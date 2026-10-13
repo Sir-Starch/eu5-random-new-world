@@ -1,0 +1,19 @@
+# Dependency-aware roadmap
+
+All phase gates target the currently detected EU5 build, then repeat on future patches. The only in-game result so far is metadata recognition; the owner requested no more game launches in this session [V-GAME C11–C12]. “Opus design” needs architectural judgment; “Sonnet implementable” is bounded work after its gate. See [backlog](handoff/sonnet-5.5-backlog.md).
+
+| Phase | Owner type | Depends on / acceptance gate |
+|---|---|---|
+| R0. Validation access and mod override | Opus design | Resolve first-run input issue without changing the normal profile; complete experiments 001–002 with comparable logs and visible setup change. Gate: C11 plus actual content override [UNKNOWN C13]. |
+| R1. Geography contract | Opus design | Experiments 003–005 identify attribute, class, boundary and new-ID behavior, required layers/caches and route response. Gate: one moved boundary and one new-ID result or documented failure [UNKNOWN C13]. |
+| R2. Representation and export architecture | Opus design | Choose T3 if new IDs work; T2 if boundary works but IDs fail; T1.5 if class switching works; keep explicit exit criteria. Gate: ADR with observed experiments and a minimal mandatory file set. |
+| R3. Deterministic geography core | Sonnet implementable after R2 | Seeded model with versioned RNG, continent/island/sea graph, rasterization and Old World invariants. Gate: byte-identical outputs on Linux/Windows and synthetic topology fixtures [INFERRED C03,C14]. |
+| R4. Geographic validation | Sonnet implementable after R2 | Unique key/color/parent checks, adjacency symmetry, connected routes, no orphan seas, Old World hash. Gate: deliberately corrupted synthetic fixtures fail with typed errors. |
+| R5. Climate, terrain and resources | Opus design, then Sonnet | Map consistent distributions into observed template fields and visual layers. Gate: R1 layer contract and in-game visible, navigable result [V-LOCAL C07–C08; UNKNOWN C13]. |
+| R6. Political and cultural generation | Opus design, then Sonnet | Generate ownership, culture/religion and state graph only after R0 and R2. Gate: one coherent generated region with visible start state [V-LOCAL C09; UNKNOWN C13]. |
+| R7. Pops, economy and extraordinary societies | Opus design, then Sonnet | Couple pops, markets, institutions, tech, infrastructure and rarity rules. Gate: generated region plays through exploration/colonization/conquest without broken logs; extraordinary strength has explicit causes and weaknesses. |
+| R8. Preview, presets and reroll | Sonnet implementable after R3 | Seed roundtrip, map/route preview and four presets. Gate: preview agrees with generated raster and same seed repeats byte-identically. |
+| R9. Packaging and compatibility | Opus design, then Sonnet | Windows/Linux path discovery, local vanilla derivation, mod installation, build fingerprints and patch regression. Gate: clean install, no existing mod/playset changes, current-build test matrix. |
+| R10. Performance and distribution | Opus design, then Sonnet | Benchmark output generation, load time, memory, QA worlds; choose Python or native core from evidence. Gate: targets set from measured baseline, no proprietary assets in release, licensing decision by owner. |
+
+Alternatives at R2: **T3** gives maximum topology freedom but requires new-ID support and broad setup rewriting; **T2** preserves IDs but limits geography count and may still demand full visual regeneration; **T1.5** reclassifies existing cells and may give meaningful coastlines with less ID coupling; **T1** is an attribute-only research fallback. None is asserted to work in 1.4.1 [UNKNOWN C13]. Runtime T5 is parked unless a supported engine API and live test appear.

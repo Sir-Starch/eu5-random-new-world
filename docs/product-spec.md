@@ -1,0 +1,42 @@
+# Product specification: genuine Random New World
+
+**Vision.** A normal historical Old World opens onto an unknown, procedurally generated New World. Each seed changes coastlines, islands, terrain, resources, routes and societies. Political reshuffling on vanilla geography is a fallback diagnostic, not the product. This is a target specification; EU5 1.4.1 map override feasibility remains [UNKNOWN C13].
+
+## Player journey
+
+1. Choose a preset or a few advanced controls; leave a seed blank for a random one or enter a shareable seed.
+2. Generate and inspect a preview showing land/sea, navigation, climate, resources and broad civilization distribution. Reroll without touching the active game profile.
+3. Run validators, then install a version-specific generated mod into a new folder. The player enables it in the launcher and starts a new 1337 campaign. One-click launcher integration is an aspiration, not a verified interface [UNKNOWN C13].
+4. Explore without a full New World reveal. Save the seed, settings and generator/build fingerprints for reproducibility.
+
+## Controls and feasibility
+
+“Tool” means controllable in a future standalone generator without asserting game acceptance; “engine pending” means the relevant mod override/playability test has not run. See [capability matrix](feasibility.md).
+
+| Control | Presets / range concept | Feasibility |
+|---|---|---|
+| Seed and preview/reroll | Explicit seed and preview | Tool feasible [INFERRED C14]; engine output pending |
+| Continental layout, fragmentation and landmass size | Few large masses ↔ many smaller masses | T1.5/T2/T3 engine pending [UNKNOWN C13] |
+| Archipelagos, islands, inland seas, straits | Low ↔ high, topology constrained | T1.5/T2/T3 engine pending [UNKNOWN C13] |
+| Topography, climate and vegetation | Coherent distributions, optional volatility | T1 engine pending [V-LOCAL C08; UNKNOWN C13] |
+| Resources and settlement opportunities | Scarce ↔ abundant, geographically conditioned | T1 and setup pending [V-LOCAL C08–C09] |
+| Population density and urbanization | Sparse ↔ dense, with empty regions | T0/setup pending [V-LOCAL C09] |
+| Number, scale and political fragmentation of societies | Few large ↔ many small | T0/T3 setup pending [V-LOCAL C09] |
+| Economy, institutions and technology | Grounded variation with rare advanced clusters | T0/T3 setup pending [V-LOCAL C09] |
+| Extraordinary-civilization frequency/intensity | Off, rare default, elevated | Tool probabilities feasible; gameplay pending [UNKNOWN C13] |
+| Historical plausibility ↔ alternative history | Grounded default, opt-in fantasy | Content design feasible; gameplay pending [UNKNOWN C13] |
+
+Presets: **Historical-ish** (plausible, rare anomalies), **Unpredictable** (more geography and polity variation), **Chaotic** (high fragmentation and terrain variety), and **Legendary** (opt-in higher chance of extraordinary or fantasy societies). Exact numeric distributions require balance tests; no odds are invented here [UNKNOWN]. The default should be grounded, with extraordinary outcomes uncommon and fantasy disabled [INFERRED product decision].
+
+## Civilizations
+
+Generate empty wilderness, small decentralized societies, regional states and complex powers. Exceptional outcomes could be a continental empire, advanced maritime culture, commercial network or fractured successor realm. Their strength must come from populations, production, institutions, technology, infrastructure, geography and organization, with weaknesses such as logistical strain, factionalism or resource dependence [INFERRED product design]. Flat superpower modifiers are excluded. Exact EU5 mechanics and required files remain subject to T0/T3 validation [UNKNOWN C09,C13].
+
+## Quality bars
+
+- [INFERRED] Identical seed, settings, generator version and game-build fingerprint must produce byte-identical mod output on Windows and Linux; this is a future acceptance test, not a current result.
+- [INFERRED] Geography must be connected as intended, with no orphan sea zones, broken coastlines or Old World pixel/identifier changes. Ship and land route behavior must be observed in game before release.
+- [INFERRED] Every society needs coherent pops, ownership, culture, religion, economy and diplomacy. Exploration, colonization, trade and conquest must be tested in an actual campaign.
+- [SOURCE C15] Distribution should use original assets and generator code; local generation from the player's installation is the conservative path for modified vanilla rasters.
+
+EU4's officially advertised randomized discovery and indigenous/colonial play [SOURCE C16] are design inspirations. EU4 algorithm, settings and rarity are not established here; see [analysis](research/eu4-rnw-analysis.md).
