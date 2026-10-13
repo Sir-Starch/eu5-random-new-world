@@ -1,0 +1,18 @@
+# External sources
+
+Access date: 2026-10-13. These are research leads and terms, not evidence that a technique works in local EU5 1.4.1. No third-party repositories or assets were copied into this repository.
+
+| Source | Target/version and actual contents | License / reliability |
+|---|---|---|
+| [Paradox User Agreement](https://legal.paradoxplaza.com/eula) | Updated 2026-01-21; §§1,3,5,8 cover game rights, updates, UGC/mods, launcher | Official primary legal terms; see [legal](../legal.md) |
+| [Paradox EU5 1.4 announcement](https://www.paradoxinteractive.com/media/press-releases/paradox-interactive/relive-and-rewrite-the-history-of-spain-and-morocco-in-across-the-pillars) | 2026-10-01 announcement of 1.4 update, not a modding specification | Official primary release announcement |
+| [EU5 1.4 open-beta Steam news](https://store.steampowered.com/news/app/3450310/view/713414124781961436) | 1.4 beta news; page content was not reliably retrievable in this session | Official game publisher channel; local manifest is stronger version evidence |
+| [EU5 wiki map modding](https://eu5.paradoxwikis.com/Map_modding) | Target version unclear; page returned access error | Community lead only; no claim sourced from its inaccessible contents |
+| [EU5 Engine Atlas](https://github.com/mattebin/eu5-engine-atlas) | README says EU5 1.3.11; catalogue, scripts, `script_docs` pointer; HEAD observed `345c685f068de9affc999e7d0e548f7ec7237d53` | MIT; community, stale for 1.4.1; no code used |
+| [EU5 Modding Project](https://github.com/HLJSXK/eu5-modding-project) | Documentation, example mod source, reference assets; 1.4 compatibility not verified locally; HEAD observed `10a824fe04da480204f880e8038424256eabfb33` | README has no clear software license; do not vendor |
+| [EU5 Modding Co-op Toolkit](https://github.com/Europa-Universalis-5-Modding-Co-op/community-mod-toolkit/) | Potential modding reference; contents and version not inspected | License unknown; lead only |
+| [EU4 Conquest of Paradise](https://www.paradoxinteractive.com/games/europa-universalis-iv/add-ons/europa-universalis-iv-conquest-of-paradise) | Official description of randomized American continent and native/colonial features | Official product description, not implementation documentation |
+| [EU4 Conquest of Paradise manual](https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/241369/manuals/EuropaUniversalisIV_ConquestofParadise_Manual.pdf?t=1699879331) | Large PDF; not downloaded or reviewed | Official manual link; no claims drawn from it |
+| [RNW Adjustments Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3125288376) | EU4 community mod lead; current behavior not verified | License unknown; no code used |
+
+No source here proves that EU5 1.4.1 exposes a writable map override or an in-game RNW API. Recheck versions and rights before adopting any external implementation.
