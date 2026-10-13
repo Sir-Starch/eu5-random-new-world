@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eu5-rnw-research"
+version = "0.1.0"
+description = "Evidence and validation tools for EU5 Random New World research"
+requires-python = ">=3.12"
+dependencies = ["typer>=0.16,<1"]
+
+[project.scripts]
+rnw = "rnw.cli:app"
+
+[dependency-groups]
+dev = ["basedpyright>=1.31,<2", "pytest>=8,<10", "ruff>=0.13,<1"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rnw"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D", "COM812", "ISC001", "T201", "CPY001"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004"]
+
+[tool.basedpyright]
+typeCheckingMode = "all"
+include = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
