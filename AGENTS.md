@@ -19,5 +19,5 @@ Read [README](README.md), [feasibility](docs/feasibility.md), [findings](docs/re
 ## Document map
 
 - Evidence: [ledger](docs/research/claims-ledger.md), [sources](docs/research/sources.md), [inventory](docs/research/game-install-inventory.md), [findings](docs/research/findings.md), [EU4 analysis](docs/research/eu4-rnw-analysis.md), [log](docs/research/log.md).
-- Decisions and work: [feasibility](docs/feasibility.md), [product](docs/product-spec.md), [architecture](docs/architecture.md), [ADR](docs/adr/0001-python-research-tooling.md), [roadmap](docs/roadmap.md), [testing](docs/testing.md), [legal](docs/legal.md).
+- Decisions and work: [feasibility](docs/feasibility.md), [product](docs/product-spec.md), [architecture](docs/architecture.md), [implementation contract](docs/implementation-contract.md), [ADR](docs/adr/0001-python-research-tooling.md), [roadmap](docs/roadmap.md), [testing](docs/testing.md), [legal](docs/legal.md).
 - Handoffs and experiments: [Opus](docs/handoff/opus-5.5.md), [Sonnet](docs/handoff/sonnet-5.5-backlog.md), [experiments](experiments/), [installed list](experiments/INSTALLED.md).

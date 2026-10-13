@@ -18,8 +18,9 @@ def test_local_installation_has_consistent_parsed_hierarchy() -> None:
     map_dir = Path(root_value) / "game/in_game/map_data"
     parsed = read_locations(map_dir / "definitions.txt")
     counts = summary(parsed)
-    colors = color_summary(map_dir / "named_locations/00_default.txt")
+    colors = color_summary(parsed, map_dir / "named_locations/00_default.txt")
     assert counts["location"] > 0
     assert counts["american_location"] > 0
     assert colors["duplicate_names"] == 0
     assert colors["duplicate_colors"] == 0
+    assert colors["hierarchy_keys_without_color"] == 0

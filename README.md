@@ -20,15 +20,16 @@ uv run rnw --help
 EU5_GAME_DIR='/path/to/Europa Universalis V'
 uv run rnw inspect "$EU5_GAME_DIR"
 uv run rnw coupling "$EU5_GAME_DIR" local_data/coupling.json
+uv run rnw fingerprint "$EU5_GAME_DIR" local_data/map-contract.json
 EU5_GAME_DIR="$EU5_GAME_DIR" uv run pytest -q tests/test_local_install.py
 ```
 
-The coupling command performs a **broad lexical scan** with false positives; its raw output is gitignored [V-EXEC C10]. A metadata-only validation kit is available with `uv run rnw prepare-mod generated/rnw_exp_001_metadata` and `uv run rnw install-mod generated/rnw_exp_001_metadata USER_DIR`. It does not edit playsets or launch the game. Follow [testing](docs/testing.md) before any future in-game test and [INSTALLED](experiments/INSTALLED.md) for removal. No additional game launch is requested now.
+The coupling command performs a **broad lexical scan** with false positives; its raw output is gitignored [V-EXEC C10]. The fingerprint records hashes of the installed map-contract files without copying them [V-EXEC C20]. The corrected color audit finds 28,582 declarations, all 28,573 hierarchy keys covered, and nine declarations outside the hierarchy [V-EXEC C05]. A metadata-only validation kit is available with `uv run rnw prepare-mod generated/rnw_exp_001_metadata` and `uv run rnw install-mod generated/rnw_exp_001_metadata USER_DIR`. It does not edit playsets or launch the game. Follow [testing](docs/testing.md) before any future in-game test and [INSTALLED](experiments/INSTALLED.md) for removal. No additional game launch is requested now.
 
 ## Document map
 
 - [Findings](docs/research/findings.md), [claims ledger](docs/research/claims-ledger.md), [sources](docs/research/sources.md), [inventory](docs/research/game-install-inventory.md), [EU4 lessons](docs/research/eu4-rnw-analysis.md), [research log](docs/research/log.md)
 - [Feasibility and tier matrix](docs/feasibility.md), [product spec](docs/product-spec.md), [architecture](docs/architecture.md), [ADR](docs/adr/0001-python-research-tooling.md), [roadmap](docs/roadmap.md), [testing](docs/testing.md), [legal](docs/legal.md)
-- [Opus handoff](docs/handoff/opus-5.5.md), [Sonnet backlog](docs/handoff/sonnet-5.5-backlog.md), [experiment records](experiments/)
+- [Implementation contract](docs/implementation-contract.md), [Opus handoff](docs/handoff/opus-5.5.md), [Sonnet backlog](docs/handoff/sonnet-5.5-backlog.md), [experiment records](experiments/)
 
 The recommended direction is an **external deterministic generator emitting a complete per-build EU5 mod**, conditional on map override experiments. The runner-up is an ID-preserving geographic redraw if new IDs fail but boundary changes work [INFERRED C14]. Neither is yet proven in game.

@@ -11,6 +11,7 @@ from typing import Annotated, Final
 
 import typer
 
+from rnw.contract import fingerprint as game_fingerprint
 from rnw.geography import color_summary, read_locations, summary
 
 app: Final[typer.Typer] = typer.Typer(no_args_is_help=True)
@@ -18,12 +19,20 @@ STAMP: Final[re.Pattern[str]] = re.compile(r"^\[[^]]+\]\[[^]]+\]:\s*")
 MAX_EXAMPLES: Final[int] = 3
 
 
+def _check_output_outside_game(game_dir: Path, output: Path) -> None:
+    if output.resolve().is_relative_to(game_dir.resolve()):
+        message = "Output path must be outside the game installation"
+        raise typer.BadParameter(message)
+
+
 @app.command()
 def inspect(game_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)]) -> None:
     """Report counts from the installed game without copying its data."""
     map_dir = game_dir / "game/in_game/map_data"
     locations = read_locations(map_dir / "definitions.txt")
-    result = summary(locations) | color_summary(map_dir / "named_locations/00_default.txt")
+    result = summary(locations) | color_summary(
+        locations, map_dir / "named_locations/00_default.txt"
+    )
     typer.echo(json.dumps(result, indent=2, sort_keys=True))
 
 
@@ -33,6 +42,7 @@ def coupling(
     output: Annotated[Path, typer.Argument()],
 ) -> None:
     """Count script references to American location keys by directory."""
+    _check_output_outside_game(game_dir, output)
     locations = read_locations(game_dir / "game/in_game/map_data/definitions.txt")
     keys = {item.key for item in locations if item.continent == "america"}
     counts: Counter[str] = Counter()
@@ -65,6 +75,25 @@ def coupling(
     output.parent.mkdir(parents=True, exist_ok=True)
     _ = output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     typer.echo(f"Wrote aggregate references: {output}")
+
+
+@app.command()
+def fingerprint(
+    game_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)],
+    output: Annotated[Path, typer.Argument()],
+) -> None:
+    """Write a stable, read-only fingerprint of the current map contract."""
+    _check_output_outside_game(game_dir, output)
+    records = game_fingerprint(game_dir)
+    payload = {
+        "schema": 1,
+        "files": [
+            {"path": item.path, "size": item.size, "sha256": item.sha256} for item in records
+        ],
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    _ = output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    typer.echo(f"Wrote map-contract fingerprint: {output}")
 
 
 @app.command()

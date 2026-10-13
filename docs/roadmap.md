@@ -1,9 +1,10 @@
 # Dependency-aware roadmap
 
-All phase gates target the currently detected EU5 build, then repeat on future patches. The only in-game result so far is metadata recognition; the owner requested no more game launches in this session [V-GAME C11–C12]. “Opus design” needs architectural judgment; “Sonnet implementable” is bounded work after its gate. See [backlog](handoff/sonnet-5.5-backlog.md).
+All engine validation gates target the currently detected EU5 build, then repeat on future patches. The only in-game result so far is metadata recognition; the owner requested no more game launches in this session [V-GAME C11–C12]. **Development can start now** on a generated T2 mod candidate and a T3-capable world model under the [implementation contract](implementation-contract.md); in-game acceptance remains pending. “Opus design/implement” needs architecture and production work; “Sonnet implementable” is bounded work. See [backlog](handoff/sonnet-5.5-backlog.md).
 
 | Phase | Owner type | Depends on / acceptance gate |
 |---|---|---|
+| D0. Geography-generating mod candidate | Opus design/implement | Start now from C03–C09,C19–C20. Seeded world model, synthetic topology generation, EU5 1.4.1 staged raster mod candidate and protected-pixel invariants. Gate: offline tests and a reproducible local package labeled NOT GAME VALIDATED. |
 | R0. Validation access and mod override | Opus design | Resolve first-run input issue without changing the normal profile; complete experiments 001–002 with comparable logs and visible setup change. Gate: C11 plus actual content override [UNKNOWN C13]. |
 | R1. Geography contract | Opus design | Experiments 003–005 identify attribute, class, boundary and new-ID behavior, required layers/caches and route response. Gate: one moved boundary and one new-ID result or documented failure [UNKNOWN C13]. |
 | R2. Representation and export architecture | Opus design | Choose T3 if new IDs work; T2 if boundary works but IDs fail; T1.5 if class switching works; keep explicit exit criteria. Gate: ADR with observed experiments and a minimal mandatory file set. |
