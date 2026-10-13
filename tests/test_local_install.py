@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.geography import color_summary, read_locations, summary
 
 
@@ -24,3 +25,4 @@ def test_local_installation_has_consistent_parsed_hierarchy() -> None:
     assert colors["duplicate_names"] == 0
     assert colors["duplicate_colors"] == 0
     assert colors["hierarchy_keys_without_color"] == 0
+    assert len(fingerprint(Path(root_value))) == len(CONTRACT_FILES)
