@@ -1,16 +1,25 @@
 # Validation protocol
 
-This document describes future tests. No more EU5 launches will be performed in the current research session at the owner's request. The existing first-run Select Language issue is recorded in [experiment 001](../experiments/001-metadata/README.md).
+This document describes offline checks and future in-game tests. No more EU5 launches will be performed in the current research session at the owner's request. The existing first-run Select Language issue is recorded in [experiment 001](../experiments/001-metadata/README.md).
 
 ## Current runnable checks
 
 `uv sync --locked --group dev && make check` runs format, lint, static typing and synthetic unit tests [V-EXEC]. `EU5_GAME_DIR=/path/to/Europa\ Universalis\ V uv run pytest -q tests/test_local_install.py` enables a local-only parse check; it skips when the variable is absent and is excluded from CI by default [V-EXEC]. `uv run rnw inspect "$EU5_GAME_DIR"` and `uv run rnw coupling "$EU5_GAME_DIR" local_data/coupling.json` produce counts and a gitignored broad coupling inventory, not proof of in-game behavior [V-EXEC C05,C10]. `uv run rnw fingerprint "$EU5_GAME_DIR" local_data/map-contract.json` produces only stable file digests and sizes, so later beta builds can be compared before generating output [V-EXEC C20].
 
-The present parser validates duplicate location keys, named-color syntax and all hierarchy-key/color declarations, but it is not a complete geography validator. Nine vanilla color declarations lie outside the hierarchy and must be classified rather than rejected blindly [V-EXEC C05]. Future tests must cover actual raster color use, pixel topology, raster dimensions, sea/land classification, adjacency symmetry, graph reachability, port/coast consistency, river paths, Old World pixel/hash invariants and valid start-state references [INFERRED C03–C10,C19]. Synthetic fixtures belong in Git; game-derived rasters and logs do not.
+The D0 suite adds generator and exporter checks [V-EXEC C28–C31]:
+
+- `tests/test_rng_noise.py`: SplitMix64 reference vectors, stream independence, NumPy/Python hash equality, noise window consistency.
+- `tests/test_synth.py`: every seed/preset passes all validators; same seed is identical; presets differ measurably; seed-1 bundles match committed golden digests (the cross-platform gate once CI runs on Windows).
+- `tests/test_validate.py`: negative fixtures for orphan sea, duplicate/reserved colour, duplicate/invalid key, broken parent, changed protected pixel, vanished or split cells, undeclared labels, frozen-pixel change, ineligible change and new contacts.
+- `tests/test_coast.py`: topology preserved, displacement bounded by pass count, field sign controls direction, size floor/cap.
+- `tests/test_eu5_export.py`: a synthetic EU5-shaped installation (`tests/fixtures_eu5.py`, no game data) exercises the adapter, the full export, repeatability, the fingerprint refusal and unsafe output paths.
+- `tests/test_local_install.py` (local only): raster colours, unused declarations, river water mask and locator rows on the real installation (C23–C26).
+
+`uv run rnw generate --game-dir "$EU5_GAME_DIR" --seed N --preset continents --output generated/rnw_exp_NAME` re-decodes the written PNGs and compares them with the installation before it finishes; its `report.json` lists every invariant. Not yet covered: port/dock placement quality beyond freezing, river path continuity beyond freezing, start-state references (no setup is rewritten) and anything in game. Synthetic fixtures belong in Git; game-derived rasters and logs do not.
 
 ## Determinism and completeness gate
 
-For the same seed, settings schema, generator version and target game build, compare hashes of every emitted file on Linux and Windows; require byte identity [INFERRED]. Fix ordering, RNG algorithm/version, line endings, BOM handling, numerical rules, image encoding/compression and archive metadata. Change the schema or generator version intentionally when output changes. Test that all generated IDs resolve and every Old World reference remains valid. These are future gates, not current achievements [UNKNOWN].
+For the same seed, settings schema, generator version and target game build, compare hashes of every emitted file on Linux and Windows; require byte identity [INFERRED]. Fix ordering, RNG algorithm/version, line endings, BOM handling, numerical rules, image encoding/compression and archive metadata. Change the schema or generator version intentionally when output changes. Test that all generated IDs resolve and every Old World reference remains valid. Linux status: the synthetic golden digests pass and a repeated EU5 export was byte-identical [V-EXEC C28,C31]. Windows byte identity of the synthetic outputs is a pending CI result; EU5 PNG bytes depend on the zlib build, so cross-platform comparison of EU5 outputs uses the recorded pixel digests.
 
 ## In-game test protocol when the owner next authorizes it
 
@@ -21,4 +30,4 @@ For the same seed, settings schema, generator version and target game build, com
 5. Capture game-window-only screenshots where relevant. For start-state changes verify owner/culture/pop in the 1337 view. For map edits verify visible boundary/class, selection, land and naval movement, exploration/colonization/conquest as appropriate, and save/reload. Measure startup time against the same-build baseline.
 6. Mark `PASSED` only for the exact observed behavior, with version and evidence. A syntax check or version match alone cannot pass a geometry experiment. Record `FAILED`, `INCONCLUSIVE`, `PENDING-HUMAN-VALIDATION` or `NOT-RUN` honestly. Re-run critical tests after each beta patch [INFERRED C18].
 
-`rnw prepare-mod generated/rnw_exp_001_metadata` and `rnw install-mod generated/rnw_exp_001_metadata USER_DIR` are the current metadata validation kit [V-EXEC]. They do **not** enable a launcher playset or run the game. There is no prepared geography mod yet; experiments 002–006 specify how to build one after the preceding gate. The temporary test folder can be removed as described in [INSTALLED](../experiments/INSTALLED.md).
+`rnw prepare-mod generated/rnw_exp_001_metadata` and `rnw install-mod generated/rnw_exp_001_metadata USER_DIR` are the current metadata validation kit [V-EXEC]. They do **not** enable a launcher playset or run the game. A prepared, NOT GAME VALIDATED geography candidate exists locally for experiment 004 (`rnw generate`, C28); experiments 002–003 still come first. The temporary test folder can be removed as described in [INSTALLED](../experiments/INSTALLED.md).

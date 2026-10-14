@@ -1,6 +1,6 @@
 # Feasibility and ambition ladder
 
-Current verdict for EU5 **1.4.1 open beta, Steam build 25905365**: the highest tier established in-game is **none of T0–T5**. Only metadata discovery passed a limited startup check [V-GAME, C11]. T1.5–T3 remain plausible research targets because relevant static data exists [V-LOCAL, C03–C09], but no geography override or playability has been observed [UNKNOWN, C13]. This is a confidence limit, not a finding that genuine RNW is impossible.
+Current verdict for EU5 **1.4.1 open beta, Steam build 25905365**: the highest tier established in-game is **none of T0–T5**. Only metadata discovery passed a limited startup check [V-GAME, C11]. T1.5–T3 remain plausible research targets because relevant static data exists [V-LOCAL, C03–C09], but no geography override or playability has been observed [UNKNOWN, C13]. This is a confidence limit, not a finding that genuine RNW is impossible. On 2026-10-14 an offline T2 candidate (moved land–sea pixels between existing IDs) was generated and validated outside the game; it does not change any tier classification until tested in game [V-EXEC C28; UNKNOWN C13].
 
 Capability terms: **Verified possible** means observed in game for 1.4.1; **Strongly supported** means multiple local interfaces exist but a game test is missing; **Plausible but unverified** means an experiment is needed; **Technically difficult** means numerous coupled assets/contracts must be solved; **Blocked via supported interfaces** requires evidence of an actual engine restriction, which we do not have.
 

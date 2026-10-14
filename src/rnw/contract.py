@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 
@@ -41,6 +42,22 @@ class FileFingerprint:
     path: str
     size: int
     sha256: str
+
+
+def fingerprint_document(records: tuple[FileFingerprint, ...]) -> str:
+    """Serialize records exactly as ``rnw fingerprint`` writes them."""
+    payload = {
+        "schema": 1,
+        "files": [
+            {"path": item.path, "size": item.size, "sha256": item.sha256} for item in records
+        ],
+    }
+    return json.dumps(payload, indent=2, sort_keys=True) + "\n"
+
+
+def aggregate_digest(records: tuple[FileFingerprint, ...]) -> str:
+    """SHA-256 of the fingerprint document; claim C20 records the 1.4.1 value."""
+    return hashlib.sha256(fingerprint_document(records).encode("utf-8")).hexdigest()
 
 
 def fingerprint(game_dir: Path) -> tuple[FileFingerprint, ...]:

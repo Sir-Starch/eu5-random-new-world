@@ -6,17 +6,44 @@ import json
 import re
 import shutil
 from collections import Counter
-from pathlib import Path  # noqa: TC003 - Typer resolves Path annotations at runtime.
+from pathlib import Path
 from typing import Annotated, Final
 
 import typer
 
+from rnw.artifacts import OutputPathError, check_new_output, write_synthetic_bundle
+from rnw.contract import MissingContractFileError, fingerprint_document
 from rnw.contract import fingerprint as game_fingerprint
-from rnw.geography import color_summary, read_locations, summary
+from rnw.eu5_export import ExportError, export_candidate
+from rnw.eu5_map import Eu5ContractError
+from rnw.geography import GeographyError, color_summary, read_locations, summary
+from rnw.png import PngFormatError
+from rnw.settings import SettingsError, load_settings, run_spec
+from rnw.synth import generate_world, synthetic_base
+from rnw.validate import ValidationError, topology_metrics, validate_world
 
 app: Final[typer.Typer] = typer.Typer(no_args_is_help=True)
 STAMP: Final[re.Pattern[str]] = re.compile(r"^\[[^]]+\]\[[^]]+\]:\s*")
 MAX_EXAMPLES: Final[int] = 3
+SYNTH_NAME: Final[re.Pattern[str]] = re.compile(r"rnw_synth_[a-z0-9_]{1,48}")
+ISLAND_PX: Final[int] = 400
+SEED_MAX: Final[int] = (1 << 64) - 1
+FAILURES: Final[tuple[type[Exception], ...]] = (
+    Eu5ContractError,
+    ExportError,
+    GeographyError,
+    MissingContractFileError,
+    OutputPathError,
+    PngFormatError,
+    SettingsError,
+    ValidationError,
+)
+SeedOption = Annotated[int, typer.Option(min=0, max=SEED_MAX, help="Unsigned 64-bit seed.")]
+PresetOption = Annotated[str, typer.Option(help="continents or archipelago.")]
+SettingsOption = Annotated[
+    Path | None,
+    typer.Option(exists=True, dir_okay=False, help="JSON overrides; schema 1."),
+]
 
 
 def _check_output_outside_game(game_dir: Path, output: Path) -> None:
@@ -84,15 +111,9 @@ def fingerprint(
 ) -> None:
     """Write a stable, read-only fingerprint of the current map contract."""
     _check_output_outside_game(game_dir, output)
-    records = game_fingerprint(game_dir)
-    payload = {
-        "schema": 1,
-        "files": [
-            {"path": item.path, "size": item.size, "sha256": item.sha256} for item in records
-        ],
-    }
+    document = fingerprint_document(game_fingerprint(game_dir))
     output.parent.mkdir(parents=True, exist_ok=True)
-    _ = output.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    _ = output.write_text(document, encoding="utf-8")
     typer.echo(f"Wrote map-contract fingerprint: {output}")
 
 
@@ -156,6 +177,70 @@ def logdiff(
     delta = new - old
     typer.echo(
         json.dumps({"new_lines": sum(delta.values()), "examples": sorted(delta)[:30]}, indent=2)
+    )
+
+
+@app.command()
+def synth(
+    *,
+    output: Annotated[Path, typer.Option(help="New generated/rnw_synth_* directory.")],
+    seed: SeedOption,
+    preset: PresetOption = "continents",
+    settings: SettingsOption = None,
+) -> None:
+    """Generate a synthetic world from a seed; outputs are byte-deterministic."""
+    try:
+        check_new_output(output, SYNTH_NAME)
+        chosen = load_settings(preset, settings)
+        world = generate_world(seed, chosen)
+        validate_world(world, base=synthetic_base(chosen.synthetic))
+        metrics = topology_metrics(world, ISLAND_PX)
+        manifest = write_synthetic_bundle(world, run_spec(seed, chosen), metrics, output)
+    except FAILURES as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(json.dumps({"output": str(output), "metrics": metrics, "files": manifest["files"]}))
+
+
+@app.command()
+def generate(  # noqa: PLR0913 - mirrors the documented CLI contract.
+    *,
+    game_dir: Annotated[
+        Path, typer.Option(exists=True, file_okay=False, help="Read-only EU5 installation.")
+    ],
+    output: Annotated[Path, typer.Option(help="New generated/rnw_exp_* directory.")],
+    seed: SeedOption,
+    preset: PresetOption = "continents",
+    settings: SettingsOption = None,
+    accept_build: Annotated[
+        str | None, typer.Option(help="Explicitly select an untested fingerprint digest.")
+    ] = None,
+) -> None:
+    """Stage a NOT GAME VALIDATED coastline mod candidate from the local installation."""
+    try:
+        chosen = load_settings(preset, settings)
+        report = export_candidate(
+            game_dir,
+            output,
+            seed=seed,
+            settings=chosen,
+            accept_build=accept_build,
+            settings_file=None if settings is None else settings.name,
+        )
+    except FAILURES as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(
+        json.dumps(
+            {
+                "status": report["status"],
+                "output": str(output),
+                "changes": report["changes"],
+                "files": report["files"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
     )
 
 

@@ -21,3 +21,18 @@ This is an implementation task for Opus, not another research plan. Target the i
 `uv sync --locked --group dev && make check` passes from a clean clone. The synthetic generator produces byte-identical outputs for repeated seed/settings/version runs on Linux and Windows CI; distinct seeds change coastline metrics. A local command against the fingerprinted 1.4.1 installation emits one `rnw_exp_*` candidate and a report proving changed New World coastline pixels and unchanged protected pixels. The report states **NOT GAME VALIDATED**. The eventual engine validation, when separately authorized, follows experiments 002–004 in order with a complete same-build vanilla baseline; [testing](testing.md) defines evidence needed to call each rung passed.
 
 This slice is genuine mod development: it produces a geography-changing package candidate. It does not require an unproven T3 loader contract, and it does not redefine the final product as T2. If the 1.4.1 engine later rejects T2, retain the model and adapt the exporter based on that failure; if new IDs work, extend the exporter to T3.
+
+## Delivery status, 2026-10-14
+
+Delivered offline; **NOT GAME VALIDATED**. See [ADR 0002](adr/0002-d0-generator-stack.md) and claims C23–C33.
+
+| Contract item | Result |
+|---|---|
+| 1. Model and settings | `rnw.model.World` (label raster, cells with key/colour/class/five parents, ocean anchors, graph edges); settings schema 1 with `continents` and `archipelago` presets; SplitMix64 RNG v1 [V-EXEC C31,C33] |
+| 2. Geographic generator | `rnw synth` generates land, seas, lakes, new cells, hierarchy and unique colours around a protected synthetic Old World; byte-identical bundles with committed golden digests; presets differ measurably [V-EXEC C31] |
+| 3. EU5 1.4.1 exporter | `rnw generate` refuses unknown fingerprints, overwrites, non-`generated/` and in-game outputs; stages `locations.png` + `rivers.png` with metadata, manifest, report and preview; moves 16,205 land–sea pixels between existing American IDs for seed 42 [V-EXEC C28–C30] |
+| 4. Offline validation | Typed failures for orphan sea, duplicate colour/key, broken parent, changed protected pixel, vanished/split cells, unexpected labels, new contacts and ineligible changes; written files are re-decoded and compared with the installation [V-EXEC] |
+
+Deviations: the visual heightmap was not edited because `terrain2/heightmap.png` does not cover the Americas (C25). The nine extra colour declarations are now known to be zero-pixel declarations (C23) and remain untouched. Linux byte identity is observed; Windows identity waits for CI.
+
+Local reproduction: `uv run rnw generate --game-dir "$EU5_GAME_DIR" --seed 42 --preset continents --output generated/rnw_exp_d0_coast_s42`. The expected hashes are in C28.

@@ -24,7 +24,9 @@ Observed 2026-10-13 on Linux x86_64 with a Wayland desktop. All game paths below
 | `game/in_game/map_data/adjacencies.csv`, `ports.csv` | 11 KiB and 152 KiB; connectivity and ports [V-LOCAL] |
 | `game/in_game/map_data/nodes.dat` | Opaque 11 MiB data file; actual role unverified [V-LOCAL]/[UNKNOWN] |
 | `game/in_game/map_data/location_templates.txt` | 3.6 MiB; location attributes including topography, vegetation, climate, religion, culture, raw material [V-LOCAL] |
-| `game/in_game/gfx/terrain2/heightmap.png` | 16-bit grayscale 8192×4096, 6.0 MiB [V-LOCAL] |
+| `game/in_game/gfx/terrain2/heightmap.png` | 16-bit grayscale 8192×4096, 6.0 MiB; not a global aligned layer, no Americas (C25) [V-LOCAL] |
+| `game/in_game/gfx/terrain2/decals/heightmap_*_16*` | 16 decal height tiles with masks, ~965 MiB total; `terrain_properties.json` declares 65536×32768 terrain (C25) [V-LOCAL] |
+| `game/in_game/gfx/map/map_objects/generated_*locators*.txt` | City, unit, combat, dock, VFX and volcano locators; `position = { x h z }` with flipped row (C26) [V-LOCAL] |
 | `game/in_game/gfx/terrain2/biomes.png` | 8-bit grayscale 8191×4095, 56 KiB [V-LOCAL] |
 | `game/main_menu/setup/1337/` | 26 setup files including pops, countries, markets, institutions, roads, locations, colonies [V-LOCAL] |
 

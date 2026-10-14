@@ -22,3 +22,13 @@
 - [SOURCE] Evaluated REA and a 1.4 map-mod Workshop lead. Neither was executed or treated as proof of EU5 1.4.1 topology support. Local GNU `objdump` exists, but no full decompiler provider is installed [V-LOCAL].
 - [V-LOCAL]/[INFERRED] Compared only the temporary and normal `pdx_settings.json` files: the temporary profile lacks the `first_time_playing` flag found as `false` in the normal profile. This may explain the first-run screen, not its lack of input response; no game workaround was tested.
 - [V-EXEC] Refocused the Opus handoff on implementing a seeded geography-changing `rnw_exp_*` package candidate now, with offline invariants and future T3 capacity. `make check` passed 11 synthetic tests with 1 local-only skip; the optional local installation test passed. All Markdown relative links resolve.
+
+## 2026-10-14 — D0 geography candidate (Opus)
+
+- [V-EXEC] Raster audit of build 25905365: all pixels declared; the nine extra colour declarations are the nine zero-pixel colours (C23). `rivers.png` background is a water/land mask (C24). Locator/port rows are flipped (C26).
+- [V-LOCAL]/[V-EXEC] `terrain2/heightmap.png` turned out to be a partial Eurasia/Africa layer with no Americas; the real terrain uses 65536×32768 decal tiles and a cache (C25). The planned heightmap adjustment was dropped; the visual mismatch is reported as untested.
+- [V-EXEC] Implemented the D0 slice: SplitMix64 RNG and integer fractal noise; game-independent `World` model with new-ID support; synthetic generator with `continents`/`archipelago` presets; contact-preserving coast mover; typed validators; deterministic PNG writer; read-only EU5 adapter; staged exporter with manifest and report; `rnw synth` and `rnw generate`. Added `numpy` and `pillow` dependencies.
+- [V-EXEC] `rnw generate --seed 42 --preset continents` produced `generated/rnw_exp_d0_coast_s42` in about 10 s: 16,205 pixels moved, all invariants passed after re-decoding the files, and a repeat run was byte-identical (C28). The archipelago preset and seed 7 gave different geometry (C29). Only `generated/` was written; nothing was installed and the game was not launched.
+- [SOURCE] Verified the SplitMix64 constants and a seed-1234567 vector against the reference C file and Rosetta Code (C33).
+- [V-EXEC] `make check` passes with 68 synthetic tests and 2 local-only skips; the optional local tests pass against the installation. Windows CI has not run because nothing was pushed (C31).
+- [V-EXEC] A fresh clone of branch `d0-geography-candidate` passed `uv sync --locked --group dev && make check` (68 passed, 2 local-only skips). Tracked files total 456 KiB; no game-derived file is tracked.

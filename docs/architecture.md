@@ -1,6 +1,6 @@
 # Architecture options and decision gates
 
-The production architecture is conditional on [experiments 002–006](../experiments/) and [feasibility](feasibility.md). [ADR 0001](adr/0001-python-research-tooling.md) decides only the research kit stack. No world generator or map exporter exists yet.
+The production architecture is conditional on [experiments 002–006](../experiments/) and [feasibility](feasibility.md). [ADR 0001](adr/0001-python-research-tooling.md) decides only the research kit stack. The D0 offline generator and an ID-preserving EU5 exporter now exist ([ADR 0002](adr/0002-d0-generator-stack.md)); neither is game validated.
 
 | Option | Benefits | Costs and evidence gate |
 |---|---|---|
@@ -14,7 +14,17 @@ The production architecture is conditional on [experiments 002–006](../experim
 
 ## Minimal conceptual pipeline, subject to validation
 
-`settings + seed + game build fingerprint → abstract geography and society model → validators → EU5-specific serializers → complete mod package → manual launcher enablement → in-game regression evidence` [INFERRED]. The world model must distinguish IDs, color raster cells, geographic parents, land/sea class, graph edges and start-state entities. It is deliberately not implemented before contracts are known.
+`settings + seed + game build fingerprint → abstract geography and society model → validators → EU5-specific serializers → complete mod package → manual launcher enablement → in-game regression evidence` [INFERRED]. The world model must distinguish IDs, color raster cells, geographic parents, land/sea class, graph edges and start-state entities. Implemented so far [V-EXEC C28–C31]:
+
+| Stage | Module | State |
+|---|---|---|
+| Settings, seed, RNG | `settings.py`, `rng.py`, `noise.py` | Schema 1, two presets, SplitMix64 v1, integer noise |
+| World model | `model.py`, `topology.py` | Label raster, cells, classes, parents, anchors, edges; new IDs supported |
+| Generators | `synth.py` (T3-style, synthetic), `coast.py` (T2 boundary moves) | Deterministic, offline |
+| Validators | `validate.py` | Typed errors, generic and boundary-move checks |
+| EU5 adapter and serializer | `eu5_map.py`, `eu5_export.py`, `png.py`, `artifacts.py` | Build 25905365 only; emits `locations.png` + `rivers.png` |
+
+Start-state entities, names, terrain attributes and new EU5 IDs are not generated yet; they wait for experiments 002, 003 and 005.
 
 The exporter should read any vanilla-derived data from the user's local game installation and write generated assets only to gitignored/local mod directories [INFERRED C15]. It must preserve Old World pixel regions, identifiers and references by explicit tests. A package manifest should record seed, settings schema, generator version, target game build and hashes without embedding proprietary input files.
 

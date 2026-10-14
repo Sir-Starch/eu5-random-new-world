@@ -1,6 +1,6 @@
 # External sources
 
-Access date: 2026-10-13. These are research leads and terms, not evidence that a technique works in local EU5 1.4.1. No third-party repositories or assets were copied into this repository.
+Access date: 2026-10-13 unless a row says otherwise. These are research leads and terms, not evidence that a technique works in local EU5 1.4.1. No third-party repositories or assets were copied into this repository.
 
 | Source | Target/version and actual contents | License / reliability |
 |---|---|---|
@@ -16,5 +16,6 @@ Access date: 2026-10-13. These are research leads and terms, not evidence that a
 | [RNW Adjustments Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3125288376) | EU4 community mod lead; current behavior not verified | License unknown; no code used |
 | [Steam Workshop EU5 overhaul listing](https://steamcommunity.com/workshop/browse/?appid=3450310&requiredtags%5B%5D=Overhaul) | Search/listing shows a “More Locations Mod” lead; a 1.4 variant appeared in search results, but its files and in-game behavior were not inspected | Community listing only; neither T3 nor 1.4.1 compatibility proven |
 | [REA](https://github.com/morluto/rea) | README at HEAD `aa6f74af04c06d3d09ef69d2292f05f74e93cf1b` describes reverse engineering via MCP/CLI and native providers; evaluated for possible binary analysis, not installed or executed | MIT; `objdump` available locally, no Ghidra/Hopper/IDA/Rizin; no code used |
+| [SplitMix64 reference C](https://prng.di.unimi.it/splitmix64.c) and [Rosetta Code task](https://rosettacode.org/wiki/Pseudo-random_numbers/Splitmix64) | Accessed 2026-10-14. Vigna's 2015 reference `next()` constants; Rosetta Code lists the first five outputs for seed 1234567 | Reference code dedicated to the public domain; our implementation is original and uses only the published algorithm constants (C33) |
 
 No source here proves that EU5 1.4.1 exposes a writable map override or an in-game RNW API. Recheck versions and rights before adopting any external implementation.
