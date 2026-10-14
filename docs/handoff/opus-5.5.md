@@ -32,6 +32,10 @@ The D0 slice of the [implementation contract](../implementation-contract.md) is 
 
 ## Next work, in order
 
+**In-game update 2026-10-14:** experiment 004 is PARTIAL — the mod's `locations.png` reshapes location outlines in game, drawn terrain does not change (C34–C36). Priority 0 below is now the visual terrain layer.
+
+0. **Visual coastline:** extend the exporter to write the affected height decals (C36) consistently with the moved pixels. First test which source the engine reads: a mod copy of one decal's PNG versus regenerated `.info`/`.bin` (LZAV; pin and review any LZAV implementation before use, or test `lzav=no`). Also check `terrain_cache/checksum.json` invalidation and material masks.
+
 1. **When the owner authorizes game time:** fix the isolated-profile first-run input issue (C22), then run experiments 002 → 003 → 004 with a complete same-build baseline. For 004 install exactly the D0 candidate per its [record](../../experiments/004-boundary/README.md). Expect a drawn-terrain mismatch; the question is whether borders, selection and movement follow the moved pixels.
 2. **Offline, now:** extend the exporter toward T3 behind a flag: new keys/colours in `named_locations`, `definitions.txt` and `default.map` for a small generated island using the existing model. Keep it out of default output until experiment 005 is authorized.
 3. **Offline, now:** investigate the American visual terrain source (decal tiles, `terrain_cache/checksum.json`) read-only, to decide whether a later exporter can align the drawn coast.
