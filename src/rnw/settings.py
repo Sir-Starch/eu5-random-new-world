@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 SCHEMA_VERSION: Final[int] = 1
 GENERATOR: Final[str] = "rnw-geo"
-GENERATOR_VERSION: Final[str] = "0.2.0"
+GENERATOR_VERSION: Final[str] = "0.3.0"
 WINDOW_SIZE: Final[int] = 4
 
 
@@ -72,6 +72,27 @@ class CoastSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class NewWorldSettings:
+    """Controls for replacing the whole New World with generated cells (T3)."""
+
+    land_permille: int
+    feature_px: int
+    octaves: int
+    persistence_permille: int
+    coast_margin_px: int
+    min_island_px: int
+    min_lake_px: int
+    max_lake_px: int
+    location_px: int
+    sea_zone_px: int
+    min_cell_px: int
+    min_sea_cell_px: int
+    wasteland_permille: int
+    province_size: int
+    ocean_band_px: int
+
+
+@dataclass(frozen=True, slots=True)
 class Settings:
     """A complete settings document."""
 
@@ -79,6 +100,7 @@ class Settings:
     synthetic: SyntheticSettings
     geography: GeographySettings
     coast: CoastSettings
+    new_world: NewWorldSettings
 
     def to_json_data(self) -> dict[str, object]:
         """Return the schema-tagged document."""
@@ -113,6 +135,11 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "river_radius_px": (0, 64),
     "border_px": (1, 64),
     "window": (0, 1 << 20),
+    "min_sea_cell_px": (1, 100_000),
+    "max_lake_px": (1, 1_000_000),
+    "wasteland_permille": (0, 500),
+    "province_size": (1, 32),
+    "ocean_band_px": (0, 8192),
 }
 PRESETS: Final[dict[str, Settings]] = {
     "continents": Settings(
@@ -145,6 +172,23 @@ PRESETS: Final[dict[str, Settings]] = {
             river_radius_px=2,
             border_px=2,
         ),
+        new_world=NewWorldSettings(
+            land_permille=400,
+            feature_px=1600,
+            octaves=7,
+            persistence_permille=520,
+            coast_margin_px=48,
+            min_island_px=600,
+            min_lake_px=80,
+            max_lake_px=4000,
+            location_px=40,
+            sea_zone_px=110,
+            min_cell_px=300,
+            min_sea_cell_px=2000,
+            wasteland_permille=90,
+            province_size=6,
+            ocean_band_px=1600,
+        ),
     ),
     "archipelago": Settings(
         preset="archipelago",
@@ -176,6 +220,23 @@ PRESETS: Final[dict[str, Settings]] = {
             river_radius_px=2,
             border_px=2,
         ),
+        new_world=NewWorldSettings(
+            land_permille=300,
+            feature_px=520,
+            octaves=7,
+            persistence_permille=580,
+            coast_margin_px=48,
+            min_island_px=250,
+            min_lake_px=80,
+            max_lake_px=4000,
+            location_px=40,
+            sea_zone_px=110,
+            min_cell_px=300,
+            min_sea_cell_px=2000,
+            wasteland_permille=90,
+            province_size=6,
+            ocean_band_px=1600,
+        ),
     ),
 }
 
@@ -202,7 +263,7 @@ def _checked_window(value: object) -> tuple[int, int, int, int]:
     return (items[0], items[1], items[2], items[3])
 
 
-def _merge[T: (SyntheticSettings, GeographySettings, CoastSettings)](
+def _merge[T: (SyntheticSettings, GeographySettings, CoastSettings, NewWorldSettings)](
     base: T, section: str, override: object
 ) -> T:
     if not isinstance(override, dict):
@@ -233,7 +294,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         message = f"Unknown preset: {name}; choose one of {', '.join(sorted(PRESETS))}"
         raise SettingsError(message)
     base = PRESETS[name]
-    unknown = sorted(set(data) - {"synthetic", "geography", "coast"})
+    unknown = sorted(set(data) - {"synthetic", "geography", "coast", "new_world"})
     if unknown:
         message = f"Unknown settings sections: {', '.join(unknown)}"
         raise SettingsError(message)
@@ -246,6 +307,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         synthetic=synthetic,
         geography=_merge(base.geography, "geography", data.get("geography", {})),
         coast=_merge(base.coast, "coast", data.get("coast", {})),
+        new_world=_merge(base.new_world, "new_world", data.get("new_world", {})),
     )
 
 

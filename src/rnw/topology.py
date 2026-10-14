@@ -99,3 +99,43 @@ def component_counts(
     owner[components.ravel()] = labels.ravel()
     size = label_count if label_count is not None else int(labels.max()) + 1
     return np.bincount(owner, minlength=size).astype(np.int64)
+
+
+def distance_from(
+    sources: NDArray[np.bool_], limit: int, *, octagonal: bool = False
+) -> NDArray[np.int32]:
+    """Step distance to the nearest source pixel, capped at ``limit``.
+
+    Steps are 4-neighbour; ``octagonal`` also allows diagonal steps on every second
+    round, which approximates Euclidean distance better than the diamond metric.
+    """
+    height, width = sources.shape
+    distance = np.full(sources.size, limit, dtype=np.int32)
+    frontier = np.flatnonzero(sources.ravel())
+    distance[frontier] = 0
+    for step in range(1, limit):
+        if not frontier.size:
+            break
+        column = frontier % width
+        parts = [
+            frontier[frontier >= width] - width,
+            frontier[frontier < (height - 1) * width] + width,
+            frontier[column != 0] - 1,
+            frontier[column != width - 1] + 1,
+        ]
+        if octagonal and step % 2 == 0:
+            up = frontier >= width
+            down = frontier < (height - 1) * width
+            left = column != 0
+            right = column != width - 1
+            parts += [
+                frontier[up & left] - width - 1,
+                frontier[up & right] - width + 1,
+                frontier[down & left] + width - 1,
+                frontier[down & right] + width + 1,
+            ]
+        reached = np.concatenate(parts)
+        reached = np.unique(reached[distance[reached] > step])
+        distance[reached] = step
+        frontier = reached
+    return distance.reshape(height, width)

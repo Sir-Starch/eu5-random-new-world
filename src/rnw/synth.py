@@ -83,32 +83,44 @@ def synthetic_base(canvas: SyntheticSettings) -> World:
     return World(labels, cells, anchors=frozenset({6, 7}))
 
 
-def _shifted(values: NDArray[np.int32], dy: int, dx: int) -> NDArray[np.int32]:
-    """Value of the neighbour at (y + dy, x + dx); -1 outside the raster."""
-    out = np.full(values.shape, -1, dtype=np.int32)
-    height, width = values.shape
-    out[max(0, -dy) : height - max(0, dy), max(0, -dx) : width - max(0, dx)] = values[
-        max(0, dy) : height - max(0, -dy), max(0, dx) : width - max(0, -dx)
-    ]
-    return out
-
-
 def grow_regions(mask: NDArray[np.bool_], seeds: NDArray[np.int32]) -> NDArray[np.int32]:
     """Grow seed labels through ``mask`` one 4-neighbour step per round.
 
     A pixel adopts the label of an already labelled neighbour in N, W, E, S order, so
     every grown region stays 4-connected to its seed. Unreachable pixels remain -1.
+    Only the previous round's frontier can border unlabelled pixels, so each round
+    touches the frontier instead of the whole raster.
     """
-    labels = np.where(mask, seeds, -1).astype(np.int32)
-    while True:
-        grown = labels.copy()
-        for dy, dx in NEIGHBOURS:
-            source = _shifted(labels, dy, dx)
-            take = mask & (grown < 0) & (source >= 0)
-            grown[take] = source[take]
-        if np.array_equal(grown, labels):
-            return labels
-        labels = grown
+    height, width = mask.shape
+    allowed = mask.ravel()
+    labels = np.where(allowed, seeds.ravel(), -1).astype(np.int32)
+    frontier = np.flatnonzero(labels >= 0)
+    while frontier.size:
+        frontier = _claim(labels, allowed, frontier, width, height)
+    return labels.reshape(height, width)
+
+
+def _claim(
+    labels: NDArray[np.int32],
+    allowed: NDArray[np.bool_],
+    frontier: NDArray[np.int64],
+    width: int,
+    height: int,
+) -> NDArray[np.int64]:
+    """One growth round in N, W, E, S priority; returns the newly labelled pixels."""
+    column = frontier % width
+    claimed: list[NDArray[np.int64]] = []
+    for sources, offset in (
+        (frontier[frontier < (height - 1) * width], width),
+        (frontier[column != width - 1], 1),
+        (frontier[column != 0], -1),
+        (frontier[frontier >= width], -width),
+    ):
+        targets = sources + offset
+        free = allowed[targets] & (labels[targets] < 0)
+        labels[targets[free]] = labels[sources[free]]
+        claimed.append(targets[free])
+    return np.sort(np.concatenate(claimed))
 
 
 def _first_pixels(components: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -116,7 +128,7 @@ def _first_pixels(components: NDArray[np.int64]) -> NDArray[np.int64]:
     return first.astype(np.int64)
 
 
-def _sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.int32]:
+def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.int32]:
     """Jittered-grid seeds inside ``mask``; each mask component gets at least one."""
     height, width = mask.shape
     gx = np.arange((width + spacing - 1) // spacing, dtype=np.int64)
@@ -141,7 +153,7 @@ def _sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.int32]
     return seeds.reshape(mask.shape)
 
 
-def _renumber(labels: NDArray[np.int32]) -> NDArray[np.int32]:
+def renumber(labels: NDArray[np.int32]) -> NDArray[np.int32]:
     """Number non-negative labels by first appearance in raster order."""
     flat = labels.ravel()
     valid = flat >= 0
@@ -154,7 +166,7 @@ def _renumber(labels: NDArray[np.int32]) -> NDArray[np.int32]:
     return out.reshape(labels.shape)
 
 
-def _merge_small(labels: NDArray[np.int32], minimum: int) -> NDArray[np.int32]:
+def merge_small(labels: NDArray[np.int32], minimum: int) -> NDArray[np.int32]:
     """Merge cells smaller than ``minimum`` into their longest-border neighbour."""
     count = int(labels.max()) + 1
     sizes = np.bincount(labels[labels >= 0], minlength=count).astype(np.int64)
@@ -223,7 +235,9 @@ def _land_mask(seed: int, geo: GeographySettings, width: int, height: int) -> ND
     return land | small_lake
 
 
-def _group(members: list[int], neighbours: dict[int, set[int]], size: int) -> list[list[int]]:
+def group_adjacent(
+    members: list[int], neighbours: dict[int, set[int]], size: int
+) -> list[list[int]]:
     """Greedy breadth-first grouping of adjacent members in ascending order."""
     allowed = set(members)
     assigned: set[int] = set()
@@ -244,7 +258,7 @@ def _group(members: list[int], neighbours: dict[int, set[int]], size: int) -> li
     return groups
 
 
-def _lift(groups: list[list[int]], neighbours: dict[int, set[int]]) -> dict[int, set[int]]:
+def lift_groups(groups: list[list[int]], neighbours: dict[int, set[int]]) -> dict[int, set[int]]:
     owner = {member: index for index, group in enumerate(groups) for member in group}
     lifted: dict[int, set[int]] = {}
     for member, adjacent in neighbours.items():
@@ -272,10 +286,12 @@ def _hierarchy(
     counters = [0, 0, 0]
     for kind in (CellClass.LAND, CellClass.SEA, CellClass.LAKE):
         members = [index for index, item in enumerate(classes) if item is kind]
-        provinces = _group(members, neighbours, group_size)
-        province_links = _lift(provinces, neighbours)
-        areas = _group(list(range(len(provinces))), province_links, group_size)
-        regions = _group(list(range(len(areas))), _lift(areas, province_links), group_size)
+        provinces = group_adjacent(members, neighbours, group_size)
+        province_links = lift_groups(provinces, neighbours)
+        areas = group_adjacent(list(range(len(provinces))), province_links, group_size)
+        regions = group_adjacent(
+            list(range(len(areas))), lift_groups(areas, province_links), group_size
+        )
         for region in regions:
             counters[2] += 1
             region_cells = [cell for area in region for p in areas[area] for cell in provinces[p]]
@@ -319,11 +335,13 @@ def generate_world(seed: int, settings: Settings) -> World:
     water_parts = label_components(land.astype(np.int32))
     ocean = water_parts == water_parts[0, 0]
     lakes = ~land & ~ocean
-    land_cells = _merge_small(
-        grow_regions(land, _sites(derive_seed(seed, "land_sites"), land, geo.location_px)),
+    land_cells = merge_small(
+        grow_regions(land, seed_sites(derive_seed(seed, "land_sites"), land, geo.location_px)),
         geo.min_cell_px,
     )
-    sea_cells = grow_regions(ocean, _sites(derive_seed(seed, "sea_sites"), ocean, geo.sea_zone_px))
+    sea_cells = grow_regions(
+        ocean, seed_sites(derive_seed(seed, "sea_sites"), ocean, geo.sea_zone_px)
+    )
     lake_cells = np.where(lakes, water_parts, -1).astype(np.int32)
     offset = 0
     domain = np.full((height, width), -1, dtype=np.int32)
@@ -333,7 +351,7 @@ def generate_world(seed: int, settings: Settings) -> World:
         (CellClass.SEA, sea_cells),
         (CellClass.LAKE, lake_cells),
     ):
-        numbered = _renumber(part)
+        numbered = renumber(part)
         present = int(numbered.max()) + 1 if np.any(numbered >= 0) else 0
         domain[numbered >= 0] = numbered[numbered >= 0] + offset
         classes.extend([kind] * present)

@@ -123,7 +123,11 @@ def _consume_assignment(words: list[str], index: int, stack: list[str]) -> int:
 
 def read_locations(path: Path) -> tuple[Location, ...]:
     """Parse five hierarchy levels and the location keys inside provinces."""
-    content = path.read_text(encoding="utf-8-sig")
+    return parse_locations(path.read_text(encoding="utf-8-sig"))
+
+
+def parse_locations(content: str) -> tuple[Location, ...]:
+    """Parse hierarchy text (already decoded) into locations with their parents."""
     words = [
         match.group() for match in TOKEN.finditer(content) if not match.group().startswith("#")
     ]

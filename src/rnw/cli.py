@@ -14,8 +14,10 @@ import typer
 from rnw.artifacts import OutputPathError, check_new_output, write_synthetic_bundle
 from rnw.contract import MissingContractFileError, fingerprint_document
 from rnw.contract import fingerprint as game_fingerprint
+from rnw.eu5_canvas import CanvasError
 from rnw.eu5_export import ExportError, export_candidate
 from rnw.eu5_map import Eu5ContractError
+from rnw.eu5_nw_export import NewWorldExportError, export_new_world
 from rnw.geography import GeographyError, color_summary, read_locations, summary
 from rnw.png import PngFormatError
 from rnw.settings import SettingsError, load_settings, run_spec
@@ -29,8 +31,10 @@ SYNTH_NAME: Final[re.Pattern[str]] = re.compile(r"rnw_synth_[a-z0-9_]{1,48}")
 ISLAND_PX: Final[int] = 400
 SEED_MAX: Final[int] = (1 << 64) - 1
 FAILURES: Final[tuple[type[Exception], ...]] = (
+    CanvasError,
     Eu5ContractError,
     ExportError,
+    NewWorldExportError,
     GeographyError,
     MissingContractFileError,
     OutputPathError,
@@ -242,6 +246,38 @@ def generate(  # noqa: PLR0913 - mirrors the documented CLI contract.
             sort_keys=True,
         )
     )
+
+
+@app.command()
+def newworld(  # noqa: PLR0913 - mirrors the generate command.
+    *,
+    game_dir: Annotated[
+        Path, typer.Option(exists=True, file_okay=False, help="Read-only EU5 installation.")
+    ],
+    output: Annotated[Path, typer.Option(help="New generated/rnw_exp_* directory.")],
+    seed: SeedOption,
+    preset: PresetOption = "continents",
+    settings: SettingsOption = None,
+    accept_build: Annotated[
+        str | None, typer.Option(help="Explicitly select an untested fingerprint digest.")
+    ] = None,
+) -> None:
+    """Stage a NOT GAME VALIDATED mod that replaces the New World with generated land."""
+    try:
+        chosen = load_settings(preset, settings)
+        report = export_new_world(
+            game_dir,
+            output,
+            seed=seed,
+            settings=chosen,
+            accept_build=accept_build,
+            settings_file=None if settings is None else settings.name,
+        )
+    except FAILURES as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    summary = {key: report[key] for key in ("status", "canvas", "generated", "invariants")}
+    typer.echo(json.dumps(summary, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
