@@ -48,6 +48,7 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
+from rnw.eu5_terrain import RELIEF_CODES, WASTE_CODE, WATER_CODE, terrain_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world
@@ -94,8 +95,12 @@ CURRENTS: Final[re.Pattern[str]] = re.compile(r"\s*movement_assistance\s*=\s*\{[
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 UNTESTED: Final[tuple[str, ...]] = (
     (
-        "Visual terrain is NOT regenerated: height decals, material masks and mountain "
-        "decals still draw the vanilla Americas under the new map."
+        "Terrain: height and material decal layers are rebuilt as compiled .info/.bin only; "
+        "the vanilla PNG sources and terrain_cache/checksum.json are not changed."
+    ),
+    (
+        "Lake water meshes (lakes.bin), river splines, tree/vegetation objects and the "
+        "flat map are vanilla and may show old Americas features over the new terrain."
     ),
     "Whether EU5 accepts thousands of new location keys and removed vanilla ones.",
     (
@@ -180,16 +185,22 @@ def _donor_map(  # noqa: PLR0913 - donor search needs map, canvas, world and geo
     return chosen
 
 
-def _template_lines(
-    plan: Plan, world: NewWorld, donors: list[str], bodies: dict[str, str]
-) -> list[str]:
-    coastal = _coastal(world)
+def land_topography(plan: Plan, world: NewWorld) -> dict[int, str]:
+    """Topography of each generated land cell by elevation rank (vanilla-like shares)."""
     land = [i for i, cell in enumerate(plan.cells) if cell.kind is CellClass.LAND]
     ranked = sorted(land, key=lambda index: (int(world.mean_elevation[index]), index))
     topography: dict[int, str] = {}
     for position, index in enumerate(ranked):
         share = (position * 1000) // max(1, len(ranked))
         topography[index] = next(name for name, limit in LAND_TOPOGRAPHY if share < limit)
+    return topography
+
+
+def _template_lines(
+    plan: Plan, world: NewWorld, donors: list[str], bodies: dict[str, str]
+) -> list[str]:
+    coastal = _coastal(world)
+    topography = land_topography(plan, world)
     lines: list[str] = []
     for index, cell in enumerate(plan.cells):
         body = bodies[donors[index]]
@@ -612,6 +623,8 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     )
     text_checks = _verify_texts(texts, plan, removed)
     rgb, rivers = _rasters(game_map, canvas, world, plan)
+    codes = _class_codes(game_map, canvas, world, land_topography(plan, world))
+    terrain_files, terrain_stats = terrain_outputs(game_dir, codes, seed)
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
     inputs = {record.path: record for record in game_map.inputs}
@@ -635,6 +648,8 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
             }
             files.append(record)
         for relative, data in sorted(texts.items()):
+            files.append(write_bytes(stage, f"{name}/{relative}", data))
+        for relative, data in sorted(terrain_files.items()):
             files.append(write_bytes(stage, f"{name}/{relative}", data))
         files.append(
             write_bytes(
@@ -696,6 +711,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
             },
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,
+            "terrain": terrain_stats,
             "files": [*files, preview_record, settings_record],
             "inputs": [
                 {"path": record.path, "size": record.size, "sha256": record.sha256}
@@ -726,6 +742,29 @@ def _metadata(name: str, seed: int, preset: str) -> bytes:
         "game_custom_data": {},
     }
     return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8-sig")
+
+
+def _class_codes(
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld, topography: dict[int, str]
+) -> NDArray[np.int8]:
+    """World-sized relief code map (see ``eu5_terrain.RELIEF_CODES``); -1 off canvas."""
+    codes = np.full(game_map.labels.shape, -1, dtype=np.int8)
+    rows, columns = np.nonzero(canvas.mask)
+    table = np.array(
+        [
+            WATER_CODE
+            if kind in {CellClass.SEA, CellClass.LAKE}
+            else WASTE_CODE
+            if kind is CellClass.WASTELAND
+            else RELIEF_CODES[topography[index]]
+            for index, kind in enumerate(world.classes)
+        ],
+        dtype=np.int8,
+    )
+    codes[rows, _world_columns(canvas, columns.astype(np.int64))] = table[
+        world.labels[rows, columns]
+    ]
+    return codes
 
 
 def _class_preview(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.uint8]:
