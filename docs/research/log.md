@@ -32,3 +32,4 @@
 - [SOURCE] Verified the SplitMix64 constants and a seed-1234567 vector against the reference C file and Rosetta Code (C33).
 - [V-EXEC] `make check` passes with 68 synthetic tests and 2 local-only skips; the optional local tests pass against the installation. Windows CI has not run because nothing was pushed (C31).
 - [V-EXEC] A fresh clone of branch `d0-geography-candidate` passed `uv sync --locked --group dev && make check` (68 passed, 2 local-only skips). Tracked files total 456 KiB; no game-derived file is tracked.
+- [V-LOCAL] Owner installed `rnw_exp_d0_coast_s42` into the normal profile's new `mod/` folder (12:35); the agent verified the installed files are byte-identical to the manifest. Baseline logs from the owner's 12:31 launch without the mod were copied to gitignored `local_data/baseline/2026-10-14-normal-no-rnw/`. That log also shows the active playset references two Workshop mods whose metadata the game could not open; they were not touched.

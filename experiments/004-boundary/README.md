@@ -8,4 +8,5 @@
 - **Remaining uncertainty:** Override contract, derived centers/ports/nodes, cache invalidation and pathfinding.
 - **Architecture implication:** Gates T2 ID-preserving reshape.
 - **When authorized:** After 002–003, install only `generated/rnw_exp_d0_coast_s42/rnw_exp_d0_coast_s42` into the isolated profile with `rnw install-mod`, record it in [INSTALLED](../INSTALLED.md), and check against a same-build baseline: error log, location borders/selection in the window, unit movement onto moved coast, naval movement, ports near frozen coasts, save/reload. Expect a drawn-terrain mismatch (C25).
-- **Status:** **NOT-RUN** in game; candidate **PREPARED OFFLINE**, NOT GAME VALIDATED.
+- **Installation:** 2026-10-14, normal profile `mod/rnw_exp_d0_coast_s42`, byte-identical to the manifest; see [INSTALLED](../INSTALLED.md). Baseline logs without the mod are in gitignored `local_data/baseline/2026-10-14-normal-no-rnw/`.
+- **Status:** **NOT-RUN** in game (installed, not yet launched with it); candidate **PREPARED OFFLINE**, NOT GAME VALIDATED.
