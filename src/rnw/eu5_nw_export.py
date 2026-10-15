@@ -37,6 +37,7 @@ from rnw.eu5_map import (
     open_png,
 )
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
+from rnw.eu5_remap import build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
     prune_setup,
@@ -51,11 +52,11 @@ from rnw.eu5_rewrite import (
 from rnw.eu5_terrain import RELIEF_CODES, WASTE_CODE, WATER_CODE, terrain_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.model import CellClass
-from rnw.newworld import NewWorld, generate_new_world
+from rnw.newworld import NewWorld, generate_new_world, split_at_column
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.settings import canonical_json, run_spec, spec_digest
-from rnw.topology import adjacency_pairs, label_components, unpack_pairs
+from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -66,6 +67,7 @@ if TYPE_CHECKING:
     from rnw.settings import Settings
 
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
+MAX_LOCATIONS: Final[int] = 32_000
 SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
 LOCALIZATION_DIR: Final[str] = "game/main_menu/localization"
 LANGUAGES: Final[tuple[str, ...]] = (
@@ -217,7 +219,7 @@ def _template_lines(
     return lines
 
 
-def _ports(
+def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
     plan: Plan, world: NewWorld, canvas: Canvas
 ) -> tuple[list[str], dict[int, tuple[int, int]]]:
     """One port per coastal land cell, on its longest sea border, nearest its centre."""
@@ -269,7 +271,14 @@ def _ports(
         pixel = int(candidates[int(np.argmin(distance))])
         row, column = divmod(pixel, width)
         x = int(_world_columns(canvas, np.array([column], dtype=np.int64))[0])
-        positions[land_cell] = (row, x)
+        dock_row, dock_column = row, column
+        for d_row, d_column in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            r, c = row + d_row, column + d_column
+            if 0 <= r < labels.shape[0] and 0 <= c < width and int(labels[r, c]) == sea_cell:
+                dock_row, dock_column = r, c
+                break
+        dock_x = int(_world_columns(canvas, np.array([dock_column], dtype=np.int64))[0])
+        positions[land_cell] = (dock_row, dock_x)
         rows_out.append(
             f"{plan.cells[land_cell].key};{plan.cells[sea_cell].key};{x};{height - 1 - row};x"
         )
@@ -318,6 +327,26 @@ def _locator_instances(
     return out
 
 
+def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
+    """Locator instances at the interior point of each trimmed ocean zone's remainder."""
+    height, width = canvas.rolled.shape
+    full = np.zeros(canvas.rolled.shape, dtype=bool)
+    full[:, canvas.col0 : canvas.col0 + canvas.mask.shape[1]] = canvas.mask
+    out: dict[str, str] = {}
+    for zone in np.flatnonzero(canvas.trimmed).tolist():
+        rows, columns = np.nonzero((canvas.rolled == zone) & ~full)
+        top, bottom = int(rows.min()), int(rows.max()) + 1
+        left, right = int(columns.min()), int(columns.max()) + 1
+        mine = (canvas.rolled[top:bottom, left:right] == zone) & ~full[top:bottom, left:right]
+        distance = distance_from(np.pad(~mine, 1, constant_values=True), 4096)[1:-1, 1:-1]
+        best = int(np.argmax(np.where(mine, distance, -1)))
+        row, column = divmod(best, mine.shape[1])
+        x = (left + column - canvas.roll) % width
+        key = game_map.keys[zone]
+        out[key] = _instance(key, top + row, x, height)
+    return out
+
+
 def _additions(plan: Plan) -> HierarchyAdditions:
     additions = HierarchyAdditions()
     provinces: dict[str, list[str]] = {}
@@ -345,10 +374,9 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
 def _localization(plan: Plan) -> dict[str, bytes]:
     names = {cell.key: cell.name for cell in plan.cells}
     names.update(plan.province_names)
-    names.update({area: plan.display_overrides[area] for area in plan.new_areas})
-    overrides = {
-        key: value for key, value in plan.display_overrides.items() if key not in plan.new_areas
-    }
+    fresh = {area for area in plan.new_areas if area.startswith("rnw_")}
+    names.update({area: plan.display_overrides[area] for area in sorted(fresh)})
+    overrides = {key: value for key, value in plan.display_overrides.items() if key not in fresh}
     files: dict[str, bytes] = {}
     for language in LANGUAGES:
         base = f"main_menu/localization/{language}"
@@ -430,6 +458,18 @@ def _check_world(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> dict[str,
     }
 
 
+def _removed_provinces(hierarchy: dict[str, Location], removed: set[str]) -> dict[str, list[str]]:
+    """Locations of every province that loses all of them, in definition order."""
+    provinces: dict[str, list[str]] = {}
+    for key, location in hierarchy.items():
+        provinces.setdefault(location.province, []).append(key)
+    return {
+        province: keys
+        for province, keys in provinces.items()
+        if all(key in removed for key in keys)
+    }
+
+
 def _setup_texts(game_dir: Path) -> dict[str, str]:
     return {
         path.name: path.read_text(encoding="utf-8-sig")
@@ -475,6 +515,11 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     )
     port_rows, port_pixels = _ports(plan, world, canvas)
     instances = _locator_instances(plan, world, canvas, port_pixels)
+    trimmed = _trimmed_instances(game_map, canvas)
+    for file_name in ("unit_stack", "combat", "vfx"):
+        target = next(key for key in instances if file_name in key)
+        instances[target].extend(trimmed.values())
+    relocated = removed | set(trimmed)
     kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
     removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
     gone = removed | (removed_provinces - kept_provinces) | set(plan.dropped_areas)
@@ -517,7 +562,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         outputs[_mod_path(relative)] = _encode(
             game_dir,
             relative,
-            rewrite_locators(_read(game_dir, relative), removed, instances.get(name, [])),
+            rewrite_locators(_read(game_dir, relative), relocated, instances.get(name, [])),
         )
     outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(
         game_dir,
@@ -588,7 +633,7 @@ def _preview(final_rgb_classes: NDArray[np.uint8]) -> bytes:
     return encode_png(final_rgb_classes, color_type=COLOR_RGB, compression="zlib")
 
 
-def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
+def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each input.
     game_dir: Path,
     output: Path,
     *,
@@ -605,6 +650,15 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     hierarchy = {location.key: location for location in read_locations(game_dir / DEFINITIONS)}
     canvas = select_canvas(game_map, settings.new_world.ocean_band_px)
     world = generate_new_world(canvas.mask.copy(), seed=seed, settings=settings.new_world)
+    width = int(game_map.labels.shape[1])
+    world = split_at_column(world, (canvas.roll - canvas.col0) % width)
+    total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
+    if total > MAX_LOCATIONS:
+        message = (
+            f"{total} locations exceed the {MAX_LOCATIONS} safety cap (vanilla has under "
+            "28,600; a 16-bit limit is suspected); raise location_px or sea_zone_px"
+        )
+        raise NewWorldExportError(message)
     geometry = vanilla_geometry(game_map, canvas, hierarchy)
     plan = plan_identities(
         game_map, canvas, world, hierarchy, geometry, seed=seed, settings=settings.new_world
@@ -622,6 +676,18 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
         geometry=geometry,
     )
     text_checks = _verify_texts(texts, plan, removed)
+    remap = build_remap(
+        [
+            (game_map.keys[i], game_map.classes[i], int(geometry.rows[i]), int(geometry.columns[i]))
+            for i in np.flatnonzero(canvas.removed).tolist()
+        ],
+        plan,
+        np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
+        _removed_provinces(hierarchy, removed),
+    )
+    scripts, remapped = remap_scripts(game_dir, remap)
+    texts.update(scripts)
+    text_stats["scripts_remapped"] = remapped
     rgb, rivers = _rasters(game_map, canvas, world, plan)
     codes = _class_codes(game_map, canvas, world, land_topography(plan, world))
     terrain_files, terrain_stats = terrain_outputs(game_dir, codes, seed)

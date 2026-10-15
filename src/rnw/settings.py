@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 SCHEMA_VERSION: Final[int] = 1
 GENERATOR: Final[str] = "rnw-geo"
-GENERATOR_VERSION: Final[str] = "0.3.0"
+GENERATOR_VERSION: Final[str] = "0.3.1"
 WINDOW_SIZE: Final[int] = 4
 
 
@@ -181,8 +181,8 @@ PRESETS: Final[dict[str, Settings]] = {
             min_island_px=600,
             min_lake_px=80,
             max_lake_px=4000,
-            location_px=40,
-            sea_zone_px=110,
+            location_px=46,
+            sea_zone_px=120,
             min_cell_px=300,
             min_sea_cell_px=2000,
             wasteland_permille=90,
@@ -229,8 +229,8 @@ PRESETS: Final[dict[str, Settings]] = {
             min_island_px=250,
             min_lake_px=80,
             max_lake_px=4000,
-            location_px=40,
-            sea_zone_px=110,
+            location_px=46,
+            sea_zone_px=120,
             min_cell_px=300,
             min_sea_cell_px=2000,
             wasteland_permille=90,

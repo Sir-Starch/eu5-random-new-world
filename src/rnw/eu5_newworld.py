@@ -208,6 +208,7 @@ def plan_identities(  # noqa: PLR0912, PLR0913, PLR0915, C901 - one pass over al
             plan.province_names[name] = province_names.next()
             for index in group:
                 province_of[index] = name
+    new_area_centres: dict[str, tuple[int, int]] = {}
     homeless_provinces = group_adjacent(homeless, neighbours, settings.province_size)
     links = lift_groups(homeless_provinces, neighbours)
     area_names = NameGenerator(seed, "areas")
@@ -219,6 +220,7 @@ def plan_identities(  # noqa: PLR0912, PLR0913, PLR0915, C901 - one pass over al
         plan.new_areas[area] = []
         plan.display_overrides[area] = area_names.next()
         centre = (rolled_centres[cells].sum(axis=0) // len(cells)).reshape(1, 2)
+        new_area_centres[area] = (int(centre[0, 0]), int(centre[0, 1]))
         nearest_area = _nearest(centre, land_areas)[0]
         plan.area_region[area] = hierarchy_region(hierarchy, game_map, nearest_area)
         for province in members:
@@ -229,6 +231,19 @@ def plan_identities(  # noqa: PLR0912, PLR0913, PLR0915, C901 - one pass over al
             for index in homeless_provinces[province]:
                 province_of[index] = name
                 area_of[index] = area
+    kept_areas = {
+        hierarchy[key].area
+        for index, key in enumerate(game_map.keys)
+        if key in hierarchy and not canvas.removed[index]
+    }
+    _adopt_vanilla_areas(
+        plan,
+        area_of,
+        missing=[area for area in sorted(land_areas) if area not in set(area_of) | kept_areas],
+        vanilla_centres=land_areas,
+        new_centres=new_area_centres,
+        regions={location.area: location.region for location in hierarchy.values()},
+    )
     parents = _area_parents(hierarchy)
     for area, region in plan.area_region.items():
         parents[area] = (region, *parents_of_region(parents, region))
@@ -262,6 +277,38 @@ def plan_identities(  # noqa: PLR0912, PLR0913, PLR0915, C901 - one pass over al
     }
     plan.dropped_areas = sorted(vanilla_new_world_areas - {cell.area for cell in plan.cells})
     return plan
+
+
+def _adopt_vanilla_areas(  # noqa: PLR0913 - renaming touches every area table of the plan.
+    plan: Plan,
+    area_of: list[str],
+    *,
+    missing: list[str],
+    vanilla_centres: dict[str, tuple[int, int]],
+    new_centres: dict[str, tuple[int, int]],
+    regions: dict[str, str],
+) -> None:
+    """Give vanilla land areas that lost every location to the nearest new areas.
+
+    Script references to those area keys then keep resolving, and their regions keep
+    the vanilla parent chain.
+    """
+    free = dict(new_centres)
+    renames: dict[str, str] = {}
+    for area in missing:
+        if not free:
+            break
+        target = _nearest(np.array([vanilla_centres[area]], dtype=np.int64), free)[0]
+        renames[target] = area
+        del free[target]
+    for old, new in renames.items():
+        plan.new_areas[new] = plan.new_areas.pop(old)
+        _ = plan.area_region.pop(old)
+        plan.area_region[new] = regions[new]
+        plan.display_overrides[new] = plan.display_overrides.pop(old)
+    for index, area in enumerate(area_of):
+        if area in renames:
+            area_of[index] = renames[area]
 
 
 def _area_parents(hierarchy: dict[str, Location]) -> dict[str, tuple[str, str, str]]:

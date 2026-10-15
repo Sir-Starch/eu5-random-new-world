@@ -186,12 +186,8 @@ def generate_new_world(
     flat = labels.ravel()
     inside = np.flatnonzero(flat >= 0)
     owner = flat[inside]
-    width = domain.shape[1]
     pixels = np.bincount(owner, minlength=count).astype(np.int64)
-    rows = _weighted(owner, inside // width, count)
-    columns = _weighted(owner, inside % width, count)
     mean_elevation = _weighted(owner, elevation.ravel()[inside], count) // np.maximum(1, pixels)
-    centroids = np.stack([rows // np.maximum(1, pixels), columns // np.maximum(1, pixels)], axis=1)
     land_ids = [index for index, kind in enumerate(kinds) if kind is CellClass.LAND]
     wasteland = len(land_ids) * settings.wasteland_permille // PERMILLE
     if wasteland:
@@ -211,6 +207,23 @@ def generate_new_world(
         ranked = sorted(land_ids, key=lambda index: (-int(score[index]), index))
         for index in ranked[:wasteland]:
             kinds[index] = CellClass.WASTELAND
+    return derive_world(labels, tuple(kinds), elevation)
+
+
+def derive_world(
+    labels: NDArray[np.int32], kinds: tuple[CellClass, ...], elevation: NDArray[np.int32]
+) -> NewWorld:
+    """Compute sizes, centres, interior points and contacts for a labelled world."""
+    count = len(kinds)
+    flat = labels.ravel()
+    inside = np.flatnonzero(flat >= 0)
+    owner = flat[inside]
+    width = labels.shape[1]
+    pixels = np.bincount(owner, minlength=count).astype(np.int64)
+    rows = _weighted(owner, inside // width, count)
+    columns = _weighted(owner, inside % width, count)
+    mean_elevation = _weighted(owner, elevation.ravel()[inside], count) // np.maximum(1, pixels)
+    centroids = np.stack([rows // np.maximum(1, pixels), columns // np.maximum(1, pixels)], axis=1)
     edges = tuple(
         (first, second)
         for first, second in unpack_pairs(adjacency_pairs(labels))
@@ -218,7 +231,7 @@ def generate_new_world(
     )
     return NewWorld(
         labels=labels,
-        classes=tuple(kinds),
+        classes=kinds,
         elevation=elevation,
         pixels=pixels,
         centroids=centroids,
@@ -226,3 +239,36 @@ def generate_new_world(
         mean_elevation=mean_elevation,
         edges=edges,
     )
+
+
+def split_at_column(world: NewWorld, column: int) -> NewWorld:
+    """Split every cell that crosses ``column`` so no cell spans it.
+
+    Used for a map seam: each side's 4-connected parts become separate cells (the
+    largest part keeps the original index), so every cell stays connected.
+    """
+    labels = world.labels.copy()
+    kinds = list(world.classes)
+    if not 0 < column < labels.shape[1]:
+        return world
+    left = labels[:, column - 1]
+    right = labels[:, column]
+    crossing = np.unique(left[(left == right) & (left >= 0)])
+    for cell in cast("list[int]", crossing.tolist()):
+        rows, columns = np.nonzero(labels == cell)
+        top, bottom = int(rows.min()), int(rows.max()) + 1
+        start, end = int(columns.min()), int(columns.max()) + 1
+        window = labels[top:bottom, start:end]
+        mine = window == cell
+        side = np.zeros(mine.shape, dtype=np.int32)
+        side[:, max(0, column - start) :] = 1
+        parts = label_components(np.where(mine, side, -1).astype(np.int32))
+        ids = np.unique(parts[mine])
+        sizes = [int(np.count_nonzero(parts[mine] == part)) for part in ids.tolist()]
+        keep = ids[int(np.argmax(sizes))]
+        for part in ids.tolist():
+            if part == keep:
+                continue
+            window[mine & (parts == part)] = len(kinds)
+            kinds.append(world.classes[cell])
+    return derive_world(labels, tuple(kinds), world.elevation)
