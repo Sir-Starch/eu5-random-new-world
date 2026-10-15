@@ -36,3 +36,7 @@
 - [V-GAME] Owner launched EU5 1.4.1 with `rnw_exp_d0_coast_s42` in a separate playset: the mod mounted, location outlines followed the generated raster (Erie encloses lake pixels moved by the mod), drawn terrain stayed vanilla (C34). Error-log triage found nothing related to changed locations, but the baseline stage differed (C35).
 - [V-LOCAL]/[V-EXEC] Mapped the drawn relief: 16 height decals on a 4×4 grid, 2 decal pixels per location pixel, LZAV-compiled tiles plus 16-bit PNG sources; heights > 2300 match land at 99.1% in a US region (C36). A visual coastline needs generated height (and likely material) decals; which file the engine reads (PNG or `.bin`) is the next experiment.
 - [V-OWNER DECISION] After the D0 result the owner asked for real generation: new IDs, an empty 1337 New World, visible terrain. Built `rnw newworld` (T3): seeded continents on an America+ocean canvas, new locations/provinces with reused area/region names, rewritten map/setup/localization files, and rebuilt terrain decals (C38-C42). The format work used a locally compiled reference LZAV decoder only as a test oracle (C39).
+
+## 2026-10-15 — first T3 launch
+
+- [V-GAME] The T3 candidate loaded map, setup, scripts and the modified decal cache but crashed while starting 1337, right after failing to set up a holy site on a removed location (C43). Built v2 with script-reference remapping, area adoption, locator fixes and a location cap (C44).
