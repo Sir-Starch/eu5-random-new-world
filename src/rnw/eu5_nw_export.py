@@ -49,7 +49,14 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
-from rnw.eu5_terrain import RELIEF_CODES, WASTE_CODE, WATER_CODE, terrain_outputs
+from rnw.eu5_terrain import (
+    RELIEF_CODES,
+    WASTE_CODE,
+    WATER_CODE,
+    terrain_outputs,
+    vanilla_categories,
+)
+from rnw.eu5_water import water_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world, split_at_column
@@ -93,6 +100,9 @@ ROTATION: Final[str] = "{ -0.000000 -0.000000 -0.000000 1.000000 }"
 SCALE: Final[str] = "{ 1.000000 1.000000 1.000000 }"
 TOPOGRAPHY: Final[re.Pattern[str]] = re.compile(r"topography\s*=\s*[A-Za-z_]+")
 HARBOR: Final[re.Pattern[str]] = re.compile(r"\s*natural_harbor_suitability\s*=\s*[0-9.]+")
+TOPOGRAPHY_VALUE: Final[re.Pattern[str]] = re.compile(
+    r"topography\s*=\s*(mountains|mountain_wasteland|hills_wasteland|plateau_wasteland|mesa_wasteland)\b"
+)
 CURRENTS: Final[re.Pattern[str]] = re.compile(r"\s*movement_assistance\s*=\s*\{[^{}]*\}")
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 UNTESTED: Final[tuple[str, ...]] = (
@@ -691,7 +701,29 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     text_stats["scripts_remapped"] = remapped
     rgb, rivers = _rasters(game_map, canvas, world, plan)
     codes = _class_codes(game_map, canvas, world, land_topography(plan, world))
-    terrain_files, terrain_stats = terrain_outputs(game_dir, codes, seed)
+    vanilla_water = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
+    )[game_map.labels]
+    bodies = _template_bodies(_read(game_dir, TEMPLATES))
+    highland = np.array(
+        [
+            kind is CellClass.WASTELAND or TOPOGRAPHY_VALUE.search(bodies.get(key, "")) is not None
+            for key, kind in zip(game_map.keys, game_map.classes, strict=True)
+        ],
+        dtype=bool,
+    )
+    categories = vanilla_categories(
+        game_map.labels,
+        np.array([kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes]),
+        highland,
+    )
+    terrain_files, terrain_stats = terrain_outputs(game_dir, codes, vanilla_water, categories, seed)
+    canvas_world = codes != -1
+    new_water = vanilla_water.copy()
+    new_water[canvas_world] = codes[canvas_world] == WATER_CODE
+    water_files, water_stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed)
+    terrain_files.update(water_files)
+    terrain_stats.update(water_stats)
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
     inputs = {record.path: record for record in game_map.inputs}
