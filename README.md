@@ -24,7 +24,8 @@ uv run rnw inspect "$EU5_GAME_DIR"
 uv run rnw coupling "$EU5_GAME_DIR" local_data/coupling.json
 uv run rnw fingerprint "$EU5_GAME_DIR" local_data/map-contract.json
 uv run rnw synth --seed 1 --preset archipelago --output generated/rnw_synth_demo
-uv run rnw generate --game-dir "$EU5_GAME_DIR" --seed 42 --preset continents --output generated/rnw_exp_d0_coast_s42
+uv run rnw newworld --game-dir "$EU5_GAME_DIR" --seed 42 --preset continents --output generated/rnw_exp_new_world --replace
+uv run rnw install-mod --replace generated/rnw_exp_new_world/rnw_exp_new_world "$EU5_USER_DIR"
 EU5_GAME_DIR="$EU5_GAME_DIR" uv run pytest -q tests/test_local_install.py
 ```
 

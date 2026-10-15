@@ -11,7 +11,7 @@ from typing import Annotated, Final
 
 import typer
 
-from rnw.artifacts import OutputPathError, check_new_output, write_synthetic_bundle
+from rnw.artifacts import OutputPathError, check_new_output, swap_in, write_synthetic_bundle
 from rnw.contract import MissingContractFileError, fingerprint_document
 from rnw.contract import fingerprint as game_fingerprint
 from rnw.eu5_canvas import CanvasError
@@ -149,21 +149,50 @@ def prepare_mod(output: Annotated[Path, typer.Argument()]) -> None:
 def install_mod(
     prepared: Annotated[Path, typer.Argument(exists=True, file_okay=False)],
     user_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)],
+    *,
+    replace: Annotated[
+        bool, typer.Option(help="Replace an installed rnw_exp_* mod of the same name.")
+    ] = False,
 ) -> None:
-    """Install one new experiment without touching existing mods or playsets."""
-    if (
-        not prepared.name.startswith("rnw_exp_")
-        or not (prepared / ".metadata/metadata.json").is_file()
-    ):
+    """Install one rnw_exp_* mod; never touches other mods or playsets."""
+    if not _is_rnw_mod(prepared):
         message = "Prepared directory must be a valid rnw_exp_* mod"
         raise typer.BadParameter(message)
     target = user_dir / "mod" / prepared.name
-    if target.exists():
-        message = f"Destination already exists: {target}"
+    if target.exists() and not (replace and _is_rnw_mod(target)):
+        message = f"Destination already exists (use --replace for an rnw_exp_* mod): {target}"
         raise typer.BadParameter(message)
     target.parent.mkdir(exist_ok=True)
-    _ = shutil.copytree(prepared, target)
+    incoming = target.parent / f".{target.name}.partial"
+    if incoming.exists():
+        shutil.rmtree(incoming)
+    _ = shutil.copytree(prepared, incoming)
+    swap_in(incoming, target)
     typer.echo(f"Installed {target}")
+
+
+@app.command()
+def uninstall_mod(
+    names: Annotated[list[str], typer.Argument(help="rnw_exp_* folder names to remove.")],
+    user_dir: Annotated[Path, typer.Option(exists=True, file_okay=False)],
+) -> None:
+    """Remove installed rnw_exp_* mods; refuses any other folder."""
+    targets = [user_dir / "mod" / name for name in names]
+    bad = [str(target) for target in targets if not _is_rnw_mod(target)]
+    if bad:
+        message = f"Not installed rnw_exp_* mods: {', '.join(bad)}"
+        raise typer.BadParameter(message)
+    for target in targets:
+        shutil.rmtree(target)
+        typer.echo(f"Removed {target}")
+
+
+def _is_rnw_mod(path: Path) -> bool:
+    return (
+        path.is_dir()
+        and path.name.startswith("rnw_exp_")
+        and (path / ".metadata/metadata.json").is_file()
+    )
 
 
 @app.command()
@@ -219,6 +248,9 @@ def generate(  # noqa: PLR0913 - mirrors the documented CLI contract.
     accept_build: Annotated[
         str | None, typer.Option(help="Explicitly select an untested fingerprint digest.")
     ] = None,
+    replace: Annotated[
+        bool, typer.Option(help="Replace an existing generated/rnw_exp_* bundle.")
+    ] = False,
 ) -> None:
     """Stage a NOT GAME VALIDATED coastline mod candidate from the local installation."""
     try:
@@ -230,6 +262,7 @@ def generate(  # noqa: PLR0913 - mirrors the documented CLI contract.
             settings=chosen,
             accept_build=accept_build,
             settings_file=None if settings is None else settings.name,
+            replace=replace,
         )
     except FAILURES as error:
         typer.echo(f"Error: {error}", err=True)
@@ -261,6 +294,9 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
     accept_build: Annotated[
         str | None, typer.Option(help="Explicitly select an untested fingerprint digest.")
     ] = None,
+    replace: Annotated[
+        bool, typer.Option(help="Replace an existing generated/rnw_exp_* bundle.")
+    ] = False,
 ) -> None:
     """Stage a NOT GAME VALIDATED mod that replaces the New World with generated land."""
     try:
@@ -272,6 +308,7 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
             settings=chosen,
             accept_build=accept_build,
             settings_file=None if settings is None else settings.name,
+            replace=replace,
         )
     except FAILURES as error:
         typer.echo(f"Error: {error}", err=True)

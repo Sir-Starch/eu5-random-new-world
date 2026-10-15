@@ -641,9 +641,10 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     settings: Settings,
     accept_build: str | None = None,
     settings_file: str | None = None,
+    replace: bool = False,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report."""
-    check_new_output(output, MOD_NAME, game_dir)
+    check_new_output(output, MOD_NAME, game_dir, replace=replace)
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
     spec = run_spec(seed, settings)
     game_map = load_map(game_dir)

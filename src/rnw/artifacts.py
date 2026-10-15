@@ -34,11 +34,17 @@ class OutputPathError(ValueError):
     """The requested output location is unsafe or already used."""
 
 
-def check_new_output(output: Path, pattern: re.Pattern[str], game_dir: Path | None = None) -> None:
-    """Require a new directory named by ``pattern`` directly under ``generated/``.
+def check_new_output(
+    output: Path,
+    pattern: re.Pattern[str],
+    game_dir: Path | None = None,
+    *,
+    replace: bool = False,
+) -> None:
+    """Require a directory named by ``pattern`` directly under ``generated/``.
 
-    The path must not exist, must not be inside the game installation and must not
-    collide with a leftover staging directory.
+    The path must not exist unless ``replace`` is set, must not be inside the game
+    installation and must not collide with a leftover staging directory.
     """
     resolved = output.resolve()
     if game_dir is not None and resolved.is_relative_to(game_dir.resolve()):
@@ -50,7 +56,7 @@ def check_new_output(output: Path, pattern: re.Pattern[str], game_dir: Path | No
     if pattern.fullmatch(resolved.name) is None:
         message = f"Output directory name must match {pattern.pattern}"
         raise OutputPathError(message)
-    if resolved.exists():
+    if resolved.exists() and not (replace and resolved.is_dir()):
         message = f"Refusing to overwrite existing output: {resolved}"
         raise OutputPathError(message)
     if staging_path(resolved).exists():
@@ -65,7 +71,11 @@ def staging_path(output: Path) -> Path:
 
 @contextmanager
 def staged(output: Path) -> Generator[Path]:
-    """Yield a fresh staging directory and atomically rename it on success."""
+    """Yield a fresh staging directory; on success it replaces ``output``.
+
+    An existing ``output`` (allowed only by ``check_new_output(..., replace=True)``) is
+    moved aside first and deleted after the new directory is in place.
+    """
     stage = staging_path(output)
     output.parent.mkdir(parents=True, exist_ok=True)
     stage.mkdir()
@@ -74,7 +84,19 @@ def staged(output: Path) -> Generator[Path]:
     except BaseException:
         shutil.rmtree(stage)
         raise
-    _ = stage.rename(output)
+    swap_in(stage, output)
+
+
+def swap_in(new: Path, target: Path) -> None:
+    """Put ``new`` at ``target``, removing a previous ``target`` only after the move."""
+    old = target.parent / f".{target.name}.old"
+    if old.exists():
+        shutil.rmtree(old)
+    if target.exists():
+        _ = target.rename(old)
+    _ = new.rename(target)
+    if old.exists():
+        shutil.rmtree(old)
 
 
 def sha256(data: bytes) -> str:
