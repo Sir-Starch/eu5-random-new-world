@@ -66,4 +66,4 @@
 - [V-LOCAL] Measured the vanilla `rivers.png` conventions and statistics (C59).
 - [V-EXEC] Implemented `rivers.py` (priority-flood drainage, rain-weighted catchments, head-down drawing with join pixels, valley carving) and the EU5 encoding; generator 0.6.0. Five worlds over two presets pass every river rule, the seam strait and the city-point checks (C60). `make check`: 93 passed.
 - [V-EXEC] The first full export on a fresh random seed failed sea reachability: land enclosed the sea around a protected islet. Added strait cutting for enclosed seas (C61). `make check` 88 passed; the three local tests pass.
-- [V-EXEC] Full export of continents seed 7 passes every invariant and river rule (C63). The archipelago 5 and continents 2026 exports were killed externally (exit 137) and are still to be rerun.
+- [V-EXEC] Full exports of continents 7, continents 2026 and archipelago 5 pass every invariant and river rule, about 10 minutes each (C63). The first batch had been left running unattended in the background; the owner killed it as hung. Long exports now run one at a time under a timeout while the agent waits.
