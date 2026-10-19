@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "eu5-rnw-research"
-version = "0.0.1"
+version = "0.9.1"
 description = "Evidence and validation tools for EU5 Random New World research"
 requires-python = ">=3.12"
 dependencies = [

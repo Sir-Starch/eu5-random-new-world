@@ -91,5 +91,5 @@
 ## 2026-10-19 — Product rules and versioning
 
 - [OWNER DECISION] Vanilla first and no crutches: no patched engine files, no self-repairing output; fix the generator at the source (AGENTS.md).
-- [OWNER DECISION] One SemVer product version for the Steam Workshop ([ADR 0003](../adr/0003-versioning.md)): 0.MINOR.PATCH development (MINOR per phase accepted in game), and the first publication is the complete product, 1.0.0 (owner correction the same day). The four drifting version strings (three mod metadata versions and the generator output version 0.9.1) are replaced by `version` in `pyproject.toml`, now 0.0.1; run specs carry `version` instead of `generator_version`.
+- [OWNER DECISION] One SemVer product version for the Steam Workshop ([ADR 0003](../adr/0003-versioning.md)): 0.MINOR.PATCH development (MINOR per phase accepted in game), and the first publication is the complete product, 1.0.0 (owner correction the same day). The four drifting version strings (three mod metadata versions and the generator output version 0.9.1) are replaced by `version` in `pyproject.toml`; run specs carry `version` instead of `generator_version`. The owner kept the number the work was tracked by: 0.9.1.
 
