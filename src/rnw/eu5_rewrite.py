@@ -268,7 +268,7 @@ def _record_holders(root: Block) -> Iterable[Block]:
 def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup files.
     texts: dict[str, str],
     removed: set[str],
-    pops_added: list[str],
+    pops_added: dict[str, list[str]],
 ) -> SetupResult:
     """Remove every setup record that refers to a removed identifier, to a fixed point.
 
@@ -315,11 +315,25 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
         if name.startswith("06_") and pops_added:
             holder = trees[name].block("locations")
             if holder is not None:
-                lines = "".join(f"{key} = {{\n}}\n" for key in pops_added)
+                lines = "".join(
+                    f"{key} = {{\n" + "".join(f"{line}\n" for line in pops) + "}\n"
+                    for key, pops in pops_added.items()
+                )
                 edits.insert(_line_start(text, holder.close), lines)
         out[name] = edits.apply(text)
         deleted[name] = len(doomed[name])
     return SetupResult(out, deleted, ids)
+
+
+def insert_into_block(text: str, path: tuple[str, ...], addition: str) -> str:
+    """Insert ``addition`` before the closing brace of the block at ``path``."""
+    block = parse(text).block(*path)
+    if block is None:
+        message = f"No block {'/'.join(path)}"
+        raise KeyError(message)
+    edits = Edits()
+    edits.insert(_line_start(text, block.close), addition)
+    return edits.apply(text)
 
 
 def _prune_members(

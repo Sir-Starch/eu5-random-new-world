@@ -13,7 +13,10 @@ import pytest
 
 from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_biomes import template_attributes
-from rnw.eu5_map import RIVER_LAND, RIVER_WATER, load_map
+from rnw.eu5_canvas import select_canvas
+from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map
+from rnw.eu5_natives import vanilla_natives
+from rnw.eu5_newworld import vanilla_geometry
 from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, TOPOGRAPHY_GROUPS, SlotTables, synthesize
 from rnw.eu5_terrain import DecalStore
 from rnw.geography import color_summary, read_locations, summary
@@ -105,3 +108,28 @@ def test_local_slot_rules_reproduce_vanilla_structure() -> None:
     vanilla = materials[:1600, 5800:8000]
     edges = np.array([0, 5, 6, 7, 8, 9, 10, 17, 255, 256])
     assert np.mean(np.digitize(vanilla, edges) == np.digitize(slots, edges)) >= 0.8
+
+
+def test_local_native_calibration_reads_the_vanilla_americas() -> None:
+    """Native calibration finds American pops, cultures, religions and setups."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    root = Path(root_value)
+    game_map = load_map(root)
+    hierarchy = {location.key: location for location in read_locations(root / DEFINITIONS)}
+    canvas = select_canvas(game_map, 1600)
+    attributes = template_attributes(
+        (root / "game/in_game/map_data/location_templates.txt").read_text(encoding="utf-8-sig")
+    )
+    vanilla = vanilla_natives(
+        root, game_map, vanilla_geometry(game_map, canvas, hierarchy), attributes, hierarchy
+    )
+    assert len(vanilla.cultures) > 500
+    assert len(vanilla.religions) > 50
+    assert vanilla.density["tropical"] > 5 * vanilla.density["subpolar"]
+    assert vanilla.population_per_location > 1000
+    assert {"amerindian_tribe", "amerindian_monarchy"} <= vanilla.templates
+    assert "PAM" in vanilla.reserved_tags
+    assert any(culture.state_include for culture in vanilla.cultures.values())
+    assert any(culture.city_setup for culture in vanilla.cultures.values())

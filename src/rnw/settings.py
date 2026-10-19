@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 SCHEMA_VERSION: Final[int] = 1
 GENERATOR: Final[str] = "rnw-geo"
-GENERATOR_VERSION: Final[str] = "0.7.0"
+GENERATOR_VERSION: Final[str] = "0.8.0"
 WINDOW_SIZE: Final[int] = 4
 
 
@@ -93,6 +93,34 @@ class NewWorldSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class NativeSettings:
+    """Controls for native societies of the New World (location counts are means)."""
+
+    population_permille: int
+    hearths_per_10k: int
+    hearth_reach_steps: int
+    state_share_permille: int
+    state_locations: int
+    culture_locations: int
+    religion_locations: int
+    tribe_locations: int
+    organized_permille: int
+
+
+NATIVES: Final[NativeSettings] = NativeSettings(
+    population_permille=1000,
+    hearths_per_10k=6,
+    hearth_reach_steps=16,
+    state_share_permille=110,
+    state_locations=3,
+    culture_locations=10,
+    religion_locations=80,
+    tribe_locations=6,
+    organized_permille=450,
+)
+
+
+@dataclass(frozen=True, slots=True)
 class Settings:
     """A complete settings document."""
 
@@ -101,6 +129,7 @@ class Settings:
     geography: GeographySettings
     coast: CoastSettings
     new_world: NewWorldSettings
+    natives: NativeSettings = NATIVES
 
     def to_json_data(self) -> dict[str, object]:
         """Return the schema-tagged document."""
@@ -140,6 +169,15 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "wasteland_permille": (0, 500),
     "province_size": (1, 32),
     "ocean_band_px": (0, 8192),
+    "population_permille": (0, 5000),
+    "hearths_per_10k": (0, 100),
+    "hearth_reach_steps": (1, 100),
+    "state_share_permille": (1, 1000),
+    "state_locations": (1, 100),
+    "culture_locations": (1, 1000),
+    "religion_locations": (1, 10_000),
+    "tribe_locations": (1, 100),
+    "organized_permille": (0, 1000),
 }
 PRESETS: Final[dict[str, Settings]] = {
     "continents": Settings(
@@ -189,6 +227,7 @@ PRESETS: Final[dict[str, Settings]] = {
             province_size=6,
             ocean_band_px=1600,
         ),
+        natives=NATIVES,
     ),
     "archipelago": Settings(
         preset="archipelago",
@@ -237,6 +276,7 @@ PRESETS: Final[dict[str, Settings]] = {
             province_size=6,
             ocean_band_px=1600,
         ),
+        natives=replace(NATIVES, hearths_per_10k=8, religion_locations=60),
     ),
 }
 
@@ -263,9 +303,9 @@ def _checked_window(value: object) -> tuple[int, int, int, int]:
     return (items[0], items[1], items[2], items[3])
 
 
-def _merge[T: (SyntheticSettings, GeographySettings, CoastSettings, NewWorldSettings)](
-    base: T, section: str, override: object
-) -> T:
+def _merge[
+    T: (SyntheticSettings, GeographySettings, CoastSettings, NewWorldSettings, NativeSettings)
+](base: T, section: str, override: object) -> T:
     if not isinstance(override, dict):
         message = f"Settings section {section} must be an object"
         raise SettingsError(message)
@@ -294,7 +334,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         message = f"Unknown preset: {name}; choose one of {', '.join(sorted(PRESETS))}"
         raise SettingsError(message)
     base = PRESETS[name]
-    unknown = sorted(set(data) - {"synthetic", "geography", "coast", "new_world"})
+    unknown = sorted(set(data) - {"synthetic", "geography", "coast", "new_world", "natives"})
     if unknown:
         message = f"Unknown settings sections: {', '.join(unknown)}"
         raise SettingsError(message)
@@ -308,6 +348,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         geography=_merge(base.geography, "geography", data.get("geography", {})),
         coast=_merge(base.coast, "coast", data.get("coast", {})),
         new_world=_merge(base.new_world, "new_world", data.get("new_world", {})),
+        natives=_merge(base.natives, "natives", data.get("natives", {})),
     )
 
 

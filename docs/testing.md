@@ -14,6 +14,7 @@ The D0 suite adds generator and exporter checks [V-EXEC C28–C31]:
 - `tests/test_coast.py`: topology preserved, displacement bounded by pass count, field sign controls direction, size floor/cap.
 - `tests/test_eu5_export.py`: a synthetic EU5-shaped installation (`tests/fixtures_eu5.py`, no game data) exercises the adapter, the full export, repeatability, the fingerprint refusal and unsafe output paths.
 - `tests/test_local_install.py` (local only): raster colours, unused declarations, river water mask and locator rows on the real installation (C23–C26).
+- `tests/test_societies.py` and `tests/test_natives_eu5.py` (R6a): native societies on synthetic graphs (determinism, population total, state share, connected and nested zones, disjoint polities); homeland vectors, matching, fresh tags, colours and the setup texts. The local test also reads the vanilla native calibration (C67).
 
 `uv run rnw generate --game-dir "$EU5_GAME_DIR" --seed N --preset continents --output generated/rnw_exp_NAME` re-decodes the written PNGs and compares them with the installation before it finishes; its `report.json` lists every invariant. Not yet covered: port/dock placement quality beyond freezing, river path continuity beyond freezing, start-state references (no setup is rewritten) and anything in game. Synthetic fixtures belong in Git; game-derived rasters and logs do not.
 

@@ -23,12 +23,13 @@ The production architecture is conditional on [experiments 002–006](../experim
 | Generators | `synth.py` (T3-style, synthetic), `coast.py` (T2 boundary moves) | Deterministic, offline |
 | Validators | `validate.py` | Typed errors, generic and boundary-move checks |
 | EU5 adapter and serializer | `eu5_map.py`, `eu5_export.py`, `png.py`, `artifacts.py` | Build 25905365 only; emits `locations.png` + `rivers.png` |
-| T3 New World | `newworld.py`, `eu5_canvas.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_nw_export.py`, `pdx.py`, `names.py` | New IDs, empty 1337 start; plays in game [V-GAME C45] |
+| T3 New World | `newworld.py`, `eu5_canvas.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_nw_export.py`, `pdx.py`, `names.py` | New IDs; plays in game [V-GAME C45] (first with an empty 1337 start) |
 | Relief and climate (V1) | `fields.py`, `relief.py`, `climate.py` | Game-independent integer fields: warped rotated noise, mountain belts, Euclidean distance, zonal-wind rainfall |
 | Rivers (V1b) | `rivers.py` | Game-independent priority-flood drainage, rain-weighted catchments, one-pixel river networks drawn head-down, valley carving; EU5 codes in `eu5_nw_export.py` |
 | Biomes and terrain (V1) | `eu5_biomes.py`, `eu5_slots.py`, `eu5_terrain.py`, `eu5_objects.py`, `eu5_water.py`, `terrain_tiles.py`, `lzav.py`, `dds.py` | Templates from a calibrated climate model; decal heights and material slots by vanilla rules; vegetation instances; water textures; NOT GAME VALIDATED ([terrain-biomes](terrain-biomes.md)) |
+| Native societies (R6a) | `societies.py`, `eu5_natives.py` | Game-independent hearths, complexity, population, nested religion/culture zones, states and tribes on the location graph; EU5 calibration on the vanilla 1337 Americas, vanilla culture/religion matching by homeland, new tags, pops, countries, towns, markets, holy sites; NOT GAME VALIDATED ([natives](natives.md)) |
 
-Native start-state entities (R6) are not generated yet; the New World starts empty.
+The 1337 start now has generated native societies instead of an empty New World.
 
 The exporter should read any vanilla-derived data from the user's local game installation and write generated assets only to gitignored/local mod directories [INFERRED C15]. It must preserve Old World pixel regions, identifiers and references by explicit tests. A package manifest should record seed, settings schema, generator version, target game build and hashes without embedding proprietary input files.
 

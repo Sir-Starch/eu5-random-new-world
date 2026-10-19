@@ -1,8 +1,9 @@
-"""Stage a generated New World mod (T3: new IDs, empty 1337 start) for EU5 1.4.1.
+"""Stage a generated New World mod (T3: new IDs, native 1337 start) for EU5 1.4.1.
 
 NOT GAME VALIDATED as a whole; the first generated start loaded in game [V-GAME C45].
 Locations, provinces, coasts, relief, biomes (location templates), terrain decals,
-water and vegetation instances are generated from one model; the Old World is kept.
+water, vegetation instances and native societies are generated from one model; the
+Old World is kept.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -53,11 +54,24 @@ from rnw.eu5_map import (
     load_map,
     open_png,
 )
+from rnw.eu5_natives import (
+    DEFINITION_FILE,
+    NativeWorld,
+    build_natives,
+    city_lines,
+    country_definitions,
+    country_names,
+    country_records,
+    holy_site_outputs,
+    market_lines,
+    vanilla_natives,
+)
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
 from rnw.eu5_objects import PixelClasses, object_outputs
 from rnw.eu5_remap import build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
+    insert_into_block,
     prune_setup,
     rewrite_class_lists,
     rewrite_csv,
@@ -167,7 +181,22 @@ UNTESTED: Final[tuple[str, ...]] = (
         "EU5 honours it is unknown."
     ),
     "Colonisation, exploration, movement, naval routes, ports, save/load and startup time.",
+    (
+        "Native countries use new three-letter tags defined in "
+        "in_game/setup/countries/rnw_natives.txt without scripted coats of arms; that EU5 "
+        "accepts them, pop-type tribes on generated locations and engine-drawn coats of "
+        "arms is untested."
+    ),
+    (
+        "Holy sites of placed American religions move into their generated religion zones; "
+        "religions and situations with special mechanics may still expect vanilla geography."
+    ),
 )
+SETUP_INSERTS: Final[dict[str, tuple[str, ...]]] = {
+    "10_countries.txt": ("countries", "countries"),
+    "07_cities_and_buildings.txt": ("locations",),
+    "03_markets.txt": ("market_manager",),
+}
 
 
 class NewWorldExportError(ValueError):
@@ -430,8 +459,9 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
 
 
-def _localization(plan: Plan) -> dict[str, bytes]:
+def _localization(plan: Plan, extra: dict[str, str]) -> dict[str, bytes]:
     names = {cell.key: cell.name for cell in plan.cells}
+    names.update(extra)
     names.update(plan.province_names)
     fresh = {area for area in plan.new_areas if area.startswith("rnw_")}
     names.update({area: plan.display_overrides[area] for area in sorted(fresh)})
@@ -563,6 +593,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     removed: set[str],
     geometry: VanillaGeometry,
     biomes: CellBiomes,
+    natives: NativeWorld,
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     bodies = _template_bodies(_read(game_dir, TEMPLATES))
     donors = _donor_map(
@@ -631,12 +662,22 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         LOCATOR_OVERRIDE,
         rewrite_override_locators(_read(game_dir, LOCATOR_OVERRIDE), removed),
     )
-    setup = prune_setup(_setup_texts(game_dir), gone, [c.key for c in plan.cells])
+    setup = prune_setup(
+        _setup_texts(game_dir), gone, {c.key: natives.pops.get(c.key, []) for c in plan.cells}
+    )
+    additions = {
+        "10_countries.txt": country_records(natives.countries),
+        "07_cities_and_buildings.txt": city_lines(natives.ranks),
+        "03_markets.txt": market_lines(natives.markets),
+    }
     for name, text in setup.texts.items():
         relative = f"{SETUP_DIR}/{name}"
+        if additions.get(name):
+            text = insert_into_block(text, SETUP_INSERTS[name], additions[name])  # noqa: PLW2901
         if text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
-    outputs.update(_localization(plan))
+    outputs[DEFINITION_FILE] = country_definitions(natives.countries)
+    outputs.update(_localization(plan, country_names(natives.countries)))
     stats: dict[str, object] = {
         "ports": len(port_rows),
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
@@ -723,6 +764,18 @@ def _rivers(
     return codes, carved, stats
 
 
+def referenced_words(path: str, text: str) -> set[str]:
+    """Identifier-like words of a script text, without comments.
+
+    Named colours count only their keys: a colour such as ``dabaca`` can spell a
+    location key (vanilla has one) without referring to it.
+    """
+    text = re.sub(r"#[^\n]*", "", text)
+    if path == _mod_path(NAMED_COLORS):
+        text = "\n".join(line.split("=", 1)[0] for line in text.splitlines())
+    return set(WORD.findall(text))
+
+
 def _verify_texts(outputs: dict[str, bytes], plan: Plan, removed: set[str]) -> dict[str, object]:
     """Cross-file consistency of the written text files."""
     definitions = outputs[_mod_path(DEFINITIONS)].decode("utf-8-sig")
@@ -740,14 +793,33 @@ def _verify_texts(outputs: dict[str, bytes], plan: Plan, removed: set[str]) -> d
     for path, data in outputs.items():
         if not path.endswith((".txt", ".map", ".csv")) or "localization" in path:
             continue
-        text = re.sub(r"#[^\n]*", "", data.decode("utf-8-sig"))
-        found = {word for word in WORD.findall(text) if word in removed}
+        found = referenced_words(path, data.decode("utf-8-sig")) & removed
         if found:
             leftovers[path] = len(found)
     if leftovers:
         message = f"Removed locations are still referenced: {leftovers}"
         raise NewWorldExportError(message)
     return {"definition_locations": len(keys), "template_locations": len(template_keys)}
+
+
+def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
+    """Countries own or hold generated land only, once each, under fresh tags."""
+    land = {cell.key for cell in plan.cells if cell.kind is CellClass.LAND}
+    tags = [country.tag for country in natives.countries]
+    if len(set(tags)) != len(tags) or not all(re.fullmatch(r"[A-Z]{3}", tag) for tag in tags):
+        message = "Native tags are not unique three-letter tags"
+        raise NewWorldExportError(message)
+    seen: set[str] = set()
+    for country in natives.countries:
+        members = set(country.members)
+        if not members <= land or country.capital not in members or members & seen:
+            message = f"Native country {country.tag} has invalid or shared locations"
+            raise NewWorldExportError(message)
+        seen |= members
+    if not set(natives.pops) <= land or not set(natives.ranks) <= land:
+        message = "Native pops or ranks lie outside generated land"
+        raise NewWorldExportError(message)
+    return {"native_countries": len(tags), "native_locations_held": len(seen)}
 
 
 def _preview(final_rgb_classes: NDArray[np.uint8]) -> bytes:
@@ -796,6 +868,18 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
     )
     river_codes, carved, river_stats = _rivers(world, canvas, climate, seed)
+    river_pixels = np.bincount(
+        world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
+    )[: len(world.classes)]
+    natives = build_natives(
+        world=world,
+        plan=plan,
+        biomes=biomes,
+        river_pixels=river_pixels.astype(np.int64),
+        vanilla=vanilla_natives(game_dir, game_map, geometry, vanilla_attributes, hierarchy),
+        settings=settings.natives,
+        seed=seed,
+    )
     slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
     biome_stats["materials"] = slot_stats
     texts, text_stats = _text_outputs(
@@ -808,8 +892,10 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         removed=removed,
         geometry=geometry,
         biomes=biomes,
+        natives=natives,
     )
     text_checks = _verify_texts(texts, plan, removed)
+    text_checks.update(_verify_natives(natives, plan))
     remap = build_remap(
         [
             (game_map.keys[i], game_map.classes[i], int(geometry.rows[i]), int(geometry.columns[i]))
@@ -820,6 +906,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         _removed_provinces(hierarchy, removed),
     )
     scripts, remapped = remap_scripts(game_dir, remap)
+    scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
     texts.update(scripts)
     text_stats["scripts_remapped"] = remapped
     rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
@@ -924,7 +1011,10 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         report: dict[str, object] = {
             "schema": 1,
             "status": STATUS,
-            "tier": "T3 candidate: generated New World with new location IDs, empty 1337 start",
+            "tier": (
+                "T3 candidate: generated New World with new location IDs and generated "
+                "native societies in the 1337 start"
+            ),
             "mod": name,
             "spec": spec,
             "spec_sha256": spec_digest(spec),
@@ -949,6 +1039,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
             },
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,
+            "natives": natives.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,
             "files": [*files, preview_record, settings_record],
