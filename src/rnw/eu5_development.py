@@ -5,7 +5,8 @@ Americas get their civilisation level from region, province and location entries
 [V-LOCAL C73]. The generated world keeps the rules and replaces those positional inputs
 by values from its own society model: a term that follows complexity, harbour values on
 the vanilla distribution, and market villages in the most complex state capitals.
-All arithmetic is integer.
+The term is calibrated per settlement class (cities, towns, other state land) against the
+estimated vanilla development of that class. All arithmetic is integer.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -41,6 +42,10 @@ MEMBER: Final[str] = "member"
 TRIBE: Final[str] = "tribe"
 UNORGANISED: Final[str] = "unorganised"
 CLASSES: Final[tuple[str, ...]] = (CITY, TOWN, CAPITAL, MEMBER, TRIBE, UNORGANISED)
+STATE_LAND: Final[tuple[str, ...]] = (CAPITAL, MEMBER)
+# Settlement classes whose keyed term is fitted on its own; tribes and unorganised land
+# follow the state-land curve (the same civilisation level for the same complexity).
+FIT_GROUPS: Final[tuple[tuple[str, ...], ...]] = (STATE_LAND, (CITY,), (TOWN,))
 HEADER: Final[str] = "\n\t# RNW generated natives\n"
 HARBOR_FIELD: Final[str] = "natural_harbor_suitability"
 NUMBER: Final[re.Pattern[str]] = re.compile(r"-?[0-9]+(?:\.[0-9]+)?")
@@ -56,13 +61,17 @@ RAY_DIRECTIONS: Final[tuple[tuple[int, int], ...]] = (
     (0, -1024), (134, -1015), (265, -989), (392, -946), (512, -887), (623, -812),
     (724, -724), (812, -623), (887, -512), (946, -392), (989, -265), (1015, -134),
 )  # fmt: skip
-# Complexity (permille) from which a location is fully developed is fitted per world
-# among these candidates: vanilla's keyed entries lift state land to a similar level on
-# any terrain (Mesoamerica +12 on jungle, Great Plains +5), whereas generated worlds differ
-# in how much development their physical rules give state land [V-EXEC C75].
+# Complexity (permille) from which a location is fully developed is fitted per world and
+# settlement class among these candidates: vanilla's keyed entries lift each class to its
+# level on any terrain (Mesoamerica +12 on jungle, Great Plains +5), whereas generated
+# worlds differ in how much development their physical rules give it [V-EXEC C75-C76].
 FULL_CANDIDATES: Final[range] = range(250, 3001, 5)
 SHELTER_REACH: Final[int] = 64
 SHELTER_START: Final[int] = 2
+
+
+# A generated land location: key, vegetation, climate, topography and river size.
+type Cell = tuple[str, str, str, str, int]
 
 
 class DevelopmentError(ValueError):
@@ -79,6 +88,7 @@ class Site:
     vegetation: str
     climate: str
     topography: str
+    river: int
     keyed: int
 
 
@@ -179,12 +189,13 @@ def _words(block: Block | None) -> list[str]:
 def site_value(rules: Mapping[str, int], site: Site) -> int:
     """Start development of one location in thousandths, clamped at zero.
 
-    Sums ``base``, ``coastal`` times harbour suitability, the rank, the vegetation,
-    climate and topography values and the keyed entries. The river term is left out:
-    the engine's river size is unknown [UNKNOWN].
+    Sums ``base``, ``coastal`` times harbour suitability, ``river`` times river size, the
+    rank, the vegetation, climate and topography values and the keyed entries. The river
+    size is the rank of the widest river pixel (``river_sizes``) [INFERRED].
     """
     total = rules.get("base", 0)
     total += rules.get("coastal", 0) * site.harbour // HUNDREDTHS
+    total += rules.get("river", 0) * site.river
     total += rules.get(site.rank, 0) if site.rank else 0
     total += sum(rules.get(name, 0) for name in (site.vegetation, site.climate, site.topography))
     return max(0, total + site.keyed)
@@ -204,17 +215,19 @@ def _mean_milli(total: int, count: int) -> int:
     return (2 * total + count) // (2 * count) if count else 0
 
 
-def calibrate(
+def calibrate(  # noqa: PLR0913 - the calibration reads five vanilla inputs.
     *,
     rules_text: str,
     templates_text: str,
     buildings_text: str,
     countries_text: str,
     american: Mapping[str, Location],
+    rivers: Mapping[str, int],
 ) -> DevelopmentCalibration:
     """Society maximum, harbour distribution, village share and class means of vanilla.
 
-    ``american`` holds the vanilla American land locations with their hierarchy.
+    ``american`` holds the vanilla American land locations with their hierarchy and
+    ``rivers`` their river sizes.
     """
     rules = development_rules(rules_text)
     if not american:
@@ -254,9 +267,15 @@ def calibrate(
                 vegetation=fields[key].get("vegetation", ""),
                 climate=fields[key].get("climate", ""),
                 topography=fields[key].get("topography", ""),
+                river=rivers.get(key, 0),
                 keyed=keyed[key],
             )
         )
+    present = Counter(site.kind for site in sites)
+    missing = [kind for group in FIT_GROUPS for kind in group if not present[kind]]
+    if missing:
+        message = f"No vanilla American locations of class {missing[0]}"
+        raise DevelopmentError(message)
     american_harbours = sorted(harbours[key] for key in american if key in harbours)
     if not american_harbours:
         message = "No vanilla American harbour values"
@@ -324,39 +343,25 @@ def society_term(level: int, society_max: int, full: int) -> int:
     return (society_max * min(PERMILLE, level * PERMILLE // full) + PERMILLE // 2) // PERMILLE
 
 
-def society_terms(
-    complexity: Mapping[str, int], keys: Sequence[str], society_max: int, full: int
-) -> dict[str, int]:
-    """Keyed development per location from its complexity (permille).
-
-    Only terms of at least 1 are returned, in key order.
-    """
-    terms: dict[str, int] = {}
-    for key in keys:
-        term = society_term(complexity.get(key, 0), society_max, full)
-        if term >= 1:
-            terms[key] = term
-    return terms
-
-
 def fit_full(
-    calibration: DevelopmentCalibration, sites: Sequence[Site], levels: Sequence[int]
+    calibration: DevelopmentCalibration,
+    sites: Sequence[Site],
+    levels: Sequence[int],
+    group: tuple[str, ...] = STATE_LAND,
 ) -> int:
-    """The saturation whose terms bring generated state land to the vanilla mean.
+    """The saturation whose terms bring one settlement class to its vanilla mean.
 
     ``sites`` carry no keyed entry yet and ``levels`` are their complexities. The estimated
-    mean development of state capitals and members together is compared with the vanilla
-    one; the smallest candidate with the closest mean wins. Without state land the
-    largest candidate is returned.
+    mean development of the sites in ``group`` is compared with the vanilla mean of the
+    same classes; the smallest candidate with the closest mean wins. Without such sites
+    the largest candidate is returned.
     """
-    state = [
-        (site, level)
-        for site, level in zip(sites, levels, strict=True)
-        if site.kind in {CAPITAL, MEMBER}
+    chosen = [
+        (site, level) for site, level in zip(sites, levels, strict=True) if site.kind in group
     ]
-    if not state:
+    if not chosen:
         return FULL_CANDIDATES[-1]
-    vanilla = [calibration.vanilla_means[kind] for kind in (CAPITAL, MEMBER)]
+    vanilla = [calibration.vanilla_means[kind] for kind in group]
     vanilla_count = sum(n for n, _ in vanilla)
     vanilla_total = sum(n * mean for n, mean in vanilla)
 
@@ -366,11 +371,47 @@ def fit_full(
                 calibration.rules,
                 replace(site, keyed=PERMILLE * society_term(level, calibration.society_max, full)),
             )
-            for site, level in state
+            for site, level in chosen
         )
-        return abs(total * vanilla_count - vanilla_total * len(state))
+        return abs(total * vanilla_count - vanilla_total * len(chosen))
 
     return min(FULL_CANDIDATES, key=lambda full: (gap(full), full))
+
+
+def fit_fulls(
+    calibration: DevelopmentCalibration, sites: Sequence[Site], levels: Sequence[int]
+) -> dict[str, int]:
+    """Saturation per settlement class; tribes and unorganised land share state land's."""
+    fulls: dict[str, int] = {}
+    for group in FIT_GROUPS:
+        fulls.update(dict.fromkeys(group, fit_full(calibration, sites, levels, group)))
+    fulls[TRIBE] = fulls[UNORGANISED] = fulls[CAPITAL]
+    return fulls
+
+
+def river_sizes(
+    labels: NDArray[np.int32],
+    codes: NDArray[np.uint8],
+    count: int,
+    *,
+    widths: Sequence[int],
+    limit: int,
+) -> NDArray[np.int64]:
+    """River size per label: the rank of its widest river pixel, 0 without a river.
+
+    ``codes`` is a ``rivers.png`` raster; values below ``limit`` are river pixels and
+    ``widths`` lists the width codes from narrow to wide (ranks 1, 2, ...). A label with
+    only marker pixels (sources, joins, splits) gets size 1. That EU5 sizes rivers this
+    way is inferred from the map legend (small river to great river) [INFERRED].
+    """
+    table = np.zeros(256, dtype=np.int64)
+    table[:limit] = 1
+    for rank, code in enumerate(widths, start=1):
+        table[code] = rank
+    river = codes < limit
+    sizes = np.zeros(count, dtype=np.int64)
+    np.maximum.at(sizes, labels[river].astype(np.int64), table[codes[river]])
+    return sizes
 
 
 def shelter(
@@ -476,31 +517,40 @@ def build_development(
     *,
     calibration: DevelopmentCalibration,
     natives: NativeWorld,
-    cells: Sequence[tuple[str, str, str, str]],
+    cells: Sequence[Cell],
     scores: Mapping[str, int],
 ) -> Development:
     """Terms, harbours and market villages of a generated world, with their statistics.
 
     ``cells`` lists the generated land locations as (key, vegetation, climate,
-    topography); ``scores`` maps each port location to its shelter score.
+    topography, river size); ``scores`` maps each port location to its shelter score.
     """
     keys = [key for key, *_ in cells]
     harbours = harbour_values(scores, calibration.harbours) if scores else {}
     sites = generated_sites(natives, cells, harbours)
-    full = fit_full(calibration, sites, [natives.complexity.get(key, 0) for key in keys])
-    terms = society_terms(natives.complexity, keys, calibration.society_max, full)
+    levels = [natives.complexity.get(key, 0) for key in keys]
+    fulls = fit_fulls(calibration, sites, levels)
+    terms = {
+        key: term
+        for key, site, level in zip(keys, sites, levels, strict=True)
+        if (term := society_term(level, calibration.society_max, fulls[site.kind])) >= 1
+    }
     states = [(c.tag, c.capital) for c in natives.countries if c.kind == "state"]
     villages = market_villages(
         states, natives.complexity, natives.population, calibration.village_permille
     )
     parts = Development(terms=terms, harbours=harbours, villages=villages, stats={})
     stats = _stats(calibration, natives, cells, parts, len(states))
-    stats["society_full_permille"] = full
+    stats["society_full_permille"] = {
+        "state_land": fulls[CAPITAL],
+        "city": fulls[CITY],
+        "town": fulls[TOWN],
+    }
     return replace(parts, stats=stats)
 
 
 def generated_sites(
-    natives: NativeWorld, cells: Sequence[tuple[str, str, str, str]], harbours: Mapping[str, int]
+    natives: NativeWorld, cells: Sequence[Cell], harbours: Mapping[str, int]
 ) -> list[Site]:
     """Development inputs of the generated land locations, without keyed entries."""
     kinds = _generated_kinds(natives)
@@ -512,16 +562,17 @@ def generated_sites(
             vegetation=vegetation,
             climate=climate,
             topography=topography,
+            river=river,
             keyed=0,
         )
-        for key, vegetation, climate, topography in cells
+        for key, vegetation, climate, topography, river in cells
     ]
 
 
 def _stats(
     calibration: DevelopmentCalibration,
     natives: NativeWorld,
-    cells: Sequence[tuple[str, str, str, str]],
+    cells: Sequence[Cell],
     parts: Development,
     state_count: int,
 ) -> dict[str, object]:
@@ -532,12 +583,17 @@ def _stats(
         for key, site in zip(keys, generated_sites(natives, cells, harbours), strict=True)
     ]
     generated = class_means(calibration.rules, sites)
+    reached = [key for key in keys if natives.complexity.get(key, 0) > 0]
     ported = sorted(harbours.values())
     vanilla = list(calibration.harbours)
     return {
         "society_max": calibration.society_max,
         "entries": len(terms),
         "positive_permille": PERMILLE * len(terms) // max(1, len(keys)),
+        "civilised_permille": PERMILLE * len(reached) // max(1, len(keys)),
+        "coverage_permille": PERMILLE
+        * sum(1 for key in reached if key in terms)
+        // max(1, len(reached)),
         "population_spearman_permille": spearman_permille(
             [terms.get(key, 0) for key in keys], [natives.population.get(key, 0) for key in keys]
         ),

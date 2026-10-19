@@ -106,3 +106,11 @@
 - [V-EXEC] Corrected vanilla numbers: the American harbour values include 13 negative ones (1,092 values, 758‰ zero, mean 0.101); the donor regex for harbours did not match a minus sign (C73–C74).
 - [V-EXEC] First build (continents 3706823338, linear term): states at 0.63–0.73× the vanilla mean. A fixed saturation of 800 fixed it there and failed on archipelago 5 (members 1.55×). The saturation is now fitted per world to the vanilla state mean; all three builds (continents 3706823338, archipelago 5, fresh random continents 515055336) pass every acceptance criterion (C75). Golden digests of `rnw synth` changed only through the version string. The bundle of seed 515055336 stays in `generated/rnw_exp_new_world`; experiment 012 is the next in-game test.
 
+## 2026-10-19 — R7a audit (product version 0.9.3)
+
+- [OWNER] Not satisfied with the weaknesses left by R7a (cities and towns below vanilla, rank correlation near its bound, no byte-identity check, river term left out); audit and fix.
+- [V-EXEC] A scratch harness runs the export up to natives and development on cached worlds (about 1 minute instead of 11) and reproduces the full builds exactly.
+- [V-EXEC] Findings (C76): rivers are far more common on generated urban and state land than in vanilla, so the estimate without the river term was biased; generated cities and towns stand on poorer land than the rest of generated state land, unlike vanilla. Fixes: the estimate includes `river` × river size (rank of the widest river pixel, [INFERRED]); the saturation is fitted per settlement class; a new invariant keeps Old World development entries identical to vanilla. Rejected: a term from ungated hearth influence (cities worse) and a tribal fit (needs the full term on all reached tribal land and still misses).
+- [V-EXEC] The positive-share bound measured the hearth count (3-hearth world: 229‰ of land reached, below the 250‰ bound); replaced by coverage of reached land (≥ 850‰), reported as `coverage_permille`.
+- [V-EXEC] Three full builds pass every criterion; cities 12.07–12.29 and towns 6.29–6.40 against vanilla 12.28 and 6.38; two builds of seed 3717486232 are byte-identical. `make check`: 137 passed; local tests pass. Seed 3717486232 stays staged for experiment 012.
+

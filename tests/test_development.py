@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pytest
 
@@ -20,12 +22,13 @@ from rnw.eu5_development import (
     calibrate,
     development_lines,
     fit_full,
+    fit_fulls,
     harbour_values,
     hundredths_text,
     market_villages,
+    river_sizes,
     shelter,
     society_term,
-    society_terms,
     spearman_permille,
     template_harbours,
     to_hundredths,
@@ -50,6 +53,7 @@ from rnw.pdx import parse
 RULES = """development = {
 	base = -2
 	coastal = 5
+	river = 0.5
 	city = 5
 	town = 2
 	forest = -2
@@ -64,10 +68,13 @@ TEMPLATE_TEXT = f"""a1 = {{ {FIELDS} natural_harbor_suitability = 0.25 }}
 a2 = {{ {FIELDS} natural_harbor_suitability = -0.10 }}
 a3 = {{ {FIELDS} movement_assistance = {{ x = 1 }} }}
 a4 = {{ {FIELDS} natural_harbor_suitability = 0.00 }}
+a5 = {{ {FIELDS} }}
+a6 = {{ {FIELDS} }}
 old = {{ {FIELDS} natural_harbor_suitability = 0.75 }}
 """
 BUILDINGS = """locations = {
 	a1 = { rank = city town_setup = x }
+	a5 = { rank = town town_setup = y }
 }
 building_manager = {
 	market_village = { tag = AAA level = 1 location = a2 }
@@ -76,7 +83,7 @@ building_manager = {
 """
 COUNTRIES = """countries = {
 	countries = {
-		AAA = { own_control_core = { a2 } capital = a2 }
+		AAA = { own_control_core = { a2 a6 } capital = a2 }
 		BBB = { own_control_core = { a3 } capital = a3 }
 		TTT = { type = pop add_pops_from_locations = { a4 } }
 		OLD = { own_control_core = { old } capital = old }
@@ -96,19 +103,24 @@ def _location(key: str, region: str) -> Location:
     )
 
 
-def _calibration() -> DevelopmentCalibration:
-    american = {
-        "a1": _location("a1", "mesoamerica_region"),
-        "a2": _location("a2", "mesoamerica_region"),
-        "a3": _location("a3", "other_region"),
-        "a4": _location("a4", "other_region"),
-    }
+AMERICAN = {
+    "a1": _location("a1", "mesoamerica_region"),
+    "a2": _location("a2", "mesoamerica_region"),
+    "a3": _location("a3", "other_region"),
+    "a4": _location("a4", "other_region"),
+    "a5": _location("a5", "plains_region"),
+    "a6": _location("a6", "mesoamerica_region"),
+}
+
+
+def _calibration(american: dict[str, Location] | None = None) -> DevelopmentCalibration:
     return calibrate(
         rules_text=RULES,
         templates_text=TEMPLATE_TEXT,
         buildings_text=BUILDINGS,
         countries_text=COUNTRIES,
-        american=american,
+        american=AMERICAN if american is None else american,
+        rivers={"a1": 2},
     )
 
 
@@ -145,43 +157,54 @@ def test_calibration_reads_the_vanilla_american_setup() -> None:
     assert calibration.harbours == (-10, 0, 25)
     assert calibration.village_permille == 500
     means = dict(calibration.vanilla_means)
-    # a1: -2 + 5 * 0.25 + city 5 + forest -2 + flatland 1 + keyed 12
-    assert means["city"] == (1, 15_250)
+    # a1: -2 + 5 * 0.25 + river 0.5 * 2 + city 5 + forest -2 + flatland 1 + keyed 12
+    assert means["city"] == (1, 16_250)
     # a2: -2 - 0.5 - 2 + 1 + 12 = 8.5; a3: -3 clamps to 0
     assert means["capital"] == (2, 4_250)
+    # a5: -2 + town 2 - 2 + 1 + plains 5; a6: -2 - 2 + 1 + 12
+    assert means["town"] == (1, 4_000)
+    assert means["member"] == (1, 9_000)
     assert means["tribe"] == (1, 0)
-    assert means["town"] == (0, 0)
+    assert means["unorganised"] == (0, 0)
 
 
-def test_calibration_fails_without_american_land() -> None:
-    """Missing data stops the build instead of falling back."""
+def test_calibration_fails_without_data() -> None:
+    """Missing land or a missing settlement class stops the build instead of falling back."""
     with pytest.raises(DevelopmentError):
-        _ = calibrate(
-            rules_text=RULES,
-            templates_text=TEMPLATE_TEXT,
-            buildings_text=BUILDINGS,
-            countries_text=COUNTRIES,
-            american={},
-        )
+        _ = _calibration({})
+    without_town = {key: value for key, value in AMERICAN.items() if key != "a5"}
+    with pytest.raises(DevelopmentError, match="town"):
+        _ = _calibration(without_town)
 
 
-def test_society_terms_follow_complexity() -> None:
-    """Zero gives no entry, the saturation level and more the maximum, halves round up."""
-    complexity = {"a": 0, "b": 1000, "c": 400, "d": 30, "e": 35, "f": 600, "g": 800}
-    terms = society_terms(complexity, ["g", "f", "e", "d", "c", "b", "a"], 12, 800)
-    assert terms == {"g": 12, "f": 9, "e": 1, "c": 6, "b": 12}
-    assert list(terms) == ["g", "f", "e", "c", "b"]
-    values = [
-        society_terms({"x": level}, ["x"], 12, 800).get("x", 0) for level in range(0, 1001, 50)
-    ]
+def test_society_term_follows_complexity() -> None:
+    """Zero gives nothing, the saturation level and more the maximum, halves round up."""
+    terms = {level: society_term(level, 12, 800) for level in (0, 30, 35, 400, 600, 800, 1000)}
+    assert terms == {0: 0, 30: 0, 35: 1, 400: 6, 600: 9, 800: 12, 1000: 12}
+    values = [society_term(level, 12, 800) for level in range(0, 1001, 50)]
     assert values == sorted(values)
-    assert society_terms({"x": 500}, ["x"], 12, 1000) == {"x": 6}
-    assert society_terms({"x": 500}, ["x"], 12, 500) == {"x": 12}
+    assert society_term(500, 12, 1000) == 6
+    assert society_term(500, 12, 500) == 12
+
+
+def test_river_sizes_rank_the_widest_river_pixel() -> None:
+    """Width codes rank from narrow to wide; markers alone count 1; dry labels 0."""
+    labels = np.array([[0, 0, 1, 2], [3, 3, 2, 2]], dtype=np.int32)
+    codes = np.array([[4, 11, 0, 255], [15, 5, 254, 255]], dtype=np.uint8)
+    sizes = river_sizes(labels, codes, 5, widths=(4, 5, 11, 15), limit=16)
+    assert sizes.tolist() == [3, 1, 0, 4, 0]
 
 
 def _site(kind: str) -> Site:
     return Site(
-        kind=kind, harbour=0, rank="", vegetation="forest", climate="", topography="", keyed=0
+        kind=kind,
+        harbour=0,
+        rank="",
+        vegetation="forest",
+        climate="",
+        topography="",
+        river=0,
+        keyed=0,
     )
 
 
@@ -194,8 +217,8 @@ def _flat_calibration(base: int) -> DevelopmentCalibration:
         vanilla_means={
             "capital": (1, 4000),
             "member": (1, 4000),
-            "city": (0, 0),
-            "town": (0, 0),
+            "city": (1, 9000),
+            "town": (1, 6000),
             "tribe": (0, 0),
             "unorganised": (0, 0),
         },
@@ -216,12 +239,25 @@ def test_fit_full_lowers_the_term_where_land_already_develops() -> None:
     assert fit_full(_flat_calibration(0), [], []) == FULL_CANDIDATES[-1]
 
 
+def test_fit_fulls_calibrate_each_settlement_class() -> None:
+    """Cities, towns and other state land reach their own vanilla means; tribes follow."""
+    calibration = _flat_calibration(-1000)
+    sites = [_site("city"), _site("town"), _site("capital"), _site("member"), _site("tribe")]
+    levels = [500] * len(sites)
+    fulls = fit_fulls(calibration, sites, levels)
+    # city mean 9 needs a term of 10, town mean 6 a term of 7, state land 4 a term of 5
+    assert society_term(500, 12, fulls["city"]) == 10
+    assert society_term(500, 12, fulls["town"]) == 7
+    assert society_term(500, 12, fulls["capital"]) == 5
+    assert fulls["member"] == fulls["capital"] == fulls["tribe"] == fulls["unorganised"]
+
+
 def test_build_development_plans_terms_harbours_and_villages() -> None:
     """A tiny world gets terms on its state land, one harbour and one village."""
     cells = [
-        ("g1", "forest", "tropical", "flatland"),
-        ("g2", "forest", "tropical", "flatland"),
-        ("g3", "forest", "tropical", "flatland"),
+        ("g1", "forest", "tropical", "flatland", 1),
+        ("g2", "forest", "tropical", "flatland", 0),
+        ("g3", "forest", "tropical", "flatland", 0),
     ]
     development = build_development(
         calibration=_calibration(), natives=_natives(), cells=cells, scores={"g2": 10}
@@ -230,9 +266,12 @@ def test_build_development_plans_terms_harbours_and_villages() -> None:
     assert development.villages == (("QQA", "g1"),)
     assert set(development.terms) <= {"g1", "g2"}
     assert development.terms["g1"] >= development.terms.get("g2", 0)
-    full = development.stats["society_full_permille"]
-    assert isinstance(full, int)
-    assert full in FULL_CANDIDATES
+    fulls = cast("dict[str, int]", development.stats["society_full_permille"])
+    assert set(fulls) == {"state_land", "city", "town"}
+    # g1 (900) and g2 (400) are reached by a hearth, g3 (0) is not
+    assert development.stats["civilised_permille"] == 666
+    assert development.stats["coverage_permille"] == 1000
+    assert all(full in FULL_CANDIDATES for full in fulls.values())
     assert development.stats["society_max"] == 12
 
 
@@ -439,7 +478,7 @@ def test_verification_accepts_the_planned_output() -> None:
     }
 
 
-@pytest.mark.parametrize("case", ["kept", "duplicate", "sea", "high", "harbour", "village"])
+@pytest.mark.parametrize("case", ["kept", "old", "duplicate", "sea", "high", "harbour", "village"])
 def test_verification_rejects_broken_output(case: str) -> None:
     """Each broken record raises instead of being repaired."""
     terms = {"g1": 11, "g2": 5}
@@ -449,6 +488,10 @@ def test_verification_rejects_broken_output(case: str) -> None:
     rules = None
     if case == "kept":
         rules = RULES
+    if case == "old":
+        rules = drop_block_entries(RULES, ("development",), NEW_WORLD_KEYS).replace(
+            "base = -2", "base = -3"
+        )
     if case == "sea":
         terms = {**terms, "sea": 2}
     if case == "high":

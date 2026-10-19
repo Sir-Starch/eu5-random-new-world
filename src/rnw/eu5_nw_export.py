@@ -45,7 +45,9 @@ from rnw.eu5_development import (
     building_lines,
     calibrate,
     development_lines,
+    development_rules,
     hundredths_text,
+    river_sizes,
     shelter,
     template_harbours,
 )
@@ -199,7 +201,7 @@ UNTESTED: Final[tuple[str, ...]] = (
     (
         "Development entries keyed by generated location keys, per-port harbour values and "
         "market villages in generated state capitals are untested; so is the estimate in "
-        "the report (the river term is left out)."
+        "the report (river size is inferred from the widest river pixel)."
     ),
     (
         "Native countries use new three-letter tags defined in "
@@ -913,12 +915,23 @@ def _vanilla_american(game_map: Eu5Map, hierarchy: dict[str, Location]) -> dict[
 def calibrate_development(
     game_dir: Path, game_map: Eu5Map, hierarchy: dict[str, Location]
 ) -> DevelopmentCalibration:
+    """Development calibration on the vanilla 1337 Americas of the installation."""
+    american = _vanilla_american(game_map, hierarchy)
+    sizes = river_sizes(
+        game_map.labels,
+        game_map.rivers,
+        len(game_map.keys),
+        widths=RIVER_WIDTH_CODES,
+        limit=RIVER_CLASSES,
+    )
+    index = {key: number for number, key in enumerate(game_map.keys)}
     return calibrate(
         rules_text=_read(game_dir, f"{SETUP_DIR}/{DEVELOPMENT_FILE}"),
         templates_text=_read(game_dir, TEMPLATES),
         buildings_text=_read(game_dir, f"{SETUP_DIR}/{BUILDINGS_FILE}"),
         countries_text=_read(game_dir, f"{SETUP_DIR}/10_countries.txt"),
-        american=_vanilla_american(game_map, hierarchy),
+        american=american,
+        rivers={key: int(sizes[index[key]]) for key in american},
     )
 
 
@@ -932,13 +945,21 @@ def _plan_development(  # noqa: PLR0913 - development reads the calibration, wor
     natives: NativeWorld,
     labels: NDArray[np.int32],
     docks: dict[int, tuple[int, int]],
+    river_codes: NDArray[np.uint8],
 ) -> Development:
     wet = {CellClass.SEA, CellClass.LAKE}
     table = np.array([kind in wet for kind in (*game_map.classes, *world.classes)], dtype=bool)
     cells = sorted(docks)
     scores = shelter(table[labels], np.array([docks[cell] for cell in cells], dtype=np.int64))
+    sizes = river_sizes(
+        world.labels,
+        river_codes,
+        len(world.classes) + 1,
+        widths=RIVER_WIDTH_CODES,
+        limit=RIVER_CLASSES,
+    )
     cell_fields = [
-        (cell.key, biomes.vegetation[i], biomes.climate[i], biomes.topography[i])
+        (cell.key, biomes.vegetation[i], biomes.climate[i], biomes.topography[i], int(sizes[i]))
         for i, cell in enumerate(plan.cells)
         if cell.kind is CellClass.LAND
     ]
@@ -1006,7 +1027,8 @@ def verify_development(  # noqa: PLR0913, PLR0917 - every generated development 
     def text(relative: str) -> str:
         return outputs[_mod_path(relative)].decode("utf-8-sig")
 
-    block = parse(text(f"{SETUP_DIR}/{DEVELOPMENT_FILE}")).block("development")
+    rules_text = text(f"{SETUP_DIR}/{DEVELOPMENT_FILE}")
+    block = parse(rules_text).block("development")
     if block is None:
         message = "No development block in the output"
         raise NewWorldExportError(message)
@@ -1014,8 +1036,12 @@ def verify_development(  # noqa: PLR0913, PLR0917 - every generated development 
     if kept:
         message = f"Development entry {kept[0]} of the vanilla New World was kept"
         raise NewWorldExportError(message)
-    found = _verify_terms(block, plan, development, calibration)
     generated = {cell.key for cell in plan.cells}
+    old = {k: v for k, v in calibration.rules.items() if k not in new_world_keys}
+    if {k: v for k, v in development_rules(rules_text).items() if k not in generated} != old:
+        message = "Development rules outside the New World differ from vanilla"
+        raise NewWorldExportError(message)
+    found = _verify_terms(block, plan, development, calibration)
     harbours = {k: v for k, v in template_harbours(text(TEMPLATES)).items() if k in generated}
     if harbours != development.harbours or not set(harbours.values()) <= set(calibration.harbours):
         message = "Generated harbour values differ from the ports or the vanilla values"
@@ -1102,6 +1128,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         natives=natives,
         labels=final_labels,
         docks=ports[1],
+        river_codes=river_codes,
     )
     texts, text_stats = _text_outputs(
         game_dir,

@@ -77,6 +77,8 @@ Generated cities stay low because they stand on poor land. This is a watch item,
 
 **Second revision (2026-10-19).** A fixed saturation of 800 passed on continents 3706823338 (state members 4.11, capitals 3.89) but failed on archipelago 5 (members 6.39 = 1.55×, capitals 6.42): island state land gets about 2 more development from its physical rules, and no single constant satisfied both worlds (continents needed `full` ≤ about 880, archipelago ≥ about 825). Vanilla's keyed entries compensate terrain in the same way (Mesoamerica +12 on jungle, Great Plains +5), so `full` is now fitted per world: `fit_full` takes the smallest candidate in 250…3000 (step 5) for which the estimated mean development of state capitals and members together is closest to the vanilla mean. On archipelago 5's complexities it gives `full` = 1115 and capitals 4.42, members 4.30.
 
+**Audit revision (2026-10-19, Opus, product version 0.9.3).** The owner rejected the remaining weaknesses. An audit on cached worlds found: (1) rivers are not spread alike in vanilla and generated land (generated cities have a river in 857–1000‰ of cases, vanilla cities in 111‰), so leaving the river term out biased the calibration; the estimate now includes it with river size taken from `rivers.png` [INFERRED]. (2) Generated cities and towns stand on poorer land than the rest of generated state land, while vanilla cities stand on better land than vanilla state land, so one state-land curve cannot reach both class means; the saturation is now fitted per settlement class (cities, towns, other state land). (3) A new invariant keeps every Old World development entry identical to vanilla. Tribes and unorganised land stay below vanilla for reasons of land and authored vanilla bonuses (see [economy](../economy.md)); they are not fitted. Cities and towns join the acceptance criteria (0.75–1.5× vanilla).
+
 ### C. Harbour suitability
 
 Replace the constant 0.50 in `eu5_nw_export._template_lines` with one value per generated port location. Land without a port keeps no harbour field, as in vanilla, where every harbour entry has a port.
@@ -115,7 +117,7 @@ Add a `development` section to `report.json` with:
 - the number of market villages and the share of state capitals that have one;
 - the estimated mean development per class for the generated world and for the vanilla Americas. The classes are exclusive: city, town, other state capital, other state member, tribe, unorganised.
 
-The estimate uses: base + coastal × harbour + rank + vegetation + climate + topography + keyed entries, clamped at 0. It leaves out the river term because the engine's river size is unknown. Compute it for both sides with the same function, and label it an estimate.
+The estimate uses: base + coastal × harbour + rank + vegetation + climate + topography + keyed entries, clamped at 0. It leaves out the river term because the engine's river size is unknown. Compute it for both sides with the same function, and label it an estimate. (Since the audit revision the estimate includes the river term with an inferred river size, C76.)
 
 ## Code placement
 
@@ -149,10 +151,10 @@ In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B
 2. Raise PATCH per [ADR 0003](../adr/0003-versioning.md): 0.9.1 → 0.9.2, or the next PATCH if the owner has accepted R6 in the meantime. Update golden digests only if they change; `rnw synth` output should not change.
 3. Build three worlds, one at a time, each in the foreground under `timeout 1200` and each into `generated/rnw_exp_new_world --replace` (the CLI accepts only `rnw_exp_*` outputs; do not create other bundles). Build continents 3706823338 first, then archipelago 5, then a fresh random continents seed. Copy each `report.json` to gitignored `local_data/` before the next build, so the bundle that remains is the fresh seed for the owner. Confirm with `pgrep -af rnw` that nothing is left running. On each world:
    - every invariant passes;
-   - estimated mean development of state members and of state capitals is each within 0.75–1.5 × the vanilla value;
+   - estimated mean development of cities, towns, state capitals and state members is each within 0.75–1.5 × the vanilla value (cities and towns since the audit revision);
    - the tribe and unorganised means are each at most the vanilla value + 0.5;
    - the Spearman correlation between the term and population is at least 0.5;
-   - the share of land with a positive term is 25–45%;
+   - at least 85% of the land that a hearth reaches (complexity above 0) has a positive term. Until the audit revision this read "the share of land with a positive term is 25–45%"; that bound measured the number of hearths, not the development model: on a world with 3 hearths (continents 3717486232) only 230‰ of land has any complexity, so no term can reach 250‰ (C76);
    - the harbour zero share is 758‰ ± 10 and the mean 0.101 ± 0.01;
    - the share of state capitals with a market village is 354‰, up to rounding.
 
@@ -172,7 +174,7 @@ In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B
 **Method:**
 
 1. Use the development map mode. Hearth regions should be the bright areas, with no bright patch left where vanilla Mesoamerica or Colombia lay.
-2. Compare the development in the tooltips of one city, one state member and one tribe location with the report's estimate. This tests the clamp and the omitted river term.
+2. Compare the development in the tooltips of one city, one state member and one tribe location with the report's estimate. This tests the clamp and the inferred river size.
 3. Check the harbour suitability of three ports.
 4. Check one market village in a state capital's building list.
 5. Look for `error.log` lines that name `14_development`, `building_manager` or `rnw_` keys.

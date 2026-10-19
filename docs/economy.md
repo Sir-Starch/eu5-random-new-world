@@ -1,6 +1,6 @@
 # Start economy (phase R7)
 
-**Status:** R7a implemented on 2026-10-19 (product version 0.9.2, claims C73–C75), NOT GAME VALIDATED. Designed in [sonnet-r7a-development](handoff/sonnet-r7a-development.md); it passes the offline acceptance on three worlds (C75); in-game test pending (experiment 012). It covers start development, harbour suitability and market villages. Institutions, roads, other buildings, technology and extraordinary societies are open work.
+**Status:** R7a implemented on 2026-10-19 (product version 0.9.2, claims C73–C75) and revised after an audit (0.9.3, C76), NOT GAME VALIDATED. Designed in [sonnet-r7a-development](handoff/sonnet-r7a-development.md); in-game test pending (experiment 012). It covers start development, harbour suitability and market villages. Institutions, roads, other buildings, technology and extraordinary societies are open work.
 
 ## Goal
 
@@ -23,16 +23,32 @@ The generator kept the 14 American region entries, and generated regions reuse v
 |---|---|
 | Calibration | `calibrate` parses the vanilla setup texts and templates: the rules, the maximum keyed sum `B` (12), the sorted American harbour values, the share of American state capitals with a market village (354‰) and the estimated mean development per class. |
 | Positional entries | `eu5_rewrite.drop_block_entries` removes every entry keyed by a region, area, province or location of the vanilla New World from the `development` block. `vanilla_new_world_keys` fails the export if a kept vanilla location lies under one of them. |
-| Society term | `society_term`: `(B × level + 500) // 1000` per generated land location, with level = `min(1000, complexity × 1000 // full)` and complexity the permille level of the society model. `fit_full` picks `full` per world among 250…3000 (step 5): the smallest candidate for which the estimated mean development of state capitals and members together comes closest to the vanilla mean (`FULL_CANDIDATES`). Only terms of 1 or more become `<key> = <n>` lines; `full` is reported as `society_full_permille`. |
+| Society term | `society_term`: `(B × level + 500) // 1000` per generated land location, with level = `min(1000, complexity × 1000 // full)` and complexity the permille level of the society model. `fit_fulls` picks `full` per world and settlement class among 250…3000 (step 5): for cities, for towns and for the other state land (capitals and members together), the smallest candidate whose estimated mean development comes closest to the vanilla mean of the same class. Tribes and unorganised land use the state-land `full`. Only terms of 1 or more become `<key> = <n>` lines; the three `full` values are reported as `society_full_permille`. |
 | Harbours | `shelter` casts 48 integer-direction rays of 64 px from each port's dock on the final world raster (columns wrap, lakes count as water) and counts those that meet land. `harbour_values` sorts the ports by (score, key) and takes the vanilla value at index `(2i + 1) × m // (2n)`. Shelter predicts vanilla values only weakly (Spearman 0.10–0.19, C74), so the distribution is what is reproduced. |
 | Market villages | `market_villages` gives the vanilla share of generated state capitals one level-1 `market_village`, most complex first, ties by population then key. |
 | Output | `14_development.txt` gets the dropped entries and the term lines; `07_cities_and_buildings.txt` gets the village lines in `building_manager`; location templates carry the harbour values of ports only. |
 
-Choices marked [INFERRED design]: a term that follows complexity and saturates at a level fitted per world, the use of shelter to order harbours, and the choice of village capitals by complexity. The fit exists because vanilla's keyed entries lift state land to a similar level on any terrain (Mesoamerica +12 on jungle, Great Plains +5), whereas the physical rules give generated state land different development per world. Copying vanilla's per-class bonus would have given states 8.7–10.6 against 4.1 (C74); a purely linear term left continents states at 0.63–0.73 of the vanilla mean and a fixed saturation of 800 permille left archipelago 5 states at 1.55 (C75).
+Choices marked [INFERRED design]: a term that follows complexity and saturates at a level fitted per world and settlement class, river size as the rank of the widest river pixel, the use of shelter to order harbours, and the choice of village capitals by complexity. The fit exists because vanilla's keyed entries lift each settlement class to its level on any terrain (Mesoamerica +12 on jungle, Great Plains +5), whereas the physical rules give generated land of each class different development per world. Copying vanilla's per-class bonus would have given states 8.7–10.6 against 4.1 (C74); a purely linear term left continents states at 0.63–0.73 of the vanilla mean; a fixed saturation of 800 permille left archipelago 5 states at 1.55 (C75). A single state-land curve then left cities at 7.8–9.7 and towns at 3.1–6.6 against vanilla 12.2 and 6.1, because generated urban centres stand on poorer land than the rest of generated state land, while vanilla cities stand on better land than vanilla state land (C76).
 
-## Results (C75)
+## Estimate and the river term
 
-On continents 3706823338, archipelago 5 and continents 515055336 the estimated mean development of state members is 4.42, 4.31 and 4.33 (vanilla 4.13) and of state capitals 4.13, 4.42 and 4.40 (vanilla 4.60). Tribes and unorganised land stay under 0.3 (vanilla 1.14 and 0.70). The fitted saturation is 760, 1115 and 810 permille. Towns (3.05–6.55) and cities (7.80–9.71) lie below vanilla (6.13, 12.22) because they stand on poor land; this is watched, not a criterion.
+The estimate sums every rule of `14_development.txt` and clamps at zero, the same function for vanilla and generated land. River size is the rank of the widest river pixel of the location in `rivers.png` (width codes 4, 5, 11, 15 give 1–4; a location with only source, join or split pixels gets 1). The engine's mapping is not documented; the map legend names five sizes, small river to great river [INFERRED]. The term matters because rivers are not spread alike: generated cities have a river in 857–1000‰ of cases against 111‰ in vanilla, state capitals 702–795‰ against 463‰, because hearths and population follow river farming (C76). Leaving the term out understated generated urban development relative to vanilla.
+
+## Results (C76)
+
+Estimated mean development (vanilla Americas: city 12.28, town 6.38, state capital 4.96, state member 4.41, tribe 1.26, unorganised 0.78):
+
+| World | City | Town | Capital | Member | Tribe | Unorganised | `full` city / town / state land |
+|---|---|---|---|---|---|---|---|
+| continents 3706823338 | 12.07 | 6.40 | 4.38 | 4.72 | 0.12 | 0.13 | 250 / 880 / 785 |
+| archipelago 5 | 12.20 | 6.37 | 4.81 | 4.61 | 0.36 | 0.38 | 725 / 890 / 1175 |
+| continents 3717486232 | 12.29 | 6.29 | 4.60 | 4.66 | 0.18 | 0.20 | 745 / 1100 / 1320 |
+
+The rank correlation of term and population is 657, 628 and 573‰ (vanilla 507‰). Of the land a hearth reaches, 912–933‰ gets a term (`coverage_permille`); that land is 229–295‰ of all land (`civilised_permille`), depending on whether a world has 3 or 4 hearths. Two builds of seed 3717486232 are byte-identical (715 files). Harbour values and market villages reproduce the vanilla distribution and share.
+
+## Measured differences that are not fitted
+
+Tribes and unorganised land stay below vanilla (0.1–0.4 against 1.26 and 0.78, C76). The physical part over all generated land equals vanilla's (−4.0 to −4.5 against −4.26), but the generator puts civilisations on the best land (state capitals −1.3 to −2.0 against −6.2 for vanilla capitals in jungles and highlands), so generated tribal land is poorer than vanilla's (−4.3 to −4.6 against −3.25). Vanilla also gives land outside states authored regional bonuses (Great Plains +5, tribes inside Mesoamerica +12). A fit for tribes would need the full civilisation term on all tribal land with complexity above 0.25 and still stays below vanilla (0.6–1.1), so it is not made: tribal land earns development only from hearth complexity and its own land.
 
 ## Settings
 
@@ -41,13 +57,13 @@ None. Presets (R8) will own a development control.
 ## Checks
 
 - Synthetic tests (`tests/test_development.py`): decimals and signs; templates with nested blocks; calibration on a small setup; terms, harbour quantiles, shelter geometry (including the map wrap), village choice, rank correlation; line insertion; `drop_block_entries`; `verify_development` accepts the plan and rejects a kept New World entry, a repeated key, a sea key, a value above `B`, a harbour on a location without a port and a village outside its capital.
-- Export invariants (`verify_development`): the checks above on the final texts.
+- Export invariants (`verify_development`): the checks above on the final texts, plus every Old World development entry identical to vanilla.
 - `tests/test_local_install.py` reads the vanilla calibration (`B = 12`, 1,092 harbour values, 354‰).
-- `report.json` section `development` holds `B`, the entry count, the share of land with a positive term, the rank correlation of term and population, harbour histograms, village counts and the estimated mean development per class for the generated world and for vanilla. The estimate is a clamp-at-zero sum without the river term (the engine's river size is unknown).
+- `report.json` section `development` holds `B`, the fitted `full` per class, the entry count, the share of land with a positive term, the share reached by a hearth and its coverage, the rank correlation of term and population, harbour histograms, village counts and the estimated mean development per class for the generated world and for vanilla. The estimate is a clamp-at-zero sum of every rule, with river size inferred from `rivers.png`.
 
 ## Open work
 
 - Institutions, roads and other buildings (terraces, walls, culture buildings).
-- The river term in the estimate and the effect of `development` on pops after the start.
+- The engine's river size (experiment 012) and the effect of `development` on pops after the start.
 - Technology and institution spread per society; extraordinary societies (R7 proper).
 - Whether the engine honours entries for new keys (experiment 012).
