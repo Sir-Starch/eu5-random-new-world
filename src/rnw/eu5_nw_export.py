@@ -81,6 +81,7 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
+from rnw.eu5_shaders import TERRA_INCOGNITA, soften_terra_incognita
 from rnw.eu5_slots import (
     CLIMATE_GROUPS,
     COAST_SLOTS,
@@ -186,6 +187,10 @@ UNTESTED: Final[tuple[str, ...]] = (
         "in_game/setup/countries/rnw_natives.txt without scripted coats of arms; that EU5 "
         "accepts them, pop-type tribes on generated locations and engine-drawn coats of "
         "arms is untested."
+    ),
+    (
+        "The terra incognita shader is patched to soften its edge over about two location "
+        "pixels; that EU5 compiles the patched shader and its cost are untested."
     ),
     (
         "Holy sites of placed American religions move into their generated religion zones; "
@@ -677,11 +682,15 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         if text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
     outputs[DEFINITION_FILE] = country_definitions(natives.countries)
+    shader = soften_terra_incognita(_read(game_dir, TERRA_INCOGNITA))
+    if shader is not None:
+        outputs[_mod_path(TERRA_INCOGNITA)] = _encode(game_dir, TERRA_INCOGNITA, shader)
     outputs.update(_localization(plan, country_names(natives.countries)))
     stats: dict[str, object] = {
         "ports": len(port_rows),
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
         "setup_identifiers_removed": len(setup.removed_ids),
+        "terra_incognita_softened": shader is not None,
     }
     return outputs, stats
 

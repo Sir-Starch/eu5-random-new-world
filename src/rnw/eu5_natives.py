@@ -474,6 +474,7 @@ class _Cells:
     topography: list[str]
     latitude: list[int]
     coastal: list[bool]
+    seas: list[list[int]]
 
 
 def land_graph(
@@ -502,9 +503,12 @@ def land_graph(
         }
     )
     is_coastal = np.zeros(len(land), dtype=bool)
-    for wet, members in shores.items():
+    seas: list[list[int]] = [[] for _ in land]
+    for wet, members in sorted(shores.items()):
         if sea[wet]:
             is_coastal[members] = True
+            for member in sorted(set(members)):
+                seas[member].append(wet)
     climate = [biomes.climate[cell] for cell in land]
     vegetation = [biomes.vegetation[cell] for cell in land]
     topography = [biomes.topography[cell] for cell in land]
@@ -557,6 +561,7 @@ def land_graph(
         topography=topography,
         latitude=latitudes,
         coastal=is_coastal.tolist(),
+        seas=seas,
     )
     return graph, cells
 
@@ -783,7 +788,9 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
     tribe_names = NameGenerator(seed, "tribes", frozenset(cell.name for cell in plan.cells))
     religion_areas: dict[int, set[str]] = {}
     for node, zone in enumerate(societies.religion.tolist()):
-        religion_areas.setdefault(zone, set()).add(plan.cells[cells.cells[node]].area)
+        known = religion_areas.setdefault(zone, set())
+        known.add(plan.cells[cells.cells[node]].area)
+        known.update(plan.cells[sea].area for sea in cells.seas[node])
     countries: list[Country] = []
     for number, polity in enumerate(societies.polities):
         is_state = polity.kind == STATE
