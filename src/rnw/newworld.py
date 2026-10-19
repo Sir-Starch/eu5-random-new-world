@@ -39,13 +39,17 @@ WOBBLE_PASSES: Final[int] = 64
 STRIP_ROWS: Final[int] = 1024
 INTERIOR_LIMIT: Final[int] = 512
 SHORE_LIMIT: Final[int] = 64
-# Seam strait: no land within SEAM_GAP_PX of the wrap; the coasts follow a coastal ramp of
-# SEAM_RAMP_MARGINS coast margins shifted by up to SEAM_SHIFT_PX of warped noise, so the
-# strait meanders and changes width instead of running as a straight canal.
+# Land keeps clear of the domain edge and of a SEAM_GAP_PX strait at the wrap. Elevation
+# falls over a ramp of EDGE_RAMP_MARGINS coast margins whose start moves inland by up to
+# EDGE_SHIFT_RAMPS ramps of warped noise with a period of EDGE_SHIFT_PERIOD_PERMILLE of the
+# ramp, so coasts neither trace the canvas
+# nor run as a straight canal along the seam. The ramp does not grow with the feature size:
+# a wide ramp leaves only the canvas core for the land budget, and every seed then fills
+# the same outline [V-EXEC C64].
 SEAM_GAP_PX: Final[int] = 24
-SEAM_RAMP_MARGINS: Final[int] = 3
-SEAM_SHIFT_PX: Final[int] = 160
-SEAM_PERIOD: Final[int] = 480
+EDGE_RAMP_MARGINS: Final[int] = 4
+EDGE_SHIFT_RAMPS: Final[int] = 2
+EDGE_SHIFT_PERIOD_PERMILLE: Final[int] = 2500
 MAX_STRAITS: Final[int] = 16
 OUTSIDE: Final[int] = 2
 LAND_KINDS: Final[frozenset[CellClass]] = frozenset(
@@ -101,37 +105,24 @@ def _seam_gap(columns: NDArray[np.int64], seam: int) -> NDArray[np.int64]:
     return np.where(columns >= seam, columns - seam, seam - 1 - columns)
 
 
-def _seam_penalty(
-    shape: tuple[int, int], seam: int, seed: int, ramp: int
-) -> tuple[slice, NDArray[np.int64]]:
-    """Columns near the seam and the elevation penalty that opens a strait there."""
-    height, width = shape
-    start = max(0, seam - ramp - SEAM_SHIFT_PX)
-    stop = min(width, seam + ramp + SEAM_SHIFT_PX)
-    gap = _seam_gap(np.arange(start, stop, dtype=np.int64), seam)[np.newaxis, :]
-    shift = warped_noise(
-        derive_seed(seed, "nw_seam_coast"),
-        (height, stop - start),
-        step=8,
-        period=SEAM_PERIOD,
-        octaves=4,
-        warp_px=SEAM_PERIOD // 4,
-    )
-    reach = gap + shift * SEAM_SHIFT_PX // NOISE_SCALE
-    return slice(start, stop), (ramp - reach) * NOISE_SCALE * 3 // ramp
-
-
 def _land(
     domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings, seam: int | None
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation."""
     margin = settings.coast_margin_px
-    ramp = max(4 * margin, settings.feature_px // 3)
+    ramp = EDGE_RAMP_MARGINS * margin
+    shift_px = EDGE_SHIFT_RAMPS * ramp
+    shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
     sources = ~domain
     sources[[0, -1], :] = True
     sources[:, [0, -1]] = True
-    edge = distance_from(sources, ramp + 1, octagonal=True)
-    elevation = _field(
+    guard = sources.copy()
+    strait = np.zeros(domain.shape, dtype=bool)
+    if seam is not None and 0 < seam < domain.shape[1]:
+        columns = np.arange(domain.shape[1], dtype=np.int64)
+        strait |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
+        guard |= strait
+    relief = _field(
         seed,
         "new_world_elevation",
         shape=domain.shape,
@@ -147,25 +138,31 @@ def _land(
         octaves=3,
         persistence_permille=500,
     )
-    reach = edge.astype(np.int64) + wobble.astype(np.int64) * ramp // (3 * NOISE_SCALE)
-    penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
-    shore = edge < margin
-    if seam is not None and 0 < seam < domain.shape[1]:
-        shape = (int(domain.shape[0]), int(domain.shape[1]))
-        near, extra = _seam_penalty(shape, seam, seed, SEAM_RAMP_MARGINS * margin)
-        penalty[:, near] = np.maximum(penalty[:, near], extra)
-        columns = np.arange(shape[1], dtype=np.int64)
-        shore |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
-    elevation = (elevation - np.maximum(0, penalty)).astype(np.int32)
-    interior = domain & ~shore
-    values = elevation[interior]
-    keep = values.size * settings.land_permille // PERMILLE
-    threshold = np.partition(values, values.size - keep)[values.size - keep]
-    land = interior & (elevation >= threshold)
+    shift = warped_noise(
+        derive_seed(seed, "new_world_edge_shift"),
+        (int(domain.shape[0]), int(domain.shape[1])),
+        step=8,
+        period=shift_period,
+        octaves=4,
+        warp_px=shift_period // 4,
+    )
+    # Warped noise mostly stays within +-0.4 of NOISE_SCALE; stretch it over the shift.
+    inland = shift_px * np.clip(NOISE_SCALE // 2 + shift * 5 // 4, 0, NOISE_SCALE) // NOISE_SCALE
+    offset = wobble.astype(np.int64) * ramp // (3 * NOISE_SCALE) - inland
     open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
-    if seam is not None and 0 < seam < domain.shape[1]:
-        open_shore |= shore & ~(edge < margin)
-    land = open_channels(domain, land, shore=shore, open_shore=open_shore, width=margin)
+    open_shore |= strait & ~(distance_from(sources, margin, octagonal=True) < margin)
+    # A sea cut off from open water (around a protected islet) gets a strait: its shortest
+    # path to open water joins the guard and the coasts are drawn again, so the strait has
+    # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
+    land, shore, elevation = _coasts(domain, guard, relief, offset, ramp=ramp, settings=settings)
+    for _ in range(MAX_STRAITS):
+        path = stray_strait(domain, land, shore=shore, open_shore=open_shore)
+        if path is None:
+            break
+        guard |= path
+        land, shore, elevation = _coasts(
+            domain, guard, relief, offset, ramp=ramp, settings=settings
+        )
     parts = label_components(land.astype(np.int32))
     land &= np.bincount(parts.ravel())[parts] >= settings.min_island_px
     coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
@@ -177,6 +174,35 @@ def _land(
     size = np.bincount(parts.ravel())[parts]
     small = enclosed & ((size < settings.min_lake_px) | (size > settings.max_lake_px))
     return land | small, ocean, enclosed & ~small, elevation
+
+
+def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and the ramp.
+    domain: NDArray[np.bool_],
+    guard: NDArray[np.bool_],
+    relief: NDArray[np.int32],
+    offset: NDArray[np.int64],
+    *,
+    ramp: int,
+    settings: NewWorldSettings,
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
+    """Lower the relief over a ramp from the guard and keep the land budget.
+
+    Returns land, shore (no land within a coast margin of the guard) and the elevation.
+    """
+    # The cap must exceed every reach, or the wobble would dent the interior too.
+    edge = distance_from(guard, ramp - int(offset.min()) + 2, octagonal=True)
+    reach = edge.astype(np.int64) + offset
+    penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
+    # No land in slivers of the domain too thin to hold a full ramp.
+    opened = distance_from(edge >= ramp, ramp + 1, octagonal=True) <= ramp
+    penalty = np.where(opened, penalty, 3 * NOISE_SCALE)
+    shore = edge < settings.coast_margin_px
+    elevation = (relief - np.maximum(0, penalty)).astype(np.int32)
+    interior = domain & ~shore
+    values = elevation[interior]
+    keep = values.size * settings.land_permille // PERMILLE
+    threshold = np.partition(values, values.size - keep)[values.size - keep]
+    return interior & (elevation >= threshold), shore, elevation
 
 
 def open_sea(domain: NDArray[np.bool_]) -> NDArray[np.bool_]:
@@ -237,34 +263,28 @@ def _path(
     return path.reshape(height, width)
 
 
-def open_channels(
+def stray_strait(
     domain: NDArray[np.bool_],
     land: NDArray[np.bool_],
     *,
     shore: NDArray[np.bool_],
     open_shore: NDArray[np.bool_],
-    width: int,
-) -> NDArray[np.bool_]:
-    """Cut straits so every water body that touches a domain edge reaches the open sea.
+) -> NDArray[np.bool_] | None:
+    """Shortest path from a sea that land cuts off from open water to open water.
 
-    Water around a hole in the domain (a protected island or sea) counts as sea; if
-    generated land encloses it, a strait ``width`` pixels wide is cut along the shortest
-    path to open water, so no sea zone and no protected coast is cut off.
+    Water around a hole in the domain (a protected island or sea) counts as sea, so no sea
+    zone and no protected coast may be cut off. None when every sea that touches ``shore``
+    reaches ``open_shore``, or when no path through the domain exists.
     """
-    for _ in range(MAX_STRAITS):
-        coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
-        parts = label_components(coded)
-        water = domain & ~land
-        open_parts = np.unique(parts[water & open_shore])
-        stray = np.setdiff1d(np.unique(parts[water & shore]), open_parts)
-        if not stray.size:
-            break
-        start = water & (parts == stray[0])
-        path = _path(start, water & np.isin(parts, open_parts), domain)
-        if not np.any(path):
-            break
-        land &= distance_from(path, width // 2 + 1, octagonal=True) > width // 2
-    return land
+    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
+    parts = label_components(coded)
+    water = domain & ~land
+    open_parts = np.unique(parts[water & open_shore])
+    stray = np.setdiff1d(np.unique(parts[water & shore]), open_parts)
+    if not stray.size:
+        return None
+    path = _path(water & (parts == stray[0]), water & np.isin(parts, open_parts), domain)
+    return path if np.any(path) else None
 
 
 def _weighted(

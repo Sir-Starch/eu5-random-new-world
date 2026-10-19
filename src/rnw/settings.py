@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 SCHEMA_VERSION: Final[int] = 1
 GENERATOR: Final[str] = "rnw-geo"
-GENERATOR_VERSION: Final[str] = "0.6.0"
+GENERATOR_VERSION: Final[str] = "0.7.0"
 WINDOW_SIZE: Final[int] = 4
 
 

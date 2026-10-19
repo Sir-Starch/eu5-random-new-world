@@ -1,6 +1,6 @@
 # Terrain and biome synthesis (phase V1)
 
-**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). V1b rivers implemented on 2026-10-19 (generator 0.6.0, C59–C60) and awaiting owner review. NOT GAME VALIDATED.
+**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). V1b rivers implemented on 2026-10-19 (generator 0.6.0, C59–C60) and accepted by the owner in game (C64); the same review led to V1b.1 (generator 0.7.0, below). NOT GAME VALIDATED.
 
 ## Problem
 
@@ -33,6 +33,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 
 | Stage | Module | Method |
 |---|---|---|
+| 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget. Near a guard (canvas edge, the seam band, strait axes) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
 | 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow noise zero lines (belts) whose width and edges vary, cut into segments by a presence noise, with ridged crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
 | 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation within the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
@@ -70,7 +71,8 @@ The interim patch transfer copied river and border bands from unrelated places a
 
 ## Open work
 
-- **V1b rivers:** implemented (above, C60); awaiting review in game. Lakes end rivers (no outflows yet); splits and deltas are not generated.
+- **V1b rivers:** accepted in game (C64). Lakes end rivers (no outflows yet); splits and deltas are not generated.
+- **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Awaiting review in game.
 - Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
 - Erosion for more natural valleys.
 - The mod is about 1.3 GB, because instance files are whole-file overrides.

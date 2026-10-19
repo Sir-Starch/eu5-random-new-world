@@ -1,16 +1,31 @@
-"""New World cells: the seam strait and shore-aware city points (synthetic domains)."""
+"""New World cells: seed-driven coasts, the seam strait and city points (synthetic domains)."""
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
 # pyright: reportAny=false
 
 from __future__ import annotations
 
+from dataclasses import replace
+from itertools import combinations
+from typing import TYPE_CHECKING
+
 import numpy as np
 
 from rnw.model import CellClass
-from rnw.newworld import SEAM_GAP_PX, derive_world, generate_new_world, open_channels, open_sea
+from rnw.newworld import (
+    LAND_KINDS,
+    SEAM_GAP_PX,
+    NewWorld,
+    derive_world,
+    generate_new_world,
+    open_sea,
+    stray_strait,
+)
 from rnw.settings import NewWorldSettings
 from rnw.topology import distance_from, label_components
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 SMALL = NewWorldSettings(
     land_permille=450,
@@ -31,12 +46,30 @@ SMALL = NewWorldSettings(
 )
 
 
+def _land_mask(world: NewWorld) -> NDArray[np.bool_]:
+    land = np.array([kind in LAND_KINDS for kind in world.classes] + [False])
+    return land[world.labels]
+
+
+def test_land_outline_changes_with_the_seed() -> None:
+    """Seeds place different coasts in one domain; a thin arm of the domain stays sea."""
+    settings = replace(SMALL, feature_px=240, octaves=5, land_permille=400, coast_margin_px=4)
+    domain = np.zeros((300, 600), dtype=bool)
+    domain[20:280, 20:400] = True
+    domain[140:170, 400:590] = True
+    masks = [
+        _land_mask(generate_new_world(domain, seed=seed, settings=settings)) for seed in range(1, 5)
+    ]
+    overlap = [np.count_nonzero(a & b) / np.count_nonzero(a | b) for a, b in combinations(masks, 2)]
+    assert np.mean(overlap) < 0.55  # a ramp of feature_px / 3 gave one outline (0.83)
+    assert not any(np.any(mask[:, 440:]) for mask in masks)
+
+
 def test_seam_column_gets_a_strait() -> None:
     """No land lies within the seam gap; land remains on both sides."""
     domain = np.ones((160, 400), dtype=bool)
     world = generate_new_world(domain, seed=3, settings=SMALL, seam=200)
-    land = np.array([kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes])
-    mask = land[world.labels] & (world.labels >= 0)
+    mask = _land_mask(world)
     assert not np.any(mask[:, 200 - SEAM_GAP_PX : 200 + SEAM_GAP_PX])
     assert np.any(mask[:, :200])
     assert np.any(mask[:, 200:])
@@ -57,8 +90,8 @@ def test_city_points_move_away_from_the_shore() -> None:
     assert world.interior[0].tolist()[1] < 10
 
 
-def test_enclosed_sea_gets_a_strait_to_the_open_sea() -> None:
-    """Water ringing a protected hole that land encloses is joined to open water."""
+def test_enclosed_sea_gets_a_path_to_the_open_sea() -> None:
+    """Water ringing a protected hole that land encloses gets a path to open water."""
     domain = np.ones((80, 120), dtype=bool)
     domain[36:44, 56:64] = False
     domain[0:3, 100:103] = False  # a protected corner must not seed the search
@@ -69,10 +102,26 @@ def test_enclosed_sea_gets_a_strait_to_the_open_sea() -> None:
     land &= domain
     shore = distance_from(~domain, 6, octagonal=True) < 6
     open_shore = distance_from(open_sea(domain), 6, octagonal=True) < 6
-    opened = open_channels(domain, land, shore=shore, open_shore=open_shore, width=6)
-    water = domain & ~opened
+    path = stray_strait(domain, land, shore=shore, open_shore=open_shore)
+    assert path is not None
+    assert 20 <= np.count_nonzero(path) <= 30
+    water = domain & ~(land & ~path)
     parts = label_components(water.astype(np.int32))
     assert parts[40, 54] == parts[2, 2]
-    assert np.count_nonzero(land & ~opened) < 400
-    assert np.array_equal(open_channels(domain, opened, shore=shore, open_shore=open_shore,
-                                        width=6), opened)  # fmt: skip
+    land[44:75, 58:62] = False
+    assert stray_strait(domain, land, shore=shore, open_shore=open_shore) is None
+
+
+def test_islet_inside_land_keeps_a_strait() -> None:
+    """Land generated around a protected islet leaves its sea joined to open water."""
+    settings = replace(SMALL, land_permille=700)
+    domain = np.ones((240, 240), dtype=bool)
+    domain[116:124, 116:124] = False
+    world = generate_new_world(domain, seed=5, settings=settings)
+    mask = _land_mask(world)
+    water = (world.labels >= 0) & ~mask
+    parts = label_components(np.where(water, 1, 0).astype(np.int32))
+    assert np.count_nonzero(mask) > mask.size // 3  # the islet sits inside a landmass
+    ring = parts[112:128, 112:128][water[112:128, 112:128]]
+    edge = parts[0, :][water[0, :]]
+    assert np.intersect1d(ring, edge).size

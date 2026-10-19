@@ -67,3 +67,10 @@
 - [V-EXEC] Implemented `rivers.py` (priority-flood drainage, rain-weighted catchments, head-down drawing with join pixels, valley carving) and the EU5 encoding; generator 0.6.0. Five worlds over two presets pass every river rule, the seam strait and the city-point checks (C60). `make check`: 93 passed.
 - [V-EXEC] The first full export on a fresh random seed failed sea reachability: land enclosed the sea around a protected islet. Added strait cutting for enclosed seas (C61). `make check` 88 passed; the three local tests pass.
 - [V-EXEC] Full exports of continents 7, continents 2026 and archipelago 5 pass every invariant and river rule, about 10 minutes each (C63). The first batch had been left running unattended in the background; the owner killed it as hung. Long exports now run one at a time under a timeout while the agent waits.
+
+## 2026-10-19 — V1b accepted; seed-driven coastlines (V1b.1)
+
+- [V-GAME owner review] Hydrology approved; V1b rivers accepted. Defect: the north-west ("Alaska") was the same as in the previous seed (C64).
+- [V-EXEC] Cause: the canvas-edge ramp grew with `feature_px` (533 px) and left only the canvas core for the land budget, so all seeds filled the same outline (IoU 0.53–0.67). Generator 0.7.0 shares one guard for the canvas edge, the seam and strait axes, with a 4-margin ramp moved inland by stretched warped noise; slivers stay sea; the wobble cap bug that speckled archipelago land is fixed. Enclosed seas get a strait axis in the guard instead of a straight canal. Overlap is now 0.31–0.45 (C64). `make check`: 96 passed; the three local tests pass.
+- [V-EXEC] Built seed 3706823338 (C65); all invariants and river rules pass.
+
