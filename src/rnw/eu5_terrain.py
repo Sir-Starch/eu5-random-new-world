@@ -1,11 +1,13 @@
 """Regenerate EU5 1.4.1 visual terrain under a generated New World.
 
-Height and material decal layers that overlap the canvas are rebuilt: water is the
-observed sea floor (2234), land starts above the observed minimum land height and rises
-inland with integer noise relief, wastelands carry ridged mountains, and new land takes
-the material of the nearest vanilla land pixel of the same decal. Mountain and volcano
-decals inside the canvas are disabled both in their instance files and in the decal
-cache. Values marked [V-EXEC] were measured on build 25905365.
+Height and material decal layers that overlap the canvas are rebuilt. Heights follow
+the vanilla coast profile at the shore and the continuous relief field inland (the same
+field that set cell topography), with fine detail noise whose amplitude grows with
+height. Materials are biome slots rebuilt from the location data by the vanilla rules
+(``eu5_slots.py``), so each location's biome, coast, borders and rivers render the way
+vanilla does. Mountain and volcano decals inside the canvas are disabled in their
+instance files and in the decal cache. Values marked [V-EXEC] were measured on build
+25905365.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -15,25 +17,19 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
+from rnw.eu5_slots import LEVELS, SlotTables, level_counts, synthesize
+from rnw.fields import PERMILLE, box_blur, upsample
 from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
-from rnw.terrain_materials import (
-    HIGHLAND,
-    LOWLAND,
-    NONE,
-    coastal_palette,
-    pick,
-    site_field,
-    site_offset,
-)
-from rnw.terrain_tiles import parse_info, read_level0, write_layer
-from rnw.topology import distance_from
+from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
+from rnw.topology import distance_from, euclidean_distance
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -42,36 +38,17 @@ if TYPE_CHECKING:
 
 TERRAIN: Final[str] = "game/in_game/gfx/terrain2"
 DECAL_CACHE: Final[str] = f"{TERRAIN}/terrain_cache/ingame_decals.json"
-SEA_FLOOR: Final[int] = 2234
-LAND_BASE: Final[int] = 5600
-INLAND_STEP: Final[int] = 18
-INLAND_LIMIT: Final[int] = 300
-RELIEF: Final[int] = 2200
-RELIEF_RAMP: Final[int] = 40
-RIDGE_HEIGHT: Final[int] = 15000
-RIDGE_RAMP: Final[int] = 60
-NO_MATERIAL: Final[int] = 255
 LOCATION_UNITS: Final[int] = 4
 HEIGHTMAP: Final[re.Pattern[str]] = re.compile(r"heightmap_\d+_\d+")
 OUTSIDE: Final[int] = -1
 WATER_CODE: Final[int] = 0
-WASTE_CODE: Final[int] = 2
-RELIEF_CODES: Final[dict[str, int]] = {
-    "wetlands": 1,
-    "flatland": 1,
-    "hills": 3,
-    "plateau": 4,
-    "mountains": 5,
-}
-# Per relief code: (noise amplitude, height offset, ridge weight in permille).
-RELIEF_SHAPE: Final[dict[int, tuple[int, int, int]]] = {
-    1: (700, 0, 0),
-    2: (3000, 3500, 1000),
-    3: (2600, 900, 0),
-    4: (1400, 3200, 0),
-    5: (4200, 2500, 450),
-}
-SMOOTH_RADIUS: Final[int] = 48
+LAND_CODE: Final[int] = 1
+DETAIL_PERIOD: Final[int] = 64
+DETAIL_BASE: Final[int] = 250
+DETAIL_PERMILLE: Final[int] = 60
+CREST_PERIOD: Final[int] = 48
+CREST_FULL: Final[int] = 16000
+CREST_HEIGHT: Final[int] = 2600
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,7 +79,70 @@ def heightmap_decals(cache: list[dict[str, object]], map_rows: int) -> list[Deca
     return found
 
 
-def _upsample(values: NDArray[np.int64] | NDArray[np.int8], factor: int) -> NDArray[np.int64]:
+@dataclass(eq=False)
+class DecalStore:
+    """Reads vanilla decal layers once and keeps them in compact form."""
+
+    game_dir: Path
+    map_shape: tuple[int, int]
+    cache: list[dict[str, object]] = field(init=False)
+    decals: list[Decal] = field(init=False)
+    _layers: dict[tuple[str, str], tuple[LayerFormat, NDArray[np.uint16] | NDArray[np.uint8]]] = (
+        field(init=False, default_factory=dict)
+    )
+
+    def __post_init__(self) -> None:
+        """Load the decal cache and the heightmap decal footprints."""
+        text = (self.game_dir / DECAL_CACHE).read_text(encoding="utf-8-sig")
+        self.cache = cast("list[dict[str, object]]", json.loads(text))
+        self.decals = heightmap_decals(self.cache, self.map_shape[0])
+
+    def paths(self, decal: str, kind: str) -> tuple[str, Path, Path]:
+        """Mod-relative stem and the vanilla .info and .bin paths of one layer."""
+        folder = self.game_dir / TERRAIN / "decals" / decal
+        return (
+            f"in_game/gfx/terrain2/decals/{decal}/{decal}_{kind}",
+            folder / f"{decal}_{kind}.info",
+            folder / f"{decal}_{kind}.bin",
+        )
+
+    def layer(self, decal: str, kind: str) -> tuple[LayerFormat, NDArray[np.int64]]:
+        """Vanilla layer ``kind`` ("height" or "materials") of a decal, north-up."""
+        key = (decal, kind)
+        if key not in self._layers:
+            _, info_path, bin_path = self.paths(decal, kind)
+            layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
+            image = read_level0(layer, spans, bin_path.read_bytes())
+            compact: NDArray[np.uint16] | NDArray[np.uint8] = (
+                image.astype(np.uint16) if kind == "height" else image.astype(np.uint8)
+            )
+            self._layers[key] = (layer, compact)
+        layer, compact = self._layers[key]
+        return layer, compact.astype(np.int64)
+
+    def world_heights(self) -> NDArray[np.uint16]:
+        """Vanilla height at location resolution (one decal sample per location pixel)."""
+        out = np.zeros(self.map_shape, dtype=np.uint16)
+        for decal in self.decals:
+            _, image = self.layer(decal.name, "height")
+            out[
+                decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
+            ] = image[1::2, 1::2]
+        return out
+
+    def world_materials(self) -> NDArray[np.uint8]:
+        """All vanilla material layers on one grid with two pixels per location pixel."""
+        out = np.full((self.map_shape[0] * 2, self.map_shape[1] * 2), 255, dtype=np.uint8)
+        for decal in self.decals:
+            _, image = self.layer(decal.name, "materials")
+            out[
+                decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
+                decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
+            ] = image
+        return out
+
+
+def _upsample(values: NDArray[np.generic], factor: int) -> NDArray[np.int64]:
     return np.repeat(np.repeat(values.astype(np.int64), factor, axis=0), factor, axis=1)
 
 
@@ -113,49 +153,36 @@ def _noise(  # noqa: PLR0913 - a strip-computed field needs origin, size and oct
     for row in range(0, height, 1024):
         rows = min(1024, height - row)
         out[row : row + rows] = fractal_noise(
-            key, x0, y0 + row, width, rows, period=period, octaves=5, persistence_permille=520
+            key, x0, y0 + row, width, rows, period=period, octaves=3, persistence_permille=500
         )
     return out
 
 
-def box_blur(values: NDArray[np.int64], radius: int) -> NDArray[np.int64]:
-    """Separable integer box blur with edge replication."""
-    out = values
-    for axis in (0, 1):
-        padded = np.pad(
-            out, [(radius + 1, radius) if a == axis else (0, 0) for a in (0, 1)], mode="edge"
-        )
-        summed = np.cumsum(padded, axis=axis, dtype=np.int64)
-        size = 2 * radius + 1
-        if axis == 0:
-            out = (summed[size:] - summed[:-size]) // size
-        else:
-            out = (summed[:, size:] - summed[:, :-size]) // size
-    return out
-
-
-# Median vanilla coast profile measured on decal heightmap_6_16 [V-EXEC]: height by
-# step distance (decal pixels) into water and into land from the coastline.
+# Median vanilla shelf profile measured on decal heightmap_6_16 [V-EXEC]: height by step
+# distance (decal pixels) into water from the coastline; land starts at 5708.
 WATER_PROFILE: Final[tuple[tuple[int, int], ...]] = (
     (1, 5292), (2, 4636), (3, 4028), (4, 3470), (5, 2940), (6, 2416), (7, 2300), (8, 2234),
 )  # fmt: skip
-LAND_PROFILE: Final[tuple[tuple[int, int], ...]] = (
-    (1, 5708), (2, 5914), (3, 5998), (4, 6084), (6, 6266), (10, 6496), (20, 6936),
-    (40, 7568), (60, 8508), (120, 9800),
-)  # fmt: skip
+SHORE_HEIGHT: Final[int] = 5708
+CAP_SLOPE: Final[int] = 300
+CAP_REACH: Final[int] = 64
+EIGHTHS: Final[int] = 8
 MARGIN: Final[int] = 128
 COAST_SMOOTH: Final[int] = 3
-SHELF_BAND: Final[int] = 6
-BEACH_BAND: Final[int] = 4
 
 
-def _profile(distance: NDArray[np.int64], table: tuple[tuple[int, int], ...]) -> NDArray[np.int64]:
-    """Integer piecewise-linear interpolation of a (distance, height) table."""
+def _profile(
+    distance: NDArray[np.int64], table: tuple[tuple[int, int], ...], unit: int = 1
+) -> NDArray[np.int64]:
+    """Integer piecewise-linear interpolation of a (distance, height) table.
+
+    ``distance`` is in ``1 / unit`` pixels.
+    """
     out = np.full(distance.shape, table[-1][1], dtype=np.int64)
-    out[distance <= table[0][0]] = table[0][1]
+    out[distance <= table[0][0] * unit] = table[0][1]
     for (d0, h0), (d1, h1) in pairwise(table):
-        inside = (distance > d0) & (distance <= d1)
-        out[inside] = h0 + (distance[inside] - d0) * (h1 - h0) // (d1 - d0)
+        inside = (distance > d0 * unit) & (distance <= d1 * unit)
+        out[inside] = h0 + (distance[inside] - d0 * unit) * (h1 - h0) // ((d1 - d0) * unit)
     return out
 
 
@@ -187,20 +214,30 @@ def _window(decal: Decal, shape: tuple[int, int]) -> Window:
 def _land_and_distances(
     codes: NDArray[np.int64], vanilla_water: NDArray[np.bool_]
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int64], NDArray[np.int64]]:
-    """Smoothed land mask (new coast inside the canvas), canvas mask and coast distances."""
-    canvas = codes != OUTSIDE
-    raw = np.where(canvas, codes != WATER_CODE, ~vanilla_water)
+    """Smoothed land mask, canvas mask and coast distances at decal resolution.
+
+    Inputs are at location resolution. Distances are in eighths of a decal pixel; the
+    inland one is Euclidean (computed per location pixel and interpolated), so slopes
+    built on it have no metric artefacts.
+    """
+    canvas_location = codes != OUTSIDE
+    land_location = np.where(canvas_location, codes != WATER_CODE, ~vanilla_water)
+    canvas = _upsample(canvas_location.astype(np.int8), 2).astype(bool)
+    raw = _upsample(land_location.astype(np.int8), 2).astype(bool)
     smooth = box_blur(raw.astype(np.int64) * 1000, COAST_SMOOTH) >= 500  # noqa: PLR2004 - half
     land = np.where(canvas, smooth, raw)
-    inland = distance_from(~land, LAND_PROFILE[-1][0] + 1, octagonal=True).astype(np.int64)
+    shape = (int(land.shape[0]), int(land.shape[1]))
+    reach = euclidean_distance(~land_location, CAP_REACH) * 2
+    inland = box_blur(upsample(np.pad(reach, ((0, 1), (0, 1)), mode="edge"), 2, shape), 2)
     offshore = distance_from(land, WATER_PROFILE[-1][0] + 1, octagonal=True).astype(np.int64)
-    inland = np.where(land, np.maximum(box_blur(inland * 8, 4) // 8, 1), 0)
-    offshore = np.where(land, 0, np.maximum(box_blur(offshore * 8, 2) // 8, 1))
+    offshore = box_blur(offshore * EIGHTHS, 2)
+    inland = np.where(land, np.maximum(inland, EIGHTHS), 0)
+    offshore = np.where(land, 0, np.maximum(offshore, EIGHTHS))
     return land, canvas, inland, offshore
 
 
-def _heights(  # noqa: PLR0913 - one window's height needs codes, coast, origin and seed.
-    codes: NDArray[np.int64],
+def _heights(  # noqa: PLR0913 - one window's height needs relief, coast, origin and seed.
+    relief: NDArray[np.int64],
     *,
     land: NDArray[np.bool_],
     inland: NDArray[np.int64],
@@ -208,219 +245,124 @@ def _heights(  # noqa: PLR0913 - one window's height needs codes, coast, origin 
     seed: int,
     origin: tuple[int, int],
 ) -> NDArray[np.int64]:
-    """Generated heights for a window: vanilla coast profile plus relief by topography."""
-    height, width = codes.shape
+    """Generated heights for a window: relief plus detail under a coastal cap.
+
+    ``relief`` is at location resolution; the result is at decal resolution. Near the
+    shore the height is capped by a ramp that starts at the lowest vanilla land height,
+    so beaches are low and ranges rise from them without a terrace. Water follows the
+    vanilla shelf profile. Distances are in eighths of a pixel.
+    """
+    filled = np.pad(np.where(relief > 0, relief, COAST_HEIGHT), ((0, 1), (0, 1)), mode="edge")
+    shape = (int(land.shape[0]), int(land.shape[1]))
+    smooth = upsample(filled, 2, shape)
     x0, y0 = origin
-    table = np.zeros((3, 8), dtype=np.int64)
-    for code, (amplitude, offset, ridge) in RELIEF_SHAPE.items():
-        table[:, code] = (amplitude, offset, ridge)
-    index = np.where(land & (codes != OUTSIDE), np.maximum(codes, 0), 0)
-    amplitude = box_blur(table[0][index], SMOOTH_RADIUS)
-    offset = box_blur(table[1][index], SMOOTH_RADIUS)
-    ridge_weight = box_blur(table[2][index], SMOOTH_RADIUS)
-    ramp = np.minimum(inland, RELIEF_RAMP) * 1000 // RELIEF_RAMP
-    broad = _noise(derive_seed(seed, "terrain_broad"), x0, y0, width, height, period=3000)
-    relief = _noise(derive_seed(seed, "terrain_relief"), x0, y0, width, height, period=500)
-    ridges = NOISE_SCALE - np.abs(
-        _noise(derive_seed(seed, "terrain_ridges"), x0, y0, width, height, period=260)
-    )
-    ridge_height = (ridges * ridges // NOISE_SCALE) * RIDGE_HEIGHT // NOISE_SCALE
-    raised = (
-        (broad + NOISE_SCALE) * 2500 // (2 * NOISE_SCALE)
-        + offset
-        + relief * amplitude // NOISE_SCALE
-        + ridge_height * ridge_weight // 1000
-    )
-    land_height = _profile(inland, LAND_PROFILE) + np.maximum(0, raised) * ramp // 1000
-    water_height = _profile(offshore, WATER_PROFILE)
+    detail = _noise(derive_seed(seed, "terrain_detail"), x0, y0, shape[1], shape[0],
+                    period=DETAIL_PERIOD)  # fmt: skip
+    raised = np.maximum(0, smooth - COAST_HEIGHT)
+    amplitude = DETAIL_BASE + raised * DETAIL_PERMILLE // PERMILLE
+    crest = NOISE_SCALE - np.minimum(
+        np.abs(_noise(derive_seed(seed, "terrain_crests"), x0, y0, shape[1], shape[0],
+                      period=CREST_PERIOD)),
+        NOISE_SCALE,
+    )  # fmt: skip
+    crests = (crest * crest // NOISE_SCALE) * np.minimum(raised, CREST_FULL) // CREST_FULL
+    inner = smooth + detail * amplitude // NOISE_SCALE + crests * CREST_HEIGHT // NOISE_SCALE
+    cap = SHORE_HEIGHT + (inland - EIGHTHS) * CAP_SLOPE // EIGHTHS
+    land_height = np.maximum(np.minimum(inner, cap), SHORE_HEIGHT)
+    water_height = _profile(offshore, WATER_PROFILE, EIGHTHS)
     return np.where(land, land_height, water_height)
 
 
-def _bands(
-    land: NDArray[np.bool_], inland: NDArray[np.int64], offshore: NDArray[np.int64]
-) -> NDArray[np.int8]:
-    """0 deep water, 1 shelf, 2 beach, 3 inland."""
-    band = np.zeros(land.shape, dtype=np.int8)
-    band[~land & (offshore <= SHELF_BAND)] = 1
-    band[land & (inland <= BEACH_BAND)] = 2
-    band[land & (inland > BEACH_BAND)] = 3
-    return band
-
-
-def _patch_materials(  # noqa: PLR0913 - patch transfer needs both worlds and the window.
-    seed: int,
-    *,
-    window: Window,
-    codes: NDArray[np.int64],
-    bands: tuple[NDArray[np.int8], NDArray[np.int8]],
-    canvas: NDArray[np.bool_],
-    local: NDArray[np.int64],
-    world_materials: NDArray[np.uint8],
-    categories: NDArray[np.int8],
+def level_shares(
+    store: DecalStore, labels: NDArray[np.int32], group: NDArray[np.int64], groups: int
 ) -> NDArray[np.int64]:
-    """Shelf/beach slots by noise; inland copies vanilla patches of the same category."""
-    new_band, vanilla_band = bands
-    height, width = codes.shape
-    x0, y0 = window.column0 * 2, window.row0 * 2
-    out = local.copy()
-    out[canvas & (new_band == 0)] = NO_MATERIAL
-    for band in (1, 2):
-        targets = canvas & (new_band == band)
-        if np.any(targets):
-            palette = coastal_palette(local[vanilla_band == band])
-            noise = _noise(
-                derive_seed(seed, f"material_band_{band}"), x0, y0, width, height, period=40
-            )
-            out[targets] = pick(palette, noise)[targets]
-    targets = canvas & (new_band == 3)  # noqa: PLR2004 - inland band
-    if not np.any(targets):
-        return out
-    cell_x, cell_y = site_field(seed, window.column0, window.row0, width // 2, height // 2)
-    cell_x = _upsample(cell_x, 2)
-    cell_y = _upsample(cell_y, 2)
-    wanted = np.where(
-        (codes == WASTE_CODE) | (codes == RELIEF_CODES["mountains"]), HIGHLAND, LOWLAND
-    )
-    keys = np.stack([cell_x[targets], cell_y[targets], wanted[targets]], axis=1)
-    unique, inverse = np.unique(keys, axis=0, return_inverse=True)
-    offsets = np.array(
-        [site_offset(seed, int(x), int(y), int(c), categories) for x, y, c in unique.tolist()],
-        dtype=np.int64,
-    )
-    rows, columns = np.nonzero(targets)
-    world_rows, world_columns = world_materials.shape
-    source_rows = np.clip(rows + y0 + 2 * offsets[inverse.ravel(), 1], 0, world_rows - 1)
-    source_columns = (columns + x0 + 2 * offsets[inverse.ravel(), 0]) % world_columns
-    sampled = world_materials[source_rows, source_columns].astype(np.int64)
-    fallback_palette = coastal_palette(local[vanilla_band == 3])  # noqa: PLR2004 - inland band
-    fallback = pick(
-        fallback_palette,
-        _noise(derive_seed(seed, "material_fallback"), x0, y0, width, height, period=60),
-    )[rows, columns]
-    out[rows, columns] = np.where(sampled == NO_MATERIAL, fallback, sampled)
-    return out
+    """Interior variation-level counts per label group over every vanilla decal."""
+    counts = np.zeros((groups, LEVELS), dtype=np.int64)
+    for decal in store.decals:
+        _, materials = store.layer(decal.name, "materials")
+        crop = labels[
+            decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
+        ]
+        counts += level_counts(materials, crop, group, groups)
+    return counts
 
 
-def vanilla_categories(
-    labels: NDArray[np.int32], water: NDArray[np.bool_], highland: NDArray[np.bool_]
-) -> NDArray[np.int8]:
-    """Location-raster map: 0 water or coast, 1 lowland inland, 2 highland inland."""
-    land = ~water[labels]
-    inland = distance_from(~land, 4) >= 3  # noqa: PLR2004 - three location pixels
-    out = np.where(highland[labels], HIGHLAND, LOWLAND).astype(np.int8)
-    out[~(land & inland)] = NONE
-    return out
+@dataclass(frozen=True, slots=True, eq=False)
+class TerrainInputs:
+    """World-sized rasters that drive the rebuilt decals (location resolution)."""
 
-
-def _layer(game_dir: Path, decal: str, kind: str) -> tuple[str, Path, Path]:
-    folder = game_dir / TERRAIN / "decals" / decal
-    return (
-        f"in_game/gfx/terrain2/decals/{decal}/{decal}_{kind}",
-        folder / f"{decal}_{kind}.info",
-        folder / f"{decal}_{kind}.bin",
-    )
-
-
-def _world_materials(
-    game_dir: Path, decals: list[Decal], shape: tuple[int, int]
-) -> NDArray[np.uint8]:
-    """All vanilla material layers on one 2x world grid (for margins across seams)."""
-    world = np.full((shape[0] * 2, shape[1] * 2), NO_MATERIAL, dtype=np.uint8)
-    for decal in decals:
-        _, info_path, bin_path = _layer(game_dir, decal.name, "materials")
-        layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
-        image = read_level0(layer, spans, bin_path.read_bytes())
-        world[
-            decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
-            decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
-        ] = image.astype(np.uint8)
-    return world
+    codes: NDArray[np.int8]
+    vanilla_water: NDArray[np.bool_]
+    relief: NDArray[np.int32]
+    labels: NDArray[np.int32]
+    rivers: NDArray[np.bool_]
 
 
 def terrain_outputs(
-    game_dir: Path,
-    codes: NDArray[np.int8],
-    vanilla_water: NDArray[np.bool_],
-    categories: NDArray[np.int8],
-    seed: int,
-) -> tuple[dict[str, bytes], dict[str, object]]:
+    store: DecalStore, inputs: TerrainInputs, tables: SlotTables, seed: int
+) -> tuple[dict[str, bytes], NDArray[np.uint8], dict[str, object]]:
     """Mod files for every decal layer touched by the canvas, plus decal disabling.
 
-    ``codes`` is the world-sized relief-code map (-1 outside the canvas, 0 water) and
-    ``vanilla_water`` the vanilla water mask, both at location resolution.
+    ``inputs.codes`` is -1 outside the canvas, 0 for water and 1 for land. Returns the
+    files, the final material raster (two pixels per location pixel) and statistics.
     """
-    cache_text = (game_dir / DECAL_CACHE).read_text(encoding="utf-8-sig")
-    cache = cast("list[dict[str, object]]", json.loads(cache_text))
-    decals = heightmap_decals(cache, codes.shape[0])
+    codes = inputs.codes
+    shape = (int(codes.shape[0]), int(codes.shape[1]))
     outputs: dict[str, bytes] = {}
     touched: list[str] = []
-    world_materials: NDArray[np.uint8] | None = None
-    for decal in decals:
+    materials_world = store.world_materials()
+    for decal in store.decals:
         inner = codes[
             decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
         ]
         if not np.any(inner != OUTSIDE):
             continue
-        if world_materials is None:
-            world_materials = _world_materials(game_dir, decals, (codes.shape[0], codes.shape[1]))
         touched.append(decal.name)
-        window = _window(decal, (codes.shape[0], codes.shape[1]))
+        window = _window(decal, shape)
         rows = slice(window.row0, window.row1)
         columns = slice(window.column0, window.column1)
-        local = _upsample(codes[rows, columns], 2)
-        water = _upsample(vanilla_water[rows, columns].astype(np.int8), 2).astype(bool)
-        land, canvas, inland, offshore = _land_and_distances(local, water)
+        land, canvas, inland, offshore = _land_and_distances(
+            codes[rows, columns].astype(np.int64), inputs.vanilla_water[rows, columns]
+        )
         crop = (
             slice(window.inner_row, window.inner_row + decal.rows * 2),
             slice(window.inner_column, window.inner_column + decal.columns * 2),
         )
-        for kind in ("height", "materials"):
-            stem, info_path, bin_path = _layer(game_dir, decal.name, kind)
-            layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
-            vanilla = read_level0(layer, spans, bin_path.read_bytes())
-            if kind == "height":
-                generated = _heights(
-                    local,
-                    land=land,
-                    inland=inland,
-                    offshore=offshore,
-                    seed=seed,
-                    origin=(window.column0 * 2, window.row0 * 2),
-                )[crop]
-            else:
-                vanilla_land = ~water
-                v_inland = distance_from(water, BEACH_BAND + 2, octagonal=True).astype(np.int64)
-                v_offshore = distance_from(vanilla_land, SHELF_BAND + 2, octagonal=True).astype(
-                    np.int64
-                )
-                window_materials = world_materials[
-                    window.row0 * 2 : window.row1 * 2, window.column0 * 2 : window.column1 * 2
-                ].astype(np.int64)
-                generated = _patch_materials(
-                    seed,
-                    window=window,
-                    codes=local,
-                    bands=(
-                        _bands(land, inland, offshore),
-                        _bands(vanilla_land, v_inland, v_offshore),
-                    ),
-                    canvas=canvas,
-                    local=window_materials,
-                    world_materials=world_materials,
-                    categories=categories,
-                )[crop]
-            image = np.where(canvas[crop], generated, vanilla)
-            info, data = write_layer(image, layer)
-            outputs[f"{stem}.info"] = info.encode("utf-8")
-            outputs[f"{stem}.bin"] = data
-    disabled, cache_out = _disable_decals(game_dir, cache, codes)
+        origin = (window.column0 * 2, window.row0 * 2)
+        height_layer, vanilla_height = store.layer(decal.name, "height")
+        generated = _heights(
+            inputs.relief[rows, columns].astype(np.int64),
+            land=land,
+            inland=inland,
+            offshore=offshore,
+            seed=seed,
+            origin=origin,
+        )[crop]
+        stem, _, _ = store.paths(decal.name, "height")
+        info, data = write_layer(np.where(canvas[crop], generated, vanilla_height), height_layer)
+        outputs[f"{stem}.info"] = info.encode("utf-8")
+        outputs[f"{stem}.bin"] = data
+        material_layer, vanilla_materials = store.layer(decal.name, "materials")
+        labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
+        rivers = _upsample(inputs.rivers[rows, columns].astype(np.int8), 2).astype(bool)
+        slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin)[crop]
+        image = np.where(canvas[crop], slots, vanilla_materials)
+        stem, _, _ = store.paths(decal.name, "materials")
+        info, data = write_layer(image, material_layer)
+        outputs[f"{stem}.info"] = info.encode("utf-8")
+        outputs[f"{stem}.bin"] = data
+        materials_world[
+            decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
+            decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
+        ] = image.astype(np.uint8)
+    disabled, cache_out = _disable_decals(store, codes)
     outputs.update(disabled)
     outputs["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
     stats: dict[str, object] = {
         "decals_rebuilt": touched,
         "mountain_decals_disabled": len(disabled),
     }
-    return outputs, stats
+    return outputs, materials_world, stats
 
 
 def _inside(codes: NDArray[np.int8], x: float, y: float) -> bool:
@@ -430,18 +372,16 @@ def _inside(codes: NDArray[np.int8], x: float, y: float) -> bool:
     return 0 <= row < rows and 0 <= column < columns and bool(codes[row, column] != OUTSIDE)
 
 
-def _disable_decals(
-    game_dir: Path, cache: list[dict[str, object]], codes: NDArray[np.int8]
-) -> tuple[dict[str, bytes], bytes]:
+def _disable_decals(store: DecalStore, codes: NDArray[np.int8]) -> tuple[dict[str, bytes], bytes]:
     """Disable mountain/volcano decals over the canvas in instances and in the cache."""
     kept: list[dict[str, object]] = []
-    for entry in cache:
+    for entry in store.cache:
         name = str(entry["decal_name"])
         position = cast("dict[str, dict[str, float]]", entry["decal_transform"])["position"]
         if HEIGHTMAP.fullmatch(name) or not _inside(codes, position["x"], position["y"]):
             kept.append(entry)
     files: dict[str, bytes] = {}
-    decals = game_dir / TERRAIN / "decals"
+    decals = store.game_dir / TERRAIN / "decals"
     for folder in sorted(path for path in decals.iterdir() if path.is_dir()):
         if HEIGHTMAP.fullmatch(folder.name) or not (folder / "instances").is_dir():
             continue

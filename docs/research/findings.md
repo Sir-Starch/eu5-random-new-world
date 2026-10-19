@@ -39,6 +39,12 @@ This is a read-only investigation of Steam build 25905365 on `1.4-open-beta`, pl
 - [V-EXEC] The first geography-changing candidate exists offline (C28–C30). Inside a bounded North-East American window, it moves 16,205 land–sea pixels between existing IDs, keeps every cell contact, and leaves all non-American pixels and outside-window bytes unchanged. Only `locations.png` and `rivers.png` are emitted. It is **NOT GAME VALIDATED**; the drawn terrain will not match because the visual terrain layers are untouched (C25).
 - [INFERRED] Contact-preserving T2 edits reshape coasts but cannot add islands or straits (C32). The T3-capable world model and the synthetic generator already create new cells, keys, colours and hierarchy; using that in EU5 waits on the new-ID experiment (005).
 
+## Terrain rendering findings, 2026-10-19
+
+- [V-LOCAL] EU5 draws each location with the biome selected by its template's climate, vegetation and topography; the decal material layer stores slot roles (coast, transition, water edge, border bands, variations), not textures (C50). Generated templates and the slot layer must therefore be coherent with each other, and vanilla's look follows from rules, not hand painting.
+- [V-EXEC] Those rules are measurable and reproducible: rebuilding a vanilla crop from vanilla templates matches 85.6% of structural slot pixels (C51). Trees and grass are pre-placed instance lists whose densities follow vegetation and slot; 27–44% of them stood on the removed Americas (C52).
+- [V-EXEC] The V1a build ties relief, climate, templates, material slots and vegetation instances to one model; climate and vegetation zones are more coherent than vanilla's, and instance densities per vegetation match the Old World (C53). NOT GAME VALIDATED.
+
 ## Patch-sensitive research leads
 
 [SOURCE] The [EU5 Engine Atlas](https://github.com/mattebin/eu5-engine-atlas) claims `script_docs` and other engine probes, but targets 1.3.11, so its capability list is not 1.4.1 evidence (C17). [SOURCE] The [1.4 update announcement](https://www.paradoxinteractive.com/media/press-releases/paradox-interactive/relive-and-rewrite-the-history-of-spain-and-morocco-in-across-the-pillars) and [Paradox terms](https://legal.paradoxplaza.com/eula) establish that the game changes; all map and script contracts must be fingerprinted by build (C18). The wiki map page was inaccessible and contributed no assertions.

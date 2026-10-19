@@ -1,7 +1,8 @@
 """Stage a generated New World mod (T3: new IDs, empty 1337 start) for EU5 1.4.1.
 
-NOT GAME VALIDATED. The visual terrain (height decals) is not regenerated yet, so the
-drawn relief stays vanilla even though locations, provinces and coasts are new.
+NOT GAME VALIDATED as a whole; the first generated start loaded in game [V-GAME C45].
+Locations, provinces, coasts, relief, biomes (location templates), terrain decals,
+water and vegetation instances are generated from one model; the Old World is kept.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -17,6 +18,15 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw.artifacts import check_new_output, pixel_digest, staged, write_bytes
+from rnw.eu5_biomes import (
+    CellBiomes,
+    Generated,
+    assign_biomes,
+    climate_grid,
+    label_statistics,
+    template_attributes,
+    vanilla_locations,
+)
 from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, select_canvas
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
 from rnw.eu5_map import (
@@ -37,6 +47,7 @@ from rnw.eu5_map import (
     open_png,
 )
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
+from rnw.eu5_objects import PixelClasses, object_outputs
 from rnw.eu5_remap import build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
@@ -49,12 +60,15 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
+from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, LEVELS, TOPOGRAPHY_GROUPS, SlotTables
 from rnw.eu5_terrain import (
-    RELIEF_CODES,
-    WASTE_CODE,
+    LAND_CODE,
+    OUTSIDE,
     WATER_CODE,
+    DecalStore,
+    TerrainInputs,
+    level_shares,
     terrain_outputs,
-    vanilla_categories,
 )
 from rnw.eu5_water import water_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
@@ -75,6 +89,8 @@ if TYPE_CHECKING:
 
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
 MAX_LOCATIONS: Final[int] = 32_000
+RIVER_CLASSES: Final[int] = 16
+MIN_LEVEL_PIXELS: Final[int] = 2000
 SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
 LOCALIZATION_DIR: Final[str] = "game/main_menu/localization"
 LANGUAGES: Final[tuple[str, ...]] = (
@@ -89,20 +105,10 @@ LANGUAGES: Final[tuple[str, ...]] = (
     "simp_chinese",
     "spanish",
 )
-LAND_TOPOGRAPHY: Final[tuple[tuple[str, int], ...]] = (
-    ("wetlands", 80),
-    ("flatland", 490),
-    ("hills", 720),
-    ("plateau", 870),
-    ("mountains", 1000),
-)
 ROTATION: Final[str] = "{ -0.000000 -0.000000 -0.000000 1.000000 }"
 SCALE: Final[str] = "{ 1.000000 1.000000 1.000000 }"
 TOPOGRAPHY: Final[re.Pattern[str]] = re.compile(r"topography\s*=\s*[A-Za-z_]+")
 HARBOR: Final[re.Pattern[str]] = re.compile(r"\s*natural_harbor_suitability\s*=\s*[0-9.]+")
-TOPOGRAPHY_VALUE: Final[re.Pattern[str]] = re.compile(
-    r"topography\s*=\s*(mountains|mountain_wasteland|hills_wasteland|plateau_wasteland|mesa_wasteland)\b"
-)
 CURRENTS: Final[re.Pattern[str]] = re.compile(r"\s*movement_assistance\s*=\s*\{[^{}]*\}")
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 UNTESTED: Final[tuple[str, ...]] = (
@@ -111,14 +117,16 @@ UNTESTED: Final[tuple[str, ...]] = (
         "the vanilla PNG sources and terrain_cache/checksum.json are not changed."
     ),
     (
-        "Lake water meshes (lakes.bin), river splines, tree/vegetation objects and the "
-        "flat map are vanilla and may show old Americas features over the new terrain."
+        "Vegetation instance files (*_generator_*.bin, jungle_dense text) are whole-file "
+        "overrides with new instance counts; that EU5 loads them and their memory and "
+        "startup cost are untested."
     ),
-    "Whether EU5 accepts thousands of new location keys and removed vanilla ones.",
     (
-        "Around 700 script references to removed American locations (events, holy sites, "
-        "expeditions, formables) will not resolve; their effect is untested."
+        "Every generated (climate, vegetation, topography) combination resolves to a biome "
+        "through the priority rules of biomes.txt; rare combinations may fall back to a "
+        "partial match."
     ),
+    "River splines are not generated yet; the new land has no rivers (V1b).",
     "nodes.dat and other derived caches are vanilla and may not match the new map.",
     (
         "Display-name overrides for reused area/region keys use a replace/ folder; whether "
@@ -197,34 +205,41 @@ def _donor_map(  # noqa: PLR0913 - donor search needs map, canvas, world and geo
     return chosen
 
 
-def land_topography(plan: Plan, world: NewWorld) -> dict[int, str]:
-    """Topography of each generated land cell by elevation rank (vanilla-like shares)."""
-    land = [i for i, cell in enumerate(plan.cells) if cell.kind is CellClass.LAND]
-    ranked = sorted(land, key=lambda index: (int(world.mean_elevation[index]), index))
-    topography: dict[int, str] = {}
-    for position, index in enumerate(ranked):
-        share = (position * 1000) // max(1, len(ranked))
-        topography[index] = next(name for name, limit in LAND_TOPOGRAPHY if share < limit)
-    return topography
+def _set_field(body: str, name: str, value: str) -> str:
+    """Set ``name = value`` in a one-line template body, appending it when absent."""
+    pattern = re.compile(rf"\b{name}\s*=\s*[A-Za-z_]+")
+    if not value:
+        return pattern.sub("", body, count=1)
+    if pattern.search(body):
+        return pattern.sub(f"{name} = {value}", body, count=1)
+    return body[:-1].rstrip() + f" {name} = {value} }}"
 
 
 def _template_lines(
-    plan: Plan, world: NewWorld, donors: list[str], bodies: dict[str, str]
+    plan: Plan, world: NewWorld, donors: list[str], bodies: dict[str, str], biomes: CellBiomes
 ) -> list[str]:
     coastal = _coastal(world)
-    topography = land_topography(plan, world)
     lines: list[str] = []
     for index, cell in enumerate(plan.cells):
         body = bodies[donors[index]]
-        if cell.kind is CellClass.LAND:
-            body = TOPOGRAPHY.sub(f"topography = {topography[index]}", body, count=1)
+        if cell.kind in {CellClass.LAND, CellClass.WASTELAND}:
+            for name, values in (
+                ("topography", biomes.topography),
+                ("vegetation", biomes.vegetation),
+                ("climate", biomes.climate),
+                ("raw_material", biomes.raw_material),
+            ):
+                body = _set_field(body, name, values[index])
             body = HARBOR.sub("", body)
-            if coastal[index]:
+            if cell.kind is CellClass.LAND and coastal[index]:
                 body = body[:-1].rstrip() + " natural_harbor_suitability = 0.50 }"
         elif cell.kind is CellClass.SEA:
             kind = "coastal_ocean" if coastal[index] else "ocean"
             body = TOPOGRAPHY.sub(f"topography = {kind}", body, count=1)
             body = CURRENTS.sub("", body)
+            body = _set_field(body, "climate", biomes.climate[index])
+        else:
+            body = _set_field(body, "climate", biomes.climate[index])
         lines.append(f"{cell.key} = {body}")
     return lines
 
@@ -513,6 +528,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     hierarchy: dict[str, Location],
     removed: set[str],
     geometry: VanillaGeometry,
+    biomes: CellBiomes,
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     bodies = _template_bodies(_read(game_dir, TEMPLATES))
     donors = _donor_map(
@@ -558,7 +574,9 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         game_dir,
         TEMPLATES,
         rewrite_templates(
-            _read(game_dir, TEMPLATES), removed, _template_lines(plan, world, donors, bodies)
+            _read(game_dir, TEMPLATES),
+            removed,
+            _template_lines(plan, world, donors, bodies, biomes),
         ),
     )
     outputs[_mod_path(PORTS)] = _encode(
@@ -676,6 +694,12 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     )
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     world_checks = _check_world(game_map, canvas, world)
+    store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
+    vanilla_attributes = template_attributes(_read(game_dir, TEMPLATES))
+    biomes, biome_stats = _biome_model(
+        game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
+    )
+    slot_tables = _slot_tables(game_map, vanilla_attributes, biomes, store)
     texts, text_stats = _text_outputs(
         game_dir,
         game_map=game_map,
@@ -685,6 +709,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         hierarchy=hierarchy,
         removed=removed,
         geometry=geometry,
+        biomes=biomes,
     )
     text_checks = _verify_texts(texts, plan, removed)
     remap = build_remap(
@@ -700,30 +725,46 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     texts.update(scripts)
     text_stats["scripts_remapped"] = remapped
     rgb, rivers = _rasters(game_map, canvas, world, plan)
-    codes = _class_codes(game_map, canvas, world, land_topography(plan, world))
+    codes = _codes(game_map, canvas, world)
+    canvas_world = codes != OUTSIDE
     vanilla_water = np.array(
         [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
     )[game_map.labels]
-    bodies = _template_bodies(_read(game_dir, TEMPLATES))
-    highland = np.array(
-        [
-            kind is CellClass.WASTELAND or TOPOGRAPHY_VALUE.search(bodies.get(key, "")) is not None
-            for key, kind in zip(game_map.keys, game_map.classes, strict=True)
-        ],
-        dtype=bool,
+    relief_world = np.zeros(game_map.labels.shape, dtype=np.int32)
+    rows, columns = np.nonzero(canvas.mask)
+    relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = world.elevation[
+        rows, columns
+    ]
+    final_labels = _final_labels(game_map, canvas, world)
+    terrain_inputs = TerrainInputs(
+        codes=codes,
+        vanilla_water=vanilla_water,
+        relief=relief_world,
+        labels=final_labels,
+        rivers=rivers < RIVER_CLASSES,
     )
-    categories = vanilla_categories(
-        game_map.labels,
-        np.array([kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes]),
-        highland,
+    terrain_files, materials_world, terrain_stats = terrain_outputs(
+        store, terrain_inputs, slot_tables, seed
     )
-    terrain_files, terrain_stats = terrain_outputs(game_dir, codes, vanilla_water, categories, seed)
-    canvas_world = codes != -1
     new_water = vanilla_water.copy()
     new_water[canvas_world] = codes[canvas_world] == WATER_CODE
     water_files, water_stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed)
     terrain_files.update(water_files)
     terrain_stats.update(water_stats)
+    pixel_classes, class_count, coarse_count = _pixel_classes(
+        game_map, vanilla_attributes, biomes, final_labels, materials_world
+    )
+    object_files, object_stats = object_outputs(
+        game_dir,
+        classes=pixel_classes,
+        canvas=canvas_world,
+        class_count=class_count,
+        coarse_count=coarse_count,
+        seed=seed,
+    )
+    del materials_world
+    terrain_files.update(object_files)
+    terrain_stats["objects"] = object_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
     inputs = {record.path: record for record in game_map.inputs}
@@ -810,6 +851,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
             },
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,
+            "biomes": biome_stats,
             "terrain": terrain_stats,
             "files": [*files, preview_record, settings_record],
             "inputs": [
@@ -843,20 +885,14 @@ def _metadata(name: str, seed: int, preset: str) -> bytes:
     return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8-sig")
 
 
-def _class_codes(
-    game_map: Eu5Map, canvas: Canvas, world: NewWorld, topography: dict[int, str]
-) -> NDArray[np.int8]:
-    """World-sized relief code map (see ``eu5_terrain.RELIEF_CODES``); -1 off canvas."""
-    codes = np.full(game_map.labels.shape, -1, dtype=np.int8)
+def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8]:
+    """World-sized code map: -1 off the canvas, 0 generated water, 1 generated land."""
+    codes = np.full(game_map.labels.shape, OUTSIDE, dtype=np.int8)
     rows, columns = np.nonzero(canvas.mask)
     table = np.array(
         [
-            WATER_CODE
-            if kind in {CellClass.SEA, CellClass.LAKE}
-            else WASTE_CODE
-            if kind is CellClass.WASTELAND
-            else RELIEF_CODES[topography[index]]
-            for index, kind in enumerate(world.classes)
+            WATER_CODE if kind in {CellClass.SEA, CellClass.LAKE} else LAND_CODE
+            for kind in world.classes
         ],
         dtype=np.int8,
     )
@@ -864,6 +900,191 @@ def _class_codes(
         world.labels[rows, columns]
     ]
     return codes
+
+
+def _vocabulary(values: list[str]) -> tuple[list[str], NDArray[np.int64]]:
+    names = sorted(set(values))
+    index = {name: number for number, name in enumerate(names)}
+    return names, np.array([index[value] for value in values], dtype=np.int64)
+
+
+def _final_field(
+    game_map: Eu5Map, attributes: dict[str, dict[str, str]], generated: tuple[str, ...], name: str
+) -> list[str]:
+    return [attributes.get(key, {}).get(name, "") for key in game_map.keys] + list(generated)
+
+
+def _old_world_land(game_map: Eu5Map) -> NDArray[np.bool_]:
+    return np.array(
+        [
+            kind in {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
+            and continent not in OCEANS
+            and continent != NEW_WORLD
+            for kind, continent in zip(game_map.classes, game_map.continents, strict=True)
+        ],
+        dtype=bool,
+    )
+
+
+def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world and the decals.
+    game_map: Eu5Map,
+    *,
+    canvas: Canvas,
+    world: NewWorld,
+    store: DecalStore,
+    attributes: dict[str, dict[str, str]],
+    seed: int,
+) -> tuple[CellBiomes, dict[str, object]]:
+    """Climate, vegetation, topography and raw material of every generated cell."""
+    vanilla_height = store.world_heights()
+    vanilla = vanilla_locations(game_map.labels, vanilla_height)
+    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
+    final_sea = np.concatenate(
+        [sea, np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)]
+    )
+    height = vanilla_height.astype(np.int64)
+    rows, columns = np.nonzero(canvas.mask)
+    world_columns = _world_columns(canvas, columns.astype(np.int64))
+    height[rows, world_columns] = world.elevation[rows, columns]
+    vanilla_grid = climate_grid(sea[game_map.labels], vanilla_height.astype(np.int64))
+    final_grid = climate_grid(final_sea[_final_labels(game_map, canvas, world)], height)
+    del height, vanilla_height
+    points = np.stack(
+        [world.centroids[:, 0], _world_columns(canvas, world.centroids[:, 1])], axis=1
+    )
+    cells = Generated(
+        kinds=world.classes,
+        points=points,
+        mean_height=world.mean_elevation,
+        spread=world.spread,
+        edges=world.edges,
+        coastal=_coastal(world),
+    )
+    biomes, stats = assign_biomes(
+        game_map=game_map,
+        templates=attributes,
+        vanilla=vanilla,
+        vanilla_grid=vanilla_grid,
+        final_grid=final_grid,
+        cells=cells,
+        seed=seed,
+    )
+    stats["coherence"] = _coherence(game_map, attributes, vanilla.pairs, world, biomes)
+    return biomes, stats
+
+
+def _coherence(
+    game_map: Eu5Map,
+    attributes: dict[str, dict[str, str]],
+    pairs: NDArray[np.int64],
+    world: NewWorld,
+    biomes: CellBiomes,
+) -> dict[str, object]:
+    """Same-label edge share and region sizes of climate and vegetation, vanilla vs ours."""
+    old = _old_world_land(game_map)
+    low = (pairs >> np.int64(32)).astype(np.int64)
+    high = (pairs & np.int64((1 << 32) - 1)).astype(np.int64)
+    keep = old[low] & old[high]
+    index = np.full(len(game_map.keys), -1, dtype=np.int64)
+    members = np.flatnonzero(old)
+    index[members] = np.arange(members.size)
+    vanilla_edges = np.stack([index[low[keep]], index[high[keep]]], axis=1)
+    land = [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes]
+    local = np.full(len(world.classes), -1, dtype=np.int64)
+    generated_members = [i for i, flag in enumerate(land) if flag]
+    local[generated_members] = np.arange(len(generated_members))
+    generated_edges = np.array(
+        [(local[a], local[b]) for a, b in world.edges if land[a] and land[b]], dtype=np.int64
+    ).reshape(-1, 2)
+    out: dict[str, object] = {}
+    for name, values in (("climate", biomes.climate), ("vegetation", biomes.vegetation)):
+        vanilla_values = [attributes.get(game_map.keys[i], {}).get(name, "") for i in members]
+        out[name] = {
+            "vanilla_old_world": label_statistics(vanilla_values, vanilla_edges),
+            "generated": label_statistics([values[i] for i in generated_members], generated_edges),
+        }
+    return out
+
+
+def _slot_tables(
+    game_map: Eu5Map,
+    attributes: dict[str, dict[str, str]],
+    biomes: CellBiomes,
+    store: DecalStore,
+) -> SlotTables:
+    """Per final label (vanilla, then generated) inputs of the material slot rules."""
+    vanilla_count = len(game_map.keys)
+    water = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes]
+        + [not value for value in biomes.vegetation],
+        dtype=bool,
+    )
+    topography = _final_field(game_map, attributes, biomes.topography, "topography")
+    vegetation = _final_field(game_map, attributes, biomes.vegetation, "vegetation")
+    climate = _final_field(game_map, attributes, biomes.climate, "climate")
+    _, topography_group = _vocabulary([TOPOGRAPHY_GROUPS.get(t, t) for t in topography])
+    _, vegetation_id = _vocabulary(vegetation)
+    _, climate_group = _vocabulary([CLIMATE_GROUPS.get(c, c) for c in climate])
+    group_names, group = _vocabulary(
+        [f"{v}|{t}" for v, t in zip(vegetation, topography, strict=True)]
+    )
+    vanilla_group = np.where(water[:vanilla_count], -1, group[:vanilla_count])
+    counts = level_shares(store, game_map.labels, vanilla_group, len(group_names))
+    by_vegetation: dict[str, NDArray[np.int64]] = {}
+    for name, row in zip(group_names, counts, strict=True):
+        key = name.split("|")[0]
+        by_vegetation[key] = by_vegetation.get(key, np.zeros(LEVELS, dtype=np.int64)) + row
+    overall = counts.sum(axis=0)
+    shares = np.zeros((len(group_names), LEVELS), dtype=np.int64)
+    for number, name in enumerate(group_names):
+        row = counts[number]
+        if row.sum() < MIN_LEVEL_PIXELS:
+            row = by_vegetation.get(name.split("|")[0], overall)
+        if row.sum() < MIN_LEVEL_PIXELS:
+            row = overall
+        shares[number] = row * 1000 // max(1, int(row.sum()))
+    return SlotTables(
+        water=water,
+        coast_slot=np.array([COAST_SLOTS.get(t, 0) for t in topography], dtype=np.int64),
+        topography=topography_group,
+        vegetation=vegetation_id,
+        climate=climate_group,
+        level_one=shares[group, 0],
+        level_two=shares[group, 1],
+    )
+
+
+def _pixel_classes(
+    game_map: Eu5Map,
+    attributes: dict[str, dict[str, str]],
+    biomes: CellBiomes,
+    labels: NDArray[np.int32],
+    materials: NDArray[np.uint8],
+) -> tuple[PixelClasses, int, int]:
+    """Vegetation-object classes per final label: fine (vegetation, climate, topography)."""
+    topography = _final_field(game_map, attributes, biomes.topography, "topography")
+    vegetation = _final_field(game_map, attributes, biomes.vegetation, "vegetation")
+    climate = _final_field(game_map, attributes, biomes.climate, "climate")
+    vanilla_land = np.array(
+        [kind in {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
+         for kind in game_map.classes] + [bool(value) for value in biomes.vegetation]
+    )  # fmt: skip
+    fine_names, fine = _vocabulary(
+        [
+            f"{v}|{c}|{TOPOGRAPHY_GROUPS.get(t, t)}"
+            for v, c, t in zip(vegetation, climate, topography, strict=True)
+        ]
+    )
+    coarse_names, coarse = _vocabulary(vegetation)
+    calibrate = np.concatenate([_old_world_land(game_map), np.zeros(len(biomes.vegetation), bool)])
+    classes = PixelClasses(
+        labels=labels,
+        materials=materials,
+        label_class=np.where(vanilla_land, fine, -1),
+        label_coarse=np.where(vanilla_land, coarse, -1),
+        calibrate=calibrate & vanilla_land,
+    )
+    return classes, len(fine_names), len(coarse_names)
 
 
 def _class_preview(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.uint8]:

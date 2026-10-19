@@ -19,7 +19,7 @@ import numpy as np
 from PIL import Image
 
 from rnw.dds import rewrite
-from rnw.eu5_terrain import box_blur
+from rnw.fields import box_blur
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.rng import derive_seed
 from rnw.topology import distance_from

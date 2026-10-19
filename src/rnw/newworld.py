@@ -1,8 +1,10 @@
 """Generate a complete New World inside an arbitrary domain mask (T3, game-independent).
 
 The domain is the set of pixels that may be replaced. A ring of ocean is kept along its
-border so generated seas meet the surrounding (protected) ocean. Everything is integer
-arithmetic driven by named SplitMix64 streams, so equal inputs give equal outputs.
+border so generated seas meet the surrounding (protected) ocean. Land carries a
+continuous relief field (``relief.py``); the highest cells become wastelands. Everything
+is integer arithmetic driven by named SplitMix64 streams, so equal inputs give equal
+outputs.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -15,8 +17,10 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
+from rnw.fields import warped_noise
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.relief import generate_relief
 from rnw.rng import derive_seed
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
@@ -27,6 +31,9 @@ if TYPE_CHECKING:
     from rnw.settings import NewWorldSettings
 
 PERMILLE: Final[int] = 1000
+WOBBLE_PX: Final[int] = 16
+WOBBLE_PERIOD: Final[int] = 48
+WOBBLE_PASSES: Final[int] = 64
 STRIP_ROWS: Final[int] = 1024
 INTERIOR_LIMIT: Final[int] = 512
 OUTSIDE: Final[int] = 2
@@ -43,6 +50,7 @@ class NewWorld:
     centroids: NDArray[np.int64]
     interior: NDArray[np.int64]
     mean_elevation: NDArray[np.int64]
+    spread: NDArray[np.int64]
     edges: tuple[tuple[int, int], ...]
 
 
@@ -152,11 +160,104 @@ def _interior_points(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]
     return points
 
 
+def _absorb_orphans(
+    labels: NDArray[np.int32], orphan: NDArray[np.bool_], kind: NDArray[np.int64]
+) -> NDArray[np.bool_]:
+    """Give orphan pixels the label of a non-orphan 4-neighbour of the same class.
+
+    Works inwards from the edges of orphan patches, N, W, E, S first, touching only
+    orphan pixels; returns the pixels that found no such neighbour.
+    """
+    height, width = labels.shape
+    flat = labels.reshape(-1)
+    is_orphan = orphan.reshape(-1).copy()
+    pending = np.flatnonzero(is_orphan)
+    for _ in range(WOBBLE_PASSES):
+        if not pending.size:
+            break
+        for offset in (-width, -1, 1, width):
+            column = pending % width
+            if offset == -width:
+                inside = pending >= width
+            elif offset == width:
+                inside = pending < (height - 1) * width
+            elif offset == -1:
+                inside = column != 0
+            else:
+                inside = column != width - 1
+            here = pending[inside & is_orphan[pending]]
+            there = here + offset
+            ok = (
+                ~is_orphan[there]
+                & (flat[there] >= 0)
+                & (kind[np.maximum(flat[there], 0)] == kind[np.maximum(flat[here], 0)])
+            )
+            flat[here[ok]] = flat[there[ok]]
+            is_orphan[here[ok]] = False
+        pending = pending[is_orphan[pending]]
+    return is_orphan.reshape(height, width)
+
+
+def wobble_borders(
+    labels: NDArray[np.int32], kinds: list[CellClass], seed: int
+) -> NDArray[np.int32]:
+    """Bend straight cell borders into curves; classes, coasts and cell count are kept.
+
+    Each pixel takes the label found a smooth noise displacement away when that pixel
+    has the same class. Pieces cut off from their cell's largest part are absorbed by a
+    neighbouring cell of the same class. If any cell would vanish or split, the
+    original labels are returned.
+    """
+    shape = (int(labels.shape[0]), int(labels.shape[1]))
+    kind = np.array([list(CellClass).index(value) for value in kinds], dtype=np.int64)
+    offsets = [
+        warped_noise(
+            derive_seed(seed, stream), shape, step=4, period=WOBBLE_PERIOD, octaves=3, warp_px=0
+        )
+        * WOBBLE_PX
+        // NOISE_SCALE
+        for stream in ("nw_wobble_rows", "nw_wobble_columns")
+    ]
+    rows = np.clip(np.arange(shape[0])[:, np.newaxis] + offsets[0], 0, shape[0] - 1)
+    columns = np.clip(np.arange(shape[1])[np.newaxis, :] + offsets[1], 0, shape[1] - 1)
+    source = labels[rows, columns]
+    del rows, columns, offsets
+    valid = (labels >= 0) & (source >= 0)
+    same = valid & (kind[np.maximum(source, 0)] == kind[np.maximum(labels, 0)])
+    moved = np.where(same, source, labels).astype(np.int32)
+    del source, same, valid
+    parts = label_components(moved)
+    owner = np.full(int(parts.max()) + 1, -1, dtype=np.int64)
+    owner[parts.ravel()] = moved.ravel()
+    sizes = np.bincount(parts.ravel())
+    best = np.full(len(kinds), -1, dtype=np.int64)
+    order = np.lexsort((np.arange(sizes.size), -sizes))
+    for part in order.tolist():
+        cell = int(owner[part])
+        if cell >= 0 and best[cell] < 0:
+            best[cell] = part
+    if np.any(best < 0):
+        return labels
+    keep = np.zeros(sizes.size, dtype=bool)
+    keep[best] = True
+    orphan = (moved >= 0) & ~keep[parts]
+    del parts
+    left = _absorb_orphans(moved, orphan, kind)
+    moved[left] = labels[left]
+    check = label_components(moved)
+    pieces = np.zeros(int(check.max()) + 1, dtype=np.int64) - 1
+    pieces[check.ravel()] = moved.ravel()
+    per_cell = np.bincount(pieces[pieces >= 0], minlength=len(kinds))
+    if np.any(per_cell != 1):
+        return labels
+    return moved
+
+
 def generate_new_world(
     domain: NDArray[np.bool_], *, seed: int, settings: NewWorldSettings
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells."""
-    land, ocean, lakes, elevation = _land(domain, seed, settings)
+    land, ocean, lakes, _ = _land(domain, seed, settings)
     land_cells = merge_small(
         grow_regions(
             land, seed_sites(derive_seed(seed, "nw_land_sites"), land, settings.location_px)
@@ -182,32 +283,20 @@ def generate_new_world(
         present = int(numbered.max()) + 1 if np.any(numbered >= 0) else 0
         labels[numbered >= 0] = numbered[numbered >= 0] + len(kinds)
         kinds.extend([kind] * present)
+    labels = wobble_borders(labels, kinds, seed)
+    relief = generate_relief(land, seed=seed)
     count = len(kinds)
     flat = labels.ravel()
     inside = np.flatnonzero(flat >= 0)
     owner = flat[inside]
     pixels = np.bincount(owner, minlength=count).astype(np.int64)
-    mean_elevation = _weighted(owner, elevation.ravel()[inside], count) // np.maximum(1, pixels)
+    mean_relief = _weighted(owner, relief.ravel()[inside], count) // np.maximum(1, pixels)
     land_ids = [index for index, kind in enumerate(kinds) if kind is CellClass.LAND]
     wasteland = len(land_ids) * settings.wasteland_permille // PERMILLE
-    if wasteland:
-        ridges = NOISE_SCALE - np.abs(
-            _field(
-                seed,
-                "new_world_ridges",
-                shape=domain.shape,
-                period=max(8, settings.feature_px // 3),
-                octaves=4,
-                persistence_permille=550,
-            )
-        ).astype(np.int64)
-        ridge = np.bincount(owner, weights=ridges.ravel()[inside], minlength=count)
-        mean_ridge = (ridge // np.maximum(1, pixels)).astype(np.int64)
-        score = mean_ridge * 2 + mean_elevation
-        ranked = sorted(land_ids, key=lambda index: (-int(score[index]), index))
-        for index in ranked[:wasteland]:
-            kinds[index] = CellClass.WASTELAND
-    return derive_world(labels, tuple(kinds), elevation)
+    ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
+    for index in ranked[:wasteland]:
+        kinds[index] = CellClass.WASTELAND
+    return derive_world(labels, tuple(kinds), relief)
 
 
 def derive_world(
@@ -222,7 +311,11 @@ def derive_world(
     pixels = np.bincount(owner, minlength=count).astype(np.int64)
     rows = _weighted(owner, inside // width, count)
     columns = _weighted(owner, inside % width, count)
-    mean_elevation = _weighted(owner, elevation.ravel()[inside], count) // np.maximum(1, pixels)
+    values = elevation.ravel()[inside].astype(np.int64)
+    mean_elevation = _weighted(owner, values, count) // np.maximum(1, pixels)
+    square = _weighted(owner, values * values, count) // np.maximum(1, pixels)
+    variance = np.maximum(0, square - mean_elevation * mean_elevation)
+    spread = np.floor(np.sqrt(variance.astype(np.float64))).astype(np.int64)
     centroids = np.stack([rows // np.maximum(1, pixels), columns // np.maximum(1, pixels)], axis=1)
     edges = tuple(
         (first, second)
@@ -237,6 +330,7 @@ def derive_world(
         centroids=centroids,
         interior=_interior_points(labels, count),
         mean_elevation=mean_elevation,
+        spread=spread,
         edges=edges,
     )
 

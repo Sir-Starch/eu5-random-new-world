@@ -45,3 +45,10 @@
 ## 2026-10-19 — owner review of terrain
 
 - [V-GAME owner observation] Coasts and water accepted as fixes; terrain still pixelated and incoherent up close. Measured that per-pixel fragmentation matches vanilla, so the missing piece is biome structure (C47). Recorded the mandatory terrain/biome synthesis phase V1 with algorithm and acceptance metrics.
+
+## 2026-10-19 — V1a terrain and biome synthesis
+
+- [V-LOCAL] Found the rendering model: per-location biomes from template climate, vegetation and topography; slot-coded material layers; pre-placed vegetation instances (C50, C52). This replaced the planned exemplar quilting with reverse-engineered vanilla rules.
+- [V-EXEC] Measured vanilla slot rules on four decals and reproduced them (85.6% structural agreement, C51); calibrated relief heights per topography (C48) and latitude anchors (C49).
+- [V-EXEC] Implemented `fields.py`, `relief.py`, `climate.py`, `eu5_biomes.py`, `eu5_slots.py`, `eu5_objects.py`, the rebuilt `eu5_terrain.py` and organic border wobble; removed the interim patch-transfer `terrain_materials.py`. Generator version 0.4.0. `make check`: 84 passed, 2 local-only skips; the three local tests pass.
+- [V-EXEC] Built `rnw_exp_new_world` V1a (C53): coherent climate bands, vegetation zones and per-vegetation tree densities matching the Old World. Not installed by the agent; NOT GAME VALIDATED.

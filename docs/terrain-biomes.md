@@ -1,41 +1,67 @@
-# Terrain and biome synthesis (required, planned)
+# Terrain and biome synthesis (phase V1)
 
-**Status:** planned, not implemented. The current material layer is an interim patch transfer (C46) and must be replaced.
+**Status:** V1a implemented on 2026-10-19 and awaiting owner review in game: relief, climate, biomes, material slots and vegetation instances. Generated rivers (V1b) are still to do. NOT GAME VALIDATED.
 
 ## Problem
 
-The owner reviewed the generated New World in EU5 1.4.1 on 2026-10-19 [V-GAME owner observation]. Coasts and water were fixed, but up close the land looks pixelated: forests and other biomes show many small squares, borders are rough, biomes do not fill coherent areas, and transitions are not smooth. Generation must use a deliberate algorithm, not noise plus random patches.
+The owner reviewed the generated New World in EU5 1.4.1 on 2026-10-19 [V-GAME owner observation]. Coasts and water were fixed, but up close the land looked pixelated: forests and other biomes showed many small squares, borders were rough, biomes did not fill coherent areas, and transitions were not smooth. Generation must use a deliberate algorithm, not noise plus random patches.
 
-Measured cause [V-EXEC C47]: per-pixel fragmentation of the material index map is about the same as vanilla (boundary density 0.25 vs 0.29, median patch 5 vs 4 pixels). The difference is structure. The interim method copies Voronoi patches from vanilla land anywhere at a similar latitude, so neighbouring patches come from unrelated landscapes. Their borders are hard cuts, and nothing ties materials to climate, relief or the location templates [INFERRED].
+## How EU5 draws land
 
-## Requirements
+Investigation of the 1.4.1 files changed the plan [V-LOCAL C50; V-EXEC C51, C52]:
 
-1. Biomes form coherent regions with plausible shapes. Their size and shape statistics should be comparable to vanilla's.
-2. Transitions between biomes are gradual ecotones, not hard edges or patch seams.
-3. Biomes follow a physical model: latitude, elevation, distance to sea, prevailing winds, rain shadow and rivers.
-4. Visual layers (heights, materials) and gameplay data (location templates: climate, vegetation, topography, raw materials) come from the same model, so a forest location looks like forest.
-5. The output is deterministic and seam-free across decals. The Old World stays untouched.
+- **Biome per location.** The shader samples a per-location biome texture through the location colour map (`main_menu/gfx/FX/cw/terrain2_biomes.fxh`). The biome is chosen from the location template's climate, vegetation and topography in `gfx/map/biome_definitions/biomes.txt`. A coherent look therefore needs coherent templates.
+- **The material layer stores slots, not textures.** Every biome in `gfx/terrain2/materials.txt` lists 16 materials (a few list 17). The decal layer selects one of them per pixel by role:
 
-## Algorithm plan
+  | Slots | Role | Vanilla rule |
+  |---|---|---|
+  | 0–4 | Coast, chosen by the location's topography (flatland, hills, plateau, mountains, wetlands) | 1–4 px inland; 2–6 px offshore |
+  | 5 | Coast transition | 4–10 px inland |
+  | 6 | Rivers, lake and sea edges | 0–3 px around river pixels; 5–10 px offshore |
+  | 7 | Topography border | Band of about ±4 px around location borders where topography changes |
+  | 8 | Vegetation border | Same band where vegetation changes |
+  | 9 | Climate border | Same band where climate changes |
+  | 10–15 | Two families of three variations | Family blobs about 25 px; level blobs about 8 px |
 
-| Stage | Method | Output |
+  Where several attributes change at once, topography wins, then vegetation, then climate. Some changes get no band: flatland ↔ flatland wasteland, arid ↔ hot semi-arid, cold arid ↔ cold semi-arid, arctic ↔ subpolar. Level shares depend on vegetation and topography; forest uses level 1 only. Pixels are decal pixels, two per location pixel.
+- **Trees and ground clutter are pre-placed instances.** They live in `gfx/map/map_objects/*_generator_*.bin` (40-byte records: x, y, z, quaternion, scale) and in three inline `jungle_dense` text files. 27–44% of the forest, pine, jungle, woods and grass instances stood on the removed Americas.
+
+The interim patch transfer copied river and border bands from unrelated places and took templates from random donors. That produced the squares and the mosaic (C47).
+
+## Algorithm (implemented)
+
+| Stage | Module | Method |
 |---|---|---|
-| 1. Relief | Plate or ridge skeleton for mountain ranges, so they form chains rather than blobs. Hypsometric shaping, then light hydraulic erosion. Rivers from flow accumulation carve valleys and feed `rivers.png` | Height field, river network |
-| 2. Climate | Temperature from latitude, elevation lapse rate and ocean moderation. Moisture advected along latitude-band winds, with orographic rain and rain shadow behind ranges | Temperature and moisture fields |
-| 3. Biome classification | Whittaker-style lookup calibrated on vanilla. Learn the joint distribution of vanilla templates' climate and vegetation against latitude, elevation and coast distance, then classify | Biome per pixel and per location |
-| 4. Coherence | Classify at a coarse scale, apply a majority filter, enforce a minimum region area, warp boundaries with noise, define ecotone width per biome pair | Smooth biome map with ecotone weights |
-| 5. Material synthesis | An exemplar library of vanilla material maps per biome, taken from vanilla locations of that biome. Image quilting on the categorical map: overlapping patches with minimum-error boundary cuts (Efros and Freeman, 2001). Ecotones blend the two biomes' syntheses by noise-dithered thresholds | Material layer without seams |
-| 6. Gameplay consistency | Location templates take the majority biome, climate and topography of their pixels. Raw materials are drawn per biome from vanilla frequencies | `location_templates.txt` |
+| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow noise zero lines (belts) whose width and edges vary, cut into segments by a presence noise, with ridged crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. |
+| 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
+| 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation within the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
+| 4. Coherence | `eu5_biomes.py` | Class scores are smoothed over the location adjacency graph: 3 rounds for climate, 1 for vegetation. Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. |
+| 5. Material slots | `eu5_slots.py` | The vanilla rules above, applied to the generated labels and templates. Band edges, variation families and levels come from uniformised integer noise in absolute decal coordinates, so adjacent decals agree. |
+| 6. Gameplay consistency | `eu5_nw_export.py` | Each location template gets the model's climate, vegetation and topography. Raw materials are drawn from vanilla frequencies for the same climate, vegetation, topography and coastal flag. |
+| 7. Vegetation instances | `eu5_objects.py` | Vanilla instances inside the canvas are dropped. New instances are sampled per material pixel at the Old World density for the pixel's (vegetation, climate, topography, slot) class. Rotation and scale are copied from vanilla records of the same file. |
+| 8. Location shapes | `newworld.py` | Cell borders are bent by a smooth displacement field, then cut-off pieces are re-attached, so borders and the bands along them are organic rather than polygonal. |
 
-## Acceptance criteria
+## Acceptance results (seed 42, continents) [V-EXEC C51–C53]
 
-- **Biome coherence:** at least vanilla's on comparable areas. Measure the share of pixels equal to their 9×9 majority, and the distribution of region areas.
-- **No visible patch structure:** gradient energy of the material map along synthesis-patch boundaries must not exceed interior levels by more than 10%.
-- **Ecotones:** transitions between biomes have a measurable width of at least 8 location pixels, with no straight or grid-aligned edges.
-- **Per-biome slot statistics:** within a set tolerance of the vanilla exemplars (for example, total variation ≤ 0.15).
-- **Template agreement:** each location's vegetation matches its rendered biome for at least 95% of locations.
-- **Owner review in game:** screenshots at continental, regional and close zoom.
+- **Slot-rule fidelity:** rebuilding a 1600×2400 vanilla Mediterranean crop from vanilla templates gives 85.6% agreement on structural classes. Coast slot choice is right on 96% of coast pixels. The optional local test requires at least 80%.
+- **Biome coherence:** the share of adjacent location pairs with the same climate is 919‰ (vanilla Old World 806‰); for vegetation it is 854‰ (vanilla 631‰). Mean region size is 86 and 38 locations (vanilla 13 and 7). Zones are deliberately more coherent than vanilla's location-level mosaic.
+- **Climate bands:** tropical at 0–20°; subtropical and arid at 20–35°; Mediterranean and cold arid at 35–45°; continental at 45–55°; subpolar at 55–65°; arctic above 65°.
+- **Vegetation instances:** density per 1000 location pixels, generated versus Old World:
 
-## Place in the roadmap
+  | Instances | Generated | Old World |
+  |---|---|---|
+  | Forest trees in forest | 75 | 90 |
+  | Pine in forest | 344 | 283 |
+  | Jungle trees in jungle | 387 | 299 |
+  | Woods trees in woods | 97 | 75 |
+  | Grass in grassland | 107 | 99 |
 
-Phase V1 in [roadmap](roadmap.md); it supersedes the visual part of R5. It can proceed in parallel with native civilizations (R6), because both read the same biome and template data.
+  None are placed on desert, sparse land or water.
+- **Owner review in game:** pending. Check screenshots at continental, regional and close zoom.
+
+## Open work
+
+- **V1b rivers:** flow accumulation on the relief, river lines in `rivers.png` (palette 0 for sources, rare 1 and 2 probably for joins and splits [INFERRED], 4/5/11/15 for bodies with exactly two 4-neighbours [V-EXEC C52]), valleys carved into the heights, slot 6 along them.
+- Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
+- Erosion for more natural valleys.
+- The mod is about 1.3 GB, because instance files are whole-file overrides.

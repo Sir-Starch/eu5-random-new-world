@@ -23,8 +23,11 @@ The production architecture is conditional on [experiments 002–006](../experim
 | Generators | `synth.py` (T3-style, synthetic), `coast.py` (T2 boundary moves) | Deterministic, offline |
 | Validators | `validate.py` | Typed errors, generic and boundary-move checks |
 | EU5 adapter and serializer | `eu5_map.py`, `eu5_export.py`, `png.py`, `artifacts.py` | Build 25905365 only; emits `locations.png` + `rivers.png` |
+| T3 New World | `newworld.py`, `eu5_canvas.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_nw_export.py`, `pdx.py`, `names.py` | New IDs, empty 1337 start; plays in game [V-GAME C45] |
+| Relief and climate (V1) | `fields.py`, `relief.py`, `climate.py` | Game-independent integer fields: warped rotated noise, mountain belts, Euclidean distance, zonal-wind rainfall |
+| Biomes and terrain (V1) | `eu5_biomes.py`, `eu5_slots.py`, `eu5_terrain.py`, `eu5_objects.py`, `eu5_water.py`, `terrain_tiles.py`, `lzav.py`, `dds.py` | Templates from a calibrated climate model; decal heights and material slots by vanilla rules; vegetation instances; water textures; NOT GAME VALIDATED ([terrain-biomes](terrain-biomes.md)) |
 
-Start-state entities, names, terrain attributes and new EU5 IDs are not generated yet; they wait for experiments 002, 003 and 005.
+Native start-state entities (R6) are not generated yet; the New World starts empty.
 
 The exporter should read any vanilla-derived data from the user's local game installation and write generated assets only to gitignored/local mod directories [INFERRED C15]. It must preserve Old World pixel regions, identifiers and references by explicit tests. A package manifest should record seed, settings schema, generator version, target game build and hashes without embedding proprietary input files.
 
