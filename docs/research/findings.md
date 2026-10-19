@@ -44,6 +44,7 @@ This is a read-only investigation of Steam build 25905365 on `1.4-open-beta`, pl
 - [V-LOCAL] EU5 draws each location with the biome selected by its template's climate, vegetation and topography; the decal material layer stores slot roles (coast, transition, water edge, border bands, variations), not textures (C50). Generated templates and the slot layer must therefore be coherent with each other, and vanilla's look follows from rules, not hand painting.
 - [V-EXEC] Those rules are measurable and reproducible: rebuilding a vanilla crop from vanilla templates matches 85.6% of structural slot pixels (C51). Trees and grass are pre-placed instance lists whose densities follow vegetation and slot; 27–44% of them stood on the removed Americas (C52).
 - [V-EXEC] The V1a build ties relief, climate, templates, material slots and vegetation instances to one model; climate and vegetation zones are more coherent than vanilla's, and instance densities per vegetation match the Old World (C53). NOT GAME VALIDATED.
+- [V-GAME] V1a loads and renders in 1.4.1; its defects came from the unstitched map wrap, short biome material lists and vanilla city ground decals (C55, C56). Generator 0.5.0 avoids the first two. NOT GAME VALIDATED.
 
 ## Patch-sensitive research leads
 

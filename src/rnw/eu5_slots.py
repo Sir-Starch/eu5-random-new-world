@@ -12,6 +12,12 @@ topography first, then vegetation, then climate; rivers get a 0-3 pixel band; th
 variation families form blobs about 25 pixels across and the levels about 8, with level
 shares that depend on vegetation and topography (forest is level 1 only).
 
+Most biomes list fewer than 16 materials (93 of 191 list 13). The shader clamps the slot
+to 15 and reads the biome's material table, whose unlisted entries point at
+``fallback_material`` (dead grass) [V-LOCAL C54; INFERRED]. Vanilla writes such slots
+anyway; generated land does not: a slot the biome does not list falls back to the same
+variation level of the first family, else to the highest listed level, else to slot 0.
+
 All thresholds are wobbled by integer noise in absolute decal coordinates, so adjacent
 decals agree. Pixels here are decal pixels, two per location pixel.
 """
@@ -42,6 +48,7 @@ VEGETATION_BORDER: Final[int] = 8
 CLIMATE_BORDER: Final[int] = 9
 VARIATION: Final[int] = 10
 LEVELS: Final[int] = 3
+SLOTS: Final[int] = 16
 COAST_SLOTS: Final[dict[str, int]] = {
     "flatland": 0,
     "flatland_wasteland": 0,
@@ -116,6 +123,19 @@ class SlotTables:
     climate: NDArray[np.int64]
     level_one: NDArray[np.int64]
     level_two: NDArray[np.int64]
+    materials: NDArray[np.int64]
+
+
+@cache
+def slot_remap() -> NDArray[np.int64]:
+    """Row ``n``: the slot written in place of each slot 0-15 for a biome of ``n`` materials."""
+    table = np.tile(np.arange(SLOTS, dtype=np.int64), (SLOTS + 1, 1))
+    table[0] = 0
+    for count in range(1, SLOTS):
+        for slot in range(count, SLOTS):
+            level = min(VARIATION + (slot - VARIATION) % LEVELS, count - 1)
+            table[count, slot] = level if slot >= VARIATION and level >= VARIATION else 0
+    return table
 
 
 def _border(attribute: NDArray[np.int64]) -> NDArray[np.bool_]:
@@ -195,6 +215,9 @@ def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables 
         np.where(level_u < tables.level_one[owner] + tables.level_two[owner], 1, 2),
     )
     out[free] = (VARIATION + LEVELS * family + level)[free]
+    count = np.clip(tables.materials[owner], 0, SLOTS)
+    listed = land & (out < SLOTS)
+    out[listed] = slot_remap()[count[listed], out[listed]]
     return out
 
 

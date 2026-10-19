@@ -5,15 +5,19 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import numpy as np
 
 from rnw.climate import RainSettings, rainfall
 from rnw.eu5_biomes import (
+    biome_of,
+    biome_rules,
     knn_scores,
     label_statistics,
     latitude_tenths,
+    material_counts,
     smooth_scores,
     template_attributes,
 )
@@ -25,6 +29,7 @@ from rnw.eu5_slots import (
     VEGETATION_BORDER,
     SlotTables,
     level_counts,
+    slot_remap,
     synthesize,
 )
 from rnw.fields import block_mean, smoothstep, upsample, warped_noise
@@ -160,6 +165,7 @@ def _island() -> tuple[np.ndarray, SlotTables]:
         climate=np.array([0, 1, 1], dtype=np.int64),
         level_one=np.array([0, 1000, 300], dtype=np.int64),
         level_two=np.array([0, 0, 500], dtype=np.int64),
+        materials=np.array([16, 16, 16], dtype=np.int64),
     )
     return labels, tables
 
@@ -180,6 +186,51 @@ def test_slot_rules_mark_coast_borders_and_variations() -> None:
     right = slots[25:55, 48:60]
     levels = {(slot - VARIATION) % 3 for slot in np.unique(right).tolist() if slot >= VARIATION}
     assert levels == {0, 1, 2}
+
+
+def test_short_material_lists_get_only_listed_slots() -> None:
+    """A biome with 13 materials keeps its slots; missing variations reuse family one."""
+    remap = slot_remap()
+    assert remap[13].tolist() == [*range(13), 10, 11, 12]
+    assert remap[12].tolist()[10:] == [10, 11, 11, 10, 11, 11]
+    assert remap[1].tolist() == [0] * 16
+    assert remap[16].tolist() == list(range(16))
+    labels, tables = _island()
+    short = replace(tables, materials=np.array([16, 16, 13], dtype=np.int64))
+    land = labels > 0
+    rivers = np.zeros(labels.shape, dtype=bool)
+    full = synthesize(labels, land, rivers, tables, seed=1, origin=(0, 0))
+    slots = synthesize(labels, land, rivers, short, seed=1, origin=(0, 0))
+    right = labels == 2
+    assert int(slots[right].max()) <= 12
+    assert np.array_equal(slots[~right], full[~right])
+    assert np.any(full[right] >= 13)
+
+
+BIOMES_TEXT = """# comment = { biome = no }
+000 = { biome = default_biome }
+001 = {
+ climate = arid climate = hot_semi_arid # both
+ vegetation = desert biome = dry
+}
+002 = { climate = arid vegetation = desert topography = hills biome = dry_hills }
+"""
+MATERIALS_TEXT = """materials = { { name = "x" diffuse = "a.dds" }
+{ name = dry materials = {
+ a # coast
+ b c } }
+{ name = dry_hills materials = { a } } }
+"""
+
+
+def test_biome_rules_pick_the_most_specific_match() -> None:
+    """Rules with more named attributes win; unlisted values fall back to the default."""
+    rules = biome_rules(BIOMES_TEXT)
+    assert [rule.biome for rule in rules] == ["default_biome", "dry", "dry_hills"]
+    assert biome_of(rules, "hot_semi_arid", "desert", "hills") == "dry"
+    assert biome_of(rules, "arid", "desert", "hills") == "dry_hills"
+    assert biome_of(rules, "arctic", "forest", "flatland") == "default_biome"
+    assert material_counts(MATERIALS_TEXT) == {"dry": 3, "dry_hills": 1}
 
 
 def test_level_counts_skip_borders() -> None:

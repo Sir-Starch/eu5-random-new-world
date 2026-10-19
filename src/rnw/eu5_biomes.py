@@ -41,6 +41,14 @@ FIELDS: Final[re.Pattern[str]] = re.compile(
     r"\b(climate|vegetation|topography|raw_material)\s*=\s*([A-Za-z_]+)"
 )
 TEMPLATE: Final[re.Pattern[str]] = re.compile(r"^([A-Za-z0-9_]+)\s*=\s*\{([^{}]*)\}", re.MULTILINE)
+RULE: Final[re.Pattern[str]] = re.compile(r"^\s*[A-Za-z0-9_]+\s*=\s*\{([^{}]*)\}", re.MULTILINE)
+ASSIGNMENT: Final[re.Pattern[str]] = re.compile(r"\b([a-z_]+)\s*=\s*([A-Za-z0-9_]+)")
+MATERIAL_LIST: Final[re.Pattern[str]] = re.compile(
+    r"\bname\s*=\s*([A-Za-z0-9_]+)\s+materials\s*=\s*\{([^{}]*)\}"
+)
+BIOME_KEYS: Final[tuple[str, ...]] = ("climate", "vegetation", "topography")
+BIOME_DEFINITIONS: Final[str] = "game/in_game/gfx/map/biome_definitions/biomes.txt"
+TERRAIN_MATERIALS: Final[str] = "game/in_game/gfx/terrain2/materials.txt"
 CLIMATE_STEP: Final[int] = 4
 # Row of the equator and (pixels from it, absolute latitude in tenths of a degree), from
 # city locators of build 25905365 [V-LOCAL C49]: Quito, Mogadishu and Singapore near
@@ -64,6 +72,9 @@ VEGETATION_ROUNDS: Final[int] = 1
 SELF_WEIGHT: Final[int] = 2
 TOPOGRAPHIES: Final[tuple[str, ...]] = ("mountains", "plateau", "hills", "wetlands", "flatland")
 EMPTY_LAND: Final[dict[str, str]] = {"farmland": "grasslands"}
+# biomes.txt defines no desert wetlands biome; such templates fall to default_biome, whose
+# only material is fallback_material [V-LOCAL C54].
+NO_WETLANDS: Final[frozenset[str]] = frozenset({"desert"})
 MOUNTAIN_WASTE_HEIGHT: Final[int] = 14000
 FLAT_WASTE_SPREAD: Final[int] = 900
 LAND_KINDS: Final[frozenset[CellClass]] = frozenset(
@@ -75,6 +86,64 @@ WATER_KINDS: Final[frozenset[CellClass]] = frozenset({CellClass.SEA, CellClass.L
 def template_attributes(text: str) -> dict[str, dict[str, str]]:
     """Climate, vegetation, topography and raw material of every template."""
     return {key: dict(FIELDS.findall(body)) for key, body in TEMPLATE.findall(text)}
+
+
+def _without_comments(text: str) -> str:
+    return "\n".join(line.split("#", 1)[0] for line in text.splitlines())
+
+
+@dataclass(frozen=True, slots=True)
+class BiomeRule:
+    """One ``biomes.txt`` definition: accepted values per attribute (empty = any)."""
+
+    climate: frozenset[str]
+    vegetation: frozenset[str]
+    topography: frozenset[str]
+    biome: str
+
+
+def biome_rules(text: str) -> list[BiomeRule]:
+    """Definitions of ``gfx/map/biome_definitions/biomes.txt`` in file order."""
+    rules: list[BiomeRule] = []
+    for body in RULE.findall(_without_comments(text)):
+        values: dict[str, set[str]] = {key: set() for key in BIOME_KEYS}
+        biome = ""
+        for key, value in ASSIGNMENT.findall(body):
+            if key == "biome":
+                biome = value
+            elif key in values:
+                values[key].add(value)
+        if biome:
+            rules.append(
+                BiomeRule(
+                    climate=frozenset(values["climate"]),
+                    vegetation=frozenset(values["vegetation"]),
+                    topography=frozenset(values["topography"]),
+                    biome=biome,
+                )
+            )
+    return rules
+
+
+def biome_of(rules: list[BiomeRule], climate: str, vegetation: str, topography: str) -> str:
+    """Biome of the matching rule that names the most attributes; the first wins ties."""
+    best, named = "", -1
+    values = (climate, vegetation, topography)
+    for rule in rules:
+        sets = (rule.climate, rule.vegetation, rule.topography)
+        pairs = zip(sets, values, strict=True)
+        if all(not accepted or value in accepted for accepted, value in pairs):
+            count = sum(1 for accepted in sets if accepted)
+            if count > named:
+                best, named = rule.biome, count
+    return best
+
+
+def material_counts(text: str) -> dict[str, int]:
+    """Number of material slots each biome of ``gfx/terrain2/materials.txt`` defines."""
+    return {
+        name: len(body.split()) for name, body in MATERIAL_LIST.findall(_without_comments(text))
+    }
 
 
 def latitude_tenths(rows: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -266,8 +335,12 @@ def _topography(  # noqa: PLR0913 - ranks use height, spread, rain and coast tog
     spread: NDArray[np.int64],
     rain: NDArray[np.int64],
     coast: NDArray[np.int64],
+    dry: frozenset[int],
 ) -> dict[int, str]:
-    """Assign topographies in vanilla proportions by relief and wetness ranks."""
+    """Assign topographies in vanilla proportions by relief and wetness ranks.
+
+    Cells in ``dry`` never become wetlands.
+    """
     remaining = list(cells)
     out: dict[int, str] = {}
     total = sum(shares.values())
@@ -286,7 +359,8 @@ def _topography(  # noqa: PLR0913 - ranks use height, spread, rain and coast tog
 
     for name in TOPOGRAPHIES[:-1]:
         wanted = len(cells) * shares.get(name, 0) // max(1, total)
-        ranked = sorted(remaining, key=lambda i: (-score(name, i), i))
+        candidates = [i for i in remaining if name != "wetlands" or i not in dry]
+        ranked = sorted(candidates, key=lambda i: (-score(name, i), i))
         chosen = set(ranked[:wanted])
         out.update(dict.fromkeys(chosen, name))
         remaining = [i for i in remaining if i not in chosen]
@@ -410,6 +484,7 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
         spread=cells.spread,
         rain=rain,
         coast=coast,
+        dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
     )
     for cell, name in ranked.items():
         topography[cell] = name

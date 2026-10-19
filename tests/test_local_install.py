@@ -92,6 +92,7 @@ def test_local_slot_rules_reproduce_vanilla_structure() -> None:
         climate=ids([CLIMATE_GROUPS.get(c, c) for c in (row.get("climate", "") for row in fields)]),
         level_one=np.full(count, 400, dtype=np.int64),
         level_two=np.full(count, 450, dtype=np.int64),
+        materials=np.full(count, 16, dtype=np.int64),
     )
     store = DecalStore(root, (int(game_map.labels.shape[0]), int(game_map.labels.shape[1])))
     decal = next(item for item in store.decals if item.name == "heightmap_6_16")

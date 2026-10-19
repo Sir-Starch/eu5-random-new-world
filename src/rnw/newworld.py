@@ -1,7 +1,9 @@
 """Generate a complete New World inside an arbitrary domain mask (T3, game-independent).
 
 The domain is the set of pixels that may be replaced. A ring of ocean is kept along its
-border so generated seas meet the surrounding (protected) ocean. Land carries a
+border so generated seas meet the surrounding (protected) ocean, and a strait along an
+optional seam column where the map wraps: EU5 does not stitch terrain across the wrap,
+so land there shows a crack [V-GAME owner observation, 1.4.1]. Land carries a
 continuous relief field (``relief.py``); the highest cells become wastelands. Everything
 is integer arithmetic driven by named SplitMix64 streams, so equal inputs give equal
 outputs.
@@ -36,7 +38,18 @@ WOBBLE_PERIOD: Final[int] = 48
 WOBBLE_PASSES: Final[int] = 64
 STRIP_ROWS: Final[int] = 1024
 INTERIOR_LIMIT: Final[int] = 512
+SHORE_LIMIT: Final[int] = 64
+# Seam strait: no land within SEAM_GAP_PX of the wrap; the coasts follow a coastal ramp of
+# SEAM_RAMP_MARGINS coast margins shifted by up to SEAM_SHIFT_PX of warped noise, so the
+# strait meanders and changes width instead of running as a straight canal.
+SEAM_GAP_PX: Final[int] = 24
+SEAM_RAMP_MARGINS: Final[int] = 3
+SEAM_SHIFT_PX: Final[int] = 160
+SEAM_PERIOD: Final[int] = 480
 OUTSIDE: Final[int] = 2
+LAND_KINDS: Final[frozenset[CellClass]] = frozenset(
+    {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
+)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -82,8 +95,33 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
     return out
 
 
+def _seam_gap(columns: NDArray[np.int64], seam: int) -> NDArray[np.int64]:
+    """Distance in pixels to the seam between columns ``seam - 1`` and ``seam``."""
+    return np.where(columns >= seam, columns - seam, seam - 1 - columns)
+
+
+def _seam_penalty(
+    shape: tuple[int, int], seam: int, seed: int, ramp: int
+) -> tuple[slice, NDArray[np.int64]]:
+    """Columns near the seam and the elevation penalty that opens a strait there."""
+    height, width = shape
+    start = max(0, seam - ramp - SEAM_SHIFT_PX)
+    stop = min(width, seam + ramp + SEAM_SHIFT_PX)
+    gap = _seam_gap(np.arange(start, stop, dtype=np.int64), seam)[np.newaxis, :]
+    shift = warped_noise(
+        derive_seed(seed, "nw_seam_coast"),
+        (height, stop - start),
+        step=8,
+        period=SEAM_PERIOD,
+        octaves=4,
+        warp_px=SEAM_PERIOD // 4,
+    )
+    reach = gap + shift * SEAM_SHIFT_PX // NOISE_SCALE
+    return slice(start, stop), (ramp - reach) * NOISE_SCALE * 3 // ramp
+
+
 def _land(
-    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
+    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings, seam: int | None
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation."""
     margin = settings.coast_margin_px
@@ -110,8 +148,15 @@ def _land(
     )
     reach = edge.astype(np.int64) + wobble.astype(np.int64) * ramp // (3 * NOISE_SCALE)
     penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
+    shore = edge < margin
+    if seam is not None and 0 < seam < domain.shape[1]:
+        shape = (int(domain.shape[0]), int(domain.shape[1]))
+        near, extra = _seam_penalty(shape, seam, seed, SEAM_RAMP_MARGINS * margin)
+        penalty[:, near] = np.maximum(penalty[:, near], extra)
+        columns = np.arange(shape[1], dtype=np.int64)
+        shore |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
     elevation = (elevation - np.maximum(0, penalty)).astype(np.int32)
-    interior = domain & (edge >= margin)
+    interior = domain & ~shore
     values = elevation[interior]
     keep = values.size * settings.land_permille // PERMILLE
     threshold = np.partition(values, values.size - keep)[values.size - keep]
@@ -121,7 +166,7 @@ def _land(
     coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
     parts = label_components(coded)
     water = domain & ~land
-    ocean_parts = np.unique(parts[water & (edge < margin)])
+    ocean_parts = np.unique(parts[water & shore])
     ocean = water & np.isin(parts, ocean_parts)
     enclosed = water & ~ocean
     size = np.bincount(parts.ravel())[parts]
@@ -137,8 +182,17 @@ def _weighted(
     return sums.astype(np.int64)
 
 
-def _interior_points(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]:
-    """Per cell, the first pixel (raster order) farthest from the cell's boundary."""
+def _interior_points(
+    labels: NDArray[np.int32], count: int, land: NDArray[np.bool_]
+) -> NDArray[np.int64]:
+    """Per cell, the first pixel (raster order) with the best interior score.
+
+    Water cells take the pixel farthest from the cell boundary. Land cells (``land`` per
+    cell) hold city models, which are square and can reach past a near shore, so their
+    score is ``min(2 * d_border, d_shore)`` in octagonal distance, ties going to the
+    larger ``d_border``: the point moves inland until it is twice as far from water as
+    from the cell's other borders.
+    """
     height, width = labels.shape
     padded = np.pad(labels, 1, constant_values=-1)
     center = padded[1:-1, 1:-1]
@@ -148,10 +202,17 @@ def _interior_points(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]
         | (padded[1:-1, :-2] != center)
         | (padded[1:-1, 2:] != center)
     )
-    distance = distance_from(boundary, INTERIOR_LIMIT).ravel()
+    del padded, center
+    is_land = np.concatenate([land, [False]])[labels]
+    distance = distance_from(boundary, INTERIOR_LIMIT).astype(np.int64)
+    border = distance_from(boundary, INTERIOR_LIMIT, octagonal=True).astype(np.int64)
+    shore = distance_from(~is_land, SHORE_LIMIT, octagonal=True).astype(np.int64)
+    score = np.where(is_land, np.minimum(2 * border, shore), distance).ravel()
+    tie = np.where(is_land, border, 0).ravel()
+    del distance, border, shore, boundary, is_land
     flat = labels.ravel()
     inside = np.flatnonzero(flat >= 0)
-    order = inside[np.lexsort((inside, -distance[inside].astype(np.int64), flat[inside]))]
+    order = inside[np.lexsort((inside, -tie[inside], -score[inside], flat[inside]))]
     owners = flat[order]
     first = np.flatnonzero(np.concatenate([[True], owners[1:] != owners[:-1]]))
     points = np.zeros((count, 2), dtype=np.int64)
@@ -254,10 +315,14 @@ def wobble_borders(
 
 
 def generate_new_world(
-    domain: NDArray[np.bool_], *, seed: int, settings: NewWorldSettings
+    domain: NDArray[np.bool_], *, seed: int, settings: NewWorldSettings, seam: int | None = None
 ) -> NewWorld:
-    """Fill ``domain`` with generated land, sea and lake cells."""
-    land, ocean, lakes, _ = _land(domain, seed, settings)
+    """Fill ``domain`` with generated land, sea and lake cells.
+
+    ``seam`` is the crop column where the world map wraps (cells left of it continue at
+    the right map edge); a strait keeps land away from it.
+    """
+    land, ocean, lakes, _ = _land(domain, seed, settings, seam)
     land_cells = merge_small(
         grow_regions(
             land, seed_sites(derive_seed(seed, "nw_land_sites"), land, settings.location_px)
@@ -328,7 +393,9 @@ def derive_world(
         elevation=elevation,
         pixels=pixels,
         centroids=centroids,
-        interior=_interior_points(labels, count),
+        interior=_interior_points(
+            labels, count, np.array([kind in LAND_KINDS for kind in kinds], dtype=bool)
+        ),
         mean_elevation=mean_elevation,
         spread=spread,
         edges=edges,

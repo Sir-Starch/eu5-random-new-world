@@ -12,18 +12,23 @@ from __future__ import annotations
 
 import re
 import zlib
-from collections import deque
+from collections import Counter, deque
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
 from rnw.artifacts import check_new_output, pixel_digest, staged, write_bytes
 from rnw.eu5_biomes import (
+    BIOME_DEFINITIONS,
+    TERRAIN_MATERIALS,
     CellBiomes,
     Generated,
     assign_biomes,
+    biome_of,
+    biome_rules,
     climate_grid,
     label_statistics,
+    material_counts,
     template_attributes,
     vanilla_locations,
 )
@@ -60,7 +65,14 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
-from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, LEVELS, TOPOGRAPHY_GROUPS, SlotTables
+from rnw.eu5_slots import (
+    CLIMATE_GROUPS,
+    COAST_SLOTS,
+    LEVELS,
+    SLOTS,
+    TOPOGRAPHY_GROUPS,
+    SlotTables,
+)
 from rnw.eu5_terrain import (
     LAND_CODE,
     OUTSIDE,
@@ -125,6 +137,10 @@ UNTESTED: Final[tuple[str, ...]] = (
         "Every generated (climate, vegetation, topography) combination resolves to a biome "
         "through the priority rules of biomes.txt; rare combinations may fall back to a "
         "partial match."
+    ),
+    (
+        "Slots a biome's material list lacks are replaced on generated land; that the engine "
+        "renders such slots with fallback_material is inferred from the shader."
     ),
     "River splines are not generated yet; the new land has no rivers (V1b).",
     "nodes.dat and other derived caches are vanilla and may not match the new map.",
@@ -678,9 +694,12 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     game_map = load_map(game_dir)
     hierarchy = {location.key: location for location in read_locations(game_dir / DEFINITIONS)}
     canvas = select_canvas(game_map, settings.new_world.ocean_band_px)
-    world = generate_new_world(canvas.mask.copy(), seed=seed, settings=settings.new_world)
     width = int(game_map.labels.shape[1])
-    world = split_at_column(world, (canvas.roll - canvas.col0) % width)
+    seam = (canvas.roll - canvas.col0) % width
+    world = generate_new_world(
+        canvas.mask.copy(), seed=seed, settings=settings.new_world, seam=seam
+    )
+    world = split_at_column(world, seam)
     total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
     if total > MAX_LOCATIONS:
         message = (
@@ -699,7 +718,8 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     biomes, biome_stats = _biome_model(
         game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
     )
-    slot_tables = _slot_tables(game_map, vanilla_attributes, biomes, store)
+    slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
+    biome_stats["materials"] = slot_stats
     texts, text_stats = _text_outputs(
         game_dir,
         game_map=game_map,
@@ -1011,7 +1031,7 @@ def _slot_tables(
     attributes: dict[str, dict[str, str]],
     biomes: CellBiomes,
     store: DecalStore,
-) -> SlotTables:
+) -> tuple[SlotTables, dict[str, object]]:
     """Per final label (vanilla, then generated) inputs of the material slot rules."""
     vanilla_count = len(game_map.keys)
     water = np.array(
@@ -1043,7 +1063,21 @@ def _slot_tables(
         if row.sum() < MIN_LEVEL_PIXELS:
             row = overall
         shares[number] = row * 1000 // max(1, int(row.sum()))
-    return SlotTables(
+    rules = biome_rules(_read(store.game_dir, BIOME_DEFINITIONS))
+    lists = material_counts(_read(store.game_dir, TERRAIN_MATERIALS))
+    resolved: dict[tuple[str, str, str], str] = {}
+    materials = np.full(len(vegetation), SLOTS, dtype=np.int64)
+    generated: Counter[str] = Counter()
+    for label in range(vanilla_count, len(vegetation)):
+        if water[label]:
+            continue
+        triple = (climate[label], vegetation[label], topography[label])
+        if triple not in resolved:
+            resolved[triple] = biome_of(rules, *triple)
+        biome = resolved[triple]
+        materials[label] = lists.get(biome, SLOTS)
+        generated[biome] += 1
+    tables = SlotTables(
         water=water,
         coast_slot=np.array([COAST_SLOTS.get(t, 0) for t in topography], dtype=np.int64),
         topography=topography_group,
@@ -1051,7 +1085,18 @@ def _slot_tables(
         climate=climate_group,
         level_one=shares[group, 0],
         level_two=shares[group, 1],
+        materials=materials,
     )
+    short = materials[vanilla_count:][~water[vanilla_count:]]
+    stats: dict[str, object] = {
+        "generated_biomes": dict(sorted(generated.items())),
+        "default_biome_locations": generated.get("default_biome", 0),
+        "locations_by_material_count": {
+            str(count): int(number)
+            for count, number in zip(*np.unique(short, return_counts=True), strict=True)
+        },
+    }
+    return tables, stats
 
 
 def _pixel_classes(
