@@ -41,3 +41,7 @@
 
 - [V-GAME] The T3 candidate loaded map, setup, scripts and the modified decal cache but crashed while starting 1337, right after failing to set up a holy site on a removed location (C43). Built v2 with script-reference remapping, area adoption, locator fixes and a location cap (C44).
 - [V-GAME] v2 loaded into a playable 1337 start with the generated continent (C45) — first in-game proof of generated New World geography with new IDs. Visual defects traced to lake meshes, water/foam textures, per-decal fields and cliff heights; all rebuilt offline (C46).
+
+## 2026-10-19 — owner review of terrain
+
+- [V-GAME owner observation] Coasts and water accepted as fixes; terrain still pixelated and incoherent up close. Measured that per-pixel fragmentation matches vanilla, so the missing piece is biome structure (C47). Recorded the mandatory terrain/biome synthesis phase V1 with algorithm and acceptance metrics.

@@ -34,6 +34,7 @@ Generate empty wilderness, small decentralized societies, regional states and co
 
 ## Quality bars
 
+- [OWNER 2026-10-19] Generated terrain must look deliberate at every zoom level: coherent biome regions, smooth ecotones, mountain chains, rivers and valleys; no pixel-scale patchwork or patch seams. Visual layers and gameplay templates must come from the same climate/biome model. See [terrain-biomes](terrain-biomes.md).
 - [INFERRED] Identical seed, settings, generator version and game-build fingerprint must produce byte-identical mod output on Windows and Linux; this is a future acceptance test, not a current result.
 - [INFERRED] Geography must be connected as intended, with no orphan sea zones, broken coastlines or Old World pixel/identifier changes. Ship and land route behavior must be observed in game before release.
 - [INFERRED] Every society needs coherent pops, ownership, culture, religion, economy and diplomacy. Exploration, colonization, trade and conquest must be tested in an actual campaign.
