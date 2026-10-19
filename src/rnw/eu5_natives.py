@@ -206,6 +206,8 @@ class NativeWorld:
     holy_sites: dict[str, str]
     names: dict[str, str]
     vassals: tuple[tuple[str, str], ...]
+    complexity: dict[str, int]
+    population: dict[str, int]
     stats: dict[str, object]
 
 
@@ -1065,6 +1067,8 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         holy_sites=holy,
         names=names,
         vassals=vassals,
+        complexity=dict(zip(keys, societies.complexity.tolist(), strict=True)),
+        population=dict(zip(keys, societies.population.tolist(), strict=True)),
         stats=stats,
     )
 

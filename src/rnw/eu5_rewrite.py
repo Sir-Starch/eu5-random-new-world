@@ -336,6 +336,19 @@ def insert_into_block(text: str, path: tuple[str, ...], addition: str) -> str:
     return edits.apply(text)
 
 
+def drop_block_entries(text: str, path: tuple[str, ...], keys: set[str]) -> str:
+    """Remove the entries keyed by ``keys`` from the block at ``path``; other bytes stay."""
+    block = parse(text).block(*path)
+    if block is None:
+        message = f"No block {'/'.join(path)}"
+        raise KeyError(message)
+    edits = Edits()
+    for entry in block.entries:
+        if entry.key in keys:
+            _delete(edits, text, entry)
+    return edits.apply(text)
+
+
 def _prune_members(
     record: Entry, ids: set[str], words: set[tuple[int, int]], doomed: set[tuple[int, int]]
 ) -> bool:

@@ -17,6 +17,7 @@ from rnw.eu5_canvas import select_canvas
 from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map
 from rnw.eu5_natives import vanilla_natives
 from rnw.eu5_newworld import vanilla_geometry
+from rnw.eu5_nw_export import calibrate_development
 from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, TOPOGRAPHY_GROUPS, SlotTables, synthesize
 from rnw.eu5_terrain import DecalStore
 from rnw.geography import color_summary, read_locations, summary
@@ -133,3 +134,21 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
     assert "PAM" in vanilla.reserved_tags
     assert any(culture.state_include for culture in vanilla.cultures.values())
     assert any(culture.city_setup for culture in vanilla.cultures.values())
+
+
+def test_local_development_calibration_reads_the_vanilla_americas() -> None:
+    """Keyed maximum, harbour distribution and market-village share of vanilla 1.4.1."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    root = Path(root_value)
+    game_map = load_map(root)
+    hierarchy = {location.key: location for location in read_locations(root / DEFINITIONS)}
+    calibration = calibrate_development(root, game_map, hierarchy)
+    assert calibration.society_max == 12
+    assert len(calibration.harbours) == 1092
+    assert calibration.harbours.count(0) == 828
+    assert calibration.harbours[0] == -10
+    assert calibration.village_permille == 354
+    assert calibration.vanilla_means["city"][0] == 9
+    assert calibration.vanilla_means["unorganised"][0] == 2088

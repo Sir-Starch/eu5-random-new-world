@@ -37,6 +37,18 @@ from rnw.eu5_biomes import (
     vanilla_locations,
 )
 from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, select_canvas
+from rnw.eu5_development import (
+    VILLAGE,
+    Development,
+    DevelopmentCalibration,
+    build_development,
+    building_lines,
+    calibrate,
+    development_lines,
+    hundredths_text,
+    shelter,
+    template_harbours,
+)
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
 from rnw.eu5_map import (
     ADJACENCIES,
@@ -73,6 +85,7 @@ from rnw.eu5_objects import PixelClasses, object_outputs
 from rnw.eu5_remap import build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
+    drop_block_entries,
     insert_into_block,
     prune_setup,
     rewrite_class_lists,
@@ -150,7 +163,7 @@ LANGUAGES: Final[tuple[str, ...]] = (
 ROTATION: Final[str] = "{ -0.000000 -0.000000 -0.000000 1.000000 }"
 SCALE: Final[str] = "{ 1.000000 1.000000 1.000000 }"
 TOPOGRAPHY: Final[re.Pattern[str]] = re.compile(r"topography\s*=\s*[A-Za-z_]+")
-HARBOR: Final[re.Pattern[str]] = re.compile(r"\s*natural_harbor_suitability\s*=\s*[0-9.]+")
+HARBOR: Final[re.Pattern[str]] = re.compile(r"\s*natural_harbor_suitability\s*=\s*-?[0-9.]+")
 CURRENTS: Final[re.Pattern[str]] = re.compile(r"\s*movement_assistance\s*=\s*\{[^{}]*\}")
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 UNTESTED: Final[tuple[str, ...]] = (
@@ -184,6 +197,11 @@ UNTESTED: Final[tuple[str, ...]] = (
     ),
     "Colonisation, exploration, movement, naval routes, ports, save/load and startup time.",
     (
+        "Development entries keyed by generated location keys, per-port harbour values and "
+        "market villages in generated state capitals are untested; so is the estimate in "
+        "the report (the river term is left out)."
+    ),
+    (
         "Native countries use new three-letter tags defined in "
         "in_game/setup/countries/rnw_natives.txt without scripted coats of arms; that EU5 "
         "accepts them, pop-type tribes on generated locations and engine-drawn coats of "
@@ -194,11 +212,16 @@ UNTESTED: Final[tuple[str, ...]] = (
         "religions and situations with special mechanics may still expect vanilla geography."
     ),
 )
-SETUP_INSERTS: Final[dict[str, tuple[str, ...]]] = {
-    "10_countries.txt": ("countries", "countries"),
-    "07_cities_and_buildings.txt": ("locations",),
-    "03_markets.txt": ("market_manager",),
-    "12_diplomacy.txt": ("diplomacy_manager",),
+DEVELOPMENT_FILE: Final[str] = "14_development.txt"
+BUILDINGS_FILE: Final[str] = "07_cities_and_buildings.txt"
+# Blocks of the 1337 setup files that receive generated records, in the order of
+# their additions in ``_text_outputs``.
+SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
+    "10_countries.txt": (("countries", "countries"),),
+    BUILDINGS_FILE: (("locations",), ("building_manager",)),
+    "03_markets.txt": (("market_manager",),),
+    "12_diplomacy.txt": (("diplomacy_manager",),),
+    DEVELOPMENT_FILE: (("development",),),
 }
 
 
@@ -281,8 +304,13 @@ def _set_field(body: str, name: str, value: str) -> str:
     return body[:-1].rstrip() + f" {name} = {value} }}"
 
 
-def _template_lines(
-    plan: Plan, world: NewWorld, donors: list[str], bodies: dict[str, str], biomes: CellBiomes
+def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every generated input.
+    plan: Plan,
+    world: NewWorld,
+    donors: list[str],
+    bodies: dict[str, str],
+    biomes: CellBiomes,
+    harbours: dict[str, int],
 ) -> list[str]:
     coastal = _coastal(world)
     lines: list[str] = []
@@ -297,8 +325,9 @@ def _template_lines(
             ):
                 body = _set_field(body, name, values[index])
             body = HARBOR.sub("", body)
-            if cell.kind is CellClass.LAND and coastal[index]:
-                body = body[:-1].rstrip() + " natural_harbor_suitability = 0.50 }"
+            if cell.key in harbours:
+                value = hundredths_text(harbours[cell.key])
+                body = body[:-1].rstrip() + f" natural_harbor_suitability = {value} }}"
         elif cell.kind is CellClass.SEA:
             kind = "coastal_ocean" if coastal[index] else "ocean"
             body = TOPOGRAPHY.sub(f"topography = {kind}", body, count=1)
@@ -599,6 +628,9 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     geometry: VanillaGeometry,
     biomes: CellBiomes,
     natives: NativeWorld,
+    development: Development,
+    ports: tuple[list[str], dict[int, tuple[int, int]]],
+    new_world_keys: set[str],
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     bodies = _template_bodies(_read(game_dir, TEMPLATES))
     donors = _donor_map(
@@ -609,7 +641,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         columns=geometry.columns,
         bodies=bodies,
     )
-    port_rows, port_pixels = _ports(plan, world, canvas)
+    port_rows, port_pixels = ports
     instances = _locator_instances(plan, world, canvas, port_pixels)
     trimmed = _trimmed_instances(game_map, canvas)
     for file_name in ("unit_stack", "combat", "vfx"):
@@ -646,7 +678,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         rewrite_templates(
             _read(game_dir, TEMPLATES),
             removed,
-            _template_lines(plan, world, donors, bodies, biomes),
+            _template_lines(plan, world, donors, bodies, biomes, development.harbours),
         ),
     )
     outputs[_mod_path(PORTS)] = _encode(
@@ -670,16 +702,22 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     setup = prune_setup(
         _setup_texts(game_dir), gone, {c.key: natives.pops.get(c.key, []) for c in plan.cells}
     )
-    additions = {
-        "10_countries.txt": country_records(natives.countries),
-        "07_cities_and_buildings.txt": city_lines(natives.ranks),
-        "03_markets.txt": market_lines(natives.markets),
-        "12_diplomacy.txt": vassal_lines(natives.vassals),
+    additions: dict[str, tuple[str, ...]] = {
+        "10_countries.txt": (country_records(natives.countries),),
+        BUILDINGS_FILE: (city_lines(natives.ranks), building_lines(development.villages)),
+        "03_markets.txt": (market_lines(natives.markets),),
+        "12_diplomacy.txt": (vassal_lines(natives.vassals),),
+        DEVELOPMENT_FILE: (development_lines(development.terms),),
     }
     for name, text in setup.texts.items():
         relative = f"{SETUP_DIR}/{name}"
-        if additions.get(name):
-            text = insert_into_block(text, SETUP_INSERTS[name], additions[name])  # noqa: PLW2901
+        if name == DEVELOPMENT_FILE:
+            text = drop_block_entries(text, ("development",), new_world_keys)  # noqa: PLW2901
+        for path, addition in zip(
+            SETUP_INSERTS.get(name, ()), additions.get(name, ()), strict=True
+        ):
+            if addition:
+                text = insert_into_block(text, path, addition)  # noqa: PLW2901
         if text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
     outputs[DEFINITION_FILE] = country_definitions(natives.countries)
@@ -835,6 +873,162 @@ def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
     return {"native_countries": len(tags), "native_locations_held": len(seen)}
 
 
+def vanilla_new_world_keys(hierarchy: dict[str, Location], removed: set[str]) -> set[str]:
+    """Region, area, province and location keys of the vanilla New World.
+
+    Their development entries are dropped, so no kept vanilla location may lie under one.
+    """
+    keys = {
+        name
+        for location in hierarchy.values()
+        if location.continent == NEW_WORLD
+        for name in (location.region, location.area, location.province, location.key)
+    }
+    under = [
+        location.key
+        for location in hierarchy.values()
+        if location.key not in removed
+        and keys & {location.region, location.area, location.province, location.key}
+    ]
+    if under:
+        message = (
+            f"{len(under)} kept vanilla locations (for example {under[0]}) lie under "
+            "New World keys whose development entries are dropped"
+        )
+        raise NewWorldExportError(message)
+    return keys
+
+
+def _vanilla_american(game_map: Eu5Map, hierarchy: dict[str, Location]) -> dict[str, Location]:
+    index = {key: number for number, key in enumerate(game_map.keys)}
+    return {
+        key: location
+        for key, location in hierarchy.items()
+        if location.continent == NEW_WORLD
+        and key in index
+        and game_map.classes[index[key]] is CellClass.LAND
+    }
+
+
+def calibrate_development(
+    game_dir: Path, game_map: Eu5Map, hierarchy: dict[str, Location]
+) -> DevelopmentCalibration:
+    return calibrate(
+        rules_text=_read(game_dir, f"{SETUP_DIR}/{DEVELOPMENT_FILE}"),
+        templates_text=_read(game_dir, TEMPLATES),
+        buildings_text=_read(game_dir, f"{SETUP_DIR}/{BUILDINGS_FILE}"),
+        countries_text=_read(game_dir, f"{SETUP_DIR}/10_countries.txt"),
+        american=_vanilla_american(game_map, hierarchy),
+    )
+
+
+def _plan_development(  # noqa: PLR0913 - development reads the calibration, world and ports.
+    calibration: DevelopmentCalibration,
+    *,
+    game_map: Eu5Map,
+    world: NewWorld,
+    plan: Plan,
+    biomes: CellBiomes,
+    natives: NativeWorld,
+    labels: NDArray[np.int32],
+    docks: dict[int, tuple[int, int]],
+) -> Development:
+    wet = {CellClass.SEA, CellClass.LAKE}
+    table = np.array([kind in wet for kind in (*game_map.classes, *world.classes)], dtype=bool)
+    cells = sorted(docks)
+    scores = shelter(table[labels], np.array([docks[cell] for cell in cells], dtype=np.int64))
+    cell_fields = [
+        (cell.key, biomes.vegetation[i], biomes.climate[i], biomes.topography[i])
+        for i, cell in enumerate(plan.cells)
+        if cell.kind is CellClass.LAND
+    ]
+    return build_development(
+        calibration=calibration,
+        natives=natives,
+        cells=cell_fields,
+        scores={
+            plan.cells[cell].key: score for cell, score in zip(cells, scores.tolist(), strict=True)
+        },
+    )
+
+
+def _verify_terms(
+    block: Block, plan: Plan, development: Development, calibration: DevelopmentCalibration
+) -> dict[str, int]:
+    land = {cell.key for cell in plan.cells if cell.kind is CellClass.LAND}
+    generated = {cell.key for cell in plan.cells}
+    found: dict[str, int] = {}
+    for entry in block.entries:
+        if entry.key in generated:
+            if entry.key in found or entry.key not in land or not isinstance(entry.value, str):
+                message = f"Development entry {entry.key} is repeated or not on land"
+                raise NewWorldExportError(message)
+            found[entry.key] = int(entry.value)
+    if found != development.terms or not all(
+        1 <= term <= calibration.society_max for term in found.values()
+    ):
+        message = "Generated development entries differ from the plan or exceed the maximum"
+        raise NewWorldExportError(message)
+    return found
+
+
+def _verify_villages(
+    manager: Block | None, natives: NativeWorld, development: Development
+) -> list[tuple[str, str]]:
+    states = {c.tag: c.capital for c in natives.countries if c.kind == "state"}
+    villages: list[tuple[str, str]] = []
+    for entry in manager.find(VILLAGE) if manager is not None else ():
+        if not isinstance(entry.value, Block):
+            continue
+        tag, where = entry.value.first("tag"), entry.value.first("location")
+        if tag is not None and where is not None and tag.value in states:
+            villages.append((str(tag.value), str(where.value)))
+    if (
+        len({where for _, where in villages}) != len(villages)
+        or any(states[tag] != where for tag, where in villages)
+        or sorted(villages) != sorted(development.villages)
+    ):
+        message = "Generated market villages are not one per planned state capital"
+        raise NewWorldExportError(message)
+    return villages
+
+
+def verify_development(  # noqa: PLR0913, PLR0917 - every generated development record is checked.
+    outputs: dict[str, bytes],
+    plan: Plan,
+    natives: NativeWorld,
+    development: Development,
+    calibration: DevelopmentCalibration,
+    new_world_keys: set[str],
+) -> dict[str, object]:
+    """No positional development is left; terms, harbours and villages are as planned."""
+
+    def text(relative: str) -> str:
+        return outputs[_mod_path(relative)].decode("utf-8-sig")
+
+    block = parse(text(f"{SETUP_DIR}/{DEVELOPMENT_FILE}")).block("development")
+    if block is None:
+        message = "No development block in the output"
+        raise NewWorldExportError(message)
+    kept = sorted(entry.key for entry in block.entries if entry.key in new_world_keys)
+    if kept:
+        message = f"Development entry {kept[0]} of the vanilla New World was kept"
+        raise NewWorldExportError(message)
+    found = _verify_terms(block, plan, development, calibration)
+    generated = {cell.key for cell in plan.cells}
+    harbours = {k: v for k, v in template_harbours(text(TEMPLATES)).items() if k in generated}
+    if harbours != development.harbours or not set(harbours.values()) <= set(calibration.harbours):
+        message = "Generated harbour values differ from the ports or the vanilla values"
+        raise NewWorldExportError(message)
+    manager = parse(text(f"{SETUP_DIR}/{BUILDINGS_FILE}")).block("building_manager")
+    villages = _verify_villages(manager, natives, development)
+    return {
+        "development_entries": len(found),
+        "harbour_values": len(harbours),
+        "market_villages": len(villages),
+    }
+
+
 def _preview(final_rgb_classes: NDArray[np.uint8]) -> bytes:
     return encode_png(final_rgb_classes, color_type=COLOR_RGB, compression="zlib")
 
@@ -877,6 +1071,8 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     world_checks = _check_world(game_map, canvas, world)
     store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
     vanilla_attributes = template_attributes(_read(game_dir, TEMPLATES))
+    new_world_keys = vanilla_new_world_keys(hierarchy, removed)
+    calibration = calibrate_development(game_dir, game_map, hierarchy)
     biomes, biome_stats, climate = _biome_model(
         game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
     )
@@ -895,6 +1091,18 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     )
     slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
     biome_stats["materials"] = slot_stats
+    final_labels = _final_labels(game_map, canvas, world)
+    ports = _ports(plan, world, canvas)
+    development = _plan_development(
+        calibration,
+        game_map=game_map,
+        world=world,
+        plan=plan,
+        biomes=biomes,
+        natives=natives,
+        labels=final_labels,
+        docks=ports[1],
+    )
     texts, text_stats = _text_outputs(
         game_dir,
         game_map=game_map,
@@ -906,9 +1114,15 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         geometry=geometry,
         biomes=biomes,
         natives=natives,
+        development=development,
+        ports=ports,
+        new_world_keys=new_world_keys,
     )
     text_checks = _verify_texts(texts, plan, removed)
     text_checks.update(_verify_natives(natives, plan))
+    text_checks.update(
+        verify_development(texts, plan, natives, development, calibration, new_world_keys)
+    )
     remap = build_remap(
         [
             (game_map.keys[i], game_map.classes[i], int(geometry.rows[i]), int(geometry.columns[i]))
@@ -932,7 +1146,6 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     rows, columns = np.nonzero(canvas.mask)
     relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = carved[rows, columns]
     del carved
-    final_labels = _final_labels(game_map, canvas, world)
     terrain_inputs = TerrainInputs(
         codes=codes,
         vanilla_water=vanilla_water,
@@ -1053,6 +1266,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,
             "natives": natives.stats,
+            "development": development.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,
             "files": [*files, preview_record, settings_record],

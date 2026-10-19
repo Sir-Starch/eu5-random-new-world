@@ -34,7 +34,7 @@ The generator keeps the 14 American region entries. Generated regions reuse vani
 
 Generated natives have no buildings: the vanilla records were pruned together with their tags [V-EXEC C74].
 
-Every generated coastal land location (each has one port) also gets `natural_harbor_suitability = 0.50`, which adds 2.5 development [V-EXEC C74]. Vanilla American ports have 0 in 767‰ of cases, and their mean is 0.103 [V-EXEC C73]. Harbour suitability also feeds port buildings, naval actions and expeditions [V-LOCAL].
+Every generated coastal land location (each has one port) also gets `natural_harbor_suitability = 0.50`, which adds 2.5 development [V-EXEC C74]. In the vanilla Americas 1,092 locations carry the field: 828 (758‰) are 0.00, 13 are −0.10, and the mean is 0.101 [V-EXEC C73]. Harbour suitability also feeds port buildings, naval actions and expeditions [V-LOCAL].
 
 ## Goal
 
@@ -54,7 +54,7 @@ Guard the step with an invariant that fails loudly: no kept vanilla location may
 
 `societies.Societies.complexity` already holds a permille level (0–1000) per land location. It falls with travel cost from each hearth and is damped on poor land.
 
-For each generated land location, set the term to `(B × complexity + 500) // 1000`, which rounds halves up in integer arithmetic. Write the locations where the term is at least 1 as `<key> = <n>` lines in the same block. Vanilla also keys locations there (for example `cahokia = 7`). Write them in plan order so the output is deterministic.
+For each generated land location, set the term to `(B × level + 500) // 1000`, which rounds halves up in integer arithmetic. The level is `min(1000, complexity × 1000 // full)`, with `full` fitted per world (see the revisions below). Write the locations where the term is at least 1 as `<key> = <n>` lines in the same block. Vanilla also keys locations there (for example `cahokia = 7`). Write them in plan order so the output is deterministic.
 
 `B` is calibrated at build time, not hard-coded. It is the largest keyed sum (region + area + province + location) that any vanilla American land location receives. On 1.4.1 that is 12 (Mesoamerica, and Cahokia at 5 + 7) [V-EXEC C73].
 
@@ -73,13 +73,17 @@ It also gives a Spearman correlation of 0.63 with population. 32% of land gets a
 
 Generated cities stay low because they stand on poor land. This is a watch item, not a criterion.
 
+**Revision after the first build (2026-10-19).** The estimate above overstated the generated physical part, because it still counted the old constant harbour 0.50 (+2.5 on every coast). With real harbour values (mean 0.10) the first full build (continents 3706823338, purely linear term) gave state capitals 2.90 and other state members 3.03 against the vanilla 4.60 and 4.13 (0.63× and 0.73×), which misses the 0.75× criterion (C75). Vanilla state land holds the full keyed maximum (median 12), so the term now saturates: complexity of 800 permille or more counts fully. On that build's complexities the saturation gives capitals 3.88, members 4.09, towns 6.15 and cities 8.43, with tribes and unorganised land unchanged at 0.09. 
+
+**Second revision (2026-10-19).** A fixed saturation of 800 passed on continents 3706823338 (state members 4.11, capitals 3.89) but failed on archipelago 5 (members 6.39 = 1.55×, capitals 6.42): island state land gets about 2 more development from its physical rules, and no single constant satisfied both worlds (continents needed `full` ≤ about 880, archipelago ≥ about 825). Vanilla's keyed entries compensate terrain in the same way (Mesoamerica +12 on jungle, Great Plains +5), so `full` is now fitted per world: `fit_full` takes the smallest candidate in 250…3000 (step 5) for which the estimated mean development of state capitals and members together is closest to the vanilla mean. On archipelago 5's complexities it gives `full` = 1115 and capitals 4.42, members 4.30.
+
 ### C. Harbour suitability
 
-Replace the constant 0.50 in `eu5_nw_export._template_lines` with one value per generated port location. Land without a port keeps no harbour field, as in vanilla, where every harbour entry has a port and every port has one.
+Replace the constant 0.50 in `eu5_nw_export._template_lines` with one value per generated port location. Land without a port keeps no harbour field, as in vanilla, where every harbour entry has a port.
 
-1. **Vanilla distribution.** Read `natural_harbor_suitability` from the template of every vanilla American location that has the field. On 1.4.1 there are 1,079 such locations. Keep the values as integer hundredths, sorted.
+1. **Vanilla distribution.** Read `natural_harbor_suitability` from the template of every vanilla American location that has the field. On 1.4.1 there are 1,092 such locations, 13 of them at −0.10. Keep the values as integer hundredths, sorted, with their sign.
 2. **Shelter score.** `_ports` already returns the dock pixel of each port. On the final full-map raster (`_final_labels`, with vanilla classes from `game_map.classes` and generated classes from `world.classes`), cast 48 rays of 64 px from the dock pixel. Columns wrap and rows are clamped. The score is the number of rays that reach a land or wasteland pixel. Count lakes as water.
-3. **Quantile mapping.** Sort the ports by (score, key). The port at 0-based rank `i` of `n` gets the vanilla value at index `floor((2i + 1) × m / (2n))` of the `m` sorted values. Write the value with two decimals (`0.25`), as vanilla does.
+3. **Quantile mapping.** Sort the ports by (score, key). The port at 0-based rank `i` of `n` gets the vanilla value at index `floor((2i + 1) × m / (2n))` of the `m` sorted values. Write the value with two decimals (`0.25`, `-0.10`), as vanilla does.
 
 Shelter predicts the vanilla values only weakly: the Spearman correlation is 0.10–0.12 on the Americas and 0.18–0.19 on the whole map. The vanilla values look hand-authored [V-EXEC C74]. The distribution is what matters here; shelter only sets the order, in the right direction. Do not claim more.
 
@@ -118,7 +122,7 @@ The estimate uses: base + coastal × harbour + rank + vegetation + climate + top
 | Where | What |
 |---|---|
 | `src/rnw/eu5_development.py` (new) | `DevelopmentCalibration` (frozen: `society_max`, `harbours` in hundredths, `market_village_permille`, the parsed rules for the estimate); `vanilla_development(...)` as a pure function of the parsed setup texts, hierarchy and templates; `society_terms(complexity, keys, society_max)`; `shelter(water, docks, rays=48, reach=64)` (vectorised); `harbour_values(scores, keys, harbours)`; `market_villages(states, complexity, population, permille)`; `development_lines(terms)`; `building_lines(buildings)`; `estimate(...)` |
-| `src/rnw/eu5_natives.py` | `NativeWorld` gains `complexity: dict[str, int]` (permille per generated land key) from `societies.complexity`. Natives code makes no other change |
+| `src/rnw/eu5_natives.py` | `NativeWorld` gains `complexity: dict[str, int]` (permille) and `population: dict[str, int]` (milli-pops), both per generated land key, from `societies`. Natives code makes no other change |
 | `src/rnw/eu5_rewrite.py` | `drop_block_entries` |
 | `src/rnw/eu5_nw_export.py` | Calibrate once; insert development lines via `SETUP_INSERTS["14_development.txt"] = ("development",)` and buildings via a second insert into `07_cities_and_buildings.txt` at `("building_manager",)`. `SETUP_INSERTS` holds one path per file, so extend it or insert twice; keep it simple. Also drop the entries, set a harbour per port in `_template_lines`, add `_verify_development` and the report section |
 | `AGENTS.md` | Add `eu5_development.py` to the code layout and `docs/economy.md` to the document map |
@@ -137,7 +141,7 @@ Use synthetic fixtures only (new `tests/test_development.py`):
 - `drop_block_entries` removes only the named keys; comments and other bytes stay.
 - `_verify_development` rejects each of these: an entry for a vanilla region, a duplicate key, a value above `B`, a harbour value on a location without a port, and a building outside its owner's capital.
 
-In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B == 12`, 1,079 American harbour values (767‰ of them zero), and market villages in 79 of 223 American state capitals.
+In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B == 12`, 1,092 American harbour values (828 of them zero), and market villages in 79 of 223 American state capitals.
 
 ## Acceptance (offline)
 
@@ -149,7 +153,7 @@ In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B
    - the tribe and unorganised means are each at most the vanilla value + 0.5;
    - the Spearman correlation between the term and population is at least 0.5;
    - the share of land with a positive term is 25–45%;
-   - the harbour zero share is 767‰ ± 10 and the mean 0.103 ± 0.01;
+   - the harbour zero share is 758‰ ± 10 and the mean 0.101 ± 0.01;
    - the share of state capitals with a market village is 354‰, up to rounding.
 
    If a criterion fails, change the model, not the threshold, and record why.

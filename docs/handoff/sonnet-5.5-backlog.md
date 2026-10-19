@@ -1,6 +1,6 @@
 # Sonnet 5.5 bounded backlog
 
-**Next task (2026-10-19): S08, R7a.** Development and market villages from the generated world, designed in [sonnet-r7a-development](sonnet-r7a-development.md). It takes priority over S01–S05, which are research-kit tasks from before the generator.
+**S08, R7a, done 2026-10-19** (generator 0.9.2, [economy](../economy.md), C75): development and market villages from the generated world, designed in [sonnet-r7a-development](sonnet-r7a-development.md). Experiment 012 awaits the next batched game test. S01–S05 are research-kit tasks from before the generator.
 
 Tasks below are ordered by dependency and do not assume unverified EU5 geography support. Read [AGENTS.md](../../AGENTS.md), [feasibility](../feasibility.md) and [testing](../testing.md) first. Do not launch the game without renewed owner authorization; the current session's owner requested no further launches [V-GAME C12].
 
