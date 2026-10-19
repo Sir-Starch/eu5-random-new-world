@@ -25,6 +25,7 @@ The production architecture is conditional on [experiments 002–006](../experim
 | EU5 adapter and serializer | `eu5_map.py`, `eu5_export.py`, `png.py`, `artifacts.py` | Build 25905365 only; emits `locations.png` + `rivers.png` |
 | T3 New World | `newworld.py`, `eu5_canvas.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_nw_export.py`, `pdx.py`, `names.py` | New IDs, empty 1337 start; plays in game [V-GAME C45] |
 | Relief and climate (V1) | `fields.py`, `relief.py`, `climate.py` | Game-independent integer fields: warped rotated noise, mountain belts, Euclidean distance, zonal-wind rainfall |
+| Rivers (V1b) | `rivers.py` | Game-independent priority-flood drainage, rain-weighted catchments, one-pixel river networks drawn head-down, valley carving; EU5 codes in `eu5_nw_export.py` |
 | Biomes and terrain (V1) | `eu5_biomes.py`, `eu5_slots.py`, `eu5_terrain.py`, `eu5_objects.py`, `eu5_water.py`, `terrain_tiles.py`, `lzav.py`, `dds.py` | Templates from a calibrated climate model; decal heights and material slots by vanilla rules; vegetation instances; water textures; NOT GAME VALIDATED ([terrain-biomes](terrain-biomes.md)) |
 
 Native start-state entities (R6) are not generated yet; the New World starts empty.

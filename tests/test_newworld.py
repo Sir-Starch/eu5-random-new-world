@@ -8,8 +8,9 @@ from __future__ import annotations
 import numpy as np
 
 from rnw.model import CellClass
-from rnw.newworld import SEAM_GAP_PX, derive_world, generate_new_world
+from rnw.newworld import SEAM_GAP_PX, derive_world, generate_new_world, open_channels, open_sea
 from rnw.settings import NewWorldSettings
+from rnw.topology import distance_from, label_components
 
 SMALL = NewWorldSettings(
     land_permille=450,
@@ -54,3 +55,24 @@ def test_city_points_move_away_from_the_shore() -> None:
     assert labels[row, column] == 1
     assert column > 32  # the cell's middle column is 29-30
     assert world.interior[0].tolist()[1] < 10
+
+
+def test_enclosed_sea_gets_a_strait_to_the_open_sea() -> None:
+    """Water ringing a protected hole that land encloses is joined to open water."""
+    domain = np.ones((80, 120), dtype=bool)
+    domain[36:44, 56:64] = False
+    domain[0:3, 100:103] = False  # a protected corner must not seed the search
+    land = np.ones((80, 120), dtype=bool)
+    land[:6, :] = land[-6:, :] = False
+    land[:, :6] = land[:, -6:] = False
+    land[32:48, 52:68] = False
+    land &= domain
+    shore = distance_from(~domain, 6, octagonal=True) < 6
+    open_shore = distance_from(open_sea(domain), 6, octagonal=True) < 6
+    opened = open_channels(domain, land, shore=shore, open_shore=open_shore, width=6)
+    water = domain & ~opened
+    parts = label_components(water.astype(np.int32))
+    assert parts[40, 54] == parts[2, 2]
+    assert np.count_nonzero(land & ~opened) < 400
+    assert np.array_equal(open_channels(domain, opened, shore=shore, open_shore=open_shore,
+                                        width=6), opened)  # fmt: skip

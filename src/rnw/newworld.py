@@ -46,6 +46,7 @@ SEAM_GAP_PX: Final[int] = 24
 SEAM_RAMP_MARGINS: Final[int] = 3
 SEAM_SHIFT_PX: Final[int] = 160
 SEAM_PERIOD: Final[int] = 480
+MAX_STRAITS: Final[int] = 16
 OUTSIDE: Final[int] = 2
 LAND_KINDS: Final[frozenset[CellClass]] = frozenset(
     {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
@@ -161,6 +162,10 @@ def _land(
     keep = values.size * settings.land_permille // PERMILLE
     threshold = np.partition(values, values.size - keep)[values.size - keep]
     land = interior & (elevation >= threshold)
+    open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
+    if seam is not None and 0 < seam < domain.shape[1]:
+        open_shore |= shore & ~(edge < margin)
+    land = open_channels(domain, land, shore=shore, open_shore=open_shore, width=margin)
     parts = label_components(land.astype(np.int32))
     land &= np.bincount(parts.ravel())[parts] >= settings.min_island_px
     coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
@@ -172,6 +177,94 @@ def _land(
     size = np.bincount(parts.ravel())[parts]
     small = enclosed & ((size < settings.min_lake_px) | (size > settings.max_lake_px))
     return land | small, ocean, enclosed & ~small, elevation
+
+
+def open_sea(domain: NDArray[np.bool_]) -> NDArray[np.bool_]:
+    """Pixels outside the domain that reach the raster border, and the border itself.
+
+    Holes in the domain (protected islands or seas inside it) are not open sea.
+    """
+    outside = ~domain
+    parts = label_components(outside.astype(np.int32))
+    border = np.zeros(domain.shape, dtype=bool)
+    border[[0, -1], :] = True
+    border[:, [0, -1]] = True
+    reaching = np.unique(parts[border & outside])
+    return border | (outside & np.isin(parts, reaching))
+
+
+def _path(
+    start: NDArray[np.bool_], target: NDArray[np.bool_], passable: NDArray[np.bool_]
+) -> NDArray[np.bool_]:
+    """Shortest 4-connected path over ``passable`` pixels from ``start`` to ``target``.
+
+    Breadth-first; ties go to the lowest-index neighbour. Empty if unreachable.
+    """
+    height, width = start.shape
+    previous = np.full(start.size, -1, dtype=np.int32)
+    seen = start.ravel() | ~passable.ravel()
+    goal = target.ravel()
+    frontier = np.flatnonzero(start.ravel())
+    end = -1
+    while frontier.size and end < 0:
+        column = frontier % width
+        origins = [
+            frontier[frontier >= width],
+            frontier[frontier < (height - 1) * width],
+            frontier[column != 0],
+            frontier[column != width - 1],
+        ]
+        source = np.concatenate(origins)
+        reached = np.concatenate(
+            [origins[0] - width, origins[1] + width, origins[2] - 1, origins[3] + 1]
+        )
+        fresh = ~seen[reached]
+        source, reached = source[fresh], reached[fresh]
+        order = np.lexsort((source, reached))
+        source, reached = source[order], reached[order]
+        first = np.concatenate([[True], reached[1:] != reached[:-1]]) if reached.size else reached
+        source, reached = source[first], reached[first]
+        previous[reached] = source
+        seen[reached] = True
+        hits = reached[goal[reached]]
+        end = int(hits.min()) if hits.size else -1
+        frontier = reached
+    path = np.zeros(start.size, dtype=bool)
+    node = end
+    while node >= 0:
+        path[node] = True
+        node = int(previous[node])
+    return path.reshape(height, width)
+
+
+def open_channels(
+    domain: NDArray[np.bool_],
+    land: NDArray[np.bool_],
+    *,
+    shore: NDArray[np.bool_],
+    open_shore: NDArray[np.bool_],
+    width: int,
+) -> NDArray[np.bool_]:
+    """Cut straits so every water body that touches a domain edge reaches the open sea.
+
+    Water around a hole in the domain (a protected island or sea) counts as sea; if
+    generated land encloses it, a strait ``width`` pixels wide is cut along the shortest
+    path to open water, so no sea zone and no protected coast is cut off.
+    """
+    for _ in range(MAX_STRAITS):
+        coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
+        parts = label_components(coded)
+        water = domain & ~land
+        open_parts = np.unique(parts[water & open_shore])
+        stray = np.setdiff1d(np.unique(parts[water & shore]), open_parts)
+        if not stray.size:
+            break
+        start = water & (parts == stray[0])
+        path = _path(start, water & np.isin(parts, open_parts), domain)
+        if not np.any(path):
+            break
+        land &= distance_from(path, width // 2 + 1, octagonal=True) > width // 2
+    return land
 
 
 def _weighted(

@@ -1,6 +1,6 @@
 # Terrain and biome synthesis (phase V1)
 
-**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). Generated rivers (V1b) are still to do. NOT GAME VALIDATED.
+**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). V1b rivers implemented on 2026-10-19 (generator 0.6.0, C59–C60) and awaiting owner review. NOT GAME VALIDATED.
 
 ## Problem
 
@@ -40,7 +40,8 @@ The interim patch transfer copied river and border bands from unrelated places a
 | 5. Material slots | `eu5_slots.py` | The vanilla rules above, applied to the generated labels and templates. Band edges, variation families and levels come from uniformised integer noise in absolute decal coordinates, so adjacent decals agree. Each label's biome is resolved through `biomes.txt` (most specific rule); a slot its material list lacks becomes the same variation level of the first family, else the highest listed level, else slot 0. |
 | 6. Gameplay consistency | `eu5_nw_export.py` | Each location template gets the model's climate, vegetation and topography. Raw materials are drawn from vanilla frequencies for the same climate, vegetation, topography and coastal flag. |
 | 7. Vegetation instances | `eu5_objects.py` | Vanilla instances inside the canvas are dropped. New instances are sampled per material pixel at the Old World density for the pixel's (vegetation, climate, topography, slot) class. Rotation and scale are copied from vanilla records of the same file. |
-| 8. Location shapes | `newworld.py` | Cell borders are bent by a smooth displacement field, then cut-off pieces are re-attached, so borders and the bands along them are organic rather than polygonal. A meandering strait keeps land at least 24 px from the map wrap. City points maximise `min(2 × distance to the cell border, distance to water)`, so coastal cities stand inland. |
+| 7b. Rivers (V1b) | `rivers.py`, `eu5_nw_export.py` | On a 4-pixel grid, a priority flood from all water gives every land cell a downstream neighbour, so depressions are crossed; routing adds fractal valley noise so flow converges. The square root of rainfall accumulates downstream; the catchment threshold gives 16 river pixels per 1000 land pixels (vanilla 15.7). Streams split at confluences (larger branch continues); rivers to the sea need 12 cells. Each stream is drawn from its head down a smoothed, slightly meandering line until it reaches water (up to 3 px into it; the head becomes the source) or meets a river drawn before (a join pixel beside one river pixel). Widths 4/5/11/15 follow catchment in vanilla shares; valleys of 350–1,150 units are carved within 6 px; slot 6 runs along rivers. The export refuses any violation of the vanilla raster rules (C59). |
+| 8. Location shapes | `newworld.py` | Cell borders are bent by a smooth displacement field, then cut-off pieces are re-attached, so borders and the bands along them are organic rather than polygonal. A meandering strait keeps land at least 24 px from the map wrap, and a strait is cut wherever generated land would enclose the sea around a protected Old World islet (C61). City points maximise `min(2 × distance to the cell border, distance to water)`, so coastal cities stand inland. |
 
 ## Acceptance results (seed 42, continents) [V-EXEC C51–C53]
 
@@ -69,7 +70,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 
 ## Open work
 
-- **V1b rivers:** flow accumulation on the relief, river lines in `rivers.png` (palette 0 for sources, rare 1 and 2 probably for joins and splits [INFERRED], 4/5/11/15 for bodies with exactly two 4-neighbours [V-EXEC C52]), valleys carved into the heights, slot 6 along them.
+- **V1b rivers:** implemented (above, C60); awaiting review in game. Lakes end rivers (no outflows yet); splits and deltas are not generated.
 - Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
 - Erosion for more natural valleys.
 - The mod is about 1.3 GB, because instance files are whole-file overrides.

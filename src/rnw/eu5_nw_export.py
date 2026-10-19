@@ -20,8 +20,10 @@ import numpy as np
 from rnw.artifacts import check_new_output, pixel_digest, staged, write_bytes
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
+    CLIMATE_STEP,
     TERRAIN_MATERIALS,
     CellBiomes,
+    ClimateGrid,
     Generated,
     assign_biomes,
     biome_of,
@@ -88,6 +90,9 @@ from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world, split_at_column
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
+from rnw.relief import COAST_HEIGHT
+from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
+from rnw.rivers import STEP as RIVER_STEP
 from rnw.settings import canonical_json, run_spec, spec_digest
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
@@ -102,6 +107,15 @@ if TYPE_CHECKING:
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
 MAX_LOCATIONS: Final[int] = 32_000
 RIVER_CLASSES: Final[int] = 16
+RIVER_SOURCE: Final[int] = 0
+RIVER_JOIN: Final[int] = 1
+# Vanilla uses widths 4, 5, 11 and 15 on 61.5%, 23.9%, 8.1% and 6.2% of Old World river
+# pixels [V-EXEC C59]; valleys are cut in proportion (vanilla rivers lie a median 318
+# and a quarter of them over 950 height units below the 17-pixel local mean).
+RIVER_WIDTH_CODES: Final[tuple[int, ...]] = (4, 5, 11, 15)
+RIVER_WIDTH_SHARES: Final[tuple[int, ...]] = (615, 239, 84, 62)
+RIVER_VALLEY_DEPTHS: Final[tuple[int, ...]] = (350, 550, 850, 1150)
+RIVER_VALLEY_PX: Final[int] = 6
 MIN_LEVEL_PIXELS: Final[int] = 2000
 SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
 LOCALIZATION_DIR: Final[str] = "game/main_menu/localization"
@@ -142,7 +156,11 @@ UNTESTED: Final[tuple[str, ...]] = (
         "Slots a biome's material list lacks are replaced on generated land; that the engine "
         "renders such slots with fallback_material is inferred from the shader."
     ),
-    "River splines are not generated yet; the new land has no rivers (V1b).",
+    (
+        "Generated rivers follow the vanilla rivers.png conventions measured on 1.4.1 "
+        "(one source per network, join pixels, free tributary heads, mouths into water); "
+        "that EU5 builds river meshes and river modifiers from them is untested."
+    ),
     "nodes.dat and other derived caches are vanilla and may not match the new map.",
     (
         "Display-name overrides for reused area/region keys use a replace/ folder; whether "
@@ -628,7 +646,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
 
 
 def _rasters(
-    game_map: Eu5Map, canvas: Canvas, world: NewWorld, plan: Plan
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld, plan: Plan, river_codes: NDArray[np.uint8]
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
     rows, columns = np.nonzero(canvas.mask)
     world_columns = _world_columns(canvas, columns.astype(np.int64))
@@ -642,8 +660,67 @@ def _rasters(
         [cell.kind in {CellClass.SEA, CellClass.LAKE} for cell in plan.cells], dtype=bool
     )
     rivers = game_map.rivers
-    rivers[rows, world_columns] = np.where(water[cells], RIVER_WATER, RIVER_LAND)
+    rivers[rows, world_columns] = np.where(
+        river_codes[rows, columns] < RIVER_CLASSES,
+        river_codes[rows, columns],
+        np.where(water[cells], RIVER_WATER, RIVER_LAND),
+    )
     return rgb, rivers
+
+
+def _rivers(
+    world: NewWorld, canvas: Canvas, climate: ClimateGrid, seed: int
+) -> tuple[NDArray[np.uint8], NDArray[np.int64], dict[str, object]]:
+    """River codes for ``rivers.png`` and relief with carved valleys, in crop coordinates.
+
+    Rain comes from the final climate grid (world coordinates) at each coarse river
+    cell's centre. Codes follow the vanilla raster: 0 source, 1 join, then widths 4, 5,
+    11 and 15 in vanilla proportions by catchment [V-EXEC C59].
+    """
+    land_kind = np.array(
+        [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
+    )
+    land = land_kind[world.labels]
+    height, width_crop = land.shape
+    world_width = int(canvas.rolled.shape[1])
+    coarse_rows = -(-height // RIVER_STEP)
+    coarse_columns = -(-width_crop // RIVER_STEP)
+    centre_rows = np.arange(coarse_rows, dtype=np.int64) * RIVER_STEP + RIVER_STEP // 2
+    centre_columns = np.arange(coarse_columns, dtype=np.int64) * RIVER_STEP + RIVER_STEP // 2
+    grid_rows = np.clip(centre_rows // CLIMATE_STEP, 0, climate.rain.shape[0] - 1)
+    grid_columns = np.clip(
+        _world_columns(canvas, centre_columns) % world_width // CLIMATE_STEP,
+        0,
+        climate.rain.shape[1] - 1,
+    )
+    rain = climate.rain[grid_rows[:, np.newaxis], grid_columns[np.newaxis, :]]
+    elevation = world.elevation.astype(np.int64)
+    rivers = generate_rivers(land, elevation, rain, seed=seed)
+    classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
+    codes = np.full(land.shape, RIVER_LAND, dtype=np.uint8)
+    body = classes >= 0
+    codes[body] = np.array(RIVER_WIDTH_CODES, dtype=np.uint8)[classes[body]]
+    codes[rivers.role == SOURCE] = RIVER_SOURCE
+    codes[rivers.role == JOIN] = RIVER_JOIN
+    problems = network_problems(rivers.role, ~land)
+    if any(problems.values()):
+        message = f"generated rivers break the raster rules: {problems}"
+        raise NewWorldExportError(message)
+    carved = carve_valleys(
+        elevation,
+        classes,
+        depths=RIVER_VALLEY_DEPTHS,
+        radius_px=RIVER_VALLEY_PX,
+        floor=COAST_HEIGHT,
+    )
+    land_pixels = int(np.count_nonzero(land))
+    stats: dict[str, object] = dict(rivers.stats)
+    stats["pixels_per_1000_land"] = int(rivers.stats["pixels"]) * 1000 // max(1, land_pixels)
+    stats["problems"] = problems
+    stats["width_pixels"] = {
+        str(code): int(np.count_nonzero(codes == code)) for code in RIVER_WIDTH_CODES
+    }
+    return codes, carved, stats
 
 
 def _verify_texts(outputs: dict[str, bytes], plan: Plan, removed: set[str]) -> dict[str, object]:
@@ -715,9 +792,10 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     world_checks = _check_world(game_map, canvas, world)
     store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
     vanilla_attributes = template_attributes(_read(game_dir, TEMPLATES))
-    biomes, biome_stats = _biome_model(
+    biomes, biome_stats, climate = _biome_model(
         game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
     )
+    river_codes, carved, river_stats = _rivers(world, canvas, climate, seed)
     slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
     biome_stats["materials"] = slot_stats
     texts, text_stats = _text_outputs(
@@ -744,7 +822,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     scripts, remapped = remap_scripts(game_dir, remap)
     texts.update(scripts)
     text_stats["scripts_remapped"] = remapped
-    rgb, rivers = _rasters(game_map, canvas, world, plan)
+    rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
     codes = _codes(game_map, canvas, world)
     canvas_world = codes != OUTSIDE
     vanilla_water = np.array(
@@ -752,9 +830,8 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     )[game_map.labels]
     relief_world = np.zeros(game_map.labels.shape, dtype=np.int32)
     rows, columns = np.nonzero(canvas.mask)
-    relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = world.elevation[
-        rows, columns
-    ]
+    relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = carved[rows, columns]
+    del carved
     final_labels = _final_labels(game_map, canvas, world)
     terrain_inputs = TerrainInputs(
         codes=codes,
@@ -785,6 +862,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     del materials_world
     terrain_files.update(object_files)
     terrain_stats["objects"] = object_stats
+    terrain_stats["rivers"] = river_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
     inputs = {record.path: record for record in game_map.inputs}
@@ -954,7 +1032,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     store: DecalStore,
     attributes: dict[str, dict[str, str]],
     seed: int,
-) -> tuple[CellBiomes, dict[str, object]]:
+) -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
     """Climate, vegetation, topography and raw material of every generated cell."""
     vanilla_height = store.world_heights()
     vanilla = vanilla_locations(game_map.labels, vanilla_height)
@@ -990,7 +1068,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
         seed=seed,
     )
     stats["coherence"] = _coherence(game_map, attributes, vanilla.pairs, world, biomes)
-    return biomes, stats
+    return biomes, stats, final_grid
 
 
 def _coherence(
