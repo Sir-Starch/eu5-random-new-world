@@ -4,7 +4,7 @@
 - **Method:** The owner installs `rnw_exp_new_world` built from seed 3706823338 (continents, generator 0.7.0, C65) in place and starts a 1337 campaign. Compare the north-west and the overall outline with the previous build (seed 3903742112); check the seam strait at close zoom, the gulf around Bermuda, rivers, startup and error.log.
 - **Files/tools:** `generated/rnw_exp_new_world/` (report and `preview.png`), `rnw logdiff` against the same-build baseline.
 - **Game version:** 1.4.1 open beta, build 25905365 [V-LOCAL C01].
-- **Result/evidence:** Built and verified offline (C65). Not installed yet.
+- **Result/evidence:** Built and verified offline (C65). Installed by the owner on 2026-10-19 (commit 02fe1ea; 712 files verified byte-identical). In-game run pending.
 - **Remaining uncertainty:** whether the wider, ragged seam strait still hides the wrap crack; whether the less saturated land budget leaves too much sea in some seeds.
 - **Architecture implication:** If it passes, V1 physical geography is accepted and work moves to natives (R6).
 - **Status:** **PENDING-HUMAN-VALIDATION**.
