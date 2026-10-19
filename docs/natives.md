@@ -1,6 +1,6 @@
 # Native societies (phase R6)
 
-**Status:** R6a implemented on 2026-10-19 (generator 0.8.0, C67–C68). The owner's first run loads it and shows the states with names, flags and rulers (C69); the rest is untested in game. R6b (generator 0.9.0, C70) adds place names in local languages, vassals, coastal seas known to natives and a softer terra incognita edge; in-game test pending (experiment 011). The generated New World is no longer empty in 1337: it has native pops, states, tribes, towns, markets and holy sites, derived from the same physical model as the terrain.
+**Status:** R6a implemented on 2026-10-19 (generator 0.8.0, C67–C68). The owner's first run loads it and shows the states with names, flags and rulers (C69); the rest is untested in game. R6b (generator 0.9.0–0.9.1, C70–C72) adds place names in local languages, vassals and coastal seas known to natives, and fixes unbent location borders; in-game test pending (experiment 011). The generated New World is no longer empty in 1337: it has native pops, states, tribes, towns, markets and holy sites, derived from the same physical model as the terrain.
 
 ## Goal of the first slice
 
@@ -72,4 +72,4 @@ Whether EU5 1.4.1 accepts the new tags, pop-type tribes on generated locations a
 
 ## Terra incognita edge
 
-The shader blends visibility over one location pixel, so its edge repeats the pixel steps of the location raster (C69). The export patches the local `main_menu/gfx/FX/terra_incognita.shader`: where any of four samples two pixels away differs, it averages 13 samples within two pixels; elsewhere it keeps the single sample. If the expected line is missing (a patch changed the shader), the shader is left alone and the report says so.
+The terra incognita shader blends visibility over one location pixel, so its edge follows the pixel steps of the location raster in vanilla and generated land alike (C69). A shader patch tried in R6b is removed at the owner's request (C72). The generated map itself is fixed instead: borders are bent again where one cell used to undo the bending everywhere (C71), natives know their coastal seas, and the terrain coastline follows the raster as closely as in vanilla (C72).

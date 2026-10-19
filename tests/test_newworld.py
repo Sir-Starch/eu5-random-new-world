@@ -20,6 +20,7 @@ from rnw.newworld import (
     generate_new_world,
     open_sea,
     stray_strait,
+    wobble_borders,
 )
 from rnw.settings import NewWorldSettings
 from rnw.topology import distance_from, label_components
@@ -125,3 +126,20 @@ def test_islet_inside_land_keeps_a_strait() -> None:
     ring = parts[112:128, 112:128][water[112:128, 112:128]]
     edge = parts[0, :][water[0, :]]
     assert np.intersect1d(ring, edge).size
+
+
+def test_a_vanishing_cell_does_not_undo_the_wobble() -> None:
+    """A one-pixel cell lost to the displacement is restored; other borders still bend.
+
+    Before generator 0.9.1 one such cell made the whole world keep straight borders.
+    """
+    labels = np.zeros((160, 240), dtype=np.int32)
+    labels[:, 120:] = 1
+    labels[80, 119] = 2
+    kinds = [CellClass.LAND] * 3
+    moved = wobble_borders(labels, kinds, 2)  # seed 2 displaces the one-pixel cell away
+    assert not np.array_equal(moved, labels)
+    assert int(np.count_nonzero(moved == 2)) == 1
+    parts = label_components(moved)
+    for cell in range(3):
+        assert np.unique(parts[moved == cell]).size == 1

@@ -36,6 +36,7 @@ PERMILLE: Final[int] = 1000
 WOBBLE_PX: Final[int] = 16
 WOBBLE_PERIOD: Final[int] = 48
 WOBBLE_PASSES: Final[int] = 64
+WOBBLE_REPAIRS: Final[int] = 16
 STRIP_ROWS: Final[int] = 1024
 INTERIOR_LIMIT: Final[int] = 512
 SHORE_LIMIT: Final[int] = 64
@@ -379,8 +380,9 @@ def wobble_borders(
 
     Each pixel takes the label found a smooth noise displacement away when that pixel
     has the same class. Pieces cut off from their cell's largest part are absorbed by a
-    neighbouring cell of the same class. If any cell would vanish or split, the
-    original labels are returned.
+    neighbouring cell of the same class. A cell that would vanish or split gets its
+    original pixels back, and so do the pixels it took, until every cell is one piece;
+    one bad cell no longer undoes the wobble of the whole world (C71).
     """
     shape = (int(labels.shape[0]), int(labels.shape[1]))
     kind = np.array([list(CellClass).index(value) for value in kinds], dtype=np.int64)
@@ -400,6 +402,11 @@ def wobble_borders(
     same = valid & (kind[np.maximum(source, 0)] == kind[np.maximum(labels, 0)])
     moved = np.where(same, source, labels).astype(np.int32)
     del source, same, valid
+    counts = np.bincount(moved[moved >= 0], minlength=len(kinds))
+    vanished = np.flatnonzero(counts == 0)
+    if vanished.size:
+        restore = np.isin(labels, vanished)
+        moved[restore] = labels[restore]
     parts = label_components(moved)
     owner = np.full(int(parts.max()) + 1, -1, dtype=np.int64)
     owner[parts.ravel()] = moved.ravel()
@@ -418,13 +425,17 @@ def wobble_borders(
     del parts
     left = _absorb_orphans(moved, orphan, kind)
     moved[left] = labels[left]
-    check = label_components(moved)
-    pieces = np.zeros(int(check.max()) + 1, dtype=np.int64) - 1
-    pieces[check.ravel()] = moved.ravel()
-    per_cell = np.bincount(pieces[pieces >= 0], minlength=len(kinds))
-    if np.any(per_cell != 1):
-        return labels
-    return moved
+    for _ in range(WOBBLE_REPAIRS):
+        check = label_components(moved)
+        pieces = np.zeros(int(check.max()) + 1, dtype=np.int64) - 1
+        pieces[check.ravel()] = moved.ravel()
+        per_cell = np.bincount(pieces[pieces >= 0], minlength=len(kinds))
+        bad = np.flatnonzero(per_cell != 1)
+        if not bad.size:
+            return moved
+        revert = np.isin(labels, bad) | np.isin(moved, bad)
+        moved[revert] = labels[revert]
+    return labels
 
 
 def generate_new_world(
