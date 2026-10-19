@@ -7,7 +7,7 @@ Build toward genuine procedurally generated EU5 New World geography **and** civi
 ## Product rules
 
 - **Vanilla first, no crutches.** Use vanilla mechanisms, data and engine behaviour wherever they fit, and generate only what the New World needs. The mod must be professional and architecturally clean. Never patch vanilla engine or interface files (shaders, defines, GUI) to hide a defect of generated content, and never add layers in which the mod repairs its own output. Fix the generator so its output is correct by construction. Validators fail loudly; nothing silently falls back.
-- **Versioning.** One SemVer product version, `version` in `pyproject.toml` ([ADR 0003](docs/adr/0003-versioning.md)). 0.0.x is development, 0.1.0 is the first Steam Workshop publication and 1.0.0 is the complete product. Any change of generated output raises at least PATCH and updates the golden digests.
+- **Versioning.** One SemVer product version, `version` in `pyproject.toml` ([ADR 0003](docs/adr/0003-versioning.md)). 0.MINOR.PATCH is development (MINOR when the owner accepts a roadmap phase in game). The first Steam Workshop publication is the complete product, 1.0.0. Any change of generated output raises at least PATCH and updates the golden digests.
 
 ## Evidence and safety
 
