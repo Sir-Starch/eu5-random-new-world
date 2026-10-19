@@ -1,6 +1,6 @@
 # Terrain and biome synthesis (phase V1)
 
-**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). V1b rivers implemented on 2026-10-19 (generator 0.6.0, C59–C60) and accepted by the owner in game (C64); the same review led to V1b.1 (generator 0.7.0, below). NOT GAME VALIDATED.
+**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). V1b rivers implemented on 2026-10-19 (generator 0.6.0, C59–C60) and accepted by the owner in game (C64); the same review led to V1b.1 (generator 0.7.0, below), accepted in game (C66).
 
 ## Problem
 
@@ -72,7 +72,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 ## Open work
 
 - **V1b rivers:** accepted in game (C64). Lakes end rivers (no outflows yet); splits and deltas are not generated.
-- **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Awaiting review in game.
+- **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Accepted in game (C66).
 - Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
 - Erosion for more natural valleys.
 - The mod is about 1.3 GB, because instance files are whole-file overrides.

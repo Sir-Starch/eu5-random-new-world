@@ -73,4 +73,5 @@
 - [V-GAME owner review] Hydrology approved; V1b rivers accepted. Defect: the north-west ("Alaska") was the same as in the previous seed (C64).
 - [V-EXEC] Cause: the canvas-edge ramp grew with `feature_px` (533 px) and left only the canvas core for the land budget, so all seeds filled the same outline (IoU 0.53–0.67). Generator 0.7.0 shares one guard for the canvas edge, the seam and strait axes, with a 4-margin ramp moved inland by stretched warped noise; slivers stay sea; the wobble cap bug that speckled archipelago land is fixed. Enclosed seas get a strait axis in the guard instead of a straight canal. Overlap is now 0.31–0.45 (C64). `make check`: 96 passed; the three local tests pass.
 - [V-EXEC] Built seed 3706823338 (C65); all invariants and river rules pass.
+- [V-GAME owner review] V1b.1 checked in game and accepted (C66). V1 physical geography is accepted; work moves to natives (R6). The owner asked to batch changes and request a game test only when one is really needed.
 
