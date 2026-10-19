@@ -8,6 +8,8 @@ from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_natives import (
     OPERATORS,
     Country,
+    Culture,
+    PlaceNamer,
     VanillaNatives,
     country_definitions,
     country_names,
@@ -17,10 +19,12 @@ from rnw.eu5_natives import (
     land_graph,
     match_homelands,
     new_tags,
+    vassal_lines,
 )
 from rnw.eu5_nw_export import referenced_words
 from rnw.eu5_rewrite import insert_into_block, prune_setup
 from rnw.model import CellClass
+from rnw.names import MarkovNames, name_key
 from rnw.newworld import NewWorld
 from rnw.pdx import parse
 
@@ -180,3 +184,57 @@ def test_land_graph_links_shores_and_scores_farming() -> None:
     assert graph.potential[2] == 0  # far beyond 65 degrees
     assert graph.capacity[0] == 5000  # 1000 px at 5 per 1000 px
     assert graph.cost[1] > graph.cost[0]
+
+
+def test_markov_names_are_new_unique_and_seeded() -> None:
+    """Draws repeat for a seed, never copy the corpus and never repeat each other."""
+    corpus = [
+        f"{a}{b}{c}"
+        for a in ("Tla", "Xo", "Cua")
+        for b in ("ca", "chi", "te")
+        for c in ("pan", "tlan", "co")
+    ]
+    first = MarkovNames(corpus, 3, "test", set())
+    names = [first.next() for _ in range(40)]
+    again = MarkovNames(corpus, 3, "test", set())
+    assert names == [again.next() for _ in range(40)]
+    assert len({name_key(name) for name in names}) == len(names)
+    assert not {name_key(name) for name in names} & {name_key(name) for name in corpus}
+    assert name_key("Caxitlán") == name_key("caxitlan")
+
+
+def test_place_namer_backs_off_to_larger_corpora() -> None:
+    """A culture with few names borrows its religion's corpus; unknown ones use all."""
+    places = tuple((f"Ka{i:02d}lan", "big_culture") for i in range(50))
+    places += (("Xolo", "small_culture"),)
+    culture = Culture("faith", (), 1, "", "", "", "")
+    vanilla = VanillaNatives(
+        density={},
+        population_per_location=0,
+        cultures={"big_culture": culture, "small_culture": culture},
+        religions={},
+        templates=frozenset(),
+        reserved_tags=frozenset(),
+        holy_sites=(),
+        places=places,
+        languages={"big_culture": ("big_language", ""), "small_culture": ("small_language", "")},
+        reserved_names=frozenset(),
+    )
+    namer = PlaceNamer(vanilla, seed=1)
+    drawn = [namer.name("small_culture") for _ in range(5)] + [namer.name("unknown")]
+    assert len({name_key(name) for name in drawn}) == len(drawn)
+    assert all(name_key(name) not in {name_key(p) for p, _ in places} for name in drawn)
+
+
+def test_vassal_lines_parse_as_dependencies() -> None:
+    """Vassal pairs become dependency records inside the diplomacy manager."""
+    text = insert_into_block(
+        "diplomacy_manager = {\n}\n", ("diplomacy_manager",), vassal_lines((("QQA", "QQB"),))
+    )
+    holder = parse(text).block("diplomacy_manager")
+    assert holder is not None
+    record = holder.block("dependency")
+    assert record is not None
+    fields = {entry.key: entry.value for entry in record.entries}
+    assert fields == {"first": "QQA", "second": "QQB", "subject_type": "vassal"}
+    assert vassal_lines(()) == ""

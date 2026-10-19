@@ -65,6 +65,7 @@ from rnw.eu5_natives import (
     holy_site_outputs,
     market_lines,
     vanilla_natives,
+    vassal_lines,
 )
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
 from rnw.eu5_objects import PixelClasses, object_outputs
@@ -201,6 +202,7 @@ SETUP_INSERTS: Final[dict[str, tuple[str, ...]]] = {
     "10_countries.txt": ("countries", "countries"),
     "07_cities_and_buildings.txt": ("locations",),
     "03_markets.txt": ("market_manager",),
+    "12_diplomacy.txt": ("diplomacy_manager",),
 }
 
 
@@ -464,13 +466,15 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
 
 
-def _localization(plan: Plan, extra: dict[str, str]) -> dict[str, bytes]:
+def _localization(plan: Plan, extra: dict[str, str], renamed: dict[str, str]) -> dict[str, bytes]:
     names = {cell.key: cell.name for cell in plan.cells}
     names.update(extra)
     names.update(plan.province_names)
     fresh = {area for area in plan.new_areas if area.startswith("rnw_")}
     names.update({area: plan.display_overrides[area] for area in sorted(fresh)})
     overrides = {key: value for key, value in plan.display_overrides.items() if key not in fresh}
+    for table in (names, overrides):
+        table.update({key: renamed[key] for key in table if key in renamed})
     files: dict[str, bytes] = {}
     for language in LANGUAGES:
         base = f"main_menu/localization/{language}"
@@ -674,6 +678,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         "10_countries.txt": country_records(natives.countries),
         "07_cities_and_buildings.txt": city_lines(natives.ranks),
         "03_markets.txt": market_lines(natives.markets),
+        "12_diplomacy.txt": vassal_lines(natives.vassals),
     }
     for name, text in setup.texts.items():
         relative = f"{SETUP_DIR}/{name}"
@@ -685,7 +690,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     shader = soften_terra_incognita(_read(game_dir, TERRA_INCOGNITA))
     if shader is not None:
         outputs[_mod_path(TERRA_INCOGNITA)] = _encode(game_dir, TERRA_INCOGNITA, shader)
-    outputs.update(_localization(plan, country_names(natives.countries)))
+    outputs.update(_localization(plan, country_names(natives.countries), natives.names))
     stats: dict[str, object] = {
         "ports": len(port_rows),
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
@@ -825,6 +830,13 @@ def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
             message = f"Native country {country.tag} has invalid or shared locations"
             raise NewWorldExportError(message)
         seen |= members
+    states = {country.tag for country in natives.countries if country.kind == "state"}
+    vassals = [vassal for _, vassal in natives.vassals]
+    if len(set(vassals)) != len(vassals) or not all(
+        lord in states and vassal in states and lord != vassal for lord, vassal in natives.vassals
+    ):
+        message = "Native vassals must be distinct states with one overlord each"
+        raise NewWorldExportError(message)
     if not set(natives.pops) <= land or not set(natives.ranks) <= land:
         message = "Native pops or ranks lie outside generated land"
         raise NewWorldExportError(message)

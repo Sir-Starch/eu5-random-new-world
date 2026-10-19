@@ -81,3 +81,9 @@
 - [V-EXEC] Implemented `societies.py` (game-independent hearths, complexity, population, nested religion and culture zones, states, tribes, ranks and markets on the location graph) and `eu5_natives.py` (vanilla calibration, homeland matching of vanilla American cultures and religions, new tags, pops, countries, definitions, names, towns, markets, holy sites); generator 0.8.0 with a `natives` settings section. Tuning on cached worlds: state land as a quota (11%) instead of a complexity threshold; hearths scored by food within half a reach, so a lone fertile islet no longer wins; a growing-season factor keeps hearths below about 50°; cultures reuse their own religion's pool before foreign ones, and an unused identity must fit within a slack. `make check`: 107 passed; the four local tests pass.
 - [V-EXEC] Full build on fresh random seed 3200056429 passes every invariant; every native reference resolves against the 1.4.1 definitions (C68). Experiment 010 (in game) is next.
 - [V-GAME owner review] R6a loads; states show with names, flags and rulers. Defect: stepped terra incognita edge (C69). The shader blends visibility over one location pixel only; the next build patches `terra_incognita.shader` (read from the local install) to average 13 samples within two pixels near edges, and natives now know the seas along their coasts.
+
+## 2026-10-19 — R6b names and vassals
+
+- [V-LOCAL]/[V-EXEC] Vanilla place names, culture languages and families, and diplomacy setup read (C70).
+- [V-EXEC] Generator 0.9.0: `names.MarkovNames` (order-3 character chain, never copies its corpus) and `eu5_natives.PlaceNamer` name land, wastelands, provinces, areas, states and tribes in the local culture's language with back-off to family, religion and all Americas; the largest 5% of states take bordering co-religionist states as vassals; natives know their coastal seas; the terra incognita shader is softened. `make check`: 111 passed.
+

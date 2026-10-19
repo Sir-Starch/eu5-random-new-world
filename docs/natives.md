@@ -1,6 +1,6 @@
 # Native societies (phase R6)
 
-**Status:** R6a implemented on 2026-10-19 (generator 0.8.0, C67–C68). The owner's first run loads it and shows the states with names, flags and rulers (C69); the rest is untested in game. The generated New World is no longer empty in 1337: it has native pops, states, tribes, towns, markets and holy sites, derived from the same physical model as the terrain.
+**Status:** R6a implemented on 2026-10-19 (generator 0.8.0, C67–C68). The owner's first run loads it and shows the states with names, flags and rulers (C69); the rest is untested in game. R6b (generator 0.9.0, C70) adds place names in local languages, vassals, coastal seas known to natives and a softer terra incognita edge; in-game test pending (experiment 011). The generated New World is no longer empty in 1337: it has native pops, states, tribes, towns, markets and holy sites, derived from the same physical model as the terrain.
 
 ## Goal of the first slice
 
@@ -34,6 +34,8 @@ Read-only survey of `main_menu/setup/1337`, `in_game/setup/countries` and `main_
 | 6. Identity | `eu5_natives.match_homelands` | Each zone has a homeland vector: pop-weighted climate (counted twice), vegetation and topography shares, share in states, latitude and coast. Vanilla cultures and religions have the same vector from their 1337 homelands. Zones pick in order of population. Each takes the best unused religion, or a culture of its religion, unless reusing the best one fits better by more than a slack; a small seeded noise varies the choice. |
 | 7. Polities | `societies._state_land`, `_states`, `_tribes` | The most complex 11% of inhabited land becomes state land. Its capitals, the most populous spaced locations, take territories by weighted growth (larger capitals reach farther). In 45% of culture zones the tribal land splits into pop-type tribes of about 6 locations; the rest stays unorganised. |
 | 8. Ranks and markets | `societies._ranks` | The most populous 4% of states have a city capital and the next 11% a town capital. Every city, and the largest state near each hearth, is a market centre. |
+| 8b. Vassals | `eu5_natives._vassals` | The most populous 5% of states take up to three bordering states of their religion with under a third of their population as vassals (`12_diplomacy.txt`, `subject_type = vassal`). Vanilla has 4 American vassals (C70); generated worlds get 8–19. |
+| 8c. Names | `names.MarkovNames`, `eu5_natives.PlaceNamer` | A character Markov chain (order 3) per corpus of vanilla American place names, chosen by the culture's language, else its family, else its religion, else all Americas (at least 40 names). Land locations take their culture's language; wastelands that of their land neighbours (with "Highlands"); provinces and areas that of most of their locations; states their capital's name and tribes a name of their culture. Names copy no vanilla name (accents ignored) and never repeat. Seas and lakes keep syllable names. |
 | 9. Serialisation | `eu5_natives`, `eu5_nw_export` | Writes the following. `06_pops.txt`: elites in state capitals, burghers in towns, peasants and tribesmen. `10_countries.txt`: landed countries with `own_control_core` and pop countries with `add_pops_from_locations`; the include template is the one the culture used in vanilla (else a generic American monarchy or tribe, with the right coast variant); `discovered_areas` covers the religion zone and the seas along its coasts; `ruler = random`. `in_game/setup/countries/rnw_natives.txt` holds colours that differ from neighbours, culture and religion. Localization gives the capital's name to a state and a generated name to a tribe. `07_cities_and_buildings.txt` gets ranks with the culture's vanilla town setup (else `mexican_city` or `south_east_woodlands_town`), and `03_markets.txt` gets markets. Holy sites of placed religions move to their most populous zone locations. |
 
 Choices marked [INFERRED design]: the farming table, the topography density factors (the vanilla fit gives mountains 3.0 only because of the Andes), travel costs, the growing-season band, the gain and peasant curves, and the matching weights.
@@ -64,6 +66,10 @@ Whether EU5 1.4.1 accepts the new tags, pop-type tribes on generated locations a
 
 ## Open work
 
-- R6b: place names in the language of the local culture (today location names come from generic syllables); tributaries and alliances between states; mixed-culture border locations; a rare-civilisation preset.
+- Alliances and rivalries between states; mixed-culture border locations; a rare-civilisation preset; tribes are invisible on the political map because pop-type countries own no land (as in vanilla).
 - Religions with special mechanics (for example Nahuatl or Inti situations and generic actions) may expect vanilla geography; scripts were only remapped to the nearest generated location.
 - Generated cultures and religions (instead of vanilla ones) for the alternative-history presets.
+
+## Terra incognita edge
+
+The shader blends visibility over one location pixel, so its edge repeats the pixel steps of the location raster (C69). The export patches the local `main_menu/gfx/FX/terra_incognita.shader`: where any of four samples two pixels away differs, it averages 13 samples within two pixels; elsewhere it keeps the single sample. If the expected line is missing (a patch changed the shader), the shader is left alone and the report says so.

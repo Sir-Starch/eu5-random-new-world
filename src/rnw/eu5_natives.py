@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -26,7 +26,7 @@ from rnw.eu5_biomes import latitude_tenths
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_remap import remap_text
 from rnw.model import CellClass
-from rnw.names import NameGenerator
+from rnw.names import MarkovNames, name_key
 from rnw.pdx import Block, parse
 from rnw.rng import SplitMix64, derive_seed, hash_grid
 from rnw.societies import (
@@ -56,6 +56,14 @@ TEMPLATE_DIR: Final[str] = "game/main_menu/setup/templates"
 COUNTRY_DIR: Final[str] = "game/in_game/setup/countries"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
 COUNTRY_NAMES: Final[str] = "game/main_menu/localization/english/country_names_l_english.yml"
+LOCATION_NAMES: Final[str] = "game/main_menu/localization/english/location_names"
+CULTURE_DIR: Final[str] = "game/in_game/common/cultures"
+LANGUAGE_DIR: Final[str] = "game/in_game/common/languages"
+NAME_LINE: Final[re.Pattern[str]] = re.compile(r'^ *([A-Za-z0-9_]+):\d* *"([^"]*)"', re.MULTILINE)
+# A place-name corpus needs this many vanilla names; smaller ones back off from the
+# language to its family, then to the culture's religion, then to the whole Americas.
+MIN_CORPUS: Final[int] = 40
+WASTELAND_SUFFIX: Final[str] = " Highlands"
 DEFINITION_FILE: Final[str] = "in_game/setup/countries/rnw_natives.txt"
 CLIMATES: Final[tuple[str, ...]] = (
     "arctic", "subpolar", "continental", "oceanic", "mediterranean", "subtropical",
@@ -114,6 +122,12 @@ DEFAULT_TRIBE: Final[str] = "amerindian_tribe"
 DEFAULT_CITY: Final[str] = "mexican_city"
 DEFAULT_TOWN: Final[str] = "south_east_woodlands_town"
 ADVANCED_PERMILLE: Final[int] = 700
+# Vanilla 1337 sets up 4 vassals among 223 American states (C70). The most populous 5%
+# of states take up to three bordering states of their religion with under a third of
+# their population as vassals.
+OVERLORD_PERMILLE: Final[int] = 50
+MAX_VASSALS: Final[int] = 3
+VASSAL_SHARE: Final[int] = 3
 NO_COAST: Final[str] = "_no_coast"
 TAG_WORD: Final[re.Pattern[str]] = re.compile(r"(?<![A-Za-z0-9_])([A-Z]{3})(?![A-Za-z0-9_])")
 OPERATORS: Final[frozenset[str]] = frozenset({"AND", "NOT", "NOR", "ALL", "ANY", "YES"})
@@ -159,6 +173,9 @@ class VanillaNatives:
     templates: frozenset[str]
     reserved_tags: frozenset[str]
     holy_sites: tuple[HolySite, ...]
+    places: tuple[tuple[str, str], ...] = ()
+    languages: dict[str, tuple[str, str]] = field(default_factory=dict)
+    reserved_names: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,6 +204,8 @@ class NativeWorld:
     ranks: dict[str, tuple[str, str]]
     markets: tuple[str, ...]
     holy_sites: dict[str, str]
+    names: dict[str, str]
+    vassals: tuple[tuple[str, str], ...]
     stats: dict[str, object]
 
 
@@ -421,6 +440,12 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
     templates = frozenset(path.stem for path in (game_dir / TEMPLATE_DIR).glob("*.txt"))
     names = set(TAG_WORD.findall(_text(game_dir, COUNTRY_NAMES)))
     reserved = frozenset(words | names | set(countries) | OPERATORS)
+    place_names = _location_names(game_dir)
+    places = tuple(
+        (place_names[key], _main_culture(pops[key]))
+        for key in american
+        if key in place_names and pops.get(key)
+    )
     return VanillaNatives(
         density=density,
         population_per_location=total // len(american),
@@ -429,7 +454,48 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         templates=templates,
         reserved_tags=reserved,
         holy_sites=_holy_sites(game_dir),
+        places=places,
+        languages=_languages(game_dir, set(cultures)),
+        reserved_names=frozenset(name_key(name) for name in place_names.values()),
     )
+
+
+def _main_culture(rows: list[tuple[str, int, str, str]]) -> str:
+    sizes = Counter[str]()
+    for _, amount, culture, _ in rows:
+        sizes[culture] += amount
+    return min(sizes, key=lambda culture: (-sizes[culture], culture))
+
+
+def _location_names(game_dir: Path) -> dict[str, str]:
+    """English display names of every location (all ``location_names`` files)."""
+    names: dict[str, str] = {}
+    for path in sorted((game_dir / LOCATION_NAMES).glob("*.yml")):
+        names.update(NAME_LINE.findall(path.read_text(encoding="utf-8-sig")))
+    return names
+
+
+def _languages(game_dir: Path, cultures: set[str]) -> dict[str, tuple[str, str]]:
+    """Language and language family of the given cultures ("" where unknown)."""
+    language: dict[str, str] = {}
+    for path in sorted((game_dir / CULTURE_DIR).glob("*.txt")):
+        for entry in parse(path.read_text(encoding="utf-8-sig")).entries:
+            if entry.key in cultures and isinstance(entry.value, Block):
+                value = entry.value.first("language")
+                if value is not None and isinstance(value.value, str):
+                    language[entry.key] = value.value
+    family: dict[str, str] = {}
+    wanted = set(language.values())
+    for path in sorted((game_dir / LANGUAGE_DIR).glob("*.txt")):
+        for entry in parse(path.read_text(encoding="utf-8-sig")).entries:
+            if entry.key in wanted and isinstance(entry.value, Block):
+                value = entry.value.first("family")
+                if value is not None and isinstance(value.value, str):
+                    family[entry.key] = value.value
+    return {
+        culture: (language.get(culture, ""), family.get(language.get(culture, ""), ""))
+        for culture in sorted(cultures)
+    }
 
 
 def _vanilla_coastal(game_map: Eu5Map, keys: list[str], index: dict[str, int]) -> set[str]:
@@ -758,6 +824,74 @@ def _pop_lines(
     return pops
 
 
+class PlaceNamer:
+    """Place names in a culture's language: one Markov chain per vanilla name corpus."""
+
+    __slots__: tuple[str, ...] = ("_chains", "_corpora", "_seed", "_used", "_vanilla")
+
+    def __init__(self, vanilla: VanillaNatives, seed: int) -> None:
+        self._vanilla: VanillaNatives = vanilla
+        self._seed: int = seed
+        self._used: set[str] = set(vanilla.reserved_names)
+        self._chains: dict[str, MarkovNames] = {}
+        self._corpora: dict[str, list[str]] = {}
+        for name, culture in vanilla.places:
+            for key in [*self._keys(culture), "all"]:
+                self._corpora.setdefault(key, []).append(name)
+
+    def _keys(self, culture: str) -> list[str]:
+        language, family = self._vanilla.languages.get(culture, ("", ""))
+        info = self._vanilla.cultures.get(culture)
+        religion = info.religion if info is not None else ""
+        pairs = (("language", language), ("family", family), ("religion", religion))
+        return [f"{kind}:{value}" for kind, value in pairs if value]
+
+    def name(self, culture: str) -> str:
+        """A new place name for ``culture``, unique among all names drawn."""
+        key = next(
+            (key for key in self._keys(culture) if len(self._corpora.get(key, ())) >= MIN_CORPUS),
+            "all",
+        )
+        chain = self._chains.get(key)
+        if chain is None:
+            chain = MarkovNames(self._corpora.get(key, []), self._seed, key, self._used)
+            self._chains[key] = chain
+        return chain.next()
+
+
+def _majority(cultures: list[str]) -> str:
+    counts = Counter(cultures)
+    return min(counts, key=lambda culture: (-counts[culture], culture)) if counts else ""
+
+
+def _place_names(
+    world: NewWorld,
+    plan: Plan,
+    cells: _Cells,
+    culture_of: list[str],
+    namer: PlaceNamer,
+) -> dict[str, str]:
+    """Names of land and wasteland locations, provinces and areas in local languages."""
+    culture: dict[int, str] = dict(zip(cells.cells, culture_of, strict=True))
+    names = {plan.cells[cell].key: namer.name(culture[cell]) for cell in cells.cells}
+    near: dict[int, list[str]] = {}
+    for first, second in world.edges:
+        for waste, land in ((first, second), (second, first)):
+            if world.classes[waste] is CellClass.WASTELAND and land in culture:
+                near.setdefault(waste, []).append(culture[land])
+    for waste in sorted(near):
+        culture[waste] = _majority(near[waste])
+        names[plan.cells[waste].key] = namer.name(culture[waste]) + WASTELAND_SUFFIX
+    members: dict[str, list[str]] = {}
+    for cell, value in sorted(culture.items()):
+        members.setdefault(plan.cells[cell].province, []).append(value)
+        members.setdefault(plan.cells[cell].area, []).append(value)
+    for key in sorted(set(plan.province_names) | set(plan.display_overrides)):
+        if members.get(key):
+            names[key] = namer.name(_majority(members[key]))
+    return names
+
+
 def _neighbours(societies: Societies, edges: NDArray[np.int64]) -> list[set[int]]:
     owner = np.full(len(societies.population), -1, dtype=np.int64)
     for number, polity in enumerate(societies.polities):
@@ -781,11 +915,12 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
     cultures: list[str],
     neighbours: list[set[int]],
     seed: int,
+    names: dict[str, str],
+    namer: PlaceNamer,
 ) -> list[Country]:
     keys = [plan.cells[cell].key for cell in cells.cells]
     tags = new_tags(len(societies.polities), vanilla.reserved_tags, seed)
     colors = _colors(neighbours, seed)
-    tribe_names = NameGenerator(seed, "tribes", frozenset(cell.name for cell in plan.cells))
     religion_areas: dict[int, set[str]] = {}
     for node, zone in enumerate(societies.religion.tolist()):
         known = religion_areas.setdefault(zone, set())
@@ -797,7 +932,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
         areas = religion_areas[int(societies.religion[polity.capital])] | {
             plan.cells[cells.cells[node]].area for node in polity.members
         }
-        name = plan.cells[cells.cells[polity.capital]].name if is_state else tribe_names.next()
+        name = names[keys[polity.capital]] if is_state else namer.name(cultures[polity.culture])
         countries.append(
             Country(
                 tag=tags[number],
@@ -820,6 +955,34 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
             )
         )
     return countries
+
+
+def _vassals(
+    societies: Societies, religions: list[str], neighbours: list[set[int]]
+) -> list[tuple[int, int]]:
+    """(overlord, vassal) polity pairs among neighbouring states of one religion."""
+    states = [n for n, polity in enumerate(societies.polities) if polity.kind == STATE]
+    people = {
+        n: int(societies.population[list(societies.polities[n].members)].sum()) for n in states
+    }
+    faith = {n: religions[int(societies.religion[societies.polities[n].capital])] for n in states}
+    ranked = sorted(states, key=lambda n: (-people[n], n))
+    overlords = ranked[: max(1, (len(ranked) * OVERLORD_PERMILLE + PERMILLE // 2) // PERMILLE)]
+    taken = set(overlords)
+    pairs: list[tuple[int, int]] = []
+    for lord in overlords:
+        options = sorted(
+            (n for n in neighbours[lord] if n in people and n not in taken),
+            key=lambda n: (-people[n], n),
+        )
+        chosen = [
+            n
+            for n in options
+            if faith[n] == faith[lord] and VASSAL_SHARE * people[n] < people[lord]
+        ][:MAX_VASSALS]
+        taken.update(chosen)
+        pairs += [(lord, n) for n in chosen]
+    return pairs
 
 
 def _rank_setups(
@@ -853,6 +1016,9 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
     societies = generate_societies(graph, settings, seed=seed, target=target)
     keys = [plan.cells[cell].key for cell in cells.cells]
     religions, cultures, state = _identities(societies, cells, vanilla, seed)
+    namer = PlaceNamer(vanilla, seed)
+    culture_of = [cultures[int(zone)] for zone in societies.culture.tolist()]
+    names = _place_names(world, plan, cells, culture_of, namer)
     countries = _countries_of(
         societies,
         cells=cells,
@@ -862,8 +1028,14 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         cultures=cultures,
         neighbours=_neighbours(societies, graph.edges),
         seed=seed,
+        names=names,
+        namer=namer,
     )
     ranks = _rank_setups(societies, keys, cultures, vanilla)
+    vassals = tuple(
+        (countries[lord].tag, countries[vassal].tag)
+        for lord, vassal in _vassals(societies, religions, _neighbours(societies, graph.edges))
+    )
     holy = _place_holy_sites(vanilla, religions, societies, keys)
     stats: dict[str, object] = {
         "land_locations": len(keys),
@@ -882,6 +1054,8 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         "ranks": dict(Counter(rank for rank, _ in ranks.values())),
         "markets": len(societies.markets),
         "holy_sites_placed": len(holy),
+        "names_in_local_languages": len(names),
+        "vassals": len(vassals),
     }
     return NativeWorld(
         pops=_pop_lines(societies, keys, religions, cultures),
@@ -889,6 +1063,8 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         ranks=ranks,
         markets=tuple(keys[node] for node in societies.markets),
         holy_sites=holy,
+        names=names,
+        vassals=vassals,
         stats=stats,
     )
 
@@ -975,6 +1151,15 @@ def city_lines(ranks: dict[str, tuple[str, str]]) -> str:
     body = "".join(
         f"\t{key} = {{ rank = {rank} town_setup = {setup} }}\n"
         for key, (rank, setup) in ranks.items()
+    )
+    return "\n\t# RNW generated natives\n" + body if body else ""
+
+
+def vassal_lines(vassals: tuple[tuple[str, str], ...]) -> str:
+    """Entries for ``diplomacy_manager = { ... }`` of ``12_diplomacy.txt``."""
+    body = "".join(
+        f"\tdependency = {{ first = {lord} second = {vassal} subject_type = vassal }}\n"
+        for lord, vassal in vassals
     )
     return "\n\t# RNW generated natives\n" + body if body else ""
 
