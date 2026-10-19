@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from rnw import __version__
 from rnw.settings import (
-    GENERATOR_VERSION,
     PRESETS,
     SettingsError,
     build_settings,
@@ -38,7 +38,7 @@ def test_settings_document_round_trips_through_its_canonical_json(tmp_path: Path
     assert loaded == settings
     assert spec_digest(run_spec(5, loaded)) == spec_digest(run_spec(5, settings))
     assert spec_digest(run_spec(5, loaded)) != spec_digest(run_spec(6, loaded))
-    assert run_spec(5, loaded)["generator_version"] == GENERATOR_VERSION
+    assert run_spec(5, loaded)["version"] == __version__
 
 
 def test_canonical_json_is_sorted_compact_ascii() -> None:
@@ -71,3 +71,10 @@ def test_settings_file_must_be_an_object(tmp_path: Path) -> None:
     _ = path.write_text(json.dumps([1, 2]), encoding="utf-8")
     with pytest.raises(SettingsError):
         _ = load_settings("continents", path)
+
+
+def test_product_version_is_semver() -> None:
+    """One MAJOR.MINOR.PATCH product version (ADR 0003)."""
+    parts = __version__.split(".")
+    assert len(parts) == 3
+    assert all(part.isdigit() for part in parts)

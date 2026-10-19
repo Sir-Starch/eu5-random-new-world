@@ -88,3 +88,8 @@
 - [V-EXEC] Generator 0.9.0: `names.MarkovNames` (order-3 character chain, never copies its corpus) and `eu5_natives.PlaceNamer` name land, wastelands, provinces, areas, states and tribes in the local culture's language with back-off to family, religion and all Americas; the largest 5% of states take bordering co-religionist states as vassals; natives know their coastal seas; the terra incognita shader was softened (removed again, see below). `make check`: 111 passed.
 - [V-GAME owner review] R6b works overall; border lines did not follow the fill at close zoom (C71). Cause: `wobble_borders` discarded the bending of every border when one cell vanished; generator 0.9.1 repairs only the affected cells. The owner asked to keep the vanilla terra incognita and fix the map instead; the shader patch is removed. The generated terrain coastline follows the raster as closely as vanilla's (C72).
 
+## 2026-10-19 — Product rules and versioning
+
+- [OWNER DECISION] Vanilla first and no crutches: no patched engine files, no self-repairing output; fix the generator at the source (AGENTS.md).
+- [OWNER DECISION] One SemVer product version for the Steam Workshop ([ADR 0003](../adr/0003-versioning.md)): 0.0.x development, 0.1.0 first publication, 1.0.0 complete product. The four drifting version strings (three mod metadata versions and the generator output version 0.9.1) are replaced by `version` in `pyproject.toml`, now 0.0.1; run specs carry `version` instead of `generator_version`.
+

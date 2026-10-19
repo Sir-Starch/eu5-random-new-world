@@ -11,6 +11,7 @@ from typing import Annotated, Final
 
 import typer
 
+from rnw import __version__
 from rnw.artifacts import OutputPathError, check_new_output, swap_in, write_synthetic_bundle
 from rnw.contract import MissingContractFileError, fingerprint_document
 from rnw.contract import fingerprint as game_fingerprint
@@ -132,7 +133,7 @@ def prepare_mod(output: Annotated[Path, typer.Argument()]) -> None:
     payload: dict[str, str | list[str] | dict[str, str]] = {
         "name": "RNW experiment 001 - metadata",
         "id": "rnw_exp_001_metadata",
-        "version": "0.1.0",
+        "version": __version__,
         "supported_game_version": "1.4.*",
         "short_description": "Local RNW loading experiment",
         "tags": ["Map"],

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Final, cast, override
 
 import numpy as np
 
+from rnw import __version__
 from rnw.artifacts import check_new_output, pixel_digest, staged, write_bytes
 from rnw.coast import move_coast
 from rnw.contract import aggregate_digest, fingerprint
@@ -243,7 +244,7 @@ def _metadata(name: str, seed: int, preset: str) -> bytes:
     payload: dict[str, object] = {
         "name": f"RNW D0 coast {preset} seed {seed} ({STATUS})",
         "id": name,
-        "version": "0.2.0",
+        "version": __version__,
         "supported_game_version": "1.4.*",
         "short_description": f"Generated New World coastline candidate; local only; {STATUS}",
         "tags": ["Map"],

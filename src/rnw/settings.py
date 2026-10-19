@@ -2,7 +2,7 @@
 
 Every value is an integer (fractions are permille), so canonical JSON and generated
 geometry contain no platform-dependent floating-point text. Changing output for the
-same seed and settings requires a new ``GENERATOR_VERSION``.
+same seed and settings requires a new product version (ADR 0003).
 """
 
 from __future__ import annotations
@@ -12,6 +12,7 @@ import json
 from dataclasses import asdict, dataclass, fields, replace
 from typing import TYPE_CHECKING, Final, cast
 
+from rnw import __version__
 from rnw.rng import RNG_VERSION, check_seed
 
 if TYPE_CHECKING:
@@ -19,7 +20,6 @@ if TYPE_CHECKING:
 
 SCHEMA_VERSION: Final[int] = 1
 GENERATOR: Final[str] = "rnw-geo"
-GENERATOR_VERSION: Final[str] = "0.9.1"
 WINDOW_SIZE: Final[int] = 4
 
 
@@ -372,7 +372,7 @@ def run_spec(seed: int, settings: Settings) -> dict[str, object]:
     """Everything that determines generated output apart from game input files."""
     return {
         "generator": GENERATOR,
-        "generator_version": GENERATOR_VERSION,
+        "version": __version__,
         "rng": RNG_VERSION,
         "seed": check_seed(seed),
         "settings": settings.to_json_data(),

@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import __version__
 from rnw.artifacts import check_new_output, pixel_digest, staged, write_bytes
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
@@ -1076,7 +1077,7 @@ def _metadata(name: str, seed: int, preset: str) -> bytes:
     payload: dict[str, object] = {
         "name": f"RNW New World {preset} seed {seed} ({STATUS})",
         "id": name,
-        "version": "0.3.0",
+        "version": __version__,
         "supported_game_version": "1.4.*",
         "short_description": f"Generated New World with new locations; local only; {STATUS}",
         "tags": ["Map"],
