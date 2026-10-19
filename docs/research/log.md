@@ -57,4 +57,5 @@
 
 - [V-GAME owner observation] V1a loads and renders; owner reported a crack along the map wrap, city models with a corner in water, brown pixel patches in white desert and green city ground in sand (C55).
 - [V-LOCAL] Found that most biome material lists are shorter than 16, that the shader clamps slots to 15, and that material 0 is `fallback_material`; vanilla city ground is green for every non-Mediterranean biome (C54, C56).
-- [V-EXEC] Generator 0.5.0: seam strait, shore-aware city points, slots limited to each biome's list, no desert wetlands. `make check` 88 passed; the three local tests pass.
+- [V-EXEC] Generator 0.5.0: seam strait, shore-aware city points, slots limited to each biome's list, no desert wetlands.
+- [V-GAME owner review] V1a.1 (commit 123a907) installed, checked in game and accepted (C58). `make check` 88 passed; the three local tests pass.

@@ -1,6 +1,6 @@
 # Terrain and biome synthesis (phase V1)
 
-**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below). Generated rivers (V1b) are still to do. NOT GAME VALIDATED.
+**Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). Generated rivers (V1b) are still to do. NOT GAME VALIDATED.
 
 ## Problem
 
