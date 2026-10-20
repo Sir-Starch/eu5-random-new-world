@@ -5,7 +5,8 @@ The hierarchy is built from the generated cells, top-down, as compact connected 
 regions, each region into areas and each area into provinces; the sea into the vanilla
 sea areas the canvas touches, then into provinces. Vanilla keys go to the generated part
 nearest their vanilla position, so script references to them keep resolving; areas a
-region needs beyond its vanilla ones get new keys. Provinces and locations are new.
+region needs beyond its vanilla ones get new keys. Water near a shore belongs to the
+region of that shore, as in vanilla. Provinces and locations are new.
 Stamping vanilla areas onto cells by position instead left areas and regions in pieces
 inside one another [V-GAME owner, 1.4.1].
 """
@@ -23,11 +24,13 @@ import numpy as np
 
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.hierarchy import (
+    absorb_small_pieces,
     balanced_parts,
     centre_of,
     contact_graph,
     keyed_parts,
     match,
+    piece_counts,
     pieces,
     split,
     split_landmasses,
@@ -38,6 +41,8 @@ from rnw.rng import SplitMix64, derive_seed
 from rnw.topology import adjacency_pairs, unpack_pairs
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from numpy.typing import NDArray
 
     from rnw.eu5_canvas import Canvas
@@ -60,9 +65,15 @@ NAME_SUFFIX: Final[dict[CellClass, str]] = {
     CellClass.LAKE: " Lake",
 }
 # Vanilla American land holds 6.2 locations per province and 5.8 provinces per area, its
-# sea areas 8.6 zones per province (local 1.4.1 definitions.txt and default.map).
+# sea areas 8.6 zones per province and 52 per area (local 1.4.1 definitions.txt and
+# default.map).
 AREA_PROVINCES: Final[int] = 6
 SEA_PROVINCE_ZONES: Final[int] = 9
+SEA_AREA_ZONES: Final[int] = 52
+# A region keeps its largest piece of water; other pieces below this join the water
+# around them, as an island below half a part joins its nearest part.
+MIN_SHORE_PIECE: Final[int] = SEA_AREA_ZONES // 4
+TARGET_SCALE: Final[int] = 1000
 COLOR_BITS: Final[int] = 24
 STRIP_ROWS: Final[int] = 1024
 LAND_FAMILY: Final[frozenset[CellClass]] = frozenset(
@@ -268,9 +279,14 @@ def _land_areas(
 
 @dataclass(frozen=True, slots=True)
 class _SeaArea:
-    """A vanilla sea area the canvas touches: replaced zones and what stays outside."""
+    """A vanilla sea area the canvas touches: replaced zones and what stays outside.
+
+    A coastal area lies under an American land region; the others are ocean areas.
+    """
 
     name: str
+    region: str
+    coastal: bool
     replaced: int
     centre: tuple[int, int]
     remaining: frozenset[int]
@@ -291,13 +307,39 @@ def _vanilla_seas(
     seas: list[_SeaArea] = []
     for name in names:
         labels = members[name]
+        first = hierarchy[game_map.keys[labels[0]]]
         replaced = [label for label in labels if canvas.removed[label]]
         placed = replaced or [label for label in labels if canvas.trimmed[label]]
         row = sum(int(geometry.rows[label]) for label in placed) // len(placed)
         column = sum(int(geometry.columns[label]) for label in placed) // len(placed)
-        remaining = frozenset(label for label in labels if not canvas.removed[label])
-        seas.append(_SeaArea(name, len(replaced), (row, column - canvas.col0), remaining))
+        seas.append(
+            _SeaArea(
+                name,
+                first.region,
+                first.continent == NEW_WORLD,
+                len(replaced),
+                (row, column - canvas.col0),
+                frozenset(label for label in labels if not canvas.removed[label]),
+            )
+        )
     return seas
+
+
+def _coasts(
+    world: NewWorld, sea: Sequence[bool], region_of: dict[int, str]
+) -> dict[str, list[int]]:
+    """Sea zones by the region whose land they touch most (lowest name on ties)."""
+    touches: dict[int, dict[str, int]] = {}
+    for first, second in world.edges:
+        for zone, land in ((first, second), (second, first)):
+            if sea[zone] and land in region_of:
+                counts = touches.setdefault(zone, {})
+                counts[region_of[land]] = counts.get(region_of[land], 0) + 1
+    coasts: dict[str, list[int]] = {}
+    for zone in sorted(touches):
+        counts = touches[zone]
+        coasts.setdefault(min(counts, key=lambda name: (-counts[name], name)), []).append(zone)
+    return coasts
 
 
 def _outside_contacts(canvas: Canvas, world: NewWorld, offset: int) -> set[tuple[int, int]]:
@@ -318,20 +360,27 @@ def _outside_contacts(canvas: Canvas, world: NewWorld, offset: int) -> set[tuple
     return contacts
 
 
-def _sea_areas(
+def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and parents.
     graph: ContactGraph,
     cells: list[int],
     seas: list[_SeaArea],
     contacts: set[tuple[int, int]],
+    *,
+    coasts: dict[str, list[int]],
     parents: dict[str, tuple[str, str, str]],
 ) -> tuple[list[_Area], set[str]]:
-    """Sea areas keep their vanilla keys; a cut one grows from what stays outside.
+    """Coastal water joins the region of its shore; the open ocean keeps the ocean areas.
 
-    A generated zone touching the remainder of a vanilla sea area cut by the canvas
-    anchors that area (the first by name if it touches several), so the area stays
-    joined to its remainder. Every other sea area starts at the generated zone nearest
-    its replaced zones, on water large enough to hold half an area. Returns the areas
-    and the names of the anchored ones, which may have one piece per anchor stretch.
+    Every land region grows its water from the zones on its shore, so each piece of a
+    region's sea touches that region's land. The coastal share of all water is the
+    vanilla one, and a region's share follows its shore length; a small piece of a
+    region's water beside its largest one joins the water around it. A region's water is
+    split into its vanilla sea areas (nearest first) and new ones as its size needs.
+    An ocean area cut by the canvas grows from the generated zones that touch its
+    remainder (the first by name if a zone touches several), so it stays joined to it;
+    every other ocean area starts at the open zone nearest its replaced zones. Returns
+    the areas and the names of the cut ocean areas, which may have one piece per
+    stretch of remainder.
     """
     owner = {label: sea.name for sea in reversed(seas) for label in sea.remaining}
     water = set(cells)
@@ -342,39 +391,82 @@ def _sea_areas(
     anchors: dict[str, list[int]] = {}
     for cell in sorted(touching):
         anchors.setdefault(min(touching[cell]), []).append(cell)
-    used = [sea for sea in seas if not sea.remaining or anchors.get(sea.name)]
+    oceans = [
+        sea for sea in seas if not sea.coastal and (not sea.remaining or anchors.get(sea.name))
+    ]
+    regions = sorted(coasts)
+    shore = {zone for zones in coasts.values() for zone in zones}
     hosting = [
         cell
         for piece in pieces(graph, cells)
-        if 2 * len(piece) * len(used) >= len(cells)
+        if 2 * len(piece) * (len(oceans) + len(regions)) >= len(cells)
         for cell in piece
-        if cell not in touching
+        if cell not in touching and cell not in shore
     ]
-    free = [sea for sea in used if not sea.remaining]
+    free = [sea for sea in oceans if not sea.remaining]
     pairing = match(
         [sea.centre for sea in free], [(int(r), int(c)) for r, c in graph.centres[hosting].tolist()]
     )
     if any(choice < 0 for choice in pairing):
-        message = f"{len(hosting)} open sea zones cannot start {len(free)} sea areas"
+        message = f"{len(hosting)} open sea zones cannot start {len(free)} ocean areas"
         raise IdentityError(message)
     start = {sea.name: [hosting[choice]] for sea, choice in zip(free, pairing, strict=True)}
-    sources = [sorted(anchors[sea.name]) if sea.remaining else start[sea.name] for sea in used]
+    coastal = sum(sea.replaced for sea in seas if sea.coastal)
+    length = max(1, len(shore))
     parts, _ = balanced_parts(
         graph,
         cells,
-        sources,
-        [sea.replaced for sea in used],
-        movable=[not sea.remaining for sea in used],
+        [coasts[region] for region in regions]
+        + [sorted(anchors[sea.name]) if sea.remaining else start[sea.name] for sea in oceans],
+        [len(coasts[region]) * coastal * TARGET_SCALE // length for region in regions]
+        + [sea.replaced * TARGET_SCALE for sea in oceans],
+        movable=[False] * len(regions) + [not sea.remaining for sea in oceans],
     )
+    parts = absorb_small_pieces(graph, parts, first=len(regions), minimum=MIN_SHORE_PIECE)
     areas: list[_Area] = []
-    for sea, part in zip(used, parts, strict=True):
+    fresh = 0
+    for region, part in zip(regions, parts, strict=False):
+        keys = [sea for sea in seas if sea.coastal and sea.region == region]
+        found = pieces(graph, part)
+        split_parts = [
+            area
+            for piece, count in zip(
+                found, piece_counts(found, SEA_AREA_ZONES, at_least=len(keys)), strict=True
+            )
+            for area in split(graph, piece, count)
+        ]
+        pairing = match(
+            [centre_of(graph, area) for area in split_parts], [sea.centre for sea in keys]
+        )
+        for area, key in zip(split_parts, pairing, strict=True):
+            if key < 0:
+                fresh += 1
+            name = keys[key].name if key >= 0 else f"rnw_sea_area_{fresh:04d}"
+            provinces = split(graph, area, max(1, _rounded(len(area), SEA_PROVINCE_ZONES)))
+            areas.append(_Area(name, parents[region], provinces, key < 0))
+    for sea, part in zip(oceans, parts[len(regions) :], strict=True):
         provinces = [
             province
             for piece in (pieces(graph, part) if sea.remaining else [part])
             for province in split(graph, piece, max(1, _rounded(len(piece), SEA_PROVINCE_ZONES)))
         ]
         areas.append(_Area(sea.name, parents[sea.name], provinces, new=False))
-    return areas, {sea.name for sea in used if sea.remaining}
+    return areas, {sea.name for sea in oceans if sea.remaining}
+
+
+def _check_shores(graph: ContactGraph, areas: list[_Area], coasts: dict[str, list[int]]) -> None:
+    """Every piece of a land region's water touches that region's land."""
+    water: dict[str, list[int]] = {}
+    for area in areas:
+        if area.parents[0] in coasts:
+            water.setdefault(area.parents[0], []).extend(
+                cell for province in area.provinces for cell in province
+            )
+    for region, cells in sorted(water.items()):
+        shore = set(coasts[region])
+        if any(not shore & set(piece) for piece in pieces(graph, cells)):
+            message = f"Water of {region} has a piece away from the region's shore"
+            raise IdentityError(message)
 
 
 def _check_pieces(graph: ContactGraph, areas: list[_Area], *, depth: int, exempt: set[str]) -> None:
@@ -402,6 +494,47 @@ def _check_pieces(graph: ContactGraph, areas: list[_Area], *, depth: int, exempt
             raise IdentityError(message)
 
 
+def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas and world.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    hierarchy: dict[str, Location],
+    geometry: VanillaGeometry,
+    settings: NewWorldSettings,
+) -> tuple[list[_Area], set[str]]:
+    """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
+    count = len(game_map.keys)
+    pixels = np.bincount(canvas.rolled.ravel(), minlength=count).astype(np.int64)
+    is_land = [kind in LAND_FAMILY for kind in world.classes]
+    is_sea = [kind is CellClass.SEA for kind in world.classes]
+    land = contact_graph(world.centroids, world.edges, is_land)
+    sea = contact_graph(world.centroids, world.edges, is_sea)
+    areas = _land_areas(
+        land,
+        [cell for cell, flag in enumerate(is_land) if flag],
+        _vanilla_land(game_map, canvas, hierarchy, geometry, pixels),
+        settings.province_size,
+    )
+    region_of = {
+        cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
+    }
+    coasts = _coasts(world, is_sea, region_of)
+    parents = _area_parents(hierarchy)
+    parents.update({area.parents[0]: area.parents for area in areas})
+    sea_areas, anchored = _sea_areas(
+        sea,
+        [cell for cell, flag in enumerate(is_sea) if flag],
+        _vanilla_seas(game_map, canvas, hierarchy, geometry),
+        _outside_contacts(canvas, world, count),
+        coasts=coasts,
+        parents=parents,
+    )
+    _check_pieces(land, areas, depth=len(LEVELS), exempt=set())
+    _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
+    _check_shores(sea, sea_areas, coasts)
+    return areas + sea_areas, anchored
+
+
 def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world and hierarchy.
     game_map: Eu5Map,
     canvas: Canvas,
@@ -415,33 +548,12 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     """Assign keys, colours, names and parents to every generated cell.
 
     Land is split top-down into the vanilla subcontinents and regions, then into areas
-    and provinces; sea zones into the vanilla sea areas the canvas touches, then into
-    provinces. Every part is compact and connected on its landmass or water body.
+    and provinces. Water near a shore joins the region of that shore and is split into
+    its sea areas, the open ocean into the vanilla ocean areas the canvas touches; both
+    then into provinces. Every part is compact and connected on its landmass or water
+    body, and every piece of a region's water touches the region's land.
     """
-    count = len(game_map.keys)
-    pixels = np.bincount(canvas.rolled.ravel(), minlength=count).astype(np.int64)
-    is_land = [kind in LAND_FAMILY for kind in world.classes]
-    is_sea = [kind is CellClass.SEA for kind in world.classes]
-    land = contact_graph(world.centroids, world.edges, is_land)
-    sea = contact_graph(world.centroids, world.edges, is_sea)
-    land_cells = [cell for cell, flag in enumerate(is_land) if flag]
-    sea_cells = [cell for cell, flag in enumerate(is_sea) if flag]
-    areas = _land_areas(
-        land,
-        land_cells,
-        _vanilla_land(game_map, canvas, hierarchy, geometry, pixels),
-        settings.province_size,
-    )
-    sea_areas, anchored = _sea_areas(
-        sea,
-        sea_cells,
-        _vanilla_seas(game_map, canvas, hierarchy, geometry),
-        _outside_contacts(canvas, world, count),
-        _area_parents(hierarchy),
-    )
-    _check_pieces(land, areas, depth=len(LEVELS), exempt=set())
-    _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
-    areas.extend(sea_areas)
+    areas, anchored = _hierarchy(game_map, canvas, world, hierarchy, geometry, settings)
     plan = Plan(cells=[], anchored_sea_areas=sorted(anchored))
     province_names = NameGenerator(seed, "provinces")
     area_names = NameGenerator(seed, "areas")

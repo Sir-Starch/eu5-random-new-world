@@ -362,6 +362,55 @@ def keyed_parts(
     return parts
 
 
+def piece_counts(found: Sequence[Sequence[int]], size: int, *, at_least: int) -> list[int]:
+    """Parts per piece: one per ``size`` cells, at least one each and ``at_least`` in all.
+
+    Extra parts go to the piece with the most cells per part, while it has room.
+    """
+    counts = [max(1, (len(piece) + size // 2) // size) for piece in found]
+    while sum(counts) < at_least:
+        room = [number for number, piece in enumerate(found) if counts[number] < len(piece)]
+        if not room:
+            break
+        widest = max(
+            room, key=lambda number: (len(found[number]) * size // counts[number], -number)
+        )
+        counts[widest] += 1
+    return counts
+
+
+def absorb_small_pieces(
+    graph: ContactGraph, parts: Sequence[Sequence[int]], *, first: int, minimum: int
+) -> list[list[int]]:
+    """Move small side pieces of the first ``first`` parts to the part they touch most.
+
+    Each of those parts keeps its largest piece; another piece below ``minimum`` cells
+    joins the part it has most contacts with (lowest index on ties), as an island too
+    small for a part of its own joins its nearest part.
+    """
+    owner = {cell: number for number, part in enumerate(parts) for cell in part}
+    for number in range(first):
+        mine = [cell for cell in sorted(owner) if owner[cell] == number]
+        found = sorted(pieces(graph, mine), key=lambda piece: (-len(piece), piece[0]))
+        for piece in found[1:]:
+            if len(piece) >= minimum:
+                continue
+            inside = set(piece)
+            counts: dict[int, int] = {}
+            for cell in piece:
+                for neighbour, _ in graph.links[cell]:
+                    if neighbour not in inside and neighbour in owner:
+                        counts[owner[neighbour]] = counts.get(owner[neighbour], 0) + 1
+            if counts:
+                target = min(counts, key=lambda part: (-counts[part], part))
+                for cell in piece:
+                    owner[cell] = target
+    moved: list[list[int]] = [[] for _ in parts]
+    for cell in sorted(owner):
+        moved[owner[cell]].append(cell)
+    return moved
+
+
 def split_landmasses(
     graph: ContactGraph, groups: Iterable[Sequence[int]], *, exempt: set[int] | None = None
 ) -> list[int]:

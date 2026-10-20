@@ -11,11 +11,13 @@ import pytest
 from rnw.hierarchy import (
     ContactGraph,
     PartitionError,
+    absorb_small_pieces,
     balanced_parts,
     centre_of,
     contact_graph,
     keyed_parts,
     match,
+    piece_counts,
     pieces,
     split,
     split_landmasses,
@@ -104,3 +106,17 @@ def test_impossible_split_fails_loudly() -> None:
     graph = _grid(3, 1)
     with pytest.raises(PartitionError):
         _ = split(graph, _land(graph), 4)
+
+
+def test_small_side_pieces_join_the_part_they_touch_most() -> None:
+    graph = _grid(10, 1)
+    parts = [[0, 1, 2, 3, 7], [4, 5, 6], [8, 9]]
+    moved = absorb_small_pieces(graph, parts, first=1, minimum=2)
+    assert moved == [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]
+    assert absorb_small_pieces(graph, parts, first=1, minimum=1) == [list(p) for p in parts]
+
+
+def test_piece_counts_reach_the_key_count_on_the_widest_piece() -> None:
+    assert piece_counts([[0] * 100, [0] * 10], 50, at_least=1) == [2, 1]
+    assert piece_counts([[0] * 100, [0] * 10], 50, at_least=5) == [4, 1]
+    assert piece_counts([[0] * 2, [0]], 50, at_least=9) == [2, 1]
