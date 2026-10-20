@@ -7,10 +7,13 @@ from typing import TYPE_CHECKING, cast
 
 from typer.testing import CliRunner
 
+from rnw import parallel
 from rnw.cli import app
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    import pytest
 
 
 def test_prepared_mod_has_matching_identity_and_beta_version(tmp_path: Path) -> None:
@@ -78,3 +81,21 @@ def test_uninstall_removes_rnw_mods_and_refuses_others(tmp_path: Path) -> None:
     assert done.exit_code == 0, done.output
     assert not (mods / "rnw_exp_old").exists()
     assert (mods / "someone_elses_mod").is_dir()
+
+
+def test_newworld_refuses_to_start_without_the_memory_it_needs(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """With too little free memory the command stops before any work and says why."""
+    monkeypatch.delenv("RNW_MEMORY", raising=False)
+    monkeypatch.setattr(parallel, "available_memory", lambda: 2 * parallel.GIB)
+    game = tmp_path / "game"
+    game.mkdir()
+    output = tmp_path / "generated" / "rnw_exp_low_memory"
+    result = CliRunner().invoke(
+        app, ["newworld", "--game-dir", str(game), "--output", str(output), "--seed", "1"]
+    )
+    assert result.exit_code == 2
+    assert "needs about 7.0 GiB of free memory" in result.output
+    assert "2.0 GiB free" in result.output
+    assert not output.exists()

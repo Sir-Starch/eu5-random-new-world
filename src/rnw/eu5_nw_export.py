@@ -135,7 +135,7 @@ from rnw.newworld import (
     split_at_column,
     unported_cells,
 )
-from rnw.parallel import configure
+from rnw.parallel import GIB, configure, require_memory
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.relief import COAST_HEIGHT
@@ -260,6 +260,11 @@ SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
     "12_diplomacy.txt": (("diplomacy_manager",),),
     DEVELOPMENT_FILE: (("development",),),
 }
+
+
+# The smallest working set of an export: its peak with one thread and the thinnest bands
+# (6.3 GiB on the continents preset, C102), rounded up.
+EXPORT_MEMORY: Final[int] = 7 * GIB
 
 
 class NewWorldExportError(ValueError):
@@ -1208,13 +1213,18 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     accept_build: str | None = None,
     settings_file: str | None = None,
     replace: bool = False,
+    check_memory: bool = True,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report.
 
     The large files (terrain layers, vegetation instances) go to a spool directory beside
-    the output as they are made, and join the bundle when it is written.
+    the output as they are made, and join the bundle when it is written. Unless
+    ``check_memory`` is false the export first checks that the machine has the memory its
+    smallest working set needs (``EXPORT_MEMORY``); more memory only makes it faster.
     """
     check_new_output(output, MOD_NAME, game_dir, replace=replace)
+    if check_memory:
+        require_memory(EXPORT_MEMORY, "The New World export")
     with Spool(spool_path(output)) as spool:
         return _export_new_world(
             spool,

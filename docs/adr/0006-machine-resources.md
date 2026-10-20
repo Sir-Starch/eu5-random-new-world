@@ -1,0 +1,25 @@
+# ADR 0006: The export reads the machine and bounds its memory
+
+**Status:** Accepted 2026-10-21 (owner direction: the generator must not cause problems for any player, its kernels must adapt to the machine, and its memory must suit EU5's requirements rather than a calculator's).
+
+## Context
+
+EU5 asks for 16 GB of RAM at the minimum (Intel Core i7-8700K or Ryzen 5 3600, six cores) and recommends 32 GB (i7-14700K or Ryzen 7 7800X3D) [SOURCE: Steam store page of EU5, read 2026-10-21]. The player runs the generator before the game, on a machine that also holds a desktop, a browser and often the launcher. The first Rust export ([ADR 0005](0005-native-core.md), C101) peaked at 21.8 GB of resident memory with eight decal threads, because every decal window, water texture and sampling pass held whole-map eight-byte arrays, and the output files waited in memory until the bundle was written. On a 16 GB machine that is swapping, a stalled desktop or a killed process, and it would have been the application's first impression.
+
+## Decision
+
+1. **Target.** The continents preset (canvas 8192 x 10030 pixels, 733 files) peaks at 6.9 GiB of resident memory at the default thread count on a 32-thread machine and at 6.3 GiB with one thread and the thinnest bands, which takes 3 min 48 s instead of 2 min 4 s (C102); the process keeps about 3.3 GiB of rasters and tables and adds the transient set of the stage it is in. A machine with 16 GB runs it; a machine with 32 GB only runs it faster.
+2. **Bounded working sets, identical output.** Every stage that was a whole-map array pass is a sequence of independent pieces whose size is a parameter and never changes a byte of the result:
+   - decals are rebuilt in **bands** of location rows, each computed in a window that reaches `BAND_HALO` rows past it (the coast cap of the distance fields plus the interpolation and blur margins), so no row depends on where its neighbours begin;
+   - water textures, vegetation sampling, relief, river valleys, climate grids, world statistics and the coast model run in **strips** with the halo of their own neighbourhood (zero for pointwise stages);
+   - sums are exact integers in float64 added strip by strip, and thresholds are found by counting instead of partitioning a copy;
+   - large output files (decal layers, vegetation instances) go to a **spool** directory beside the output as they are made and are moved into the bundle when it is written;
+   - vanilla decal layers (30 ms each to decode) are read when needed and not kept; narrow types (`uint8`, `uint16`, `int32`) replace `int64` wherever the range is known, and 32-bit component numbers replace 64-bit ones.
+3. **The allocator.** glibc gives every thread an arena that keeps what is freed in it; limiting it to two arenas (`mallopt`, set when the pool is sized) took the default peak from 8.4 to 6.9 GiB with the same output and speed. Other platforms need nothing.
+4. **The machine is read at every run** (`rnw.parallel`): the threads the process may use (its affinity and a container's CPU quota; one thread stays free from four threads up so the desktop does not stall), the memory that is free now (`MemAvailable`, the container's cgroup headroom, or the Windows `GlobalMemoryStatusEx` figure), and a budget of 60% of it for bands and workers. The native thread pool is sized once from the same figures. `RNW_THREADS` and `RNW_MEMORY` (MiB) override them for benchmarks and tests. Where the system will not say how much memory is free, a conservative 4 GiB is assumed for sizing.
+5. **Preflight.** The export first requires 7 GiB of free memory (the measured floor of 6.3 GiB, rounded up) and otherwise stops, before any work, saying how much it needs and how much is free; `--ignore-memory` starts anyway. Nothing falls back silently.
+6. **Proof.** Each banded or stripped function has a test that equals its whole-raster specification (kept in `tests/reference/`) for band heights from one row to the whole raster and for one thread and several, and a test that fails if the halo is smaller than the distance reach. A full export under `RNW_MEMORY=2500 RNW_THREADS=2` produces the same 733 file hashes as the default run, and those as the Python build of 0.9.13.
+
+## Consequences
+
+Memory and speed trade through two numbers the machine sets, so a slower, smaller machine gets the same world. The halo of a band is an engineering constant that must grow with the distance reach it covers: `BAND_HALO` is derived from `CAP_REACH`, and the test of the halo guards it. A new whole-map pass is a regression of this decision: it must be a strip, band or kernel with the same equality test. Windows and macOS memory figures are read through the platform call or reported unknown [UNKNOWN until the packaged application runs there]; the Linux paths are tested in this repository.

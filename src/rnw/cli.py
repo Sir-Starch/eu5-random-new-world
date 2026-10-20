@@ -22,6 +22,7 @@ from rnw.eu5_nw_export import NewWorldExportError, export_new_world
 from rnw.eu5_objects import ObjectBudgetError
 from rnw.eu5_remap import RemapError
 from rnw.geography import GeographyError, color_summary, read_locations, summary
+from rnw.parallel import ResourceError
 from rnw.png import PngFormatError
 from rnw.settings import SettingsError, load_settings, run_spec
 from rnw.synth import generate_world, synthetic_base
@@ -44,6 +45,7 @@ FAILURES: Final[tuple[type[Exception], ...]] = (
     OutputPathError,
     PngFormatError,
     RemapError,
+    ResourceError,
     SettingsError,
     ValidationError,
 )
@@ -302,6 +304,9 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
     replace: Annotated[
         bool, typer.Option(help="Replace an existing generated/rnw_exp_* bundle.")
     ] = False,
+    ignore_memory: Annotated[
+        bool, typer.Option(help="Start although the free memory is below what the export needs.")
+    ] = False,
 ) -> None:
     """Stage a NOT GAME VALIDATED mod that replaces the New World with generated land."""
     try:
@@ -314,6 +319,7 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
             accept_build=accept_build,
             settings_file=None if settings is None else settings.name,
             replace=replace,
+            check_memory=not ignore_memory,
         )
     except FAILURES as error:
         typer.echo(f"Error: {error}", err=True)

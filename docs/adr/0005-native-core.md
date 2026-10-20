@@ -26,3 +26,5 @@ Option 3.
 ## Consequences
 
 Building the project needs a Rust toolchain (rustup, stable); the application's own build ships the wheel so a player installs nothing. CI gains `cargo fmt`, `cargo clippy` and `cargo test` on Linux and Windows. Kernel changes must be made twice (Rust and reference) and prove equal, which is the price of the speed. If a kernel stops being hot it can go back to NumPy by deleting the Rust function and keeping the reference.
+
+The first Rust export held whole-map arrays in every stage and peaked at 21.8 GiB. [ADR 0006](0006-machine-resources.md) sets the memory target, the banded and stripped forms of the kernels' callers, the spool and the reading of the machine; the determinism contract above covers band height and thread count as well.

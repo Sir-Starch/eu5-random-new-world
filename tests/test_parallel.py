@@ -7,12 +7,12 @@ import subprocess
 import sys
 from typing import TYPE_CHECKING
 
+import pytest
+
 from rnw import parallel
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import pytest
 
 
 def _machine(monkeypatch: pytest.MonkeyPatch, *, cores: int, free: int | None) -> None:
@@ -104,3 +104,16 @@ def test_the_native_pool_takes_the_first_size_asked() -> None:
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     )
     assert done.stdout.split() == ["3", "3"]
+
+
+def test_a_task_that_needs_more_memory_than_is_free_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The refusal names the need and the free memory; unknown memory lets the task start."""
+    monkeypatch.delenv(parallel.MEMORY_ENVIRONMENT, raising=False)
+    monkeypatch.setattr(parallel, "available_memory", lambda: 5 * parallel.GIB)
+    parallel.require_memory(5 * parallel.GIB, "A task")
+    with pytest.raises(parallel.ResourceError, match=r"needs about 6\.0 GiB .* 5\.0 GiB free"):
+        parallel.require_memory(6 * parallel.GIB, "A task")
+    monkeypatch.setattr(parallel, "available_memory", lambda: None)
+    parallel.require_memory(1 << 60, "A task")

@@ -36,6 +36,9 @@ UNKNOWN_MEMORY: Final[int] = 4 * GIB
 # desktop, the file cache and estimates that are too small.
 BUDGET_SHARE_PERMILLE: Final[int] = 600
 CGROUP: Final[Path] = Path("/sys/fs/cgroup")
+# glibc's mallopt parameter for the number of arenas and the number we allow.
+M_ARENA_MAX: Final[int] = -8
+MALLOC_ARENAS: Final[int] = 2
 
 
 class _MemoryStatus(ctypes.Structure):
@@ -115,6 +118,24 @@ def available_memory() -> int | None:
     return min(known) if known else None
 
 
+class ResourceError(RuntimeError):
+    """The machine has less than a task needs."""
+
+
+def require_memory(needed: int, task: str) -> None:
+    """Refuse a task that needs more free memory than the machine has, before it starts.
+
+    Where the system will not say how much is free, the task is allowed to start.
+    """
+    free = available_memory()
+    if free is not None and free < needed:
+        message = (
+            f"{task} needs about {needed / GIB:.1f} GiB of free memory and this machine has "
+            f"{free / GIB:.1f} GiB free; close other programs and run it again"
+        )
+        raise ResourceError(message)
+
+
 def memory_budget() -> int:
     """Bytes the next stage may fill with working memory: a share of what is free now."""
     free = available_memory()
@@ -149,12 +170,26 @@ def thread_count() -> int:
     return available - 1 if available >= SPARE_CORE_FROM else available
 
 
+def limit_malloc_arenas() -> None:
+    """Keep glibc's allocator from giving every thread an arena of its own.
+
+    Each arena holds on to the memory freed in it, and a pool of 30 threads that build
+    and drop 100 MB buffers kept 1.5 GiB resident that nothing used; two arenas gave the
+    same output and speed with a peak of 6.9 instead of 8.4 GiB [V-EXEC C102]. Other
+    platforms and C libraries have no such setting and need none.
+    """
+    if sys.platform.startswith("linux"):
+        with contextlib.suppress(OSError, AttributeError):
+            _ = ctypes.CDLL(None).mallopt(M_ARENA_MAX, MALLOC_ARENAS)
+
+
 def configure() -> int:
     """Size the native thread pool to ``thread_count()``; returns the size in force.
 
     Only the first call before a kernel has run can resize the pool, so a process that
     already ran one keeps its pool. The pool size never changes a result.
     """
+    limit_malloc_arenas()
     return _native.configure_threads(thread_count())
 
 
