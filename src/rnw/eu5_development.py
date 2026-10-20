@@ -4,7 +4,8 @@ EU5 sums the rules of ``14_development.txt`` per location at the 1337 start. The
 Americas get their civilisation level from region, province and location entries
 [V-LOCAL C73]. The generated world keeps the rules and replaces those positional inputs
 by values from its own society model: a term that follows complexity, harbour values on
-the vanilla distribution, and market villages in the most complex state capitals.
+the vanilla distribution, and market villages in the most complex state capitals that
+are neither cities nor towns (EU5 refuses the building there [V-GAME 1.4.2, C95]).
 The term is calibrated per settlement class (cities, towns, other state land) against the
 estimated vanilla development of that class. All arithmetic is integer.
 """
@@ -249,9 +250,11 @@ def calibrate(  # noqa: PLR0913 - the calibration reads five vanilla inputs.
         raise DevelopmentError(message)
     ranks, villages = _buildings(buildings_text)
     members, capitals, holders = _countries(countries_text)
-    state_capitals = sorted(c for c in capitals if c in american and c in members)
+    state_capitals = sorted(
+        c for c in capitals if c in american and c in members and ranks.get(c) not in {CITY, TOWN}
+    )
     if not state_capitals:
-        message = "No vanilla American state capitals"
+        message = "No vanilla American state capitals without a city or town rank"
         raise DevelopmentError(message)
     with_village = sum(1 for c in state_capitals if c in villages)
     share = (PERMILLE * with_village + len(state_capitals) // 2) // len(state_capitals)
@@ -535,7 +538,11 @@ def build_development(
         for key, site, level in zip(keys, sites, levels, strict=True)
         if (term := society_term(level, calibration.society_max, fulls[site.kind])) >= 1
     }
-    states = [(c.tag, c.capital) for c in natives.countries if c.kind == "state"]
+    states = [
+        (c.tag, c.capital)
+        for c in natives.countries
+        if c.kind == "state" and c.capital not in natives.ranks
+    ]
     villages = market_villages(
         states, natives.complexity, natives.population, calibration.village_permille
     )

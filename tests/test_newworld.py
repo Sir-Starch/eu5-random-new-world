@@ -19,7 +19,9 @@ from rnw.newworld import (
     derive_world,
     generate_new_world,
     open_sea,
+    seal_pockets,
     stray_strait,
+    unported_cells,
     wobble_borders,
 )
 from rnw.settings import NewWorldSettings
@@ -143,3 +145,26 @@ def test_a_vanishing_cell_does_not_undo_the_wobble() -> None:
     parts = label_components(moved)
     for cell in range(3):
         assert np.unique(parts[moved == cell]).size == 1
+
+
+def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:
+    """Land cells reach a port only through land: walled-in pockets turn into wasteland."""
+    kinds = (
+        CellClass.SEA,
+        CellClass.LAND,  # coastal
+        CellClass.LAND,  # joined to the coast through the previous cell
+        CellClass.WASTELAND,
+        CellClass.LAND,  # behind the wasteland
+        CellClass.LAND,
+        CellClass.LAKE,
+        CellClass.LAND,  # only a lake on its far side
+    )
+    labels = np.arange(len(kinds), dtype=np.int32).reshape(1, -1)
+    world = derive_world(labels, kinds, np.zeros((1, len(kinds)), dtype=np.int32))
+    assert unported_cells(world) == [4, 5, 7]
+    sealed = seal_pockets(world)
+    assert sealed.classes[4:6] == (CellClass.WASTELAND, CellClass.WASTELAND)
+    assert sealed.classes[7] is CellClass.WASTELAND
+    assert sealed.classes[1:3] == (CellClass.LAND, CellClass.LAND)
+    assert unported_cells(sealed) == []
+    assert seal_pockets(sealed) is sealed

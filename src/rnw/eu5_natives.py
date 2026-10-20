@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -58,6 +58,7 @@ TEMPLATE_DIR: Final[str] = "game/main_menu/setup/templates"
 GOVERNMENT_FIELDS: Final[tuple[str, ...]] = ("type", "heir_selection")
 COUNTRY_DIR: Final[str] = "game/in_game/setup/countries"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
+NAMED_COLORS: Final[str] = "game/main_menu/common/named_colors/02_map.txt"
 COUNTRY_NAMES: Final[str] = "game/main_menu/localization/english/country_names_l_english.yml"
 LOCATION_NAMES: Final[str] = "game/main_menu/localization/english/location_names"
 CULTURE_DIR: Final[str] = "game/in_game/common/cultures"
@@ -131,11 +132,28 @@ ADVANCED_PERMILLE: Final[int] = 700
 OVERLORD_PERMILLE: Final[int] = 50
 MAX_VASSALS: Final[int] = 3
 VASSAL_SHARE: Final[int] = 3
+COLOR_CHANNELS: Final[int] = 3
+# EU5 logs every enabled culture and religion without a pop in the setup [V-GAME 1.4.2,
+# C95], and vanilla has none. Each one the zones did not take gets a small pop of its own
+# in the zone whose homeland fits it best.
+DIASPORA_MILLI: Final[int] = 50
+# EU5 offers `vassal` only when the overlord's country rank level is at least the
+# subject's, and logged nine vassals of default-rank templates as invalid at the start
+# [V-GAME 1.4.2, C95]. Every pair therefore sets both ranks, in a combination vanilla
+# uses (7 times).
+LORD_RANK: Final[str] = "rank_duchy"
+VASSAL_RANK: Final[str] = "rank_county"
 NO_COAST: Final[str] = "_no_coast"
 TAG_WORD: Final[re.Pattern[str]] = re.compile(r"(?<![A-Za-z0-9_])([A-Z]{3})(?![A-Za-z0-9_])")
 OPERATORS: Final[frozenset[str]] = frozenset({"AND", "NOT", "NOR", "ALL", "ANY", "YES"})
 LETTERS: Final[str] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 COLOR_TRIES: Final[int] = 6
+COLOR_DEFINITION: Final[re.Pattern[str]] = re.compile(
+    r"^\s*([A-Za-z0-9_]+)\s*=\s*(rgb|hsv360|hsv)\s*\{([^{}]*)\}", re.MULTILINE
+)
+COUNTRY_COLOR: Final[re.Pattern[str]] = re.compile(
+    r"^\s*color\s*=\s*(?:(rgb|hsv360|hsv)\s*\{([^{}]*)\}|([A-Za-z0-9_]+))", re.MULTILINE
+)
 
 
 class NativesError(ValueError):
@@ -180,6 +198,7 @@ class VanillaNatives:
     languages: dict[str, tuple[str, str]] = field(default_factory=dict)
     reserved_names: frozenset[str] = frozenset()
     governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    colors: frozenset[tuple[int, int, int]] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -198,6 +217,7 @@ class Country:
     color: tuple[int, int, int]
     color2: tuple[int, int, int]
     government: tuple[tuple[str, str], ...] = ()
+    rank: str = ""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -523,7 +543,50 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         languages=_languages(game_dir, set(cultures)),
         reserved_names=frozenset(name_key(name) for name in place_names.values()),
         governments=template_governments(template_texts, setup_text),
+        colors=vanilla_colors(game_dir),
     )
+
+
+def _rgb(kind: str, body: str) -> tuple[int, int, int] | None:
+    """8-bit RGB of an ``rgb``, ``hsv360`` or ``hsv`` colour body, None if malformed."""
+    try:
+        values = [float(word) for word in body.split()]
+    except ValueError:
+        return None
+    if len(values) != COLOR_CHANNELS:
+        return None
+    if kind == "rgb":
+        return (int(values[0]), int(values[1]), int(values[2]))
+    if kind == "hsv360":
+        return hsv_rgb(int(values[0]) % 360, round(values[1] * 10), round(values[2] * 10))
+    return hsv_rgb(
+        int(values[0] * 360) % 360, round(values[1] * PERMILLE), round(values[2] * PERMILLE)
+    )
+
+
+def vanilla_colors(game_dir: Path) -> frozenset[tuple[int, int, int]]:
+    """Map colours of every vanilla country definition, named ones resolved.
+
+    EU5 logs two countries with the same colour [V-GAME 1.4.2, C95], so generated colours
+    avoid these. HSV colours are converted with this module's rounding, which can differ
+    from the engine's by one unit; a clash is logged only for an exact match.
+    """
+    named: dict[str, tuple[int, int, int]] = {}
+    for match in COLOR_DEFINITION.finditer(_text(game_dir, NAMED_COLORS)):
+        color = _rgb(match.group(2), match.group(3))
+        if color is not None:
+            named[match.group(1)] = color
+    colors: set[tuple[int, int, int]] = set()
+    for path in sorted((game_dir / COUNTRY_DIR).glob("*.txt")):
+        for match in COUNTRY_COLOR.finditer(path.read_text(encoding="utf-8-sig")):
+            color = (
+                _rgb(match.group(1), match.group(2))
+                if match.group(1)
+                else named.get(match.group(3))
+            )
+            if color is not None:
+                colors.add(color)
+    return frozenset(colors)
 
 
 def _main_culture(rows: list[tuple[str, int, str, str]]) -> str:
@@ -791,27 +854,34 @@ def hsv_rgb(hue: int, saturation: int, value: int) -> tuple[int, int, int]:
     )
 
 
-def _colors(
-    neighbours: list[set[int]], seed: int
+def map_colors(
+    neighbours: list[set[int]], seed: int, taken: frozenset[tuple[int, int, int]]
 ) -> list[tuple[tuple[int, int, int], tuple[int, int, int]]]:
-    """Map colours that differ from already coloured neighbours, plus a second colour."""
+    """Map colours that differ from coloured neighbours and are unused, plus a second colour."""
     rng = SplitMix64(derive_seed(seed, "natives", "colors"))
+    used = set(taken)
     out: list[tuple[tuple[int, int, int], tuple[int, int, int]]] = []
+
+    def draw() -> tuple[int, int, int]:
+        return hsv_rgb(rng.below(360), 350 + rng.below(450), 400 + rng.below(450))
+
     for number, near in enumerate(neighbours):
-        options = [
-            hsv_rgb(rng.below(360), 350 + rng.below(450), 400 + rng.below(450))
-            for _ in range(COLOR_TRIES)
-        ]
-        taken = [out[other][0] for other in near if other < number]
+        options = [draw() for _ in range(COLOR_TRIES)]
+        nearby = [out[other][0] for other in near if other < number]
 
-        def spread(color: tuple[int, int, int], taken: list[tuple[int, int, int]] = taken) -> int:
-            if not taken:
+        def spread(color: tuple[int, int, int], nearby: list[tuple[int, int, int]] = nearby) -> int:
+            if not nearby:
                 return 0
-            return min(sum(abs(a - b) for a, b in zip(color, t, strict=True)) for t in taken)
+            return min(sum(abs(a - b) for a, b in zip(color, t, strict=True)) for t in nearby)
 
-        best = max(range(COLOR_TRIES), key=lambda i: (spread(options[i]), -i))
+        ranked = sorted(range(COLOR_TRIES), key=lambda i: (-spread(options[i]), i))
+        free = [options[i] for i in ranked if options[i] not in used]
+        chosen = free[0] if free else draw()
+        while chosen in used:
+            chosen = draw()
+        used.add(chosen)
         second = hsv_rgb(rng.below(360), 300 + rng.below(500), 300 + rng.below(600))
-        out.append((options[best], second))
+        out.append((chosen, second))
     return out
 
 
@@ -859,6 +929,59 @@ def _identities(
         preferred=[by_religion.get(name, []) for name in zone_religion],
     )
     return religions, cultures, state
+
+
+def diaspora(  # noqa: PLR0913 - a diaspora needs the zones, identities and vanilla tables.
+    societies: Societies,
+    keys: list[str],
+    *,
+    zones: list[tuple[tuple[int, ...], int]],
+    state: NDArray[np.bool_],
+    religions: list[str],
+    cultures: list[str],
+    vanilla: VanillaNatives,
+    seed: int,
+) -> dict[str, list[str]]:
+    """Small pops of the vanilla cultures and religions no zone took, by best homeland fit."""
+    inhabited = np.flatnonzero(societies.population > 0).tolist()
+    by_zone: dict[int, list[int]] = {}
+    for node in inhabited:
+        by_zone.setdefault(int(societies.culture[node]), []).append(node)
+    if not by_zone:
+        return {}
+    zone_ids = np.array(sorted(by_zone), dtype=np.int64)
+    vectors = np.array([zones[int(zone)][0] for zone in zone_ids], dtype=np.int64)
+    used_cultures = {cultures[int(societies.culture[node])] for node in inhabited}
+    used_religions = {religions[int(societies.religion[node])] for node in inhabited}
+
+    def place(name: str, homeland_vector: tuple[int, ...]) -> tuple[int, int]:
+        """(node, culture zone) best fitting ``homeland_vector``; ties by noise and key."""
+        stream = derive_seed(seed, "natives", "diaspora", name)
+        noise = hash_grid(stream, zone_ids, np.zeros(zone_ids.size, dtype=np.int64)) % np.uint64(
+            MATCH_NOISE
+        )
+        distance = np.abs(vectors - np.array(homeland_vector, dtype=np.int64)).sum(axis=1)
+        zone = int(zone_ids[int(np.argmin(distance + noise.astype(np.int64)))])
+        members = by_zone[zone]
+        return members[SplitMix64(stream).below(len(members))], zone
+
+    pops: dict[str, list[str]] = {}
+
+    def add(node: int, culture: str, religion: str) -> None:
+        kind = "peasants" if state[node] else "tribesmen"
+        size = _size(DIASPORA_MILLI)
+        row = f"\tdefine_pop = {{\ttype = {kind}\tsize = {size}\tculture = {culture}\t"
+        pops.setdefault(keys[node], []).append(row + f"religion = {religion} }}")
+
+    for name in sorted(set(vanilla.cultures) - used_cultures):
+        info = vanilla.cultures[name]
+        node, _ = place(name, info.homeland)
+        add(node, name, info.religion)
+        used_religions.add(info.religion)
+    for name in sorted(set(vanilla.religions) - used_religions):
+        node, _ = place(name, vanilla.religions[name][0])
+        add(node, cultures[int(societies.culture[node])], name)
+    return pops
 
 
 def _pop_lines(
@@ -988,7 +1111,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
 ) -> list[Country]:
     keys = [plan.cells[cell].key for cell in cells.cells]
     tags = new_tags(len(societies.polities), vanilla.reserved_tags, seed, loc_keys)
-    colors = _colors(neighbours, seed)
+    colors = map_colors(neighbours, seed, vanilla.colors)
     religion_areas: dict[int, set[str]] = {}
     for node, zone in enumerate(societies.religion.tolist()):
         known = religion_areas.setdefault(zone, set())
@@ -1107,10 +1230,22 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         loc_keys=loc_keys,
     )
     ranks = _rank_setups(societies, keys, cultures, vanilla)
-    vassals = tuple(
-        (countries[lord].tag, countries[vassal].tag)
-        for lord, vassal in _vassals(societies, religions, _neighbours(societies, graph.edges))
-    )
+    pairs = _vassals(societies, religions, _neighbours(societies, graph.edges))
+    ranked = {vassal: VASSAL_RANK for _, vassal in pairs} | {lord: LORD_RANK for lord, _ in pairs}
+    countries = [replace(country, rank=ranked.get(i, "")) for i, country in enumerate(countries)]
+    vassals = tuple((countries[lord].tag, countries[vassal].tag) for lord, vassal in pairs)
+    pops = _pop_lines(societies, keys, religions, cultures)
+    for where, rows in diaspora(
+        societies,
+        keys,
+        zones=_zone_homelands(societies.culture, cells, societies, state),
+        state=state,
+        religions=religions,
+        cultures=cultures,
+        vanilla=vanilla,
+        seed=seed,
+    ).items():
+        pops.setdefault(where, []).extend(rows)
     holy = _place_holy_sites(vanilla, religions, societies, keys)
     stats: dict[str, object] = {
         "land_locations": len(keys),
@@ -1133,7 +1268,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         "vassals": len(vassals),
     }
     return NativeWorld(
-        pops=_pop_lines(societies, keys, religions, cultures),
+        pops=pops,
         countries=tuple(countries),
         ranks=ranks,
         markets=tuple(keys[node] for node in societies.markets),
@@ -1186,6 +1321,8 @@ def country_records(countries: tuple[Country, ...]) -> str:
             lines.append(_locations_block(country.members, "\t\t"))
             lines.append("\t\t}\n")
         lines.append(f'\t\tinclude = "{country.include}"\n')
+        if country.rank:
+            lines.append(f"\t\tcountry_rank = {country.rank}\n")
         lines.append("\t\tdiscovered_areas = {\n")
         lines.append(_locations_block(country.areas, "\t\t"))
         lines.append("\t\t}\n")

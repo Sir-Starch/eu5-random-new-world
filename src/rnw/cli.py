@@ -19,6 +19,8 @@ from rnw.eu5_canvas import CanvasError
 from rnw.eu5_export import ExportError, export_candidate
 from rnw.eu5_map import Eu5ContractError
 from rnw.eu5_nw_export import NewWorldExportError, export_new_world
+from rnw.eu5_objects import ObjectBudgetError
+from rnw.eu5_remap import RemapError
 from rnw.geography import GeographyError, color_summary, read_locations, summary
 from rnw.png import PngFormatError
 from rnw.settings import SettingsError, load_settings, run_spec
@@ -38,8 +40,10 @@ FAILURES: Final[tuple[type[Exception], ...]] = (
     NewWorldExportError,
     GeographyError,
     MissingContractFileError,
+    ObjectBudgetError,
     OutputPathError,
     PngFormatError,
+    RemapError,
     SettingsError,
     ValidationError,
 )

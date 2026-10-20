@@ -21,7 +21,7 @@ from rnw.eu5_biomes import (
     smooth_scores,
     template_attributes,
 )
-from rnw.eu5_objects import rewrite_inline, sample_instances
+from rnw.eu5_objects import budget_scale, rewrite_inline, sample_instances
 from rnw.eu5_slots import (
     COAST_TRANSITION,
     NO_MATERIAL,
@@ -271,3 +271,18 @@ def test_inline_instances_are_rewritten_in_place(tmp_path: Path) -> None:
     assert "count=2" in text
     assert "5.000000 0.000000 6.000000" in text
     assert 'transform="3 0 4 0 0 0 1 1 1 1\n"}' in text
+
+
+def test_density_scale_keeps_new_instances_within_the_budget() -> None:
+    """Expected instances are the pixel counts times the key densities; the scale is at most 1."""
+    one = 1 << 24
+    fine = np.array([2 * one, 0], dtype=np.int64)  # two instances per pixel
+    coarse = np.array([0, one], dtype=np.int64)  # one instance per pixel
+    tables = [(fine, coarse)]
+    fine_pixels = np.array([100, 0], dtype=np.int64)
+    coarse_pixels = np.array([0, 50], dtype=np.int64)  # 100 * 2 + 50 * 1 = 250 expected
+    assert budget_scale(tables, fine_pixels, coarse_pixels, 500) == one
+    assert budget_scale(tables, fine_pixels, coarse_pixels, 250) == one
+    assert budget_scale(tables, fine_pixels, coarse_pixels, 125) == one // 2
+    assert budget_scale(tables, fine_pixels, coarse_pixels, 0) == 0
+    assert budget_scale([], fine_pixels, coarse_pixels, 10) == one

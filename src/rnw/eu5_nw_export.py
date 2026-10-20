@@ -120,7 +120,13 @@ from rnw.eu5_water import water_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
-from rnw.newworld import NewWorld, generate_new_world, split_at_column
+from rnw.newworld import (
+    NewWorld,
+    generate_new_world,
+    seal_pockets,
+    split_at_column,
+    unported_cells,
+)
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.relief import COAST_HEIGHT
@@ -223,6 +229,18 @@ UNTESTED: Final[tuple[str, ...]] = (
 DEVELOPMENT_FILE: Final[str] = "14_development.txt"
 BUILDINGS_FILE: Final[str] = "07_cities_and_buildings.txt"
 COUNTRIES_FILE: Final[str] = "10_countries.txt"
+TRIMMED_LOCATORS: Final[tuple[str, ...]] = ("unit_stack", "combat", "vfx")
+LOCATOR_ID: Final[re.Pattern[str]] = re.compile(r"\bid=([A-Za-z0-9_]+)")
+BASE_VALUES: Final[str] = (
+    "game/main_menu/common/static_modifiers/location_historical_base_values.txt"
+)
+TEMPLATE_MODIFIER: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9_])modifier\s*=\s*([A-Za-z0-9_]+)"
+)
+# A donor's historical base value (Potosi's silver, say) belongs to that place alone.
+DONOR_MODIFIER: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9_])modifier\s*=\s*[A-Za-z0-9_]+\s*"
+)
 # Blocks of the 1337 setup files that receive generated records, in the order of
 # their additions in ``_text_outputs``.
 SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
@@ -260,6 +278,20 @@ def _template_bodies(text: str) -> dict[str, str]:
         for entry in root.entries
         if entry.key is not None and isinstance(entry.value, Block)
     }
+
+
+def retired_base_modifiers(bodies: dict[str, str], removed: set[str]) -> set[str]:
+    """Historical base values that only removed locations' templates use.
+
+    The file's values are applied by ``modifier = name`` in location templates alone
+    [V-LOCAL 1.4.2, C95], so a value no kept template names is never used again and the
+    engine would log it as unused.
+    """
+    gone: set[str] = set()
+    kept: set[str] = set()
+    for key, body in bodies.items():
+        (gone if key in removed else kept).update(TEMPLATE_MODIFIER.findall(body))
+    return gone - kept
 
 
 def _donor_map(  # noqa: PLR0913 - donor search needs map, canvas, world and geometry.
@@ -324,7 +356,7 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
     coastal = _coastal(world)
     lines: list[str] = []
     for index, cell in enumerate(plan.cells):
-        body = bodies[donors[index]]
+        body = DONOR_MODIFIER.sub("", bodies[donors[index]])
         if cell.kind in {CellClass.LAND, CellClass.WASTELAND}:
             for name, values in (
                 ("topography", biomes.topography),
@@ -529,6 +561,10 @@ def _final_labels(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[
 def _check_world(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> dict[str, int]:
     """Connectivity, sea reachability and Old World contact preservation."""
     count = len(world.classes)
+    unported = unported_cells(world)
+    if unported:
+        message = f"{len(unported)} land cells reach no port, e.g. cell {unported[0]}"
+        raise NewWorldExportError(message)
     parts = label_components(world.labels)
     owner = np.full(int(parts.max()) + 1, -1, dtype=np.int64)
     owner[parts.ravel()] = world.labels.ravel()
@@ -587,6 +623,7 @@ def _check_world(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> dict[str,
         "old_world_contacts_lost": 0,
         "generated_cells_split": 0,
         "generated_sea_zones_unreachable": 0,
+        "land_cells_without_port_access": 0,
     }
 
 
@@ -653,9 +690,6 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     port_rows, port_pixels = ports
     instances = _locator_instances(plan, world, canvas, port_pixels)
     trimmed = _trimmed_instances(game_map, canvas)
-    for file_name in ("unit_stack", "combat", "vfx"):
-        target = next(key for key in instances if file_name in key)
-        instances[target].extend(trimmed.values())
     relocated = removed | set(trimmed)
     kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
     removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
@@ -698,16 +732,18 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     )
     for relative in LOCATOR_FILES:
         name = relative.rsplit("/", 1)[1]
+        text = _read(game_dir, relative)
+        fresh = list(instances.get(name, []))
+        if any(kind in name for kind in TRIMMED_LOCATORS):
+            # A trimmed ocean zone moves its locator only where vanilla has one.
+            held = set(LOCATOR_ID.findall(text))
+            fresh += [instance for key, instance in trimmed.items() if key in held]
         outputs[_mod_path(relative)] = _encode(
-            game_dir,
-            relative,
-            rewrite_locators(_read(game_dir, relative), relocated, instances.get(name, [])),
+            game_dir, relative, rewrite_locators(text, relocated, fresh)
         )
-    outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(
-        game_dir,
-        LOCATOR_OVERRIDE,
-        rewrite_override_locators(_read(game_dir, LOCATOR_OVERRIDE), removed),
-    )
+    override = _read(game_dir, LOCATOR_OVERRIDE)
+    if (rewritten := rewrite_override_locators(override, removed)) != override:
+        outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
     setup = prune_setup(
         _setup_texts(game_dir), gone, {c.key: natives.pops.get(c.key, []) for c in plan.cells}
     )
@@ -730,12 +766,18 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         if text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
     outputs.update(country_definition_outputs(game_dir, setup.removed_ids))
+    retired = retired_base_modifiers(bodies, removed)
+    if retired:
+        outputs[_mod_path(BASE_VALUES)] = _encode(
+            game_dir, BASE_VALUES, drop_block_entries(_read(game_dir, BASE_VALUES), (), retired)
+        )
     outputs[DEFINITION_FILE] = country_definitions(natives.countries)
     outputs.update(_localization(plan, country_names(natives.countries), natives.names))
     stats: dict[str, object] = {
         "ports": len(port_rows),
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
         "setup_identifiers_removed": len(setup.removed_ids),
+        "base_modifiers_retired": sorted(retired),
     }
     return outputs, stats
 
@@ -1172,7 +1214,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     world = generate_new_world(
         canvas.mask.copy(), seed=seed, settings=settings.new_world, seam=seam
     )
-    world = split_at_column(world, seam)
+    world = seal_pockets(split_at_column(world, seam))
     total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
     if total > MAX_LOCATIONS:
         message = (
@@ -1260,12 +1302,15 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
         _removed_provinces(hierarchy, removed),
     )
-    scripts, remapped = remap_scripts(game_dir, remap)
+    removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
+    rewrite = remap_scripts(game_dir, remap, removed_tags)
+    scripts = rewrite.outputs
     scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
     texts.update(scripts)
     text_checks.update(verify_country_tags(game_dir, texts))
     text_checks.update(verify_localization(texts, vanilla_hashes))
-    text_stats["scripts_remapped"] = remapped
+    text_stats["scripts_remapped"] = rewrite.remapped
+    text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
     rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
     codes = _codes(game_map, canvas, world)
     canvas_world = codes != OUTSIDE

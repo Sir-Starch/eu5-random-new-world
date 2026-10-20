@@ -163,3 +163,11 @@
 - [V-EXEC] Profile (C92): of about 11 minutes, terrain decals take a third (material slot noise most), the generated geometry a sixth, and decoding the same vanilla decals with a pure-Python LZAV decoder a fifth; everything runs on one core. R10 now orders the work: per-build cache of vanilla inputs, parallel decals, then a native core for noise, distances and LZAV where they still dominate.
 - [V-GAME owner] Rewriting the mod while RNW is active and applying the same playset once loads the new world without a restart (C93); ADR 0004 simplifies the reload flow to that.
 - [V-LOCAL] The session's error log against the vanilla baseline (C94) lists further generator defects. 0.9.9 fixes the largest one: generated countries now write the government fields their template's vanilla users write (66 monarchies had a tribal heir selection). The rest are queued.
+
+## 2026-10-20 — The defect batch of C95 (product version 0.9.10)
+
+- [V-GAME owner] The vanilla 1.4.2 baseline log now exists (Default playset, a new 1337 game): 736 normalised categories. Against it, the 0.9.8 world's log has 746 lines of its own (C95).
+- [V-EXEC] Causes: the engine cap of 2^24 map objects (the world held 19.5 million instances, vanilla 15.9 million; the incomplete locators are its consequence), 53 dynamic historical events of removed tags, vassal pairs without ranks, DLC city graphics and list keys the remap did not read, a volcano object naming a removed location, 3 unported land cells, a colour clash with a vanilla country, base values only removed locations used, cultures and religions without pops and villages in city or town capitals.
+- [V-EXEC] 0.9.10 fixes all of them in the generator (C96): an instance budget, event retirement, ranks, a DLC-aware remap, `seal_pockets`, unique colours, a diaspora of small pops, village rules and base value cleanup. Two more defects found on the way: generated templates copied a donor's base value (Potosi's silver) and trimmed ocean zones got locators vanilla does not have. Seed 319218363 rebuilt (12 minutes) and verified offline.
+- [UNKNOWN] `Locator transform overrides modified` for `city` and `vfx` is not explained; the override file is no longer shipped when unchanged. Experiment 015 checks the log in game.
+

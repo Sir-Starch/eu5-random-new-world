@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -16,12 +17,15 @@ from rnw.eu5_natives import (
     country_definitions,
     country_names,
     country_records,
+    diaspora,
     homeland,
     hsv_rgb,
     land_graph,
+    map_colors,
     match_homelands,
     new_tags,
     template_governments,
+    vanilla_colors,
     vassal_lines,
 )
 from rnw.eu5_nw_export import referenced_words
@@ -31,6 +35,10 @@ from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
 from rnw.newworld import NewWorld
 from rnw.pdx import parse
+from rnw.societies import Societies
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _country(tag: str, kind: str) -> Country:
@@ -318,3 +326,100 @@ def test_vassal_lines_parse_as_dependencies() -> None:
     fields = {entry.key: entry.value for entry in record.entries}
     assert fields == {"first": "QQA", "second": "QQB", "subject_type": "vassal"}
     assert vassal_lines(()) == ""
+
+
+def test_vassal_pairs_write_their_country_ranks() -> None:
+    """A country with a rank writes it; the others leave the rank to the engine."""
+    lord = replace(_country("QQA", "state"), rank="rank_duchy")
+    text = "countries = {\n\tcountries = {\n" + country_records((lord, _country("QQB", "state")))
+    text += "\t}\n}\n"
+    holder = parse(text).block("countries", "countries")
+    assert holder is not None
+    first, second = holder.block("QQA"), holder.block("QQB")
+    assert first is not None
+    assert second is not None
+    assert [entry.value for entry in first.find("country_rank")] == ["rank_duchy"]
+    assert list(second.find("country_rank")) == []
+
+
+def test_map_colours_avoid_vanilla_colours_and_each_other() -> None:
+    """No generated colour repeats a taken one, even when its best draw would."""
+    plain = map_colors([set(), {0}, {0, 1}], 7, frozenset())
+    first = {color for color, _ in plain}
+    assert len(first) == 3
+    taken = frozenset({plain[0][0], plain[2][0]})
+    moved = map_colors([set(), {0}, {0, 1}], 7, taken)
+    chosen = [color for color, _ in moved]
+    assert not set(chosen) & taken
+    assert len(set(chosen)) == 3
+    assert map_colors([set(), {0}, {0, 1}], 7, taken) == moved
+
+
+def test_vanilla_colours_resolve_named_and_inline_definitions(tmp_path: Path) -> None:
+    """Every country's colour counts, whether it names a map colour or spells one."""
+    named = tmp_path / "game/main_menu/common/named_colors/02_map.txt"
+    named.parent.mkdir(parents=True)
+    colors = "colors = {\n\tmap_a = rgb { 10 20 30 }\n\tmap_b = hsv360 { 0 100 100 }\n"
+    _ = named.write_text(colors + "\tmap_c = rgb { 1 2 }\n}\n", encoding="utf-8")
+    countries = tmp_path / "game/in_game/setup/countries"
+    countries.mkdir(parents=True)
+    definitions = [
+        "AAA = {\n\tcolor = map_a\n\tcolor2 = rgb { 9 9 9 }\n}\n",
+        "BBB = {\n\tcolor = rgb { 40 50 60 }\n}\n",
+        "CCC = {\n\tcolor = map_b\n}\nDDD = {\n\tcolor = map_c\n}\n",
+    ]
+    _ = (countries / "x.txt").write_text("".join(definitions), encoding="utf-8")
+    assert vanilla_colors(tmp_path) == {(10, 20, 30), (40, 50, 60), (255, 0, 0)}
+
+
+def test_diaspora_gives_every_unused_culture_and_religion_a_small_pop() -> None:
+    """Unused cultures and religions get one small pop in the zone that fits them best."""
+
+    def culture(religion: str, vector: tuple[int, ...]) -> Culture:
+        return Culture(religion, vector, 1, "", "", "", "")
+
+    zero = np.zeros(3, dtype=np.int64)
+    societies = Societies(
+        complexity=zero,
+        population=np.array([1000, 2000, 0], dtype=np.int64),
+        peasants=zero,
+        religion=np.array([0, 1, 1], dtype=np.int64),
+        culture=np.array([0, 1, 1], dtype=np.int64),
+        hearths=(),
+        polities=(),
+        ranks={},
+        markets=(),
+    )
+    west, east = (1000, 0, 0), (0, 1000, 0)
+    vanilla = VanillaNatives(
+        density={},
+        population_per_location=0,
+        cultures={
+            "c0": culture("r0", west),
+            "c1": culture("r1", east),
+            "cx": culture("rx", east),
+            "cy": culture("r0", west),
+        },
+        religions={"r0": (west, 1), "r1": (east, 1), "rx": (east, 1), "rz": (west, 1)},
+        templates=frozenset(),
+        reserved_tags=frozenset(),
+        holy_sites=(),
+    )
+    rows = diaspora(
+        societies,
+        ["k0", "k1", "k2"],
+        zones=[(west, 1000), (east, 2000)],
+        state=np.array([False, True, False]),
+        religions=["r0", "r1"],
+        cultures=["c0", "c1"],
+        vanilla=vanilla,
+        seed=1,
+    )
+    assert sorted(rows) == ["k0", "k1"]
+    assert rows["k0"] == [
+        "\tdefine_pop = {\ttype = tribesmen\tsize = 0.050\tculture = cy\treligion = r0 }",
+        "\tdefine_pop = {\ttype = tribesmen\tsize = 0.050\tculture = c0\treligion = rz }",
+    ]
+    assert rows["k1"] == [
+        "\tdefine_pop = {\ttype = peasants\tsize = 0.050\tculture = cx\treligion = rx }"
+    ]

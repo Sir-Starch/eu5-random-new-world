@@ -149,6 +149,6 @@ def test_local_development_calibration_reads_the_vanilla_americas() -> None:
     assert len(calibration.harbours) == 1092
     assert calibration.harbours.count(0) == 828
     assert calibration.harbours[0] == -10
-    assert calibration.village_permille == 354
+    assert calibration.village_permille == 393  # 79 of the 201 capitals that are no city or town
     assert calibration.vanilla_means["city"][0] == 9
     assert calibration.vanilla_means["unorganised"][0] == 2088

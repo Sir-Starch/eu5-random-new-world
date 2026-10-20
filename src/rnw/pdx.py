@@ -135,6 +135,18 @@ def _block(tokens: list[tuple[str, str, int, int]], index: int, *, root: bool) -
     return block, index
 
 
+def line_span(text: str, start: int, end: int) -> tuple[int, int]:
+    """Widen a span to its whole line(s) when nothing else but a comment shares them."""
+    line_start = text.rfind("\n", 0, start) + 1
+    line_end = text.find("\n", end)
+    line_end = len(text) if line_end < 0 else line_end
+    before = text[line_start:start]
+    after = text[end:line_end].split("#", 1)[0]
+    if before.strip() or after.strip():
+        return start, end
+    return line_start, min(len(text), line_end + 1)
+
+
 @dataclass(slots=True)
 class Edits:
     """Non-overlapping deletions and insertions applied to the original text at once."""

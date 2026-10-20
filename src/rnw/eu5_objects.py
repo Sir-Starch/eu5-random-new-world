@@ -9,6 +9,8 @@ pixel's class (vegetation, climate, topography and material slot), so forest tre
 stand on forest variation slots and avoid coasts, rivers and border bands as in vanilla
 [V-EXEC C52]. Each new instance copies rotation and scale from a vanilla record of the
 same file, so no floating-point trigonometry is involved and output is deterministic.
+Densities are scaled down together when the generated land would carry more instances
+than the removed Americas did, because the engine caps the objects of a game (C95).
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -34,6 +36,12 @@ RECORD_FLOATS: Final[int] = 10
 SLOT_CLASSES: Final[int] = 18
 NO_SLOT: Final[int] = 17
 DENSITY_BITS: Final[int] = 24
+# EU5 refuses a game with more than 2**24 mesh map objects and drops the objects loaded
+# last, which left the combat and unit-stack locators incomplete [V-GAME 1.4.2, C95].
+# Vanilla stays below that cap, so the new vegetation may not outnumber the instances
+# of the removed Americas; one percent stays unused.
+BUDGET_PERMILLE: Final[int] = 990
+PERMILLE: Final[int] = 1000
 MIN_PIXELS: Final[int] = 20_000
 CHUNK_ROWS: Final[int] = 1024
 INLINE: Final[re.Pattern[str]] = re.compile(
@@ -43,6 +51,10 @@ BIN_REFERENCE: Final[re.Pattern[str]] = re.compile(
     r'transform_bin_file="gfx/map/map_objects/([^"]+\.bin)"'
 )
 GENERATOR: Final[re.Pattern[str]] = re.compile(r"_generator_|^woods_cherry_")
+
+
+class ObjectBudgetError(ValueError):
+    """New instances that outnumber the instances they replace."""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -159,6 +171,22 @@ def _densities(
     return out[0], out[1]
 
 
+def budget_scale(
+    tables: list[tuple[NDArray[np.int64], NDArray[np.int64]]],
+    fine_count: NDArray[np.int64],
+    coarse_count: NDArray[np.int64],
+    budget: int,
+) -> int:
+    """Fixed-point factor (at most one) that keeps the expected new instances in ``budget``.
+
+    ``fine_count`` and ``coarse_count`` count the canvas pixels sampled with each key's
+    density, so the expected instances of a file are ``sum(count * density)``.
+    """
+    wanted = sum(int(fine_count @ fine) + int(coarse_count @ coarse) for fine, coarse in tables)
+    wanted >>= DENSITY_BITS
+    return min(1 << DENSITY_BITS, (budget << DENSITY_BITS) // max(wanted, 1))
+
+
 def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, source records and seed.
     pixel_rows: NDArray[np.int64],
     pixel_columns: NDArray[np.int64],
@@ -189,6 +217,33 @@ def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, sourc
     return out
 
 
+def _canvas_pixels(
+    classes: PixelClasses, canvas: NDArray[np.bool_]
+) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
+    """Row, column, fine key and coarse key of every material pixel of the canvas to fill."""
+    rows = classes.labels.shape[0]
+    canvas_rows: list[NDArray[np.int64]] = []
+    canvas_columns: list[NDArray[np.int64]] = []
+    fine_keys: list[NDArray[np.int64]] = []
+    coarse_keys: list[NDArray[np.int64]] = []
+    for start in range(0, rows * 2, CHUNK_ROWS):
+        stop = min(rows * 2, start + CHUNK_ROWS)
+        labels = np.repeat(np.repeat(classes.labels[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
+        inside = np.repeat(np.repeat(canvas[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
+        inside &= classes.label_class[labels] >= 0
+        local_rows, local_columns = np.nonzero(inside)
+        canvas_rows.append(local_rows + start)
+        canvas_columns.append(local_columns)
+        fine_keys.append(_pixel_keys(classes, classes.label_class, start, stop)[inside])
+        coarse_keys.append(_pixel_keys(classes, classes.label_coarse, start, stop)[inside])
+    return (
+        np.concatenate(canvas_rows),
+        np.concatenate(canvas_columns),
+        np.concatenate(fine_keys),
+        np.concatenate(coarse_keys),
+    )
+
+
 def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     game_dir: Path,
     *,
@@ -215,46 +270,37 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
         return {}, {"instance_files": 0}
     fine_pixels = _pixel_counts(classes, classes.label_class, class_count, classes.calibrate)
     coarse_pixels = _pixel_counts(classes, classes.label_coarse, coarse_count, classes.calibrate)
-    canvas_rows: list[NDArray[np.int64]] = []
-    canvas_columns: list[NDArray[np.int64]] = []
-    fine_keys: list[NDArray[np.int64]] = []
-    coarse_keys: list[NDArray[np.int64]] = []
-    for start in range(0, rows * 2, CHUNK_ROWS):
-        stop = min(rows * 2, start + CHUNK_ROWS)
-        labels = np.repeat(np.repeat(classes.labels[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
-        inside = np.repeat(np.repeat(canvas[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
-        inside &= classes.label_class[labels] >= 0
-        local_rows, local_columns = np.nonzero(inside)
-        canvas_rows.append(local_rows + start)
-        canvas_columns.append(local_columns)
-        fine_keys.append(_pixel_keys(classes, classes.label_class, start, stop)[inside])
-        coarse_keys.append(_pixel_keys(classes, classes.label_coarse, start, stop)[inside])
-    pixel_rows = np.concatenate(canvas_rows)
-    pixel_columns = np.concatenate(canvas_columns)
-    fine_key = np.concatenate(fine_keys)
-    coarse_key = np.concatenate(coarse_keys)
+    pixel_rows, pixel_columns, fine_key, coarse_key = _canvas_pixels(classes, canvas)
     use_fine = fine_pixels[fine_key] >= MIN_PIXELS
+    tables = [_densities(instance, classes, fine_pixels, coarse_pixels) for instance, _ in affected]
+    removed = sum(int(np.count_nonzero(inside)) for _, inside in affected)
+    scale = budget_scale(
+        tables,
+        np.bincount(fine_key[use_fine], minlength=fine_pixels.size),
+        np.bincount(coarse_key[~use_fine], minlength=coarse_pixels.size),
+        removed * BUDGET_PERMILLE // PERMILLE,
+    )
     records: dict[str, list[tuple[InstanceSet, NDArray[np.float32]]]] = {}
-    removed = 0
     added = 0
-    for instance, inside in affected:
-        fine, coarse = _densities(instance, classes, fine_pixels, coarse_pixels)
+    for (instance, inside), (fine_table, coarse_table) in zip(affected, tables, strict=True):
+        fine = (fine_table * scale) >> DENSITY_BITS
+        coarse = (coarse_table * scale) >> DENSITY_BITS
         density = np.where(use_fine, fine[fine_key], coarse[coarse_key])
         wanted = density > 0
-        donors = instance.records[~inside]
-        stream = derive_seed(seed, "objects", instance.name)
+        kept = instance.records[~inside]
         fresh = sample_instances(
             pixel_rows[wanted],
             pixel_columns[wanted],
             density=density[wanted],
-            source=donors,
+            source=kept,
             rows=rows,
-            key=stream,
+            key=derive_seed(seed, "objects", instance.name),
         )
-        kept = instance.records[~inside]
-        removed += int(np.count_nonzero(inside))
         added += int(fresh.shape[0])
         records.setdefault(instance.path, []).append((instance, np.concatenate([kept, fresh])))
+    if added > removed:
+        message = f"{added} new map object instances outnumber the {removed} they replace"
+        raise ObjectBudgetError(message)
     outputs: dict[str, bytes] = {}
     for path, parts in records.items():
         relative = path.removeprefix("game/")
@@ -267,6 +313,7 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
         "instance_files": len(outputs),
         "instances_removed": removed,
         "instances_added": added,
+        "density_scale_permille": scale * PERMILLE >> DENSITY_BITS,
     }
     return outputs, stats
 

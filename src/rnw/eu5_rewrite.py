@@ -12,7 +12,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
-from rnw.pdx import Block, Edits, Entry, parse
+from rnw.pdx import Block, Edits, Entry, line_span, parse
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -28,20 +28,8 @@ CLASS_LIST_NAMES: Final[tuple[str, ...]] = (
 )
 
 
-def _line_span(text: str, start: int, end: int) -> tuple[int, int]:
-    """Widen a span to its whole line(s) when nothing else but a comment shares them."""
-    line_start = text.rfind("\n", 0, start) + 1
-    line_end = text.find("\n", end)
-    line_end = len(text) if line_end < 0 else line_end
-    before = text[line_start:start]
-    after = text[end:line_end].split("#", 1)[0]
-    if before.strip() or after.strip():
-        return start, end
-    return line_start, min(len(text), line_end + 1)
-
-
 def _delete(edits: Edits, text: str, entry: Entry) -> None:
-    edits.deletions.append(_line_span(text, entry.start, entry.end))
+    edits.deletions.append(line_span(text, entry.start, entry.end))
 
 
 def _words(value: str | Block) -> Iterable[str]:
@@ -309,7 +297,7 @@ def prune_setup(  # noqa: C901, PLR0912 - one fixed-point loop over all setup fi
     for name, text in texts.items():
         edits = Edits()
         for start, end in sorted(doomed[name]):
-            edits.deletions.append(_line_span(text, start, end))
+            edits.deletions.append(line_span(text, start, end))
         for start, end in sorted(words[name]):
             edits.deletions.append((start, end))
         if name.startswith("06_") and pops_added:

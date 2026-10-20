@@ -5,8 +5,12 @@ expedition routes and events pointing at nothing; EU5 1.4.1 crashed while settin
 holy site whose location was removed [V-GAME]. Each removed location is mapped to the
 nearest generated cell of the same family, and only syntactic location references are
 rewritten: ``location:KEY`` scopes, ``location``/``connected_location`` values and the
-items of ``location``/``locations``/``waypoints`` lists. Removed provinces map to the
-province of their first location's replacement.
+items of ``location``/``locations``/``waypoints`` and ``province_definition``/
+``provinces`` lists (repeats dropped). Removed provinces map to the province of their
+first location's replacement. A removed location in a ``map_id`` list is dropped, since
+the object it names needs a locator of its own. The files of the base game and of every
+DLC are rewritten alike; a mod file replaces the DLC file at the same path. The same
+pass drops the dynamic historical events of removed country tags (``eu5_events``).
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -15,12 +19,14 @@ province of their first location's replacement.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.eu5_events import names_tag, retire_events
 from rnw.model import CellClass
-from rnw.pdx import Block, Edits, PdxSyntaxError, parse
+from rnw.pdx import Block, Edits, PdxSyntaxError, line_span, parse
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -36,10 +42,16 @@ SCRIPT_ROOTS: Final[tuple[str, ...]] = (
     "game/in_game/gfx/map/canal_gfx",
     "game/in_game/gfx/map/city_data",
 )
+SCRIPT_FILES: Final[tuple[str, ...]] = (
+    "game/in_game/gfx/map/map_objects/dynamic_game_objects.txt",
+)
 VALUE_KEYS: Final[frozenset[str]] = frozenset(
     {"location", "connected_location", "only_in_location"}
 )
-LIST_KEYS: Final[frozenset[str]] = frozenset({"location", "locations", "waypoints"})
+LIST_KEYS: Final[frozenset[str]] = frozenset(
+    {"location", "locations", "waypoints", "province_definition", "provinces", "map_id"}
+)
+DROP_KEYS: Final[frozenset[str]] = frozenset({"map_id"})
 SCOPE: Final[re.Pattern[str]] = re.compile(
     r"(?<![A-Za-z0-9_])(location|province):([A-Za-z_][A-Za-z0-9_]*)"
 )
@@ -85,12 +97,18 @@ def build_remap(
     return remap
 
 
-def _list_edits(block: Block, remap: dict[str, str], edits: Edits) -> int:
+def _list_edits(block: Block, remap: dict[str, str], edits: Edits, text: str, *, drop: bool) -> int:
     count = 0
+    seen = {word.value for word in block.words() if isinstance(word.value, str)} - remap.keys()
     for entry in block.entries:
         if entry.key is None and isinstance(entry.value, str) and entry.value in remap:
-            edits.deletions.append((entry.start, entry.end))
-            edits.insert(entry.start, remap[entry.value])
+            target = remap[entry.value]
+            if drop or target in seen:
+                edits.deletions.append(line_span(text, entry.start, entry.end))
+            else:
+                edits.deletions.append((entry.start, entry.end))
+                edits.insert(entry.start, target)
+                seen.add(target)
             count += 1
     return count
 
@@ -101,7 +119,7 @@ def _walk(block: Block, remap: dict[str, str], edits: Edits, text: str) -> int:
         value = entry.value
         if isinstance(value, Block):
             if entry.key in LIST_KEYS:
-                count += _list_edits(value, remap, edits)
+                count += _list_edits(value, remap, edits, text, drop=entry.key in DROP_KEYS)
             count += _walk(value, remap, edits, text)
         elif entry.key in VALUE_KEYS:
             bare = value.strip('"')
@@ -111,7 +129,6 @@ def _walk(block: Block, remap: dict[str, str], edits: Edits, text: str) -> int:
                 quote = '"' if value.startswith('"') else ""
                 edits.insert(start, f"{quote}{remap[bare]}{quote}")
                 count += 1
-    _ = text
     return count
 
 
@@ -135,21 +152,58 @@ def remap_text(text: str, remap: dict[str, str]) -> tuple[str, int]:
     return (edits.apply(text) if count else text), count
 
 
-def remap_scripts(game_dir: Path, remap: dict[str, str]) -> tuple[dict[str, bytes], dict[str, int]]:
-    """Mod copies of every script file whose location references changed."""
+class RemapError(ValueError):
+    """Script files that cannot be rewritten as one set."""
+
+
+@dataclass(frozen=True, slots=True)
+class ScriptRewrite:
+    """Mod copies of rewritten script files with what changed in each."""
+
+    outputs: dict[str, bytes]
+    remapped: dict[str, int]
+    retired: dict[str, tuple[str, ...]]
+
+
+def _script_files(game_dir: Path) -> dict[str, Path]:
+    """Script files by mod path: the base game's and every DLC's, none twice."""
+    game = game_dir / "game"
+    files: dict[str, Path] = {}
+    for base in (game, *sorted((game / "dlc").glob("*"))):
+        paths = [
+            path
+            for root in SCRIPT_ROOTS
+            if (base / root.removeprefix("game/")).is_dir()
+            for path in sorted((base / root.removeprefix("game/")).rglob("*.txt"))
+        ]
+        paths += [base / name.removeprefix("game/") for name in SCRIPT_FILES]
+        for path in paths:
+            if not path.is_file():
+                continue
+            relative = path.relative_to(base).as_posix()
+            if relative in files:
+                message = f"{relative} exists in the base game and in {base.name}"
+                raise RemapError(message)
+            files[relative] = path
+    return files
+
+
+def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str]) -> ScriptRewrite:
+    """Mod copies of every script file whose location or tag references changed."""
     outputs: dict[str, bytes] = {}
     counts: dict[str, int] = {}
-    for root in SCRIPT_ROOTS:
-        base = game_dir / root
-        if not base.is_dir():
-            continue
-        for path in sorted(base.rglob("*.txt")):
-            raw = path.read_bytes()
-            bom = raw.startswith(b"\xef\xbb\xbf")
-            text = raw.decode("utf-8-sig", errors="strict")
-            new, count = remap_text(text, remap)
-            if count:
-                relative = path.relative_to(game_dir).as_posix().removeprefix("game/")
-                outputs[relative] = (("﻿" if bom else "") + new).encode("utf-8")
-                counts[relative] = count
-    return outputs, counts
+    retired: dict[str, tuple[str, ...]] = {}
+    for relative, path in _script_files(game_dir).items():
+        raw = path.read_bytes()
+        text = raw.decode("utf-8-sig", errors="strict")
+        if "/events/" in relative and names_tag(text, retired_tags):
+            result = retire_events(text, retired_tags)
+            if result.text != text:
+                text = result.text
+                retired[relative] = result.events
+        new, count = remap_text(text, remap)
+        if count or relative in retired:
+            bom = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
+            outputs[relative] = (bom + new).encode("utf-8")
+            counts[relative] = count
+    return ScriptRewrite(outputs, counts, retired)

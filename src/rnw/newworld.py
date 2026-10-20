@@ -14,7 +14,7 @@ outputs.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
@@ -524,6 +524,49 @@ def derive_world(
         spread=spread,
         edges=edges,
     )
+
+
+def unported_cells(world: NewWorld) -> list[int]:
+    """Land cells that reach no coast without crossing wasteland, lakes or the sea.
+
+    EU5 logs a location as "isolated from all ports by impassable terrain" when walling
+    wasteland leaves it no way to a port [V-GAME 1.4.2, C95]; every coastal land cell has
+    a port, so the cells to find are the land components that touch no sea cell.
+    """
+    parent = list(range(len(world.classes)))
+
+    def find(item: int) -> int:
+        while parent[item] != item:
+            parent[item] = parent[parent[item]]
+            item = parent[item]
+        return item
+
+    coastal: set[int] = set()
+    for first, second in world.edges:
+        kinds = (world.classes[first], world.classes[second])
+        if kinds == (CellClass.LAND, CellClass.LAND):
+            parent[find(first)] = find(second)
+        elif kinds == (CellClass.LAND, CellClass.SEA):
+            coastal.add(find(first))
+        elif kinds == (CellClass.SEA, CellClass.LAND):
+            coastal.add(find(second))
+    reached = {find(item) for item in coastal}
+    return [
+        index
+        for index, kind in enumerate(world.classes)
+        if kind is CellClass.LAND and find(index) not in reached
+    ]
+
+
+def seal_pockets(world: NewWorld) -> NewWorld:
+    """``world`` with its unported land turned into wasteland (mountains no port reaches)."""
+    cells = unported_cells(world)
+    if not cells:
+        return world
+    kinds = list(world.classes)
+    for index in cells:
+        kinds[index] = CellClass.WASTELAND
+    return replace(world, classes=tuple(kinds))
 
 
 def split_at_column(world: NewWorld, column: int) -> NewWorld:

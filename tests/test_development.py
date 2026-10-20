@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import cast
 
 import numpy as np
@@ -168,6 +169,23 @@ def test_calibration_reads_the_vanilla_american_setup() -> None:
     assert means["unorganised"] == (0, 0)
 
 
+def test_calibration_counts_only_capitals_that_can_hold_a_village() -> None:
+    """A state capital that is a city or town cannot have one, so it is not in the share."""
+    buildings = BUILDINGS.replace("a1 = { rank = city", "a2 = { rank = town").replace(
+        "a5 = { rank = town", "a5 = { rank = city"
+    )
+    calibration = calibrate(
+        rules_text=RULES,
+        templates_text=TEMPLATE_TEXT,
+        buildings_text=buildings,
+        countries_text=COUNTRIES,
+        american=AMERICAN,
+        rivers={"a1": 2},
+    )
+    # a2 (a town) is out; a3 alone is eligible and has no village
+    assert calibration.village_permille == 0
+
+
 def test_calibration_fails_without_data() -> None:
     """Missing land or a missing settlement class stops the build instead of falling back."""
     with pytest.raises(DevelopmentError):
@@ -324,6 +342,21 @@ def test_shelter_counts_rays_that_meet_land() -> None:
     strip[:, :10] = False
     edge = np.array([[50, 195]], dtype=np.int64)
     assert shelter(strip, edge).tolist() == [23]
+
+
+def test_market_villages_skip_city_and_town_capitals() -> None:
+    """A state whose capital has a city or town rank gets no market village."""
+    natives = replace(_natives(), ranks={"g1": ("city", "x")})
+    cells = [
+        ("g1", "forest", "tropical", "flatland", 1),
+        ("g2", "forest", "tropical", "flatland", 0),
+    ]
+    development = build_development(
+        calibration=_calibration(), natives=natives, cells=cells, scores={}
+    )
+    assert development.villages == ()
+    stats = cast("dict[str, int]", development.stats["market_villages"])
+    assert stats["state_capitals"] == 0
 
 
 def test_market_villages_take_the_most_complex_capitals() -> None:
