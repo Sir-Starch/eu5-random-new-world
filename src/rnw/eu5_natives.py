@@ -351,13 +351,14 @@ def _holy_sites(game_dir: Path) -> tuple[HolySite, ...]:
 def template_governments(
     templates: dict[str, str], setup_text: str
 ) -> dict[str, tuple[tuple[str, str], ...]]:
-    """Government fields a country must add to each usable template.
+    """Government fields a generated country writes with each usable template.
 
-    A template with a government type, its own or from a template it includes, needs none.
-    Some vanilla templates leave the type to the country entry
-    (``amerindian_advanced_republic_not_nahuatl_no_coast``: Tlaxcala adds ``type = republic``),
-    so such a template takes the fields its vanilla users agree on most; a template without
-    a type that no vanilla country completes is left out.
+    A generated country writes what the vanilla countries with the same template write
+    most often. Vanilla templates may set no type (Tlaxcala adds ``type = republic`` to
+    ``amerindian_advanced_republic_not_nahuatl_no_coast``) or a heir selection that every
+    user overrides (``amerindian_advanced_monarchy*`` set ``tribal_oldest_male``; all their
+    users write ``cognatic_primogeniture``). A template is usable only if its fields, the
+    template itself or a template it includes give a government type.
     """
     roots = {name: parse(text) for name, text in templates.items()}
 
@@ -374,28 +375,29 @@ def template_governments(
             if isinstance(include.value, str)
         )
 
-    out: dict[str, tuple[tuple[str, str], ...]] = {
-        name: () for name in roots if typed(name, frozenset())
-    }
     holder = parse(setup_text).block("countries", "countries")
     used: dict[str, Counter[tuple[tuple[str, str], ...]]] = {}
     for entry in holder.entries if holder is not None else []:
-        government = entry.value.block("government") if isinstance(entry.value, Block) else None
-        if government is None or not isinstance(entry.value, Block):
+        if not isinstance(entry.value, Block):
             continue
+        government = entry.value.block("government")
         fields = tuple(
             (key, value.value)
             for key in GOVERNMENT_FIELDS
-            if (value := government.first(key)) is not None and isinstance(value.value, str)
+            if government is not None
+            and (value := government.first(key)) is not None
+            and isinstance(value.value, str)
         )
-        if not fields or fields[0][0] != "type":
-            continue
         for include in entry.value.find("include"):
             name = include.value.strip('"') if isinstance(include.value, str) else ""
-            if name in templates and name not in out:
+            if name in roots:
                 used.setdefault(name, Counter())[fields] += 1
-    for name, counts in used.items():
-        out[name] = min(counts, key=lambda fields: (-counts[fields], fields))
+    out: dict[str, tuple[tuple[str, str], ...]] = {}
+    for name in roots:
+        counts = used.get(name, Counter())
+        fields = min(counts, key=lambda each: (-counts[each], each), default=())
+        if any(key == "type" for key, _ in fields) or typed(name, frozenset()):
+            out[name] = fields
     return out
 
 

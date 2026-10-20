@@ -113,6 +113,7 @@ TEMPLATES = {
     "orphan": "government = {\n}\n",
     "loop_a": 'include = "loop_b"\n',
     "loop_b": 'include = "loop_a"\n',
+    "monarch": "government = {\n\ttype = monarchy\n\their_selection = tribal_oldest_male\n}\n",
 }
 OPEN_USERS = """countries = {
 \tcountries = {
@@ -132,18 +133,26 @@ OPEN_USERS = """countries = {
 \t\t\tinclude = "orphan"
 \t\t\tgovernment = { ruler = random }
 \t\t}
+\t\tEEE = {
+\t\t\tinclude = "monarch"
+\t\t\tgovernment = { type = monarchy heir_selection = cognatic_primogeniture }
+\t\t}
+\t\tFFF = {
+\t\t\tinclude = "nested"
+\t\t}
 \t}
 }
 """
 
 
-def test_template_governments_complete_open_templates_from_their_users() -> None:
-    """Typed templates, also through includes, need nothing; open ones take their users' type."""
+def test_template_governments_follow_their_vanilla_users() -> None:
+    """A template takes what its vanilla users write most; it needs a type from somewhere."""
     governments = template_governments(TEMPLATES, OPEN_USERS)
     assert governments == {
         "typed": (),
         "nested": (),
         "open": (("type", "republic"), ("heir_selection", "oligarchic_elective")),
+        "monarch": (("type", "monarchy"), ("heir_selection", "cognatic_primogeniture")),
     }
 
 
