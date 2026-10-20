@@ -59,6 +59,9 @@ GOVERNMENT_FIELDS: Final[tuple[str, ...]] = ("type", "heir_selection")
 COUNTRY_DIR: Final[str] = "game/in_game/setup/countries"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
 NAMED_COLORS: Final[str] = "game/main_menu/common/named_colors/02_map.txt"
+COUNTRY_NAME: Final[re.Pattern[str]] = re.compile(
+    r'^\s*([A-Za-z0-9_]+):\d*\s+"([^"]*)"', re.MULTILINE
+)
 COUNTRY_NAMES: Final[str] = "game/main_menu/localization/english/country_names_l_english.yml"
 LOCATION_NAMES: Final[str] = "game/main_menu/localization/english/location_names"
 CULTURE_DIR: Final[str] = "game/in_game/common/cultures"
@@ -523,7 +526,11 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         for path in sorted((game_dir / TEMPLATE_DIR).glob("*.txt"))
     }
     templates = frozenset(template_texts)
-    names = set(TAG_WORD.findall(_text(game_dir, COUNTRY_NAMES)))
+    country_text = _text(game_dir, COUNTRY_NAMES)
+    names = set(TAG_WORD.findall(country_text))
+    country_words = {
+        name for key, name in COUNTRY_NAME.findall(country_text) if not key.endswith("_ADJ")
+    }
     reserved = frozenset(words | names | set(countries) | OPERATORS)
     place_names = _location_names(game_dir)
     places = tuple(
@@ -541,7 +548,9 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         holy_sites=_holy_sites(game_dir),
         places=places,
         languages=_languages(game_dir, set(cultures)),
-        reserved_names=frozenset(name_key(name) for name in place_names.values()),
+        reserved_names=frozenset(
+            name_key(name) for name in (*place_names.values(), *country_words)
+        ),
         governments=template_governments(template_texts, setup_text),
         colors=vanilla_colors(game_dir),
     )

@@ -19,12 +19,13 @@ pass drops the dynamic historical events of removed country tags (``eu5_events``
 from __future__ import annotations
 
 import re
+from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.eu5_events import names_tag, retire_events
+from rnw.eu5_events import EVENT_ID, mentions, names_tag, retire_events
 from rnw.model import CellClass
 from rnw.pdx import Block, Edits, PdxSyntaxError, line_span, parse
 
@@ -193,17 +194,29 @@ def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str])
     outputs: dict[str, bytes] = {}
     counts: dict[str, int] = {}
     retired: dict[str, tuple[str, ...]] = {}
-    for relative, path in _script_files(game_dir).items():
-        raw = path.read_bytes()
-        text = raw.decode("utf-8-sig", errors="strict")
-        if "/events/" in relative and names_tag(text, retired_tags):
-            result = retire_events(text, retired_tags)
-            if result.text != text:
-                text = result.text
-                retired[relative] = result.events
+    named: Counter[str] = Counter()
+    pending: dict[str, tuple[bytes, str]] = {}
+
+    def emit(relative: str, raw: bytes, text: str, *, changed: bool) -> None:
         new, count = remap_text(text, remap)
-        if count or relative in retired:
+        if count or changed:
             bom = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
             outputs[relative] = (bom + new).encode("utf-8")
             counts[relative] = count
+
+    for relative, path in _script_files(game_dir).items():
+        raw = path.read_bytes()
+        text = raw.decode("utf-8-sig", errors="strict")
+        named.update(EVENT_ID.findall(text))
+        if "/events/" in relative and names_tag(text, retired_tags):
+            pending[relative] = (raw, text)
+        else:
+            emit(relative, raw, text, changed=False)
+    for relative, (raw, text) in pending.items():
+        elsewhere = named.copy()
+        elsewhere.subtract(mentions(text))
+        result = retire_events(text, retired_tags, elsewhere)
+        if result.text != text:
+            retired[relative] = result.events
+        emit(relative, raw, result.text, changed=relative in retired)
     return ScriptRewrite(outputs, counts, retired)

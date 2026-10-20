@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.eu5_events import names_tag, retire_events
+from rnw.eu5_events import mentions, names_tag, retire_events
 from rnw.eu5_nw_export import DONOR_MODIFIER, retired_base_modifiers
 from rnw.eu5_remap import RemapError, remap_scripts, remap_text
 
@@ -177,3 +178,38 @@ def test_a_donors_base_value_is_not_copied_to_generated_locations() -> None:
     assert DONOR_MODIFIER.sub("", body) == "{ topography = flatland vegetation = forest }"
     plain = "{ topography = flatland movement_assistance = { -90.16 4.98 } }"
     assert DONOR_MODIFIER.sub("", plain) == plain
+
+
+CHAIN = """flavor_ch.1 = {
+\tdynamic_historical_event = { tag = AAA }
+\toption = { trigger_event = { id = flavor_ch.2 } }
+}
+flavor_ch.2 = {
+\toption = { trigger_event = { id = flavor_ch.3 } }
+}
+flavor_ch.3 = {
+\ttitle = flavor_ch.3.title
+}
+flavor_ch.4 = {
+\toption = { trigger_event = { id = flavor_ch.5 } }
+}
+flavor_ch.5 = { }
+"""
+
+
+def test_follow_ups_that_only_dropped_events_fired_go_with_them() -> None:
+    """The chain of a dropped event is dropped; an event another file fires stays."""
+    result = retire_events(CHAIN, {"AAA"}, Counter())
+    assert result.events == ("flavor_ch.1", "flavor_ch.2", "flavor_ch.3")
+    assert result.text.startswith("flavor_ch.4 = {")
+    assert "flavor_ch.5 = { }" in result.text
+    fired = retire_events(CHAIN, {"AAA"}, Counter({"flavor_ch.2": 1}))
+    assert fired.events == ("flavor_ch.1",)
+    assert "flavor_ch.3 = {" in fired.text
+    assert retire_events(CHAIN, {"AAA"}).events == ("flavor_ch.1",)
+
+
+def test_event_mentions_count_ids_not_numbers() -> None:
+    """Ids with a namespace count; localization keys of an event count for the event."""
+    text = "id = a.1 x = 1.5 a.12 = { title = a.1.title }"
+    assert mentions(text) == Counter({"a.1": 2, "a.12": 1})

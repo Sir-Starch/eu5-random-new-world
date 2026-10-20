@@ -9,6 +9,7 @@ import numpy as np
 
 from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_natives import (
+    COUNTRY_NAME,
     OPERATORS,
     Country,
     Culture,
@@ -423,3 +424,9 @@ def test_diaspora_gives_every_unused_culture_and_religion_a_small_pop() -> None:
     assert rows["k1"] == [
         "\tdefine_pop = {\ttype = peasants\tsize = 0.050\tculture = cx\treligion = rx }"
     ]
+
+
+def test_country_name_pattern_reads_names_and_adjectives() -> None:
+    """Vanilla country names, with or without a version number, are told from adjectives."""
+    text = ' WNA: "Wanga"\n WNA_ADJ: "Wangan"\n FOO:0 "Bar"\n'
+    assert COUNTRY_NAME.findall(text) == [("WNA", "Wanga"), ("WNA_ADJ", "Wangan"), ("FOO", "Bar")]
