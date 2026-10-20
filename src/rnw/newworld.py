@@ -107,6 +107,43 @@ def _seam_gap(columns: NDArray[np.int64], seam: int) -> NDArray[np.int64]:
     return np.where(columns >= seam, columns - seam, seam - 1 - columns)
 
 
+def _edge_offset(
+    seed: int,
+    wobble: NDArray[np.int32],
+    *,
+    ramp: int,
+    shift_px: int,
+    shift_period: int,
+) -> NDArray[np.int32]:
+    """Where the coast ramp starts, per pixel: wobble minus the inland shift.
+
+    The shift noise is built in strips of ``STRIP_ROWS`` rows (a multiple of the noise
+    step); the offset is a few ramps wide, so a 32-bit raster holds it.
+    """
+    height, width = (int(size) for size in wobble.shape)
+    key = derive_seed(seed, "new_world_edge_shift")
+    offset = np.empty((height, width), dtype=np.int32)
+    for first in range(0, height, STRIP_ROWS):
+        rows = min(STRIP_ROWS, height - first)
+        shift = warped_noise(
+            key,
+            (rows, width),
+            step=8,
+            period=shift_period,
+            octaves=4,
+            warp_px=shift_period // 4,
+            row0=first,
+        )
+        # Warped noise mostly stays within +-0.4 of NOISE_SCALE; stretch it over the shift.
+        inland = (
+            shift_px * np.clip(NOISE_SCALE // 2 + shift * 5 // 4, 0, NOISE_SCALE) // NOISE_SCALE
+        )
+        offset[first : first + rows] = (
+            wobble[first : first + rows].astype(np.int64) * ramp // (3 * NOISE_SCALE) - inland
+        )
+    return offset
+
+
 def _land(
     domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings, seam: int | None
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
@@ -140,19 +177,11 @@ def _land(
         octaves=3,
         persistence_permille=500,
     )
-    shift = warped_noise(
-        derive_seed(seed, "new_world_edge_shift"),
-        (int(domain.shape[0]), int(domain.shape[1])),
-        step=8,
-        period=shift_period,
-        octaves=4,
-        warp_px=shift_period // 4,
-    )
-    # Warped noise mostly stays within +-0.4 of NOISE_SCALE; stretch it over the shift.
-    inland = shift_px * np.clip(NOISE_SCALE // 2 + shift * 5 // 4, 0, NOISE_SCALE) // NOISE_SCALE
-    offset = wobble.astype(np.int64) * ramp // (3 * NOISE_SCALE) - inland
+    offset = _edge_offset(seed, wobble, ramp=ramp, shift_px=shift_px, shift_period=shift_period)
+    del wobble
     open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
     open_shore |= strait & ~(distance_from(sources, margin, octagonal=True) < margin)
+    del sources
     # A sea cut off from open water (around a protected islet) gets a strait: its shortest
     # path to open water joins the guard and the coasts are drawn again, so the strait has
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
@@ -165,24 +194,37 @@ def _land(
         land, shore, elevation = _coasts(
             domain, guard, relief, offset, ramp=ramp, settings=settings
         )
-    parts = label_components(land.astype(np.int32))
-    land &= np.bincount(parts.ravel())[parts] >= settings.min_island_px
-    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)
+    del relief, offset, guard, strait, open_shore
+    land &= _large_parts(land, settings.min_island_px)
+    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32, copy=False)
     parts = label_components(coded)
+    del coded
     water = domain & ~land
-    ocean_parts = np.unique(parts[water & shore])
-    ocean = water & np.isin(parts, ocean_parts)
+    sizes = np.bincount(parts.ravel())
+    ocean_part = np.zeros(sizes.size, dtype=bool)
+    ocean_part[np.unique(parts[water & shore])] = True
+    ocean = water & ocean_part[parts]
     enclosed = water & ~ocean
-    size = np.bincount(parts.ravel())[parts]
-    small = enclosed & ((size < settings.min_lake_px) | (size > settings.max_lake_px))
+    outside_range = (sizes < settings.min_lake_px) | (sizes > settings.max_lake_px)
+    small = enclosed & outside_range[parts]
     return land | small, ocean, enclosed & ~small, elevation
+
+
+def _large_parts(mask: NDArray[np.bool_], minimum: int) -> NDArray[np.bool_]:
+    """Pixels of ``mask`` that sit in a 4-connected part of the labelling of at least ``minimum``.
+
+    The labelling is of the mask as a 0/1 raster, so the parts are land and water alike;
+    callers intersect the result with the side they mean.
+    """
+    parts = label_components(mask.astype(np.int32))
+    return (np.bincount(parts.ravel()) >= minimum)[parts]
 
 
 def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and the ramp.
     domain: NDArray[np.bool_],
     guard: NDArray[np.bool_],
     relief: NDArray[np.int32],
-    offset: NDArray[np.int64],
+    offset: NDArray[np.int32],
     *,
     ramp: int,
     settings: NewWorldSettings,
@@ -190,21 +232,55 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
     """Lower the relief over a ramp from the guard and keep the land budget.
 
     Returns land, shore (no land within a coast margin of the guard) and the elevation.
+    The per-pixel arithmetic runs in strips; only the two distance fields are whole-raster.
     """
     # The cap must exceed every reach, or the wobble would dent the interior too.
     edge = distance_from(guard, ramp - int(offset.min()) + 2, octagonal=True)
-    reach = edge.astype(np.int64) + offset
-    penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
     # No land in slivers of the domain too thin to hold a full ramp.
     opened = distance_from(edge >= ramp, ramp + 1, octagonal=True) <= ramp
-    penalty = np.where(opened, penalty, 3 * NOISE_SCALE)
     shore = edge < settings.coast_margin_px
-    elevation = (relief - np.maximum(0, penalty)).astype(np.int32)
+    height, width = (int(size) for size in edge.shape)
+    elevation = np.empty((height, width), dtype=np.int32)
+    for first in range(0, height, STRIP_ROWS):
+        rows = slice(first, min(height, first + STRIP_ROWS))
+        reach = edge[rows].astype(np.int64) + offset[rows]
+        penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
+        penalty = np.where(opened[rows], penalty, 3 * NOISE_SCALE)
+        elevation[rows] = (relief[rows] - np.maximum(0, penalty)).astype(np.int32)
+    del edge, opened
     interior = domain & ~shore
-    values = elevation[interior]
-    keep = values.size * settings.land_permille // PERMILLE
-    threshold = np.partition(values, values.size - keep)[values.size - keep]
+    threshold = _threshold(elevation, interior, settings.land_permille)
     return interior & (elevation >= threshold), shore, elevation
+
+
+def _threshold(values: NDArray[np.int32], mask: NDArray[np.bool_], permille: int) -> int:
+    """The value that ``permille`` of the masked values (rounded down) reach or pass.
+
+    Equal to ``np.partition(values[mask], n - keep)[n - keep]`` with ``keep = n * permille
+    // 1000``, found by counting the values instead of copying and partitioning them.
+    """
+    height = int(values.shape[0])
+    lows: list[int] = []
+    highs: list[int] = []
+    for first in range(0, height, STRIP_ROWS):
+        strip = values[first : first + STRIP_ROWS][mask[first : first + STRIP_ROWS]]
+        if strip.size:
+            lows.append(int(strip.min()))
+            highs.append(int(strip.max()))
+    if not lows:
+        message = "no pixel can hold land"
+        raise ValueError(message)
+    low, high = min(lows), max(highs)
+    counts = np.zeros(high - low + 1, dtype=np.int64)
+    for first in range(0, height, STRIP_ROWS):
+        strip = values[first : first + STRIP_ROWS][mask[first : first + STRIP_ROWS]]
+        counts += np.bincount(strip.astype(np.int64) - low, minlength=counts.size)
+    total = int(counts.sum())
+    keep = total * permille // PERMILLE
+    if keep < 1:
+        message = f"a land share of {permille} permille keeps no pixel of {total}"
+        raise ValueError(message)
+    return low + int(np.searchsorted(np.cumsum(counts), total - keep, side="right"))
 
 
 def open_sea(domain: NDArray[np.bool_]) -> NDArray[np.bool_]:
@@ -289,14 +365,6 @@ def stray_strait(
     return path if np.any(path) else None
 
 
-def _weighted(
-    owner: NDArray[np.int32], weights: NDArray[np.int64] | NDArray[np.int32], count: int
-) -> NDArray[np.int64]:
-    """Exact per-cell integer sums (float64 is exact below 2**53)."""
-    sums = cast("NDArray[np.float64]", np.bincount(owner, weights=weights, minlength=count))
-    return sums.astype(np.int64)
-
-
 def _interior_points(
     labels: NDArray[np.int32], count: int, land: NDArray[np.bool_]
 ) -> NDArray[np.int64]:
@@ -306,29 +374,15 @@ def _interior_points(
     cell) hold city models, which are square and can reach past a near shore, so their
     score is ``min(2 * d_border, d_shore)`` in octagonal distance, ties going to the
     larger ``d_border``: the point moves inland until it is twice as far from water as
-    from the cell's other borders.
+    from the cell's other borders. The kernel is Rust (ADR 0005), its NumPy specification
+    is ``tests/reference/points.py``.
     """
-    padded = np.pad(labels, 1, constant_values=-1)
-    center = padded[1:-1, 1:-1]
-    boundary = (
-        (padded[:-2, 1:-1] != center)
-        | (padded[2:, 1:-1] != center)
-        | (padded[1:-1, :-2] != center)
-        | (padded[1:-1, 2:] != center)
-    )
-    del padded, center
-    is_land = np.concatenate([land, [False]])[labels]
-    distance = distance_from(boundary, INTERIOR_LIMIT).astype(np.int64)
-    border = distance_from(boundary, INTERIOR_LIMIT, octagonal=True).astype(np.int64)
-    shore = distance_from(~is_land, SHORE_LIMIT, octagonal=True).astype(np.int64)
-    score = np.where(is_land, np.minimum(2 * border, shore), distance)
-    tie = np.where(is_land, border, 0)
-    del distance, border, shore, boundary, is_land
-    return _native.best_points(
+    del count
+    return _native.interior_points(
         np.ascontiguousarray(labels, dtype=np.int32),
-        np.ascontiguousarray(score, dtype=np.int64),
-        np.ascontiguousarray(tie, dtype=np.int64),
-        count,
+        np.ascontiguousarray(land, dtype=np.bool_),
+        INTERIOR_LIMIT,
+        SHORE_LIMIT,
     )
 
 
@@ -456,27 +510,28 @@ def generate_new_world(
         ),
         settings.min_sea_cell_px,
     )
-    lake_parts = label_components(np.where(lakes, 1, 0).astype(np.int32))
-    lake_cells = np.where(lakes, lake_parts, -1).astype(np.int32)
+    del ocean
+    lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
+    del lakes
     labels = np.full(domain.shape, -1, dtype=np.int32)
     kinds: list[CellClass] = []
     for kind, part in (
         (CellClass.LAND, land_cells),
         (CellClass.SEA, sea_cells),
-        (CellClass.LAKE, lake_cells),
+        (CellClass.LAKE, lake_cells.astype(np.int32)),
     ):
         numbered = renumber(part)
         present = int(numbered.max()) + 1 if np.any(numbered >= 0) else 0
         labels[numbered >= 0] = numbered[numbered >= 0] + len(kinds)
         kinds.extend([kind] * present)
+        del numbered
+    del land_cells, sea_cells, lake_cells
     labels = wobble_borders(labels, kinds, seed)
     relief = generate_relief(land, seed=seed)
+    del land
     count = len(kinds)
-    flat = labels.ravel()
-    inside = np.flatnonzero(flat >= 0)
-    owner = flat[inside]
-    pixels = np.bincount(owner, minlength=count).astype(np.int64)
-    mean_relief = _weighted(owner, relief.ravel()[inside], count) // np.maximum(1, pixels)
+    pixels, _, _, total, _ = _cell_sums(labels, relief, count)
+    mean_relief = total // np.maximum(1, pixels)
     land_ids = [index for index, kind in enumerate(kinds) if kind is CellClass.LAND]
     wasteland = len(land_ids) * settings.wasteland_permille // PERMILLE
     ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
@@ -485,21 +540,43 @@ def generate_new_world(
     return derive_world(labels, tuple(kinds), relief)
 
 
+def _cell_sums(
+    labels: NDArray[np.int32], elevation: NDArray[np.int32], count: int
+) -> tuple[NDArray[np.int64], ...]:
+    """Pixels, row sum, column sum, elevation sum and elevation square sum per cell.
+
+    The sums are exact integers in float64 (below 2**53), added strip by strip, so the
+    result does not depend on the strip height.
+    """
+    rows, width = (int(size) for size in labels.shape)
+    totals = np.zeros((5, count), dtype=np.float64)
+    columns_of = np.arange(width, dtype=np.int64)
+    for first in range(0, rows, STRIP_ROWS):
+        last = min(rows, first + STRIP_ROWS)
+        strip = labels[first:last]
+        inside = strip >= 0
+        owner = strip[inside]
+        row_index = np.broadcast_to(
+            np.arange(first, last, dtype=np.int64)[:, np.newaxis], strip.shape
+        )
+        column_index = np.broadcast_to(columns_of[np.newaxis, :], strip.shape)
+        values = elevation[first:last][inside].astype(np.int64)
+        totals[0] += np.bincount(owner, minlength=count)
+        for slot, weights in enumerate(
+            (row_index[inside], column_index[inside], values, values * values), start=1
+        ):
+            totals[slot] += np.bincount(owner, weights=weights, minlength=count)
+    return tuple(total.astype(np.int64) for total in totals)
+
+
 def derive_world(
     labels: NDArray[np.int32], kinds: tuple[CellClass, ...], elevation: NDArray[np.int32]
 ) -> NewWorld:
     """Compute sizes, centres, interior points and contacts for a labelled world."""
     count = len(kinds)
-    flat = labels.ravel()
-    inside = np.flatnonzero(flat >= 0)
-    owner = flat[inside]
-    width = labels.shape[1]
-    pixels = np.bincount(owner, minlength=count).astype(np.int64)
-    rows = _weighted(owner, inside // width, count)
-    columns = _weighted(owner, inside % width, count)
-    values = elevation.ravel()[inside].astype(np.int64)
-    mean_elevation = _weighted(owner, values, count) // np.maximum(1, pixels)
-    square = _weighted(owner, values * values, count) // np.maximum(1, pixels)
+    pixels, rows, columns, total, square_total = _cell_sums(labels, elevation, count)
+    mean_elevation = total // np.maximum(1, pixels)
+    square = square_total // np.maximum(1, pixels)
     variance = np.maximum(0, square - mean_elevation * mean_elevation)
     spread = np.floor(np.sqrt(variance.astype(np.float64))).astype(np.int64)
     centroids = np.stack([rows // np.maximum(1, pixels), columns // np.maximum(1, pixels)], axis=1)

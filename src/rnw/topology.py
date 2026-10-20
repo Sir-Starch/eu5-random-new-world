@@ -50,14 +50,14 @@ def unpack_pairs(pairs: NDArray[np.int64]) -> list[tuple[int, int]]:
     return list(zip((pairs >> PAIR_SHIFT).tolist(), (pairs & mask).tolist(), strict=True))
 
 
-def label_components(labels: NDArray[np.int32], *, wrap_x: bool = False) -> NDArray[np.int64]:
+def label_components(labels: NDArray[np.int32], *, wrap_x: bool = False) -> NDArray[np.int32]:
     """Number 4-connected equal-label components in raster order of first pixel.
 
     Horizontal runs are joined with a union-find whose root is always the smallest run
     index, so the numbering is independent of hash order and platform.
     """
     if labels.size == 0:
-        return np.zeros(labels.shape, dtype=np.int64)
+        return np.zeros(labels.shape, dtype=np.int32)
     return _native.label_components(np.ascontiguousarray(labels, dtype=np.int32), wrap_x)
 
 

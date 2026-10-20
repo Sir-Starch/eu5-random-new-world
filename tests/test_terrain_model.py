@@ -39,6 +39,8 @@ from rnw.topology import euclidean_distance, nearest_label
 if TYPE_CHECKING:
     from pathlib import Path
 
+    import pytest
+
 RAIN = RainSettings(decay_px=200, recharge_px=10, lift_units=40000, blur_px=1, relief_blur_px=1)
 
 
@@ -290,3 +292,27 @@ def test_density_scale_keeps_new_instances_within_the_budget() -> None:
     assert budget_scale(tables, fine_pixels, coarse_pixels, 125) == one // 2
     assert budget_scale(tables, fine_pixels, coarse_pixels, 0) == 0
     assert budget_scale([], fine_pixels, coarse_pixels, 10) == one
+
+
+def test_climate_grid_in_strips_equals_the_whole_raster_grid(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Block means of sea share and height are the same for any strip height."""
+    from rnw import eu5_biomes  # noqa: PLC0415 - patched below
+
+    generator = np.random.default_rng(6)
+    shape = (203, 187)
+    sea = (
+        upsample(generator.integers(0, 2, (shape[0] // 30 + 2, shape[1] // 30 + 2)), 30, shape) > 0
+    )
+    height = upsample(
+        generator.integers(0, 40_000, (shape[0] // 20 + 2, shape[1] // 20 + 2)), 20, shape
+    )
+    whole = eu5_biomes.climate_grid(sea, height.astype(np.int64))
+    for strip in (4, 20, 1024):
+        monkeypatch.setattr(eu5_biomes, "CLIMATE_STRIP", strip)
+        for kind in (np.int64, np.int32, np.uint16):
+            grid = eu5_biomes.climate_grid(sea, height.astype(kind))
+            assert np.array_equal(grid.rain, whole.rain)
+            assert np.array_equal(grid.coast, whole.coast)
+            assert np.array_equal(grid.shore, whole.shore)

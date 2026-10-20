@@ -95,10 +95,10 @@ pub fn encode(raw: &[u8]) -> Vec<u8> {
 struct Level {
     rows: usize,
     columns: usize,
-    samples: Vec<i64>,
+    samples: Vec<u16>,
 }
 
-fn level_stack(north_up: &[i64], rows: usize, columns: usize) -> Vec<Level> {
+fn level_stack(north_up: &[u16], rows: usize, columns: usize) -> Vec<Level> {
     let mut samples = Vec::with_capacity(north_up.len());
     for row in (0..rows).rev() {
         samples.extend_from_slice(&north_up[row * columns..(row + 1) * columns]);
@@ -141,7 +141,7 @@ fn tile_bytes(level: &Level, row_tile: usize, column_tile: usize, sample_bytes: 
                 .min(level.columns - 1);
             let value = level.samples[y * level.columns + x];
             if sample_bytes == 2 {
-                raw.extend_from_slice(&(value as u16).to_le_bytes());
+                raw.extend_from_slice(&value.to_le_bytes());
             } else {
                 raw.push(value as u8);
             }
@@ -152,7 +152,7 @@ fn tile_bytes(level: &Level, row_tile: usize, column_tile: usize, sample_bytes: 
 
 /// Compressed tiles of every mip level in file order: their sizes and the joined bytes.
 pub fn pack_layer(
-    north_up: &[i64],
+    north_up: &[u16],
     (rows, columns): (usize, usize),
     sample_bytes: usize,
 ) -> (Vec<usize>, Vec<u8>) {
@@ -194,11 +194,11 @@ mod tests {
 
     #[test]
     fn a_small_layer_is_one_tile_per_level() {
-        let image: Vec<i64> = (0..100 * 90).map(|v| v % 65_536).collect();
+        let image: Vec<u16> = (0..100 * 90).map(|v| (v % 65_536) as u16).collect();
         let (sizes, bytes) = pack_layer(&image, (100, 90), 2);
         assert_eq!(sizes.len(), 1);
         assert_eq!(bytes.len(), sizes[0]);
-        let big: Vec<i64> = vec![5; 300 * 200];
+        let big: Vec<u16> = vec![5; 300 * 200];
         let (sizes, _) = pack_layer(&big, (300, 200), 1);
         assert_eq!(sizes.len(), 6 + 2 + 1); // 3 x 2 tiles, then 150 x 100 in 2 x 1, then 75 x 50 in one
     }

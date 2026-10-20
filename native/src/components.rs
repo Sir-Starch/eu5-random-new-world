@@ -21,11 +21,11 @@ fn join(parent: &mut [u32], first: u32, second: u32) {
 }
 
 /// Number the components of `labels`; with `wrap_x` the first and last columns touch.
-pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x: bool) -> Vec<i64> {
+pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x: bool) -> Vec<i32> {
     if labels.is_empty() {
         return Vec::new();
     }
-    let mut run_of = vec![0_u32; labels.len()];
+    let mut run_of = vec![0_i32; labels.len()];
     let mut runs: u32 = 0;
     for row in 0..height {
         for column in 0..width {
@@ -33,7 +33,7 @@ pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x:
             if column == 0 || labels[at] != labels[at - 1] {
                 runs += 1;
             }
-            run_of[at] = runs - 1;
+            run_of[at] = (runs - 1) as i32;
         }
     }
     let mut parent: Vec<u32> = (0..runs).collect();
@@ -41,7 +41,7 @@ pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x:
         for column in 0..width {
             let at = row * width + column;
             if labels[at] == labels[at - width] {
-                join(&mut parent, run_of[at - width], run_of[at]);
+                join(&mut parent, run_of[at - width] as u32, run_of[at] as u32);
             }
         }
     }
@@ -49,12 +49,12 @@ pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x:
         for row in 0..height {
             let (first, last) = (row * width, row * width + width - 1);
             if labels[first] == labels[last] {
-                join(&mut parent, run_of[first], run_of[last]);
+                join(&mut parent, run_of[first] as u32, run_of[last] as u32);
             }
         }
     }
-    let mut component = vec![0_i64; runs as usize];
-    let mut next: i64 = 0;
+    let mut component = vec![0_i32; runs as usize];
+    let mut next: i32 = 0;
     for run in 0..runs {
         let root = find(&mut parent, run);
         if root == run {
@@ -64,7 +64,10 @@ pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x:
             component[run as usize] = component[root as usize];
         }
     }
-    run_of.iter().map(|&run| component[run as usize]).collect()
+    for slot in &mut run_of {
+        *slot = component[*slot as usize];
+    }
+    run_of
 }
 
 #[cfg(test)]

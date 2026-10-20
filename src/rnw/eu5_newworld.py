@@ -129,13 +129,12 @@ def vanilla_geometry(
 ) -> VanillaGeometry:
     """Pixel-weighted centroid of every vanilla label on the rolled raster."""
     count = len(game_map.keys)
-    height, width = canvas.rolled.shape
-    flat = canvas.rolled.ravel()
-    pixels = np.maximum(1, np.bincount(flat, minlength=count))
+    height, width = canvas.shape
+    pixels = np.maximum(1, np.bincount(game_map.labels.ravel(), minlength=count))
     row_sum = np.zeros(count, dtype=np.float64)
     column_sum = np.zeros(count, dtype=np.float64)
     for start in range(0, height, 1024):
-        block = canvas.rolled[start : start + 1024]
+        block = canvas.rolled(game_map.labels, slice(start, start + 1024))
         rows = np.repeat(np.arange(start, start + block.shape[0], dtype=np.int64), width)
         columns = np.tile(np.arange(width, dtype=np.int64), block.shape[0])
         row_sum += np.bincount(block.ravel(), weights=rows, minlength=count)
@@ -340,9 +339,11 @@ def _coasts(
     return coasts
 
 
-def _outside_contacts(canvas: Canvas, world: NewWorld, offset: int) -> set[tuple[int, int]]:
+def _outside_contacts(
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld, offset: int
+) -> set[tuple[int, int]]:
     """(vanilla label, generated cell) pairs that touch across the canvas edge."""
-    height, width = int(canvas.rolled.shape[0]), int(canvas.rolled.shape[1])
+    height, width = canvas.shape
     stop = canvas.col0 + int(canvas.mask.shape[1]) + 1
     columns = np.arange(canvas.col0 - 1, stop, dtype=np.int64) % width
     contacts: set[tuple[int, int]] = set()
@@ -350,7 +351,9 @@ def _outside_contacts(canvas: Canvas, world: NewWorld, offset: int) -> set[tuple
         rows = slice(start, min(height, start + STRIP_ROWS + 1))
         generated = np.pad(world.labels[rows], ((0, 0), (1, 1)), constant_values=-1)
         combined = np.where(
-            generated >= 0, generated + offset, canvas.rolled[rows][:, columns]
+            generated >= 0,
+            generated + offset,
+            canvas.rolled(game_map.labels, rows)[:, columns],
         ).astype(np.int32)
         for low, high in unpack_pairs(adjacency_pairs(combined)):
             if low < offset <= high:
@@ -501,7 +504,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
 ) -> tuple[list[_Area], set[str]]:
     """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
     count = len(game_map.keys)
-    pixels = np.bincount(canvas.rolled.ravel(), minlength=count).astype(np.int64)
+    pixels = np.bincount(game_map.labels.ravel(), minlength=count).astype(np.int64)
     is_land = [kind in LAND_FAMILY for kind in world.classes]
     is_sea = [kind is CellClass.SEA for kind in world.classes]
     land = contact_graph(world.centroids, world.edges, is_land)
@@ -523,7 +526,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         sea,
         [cell for cell, flag in enumerate(is_sea) if flag],
         _vanilla_seas(game_map, canvas, hierarchy, geometry),
-        _outside_contacts(canvas, world, count),
+        _outside_contacts(game_map, canvas, world, count),
         coasts=coasts,
         parents=parents,
         keys=keys,

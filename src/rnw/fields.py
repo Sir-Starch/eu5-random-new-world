@@ -68,15 +68,21 @@ def warped_noise(  # noqa: PLR0913 - a field is defined by its stream, grid, war
     period: int,
     octaves: int,
     warp_px: int,
+    row0: int = 0,
 ) -> NDArray[np.int64]:
     """Domain-warped rotated fractal noise, sampled every ``step`` pixels and upsampled.
 
     Coordinates are displaced by two low-frequency noises of amplitude ``warp_px``
-    before lookup, which bends straight features into natural curves.
+    before lookup, which bends straight features into natural curves. ``row0`` is the row
+    of the whole raster where the window ``shape`` starts; it must lie on the sample
+    lattice (a multiple of ``step``), so a window holds the rows of the whole raster.
     """
+    if row0 % step:
+        message = f"row0 {row0} is not a multiple of the step {step}"
+        raise ValueError(message)
     rows = shape[0] // step + 2
     columns = shape[1] // step + 2
-    ys = (np.arange(rows, dtype=np.int64) * step * SUBPIXEL)[:, np.newaxis]
+    ys = ((np.arange(rows, dtype=np.int64) + row0 // step) * step * SUBPIXEL)[:, np.newaxis]
     xs = (np.arange(columns, dtype=np.int64) * step * SUBPIXEL)[np.newaxis, :]
     ys, xs = np.broadcast_arrays(ys, xs)
     if warp_px:

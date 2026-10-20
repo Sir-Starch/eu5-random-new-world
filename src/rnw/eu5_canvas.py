@@ -41,14 +41,38 @@ class Canvas:
     roll: int
     col0: int
     mask: NDArray[np.bool_]
-    rolled: NDArray[np.int32]
+    shape: tuple[int, int]
     removed: NDArray[np.bool_]
     trimmed: NDArray[np.bool_]
 
+    def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
+        """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""
+        return np.roll(labels if rows is None else labels[rows], self.roll, axis=1)
+
     def world_column(self, column: NDArray[np.int64] | int) -> NDArray[np.int64] | int:
         """Map a crop column back to the unrolled map column."""
-        width = int(self.rolled.shape[1])
-        return (column + self.col0 - self.roll) % width
+        return (column + self.col0 - self.roll) % self.shape[1]
+
+    def spans(self) -> list[tuple[slice, slice]]:
+        """Pairs of (crop columns, map columns) that cover the canvas: two if it wraps the seam."""
+        width, crop_width = self.shape[1], int(self.mask.shape[1])
+        start = (self.col0 - self.roll) % width
+        first = min(crop_width, width - start)
+        pairs = [(slice(0, first), slice(start, start + first))]
+        if first < crop_width:
+            pairs.append((slice(first, crop_width), slice(0, crop_width - first)))
+        return pairs
+
+    def put(self, target: NDArray[np.generic], values: NDArray[np.generic]) -> None:
+        """Write the crop-sized ``values`` into the map-sized ``target`` where the mask holds.
+
+        Equal to assigning through the indices of the mask's pixels and their map columns,
+        without building those indices (two eight-byte numbers for each of 38 million pixels).
+        """
+        for crop, world in self.spans():
+            keep = self.mask[:, crop]
+            keep = keep.reshape(keep.shape + (1,) * (values.ndim - 2))
+            np.copyto(target[:, world], values[:, crop], where=keep)
 
 
 def _roll_for(columns_used: NDArray[np.bool_]) -> int:
@@ -157,7 +181,7 @@ def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
         roll=roll,
         col0=col0,
         mask=np.ascontiguousarray(canvas[:, col0:col1]),
-        rolled=rolled,
+        shape=(int(rolled.shape[0]), int(rolled.shape[1])),
         removed=removed,
         trimmed=trimmed,
     )

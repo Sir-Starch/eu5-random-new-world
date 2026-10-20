@@ -36,6 +36,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 STEP: Final[int] = 4
+# Rows per strip of the whole-raster passes; a multiple of STEP.
+STRIP_ROWS: Final[int] = 1024
 SUBPIXEL: Final[int] = 16
 NONE: Final[int] = -1
 SOURCE: Final[int] = 0
@@ -462,9 +464,30 @@ def draw_rivers(
     return Rivers(role=canvas.role, flow=canvas.flow, stats=stats)
 
 
+def _coarse_land_and_height(
+    land: NDArray[np.bool_], height: NDArray[np.int32] | NDArray[np.int64], strip: int
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Land share (permille) and mean land height of every STEP x STEP block.
+
+    Computed in strips of ``strip`` rows (a multiple of ``STEP``), so no whole-raster
+    eight-byte copy is made; the blocks, and with them the result, are the same.
+    """
+    rows, columns = (int(size) for size in land.shape)
+    shape = (-(-rows // STEP), -(-columns // STEP))
+    share = np.empty(shape, dtype=np.int64)
+    weight = np.empty(shape, dtype=np.int64)
+    for first in range(0, rows, strip):
+        window = slice(first, min(rows, first + strip))
+        block = slice(first // STEP, -(-window.stop // STEP))
+        on_land = land[window]
+        share[block] = block_mean(on_land.astype(np.int64) * PERMILLE, STEP)
+        weight[block] = block_mean(np.where(on_land, height[window], 0).astype(np.int64), STEP)
+    return share, weight
+
+
 def generate_rivers(
     land: NDArray[np.bool_],
-    height: NDArray[np.int64],
+    height: NDArray[np.int32] | NDArray[np.int64],
     rain: NDArray[np.int64],
     *,
     seed: int,
@@ -474,10 +497,8 @@ def generate_rivers(
     ``rain`` has one value per STEP x STEP block (blocks may be partial at the edges).
     """
     shape = (-(-land.shape[0] // STEP), -(-land.shape[1] // STEP))
-    coarse_land = block_mean(land.astype(np.int64) * PERMILLE, STEP)[: shape[0], : shape[1]]
-    coarse_land = coarse_land >= PERMILLE // 2
-    weight = block_mean(np.where(land, height, 0), STEP)
-    count = block_mean(land.astype(np.int64) * PERMILLE, STEP)
+    count, weight = _coarse_land_and_height(land, height, STRIP_ROWS)
+    coarse_land = count >= PERMILLE // 2
     coarse_height = weight * PERMILLE // np.maximum(1, count)
     valleys = warped_noise(
         derive_seed(seed, "river_valleys"),
@@ -519,25 +540,42 @@ def flow_classes(rivers: Rivers, shares_permille: tuple[int, ...]) -> NDArray[np
 
 
 def carve_valleys(
-    relief: NDArray[np.int64],
+    relief: NDArray[np.int32] | NDArray[np.int64],
     classes: NDArray[np.int8],
     *,
     depths: tuple[int, ...],
     radius_px: int,
     floor: int,
-) -> NDArray[np.int64]:
+) -> NDArray[np.int32]:
     """Lower ``relief`` around river pixels: ``depths[class]`` at the river, easing to
-    nothing at ``radius_px``; land never drops below ``floor``. Water (0) is kept."""
-    river = classes >= 0
-    if not np.any(river):
-        return relief
-    distance = euclidean_distance(river, radius_px)
-    nearest = nearest_label(classes.astype(np.int32), river, radius_px + 1)
-    depth = np.array(depths, dtype=np.int64)[np.maximum(nearest, 0)]
-    ease = PERMILLE - smoothstep(distance, 0, radius_px * 8)
-    carve = np.where(nearest >= 0, depth * ease // PERMILLE, 0)
-    land = relief > 0
-    return np.where(land, np.maximum(relief - carve, np.minimum(relief, floor)), relief)
+    nothing at ``radius_px``; land never drops below ``floor``. Water (0) is kept.
+
+    Rows are carved in strips, each in a window that reaches ``radius_px + 1`` rows past it
+    (the reach of the distance and of the nearest river class), so the result does not
+    depend on the strip height.
+    """
+    rows = int(relief.shape[0])
+    out = np.empty(relief.shape, dtype=np.int32)
+    table = np.array(depths, dtype=np.int64)
+    for first in range(0, rows, STRIP_ROWS):
+        last = min(rows, first + STRIP_ROWS)
+        start, stop = max(0, first - radius_px - 1), min(rows, last + radius_px + 1)
+        window_classes = classes[start:stop]
+        river = window_classes >= 0
+        core = slice(first - start, last - start)
+        values = relief[first:last].astype(np.int64)
+        if not np.any(river):
+            out[first:last] = values
+            continue
+        distance = euclidean_distance(river, radius_px)[core]
+        nearest = nearest_label(window_classes.astype(np.int32), river, radius_px + 1)[core]
+        depth = table[np.maximum(nearest, 0)]
+        ease = PERMILLE - smoothstep(distance, 0, radius_px * 8)
+        carve = np.where(nearest >= 0, depth * ease // PERMILLE, 0)
+        out[first:last] = np.where(
+            values > 0, np.maximum(values - carve, np.minimum(values, floor)), values
+        )
+    return out
 
 
 def network_problems(role: NDArray[np.int8], water: NDArray[np.bool_]) -> dict[str, int]:
@@ -550,10 +588,10 @@ def network_problems(role: NDArray[np.int8], water: NDArray[np.bool_]) -> dict[s
     river = role != NONE
     padded = np.pad(river, 1)
     degree = (
-        padded[:-2, 1:-1].astype(np.int64) + padded[2:, 1:-1] + padded[1:-1, :-2] + padded[1:-1, 2:]
+        padded[:-2, 1:-1].astype(np.uint8) + padded[2:, 1:-1] + padded[1:-1, :-2] + padded[1:-1, 2:]
     )
     join = np.pad(role == JOIN, 1)
-    joins = join[:-2, 1:-1].astype(np.int64) + join[2:, 1:-1] + join[1:-1, :-2] + join[1:-1, 2:]
+    joins = join[:-2, 1:-1].astype(np.uint8) + join[2:, 1:-1] + join[1:-1, :-2] + join[1:-1, 2:]
     wet = np.pad(water, 1)
     near_water = wet[:-2, 1:-1] | wet[2:, 1:-1] | wet[1:-1, :-2] | wet[1:-1, 2:] | water
     body = role == BODY

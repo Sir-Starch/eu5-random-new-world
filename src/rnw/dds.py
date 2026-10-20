@@ -23,6 +23,7 @@ HEADER_SIZE: Final[int] = 128
 BLOCK: Final[int] = 4
 BLOCK_BYTES: Final[int] = 16
 DXT5: Final[bytes] = b"DXT5"
+CHUNK_BLOCKS: Final[int] = 1 << 15
 
 
 class DdsError(ValueError):
@@ -120,6 +121,7 @@ def encode_blocks(blocks: NDArray[np.uint8]) -> bytes:
 
 
 def _blocks_of(image: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """A ``(down, across, 4, 4, 4)`` view of the image cut into 4 x 4 blocks (edges repeated)."""
     rows, columns = image.shape[:2]
     padded = np.pad(
         image,
@@ -130,25 +132,28 @@ def _blocks_of(image: NDArray[np.uint8]) -> NDArray[np.uint8]:
     return padded.reshape(down, BLOCK, across, BLOCK, 4).transpose(0, 2, 1, 3, 4)
 
 
-def _halve(image: NDArray[np.int64]) -> NDArray[np.int64]:
+def _halve(image: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """The next mip level: the mean of every 2 x 2 block, rounded down (edges repeated)."""
     rows, columns = image.shape[:2]
     if rows == 1 and columns == 1:
         return image
     padded = np.pad(image, ((0, rows % 2), (0, columns % 2), (0, 0)), mode="edge")
-    return (
-        padded.reshape(padded.shape[0] // 2, 2, padded.shape[1] // 2, 2, -1).sum(axis=(1, 3)) // 4
+    total = padded.reshape(padded.shape[0] // 2, 2, padded.shape[1] // 2, 2, -1).sum(
+        axis=(1, 3), dtype=np.uint16
     )
+    return (total // 4).astype(np.uint8)
 
 
 def rewrite(data: bytes, image: NDArray[np.uint8], changed: NDArray[np.bool_]) -> bytes:
     """Re-encode the blocks of every mip level that overlap ``changed`` pixels.
 
     ``image`` is the full new level-0 RGBA image; lower levels are box-filtered from it.
-    Blocks not overlapping ``changed`` keep their original bytes.
+    Blocks not overlapping ``changed`` keep their original bytes. The blocks are encoded
+    ``CHUNK_BLOCKS`` at a time, which bounds the working memory and not the result.
     """
     shape = layout(data)
     out = bytearray(data)
-    level_image = image.astype(np.int64)
+    level_image = image
     level_mask = changed
     for level, (offset, rows, columns) in enumerate(shape.levels):
         if level:
@@ -167,13 +172,15 @@ def rewrite(data: bytes, image: NDArray[np.uint8], changed: NDArray[np.bool_]) -
         )
         if not np.any(touched):
             continue
-        blocks = _blocks_of(level_image[:rows, :columns].clip(0, 255).astype(np.uint8))
+        blocks = _blocks_of(level_image[:rows, :columns])
         indices = np.flatnonzero(touched.ravel())
-        encoded = np.frombuffer(
-            encode_blocks(blocks.reshape(-1, BLOCK, BLOCK, 4)[indices]), np.uint8
-        )
         target = np.frombuffer(out, np.uint8, count=down * across * BLOCK_BYTES, offset=offset)
         view = target.reshape(-1, BLOCK_BYTES).copy()
-        view[indices] = encoded.reshape(-1, BLOCK_BYTES)
+        for start in range(0, indices.size, CHUNK_BLOCKS):
+            chosen = indices[start : start + CHUNK_BLOCKS]
+            encoded = np.frombuffer(
+                encode_blocks(blocks[chosen // across, chosen % across]), np.uint8
+            )
+            view[chosen] = encoded.reshape(-1, BLOCK_BYTES)
         out[offset : offset + view.size] = view.tobytes()
     return bytes(out)

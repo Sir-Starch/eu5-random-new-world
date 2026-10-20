@@ -46,6 +46,16 @@ mod _native {
     #[pymodule_export]
     use super::LzavError;
 
+    /// Size the thread pool of the kernels; returns its size. Only the first call before a
+    /// kernel has run can change it, later calls report the size in force.
+    #[pyfunction]
+    fn configure_threads(threads: usize) -> usize {
+        let _ = rayon::ThreadPoolBuilder::new()
+            .num_threads(threads.max(1))
+            .build_global();
+        rayon::current_num_threads()
+    }
+
     /// Decode a format-3 LZAV stream that expands to exactly `size` bytes.
     #[pyfunction]
     fn lzav_decode<'py>(
@@ -333,9 +343,14 @@ mod _native {
         py: Python<'py>,
         labels: PyReadonlyArray2<'py, i32>,
         wrap_x: bool,
-    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+    ) -> PyResult<Bound<'py, PyArray2<i32>>> {
         let shape = labels.as_array().dim();
         let values = labels.as_slice()?;
+        if i32::try_from(values.len()).is_err() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "more pixels than 32-bit component numbers",
+            ));
+        }
         let out = py.detach(|| components::label_components(values, shape, wrap_x));
         shaped(py, shape, out)
     }
@@ -359,31 +374,30 @@ mod _native {
         Ok((tree.parent.into_pyarray(py), tree.flow.into_pyarray(py)))
     }
 
-    /// Per label, the first raster pixel with the best score (ties by `tie`), as `(count, 2)`.
+    /// Per cell, the interior point `(row, column)` (see `raster::interior_points`), as `(count, 2)`.
     #[pyfunction]
-    fn best_points<'py>(
+    fn interior_points<'py>(
         py: Python<'py>,
         labels: PyReadonlyArray2<'py, i32>,
-        score: PyReadonlyArray2<'py, i64>,
-        tie: PyReadonlyArray2<'py, i64>,
-        count: usize,
+        land: PyReadonlyArray1<'py, bool>,
+        interior_limit: i32,
+        shore_limit: i32,
     ) -> PyResult<Bound<'py, PyArray2<i64>>> {
-        let (height, width) = labels.as_array().dim();
-        if score.as_array().dim() != (height, width) || tie.as_array().dim() != (height, width) {
-            return Err(pyo3::exceptions::PyValueError::new_err(
-                "mismatched rasters",
-            ));
-        }
-        let (labels, score, tie) = (labels.as_slice()?, score.as_slice()?, tie.as_slice()?);
-        if labels
-            .iter()
-            .any(|&label| usize::try_from(label).is_ok_and(|label| label >= count))
+        let shape = labels.as_array().dim();
+        let (labels, land) = (labels.as_slice()?, land.as_slice()?);
+        let count = land.len();
+        if shape.0 == 0
+            || shape.1 == 0
+            || labels
+                .iter()
+                .any(|&label| usize::try_from(label).is_ok_and(|label| label >= count))
         {
             return Err(pyo3::exceptions::PyValueError::new_err(
-                "a label is not below the count",
+                "an empty raster or a label that is not below the count",
             ));
         }
-        let out = py.detach(|| raster::best_points(labels, score, tie, width, count));
+        let out = py
+            .detach(|| raster::interior_points(labels, shape, land, (interior_limit, shore_limit)));
         shaped(py, (count, 2), out)
     }
 
@@ -475,11 +489,12 @@ mod _native {
         PyBytes::new(py, &py.detach(|| tiles::encode(raw)))
     }
 
-    /// Compressed tiles of a layer image (north-up): the size of each and the joined bytes.
+    /// Compressed tiles of a layer image (north-up, 16-bit samples; an 8-bit layer keeps
+    /// the low byte): the size of each and the joined bytes.
     #[pyfunction]
     fn pack_layer<'py>(
         py: Python<'py>,
-        image: PyReadonlyArray2<'py, i64>,
+        image: PyReadonlyArray2<'py, u16>,
         sample_bytes: usize,
     ) -> PyResult<(Vec<usize>, Bound<'py, PyBytes>)> {
         let shape = image.as_array().dim();

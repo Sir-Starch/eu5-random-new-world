@@ -135,32 +135,132 @@ mod tests {
 }
 
 /// Per label, the `(row, column)` of the first pixel in raster order with the highest
-/// `score`, ties going to the higher `tie`. Labels without pixels, and negative labels,
-/// give `(0, 0)` / are skipped, as the NumPy reference does.
+/// score, ties going to the higher tie value. Labels without pixels, and negative labels,
+/// give `(0, 0)` / are skipped.
 pub fn best_points(
     labels: &[i32],
-    score: &[i64],
-    tie: &[i64],
     width: usize,
     count: usize,
+    value: impl Fn(usize) -> (i64, i64) + Sync,
 ) -> Vec<i64> {
-    let mut best: Vec<Option<(i64, i64, usize)>> = vec![None; count];
-    for (index, &label) in labels.iter().enumerate() {
-        let Ok(label) = usize::try_from(label) else {
-            continue;
-        };
-        let candidate = (score[index], tie[index]);
-        match &mut best[label] {
-            Some((s, t, _)) if (*s, *t) >= candidate => {}
-            slot => *slot = Some((candidate.0, candidate.1, index)),
+    const CHUNK: usize = 1 << 20;
+    type Best = Vec<Option<(i64, i64, usize)>>;
+    let starts: Vec<usize> = (0..labels.len()).step_by(CHUNK).collect();
+    let parts: Vec<Best> = starts
+        .par_iter()
+        .map(|&start| {
+            let mut best: Best = vec![None; count];
+            let end = (start + CHUNK).min(labels.len());
+            for (offset, &label) in labels[start..end].iter().enumerate() {
+                let index = start + offset;
+                let Ok(label) = usize::try_from(label) else {
+                    continue;
+                };
+                let candidate = value(index);
+                match &mut best[label] {
+                    Some((s, t, _)) if (*s, *t) >= candidate => {}
+                    slot => *slot = Some((candidate.0, candidate.1, index)),
+                }
+            }
+            best
+        })
+        .collect();
+    // Chunks are in raster order, so a later chunk wins only with a strictly better value.
+    let mut merged: Best = vec![None; count];
+    for part in parts {
+        for (slot, candidate) in merged.iter_mut().zip(part) {
+            if let Some((s, t, index)) = candidate {
+                match slot {
+                    Some((best_s, best_t, _)) if (*best_s, *best_t) >= (s, t) => {}
+                    _ => *slot = Some((s, t, index)),
+                }
+            }
         }
     }
-    best.iter()
+    merged
+        .iter()
         .flat_map(|entry| {
             let at = entry.map_or(0, |(_, _, index)| index);
             [(at / width) as i64, (at % width) as i64]
         })
         .collect()
+}
+
+/// Pixels whose 4-neighbour (outside the raster counts as label -1) has another label.
+fn cell_boundary(labels: &[i32], (height, width): (usize, usize)) -> Vec<bool> {
+    let mut out = vec![false; labels.len()];
+    out.par_chunks_mut(width)
+        .enumerate()
+        .for_each(|(row, line)| {
+            for (column, slot) in line.iter_mut().enumerate() {
+                let here = labels[row * width + column];
+                let up = if row > 0 {
+                    labels[(row - 1) * width + column]
+                } else {
+                    -1
+                };
+                let down = if row + 1 < height {
+                    labels[(row + 1) * width + column]
+                } else {
+                    -1
+                };
+                let left = if column > 0 {
+                    labels[row * width + column - 1]
+                } else {
+                    -1
+                };
+                let right = if column + 1 < width {
+                    labels[row * width + column + 1]
+                } else {
+                    -1
+                };
+                *slot = up != here || down != here || left != here || right != here;
+            }
+        });
+    out
+}
+
+/// Per cell, the interior point: the first pixel (raster order) with the best score.
+///
+/// Water cells score the 4-step distance to the cell boundary. Land cells (`land[label]`)
+/// hold city models, which are square and can reach past a near shore, so their score is
+/// `min(2 * border, shore)` in octagonal distance, ties going to the larger border
+/// distance. Distances are capped at `interior_limit` (boundary) and `shore_limit`.
+pub fn interior_points(
+    labels: &[i32],
+    shape: (usize, usize),
+    land: &[bool],
+    (interior_limit, shore_limit): (i32, i32),
+) -> Vec<i64> {
+    let boundary = cell_boundary(labels, shape);
+    let is_land = |label: i32| {
+        usize::try_from(label)
+            .ok()
+            .and_then(|at| land.get(at))
+            .copied()
+            == Some(true)
+    };
+    let not_land: Vec<bool> = labels.par_iter().map(|&label| !is_land(label)).collect();
+    let (distance, (border, shore)) = rayon::join(
+        || crate::distance::distance_from(&boundary, shape, interior_limit, false),
+        || {
+            rayon::join(
+                || crate::distance::distance_from(&boundary, shape, interior_limit, true),
+                || crate::distance::distance_from(&not_land, shape, shore_limit, true),
+            )
+        },
+    );
+    drop(boundary);
+    best_points(labels, shape.1, land.len(), |index| {
+        if is_land(labels[index]) {
+            (
+                i64::from((2 * border[index]).min(shore[index])),
+                i64::from(border[index]),
+            )
+        } else {
+            (i64::from(distance[index]), 0)
+        }
+    })
 }
 
 #[cfg(test)]
@@ -174,7 +274,7 @@ mod best_tests {
         let tie = [0, 1, 2, 0, 0, 0];
         // label 0: pixels 1 and 2 share score 9, the higher tie is pixel 2; label 1: first pixel
         assert_eq!(
-            best_points(&labels, &score, &tie, 3, 3),
+            best_points(&labels, 3, 3, |at| (score[at], tie[at])),
             vec![0, 2, 1, 0, 0, 0]
         );
     }

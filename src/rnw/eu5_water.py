@@ -21,6 +21,7 @@ from PIL import Image
 from rnw.dds import rewrite
 from rnw.fields import box_blur
 from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.parallel import band_rows
 from rnw.rng import derive_seed
 from rnw.topology import distance_from
 
@@ -37,6 +38,13 @@ COLOR_REACH: Final[int] = 64
 FOAM_REACH: Final[int] = 16
 BAND_ROWS: Final[int] = 64
 BLEND: Final[int] = 16
+# The colour is blurred over a radius of BLUR pixels, so a strip reads that many rows past it.
+BLUR: Final[int] = 2
+# Rows per strip: the memory of one texture row (RGBA in eight-byte integers, a dozen
+# arrays alive) bounds the strip by the free memory [V-EXEC C102].
+STRIP_ROW_BYTES: Final[int] = 400
+STRIP_FLOOR: Final[int] = 16
+STRIP_CEILING: Final[int] = 512
 
 
 def _downsample(mask: NDArray[np.bool_], factor: int, *, any_true: bool) -> NDArray[np.bool_]:
@@ -58,28 +66,46 @@ def _decode(data: bytes) -> NDArray[np.uint8]:
 
 
 def _profile_table(
-    image: NDArray[np.int64], distance: NDArray[np.int64], reach: int
+    image: NDArray[np.uint8], distance: NDArray[np.uint8], reach: int, strip: int
 ) -> NDArray[np.int64]:
-    """Mean RGBA per (latitude band, distance to land) from vanilla pixels."""
-    bands = image.shape[0] // BAND_ROWS
-    band = np.minimum(np.arange(image.shape[0], dtype=np.int64) // BAND_ROWS, bands - 1)[:, None]
-    key = (band * (reach + 1) + np.minimum(distance, reach)).ravel()
+    """Mean RGBA per (latitude band, distance to land) from vanilla pixels.
+
+    The sums are exact integers in float64 (below 2**53), so adding them strip by strip
+    gives the same table as adding them at once.
+    """
+    rows = image.shape[0]
+    bands = rows // BAND_ROWS
     size = bands * (reach + 1)
-    counts = np.maximum(1, np.bincount(key, minlength=size))
-    table = np.zeros((size, 4), dtype=np.int64)
-    for channel in range(4):
-        sums = np.bincount(key, weights=image[..., channel].ravel(), minlength=size)
-        table[:, channel] = sums.astype(np.int64) // counts
-    return table.reshape(bands, reach + 1, 4)
+    counts = np.zeros(size, dtype=np.int64)
+    sums = np.zeros((size, 4), dtype=np.float64)
+    for first in range(0, rows, strip):
+        last = min(rows, first + strip)
+        latitude = np.minimum(np.arange(first, last, dtype=np.int64) // BAND_ROWS, bands - 1)
+        key = (
+            latitude[:, None] * (reach + 1)
+            + np.minimum(distance[first:last], reach).astype(np.int64)
+        ).ravel()
+        counts += np.bincount(key, minlength=size)
+        for channel in range(4):
+            sums[:, channel] += np.bincount(
+                key, weights=image[first:last, :, channel].ravel(), minlength=size
+            )
+    counts = np.maximum(1, counts)
+    return (sums.astype(np.int64) // counts[:, None]).reshape(bands, reach + 1, 4)
 
 
 def _synthesize(
-    table: NDArray[np.int64], distance: NDArray[np.int64], reach: int
+    table: NDArray[np.int64], distance: NDArray[np.int64], reach: int, first_row: int
 ) -> NDArray[np.int64]:
-    """Colour by latitude (linearly blended between bands) and distance to land."""
+    """Colour by latitude (linearly blended between bands) and distance to land.
+
+    ``distance`` holds the rows from ``first_row`` of the image on.
+    """
     rows = distance.shape[0]
     bands = table.shape[0]
-    position = (np.arange(rows, dtype=np.int64) * 1000 - BAND_ROWS * 500) // BAND_ROWS
+    position = (
+        np.arange(first_row, first_row + rows, dtype=np.int64) * 1000 - BAND_ROWS * 500
+    ) // BAND_ROWS
     lower = np.minimum(np.maximum(position // 1000, 0), bands - 1)
     upper = np.minimum(lower + 1, bands - 1)
     weight = np.minimum(np.maximum(position - lower * 1000, 0), 1000)[:, None, None]
@@ -87,6 +113,36 @@ def _synthesize(
     first = table[lower[:, None], d]
     second = table[upper[:, None], d]
     return (first * (1000 - weight) + second * weight) // 1000
+
+
+def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the table and the noise.
+    image: NDArray[np.uint8],
+    distances: tuple[NDArray[np.uint8], NDArray[np.uint8]],
+    touched: NDArray[np.bool_],
+    table: NDArray[np.int64],
+    *,
+    first: int,
+    last: int,
+    reach: int,
+    key: int,
+) -> NDArray[np.uint8]:
+    """New colours of rows ``first`` to ``last``; the blur reads ``BLUR`` rows past them."""
+    rows, columns = touched.shape
+    start, stop = max(0, first - BLUR), min(rows, last + BLUR)
+    old_distance, new_distance = (d[start:stop].astype(np.int64) for d in distances)
+    synthetic = _synthesize(table, new_distance, reach, start)
+    for channel in range(4):
+        synthetic[..., channel] = box_blur(synthetic[..., channel], BLUR)
+    synthetic = synthetic[first - start : last - start]
+    noise = fractal_noise(
+        key, 0, first, columns, last - first, period=96, octaves=3, persistence_permille=500
+    )
+    synthetic[..., :3] += (noise * 6 // NOISE_SCALE)[..., None]
+    calm = np.minimum(old_distance, new_distance)[first - start : last - start]
+    keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
+    original = image[first:last].astype(np.int64)
+    blended = (original * keep + synthetic * (BLEND - keep)) // BLEND
+    return np.where(touched[first:last, :, None], blended, original).clip(0, 255).astype(np.uint8)
 
 
 def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the seed.
@@ -99,33 +155,37 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
     stream: str,
 ) -> tuple[bytes, int]:
     vanilla_water, new_water, canvas = masks
-    image = _decode(data).astype(np.int64)
+    image = _decode(data)
     old_water = _downsample(vanilla_water, factor, any_true=False)
     fresh_water = _downsample(new_water, factor, any_true=False)
     touched = _downsample(canvas, factor, any_true=True)
-    old_distance = distance_from(~old_water, reach + 1, octagonal=True).astype(np.int64)
-    new_distance = distance_from(~fresh_water, reach + 1, octagonal=True).astype(np.int64)
-    table = _profile_table(image, old_distance, reach)
-    synthetic = _synthesize(table, new_distance, reach)
-    for channel in range(4):
-        synthetic[..., channel] = box_blur(synthetic[..., channel], 2)
+    # Distances are at most reach + 1 steps, which a byte holds.
+    old_distance = distance_from(~old_water, reach + 1, octagonal=True).astype(np.uint8)
+    new_distance = distance_from(~fresh_water, reach + 1, octagonal=True).astype(np.uint8)
+    del old_water, fresh_water
     rows, columns = touched.shape
-    noise = fractal_noise(
-        derive_seed(seed, stream),
-        0,
-        0,
-        columns,
-        rows,
-        period=96,
-        octaves=3,
-        persistence_permille=500,
+    strip = band_rows(
+        columns * STRIP_ROW_BYTES, workers=1, floor=STRIP_FLOOR, ceiling=STRIP_CEILING
     )
-    synthetic[..., :3] += (noise * 6 // NOISE_SCALE)[..., None]
-    calm = np.minimum(old_distance, new_distance)
-    keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
-    blended = (image * keep + synthetic * (BLEND - keep)) // BLEND
-    result = np.where(touched[..., None], blended, image).clip(0, 255).astype(np.uint8)
-    changed = touched & np.any(result != image, axis=2)
+    table = _profile_table(image, old_distance, reach, strip)
+    key = derive_seed(seed, stream)
+    result = np.empty_like(image)
+    changed = np.zeros(touched.shape, dtype=bool)
+    for first in range(0, rows, strip):
+        last = min(rows, first + strip)
+        result[first:last] = _render(
+            image,
+            (old_distance, new_distance),
+            touched,
+            table,
+            first=first,
+            last=last,
+            reach=reach,
+            key=key,
+        )
+        changed[first:last] = touched[first:last] & np.any(
+            result[first:last] != image[first:last], axis=2
+        )
     return rewrite(data, result, changed), int(np.count_nonzero(changed))
 
 

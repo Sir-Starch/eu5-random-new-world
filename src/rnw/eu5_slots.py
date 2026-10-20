@@ -128,7 +128,7 @@ def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables 
     *,
     seed: int,
     origin: tuple[int, int],
-) -> NDArray[np.int64]:
+) -> NDArray[np.uint8]:
     """Material slot per pixel of a window whose top-left decal pixel is ``origin``."""
     streams = ("slot_coast", "slot_shelf", "slot_border", "slot_family", "slot_level")
     columns = (
@@ -140,7 +140,7 @@ def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables 
         tables.level_two,
         tables.materials,
     )
-    slots = _native.synthesize_slots(
+    return _native.synthesize_slots(
         np.ascontiguousarray(labels, dtype=np.int32),
         np.ascontiguousarray(land, dtype=np.bool_),
         np.ascontiguousarray(rivers, dtype=np.bool_),
@@ -153,11 +153,10 @@ def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables 
         origin[1],
         np.ascontiguousarray(slot_remap(), dtype=np.int64).reshape(-1),
     )
-    return slots.astype(np.int64)
 
 
 def level_counts(
-    materials: NDArray[np.int64], labels: NDArray[np.int32], group: NDArray[np.int64], groups: int
+    materials: NDArray[np.integer], labels: NDArray[np.int32], group: NDArray[np.int64], groups: int
 ) -> NDArray[np.int64]:
     """Count variation levels in location interiors per label group (-1 = ignore).
 
@@ -177,7 +176,7 @@ def level_counts(
     variation = (materials >= VARIATION) & (materials < VARIATION + 2 * LEVELS)
     keep &= variation
     owner = group[full[keep]]
-    level = (materials[keep] - VARIATION) % LEVELS
+    level = (materials[keep].astype(np.int64) - VARIATION) % LEVELS
     valid = owner >= 0
     counts = np.bincount(owner[valid] * LEVELS + level[valid], minlength=groups * LEVELS)
     return counts.reshape(groups, LEVELS).astype(np.int64)

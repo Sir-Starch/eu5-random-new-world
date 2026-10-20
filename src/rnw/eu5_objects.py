@@ -25,9 +25,11 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import _native
+from rnw.parallel import band_rows
 from rnw.rng import MASK64, derive_seed
 
 if TYPE_CHECKING:
+    from collections.abc import Buffer, MutableMapping
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -44,6 +46,11 @@ DENSITY_BITS: Final[int] = 24
 BUDGET_PERMILLE: Final[int] = 990
 PERMILLE: Final[int] = 1000
 MIN_PIXELS: Final[int] = 20_000
+# The canvas pixels are read a strip of location rows at a time: four 32-bit values for each
+# of the four material pixels of a location pixel, doubled for the copies in flight.
+PIXEL_ROW_BYTES: Final[int] = 4 * 16 * 2
+STRIP_FLOOR: Final[int] = 8
+STRIP_CEILING: Final[int] = 256
 INLINE: Final[re.Pattern[str]] = re.compile(
     r'(object=\{[^{}]*?name="([^"]+)"[^{}]*?count=)(\d+)(\s*transform=")([^"]*)("\})', re.DOTALL
 )
@@ -201,16 +208,33 @@ def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, donor
 
 
 def canvas_pixels(
-    classes: PixelClasses, canvas: NDArray[np.bool_]
+    classes: PixelClasses, canvas: NDArray[np.bool_], first: int = 0, last: int | None = None
 ) -> tuple[NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32]]:
-    """Row, column, fine key and coarse key of every material pixel of the canvas to fill."""
-    return _native.canvas_pixels(
-        np.ascontiguousarray(classes.labels, dtype=np.int32),
-        np.ascontiguousarray(classes.materials, dtype=np.uint8),
-        np.ascontiguousarray(canvas, dtype=np.bool_),
+    """Row, column, fine key and coarse key of every material pixel of the canvas to fill.
+
+    Only the location rows ``first`` to ``last`` are read; the rows returned are material
+    rows of the whole raster, so the pixels of consecutive row ranges join into the pixels
+    of the whole canvas.
+    """
+    start, stop, _ = slice(first, last).indices(int(classes.labels.shape[0]))
+    rows, columns, fine, coarse = _native.canvas_pixels(
+        np.ascontiguousarray(classes.labels[start:stop], dtype=np.int32),
+        np.ascontiguousarray(classes.materials[start * 2 : stop * 2], dtype=np.uint8),
+        np.ascontiguousarray(canvas[start:stop], dtype=np.bool_),
         np.ascontiguousarray(classes.label_class, dtype=np.int64),
         np.ascontiguousarray(classes.label_coarse, dtype=np.int64),
     )
+    rows += np.uint32(start * 2)
+    return rows, columns, fine, coarse
+
+
+def _strips(classes: PixelClasses) -> list[tuple[int, int]]:
+    """Location row ranges whose canvas pixels fit the memory budget one range at a time."""
+    rows, columns = (int(size) for size in classes.labels.shape)
+    height = band_rows(
+        columns * PIXEL_ROW_BYTES, workers=1, floor=STRIP_FLOOR, ceiling=min(STRIP_CEILING, rows)
+    )
+    return [(first, min(rows, first + height)) for first in range(0, rows, height)]
 
 
 def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
@@ -221,11 +245,12 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     class_count: int,
     coarse_count: int,
     seed: int,
-) -> tuple[dict[str, bytes], dict[str, object]]:
-    """Rewritten instance files for every file that has instances in the canvas.
+    sink: MutableMapping[str, Buffer],
+) -> dict[str, object]:
+    """Rewrite the instance files that have instances in the canvas into ``sink``.
 
     ``canvas`` marks replaced location pixels; ``classes.calibrate`` marks the labels
-    whose pixels calibrate densities (Old World land).
+    whose pixels calibrate densities (Old World land). Returns statistics.
     """
     rows, columns = classes.labels.shape
     sets = _bin_sets(game_dir) + _inline_sets(game_dir)
@@ -236,57 +261,67 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
         if np.any(inside):
             affected.append((instance, inside))
     if not affected:
-        return {}, {"instance_files": 0}
+        return {"instance_files": 0}
     fine_pixels = pixel_counts(classes, classes.label_class, class_count, classes.calibrate)
     coarse_pixels = pixel_counts(classes, classes.label_coarse, coarse_count, classes.calibrate)
-    pixels = canvas_pixels(classes, canvas)
-    _, _, fine_key, coarse_key = pixels
     use_fine = fine_pixels >= MIN_PIXELS
     tables = [_densities(instance, classes, fine_pixels, coarse_pixels) for instance, _ in affected]
     removed = sum(int(np.count_nonzero(inside)) for _, inside in affected)
-    fine_chosen = use_fine[fine_key]
+    strips = _strips(classes)
+    fine_count = np.zeros(fine_pixels.size, dtype=np.int64)
+    coarse_count_pixels = np.zeros(coarse_pixels.size, dtype=np.int64)
+    for first, last in strips:
+        _, _, fine_key, coarse_key = canvas_pixels(classes, canvas, first, last)
+        fine_chosen = use_fine[fine_key]
+        fine_count += np.bincount(fine_key, minlength=fine_pixels.size) * use_fine
+        coarse_count_pixels += np.bincount(coarse_key[~fine_chosen], minlength=coarse_pixels.size)
     scale = budget_scale(
-        tables,
-        np.bincount(fine_key, minlength=fine_pixels.size) * use_fine,
-        np.bincount(coarse_key[~fine_chosen], minlength=coarse_pixels.size),
-        removed * BUDGET_PERMILLE // PERMILLE,
+        tables, fine_count, coarse_count_pixels, removed * BUDGET_PERMILLE // PERMILLE
     )
-    del fine_chosen
-    records: dict[str, list[tuple[InstanceSet, NDArray[np.float32]]]] = {}
-    added = 0
-    for (instance, inside), (fine_table, coarse_table) in zip(affected, tables, strict=True):
-        kept = instance.records[~inside]
-        fresh = sample_instances(
-            pixels,
-            use_fine=use_fine,
-            densities=(
-                (fine_table * scale) >> DENSITY_BITS,
-                (coarse_table * scale) >> DENSITY_BITS,
-            ),
-            source=kept,
-            rows=rows,
-            key=derive_seed(seed, "objects", instance.name),
-        )
-        added += int(fresh.shape[0])
-        records.setdefault(instance.path, []).append((instance, np.concatenate([kept, fresh])))
+    scaled = [
+        ((fine_table * scale) >> DENSITY_BITS, (coarse_table * scale) >> DENSITY_BITS)
+        for fine_table, coarse_table in tables
+    ]
+    kept_records = [instance.records[~inside] for instance, inside in affected]
+    fresh: list[list[NDArray[np.float32]]] = [[] for _ in affected]
+    for first, last in strips:
+        pixels = canvas_pixels(classes, canvas, first, last)
+        for index, (instance, _) in enumerate(affected):
+            fresh[index].append(
+                sample_instances(
+                    pixels,
+                    use_fine=use_fine,
+                    densities=scaled[index],
+                    source=kept_records[index],
+                    rows=rows,
+                    key=derive_seed(seed, "objects", instance.name),
+                )
+            )
+    added = sum(int(part.shape[0]) for parts in fresh for part in parts)
     if added > removed:
         message = f"{added} new map object instances outnumber the {removed} they replace"
         raise ObjectBudgetError(message)
-    outputs: dict[str, bytes] = {}
-    for path, parts in records.items():
-        relative = path.removeprefix("game/")
-        if path.endswith(".bin"):
-            outputs[relative] = parts[0][1].astype("<f4").tobytes()
+    inline: dict[str, dict[str, NDArray[np.float32]]] = {}
+    files = 0
+    for index, (instance, _) in enumerate(affected):
+        values = np.concatenate([kept_records[index], *fresh[index]])
+        kept_records[index] = np.empty((0, RECORD_FLOATS), dtype=np.float32)
+        fresh[index] = []
+        relative = instance.path.removeprefix("game/")
+        if instance.path.endswith(".bin"):
+            sink[relative] = np.ascontiguousarray(values, dtype="<f4")
+            files += 1
         else:
-            replaced = {instance.name: values for instance, values in parts}
-            outputs[relative] = rewrite_inline(game_dir / path, replaced)
-    stats: dict[str, object] = {
-        "instance_files": len(outputs),
+            inline.setdefault(instance.path, {})[instance.name] = values
+    for path, replaced in inline.items():
+        sink[path.removeprefix("game/")] = rewrite_inline(game_dir / path, replaced)
+        files += 1
+    return {
+        "instance_files": files,
         "instances_removed": removed,
         "instances_added": added,
         "density_scale_permille": scale * PERMILLE >> DENSITY_BITS,
     }
-    return outputs, stats
 
 
 def _format(values: NDArray[np.float32]) -> str:

@@ -81,10 +81,12 @@ def tile_counts(rows: int, columns: int) -> tuple[int, int]:
     return -(-rows // TILE), -(-columns // TILE)
 
 
-def read_level0(layer: LayerFormat, spans: list[tuple[int, int]], data: bytes) -> NDArray[np.int64]:
-    """Decode mip level 0 and return it north-up."""
+def read_level0(
+    layer: LayerFormat, spans: list[tuple[int, int]], data: bytes
+) -> NDArray[np.uint16] | NDArray[np.uint8]:
+    """Decode mip level 0 and return it north-up, in the sample type of the layer."""
     down, across = tile_counts(layer.height, layer.width)
-    image = np.zeros((down * TILE, across * TILE), dtype=np.int64)
+    image = np.zeros((down * TILE, across * TILE), dtype=layer.dtype)
     raw_size = SIDE * SIDE * layer.sample_bytes
     for index in range(down * across):
         offset, size = spans[index]
@@ -96,14 +98,15 @@ def read_level0(layer: LayerFormat, spans: list[tuple[int, int]], data: bytes) -
     return image[: layer.height, : layer.width][::-1]
 
 
-def write_layer(north_up: NDArray[np.int64], layer: LayerFormat) -> tuple[str, bytes]:
+def write_layer(north_up: NDArray[np.integer], layer: LayerFormat) -> tuple[str, bytes]:
     """Build ``.info`` text and ``.bin`` bytes for an image.
 
     The tiles of every mip level are cut, compressed and joined natively (ADR 0005); the
-    NumPy and Python version is ``tests/reference/tiles.py``.
+    NumPy and Python version is ``tests/reference/tiles.py``. Values wider than the sample
+    type keep their low bytes.
     """
     sizes, data = _native.pack_layer(
-        np.ascontiguousarray(north_up, dtype=np.int64), layer.sample_bytes
+        np.ascontiguousarray(north_up.astype(np.uint16, copy=False)), layer.sample_bytes
     )
     spans = list(zip(accumulate([0, *sizes[:-1]]), sizes, strict=True))
     infos = " ".join(f"{{\n\t\toffset={o}\n\t\tsize={s}\n\t}}" for o, s in spans)

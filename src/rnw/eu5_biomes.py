@@ -50,6 +50,8 @@ BIOME_KEYS: Final[tuple[str, ...]] = ("climate", "vegetation", "topography")
 BIOME_DEFINITIONS: Final[str] = "game/in_game/gfx/map/biome_definitions/biomes.txt"
 TERRAIN_MATERIALS: Final[str] = "game/in_game/gfx/terrain2/materials.txt"
 CLIMATE_STEP: Final[int] = 4
+# Rows per strip of the whole-raster climate passes; a multiple of CLIMATE_STEP.
+CLIMATE_STRIP: Final[int] = 1024
 # Row of the equator and (pixels from it, absolute latitude in tenths of a degree), from
 # city locators of build 25905365 [V-LOCAL C49]: Quito, Mogadishu and Singapore near
 # the equator, Cairo 30.0, London 51.5, Oslo 59.9, Arkhangelsk 64.5, Hammerfest 70.7.
@@ -169,11 +171,33 @@ class ClimateGrid:
     shore: NDArray[np.int64]
 
 
-def climate_grid(sea: NDArray[np.bool_], height: NDArray[np.int64]) -> ClimateGrid:
+def _block_means(
+    sea: NDArray[np.bool_], height: NDArray[np.integer], strip: int
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Block means of the sea share (permille) and of the height, a strip of rows at a time.
+
+    ``strip`` is a multiple of ``CLIMATE_STEP``, so every block lies in one strip and the
+    result is the same as for the whole raster, without an eight-byte copy of it.
+    """
+    step = CLIMATE_STEP
+    rows, columns = (int(size) for size in sea.shape)
+    shape = (-(-rows // step), -(-columns // step))
+    share = np.empty(shape, dtype=np.int64)
+    mean = np.empty(shape, dtype=np.int64)
+    for first in range(0, rows, strip):
+        window = slice(first, min(rows, first + strip))
+        blocks = slice(first // step, -(-window.stop // step))
+        share[blocks] = block_mean(sea[window].astype(np.int64) * 1000, step)
+        mean[blocks] = block_mean(height[window].astype(np.int64), step)
+    return share, mean
+
+
+def climate_grid(sea: NDArray[np.bool_], height: NDArray[np.integer]) -> ClimateGrid:
     """Rainfall, distance to the sea (land) and distance to land (water), in pixels."""
     step = CLIMATE_STEP
-    sea_grid = block_mean(sea.astype(np.int64) * 1000, step) >= 500  # noqa: PLR2004 - half
-    height_grid = np.maximum(block_mean(height, step), SEA_HEIGHT)
+    share, mean = _block_means(sea, height, CLIMATE_STRIP)
+    sea_grid = share >= 500  # noqa: PLR2004 - half
+    height_grid = np.maximum(mean, SEA_HEIGHT)
     rows = np.arange(sea_grid.shape[0], dtype=np.int64) * step + step // 2
     rain = rainfall(sea_grid, height_grid, latitude_tenths(rows), RAIN)
     coast = distance_from(sea_grid, COAST_LIMIT, octagonal=True).astype(np.int64) * step

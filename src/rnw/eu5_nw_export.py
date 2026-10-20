@@ -20,7 +20,14 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import __version__
-from rnw.artifacts import check_new_output, pixel_digest, staged, write_bytes
+from rnw.artifacts import (
+    Spool,
+    check_new_output,
+    pixel_digest,
+    spool_path,
+    staged,
+    write_bytes,
+)
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
     CLIMATE_STEP,
@@ -128,6 +135,7 @@ from rnw.newworld import (
     split_at_column,
     unported_cells,
 )
+from rnw.parallel import configure
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.relief import COAST_HEIGHT
@@ -259,8 +267,7 @@ class NewWorldExportError(ValueError):
 
 
 def _world_columns(canvas: Canvas, columns: NDArray[np.int64]) -> NDArray[np.int64]:
-    width = int(canvas.rolled.shape[1])
-    return (columns + canvas.col0 - canvas.roll) % width
+    return (columns + canvas.col0 - canvas.roll) % canvas.shape[1]
 
 
 def _coastal(world: NewWorld) -> NDArray[np.bool_]:
@@ -422,7 +429,7 @@ def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
     positions: dict[int, tuple[int, int]] = {}
     order = np.lexsort((pixels, packed))
     packed_sorted, pixels_sorted = packed[order], pixels[order]
-    height = canvas.rolled.shape[0]
+    height = canvas.shape[0]
     for land_cell in sorted(best):
         sea_cell = best[land_cell][0]
         key = land_cell * (len(plan.cells) + 1) + sea_cell
@@ -459,7 +466,7 @@ def _instance(key: str, row: int, x: int, height: int) -> str:
 def _locator_instances(
     plan: Plan, world: NewWorld, canvas: Canvas, ports: dict[int, tuple[int, int]]
 ) -> dict[str, list[str]]:
-    height = int(canvas.rolled.shape[0])
+    height = canvas.shape[0]
     columns = _world_columns(canvas, world.interior[:, 1])
     rows = world.interior[:, 0]
     wanted = {
@@ -492,16 +499,17 @@ def _locator_instances(
 
 def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
     """Locator instances at the interior point of each trimmed ocean zone's remainder."""
-    height, width = canvas.rolled.shape
-    full = np.zeros(canvas.rolled.shape, dtype=bool)
+    height, width = canvas.shape
+    rolled = canvas.rolled(game_map.labels)
+    full = np.zeros(canvas.shape, dtype=bool)
     full[:, canvas.col0 : canvas.col0 + canvas.mask.shape[1]] = canvas.mask
     out: dict[str, str] = {}
     zones = np.flatnonzero(canvas.trimmed).astype(np.int32)
-    boxes = remainder_boxes(canvas.rolled, full, zones, len(game_map.keys))
+    boxes = remainder_boxes(rolled, full, zones, len(game_map.keys))
     for zone in zones.tolist():
         window = boxes[zone]
         top, left = window[0].start, window[1].start
-        mine = (canvas.rolled[window] == zone) & ~full[window]
+        mine = (rolled[window] == zone) & ~full[window]
         distance = distance_from(np.pad(~mine, 1, constant_values=True), 4096)[1:-1, 1:-1]
         best = int(np.argmax(np.where(mine, distance, -1)))
         row, column = divmod(best, mine.shape[1])
@@ -554,10 +562,7 @@ def _localization(plan: Plan, extra: dict[str, str], renamed: dict[str, str]) ->
 
 def _final_labels(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int32]:
     final = game_map.labels.copy()
-    rows, columns = np.nonzero(canvas.mask)
-    final[rows, _world_columns(canvas, columns.astype(np.int64))] = world.labels[
-        rows, columns
-    ] + len(game_map.keys)
+    canvas.put(final, world.labels + len(game_map.keys))
     return final
 
 
@@ -788,29 +793,28 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
 def _rasters(
     game_map: Eu5Map, canvas: Canvas, world: NewWorld, plan: Plan, river_codes: NDArray[np.uint8]
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
-    rows, columns = np.nonzero(canvas.mask)
-    world_columns = _world_columns(canvas, columns.astype(np.int64))
-    cells = world.labels[rows, columns]
-    colors = np.array([cell.color for cell in plan.cells], dtype=np.int64)[cells]
+    colors = np.array([cell.color for cell in plan.cells], dtype=np.int64)
+    palette = np.stack([(colors >> 16) & 0xFF, (colors >> 8) & 0xFF, colors & 0xFF], axis=1)
     rgb = game_map.rgb
-    rgb[rows, world_columns, 0] = (colors >> 16) & 0xFF
-    rgb[rows, world_columns, 1] = (colors >> 8) & 0xFF
-    rgb[rows, world_columns, 2] = colors & 0xFF
+    canvas.put(rgb, palette.astype(np.uint8)[world.labels])
     water = np.array(
         [cell.kind in {CellClass.SEA, CellClass.LAKE} for cell in plan.cells], dtype=bool
     )
     rivers = game_map.rivers
-    rivers[rows, world_columns] = np.where(
-        river_codes[rows, columns] < RIVER_CLASSES,
-        river_codes[rows, columns],
-        np.where(water[cells], RIVER_WATER, RIVER_LAND),
+    canvas.put(
+        rivers,
+        np.where(
+            river_codes < RIVER_CLASSES,
+            river_codes,
+            np.where(water[world.labels], RIVER_WATER, RIVER_LAND),
+        ).astype(np.uint8),
     )
     return rgb, rivers
 
 
 def _rivers(
     world: NewWorld, canvas: Canvas, climate: ClimateGrid, seed: int
-) -> tuple[NDArray[np.uint8], NDArray[np.int64], dict[str, object]]:
+) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
     """River codes for ``rivers.png`` and relief with carved valleys, in crop coordinates.
 
     Rain comes from the final climate grid (world coordinates) at each coarse river
@@ -822,7 +826,7 @@ def _rivers(
     )
     land = land_kind[world.labels]
     height, width_crop = land.shape
-    world_width = int(canvas.rolled.shape[1])
+    world_width = canvas.shape[1]
     coarse_rows = -(-height // RIVER_STEP)
     coarse_columns = -(-width_crop // RIVER_STEP)
     centre_rows = np.arange(coarse_rows, dtype=np.int64) * RIVER_STEP + RIVER_STEP // 2
@@ -834,7 +838,7 @@ def _rivers(
         climate.rain.shape[1] - 1,
     )
     rain = climate.rain[grid_rows[:, np.newaxis], grid_columns[np.newaxis, :]]
-    elevation = world.elevation.astype(np.int64)
+    elevation = world.elevation
     rivers = generate_rivers(land, elevation, rain, seed=seed)
     classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
     codes = np.full(land.shape, RIVER_LAND, dtype=np.uint8)
@@ -1195,7 +1199,7 @@ def _preview(final_rgb_classes: NDArray[np.uint8]) -> bytes:
     return encode_png(final_rgb_classes, color_type=COLOR_RGB, compression="zlib")
 
 
-def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each input.
+def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     game_dir: Path,
     output: Path,
     *,
@@ -1205,9 +1209,36 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     settings_file: str | None = None,
     replace: bool = False,
 ) -> dict[str, object]:
-    """Generate, validate and stage one New World mod bundle; return its report."""
-    clock = Clock()
+    """Generate, validate and stage one New World mod bundle; return its report.
+
+    The large files (terrain layers, vegetation instances) go to a spool directory beside
+    the output as they are made, and join the bundle when it is written.
+    """
     check_new_output(output, MOD_NAME, game_dir, replace=replace)
+    with Spool(spool_path(output)) as spool:
+        return _export_new_world(
+            spool,
+            game_dir,
+            output,
+            seed=seed,
+            settings=settings,
+            accept_build=accept_build,
+            settings_file=settings_file,
+        )
+
+
+def _export_new_world(  # noqa: PLR0913, PLR0915 - one pass over every stage of the export.
+    spool: Spool,
+    game_dir: Path,
+    output: Path,
+    *,
+    seed: int,
+    settings: Settings,
+    accept_build: str | None,
+    settings_file: str | None,
+) -> dict[str, object]:
+    clock = Clock()
+    _ = configure()
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
     spec = run_spec(seed, settings)
     game_map = load_map(game_dir)
@@ -1286,9 +1317,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         river_codes=river_codes,
     )
 
-    def build_rasters() -> tuple[
-        NDArray[np.uint8], NDArray[np.uint8], dict[str, bytes], dict[str, object]
-    ]:
+    def build_rasters() -> tuple[NDArray[np.uint8], NDArray[np.uint8], dict[str, object]]:
         rasters_clock = Clock()
         rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
         codes = _codes(game_map, canvas, world)
@@ -1296,13 +1325,21 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         vanilla_water = np.array(
             [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
         )[game_map.labels]
-        relief_world = np.zeros(game_map.labels.shape, dtype=np.int32)
-        rows, columns = np.nonzero(canvas.mask)
-        relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = carved[rows, columns]
+
+        def relief_window(rows: slice, columns: slice) -> NDArray[np.int32]:
+            """Carved relief of a window of the world, zero off the canvas mask."""
+            world = np.arange(columns.start, columns.stop, dtype=np.int64)
+            inside = (world - canvas.col0 + canvas.roll) % canvas.shape[1]
+            valid = inside < canvas.mask.shape[1]
+            window = np.zeros((rows.stop - rows.start, world.size), dtype=np.int32)
+            local = inside[valid]
+            window[:, valid] = np.where(canvas.mask[rows][:, local], carved[rows][:, local], 0)
+            return window
+
         terrain_inputs = TerrainInputs(
             codes=codes,
             vanilla_water=vanilla_water,
-            relief=relief_world,
+            relief=relief_window,
             labels=final_labels,
             rivers=rivers < RIVER_CLASSES,
         )
@@ -1314,29 +1351,29 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
             watering = pool.submit(
                 water_outputs, game_dir, vanilla_water, new_water, canvas_world, seed
             )
-            terrain_files, materials_world, terrain_stats = terrain_outputs(
-                store, terrain_inputs, slot_tables, seed
+            materials_world, terrain_stats = terrain_outputs(
+                store, terrain_inputs, slot_tables, seed, spool
             )
             rasters_clock.lap("terrain decals")
             water_files, water_stats = watering.result()
         rasters_clock.lap("water")
-        terrain_files.update(water_files)
+        spool.update(water_files)
         terrain_stats.update(water_stats)
         pixel_classes, class_count, coarse_count = _pixel_classes(
             game_map, vanilla_attributes, biomes, final_labels, materials_world
         )
-        object_files, object_stats = object_outputs(
+        object_stats = object_outputs(
             game_dir,
             classes=pixel_classes,
             canvas=canvas_world,
             class_count=class_count,
             coarse_count=coarse_count,
             seed=seed,
+            sink=spool,
         )
         rasters_clock.lap("vegetation instances")
-        terrain_files.update(object_files)
         terrain_stats["objects"] = object_stats
-        return rgb, rivers, terrain_files, terrain_stats
+        return rgb, rivers, terrain_stats
 
     with ThreadPoolExecutor(max_workers=1) as pool:
         pending = pool.submit(build_rasters)
@@ -1386,7 +1423,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         text_stats["scripts_remapped"] = rewrite.remapped
         text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
         text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
-        rgb, rivers, terrain_files, terrain_stats = pending.result()
+        rgb, rivers, terrain_stats = pending.result()
     terrain_stats["rivers"] = river_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
@@ -1412,8 +1449,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
             files.append(record)
         for relative, data in sorted(texts.items()):
             files.append(write_bytes(stage, f"{name}/{relative}", data))
-        for relative, data in sorted(terrain_files.items()):
-            files.append(write_bytes(stage, f"{name}/{relative}", data))
+        files.extend(spool.install(stage, name))
         files.append(
             write_bytes(
                 stage, f"{name}/.metadata/metadata.json", _metadata(name, seed, settings.preset)
@@ -1434,8 +1470,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         changed = np.any(decoded != vanilla, axis=2)
         del vanilla, decoded
         outside = changed.copy()
-        rows, columns = np.nonzero(canvas.mask)
-        outside[rows, _world_columns(canvas, columns.astype(np.int64))] = False
+        canvas.put(outside, np.zeros(canvas.mask.shape, dtype=bool))
         if np.any(outside):
             message = "locations.png changed outside the New World canvas"
             raise NewWorldExportError(message)
@@ -1518,7 +1553,6 @@ def _metadata(name: str, seed: int, preset: str) -> bytes:
 def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8]:
     """World-sized code map: -1 off the canvas, 0 generated water, 1 generated land."""
     codes = np.full(game_map.labels.shape, OUTSIDE, dtype=np.int8)
-    rows, columns = np.nonzero(canvas.mask)
     table = np.array(
         [
             WATER_CODE if kind in {CellClass.SEA, CellClass.LAKE} else LAND_CODE
@@ -1526,9 +1560,7 @@ def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8
         ],
         dtype=np.int8,
     )
-    codes[rows, _world_columns(canvas, columns.astype(np.int64))] = table[
-        world.labels[rows, columns]
-    ]
+    canvas.put(codes, table[world.labels])
     return codes
 
 
@@ -1572,11 +1604,9 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     final_sea = np.concatenate(
         [sea, np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)]
     )
-    height = vanilla_height.astype(np.int64)
-    rows, columns = np.nonzero(canvas.mask)
-    world_columns = _world_columns(canvas, columns.astype(np.int64))
-    height[rows, world_columns] = world.elevation[rows, columns]
-    vanilla_grid = climate_grid(sea[game_map.labels], vanilla_height.astype(np.int64))
+    height = vanilla_height.astype(np.int32)
+    canvas.put(height, world.elevation)
+    vanilla_grid = climate_grid(sea[game_map.labels], vanilla_height)
     final_grid = climate_grid(final_sea[_final_labels(game_map, canvas, world)], height)
     del height, vanilla_height
     points = np.stack(

@@ -345,7 +345,7 @@ def test_components_equal_the_reference(*, wrap_x: bool) -> None:
     grids.append(blobs)
     for labels in grids:
         native = topology.label_components(labels, wrap_x=wrap_x)
-        assert native.dtype == np.int64
+        assert native.dtype == np.int32
         assert np.array_equal(native, reference_topology.label_components(labels, wrap_x=wrap_x))
     empty = np.zeros((0, 4), dtype=np.int32)
     assert topology.label_components(empty).shape == (0, 4)
@@ -366,18 +366,26 @@ def test_drainage_equals_the_reference(shape: tuple[int, int], seed: int) -> Non
     assert np.array_equal(native.flow, expected.flow)
 
 
-def test_best_points_equal_the_reference() -> None:
-    """The first best pixel per label, ties by the second score, empty labels at the origin."""
-    generator = np.random.default_rng(8)
-    labels = generator.integers(-1, 11, (40, 33), dtype=np.int32)
-    labels[labels == 7] = 8  # label 7 has no pixel
-    score = generator.integers(0, 6, labels.shape, dtype=np.int64)
-    tie = generator.integers(0, 3, labels.shape, dtype=np.int64)
-    native = _native.best_points(labels, score, tie, 12)
-    assert np.array_equal(native, reference_points.best_points(labels, score, tie, 12))
+@pytest.mark.parametrize(("seed", "limits"), [(8, (512, 64)), (9, (6, 3)), (10, (40, 5))])
+def test_interior_points_equal_the_reference(seed: int, limits: tuple[int, int]) -> None:
+    """Boundary and shore distances, the land score and its ties, empty cells at the origin."""
+    generator = np.random.default_rng(seed)
+    shape = (60, 77)
+    labels = (
+        fields.upsample(
+            generator.integers(0, 14, (shape[0] // 11 + 2, shape[1] // 11 + 2)), 11, shape
+        )
+        % 14
+    ).astype(np.int32)
+    labels[labels == 7] = 8  # cell 7 has no pixel
+    labels[:3, :9] = -1
+    land = generator.random(14) < 0.6
+    native = _native.interior_points(labels, land, *limits)
+    assert np.array_equal(native, reference_points.interior_points(labels, land, *limits))
     assert native[7].tolist() == [0, 0]
+    assert native.shape == (14, 2)
     with pytest.raises(ValueError, match="below the count"):
-        _ = _native.best_points(labels, score, tie, 5)
+        _ = _native.interior_points(labels, land[:5], *limits)
 
 
 def _slot_window(seed: int, shape: tuple[int, int]) -> tuple[np.ndarray, ...]:
@@ -420,7 +428,7 @@ def test_slot_synthesis_equals_the_reference(seed: int, *, with_rivers: bool) ->
         expected = reference_slots.synthesize(
             labels, land, river_mask, tables, seed=seed, origin=origin
         )
-        assert native.dtype == np.int64
+        assert native.dtype == np.uint8
         assert np.array_equal(native, expected)
         assert len(np.unique(native)) > 4
 

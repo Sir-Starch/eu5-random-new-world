@@ -6,7 +6,9 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
+from rnw import rivers as rivers_module
 from rnw.rivers import (
     BODY,
     JOIN,
@@ -21,6 +23,7 @@ from rnw.rivers import (
     network_problems,
     streams,
 )
+from tests.reference import rivers as reference_rivers
 
 
 def _valley(rows: int = 360, columns: int = 280) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -110,3 +113,65 @@ def test_flow_classes_follow_quantiles_and_valleys_are_carved() -> None:
     assert carved[2, 35] == 6000
     assert carved[0, 5] > carved[1, 5] > carved[2, 5]
     assert carved[2, 0] == 0
+
+
+def _river_raster(seed: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Land, relief and river size classes of a window with a few long streams."""
+    generator = np.random.default_rng(seed)
+    shape = (130, 97)
+    land = np.ones(shape, dtype=bool)
+    land[:, :7] = False
+    land[100:, 40:70] = False
+    relief = np.where(land, generator.integers(5700, 30_000, shape), 0).astype(np.int32)
+    classes = np.full(shape, -1, dtype=np.int8)
+    for column, kind in ((20, 0), (45, 1), (80, 3)):
+        classes[:120, column] = kind
+    classes[60, 20:46] = 2
+    return land, relief, classes
+
+
+@pytest.mark.parametrize("strip", [1, 9, 33, 5000])
+def test_valleys_carved_in_strips_equal_the_whole_raster_ones(
+    monkeypatch: pytest.MonkeyPatch, strip: int
+) -> None:
+    """The reach of the distance and of the nearest class is covered by the strip halo."""
+    _, relief, classes = _river_raster(strip)
+    monkeypatch.setattr(rivers_module, "STRIP_ROWS", strip)
+    depths = (350, 550, 850, 1150)
+    native = carve_valleys(relief, classes, depths=depths, radius_px=6, floor=5700)
+    expected = reference_rivers.carve_valleys(
+        relief.astype(np.int64), classes, depths=depths, radius_px=6, floor=5700
+    )
+    assert native.dtype == np.int32
+    assert np.array_equal(native, expected)
+    assert int((relief - native).max()) > 300
+
+
+@pytest.mark.parametrize("strip", [4, 40, 5000])
+def test_coarse_river_statistics_in_strips_equal_the_whole_raster_ones(
+    monkeypatch: pytest.MonkeyPatch, strip: int
+) -> None:
+    """Block shares and weighted heights agree, partial blocks at the edges included."""
+    land, relief, _ = _river_raster(2)
+    land = land[:123, :95]
+    relief = relief[:123, :95]
+    native = rivers_module._coarse_land_and_height(land, relief, strip)  # pyright: ignore[reportPrivateUsage]
+    expected = reference_rivers.coarse_land_and_height(land, relief.astype(np.int64))
+    for ours, theirs in zip(native, expected, strict=True):
+        assert np.array_equal(ours, theirs)
+    del monkeypatch
+
+
+def test_network_checks_equal_the_whole_raster_ones() -> None:
+    """Byte-sized neighbour counts give the same violations as eight-byte ones."""
+    generator = np.random.default_rng(4)
+    role = np.full((60, 50), NONE, dtype=np.int8)
+    role[10, 5:40] = BODY
+    role[10, 5] = SOURCE
+    role[10, 39] = JOIN
+    role[11:25, 20] = BODY
+    role[30:32, 30:32] = BODY
+    role[generator.random(role.shape) < 0.02] = BODY
+    water = np.zeros(role.shape, dtype=bool)
+    water[:, 45:] = True
+    assert network_problems(role, water) == reference_rivers.network_problems(role, water)

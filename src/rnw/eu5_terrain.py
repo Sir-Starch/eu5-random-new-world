@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import json
 import re
-import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, cast
@@ -27,12 +26,13 @@ import numpy as np
 from rnw import _native
 from rnw.eu5_slots import LEVELS, SlotTables, level_counts, synthesize
 from rnw.noise import NOISE_SCALE
-from rnw.parallel import worker_count
+from rnw.parallel import band_rows, worker_count
 from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
 from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
 
 if TYPE_CHECKING:
+    from collections.abc import Buffer, Callable, MutableMapping
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -43,8 +43,6 @@ LOCATION_UNITS: Final[int] = 4
 HEIGHTMAP: Final[re.Pattern[str]] = re.compile(r"heightmap_\d+_\d+")
 OUTSIDE: Final[int] = -1
 DECAL_THREADS: Final[int] = 8
-# Measured peak of one decal window on top of the rest of the export (C101).
-DECAL_BYTES: Final[int] = 4 << 30
 WATER_CODE: Final[int] = 0
 LAND_CODE: Final[int] = 1
 DETAIL_PERIOD: Final[int] = 64
@@ -85,16 +83,16 @@ def heightmap_decals(cache: list[dict[str, object]], map_rows: int) -> list[Deca
 
 @dataclass(eq=False)
 class DecalStore:
-    """Reads vanilla decal layers once and keeps them in compact form."""
+    """Reads vanilla decal layers; a layer takes about 30 ms to decode, so none is kept.
+
+    Holding the sixteen decoded heights and materials would take two gigabytes of the
+    export's memory for under a second of decoding [V-EXEC C102].
+    """
 
     game_dir: Path
     map_shape: tuple[int, int]
     cache: list[dict[str, object]] = field(init=False)
     decals: list[Decal] = field(init=False)
-    _layers: dict[tuple[str, str], tuple[LayerFormat, NDArray[np.uint16] | NDArray[np.uint8]]] = (
-        field(init=False, default_factory=dict)
-    )
-    _lock: threading.RLock = field(init=False, default_factory=threading.RLock)
 
     def __post_init__(self) -> None:
         """Load the decal cache and the heightmap decal footprints."""
@@ -111,20 +109,16 @@ class DecalStore:
             folder / f"{decal}_{kind}.bin",
         )
 
-    def layer(self, decal: str, kind: str) -> tuple[LayerFormat, NDArray[np.int64]]:
-        """Vanilla layer ``kind`` ("height" or "materials") of a decal, north-up."""
-        key = (decal, kind)
-        with self._lock:
-            if key not in self._layers:
-                _, info_path, bin_path = self.paths(decal, kind)
-                layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
-                image = read_level0(layer, spans, bin_path.read_bytes())
-                compact: NDArray[np.uint16] | NDArray[np.uint8] = (
-                    image.astype(np.uint16) if kind == "height" else image.astype(np.uint8)
-                )
-                self._layers[key] = (layer, compact)
-            layer, compact = self._layers[key]
-        return layer, compact.astype(np.int64)
+    def layer(
+        self, decal: str, kind: str
+    ) -> tuple[LayerFormat, NDArray[np.uint16] | NDArray[np.uint8]]:
+        """Vanilla layer ``kind`` ("height" or "materials") of a decal, north-up, 16 or 8 bit."""
+        _, info_path, bin_path = self.paths(decal, kind)
+        layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
+        image = read_level0(layer, spans, bin_path.read_bytes())
+        if kind == "height":
+            return layer, image.astype(np.uint16, copy=False)
+        return layer, image.astype(np.uint8, copy=False)
 
     def world_heights(self) -> NDArray[np.uint16]:
         """Vanilla height at location resolution (one decal sample per location pixel)."""
@@ -148,10 +142,6 @@ class DecalStore:
         return out
 
 
-def _upsample(values: NDArray[np.generic], factor: int) -> NDArray[np.int64]:
-    return np.repeat(np.repeat(values.astype(np.int64), factor, axis=0), factor, axis=1)
-
-
 # Median vanilla shelf profile measured on decal heightmap_6_16 [V-EXEC]: height by step
 # distance (decal pixels) into water from the coastline; land starts at 5708.
 WATER_PROFILE: Final[tuple[tuple[int, int], ...]] = (
@@ -163,6 +153,16 @@ CAP_REACH: Final[int] = 64
 EIGHTHS: Final[int] = 8
 MARGIN: Final[int] = 128
 COAST_SMOOTH: Final[int] = 3
+# A decal is rebuilt in bands of whole location rows. Each band is computed in a window
+# that reaches BAND_HALO rows past it: a height depends on locations at most CAP_REACH
+# rows away (the coast cap), plus a row for the bilinear step and one for the blur, and
+# the material rules look 17 decal pixels away, so no row of a band depends on the band
+# size or on where its neighbours begin [V-EXEC C102].
+BAND_HALO: Final[int] = CAP_REACH + 8
+BAND_ROWS: Final[int] = 128
+MIN_BAND_ROWS: Final[int] = 16
+# Working memory of a band per location pixel of its window [V-EXEC C102].
+BAND_BYTES: Final[int] = 600
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -175,19 +175,6 @@ class Window:
     column1: int
     inner_row: int
     inner_column: int
-
-
-def _window(decal: Decal, shape: tuple[int, int]) -> Window:
-    row0 = max(0, decal.row0 - MARGIN)
-    column0 = max(0, decal.column0 - MARGIN)
-    return Window(
-        row0,
-        min(shape[0], decal.row0 + decal.rows + MARGIN),
-        column0,
-        min(shape[1], decal.column0 + decal.columns + MARGIN),
-        (decal.row0 - row0) * 2,
-        (decal.column0 - column0) * 2,
-    )
 
 
 def decal_heights(
@@ -248,70 +235,152 @@ def level_shares(
 
 @dataclass(frozen=True, slots=True, eq=False)
 class TerrainInputs:
-    """World-sized rasters that drive the rebuilt decals (location resolution)."""
+    """World-sized rasters that drive the rebuilt decals (location resolution).
+
+    ``relief(rows, columns)`` gives the generated relief of a window of the world, zero off
+    the canvas; the rest are whole-world rasters.
+    """
 
     codes: NDArray[np.int8]
     vanilla_water: NDArray[np.bool_]
-    relief: NDArray[np.int32]
+    relief: Callable[[slice, slice], NDArray[np.int32]]
     labels: NDArray[np.int32]
     rivers: NDArray[np.bool_]
 
 
-def _rebuild_decal(
+class TerrainRangeError(ValueError):
+    """A generated sample does not fit the decal layer it is written to."""
+
+
+def _band_window(decal: Decal, shape: tuple[int, int], first: int, last: int) -> Window:
+    """The window that computes rows ``first`` to ``last`` (of the decal) of one decal."""
+    row0 = max(0, decal.row0 + first - BAND_HALO)
+    column0 = max(0, decal.column0 - MARGIN)
+    return Window(
+        row0,
+        min(shape[0], decal.row0 + last + BAND_HALO),
+        column0,
+        min(shape[1], decal.column0 + decal.columns + MARGIN),
+        (decal.row0 + first - row0) * 2,
+        (decal.column0 - column0) * 2,
+    )
+
+
+def _write_where(
+    target: NDArray[np.uint16] | NDArray[np.uint8],
+    values: NDArray[np.integer],
+    mask: NDArray[np.bool_],
+) -> None:
+    """Copy ``values`` into ``target`` where ``mask`` holds, refusing values that do not fit."""
+    limit = int(np.iinfo(target.dtype).max)
+    chosen = values[mask]
+    if chosen.size and (int(chosen.min()) < 0 or int(chosen.max()) > limit):
+        message = f"generated samples {chosen.min()}..{chosen.max()} do not fit {target.dtype}"
+        raise TerrainRangeError(message)
+    np.copyto(target, values, where=mask, casting="unsafe")
+
+
+def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inputs and the images.
+    decal: Decal,
+    *,
+    first: int,
+    last: int,
+    inputs: TerrainInputs,
+    tables: SlotTables,
+    seed: int,
+    images: tuple[NDArray[np.uint16], NDArray[np.uint8]],
+) -> None:
+    """Heights and material slots of rows ``first`` to ``last`` of a decal, into ``images``."""
+    codes = inputs.codes
+    window = _band_window(decal, (int(codes.shape[0]), int(codes.shape[1])), first, last)
+    rows = slice(window.row0, window.row1)
+    columns = slice(window.column0, window.column1)
+    origin = (window.column0 * 2, window.row0 * 2)
+    land, canvas, heights = decal_heights(
+        codes[rows, columns],
+        inputs.vanilla_water[rows, columns],
+        inputs.relief(rows, columns),
+        seed=seed,
+        origin=origin,
+    )
+    core = (
+        slice(window.inner_row, window.inner_row + (last - first) * 2),
+        slice(window.inner_column, window.inner_column + decal.columns * 2),
+    )
+    target = slice(first * 2, last * 2)
+    inside = canvas[core]
+    height_image, material_image = images
+    _write_where(height_image[target], heights[core], inside)
+    del heights, canvas
+    labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
+    rivers = np.repeat(np.repeat(inputs.rivers[rows, columns], 2, axis=0), 2, axis=1)
+    slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin)
+    _write_where(material_image[target], slots[core], inside)
+
+
+def _rebuild_decal(  # noqa: PLR0913 - a decal reads the store, the inputs, the tables and the bands.
     decal: Decal,
     store: DecalStore,
     inputs: TerrainInputs,
     tables: SlotTables,
+    *,
     seed: int,
-) -> tuple[dict[str, bytes], NDArray[np.int64]]:
-    """The mod files and the material image of one decal over the canvas."""
-    codes = inputs.codes
-    window = _window(decal, (int(codes.shape[0]), int(codes.shape[1])))
-    rows = slice(window.row0, window.row1)
-    columns = slice(window.column0, window.column1)
-    land, canvas, generated_window = decal_heights(
-        codes[rows, columns],
-        inputs.vanilla_water[rows, columns],
-        inputs.relief[rows, columns],
-        seed=seed,
-        origin=(window.column0 * 2, window.row0 * 2),
-    )
-    crop = (
-        slice(window.inner_row, window.inner_row + decal.rows * 2),
-        slice(window.inner_column, window.inner_column + decal.columns * 2),
-    )
-    origin = (window.column0 * 2, window.row0 * 2)
+    pool: ThreadPoolExecutor,
+    band: int,
+) -> tuple[dict[str, bytes], NDArray[np.uint8]]:
+    """The mod files and the material image of one decal over the canvas.
+
+    The decal is cut into bands of ``band`` location rows that run on ``pool``; the files
+    are the same for any band size.
+    """
     height_layer, vanilla_height = store.layer(decal.name, "height")
-    generated = generated_window[crop]
-    outputs: dict[str, bytes] = {}
-    stem, _, _ = store.paths(decal.name, "height")
-    info, data = write_layer(np.where(canvas[crop], generated, vanilla_height), height_layer)
-    outputs[f"{stem}.info"] = info.encode("utf-8")
-    outputs[f"{stem}.bin"] = data
     material_layer, vanilla_materials = store.layer(decal.name, "materials")
-    labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
-    rivers = _upsample(inputs.rivers[rows, columns].astype(np.int8), 2).astype(bool)
-    slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin)[crop]
-    image = np.where(canvas[crop], slots, vanilla_materials)
-    stem, _, _ = store.paths(decal.name, "materials")
-    info, data = write_layer(image, material_layer)
-    outputs[f"{stem}.info"] = info.encode("utf-8")
-    outputs[f"{stem}.bin"] = data
-    return outputs, image
+    height_image = np.array(vanilla_height, dtype=np.uint16)
+    material_image = np.array(vanilla_materials, dtype=np.uint8)
+    rows = decal.rows
+    spans = [(first, min(rows, first + band)) for first in range(0, rows, band)]
+
+    def rebuild(span: tuple[int, int]) -> None:
+        _rebuild_band(
+            decal,
+            first=span[0],
+            last=span[1],
+            inputs=inputs,
+            tables=tables,
+            seed=seed,
+            images=(height_image, material_image),
+        )
+
+    for _ in pool.map(rebuild, spans):
+        pass
+    outputs: dict[str, bytes] = {}
+    for kind, image, layer in (
+        ("height", height_image, height_layer),
+        ("materials", material_image, material_layer),
+    ):
+        stem, _, _ = store.paths(decal.name, kind)
+        info, data = write_layer(image, layer)
+        outputs[f"{stem}.info"] = info.encode("utf-8")
+        outputs[f"{stem}.bin"] = data
+    return outputs, material_image
 
 
 def terrain_outputs(
-    store: DecalStore, inputs: TerrainInputs, tables: SlotTables, seed: int
-) -> tuple[dict[str, bytes], NDArray[np.uint8], dict[str, object]]:
+    store: DecalStore,
+    inputs: TerrainInputs,
+    tables: SlotTables,
+    seed: int,
+    sink: MutableMapping[str, Buffer],
+) -> tuple[NDArray[np.uint8], dict[str, object]]:
     """Mod files for every decal layer touched by the canvas, plus decal disabling.
 
-    ``inputs.codes`` is -1 outside the canvas, 0 for water and 1 for land. Returns the
-    files, the final material raster (two pixels per location pixel) and statistics.
-    The decals are independent, so they are rebuilt on a few threads; the files and the
-    raster are the same for any number of threads.
+    ``inputs.codes`` is -1 outside the canvas, 0 for water and 1 for land. The files go
+    into ``sink`` as each decal is done, so they do not pile up in memory; returns the
+    final material raster (two pixels per location pixel) and statistics. Each decal is
+    rebuilt in bands on a few threads, sized to the cores and to the free memory; the
+    files and the raster are the same for any size and any number.
     """
     codes = inputs.codes
-    outputs: dict[str, bytes] = {}
     materials_world = store.world_materials()
     touched = [
         decal
@@ -323,28 +392,34 @@ def terrain_outputs(
             != OUTSIDE
         )
     ]
-
-    def rebuild(decal: Decal) -> tuple[dict[str, bytes], NDArray[np.int64]]:
-        return _rebuild_decal(decal, store, inputs, tables, seed)
-
-    with ThreadPoolExecutor(
-        max_workers=worker_count(DECAL_THREADS, bytes_each=DECAL_BYTES)
-    ) as pool:
-        rebuilt = list(pool.map(rebuild, touched))
-    for decal, (files, image) in zip(touched, rebuilt, strict=True):
-        outputs.update(files)
-        materials_world[
-            decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
-            decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
-        ] = image.astype(np.uint8)
+    columns = max((decal.columns for decal in touched), default=0) + 2 * MARGIN
+    thin = BAND_BYTES * columns * (2 * BAND_HALO + MIN_BAND_ROWS)
+    workers = worker_count(DECAL_THREADS, bytes_each=thin)
+    window = band_rows(
+        BAND_BYTES * columns,
+        workers=workers,
+        floor=2 * BAND_HALO + MIN_BAND_ROWS,
+        ceiling=2 * BAND_HALO + BAND_ROWS,
+    )
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for decal in touched:
+            files, image = _rebuild_decal(
+                decal, store, inputs, tables, seed=seed, pool=pool, band=window - 2 * BAND_HALO
+            )
+            sink.update(files)
+            del files
+            materials_world[
+                decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
+                decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
+            ] = image
     disabled, cache_out = _disable_decals(store, codes)
-    outputs.update(disabled)
-    outputs["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
+    sink.update(disabled)
+    sink["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
     stats: dict[str, object] = {
         "decals_rebuilt": [decal.name for decal in touched],
         "mountain_decals_disabled": len(disabled),
     }
-    return outputs, materials_world, stats
+    return materials_world, stats
 
 
 def _inside(codes: NDArray[np.int8], x: float, y: float) -> bool:

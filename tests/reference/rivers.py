@@ -1,6 +1,8 @@
-"""Pure-Python priority-flood drainage: the specification of the Rust kernel.
+"""River references: priority-flood drainage (the Rust kernel's specification) and the
+whole-raster valley carving, network checks and coarse statistics that the strip versions
+of ``rnw.rivers`` must equal.
 
-Moved from ``rnw.rivers`` when it became native (docs/adr/0005-native-core.md).
+Moved from ``rnw.rivers`` (docs/adr/0005-native-core.md).
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -13,8 +15,10 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.rivers import Drainage
+from rnw.fields import PERMILLE, block_mean, smoothstep
+from rnw.rivers import BODY, JOIN, NONE, SOURCE, STEP, Drainage
 from rnw.rng import hash_grid
+from rnw.topology import euclidean_distance, label_components, nearest_label
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -83,3 +87,70 @@ def drainage(
         parent=np.where(up >= 0, (up_r - 1) * columns + (up_c - 1), -1),
         flow=np.array(flow, dtype=np.int64)[inner],
     )
+
+
+def carve_valleys(
+    relief: NDArray[np.int64],
+    classes: NDArray[np.int8],
+    *,
+    depths: tuple[int, ...],
+    radius_px: int,
+    floor: int,
+) -> NDArray[np.int64]:
+    """Lower ``relief`` around river pixels: ``depths[class]`` at the river, easing to
+    nothing at ``radius_px``; land never drops below ``floor``. Water (0) is kept."""
+    river = classes >= 0
+    if not np.any(river):
+        return relief
+    distance = euclidean_distance(river, radius_px)
+    nearest = nearest_label(classes.astype(np.int32), river, radius_px + 1)
+    depth = np.array(depths, dtype=np.int64)[np.maximum(nearest, 0)]
+    ease = PERMILLE - smoothstep(distance, 0, radius_px * 8)
+    carve = np.where(nearest >= 0, depth * ease // PERMILLE, 0)
+    land = relief > 0
+    return np.where(land, np.maximum(relief - carve, np.minimum(relief, floor)), relief)
+
+
+def network_problems(role: NDArray[np.int8], water: NDArray[np.bool_]) -> dict[str, int]:
+    """Violations of the river raster rules (all zero for a valid network).
+
+    Sources have one river neighbour, joins two, other pixels two (or one at a free
+    end, or three beside exactly one join); no 2x2 blocks; each connected network has
+    exactly one source and at least one end at or in water.
+    """
+    river = role != NONE
+    padded = np.pad(river, 1)
+    degree = (
+        padded[:-2, 1:-1].astype(np.int64) + padded[2:, 1:-1] + padded[1:-1, :-2] + padded[1:-1, 2:]
+    )
+    join = np.pad(role == JOIN, 1)
+    joins = join[:-2, 1:-1].astype(np.int64) + join[2:, 1:-1] + join[1:-1, :-2] + join[1:-1, 2:]
+    wet = np.pad(water, 1)
+    near_water = wet[:-2, 1:-1] | wet[2:, 1:-1] | wet[1:-1, :-2] | wet[1:-1, 2:] | water
+    body = role == BODY
+    ends = body & (degree == 1)
+    components = label_components(np.where(river, 1, 0).astype(np.int32))
+    size = int(components.max()) + 1
+    networks = np.unique(components[river])
+    sources = np.bincount(components[role == SOURCE], minlength=size)[networks]
+    mouths = np.bincount(components[ends & near_water], minlength=size)[networks]
+    return {
+        "bad_sources": int(np.count_nonzero((role == SOURCE) & (degree != 1))),
+        "bad_joins": int(np.count_nonzero((role == JOIN) & (degree != 2))),
+        "bad_body": int(np.count_nonzero(body & ((degree == 0) | (degree > 3)))),
+        "bad_confluences": int(np.count_nonzero(body & (degree == 3) & (joins != 1))),
+        "blocks": int(
+            np.count_nonzero(river[:-1, :-1] & river[1:, :-1] & river[:-1, 1:] & river[1:, 1:])
+        ),
+        "networks_without_one_source": int(np.count_nonzero(sources != 1)),
+        "networks_without_mouth": int(np.count_nonzero(mouths == 0)),
+    }
+
+
+def coarse_land_and_height(
+    land: NDArray[np.bool_], height: NDArray[np.int64]
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Land share (permille) and weighted land height of every STEP x STEP block."""
+    count = block_mean(land.astype(np.int64) * PERMILLE, STEP)
+    weight = block_mean(np.where(land, height, 0), STEP)
+    return count, weight

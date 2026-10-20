@@ -123,7 +123,7 @@ def _claim(
     return np.sort(np.concatenate(claimed))
 
 
-def _first_pixels(components: NDArray[np.int64]) -> NDArray[np.int64]:
+def _first_pixels(components: NDArray[np.integer]) -> NDArray[np.int64]:
     _, first = np.unique(components.ravel(), return_index=True)
     return first.astype(np.int64)
 

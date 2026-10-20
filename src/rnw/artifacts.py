@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import shutil
+from collections.abc import Buffer, Iterator, MutableMapping
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Self, override
 
 import numpy as np
 
@@ -59,9 +60,10 @@ def check_new_output(
     if resolved.exists() and not (replace and resolved.is_dir()):
         message = f"Refusing to overwrite existing output: {resolved}"
         raise OutputPathError(message)
-    if staging_path(resolved).exists():
-        message = f"Refusing to overwrite a leftover staging directory: {staging_path(resolved)}"
-        raise OutputPathError(message)
+    for leftover in (staging_path(resolved), spool_path(resolved)):
+        if leftover.exists():
+            message = f"Refusing to overwrite a leftover staging directory: {leftover}"
+            raise OutputPathError(message)
 
 
 def staging_path(output: Path) -> Path:
@@ -108,6 +110,75 @@ def pixel_digest(pixels: NDArray[np.uint8], mode: str) -> str:
     """Encoding-independent digest of decoded pixels."""
     header = f"{mode}:{pixels.shape[1]}x{pixels.shape[0]}\n".encode("ascii")
     return sha256(header + np.ascontiguousarray(pixels).tobytes())
+
+
+def spool_path(output: Path) -> Path:
+    """Hidden sibling where finished files wait for the bundle to be written."""
+    return output.parent / f".{output.name}.spool"
+
+
+class Spool(MutableMapping[str, Buffer]):
+    """Files kept on disk as they are made, so the large ones do not wait in memory.
+
+    It behaves as a mapping from a bundle-relative path to the file's bytes: storing a
+    file writes it (and hashes it) at once, reading one reads it back. ``install`` moves
+    every file into the staged bundle with its manifest record. Use as a context manager;
+    leaving it removes whatever was not installed.
+    """
+
+    def __init__(self, root: Path) -> None:
+        self._root: Path = root
+        self._records: dict[str, tuple[int, str]] = {}
+
+    def __enter__(self) -> Self:
+        if self._root.exists():
+            message = f"Refusing to reuse a leftover spool directory: {self._root}"
+            raise OutputPathError(message)
+        self._root.mkdir(parents=True)
+        return self
+
+    def __exit__(self, *_exc: object) -> None:
+        shutil.rmtree(self._root, ignore_errors=True)
+
+    @override
+    def __setitem__(self, relative: str, data: Buffer) -> None:
+        target = self._root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        view = memoryview(data)
+        with target.open("wb") as handle:
+            _ = handle.write(view)
+        self._records[relative] = (view.nbytes, hashlib.sha256(view).hexdigest())
+
+    @override
+    def __getitem__(self, relative: str) -> bytes:
+        if relative not in self._records:
+            raise KeyError(relative)
+        return (self._root / relative).read_bytes()
+
+    @override
+    def __delitem__(self, relative: str) -> None:
+        del self._records[relative]
+        (self._root / relative).unlink()
+
+    @override
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._records)
+
+    @override
+    def __len__(self) -> int:
+        return len(self._records)
+
+    def install(self, stage: Path, prefix: str) -> list[dict[str, object]]:
+        """Move the files to ``stage/prefix/...``; return their manifest records, sorted."""
+        records: list[dict[str, object]] = []
+        for relative in sorted(self._records):
+            size, digest = self._records[relative]
+            target = stage / prefix / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            _ = (self._root / relative).replace(target)
+            records.append({"path": f"{prefix}/{relative}", "size": size, "sha256": digest})
+        self._records.clear()
+        return records
 
 
 def write_bytes(root: Path, relative: str, data: bytes) -> dict[str, object]:
