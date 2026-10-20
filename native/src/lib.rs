@@ -11,6 +11,7 @@ pub mod noise;
 pub mod objects;
 pub mod raster;
 pub mod slots;
+pub mod terrain;
 pub mod tiles;
 
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
@@ -488,6 +489,58 @@ mod _native {
         let samples = image.as_slice()?;
         let (sizes, bytes) = py.detach(|| tiles::pack_layer(samples, shape, sample_bytes));
         Ok((sizes, PyBytes::new(py, &bytes)))
+    }
+
+    /// Land mask, canvas mask and heights of a decal window at decal resolution.
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn decal_heights<'py>(
+        py: Python<'py>,
+        codes: PyReadonlyArray2<'py, i8>,
+        vanilla_water: PyReadonlyArray2<'py, bool>,
+        relief: PyReadonlyArray2<'py, i64>,
+        keys: (u64, u64),
+        origin: (i64, i64),
+        table: Vec<(i64, i64)>,
+        profile_end: i32,
+        params: std::collections::HashMap<String, i64>,
+    ) -> PyResult<(
+        Bound<'py, PyArray2<bool>>,
+        Bound<'py, PyArray2<bool>>,
+        Bound<'py, PyArray2<i64>>,
+    )> {
+        let shape = codes.as_array().dim();
+        if vanilla_water.as_array().dim() != shape || relief.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "mismatched rasters",
+            ));
+        }
+        if shape.0 == 0 || shape.1 == 0 || table.is_empty() {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "empty window or profile",
+            ));
+        }
+        let (codes, water, relief) = (
+            codes.as_slice()?,
+            vanilla_water.as_slice()?,
+            relief.as_slice()?,
+        );
+        let params = terrain::Params::new(params);
+        let (land, canvas, heights) = py
+            .detach(|| {
+                let fields =
+                    terrain::land_and_distances(codes, water, shape, &params, profile_end)?;
+                let heights =
+                    terrain::heights(relief, shape, &fields, keys, origin, &table, &params)?;
+                Ok::<_, String>((fields.land, fields.canvas, heights))
+            })
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        let doubled = (shape.0 * 2, shape.1 * 2);
+        Ok((
+            shaped(py, doubled, land)?,
+            shaped(py, doubled, canvas)?,
+            shaped(py, doubled, heights)?,
+        ))
     }
 
     /// Value noise at arbitrary integer coordinates.

@@ -12,6 +12,7 @@ from rnw import (
     _native,
     eu5_objects,
     eu5_slots,
+    eu5_terrain,
     fields,
     lzav,
     noise,
@@ -26,6 +27,7 @@ from tests.reference import objects as reference_objects
 from tests.reference import points as reference_points
 from tests.reference import rivers as reference_rivers
 from tests.reference import slots as reference_slots
+from tests.reference import terrain as reference_terrain
 from tests.reference import tiles as reference_tiles
 from tests.reference import topology as reference_topology
 
@@ -454,3 +456,40 @@ def test_layer_packing_equals_the_reference(shape: tuple[int, int], sample_bytes
     layer = terrain_tiles.LayerFormat(shape[1], shape[0], "<u2" if sample_bytes == 2 else "u1")
     native = terrain_tiles.write_layer(image, layer)
     assert native == reference_tiles.write_layer(image, layer)
+
+
+@pytest.mark.parametrize("seed", [1, 2])
+@pytest.mark.parametrize("origin", [(0, 0), (4096, 2048)])
+def test_decal_heights_equal_the_reference(seed: int, origin: tuple[int, int]) -> None:
+    """Land mask, canvas mask and heights match: coast smoothing, caps, crests and shelves."""
+    generator = np.random.default_rng(seed)
+    shape = (45, 61)
+    codes = fields.upsample(
+        generator.integers(-1, 2, (shape[0] // 6 + 2, shape[1] // 6 + 2)), 6, shape
+    )
+    codes = codes.astype(np.int8)
+    codes[:5] = -1
+    water = (
+        fields.upsample(generator.integers(0, 2, (shape[0] // 9 + 2, shape[1] // 9 + 2)), 9, shape)
+        > 0
+    )
+    relief = fields.upsample(
+        generator.integers(-500, 30_000, (shape[0] // 5 + 2, shape[1] // 5 + 2)), 5, shape
+    )
+    native = eu5_terrain.decal_heights(codes, water, relief, seed=seed, origin=origin)
+    land, canvas, inland, offshore = reference_terrain.land_and_distances(
+        codes.astype(np.int64), water
+    )
+    expected = reference_terrain.heights(
+        relief.astype(np.int64),
+        land=land,
+        inland=inland,
+        offshore=offshore,
+        seed=seed,
+        origin=origin,
+    )
+    assert np.array_equal(native[0], land)
+    assert np.array_equal(native[1], canvas)
+    assert np.array_equal(native[2], expected)
+    assert land.any()
+    assert (~land).any()

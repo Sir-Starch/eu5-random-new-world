@@ -20,19 +20,17 @@ import re
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
+from rnw import _native
 from rnw.eu5_slots import LEVELS, SlotTables, level_counts, synthesize
-from rnw.fields import PERMILLE, box_blur, upsample
-from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.noise import NOISE_SCALE
 from rnw.parallel import worker_count
 from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
 from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
-from rnw.topology import distance_from, euclidean_distance
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -154,18 +152,6 @@ def _upsample(values: NDArray[np.generic], factor: int) -> NDArray[np.int64]:
     return np.repeat(np.repeat(values.astype(np.int64), factor, axis=0), factor, axis=1)
 
 
-def _noise(  # noqa: PLR0913 - a strip-computed field needs origin, size and octaves.
-    key: int, x0: int, y0: int, width: int, height: int, *, period: int
-) -> NDArray[np.int64]:
-    out = np.empty((height, width), dtype=np.int64)
-    for row in range(0, height, 1024):
-        rows = min(1024, height - row)
-        out[row : row + rows] = fractal_noise(
-            key, x0, y0 + row, width, rows, period=period, octaves=3, persistence_permille=500
-        )
-    return out
-
-
 # Median vanilla shelf profile measured on decal heightmap_6_16 [V-EXEC]: height by step
 # distance (decal pixels) into water from the coastline; land starts at 5708.
 WATER_PROFILE: Final[tuple[tuple[int, int], ...]] = (
@@ -177,21 +163,6 @@ CAP_REACH: Final[int] = 64
 EIGHTHS: Final[int] = 8
 MARGIN: Final[int] = 128
 COAST_SMOOTH: Final[int] = 3
-
-
-def _profile(
-    distance: NDArray[np.int64], table: tuple[tuple[int, int], ...], unit: int = 1
-) -> NDArray[np.int64]:
-    """Integer piecewise-linear interpolation of a (distance, height) table.
-
-    ``distance`` is in ``1 / unit`` pixels.
-    """
-    out = np.full(distance.shape, table[-1][1], dtype=np.int64)
-    out[distance <= table[0][0] * unit] = table[0][1]
-    for (d0, h0), (d1, h1) in pairwise(table):
-        inside = (distance > d0 * unit) & (distance <= d1 * unit)
-        out[inside] = h0 + (distance[inside] - d0 * unit) * (h1 - h0) // ((d1 - d0) * unit)
-    return out
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -219,66 +190,46 @@ def _window(decal: Decal, shape: tuple[int, int]) -> Window:
     )
 
 
-def _land_and_distances(
-    codes: NDArray[np.int64], vanilla_water: NDArray[np.bool_]
-) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int64], NDArray[np.int64]]:
-    """Smoothed land mask, canvas mask and coast distances at decal resolution.
-
-    Inputs are at location resolution. Distances are in eighths of a decal pixel; the
-    inland one is Euclidean (computed per location pixel and interpolated), so slopes
-    built on it have no metric artefacts.
-    """
-    canvas_location = codes != OUTSIDE
-    land_location = np.where(canvas_location, codes != WATER_CODE, ~vanilla_water)
-    canvas = _upsample(canvas_location.astype(np.int8), 2).astype(bool)
-    raw = _upsample(land_location.astype(np.int8), 2).astype(bool)
-    smooth = box_blur(raw.astype(np.int64) * 1000, COAST_SMOOTH) >= 500  # noqa: PLR2004 - half
-    land = np.where(canvas, smooth, raw)
-    shape = (int(land.shape[0]), int(land.shape[1]))
-    reach = euclidean_distance(~land_location, CAP_REACH) * 2
-    inland = box_blur(upsample(np.pad(reach, ((0, 1), (0, 1)), mode="edge"), 2, shape), 2)
-    offshore = distance_from(land, WATER_PROFILE[-1][0] + 1, octagonal=True).astype(np.int64)
-    offshore = box_blur(offshore * EIGHTHS, 2)
-    inland = np.where(land, np.maximum(inland, EIGHTHS), 0)
-    offshore = np.where(land, 0, np.maximum(offshore, EIGHTHS))
-    return land, canvas, inland, offshore
-
-
-def _heights(  # noqa: PLR0913 - one window's height needs relief, coast, origin and seed.
-    relief: NDArray[np.int64],
+def decal_heights(
+    codes: NDArray[np.int8],
+    vanilla_water: NDArray[np.bool_],
+    relief: NDArray[np.int32] | NDArray[np.int64],
     *,
-    land: NDArray[np.bool_],
-    inland: NDArray[np.int64],
-    offshore: NDArray[np.int64],
     seed: int,
     origin: tuple[int, int],
-) -> NDArray[np.int64]:
-    """Generated heights for a window: relief plus detail under a coastal cap.
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int64]]:
+    """Land mask, canvas mask and generated heights of a decal window, at decal resolution.
 
-    ``relief`` is at location resolution; the result is at decal resolution. Near the
-    shore the height is capped by a ramp that starts at the lowest vanilla land height,
-    so beaches are low and ranges rise from them without a terrace. Water follows the
-    vanilla shelf profile. Distances are in eighths of a pixel.
+    The inputs are at location resolution. Heights are relief plus detail under a coastal
+    cap, so beaches are low and ranges rise from them without a terrace; water follows the
+    vanilla shelf profile. The kernel is Rust (ADR 0005), its NumPy specification is
+    ``tests/reference/terrain.py``.
     """
-    filled = np.pad(np.where(relief > 0, relief, COAST_HEIGHT), ((0, 1), (0, 1)), mode="edge")
-    shape = (int(land.shape[0]), int(land.shape[1]))
-    smooth = upsample(filled, 2, shape)
-    x0, y0 = origin
-    detail = _noise(derive_seed(seed, "terrain_detail"), x0, y0, shape[1], shape[0],
-                    period=DETAIL_PERIOD)  # fmt: skip
-    raised = np.maximum(0, smooth - COAST_HEIGHT)
-    amplitude = DETAIL_BASE + raised * DETAIL_PERMILLE // PERMILLE
-    crest = NOISE_SCALE - np.minimum(
-        np.abs(_noise(derive_seed(seed, "terrain_crests"), x0, y0, shape[1], shape[0],
-                      period=CREST_PERIOD)),
-        NOISE_SCALE,
-    )  # fmt: skip
-    crests = (crest * crest // NOISE_SCALE) * np.minimum(raised, CREST_FULL) // CREST_FULL
-    inner = smooth + detail * amplitude // NOISE_SCALE + crests * CREST_HEIGHT // NOISE_SCALE
-    cap = SHORE_HEIGHT + (inland - EIGHTHS) * CAP_SLOPE // EIGHTHS
-    land_height = np.maximum(np.minimum(inner, cap), SHORE_HEIGHT)
-    water_height = _profile(offshore, WATER_PROFILE, EIGHTHS)
-    return np.where(land, land_height, water_height)
+    params = {
+        "coast_smooth": COAST_SMOOTH,
+        "cap_reach": CAP_REACH,
+        "eighths": EIGHTHS,
+        "coast_height": COAST_HEIGHT,
+        "detail_period": DETAIL_PERIOD,
+        "crest_period": CREST_PERIOD,
+        "noise_scale": NOISE_SCALE,
+        "detail_base": DETAIL_BASE,
+        "detail_permille": DETAIL_PERMILLE,
+        "crest_full": CREST_FULL,
+        "crest_height": CREST_HEIGHT,
+        "shore_height": SHORE_HEIGHT,
+        "cap_slope": CAP_SLOPE,
+    }
+    return _native.decal_heights(
+        np.ascontiguousarray(codes, dtype=np.int8),
+        np.ascontiguousarray(vanilla_water, dtype=np.bool_),
+        np.ascontiguousarray(relief, dtype=np.int64),
+        (derive_seed(seed, "terrain_detail"), derive_seed(seed, "terrain_crests")),
+        origin,
+        list(WATER_PROFILE),
+        WATER_PROFILE[-1][0] + 1,
+        params,
+    )
 
 
 def level_shares(
@@ -318,8 +269,12 @@ def _rebuild_decal(
     window = _window(decal, (int(codes.shape[0]), int(codes.shape[1])))
     rows = slice(window.row0, window.row1)
     columns = slice(window.column0, window.column1)
-    land, canvas, inland, offshore = _land_and_distances(
-        codes[rows, columns].astype(np.int64), inputs.vanilla_water[rows, columns]
+    land, canvas, generated_window = decal_heights(
+        codes[rows, columns],
+        inputs.vanilla_water[rows, columns],
+        inputs.relief[rows, columns],
+        seed=seed,
+        origin=(window.column0 * 2, window.row0 * 2),
     )
     crop = (
         slice(window.inner_row, window.inner_row + decal.rows * 2),
@@ -327,14 +282,7 @@ def _rebuild_decal(
     )
     origin = (window.column0 * 2, window.row0 * 2)
     height_layer, vanilla_height = store.layer(decal.name, "height")
-    generated = _heights(
-        inputs.relief[rows, columns].astype(np.int64),
-        land=land,
-        inland=inland,
-        offshore=offshore,
-        seed=seed,
-        origin=origin,
-    )[crop]
+    generated = generated_window[crop]
     outputs: dict[str, bytes] = {}
     stem, _, _ = store.paths(decal.name, "height")
     info, data = write_layer(np.where(canvas[crop], generated, vanilla_height), height_layer)

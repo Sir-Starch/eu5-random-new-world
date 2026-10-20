@@ -1,6 +1,6 @@
 # Typing of the Rust extension module (native/, ADR 0005).
 
-from numpy import bool_, float32, int32, int64, uint8, uint32
+from numpy import bool_, float32, int8, int32, int64, uint8, uint32
 from numpy.typing import NDArray
 
 class LzavError(ValueError): ...
@@ -86,3 +86,13 @@ def synthesize_slots(
 ) -> NDArray[uint8]: ...
 def lzav_encode(raw: bytes) -> bytes: ...
 def pack_layer(image: NDArray[int64], sample_bytes: int) -> tuple[list[int], bytes]: ...
+def decal_heights(
+    codes: NDArray[int8],
+    vanilla_water: NDArray[bool_],
+    relief: NDArray[int64],
+    keys: tuple[int, int],
+    origin: tuple[int, int],
+    table: list[tuple[int, int]],
+    profile_end: int,
+    params: dict[str, int],
+) -> tuple[NDArray[bool_], NDArray[bool_], NDArray[int64]]: ...
