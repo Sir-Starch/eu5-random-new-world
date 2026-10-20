@@ -1307,15 +1307,18 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
             rivers=rivers < RIVER_CLASSES,
         )
         rasters_clock.lap("rasters")
-        terrain_files, materials_world, terrain_stats = terrain_outputs(
-            store, terrain_inputs, slot_tables, seed
-        )
-        rasters_clock.lap("terrain decals")
         new_water = vanilla_water.copy()
         new_water[canvas_world] = codes[canvas_world] == WATER_CODE
-        water_files, water_stats = water_outputs(
-            game_dir, vanilla_water, new_water, canvas_world, seed
-        )
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            # The water textures need none of the terrain, so they are built beside it.
+            watering = pool.submit(
+                water_outputs, game_dir, vanilla_water, new_water, canvas_world, seed
+            )
+            terrain_files, materials_world, terrain_stats = terrain_outputs(
+                store, terrain_inputs, slot_tables, seed
+            )
+            rasters_clock.lap("terrain decals")
+            water_files, water_stats = watering.result()
         rasters_clock.lap("water")
         terrain_files.update(water_files)
         terrain_stats.update(water_stats)
