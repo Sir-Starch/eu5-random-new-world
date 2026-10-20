@@ -4,9 +4,9 @@
 
 ## Player journey
 
-1. Choose a preset or a few advanced controls; leave a seed blank for a random one or enter a shareable seed.
-2. Generate and inspect a preview showing land/sea, navigation, climate, resources and broad civilization distribution. Reroll without touching the active game profile.
-3. Run validators, then install a version-specific generated mod into a new folder. The player enables it in the launcher and starts a new 1337 campaign. One-click launcher integration is an aspiration, not a verified interface [UNKNOWN C13].
+1. Open the RNW application, which finds the game ([ADR 0004](adr/0004-generator-application.md)). Choose a preset, a continent type or a few advanced controls; the seed is random unless one is entered or pasted, and it can be copied, saved and reused.
+2. Inspect a preview showing land/sea, navigation, climate, resources and broad civilization distribution. Reroll without touching the active game profile.
+3. Generate with visible progress; the application validates the world and installs it in place as one local mod. In the game's main menu the player enables RNW once and starts a new 1337 campaign; later worlds replace it without closing the game [V-GAME C82; experiment 013 pending]. Options applied at game start, such as the visibility mode, are game rules in the game's setup screen.
 4. Explore without a full New World reveal. Save the seed, settings and generator/build fingerprints for reproducibility.
 
 ## Controls and feasibility

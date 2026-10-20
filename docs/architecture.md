@@ -4,7 +4,7 @@ The production architecture is conditional on [experiments 002–006](../experim
 
 | Option | Benefits | Costs and evidence gate |
 |---|---|---|
-| A. In-game dynamic generation | Direct campaign flow, no prelaunch install | No EU5 1.4.1 topology mutation API verified [UNKNOWN C13]; requires engine/`script_docs` probe plus live test |
+| A. In-game dynamic generation | Direct campaign flow, no prelaunch install | Not possible with vanilla mechanisms: the 1.4.1 executable has no random-map generator, mods cannot run code, and no script effect changes land, sea, relief or climate [V-LOCAL/INFERRED C83] |
 | B. External preprocessing of a versioned template | Good seed and preview workflow; can compute large rasters outside game | Needs reliable mod override and clear rights to any template; test 002–006 [INFERRED C03–C14] |
 | C. Standalone generator emitting a complete mod | Clear validation boundary and reproducible artifact; Linux/Windows friendly | Full file coupling, loader behavior and local-only vanilla derivation must be solved; test 002–006 [INFERRED C03–C15] |
 | D. Curated pre-generated worlds | Predictable QA per world, simpler player install | Limited variety, storage and asset rights; still needs T2/T3 mod acceptance [INFERRED] |
@@ -12,9 +12,11 @@ The production architecture is conditional on [experiments 002–006](../experim
 
 **Conditional recommendation:** C, with B as a local generation technique. Keep game-specific adapters behind a build fingerprint and validate before installing. **Runner-up:** an ID-preserving T2 exporter if new IDs fail while pixel boundary edits work. A switch to T0 alone would not meet the product goal. [INFERRED C03–C14]
 
+**Delivery decision (2026-10-20, [ADR 0004](adr/0004-generator-application.md)):** option C as a local application with a window. It generates from the player's installation, installs the world in place, and the game takes it up when a new game starts without being closed (C82; experiment 013). D is the fallback.
+
 ## Minimal conceptual pipeline, subject to validation
 
-`settings + seed + game build fingerprint → abstract geography and society model → validators → EU5-specific serializers → complete mod package → manual launcher enablement → in-game regression evidence` [INFERRED]. The world model must distinguish IDs, color raster cells, geographic parents, land/sea class, graph edges and start-state entities. Implemented so far [V-EXEC C28–C31]:
+`settings + seed + game build fingerprint → abstract geography and society model → validators → EU5-specific serializers → complete mod package → in-place installation → new game from the main menu → in-game regression evidence` [INFERRED]. The world model must distinguish IDs, color raster cells, geographic parents, land/sea class, graph edges and start-state entities. Implemented so far [V-EXEC C28–C31]:
 
 | Stage | Module | State |
 |---|---|---|

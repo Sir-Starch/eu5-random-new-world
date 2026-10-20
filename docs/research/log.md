@@ -134,3 +134,10 @@
 - [OWNER] Two phases added to the [roadmap](../roadmap.md): U1, a comfortable setup inside the game (generation settings, visibility modes including a New World hidden by terra incognita already at country selection, seed QoL, ideally without a restart), and P1, preparation of the GitHub repository and the Steam Workshop page.
 - [V-LOCAL] Vanilla declares 30 lobby game rules in `main_menu/common/game_rules/` (C81), a lead for in-game options.
 - [V-GAME owner] Correction of the first U1 premise, which assumed a new seed needs a game restart: EU5 reloads mods in the main menu without closing the game, map mods included, and builds the world when a new game starts (C82). U1 now requires a reroll that never closes the game; open is whether the reload re-reads a mod rewritten on disk.
+
+## 2026-10-20 — Delivery: a generator application with a window
+
+- [OWNER] The player must not generate in a terminal or keep scripts; control belongs in menus, a restart only if unavoidable, and the game must never look frozen.
+- [V-LOCAL]/[V-EXEC] The game cannot compute a geography (C83): no random-map generator in `eu5.exe`, `CMapGenerator` reads the locations PNG, mods are mounted data, and script effects change the start state but not land, sea, relief or climate. The owner's `debug.log` shows playset switching in the running game and a fresh mount of every mod's `in_game` at each new game (21.8 s behind the loading screen).
+- [OWNER DECISION] Of a pool of pre-generated worlds, a pool with societies rerolled by script, and a local application with a window, the owner chose the application ([ADR 0004](../adr/0004-generator-application.md)). Roadmap U1, R9, R10 and P1, the architecture, product spec and legal notes follow it.
+- [V-EXEC] Experiment 013 (does a new game read a mod rewritten on disk while the game runs?) is prepared: world B, continents seed 34378487 (0.9.5), is built for it.
