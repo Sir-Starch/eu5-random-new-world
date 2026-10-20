@@ -2,7 +2,7 @@
 
 ## Goal and present boundary
 
-Build toward genuine procedurally generated EU5 New World geography **and** civilizations while preserving the Old World. Ownership randomization is a diagnostic fallback, not the goal. The current installation is 1.4.1 open beta build 25905365; inspect the exact build and file layout after every patch [V-LOCAL C01; INFERRED C18]. No T0–T5 geography capability has been observed in game [UNKNOWN C13]. The owner requested no more EU5 launches in the current session after an isolated-profile input issue [V-GAME C12].
+Build toward genuine procedurally generated EU5 New World geography **and** civilizations while preserving the Old World. Ownership randomization is a diagnostic fallback, not the goal. The current installation is 1.4.2 open beta build 26043558 (Steam update of 2026-10-20, C84); the generator and the claims up to C83 were checked on 1.4.1 build 25905365. Inspect the exact build and file layout after every patch [V-LOCAL C01; INFERRED C18]. No T0–T5 geography capability has been observed in game [UNKNOWN C13]. The owner requested no more EU5 launches in the current session after an isolated-profile input issue [V-GAME C12].
 
 ## Product rules
 

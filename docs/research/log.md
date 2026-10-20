@@ -141,3 +141,8 @@
 - [V-LOCAL]/[V-EXEC] The game cannot compute a geography (C83): no random-map generator in `eu5.exe`, `CMapGenerator` reads the locations PNG, mods are mounted data, and script effects change the start state but not land, sea, relief or climate. The owner's `debug.log` shows playset switching in the running game and a fresh mount of every mod's `in_game` at each new game (21.8 s behind the loading screen).
 - [OWNER DECISION] Of a pool of pre-generated worlds, a pool with societies rerolled by script, and a local application with a window, the owner chose the application ([ADR 0004](../adr/0004-generator-application.md)). Roadmap U1, R9, R10 and P1, the architecture, product spec and legal notes follow it.
 - [V-EXEC] Experiment 013 (does a new game read a mod rewritten on disk while the game runs?) is prepared: world B, continents seed 34378487 (0.9.5), is built for it.
+
+## 2026-10-20 — Experiment 013 and the 1.4.2 patch
+
+- [V-LOCAL] Steam installed 1.4.2 (build 26043558) at 15:59, after world B was built from 1.4.1 files at 15:41–15:52. The patch changed three map-contract files, about 500 Old World location templates and several files the mod overrides whole (C84); the generator now refuses the build, as intended.
+- [V-GAME owner] Experiment 013 (C85): a new game after replacing the mod on disk kept the old map and read the new setup (rung a failed); a playset round trip reloaded the mod in the game, then generating the 1337 game crashed (rung b). The control and a 1.4.2 rebuild are needed before the crash can be attributed.
