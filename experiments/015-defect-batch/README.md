@@ -10,6 +10,6 @@
 - **Also check in game:** vegetation looks thinner than the 0.9.8 world (the scale factor is in `report.json`, `terrain.objects.density_scale_permille`); the 3 former port-less locations are now wasteland; a vassal and its overlord start in the War/Diplomacy views; diaspora pops show as small minorities.
 - **Files/tools:** `generated/rnw_exp_new_world/report.json`, `rnw logdiff`, owner's `error.log` and `debug.log` (read only).
 - **Game version:** 1.4.2 open beta, build 26043558 (C84).
-- **Result/evidence:** pending the owner's run.
+- **Result/evidence:** [V-GAME owner, 2026-10-20; logs read only] Run 1 (RNW activated from inside a running vanilla game): the 0.9.10 world loaded with 5 lines the baseline lacks and none of the C95 categories, then the game crashed (C97). Run 2 (fresh launch, RNW active): the game started, ran about two minutes and closed normally (C98); its log also shows the nine invalid vassals, which ranks did not fix (C99, fixed by the overlord rule of 0.9.12). Both crashes of the day have one code address and equal registers: the reload after a vanilla game, not the world.
 - **Remaining uncertainty:** The vassal rank cause is inferred (C95): if `Subject type 'vassal' is invalid` remains, the rank is not the reason. The object budget (net zero against vanilla) is a safe bound, not the measured cap.
-- **Status:** **PENDING**
+- **Status:** **PARTIAL** — load-time errors of C95 gone in game; vassals fixed in 0.9.12 (to check); the crash after a vanilla game remains open (ADR 0004 limit).
