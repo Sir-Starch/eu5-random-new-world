@@ -172,4 +172,6 @@
 - [UNKNOWN] `Locator transform overrides modified` for `city` and `vfx` is not explained; the override file is no longer shipped when unchanged. Experiment 015 checks the log in game.
 - [V-GAME owner] Experiment 015, first run: the 0.9.10 world loaded with only 5 lines the vanilla baseline lacks (none of the C95 categories), then the game crashed a few seconds after the start (C97), at the same address and with the same registers as the crash of 14:44 (world B′). Both followed a vanilla game that had run in the same process before the switch to RNW.
 - [V-EXEC] 0.9.11: events that only dropped events fired (chains) go too; generated country names avoid vanilla country names.
+- [V-GAME owner] Experiment 015, second run: with RNW active at the launch and no game before, the 0.9.10 world starts and runs without a crash (C98). The crash of C97 is therefore a matter of order: a vanilla game, then RNW activated from inside the running game.
+- [V-GAME owner] That session's log still has 9 invalid vassals: ranks are not the reason (C99). All invalid pairs have an overlord whose template sets no starting technology level (0 of 18 valid against 23 of 23 for level 2 in two worlds). 0.9.12 takes overlords only from templates at vanilla's lowest lord level and drops the explicit ranks.
 

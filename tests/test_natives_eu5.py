@@ -6,6 +6,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import numpy as np
+import pytest
 
 from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_natives import (
@@ -13,6 +14,7 @@ from rnw.eu5_natives import (
     OPERATORS,
     Country,
     Culture,
+    NativesError,
     PlaceNamer,
     VanillaNatives,
     country_definitions,
@@ -25,9 +27,12 @@ from rnw.eu5_natives import (
     map_colors,
     match_homelands,
     new_tags,
+    overlord_level,
     template_governments,
+    template_levels,
     vanilla_colors,
     vassal_lines,
+    vassal_pairs,
 )
 from rnw.eu5_nw_export import referenced_words
 from rnw.eu5_rewrite import insert_into_block, prune_setup
@@ -36,7 +41,7 @@ from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
 from rnw.newworld import NewWorld
 from rnw.pdx import parse
-from rnw.societies import Societies
+from rnw.societies import STATE, TRIBE, Polity, Societies
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -329,20 +334,6 @@ def test_vassal_lines_parse_as_dependencies() -> None:
     assert vassal_lines(()) == ""
 
 
-def test_vassal_pairs_write_their_country_ranks() -> None:
-    """A country with a rank writes it; the others leave the rank to the engine."""
-    lord = replace(_country("QQA", "state"), rank="rank_duchy")
-    text = "countries = {\n\tcountries = {\n" + country_records((lord, _country("QQB", "state")))
-    text += "\t}\n}\n"
-    holder = parse(text).block("countries", "countries")
-    assert holder is not None
-    first, second = holder.block("QQA"), holder.block("QQB")
-    assert first is not None
-    assert second is not None
-    assert [entry.value for entry in first.find("country_rank")] == ["rank_duchy"]
-    assert list(second.find("country_rank")) == []
-
-
 def test_map_colours_avoid_vanilla_colours_and_each_other() -> None:
     """No generated colour repeats a taken one, even when its best draw would."""
     plain = map_colors([set(), {0}, {0, 1}], 7, frozenset())
@@ -430,3 +421,65 @@ def test_country_name_pattern_reads_names_and_adjectives() -> None:
     """Vanilla country names, with or without a version number, are told from adjectives."""
     text = ' WNA: "Wanga"\n WNA_ADJ: "Wangan"\n FOO:0 "Bar"\n'
     assert COUNTRY_NAME.findall(text) == [("WNA", "Wanga"), ("WNA_ADJ", "Wangan"), ("FOO", "Bar")]
+
+
+LEVELS = {
+    "plain": "starting_technology_level = 0\ngovernment = { type = monarchy }\n",
+    "advanced": "starting_technology_level = 2\n",
+    "nested": 'include = "advanced"\ninclude = "missing"\n',
+    "silent": "government = { type = tribe }\n",
+    "loop_a": 'include = "loop_b"\n',
+    "loop_b": 'include = "loop_a"\n',
+}
+
+
+def test_template_levels_follow_includes() -> None:
+    """A template has the level it sets or its includes set; none is no level."""
+    assert template_levels(LEVELS) == {"plain": 0, "advanced": 2, "nested": 2}
+
+
+def test_overlord_level_is_the_lowest_of_the_vanilla_lords() -> None:
+    """Lords without a known level do not count; no lord with one stops the build."""
+    setup = (
+        "countries = { countries = {\n"
+        'AAA = { include = "advanced" include = "silent" }\n'
+        'BBB = { include = "nested" }\n'
+        'CCC = { include = "silent" }\n'
+        'DDD = { include = "plain" }\n}\n}\n'
+    )
+    levels = template_levels(LEVELS)
+    diplomacy = (
+        "dependency = { first = AAA second = XXX subject_type = vassal }\n"
+        "dependency = { first = BBB second = XXX subject_type = vassal }\n"
+        "dependency = { first = CCC second = XXX subject_type = vassal }\n"
+        "dependency = { first = DDD second = XXX subject_type = tributary }\n"
+    )
+    assert overlord_level(setup, diplomacy, levels) == 2
+    with pytest.raises(NativesError):
+        _ = overlord_level(setup, "", levels)
+
+
+def test_overlords_come_from_able_states_only() -> None:
+    """The biggest able state leads; a bigger unable neighbour can only follow."""
+    polities = (
+        Polity(STATE, (0,), 0, 0),
+        Polity(STATE, (1,), 1, 0),
+        Polity(STATE, (2,), 2, 0),
+        Polity(TRIBE, (3,), 3, 0),
+    )
+    societies = Societies(
+        complexity=np.zeros(4, dtype=np.int64),
+        population=np.array([9000, 5000, 1000, 100], dtype=np.int64),
+        peasants=np.zeros(4, dtype=np.int64),
+        religion=np.zeros(4, dtype=np.int64),
+        culture=np.zeros(4, dtype=np.int64),
+        hearths=(),
+        polities=polities,
+        ranks={},
+        markets=(),
+    )
+    near: list[set[int]] = [{1, 2}, {0, 2}, {0, 1}, set()]
+    assert vassal_pairs(societies, ["x"], near, {1, 2}) == [(1, 2)]
+    # state 1 is more than a third of state 0, so only state 2 can follow it
+    assert vassal_pairs(societies, ["x"], near, {0, 1, 2}) == [(0, 2)]
+    assert vassal_pairs(societies, ["x"], near, set()) == []

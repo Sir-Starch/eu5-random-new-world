@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -136,16 +136,17 @@ OVERLORD_PERMILLE: Final[int] = 50
 MAX_VASSALS: Final[int] = 3
 VASSAL_SHARE: Final[int] = 3
 COLOR_CHANNELS: Final[int] = 3
+# EU5 logged every vassal of a lord whose template sets no starting technology (the
+# default `amerindian_monarchy`, tribes) as invalid at the start, and none of the lords with
+# a technology of at least 2 [V-GAME 1.4.2, C99]; vanilla's lords all have one. Overlords
+# therefore come only from templates at the lowest technology level a vanilla lord has.
+VASSAL_LORD: Final[re.Pattern[str]] = re.compile(
+    r"first\s*=\s*(\w+)\s+second\s*=\s*\w+\s+subject_type\s*=\s*vassal"
+)
 # EU5 logs every enabled culture and religion without a pop in the setup [V-GAME 1.4.2,
 # C95], and vanilla has none. Each one the zones did not take gets a small pop of its own
 # in the zone whose homeland fits it best.
 DIASPORA_MILLI: Final[int] = 50
-# EU5 offers `vassal` only when the overlord's country rank level is at least the
-# subject's, and logged nine vassals of default-rank templates as invalid at the start
-# [V-GAME 1.4.2, C95]. Every pair therefore sets both ranks, in a combination vanilla
-# uses (7 times).
-LORD_RANK: Final[str] = "rank_duchy"
-VASSAL_RANK: Final[str] = "rank_county"
 NO_COAST: Final[str] = "_no_coast"
 TAG_WORD: Final[re.Pattern[str]] = re.compile(r"(?<![A-Za-z0-9_])([A-Z]{3})(?![A-Za-z0-9_])")
 OPERATORS: Final[frozenset[str]] = frozenset({"AND", "NOT", "NOR", "ALL", "ANY", "YES"})
@@ -202,6 +203,8 @@ class VanillaNatives:
     reserved_names: frozenset[str] = frozenset()
     governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
     colors: frozenset[tuple[int, int, int]] = frozenset()
+    levels: dict[str, int] = field(default_factory=dict)
+    overlord_level: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -220,7 +223,6 @@ class Country:
     color: tuple[int, int, int]
     color2: tuple[int, int, int]
     government: tuple[tuple[str, str], ...] = ()
-    rank: str = ""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -526,6 +528,7 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         for path in sorted((game_dir / TEMPLATE_DIR).glob("*.txt"))
     }
     templates = frozenset(template_texts)
+    levels = template_levels(template_texts)
     country_text = _text(game_dir, COUNTRY_NAMES)
     names = set(TAG_WORD.findall(country_text))
     country_words = {
@@ -553,6 +556,10 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         ),
         governments=template_governments(template_texts, setup_text),
         colors=vanilla_colors(game_dir),
+        levels=levels,
+        overlord_level=overlord_level(
+            setup_text, _text(game_dir, f"{SETUP}/12_diplomacy.txt"), levels
+        ),
     )
 
 
@@ -571,6 +578,48 @@ def _rgb(kind: str, body: str) -> tuple[int, int, int] | None:
     return hsv_rgb(
         int(values[0] * 360) % 360, round(values[1] * PERMILLE), round(values[2] * PERMILLE)
     )
+
+
+def template_levels(templates: dict[str, str]) -> dict[str, int]:
+    """Starting technology level of each template that sets one, itself or through includes."""
+    roots = {name: parse(text) for name, text in templates.items()}
+
+    def level(name: str, seen: frozenset[str]) -> int | None:
+        root = roots.get(name)
+        if root is None or name in seen:
+            return None
+        own = root.first("starting_technology_level")
+        if own is not None and isinstance(own.value, str) and own.value.isdigit():
+            return int(own.value)
+        known = [
+            found
+            for include in root.find("include")
+            if isinstance(include.value, str)
+            if (found := level(include.value.strip('"'), seen | {name})) is not None
+        ]
+        return max(known) if known else None
+
+    return {name: found for name in roots if (found := level(name, frozenset())) is not None}
+
+
+def overlord_level(setup_text: str, diplomacy_text: str, levels: dict[str, int]) -> int:
+    """The lowest technology level among the vanilla vassal lords whose template has one."""
+    lords = set(VASSAL_LORD.findall(diplomacy_text))
+    holder = parse(setup_text).block("countries", "countries")
+    found: list[int] = []
+    for entry in holder.entries if holder is not None else []:
+        if entry.key in lords and isinstance(entry.value, Block):
+            known = [
+                levels[name]
+                for include in entry.value.find("include")
+                if isinstance(include.value, str)
+                if (name := include.value.strip('"')) in levels
+            ]
+            found += [max(known)] if known else []
+    if not found:
+        message = "No vanilla vassal lord has a template with a starting technology level"
+        raise NativesError(message)
+    return min(found)
 
 
 def vanilla_colors(game_dir: Path) -> frozenset[tuple[int, int, int]]:
@@ -1162,17 +1211,22 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
     return countries
 
 
-def _vassals(
-    societies: Societies, religions: list[str], neighbours: list[set[int]]
+def vassal_pairs(
+    societies: Societies, religions: list[str], neighbours: list[set[int]], able: set[int]
 ) -> list[tuple[int, int]]:
-    """(overlord, vassal) polity pairs among neighbouring states of one religion."""
+    """(overlord, vassal) polity pairs among neighbouring states of one religion.
+
+    Overlords are the most populous states in ``able``; their number is the share of all
+    states.
+    """
     states = [n for n, polity in enumerate(societies.polities) if polity.kind == STATE]
     people = {
         n: int(societies.population[list(societies.polities[n].members)].sum()) for n in states
     }
     faith = {n: religions[int(societies.religion[societies.polities[n].capital])] for n in states}
     ranked = sorted(states, key=lambda n: (-people[n], n))
-    overlords = ranked[: max(1, (len(ranked) * OVERLORD_PERMILLE + PERMILLE // 2) // PERMILLE)]
+    count = max(1, (len(ranked) * OVERLORD_PERMILLE + PERMILLE // 2) // PERMILLE)
+    overlords = [n for n in ranked if n in able][:count]
     taken = set(overlords)
     pairs: list[tuple[int, int]] = []
     for lord in overlords:
@@ -1239,9 +1293,12 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         loc_keys=loc_keys,
     )
     ranks = _rank_setups(societies, keys, cultures, vanilla)
-    pairs = _vassals(societies, religions, _neighbours(societies, graph.edges))
-    ranked = {vassal: VASSAL_RANK for _, vassal in pairs} | {lord: LORD_RANK for lord, _ in pairs}
-    countries = [replace(country, rank=ranked.get(i, "")) for i, country in enumerate(countries)]
+    able = {
+        number
+        for number, country in enumerate(countries)
+        if vanilla.levels.get(country.include, -1) >= vanilla.overlord_level
+    }
+    pairs = vassal_pairs(societies, religions, _neighbours(societies, graph.edges), able)
     vassals = tuple((countries[lord].tag, countries[vassal].tag) for lord, vassal in pairs)
     pops = _pop_lines(societies, keys, religions, cultures)
     for where, rows in diaspora(
@@ -1330,8 +1387,6 @@ def country_records(countries: tuple[Country, ...]) -> str:
             lines.append(_locations_block(country.members, "\t\t"))
             lines.append("\t\t}\n")
         lines.append(f'\t\tinclude = "{country.include}"\n')
-        if country.rank:
-            lines.append(f"\t\tcountry_rank = {country.rank}\n")
         lines.append("\t\tdiscovered_areas = {\n")
         lines.append(_locations_block(country.areas, "\t\t"))
         lines.append("\t\t}\n")
