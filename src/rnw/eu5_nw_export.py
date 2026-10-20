@@ -133,6 +133,7 @@ from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.settings import canonical_json, run_spec, spec_digest
+from rnw.timing import Clock
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -1203,18 +1204,22 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     replace: bool = False,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report."""
+    clock = Clock()
     check_new_output(output, MOD_NAME, game_dir, replace=replace)
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
     spec = run_spec(seed, settings)
     game_map = load_map(game_dir)
     hierarchy = {location.key: location for location in read_locations(game_dir / DEFINITIONS)}
+    clock.lap("load map")
     canvas = select_canvas(game_map, settings.new_world.ocean_band_px)
+    clock.lap("select canvas")
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
     world = generate_new_world(
         canvas.mask.copy(), seed=seed, settings=settings.new_world, seam=seam
     )
     world = seal_pockets(split_at_column(world, seam))
+    clock.lap("generate world")
     total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
     if total > MAX_LOCATIONS:
         message = (
@@ -1223,6 +1228,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         )
         raise NewWorldExportError(message)
     geometry = vanilla_geometry(game_map, canvas, hierarchy)
+    clock.lap("geometry")
     vanilla_hashes = key_hashes(vanilla_localization_keys(game_dir))
     loc_keys = KeySpace(vanilla_hashes)
     plan = plan_identities(
@@ -1237,14 +1243,17 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     )
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     world_checks = _check_world(game_map, canvas, world)
+    clock.lap("identities and checks")
     store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
     vanilla_attributes = template_attributes(_read(game_dir, TEMPLATES))
     new_world_keys = vanilla_new_world_keys(hierarchy, removed)
     calibration = calibrate_development(game_dir, game_map, hierarchy)
+    clock.lap("vanilla reads")
     biomes, biome_stats, climate = _biome_model(
         game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
     )
     river_codes, carved, river_stats = _rivers(world, canvas, climate, seed)
+    clock.lap("biomes and rivers")
     river_pixels = np.bincount(
         world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
     )[: len(world.classes)]
@@ -1259,6 +1268,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         loc_keys=loc_keys,
     )
     slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
+    clock.lap("natives and slot tables")
     biome_stats["materials"] = slot_stats
     final_labels = _final_labels(game_map, canvas, world)
     ports = _ports(plan, world, canvas)
@@ -1289,6 +1299,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         new_world_keys=new_world_keys,
     )
     text_checks = _verify_texts(texts, plan, removed)
+    clock.lap("texts")
     text_checks.update(_verify_natives(natives, plan))
     text_checks.update(
         verify_development(texts, plan, natives, development, calibration, new_world_keys)
@@ -1305,6 +1316,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
     rewrite = remap_scripts(game_dir, remap, removed_tags)
     scripts = rewrite.outputs
+    clock.lap("script remap")
     scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
     texts.update(scripts)
     text_checks.update(verify_country_tags(game_dir, texts))
@@ -1329,12 +1341,15 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         labels=final_labels,
         rivers=rivers < RIVER_CLASSES,
     )
+    clock.lap("rasters")
     terrain_files, materials_world, terrain_stats = terrain_outputs(
         store, terrain_inputs, slot_tables, seed
     )
+    clock.lap("terrain decals")
     new_water = vanilla_water.copy()
     new_water[canvas_world] = codes[canvas_world] == WATER_CODE
     water_files, water_stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed)
+    clock.lap("water")
     terrain_files.update(water_files)
     terrain_stats.update(water_stats)
     pixel_classes, class_count, coarse_count = _pixel_classes(
@@ -1349,6 +1364,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         seed=seed,
     )
     del materials_world
+    clock.lap("vegetation instances")
     terrain_files.update(object_files)
     terrain_stats["objects"] = object_stats
     terrain_stats["rivers"] = river_stats
@@ -1459,6 +1475,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         }
         _ = write_bytes(stage, "manifest.json", canonical_json(manifest).encode())
         _ = write_bytes(stage, "report.json", canonical_json(report).encode())
+    clock.lap("write files")
     return report
 
 

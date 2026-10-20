@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import json
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
@@ -26,6 +28,7 @@ import numpy as np
 from rnw.eu5_slots import LEVELS, SlotTables, level_counts, synthesize
 from rnw.fields import PERMILLE, box_blur, upsample
 from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.parallel import worker_count
 from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
 from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
@@ -41,6 +44,7 @@ DECAL_CACHE: Final[str] = f"{TERRAIN}/terrain_cache/ingame_decals.json"
 LOCATION_UNITS: Final[int] = 4
 HEIGHTMAP: Final[re.Pattern[str]] = re.compile(r"heightmap_\d+_\d+")
 OUTSIDE: Final[int] = -1
+DECAL_THREADS: Final[int] = 8
 WATER_CODE: Final[int] = 0
 LAND_CODE: Final[int] = 1
 DETAIL_PERIOD: Final[int] = 64
@@ -90,6 +94,7 @@ class DecalStore:
     _layers: dict[tuple[str, str], tuple[LayerFormat, NDArray[np.uint16] | NDArray[np.uint8]]] = (
         field(init=False, default_factory=dict)
     )
+    _lock: threading.RLock = field(init=False, default_factory=threading.RLock)
 
     def __post_init__(self) -> None:
         """Load the decal cache and the heightmap decal footprints."""
@@ -109,15 +114,16 @@ class DecalStore:
     def layer(self, decal: str, kind: str) -> tuple[LayerFormat, NDArray[np.int64]]:
         """Vanilla layer ``kind`` ("height" or "materials") of a decal, north-up."""
         key = (decal, kind)
-        if key not in self._layers:
-            _, info_path, bin_path = self.paths(decal, kind)
-            layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
-            image = read_level0(layer, spans, bin_path.read_bytes())
-            compact: NDArray[np.uint16] | NDArray[np.uint8] = (
-                image.astype(np.uint16) if kind == "height" else image.astype(np.uint8)
-            )
-            self._layers[key] = (layer, compact)
-        layer, compact = self._layers[key]
+        with self._lock:
+            if key not in self._layers:
+                _, info_path, bin_path = self.paths(decal, kind)
+                layer, spans = parse_info(info_path.read_text(encoding="utf-8-sig"))
+                image = read_level0(layer, spans, bin_path.read_bytes())
+                compact: NDArray[np.uint16] | NDArray[np.uint8] = (
+                    image.astype(np.uint16) if kind == "height" else image.astype(np.uint8)
+                )
+                self._layers[key] = (layer, compact)
+            layer, compact = self._layers[key]
         return layer, compact.astype(np.int64)
 
     def world_heights(self) -> NDArray[np.uint16]:
@@ -298,6 +304,52 @@ class TerrainInputs:
     rivers: NDArray[np.bool_]
 
 
+def _rebuild_decal(
+    decal: Decal,
+    store: DecalStore,
+    inputs: TerrainInputs,
+    tables: SlotTables,
+    seed: int,
+) -> tuple[dict[str, bytes], NDArray[np.int64]]:
+    """The mod files and the material image of one decal over the canvas."""
+    codes = inputs.codes
+    window = _window(decal, (int(codes.shape[0]), int(codes.shape[1])))
+    rows = slice(window.row0, window.row1)
+    columns = slice(window.column0, window.column1)
+    land, canvas, inland, offshore = _land_and_distances(
+        codes[rows, columns].astype(np.int64), inputs.vanilla_water[rows, columns]
+    )
+    crop = (
+        slice(window.inner_row, window.inner_row + decal.rows * 2),
+        slice(window.inner_column, window.inner_column + decal.columns * 2),
+    )
+    origin = (window.column0 * 2, window.row0 * 2)
+    height_layer, vanilla_height = store.layer(decal.name, "height")
+    generated = _heights(
+        inputs.relief[rows, columns].astype(np.int64),
+        land=land,
+        inland=inland,
+        offshore=offshore,
+        seed=seed,
+        origin=origin,
+    )[crop]
+    outputs: dict[str, bytes] = {}
+    stem, _, _ = store.paths(decal.name, "height")
+    info, data = write_layer(np.where(canvas[crop], generated, vanilla_height), height_layer)
+    outputs[f"{stem}.info"] = info.encode("utf-8")
+    outputs[f"{stem}.bin"] = data
+    material_layer, vanilla_materials = store.layer(decal.name, "materials")
+    labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
+    rivers = _upsample(inputs.rivers[rows, columns].astype(np.int8), 2).astype(bool)
+    slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin)[crop]
+    image = np.where(canvas[crop], slots, vanilla_materials)
+    stem, _, _ = store.paths(decal.name, "materials")
+    info, data = write_layer(image, material_layer)
+    outputs[f"{stem}.info"] = info.encode("utf-8")
+    outputs[f"{stem}.bin"] = data
+    return outputs, image
+
+
 def terrain_outputs(
     store: DecalStore, inputs: TerrainInputs, tables: SlotTables, seed: int
 ) -> tuple[dict[str, bytes], NDArray[np.uint8], dict[str, object]]:
@@ -305,52 +357,30 @@ def terrain_outputs(
 
     ``inputs.codes`` is -1 outside the canvas, 0 for water and 1 for land. Returns the
     files, the final material raster (two pixels per location pixel) and statistics.
+    The decals are independent, so they are rebuilt on a few threads; the files and the
+    raster are the same for any number of threads.
     """
     codes = inputs.codes
-    shape = (int(codes.shape[0]), int(codes.shape[1]))
     outputs: dict[str, bytes] = {}
-    touched: list[str] = []
     materials_world = store.world_materials()
-    for decal in store.decals:
-        inner = codes[
-            decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
-        ]
-        if not np.any(inner != OUTSIDE):
-            continue
-        touched.append(decal.name)
-        window = _window(decal, shape)
-        rows = slice(window.row0, window.row1)
-        columns = slice(window.column0, window.column1)
-        land, canvas, inland, offshore = _land_and_distances(
-            codes[rows, columns].astype(np.int64), inputs.vanilla_water[rows, columns]
+    touched = [
+        decal
+        for decal in store.decals
+        if np.any(
+            codes[
+                decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
+            ]
+            != OUTSIDE
         )
-        crop = (
-            slice(window.inner_row, window.inner_row + decal.rows * 2),
-            slice(window.inner_column, window.inner_column + decal.columns * 2),
-        )
-        origin = (window.column0 * 2, window.row0 * 2)
-        height_layer, vanilla_height = store.layer(decal.name, "height")
-        generated = _heights(
-            inputs.relief[rows, columns].astype(np.int64),
-            land=land,
-            inland=inland,
-            offshore=offshore,
-            seed=seed,
-            origin=origin,
-        )[crop]
-        stem, _, _ = store.paths(decal.name, "height")
-        info, data = write_layer(np.where(canvas[crop], generated, vanilla_height), height_layer)
-        outputs[f"{stem}.info"] = info.encode("utf-8")
-        outputs[f"{stem}.bin"] = data
-        material_layer, vanilla_materials = store.layer(decal.name, "materials")
-        labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
-        rivers = _upsample(inputs.rivers[rows, columns].astype(np.int8), 2).astype(bool)
-        slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin)[crop]
-        image = np.where(canvas[crop], slots, vanilla_materials)
-        stem, _, _ = store.paths(decal.name, "materials")
-        info, data = write_layer(image, material_layer)
-        outputs[f"{stem}.info"] = info.encode("utf-8")
-        outputs[f"{stem}.bin"] = data
+    ]
+
+    def rebuild(decal: Decal) -> tuple[dict[str, bytes], NDArray[np.int64]]:
+        return _rebuild_decal(decal, store, inputs, tables, seed)
+
+    with ThreadPoolExecutor(max_workers=worker_count(DECAL_THREADS)) as pool:
+        rebuilt = list(pool.map(rebuild, touched))
+    for decal, (files, image) in zip(touched, rebuilt, strict=True):
+        outputs.update(files)
         materials_world[
             decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
             decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
@@ -359,7 +389,7 @@ def terrain_outputs(
     outputs.update(disabled)
     outputs["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
     stats: dict[str, object] = {
-        "decals_rebuilt": touched,
+        "decals_rebuilt": [decal.name for decal in touched],
         "mountain_decals_disabled": len(disabled),
     }
     return outputs, materials_world, stats
