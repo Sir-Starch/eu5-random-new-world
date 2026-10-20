@@ -9,7 +9,7 @@
   5. `error.log` lines that name `14_development`, `building_manager`, `market_village` or `rnw_` keys; `rnw logdiff` against the same-build baseline.
 - **Files/tools:** `generated/rnw_exp_new_world/` (`report.json` section `development`), `rnw logdiff`.
 - **Game version:** 1.4.1 open beta, build 25905365 [V-LOCAL C01].
-- **Result/evidence:** none from the game yet. Three offline builds pass every criterion (C75, revised by the audit in C76); the staged bundle in `generated/rnw_exp_new_world` is continents on seed 3717486232 (version 0.9.3), byte-identical on rebuild.
+- **Result/evidence:** [V-GAME owner, 2026-10-20] the 0.9.3 build loads, and the world map looks right visually (C77). The owner noticed generated areas and regions in pieces inside other regions, a fault of the identity planner since T3, not of R7a; fixed in 0.9.4 (C78). Items 2–5 were not reported one by one. Three offline builds pass every criterion (C75, revised by the audit in C76); the 0.9.3 bundle of continents seed 3717486232 was byte-identical on rebuild. The staged bundle is now version 0.9.4 of the same seed, with the compact connected hierarchy (C78).
 - **Remaining uncertainty:** whether the engine reads development entries for new location keys, whether a `market_village` of a generated tag loads in a generated capital, and how the engine sizes rivers.
 - **Architecture implication:** If entries for new keys are ignored, put the society term into a scripted static modifier or into the location templates; if market villages fail to load, drop them and keep development and harbours.
-- **Status:** **NOT-RUN**.
+- **Status:** **PARTIAL** — loads and looks right; the item checks remain open and can be done on the 0.9.4 build.

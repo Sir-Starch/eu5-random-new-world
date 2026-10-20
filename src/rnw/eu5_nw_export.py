@@ -1289,6 +1289,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
                 "reused_areas": len({cell.area for cell in plan.cells} - set(plan.new_areas)),
                 "regions": len({cell.region for cell in plan.cells}),
                 "dropped_vanilla_areas": plan.dropped_areas,
+                "sea_areas_grown_from_their_remainder": plan.anchored_sea_areas,
             },
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,

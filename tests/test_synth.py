@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 ISLAND_PX = 400
 GOLDEN_MANIFESTS = {
-    "continents": "a53f037da2c2a394f3c2b9a7b68e050aa0e638e16fd8d8f5b371c93ae52b7de4",
-    "archipelago": "edaa4cd8762f562419ea694b64f3743d6c6d88e3f4a2dbf1623af53cb77de354",
+    "continents": "b120547c923544fc0a665722999f6ae318ff4dfb4630a8e765446b3816906efa",
+    "archipelago": "8a5a99f247287d28e6bd1d683adb87659a859beacb8050640afa64827d8d1a81",
 }
 
 
