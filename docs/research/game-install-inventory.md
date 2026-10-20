@@ -4,8 +4,8 @@ Observed 2026-10-13 on Linux x86_64 with a Wayland desktop. All game paths below
 
 | Item | Observation | Evidence |
 |---|---|---|
-| Steam identity | App 3450310, `1.4-open-beta` branch, build 25905365 | [V-LOCAL] `../appmanifest_3450310.acf` and Steam library metadata |
-| Running version | 1.4.1 | [V-GAME] main menu and temporary-profile `logs/debug.log`, mod-version line, 2026-10-13 |
+| Steam identity | App 3450310, `1.4-open-beta` branch, build 26043558 since 2026-10-20 (was 25905365, C84) | [V-LOCAL] `../appmanifest_3450310.acf` and Steam library metadata |
+| Running version | 1.4.2 since 2026-10-20 (was 1.4.1) | [V-GAME] main menu and temporary-profile `logs/debug.log`, mod-version line, 2026-10-13 |
 | Executable | Windows PE `binaries/eu5.exe`, running under Steam Proton | [V-LOCAL] `file binaries/eu5.exe`; [V-GAME] Proton process and logs |
 | Display | Wayland desktop, Steam active; Vulkan renderer reported an NVIDIA GPU | [V-LOCAL] environment commands; [V-GAME] debug log |
 | User data | `steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V/` in the same Steam library | [V-LOCAL] directory inspection |

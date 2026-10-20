@@ -13,7 +13,7 @@ Versions had drifted apart. Three generated mods hard-coded their own `metadata.
   - 0.MINOR.PATCH: development; nothing is published. The scheme continues the generator numbering at 0.9.1. MINOR rises when a roadmap phase is accepted in game by the owner (next: native societies, R6), PATCH with every other change of generated output.
   - 1.0.0: the first Steam Workshop publication, which is the complete product of the [product specification](../product-spec.md), validated in game.
   - After 1.0.0, a published feature release raises MINOR and a published fix raises PATCH.
-- **Reproducibility.** Any change of generated output for the same seed and settings raises at least PATCH and updates the golden digests. A version plus a seed and settings therefore names exactly one mod.
+- **Reproducibility.** Any change of generated output for the same seed and settings raises at least PATCH and updates the golden digests. A version plus a seed and settings therefore names exactly one mod for one game build: the mod is cut from the installed vanilla map, so on another patch the same seed gives a slightly different world (C87). A shared seed must carry the version and the game build.
 - **Game version.** `supported_game_version` follows the fingerprinted game build and changes only after a regression pass on a new patch (AGENTS.md).
 
 ## Consequences

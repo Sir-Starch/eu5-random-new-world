@@ -56,6 +56,9 @@ KNOWN_BUILDS: Final[dict[str, str]] = {
     "07f8cd273bdde1711e222533b9640a51ff2747c08eead36331fc1281fa5bc055": (
         "EU5 1.4.1 open beta, Steam build 25905365"
     ),
+    "a9e3eb3309f04b5d2153f8282b6c218089d1962356802ae2dd3e193551e5e6f1": (
+        "EU5 1.4.2 open beta, Steam build 26043558"
+    ),
 }
 MOD_LOCATIONS: Final[str] = "in_game/map_data/locations.png"
 MOD_RIVERS: Final[str] = "in_game/map_data/rivers.png"

@@ -147,3 +147,8 @@
 - [V-LOCAL] Steam installed 1.4.2 (build 26043558) at 15:59, after world B was built from 1.4.1 files at 15:41–15:52. The patch changed three map-contract files, about 500 Old World location templates and several files the mod overrides whole (C84); the generator now refuses the build, as intended.
 - [V-GAME owner] Experiment 013 (C85): a new game after replacing the mod on disk kept the old map and read the new setup (rung a failed); a playset round trip reloaded the mod in the game, then generating the 1337 game crashed (rung b). The control and a 1.4.2 rebuild are needed before the crash can be attributed.
 - [V-GAME owner] Control of experiment 013: after a full restart world B loads and the 1337 game starts; the government-type errors appear there too. The crash belongs to the in-game reload path. ADR 0004 now installs a world only while the game is closed and asks for one restart; a restart-free flow needs a clean reload test on mods built for 1.4.2.
+
+## 2026-10-20 — Regression to 1.4.2 (product version 0.9.6)
+
+- [V-EXEC] The local install tests pass on build 26043558; its map-contract digest joins the known builds (C87). A full build of seed 34378487 on 1.4.2 passes every invariant, and its overrides now match 1.4.2 outside American content (the 1.4.1 build differed in 497 Old World templates and more). The same seed gives a slightly different world on another patch; ADR 0003 now says so, and a shared seed must carry the game build.
+- [V-EXEC] Correction: the `invalid government type` lines are not a 1.4.2 regression. They name exactly the 544 vanilla American tags the mod removes and appear in 1.4.1 sessions with RNW too (C86); with a localization hash collision of `rnw_loc_05454`, they are open defects of the generator.
