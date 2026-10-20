@@ -12,7 +12,7 @@ The production architecture is conditional on [experiments 002–006](../experim
 
 **Conditional recommendation:** C, with B as a local generation technique. Keep game-specific adapters behind a build fingerprint and validate before installing. **Runner-up:** an ID-preserving T2 exporter if new IDs fail while pixel boundary edits work. A switch to T0 alone would not meet the product goal. [INFERRED C03–C14]
 
-**Delivery decision (2026-10-20, [ADR 0004](adr/0004-generator-application.md)):** option C as a local application with a window. It generates from the player's installation, installs the world in place, and a new world needs the game's mod reload or one restart, because a new game without either keeps the old map (C85). D is the fallback.
+**Delivery decision (2026-10-20, [ADR 0004](adr/0004-generator-application.md)):** option C as a local application with a window. It generates from the player's installation, installs the world in place, and a new world loads through the game's mod reload without a restart (C88); a new game without the reload keeps the old map (C85). D is the fallback.
 
 ## Minimal conceptual pipeline, subject to validation
 
