@@ -19,7 +19,7 @@ EU5 1.4.1 cannot compute a seed's geography itself [V-LOCAL/V-EXEC C83]. The exe
 
 - RNW ships as a desktop application with a window for Windows and Linux. The player installs no Python and never uses a terminal.
 - The application finds the game installation and profile and offers presets, settings and a seed: random by default, with copy, paste, history and reuse. It shows a preview, generates with visible progress per stage and a cancel button, validates the result and installs it in place as one local mod folder.
-- The game takes the new world up without being closed: the player starts a new game from the main menu (C82). If experiment 013 shows that a mod rewritten on disk is not re-read, the application asks for one game restart and says so beforehand.
+- A new world needs a game restart for now. Experiment 013 (C85): a new game after rewriting the mod keeps the old map and reads the new setup, which mixes two worlds; the in-game playset reload crashed; a full restart works. So the application generates while the game may stay open, but installs a world only while EU5 is not running, and then the player starts the game again. A world therefore can never meet the map of another. A restart-free flow returns only if a clean in-game reload is shown safe on mods built for the current patch.
 - Options that the engine can apply at game start, such as the visibility mode, are game rules of the mod and are set in the game's own setup screen [V-LOCAL C81]. The application computes only what the game cannot.
 - Generated output stays on the player's machine; nothing derived from vanilla files is uploaded ([legal](../legal.md)).
 

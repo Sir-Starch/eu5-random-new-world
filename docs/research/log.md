@@ -146,3 +146,4 @@
 
 - [V-LOCAL] Steam installed 1.4.2 (build 26043558) at 15:59, after world B was built from 1.4.1 files at 15:41–15:52. The patch changed three map-contract files, about 500 Old World location templates and several files the mod overrides whole (C84); the generator now refuses the build, as intended.
 - [V-GAME owner] Experiment 013 (C85): a new game after replacing the mod on disk kept the old map and read the new setup (rung a failed); a playset round trip reloaded the mod in the game, then generating the 1337 game crashed (rung b). The control and a 1.4.2 rebuild are needed before the crash can be attributed.
+- [V-GAME owner] Control of experiment 013: after a full restart world B loads and the 1337 game starts; the government-type errors appear there too. The crash belongs to the in-game reload path. ADR 0004 now installs a world only while the game is closed and asks for one restart; a restart-free flow needs a clean reload test on mods built for 1.4.2.
