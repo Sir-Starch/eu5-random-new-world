@@ -49,6 +49,7 @@ if TYPE_CHECKING:
     from rnw.eu5_map import Eu5Map
     from rnw.geography import Location
     from rnw.hierarchy import ContactGraph
+    from rnw.loc_keys import KeySpace
     from rnw.newworld import NewWorld
     from rnw.settings import NewWorldSettings
 
@@ -244,7 +245,7 @@ def _keyed(
 
 
 def _land_areas(
-    graph: ContactGraph, cells: list[int], tally: _Tally, province_size: int
+    graph: ContactGraph, cells: list[int], tally: _Tally, province_size: int, keys: KeySpace
 ) -> list[_Area]:
     """Top-down: subcontinents and regions keep their vanilla keys, areas reuse theirs.
 
@@ -253,7 +254,6 @@ def _land_areas(
     vanilla area key is reused by the generated area nearest to it.
     """
     areas: list[_Area] = []
-    fresh = 0
     subcontinents = sorted(tally.children[NEW_WORLD])
     for subcontinent, sub_cells in zip(
         subcontinents, _keyed(graph, cells, tally, subcontinents), strict=True
@@ -269,9 +269,7 @@ def _land_areas(
                 [centre_of(graph, part) for part in parts], [tally.centre(key) for key in vanilla]
             )
             for part, key in zip(parts, pairing, strict=True):
-                if key < 0:
-                    fresh += 1
-                name = vanilla[key] if key >= 0 else f"rnw_area_{fresh:04d}"
+                name = vanilla[key] if key >= 0 else keys.next("rnw_area_", 4)
                 provinces = split(graph, part, max(1, _rounded(len(part), province_size)))
                 areas.append(_Area(name, (region, subcontinent, NEW_WORLD), provinces, key < 0))
     return areas
@@ -368,6 +366,7 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     *,
     coasts: dict[str, list[int]],
     parents: dict[str, tuple[str, str, str]],
+    keys: KeySpace,
 ) -> tuple[list[_Area], set[str]]:
     """Coastal water joins the region of its shore; the open ocean keeps the ocean areas.
 
@@ -424,24 +423,21 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     )
     parts = absorb_small_pieces(graph, parts, first=len(regions), minimum=MIN_SHORE_PIECE)
     areas: list[_Area] = []
-    fresh = 0
     for region, part in zip(regions, parts, strict=False):
-        keys = [sea for sea in seas if sea.coastal and sea.region == region]
+        coastal_seas = [sea for sea in seas if sea.coastal and sea.region == region]
         found = pieces(graph, part)
         split_parts = [
             area
             for piece, count in zip(
-                found, piece_counts(found, SEA_AREA_ZONES, at_least=len(keys)), strict=True
+                found, piece_counts(found, SEA_AREA_ZONES, at_least=len(coastal_seas)), strict=True
             )
             for area in split(graph, piece, count)
         ]
         pairing = match(
-            [centre_of(graph, area) for area in split_parts], [sea.centre for sea in keys]
+            [centre_of(graph, area) for area in split_parts], [sea.centre for sea in coastal_seas]
         )
         for area, key in zip(split_parts, pairing, strict=True):
-            if key < 0:
-                fresh += 1
-            name = keys[key].name if key >= 0 else f"rnw_sea_area_{fresh:04d}"
+            name = coastal_seas[key].name if key >= 0 else keys.next("rnw_sea_area_", 4)
             provinces = split(graph, area, max(1, _rounded(len(area), SEA_PROVINCE_ZONES)))
             areas.append(_Area(name, parents[region], provinces, key < 0))
     for sea, part in zip(oceans, parts[len(regions) :], strict=True):
@@ -501,6 +497,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     hierarchy: dict[str, Location],
     geometry: VanillaGeometry,
     settings: NewWorldSettings,
+    keys: KeySpace,
 ) -> tuple[list[_Area], set[str]]:
     """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
     count = len(game_map.keys)
@@ -514,6 +511,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         [cell for cell, flag in enumerate(is_land) if flag],
         _vanilla_land(game_map, canvas, hierarchy, geometry, pixels),
         settings.province_size,
+        keys,
     )
     region_of = {
         cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
@@ -528,6 +526,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         _outside_contacts(canvas, world, count),
         coasts=coasts,
         parents=parents,
+        keys=keys,
     )
     _check_pieces(land, areas, depth=len(LEVELS), exempt=set())
     _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
@@ -544,6 +543,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     *,
     seed: int,
     settings: NewWorldSettings,
+    keys: KeySpace,
 ) -> Plan:
     """Assign keys, colours, names and parents to every generated cell.
 
@@ -553,21 +553,19 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     then into provinces. Every part is compact and connected on its landmass or water
     body, and every piece of a region's water touches the region's land.
     """
-    areas, anchored = _hierarchy(game_map, canvas, world, hierarchy, geometry, settings)
+    areas, anchored = _hierarchy(game_map, canvas, world, hierarchy, geometry, settings, keys)
     plan = Plan(cells=[], anchored_sea_areas=sorted(anchored))
     province_names = NameGenerator(seed, "provinces")
     area_names = NameGenerator(seed, "areas")
     province_of = [""] * len(world.classes)
     area_of: list[_Area | None] = [None] * len(world.classes)
-    serial = 0
     for area in areas:
         if area.new:
             plan.new_areas[area.name] = []
             plan.area_region[area.name] = area.parents[0]
             plan.display_overrides[area.name] = area_names.next()
         for cells in area.provinces:
-            serial += 1
-            name = f"rnw_prov_{serial:05d}"
+            name = keys.next("rnw_prov_", 5)
             plan.province_names[name] = province_names.next()
             if area.new:
                 plan.new_areas[area.name].append(name)
@@ -577,9 +575,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     used = set(game_map.colors.tolist())
     colors = _colors(seed, len(world.classes), {int(value) for value in used})
     location_names = NameGenerator(seed, "locations")
-    serials = dict.fromkeys(KEY_PREFIX, 0)
     for index, kind in enumerate(world.classes):
-        serials[kind] += 1
         area = area_of[index]
         if area is None:
             message = f"Generated cell {index} ({kind.value}) has no area"
@@ -587,7 +583,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
         region, subcontinent, continent = area.parents
         plan.cells.append(
             PlannedCell(
-                key=f"{KEY_PREFIX[kind]}{serials[kind]:05d}",
+                key=keys.next(KEY_PREFIX[kind], 5),
                 name=location_names.next() + NAME_SUFFIX[kind],
                 color=colors[index],
                 kind=kind,

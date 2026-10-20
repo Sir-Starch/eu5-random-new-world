@@ -70,6 +70,7 @@ from rnw.eu5_map import (
     open_png,
 )
 from rnw.eu5_natives import (
+    COUNTRY_DIR,
     DEFINITION_FILE,
     NativeWorld,
     build_natives,
@@ -117,6 +118,7 @@ from rnw.eu5_terrain import (
 )
 from rnw.eu5_water import water_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
+from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world, split_at_column
 from rnw.pdx import Block, parse
@@ -168,6 +170,10 @@ TOPOGRAPHY: Final[re.Pattern[str]] = re.compile(r"topography\s*=\s*[A-Za-z_]+")
 HARBOR: Final[re.Pattern[str]] = re.compile(r"\s*natural_harbor_suitability\s*=\s*-?[0-9.]+")
 CURRENTS: Final[re.Pattern[str]] = re.compile(r"\s*movement_assistance\s*=\s*\{[^{}]*\}")
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+# A localization entry: an indented key, an optional version number, then the text.
+LOC_KEY: Final[re.Pattern[str]] = re.compile(r"^\s+([^\s:#\"]+):\d*\s", re.MULTILINE)
+# Folders of the installation whose localization the engine loads.
+LOC_ROOTS: Final[tuple[str, ...]] = ("game", "jomini", "clausewitz")
 UNTESTED: Final[tuple[str, ...]] = (
     (
         "Terrain: height and material decal layers are rebuilt as compiled .info/.bin only; "
@@ -216,10 +222,11 @@ UNTESTED: Final[tuple[str, ...]] = (
 )
 DEVELOPMENT_FILE: Final[str] = "14_development.txt"
 BUILDINGS_FILE: Final[str] = "07_cities_and_buildings.txt"
+COUNTRIES_FILE: Final[str] = "10_countries.txt"
 # Blocks of the 1337 setup files that receive generated records, in the order of
 # their additions in ``_text_outputs``.
 SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
-    "10_countries.txt": (("countries", "countries"),),
+    COUNTRIES_FILE: (("countries", "countries"),),
     BUILDINGS_FILE: (("locations",), ("building_manager",)),
     "03_markets.txt": (("market_manager",),),
     "12_diplomacy.txt": (("diplomacy_manager",),),
@@ -705,7 +712,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         _setup_texts(game_dir), gone, {c.key: natives.pops.get(c.key, []) for c in plan.cells}
     )
     additions: dict[str, tuple[str, ...]] = {
-        "10_countries.txt": (country_records(natives.countries),),
+        COUNTRIES_FILE: (country_records(natives.countries),),
         BUILDINGS_FILE: (city_lines(natives.ranks), building_lines(development.villages)),
         "03_markets.txt": (market_lines(natives.markets),),
         "12_diplomacy.txt": (vassal_lines(natives.vassals),),
@@ -722,6 +729,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
                 text = insert_into_block(text, path, addition)  # noqa: PLW2901
         if text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
+    outputs.update(country_definition_outputs(game_dir, setup.removed_ids))
     outputs[DEFINITION_FILE] = country_definitions(natives.countries)
     outputs.update(_localization(plan, country_names(natives.countries), natives.names))
     stats: dict[str, object] = {
@@ -846,6 +854,89 @@ def _verify_texts(outputs: dict[str, bytes], plan: Plan, removed: set[str]) -> d
         message = f"Removed locations are still referenced: {leftovers}"
         raise NewWorldExportError(message)
     return {"definition_locations": len(keys), "template_locations": len(template_keys)}
+
+
+def vanilla_localization_keys(game_dir: Path) -> set[str]:
+    """Every localization key of the installation, over all languages and DLC folders."""
+    keys: set[str] = set()
+    for root in LOC_ROOTS:
+        for path in sorted((game_dir / root).rglob("*.yml")):
+            if "localization" in path.parts:
+                keys |= set(LOC_KEY.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
+    return keys
+
+
+def verify_localization(outputs: dict[str, bytes], vanilla_hashes: set[int]) -> dict[str, object]:
+    """Generated localization keys share no hash with each other or with vanilla keys.
+
+    Files under ``replace`` override vanilla keys on purpose and are not checked.
+    """
+    keys: set[str] = set()
+    for path, data in outputs.items():
+        if path.endswith(".yml") and "/localization/" in path and "/replace/" not in path:
+            keys |= set(LOC_KEY.findall(data.decode("utf-8-sig")))
+    hashes = [key_hash(key) for key in sorted(keys)]
+    clashes = len(hashes) - len(set(hashes)) + len(set(hashes) & vanilla_hashes)
+    if clashes:
+        message = f"{clashes} generated localization keys collide in the engine's key hash"
+        raise NewWorldExportError(message)
+    return {"localization_keys": len(keys)}
+
+
+def country_definition_outputs(game_dir: Path, removed: set[str]) -> dict[str, bytes]:
+    """Vanilla tag definition files without the tags whose 1337 setup entry was removed.
+
+    Vanilla defines a tag only together with its setup entry, and the engine creates every
+    defined tag as a country, so a definition left behind is a country without a
+    government (C86). Every other byte of a rewritten file stays.
+    """
+    outputs: dict[str, bytes] = {}
+    for path in sorted((game_dir / COUNTRY_DIR).glob("*.txt")):
+        relative = f"{COUNTRY_DIR}/{path.name}"
+        text = path.read_text(encoding="utf-8-sig")
+        tags = {entry.key for entry in parse(text).entries if entry.key} & removed
+        if tags:
+            outputs[_mod_path(relative)] = _encode(
+                game_dir, relative, drop_block_entries(text, (), tags)
+            )
+    return outputs
+
+
+def _setup_tags(text: str) -> set[str]:
+    holder = parse(text).block("countries", "countries")
+    return {entry.key for entry in holder.entries if entry.key} if holder is not None else set()
+
+
+def _defined_tags(game_dir: Path, outputs: dict[str, bytes]) -> set[str]:
+    """Tags of the vanilla country files, each file replaced by its output if written."""
+    prefix = f"{_mod_path(COUNTRY_DIR)}/"
+    names = {path.name for path in (game_dir / COUNTRY_DIR).glob("*.txt")}
+    names |= {path.removeprefix(prefix) for path in outputs if path.startswith(prefix)}
+    tags: set[str] = set()
+    for name in sorted(names):
+        relative = f"{COUNTRY_DIR}/{name}"
+        data = outputs.get(_mod_path(relative))
+        text = data.decode("utf-8-sig") if data is not None else _read(game_dir, relative)
+        tags |= {entry.key for entry in parse(text).entries if entry.key}
+    return tags
+
+
+def verify_country_tags(game_dir: Path, outputs: dict[str, bytes]) -> dict[str, object]:
+    """Defined tags and 1337 setup entries agree exactly as they do in vanilla."""
+    relative = f"{SETUP_DIR}/{COUNTRIES_FILE}"
+    data = outputs.get(_mod_path(relative))
+    vanilla_setup = _setup_tags(_read(game_dir, relative))
+    setup = _setup_tags(data.decode("utf-8-sig")) if data is not None else vanilla_setup
+    vanilla_defined, tags = _defined_tags(game_dir, {}), _defined_tags(game_dir, outputs)
+    unused, undefined = tags - setup, setup - tags
+    if unused != vanilla_defined - vanilla_setup or undefined != vanilla_setup - vanilla_defined:
+        message = (
+            f"Tag definitions and 1337 setup disagree: {len(unused)} defined without a setup "
+            f"entry (vanilla {len(vanilla_defined - vanilla_setup)}), {len(undefined)} set up "
+            "without a definition"
+        )
+        raise NewWorldExportError(message)
+    return {"country_tags_defined": len(tags), "country_tags_without_setup": sorted(unused)}
 
 
 def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
@@ -1090,8 +1181,17 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         )
         raise NewWorldExportError(message)
     geometry = vanilla_geometry(game_map, canvas, hierarchy)
+    vanilla_hashes = key_hashes(vanilla_localization_keys(game_dir))
+    loc_keys = KeySpace(vanilla_hashes)
     plan = plan_identities(
-        game_map, canvas, world, hierarchy, geometry, seed=seed, settings=settings.new_world
+        game_map,
+        canvas,
+        world,
+        hierarchy,
+        geometry,
+        seed=seed,
+        settings=settings.new_world,
+        keys=loc_keys,
     )
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     world_checks = _check_world(game_map, canvas, world)
@@ -1114,6 +1214,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         vanilla=vanilla_natives(game_dir, game_map, geometry, vanilla_attributes, hierarchy),
         settings=settings.natives,
         seed=seed,
+        loc_keys=loc_keys,
     )
     slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
     biome_stats["materials"] = slot_stats
@@ -1162,6 +1263,8 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     scripts, remapped = remap_scripts(game_dir, remap)
     scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
     texts.update(scripts)
+    text_checks.update(verify_country_tags(game_dir, texts))
+    text_checks.update(verify_localization(texts, vanilla_hashes))
     text_stats["scripts_remapped"] = remapped
     rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
     codes = _codes(game_map, canvas, world)

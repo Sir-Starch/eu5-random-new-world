@@ -23,6 +23,7 @@ from rnw.eu5_natives import (
 )
 from rnw.eu5_nw_export import referenced_words
 from rnw.eu5_rewrite import insert_into_block, prune_setup
+from rnw.loc_keys import KeySpace, key_hashes
 from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
 from rnw.newworld import NewWorld
@@ -77,11 +78,20 @@ def test_match_prefers_own_pool_and_unused_candidates() -> None:
 def test_tags_are_fresh_three_letter_words() -> None:
     """Generated tags avoid reserved words and keyword-like operators."""
     reserved = frozenset({"ABC", "XYZ"}) | OPERATORS
-    tags = new_tags(500, reserved, seed=9)
+    tags = new_tags(500, reserved, seed=9, keys=KeySpace(set()))
     assert len(set(tags)) == 500
     assert all(len(tag) == 3 and tag.isalpha() and tag.isupper() for tag in tags)
     assert not set(tags) & reserved
-    assert tags == new_tags(500, reserved, seed=9)
+    assert tags == new_tags(500, reserved, seed=9, keys=KeySpace(set()))
+
+
+def test_tags_skip_taken_localization_hashes() -> None:
+    """A tag is skipped when the hash of its name or adjective key is already taken."""
+    first = new_tags(2, frozenset(), seed=9, keys=KeySpace(set()))
+    taken = key_hashes([f"{first[0]}_ADJ"])
+    tags = new_tags(2, frozenset(), seed=9, keys=KeySpace(taken))
+    assert first[0] not in tags
+    assert tags[0] == first[1]
 
 
 def test_hsv_primaries() -> None:

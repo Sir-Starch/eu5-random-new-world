@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_newworld import Plan, VanillaGeometry
     from rnw.geography import Location
+    from rnw.loc_keys import KeySpace
     from rnw.newworld import NewWorld
     from rnw.settings import NativeSettings
 
@@ -696,13 +697,14 @@ def match_homelands(
     return chosen
 
 
-def new_tags(count: int, reserved: frozenset[str], seed: int) -> list[str]:
+def new_tags(count: int, reserved: frozenset[str], seed: int, keys: KeySpace) -> list[str]:
+    """Fresh three-letter tags whose name and adjective keys have free hashes."""
     rng = SplitMix64(derive_seed(seed, "natives", "tags"))
     taken = set(reserved)
     tags: list[str] = []
     while len(tags) < count:
         tag = "".join(LETTERS[rng.below(len(LETTERS))] for _ in range(3))
-        if tag not in taken:
+        if tag not in taken and keys.claim((tag, f"{tag}_ADJ")):
             taken.add(tag)
             tags.append(tag)
     return tags
@@ -919,9 +921,10 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
     seed: int,
     names: dict[str, str],
     namer: PlaceNamer,
+    loc_keys: KeySpace,
 ) -> list[Country]:
     keys = [plan.cells[cell].key for cell in cells.cells]
-    tags = new_tags(len(societies.polities), vanilla.reserved_tags, seed)
+    tags = new_tags(len(societies.polities), vanilla.reserved_tags, seed, loc_keys)
     colors = _colors(neighbours, seed)
     religion_areas: dict[int, set[str]] = {}
     for node, zone in enumerate(societies.religion.tolist()):
@@ -1011,6 +1014,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
     vanilla: VanillaNatives,
     settings: NativeSettings,
     seed: int,
+    loc_keys: KeySpace,
 ) -> NativeWorld:
     """Societies, their cultures and religions, countries and their names."""
     graph, cells = land_graph(world, biomes, river_pixels, vanilla)
@@ -1032,6 +1036,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         seed=seed,
         names=names,
         namer=namer,
+        loc_keys=loc_keys,
     )
     ranks = _rank_setups(societies, keys, cultures, vanilla)
     vassals = tuple(
