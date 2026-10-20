@@ -54,6 +54,8 @@ if TYPE_CHECKING:
 
 SETUP: Final[str] = "game/main_menu/setup/1337"
 TEMPLATE_DIR: Final[str] = "game/main_menu/setup/templates"
+# Government fields a country entry adds when its template leaves the type open.
+GOVERNMENT_FIELDS: Final[tuple[str, ...]] = ("type", "heir_selection")
 COUNTRY_DIR: Final[str] = "game/in_game/setup/countries"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
 COUNTRY_NAMES: Final[str] = "game/main_menu/localization/english/country_names_l_english.yml"
@@ -177,6 +179,7 @@ class VanillaNatives:
     places: tuple[tuple[str, str], ...] = ()
     languages: dict[str, tuple[str, str]] = field(default_factory=dict)
     reserved_names: frozenset[str] = frozenset()
+    governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,6 +197,7 @@ class Country:
     areas: tuple[str, ...]
     color: tuple[int, int, int]
     color2: tuple[int, int, int]
+    government: tuple[tuple[str, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -344,6 +348,57 @@ def _holy_sites(game_dir: Path) -> tuple[HolySite, ...]:
     return tuple(sites)
 
 
+def template_governments(
+    templates: dict[str, str], setup_text: str
+) -> dict[str, tuple[tuple[str, str], ...]]:
+    """Government fields a country must add to each usable template.
+
+    A template with a government type, its own or from a template it includes, needs none.
+    Some vanilla templates leave the type to the country entry
+    (``amerindian_advanced_republic_not_nahuatl_no_coast``: Tlaxcala adds ``type = republic``),
+    so such a template takes the fields its vanilla users agree on most; a template without
+    a type that no vanilla country completes is left out.
+    """
+    roots = {name: parse(text) for name, text in templates.items()}
+
+    def typed(name: str, seen: frozenset[str]) -> bool:
+        root = roots.get(name)
+        if root is None or name in seen:
+            return False
+        government = root.block("government")
+        if government is not None and government.first("type") is not None:
+            return True
+        return any(
+            typed(include.value.strip('"'), seen | {name})
+            for include in root.find("include")
+            if isinstance(include.value, str)
+        )
+
+    out: dict[str, tuple[tuple[str, str], ...]] = {
+        name: () for name in roots if typed(name, frozenset())
+    }
+    holder = parse(setup_text).block("countries", "countries")
+    used: dict[str, Counter[tuple[tuple[str, str], ...]]] = {}
+    for entry in holder.entries if holder is not None else []:
+        government = entry.value.block("government") if isinstance(entry.value, Block) else None
+        if government is None or not isinstance(entry.value, Block):
+            continue
+        fields = tuple(
+            (key, value.value)
+            for key in GOVERNMENT_FIELDS
+            if (value := government.first(key)) is not None and isinstance(value.value, str)
+        )
+        if not fields or fields[0][0] != "type":
+            continue
+        for include in entry.value.find("include"):
+            name = include.value.strip('"') if isinstance(include.value, str) else ""
+            if name in templates and name not in out:
+                used.setdefault(name, Counter())[fields] += 1
+    for name, counts in used.items():
+        out[name] = min(counts, key=lambda fields: (-counts[fields], fields))
+    return out
+
+
 def _most_common(values: list[str]) -> str:
     if not values:
         return ""
@@ -372,7 +427,8 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         raise NativesError(message)
     pixels = np.bincount(game_map.labels.ravel(), minlength=len(game_map.keys))
     pops = _pops(_text(game_dir, f"{SETUP}/06_pops.txt"))
-    countries = _countries(_text(game_dir, f"{SETUP}/10_countries.txt"))
+    setup_text = _text(game_dir, f"{SETUP}/10_countries.txt")
+    countries = _countries(setup_text)
     tag_cultures, words = _definitions(game_dir)
     owned = {
         location
@@ -440,7 +496,11 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         religion: (profile(rows_of), sum(amount for _, amount in rows_of))
         for religion, rows_of in sorted(religion_rows.items())
     }
-    templates = frozenset(path.stem for path in (game_dir / TEMPLATE_DIR).glob("*.txt"))
+    template_texts = {
+        path.stem: path.read_text(encoding="utf-8-sig")
+        for path in sorted((game_dir / TEMPLATE_DIR).glob("*.txt"))
+    }
+    templates = frozenset(template_texts)
     names = set(TAG_WORD.findall(_text(game_dir, COUNTRY_NAMES)))
     reserved = frozenset(words | names | set(countries) | OPERATORS)
     place_names = _location_names(game_dir)
@@ -460,6 +520,7 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         places=places,
         languages=_languages(game_dir, set(cultures)),
         reserved_names=frozenset(name_key(name) for name in place_names.values()),
+        governments=template_governments(template_texts, setup_text),
     )
 
 
@@ -938,6 +999,16 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
             plan.cells[cells.cells[node]].area for node in polity.members
         }
         name = names[keys[polity.capital]] if is_state else namer.name(cultures[polity.culture])
+        include = _include(
+            vanilla,
+            cultures[polity.culture],
+            state=is_state,
+            advanced=int(societies.complexity[polity.capital]) >= ADVANCED_PERMILLE,
+            coastal=any(cells.coastal[node] for node in polity.members),
+        )
+        if include not in vanilla.governments:
+            message = f"Template {include} has no government type, and no vanilla country sets one"
+            raise NativesError(message)
         countries.append(
             Country(
                 tag=tags[number],
@@ -947,16 +1018,11 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
                 capital=keys[polity.capital],
                 culture=cultures[polity.culture],
                 religion=religions[int(societies.religion[polity.capital])],
-                include=_include(
-                    vanilla,
-                    cultures[polity.culture],
-                    state=is_state,
-                    advanced=int(societies.complexity[polity.capital]) >= ADVANCED_PERMILLE,
-                    coastal=any(cells.coastal[node] for node in polity.members),
-                ),
+                include=include,
                 areas=tuple(sorted(areas)),
                 color=colors[number][0],
                 color2=colors[number][1],
+                government=vanilla.governments[include],
             )
         )
     return countries
@@ -1121,7 +1187,9 @@ def country_records(countries: tuple[Country, ...]) -> str:
         lines.append("\t\tdiscovered_areas = {\n")
         lines.append(_locations_block(country.areas, "\t\t"))
         lines.append("\t\t}\n")
-        lines.append("\t\tgovernment = {\n\t\t\truler = random\n\t\t}\n")
+        lines.append("\t\tgovernment = {\n")
+        lines.extend(f"\t\t\t{key} = {value}\n" for key, value in country.government)
+        lines.append("\t\t\truler = random\n\t\t}\n")
         lines.append("\t}\n")
         parts.append("".join(lines))
     return "".join(parts)

@@ -8,7 +8,7 @@
   4. Whether one switch loaded the new build (the open question of C88): the mod name in `debug.log` and the world itself.
 - **Files/tools:** `generated/rnw_exp_new_world/` (`report.json`: `country_tags_without_setup`, `localization_keys`), `rnw logdiff`.
 - **Game version:** 1.4.2 open beta, build 26043558 (C84).
-- **Result/evidence:** None yet.
+- **Result/evidence:** [V-GAME owner, 2026-10-20; logs read only] (C91). The owner restarted the game instead of switching once, so item 4 stays open. No `Localization key hash collision` line; no removed vanilla tag logs `invalid government type`. 15 generated states still do: their template `amerindian_advanced_republic_not_nahuatl_no_coast` sets no government type, fixed in 0.9.8.
 - **Remaining uncertainty:** Whether some vanilla script needs one of the removed tags to be defined, not just referenced (none was found offline; formables are referenced the same way, C89).
 - **Architecture implication:** If a removed tag must stay defined, that tag needs a dead-at-start setup entry in vanilla's style instead (C89); if collisions remain, the key hash differs per language and the key space must cover it.
-- **Status:** **NOT-RUN**.
+- **Status:** **PARTIAL** — collisions and removed tags fixed in game (0.9.7); the 15 open-template states and the single switch are rechecked on 0.9.8.

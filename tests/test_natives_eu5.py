@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 
 from rnw.eu5_biomes import CellBiomes
@@ -19,6 +21,7 @@ from rnw.eu5_natives import (
     land_graph,
     match_homelands,
     new_tags,
+    template_governments,
     vassal_lines,
 )
 from rnw.eu5_nw_export import referenced_words
@@ -101,6 +104,64 @@ def test_hsv_primaries() -> None:
     assert hsv_rgb(240, 1000, 1000) == (0, 0, 255)
     assert hsv_rgb(60, 1000, 1000) == (255, 255, 0)
     assert hsv_rgb(200, 0, 500) == (127, 127, 127)
+
+
+TEMPLATES = {
+    "typed": "government = {\n\ttype = monarchy\n}\n",
+    "nested": 'include = "typed"\ngovernment = {\n\truler = random\n}\n',
+    "open": "starting_technology_level = 2\ngovernment = {\n\tparliament = { }\n}\n",
+    "orphan": "government = {\n}\n",
+    "loop_a": 'include = "loop_b"\n',
+    "loop_b": 'include = "loop_a"\n',
+}
+OPEN_USERS = """countries = {
+\tcountries = {
+\t\tAAA = {
+\t\t\tinclude = "open"
+\t\t\tgovernment = { type = republic heir_selection = oligarchic_elective ruler = x }
+\t\t}
+\t\tBBB = {
+\t\t\tinclude = "open"
+\t\t\tgovernment = { type = republic heir_selection = oligarchic_elective }
+\t\t}
+\t\tCCC = {
+\t\t\tinclude = "open"
+\t\t\tgovernment = { type = monarchy }
+\t\t}
+\t\tDDD = {
+\t\t\tinclude = "orphan"
+\t\t\tgovernment = { ruler = random }
+\t\t}
+\t}
+}
+"""
+
+
+def test_template_governments_complete_open_templates_from_their_users() -> None:
+    """Typed templates, also through includes, need nothing; open ones take their users' type."""
+    governments = template_governments(TEMPLATES, OPEN_USERS)
+    assert governments == {
+        "typed": (),
+        "nested": (),
+        "open": (("type", "republic"), ("heir_selection", "oligarchic_elective")),
+    }
+
+
+def test_country_records_add_the_template_government() -> None:
+    """A country with an open template writes the completed government fields."""
+    country = replace(
+        _country("QQA", "state"),
+        include="open",
+        government=(("type", "republic"), ("heir_selection", "oligarchic_elective")),
+    )
+    text = "countries = {\n\tcountries = {\n" + country_records((country,)) + "\t}\n}\n"
+    government = parse(text).block("countries", "countries", "QQA", "government")
+    assert government is not None
+    assert [(entry.key, entry.value) for entry in government.entries] == [
+        ("type", "republic"),
+        ("heir_selection", "oligarchic_elective"),
+        ("ruler", "random"),
+    ]
 
 
 def test_country_texts_parse_and_name_every_tag() -> None:
