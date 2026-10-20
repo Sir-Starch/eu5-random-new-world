@@ -36,7 +36,7 @@ from rnw.eu5_biomes import (
     template_attributes,
     vanilla_locations,
 )
-from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, select_canvas
+from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, remainder_boxes, select_canvas
 from rnw.eu5_development import (
     VILLAGE,
     Development,
@@ -495,11 +495,12 @@ def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
     full = np.zeros(canvas.rolled.shape, dtype=bool)
     full[:, canvas.col0 : canvas.col0 + canvas.mask.shape[1]] = canvas.mask
     out: dict[str, str] = {}
-    for zone in np.flatnonzero(canvas.trimmed).tolist():
-        rows, columns = np.nonzero((canvas.rolled == zone) & ~full)
-        top, bottom = int(rows.min()), int(rows.max()) + 1
-        left, right = int(columns.min()), int(columns.max()) + 1
-        mine = (canvas.rolled[top:bottom, left:right] == zone) & ~full[top:bottom, left:right]
+    zones = np.flatnonzero(canvas.trimmed).astype(np.int32)
+    boxes = remainder_boxes(canvas.rolled, full, zones, len(game_map.keys))
+    for zone in zones.tolist():
+        window = boxes[zone]
+        top, left = window[0].start, window[1].start
+        mine = (canvas.rolled[window] == zone) & ~full[window]
         distance = distance_from(np.pad(~mine, 1, constant_values=True), 4096)[1:-1, 1:-1]
         best = int(np.argmax(np.where(mine, distance, -1)))
         row, column = divmod(best, mine.shape[1])

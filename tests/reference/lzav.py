@@ -5,7 +5,9 @@ Moved from ``rnw.lzav`` when the decoder became native ([ADR 0005](docs/adr/0005
 
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, cast
+
+import numpy as np
 
 FORMAT: Final[int] = 3
 MIN_REFERENCE: Final[int] = 5
@@ -77,4 +79,77 @@ def decode(data: bytes | bytearray, size: int) -> bytes:
     if len(out) != size:
         message = f"decoded {len(out)} bytes, expected {size}"
         raise LzavError(message)
+    return bytes(out)
+
+
+RUN_DISTANCE: Final[int] = 8
+MIN_RUN: Final[int] = 32
+SHORT_REFERENCE: Final[int] = 15
+
+
+def _length_bytes(value: int) -> bytes:
+    out = bytearray()
+    while value > 0x7F:
+        out.append(0x80 | (value & 0x7F))
+        value >>= 7
+    out.append(value)
+    return bytes(out)
+
+
+def _literal_block(chunk: bytes) -> bytes:
+    if len(chunk) < SHORT_LENGTH:
+        return bytes([len(chunk)]) + chunk
+    return b"\x00" + _length_bytes(len(chunk) - SHORT_LENGTH) + chunk
+
+
+def _runs(raw: bytes) -> list[tuple[int, int]]:
+    """Spans [start, end) where every byte repeats the byte 8 positions earlier."""
+    if len(raw) <= RUN_DISTANCE:
+        return []
+    data = np.frombuffer(raw, dtype=np.uint8)
+    same = np.concatenate([[False], data[RUN_DISTANCE:] == data[:-RUN_DISTANCE], [False]])
+    edges = np.flatnonzero(np.diff(same.astype(np.int8)))
+    spans: list[tuple[int, int]] = []
+    starts = cast("list[int]", edges[0::2].tolist())
+    ends = cast("list[int]", edges[1::2].tolist())
+    for start, end in zip(starts, ends, strict=True):
+        if end - start >= MIN_RUN:
+            spans.append((start + RUN_DISTANCE, end + RUN_DISTANCE))
+    return spans
+
+
+def encode(raw: bytes) -> bytes:
+    """Encode with offset-8 reference blocks for repeated runs, literals elsewhere.
+
+    Literal blocks carry no offset bits, so after one the decoder's carry shift is 2
+    and the 10-bit offset field holds ``8 >> 2``; directly after a reference it is 8.
+    The final ``LITERALS_AT_END`` bytes are always literals.
+    """
+    limit = len(raw) - LITERALS_AT_END
+    out = bytearray([FORMAT << 4 | MIN_REFERENCE])
+    position = 0
+    for run_start, run_end in _runs(raw):
+        start = max(run_start, position)
+        end = min(run_end, limit)
+        if end - start < MIN_REFERENCE + 1:
+            continue
+        shift = 0
+        if start > position:
+            out += _literal_block(raw[position:start])
+            shift = 2
+        field = RUN_DISTANCE >> shift
+        length = end - start
+        extra = MIN_REFERENCE - 1
+        if length - extra <= SHORT_REFERENCE:
+            out += bytes([(field & 3) << 6 | 0x10 | (length - extra), field >> 2])
+        else:
+            out += bytes([(field & 3) << 6 | 0x10, field >> 2])
+            out += _length_bytes(length - extra - SHORT_LENGTH)
+        position = end
+    tail = raw[position:]
+    out += (
+        b"\x00" + _length_bytes(len(tail) - SHORT_LENGTH) + tail
+        if len(tail) >= SHORT_LENGTH
+        else bytes([len(tail)]) + tail
+    )
     return bytes(out)

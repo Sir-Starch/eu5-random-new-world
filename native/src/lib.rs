@@ -11,6 +11,7 @@ pub mod noise;
 pub mod objects;
 pub mod raster;
 pub mod slots;
+pub mod tiles;
 
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::prelude::*;
@@ -465,6 +466,28 @@ mod _native {
             )
         });
         shaped(py, shape, out)
+    }
+
+    /// Encode bytes as an LZAV format-3 stream with offset-8 references for repeated runs.
+    #[pyfunction]
+    fn lzav_encode<'py>(py: Python<'py>, raw: &[u8]) -> Bound<'py, PyBytes> {
+        PyBytes::new(py, &py.detach(|| tiles::encode(raw)))
+    }
+
+    /// Compressed tiles of a layer image (north-up): the size of each and the joined bytes.
+    #[pyfunction]
+    fn pack_layer<'py>(
+        py: Python<'py>,
+        image: PyReadonlyArray2<'py, i64>,
+        sample_bytes: usize,
+    ) -> PyResult<(Vec<usize>, Bound<'py, PyBytes>)> {
+        let shape = image.as_array().dim();
+        if shape.0 == 0 || shape.1 == 0 || !(1..=2).contains(&sample_bytes) {
+            return Err(pyo3::exceptions::PyValueError::new_err("unsupported layer"));
+        }
+        let samples = image.as_slice()?;
+        let (sizes, bytes) = py.detach(|| tiles::pack_layer(samples, shape, sample_bytes));
+        Ok((sizes, PyBytes::new(py, &bytes)))
     }
 
     /// Value noise at arbitrary integer coordinates.

@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from itertools import accumulate
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.lzav import decode, encode
+from rnw import _native
+from rnw.lzav import decode
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -94,46 +96,20 @@ def read_level0(layer: LayerFormat, spans: list[tuple[int, int]], data: bytes) -
     return image[: layer.height, : layer.width][::-1]
 
 
-def _tiles(level: NDArray[np.int64], dtype: str) -> list[bytes]:
-    rows, columns = level.shape
-    down, across = tile_counts(rows, columns)
-    padded = np.pad(
-        level,
-        ((BORDER, down * TILE - rows + BORDER), (BORDER, across * TILE - columns + BORDER)),
-        mode="edge",
-    ).astype(dtype)
-    return [
-        padded[r * TILE : r * TILE + SIDE, c * TILE : c * TILE + SIDE].tobytes()
-        for r in range(down)
-        for c in range(across)
-    ]
-
-
-def raw_tiles(north_up: NDArray[np.int64], layer: LayerFormat) -> list[bytes]:
-    """Uncompressed tiles of every mip level, in file order."""
-    level = north_up[::-1]
-    out: list[bytes] = []
-    for index, _ in enumerate(level_shapes(layer)):
-        if index:
-            level = level[1::2, 1::2]
-        out.extend(_tiles(level, layer.dtype))
-    return out
-
-
 def write_layer(north_up: NDArray[np.int64], layer: LayerFormat) -> tuple[str, bytes]:
-    """Build ``.info`` text and ``.bin`` bytes for an image."""
-    chunks: list[bytes] = []
-    spans: list[tuple[int, int]] = []
-    offset = 0
-    for tile in raw_tiles(north_up, layer):
-        packed = encode(tile)
-        spans.append((offset, len(packed)))
-        chunks.append(packed)
-        offset += len(packed)
+    """Build ``.info`` text and ``.bin`` bytes for an image.
+
+    The tiles of every mip level are cut, compressed and joined natively (ADR 0005); the
+    NumPy and Python version is ``tests/reference/tiles.py``.
+    """
+    sizes, data = _native.pack_layer(
+        np.ascontiguousarray(north_up, dtype=np.int64), layer.sample_bytes
+    )
+    spans = list(zip(accumulate([0, *sizes[:-1]]), sizes, strict=True))
     infos = " ".join(f"{{\n\t\toffset={o}\n\t\tsize={s}\n\t}}" for o, s in spans)
     info = (
         f"source_resolution={{ {layer.width} {layer.height} }}\nnum_channels=1\n"
         f"bytes_per_channel={layer.sample_bytes}\nempty_value={{ 0 0 0 0 }}\nlzav=yes\n"
         f"tile_infos={{ {infos} }}\n"
     )
-    return info, b"".join(chunks)
+    return info, data

@@ -86,7 +86,7 @@ def _drop_landlocked(canvas: NDArray[np.bool_], sea: NDArray[np.bool_]) -> NDArr
     return canvas & good[parts]
 
 
-def _remainder_boxes(
+def remainder_boxes(
     rolled: NDArray[np.int32], canvas: NDArray[np.bool_], zones: NDArray[np.int32], count: int
 ) -> dict[int, tuple[slice, slice]]:
     """Bounding box of the part of each zone that the canvas leaves, for zones with one.
@@ -127,7 +127,7 @@ def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
     near_other = distance_from(other[rolled], GUARD_PX + 1) <= GUARD_PX
     canvas = inside_new | ((ocean & sea)[rolled] & near_new & ~near_other)
     zones = np.unique(rolled[canvas & ~inside_new])
-    boxes = _remainder_boxes(rolled, canvas, zones, count)
+    boxes = remainder_boxes(rolled, canvas, zones, count)
     for zone in zones.tolist():
         if zone not in boxes:
             continue

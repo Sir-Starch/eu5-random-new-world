@@ -8,7 +8,17 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw import _native, eu5_objects, eu5_slots, fields, lzav, noise, rivers, topology
+from rnw import (
+    _native,
+    eu5_objects,
+    eu5_slots,
+    fields,
+    lzav,
+    noise,
+    rivers,
+    terrain_tiles,
+    topology,
+)
 from tests.reference import fields as reference_fields
 from tests.reference import lzav as reference_lzav
 from tests.reference import noise as reference_noise
@@ -16,6 +26,7 @@ from tests.reference import objects as reference_objects
 from tests.reference import points as reference_points
 from tests.reference import rivers as reference_rivers
 from tests.reference import slots as reference_slots
+from tests.reference import tiles as reference_tiles
 from tests.reference import topology as reference_topology
 
 
@@ -410,3 +421,36 @@ def test_slot_synthesis_equals_the_reference(seed: int, *, with_rivers: bool) ->
         assert native.dtype == np.int64
         assert np.array_equal(native, expected)
         assert len(np.unique(native)) > 4
+
+
+def test_lzav_encoder_equals_the_reference() -> None:
+    """Run detection, the end-literal rule and short and long length forms match."""
+    generator = np.random.default_rng(31)
+    samples = [
+        bytes(generator.integers(0, 256, 700, dtype=np.uint8)),
+        bytes(5000),
+        bytes([1, 2, 3, 4, 5, 6, 7, 8]) * 90 + b"tail-bytes-here",
+        bytes(generator.integers(0, 4, 3000, dtype=np.uint8)) + bytes(40) + b"x" * 33,
+        b"abcdefgh" * 4 + b"123456789",
+        b"a",
+        bytes(9),
+        bytes(10),
+        bytes(range(256)) * 3,
+    ]
+    for raw in samples:
+        stream = lzav.encode(raw)
+        assert stream == reference_lzav.encode(raw)
+        assert lzav.decode(stream, len(raw)) == raw
+
+
+@pytest.mark.parametrize(
+    ("shape", "sample_bytes"), [((100, 90), 2), ((300, 200), 1), ((517, 129), 2)]
+)
+def test_layer_packing_equals_the_reference(shape: tuple[int, int], sample_bytes: int) -> None:
+    """Flip, mip levels, edge-padded tiles, truncation to the sample type and offsets match."""
+    generator = np.random.default_rng(shape[0])
+    image = generator.integers(0, 70_000, shape, dtype=np.int64)
+    image[: shape[0] // 2, : shape[1] // 2] = 4000  # long runs compress
+    layer = terrain_tiles.LayerFormat(shape[1], shape[0], "<u2" if sample_bytes == 2 else "u1")
+    native = terrain_tiles.write_layer(image, layer)
+    assert native == reference_tiles.write_layer(image, layer)

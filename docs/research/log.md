@@ -176,3 +176,9 @@
 - [V-GAME owner] That session's log still has 9 invalid vassals: ranks are not the reason (C99). All invalid pairs have an overlord whose template sets no starting technology level (0 of 18 valid against 23 of 23 for level 2 in two worlds). 0.9.12 takes overlords only from templates at vanilla's lowest lord level and drops the explicit ranks.
 - [V-GAME owner] Experiment 015, third run: 0.9.12 on a fresh launch runs without a crash and without invalid vassals (C100). The remaining lines are the two locator hints, 39 unused modifiers of dropped events (retired in 0.9.13) and 3 never-set variables read by kept scripts.
 
+## 2026-10-20 — The Rust core (ADR 0005, roadmap R10)
+
+- [V-EXEC] ADR 0005 chooses a hybrid: Python generator and readers, Rust (PyO3 and rayon, built by maturin) for the hot integer kernels, NumPy versions kept as the references in `tests/reference/`. Kernels moved so far: LZAV decode and encode, value and fractal noise, step and Euclidean distance fields, label spreading and connected components, bilinear upsampling, block means and box blurs, the vegetation pixel keys and sampling, the priority-flood drainage, the best pixel per label, the material slot synthesis and the layer packer; the terrain decals run on threads.
+- [V-EXEC] A full export fell from 11 min 55 s to 2 min 31 s with identical output (C101). `make check` now builds the extension and runs `cargo fmt`, `clippy` and `cargo test`.
+- [V-EXEC] Memory is the next limit: the build peaks at 38 GB and spends a third of its CPU time in the kernel on page faults. The remaining stages are the generated world (31 s), identities, biomes and rivers, water and the text rewriting.
+
