@@ -10,6 +10,7 @@ pub mod lzav;
 pub mod noise;
 pub mod objects;
 pub mod raster;
+pub mod slots;
 
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::prelude::*;
@@ -382,6 +383,88 @@ mod _native {
         }
         let out = py.detach(|| raster::best_points(labels, score, tie, width, count));
         shaped(py, (count, 2), out)
+    }
+
+    /// Terrain material slot per pixel of a decal window (`u8`, 255 = none).
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn synthesize_slots<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        land: PyReadonlyArray2<'py, bool>,
+        rivers: PyReadonlyArray2<'py, bool>,
+        tables: Vec<PyReadonlyArray1<'py, i64>>,
+        water: PyReadonlyArray1<'py, bool>,
+        keys: [u64; 5],
+        periods: [i64; 3],
+        quantiles: Vec<PyReadonlyArray1<'py, i64>>,
+        x0: i64,
+        y0: i64,
+        remap: PyReadonlyArray1<'py, i64>,
+    ) -> PyResult<Bound<'py, PyArray2<u8>>> {
+        let shape = labels.as_array().dim();
+        if land.as_array().dim() != shape || rivers.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "mismatched rasters",
+            ));
+        }
+        if tables.len() != 7 || quantiles.len() != 3 || remap.len()? != 17 * 16 {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "wrong table counts",
+            ));
+        }
+        let columns: Vec<&[i64]> = tables
+            .iter()
+            .map(|array| array.as_slice())
+            .collect::<Result<_, _>>()?;
+        let quantile_slices: Vec<&[i64]> = quantiles
+            .iter()
+            .map(|array| array.as_slice())
+            .collect::<Result<_, _>>()?;
+        let labels = labels.as_slice()?;
+        let labels_count = water.len()?;
+        if columns.iter().any(|column| column.len() != labels_count)
+            || labels
+                .iter()
+                .any(|&l| usize::try_from(l).map_or(true, |l| l >= labels_count))
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "labels outside the tables",
+            ));
+        }
+        let tables = slots::Tables {
+            water: water.as_slice()?,
+            coast_slot: columns[0],
+            topography: columns[1],
+            vegetation: columns[2],
+            climate: columns[3],
+            level_one: columns[4],
+            level_two: columns[5],
+            materials: columns[6],
+        };
+        let wobble = slots::Wobble {
+            coast: keys[0],
+            shelf: keys[1],
+            border: keys[2],
+            family: keys[3],
+            level: keys[4],
+            periods,
+            quantiles: [quantile_slices[0], quantile_slices[1], quantile_slices[2]],
+        };
+        let (land, rivers, remap) = (land.as_slice()?, rivers.as_slice()?, remap.as_slice()?);
+        let out = py.detach(|| {
+            slots::synthesize(
+                labels,
+                land,
+                rivers,
+                shape,
+                &tables,
+                &wobble,
+                (x0, y0),
+                remap,
+            )
+        });
+        shaped(py, shape, out)
     }
 
     /// Value noise at arbitrary integer coordinates.

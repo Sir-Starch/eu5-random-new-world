@@ -71,3 +71,16 @@ def drainage(
 def best_points(
     labels: NDArray[int32], score: NDArray[int64], tie: NDArray[int64], count: int
 ) -> NDArray[int64]: ...
+def synthesize_slots(
+    labels: NDArray[int32],
+    land: NDArray[bool_],
+    rivers: NDArray[bool_],
+    tables: list[NDArray[int64]],
+    water: NDArray[bool_],
+    keys: list[int],
+    periods: list[int],
+    quantiles: list[NDArray[int64]],
+    x0: int,
+    y0: int,
+    remap: NDArray[int64],
+) -> NDArray[uint8]: ...

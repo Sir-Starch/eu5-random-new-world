@@ -8,13 +8,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw import _native, eu5_objects, fields, lzav, noise, rivers, topology
+from rnw import _native, eu5_objects, eu5_slots, fields, lzav, noise, rivers, topology
 from tests.reference import fields as reference_fields
 from tests.reference import lzav as reference_lzav
 from tests.reference import noise as reference_noise
 from tests.reference import objects as reference_objects
 from tests.reference import points as reference_points
 from tests.reference import rivers as reference_rivers
+from tests.reference import slots as reference_slots
 from tests.reference import topology as reference_topology
 
 
@@ -364,3 +365,48 @@ def test_best_points_equal_the_reference() -> None:
     assert native[7].tolist() == [0, 0]
     with pytest.raises(ValueError, match="below the count"):
         _ = _native.best_points(labels, score, tie, 5)
+
+
+def _slot_window(seed: int, shape: tuple[int, int]) -> tuple[np.ndarray, ...]:
+    generator = np.random.default_rng(seed)
+    count = 14
+    labels = (
+        fields.upsample(
+            generator.integers(0, count, (shape[0] // 8 + 2, shape[1] // 8 + 2)), 8, shape
+        )
+        % count
+    ).astype(np.int32)
+    land_label = generator.random(count) < 0.6
+    land = land_label[labels] & (generator.random(shape) < 0.97)
+    rivers_mask = (generator.random(shape) < 0.01) & land
+    return labels, land, rivers_mask, land_label
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+@pytest.mark.parametrize("with_rivers", [False, True])
+def test_slot_synthesis_equals_the_reference(seed: int, *, with_rivers: bool) -> None:
+    """Coast, transition, river and border bands, variation levels and the remap match."""
+    shape = (70 + seed * 9, 83 + seed * 5)
+    labels, land, river_mask, land_label = _slot_window(seed, shape)
+    generator = np.random.default_rng(seed + 50)
+    count = land_label.size
+    tables = eu5_slots.SlotTables(
+        water=~land_label,
+        coast_slot=generator.integers(0, 5, count, dtype=np.int64),
+        topography=generator.integers(0, 4, count, dtype=np.int64),
+        vegetation=generator.integers(0, 4, count, dtype=np.int64),
+        climate=generator.integers(0, 3, count, dtype=np.int64),
+        level_one=generator.integers(0, 500, count, dtype=np.int64),
+        level_two=generator.integers(0, 400, count, dtype=np.int64),
+        materials=generator.integers(0, 18, count, dtype=np.int64),
+    )
+    if not with_rivers:
+        river_mask = np.zeros(shape, dtype=np.bool_)
+    for origin in ((0, 0), (1234, 567)):
+        native = eu5_slots.synthesize(labels, land, river_mask, tables, seed=seed, origin=origin)
+        expected = reference_slots.synthesize(
+            labels, land, river_mask, tables, seed=seed, origin=origin
+        )
+        assert native.dtype == np.int64
+        assert np.array_equal(native, expected)
+        assert len(np.unique(native)) > 4
