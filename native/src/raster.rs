@@ -133,3 +133,49 @@ mod tests {
         assert_eq!(box_blur(&[-1, 0, 0], (1, 3), 1), vec![-1, -1, 0]);
     }
 }
+
+/// Per label, the `(row, column)` of the first pixel in raster order with the highest
+/// `score`, ties going to the higher `tie`. Labels without pixels, and negative labels,
+/// give `(0, 0)` / are skipped, as the NumPy reference does.
+pub fn best_points(
+    labels: &[i32],
+    score: &[i64],
+    tie: &[i64],
+    width: usize,
+    count: usize,
+) -> Vec<i64> {
+    let mut best: Vec<Option<(i64, i64, usize)>> = vec![None; count];
+    for (index, &label) in labels.iter().enumerate() {
+        let Ok(label) = usize::try_from(label) else {
+            continue;
+        };
+        let candidate = (score[index], tie[index]);
+        match &mut best[label] {
+            Some((s, t, _)) if (*s, *t) >= candidate => {}
+            slot => *slot = Some((candidate.0, candidate.1, index)),
+        }
+    }
+    best.iter()
+        .flat_map(|entry| {
+            let at = entry.map_or(0, |(_, _, index)| index);
+            [(at / width) as i64, (at % width) as i64]
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod best_tests {
+    use super::*;
+
+    #[test]
+    fn the_first_best_pixel_wins_by_score_then_tie() {
+        let labels = [0, 0, 0, 1, 1, -1];
+        let score = [5, 9, 9, 1, 1, 100];
+        let tie = [0, 1, 2, 0, 0, 0];
+        // label 0: pixels 1 and 2 share score 9, the higher tie is pixel 2; label 1: first pixel
+        assert_eq!(
+            best_points(&labels, &score, &tie, 3, 3),
+            vec![0, 2, 1, 0, 0, 0]
+        );
+    }
+}

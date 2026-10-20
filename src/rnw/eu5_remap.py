@@ -53,6 +53,7 @@ LIST_KEYS: Final[frozenset[str]] = frozenset(
     {"location", "locations", "waypoints", "province_definition", "provinces", "map_id"}
 )
 DROP_KEYS: Final[frozenset[str]] = frozenset({"map_id"})
+WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_]+")
 SCOPE: Final[re.Pattern[str]] = re.compile(
     r"(?<![A-Za-z0-9_])(location|province):([A-Za-z_][A-Za-z0-9_]*)"
 )
@@ -135,6 +136,8 @@ def _walk(block: Block, remap: dict[str, str], edits: Edits, text: str) -> int:
 
 def remap_text(text: str, remap: dict[str, str]) -> tuple[str, int]:
     """Rewrite location references in one script text; returns (text, replacements)."""
+    if remap.keys().isdisjoint(WORD.findall(text)):
+        return text, 0  # no reference can change, so the text need not be parsed
     count = 0
     try:
         root = parse(text)

@@ -86,6 +86,32 @@ def _drop_landlocked(canvas: NDArray[np.bool_], sea: NDArray[np.bool_]) -> NDArr
     return canvas & good[parts]
 
 
+def _remainder_boxes(
+    rolled: NDArray[np.int32], canvas: NDArray[np.bool_], zones: NDArray[np.int32], count: int
+) -> dict[int, tuple[slice, slice]]:
+    """Bounding box of the part of each zone that the canvas leaves, for zones with one.
+
+    A zone's remainder does not change while other zones are processed, since the
+    canvas only changes on the pixels of the zone being processed.
+    """
+    chosen = np.zeros(count, dtype=bool)
+    chosen[zones] = True
+    rest = chosen[rolled] & ~canvas
+    low = np.full((2, count), np.iinfo(np.int64).max, dtype=np.int64)
+    high = np.full((2, count), -1, dtype=np.int64)
+    for axis, view in enumerate((rest, rest.T)):
+        first, second = np.nonzero(view)  # ascending in the first coordinate
+        owner = rolled[(first, second) if axis == 0 else (second, first)]
+        low[axis, owner[::-1]] = first[::-1]
+        high[axis, owner] = first
+    return {
+        int(zone): (slice(int(low[0, zone]), int(high[0, zone]) + 1),
+                    slice(int(low[1, zone]), int(high[1, zone]) + 1))
+        for zone in zones.tolist()
+        if high[0, zone] >= 0
+    }  # fmt: skip
+
+
 def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
     """Return the canvas for ``band_px`` of ocean around the New World."""
     count = len(game_map.keys)
@@ -100,14 +126,13 @@ def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
     other = ~new_world & ~ocean
     near_other = distance_from(other[rolled], GUARD_PX + 1) <= GUARD_PX
     canvas = inside_new | ((ocean & sea)[rolled] & near_new & ~near_other)
-    for zone in np.unique(rolled[canvas & ~inside_new]).tolist():
-        rest = (rolled == zone) & ~canvas
-        if not np.any(rest):
+    zones = np.unique(rolled[canvas & ~inside_new])
+    boxes = _remainder_boxes(rolled, canvas, zones, count)
+    for zone in zones.tolist():
+        if zone not in boxes:
             continue
-        rows = np.flatnonzero(rest.any(axis=1))
-        columns = np.flatnonzero(rest.any(axis=0))
-        window = (slice(rows[0], rows[-1] + 1), slice(columns[0], columns[-1] + 1))
-        part = rest[window]
+        window = boxes[zone]
+        part = (rolled[window] == zone) & ~canvas[window]
         components = label_components(part.astype(np.int32))
         sizes = np.bincount(components[part])
         keep = int(np.argmax(sizes))

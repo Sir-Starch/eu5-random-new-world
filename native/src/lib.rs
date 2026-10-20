@@ -2,7 +2,9 @@
 //!
 //! Every function equals its Python reference in `tests/reference/` bit for bit.
 
+pub mod components;
 pub mod distance;
+pub mod drainage;
 pub mod hash;
 pub mod lzav;
 pub mod noise;
@@ -320,6 +322,66 @@ mod _native {
         let donors = donors.as_slice()?;
         let out = py.detach(|| objects::sample_instances(pixels, &density, donors, key, map_rows));
         shaped(py, (out.len() / 10, 10), out)
+    }
+
+    /// Number the 4-connected equal-label components in raster order of first pixel.
+    #[pyfunction]
+    fn label_components<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        wrap_x: bool,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = labels.as_array().dim();
+        let values = labels.as_slice()?;
+        let out = py.detach(|| components::label_components(values, shape, wrap_x));
+        shaped(py, shape, out)
+    }
+
+    /// Priority-flood drainage tree of a coarse land grid: (downstream cell, catchment).
+    #[pyfunction]
+    #[allow(clippy::type_complexity)]
+    fn drainage<'py>(
+        py: Python<'py>,
+        land: PyReadonlyArray2<'py, bool>,
+        height: PyReadonlyArray2<'py, i64>,
+        rain: PyReadonlyArray2<'py, i64>,
+        key: u64,
+    ) -> PyResult<(Bound<'py, PyArray1<i64>>, Bound<'py, PyArray1<i64>>)> {
+        let shape = land.as_array().dim();
+        if height.as_array().dim() != shape || rain.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err("mismatched grids"));
+        }
+        let (land, height, rain) = (land.as_slice()?, height.as_slice()?, rain.as_slice()?);
+        let tree = py.detach(|| crate::drainage::drainage(land, height, rain, shape, key));
+        Ok((tree.parent.into_pyarray(py), tree.flow.into_pyarray(py)))
+    }
+
+    /// Per label, the first raster pixel with the best score (ties by `tie`), as `(count, 2)`.
+    #[pyfunction]
+    fn best_points<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        score: PyReadonlyArray2<'py, i64>,
+        tie: PyReadonlyArray2<'py, i64>,
+        count: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let (height, width) = labels.as_array().dim();
+        if score.as_array().dim() != (height, width) || tie.as_array().dim() != (height, width) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "mismatched rasters",
+            ));
+        }
+        let (labels, score, tie) = (labels.as_slice()?, score.as_slice()?, tie.as_slice()?);
+        if labels
+            .iter()
+            .any(|&label| usize::try_from(label).is_ok_and(|label| label >= count))
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "a label is not below the count",
+            ));
+        }
+        let out = py.detach(|| raster::best_points(labels, score, tie, width, count));
+        shaped(py, (count, 2), out)
     }
 
     /// Value noise at arbitrary integer coordinates.

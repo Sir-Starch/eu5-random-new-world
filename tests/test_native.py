@@ -8,11 +8,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw import eu5_objects, fields, lzav, noise, topology
+from rnw import _native, eu5_objects, fields, lzav, noise, rivers, topology
 from tests.reference import fields as reference_fields
 from tests.reference import lzav as reference_lzav
 from tests.reference import noise as reference_noise
 from tests.reference import objects as reference_objects
+from tests.reference import points as reference_points
+from tests.reference import rivers as reference_rivers
 from tests.reference import topology as reference_topology
 
 
@@ -304,3 +306,61 @@ def test_instance_sampling_equals_the_reference(seed: int) -> None:
     assert eu5_objects.sample_instances(
         pixels, use_fine=use_fine, densities=(fine, coarse), source=donors[:0], rows=13, key=1
     ).shape == (0, 10)
+
+
+@pytest.mark.parametrize("wrap_x", [False, True])
+def test_components_equal_the_reference(*, wrap_x: bool) -> None:
+    """Numbering by first pixel, with and without the seam joining the edges."""
+    generator = np.random.default_rng(21)
+    grids = [
+        generator.integers(0, k, shape, dtype=np.int32)
+        for k, shape in (
+            (2, (30, 41)),
+            (5, (60, 17)),
+            (3, (1, 30)),
+            (3, (30, 1)),
+            (1, (6, 6)),
+            (9, (50, 50)),
+        )
+    ]
+    blobs = np.zeros((40, 40), dtype=np.int32)
+    blobs[5:20, 5:20] = 1
+    blobs[10:30, 25:39] = 1
+    blobs[:, 0] = 2
+    blobs[:, -1] = 2
+    grids.append(blobs)
+    for labels in grids:
+        native = topology.label_components(labels, wrap_x=wrap_x)
+        assert native.dtype == np.int64
+        assert np.array_equal(native, reference_topology.label_components(labels, wrap_x=wrap_x))
+    empty = np.zeros((0, 4), dtype=np.int32)
+    assert topology.label_components(empty).shape == (0, 4)
+
+
+@pytest.mark.parametrize("shape", [(1, 1), (4, 9), (30, 41), (64, 64)])
+@pytest.mark.parametrize("seed", [1, 2])
+def test_drainage_equals_the_reference(shape: tuple[int, int], seed: int) -> None:
+    """The flood order, ties by hashed noise and the accumulated rain match."""
+    generator = np.random.default_rng(seed * 100 + shape[0])
+    land = generator.random(shape) < 0.75
+    height = generator.integers(-5, 400, shape, dtype=np.int64)
+    height[::7] = 100  # flats make the tie-breaking noise matter
+    rain = generator.integers(-3, 50, shape, dtype=np.int64)
+    native = rivers.drainage(land, height, rain, key=seed + 1000)
+    expected = reference_rivers.drainage(land, height, rain, key=seed + 1000)
+    assert np.array_equal(native.parent, expected.parent)
+    assert np.array_equal(native.flow, expected.flow)
+
+
+def test_best_points_equal_the_reference() -> None:
+    """The first best pixel per label, ties by the second score, empty labels at the origin."""
+    generator = np.random.default_rng(8)
+    labels = generator.integers(-1, 11, (40, 33), dtype=np.int32)
+    labels[labels == 7] = 8  # label 7 has no pixel
+    score = generator.integers(0, 6, labels.shape, dtype=np.int64)
+    tie = generator.integers(0, 3, labels.shape, dtype=np.int64)
+    native = _native.best_points(labels, score, tie, 12)
+    assert np.array_equal(native, reference_points.best_points(labels, score, tie, 12))
+    assert native[7].tolist() == [0, 0]
+    with pytest.raises(ValueError, match="below the count"):
+        _ = _native.best_points(labels, score, tie, 5)

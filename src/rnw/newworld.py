@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
+from rnw import _native
 from rnw.fields import warped_noise
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
@@ -307,7 +308,6 @@ def _interior_points(
     larger ``d_border``: the point moves inland until it is twice as far from water as
     from the cell's other borders.
     """
-    height, width = labels.shape
     padded = np.pad(labels, 1, constant_values=-1)
     center = padded[1:-1, 1:-1]
     boundary = (
@@ -321,18 +321,15 @@ def _interior_points(
     distance = distance_from(boundary, INTERIOR_LIMIT).astype(np.int64)
     border = distance_from(boundary, INTERIOR_LIMIT, octagonal=True).astype(np.int64)
     shore = distance_from(~is_land, SHORE_LIMIT, octagonal=True).astype(np.int64)
-    score = np.where(is_land, np.minimum(2 * border, shore), distance).ravel()
-    tie = np.where(is_land, border, 0).ravel()
+    score = np.where(is_land, np.minimum(2 * border, shore), distance)
+    tie = np.where(is_land, border, 0)
     del distance, border, shore, boundary, is_land
-    flat = labels.ravel()
-    inside = np.flatnonzero(flat >= 0)
-    order = inside[np.lexsort((inside, -tie[inside], -score[inside], flat[inside]))]
-    owners = flat[order]
-    first = np.flatnonzero(np.concatenate([[True], owners[1:] != owners[:-1]]))
-    points = np.zeros((count, 2), dtype=np.int64)
-    points[owners[first]] = np.stack([order[first] // width, order[first] % width], axis=1)
-    _ = height
-    return points
+    return _native.best_points(
+        np.ascontiguousarray(labels, dtype=np.int32),
+        np.ascontiguousarray(score, dtype=np.int64),
+        np.ascontiguousarray(tie, dtype=np.int64),
+        count,
+    )
 
 
 def _absorb_orphans(

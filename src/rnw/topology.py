@@ -50,45 +50,15 @@ def unpack_pairs(pairs: NDArray[np.int64]) -> list[tuple[int, int]]:
     return list(zip((pairs >> PAIR_SHIFT).tolist(), (pairs & mask).tolist(), strict=True))
 
 
-def _find(parent: list[int], item: int) -> int:
-    while parent[item] != item:
-        parent[item] = parent[parent[item]]
-        item = parent[item]
-    return item
-
-
 def label_components(labels: NDArray[np.int32], *, wrap_x: bool = False) -> NDArray[np.int64]:
     """Number 4-connected equal-label components in raster order of first pixel.
 
-    Horizontal runs are joined with a union-find whose root is always the smallest
-    run index, so the numbering is independent of hash order and platform.
+    Horizontal runs are joined with a union-find whose root is always the smallest run
+    index, so the numbering is independent of hash order and platform.
     """
-    height, width = labels.shape
     if labels.size == 0:
         return np.zeros(labels.shape, dtype=np.int64)
-    starts = np.ones(labels.shape, dtype=bool)
-    starts[:, 1:] = labels[:, 1:] != labels[:, :-1]
-    run_of = np.cumsum(starts.ravel(), dtype=np.int64).reshape(height, width) - 1
-    run_count = int(run_of[-1, -1]) + 1
-    same = labels[1:] == labels[:-1]
-    first = [run_of[:-1][same]]
-    second = [run_of[1:][same]]
-    if wrap_x and width > 1:
-        seam = labels[:, -1] == labels[:, 0]
-        first.append(run_of[:, -1][seam])
-        second.append(run_of[:, 0][seam])
-    joined = np.unique(np.concatenate(first) * run_count + np.concatenate(second))
-    parent = list(range(run_count))
-    for upper, lower in zip(
-        (joined // run_count).tolist(), (joined % run_count).tolist(), strict=True
-    ):
-        root_a = _find(parent, upper)
-        root_b = _find(parent, lower)
-        if root_a != root_b:
-            parent[max(root_a, root_b)] = min(root_a, root_b)
-    roots = np.array([_find(parent, item) for item in range(run_count)], dtype=np.int64)
-    _, component_of_run = np.unique(roots, return_inverse=True)
-    return component_of_run.astype(np.int64)[run_of]
+    return _native.label_components(np.ascontiguousarray(labels, dtype=np.int32), wrap_x)
 
 
 def component_counts(
