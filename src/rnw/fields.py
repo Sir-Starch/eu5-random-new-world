@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.noise import NOISE_SCALE, UNIT, fractal_noise
-from rnw.rng import GAMMA, MASK64, hash_grid, mix64
+from rnw import _native
+from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.rng import MASK64, mix64
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -30,34 +31,18 @@ def smoothstep(values: NDArray[np.int64], low: int, high: int) -> NDArray[np.int
 
 
 SUBPIXEL: Final[int] = 16
-ANGLE_SCALE: Final[int] = 1024
-# (cos, sin) * 1024 of the lattice rotation per octave: multiples of the golden angle,
-# so no two octaves share grid axes and features do not line up with the raster.
-ROTATIONS: Final[tuple[tuple[int, int], ...]] = (
-    (-755, 692), (90, -1020), (623, 813), (-1008, -178), (864, -550), (-266, 989),
-)  # fmt: skip
 
 
-def _smooth_unit(t: NDArray[np.int64]) -> NDArray[np.int64]:
-    return t * t * (3 * UNIT - 2 * t) // (UNIT * UNIT)
+def _flat(values: NDArray[np.int64]) -> NDArray[np.int64]:
+    return np.ascontiguousarray(values, dtype=np.int64).reshape(-1)
 
 
 def value_noise_at(
     key: int, xs: NDArray[np.int64], ys: NDArray[np.int64], period: int
 ) -> NDArray[np.int64]:
     """Value noise in [-32768, 32767] at arbitrary integer coordinates of any shape."""
-    ix = np.floor_divide(xs, period)
-    iy = np.floor_divide(ys, period)
-    sx = _smooth_unit((xs - ix * period) * UNIT // period)
-    sy = _smooth_unit((ys - iy * period) * UNIT // period)
-    corners = [
-        (hash_grid(key, ix + dx, iy + dy) >> np.uint64(48)).astype(np.int64) - NOISE_SCALE
-        for dy in (0, 1)
-        for dx in (0, 1)
-    ]
-    top = corners[0] * UNIT + (corners[1] - corners[0]) * sx
-    bottom = corners[2] * UNIT + (corners[3] - corners[2]) * sx
-    return (top * UNIT + (bottom - top) * sy) // (UNIT * UNIT)
+    flat = _native.value_noise_at(key & MASK64, _flat(xs), _flat(ys), period)
+    return flat.reshape(xs.shape)
 
 
 def fractal_at(  # noqa: PLR0913 - octave controls are part of the field definition.
@@ -70,19 +55,10 @@ def fractal_at(  # noqa: PLR0913 - octave controls are part of the field definit
     persistence_permille: int,
 ) -> NDArray[np.int64]:
     """Rotated-lattice fractal noise at sub-pixel coordinates (units of 1/16 pixel)."""
-    total = np.zeros(xs.shape, dtype=np.int64)
-    amplitude = PERMILLE
-    weight = 0
-    for octave in range(octaves):
-        cos, sin = ROTATIONS[octave % len(ROTATIONS)]
-        rx = (xs * cos - ys * sin) // ANGLE_SCALE
-        ry = (xs * sin + ys * cos) // ANGLE_SCALE
-        octave_key = mix64((key + octave * GAMMA) & MASK64)
-        octave_period = max(2, (period >> octave)) * SUBPIXEL
-        total += amplitude * value_noise_at(octave_key, rx, ry, octave_period)
-        weight += amplitude
-        amplitude = max(1, amplitude * persistence_permille // PERMILLE)
-    return total // max(1, weight)
+    flat = _native.fractal_at(
+        key & MASK64, _flat(xs), _flat(ys), period, octaves, persistence_permille
+    )
+    return flat.reshape(xs.shape)
 
 
 def warped_noise(  # noqa: PLR0913 - a field is defined by its stream, grid, warp and octaves.
