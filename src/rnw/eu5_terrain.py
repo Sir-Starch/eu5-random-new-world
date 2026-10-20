@@ -45,6 +45,8 @@ LOCATION_UNITS: Final[int] = 4
 HEIGHTMAP: Final[re.Pattern[str]] = re.compile(r"heightmap_\d+_\d+")
 OUTSIDE: Final[int] = -1
 DECAL_THREADS: Final[int] = 8
+# Measured peak of one decal window on top of the rest of the export (C101).
+DECAL_BYTES: Final[int] = 4 << 30
 WATER_CODE: Final[int] = 0
 LAND_CODE: Final[int] = 1
 DETAIL_PERIOD: Final[int] = 64
@@ -377,7 +379,9 @@ def terrain_outputs(
     def rebuild(decal: Decal) -> tuple[dict[str, bytes], NDArray[np.int64]]:
         return _rebuild_decal(decal, store, inputs, tables, seed)
 
-    with ThreadPoolExecutor(max_workers=worker_count(DECAL_THREADS)) as pool:
+    with ThreadPoolExecutor(
+        max_workers=worker_count(DECAL_THREADS, bytes_each=DECAL_BYTES)
+    ) as pool:
         rebuilt = list(pool.map(rebuild, touched))
     for decal, (files, image) in zip(touched, rebuilt, strict=True):
         outputs.update(files)

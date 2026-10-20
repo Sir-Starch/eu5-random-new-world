@@ -14,6 +14,7 @@ from __future__ import annotations
 import re
 import zlib
 from collections import Counter, deque
+from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -1284,90 +1285,105 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
         docks=ports[1],
         river_codes=river_codes,
     )
-    texts, text_stats = _text_outputs(
-        game_dir,
-        game_map=game_map,
-        canvas=canvas,
-        world=world,
-        plan=plan,
-        hierarchy=hierarchy,
-        removed=removed,
-        geometry=geometry,
-        biomes=biomes,
-        natives=natives,
-        development=development,
-        ports=ports,
-        new_world_keys=new_world_keys,
-    )
-    text_checks = _verify_texts(texts, plan, removed)
-    clock.lap("texts")
-    text_checks.update(_verify_natives(natives, plan))
-    text_checks.update(
-        verify_development(texts, plan, natives, development, calibration, new_world_keys)
-    )
-    remap = build_remap(
-        [
-            (game_map.keys[i], game_map.classes[i], int(geometry.rows[i]), int(geometry.columns[i]))
-            for i in np.flatnonzero(canvas.removed).tolist()
-        ],
-        plan,
-        np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
-        _removed_provinces(hierarchy, removed),
-    )
-    removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
-    rewrite = remap_scripts(game_dir, remap, removed_tags)
-    scripts = rewrite.outputs
-    clock.lap("script remap")
-    scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
-    texts.update(scripts)
-    text_checks.update(verify_country_tags(game_dir, texts))
-    text_checks.update(verify_localization(texts, vanilla_hashes))
-    text_stats["scripts_remapped"] = rewrite.remapped
-    text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
-    text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
-    rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
-    codes = _codes(game_map, canvas, world)
-    canvas_world = codes != OUTSIDE
-    vanilla_water = np.array(
-        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
-    )[game_map.labels]
-    relief_world = np.zeros(game_map.labels.shape, dtype=np.int32)
-    rows, columns = np.nonzero(canvas.mask)
-    relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = carved[rows, columns]
-    del carved
-    terrain_inputs = TerrainInputs(
-        codes=codes,
-        vanilla_water=vanilla_water,
-        relief=relief_world,
-        labels=final_labels,
-        rivers=rivers < RIVER_CLASSES,
-    )
-    clock.lap("rasters")
-    terrain_files, materials_world, terrain_stats = terrain_outputs(
-        store, terrain_inputs, slot_tables, seed
-    )
-    clock.lap("terrain decals")
-    new_water = vanilla_water.copy()
-    new_water[canvas_world] = codes[canvas_world] == WATER_CODE
-    water_files, water_stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed)
-    clock.lap("water")
-    terrain_files.update(water_files)
-    terrain_stats.update(water_stats)
-    pixel_classes, class_count, coarse_count = _pixel_classes(
-        game_map, vanilla_attributes, biomes, final_labels, materials_world
-    )
-    object_files, object_stats = object_outputs(
-        game_dir,
-        classes=pixel_classes,
-        canvas=canvas_world,
-        class_count=class_count,
-        coarse_count=coarse_count,
-        seed=seed,
-    )
-    del materials_world
-    clock.lap("vegetation instances")
-    terrain_files.update(object_files)
-    terrain_stats["objects"] = object_stats
+
+    def build_rasters() -> tuple[
+        NDArray[np.uint8], NDArray[np.uint8], dict[str, bytes], dict[str, object]
+    ]:
+        rasters_clock = Clock()
+        rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
+        codes = _codes(game_map, canvas, world)
+        canvas_world = codes != OUTSIDE
+        vanilla_water = np.array(
+            [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
+        )[game_map.labels]
+        relief_world = np.zeros(game_map.labels.shape, dtype=np.int32)
+        rows, columns = np.nonzero(canvas.mask)
+        relief_world[rows, _world_columns(canvas, columns.astype(np.int64))] = carved[rows, columns]
+        terrain_inputs = TerrainInputs(
+            codes=codes,
+            vanilla_water=vanilla_water,
+            relief=relief_world,
+            labels=final_labels,
+            rivers=rivers < RIVER_CLASSES,
+        )
+        rasters_clock.lap("rasters")
+        terrain_files, materials_world, terrain_stats = terrain_outputs(
+            store, terrain_inputs, slot_tables, seed
+        )
+        rasters_clock.lap("terrain decals")
+        new_water = vanilla_water.copy()
+        new_water[canvas_world] = codes[canvas_world] == WATER_CODE
+        water_files, water_stats = water_outputs(
+            game_dir, vanilla_water, new_water, canvas_world, seed
+        )
+        rasters_clock.lap("water")
+        terrain_files.update(water_files)
+        terrain_stats.update(water_stats)
+        pixel_classes, class_count, coarse_count = _pixel_classes(
+            game_map, vanilla_attributes, biomes, final_labels, materials_world
+        )
+        object_files, object_stats = object_outputs(
+            game_dir,
+            classes=pixel_classes,
+            canvas=canvas_world,
+            class_count=class_count,
+            coarse_count=coarse_count,
+            seed=seed,
+        )
+        rasters_clock.lap("vegetation instances")
+        terrain_files.update(object_files)
+        terrain_stats["objects"] = object_stats
+        return rgb, rivers, terrain_files, terrain_stats
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        pending = pool.submit(build_rasters)
+        texts, text_stats = _text_outputs(
+            game_dir,
+            game_map=game_map,
+            canvas=canvas,
+            world=world,
+            plan=plan,
+            hierarchy=hierarchy,
+            removed=removed,
+            geometry=geometry,
+            biomes=biomes,
+            natives=natives,
+            development=development,
+            ports=ports,
+            new_world_keys=new_world_keys,
+        )
+        text_checks = _verify_texts(texts, plan, removed)
+        clock.lap("texts")
+        text_checks.update(_verify_natives(natives, plan))
+        text_checks.update(
+            verify_development(texts, plan, natives, development, calibration, new_world_keys)
+        )
+        remap = build_remap(
+            [
+                (
+                    game_map.keys[i],
+                    game_map.classes[i],
+                    int(geometry.rows[i]),
+                    int(geometry.columns[i]),
+                )
+                for i in np.flatnonzero(canvas.removed).tolist()
+            ],
+            plan,
+            np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
+            _removed_provinces(hierarchy, removed),
+        )
+        removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
+        rewrite = remap_scripts(game_dir, remap, removed_tags)
+        scripts = rewrite.outputs
+        clock.lap("script remap")
+        scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
+        texts.update(scripts)
+        text_checks.update(verify_country_tags(game_dir, texts))
+        text_checks.update(verify_localization(texts, vanilla_hashes))
+        text_stats["scripts_remapped"] = rewrite.remapped
+        text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
+        text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
+        rgb, rivers, terrain_files, terrain_stats = pending.result()
     terrain_stats["rivers"] = river_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"

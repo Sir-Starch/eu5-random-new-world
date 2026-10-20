@@ -10,6 +10,11 @@ import sys
 import time
 from typing import Final
 
+try:  # the resource module does not exist on Windows
+    import resource
+except ImportError:  # pragma: no cover
+    resource = None
+
 ENVIRONMENT: Final[str] = "RNW_TIMING"
 
 
@@ -26,5 +31,9 @@ class Clock:
         """Print the seconds since the last lap when timing is on."""
         now = time.perf_counter()
         if self._on:
-            print(f"[timing] {name}: {now - self._last:.1f} s", file=sys.stderr, flush=True)
+            peak = ""
+            if resource is not None:
+                kilobytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+                peak = f", peak {kilobytes / 1024 / 1024:.1f} GB"
+            print(f"[timing] {name}: {now - self._last:.1f} s{peak}", file=sys.stderr, flush=True)
         self._last = now
