@@ -8,9 +8,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw import fields, lzav, noise, topology
+from rnw import eu5_objects, fields, lzav, noise, topology
+from tests.reference import fields as reference_fields
 from tests.reference import lzav as reference_lzav
 from tests.reference import noise as reference_noise
+from tests.reference import objects as reference_objects
 from tests.reference import topology as reference_topology
 
 
@@ -180,3 +182,125 @@ def test_label_spreading_equals_the_reference(limit: int) -> None:
         native = topology.nearest_label(labels, sources, limit)
         assert native.dtype == np.int32
         assert np.array_equal(native, reference_topology.nearest_label(labels, sources, limit))
+
+
+SHAPES = [(1, 1), (1, 9), (9, 1), (5, 7), (40, 3), (64, 100), (33, 47)]
+
+
+def _values(shape: tuple[int, int]) -> np.ndarray:
+    generator = np.random.default_rng(shape[0] * 1000 + shape[1])
+    return generator.integers(-3_000_000, 3_000_000, shape, dtype=np.int64)
+
+
+@pytest.mark.parametrize("shape", SHAPES)
+@pytest.mark.parametrize("step", [1, 2, 3, 7, 16])
+def test_upsample_equals_the_reference(shape: tuple[int, int], step: int) -> None:
+    """Bilinear samples, including negative values that must floor, not truncate."""
+    coarse = _values((shape[0] // step + 2, shape[1] // step + 2))
+    native = fields.upsample(coarse, step, shape)
+    assert native.shape == shape
+    assert np.array_equal(native, reference_fields.upsample(coarse, step, shape))
+
+
+def test_upsample_refuses_a_grid_that_is_too_small() -> None:
+    """The native kernel checks what NumPy would turn into an index error."""
+    with pytest.raises(ValueError, match="too small"):
+        _ = fields.upsample(np.zeros((2, 2), dtype=np.int64), 4, (9, 9))
+
+
+@pytest.mark.parametrize("shape", SHAPES)
+@pytest.mark.parametrize("step", [1, 2, 3, 5, 8])
+def test_block_mean_equals_the_reference(shape: tuple[int, int], step: int) -> None:
+    """Partial blocks replicate the edge; negative sums floor."""
+    values = _values(shape)
+    native = fields.block_mean(values, step)
+    assert np.array_equal(native, reference_fields.block_mean(values, step))
+
+
+@pytest.mark.parametrize("shape", SHAPES)
+@pytest.mark.parametrize("radius", [0, 1, 2, 5, 40])
+def test_box_blur_equals_the_reference(shape: tuple[int, int], radius: int) -> None:
+    """Radii smaller and much larger than the grid, signed values."""
+    values = _values(shape)
+    native = fields.box_blur(values, radius)
+    assert np.array_equal(native, reference_fields.box_blur(values, radius))
+
+
+def _pixel_classes(seed: int) -> tuple[eu5_objects.PixelClasses, np.ndarray]:
+    generator = np.random.default_rng(seed)
+    labels = generator.integers(0, 9, (13, 17), dtype=np.int32)
+    materials = generator.integers(0, 40, (26, 34), dtype=np.uint8)
+    classes = eu5_objects.PixelClasses(
+        labels=labels,
+        materials=materials,
+        label_class=np.array([0, 1, 2, -1, 3, 1, 0, 2, 4], dtype=np.int64),
+        label_coarse=np.array([0, 0, 1, 1, 2, 0, 0, 1, 2], dtype=np.int64),
+        calibrate=np.array([True, True, False, True, True, False, True, True, True]),
+    )
+    return classes, generator.random((13, 17)) < 0.6
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_canvas_pixels_equal_the_reference(seed: int) -> None:
+    """Raster order, merged slots and skipped class-less labels match."""
+    classes, canvas = _pixel_classes(seed)
+    native = eu5_objects.canvas_pixels(classes, canvas)
+    expected = reference_objects.canvas_pixels(classes, canvas)
+    for found, wanted in zip(native, expected, strict=True):
+        assert found.dtype == np.uint32
+        assert np.array_equal(found, wanted)
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_pixel_counts_equal_the_reference(seed: int) -> None:
+    """Counts per key over the masked labels match for both class tables."""
+    classes, _ = _pixel_classes(seed)
+    masked = eu5_objects.PixelClasses(
+        classes.labels,
+        classes.materials,
+        classes.label_coarse,
+        classes.label_coarse,
+        classes.calibrate,
+    )
+    for table in (masked.label_class, classes.label_coarse):
+        native = eu5_objects.pixel_counts(masked, table, 5, masked.calibrate)
+        expected = reference_objects.pixel_counts(masked, table, 5, masked.calibrate)
+        assert np.array_equal(native, expected)
+
+
+def test_pixel_counts_refuse_a_label_without_a_class() -> None:
+    """A masked label of class -1 would give a negative key, which bincount refuses."""
+    classes, _ = _pixel_classes(1)
+    with pytest.raises(ValueError, match="no class"):
+        _ = eu5_objects.pixel_counts(classes, classes.label_class, 5, np.ones(9, dtype=np.bool_))
+
+
+@pytest.mark.parametrize("seed", [4, 5])
+def test_instance_sampling_equals_the_reference(seed: int) -> None:
+    """Whole and fractional parts, donor choice and float positions match bit for bit."""
+    classes, canvas = _pixel_classes(seed)
+    pixels = eu5_objects.canvas_pixels(classes, canvas)
+    generator = np.random.default_rng(seed)
+    use_fine = generator.random(90) < 0.5
+    fine = generator.integers(0, 3 << 24, 90, dtype=np.int64) * (generator.random(90) < 0.7)
+    coarse = generator.integers(0, 2 << 24, 90, dtype=np.int64)
+    donors = generator.random((7, 10), dtype=np.float32)
+    native = eu5_objects.sample_instances(
+        pixels, use_fine=use_fine, densities=(fine, coarse), source=donors, rows=13, key=seed + 99
+    )
+    rows, columns, fine_key, coarse_key = (array.astype(np.int64) for array in pixels)
+    density = np.where(use_fine[fine_key], fine[fine_key], coarse[coarse_key])
+    wanted = density > 0
+    expected = reference_objects.sample_instances(
+        rows[wanted],
+        columns[wanted],
+        density=density[wanted],
+        source=donors,
+        rows=13,
+        key=seed + 99,
+    )
+    assert native.shape[1] == 10
+    assert np.array_equal(native.view(np.uint32), expected.view(np.uint32))
+    assert eu5_objects.sample_instances(
+        pixels, use_fine=use_fine, densities=(fine, coarse), source=donors[:0], rows=13, key=1
+    ).shape == (0, 10)

@@ -248,9 +248,13 @@ def test_level_counts_skip_borders() -> None:
 def test_instance_sampling_matches_density() -> None:
     """Expected instance count equals the fixed-point density; donors supply transforms."""
     rows, columns = np.nonzero(np.ones((100, 100), dtype=bool))
-    density = np.full(rows.size, 1 << 22, dtype=np.int64)  # a quarter per pixel
+    zeros = np.zeros(rows.size, dtype=np.uint32)
+    pixels = (rows.astype(np.uint32), columns.astype(np.uint32), zeros, zeros)
+    densities = (np.array([1 << 22], dtype=np.int64), np.zeros(1, dtype=np.int64))  # a quarter
     source = np.array([[0, 0, 0, 0, 0.5, 0, 0.866, 0.8, 0.8, 0.8]], dtype=np.float32)
-    out = sample_instances(rows, columns, density=density, source=source, rows=50, key=9)
+    out = sample_instances(
+        pixels, use_fine=np.array([True]), densities=densities, source=source, rows=50, key=9
+    )
     assert abs(out.shape[0] - 2500) < 200
     assert np.all(out[:, 4] == np.float32(0.5))
     assert np.all((out[:, 0] >= 0) & (out[:, 0] < 50))

@@ -24,7 +24,8 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.rng import derive_seed, hash_grid
+from rnw import _native
+from rnw.rng import MASK64, derive_seed
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -43,7 +44,6 @@ DENSITY_BITS: Final[int] = 24
 BUDGET_PERMILLE: Final[int] = 990
 PERMILLE: Final[int] = 1000
 MIN_PIXELS: Final[int] = 20_000
-CHUNK_ROWS: Final[int] = 1024
 INLINE: Final[re.Pattern[str]] = re.compile(
     r'(object=\{[^{}]*?name="([^"]+)"[^{}]*?count=)(\d+)(\s*transform=")([^"]*)("\})', re.DOTALL
 )
@@ -124,28 +124,17 @@ def _slot_class(materials: NDArray[np.uint8]) -> NDArray[np.int64]:
     return np.where(slots >= NO_SLOT, NO_SLOT, slots)
 
 
-def _pixel_keys(
-    classes: PixelClasses, table: NDArray[np.int64], row0: int, row1: int
-) -> NDArray[np.int64]:
-    """Key (class x slot) of every material pixel in even material rows ``row0:row1``."""
-    labels = classes.labels[row0 // 2 : row1 // 2]
-    expanded = np.repeat(np.repeat(table[labels], 2, axis=0), 2, axis=1)
-    return expanded * SLOT_CLASSES + _slot_class(classes.materials[row0:row1])
-
-
-def _pixel_counts(
+def pixel_counts(
     classes: PixelClasses, table: NDArray[np.int64], keys: int, mask: NDArray[np.bool_]
 ) -> NDArray[np.int64]:
     """Material pixels per key among labels where ``mask`` is true."""
-    counts = np.zeros(keys * SLOT_CLASSES, dtype=np.int64)
-    rows = classes.materials.shape[0]
-    for start in range(0, rows, CHUNK_ROWS):
-        stop = min(rows, start + CHUNK_ROWS)
-        key = _pixel_keys(classes, table, start, stop)
-        labels = np.repeat(np.repeat(classes.labels[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
-        chosen = mask[labels]
-        counts += np.bincount(key[chosen], minlength=counts.size)
-    return counts
+    return _native.pixel_counts(
+        np.ascontiguousarray(classes.labels, dtype=np.int32),
+        np.ascontiguousarray(classes.materials, dtype=np.uint8),
+        np.ascontiguousarray(table, dtype=np.int64),
+        np.ascontiguousarray(mask, dtype=np.bool_),
+        keys * SLOT_CLASSES,
+    )
 
 
 def _densities(
@@ -187,60 +176,40 @@ def budget_scale(
     return min(1 << DENSITY_BITS, (budget << DENSITY_BITS) // max(wanted, 1))
 
 
-def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, source records and seed.
-    pixel_rows: NDArray[np.int64],
-    pixel_columns: NDArray[np.int64],
+def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, donors and seed.
+    pixels: tuple[NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32]],
     *,
-    density: NDArray[np.int64],
+    use_fine: NDArray[np.bool_],
+    densities: tuple[NDArray[np.int64], NDArray[np.int64]],
     source: NDArray[np.float32],
     rows: int,
     key: int,
 ) -> NDArray[np.float32]:
-    """Records for pixels with fixed-point densities (expected count = density)."""
-    first = hash_grid(key, pixel_columns, pixel_rows)
-    fraction = (first & np.uint64((1 << DENSITY_BITS) - 1)).astype(np.int64)
-    count = (density + fraction) >> DENSITY_BITS
-    picked = np.flatnonzero(count)
-    if not picked.size or not source.size:
-        return np.zeros((0, RECORD_FLOATS), dtype=np.float32)
-    repeat = count[picked]
-    index = np.repeat(picked, repeat)
-    copy = np.arange(index.size, dtype=np.int64) - np.repeat(np.cumsum(repeat) - repeat, repeat)
-    second = hash_grid(key ^ 0x5EED, pixel_columns[index] * 8 + copy, pixel_rows[index])
-    dx = (second & np.uint64(0xFFFF)).astype(np.int64)
-    dz = ((second >> np.uint64(16)) & np.uint64(0xFFFF)).astype(np.int64)
-    donor = ((second >> np.uint64(32)) % np.uint64(source.shape[0])).astype(np.int64)
-    out = source[donor].copy()
-    out[:, 0] = ((pixel_columns[index] * 65536 + dx) / 131072.0).astype(np.float32)
-    out[:, 1] = 0.0
-    out[:, 2] = (rows - (pixel_rows[index] * 65536 + dz) / 131072.0).astype(np.float32)
-    return out
+    """Records for canvas pixels with fixed-point densities (expected count = density).
+
+    ``pixels`` holds the rows, columns, fine keys and coarse keys of the pixels; a pixel
+    with a fine key in ``use_fine`` takes the fine density, else its coarse key's.
+    """
+    return _native.sample_instances(
+        *pixels,
+        use_fine,
+        *densities,
+        np.ascontiguousarray(source, dtype=np.float32),
+        key & MASK64,
+        rows,
+    )
 
 
-def _canvas_pixels(
+def canvas_pixels(
     classes: PixelClasses, canvas: NDArray[np.bool_]
-) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
+) -> tuple[NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32]]:
     """Row, column, fine key and coarse key of every material pixel of the canvas to fill."""
-    rows = classes.labels.shape[0]
-    canvas_rows: list[NDArray[np.int64]] = []
-    canvas_columns: list[NDArray[np.int64]] = []
-    fine_keys: list[NDArray[np.int64]] = []
-    coarse_keys: list[NDArray[np.int64]] = []
-    for start in range(0, rows * 2, CHUNK_ROWS):
-        stop = min(rows * 2, start + CHUNK_ROWS)
-        labels = np.repeat(np.repeat(classes.labels[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
-        inside = np.repeat(np.repeat(canvas[start // 2 : stop // 2], 2, axis=0), 2, axis=1)
-        inside &= classes.label_class[labels] >= 0
-        local_rows, local_columns = np.nonzero(inside)
-        canvas_rows.append(local_rows + start)
-        canvas_columns.append(local_columns)
-        fine_keys.append(_pixel_keys(classes, classes.label_class, start, stop)[inside])
-        coarse_keys.append(_pixel_keys(classes, classes.label_coarse, start, stop)[inside])
-    return (
-        np.concatenate(canvas_rows),
-        np.concatenate(canvas_columns),
-        np.concatenate(fine_keys),
-        np.concatenate(coarse_keys),
+    return _native.canvas_pixels(
+        np.ascontiguousarray(classes.labels, dtype=np.int32),
+        np.ascontiguousarray(classes.materials, dtype=np.uint8),
+        np.ascontiguousarray(canvas, dtype=np.bool_),
+        np.ascontiguousarray(classes.label_class, dtype=np.int64),
+        np.ascontiguousarray(classes.label_coarse, dtype=np.int64),
     )
 
 
@@ -268,30 +237,32 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
             affected.append((instance, inside))
     if not affected:
         return {}, {"instance_files": 0}
-    fine_pixels = _pixel_counts(classes, classes.label_class, class_count, classes.calibrate)
-    coarse_pixels = _pixel_counts(classes, classes.label_coarse, coarse_count, classes.calibrate)
-    pixel_rows, pixel_columns, fine_key, coarse_key = _canvas_pixels(classes, canvas)
-    use_fine = fine_pixels[fine_key] >= MIN_PIXELS
+    fine_pixels = pixel_counts(classes, classes.label_class, class_count, classes.calibrate)
+    coarse_pixels = pixel_counts(classes, classes.label_coarse, coarse_count, classes.calibrate)
+    pixels = canvas_pixels(classes, canvas)
+    _, _, fine_key, coarse_key = pixels
+    use_fine = fine_pixels >= MIN_PIXELS
     tables = [_densities(instance, classes, fine_pixels, coarse_pixels) for instance, _ in affected]
     removed = sum(int(np.count_nonzero(inside)) for _, inside in affected)
+    fine_chosen = use_fine[fine_key]
     scale = budget_scale(
         tables,
-        np.bincount(fine_key[use_fine], minlength=fine_pixels.size),
-        np.bincount(coarse_key[~use_fine], minlength=coarse_pixels.size),
+        np.bincount(fine_key, minlength=fine_pixels.size) * use_fine,
+        np.bincount(coarse_key[~fine_chosen], minlength=coarse_pixels.size),
         removed * BUDGET_PERMILLE // PERMILLE,
     )
+    del fine_chosen
     records: dict[str, list[tuple[InstanceSet, NDArray[np.float32]]]] = {}
     added = 0
     for (instance, inside), (fine_table, coarse_table) in zip(affected, tables, strict=True):
-        fine = (fine_table * scale) >> DENSITY_BITS
-        coarse = (coarse_table * scale) >> DENSITY_BITS
-        density = np.where(use_fine, fine[fine_key], coarse[coarse_key])
-        wanted = density > 0
         kept = instance.records[~inside]
         fresh = sample_instances(
-            pixel_rows[wanted],
-            pixel_columns[wanted],
-            density=density[wanted],
+            pixels,
+            use_fine=use_fine,
+            densities=(
+                (fine_table * scale) >> DENSITY_BITS,
+                (coarse_table * scale) >> DENSITY_BITS,
+            ),
             source=kept,
             rows=rows,
             key=derive_seed(seed, "objects", instance.name),
