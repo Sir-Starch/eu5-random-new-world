@@ -132,4 +132,5 @@
 ## 2026-10-20 — Roadmap: player experience and publication
 
 - [OWNER] Two phases added to the [roadmap](../roadmap.md): U1, a comfortable setup inside the game (generation settings, visibility modes including a New World hidden by terra incognita already at country selection, seed QoL, ideally without a restart), and P1, preparation of the GitHub repository and the Steam Workshop page.
-- [V-LOCAL] Vanilla declares 30 lobby game rules in `main_menu/common/game_rules/` (C81), a lead for in-game options; a new seed without a restart still needs an engine path not yet known (C13).
+- [V-LOCAL] Vanilla declares 30 lobby game rules in `main_menu/common/game_rules/` (C81), a lead for in-game options.
+- [V-GAME owner] Correction of the first U1 premise, which assumed a new seed needs a game restart: EU5 reloads mods in the main menu without closing the game, map mods included, and builds the world when a new game starts (C82). U1 now requires a reroll that never closes the game; open is whether the reload re-reads a mod rewritten on disk.
