@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.9.4,<2"]
+build-backend = "maturin"
 
 [project]
 name = "eu5-rnw-research"
@@ -19,8 +19,19 @@ rnw = "rnw.cli:app"
 [dependency-groups]
 dev = ["basedpyright>=1.31,<2", "pytest>=8,<10", "ruff>=0.13,<1"]
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/rnw"]
+[tool.maturin]
+manifest-path = "native/Cargo.toml"
+python-source = "src"
+module-name = "rnw._native"
+profile = "release"
+
+[tool.uv]
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "native/Cargo.toml" },
+    { file = "native/Cargo.lock" },
+    { file = "native/src/**/*.rs" },
+]
 
 [tool.ruff]
 line-length = 100

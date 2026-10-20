@@ -11,8 +11,15 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: '3.12'
+      - run: rustup update stable
       - run: uv sync --locked --group dev
       - run: uv run ruff format --check .
       - run: uv run ruff check .
       - run: uv run basedpyright
       - run: uv run pytest -q
+      - run: cargo fmt --check
+        working-directory: native
+      - run: cargo clippy --all-targets -- -D warnings
+        working-directory: native
+      - run: cargo test
+        working-directory: native

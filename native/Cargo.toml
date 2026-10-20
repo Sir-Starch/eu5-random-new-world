@@ -1,0 +1,21 @@
+[package]
+name = "rnw-native"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+description = "Integer-exact hot kernels of the Random New World generator"
+
+[lib]
+name = "_native"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+numpy = "0.30.0"
+pyo3 = { version = "0.30.1", features = ["abi3-py312"] }
+rayon = "1.12.0"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1

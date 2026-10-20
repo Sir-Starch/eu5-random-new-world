@@ -1,6 +1,6 @@
-.PHONY: check format lint test typecheck
+.PHONY: check format lint test typecheck rust
 
-check: format lint typecheck test
+check: format lint typecheck test rust
 
 format:
 	uv run ruff format --check .
@@ -13,3 +13,6 @@ typecheck:
 
 test:
 	uv run pytest -q
+
+rust:
+	cd native && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test

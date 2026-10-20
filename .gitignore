@@ -14,3 +14,5 @@ experiments/*/output/
 *.log
 # Local task brief supplied by the owner; canonical project status is in docs/.
 eu5-rnw-gpt6-sol-prompt.md
+*.so
+*.pyd
