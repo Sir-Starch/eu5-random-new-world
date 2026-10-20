@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.eu5_events import mentions, names_tag, retire_events
+from rnw.eu5_events import mentions, names_tag, retire_events, retire_modifiers
 from rnw.eu5_nw_export import DONOR_MODIFIER, retired_base_modifiers
 from rnw.eu5_remap import RemapError, remap_scripts, remap_text
 
@@ -213,3 +213,36 @@ def test_event_mentions_count_ids_not_numbers() -> None:
     """Ids with a namespace count; localization keys of an event count for the event."""
     text = "id = a.1 x = 1.5 a.12 = { title = a.1.title }"
     assert mentions(text) == Counter({"a.1": 2, "a.12": 1})
+
+
+def test_modifiers_only_dropped_events_applied_leave_their_file() -> None:
+    """A modifier goes when the dropped events name it and nothing else does."""
+    texts = {
+        "main_menu/common/static_modifiers/country.txt": (
+            "used_mod = {\n\ta = 1\n}\ngone_mod = {\n\ta = 2\n}\nother = {\n}\n"
+        ),
+        "in_game/common/x.txt": "e = { add_country_modifier = { modifier = used_mod } }\n",
+    }
+    removed = "add_country_modifier = { modifier = gone_mod }\nmodifier = used_mod\n"
+    changed, dropped = retire_modifiers(texts, removed)
+    assert dropped == ("gone_mod",)
+    assert changed == {
+        "main_menu/common/static_modifiers/country.txt": (
+            "used_mod = {\n\ta = 1\n}\nother = {\n}\n"
+        )
+    }
+    assert retire_modifiers(texts, "") == ({}, ())
+
+
+def test_remap_scripts_retires_event_modifiers(tmp_path: Path) -> None:
+    """The events file and the static modifier file of a dropped event are both rewritten."""
+    game = tmp_path / "game"
+    _write(
+        game,
+        "in_game/events/flavor.txt",
+        "ev.1 = {\n\tdynamic_historical_event = { tag = AAA }\n\tmodifier = m_only\n}\n",
+    )
+    _write(game, "main_menu/common/static_modifiers/c.txt", "m_only = {\n\tx = 1\n}\nkeep = {\n}\n")
+    rewrite = remap_scripts(tmp_path, {}, {"AAA"})
+    assert rewrite.modifiers == ("m_only",)
+    assert rewrite.outputs["main_menu/common/static_modifiers/c.txt"] == b"keep = {\n}\n"

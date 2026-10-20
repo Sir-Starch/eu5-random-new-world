@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.eu5_events import EVENT_ID, mentions, names_tag, retire_events
+from rnw.eu5_events import EVENT_ID, mentions, names_tag, retire_events, retire_modifiers
 from rnw.model import CellClass
 from rnw.pdx import Block, Edits, PdxSyntaxError, line_span, parse
 
@@ -164,6 +164,7 @@ class ScriptRewrite:
     outputs: dict[str, bytes]
     remapped: dict[str, int]
     retired: dict[str, tuple[str, ...]]
+    modifiers: tuple[str, ...] = ()
 
 
 def _script_files(game_dir: Path) -> dict[str, Path]:
@@ -191,32 +192,32 @@ def _script_files(game_dir: Path) -> dict[str, Path]:
 
 def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str]) -> ScriptRewrite:
     """Mod copies of every script file whose location or tag references changed."""
+    files: dict[str, tuple[bytes, str]] = {}
+    named: Counter[str] = Counter()
+    for relative, path in _script_files(game_dir).items():
+        raw = path.read_bytes()
+        files[relative] = (raw, raw.decode("utf-8-sig", errors="strict"))
+        named.update(EVENT_ID.findall(files[relative][1]))
+    texts = {relative: text for relative, (_, text) in files.items()}
+    retired: dict[str, tuple[str, ...]] = {}
+    removed: list[str] = []
+    for relative, text in list(texts.items()):
+        if "/events/" in relative and names_tag(text, retired_tags):
+            elsewhere = named.copy()
+            elsewhere.subtract(mentions(text))
+            result = retire_events(text, retired_tags, elsewhere)
+            if result.text != text:
+                texts[relative] = result.text
+                retired[relative] = result.events
+                removed.append(result.removed)
+    changed, modifiers = retire_modifiers(texts, "".join(removed))
+    texts.update(changed)
     outputs: dict[str, bytes] = {}
     counts: dict[str, int] = {}
-    retired: dict[str, tuple[str, ...]] = {}
-    named: Counter[str] = Counter()
-    pending: dict[str, tuple[bytes, str]] = {}
-
-    def emit(relative: str, raw: bytes, text: str, *, changed: bool) -> None:
-        new, count = remap_text(text, remap)
-        if count or changed:
+    for relative, (raw, original) in files.items():
+        new, count = remap_text(texts[relative], remap)
+        if count or texts[relative] != original:
             bom = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
             outputs[relative] = (bom + new).encode("utf-8")
             counts[relative] = count
-
-    for relative, path in _script_files(game_dir).items():
-        raw = path.read_bytes()
-        text = raw.decode("utf-8-sig", errors="strict")
-        named.update(EVENT_ID.findall(text))
-        if "/events/" in relative and names_tag(text, retired_tags):
-            pending[relative] = (raw, text)
-        else:
-            emit(relative, raw, text, changed=False)
-    for relative, (raw, text) in pending.items():
-        elsewhere = named.copy()
-        elsewhere.subtract(mentions(text))
-        result = retire_events(text, retired_tags, elsewhere)
-        if result.text != text:
-            retired[relative] = result.events
-        emit(relative, raw, result.text, changed=relative in retired)
-    return ScriptRewrite(outputs, counts, retired)
+    return ScriptRewrite(outputs, counts, retired, modifiers)

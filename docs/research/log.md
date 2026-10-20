@@ -174,4 +174,5 @@
 - [V-EXEC] 0.9.11: events that only dropped events fired (chains) go too; generated country names avoid vanilla country names.
 - [V-GAME owner] Experiment 015, second run: with RNW active at the launch and no game before, the 0.9.10 world starts and runs without a crash (C98). The crash of C97 is therefore a matter of order: a vanilla game, then RNW activated from inside the running game.
 - [V-GAME owner] That session's log still has 9 invalid vassals: ranks are not the reason (C99). All invalid pairs have an overlord whose template sets no starting technology level (0 of 18 valid against 23 of 23 for level 2 in two worlds). 0.9.12 takes overlords only from templates at vanilla's lowest lord level and drops the explicit ranks.
+- [V-GAME owner] Experiment 015, third run: 0.9.12 on a fresh launch runs without a crash and without invalid vassals (C100). The remaining lines are the two locator hints, 39 unused modifiers of dropped events (retired in 0.9.13) and 3 never-set variables read by kept scripts.
 

@@ -1311,6 +1311,7 @@ def export_new_world(  # noqa: PLR0913, PLR0915 - the CLI contract names each in
     text_checks.update(verify_localization(texts, vanilla_hashes))
     text_stats["scripts_remapped"] = rewrite.remapped
     text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
+    text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
     rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
     codes = _codes(game_map, canvas, world)
     canvas_world = codes != OUTSIDE
