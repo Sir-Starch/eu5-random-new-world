@@ -19,7 +19,7 @@
 
 **The Workshop item is a mod that contains the generator and teaches the player to use it, from inside the game.**
 
-- **In the item:** the data mod (in-game window, game rules where a mod may define them [UNKNOWN: C81], localization of the instructions) and a `generator/` folder with the packaged generator (the PyInstaller folder of ADR 0007, built for Windows; on Linux it runs in the game's Proton prefix, see below). The generator needs no installation.
+- **In the item:** the data mod (in-game window, game rules where a mod may define them [UNKNOWN: C81], localization of the instructions) and a `generator/` folder with the packaged generator (built for Windows as the embeddable Python with the wheels and our code, see Trust on Windows; on Linux it runs in the game's Proton prefix, see below). The generator needs no installation.
 - **In the game:** a window of the mod (scripted widget) states whether a generated world is present (a localization key that only the generated mod defines), shows its name, seed and generator version, and gives the steps: open the Mods window, press **Open in folder** on Random New World, start the generator, press Generate, switch the playset off and on to reload the mods, start a new game. The visibility modes and the other options the engine applies at the start of a campaign are game rules of the mod [V-LOCAL C81].
 - **In the generator window:** the choices that need the map (preset, seed, size of the continents), which the engine can only read from files; the generator finds the game and the profile, lists the generated world as a second, local mod (`rnw_exp_new_world` in the profile's `mod/` folder, never in the Workshop folder, which Steam rewrites) and says what to do back in the game. Where the Workshop item sits is known to it from its own path.
 - **Settings in the game that reach the generator:** a button of the in-game window runs a script effect that writes the player's choices as one `debug_log` line; the generator reads the newest such line from the game's log and starts with them filled in [UNKNOWN: needs experiment 016].
@@ -34,6 +34,22 @@ The installation is the Windows build (`binaries/eu5.exe`, no native Linux binar
 - A program started there inherits the game's affinity mask (16 of 32 processors on the owner's machine), and the generator uses that many threads [V-GAME; `rnw.parallel`].
 - A native Linux build (made on Ubuntu 22.04, glibc 2.35; PySide6 needs 2.34) is not needed for the in-game path; whether to ship it as well for players who start the generator from their desktop is a size decision (about 250 MB more) for later.
 - Open: the full generator in that place (Qt window, 7.5 GiB beside the running game, time with the inherited threads) [UNKNOWN].
+
+## Trust on Windows
+
+A program in a Workshop item meets three Windows checks, each with its own trigger:
+
+- **SmartScreen** ("Windows protected your PC") looks only at files that carry the Mark of the Web, which browsers and some other downloaders write; the Steam client is reported not to write it for the games it installs [SOURCE: Lawrence 2024; AssetHoard; nothing from Valve, and nothing about Workshop items]. Expected: no prompt for the generator from the Workshop [INFERRED; check with `dir /r` in experiment 018].
+- **Antivirus heuristics** (Defender and others) flag PyInstaller programs often, because the stock bootloader is shared with malware; PyInstaller's own documentation names a self-built bootloader as a way out [SOURCE: PyInstaller 6.22.2 docs].
+- **Smart App Control** (Windows 11, on by default in most cases) checks every program, not only downloaded ones: what its cloud service cannot vouch for must carry a valid signature, or it is blocked, with no per-app exception [SOURCE: Microsoft support]. An unsigned program of ours with no history is blocked there [INFERRED].
+
+Hence:
+
+- **No PyInstaller on Windows.** The package is the official embeddable Python, the wheels as they come from PyPI and our code. That is the layout already tested under Wine and Proton (733 files, self-test, discovery: C106, C107). Python itself is signed by the Python Software Foundation and every Qt file by The Qt Company; NumPy, OpenBLAS and Pillow are unsigned but are the files millions of installations carry [V-EXEC: certificate subjects read from the PE files, chains not verified]. Our own binaries are two: a small launcher (`RandomNewWorld.exe`, of the kind of experiment 019's probe, that starts `pythonw.exe -m rnw.gui`) and `_native.pyd`.
+- **Those two are signed.** The free route for open-source projects is the SignPath Foundation (OSI licence, the owner's own repository with MFA, signing in CI with manual approval per release, the certificate in SignPath Foundation's name); the paid one is Azure Artifact Signing [SOURCE: signpath.org/terms]. Both need the owner's licence choice and accounts; I take no account action.
+- **Behaviour that can be read from the code and is enforced by tests:** no network modules in the package, no administrator rights (`asInvoker`), writes only to the profile's `mod/rnw_*` folders and the generator's data folder (already enforced by `rnw.app.install`), no registry writes, nothing unpacked to temporary folders.
+- **Each release:** built only by CI from a tagged commit, SHA-256 of every file published beside the source, a VirusTotal scan and false-positive reports to the vendors before it goes to the Workshop (the owner's actions: uploading a file to a scanner shares it).
+- **To check on Windows 11** (a machine or VM with Defender's defaults and Smart App Control on): whether the signed launcher and `_native.pyd` start, whether Workshop files carry the Mark of the Web, what Defender says.
 
 ## Experiments before building
 
