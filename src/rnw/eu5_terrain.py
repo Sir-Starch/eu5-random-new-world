@@ -177,21 +177,28 @@ class Window:
     inner_column: int
 
 
-def decal_heights(
+def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the core to compute.
     codes: NDArray[np.int8],
     vanilla_water: NDArray[np.bool_],
     relief: NDArray[np.int32] | NDArray[np.int64],
     *,
     seed: int,
     origin: tuple[int, int],
+    core: tuple[slice, slice] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int64]]:
-    """Land mask, canvas mask and generated heights of a decal window, at decal resolution.
+    """Land mask of a decal window and canvas mask and generated heights of its core.
 
-    The inputs are at location resolution. Heights are relief plus detail under a coastal
-    cap, so beaches are low and ranges rise from them without a terrace; water follows the
-    vanilla shelf profile. The kernel is Rust (ADR 0005), its NumPy specification is
-    ``tests/reference/terrain.py``.
+    The inputs are at location resolution, the results at decal resolution. Heights are
+    relief plus detail under a coastal cap, so beaches are low and ranges rise from them
+    without a terrace; water follows the vanilla shelf profile. ``core`` (row and column
+    slices of the decal-resolution window, all of it by default) limits the canvas mask and
+    the heights, and with them the noise and the per-pixel rules, to those pixels; the
+    distance fields always cover the window. The kernel is Rust (ADR 0005), its NumPy
+    specification is ``tests/reference/terrain.py``.
     """
+    rows, columns = core if core is not None else (slice(None), slice(None))
+    row0, row1, _ = rows.indices(int(codes.shape[0]) * 2)
+    column0, column1, _ = columns.indices(int(codes.shape[1]) * 2)
     params = {
         "coast_smooth": COAST_SMOOTH,
         "cap_reach": CAP_REACH,
@@ -216,6 +223,7 @@ def decal_heights(
         list(WATER_PROFILE),
         WATER_PROFILE[-1][0] + 1,
         params,
+        (row0, row1 - row0, column0, column1 - column0),
     )
 
 
@@ -296,26 +304,26 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
     rows = slice(window.row0, window.row1)
     columns = slice(window.column0, window.column1)
     origin = (window.column0 * 2, window.row0 * 2)
-    land, canvas, heights = decal_heights(
+    core = (
+        slice(window.inner_row, window.inner_row + (last - first) * 2),
+        slice(window.inner_column, window.inner_column + decal.columns * 2),
+    )
+    land, inside, heights = decal_heights(
         codes[rows, columns],
         inputs.vanilla_water[rows, columns],
         inputs.relief(rows, columns),
         seed=seed,
         origin=origin,
-    )
-    core = (
-        slice(window.inner_row, window.inner_row + (last - first) * 2),
-        slice(window.inner_column, window.inner_column + decal.columns * 2),
+        core=core,
     )
     target = slice(first * 2, last * 2)
-    inside = canvas[core]
     height_image, material_image = images
-    _write_where(height_image[target], heights[core], inside)
-    del heights, canvas
+    _write_where(height_image[target], heights, inside)
+    del heights
     labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
     rivers = np.repeat(np.repeat(inputs.rivers[rows, columns], 2, axis=0), 2, axis=1)
-    slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin)
-    _write_where(material_image[target], slots[core], inside)
+    slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
+    _write_where(material_image[target], slots, inside)
 
 
 def _rebuild_decal(  # noqa: PLR0913 - a decal reads the store, the inputs, the tables and the bands.

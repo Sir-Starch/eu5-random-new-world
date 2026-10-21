@@ -417,8 +417,20 @@ mod _native {
         x0: i64,
         y0: i64,
         remap: PyReadonlyArray1<'py, i64>,
+        core: (usize, usize, usize, usize),
     ) -> PyResult<Bound<'py, PyArray2<u8>>> {
         let shape = labels.as_array().dim();
+        let core = slots::Core {
+            row0: core.0,
+            rows: core.1,
+            column0: core.2,
+            columns: core.3,
+        };
+        if !core.fits(shape) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the core does not lie inside the window",
+            ));
+        }
         if land.as_array().dim() != shape || rivers.as_array().dim() != shape {
             return Err(pyo3::exceptions::PyValueError::new_err(
                 "mismatched rasters",
@@ -474,13 +486,14 @@ mod _native {
                 land,
                 rivers,
                 shape,
+                core,
                 &tables,
                 &wobble,
                 (x0, y0),
                 remap,
             )
         });
-        shaped(py, shape, out)
+        shaped(py, core.shape(), out)
     }
 
     /// Encode bytes as an LZAV format-3 stream with offset-8 references for repeated runs.
@@ -519,6 +532,7 @@ mod _native {
         table: Vec<(i64, i64)>,
         profile_end: i32,
         params: std::collections::HashMap<String, i64>,
+        core: (usize, usize, usize, usize),
     ) -> PyResult<(
         Bound<'py, PyArray2<bool>>,
         Bound<'py, PyArray2<bool>>,
@@ -541,20 +555,32 @@ mod _native {
             relief.as_slice()?,
         );
         let params = terrain::Params::new(params);
+        let core = slots::Core {
+            row0: core.0,
+            rows: core.1,
+            column0: core.2,
+            columns: core.3,
+        };
+        if !core.fits((shape.0 * 2, shape.1 * 2)) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the core does not lie inside the window",
+            ));
+        }
         let (land, canvas, heights) = py
             .detach(|| {
                 let fields =
                     terrain::land_and_distances(codes, water, shape, &params, profile_end)?;
                 let heights =
-                    terrain::heights(relief, shape, &fields, keys, origin, &table, &params)?;
-                Ok::<_, String>((fields.land, fields.canvas, heights))
+                    terrain::heights(relief, shape, core, &fields, keys, origin, &table, &params)?;
+                let canvas = slots::crop(&fields.canvas, shape.1 * 2, core);
+                Ok::<_, String>((fields.land, canvas, heights))
             })
             .map_err(pyo3::exceptions::PyValueError::new_err)?;
         let doubled = (shape.0 * 2, shape.1 * 2);
         Ok((
             shaped(py, doubled, land)?,
-            shaped(py, doubled, canvas)?,
-            shaped(py, doubled, heights)?,
+            shaped(py, core.shape(), canvas)?,
+            shaped(py, core.shape(), heights)?,
         ))
     }
 

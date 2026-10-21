@@ -83,6 +83,7 @@ def synthesize_slots(
     x0: int,
     y0: int,
     remap: NDArray[int64],
+    core: tuple[int, int, int, int],
 ) -> NDArray[uint8]: ...
 def lzav_encode(raw: bytes) -> bytes: ...
 def configure_threads(threads: int) -> int: ...
@@ -96,4 +97,5 @@ def decal_heights(
     table: list[tuple[int, int]],
     profile_end: int,
     params: dict[str, int],
+    core: tuple[int, int, int, int],
 ) -> tuple[NDArray[bool_], NDArray[bool_], NDArray[int64]]: ...

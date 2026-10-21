@@ -18,10 +18,16 @@ import contextlib
 import ctypes
 import os
 import sys
+from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Final, Self
 
 from rnw import _native
+from rnw.timing import timed
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import TracebackType
 
 ENVIRONMENT: Final[str] = "RNW_THREADS"
 MEMORY_ENVIRONMENT: Final[str] = "RNW_MEMORY"
@@ -215,3 +221,62 @@ def band_rows(row_bytes: int, *, workers: int, floor: int, ceiling: int, reserve
     """
     room = max(0, memory_budget() - reserved) // max(1, workers * row_bytes)
     return max(floor, min(ceiling, room))
+
+
+# Free memory from which stages of a job may overlap: the default export peaks at 6.9 GiB
+# with them and 6.3 GiB without [V-EXEC C102]; the rest is headroom for the desktop.
+OVERLAP_MEMORY: Final[int] = 10 * GIB
+OVERLAP_STAGES: Final[int] = 4
+
+
+def stage_workers() -> int:
+    """How many stages of a job may run at once on this machine (1 = one after the other).
+
+    Overlap needs a few spare cores and the memory for the stages' working sets together;
+    where the system will not say how much memory is free, stages do not overlap.
+    """
+    if thread_count() < OVERLAP_STAGES:
+        return 1
+    free = available_memory()
+    if free is None or free < OVERLAP_MEMORY:
+        return 1
+    return OVERLAP_STAGES
+
+
+class Stages:
+    """Runs the independent stages of a job on a few threads, or one after the other.
+
+    With one worker ``submit`` runs a stage at once, so the job is the plain sequence of
+    its calls; with more, a stage starts when a worker is free and the job goes on. A stage
+    may wait (``Future.result``) only for stages submitted before it: the pool starts
+    stages in submission order, so a waited-for stage is already running or done and
+    waiting cannot deadlock.
+    """
+
+    def __init__(self, workers: int) -> None:
+        self._pool: ThreadPoolExecutor | None = (
+            ThreadPoolExecutor(max_workers=workers) if workers > 1 else None
+        )
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        trace: TracebackType | None,
+    ) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=True, cancel_futures=exc is not None)
+
+    def submit[T](self, name: str, work: Callable[[], T]) -> Future[T]:
+        """Start ``work`` (timed as ``name`` when timing is on) and return its future."""
+        if self._pool is not None:
+            return self._pool.submit(timed, name, work)
+        future: Future[T] = Future()
+        try:
+            future.set_result(timed(name, work))
+        except BaseException as error:  # noqa: BLE001 - re-raised by result()
+            future.set_exception(error)
+        return future

@@ -7,6 +7,7 @@
 use crate::distance::{distance_from, euclidean_distance};
 use crate::noise::fractal_window;
 use crate::raster::{box_blur, upsample};
+use crate::slots::{Core, crop};
 use rayon::prelude::*;
 use std::collections::HashMap;
 
@@ -162,12 +163,14 @@ fn profile(distance: i64, table: &[(i64, i64)], unit: i64) -> i64 {
     table[table.len() - 1].1
 }
 
-/// Heights of the window: relief plus detail under a coastal cap on land, the shelf
-/// profile in water.
+/// Heights of the `core` of the window (decal pixels; row-major, core-sized): relief plus
+/// detail under a coastal cap on land, the shelf profile in water. The fields and the
+/// relief cover the whole window; the noise and the per-pixel rules run on the core.
 #[allow(clippy::too_many_arguments)]
 pub fn heights(
     relief: &[i64],
     shape: (usize, usize),
+    core: Core,
     fields: &Fields,
     keys: (u64, u64),
     origin: (i64, i64),
@@ -180,15 +183,25 @@ pub fn heights(
         .par_iter()
         .map(|&r| if r > 0 { r } else { coast_height })
         .collect();
-    let smooth = upsample(&pad_edge(&filled, shape), shape.1 + 1, 2, doubled);
+    let smooth = crop(
+        &upsample(&pad_edge(&filled, shape), shape.1 + 1, 2, doubled),
+        doubled.1,
+        core,
+    );
     drop(filled);
+    let (land, inland, offshore) = (
+        crop(&fields.land, doubled.1, core),
+        crop(&fields.inland, doubled.1, core),
+        crop(&fields.offshore, doubled.1, core),
+    );
+    let origin = (origin.0 + core.column0 as i64, origin.1 + core.row0 as i64);
     let (detail_period, crest_period) = (params.get("detail_period")?, params.get("crest_period")?);
     let (detail, crest) = rayon::join(
         || {
             fractal_window(
                 keys.0,
                 origin,
-                (doubled.1, doubled.0),
+                (core.columns, core.rows),
                 detail_period,
                 DETAIL_OCTAVES,
                 PERSISTENCE,
@@ -198,7 +211,7 @@ pub fn heights(
             fractal_window(
                 keys.1,
                 origin,
-                (doubled.1, doubled.0),
+                (core.columns, core.rows),
                 crest_period,
                 DETAIL_OCTAVES,
                 PERSISTENCE,
@@ -217,8 +230,8 @@ pub fn heights(
     Ok((0..smooth.len())
         .into_par_iter()
         .map(|at| {
-            if !fields.land[at] {
-                return profile(fields.offshore[at], table, eighths);
+            if !land[at] {
+                return profile(offshore[at], table, eighths);
             }
             let raised = (smooth[at] - coast_height).max(0);
             let amplitude = detail_base + (raised * detail_permille).div_euclid(PERMILLE);
@@ -228,7 +241,7 @@ pub fn heights(
             let inner = smooth[at]
                 + (detail[at] * amplitude).div_euclid(noise_scale)
                 + (crests * crest_height).div_euclid(noise_scale);
-            let cap = shore + ((fields.inland[at] - eighths) * slope).div_euclid(eighths);
+            let cap = shore + ((inland[at] - eighths) * slope).div_euclid(eighths);
             inner.min(cap).max(shore)
         })
         .collect())

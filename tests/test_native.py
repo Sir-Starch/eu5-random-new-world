@@ -431,6 +431,15 @@ def test_slot_synthesis_equals_the_reference(seed: int, *, with_rivers: bool) ->
         assert native.dtype == np.uint8
         assert np.array_equal(native, expected)
         assert len(np.unique(native)) > 4
+        for core in (
+            (slice(5, 40), slice(7, 60)),
+            (slice(0, 1), slice(0, shape[1])),
+            (slice(20, shape[0]), slice(30, 31)),
+        ):
+            cropped = eu5_slots.synthesize(
+                labels, land, river_mask, tables, seed=seed, origin=origin, core=core
+            )
+            assert np.array_equal(cropped, expected[core])
 
 
 def test_lzav_encoder_equals_the_reference() -> None:
@@ -501,3 +510,13 @@ def test_decal_heights_equal_the_reference(seed: int, origin: tuple[int, int]) -
     assert np.array_equal(native[2], expected)
     assert land.any()
     assert (~land).any()
+    doubled = (shape[0] * 2, shape[1] * 2)
+    for core in (
+        (slice(10, 70), slice(12, 100)),
+        (slice(0, 1), slice(0, doubled[1])),
+        (slice(40, doubled[0]), slice(50, 51)),
+    ):
+        part = eu5_terrain.decal_heights(codes, water, relief, seed=seed, origin=origin, core=core)
+        assert np.array_equal(part[0], land)
+        assert np.array_equal(part[1], canvas[core])
+        assert np.array_equal(part[2], expected[core])

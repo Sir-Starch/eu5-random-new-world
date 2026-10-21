@@ -8,7 +8,10 @@ from __future__ import annotations
 import os
 import sys
 import time
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 try:  # the resource module does not exist on Windows
     import resource
@@ -16,6 +19,7 @@ except ImportError:  # pragma: no cover
     resource = None
 
 ENVIRONMENT: Final[str] = "RNW_TIMING"
+STARTED: Final[float] = time.perf_counter()
 
 
 class Clock:
@@ -37,3 +41,22 @@ class Clock:
                 peak = f", peak {kilobytes / 1024 / 1024:.1f} GB"
             print(f"[timing] {name}: {now - self._last:.1f} s{peak}", file=sys.stderr, flush=True)
         self._last = now
+
+
+def timed[T](name: str, work: Callable[[], T]) -> T:
+    """Run ``work``; with timing on, print when it started and how long it took.
+
+    Stages that run beside each other report their own start and duration, which a lap
+    of one clock cannot.
+    """
+    if not os.environ.get(ENVIRONMENT):
+        return work()
+    start = time.perf_counter()
+    try:
+        return work()
+    finally:
+        print(
+            f"[timing] {name}: {time.perf_counter() - start:.1f} s (from {start - STARTED:.1f} s)",
+            file=sys.stderr,
+            flush=True,
+        )

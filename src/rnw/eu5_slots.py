@@ -128,8 +128,17 @@ def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables 
     *,
     seed: int,
     origin: tuple[int, int],
+    core: tuple[slice, slice] | None = None,
 ) -> NDArray[np.uint8]:
-    """Material slot per pixel of a window whose top-left decal pixel is ``origin``."""
+    """Material slot per pixel of a window whose top-left decal pixel is ``origin``.
+
+    With ``core`` (row and column slices of the window) only those pixels are computed and
+    returned: the distance fields look at the whole window, the noise and the rules run on
+    the core. The result equals the same slice of the whole window's slots.
+    """
+    rows, columns_slice = core if core is not None else (slice(None), slice(None))
+    row0, row1, _ = rows.indices(int(labels.shape[0]))
+    column0, column1, _ = columns_slice.indices(int(labels.shape[1]))
     streams = ("slot_coast", "slot_shelf", "slot_border", "slot_family", "slot_level")
     columns = (
         tables.coast_slot,
@@ -152,6 +161,7 @@ def synthesize(  # noqa: PLR0913 - the rules read labels, coast, rivers, tables 
         origin[0],
         origin[1],
         np.ascontiguousarray(slot_remap(), dtype=np.int64).reshape(-1),
+        (row0, row1 - row0, column0, column1 - column0),
     )
 
 

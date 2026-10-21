@@ -5,13 +5,15 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import threading
 from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw import parallel
+from rnw import parallel, timing
 
 if TYPE_CHECKING:
+    from concurrent.futures import Future
     from pathlib import Path
 
 
@@ -117,3 +119,78 @@ def test_a_task_that_needs_more_memory_than_is_free_is_refused(
         parallel.require_memory(6 * parallel.GIB, "A task")
     monkeypatch.setattr(parallel, "available_memory", lambda: None)
     parallel.require_memory(1 << 60, "A task")
+
+
+def test_stages_run_in_submission_order_on_one_worker() -> None:
+    """With one worker a stage has run when submit returns, so a job reads as a sequence."""
+    order: list[str] = []
+
+    def stage(name: str) -> str:
+        order.append(name)
+        return name
+
+    with parallel.Stages(1) as stages:
+        first = stages.submit("first", lambda: stage("first"))
+        assert order == ["first"]
+        second = stages.submit("second", lambda: stage("second") + first.result())
+    assert order == ["first", "second"]
+    assert second.result() == "secondfirst"
+
+
+def test_stages_overlap_and_may_wait_for_earlier_ones() -> None:
+    """Stages on several workers run at once; one may wait for a stage submitted before it."""
+    started = threading.Barrier(2, timeout=10)
+
+    def slow() -> int:
+        _ = started.wait()
+        return 7
+
+    def waiting(earlier: Future[int]) -> int:
+        _ = started.wait()
+        return earlier.result() * 6
+
+    with parallel.Stages(2) as stages:
+        first = stages.submit("slow", slow)
+        second = stages.submit("waiting", lambda: waiting(first))
+    assert (first.result(), second.result()) == (7, 42)
+
+
+def test_a_failing_stage_raises_where_its_result_is_read() -> None:
+    """The error of a stage surfaces at result(), on one worker and on several."""
+
+    def boom() -> int:
+        message = "stage failed"
+        raise ValueError(message)
+
+    for workers in (1, 3):
+        with parallel.Stages(workers) as stages:
+            future = stages.submit("boom", boom)
+            with pytest.raises(ValueError, match="stage failed"):
+                _ = future.result()
+
+
+def test_stages_overlap_only_on_a_machine_with_cores_and_memory(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Four threads and 10 GiB free allow overlap; fewer threads, less memory or an unknown
+    amount of memory run the stages one after the other."""
+    _machine(monkeypatch, cores=8, free=12 * parallel.GIB)
+    assert parallel.stage_workers() == parallel.OVERLAP_STAGES
+    _machine(monkeypatch, cores=8, free=9 * parallel.GIB)
+    assert parallel.stage_workers() == 1
+    _machine(monkeypatch, cores=8, free=None)
+    assert parallel.stage_workers() == 1
+    _machine(monkeypatch, cores=3, free=64 * parallel.GIB)
+    assert parallel.stage_workers() == 1
+
+
+def test_timed_reports_a_stage_only_when_timing_is_on(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The result is the stage's result either way; the report goes to standard error."""
+    monkeypatch.delenv("RNW_TIMING", raising=False)
+    assert timing.timed("quiet", lambda: 5) == 5
+    assert capsys.readouterr().err == ""
+    monkeypatch.setenv("RNW_TIMING", "1")
+    assert timing.timed("loud", lambda: 6) == 6
+    assert "[timing] loud:" in capsys.readouterr().err

@@ -14,7 +14,6 @@ from __future__ import annotations
 import re
 import zlib
 from collections import Counter, deque
-from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -135,14 +134,14 @@ from rnw.newworld import (
     split_at_column,
     unported_cells,
 )
-from rnw.parallel import GIB, configure, require_memory
+from rnw.parallel import GIB, Stages, configure, require_memory, stage_workers
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.settings import canonical_json, run_spec, spec_digest
-from rnw.timing import Clock
+from rnw.timing import Clock, timed
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -571,8 +570,13 @@ def _final_labels(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[
     return final
 
 
-def _check_world(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> dict[str, int]:
-    """Connectivity, sea reachability and Old World contact preservation."""
+def _check_world(
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld, final: NDArray[np.int32]
+) -> dict[str, int]:
+    """Connectivity, sea reachability and Old World contact preservation.
+
+    ``final`` is the label raster of the finished map (``_final_labels``).
+    """
     count = len(world.classes)
     unported = unported_cells(world)
     if unported:
@@ -585,7 +589,6 @@ def _check_world(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> dict[str,
     if np.any(per_cell != 1):
         message = f"{int(np.count_nonzero(per_cell != 1))} generated cells are split or empty"
         raise NewWorldExportError(message)
-    final = _final_labels(game_map, canvas, world)
     vanilla_count = len(game_map.keys)
     before = set(unpack_pairs(adjacency_pairs(game_map.labels, wrap_x=True)))
     after = set(unpack_pairs(adjacency_pairs(final, wrap_x=True)))
@@ -626,8 +629,9 @@ def _check_world(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> dict[str,
     if orphan:
         message = f"{len(orphan)} generated sea zones cannot reach the Old World seas"
         raise NewWorldExportError(message)
+    present = np.bincount(final.ravel(), minlength=vanilla_count + count)
     for zone in np.flatnonzero(canvas.trimmed).tolist():
-        if not np.any(final == zone):
+        if not present[zone]:
             message = f"Trimmed ocean zone vanished: {game_map.keys[zone]}"
             raise NewWorldExportError(message)
     return {
@@ -1237,7 +1241,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
         )
 
 
-def _export_new_world(  # noqa: PLR0913, PLR0915 - one pass over every stage of the export.
+def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every stage of the export.
     spool: Spool,
     game_dir: Path,
     output: Path,
@@ -1270,140 +1274,204 @@ def _export_new_world(  # noqa: PLR0913, PLR0915 - one pass over every stage of 
             "28,600; a 16-bit limit is suspected); raise location_px or sea_zone_px"
         )
         raise NewWorldExportError(message)
-    geometry = vanilla_geometry(game_map, canvas, hierarchy)
-    clock.lap("geometry")
-    vanilla_hashes = key_hashes(vanilla_localization_keys(game_dir))
-    loc_keys = KeySpace(vanilla_hashes)
-    plan = plan_identities(
-        game_map,
-        canvas,
-        world,
-        hierarchy,
-        geometry,
-        seed=seed,
-        settings=settings.new_world,
-        keys=loc_keys,
-    )
-    removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
-    world_checks = _check_world(game_map, canvas, world)
-    clock.lap("identities and checks")
-    store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
-    vanilla_attributes = template_attributes(_read(game_dir, TEMPLATES))
-    new_world_keys = vanilla_new_world_keys(hierarchy, removed)
-    calibration = calibrate_development(game_dir, game_map, hierarchy)
-    clock.lap("vanilla reads")
-    biomes, biome_stats, climate = _biome_model(
-        game_map, canvas=canvas, world=world, store=store, attributes=vanilla_attributes, seed=seed
-    )
-    river_codes, carved, river_stats = _rivers(world, canvas, climate, seed)
-    clock.lap("biomes and rivers")
-    river_pixels = np.bincount(
-        world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
-    )[: len(world.classes)]
-    natives = build_natives(
-        world=world,
-        plan=plan,
-        biomes=biomes,
-        river_pixels=river_pixels.astype(np.int64),
-        vanilla=vanilla_natives(game_dir, game_map, geometry, vanilla_attributes, hierarchy),
-        settings=settings.natives,
-        seed=seed,
-        loc_keys=loc_keys,
-    )
-    slot_tables, slot_stats = _slot_tables(game_map, vanilla_attributes, biomes, store)
-    clock.lap("natives and slot tables")
-    biome_stats["materials"] = slot_stats
     final_labels = _final_labels(game_map, canvas, world)
-    ports = _ports(plan, world, canvas)
-    development = _plan_development(
-        calibration,
-        game_map=game_map,
-        world=world,
-        plan=plan,
-        biomes=biomes,
-        natives=natives,
-        labels=final_labels,
-        docks=ports[1],
-        river_codes=river_codes,
-    )
+    removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
+    with Stages(stage_workers()) as stages:
 
-    def build_rasters() -> tuple[NDArray[np.uint8], NDArray[np.uint8], dict[str, object]]:
-        rasters_clock = Clock()
-        rgb, rivers = _rasters(game_map, canvas, world, plan, river_codes)
-        codes = _codes(game_map, canvas, world)
-        canvas_world = codes != OUTSIDE
-        vanilla_water = np.array(
-            [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
-        )[game_map.labels]
-
-        def relief_window(rows: slice, columns: slice) -> NDArray[np.int32]:
-            """Carved relief of a window of the world, zero off the canvas mask."""
-            world = np.arange(columns.start, columns.stop, dtype=np.int64)
-            inside = (world - canvas.col0 + canvas.roll) % canvas.shape[1]
-            valid = inside < canvas.mask.shape[1]
-            window = np.zeros((rows.stop - rows.start, world.size), dtype=np.int32)
-            local = inside[valid]
-            window[:, valid] = np.where(canvas.mask[rows][:, local], carved[rows][:, local], 0)
-            return window
-
-        terrain_inputs = TerrainInputs(
-            codes=codes,
-            vanilla_water=vanilla_water,
-            relief=relief_window,
-            labels=final_labels,
-            rivers=rivers < RIVER_CLASSES,
-        )
-        rasters_clock.lap("rasters")
-        new_water = vanilla_water.copy()
-        new_water[canvas_world] = codes[canvas_world] == WATER_CODE
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            # The water textures need none of the terrain, so they are built beside it.
-            watering = pool.submit(
-                water_outputs, game_dir, vanilla_water, new_water, canvas_world, seed
+        def identify() -> tuple[VanillaGeometry, set[int], KeySpace, Plan]:
+            geometry = vanilla_geometry(game_map, canvas, hierarchy)
+            vanilla_hashes = key_hashes(vanilla_localization_keys(game_dir))
+            loc_keys = KeySpace(vanilla_hashes)
+            plan = plan_identities(
+                game_map,
+                canvas,
+                world,
+                hierarchy,
+                geometry,
+                seed=seed,
+                settings=settings.new_world,
+                keys=loc_keys,
             )
-            materials_world, terrain_stats = terrain_outputs(
-                store, terrain_inputs, slot_tables, seed, spool
-            )
-            rasters_clock.lap("terrain decals")
-            water_files, water_stats = watering.result()
-        rasters_clock.lap("water")
-        spool.update(water_files)
-        terrain_stats.update(water_stats)
-        pixel_classes, class_count, coarse_count = _pixel_classes(
-            game_map, vanilla_attributes, biomes, final_labels, materials_world
-        )
-        object_stats = object_outputs(
-            game_dir,
-            classes=pixel_classes,
-            canvas=canvas_world,
-            class_count=class_count,
-            coarse_count=coarse_count,
-            seed=seed,
-            sink=spool,
-        )
-        rasters_clock.lap("vegetation instances")
-        terrain_stats["objects"] = object_stats
-        return rgb, rivers, terrain_stats
+            return geometry, vanilla_hashes, loc_keys, plan
 
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        pending = pool.submit(build_rasters)
-        texts, text_stats = _text_outputs(
-            game_dir,
+        def read_vanilla() -> tuple[
+            DecalStore, dict[str, dict[str, str]], set[str], DevelopmentCalibration
+        ]:
+            store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
+            return (
+                store,
+                template_attributes(_read(game_dir, TEMPLATES)),
+                vanilla_new_world_keys(hierarchy, removed),
+                calibrate_development(game_dir, game_map, hierarchy),
+            )
+
+        def build_water() -> dict[str, int]:
+            """The water textures need only the generated world, so they are built early."""
+            codes = _codes(game_map, canvas, world)
+            canvas_world = codes != OUTSIDE
+            vanilla_water = np.array(
+                [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
+            )[game_map.labels]
+            new_water = vanilla_water.copy()
+            new_water[canvas_world] = codes[canvas_world] == WATER_CODE
+            files, stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed)
+            spool.update(files)
+            return stats
+
+        water = stages.submit("water textures", build_water)
+        identities = stages.submit("identities", identify)
+        checks = stages.submit(
+            "world checks", lambda: _check_world(game_map, canvas, world, final_labels)
+        )
+        reads = stages.submit("vanilla reads", read_vanilla)
+
+        def weather() -> tuple[
+            CellBiomes,
+            dict[str, object],
+            tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]],
+        ]:
+            store, attributes, _, _ = reads.result()
+            biomes, biome_stats, climate = _biome_model(
+                game_map,
+                canvas=canvas,
+                world=world,
+                final_labels=final_labels,
+                store=store,
+                attributes=attributes,
+                seed=seed,
+            )
+            return biomes, biome_stats, _rivers(world, canvas, climate, seed)
+
+        weathering = stages.submit("biomes and rivers", weather)
+        geometry, vanilla_hashes, loc_keys, plan = identities.result()
+        store, vanilla_attributes, new_world_keys, calibration = reads.result()
+        vanilla_start = stages.submit(
+            "vanilla natives",
+            lambda: vanilla_natives(game_dir, game_map, geometry, vanilla_attributes, hierarchy),
+        )
+        biomes, biome_stats, (river_codes, carved, river_stats) = weathering.result()
+        slot_tables, slot_stats = timed(
+            "slot tables", lambda: _slot_tables(game_map, vanilla_attributes, biomes, store)
+        )
+        biome_stats["materials"] = slot_stats
+
+        def build_locations() -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
+            return _rasters(game_map, canvas, world, plan, river_codes)
+
+        locations = stages.submit("location rasters", build_locations)
+
+        def encode_rasters() -> list[bytes]:
+            rgb, rivers = locations.result()
+            return [
+                encode_png(pixels, color_type=color_type, compression="zlib", extra_chunks=chunks)
+                for pixels, color_type, chunks in (
+                    (rgb, COLOR_RGB, game_map.locations_chunks),
+                    (rivers, COLOR_PALETTE, game_map.rivers_chunks),
+                )
+            ]
+
+        encodings = stages.submit("png encoding", encode_rasters)
+
+        def build_terrain() -> dict[str, object]:
+            rivers = locations.result()[1]
+
+            def decals() -> tuple[NDArray[np.uint8], dict[str, object]]:
+                codes = _codes(game_map, canvas, world)
+                vanilla_water = np.array(
+                    [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes],
+                    dtype=bool,
+                )[game_map.labels]
+
+                def relief_window(rows: slice, columns: slice) -> NDArray[np.int32]:
+                    """Carved relief of a window of the world, zero off the canvas mask."""
+                    world_columns = np.arange(columns.start, columns.stop, dtype=np.int64)
+                    inside = (world_columns - canvas.col0 + canvas.roll) % canvas.shape[1]
+                    valid = inside < canvas.mask.shape[1]
+                    window = np.zeros((rows.stop - rows.start, world_columns.size), dtype=np.int32)
+                    local = inside[valid]
+                    window[:, valid] = np.where(
+                        canvas.mask[rows][:, local], carved[rows][:, local], 0
+                    )
+                    return window
+
+                inputs = TerrainInputs(
+                    codes=codes,
+                    vanilla_water=vanilla_water,
+                    relief=relief_window,
+                    labels=final_labels,
+                    rivers=rivers < RIVER_CLASSES,
+                )
+                return terrain_outputs(store, inputs, slot_tables, seed, spool)
+
+            materials_world, terrain_stats = timed("terrain decals", decals)
+            terrain_stats.update(water.result())
+            canvas_world = np.zeros(game_map.labels.shape, dtype=bool)
+            canvas.put(canvas_world, canvas.mask)
+            pixel_classes, class_count, coarse_count = _pixel_classes(
+                game_map, vanilla_attributes, biomes, final_labels, materials_world
+            )
+            terrain_stats["objects"] = timed(
+                "vegetation instances",
+                lambda: object_outputs(
+                    game_dir,
+                    classes=pixel_classes,
+                    canvas=canvas_world,
+                    class_count=class_count,
+                    coarse_count=coarse_count,
+                    seed=seed,
+                    sink=spool,
+                ),
+            )
+            return terrain_stats
+
+        terraining = stages.submit("terrain", build_terrain)
+        river_pixels = np.bincount(
+            world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
+        )[: len(world.classes)]
+        natives = timed(
+            "natives",
+            lambda: build_natives(
+                world=world,
+                plan=plan,
+                biomes=biomes,
+                river_pixels=river_pixels.astype(np.int64),
+                vanilla=vanilla_start.result(),
+                settings=settings.natives,
+                seed=seed,
+                loc_keys=loc_keys,
+            ),
+        )
+        ports = _ports(plan, world, canvas)
+        development = _plan_development(
+            calibration,
             game_map=game_map,
-            canvas=canvas,
             world=world,
             plan=plan,
-            hierarchy=hierarchy,
-            removed=removed,
-            geometry=geometry,
             biomes=biomes,
             natives=natives,
-            development=development,
-            ports=ports,
-            new_world_keys=new_world_keys,
+            labels=final_labels,
+            docks=ports[1],
+            river_codes=river_codes,
+        )
+        texts, text_stats = timed(
+            "texts",
+            lambda: _text_outputs(
+                game_dir,
+                game_map=game_map,
+                canvas=canvas,
+                world=world,
+                plan=plan,
+                hierarchy=hierarchy,
+                removed=removed,
+                geometry=geometry,
+                biomes=biomes,
+                natives=natives,
+                development=development,
+                ports=ports,
+                new_world_keys=new_world_keys,
+            ),
         )
         text_checks = _verify_texts(texts, plan, removed)
-        clock.lap("texts")
         text_checks.update(_verify_natives(natives, plan))
         text_checks.update(
             verify_development(texts, plan, natives, development, calibration, new_world_keys)
@@ -1423,9 +1491,8 @@ def _export_new_world(  # noqa: PLR0913, PLR0915 - one pass over every stage of 
             _removed_provinces(hierarchy, removed),
         )
         removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
-        rewrite = remap_scripts(game_dir, remap, removed_tags)
+        rewrite = timed("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
         scripts = rewrite.outputs
-        clock.lap("script remap")
         scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
         texts.update(scripts)
         text_checks.update(verify_country_tags(game_dir, texts))
@@ -1433,22 +1500,25 @@ def _export_new_world(  # noqa: PLR0913, PLR0915 - one pass over every stage of 
         text_stats["scripts_remapped"] = rewrite.remapped
         text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
         text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
-        rgb, rivers, terrain_stats = pending.result()
+        world_checks = checks.result()
+        rgb, rivers = locations.result()
+        png_data = encodings.result()
+        terrain_stats = terraining.result()
+    clock.lap("stages")
     terrain_stats["rivers"] = river_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
     inputs = {record.path: record for record in game_map.inputs}
     with staged(output) as stage:
         files: list[dict[str, object]] = []
-        for relative, source, pixels, mode, color_type, chunks in (
-            ("in_game/map_data/locations.png", LOCATIONS, rgb, "RGB", COLOR_RGB,
-             game_map.locations_chunks),
-            ("in_game/map_data/rivers.png", RIVERS, rivers, "P", COLOR_PALETTE,
-             game_map.rivers_chunks),
-        ):  # fmt: skip
-            data = encode_png(
-                pixels, color_type=color_type, compression="zlib", extra_chunks=chunks
-            )
+        for (relative, source, pixels, mode), data in zip(
+            (
+                ("in_game/map_data/locations.png", LOCATIONS, rgb, "RGB"),
+                ("in_game/map_data/rivers.png", RIVERS, rivers, "P"),
+            ),
+            png_data,
+            strict=True,
+        ):
             record = write_bytes(stage, f"{name}/{relative}", data)
             record |= {
                 "derived_from": source,
@@ -1603,6 +1673,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     *,
     canvas: Canvas,
     world: NewWorld,
+    final_labels: NDArray[np.int32],
     store: DecalStore,
     attributes: dict[str, dict[str, str]],
     seed: int,
@@ -1617,7 +1688,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     height = vanilla_height.astype(np.int32)
     canvas.put(height, world.elevation)
     vanilla_grid = climate_grid(sea[game_map.labels], vanilla_height)
-    final_grid = climate_grid(final_sea[_final_labels(game_map, canvas, world)], height)
+    final_grid = climate_grid(final_sea[final_labels], height)
     del height, vanilla_height
     points = np.stack(
         [world.centroids[:, 0], _world_columns(canvas, world.centroids[:, 1])], axis=1
