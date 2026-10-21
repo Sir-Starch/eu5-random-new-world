@@ -90,6 +90,8 @@ class NewWorldSettings:
     wasteland_permille: int
     province_size: int
     ocean_band_px: int
+    # Gold, silver, gems and pearls against their vanilla frequency (1000: as in vanilla).
+    precious_permille: int = 1000
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +107,8 @@ class NativeSettings:
     religion_locations: int
     tribe_locations: int
     organized_permille: int
+    # Share of the state land given to lone states away from the hearths' clusters.
+    state_spread_permille: int = 0
 
 
 NATIVES: Final[NativeSettings] = NativeSettings(
@@ -117,6 +121,9 @@ NATIVES: Final[NativeSettings] = NativeSettings(
     religion_locations=80,
     tribe_locations=6,
     organized_permille=450,
+    # Vanilla 1337 America: 15 % of its states lie in small groups apart from the two great
+    # centres (C117).
+    state_spread_permille=150,
 )
 
 
@@ -178,6 +185,8 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "religion_locations": (1, 10_000),
     "tribe_locations": (1, 100),
     "organized_permille": (0, 1000),
+    "precious_permille": (0, 5000),
+    "state_spread_permille": (0, 1000),
 }
 PRESETS: Final[dict[str, Settings]] = {
     "continents": Settings(
@@ -279,6 +288,68 @@ PRESETS: Final[dict[str, Settings]] = {
         natives=replace(NATIVES, hearths_per_10k=8, religion_locations=60),
     ),
 }
+# More kinds of New World from the same model: its scale (``feature_px``), land share and
+# smallest island decide whether the land joins into one mass or falls apart. Measured on
+# seeds 42, 7 and 1000 (share of the land in masses of at least 3 %): continents 84-92 %
+# in one mass with its isthmuses, like the Americas; supercontinent about 95 %; small
+# continents three or four masses (48/35/12, 49/24/18, 44/22/17); archipelago five to eleven
+# islands, the largest 21-42 %; islands six to twelve, the largest 13-25 % (C116).
+PRESETS["supercontinent"] = replace(
+    PRESETS["continents"],
+    preset="supercontinent",
+    new_world=replace(
+        PRESETS["continents"].new_world,
+        land_permille=540,
+        feature_px=3600,
+        persistence_permille=470,
+        min_island_px=6000,
+        # More land, so larger locations keep the map under the engine's location cap.
+        location_px=54,
+    ),
+)
+PRESETS["small_continents"] = replace(
+    PRESETS["continents"],
+    preset="small_continents",
+    new_world=replace(
+        PRESETS["continents"].new_world,
+        land_permille=300,
+        feature_px=1000,
+        min_island_px=1200,
+    ),
+)
+PRESETS["archipelago"] = replace(
+    PRESETS["archipelago"],
+    new_world=replace(PRESETS["archipelago"].new_world, land_permille=200, feature_px=420),
+)
+PRESETS["islands"] = replace(
+    PRESETS["archipelago"],
+    preset="islands",
+    new_world=replace(
+        PRESETS["archipelago"].new_world,
+        land_permille=180,
+        feature_px=300,
+        octaves=6,
+        persistence_permille=600,
+        min_island_px=120,
+    ),
+    natives=replace(NATIVES, hearths_per_10k=10, religion_locations=50),
+)
+# English names, for a mod's metadata and the window's default text.
+TITLES: Final[dict[str, str]] = {
+    "supercontinent": "Supercontinent",
+    "continents": "Continents",
+    "small_continents": "Small continents",
+    "archipelago": "Archipelago",
+    "islands": "Scattered islands",
+}
+# The order in which the generator's window offers them.
+WORLD_TYPES: Final[tuple[str, ...]] = (
+    "supercontinent",
+    "continents",
+    "small_continents",
+    "archipelago",
+    "islands",
+)
 
 
 def _checked_int(name: str, value: object) -> int:

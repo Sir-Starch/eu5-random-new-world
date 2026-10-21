@@ -283,15 +283,49 @@ def _population(
     return np.where(out >= MIN_POPULATION, out, 0)
 
 
-def _state_land(
-    complexity: NDArray[np.int64], inhabited: NDArray[np.bool_], share: int
+def _state_land(  # noqa: PLR0913 - the core, the share and how the outliers are placed
+    complexity: NDArray[np.int64],
+    inhabited: NDArray[np.bool_],
+    share: int,
+    *,
+    spread: int = 0,
+    moves: _Graph | None = None,
+    potential: NDArray[np.int64] | None = None,
+    reach: int = 0,
+    pocket: int = 1,
+    rng: SplitMix64 | None = None,
 ) -> NDArray[np.bool_]:
-    """The most complex inhabited locations, ``share`` permille of them (complexity > 0)."""
+    """State land: ``share`` permille of the inhabited land, mostly the most complex.
+
+    ``spread`` permille of it goes to pockets away from the core, as the small groups of
+    states apart from the great centres in vanilla 1337 America (C117): a pocket starts at
+    an inhabited location at least ``reach`` from all other state land, drawn by its
+    potential, and takes the nearest one to three times ``pocket`` locations.
+    """
     candidates = np.flatnonzero(inhabited & (complexity > 0))
     wanted = int(np.count_nonzero(inhabited)) * share // PERMILLE
-    order = candidates[np.argsort(-complexity[candidates], kind="stable")][:wanted]
+    outlying = wanted * spread // PERMILLE if moves is not None and rng is not None else 0
+    order = candidates[np.argsort(-complexity[candidates], kind="stable")][: wanted - outlying]
     land = np.zeros(len(complexity), dtype=bool)
     land[order] = True
+    if outlying == 0 or moves is None or rng is None or potential is None:
+        return land
+    placed = 0
+    while placed < outlying:
+        taken = np.flatnonzero(land).tolist()
+        cost, _ = moves.grow(taken, limit=reach) if taken else (np.full(len(land), -1), None)
+        pool = np.flatnonzero(inhabited & ~land & (cost < 0))
+        if pool.size == 0:
+            break
+        weights = np.maximum(1, potential[pool])
+        pick = rng.below(int(weights.sum()))
+        start = int(pool[int(np.searchsorted(np.cumsum(weights), pick, side="right"))])
+        size = min(outlying - placed, pocket * (1 + rng.below(3)))
+        near, _ = moves.grow([start], allowed=inhabited & ~land, limit=reach)
+        reached = np.flatnonzero(near >= 0)
+        members = reached[np.argsort(near[reached], kind="stable")][: max(1, size)]
+        land[members] = True
+        placed += int(members.size)
     return land
 
 
@@ -401,7 +435,17 @@ def generate_societies(
         culture[members] = inner[members] + zones
         zones += made
     inhabited = population > 0
-    state_land = _state_land(complexity, inhabited, settings.state_share_permille)
+    state_land = _state_land(
+        complexity,
+        inhabited,
+        settings.state_share_permille,
+        spread=settings.state_spread_permille,
+        moves=moves,
+        potential=graph.potential,
+        reach=reach,
+        pocket=settings.state_locations,
+        rng=rng,
+    )
     polities = [
         Polity(STATE, tuple(members), capital, int(culture[capital]))
         for capital, members in _states(

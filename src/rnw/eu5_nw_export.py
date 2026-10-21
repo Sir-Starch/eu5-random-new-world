@@ -137,12 +137,13 @@ from rnw.newworld import (
 )
 from rnw.parallel import GIB, Stages, configure, require_memory, stage_workers
 from rnw.pdx import Block, parse
+from rnw.pictures import center_column, cover, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.progress import Progress, active, checkpoint, run_stage, running
 from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
-from rnw.settings import canonical_json, run_spec, spec_digest
+from rnw.settings import TITLES, canonical_json, run_spec, spec_digest
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -1221,6 +1222,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     replace: bool = False,
     check_memory: bool = True,
     progress: Progress | None = None,
+    world_code: str | None = None,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report.
 
@@ -1243,6 +1245,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
             settings=settings,
             accept_build=accept_build,
             settings_file=settings_file,
+            world_code=world_code,
         )
 
 
@@ -1255,6 +1258,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     settings: Settings,
     accept_build: str | None,
     settings_file: str | None,
+    world_code: str | None,
 ) -> dict[str, object]:
     _ = configure()
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
@@ -1373,6 +1377,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 vanilla=climates.result(),
                 attributes=reads.result()[1],
                 seed=seed,
+                precious_permille=settings.new_world.precious_permille,
             )
             return biomes, biome_stats, _rivers(world, canvas, climate, seed)
 
@@ -1568,7 +1573,17 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         files.extend(spool.install(stage, name))
         files.append(
             write_bytes(
-                stage, f"{name}/.metadata/metadata.json", _metadata(name, seed, settings.preset)
+                stage,
+                f"{name}/.metadata/metadata.json",
+                _metadata(name, seed, settings.preset, world_code),
+            )
+        )
+        revealed, hidden = _previews(game_map, canvas, world)
+        files.append(
+            write_bytes(
+                stage,
+                f"{name}/.metadata/thumbnail.png",
+                _preview(thumbnail(hidden, center_column(hidden))),
             )
         )
         decoded = open_png(stage / name / "in_game/map_data/locations.png", "RGB")
@@ -1590,9 +1605,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         if np.any(outside):
             message = "locations.png changed outside the New World canvas"
             raise NewWorldExportError(message)
-        preview_record = write_bytes(
-            stage, "preview.png", _preview(_class_preview(game_map, canvas, world))
-        )
+        preview_record = write_bytes(stage, "preview.png", _preview(revealed))
+        hidden_record = write_bytes(stage, "preview_hidden.png", _preview(hidden))
         settings_record = write_bytes(
             stage, "settings.json", canonical_json(spec["settings"]).encode()
         )
@@ -1633,7 +1647,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "development": development.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,
-            "files": [*files, preview_record, settings_record],
+            "files": [*files, preview_record, hidden_record, settings_record],
             "inputs": [
                 {"path": record.path, "size": record.size, "sha256": record.sha256}
                 for record in game_map.inputs
@@ -1649,16 +1663,23 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     return report
 
 
-def _metadata(name: str, seed: int, preset: str) -> bytes:
+def _metadata(name: str, seed: int, preset: str, world_code: str | None) -> bytes:
+    """The mod's metadata: a complete map mod that names its world and how to make it again."""
     import json  # noqa: PLC0415
 
+    code = f" World code {world_code}." if world_code else ""
     payload: dict[str, object] = {
-        "name": f"RNW New World {preset} seed {seed} ({STATUS})",
+        "name": f"Random New World: {TITLES.get(preset, preset)}, seed {seed} ({STATUS})",
         "id": name,
         "version": __version__,
         "supported_game_version": "1.4.*",
-        "short_description": f"Generated New World with new locations; local only; {STATUS}",
+        "short_description": (
+            "A New World for Europa Universalis V made by the Random New World generator. "
+            f"A complete map mod: play it on its own, the generator is not needed.{code} "
+            f"{STATUS}"
+        ),
         "tags": ["Map"],
+        "picture": "thumbnail.png",
         "relationships": [],
         "game_custom_data": {},
     }
@@ -1732,6 +1753,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     vanilla: VanillaClimate,
     attributes: dict[str, dict[str, str]],
     seed: int,
+    precious_permille: int = 1000,
 ) -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
     """Climate, vegetation, topography and raw material of every generated cell."""
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
@@ -1761,6 +1783,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
         final_grid=final_grid,
         cells=cells,
         seed=seed,
+        precious_permille=precious_permille,
     )
     stats["coherence"] = _coherence(game_map, attributes, vanilla.locations.pairs, world, biomes)
     return biomes, stats, final_grid
@@ -1922,7 +1945,10 @@ def _pixel_classes(
     return classes, len(fine_names), len(coarse_names)
 
 
-def _class_preview(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.uint8]:
+def _previews(
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld
+) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
+    """The map at an eighth of its size with the New World drawn in, and with it covered."""
     step = 8
     water = np.array(
         [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
@@ -1940,5 +1966,6 @@ def _class_preview(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray
     table = np.array([palette[kind] for kind in world.classes], dtype=np.uint8)
     rows, columns = np.nonzero(canvas.mask[::step, ::step])
     world_columns = _world_columns(canvas, columns.astype(np.int64) * step) // step
+    hidden = cover(image, rows, world_columns)
     image[rows, world_columns] = table[world.labels[rows * step, columns * step]]
-    return image
+    return image, hidden

@@ -1,25 +1,24 @@
 """The main window, driven offscreen: widgets follow the controller and the buttons act."""
 
-# NumPy and Qt stubs type signals and widgets loosely.
+# Qt stubs type signals and widgets loosely.
 # pyright: reportAny=false
 
 from __future__ import annotations
 
-import threading
 import time
 from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.app.discovery import Environment, GameInstall
-from rnw.app.service import Request, Result
-from rnw.app.worldcode import encode, new_code
-from rnw.gui.controller import Controller, Generator, Phase
+from rnw.app import service
+from rnw.app.discovery import Environment, GameInstall, Profile
+from rnw.gui.controller import NEW, Controller, Phase
+from rnw.gui.text import text
 
 try:  # the window needs PySide6 and the system's graphics libraries
-    from PySide6.QtWidgets import QApplication
+    from PySide6.QtWidgets import QApplication, QMessageBox
 
-    from rnw.gui.window import MainWindow
+    from rnw.gui.window import MainWindow, SettingsDialog
 except ImportError:
     pytest.skip("PySide6 is not available", allow_module_level=True)
 
@@ -27,6 +26,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
+    from rnw.app.service import Exporter
     from rnw.progress import Progress
 
 
@@ -48,106 +48,113 @@ def pump(condition: Callable[[], bool], timeout: float = 10.0) -> None:
         time.sleep(0.005)
 
 
-def quick(request: Request, progress: Progress | None = None) -> Result:
-    """A generator that reports two stages and returns."""
-    assert progress is not None
-    progress.begin("generate world")
-    progress.finish("generate world")
-    return Result(encode(request.code), request.data, None, 2.4, {})
+def _window(tmp_path: Path, export: Exporter, *, game: bool = True) -> MainWindow:
+    def generator(request: service.Request, progress: Progress | None = None) -> service.Result:
+        return service.generate(request, progress, export)
 
-
-def hang(request: Request, progress: Progress | None = None) -> Result:
-    """A generator that runs until it is cancelled."""
-    del request
-    assert progress is not None
-    progress.begin("generate world")
-    while True:
-        progress.checkpoint()
-        _ = threading.Event().wait(0.005)
-
-
-def _window(tmp_path: Path, generator: Generator) -> MainWindow:
-    game = tmp_path / "game"
-    (game / "game" / "in_game" / "map_data").mkdir(parents=True)
     controller = Controller(
         data=tmp_path / "data",
         environment=Environment(system="linux", home=tmp_path / "home", variables={}),
         generator=generator,
     )
-    controller.game = GameInstall(game, None, "26043558")
-    controller.install = False
+    if game:
+        (tmp_path / "game" / "game" / "in_game" / "map_data").mkdir(parents=True)
+        controller.game = GameInstall(tmp_path / "game", None, "26043558")
+    (tmp_path / "profile" / "mod").mkdir(parents=True)
+    controller.profile = Profile(tmp_path / "profile", "linux", has_mods=True)
     return MainWindow(controller)
 
 
-def test_the_window_shows_the_world_and_enables_generate_only_when_it_can(
-    application: QApplication, tmp_path: Path
+@pytest.mark.usefixtures("application")
+def test_the_new_world_page_shows_types_and_needs_a_game(
+    tmp_path: Path, fake_export: Exporter
 ) -> None:
-    """Seed and code come from the controller; without a game Generate is off."""
-    del application
-    window = _window(tmp_path, quick)
+    """Every world type is offered; without a game, Generate is off and says why."""
+    window = _window(tmp_path, fake_export, game=False)
+    assert window.stack.currentWidget() is window.new_page
+    assert len(window.type_buttons.buttons()) == 5
+    assert not window.generate_button.isEnabled()
+    assert window.problem_line.text() == text("game_missing")
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_a_slider_changes_the_world_and_its_code(tmp_path: Path, fake_export: Exporter) -> None:
+    """Moving a control changes the value, marks it, and the code carries it."""
+    window = _window(tmp_path, fake_export)
     controller = window.controller
-    assert window.seed_edit.text() == str(controller.seed)
+    before = controller.code
+    window.customize_button.setChecked(True)
+    row = next(r for r in window.rows if r.control.key == "natives.state_spread_permille")
+    row.slider.setValue(row.control.position(400))
+    pump(lambda: "natives.state_spread_permille" in controller.changes)
+    assert controller.value("natives.state_spread_permille") == row.control.value_at(
+        row.control.position(400)
+    )
+    assert controller.code != before
     assert window.code_edit.text() == controller.code
-    assert window.generate_button.isEnabled()
-    assert not window.cancel_button.isEnabled()
-    assert window.stage_list.count() > 10
-    controller.game = None
-    window.refresh()
-    assert not window.generate_button.isEnabled()
-    assert window.game_problem.text() != ""
+    assert row.reset.isEnabled()
+    row.reset.click()
+    pump(lambda: not controller.changes)
+    _ = window.close()
 
 
-def test_typing_a_seed_or_pasting_a_code_changes_the_world(
-    application: QApplication, tmp_path: Path
+@pytest.mark.usefixtures("application")
+def test_a_made_world_opens_hidden_and_shows_on_request(
+    tmp_path: Path, fake_export: Exporter
 ) -> None:
-    """A typed seed, a pasted code and a bad entry all go through the controller's checks."""
-    window = _window(tmp_path, quick)
-    window.seed_edit.setText("2468")
-    window.seed_edit.editingFinished.emit()
-    assert window.controller.seed == 2468
-    window.seed_edit.setText("not a number")
-    window.seed_edit.editingFinished.emit()
-    assert window.controller.seed == 2468
-    assert window.notice.text() != ""
-    assert window.seed_edit.text() == "2468"
-    QApplication.clipboard().setText(encode(new_code("archipelago", 99)))
-    window.paste_button.click()
-    assert (window.controller.preset, window.controller.seed) == ("archipelago", 99)
-    assert window.preset_choice.currentData() == "archipelago"
-    window.copy_button.click()
-    assert QApplication.clipboard().text() == window.controller.code
-    window.random_button.click()
-    assert window.controller.seed != 99
-    del application
-
-
-def test_generate_runs_to_the_end_and_fills_the_history(
-    application: QApplication, tmp_path: Path
-) -> None:
-    """The bar fills, the status says done, and Generate is available again."""
-    del application
-    window = _window(tmp_path, quick)
+    """After Generate the world is listed and shown with its New World covered until asked."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
     window.generate_button.click()
-    pump(lambda: window.controller.phase is Phase.FINISHED)
-    pump(lambda: window.bar.value() == window.bar.maximum())
-    assert "Done in 2 s" in window.status.text()
-    assert window.generate_button.isEnabled()
-    items = [window.stage_list.item(row).text() for row in range(window.stage_list.count())]
-    assert any(item.startswith("✓") and "Generating continents" in item for item in items)
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    assert window.world_list.count() == 2
+    assert not window.reveal_button.isChecked()
+    assert window.preview_caption.text().startswith(text("preview_hidden"))
+    window.reveal_button.click()
+    pump(lambda: controller.revealed)
+    assert window.preview_caption.text().startswith(text("preview_shown"))
+    assert window.remove_button.isVisible() or not window.isVisible()
+    window.world_list.setCurrentRow(0)
+    pump(lambda: controller.selection == NEW)
+    assert not controller.revealed
+    _ = window.close()
 
 
-def test_cancel_shows_cancelling_and_then_cancelled(
-    application: QApplication, tmp_path: Path
+@pytest.mark.usefixtures("application")
+def test_delete_asks_first(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """While the generator runs the controls are locked and Cancel is the one live button."""
-    del application
-    window = _window(tmp_path, hang)
-    window.generate_button.click()
-    pump(lambda: window.controller.phase is Phase.RUNNING and window.cancel_button.isEnabled())
-    assert not window.generate_button.isEnabled()
-    assert not window.seed_edit.isEnabled()
-    window.cancel_button.click()
-    pump(lambda: window.controller.phase is Phase.CANCELLED)
-    pump(lambda: "Cancelled" in window.status.text())
-    assert window.seed_edit.isEnabled()
+    """Delete does nothing when the player says no and removes the world on yes."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    _ = controller.start()
+    controller.wait(10)
+    pump(lambda: bool(controller.worlds))
+    answers = [QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes]
+
+    def answer(*_args: object, **_kwargs: object) -> QMessageBox.StandardButton:
+        return answers.pop(0)
+
+    monkeypatch.setattr(QMessageBox, "question", answer)
+    window.delete_button.click()
+    assert controller.worlds
+    window.delete_button.click()
+    controller.wait(10)
+    pump(lambda: not controller.worlds)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_settings_dialog_remembers_the_picture_choice(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The box for the mod-list pictures starts off and its choice is kept."""
+    window = _window(tmp_path, fake_export)
+    dialog = SettingsDialog(window)
+    assert not dialog.reveal.isChecked()
+    dialog.reveal.setChecked(True)
+    assert window.controller.preferences.reveal_thumbnails
+    _ = dialog.close()
     _ = window.close()

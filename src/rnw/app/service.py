@@ -1,21 +1,21 @@
-"""Generating a world for a player: export, install, and remember what happened.
+"""Making worlds for a player, and adding them to the game or taking them out again.
 
-``generate`` is what the window's Generate button calls (and the command line could): it
-runs the export for a world code into the application's own folder, installs the finished
-mod into the profile when asked, and writes the outcome to the history, also when it was
-cancelled or failed. Progress and cancel come from ``rnw.progress``.
+``generate`` is what the window's Generate button calls (and ``rnw world``): it runs the
+export for a world code into the world's own folder in the generator's data, records the
+world in the library and, when asked, adds it to the game. Every world is a mod of its own
+(``rnw.app.library``), so a new world never replaces another; what to keep is the
+player's choice. Progress and cancel come from ``rnw.progress``.
 """
 
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final, Protocol
 
-from rnw.app import history, install
-from rnw.app.paths import workspace
-from rnw.app.worldcode import encode
-from rnw.eu5_export import MOD_NAME
+from rnw import __version__
+from rnw.app import install, library
+from rnw.app.worldcode import decode, encode
 from rnw.eu5_nw_export import export_new_world
 from rnw.progress import Cancelled, active, checkpoint, running
 
@@ -23,11 +23,10 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from rnw.app.discovery import GameInstall, Profile
+    from rnw.app.library import World
     from rnw.app.worldcode import WorldCode
     from rnw.progress import Progress
 
-MOD_FOLDER: Final[str] = "rnw_exp_new_world"
-BUNDLE_FOLDER: Final[str] = MOD_FOLDER
 WAIT_PAUSE: Final[float] = 2.0
 
 
@@ -46,6 +45,7 @@ class Exporter(Protocol):
         replace: bool = False,
         check_memory: bool = True,
         progress: Progress | None = None,
+        world_code: str | None = None,
     ) -> dict[str, object]: ...
 
 
@@ -60,31 +60,37 @@ class Request:
     install: bool = True
     accept_build: str | None = None
     check_memory: bool = True
+    reveal_thumbnail: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class Result:
     """What a finished generation produced."""
 
-    code: str
+    world: World
     bundle: Path
     installed: Path | None
     seconds: float
     summary: dict[str, object]
 
+    @property
+    def code(self) -> str:
+        """The world code."""
+        return self.world.code
 
-def _install(bundle: Path, profile: Path, progress: Progress | None) -> Path:
-    """Install the finished world; while the game holds the old one, wait until it lets go.
 
-    Without a progress to cancel by (the command line), a world in use is an error at once.
+def _install(mod: Path, profile: Path, progress: Progress | None) -> Path:
+    """Move a finished world into the game; while the game holds a mod of that name, wait.
+
+    Without a progress to cancel by (the command line), a mod in use is an error at once.
     """
     with active(progress), running("install"):
-        incoming = install.stage(bundle, profile, replace=True)
+        incoming = install.stage(mod, profile, replace=True, move=True)
         try:
             return install.put_in_place(incoming)
         except install.WorldInUseError:
             if progress is None:
-                install.discard(incoming)
+                _ = incoming.rename(mod)
                 raise
         try:
             with running("waiting for the game"):
@@ -96,7 +102,7 @@ def _install(bundle: Path, profile: Path, progress: Progress | None) -> Path:
                     except install.WorldInUseError:
                         continue
         except Cancelled:
-            install.discard(incoming)
+            _ = incoming.rename(mod)
             raise
 
 
@@ -109,45 +115,94 @@ def _require_profile(request: Request) -> None:
 def generate(
     request: Request, progress: Progress | None = None, exporter: Exporter | None = None
 ) -> Result:
-    """Generate (and install) the world of ``request``; the history records the outcome.
+    """Make the world of ``request`` as a mod of its own, record it, and add it if asked.
 
-    Raises what the export raises, ``Cancelled`` when ``progress`` was cancelled and
-    ``InstallError`` when the mod cannot be put into the profile; a failure after the
-    export leaves the finished bundle in the application's folder.
+    Raises what the export raises and ``Cancelled`` when ``progress`` was cancelled; then
+    nothing is recorded. A world that was made but could not be added is recorded and kept
+    beside the generator, so ``add_to_game`` can try again without making it anew.
     """
     run = export_new_world if exporter is None else exporter
-    text = encode(request.code)
+    _require_profile(request)
     started = time.monotonic()
-    output = workspace(request.data) / MOD_FOLDER
+    text = encode(request.code)
     build = request.game.build_id
-    try:
-        _require_profile(request)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        report = run(
-            request.game.directory,
-            output,
-            seed=request.code.seed,
-            settings=request.code.settings(),
-            accept_build=request.accept_build,
-            replace=True,
-            check_memory=request.check_memory,
-            progress=progress,
-        )
-        installed = None
-        if request.install and request.profile is not None:
-            installed = _install(output / BUNDLE_FOLDER, request.profile.directory, progress)
-    except Cancelled:
-        _ = history.record(request.data, history.Entry(text, history.now(), build, "cancelled"))
-        raise
-    except Exception as error:
-        note = f"{type(error).__name__}: {error}"
-        _ = history.record(request.data, history.Entry(text, history.now(), build, "failed", note))
-        raise
-    outcome = "installed" if installed is not None else "generated"
-    _ = history.record(request.data, history.Entry(text, history.now(), build, outcome))
+    world = library.World(
+        id=library.world_id(text, build),
+        code=text,
+        preset=request.code.preset,
+        seed=request.code.seed,
+        generator=__version__,
+        game_build=build,
+        created=library.now(),
+        seconds=0.0,
+    )
+    output = library.folder(request.data, world)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    report = run(
+        request.game.directory,
+        output,
+        seed=request.code.seed,
+        settings=request.code.settings(),
+        accept_build=request.accept_build,
+        replace=True,
+        check_memory=request.check_memory,
+        progress=progress,
+        world_code=text,
+    )
+    world = replace(world, seconds=round(time.monotonic() - started, 1))
+    library.save(request.data, world)
+    installed = None
+    mod = output / world.folder
+    if request.reveal_thumbnail:
+        _ = library.write_thumbnail(request.data, world, mod, revealed=True)
+    if request.install and request.profile is not None:
+        installed = _install(mod, request.profile.directory, progress)
     keys = ("status", "canvas", "generated", "invariants")
     summary = {key: report[key] for key in keys if key in report}
-    return Result(text, output, installed, time.monotonic() - started, summary)
+    return Result(world, output, installed, time.monotonic() - started, summary)
 
 
-assert MOD_NAME.fullmatch(MOD_FOLDER)  # noqa: S101 - the folder name must satisfy the export's rule
+def add_to_game(  # noqa: PLR0913 - a world, where it goes and how the work is shown
+    world: World,
+    *,
+    game: GameInstall,
+    data: Path,
+    profile: Profile,
+    progress: Progress | None = None,
+    exporter: Exporter | None = None,
+    reveal_thumbnail: bool = False,
+) -> Result:
+    """Put a recorded world into the game: its kept mod, or the world made again from its code.
+
+    A world made for another game build is made again for this one, which is a world of its
+    own (the code is the same, the vanilla map it is cut from is not).
+    """
+    kept = library.kept(data, world)
+    if kept is not None and world.game_build == game.build_id:
+        started = time.monotonic()
+        installed = _install(kept, profile.directory, progress)
+        return Result(world, library.folder(data, world), installed, time.monotonic() - started, {})
+    request = Request(
+        game=game,
+        code=decode(world.code),
+        data=data,
+        profile=profile,
+        reveal_thumbnail=reveal_thumbnail,
+    )
+    result = generate(request, progress, exporter)
+    if world.name and result.world.id == world.id:
+        renamed = library.rename(data, result.world, world.name)
+        return Result(renamed, result.bundle, result.installed, result.seconds, result.summary)
+    return result
+
+
+def remove_from_game(world_folder: str, profile: Profile) -> None:
+    """Take a world's mod out of the game (its record and pictures stay in the library)."""
+    _ = install.uninstall([world_folder], profile.directory)
+
+
+def delete(world: World, data: Path, profile: Profile | None) -> None:
+    """Take the world out of the game if it is there, then forget it."""
+    if profile is not None and library.installed(profile.directory, world) is not None:
+        remove_from_game(world.folder, profile)
+    library.forget(data, world)

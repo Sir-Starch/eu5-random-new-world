@@ -27,7 +27,7 @@ from rnw.geography import GeographyError, color_summary, read_locations, summary
 from rnw.parallel import ResourceError
 from rnw.png import PngFormatError
 from rnw.progress import Cancelled, Progress, Update
-from rnw.settings import SettingsError, load_settings, run_spec
+from rnw.settings import WORLD_TYPES, SettingsError, load_settings, run_spec
 from rnw.synth import generate_world, synthetic_base
 from rnw.validate import ValidationError, topology_metrics, validate_world
 
@@ -56,7 +56,7 @@ FAILURES: Final[tuple[type[Exception], ...]] = (
     ValidationError,
 )
 SeedOption = Annotated[int, typer.Option(min=0, max=SEED_MAX, help="Unsigned 64-bit seed.")]
-PresetOption = Annotated[str, typer.Option(help="continents or archipelago.")]
+PresetOption = Annotated[str, typer.Option(help=f"One of: {', '.join(WORLD_TYPES)}.")]
 SettingsOption = Annotated[
     Path | None,
     typer.Option(exists=True, dir_okay=False, help="JSON overrides; schema 1."),
@@ -275,7 +275,7 @@ def world(
         decoded = worldcode.decode(code)
         games = discovery.find_games()
         game = (
-            GameInstall(game_dir, None, "")
+            discovery.game_beside(game_dir) or GameInstall(game_dir, None, "")
             if game_dir is not None
             else (games[0] if games else None)
         )

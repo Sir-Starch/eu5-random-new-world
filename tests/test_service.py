@@ -1,19 +1,30 @@
-"""Generating for a player: the flow, the history and the errors, with a stand-in export."""
+"""Making worlds for a player: each a mod of its own, recorded, added and removed again."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 
-from rnw.app import history, install, service
+from rnw.app import install, library, service
 from rnw.app.discovery import GameInstall, Profile
+from rnw.app.library import Placement
 from rnw.app.service import Request, generate
 from rnw.app.worldcode import encode, new_code
+from rnw.pictures import TERRA_INCOGNITA
+from rnw.png import COLOR_RGB, encode_png
 from rnw.progress import STAGES, Cancelled, Progress
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+
+def _png(color: tuple[int, int, int]) -> bytes:
+    image = np.zeros((32, 64, 3), dtype=np.uint8)
+    image[:] = (25, 45, 90)
+    image[:, :20] = color
+    return encode_png(image, color_type=COLOR_RGB, compression="zlib")
 
 
 class FakeExport:
@@ -22,7 +33,7 @@ class FakeExport:
     def __init__(self, *, fail: Exception | None = None, cancel: bool = False) -> None:
         self.fail: Exception | None = fail
         self.cancel: bool = cancel
-        self.calls: list[tuple[int, str | None, bool]] = []
+        self.calls: list[tuple[int, str | None]] = []
 
     def __call__(  # noqa: PLR0913
         self,
@@ -36,84 +47,137 @@ class FakeExport:
         replace: bool = False,
         check_memory: bool = True,
         progress: Progress | None = None,
+        world_code: str | None = None,
     ) -> dict[str, object]:
-        del game_dir, settings, settings_file
-        self.calls.append((seed, accept_build, replace and check_memory))
+        del game_dir, settings, settings_file, accept_build, replace, check_memory
+        self.calls.append((seed, world_code))
         if progress is not None and self.cancel:
             progress.cancel()
             progress.checkpoint()
         if self.fail is not None:
             raise self.fail
-        mod = output / "rnw_exp_new_world"
-        (mod / ".metadata").mkdir(parents=True)
-        _ = (mod / ".metadata/metadata.json").write_text("{}", encoding="utf-8")
+        mod = output / output.name
+        (mod / ".metadata").mkdir(parents=True, exist_ok=True)
+        _ = (mod / ".metadata/metadata.json").write_text('{"name": "World"}', encoding="utf-8")
+        (mod / "in_game/map_data").mkdir(parents=True, exist_ok=True)
         _ = (mod / "seed.txt").write_text(str(seed), encoding="utf-8")
+        _ = (output / "preview.png").write_bytes(_png((96, 160, 72)))
+        _ = (output / "preview_hidden.png").write_bytes(_png(TERRA_INCOGNITA))
         return {"status": "NOT GAME VALIDATED", "canvas": {}, "generated": {}, "invariants": {}}
 
 
-def _request(tmp_path: Path, *, with_profile: bool = True, install: bool = True) -> Request:
+def _request(tmp_path: Path, *, seed: int = 4242, install: bool = True) -> Request:
     profile = tmp_path / "profile"
     profile.mkdir(exist_ok=True)
     return Request(
         game=GameInstall(tmp_path / "game", None, "26043558"),
-        code=new_code("continents", 4242),
+        code=new_code("continents", seed),
         data=tmp_path / "data",
-        profile=Profile(profile, "linux", has_mods=False) if with_profile else None,
+        profile=Profile(profile, "linux", has_mods=False),
         install=install,
     )
 
 
-def test_generate_installs_and_records(tmp_path: Path) -> None:
-    """The bundle is made in the application's folder, installed into the profile, recorded."""
-    request = _request(tmp_path)
+def test_every_world_is_a_mod_of_its_own_and_is_moved_into_the_game(tmp_path: Path) -> None:
+    """Two seeds make two mods side by side; the bundle keeps the pictures, not a second copy."""
     export = FakeExport()
-    result = generate(request, Progress(), export)
-    assert export.calls == [(4242, None, True)]
-    installed = tmp_path / "profile" / "mod" / "rnw_exp_new_world"
-    assert result.installed == installed
-    assert (installed / "seed.txt").read_text(encoding="utf-8") == "4242"
-    assert result.bundle == tmp_path / "data" / "generated" / "rnw_exp_new_world"
-    assert result.code == encode(request.code)
-    assert result.summary["status"] == "NOT GAME VALIDATED"
-    entries = history.load(request.data)
-    assert [(entry.outcome, entry.game_build) for entry in entries] == [("installed", "26043558")]
-    assert entries[0].code == result.code
+    first = generate(_request(tmp_path, seed=1), Progress(), export)
+    second = generate(_request(tmp_path, seed=2), Progress(), export)
+    assert first.world.folder != second.world.folder
+    assert export.calls == [(1, first.world.code), (2, second.world.code)]
+    mods = tmp_path / "profile" / "mod"
+    assert sorted(path.name for path in mods.iterdir()) == sorted(
+        [first.world.folder, second.world.folder]
+    )
+    assert first.installed == mods / first.world.folder
+    assert not (first.bundle / first.world.folder).exists()
+    assert (first.bundle / library.PREVIEW_HIDDEN).is_file()
+    worlds = library.load(tmp_path / "data")
+    assert {world.id for world in worlds} == {first.world.id, second.world.id}
+    assert library.placement(tmp_path / "data", tmp_path / "profile", first.world) is (
+        Placement.IN_GAME
+    )
 
 
-def test_generate_without_installing_keeps_the_profile_untouched(tmp_path: Path) -> None:
-    """Install off: the profile gets nothing and the outcome is 'generated'."""
+def test_the_same_code_on_the_same_build_is_the_same_world(tmp_path: Path) -> None:
+    """Generating a code again replaces its own mod and record, nothing else."""
+    export = FakeExport()
+    first = generate(_request(tmp_path, seed=5), Progress(), export)
+    again = generate(_request(tmp_path, seed=5), Progress(), export)
+    assert again.world.id == first.world.id
+    assert len(library.load(tmp_path / "data")) == 1
+    assert install.installed_mods(tmp_path / "profile") == [again.installed]
+
+
+def test_a_world_made_without_adding_is_kept_and_added_later(tmp_path: Path) -> None:
+    """Unticked 'add to the game' keeps the mod beside the generator until it is added."""
     request = _request(tmp_path, install=False)
-    result = generate(request, None, FakeExport())
+    result = generate(request, Progress(), FakeExport())
     assert result.installed is None
-    assert not (tmp_path / "profile" / "mod").exists()
-    assert history.load(request.data)[0].outcome == "generated"
+    assert library.placement(request.data, tmp_path / "profile", result.world) is Placement.KEPT
+    assert request.profile is not None
+    added = service.add_to_game(
+        result.world, game=request.game, data=request.data, profile=request.profile
+    )
+    assert added.installed == tmp_path / "profile" / "mod" / result.world.folder
+    assert library.kept(request.data, result.world) is None
+
+
+def test_removing_keeps_the_record_and_deleting_forgets_it(tmp_path: Path) -> None:
+    """Out of the game, a world is code and pictures; deleted, it is gone everywhere."""
+    request = _request(tmp_path)
+    result = generate(request, Progress(), FakeExport())
+    assert request.profile is not None
+    service.remove_from_game(result.world.folder, request.profile)
+    assert library.placement(request.data, tmp_path / "profile", result.world) is (
+        Placement.CODE_ONLY
+    )
+    assert library.load(request.data) == [result.world]
+    again = generate(_request(tmp_path), Progress(), FakeExport())
+    service.delete(again.world, request.data, request.profile)
+    assert library.load(request.data) == []
+    assert install.installed_mods(tmp_path / "profile") == []
 
 
 def test_a_missing_profile_is_refused_before_any_work(tmp_path: Path) -> None:
-    """Asking to install without a profile fails at once and is recorded as failed."""
-    request = _request(tmp_path, with_profile=False)
-    export = FakeExport()
-    with pytest.raises(install.InstallError, match="no profile"):
-        _ = generate(request, None, export)
-    assert export.calls == []
-    assert history.load(request.data)[0].outcome == "failed"
-
-
-def test_failures_and_cancels_are_recorded_and_raised(tmp_path: Path) -> None:
-    """An export error is raised after being written to the history; so is a cancel."""
+    """Asking to add a world without a profile fails at once and records nothing."""
     request = _request(tmp_path)
-    with pytest.raises(ValueError, match="boom"):
-        _ = generate(request, None, FakeExport(fail=ValueError("boom")))
-    failed = history.load(request.data)[0]
-    assert failed.outcome == "failed"
-    assert "ValueError: boom" in failed.note
+    request = Request(game=request.game, code=request.code, data=request.data, install=True)
+    export = FakeExport()
+    with pytest.raises(install.InstallError):
+        _ = generate(request, Progress(), export)
+    assert export.calls == []
+    assert library.load(request.data) == []
+
+
+def test_failures_and_cancels_record_nothing(tmp_path: Path) -> None:
+    """An export error or a cancel is raised; no world is recorded and nothing is added."""
+    request = _request(tmp_path)
+    with pytest.raises(RuntimeError, match="boom"):
+        _ = generate(request, Progress(), FakeExport(fail=RuntimeError("boom")))
     with pytest.raises(Cancelled):
         _ = generate(request, Progress(), FakeExport(cancel=True))
-    assert [entry.outcome for entry in history.load(request.data)] == ["cancelled", "failed"]
-    assert not (tmp_path / "profile" / "mod").exists()
+    assert library.load(request.data) == []
+    assert install.installed_mods(tmp_path / "profile") == []
 
 
-def test_install_waits_while_the_game_holds_the_world(
+def test_the_mod_list_picture_shows_the_new_world_only_when_asked(tmp_path: Path) -> None:
+    """With the player's choice the mod gets the full picture; without it, the export's own."""
+    request = _request(tmp_path)
+    revealed = Request(
+        game=request.game,
+        code=request.code,
+        data=request.data,
+        profile=request.profile,
+        reveal_thumbnail=True,
+    )
+    result = generate(revealed, Progress(), FakeExport())
+    assert result.installed is not None
+    assert (result.installed / library.THUMBNAIL).is_file()
+    assert encode(request.code) == result.world.code
+
+
+def test_install_waits_while_the_game_holds_a_mod_of_that_name(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Refused moves are retried until the game lets go; the window shows the instruction."""
@@ -124,7 +188,7 @@ def test_install_waits_while_the_game_holds_the_world(
     def held(incoming: Path) -> Path:
         if refusals[0] > 0:
             refusals[0] -= 1
-            message = "The game is using rnw_exp_new_world"
+            message = "The game is using the world"
             raise install.WorldInUseError(message)
         return real(incoming)
 
@@ -133,15 +197,14 @@ def test_install_waits_while_the_game_holds_the_world(
     result = generate(
         _request(tmp_path), Progress(lambda update: labels.append(update.label)), FakeExport()
     )
-    assert result.installed == tmp_path / "profile" / "mod" / "rnw_exp_new_world"
+    assert result.installed == tmp_path / "profile" / "mod" / result.world.folder
     assert STAGES["waiting for the game"].label in labels
-    assert [entry.outcome for entry in history.load(tmp_path / "data")] == ["installed"]
 
 
-def test_a_cancel_while_waiting_leaves_the_installed_world(
+def test_a_cancel_while_waiting_keeps_the_world_beside_the_generator(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Cancel stops the wait, removes the staged copy and is recorded; nothing is half done."""
+    """Cancel stops the wait; the made world stays recorded and kept, ready to be added."""
     monkeypatch.setattr(service, "WAIT_PAUSE", 0.0)
     progress = Progress()
 
@@ -153,14 +216,14 @@ def test_a_cancel_while_waiting_leaves_the_installed_world(
     monkeypatch.setattr(install, "put_in_place", held)
     with pytest.raises(Cancelled):
         _ = generate(_request(tmp_path), progress, FakeExport())
-    assert not (tmp_path / "profile" / "mod" / install.WORK).exists()
-    assert [entry.outcome for entry in history.load(tmp_path / "data")] == ["cancelled"]
+    [world] = library.load(tmp_path / "data")
+    assert library.placement(tmp_path / "data", tmp_path / "profile", world) is Placement.KEPT
 
 
-def test_without_a_progress_a_held_world_is_an_error_at_once(
+def test_without_a_progress_a_held_mod_is_an_error_at_once(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The command line has no Cancel button, so it does not wait."""
+    """The command line has no Cancel button, so it does not wait; the world is kept."""
 
     def held(incoming: Path) -> Path:
         message = f"The game is using {incoming.name}"
@@ -169,4 +232,5 @@ def test_without_a_progress_a_held_world_is_an_error_at_once(
     monkeypatch.setattr(install, "put_in_place", held)
     with pytest.raises(install.WorldInUseError):
         _ = generate(_request(tmp_path), None, FakeExport())
-    assert not (tmp_path / "profile" / "mod" / install.WORK).exists()
+    [world] = library.load(tmp_path / "data")
+    assert library.kept(tmp_path / "data", world) is not None

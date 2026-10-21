@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import fields
+
 import pytest
 
 from rnw import __version__
 from rnw.app import worldcode
 from rnw.app.worldcode import WorldCode, WorldCodeError, decode, encode, new_code, reproduces
+from rnw.settings import NativeSettings, NewWorldSettings
 
 
 def test_a_default_world_is_a_short_code_that_round_trips() -> None:
@@ -80,3 +83,29 @@ def test_random_seeds_differ_and_fit_64_bits() -> None:
     seeds = {worldcode.random_seed() for _ in range(20)}
     assert len(seeds) == 20
     assert all(0 <= seed < 1 << 64 for seed in seeds)
+
+
+def test_changes_of_listed_fields_pack_into_a_short_compact_code() -> None:
+    """Format 2 writes a number and a value per change; other changes keep format 1 JSON."""
+    changes: dict[str, object] = {
+        "new_world": {"land_permille": 600, "feature_px": 4000, "precious_permille": 3000},
+        "natives": {"state_spread_permille": 450, "population_permille": 2500},
+    }
+    code = new_code("supercontinent", 42, changes)
+    text = encode(code)
+    assert decode(text) == code
+    assert len(text) < 70
+    assert worldcode.format_of(text) == worldcode.COMPACT
+    other: dict[str, object] = {"coast": {"passes": 12}}
+    legacy = new_code("continents", 42, other)
+    assert worldcode.format_of(encode(legacy)) == worldcode.FORMAT
+    assert decode(encode(legacy)) == legacy
+
+
+def test_every_setting_of_the_new_world_and_its_peoples_has_a_field_number() -> None:
+    """The append-only list names every field a world code can change."""
+    names = [f"new_world.{item.name}" for item in fields(NewWorldSettings)]
+    names += [f"natives.{item.name}" for item in fields(NativeSettings)]
+    assert set(names) <= set(worldcode.CHANGE_FIELDS)
+    assert len(set(worldcode.CHANGE_FIELDS)) == len(worldcode.CHANGE_FIELDS)
+    assert len(worldcode.CHANGE_FIELDS) < 256

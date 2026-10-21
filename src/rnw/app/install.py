@@ -56,10 +56,11 @@ def installed_mods(profile: Path) -> list[Path]:
     return sorted(path for path in folder.iterdir() if is_rnw_mod(path))
 
 
-def stage(prepared: Path, profile: Path, *, replace: bool = False) -> Path:
-    """Copy the generated mod ``prepared`` into the work folder; returns the copy.
+def stage(prepared: Path, profile: Path, *, replace: bool = False, move: bool = False) -> Path:
+    """Copy (or, with ``move``, move) the mod ``prepared`` into the work folder; returns it.
 
-    The copy is complete when this returns; ``put_in_place`` swaps it in.
+    The copy is complete when this returns; ``put_in_place`` swaps it in. Moving keeps a
+    world on the disk once: a rename on the same drive, a copy and delete across drives.
     """
     if not is_rnw_mod(prepared):
         message = "The prepared directory must be a valid rnw_exp_* mod"
@@ -75,7 +76,7 @@ def stage(prepared: Path, profile: Path, *, replace: bool = False) -> Path:
     incoming.parent.mkdir(parents=True, exist_ok=True)
     if incoming.exists():
         when_free(lambda: shutil.rmtree(incoming))
-    _ = shutil.copytree(prepared, incoming)
+    _ = shutil.move(prepared, incoming) if move else shutil.copytree(prepared, incoming)
     return incoming
 
 

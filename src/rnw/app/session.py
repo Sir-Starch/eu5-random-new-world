@@ -62,6 +62,23 @@ def _items(value: object) -> list[object]:
     return cast("list[object]", value) if isinstance(value, list) else []
 
 
+def enabled_mods(profile: Path) -> list[str] | None:
+    """Folder names of the mods the active playset enables, in its order; None when unknown."""
+    try:
+        data = cast("object", json.loads((profile / PLAYSETS).read_text(encoding="utf-8-sig")))
+    except (OSError, ValueError):
+        return None
+    active = [item for item in _items(_field(data, "playsets")) if _field(item, "isActive") is True]
+    if len(active) != 1:
+        return None
+    names: list[str] = []
+    for mod in _items(_field(active[0], "orderedListMods")):
+        path = _field(mod, "path")
+        if isinstance(path, str) and _field(mod, "isEnabled") is True:
+            names.append(path.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1])
+    return names
+
+
 def world_enabled(profile: Path, folder: str) -> bool | None:
     """Whether the active playset enables the mod in ``mod/<folder>``; None when unknown."""
     try:

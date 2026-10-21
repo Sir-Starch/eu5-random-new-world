@@ -3,7 +3,8 @@
 Run ``uv run python packaging/hub.py [--replace]`` on Linux with MinGW, ``uv`` and the Rust
 target ``x86_64-pc-windows-gnu`` installed. It writes ``dist/rnw_exp_hub`` (ignored by git):
 
-- ``.metadata/metadata.json`` and ``LICENSE``;
+- ``.metadata/metadata.json``, ``.metadata/thumbnail.png`` (the avatar in ``assets/``, made
+  512 pixels square) and ``LICENSE``;
 - ``Random New World Generator.exe``, the launcher from ``packaging/launcher``;
 - ``generator/python``: the official embeddable CPython, pinned by SHA-256, whose ``._pth``
   names ``../site`` as the only place to import from;
@@ -44,6 +45,8 @@ LAUNCHER: Final[str] = "Random New World Generator.exe"
 PYTHON_VERSION: Final[tuple[int, int]] = (3, 12)
 RUST_TARGET: Final[str] = "x86_64-pc-windows-gnu"
 MINGW: Final[str] = "x86_64-w64-mingw32"
+AVATAR: Final[Path] = ROOT / "packaging" / "assets" / "rnw-avatar.png"
+THUMBNAIL_SIZE: Final[int] = 512
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,19 +122,32 @@ def version_fields(version: str) -> tuple[int, int, int, int]:
 def metadata(version: str) -> bytes:
     """The hub's ``metadata.json``, in the form the game reads (UTF-8 with BOM)."""
     payload: dict[str, object] = {
-        "name": "RNW hub with generator (test, NOT GAME VALIDATED)",
+        "name": "Random New World: generator (test, NOT GAME VALIDATED)",
         "id": MOD_ID,
         "version": version,
         "supported_game_version": "1.4.*",
         "short_description": (
-            "Development stand-in for the Workshop item: the generator and its launcher; "
-            "no game content"
+            "Makes New World maps for EU5, each a complete mod of its own. Do not enable "
+            "this mod: in the Mods window press Open in folder on it and start Random New "
+            "World Generator."
         ),
         "tags": ["Map"],
+        "picture": "thumbnail.png",
         "relationships": [],
         "game_custom_data": {},
     }
     return (json.dumps(payload, indent=2, ensure_ascii=False) + "\n").encode("utf-8-sig")
+
+
+def write_thumbnail(target: Path) -> None:
+    """The hub's picture in the game's mod list: the avatar, square, at the usual size."""
+    from PIL import Image  # noqa: PLC0415 - the build's own dependency
+
+    with Image.open(AVATAR) as avatar:
+        square = avatar.convert("RGB").resize(
+            (THUMBNAIL_SIZE, THUMBNAIL_SIZE), Image.Resampling.LANCZOS
+        )
+        square.save(target, optimize=True)
 
 
 def _run(command: list[str], *, cwd: Path = ROOT, env: dict[str, str] | None = None) -> None:
@@ -305,6 +321,7 @@ def build(output: Path, *, replace: bool) -> Path:
     for folder in (stage / ".metadata", python, site):
         folder.mkdir(parents=True)
     _ = (stage / ".metadata" / "metadata.json").write_bytes(metadata(__version__))
+    write_thumbnail(stage / ".metadata" / "thumbnail.png")
     _ = shutil.copyfile(ROOT / "LICENSE", stage / "LICENSE")
     unpack_python(fetch(EMBEDDED_PYTHON, WORK / "cache"), python)
     install_wheels(site)

@@ -1,116 +1,139 @@
-"""The window's controller: choices, validation and the generation lifecycle, no display."""
+"""The window's controller: choices, the library and the work, without a display."""
 
 from __future__ import annotations
 
 import threading
 from typing import TYPE_CHECKING
 
-from rnw.app import discovery, history
-from rnw.app.discovery import Environment, GameInstall
-from rnw.app.service import Request, Result
+from rnw.app import controls, library, service
+from rnw.app.discovery import Environment, GameInstall, Profile
+from rnw.app.library import Placement
 from rnw.app.worldcode import WorldCode, encode, new_code
-from rnw.gui.controller import SEED_MAX, Controller, Generator, Phase
+from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from rnw.app.service import Exporter
     from rnw.progress import Progress
 
 
-def _game(root: Path) -> GameInstall:
-    (root / "game" / "in_game" / "map_data").mkdir(parents=True, exist_ok=True)
-    return GameInstall(root, None, "26043558")
+def _controller(tmp_path: Path, export: Exporter) -> Controller:
+    def generator(request: service.Request, progress: Progress | None = None) -> service.Result:
+        return service.generate(request, progress, export)
 
-
-def _result(request: Request) -> Result:
-    return Result(encode(request.code), request.data, None, 1.5, {"status": "x"})
-
-
-def _instant(request: Request, progress: Progress | None = None) -> Result:
-    del progress
-    return _result(request)
-
-
-def _controller(tmp_path: Path, generator: Generator) -> Controller:
     environment = Environment(system="linux", home=tmp_path / "home", variables={})
     controller = Controller(data=tmp_path / "data", environment=environment, generator=generator)
-    controller.game = _game(tmp_path / "game")
-    controller.install = False
+    (tmp_path / "game" / "game" / "in_game" / "map_data").mkdir(parents=True)
+    controller.game = GameInstall(tmp_path / "game", None, "26043558")
+    (tmp_path / "profile" / "mod").mkdir(parents=True)
+    controller.profile = Profile(tmp_path / "profile", "linux", has_mods=True)
     return controller
 
 
-def test_choices_are_validated_and_remembered(tmp_path: Path) -> None:
-    """Seeds, codes, presets, game and profile folders are checked; bad input changes nothing."""
-    controller = _controller(tmp_path, _instant)
-    changes: list[int] = []
-    controller.subscribe(lambda: changes.append(1))
+def _finish(controller: Controller) -> None:
+    controller.wait(10)
+    assert controller.phase is Phase.FINISHED, controller.message
+
+
+def test_choices_are_validated_and_a_type_resets_its_values(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Seeds, codes and values are checked; choosing a type gives back its own values."""
+    controller = _controller(tmp_path, fake_export)
     assert controller.set_seed("12345") is None
     assert controller.seed == 12345
-    assert controller.set_seed("-1") is not None
-    assert controller.set_seed("x") is not None
-    assert controller.set_seed(str(SEED_MAX + 1)) is not None
+    for bad in ("-1", "x", str(SEED_MAX + 1)):
+        assert controller.set_seed(bad) is not None
     assert controller.seed == 12345
-    controller.set_preset("archipelago")
-    controller.set_preset("flat")
-    assert controller.preset == "archipelago"
-    pasted = encode(new_code("continents", 777))
-    assert controller.set_seed(f" {pasted.lower()} ") is None
-    assert (controller.preset, controller.seed) == ("continents", 777)
-    assert controller.use_code("RNW1-00000") is not None
+    controller.set_value("new_world.land_permille", 5)
+    assert controller.value("new_world.land_permille") == 150
+    controller.set_value("natives.state_spread_permille", 300)
+    assert set(controller.changes) == {"new_world.land_permille", "natives.state_spread_permille"}
+    code = controller.code
+    controller.set_preset("islands")
+    assert controller.changes == {}
+    assert controller.value("new_world.land_permille") == 180
+    assert controller.use_code(code) is None
+    assert controller.preset == "continents"
+    assert controller.value("natives.state_spread_permille") == 300
     other = encode(WorldCode("continents", 5, "0.1.0"))
     assert controller.use_code(other) is None
     assert "0.1.0" in controller.notice
-    controller.randomize()
-    assert controller.notice == ""
-    assert controller.code.startswith("RNW1-")
-    assert controller.choose_game(tmp_path / "nowhere") is not None
-    assert controller.choose_profile(tmp_path / "nowhere") is not None
-    folder = tmp_path / "profile"
-    folder.mkdir()
-    assert controller.choose_profile(folder) is None
-    assert controller.profile is not None
-    assert controller.profile.directory == folder
+    wild = encode(new_code("continents", 5, {"new_world": {"land_permille": 800}}))
+    assert controller.use_code(wild) is not None
+    controller.reset_values()
+    assert controller.changes == {}
+
+
+def test_generate_is_refused_beyond_the_location_budget(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Much land in small locations would exceed the engine's limit, so it cannot start."""
+    controller = _controller(tmp_path, fake_export)
+    assert controller.problem() is None
+    controller.set_preset("supercontinent")
+    controller.set_value("new_world.land_permille", 600)
+    controller.set_value("new_world.location_px", 40)
+    assert controller.estimated_locations() > controls.LOCATION_BUDGET
+    problem = controller.problem()
+    assert problem is not None
+    assert "locations" in problem
+    assert controller.start() == problem
+
+
+def test_a_world_is_made_selected_hidden_and_managed(tmp_path: Path, fake_export: Exporter) -> None:
+    """The new world is selected with its New World hidden; removing, adding and deleting work."""
+    controller = _controller(tmp_path, fake_export)
+    changes: list[int] = []
+    controller.subscribe(lambda: changes.append(1))
+    assert controller.start() is None
+    _finish(controller)
+    [world] = controller.worlds
+    assert controller.selection == world.id
+    assert not controller.revealed
+    assert controller.picture(world) == library.picture(controller.data, world, revealed=False)
+    controller.set_revealed(True)
+    assert controller.picture(world) == library.picture(controller.data, world, revealed=True)
+    assert controller.placement(world) is Placement.IN_GAME
+    assert controller.remove_selected() is None
+    _finish(controller)
+    assert controller.placement(world) is Placement.CODE_ONLY
+    assert controller.add_selected() is None
+    _finish(controller)
+    assert controller.placement(world) is Placement.IN_GAME
+    controller.rename(world, "Vinland")
+    assert controller.name(controller.worlds[0]) == "Vinland"
+    assert controller.delete_selected() is None
+    _finish(controller)
+    assert controller.worlds == []
+    assert controller.selection == NEW
     assert changes
 
 
-def test_a_generation_reports_progress_and_finishes(tmp_path: Path) -> None:
-    """The thread runs the generator, the state follows its stages, and the end is announced."""
-    seen: list[tuple[Phase, float, tuple[str, ...]]] = []
-
-    def generator(request: Request, progress: Progress | None = None) -> Result:
-        assert progress is not None
-        progress.begin("generate world")
-        progress.begin("relief")
-        progress.finish("relief")
-        progress.finish("generate world")
-        return _result(request)
-
-    controller = _controller(tmp_path, generator)
-    controller.subscribe(
-        lambda: seen.append((controller.phase, controller.fraction, controller.running))
-    )
-    assert controller.problem() is None
-    assert controller.start() is None
-    controller.wait(10)
-    assert controller.phase is Phase.FINISHED
-    assert controller.fraction == 1.0
-    assert controller.result is not None
-    assert any(
-        running == ("Raising mountains and valleys", "Generating continents, seas and relief")
-        or "Generating continents, seas and relief" in running
-        for _, _, running in seen
-    )
-    rows = dict(controller.stage_rows())
-    assert rows["Generating continents, seas and relief"] == "done"
-    assert rows["Writing the mod"] == "waiting"
-    assert "Raising mountains and valleys" not in rows
+def test_like_this_takes_type_and_values_with_a_new_seed(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """'New world with these settings' fills the form from a world and picks a fresh seed."""
+    controller = _controller(tmp_path, fake_export)
+    controller.set_preset("archipelago")
+    controller.set_value("natives.population_permille", 2000)
+    _ = controller.start()
+    _finish(controller)
+    [world] = controller.worlds
+    controller.set_preset("continents")
+    controller.like(world)
+    assert (controller.preset, controller.selection) == ("archipelago", NEW)
+    assert controller.value("natives.population_permille") == 2000
+    assert controller.seed != world.seed
+    assert controller.changed_count(world) == 1
 
 
-def test_cancel_stops_the_generation_and_says_so(tmp_path: Path) -> None:
-    """Cancel switches to 'cancelling' at once and to 'cancelled' when the thread has stopped."""
+def test_cancel_stops_the_work_and_says_so(tmp_path: Path, fake_export: Exporter) -> None:
+    """A cancel while the generator runs ends in CANCELLED, with nothing recorded."""
     started = threading.Event()
 
-    def generator(request: Request, progress: Progress | None = None) -> Result:
+    def hang(request: service.Request, progress: Progress | None = None) -> service.Result:
         del request
         assert progress is not None
         started.set()
@@ -118,57 +141,59 @@ def test_cancel_stops_the_generation_and_says_so(tmp_path: Path) -> None:
             progress.checkpoint()
             _ = threading.Event().wait(0.005)
 
-    controller = _controller(tmp_path, generator)
+    controller = _controller(tmp_path, fake_export)
+    controller.generator = hang
     assert controller.start() is None
-    assert started.wait(10)
-    assert controller.problem() is not None
+    assert started.wait(5)
+    assert controller.task is Task.GENERATE
     controller.cancel()
-    assert controller.phase in {Phase.CANCELLING, Phase.CANCELLED}
     controller.wait(10)
     assert controller.phase is Phase.CANCELLED
-    assert controller.running == ()
-    assert controller.problem() is None
+    assert controller.worlds == []
 
 
-def test_a_failure_is_explained_and_logged(tmp_path: Path) -> None:
-    """The error text reaches the window and the traceback goes to a file in the data folder."""
+def test_a_failure_is_explained_and_logged(tmp_path: Path, fake_export: Exporter) -> None:
+    """The message reaches the window and the traceback a file in the data folder."""
 
-    def generator(request: Request, progress: Progress | None = None) -> Result:
+    def broken(request: service.Request, progress: Progress | None = None) -> service.Result:
         del request, progress
-        message = "the disk is full"
-        raise OSError(message)
+        message = "the map is gone"
+        raise RuntimeError(message)
 
-    controller = _controller(tmp_path, generator)
-    assert controller.start() is None
+    controller = _controller(tmp_path, fake_export)
+    controller.generator = broken
+    _ = controller.start()
     controller.wait(10)
-    assert controller.phase is Phase.FAILED
-    assert controller.message == "the disk is full"
-    log = (tmp_path / "data" / "last-error.log").read_text(encoding="utf-8")
-    assert "OSError: the disk is full" in log
+    assert (controller.phase, controller.message) == (Phase.FAILED, "the map is gone")
+    assert "RuntimeError" in (controller.data / "last-error.log").read_text(encoding="utf-8")
 
 
-def test_generate_needs_a_game_and_a_profile_to_install_into(tmp_path: Path) -> None:
-    """The reasons Generate cannot start are the player's to fix and are worded for them."""
-    controller = _controller(tmp_path, _instant)
-    controller.game = None
-    assert controller.problem() == "Choose the game folder first."
-    assert controller.start() == "Choose the game folder first."
-    controller.game = _game(tmp_path / "game")
-    controller.install = True
-    controller.profile = None
-    assert controller.problem() is not None
-    assert "profile" in (controller.problem() or "")
-    controller.install = False
-    assert controller.problem() is None
+def test_strays_are_listed_and_can_be_removed(tmp_path: Path, fake_export: Exporter) -> None:
+    """A world of an earlier version in the game shows as a stray and can be taken out."""
+    controller = _controller(tmp_path, fake_export)
+    stray = tmp_path / "profile" / "mod" / "rnw_exp_new_world"
+    (stray / ".metadata").mkdir(parents=True)
+    _ = (stray / ".metadata/metadata.json").write_text("{}", encoding="utf-8")
+    (stray / "in_game" / "map_data").mkdir(parents=True)
+    controller.refresh_library()
+    assert controller.strays == [stray]
+    controller.select(f"{STRAY}rnw_exp_new_world")
+    assert controller.selected_stray() == stray
+    assert controller.remove_selected() is None
+    controller.wait(10)
+    assert controller.strays == []
 
 
-def test_discover_takes_the_first_game_and_profile(tmp_path: Path) -> None:
-    """With nothing installed discovery leaves the choices empty instead of failing."""
-    controller = _controller(tmp_path, _instant)
-    controller.discover()
-    assert controller.games == []
-    assert controller.game is None
-    assert controller.profile is None
-    assert discovery.is_game(tmp_path / "game")
-    assert history.load(tmp_path / "data") == []
-    assert controller.history() == []
+def test_the_mod_list_pictures_follow_the_players_choice(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Changing the choice redraws the picture of every world with a mod and is remembered."""
+    controller = _controller(tmp_path, fake_export)
+    _ = controller.start()
+    _finish(controller)
+    [world] = controller.worlds
+    mod = tmp_path / "profile" / "mod" / world.folder
+    controller.set_reveal_thumbnails(True)
+    assert (mod / library.THUMBNAIL).is_file()
+    again = Controller(data=controller.data)
+    assert again.preferences.reveal_thumbnails

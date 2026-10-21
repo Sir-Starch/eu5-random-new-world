@@ -38,6 +38,9 @@ if TYPE_CHECKING:
 
     from rnw.eu5_map import Eu5Map
 
+PERMILLE: Final[int] = 1000
+# Materials whose weight the precious setting scales.
+PRECIOUS: Final[frozenset[str]] = frozenset({"goods_gold", "silver", "gems", "pearls"})
 FIELDS: Final[re.Pattern[str]] = re.compile(
     r"\b(climate|vegetation|topography|raw_material)\s*=\s*([A-Za-z_]+)"
 )
@@ -417,6 +420,10 @@ def _pick(counter: Counter[str], key: int) -> str:
     return max(counter)
 
 
+def _new_world(game_map: Eu5Map) -> NDArray[np.bool_]:
+    return np.array([name == NEW_WORLD for name in game_map.continents], dtype=bool)
+
+
 def _old_world(game_map: Eu5Map) -> NDArray[np.bool_]:
     return np.array(
         [name not in OCEANS and name != NEW_WORLD for name in game_map.continents], dtype=bool
@@ -432,6 +439,7 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
     final_grid: ClimateGrid,
     cells: Generated,
     seed: int,
+    precious_permille: int = 1000,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics."""
     count = len(cells.kinds)
@@ -541,10 +549,11 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
         game_map,
         attributes=attributes,
         vanilla=vanilla,
-        old=old,
+        source=_new_world(game_map),
         cells=cells,
         fields=(climate, vegetation, topography),
         seed=seed,
+        precious_permille=precious_permille,
     )
     result = CellBiomes(tuple(climate), tuple(vegetation), tuple(topography), raw)
     stats: dict[str, object] = {
@@ -561,12 +570,21 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     *,
     attributes: list[dict[str, str]],
     vanilla: VanillaLocations,
-    old: NDArray[np.bool_],
+    source: NDArray[np.bool_],
     cells: Generated,
     fields: tuple[list[str], list[str], list[str]],
     seed: int,
+    precious_permille: int = 1000,
 ) -> tuple[str, ...]:
-    """Draw each land cell's raw material from vanilla frequencies of similar locations."""
+    """Draw each land cell's raw material from vanilla frequencies of similar locations.
+
+    The frequencies are those of the vanilla New World (``source``): drawing them from the
+    Old World gave a generated America elephants, horses, wheat, rice, silk and tea and none
+    of its maize, potatoes, cocoa, tobacco or chili (C116). Similar means the same climate,
+    vegetation, topography and coast, falling back to fewer of them. ``precious_permille``
+    weighs gold, silver, gems and pearls against the rest (1000: their vanilla share); a
+    class whose only materials it removes falls back to a coarser class.
+    """
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     mask = np.int64((1 << 32) - 1)
     low = vanilla.pairs >> np.int64(32)
@@ -576,7 +594,7 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     coastal[high[sea[low]]] = True
     tables: list[dict[tuple[str, ...], Counter[str]]] = [{}, {}, {}, {}]
     for i, kind in enumerate(game_map.classes):
-        if kind is not CellClass.LAND or not old[i] or "raw_material" not in attributes[i]:
+        if kind is not CellClass.LAND or not source[i] or "raw_material" not in attributes[i]:
             continue
         row = attributes[i]
         vegetation = EMPTY_LAND.get(row.get("vegetation", ""), row.get("vegetation", ""))
@@ -604,11 +622,28 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
             (flag,),
         )
         counter = next(
-            (table[key] for table, key in zip(tables, keys, strict=True) if key in table),
+            (
+                weighted
+                for table, key in zip(tables, keys, strict=True)
+                if key in table and (weighted := _weighted(table[key], precious_permille))
+            ),
             Counter({"stone": 1}),
         )
         out.append(_pick(counter, hash_point(stream, cell, 0)))
     return tuple(out)
+
+
+def _weighted(counter: Counter[str], precious_permille: int) -> Counter[str]:
+    """``counter`` with the precious materials weighed by ``precious_permille``."""
+    if precious_permille == PERMILLE:
+        return counter
+    weighted = Counter(
+        {
+            name: count * (precious_permille if name in PRECIOUS else PERMILLE)
+            for name, count in counter.items()
+        }
+    )
+    return +weighted
 
 
 def label_statistics(labels: list[str], edges: NDArray[np.int64]) -> dict[str, int]:

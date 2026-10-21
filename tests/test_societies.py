@@ -130,3 +130,47 @@ def test_zones_and_polities_are_connected_and_disjoint() -> None:
     assert set(societies.ranks) <= capitals
     assert CITY in societies.ranks.values()
     assert set(societies.markets) <= capitals
+
+
+def _state_groups(graph: LandGraph, societies: Societies) -> list[int]:
+    """Locations of each group of touching state land, largest first."""
+    land = {
+        member for polity in societies.polities if polity.kind == STATE for member in polity.members
+    }
+    neighbours: dict[int, set[int]] = {node: set() for node in land}
+    for first, second in graph.edges.tolist():
+        if first in land and second in land:
+            neighbours[first].add(second)
+            neighbours[second].add(first)
+    sizes: list[int] = []
+    seen: set[int] = set()
+    for start in land:
+        if start in seen:
+            continue
+        group, stack = {start}, [start]
+        while stack:
+            for other in neighbours[stack.pop()] - group:
+                group.add(other)
+                stack.append(other)
+        seen |= group
+        sizes.append(len(group))
+    return sorted(sizes, reverse=True)
+
+
+def test_lone_states_spread_state_land_into_small_groups() -> None:
+    """With a spread, part of the state land lies in small groups apart from the core.
+
+    Without one the states form one block around the hearths, as before; the share of state
+    land stays as set either way.
+    """
+    graph = _grid()
+    clustered = generate_societies(
+        graph, replace(SETTINGS, state_spread_permille=0), seed=3, target=4_000_000
+    )
+    spread = generate_societies(
+        graph, replace(SETTINGS, state_spread_permille=400), seed=3, target=4_000_000
+    )
+    one, many = _state_groups(graph, clustered), _state_groups(graph, spread)
+    assert len(many) > len(one)
+    assert sum(many[1:]) > sum(one[1:])
+    assert abs(sum(many) - sum(one)) <= max(2, sum(one) // 10)
