@@ -19,7 +19,7 @@ So the generation runs in a small program that comes with this mod. It reads you
 1. Add **Random New World** to a playset. Its window in the main menu shows whether you have a world and repeats these steps. [Fallback if 016 fails: the rules screen.]
 2. In the **Mods** window press **Open in folder** on Random New World and double-click **Random New World Generator**.
 3. Choose a preset and a seed, or paste a world code, and press **Generate**. It takes two to three minutes.
-4. Back in the game: the first time, add **Random New World: generated world** to the playset. Every time, apply the playset again and start a new game.
+4. Back in the game: the first time, add **Random New World: generated world** to the playset. Then restart EU5 and start a new game. [Until C113 is understood: a new game after reloading the mods in a running EU5 can crash.]
 
 Your world code is shown in the game and in the generator. Keep it with your saves: the same code recreates the same world after a reinstall or on a friend's computer.
 
@@ -43,7 +43,7 @@ The game runs through Proton. Open in folder then opens Wine's file explorer, an
 ## Limits
 
 - **New campaigns only.** A world must be generated before the campaign starts.
-- **Restart after a campaign without the mod.** If you played a campaign without Random New World in the same session, restart EU5 before playing a generated world (the game can crash otherwise).
+- **Restart after generating.** Start EU5 again before the new campaign. Loading a different world into a running game can crash it (the crash is in the game engine; it happens after the mods are reloaded, not on a fresh start).
 - **Game updates.** After an EU5 update, the generator may refuse to run until it is updated for the new build. It then offers to rebuild your world. Older saves need the world they were played on: generate their code again.
 - **Multiplayer.** Every player uses the same world code with the same game version. [Confirm on a second computer.]
 - **Memory.** About 7.5 GB of free memory for the two minutes of generation. EU5's recommended 32 GB is plenty.
