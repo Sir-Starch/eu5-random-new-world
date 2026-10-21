@@ -1,6 +1,6 @@
 # ADR 0007: The application window is Qt, packaged with PyInstaller
 
-**Status:** On hold 2026-10-21. It was written as the consequence of [ADR 0004](0004-generator-application.md); the owner then said the mod should live inside the game and that a separate generator program is hardly a normal solution, so no more work goes into the window until the delivery model is decided again. The code (`rnw/gui/`, `packaging/`) stays and works; the headless core is needed in every model.
+**Status:** On hold 2026-10-21. It was written as the consequence of [ADR 0004](0004-generator-application.md); the owner then said the mod should live inside the game and that a separate generator program is hardly a normal solution, so no more work goes into the window; [ADR 0008](0008-workshop-worlds.md) now sets the delivery model. The code (`rnw/gui/`, `packaging/`) stays and works; the headless core is needed in every model.
 
 ## Context
 
