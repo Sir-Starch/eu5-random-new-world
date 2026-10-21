@@ -50,11 +50,25 @@ STRINGS: Final[dict[str, str]] = {
     "outcome.cancelled": "cancelled",
     "result_installed": "Installed to {path}.",
     "result_generated": "Made in {path}. Nothing was installed.",
-    "next_steps": (
-        "Now close EU5 and start it again, with the generated world enabled in your playset, "
-        "and start a new 1337 game. EU5 can crash if a different world is started without a "
-        "restart."
+    "next_fresh": (
+        "In EU5, switch to another playset and back to yours, which reloads the mods, then "
+        "start a new 1337 game."
     ),
+    "next_fresh_tick": (
+        "In EU5, tick the generated world (RNW New World …) in your playset, which reloads "
+        "the mods, then start a new 1337 game."
+    ),
+    "next_played": (
+        "You have played in EU5 since you started it, and a different world started after "
+        "that crashes the game: close EU5, start it again and begin a new 1337 game."
+    ),
+    "next_start": "Start EU5 and begin a new 1337 game.",
+    "next_unknown": (
+        "If EU5 is running and no game was started since you launched it, switch to another "
+        "playset and back, then start a new 1337 game; otherwise restart EU5 first."
+    ),
+    "next_tick": "Tick the generated world (RNW New World …) in your playset.",
+    "next_check_tick": "Make sure the generated world (RNW New World …) is ticked in your playset.",
     "open_folder": "Open folder",
     "preview": "Preview",
     "ready_no_game": "Choose the game folder first.",

@@ -232,7 +232,7 @@ class MainWindow(QMainWindow):
         self.preview.setMinimumHeight(PREVIEW_WIDTH // 2)
         self.outcome = QLabel()
         self.outcome.setWordWrap(True)
-        self.next_steps = QLabel(text("next_steps"))
+        self.next_steps = QLabel()
         self.next_steps.setWordWrap(True)
         self.open_button = QPushButton(text("open_folder"))
         layout.addWidget(self.preview)
@@ -370,7 +370,8 @@ class MainWindow(QMainWindow):
             if result.installed is not None
             else text("result_generated", path=result.bundle)
         )
-        self.next_steps.setVisible(result.installed is not None)
+        self.next_steps.setText(self.controller.advice)
+        self.next_steps.setVisible(bool(self.controller.advice))
         self.open_button.setVisible(True)
 
     # -- what the buttons do --------------------------------------------------------------

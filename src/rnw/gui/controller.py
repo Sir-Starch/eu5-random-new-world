@@ -15,8 +15,9 @@ from enum import Enum
 from typing import TYPE_CHECKING, Final, Protocol
 
 from rnw import __version__
-from rnw.app import discovery, history, install, paths, service
+from rnw.app import discovery, history, install, paths, service, session
 from rnw.app.discovery import GameInstall, Profile
+from rnw.app.session import GameState
 from rnw.app.worldcode import (
     WorldCode,
     WorldCodeError,
@@ -88,6 +89,7 @@ class Controller:
         self.finished: frozenset[str] = frozenset()
         self.message: str = ""
         self.result: service.Result | None = None
+        self.advice: str = ""
         self.notice: str = ""
         self._observers: list[Callable[[], None]] = []
         self._lock: threading.Lock = threading.Lock()
@@ -230,7 +232,7 @@ class Controller:
         with self._lock:
             self.phase = Phase.RUNNING
             self.fraction, self.running, self.finished = 0.0, (), frozenset()
-            self.message, self.result = "", None
+            self.message, self.result, self.advice = "", None, ""
             self._progress = progress
         self._changed()
         self._thread = threading.Thread(
@@ -273,12 +275,36 @@ class Controller:
             outcome = Phase.CANCELLED
         except Exception as error:  # noqa: BLE001 - whatever failed is shown to the player
             outcome, message = Phase.FAILED, self._explain(error)
+        advice = self.next_step(result) if result is not None else ""
         with self._lock:
             self.phase, self.result, self.message = outcome, result, message
+            self.advice = advice
             self.running = ()
             if outcome is Phase.FINISHED:
                 self.fraction = 1.0
         self._changed()
+
+    def next_step(self, result: service.Result) -> str:
+        """What to do in EU5 for the installed world, from the game's log and playsets.
+
+        A different world starts without a restart only while no game was built since EU5
+        was launched, and only after a real reload of the mods (experiment 021).
+        """
+        if result.installed is None or self.profile is None:
+            return ""
+        state = session.game_state(self.profile.directory)
+        enabled = session.world_enabled(self.profile.directory, result.installed.name)
+        if state is GameState.FRESH:
+            return text("next_fresh" if enabled is not False else "next_fresh_tick") + (
+                "" if enabled is not None else " " + text("next_check_tick")
+            )
+        tick = {True: "", False: text("next_tick") + " ", None: text("next_check_tick") + " "}
+        steps = {
+            GameState.PLAYED: "next_played",
+            GameState.CLOSED: "next_start",
+            GameState.UNKNOWN: "next_unknown",
+        }
+        return tick[enabled] + text(steps[state])
 
     def _explain(self, error: Exception) -> str:
         """The error for the player; the traceback goes to a file for a bug report."""
