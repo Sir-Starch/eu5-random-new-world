@@ -63,10 +63,14 @@ def test_leaving_the_spool_removes_what_was_not_installed(tmp_path: Path) -> Non
         _ = Spool(tmp_path / ".other")["missing"]
 
 
-def test_a_leftover_spool_blocks_a_new_export(tmp_path: Path) -> None:
-    """The output check refuses to start beside a spool a crashed run left behind."""
+def test_a_leftover_spool_blocks_a_new_export_until_it_is_replaced(tmp_path: Path) -> None:
+    """The output check refuses to start beside scratch a killed run left behind, and
+    ``replace`` clears it."""
     generated = tmp_path / "generated"
     output = generated / "rnw_exp_new_world"
     spool_path(output).mkdir(parents=True)
-    with pytest.raises(OutputPathError, match="leftover staging"):
+    _ = (spool_path(output) / "half.bin").write_bytes(b"x")
+    with pytest.raises(OutputPathError, match=r"leftover staging.*--replace clears it"):
         check_new_output(output, MOD_NAME)
+    check_new_output(output, MOD_NAME, replace=True)
+    assert not spool_path(output).exists()

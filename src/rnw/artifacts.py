@@ -45,7 +45,8 @@ def check_new_output(
     """Require a directory named by ``pattern`` directly under ``generated/``.
 
     The path must not exist unless ``replace`` is set, must not be inside the game
-    installation and must not collide with a leftover staging directory.
+    installation and must not collide with a leftover staging or spool directory, which an
+    interrupted run leaves and ``replace`` (permission to discard the earlier output) clears.
     """
     resolved = output.resolve()
     if game_dir is not None and resolved.is_relative_to(game_dir.resolve()):
@@ -61,9 +62,15 @@ def check_new_output(
         message = f"Refusing to overwrite existing output: {resolved}"
         raise OutputPathError(message)
     for leftover in (staging_path(resolved), spool_path(resolved)):
-        if leftover.exists():
-            message = f"Refusing to overwrite a leftover staging directory: {leftover}"
+        if not leftover.exists():
+            continue
+        if not replace:
+            message = (
+                f"Refusing to overwrite a leftover staging directory: {leftover} "
+                "(left by an interrupted run; --replace clears it)"
+            )
             raise OutputPathError(message)
+        shutil.rmtree(leftover)
 
 
 def staging_path(output: Path) -> Path:
