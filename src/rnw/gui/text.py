@@ -51,8 +51,9 @@ STRINGS: Final[dict[str, str]] = {
     "result_installed": "Installed to {path}.",
     "result_generated": "Made in {path}. Nothing was installed.",
     "next_steps": (
-        "In EU5: enable “Random New World” in your playset and start a new 1337 game. If the "
-        "game is running, wait in the main menu and switch the playset on again."
+        "Now close EU5 and start it again, with the generated world enabled in your playset, "
+        "and start a new 1337 game. EU5 can crash if a different world is started without a "
+        "restart."
     ),
     "open_folder": "Open folder",
     "preview": "Preview",
