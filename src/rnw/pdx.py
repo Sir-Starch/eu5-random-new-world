@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, override
 
+from rnw.progress import checkpoint
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -78,6 +80,7 @@ class Entry:
 
 def parse(text: str) -> Block:
     """Parse a whole file into its root block (offsets index ``text``)."""
+    checkpoint()
     tokens = [
         (match.lastgroup or "", match.group(), match.start(), match.end())
         for match in TOKEN.finditer(text)

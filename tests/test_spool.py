@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import hashlib
+import sys
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 
+from rnw import artifacts
 from rnw.artifacts import OutputPathError, Spool, check_new_output, spool_path
 from rnw.eu5_export import MOD_NAME
 
@@ -74,3 +76,32 @@ def test_a_leftover_spool_blocks_a_new_export_until_it_is_replaced(tmp_path: Pat
         check_new_output(output, MOD_NAME)
     check_new_output(output, MOD_NAME, replace=True)
     assert not spool_path(output).exists()
+
+
+def test_a_busy_file_is_retried_on_windows_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A refusal that goes away is retried on Windows and raised at once elsewhere."""
+    monkeypatch.setattr(artifacts, "BUSY_PAUSE", 0.0)
+    calls: list[int] = []
+
+    def flaky() -> str:
+        calls.append(1)
+        if len(calls) < 3:
+            message = "busy"
+            raise PermissionError(message)
+        return "done"
+
+    monkeypatch.setattr(sys, "platform", "win32")
+    assert artifacts.when_free(flaky) == "done"
+    assert len(calls) == 3
+
+    def always() -> None:
+        message = "locked for good"
+        raise PermissionError(message)
+
+    with pytest.raises(PermissionError, match="locked for good"):
+        artifacts.when_free(always)
+    calls.clear()
+    monkeypatch.setattr(sys, "platform", "linux")
+    with pytest.raises(PermissionError, match="busy"):
+        _ = artifacts.when_free(flaky)
+    assert len(calls) == 1

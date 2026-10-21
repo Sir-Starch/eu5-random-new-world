@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import shutil
+import sys
+import time
 from collections.abc import Buffer, Iterator, MutableMapping
 from contextlib import contextmanager
+from functools import partial
 from typing import TYPE_CHECKING, Final, Self, override
 
 import numpy as np
@@ -16,12 +19,17 @@ from rnw.settings import canonical_json
 
 if TYPE_CHECKING:
     import re
-    from collections.abc import Generator
+    from collections.abc import Callable, Generator
     from pathlib import Path
 
     from numpy.typing import NDArray
 
 GENERATED_DIR: Final[str] = "generated"
+# Windows lets a virus scanner or the indexer hold a file it has just seen for a moment, and
+# then refuses to move or delete it; the same action a little later works. Elsewhere a
+# refusal is a real one and is raised at once.
+BUSY_ATTEMPTS: Final[int] = 8
+BUSY_PAUSE: Final[float] = 0.25
 CLASS_COLORS: Final[dict[CellClass, tuple[int, int, int]]] = {
     CellClass.LAND: (96, 160, 72),
     CellClass.SEA: (32, 64, 150),
@@ -33,6 +41,18 @@ CLASS_COLORS: Final[dict[CellClass, tuple[int, int, int]]] = {
 
 class OutputPathError(ValueError):
     """The requested output location is unsafe or already used."""
+
+
+def when_free[T](action: Callable[[], T]) -> T:
+    """Run a file system action; on Windows try again for a few seconds if a file is busy."""
+    if sys.platform != "win32":
+        return action()
+    for attempt in range(1, BUSY_ATTEMPTS):
+        try:
+            return action()
+        except PermissionError:
+            time.sleep(BUSY_PAUSE * attempt)
+    return action()
 
 
 def check_new_output(
@@ -70,7 +90,7 @@ def check_new_output(
                 "(left by an interrupted run; --replace clears it)"
             )
             raise OutputPathError(message)
-        shutil.rmtree(leftover)
+        when_free(partial(shutil.rmtree, leftover))
 
 
 def staging_path(output: Path) -> Path:
@@ -91,7 +111,7 @@ def staged(output: Path) -> Generator[Path]:
     try:
         yield stage
     except BaseException:
-        shutil.rmtree(stage)
+        when_free(lambda: shutil.rmtree(stage))
         raise
     swap_in(stage, output)
 
@@ -100,12 +120,12 @@ def swap_in(new: Path, target: Path) -> None:
     """Put ``new`` at ``target``, removing a previous ``target`` only after the move."""
     old = target.parent / f".{target.name}.old"
     if old.exists():
-        shutil.rmtree(old)
+        when_free(lambda: shutil.rmtree(old))
     if target.exists():
-        _ = target.rename(old)
-    _ = new.rename(target)
+        _ = when_free(lambda: target.rename(old))
+    _ = when_free(lambda: new.rename(target))
     if old.exists():
-        shutil.rmtree(old)
+        when_free(lambda: shutil.rmtree(old))
 
 
 def sha256(data: bytes) -> str:
@@ -145,7 +165,7 @@ class Spool(MutableMapping[str, Buffer]):
         return self
 
     def __exit__(self, *_exc: object) -> None:
-        shutil.rmtree(self._root, ignore_errors=True)
+        when_free(lambda: shutil.rmtree(self._root, ignore_errors=True))
 
     @override
     def __setitem__(self, relative: str, data: Buffer) -> None:
@@ -182,7 +202,9 @@ class Spool(MutableMapping[str, Buffer]):
             size, digest = self._records[relative]
             target = stage / prefix / relative
             target.parent.mkdir(parents=True, exist_ok=True)
-            _ = (self._root / relative).replace(target)
+            _ = when_free(
+                lambda source=self._root / relative, target=target: source.replace(target)
+            )
             records.append({"path": f"{prefix}/{relative}", "size": size, "sha256": digest})
         self._records.clear()
         return records

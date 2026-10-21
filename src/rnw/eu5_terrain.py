@@ -27,6 +27,7 @@ from rnw import _native
 from rnw.eu5_slots import LEVELS, SlotTables, level_counts, synthesize
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
+from rnw.progress import checkpoint
 from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
 from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
@@ -124,6 +125,7 @@ class DecalStore:
         """Vanilla height at location resolution (one decal sample per location pixel)."""
         out = np.zeros(self.map_shape, dtype=np.uint16)
         for decal in self.decals:
+            checkpoint()
             _, image = self.layer(decal.name, "height")
             out[
                 decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
@@ -134,6 +136,7 @@ class DecalStore:
         """All vanilla material layers on one grid with two pixels per location pixel."""
         out = np.full((self.map_shape[0] * 2, self.map_shape[1] * 2), 255, dtype=np.uint8)
         for decal in self.decals:
+            checkpoint()
             _, image = self.layer(decal.name, "materials")
             out[
                 decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
@@ -233,6 +236,7 @@ def level_shares(
     """Interior variation-level counts per label group over every vanilla decal."""
     counts = np.zeros((groups, LEVELS), dtype=np.int64)
     for decal in store.decals:
+        checkpoint()
         _, materials = store.layer(decal.name, "materials")
         crop = labels[
             decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
@@ -349,6 +353,7 @@ def _rebuild_decal(  # noqa: PLR0913 - a decal reads the store, the inputs, the 
     spans = [(first, min(rows, first + band)) for first in range(0, rows, band)]
 
     def rebuild(span: tuple[int, int]) -> None:
+        checkpoint()
         _rebuild_band(
             decal,
             first=span[0],
@@ -411,6 +416,7 @@ def terrain_outputs(
     )
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for decal in touched:
+            checkpoint()
             files, image = _rebuild_decal(
                 decal, store, inputs, tables, seed=seed, pool=pool, band=window - 2 * BAND_HALO
             )

@@ -29,6 +29,7 @@ from rnw.climate import RainSettings, rainfall
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.fields import block_mean
 from rnw.model import CellClass
+from rnw.progress import checkpoint
 from rnw.rng import derive_seed, hash_point
 from rnw.topology import adjacency_pairs, distance_from
 
@@ -185,6 +186,7 @@ def _block_means(
     share = np.empty(shape, dtype=np.int64)
     mean = np.empty(shape, dtype=np.int64)
     for first in range(0, rows, strip):
+        checkpoint()
         window = slice(first, min(rows, first + strip))
         blocks = slice(first // step, -(-window.stop // step))
         share[blocks] = block_mean(sea[window].astype(np.int64) * 1000, step)
@@ -323,6 +325,7 @@ def vanilla_locations(labels: NDArray[np.int32], height: NDArray[np.uint16]) -> 
     width = labels.shape[1]
     sums = np.zeros((4, count), dtype=np.float64)
     for start in range(0, labels.shape[0], 1024):
+        checkpoint()
         block = labels[start : start + 1024].ravel()
         values = height[start : start + 1024].ravel().astype(np.float64)
         index = np.arange(block.size, dtype=np.int64)

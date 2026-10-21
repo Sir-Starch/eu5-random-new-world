@@ -1,5 +1,7 @@
 """Wall-clock stage timing for benchmarks, printed to stderr when ``RNW_TIMING`` is set.
 
+A line gives the stage, how long it took, when it began and the process's peak memory so far.
+
 Nothing here reaches the generated files, so timing never changes a result.
 """
 
@@ -22,25 +24,12 @@ ENVIRONMENT: Final[str] = "RNW_TIMING"
 STARTED: Final[float] = time.perf_counter()
 
 
-class Clock:
-    """Reports the time since the previous lap, or since creation, under a stage name."""
-
-    __slots__: tuple[str, ...] = ("_last", "_on")
-
-    def __init__(self) -> None:
-        self._on: bool = bool(os.environ.get(ENVIRONMENT))
-        self._last: float = time.perf_counter()
-
-    def lap(self, name: str) -> None:
-        """Print the seconds since the last lap when timing is on."""
-        now = time.perf_counter()
-        if self._on:
-            peak = ""
-            if resource is not None:
-                kilobytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-                peak = f", peak {kilobytes / 1024 / 1024:.1f} GB"
-            print(f"[timing] {name}: {now - self._last:.1f} s{peak}", file=sys.stderr, flush=True)
-        self._last = now
+def peak_gib() -> str:
+    """The process's peak resident memory as text, or nothing where the system will not say."""
+    if resource is None:
+        return ""
+    kilobytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return f", peak {kilobytes / 1024 / 1024:.1f} GB"
 
 
 def timed[T](name: str, work: Callable[[], T]) -> T:
@@ -55,8 +44,9 @@ def timed[T](name: str, work: Callable[[], T]) -> T:
     try:
         return work()
     finally:
+        took, began = time.perf_counter() - start, start - STARTED
         print(
-            f"[timing] {name}: {time.perf_counter() - start:.1f} s (from {start - STARTED:.1f} s)",
+            f"[timing] {name}: {took:.1f} s (from {began:.1f} s){peak_gib()}",
             file=sys.stderr,
             flush=True,
         )

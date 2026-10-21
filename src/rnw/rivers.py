@@ -29,6 +29,7 @@ import numpy as np
 from rnw import _native
 from rnw.fields import PERMILLE, block_mean, smoothstep, value_noise_at, warped_noise
 from rnw.noise import NOISE_SCALE
+from rnw.progress import checkpoint
 from rnw.rng import MASK64, derive_seed, hash_grid
 from rnw.topology import euclidean_distance, label_components, nearest_label
 
@@ -436,6 +437,7 @@ def draw_rivers(
     key = derive_seed(seed, "river_lines")
     whole = 1 << 30
     for number, stream in enumerate(found):
+        checkpoint()
         below = _downstream(tree, stream.cells[0], whole)
         cells = [*reversed(below), *stream.cells]
         flows = [int(tree.flow[cell]) for cell in cells]
@@ -558,6 +560,7 @@ def carve_valleys(
     out = np.empty(relief.shape, dtype=np.int32)
     table = np.array(depths, dtype=np.int64)
     for first in range(0, rows, STRIP_ROWS):
+        checkpoint()
         last = min(rows, first + STRIP_ROWS)
         start, stop = max(0, first - radius_px - 1), min(rows, last + radius_px + 1)
         window_classes = classes[start:stop]

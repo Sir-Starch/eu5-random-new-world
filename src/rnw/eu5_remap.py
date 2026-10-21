@@ -28,6 +28,7 @@ import numpy as np
 from rnw.eu5_events import EVENT_ID, mentions, names_tag, retire_events, retire_modifiers
 from rnw.model import CellClass
 from rnw.pdx import Block, Edits, PdxSyntaxError, line_span, parse
+from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -218,6 +219,7 @@ def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str])
     outputs: dict[str, bytes] = {}
     counts: dict[str, int] = {}
     for relative, (raw, original) in files.items():
+        checkpoint()
         new, count = remap_text(texts[relative], remap)
         if count or texts[relative] != original:
             bom = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""

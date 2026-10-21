@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, Self
 
 from rnw import _native
-from rnw.timing import timed
+from rnw.progress import checkpoint, run_stage
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -47,10 +47,15 @@ M_ARENA_MAX: Final[int] = -8
 MALLOC_ARENAS: Final[int] = 2
 
 
-class _MemoryStatus(ctypes.Structure):
+class MemoryStatus(ctypes.Structure):
+    """``MEMORYSTATUSEX``: two 32-bit words and seven 64-bit counters.
+
+    The words are ``c_uint32``, not ``c_ulong``, which is 64 bits wide on Linux and macOS.
+    """
+
     _fields_: tuple[tuple[str, type], ...] = (  # pyright: ignore[reportIncompatibleVariableOverride]
-        ("length", ctypes.c_ulong),
-        ("load", ctypes.c_ulong),
+        ("length", ctypes.c_uint32),
+        ("load", ctypes.c_uint32),
         ("total", ctypes.c_ulonglong),
         ("available", ctypes.c_ulonglong),
         ("page_total", ctypes.c_ulonglong),
@@ -110,8 +115,8 @@ def available_memory() -> int | None:
     if override is not None:
         return max(1, int(override)) * MIB
     if sys.platform == "win32":
-        status = _MemoryStatus()
-        status.length = ctypes.sizeof(_MemoryStatus)
+        status = MemoryStatus()
+        status.length = ctypes.sizeof(MemoryStatus)
         windll = getattr(ctypes, "windll", None)
         if windll is None or not windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
             return None
@@ -271,12 +276,13 @@ class Stages:
             self._pool.shutdown(wait=True, cancel_futures=exc is not None)
 
     def submit[T](self, name: str, work: Callable[[], T]) -> Future[T]:
-        """Start ``work`` (timed as ``name`` when timing is on) and return its future."""
+        """Start ``work`` as the stage ``name`` and return its future."""
+        checkpoint()
         if self._pool is not None:
-            return self._pool.submit(timed, name, work)
+            return self._pool.submit(run_stage, name, work)
         future: Future[T] = Future()
         try:
-            future.set_result(timed(name, work))
+            future.set_result(run_stage(name, work))
         except BaseException as error:  # noqa: BLE001 - re-raised by result()
             future.set_exception(error)
         return future

@@ -24,6 +24,7 @@ from rnw.eu5_remap import RemapError
 from rnw.geography import GeographyError, color_summary, read_locations, summary
 from rnw.parallel import ResourceError
 from rnw.png import PngFormatError
+from rnw.progress import Cancelled, Progress, Update
 from rnw.settings import SettingsError, load_settings, run_spec
 from rnw.synth import generate_world, synthetic_base
 from rnw.validate import ValidationError, topology_metrics, validate_world
@@ -35,6 +36,7 @@ SYNTH_NAME: Final[re.Pattern[str]] = re.compile(r"rnw_synth_[a-z0-9_]{1,48}")
 ISLAND_PX: Final[int] = 400
 SEED_MAX: Final[int] = (1 << 64) - 1
 FAILURES: Final[tuple[type[Exception], ...]] = (
+    Cancelled,
     CanvasError,
     Eu5ContractError,
     ExportError,
@@ -288,6 +290,12 @@ def generate(  # noqa: PLR0913 - mirrors the documented CLI contract.
     )
 
 
+def _print_update(update: Update) -> None:
+    """One line per stage that starts or ends, with the share of the work that is done."""
+    state = "done " if update.finished else "start"
+    typer.echo(f"[{update.fraction:4.0%}] {state} {update.label}", err=True)
+
+
 @app.command()
 def newworld(  # noqa: PLR0913 - mirrors the generate command.
     *,
@@ -307,6 +315,9 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
     ignore_memory: Annotated[
         bool, typer.Option(help="Start although the free memory is below what the export needs.")
     ] = False,
+    progress: Annotated[
+        bool, typer.Option(help="Print each stage and the share of the work done to stderr.")
+    ] = False,
 ) -> None:
     """Stage a NOT GAME VALIDATED mod that replaces the New World with generated land."""
     try:
@@ -320,6 +331,7 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
             settings_file=None if settings is None else settings.name,
             replace=replace,
             check_memory=not ignore_memory,
+            progress=Progress(_print_update) if progress else None,
         )
     except FAILURES as error:
         typer.echo(f"Error: {error}", err=True)

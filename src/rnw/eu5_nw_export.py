@@ -138,11 +138,11 @@ from rnw.newworld import (
 from rnw.parallel import GIB, Stages, configure, require_memory, stage_workers
 from rnw.pdx import Block, parse
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
+from rnw.progress import Progress, active, checkpoint, run_stage, running
 from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.settings import canonical_json, run_spec, spec_digest
-from rnw.timing import Clock, timed
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -921,6 +921,7 @@ def vanilla_localization_keys(game_dir: Path) -> set[str]:
     for root in LOC_ROOTS:
         for path in sorted((game_dir / root).rglob("*.yml")):
             if "localization" in path.parts:
+                checkpoint()
                 keys |= set(LOC_KEY.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
     return keys
 
@@ -1219,6 +1220,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     settings_file: str | None = None,
     replace: bool = False,
     check_memory: bool = True,
+    progress: Progress | None = None,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report.
 
@@ -1226,11 +1228,13 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     the output as they are made, and join the bundle when it is written. Unless
     ``check_memory`` is false the export first checks that the machine has the memory its
     smallest working set needs (``EXPORT_MEMORY``); more memory only makes it faster.
+    ``progress`` receives the stages as they run and can cancel the job, which raises
+    ``Cancelled`` and leaves nothing behind.
     """
     check_new_output(output, MOD_NAME, game_dir, replace=replace)
     if check_memory:
         require_memory(EXPORT_MEMORY, "The New World export")
-    with Spool(spool_path(output)) as spool:
+    with active(progress), Spool(spool_path(output)) as spool:
         return _export_new_world(
             spool,
             game_dir,
@@ -1252,15 +1256,20 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     accept_build: str | None,
     settings_file: str | None,
 ) -> dict[str, object]:
-    clock = Clock()
     _ = configure()
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
     spec = run_spec(seed, settings)
-    game_map = load_map(game_dir)
-    hierarchy = {location.key: location for location in read_locations(game_dir / DEFINITIONS)}
-    clock.lap("load map")
-    canvas = select_canvas(game_map, settings.new_world.ocean_band_px)
-    clock.lap("select canvas")
+
+    def load() -> tuple[Eu5Map, dict[str, Location]]:
+        loaded = load_map(game_dir)
+        return loaded, {
+            location.key: location for location in read_locations(game_dir / DEFINITIONS)
+        }
+
+    game_map, hierarchy = run_stage("load map", load)
+    canvas = run_stage(
+        "select canvas", lambda: select_canvas(game_map, settings.new_world.ocean_band_px)
+    )
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
@@ -1297,7 +1306,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 game_dir, game_map, geometries.result(), reads.result()[1], hierarchy
             ),
         )
-        world = timed(
+        world = run_stage(
             "generate world",
             lambda: seal_pockets(
                 generate_new_world(
@@ -1309,7 +1318,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 )
             ),
         )
-        clock.lap("generate world")
         total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
         if total > MAX_LOCATIONS:
             message = (
@@ -1374,7 +1382,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         vanilla_hashes = localization.result()
         loc_keys, plan = identities.result()
         biomes, biome_stats, (river_codes, carved, river_stats) = weathering.result()
-        slot_tables, slot_stats = timed(
+        slot_tables, slot_stats = run_stage(
             "slot tables",
             lambda: _slot_tables(game_map, vanilla_attributes, biomes, game_dir, levels.result()),
         )
@@ -1428,14 +1436,14 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 )
                 return terrain_outputs(store, inputs, slot_tables, seed, spool)
 
-            materials_world, terrain_stats = timed("terrain decals", decals)
+            materials_world, terrain_stats = run_stage("terrain decals", decals)
             terrain_stats.update(water.result())
             canvas_world = np.zeros(game_map.labels.shape, dtype=bool)
             canvas.put(canvas_world, canvas.mask)
             pixel_classes, class_count, coarse_count = _pixel_classes(
                 game_map, vanilla_attributes, biomes, final_labels, materials_world
             )
-            terrain_stats["objects"] = timed(
+            terrain_stats["objects"] = run_stage(
                 "vegetation instances",
                 lambda: object_outputs(
                     game_dir,
@@ -1453,7 +1461,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         river_pixels = np.bincount(
             world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
         )[: len(world.classes)]
-        natives = timed(
+        natives = run_stage(
             "natives",
             lambda: build_natives(
                 world=world,
@@ -1466,6 +1474,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 loc_keys=loc_keys,
             ),
         )
+        checkpoint()
         ports = _ports(plan, world, canvas)
         development = _plan_development(
             calibration,
@@ -1478,7 +1487,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             docks=ports[1],
             river_codes=river_codes,
         )
-        texts, text_stats = timed(
+        texts, text_stats = run_stage(
             "texts",
             lambda: _text_outputs(
                 game_dir,
@@ -1496,11 +1505,13 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 new_world_keys=new_world_keys,
             ),
         )
+        checkpoint()
         text_checks = _verify_texts(texts, plan, removed)
         text_checks.update(_verify_natives(natives, plan))
         text_checks.update(
             verify_development(texts, plan, natives, development, calibration, new_world_keys)
         )
+        checkpoint()
         remap = build_remap(
             [
                 (
@@ -1516,10 +1527,11 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             _removed_provinces(hierarchy, removed),
         )
         removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
-        rewrite = timed("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
+        rewrite = run_stage("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
         scripts = rewrite.outputs
         scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
         texts.update(scripts)
+        checkpoint()
         text_checks.update(verify_country_tags(game_dir, texts))
         text_checks.update(verify_localization(texts, vanilla_hashes))
         text_stats["scripts_remapped"] = rewrite.remapped
@@ -1529,12 +1541,11 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         rgb, rivers = locations.result()
         png_data = encodings.result()
         terrain_stats = terraining.result()
-    clock.lap("stages")
     terrain_stats["rivers"] = river_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
     inputs = {record.path: record for record in game_map.inputs}
-    with staged(output) as stage:
+    with running("write files"), staged(output) as stage:
         files: list[dict[str, object]] = []
         for (relative, source, pixels, mode), data in zip(
             (
@@ -1635,7 +1646,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         }
         _ = write_bytes(stage, "manifest.json", canonical_json(manifest).encode())
         _ = write_bytes(stage, "report.json", canonical_json(report).encode())
-    clock.lap("write files")
     return report
 
 

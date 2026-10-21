@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import ctypes
 import os
 import subprocess
 import sys
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -194,3 +195,50 @@ def test_timed_reports_a_stage_only_when_timing_is_on(
     monkeypatch.setenv("RNW_TIMING", "1")
     assert timing.timed("loud", lambda: 6) == 6
     assert "[timing] loud:" in capsys.readouterr().err
+
+
+class _FakeKernel:
+    """Stands in for ``ctypes.windll.kernel32`` and fills the memory status like Windows."""
+
+    def __init__(self, available: int, *, succeeds: bool = True) -> None:
+        self.available: int = available
+        self.succeeds: bool = succeeds
+        self.length_seen: int = 0
+
+    def GlobalMemoryStatusEx(self, reference: object) -> int:  # noqa: N802 - the Windows name
+        status = cast("parallel.MemoryStatus", getattr(reference, "_obj"))  # noqa: B009
+        self.length_seen = int(cast("int", status.length))
+        status.available = self.available
+        return int(self.succeeds)
+
+
+class _FakeWindll:
+    def __init__(self, kernel: _FakeKernel) -> None:
+        self.kernel32: _FakeKernel = kernel
+
+
+def test_windows_memory_comes_from_the_global_memory_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """On Windows the available physical memory is the figure of GlobalMemoryStatusEx."""
+    monkeypatch.delenv(parallel.MEMORY_ENVIRONMENT, raising=False)
+    monkeypatch.setattr(sys, "platform", "win32")
+    kernel = _FakeKernel(9 * parallel.GIB)
+    monkeypatch.setattr(ctypes, "windll", _FakeWindll(kernel), raising=False)
+    assert parallel.available_memory() == 9 * parallel.GIB
+    assert kernel.length_seen == ctypes.sizeof(parallel.MemoryStatus)
+    monkeypatch.setattr(
+        ctypes, "windll", _FakeWindll(_FakeKernel(1, succeeds=False)), raising=False
+    )
+    assert parallel.available_memory() is None
+    monkeypatch.delattr(ctypes, "windll", raising=False)
+    assert parallel.available_memory() is None
+
+
+def test_the_memory_status_structure_has_the_windows_layout() -> None:
+    """MEMORYSTATUSEX is 64 bytes: two 32-bit words, then seven 64-bit counters."""
+    structure = parallel.MemoryStatus
+    assert (structure.length.offset, structure.load.offset, structure.total.offset) == (0, 4, 8)
+    assert structure.available.offset == 16
+    assert structure.extended.offset == 56
+    assert ctypes.sizeof(structure) == 64

@@ -22,6 +22,7 @@ import numpy as np
 from rnw.fields import PERMILLE, block_mean, box_blur, smoothstep, upsample, warped_noise
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
+from rnw.progress import checkpoint
 from rnw.rng import derive_seed
 from rnw.topology import euclidean_distance
 
@@ -191,6 +192,7 @@ def generate_relief(land: NDArray[np.bool_], *, seed: int) -> NDArray[np.int32]:
     out = np.empty((rows, columns), dtype=np.int32)
 
     def run(first: int) -> None:
+        checkpoint()
         last = min(rows, first + strip)
         out[first:last] = _relief_strip(land, grid, seed, first, last)
 

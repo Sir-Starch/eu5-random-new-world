@@ -26,6 +26,7 @@ import numpy as np
 
 from rnw import _native
 from rnw.parallel import band_rows
+from rnw.progress import checkpoint
 from rnw.rng import MASK64, derive_seed
 
 if TYPE_CHECKING:
@@ -285,6 +286,7 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     kept_records = [instance.records[~inside] for instance, inside in affected]
     fresh: list[list[NDArray[np.float32]]] = [[] for _ in affected]
     for first, last in strips:
+        checkpoint()
         pixels = canvas_pixels(classes, canvas, first, last)
         for index, (instance, _) in enumerate(affected):
             fresh[index].append(

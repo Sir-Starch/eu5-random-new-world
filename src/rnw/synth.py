@@ -18,6 +18,7 @@ import numpy as np
 
 from rnw.model import Cell, CellClass, Parents, World
 from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.progress import checkpoint
 from rnw.rng import SplitMix64, derive_seed, hash_grid
 from rnw.topology import adjacency_pairs, label_components, unpack_pairs
 
@@ -96,6 +97,7 @@ def grow_regions(mask: NDArray[np.bool_], seeds: NDArray[np.int32]) -> NDArray[n
     labels = np.where(allowed, seeds.ravel(), -1).astype(np.int32)
     frontier = np.flatnonzero(labels >= 0)
     while frontier.size:
+        checkpoint()
         frontier = _claim(labels, allowed, frontier, width, height)
     return labels.reshape(height, width)
 

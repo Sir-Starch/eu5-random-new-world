@@ -191,3 +191,9 @@
 - [V-EXEC] The machine is read at each run (`rnw.parallel`: cores with affinity and container quota, `MemAvailable`, cgroup headroom, Windows `GlobalMemoryStatusEx`); the export refuses to start below 7 GiB free and says so; `--ignore-memory` starts anyway.
 - [UNKNOWN] The Windows and macOS memory paths are untested here; a leftover spool or staging directory of a killed run blocks the next run until `--replace` clears it.
 - [V-EXEC] Speed, same day (C103): a lookup table instead of a binary search in the slot kernel, band kernels that evaluate noise and rules only on the band's core, and an export built from overlapping stages (`parallel.Stages`, one worker below four threads or 10 GiB free) in which everything that reads only the vanilla game runs beside the world generation. 124 -> 94 s; six threads give 96 s, three threads 137 s, one thread 192 s, always with the 733 hashes of the Python build. The next limit is the interpreter lock held by the text half's pure-Python parser while the decals wait.
+
+## 2026-10-21 — Progress, cancel and Windows readiness (roadmap R9, U1)
+
+- [V-EXEC] `rnw.progress` announces every stage of the export (22 weighted stages and 4 parts) to a listener and carries the cancel flag; long loops call `checkpoint()`. A cancel at 20-66 s of a real export raised `Cancelled` within 0.2-3.2 s and left no spool, staging or half-written output (the earlier bundle stays); `rnw newworld --progress` prints the stages.
+- [V-EXEC] The Rust crate passes `cargo check` and `clippy -D warnings` for `x86_64-pc-windows-gnu`; the Windows memory path (`GlobalMemoryStatusEx`) is covered by a test with a fake kernel, the structure layout by a size and offset test, and busy files are retried on Windows only (`when_free`). CI runs Linux and Windows but has not been run: nothing is pushed [UNKNOWN].
+

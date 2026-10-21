@@ -22,6 +22,7 @@ from rnw.dds import rewrite
 from rnw.fields import box_blur
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import band_rows
+from rnw.progress import checkpoint
 from rnw.rng import derive_seed
 from rnw.topology import distance_from
 
@@ -172,6 +173,7 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
     result = np.empty_like(image)
     changed = np.zeros(touched.shape, dtype=bool)
     for first in range(0, rows, strip):
+        checkpoint()
         last = min(rows, first + strip)
         result[first:last] = _render(
             image,

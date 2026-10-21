@@ -25,6 +25,7 @@ from rnw.fields import warped_noise
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
+from rnw.progress import checkpoint
 from rnw.relief import generate_relief
 from rnw.rng import derive_seed
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
@@ -189,6 +190,7 @@ def _land(
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
     land, shore, elevation = _coasts(domain, guard, relief, offset, ramp=ramp, settings=settings)
     for _ in range(MAX_STRAITS):
+        checkpoint()
         path = stray_strait(domain, land, shore=shore, open_shore=open_shore)
         if path is None:
             break

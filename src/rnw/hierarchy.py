@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.progress import checkpoint
+
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
@@ -277,6 +279,7 @@ def _balance(  # noqa: PLR0913 - balancing reads the layout, sources, targets an
     step: list[int] = []
     sign = [0] * len(sources)
     for _ in range(BALANCE_ROUNDS):
+        checkpoint()
         sizes = [len(group) for group in _groups(graph, layout, sources, handicap, pinned)]
         goals = _goals(layout, sources, targets, sizes)
         error = sum(abs(size - goal) for size, goal in zip(sizes, goals, strict=True))
@@ -320,6 +323,7 @@ def balanced_parts(
     layout = _layout(graph, members, current)
     handicap = [0] * len(current)
     for _ in range(LLOYD_ROUNDS):
+        checkpoint()
         handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=movable)
         groups = _groups(graph, layout, current, handicap, movable)
         for part, group in enumerate(groups):
