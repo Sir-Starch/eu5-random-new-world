@@ -1,6 +1,6 @@
 # ADR 0007: The application window is Qt, packaged with PyInstaller
 
-**Status:** Accepted 2026-10-21 (chosen from evidence, as [ADR 0004](0004-generator-application.md) leaves it to R9; the headless core stays toolkit-independent, so the choice can be reversed).
+**Status:** On hold 2026-10-21. It was written as the consequence of [ADR 0004](0004-generator-application.md); the owner then said the mod should live inside the game and that a separate generator program is hardly a normal solution, so no more work goes into the window until the delivery model is decided again. The code (`rnw/gui/`, `packaging/`) stays and works; the headless core is needed in every model.
 
 ## Context
 
