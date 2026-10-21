@@ -99,3 +99,37 @@ def test_newworld_refuses_to_start_without_the_memory_it_needs(
     assert "needs about 7.5 GiB of free memory" in result.output
     assert "2.0 GiB free" in result.output
     assert not output.exists()
+
+
+def test_world_codes_round_trip_through_the_command() -> None:
+    """The command prints a code for a seed and reads it back to the same world."""
+    runner = CliRunner()
+    made = runner.invoke(app, ["world-code", "--preset", "archipelago", "--seed", "99"])
+    assert made.exit_code == 0, made.output
+    printed = cast("dict[str, object]", json.loads(made.output))
+    assert printed["seed"] == 99
+    assert printed["preset"] == "archipelago"
+    assert printed["reproduced_by_this_generator"] is True
+    read = runner.invoke(app, ["world-code", str(printed["code"]).lower()])
+    assert read.exit_code == 0, read.output
+    assert cast("dict[str, object]", json.loads(read.output))["seed"] == 99
+    broken = runner.invoke(app, ["world-code", "RNW1-00000-00000"])
+    assert broken.exit_code == 2
+    assert "Error:" in broken.output
+
+
+def test_find_game_reports_the_variables_it_was_given(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The search lists an explicit game folder and profile folder first."""
+    game = tmp_path / "game"
+    (game / "game" / "in_game" / "map_data").mkdir(parents=True)
+    profile = tmp_path / "profile"
+    profile.mkdir()
+    monkeypatch.setenv("EU5_GAME_DIR", str(game))
+    monkeypatch.setenv("EU5_USER_DIR", str(profile))
+    result = CliRunner().invoke(app, ["find-game"])
+    assert result.exit_code == 0, result.output
+    found = cast("dict[str, list[dict[str, object]]]", json.loads(result.output))
+    assert found["games"][0]["directory"] == str(game)
+    assert found["profiles"][0]["kind"] == "chosen"

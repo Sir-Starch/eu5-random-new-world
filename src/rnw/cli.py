@@ -4,15 +4,17 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 from collections import Counter
 from pathlib import Path
-from typing import Annotated, Final
+from typing import Annotated, Final, cast
 
 import typer
 
 from rnw import __version__
-from rnw.artifacts import OutputPathError, check_new_output, swap_in, write_synthetic_bundle
+from rnw.app import discovery, install, paths, service, worldcode
+from rnw.app.discovery import GameInstall
+from rnw.app.install import InstallError
+from rnw.artifacts import OutputPathError, check_new_output, write_synthetic_bundle
 from rnw.contract import MissingContractFileError, fingerprint_document
 from rnw.contract import fingerprint as game_fingerprint
 from rnw.eu5_canvas import CanvasError
@@ -37,6 +39,8 @@ ISLAND_PX: Final[int] = 400
 SEED_MAX: Final[int] = (1 << 64) - 1
 FAILURES: Final[tuple[type[Exception], ...]] = (
     Cancelled,
+    InstallError,
+    worldcode.WorldCodeError,
     CanvasError,
     Eu5ContractError,
     ExportError,
@@ -164,19 +168,10 @@ def install_mod(
     ] = False,
 ) -> None:
     """Install one rnw_exp_* mod; never touches other mods or playsets."""
-    if not _is_rnw_mod(prepared):
-        message = "Prepared directory must be a valid rnw_exp_* mod"
-        raise typer.BadParameter(message)
-    target = user_dir / "mod" / prepared.name
-    if target.exists() and not (replace and _is_rnw_mod(target)):
-        message = f"Destination already exists (use --replace for an rnw_exp_* mod): {target}"
-        raise typer.BadParameter(message)
-    target.parent.mkdir(exist_ok=True)
-    incoming = target.parent / f".{target.name}.partial"
-    if incoming.exists():
-        shutil.rmtree(incoming)
-    _ = shutil.copytree(prepared, incoming)
-    swap_in(incoming, target)
+    try:
+        target = install.install(prepared, user_dir, replace=replace)
+    except InstallError as error:
+        raise typer.BadParameter(str(error)) from error
     typer.echo(f"Installed {target}")
 
 
@@ -186,21 +181,134 @@ def uninstall_mod(
     user_dir: Annotated[Path, typer.Option(exists=True, file_okay=False)],
 ) -> None:
     """Remove installed rnw_exp_* mods; refuses any other folder."""
-    targets = [user_dir / "mod" / name for name in names]
-    bad = [str(target) for target in targets if not _is_rnw_mod(target)]
-    if bad:
-        message = f"Not installed rnw_exp_* mods: {', '.join(bad)}"
-        raise typer.BadParameter(message)
-    for target in targets:
-        shutil.rmtree(target)
+    try:
+        removed = install.uninstall(names, user_dir)
+    except InstallError as error:
+        raise typer.BadParameter(str(error)) from error
+    for target in removed:
         typer.echo(f"Removed {target}")
 
 
-def _is_rnw_mod(path: Path) -> bool:
-    return (
-        path.is_dir()
-        and path.name.startswith("rnw_exp_")
-        and (path / ".metadata/metadata.json").is_file()
+@app.command()
+def find_game() -> None:
+    """List the EU5 installations and profiles this machine has (read-only)."""
+    games = discovery.find_games()
+    profiles = discovery.find_profiles(games=games)
+    typer.echo(
+        json.dumps(
+            {
+                "games": [
+                    {"directory": str(game.directory), "build_id": game.build_id} for game in games
+                ],
+                "profiles": [
+                    {"directory": str(item.directory), "kind": item.kind, "has_mods": item.has_mods}
+                    for item in profiles
+                ],
+                "data_directory": str(paths.data_directory()),
+            },
+            indent=2,
+        )
+    )
+
+
+@app.command()
+def world_code(
+    text: Annotated[str | None, typer.Argument(help="A world code to read.")] = None,
+    *,
+    preset: PresetOption = "continents",
+    seed: Annotated[int | None, typer.Option(min=0, max=SEED_MAX, help="Default: random.")] = None,
+    settings: SettingsOption = None,
+) -> None:
+    """Print a world code for a preset and seed, or read the one given."""
+    try:
+        if text is not None:
+            code = worldcode.decode(text)
+        else:
+            changes = None if settings is None else _read_changes(settings)
+            code = worldcode.new_code(preset, seed, changes)
+    except (worldcode.WorldCodeError, SettingsError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(
+        json.dumps(
+            {
+                "code": worldcode.encode(code),
+                "preset": code.preset,
+                "seed": code.seed,
+                "generator": code.generator,
+                "reproduced_by_this_generator": worldcode.reproduces(code),
+                "changes": code.changes,
+            },
+            indent=2,
+        )
+    )
+
+
+def _read_changes(path: Path) -> dict[str, object]:
+    data = cast("object", json.loads(path.read_text(encoding="utf-8")))
+    if not isinstance(data, dict):
+        message = "The settings file must hold a JSON object"
+        raise SettingsError(message)
+    changes = cast("dict[str, object]", data)
+    _ = changes.pop("schema", None)
+    _ = changes.pop("preset", None)
+    return changes
+
+
+@app.command()
+def world(
+    code: Annotated[str, typer.Argument(help="A world code (see world-code).")],
+    *,
+    install_into_profile: Annotated[
+        bool, typer.Option("--install", help="Install the mod into the profile found.")
+    ] = False,
+    game_dir: Annotated[
+        Path | None, typer.Option(exists=True, file_okay=False, help="Default: search Steam.")
+    ] = None,
+    data_dir: Annotated[
+        Path | None, typer.Option(file_okay=False, help="Default: the application's folder.")
+    ] = None,
+    ignore_memory: Annotated[bool, typer.Option(help="Start with too little free memory.")] = False,
+) -> None:
+    """Generate the world of a code the way the application does; install only on request."""
+    try:
+        decoded = worldcode.decode(code)
+        games = discovery.find_games()
+        game = (
+            GameInstall(game_dir, None, "")
+            if game_dir is not None
+            else (games[0] if games else None)
+        )
+        if game is None:
+            message = "No EU5 installation found; pass --game-dir"
+            raise typer.BadParameter(message)
+        profiles = discovery.find_profiles(games=games) if install_into_profile else []
+        result = service.generate(
+            service.Request(
+                game=game,
+                code=decoded,
+                data=data_dir or paths.data_directory(),
+                profile=profiles[0] if profiles else None,
+                install=install_into_profile,
+                check_memory=not ignore_memory,
+            ),
+            Progress(_print_update),
+        )
+    except FAILURES as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(
+        json.dumps(
+            {
+                "code": result.code,
+                "bundle": str(result.bundle),
+                "installed": None if result.installed is None else str(result.installed),
+                "seconds": round(result.seconds, 1),
+                "summary": result.summary,
+            },
+            indent=2,
+            sort_keys=True,
+        )
     )
 
 

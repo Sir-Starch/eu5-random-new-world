@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from rnw.app.discovery import find_games
 from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_biomes import template_attributes
 from rnw.eu5_canvas import select_canvas
@@ -152,3 +153,15 @@ def test_local_development_calibration_reads_the_vanilla_americas() -> None:
     assert calibration.village_permille == 393  # 79 of the 201 capitals that are no city or town
     assert calibration.vanilla_means["city"][0] == 9
     assert calibration.vanilla_means["unorganised"][0] == 2088
+
+
+def test_local_discovery_finds_the_installation() -> None:
+    """The search over this machine's Steam libraries includes the installation under test."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    games = find_games()
+    assert any(game.directory.resolve() == Path(root_value).resolve() for game in games)
+    steam = [game for game in games if game.library is not None]
+    if steam:
+        assert steam[0].build_id.isdigit()

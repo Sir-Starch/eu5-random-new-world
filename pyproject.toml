@@ -49,6 +49,8 @@ max-complexity = 12
 
 [tool.basedpyright]
 typeCheckingMode = "all"
+# Windows-only and POSIX-only code is checked on every platform, so CI agrees on both.
+pythonPlatform = "All"
 include = ["src", "tests"]
 
 [tool.pytest.ini_options]
