@@ -15,7 +15,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Final, Protocol
 
 from rnw import __version__
-from rnw.app import discovery, history, paths, service
+from rnw.app import discovery, history, install, paths, service
 from rnw.app.discovery import GameInstall, Profile
 from rnw.app.worldcode import (
     WorldCode,
@@ -103,11 +103,17 @@ class Controller:
             observer()
 
     def discover(self) -> None:
-        """Look for the game and the profile again and take the first of each."""
+        """Look for the game and the profile again and take the first of each.
+
+        Worlds retired by an earlier install that the game held then are deleted now if it
+        has let go of them.
+        """
         self.games = discovery.find_games(self.environment, self.program_folder)
         self.profiles = discovery.find_profiles(self.environment, self.games)
         self.game = self.games[0] if self.games else None
         self.profile = self.profiles[0] if self.profiles else None
+        if self.profile is not None:
+            _ = install.sweep(self.profile.directory)
         self._changed()
 
     def choose_game(self, directory: Path) -> str | None:

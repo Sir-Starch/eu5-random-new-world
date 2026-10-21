@@ -172,7 +172,7 @@ def install_wheels(site: Path) -> None:
     """The locked runtime dependencies as Windows wheels, each checked against its hash."""
     requirements = WORK / "requirements.txt"
     _run([
-        "uv", "export", "--frozen", "--no-emit-project", "--no-dev", "--group", "gui",
+        "uv", "export", "--quiet", "--frozen", "--no-emit-project", "--no-dev", "--group", "gui",
         "--format", "requirements-txt", "--output-file", str(requirements),
     ])  # fmt: skip
     _run([

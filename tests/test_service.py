@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.app import history, install
+from rnw.app import history, install, service
 from rnw.app.discovery import GameInstall, Profile
 from rnw.app.service import Request, generate
 from rnw.app.worldcode import encode, new_code
-from rnw.progress import Cancelled, Progress
+from rnw.progress import STAGES, Cancelled, Progress
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -111,3 +111,62 @@ def test_failures_and_cancels_are_recorded_and_raised(tmp_path: Path) -> None:
         _ = generate(request, Progress(), FakeExport(cancel=True))
     assert [entry.outcome for entry in history.load(request.data)] == ["cancelled", "failed"]
     assert not (tmp_path / "profile" / "mod").exists()
+
+
+def test_install_waits_while_the_game_holds_the_world(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Refused moves are retried until the game lets go; the window shows the instruction."""
+    monkeypatch.setattr(service, "WAIT_PAUSE", 0.0)
+    real = install.put_in_place
+    refusals = [2]
+
+    def held(incoming: Path) -> Path:
+        if refusals[0] > 0:
+            refusals[0] -= 1
+            message = "The game is using rnw_exp_new_world"
+            raise install.WorldInUseError(message)
+        return real(incoming)
+
+    monkeypatch.setattr(install, "put_in_place", held)
+    labels: list[str] = []
+    result = generate(
+        _request(tmp_path), Progress(lambda update: labels.append(update.label)), FakeExport()
+    )
+    assert result.installed == tmp_path / "profile" / "mod" / "rnw_exp_new_world"
+    assert STAGES["waiting for the game"].label in labels
+    assert [entry.outcome for entry in history.load(tmp_path / "data")] == ["installed"]
+
+
+def test_a_cancel_while_waiting_leaves_the_installed_world(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Cancel stops the wait, removes the staged copy and is recorded; nothing is half done."""
+    monkeypatch.setattr(service, "WAIT_PAUSE", 0.0)
+    progress = Progress()
+
+    def held(incoming: Path) -> Path:
+        progress.cancel()
+        message = f"The game is using {incoming.name}"
+        raise install.WorldInUseError(message)
+
+    monkeypatch.setattr(install, "put_in_place", held)
+    with pytest.raises(Cancelled):
+        _ = generate(_request(tmp_path), progress, FakeExport())
+    assert not (tmp_path / "profile" / "mod" / install.WORK).exists()
+    assert [entry.outcome for entry in history.load(tmp_path / "data")] == ["cancelled"]
+
+
+def test_without_a_progress_a_held_world_is_an_error_at_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The command line has no Cancel button, so it does not wait."""
+
+    def held(incoming: Path) -> Path:
+        message = f"The game is using {incoming.name}"
+        raise install.WorldInUseError(message)
+
+    monkeypatch.setattr(install, "put_in_place", held)
+    with pytest.raises(install.WorldInUseError):
+        _ = generate(_request(tmp_path), None, FakeExport())
+    assert not (tmp_path / "profile" / "mod" / install.WORK).exists()

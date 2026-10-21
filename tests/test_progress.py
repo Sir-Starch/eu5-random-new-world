@@ -105,7 +105,7 @@ def test_every_stage_the_code_announces_has_a_label_and_a_weight() -> None:
 
     pattern = re.compile(r'(?:run_stage|running|stages\.submit)\(\s*"([^"]+)"')
     used: set[str] = set()
-    for path in Path(progress.__file__).parent.glob("*.py"):
+    for path in Path(progress.__file__).parent.rglob("*.py"):
         used.update(pattern.findall(path.read_text(encoding="utf-8")))
     assert {"generate world", "texts", "write files", "terrain decals"} <= used
     assert used - set(STAGES) == set()

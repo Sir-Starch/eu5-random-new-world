@@ -164,10 +164,38 @@ def _quota_cores() -> int | None:
         return None
 
 
+def _windows_affinity() -> int | None:
+    """Processors in this process's affinity mask on Windows; None if unrestricted or unknown.
+
+    A process inherits the mask of the one that started it: the generator started from the
+    game's Open in folder gets the game's (16 of 32 processors on the owner's machine under
+    Proton, C107). A mask equal to the system's restricts nothing, and then the processors of
+    every group may be used, which the mask of one group would undercount.
+    """
+    windll = getattr(ctypes, "windll", None)
+    if windll is None:
+        return None
+    process, system = ctypes.c_size_t(), ctypes.c_size_t()
+    # The pseudo-handle of the current process, as GetCurrentProcess returns it; calling that
+    # through ctypes would cut the pointer-sized handle to a 32-bit int.
+    current = ctypes.c_void_p(-1)
+    if not windll.kernel32.GetProcessAffinityMask(
+        current, ctypes.byref(process), ctypes.byref(system)
+    ):
+        return None
+    if process.value == system.value:
+        return None
+    return process.value.bit_count() or None
+
+
 def cores() -> int:
     """Hardware threads this process may run on: its affinity, within a container quota."""
     affinity = getattr(os, "sched_getaffinity", None)
-    count = len(affinity(0)) if affinity is not None else (os.cpu_count() or 1)
+    if affinity is not None:
+        count = len(affinity(0))
+    else:
+        restricted = _windows_affinity() if sys.platform == "win32" else None
+        count = restricted or os.cpu_count() or 1
     quota = _quota_cores()
     return max(1, min(count, quota) if quota is not None else count)
 

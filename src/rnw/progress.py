@@ -65,6 +65,15 @@ STAGES: Final[dict[str, StageInfo]] = {
     "sea cells": StageInfo("Growing sea zones", 0),
     "relief": StageInfo("Raising mountains and valleys", 0),
     "terrain": StageInfo("Building the terrain", 0),
+    # Parts of installing, after the export (``rnw.app.service``).
+    "install": StageInfo("Installing the world into your profile", 0),
+    "waiting for the game": StageInfo(
+        (
+            "Waiting for the game to let go of the previous world: untick it in the game's "
+            "playset and apply the playset, or close the game"
+        ),
+        0,
+    ),
 }
 TOTAL_WEIGHT: Final[int] = sum(info.weight for info in STAGES.values())
 

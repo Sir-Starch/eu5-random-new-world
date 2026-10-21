@@ -17,7 +17,7 @@ from rnw.app.paths import workspace
 from rnw.app.worldcode import encode
 from rnw.eu5_export import MOD_NAME
 from rnw.eu5_nw_export import export_new_world
-from rnw.progress import Cancelled
+from rnw.progress import Cancelled, active, checkpoint, running
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 
 MOD_FOLDER: Final[str] = "rnw_exp_new_world"
 BUNDLE_FOLDER: Final[str] = MOD_FOLDER
+WAIT_PAUSE: Final[float] = 2.0
 
 
 class Exporter(Protocol):
@@ -72,6 +73,33 @@ class Result:
     summary: dict[str, object]
 
 
+def _install(bundle: Path, profile: Path, progress: Progress | None) -> Path:
+    """Install the finished world; while the game holds the old one, wait until it lets go.
+
+    Without a progress to cancel by (the command line), a world in use is an error at once.
+    """
+    with active(progress), running("install"):
+        incoming = install.stage(bundle, profile, replace=True)
+        try:
+            return install.put_in_place(incoming)
+        except install.WorldInUseError:
+            if progress is None:
+                install.discard(incoming)
+                raise
+        try:
+            with running("waiting for the game"):
+                while True:
+                    time.sleep(WAIT_PAUSE)
+                    checkpoint()
+                    try:
+                        return install.put_in_place(incoming)
+                    except install.WorldInUseError:
+                        continue
+        except Cancelled:
+            install.discard(incoming)
+            raise
+
+
 def _require_profile(request: Request) -> None:
     if request.install and request.profile is None:
         message = "There is no profile to install into; choose one or turn installing off"
@@ -107,9 +135,7 @@ def generate(
         )
         installed = None
         if request.install and request.profile is not None:
-            installed = install.install(
-                output / BUNDLE_FOLDER, request.profile.directory, replace=True
-            )
+            installed = _install(output / BUNDLE_FOLDER, request.profile.directory, progress)
     except Cancelled:
         _ = history.record(request.data, history.Entry(text, history.now(), build, "cancelled"))
         raise

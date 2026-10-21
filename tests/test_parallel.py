@@ -242,3 +242,42 @@ def test_the_memory_status_structure_has_the_windows_layout() -> None:
     assert structure.available.offset == 16
     assert structure.extended.offset == 56
     assert ctypes.sizeof(structure) == 64
+
+
+class _FakeAffinityKernel:
+    """Stands in for ``ctypes.windll.kernel32`` and reports process and system masks."""
+
+    def __init__(self, process: int, system: int, *, succeeds: bool = True) -> None:
+        self.process: int = process
+        self.system: int = system
+        self.succeeds: bool = succeeds
+
+    def GetProcessAffinityMask(  # noqa: N802 - the Windows name
+        self, handle: ctypes.c_void_p, process: object, system: object
+    ) -> int:
+        assert handle.value == ctypes.c_void_p(-1).value
+        cast("ctypes.c_size_t", getattr(process, "_obj")).value = self.process  # noqa: B009
+        cast("ctypes.c_size_t", getattr(system, "_obj")).value = self.system  # noqa: B009
+        return int(self.succeeds)
+
+
+class _FakeAffinityWindll:
+    def __init__(self, kernel: _FakeAffinityKernel) -> None:
+        self.kernel32: _FakeAffinityKernel = kernel
+
+
+def test_windows_cores_follow_the_inherited_affinity_mask(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A narrowed mask counts its processors; an unrestricted or unreadable one counts all."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.delattr(os, "sched_getaffinity", raising=False)
+    monkeypatch.setattr(os, "cpu_count", lambda: 32)
+    monkeypatch.setattr(parallel, "_quota_cores", lambda: None)
+    full = (1 << 32) - 1
+    for process, succeeds, expected in ((0xFFFF, True, 16), (full, True, 32), (0xFF, False, 32)):
+        kernel = _FakeAffinityKernel(process, full, succeeds=succeeds)
+        monkeypatch.setattr(ctypes, "windll", _FakeAffinityWindll(kernel), raising=False)
+        assert parallel.cores() == expected
+    monkeypatch.delattr(ctypes, "windll", raising=False)
+    assert parallel.cores() == 32
