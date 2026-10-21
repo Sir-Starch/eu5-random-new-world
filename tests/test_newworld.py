@@ -20,6 +20,7 @@ from rnw.newworld import (
     generate_new_world,
     open_sea,
     seal_pockets,
+    split_at_column,
     stray_strait,
     unported_cells,
     wobble_borders,
@@ -168,3 +169,17 @@ def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:
     assert sealed.classes[1:3] == (CellClass.LAND, CellClass.LAND)
     assert unported_cells(sealed) == []
     assert seal_pockets(sealed) is sealed
+
+
+def test_splitting_at_the_seam_while_generating_equals_splitting_afterwards() -> None:
+    """One description of the split world is the world of ``split_at_column``, cell for cell."""
+    domain = np.ones((160, 400), dtype=bool)
+    plain = split_at_column(generate_new_world(domain, seed=3, settings=SMALL, seam=200), 200)
+    direct = generate_new_world(domain, seed=3, settings=SMALL, seam=200, split_at_seam=True)
+    assert np.array_equal(plain.labels, direct.labels)
+    assert plain.classes == direct.classes
+    assert plain.edges == direct.edges
+    for name in ("pixels", "centroids", "interior", "mean_elevation", "spread", "elevation"):
+        assert np.array_equal(getattr(plain, name), getattr(direct, name))
+    unsplit = generate_new_world(domain, seed=3, settings=SMALL, seam=200)
+    assert len(direct.classes) >= len(unsplit.classes)

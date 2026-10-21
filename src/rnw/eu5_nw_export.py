@@ -14,6 +14,7 @@ from __future__ import annotations
 import re
 import zlib
 from collections import Counter, deque
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -34,6 +35,7 @@ from rnw.eu5_biomes import (
     CellBiomes,
     ClimateGrid,
     Generated,
+    VanillaLocations,
     assign_biomes,
     biome_of,
     biome_rules,
@@ -131,7 +133,6 @@ from rnw.newworld import (
     NewWorld,
     generate_new_world,
     seal_pockets,
-    split_at_column,
     unported_cells,
 )
 from rnw.parallel import GIB, Stages, configure, require_memory, stage_workers
@@ -262,8 +263,8 @@ SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
 
 
 # The smallest working set of an export: its peak with one thread and the thinnest bands
-# (6.3 GiB on the continents preset, C102), rounded up.
-EXPORT_MEMORY: Final[int] = 7 * GIB
+# (6.8 GiB on the continents preset, C103), rounded up.
+EXPORT_MEMORY: Final[int] = 7 * GIB + GIB // 2
 
 
 class NewWorldExportError(ValueError):
@@ -1262,38 +1263,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     clock.lap("select canvas")
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
-    world = generate_new_world(
-        canvas.mask.copy(), seed=seed, settings=settings.new_world, seam=seam
-    )
-    world = seal_pockets(split_at_column(world, seam))
-    clock.lap("generate world")
-    total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
-    if total > MAX_LOCATIONS:
-        message = (
-            f"{total} locations exceed the {MAX_LOCATIONS} safety cap (vanilla has under "
-            "28,600; a 16-bit limit is suspected); raise location_px or sea_zone_px"
-        )
-        raise NewWorldExportError(message)
-    final_labels = _final_labels(game_map, canvas, world)
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     with Stages(stage_workers()) as stages:
-
-        def identify() -> tuple[VanillaGeometry, set[int], KeySpace, Plan]:
-            geometry = vanilla_geometry(game_map, canvas, hierarchy)
-            vanilla_hashes = key_hashes(vanilla_localization_keys(game_dir))
-            loc_keys = KeySpace(vanilla_hashes)
-            plan = plan_identities(
-                game_map,
-                canvas,
-                world,
-                hierarchy,
-                geometry,
-                seed=seed,
-                settings=settings.new_world,
-                keys=loc_keys,
-            )
-            return geometry, vanilla_hashes, loc_keys, plan
-
+        # Everything that reads only the vanilla game runs beside the generation of the world.
         def read_vanilla() -> tuple[
             DecalStore, dict[str, dict[str, str]], set[str], DevelopmentCalibration
         ]:
@@ -1304,6 +1276,62 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 vanilla_new_world_keys(hierarchy, removed),
                 calibrate_development(game_dir, game_map, hierarchy),
             )
+
+        reads = stages.submit("vanilla reads", read_vanilla)
+        geometries = stages.submit(
+            "vanilla geometry", lambda: vanilla_geometry(game_map, canvas, hierarchy)
+        )
+        localization = stages.submit(
+            "vanilla localization keys", lambda: key_hashes(vanilla_localization_keys(game_dir))
+        )
+        climates = stages.submit(
+            "vanilla climate", lambda: _vanilla_climate(game_map, reads.result()[0])
+        )
+        levels = stages.submit(
+            "vanilla material levels",
+            lambda: _vanilla_level_counts(game_map, reads.result()[1], reads.result()[0]),
+        )
+        vanilla_start = stages.submit(
+            "vanilla natives",
+            lambda: vanilla_natives(
+                game_dir, game_map, geometries.result(), reads.result()[1], hierarchy
+            ),
+        )
+        world = timed(
+            "generate world",
+            lambda: seal_pockets(
+                generate_new_world(
+                    canvas.mask.copy(),
+                    seed=seed,
+                    settings=settings.new_world,
+                    seam=seam,
+                    split_at_seam=True,
+                )
+            ),
+        )
+        clock.lap("generate world")
+        total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
+        if total > MAX_LOCATIONS:
+            message = (
+                f"{total} locations exceed the {MAX_LOCATIONS} safety cap (vanilla has under "
+                "28,600; a 16-bit limit is suspected); raise location_px or sea_zone_px"
+            )
+            raise NewWorldExportError(message)
+        final_labels = _final_labels(game_map, canvas, world)
+
+        def identify() -> tuple[KeySpace, Plan]:
+            loc_keys = KeySpace(localization.result())
+            plan = plan_identities(
+                game_map,
+                canvas,
+                world,
+                hierarchy,
+                geometries.result(),
+                seed=seed,
+                settings=settings.new_world,
+                keys=loc_keys,
+            )
+            return loc_keys, plan
 
         def build_water() -> dict[str, int]:
             """The water textures need only the generated world, so they are built early."""
@@ -1323,35 +1351,32 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         checks = stages.submit(
             "world checks", lambda: _check_world(game_map, canvas, world, final_labels)
         )
-        reads = stages.submit("vanilla reads", read_vanilla)
 
         def weather() -> tuple[
             CellBiomes,
             dict[str, object],
             tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]],
         ]:
-            store, attributes, _, _ = reads.result()
             biomes, biome_stats, climate = _biome_model(
                 game_map,
                 canvas=canvas,
                 world=world,
                 final_labels=final_labels,
-                store=store,
-                attributes=attributes,
+                vanilla=climates.result(),
+                attributes=reads.result()[1],
                 seed=seed,
             )
             return biomes, biome_stats, _rivers(world, canvas, climate, seed)
 
         weathering = stages.submit("biomes and rivers", weather)
-        geometry, vanilla_hashes, loc_keys, plan = identities.result()
         store, vanilla_attributes, new_world_keys, calibration = reads.result()
-        vanilla_start = stages.submit(
-            "vanilla natives",
-            lambda: vanilla_natives(game_dir, game_map, geometry, vanilla_attributes, hierarchy),
-        )
+        geometry = geometries.result()
+        vanilla_hashes = localization.result()
+        loc_keys, plan = identities.result()
         biomes, biome_stats, (river_codes, carved, river_stats) = weathering.result()
         slot_tables, slot_stats = timed(
-            "slot tables", lambda: _slot_tables(game_map, vanilla_attributes, biomes, store)
+            "slot tables",
+            lambda: _slot_tables(game_map, vanilla_attributes, biomes, game_dir, levels.result()),
         )
         biome_stats["materials"] = slot_stats
 
@@ -1668,28 +1693,45 @@ def _old_world_land(game_map: Eu5Map) -> NDArray[np.bool_]:
     )
 
 
-def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world and the decals.
+@dataclass(frozen=True, slots=True, eq=False)
+class VanillaClimate:
+    """What the biome model reads of the vanilla map; it does not depend on the generated world."""
+
+    height: NDArray[np.uint16]
+    locations: VanillaLocations
+    grid: ClimateGrid
+
+
+def _vanilla_climate(game_map: Eu5Map, store: DecalStore) -> VanillaClimate:
+    """Vanilla heights, location statistics and climate grid (computed beside the world)."""
+    height = store.world_heights()
+    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
+    return VanillaClimate(
+        height=height,
+        locations=vanilla_locations(game_map.labels, height),
+        grid=climate_grid(sea[game_map.labels], height),
+    )
+
+
+def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world and the vanilla climate.
     game_map: Eu5Map,
     *,
     canvas: Canvas,
     world: NewWorld,
     final_labels: NDArray[np.int32],
-    store: DecalStore,
+    vanilla: VanillaClimate,
     attributes: dict[str, dict[str, str]],
     seed: int,
 ) -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
     """Climate, vegetation, topography and raw material of every generated cell."""
-    vanilla_height = store.world_heights()
-    vanilla = vanilla_locations(game_map.labels, vanilla_height)
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     final_sea = np.concatenate(
         [sea, np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)]
     )
-    height = vanilla_height.astype(np.int32)
+    height = vanilla.height.astype(np.int32)
     canvas.put(height, world.elevation)
-    vanilla_grid = climate_grid(sea[game_map.labels], vanilla_height)
     final_grid = climate_grid(final_sea[final_labels], height)
-    del height, vanilla_height
+    del height
     points = np.stack(
         [world.centroids[:, 0], _world_columns(canvas, world.centroids[:, 1])], axis=1
     )
@@ -1704,13 +1746,13 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     biomes, stats = assign_biomes(
         game_map=game_map,
         templates=attributes,
-        vanilla=vanilla,
-        vanilla_grid=vanilla_grid,
+        vanilla=vanilla.locations,
+        vanilla_grid=vanilla.grid,
         final_grid=final_grid,
         cells=cells,
         seed=seed,
     )
-    stats["coherence"] = _coherence(game_map, attributes, vanilla.pairs, world, biomes)
+    stats["coherence"] = _coherence(game_map, attributes, vanilla.locations.pairs, world, biomes)
     return biomes, stats, final_grid
 
 
@@ -1747,11 +1789,26 @@ def _coherence(
     return out
 
 
+def _vanilla_level_counts(
+    game_map: Eu5Map, attributes: dict[str, dict[str, str]], store: DecalStore
+) -> dict[str, NDArray[np.int64]]:
+    """Variation-level counts of the vanilla decals per ``vegetation|topography`` group."""
+    topography = [attributes.get(key, {}).get("topography", "") for key in game_map.keys]
+    vegetation = [attributes.get(key, {}).get("vegetation", "") for key in game_map.keys]
+    water = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
+    )
+    names, group = _vocabulary([f"{v}|{t}" for v, t in zip(vegetation, topography, strict=True)])
+    counts = level_shares(store, game_map.labels, np.where(water, -1, group), len(names))
+    return dict(zip(names, counts, strict=True))
+
+
 def _slot_tables(
     game_map: Eu5Map,
     attributes: dict[str, dict[str, str]],
     biomes: CellBiomes,
-    store: DecalStore,
+    game_dir: Path,
+    vanilla_counts: dict[str, NDArray[np.int64]],
 ) -> tuple[SlotTables, dict[str, object]]:
     """Per final label (vanilla, then generated) inputs of the material slot rules."""
     vanilla_count = len(game_map.keys)
@@ -1769,8 +1826,10 @@ def _slot_tables(
     group_names, group = _vocabulary(
         [f"{v}|{t}" for v, t in zip(vegetation, topography, strict=True)]
     )
-    vanilla_group = np.where(water[:vanilla_count], -1, group[:vanilla_count])
-    counts = level_shares(store, game_map.labels, vanilla_group, len(group_names))
+    no_levels = np.zeros(LEVELS, dtype=np.int64)
+    counts = np.array([vanilla_counts.get(name, no_levels) for name in group_names]).reshape(
+        len(group_names), LEVELS
+    )
     by_vegetation: dict[str, NDArray[np.int64]] = {}
     for name, row in zip(group_names, counts, strict=True):
         key = name.split("|")[0]
@@ -1784,8 +1843,8 @@ def _slot_tables(
         if row.sum() < MIN_LEVEL_PIXELS:
             row = overall
         shares[number] = row * 1000 // max(1, int(row.sum()))
-    rules = biome_rules(_read(store.game_dir, BIOME_DEFINITIONS))
-    lists = material_counts(_read(store.game_dir, TERRAIN_MATERIALS))
+    rules = biome_rules(_read(game_dir, BIOME_DEFINITIONS))
+    lists = material_counts(_read(game_dir, TERRAIN_MATERIALS))
     resolved: dict[tuple[str, str, str], str] = {}
     materials = np.full(len(vegetation), SLOTS, dtype=np.int64)
     generated: Counter[str] = Counter()

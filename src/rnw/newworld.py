@@ -15,6 +15,7 @@ outputs.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from functools import partial
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
@@ -23,6 +24,7 @@ from rnw import _native
 from rnw.fields import warped_noise
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.parallel import Stages, stage_workers
 from rnw.relief import generate_relief
 from rnw.rng import derive_seed
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
@@ -489,30 +491,55 @@ def wobble_borders(
     return labels
 
 
+def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) -> NDArray[np.int32]:
+    """Cells of about ``spacing`` pixels grown inside ``mask``, none under ``smallest`` pixels."""
+    return merge_small(grow_regions(mask, seed_sites(key, mask, spacing)), smallest)
+
+
 def generate_new_world(
-    domain: NDArray[np.bool_], *, seed: int, settings: NewWorldSettings, seam: int | None = None
+    domain: NDArray[np.bool_],
+    *,
+    seed: int,
+    settings: NewWorldSettings,
+    seam: int | None = None,
+    split_at_seam: bool = False,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
     ``seam`` is the crop column where the world map wraps (cells left of it continue at
-    the right map edge); a strait keeps land away from it.
+    the right map edge); a strait keeps land away from it. With ``split_at_seam`` the
+    cells the seam still crosses are split before the world is described, which gives the
+    world of ``split_at_column`` without describing it twice.
+
+    The land cells, the sea cells and the relief depend only on the masks, so they are
+    built beside each other when the machine has the cores and the memory for it.
     """
     land, ocean, lakes, _ = _land(domain, seed, settings, seam)
-    land_cells = merge_small(
-        grow_regions(
-            land, seed_sites(derive_seed(seed, "nw_land_sites"), land, settings.location_px)
-        ),
-        settings.min_cell_px,
-    )
-    sea_cells = merge_small(
-        grow_regions(
-            ocean, seed_sites(derive_seed(seed, "nw_sea_sites"), ocean, settings.sea_zone_px)
-        ),
-        settings.min_sea_cell_px,
-    )
-    del ocean
-    lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
-    del lakes
+    with Stages(stage_workers()) as stages:
+        land_job = stages.submit(
+            "land cells",
+            partial(
+                _cells,
+                land,
+                key=derive_seed(seed, "nw_land_sites"),
+                spacing=settings.location_px,
+                smallest=settings.min_cell_px,
+            ),
+        )
+        sea_job = stages.submit(
+            "sea cells",
+            partial(
+                _cells,
+                ocean,
+                key=derive_seed(seed, "nw_sea_sites"),
+                spacing=settings.sea_zone_px,
+                smallest=settings.min_sea_cell_px,
+            ),
+        )
+        relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed))
+        lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
+        land_cells, sea_cells, relief = land_job.result(), sea_job.result(), relief_job.result()
+    del ocean, lakes, land
     labels = np.full(domain.shape, -1, dtype=np.int32)
     kinds: list[CellClass] = []
     for kind, part in (
@@ -527,8 +554,6 @@ def generate_new_world(
         del numbered
     del land_cells, sea_cells, lake_cells
     labels = wobble_borders(labels, kinds, seed)
-    relief = generate_relief(land, seed=seed)
-    del land
     count = len(kinds)
     pixels, _, _, total, _ = _cell_sums(labels, relief, count)
     mean_relief = total // np.maximum(1, pixels)
@@ -537,6 +562,8 @@ def generate_new_world(
     ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
     for index in ranked[:wasteland]:
         kinds[index] = CellClass.WASTELAND
+    if split_at_seam and seam is not None:
+        kinds = _split_crossing_cells(labels, kinds, seam)
     return derive_world(labels, tuple(kinds), relief)
 
 
@@ -643,16 +670,16 @@ def seal_pockets(world: NewWorld) -> NewWorld:
     return replace(world, classes=tuple(kinds))
 
 
-def split_at_column(world: NewWorld, column: int) -> NewWorld:
-    """Split every cell that crosses ``column`` so no cell spans it.
+def _split_crossing_cells(
+    labels: NDArray[np.int32], kinds: list[CellClass], column: int
+) -> list[CellClass]:
+    """Give every part of a cell that crosses ``column`` but the largest a cell of its own.
 
-    Used for a map seam: each side's 4-connected parts become separate cells (the
-    largest part keeps the original index), so every cell stays connected.
+    ``labels`` is changed in place; returns the classes with those of the new cells added.
     """
-    labels = world.labels.copy()
-    kinds = list(world.classes)
+    kinds = list(kinds)
     if not 0 < column < labels.shape[1]:
-        return world
+        return kinds
     left = labels[:, column - 1]
     right = labels[:, column]
     crossing = np.unique(left[(left == right) & (left >= 0)])
@@ -672,5 +699,18 @@ def split_at_column(world: NewWorld, column: int) -> NewWorld:
             if part == keep:
                 continue
             window[mine & (parts == part)] = len(kinds)
-            kinds.append(world.classes[cell])
+            kinds.append(kinds[cell])
+    return kinds
+
+
+def split_at_column(world: NewWorld, column: int) -> NewWorld:
+    """Split every cell that crosses ``column`` so no cell spans it.
+
+    Used for a map seam: each side's 4-connected parts become separate cells (the
+    largest part keeps the original index), so every cell stays connected.
+    """
+    if not 0 < column < world.labels.shape[1]:
+        return world
+    labels = world.labels.copy()
+    kinds = _split_crossing_cells(labels, list(world.classes), column)
     return derive_world(labels, tuple(kinds), world.elevation)
