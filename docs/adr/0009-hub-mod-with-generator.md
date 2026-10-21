@@ -51,6 +51,17 @@ Hence:
 - **Each release:** built only by CI from a tagged commit, SHA-256 of every file published beside the source, a VirusTotal scan and false-positive reports to the vendors before it goes to the Workshop (the owner's actions: uploading a file to a scanner shares it).
 - **To check on Windows 11** (a machine or VM with Defender's defaults and Smart App Control on): whether the signed launcher and `_native.pyd` start, whether Workshop files carry the Mark of the Web, what Defender says.
 
+## Alternative rejected: a DLL mod with generation inside the game
+
+The owner asked (2026-10-21) whether a DLL mod is allowed and would give real built-in generation.
+
+- **Rules.** Paradox's User Agreement (updated 2026-01-21) counts "scripts and programs" as UGC that may be made and shared for free and non-commercially, and its conduct rules forbid cheats, hacks, malicious programs and "hacked data files"; neither names DLLs, code mods or reverse engineering [SOURCE]. A DLL that hooks the engine is a hack in the plain sense of the word, so the rules give it no cover; a separate program that only reads the game and writes a data mod is not [INFERRED].
+- **Engine.** EU5 has no code-mod interface: `eu5.exe` loads no library from a mod, only its own and system ones [V-LOCAL: imports and `LoadLibrary` calls, C83 and this ADR]. Code reaches the game process only through a proxy DLL beside `eu5.exe` (it imports `VERSION.dll` and `WINMM.dll`, the usual targets) or an injector, as Anvil does for EU4 with a `version.dll` that the player copies into the game folder by hand or with a separate manager program [SOURCE: Anvil README]. Workshop items land in `workshop/content/3450310/`, so the Workshop cannot deliver the loader; under Proton the player would also set `WINEDLLOVERRIDES` in the launch options [INFERRED: Wine prefers its built-in `version.dll`].
+- **What it would buy.** The map is still read from files when the mods load (C83), so a DLL would run the same generator inside the game and write the same files; skipping the playset reload or drawing its own window means hooking engine functions found by reverse engineering, which every patch moves (1.4.1 to 1.4.2 took a week, C84).
+- **Cost.** A manual step into the game folder, which the Workshop-only requirement excludes; a crash for every player after each patch until the hooks are fixed; the worst possible antivirus profile (an unsigned DLL loaded into a game is how cheats and malware work, and Smart App Control blocks it); the product rule against patching the engine.
+
+So no DLL. The nearest thing inside the rules is a generator that starts once from Open in folder and then answers a Generate button of the in-game window through the `debug_log` line (experiment 017 decides whether the log is written soon enough). If Paradox ever publishes a code-mod interface for EU5, as Cities: Skylines II has, this is reopened.
+
 ## Experiments before building
 
 - **016 (owner in game):** a test mod with a scripted widget in the main menu and one in the game: does it show, can it print a localization key defined by another mod, and does the mod manager's Open in folder work for it.
