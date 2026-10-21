@@ -69,10 +69,12 @@ class Controller:
         data: Path | None = None,
         environment: discovery.Environment | None = None,
         generator: Generator = _generate,
+        program_folder: Path | None = None,
     ) -> None:
         self.data: Path = paths.data_directory() if data is None else data
         self.environment: discovery.Environment = environment or discovery.Environment()
         self.generator: Generator = generator
+        self.program_folder: Path | None = program_folder
         self.games: list[GameInstall] = []
         self.profiles: list[Profile] = []
         self.game: GameInstall | None = None
@@ -102,7 +104,7 @@ class Controller:
 
     def discover(self) -> None:
         """Look for the game and the profile again and take the first of each."""
-        self.games = discovery.find_games(self.environment)
+        self.games = discovery.find_games(self.environment, self.program_folder)
         self.profiles = discovery.find_profiles(self.environment, self.games)
         self.game = self.games[0] if self.games else None
         self.profile = self.profiles[0] if self.profiles else None

@@ -201,3 +201,10 @@
 - [OWNER 2026-10-21] Asked how a mod that is not inside the game could be published on the Workshop. A Workshop item is a data folder the game mounts and never runs; I found no Paradox rule that bans executables, but nothing starts one from the game. [ADR 0008](../adr/0008-workshop-worlds.md) replaces ADR 0004: worlds are Workshop mods (a base mod with game rules plus one mod per world), the generator is our factory.
 - [V-LOCAL] Engine facts found for the in-game design (2026-10-21, files and `eu5.exe`): mods can add windows through scripted widgets; the game's mod manager has an Open in folder button for every mod (`LocalMod.OpenInFolder`); the script effect `debug_log` writes a string to the debug log; no plugin or native-mod hook exists. [ADR 0009](adr/0009-hub-mod-with-generator.md) proposes one Workshop mod that carries the generator, explains it in the game and is opened from the mod list.
 
+
+## 2026-10-21 — The generator under Proton (ADR 0009, experiment 019)
+
+- [V-GAME owner] Open in folder in the game's Mods window opens Wine's own explorer at the mod's folder. A Linux player therefore stands inside the game's Wine prefix, and the program to start there is the Windows build.
+- [V-EXEC] The Windows build under the game's Proton (11.0, a community build), in a prefix made by `proton run`: the window's self-test passes, and from a Workshop item folder (`S:\` or `Z:\`) it finds the game and the profile (C106). An earlier `DLL load failed` for QtWidgets came from a test prefix made without the `proton` script (no ICU 68, no DXVK `d3d11.dll`), not from Proton.
+- [V-EXEC] Discovery fix: Proton's Steam stub writes `"LibraryFolders"`; the KeyValues reader folds keys to lower case. Discovery also walks up from the program's own folder to the Steam library (`game_beside`), which a program inside a prefix needs.
+- [UNKNOWN] Experiment 019, part 3 (owner): start the program from that explorer while the game runs.

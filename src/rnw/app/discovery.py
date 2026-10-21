@@ -169,7 +169,7 @@ def _manifest(library: Path) -> Section | None:
         text = (library / "steamapps" / f"appmanifest_{APP_ID}.acf").read_text(
             encoding="utf-8", errors="replace"
         )
-        state = parse(text).get("AppState")
+        state = parse(text).get("appstate")
         return state if isinstance(state, dict) else None
     return None
 
@@ -179,10 +179,35 @@ def is_game(directory: Path) -> bool:
     return directory.joinpath(*MAP_MARKER).is_dir()
 
 
-def find_games(environment: Environment | None = None) -> list[GameInstall]:
-    """EU5 installations found: ``EU5_GAME_DIR`` first, then every Steam library."""
+def game_beside(start: Path) -> GameInstall | None:
+    """The game whose Steam library holds ``start``, for a program started from a Workshop item.
+
+    A Workshop item lives in ``<library>/steamapps/workshop/content/3450310/<item>/``, and the
+    game in ``<library>/steamapps/common/``; walking up from ``start`` finds the library
+    without Steam's registry or library list, which a Windows program inside a Proton prefix
+    cannot see.
+    """
+    for parent in (start.resolve(), *start.resolve().parents):
+        if parent.name == "steamapps":
+            library = parent.parent
+            state = _manifest(library)
+            folder = state.get("installdir") if state is not None else None
+            directory = parent / "common" / (folder if isinstance(folder, str) else GAME_FOLDER)
+            build = state.get("buildid") if state is not None else None
+            if is_game(directory):
+                return GameInstall(directory, library, build if isinstance(build, str) else "")
+    return None
+
+
+def find_games(
+    environment: Environment | None = None, start: Path | None = None
+) -> list[GameInstall]:
+    """EU5 installations found: beside ``start``, ``EU5_GAME_DIR``, then every Steam library."""
     environment = environment or Environment()
     found: list[GameInstall] = []
+    nearby = game_beside(start) if start is not None else None
+    if nearby is not None:
+        found.append(nearby)
     explicit = environment.variables.get(GAME_DIR_VARIABLE)
     if explicit and is_game(Path(explicit)):
         found.append(GameInstall(Path(explicit), None, ""))

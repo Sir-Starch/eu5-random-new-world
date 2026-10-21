@@ -1,7 +1,9 @@
 """Valve's text KeyValues format, as far as Steam's library and app manifests use it.
 
 ``"key" "value"`` pairs and ``"key" { ... }`` sections, with ``//`` comments and the
-escapes ``\\\\``, ``\\"``, ``\\n`` and ``\\t`` inside quotes. Duplicate keys keep the last value.
+escapes ``\\\\``, ``\\"``, ``\\n`` and ``\\t`` inside quotes. Keys are case-insensitive in
+Valve's format (Steam writes ``"libraryfolders"``, the Steam stub in a Proton prefix
+``"LibraryFolders"``), so they are kept in lower case. Duplicate keys keep the last value.
 """
 
 from __future__ import annotations
@@ -25,7 +27,7 @@ def _unescape(text: str) -> str:
 
 
 def parse(text: str) -> Section:
-    """The sections and values of a KeyValues file, as nested dictionaries."""
+    """The sections and values of a KeyValues file, as nested dictionaries with lower-case keys."""
     root: Section = {}
     stack: list[Section] = [root]
     pending: str | None = None
@@ -37,7 +39,7 @@ def parse(text: str) -> Section:
         if quoted is not None:
             word = _unescape(quoted)
             if pending is None:
-                pending = word
+                pending = word.lower()
             else:
                 stack[-1][pending] = word
                 pending = None

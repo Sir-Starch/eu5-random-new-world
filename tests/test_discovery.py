@@ -56,6 +56,7 @@ def test_keyvalues_parse_nested_sections_escapes_and_comments() -> None:
         '// a comment\n"a" { "path" "D:\\\\Games\\\\Steam" "n" "x\\"y" "b" { "c" "d" } }\n"e" "f"\n'
     )
     assert tree == {"a": {"path": "D:\\Games\\Steam", "n": 'x"y', "b": {"c": "d"}}, "e": "f"}
+    assert parse('"LibraryFolders" { "Path" "S:\\\\" }') == {"libraryfolders": {"path": "S:\\"}}
     for bad in ('"a" {', '"a"', "}", '"a" { "b" } }', "stray"):
         with pytest.raises(VdfError):
             _ = parse(bad)
@@ -155,3 +156,37 @@ def test_nothing_found_is_an_empty_list_not_an_error(tmp_path: Path) -> None:
     assert discovery.find_games(environment) == []
     assert discovery.find_profiles(environment) == []
     assert GameInstall(tmp_path, None, "").build_id == ""
+
+
+def test_a_program_in_a_workshop_folder_finds_the_game_beside_it(tmp_path: Path) -> None:
+    """Walking up from steamapps/workshop/content/3450310/<item> reaches the game's folder."""
+    library = _library(tmp_path / "SteamLibrary")
+    item = library / "steamapps" / "workshop" / "content" / "3450310" / "9999" / "generator"
+    item.mkdir(parents=True)
+    found = discovery.game_beside(item)
+    assert found == GameInstall(
+        (library / "steamapps" / "common" / "Europa Universalis V").resolve(),
+        library.resolve(),
+        "26043558",
+    )
+    environment = Environment(system="linux", home=tmp_path / "home", variables={})
+    games = discovery.find_games(environment, start=item)
+    assert [game.build_id for game in games] == ["26043558"]
+    elsewhere = tmp_path / "somewhere" / "generator"
+    elsewhere.mkdir(parents=True)
+    assert discovery.game_beside(elsewhere) is None
+
+
+def test_inside_a_proton_prefix_the_steam_stub_lists_the_library(tmp_path: Path) -> None:
+    """The Windows build in the game's prefix reads the stub's "LibraryFolders" (capitalised)."""
+    stub = _library(tmp_path / "drive_c" / "Program Files (x86)" / "Steam", with_game=False)
+    library = _library(tmp_path / "S")
+    _ = (stub / "steamapps" / "libraryfolders.vdf").write_text(
+        f'"LibraryFolders"\n{{\n\t"1"\n\t{{\n\t\t"path"\t\t"{library}"\n\t}}\n}}\n',
+        encoding="utf-8",
+    )
+    environment = Environment(
+        system="win32", home=tmp_path / "home", variables={}, steam_registry=lambda: [stub]
+    )
+    games = discovery.find_games(environment)
+    assert [(game.library, game.build_id) for game in games] == [(library, "26043558")]

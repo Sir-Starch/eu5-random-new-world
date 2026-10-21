@@ -7,6 +7,7 @@ the world codes work, and exits with 0: the packaging jobs run it on the built f
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QApplication
@@ -43,7 +44,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = list(sys.argv if argv is None else argv)
     application = QApplication(arguments)
     application.setApplicationName(TITLE)
-    controller = Controller()
+    controller = Controller(
+        program_folder=Path(sys.executable if getattr(sys, "frozen", False) else __file__).parent
+    )
     if SELF_TEST in arguments:
         return self_test(application, controller)
     window = MainWindow(controller)
