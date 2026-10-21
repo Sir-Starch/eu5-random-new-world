@@ -16,8 +16,21 @@ dependencies = [
 [project.scripts]
 rnw = "rnw.cli:app"
 
+[project.gui-scripts]
+rnw-gui = "rnw.gui.__main__:main"
+
 [dependency-groups]
-dev = ["basedpyright>=1.31,<2", "pytest>=8,<10", "ruff>=0.13,<1"]
+dev = [
+    "basedpyright>=1.31,<2",
+    "pytest>=8,<10",
+    "ruff>=0.13,<1",
+    { include-group = "gui" },
+]
+# The window of the generator application (ADR 0007); the generator and the command line need none of it.
+gui = ["pyside6-essentials>=6.8,<7"]
+packaging = [
+    "pyinstaller>=6.10,<7",
+]
 
 [tool.maturin]
 manifest-path = "native/Cargo.toml"
@@ -46,6 +59,8 @@ max-complexity = 12
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "PLR2004", "SLF001"]
+# Scripts for the packaging jobs, run by path rather than imported.
+"packaging/**" = ["INP001"]
 
 [tool.basedpyright]
 typeCheckingMode = "all"

@@ -313,6 +313,17 @@ def world(
 
 
 @app.command()
+def gui() -> None:
+    """Open the generator application's window (needs the optional PySide6 group)."""
+    try:
+        from rnw.gui.__main__ import main  # noqa: PLC0415 - Qt is optional for the command line
+    except ImportError as error:
+        typer.echo(f"Error: the window needs PySide6 ({error})", err=True)
+        raise typer.Exit(code=2) from error
+    raise typer.Exit(code=main())
+
+
+@app.command()
 def logdiff(
     baseline: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],
     current: Annotated[Path, typer.Argument(exists=True, dir_okay=False)],

@@ -12,6 +12,9 @@ jobs:
         with:
           python-version: '3.12'
       - run: rustup update stable
+      - name: Qt system libraries (the window is tested offscreen)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
       - run: uv sync --locked --group dev
       - run: uv run ruff format --check .
       - run: uv run ruff check .
@@ -23,3 +26,38 @@ jobs:
         working-directory: native
       - run: cargo test
         working-directory: native
+  package:
+    needs: checks
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: rustup update stable
+      - name: Qt system libraries (the self-test opens the window offscreen)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+      - run: uv sync --locked --group gui --group packaging
+      - run: uv run --group packaging python packaging/build.py
+      - name: Self-test of the built application (Linux)
+        if: runner.os == 'Linux'
+        run: ./dist/RandomNewWorld/RandomNewWorld --self-test
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - name: Self-test of the built application (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $run = Start-Process -FilePath dist\RandomNewWorld\RandomNewWorld.exe -ArgumentList "--self-test" -Wait -PassThru
+          exit $run.ExitCode
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RandomNewWorld-${{ runner.os }}
+          path: dist/RandomNewWorld
+          retention-days: 7

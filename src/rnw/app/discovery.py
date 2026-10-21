@@ -174,7 +174,8 @@ def _manifest(library: Path) -> Section | None:
     return None
 
 
-def _is_game(directory: Path) -> bool:
+def is_game(directory: Path) -> bool:
+    """Whether ``directory`` is an EU5 installation (it holds the map data)."""
     return directory.joinpath(*MAP_MARKER).is_dir()
 
 
@@ -183,7 +184,7 @@ def find_games(environment: Environment | None = None) -> list[GameInstall]:
     environment = environment or Environment()
     found: list[GameInstall] = []
     explicit = environment.variables.get(GAME_DIR_VARIABLE)
-    if explicit and _is_game(Path(explicit)):
+    if explicit and is_game(Path(explicit)):
         found.append(GameInstall(Path(explicit), None, ""))
     for root in steam_roots(environment):
         for library in libraries(root):
@@ -199,7 +200,7 @@ def find_games(environment: Environment | None = None) -> list[GameInstall]:
             )
             build = state.get("buildid")
             install = GameInstall(directory, library, build if isinstance(build, str) else "")
-            if _is_game(directory) and all(item.directory != directory for item in found):
+            if is_game(directory) and all(item.directory != directory for item in found):
                 found.append(install)
     return found
 
