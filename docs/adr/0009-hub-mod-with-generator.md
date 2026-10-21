@@ -87,8 +87,9 @@ If Paradox ever publishes a code-mod interface for EU5, as Cities: Skylines II h
 - **017 (owner in game):** a `debug_log` line from a button: does it reach `debug.log` or `game.log` with the text, and how soon. Fallback: no phase 2; all map choices stay in the generator window.
 - **018 (owner, Steam account):** upload a private test item with a harmless executable at the top of the folder and in `generator/`: is it accepted, does it download, does the game log anything about a file at the top. Fallback: the generator moves into `generator/` only (019 showed the game ignores that folder), or, if the Workshop refuses programs, the generator comes from a code host and the description says so. I take no account action.
 - **019 (owner, Linux with Proton):** [done](../../experiments/019-linux-proton-launch/README.md).
+- **021 (owner, Linux):** [the hub's generator from the game](../../experiments/021-hub-generator-in-game/README.md): `packaging/hub.py` builds the hub; offline under Proton its launcher passes the self-test and its Python generates the 733 reference files (C111).
 - **020 (owner or a tester, Windows 11 with Defender's defaults and Smart App Control on):** does the launcher start, do Workshop files carry the Mark of the Web (`dir /r`), what Defender says; then again once the two binaries are signed.
-- **Offline (mine):** the Windows layout builder, the launcher, the hub mod's files, the world mod's status keys and the product name `rnw_world` (development builds keep `rnw_exp_*`), tested without the game.
+- **Offline (mine):** the Windows layout builder and the launcher (done, C111), the hub mod's in-game files, the world mod's status keys and the product name `rnw_world` (development builds keep `rnw_exp_*`), tested without the game.
 
 ## Consequences
 

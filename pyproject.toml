@@ -68,7 +68,10 @@ max-complexity = 12
 typeCheckingMode = "all"
 # Windows-only and POSIX-only code is checked on every platform, so CI agrees on both.
 pythonPlatform = "All"
-include = ["src", "tests"]
+include = ["src", "tests", "packaging"]
+# The packaging scripts are run by path; their tests import them from there.
+extraPaths = ["src", "packaging"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["packaging"]
