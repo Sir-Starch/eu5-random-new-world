@@ -1,6 +1,6 @@
 # ADR 0008: Worlds are Workshop mods; the generator is our factory
 
-**Status:** Accepted 2026-10-21 (owner direction). Supersedes the delivery decision of [ADR 0004](0004-generator-application.md); [ADR 0007](0007-application-window-and-packaging.md) stays on hold.
+**Status:** Replaced 2026-10-21 by [ADR 0009](0009-hub-mod-with-generator.md) (the finite pool does not meet the owner's requirement of real generation). Accepted the same day on the owner's direction that the mod lives in the game and on the Workshop. Supersedes the delivery decision of [ADR 0004](0004-generator-application.md); [ADR 0007](0007-application-window-and-packaging.md) stays on hold.
 
 ## Context
 
