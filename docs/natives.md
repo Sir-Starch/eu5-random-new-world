@@ -54,6 +54,9 @@ Choices marked [INFERRED design]: the farming table, the topography density fact
 | `religion_locations` | 80 | 60 | Mean locations per religion zone |
 | `tribe_locations` | 6 | 6 | Mean locations per tribe |
 | `organized_permille` | 450 | 450 | Share of culture zones organised into tribes |
+| `state_spread_permille` | 150 | 150 | Share of the state land in small pockets of states away from the hearths' core (0.9.14) |
+
+**Lone states (0.9.14, C117).** Vanilla 1337 America has 223 land states in 13 groups of touching states: one of 172 (Mesoamerica), then 18, 8 and ten small groups of one to five states; 15 % of its states lie outside the two great centres. Up to 0.9.13 the state land was only the most complex inhabited land, so a continent got exactly one group per hearth (three groups of 81, 48 and 38 states) and no small ones. Now `state_spread_permille` of the state land goes to pockets: each starts at an inhabited location at least a hearth's reach from all other state land, drawn by its potential, and takes the nearest one to three times `state_locations` locations. With the default 150 the continents world of seed 42 has 16 groups (147, 5, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2). The window offers 0 to 60 %.
 
 ## Checks
 

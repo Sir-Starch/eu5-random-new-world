@@ -61,6 +61,10 @@ None. Presets (R8) will own a development control.
 - `tests/test_local_install.py` reads the vanilla calibration (`B = 12`, 1,092 harbour values, 393‰).
 - `report.json` section `development` holds `B`, the fitted `full` per class, the entry count, the share of land with a positive term, the share reached by a hearth and its coverage, the rank correlation of term and population, harbour histograms, village counts and the estimated mean development per class for the generated world and for vanilla. The estimate is a clamp-at-zero sum of every rule, with river size inferred from `rivers.png`.
 
+## Raw materials (0.9.14, C119)
+
+Each generated land location draws its raw material from the vanilla frequencies of similar locations: the same climate, vegetation, topography and coast, falling back to fewer of them. Up to 0.9.13 those frequencies were the Old World's, so a generated America had elephants (55 locations of one world), horses (87), wheat (261), rice (225), millet (215), silk (36), tea (25) and camels (17) and none of maize, potatoes, cocoa, tobacco or chili, which in vanilla only America has. They are now the vanilla New World's: in the continents world of seed 42 no Old-World-only material is left and maize holds 380 locations, chili 86, cocoa 73, potatoes 44, tobacco 15. `new_world.precious_permille` weighs gold, silver, gems and pearls against the rest (1000: their vanilla share; the window offers 0 to 3 times); a class whose only materials it removes falls back to a coarser class.
+
 ## Open work
 
 - Institutions, roads and other buildings (terraces, walls, culture buildings).

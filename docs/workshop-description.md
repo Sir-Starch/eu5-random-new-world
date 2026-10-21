@@ -6,26 +6,28 @@ Draft of the Steam Workshop text for release 1.0.0 ([ADR 0009](adr/0009-hub-mod-
 
 ## Random New World
 
-A new Americas every campaign. Random New World replaces the New World of EU5 with generated continents, coasts, relief, climate, rivers, vegetation, provinces and native societies, and keeps the Old World as Paradox made it. Any seed gives a different world; the same world code gives the same world on every computer.
+A generator of New Worlds for Europa Universalis V. It makes the Americas anew: continents, coasts, relief, climate, rivers, vegetation, resources, provinces and native peoples, and keeps the Old World as Paradox made it. **Every world it makes is a complete map mod of its own.** Play it on its own, keep as many as you like, delete them, or share one: it does not need this generator to run, and you may upload it as your own map.
 
-## Why there is a program in this mod
+You do not enable this item in a playset. It only carries the generator.
+
+## Why there is a program in this item
 
 EU5 builds its map from files when it loads the mods. A mod is data: it cannot run code, and the game's script can change who owns what at the start, but it cannot make land, mountains or rivers. EU5 has no official way to add code to the game.
 
-So the generation runs in a small program that comes with this mod. It reads your EU5 installation, generates the world and saves it as an ordinary local mod. It does not change the game, attach to it or run inside it. Paradox's user agreement counts programs among the content players may make and share for free.
+So the generation runs in a small program that comes with this item. It reads your EU5 installation, generates a world and saves it as an ordinary mod. It does not change the game, attach to it or run inside it. Paradox's user agreement counts programs among the content players may make and share for free.
 
 ## How to use it
 
-1. Add **Random New World** to a playset. Its window in the main menu shows whether you have a world and repeats these steps. [Fallback if 016 fails: the rules screen.]
-2. In the **Mods** window press **Open in folder** on Random New World and double-click **Random New World Generator**.
-3. Choose a preset and a seed, or paste a world code, and press **Generate**. It takes two to three minutes.
-4. Back in the game: switch to another playset and back to yours (the first time, tick **Random New World: generated world**), and start a new game. If you already played a campaign since starting EU5, restart EU5 first. The generator tells you which applies.
+1. In the **Mods** window press **Open in folder** on Random New World and double-click **Random New World Generator**.
+2. Choose a world type: Supercontinent, Continents, Small continents, Archipelago or Scattered islands. Keep the random seed or type one, or paste a world code. Under **Customize** you can change land, coasts, map scale, gold and silver, and the native peoples, from one great empire to lone states; every value offered still makes a playable world.
+3. Press **Generate**. In two or three minutes the world is a new mod in your mod list, named "Random New World: <type>, seed <seed>".
+4. In the game, tick that world (only one world at a time) and start a new game. If you already played a campaign since starting EU5, restart EU5 first. The generator tells you exactly what to do.
 
-Your world code is shown in the game and in the generator. Keep it with your saves: the same code recreates the same world after a reinstall or on a friend's computer.
+The generator keeps every world you made, with its code. Its picture shows the New World as terra incognita until you choose to see it, so nothing is spoiled; the same goes for the pictures in the game's mod list unless you turn that off. A world code recreates the same world, byte for byte, on any computer with the same game version.
 
 ## What the program does and does not do
 
-- It reads your EU5 installation and writes only two places: the generated world mod (`mod/rnw_world` in your EU5 documents folder) and its own data folder.
+- It reads your EU5 installation and writes only two places: the world mods it makes (`mod/rnw_world_…` in your EU5 documents folder) and its own data folder.
 - It does not use the network, does not need administrator rights, does not touch the registry and does not change any game file.
 - Its source code is public under the Mozilla Public License 2.0: [repository link]. Every release is built from a tagged commit by an automatic build, and the SHA-256 checksum of every file is published there.
 - Whether you trust a program is your decision. You can read the code, compare the checksums, or build it yourself.
@@ -45,13 +47,14 @@ The game runs through Proton. Open in folder then opens Wine's file explorer, an
 - **New campaigns only.** A world must be generated before the campaign starts.
 - **Generate before you play, or restart.** EU5 crashes when a different world starts after a campaign in the same session (the crash is in the game engine). Generating right after starting EU5 needs no restart; after a campaign, restart EU5 before the new world.
 - **Game updates.** After an EU5 update, the generator may refuse to run until it is updated for the new build. It then offers to rebuild your world. Older saves need the world they were played on: generate their code again.
-- **Multiplayer.** Every player uses the same world code with the same game version. [Confirm on a second computer.]
+- **One world at a time.** Tick only one generated world in a playset.
+- **Multiplayer.** Every player uses the same world code with the same game version.
 - **Memory.** About 7.5 GB of free memory for the two minutes of generation. EU5's recommended 32 GB is plenty.
 - **Achievements.** Like other mods that change the game, it changes the game's checksum. [Confirm what EU5 allows.]
 
 ## Removing it
 
-Unsubscribe, and delete the world in the generator (**Remove world**) or delete `mod/rnw_world` yourself.
+Delete worlds in the generator (**Delete world**) or remove their folders yourself, then unsubscribe. Worlds you keep stay playable without the generator.
 
 ## Licence and credits
 
