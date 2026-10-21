@@ -33,6 +33,10 @@ The coupling command performs a **broad lexical scan** with false positives; its
 
 The application window (Qt) opens with `uv run --group gui rnw gui`; `uv run rnw world-code --seed 42` prints a world code and `uv run rnw world CODE` makes that world headless (it installs into the game profile only with `--install`). `uv run --group packaging python packaging/build.py` freezes the window into `dist/RandomNewWorld` ([ADR 0007](docs/adr/0007-application-window-and-packaging.md)).
 
+## Licence
+
+Code and mod files are under the [Mozilla Public License 2.0](LICENSE) ([why](docs/legal.md)). Generated worlds are made locally from the player's own EU5 installation and are not covered by it; they are never distributed.
+
 ## Document map
 
 - [Findings](docs/research/findings.md), [claims ledger](docs/research/claims-ledger.md), [sources](docs/research/sources.md), [inventory](docs/research/game-install-inventory.md), [EU4 lessons](docs/research/eu4-rnw-analysis.md), [research log](docs/research/log.md)

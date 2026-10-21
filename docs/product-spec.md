@@ -4,9 +4,9 @@
 
 ## Player journey
 
-1. Open the RNW application, which finds the game ([ADR 0004](adr/0004-generator-application.md)). Choose a preset, a continent type or a few advanced controls; the seed is random unless one is entered or pasted, and it can be copied, saved and reused.
+1. In the game, press Open in folder on Random New World and start its generator, which finds the game ([ADR 0009](adr/0009-hub-mod-with-generator.md)). Choose a preset, a continent type or a few advanced controls; the seed is random unless one is entered or pasted, and it can be copied, saved and reused.
 2. Inspect a preview showing land/sea, navigation, climate, resources and broad civilization distribution. Reroll without touching the active game profile.
-3. Generate with visible progress; the application validates the world and installs it in place as one local mod. In the game's main menu the player enables RNW once and starts a new 1337 campaign; a later world is installed while RNW is switched off and loads when the player switches it on again, without closing the game [V-GAME C88]; a new game without that reload would mix two worlds [V-GAME C85]. Options applied at game start, such as the visibility mode, are game rules in the game's setup screen.
+3. Generate with visible progress; the generator validates the world and installs it in place as one local mod, the generated world. In the game's main menu the player ticks it once in the playset beside Random New World, applies the playset and starts a new 1337 campaign; a later world loads when the playset is applied again, without closing the game [V-GAME C88, C93]; a new game without that reload would mix two worlds [V-GAME C85]. Options applied at game start, such as the visibility mode, are game rules in the game's setup screen.
 4. Explore without a full New World reveal. Save the seed, settings and generator/build fingerprints for reproducibility.
 
 ## Controls and feasibility
