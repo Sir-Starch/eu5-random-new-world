@@ -25,10 +25,19 @@
 - **Settings in the game that reach the generator:** a button of the in-game window runs a script effect that writes the player's choices as one `debug_log` line; the generator reads the newest such line from the game's log and starts with them filled in [UNKNOWN: needs experiment 016].
 - **If the Workshop refuses an executable:** the item keeps the data mod and the instructions, the generator is a release on a code host, and the window says where to get it (text; the engine opens URLs only for DLC links [V-LOCAL]). Nothing else changes.
 
+## Linux
+
+The installation is the Windows build (`binaries/eu5.exe`, no native Linux binary) and runs through Proton, so the game and the generator are different kinds of process: the game is a Wine process, the generator a native Linux program that reads the Steam library and the profile inside the Proton prefix (`compatdata/3450310/pfx/.../Documents/Paradox Interactive/Europa Universalis V`), which discovery already finds [V-EXEC C104]. The same path holds the game's logs, so the `debug_log` channel works the same way. Three things differ and are to be checked on a Linux machine [UNKNOWN]:
+
+- **Open in folder under Proton.** The button ends in `ShellExecute` inside Wine; whether that opens the native file manager, Wine's own explorer or nothing is not known. The in-game instructions therefore also give the folder as a path pattern (`steamapps/workshop/content/3450310/<item id>/generator/linux`) and the generator, started by any means, says where it is.
+- **The executable bit.** Whether Steam keeps it on Workshop files is not known; if it does not, the folder holds `start-linux.sh` to be run with `sh` and the instructions say so.
+- **Library version.** The Linux build is made on the oldest supported runner (Ubuntu 22.04, glibc 2.35) so that it starts on SteamOS and common distributions; PySide6 needs glibc 2.34.
+
 ## Experiments before building
 
 - **016 (owner in game):** a test mod with a scripted widget in the main menu and one in the game: does it show, can it print a localization key defined by another mod, and does the mod manager's Open in folder work for it.
 - **017 (owner in game):** a `debug_log` line from a button in a campaign: does it reach `debug.log` or `game.log`, with the text.
+- **019 (owner, Linux with Proton):** click Open in folder in the game's Mods window on any mod and say what opens; then download a private test item that holds a script and a binary and say whether `ls -l` shows the executable bit.
 - **018 (owner, Steam account):** upload a private test item with a harmless executable and see whether it is accepted and downloads into the Workshop folder. I take no account action.
 - **Offline (mine):** the generator finds its own folder, reads the settings line from a log, writes the world mod; the world mod carries the loc key; both are tested without the game.
 
