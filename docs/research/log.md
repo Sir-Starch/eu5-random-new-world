@@ -554,3 +554,17 @@
 - [V-LOCAL C170] 17 `have not discovered the capital ... scripted bias` lines in every session since 0.9.30, all from
   the opinions of R7c; the vanilla logs have none. Found by reading the logs; not fixed.
 - No EU5 launch by the agent, no push or publication.
+
+## 2026-10-23 — The opinions of the empires: every holder knows its partner's capital (0.9.33), C171
+
+- [V-LOCAL] Vanilla's countries get `discovered_areas` of a whole region from an exploration template (`expl_andean` lists
+  the eight areas of the Andes), so the opinions of the Andes block never name a capital the holder has not discovered. A
+  generated country knew its religion zone and its own areas only, which is where the 17 warnings of C170 came from.
+- [V-EXEC C171] 0.9.33, epoch 9: after the empires are planned, the holder of every generated opinion discovers the area of its
+  partner's capital (`discover_opinion_partners`); `verify_empires` checks it on the written records. 7 new tests (953 pass).
+  The AMK4 world made again: 17 areas added to 16 countries, one per warned pair, nothing else changed in the setup, the
+  mod differs from the 0.9.32 one in `10_countries.txt` and `.metadata` only. The reference world has no pair that needs
+  an area, so its digest stays that of epoch 8 and only its code (the release) changes; it no longer exercises this rule,
+  the AMK4 world does. Installed as `rnw_exp_world_bdwkgaakvy`.
+- [UNKNOWN] Whether the game applied the bias before, and whether the 17 lines disappear in game.
+- No EU5 launch by the agent, no push or publication.

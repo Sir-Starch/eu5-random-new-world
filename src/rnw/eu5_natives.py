@@ -31,6 +31,7 @@ from rnw.eu5_empires import (
     empire_roads,
     extraordinary_report,
     median,
+    opinion_knowledge,
     road_targets,
     share,
     travel_steps,
@@ -66,6 +67,7 @@ from rnw.societies import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping, Sequence
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -1491,18 +1493,32 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
     near = _neighbours(societies, graph.edges)
     pairs = vassal_pairs(societies, religions, near, able)
     vassals = tuple((countries[lord].tag, countries[vassal].tag) for lord, vassal in pairs)
+    node_areas = [plan.cells[cell].area for cell in cells.cells]
     roads, opinions, extraordinary = _empires(
         societies,
         graph,
         vanilla,
         tuple(countries),
-        areas=[plan.cells[cell].area for cell in cells.cells],
+        areas=node_areas,
         keys=keys,
         neighbours=near,
         pairs=pairs,
         religions=religions,
         cultures=cultures,
     )
+    # An opinion needs its holder to know the partner's capital (C170): the area is discovered.
+    before = sum(len(country.areas) for country in countries)
+    countries = list(
+        discover_opinion_partners(
+            countries,
+            opinions,
+            {
+                country.tag: node_areas[polity.capital]
+                for country, polity in zip(countries, societies.polities, strict=True)
+            },
+        )
+    )
+    discovered = sum(len(country.areas) for country in countries) - before
     pops = _pop_lines(societies, keys, religions, cultures)
     for where, rows in diaspora(
         societies,
@@ -1540,6 +1556,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         "holy_sites_placed": len(holy),
         "names_in_local_languages": len(names),
         "vassals": len(vassals),
+        "areas_discovered_for_opinions": discovered,
     }
     return NativeWorld(
         pops=pops,
@@ -1566,6 +1583,21 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
             plain_cultures=_identities(societies, cells, vanilla, seed, with_families=False)[1],
             vassals=len(vassals),
         ),
+    )
+
+
+def discover_opinion_partners(
+    countries: Sequence[Country],
+    opinions: Sequence[tuple[str, str, str]],
+    capital_areas: Mapping[str, str],
+) -> tuple[Country, ...]:
+    """The countries, each discovering the areas ``opinion_knowledge`` names; the others stay."""
+    known = opinion_knowledge(opinions, capital_areas)
+    return tuple(
+        replace(country, areas=tuple(sorted({*country.areas, *known[country.tag]})))
+        if country.tag in known
+        else country
+        for country in countries
     )
 
 

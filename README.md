@@ -1,5 +1,7 @@
 # EU5 Random New World
 
+**Opinions, 2026-10-23:** the opinions of the great empires named capitals that their holders had not discovered, 17 warnings per start (C170); generator **0.9.33** makes each holder discover its partner's capital area and checks it on the written records (C171); not yet seen in game.
+
 **Map frame, 2026-10-23:** at country selection the cover of the New World reached beyond the map's north and south edges and cut the wooden table of the frame black over the New World's longitudes (C169); generator **0.9.32** (epoch 8) keeps the cover on the map; not yet seen in game ([experiment 027](experiments/027-map-shader-scope/README.md)).
 
 **Roads, 2026-10-23:** 0.9.29 logged 125,820 missing-road-strip errors (C161). Generator **0.9.30** writes the spline network for the generated locations (C162, C163; [interoperability register](docs/research/interoperability.md) R-001); **0.9.31** keeps vanilla's segment and point order as a precaution (C165). The owner's tests load it with no strip error and show a road network in the Roads lens (C166); an early report of vanished roads in 0.9.30 was an observation error: the owner's screen recording shows the proximity lens in observer mode, not Roads, and roads drawn on the map at zoom, so 0.9.30 drew roads too (C168). A 5.7-minute run at maximum speed logged no strip error (C167); roads built in play are not yet confirmed ([experiment 029](experiments/029-spline-strips/README.md)).

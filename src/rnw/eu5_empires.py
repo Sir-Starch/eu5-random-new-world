@@ -15,6 +15,8 @@ uses, in the Americas or, for roads, in the Old World [V-LOCAL C158]:
   empire and it holds ``opinion_prey_to_conquest`` of them (the Andes block of ``18_opinions``).
 * **Resentment.** Its vassals hold ``opinion_tyrant_overlord`` of it and it holds
   ``opinion_irritated`` of them (the Mayapan block).
+* **Knowledge.** The holder of an opinion has discovered the area of its partner's capital, as
+  every country of vanilla's Andes block has through its regional exploration template (C170).
 
 Diversity (the pops keep the cultures and religions of the zones the empire spans) and reach
 (control falls with distance from the capital [INFERRED]) write nothing; they are reported.
@@ -297,6 +299,24 @@ def empire_opinions(
     return tuple(opinions)
 
 
+def opinion_knowledge(
+    opinions: Sequence[tuple[str, str, str]], capital_areas: Mapping[str, str]
+) -> dict[str, frozenset[str]]:
+    """The areas each holder of an opinion has to have discovered: those of its partners' capitals.
+
+    The game warns of a scripted bias toward a country whose capital the holder has not
+    discovered (``diplomacy_manager.cpp``) [V-LOCAL C170], and what it then does with the bias is
+    [UNKNOWN]. Vanilla's countries never meet it: an exploration template such as ``expl_andean``
+    lists every area of the region, so the Andes block of ``18_opinions`` names capitals all of
+    them know [V-LOCAL]. A generated country knows its religion zone and its own areas only, so
+    the opinion's holder discovers the area of the capital instead.
+    """
+    needed: dict[str, set[str]] = defaultdict(set)
+    for first, second, _ in opinions:
+        needed[first].add(capital_areas[second])
+    return {tag: frozenset(areas) for tag, areas in needed.items()}
+
+
 def road_lines(roads: Sequence[tuple[str, str]]) -> str:
     """Entries for ``road_network = { ... }`` of ``09_roads.txt``, each pair once, sorted by key."""
     pairs = sorted({(min(a, b), max(a, b)) for a, b in roads})
@@ -323,6 +343,26 @@ def written_ranks(text: str, tags: Collection[str]) -> dict[str, list[str]]:
         for entry in (holder.entries if holder is not None else [])
         if entry.key is not None and entry.key in tags and isinstance(entry.value, Block)
     }
+
+
+def written_discoveries(text: str, tags: Collection[str]) -> dict[str, tuple[str, frozenset[str]]]:
+    """Written ``capital`` and ``discovered_areas`` of the country records of ``tags``."""
+    holder = parse(text).block("countries", "countries")
+    found: dict[str, tuple[str, frozenset[str]]] = {}
+    for entry in holder.entries if holder is not None else []:
+        if entry.key is None or entry.key not in tags or not isinstance(entry.value, Block):
+            continue
+        capital = entry.value.first("capital")
+        areas = entry.value.block("discovered_areas")
+        found[entry.key] = (
+            capital.value if capital is not None and isinstance(capital.value, str) else "",
+            frozenset(
+                word.value
+                for word in (areas.words() if areas is not None else ())
+                if isinstance(word.value, str)
+            ),
+        )
+    return found
 
 
 def median(values: Sequence[int]) -> int:

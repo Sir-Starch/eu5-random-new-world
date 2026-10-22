@@ -24,6 +24,7 @@ from rnw.eu5_empires import (
     highest_level,
     largest_states,
     median,
+    opinion_knowledge,
     opinion_lines,
     rank_levels,
     road_density,
@@ -32,9 +33,16 @@ from rnw.eu5_empires import (
     share,
     travel_steps,
     unlinked,
+    written_discoveries,
     written_ranks,
 )
-from rnw.eu5_natives import Country, NativeWorld, VanillaNatives, country_records
+from rnw.eu5_natives import (
+    Country,
+    NativeWorld,
+    VanillaNatives,
+    country_records,
+    discover_opinion_partners,
+)
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_nw_export import (
     COUNTRIES_FILE,
@@ -361,7 +369,7 @@ ORIGINAL_OPINIONS = (
 )
 
 
-def _plan() -> Plan:
+def _plan(*, area_per_location: bool = False) -> Plan:
     def cell(key: str, kind: CellClass) -> PlannedCell:
         return PlannedCell(
             key=key,
@@ -369,7 +377,7 @@ def _plan() -> Plan:
             color=1,
             kind=kind,
             province="p",
-            area="a",
+            area=key if area_per_location else "a",
             region="r",
             subcontinent="s",
             continent="america",
@@ -457,11 +465,13 @@ def _outputs(
     }
 
 
-def _verify(outputs: dict[str, bytes], natives: NativeWorld) -> dict[str, object]:
+def _verify(
+    outputs: dict[str, bytes], natives: NativeWorld, *, area_per_location: bool = False
+) -> dict[str, object]:
     return verify_empires(
         outputs,
         natives,
-        _plan(),
+        _plan(area_per_location=area_per_location),
         _world(),
         _vanilla(),
         {"09_roads.txt": ORIGINAL_ROADS, "18_opinions.txt": ORIGINAL_OPINIONS},
@@ -535,6 +545,79 @@ def test_verification_rejects_each_broken_record(case: str) -> None:
         outputs[path] = outputs[path].replace(old, new)
     with pytest.raises(NewWorldExportError, match=broken.message):
         _ = _verify(outputs, natives)
+
+
+def test_opinion_holders_discover_the_areas_of_their_partners_capitals() -> None:
+    """Each holder names the capital area of each partner once; a country without opinions none."""
+    capitals = {"EMP": "g0", "NBR": "g4", "VAS": "g3", "FAR": "g5"}
+    assert opinion_knowledge(PLANNED_OPINIONS, capitals) == {
+        "NBR": frozenset({"g0"}),
+        "EMP": frozenset({"g4", "g3"}),
+        "VAS": frozenset({"g0"}),
+    }
+    assert opinion_knowledge((), capitals) == {}
+    with pytest.raises(KeyError):
+        _ = opinion_knowledge((("NBR", "NOBODY", FEAR),), capitals)
+
+
+def _unaware_countries() -> tuple[Country, ...]:
+    """Each country knows its own areas only, as a generated one does without opinions."""
+    return tuple(replace(country, areas=country.members) for country in _countries())
+
+
+def test_discovering_adds_the_missing_areas_and_leaves_the_rest_as_it_is() -> None:
+    """The three holders gain their partners' capital areas, sorted and once; FAR is untouched."""
+    countries = _unaware_countries()
+    capitals = {country.tag: country.capital for country in countries}
+    found = {
+        country.tag: country.areas
+        for country in discover_opinion_partners(countries, PLANNED_OPINIONS, capitals)
+    }
+    assert found == {
+        "EMP": ("g0", "g1", "g2", "g3", "g4"),
+        "VAS": ("g0", "g3"),
+        "NBR": ("g0", "g4"),
+        "FAR": ("g5",),
+    }
+    assert discover_opinion_partners(countries, (), capitals) == countries
+
+
+def test_written_records_name_the_capital_and_the_discovered_areas() -> None:
+    """The record's ``capital`` and the words of ``discovered_areas`` are read back."""
+    countries = _unaware_countries()
+    text = "countries = {\n\tcountries = {\n" + country_records(countries) + "\t}\n}\n"
+    found = written_discoveries(text, {"EMP", "FAR", "NOBODY"})
+    assert found == {
+        "EMP": ("g0", frozenset({"g0", "g1", "g2"})),
+        "FAR": ("g5", frozenset({"g5"})),
+    }
+
+
+def test_verification_accepts_opinions_whose_holders_discovered_the_capitals() -> None:
+    """With an area per location, discovering is what makes the planned opinions acceptable."""
+    countries = _unaware_countries()
+    capitals = {country.tag: country.capital for country in countries}
+    aware = discover_opinion_partners(countries, PLANNED_OPINIONS, capitals)
+    natives = _natives(aware)
+    assert _verify(_outputs(natives), natives, area_per_location=True)["empire_opinions"] == 4
+
+
+@pytest.mark.parametrize(("holder", "partner"), [("NBR", "EMP"), ("EMP", "NBR"), ("VAS", "EMP")])
+def test_verification_refuses_a_holder_that_has_not_discovered_the_capital(
+    holder: str, partner: str
+) -> None:
+    """The game warns of a bias toward an undiscovered capital (C170): it is refused, not mended."""
+    countries = _unaware_countries()
+    capitals = {country.tag: country.capital for country in countries}
+    aware = discover_opinion_partners(countries, PLANNED_OPINIONS, capitals)
+    capital_area = capitals[partner]
+    forgetful = tuple(
+        replace(c, areas=tuple(a for a in c.areas if a != capital_area)) if c.tag == holder else c
+        for c in aware
+    )
+    natives = _natives(forgetful)
+    with pytest.raises(NewWorldExportError, match=f"{holder} holds .* of {partner} without"):
+        _ = _verify(_outputs(natives), natives, area_per_location=True)
 
 
 def test_an_opinion_the_plan_lacks_is_refused() -> None:

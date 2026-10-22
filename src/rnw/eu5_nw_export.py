@@ -75,6 +75,7 @@ from rnw.eu5_empires import (
     EmpireCalibration,
     opinion_lines,
     road_lines,
+    written_discoveries,
     written_ranks,
 )
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
@@ -1441,6 +1442,22 @@ def _opinion_problems(
     return problems
 
 
+def _knowledge_problems(countries_text: str, natives: NativeWorld, plan: Plan) -> list[str]:
+    """Every holder of a generated opinion has discovered the area of its partner's capital.
+
+    Read from the written country records, so that the game's warning about a scripted bias
+    toward an undiscovered capital (C170) cannot come from a generated opinion.
+    """
+    area_of = {cell.key: cell.area for cell in plan.cells}
+    written = written_discoveries(countries_text, {country.tag for country in natives.countries})
+    problems: list[str] = []
+    for first, second, kind in natives.opinions:
+        area = area_of.get(written.get(second, ("", frozenset()))[0])
+        if area is None or area not in written.get(first, ("", frozenset()))[1]:
+            problems.append(f"{first} holds {kind} of {second} without discovering its capital")
+    return problems
+
+
 def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is checked on the final texts.
     outputs: dict[str, bytes],
     natives: NativeWorld,
@@ -1454,7 +1471,8 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
 
     Only empires have a rank. Every road pair joins two generated land locations in contact
     that an empire or its vassals hold, once, and the roads of each empire reach its capital.
-    Every opinion line joins an empire to a state in contact or to its vassal, once. Nothing
+    Every opinion line joins an empire to a state in contact or to its vassal, once, and its
+    holder has discovered the area of its partner's capital. Nothing
     names a vanilla tag or location, and the Old World entries of ``09_roads.txt`` and
     ``18_opinions.txt`` are vanilla's (``gone``: what the export removed). ``originals`` holds
     the two vanilla texts by file name; a world without empires leaves ``09_roads.txt`` unchanged
@@ -1483,6 +1501,7 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
                 natives.opinions,
                 gone,
             ),
+            *_knowledge_problems(text(COUNTRIES_FILE), natives, plan),
         ]
     if problems:
         extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
