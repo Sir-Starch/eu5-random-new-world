@@ -509,3 +509,15 @@
   the locations still there); [experiment 030](../../experiments/030-spline-probes/README.md) says how to bisect with at
   most three launches. The cause is [UNKNOWN]; the vanilla navigation-mesh cache is not regenerated and is one candidate.
 - No EU5 launch by the agent, no push or publication.
+
+## 2026-10-23 — The roads had not vanished (owner), C166
+
+- [V-GAME owner C166] The owner looked again with the Roads lens: roads are there, a network over the Old World and a
+  dense one over the four empires' territories; the report of vanished roads came from the wrong lens. The session
+  (00:15–00:18) started 6WBN (0.9.30) and then AMK4 (0.9.31); the screenshot is probably AMK4. Both starts have 0
+  `spline network strip` lines, no spline or road line in `error.log`, no crash.
+- C164 is marked retracted; C165's premise is withdrawn, its file facts stand. Experiment 030 is superseded (probe B and
+  the control are not needed), experiment 029 is PARTIAL. Whether 0.9.30 would have shown roads too is unknown; the
+  order-preserving rebuild of 0.9.31 stays as the safer design.
+- Not yet seen: a long run (the 0.9.29 flood began after about five minutes of play), roads built in play between
+  generated locations, the empires' roads as lines, caravans. No EU5 launch by the agent.

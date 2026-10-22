@@ -1,6 +1,6 @@
 # 030 — Why the roads vanished: the corrected spline network and an Old-World-only probe
 
-Date prepared: 2026-10-23. **NOT-RUN: PREPARED, INSTALLED, NOT LAUNCHED.**
+Date prepared: 2026-10-23. **SUPERSEDED: the roads had not vanished (wrong lens); probe A shows roads, probe B and the control are not needed (C166).**
 
 - **Background:** with the spline network of 0.9.30 (experiment 029) the game starts, writes no strip error and no crash, but draws no road anywhere, the Old World's included [V-GAME owner C164]. The difference to the 0.9.29 world, where roads draw, is that one file. 0.9.31 keeps vanilla's segments and points in vanilla's order (C165).
 - **Hypotheses**, in the order the probes test them:
@@ -23,7 +23,7 @@ Date prepared: 2026-10-23. **NOT-RUN: PREPARED, INSTALLED, NOT LAUNCHED.**
 - **Diagnostics, optional and untested** (from the engine's own strings, [V-LOCAL] `local_data/re/eu5_strings.txt`): the console command `Draw.SplineNetwork` (the debug menu has a "Splines" button for it) draws the network the engine loaded: strips, anchors and segments; `SplineNetwork.Graphics.ClearAllSplines` followed by `SplineNetwork.Graphics.AddAllSplines` rebuilds the road graphics. If `Draw.SplineNetwork` shows the lines but no road draws, the network loaded and the road assets did not.
 - **Files/tools:** `debug.log`, `error.log`, `report.json` (`text_stats.splines`) of the worlds; `rnw logdiff`.
 - **Game version:** 1.4.3 open beta, build 26105915 [V-LOCAL C148]. Basis: C162, C164, C165; [interoperability register](../../docs/research/interoperability.md) R-001.
-- **Result/evidence:** none yet.
+- **Result/evidence:** [V-GAME owner, 2026-10-23] with the right lens (Roads) roads are there (screenshot, probably AMK4); the report that started this experiment came from the wrong lens (C166). No probe B or control run is needed. The hypotheses H1 to H3 were never tested; the order-preserving rebuild stays as the safer design.
 - **Remaining uncertainty:** the engine's reader is not available, so the rules of the format are inferred from one vanilla file. If A, B and control all fail to explain it, the next step is to read how the engine loads the file, which is a different kind of work (the register records the method of each step; disassembly has not been done for this case).
 - **Architecture implication:** If H2 holds, add strips more like vanilla's (shared segments, junction points). If H3 holds, the mod needs its own navmesh or the roads of generated land cannot work, and the generator should write no `road_network` pairs. If H1 holds, nothing more.
-- **Status:** **NOT-RUN** — prepared and installed; the owner's test decides.
+- **Status:** **SUPERSEDED** — the premise was a wrong lens; `rnw_exp_probe_splnet_oldworld` and `rnw_exp_world_6wbnuwo42f` can be removed.
