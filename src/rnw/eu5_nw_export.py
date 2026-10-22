@@ -15,6 +15,7 @@ import re
 import zlib
 from collections import Counter, deque
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
@@ -111,6 +112,7 @@ from rnw.eu5_natives import (
     COUNTRY_DIR,
     DEFINITION_FILE,
     NativeWorld,
+    VanillaNatives,
     build_natives,
     city_lines,
     country_definitions,
@@ -145,6 +147,7 @@ from rnw.eu5_slots import (
     TOPOGRAPHY_GROUPS,
     SlotTables,
 )
+from rnw.eu5_technology import written_records
 from rnw.eu5_terrain import (
     LAND_CODE,
     OUTSIDE,
@@ -1173,6 +1176,70 @@ def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
     return {"native_countries": len(tags), "native_locations_held": len(seen)}
 
 
+def _technology_problems(
+    records: dict[str, tuple[list[str], list[str]]], natives: NativeWorld, vanilla: VanillaNatives
+) -> list[str]:
+    problems: list[str] = []
+    allowed = set(vanilla.state_levels)
+    levels: dict[str, int] = {}
+    for country in natives.countries:
+        includes, written = records.get(country.tag, ([], []))
+        if includes != [country.include]:
+            problems.append(f"{country.tag} does not write its template {country.include}")
+        elif country.kind != "state":
+            if written:
+                problems.append(f"Tribe {country.tag} writes a technology level")
+        elif len(written) != 1 or not written[0].isdigit() or int(written[0]) not in allowed:
+            problems.append(f"{country.tag} writes {written} as its technology level")
+        else:
+            level, template = int(written[0]), vanilla.levels.get(country.include, 0)
+            levels[country.tag] = level
+            if not template <= level <= template + 1:
+                problems.append(
+                    f"{country.tag} has level {level}, its template {country.include} {template}"
+                )
+    ordinary = sorted(
+        (natives.complexity[c.capital], natives.population[c.capital], c.tag)
+        for c in natives.countries
+        if c.kind == "state" and not c.great and c.tag in levels
+    )
+    problems += [
+        f"{after[2]} has a lower level than {before[2]}, which is less complex"
+        for before, after in pairwise(ordinary)
+        if levels[after[2]] < levels[before[2]]
+    ]
+    template_of = {c.tag: vanilla.levels.get(c.include, 0) for c in natives.countries}
+    problems += [
+        f"{lord} leads {vassal} without the level or the template to lead"
+        for lord, vassal in natives.vassals
+        if levels.get(lord, -1) < vanilla.overlord_level
+        or template_of.get(lord, -1) < vanilla.overlord_level
+    ]
+    return problems
+
+
+def verify_technology(
+    outputs: dict[str, bytes], natives: NativeWorld, vanilla: VanillaNatives
+) -> dict[str, object]:
+    """Every state writes a level of the vanilla set and a fitting template, a tribe none.
+
+    Levels never fall along the rising complexity of the capitals (great empires apart), a
+    template is at most the level and at most one below it, and a vassal lord has the level
+    and the template to lead (C99).
+    """
+    text = outputs[_mod_path(f"{SETUP_DIR}/{COUNTRIES_FILE}")].decode("utf-8-sig")
+    records = written_records(text, {country.tag for country in natives.countries})
+    problems = _technology_problems(records, natives, vanilla)
+    if problems:
+        extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        message = f"Technology of the native states: {problems[0]}{extra}"
+        raise NewWorldExportError(message)
+    return {
+        "technology_levels_written": sum(1 for c in natives.countries if c.kind == "state"),
+        "technology_vassal_lords": len({lord for lord, _ in natives.vassals}),
+    }
+
+
 def vanilla_new_world_keys(hierarchy: dict[str, Location], removed: set[str]) -> set[str]:
     """Region, area, province and location keys of the vanilla New World.
 
@@ -1697,6 +1764,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         checkpoint()
         text_checks = _verify_texts(texts, plan, removed)
         text_checks.update(_verify_natives(natives, plan))
+        text_checks.update(verify_technology(texts, natives, vanilla_start.result()))
         text_checks.update(
             verify_development(texts, plan, natives, development, calibration, new_world_keys)
         )
@@ -1861,6 +1929,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,
             "natives": natives.stats,
+            "technology": natives.technology,
             "development": development.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections import Counter
 from pathlib import Path
 from typing import cast
 
@@ -155,6 +156,26 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
     assert "PAM" in vanilla.reserved_tags
     assert any(culture.state_include for culture in vanilla.cultures.values())
     assert any(culture.city_setup for culture in vanilla.cultures.values())
+    # R7b: the vanilla state levels (4 landed countries have none) and the family triggers
+    assert vanilla.state_levels == (0,) * 11 + (1,) * 17 + (2,) * 191
+    assert vanilla.families.by_region == dict.fromkeys(
+        ("mesoamerica_region", "central_america_region"), "mesoamerica"
+    ) | dict.fromkeys(
+        (
+            "colombia_region",
+            "andes_region",
+            "brazil_region",
+            "chaco_region",
+            "la_plata_region",
+            "caribbean_region",
+        ),
+        "south_america",
+    )
+    assert vanilla.families.by_area == dict.fromkeys(
+        ("xalisco_area", "zacatecas_area"), "mesoamerica"
+    )
+    shares = Counter(culture.family for culture in vanilla.cultures.values())
+    assert shares == {"north_america": 380, "south_america": 276, "mesoamerica": 74}
 
 
 def test_local_development_calibration_reads_the_vanilla_americas() -> None:

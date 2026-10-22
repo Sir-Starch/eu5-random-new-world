@@ -414,3 +414,21 @@
   family in the homeland vector; R7c (S10) empires at `min(T, S + 1)` with the highest American
   rank and royal roads, feared by neighbours and resented by vassals. No generated output changed;
   no version bump, no game launch, nothing installed.
+
+## 2026-10-22 — R7b: technology from the societies (Sonnet)
+
+- [OWNER] The 0.9.27 cover candidate was uncommitted at the start of R7b, as the handoff foresaw;
+  the owner asked for it to be committed first (`f9f7e2c`). Base builds of four worlds were made on it.
+- [V-EXEC C159] Generator 0.9.28 (epoch 4): a state's `starting_technology_level` follows the rank of its
+  capital's complexity on the vanilla American distribution (11 × 0, 17 × 1, 191 × 2), a great empire gets
+  the highest, a tribe none; the template follows the level within one level of the culture's own
+  (`template_for_level`); the homeland vector gains the three regional family shares
+  (`FAMILY_WEIGHT = 2`). New module `eu5_technology.py`; `verify_technology` and the report section
+  `technology`.
+- [V-EXEC C159] Four builds against their base builds: all invariants pass; levels equal the vanilla
+  quantiles within one state; family agreement 924–1000‰ of states, 943–996‰ of the population (C157:
+  427‰, 404‰); homeland distance at most 1.092 times that without the families; land, gfx, development and
+  markets byte-identical to the base. The weight of 2 met every criterion at the first attempt.
+- [V-EXEC] The reference world is renewed for epoch 4 and made again byte for byte; all 8 local tests pass.
+- [UNKNOWN] Written levels, researched advances and the lords' vassals are untested in game. No EU5
+  launch, push or publication.

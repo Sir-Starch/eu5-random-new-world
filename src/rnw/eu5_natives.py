@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -25,6 +25,20 @@ import numpy as np
 from rnw.eu5_biomes import latitude_tenths
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_remap import remap_text
+from rnw.eu5_technology import (
+    TRIGGER_FILE,
+    Families,
+    agreement_permille,
+    families,
+    family_shares,
+    homeland_distance,
+    majority,
+    state_levels,
+    technology_report,
+    template_for_level,
+    vanilla_state_levels,
+    without_families,
+)
 from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
 from rnw.pdx import Block, parse
@@ -128,7 +142,6 @@ ADVANCED_STATE: Final[str] = "amerindian_advanced_monarchy_not_nahuatl"
 DEFAULT_TRIBE: Final[str] = "amerindian_tribe"
 DEFAULT_CITY: Final[str] = "mexican_city"
 DEFAULT_TOWN: Final[str] = "south_east_woodlands_town"
-ADVANCED_PERMILLE: Final[int] = 700
 # Vanilla 1337 sets up 4 vassals among 223 American states (C70). The most populous 5%
 # of states take up to three bordering states of their religion with under a third of
 # their population as vassals.
@@ -175,6 +188,7 @@ class Culture:
     tribe_include: str
     city_setup: str
     town_setup: str
+    family: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -205,6 +219,8 @@ class VanillaNatives:
     colors: frozenset[tuple[int, int, int]] = frozenset()
     levels: dict[str, int] = field(default_factory=dict)
     overlord_level: int = 0
+    families: Families = field(default_factory=lambda: Families({}, {}))
+    state_levels: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -223,6 +239,8 @@ class Country:
     color: tuple[int, int, int]
     color2: tuple[int, int, int]
     government: tuple[tuple[str, str], ...] = ()
+    level: int | None = None
+    great: bool = False
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -239,6 +257,7 @@ class NativeWorld:
     complexity: dict[str, int]
     population: dict[str, int]
     stats: dict[str, object]
+    technology: dict[str, object] = field(default_factory=dict)
 
 
 def _milli(value: str) -> int:
@@ -271,8 +290,9 @@ def homeland(  # noqa: PLR0913, PLR0917 - a homeland combines every template fie
     coastal: list[bool],
     state: list[bool],
     weights: list[int],
+    members: list[str],
 ) -> tuple[int, ...]:
-    """Feature vector compared by L1 distance: climate counts double, latitude half."""
+    """L1 feature vector: climate and the family of each location count double, latitude half."""
     total = max(1, sum(weights))
     latitude = sum(abs(lat) * w for lat, w in zip(latitudes, weights, strict=True)) // total
     coast = sum(w for flag, w in zip(coastal, weights, strict=True) if flag) * PERMILLE // total
@@ -284,6 +304,7 @@ def homeland(  # noqa: PLR0913, PLR0917 - a homeland combines every template fie
         2 * states,
         latitude // 2,
         coast // 2,
+        *family_shares(members, weights),
     )
 
 
@@ -433,7 +454,7 @@ def _most_common(values: list[str]) -> str:
     return min(counts, key=lambda value: (-counts[value], value))
 
 
-def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
+def vanilla_natives(
     game_dir: Path,
     game_map: Eu5Map,
     geometry: VanillaGeometry,
@@ -452,6 +473,7 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
     if not american:
         message = "No vanilla American land locations"
         raise NativesError(message)
+    regional = _regional_families(game_dir, hierarchy)
     pixels = np.bincount(game_map.labels.ravel(), minlength=len(game_map.keys))
     pops = _pops(_text(game_dir, f"{SETUP}/06_pops.txt"))
     setup_text = _text(game_dir, f"{SETUP}/10_countries.txt")
@@ -476,13 +498,11 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         climate: sums[0] * PERMILLE // max(1, sums[1]) for climate, sums in climate_sums.items()
     }
     total = sum(row[1] for key in american for row in pops.get(key, []))
-    culture_rows: dict[str, list[tuple[str, int]]] = {}
-    religion_rows: dict[str, list[tuple[str, int]]] = {}
-    for key in american:
-        for _, amount, culture, religion in pops.get(key, []):
-            culture_rows.setdefault(culture, []).append((key, amount))
-            religion_rows.setdefault(religion, []).append((key, amount))
+    culture_rows, religion_rows = _pop_rows(pops, american)
     coastal = _vanilla_coastal(game_map, american, index)
+
+    def family_of(key: str) -> str:
+        return regional.of(hierarchy[key].region, hierarchy[key].area)
 
     def profile(rows_of: list[tuple[str, int]]) -> tuple[int, ...]:
         keys = [key for key, _ in rows_of]
@@ -494,6 +514,7 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
             [key in coastal for key in keys],
             [key in owned for key in keys],
             [amount for _, amount in rows_of],
+            [family_of(key) for key in keys],
         )
 
     includes: dict[tuple[str, str], list[str]] = {}
@@ -518,6 +539,9 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
             tribe_include=_most_common(includes.get((culture, "pop"), [])),
             city_setup=setups.get((culture, CITY), ""),
             town_setup=setups.get((culture, "town"), ""),
+            family=majority(
+                [family_of(key) for key, _ in rows_of], [amount for _, amount in rows_of]
+            ),
         )
     religions = {
         religion: (profile(rows_of), sum(amount for _, amount in rows_of))
@@ -560,6 +584,31 @@ def vanilla_natives(  # noqa: C901 - one pass over the vanilla Americas.
         overlord_level=overlord_level(
             setup_text, _text(game_dir, f"{SETUP}/12_diplomacy.txt"), levels
         ),
+        families=regional,
+        state_levels=vanilla_state_levels(setup_text, levels, set(american)),
+    )
+
+
+def _pop_rows(
+    pops: dict[str, list[tuple[str, int, str, str]]], keys: list[str]
+) -> tuple[dict[str, list[tuple[str, int]]], dict[str, list[tuple[str, int]]]]:
+    """(location, size) of the pops of each culture and of each religion."""
+    by_culture: dict[str, list[tuple[str, int]]] = {}
+    by_religion: dict[str, list[tuple[str, int]]] = {}
+    for key in keys:
+        for _, amount, culture, religion in pops.get(key, []):
+            by_culture.setdefault(culture, []).append((key, amount))
+            by_religion.setdefault(religion, []).append((key, amount))
+    return by_culture, by_religion
+
+
+def _regional_families(game_dir: Path, hierarchy: dict[str, Location]) -> Families:
+    """Families of the vanilla American regions and areas the scripted triggers list."""
+    american = [location for location in hierarchy.values() if location.continent == NEW_WORLD]
+    return families(
+        _text(game_dir, TRIGGER_FILE),
+        {location.region for location in american},
+        {location.area for location in american},
     )
 
 
@@ -728,6 +777,7 @@ class _Cells:
     latitude: list[int]
     coastal: list[bool]
     seas: list[list[int]]
+    family: list[str] = field(default_factory=list)
 
 
 def land_graph(
@@ -836,6 +886,7 @@ def _zone_homelands(
                     [cells.coastal[n] for n in members],
                     [bool(state[n]) for n in members],
                     weights,
+                    [cells.family[n] for n in members],
                 ),
                 sum(int(societies.population[n]) for n in members),
             )
@@ -943,19 +994,26 @@ def map_colors(
     return out
 
 
-def _include(  # noqa: PLR0913 - the template depends on the culture, the polity and its coast.
+def _include(
     vanilla: VanillaNatives,
     culture: str,
     *,
-    state: bool,
-    advanced: bool,
+    level: int | None,
     coastal: bool,
     empire: bool = False,
 ) -> str:
+    """Template of a state of ``level`` or, without one, of a tribe, with its coast variant."""
     info = vanilla.cultures.get(culture)
-    name = (info.state_include if state else info.tribe_include) if info else ""
-    if not name:
-        name = (ADVANCED_STATE if advanced else DEFAULT_STATE) if state else DEFAULT_TRIBE
+    if level is None:
+        name = (info.tribe_include if info else "") or DEFAULT_TRIBE
+    else:
+        name = template_for_level(
+            info.state_include if info else "",
+            level,
+            vanilla.levels,
+            advanced=ADVANCED_STATE,
+            default=DEFAULT_STATE,
+        )
     if empire and vanilla.levels.get(name, -1) < vanilla.overlord_level:
         # A great empire leads vassals, which a lord without a starting technology cannot (C99).
         name = ADVANCED_STATE
@@ -968,20 +1026,39 @@ def _include(  # noqa: PLR0913 - the template depends on the culture, the polity
 
 
 def _identities(
-    societies: Societies, cells: _Cells, vanilla: VanillaNatives, seed: int
+    societies: Societies,
+    cells: _Cells,
+    vanilla: VanillaNatives,
+    seed: int,
+    *,
+    with_families: bool = True,
 ) -> tuple[list[str], list[str], NDArray[np.bool_]]:
-    """Religion per religion zone and culture per culture zone; state land mask."""
+    """Religion per religion zone and culture per culture zone; state land mask.
+
+    Without ``with_families`` the regional families weigh nothing, as with a family weight of
+    0; the report compares the cultures this chooses with the ones the families choose.
+    """
     state = np.zeros(len(cells.cells), dtype=bool)
     for polity in societies.polities:
         if polity.kind == STATE:
             state[list(polity.members)] = True
+
+    def vector(homeland_vector: tuple[int, ...]) -> tuple[int, ...]:
+        return homeland_vector if with_families else without_families(homeland_vector)
+
+    def zones_of(zones: NDArray[np.int64]) -> list[tuple[tuple[int, ...], int]]:
+        return [
+            (vector(homeland_vector), people)
+            for homeland_vector, people in _zone_homelands(zones, cells, societies, state)
+        ]
+
     religion_names = sorted(vanilla.religions)
     religions = match_homelands(
-        _zone_homelands(societies.religion, cells, societies, state),
-        [(name, vanilla.religions[name][0]) for name in religion_names],
+        zones_of(societies.religion),
+        [(name, vector(vanilla.religions[name][0])) for name in religion_names],
         key=derive_seed(seed, "natives", "religions"),
     )
-    culture_zones = _zone_homelands(societies.culture, cells, societies, state)
+    culture_zones = zones_of(societies.culture)
     culture_names = sorted(vanilla.cultures)
     zone_religion = [""] * len(culture_zones)
     for node, zone in enumerate(societies.culture.tolist()):
@@ -991,7 +1068,7 @@ def _identities(
         by_religion.setdefault(vanilla.cultures[name].religion, []).append(number)
     cultures = match_homelands(
         culture_zones,
-        [(name, vanilla.cultures[name].homeland) for name in culture_names],
+        [(name, vector(vanilla.cultures[name].homeland)) for name in culture_names],
         key=derive_seed(seed, "natives", "cultures"),
         preferred=[by_religion.get(name, []) for name in zone_religion],
     )
@@ -1179,6 +1256,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
     keys = [plan.cells[cell].key for cell in cells.cells]
     tags = new_tags(len(societies.polities), vanilla.reserved_tags, seed, loc_keys)
     colors = map_colors(neighbours, seed, vanilla.colors)
+    levels = _state_levels(societies, tags, vanilla)
     religion_areas: dict[int, set[str]] = {}
     for node, zone in enumerate(societies.religion.tolist()):
         known = religion_areas.setdefault(zone, set())
@@ -1194,8 +1272,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
         include = _include(
             vanilla,
             cultures[polity.culture],
-            state=is_state,
-            advanced=int(societies.complexity[polity.capital]) >= ADVANCED_PERMILLE,
+            level=levels.get(number),
             coastal=any(cells.coastal[node] for node in polity.members),
             empire=polity.great,
         )
@@ -1216,9 +1293,36 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
                 color=colors[number][0],
                 color2=colors[number][1],
                 government=vanilla.governments[include],
+                level=levels.get(number),
+                great=polity.great,
             )
         )
     return countries
+
+
+def _state_levels(societies: Societies, tags: list[str], vanilla: VanillaNatives) -> dict[int, int]:
+    """Starting technology level of each state polity, by polity number.
+
+    Ordinary states take the vanilla American distribution by the rising complexity of their
+    capitals; a great empire takes the highest vanilla level (R7b).
+    """
+    polities = societies.polities
+    states = [number for number, polity in enumerate(polities) if polity.kind == STATE]
+    if states and not vanilla.state_levels:
+        message = "No vanilla state levels to give the generated states"
+        raise NativesError(message)
+    ordinary = [number for number in states if not polities[number].great]
+    order = [
+        (
+            int(societies.complexity[polities[number].capital]),
+            int(societies.population[polities[number].capital]),
+            tags[number],
+        )
+        for number in ordinary
+    ]
+    levels = dict(zip(ordinary, state_levels(order, vanilla.state_levels), strict=True))
+    levels.update({number: vanilla.state_levels[-1] for number in states if polities[number].great})
+    return levels
 
 
 def vassal_pairs(
@@ -1282,6 +1386,13 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
 ) -> NativeWorld:
     """Societies, their cultures and religions, countries and their names."""
     graph, cells = land_graph(world, biomes, river_pixels, vanilla)
+    cells = replace(
+        cells,
+        family=[
+            vanilla.families.of(plan.cells[cell].region, plan.cells[cell].area)
+            for cell in cells.cells
+        ],
+    )
     target = vanilla.population_per_location * len(cells.cells)
     societies = generate_societies(graph, settings, seed=seed, target=target)
     keys = [plan.cells[cell].key for cell in cells.cells]
@@ -1306,7 +1417,9 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
     able = {
         number
         for number, country in enumerate(countries)
-        if vanilla.levels.get(country.include, -1) >= vanilla.overlord_level
+        if country.level is not None
+        and country.level >= vanilla.overlord_level
+        and vanilla.levels.get(country.include, -1) >= vanilla.overlord_level
     }
     pairs = vassal_pairs(societies, religions, _neighbours(societies, graph.edges), able)
     vassals = tuple((countries[lord].tag, countries[vassal].tag) for lord, vassal in pairs)
@@ -1359,6 +1472,73 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         complexity=dict(zip(keys, societies.complexity.tolist(), strict=True)),
         population=dict(zip(keys, societies.population.tolist(), strict=True)),
         stats=stats,
+        technology=_technology(
+            societies,
+            cells,
+            vanilla,
+            tuple(countries),
+            keys=keys,
+            state=state,
+            cultures=cultures,
+            plain_cultures=_identities(societies, cells, vanilla, seed, with_families=False)[1],
+            vassals=len(vassals),
+        ),
+    )
+
+
+def _technology(  # noqa: PLR0913 - the report reads the countries, the zones and both choices.
+    societies: Societies,
+    cells: _Cells,
+    vanilla: VanillaNatives,
+    countries: tuple[Country, ...],
+    *,
+    keys: list[str],
+    state: NDArray[np.bool_],
+    cultures: list[str],
+    plain_cultures: list[str],
+    vassals: int,
+) -> dict[str, object]:
+    """The ``technology`` section of the report: levels, templates, families and distances."""
+    states = [country for country in countries if country.kind == STATE]
+    tribes = [country for country in countries if country.kind != STATE]
+    where = dict(zip(keys, cells.family, strict=True))
+
+    def agrees(country: Country) -> bool:
+        return vanilla.cultures[country.culture].family == where[country.capital]
+
+    def lives_with(node: int) -> bool:
+        culture = cultures[int(societies.culture[node])]
+        return vanilla.cultures[culture].family == cells.family[node]
+
+    people = [int(amount) for amount in societies.population]
+    agreeing = sum(amount for node, amount in enumerate(people) if lives_with(node))
+    homelands = {name: info.homeland for name, info in vanilla.cultures.items()}
+    zones = _zone_homelands(societies.culture, cells, societies, state)
+
+    def base(name: str) -> str:
+        return name.removesuffix(NO_COAST)
+
+    replaced = sum(
+        1
+        for country in states
+        if (own := vanilla.cultures[country.culture].state_include)
+        and base(own) != base(country.include)
+    )
+    return technology_report(
+        states=[(c.tag, c.level) for c in states if c.level is not None],
+        vanilla=vanilla.state_levels,
+        tribes=[vanilla.levels.get(c.include) for c in tribes],
+        replaced=replaced,
+        agreement={
+            "states": agreement_permille(sum(agrees(c) for c in states), len(states)),
+            "tribes": agreement_permille(sum(agrees(c) for c in tribes), len(tribes)),
+            "population": agreement_permille(agreeing, sum(people)),
+        },
+        distance={
+            "with_families": homeland_distance(zones, cultures, homelands),
+            "without_families": homeland_distance(zones, plain_cultures, homelands),
+        },
+        vassals=vassals,
     )
 
 
@@ -1402,6 +1582,8 @@ def country_records(countries: tuple[Country, ...]) -> str:
             lines.append(_locations_block(country.members, "\t\t"))
             lines.append("\t\t}\n")
         lines.append(f'\t\tinclude = "{country.include}"\n')
+        if country.level is not None:
+            lines.append(f"\t\tstarting_technology_level = {country.level}\n")
         lines.append("\t\tdiscovered_areas = {\n")
         lines.append(_locations_block(country.areas, "\t\t"))
         lines.append("\t\t}\n")

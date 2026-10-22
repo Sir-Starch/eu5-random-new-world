@@ -37,6 +37,7 @@ from rnw.eu5_natives import (
 )
 from rnw.eu5_nw_export import referenced_words
 from rnw.eu5_rewrite import insert_into_block, prune_setup
+from rnw.eu5_technology import FAMILIES, MESOAMERICA, NORTH_AMERICA, plain
 from rnw.loc_keys import KeySpace, key_hashes
 from rnw.model import CellClass
 from rnw.names import MarkovNames, name_key
@@ -64,8 +65,8 @@ def _country(tag: str, kind: str) -> Country:
     )
 
 
-def test_homeland_weights_climate_and_states() -> None:
-    """Shares are pop-weighted permille; climate and state share count double."""
+def test_homeland_weights_climate_states_and_families() -> None:
+    """Shares are pop-weighted permille; climate, state share and the families count double."""
     vector = homeland(
         ["tropical", "arid"],
         ["jungle", "desert"],
@@ -74,12 +75,43 @@ def test_homeland_weights_climate_and_states() -> None:
         [True, False],
         [True, False],
         [3, 1],
+        [MESOAMERICA, NORTH_AMERICA],
     )
     climates = vector[:11]
     assert sum(climates) == 2 * 1000
-    assert vector[-3] == 2 * 750
-    assert vector[-2] == (3 * 100 + 300) // 4 // 2
-    assert vector[-1] == 750 // 2
+    states, latitude, coast, *family = vector[-6:]
+    assert states == 2 * 750
+    assert latitude == (3 * 100 + 300) // 4 // 2
+    assert coast == 750 // 2
+    assert family == [2 * 750, 0, 2 * 250]
+    assert len(vector) == 11 + 7 + 5 + 3 + len(FAMILIES)
+
+
+def test_a_zone_follows_the_family_of_its_land_over_a_better_climate() -> None:
+    """A Mesoamerican zone takes the Mesoamerican culture unless the climate gap is larger."""
+
+    def vector(climates: list[str], members: list[str]) -> tuple[int, ...]:
+        count = len(climates)
+        return homeland(
+            climates,
+            ["jungle"] * count,
+            ["hills"] * count,
+            [100] * count,
+            [True] * count,
+            [False] * count,
+            [1] * count,
+            members,
+        )
+
+    here = vector(["tropical"] * 2, [MESOAMERICA] * 2)
+    candidates = [
+        ("northern", vector(["tropical"] * 2, [NORTH_AMERICA] * 2)),
+        ("southern", vector(["tropical", "subtropical"], [MESOAMERICA] * 2)),
+    ]
+    # the climate alone fits the northern culture better; the family decides for the other
+    plain_candidates = [(name, plain(found)) for name, found in candidates]
+    assert match_homelands([(plain(here), 1)], plain_candidates, key=1) == ["northern"]
+    assert match_homelands([(here, 1)], candidates, key=1) == ["southern"]
 
 
 def test_match_prefers_own_pool_and_unused_candidates() -> None:
@@ -501,12 +533,8 @@ def test_a_great_empire_takes_a_template_that_can_lead_vassals() -> None:
         levels={"tier_two": 2, "tier_zero": 0, "amerindian_advanced_monarchy_not_nahuatl": 2},
         overlord_level=2,
     )
-    plain = {"state": True, "advanced": False, "coastal": True}
-    assert _include(vanilla, "lord", empire=True, **plain) == "tier_two"
-    assert _include(vanilla, "weak", **plain) == "tier_zero"
-    assert _include(vanilla, "weak", empire=True, **plain) == (
-        "amerindian_advanced_monarchy_not_nahuatl"
-    )
-    assert _include(vanilla, "nobody", empire=True, **plain) == (
-        "amerindian_advanced_monarchy_not_nahuatl"
-    )
+    advanced = "amerindian_advanced_monarchy_not_nahuatl"
+    assert _include(vanilla, "lord", level=2, coastal=True, empire=True) == "tier_two"
+    assert _include(vanilla, "weak", level=1, coastal=True) == "tier_zero"
+    assert _include(vanilla, "weak", level=1, coastal=True, empire=True) == advanced
+    assert _include(vanilla, "nobody", level=2, coastal=True, empire=True) == advanced
