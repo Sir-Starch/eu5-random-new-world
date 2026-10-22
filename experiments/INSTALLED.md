@@ -1,5 +1,14 @@
 # Installed experiments
 
+2026-10-22, owner-requested installation of C151: target new profile folder
+`mod/rnw_exp_world_hgihw5wfjp`, title `RNW: Small continents HGIH`, version 0.9.26.
+Source: `local_data/close-zoom-cover/application/generated/rnw_exp_world_hgihw5wfjp/rnw_exp_world_hgihw5wfjp/`.
+The game was closed and the target did not exist. [V-EXEC] Installed through
+`rnw install-mod`; all 751 files, including metadata, independently hash-identical
+to the source. Existing worlds and playset entries were outside the installation.
+The active playset still enables the older DSLL world; enable HGIH instead in game.
+Removal: with EU5 closed, `uv run rnw uninstall-mod rnw_exp_world_hgihw5wfjp --user-dir USER_DIR`.
+
 2026-10-22, close-zoom cover (C150–C151, experiment 026): no mod was installed or
 removed and no existing profile/mod/playset was changed. The new offline CLI bundle is
 `local_data/close-zoom-cover/application/generated/rnw_exp_world_hgihw5wfjp/`.

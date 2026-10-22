@@ -94,3 +94,14 @@ With a newly generated covered candidate loaded on a fresh launch, check:
    behavior after the mod is reloaded.
 4. Multiplayer selection/start and loading a second lobby in one process do not
    bypass the intended behavior. No such result is established by this offline pass.
+
+## Installation after owner request
+
+[OWNER / V-EXEC C152] The owner requested agent installation instead of manual copying.
+With EU5 closed, `rnw install-mod` installed the candidate into the new normal-profile
+folder `mod/rnw_exp_world_hgihw5wfjp`. Its displayed name is
+`RNW: Small continents HGIH`, version 0.9.26. Every one of its 751 files, including
+metadata, independently hashes identically to the prepared source. Earlier statements
+about no installation describe the offline phase before this request. Existing worlds
+and playset entries were outside the installation; HGIH must be enabled instead of
+the older DSLL world in the game's playset. No game launch or runtime result is claimed.

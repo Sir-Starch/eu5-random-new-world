@@ -383,3 +383,14 @@
 - [UNKNOWN] Native map picking is not intercepted, and UI guards do not establish an
   engine-level ban. Concealment, UI start prevention, discovery, keyboard routes and
   multiplayer still require in-game confirmation. No EU5 launch, push or publication.
+
+## 2026-10-22 — Install the cover candidate (owner request)
+
+- [OWNER] Install verified updates directly instead of asking the owner to copy files.
+  The standing workflow is now recorded in `AGENTS.md`.
+- [V-EXEC C152] With EU5 closed and the destination absent, install 0.9.26 into the new
+  profile folder `mod/rnw_exp_world_hgihw5wfjp` through `rnw install-mod`.
+  Independently hash all 751 files, including metadata: every hash matches the source.
+  Displayed name: `RNW: Small continents HGIH`. Installation leaves the active playset
+  pointing at the older DSLL world; HGIH needs selection in the game's playset.
+- [UNKNOWN] No game launch, runtime validation or change to earlier gameplay verdicts.
