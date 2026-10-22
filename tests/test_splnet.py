@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import struct
 from dataclasses import replace
+from itertools import pairwise
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -203,3 +204,68 @@ def test_rebuild_refuses_what_it_cannot_keep_correct(case: str) -> None:
         added = [NewStrip(4, 5, np.array([(0.5, 0.5), (70.5, 70.5)], dtype=np.float32))]
     with pytest.raises(SplineError):
         _ = rebuild(network, mapping, anchors, added)
+
+
+def _vanilla_like() -> SplineNetwork:
+    """Three roads whose segments and points are not in the order of the strips, with gaps."""
+    places = {1: (0.5, 0.5), 2: (20.5, 0.5), 3: (40.5, 0.5), 4: (60.5, 0.5)}
+    anchors = np.array(sorted(places), dtype=np.int64)
+    xy = np.array([places[i] for i in sorted(places)], dtype=np.float32)
+    # points 5..10 in runs along the roads; the segments come in an order of their own
+    flag = POINT_FLAG
+    segments = (
+        (3, flag + 9, flag + 10, 4),  # 0: road 3-4
+        (1, flag + 5, flag + 6, 2),  # 1: road 1-2
+        (2, flag + 7, flag + 8, 3),  # 2: road 2-3
+    )
+    point_xy = np.array(
+        [(5.0, 1.0), (10.0, 1.0), (25.0, 1.0), (30.0, 1.0), (45.0, 1.0), (50.0, 1.0)],
+        dtype=np.float32,
+    )
+    strips = {strip_id(1, 2): (1,), strip_id(2, 3): (2,), strip_id(3, 4): (0,)}
+    return SplineNetwork(anchors, xy, point_xy, segments, strips)
+
+
+def test_a_map_that_lost_nothing_gets_the_same_network_back() -> None:
+    """Segments and points keep the order they had, so an identity rebuild writes the same bytes."""
+    network = _vanilla_like()
+    data = serialize(network)
+    again = rebuild(network, {1: 1, 2: 2, 3: 3, 4: 4}, {}, [])
+    assert serialize(again) == data
+    assert again.segments == network.segments
+
+
+def test_what_is_left_keeps_its_relative_order_and_closes_the_gaps() -> None:
+    """Dropping location 2 leaves road 3-4 only: its segment and points move down, in order."""
+    network = _vanilla_like()
+    result = rebuild(network, {1: 1, 3: 2, 4: 3}, {}, [])
+    assert sorted(result.strips) == [strip_id(2, 3)]
+    assert result.segments == ((2, POINT_FLAG + 4, POINT_FLAG + 5, 3),)
+    assert result.point_xy.tolist() == [[45.0, 1.0], [50.0, 1.0]]
+    assert result.first_point == 4
+
+
+def test_new_roads_become_chains_of_short_segments_after_the_old_ones() -> None:
+    """A long road is cut into segments of at most six points that share their end points."""
+    network = _vanilla_like()
+    far = {5: (200.5, 0.5)}
+    path = np.array([(60.5 + 140.0 * i / 20, 0.5) for i in range(21)], dtype=np.float32)
+    road = NewStrip(4, 5, path)
+    result = rebuild(network, {1: 1, 2: 2, 3: 3, 4: 4}, far, [road])
+    # the new anchor 5 moves the first point up by one: the old points are renumbered, in order
+    shifted = tuple(
+        tuple(point + 1 if point >= POINT_FLAG else point for point in members)
+        for members in network.segments
+    )
+    assert result.segments[:3] == shifted
+    chain = [result.strips[strip_id(4, 5)][i] for i in range(len(result.strips[strip_id(4, 5)]))]
+    segments = [result.segments[n] for n in chain]
+    assert chain == list(range(3, 3 + len(chain)))
+    assert all(2 <= len(members) <= 6 for members in segments)
+    assert all(a[-1] == b[0] for a, b in pairwise(segments))
+    assert segments[0][0] == 4
+    assert segments[-1][-1] == 5
+    inner = [point for members in segments for point in members if point >= POINT_FLAG]
+    first_new = POINT_FLAG + result.first_point + 6  # after the six old points
+    assert sorted(set(inner)) == list(range(first_new, first_new + 19))
+    assert polyline(result, strip_id(4, 5)).tolist() == path.tolist()

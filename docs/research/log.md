@@ -495,3 +495,17 @@
   `rnw_exp_world_6wbnuwo42f`; experiment 029 is prepared, NOT-RUN.
 - [UNKNOWN] The engine's acceptance of a file written by us is untested; its own reader is not available. No
   EU5 launch, push or publication.
+
+## 2026-10-23 — The roads vanished with the generated spline network (owner), 0.9.31
+
+- [V-GAME owner C164] The 0.9.30 world loads, writes no strip error and no crash, and draws no road anywhere.
+  Its logs hold no line about splines or roads; the world differs from the 0.9.29 one in the spline network only.
+- [V-EXEC C165] 0.9.30 had changed the order of the Old World's own segments (renumbered by the strips that use them);
+  a first reading that vanilla numbers points in segment order was a flawed test and is withdrawn (vanilla numbers its
+  points in runs along roads, its segments in an order of their own). 0.9.31 keeps every kept segment and point in
+  vanilla's order and only closes the gaps (the identity rebuild writes vanilla's bytes), adds new roads as chains of
+  short segments after the old ones and spaces their points evenly. Epoch 7, reference world renewed, 9 local tests pass.
+- Installed `rnw_exp_world_amk4jfomct` and the probe `rnw_exp_probe_splnet_oldworld` (the same map, only vanilla strips of
+  the locations still there); [experiment 030](../../experiments/030-spline-probes/README.md) says how to bisect with at
+  most three launches. The cause is [UNKNOWN]; the vanilla navigation-mesh cache is not regenerated and is one candidate.
+- No EU5 launch by the agent, no push or publication.

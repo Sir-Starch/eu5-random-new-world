@@ -118,14 +118,18 @@ def _wanted(
 def road_path(start: Point, border: Point, end: Point) -> NDArray[np.float32]:
     """A smooth road from ``start`` to ``end`` through ``border``, a point every ``SPACING`` pixels.
 
-    A quadratic curve whose middle is the border point. Its ends are exactly the two anchors.
+    A quadratic curve whose middle is the border point, cut into equal steps along its length. Its
+    ends are exactly the two anchors.
     """
     first, middle, last = (np.array(point, dtype=np.float64) for point in (start, border, end))
     control = 2.0 * middle - (first + last) / 2.0
-    length = float(np.hypot(*(middle - first)) + np.hypot(*(last - middle)))
-    steps = max(2, math.ceil(length / SPACING))
-    t = (np.arange(steps + 1, dtype=np.float64) / steps)[:, None]
-    path = (1.0 - t) ** 2 * first + 2.0 * (1.0 - t) * t * control + t**2 * last
+    rough = max(2, math.ceil((np.hypot(*(middle - first)) + np.hypot(*(last - middle))) / SPACING))
+    t = (np.arange(8 * rough + 1, dtype=np.float64) / (8 * rough))[:, None]
+    curve = (1.0 - t) ** 2 * first + 2.0 * (1.0 - t) * t * control + t**2 * last
+    along = np.concatenate([[0.0], np.cumsum(np.hypot(*np.diff(curve, axis=0).T))])
+    steps = max(2, math.ceil(float(along[-1]) / SPACING))
+    at = np.arange(steps + 1, dtype=np.float64) * (float(along[-1]) / steps)
+    path = np.stack([np.interp(at, along, curve[:, 0]), np.interp(at, along, curve[:, 1])], axis=1)
     path = path.astype(np.float32)
     path[0], path[-1] = np.array(start, dtype=np.float32), np.array(end, dtype=np.float32)
     return path

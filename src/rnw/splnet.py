@@ -45,6 +45,8 @@ if TYPE_CHECKING:
 
 POINT_FLAG: Final[int] = 0x10000000
 MIN_POINTS: Final[int] = 2
+# Vanilla's segments have 6.8 points on average and 6 at the median, 88 at most [V-EXEC C162].
+SEGMENT_POINTS: Final[int] = 6
 SEGMENT_SHIFT: Final[int] = 8
 STRIP_HIGH_SHIFT: Final[int] = 35
 STRIP_LOW_SHIFT: Final[int] = 6
@@ -418,11 +420,18 @@ def rebuild(
 ) -> SplineNetwork:
     """The spline network of a map whose locations changed.
 
-    ``mapping`` gives the new index of every old location that is still there; the anchors, strips,
-    segments and points of the others leave, and the rest are renumbered (the strips keep their
-    segments, shared ones included). ``anchors`` are the positions of the anchors of new locations
-    and ``added`` the new roads; a road may join a new location to an old one. The order of the
-    kept locations must not change: a strip runs from its lower anchor to its higher one.
+    ``mapping`` gives the new index of every old location that is still there. The anchors,
+    strips, segments and points of the others leave, and what is left keeps its order and is only
+    renumbered to close the gaps (a strip keeps its segments, shared ones included), so that a map
+    that lost nothing gets the same bytes back. ``anchors`` are the positions of the anchors of
+    new locations and ``added`` the new roads; a road may join a new location to an old one and
+    becomes a chain of short segments after the old ones, its points one run after the old ones.
+    The order of the kept locations must not change: a strip runs from its lower anchor to its
+    higher one.
+
+    Vanilla's segments and points are not in the order of the strips or of each other: its points
+    are numbered in runs along roads, its segments in an order of their own. Neither is touched
+    here, because the engine's reader may rely on them [INFERRED].
     """
     if len(set(mapping.values())) != len(mapping):
         message = "Spline network: two locations got the same index"
@@ -430,38 +439,29 @@ def rebuild(
     positions = _anchor_positions(vanilla, mapping, anchors)
     kept = _kept_strips(vanilla, mapping)
     fresh = _fresh_strips(added, kept, positions)
-    used = sorted(
-        {
-            point
-            for old in kept.values()
-            for ref in vanilla.strips[old]
-            for point in vanilla.segments[ref]
-            if point >= POINT_FLAG
-        }
-    )
     first = max(positions, default=0) + 1
-    renumbered = {point: POINT_FLAG + first + number for number, point in enumerate(used)}
-    point_xy = [_flagged(vanilla, point) for point in used]
-    segments: list[tuple[int, ...]] = []
+    old_segments = sorted({ref for old in kept.values() for ref in vanilla.strips[old]})
+    old_points = sorted(
+        {point for ref in old_segments for point in vanilla.segments[ref] if point >= POINT_FLAG}
+    )
+    renumbered = {point: POINT_FLAG + first + number for number, point in enumerate(old_points)}
+    point_xy = [_flagged(vanilla, point) for point in old_points]
+    segments = [
+        tuple(
+            renumbered[point] if point >= POINT_FLAG else mapping[point]
+            for point in vanilla.segments[ref]
+        )
+        for ref in old_segments
+    ]
+    numbers = {ref: number for number, ref in enumerate(old_segments)}
     strips: dict[int, tuple[int, ...]] = {}
-    numbers: dict[int, int] = {}
     for ident in sorted(kept.keys() | fresh.keys()):
-        if ident in fresh:
-            strips[ident] = (len(segments),)
-            segments.append(_new_segment(fresh[ident], first, point_xy))
+        if ident in kept:
+            strips[ident] = tuple(numbers[ref] for ref in vanilla.strips[kept[ident]])
             continue
-        refs: list[int] = []
-        for ref in vanilla.strips[kept[ident]]:
-            if ref not in numbers:
-                numbers[ref] = len(segments)
-                segments.append(
-                    tuple(
-                        renumbered[point] if point >= POINT_FLAG else mapping[point]
-                        for point in vanilla.segments[ref]
-                    )
-                )
-            refs.append(numbers[ref])
-        strips[ident] = tuple(refs)
+        chain = _chain(fresh[ident], first, point_xy)
+        strips[ident] = tuple(range(len(segments), len(segments) + len(chain)))
+        segments += chain
     order = sorted(positions)
     network = SplineNetwork(
         anchors=np.array(order, dtype=np.int64),
@@ -524,16 +524,22 @@ def _fresh_strips(
     return fresh
 
 
-def _new_segment(
+def _chain(
     strip: NewStrip, first: int, point_xy: list[tuple[float, float]]
-) -> tuple[int, ...]:
-    """The one segment of a new strip; its inner points join ``point_xy``."""
-    members = [strip.low]
-    for x, y in strip.path[1:-1].tolist():
-        members.append(POINT_FLAG + first + len(point_xy))
+) -> list[tuple[int, ...]]:
+    """The segments of a new strip, ``SEGMENT_POINTS`` points each, each joined to the next.
+
+    Inner points join ``point_xy`` in the order of the path, as one run, like the points of a road
+    in vanilla.
+    """
+    inner = strip.path[1:-1].tolist()
+    ids: list[int] = [strip.low]
+    for x, y in inner:
+        ids.append(POINT_FLAG + first + len(point_xy))
         point_xy.append((float(x), float(y)))
-    members.append(strip.high)
-    return tuple(members)
+    ids.append(strip.high)
+    step = SEGMENT_POINTS - 1
+    return [tuple(ids[start : start + SEGMENT_POINTS]) for start in range(0, len(ids) - 1, step)]
 
 
 def _flagged(network: SplineNetwork, point: int) -> tuple[float, float]:

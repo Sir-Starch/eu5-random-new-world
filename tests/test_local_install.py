@@ -205,6 +205,9 @@ def test_local_spline_network_is_read_and_written_back_exactly() -> None:
     data = (root / SPLINE_GAME_FILE).read_bytes()
     network = splnet.parse(data)
     assert splnet.serialize(network) == data
+    # a map that lost nothing gets vanilla's own bytes back: order and numbering are kept
+    same = splnet.rebuild(network, {int(a): int(a) for a in network.anchors.tolist()}, {}, [])
+    assert splnet.serialize(same) == data
     assert (len(network.anchors), len(network.point_xy)) == (21_046, 589_062)
     assert (len(network.segments), len(network.strips)) == (110_111, 51_095)
     game_map = load_map(root)

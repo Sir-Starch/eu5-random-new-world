@@ -1,6 +1,6 @@
 # EU5 Random New World
 
-**Roads, 2026-10-22:** the owner's first game session of 0.9.29 looked right but logged 125,820 missing-road-strip errors (C161). Generator **0.9.30** writes the spline network those strips live in, for the generated locations (C162, C163; [interoperability register](docs/research/interoperability.md) R-001); [experiment 029](experiments/029-spline-strips/README.md) is installed as `rnw_exp_world_6wbnuwo42f` and awaits the owner's test.
+**Roads, 2026-10-23:** 0.9.29 logged 125,820 missing-road-strip errors (C161); 0.9.30 writes the spline network for the generated locations (C162, C163; [interoperability register](docs/research/interoperability.md) R-001), the game then loaded it without an error and drew no road anywhere (C164). Generator **0.9.31** keeps vanilla's order and numbering (C165); [experiment 030](experiments/030-spline-probes/README.md) has the corrected world `rnw_exp_world_amk4jfomct` and a probe installed, and awaits the owner's test.
 
 **R7 offline complete, 2026-10-22:** generator **0.9.28** gives each native state a technology level from its society and keeps cultures in the regional family of their land (R7b, C159); **0.9.29** gives great empires the Old World's level, a vanilla rank, royal roads, feared neighbours and resentful vassals (R7c, C160). Offline checks pass; nothing is validated in game. [Experiment 028](experiments/028-technology-and-empires/README.md) is installed as `rnw_exp_world_canszr3phf` and awaits the owner's test.
 
