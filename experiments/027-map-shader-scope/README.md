@@ -1,6 +1,6 @@
 # 027: Keep the map cover out of loading and character scenes
 
-Date: 2026-10-22. **0.9.26 GAME REGRESSION; 0.9.27 OFFLINE CANDIDATE.**
+Date: 2026-10-22. **0.9.26 GAME REGRESSION; 0.9.27 PASSED for loading art and portraits (owner, 2026-10-23, C169); 0.9.32 FOLLOWS UP the black map frame (C169), NOT GAME VALIDATED.**
 
 ## Owner observation and runtime evidence
 
@@ -65,3 +65,23 @@ launch with only the new world active, verify loading artwork, ruler/character/e
 backgrounds, portrait attachments and ship effects; retain full New World concealment
 at every zoom and map lens. Check normal Old World rendering and discovered New World
 detail in a campaign. Do not treat restored vanilla include graphs as a running-game result.
+
+## Follow-up 2026-10-23: the map's frame is black over the New World (0.9.32)
+
+[V-GAME owner, C169] With the 0.9.27 scope (carried by 0.9.28 to 0.9.31) the owner reports no problem with loading
+artwork, rulers' backgrounds and portraits, and the latest session's `error.log` and `debug.log` hold no
+`RnwVisibility` or shader-compile line [V-LOCAL]. One defect remains: at country selection, above and below the map,
+the wooden table of the map's frame is drawn at the two ends of the world and is black in between (two screenshots).
+
+[V-LOCAL / INFERRED C169] The cover's grid is clamped to its first and last row (`RnwCell01`), so beyond the map's north
+and south edges the edge rows hold on without end; the table is a mesh of the shader that clips where the cover is.
+The installed cover's first row is covered at x 0 to 5,088 and 14,208 to 16,384, its last at x 1,824 to 11,168, the
+stretches where the screenshots are black.
+
+[V-EXEC C169] Generator 0.9.32 (epoch 8): `RnwMask` returns 0 outside z 0 to 8192; the grid stays clamped for the
+interpolation inside the map. The new world differs from the 0.9.31 world of the same code in
+`rnw_new_world_cover.fxh` and `.metadata` only. Installed as `rnw_exp_world_j3ze425437` (see INSTALLED).
+
+**Check in game:** start the world with only the hub and `rnw_exp_world_j3ze425437`, look at the north and south edges
+of the map from far out, at country selection and in a campaign: the table should be drawn along the whole width. The New
+World must stay covered at selection, and its rim at the poles must still be covered inside the map.

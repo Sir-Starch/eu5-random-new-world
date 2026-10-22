@@ -581,9 +581,15 @@ PixelShader =
 		}}
 
 		// The grid, bilinear between cell centres and sharpened, so its edge is smooth. The
-		// world's z grows northwards, the grid's rows southwards.
+		// world's z grows northwards, the grid's rows southwards. The map wraps in x but ends in
+		// z: beyond its north and south edges lies the table of its frame, which the grid's first
+		// and last rows (clamped for the interpolation) must not reach.
 		float RnwMask( float2 WorldSpacePosXZ )
 		{{
+			[branch] if( WorldSpacePosXZ.y < 0.0f || WorldSpacePosXZ.y > RnwMapSize.y )
+			{{
+				return 0.0f;
+			}}
 			float2 Cell = float2( WorldSpacePosXZ.x, RnwMapSize.y - WorldSpacePosXZ.y );
 			Cell = Cell / RnwCell - vec2( 0.5f );
 			float2 Corner = floor( Cell );

@@ -180,6 +180,8 @@ def test_the_include_holds_the_grid_north_first_and_declares_no_sampler() -> Non
     assert f"static const uint4 RnwCoverWords[{grid.size // 128}]" in include
     assert "uint4( 0x00000001, 0x00000000, 0x00000000, 0x00000000 )" in include
     assert "RnwMapSize.y - WorldSpacePosXZ.y" in include
+    # The grid's edge rows stop at the map's edge: the table of its frame is not the New World.
+    assert "WorldSpacePosXZ.y < 0.0f || WorldSpacePosXZ.y > RnwMapSize.y" in include
     assert "float3( 0.100000f, 0.050000f, 0.025000f )" in include
     assert shader_samplers(include, _reader({})) == {}
     assert "Includes" not in include

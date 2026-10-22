@@ -533,3 +533,24 @@
   `natives.md`): a defect in 0.9.30 is **not** an established fact, the report was most likely an observation error, and the
   order-preserving rebuild of 0.9.31 is a precaution, not a verified fix. The history of the commit `ceea893`, whose
   message says 0.9.30 drew no road, is left as it was.
+
+## 2026-10-23 — The map's frame is black over the New World (owner), C168, C169, C170; 0.9.32
+
+- [V-GAME owner C168] The owner's screen recording of the 0.9.30 session shows the proximity lens in observer mode, not
+  Roads, and roads drawn on the map at zoom: 0.9.30 drew roads, the report of C164 was an observation error, and the
+  order-preserving rebuild of 0.9.31 stays a precaution. A road built by hand in Bohemia works. Roads between generated
+  locations in play cannot be tried: the world is covered at selection and the owner cannot start there.
+- [V-GAME owner / V-LOCAL C169] Two screenshots at country selection: above and below the map the table of the frame is
+  black over the New World's longitudes. The installed AMK4 cover's first and last grid rows are covered at those stretches
+  of x; the clamp of `RnwCell01` extends them beyond the map's edge, and the mesh shader clips the table there.
+  [V-LOCAL] No `RnwVisibility` or shader-compile line in the latest logs; the owner saw no problem with loading art and
+  portraits (experiment 027 passes for them).
+- [V-EXEC C169] 0.9.32, epoch 8: `RnwMask` returns 0 outside z 0 to 8192. Test, synthetic digests of epoch 8 and the reference
+  world renewed (`RNW1-0426C-SYW6B-MW73Y-C004J-0054V-AW0`); `make check` 946 passed (one of three full runs failed
+  `test_window.py::test_new_world_visibility_is_a_default_and_leaves_the_existing_world_hidden`, which passes alone five
+  times and in the two next full runs; a flake, not investigated); 9 local tests pass with `RNW_REPRODUCE=1`.
+  The candidate `RNW1-080G0-00003-EF38N-A004J-00813-BM0FJ-JT80` (AMK4's world) is installed as `rnw_exp_world_j3ze425437`;
+  against AMK4 only the cover include and `.metadata` differ.
+- [V-LOCAL C170] 17 `have not discovered the capital ... scripted bias` lines in every session since 0.9.30, all from
+  the opinions of R7c; the vanilla logs have none. Found by reading the logs; not fixed.
+- No EU5 launch by the agent, no push or publication.
