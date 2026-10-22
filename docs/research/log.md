@@ -336,3 +336,23 @@
   strict types, 811 Python tests (8 skips), and 23 Rust tests. Local agent verification
   transcripts under `.omo/evidence/` are ignored, alongside existing generated/local data.
   The documentation checkpoint follows separately. No push or publication was performed.
+
+## 2026-10-22 — 1.4.3 offline regression (0.9.25)
+
+- [OWNER] Reported patch 1.4.3 and approved a full isolated generation, without EU5 launch.
+- [V-LOCAL/V-EXEC C148] Installed beta build 26105915; only location templates changed in
+  the ten-file map contract. The full C144 input comparison finds 977 changed files and
+  16 changed inputs that the old world mod overrides. Old worlds should be regenerated
+  [INFERRED]; no existing world or profile was changed.
+- [V-EXEC C149] Register the exact fingerprint, release 0.9.25, retain epoch 1: no algorithm
+  changes. The real application CLI makes the reference world in 92.4 s, passing every
+  invariant; all 739 non-metadata mod files rehash to the report's digest. Fifteen differ
+  from the 1.4.2 reference; no raster or terrain file differs. Renew the current-build
+  reference; the earlier digest remains in C144. See [experiment 025](../../experiments/025-patch-1-4-3/README.md).
+- [V-EXEC] All eight local installation tests pass with `RNW_REPRODUCE=1` in 113.27 s,
+  including an independent full export matching the new reference digest.
+  Formatting/lint, strict types, 811 Python tests (8 optional skips), and 23 Rust tests pass.
+  The sandbox prevents the type checker from inspecting Python; running it outside the
+  sandbox succeeds. No code or configuration was changed for that environment limitation.
+- [UNKNOWN] No claim of 1.4.3 loading or playability; no installation, game launch, push
+  or publication.

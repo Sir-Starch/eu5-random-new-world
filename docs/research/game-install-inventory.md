@@ -4,13 +4,17 @@ Observed 2026-10-13 on Linux x86_64 with a Wayland desktop. All game paths below
 
 | Item | Observation | Evidence |
 |---|---|---|
-| Steam identity | App 3450310, `1.4-open-beta` branch, build 26043558 since 2026-10-20 (was 25905365, C84) | [V-LOCAL] `../appmanifest_3450310.acf` and Steam library metadata |
-| Running version | 1.4.2 since 2026-10-20 (was 1.4.1) | [V-GAME] main menu and temporary-profile `logs/debug.log`, mod-version line, 2026-10-13 |
+| Steam identity | App 3450310, `1.4-open-beta` branch, build 26105915 since 2026-10-22 16:24 CEST (was 26043558, C148) | [V-LOCAL] `steamapps/appmanifest_3450310.acf`, `StateFlags=4`, installed/target build equal |
+| Running version | Last observed 1.4.2; the owner reports patch 1.4.3, whose installed build was checked offline. No 1.4.3 launch in this check | [V-GAME] earlier observations; [OWNER]/[V-LOCAL] C148–C149 |
 | Executable | Windows PE `binaries/eu5.exe`, running under Steam Proton | [V-LOCAL] `file binaries/eu5.exe`; [V-GAME] Proton process and logs |
 | Display | Wayland desktop, Steam active; Vulkan renderer reported an NVIDIA GPU | [V-LOCAL] environment commands; [V-GAME] debug log |
 | User data | `steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V/` in the same Steam library | [V-LOCAL] directory inspection |
 | Normal mod/log/save directories | `mod/`, `logs/`, `save games/` under that user directory | [V-LOCAL] directory inspection |
 | Isolated test profile | `/tmp/rnw_eu5_validation/`; launched with `-userdir Z:\tmp\rnw_eu5_validation` | [V-GAME] files and logs appeared there |
+
+## Patch check, 2026-10-22
+
+[V-LOCAL/V-EXEC C148] Of the ten map-contract files, only `location_templates.txt` differs from build 26043558 (3,754,030 to 3,754,033 bytes). The new aggregate SHA-256 is `592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a`. Current hierarchy: 9 continents, 23 subcontinents, 82 regions, 805 areas, 4,311 provinces, 28,573 locations, including 6,167 American keys. There are 28,582 named colours, no duplicates and no hierarchy key without a colour. These current counts supersede the initial counts below, not their historical evidence. The wider input comparison and offline export are recorded in [experiment 025](../../experiments/025-patch-1-4-3/README.md).
 
 ## Representative files
 

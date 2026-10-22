@@ -2,6 +2,11 @@
 
 Before 2026-10-14 no test mod was installed in the owner's normal EU5 user mod directory. Only new folders starting with `rnw_exp_` may be installed there, and each must be recorded here before use.
 
+2026-10-22 patch 1.4.3 check ([025](025-patch-1-4-3/README.md)): no mod installed or
+removed. The new offline bundle is exactly
+`local_data/patch-1.4.3/application/generated/rnw_exp_world_yx2z7qw242/`, outside every
+game profile; only that folder needs removal if the retained bundle is no longer wanted.
+
 2026-10-22 continuation: no mod was installed or removed. Offline bundles
 `generated/rnw_exp_resume_cold`, `generated/rnw_exp_resume_warm`, and package folders
 `generated/rnw_exp_resume_hub`, `generated/rnw_exp_resume_hub_final` were created for C144–C145.
