@@ -496,18 +496,19 @@
 - [UNKNOWN] The engine's acceptance of a file written by us is untested; its own reader is not available. No
   EU5 launch, push or publication.
 
-## 2026-10-23 — The roads vanished with the generated spline network (owner), 0.9.31
+## 2026-10-23 — A report of vanished roads with 0.9.30 (owner; retracted below), 0.9.31
 
-- [V-GAME owner C164] The 0.9.30 world loads, writes no strip error and no crash, and draws no road anywhere.
-  Its logs hold no line about splines or roads; the world differs from the 0.9.29 one in the spline network only.
-- [V-EXEC C165] 0.9.30 had changed the order of the Old World's own segments (renumbered by the strips that use them);
+- [V-GAME owner C164, retracted in C166] The owner reported that the 0.9.30 world loaded, wrote no strip error and no
+  crash, and drew no road anywhere; the owner later found the wrong lens had been on. The logs hold no line about
+  splines or roads; the world differs from the 0.9.29 one in the spline network only.
+- [V-EXEC C165] 0.9.30 changed the order of the Old World's own segments (renumbered by the strips that use them);
   a first reading that vanilla numbers points in segment order was a flawed test and is withdrawn (vanilla numbers its
   points in runs along roads, its segments in an order of their own). 0.9.31 keeps every kept segment and point in
   vanilla's order and only closes the gaps (the identity rebuild writes vanilla's bytes), adds new roads as chains of
   short segments after the old ones and spaces their points evenly. Epoch 7, reference world renewed, 9 local tests pass.
 - Installed `rnw_exp_world_amk4jfomct` and the probe `rnw_exp_probe_splnet_oldworld` (the same map, only vanilla strips of
   the locations still there); [experiment 030](../../experiments/030-spline-probes/README.md) says how to bisect with at
-  most three launches. The cause is [UNKNOWN]; the vanilla navigation-mesh cache is not regenerated and is one candidate.
+  most three launches. (Those probes answered a premise that was retracted; no defect in 0.9.30 is established.)
 - No EU5 launch by the agent, no push or publication.
 
 ## 2026-10-23 — The roads had not vanished (owner), C166
@@ -521,3 +522,14 @@
   order-preserving rebuild of 0.9.31 stays as the safer design.
 - Not yet seen: a long run (the 0.9.29 flood began after about five minutes of play), roads built in play between
   generated locations, the empires' roads as lines, caravans. No EU5 launch by the agent.
+
+## 2026-10-23 — A long run with 0.9.31 (owner), C167; wording about 0.9.30 corrected
+
+- [V-GAME owner / V-LOCAL C167] AMK4 (0.9.31) ran 5 min 43 s at maximum speed: 0 strip errors, none in `error.log`
+  about the mod (only the old `rnw_probe_hidden` lines), no crash, three autosaves; the AI tried `build_road` 15 times and
+  each was logged as an invalid AI command, among thousands of invalid commands of other kinds. Whether a road was built
+  in play is not shown.
+- Wording corrected across the documents (README, C164 to C166, experiments 029 and 030, the register, the roadmap,
+  `natives.md`): a defect in 0.9.30 is **not** an established fact, the report was most likely an observation error, and the
+  order-preserving rebuild of 0.9.31 is a precaution, not a verified fix. The history of the commit `ceea893`, whose
+  message says 0.9.30 drew no road, is left as it was.

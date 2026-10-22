@@ -1,8 +1,8 @@
-# 030 — Why the roads vanished: the corrected spline network and an Old-World-only probe
+# 030 — Roads reported missing in 0.9.30: the order-preserving spline network and an Old-World-only probe (premise retracted)
 
 Date prepared: 2026-10-23. **SUPERSEDED: the roads had not vanished (wrong lens); probe A shows roads, probe B and the control are not needed (C166).**
 
-- **Background:** with the spline network of 0.9.30 (experiment 029) the game starts, writes no strip error and no crash, but draws no road anywhere, the Old World's included [V-GAME owner C164]. The difference to the 0.9.29 world, where roads draw, is that one file. 0.9.31 keeps vanilla's segments and points in vanilla's order (C165).
+- **Background:** the owner first reported that with the spline network of 0.9.30 (experiment 029) no road was drawn anywhere, the Old World's included (C164), and then withdrew it: the wrong lens had been on (C166). **That 0.9.30 had a defect is not an established fact, and the likeliest explanation is an observation error.** The probes were designed on the first report. 0.9.31 keeps vanilla's segments and points in vanilla's order (C165) as a precaution, not as a verified fix.
 - **Hypotheses**, in the order the probes test them:
   - **H1** The engine relies on the order of segments or the numbering of points, which 0.9.30 changed for the Old World too (segments renumbered by the strips that use them). 0.9.31 does not change it: a map that lost nothing gets vanilla's bytes back.
   - **H2** Something in the added strips (a chain of short segments, new anchors beyond vanilla's highest index 27,923, the point numbering base 30,211) makes the engine drop the whole network.
