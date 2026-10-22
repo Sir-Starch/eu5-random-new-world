@@ -43,7 +43,7 @@ wheels = [
 
 [[package]]
 name = "eu5-rnw-research"
-version = "0.9.33"
+version = "0.10.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },

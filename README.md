@@ -1,5 +1,7 @@
 # EU5 Random New World
 
+**0.10.0, 2026-10-23:** the covered New World shows the game's terra incognita drawings (dragons, compasses) through a sampler declared like the game's own, and the lobby's list leaves the New World's countries out through a scripted filter instead of leaving empty cells (C172, [experiment 031](experiments/031-cover-drawings-and-list/README.md)); not yet seen in game. The owner reports that shaders and the hiding look right in the latest run, and the 17 undiscovered-capital warnings of the opinions are gone from its log (C171).
+
 **Opinions, 2026-10-23:** the opinions of the great empires named capitals that their holders had not discovered, 17 warnings per start (C170); generator **0.9.33** makes each holder discover its partner's capital area and checks it on the written records (C171); not yet seen in game.
 
 **Map frame, 2026-10-23:** at country selection the cover of the New World reached beyond the map's north and south edges and cut the wooden table of the frame black over the New World's longitudes (C169); generator **0.9.32** (epoch 8) keeps the cover on the map; not yet seen in game ([experiment 027](experiments/027-map-shader-scope/README.md)).

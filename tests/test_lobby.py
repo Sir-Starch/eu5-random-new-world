@@ -17,6 +17,14 @@ from rnw.eu5_lobby import (
     CELL,
     CONTEXT_MENU,
     COVER_INCLUDE,
+    DRAWINGS_FILE,
+    DRAWINGS_INCLUDE,
+    DRAWINGS_INDEX,
+    DRAWINGS_SAMPLER,
+    FILTER_FILE,
+    FILTER_NAME,
+    FILTER_TAG,
+    FILTER_TEXTS,
     INDIRECTION_INCLUDE,
     INDIRECTION_REF,
     OWN_SAMPLERS,
@@ -32,15 +40,21 @@ from rnw.eu5_lobby import (
     cover_include,
     cover_shader,
     cover_words,
+    drawings_include,
+    filter_localization,
+    filter_localization_files,
+    filter_text,
     hide_select_entry,
     land_colour,
     mod_path,
     sampler_include,
     samplers_bound,
     scripted_gui_text,
+    shader_indexes,
     shader_samplers,
     unknown_colour,
 )
+from rnw.eu5_nw_export import LANGUAGES
 from rnw.pdx import parse
 
 if TYPE_CHECKING:
@@ -115,12 +129,10 @@ def test_each_shader_takes_its_includes_and_edits_and_is_refused_otherwise(
     assert edit.includes[-1] == COVER_INCLUDE
     replacements = [replacement for _, replacement in edit.edits]
     expected_notes = sum(replacement.count("Random New World") for replacement in replacements)
-    expected_calls = sum(
-        replacement.count(f"{edit.indirection}, {edit.visibility} )")
-        for replacement in replacements
-    )
+    arguments = ", ".join(filter(None, (edit.indirection, edit.visibility, edit.drawings)))
+    expected_calls = sum(replacement.count(f"{arguments} )") for replacement in replacements)
     assert patched.count("Random New World") == expected_notes
-    assert patched.count(f"{edit.indirection}, {edit.visibility} )") == expected_calls
+    assert patched.count(f"{arguments} )") == expected_calls
     assert all(replacement.strip() in patched for replacement in replacements)
     assert patched.count("{") == patched.count("}")
     assert patched.count("(") == patched.count(")")
@@ -136,6 +148,9 @@ def test_a_shader_adds_a_sampler_of_its_own_only_for_a_slot_it_lacks(edit: Shade
     own = {sampler: name for name, (sampler, _) in OWN_SAMPLERS.items()}
     for sampler in (edit.indirection, edit.visibility):
         assert (sampler in own) == (own.get(sampler) in edit.includes)
+    # The drawings are always the mod's own, and only the shaders that paint read them.
+    assert (DRAWINGS_INCLUDE in edit.includes) == bool(edit.drawings)
+    assert edit.drawings in ("", DRAWINGS_SAMPLER)
 
 
 def _reader(files: dict[str, str]):  # noqa: ANN202 - a test's small lookup
@@ -160,12 +175,13 @@ def test_a_slot_named_twice_or_a_missing_sampler_is_a_binding_problem() -> None:
     """As in 0.9.19: a second sampler of the province indirection is refused (C138)."""
     edit = SHADERS[0]
     fine = {edit.indirection: INDIRECTION_REF, edit.visibility: TI_REF, "Other": "Slot"}
-    assert binding_problem(edit, fine) is None
-    assert binding_problem(edit, None) is not None
-    twice = binding_problem(edit, fine | {"RnwProvinceIndirection": INDIRECTION_REF})
+    mine = {DRAWINGS_INDEX: [DRAWINGS_SAMPLER]}
+    assert binding_problem(edit, fine, mine) is None
+    assert binding_problem(edit, None, mine) is not None
+    twice = binding_problem(edit, fine | {"RnwProvinceIndirection": INDIRECTION_REF}, mine)
     assert twice is not None
     assert INDIRECTION_REF in twice
-    missing = binding_problem(edit, {edit.visibility: TI_REF})
+    missing = binding_problem(edit, {edit.visibility: TI_REF}, mine)
     assert missing is not None
     assert edit.indirection in missing
 
@@ -202,6 +218,59 @@ def test_an_own_sampler_include_declares_one_bound_sampler(name: str) -> None:
     assert {VISIBILITY_INCLUDE, INDIRECTION_INCLUDE} == set(OWN_SAMPLERS)
 
 
+def test_the_drawings_take_an_index_that_no_other_sampler_of_the_shader_holds() -> None:
+    """The drawings' sampler must be alone at its Index, or the shader is refused (C172)."""
+    edit = SHADERS[0]
+    fine = {edit.indirection: INDIRECTION_REF, edit.visibility: TI_REF}
+    assert edit.drawings == DRAWINGS_SAMPLER
+    assert binding_problem(edit, fine, {DRAWINGS_INDEX: [DRAWINGS_SAMPLER]}) is None
+    held = binding_problem(edit, fine, {DRAWINGS_INDEX: [DRAWINGS_SAMPLER, "Other"]})
+    assert held is not None
+    assert "Other" in held
+    assert binding_problem(edit, fine, {}) is not None
+    assert binding_problem(edit, fine, None) is not None
+    assert binding_problem(edit, fine, {DRAWINGS_INDEX + 1: ["Other"]}) is not None
+    # A shader that only clips takes no drawings and is not asked for an Index.
+    plain = next(shader for shader in SHADERS if not shader.drawings)
+    assert (
+        binding_problem(
+            plain,
+            {plain.indirection: INDIRECTION_REF, plain.visibility: TI_REF},
+        )
+        is None
+    )
+
+
+def test_the_indexes_of_a_shader_are_found_through_its_includes() -> None:
+    """Each Index lists its samplers, a Ref-only sampler is left out, a missing include fails."""
+    files = {
+        "a.fxh": 'TextureSampler A\n{\n\tIndex = 2\n\tfile = "x.dds"\n}\n'
+        + SAMPLE.format(name="R", ref="SlotR"),
+    }
+    shader = (
+        'Includes = {\n\t"a.fxh"\n}\n'
+        "TextureSampler B\n{\n\tIndex = 2\n}\nTextureSampler C\n{\n\tIndex = 5\n}\n"
+    )
+    found = shader_indexes(shader, _reader(files))
+    assert found is not None
+    assert {index: sorted(names) for index, names in found.items()} == {
+        2: ["A", "B"],
+        5: ["C"],
+    }
+    assert shader_indexes('Includes = {\n\t"x.fxh"\n}\n', _reader(files)) is None
+
+
+def test_the_drawings_include_names_the_games_texture_with_an_index() -> None:
+    """The sampler is bound by its Index and carries the path of the game's texture, no copy."""
+    text = drawings_include()
+    assert samplers_bound(text)
+    assert shader_indexes(text, _reader({})) == {DRAWINGS_INDEX: [DRAWINGS_SAMPLER]}
+    assert f'file = "{DRAWINGS_FILE}"' in text
+    assert DRAWINGS_FILE.startswith("gfx/map/flatmap/")
+    assert text.count("{") == text.count("}")
+    assert "Ref" not in text
+
+
 def test_a_sampler_with_only_a_file_is_not_bound() -> None:
     """The game drops a sampler that names neither a Ref nor an Index (C137)."""
     dropped = 'TextureSampler Mask\n{\n\tMagFilter = "Linear"\n\tFile = "gfx/a.dds"\n}\n'
@@ -218,8 +287,10 @@ def test_the_cover_files_are_the_mods_own_and_the_changed_game_files() -> None:
     assert not any(path.startswith("game/") for path in files)
     assert {mod_path(edit.path) for edit in SHADERS} <= set(files)
     assert {mod_path(CONTEXT_MENU), SCRIPTED_GUI_FILE} <= set(files)
-    for name in (COVER_INCLUDE, *OWN_SAMPLERS):
+    for name in (COVER_INCLUDE, DRAWINGS_INCLUDE, *OWN_SAMPLERS):
         assert f"main_menu/gfx/FX/{name}" in files
+    assert FILTER_FILE in files
+    assert set(filter_localization_files()) <= set(files)
     assert not any(path.endswith(".dds") for path in files)
     assert "in_game/gui/multiplayer_lobby.gui" in files
     assert "in_game/gui/map_markers.gui" in files
@@ -242,6 +313,37 @@ def test_the_context_menu_loses_select_for_a_country_of_the_new_world() -> None:
     assert CONTEXT_MENU.endswith("context_menu.gui")
 
 
+def test_the_filter_leaves_out_the_new_worlds_countries_by_the_games_own_mechanism() -> None:
+    """A scripted filter of the lobby's tag, on from the start, passing every other country."""
+    text = filter_text()
+    filter_ = parse(text).block(FILTER_NAME)
+    assert filter_ is not None
+    fields = {e.key: e.value for e in filter_.entries if isinstance(e.value, str)}
+    assert fields == {
+        "scope": "country",
+        "tag": "no_filters",
+        "enabled_at_start": "yes",
+        "hidden_in_searchbar": "yes",
+    }
+    assert "NOT = { capital.continent = continent:america }" in text
+    assert FILTER_FILE.startswith("in_game/gui/filters/")
+    assert fields["tag"] == FILTER_TAG
+
+
+def test_the_filters_texts_exist_in_every_language_the_world_is_written_in() -> None:
+    """Name and description in ten languages, one file each, under the keys the game derives."""
+    assert set(FILTER_TEXTS) == set(LANGUAGES)
+    files = filter_localization_files()
+    assert len(set(files)) == len(files) == len(LANGUAGES)
+    for language in LANGUAGES:
+        text = filter_localization(language)
+        assert text.startswith(f"l_{language}:\n")
+        assert f" search_filter_{FILTER_NAME}_name: " in text
+        assert f" search_filter_{FILTER_NAME}_desc: " in text
+        assert text.count('"') == 4
+        assert any(path.endswith(f"_l_{language}.yml") for path in files)
+
+
 def test_the_scripted_gui_reads_the_capitals_continent() -> None:
     """A country scope, shown when the capital is on the New World's continent; no game rule."""
     gui = parse(scripted_gui_text()).block(SCRIPTED_GUI)
@@ -257,6 +359,7 @@ def test_the_scripted_gui_reads_the_capitals_continent() -> None:
 # Stand-ins for the game's sampler macros: a sampler is a texture read through one sampler state.
 HARNESS_HEAD = """SamplerState RnwHarnessSampler : register(s0);
 #define PdxTextureSampler2D Texture2D
+#define PdxTex2D(samp, uv) (samp).Sample(RnwHarnessSampler, (uv))
 #define PdxTex2DLod0(samp, uv) (samp).SampleLevel(RnwHarnessSampler, (uv), 0)
 #define PdxTex2DLoad0(samp, uv) (samp).Load(int3((uv), 0))
 float2 vec2(float v) { return float2(v, v); }
@@ -267,7 +370,7 @@ float4 main(RnwHarnessInput Input) : SV_Target
 {
 \tfloat2 Position = Input.WorldSpacePos.xz;
 \tfloat3 Color = RnwCovered( float3( 1.0f, 1.0f, 1.0f ), Position, RnwProvinceIndirection,
-\t\tRnwVisibility );
+\t\tRnwVisibility, RnwDrawings );
 \treturn float4( Color, 1.0f - RnwCover( Position, RnwProvinceIndirection, RnwVisibility ) );
 }
 """
@@ -275,9 +378,9 @@ float4 main(RnwHarnessInput Input) : SV_Target
 
 def _harness(include: str) -> str:
     """The include's code with the mod's samplers declared, as the game declares bound ones."""
+    samplers = [sampler for sampler, _ in OWN_SAMPLERS.values()] + [DRAWINGS_SAMPLER]
     declared = [
-        f"Texture2D {sampler} : register(t{slot});"
-        for slot, (sampler, _) in enumerate(OWN_SAMPLERS.values())
+        f"Texture2D {sampler} : register(t{slot});" for slot, sampler in enumerate(samplers)
     ]
     code = re.search(r"\[\[(.*)\]\]", include, re.DOTALL)
     assert code is not None

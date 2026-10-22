@@ -10,10 +10,14 @@ files of the mod that replace the game's own, made from the installed game and n
 (AGENTS.md); the owner chose the four layers seen there (C136):
 
 * the terrain, in 3D and on the flat map, and the water take the colour of TI where the cover
-  holds, after the game's ``terra_incognita.shader`` where nothing is known;
+  holds, after the game's ``terra_incognita.shader`` where nothing is known, with its drawings
+  (dragons, compasses) read from the game's own texture through a sampler of the mod's
+  (``DRAWINGS_SAMPLER``, an ``Index`` and the path in ``file``, as that shader declares it);
 * borders and map names fade out there;
 * the context menu of a country on the map leaves out *Select* for a country of the New World,
-  which a scripted GUI of the mod recognises by its capital's continent.
+  which a scripted GUI of the mod recognises by its capital's continent;
+* the lobby's list of countries leaves them out through a scripted filter of the game's own
+  (``gui/filters``, the tag the lobby asks for), so no empty cells stand in its grid.
 
 The close-zoom failure of C150 adds detail, mesh and tree-shadow passes and lobby/marker GUI
 guards (C151). Native map picking is not intercepted; the lobby guard hides a selected New
@@ -53,7 +57,7 @@ from rnw.eu5_lobby_gui import GUI_FILES
 from rnw.eu5_lobby_gui import scripted_gui_text as location_scripted_gui_text
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Callable, Mapping, Sequence
 
     from numpy.typing import NDArray
 
@@ -63,6 +67,79 @@ SCRIPTED_GUI_FILE: Final[str] = "in_game/common/scripted_guis/rnw_new_world.txt"
 COVER_INCLUDE: Final[str] = "rnw_new_world_cover.fxh"
 VISIBILITY_INCLUDE: Final[str] = "rnw_new_world_visibility.fxh"
 INDIRECTION_INCLUDE: Final[str] = "rnw_new_world_indirection.fxh"
+# The drawings of terra incognita (dragons, compasses): a texture of the game's own, named by
+# path and read through a sampler of the mod's with an ``Index``, as terra_incognita.shader does.
+DRAWINGS_INCLUDE: Final[str] = "rnw_new_world_drawings.fxh"
+DRAWINGS_SAMPLER: Final[str] = "RnwDrawings"
+DRAWINGS_INDEX: Final[int] = 2
+DRAWINGS_FILE: Final[str] = "gfx/map/flatmap/terra_incognita.dds"
+# The lobby's list of countries, filtered by the game's own scripted filters (``gui/filters``).
+FILTER_FILE: Final[str] = "in_game/gui/filters/99_rnw_new_world.txt"
+FILTER_NAME: Final[str] = "rnw_new_world_hidden"
+FILTER_TAG: Final[str] = "no_filters"
+FILTER_TEXTS: Final[dict[str, tuple[str, str]]] = {
+    "braz_por": (
+        "Novo Mundo oculto",
+        (
+            "Os países do Novo Mundo gerado ficam fora da lista enquanto ele está oculto "
+            "(uma opção do gerador)."
+        ),
+    ),
+    "english": (
+        "New World hidden",
+        (
+            "The countries of the generated New World are left out of the list while it is "
+            "hidden (a setting of the generator)."
+        ),
+    ),
+    "french": (
+        "Nouveau Monde caché",
+        (
+            "Les pays du Nouveau Monde généré sont écartés de la liste tant qu'il est caché "
+            "(réglage du générateur)."
+        ),
+    ),
+    "german": (
+        "Neue Welt verborgen",
+        (
+            "Die Länder der erzeugten Neuen Welt stehen nicht in der Liste, solange sie "
+            "verborgen ist (Einstellung des Generators)."
+        ),
+    ),
+    "japanese": (
+        "新大陸を非表示",
+        "生成された新大陸が隠されている間、その国々は一覧に表示されません（ジェネレーターの設定）。",  # noqa: RUF001
+    ),
+    "korean": (
+        "신대륙 숨김",
+        "생성된 신대륙이 숨겨져 있는 동안 그 나라들은 목록에 나타나지 않습니다 (생성기 설정).",
+    ),
+    "polish": (
+        "Nowy Świat ukryty",
+        (
+            "Kraje wygenerowanego Nowego Świata nie pojawiają się na liście, dopóki jest ukryty "
+            "(ustawienie generatora)."
+        ),
+    ),
+    "russian": (
+        "Новый Свет скрыт",
+        (
+            "Страны созданного Нового Света не показываются в списке, пока он скрыт "
+            "(настройка генератора)."
+        ),
+    ),
+    "simp_chinese": (
+        "隐藏新大陆",
+        "新大陆被隐藏时，其生成的国家不会出现在列表中（生成器的设置）。",  # noqa: RUF001
+    ),
+    "spanish": (
+        "Nuevo Mundo oculto",
+        (
+            "Los países del Nuevo Mundo generado no aparecen en la lista mientras está oculto "
+            "(ajuste del generador)."
+        ),
+    ),
+}
 TI_REF: Final[str] = "TerraIncognitaVisibilityTexture"
 INDIRECTION_REF: Final[str] = "JominiProvinceColorIndirection"
 # The mod's own sampler includes: the sampler each declares and the engine slot it reads.
@@ -96,6 +173,7 @@ LAND_HSV: Final[re.Pattern[str]] = re.compile(
 INCLUDES: Final[re.Pattern[str]] = re.compile(r"\AIncludes = \{\n(.*?)\n\}\n", re.DOTALL)
 SAMPLER: Final[re.Pattern[str]] = re.compile(r"TextureSampler\s+(\w+)\s*\{(.*?)\}", re.DOTALL)
 REF: Final[re.Pattern[str]] = re.compile(r"\bRef\s*=\s*(\w+)")
+INDEX: Final[re.Pattern[str]] = re.compile(r"\bIndex\s*=\s*(\d+)")
 INCLUDE_NAMES: Final[re.Pattern[str]] = re.compile(r"Includes\s*=\s*\{(.*?)\}", re.DOTALL)
 SELECT: Final[str] = 'visible = "[And(IsLobbyOpen, IsCountryPlayable(Country.Self))]"'
 NEW_WORLD_COUNTRY: Final[str] = (
@@ -110,7 +188,9 @@ class ShaderEdit:
     samplers of the province indirection and of TI that its call of the cover passes.
 
     ``path`` is the override destination; ``source_path`` derives a private copy from a
-    different installed file without overriding that shared original.
+    different installed file without overriding that shared original. ``drawings`` names the
+    sampler of the terra incognita drawings that a call of ``RnwCovered`` passes, for the
+    shaders that paint the colour of the cover (empty where the cover only clips or fades).
     """
 
     path: str
@@ -119,6 +199,7 @@ class ShaderEdit:
     visibility: str
     edits: tuple[tuple[str, str], ...]
     source_path: str | None = None
+    drawings: str = ""
 
 
 def _lines(indent: int, *lines: str) -> str:
@@ -128,16 +209,28 @@ def _lines(indent: int, *lines: str) -> str:
 def _shader(
     path: str,
     includes: tuple[str, ...],
-    samplers: tuple[str, str],
+    samplers: tuple[str, ...],
     anchor: str,
     *lines: str,
     source_path: str | None = None,
 ) -> ShaderEdit:
-    """One edit at ``anchor``: ``lines`` before it, ``{samplers}`` standing for the call's."""
+    """One edit at ``anchor``: ``lines`` before it, ``{samplers}`` standing for the call's.
+
+    ``samplers`` are the indirection's and TI's, and the drawings' for a shader that paints.
+    """
     indent = len(anchor) - len(anchor.lstrip("\t"))
     arguments = ", ".join(samplers)
     body = _lines(indent, NOTE, *(line.format(samplers=arguments) for line in lines))
-    return ShaderEdit(path, includes, *samplers, ((anchor, body + anchor),), source_path)
+    indirection, visibility, *drawings = samplers
+    return ShaderEdit(
+        path,
+        includes,
+        indirection,
+        visibility,
+        ((anchor, body + anchor),),
+        source_path,
+        drawings[0] if drawings else "",
+    )
 
 
 def _tree_effect(name: str, vertex_shader: str, pixel_shader: str) -> str:
@@ -156,6 +249,8 @@ def _tree_lighting_call(function: str, *arguments: str) -> str:
 
 
 TERRAIN_SAMPLERS: Final[tuple[str, str]] = ("ProvinceColorIndirectionTexture", "RnwVisibility")
+# The shaders that paint the unknown colour read the drawings of terra incognita as well.
+DRAWN_SAMPLERS: Final[tuple[str, str, str]] = (*TERRAIN_SAMPLERS, DRAWINGS_SAMPLER)
 TREE_SHADOW_EFFECTS: Final[tuple[tuple[str, str, str], ...]] = (
     ("treeShadow", '"VertexPdxMeshStandardShadow"', '"PixelPdxMeshAlphaBlendShadow"'),
     ("tree_two_sidedShadow", '"VertexPdxMeshStandardShadow"', '"PixelPdxMeshAlphaBlendShadow"'),
@@ -244,7 +339,7 @@ TREE_SHADOW_CODE: Final[str] = "\n".join(
 SHADERS: Final[tuple[ShaderEdit, ...]] = (
     ShaderEdit(
         "game/main_menu/gfx/FX/pdxterrain2.shader",
-        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        (VISIBILITY_INCLUDE, DRAWINGS_INCLUDE, COVER_INCLUDE),
         *TERRAIN_SAMPLERS,
         (
             (
@@ -255,7 +350,7 @@ SHADERS: Final[tuple[ShaderEdit, ...]] = (
                     NOTE,
                     "float2 RnwPosition = Input.WorldSpacePos.xz;",
                     "RnwOutput._Color.rgb = RnwCovered( RnwOutput._Color.rgb, RnwPosition,",
-                    "\tProvinceColorIndirectionTexture, RnwVisibility );",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility, RnwDrawings );",
                     "return RnwOutput;",
                 ),
             ),
@@ -265,16 +360,17 @@ SHADERS: Final[tuple[ShaderEdit, ...]] = (
                     4,
                     NOTE,
                     "FinalColor.rgb = RnwCovered( FinalColor.rgb, Input.WorldSpacePos.xz,",
-                    "\tProvinceColorIndirectionTexture, RnwVisibility );",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility, RnwDrawings );",
                     "return FinalColor;",
                 ),
             ),
         ),
+        drawings=DRAWINGS_SAMPLER,
     ),
     _shader(
         "game/main_menu/gfx/FX/pdxwater.shader",
-        (VISIBILITY_INCLUDE, COVER_INCLUDE),
-        TERRAIN_SAMPLERS,
+        (VISIBILITY_INCLUDE, DRAWINGS_INCLUDE, COVER_INCLUDE),
+        DRAWN_SAMPLERS,
         _lines(4, "return PS_Return( Water._Color, Material );"),
         "float2 RnwPosition = Input.WorldSpacePos.xz;",
         "Water._Color.rgb = RnwCovered( Water._Color.rgb, RnwPosition, {samplers} );",
@@ -472,11 +568,14 @@ def cover_files() -> tuple[str, ...]:
     """The mod's files that cover the New World at country selection, relative to the mod."""
     return (
         f"{SHADER_DIR}/{COVER_INCLUDE}",
+        f"{SHADER_DIR}/{DRAWINGS_INCLUDE}",
         *(f"{SHADER_DIR}/{name}" for name in OWN_SAMPLERS),
         *(mod_path(edit.path) for edit in SHADERS),
         mod_path(CONTEXT_MENU),
         *(mod_path(path) for path in GUI_FILES),
         SCRIPTED_GUI_FILE,
+        FILTER_FILE,
+        *filter_localization_files(),
     )
 
 
@@ -517,9 +616,8 @@ def land_colour(defines: str) -> tuple[float, float, float] | None:
 def unknown_colour(land: tuple[float, float, float]) -> tuple[float, float, float]:
     """Terra incognita's colour where nothing is known: the land colour half grey, at a tenth.
 
-    ``terra_incognita.shader`` also darkens it by the drawings of a file texture of its own; a
-    mod's include could read that only through an engine slot no test has shown free (C137),
-    so the drawings are left out.
+    ``terra_incognita.shader`` also darkens it where its drawings lie; the cover multiplies this
+    colour by them (``RnwDrawn``), read from the game's texture through ``DRAWINGS_SAMPLER``.
     """
     grey = sum(part * weight for part, weight in zip(land, GREY, strict=True))
     red, green, blue = ((part + (grey - part) * GREY_SHARE) * UNKNOWN_BRIGHTNESS for part in land)
@@ -543,7 +641,8 @@ def cover_include(
 ) -> str:
     """The include of the cover's code: how much of a point it takes and what it paints there.
 
-    It declares no sampler: the shader passes the ones of the province indirection and of TI.
+    It declares no sampler: the shader passes the ones of the province indirection, of TI and,
+    where the colour is painted, of the drawings of terra incognita.
     """
     rows, columns = shape
     grid_rows, grid_columns = grid.shape
@@ -554,7 +653,8 @@ def cover_include(
     unknown = ", ".join(f"{part:.6f}f" for part in colour)
     return f"""# Random New World: the cover of the New World at country selection (C136-C138).
 # Made by the generator for one world: the grid and the map's size are this world's. It declares
-# no sampler; the shader passes those of the province indirection and of terra incognita.
+# no sampler; the shader passes those of the province indirection, of terra incognita and of its
+# drawings.
 
 PixelShader =
 {{
@@ -641,11 +741,23 @@ PixelShader =
 			return Mask * RnwUnknown( WorldSpacePosXZ, Indirection, Visibility );
 		}}
 
-		float3 RnwCovered( float3 Color, float2 WorldSpacePosXZ, in PdxTextureSampler2D Indirection,
-			in PdxTextureSampler2D Visibility )
+		// What terra_incognita.shader multiplies its colour by where the drawings lie: the texture
+		// covers the whole map, its top row north, the red channel darkens by up to three quarters
+		// and the green by up to a half.
+		float RnwDrawn( float2 WorldSpacePosXZ, in PdxTextureSampler2D Drawings )
 		{{
+			float2 UV = float2( WorldSpacePosXZ.x / RnwMapSize.x,
+				1.0f - WorldSpacePosXZ.y / RnwMapSize.y );
+			float2 Drawing = PdxTex2D( Drawings, UV ).rg;
+			return ( 1.0f - 0.75f * Drawing.r ) * ( 1.0f - 0.5f * Drawing.g );
+		}}
+
+		float3 RnwCovered( float3 Color, float2 WorldSpacePosXZ, in PdxTextureSampler2D Indirection,
+			in PdxTextureSampler2D Visibility, in PdxTextureSampler2D Drawings )
+		{{
+			float Drawn = RnwDrawn( WorldSpacePosXZ, Drawings );
 			float Cover = RnwCover( WorldSpacePosXZ, Indirection, Visibility );
-			return lerp( Color, RnwUnknownColour, Cover );
+			return lerp( Color, RnwUnknownColour * Drawn, Cover );
 		}}
 	]]
 }}
@@ -674,6 +786,33 @@ PixelShader =
 """
 
 
+def drawings_include() -> str:
+    """The include with the sampler of the drawings of terra incognita, a texture of the game.
+
+    It is declared as ``terra_incognita.shader`` declares the same texture, with an ``Index`` and
+    the path in ``file``, so the game binds it without the mod carrying a copy of it.
+    """
+    return f"""# Random New World: a sampler of the game's own drawings of terra incognita (dragons
+# and compasses), as terra_incognita.shader declares them, for the cover. A shader must
+# have no other sampler of this Index (C172).
+
+PixelShader =
+{{
+	TextureSampler {DRAWINGS_SAMPLER}
+	{{
+		Index = {DRAWINGS_INDEX}
+		MagFilter = "Linear"
+		MinFilter = "Linear"
+		MipFilter = "Linear"
+		SampleModeU = "Wrap"
+		SampleModeV = "Clamp"
+		file = "{DRAWINGS_FILE}"
+		srgb = no
+	}}
+}}
+"""
+
+
 def samplers_bound(include: str) -> bool:
     """Whether every sampler of an include names an engine slot, without which it is dropped."""
     return all(
@@ -681,13 +820,13 @@ def samplers_bound(include: str) -> bool:
     )
 
 
-def shader_samplers(text: str, read: Callable[[str], str | None]) -> dict[str, str | None] | None:
-    """Every sampler a shader declares itself or through its includes, with its slot (``Ref``).
+def _declared(text: str, read: Callable[[str], str | None]) -> list[tuple[str, str]] | None:
+    """Every ``(name, body)`` of a sampler a shader declares itself or through its includes.
 
     ``read`` gives the text of an include by its name, or None when there is none; a missing
     include gives None for the whole shader. Each include is read once, as the game does.
     """
-    samplers: dict[str, str | None] = {}
+    declared: list[tuple[str, str]] = []
     seen: set[str] = set()
     pending = [text]
     while pending:
@@ -701,19 +840,47 @@ def shader_samplers(text: str, read: Callable[[str], str | None]) -> dict[str, s
             if found is None:
                 return None
             pending.append(found)
-        for sampler, body in SAMPLER.findall(current):
-            ref = REF.search(body)
-            samplers[sampler] = ref.group(1) if ref else None
+        declared.extend(SAMPLER.findall(current))
+    return declared
+
+
+def shader_samplers(text: str, read: Callable[[str], str | None]) -> dict[str, str | None] | None:
+    """Every sampler a shader declares itself or through its includes, with its slot (``Ref``)."""
+    declared = _declared(text, read)
+    if declared is None:
+        return None
+    samplers: dict[str, str | None] = {}
+    for sampler, body in declared:
+        ref = REF.search(body)
+        samplers[sampler] = ref.group(1) if ref else None
     return samplers
 
 
-def binding_problem(edit: ShaderEdit, samplers: Mapping[str, str | None] | None) -> str | None:
+def shader_indexes(text: str, read: Callable[[str], str | None]) -> dict[int, list[str]] | None:
+    """The samplers of each ``Index`` a shader declares itself or through its includes."""
+    declared = _declared(text, read)
+    if declared is None:
+        return None
+    indexes: dict[int, list[str]] = {}
+    for sampler, body in declared:
+        index = INDEX.search(body)
+        if index:
+            indexes.setdefault(int(index.group(1)), []).append(sampler)
+    return indexes
+
+
+def binding_problem(
+    edit: ShaderEdit,
+    samplers: Mapping[str, str | None] | None,
+    indexes: Mapping[int, Sequence[str]] | None = None,
+) -> str | None:
     """Why the patched shader would not bind as the cover expects, or None when it would.
 
-    The samplers its call passes must read the province indirection and TI, and no engine slot
-    may stand under two names (C138).
+    The samplers its call passes must read the province indirection and TI, no engine slot
+    may stand under two names (C138), and the sampler of the drawings must be the only one of
+    its ``Index`` (``indexes``, from ``shader_indexes``; a slot named twice fails the same way).
     """
-    if samplers is None:
+    if samplers is None or (edit.drawings and indexes is None):
         return "an include it names is missing"
     expected = {edit.indirection: INDIRECTION_REF, edit.visibility: TI_REF}
     wrong = [name for name, ref in expected.items() if samplers.get(name) != ref]
@@ -726,6 +893,13 @@ def binding_problem(edit: ShaderEdit, samplers: Mapping[str, str | None] | None)
     twice = sorted(ref for ref, found in names.items() if len(found) > 1)
     if twice:
         return f"the slots {', '.join(twice)} are named twice"
+    if (
+        edit.drawings
+        and indexes is not None
+        and list(indexes.get(DRAWINGS_INDEX, ())) != [edit.drawings]
+    ):
+        shared = ", ".join(indexes.get(DRAWINGS_INDEX, ())) or "none"
+        return f"the Index {DRAWINGS_INDEX} of the drawings is held by {shared}"
     return None
 
 
@@ -750,6 +924,47 @@ def hide_select_entry(text: str) -> str | None:
         f'Not({NEW_WORLD_COUNTRY}))]"'
     )
     return text.replace(SELECT, replacement)
+
+
+def filter_text() -> str:
+    """The scripted filter that leaves the New World's countries out of the lobby's list.
+
+    The lobby asks for the filters of the tag ``no_filters``, which vanilla defines none of; the
+    filter is on from the start and passes every country whose capital is not on the New
+    World's continent. It is the game's own way to filter a list, so the list shows no gap
+    where a hidden item would stand in its grid.
+    """
+    return (
+        "# Random New World: the lobby's list of countries leaves out the New World's while it is\n"
+        "# hidden (C172).\n"
+        f"{FILTER_NAME} = {{\n"
+        "\tscope = country\n"
+        f"\ttag = {FILTER_TAG}\n"
+        "\tenabled_at_start = yes\n"
+        "\thidden_in_searchbar = yes\n"
+        "\ttrigger = {\n"
+        f"\t\tNOT = {{ capital.continent = continent:{CONTINENT} }}\n"
+        "\t}\n"
+        "}\n"
+    )
+
+
+def filter_localization_files() -> tuple[str, ...]:
+    """The mod's paths of the filter's texts, one file for each language."""
+    return tuple(
+        f"main_menu/localization/{language}/rnw_new_world_cover_l_{language}.yml"
+        for language in FILTER_TEXTS
+    )
+
+
+def filter_localization(language: str) -> str:
+    """The name and the description of the filter in one language."""
+    name, description = FILTER_TEXTS[language]
+    return (
+        f"l_{language}:\n"
+        f' search_filter_{FILTER_NAME}_name: "{name}"\n'
+        f' search_filter_{FILTER_NAME}_desc: "{description}"\n'
+    )
 
 
 def scripted_gui_text() -> str:

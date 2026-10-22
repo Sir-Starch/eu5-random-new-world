@@ -85,3 +85,5 @@ interpolation inside the map. The new world differs from the 0.9.31 world of the
 **Check in game:** start the world with only the hub and `rnw_exp_world_j3ze425437`, look at the north and south edges
 of the map from far out, at country selection and in a campaign: the table should be drawn along the whole width. The New
 World must stay covered at selection, and its rim at the poles must still be covered inside the map.
+
+**Result 2026-10-23 (C172):** [V-GAME owner] shaders and the hiding of the New World look right in a later run, with the 0.9.32/0.9.33 worlds installed; the frame's table, loading art and portraits raise no complaint. Remaining items (the drawings of terra incognita and the lobby's list) are in [experiment 031](../031-cover-drawings-and-list/README.md).
