@@ -15,6 +15,10 @@ files of the mod that replace the game's own, made from the installed game and n
 * the context menu of a country on the map leaves out *Select* for a country of the New World,
   which a scripted GUI of the mod recognises by its capital's continent.
 
+The close-zoom failure of C150 adds detail, mesh and tree-shadow passes and lobby/marker GUI
+guards (C151). Native map picking is not intercepted; the lobby guard hides a selected New
+World country's information and disables its UI start controls. Runtime confirmation is open.
+
 Where the cover lies is a grid of ``CELL``-pixel squares held in the include as a constant
 array, a bit each, first row north: the generated locations and the game's ocean wastelands
 (impassable sea zones) that border them, which a country in a game does not know either and
@@ -44,6 +48,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
+
+from rnw.eu5_lobby_gui import GUI_FILES
+from rnw.eu5_lobby_gui import scripted_gui_text as location_scripted_gui_text
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -123,7 +130,107 @@ def _shader(
     return ShaderEdit(path, includes, *samplers, ((anchor, body + anchor),))
 
 
+def _tree_effect(name: str, vertex_shader: str, pixel_shader: str) -> str:
+    return "\n".join(
+        (
+            f"Effect {name}",
+            "{",
+            f"\tVertexShader = {vertex_shader}",
+            f"\tPixelShader = {pixel_shader}",
+        )
+    )
+
+
+def _tree_lighting_call(function: str, *arguments: str) -> str:
+    return f"float3 Color = {function}( {', '.join(arguments)} );"
+
+
 TERRAIN_SAMPLERS: Final[tuple[str, str]] = ("ProvinceColorIndirectionTexture", "RnwVisibility")
+TREE_SHADOW_EFFECTS: Final[tuple[tuple[str, str, str], ...]] = (
+    ("treeShadow", '"VertexPdxMeshStandardShadow"', '"PixelPdxMeshAlphaBlendShadow"'),
+    ("tree_two_sidedShadow", '"VertexPdxMeshStandardShadow"', '"PixelPdxMeshAlphaBlendShadow"'),
+    (
+        "tree_alpha_to_coverageShadow",
+        '"VertexPdxMeshStandardShadow"',
+        '"PixelPdxMeshAlphaBlendShadow"',
+    ),
+    (
+        "tree_alpha_to_coverage_two_sidedShadow",
+        '"VertexPdxMeshStandardShadow"',
+        '"PixelPdxMeshAlphaBlendShadow"',
+    ),
+    ("treeShadow_mapobject", "VS_mapobject_shadow", '"PS_jomini_mapobject_shadow_alphablend"'),
+    (
+        "tree_two_sidedShadow_mapobject",
+        "VS_mapobject_shadow",
+        '"PS_jomini_mapobject_shadow_alphablend"',
+    ),
+    (
+        "tree_alpha_to_coverageShadow_mapobject",
+        "VS_mapobject_shadow",
+        '"PS_jomini_mapobject_shadow_alphablend"',
+    ),
+    (
+        "tree_alpha_to_coverage_two_sidedShadow_mapobject",
+        "VS_mapobject_shadow",
+        '"PS_jomini_mapobject_shadow_alphablend"',
+    ),
+    ("billboard_testShadow", "VS_billboard_test_shadow", "PixelPdxMeshAlphaBlendShadow"),
+    (
+        "billboard_testShadow_mapobject",
+        "VS_billboard_test_mapobject_shadow",
+        "PS_jomini_mapobject_shadow_alphablend",
+    ),
+)
+TREE_SHADOW_CODE: Final[str] = "\n".join(
+    [
+        "MainCode PS_RnwTreeShadow",
+        "{",
+        '\tInput = "VS_OUTPUT_PDXMESHSHADOWSTANDARD"',
+        '\tOutput = "void"',
+        "\tCode",
+        "\t[[",
+        "\t\tPDX_MAIN",
+        "\t\t{",
+        "\t\t\tfloat Alpha = PdxTex2D( PDXMESH_AlphaBlendShadowMap, Input.UV_InstanceIndex.xy ).a;",
+        "\t\t#ifdef PDXMESH_USE_DITHERED_OPACITY",
+        "\t\t\tfloat Opacity = PdxMeshGetOpacity( uint( Input.UV_InstanceIndex.z + 0.5 ) );",
+        "\t\t\tPdxMeshApplyDitheredOpacity( Opacity, Input.Position.xy );",
+        "\t\t#endif",
+        "\t\t\tfloat4x4 WorldMatrix = PdxMeshGetWorldMatrix( {} );".format(
+            "uint( Input.UV_InstanceIndex.z + 0.5 )"
+        ),
+        "\t\t\tfloat2 WorldSpacePosXZ = float2( WorldMatrix[0][3], WorldMatrix[2][3] );",
+        "\t\t\tclip( 0.001f - RnwCover( {}, {}, {} ) );".format(
+            "WorldSpacePosXZ", "ProvinceColorIndirectionTexture", "RnwVisibility"
+        ),
+        "\t\t\tclip( Alpha - 0.5f );",
+        "\t\t}",
+        "\t]]",
+        "}",
+        "MainCode PS_RnwTreeMapObjectShadow",
+        "{",
+        '\tInput = "VS_OUTPUT_MAPOBJECT_SHADOW"',
+        '\tOutput = "void"',
+        "\tCode",
+        "\t[[",
+        "\t\tPDX_MAIN",
+        "\t\t{",
+        "\t\t\tApplyDither( Input );",
+        "\t\t\tfloat Alpha = PdxTex2D( PDXMESH_AlphaBlendShadowMap, Input.UV ).a;",
+        "\t\t\tfloat4x4 WorldMatrix = UnpackAndGetMapObjectWorldMatrix( {} );".format(
+            "Input.Index24_Packed1_Opacity6_Sign1"
+        ),
+        "\t\t\tfloat2 WorldSpacePosXZ = float2( WorldMatrix[0][3], WorldMatrix[2][3] );",
+        "\t\t\tclip( 0.001f - RnwCover( {}, {}, {} ) );".format(
+            "WorldSpacePosXZ", "ProvinceColorIndirectionTexture", "RnwVisibility"
+        ),
+        "\t\t\tclip( Alpha - 0.5f );",
+        "\t\t}",
+        "\t]]",
+        "}",
+    ]
+)
 SHADERS: Final[tuple[ShaderEdit, ...]] = (
     ShaderEdit(
         "game/main_menu/gfx/FX/pdxterrain2.shader",
@@ -187,6 +294,150 @@ SHADERS: Final[tuple[ShaderEdit, ...]] = (
         _lines(3, "return MixedColor;"),
         "MixedColor.a *= 1.0f - RnwCover( Input.WorldSpacePos.xz, {samplers} );",
     ),
+    ShaderEdit(
+        "game/main_menu/gfx/FX/tree.shader",
+        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        "ProvinceColorIndirectionTexture",
+        "RnwVisibility",
+        (
+            (
+                "MainCode PS_leaf\n",
+                TREE_SHADOW_CODE + "MainCode PS_leaf\n",
+            ),
+            (
+                _lines(
+                    4,
+                    _tree_lighting_call(
+                        "CalculateSunLighting", "MaterialProps", "LightingProps", "EnvironmentMap"
+                    ),
+                ),
+                _lines(
+                    4,
+                    NOTE,
+                    "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz,",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility ) );",
+                    _tree_lighting_call(
+                        "CalculateSunLighting", "MaterialProps", "LightingProps", "EnvironmentMap"
+                    ),
+                ),
+            ),
+            (
+                _lines(
+                    4,
+                    _tree_lighting_call(
+                        "CalculateCustomLeafLighting",
+                        "TranslucencyMask",
+                        "MaterialProps",
+                        "LightingProps",
+                        "EnvironmentMap",
+                        "ShadowTerm",
+                        "SoftShadowTerm",
+                    ),
+                ),
+                _lines(
+                    4,
+                    NOTE,
+                    "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz,",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility ) );",
+                    _tree_lighting_call(
+                        "CalculateCustomLeafLighting",
+                        "TranslucencyMask",
+                        "MaterialProps",
+                        "LightingProps",
+                        "EnvironmentMap",
+                        "ShadowTerm",
+                        "SoftShadowTerm",
+                    ),
+                ),
+            ),
+            *(
+                (
+                    _tree_effect(name, vertex_shader, old_pixel_shader),
+                    _tree_effect(name, vertex_shader, "PS_RnwTreeShadow"),
+                )
+                for name, vertex_shader, old_pixel_shader in TREE_SHADOW_EFFECTS
+                if "mapobject" not in name and "Shadow" in name
+            ),
+            *(
+                (
+                    _tree_effect(name, vertex_shader, old_pixel_shader),
+                    _tree_effect(name, vertex_shader, "PS_RnwTreeMapObjectShadow"),
+                )
+                for name, vertex_shader, old_pixel_shader in TREE_SHADOW_EFFECTS
+                if "mapobject" in name
+            ),
+        ),
+    ),
+    _shader(
+        "game/main_menu/gfx/FX/river_surface.shader",
+        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        TERRAIN_SAMPLERS,
+        _lines(4, "return PS_Return( FinalColor, Material );"),
+        "FinalColor.a *= 1.0f - RnwCover( Input.WorldSpacePos.xz, {samplers} );",
+    ),
+    _shader(
+        "game/main_menu/gfx/FX/river_bottom.shader",
+        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        TERRAIN_SAMPLERS,
+        _lines(4, "return Out;"),
+        "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz, {samplers} ) );",
+    ),
+    _shader(
+        "game/main_menu/gfx/FX/city_generated_geometry.shader",
+        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        TERRAIN_SAMPLERS,
+        _lines(3, "return PS_Return( Color, Alpha * Opacity * FlatmapFade.y, MaterialProps );"),
+        "Alpha *= 1.0f - RnwCover( WorldSpacePos.xz, {samplers} );",
+    ),
+    _shader(
+        "game/main_menu/gfx/FX/pdxmesh.shader",
+        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        TERRAIN_SAMPLERS,
+        _lines(3, "return TerrainShader( InputTerrain, Input.Normal );"),
+        "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz, {samplers} ) );",
+    ),
+    _shader(
+        "game/loading_screen/gfx/FX/pdxmesh_base.fxh",
+        ("jomini/jomini_province_overlays.fxh", VISIBILITY_INCLUDE, COVER_INCLUDE),
+        ("ProvinceColorIndirectionTexture", "RnwVisibility"),
+        _lines(4, "float Alpha = Diffuse.a;"),
+        "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz, {samplers} ) );",
+    ),
+    ShaderEdit(
+        "game/main_menu/gfx/FX/pdxmesh_decal.shader",
+        (VISIBILITY_INCLUDE, COVER_INCLUDE),
+        "ProvinceColorIndirectionTexture",
+        "RnwVisibility",
+        (
+            (
+                _lines(4, "return float4( Color, Alpha );"),
+                _lines(
+                    4,
+                    NOTE,
+                    "Alpha *= 1.0f - RnwCover( Input.WorldSpacePos.xz,",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility );",
+                    "return float4( Color, Alpha );",
+                ),
+            ),
+            (
+                _lines(4, "return float4( Color, Diffuse.a );"),
+                _lines(
+                    4,
+                    NOTE,
+                    "Diffuse.a *= 1.0f - RnwCover( Input.WorldSpacePos.xz,",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility );",
+                    "return float4( Color, Diffuse.a );",
+                ),
+            ),
+        ),
+    ),
+    _shader(
+        "game/main_menu/gfx/FX/worldtext.shader",
+        (INDIRECTION_INCLUDE, VISIBILITY_INCLUDE, COVER_INCLUDE),
+        ("RnwProvinceIndirection", "RnwVisibility"),
+        _lines(3, "return MixedColor;"),
+        "MixedColor.a *= 1.0f - RnwCover( Input.WorldSpacePos.xz, {samplers} );",
+    ),
 )
 
 
@@ -202,6 +453,7 @@ def cover_files() -> tuple[str, ...]:
         *(f"{SHADER_DIR}/{name}" for name in OWN_SAMPLERS),
         *(mod_path(edit.path) for edit in SHADERS),
         mod_path(CONTEXT_MENU),
+        *(mod_path(path) for path in GUI_FILES),
         SCRIPTED_GUI_FILE,
     )
 
@@ -478,4 +730,4 @@ def scripted_gui_text() -> str:
         "# Random New World: is the country's capital in the generated New World?\n"
         f"{SCRIPTED_GUI} = {{\n\tscope = country\n\tis_shown = {{\n"
         f"\t\tcapital.continent = continent:{CONTINENT}\n\t}}\n}}\n"
-    )
+    ) + location_scripted_gui_text()

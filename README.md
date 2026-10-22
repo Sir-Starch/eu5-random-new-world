@@ -2,6 +2,14 @@
 
 Research and bootstrap repository for a future Europa Universalis V Random New World generator. The target is **genuinely generated geography and civilizations** with a historical Old World, not a shuffle of vanilla owners.
 
+**Cover failure, 2026-10-22:** the owner's EU5 1.4.3 test of a 0.9.20 world reveals
+trees, rivers, resources and cities at close zoom and allows starting as a covered
+New World country [V-GAME owner / V-LOCAL C150]. The political-lens success of C139
+does not cover these routes. Follow-up: [experiment 026](experiments/026-close-zoom-cover/README.md).
+Generator **0.9.26** adds an expanded cover and lobby UI safeguards, verified offline
+against the exact installed build [V-EXEC C151]. Native map picking is not intercepted;
+the new concealment and UI start guards require an in-game retest [UNKNOWN].
+
 **Patch check, 2026-10-22:** generator **0.9.25** accepts the locally checked **1.4.3 open beta, Steam build 26105915**. The installation tests and a full reference-world export pass offline; the output preserves pixels outside the canvas and loses no Old World contacts [V-LOCAL/V-EXEC C148–C149]. Worlds built from 1.4.2 should be regenerated because their full-file overrides can undo patch changes [INFERRED C148]. **1.4.3 loading and playability remain unverified**; EU5 was not launched. See [the patch record](experiments/025-patch-1-4-3/README.md). The dated entries below describe earlier milestones.
 
 **Actual status, 2026-10-13:** Local EU5 is the Steam `1.4-open-beta` branch, build 25905365, running as **1.4.1** through Proton [V-LOCAL C01; V-GAME C02]. An isolated metadata-only `rnw_exp_*` mod was recognized and version-matched in the game log [V-GAME C11], but complete error-free loading, content override, changed start state, boundaries, new locations and playability remain unverified [UNKNOWN C13]. The isolated profile opened an unresponsive first-run Select Language screen, so the game was closed and **will not be launched again in this session** at the owner's request [V-GAME C12]. The full result of experiment 001 is **INCONCLUSIVE**; experiments 002–006 are **NOT-RUN**.

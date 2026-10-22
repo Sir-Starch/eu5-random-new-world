@@ -23,21 +23,19 @@ from rnw.eu5_lobby import (
     CONTEXT_MENU,
     COVER_INCLUDE,
     GRAPHICS_DEFINES,
-    INCLUDE_DIRS,
     OWN_SAMPLERS,
     SHADERS,
-    binding_problem,
     cover_include,
     cover_shader,
     hide_select_entry,
     land_colour,
     sampler_include,
-    shader_samplers,
 )
+from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
 from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map
 from rnw.eu5_natives import vanilla_natives
 from rnw.eu5_newworld import vanilla_geometry
-from rnw.eu5_nw_export import calibrate_development, export_new_world
+from rnw.eu5_nw_export import binding_problems, calibrate_development, export_new_world
 from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, TOPOGRAPHY_GROUPS, SlotTables, synthesize
 from rnw.eu5_terrain import DecalStore
 from rnw.geography import color_summary, read_locations, summary
@@ -199,19 +197,15 @@ def test_local_game_files_take_the_selection_cover() -> None:
     mod = {COVER_INCLUDE: cover_include((8192, 16384), grid, (0.1, 0.1, 0.1))}
     mod.update({name: sampler_include(name) for name in OWN_SAMPLERS})
 
-    def read(name: str) -> str | None:
-        if name in mod:
-            return mod[name]
-        found = [
-            root / folder / name for folder in INCLUDE_DIRS if (root / folder / name).is_file()
-        ]
-        return found[0].read_text(encoding="utf-8-sig") if found else None
-
+    shaders: dict[str, str] = {}
     for edit in SHADERS:
         patched = cover_shader(edit, (root / edit.path).read_text(encoding="utf-8-sig"))
         assert patched, edit.path
-        assert binding_problem(edit, shader_samplers(patched, read)) is None, edit.path
+        shaders[edit.path] = patched
+    assert not binding_problems(root, shaders, mod)
     assert hide_select_entry((root / CONTEXT_MENU).read_text(encoding="utf-8-sig"))
+    for path in GUI_FILES:
+        assert patch_gui(path, (root / path).read_text(encoding="utf-8-sig")), path
     assert land_colour((root / GRAPHICS_DEFINES).read_text(encoding="utf-8-sig"))
 
 

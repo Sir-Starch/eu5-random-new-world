@@ -356,3 +356,30 @@
   sandbox succeeds. No code or configuration was changed for that environment limitation.
 - [UNKNOWN] No claim of 1.4.3 loading or playability; no installation, game launch, push
   or publication.
+
+## 2026-10-22 — Close-zoom cover and lobby safeguards (0.9.26)
+
+- [V-GAME owner / V-LOCAL C150] The owner sees trees, rivers, resource markers and
+  cities through the cover at close zoom and starts as a New World country from the
+  map. The latest profile log mounts the 0.9.20 world on EU5 1.4.3. C139's political
+  lens success did not validate these open checks. Record the failure in experiment 026.
+- [V-EXEC C151] Extend cover output from 9 to 19 files: eight shader/include and two
+  GUI overrides. Include tree shadow passes, standard mesh rendering and lobby-only
+  marker suppression. Hide covered country cards/selected-country information and
+  guard start/join controls; suppress the unfiltered random selector while covered.
+- [V-EXEC C151] A failing-first regression catches an include-resolution hole in the
+  binding audit: generated overrides now take precedence over installed includes.
+  Five consumers of the standard mesh include have no duplicate slots. Four tree
+  shadow HLSL variants compile with typed native-call stubs; this is not EU5 compilation.
+- [V-EXEC C151] Raise release to 0.9.26 and epoch to 2, preserving epoch-1 digests.
+  A real CLI export takes 90.2 s and passes all invariants; independent disk hashes
+  give 749 non-metadata files, `e1654f67aa8fdae52b988bb96dc6dd75f16f289563ba448230dba9add85e708b`.
+  Ten files are added and only the scripted GUI changes relative to C149; all existing
+  geography, civilization and raster files remain identical. Renew the reference.
+- [V-EXEC] Required checks pass: formatting/lint, strict types, 835 Python tests
+  (8 optional skips), 23 Rust tests. All 8 installation tests pass in 109.34 s with
+  an independent full reference export. The candidates stay outside every profile
+  under `local_data/close-zoom-cover/`; no existing mod, game or playset was changed.
+- [UNKNOWN] Native map picking is not intercepted, and UI guards do not establish an
+  engine-level ban. Concealment, UI start prevention, discovery, keyboard routes and
+  multiplayer still require in-game confirmation. No EU5 launch, push or publication.

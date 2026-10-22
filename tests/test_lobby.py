@@ -98,7 +98,7 @@ def test_the_unknown_colour_is_the_land_colour_half_grey_at_a_tenth() -> None:
 
 def _shader(edit: ShaderEdit) -> str:
     """A shader with the include block first and every anchor of the edit once."""
-    anchors = "".join(old for old, _ in edit.edits)
+    anchors = "".join(f"{old}\n}}\n" if old.startswith("Effect ") else old for old, _ in edit.edits)
     return f'Includes = {{\n\t"a.fxh"\n}}\n\nPixelShader =\n{{\n{anchors}}}\n'
 
 
@@ -113,8 +113,15 @@ def test_each_shader_takes_its_includes_and_edits_and_is_refused_otherwise(
     added = "".join(f'\t"{name}"\n' for name in edit.includes)
     assert patched.startswith(f'Includes = {{\n\t"a.fxh"\n{added}}}\n')
     assert edit.includes[-1] == COVER_INCLUDE
-    assert patched.count("Random New World") == len(edit.edits)
-    assert patched.count(f"{edit.indirection}, {edit.visibility} )") == len(edit.edits)
+    replacements = [replacement for _, replacement in edit.edits]
+    expected_notes = sum(replacement.count("Random New World") for replacement in replacements)
+    expected_calls = sum(
+        replacement.count(f"{edit.indirection}, {edit.visibility} )")
+        for replacement in replacements
+    )
+    assert patched.count("Random New World") == expected_notes
+    assert patched.count(f"{edit.indirection}, {edit.visibility} )") == expected_calls
+    assert all(replacement.strip() in patched for replacement in replacements)
     assert patched.count("{") == patched.count("}")
     assert patched.count("(") == patched.count(")")
     first = edit.edits[0][0]
@@ -212,6 +219,8 @@ def test_the_cover_files_are_the_mods_own_and_the_changed_game_files() -> None:
     for name in (COVER_INCLUDE, *OWN_SAMPLERS):
         assert f"main_menu/gfx/FX/{name}" in files
     assert not any(path.endswith(".dds") for path in files)
+    assert "in_game/gui/multiplayer_lobby.gui" in files
+    assert "in_game/gui/map_markers.gui" in files
 
 
 def test_the_context_menu_loses_select_for_a_country_of_the_new_world() -> None:

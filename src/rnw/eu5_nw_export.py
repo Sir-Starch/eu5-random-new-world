@@ -88,6 +88,7 @@ from rnw.eu5_lobby import (
     shader_samplers,
     unknown_colour,
 )
+from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
 from rnw.eu5_map import (
     ADJACENCIES,
     DEFAULT_MAP,
@@ -600,17 +601,20 @@ def _localization(plan: Plan, extra: dict[str, str], renamed: dict[str, str]) ->
     return files
 
 
-def _binding_problems(
+def binding_problems(
     game_dir: Path, shaders: dict[str, str], mod_includes: dict[str, str]
 ) -> list[str]:
     """Why patched shaders would not bind as the cover expects (C137, C138); empty when fine.
 
-    Includes are looked up as the game does, the mod's own (``mod_includes``) first.
+    Includes use the mod's own files and patched game includes before installed originals.
     """
 
     def read(name: str) -> str | None:
         if name in mod_includes:
             return mod_includes[name]
+        for folder in INCLUDE_DIRS:
+            if (relative := f"{folder}/{name}") in shaders:
+                return shaders[relative]
         for folder in INCLUDE_DIRS:
             if (game_dir / folder / name).is_file():
                 return _read(game_dir, f"{folder}/{name}")
@@ -644,10 +648,13 @@ def _cover_outputs(
     cover's samplers, stops the export instead of leaving the cover half made.
     """
     patched = {edit.path: cover_shader(edit, _read(game_dir, edit.path)) for edit in SHADERS}
+    gui_patched = {path: patch_gui(path, _read(game_dir, path)) for path in GUI_FILES}
     menu = hide_select_entry(_read(game_dir, CONTEXT_MENU))
     land = land_colour(_read(game_dir, GRAPHICS_DEFINES))
     shaders = {path: text for path, text in patched.items() if text is not None}
     broken = sorted(path for path in patched if path not in shaders)
+    guis = {path: text for path, text in gui_patched.items() if text is not None}
+    broken.extend(path for path in gui_patched if path not in guis)
     if menu is None:
         broken.append(CONTEXT_MENU)
     if land is None:
@@ -671,7 +678,7 @@ def _cover_outputs(
         COVER_INCLUDE: cover_include((rows, columns), grid, unknown_colour(land)),
         **{name: sampler_include(name) for name in OWN_SAMPLERS},
     }
-    broken = _binding_problems(game_dir, shaders, mod_includes)
+    broken = binding_problems(game_dir, shaders, mod_includes)
     if broken:
         message = (
             "The cover of the New World would not bind in this build of the game "
@@ -681,6 +688,7 @@ def _cover_outputs(
     outputs = {
         **{f"{SHADER_DIR}/{name}": text.encode("utf-8") for name, text in mod_includes.items()},
         _mod_path(CONTEXT_MENU): _encode(game_dir, CONTEXT_MENU, menu),
+        **{_mod_path(path): _encode(game_dir, path, text) for path, text in guis.items()},
         SCRIPTED_GUI_FILE: scripted_gui_text().encode("utf-8-sig"),
     }
     for path, text in shaders.items():

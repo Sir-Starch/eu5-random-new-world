@@ -1,5 +1,12 @@
 # Installed experiments
 
+2026-10-22, close-zoom cover (C150–C151, experiment 026): no mod was installed or
+removed and no existing profile/mod/playset was changed. The new offline CLI bundle is
+`local_data/close-zoom-cover/application/generated/rnw_exp_world_hgihw5wfjp/`.
+The independent reference-test output is under
+`local_data/close-zoom-cover/reproduction/`. Both are outside every game profile and
+ignored by Git; either exact folder may be removed when its evidence is no longer needed.
+
 Before 2026-10-14 no test mod was installed in the owner's normal EU5 user mod directory. Only new folders starting with `rnw_exp_` may be installed there, and each must be recorded here before use.
 
 2026-10-22 patch 1.4.3 check ([025](025-patch-1-4-3/README.md)): no mod installed or
