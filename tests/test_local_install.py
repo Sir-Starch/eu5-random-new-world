@@ -176,6 +176,17 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
     )
     shares = Counter(culture.family for culture in vanilla.cultures.values())
     assert shares == {"north_america": 380, "south_america": 276, "mesoamerica": 74}
+    # R7c: the great empire's level, rank, road bound and its four opinion types (C155, C158)
+    assert vanilla.empire is not None
+    assert (vanilla.empire.level, vanilla.empire.rank) == (3, "rank_duchy")
+    assert 900 <= vanilla.empire.road_permille <= 1100
+    assert vanilla.empire.opinions == (
+        "opinion_threatens_conquest",
+        "opinion_prey_to_conquest",
+        "opinion_tyrant_overlord",
+        "opinion_irritated",
+    )
+    assert len(vanilla.empire.largest) == 5
 
 
 def test_local_development_calibration_reads_the_vanilla_americas() -> None:

@@ -1,5 +1,7 @@
 # EU5 Random New World
 
+**R7 offline complete, 2026-10-22:** generator **0.9.28** gives each native state a technology level from its society and keeps cultures in the regional family of their land (R7b, C159); **0.9.29** gives great empires the Old World's level, a vanilla rank, royal roads, feared neighbours and resentful vassals (R7c, C160). Offline checks pass; nothing is validated in game. [Experiment 028](experiments/028-technology-and-empires/README.md) is installed as `rnw_exp_world_canszr3phf` and awaits the owner's test.
+
 **Shader regression, 2026-10-22:** the owner confirms full New World concealment in
 0.9.26, but loading art and character backgrounds fail [V-GAME owner / V-LOCAL C153].
 Generator **0.9.27** isolates the cover in a private map-mesh include and restores the

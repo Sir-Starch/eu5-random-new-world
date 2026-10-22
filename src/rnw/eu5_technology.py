@@ -149,6 +149,19 @@ def _own_level(block: Block, levels: Mapping[str, int]) -> int | None:
     return max(known) if known else None
 
 
+def american_states(setup_text: str, american: Collection[str]) -> list[tuple[str, Block]]:
+    """Landed countries of the 1337 setup that hold some locations, all of them in ``american``."""
+    holder = parse(setup_text).block("countries", "countries")
+    found: list[tuple[str, Block]] = []
+    for entry in holder.entries if holder is not None else []:
+        if entry.key is None or not isinstance(entry.value, Block) or _is_pop(entry.value):
+            continue
+        held = _held(entry.value)
+        if held and set(held) <= set(american):
+            found.append((entry.key, entry.value))
+    return found
+
+
 def vanilla_state_levels(
     setup_text: str, levels: Mapping[str, int], american: Collection[str]
 ) -> tuple[int, ...]:
@@ -158,17 +171,11 @@ def vanilla_state_levels(
     (``levels``, the templates with theirs). A country with neither is left out, and so is
     every country that is not landed or holds a location outside ``american``.
     """
-    holder = parse(setup_text).block("countries", "countries")
-    found: list[int] = []
-    for entry in holder.entries if holder is not None else []:
-        if entry.key is None or not isinstance(entry.value, Block) or _is_pop(entry.value):
-            continue
-        held = _held(entry.value)
-        if not held or not set(held) <= set(american):
-            continue
-        level = _own_level(entry.value, levels)
-        if level is not None:
-            found.append(level)
+    found = [
+        level
+        for _, block in american_states(setup_text, american)
+        if (level := _own_level(block, levels)) is not None
+    ]
     if not found:
         message = "No vanilla American landed country has a starting technology level"
         raise TechnologyError(message)

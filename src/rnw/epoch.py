@@ -32,7 +32,13 @@ from rnw import __version__
 Release = tuple[int, int, int]
 
 # The first release of each epoch, in order; epoch numbers are 1, 2, 3, ... with no gaps.
-ALGORITHM_SINCE: Final[tuple[Release, ...]] = ((0, 9, 20), (0, 9, 26), (0, 9, 27), (0, 9, 28))
+ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
+    (0, 9, 20),
+    (0, 9, 26),
+    (0, 9, 27),
+    (0, 9, 28),
+    (0, 9, 29),
+)
 
 
 class ReleaseError(ValueError):

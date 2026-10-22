@@ -2,6 +2,8 @@
 
 **Designed by Opus 5.5 on 2026-10-22 for Sonnet 5.5 to implement.** There are two tasks with two commits: R7b (S09) first, then R7c (S10) on top of it. Together they finish roadmap phase R7 offline, after [R7a](sonnet-r7a-development.md). Both change generated output and are NOT GAME VALIDATED. Do not launch the game; the owner batches the in-game test (experiment below).
 
+**Status, 2026-10-22: implemented.** R7b is generator 0.9.28 (C159) and R7c 0.9.29 (C160); see [natives](../natives.md) and [experiment 028](../../experiments/028-technology-and-empires/README.md) (NOT-RUN, installed as `rnw_exp_world_canszr3phf`). The in-game gate remains the owner's.
+
 Before you start, read [AGENTS.md](../../AGENTS.md), [natives](../natives.md), [economy](../economy.md), section A of [ADR 0010](../adr/0010-layered-worlds-and-a-generator-of-its-own.md) (the peoples layer), claims C155–C158 and this page. Start on a clean working tree. If the 0.9.27 cover candidate is still uncommitted, stop and ask the owner.
 
 ## Where R7 stands

@@ -1,6 +1,6 @@
 # Start economy (phase R7)
 
-**Status:** R7a implemented on 2026-10-19 (product version 0.9.2, claims C73–C75) and revised after an audit (0.9.3, C76), NOT GAME VALIDATED. Designed in [sonnet-r7a-development](handoff/sonnet-r7a-development.md); in-game test pending (experiment 012). It covers start development, harbour suitability and market villages. Institutions, roads, other buildings, technology and extraordinary societies are open work.
+**Status:** R7a implemented on 2026-10-19 (product version 0.9.2, claims C73–C75) and revised after an audit (0.9.3, C76), NOT GAME VALIDATED. Designed in [sonnet-r7a-development](handoff/sonnet-r7a-development.md); in-game test pending (experiment 012). It covers start development, harbour suitability and market villages. Technology (R7b, 0.9.28, C159) and great empires with causes and weaknesses (R7c, 0.9.29, C160, including their royal roads) are implemented offline and described in [natives](natives.md); institutions, ordinary roads and other buildings are open work, and the R7 gate (a region plays through exploration, colonisation and conquest without broken logs) awaits the in-game test of experiment 028.
 
 ## Goal
 
@@ -69,5 +69,5 @@ Each generated land location draws its raw material from the vanilla frequencies
 
 - Institutions, roads and other buildings (terraces, walls, culture buildings).
 - The engine's river size (experiment 012) and the effect of `development` on pops after the start.
-- Technology per society and great empires with explicit causes and weaknesses: designed as R7b and R7c ([design](handoff/sonnet-r7-technology-and-empires.md)). Institutions need no setup: the vanilla 1337 Americas have none and they spread in game (C155).
+- Technology per society (R7b) and great empires with explicit causes and weaknesses (R7c) are implemented offline ([natives](natives.md), C159, C160; design [sonnet-r7-technology-and-empires](handoff/sonnet-r7-technology-and-empires.md)); their in-game test is [experiment 028](../experiments/028-technology-and-empires/README.md). Institutions need no setup: the vanilla 1337 Americas have none and they spread in game (C155). Ordinary roads, rivals and other buildings need nothing either: the vanilla Americas have none (C155).
 - Whether the engine honours entries for new keys (experiment 012).

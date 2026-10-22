@@ -9,6 +9,7 @@ import hashlib
 from dataclasses import replace
 
 import numpy as np
+import pytest
 
 from rnw.settings import NATIVES
 from rnw.societies import (
@@ -20,6 +21,8 @@ from rnw.societies import (
     LandGraph,
     Societies,
     generate_societies,
+    land_routes,
+    trunk_roads,
 )
 
 ROWS, COLUMNS, ISLAND = 30, 40, 12
@@ -253,3 +256,69 @@ def test_a_higher_chance_raises_more_empires() -> None:
     assert counts == sorted(counts)
     assert counts[0] == 0
     assert counts[-1] > counts[1] > 0
+
+
+def _roads(
+    count: int,
+    edges: list[tuple[int, int]],
+    costs: list[int] | None = None,
+    links: list[tuple[int, int]] | None = None,
+) -> LandGraph:
+    zero = np.zeros(count, dtype=np.int64)
+    return LandGraph(
+        capacity=zero,
+        potential=zero,
+        cost=np.array(costs or [STEP_COST] * count, dtype=np.int64),
+        edges=np.array(edges, dtype=np.int64).reshape(-1, 2),
+        links=np.array(links or [], dtype=np.int64).reshape(-1, 2),
+    )
+
+
+def test_trunk_roads_follow_a_line_to_each_target() -> None:
+    """A line graph gives the path to the farthest target and its prefix for a nearer one."""
+    line = _roads(4, [(0, 1), (1, 2), (2, 3)])
+    assert trunk_roads(line, {0, 1, 2, 3}, 0, [3]) == ((0, 1), (1, 2), (2, 3))
+    assert trunk_roads(line, {0, 1, 2, 3}, 0, [2]) == ((0, 1), (1, 2))
+    assert trunk_roads(line, {0, 1, 2, 3}, 3, [0]) == ((0, 1), (1, 2), (2, 3))
+    assert trunk_roads(line, {0, 1, 2, 3}, 0, []) == ()
+
+
+def test_trunk_roads_of_equal_cost_take_the_lower_indices() -> None:
+    """Of two routes of equal cost the one through the lower index wins, whatever the edge order."""
+    diamond = _roads(4, [(2, 3), (0, 2), (1, 3), (0, 1)])
+    assert trunk_roads(diamond, {0, 1, 2, 3}, 0, [3]) == ((0, 1), (1, 3))
+    assert land_routes(diamond, {0, 1, 2, 3}, 0)[1].tolist() == [-1, 0, 0, 1]
+
+
+def test_trunk_roads_take_the_cheaper_route() -> None:
+    """The cost of the location entered decides before the index does."""
+    diamond = _roads(4, [(0, 1), (0, 2), (1, 3), (2, 3)], costs=[1000, 5000, 1000, 1000])
+    assert trunk_roads(diamond, {0, 1, 2, 3}, 0, [3]) == ((0, 2), (2, 3))
+    cost, _ = land_routes(diamond, {0, 1, 2, 3}, 0)
+    assert cost.tolist() == [0, 5000, 1000, 2000]
+
+
+def test_trunk_roads_stay_inside_the_allowed_land_and_off_the_sea() -> None:
+    """An island, a location outside ``allowed`` and a sea link all leave a target unlinked."""
+    graph = _roads(5, [(0, 1), (1, 2), (3, 4)], links=[(2, 3)])
+    assert trunk_roads(graph, {0, 1, 2, 3, 4}, 0, [4, 3]) == ()
+    assert trunk_roads(graph, {0, 1, 3}, 0, [2]) == ()
+    assert trunk_roads(graph, {0, 1, 2}, 0, [2, 4]) == ((0, 1), (1, 2))
+    cost, before = land_routes(graph, {0, 1, 2, 3, 4}, 0)
+    assert cost.tolist() == [0, 1000, 2000, -1, -1]
+    assert before.tolist() == [-1, 0, 1, -1, -1]
+
+
+def test_trunk_roads_are_unique_sorted_pairs_with_the_lower_index_first() -> None:
+    """Targets that share a prefix add its pairs once."""
+    tree = _roads(6, [(5, 4), (4, 3), (3, 0), (4, 2), (2, 1)])
+    pairs = trunk_roads(tree, {0, 1, 2, 3, 4, 5}, 5, [0, 1, 2])
+    assert pairs == tuple(sorted(set(pairs)))
+    assert all(a < b for a, b in pairs)
+    assert pairs == ((0, 3), (1, 2), (2, 4), (3, 4), (4, 5))
+
+
+def test_a_route_needs_an_allowed_source() -> None:
+    """The capital must be inside the allowed land."""
+    with pytest.raises(ValueError, match="allowed"):
+        _ = trunk_roads(_roads(2, [(0, 1)]), {1}, 0, [1])

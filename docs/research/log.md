@@ -432,3 +432,24 @@
 - [V-EXEC] The reference world is renewed for epoch 4 and made again byte for byte; all 8 local tests pass.
 - [UNKNOWN] Written levels, researched advances and the lords' vassals are untested in game. No EU5
   launch, push or publication.
+
+## 2026-10-22 — R7c: great empires with causes and weaknesses (Sonnet)
+
+- [V-EXEC C160] Generator 0.9.29 (epoch 5): a great empire starts at level 3 (`min(T, S + 1)`) over a
+  level-2 template with `rank_duchy`, gets royal roads over land contacts from its capital to its
+  vassals' capitals, its ranked places and the biggest location of each area, is feared by its independent
+  neighbours and resented by its vassals (`opinion` records after the Andes and Mayapan blocks). New
+  module `eu5_empires.py`, `societies.land_routes` and `trunk_roads`, `verify_empires`, report section
+  `extraordinary`, window texts. A world without empires is byte-identical to R7b's but for `.metadata`.
+- [V-EXEC C160] Five builds, all invariants pass; every empire has level 3, `rank_duchy`, 0.24–0.31 road
+  pairs per location (bound 1.0), no unlinked target and at least a feared neighbour and three resentful
+  vassals. The road bound reads 1000‰ only when a pair belongs to its first location's owner; C158's 260
+  countries and median 0.5 were not reproduced exactly.
+- The first run on a world without empires failed `verify_empires` because the export leaves the unchanged
+  `09_roads.txt` out of its outputs; an absent file is now vanilla's, with a test. The check had not been
+  repaired, the fault was in the check.
+- [V-EXEC] Reference world renewed for epoch 5 (750 files); all 8 local tests pass. Installed as
+  `rnw_exp_world_canszr3phf` (752 files hash like the manifest; the other mods and the profile root are
+  unchanged), recorded in `INSTALLED.md`. Experiment 028 is prepared, NOT-RUN.
+- [UNKNOWN] Written level, rank, roads and opinions, and their direction, are untested in game. No EU5
+  launch, push or publication.

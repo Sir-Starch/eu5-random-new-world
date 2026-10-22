@@ -10,9 +10,11 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
+from rnw.eu5_empires import OPINION_TYPES, EmpireCalibration
 from rnw.eu5_natives import (
     Country,
     Culture,
+    NativesError,
     NativeWorld,
     VanillaNatives,
     _Cells,  # pyright: ignore[reportPrivateUsage]
@@ -326,9 +328,14 @@ def test_states_take_levels_by_complexity_and_an_empire_the_highest() -> None:
     )
     societies = _societies(polities, [300, 100, 700, 900, 50])
     tags = ["TAA", "TBB", "TCC", "TDD", "TEE"]
-    assert _state_levels(societies, tags, _vanilla()) == {0: 2, 1: 0, 2: 2, 3: 2}
-    with pytest.raises(Exception, match="No vanilla state levels"):
-        _ = _state_levels(societies, tags, _vanilla(state_levels=()))
+    empire = EmpireCalibration(
+        level=3, rank="rank_duchy", road_permille=1000, opinions=OPINION_TYPES
+    )
+    assert _state_levels(societies, tags, _vanilla(empire=empire)) == {0: 2, 1: 0, 2: 2, 3: 3}
+    with pytest.raises(NativesError, match="No empire calibration"):
+        _ = _state_levels(societies, tags, _vanilla())
+    with pytest.raises(NativesError, match="No vanilla state levels"):
+        _ = _state_levels(societies, tags, _vanilla(state_levels=(), empire=empire))
 
 
 def test_the_report_counts_agreement_replaced_templates_and_distances() -> None:
@@ -471,6 +478,34 @@ def test_an_empire_is_left_out_of_the_ordering() -> None:
     first, second, third, tribe = _good()
     empire = replace(first, great=True, level=2, include="t2")
     assert _verified((empire, replace(second, level=1, include="t1"), third, tribe))
+
+
+def test_an_empire_may_write_the_calibrated_level_above_the_vanilla_ones() -> None:
+    """Level 3 is no vanilla American state level but the empire's, one above its template."""
+    first, second, third, tribe = _good()
+    empire = replace(first, great=True, level=3, include="t2")
+    calibrated = EmpireCalibration(
+        level=3, rank="rank_duchy", road_permille=1000, opinions=OPINION_TYPES
+    )
+    text = "countries = {\n\tcountries = {\n" + country_records((empire, second, third, tribe))
+    text += "\t}\n}\n"
+    countries = (empire, second, third, tribe)
+    vanilla = _vanilla(
+        levels={"t0": 0, "t1": 1, "t2": 2, "tt": 0}, overlord_level=OVERLORD, empire=calibrated
+    )
+    assert verify_technology({PATH: text.encode()}, _world(countries), vanilla)
+    with pytest.raises(NewWorldExportError):
+        _ = verify_technology(
+            {PATH: text.encode()}, _world(countries), replace(vanilla, empire=None)
+        )
+    ordinary = replace(second, level=3, include="t2")
+    broken = "countries = {\n\tcountries = {\n" + country_records((first, ordinary, third, tribe))
+    with pytest.raises(NewWorldExportError):
+        _ = verify_technology(
+            {PATH: (broken + "\t}\n}\n").encode()},
+            _world((first, ordinary, third, tribe)),
+            vanilla,
+        )
 
 
 def test_parsed_blocks_stay_blocks() -> None:

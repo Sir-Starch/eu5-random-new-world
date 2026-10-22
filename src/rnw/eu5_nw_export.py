@@ -66,6 +66,17 @@ from rnw.eu5_development import (
     shelter,
     template_harbours,
 )
+from rnw.eu5_empires import (
+    FEAR,
+    IRRITATED,
+    OPINION_TYPES,
+    PREY,
+    TYRANT,
+    EmpireCalibration,
+    opinion_lines,
+    road_lines,
+    written_ranks,
+)
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
 from rnw.eu5_lobby import (
     CONTEXT_MENU,
@@ -296,8 +307,10 @@ SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
     COUNTRIES_FILE: (("countries", "countries"),),
     BUILDINGS_FILE: (("locations",), ("building_manager",)),
     "03_markets.txt": (("market_manager",),),
+    "09_roads.txt": (("road_network",),),
     "12_diplomacy.txt": (("diplomacy_manager",),),
     DEVELOPMENT_FILE: (("development",),),
+    "18_opinions.txt": (("diplomacy_manager",),),
 }
 
 
@@ -919,8 +932,10 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         COUNTRIES_FILE: (country_records(natives.countries),),
         BUILDINGS_FILE: (city_lines(natives.ranks), building_lines(development.villages)),
         "03_markets.txt": (market_lines(natives.markets),),
+        "09_roads.txt": (road_lines(natives.roads),),
         "12_diplomacy.txt": (vassal_lines(natives.vassals),),
         DEVELOPMENT_FILE: (development_lines(development.terms),),
+        "18_opinions.txt": (opinion_lines(natives.opinions),),
     }
     for name, text in setup.texts.items():
         relative = f"{SETUP_DIR}/{name}"
@@ -1181,6 +1196,7 @@ def _technology_problems(
 ) -> list[str]:
     problems: list[str] = []
     allowed = set(vanilla.state_levels)
+    empire_level: set[int] = {vanilla.empire.level} if vanilla.empire is not None else set()
     levels: dict[str, int] = {}
     for country in natives.countries:
         includes, written = records.get(country.tag, ([], []))
@@ -1189,7 +1205,11 @@ def _technology_problems(
         elif country.kind != "state":
             if written:
                 problems.append(f"Tribe {country.tag} writes a technology level")
-        elif len(written) != 1 or not written[0].isdigit() or int(written[0]) not in allowed:
+        elif (
+            len(written) != 1
+            or not written[0].isdigit()
+            or int(written[0]) not in allowed | (empire_level if country.great else set())
+        ):
             problems.append(f"{country.tag} writes {written} as its technology level")
         else:
             level, template = int(written[0]), vanilla.levels.get(country.include, 0)
@@ -1237,6 +1257,228 @@ def verify_technology(
     return {
         "technology_levels_written": sum(1 for c in natives.countries if c.kind == "state"),
         "technology_vassal_lords": len({lord for lord, _ in natives.vassals}),
+    }
+
+
+def _pairs_of(text: str, block: str) -> list[tuple[str, str]]:
+    """The ``a = b`` pairs of a block of a setup file, in file order."""
+    holder = parse(text).block(block)
+    return [
+        (entry.key, entry.value)
+        for entry in (holder.entries if holder is not None else [])
+        if entry.key is not None and isinstance(entry.value, str)
+    ]
+
+
+def _opinions_of(text: str) -> list[tuple[str, str, str]]:
+    """The (first, second, type) of the ``opinion`` records of ``diplomacy_manager``."""
+    holder = parse(text).block("diplomacy_manager")
+    found: list[tuple[str, str, str]] = []
+    for entry in holder.find("opinion") if holder is not None else ():
+        if isinstance(entry.value, Block):
+            fields = {e.key: e.value for e in entry.value.entries if isinstance(e.value, str)}
+            found.append(
+                (fields.get("first", ""), fields.get("second", ""), fields.get("type", ""))
+            )
+    return found
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class _Relations:
+    """Who holds, leads and touches whom in the generated world, for the empire checks."""
+
+    tags: frozenset[str]
+    empires: dict[str, str]
+    owner: dict[str, str]
+    lord: dict[str, str]
+    subjects: frozenset[str]
+    generated: frozenset[str]
+    land: frozenset[str]
+    contact: frozenset[tuple[str, str]]
+    near: dict[str, set[str]]
+
+
+def _relations(natives: NativeWorld, plan: Plan, world: NewWorld) -> _Relations:
+    countries = {country.tag: country for country in natives.countries}
+    empires = {tag: country.capital for tag, country in countries.items() if country.great}
+    land = {cell.key for cell in plan.cells if cell.kind is CellClass.LAND}
+    owner = {key: tag for tag, c in countries.items() if c.kind == "state" for key in c.members}
+    contact: set[tuple[str, str]] = set()
+    near: dict[str, set[str]] = {}
+    for first, second in world.edges:
+        keys = (plan.cells[first].key, plan.cells[second].key)
+        if keys[0] in land and keys[1] in land:
+            contact |= {keys, (keys[1], keys[0])}
+            one, other = owner.get(keys[0]), owner.get(keys[1])
+            if one and other and one != other:
+                near.setdefault(one, set()).add(other)
+                near.setdefault(other, set()).add(one)
+    return _Relations(
+        tags=frozenset(countries),
+        empires=empires,
+        owner=owner,
+        lord={vassal: lord for lord, vassal in natives.vassals if lord in empires},
+        subjects=frozenset(vassal for _, vassal in natives.vassals),
+        generated=frozenset(cell.key for cell in plan.cells),
+        land=frozenset(land),
+        contact=frozenset(contact),
+        near=near,
+    )
+
+
+def _rank_problems(
+    countries_text: str, natives: NativeWorld, calibration: EmpireCalibration
+) -> list[str]:
+    tags = {country.tag for country in natives.countries}
+    ranks = written_ranks(countries_text, tags)
+    levels = written_records(countries_text, tags)
+    problems: list[str] = []
+    for country in natives.countries:
+        wanted = [calibration.rank] if country.great else []
+        if ranks.get(country.tag, []) != wanted:
+            problems.append(
+                f"{country.tag} writes the ranks {ranks.get(country.tag)}, not {wanted}"
+            )
+        if country.great and levels.get(country.tag, ([], []))[1] != [str(calibration.level)]:
+            problems.append(f"Great empire {country.tag} does not write level {calibration.level}")
+    return problems
+
+
+def _road_problems(
+    text: str,
+    original: str,
+    relations: _Relations,
+    planned: tuple[tuple[str, str], ...],
+    gone: set[str],
+) -> list[str]:
+    """Old World roads are vanilla's; new ones are planned, once, in contact, inside one empire."""
+    problems: list[str] = []
+    roads = _pairs_of(text, "road_network")
+    old = [pair for pair in roads if not set(pair) & relations.generated]
+    if old != [pair for pair in _pairs_of(original, "road_network") if not set(pair) & gone]:
+        problems.append("The Old World roads differ from vanilla")
+    new = [(min(pair), max(pair)) for pair in roads if set(pair) & relations.generated]
+    if len(set(new)) != len(new) or set(new) != set(planned):
+        problems.append("The generated road pairs are repeated or differ from the plan")
+    joined: dict[str, set[tuple[str, str]]] = {}
+    for first, second in new:
+        heads = {
+            relations.lord.get(tag, tag) if tag else ""
+            for tag in (relations.owner.get(first), relations.owner.get(second))
+        }
+        if (
+            first not in relations.land
+            or second not in relations.land
+            or (first, second) not in relations.contact
+            or len(heads) != 1
+            or not heads <= set(relations.empires)
+        ):
+            problems.append(f"Road {first} = {second} is not a contact inside one empire")
+        else:
+            joined.setdefault(next(iter(heads)), set()).add((first, second))
+    for tag, pairs in joined.items():
+        reached = {relations.empires[tag]}
+        grew = True
+        while grew:
+            before = len(reached)
+            for first, second in pairs:
+                if first in reached or second in reached:
+                    reached |= {first, second}
+            grew = len(reached) > before
+        if reached != {key for pair in pairs for key in pair} | {relations.empires[tag]}:
+            problems.append(f"The roads of {tag} are not connected to its capital")
+    return problems
+
+
+def _related(kind: str, first: str, second: str, relations: _Relations) -> bool:
+    """Whether (first, second) stand in the relation the opinion type is written for."""
+    if kind == FEAR:
+        touching = first in relations.near.get(second, ())
+        return second in relations.empires and touching and first not in relations.subjects
+    if kind == PREY:
+        touching = second in relations.near.get(first, ())
+        return first in relations.empires and touching and second not in relations.subjects
+    if kind == TYRANT:
+        return relations.lord.get(first) == second
+    return kind == IRRITATED and relations.lord.get(second) == first
+
+
+def _opinion_problems(
+    text: str,
+    original: str,
+    relations: _Relations,
+    planned: tuple[tuple[str, str, str], ...],
+    gone: set[str],
+) -> list[str]:
+    """Old World opinions are vanilla's; new ones are planned, once and between related states."""
+    problems: list[str] = []
+    found = _opinions_of(text)
+    old = [line for line in found if not {line[0], line[1]} & relations.tags]
+    kept = [line for line in _opinions_of(original) if not {line[0], line[1]} & gone]
+    if old != kept:
+        problems.append("The Old World opinions differ from vanilla")
+    added = [line for line in found if {line[0], line[1]} & relations.tags]
+    if len(set(added)) != len(added) or set(added) != set(planned):
+        problems.append("The generated opinions are repeated or differ from the plan")
+    problems += [
+        f"Opinion {first} {second} {kind} joins unrelated states"
+        for first, second, kind in added
+        if kind not in OPINION_TYPES or not _related(kind, first, second, relations)
+    ]
+    return problems
+
+
+def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is checked on the final texts.
+    outputs: dict[str, bytes],
+    natives: NativeWorld,
+    plan: Plan,
+    world: NewWorld,
+    vanilla: VanillaNatives,
+    originals: dict[str, str],
+    gone: set[str],
+) -> dict[str, object]:
+    """Great empires write their level and rank, their roads and their opinions as planned.
+
+    Only empires have a rank. Every road pair joins two generated land locations in contact
+    that an empire or its vassals hold, once, and the roads of each empire reach its capital.
+    Every opinion line joins an empire to a state in contact or to its vassal, once. Nothing
+    names a vanilla tag or location, and the Old World entries of ``09_roads.txt`` and
+    ``18_opinions.txt`` are vanilla's (``gone``: what the export removed). ``originals`` holds
+    the two vanilla texts by file name; a world without empires leaves ``09_roads.txt`` unchanged
+    and so out of ``outputs``.
+    """
+
+    def text(name: str) -> str:
+        # A file the export left unchanged is not among the outputs and is vanilla's.
+        path = _mod_path(f"{SETUP_DIR}/{name}")
+        return outputs[path].decode("utf-8-sig") if path in outputs else originals[name]
+
+    calibration = vanilla.empire
+    relations = _relations(natives, plan, world)
+    if calibration is None:
+        problems = ["No empire calibration"] if relations.empires else []
+    else:
+        problems = [
+            *_rank_problems(text(COUNTRIES_FILE), natives, calibration),
+            *_road_problems(
+                text("09_roads.txt"), originals["09_roads.txt"], relations, natives.roads, gone
+            ),
+            *_opinion_problems(
+                text("18_opinions.txt"),
+                originals["18_opinions.txt"],
+                relations,
+                natives.opinions,
+                gone,
+            ),
+        ]
+    if problems:
+        extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        message = f"Great empires: {problems[0]}{extra}"
+        raise NewWorldExportError(message)
+    return {
+        "empire_countries": len(relations.empires),
+        "empire_road_pairs": len(natives.roads),
+        "empire_opinions": len(natives.opinions),
     }
 
 
@@ -1784,6 +2026,20 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             _removed_provinces(hierarchy, removed),
         )
         removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
+        text_checks.update(
+            verify_empires(
+                texts,
+                natives,
+                plan,
+                world,
+                vanilla_start.result(),
+                {
+                    name: _read(game_dir, f"{SETUP_DIR}/{name}")
+                    for name in ("09_roads.txt", "18_opinions.txt")
+                },
+                removed | removed_tags,
+            )
+        )
         rewrite = run_stage("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
         scripts = rewrite.outputs
         scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
@@ -1930,6 +2186,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "text_stats": text_stats,
             "natives": natives.stats,
             "technology": natives.technology,
+            "extraordinary": natives.extraordinary,
             "development": development.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,

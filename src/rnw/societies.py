@@ -25,6 +25,8 @@ import numpy as np
 from rnw.rng import SplitMix64, derive_seed
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from numpy.typing import NDArray
 
     from rnw.settings import NativeSettings
@@ -448,6 +450,73 @@ def _ranks(
         if local and local[0].capital not in markets:
             markets.append(local[0].capital)
     return ranks, tuple(markets)
+
+
+def land_routes(
+    graph: LandGraph, allowed: Collection[int], source: int
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Cheapest travel cost from ``source`` over land contacts inside ``allowed``.
+
+    Returns the cost of every location and the location before it on its route; both are
+    -1 for the unreached, and the source has cost 0 and no location before it. A move costs
+    the travel cost of the location entered, as everywhere in the model, and the sea links
+    are never used. Of two routes of equal cost the one whose last step starts at the lower
+    index wins.
+    """
+    count = len(graph.capacity)
+    permitted = np.zeros(count, dtype=bool)
+    permitted[list(allowed)] = True
+    if not permitted[source]:
+        message = "The source of a route must be an allowed location"
+        raise ValueError(message)
+    edges = graph.edges[permitted[graph.edges[:, 0]] & permitted[graph.edges[:, 1]]]
+    neighbours: dict[int, list[int]] = {}
+    for first, second in edges.tolist():
+        neighbours.setdefault(first, []).append(second)
+        neighbours.setdefault(second, []).append(first)
+    entering: list[int] = graph.cost.tolist()
+    cost = [-1] * count
+    before = [-1] * count
+    best: dict[int, int] = {source: 0}
+    heap: list[tuple[int, int]] = [(0, source)]
+    while heap:
+        total, node = heapq.heappop(heap)
+        if cost[node] >= 0:
+            continue
+        cost[node] = total
+        for other in neighbours.get(node, ()):
+            if cost[other] >= 0:
+                continue
+            reach = total + entering[other]
+            known = best.get(other)
+            if known is None or reach < known:
+                best[other], before[other] = reach, node
+                heapq.heappush(heap, (reach, other))
+            elif reach == known and node < before[other]:
+                before[other] = node
+    return np.array(cost, dtype=np.int64), np.array(before, dtype=np.int64)
+
+
+def trunk_roads(
+    graph: LandGraph, allowed: Collection[int], capital: int, targets: Collection[int]
+) -> tuple[tuple[int, int], ...]:
+    """Road pairs of the shortest land routes from ``capital`` to ``targets``.
+
+    The routes run through ``allowed`` only (``land_routes``); a target that no route reaches
+    stays unlinked. The result is the union of the routes as unordered pairs, each once,
+    lower index first, sorted.
+    """
+    cost, before = land_routes(graph, allowed, capital)
+    pairs: set[tuple[int, int]] = set()
+    for target in targets:
+        node = target
+        if cost[node] < 0:
+            continue
+        while node != capital:
+            step = int(before[node])
+            pairs.add((min(node, step), max(node, step)))
+            node = step
+    return tuple(sorted(pairs))
 
 
 def generate_societies(

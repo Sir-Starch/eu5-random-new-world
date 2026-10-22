@@ -24,6 +24,18 @@ import numpy as np
 
 from rnw.eu5_biomes import latitude_tenths
 from rnw.eu5_canvas import NEW_WORLD
+from rnw.eu5_empires import (
+    EmpireCalibration,
+    empire_calibration,
+    empire_opinions,
+    empire_roads,
+    extraordinary_report,
+    median,
+    road_targets,
+    share,
+    travel_steps,
+    unlinked,
+)
 from rnw.eu5_remap import remap_text
 from rnw.eu5_technology import (
     TRIGGER_FILE,
@@ -71,6 +83,9 @@ TEMPLATE_DIR: Final[str] = "game/main_menu/setup/templates"
 # Government fields a country entry adds when its template leaves the type open.
 GOVERNMENT_FIELDS: Final[tuple[str, ...]] = ("type", "heir_selection")
 COUNTRY_DIR: Final[str] = "game/in_game/setup/countries"
+RANK_DIR: Final[str] = "game/in_game/common/country_ranks"
+BIAS_DIR: Final[str] = "game/in_game/common/biases"
+ROADS_FILE: Final[str] = f"{SETUP}/09_roads.txt"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
 NAMED_COLORS: Final[str] = "game/main_menu/common/named_colors/02_map.txt"
 COUNTRY_NAME: Final[re.Pattern[str]] = re.compile(
@@ -221,6 +236,7 @@ class VanillaNatives:
     overlord_level: int = 0
     families: Families = field(default_factory=lambda: Families({}, {}))
     state_levels: tuple[int, ...] = ()
+    empire: EmpireCalibration | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,6 +257,7 @@ class Country:
     government: tuple[tuple[str, str], ...] = ()
     level: int | None = None
     great: bool = False
+    rank: str = ""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -258,6 +275,9 @@ class NativeWorld:
     population: dict[str, int]
     stats: dict[str, object]
     technology: dict[str, object] = field(default_factory=dict)
+    roads: tuple[tuple[str, str], ...] = ()
+    opinions: tuple[tuple[str, str, str], ...] = ()
+    extraordinary: dict[str, object] = field(default_factory=dict)
 
 
 def _milli(value: str) -> int:
@@ -553,6 +573,7 @@ def vanilla_natives(
     }
     templates = frozenset(template_texts)
     levels = template_levels(template_texts)
+    state_levels_of = vanilla_state_levels(setup_text, levels, set(american))
     country_text = _text(game_dir, COUNTRY_NAMES)
     names = set(TAG_WORD.findall(country_text))
     country_words = {
@@ -585,7 +606,16 @@ def vanilla_natives(
             setup_text, _text(game_dir, f"{SETUP}/12_diplomacy.txt"), levels
         ),
         families=regional,
-        state_levels=vanilla_state_levels(setup_text, levels, set(american)),
+        state_levels=state_levels_of,
+        empire=_empire_calibration(
+            game_dir,
+            setup_text=setup_text,
+            levels=levels,
+            state_levels=state_levels_of,
+            american=american,
+            pops=pops,
+            tag_cultures=tag_cultures,
+        ),
     )
 
 
@@ -600,6 +630,37 @@ def _pop_rows(
             by_culture.setdefault(culture, []).append((key, amount))
             by_religion.setdefault(religion, []).append((key, amount))
     return by_culture, by_religion
+
+
+def _empire_calibration(  # noqa: PLR0913 - the calibration reads the setup, templates and pops.
+    game_dir: Path,
+    *,
+    setup_text: str,
+    levels: dict[str, int],
+    state_levels: tuple[int, ...],
+    american: list[str],
+    pops: dict[str, list[tuple[str, int, str, str]]],
+    tag_cultures: dict[str, str],
+) -> EmpireCalibration:
+    """Level, rank, road bound and opinions of a great empire from the vanilla files."""
+
+    def texts(directory: str) -> list[str]:
+        return [
+            path.read_text(encoding="utf-8-sig")
+            for path in sorted((game_dir / directory).glob("*.txt"))
+        ]
+
+    return empire_calibration(
+        levels=levels,
+        state_levels=state_levels,
+        setup_text=setup_text,
+        rank_texts=texts(RANK_DIR),
+        roads_text=_text(game_dir, ROADS_FILE),
+        bias_texts=texts(BIAS_DIR),
+        american=american,
+        pops=pops,
+        cultures=tag_cultures,
+    )
 
 
 def _regional_families(game_dir: Path, hierarchy: dict[str, Location]) -> Families:
@@ -1295,6 +1356,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
                 government=vanilla.governments[include],
                 level=levels.get(number),
                 great=polity.great,
+                rank=vanilla.empire.rank if polity.great and vanilla.empire else "",
             )
         )
     return countries
@@ -1304,7 +1366,7 @@ def _state_levels(societies: Societies, tags: list[str], vanilla: VanillaNatives
     """Starting technology level of each state polity, by polity number.
 
     Ordinary states take the vanilla American distribution by the rising complexity of their
-    capitals; a great empire takes the highest vanilla level (R7b).
+    capitals; a great empire takes the calibrated level, ``min(T, S + 1)`` (R7b, R7c).
     """
     polities = societies.polities
     states = [number for number, polity in enumerate(polities) if polity.kind == STATE]
@@ -1321,7 +1383,12 @@ def _state_levels(societies: Societies, tags: list[str], vanilla: VanillaNatives
         for number in ordinary
     ]
     levels = dict(zip(ordinary, state_levels(order, vanilla.state_levels), strict=True))
-    levels.update({number: vanilla.state_levels[-1] for number in states if polities[number].great})
+    great = [number for number in states if polities[number].great]
+    if great and vanilla.empire is None:
+        message = "No empire calibration to give the great empires their level"
+        raise NativesError(message)
+    if great and vanilla.empire is not None:
+        levels.update(dict.fromkeys(great, vanilla.empire.level))
     return levels
 
 
@@ -1421,8 +1488,21 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         and country.level >= vanilla.overlord_level
         and vanilla.levels.get(country.include, -1) >= vanilla.overlord_level
     }
-    pairs = vassal_pairs(societies, religions, _neighbours(societies, graph.edges), able)
+    near = _neighbours(societies, graph.edges)
+    pairs = vassal_pairs(societies, religions, near, able)
     vassals = tuple((countries[lord].tag, countries[vassal].tag) for lord, vassal in pairs)
+    roads, opinions, extraordinary = _empires(
+        societies,
+        graph,
+        vanilla,
+        tuple(countries),
+        areas=[plan.cells[cell].area for cell in cells.cells],
+        keys=keys,
+        neighbours=near,
+        pairs=pairs,
+        religions=religions,
+        cultures=cultures,
+    )
     pops = _pop_lines(societies, keys, religions, cultures)
     for where, rows in diaspora(
         societies,
@@ -1472,6 +1552,9 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         complexity=dict(zip(keys, societies.complexity.tolist(), strict=True)),
         population=dict(zip(keys, societies.population.tolist(), strict=True)),
         stats=stats,
+        roads=roads,
+        opinions=opinions,
+        extraordinary=extraordinary,
         technology=_technology(
             societies,
             cells,
@@ -1484,6 +1567,127 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
             vassals=len(vassals),
         ),
     )
+
+
+def _empires(  # noqa: PLR0913 - the empires read the graph, the polities and the people.
+    societies: Societies,
+    graph: LandGraph,
+    vanilla: VanillaNatives,
+    countries: tuple[Country, ...],
+    *,
+    areas: list[str],
+    keys: list[str],
+    neighbours: list[set[int]],
+    pairs: list[tuple[int, int]],
+    religions: list[str],
+    cultures: list[str],
+) -> tuple[tuple[tuple[str, str], ...], tuple[tuple[str, str, str], ...], dict[str, object]]:
+    """Royal roads, fear and resentment of every great empire, and the report section.
+
+    Roads run over land contacts from the capital through the empire's and its vassals'
+    locations; the independent states in land contact fear the empire and its vassals resent
+    it. No random number is drawn (R7c).
+    """
+    calibration = vanilla.empire
+    great = [number for number, polity in enumerate(societies.polities) if polity.great]
+    if calibration is None:
+        if great:
+            message = "No empire calibration for the great empires"
+            raise NativesError(message)
+        return (), (), {}
+    people = societies.population.tolist()
+    subjects = {vassal for _, vassal in pairs}
+    roads: set[tuple[str, str]] = set()
+    opinions: list[tuple[str, str, str]] = []
+    records: list[dict[str, object]] = []
+    for number in great:
+        polity = societies.polities[number]
+        tag = countries[number].tag
+        vassal_ids = [vassal for lord, vassal in pairs if lord == number]
+        vassal_nodes = [
+            node for vassal in vassal_ids for node in societies.polities[vassal].members
+        ]
+        targets = road_targets(
+            capital=polity.capital,
+            vassal_capitals=[societies.polities[vassal].capital for vassal in vassal_ids],
+            members=polity.members,
+            ranked=societies.ranks,
+            markets=societies.markets,
+            areas=areas,
+            population=people,
+            keys=keys,
+        )
+        built = empire_roads(
+            graph,
+            capital=polity.capital,
+            members=polity.members,
+            vassal_members=vassal_nodes,
+            targets=targets,
+        )
+        roads |= {(min(keys[a], keys[b]), max(keys[a], keys[b])) for a, b in built}
+        feared = [
+            countries[other].tag
+            for other in sorted(neighbours[number])
+            if societies.polities[other].kind == STATE and other not in subjects
+        ]
+        vassal_tags = [countries[vassal].tag for vassal in vassal_ids]
+        opinions += empire_opinions(tag, feared, vassal_tags)
+        culture, religion = (
+            cultures[polity.culture],
+            religions[int(societies.religion[polity.capital])],
+        )
+        total = sum(people[node] for node in polity.members)
+        foreign_culture = sum(
+            people[node]
+            for node in polity.members
+            if cultures[int(societies.culture[node])] != culture
+        )
+        foreign_religion = sum(
+            people[node]
+            for node in polity.members
+            if religions[int(societies.religion[node])] != religion
+        )
+        on_road = {node for pair in built for node in pair}
+        reach = travel_steps(
+            graph, {*polity.members, *vassal_nodes}, polity.capital, polity.members
+        )
+        records.append(
+            {
+                "tag": tag,
+                "name": countries[number].name,
+                "capital": keys[polity.capital],
+                "locations": len(polity.members),
+                "vassals": len(vassal_ids),
+                "vassal_locations": len(vassal_nodes),
+                "population_milli": total,
+                "population_share_permille": share(total, int(societies.population.sum())),
+                "level": countries[number].level,
+                "rank": countries[number].rank,
+                "road_targets": len(targets),
+                "road_pairs": len(built),
+                "road_pairs_per_location_permille": share(
+                    len(built), len(polity.members) + len(vassal_nodes)
+                ),
+                "unlinked_targets": len(unlinked(built, polity.capital, targets)),
+                "feared_neighbours": len(feared),
+                "resentful_vassals": len(vassal_tags),
+                "unwritten_weaknesses": [
+                    text
+                    for text, missing in (
+                        ("fear: no independent state in land contact", not feared),
+                        ("resentment: no vassal", not vassal_tags),
+                    )
+                    if missing
+                ],
+                "foreign_culture_permille": share(foreign_culture, total),
+                "foreign_religion_permille": share(foreign_religion, total),
+                "median_travel_steps": median(reach),
+                "off_road_permille": share(
+                    sum(1 for node in polity.members if node not in on_road), len(polity.members)
+                ),
+            }
+        )
+    return tuple(sorted(roads)), tuple(opinions), extraordinary_report(calibration, records)
 
 
 def _technology(  # noqa: PLR0913 - the report reads the countries, the zones and both choices.
@@ -1584,6 +1788,8 @@ def country_records(countries: tuple[Country, ...]) -> str:
         lines.append(f'\t\tinclude = "{country.include}"\n')
         if country.level is not None:
             lines.append(f"\t\tstarting_technology_level = {country.level}\n")
+        if country.rank:
+            lines.append(f"\t\tcountry_rank = {country.rank}\n")
         lines.append("\t\tdiscovered_areas = {\n")
         lines.append(_locations_block(country.areas, "\t\t"))
         lines.append("\t\t}\n")

@@ -149,7 +149,8 @@ STRINGS: Final[dict[str, str]] = {
     "quick.empires.about": (
         "How likely a great native empire is to rise around each centre of culture, as the "
         "fantasy setting of EU4's random New World: one state many times the size of the "
-        "others, with an advanced government."
+        "others, with an advanced government, the Old World's technology, a higher rank and "
+        "royal roads, feared by its neighbours and resented by its vassals."
     ),
     "quick.empires.never": "Never",
     "quick.empires.seldom": "Seldom",
@@ -259,7 +260,9 @@ STRINGS: Final[dict[str, str]] = {
     "control.natives.empire_permille": "Great empires",
     "control.natives.empire_permille.about": (
         "Chance, for each cultural hearth, that a great empire rises around it: one state "
-        "many times the size of the others, with an advanced government."
+        "many times the size of the others, with an advanced government, the Old World's "
+        "technology, a higher rank and royal roads, feared by its neighbours and resented by "
+        "its vassals."
     ),
     "control.natives.state_locations": "State size",
     "control.natives.state_locations.about": "Locations of a native state, on average.",
