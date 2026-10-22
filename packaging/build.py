@@ -13,6 +13,9 @@ import sys
 from pathlib import Path
 from typing import Final
 
+import allowlist
+from notices import write_notices
+
 ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 NAME: Final[str] = "RandomNewWorld"
 
@@ -38,7 +41,13 @@ def build() -> Path:
         str(spec),
     ]
     _ = subprocess.run(command, check=True, cwd=ROOT)  # noqa: S603 - our own interpreter and fixed options
-    return dist / NAME
+    folder = dist / NAME
+    write_notices(folder)
+    problems = allowlist.problems_in_folder(folder, vendored=("_internal/",))
+    if problems:
+        message = f"Package contains game files: {problems}"
+        raise RuntimeError(message)
+    return folder
 
 
 if __name__ == "__main__":

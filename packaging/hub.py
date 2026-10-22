@@ -35,6 +35,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
 
+import allowlist
+from notices import write_notices
+
 if TYPE_CHECKING:
     from http.client import HTTPResponse
 
@@ -264,6 +267,15 @@ def check_programs(root: Path) -> None:
         raise BuildError(message)
 
 
+def check_no_game_files(root: Path) -> None:
+    """Nothing of the game is in the hub (ADR 0010, H): no folder of its installation, no shader
+    or texture of its kind, no world a generator made on someone's machine."""
+    found = allowlist.problems_in_folder(root)
+    if found:
+        message = f"The hub holds what looks like a file of the game: {found[:5]}"
+        raise BuildError(message)
+
+
 def compile_modules(*folders: Path) -> None:
     """Byte-code for every module, valid whatever the file times are after a download."""
     if sys.version_info[:2] != PYTHON_VERSION:
@@ -332,6 +344,8 @@ def build(output: Path, *, replace: bool) -> Path:
     compile_modules(site)
     build_launcher(stage, __version__)
     check_programs(stage)
+    write_notices(stage)
+    check_no_game_files(stage)
     if output.exists():
         shutil.rmtree(output)
     output.parent.mkdir(parents=True, exist_ok=True)
