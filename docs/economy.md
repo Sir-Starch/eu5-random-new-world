@@ -69,5 +69,5 @@ Each generated land location draws its raw material from the vanilla frequencies
 
 - Institutions, roads and other buildings (terraces, walls, culture buildings).
 - The engine's river size (experiment 012) and the effect of `development` on pops after the start.
-- Technology and institution spread per society; extraordinary societies (R7 proper).
+- Technology per society and great empires with explicit causes and weaknesses: designed as R7b and R7c ([design](handoff/sonnet-r7-technology-and-empires.md)). Institutions need no setup: the vanilla 1337 Americas have none and they spread in game (C155).
 - Whether the engine honours entries for new keys (experiment 012).

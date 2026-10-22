@@ -394,3 +394,23 @@
   Displayed name: `RNW: Small continents HGIH`. Installation leaves the active playset
   pointing at the older DSLL world; HGIH needs selection in the game's playset.
 - [UNKNOWN] No game launch, runtime validation or change to earlier gameplay verdicts.
+
+## 2026-10-22 — R7b and R7c designed for Sonnet (Opus)
+
+- [V-LOCAL/V-EXEC C155] Technology at the start is `starting_technology_level`: age-of-traditions
+  advances above a country's level start unresearched. Vanilla American states are 191 of 223 at
+  level 2; the 1337 Americas have no institutions, roads or rivals, so R7 needs none for them.
+- [V-EXEC C156] On the 0.9.23 small_continents world 109 of 131 generated states start at level 0:
+  the level follows the culture's vanilla template and one complexity threshold, not the society.
+  Its great empire is large (58 locations) but has no other cause of strength and no weakness.
+- [V-LOCAL/V-EXEC C157] Advance trees and units follow three regional families chosen by the
+  capital's region key, which the hierarchy places by vanilla position; cultures are matched by
+  climate. Only 56 of 131 states and 40.4% of the population sit in their culture's family.
+- [V-LOCAL/V-EXEC C158] Vanilla levers for extraordinary societies: `country_rank`, start-up
+  opinions (the Andes and Mayapan records), and roads, whose 1,646 pairs all join locations in
+  pixel contact. Tributaries are out of reach for native monarchies.
+- Design [sonnet-r7-technology-and-empires](../handoff/sonnet-r7-technology-and-empires.md):
+  R7b (S09) levels by complexity on the vanilla quantiles, templates that follow the level, the
+  family in the homeland vector; R7c (S10) empires at `min(T, S + 1)` with the highest American
+  rank and royal roads, feared by neighbours and resented by vassals. No generated output changed;
+  no version bump, no game launch, nothing installed.
