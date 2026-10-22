@@ -60,6 +60,7 @@ STAGES: Final[dict[str, StageInfo]] = {
     "atlas": StageInfo("Drawing the atlas of the world", 2),
     "texts": StageInfo("Writing names, setup and scripts", 10),
     "script remap": StageInfo("Rewriting game scripts", 4),
+    "spline network": StageInfo("Laying out the strips of the roads", 4),
     "selection cover": StageInfo("Covering the New World until it is played", 1),
     "write files": StageInfo("Writing the mod", 4),
     # Parts of the stages above: they show in the list while they run and add no weight.

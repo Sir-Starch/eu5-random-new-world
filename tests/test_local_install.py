@@ -14,7 +14,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from rnw import epoch
+from rnw import epoch, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode
 from rnw.contract import CONTRACT_FILES, fingerprint
@@ -38,9 +38,12 @@ from rnw.eu5_natives import vanilla_natives
 from rnw.eu5_newworld import vanilla_geometry
 from rnw.eu5_nw_export import binding_problems, calibrate_development, export_new_world
 from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, TOPOGRAPHY_GROUPS, SlotTables, synthesize
+from rnw.eu5_splines import GAME_FILE as SPLINE_GAME_FILE
+from rnw.eu5_splines import land_contacts
 from rnw.eu5_terrain import DecalStore
 from rnw.geography import color_summary, read_locations, summary
-from rnw.model import WATER_CLASSES
+from rnw.model import WATER_CLASSES, CellClass
+from rnw.pdx import parse
 from rnw.record import Record
 
 GOLDEN_WORLD = Path(__file__).with_name("golden_world.json")
@@ -187,6 +190,42 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
         "opinion_irritated",
     )
     assert len(vanilla.empire.largest) == 5
+
+
+def test_local_spline_network_is_read_and_written_back_exactly() -> None:
+    """Vanilla's spline network round-trips byte for byte and has a strip for every land contact.
+
+    It also has one for each road of the 1337 setup, and its anchors are the locations'
+    indexes in the order of ``definitions.txt`` (C162).
+    """
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    root = Path(root_value)
+    data = (root / SPLINE_GAME_FILE).read_bytes()
+    network = splnet.parse(data)
+    assert splnet.serialize(network) == data
+    assert (len(network.anchors), len(network.point_xy)) == (21_046, 589_062)
+    assert (len(network.segments), len(network.strips)) == (110_111, 51_095)
+    game_map = load_map(root)
+    keys = [location.key for location in read_locations(root / DEFINITIONS)]
+    index = {key: number + 1 for number, key in enumerate(keys)}
+    land = np.array([kind is CellClass.LAND for kind in game_map.classes], dtype=bool)
+    contacts = land_contacts(game_map.labels, land, np.ones(len(land), dtype=bool))
+    pairs = {splnet.strip_id(index[game_map.keys[a]], index[game_map.keys[b]]) for a, b in contacts}
+    assert pairs <= network.strips.keys()
+    assert len(pairs) == 50_580
+    roads = parse(
+        (root / "game/main_menu/setup/1337/09_roads.txt").read_text(encoding="utf-8-sig")
+    ).block("road_network")
+    assert roads is not None
+    wanted = {
+        splnet.strip_id(index[entry.key], index[entry.value])
+        for entry in roads.entries
+        if entry.key in index and isinstance(entry.value, str) and entry.value in index
+    }
+    assert len(wanted) == 1_646
+    assert wanted <= network.strips.keys()
 
 
 def test_local_development_calibration_reads_the_vanilla_americas() -> None:

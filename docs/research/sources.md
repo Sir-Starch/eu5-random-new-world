@@ -24,4 +24,13 @@ Access date: 2026-10-13 unless a row says otherwise. These are research leads an
 | [Paradox User Agreement](https://legal.paradoxplaza.com/eula) and [Rules of Conduct](https://legal.paradoxplaza.com/rules-of-conduct?locale=en) | Accessed 2026-10-21 (agreement updated 2026-01-21, rules 2022-05-02): UGC includes "scripts and programs" (§5); cheats, hacks, malicious programs and hacked data files are forbidden; no clause on DLLs, code mods or reverse engineering | Terms; not legal advice |
 | [Anvil](https://github.com/happy-dwarf-team/anvil) | Accessed 2026-10-21: EU4 plugin loader as a proxy `version.dll` beside `eu4.exe`, copied by hand or by its unsigned manager; plugins from Workshop mods load after per-file approval; stage 1, EU4 1.37.5; precedent for ADR 0009's rejected DLL alternative | MIT; not used, not executed |
 
+## Interoperability legal audit (accessed 2026-10-22)
+
+Primary texts and exact provisions are linked in the [interoperability register](interoperability.md),
+under stable references L1–L4, P1–P3 and S1: EU software/copyright legislation, the SAS and Nintendo
+judgments, Paradox's agreement and conduct rules, EU5's Steam EULA pointer and Steam's agreement.
+The live primary pages were read; EUR-Lex, the conduct rules and the EU5 EULA required the browser
+after the text-fetch tool returned challenges or errors. Earlier rows retain their historical access
+dates. This audit establishes neither in-game compatibility nor blanket permission to publish.
+
 No source here proves that EU5 1.4.1 exposes a writable map override or an in-game RNW API. Recheck versions and rights before adopting any external implementation.

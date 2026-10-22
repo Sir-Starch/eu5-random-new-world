@@ -158,6 +158,18 @@ from rnw.eu5_slots import (
     TOPOGRAPHY_GROUPS,
     SlotTables,
 )
+from rnw.eu5_splines import (
+    GAME_FILE as SPLINE_GAME_FILE,
+)
+from rnw.eu5_splines import (
+    MOD_FILE as SPLINE_FILE,
+)
+from rnw.eu5_splines import (
+    build_splines,
+    spline_problems,
+    world_anchors,
+    world_contacts,
+)
 from rnw.eu5_technology import written_records
 from rnw.eu5_terrain import (
     LAND_CODE,
@@ -189,6 +201,7 @@ from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.settings import canonical_json, run_spec, spec_digest
+from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -1482,6 +1495,58 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
     }
 
 
+def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan and the setup.
+    game_dir: Path,
+    *,
+    game_map: Eu5Map,
+    plan: Plan,
+    world: NewWorld,
+    canvas: Canvas,
+    final: NDArray[np.int32],
+    hierarchy: dict[str, Location],
+    texts: dict[str, bytes],
+    natives: NativeWorld,
+) -> tuple[bytes, dict[str, object]]:
+    """The mod's spline network, made from the game's, and its statistics (R7d).
+
+    Every land contact of a generated location gets a strip, so that no road between generated
+    locations, set up or built in play, lacks one (C161). It fails if the file, the contacts or the
+    roads of ``09_roads.txt`` are not as ``rnw.eu5_splines`` expects.
+    """
+    vanilla = (game_dir / SPLINE_GAME_FILE).read_bytes()
+    vanilla_keys = list(hierarchy)
+    mod_keys = [
+        location.key
+        for location in parse_locations(texts[_mod_path(DEFINITIONS)].decode("utf-8-sig"))
+    ]
+    contacts = world_contacts(game_map, plan, world, final)
+    try:
+        data, stats = build_splines(
+            vanilla,
+            vanilla_keys=vanilla_keys,
+            mod_keys=mod_keys,
+            contacts=contacts,
+            anchors=world_anchors(game_map, plan, world, canvas, final),
+        )
+    except SplineError as error:
+        message = f"Spline network: {error}"
+        raise NewWorldExportError(message) from error
+    roads = _pairs_of(_read(game_dir, f"{SETUP_DIR}/09_roads.txt"), "road_network")
+    problems = spline_problems(
+        data,
+        vanilla,
+        vanilla_keys=vanilla_keys,
+        mod_keys=mod_keys,
+        contacts=list(contacts),
+        roads=[*roads, *natives.roads],
+    )
+    if problems:
+        extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        message = f"Spline network: {problems[0]}{extra}"
+        raise NewWorldExportError(message)
+    return data, stats | {"land_contacts": len(contacts)}
+
+
 def vanilla_new_world_keys(hierarchy: dict[str, Location], removed: set[str]) -> set[str]:
     """Region, area, province and location keys of the vanilla New World.
 
@@ -2025,6 +2090,22 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
             _removed_provinces(hierarchy, removed),
         )
+        spline_data, spline_stats = run_stage(
+            "spline network",
+            lambda: _spline_outputs(
+                game_dir,
+                game_map=game_map,
+                plan=plan,
+                world=world,
+                canvas=canvas,
+                final=final_labels,
+                hierarchy=hierarchy,
+                texts=texts,
+                natives=natives,
+            ),
+        )
+        texts[SPLINE_FILE] = spline_data
+        text_stats["splines"] = spline_stats
         removed_tags = _defined_tags(game_dir, {}) - _defined_tags(game_dir, texts)
         text_checks.update(
             verify_empires(

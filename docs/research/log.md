@@ -454,6 +454,20 @@
 - [UNKNOWN] Written level, rank, roads and opinions, and their direction, are untested in game. No EU5
   launch, push or publication.
 
+## 2026-10-22 — Interoperability register checked against primary legal texts
+
+- [SOURCE] Read Directive 2009/24/EC, the SAS and Nintendo judgments, Directive 2001/29/EC
+  (2019 consolidation), Paradox's current User Agreement and conduct rules, EU5's Steam EULA page,
+  and the Steam Subscriber Agreement clauses cited in the [register](interoperability.md).
+- [V-EXEC] Replaced the memory-based legal paragraph and corrected the old/current article numbering;
+  separated format research, code translation, asset copying and publication. Added source dates,
+  provision/paragraph references and a case-specific evidence checklist. Qualified R-001's legal basis
+  without revalidating its technical observations or changing generator output.
+- [UNKNOWN] National-law application and rights in particular copied geometry remain unresolved;
+  local generation and an asset-free repository are project safeguards, not blanket legal permission.
+- [V-EXEC] `uv sync --locked --group dev && make check` passes: formatting, lint and type checks,
+  943 Python tests (9 optional local-install tests skipped), Rust formatting/clippy and 23 Rust tests.
+
 ## 2026-10-22 — First game session of R7b/R7c (owner), read-only log analysis
 
 - [V-GAME owner C161] The owner ran the CANS world and reports that visually everything seems to work.
@@ -463,3 +477,21 @@
   15–20 s and lost its first 12 minutes. No other line names the new keys or tags. Cause [INFERRED]:
   strips live in the 30 MB binary `spline_network.splnet`, which has vanilla locations only.
 - Experiment 028 is PARTIAL; the R7 gate stays open. Not changed: generator, worlds, profile.
+
+## 2026-10-22 — R7d: the spline network of generated locations (owner's choice, Sonnet)
+
+- [OWNER] After the log finding of C161 the owner chose to research the `.splnet` format now. [OWNER] A new
+  standing rule: every reverse-engineered closed format or written binary of EU5 gets an entry in the
+  [interoperability register](interoperability.md) (necessity, why official means fall short, what is studied or
+  changed, how compatibility is kept without distributing Paradox's resources; EU frame Directive 2009/24/EC).
+  R-001 is this file; earlier cases are added when next touched.
+- [V-LOCAL/V-EXEC C162] The file is the engine's tagged binary with points, segments and strips; an anchor is a
+  location's index in `definitions.txt` order; vanilla has a strip for every land-land contact and every road.
+  `rnw.splnet` reads and writes it back byte for byte (31,615,438 bytes, 0.8 s and 0.3 s).
+- [V-EXEC C163] Generator 0.9.30 (epoch 6) writes the mod's file: the vanilla strips of kept locations
+  renumbered by the mod's order and a strip for every land contact of a generated location. An independent
+  check against the mod's raster finds every anchor on its own location; the three builds differ from R7c only
+  by the new file, `.metadata` and `inputs.json`. Reference world renewed; 9 local tests pass. Installed as
+  `rnw_exp_world_6wbnuwo42f`; experiment 029 is prepared, NOT-RUN.
+- [UNKNOWN] The engine's acceptance of a file written by us is untested; its own reader is not available. No
+  EU5 launch, push or publication.
