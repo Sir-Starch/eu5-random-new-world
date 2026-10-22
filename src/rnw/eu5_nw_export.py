@@ -647,7 +647,10 @@ def _cover_outputs(
     to draw and offer; a game whose files read otherwise, or whose shaders would not bind the
     cover's samplers, stops the export instead of leaving the cover half made.
     """
-    patched = {edit.path: cover_shader(edit, _read(game_dir, edit.path)) for edit in SHADERS}
+    patched = {
+        edit.path: cover_shader(edit, _read(game_dir, edit.source_path or edit.path))
+        for edit in SHADERS
+    }
     gui_patched = {path: patch_gui(path, _read(game_dir, path)) for path in GUI_FILES}
     menu = hide_select_entry(_read(game_dir, CONTEXT_MENU))
     land = land_colour(_read(game_dir, GRAPHICS_DEFINES))
@@ -691,8 +694,10 @@ def _cover_outputs(
         **{_mod_path(path): _encode(game_dir, path, text) for path, text in guis.items()},
         SCRIPTED_GUI_FILE: scripted_gui_text().encode("utf-8-sig"),
     }
-    for path, text in shaders.items():
-        outputs[_mod_path(path)] = _encode(game_dir, path, text)
+    for edit in SHADERS:
+        outputs[_mod_path(edit.path)] = _encode(
+            game_dir, edit.source_path or edit.path, shaders[edit.path]
+        )
     if sorted(outputs) != sorted(cover_files()):
         message = "the cover's files differ from the list the library copies"
         raise NewWorldExportError(message)

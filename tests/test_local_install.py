@@ -199,7 +199,9 @@ def test_local_game_files_take_the_selection_cover() -> None:
 
     shaders: dict[str, str] = {}
     for edit in SHADERS:
-        patched = cover_shader(edit, (root / edit.path).read_text(encoding="utf-8-sig"))
+        patched = cover_shader(
+            edit, (root / (edit.source_path or edit.path)).read_text(encoding="utf-8-sig")
+        )
         assert patched, edit.path
         shaders[edit.path] = patched
     assert not binding_problems(root, shaders, mod)

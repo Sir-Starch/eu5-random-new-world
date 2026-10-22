@@ -15,6 +15,7 @@ from rnw.settings import PRESETS, canonical_json
 PRESET_DIGESTS = {
     1: "26cc8c9a08f5bca3f32ccae294cc43176ae55ba96cbe49e9b7b7c7f000173974",
     2: "26cc8c9a08f5bca3f32ccae294cc43176ae55ba96cbe49e9b7b7c7f000173974",
+    3: "26cc8c9a08f5bca3f32ccae294cc43176ae55ba96cbe49e9b7b7c7f000173974",
 }
 
 

@@ -1,5 +1,12 @@
 # EU5 Random New World
 
+**Shader regression, 2026-10-22:** the owner confirms full New World concealment in
+0.9.26, but loading art and character backgrounds fail [V-GAME owner / V-LOCAL C153].
+Generator **0.9.27** isolates the cover in a private map-mesh include and restores the
+vanilla dependency graphs for loading and scene shaders; offline checks pass, while
+the running-game retest remains open [V-EXEC / UNKNOWN C154]. See
+[experiment 027](experiments/027-map-shader-scope/README.md).
+
 Research and bootstrap repository for a future Europa Universalis V Random New World generator. The target is **genuinely generated geography and civilizations** with a historical Old World, not a shuffle of vanilla owners.
 
 **Cover failure, 2026-10-22:** the owner's EU5 1.4.3 test of a 0.9.20 world reveals

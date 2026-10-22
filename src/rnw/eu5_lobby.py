@@ -107,13 +107,18 @@ NOTE: Final[str] = "// Random New World: the New World is covered where nothing 
 @dataclass(frozen=True, slots=True)
 class ShaderEdit:
     """A game shader the cover changes: includes added, lines replaced (each found once), and the
-    samplers of the province indirection and of TI that its call of the cover passes."""
+    samplers of the province indirection and of TI that its call of the cover passes.
+
+    ``path`` is the override destination; ``source_path`` derives a private copy from a
+    different installed file without overriding that shared original.
+    """
 
     path: str
     includes: tuple[str, ...]
     indirection: str
     visibility: str
     edits: tuple[tuple[str, str], ...]
+    source_path: str | None = None
 
 
 def _lines(indent: int, *lines: str) -> str:
@@ -121,13 +126,18 @@ def _lines(indent: int, *lines: str) -> str:
 
 
 def _shader(
-    path: str, includes: tuple[str, ...], samplers: tuple[str, str], anchor: str, *lines: str
+    path: str,
+    includes: tuple[str, ...],
+    samplers: tuple[str, str],
+    anchor: str,
+    *lines: str,
+    source_path: str | None = None,
 ) -> ShaderEdit:
     """One edit at ``anchor``: ``lines`` before it, ``{samplers}`` standing for the call's."""
     indent = len(anchor) - len(anchor.lstrip("\t"))
     arguments = ", ".join(samplers)
     body = _lines(indent, NOTE, *(line.format(samplers=arguments) for line in lines))
-    return ShaderEdit(path, includes, *samplers, ((anchor, body + anchor),))
+    return ShaderEdit(path, includes, *samplers, ((anchor, body + anchor),), source_path)
 
 
 def _tree_effect(name: str, vertex_shader: str, pixel_shader: str) -> str:
@@ -389,19 +399,31 @@ SHADERS: Final[tuple[ShaderEdit, ...]] = (
         _lines(3, "return PS_Return( Color, Alpha * Opacity * FlatmapFade.y, MaterialProps );"),
         "Alpha *= 1.0f - RnwCover( WorldSpacePos.xz, {samplers} );",
     ),
-    _shader(
+    ShaderEdit(
         "game/main_menu/gfx/FX/pdxmesh.shader",
         (VISIBILITY_INCLUDE, COVER_INCLUDE),
-        TERRAIN_SAMPLERS,
-        _lines(3, "return TerrainShader( InputTerrain, Input.Normal );"),
-        "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz, {samplers} ) );",
+        *TERRAIN_SAMPLERS,
+        (
+            (_lines(1, '"pdxmesh_base.fxh"'), _lines(1, '"rnw_map_mesh.fxh"')),
+            (
+                _lines(3, "return TerrainShader( InputTerrain, Input.Normal );"),
+                _lines(
+                    3,
+                    NOTE,
+                    "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz,",
+                    "\tProvinceColorIndirectionTexture, RnwVisibility ) );",
+                    "return TerrainShader( InputTerrain, Input.Normal );",
+                ),
+            ),
+        ),
     ),
     _shader(
-        "game/loading_screen/gfx/FX/pdxmesh_base.fxh",
+        "game/main_menu/gfx/FX/rnw_map_mesh.fxh",
         ("jomini/jomini_province_overlays.fxh", VISIBILITY_INCLUDE, COVER_INCLUDE),
         ("ProvinceColorIndirectionTexture", "RnwVisibility"),
         _lines(4, "float Alpha = Diffuse.a;"),
         "clip( 0.001f - RnwCover( Input.WorldSpacePos.xz, {samplers} ) );",
+        source_path="game/loading_screen/gfx/FX/pdxmesh_base.fxh",
     ),
     ShaderEdit(
         "game/main_menu/gfx/FX/pdxmesh_decal.shader",

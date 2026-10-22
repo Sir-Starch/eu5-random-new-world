@@ -2,6 +2,10 @@
 
 Date: 2026-10-22. **OWNER REPRODUCTION FAILED; FIX NOT GAME VALIDATED.**
 
+Follow-up owner test of 0.9.26: New World concealment is reported complete, but the
+shared mesh include breaks loading/character artwork (C153). The scope correction
+and its validation boundary are in [experiment 027](../027-map-shader-scope/README.md).
+
 [V-GAME owner C150] At close zoom the covered New World exposes trees, rivers,
 resources and cities. The owner selected a New World country through the map and
 started playing it despite the terra incognita cover.

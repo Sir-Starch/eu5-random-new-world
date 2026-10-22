@@ -1,6 +1,38 @@
 from __future__ import annotations
 
-from rnw.eu5_lobby import COVER_INCLUDE, SHADERS, cover_shader
+from rnw.eu5_lobby import COVER_INCLUDE, SHADERS, cover_files, cover_shader
+
+
+def test_cover_does_not_override_the_base_used_by_loading_art_and_portrait_scenes() -> None:
+    files = cover_files()
+    assert "loading_screen/gfx/FX/pdxmesh_base.fxh" not in files, (
+        "shared scene shaders still receive the map-only RnwVisibility reference"
+    )
+    assert "main_menu/gfx/FX/rnw_map_mesh.fxh" in files
+
+
+def test_only_the_map_mesh_shader_uses_the_private_covered_base() -> None:
+    edit = next(edit for edit in SHADERS if edit.path.endswith("/pdxmesh.shader"))
+    source = 'Includes = {\n\t"pdxmesh_base.fxh"\n}\n'
+    source += "\t\t\treturn TerrainShader( InputTerrain, Input.Normal );\n"
+    patched = cover_shader(edit, source)
+    assert patched is not None
+    assert '"pdxmesh_base.fxh"' not in patched
+    assert '"rnw_map_mesh.fxh"' in patched
+    assert '"rnw_new_world_visibility.fxh"' in patched.split("}\n", 1)[0]
+    private = next(edit for edit in SHADERS if edit.path.endswith("/rnw_map_mesh.fxh"))
+    assert private.source_path == "game/loading_screen/gfx/FX/pdxmesh_base.fxh"
+    assert all(
+        not edit.path.endswith(
+            (
+                "/pdxmesh_without_terrain.shader",
+                "/pdxmesh_pulse_uv.shader",
+                "/pdxmesh_rotate_uv.shader",
+                "/pdxmesh_emissive.shader",
+            )
+        )
+        for edit in SHADERS
+    )
 
 
 def test_close_zoom_shader_families_clip_the_unknown_new_world() -> None:
@@ -15,7 +47,7 @@ def test_close_zoom_shader_families_clip_the_unknown_new_world() -> None:
             "return PS_Return( Color, Alpha * Opacity * FlatmapFade.y, MaterialProps );",
         ),
         "pdxmesh.shader": ("return TerrainShader( InputTerrain, Input.Normal );",),
-        "pdxmesh_base.fxh": ("float Alpha = Diffuse.a;",),
+        "rnw_map_mesh.fxh": ("float Alpha = Diffuse.a;",),
         "pdxmesh_decal.shader": (
             "return float4( Color, Alpha );",
             "return float4( Color, Diffuse.a );",

@@ -1,5 +1,13 @@
 # Installed experiments
 
+2026-10-22, scoped shader fix (experiment 027, C154): prepared new installation target
+`mod/rnw_exp_world_qduvxguw6u`, title `RNW: Small continents QDUV`, version 0.9.27.
+Source: `local_data/cover-scope-20261022/application/generated/rnw_exp_world_qduvxguw6u/rnw_exp_world_qduvxguw6u/`.
+Installation and full-file verification are pending. Existing HGIH and other worlds
+are preserved; enable QDUV instead of HGIH in the game's playset after installation.
+Removal: with EU5 closed, `uv run rnw uninstall-mod rnw_exp_world_qduvxguw6u --user-dir USER_DIR`.
+Offline reference-test artifacts stay under `local_data/cover-scope-20261022/reproduction/`.
+
 2026-10-22, owner-requested installation of C151: target new profile folder
 `mod/rnw_exp_world_hgihw5wfjp`, title `RNW: Small continents HGIH`, version 0.9.26.
 Source: `local_data/close-zoom-cover/application/generated/rnw_exp_world_hgihw5wfjp/rnw_exp_world_hgihw5wfjp/`.
