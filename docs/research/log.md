@@ -453,3 +453,13 @@
   unchanged), recorded in `INSTALLED.md`. Experiment 028 is prepared, NOT-RUN.
 - [UNKNOWN] Written level, rank, roads and opinions, and their direction, are untested in game. No EU5
   launch, push or publication.
+
+## 2026-10-22 — First game session of R7b/R7c (owner), read-only log analysis
+
+- [V-GAME owner C161] The owner ran the CANS world and reports that visually everything seems to work.
+- [V-LOCAL C161] The agent read the session's logs (read only, copies under `local_data/r7c/`): 125,820
+  `Could not find spline network strip` lines in `debug.log`, for 83 of 97 generated road pairs (once at
+  load, then thousands a minute once the game ran) and for 6 roads built in play. `error.log` rotated every
+  15–20 s and lost its first 12 minutes. No other line names the new keys or tags. Cause [INFERRED]:
+  strips live in the 30 MB binary `spline_network.splnet`, which has vanilla locations only.
+- Experiment 028 is PARTIAL; the R7 gate stays open. Not changed: generator, worlds, profile.
