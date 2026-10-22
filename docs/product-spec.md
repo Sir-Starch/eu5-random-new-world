@@ -6,7 +6,7 @@
 
 1. In the game, press Open in folder on Random New World and start its generator, which finds the game ([ADR 0009](adr/0009-hub-mod-with-generator.md)). Choose a preset, a continent type or a few advanced controls; the seed is random unless one is entered or pasted, and it can be copied, saved and reused.
 2. Inspect a preview showing land/sea, navigation, climate, resources and broad civilization distribution. Reroll without touching the active game profile.
-3. Generate with visible progress; the generator validates the world and installs it in place as one local mod, the generated world. In the game's main menu the player ticks it once in the playset beside Random New World, applies the playset and starts a new 1337 campaign; a later world loads when the playset is applied again, without closing the game [V-GAME C88, C93]; a new game without that reload would mix two worlds [V-GAME C85]. Options applied at game start, such as the visibility mode, are game rules in the game's setup screen.
+3. Generate with visible progress; the generator validates the world and installs it in place as one local mod, the generated world. In the game's main menu the player ticks it once in the playset beside Random New World, applies the playset and starts a new 1337 campaign; a later world loads when the playset is applied again, without closing the game [V-GAME C88, C93]; a new game without that reload would mix two worlds [V-GAME C85]. Options applied at game start are game rules in the game's setup screen where the engine allows; whether the New World is shown before it is played (the generator's pictures, the mod-list picture and the cover at country selection) is one setting of the generator, hidden by default (C133).
 4. Explore without a full New World reveal. Save the seed, settings and generator/build fingerprints for reproducibility.
 
 ## Controls and feasibility
@@ -23,7 +23,7 @@
 | Population density and urbanization | Sparse ↔ dense, with empty regions | T0/setup pending [V-LOCAL C09] |
 | Number, scale and political fragmentation of societies | Few large ↔ many small | T0/T3 setup pending [V-LOCAL C09] |
 | Economy, institutions and technology | Grounded variation with rare advanced clusters | T0/T3 setup pending [V-LOCAL C09] |
-| Extraordinary-civilization frequency/intensity | Off, rare default, elevated | Tool probabilities feasible; gameplay pending [UNKNOWN C13] |
+| Extraordinary-civilization frequency/intensity | Never, Seldom (default), Sometimes, Often: the chance per cultural hearth of a great native empire, after EU4's Fantasy Random New World [SOURCE C122] | Implemented as `natives.empire_permille` (0.9.15, C125, C126); gameplay pending |
 | Historical plausibility ↔ alternative history | Grounded default, opt-in fantasy | Content design feasible; gameplay pending [UNKNOWN C13] |
 
 Presets: **Historical-ish** (plausible, rare anomalies), **Unpredictable** (more geography and polity variation), **Chaotic** (high fragmentation and terrain variety), and **Legendary** (opt-in higher chance of extraordinary or fantasy societies). Exact numeric distributions require balance tests; no odds are invented here [UNKNOWN]. The default should be grounded, with extraordinary outcomes uncommon and fantasy disabled [INFERRED product decision].

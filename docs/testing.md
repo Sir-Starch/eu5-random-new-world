@@ -9,7 +9,8 @@ This document describes offline checks and future in-game tests. No more EU5 lau
 The D0 suite adds generator and exporter checks [V-EXEC C28–C31]:
 
 - `tests/test_rng_noise.py`: SplitMix64 reference vectors, stream independence, NumPy/Python hash equality, noise window consistency.
-- `tests/test_synth.py`: every seed/preset passes all validators; same seed is identical; presets differ measurably; seed-1 bundles match committed golden digests (the cross-platform gate once CI runs on Windows).
+- `tests/test_synth.py`: every seed/preset passes all validators; same seed is identical; presets differ measurably; seed-1 bundles match committed golden digests, keyed by algorithm epoch (the cross-platform gate once CI runs on Windows).
+- `tests/test_epoch.py`, `tests/test_record.py`, `tests/test_inputs.py`: the epoch table and the pinned presets of the running epoch, the reproducibility record and its five verdicts, the recording of game files read. `tests/golden_world.json` is the reference world of the epoch: `RNW_REPRODUCE=1 EU5_GAME_DIR=... uv run pytest tests/test_local_install.py -k reference` makes it again (about 90 s, 7.5 GiB) and compares the digest of its files; `rnw verify-world` does the same for a world of the library.
 - `tests/test_validate.py`: negative fixtures for orphan sea, duplicate/reserved colour, duplicate/invalid key, broken parent, changed protected pixel, vanished or split cells, undeclared labels, frozen-pixel change, ineligible change and new contacts.
 - `tests/test_coast.py`: topology preserved, displacement bounded by pass count, field sign controls direction, size floor/cap.
 - `tests/test_eu5_export.py`: a synthetic EU5-shaped installation (`tests/fixtures_eu5.py`, no game data) exercises the adapter, the full export, repeatability, the fingerprint refusal and unsafe output paths.

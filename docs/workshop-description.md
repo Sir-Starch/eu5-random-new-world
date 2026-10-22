@@ -19,11 +19,11 @@ So the generation runs in a small program that comes with this item. It reads yo
 ## How to use it
 
 1. In the **Mods** window press **Open in folder** on Random New World and double-click **Random New World Generator**.
-2. Choose a world type: Supercontinent, Continents, Small continents, Archipelago or Scattered islands. Keep the random seed or type one, or paste a world code. Under **Customize** you can change land, coasts, map scale, gold and silver, and the native peoples, from one great empire to lone states; every value offered still makes a playable world.
-3. Press **Generate**. In two or three minutes the world is a new mod in your mod list, named "Random New World: <type>, seed <seed>".
+2. Choose a world type: Supercontinent, Continents, Small continents, Archipelago or Scattered islands. Keep the random seed or type one, or paste a world code. **World basics** answer the common questions in a word, as EU4's random New World did: how much land, how many native peoples and states, how often a great native empire rises (never, seldom, sometimes, often), and how rich the gold and silver. Under **Customize** you can change every value: land, coasts, map scale and the native peoples, from great empires to lone states; every value offered still makes a playable world.
+3. Press **Generate**. In two or three minutes the world is a new mod in your mod list, named "RNW: <type> <tag>" (for example "RNW: Small continents 7K3Q"); you can rename it in the generator. While the New World is hidden, its picture in the mod list carries the same tag in red, so worlds can be told apart.
 4. In the game, tick that world (only one world at a time) and start a new game. If you already played a campaign since starting EU5, restart EU5 first. The generator tells you exactly what to do.
 
-The generator keeps every world you made, with its code. Its picture shows the New World as terra incognita until you choose to see it, so nothing is spoiled; the same goes for the pictures in the game's mod list unless you turn that off. A world code recreates the same world, byte for byte, on any computer with the same game version.
+The generator keeps every world you made, with its code. Until you choose to see it in Settings, the New World stays terra incognita everywhere before you play: in the generator's pictures, in the game's mod list, and on the map of the game's new-game screen. One setting turns all of that off. A world code recreates the same world, byte for byte, on any computer with the same game version.
 
 ## What the program does and does not do
 
