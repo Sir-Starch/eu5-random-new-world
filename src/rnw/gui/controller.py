@@ -1,9 +1,9 @@
 """What the window knows and does, without drawing anything.
 
 The controller holds the player's choices for a new world (type, seed, the changed
-settings), the library of worlds made before, which entry is selected and whether its New
-World is shown, and it runs the long work (making a world, adding one to the game, taking
-one out, deleting one) on a thread of its own. It tells observers when something changed,
+settings), the library of worlds made before and which entry is selected, and it runs the
+long work (making a world, adding one to the game, taking one out, deleting one) on a thread
+of its own. It tells observers when something changed,
 from whichever thread changed it; the window turns that into a signal for its own thread.
 Nothing here imports Qt, so it is tested without a display.
 """
@@ -13,29 +13,64 @@ from __future__ import annotations
 import json
 import threading
 import traceback
+from dataclasses import replace
 from enum import Enum
+from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
-from rnw import __version__
-from rnw.app import controls, discovery, install, library, paths, preferences, service, session
+from rnw import __version__, atlas, landmask, worldfile, worldname
+from rnw.app import (
+    candidates,
+    controls,
+    diagnostics,
+    discovery,
+    exchange,
+    install,
+    library,
+    logs,
+    paths,
+    preferences,
+    quick,
+    service,
+    session,
+    transfer,
+)
 from rnw.app.discovery import GameInstall, Profile
+from rnw.app.library import Placement
 from rnw.app.session import GameState
-from rnw.app.worldcode import WorldCode, WorldCodeError, decode, encode, random_seed, reproduces
+from rnw.app.worldcode import (
+    WorldCode,
+    WorldCodeError,
+    decode,
+    encode,
+    random_seed,
+    reproduces,
+    rolled,
+    with_new_seed,
+)
 from rnw.gui.text import text
-from rnw.progress import STAGES, Cancelled, Progress, Update
+from rnw.layers import PARTS, rolls_of
+from rnw.png import COLOR_RGB, encode_png
+from rnw.progress import STAGES, Cancelled, Progress, Update, active
+from rnw.record import Verdict, verdict
 from rnw.settings import PRESETS, WORLD_TYPES, SettingsError, build_settings
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from pathlib import Path
 
-    from rnw.app.library import Placement, World
+    from rnw.app.library import World
+    from rnw.atlas import Atlas
+    from rnw.landmask import LandMask
 
 SEED_MAX: Final[int] = (1 << 64) - 1
 ERROR_LOG: Final[str] = "last-error.log"
 NEW: Final[str] = "new"
 STRAY: Final[str] = "stray:"
-SEED_DIGITS: Final[int] = 6
+# What the record alone says (ADR 0010, G): the algorithm; anything else is "not checked yet".
+REPRODUCTION: Final[dict[Verdict, str]] = {
+    Verdict.OTHER_ALGORITHM: "repro.other_algorithm",
+    Verdict.NEWER_FORMAT: "repro.newer_format",
+}
 
 
 class Phase(Enum):
@@ -56,6 +91,15 @@ class Task(Enum):
     ADD = "add"
     REMOVE = "remove"
     DELETE = "delete"
+    CHECK = "check"
+    REROLL = "reroll"
+    RECEIVE = "receive"
+    SEND = "send"
+    COPY = "copy"
+    TEMPLATE = "template"
+    CANDIDATES = "candidates"
+    QUEUE = "queue"
+    UNDO = "undo"
 
 
 class Generator(Protocol):
@@ -66,8 +110,27 @@ class Generator(Protocol):
     ) -> service.Result: ...
 
 
+class Checker(Protocol):
+    """``service.check``, so tests can stand in for it."""
+
+    def __call__(
+        self,
+        world: World,
+        *,
+        game: GameInstall,
+        data: Path,
+        progress: Progress | None = None,
+    ) -> service.Check: ...
+
+
 def _generate(request: service.Request, progress: Progress | None = None) -> service.Result:
     return service.generate(request, progress)
+
+
+def _check(
+    world: World, *, game: GameInstall, data: Path, progress: Progress | None = None
+) -> service.Check:
+    return service.check(world, game=game, data=data, progress=progress)
 
 
 class Controller:
@@ -79,10 +142,12 @@ class Controller:
         environment: discovery.Environment | None = None,
         generator: Generator = _generate,
         program_folder: Path | None = None,
+        checker: Checker = _check,
     ) -> None:
-        self.data: Path = paths.data_directory() if data is None else data
+        self.data: Path = paths.data_directory(program=program_folder) if data is None else data
         self.environment: discovery.Environment = environment or discovery.Environment()
         self.generator: Generator = generator
+        self.checker: Checker = checker
         self.program_folder: Path | None = program_folder
         self.games: list[GameInstall] = []
         self.profiles: list[Profile] = []
@@ -93,6 +158,8 @@ class Controller:
         self.changes: dict[str, int] = {}
         self.other_changes: dict[str, object] = {}
         self.install: bool = True
+        self.output_folder: Path | None = None
+        self.world_file: Path | None = None
         self.notice: str = ""
         self.phase: Phase = Phase.IDLE
         self.task: Task | None = None
@@ -102,12 +169,22 @@ class Controller:
         self.finished: frozenset[str] = frozenset()
         self.message: str = ""
         self.result: service.Result | None = None
+        self.checks: dict[str, service.Check] = {}
         self.worlds: list[World] = []
         self.strays: list[Path] = []
         self.selection: str = NEW
-        self.revealed: bool = False
         self.preferences: preferences.Preferences = preferences.load(self.data)
+        _ = library.migrate_visibility(self.data, default=self.preferences.show_new_world)
+        logs.start(self.data)
         self._observers: list[Callable[[], None]] = []
+        self._compatible: dict[tuple[str, str], bool | None] = {}
+        self.runs: int = 0
+        self.land_mask: LandMask | None = None
+        self.last_import: exchange.Imported | None = None
+        self.candidates: list[candidates.Candidate] = []
+        self.candidate_code: WorldCode | None = None
+        self.queue: list[service.Request] = []
+        self.queue_done: int = 0
         self._lock: threading.Lock = threading.Lock()
         self._progress: Progress | None = None
         self._thread: threading.Thread | None = None
@@ -134,9 +211,29 @@ class Controller:
         has let go of them.
         """
         self.games = discovery.find_games(self.environment, self.program_folder)
+        chosen = Path(self.preferences.game_dir) if self.preferences.game_dir else None
+        if chosen is not None and discovery.is_game(chosen):
+            self.games = [
+                GameInstall(chosen, None, ""),
+                *(item for item in self.games if item.directory != chosen),
+            ]
         self.profiles = discovery.find_profiles(self.environment, self.games)
+        picked = Path(self.preferences.profile_dir) if self.preferences.profile_dir else None
+        if picked is not None and picked.is_dir():
+            self.profiles = [
+                Profile(picked, "chosen", (picked / "mod").is_dir()),
+                *(item for item in self.profiles if item.directory != picked),
+            ]
         self.game = self.games[0] if self.games else None
         self.profile = self.profiles[0] if self.profiles else None
+        logs.get().info(
+            "found %d game(s), used %s (build %s); %d profile(s), used %s",
+            len(self.games),
+            self.game.directory.name if self.game else "none",
+            self.game.build_id if self.game else "-",
+            len(self.profiles),
+            self.profile.kind if self.profile else "none",
+        )
         if self.profile is not None:
             _ = install.sweep(self.profile.directory)
         self.refresh_library()
@@ -147,6 +244,7 @@ class Controller:
             return text("not_a_game")
         self.game = GameInstall(directory, None, "")
         self.games = [self.game, *(item for item in self.games if item.directory != directory)]
+        self._remember(game_dir=str(directory))
         self._changed()
         return None
 
@@ -156,8 +254,14 @@ class Controller:
             return text("not_a_profile")
         self.profile = Profile(directory, "chosen", (directory / "mod").is_dir())
         self.profiles = [self.profile, *(p for p in self.profiles if p.directory != directory)]
+        self._remember(profile_dir=str(directory))
         self.refresh_library()
         return None
+
+    def _remember(self, **chosen: str) -> None:
+        """Keep a folder the player chose by hand, so that the generator is not asked again."""
+        self.preferences = replace(self.preferences, **chosen)
+        preferences.save(self.data, self.preferences)
 
     # -- the new world's choices ---------------------------------------------------------------
 
@@ -181,13 +285,15 @@ class Controller:
         if not 0 <= seed <= SEED_MAX:
             return text("bad_seed")
         self.seed = seed
+        _ = self.other_changes.pop("rolls", None)
         self.notice = ""
         self._changed()
         return None
 
     def randomize(self) -> None:
-        """A new random seed."""
+        """A new random seed, on a land of its own: every roll goes back to 0."""
         self.seed = random_seed()
+        _ = self.other_changes.pop("rolls", None)
         self.notice = ""
         self._changed()
 
@@ -212,8 +318,17 @@ class Controller:
         notices: list[str] = []
         if not reproduces(code):
             notices.append(text("other_version", made=code.generator, current=__version__))
-        if other:
+        if set(other) - {"rolls", "mask"}:
             notices.append(text("other_changes"))
+        wanted = code.settings().mask.id
+        self.land_mask = self.land_mask if self.land_mask and self.land_mask.id == wanted else None
+        if wanted and self.land_mask is None:
+            notices.append(text("needs_land_image"))
+        rolls = {part: number for part, number in rolls_of(code.settings()).items() if number}
+        if rolls:
+            notices.append(
+                text("rolled_code", parts=", ".join(f"{p} {n}" for p, n in rolls.items()))
+            )
         self.notice = " ".join(notices)
         self._changed()
         return None
@@ -230,6 +345,20 @@ class Controller:
             _ = self.changes.pop(key, None)
         else:
             self.changes[key] = number
+        self._changed()
+
+    def quick_level(self, name: str) -> str | None:
+        """The level of a quick setting that the controls hold now; None: a custom mix."""
+        values = {control.key: self.value(control.key) for control in controls.CONTROLS}
+        return quick.BY_NAME[name].current(self.preset, values)
+
+    def set_quick(self, name: str, level: str) -> None:
+        """Set the controls of one answer of a quick setting."""
+        for key, number in quick.BY_NAME[name].level(level).values(self.preset).items():
+            if number == controls.BY_KEY[key].default(self.preset):
+                _ = self.changes.pop(key, None)
+            else:
+                self.changes[key] = number
         self._changed()
 
     def reset_value(self, key: str) -> None:
@@ -279,7 +408,6 @@ class Controller:
         """Show the new-world page (``NEW``), a world (its id) or a stray (``STRAY`` + folder)."""
         if selection != self.selection:
             self.selection = selection
-            self.revealed = False
             self._changed()
 
     def selected_world(self) -> World | None:
@@ -293,36 +421,40 @@ class Controller:
         name = self.selection.removeprefix(STRAY)
         return next((stray for stray in self.strays if stray.name == name), None)
 
-    def set_revealed(self, revealed: bool) -> None:  # noqa: FBT001 - the window's toggle
-        """Show or hide the selected world's New World."""
-        if revealed != self.revealed:
-            self.revealed = revealed
-            self._changed()
-
     def picture(self, world: World) -> Path | None:
-        """The selected world's picture: covered unless the player asked to see it."""
-        return library.picture(self.data, world, revealed=self.revealed)
+        """A world's picture: covered unless the player chose to see the New World."""
+        return library.picture(self.data, world, revealed=self.shown(world))
 
-    def covered_picture(self, world: World) -> Path | None:
-        """A world's covered picture, for the list."""
-        return library.picture(self.data, world, revealed=False)
+    def shown(self, world: World) -> bool:
+        """Whether this world's New World is shown in the generator and in EU5."""
+        return library.world_shown(world, default=self.preferences.show_new_world)
 
     def placement(self, world: World) -> Placement:
         """Where the world's mod is."""
         return library.placement(self.data, self._profile_dir(), world)
 
     def name(self, world: World) -> str:
-        """The player's name for the world, or one made of its type and seed."""
-        if world.name:
-            return world.name
-        seed = str(world.seed)[:SEED_DIGITS]
-        return text("default_name", type=text(f"type.{world.preset}"), seed=seed)
+        """The player's name for the world, or its type and tag (ADR 0010)."""
+        return worldname.display_name(world.preset, worldname.tag_of(world.id), world.name)
 
-    def rename(self, world: World, name: str) -> None:
-        """Give the world a name of the player's (blank: the default)."""
-        if name.strip() != world.name:
-            _ = library.rename(self.data, world, name)
-            self.refresh_library()
+    def rename(self, world: World, name: str) -> str | None:
+        """Give the world a name of the player's (blank or the default: none); returns what
+        could not be done, or None.
+
+        The name goes into the metadata of the world's mod, in the game or kept, so the game's
+        list shows it; while the game holds the file that has to wait until the world is added
+        again.
+        """
+        cleaned = worldname.clean_name(name)
+        if cleaned == worldname.display_name(world.preset, worldname.tag_of(world.id)):
+            cleaned = ""
+        if cleaned == world.name:
+            return None
+        renamed = library.rename(self.data, world, cleaned)
+        mods = (library.installed(self._profile_dir(), renamed), library.kept(self.data, renamed))
+        held = [mod for mod in mods if mod is not None and not library.retitle(renamed, mod)]
+        self.refresh_library()
+        return text("retitle_later") if held else None
 
     def changed_count(self, world: World) -> int:
         """How many settings the world's code changes."""
@@ -332,7 +464,8 @@ class Controller:
             return 0
         extra = sum(
             len(cast("dict[str, object]", fields)) if isinstance(fields, dict) else 1
-            for fields in other.values()
+            for section, fields in other.items()
+            if section not in {"rolls", "mask"}
         )
         return len(shown) + extra
 
@@ -346,21 +479,149 @@ class Controller:
         self.preset = code.preset
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
+        _ = self.other_changes.pop("rolls", None)
+        self.land_mask = library.land_mask(self.data, world)
         self.seed = random_seed()
         self.notice = ""
         self.selection = NEW
-        self.revealed = False
         self._changed()
 
-    def set_reveal_thumbnails(self, reveal: bool) -> None:  # noqa: FBT001 - the dialog's box
-        """Remember the choice and redraw the mod-list pictures of every world with a mod."""
-        self.preferences = preferences.Preferences(reveal_thumbnails=reveal)
-        preferences.save(self.data, self.preferences)
-        for world in self.worlds:
-            mod = library.installed(self._profile_dir(), world) or library.kept(self.data, world)
-            if mod is not None:
-                _ = library.write_thumbnail(self.data, world, mod, revealed=reveal)
+    def edit_selected(self) -> None:
+        """Load the selected world's type, seed and settings into the new-world page, to change
+        the settings of its peoples or resources on the same land (a version of it)."""
+        world = self.selected_world()
+        if world is None:
+            return
+        try:
+            code = decode(world.code)
+        except WorldCodeError:
+            return
+        shown, other = controls.flat(code.changes)
+        self.preset, self.seed = code.preset, code.seed
+        self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
+        self.other_changes = other
+        self.land_mask = library.land_mask(self.data, world)
+        self.notice = ""
+        self.selection = NEW
         self._changed()
+
+    # -- versions of a world -------------------------------------------------------------------
+
+    def listed(self) -> list[tuple[World, int]]:
+        """The worlds as the window lists them: versions of one continent together."""
+        return library.grouped(self.worlds)
+
+    def annotate(self, world: World, notes: str, user_tag: str, *, starred: bool) -> None:
+        updated = replace(
+            world, notes=notes[:16384], user_tag=user_tag.strip()[:64], starred=starred
+        )
+        library.save(self.data, updated)
+        self.refresh_library()
+
+    def parent_of(self, world: World) -> World | None:
+        """The world this one is a version of, if the library still has it."""
+        return next((item for item in self.worlds if item.id == world.parent), None)
+
+    def undo_selected(self) -> str | None:
+        if self.busy:
+            return text("ready_busy")
+        world = self.selected_world()
+        parent = self.parent_of(world) if world is not None else None
+        if world is None or parent is None:
+            return None
+        if self.placement(world) is not Placement.IN_GAME:
+            self.select(parent.id)
+            return None
+        if self.game is None or self.profile is None:
+            return text("ready_no_game")
+        game, profile, data = self.game, self.profile, self.data
+        generator, show = self.generator, self.shown(parent)
+
+        def work(progress: Progress) -> service.Result:
+            return service.undo_roll(
+                world,
+                parent,
+                game=game,
+                profile=profile,
+                data=data,
+                progress=progress,
+                show_new_world=show,
+                make=generator,
+            )
+
+        return self._run(Task.UNDO, world.id, work)
+
+    def reroll_selected(self, part: str, *, keep_both: bool = False) -> str | None:
+        """Make one part (``rnw.layers``) of the selected world again on the same land, as a
+        version of it; returns why not, or None.
+
+        A world in the game is replaced in the game by its new version unless ``keep_both``; one
+        that is not in the game is made beside the generator and the profile is not touched.
+        """
+        world = self.selected_world()
+        if self.busy:
+            return text("ready_busy")
+        if self.game is None:
+            return text("ready_no_game")
+        if world is None or part not in PARTS:
+            return None
+        try:
+            code = rolled(decode(world.code), part)
+            drawn = service.required_land_mask(self.data, world)
+        except (WorldCodeError, service.LandImageError) as error:
+            return str(error)
+        game, data, generator = self.game, self.data, self.generator
+        profile = self.profile if self.placement(world) is Placement.IN_GAME else None
+        request = service.Request(
+            game=game,
+            code=code,
+            data=data,
+            profile=profile,
+            install=profile is not None,
+            show_new_world=self.shown(world),
+            parent=world.id,
+            part=part,
+            land_mask=drawn,
+        )
+
+        def work(progress: Progress) -> service.Result:
+            result = generator(request, progress)
+            if profile is not None and not keep_both and result.world.id != world.id:
+                service.remove_from_game(world.folder, profile)
+            return result
+
+        return self._run(Task.REROLL, world.id, work)
+
+    def set_show_new_world(self, show: bool) -> None:  # noqa: FBT001 - the dialog's box
+        """Remember the visibility choice for worlds made from now on."""
+        self.preferences = replace(self.preferences, show_new_world=show)
+        preferences.save(self.data, self.preferences)
+        self._changed()
+
+    def set_world_visibility(
+        self,
+        world: World,
+        show: bool,  # noqa: FBT001 - the world's checkbox value
+    ) -> str | None:
+        """Change one world's saved visibility and its existing mod presentation."""
+        if self.busy:
+            return text("ready_busy")
+        if self.shown(world) == show and world.show_new_world is not None:
+            return None
+        changed = replace(world, show_new_world=show)
+        mods = (
+            library.installed(self._profile_dir(), world),
+            library.kept(self.data, world),
+        )
+        try:
+            for mod in mods:
+                if mod is not None:
+                    library.show(self.data, changed, mod, shown=show)
+            library.save(self.data, changed)
+        except OSError as error:
+            return str(error)
+        self.refresh_library()
+        return None
 
     # -- what can run now ----------------------------------------------------------------------
 
@@ -377,13 +638,53 @@ class Controller:
             return text("ready_no_game")
         if self.install and self.profile is None:
             return text("ready_no_profile")
+        return self._choices_problem()
+
+    def _choices_problem(self) -> str | None:
+        """What is wrong with the choices: too many locations, or a land image that is missing."""
         try:
             estimate = self.estimated_locations()
         except SettingsError as error:
             return str(error)
         if estimate > controls.LOCATION_BUDGET:
             return text("too_many_locations", count=estimate, budget=controls.LOCATION_BUDGET)
+        wanted = self.world_code().settings().mask.id
+        if wanted and (self.land_mask is None or self.land_mask.id != wanted):
+            return text("needs_land_image")
         return None
+
+    def choose_land_image(self, path: Path) -> str | None:
+        """Make the land of the new world the picture at ``path`` (white is land, black is sea);
+        returns what is wrong with the picture, or None."""
+        try:
+            mask = landmask.read(path)
+        except landmask.LandMaskError as error:
+            return str(error)
+        self.land_mask = mask
+        self.other_changes["mask"] = {"id": mask.id}
+        self.notice = ""
+        self._changed()
+        return None
+
+    def save_land_template(self, output: Path) -> str | None:
+        """Write the picture of the area the New World can fill, to draw land on, as a task;
+        returns why not, or None."""
+        if self.busy:
+            return text("ready_busy")
+        if self.game is None:
+            return text("ready_no_game")
+        game = self.game
+
+        def work(_progress: Progress) -> None:
+            _ = service.land_template(game, output)
+
+        return self._run(Task.TEMPLATE, str(output), work)
+
+    def clear_land_image(self) -> None:
+        """Go back to land the generator draws."""
+        self.land_mask = None
+        _ = self.other_changes.pop("mask", None)
+        self._changed()
 
     def world_problem(self) -> str | None:
         """Why the world actions cannot run now, or None when they can."""
@@ -413,25 +714,276 @@ class Controller:
 
     # -- the work ------------------------------------------------------------------------------
 
-    def start(self) -> str | None:
-        """Start making the new world; returns why it cannot, or None."""
+    def sketch_candidates(self, count: int = 6) -> str | None:
+        if self.busy:
+            return text("ready_busy")
+        if self.game is None:
+            return text("ready_no_game")
+        code, game = self.world_code(), self.game
+        try:
+            seeds = candidates.roll(count)
+        except candidates.CandidateError as error:
+            return str(error)
+        self.candidates, self.candidate_code = [], None
+
+        def work(_progress: Progress) -> None:
+            found = candidates.sketch(game.directory, code.settings(), seeds)
+            with self._lock:
+                self.candidates, self.candidate_code = found, code
+
+        return self._run(Task.CANDIDATES, NEW, work)
+
+    def choose_candidate(self, index: int) -> None:
+        if self.busy or self.candidate_code is None or not 0 <= index < len(self.candidates):
+            return
+        code = with_new_seed(self.candidate_code, self.candidates[index].seed)
+        _ = self.use_code(encode(code))
+        self.selection = NEW
+        self._changed()
+
+    def enqueue(self) -> str | None:
         reason = self.problem()
         if reason is not None or self.game is None:
             return reason
-        request = service.Request(
+        self.queue.append(self._request())
+        self._changed()
+        return None
+
+    def clear_queue(self) -> None:
+        if not self.busy:
+            self.queue.clear()
+            self._changed()
+
+    def start_queue(self) -> str | None:
+        """Generate snapshots in order; a cancellation or failure leaves the rest pending."""
+        if self.busy:
+            return text("ready_busy")
+        if not self.queue:
+            return text("queue_empty")
+        self.queue_done = 0
+        generator = self.generator
+
+        def work(progress: Progress) -> service.Result | None:
+            result = None
+            while self.queue:
+                progress.checkpoint()
+                progress.reset_stages()
+                result = generator(self.queue[0], progress)
+                with self._lock:
+                    _ = self.queue.pop(0)
+                    self.queue_done += 1
+                    self.finished, self.fraction = frozenset(), 0.0
+                self._changed()
+            return result
+
+        return self._run(Task.QUEUE, NEW, work)
+
+    def _request(self) -> service.Request:
+        if self.game is None:
+            message = "Choose the game before generating"
+            raise SettingsError(message)
+        return service.Request(
             game=self.game,
             code=self.world_code(),
             data=self.data,
             profile=self.profile,
             install=self.install,
-            reveal_thumbnail=self.preferences.reveal_thumbnails,
+            show_new_world=self.preferences.show_new_world,
+            land_mask=self.land_mask,
+            output_folder=self.output_folder,
+            world_file=self.world_file,
         )
+
+    def start(self) -> str | None:
+        """Start making the new world; returns why it cannot, or None."""
+        reason = self.problem()
+        if reason is not None or self.game is None:
+            return reason
+        request = self._request()
         generator = self.generator
 
         def work(progress: Progress) -> service.Result:
             return generator(request, progress)
 
         return self._run(Task.GENERATE, NEW, work)
+
+    def reproduction(self, world: World) -> str:
+        """What is known of whether this generator makes ``world`` again, in a sentence.
+
+        The record decides what it can without the game's files; a check, once it has run,
+        settles the rest (ADR 0010).
+        """
+        record = world.record
+        if record is None:
+            return text("repro.none")
+        found = self.checks.get(world.id)
+        if found is not None and found.reproduced is not None:
+            first = found.differing[0] if found.differing else "?"
+            return (
+                text("repro.identical", count=record.output_count)
+                if found.reproduced
+                else text("repro.differs", count=len(found.differing), first=first)
+            )
+        if found is not None and found.verdict is Verdict.OTHER_INPUTS:
+            return text("repro.other_inputs", count=len(found.changed_inputs))
+        key = REPRODUCTION.get(verdict(record), "repro.same_algorithm")
+        return text(key, release=record.release)
+
+    # -- world files ---------------------------------------------------------------------------
+
+    def import_file(self, path: Path) -> str | None:
+        """Take a world file into the library; returns what went wrong, or None.
+
+        A compact ``.rnworld`` is taken at once. A transferred built world (``.rnworld-mod``) is
+        a gigabyte and runs as a task; it needs the game, to check that it is the one the world
+        was made from.
+        """
+        if not worldfile.is_world_file(path):
+            return text("not_world_file")
+        if path.name.lower().endswith(worldfile.MOD_EXTENSION):
+            return self._receive(path)
+        try:
+            taken = exchange.import_world(self.data, path)
+        except (exchange.ExchangeError, worldfile.WorldFileError, OSError) as error:
+            logs.get().warning("world file %s refused: %s", path.name, error)
+            return str(error)
+        self.selection = taken.world.id
+        self.last_import = taken
+        self.refresh_library()
+        return None
+
+    def _receive(self, path: Path) -> str | None:
+        if self.busy:
+            return text("ready_busy")
+        if self.game is None:
+            return text("ready_no_game")
+        game, data = self.game, self.data
+
+        def work(_progress: Progress) -> None:
+            taken = transfer.receive_mod(data, path, game)
+            with self._lock:
+                self.selection = taken.world.id
+
+        return self._run(Task.RECEIVE, path.name, work)
+
+    def copy_mod_to(self, world: World, destination: Path) -> str | None:
+        """Copy the world's mod into a folder of the player's choice, as a task; returns why not."""
+        if self.busy:
+            return text("ready_busy")
+        mod = library.installed(self._profile_dir(), world) or library.kept(self.data, world)
+        if mod is None:
+            return text("no_mod_to_send")
+
+        def work(_progress: Progress) -> None:
+            _ = exchange.copy_mod(mod, destination)
+
+        return self._run(Task.COPY, world.id, work)
+
+    def export_file(self, world: World, output: Path) -> str | None:
+        """Write the world's compact world file; returns what went wrong, or None."""
+        try:
+            _ = exchange.export_world(self.data, world, output)
+        except (worldfile.WorldFileError, OSError) as error:
+            return str(error)
+        return None
+
+    def send_built(self, world: World, output: Path) -> str | None:
+        """Write the built world, its mod included, as a file to carry to another machine of
+        the player's; returns why not, or None. Runs as a task."""
+        if self.busy:
+            return text("ready_busy")
+        mod = library.installed(self._profile_dir(), world) or library.kept(self.data, world)
+        if mod is None:
+            return text("no_mod_to_send")
+        data = self.data
+
+        def work(_progress: Progress) -> None:
+            _ = transfer.send_mod(data, world, mod, output)
+
+        return self._run(Task.SEND, world.id, work)
+
+    # -- the atlas and its maps ----------------------------------------------------------------
+
+    def atlas(self, world: World) -> Atlas | None:
+        """The world's atlas, or None when it has none."""
+        return library.atlas(self.data, world)
+
+    def revealed(self, world: World) -> bool:
+        """Whether the world's New World may be shown here."""
+        return self.shown(world) or world.revealed
+
+    def reveal_world(self, world: World) -> None:
+        """Show this world's maps (the player's choice, kept with the world)."""
+        _ = library.reveal(self.data, world)
+        self.refresh_library()
+
+    def summary(self, world: World) -> str:
+        """One line on what the world holds, from its atlas ('' without one)."""
+        found = self.atlas(world)
+        if found is None:
+            return ""
+        return text("summary", **atlas.totals(found))
+
+    def maps_to_compare(self) -> list[tuple[World, Atlas]]:
+        """The worlds whose maps may be shown and that have an atlas."""
+        pairs = ((world, self.atlas(world)) for world in self.worlds if self.revealed(world))
+        return [(world, found) for world, found in pairs if found is not None]
+
+    def save_map(self, world: World, layer: str, output: Path) -> str | None:
+        """Write the picture of ``layer`` of a revealed world as a PNG; returns why not, or None."""
+        found = self.atlas(world)
+        if found is None or not self.revealed(world):
+            return text("covered_maps")
+        try:
+            data = encode_png(atlas.render(found, layer), color_type=COLOR_RGB, compression="zlib")
+            _ = output.write_bytes(data)
+        except (OSError, atlas.AtlasError) as error:
+            return str(error)
+        return None
+
+    def save_preview(self, world: World, output: Path) -> str | None:
+        """Copy the world's overview picture, covered unless it may be shown; returns why not."""
+        source = self.picture(world)
+        if source is None:
+            return text("preview_missing")
+        try:
+            _ = output.write_bytes(source.read_bytes())
+        except OSError as error:
+            return str(error)
+        return None
+
+    def compatibility(self, world: World) -> bool | None:
+        """Whether ``world`` is still valid for the game's build: the same build, or another
+        whose files the world read are all unchanged; None when that cannot be known.
+
+        Hashing the files takes a second or so, so the answer is kept for the build.
+        """
+        game = self.game
+        if game is None:
+            return None
+        key = (world.id, game.build_id)
+        if key not in self._compatible:
+            self._compatible[key] = service.compatible(world, game=game, data=self.data)
+        return self._compatible[key]
+
+    def check_selected(self) -> str | None:
+        """Make the selected world again and compare it with the first time; returns why it
+        cannot, or None. Needs the game's files, not the profile."""
+        world = self.selected_world()
+        if self.busy:
+            return text("ready_busy")
+        if self.game is None:
+            return text("ready_no_game")
+        if world is None:
+            return None
+        if world.record is None:
+            return text("repro.none")
+        game, data, checks, checker = self.game, self.data, self.checks, self.checker
+
+        def work(progress: Progress) -> None:
+            checks[world.id] = checker(world, game=game, data=data, progress=progress)
+
+        return self._run(Task.CHECK, world.id, work)
 
     def add_selected(self) -> str | None:
         """Put the selected world into the game; returns why it cannot, or None."""
@@ -440,25 +992,19 @@ class Controller:
         if reason is not None or world is None or self.game is None or self.profile is None:
             return reason
         game, profile, data = self.game, self.profile, self.data
-        reveal = self.preferences.reveal_thumbnails
+        show = self.shown(world)
         generator = self.generator
 
         def work(progress: Progress) -> service.Result:
-            if library.kept(data, world) is not None and world.game_build == game.build_id:
-                return service.add_to_game(
-                    world, game=game, data=data, profile=profile, progress=progress
-                )
-            request = service.Request(
+            return service.add_to_game(
+                world,
                 game=game,
-                code=decode(world.code),
                 data=data,
                 profile=profile,
-                reveal_thumbnail=reveal,
+                progress=progress,
+                show_new_world=show,
+                make=generator,
             )
-            result = generator(request, progress)
-            if world.name and result.world.id == world.id:
-                _ = library.rename(data, result.world, world.name)
-            return result
 
         return self._run(Task.ADD, world.id, work)
 
@@ -498,6 +1044,8 @@ class Controller:
         self, task: Task, target: str, work: Callable[[Progress], service.Result | None]
     ) -> str | None:
         progress = Progress(self._on_update)
+        self.runs += 1
+        logs.get().info("task %s started, target %s", task.value, target)
         with self._lock:
             self.phase, self.task, self.task_target = Phase.RUNNING, task, target
             self.fraction, self.running, self.finished = 0.0, (), frozenset()
@@ -532,6 +1080,9 @@ class Controller:
             self.running = update.running
             if update.finished:
                 self.finished = self.finished | {update.stage}
+                logs.get().info(
+                    "stage %s done, %.0f%% of the work", update.stage, update.fraction * 100
+                )
         self._changed()
 
     def _work(self, work: Callable[[Progress], service.Result | None], progress: Progress) -> None:
@@ -539,28 +1090,58 @@ class Controller:
         message = ""
         result: service.Result | None = None
         try:
-            result = work(progress)
+            with active(progress):
+                result = work(progress)
         except Cancelled:
             outcome = Phase.CANCELLED
         except Exception as error:  # noqa: BLE001 - whatever failed is shown to the player
             outcome, message = Phase.FAILED, self._explain(error)
+        logs.get().info(
+            "task %s ended: %s %s", self.task.value if self.task else "?", outcome.value, message
+        )
         with self._lock:
             self.phase, self.result, self.message = outcome, result, message
             self.running = ()
             if outcome is Phase.FINISHED:
                 self.fraction = 1.0
             if result is not None:
-                self.selection, self.revealed = result.world.id, False
+                self.selection = result.world.id
         self.refresh_library()
 
     def _explain(self, error: Exception) -> str:
-        """The error for the player; the traceback goes to a file for a bug report."""
+        """The error for the player; the traceback goes to the log and to a file for a report."""
+        logs.get().exception("task failed: %s", error)
         try:
             self.data.mkdir(parents=True, exist_ok=True)
             _ = (self.data / ERROR_LOG).write_text(traceback.format_exc(), encoding="utf-8")
         except OSError:
             pass
         return str(error) or type(error).__name__
+
+    # -- bug reports ---------------------------------------------------------------------------
+
+    def snapshot(self) -> diagnostics.Snapshot:
+        """What a diagnostics file reports of this session."""
+        return diagnostics.Snapshot(
+            data=self.data,
+            games=tuple(self.games),
+            game=self.game,
+            profiles=tuple(self.profiles),
+            profile=self.profile,
+            worlds=tuple(self.worlds),
+            strays=tuple(self.strays),
+            show_new_world=self.preferences.show_new_world,
+            program_folder=self.program_folder,
+        )
+
+    def save_diagnostics(self, output: Path) -> str | None:
+        """Write the file for a bug report; returns what went wrong, or None."""
+        try:
+            _ = diagnostics.write(output, self.snapshot())
+        except OSError as error:
+            logs.get().exception("diagnostics could not be written")
+            return text("diagnostics_failed", problem=str(error))
+        return None
 
     # -- what to do in EU5 next ----------------------------------------------------------------
 

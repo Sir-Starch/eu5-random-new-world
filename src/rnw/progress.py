@@ -57,8 +57,10 @@ STAGES: Final[dict[str, StageInfo]] = {
     "terrain decals": StageInfo("Sculpting the terrain", 28),
     "vegetation instances": StageInfo("Planting trees and grass", 12),
     "natives": StageInfo("Founding native societies", 3),
+    "atlas": StageInfo("Drawing the atlas of the world", 2),
     "texts": StageInfo("Writing names, setup and scripts", 10),
     "script remap": StageInfo("Rewriting game scripts", 4),
+    "selection cover": StageInfo("Covering the New World until it is played", 1),
     "write files": StageInfo("Writing the mod", 4),
     # Parts of the stages above: they show in the list while they run and add no weight.
     "land cells": StageInfo("Growing land locations", 0),
@@ -66,7 +68,9 @@ STAGES: Final[dict[str, StageInfo]] = {
     "relief": StageInfo("Raising mountains and valleys", 0),
     "terrain": StageInfo("Building the terrain", 0),
     # Parts of installing, after the export (``rnw.app.service``).
+    "candidates": StageInfo("Sketching continents", 0),
     "install": StageInfo("Installing the world into your profile", 0),
+    "compare inputs": StageInfo("Comparing the game's files with the ones this world read", 0),
     "waiting for the game": StageInfo(
         (
             "Waiting for the game to let go of the previous world: untick it in the game's "
@@ -113,6 +117,11 @@ class Progress:
     def cancel(self) -> None:
         """Ask the job to stop at its next checkpoint."""
         self._cancelled.set()
+
+    def reset_stages(self) -> None:
+        with self._lock:
+            self._running.clear()
+            self._done.clear()
 
     def checkpoint(self) -> None:
         """Raise ``Cancelled`` if a cancel was asked for."""

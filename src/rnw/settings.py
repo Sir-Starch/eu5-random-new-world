@@ -12,7 +12,7 @@ import json
 from dataclasses import asdict, dataclass, fields, replace
 from typing import TYPE_CHECKING, Final, cast
 
-from rnw import __version__
+from rnw.epoch import CURRENT as ALGORITHM
 from rnw.rng import RNG_VERSION, check_seed
 
 if TYPE_CHECKING:
@@ -109,8 +109,32 @@ class NativeSettings:
     organized_permille: int
     # Share of the state land given to lone states away from the hearths' clusters.
     state_spread_permille: int = 0
+    # Chance, per hearth, that a great empire rises around it (EU4's fantasy native empires):
+    # one state of many times the usual size with an advanced government. 0: none.
+    empire_permille: int = 0
 
 
+@dataclass(frozen=True, slots=True)
+class RollSettings:
+    """Rerolls of a part of a world on the same seed (``rnw.layers``): 0 is the seed's own."""
+
+    resources: int = 0
+    peoples: int = 0
+
+
+ROLLS: Final[RollSettings] = RollSettings()
+
+
+@dataclass(frozen=True, slots=True)
+class MaskSettings:
+    """The land drawn in an image instead of by the generator (``rnw.landmask``): the id of the
+    image, 48 bits of the hash of what it draws, or 0 for land the generator makes itself. The
+    image is not in the settings, only its id; the world's folder and a world file carry it."""
+
+    id: int = 0
+
+
+MASK: Final[MaskSettings] = MaskSettings()
 NATIVES: Final[NativeSettings] = NativeSettings(
     population_permille=1000,
     hearths_per_10k=6,
@@ -124,6 +148,9 @@ NATIVES: Final[NativeSettings] = NativeSettings(
     # Vanilla 1337 America: 15 % of its states lie in small groups apart from the two great
     # centres (C117).
     state_spread_permille=150,
+    # "Seldom" of the four levels the window offers (0, 250, 500, 800), as EU4's default of
+    # its fantasy setting.
+    empire_permille=250,
 )
 
 
@@ -137,12 +164,19 @@ class Settings:
     coast: CoastSettings
     new_world: NewWorldSettings
     natives: NativeSettings = NATIVES
+    rolls: RollSettings = ROLLS
+    mask: MaskSettings = MASK
 
     def to_json_data(self) -> dict[str, object]:
-        """Return the schema-tagged document."""
+        """Return the schema-tagged document; no rolls are written while all are 0, so that the
+        document, and every digest of it, is what it was before rolls existed."""
         data = cast("dict[str, object]", asdict(self))
         coast = cast("dict[str, object]", data["coast"])
         coast["window"] = list(self.coast.window)
+        if self.rolls == ROLLS:
+            del data["rolls"]
+        if self.mask == MASK:
+            del data["mask"]
         return {"schema": SCHEMA_VERSION, **data}
 
 
@@ -187,6 +221,10 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "organized_permille": (0, 1000),
     "precious_permille": (0, 5000),
     "state_spread_permille": (0, 1000),
+    "empire_permille": (0, 1000),
+    "resources": (0, 65_535),
+    "peoples": (0, 65_535),
+    "id": (0, (1 << 48) - 1),
 }
 PRESETS: Final[dict[str, Settings]] = {
     "continents": Settings(
@@ -375,7 +413,15 @@ def _checked_window(value: object) -> tuple[int, int, int, int]:
 
 
 def _merge[
-    T: (SyntheticSettings, GeographySettings, CoastSettings, NewWorldSettings, NativeSettings)
+    T: (
+        SyntheticSettings,
+        GeographySettings,
+        CoastSettings,
+        NewWorldSettings,
+        NativeSettings,
+        RollSettings,
+        MaskSettings,
+    )
 ](base: T, section: str, override: object) -> T:
     if not isinstance(override, dict):
         message = f"Settings section {section} must be an object"
@@ -405,7 +451,9 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         message = f"Unknown preset: {name}; choose one of {', '.join(sorted(PRESETS))}"
         raise SettingsError(message)
     base = PRESETS[name]
-    unknown = sorted(set(data) - {"synthetic", "geography", "coast", "new_world", "natives"})
+    unknown = sorted(
+        set(data) - {"synthetic", "geography", "coast", "new_world", "natives", "rolls", "mask"}
+    )
     if unknown:
         message = f"Unknown settings sections: {', '.join(unknown)}"
         raise SettingsError(message)
@@ -420,6 +468,8 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         coast=_merge(base.coast, "coast", data.get("coast", {})),
         new_world=_merge(base.new_world, "new_world", data.get("new_world", {})),
         natives=_merge(base.natives, "natives", data.get("natives", {})),
+        rolls=_merge(base.rolls, "rolls", data.get("rolls", {})),
+        mask=_merge(base.mask, "mask", data.get("mask", {})),
     )
 
 
@@ -440,10 +490,13 @@ def canonical_json(data: object) -> str:
 
 
 def run_spec(seed: int, settings: Settings) -> dict[str, object]:
-    """Everything that determines generated output apart from game input files."""
+    """Everything that determines generated output apart from game input files.
+
+    The algorithm epoch (``rnw.epoch``), not the release, so that a release that changes nothing a
+    world is made of leaves the specification, and every digest of it, as it was."""
     return {
         "generator": GENERATOR,
-        "version": __version__,
+        "algorithm": ALGORITHM,
         "rng": RNG_VERSION,
         "seed": check_seed(seed),
         "settings": settings.to_json_data(),

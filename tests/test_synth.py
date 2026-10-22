@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 from typer.testing import CliRunner
 
+from rnw import epoch
 from rnw.artifacts import write_synthetic_bundle
 from rnw.cli import app
 from rnw.settings import build_settings, run_spec
@@ -23,9 +24,13 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 ISLAND_PX = 400
+# By algorithm epoch (``rnw.epoch``): the bytes of a released epoch never change, and a change of
+# the synthetic bundle needs a new epoch and a new entry.
 GOLDEN_MANIFESTS = {
-    "continents": "99f7304477f9df836bb7276203a47bfefa7c561322ccc74bf300a90a3bb184c1",
-    "archipelago": "a006cd052e756e05322d825c87d5676ccf846c8838149bda117bc0b41fa4ca05",
+    1: {
+        "continents": "d015dd203991263dd05b338814277a64d50020f0b5c32b3fe035a312c8ca2c91",
+        "archipelago": "37e42f8a44c0ca0c856300c9daffd16152674ba7bf55ed781ada821ebfa02a27",
+    },
 }
 
 
@@ -79,7 +84,7 @@ def test_bundle_bytes_match_cross_platform_golden(tmp_path: Path, preset: str) -
     """
     first = _bundle_digest(tmp_path / "generated/rnw_synth_a", preset)
     assert first == _bundle_digest(tmp_path / "generated/rnw_synth_b", preset)
-    assert first == GOLDEN_MANIFESTS[preset]
+    assert first == GOLDEN_MANIFESTS[epoch.CURRENT][preset]
 
 
 def test_cli_synth_writes_bundle_and_refuses_overwrite(tmp_path: Path) -> None:

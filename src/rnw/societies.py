@@ -53,6 +53,11 @@ CITY: Final[str] = "city"
 TOWN: Final[str] = "town"
 STATE: Final[str] = "state"
 TRIBE: Final[str] = "tribe"
+# A great empire takes the nearest inhabited land around its capital, this many permille of
+# all land locations, but at least EMPIRE_FLOOR [INFERRED design]. Vanilla 1337's largest
+# native state, the Aztec empire, holds 23 of 4,434 land locations (5 permille) [V-EXEC C117].
+EMPIRE_SHARE: Final[tuple[int, int]] = (8, 16)
+EMPIRE_FLOOR: Final[int] = 12
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -75,6 +80,7 @@ class Polity:
     members: tuple[int, ...]
     capital: int
     culture: int
+    great: bool = False
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -361,6 +367,45 @@ def _states(
     ]
 
 
+def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
+    graph: _Graph,
+    hearths: list[int],
+    population: NDArray[np.int64],
+    inhabited: NDArray[np.bool_],
+    *,
+    chance: int,
+    seed: int,
+) -> list[tuple[int, list[int]]]:
+    """Capitals and members of the great empires: each hearth raises one with ``chance`` permille.
+
+    The empire's capital is the most populous inhabited location near its hearth, and it
+    takes the nearest inhabited locations by travel cost, so it is connected; it never takes
+    land another empire holds. A stream of its own draws the chance and the size for every
+    hearth whether or not an empire rises, so a higher chance raises empires at the same
+    hearths and more, and ``chance`` 0 changes nothing else.
+    """
+    rng = SplitMix64(derive_seed(seed, "empires"))
+    taken = np.zeros(len(inhabited), dtype=bool)
+    empires: list[tuple[int, list[int]]] = []
+    for hearth in hearths:
+        draw, share = rng.below(PERMILLE), _uniform(rng, EMPIRE_SHARE)
+        if draw >= chance or taken[hearth]:
+            continue
+        free = inhabited & ~taken
+        near, _ = graph.grow([hearth], allowed=free, limit=2 * STEP_COST)
+        candidates = np.flatnonzero((near >= 0) & inhabited)
+        if not candidates.size:
+            continue
+        capital = int(candidates[int(np.argmax(population[candidates]))])
+        reach, _ = graph.grow([capital], allowed=free)
+        reached = np.flatnonzero(reach >= 0)
+        size = max(EMPIRE_FLOOR, len(inhabited) * share // PERMILLE)
+        members = reached[np.argsort(reach[reached], kind="stable")][:size]
+        taken[members] = True
+        empires.append((capital, sorted(members.tolist())))
+    return empires
+
+
 def _tribes(  # noqa: PLR0913, PLR0917 - tribes read zones, population and the settings.
     graph: _Graph,
     culture: NDArray[np.int64],
@@ -446,13 +491,29 @@ def generate_societies(
         pocket=settings.state_locations,
         rng=rng,
     )
+    empires = _empires(
+        moves, hearths, population, inhabited, chance=settings.empire_permille, seed=seed
+    )
+    empire_land = np.zeros(count, dtype=bool)
+    for _, members in empires:
+        empire_land[members] = True
     polities = [
+        Polity(STATE, tuple(members), capital, int(culture[capital]), great=True)
+        for capital, members in empires
+    ]
+    polities += [
         Polity(STATE, tuple(members), capital, int(culture[capital]))
         for capital, members in _states(
-            moves, state_land, population, locations=settings.state_locations, rng=rng
+            moves,
+            state_land & ~empire_land,
+            population,
+            locations=settings.state_locations,
+            rng=rng,
         )
     ]
-    polities += _tribes(moves, culture, inhabited & ~state_land, population, settings, rng)
+    polities += _tribes(
+        moves, culture, inhabited & ~state_land & ~empire_land, population, settings, rng
+    )
     ranks, markets = _ranks(polities, population, hearths, moves, reach)
     return Societies(
         complexity=complexity,

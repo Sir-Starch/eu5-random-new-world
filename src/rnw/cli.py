@@ -10,13 +10,26 @@ from typing import Annotated, Final, cast
 
 import typer
 
-from rnw import __version__
-from rnw.app import discovery, install, paths, service, worldcode
+from rnw import __version__, cli_library, landmask, worldfile
+from rnw.app import (
+    diagnostics,
+    discovery,
+    exchange,
+    install,
+    library,
+    logs,
+    paths,
+    preferences,
+    service,
+    transfer,
+    worldcode,
+)
 from rnw.app.discovery import GameInstall
 from rnw.app.install import InstallError
 from rnw.artifacts import OutputPathError, check_new_output, write_synthetic_bundle
 from rnw.contract import MissingContractFileError, fingerprint_document
 from rnw.contract import fingerprint as game_fingerprint
+from rnw.epoch import epoch_of
 from rnw.eu5_canvas import CanvasError
 from rnw.eu5_export import ExportError, export_candidate
 from rnw.eu5_map import Eu5ContractError
@@ -24,6 +37,7 @@ from rnw.eu5_nw_export import NewWorldExportError, export_new_world
 from rnw.eu5_objects import ObjectBudgetError
 from rnw.eu5_remap import RemapError
 from rnw.geography import GeographyError, color_summary, read_locations, summary
+from rnw.layers import rolls_of
 from rnw.parallel import ResourceError
 from rnw.png import PngFormatError
 from rnw.progress import Cancelled, Progress, Update
@@ -218,30 +232,70 @@ def world_code(
     preset: PresetOption = "continents",
     seed: Annotated[int | None, typer.Option(min=0, max=SEED_MAX, help="Default: random.")] = None,
     settings: SettingsOption = None,
+    land_image: Annotated[
+        Path | None,
+        typer.Option(exists=True, dir_okay=False, help="Draw the land in this picture."),
+    ] = None,
 ) -> None:
-    """Print a world code for a preset and seed, or read the one given."""
+    """Print a world code for a preset and seed, or read the one given.
+
+    ``--land-image`` puts the id of a picture of land (white) and sea (black) into the code; the
+    world is then made with ``rnw world CODE --land-image FILE``.
+    """
     try:
         if text is not None:
             code = worldcode.decode(text)
         else:
             changes = None if settings is None else _read_changes(settings)
+            if land_image is not None:
+                changes = {**(changes or {}), "mask": {"id": landmask.read(land_image).id}}
             code = worldcode.new_code(preset, seed, changes)
+    except (worldcode.WorldCodeError, SettingsError, landmask.LandMaskError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(json.dumps(_code_document(code), indent=2))
+
+
+def _code_document(code: worldcode.WorldCode) -> dict[str, object]:
+    """What the commands print of a world code."""
+    return {
+        "code": worldcode.encode(code),
+        "preset": code.preset,
+        "seed": code.seed,
+        "generator": code.generator,
+        "algorithm": epoch_of(code.generator),
+        "reproduced_by_this_generator": worldcode.reproduces(code),
+        "rolls": rolls_of(code.settings()),
+        "changes": code.changes,
+    }
+
+
+@app.command()
+def reroll(
+    code: Annotated[str, typer.Argument(help="A world code.")],
+    part: Annotated[
+        str, typer.Option(help="What to make again: peoples, resources, or land (a new seed).")
+    ] = "peoples",
+    seed: Annotated[
+        int | None, typer.Option(min=0, max=SEED_MAX, help="For land: the new seed.")
+    ] = None,
+) -> None:
+    """Print the code of a world with one part made again; make it with ``rnw world``.
+
+    Peoples and resources are drawn again on the very same land; land is a new continent with
+    the same settings.
+    """
+    try:
+        decoded = worldcode.decode(code)
+        changed = (
+            worldcode.with_new_seed(decoded, seed)
+            if part == "land"
+            else worldcode.rolled(decoded, part)
+        )
     except (worldcode.WorldCodeError, SettingsError) as error:
         typer.echo(f"Error: {error}", err=True)
         raise typer.Exit(code=2) from error
-    typer.echo(
-        json.dumps(
-            {
-                "code": worldcode.encode(code),
-                "preset": code.preset,
-                "seed": code.seed,
-                "generator": code.generator,
-                "reproduced_by_this_generator": worldcode.reproduces(code),
-                "changes": code.changes,
-            },
-            indent=2,
-        )
-    )
+    typer.echo(json.dumps(_code_document(changed), indent=2))
 
 
 def _read_changes(path: Path) -> dict[str, object]:
@@ -255,8 +309,21 @@ def _read_changes(path: Path) -> dict[str, object]:
     return changes
 
 
+def _game_of(game_dir: Path | None, games: list[GameInstall]) -> GameInstall:
+    """The game to read: the folder given, else the first installation found."""
+    game = (
+        discovery.game_beside(game_dir) or GameInstall(game_dir, None, "")
+        if game_dir is not None
+        else (games[0] if games else None)
+    )
+    if game is None:
+        message = "No EU5 installation found; pass --game-dir"
+        raise typer.BadParameter(message)
+    return game
+
+
 @app.command()
-def world(
+def world(  # noqa: PLR0913 - the options of the command
     code: Annotated[str, typer.Argument(help="A world code (see world-code).")],
     *,
     install_into_profile: Annotated[
@@ -269,32 +336,54 @@ def world(
         Path | None, typer.Option(file_okay=False, help="Default: the application's folder.")
     ] = None,
     ignore_memory: Annotated[bool, typer.Option(help="Start with too little free memory.")] = False,
+    out: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True, file_okay=False, help="Also copy the mod into this folder (a mods folder)."
+        ),
+    ] = None,
+    land_image: Annotated[
+        Path | None,
+        typer.Option(exists=True, dir_okay=False, help="The picture a drawn land is made on."),
+    ] = None,
+    world_file: Annotated[
+        Path | None,
+        typer.Option(dir_okay=False, help="Write only a compact .rnworld; keep no mod."),
+    ] = None,
 ) -> None:
-    """Generate the world of a code the way the application does; install only on request."""
+    """Generate the world of a code the way the application does; install only on request.
+
+    ``--out`` copies the finished mod into a folder of your choice (to manage by hand, or to
+    upload from) without touching a profile.
+
+    The New World is shown before it is played only if the application's setting says so.
+    """
     try:
         decoded = worldcode.decode(code)
         games = discovery.find_games()
-        game = (
-            discovery.game_beside(game_dir) or GameInstall(game_dir, None, "")
-            if game_dir is not None
-            else (games[0] if games else None)
-        )
-        if game is None:
-            message = "No EU5 installation found; pass --game-dir"
-            raise typer.BadParameter(message)
+        game = _game_of(game_dir, games)
         profiles = discovery.find_profiles(games=games) if install_into_profile else []
+        data = data_dir or paths.data_directory()
+        logs.start(data)
         result = service.generate(
             service.Request(
                 game=game,
                 code=decoded,
-                data=data_dir or paths.data_directory(),
+                data=data,
                 profile=profiles[0] if profiles else None,
                 install=install_into_profile,
                 check_memory=not ignore_memory,
+                show_new_world=preferences.load(data).show_new_world,
+                land_mask=None if land_image is None else landmask.read(land_image),
+                world_file=world_file,
             ),
             Progress(_print_update),
         )
-    except FAILURES as error:
+        copied = None
+        if out is not None:
+            kept = library.kept(data, result.world) or result.installed
+            copied = None if kept is None else exchange.copy_mod(kept, out)
+    except (*FAILURES, exchange.ExchangeError, landmask.LandMaskError) as error:
         typer.echo(f"Error: {error}", err=True)
         raise typer.Exit(code=2) from error
     typer.echo(
@@ -303,6 +392,7 @@ def world(
                 "code": result.code,
                 "bundle": str(result.bundle),
                 "installed": None if result.installed is None else str(result.installed),
+                "copied_to": None if copied is None else str(copied),
                 "seconds": round(result.seconds, 1),
                 "summary": result.summary,
             },
@@ -310,6 +400,203 @@ def world(
             sort_keys=True,
         )
     )
+
+
+@app.command()
+def verify_world(
+    world_id: Annotated[str, typer.Argument(help="The id or the code of a world in the library.")],
+    *,
+    game_dir: Annotated[
+        Path | None, typer.Option(exists=True, file_okay=False, help="Default: search Steam.")
+    ] = None,
+    data_dir: Annotated[
+        Path | None, typer.Option(file_okay=False, help="Default: the application's folder.")
+    ] = None,
+    ignore_memory: Annotated[bool, typer.Option(help="Start with too little free memory.")] = False,
+) -> None:
+    """Make a world of the library again and say whether every file is the same (ADR 0010).
+
+    Compares the game's files with the ones the world read, then rebuilds it from its record
+    and compares every file of the mod but its metadata. Exits 0 only when it is reproduced.
+    """
+    data = data_dir or paths.data_directory()
+    logs.start(data)
+    try:
+        worlds = [
+            item for item in library.load(data) if world_id in {item.id, item.code, item.folder}
+        ]
+        if not worlds:
+            message = f"No world {world_id!r} in the library at {data}"
+            raise typer.BadParameter(message)
+        found = service.check(
+            worlds[0],
+            game=_game_of(game_dir, discovery.find_games()),
+            data=data,
+            progress=Progress(_print_update),
+            check_memory=not ignore_memory,
+        )
+    except (*FAILURES, service.CheckError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(
+        json.dumps(
+            {
+                "world": worlds[0].id,
+                "verdict": found.verdict.value,
+                "reproduced": found.reproduced,
+                "changed_inputs": found.changed_inputs[:20],
+                "differing": found.differing[:20],
+                "seconds": round(found.seconds, 1),
+            },
+            indent=2,
+        )
+    )
+    raise typer.Exit(code=0 if found.reproduced else 1)
+
+
+def _library_world(data: Path, identifier: str) -> library.World:
+    """The world of the library named by its id, folder or code."""
+    for item in library.load(data):
+        if identifier in {item.id, item.code, item.folder}:
+            return item
+    message = f"No world {identifier!r} in the library at {data}"
+    raise typer.BadParameter(message)
+
+
+DataDirOption = Annotated[
+    Path | None, typer.Option(file_okay=False, help="Default: the application's folder.")
+]
+
+
+@app.command()
+def import_world(
+    file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="A .rnworld file.")],
+    *,
+    data_dir: DataDirOption = None,
+) -> None:
+    """Take a world file into the library as its code and maps; needs no game.
+
+    The file is checked as hostile input: names, sizes and hashes. A world already in the library
+    is left as it is.
+    """
+    data = data_dir or paths.data_directory()
+    logs.start(data)
+    try:
+        taken = exchange.import_world(data, file)
+    except (exchange.ExchangeError, worldfile.WorldFileError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(
+        json.dumps(
+            {"world": taken.world.id, "code": taken.world.code, "new": taken.created}, indent=2
+        )
+    )
+
+
+@app.command()
+def export_world(
+    world_id: Annotated[str, typer.Argument(help="The id or the code of a world in the library.")],
+    output: Annotated[Path, typer.Argument(dir_okay=False, help="The .rnworld file to write.")],
+    *,
+    data_dir: DataDirOption = None,
+) -> None:
+    """Write a world's compact world file: its code, record and maps, nothing of the game."""
+    data = data_dir or paths.data_directory()
+    world = _library_world(data, world_id)
+    try:
+        written = exchange.export_world(data, world, output)
+    except (worldfile.WorldFileError, OSError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(f"Wrote {written}")
+
+
+@app.command()
+def transfer_out(
+    world_id: Annotated[str, typer.Argument(help="The id or the code of a world in the library.")],
+    output: Annotated[Path, typer.Argument(dir_okay=False, help="The .rnworld-mod file to write.")],
+    *,
+    data_dir: DataDirOption = None,
+) -> None:
+    """Write a built world, its mod included, to carry to another of your own machines.
+
+    The file is about a gigabyte and holds images derived from the game's map: it is not for
+    sharing. The other machine takes it only with the same game files.
+    """
+    data = data_dir or paths.data_directory()
+    world = _library_world(data, world_id)
+    profiles = discovery.find_profiles(games=discovery.find_games())
+    mod = library.installed(profiles[0].directory if profiles else None, world) or library.kept(
+        data, world
+    )
+    if mod is None:
+        typer.echo("Error: the world has no mod here (in the game or kept) to send", err=True)
+        raise typer.Exit(code=2)
+    try:
+        written = transfer.send_mod(data, world, mod, output)
+    except (exchange.ExchangeError, worldfile.WorldFileError, OSError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(f"Wrote {written}")
+
+
+@app.command()
+def transfer_in(
+    file: Annotated[Path, typer.Argument(exists=True, dir_okay=False, help="A .rnworld-mod file.")],
+    *,
+    game_dir: Annotated[
+        Path | None, typer.Option(exists=True, file_okay=False, help="Default: search Steam.")
+    ] = None,
+    data_dir: DataDirOption = None,
+) -> None:
+    """Take a built world sent from another of your machines into the library, as a kept mod.
+
+    Refused unless this game is the one the world was made from, file by file.
+    """
+    data = data_dir or paths.data_directory()
+    logs.start(data)
+    try:
+        taken = transfer.receive_mod(data, file, _game_of(game_dir, discovery.find_games()))
+    except (exchange.ExchangeError, worldfile.WorldFileError, OSError) as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(json.dumps({"world": taken.world.id, "code": taken.world.code}, indent=2))
+
+
+@app.command()
+def diagnostics_file(
+    output: Annotated[Path, typer.Argument(dir_okay=False, help="The ZIP to write.")],
+    *,
+    data_dir: Annotated[
+        Path | None, typer.Option(file_okay=False, help="Default: the application's folder.")
+    ] = None,
+) -> None:
+    """Pack the generator's logs and a report for a bug report; nothing is sent anywhere.
+
+    The home folder, the user's name, Steam account numbers and addresses are blanked.
+    """
+    data = data_dir or paths.data_directory()
+    logs.start(data)
+    games = discovery.find_games()
+    profiles = discovery.find_profiles(games=games)
+    worlds = library.load(data)
+    profile = profiles[0] if profiles else None
+    snapshot = diagnostics.Snapshot(
+        data=data,
+        games=tuple(games),
+        game=games[0] if games else None,
+        profiles=tuple(profiles),
+        profile=profile,
+        worlds=tuple(worlds),
+        strays=tuple(library.strays(profile.directory if profile else None, worlds)),
+        show_new_world=preferences.load(data).show_new_world,
+    )
+    try:
+        written = diagnostics.write(output, snapshot)
+    except OSError as error:
+        typer.echo(f"Error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+    typer.echo(f"Wrote {written}")
 
 
 @app.command()
@@ -457,6 +744,9 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
         raise typer.Exit(code=2) from error
     summary = {key: report[key] for key in ("status", "canvas", "generated", "invariants")}
     typer.echo(json.dumps(summary, indent=2, sort_keys=True))
+
+
+cli_library.register(app)
 
 
 if __name__ == "__main__":

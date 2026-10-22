@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import _native
-from rnw.noise import NOISE_SCALE, fractal_noise
+from rnw.noise import NOISE_SCALE
 from rnw.rng import MASK64, mix64
 
 if TYPE_CHECKING:
@@ -97,33 +97,6 @@ def warped_noise(  # noqa: PLR0913 - a field is defined by its stream, grid, war
     return upsample(coarse, step, shape)
 
 
-def coarse_noise(  # noqa: PLR0913 - a field is defined by its stream, grid and octaves.
-    key: int,
-    shape: tuple[int, int],
-    *,
-    step: int,
-    period: int,
-    octaves: int,
-    persistence_permille: int,
-) -> NDArray[np.int64]:
-    """Fractal noise sampled every ``step`` pixels (one extra sample per axis).
-
-    Sample ``(i, j)`` stands for pixel ``(i * step, j * step)``; ``period`` is in pixels.
-    """
-    rows = shape[0] // step + 2
-    columns = shape[1] // step + 2
-    return fractal_noise(
-        key,
-        0,
-        0,
-        columns,
-        rows,
-        period=max(2, period // step),
-        octaves=octaves,
-        persistence_permille=persistence_permille,
-    )
-
-
 def upsample(coarse: NDArray[np.int64], step: int, shape: tuple[int, int]) -> NDArray[np.int64]:
     """Bilinear interpolation of a grid whose sample ``(i, j)`` sits at ``(i*step, j*step)``."""
     return _native.upsample(np.ascontiguousarray(coarse, dtype=np.int64), step, *shape)
@@ -137,10 +110,3 @@ def block_mean(values: NDArray[np.int64], step: int) -> NDArray[np.int64]:
 def box_blur(values: NDArray[np.int64], radius: int) -> NDArray[np.int64]:
     """Separable integer box blur with edge replication."""
     return _native.box_blur(np.ascontiguousarray(values, dtype=np.int64), radius)
-
-
-def resample_nearest(values: NDArray[np.int64], shape: tuple[int, int]) -> NDArray[np.int64]:
-    """Nearest-neighbour resampling of a coarse grid to ``shape``."""
-    rows = np.arange(shape[0], dtype=np.int64) * values.shape[0] // shape[0]
-    columns = np.arange(shape[1], dtype=np.int64) * values.shape[1] // shape[1]
-    return values[rows[:, np.newaxis], columns[np.newaxis, :]]

@@ -53,7 +53,7 @@ def test_the_strip_coast_model_equals_the_whole_raster_one(
 
     domain, seam = _domains()[domain_index]
     monkeypatch.setattr(newworld, "STRIP_ROWS", strip)
-    native = newworld._land(domain.copy(), 7 + domain_index, SMALL, seam)  # pyright: ignore[reportPrivateUsage]
+    native = newworld.land_stage(domain.copy(), 7 + domain_index, SMALL, seam)
     expected = reference_newworld.land_model(domain.copy(), 7 + domain_index, SMALL, seam)
     for ours, theirs in zip(native, expected, strict=True):
         assert np.array_equal(ours, theirs)

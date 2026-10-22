@@ -15,11 +15,11 @@ import re
 import zlib
 from collections import Counter, deque
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
-from rnw import __version__
+from rnw import __version__, epoch, inputs, landcache, worldname
 from rnw.artifacts import (
     Spool,
     check_new_output,
@@ -28,6 +28,11 @@ from rnw.artifacts import (
     staged,
     write_bytes,
 )
+from rnw.atlas import JSON_FILE as ATLAS_JSON
+from rnw.atlas import LABELS_FILE as ATLAS_LABELS
+from rnw.atlas import to_files as atlas_files
+from rnw.bundle import COVER_COPY
+from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
     CLIMATE_STEP,
@@ -61,6 +66,28 @@ from rnw.eu5_development import (
     template_harbours,
 )
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
+from rnw.eu5_lobby import (
+    CONTEXT_MENU,
+    COVER_INCLUDE,
+    GRAPHICS_DEFINES,
+    INCLUDE_DIRS,
+    OWN_SAMPLERS,
+    SCRIPTED_GUI_FILE,
+    SHADER_DIR,
+    SHADERS,
+    binding_problem,
+    cover_files,
+    cover_grid,
+    cover_include,
+    cover_shader,
+    hide_select_entry,
+    land_colour,
+    sampler_include,
+    samplers_bound,
+    scripted_gui_text,
+    shader_samplers,
+    unknown_colour,
+)
 from rnw.eu5_map import (
     ADJACENCIES,
     DEFAULT_MAP,
@@ -77,6 +104,7 @@ from rnw.eu5_map import (
     labels_from_rgb,
     load_map,
     open_png,
+    read_class_lists,
 )
 from rnw.eu5_natives import (
     COUNTRY_DIR,
@@ -127,23 +155,25 @@ from rnw.eu5_terrain import (
 )
 from rnw.eu5_water import water_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
+from rnw.landmask import LandMask, fit
+from rnw.layers import PEOPLES, RESOURCES, layer_seed
 from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
 from rnw.newworld import (
     NewWorld,
-    generate_new_world,
-    seal_pockets,
     unported_cells,
 )
-from rnw.parallel import GIB, Stages, configure, require_memory, stage_workers
+from rnw.parallel import GIB, Stages, configure, cores, require_memory, stage_workers
 from rnw.pdx import Block, parse
-from rnw.pictures import center_column, cover, thumbnail
+from rnw.pictures import center_column, cover, tagged, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.progress import Progress, active, checkpoint, run_stage, running
+from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
+from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
-from rnw.settings import TITLES, canonical_json, run_spec, spec_digest
+from rnw.settings import canonical_json, run_spec, spec_digest
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
@@ -153,6 +183,7 @@ if TYPE_CHECKING:
 
     from rnw.geography import Location
     from rnw.settings import Settings
+    from rnw.worldname import Label
 
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
 MAX_LOCATIONS: Final[int] = 32_000
@@ -168,7 +199,10 @@ RIVER_VALLEY_DEPTHS: Final[tuple[int, ...]] = (350, 550, 850, 1150)
 RIVER_VALLEY_PX: Final[int] = 6
 MIN_LEVEL_PIXELS: Final[int] = 2000
 SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
-LOCALIZATION_DIR: Final[str] = "game/main_menu/localization"
+# The game versions a world's mod says it supports, and the file of the inputs beside the world.
+SUPPORTED_GAME: Final[str] = "1.4.*"
+INPUTS_FILE: Final[str] = "inputs.json"
+LAND_MASK_FILE: Final[str] = "land_mask.png"
 LANGUAGES: Final[tuple[str, ...]] = (
     "braz_por",
     "english",
@@ -566,6 +600,103 @@ def _localization(plan: Plan, extra: dict[str, str], renamed: dict[str, str]) ->
     return files
 
 
+def _binding_problems(
+    game_dir: Path, shaders: dict[str, str], mod_includes: dict[str, str]
+) -> list[str]:
+    """Why patched shaders would not bind as the cover expects (C137, C138); empty when fine.
+
+    Includes are looked up as the game does, the mod's own (``mod_includes``) first.
+    """
+
+    def read(name: str) -> str | None:
+        if name in mod_includes:
+            return mod_includes[name]
+        for folder in INCLUDE_DIRS:
+            if (game_dir / folder / name).is_file():
+                return _read(game_dir, f"{folder}/{name}")
+        return None
+
+    broken = [
+        f"{edit.path}: {problem}"
+        for edit in SHADERS
+        if (problem := binding_problem(edit, shader_samplers(shaders[edit.path], read)))
+    ]
+    broken.extend(
+        f"{name}: a sampler names no engine slot"
+        for name, text in mod_includes.items()
+        if not samplers_bound(text)
+    )
+    return broken
+
+
+def _cover_outputs(
+    game_dir: Path,
+    game_map: Eu5Map,
+    world: NewWorld,
+    final: NDArray[np.int32],
+    neighbours: frozenset[int],
+) -> tuple[dict[str, bytes], dict[str, object]]:
+    """The files that cover the New World at country selection, and what the cover holds.
+
+    The cover takes the generated locations and the ocean wastelands among their vanilla
+    ``neighbours`` (``rnw.eu5_lobby``). The game's own files are changed where it decides what
+    to draw and offer; a game whose files read otherwise, or whose shaders would not bind the
+    cover's samplers, stops the export instead of leaving the cover half made.
+    """
+    patched = {edit.path: cover_shader(edit, _read(game_dir, edit.path)) for edit in SHADERS}
+    menu = hide_select_entry(_read(game_dir, CONTEXT_MENU))
+    land = land_colour(_read(game_dir, GRAPHICS_DEFINES))
+    shaders = {path: text for path, text in patched.items() if text is not None}
+    broken = sorted(path for path in patched if path not in shaders)
+    if menu is None:
+        broken.append(CONTEXT_MENU)
+    if land is None:
+        broken.append(GRAPHICS_DEFINES)
+    if broken or menu is None or land is None:
+        message = (
+            "The game's files are not laid out as the cover of the New World expects "
+            f"({', '.join(broken)}); check the build before making a world"
+        )
+        raise NewWorldExportError(message)
+    lists = read_class_lists(game_dir / DEFAULT_MAP)
+    wastes = set(lists["sea_zones"]) & set(lists["impassable_mountains"])
+    seas = sorted(i for i in neighbours if game_map.keys[i] in wastes)
+    vanilla = len(game_map.keys)
+    covered = np.ones(vanilla + len(world.classes), dtype=bool)
+    covered[:vanilla] = False
+    covered[seas] = True
+    grid = cover_grid(final, covered)
+    rows, columns = final.shape
+    mod_includes = {
+        COVER_INCLUDE: cover_include((rows, columns), grid, unknown_colour(land)),
+        **{name: sampler_include(name) for name in OWN_SAMPLERS},
+    }
+    broken = _binding_problems(game_dir, shaders, mod_includes)
+    if broken:
+        message = (
+            "The cover of the New World would not bind in this build of the game "
+            f"({'; '.join(broken)}); check the build before making a world"
+        )
+        raise NewWorldExportError(message)
+    outputs = {
+        **{f"{SHADER_DIR}/{name}": text.encode("utf-8") for name, text in mod_includes.items()},
+        _mod_path(CONTEXT_MENU): _encode(game_dir, CONTEXT_MENU, menu),
+        SCRIPTED_GUI_FILE: scripted_gui_text().encode("utf-8-sig"),
+    }
+    for path, text in shaders.items():
+        outputs[_mod_path(path)] = _encode(game_dir, path, text)
+    if sorted(outputs) != sorted(cover_files()):
+        message = "the cover's files differ from the list the library copies"
+        raise NewWorldExportError(message)
+    stats: dict[str, object] = {
+        "grid": [int(grid.shape[1]), int(grid.shape[0])],
+        "grid_cells": int(np.count_nonzero(grid)),
+        "ocean_wastelands": [game_map.keys[i] for i in seas],
+        "shaders": [_mod_path(path) for path in shaders],
+    }
+    return outputs, stats
+
+
 def _final_labels(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int32]:
     final = game_map.labels.copy()
     canvas.put(final, world.labels + len(game_map.keys))
@@ -574,10 +705,11 @@ def _final_labels(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[
 
 def _check_world(
     game_map: Eu5Map, canvas: Canvas, world: NewWorld, final: NDArray[np.int32]
-) -> dict[str, int]:
+) -> tuple[dict[str, int], frozenset[int]]:
     """Connectivity, sea reachability and Old World contact preservation.
 
-    ``final`` is the label raster of the finished map (``_final_labels``).
+    ``final`` is the label raster of the finished map (``_final_labels``). Also returns the
+    vanilla locations that touch a generated one, which the selection cover reads.
     """
     count = len(world.classes)
     unported = unported_cells(world)
@@ -636,7 +768,7 @@ def _check_world(
         if not present[zone]:
             message = f"Trimmed ocean zone vanished: {game_map.keys[zone]}"
             raise NewWorldExportError(message)
-    return {
+    stats = {
         "contacts_before": len(before),
         "contacts_after": len(after),
         "old_world_contacts_lost": 0,
@@ -644,6 +776,7 @@ def _check_world(
         "generated_sea_zones_unreachable": 0,
         "land_cells_without_port_access": 0,
     }
+    return stats, frozenset(low for low, high in after if low < vanilla_count <= high)
 
 
 def _removed_provinces(hierarchy: dict[str, Location], removed: set[str]) -> dict[str, list[str]]:
@@ -1223,6 +1356,9 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     check_memory: bool = True,
     progress: Progress | None = None,
     world_code: str | None = None,
+    world_label: Label | None = None,
+    land_mask: LandMask | None = None,
+    cache_dir: Path | None = None,
 ) -> dict[str, object]:
     """Generate, validate and stage one New World mod bundle; return its report.
 
@@ -1231,14 +1367,22 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     ``check_memory`` is false the export first checks that the machine has the memory its
     smallest working set needs (``EXPORT_MEMORY``); more memory only makes it faster.
     ``progress`` receives the stages as they run and can cancel the job, which raises
-    ``Cancelled`` and leaves nothing behind.
+    ``Cancelled`` and leaves nothing behind. ``world_label`` is the title the game's mod list
+    shows and the tag drawn on a covered picture (``rnw.worldname``); without one the world is
+    titled by its type and a tag made from its code. ``land_mask`` is the land drawn in an image
+    (``rnw.landmask``): the settings' mask id must be its id, and the world is made on it.
     """
     check_new_output(output, MOD_NAME, game_dir, replace=replace)
     if check_memory:
         require_memory(EXPORT_MEMORY, "The New World export")
-    with active(progress), Spool(spool_path(output)) as spool:
+    with (
+        active(progress),
+        Spool(spool_path(output)) as spool,
+        inputs.recording(game_dir) as recorder,
+    ):
         return _export_new_world(
             spool,
+            recorder,
             game_dir,
             output,
             seed=seed,
@@ -1246,11 +1390,15 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
             accept_build=accept_build,
             settings_file=settings_file,
             world_code=world_code,
+            world_label=world_label,
+            land_mask=land_mask,
+            cache_dir=cache_dir,
         )
 
 
 def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every stage of the export.
     spool: Spool,
+    recorder: inputs.InputRecorder,
     game_dir: Path,
     output: Path,
     *,
@@ -1259,10 +1407,25 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     accept_build: str | None,
     settings_file: str | None,
     world_code: str | None,
+    world_label: Label | None,
+    land_mask: LandMask | None,
+    cache_dir: Path | None,
 ) -> dict[str, object]:
     _ = configure()
+    if settings.mask.id != (0 if land_mask is None else land_mask.id):
+        message = (
+            "The settings name a drawn land that was not given, or the given one is not it"
+            if land_mask is None
+            else "The land image is not the one the settings name (its id differs)"
+        )
+        raise NewWorldExportError(message)
     digest, build_label, accepted = resolve_build(game_dir, accept_build)
     spec = run_spec(seed, settings)
+    resources_seed = layer_seed(seed, RESOURCES, settings.rolls.resources)
+    peoples_seed = layer_seed(seed, PEOPLES, settings.rolls.peoples)
+    named = world_label or worldname.label(
+        settings.preset, worldname.fallback_tag(world_code or spec_digest(spec))
+    )
 
     def load() -> tuple[Eu5Map, dict[str, Location]]:
         loaded = load_map(game_dir)
@@ -1312,14 +1475,13 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )
         world = run_stage(
             "generate world",
-            lambda: seal_pockets(
-                generate_new_world(
-                    canvas.mask.copy(),
-                    seed=seed,
-                    settings=settings.new_world,
-                    seam=seam,
-                    split_at_seam=True,
-                )
+            lambda: landcache.get_world(
+                cache_dir,
+                canvas.mask,
+                seed=seed,
+                settings=settings.new_world,
+                seam=seam,
+                drawn=None if land_mask is None else fit(land_mask, canvas.mask.shape),
             ),
         )
         total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
@@ -1378,6 +1540,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 attributes=reads.result()[1],
                 seed=seed,
                 precious_permille=settings.new_world.precious_permille,
+                material_seed=resources_seed,
             )
             return biomes, biome_stats, _rivers(world, canvas, climate, seed)
 
@@ -1475,8 +1638,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 river_pixels=river_pixels.astype(np.int64),
                 vanilla=vanilla_start.result(),
                 settings=settings.natives,
-                seed=seed,
+                seed=peoples_seed,
                 loc_keys=loc_keys,
+            ),
+        )
+        atlas_json, atlas_png = run_stage(
+            "atlas",
+            lambda: atlas_files(
+                build_atlas(
+                    world=world, plan=plan, biomes=biomes, natives=natives, mask=canvas.mask
+                )
             ),
         )
         checkpoint()
@@ -1542,7 +1713,13 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         text_stats["scripts_remapped"] = rewrite.remapped
         text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
         text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
-        world_checks = checks.result()
+        world_checks, neighbours = checks.result()
+        cover, cover_stats = run_stage(
+            "selection cover",
+            lambda: _cover_outputs(game_dir, game_map, world, final_labels, neighbours),
+        )
+        texts.update(cover)
+        text_stats["selection_cover"] = cover_stats
         rgb, rivers = locations.result()
         png_data = encodings.result()
         terrain_stats = terraining.result()
@@ -1570,12 +1747,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             files.append(record)
         for relative, data in sorted(texts.items()):
             files.append(write_bytes(stage, f"{name}/{relative}", data))
+        files.extend(
+            write_bytes(stage, f"{COVER_COPY}/{relative}", texts[relative])
+            for relative in cover_files()
+        )
         files.extend(spool.install(stage, name))
         files.append(
             write_bytes(
                 stage,
                 f"{name}/.metadata/metadata.json",
-                _metadata(name, seed, settings.preset, world_code),
+                mod_metadata(name, named.title, world_code),
             )
         )
         revealed, hidden = _previews(game_map, canvas, world)
@@ -1583,7 +1764,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             write_bytes(
                 stage,
                 f"{name}/.metadata/thumbnail.png",
-                _preview(thumbnail(hidden, center_column(hidden))),
+                _preview(tagged(thumbnail(hidden, center_column(hidden)), named.tag)),
             )
         )
         decoded = open_png(stage / name / "in_game/map_data/locations.png", "RGB")
@@ -1610,6 +1791,24 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         settings_record = write_bytes(
             stage, "settings.json", canonical_json(spec["settings"]).encode()
         )
+        atlas_records = [
+            write_bytes(stage, ATLAS_JSON, atlas_json),
+            write_bytes(stage, ATLAS_LABELS, atlas_png),
+        ]
+        if land_mask is not None:
+            atlas_records.append(write_bytes(stage, LAND_MASK_FILE, land_mask.png()))
+        record, inputs_record = _reproducibility(
+            stage,
+            recorder,
+            game_dir,
+            files,
+            mod=name,
+            seed=seed,
+            settings=settings,
+            spec=spec,
+            game=(digest, build_label),
+            world_code=world_code,
+        )
         kinds = [cell.kind for cell in plan.cells]
         report: dict[str, object] = {
             "schema": 1,
@@ -1619,8 +1818,13 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 "native societies in the 1337 start"
             ),
             "mod": name,
+            "title": named.title,
+            "land_mask": None
+            if land_mask is None
+            else {"id": land_mask.id, "sha256": land_mask.sha256, "size": list(land_mask.size)},
             "spec": spec,
             "spec_sha256": spec_digest(spec),
+            "record": record.to_json(),
             "settings_source": settings_file or f"preset {settings.preset}",
             "build": {"fingerprint_sha256": digest, "label": build_label, "explicit": accepted},
             "canvas": {
@@ -1647,7 +1851,14 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "development": development.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,
-            "files": [*files, preview_record, hidden_record, settings_record],
+            "files": [
+                *files,
+                preview_record,
+                hidden_record,
+                settings_record,
+                inputs_record,
+                *atlas_records,
+            ],
             "inputs": [
                 {"path": record.path, "size": record.size, "sha256": record.sha256}
                 for record in game_map.inputs
@@ -1656,23 +1867,66 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         }
         manifest = {
             key: report[key]
-            for key in ("schema", "status", "spec_sha256", "build", "inputs", "files")
+            for key in ("schema", "status", "spec_sha256", "record", "build", "inputs", "files")
         }
         _ = write_bytes(stage, "manifest.json", canonical_json(manifest).encode())
         _ = write_bytes(stage, "report.json", canonical_json(report).encode())
     return report
 
 
-def _metadata(name: str, seed: int, preset: str, world_code: str | None) -> bytes:
+def _reproducibility(  # noqa: PLR0913 - what a record is made of
+    stage: Path,
+    recorder: inputs.InputRecorder,
+    game_dir: Path,
+    files: list[dict[str, object]],
+    *,
+    mod: str,
+    seed: int,
+    settings: Settings,
+    spec: dict[str, object],
+    game: tuple[str, str],
+    world_code: str | None,
+) -> tuple[Record, dict[str, object]]:
+    """The world's reproducibility record (ADR 0010, G) and the file of inputs beside it.
+
+    Called after the last read of the game: the recording ends here, and a read after it fails.
+    The inputs are hashed with the cores the machine gives the export.
+    """
+    manifest = recorder.manifest(game_dir, workers=cores())
+    entries = output_entries(files, mod)
+    fingerprint, label = game
+    record = Record(
+        format=FORMAT,
+        algorithm=epoch.CURRENT,
+        release=__version__,
+        code=world_code,
+        preset=settings.preset,
+        seed=seed,
+        settings=cast("dict[str, object]", spec["settings"]),
+        game=GameRecord(
+            label=label,
+            fingerprint_sha256=fingerprint,
+            supported=SUPPORTED_GAME,
+            inputs_sha256=manifest.digest,
+            inputs_count=len(manifest.files),
+        ),
+        output_sha256=manifest_digest(entries),
+        output_count=len(entries),
+    )
+    written = write_bytes(stage, INPUTS_FILE, record_json(manifest.to_json()).encode("ascii"))
+    return record, written
+
+
+def mod_metadata(name: str, title: str, world_code: str | None) -> bytes:
     """The mod's metadata: a complete map mod that names its world and how to make it again."""
     import json  # noqa: PLC0415
 
     code = f" World code {world_code}." if world_code else ""
     payload: dict[str, object] = {
-        "name": f"Random New World: {TITLES.get(preset, preset)}, seed {seed} ({STATUS})",
+        "name": title,
         "id": name,
         "version": __version__,
-        "supported_game_version": "1.4.*",
+        "supported_game_version": SUPPORTED_GAME,
         "short_description": (
             "A New World for Europa Universalis V made by the Random New World generator. "
             f"A complete map mod: play it on its own, the generator is not needed.{code} "
@@ -1754,6 +2008,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     attributes: dict[str, dict[str, str]],
     seed: int,
     precious_permille: int = 1000,
+    material_seed: int | None = None,
 ) -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
     """Climate, vegetation, topography and raw material of every generated cell."""
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
@@ -1784,6 +2039,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
         cells=cells,
         seed=seed,
         precious_permille=precious_permille,
+        material_seed=material_seed,
     )
     stats["coherence"] = _coherence(game_map, attributes, vanilla.locations.pairs, world, biomes)
     return biomes, stats, final_grid

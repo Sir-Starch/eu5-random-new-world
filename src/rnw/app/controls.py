@@ -119,6 +119,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("natives.culture_locations", "peoples", 5, 40),
     Control("natives.religion_locations", "peoples", 20, 200, logarithmic=True),
     Control("natives.tribe_locations", "peoples", 4, 15),
+    Control("natives.empire_permille", "peoples", 0, 1000, factor=10, decimals=1, unit="percent"),
 )
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
 GROUPS: Final[tuple[str, ...]] = ("land", "map", "peoples")

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw import __version__
+from rnw import __version__, epoch
 from rnw.settings import (
     PRESETS,
     SettingsError,
@@ -38,7 +38,7 @@ def test_settings_document_round_trips_through_its_canonical_json(tmp_path: Path
     assert loaded == settings
     assert spec_digest(run_spec(5, loaded)) == spec_digest(run_spec(5, settings))
     assert spec_digest(run_spec(5, loaded)) != spec_digest(run_spec(6, loaded))
-    assert run_spec(5, loaded)["version"] == __version__
+    assert run_spec(5, loaded)["algorithm"] == epoch.CURRENT
 
 
 def test_canonical_json_is_sorted_compact_ascii() -> None:

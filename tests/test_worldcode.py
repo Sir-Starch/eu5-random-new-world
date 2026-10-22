@@ -6,7 +6,7 @@ from dataclasses import fields
 
 import pytest
 
-from rnw import __version__
+from rnw import __version__, epoch
 from rnw.app import worldcode
 from rnw.app.worldcode import WorldCode, WorldCodeError, decode, encode, new_code, reproduces
 from rnw.settings import NativeSettings, NewWorldSettings
@@ -70,12 +70,15 @@ def test_unknown_presets_seeds_and_settings_are_refused_when_a_code_is_made() ->
         _ = encode(WorldCode("continents", 1, "9999.0.0"))
 
 
-def test_only_the_same_generator_version_promises_the_same_world() -> None:
-    """A code from another version decodes, but is not promised to reproduce its world."""
+def test_only_a_release_of_the_same_epoch_promises_the_same_world() -> None:
+    """A code from before the epochs, or from another epoch, decodes but is not promised."""
     older = WorldCode("continents", 5, "0.1.2")
     assert decode(encode(older)).generator == "0.1.2"
     assert not reproduces(older)
     assert reproduces(new_code("continents", 5))
+    first = ".".join(str(part) for part in epoch.ALGORITHM_SINCE[0])
+    assert reproduces(WorldCode("continents", 5, first)) == (epoch.CURRENT == 1)
+    assert not reproduces(WorldCode("continents", 5, "0.9.19"))
 
 
 def test_random_seeds_differ_and_fit_64_bits() -> None:

@@ -12,6 +12,7 @@ Reading is forgiving about case, spaces, dashes and the letters Crockford folds 
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
@@ -22,6 +23,8 @@ from dataclasses import dataclass
 from typing import Final, cast
 
 from rnw import __version__
+from rnw.epoch import CURRENT, epoch_of
+from rnw.layers import PARTS, rolls_of
 from rnw.rng import check_seed
 from rnw.settings import PRESETS, SettingsError, build_settings
 
@@ -57,6 +60,10 @@ CHANGE_FIELDS: Final[tuple[str, ...]] = (
     "natives.tribe_locations",
     "natives.organized_permille",
     "natives.state_spread_permille",
+    "natives.empire_permille",
+    "rolls.resources",
+    "rolls.peoples",
+    "mask.id",
 )
 FIELD_NUMBERS: Final[dict[str, int]] = {name: number for number, name in enumerate(CHANGE_FIELDS)}
 ALPHABET: Final[str] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
@@ -121,6 +128,35 @@ def new_code(
     except (ValueError, SettingsError) as error:
         raise WorldCodeError(str(error)) from error
     return WorldCode(preset, chosen, __version__, dict(changes) if changes else None)
+
+
+def rolled(code: WorldCode, part: str) -> WorldCode:
+    """The code of the same world with ``part`` (``rnw.layers``) made again: its roll one higher.
+
+    The land, and every other part, stay as they are; the generator is the one running now.
+    """
+    if part not in PARTS:
+        message = f"Unknown part {part!r}; choose one of {', '.join(PARTS)}"
+        raise WorldCodeError(message)
+    changes = copy.deepcopy(code.changes) if code.changes else {}
+    section = cast("dict[str, object]", changes.setdefault("rolls", {}))
+    section[part] = rolls_of(code.settings())[part] + 1
+    return _checked(code.preset, code.seed, changes)
+
+
+def with_new_seed(code: WorldCode, seed: int | None = None) -> WorldCode:
+    """The same settings on a new land: a new seed (random unless given), every roll back to 0."""
+    changes = copy.deepcopy(code.changes) if code.changes else {}
+    _ = changes.pop("rolls", None)
+    return _checked(code.preset, random_seed() if seed is None else check_seed(seed), changes)
+
+
+def _checked(preset: str, seed: int, changes: dict[str, object]) -> WorldCode:
+    try:
+        _ = build_settings(preset, changes)
+    except (ValueError, SettingsError) as error:
+        raise WorldCodeError(str(error)) from error
+    return WorldCode(preset, seed, __version__, changes or None)
 
 
 def encode(code: WorldCode) -> str:
@@ -257,8 +293,10 @@ def format_of(text: str) -> int:
 
 
 def reproduces(code: WorldCode) -> bool:
-    """Whether this generator makes the world of ``code`` (only the same version promises it)."""
-    return code.generator == __version__
+    """Whether this generator makes the world of ``code``: the release that made it and this one
+    are of the same algorithm epoch (``rnw.epoch``); before the first epoch nothing is promised."""
+    made = epoch_of(code.generator)
+    return made != 0 and made == CURRENT
 
 
 def _to_base32(data: bytes) -> str:

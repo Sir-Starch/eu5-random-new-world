@@ -17,6 +17,7 @@ from rnw.eu5_natives import (
     NativesError,
     PlaceNamer,
     VanillaNatives,
+    _include,  # pyright: ignore[reportPrivateUsage]
     country_definitions,
     country_names,
     country_records,
@@ -483,3 +484,29 @@ def test_overlords_come_from_able_states_only() -> None:
     # state 1 is more than a third of state 0, so only state 2 can follow it
     assert vassal_pairs(societies, ["x"], near, {0, 1, 2}) == [(0, 2)]
     assert vassal_pairs(societies, ["x"], near, set()) == []
+
+
+def test_a_great_empire_takes_a_template_that_can_lead_vassals() -> None:
+    """Its culture's template stays if it has the level a lord needs, else the advanced one."""
+    lord = Culture("faith", (), 1, "tier_two", "", "", "")
+    weak = Culture("faith", (), 1, "tier_zero", "", "", "")
+    vanilla = VanillaNatives(
+        density={},
+        population_per_location=0,
+        cultures={"lord": lord, "weak": weak},
+        religions={},
+        templates=frozenset({"tier_two", "tier_zero", "amerindian_advanced_monarchy_not_nahuatl"}),
+        reserved_tags=frozenset(),
+        holy_sites=(),
+        levels={"tier_two": 2, "tier_zero": 0, "amerindian_advanced_monarchy_not_nahuatl": 2},
+        overlord_level=2,
+    )
+    plain = {"state": True, "advanced": False, "coastal": True}
+    assert _include(vanilla, "lord", empire=True, **plain) == "tier_two"
+    assert _include(vanilla, "weak", **plain) == "tier_zero"
+    assert _include(vanilla, "weak", empire=True, **plain) == (
+        "amerindian_advanced_monarchy_not_nahuatl"
+    )
+    assert _include(vanilla, "nobody", empire=True, **plain) == (
+        "amerindian_advanced_monarchy_not_nahuatl"
+    )

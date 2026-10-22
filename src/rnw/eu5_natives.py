@@ -943,13 +943,22 @@ def map_colors(
     return out
 
 
-def _include(
-    vanilla: VanillaNatives, culture: str, *, state: bool, advanced: bool, coastal: bool
+def _include(  # noqa: PLR0913 - the template depends on the culture, the polity and its coast.
+    vanilla: VanillaNatives,
+    culture: str,
+    *,
+    state: bool,
+    advanced: bool,
+    coastal: bool,
+    empire: bool = False,
 ) -> str:
     info = vanilla.cultures.get(culture)
     name = (info.state_include if state else info.tribe_include) if info else ""
     if not name:
         name = (ADVANCED_STATE if advanced else DEFAULT_STATE) if state else DEFAULT_TRIBE
+    if empire and vanilla.levels.get(name, -1) < vanilla.overlord_level:
+        # A great empire leads vassals, which a lord without a starting technology cannot (C99).
+        name = ADVANCED_STATE
     base = name.removesuffix(NO_COAST)
     if not coastal and base + NO_COAST in vanilla.templates:
         return base + NO_COAST
@@ -1188,6 +1197,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
             state=is_state,
             advanced=int(societies.complexity[polity.capital]) >= ADVANCED_PERMILLE,
             coastal=any(cells.coastal[node] for node in polity.members),
+            empire=polity.great,
         )
         if include not in vanilla.governments:
             message = f"Template {include} has no government type, and no vanilla country sets one"
@@ -1320,6 +1330,11 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         "hearths": len(societies.hearths),
         "state_locations": int(np.count_nonzero(state)),
         "states": sum(1 for c in countries if c.kind == STATE),
+        "great_empires": [len(polity.members) for polity in societies.polities if polity.great],
+        "largest_ordinary_state": max(
+            (len(p.members) for p in societies.polities if p.kind == STATE and not p.great),
+            default=0,
+        ),
         "tribes": sum(1 for c in countries if c.kind != STATE),
         "tribe_locations": sum(len(c.members) for c in countries if c.kind != STATE),
         "religion_zones": int(societies.religion.max()) + 1 if keys else 0,

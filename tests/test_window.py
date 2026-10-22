@@ -5,19 +5,27 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 import time
 from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.app import service
+from rnw.app import library, service
 from rnw.app.discovery import Environment, GameInstall, Profile
-from rnw.gui.controller import NEW, Controller, Phase
+from rnw.bundle import COVER_COPY
+from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import text
+from rnw.record import Verdict
 
 try:  # the window needs PySide6 and the system's graphics libraries
-    from PySide6.QtWidgets import QApplication, QMessageBox
+    from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
+    from PySide6.QtGui import QDragEnterEvent, QDropEvent
+    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QPushButton
 
+    from rnw.gui.maps import CompareDialog
     from rnw.gui.window import MainWindow, SettingsDialog
 except ImportError:
     pytest.skip("PySide6 is not available", allow_module_level=True)
@@ -26,6 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
     from pathlib import Path
 
+    from rnw.app.library import World
     from rnw.app.service import Exporter
     from rnw.progress import Progress
 
@@ -66,13 +75,115 @@ def _window(tmp_path: Path, export: Exporter, *, game: bool = True) -> MainWindo
 
 
 @pytest.mark.usefixtures("application")
+def test_the_queue_buttons_generate_the_snapshots_the_player_added(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.install_box.setChecked(False)
+    _ = window.controller.set_seed("11")
+    window.enqueue_button.click()
+    _ = window.controller.set_seed("22")
+    window.enqueue_button.click()
+    window.run_queue_button.click()
+    pump(lambda: window.controller.phase is Phase.FINISHED)
+    assert {world.seed for world in window.controller.worlds} == {11, 22}
+    assert not window.controller.queue
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_a_world_file_destination_disables_install_and_saves_without_a_profile(
+    tmp_path: Path,
+    fake_export: Exporter,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.controller.profile = None
+    output = tmp_path / "mine.rnworld"
+
+    def choose(
+        _parent: MainWindow,
+        _title: str,
+        _suggested: str,
+        _filter: str,
+    ) -> tuple[str, str]:
+        return str(output), ""
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", choose)
+    window.destination.setCurrentIndex(2)
+    assert not window.install_box.isChecked()
+    assert not window.generate_button.isEnabled()
+    window.destination_button.click()
+    assert window.generate_button.isEnabled()
+    window.generate_button.click()
+    pump(lambda: window.controller.phase is Phase.FINISHED)
+    assert output.is_file()
+    assert window.controller.result is not None
+    assert window.controller.result.installed is None
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_notes_and_favourite_are_saved_from_the_world_page(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.generate_button.click()
+    pump(lambda: window.controller.selected_world() is not None)
+    window.world_tabs.setCurrentIndex(2)
+    window.notes_edit.setPlainText("Try this one with friends")
+    window.user_tag_edit.setText("multiplayer")
+    window.starred_box.setChecked(True)
+    window.save_notes_button.click()
+    world = window.controller.selected_world()
+    assert world is not None
+    assert (world.notes, world.user_tag, world.starred) == (
+        "Try this one with friends",
+        "multiplayer",
+        True,
+    )
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+@pytest.mark.parametrize(("width", "height"), [(1080, 760), (1440, 900)])
+def test_the_library_and_world_page_fit_the_supported_window_size(
+    tmp_path: Path,
+    fake_export: Exporter,
+    width: int,
+    height: int,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.resize(width, height)
+    window.show()
+    QApplication.processEvents()
+    assert (window.width(), window.height()) == (width, height)
+    assert not window.show_new_world.visibleRegion().isEmpty()
+    assert not window.progress_box.isVisible()
+    for button in window.new_page.findChildren(QPushButton):
+        if button.isVisibleTo(window):
+            assert button.height() >= max(32, button.fontMetrics().height() + 14)
+            assert button.width() >= button.minimumSizeHint().width()
+    window.generate_button.click()
+    pump(lambda: window.controller.selected_world() is not None)
+    QApplication.processEvents()
+    assert (window.width(), window.height()) == (width, height)
+    assert not window.world_visibility.visibleRegion().isEmpty()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_the_new_world_page_shows_types_and_needs_a_game(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
     """Every world type is offered; without a game, Generate is off and says why."""
     window = _window(tmp_path, fake_export, game=False)
     assert window.stack.currentWidget() is window.new_page
-    assert len(window.type_buttons.buttons()) == 5
+    assert window.type_choice.count() == 5
+    window.type_choice.setCurrentIndex(3)
+    assert window.controller.preset == "archipelago"
     assert not window.generate_button.isEnabled()
     assert window.problem_line.text() == text("game_missing")
     _ = window.close()
@@ -100,25 +211,92 @@ def test_a_slider_changes_the_world_and_its_code(tmp_path: Path, fake_export: Ex
 
 
 @pytest.mark.usefixtures("application")
-def test_a_made_world_opens_hidden_and_shows_on_request(
+def test_quick_buttons_set_the_controls_and_follow_the_sliders(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
-    """After Generate the world is listed and shown with its New World covered until asked."""
+    """A button sets its answer, the sliders move with it and a moved slider reads as custom."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    rows = {row.quick.name: row for row in window.quick_rows}
+    assert set(rows) == {"land", "peoples", "states", "empires", "wealth"}
+    assert rows["empires"].buttons["seldom"].isChecked()
+    assert not rows["empires"].custom.isVisibleTo(window)
+    rows["empires"].buttons["often"].click()
+    pump(lambda: controller.value("natives.empire_permille") == 800)
+    assert rows["empires"].buttons["often"].isChecked()
+    assert not rows["empires"].buttons["seldom"].isChecked()
+    row = next(r for r in window.rows if r.control.key == "natives.empire_permille")
+    assert row.number.value() == 80.0
+    row.number.setValue(33.0)
+    pump(lambda: controller.quick_level("empires") is None)
+    assert not any(button.isChecked() for button in rows["empires"].buttons.values())
+    assert rows["empires"].custom.isVisibleTo(window)
+    rows["empires"].buttons["never"].click()
+    pump(lambda: controller.value("natives.empire_permille") == 0)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_a_made_world_opens_hidden_and_shows_when_the_setting_says_so(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
     window = _window(tmp_path, fake_export)
     controller = window.controller
     window.generate_button.click()
     pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
     pump(lambda: window.stack.currentWidget() is window.world_page)
     assert window.world_list.count() == 2
-    assert not window.reveal_button.isChecked()
     assert window.preview_caption.text().startswith(text("preview_hidden"))
-    window.reveal_button.click()
-    pump(lambda: controller.revealed)
-    assert window.preview_caption.text().startswith(text("preview_shown"))
+    window.world_visibility.setChecked(True)
+    pump(lambda: window.preview_caption.text().startswith(text("preview_shown")))
     assert window.remove_button.isVisible() or not window.isVisible()
     window.world_list.setCurrentRow(0)
     pump(lambda: controller.selection == NEW)
-    assert not controller.revealed
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_new_world_visibility_is_a_default_and_leaves_the_existing_world_hidden(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.generate_button.click()
+    pump(lambda: window.controller.phase is Phase.FINISHED)
+    [first] = window.controller.worlds
+    window.controller.select(NEW)
+    pump(lambda: window.stack.currentWidget() is window.new_page)
+    window.show_new_world.setChecked(True)
+    assert window.controller.preferences.show_new_world
+    assert not window.controller.shown(first)
+    window.controller.randomize()
+    window.generate_button.click()
+    pump(lambda: window.controller.phase is Phase.FINISHED)
+    second = window.controller.selected_world()
+    assert second is not None
+    assert window.controller.shown(second)
+    assert not window.controller.shown(first)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_a_missing_cover_keeps_the_visibility_checkbox_and_reports_the_problem(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.generate_button.click()
+    pump(lambda: window.controller.phase is Phase.FINISHED)
+    world = window.controller.selected_world()
+    assert world is not None
+    cover = library.folder(window.controller.data, world) / COVER_COPY
+    for path in cover.rglob("*"):
+        if path.is_file():
+            path.unlink()
+    window.world_visibility.click()
+    assert not window.world_visibility.isChecked()
+    assert "cover" in window.world_notice.text()
+    assert "missing" in window.world_notice.text()
+    assert window.controller.task is Task.GENERATE
+    assert window.controller.phase is Phase.FINISHED
     _ = window.close()
 
 
@@ -147,14 +325,244 @@ def test_delete_asks_first(
 
 
 @pytest.mark.usefixtures("application")
-def test_the_settings_dialog_remembers_the_picture_choice(
+def test_the_settings_dialog_does_not_compress_path_controls(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
-    """The box for the mod-list pictures starts off and its choice is kept."""
     window = _window(tmp_path, fake_export)
+    controller = window.controller
+    controller.games = [GameInstall(tmp_path / ("long game path " * 8), None, "26043558")]
+    controller.profiles = [Profile(tmp_path / ("long profile path " * 8), "linux", has_mods=True)]
     dialog = SettingsDialog(window)
-    assert not dialog.reveal.isChecked()
-    dialog.reveal.setChecked(True)
-    assert window.controller.preferences.reveal_thumbnails
+    dialog.show()
+    QApplication.processEvents()
+    for choice in (dialog.game_choice, dialog.profile_choice):
+        assert choice.height() >= choice.sizeHint().height()
+    assert dialog.width() <= 800
     _ = dialog.close()
     _ = window.close()
+
+
+def test_gui_self_test_does_not_migrate_the_players_library(tmp_path: Path) -> None:
+    data = tmp_path / "players-library"
+    world = library.World("legacy", "code", "continents", 42, "0.9.23", "26043558", 0, 0.0)
+    library.save(data, world)
+    record = library.folder(data, world) / library.RECORD
+    before = record.read_bytes()
+    result = subprocess.run(
+        [sys.executable, "-m", "rnw.gui", "--self-test"],
+        env={**os.environ, "RNW_DATA": str(data), "QT_QPA_PLATFORM": "offscreen"},
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stderr
+    assert record.read_bytes() == before
+
+
+@pytest.mark.usefixtures("application")
+def test_a_world_page_says_whether_it_comes_out_the_same_and_checks_on_request(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The record's sentence is on the page; Check runs and its answer replaces the sentence."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+
+    def checker(
+        world: World, *, game: GameInstall, data: Path, progress: Progress | None = None
+    ) -> service.Check:
+        del world, game, data, progress
+        return service.Check(Verdict.IDENTICAL, True, [], [], 1.0)  # noqa: FBT003
+
+    controller.checker = checker
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    assert "byte for byte" in window.details["reproduce"].text()
+    pump(window.check_button.isEnabled)
+    window.check_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and controller.task is Task.CHECK)
+    pump(lambda: "files are the same" in window.details["reproduce"].text())
+    controller.game = None
+    controller.refresh_library()
+    pump(lambda: not window.check_button.isEnabled())
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_buttons_make_a_version_of_the_world_and_the_list_shows_it_below(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """New peoples makes a version on the same land; it is listed indented, with a way back."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    window.peoples_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and len(controller.worlds) == 2)
+    pump(lambda: window.world_list.count() == 3)
+    assert window.world_list.item(2).text().startswith("↳ ")
+    assert text("part.peoples") in window.world_list.item(2).text()
+    pump(lambda: window.parent_button.isVisible() or not window.isVisible())
+    window.parent_button.click()
+    pump(lambda: not getattr(controller.selected_world(), "parent", "x"))
+    window.edit_button.click()
+    pump(lambda: controller.selection == NEW)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_maps_tab_is_covered_until_revealed_and_then_draws_layers_and_answers(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Covered by default; Reveal draws the map; layers, hover, search and saving work."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    maps = window.maps
+    assert maps.pages.currentIndex() == 0
+    assert maps.reveal_button.isVisibleTo(maps)
+    assert maps.picture() is None
+    maps.reveal_button.click()
+    pump(lambda: maps.pages.currentIndex() == 1)
+    assert maps.picture() is not None
+    assert "countries" in maps.summary.text()
+    for layer in ("countries", "cultures", "religions", "resources", "development", "land"):
+        maps.select_layer(layer)
+        assert maps.layer == layer
+        assert maps.legend_list.count() > 0
+    first = maps.picture()
+    maps.search.setText("aland")
+    pump(lambda: maps.results.count() > 0)
+    maps.results.setCurrentRow(0)
+    marked = maps.picture()
+    assert first is not None
+    assert marked is not None
+    assert not (first == marked).all()
+    maps.search.setText("")
+    pump(lambda: maps.results.count() == 0)
+    maps.show_facts_at(5, 5)
+    assert maps.facts.text()
+    maps.clear_facts()
+    assert maps.facts.text() == text("facts_hint")
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_pictures_are_saved_and_two_worlds_are_compared(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Save picture writes the chosen file; Compare needs two revealed worlds and then opens."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    target = tmp_path / "saved.png"
+
+    def chosen(*_arguments: object, **_keywords: object) -> tuple[str, str]:
+        return str(target), "PNG (*.png)"
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", chosen)
+    window.save_button.click()
+    assert target.is_file()
+    assert "saved.png" in window.world_notice.text()
+    window.compare_button.click()
+    assert text("compare_need_two") in window.world_notice.text()
+    controller.set_show_new_world(True)
+    [only] = controller.worlds
+    entries = [("one", controller.atlas(only)), ("two", controller.atlas(only))]
+    assert all(found is not None for _name, found in entries)
+    dialog = CompareDialog(window, [(name, found) for name, found in entries if found], "land")
+    dialog.layer_buttons.button(1).click()
+    assert len(dialog.views) == 2
+    dialog.choices[1].setCurrentIndex(0)
+    _ = dialog.close()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+@pytest.mark.filterwarnings("ignore::DeprecationWarning")
+def test_world_files_are_written_opened_and_dropped_on_the_window(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Save world file writes it; Open takes it into a second library; a drop does the same."""
+    first = _window(tmp_path / "one", fake_export)
+    first.generate_button.click()
+    pump(lambda: first.controller.phase is Phase.FINISHED and bool(first.controller.worlds))
+    pump(lambda: first.stack.currentWidget() is first.world_page)
+    target = tmp_path / "w.rnworld"
+    answer = {"path": str(target)}
+
+    def chosen(*_arguments: object, **_keywords: object) -> tuple[str, str]:
+        return answer["path"], ""
+
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", chosen)
+    first.export_button.click()
+    assert target.is_file()
+    assert "w.rnworld" in first.world_notice.text()
+    second = _window(tmp_path / "two", fake_export)
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", chosen)
+    second.open_file_button.click()
+    pump(lambda: bool(second.controller.worlds))
+    assert second.world_notice.text() == text("imported")
+    bad = tmp_path / "bad.rnworld"
+    _ = bad.write_bytes(b"x")
+    warned: list[str] = []
+
+    def warn(_parent: object, _title: str, message: str) -> QMessageBox.StandardButton:
+        warned.append(message)
+        return QMessageBox.StandardButton.Ok
+
+    monkeypatch.setattr(QMessageBox, "warning", warn)
+    answer["path"] = str(bad)
+    second.open_file_button.click()
+    assert warned
+    mime = QMimeData()
+    mime.setUrls([QUrl.fromLocalFile(str(target))])
+    third = _window(tmp_path / "three", fake_export)
+    event = QDragEnterEvent(
+        QPoint(5, 5),
+        Qt.DropAction.CopyAction,
+        mime,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    third.dragEnterEvent(event)
+    assert event.isAccepted()
+    drop = QDropEvent(
+        QPointF(5, 5),
+        Qt.DropAction.CopyAction,
+        mime,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    third.dropEvent(drop)
+    pump(lambda: bool(third.controller.worlds))
+    text_mime = QMimeData()
+    text_mime.setText("RNW1-0426C-SYW6B-MW73Y-C004H-0037F-87G")
+    code_event = QDragEnterEvent(
+        QPoint(5, 5),
+        Qt.DropAction.CopyAction,
+        text_mime,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    third.dragEnterEvent(code_event)
+    assert code_event.isAccepted()
+    other_mime = QMimeData()
+    other_mime.setText("hello")
+    plain = QDragEnterEvent(
+        QPoint(5, 5),
+        Qt.DropAction.CopyAction,
+        other_mime,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    third.dragEnterEvent(plain)
+    assert not plain.isAccepted()
+    for window in (first, second, third):
+        _ = window.close()

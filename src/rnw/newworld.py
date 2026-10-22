@@ -22,6 +22,7 @@ import numpy as np
 
 from rnw import _native
 from rnw.fields import warped_noise
+from rnw.landmask import LandMaskError
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
@@ -147,7 +148,12 @@ def _edge_offset(
     return offset
 
 
-def _land(
+PERCENT: Final[int] = 100
+# Of the land a drawing asks for inside the area, the least that must stay after the margin.
+MIN_KEPT_PERCENT: Final[int] = 50
+
+
+def land_stage(
     domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings, seam: int | None
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation."""
@@ -200,6 +206,20 @@ def _land(
         )
     del relief, offset, guard, strait, open_shore
     land &= _large_parts(land, settings.min_island_px)
+    return (*_classify(domain, land, shore, settings), elevation)
+
+
+def _classify(
+    domain: NDArray[np.bool_],
+    land: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    settings: NewWorldSettings,
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
+    """Split the water of ``domain`` into ocean and lakes; small lakes fill with land.
+
+    Returns land, ocean and lake masks. Water that reaches the shore is ocean; water enclosed
+    by land is a lake unless it is smaller than ``min_lake_px`` or larger than ``max_lake_px``.
+    """
     coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32, copy=False)
     parts = label_components(coded)
     del coded
@@ -211,7 +231,60 @@ def _land(
     enclosed = water & ~ocean
     outside_range = (sizes < settings.min_lake_px) | (sizes > settings.max_lake_px)
     small = enclosed & outside_range[parts]
-    return land | small, ocean, enclosed & ~small, elevation
+    return land | small, ocean, enclosed & ~small
+
+
+def _land_from_mask(
+    domain: NDArray[np.bool_],
+    drawn: NDArray[np.bool_],
+    settings: NewWorldSettings,
+    seam: int | None,
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
+    """Land, ocean and lakes of a land that is drawn, not generated (``rnw.landmask``).
+
+    The land keeps off the canvas's edge, as generated land does (the coast margin from what
+    lies outside the domain, the border and the strait at the wrap seam); specks under
+    ``min_island_px`` go. A drawing that loses most of its land to that is refused, since it
+    asks for land where the New World cannot be.
+    """
+    margin = settings.coast_margin_px
+    guard = ~domain
+    guard[[0, -1], :] = True
+    guard[:, [0, -1]] = True
+    if seam is not None and 0 < seam < domain.shape[1]:
+        columns = np.arange(domain.shape[1], dtype=np.int64)
+        guard |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
+    shore = distance_from(guard, margin, octagonal=True) < margin
+    del guard
+    wanted = drawn & domain
+    land = wanted & ~shore
+    asked, kept = int(np.count_nonzero(wanted)), int(np.count_nonzero(land))
+    if not asked or kept * PERCENT < asked * MIN_KEPT_PERCENT:
+        share = kept * PERCENT // max(1, asked)
+        message = (
+            f"Most of the land drawn lies where the New World cannot be: {share} % of it is "
+            f"inside the area and away from its edge ({margin} pixels of coast margin). "
+            "Draw the continents well inside the picture and inside the area"
+        )
+        raise LandMaskError(message)
+    land &= _large_parts(land, settings.min_island_px)
+    open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
+    for _ in range(MAX_STRAITS):
+        checkpoint()
+        path = stray_strait(domain, land, shore=shore, open_shore=open_shore)
+        if path is None:
+            break
+        # A sea that the drawing cuts off from open water gets a strait, a coast margin wide,
+        # as generated land does (C64): no sea zone may be left without a way to the sea.
+        land &= distance_from(path, margin, octagonal=True) >= margin
+        land &= _large_parts(land, settings.min_island_px)
+    if not land.any():
+        message = (
+            f"No land is left once parts under {settings.min_island_px} pixels are taken out: "
+            "draw larger continents"
+        )
+        raise LandMaskError(message)
+    return _classify(domain, land, shore, settings)
 
 
 def _large_parts(mask: NDArray[np.bool_], minimum: int) -> NDArray[np.bool_]:
@@ -498,15 +571,19 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
     return merge_small(grow_regions(mask, seed_sites(key, mask, spacing)), smallest)
 
 
-def generate_new_world(
+def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings and what shapes it
     domain: NDArray[np.bool_],
     *,
     seed: int,
     settings: NewWorldSettings,
     seam: int | None = None,
     split_at_seam: bool = False,
+    drawn: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
+
+    With ``drawn`` (a land mask fitted to the domain, ``rnw.landmask``) the land is the
+    drawing's and the generator makes the rest on it.
 
     ``seam`` is the crop column where the world map wraps (cells left of it continue at
     the right map edge); a strait keeps land away from it. With ``split_at_seam`` the
@@ -516,7 +593,10 @@ def generate_new_world(
     The land cells, the sea cells and the relief depend only on the masks, so they are
     built beside each other when the machine has the cores and the memory for it.
     """
-    land, ocean, lakes, _ = _land(domain, seed, settings, seam)
+    if drawn is None:
+        land, ocean, lakes, _ = land_stage(domain, seed, settings, seam)
+    else:
+        land, ocean, lakes = _land_from_mask(domain, drawn, settings, seam)
     with Stages(stage_workers()) as stages:
         land_job = stages.submit(
             "land cells",

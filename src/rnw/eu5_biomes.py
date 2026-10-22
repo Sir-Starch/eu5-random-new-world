@@ -440,8 +440,13 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
     cells: Generated,
     seed: int,
     precious_permille: int = 1000,
+    material_seed: int | None = None,
 ) -> tuple[CellBiomes, dict[str, object]]:
-    """Template attributes for every generated cell and calibration statistics."""
+    """Template attributes for every generated cell and calibration statistics.
+
+    The raw materials are drawn from ``material_seed`` when given (the resources part of the
+    world, ``rnw.layers``), else from ``seed``; everything else is the land's, from ``seed``.
+    """
     count = len(cells.kinds)
     old = _old_world(game_map)
     attributes = [templates.get(key, {}) for key in game_map.keys]
@@ -552,7 +557,7 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
         source=_new_world(game_map),
         cells=cells,
         fields=(climate, vegetation, topography),
-        seed=seed,
+        seed=seed if material_seed is None else material_seed,
         precious_permille=precious_permille,
     )
     result = CellBiomes(tuple(climate), tuple(vegetation), tuple(topography), raw)

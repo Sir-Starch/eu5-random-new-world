@@ -5,15 +5,18 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, cast
 
+import pytest
 from typer.testing import CliRunner
 
-from rnw import parallel
+from rnw import epoch, parallel
+from rnw.app import library, service
+from rnw.app.worldcode import encode, new_code
 from rnw.cli import app
+from rnw.record import FORMAT, GameRecord, Record, Verdict
+from rnw.settings import build_settings
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-    import pytest
 
 
 def test_prepared_mod_has_matching_identity_and_beta_version(tmp_path: Path) -> None:
@@ -110,6 +113,7 @@ def test_world_codes_round_trip_through_the_command() -> None:
     assert printed["seed"] == 99
     assert printed["preset"] == "archipelago"
     assert printed["reproduced_by_this_generator"] is True
+    assert printed["algorithm"] == epoch.CURRENT
     read = runner.invoke(app, ["world-code", str(printed["code"]).lower()])
     assert read.exit_code == 0, read.output
     assert cast("dict[str, object]", json.loads(read.output))["seed"] == 99
@@ -133,3 +137,106 @@ def test_find_game_reports_the_variables_it_was_given(
     found = cast("dict[str, list[dict[str, object]]]", json.loads(result.output))
     assert found["games"][0]["directory"] == str(game)
     assert found["profiles"][0]["kind"] == "chosen"
+
+
+def _recorded_world(data: Path) -> library.World:
+    """A world in a library at ``data``, with a record, as the export leaves it."""
+    code = encode(new_code("continents", 5))
+    world = library.World(
+        id=library.world_id(code, "1"),
+        code=code,
+        preset="continents",
+        seed=5,
+        generator="0.9.22",
+        game_build="1",
+        created=1,
+        seconds=1.0,
+        record=Record(
+            format=FORMAT,
+            algorithm=epoch.CURRENT,
+            release="0.9.22",
+            code=code,
+            preset="continents",
+            seed=5,
+            settings=build_settings("continents").to_json_data(),
+            game=GameRecord("EU5 test", "f" * 64, "1.4.*", "e" * 64, 3),
+            output_sha256="d" * 64,
+            output_count=2,
+        ),
+    )
+    library.save(data, world)
+    return world
+
+
+@pytest.mark.parametrize(("reproduced", "exit_code"), [(True, 0), (False, 1)])
+def test_verify_world_says_whether_a_world_comes_out_the_same(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *, reproduced: bool, exit_code: int
+) -> None:
+    """The exit code is 0 only for a reproduced world; the answer is printed as JSON."""
+    world = _recorded_world(tmp_path / "data")
+    (tmp_path / "game").mkdir()
+
+    def fake_check(found: library.World, **_: object) -> service.Check:
+        assert found.id == world.id
+        return service.Check(
+            Verdict.IDENTICAL if reproduced else Verdict.OTHER_INPUTS,
+            reproduced,
+            [],
+            [] if reproduced else ["seed.txt"],
+            2.0,
+        )
+
+    monkeypatch.setattr(service, "check", fake_check)
+    arguments = [
+        "verify-world",
+        world.code,
+        "--game-dir",
+        str(tmp_path / "game"),
+        "--data-dir",
+        str(tmp_path / "data"),
+    ]
+    result = CliRunner().invoke(app, arguments)
+    assert result.exit_code == exit_code, result.output
+    answer = cast("dict[str, object]", json.loads(result.output[result.output.index("{") :]))
+    assert answer["world"] == world.id
+    assert answer["reproduced"] is reproduced
+    missing = CliRunner().invoke(app, ["verify-world", "nothing", *arguments[2:]])
+    assert missing.exit_code != 0
+
+
+def test_a_world_file_goes_out_and_in_through_the_commands(tmp_path: Path) -> None:
+    """Export writes it; import takes it into another library; a bad file is an error."""
+    world = _recorded_world(tmp_path / "one")
+    runner = CliRunner()
+    output = tmp_path / "w.rnworld"
+    made = runner.invoke(
+        app, ["export-world", world.id, str(output), "--data-dir", str(tmp_path / "one")]
+    )
+    assert made.exit_code == 0, made.output
+    taken = runner.invoke(app, ["import-world", str(output), "--data-dir", str(tmp_path / "two")])
+    assert taken.exit_code == 0, taken.output
+    answer = cast("dict[str, object]", json.loads(taken.output[taken.output.index("{") :]))
+    assert answer["world"] == world.id
+    assert answer["new"] is True
+    again = runner.invoke(app, ["import-world", str(output), "--data-dir", str(tmp_path / "two")])
+    assert json.loads(again.output[again.output.index("{") :])["new"] is False
+    junk = tmp_path / "junk.rnworld"
+    _ = junk.write_bytes(b"nope")
+    bad = runner.invoke(app, ["import-world", str(junk), "--data-dir", str(tmp_path / "two")])
+    assert bad.exit_code == 2
+    missing = runner.invoke(
+        app, ["export-world", "nothing", str(output), "--data-dir", str(tmp_path / "one")]
+    )
+    assert missing.exit_code != 0
+    none = runner.invoke(
+        app,
+        [
+            "transfer-out",
+            world.id,
+            str(tmp_path / "m.rnworld-mod"),
+            "--data-dir",
+            str(tmp_path / "one"),
+        ],
+    )
+    assert none.exit_code == 2
+    assert "no mod" in none.output

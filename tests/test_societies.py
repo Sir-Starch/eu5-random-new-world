@@ -5,12 +5,22 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import replace
 
 import numpy as np
 
 from rnw.settings import NATIVES
-from rnw.societies import CITY, STATE, STEP_COST, TRIBE, LandGraph, Societies, generate_societies
+from rnw.societies import (
+    CITY,
+    EMPIRE_FLOOR,
+    STATE,
+    STEP_COST,
+    TRIBE,
+    LandGraph,
+    Societies,
+    generate_societies,
+)
 
 ROWS, COLUMNS, ISLAND = 30, 40, 12
 SETTINGS = replace(
@@ -21,6 +31,7 @@ SETTINGS = replace(
     religion_locations=150,
     tribe_locations=5,
     organized_permille=600,
+    empire_permille=0,
 )
 
 
@@ -174,3 +185,71 @@ def test_lone_states_spread_state_land_into_small_groups() -> None:
     assert len(many) > len(one)
     assert sum(many[1:]) > sum(one[1:])
     assert abs(sum(many) - sum(one)) <= max(2, sum(one) // 10)
+
+
+def _digest(societies: Societies) -> str:
+    """Everything a world is made of, as one hash."""
+    digest = hashlib.sha256()
+    for name in ("complexity", "population", "peasants", "religion", "culture"):
+        digest.update(getattr(societies, name).tobytes())
+    polities = [(p.kind, p.members, p.capital, p.culture) for p in societies.polities]
+    digest.update(repr(polities).encode())
+    digest.update(
+        repr((societies.hearths, sorted(societies.ranks.items()), societies.markets)).encode()
+    )
+    return digest.hexdigest()
+
+
+# Taken from 0.9.14, before great empires existed: with none, the societies are those bytes.
+NO_EMPIRES: dict[int, str] = {
+    3: "8918da688fcbf1b52ccd3ef3f7ada1b5732a338ec7cb35e7a73c4c1f5c6ebeeb",
+    4: "b14448be80550c2c17aa917a3c9f4595ae05727bdecc1781e3ab255011609865",
+    77: "6c86f55e823202a4eefc711ad66395101cd47c893c4cb19f818639deae0deb43",
+}
+
+
+def test_without_great_empires_the_societies_are_those_of_before() -> None:
+    """A chance of 0 draws nothing from the world's own stream: the bytes do not move."""
+    graph = _grid()
+    for seed, digest in NO_EMPIRES.items():
+        societies = generate_societies(graph, SETTINGS, seed=seed, target=4_000_000)
+        assert _digest(societies) == digest
+        assert not any(polity.great for polity in societies.polities)
+
+
+def test_great_empires_are_large_connected_states_apart_from_the_rest() -> None:
+    """Each hearth may raise a connected state of at least the floor, among disjoint polities."""
+    graph = _grid()
+    societies = generate_societies(
+        graph, replace(SETTINGS, empire_permille=1000), seed=4, target=4_000_000
+    )
+    empires = [polity for polity in societies.polities if polity.great]
+    assert empires
+    ordinary = max(len(p.members) for p in societies.polities if p.kind == STATE and not p.great)
+    held: set[int] = set()
+    for polity in societies.polities:
+        members = set(polity.members)
+        assert not members & held
+        assert _connected(members, graph.edges)
+        assert polity.capital in members
+        held |= members
+    for empire in empires:
+        assert empire.kind == STATE
+        assert len(empire.members) >= EMPIRE_FLOOR
+        assert len(empire.members) > ordinary
+        assert all(societies.population[node] > 0 for node in empire.members)
+    assert societies.ranks[empires[0].capital] == CITY
+
+
+def test_a_higher_chance_raises_more_empires() -> None:
+    """The draws do not depend on the chance, so the count only grows with it."""
+    graph = _grid()
+    counts: list[int] = []
+    for chance in (0, 400, 700, 1000):
+        societies = generate_societies(
+            graph, replace(SETTINGS, empire_permille=chance), seed=4, target=4_000_000
+        )
+        counts.append(sum(1 for polity in societies.polities if polity.great))
+    assert counts == sorted(counts)
+    assert counts[0] == 0
+    assert counts[-1] > counts[1] > 0
