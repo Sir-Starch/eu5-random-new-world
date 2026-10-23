@@ -595,3 +595,10 @@
 - [V-EXEC/V-LOCAL C179, C180] Region and area keys survive by position (`_land_areas`); 525 references to them, among them eight American scripted country names, keep vanilla meaning on random land. The plan's G1 is widened from locations to these keys, with a decision per consumer (keep, rebind, neutralize, replace) and region keys by content as option N5.
 - [V-EXEC] `docs/content-plan.md` rewritten as stages N0–N5 with a river pilot, R7d split off, static templates in the world mod (the hub carries no game files) and three owner decisions. No code or output changed; no version or epoch change.
 - No EU5 launch by the agent, no push or publication.
+
+## 2026-10-23 — Languages and the scope of 1.0.0 (owner)
+
+- [OWNER] The mod's languages are the game's official languages everywhere. Authored text is English for now; before release everything, the generator included, is localized into all eleven. Recorded as a product rule in `AGENTS.md`, in the product spec and as roadmap phase L1; the export is to take its languages from the installation (C178), and a release check is to fail on a missing or stale translation.
+- [OWNER] Everything in the content plan is part of 1.0.0; nothing is deferred. The plan, its roadmap row and P1's dependencies say so; R7d is included. N5 stays an open decision (whether, after N0).
+- [V-LOCAL] The owner's profile `pdx_settings.json` holds no language entry; where the game keeps its language choice is not known.
+- No code or output changed; no EU5 launch by the agent, no push or publication.

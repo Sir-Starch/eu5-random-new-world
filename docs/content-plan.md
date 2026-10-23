@@ -1,6 +1,6 @@
 # Random-first New World content: design and staged plan
 
-**Status:** Proposed 2026-10-23; revised the same day after a check against the installed game (C175–C180). The owner has not accepted it. Nothing is implemented, and no game launch belongs to it.
+**Status:** Proposed 2026-10-23 and revised the same day after a check against the installed game (C175–C180). The owner placed its whole scope, R7d included, in 1.0.0 and settled its languages (2026-10-23); N5 remains open. Nothing is implemented, and no game launch belongs to it.
 **Baseline:** Generator 0.10.1, algorithm epoch 11; EU5 1.4.3 open beta, Steam build 26105915.
 **Evidence:** Existing behaviour is labelled below. Every proposed behaviour is [INFERRED design]; whether the running game accepts it is [UNKNOWN] until observed.
 
@@ -23,7 +23,7 @@ The plan covers native and colonial play. Its work is architectural and runs in 
 | G3 | **No original stories.** The generator emits no event chains; its event overrides add no event IDs. | `eu5_events.py` | N3, N4 |
 | G4 | **No procedural formables.** Historical formables follow G1. | C175 | N3, N4 |
 | G5 | **Exceptional resource places vanish** with the locations that held them. | `retired_base_modifiers` | N1 |
-| G6 | **The eleventh language is missing.** The game has eleven localization folders, Turkish among them with as many files as English; the export writes ten. Every new text inherits the gap. | C178 | N1 |
+| G6 | **The eleventh language is missing.** The game has eleven official languages, Turkish among them with as many files as English; the export writes ten from a fixed list (`LANGUAGES`), so a language a patch adds would be missed as well. Every new text inherits the gap. | C178 | N1, L1 |
 | G7 | **Few society archetypes.** Only R7c's great empire is generated; the maritime, commercial and fractured archetypes of the [product spec](product-spec.md) are out of R7c's scope. | [natives](natives.md) | R7d |
 
 Not gaps, after the check against the installation:
@@ -82,7 +82,7 @@ The R7b design left "region keys chosen by content" out of scope ([R7 handoff](h
 
 - Story scripts and original localization are committed templates, copied unchanged into every world mod. The world-specific part is bindings only: start-state variables and flags on generated countries and locations, scripted triggers listing eligible locations, formable declarations, scripted country names and identity keys. Event text reads names through data functions such as `[ROOT.GetCountry.GetName]`, as vanilla's own fallback does (C176), rather than generated prose.
 - The hub mod carries no game files and stays so. A world mod is self-contained: a generator update never changes a campaign already running, and a story fix reaches new worlds through a new epoch.
-- Every key is written to all eleven language folders, so no raw key shows. Which languages receive authored prose is an owner decision (below).
+- **Languages (owner, 2026-10-23).** The mod and the generator use exactly the game's official languages, everywhere. The export takes them from the installed game (the languages it ships localization for), not from a fixed tuple, and writes every key in each. Authored text is written in English for now; until it is translated, the other languages carry the English text, so no raw key shows. Before 1.0.0 everything a player sees is translated into every official language ([roadmap](roadmap.md) L1): each translation records the hash of the English text it was made from, and the release check fails on a missing language or a stale translation.
 
 ## New local and colonial stories
 
@@ -136,13 +136,13 @@ Choose opportunities from the generated world. Export a finite set of identities
 
 Relatedness uses vanilla culture groups and languages or a recorded political association among generated societies; the plan invents no cultural-family data. Substantial presence means the main population of suitable locations.
 
-A target follows the vanilla formable-only pattern of `ADU` (C175): the formable entry, a flag definition or coat of arms, a named colour and name and adjective keys, with no country definition and no country in 1337. The generator already writes flags and coats of arms for its native tags. Formables get their own adjective where the name is a political formula (*Kalumet Union* → *Kalumet*); the language rule is a template per supported language, not an inflection algorithm. The remaining risk, that a tag first seen in a mod behaves like `ADU`, is N2's question; a rejected branch stays blocked, and ghost starting countries are no workaround.
+A target follows the vanilla formable-only pattern of `ADU` (C175): the formable entry, a flag definition or coat of arms, a named colour and name and adjective keys, with no country definition and no country in 1337. The generator already writes flags and coats of arms for its native tags. Formables get their own adjective where the name is a political formula (*Kalumet Union* → *Kalumet*); the language rule is a template per official language, not an inflection algorithm. The remaining risk, that a tag first seen in a mod behaves like `ADU`, is N2's question; a rejected branch stays blocked, and ghost starting countries are no workaround.
 
 Support diplomatic or subject-based and direct territorial consolidation where installed mechanics permit; not every union is a full-annexation checklist. Required territory comes from generated connected areas at the scale of that world. Consequences use suitable ranks, reforms, obligations and relationships with checked prerequisites, not one permanent bonus for every formable. Prevent formation cycles and repeated rewards; keep potential visibility, progress and formation eligibility distinct. Historical formables that N0 keeps or rebinds stay beside the new ones without becoming the obligatory best continuation of every society.
 
 ## More varied societies (R7d)
 
-Four more combinations of real traits (a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors) belong to the peoples layer as a continuation of R7, not to the content stages. An archetype follows geography and social structure; randomness chooses among suitable combinations. Strength comes from population, infrastructure, trade and organization; weakness from connection costs, autonomy, relationships and diversity. Neither collapse nor a giant empire is guaranteed, and not every combination needs a new government type. Stories and formables read traits (river, coast, holy site, subjects), not archetype labels, so N3 and N4 do not wait for R7d.
+Four more combinations of real traits (a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors) belong to the peoples layer as a continuation of R7, not to the content stages; like them, R7d is part of 1.0.0. An archetype follows geography and social structure; randomness chooses among suitable combinations. Strength comes from population, infrastructure, trade and organization; weakness from connection costs, autonomy, relationships and diversity. Neither collapse nor a giant empire is guaranteed, and not every combination needs a new government type. Stories and formables read traits (river, coast, holy site, subjects), not archetype labels, so N3 and N4 do not wait for R7d.
 
 ## Randomness and layer ownership
 
@@ -160,7 +160,7 @@ Excluded: mandatory historical doubles, fixed old capitals as hidden anchors, du
 
 ## Staged plan
 
-Owner types as in the [roadmap](roadmap.md). Each stage includes its tests. A stage that changes output raises the version, starts an epoch, renews the reference world and installs a verified candidate in a new recorded `rnw_exp_*` folder. Game checks are experiments the agent prepares and the owner runs; until run they are NOT-RUN. Proposed paths do not imply that the files exist.
+Every stage, R7d included, is part of 1.0.0 (owner, 2026-10-23); nothing in this plan is deferred past it. Owner types as in the [roadmap](roadmap.md). Each stage includes its tests. A stage that changes output raises the version, starts an epoch, renews the reference world and installs a verified candidate in a new recorded `rnw_exp_*` folder. Game checks are experiments the agent prepares and the owner runs; until run they are NOT-RUN. Proposed paths do not imply that the files exist.
 
 - [ ] **N0. Inventory and decisions** — Opus design; offline, no output change.
   - `rnw content-inventory GAME_DIR OUT` writes local JSON of every consumer: file, kind (tag, location, province, area, region, subcontinent), key and vanilla ID. The committed decision table (identifiers only) gives each one keep, rebind, neutralize or replace, with the verification method; `docs/content-plan.md` records the counts per decision.
@@ -168,7 +168,7 @@ Owner types as in the [roadmap](roadmap.md). Each stage includes its tests. A st
   - QA: `tests/test_content_inventory.py` with synthetic chains: a shared retained event, an adapted dependent event, an inaccessible privilege, an unclassified ID that must fail; the local test reports drift after a patch.
   - Commit: `Inventory the New World's vanilla content consumers and decide each`.
 - [ ] **N1. Correct the current output** — Sonnet implementable after N0; first game-facing candidate.
-  - Turkish localization (G6) needs no inventory and may go first.
+  - The official languages from the installation (G6), Turkish thereby included, need no inventory and may go first.
   - Neutralize and rebind per N0; record each retired reward as a loss until N3 replaces it; exceptional resource places in the resources layer (G5).
   - QA: synthetic scripted names and formables neutralized or rebound by decision; rerolling peoples leaves the deposits, rerolling resources the countries; Old World unchanged; an unclassified consumer stops the export.
   - Owner experiment: a Spanish and an English colony on a generated world carry no vanilla American name; a rebound formable appears only to its culture; an exceptional place shows its bonus; no new `error.log` lines.
@@ -213,10 +213,10 @@ The criterion is whether players on different seeds can describe different decis
 - [ ] F3. Run the owner's experiments of N1–N4; until run, the runtime result is NOT-RUN, not PASS.
 - [ ] F4. Map G1–G7 to evidence from two materially different campaigns, with limits stated.
 
-## Decisions for the owner
+## Decisions
 
-1. **Region keys by content (N5).** Recommendation: decide after N0; if positional mechanics are many, N5 is the one change that makes them semantic with vanilla data.
-2. **Languages of authored prose.** Recommendation: English and Russian authored; the other nine folders carry the English text until translated, so no raw key shows.
-3. **What 1.0.0 needs** ([ADR 0003](adr/0003-versioning.md): the first Workshop publication is the complete product). Recommendation: N0–N3 before 1.0.0, since N1 removes visible historical doubles and N3 shows the direction; N4 and R7d as later MINOR versions.
+Settled by the owner (2026-10-23): the mod and the generator use the game's official languages everywhere; authored text stays English until the full localization before release (L1); the whole plan, R7d included, is part of 1.0.0, the complete product of [ADR 0003](adr/0003-versioning.md).
+
+Open: **region keys by content (N5)**, whether, not when. Recommendation: decide after N0; if positional mechanics are many, N5 is the one change that makes them semantic with vanilla data.
 
 Settled by this plan: a plausible random world by default; historical formables kept only where N0 keeps or rebinds them; player-chosen names preserved; no additional settings. Engine uncertainties belong to N2, not to the design.
