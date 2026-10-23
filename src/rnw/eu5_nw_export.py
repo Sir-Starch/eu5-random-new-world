@@ -188,6 +188,7 @@ from rnw.eu5_terrain import (
 from rnw.eu5_water import water_outputs
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.landmask import LandMask, fit
+from rnw.languages import official_languages
 from rnw.layers import PEOPLES, RESOURCES, layer_seed
 from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
@@ -236,18 +237,6 @@ SETUP_DIR: Final[str] = "game/main_menu/setup/1337"
 SUPPORTED_GAME: Final[str] = "1.4.*"
 INPUTS_FILE: Final[str] = "inputs.json"
 LAND_MASK_FILE: Final[str] = "land_mask.png"
-LANGUAGES: Final[tuple[str, ...]] = (
-    "braz_por",
-    "english",
-    "french",
-    "german",
-    "japanese",
-    "korean",
-    "polish",
-    "russian",
-    "simp_chinese",
-    "spanish",
-)
 ROTATION: Final[str] = "{ -0.000000 -0.000000 -0.000000 1.000000 }"
 SCALE: Final[str] = "{ 1.000000 1.000000 1.000000 }"
 TOPOGRAPHY: Final[re.Pattern[str]] = re.compile(r"topography\s*=\s*[A-Za-z_]+")
@@ -618,7 +607,9 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
 
 
-def _localization(plan: Plan, extra: dict[str, str], renamed: dict[str, str]) -> dict[str, bytes]:
+def _localization(
+    plan: Plan, extra: dict[str, str], renamed: dict[str, str], languages: tuple[str, ...]
+) -> dict[str, bytes]:
     names = {cell.key: cell.name for cell in plan.cells}
     names.update(extra)
     names.update(plan.province_names)
@@ -628,7 +619,7 @@ def _localization(plan: Plan, extra: dict[str, str], renamed: dict[str, str]) ->
     for table in (names, overrides):
         table.update({key: renamed[key] for key in table if key in renamed})
     files: dict[str, bytes] = {}
-    for language in LANGUAGES:
+    for language in languages:
         base = f"main_menu/localization/{language}"
         files[f"{base}/rnw_new_world_l_{language}.yml"] = _yaml(language, names)
         files[f"{base}/replace/rnw_new_world_replace_l_{language}.yml"] = _yaml(language, overrides)
@@ -980,12 +971,14 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
             game_dir, BASE_VALUES, drop_block_entries(_read(game_dir, BASE_VALUES), (), retired)
         )
     outputs[DEFINITION_FILE] = country_definitions(natives.countries)
-    outputs.update(_localization(plan, country_names(natives.countries), natives.names))
+    languages = official_languages(game_dir)
+    outputs.update(_localization(plan, country_names(natives.countries), natives.names, languages))
     stats: dict[str, object] = {
         "ports": len(port_rows),
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
         "setup_identifiers_removed": len(setup.removed_ids),
         "base_modifiers_retired": sorted(retired),
+        "languages": list(languages),
     }
     return outputs, stats
 

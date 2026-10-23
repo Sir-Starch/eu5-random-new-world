@@ -44,6 +44,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 9, 33),
     (0, 10, 0),
     (0, 10, 1),
+    (0, 10, 2),
 )
 
 

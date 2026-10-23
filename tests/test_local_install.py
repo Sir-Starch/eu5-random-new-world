@@ -47,6 +47,7 @@ from rnw.eu5_splines import GAME_FILE as SPLINE_GAME_FILE
 from rnw.eu5_splines import land_contacts
 from rnw.eu5_terrain import DecalStore
 from rnw.geography import color_summary, read_locations, summary
+from rnw.languages import official_languages
 from rnw.model import WATER_CLASSES, CellClass
 from rnw.pdx import parse
 from rnw.record import Record
@@ -293,6 +294,22 @@ def test_local_content_consumers_all_have_a_decision() -> None:
     positional = content_report.report(inventory)["positional"]
     assert isinstance(positional, dict)
     assert positional["keys"]["region"] == 14
+
+
+def test_local_languages_are_the_installations_own() -> None:
+    """The mod writes every language the game ships localization for, Turkish included."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    languages = official_languages(Path(root_value))
+    assert "english" in languages
+    assert len(languages) >= 11
+    shipped = {
+        folder.name
+        for folder in (Path(root_value) / "game/main_menu/localization").iterdir()
+        if folder.is_dir()
+    }
+    assert set(languages) == shipped
 
 
 def test_local_game_files_take_the_selection_cover() -> None:

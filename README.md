@@ -1,5 +1,7 @@
 # EU5 Random New World
 
+**0.10.2, 2026-10-23:** [OWNER] the mod uses exactly the game's official languages, taken from the installation; the world's name files are now written in all eleven of 1.4.3, Turkish included, which the fixed list of ten missed (C178, C186). [V-EXEC] Epoch 12, reference world of 754 files; the first step of N1 of the [content plan](docs/content-plan.md), not yet seen in game.
+
 **0.10.1, 2026-10-23:** [V-GAME owner C173] the 0.10.0 cover shows vanilla terra-incognita drawings, including dragons, but its country-list filter did not remove the large blank region. [V-EXEC C174] The new candidate replaces fixed country rows with a vertical list that excludes invisible widgets from layout and removes the ineffective filter. [UNKNOWN] The engine's layout behavior awaits the owner's run of [experiment 032](experiments/032-lobby-list-layout/README.md); no agent game launch. The earlier undiscovered-capital warnings are gone from the owner's log (C171).
 
 **Opinions, 2026-10-23:** the opinions of the great empires named capitals that their holders had not discovered, 17 warnings per start (C170); generator **0.9.33** makes each holder discover its partner's capital area and checks it on the written records (C171); not yet seen in game.

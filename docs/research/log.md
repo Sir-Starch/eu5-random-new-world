@@ -610,3 +610,10 @@
 - [V-EXEC C185] The positional mechanics for N5 are 68 objects in 27 files that name every American region key and 53 areas. The decision stays with the owner, after seeing whether those read sensibly on random land.
 - Judgement, not measurement: which events name "American history" was decided by title, text and gating (the rule is in the plan); the table is the place to disagree.
 - No game launch, push or publication; no version, epoch or output change.
+
+## 2026-10-23 — 0.10.2: the official languages from the installation, C186
+
+- [OWNER] The mod uses exactly the game's languages everywhere (AGENTS.md, product spec, roadmap L1). The first item of N1 is code now: `rnw.languages.official_languages` reads the language folders of `game/main_menu/localization`; the world's name files are written for each (eleven on 1.4.3), so Turkish, which the fixed list of ten left out (C178), is written.
+- [V-EXEC C186] Epoch 12 and a new reference world (754 files, two more than before); synthetic digests renewed; 978 tests pass and the 12 local tests pass with `RNW_REPRODUCE=1`. The window tests `test_window.py` failed once in four runs and passed on the others, with and without this change (timing of the controller thread); not investigated.
+- [UNKNOWN] A Turkish interface's reading of the new files. Authored text still carries the same names in every language; translation belongs to L1.
+- No game launch by the agent, no push or publication. Not installed: the owner's candidate of N1 follows the rest of the stage.
