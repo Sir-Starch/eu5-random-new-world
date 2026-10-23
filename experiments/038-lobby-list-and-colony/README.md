@@ -37,7 +37,8 @@ The owner reported *the countries do not flicker, the colony works* with one scr
 | Row | Result | Evidence |
 | --- | --- | --- |
 | 1 flicker | **Gone** (C209). `gui.log` has no validation line for `multiplayer_lobby.gui` at all | [V-GAME] owner, `gui.log` |
-| 2 click, 3 search | Not reported: whether a New World card is dimmed, whether its click does nothing and whether a search leaves no blank stretch is not known; the log has no GUI error | [UNKNOWN] |
+| 2 click | **Works** (owner, afterwards): the cards of the New World are grey and a click chooses nothing; a double click still moves the camera to the country's place, which the owner accepts (no fix wanted, C209) | [V-GAME] owner |
+| 3 search | Not reported: whether a search leaves no blank stretch is not known; the log has no GUI error | [UNKNOWN] |
 | 4 colony | The decision made Interlaken a subject of type `colonial_nation` (the save: country `AAA11`, created 1337.7.31, `subject_type=colonial_nation`; the diplomacy tooltip: *Colonial Nation of Bern*, loyalty 81.46 per cent, a governor of Bern's court). The name the game shows is **Colony of Interlaken**: the game's own title for a colonial nation, built from the location. **The scripted name *Probe Colony* is not applied** to it either; the save stores `country_name="interlaken"` (C210) | [V-GAME] screenshot, save |
 | log | No `SET_CAPITAL_EFFECT`, no scope, key, picture or orphan line; the errors left are the vanilla ones of the baseline (the tributary subject type, the cabinet action, the coastal sea zones of generated land) | [V-GAME] `error.log` |
 
