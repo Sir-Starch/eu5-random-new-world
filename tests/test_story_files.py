@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from rnw.colonial_names import GROUPS_DIR, LANGUAGES_DIR, NAMES_FILE, TRADITIONS
 from rnw.content import (
     EMPIRE_PERIPHERY,
     GREAT_ALLIANCE,
@@ -44,7 +45,7 @@ from rnw.eu5_story import (
 )
 from rnw.pdx import Block, parse
 from rnw.stories import STORIES
-from rnw.storymodel import LOCATION, STATIC, Modifier, Source
+from rnw.storymodel import LOCATION, PULSE_FILE, STATIC, Modifier, Source
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -231,8 +232,14 @@ def test_a_family_without_a_bearer_leaves_no_event_behind(tmp_path: Path) -> Non
     assert "in_game/events/rnw_sacred.txt" not in files
     assert PRIVILEGES_FILE not in files
     assert "rnw_sacred" not in files[MODIFIERS_FILE].decode("utf-8-sig")
+    # a world with no bearer at all still has the stories that find theirs in play
     empty = _build(_install(tmp_path), ContentPlan((), (), ()))
-    assert empty == {}
+    pulse = {story.namespace for story in STORIES if story.pulse is not None}
+    assert {path for path in empty if path.startswith("in_game/events/")} == {
+        f"in_game/events/{namespace}.txt" for namespace in pulse
+    }
+    assert START_FILE not in empty
+    assert PULSE_FILE in empty
 
 
 def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path) -> None:
@@ -274,7 +281,7 @@ def test_the_texts_are_written_in_every_language_the_same(tmp_path: Path) -> Non
         "utf-8-sig"
     ).replace("l_turkish:", "l_x:")
     assert b"rnw_river.1.title" in english
-    assert len(STORIES) == len({story.family for story in STORIES}) == 6
+    assert len(STORIES) == len({story.family for story in STORIES}) == 8
 
 
 def test_facts_come_from_the_parts_of_a_world() -> None:
@@ -334,7 +341,7 @@ def _starts_by_tag(start: str) -> dict[str, str]:
 def test_every_story_family_is_written_with_its_own_start(tmp_path: Path) -> None:
     """One events file per family, and a start that binds the places the family is about."""
     files = _build(_install(tmp_path), _everything())
-    for story in STORIES:
+    for story in STORIES:  # the planned families and the ones that find their bearers in play
         assert f"in_game/events/{story.namespace}.txt" in files, story.family
     starts = _starts_by_tag(files[START_FILE].decode("utf-8-sig"))
     assert set(starts) == {"AAA", "BBB", "CCC", "DDD", "EEE", "FFF"}
@@ -365,3 +372,42 @@ def test_every_modifier_of_every_story_is_written_once_in_the_modifiers_file(
     for name in wanted:
         assert f" STATIC_MODIFIER_NAME_{name}: " in english
         assert f" STATIC_MODIFIER_DESC_{name}: " in english
+
+
+def test_colonial_names_are_written_for_the_regions_a_world_has(tmp_path: Path) -> None:
+    """One scripted name per tradition and region, with its texts in every language."""
+    root = _install(tmp_path)
+    for directory, keys in (
+        (LANGUAGES_DIR, ("spanish_language", "portuguese_language", "english_language")),
+        (LANGUAGES_DIR, ("french_language",)),
+        (GROUPS_DIR, ("netherlandish_group",)),
+    ):
+        path = root / directory / f"{keys[0]}.txt"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        _ = path.write_text("".join(f"{key} = {{ }}\n" for key in keys))
+    plan = ContentPlan((), (), ())
+    made = build(
+        root,
+        plan,
+        names={},
+        tags=[],
+        languages=("english", "turkish"),
+        seed=5,
+        taken=frozenset(),
+        regions={"north_region": "Ingari"},
+    )
+    assert NAMES_FILE in made.files
+    assert made.stats["colonial_names"] == len(TRADITIONS)
+    english = made.files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"].decode("utf-8-sig")
+    assert ' rnw_english_north_region_scripted_country_name: "New Ingari"' in english
+    none = build(
+        root,
+        plan,
+        names={},
+        tags=[],
+        languages=("english",),
+        seed=5,
+        taken=frozenset(),
+    )
+    assert NAMES_FILE not in none.files
+    assert none.stats["colonial_names"] == 0

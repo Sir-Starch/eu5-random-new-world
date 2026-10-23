@@ -194,7 +194,7 @@ def test_the_centre_ranks_are_the_ranked_places() -> None:
     """The ranks that make a centre are cities and towns."""
     assert {"city", "town"} == CENTRE_RANKS
     assert set(STORY_FAMILIES) | set(FORMABLE_FAMILIES) == set(FAMILIES)
-    assert len(FAMILIES) == len(set(FAMILIES)) == 11
+    assert len(FAMILIES) == len(set(FAMILIES)) == 12
 
 
 def test_a_union_is_a_connected_stretch_of_the_river_under_a_few_states() -> None:

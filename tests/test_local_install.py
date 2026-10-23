@@ -15,7 +15,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from rnw import content_report, epoch, eu5_probe, splnet
+from rnw import colonial_names, content_report, epoch, eu5_probe, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
 from rnw.content import FAMILIES
@@ -57,7 +57,7 @@ from rnw.model import WATER_CLASSES, CellClass
 from rnw.pdx import parse
 from rnw.record import Record
 from rnw.stories import STORIES
-from rnw.storymodel import render_events
+from rnw.storymodel import render_events, render_hook
 
 GOLDEN_WORLD = Path(__file__).with_name("golden_world.json")
 
@@ -374,11 +374,12 @@ def test_local_story_scripts_use_only_words_the_game_uses() -> None:
     for directory in ("in_game/common", "in_game/events", "main_menu/common"):
         for path in (game / directory).rglob("*.txt"):
             vanilla.update(word.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
-    ours = {"target_location", "other_location", "target_country"}
+    ours = {"target_location", "other_location", "target_country", "home_place", "seat_place"}
     written = "\n".join(render_events(story) for story in STORIES)
+    written += "\n" + render_hook(STORIES) + "\n" + colonial_names.script(["mesoamerica_region"])
     # the formables' words are checked on the vanilla names they use
     for spec in FORMATION_SPECS:
-        written += f"\n{spec.rank} {spec.emblem[:-4]} " + " ".join(spec.allow)
+        written += f"\n{spec.rank} {spec.emblem[:-4]} " + " ".join((*spec.allow, *spec.potential))
     used = {
         found
         for found in word.findall(written)
@@ -480,6 +481,8 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
             DEFINITION_FILE,
             START_FILE,
             FORMABLES_FILE,
+            colonial_names.NAMES_FILE,
+            "main_menu/localization/english/rnw_story_l_english.yml",
         )
         digests = {
             record["path"].partition("/")[2]: record["sha256"]

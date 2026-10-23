@@ -1082,6 +1082,10 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
     taken = vanilla.colors | {
         colour for country in natives.countries for colour in (country.color, country.color2)
     }
+    regions = {
+        region: natives.names.get(region) or plan.display_overrides.get(region, region)
+        for region in sorted({cell.region for cell in plan.cells if cell.kind is CellClass.LAND})
+    }
     return build_stories(
         game_dir,
         content,
@@ -1090,6 +1094,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         languages=official_languages(game_dir),
         seed=seed,
         taken=taken,
+        regions=regions,
     )
 
 

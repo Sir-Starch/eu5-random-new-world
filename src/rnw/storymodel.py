@@ -19,7 +19,10 @@ of the mod's own; the copy is made at generation time from the installation, nev
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 COUNTRY: Final[str] = "country"
 LOCATION: Final[str] = "location"
@@ -31,6 +34,9 @@ CLERGY: Final[str] = "clergy_estate"
 AFFORD: Final[str] = "gold > 100"
 CLEANUP: Final[int] = 9
 CLEANUP_MONTHS: Final[int] = 180
+# The hidden event that starts a story whose bearer is found in play (``Pulse``).
+PULSE_START: Final[int] = 10
+PULSE_FILE: Final[str] = "in_game/common/on_action/rnw_stories.txt"
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +104,22 @@ class Node:
 
 
 @dataclass(frozen=True, slots=True)
+class Pulse:
+    """How a story that has no bearer when the game starts finds one in play.
+
+    Each year the game's ``yearly_country_pulse`` gives every country ``chance`` per cent of a
+    hidden start event; the event begins the story if the country meets ``trigger`` (country
+    scope) and neither has the story nor had it within ``quiet_years``. ``setup`` are the effects
+    (root is the country) that store the story's places in its variables.
+    """
+
+    trigger: tuple[str, ...]
+    chance: int
+    setup: tuple[str, ...]
+    quiet_years: int
+
+
+@dataclass(frozen=True, slots=True)
 class Story:
     """A family's story: its nodes, the variables it keeps, the payloads it applies.
 
@@ -105,7 +127,8 @@ class Story:
     of a second place (the far end of a route, a neighbour's capital) when the family has one.
     ``immediate`` are the effects every event of the story begins with, ``gate`` the conditions
     every event of it asks besides the owner of the centre; ``holds_other`` says the bearer must
-    own the second place too when the story starts (the far end of a route is its own).
+    own the second place too when the story starts (the far end of a route is its own);
+    ``pulse`` is set for a story that has no bearer until play finds one.
     """
 
     family: str
@@ -119,6 +142,7 @@ class Story:
     immediate: tuple[str, ...] = ()
     gate: tuple[str, ...] = ()
     holds_other: bool = False
+    pulse: Pulse | None = None
 
     def event(self, number: int) -> str:
         """The identifier of node ``number``."""
@@ -127,6 +151,10 @@ class Story:
     def variables(self) -> tuple[str, ...]:
         """The variables the story keeps while it runs."""
         return (self.centre, self.path, *([self.other] if self.other else []))
+
+    def quiet(self) -> str:
+        """The variable that keeps a country from having the story again too soon."""
+        return f"{self.namespace}_quiet"
 
     def cleanup(self) -> tuple[str, ...]:
         """The effects that end a story: its variables go."""
@@ -203,6 +231,44 @@ def render_cleanup(story: Story) -> str:
     )
 
 
+def render_pulse_start(story: Story, pulse: Pulse) -> str:
+    """The hidden event that starts a story for a country the yearly pulse has chosen."""
+    guards = _lines(pulse.trigger, chr(9) * 2)
+    opening, closing = story.event(story.nodes[0].number), story.event(CLEANUP)
+    return (
+        f"{story.event(PULSE_START)} = {{\n"
+        "\ttype = country_event\n"
+        "\thidden = yes\n\n"
+        f"\ttrigger = {{\n{guards}"
+        f"\t\tNOT = {{ has_variable = {story.path} }}\n"
+        f"\t\tNOT = {{ has_variable = {story.quiet()} }}\n\t}}\n\n"
+        f"\timmediate = {{\n{_lines(pulse.setup, chr(9) * 2)}"
+        f"\t\tset_variable = {{ name = {story.quiet()} years = {pulse.quiet_years} }}\n"
+        f"\t\ttrigger_event_non_silently = {{ id = {opening} }}\n"
+        f"\t\ttrigger_event_silently = {{ id = {closing} months = {CLEANUP_MONTHS} }}\n"
+        "\t}\n"
+        "}\n"
+    )
+
+
+def pulse_action(story: Story) -> str:
+    """The name of the on_action that offers a pulse story's start to every country each year."""
+    return f"{story.namespace}_yearly"
+
+
+def render_hook(stories: Sequence[Story]) -> str:
+    """The on_action file that hooks the stories with a pulse into the game's yearly pulse."""
+    found = [story for story in stories if story.pulse is not None]
+    names = "".join(f"\t\t{pulse_action(story)}\n" for story in found)
+    out = [f"yearly_country_pulse = {{\n\ton_actions = {{\n{names}\t}}\n}}\n"]
+    for story in found:
+        assert story.pulse is not None  # noqa: S101 - narrowed above for the type checker
+        chance, start = story.pulse.chance, story.event(PULSE_START)
+        out.append(f"\n{pulse_action(story)} = {{\n\trandom_events = {{\n")
+        out.append(f"\t\tchance_to_happen = {chance}\n\t\t100 = {start}\n\t}}\n}}\n")
+    return "".join(out)
+
+
 def render_events(story: Story) -> str:
     """The script of a story's events."""
     centre = story.centre
@@ -240,6 +306,8 @@ def render_events(story: Story) -> str:
             out.append(f"\t\tai_chance = {{ base = {option.ai} }}\n\t}}\n")
         out.append("}\n\n")
     out.append(render_cleanup(story))
+    if story.pulse is not None:
+        out.append("\n" + render_pulse_start(story, story.pulse))
     return "".join(out)
 
 

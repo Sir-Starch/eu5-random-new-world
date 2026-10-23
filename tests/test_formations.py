@@ -13,6 +13,7 @@ from rnw.content import (
     HIGHLAND_CONFEDERATION,
     HIGHLAND_RELIEF,
     MARITIME_LEAGUE,
+    POSTCOLONIAL_FEDERATION,
     REGIONAL_REALM,
     RIVER_UNION,
     RULES,
@@ -366,3 +367,32 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
         assert keys[key_of(formation)] == f"${identity.tag}$"
         assert "{name}" not in keys[f"{key_of(formation)}_desc"]
         assert identity.name in keys[f"{key_of(formation)}_desc"]
+
+
+def test_a_colonial_shore_needs_a_coast_not_a_state() -> None:
+    """The federation's territory is coast, wherever it is settled; no state is offered it."""
+    facts = _chain(count=60, states=2, seas=lambda index: ("bay",) if index < 50 else ())
+    found, _ = formations(facts, SEED, POSTCOLONIAL_FEDERATION)
+    assert found
+    shore = RULES[POSTCOLONIAL_FEDERATION]
+    for formation in found:
+        assert shore.places <= len(formation.places) <= shore.territory
+        assert formation.states == ()
+        assert all(facts.places[key].seas for key in formation.places)
+    inland, reason = formations(_chain(count=60), SEED, POSTCOLONIAL_FEDERATION)
+    assert not inland
+    assert "colonial shore" in reason
+
+
+def test_the_federation_is_visible_to_countries_of_settlers_and_not_named_by_tag() -> None:
+    """Its potential names a culture, not the states of the world; a native culture is excluded."""
+    spec = BY_FAMILY[POSTCOLONIAL_FEDERATION]
+    assert spec.potential == ("culture ?= { is_culture_native_american = no }",)
+    formation = Formation(POSTCOLONIAL_FEDERATION, 0, ("loc_a", "loc_b"), (), (), "loc_a")
+    text = block(formation, Identity("XYZ", "Alto Federation", "Alto", (1, 2, 3), ("red", "blue")))
+    assert "is_culture_native_american = no" in text
+    assert "OR = {" not in text
+    assert "tag = " not in text.replace("\ttag = XYZ", "")
+    assert "capital_required = yes" in text
+    assert spec.level == 3
+    assert float(spec.fraction) < min(float(other.fraction) for other in SPECS if other is not spec)

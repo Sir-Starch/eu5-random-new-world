@@ -5,7 +5,10 @@ A formable is a country the game offers to those who hold most of a territory
 (``content``); what a family is is static and written once here: the suffix of its name, its
 level and rank, the founding modifier it gives with the payload of a vanilla modifier (as the
 stories do), a coat of arms, and the words that describe it. A family's political path differs by
-what it asks and what it grants; none gives the same permanent bonus as another.
+what it asks and what it grants; none gives the same permanent bonus as another. A family's
+``potential`` is the states the world names when it is empty (the formable is offered to them);
+a family whose bearers do not exist at the start (a colonial federation) states in script who sees
+it.
 
 The levels order the families (a country can only form a formable of a higher level than its
 own), so no chain of formations can run in a circle: the county-level states form the duchies,
@@ -21,6 +24,7 @@ from rnw.content import (
     CULTURAL_UNION,
     HIGHLAND_CONFEDERATION,
     MARITIME_LEAGUE,
+    POSTCOLONIAL_FEDERATION,
     REGIONAL_REALM,
     RIVER_UNION,
 )
@@ -42,6 +46,7 @@ class Spec:
     modifier: Modifier
     years: int
     allow: tuple[str, ...] = ()
+    potential: tuple[str, ...] = ()
 
 
 SPECS: Final[tuple[Spec, ...]] = (
@@ -154,6 +159,29 @@ SPECS: Final[tuple[Spec, ...]] = (
             "A new administration reaches across the region, and its provinces come to heel.",
         ),
         years=15,
+    ),
+    Spec(
+        family=POSTCOLONIAL_FEDERATION,
+        stem="federation",
+        suffix="Federation",
+        level=3,
+        rank="rank_kingdom",
+        fraction="0.35",
+        emblem="ce_star_05.dds",
+        description=(
+            "Colonies on one shore, settled from one old country or from several, come to share "
+            "one grievance and one future. A country of settlers that holds enough of the shore, "
+            "with its capital among them, may declare itself a federation, the {name}."
+        ),
+        modifier=Modifier(
+            "rnw_federation_founded",
+            COUNTRY,
+            Source(STATIC, "new_colonial_nation_founded"),
+            "A Nation Founded",
+            "A new nation of settlers grows fast and has little patience for rebels.",
+        ),
+        years=10,
+        potential=("culture ?= { is_culture_native_american = no }",),
     ),
 )
 

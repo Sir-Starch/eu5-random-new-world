@@ -42,6 +42,7 @@ HIGHLAND_CONFEDERATION: Final[str] = "highland_confederation"
 MARITIME_LEAGUE: Final[str] = "maritime_league"
 CULTURAL_UNION: Final[str] = "cultural_union"
 REGIONAL_REALM: Final[str] = "regional_realm"
+POSTCOLONIAL_FEDERATION: Final[str] = "postcolonial_federation"
 STORY_FAMILIES: Final[tuple[str, ...]] = (
     RIVER_CENTRE,
     SACRED_CENTRE,
@@ -56,6 +57,7 @@ FORMABLE_FAMILIES: Final[tuple[str, ...]] = (
     MARITIME_LEAGUE,
     CULTURAL_UNION,
     REGIONAL_REALM,
+    POSTCOLONIAL_FEDERATION,
 )
 FAMILIES: Final[tuple[str, ...]] = (*STORY_FAMILIES, *FORMABLE_FAMILIES)
 STATE: Final[str] = "state"
@@ -104,7 +106,8 @@ class Rule:
 
     ``thing`` names what the territory is, for the reason a family gives when it finds none;
     ``cutoff`` is the percentile of the states' places above which a place counts as a centre, a
-    lower bar where the land (a range, a coast) holds few cities.
+    lower bar where the land (a range, a coast) holds few cities; ``anywhere`` lets any place the
+    family serves be the seat, not only a centre (a colonial shore is settled where no state is).
     """
 
     family: str
@@ -116,6 +119,7 @@ class Rule:
     states: int
     bearers: int
     cutoff: int = CENTRE_CUTOFF
+    anywhere: bool = False
 
 
 RULES: Final[Mapping[str, Rule]] = {
@@ -135,6 +139,17 @@ RULES: Final[Mapping[str, Rule]] = {
         Rule(MARITIME_LEAGUE, "stretch of coast", 2, 18, 8, 3, 2, MAX_UNION_STATES, 50),
         Rule(CULTURAL_UNION, "related people", 2, 30, 12, 3, 2, MAX_UNION_STATES),
         Rule(REGIONAL_REALM, "region", 1, 48, 24, 4, 3, MAX_UNION_STATES),
+        Rule(
+            POSTCOLONIAL_FEDERATION,
+            "colonial shore",
+            2,
+            40,
+            20,
+            0,
+            0,
+            0,
+            anywhere=True,
+        ),
     )
 }
 
@@ -514,14 +529,14 @@ def _grow(
 def _adjacency(facts: Facts, family: str) -> dict[str, list[str]]:
     """Which places a territory of ``family`` may step between.
 
-    Land contacts for every family; a league also steps between coastal places that touch the
-    same sea zone, which is what joins ports across a bay or a strait.
+    Land contacts for every family; a league and a colonial shore also step between coastal
+    places that touch the same sea zone, which is what joins ports across a bay or a strait.
     """
     near: dict[str, list[str]] = {key: [] for key in facts.places}
     for first, second in sorted(facts.links):
         near[first].append(second)
         near[second].append(first)
-    if family == MARITIME_LEAGUE:
+    if family in {MARITIME_LEAGUE, POSTCOLONIAL_FEDERATION}:
         by_sea: dict[str, list[str]] = {}
         for key in sorted(facts.places):
             for sea in sorted(facts.places[key].seas):
@@ -556,7 +571,7 @@ def _served(facts: Facts, family: str, group: str = "") -> set[str]:
         return {key for key, place in places.items() if place.river >= MIN_RIVER}
     if family == HIGHLAND_CONFEDERATION:
         return {key for key, place in places.items() if place.relief in HIGHLAND_RELIEF}
-    if family == MARITIME_LEAGUE:
+    if family in {MARITIME_LEAGUE, POSTCOLONIAL_FEDERATION}:
         return {key for key, place in places.items() if place.seas}
     if family == CULTURAL_UNION:
         return {
@@ -607,7 +622,7 @@ def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], s
     held = _group_sizes(facts) if cultural else {}
     by_group: dict[str, set[str]] = {}
     seats = sorted(
-        (key for key in centres if cultural or key in served),
+        (key for key in (served if rule.anywhere else centres) if cultural or key in served),
         key=lambda key: (_rank(seed, family, key), key),
     )
     reason = f"no {rule.thing} joins enough populated places"

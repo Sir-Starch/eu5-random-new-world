@@ -710,3 +710,11 @@
 - Left in N4: the stories that depend on colonization (contact across the ocean, colony becomes a country), the postcolonial federation and the colonial names.
 - No game launch by the agent, no push or publication.
 
+## 2026-10-23 — N4c: what waits for the ocean, 0.10.10, C218-C220 (N4 done offline)
+
+- [V-LOCAL C218] The colonial pieces use the game's own vocabulary; one finding changes an earlier reading: the game makes its colonies with `create_location_country_from_province_definition`, so the probe's `create_country_from_location` (C207, C210) may not have gone through the path that applies scripted names. The probe is to be changed for a later sitting; nothing is asked now.
+- [V-EXEC C219] Contact and colony have no bearer in the finished world, so they begin in play: the game's yearly pulse gives each country a small chance of a hidden start that checks the country's conditions (the Old World never meets them). The federation needs no named bearer either; its potential is the settlers' culture. 70 colonial names (14 regions by five traditions) take the generated region names. Epoch 20, 792 files; the layer test passes.
+- [UNKNOWN C220] The engine's verdict is read in a later sitting; N4 is NOT-RUN end to end.
+- N4 is done offline: eight story families in all (the two pilots and six more), six formable families and the colonial names. Left in the content plan: N5 (the owner's decision), the Russian forms and titles of N2, F1 to F4, and the languages of L1.
+- No game launch by the agent, no push or publication.
+

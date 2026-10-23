@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw import eu5_formation
+from rnw import colonial_names, eu5_formation
 from rnw.content import (
     ContentPlan,
     Facts,
@@ -36,6 +36,7 @@ from rnw.storymodel import (
     CLEANUP,
     CLEANUP_MONTHS,
     PRIVILEGE,
+    PULSE_FILE,
     STATIC,
     Modifier,
     Privilege,
@@ -43,6 +44,7 @@ from rnw.storymodel import (
     Story,
     event_keys,
     render_events,
+    render_hook,
 )
 
 if TYPE_CHECKING:
@@ -213,12 +215,16 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     languages: Sequence[str],
     seed: int,
     taken: frozenset[tuple[int, int, int]],
+    regions: Mapping[str, str] | None = None,
 ) -> Written:
-    """Every file of the stories and formables of one world."""
+    """Every file of the stories, formables and colonial names of one world.
+
+    ``regions`` are the regions of the generated land with their names; each gets colonial names.
+    """
     files: dict[str, bytes] = {}
     texts: dict[str, str] = {}
     present = {opportunity.family for opportunity in plan.opportunities}
-    stories = [story for story in STORIES if story.family in present]
+    stories = [story for story in STORIES if story.pulse is not None or story.family in present]
     modifiers: list[str] = []
     privileges: list[str] = []
     for story in stories:
@@ -230,6 +236,8 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     if plan.opportunities:
         script, ids = start_events(plan)
         files[START_FILE] = script.encode("utf-8-sig")
+    if any(story.pulse is not None for story in stories):
+        files[PULSE_FILE] = render_hook(stories).encode("utf-8-sig")
     identities: list[eu5_formation.Identity] = []
     if plan.formations:
         families = {formation.family for formation in plan.formations}
@@ -243,6 +251,10 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
             modifiers.append(modifier_block(spec.modifier, payload(game_dir, spec.modifier.source)))
             texts[f"STATIC_MODIFIER_NAME_{spec.modifier.name}"] = spec.modifier.title
             texts[f"STATIC_MODIFIER_DESC_{spec.modifier.name}"] = spec.modifier.text
+    if regions:
+        colonial_names.check_installation(game_dir)
+        files[colonial_names.NAMES_FILE] = colonial_names.script(list(regions)).encode("utf-8-sig")
+        texts.update(colonial_names.texts(regions))
     if modifiers:
         files[MODIFIERS_FILE] = "\n".join(modifiers).encode("utf-8-sig")
     if privileges:
@@ -253,6 +265,8 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     stats: dict[str, object] = {
         "opportunities": plan.count(),
         "starts": ids,
+        "pulses": [story.family for story in stories if story.pulse is not None],
+        "colonial_names": len(regions or {}) * len(colonial_names.TRADITIONS),
         "absences": {absence.family: absence.reason for absence in plan.absences},
         "formations": {
             identity.tag: {

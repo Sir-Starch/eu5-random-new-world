@@ -12,11 +12,14 @@ from rnw.storymodel import (
     AFFORD,
     CLEANUP,
     LOCATION,
+    PULSE_START,
     Story,
     event_keys,
     outcomes,
+    pulse_action,
     reachable,
     render_events,
+    render_hook,
 )
 
 
@@ -95,6 +98,8 @@ def test_the_script_reads_and_names_each_event_once(story: Story) -> None:
     root = parse(render_events(story))
     keys = [entry.key for entry in root.entries if entry.key and isinstance(entry.value, Block)]
     expected = [story.event(node.number) for node in story.nodes] + [story.event(CLEANUP)]
+    if story.pulse is not None:
+        expected.append(story.event(PULSE_START))
     assert keys == expected
 
 
@@ -163,5 +168,83 @@ def test_the_paths_of_each_story_are_the_ones_designed() -> None:
         ("1a", "2a"), ("1a", "2b"), ("1b", "3a"), ("1b", "3b"), ("1c", "4a"), ("1c", "4b"),
     ]  # fmt: skip
     assert len(outcomes(sacred)) == 6
-    for family in ("harvest", "route_market", "great_alliance", "empire_periphery"):
+    for family in (
+        "harvest",
+        "route_market",
+        "great_alliance",
+        "empire_periphery",
+        "contact",
+        "colony",
+    ):
         assert len(outcomes(by_family[family])) == 6, family
+
+
+PULSE_STORIES = [story for story in STORIES if story.pulse is not None]
+
+
+def test_the_stories_that_find_their_bearers_in_play_are_contact_and_colony() -> None:
+    """Two stories have no bearer at the start; each is in the New World only."""
+    assert {story.family for story in PULSE_STORIES} == {"contact", "colony"}
+    for story in PULSE_STORIES:
+        assert story.pulse is not None
+        assert "capital.continent = continent:america" in story.pulse.trigger
+        assert 0 < story.pulse.chance <= 10
+        assert story.pulse.quiet_years >= 30
+    by_family = {story.family: story for story in PULSE_STORIES}
+    colony, contact = by_family["colony"], by_family["contact"]
+    assert colony.pulse is not None
+    assert contact.pulse is not None
+    assert "is_subject_type = colonial_nation" in colony.pulse.trigger
+    # strangers meet natives that are no colony and have a port, and have met someone from abroad
+    assert "NOT = { is_subject_type = colonial_nation }" in contact.pulse.trigger
+    assert "culture ?= { is_culture_native_american = yes }" in contact.pulse.trigger
+    assert "num_of_ports > 0" in contact.pulse.trigger
+    assert any("capital_in_old_world_trigger" in line for line in contact.pulse.trigger)
+
+
+@pytest.mark.parametrize("story", PULSE_STORIES, ids=[story.family for story in PULSE_STORIES])
+def test_a_pulse_start_binds_the_places_and_cannot_start_a_story_twice(story: Story) -> None:
+    """The hidden start stores both places, marks the country, and asks for no story under way."""
+    assert story.pulse is not None
+    root = parse(render_events(story))
+    start = root.block(story.event(PULSE_START))
+    assert start is not None
+    text = render_events(story)
+    section = text[text.index(f"{story.event(PULSE_START)} = {{") :]
+    assert "hidden = yes" in section
+    assert f"NOT = {{ has_variable = {story.path} }}" in section
+    assert f"NOT = {{ has_variable = {story.quiet()} }}" in section
+    assert f"set_variable = {{ name = {story.centre} value = scope:home_place }}" in section
+    assert f"set_variable = {{ name = {story.other} value = scope:seat_place }}" in section
+    assert (
+        f"set_variable = {{ name = {story.quiet()} years = {story.pulse.quiet_years} }}" in section
+    )
+    # the cleanup is scheduled, and the first node is fired after the places are stored
+    assert section.index("seat_place") < section.index(f"id = {story.event(story.nodes[0].number)}")
+    assert f"id = {story.event(CLEANUP)}" in section
+    # a pulse story has no place in a start event of the world
+    assert "location:" not in text
+
+
+def test_the_hook_offers_each_pulse_story_to_every_country_each_year() -> None:
+    """One sub-on-action per story in the game's yearly pulse, with the story's chance."""
+    hook = render_hook(STORIES)
+    root = parse(hook)
+    pulse = root.block("yearly_country_pulse")
+    assert pulse is not None
+    listed = pulse.block("on_actions")
+    assert listed is not None
+    assert [w.value for w in listed.words()] == [pulse_action(s) for s in PULSE_STORIES]
+    for story in PULSE_STORIES:
+        action = root.block(pulse_action(story))
+        assert action is not None
+        events = action.block("random_events")
+        assert events is not None
+        assert story.pulse is not None
+        chance = events.first("chance_to_happen")
+        assert chance is not None
+        assert chance.value == str(story.pulse.chance)
+        assert f"100 = {story.event(PULSE_START)}" in hook
+    assert render_hook([s for s in STORIES if s.pulse is None]) == (
+        "yearly_country_pulse = {\n\ton_actions = {\n\t}\n}\n"
+    )

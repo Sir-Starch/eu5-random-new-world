@@ -1,13 +1,15 @@
 """The pilot stories of the content plan (N3): the river centre and the sacred centre.
 
-The framework is in ``storymodel``; the stories of N4 are in ``stories_n4``. ``STORIES`` lists all
-of them, in the order the content plan offers them.
+The framework is in ``storymodel``; the stories of N4 are in ``stories_n4`` (bearers in the
+finished world) and ``stories_colonial`` (bearers found in play). ``STORIES`` lists all of them,
+in the order the content plan offers them.
 """
 
 from __future__ import annotations
 
 from typing import Final
 
+from rnw.stories_colonial import colony, contact
 from rnw.stories_n4 import alliance, empire, harvest, route
 from rnw.storymodel import (
     AFFORD,
@@ -403,4 +405,13 @@ def _sacred() -> Story:
     return Story("sacred_centre", "rnw_sacred", centre, path, nodes, modifiers, privileges)
 
 
-STORIES: Final[tuple[Story, ...]] = (_river(), _sacred(), harvest(), route(), alliance(), empire())
+STORIES: Final[tuple[Story, ...]] = (
+    _river(),
+    _sacred(),
+    harvest(),
+    route(),
+    alliance(),
+    empire(),
+    contact(),
+    colony(),
+)

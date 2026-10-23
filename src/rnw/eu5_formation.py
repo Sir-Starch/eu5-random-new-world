@@ -83,13 +83,17 @@ def block(formation: Formation, identity: Identity) -> str:
     owners = "\n".join(f"\t\t\ttag = {tag}" for tag in formation.states)
     places = "\n".join(f"\t\t{key}" for key in formation.places)
     allow = "".join(f"\t\t{line}\n" for line in spec.allow)
+    if spec.potential:
+        potential = "".join(f"\t\t{line}\n" for line in spec.potential)
+    else:
+        potential = f"\t\tOR = {{\n{owners}\n\t\t}}\n"
     return (
         f"{key_of(formation)} = {{\n"
         f"\tlevel = {spec.level}\n"
         f"\trequired_locations_fraction = {spec.fraction}\n"
         "\trule = plausible\n"
         "\tcapital_required = yes\n\n"
-        f"\tpotential = {{\n\t\tOR = {{\n{owners}\n\t\t}}\n\t}}\n\n"
+        f"\tpotential = {{\n{potential}\t}}\n\n"
         f"\tallow = {{\n{allow}\t}}\n\n"
         f"\tname = {identity.tag}\n"
         f"\tflag = {identity.tag}\n"
