@@ -33,6 +33,7 @@ from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
+from rnw.content_check import check_decisions
 from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
@@ -2151,6 +2152,20 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             )
         )
         rewrite = run_stage("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
+        try:
+            text_checks.update(
+                check_decisions(
+                    game_dir,
+                    events=[event for found in rewrite.retired.values() for event in found],
+                    modifiers=[
+                        *rewrite.modifiers,
+                        *cast("list[str]", text_stats["base_modifiers_retired"]),
+                    ],
+                    removed_tags=removed_tags,
+                )
+            )
+        except ValueError as error:
+            raise NewWorldExportError(str(error)) from error
         scripts = rewrite.outputs
         scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
         texts.update(scripts)

@@ -602,3 +602,11 @@
 - [OWNER] Everything in the content plan is part of 1.0.0; nothing is deferred. The plan, its roadmap row and P1's dependencies say so; R7d is included. N5 stays an open decision (whether, after N0).
 - [V-LOCAL] The owner's profile `pdx_settings.json` holds no language entry; where the game keeps its language choice is not known.
 - No code or output changed; no EU5 launch by the agent, no push or publication.
+
+## 2026-10-23 — N0: the New World's vanilla content consumers inventoried and decided, C181–C185
+
+- [V-EXEC C181, C182] `rnw content-inventory GAME_DIR OUT` scans the scripts under the remap roots and lists every top-level object that names an American tag, location, province, area, region or subcontinent, is retired by the exporter, or reads state only retired objects set: 634 consumers. Each has one decision in the committed table (`content_decisions.py`, identifiers only): keep 391, rebind 6, neutralize 84, replace 153. The export now stops on an object without a decision (`content_check.py`); the reference world of epoch 11 came out byte for byte the same.
+- [V-LOCAL C183, C184] Two retained rewards lose their path in ways the earlier retirement did not show (`flavor_chk.32`, `hurin_qusqu_privilege`); five of the eight American formables are culture-bound and can be rebound to the territory their culture holds (N1), three are colonial and wait for the postcolonial federation (N4); the Panama canal is a seven-object chain that cannot stand on random land.
+- [V-EXEC C185] The positional mechanics for N5 are 68 objects in 27 files that name every American region key and 53 areas. The decision stays with the owner, after seeing whether those read sensibly on random land.
+- Judgement, not measurement: which events name "American history" was decided by title, text and gating (the rule is in the plan); the table is the place to disagree.
+- No game launch, push or publication; no version, epoch or output change.

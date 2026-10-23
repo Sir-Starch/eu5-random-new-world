@@ -1,6 +1,6 @@
 # Random-first New World content: design and staged plan
 
-**Status:** Proposed 2026-10-23 and revised the same day after a check against the installed game (C175–C180). The owner placed its whole scope, R7d included, in 1.0.0 and settled its languages (2026-10-23); N5 remains open. Nothing is implemented, and no game launch belongs to it.
+**Status:** Proposed 2026-10-23 and revised the same day after a check against the installed game (C175–C180). The owner placed its whole scope, R7d included, in 1.0.0 and settled its languages (2026-10-23); N5 remains open. N0 is done offline (C181–C185); the stages after it are not implemented, and no game launch belongs to the plan.
 **Baseline:** Generator 0.10.1, algorithm epoch 11; EU5 1.4.3 open beta, Steam build 26105915.
 **Evidence:** Existing behaviour is labelled below. Every proposed behaviour is [INFERRED design]; whether the running game accepts it is [UNKNOWN] until observed.
 
@@ -162,11 +162,26 @@ Excluded: mandatory historical doubles, fixed old capitals as hidden anchors, du
 
 Every stage, R7d included, is part of 1.0.0 (owner, 2026-10-23); nothing in this plan is deferred past it. Owner types as in the [roadmap](roadmap.md). Each stage includes its tests. A stage that changes output raises the version, starts an epoch, renews the reference world and installs a verified candidate in a new recorded `rnw_exp_*` folder. Game checks are experiments the agent prepares and the owner runs; until run they are NOT-RUN. Proposed paths do not imply that the files exist.
 
-- [ ] **N0. Inventory and decisions** — Opus design; offline, no output change.
-  - `rnw content-inventory GAME_DIR OUT` writes local JSON of every consumer: file, kind (tag, location, province, area, region, subcontinent), key and vanilla ID. The committed decision table (identifiers only) gives each one keep, rebind, neutralize or replace, with the verification method; `docs/content-plan.md` records the counts per decision.
+- [x] **N0. Inventory and decisions** — Opus design; offline, no output change. Done 2026-10-23.
+  - `rnw content-inventory GAME_DIR OUT` writes local JSON of every consumer: category, vanilla ID, files, the keys it names by kind (tag, location, province, area, region, subcontinent, and `state` for a variable only a retired object sets) and its decision. The committed table is `content_decisions.py` (identifiers only; rows plus two rules: a definition keyed by a retired tag is inert, an object the exporter retires is neutralized or, where a later stage carries its purpose, replaced). The export calls `content_check.check_decisions` after the script remap: a consumer without a decision stops it. Code: `content_inventory.py` (scan), `content_decisions.py`, `content_report.py`, `content_check.py`.
   - Acceptance: the 58 events, 39 modifiers, five natural bonuses, eight scripted names, the American formables and the region and area consumers of C179 all have a decision; the positional mechanics are counted for N5.
-  - QA: `tests/test_content_inventory.py` with synthetic chains: a shared retained event, an adapted dependent event, an inaccessible privilege, an unclassified ID that must fail; the local test reports drift after a patch.
+  - QA: `tests/test_content_inventory.py` with synthetic chains (a shared retained event, an adapted dependent event, a privilege whose path was retired, an unclassified object that stops the check, a script word that is also a location); `test_local_content_consumers_all_have_a_decision` reports drift after a patch, both ways. The reference world of epoch 11 came out byte for byte the same with the check in the export.
   - Commit: `Inventory the New World's vanilla content consumers and decide each`.
+
+  **Result** (EU5 1.4.3 build 26105915, C181–C185). 634 consumers: 243 coats of arms keyed by a retired tag and 391 other script objects (186 events, 43 advances, 30 customizable localizations, 18 holy sites, 12 area preferences, 8 scripted country names, 8 formables, 44 retired modifiers and base values, and 42 in smaller categories). Decisions: **keep 391**, **rebind 6**, **neutralize 84**, **replace 153**.
+
+  | Decision | Count | Why |
+  | --- | --- | --- |
+  | keep, inert | 264 | 243 coats of arms of retired tags and 21 objects gated by them (the Russian case forms of C176, `country_flavor` exceptions) |
+  | keep, positional | 68 | Follow a vanilla region or area key by position: the regional advances of R7b, AI area preferences, goods filters, situations, 9 Old World events about the Caribbean, Brazil and the colonies |
+  | keep, generic | 39 | Earthquakes, expeditions, pirates, a Dutch city on `manhattan`: the remap keeps them working |
+  | keep, homeland | 18 | The holy sites that the natives pass places in the religion's most populated locations |
+  | keep, name | 2 | Not references: given names equal to location keys |
+  | rebind, culture | 6 | `AZT_f`, `INC_f`, `IRO_f`, `MAY_f`, `PUE_f` (gated by a culture or religion the world reuses) and the Huitzilopochtli start effect of `on_game_start`: N1 |
+  | neutralize | 84 | 49 events naming American people, places, companies or incidents and 3 inert helpers; 23 inert unique advances of retired states; 2 other inert objects; the Panama canal chain (7: advance, three decisions, footprint, map object, achievement) |
+  | replace | 153 | The 58 retired events and 44 retired modifiers and base values (by chain: CHK, AZT, CSU to N3; IRO, PUE to N4; the five natural bonuses to N1), the temple of Tenochtitlan and the privilege whose variable only a retired event set (N3), the eight scripted names and `USA_f`, `CAN_f`, `MEX_f` (N4), the silver chain (N1) and the colonial rebellion chain (N4) |
+
+  By stage: N1 carries 6 rebindings and 9 replacements, N3 76 replacements, N4 68. Two objects from G2 appear only through analysis: `flavor_chk.32` (a plain event whose trigger names a retired tag, not a dynamic one) and `hurin_qusqu_privilege` (reads a variable that only retired events set). **For N5:** the 68 positional consumers stand in 27 files and name all 14 American regions, 53 of the 154 areas, 43 locations and both subcontinents; every region key is thus load-bearing, and the case for N5 rests on whether those 68 read sensibly on random land. The decisions about events are judgements by the text and the gating, not by a count; the rule used: an event that names a historical American person, place, company, work or incident is neutralized, one that speaks only of roles, goods and regions stays.
 - [ ] **N1. Correct the current output** — Sonnet implementable after N0; first game-facing candidate.
   - The official languages from the installation (G6), Turkish thereby included, need no inventory and may go first.
   - Neutralize and rebind per N0; record each retired reward as a loss until N3 replaces it; exceptional resource places in the resources layer (G5).

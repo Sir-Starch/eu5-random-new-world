@@ -171,7 +171,7 @@ class ScriptRewrite:
     modifiers: tuple[str, ...] = ()
 
 
-def _script_files(game_dir: Path) -> dict[str, Path]:
+def script_files(game_dir: Path) -> dict[str, Path]:
     """Script files by mod path: the base game's and every DLC's, none twice."""
     game = game_dir / "game"
     files: dict[str, Path] = {}
@@ -198,7 +198,7 @@ def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str])
     """Mod copies of every script file whose location or tag references changed."""
     files: dict[str, tuple[bytes, str]] = {}
     named: Counter[str] = Counter()
-    for relative, path in _script_files(game_dir).items():
+    for relative, path in script_files(game_dir).items():
         raw = path.read_bytes()
         files[relative] = (raw, raw.decode("utf-8-sig", errors="strict"))
         named.update(EVENT_ID.findall(files[relative][1]))

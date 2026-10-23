@@ -135,6 +135,31 @@ def coupling(
     typer.echo(f"Wrote aggregate references: {output}")
 
 
+@app.command("content-inventory")
+def content_inventory(
+    game_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)],
+    output: Annotated[Path, typer.Argument()],
+) -> None:
+    """List the script objects that name the replaced New World, each with its decision.
+
+    Writes local JSON; exits with 1 when an object has no decision or a decision matches
+    nothing (content plan, N0).
+    """
+    _check_output_outside_game(game_dir, output)
+    from rnw import content_report  # noqa: PLC0415 - the command is rare and the import heavy.
+
+    inventory = content_report.build(game_dir)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    text = json.dumps(content_report.report(inventory), indent=2)
+    _ = output.write_text(text + "\n", encoding="utf-8")
+    undecided, stale = len(inventory.missing), len(inventory.stale)
+    typer.echo(
+        f"{len(inventory.consumers)} consumers, {undecided} undecided, {stale} stale: {output}"
+    )
+    if undecided or stale:
+        raise typer.Exit(1)
+
+
 @app.command()
 def fingerprint(
     game_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)],

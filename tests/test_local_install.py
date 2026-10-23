@@ -15,7 +15,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from rnw import epoch, splnet
+from rnw import content_report, epoch, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode
 from rnw.contract import CONTRACT_FILES, fingerprint
@@ -264,6 +264,35 @@ def test_local_discovery_finds_the_installation() -> None:
     steam = [game for game in games if game.library is not None]
     if steam:
         assert steam[0].build_id.isdigit()
+
+
+def test_local_content_consumers_all_have_a_decision() -> None:
+    """The scripts that name the replaced New World match the decision table, both ways.
+
+    Fails after a patch that adds or removes such an object, until the table is updated
+    (content plan, N0). The counts are those of the plan: the 58 retired events, the 39
+    modifiers only they applied, the five historical natural-resource bonuses, the eight
+    American scripted country names and the eight American formables.
+    """
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    inventory = content_report.build(Path(root_value))
+    assert inventory.missing == []
+    assert inventory.stale == []
+    assert (inventory.events, inventory.modifiers, inventory.base_values) == (58, 39, 5)
+    names = [
+        c for c in inventory.consumers.values() if c.category == "common/scripted_country_names"
+    ]
+    formables = [
+        c for c in inventory.consumers.values() if c.category == "common/formable_countries"
+    ]
+    assert len(names) == len(formables) == 8
+    assert all(inventory.verdicts[c.key] is not None for c in (*names, *formables))
+    # The positional mechanics that option N5 would make semantic: all 14 American regions.
+    positional = content_report.report(inventory)["positional"]
+    assert isinstance(positional, dict)
+    assert positional["keys"]["region"] == 14
 
 
 def test_local_game_files_take_the_selection_cover() -> None:
