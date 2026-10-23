@@ -69,8 +69,20 @@ def test_hidden_country_cards_do_not_reserve_fixed_rows() -> None:
     assert "fixedgridbox" not in patched
     assert "addrow = 74" not in patched
     assert "setitemsizefromcell" not in patched
-    assert "size = { 100% 67 }" in patched
     assert "spacing = 7" in patched
+
+
+def test_cards_of_the_vbox_take_their_width_from_a_layout_policy_not_a_percentage() -> None:
+    # The engine refuses a percentage size on a child of a vbox ("Unsupported property: size with
+    # a percentage", multiplayer_lobby.gui:4792, EU5 1.4.4, experiment 036); vanilla's idiom for a
+    # datamodel vbox is an expanding layout policy and a width of -1.
+    patched = patch_gui(GUI_FILES[0], _lobby_fixture())
+
+    assert patched is not None
+    head = patched[patched.index("item = {") : patched.index('visible = "[Not(GetScriptedGui')]
+    assert "layoutpolicy_horizontal = expanding" in head
+    assert "size = { -1 67 }" in head
+    assert "%" not in head
 
 
 def test_country_list_layout_drift_is_refused() -> None:

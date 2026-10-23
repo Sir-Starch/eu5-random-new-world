@@ -40,6 +40,7 @@ COLONY: Final[str] = "interlaken"
 FORMABLE: Final[str] = "rnw_probe_f"
 SCRIPTED_NAME: Final[str] = "rnw_probe_colony_scripted_country_name"
 VARIABLE: Final[str] = "rnw_probe_start"
+START_ACTION: Final[str] = "rnw_probe_game_start"
 CENTRE: Final[str] = "rnw_probe_centre"
 COUNTRY_VARIABLE: Final[tuple[str, str, int]] = ("FRA", VARIABLE, 7)
 LOCATION_VARIABLE: Final[tuple[str, str, int]] = ("paris", VARIABLE, 3)
@@ -227,6 +228,7 @@ def _decisions() -> str:
 		effect = {{
 			location:{COLONY} = {{
 				create_country_from_location = {{
+					save_scope_as = rnw_probe_colony
 					set_capital = location:{COLONY}
 					make_subject_of = {{
 						target = root
@@ -234,6 +236,7 @@ def _decisions() -> str:
 					}}
 				}}
 			}}
+			trigger_event_non_silently = {{ id = rnw_probe.6 }}
 		}}
 	}}
 }}
@@ -260,7 +263,7 @@ rnw_probe_read_state = {{
 		name = rnw_probe_read_state.a
 		ai_chance = {{ value = 0 }}
 		effect = {{
-			trigger_event = {{ id = rnw_probe.1 }}
+			trigger_event_non_silently = {{ id = rnw_probe.1 }}
 		}}
 	}}
 }}
@@ -270,7 +273,17 @@ rnw_probe_read_state = {{
 def _on_action() -> str:
     country, name, value = COUNTRY_VARIABLE
     location, _, location_value = LOCATION_VARIABLE
+    # Two files that define ``on_game_start`` with an ``effect`` of their own do not both run:
+    # the engine keeps the most recent (log: "There is more than one 'effect' defined"), so the
+    # game's own start would not happen (experiment 036). A mod hooks the start the way the
+    # game's ``ai_personalities_setup.txt`` does: a sub-on-action in ``on_actions``.
     return f"""on_game_start = {{
+	on_actions = {{
+		{START_ACTION}
+	}}
+}}
+
+{START_ACTION} = {{
 	effect = {{
 		c:{country} = {{
 			set_variable = {{ name = {name} value = {value} }}
@@ -279,7 +292,7 @@ def _on_action() -> str:
 			set_variable = {{ name = {name} value = {location_value} }}
 		}}
 		c:{HOST} = {{
-			trigger_event = {{ id = rnw_probe.1 }}
+			trigger_event_non_silently = {{ id = rnw_probe.1 }}
 		}}
 	}}
 }}
@@ -436,6 +449,17 @@ rnw_probe.5 = {{
 		remove_variable = {CENTRE}
 	}}
 }}
+
+rnw_probe.6 = {{
+	type = country_event
+	title = rnw_probe.6.title
+	desc = rnw_probe.6.desc
+	outcome = neutral
+
+	option = {{
+		name = rnw_probe.6.close
+	}}
+}}
 """
 
 
@@ -474,13 +498,17 @@ def _texts(colony: str) -> dict[str, str]:
         f"{TAG}_ADJ": "Probe",
         SCRIPTED_NAME: "Probe Colony",
         f"{SCRIPTED_NAME}_ADJ": "Probe Colonial",
-        "rnw_probe_found_colony": "Probe: found a subject",
-        "rnw_probe_found_colony_desc": (
+        # A decision is named by ``<id>.title`` and ``<id>.desc``; a formable by ``<id>`` and
+        # ``<id>_desc`` (vanilla ``SWI_f: "$SWI$"``). Other keys show as the bare key (036).
+        FORMABLE: f"${TAG}$",
+        f"{FORMABLE}_desc": "A formable of a tag that no country file defines.",
+        "rnw_probe_found_colony.title": "Probe: found a subject",
+        "rnw_probe_found_colony.desc": (
             f"Makes {colony} a subject of the host. Reads the name its scripted country name gives."
         ),
         "rnw_probe_found_colony.a": "Found it",
-        "rnw_probe_read_state": "Probe: read the start state",
-        "rnw_probe_read_state_desc": "Shows which start variables the game kept.",
+        "rnw_probe_read_state.title": "Probe: read the start state",
+        "rnw_probe_read_state.desc": "Shows which start variables the game kept.",
         "rnw_probe_read_state.a": "Show",
         "rnw_probe.1.title": "Probe: start state",
         "rnw_probe.1.desc": (
@@ -518,6 +546,13 @@ def _texts(colony: str) -> dict[str, str]:
             "variable still held its location. Closing removes the variable."
         ),
         "rnw_probe.5.close": "Close and remove the variable",
+        "rnw_probe.6.title": "Probe: the new subject",
+        "rnw_probe.6.desc": (
+            "The decision made a subject of the host. Its name, as the game shows it: "
+            "[rnw_probe_colony.GetName] (adjective: [rnw_probe_colony.GetAdjective]). It reads "
+            "Probe Colony if the scripted country name of the mod applies."
+        ),
+        "rnw_probe.6.close": "Close",
     }
 
 
@@ -531,7 +566,7 @@ def metadata() -> bytes:
     payload: dict[str, object] = {
         "name": "RNW probe: content hooks",
         "id": NAME,
-        "version": "0.1.0",
+        "version": "0.2.0",
         "supported_game_version": "1.4.*",
         "short_description": (
             "Research probe of the Random New World project: a formable of a tag no country "

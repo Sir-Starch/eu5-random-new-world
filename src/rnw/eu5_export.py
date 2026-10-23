@@ -60,7 +60,7 @@ KNOWN_BUILDS: Final[dict[str, str]] = {
         "EU5 1.4.2 open beta, Steam build 26043558"
     ),
     "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a": (
-        "EU5 1.4.3 open beta, Steam build 26105915"
+        "EU5 1.4.3 open beta, Steam build 26105915 (executable of 1.4.4, build 26142040)"
     ),
 }
 MOD_LOCATIONS: Final[str] = "in_game/map_data/locations.png"

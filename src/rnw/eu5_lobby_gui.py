@@ -41,8 +41,14 @@ _COUNTRY_LAYOUT_REPLACEMENT: Final[str] = (
 _COUNTRY_LIST_ANCHOR: Final[str] = (
     "item = {\n\t\t\t\t\t\t\t\t\twidget = {\n\t\t\t\t\t\t\t\t\t\tsize = { 100% 90% }\n"
 )
+
+# The engine refuses a percentage size on a child of a vbox (multiplayer_lobby.gui, EU5 1.4.4);
+# vanilla's vbox lists size an item with an expanding layout policy and a width of -1.
 _COUNTRY_LIST_REPLACEMENT: Final[str] = (
-    _COUNTRY_LIST_ANCHOR.replace("100% 90%", "100% 67")
+    _COUNTRY_LIST_ANCHOR.replace(
+        "size = { 100% 90% }",
+        "layoutpolicy_horizontal = expanding\n\t\t\t\t\t\t\t\t\t\tsize = { -1 67 }",
+    )
     + '\t\t\t\t\t\t\t\t\t\tvisible = "[Not('
     + f"GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown("
     + 'GuiScope.SetRoot(Country.MakeScope).End))]"\n'

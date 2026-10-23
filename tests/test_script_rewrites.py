@@ -246,3 +246,61 @@ def test_remap_scripts_retires_event_modifiers(tmp_path: Path) -> None:
     rewrite = remap_scripts(tmp_path, {}, {"AAA"})
     assert rewrite.modifiers == ("m_only",)
     assert rewrite.outputs["main_menu/common/static_modifiers/c.txt"] == b"keep = {\n}\n"
+
+
+IMAGES = """d1_monuments = {
+\ttag = "monuments1"
+
+\tillustration_image = { #Alpha 0
+\t\ttexture_file = "gfx/empty.dds"
+\t\tpriority = 1
+\t\tscope = location
+\t}
+
+\t#the pyramid
+\tillustration_image = {
+\t\ttexture_file = "gfx/pyramid.dds"
+\t\tscope = location
+\t\ttrigger = {
+\t\t\thas_newsletter_subscription = yes
+\t\t\tthis = location:gone
+\t\t}
+\t}
+
+\tillustration_image = {
+\t\ttexture_file = "gfx/buddha.dds"
+\t\tscope = location
+\t\ttrigger = {
+\t\t\tthis = location:kept
+\t\t}
+\t}
+}
+"""
+
+
+def test_the_illustration_of_a_removed_place_is_dropped_and_the_others_stay(tmp_path: Path) -> None:
+    """A picture bound to a place that is gone would make the engine log the comparison every
+    frame (``Invalid right side during comparison 'location'``, EU5 1.4.4, experiment 036); it
+    is not moved to another place either, since the picture shows that place."""
+    game = tmp_path / "game"
+    _write(game, "dlc/D1_pack/in_game/gfx/images/d1_images_location.txt", IMAGES)
+    _write(game, "in_game/gfx/images/00_images_location.txt", IMAGES.replace("gone", "kept"))
+    rewrite = remap_scripts(tmp_path, REMAP, set())
+    assert sorted(rewrite.outputs) == ["in_game/gfx/images/d1_images_location.txt"]
+    text = rewrite.outputs["in_game/gfx/images/d1_images_location.txt"].decode()
+    assert "pyramid" not in text
+    assert "location:gone" not in text
+    assert "location:fresh" not in text  # dropped, not rebound
+    assert "gfx/empty.dds" in text
+    assert "this = location:kept" in text
+    assert text.count("illustration_image") == 2
+    assert 'tag = "monuments1"' in text
+    assert rewrite.illustrations == {"in_game/gfx/images/d1_images_location.txt": 1}
+
+
+def test_an_illustration_naming_a_removed_province_is_dropped_too(tmp_path: Path) -> None:
+    game = tmp_path / "game"
+    text = IMAGES.replace("location:gone", "province_definition:lost_province")
+    _write(game, "in_game/gfx/images/d1.txt", text)
+    rewrite = remap_scripts(tmp_path, REMAP, set())
+    assert "lost_province" not in rewrite.outputs["in_game/gfx/images/d1.txt"].decode()

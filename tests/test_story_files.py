@@ -213,6 +213,13 @@ def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path)
     english = files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"].decode("utf-8-sig")
     assert ' XYZ: "Alto Union"' in english
     assert ' XYZ_ADJ: "Alto"' in english
+    # the formables list names a formable by its own key and describes it by ``<key>_desc``
+    # (``rnw_union_2_f`` showed as a bare key and was logged as missing, EU5 1.4.4, 036)
+    for entry in parse(formable).entries:
+        if entry.key is not None:
+            assert f" {entry.key}: " in english, entry.key
+            assert f" {entry.key}_desc: " in english, entry.key
+    assert ' rnw_union_1_f: "$XYZ$"' in english
 
 
 def test_the_texts_are_written_in_every_language_the_same(tmp_path: Path) -> None:

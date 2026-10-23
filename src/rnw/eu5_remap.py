@@ -10,7 +10,9 @@ items of ``location``/``locations``/``waypoints`` and ``province_definition``/
 first location's replacement. A removed location in a ``map_id`` list is dropped, since
 the object it names needs a locator of its own. The files of the base game and of every
 DLC are rewritten alike; a mod file replaces the DLC file at the same path. The same
-pass drops the dynamic historical events of removed country tags (``eu5_events``).
+pass drops the dynamic historical events of removed country tags (``eu5_events``) and the
+illustrations of removed places (the DLC pictures that the location view shows for a monument or a
+holy site): a picture shows its place, so it is dropped rather than moved to a generated one.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -20,7 +22,7 @@ from __future__ import annotations
 
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -31,6 +33,7 @@ from rnw.pdx import Block, Edits, PdxSyntaxError, line_span, parse
 from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
+    from collections.abc import Set as AbstractSet
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -43,6 +46,7 @@ SCRIPT_ROOTS: Final[tuple[str, ...]] = (
     "game/main_menu/common",
     "game/in_game/gfx/map/canal_gfx",
     "game/in_game/gfx/map/city_data",
+    "game/in_game/gfx/images",
 )
 SCRIPT_FILES: Final[tuple[str, ...]] = (
     "game/in_game/gfx/map/map_objects/dynamic_game_objects.txt",
@@ -57,6 +61,11 @@ DROP_KEYS: Final[frozenset[str]] = frozenset({"map_id"})
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_]+")
 SCOPE: Final[re.Pattern[str]] = re.compile(
     r"(?<![A-Za-z0-9_])(location|province):([A-Za-z_][A-Za-z0-9_]*)"
+)
+IMAGES: Final[str] = "in_game/gfx/images/"
+ILLUSTRATION: Final[str] = "illustration_image"
+PLACE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![A-Za-z0-9_])(?:location|province|province_definition):([A-Za-z_][A-Za-z0-9_]*)"
 )
 FAMILY: Final[dict[CellClass, frozenset[CellClass]]] = {
     CellClass.LAND: frozenset({CellClass.LAND}),
@@ -157,6 +166,45 @@ def remap_text(text: str, remap: dict[str, str]) -> tuple[str, int]:
     return (edits.apply(text) if count else text), count
 
 
+def _with_labels(text: str, start: int) -> int:
+    """``start`` moved up over the comment lines right above it, which name the entry."""
+    while start > 0:
+        before = text.rfind("\n", 0, start - 1) + 1
+        if not text[before:start].lstrip().startswith("#"):
+            break
+        start = before
+    return start
+
+
+def _illustrations(block: Block, removed: AbstractSet[str], text: str, edits: Edits) -> int:
+    count = 0
+    for entry in block.entries:
+        if not isinstance(entry.value, Block):
+            continue
+        if entry.key == ILLUSTRATION:
+            if any(key in removed for key in PLACE.findall(text[entry.start : entry.end])):
+                start, end = line_span(text, entry.start, entry.end)
+                edits.deletions.append((_with_labels(text, start), end))
+                count += 1
+        else:
+            count += _illustrations(entry.value, removed, text, edits)
+    return count
+
+
+def drop_illustrations(text: str, removed: AbstractSet[str]) -> tuple[str, int]:
+    """``text`` without the illustrations whose trigger names a removed place; and how many.
+
+    The location view asks every illustration's trigger of every location it shows; a trigger
+    that compares with a location that no longer exists makes the engine log an error per
+    frame (``Invalid right side during comparison 'location'``, EU5 1.4.4, experiment 036).
+    """
+    if removed.isdisjoint(WORD.findall(text)):
+        return text, 0
+    edits = Edits()
+    count = _illustrations(parse(text), removed, text, edits)
+    return (edits.apply(text) if count else text), count
+
+
 class RemapError(ValueError):
     """Script files that cannot be rewritten as one set."""
 
@@ -169,6 +217,7 @@ class ScriptRewrite:
     remapped: dict[str, int]
     retired: dict[str, tuple[str, ...]]
     modifiers: tuple[str, ...] = ()
+    illustrations: dict[str, int] = field(default_factory=dict)
 
 
 def script_files(game_dir: Path) -> dict[str, Path]:
@@ -216,13 +265,22 @@ def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str])
                 removed.append(result.removed)
     changed, modifiers = retire_modifiers(texts, "".join(removed))
     texts.update(changed)
+    illustrations: dict[str, int] = {}
+    for relative, text in list(texts.items()):
+        if relative.startswith(IMAGES):
+            texts[relative], dropped = drop_illustrations(text, remap.keys())
+            if dropped:
+                illustrations[relative] = dropped
     outputs: dict[str, bytes] = {}
     counts: dict[str, int] = {}
     for relative, (raw, original) in files.items():
         checkpoint()
         new, count = remap_text(texts[relative], remap)
+        if count and relative.startswith(IMAGES):
+            message = f"{relative} names removed places outside the illustrations it drops"
+            raise RemapError(message)
         if count or texts[relative] != original:
             bom = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
             outputs[relative] = (bom + new).encode("utf-8")
             counts[relative] = count
-    return ScriptRewrite(outputs, counts, retired, modifiers)
+    return ScriptRewrite(outputs, counts, retired, modifiers, illustrations)

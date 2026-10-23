@@ -83,6 +83,10 @@ REASONS: Final[Mapping[str, str]] = {
     "canal": (
         "The Panama canal chain needs the vanilla isthmus; removed together, never positionally."
     ),
+    "illustration": (
+        "Holds pictures of vanilla places, some of them American: the export drops each picture "
+        "of a removed place (a picture shows its place, so it is not moved) and keeps the rest."
+    ),
 }
 
 KEEP: Final = Decision.KEEP
@@ -262,6 +266,7 @@ def _elsewhere(table: _Table) -> None:
     add = table.add
     add("gfx/map", KEEP, "generic", "dynamic_game_object")
     add("gfx/map", NEUTRALIZE, "canal", "panama_canal")
+    add("gfx/images", NEUTRALIZE, "illustration", "d015_monuments1 d017_sacred_sites")
     add("menu/achievements", KEEP, "positional", "plus_ultra what_a_great_guy")
     add("menu/achievements", NEUTRALIZE, "canal", "divide_the_land")
     add("menu/coat_of_arms", KEEP, "positional", "colored_emblem_texture_lists")

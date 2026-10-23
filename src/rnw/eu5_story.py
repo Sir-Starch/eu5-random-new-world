@@ -73,6 +73,10 @@ CENTRE_VARIABLES: Final[Mapping[str, str]] = {
     SACRED_CENTRE: SACRED_CENTRE_VARIABLE,
 }
 UNION_FRACTION: Final[str] = "0.6"
+UNION_DESCRIPTION: Final[str] = (
+    "The towns on one river have traded, built and answered to each other for generations. "
+    "A single power that holds most of them may bind them into one state, the {name}."
+)
 UNION_LEVEL: Final[int] = 3
 # Names the vanilla coat of arms of ``ADU`` uses; a union takes two distinct colours of these.
 ARMS_PATTERN: Final[str] = "pattern_solid.dds"
@@ -222,12 +226,17 @@ def start_events(plan: ContentPlan) -> tuple[str, dict[str, str]]:
     return "".join(blocks).rstrip("\n") + "\n", ids
 
 
+def union_key(union: Union) -> str:
+    """The key of a union's formable, which names it in the formables list and its description."""
+    return f"rnw_union_{union.index + 1}_f"
+
+
 def union_block(union: Union, identity: UnionIdentity) -> str:
     """The formable of one river union: a tag the game does not define, as ``ADU`` is."""
     owners = "\n".join(f"\t\t\ttag = {tag}" for tag in union.states)
     places = "\n".join(f"\t\t{key}" for key in union.places)
     return (
-        f"rnw_union_{union.index + 1}_f = {{\n"
+        f"{union_key(union)} = {{\n"
         f"\tlevel = {UNION_LEVEL}\n"
         f"\trequired_locations_fraction = {UNION_FRACTION}\n"
         "\trule = plausible\n"
@@ -351,9 +360,13 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         identities = union_identities(plan.unions, names, tags, seed, taken)
         for path, text in union_files(plan.unions, identities).items():
             files[path] = text.encode("utf-8-sig")
-        for identity in identities:
+        for union, identity in zip(plan.unions, identities, strict=True):
             texts[identity.tag] = identity.name
             texts[f"{identity.tag}_ADJ"] = identity.adjective
+            # The formables list asks for the formable's own key (vanilla: ``SWI_f: "$SWI$"``);
+            # without it the game shows the key and logs it as a missing localization.
+            texts[union_key(union)] = f"${identity.tag}$"
+            texts[f"{union_key(union)}_desc"] = UNION_DESCRIPTION.format(name=identity.name)
     if texts:
         for language in languages:
             files[f"{LOCALIZATION}/{language}/rnw_story_l_{language}.yml"] = _yaml(language, texts)

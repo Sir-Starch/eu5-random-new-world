@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import pytest
 
 from rnw import eu5_probe
-from rnw.pdx import parse
+from rnw.pdx import Block, parse
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -115,3 +116,72 @@ def test_the_probe_runs_a_story_start_in_miniature(tmp_path: Path) -> None:
     assert "value = location:bern" in events
     assert "trigger_event_non_silently = { id = rnw_probe.5 months = { 1 2 } }" in events
     assert "remove_variable = rnw_probe_centre" in events
+
+
+def _options(block: Block) -> list[Block]:
+    return [
+        entry.value
+        for entry in block.entries
+        if entry.key == "option" and isinstance(entry.value, Block)
+    ]
+
+
+def _scripts(files: dict[str, bytes]) -> dict[str, str]:
+    return {path: data.decode("utf-8-sig") for path, data in files.items() if path.endswith(".txt")}
+
+
+def test_the_probe_uses_only_effects_the_game_has(tmp_path: Path) -> None:
+    """``trigger_event`` is no effect of the game (``Unknown effect trigger_event``, 1.4.4, 036)."""
+    for path, text in _scripts(eu5_probe.build(_install(tmp_path))).items():
+        assert not re.search(r"\btrigger_event\s*=", text), path
+
+
+def test_the_start_hook_adds_to_the_game_start_and_does_not_replace_it(tmp_path: Path) -> None:
+    """A second ``effect`` of ``on_game_start`` wins over the game's (036): hook an on_action."""
+    files = eu5_probe.build(_install(tmp_path))
+    root = parse(files["in_game/common/on_action/rnw_probe.txt"].decode("utf-8-sig"))
+    start = root.block("on_game_start")
+    assert start is not None
+    assert start.first("effect") is None
+    hooked = start.block("on_actions")
+    assert hooked is not None
+    assert [word.value for word in hooked.words()] == [eu5_probe.START_ACTION]
+    action = root.block(eu5_probe.START_ACTION)
+    assert action is not None
+    assert action.first("effect") is not None
+
+
+def test_what_the_probe_shows_is_named_by_the_keys_the_game_looks_up(tmp_path: Path) -> None:
+    """Decisions by ``<id>.title`` and ``<id>.desc``, a formable by ``<id>`` and ``<id>_desc``,
+    events by title, description and option; any other key shows as itself (036)."""
+    files = eu5_probe.build(_install(tmp_path))
+    scripts = _scripts(files)
+    text = files["main_menu/localization/english/rnw_probe_l_english.yml"].decode("utf-8-sig")
+    keys = set(re.findall(r"^ ([\w.]+):", text, re.MULTILINE))
+    for entry in parse(scripts["in_game/common/decisions/rnw_probe.txt"]).entries:
+        assert {f"{entry.key}.title", f"{entry.key}.desc"} <= keys
+        assert isinstance(entry.value, Block)
+        for option in _options(entry.value):
+            name = option.first("name")
+            assert name is not None
+            assert name.value in keys
+    assert {eu5_probe.FORMABLE, f"{eu5_probe.FORMABLE}_desc"} <= keys
+    for entry in parse(scripts["in_game/events/rnw_probe.txt"]).entries:
+        if not isinstance(entry.value, Block) or entry.value.first("title") is None:
+            continue
+        assert f"{entry.key}.title" in keys
+        assert f"{entry.key}.desc" in keys
+        for option in _options(entry.value):
+            name = option.first("name")
+            assert name is not None
+            assert name.value in keys, name.value
+
+
+def test_the_decision_shows_the_name_of_the_subject_it_makes(tmp_path: Path) -> None:
+    """The name the game gives the new subject (H2) is read in an event, not looked up."""
+    files = eu5_probe.build(_install(tmp_path))
+    decisions = files["in_game/common/decisions/rnw_probe.txt"].decode("utf-8-sig")
+    assert "save_scope_as = rnw_probe_colony" in decisions
+    assert "trigger_event_non_silently = { id = rnw_probe.6 }" in decisions
+    texts = files["main_menu/localization/english/rnw_probe_l_english.yml"].decode("utf-8-sig")
+    assert "[rnw_probe_colony.GetName]" in texts

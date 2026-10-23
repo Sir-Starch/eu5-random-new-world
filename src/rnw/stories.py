@@ -137,6 +137,10 @@ def _location(centre: str, name: str, years: int) -> str:
     )
 
 
+def _unlocation(centre: str, name: str) -> str:
+    return f"var:{centre} ?= {{ remove_location_modifier = {name} }}"
+
+
 def _set(name: str, value: int) -> str:
     return f"set_variable = {{ name = {name} value = {value} }}"
 
@@ -256,7 +260,7 @@ def _river() -> Story:
                     "Clear the channels at once, whatever it costs.",
                     (
                         _gold(-3),
-                        "remove_location_modifier = rnw_river_silted",
+                        _unlocation(centre, "rnw_river_silted"),
                         "add_stability = stability_weak_bonus",
                         *end,
                     ),
@@ -288,7 +292,7 @@ def _river() -> Story:
                     "b",
                     "Take back the banks and the revenues with them.",
                     (
-                        "remove_location_modifier = rnw_river_guild_wardens",
+                        _unlocation(centre, "rnw_river_guild_wardens"),
                         "add_stability = stability_mild_penalty",
                         _gold(2),
                         *end,

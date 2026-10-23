@@ -117,6 +117,29 @@ def test_every_text_and_name_the_script_uses_is_localized(story: Story) -> None:
     assert all('"' not in text for text in keys.values())
 
 
+def _scopes_of(
+    block: Block, scopes: tuple[str, ...], found: dict[str, list[tuple[str, ...]]]
+) -> None:
+    for entry in block.entries:
+        if entry.key is None:
+            continue
+        found.setdefault(entry.key, []).append(scopes)
+        if isinstance(entry.value, Block):
+            _scopes_of(entry.value, (*scopes, entry.key), found)
+
+
+def test_location_modifiers_are_changed_in_the_scope_of_the_centre(story: Story) -> None:
+    """Events run in the country's scope, so a location modifier is added or removed inside
+    ``var:<centre> ?= { }`` (the engine reported ``remove_location_modifier: Inconsistent effect
+    scopes (country vs. location)`` for a bare one, EU5 1.4.4, experiment 036)."""
+    found: dict[str, list[tuple[str, ...]]] = {}
+    _scopes_of(parse(render_events(story)), (), found)
+    for effect in ("add_location_modifier", "remove_location_modifier"):
+        for scopes in found.get(effect, []):
+            assert f"var:{story.centre}" in scopes, (effect, scopes)
+    assert found.get("remove_location_modifier") or found.get("add_location_modifier")
+
+
 def test_the_stories_name_no_tag_and_no_location() -> None:
     """The templates are the same in every world: only the start events know a place."""
     for story in STORIES:
