@@ -1,11 +1,11 @@
 {
   "comment": "The reference world of the current algorithm epoch (rnw.epoch): made again from this code on this game build, its mod's files (but .metadata) must hash to this digest. Digests only; no game data. Check it with RNW_REPRODUCE=1 EU5_GAME_DIR=... pytest tests/test_local_install.py (about two minutes) or rnw verify-world.",
-  "epoch": 17,
-  "code": "RNW1-0426C-SYW6B-MW73Y-C0050-E01PQ-P70",
+  "epoch": 18,
+  "code": "RNW1-0426C-SYW6B-MW73Y-C0050-G0432-TXG",
   "game_fingerprint_sha256": "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a",
   "game_label": "EU5 1.4.3 open beta, Steam build 26105915 (executable of 1.4.4, build 26142040)",
   "output": {
     "count": 784,
-    "sha256": "2ee00cf13373e7da91e67951aaeb408aa5ea71c0ad9a004e2083f9ed5f43d10f"
+    "sha256": "7995b07651d6114f2c932be1fe132840cc33faba73c914dee8c8b29309151b70"
   }
 }

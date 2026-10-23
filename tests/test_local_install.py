@@ -22,6 +22,7 @@ from rnw.content import FAMILIES
 from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_biomes import template_attributes
 from rnw.eu5_canvas import select_canvas
+from rnw.eu5_formation import FORMABLES_FILE
 from rnw.eu5_lobby import (
     CONTEXT_MENU,
     COVER_INCLUDE,
@@ -442,7 +443,12 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
         places = cast("dict[str, str]", stats["exceptional_places"])
         starts = cast("dict[str, str]", cast("dict[str, object]", stats["stories"])["starts"])
         files = cast("list[dict[str, str]]", report["files"])
-        wanted = ("main_menu/setup/1337/10_countries.txt", DEFINITION_FILE, START_FILE)
+        wanted = (
+            "main_menu/setup/1337/10_countries.txt",
+            DEFINITION_FILE,
+            START_FILE,
+            FORMABLES_FILE,
+        )
         digests = {
             record["path"].partition("/")[2]: record["sha256"]
             for record in files

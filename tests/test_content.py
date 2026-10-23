@@ -8,6 +8,7 @@ from rnw.content import (
     CENTRE_RANKS,
     EARLIEST_OFFSET,
     FAMILIES,
+    FORMABLE_FAMILIES,
     LATEST_OFFSET,
     MAX_CHAINS,
     MAX_RIVER_CENTRES,
@@ -20,7 +21,9 @@ from rnw.content import (
     START_YEAR,
     UNION_TERRITORY,
     WINDOW_YEARS,
+    ContentPlan,
     Facts,
+    Formation,
     Place,
     State,
     plan_content,
@@ -54,15 +57,19 @@ def _world(
     return Facts(places, state_table, frozenset(f"p{i:03d}" for i in holy), links)
 
 
-def test_a_river_world_offers_all_three_families() -> None:
+def _unions(plan: ContentPlan) -> list[Formation]:
+    return [formation for formation in plan.formations if formation.family == RIVER_UNION]
+
+
+def test_a_river_world_offers_the_river_families() -> None:
     """A long river under three states gives a centre, a sacred centre and a union."""
     plan = plan_content(_world(holy=(2, 20)), SEED)
     counts = plan.count()
     assert counts[RIVER_CENTRE] >= 1
     assert counts[SACRED_CENTRE] >= 1
     assert counts[RIVER_UNION] == 1
-    assert plan.absences == ()
-    union = plan.unions[0]
+    assert {absence.family for absence in plan.absences} <= set(FORMABLE_FAMILIES) - {RIVER_UNION}
+    union = _unions(plan)[0]
     assert len(union.states) == 3
     assert len(union.centres) >= 3
 
@@ -157,7 +164,7 @@ def test_the_families_draw_from_streams_of_their_own() -> None:
     assert [o for o in with_holy.opportunities if o.family == RIVER_CENTRE] == [
         o for o in without.opportunities if o.family == RIVER_CENTRE
     ]
-    assert with_holy.unions == without.unions
+    assert with_holy.formations == without.formations
     assert without.count()[SACRED_CENTRE] == 0
 
 
@@ -172,26 +179,27 @@ def test_unions_do_not_overlap_and_stay_within_the_limit() -> None:
     """Two basins far apart give two unions; each keeps its own territory."""
     facts = _world(count=80, states=4, breaks=(39,))
     plan = plan_content(facts, SEED)
-    assert 1 <= len(plan.unions) <= MAX_UNIONS
-    territory = [set(union.places) for union in plan.unions]
+    unions = _unions(plan)
+    assert 1 <= len(unions) <= MAX_UNIONS
+    territory = [set(union.places) for union in unions]
     for number, first in enumerate(territory):
         for second in territory[number + 1 :]:
             assert not first & second
-    assert plan.unions[0].index == 0
+    assert unions[0].index == 0
 
 
 def test_the_centre_ranks_are_the_ranked_places() -> None:
     """The ranks that make a centre are cities and towns."""
     assert {"city", "town"} == CENTRE_RANKS
-    assert set(FAMILIES) == {RIVER_CENTRE, SACRED_CENTRE, RIVER_UNION}
+    assert set(FAMILIES) == {RIVER_CENTRE, SACRED_CENTRE, *FORMABLE_FAMILIES}
 
 
 def test_a_union_is_a_connected_stretch_of_the_river_under_a_few_states() -> None:
     """A long river gives a union of at most the territory limit, joined, under its neighbours."""
     facts = _world(count=120, states=12)
     plan = plan_content(facts, SEED)
-    assert plan.unions
-    for union in plan.unions:
+    assert _unions(plan)
+    for union in _unions(plan):
         assert MIN_UNION_PLACES <= len(union.places) <= UNION_TERRITORY
         assert len(union.states) <= MAX_UNION_STATES
         members = set(union.places)

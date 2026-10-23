@@ -8,22 +8,30 @@ import pytest
 
 from rnw.content import (
     RIVER_CENTRE,
+    RIVER_UNION,
     SACRED_CENTRE,
     Absence,
     ContentPlan,
     Facts,
+    Formation,
     Opportunity,
     Place,
     Start,
     State,
-    Union,
+)
+from rnw.eu5_formation import (
+    ARMS_FILE,
+    COLORS_FILE,
+    EMBLEM_DIR,
+    FLAGS_FILE,
+    FORMABLES_FILE,
+    PATTERN_DIR,
 )
 from rnw.eu5_story import (
     LOCALIZATION,
     MODIFIERS_FILE,
     PRIVILEGES_FILE,
     START_FILE,
-    UNION_FILE,
     StoryError,
     build,
     facts_of,
@@ -48,7 +56,23 @@ SOURCES = {
         False,
         "monthly_gold_income = 6.5 monthly_prestige = -0.25",
     ),
+    "consolidated_trade_modifier": ("country", True, "selling_efficiency = 0.1"),
+    "iro_strong_tribal_unity": ("country", False, "global_defensive = 0.15"),
+    "seal_of_hansa_modifier": ("country", False, "monthly_diplomats = 0.1"),
+    "pue_unification_of_the_ancestral_puebloans": ("country", False, "monthly_prestige = 0.25"),
+    "lat_a_distinct_latin_bureaucracy": ("country", True, "global_monthly_control = 0.005"),
 }
+RANKS = (
+    "rank_county = { level = 1 }\nrank_duchy = { level = 2 }\n"
+    "rank_kingdom = { level = 3 }\nrank_empire = { level = 4 }\n"
+)
+PICTURES = (
+    "ce_checky_15_points.dds",
+    "ce_mountain.dds",
+    "ce_anchor_shield.dds",
+    "ce_rosette_06.dds",
+    "ce_star_08.dds",
+)
 BUILDING = """great_temple_of_tenochtitlan = {
 \tmax_levels = 7
 \tmodifier = {
@@ -77,8 +101,13 @@ def _static(name: str, category: str, decaying: bool, effect: str) -> str:  # no
     return f"{name} = {{\n\t{data}\n\t{effect}\n}}\n"
 
 
-def _install(root: Path, *, drop: str = "") -> Path:
+def _install(root: Path, *, drop: str = "", ranks: str = RANKS) -> Path:
     game = root / "game"
+    for directory, names in ((EMBLEM_DIR, PICTURES), (PATTERN_DIR, ("pattern_solid.dds",))):
+        for name in names:
+            picture = root / directory / name
+            picture.parent.mkdir(parents=True, exist_ok=True)
+            _ = picture.write_bytes(b"DDS ")
     statics = "".join(
         _static(name, category, decaying, effect)
         for name, (category, decaying, effect) in SOURCES.items()
@@ -88,6 +117,7 @@ def _install(root: Path, *, drop: str = "") -> Path:
         "main_menu/common/static_modifiers/country.txt": statics,
         "in_game/common/building_types/event_only_buildings.txt": BUILDING,
         "in_game/common/estate_privileges/clergy_estate.txt": PRIVILEGE,
+        "in_game/common/country_ranks/00_default.txt": ranks,
     }.items():
         path = game / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -102,7 +132,7 @@ def _plan() -> ContentPlan:
             Opportunity(RIVER_CENTRE, "ABC", "loc_a", start),
             Opportunity(SACRED_CENTRE, "DEF", "loc_b", Start(1360, 1405, 2)),
         ),
-        (Union(0, ("loc_a", "loc_c"), ("loc_a",), ("ABC", "DEF"), "loc_a"),),
+        (Formation(RIVER_UNION, 0, ("loc_a", "loc_c"), ("loc_a",), ("ABC", "DEF"), "loc_a"),),
         (),
     )
 
@@ -193,7 +223,7 @@ def test_a_family_without_a_bearer_leaves_no_event_behind(tmp_path: Path) -> Non
 def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path) -> None:
     """The formable, flag, coat of arms, colour and names that the vanilla ADU has."""
     files = _build(_install(tmp_path))
-    formable = files[UNION_FILE].decode("utf-8-sig")
+    formable = files[FORMABLES_FILE].decode("utf-8-sig")
     block = parse(formable).block("rnw_union_1_f")
     assert block is not None
     assert block.first("tag") is not None
@@ -204,11 +234,9 @@ def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path)
     locations = block.block("locations")
     assert locations is not None
     assert [w.value for w in locations.words()] == ["loc_a", "loc_c"]
-    assert "XYZ = {" in files["main_menu/common/flag_definitions/rnw_union.txt"].decode("utf-8-sig")
-    assert "map_XYZ = rgb" in files["main_menu/common/named_colors/rnw_union.txt"].decode(
-        "utf-8-sig"
-    )
-    arms = files["main_menu/common/coat_of_arms/coat_of_arms/rnw_union.txt"].decode("utf-8-sig")
+    assert "XYZ = {" in files[FLAGS_FILE].decode("utf-8-sig")
+    assert "map_XYZ = rgb" in files[COLORS_FILE].decode("utf-8-sig")
+    arms = files[ARMS_FILE].decode("utf-8-sig")
     assert 'pattern = "pattern_solid.dds"' in arms
     english = files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"].decode("utf-8-sig")
     assert ' XYZ: "Alto Union"' in english

@@ -54,7 +54,7 @@ from rnw.eu5_biomes import (
     vanilla_locations,
 )
 from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, remainder_boxes, select_canvas
-from rnw.eu5_content import ContentError, carry_out
+from rnw.eu5_content import ContentError, carry_out, culture_traits
 from rnw.eu5_content import places as content_places
 from rnw.eu5_development import (
     VILLAGE,
@@ -222,6 +222,7 @@ from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -1017,6 +1018,18 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     return outputs, stats
 
 
+def _sea_zones(plan: Plan, world: NewWorld) -> dict[str, set[str]]:
+    """The sea zones each generated land cell touches, by key (a coast; empty inland)."""
+    touching: dict[str, set[str]] = {}
+    for first, second in world.edges:
+        pair = (first, second)
+        kinds = [plan.cells[index].kind for index in pair]
+        if (CellClass.SEA in kinds) and (CellClass.LAND in kinds):
+            land, sea = (first, second) if kinds[0] is CellClass.LAND else (second, first)
+            touching.setdefault(plan.cells[land].key, set()).add(plan.cells[sea].key)
+    return touching
+
+
 def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples and the installation.
     game_dir: Path,
     *,
@@ -1024,14 +1037,18 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
     world: NewWorld,
     natives: NativeWorld,
     river_pixels: NDArray[np.int64],
+    topography: Sequence[str],
     vanilla: VanillaNatives,
     loc_keys: KeySpace,
     seed: int,
 ) -> Written:
-    """The stories and unions this world offers, as files and statistics (content plan, N3)."""
+    """The stories and formables of this world, as files and statistics (content plan, N3, N4)."""
     keys = [cell.key for cell in plan.cells]
     land = [index for index, cell in enumerate(plan.cells) if cell.kind is CellClass.LAND]
-    dominant = {place.key: place.religion for place in content_places(natives.pops)}
+    inhabited = content_places(natives.pops)
+    dominant = {place.key: place.religion for place in inhabited}
+    traits = culture_traits(game_dir)
+    cultures = {place.key: place.culture for place in inhabited}
     states = [
         (country.tag, country.members, country.capital, country.religion)
         for country in natives.countries
@@ -1051,10 +1068,16 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
             if plan.cells[first].kind is CellClass.LAND
             and plan.cells[second].kind is CellClass.LAND
         ],
+        relief={keys[index]: topography[index] for index in land},
+        culture=cultures,
+        seas=_sea_zones(plan, world),
+        groups={name: traits[name][1] for name in set(cultures.values()) if name in traits},
     )
     content = plan_content(facts, seed)
     reserved = vanilla.reserved_tags | {country.tag for country in natives.countries}
-    tags = new_tags(len(content.unions), reserved, derive_seed(seed, "content", "tags"), loc_keys)
+    tags = new_tags(
+        len(content.formations), reserved, derive_seed(seed, "content", "tags"), loc_keys
+    )
     taken = vanilla.colors | {
         colour for country in natives.countries for colour in (country.color, country.color2)
     }
@@ -2186,6 +2209,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 world=world,
                 natives=natives,
                 river_pixels=river_pixels.astype(np.int64),
+                topography=biomes.topography,
                 vanilla=vanilla_start.result(),
                 loc_keys=loc_keys,
                 seed=peoples_seed,

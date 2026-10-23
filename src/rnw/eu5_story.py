@@ -7,8 +7,8 @@ turns the two into the world's mod:
   event bound to the bearer's tag and centre;
 * the static modifiers and the estate privilege the stories apply, with the payload copied from the
   vanilla modifier, building or privilege named as their source;
-* for each river union a formable of a tag the game does not define, with the flag, the coat of
-  arms, the colour and the names that the vanilla formable-only tag ``ADU`` has (C175);
+* for each formation a formable of a tag the game does not define (``eu5_formation``) and the
+  founding modifier of its family;
 * the localization of all of it, in every language.
 
 Nothing here reads the game more than the sources it copies; a source that is gone stops the
@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from rnw import eu5_formation
 from rnw.content import (
     RIVER_CENTRE,
     SACRED_CENTRE,
@@ -28,11 +29,9 @@ from rnw.content import (
     Opportunity,
     Place,
     State,
-    Union,
 )
-from rnw.eu5_natives import hsv_rgb
+from rnw.formations import SPECS
 from rnw.pdx import Block, parse
-from rnw.rng import derive_seed
 from rnw.stories import (
     BUILDING,
     CLEANUP,
@@ -51,7 +50,7 @@ from rnw.stories import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
     from pathlib import Path
 
 NAMESPACE: Final[str] = "rnw_story"
@@ -63,25 +62,11 @@ MODIFIERS_FILE: Final[str] = "main_menu/common/static_modifiers/rnw_story_modifi
 PRIVILEGES_FILE: Final[str] = "in_game/common/estate_privileges/rnw_story.txt"
 EVENTS_DIR: Final[str] = "in_game/events"
 START_FILE: Final[str] = f"{EVENTS_DIR}/rnw_story.txt"
-UNION_FILE: Final[str] = "in_game/common/formable_countries/rnw_union.txt"
-FLAGS_FILE: Final[str] = "main_menu/common/flag_definitions/rnw_union.txt"
-ARMS_FILE: Final[str] = "main_menu/common/coat_of_arms/coat_of_arms/rnw_union.txt"
-COLORS_FILE: Final[str] = "main_menu/common/named_colors/rnw_union.txt"
 LOCALIZATION: Final[str] = "main_menu/localization"
 CENTRE_VARIABLES: Final[Mapping[str, str]] = {
     RIVER_CENTRE: RIVER_CENTRE_VARIABLE,
     SACRED_CENTRE: SACRED_CENTRE_VARIABLE,
 }
-UNION_FRACTION: Final[str] = "0.6"
-UNION_DESCRIPTION: Final[str] = (
-    "The towns on one river have traded, built and answered to each other for generations. "
-    "A single power that holds most of them may bind them into one state, the {name}."
-)
-UNION_LEVEL: Final[int] = 3
-# Names the vanilla coat of arms of ``ADU`` uses; a union takes two distinct colours of these.
-ARMS_PATTERN: Final[str] = "pattern_solid.dds"
-ARMS_EMBLEM: Final[str] = "ce_checky_15_points.dds"
-ARMS_COLOURS: Final[tuple[str, ...]] = ("green", "white", "red", "blue", "yellow", "black")
 
 
 class StoryError(ValueError):
@@ -95,17 +80,6 @@ class Payload:
     lines: tuple[str, ...]
     category: str
     decaying: bool
-
-
-@dataclass(frozen=True, slots=True)
-class UnionIdentity:
-    """What a union needs of the world besides its places: a tag, a name, a colour."""
-
-    tag: str
-    name: str
-    adjective: str
-    colour: tuple[int, int, int]
-    colours: tuple[str, str]
 
 
 @dataclass(frozen=True, slots=True)
@@ -226,100 +200,6 @@ def start_events(plan: ContentPlan) -> tuple[str, dict[str, str]]:
     return "".join(blocks).rstrip("\n") + "\n", ids
 
 
-def union_key(union: Union) -> str:
-    """The key of a union's formable, which names it in the formables list and its description."""
-    return f"rnw_union_{union.index + 1}_f"
-
-
-def union_block(union: Union, identity: UnionIdentity) -> str:
-    """The formable of one river union: a tag the game does not define, as ``ADU`` is."""
-    owners = "\n".join(f"\t\t\ttag = {tag}" for tag in union.states)
-    places = "\n".join(f"\t\t{key}" for key in union.places)
-    return (
-        f"{union_key(union)} = {{\n"
-        f"\tlevel = {UNION_LEVEL}\n"
-        f"\trequired_locations_fraction = {UNION_FRACTION}\n"
-        "\trule = plausible\n"
-        "\tcapital_required = yes\n\n"
-        f"\tpotential = {{\n\t\tOR = {{\n{owners}\n\t\t}}\n\t}}\n\n"
-        "\tallow = {\n\t}\n\n"
-        f"\tname = {identity.tag}\n"
-        f"\tflag = {identity.tag}\n"
-        f"\tadjective = {identity.tag}_ADJ\n"
-        f"\ttag = {identity.tag}\n"
-        f"\tcolor = map_{identity.tag}\n\n"
-        f"\tlocations = {{\n{places}\n\t}}\n"
-        "\tform_effect = {\n"
-        "\t\tif = {\n\t\t\tlimit = { country_rank_level < 3 }\n"
-        "\t\t\tset_country_rank_effect = { rank = country_rank:rank_kingdom }\n\t\t}\n"
-        "\t}\n"
-        "}\n"
-    )
-
-
-def union_files(unions: Sequence[Union], identities: Sequence[UnionIdentity]) -> dict[str, str]:
-    """The script files of the unions: formables, flags, coats of arms and colours."""
-    formables = "\n".join(
-        union_block(union, identity) for union, identity in zip(unions, identities, strict=True)
-    )
-    flags = "\n".join(
-        f"{i.tag} = {{\n\tflag_definition = {{\n\t\tcoa = {i.tag}\n\t\tpriority = 1\n\t}}\n}}\n"
-        for i in identities
-    )
-    arms = "\n".join(
-        (
-            f"{i.tag} = {{\n"
-            f'\tpattern = "{ARMS_PATTERN}"\n'
-            f'\tcolor1 = "{i.colours[0]}"\n'
-            f'\tcolor2 = "{i.colours[1]}"\n\n'
-            "\tcolored_emblem = {\n"
-            f'\t\ttexture = "{ARMS_EMBLEM}"\n'
-            "\t\tcolor1 = color1\n\t\tcolor2 = color2\n\t}\n}\n"
-        )
-        for i in identities
-    )
-    colours = (
-        "colors = {\n"
-        + "".join(
-            f"\tmap_{i.tag} = rgb {{ {i.colour[0]} {i.colour[1]} {i.colour[2]} }}\n"
-            for i in identities
-        )
-        + "}\n"
-    )
-    return {UNION_FILE: formables, FLAGS_FILE: flags, ARMS_FILE: arms, COLORS_FILE: colours}
-
-
-def union_identities(
-    unions: Sequence[Union],
-    names: Mapping[str, str],
-    tags: Sequence[str],
-    seed: int,
-    taken: frozenset[tuple[int, int, int]],
-) -> list[UnionIdentity]:
-    """A tag, a name, a map colour and two heraldic colours for each union."""
-    found: list[UnionIdentity] = []
-    used = set(taken)
-    for union, tag in zip(unions, tags, strict=True):
-        seat = names.get(union.seat, union.seat)
-        draw = derive_seed(seed, "content", "union", tag)
-        colour = (0, 0, 0)
-        for step in range(360):
-            hue = (draw + step * 7) % 360
-            colour = hsv_rgb(hue, 550 + (draw >> 12) % 300, 550 + (draw >> 24) % 300)
-            if colour not in used:
-                break
-        used.add(colour)
-        count = len(ARMS_COLOURS)
-        first = (draw >> 8) % count
-        second = (first + 1 + (draw >> 16) % (count - 1)) % count
-        found.append(
-            UnionIdentity(
-                tag, f"{seat} Union", seat, colour, (ARMS_COLOURS[first], ARMS_COLOURS[second])
-            )
-        )
-    return found
-
-
 def _yaml(language: str, entries: Mapping[str, str]) -> bytes:
     lines = [f"l_{language}:"] + [f' {key}: "{value}"' for key, value in entries.items()]
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
@@ -335,7 +215,7 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     seed: int,
     taken: frozenset[tuple[int, int, int]],
 ) -> Written:
-    """Every file of the stories and unions of one world."""
+    """Every file of the stories and formables of one world."""
     files: dict[str, bytes] = {}
     texts: dict[str, str] = {}
     present = {opportunity.family for opportunity in plan.opportunities}
@@ -351,22 +231,23 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     if plan.opportunities:
         script, ids = start_events(plan)
         files[START_FILE] = script.encode("utf-8-sig")
+    identities: list[eu5_formation.Identity] = []
+    if plan.formations:
+        families = {formation.family for formation in plan.formations}
+        specs = [spec for spec in SPECS if spec.family in families]
+        eu5_formation.check_installation(game_dir, specs)
+        identities = eu5_formation.identities(plan.formations, names, tags, seed, taken)
+        for path, text in eu5_formation.files(plan.formations, identities).items():
+            files[path] = text.encode("utf-8-sig")
+        texts.update(eu5_formation.texts(plan.formations, identities))
+        for spec in specs:
+            modifiers.append(modifier_block(spec.modifier, payload(game_dir, spec.modifier.source)))
+            texts[f"STATIC_MODIFIER_NAME_{spec.modifier.name}"] = spec.modifier.title
+            texts[f"STATIC_MODIFIER_DESC_{spec.modifier.name}"] = spec.modifier.text
     if modifiers:
         files[MODIFIERS_FILE] = "\n".join(modifiers).encode("utf-8-sig")
     if privileges:
         files[PRIVILEGES_FILE] = "\n".join(privileges).encode("utf-8-sig")
-    identities: list[UnionIdentity] = []
-    if plan.unions:
-        identities = union_identities(plan.unions, names, tags, seed, taken)
-        for path, text in union_files(plan.unions, identities).items():
-            files[path] = text.encode("utf-8-sig")
-        for union, identity in zip(plan.unions, identities, strict=True):
-            texts[identity.tag] = identity.name
-            texts[f"{identity.tag}_ADJ"] = identity.adjective
-            # The formables list asks for the formable's own key (vanilla: ``SWI_f: "$SWI$"``);
-            # without it the game shows the key and logs it as a missing localization.
-            texts[union_key(union)] = f"${identity.tag}$"
-            texts[f"{union_key(union)}_desc"] = UNION_DESCRIPTION.format(name=identity.name)
     if texts:
         for language in languages:
             files[f"{LOCALIZATION}/{language}/rnw_story_l_{language}.yml"] = _yaml(language, texts)
@@ -374,13 +255,15 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         "opportunities": plan.count(),
         "starts": ids,
         "absences": {absence.family: absence.reason for absence in plan.absences},
-        "unions": {
+        "formations": {
             identity.tag: {
+                "family": formation.family,
                 "name": identity.name,
-                "places": len(union.places),
-                "states": list(union.states),
+                "places": len(formation.places),
+                "states": list(formation.states),
+                **({"basis": formation.basis} if formation.basis else {}),
             }
-            for union, identity in zip(plan.unions, identities, strict=True)
+            for formation, identity in zip(plan.formations, identities, strict=True)
         },
     }
     return Written(files, stats)
@@ -396,6 +279,10 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     states: Sequence[tuple[str, tuple[str, ...], str, str]],
     holy: Sequence[str],
     links: Sequence[tuple[str, str]],
+    relief: Mapping[str, str] | None = None,
+    culture: Mapping[str, str] | None = None,
+    seas: Mapping[str, Collection[str]] | None = None,
+    groups: Mapping[str, Collection[str]] | None = None,
 ) -> Facts:
     """The facts of a world from its parts: ``states`` are (tag, members, capital, religion)."""
     owner: dict[str, str] = {}
@@ -403,6 +290,9 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     for tag, members, capital, faith in states:
         table[tag] = State(tag, capital, faith)
         owner.update(dict.fromkeys(members, tag))
+    relief = relief or {}
+    culture = culture or {}
+    seas = seas or {}
     places = {
         key: Place(
             key,
@@ -411,6 +301,9 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
             ranks.get(key, ""),
             religion.get(key, ""),
             owner.get(key, ""),
+            relief.get(key, ""),
+            culture.get(key, ""),
+            frozenset(seas.get(key, ())),
         )
         for key in keys
         if population.get(key, 0) > 0
@@ -421,4 +314,5 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
         table,
         frozenset(key for key in holy if key in present),
         frozenset((a, b) for a, b in links if a in present and b in present),
+        {name: frozenset(found) for name, found in (groups or {}).items()},
     )

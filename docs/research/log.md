@@ -693,3 +693,11 @@
 - Hooks of N2 now answered in game: H1, H3 (`on_actions`), H6, H7 hold; H2 is negative for names made by the effect; H4 and H5 are open and block nothing.
 - No game launch by the agent, no push or publication.
 
+## 2026-10-23 — N4a: four more formable families, 0.10.8, C212-C214
+
+- [OWNER] "Execute N4." The sittings 036 to 038 had answered N2, so the families that need no new hook go first: the formables.
+- [V-LOCAL C212] The installation has the ranks, `num_of_ports`, the emblems, the culture groups and the five modifier sources the families lean on; the readme says a formable shows only to a country that owns a place of it.
+- [V-EXEC C213] One planner for every formable family; calibrated on the captured facts of the reference world and of four other presets, not on a synthetic chain: the first thresholds (centres at the 75th percentile of the states' places, a fifth of the territory on mountains) found neither a confederation nor a league (too few centres in a range or on a coast); the centre bar of those two families is now the median, and the confederation asks for high ground (mountains or plateau), because the states of the reference world stand on a plateau. The reference world offers nine formables, every preset every family. Epoch 18, reference world of 784 files; the layer test passes with the formable file among the compared ones.
+- [UNKNOWN C214] The engine's verdict on the new entries and on the formables list is read in the next console sitting of a batch; experiment [039](../../experiments/039-new-world-content-n4/README.md) records what to look for and asks nothing now.
+- The stories of N4 (harvest, route and market, great alliance, empire and periphery, contact, colony) and the colonial names follow in the next versions.
+- No game launch by the agent, no push or publication.
