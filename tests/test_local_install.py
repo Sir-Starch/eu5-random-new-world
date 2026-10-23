@@ -322,7 +322,7 @@ def test_local_hook_probe_anchors_hold() -> None:
     assert eu5_probe.anchor_problems(game_dir) == []
     files = eu5_probe.build(game_dir)
     eu5_probe.check(files)
-    assert len(files) == 9 + len(official_languages(game_dir))
+    assert len(files) == 10 + len(official_languages(game_dir))
 
 
 def test_local_game_files_take_the_selection_cover() -> None:

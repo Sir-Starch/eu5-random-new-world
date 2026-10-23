@@ -113,6 +113,10 @@ def anchor_problems(game_dir: Path) -> list[str]:
             '"ce_checky_15_points.dds"',
         ),
         "in_game/common/on_action/_hardcoded.txt": ("on_game_start = {",),
+        "in_game/common/on_action/country_yearly.txt": (
+            "yearly_country_pulse = {",
+            "on_actions = {",
+        ),
         "in_game/common/decisions/canal_construction.txt": (
             "decision_category = infrastructure_decisions",
             "ai_will_do",
@@ -278,6 +282,27 @@ def _on_action() -> str:
 """
 
 
+def _pulse() -> str:
+    return f"""yearly_country_pulse = {{
+	on_actions = {{
+		rnw_probe_pulse
+	}}
+}}
+
+rnw_probe_pulse = {{
+	trigger = {{
+		OR = {{
+			tag = {HOST}
+			tag = {TAG}
+		}}
+	}}
+	events = {{
+		rnw_probe.2
+	}}
+}}
+"""
+
+
 def _events() -> str:
     country, name, value = COUNTRY_VARIABLE
     location, _, location_value = LOCATION_VARIABLE
@@ -332,6 +357,18 @@ rnw_probe.1 = {{
 	}}
 	option = {{
 		name = rnw_probe.1.close
+	}}
+}}
+
+rnw_probe.2 = {{
+	type = country_event
+	title = rnw_probe.2.title
+	desc = rnw_probe.2.desc
+	outcome = neutral
+	fire_only_once = yes
+
+	option = {{
+		name = rnw_probe.2.close
 	}}
 }}
 """
@@ -395,6 +432,13 @@ def _texts(colony: str) -> dict[str, str]:
         ),
         "rnw_probe.1.nothing": "Neither variable is set: the mod's on_game_start did not run",
         "rnw_probe.1.close": "Close",
+        "rnw_probe.2.title": "Probe: the yearly pulse",
+        "rnw_probe.2.desc": (
+            "The yearly pulse of the game reached an on_action of the mod that the mod hooked "
+            "into it from its own file. If the game's other yearly events stopped happening, "
+            "the mod's definition replaced the game's instead of adding to it."
+        ),
+        "rnw_probe.2.close": "Close",
     }
 
 
@@ -437,6 +481,7 @@ def build(game_dir: Path) -> dict[str, bytes]:
         ),
         "in_game/common/decisions/rnw_probe.txt": _decisions().encode("utf-8-sig"),
         "in_game/common/on_action/rnw_probe.txt": _on_action().encode("utf-8-sig"),
+        "in_game/common/on_action/rnw_probe_pulse.txt": _pulse().encode("utf-8-sig"),
         "in_game/events/rnw_probe.txt": _events().encode("utf-8-sig"),
         "main_menu/common/flag_definitions/rnw_probe.txt": _flags().encode("utf-8-sig"),
         "main_menu/common/coat_of_arms/coat_of_arms/rnw_probe.txt": _coat_of_arms().encode(

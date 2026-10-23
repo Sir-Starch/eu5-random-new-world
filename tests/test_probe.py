@@ -28,6 +28,7 @@ FILES = {
     "in_game/common/formable_countries/readme.txt": README,
     "main_menu/common/coat_of_arms/coat_of_arms/pre_scripted_countries.txt": COAT_OF_ARMS,
     "in_game/common/on_action/_hardcoded.txt": "on_game_start = { effect = { } }\n",
+    "in_game/common/on_action/country_yearly.txt": "yearly_country_pulse = { on_actions = { x } }\n",
     "in_game/common/decisions/canal_construction.txt": (
         "x = { decision_category = infrastructure_decisions ai_will_do = { value = 1 } }\n"
     ),
