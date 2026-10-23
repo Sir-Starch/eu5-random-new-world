@@ -12,7 +12,8 @@ generated/
 local_data/
 experiments/*/output/
 *.log
-.omo/evidence/
+# Local agent workspace state.
+.omo/
 # Local task brief supplied by the owner; canonical project status is in docs/.
 eu5-rnw-gpt6-sol-prompt.md
 *.so
