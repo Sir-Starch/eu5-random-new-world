@@ -673,3 +673,14 @@
 - [UNKNOWN] Whether the flicker is gone; the colony's scripted name (H2); the formable and decision names on screen; the sacred privilege.
 - No game launch by the agent, no push or publication.
 
+## 2026-10-23 — The second sitting (037): the list still flickers; 0.10.7 stops hiding, C205-C208
+
+- [OWNER] Ran 037 (EU5 1.4.4, 18:32 to 18:42, then a game to November 1339): *the flags of the country list flicker hard, sometimes showing another flag for a moment; the flags at the end of the list do not, probably the ones before the space once reserved for the New World; a search brings the blank stretches back*; the start state event showed; the colony was not understood, only a vassal. Proposed: fix it or change the approach, for example grey and unclickable instead of hidden.
+- [V-GAME C205] The percentage size that 0.10.6 removed was not the cause: the engine's line appears at the first load (EIL2) only, and the flicker stayed on PRJ3. [INFERRED] A `vbox` of every card builds a widget and a flag for each of them where the game's big lists are fixed grids, and cards left out of layout break a search. The agent's first reading (the percentage) was wrong; recorded in C203.
+- [V-GAME C206] The start hook through `on_actions` works beside the game's start (all four lines of *start state*, no `orphaned`, no `more than one 'effect'`).
+- [V-GAME C207] The colony is a vassal named *Interlaken* two game years on: the scripted name does not apply to a plain vassal (the save and the tooltip). The decision itself worked on the first day. Probe 0.3.0 uses the game's colonial subject type.
+- [V-GAME C208] On PRJ3 the log is free of the faults of 036 (no scope, key, picture or orphan lines); the probe's decision tooltip floods `SET_CAPITAL_EFFECT`, hidden in 0.3.0.
+- [V-EXEC] 0.10.7, epoch 17: the lobby's fixed grid is the game's again; cards of the New World are dimmed and their click disabled; the guards of the start and join buttons stay. `make check` passes; the reference world of epoch 17 (784 files) differs from PRJ3 in the lobby GUI alone. The names of the New World's countries now show in the list (the owner proposed this approach); masking them is possible and not done.
+- Installed: `rnw_exp_world_kpjmspjsw3` and the probe 0.3.0 ([INSTALLED](../../experiments/INSTALLED.md)). Experiment [038](../../experiments/038-lobby-list-and-colony/README.md) asks about five minutes.
+- No game launch by the agent, no push or publication.
+

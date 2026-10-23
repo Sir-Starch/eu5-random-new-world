@@ -22,36 +22,29 @@ class GuiEdit:
     count: int = 1
 
 
-_COUNTRY_LAYOUT_ANCHOR: Final[str] = (
-    "\t\t\t\t\t\t\tfixedgridbox = {\n"
-    '\t\t\t\t\t\t\t\tdatamodel = "[AccessLobbyCountryList.GetCountries]"\n'
-    "\t\t\t\t\t\t\t\taddcolumn = 100%\n"
-    "\t\t\t\t\t\t\t\taddrow = 74\n"
-    "\t\t\t\t\t\t\t\tdatamodel_wrap = 1\n"
-    "\t\t\t\t\t\t\t\tflipdirection = yes\n"
-    "\t\t\t\t\t\t\t\tsetitemsizefromcell = yes\n"
-)
-_COUNTRY_LAYOUT_REPLACEMENT: Final[str] = (
-    "\t\t\t\t\t\t\tvbox = {\n"
-    '\t\t\t\t\t\t\t\tdatamodel = "[AccessLobbyCountryList.GetCountries]"\n'
-    "\t\t\t\t\t\t\t\tlayoutpolicy_horizontal = expanding\n"
-    "\t\t\t\t\t\t\t\tignoreinvisible = yes\n"
-    "\t\t\t\t\t\t\t\tspacing = 7\n"
+# A country of the New World stays in the list, dimmed and without a click, instead of being
+# hidden. A hidden card either keeps its cell of the fixed grid (a blank stretch) or, in a vbox
+# that ignores invisible cards, makes the list build every card of the game at once; the owner saw
+# the flags of that list flicker hard and the blank stretches return in a search (experiment 037).
+# The grid stays the game's own, so the list is laid out and searched as in the vanilla lobby.
+CARD_OLD_WORLD: Final[str] = (
+    f"Not(GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown(GuiScope.SetRoot(Country.MakeScope).End))"
 )
 _COUNTRY_LIST_ANCHOR: Final[str] = (
     "item = {\n\t\t\t\t\t\t\t\t\twidget = {\n\t\t\t\t\t\t\t\t\t\tsize = { 100% 90% }\n"
 )
-
-# The engine refuses a percentage size on a child of a vbox (multiplayer_lobby.gui, EU5 1.4.4);
-# vanilla's vbox lists size an item with an expanding layout policy and a width of -1.
 _COUNTRY_LIST_REPLACEMENT: Final[str] = (
-    _COUNTRY_LIST_ANCHOR.replace(
-        "size = { 100% 90% }",
-        "layoutpolicy_horizontal = expanding\n\t\t\t\t\t\t\t\t\t\tsize = { -1 67 }",
-    )
-    + '\t\t\t\t\t\t\t\t\t\tvisible = "[Not('
-    + f"GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown("
-    + 'GuiScope.SetRoot(Country.MakeScope).End))]"\n'
+    _COUNTRY_LIST_ANCHOR + f'\t\t\t\t\t\t\t\t\t\talpha = "[TransparentIfFalse({CARD_OLD_WORLD})]"\n'
+)
+_CLICK_INDENT: Final[str] = "\t" * 14
+_COUNTRY_CLICK_ANCHOR: Final[str] = (
+    f"{_CLICK_INDENT}click_mode = single\n\n"
+    f'{_CLICK_INDENT}block "click_action" {{\n'
+    f'{_CLICK_INDENT}\ttitle = "LOBBYVIEW_SELECT_COUNTRY"\n'
+)
+_COUNTRY_CLICK_REPLACEMENT: Final[str] = _COUNTRY_CLICK_ANCHOR.replace(
+    "click_mode = single\n\n",
+    f'click_mode = single\n{_CLICK_INDENT}enabled = "[{CARD_OLD_WORLD}]"\n\n',
 )
 _SELECTED_COUNTRY_PANEL: Final[str] = "type LobbySelectedCountryPanel = widget {"
 _SELECTED_COUNTRY_PANEL_REPLACEMENT: Final[str] = (
@@ -85,8 +78,8 @@ def _location_hidden(marker_location: str) -> str:
 
 
 _LOBBY_EDITS: Final[tuple[GuiEdit, ...]] = (
-    GuiEdit(MULTIPLAYER_LOBBY, _COUNTRY_LAYOUT_ANCHOR, _COUNTRY_LAYOUT_REPLACEMENT),
     GuiEdit(MULTIPLAYER_LOBBY, _COUNTRY_LIST_ANCHOR, _COUNTRY_LIST_REPLACEMENT),
+    GuiEdit(MULTIPLAYER_LOBBY, _COUNTRY_CLICK_ANCHOR, _COUNTRY_CLICK_REPLACEMENT),
     GuiEdit(
         MULTIPLAYER_LOBBY,
         _SELECTED_COUNTRY_PANEL,

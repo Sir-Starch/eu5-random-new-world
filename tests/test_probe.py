@@ -38,7 +38,9 @@ FILES = {
     "in_game/common/scripted_effects/e.txt": (
         "e = { create_country_from_location = { set_capital = x make_subject_of = { } } }\n"
     ),
-    "in_game/common/subject_types/vassal.txt": "vassal = { }\n",
+    "in_game/common/subject_types/colonial_nation.txt": (
+        "colonial_nation = { is_colonial_subject = yes }\n"
+    ),
     "main_menu/localization/english/a_l_english.yml": 'l_english:\n a: "A"\n',
     "main_menu/localization/turkish/a_l_turkish.yml": 'l_turkish:\n a: "A"\n',
 }
@@ -85,7 +87,10 @@ def test_the_probe_is_built_from_anchors_that_hold(tmp_path: Path) -> None:
             },
             "no longer a county",
         ),
-        ({"in_game/common/subject_types/vassal.txt": "x = { }\n"}, "vassal.txt no longer holds"),
+        (
+            {"in_game/common/subject_types/colonial_nation.txt": "x = { }\n"},
+            "colonial_nation.txt no longer holds",
+        ),
         (
             {"in_game/common/scripted_effects/e.txt": "e = { }\n"},
             "no scripted effect uses create_country_from_location",
@@ -181,6 +186,10 @@ def test_the_decision_shows_the_name_of_the_subject_it_makes(tmp_path: Path) -> 
     """The name the game gives the new subject (H2) is read in an event, not looked up."""
     files = eu5_probe.build(_install(tmp_path))
     decisions = files["in_game/common/decisions/rnw_probe.txt"].decode("utf-8-sig")
+    # a plain vassal kept its location's name (037); the game's colonies are colonial nations, and
+    # the effect is hidden because its tooltip asks the capital of a country not yet made
+    assert "type = subject_type:colonial_nation" in decisions
+    assert "hidden_effect" in decisions
     assert "save_scope_as = rnw_probe_colony" in decisions
     assert "trigger_event_non_silently = { id = rnw_probe.6 }" in decisions
     texts = files["main_menu/localization/english/rnw_probe_l_english.yml"].decode("utf-8-sig")

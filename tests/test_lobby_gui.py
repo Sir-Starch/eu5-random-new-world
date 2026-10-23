@@ -3,12 +3,15 @@ from __future__ import annotations
 import pytest
 
 from rnw.eu5_lobby_gui import (
+    CARD_OLD_WORLD,
     COUNTRY_SELECTED,
     GUI_FILES,
     LOCATION_SCRIPTED_GUI,
     patch_gui,
     scripted_gui_text,
 )
+
+CLICK = "\t" * 14
 
 
 def _lobby_fixture() -> str:
@@ -24,6 +27,10 @@ def _lobby_fixture() -> str:
         "\t\t\t\t\t\t\t\t\twidget = {\n"
         "\t\t\t\t\t\t\t\t\t\tsize = { 100% 90% }\n"
         "\t\t\t\t\t\t\t\t\t}\n"
+        f"{CLICK}click_mode = single\n\n"
+        f'{CLICK}block "click_action" {{\n'
+        f'{CLICK}\ttitle = "LOBBYVIEW_SELECT_COUNTRY"\n'
+        f'{CLICK}\ton_action = "[SetLobbyCountry(Country.Self)]"\n'
         "type LobbySelectedCountryPanel = widget {\n\t}\n"
         'enabled = "[And3(GameLobby.CanStart, Not(HasHostError), Not(LobbyView.ShowHosting))]"\n'
         'enabled = "[GameLobby.CanStart]"\n'
@@ -43,13 +50,12 @@ def _lobby_fixture() -> str:
     )
 
 
-def test_country_list_hides_world_country_cards_and_start_guards_reject_them() -> None:
-    source = _lobby_fixture()
-
-    patched = patch_gui(GUI_FILES[0], source)
+def test_world_country_cards_are_dimmed_and_cannot_be_chosen_and_start_guards_reject_them() -> None:
+    patched = patch_gui(GUI_FILES[0], _lobby_fixture())
 
     assert patched is not None
-    assert "visible = \"[Not(GetScriptedGui('rnw_new_world_country')" in patched
+    assert f'alpha = "[TransparentIfFalse({CARD_OLD_WORLD})]"' in patched
+    assert f'enabled = "[{CARD_OLD_WORLD}]"' in patched
     assert patched.count(COUNTRY_SELECTED) == 7
     assert patched.count('enabled = "[And(GameLobby.CanJoin,') == 4
     assert 'enabled = "[And(GameLobby.CanStart,' in patched
@@ -58,37 +64,43 @@ def test_country_list_hides_world_country_cards_and_start_guards_reject_them() -
     assert "GameLobby.SetRandomPlayableObserverCharacter" in patched
 
 
-def test_hidden_country_cards_do_not_reserve_fixed_rows() -> None:
+def test_the_list_stays_the_games_own_fixed_grid_and_no_card_is_hidden() -> None:
+    # Hidden cards made the flags flicker and the blank stretches return in a search, with the
+    # list as a vbox of every card (experiment 037); the grid is the game's, untouched.
     source = _lobby_fixture()
-
     patched = patch_gui(GUI_FILES[0], source)
 
     assert patched is not None
-    assert 'datamodel = "[AccessLobbyCountryList.GetCountries]"' in patched
-    assert "ignoreinvisible = yes" in patched
-    assert "fixedgridbox" not in patched
-    assert "addrow = 74" not in patched
-    assert "setitemsizefromcell" not in patched
-    assert "spacing = 7" in patched
+    for kept in (
+        "fixedgridbox = {",
+        "addrow = 74",
+        "datamodel_wrap = 1",
+        "setitemsizefromcell = yes",
+        "size = { 100% 90% }",
+    ):
+        assert kept in patched
+    assert "vbox" not in patched
+    assert "ignoreinvisible" not in patched
+    card = patched[patched.index("item = {") : patched.index("type LobbySelectedCountryPanel")]
+    assert "visible" not in card
 
 
-def test_cards_of_the_vbox_take_their_width_from_a_layout_policy_not_a_percentage() -> None:
-    # The engine refuses a percentage size on a child of a vbox ("Unsupported property: size with
-    # a percentage", multiplayer_lobby.gui:4792, EU5 1.4.4, experiment 036); vanilla's idiom for a
-    # datamodel vbox is an expanding layout policy and a width of -1.
+def test_the_click_of_a_card_is_the_games_own_and_only_gated() -> None:
     patched = patch_gui(GUI_FILES[0], _lobby_fixture())
 
     assert patched is not None
-    head = patched[patched.index("item = {") : patched.index('visible = "[Not(GetScriptedGui')]
-    assert "layoutpolicy_horizontal = expanding" in head
-    assert "size = { -1 67 }" in head
-    assert "%" not in head
+    assert 'on_action = "[SetLobbyCountry(Country.Self)]"' in patched
+    assert 'title = "LOBBYVIEW_SELECT_COUNTRY"' in patched
+    gated = patched[patched.index("click_mode = single") : patched.index('block "click_action"')]
+    assert gated.count("enabled") == 1
 
 
 def test_country_list_layout_drift_is_refused() -> None:
-    source = _lobby_fixture().replace("addrow = 74", "addrow = 80")
-
-    assert patch_gui(GUI_FILES[0], source) is None
+    assert patch_gui(GUI_FILES[0], _lobby_fixture().replace("size = { 100% 90% }", "x")) is None
+    assert (
+        patch_gui(GUI_FILES[0], _lobby_fixture().replace("LOBBYVIEW_SELECT_COUNTRY", "OTHER"))
+        is None
+    )
 
 
 @pytest.mark.parametrize("marker", ["market_marker", "raw_goods_marker"])

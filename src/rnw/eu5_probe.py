@@ -41,6 +41,9 @@ FORMABLE: Final[str] = "rnw_probe_f"
 SCRIPTED_NAME: Final[str] = "rnw_probe_colony_scripted_country_name"
 VARIABLE: Final[str] = "rnw_probe_start"
 START_ACTION: Final[str] = "rnw_probe_game_start"
+# A plain ``vassal`` made from Interlaken kept the name *Interlaken* for two game years (experiment
+# 037), so the scripted name is asked of the subject type of the game's own colonies.
+SUBJECT_TYPE: Final[str] = "colonial_nation"
 CENTRE: Final[str] = "rnw_probe_centre"
 COUNTRY_VARIABLE: Final[tuple[str, str, int]] = ("FRA", VARIABLE, 7)
 LOCATION_VARIABLE: Final[tuple[str, str, int]] = ("paris", VARIABLE, 3)
@@ -126,7 +129,10 @@ def anchor_problems(game_dir: Path) -> list[str]:
             "decision_category = infrastructure_decisions",
             "ai_will_do",
         ),
-        "in_game/common/subject_types/vassal.txt": ("vassal",),
+        f"in_game/common/subject_types/{SUBJECT_TYPE}.txt": (
+            SUBJECT_TYPE,
+            "is_colonial_subject = yes",
+        ),
     }
     for relative, needles in vanilla.items():
         text = _read(game_dir, relative) if (game_dir / GAME / relative).is_file() else ""
@@ -226,13 +232,15 @@ def _decisions() -> str:
 		name = rnw_probe_found_colony.a
 		ai_chance = {{ value = 0 }}
 		effect = {{
-			location:{COLONY} = {{
-				create_country_from_location = {{
-					save_scope_as = rnw_probe_colony
-					set_capital = location:{COLONY}
-					make_subject_of = {{
-						target = root
-						type = subject_type:vassal
+			hidden_effect = {{
+				location:{COLONY} = {{
+					create_country_from_location = {{
+						save_scope_as = rnw_probe_colony
+						set_capital = location:{COLONY}
+						make_subject_of = {{
+							target = root
+							type = subject_type:{SUBJECT_TYPE}
+						}}
 					}}
 				}}
 			}}
@@ -504,7 +512,7 @@ def _texts(colony: str) -> dict[str, str]:
         f"{FORMABLE}_desc": "A formable of a tag that no country file defines.",
         "rnw_probe_found_colony.title": "Probe: found a subject",
         "rnw_probe_found_colony.desc": (
-            f"Makes {colony} a subject of the host. Reads the name its scripted country name gives."
+            f"Makes {colony} a colonial subject of the host; reads its scripted name."
         ),
         "rnw_probe_found_colony.a": "Found it",
         "rnw_probe_read_state.title": "Probe: read the start state",
@@ -566,7 +574,7 @@ def metadata() -> bytes:
     payload: dict[str, object] = {
         "name": "RNW probe: content hooks",
         "id": NAME,
-        "version": "0.2.0",
+        "version": "0.3.0",
         "supported_game_version": "1.4.*",
         "short_description": (
             "Research probe of the Random New World project: a formable of a tag no country "

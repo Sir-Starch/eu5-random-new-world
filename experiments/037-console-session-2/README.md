@@ -1,6 +1,6 @@
 # 037 - The second console sitting: what 036 left open
 
-2026-10-23, generator 0.10.6, algorithm epoch 16, probe rebuilt. **NOT RUN.** It asks again what [036](../036-console-session/README.md) could not answer because of the faults it found (C200 to C204), and nothing else. About ten minutes. Claims C198 to C204 give the reasons.
+2026-10-23, generator 0.10.6, algorithm epoch 16, probe rebuilt. **RUN by the owner (18:32 to 18:42, then a game to November 1339), partly: the lobby list still flickers and shows blank stretches in a search, and the list is changed again in 0.10.7; see *Result*, and [038](../038-lobby-list-and-colony/README.md).** It asks again what [036](../036-console-session/README.md) could not answer because of the faults it found (C200 to C204), and nothing else. About ten minutes. Claims C198 to C204 give the reasons.
 
 ## Before
 
@@ -31,3 +31,18 @@
 ## Evidence
 
 [V-EXEC] `make check` passes (1,048 Python tests, 23 Rust tests); the reference world of epoch 16 (784 files, digest `84d0787b...ec2ad46`) is made again from the installed game; against EIL2 the new world differs in exactly the lobby GUI, `rnw_river.txt`, the eleven story localizations, the two DLC picture files and the metadata. `rnw content-inventory` on the installation: 636 consumers, 0 undecided, 0 stale. [UNKNOWN] everything in the table.
+
+## Result (owner, EU5 1.4.4, 2026-10-23 18:32 to 18:42; claims C205 to C208)
+
+The owner sent three screenshots and four sentences; the agent read the session's `debug.log`, `game.log`, `gui.log`, `error.log` and the autosave. The game was launched with EIL2 enabled and the playset was switched to PRJ3 by the owner at 18:33:15 to 18:33:21 (the log shows the events and GUI caches loaded again); everything after that is PRJ3.
+
+| Row | Result | Evidence |
+| --- | --- | --- |
+| 1 country list | **Fails.** *The flags of the cards that came before the blank stretch of the old list flicker, sometimes for a moment showing another country's flag; the end of the list does not.* In a search the blank stretches are back (*Bern* shows two cards with seven cards of empty space between them). The engine's complaint about the percentage size appears only at the first load (EIL2, 18:33:11) and not again, so the percentage was not what made the flags flicker (C205) | [V-GAME] owner, `gui.log` |
+| 2 start state | **Works** (H3): *Probe: start state* opens at the start with all four lines (the variable on `FRA` and on `paris`, 7 and 3). The game's own start is whole again: neither `more than one 'effect'` nor `orphaned` is in the log (C206) | [V-GAME] screenshot, `debug.log` |
+| 3 colony | The decision was taken on the first day (the save: country `AAA00`, `creation_date=1337.4.1`, a `vassal` dependency of Bern). Its name stays *Interlaken* in the diplomacy tooltip (*Loyalty of Interlaken to Bern*) two years later, so **the scripted name is not applied to a plain vassal** (H2, C207); the owner did not see a *Probe Colony* anywhere. The game's own colonies are of the subject type `colonial_nation` (`is_colonial_subject`), which the next probe tries | [V-GAME] screenshot, save |
+| 4 to 7 | Not reported (the formables list, the union, the river's second event); the log has no `Inconsistent effect scopes` and no missing formable key after the switch to PRJ3 | [V-GAME] `debug.log` (the second load of the events at 18:33:31) |
+| 8 pictures | No `Invalid right side during comparison 'location'` after the switch: 2 lines at the first load (EIL2), none after, against 79,375 in 036 (C202 holds) | [V-GAME] `game.log` |
+
+Also seen: the decision's tooltip logged `Data error in loc string 'SET_CAPITAL_EFFECT'` 1,376 times (it asks the capital of a country not yet made); hidden in the probe 0.3.0.
+
