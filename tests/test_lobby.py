@@ -21,10 +21,6 @@ from rnw.eu5_lobby import (
     DRAWINGS_INCLUDE,
     DRAWINGS_INDEX,
     DRAWINGS_SAMPLER,
-    FILTER_FILE,
-    FILTER_NAME,
-    FILTER_TAG,
-    FILTER_TEXTS,
     INDIRECTION_INCLUDE,
     INDIRECTION_REF,
     OWN_SAMPLERS,
@@ -41,9 +37,6 @@ from rnw.eu5_lobby import (
     cover_shader,
     cover_words,
     drawings_include,
-    filter_localization,
-    filter_localization_files,
-    filter_text,
     hide_select_entry,
     land_colour,
     mod_path,
@@ -54,7 +47,6 @@ from rnw.eu5_lobby import (
     shader_samplers,
     unknown_colour,
 )
-from rnw.eu5_nw_export import LANGUAGES
 from rnw.pdx import parse
 
 if TYPE_CHECKING:
@@ -289,8 +281,6 @@ def test_the_cover_files_are_the_mods_own_and_the_changed_game_files() -> None:
     assert {mod_path(CONTEXT_MENU), SCRIPTED_GUI_FILE} <= set(files)
     for name in (COVER_INCLUDE, DRAWINGS_INCLUDE, *OWN_SAMPLERS):
         assert f"main_menu/gfx/FX/{name}" in files
-    assert FILTER_FILE in files
-    assert set(filter_localization_files()) <= set(files)
     assert not any(path.endswith(".dds") for path in files)
     assert "in_game/gui/multiplayer_lobby.gui" in files
     assert "in_game/gui/map_markers.gui" in files
@@ -311,37 +301,6 @@ def test_the_context_menu_loses_select_for_a_country_of_the_new_world() -> None:
     assert hide_select_entry("nothing here") is None
     assert hide_select_entry(entry + entry) is None
     assert CONTEXT_MENU.endswith("context_menu.gui")
-
-
-def test_the_filter_leaves_out_the_new_worlds_countries_by_the_games_own_mechanism() -> None:
-    """A scripted filter of the lobby's tag, on from the start, passing every other country."""
-    text = filter_text()
-    filter_ = parse(text).block(FILTER_NAME)
-    assert filter_ is not None
-    fields = {e.key: e.value for e in filter_.entries if isinstance(e.value, str)}
-    assert fields == {
-        "scope": "country",
-        "tag": "no_filters",
-        "enabled_at_start": "yes",
-        "hidden_in_searchbar": "yes",
-    }
-    assert "NOT = { capital.continent = continent:america }" in text
-    assert FILTER_FILE.startswith("in_game/gui/filters/")
-    assert fields["tag"] == FILTER_TAG
-
-
-def test_the_filters_texts_exist_in_every_language_the_world_is_written_in() -> None:
-    """Name and description in ten languages, one file each, under the keys the game derives."""
-    assert set(FILTER_TEXTS) == set(LANGUAGES)
-    files = filter_localization_files()
-    assert len(set(files)) == len(files) == len(LANGUAGES)
-    for language in LANGUAGES:
-        text = filter_localization(language)
-        assert text.startswith(f"l_{language}:\n")
-        assert f" search_filter_{FILTER_NAME}_name: " in text
-        assert f" search_filter_{FILTER_NAME}_desc: " in text
-        assert text.count('"') == 4
-        assert any(path.endswith(f"_l_{language}.yml") for path in files)
 
 
 def test_the_scripted_gui_reads_the_capitals_continent() -> None:

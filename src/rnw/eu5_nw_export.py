@@ -83,8 +83,6 @@ from rnw.eu5_lobby import (
     CONTEXT_MENU,
     COVER_INCLUDE,
     DRAWINGS_INCLUDE,
-    FILTER_FILE,
-    FILTER_TEXTS,
     GRAPHICS_DEFINES,
     INCLUDE_DIRS,
     OWN_SAMPLERS,
@@ -97,9 +95,6 @@ from rnw.eu5_lobby import (
     cover_include,
     cover_shader,
     drawings_include,
-    filter_localization,
-    filter_localization_files,
-    filter_text,
     hide_select_entry,
     land_colour,
     sampler_include,
@@ -738,11 +733,6 @@ def _cover_outputs(
         _mod_path(CONTEXT_MENU): _encode(game_dir, CONTEXT_MENU, menu),
         **{_mod_path(path): _encode(game_dir, path, text) for path, text in guis.items()},
         SCRIPTED_GUI_FILE: scripted_gui_text().encode("utf-8-sig"),
-        FILTER_FILE: filter_text().encode("utf-8-sig"),
-        **{
-            path: filter_localization(language).encode("utf-8-sig")
-            for path, language in zip(filter_localization_files(), FILTER_TEXTS, strict=True)
-        },
     }
     for edit in SHADERS:
         outputs[_mod_path(edit.path)] = _encode(

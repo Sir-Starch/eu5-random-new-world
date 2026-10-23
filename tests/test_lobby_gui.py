@@ -13,6 +13,13 @@ from rnw.eu5_lobby_gui import (
 
 def _lobby_fixture() -> str:
     return (
+        "\t\t\t\t\t\t\tfixedgridbox = {\n"
+        '\t\t\t\t\t\t\t\tdatamodel = "[AccessLobbyCountryList.GetCountries]"\n'
+        "\t\t\t\t\t\t\t\taddcolumn = 100%\n"
+        "\t\t\t\t\t\t\t\taddrow = 74\n"
+        "\t\t\t\t\t\t\t\tdatamodel_wrap = 1\n"
+        "\t\t\t\t\t\t\t\tflipdirection = yes\n"
+        "\t\t\t\t\t\t\t\tsetitemsizefromcell = yes\n\n"
         "item = {\n"
         "\t\t\t\t\t\t\t\t\twidget = {\n"
         "\t\t\t\t\t\t\t\t\t\tsize = { 100% 90% }\n"
@@ -49,6 +56,27 @@ def test_country_list_hides_world_country_cards_and_start_guards_reject_them() -
     assert 'enabled = "[And4(GameLobby.CanStart,' in patched
     assert 'visible = "[Not(IsLobbyOpen)]"' in patched
     assert "GameLobby.SetRandomPlayableObserverCharacter" in patched
+
+
+def test_hidden_country_cards_do_not_reserve_fixed_rows() -> None:
+    source = _lobby_fixture()
+
+    patched = patch_gui(GUI_FILES[0], source)
+
+    assert patched is not None
+    assert 'datamodel = "[AccessLobbyCountryList.GetCountries]"' in patched
+    assert "ignoreinvisible = yes" in patched
+    assert "fixedgridbox" not in patched
+    assert "addrow = 74" not in patched
+    assert "setitemsizefromcell" not in patched
+    assert "size = { 100% 67 }" in patched
+    assert "spacing = 7" in patched
+
+
+def test_country_list_layout_drift_is_refused() -> None:
+    source = _lobby_fixture().replace("addrow = 74", "addrow = 80")
+
+    assert patch_gui(GUI_FILES[0], source) is None
 
 
 @pytest.mark.parametrize("marker", ["market_marker", "raw_goods_marker"])

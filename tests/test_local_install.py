@@ -27,7 +27,6 @@ from rnw.eu5_lobby import (
     DRAWINGS_FILE,
     DRAWINGS_INCLUDE,
     DRAWINGS_INDEX,
-    FILTER_TAG,
     GRAPHICS_DEFINES,
     OWN_SAMPLERS,
     SHADERS,
@@ -294,8 +293,7 @@ def test_local_game_files_take_the_selection_cover() -> None:
     assert land_colour((root / GRAPHICS_DEFINES).read_text(encoding="utf-8-sig"))
 
 
-def test_local_game_has_the_drawings_and_the_lobby_filter_the_cover_relies_on() -> None:
-    """The texture of the drawings, the way the game's own shader reads it, and the lobby's tag."""
+def test_local_game_has_the_drawings_the_cover_relies_on() -> None:
     root_value = os.environ.get("EU5_GAME_DIR")
     if root_value is None:
         pytest.skip("EU5_GAME_DIR is not set")
@@ -308,13 +306,6 @@ def test_local_game_has_the_drawings_and_the_lobby_filter_the_cover_relies_on() 
     assert declared is not None
     assert re.search(rf"\bIndex\s*=\s*{DRAWINGS_INDEX}\b", declared.group(1))
     assert re.search(rf'(?i)\bfile\s*=\s*"{re.escape(DRAWINGS_FILE)}"', declared.group(1))
-    lobby = (root / "game/in_game/gui/multiplayer_lobby.gui").read_text(encoding="utf-8-sig")
-    assert lobby.count(f"WithFilterTags('{FILTER_TAG}')") == 1
-    filters = "".join(
-        path.read_text(encoding="utf-8-sig")
-        for path in (root / "game/in_game/gui/filters").glob("*.txt")
-    )
-    assert not re.search(rf"\btag\s*=\s*[\w|]*\b{FILTER_TAG}\b", filters)
 
 
 def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:

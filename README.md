@@ -1,6 +1,6 @@
 # EU5 Random New World
 
-**0.10.0, 2026-10-23:** the covered New World shows the game's terra incognita drawings (dragons, compasses) through a sampler declared like the game's own, and the lobby's list leaves the New World's countries out through a scripted filter instead of leaving empty cells (C172, [experiment 031](experiments/031-cover-drawings-and-list/README.md)); not yet seen in game. The owner reports that shaders and the hiding look right in the latest run, and the 17 undiscovered-capital warnings of the opinions are gone from its log (C171).
+**0.10.1, 2026-10-23:** [V-GAME owner C173] the 0.10.0 cover shows vanilla terra-incognita drawings, including dragons, but its country-list filter did not remove the large blank region. [V-EXEC C174] The new candidate replaces fixed country rows with a vertical list that excludes invisible widgets from layout and removes the ineffective filter. [UNKNOWN] The engine's layout behavior awaits the owner's run of [experiment 032](experiments/032-lobby-list-layout/README.md); no agent game launch. The earlier undiscovered-capital warnings are gone from the owner's log (C171).
 
 **Opinions, 2026-10-23:** the opinions of the great empires named capitals that their holders had not discovered, 17 warnings per start (C170); generator **0.9.33** makes each holder discover its partner's capital area and checks it on the written records (C171); not yet seen in game.
 

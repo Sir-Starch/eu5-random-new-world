@@ -16,8 +16,7 @@ files of the mod that replace the game's own, made from the installed game and n
 * borders and map names fade out there;
 * the context menu of a country on the map leaves out *Select* for a country of the New World,
   which a scripted GUI of the mod recognises by its capital's continent;
-* the lobby's list of countries leaves them out through a scripted filter of the game's own
-  (``gui/filters``, the tag the lobby asks for), so no empty cells stand in its grid.
+* the lobby's country cards use a vertical list that excludes invisible children from layout.
 
 The close-zoom failure of C150 adds detail, mesh and tree-shadow passes and lobby/marker GUI
 guards (C151). Native map picking is not intercepted; the lobby guard hides a selected New
@@ -73,73 +72,6 @@ DRAWINGS_INCLUDE: Final[str] = "rnw_new_world_drawings.fxh"
 DRAWINGS_SAMPLER: Final[str] = "RnwDrawings"
 DRAWINGS_INDEX: Final[int] = 2
 DRAWINGS_FILE: Final[str] = "gfx/map/flatmap/terra_incognita.dds"
-# The lobby's list of countries, filtered by the game's own scripted filters (``gui/filters``).
-FILTER_FILE: Final[str] = "in_game/gui/filters/99_rnw_new_world.txt"
-FILTER_NAME: Final[str] = "rnw_new_world_hidden"
-FILTER_TAG: Final[str] = "no_filters"
-FILTER_TEXTS: Final[dict[str, tuple[str, str]]] = {
-    "braz_por": (
-        "Novo Mundo oculto",
-        (
-            "Os países do Novo Mundo gerado ficam fora da lista enquanto ele está oculto "
-            "(uma opção do gerador)."
-        ),
-    ),
-    "english": (
-        "New World hidden",
-        (
-            "The countries of the generated New World are left out of the list while it is "
-            "hidden (a setting of the generator)."
-        ),
-    ),
-    "french": (
-        "Nouveau Monde caché",
-        (
-            "Les pays du Nouveau Monde généré sont écartés de la liste tant qu'il est caché "
-            "(réglage du générateur)."
-        ),
-    ),
-    "german": (
-        "Neue Welt verborgen",
-        (
-            "Die Länder der erzeugten Neuen Welt stehen nicht in der Liste, solange sie "
-            "verborgen ist (Einstellung des Generators)."
-        ),
-    ),
-    "japanese": (
-        "新大陸を非表示",
-        "生成された新大陸が隠されている間、その国々は一覧に表示されません（ジェネレーターの設定）。",  # noqa: RUF001
-    ),
-    "korean": (
-        "신대륙 숨김",
-        "생성된 신대륙이 숨겨져 있는 동안 그 나라들은 목록에 나타나지 않습니다 (생성기 설정).",
-    ),
-    "polish": (
-        "Nowy Świat ukryty",
-        (
-            "Kraje wygenerowanego Nowego Świata nie pojawiają się na liście, dopóki jest ukryty "
-            "(ustawienie generatora)."
-        ),
-    ),
-    "russian": (
-        "Новый Свет скрыт",
-        (
-            "Страны созданного Нового Света не показываются в списке, пока он скрыт "
-            "(настройка генератора)."
-        ),
-    ),
-    "simp_chinese": (
-        "隐藏新大陆",
-        "新大陆被隐藏时，其生成的国家不会出现在列表中（生成器的设置）。",  # noqa: RUF001
-    ),
-    "spanish": (
-        "Nuevo Mundo oculto",
-        (
-            "Los países del Nuevo Mundo generado no aparecen en la lista mientras está oculto "
-            "(ajuste del generador)."
-        ),
-    ),
-}
 TI_REF: Final[str] = "TerraIncognitaVisibilityTexture"
 INDIRECTION_REF: Final[str] = "JominiProvinceColorIndirection"
 # The mod's own sampler includes: the sampler each declares and the engine slot it reads.
@@ -574,8 +506,6 @@ def cover_files() -> tuple[str, ...]:
         mod_path(CONTEXT_MENU),
         *(mod_path(path) for path in GUI_FILES),
         SCRIPTED_GUI_FILE,
-        FILTER_FILE,
-        *filter_localization_files(),
     )
 
 
@@ -924,47 +854,6 @@ def hide_select_entry(text: str) -> str | None:
         f'Not({NEW_WORLD_COUNTRY}))]"'
     )
     return text.replace(SELECT, replacement)
-
-
-def filter_text() -> str:
-    """The scripted filter that leaves the New World's countries out of the lobby's list.
-
-    The lobby asks for the filters of the tag ``no_filters``, which vanilla defines none of; the
-    filter is on from the start and passes every country whose capital is not on the New
-    World's continent. It is the game's own way to filter a list, so the list shows no gap
-    where a hidden item would stand in its grid.
-    """
-    return (
-        "# Random New World: the lobby's list of countries leaves out the New World's while it is\n"
-        "# hidden (C172).\n"
-        f"{FILTER_NAME} = {{\n"
-        "\tscope = country\n"
-        f"\ttag = {FILTER_TAG}\n"
-        "\tenabled_at_start = yes\n"
-        "\thidden_in_searchbar = yes\n"
-        "\ttrigger = {\n"
-        f"\t\tNOT = {{ capital.continent = continent:{CONTINENT} }}\n"
-        "\t}\n"
-        "}\n"
-    )
-
-
-def filter_localization_files() -> tuple[str, ...]:
-    """The mod's paths of the filter's texts, one file for each language."""
-    return tuple(
-        f"main_menu/localization/{language}/rnw_new_world_cover_l_{language}.yml"
-        for language in FILTER_TEXTS
-    )
-
-
-def filter_localization(language: str) -> str:
-    """The name and the description of the filter in one language."""
-    name, description = FILTER_TEXTS[language]
-    return (
-        f"l_{language}:\n"
-        f' search_filter_{FILTER_NAME}_name: "{name}"\n'
-        f' search_filter_{FILTER_NAME}_desc: "{description}"\n'
-    )
 
 
 def scripted_gui_text() -> str:

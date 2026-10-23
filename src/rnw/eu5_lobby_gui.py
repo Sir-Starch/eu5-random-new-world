@@ -22,9 +22,27 @@ class GuiEdit:
     count: int = 1
 
 
-_COUNTRY_LIST_ANCHOR: Final[str] = "item = {\n\t\t\t\t\t\t\t\t\twidget = {\n"
+_COUNTRY_LAYOUT_ANCHOR: Final[str] = (
+    "\t\t\t\t\t\t\tfixedgridbox = {\n"
+    '\t\t\t\t\t\t\t\tdatamodel = "[AccessLobbyCountryList.GetCountries]"\n'
+    "\t\t\t\t\t\t\t\taddcolumn = 100%\n"
+    "\t\t\t\t\t\t\t\taddrow = 74\n"
+    "\t\t\t\t\t\t\t\tdatamodel_wrap = 1\n"
+    "\t\t\t\t\t\t\t\tflipdirection = yes\n"
+    "\t\t\t\t\t\t\t\tsetitemsizefromcell = yes\n"
+)
+_COUNTRY_LAYOUT_REPLACEMENT: Final[str] = (
+    "\t\t\t\t\t\t\tvbox = {\n"
+    '\t\t\t\t\t\t\t\tdatamodel = "[AccessLobbyCountryList.GetCountries]"\n'
+    "\t\t\t\t\t\t\t\tlayoutpolicy_horizontal = expanding\n"
+    "\t\t\t\t\t\t\t\tignoreinvisible = yes\n"
+    "\t\t\t\t\t\t\t\tspacing = 7\n"
+)
+_COUNTRY_LIST_ANCHOR: Final[str] = (
+    "item = {\n\t\t\t\t\t\t\t\t\twidget = {\n\t\t\t\t\t\t\t\t\t\tsize = { 100% 90% }\n"
+)
 _COUNTRY_LIST_REPLACEMENT: Final[str] = (
-    _COUNTRY_LIST_ANCHOR
+    _COUNTRY_LIST_ANCHOR.replace("100% 90%", "100% 67")
     + '\t\t\t\t\t\t\t\t\t\tvisible = "[Not('
     + f"GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown("
     + 'GuiScope.SetRoot(Country.MakeScope).End))]"\n'
@@ -61,6 +79,7 @@ def _location_hidden(marker_location: str) -> str:
 
 
 _LOBBY_EDITS: Final[tuple[GuiEdit, ...]] = (
+    GuiEdit(MULTIPLAYER_LOBBY, _COUNTRY_LAYOUT_ANCHOR, _COUNTRY_LAYOUT_REPLACEMENT),
     GuiEdit(MULTIPLAYER_LOBBY, _COUNTRY_LIST_ANCHOR, _COUNTRY_LIST_REPLACEMENT),
     GuiEdit(
         MULTIPLAYER_LOBBY,

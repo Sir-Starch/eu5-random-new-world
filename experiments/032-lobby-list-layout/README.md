@@ -1,0 +1,17 @@
+# 032 - Collapse hidden lobby country rows
+
+2026-10-23, generator 0.10.1, algorithm epoch 11. **NOT GAME VALIDATED.**
+
+- [V-GAME owner C173] 0.10.0 on EU5 1.4.3 build 26105915 shows vanilla TI drawings, including dragons, but still has a large blank stretch in the country list. The attachment shows the cover, not the open country list; the list result is the owner's written report. No agent game launch.
+- [V-LOCAL C174] The installed game's country list uses `fixedgridbox`, one 74-pixel row per country. The 0.10.0 override hides each New World widget but keeps that layout. Vanilla uses `vbox` with `ignoreinvisible = yes` for lists that omit hidden children, including the organizations' member lists. Its general container default is `ignoreinvisible = no`.
+- [INFERRED C174 from the owner report and those layouts] Fixed rows explain why hiding widgets leaves the blank stretch. A script filter did not solve it; why the engine does not apply it in this lobby is unknown. No binary inspection or engine modification is needed for this candidate.
+- Candidate: generate the lobby override from the installed game with a `vbox`, `ignoreinvisible = yes`, cards 67 pixels high and 7-pixel spacing (rounding the former 90% of 74 pixels). Keep the same country data model, search, sort and visibility predicate. Refuse missing or duplicated layout/card anchors. Remove the ineffective filter and its ten localization files. Keep the accepted cover's shaders byte-identical.
+- [V-EXEC] Regression first: the old exporter fails both the collapsing-layout and layout-drift tests; with the change, all seven GUI tests pass. The installed 1.4.3 GUI takes every anchor. These tests check emitted content, not engine layout behavior.
+
+Owner's game check: enable the newly installed 0.10.1 world instead of CYHL, with the hub. Open the country list, scroll to both ends, change each sort order and search then clear the search. Expect ordinary countries in contiguous rows, no New World cards and no long empty region. Check that cards fit the panel width and that scrolling and selecting an Old World country still work. Recheck the dragon cover. Preserve any new GUI errors from this run separately from old log errors.
+
+Visual QA: **PENDING**. The standing no-launch restriction prevents an agent screenshot or an engine A/B comparison. Offline checks cannot establish that the engine measures invisible rows as expected. The candidate is ready for that test, not a claim of in-game success.
+
+[V-EXEC] Completed offline verification: `uv sync --locked --group dev && make check` (format, lint, type checks; 958 Python tests; 23 Rust tests). Ten optional local tests pass with `RNW_REPRODUCE=1`, including a second independent export matching epoch 11's reference digest: 752 non-metadata files, `652b1c86bc96d972ed5845c254490f841b7ceadd39981e3b0bb128dba32809e0`, code `RNW1-0426C-SYW6B-MW73Y-C0050-2043M-N1G`. The renewed synthetic digests include the new release metadata; previous epoch entries are preserved.
+
+[V-EXEC] Owner candidate `RNW1-080G0-00003-EF38N-A0050-20813-BM0ET-6V5G` is installed as `rnw_exp_world_6dive2c4l6`, **RNW: Continents 6DIV**, 754 files; the library bundle and installed mod both hash-identically to the staged output. Compared with CYHL, only the lobby GUI and metadata differ, and the 11 filter/text files disappear. Every shader, map and start file is identical. Root profile files, hub and CYHL are unchanged. See [installed record](../INSTALLED.md).

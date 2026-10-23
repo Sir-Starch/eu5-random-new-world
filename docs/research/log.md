@@ -511,6 +511,15 @@
   most three launches. (Those probes answered a premise that was retracted; no defect in 0.9.30 is established.)
 - No EU5 launch by the agent, no push or publication.
 
+## 2026-10-23 - Owner acceptance of TI drawings; country-list layout candidate
+
+- [V-GAME owner C173] 0.10.0 shows vanilla TI drawings, including dragons. The country list still has a large gap: the tag-matched filter of experiment 031 did not achieve its intended result. The screenshot depicts the cover; the list result is the written owner report.
+- [V-LOCAL C174] Rechecked Steam build 26105915 (1.4.3), the lobby's fixed 74-pixel rows, and vanilla vbox lists with ignoreinvisible=yes. [INFERRED] Fixed rows reserve the hidden widgets' space. The reason the script filter has no effect is not established.
+- [V-EXEC C174] 0.10.1/epoch 11 replaces that one layout with a vbox excluding invisible children, 67-pixel cards and 7-pixel spacing. Search/sort/model and visibility guards remain. Removed the ineffective filter and ten text files. Both regression tests fail on the previous exporter and pass with this change; missing/duplicated anchors fail closed.
+- [V-EXEC] At the owner's request, removed exactly ten obsolete profile mods: the road probe and worlds 6WBN, AMK4, BDWK, CANS, DSLL, HGIH, HU2B, J3ZE, QDUV. Hub and CYHL retained; all their files and every profile-root file compare byte-identical. Library worlds, saves and playsets were not modified.
+- Experiment 032 records the owner's required scrolling/search/sort and card-size checks. No agent game launch, push or publication. Visual acceptance of 0.10.1 remains [UNKNOWN].
+- [V-EXEC] Full checks pass: 958 Python tests and 23 Rust tests, formatting, lint and type checks; all 10 optional local tests pass with `RNW_REPRODUCE=1` (152 seconds). Epoch 11's new reference has 752 non-metadata files, digest `652b1c86bc96d972ed5845c254490f841b7ceadd39981e3b0bb128dba32809e0`. The candidate 6DIV is installed and kept in the normal library: all 754 files match the staged world. Against CYHL, only the lobby GUI and metadata change and the 11 filter/text files disappear; all map, shader and start bytes match. All profile-root files, hub and CYHL remain unchanged after installation.
+
 ## 2026-10-23 — The roads had not vanished (owner), C166
 
 - [V-GAME owner C166] The owner looked again with the Roads lens: roads are there, a network over the Old World and a
