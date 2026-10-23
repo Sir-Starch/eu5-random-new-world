@@ -1,7 +1,7 @@
 # Random-first New World content: design and staged plan
 
-**Status:** Proposed 2026-10-23 and revised the same day after a check against the installed game (C175–C180). The owner placed its whole scope, R7d included, in 1.0.0 and settled its languages (2026-10-23); N5 remains open. N0 to N4 are done offline (C181–C220; N1 to N3 were seen in game in part, C199–C211, N4 not at all); no game launch belongs to the plan.
-**Baseline:** Generator 0.10.1, algorithm epoch 11; EU5 1.4.3 open beta, Steam build 26105915.
+**Status:** Proposed 2026-10-23 and revised the same day after a check against the installed game (C175–C180). The owner placed its whole scope, R7d included, in 1.0.0 and settled its languages (2026-10-23); N5 remains open. N0 to N4 are done offline (C181–C220; N1 to N3 were seen in game in part, C199–C211, N4 not at all) and F1 and F2 of the final verification are done offline too ([audit](research/n0-n4-audit.md), C222–C231, generator 0.10.11); no game launch belongs to the plan.
+**Baseline:** Generator 0.10.1, algorithm epoch 11; EU5 1.4.3 open beta, Steam build 26105915. (Now 0.10.11, epoch 21.)
 **Evidence:** Existing behaviour is labelled below. Every proposed behaviour is [INFERRED design]; whether the running game accepts it is [UNKNOWN] until observed.
 
 ## Design direction
@@ -168,7 +168,7 @@ Every stage, R7d included, is part of 1.0.0 (owner, 2026-10-23); nothing in this
   - QA: `tests/test_content_inventory.py` with synthetic chains (a shared retained event, an adapted dependent event, a privilege whose path was retired, an unclassified object that stops the check, a script word that is also a location); `test_local_content_consumers_all_have_a_decision` reports drift after a patch, both ways. The reference world of epoch 11 came out byte for byte the same with the check in the export.
   - Commit: `Inventory the New World's vanilla content consumers and decide each`.
 
-  **Result** (EU5 1.4.3 build 26105915, C181–C185). 634 consumers: 243 coats of arms keyed by a retired tag and 391 other script objects (186 events, 43 advances, 30 customizable localizations, 18 holy sites, 12 area preferences, 8 scripted country names, 8 formables, 44 retired modifiers and base values, and 42 in smaller categories). Decisions: **keep 391**, **rebind 6**, **neutralize 84**, **replace 153**.
+  **Result** (EU5 1.4.3 build 26105915, C181–C185; since 0.10.6 the scan also covers `gfx/images`, which adds two illustration rows: **636 consumers, neutralize 86**, the other counts unchanged). 634 consumers: 243 coats of arms keyed by a retired tag and 391 other script objects (186 events, 43 advances, 30 customizable localizations, 18 holy sites, 12 area preferences, 8 scripted country names, 8 formables, 44 retired modifiers and base values, and 42 in smaller categories). Decisions: **keep 391**, **rebind 6**, **neutralize 84**, **replace 153**.
 
   | Decision | Count | Why |
   | --- | --- | --- |
@@ -230,8 +230,8 @@ The criterion is whether players on different seeds can describe different decis
 
 ## Final verification
 
-- [ ] F1. Reconcile the inventory with every keep, rebind, neutralization and replacement; nothing disappears silently.
-- [ ] F2. Review code quality, determinism, layer ownership and Old World preservation from completed checks only.
+- [x] F1. Reconcile the inventory with every keep, rebind, neutralization and replacement; nothing disappears silently. Done offline 2026-10-23 ([audit](research/n0-n4-audit.md), C225–C228): every difference of every object of the 2,467 script files was classified against its decision, and none was left over but two DLC templates; the audit found and repaired a remap that missed `province_definition:` (18 engine errors in sitting 038, C223), two DLC monuments moved to random places (C226) and a reason without a code behind it (C228); every replaced object now says what carries it, or that none does (131 carried by 11 families, 22 by none, `CARRIERS`); and the export refuses a world in which an object vanished that nothing retires or names a key the world lacks (`check_outcomes`).
+- [x] F2. Review code quality, determinism, layer ownership and Old World preservation from completed checks only. Done offline 2026-10-23 ([audit](research/n0-n4-audit.md), C224, C229, C230): no clock or randomness outside the seed streams and no lint escape without a reason in the 19 modules of N0–N4; three exports with different hash seeds give the same digest; the layer test compares every file of three worlds (resources: one file, peoples: only the start, countries, formables, stories and texts); no Old World record, tag, text or object was lost. The same audit read the log of sitting 038 against the baselines and found 34 lines of ours (and 2 of the probe's) that C208 and C211 had called vanilla (C222, C223, repaired) and the geography faults that are not N0–N4's (C224, C231).
 - [ ] F3. Run the owner's experiments of N1–N4; until run, the runtime result is NOT-RUN, not PASS.
 - [ ] F4. Map G1–G7 to evidence from two materially different campaigns, with limits stated.
 

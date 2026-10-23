@@ -10,9 +10,11 @@ items of ``location``/``locations``/``waypoints`` and ``province_definition``/
 first location's replacement. A removed location in a ``map_id`` list is dropped, since
 the object it names needs a locator of its own. The files of the base game and of every
 DLC are rewritten alike; a mod file replaces the DLC file at the same path. The same
-pass drops the dynamic historical events of removed country tags (``eu5_events``) and the
+pass drops the dynamic historical events of removed country tags (``eu5_events``), the
 illustrations of removed places (the DLC pictures that the location view shows for a monument or a
-holy site): a picture shows its place, so it is dropped rather than moved to a generated one.
+holy site) and the unique buildings of the DLC monuments that stood in them (the 3D model of the
+pyramid of Teotihuacan or Cholula): a picture or a model shows its place, so it is dropped rather
+than moved to a generated one.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -60,9 +62,11 @@ LIST_KEYS: Final[frozenset[str]] = frozenset(
 DROP_KEYS: Final[frozenset[str]] = frozenset({"map_id"})
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_]+")
 SCOPE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![A-Za-z0-9_])(location|province):([A-Za-z_][A-Za-z0-9_]*)"
+    r"(?<![A-Za-z0-9_])(location|province|province_definition):([A-Za-z_][A-Za-z0-9_]*)"
 )
 IMAGES: Final[str] = "in_game/gfx/images/"
+CITY_DATA: Final[str] = "in_game/gfx/map/city_data/"
+MONUMENT_PLACE: Final[str] = "only_in_location"
 ILLUSTRATION: Final[str] = "illustration_image"
 PLACE: Final[re.Pattern[str]] = re.compile(
     r"(?<![A-Za-z0-9_])(?:location|province|province_definition):([A-Za-z_][A-Za-z0-9_]*)"
@@ -205,6 +209,42 @@ def drop_illustrations(text: str, removed: AbstractSet[str]) -> tuple[str, int]:
     return (edits.apply(text) if count else text), count
 
 
+def _monuments(block: Block, removed: AbstractSet[str], text: str, edits: Edits) -> int:
+    count = 0
+    for entry in block.entries:
+        if not isinstance(entry.value, Block):
+            continue
+        place = entry.value.first(MONUMENT_PLACE)
+        if (
+            entry.key is not None
+            and place is not None
+            and isinstance(place.value, str)
+            and place.value in removed
+        ):
+            start, end = line_span(text, entry.start, entry.end)
+            edits.deletions.append((_with_labels(text, start), end))
+            count += 1
+        else:
+            count += _monuments(entry.value, removed, text, edits)
+    return count
+
+
+def drop_monuments(text: str, removed: AbstractSet[str]) -> tuple[str, int]:
+    """``text`` without the unique buildings bound to a removed place; and how many.
+
+    The DLC packs of ancient monuments and sacred sites put a 3D model on one location
+    (``only_in_location``): the pyramid of Teotihuacan, the pyramid of Cholula. Remapped, the model
+    would stand on whichever generated location is nearest to the old one, with no tie to the
+    people, the holy site or the picture of that place, so it goes with the place. Its mesh list
+    stays; nothing names it.
+    """
+    if removed.isdisjoint(WORD.findall(text)):
+        return text, 0
+    edits = Edits()
+    count = _monuments(parse(text), removed, text, edits)
+    return (edits.apply(text) if count else text), count
+
+
 class RemapError(ValueError):
     """Script files that cannot be rewritten as one set."""
 
@@ -218,6 +258,7 @@ class ScriptRewrite:
     retired: dict[str, tuple[str, ...]]
     modifiers: tuple[str, ...] = ()
     illustrations: dict[str, int] = field(default_factory=dict)
+    monuments: dict[str, int] = field(default_factory=dict)
 
 
 def script_files(game_dir: Path) -> dict[str, Path]:
@@ -243,6 +284,24 @@ def script_files(game_dir: Path) -> dict[str, Path]:
     return files
 
 
+def _drop_places(
+    texts: dict[str, str], removed: AbstractSet[str]
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Drop the pictures and the models of removed places from ``texts``; count them by file."""
+    illustrations: dict[str, int] = {}
+    monuments: dict[str, int] = {}
+    for relative, text in list(texts.items()):
+        if relative.startswith(IMAGES):
+            texts[relative], dropped = drop_illustrations(text, removed)
+            if dropped:
+                illustrations[relative] = dropped
+        elif relative.startswith(CITY_DATA):
+            texts[relative], dropped = drop_monuments(text, removed)
+            if dropped:
+                monuments[relative] = dropped
+    return illustrations, monuments
+
+
 def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str]) -> ScriptRewrite:
     """Mod copies of every script file whose location or tag references changed."""
     files: dict[str, tuple[bytes, str]] = {}
@@ -265,22 +324,17 @@ def remap_scripts(game_dir: Path, remap: dict[str, str], retired_tags: set[str])
                 removed.append(result.removed)
     changed, modifiers = retire_modifiers(texts, "".join(removed))
     texts.update(changed)
-    illustrations: dict[str, int] = {}
-    for relative, text in list(texts.items()):
-        if relative.startswith(IMAGES):
-            texts[relative], dropped = drop_illustrations(text, remap.keys())
-            if dropped:
-                illustrations[relative] = dropped
+    illustrations, monuments = _drop_places(texts, remap.keys())
     outputs: dict[str, bytes] = {}
     counts: dict[str, int] = {}
     for relative, (raw, original) in files.items():
         checkpoint()
         new, count = remap_text(texts[relative], remap)
-        if count and relative.startswith(IMAGES):
-            message = f"{relative} names removed places outside the illustrations it drops"
+        if count and relative.startswith((IMAGES, CITY_DATA)):
+            message = f"{relative} names removed places outside the pictures and models it drops"
             raise RemapError(message)
         if count or texts[relative] != original:
             bom = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
             outputs[relative] = (bom + new).encode("utf-8")
             counts[relative] = count
-    return ScriptRewrite(outputs, counts, retired, modifiers, illustrations)
+    return ScriptRewrite(outputs, counts, retired, modifiers, illustrations, monuments)

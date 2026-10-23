@@ -126,8 +126,8 @@ def test_scripts_of_the_game_and_its_dlc_are_rewritten(tmp_path: Path) -> None:
     )
     _write(
         game,
-        "dlc/D1_pack/in_game/gfx/map/city_data/d1.txt",
-        "city = { only_in_location = gone }\n",
+        "dlc/D1_pack/in_game/common/holy_sites/d1.txt",
+        "city = { location = gone }\n",
     )
     _write(
         game,
@@ -137,13 +137,11 @@ def test_scripts_of_the_game_and_its_dlc_are_rewritten(tmp_path: Path) -> None:
     rewrite = remap_scripts(tmp_path, REMAP, {"AAA"})
     assert sorted(rewrite.outputs) == [
         "in_game/common/holy_sites/a.txt",
+        "in_game/common/holy_sites/d1.txt",
         "in_game/events/DHE/flavor.txt",
-        "in_game/gfx/map/city_data/d1.txt",
         "in_game/gfx/map/map_objects/dynamic_game_objects.txt",
     ]
-    assert rewrite.outputs["in_game/gfx/map/city_data/d1.txt"] == (
-        b"city = { only_in_location = fresh }\n"
-    )
+    assert rewrite.outputs["in_game/common/holy_sites/d1.txt"] == (b"city = { location = fresh }\n")
     events = rewrite.outputs["in_game/events/DHE/flavor.txt"].decode()
     assert "ev.1" not in events
     assert "owns = location:fresh" in events
@@ -304,3 +302,68 @@ def test_an_illustration_naming_a_removed_province_is_dropped_too(tmp_path: Path
     _write(game, "in_game/gfx/images/d1.txt", text)
     rewrite = remap_scripts(tmp_path, REMAP, set())
     assert "lost_province" not in rewrite.outputs["in_game/gfx/images/d1.txt"].decode()
+
+
+def test_a_province_definition_scope_is_remapped_like_a_location_scope() -> None:
+    """An exploration event asks ``province_definition = province_definition:KEY``; a key that is
+    gone makes the engine log ``Invalid province_definition key`` at load (EU5 1.4.4, sitting
+    038), whether or not the event can fire."""
+    text = (
+        "event = {\n\ttrigger = {\n\t\tlocation = {\n\t\t\tOR = {\n"
+        "\t\t\t\tprovince_definition = province_definition:lost_province\n"
+        "\t\t\t\tprovince_definition = province_definition:kept_province\n"
+        "\t\t\t}\n\t\t}\n\t}\n}\n"
+    )
+    new, count = remap_text(text, REMAP)
+    assert count == 1
+    assert "province_definition:fresh_province" in new
+    assert "province_definition:kept_province" in new
+    assert "lost_province" not in new
+
+
+MONUMENTS = """mesh_list = { name = "d1_gone_mesh" }
+mesh_list = { name = "d1_kept_mesh" }
+
+template unique_buildings
+{
+\tcode =
+\t[[
+\t\t# the pyramid
+\t\td1_gone = {
+\t\t\tonly_in_location = gone
+\t\t\tmesh_list = d1_gone_mesh
+\t\t\tlink_tooltip = { type = holy_site data = gone_holy_site }
+\t\t}
+\t\td1_kept = {
+\t\t\tonly_in_location = kept
+\t\t\tmesh_list = d1_kept_mesh
+\t\t}
+\t]]
+}
+"""
+
+
+def test_the_model_of_a_removed_place_is_dropped_and_the_others_stay(tmp_path: Path) -> None:
+    """A unique building bound to a place that is gone is dropped, not moved to the nearest
+    generated place: a model of a pyramid shows that pyramid, as a picture does."""
+    game = tmp_path / "game"
+    _write(game, "dlc/D1_pack/in_game/gfx/map/city_data/D1_monuments.txt", MONUMENTS)
+    _write(game, "in_game/gfx/map/city_data/00_kept.txt", MONUMENTS.replace("gone", "kept2"))
+    rewrite = remap_scripts(tmp_path, REMAP, set())
+    assert sorted(rewrite.outputs) == ["in_game/gfx/map/city_data/D1_monuments.txt"]
+    text = rewrite.outputs["in_game/gfx/map/city_data/D1_monuments.txt"].decode()
+    assert "d1_gone = {" not in text
+    assert "# the pyramid" not in text
+    assert "fresh" not in text  # dropped, not rebound
+    assert "only_in_location = kept" in text
+    assert text.count("mesh_list") == 3  # the two definitions stay; only the building goes
+    assert rewrite.monuments == {"in_game/gfx/map/city_data/D1_monuments.txt": 1}
+
+
+def test_city_data_that_names_a_removed_place_elsewhere_stops_the_export(tmp_path: Path) -> None:
+    """Only the models bound to a place are dropped; any other name of a removed place is an
+    unknown that must be decided, as with the pictures."""
+    game = tmp_path / "game"
+    _write(game, "in_game/gfx/map/city_data/00_x.txt", "other = {\n\tlocation = gone\n}\n")
+    with pytest.raises(RemapError, match="outside the pictures and models"):
+        _ = remap_scripts(tmp_path, REMAP, set())

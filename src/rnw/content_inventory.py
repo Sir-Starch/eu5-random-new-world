@@ -30,6 +30,7 @@ from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping
+    from collections.abc import Set as AbstractSet
     from pathlib import Path
 
 GEOGRAPHY: Final[tuple[str, ...]] = ("location", "province", "area", "region", "subcontinent")
@@ -253,6 +254,49 @@ def scan(
         )
         for key, (files, refs) in sorted(merged.items())
     }
+
+
+def residuals(
+    texts: Mapping[str, str], footprint: Footprint, present: Mapping[str, AbstractSet[str]]
+) -> dict[str, dict[str, tuple[str, ...]]]:
+    """The objects of ``texts`` that still name a key the generated world does not have.
+
+    ``texts`` are script texts by mod path as the world will carry them; ``present`` lists, by
+    kind, the keys the generated world defines. What is found is what ``scan`` finds in the
+    vanilla files, minus what the remap and the decisions took away: a name of an American
+    location, province, area, region or subcontinent that is gone, by decision key.
+    """
+    parsed = {relative: (text, parse(text)) for relative, text in texts.items()}
+    keywords: set[str] = set()
+    for _, root in parsed.values():
+        keywords |= _keys(root)
+    words = frozenset(keywords)
+    found: dict[str, dict[str, set[str]]] = {}
+    for relative, (text, root) in parsed.items():
+        category = category_of(relative)
+        for entry in root.entries:
+            if entry.key is None or not isinstance(entry.value, Block):
+                continue
+            refs = references(text[entry.start : entry.end], footprint, words)
+            for kind in GEOGRAPHY:
+                lost = refs.get(kind, set()) - present.get(kind, frozenset())
+                if lost:
+                    found.setdefault(f"{category}:{entry.key}", {}).setdefault(kind, set()).update(
+                        lost
+                    )
+    return {
+        key: {kind: tuple(sorted(names)) for kind, names in sorted(kinds.items())}
+        for key, kinds in sorted(found.items())
+    }
+
+
+def objects(text: str) -> frozenset[str]:
+    """The identifiers of the top-level script objects of ``text``."""
+    return frozenset(
+        entry.key
+        for entry in parse(text).entries
+        if entry.key is not None and isinstance(entry.value, Block)
+    )
 
 
 def summarize(consumers: Iterable[Consumer]) -> dict[str, dict[str, int]]:

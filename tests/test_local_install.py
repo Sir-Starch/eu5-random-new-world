@@ -288,6 +288,8 @@ def test_local_content_consumers_all_have_a_decision() -> None:
     inventory = content_report.build(Path(root_value))
     assert inventory.missing == []
     assert inventory.stale == []
+    assert inventory.uncarried == []  # a replaced object says what carries it, or that none does
+    assert inventory.stale_carriers == []
     assert (inventory.events, inventory.modifiers, inventory.base_values) == (58, 39, 5)
     names = [
         c for c in inventory.consumers.values() if c.category == "common/scripted_country_names"
@@ -466,6 +468,13 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
         "events": 82,
     }
     assert 3 <= guarded["common/formable_countries"] <= 8
+    # The two American monuments of the DLC packs (Teotihuacan, Cholula) are dropped with their
+    # places, as their pictures are; no object of the game's scripts is left naming a key the
+    # world lacks (the export refuses it, ``check_outcomes``).
+    monuments = cast(
+        "dict[str, int]", cast("dict[str, object]", report["text_stats"])["monuments_dropped"]
+    )
+    assert sum(monuments.values()) == 2
     places = cast("dict[str, dict[str, str]]", report["text_stats"])["exceptional_places"]
     assert len(places) >= 3  # silver, mercury and fish are found in any New World
     assert set(places) <= {spec.modifier for spec in SPECS}
@@ -479,10 +488,27 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     assert record.output_count == output["count"]
 
 
-def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
-    """Rerolling the peoples leaves the exceptional places, rerolling the resources the peoples.
+# The one file the resources layer writes: the raw material of every location and the exceptional
+# places. The peoples layer writes the start, the countries, the formables, the stories and the
+# texts, and no file of the land (``in_game/map_data``, ``in_game/gfx``, ``main_menu/gfx``).
+RESOURCES_FILE = "in_game/map_data/location_templates.txt"
+PEOPLES_DIRS = (
+    "main_menu/setup/1337/",
+    "in_game/setup/countries/",
+    "in_game/common/",
+    "in_game/events/",
+    "main_menu/common/",
+    "main_menu/localization/",
+)
 
-    The countries and the stories are the peoples'; the exceptional places are the resources'.
+
+def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
+    """Rerolling the peoples leaves the land and the resources, rerolling the resources the rest.
+
+    Every file of the three mods is compared, not a chosen few (content plan, F2): the resources'
+    reroll changes exactly one file; the peoples' reroll changes files of the start, the
+    countries, the formables, the stories and the texts only, and never the resources' file. The
+    exceptional places are the resources', the countries and the stories the peoples'.
     Three exports, about five minutes, so only with ``RNW_LAYERS=1`` (content plan, N1 and N3).
     """
     root_value = os.environ.get("EU5_GAME_DIR")
@@ -504,21 +530,17 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
         places = cast("dict[str, str]", stats["exceptional_places"])
         starts = cast("dict[str, str]", cast("dict[str, object]", stats["stories"])["starts"])
         files = cast("list[dict[str, str]]", report["files"])
-        wanted = (
-            "main_menu/setup/1337/10_countries.txt",
-            DEFINITION_FILE,
-            START_FILE,
-            FORMABLES_FILE,
-            colonial_names.NAMES_FILE,
-            "main_menu/localization/english/rnw_story_l_english.yml",
-        )
         digests = {
             record["path"].partition("/")[2]: record["sha256"]
             for record in files
-            if record["path"].partition("/")[2] in wanted
+            if not record["path"].partition("/")[2].startswith(".metadata/")
         }
-        assert len(digests) == len(wanted)
         return places, starts, digests
+
+    def changed(first: dict[str, str], second: dict[str, str]) -> set[str]:
+        return {
+            path for path in first.keys() | second.keys() if first.get(path) != second.get(path)
+        }
 
     base_places, base_starts, base_files = made("base", str(golden["code"]))
     peoples_places, peoples_starts, peoples_files = made("peoples", encode(rolled(code, "peoples")))
@@ -529,7 +551,21 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
     assert base_starts
     assert peoples_places == base_places
     assert peoples_starts != base_starts
-    assert peoples_files != base_files
     assert resource_places != base_places
     assert resource_starts == base_starts
-    assert resource_files == base_files
+    assert changed(base_files, resource_files) == {RESOURCES_FILE}
+    by_peoples = changed(base_files, peoples_files)
+    assert by_peoples
+    assert RESOURCES_FILE not in by_peoples
+    assert {path for path in by_peoples if not path.startswith(PEOPLES_DIRS)} == set()
+    # What the peoples own: the countries, their story starts, the formables over their land.
+    for owned in (
+        "main_menu/setup/1337/10_countries.txt",
+        DEFINITION_FILE,
+        START_FILE,
+        FORMABLES_FILE,
+        "main_menu/localization/english/rnw_story_l_english.yml",
+    ):
+        assert owned in by_peoples, owned
+    # The names of colonies follow the land's regions, whoever lives there.
+    assert colonial_names.NAMES_FILE not in by_peoples

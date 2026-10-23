@@ -35,6 +35,7 @@ from rnw.storymodel import (
     BUILDING,
     CLEANUP,
     CLEANUP_MONTHS,
+    HIDDEN,
     PRIVILEGE,
     PULSE_FILE,
     STATIC,
@@ -169,8 +170,7 @@ def start_event(number: int, opportunity: Opportunity, story: Story) -> str:
         )
     return (
         f"{NAMESPACE}.{number} = {{\n"
-        "\ttype = country_event\n"
-        "\thidden = yes\n"
+        f"{HIDDEN}"
         "\tfire_only_once = yes\n\n"
         "\tdynamic_historical_event = {\n"
         f"\t\ttag = {opportunity.bearer}\n"

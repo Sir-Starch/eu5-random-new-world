@@ -153,7 +153,8 @@ def _common(table: _Table) -> None:
         new_world_institution_areas_explore portugal_explore_brazil russia_colonize_alaska
         """,
     )
-    add("common/building_types", REPLACE, "retired", "great_temple_of_tenochtitlan", "N3")
+    # Gated by ``country_potential = { has_or_had_tag = TNC }``, a retired tag: nothing builds it.
+    add("common/building_types", REPLACE, "inert", "great_temple_of_tenochtitlan", "N3")
     add(
         "common/country_interactions",
         REPLACE,
@@ -381,6 +382,263 @@ RETIRED_STAGES: Final[Mapping[str, Mapping[str, str]]] = {
 }
 
 
+@dataclass(frozen=True, slots=True)
+class Carrier:
+    """What carries the purpose of a replaced object in the generated world, and how far.
+
+    ``families`` are the stories, formables and other generated content of the same kind
+    (``content.FAMILIES``, ``stories.STORIES``, ``eu5_places``, ``colonial_names``); empty
+    when nothing carries it, and then ``note`` says why in its first words (``none:``).
+    A carrier is a design relation [INFERRED], never an equivalence: a family tells a story of
+    the same kind about places and states of the generated world.
+    """
+
+    families: tuple[str, ...]
+    note: str
+
+
+PLACES: Final = "exceptional_places"
+NAMES: Final = "colonial_names"
+NONE: Final = ()
+
+
+class _Carriers:
+    """The rows being written; a replaced object is carried once."""
+
+    def __init__(self) -> None:
+        self.rows: dict[str, Carrier] = {}
+
+    def add(self, category: str, idents: str, families: tuple[str, ...], note: str) -> None:
+        """Say what carries the objects named in ``idents`` (separated by whitespace)."""
+        for ident in idents.split():
+            key = f"{category}:{ident}"
+            if key in self.rows:
+                message = f"Two carriers for {key}"
+                raise ValueError(message)
+            self.rows[key] = Carrier(families, note)
+
+
+def _carriers() -> dict[str, Carrier]:
+    table = _Carriers()
+    add = table.add
+    modifiers = "menu/static_modifiers"
+    add(
+        modifiers,
+        """
+        guanajuato_base huancavelica_base newfoundland_fishing_grounds_base potosi_base
+        zacatecas_base
+        """,
+        (PLACES,),
+        "the five natural bonuses, each a place of the generated land with the vanilla size",
+    )
+    add(
+        "events",
+        "flavor_cas.110 flavor_cas.111 flavor_cas.112 flavor_cas.113",
+        (PLACES,),
+        "the deposits only; the events about the mita and the discoverer have no story",
+    )
+    add(
+        "common/generic_actions",
+        "pilgrimage_to_cholula",
+        ("sacred_centre",),
+        "a journey to a holy centre is the first node of the sacred centre",
+    )
+    add(
+        "events",
+        "nahuatl_events.30",
+        ("sacred_centre",),
+        "a journey to a holy centre is the first node of the sacred centre",
+    )
+    add(
+        "common/estate_privileges",
+        "hurin_qusqu_privilege",
+        ("sacred_centre",),
+        "the high priesthood's seat is the sacred centre's estate privilege",
+    )
+    add(
+        "common/building_types",
+        "great_temple_of_tenochtitlan",
+        ("sacred_centre",),
+        "the temple's effect is a location modifier of the sacred centre, not a building",
+    )
+    chk = (*range(1, 13), *range(20, 25), *range(30, 36))
+    add(
+        "events",
+        " ".join(f"flavor_chk.{number}" for number in chk),
+        ("river_centre",),
+        "a river city that floods, hungers and rebuilds is the river centre",
+    )
+    add(
+        modifiers,
+        """
+        chk_exodus_of_cahokia chk_food_conditions_horrific chk_fortifying_center
+        chk_funding_new_woodhenge_expansion chk_funding_woodhenge_restoration
+        chk_maize_cravings_mod chk_new_golden_age chk_new_urban_planning
+        chk_nixtamalized_maize_practice_reintroduced chk_outer_cahokia_growth
+        chk_outer_cahokia_protected_flooding chk_over_reliance_on_maize
+        chk_preservation_of_cahokia chk_protection_against_flooding chk_rebuilding_woodhenge
+        chk_reintroduction_of_nixtamalization chk_restricted_construction
+        chk_return_of_political_elite chk_river_water_polluted chk_shadow_of_cahokia_city
+        chk_venerated_ruler chk_warbands_for_food_aggression
+        """,
+        ("river_centre",),
+        "the payloads are copied under the river centre's own names",
+    )
+    add(
+        "events",
+        """
+        flavor_azt.70 flavor_azt.90 flavor_azt.110 flavor_azt.200 flavor_azt.220
+        flavor_azt.230 flavor_azt.240
+        """,
+        ("sacred_centre", "harvest", "great_alliance", "empire_periphery"),
+        (
+            "a great pyramid, a famine year, a triple alliance and a tribute empire have "
+            "stories of their own kind"
+        ),
+    )
+    add(
+        "events",
+        "flavor_azt.80 flavor_azt.120 flavor_azt.160",
+        NONE,
+        "none: a named ruler, a legal reform and a dynasty, told by persons",
+    )
+    add(
+        "events",
+        "flavor_azt.130 flavor_azt.140 flavor_azt.150",
+        NONE,
+        "none: the game has diseases of its own, and a second set would only repeat them",
+    )
+    add(
+        "events",
+        "flavor_azt.170 flavor_azt.180 flavor_azt.190",
+        NONE,
+        "none: the fifty-two-year cycle is a calendar of one people",
+    )
+    add(
+        modifiers,
+        """
+        mexica_period_of_expansion_modifier mexica_period_of_passive_growth_modifier
+        mexica_period_of_stability_modifier renewal_of_life
+        """,
+        NONE,
+        "none: the payloads of the cycle that no family tells",
+    )
+    add(
+        "events",
+        """
+        flavor_csu.200 flavor_csu.201 flavor_csu.202 flavor_csu.210 flavor_csu.211
+        flavor_csu.212 flavor_csu.213
+        """,
+        NONE,
+        "none: a war of succession and a conquest told by named persons",
+    )
+    add(
+        "events",
+        "flavor_iro.2 flavor_iro.3 flavor_iro.10 flavor_iro.13 flavor_iro.15",
+        ("great_alliance",),
+        (
+            "a council of neighbouring peoples and the right to lead it is the great alliance; "
+            "the legends of its founders have no person in the generated world"
+        ),
+    )
+    add(
+        "events",
+        "flavor_iro.46 flavor_iro.47",
+        ("harvest",),
+        "a shared harvest and the keepers of the fields are the harvest story",
+    )
+    add(
+        modifiers,
+        "iro_earn_tribal_trust iro_seek_to_integrate iro_too_aggressive_consolidation",
+        ("great_alliance",),
+        "the payloads are copied under the great alliance's own names",
+    )
+    add(
+        modifiers,
+        """
+        iro_matriarchal_agriculture iro_sharing_of_three_sisters_harvest
+        iro_three_sisters_harvest
+        """,
+        ("harvest",),
+        "the payloads are copied under the harvest's own names",
+    )
+    add(
+        "events",
+        "flavor_pue.101",
+        ("route_market",),
+        "a road between towns is the route and market",
+    )
+    add(
+        "events",
+        "flavor_pue.102 flavor_pue.103 flavor_pue.104 flavor_pue.105",
+        ("harvest",),
+        "irrigation and the return to ancestral seats are the new fields and the villages",
+    )
+    add(
+        "events",
+        "flavor_pue.106",
+        ("cultural_union",),
+        "reuniting a culture group is the formable of related peoples",
+    )
+    add(
+        modifiers,
+        """
+        pue_improve_capital_irrigation pue_maintain_inner_tribal_peace pue_mesa_verde_capital
+        pue_mesa_verde_reclaimed pue_return_to_mesa_verde pue_the_sky_city pue_unifying_campaign
+        """,
+        ("harvest", "route_market", "cultural_union"),
+        "the payloads are copied under the new stories' own names",
+    )
+    add(
+        "common/country_interactions",
+        "form_closer_bond_iroquois merge_tribe_iroquois",
+        NONE,
+        "none: interactions between named peoples; the formables join states by decision",
+    )
+    add(
+        "common/decisions",
+        "iro_iroquois_interactions_decision",
+        ("great_alliance",),
+        "the decision that binds a league's peoples is the great alliance's council",
+    )
+    add(
+        "common/formable_countries",
+        "CAN_f MEX_f USA_f",
+        ("postcolonial_federation",),
+        "the federation of a colonial shore replaces the colonial formables of every settlers",
+    )
+    add(
+        "events",
+        " ".join(f"flavor_usa.{number}" for number in (*range(1, 21), 1000)),
+        ("postcolonial_federation", "colony"),
+        (
+            "the formable carries the nation and the colony the road to independence; the "
+            "founding steps, buildings and persons have no counterpart"
+        ),
+    )
+    add(
+        "common/scripted_country_names",
+        """
+        jamaica_scripted_country_name new_amsterdam_scripted_country_name
+        new_granada_scripted_country_name new_spain_scripted_country_name
+        new_york_scripted_country_name nova_scotia_scripted_country_name
+        peru_scripted_country_name rio_de_la_plata_scripted_country_name
+        """,
+        (NAMES,),
+        "a colony's name is the region's generated name after its founders' word for new",
+    )
+    add(
+        "events",
+        """
+        flavor_cas.2700 flavor_cas.2701 flavor_cas.2702 flavor_eng.224 flavor_eng.233
+        flavor_eng.235 flavor_eng.242
+        """,
+        ("colony",),
+        "the colonial rebellion chain is the colony story's road to independence",
+    )
+    return table.rows
+
+
 def _table() -> dict[str, Verdict]:
     table = _Table()
     _common(table)
@@ -390,6 +648,7 @@ def _table() -> dict[str, Verdict]:
 
 
 TABLE: Final[Mapping[str, Verdict]] = _table()
+CARRIERS: Final[Mapping[str, Carrier]] = _carriers()
 
 
 def decide(

@@ -11,7 +11,7 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw.content_decisions import REASONS, Decision, Verdict, decide, missing, stale
+from rnw.content_decisions import CARRIERS, REASONS, Decision, Verdict, decide, missing, stale
 from rnw.content_inventory import (
     GEOGRAPHY,
     Consumer,
@@ -54,6 +54,25 @@ class Inventory:
         """Decisions that no consumer matches."""
         return stale(self.consumers.values())
 
+    @property
+    def replaced(self) -> list[str]:
+        """The consumers whose decision is to replace them."""
+        return sorted(
+            key
+            for key, verdict in self.verdicts.items()
+            if verdict is not None and verdict.decision is Decision.REPLACE
+        )
+
+    @property
+    def uncarried(self) -> list[str]:
+        """Replaced consumers that nothing says carries them (not even ``none:``)."""
+        return [key for key in self.replaced if key not in CARRIERS]
+
+    @property
+    def stale_carriers(self) -> list[str]:
+        """Carriers of objects that are no longer replaced."""
+        return sorted(CARRIERS.keys() - set(self.replaced))
+
 
 def build(game_dir: Path) -> Inventory:
     """Scan the installation and decide every consumer it finds."""
@@ -91,6 +110,26 @@ def _positional(inventory: Inventory) -> dict[str, object]:
         "files": len({file for c in chosen for file in c.files}),
         "keys": {kind: len(names) for kind, names in keys.items()},
         "by_category": dict(sorted(Counter(c.category for c in chosen).items())),
+    }
+
+
+def _carriers(inventory: Inventory) -> dict[str, object]:
+    """What carries the purpose of the replaced objects: by family, and what nothing carries."""
+    by_family: Counter[str] = Counter()
+    for key in inventory.replaced:
+        carrier = CARRIERS.get(key)
+        by_family.update(carrier.families if carrier is not None else ())
+    return {
+        "replaced": len(inventory.replaced),
+        "carried": sum(
+            1 for key in inventory.replaced if key in CARRIERS and CARRIERS[key].families
+        ),
+        "none": sorted(
+            key for key in inventory.replaced if key in CARRIERS and not CARRIERS[key].families
+        ),
+        "undecided": inventory.uncarried,
+        "stale": inventory.stale_carriers,
+        "by_family": dict(sorted(by_family.items())),
     }
 
 
@@ -132,6 +171,7 @@ def report(inventory: Inventory) -> dict[str, object]:
         "positional": _positional(inventory),
         "missing": inventory.missing,
         "stale": inventory.stale,
+        "carriers": _carriers(inventory),
         "reason_text": {
             reason: REASONS[reason] for reason in sorted({k.split("/")[1] for k in reasons})
         },

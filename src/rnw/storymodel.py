@@ -34,6 +34,15 @@ CLERGY: Final[str] = "clergy_estate"
 AFFORD: Final[str] = "gold > 100"
 CLEANUP: Final[int] = 9
 CLEANUP_MONTHS: Final[int] = 180
+# The head of every hidden event, as the game's own hidden events write it: the engine logs an
+# event without a title even when it is hidden (EU5 1.4.4, sitting 038, C222).
+HIDDEN: Final[str] = (
+    "\ttype = country_event\n"
+    "\toutcome = neutral\n"
+    "\ttitle = empty_text\n"
+    "\tdesc = empty_text\n"
+    "\thidden = yes\n"
+)
 # The hidden event that starts a story whose bearer is found in play (``Pulse``).
 PULSE_START: Final[int] = 10
 PULSE_FILE: Final[str] = "in_game/common/on_action/rnw_stories.txt"
@@ -223,8 +232,7 @@ def render_cleanup(story: Story) -> str:
     """
     return (
         f"{story.event(CLEANUP)} = {{\n"
-        "\ttype = country_event\n"
-        "\thidden = yes\n\n"
+        f"{HIDDEN}\n"
         f"\ttrigger = {{\n\t\thas_variable = {story.centre}\n\t}}\n\n"
         f"\timmediate = {{\n{_lines(story.cleanup(), chr(9) * 2)}\t}}\n"
         "}\n"
@@ -237,8 +245,7 @@ def render_pulse_start(story: Story, pulse: Pulse) -> str:
     opening, closing = story.event(story.nodes[0].number), story.event(CLEANUP)
     return (
         f"{story.event(PULSE_START)} = {{\n"
-        "\ttype = country_event\n"
-        "\thidden = yes\n\n"
+        f"{HIDDEN}\n"
         f"\ttrigger = {{\n{guards}"
         f"\t\tNOT = {{ has_variable = {story.path} }}\n"
         f"\t\tNOT = {{ has_variable = {story.quiet()} }}\n\t}}\n\n"

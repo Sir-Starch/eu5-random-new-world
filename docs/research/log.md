@@ -726,3 +726,16 @@
 - [UNKNOWN] The result is read in a later sitting of a batch ([040](../../experiments/040-colonial-path-probe/README.md)); nothing is asked now.
 - No game launch by the agent, no push or publication.
 
+
+## 2026-10-23 — F1 and F2: the offline audit of N0 to N4, 0.10.11, C222-C231
+
+- [OWNER] "Execute F1 and F2": the final verification of the content plan that needs no game ([audit](n0-n4-audit.md)).
+- [V-EXEC C225, C227] The mod was compared with the game's files object by object (2,467 script files, 52 rewritten), by record (the setup, the 544 country definitions) and by key (the localization, the map): every difference of every object is a remap, a closed gate, a rebinding, a dropped picture or an absence; the 102 absent objects are exactly the retired events and modifiers; no Old World record, tag, text or object was lost. Two things were not explained and became findings (below).
+- [V-GAME C222-C224] The owner's own `error.log` of sitting 038, read against the baselines of 1.4.1 and 1.4.2, is not "the vanilla baseline" (C208, C211): 18 lines `Invalid province_definition key!` (the remap did not read that scope), 18 lines `is missing a title` (a hidden event wants a title; the game's own write `empty_text`), 3 "never set" notices of retired setters, 96 lines of coastal sea zones without ports (known), 4 lines for two islands without a port. The earlier readings looked for the faults of 036 and found them gone; none looked for the faults of the files the audit compares.
+- [V-EXEC C226] The inventory reads keyed top-level objects, so two DLC unique buildings (the pyramids of Teotihuacan and Cholula, in a template of raw code) had no row and were remapped to the nearest generated cell while their pictures were dropped.
+- [V-EXEC C228] The plan's stage markers said which stage was to carry a replaced object, not what carries it. `CARRIERS` now says it for all 153: 131 carried by 11 families, 22 by none, each with a reason; the table, the tests and the report check it.
+- [V-EXEC C229, C230] The reference world gives the same digest under `PYTHONHASHSEED` 1, 7 and a random one; the layer test now compares every file of three worlds (resources: one file; peoples: the start, the countries, the formables, the stories and the texts).
+- 0.10.11, epoch 21: `province_definition:` remapped; the DLC monuments dropped with their places; hidden events written as the game's are; `check_outcomes` refuses a world with a vanished object or a missing key; `CARRIERS`; the temple's reason. Reference world `RNW1-0426C-SYW6B-MW73Y-C0050-P001G-B20`, 793 files, digest `88e1d8d8…`, differing from epoch 20's in 14 files and one new one. `make check` passes (1,152 Python tests, 23 Rust tests); the read-only local tests, the reference test and the layer test pass.
+- Installed: `rnw_exp_world_t3htedmcwr` (see [INSTALLED](../../experiments/INSTALLED.md)).
+- [UNKNOWN C231] Whether the engine's log is clean of these lines after 0.10.11, and everything about N4 in game (F3).
+- No game launch, push or publication.

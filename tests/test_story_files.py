@@ -411,3 +411,26 @@ def test_colonial_names_are_written_for_the_regions_a_world_has(tmp_path: Path) 
     )
     assert NAMES_FILE not in none.files
     assert none.stats["colonial_names"] == 0
+
+
+def test_every_hidden_event_is_written_as_the_games_own_hidden_events_are(tmp_path: Path) -> None:
+    """The engine logs an event without a title even when it is hidden (EU5 1.4.4, sitting 038):
+    the game's hidden events carry ``title = empty_text``, ``desc = empty_text`` and an outcome."""
+    files = _build(_install(tmp_path), _everything())
+    scripts = [files[START_FILE], *(files[f"in_game/events/{s.namespace}.txt"] for s in STORIES)]
+    hidden = 0
+    for data in scripts:
+        for entry in parse(data.decode("utf-8-sig")).entries:
+            block = entry.value
+            if not isinstance(block, Block) or block.first("hidden") is None:
+                continue
+            hidden += 1
+            for key, wanted in (
+                ("title", "empty_text"),
+                ("desc", "empty_text"),
+                ("outcome", "neutral"),
+            ):
+                found = block.first(key)
+                assert found is not None, f"{entry.key} has no {key}"
+                assert found.value == wanted, entry.key
+    assert hidden >= 6 + len(STORIES) * 1  # the starts, the cleanups and the pulse starts

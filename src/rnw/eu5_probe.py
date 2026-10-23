@@ -112,7 +112,7 @@ def _anywhere(game_dir: Path, word: str) -> list[str]:
                     continue
                 if pattern.search(text):
                     found.append(path.relative_to(game_dir).as_posix())
-    return found
+    return sorted(found)
 
 
 def anchor_problems(game_dir: Path) -> list[str]:

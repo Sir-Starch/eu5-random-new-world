@@ -6,8 +6,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.content_check import check_decisions
+from rnw.content import FORMABLE_FAMILIES
+from rnw.content_check import Checked, check_decisions, check_outcomes
 from rnw.content_decisions import (
+    CARRIERS,
     REASONS,
     RETIRED_STAGES,
     TABLE,
@@ -29,6 +31,23 @@ from rnw.content_inventory import (
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+# Where each carrier of a replaced object landed (content plan): the stage that wrote it.
+STAGE_OF = {
+    "exceptional_places": "N1",
+    "river_centre": "N3",
+    "sacred_centre": "N3",
+    "harvest": "N4",
+    "route_market": "N4",
+    "great_alliance": "N4",
+    "empire_periphery": "N4",
+    "contact": "N4",
+    "colony": "N4",
+    "colonial_names": "N4",
+    **dict.fromkeys(FORMABLE_FAMILIES, "N4"),
+    "river_union": "N3",
+}
+KNOWN_CARRIERS = frozenset(STAGE_OF)
 
 DEFINITIONS = """america = {
 \tnorth_america = {
@@ -257,3 +276,146 @@ def test_the_export_check_refuses_tags_outside_the_footprint(tmp_path: Path) -> 
     root = _install(tmp_path)
     with pytest.raises(ValueError, match="outside the American footprint: KEP"):
         _ = check_decisions(root, events=[], modifiers=[], removed_tags=["AAA", "KEP"])
+
+
+DECIDED = {
+    "events:flavor_xx.2": Verdict(Decision.KEEP, "generic"),
+    "events:flavor_xx.6": Verdict(Decision.NEUTRALIZE, "identity"),
+    "common/estate_privileges:reward": Verdict(Decision.REPLACE, "lost", "N3"),
+    "common/scripted_triggers:trigger_b": Verdict(Decision.KEEP, "positional"),
+}
+PRESENT = {
+    "location": frozenset({"fresh", "loc_eu"}),
+    "province": frozenset({"fresh_province"}),
+    "area": frozenset({"fresh_area"}),
+    "region": frozenset({"r_one"}),
+    "subcontinent": frozenset({"north_america"}),
+}
+EVENTS_FILE = "in_game/events/DHE/flavor_xx.txt"
+
+
+def _checked(root: Path) -> Checked:
+    return check_decisions(
+        root,
+        events=["flavor_xx.1", "flavor_xx.3"],
+        modifiers=[],
+        removed_tags=["AAA", "BBB"],
+        table=DECIDED,
+    )
+
+
+def _without(text: str, event: str) -> str:
+    """``text`` without the event ``event`` (its block runs to the next unindented brace)."""
+    start = text.index(f"{event} = {{")
+    return text[:start] + text[text.index("\n}\n", start) + 3 :]
+
+
+def _written(*, dropped: tuple[str, ...], rebind: bool = True) -> dict[str, bytes]:
+    text = EVENTS
+    for event in dropped:
+        text = _without(text, event)
+    if rebind:
+        text = text.replace("location:loc_a", "location:fresh")
+    triggers = KEYWORDS.replace("location:circle", "location:fresh") if rebind else KEYWORDS
+    return {
+        EVENTS_FILE: text.encode(),
+        "in_game/common/scripted_triggers/keywords.txt": triggers.encode(),
+    }
+
+
+def test_the_outcomes_hold_when_only_retired_objects_vanish_and_no_key_is_left(
+    tmp_path: Path,
+) -> None:
+    """The retired events go, the neutralized one is rebound: nothing is left to decide."""
+    root = _install(tmp_path)
+    checked = _checked(root)
+    scripts = _written(dropped=("flavor_xx.1", "flavor_xx.3"))
+    assert check_outcomes(root, scripts, checked, PRESENT)["rewritten"] == 2
+
+
+def test_an_object_that_vanishes_without_a_decision_stops_the_export(tmp_path: Path) -> None:
+    """A generic event cannot go: only what the exporter retires may leave a file."""
+    root = _install(tmp_path)
+    checked = _checked(root)
+    scripts = _written(dropped=("flavor_xx.1", "flavor_xx.3", "flavor_xx.4"))
+    with pytest.raises(ValueError, match=r"vanished that no decision retires: events:flavor_xx.4"):
+        _ = check_outcomes(root, scripts, checked, PRESENT)
+
+
+def test_a_key_the_world_lacks_stops_the_export_even_in_a_neutralized_object(
+    tmp_path: Path,
+) -> None:
+    """The engine logs a missing key at load whether or not the gate is closed (C223)."""
+    root = _install(tmp_path)
+    checked = _checked(root)
+    scripts = _written(dropped=("flavor_xx.1", "flavor_xx.3"), rebind=False)
+    with pytest.raises(ValueError, match=r"events:flavor_xx.6 \(location loc_a\)"):
+        _ = check_outcomes(root, scripts, checked, PRESENT)
+
+
+def test_an_american_area_the_world_keeps_is_no_residue(tmp_path: Path) -> None:
+    """A key that the generated world defines again (an area kept by position) may stay."""
+    root = _install(tmp_path)
+    checked = _checked(root)
+    scripts = _written(dropped=("flavor_xx.1", "flavor_xx.3"))
+    scripts[EVENTS_FILE] = scripts[EVENTS_FILE].replace(
+        b"has_variable = unrelated", b"area = area:a_one"
+    )
+    with pytest.raises(ValueError, match=r"area a_one"):
+        _ = check_outcomes(root, scripts, checked, PRESENT)
+    kept = {**PRESENT, "area": frozenset({"a_one"})}
+    assert check_outcomes(root, scripts, checked, kept)["rewritten"] == 2
+
+
+def test_a_given_name_that_equals_a_location_key_is_no_residue(tmp_path: Path) -> None:
+    """The table says ``name``: ``circle`` in a language file is not a place."""
+    root = _install(tmp_path)
+    table = {**DECIDED, "common/scripted_triggers:trigger_b": Verdict(Decision.KEEP, "name")}
+    checked = check_decisions(
+        root,
+        events=["flavor_xx.1", "flavor_xx.3"],
+        modifiers=[],
+        removed_tags=["AAA", "BBB"],
+        table=table,
+    )
+    scripts = _written(dropped=("flavor_xx.1", "flavor_xx.3"))
+    scripts["in_game/common/scripted_triggers/keywords.txt"] = KEYWORDS.encode()
+    assert check_outcomes(root, scripts, checked, PRESENT)["rewritten"] == 2
+
+
+def test_every_replacement_names_what_carries_it() -> None:
+    """A replaced object belongs to a chain with a carrier, or says why none carries it."""
+    replaced = {key for key, verdict in TABLE.items() if verdict.decision is Decision.REPLACE}
+    assert replaced <= CARRIERS.keys()
+    for key, carrier in CARRIERS.items():
+        assert carrier.note, key
+        assert bool(carrier.families) != carrier.note.startswith("none:"), key
+        assert set(carrier.families) <= KNOWN_CARRIERS, key
+    # The rest are the objects the exporter retires, found by their chains' prefixes.
+    for key in CARRIERS.keys() - replaced:
+        category, _, ident = key.partition(":")
+        assert any(ident.startswith(start) for start in RETIRED_STAGES.get(category, {})), key
+
+
+def test_a_replacement_is_told_in_the_stage_that_carries_it() -> None:
+    """The stage a replaced object names is the stage of one of its carriers, where it has any."""
+    rules = {
+        (category, start): stage
+        for category, rules_ in RETIRED_STAGES.items()
+        for start, stage in rules_.items()
+    }
+    for key, carrier in CARRIERS.items():
+        if not carrier.families:
+            continue
+        category, _, ident = key.partition(":")
+        verdict = TABLE.get(key)
+        stage = (
+            verdict.stage
+            if verdict is not None
+            else next(
+                stage
+                for (cat, start), stage in rules.items()
+                if cat == category and ident.startswith(start)
+            )
+        )
+        assert stage in {STAGE_OF[family] for family in carrier.families}, key

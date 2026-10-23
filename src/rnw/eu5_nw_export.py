@@ -34,7 +34,7 @@ from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
 from rnw.content import plan_content
-from rnw.content_check import check_decisions
+from rnw.content_check import check_decisions, check_outcomes
 from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
@@ -596,6 +596,17 @@ def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
         key = game_map.keys[zone]
         out[key] = _instance(key, top + row, x, height)
     return out
+
+
+def _present_keys(plan: Plan) -> dict[str, frozenset[str]]:
+    """The map keys of each kind that the generated world defines."""
+    return {
+        "location": frozenset(cell.key for cell in plan.cells),
+        "province": frozenset(cell.province for cell in plan.cells),
+        "area": frozenset(cell.area for cell in plan.cells),
+        "region": frozenset(cell.region for cell in plan.cells),
+        "subcontinent": frozenset(cell.subcontinent for cell in plan.cells),
+    }
 
 
 def _additions(plan: Plan) -> HierarchyAdditions:
@@ -2298,11 +2309,19 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             )
         except ContentError as error:
             raise NewWorldExportError(str(error)) from error
+        try:
+            text_stats["script_outcomes"] = check_outcomes(
+                game_dir, scripts, checked, _present_keys(plan)
+            )
+        except ValueError as error:
+            raise NewWorldExportError(str(error)) from error
         texts.update(scripts)
         checkpoint()
         text_checks.update(verify_country_tags(game_dir, texts))
         text_checks.update(verify_localization(texts, vanilla_hashes))
         text_stats["scripts_remapped"] = rewrite.remapped
+        text_stats["illustrations_dropped"] = rewrite.illustrations
+        text_stats["monuments_dropped"] = rewrite.monuments
         text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
         text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
         world_checks, neighbours = checks.result()
