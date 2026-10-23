@@ -12,8 +12,12 @@ Every vanilla anchor the probe leans on is checked against the installation firs
 missing one stops the build (``anchor_problems``); nothing is guessed.
 
 The probe makes the formable ``rnw_probe_f`` for the tag ``ZQP`` available to Bern (``BRN``),
-a county of two locations, a scripted name for the subject made from Interlaken, two variables
-set when a game starts, and decisions that found the subject and read the variables back. It
+a county of two locations, two scripted names for the subjects Bern makes (one from Interlaken
+with the effect that vanilla uses for a country made from a location, one from a free overseas
+province with the effect that the game's own colonization uses, copied from its colonial charter
+goal), two variables set when a game starts, and decisions that found the subjects and read the
+variables back. The two subjects are an experiment of one against the other: the first did not
+get the scripted name (C207, C210), and the game's own colonies are made the second way. It
 also runs the start of a story in miniature (H7): a hidden event with a dynamic historical window
 that is certain to open in the first months, a variable that holds a location, and a delayed
 event, so the owner sees in a few game months what a story needs decades to show.
@@ -49,6 +53,28 @@ COUNTRY_VARIABLE: Final[tuple[str, str, int]] = ("FRA", VARIABLE, 7)
 LOCATION_VARIABLE: Final[tuple[str, str, int]] = ("paris", VARIABLE, 3)
 GAME: Final[str] = "game"
 FORMABLE_README: Final[str] = f"{GAME}/in_game/common/formable_countries/readme.txt"
+# A province that no country holds at the start of 1337, far from Bern: where the game's own
+# colonial charter would found a colony (the Sydney region). Its locations come from the game.
+OVERSEAS: Final[str] = "dharug_province"
+OVERSEAS_NAME: Final[str] = "rnw_probe_overseas_scripted_country_name"
+COLONIZED: Final[str] = "rnw_probe_colonized"
+CHARTER_GOAL: Final[str] = "in_game/common/colonial_charter_goals/form_colonial_nation.txt"
+# What the colonial charter goal writes and the probe copies; each must still be there.
+CHARTER_WORDS: Final[tuple[str, ...]] = (
+    "create_location_country_from_province_definition",
+    "best_capital_for_colony",
+    "cc_setup_new_town",
+    "setup_colonial_nation",
+    "add_truce_with",
+)
+OWNERSHIP_FIELDS: Final[tuple[str, ...]] = (
+    "own_control_colony",
+    "own_control_conquered",
+    "own_control_core",
+    "own_control_integrated",
+    "own_core",
+    "control",
+)
 FORMABLE_KEYS: Final[tuple[str, ...]] = (
     "level",
     "required_locations_fraction",
@@ -148,7 +174,43 @@ def anchor_problems(game_dir: Path) -> list[str]:
         for needle in ("create_country_from_location", "make_subject_of", "set_capital")
         if needle not in effects
     )
+    problems.extend(
+        f"no scripted effect defines {needle} any more"
+        for needle in ("cc_setup_new_town", "setup_colonial_nation")
+        if f"\n{needle} = {{" not in f"\n{effects}"
+    )
+    charter = _read(game_dir, CHARTER_GOAL) if (game_dir / GAME / CHARTER_GOAL).is_file() else ""
+    problems.extend(
+        f"{CHARTER_GOAL} no longer holds {word}" for word in CHARTER_WORDS if word not in charter
+    )
+    problems.extend(_overseas_problems(game_dir, countries))
     return problems
+
+
+def _province(game_dir: Path, province: str) -> list[str]:
+    """The locations of ``province`` in the installation (empty if there is no such province)."""
+    return [
+        item.key
+        for item in read_locations(game_dir / GAME / "in_game/map_data/definitions.txt")
+        if item.province == province
+    ]
+
+
+def _overseas_problems(game_dir: Path, countries: Block | None) -> list[str]:
+    """Why the overseas province is no free colony site any more, if it is not."""
+    found = _province(game_dir, OVERSEAS)
+    if not found:
+        return [f"the province {OVERSEAS} is not in the installation"]
+    held: set[str] = set()
+    for country in () if countries is None else countries.entries:
+        if isinstance(country.value, Block):
+            for field in OWNERSHIP_FIELDS:
+                inner = country.value.block(field)
+                if inner is not None:
+                    held.update(w.value for w in inner.words() if isinstance(w.value, str))
+    return [
+        f"{key} of {OVERSEAS} is held by a country at the start" for key in found if key in held
+    ]
 
 
 def _area_of(game_dir: Path, location: str) -> str:
@@ -156,6 +218,14 @@ def _area_of(game_dir: Path, location: str) -> str:
         if item.key == location:
             return item.area
     message = f"{location} is not in the installation"
+    raise ProbeError(message)
+
+
+def _area_of_province(game_dir: Path, province: str) -> str:
+    for item in read_locations(game_dir / GAME / "in_game/map_data/definitions.txt"):
+        if item.province == province:
+            return item.area
+    message = f"{province} is not in the installation"
     raise ProbeError(message)
 
 
@@ -188,8 +258,8 @@ def _formable() -> str:
 """
 
 
-def _scripted_name(area: str) -> str:
-    return f"""{SCRIPTED_NAME} = {{
+def _scripted_name(name: str, area: str) -> str:
+    return f"""{name} = {{
 	country_trigger = {{
 		overlord ?= {{
 			OR = {{
@@ -207,6 +277,14 @@ def _scripted_name(area: str) -> str:
 	}}
 }}
 """
+
+
+def _scripted_names(colony_area: str, overseas_area: str) -> str:
+    return (
+        _scripted_name(SCRIPTED_NAME, colony_area)
+        + "\n"
+        + _scripted_name(OVERSEAS_NAME, overseas_area)
+    )
 
 
 def _decisions() -> str:
@@ -245,6 +323,63 @@ def _decisions() -> str:
 				}}
 			}}
 			trigger_event_non_silently = {{ id = rnw_probe.6 }}
+		}}
+	}}
+}}
+
+rnw_probe_colonize = {{
+	decision_category = infrastructure_decisions
+
+	potential = {{
+		OR = {{
+			tag = {HOST}
+			tag = {TAG}
+		}}
+	}}
+
+	allow = {{
+		NOT = {{ has_variable = {COLONIZED} }}
+	}}
+
+	ai_will_do = {{
+		value = -1
+	}}
+
+	option = {{
+		name = rnw_probe_colonize.a
+		ai_chance = {{ value = 0 }}
+		effect = {{
+			hidden_effect = {{
+				# the effect of the game's colonial charter goal ``form_colonial_nation``, with the
+				# scopes the goal is given (owner, target) and the ones its helpers read (new_town)
+				save_scope_as = owner
+				set_variable = {{ name = {COLONIZED} }}
+				province_definition:{OVERSEAS} = {{
+					save_scope_as = target
+					ordered_location_in_province_definition = {{
+						max = 1
+						order_by = best_capital_for_colony
+						save_scope_as = new_town
+					}}
+				}}
+				scope:new_town = {{
+					change_location_rank = location_rank:town
+					cc_setup_new_town = yes
+				}}
+				scope:target = {{
+					create_location_country_from_province_definition = {{
+						subject_type = subject_type:{SUBJECT_TYPE}
+						from = scope:owner
+						capital = scope:new_town
+						hidden_effect = {{ setup_colonial_nation = yes }}
+						add_truce_with = {{
+							target = scope:owner
+							mutual = yes
+						}}
+					}}
+				}}
+			}}
+			trigger_event_non_silently = {{ id = rnw_probe.7 }}
 		}}
 	}}
 }}
@@ -328,7 +463,7 @@ rnw_probe_pulse = {{
 """
 
 
-def _events() -> str:
+def _events(overseas_area: str) -> str:
     country, name, value = COUNTRY_VARIABLE
     location, _, location_value = LOCATION_VARIABLE
     return f"""namespace = rnw_probe
@@ -468,6 +603,32 @@ rnw_probe.6 = {{
 		name = rnw_probe.6.close
 	}}
 }}
+
+rnw_probe.7 = {{
+	type = country_event
+	title = rnw_probe.7.title
+	desc = rnw_probe.7.desc
+	outcome = neutral
+
+	immediate = {{
+		random_subject = {{
+			limit = {{
+				is_subject_type = {SUBJECT_TYPE}
+				capital.area = area:{overseas_area}
+			}}
+			save_scope_as = rnw_probe_overseas
+		}}
+	}}
+
+	option = {{
+		name = rnw_probe.7.found
+		trigger = {{ exists = scope:rnw_probe_overseas }}
+	}}
+	option = {{
+		name = rnw_probe.7.missing
+		trigger = {{ NOT = {{ exists = scope:rnw_probe_overseas }} }}
+	}}
+}}
 """
 
 
@@ -500,12 +661,14 @@ def _colors() -> str:
     return f"colors = {{\n\tmap_{TAG} = rgb {{ 200 40 160 }}\n}}\n"
 
 
-def _texts(colony: str) -> dict[str, str]:
+def _texts(colony: str, overseas: str) -> dict[str, str]:
     return {
         TAG: "Probe Realm",
         f"{TAG}_ADJ": "Probe",
         SCRIPTED_NAME: "Probe Colony",
         f"{SCRIPTED_NAME}_ADJ": "Probe Colonial",
+        OVERSEAS_NAME: "Probe Overseas",
+        f"{OVERSEAS_NAME}_ADJ": "Probe Overseas",
         # A decision is named by ``<id>.title`` and ``<id>.desc``; a formable by ``<id>`` and
         # ``<id>_desc`` (vanilla ``SWI_f: "$SWI$"``). Other keys show as the bare key (036).
         FORMABLE: f"${TAG}$",
@@ -515,6 +678,13 @@ def _texts(colony: str) -> dict[str, str]:
             f"Makes {colony} a colonial subject of the host; reads its scripted name."
         ),
         "rnw_probe_found_colony.a": "Found it",
+        "rnw_probe_colonize.title": "Probe: colonize a free province",
+        "rnw_probe_colonize.desc": (
+            f"Founds a colonial nation in {overseas}, a province no country holds, with the "
+            "effect of the game's own colonial charter. Compare its name with the one of the "
+            "subject made from the other decision."
+        ),
+        "rnw_probe_colonize.a": "Found it",
         "rnw_probe_read_state.title": "Probe: read the start state",
         "rnw_probe_read_state.desc": "Shows which start variables the game kept.",
         "rnw_probe_read_state.a": "Show",
@@ -561,6 +731,15 @@ def _texts(colony: str) -> dict[str, str]:
             "Probe Colony if the scripted country name of the mod applies."
         ),
         "rnw_probe.6.close": "Close",
+        "rnw_probe.7.title": "Probe: the overseas colony",
+        "rnw_probe.7.desc": (
+            "The decision used the effect of the game's own colonial charter. The colonial "
+            "nation it made, as the game shows it: [rnw_probe_overseas.GetName] (adjective: "
+            "[rnw_probe_overseas.GetAdjective]). It reads Probe Overseas if the scripted "
+            "country name of the mod applies to a colony made the way the game makes its own."
+        ),
+        "rnw_probe.7.found": "A colonial nation of the host stands in the province: close",
+        "rnw_probe.7.missing": "No colonial nation was found in the province: close",
     }
 
 
@@ -574,12 +753,12 @@ def metadata() -> bytes:
     payload: dict[str, object] = {
         "name": "RNW probe: content hooks",
         "id": NAME,
-        "version": "0.3.0",
+        "version": "0.4.0",
         "supported_game_version": "1.4.*",
         "short_description": (
             "Research probe of the Random New World project: a formable of a tag no country "
-            "file defines, a scripted country name, start variables, a story start in miniature. "
-            "Not a world; remove when the experiment is done."
+            "file defines, scripted country names for colonies made two ways, start variables, "
+            "a story start in miniature. Not a world; remove when the experiment is done."
         ),
         "tags": ["Utilities"],
         "relationships": [],
@@ -595,23 +774,24 @@ def build(game_dir: Path) -> dict[str, bytes]:
         message = "The probe cannot be built:\n- " + "\n- ".join(problems)
         raise ProbeError(message)
     area = _area_of(game_dir, COLONY)
+    overseas = _area_of_province(game_dir, OVERSEAS)
     files: dict[str, bytes] = {
         ".metadata/metadata.json": metadata(),
         "in_game/common/formable_countries/rnw_probe.txt": _formable().encode("utf-8-sig"),
-        "in_game/common/scripted_country_names/rnw_probe.txt": _scripted_name(area).encode(
-            "utf-8-sig"
-        ),
+        "in_game/common/scripted_country_names/rnw_probe.txt": _scripted_names(
+            area, overseas
+        ).encode("utf-8-sig"),
         "in_game/common/decisions/rnw_probe.txt": _decisions().encode("utf-8-sig"),
         "in_game/common/on_action/rnw_probe.txt": _on_action().encode("utf-8-sig"),
         "in_game/common/on_action/rnw_probe_pulse.txt": _pulse().encode("utf-8-sig"),
-        "in_game/events/rnw_probe.txt": _events().encode("utf-8-sig"),
+        "in_game/events/rnw_probe.txt": _events(overseas).encode("utf-8-sig"),
         "main_menu/common/flag_definitions/rnw_probe.txt": _flags().encode("utf-8-sig"),
         "main_menu/common/coat_of_arms/coat_of_arms/rnw_probe.txt": _coat_of_arms().encode(
             "utf-8-sig"
         ),
         "main_menu/common/named_colors/rnw_probe.txt": _colors().encode("utf-8-sig"),
     }
-    texts = _texts(COLONY)
+    texts = _texts(COLONY, OVERSEAS)
     for language in official_languages(game_dir):
         files[f"main_menu/localization/{language}/rnw_probe_l_{language}.yml"] = _yaml(
             language, texts

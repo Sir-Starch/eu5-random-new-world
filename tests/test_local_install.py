@@ -358,6 +358,32 @@ def test_local_game_files_take_the_selection_cover() -> None:
     assert land_colour((root / GRAPHICS_DEFINES).read_text(encoding="utf-8-sig"))
 
 
+WORD = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
+def _vanilla_words(root_value: str) -> set[str]:
+    """Every word of the game's own scripts."""
+    game = Path(root_value) / "game"
+    found: set[str] = set()
+    for directory in ("in_game/common", "in_game/events", "main_menu/common"):
+        for path in (game / directory).rglob("*.txt"):
+            found.update(WORD.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
+    # the names of places, provinces and areas are in the map's definitions
+    found.update(WORD.findall((game / "in_game/map_data/definitions.txt").read_text("utf-8-sig")))
+    return found
+
+
+def _unknown_words(root_value: str, written: str, ours: set[str]) -> list[str]:
+    """The words of ``written`` that are neither the game's, nor the mod's own (``rnw_*``)."""
+    script = re.sub(r"rnw_[\w.]*", " ", re.sub(r"#[^\n]*", "", written))  # comments, own keys
+    used = {
+        found
+        for found in WORD.findall(script)
+        if not found.startswith(("rnw_", "var")) and found not in ours and not found.isdigit()
+    }
+    return sorted(used - _vanilla_words(root_value))
+
+
 def test_local_story_scripts_use_only_words_the_game_uses() -> None:
     """Every effect, trigger and key the stories write is a word of the game's own scripts.
 
@@ -368,24 +394,26 @@ def test_local_story_scripts_use_only_words_the_game_uses() -> None:
     root_value = os.environ.get("EU5_GAME_DIR")
     if root_value is None:
         pytest.skip("EU5_GAME_DIR is not set")
-    game = Path(root_value) / "game"
-    word = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
-    vanilla: set[str] = set()
-    for directory in ("in_game/common", "in_game/events", "main_menu/common"):
-        for path in (game / directory).rglob("*.txt"):
-            vanilla.update(word.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
     ours = {"target_location", "other_location", "target_country", "home_place", "seat_place"}
     written = "\n".join(render_events(story) for story in STORIES)
     written += "\n" + render_hook(STORIES) + "\n" + colonial_names.script(["mesoamerica_region"])
     # the formables' words are checked on the vanilla names they use
     for spec in FORMATION_SPECS:
         written += f"\n{spec.rank} {spec.emblem[:-4]} " + " ".join((*spec.allow, *spec.potential))
-    used = {
-        found
-        for found in word.findall(written)
-        if not found.startswith(("rnw_", "var")) and found not in ours and not found.isdigit()
-    }
-    assert sorted(used - vanilla) == []
+    assert _unknown_words(root_value, written, ours) == []
+
+
+def test_local_probe_scripts_use_only_words_the_game_uses() -> None:
+    """The probe's own scripts, the colonization copied from the charter goal among them."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    files = eu5_probe.build(Path(root_value))
+    written = "\n".join(
+        data.decode("utf-8-sig") for path, data in sorted(files.items()) if path.endswith(".txt")
+    )
+    ours = {eu5_probe.TAG, f"{eu5_probe.TAG}_ADJ", f"map_{eu5_probe.TAG}", "ZQP"}
+    assert _unknown_words(root_value, written, ours) == []
 
 
 def test_local_game_has_the_drawings_the_cover_relies_on() -> None:

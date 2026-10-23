@@ -718,3 +718,11 @@
 - N4 is done offline: eight story families in all (the two pilots and six more), six formable families and the colonial names. Left in the content plan: N5 (the owner's decision), the Russian forms and titles of N2, F1 to F4, and the languages of L1.
 - No game launch by the agent, no push or publication.
 
+## 2026-10-23 — Probe 0.4.0: the colonial path, C221
+
+- [OWNER] Asked why the probe does not use `create_location_country_from_province_definition`.
+- [V-LOCAL C221] It should have: the probe's `create_country_from_location` came from the first search (C191, `tunis_effects.txt`) and answered a different question than the one the colonial names ask. The game's colonial charter goal makes colonies with the other effect; the colonial subject type sets itself up in its own `on_enable`. The statement that N4's colonial names would be the game's default (C207, C210) holds only for the first effect.
+- [V-EXEC] Probe 0.4.0 copies the charter goal's effect for `dharug_province` (unowned at the start, checked against the installation) beside the old decision as a control, with a second scripted name and an event that finds the new country; installed over 0.3.0 (21 of 21 identical). No world file changed, so no version or epoch moved.
+- [UNKNOWN] The result is read in a later sitting of a batch ([040](../../experiments/040-colonial-path-probe/README.md)); nothing is asked now.
+- No game launch by the agent, no push or publication.
+

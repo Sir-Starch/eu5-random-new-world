@@ -16,11 +16,19 @@ if TYPE_CHECKING:
 DEFINITIONS = """europe = {
 \twestern_europe = { r = { central_switzerland_area = { p = { bern interlaken } } } }
 }
+oceania = {
+\taustralasia = { r = { southeastern_australia_area = { dharug_province = { dharug eora } } } }
+}
 """
 COUNTRIES = """countries = { countries = {
 \tBRN = { own_control_core = { bern interlaken } country_rank = rank_county capital = bern }
 } }
 """
+CHARTER = (
+    "form_colonial_nation = { effect = { order_by = best_capital_for_colony\n"
+    "cc_setup_new_town = yes create_location_country_from_province_definition = {\n"
+    "hidden_effect = { setup_colonial_nation = yes } add_truce_with = { } } } }\n"
+)
 README = "# " + " ".join(eu5_probe.FORMABLE_KEYS) + "\n"
 COAT_OF_ARMS = 'x = { pattern = "pattern_solid.dds" texture = "ce_checky_15_points.dds" }\n'
 FILES = {
@@ -37,7 +45,9 @@ FILES = {
     ),
     "in_game/common/scripted_effects/e.txt": (
         "e = { create_country_from_location = { set_capital = x make_subject_of = { } } }\n"
+        "cc_setup_new_town = { }\nsetup_colonial_nation = { }\n"
     ),
+    "in_game/common/colonial_charter_goals/form_colonial_nation.txt": CHARTER,
     "in_game/common/subject_types/colonial_nation.txt": (
         "colonial_nation = { is_colonial_subject = yes }\n"
     ),
@@ -94,6 +104,39 @@ def test_the_probe_is_built_from_anchors_that_hold(tmp_path: Path) -> None:
         (
             {"in_game/common/scripted_effects/e.txt": "e = { }\n"},
             "no scripted effect uses create_country_from_location",
+        ),
+        (
+            {
+                "in_game/common/scripted_effects/e.txt": (
+                    "e = { create_country_from_location = { set_capital = x\n"
+                    "make_subject_of = { } } }\nsetup_colonial_nation = { }\n"
+                )
+            },
+            "no scripted effect defines cc_setup_new_town",
+        ),
+        (
+            {
+                "in_game/common/colonial_charter_goals/form_colonial_nation.txt": CHARTER.replace(
+                    "add_truce_with", "x"
+                )
+            },
+            "form_colonial_nation.txt no longer holds add_truce_with",
+        ),
+        (
+            {
+                "main_menu/setup/1337/10_countries.txt": COUNTRIES.replace(
+                    "bern interlaken", "bern interlaken eora"
+                )
+            },
+            "eora of dharug_province is held by a country",
+        ),
+        (
+            {
+                "in_game/map_data/definitions.txt": DEFINITIONS.replace(
+                    "dharug_province", "x_province"
+                )
+            },
+            "the province dharug_province is not in the installation",
         ),
     ],
 )
@@ -194,3 +237,58 @@ def test_the_decision_shows_the_name_of_the_subject_it_makes(tmp_path: Path) -> 
     assert "trigger_event_non_silently = { id = rnw_probe.6 }" in decisions
     texts = files["main_menu/localization/english/rnw_probe_l_english.yml"].decode("utf-8-sig")
     assert "[rnw_probe_colony.GetName]" in texts
+
+
+def test_two_subjects_are_made_two_ways_and_each_has_a_scripted_name(tmp_path: Path) -> None:
+    """Interlaken by the effect that makes a country from a location, an overseas province by the
+    effect of the game's colonial charter (C207, C210, C218): one scripted name for each."""
+    files = eu5_probe.build(_install(tmp_path))
+    names = parse(files["in_game/common/scripted_country_names/rnw_probe.txt"].decode("utf-8-sig"))
+    assert [entry.key for entry in names.entries] == [
+        eu5_probe.SCRIPTED_NAME,
+        eu5_probe.OVERSEAS_NAME,
+    ]
+    texts = files["in_game/common/scripted_country_names/rnw_probe.txt"].decode("utf-8-sig")
+    assert "area = area:central_switzerland_area" in texts
+    assert "area = area:southeastern_australia_area" in texts
+    decisions = files["in_game/common/decisions/rnw_probe.txt"].decode("utf-8-sig")
+    assert "create_country_from_location" in decisions
+    colonize = decisions[decisions.index("rnw_probe_colonize = {") :]
+    colonize = colonize[: colonize.index("rnw_probe_read_state = {")]
+    # the charter goal's effect, with the scopes it is given and its helpers read
+    for line in (
+        "save_scope_as = owner",
+        "province_definition:dharug_province = {",
+        "save_scope_as = target",
+        "order_by = best_capital_for_colony",
+        "save_scope_as = new_town",
+        "change_location_rank = location_rank:town",
+        "cc_setup_new_town = yes",
+        "create_location_country_from_province_definition = {",
+        "subject_type = subject_type:colonial_nation",
+        "from = scope:owner",
+        "capital = scope:new_town",
+        "hidden_effect = { setup_colonial_nation = yes }",
+        "add_truce_with = {",
+        "trigger_event_non_silently = { id = rnw_probe.7 }",
+    ):
+        assert line in colonize, line
+    assert "hidden_effect" in colonize
+    assert "NOT = { has_variable = rnw_probe_colonized }" in colonize
+
+
+def test_the_overseas_event_finds_the_subject_by_where_its_capital_is(tmp_path: Path) -> None:
+    """The hidden effect cannot save the new country, so the event looks for it."""
+    files = eu5_probe.build(_install(tmp_path))
+    events = parse(files["in_game/events/rnw_probe.txt"].decode("utf-8-sig"))
+    block = events.block("rnw_probe.7")
+    assert block is not None
+    script = files["in_game/events/rnw_probe.txt"].decode("utf-8-sig")
+    assert "random_subject = {" in script
+    assert "capital.area = area:southeastern_australia_area" in script
+    assert "save_scope_as = rnw_probe_overseas" in script
+    assert len(_options(block)) == 2
+    texts = files["main_menu/localization/english/rnw_probe_l_english.yml"].decode("utf-8-sig")
+    assert "[rnw_probe_overseas.GetName]" in texts
+    assert 'rnw_probe_overseas_scripted_country_name: "Probe Overseas"' in texts
+    assert '"version": "0.4.0"' in files[".metadata/metadata.json"].decode("utf-8-sig")
