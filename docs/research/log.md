@@ -632,3 +632,10 @@
 - [V-EXEC C190] The new local test with `RNW_LAYERS=1` (three exports) shows the layers keep to themselves: peoples rerolled leaves the places, resources rerolled leaves the countries.
 - N1 of the content plan is complete offline: Turkish (0.10.2), neutralization and rebinding (0.10.3), exceptional places (0.10.4). The owner's experiment (a colony without a vanilla American name, a rebound formable that appears only to its culture, an exceptional place that shows its bonus, no new `error.log` lines) is NOT-RUN.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-23 — N2: the hook probe prepared and installed, C191, C192
+
+- [V-LOCAL C191] EU5 keeps state in variables; the plan's "variables and flags" becomes variables (no `set_*_flag` effects exist). Subjects are made with `create_country_from_location` and `make_subject_of`.
+- [V-EXEC C192] `rnw probe-hooks` writes `rnw_exp_probe_hooks` (a formable of the new tag `ZQP` with the full `ADU` set of files, a scripted country name of the mod's own, start variables on France and Paris, two decisions). Every anchor is checked against the installation and a moved one stops the build. Installed into the profile as a new folder, hash-identical; no playset touched. Experiment 034 lists the steps and what each answer blocks or frees.
+- [UNKNOWN] Everything the probe asks. N3 and N4 stay free to be designed and tested offline, but the branches that lean on a hook stay blocked until the owner runs the probe.
+- No game launch by the agent, no push or publication.

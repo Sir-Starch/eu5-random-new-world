@@ -15,7 +15,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from rnw import content_report, epoch, splnet
+from rnw import content_report, epoch, eu5_probe, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
 from rnw.contract import CONTRACT_FILES, fingerprint
@@ -311,6 +311,18 @@ def test_local_languages_are_the_installations_own() -> None:
         if folder.is_dir()
     }
     assert set(languages) == shipped
+
+
+def test_local_hook_probe_anchors_hold() -> None:
+    """The hook probe of N2 finds every vanilla anchor it leans on and its scripts read."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    game_dir = Path(root_value)
+    assert eu5_probe.anchor_problems(game_dir) == []
+    files = eu5_probe.build(game_dir)
+    eu5_probe.check(files)
+    assert len(files) == 9 + len(official_languages(game_dir))
 
 
 def test_local_game_files_take_the_selection_cover() -> None:
