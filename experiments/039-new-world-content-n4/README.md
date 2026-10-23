@@ -16,6 +16,10 @@ Each world offers the formable families below wherever its land and peoples allo
 
 A territory has at least the centres, places and states of its family's rule (`content.RULES`); at most eight states are offered it (the ones with the most places in it), and a state sees it only if it owns a place of it (the game's default). Territories of one family never overlap; those of different families may, since each is another political path over the same land and the levels order them (a country forms only a formable above its own level, so there is no circle). The names read *<seat> Union*, *Confederation*, *League*, *Commonwealth* and *Realm*; each has a flag of one emblem of its own (a checky field, a mountain, an anchor, a rosette, a star), a map colour and a name and an adjective in every language.
 
+## Installed
+
+The epoch 20 reference world is installed as `mod/rnw_exp_world_r7phac72kg` (**RNW: Small continents R7PH**, [INSTALLED](../INSTALLED.md)); it holds all of N4a to N4c. Enabling it is the owner's choice; this record asks for nothing.
+
 ## Not for the owner now
 
 This record is not a request. The next console sitting of a batch may take two minutes for it (`tag <TAG>` of a bearer named in `report.json`, open the formables list: each family's formable with its places counted, the name, the level; the league should show its ports requirement). Until then the runtime result stays NOT-RUN and the logs of any sitting played anyway are read for lines about `rnw_*_f`, `rnw_confederation`, `rnw_league`, `rnw_commonwealth`, `rnw_realm` and `rnw_union`.

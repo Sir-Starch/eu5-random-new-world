@@ -422,20 +422,14 @@ def routes(facts: Facts, seed: int) -> dict[str, str]:
     holds, so there is a real way between them; the other end is drawn from the family's stream.
     """
     centres = _centres(facts)
+    owner = {key: place.owner for key, place in facts.places.items()}
     near = _contacts(facts)
+    own = {key: [other for other in near[key] if owner[other] == owner[key]] for key in near}
     found: dict[str, str] = {}
     for key in sorted(centres):
-        owner = facts.places[key].owner
-        own = {tag: [o for o in near[tag] if facts.places[o].owner == owner] for tag in near}
-        steps = _steps(
-            key,
-            {here: own[here] for here in own if facts.places[here].owner == owner},
-            ROUTE_MAX_STEPS,
-        )
+        steps = _steps(key, own, ROUTE_MAX_STEPS)
         ends = [
-            other
-            for other, count in steps.items()
-            if other in centres and count >= ROUTE_MIN_STEPS and other != key
+            other for other, count in steps.items() if other in centres and count >= ROUTE_MIN_STEPS
         ]
         if ends:
             found[key] = min(ends, key=lambda other: (_rank(seed, ROUTE_MARKET, key, other), other))
