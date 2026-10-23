@@ -4,7 +4,12 @@
 
 ## What the world holds
 
-The candidate is the owner's land (continents, seed 3706823338, `empire_permille` 1000). Its plan, from `report.json` (`text_stats.stories`), is listed in the [installed record](../INSTALLED.md) once built. Per family:
+Two worlds are installed (0.10.5, epoch 15; both include everything of 033):
+
+- `rnw_exp_world_eil2f6y6cf`, **RNW: Small continents EIL2**, code `RNW1-0426C-SYW6B-MW73Y-C0050-A01QH-7WG` (the reference world of the epoch): **all three families**. River centres: `ERY`, `PZO`, `UWB`, `ZXR`; sacred centres: `SYF`, `WYX`; unions: *Neekearitagron Union* (states `CLB`, `NWX`, `RFC`, `UDS`) and *Taatsaanapeake Union* (`FYC`, `MIN`, `QZZ`, `UWB`, `XJB`). Use this one for the stories.
+- `rnw_exp_world_ri4igjvamo`, **RNW: Continents RI4I**, code `RNW1-080G0-00003-EF38N-A0050-A0813-BM0FX-JBZC` (the owner's land of 033): four river centres (`DPF`, `MSU`, `RJT`, `VMI`) and two unions (*Tago Union*, `FGG` `FTX` `FXU` `ZPG`; *Tukri Apu Union*, `RPR` `XUE` `YKO`); **no sacred centre**, because no holy place lies in a state of its own faith there (recorded as an absence in `report.json`).
+
+The plan of a world is in its `report.json` under `text_stats.stories`. Per family:
 
 - **River centre** (`rnw_river.1` to `4`): the state that holds a populous centre on a river gets the first event at a random month of its window (45 years, between 1340 and 1397, a monthly chance of 2 to 5 per cent). Choices: embankments and canals (costs gold, later *The Banks Hold*), river tolls and neglect (later *The River Takes Its Due*), or leaving the banks to the guilds (later *The River Wardens*). Every ending removes the story's variables.
 - **Sacred centre** (`rnw_sacred.1` to `4`): the state that holds a holy place of its own faith. Choices: endow the shrine (later *The Shrine Prospers*, a great temple), tithe the offerings (later *The Priests Murmur*), or give the high priest a seat among the estates (later *A Priesthood With a Seat*; the clergy estate privilege *High Priesthood of the Shrine* appears as soon as the choice is made).
@@ -16,7 +21,7 @@ A hidden event per bearer (`rnw_story.1001` and the next ones) is a `dynamic_his
 
 ## Steps for the owner
 
-1. Enable FX2E (or the new world of this version) and play any country the plan names. The names are in the world's `report.json` under `text_stats.stories.starts` (`river_centre:TAG`, `sacred_centre:TAG`); the start events are in `in_game/events/rnw_story.txt` of the mod.
+1. Enable EIL2 (or RI4I) with the hub and play any country the plan names. The names are in the world's `report.json` under `text_stats.stories.starts` (`river_centre:TAG`, `sacred_centre:TAG`); the start events are in `in_game/events/rnw_story.txt` of the mod.
 2. **Natural start.** Let the game run for decades with a bearer you follow (or watch the AI's through the event log). Note the year each event appears and the options the AI takes.
 3. **Forced start** (the console, if the game allows it): `event rnw_story.1001` or the number of a bearer you play, as that country. This tests the effects, not how often a story begins. Take one of the three options, watch the delayed event (a few years later), then its two endings.
 4. **Cut the chain.** Take the first choice, then lose the centre (let it be conquered or give it away). The later events must not fire for the old owner; after 15 years the variables should be gone (a variable viewer, if any).
