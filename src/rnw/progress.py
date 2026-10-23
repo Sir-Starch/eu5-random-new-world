@@ -57,6 +57,7 @@ STAGES: Final[dict[str, StageInfo]] = {
     "terrain decals": StageInfo("Sculpting the terrain", 28),
     "vegetation instances": StageInfo("Planting trees and grass", 12),
     "natives": StageInfo("Founding native societies", 3),
+    "stories": StageInfo("Writing the stories and unions of the world", 1),
     "atlas": StageInfo("Drawing the atlas of the world", 2),
     "texts": StageInfo("Writing names, setup and scripts", 10),
     "script remap": StageInfo("Rewriting game scripts", 4),

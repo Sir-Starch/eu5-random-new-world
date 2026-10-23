@@ -639,3 +639,11 @@
 - [V-EXEC C192] `rnw probe-hooks` writes `rnw_exp_probe_hooks` (a formable of the new tag `ZQP` with the full `ADU` set of files, a scripted country name of the mod's own, start variables on France and Paris, two decisions). Every anchor is checked against the installation and a moved one stops the build. Installed into the profile as a new folder, hash-identical; no playset touched. Experiment 034 lists the steps and what each answer blocks or frees.
 - [UNKNOWN] Everything the probe asks. N3 and N4 stay free to be designed and tested offline, but the branches that lean on a hook stay blocked until the owner runs the probe.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-23 — 0.10.5: the content model and the river pilot, C193–C196
+
+- [V-EXEC C194] `content.py` plans, from the finished world, who is offered a River centre, a Sacred centre or a River-basin union (and why not, where none): four, two and two in the reference world. `stories.py` holds the two story graphs as data (original English, texts for L1), `eu5_story.py` writes the world's files: a hidden start event per bearer bound to its tag, the static events of each family present, the payload copies, the privilege, the unions with the full set of files of the vanilla formable-only `ADU`.
+- [V-LOCAL C193] The stories lean on practice vanilla already shows (hidden events, dynamic historical events with a tag, a variable holding a location, delayed `trigger_event_*`), so N3 does not wait for the probe of N2 on the yearly pulse or the start variables; the union alone leans on H1. All of it is NOT-RUN.
+- [V-EXEC C194] Epoch 15, reference world of 782 files; 1,038 tests pass; the 13 local tests pass with `RNW_REPRODUCE=1`; `RNW_LAYERS=1` shows that the peoples' reroll changes the stories and the resources' leaves them.
+- [INFERRED] The decision table rows that name N3 are now carried in purpose (C196); the building of the plan's wording became a location modifier.
+- No game launch by the agent, no push or publication.

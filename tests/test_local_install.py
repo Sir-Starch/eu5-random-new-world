@@ -18,6 +18,7 @@ import pytest
 from rnw import content_report, epoch, eu5_probe, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
+from rnw.content import FAMILIES
 from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_biomes import template_attributes
 from rnw.eu5_canvas import select_canvas
@@ -46,6 +47,7 @@ from rnw.eu5_places import SPECS
 from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, TOPOGRAPHY_GROUPS, SlotTables, synthesize
 from rnw.eu5_splines import GAME_FILE as SPLINE_GAME_FILE
 from rnw.eu5_splines import land_contacts
+from rnw.eu5_story import START_FILE
 from rnw.eu5_terrain import DecalStore
 from rnw.geography import color_summary, read_locations, summary
 from rnw.languages import official_languages
@@ -405,6 +407,9 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     places = cast("dict[str, dict[str, str]]", report["text_stats"])["exceptional_places"]
     assert len(places) >= 3  # silver, mercury and fish are found in any New World
     assert set(places) <= {spec.modifier for spec in SPECS}
+    stories = cast("dict[str, dict[str, object]]", report["text_stats"])["stories"]
+    offered = cast("dict[str, int]", stories["opportunities"])
+    assert all(offered[family] >= 1 for family in FAMILIES)  # the reference world offers each
     if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
         pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
     output = cast("dict[str, object]", golden["output"])
@@ -413,9 +418,10 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
 
 
 def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
-    """Rerolling the peoples leaves the exceptional places, rerolling the resources the countries.
+    """Rerolling the peoples leaves the exceptional places, rerolling the resources the peoples.
 
-    Three exports, about five minutes, so only with ``RNW_LAYERS=1`` (content plan, N1).
+    The countries and the stories are the peoples'; the exceptional places are the resources'.
+    Three exports, about five minutes, so only with ``RNW_LAYERS=1`` (content plan, N1 and N3).
     """
     root_value = os.environ.get("EU5_GAME_DIR")
     if root_value is None or os.environ.get("RNW_LAYERS") != "1":
@@ -423,7 +429,7 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
     golden = cast("dict[str, object]", json.loads(GOLDEN_WORLD.read_text(encoding="utf-8")))
     code = decode(str(golden["code"]))
 
-    def made(name: str, text: str) -> tuple[dict[str, str], dict[str, str]]:
+    def made(name: str, text: str) -> tuple[dict[str, str], dict[str, str], dict[str, str]]:
         part = decode(text)
         report = export_new_world(
             Path(root_value),
@@ -432,22 +438,29 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
             settings=part.settings(),
             world_code=text,
         )
-        stats = cast("dict[str, dict[str, str]]", report["text_stats"])
+        stats = cast("dict[str, object]", report["text_stats"])
+        places = cast("dict[str, str]", stats["exceptional_places"])
+        starts = cast("dict[str, str]", cast("dict[str, object]", stats["stories"])["starts"])
         files = cast("list[dict[str, str]]", report["files"])
-        wanted = ("main_menu/setup/1337/10_countries.txt", DEFINITION_FILE)
+        wanted = ("main_menu/setup/1337/10_countries.txt", DEFINITION_FILE, START_FILE)
         digests = {
             record["path"].partition("/")[2]: record["sha256"]
             for record in files
             if record["path"].partition("/")[2] in wanted
         }
         assert len(digests) == len(wanted)
-        return stats["exceptional_places"], digests
+        return places, starts, digests
 
-    base_places, base_countries = made("base", str(golden["code"]))
-    peoples_places, peoples_countries = made("peoples", encode(rolled(code, "peoples")))
-    resource_places, resource_countries = made("resources", encode(rolled(code, "resources")))
+    base_places, base_starts, base_files = made("base", str(golden["code"]))
+    peoples_places, peoples_starts, peoples_files = made("peoples", encode(rolled(code, "peoples")))
+    resource_places, resource_starts, resource_files = made(
+        "resources", encode(rolled(code, "resources"))
+    )
     assert base_places
+    assert base_starts
     assert peoples_places == base_places
-    assert peoples_countries != base_countries
+    assert peoples_starts != base_starts
+    assert peoples_files != base_files
     assert resource_places != base_places
-    assert resource_countries == base_countries
+    assert resource_starts == base_starts
+    assert resource_files == base_files

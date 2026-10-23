@@ -33,6 +33,7 @@ from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
+from rnw.content import plan_content
 from rnw.content_check import check_decisions
 from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import (
@@ -54,6 +55,7 @@ from rnw.eu5_biomes import (
 )
 from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, remainder_boxes, select_canvas
 from rnw.eu5_content import ContentError, carry_out
+from rnw.eu5_content import places as content_places
 from rnw.eu5_development import (
     VILLAGE,
     Development,
@@ -137,6 +139,7 @@ from rnw.eu5_natives import (
     country_records,
     holy_site_outputs,
     market_lines,
+    new_tags,
     vanilla_natives,
     vassal_lines,
 )
@@ -179,6 +182,8 @@ from rnw.eu5_splines import (
     world_anchors,
     world_contacts,
 )
+from rnw.eu5_story import Written, facts_of
+from rnw.eu5_story import build as build_stories
 from rnw.eu5_technology import written_records
 from rnw.eu5_terrain import (
     LAND_CODE,
@@ -210,7 +215,9 @@ from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
+from rnw.rng import derive_seed
 from rnw.settings import canonical_json, run_spec, spec_digest
+from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
@@ -1008,6 +1015,58 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         },
     }
     return outputs, stats
+
+
+def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples and the installation.
+    game_dir: Path,
+    *,
+    plan: Plan,
+    world: NewWorld,
+    natives: NativeWorld,
+    river_pixels: NDArray[np.int64],
+    vanilla: VanillaNatives,
+    loc_keys: KeySpace,
+    seed: int,
+) -> Written:
+    """The stories and unions this world offers, as files and statistics (content plan, N3)."""
+    keys = [cell.key for cell in plan.cells]
+    land = [index for index, cell in enumerate(plan.cells) if cell.kind is CellClass.LAND]
+    dominant = {place.key: place.religion for place in content_places(natives.pops)}
+    states = [
+        (country.tag, country.members, country.capital, country.religion)
+        for country in natives.countries
+        if country.kind == STATE
+    ]
+    facts = facts_of(
+        keys=[keys[index] for index in land],
+        population=natives.population,
+        ranks={key: rank for key, (rank, _) in natives.ranks.items()},
+        religion=dominant,
+        river={keys[index]: int(river_pixels[index]) for index in land},
+        states=states,
+        holy=list(natives.holy_sites.values()),
+        links=[
+            (keys[first], keys[second])
+            for first, second in world.edges
+            if plan.cells[first].kind is CellClass.LAND
+            and plan.cells[second].kind is CellClass.LAND
+        ],
+    )
+    content = plan_content(facts, seed)
+    reserved = vanilla.reserved_tags | {country.tag for country in natives.countries}
+    tags = new_tags(len(content.unions), reserved, derive_seed(seed, "content", "tags"), loc_keys)
+    taken = vanilla.colors | {
+        colour for country in natives.countries for colour in (country.color, country.color2)
+    }
+    return build_stories(
+        game_dir,
+        content,
+        names=natives.names,
+        tags=tags,
+        languages=official_languages(game_dir),
+        seed=seed,
+        taken=taken,
+    )
 
 
 def _rasters(
@@ -2119,6 +2178,21 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 resources_seed=resources_seed,
             ),
         )
+        written = run_stage(
+            "stories",
+            lambda: _story_outputs(
+                game_dir,
+                plan=plan,
+                world=world,
+                natives=natives,
+                river_pixels=river_pixels.astype(np.int64),
+                vanilla=vanilla_start.result(),
+                loc_keys=loc_keys,
+                seed=peoples_seed,
+            ),
+        )
+        texts.update(written.files)
+        text_stats["stories"] = written.stats
         checkpoint()
         text_checks = _verify_texts(texts, plan, removed)
         text_checks.update(_verify_natives(natives, plan))
