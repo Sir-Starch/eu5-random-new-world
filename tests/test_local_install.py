@@ -50,11 +50,14 @@ from rnw.eu5_splines import GAME_FILE as SPLINE_GAME_FILE
 from rnw.eu5_splines import land_contacts
 from rnw.eu5_story import START_FILE
 from rnw.eu5_terrain import DecalStore
+from rnw.formations import SPECS as FORMATION_SPECS
 from rnw.geography import color_summary, read_locations, summary
 from rnw.languages import official_languages
 from rnw.model import WATER_CLASSES, CellClass
 from rnw.pdx import parse
 from rnw.record import Record
+from rnw.stories import STORIES
+from rnw.storymodel import render_events
 
 GOLDEN_WORLD = Path(__file__).with_name("golden_world.json")
 
@@ -353,6 +356,35 @@ def test_local_game_files_take_the_selection_cover() -> None:
     for path in GUI_FILES:
         assert patch_gui(path, (root / path).read_text(encoding="utf-8-sig")), path
     assert land_colour((root / GRAPHICS_DEFINES).read_text(encoding="utf-8-sig"))
+
+
+def test_local_story_scripts_use_only_words_the_game_uses() -> None:
+    """Every effect, trigger and key the stories write is a word of the game's own scripts.
+
+    A story names no game object the game lacks: a misspelt effect would be an unknown one at
+    load and its event would not work. The mod's own names (``rnw_*``), the scopes the stories
+    save and the event keys are the only words that are not vanilla's.
+    """
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    game = Path(root_value) / "game"
+    word = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+    vanilla: set[str] = set()
+    for directory in ("in_game/common", "in_game/events", "main_menu/common"):
+        for path in (game / directory).rglob("*.txt"):
+            vanilla.update(word.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
+    ours = {"target_location", "other_location", "target_country"}
+    written = "\n".join(render_events(story) for story in STORIES)
+    # the formables' words are checked on the vanilla names they use
+    for spec in FORMATION_SPECS:
+        written += f"\n{spec.rank} {spec.emblem[:-4]} " + " ".join(spec.allow)
+    used = {
+        found
+        for found in word.findall(written)
+        if not found.startswith(("rnw_", "var")) and found not in ours and not found.isdigit()
+    }
+    assert sorted(used - vanilla) == []
 
 
 def test_local_game_has_the_drawings_the_cover_relies_on() -> None:

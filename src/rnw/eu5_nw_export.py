@@ -1072,6 +1072,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         culture=cultures,
         seas=_sea_zones(plan, world),
         groups={name: traits[name][1] for name in set(cultures.values()) if name in traits},
+        subjects=natives.vassals,
     )
     content = plan_content(facts, seed)
     reserved = vanilla.reserved_tags | {country.tag for country in natives.countries}

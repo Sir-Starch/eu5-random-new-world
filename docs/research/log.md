@@ -701,3 +701,12 @@
 - [UNKNOWN C214] The engine's verdict on the new entries and on the formables list is read in the next console sitting of a batch; experiment [039](../../experiments/039-new-world-content-n4/README.md) records what to look for and asks nothing now.
 - The stories of N4 (harvest, route and market, great alliance, empire and periphery, contact, colony) and the colonial names follow in the next versions.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-23 — N4b: four more stories, 0.10.9, C215-C217
+
+- [V-LOCAL C215] The vocabulary of the new stories (food in province scope, the mutual opinion effect and its modifiers, 23 payload sources) is the game's own; a local test now checks that every word of every story script occurs in the game's scripts, which catches a misspelt effect before the engine does.
+- [V-EXEC C216] The story framework moved to `storymodel.py` (a second place, common effects and gates) and the stories to `stories.py` and `stories_n4.py`. Four bearers' selections were written and calibrated on the captured facts of five worlds: harvest (high ground or the most populous tenth), route (two centres of one state, 2 to 8 steps apart over its own places), alliance (neighbours of one faith or capital culture, not subjects; one council per pair), empire (a state with subjects, the most distant subject's capital). The harvest event cuts the province's food by a fifth itself, so the story's shortage is real without a runtime guard that no vanilla event uses. Epoch 19, reference world of 788 files; the layer test passes.
+- [UNKNOWN C217] The engine's verdict is read in the next console sitting of a batch (experiment [039](../../experiments/039-new-world-content-n4/README.md)); nothing is asked now.
+- Left in N4: the stories that depend on colonization (contact across the ocean, colony becomes a country), the postcolonial federation and the colonial names.
+- No game launch by the agent, no push or publication.
+

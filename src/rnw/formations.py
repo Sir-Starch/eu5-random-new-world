@@ -24,7 +24,7 @@ from rnw.content import (
     REGIONAL_REALM,
     RIVER_UNION,
 )
-from rnw.stories import COUNTRY, STATIC, Modifier, Source
+from rnw.storymodel import COUNTRY, STATIC, Modifier, Source
 
 
 @dataclass(frozen=True, slots=True)

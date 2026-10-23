@@ -7,8 +7,12 @@ from typing import TYPE_CHECKING
 import pytest
 
 from rnw.content import (
+    EMPIRE_PERIPHERY,
+    GREAT_ALLIANCE,
+    HARVEST,
     RIVER_CENTRE,
     RIVER_UNION,
+    ROUTE_MARKET,
     SACRED_CENTRE,
     Absence,
     ContentPlan,
@@ -39,7 +43,8 @@ from rnw.eu5_story import (
     payload,
 )
 from rnw.pdx import Block, parse
-from rnw.stories import LOCATION, STATIC, STORIES, Modifier, Source
+from rnw.stories import STORIES
+from rnw.storymodel import LOCATION, STATIC, Modifier, Source
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -101,6 +106,16 @@ def _static(name: str, category: str, decaying: bool, effect: str) -> str:  # no
     return f"{name} = {{\n\t{data}\n\t{effect}\n}}\n"
 
 
+def _sources() -> dict[str, tuple[str, bool, str]]:
+    """A synthetic vanilla source for every static modifier any story or formable copies."""
+    found = dict(SOURCES)
+    for story in STORIES:
+        for modifier in story.modifiers:
+            if modifier.source.kind == STATIC:
+                _ = found.setdefault(modifier.source.name, (modifier.category, False, "x = 1"))
+    return found
+
+
 def _install(root: Path, *, drop: str = "", ranks: str = RANKS) -> Path:
     game = root / "game"
     for directory, names in ((EMBLEM_DIR, PICTURES), (PATTERN_DIR, ("pattern_solid.dds",))):
@@ -110,7 +125,7 @@ def _install(root: Path, *, drop: str = "", ranks: str = RANKS) -> Path:
             _ = picture.write_bytes(b"DDS ")
     statics = "".join(
         _static(name, category, decaying, effect)
-        for name, (category, decaying, effect) in SOURCES.items()
+        for name, (category, decaying, effect) in _sources().items()
         if name != drop
     )
     for relative, text in {
@@ -259,7 +274,7 @@ def test_the_texts_are_written_in_every_language_the_same(tmp_path: Path) -> Non
         "utf-8-sig"
     ).replace("l_turkish:", "l_x:")
     assert b"rnw_river.1.title" in english
-    assert len(STORIES) == 2
+    assert len(STORIES) == len({story.family for story in STORIES}) == 6
 
 
 def test_facts_come_from_the_parts_of_a_world() -> None:
@@ -282,3 +297,71 @@ def test_facts_come_from_the_parts_of_a_world() -> None:
     assert facts.links == {("a", "c")}
     assert isinstance(facts, Facts)
     assert LOCATION == "location"
+
+
+def _everything() -> ContentPlan:
+    """An opportunity for each story family, with a second place where the family has one."""
+    spec = (
+        (RIVER_CENTRE, "AAA", "loc_a", ""),
+        (SACRED_CENTRE, "BBB", "loc_b", ""),
+        (HARVEST, "CCC", "loc_c", ""),
+        (ROUTE_MARKET, "DDD", "loc_d", "loc_e"),
+        (GREAT_ALLIANCE, "EEE", "loc_f", "loc_g"),
+        (EMPIRE_PERIPHERY, "FFF", "loc_h", "loc_i"),
+    )
+    return ContentPlan(
+        tuple(
+            Opportunity(family, tag, centre, Start(1350 + number, 1395 + number, 3), other)
+            for number, (family, tag, centre, other) in enumerate(spec)
+        ),
+        (),
+        (),
+    )
+
+
+def _starts_by_tag(start: str) -> dict[str, str]:
+    """The text of each start event by the tag of the bearer it is bound to."""
+    found: dict[str, str] = {}
+    for entry in parse(start).entries:
+        if entry.key and isinstance(entry.value, Block):
+            window = entry.value.block("dynamic_historical_event")
+            tag = window.first("tag") if window is not None else None
+            assert tag is not None
+            found[str(tag.value)] = start[entry.start : entry.end]
+    return found
+
+
+def test_every_story_family_is_written_with_its_own_start(tmp_path: Path) -> None:
+    """One events file per family, and a start that binds the places the family is about."""
+    files = _build(_install(tmp_path), _everything())
+    for story in STORIES:
+        assert f"in_game/events/{story.namespace}.txt" in files, story.family
+    starts = _starts_by_tag(files[START_FILE].decode("utf-8-sig"))
+    assert set(starts) == {"AAA", "BBB", "CCC", "DDD", "EEE", "FFF"}
+    route = starts["DDD"]
+    assert "name = rnw_route_from value = location:loc_d" in route
+    assert "name = rnw_route_to value = location:loc_e" in route
+    assert route.count("owns = ") == 2  # a route's bearer holds both ends
+    alliance = starts["EEE"]
+    assert "name = rnw_alliance_seat value = location:loc_g" in alliance
+    assert alliance.count("owns = ") == 1  # the partner's capital is not the bearer's
+    assert "name = rnw_alliance_home value = location:loc_f" in alliance
+    harvest = starts["CCC"]
+    assert "rnw_harvest_centre value = location:loc_c" in harvest
+    assert harvest.count("set_variable") == 1
+
+
+def test_every_modifier_of_every_story_is_written_once_in_the_modifiers_file(
+    tmp_path: Path,
+) -> None:
+    """The names are unique across the families, and each has its text in every language."""
+    files = _build(_install(tmp_path), _everything())
+    modifiers = parse(files[MODIFIERS_FILE].decode("utf-8-sig"))
+    written = [entry.key for entry in modifiers.entries if entry.key]
+    wanted = [modifier.name for story in STORIES for modifier in story.modifiers]
+    assert sorted(written) == sorted(wanted)
+    assert len(written) == len(set(written))
+    english = files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"].decode("utf-8-sig")
+    for name in wanted:
+        assert f" STATIC_MODIFIER_NAME_{name}: " in english
+        assert f" STATIC_MODIFIER_DESC_{name}: " in english

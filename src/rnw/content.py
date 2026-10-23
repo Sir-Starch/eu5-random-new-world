@@ -33,12 +33,23 @@ if TYPE_CHECKING:
 
 RIVER_CENTRE: Final[str] = "river_centre"
 SACRED_CENTRE: Final[str] = "sacred_centre"
+HARVEST: Final[str] = "harvest"
+ROUTE_MARKET: Final[str] = "route_market"
+GREAT_ALLIANCE: Final[str] = "great_alliance"
+EMPIRE_PERIPHERY: Final[str] = "empire_periphery"
 RIVER_UNION: Final[str] = "river_union"
 HIGHLAND_CONFEDERATION: Final[str] = "highland_confederation"
 MARITIME_LEAGUE: Final[str] = "maritime_league"
 CULTURAL_UNION: Final[str] = "cultural_union"
 REGIONAL_REALM: Final[str] = "regional_realm"
-STORY_FAMILIES: Final[tuple[str, ...]] = (RIVER_CENTRE, SACRED_CENTRE)
+STORY_FAMILIES: Final[tuple[str, ...]] = (
+    RIVER_CENTRE,
+    SACRED_CENTRE,
+    HARVEST,
+    ROUTE_MARKET,
+    GREAT_ALLIANCE,
+    EMPIRE_PERIPHERY,
+)
 FORMABLE_FAMILIES: Final[tuple[str, ...]] = (
     RIVER_UNION,
     HIGHLAND_CONFEDERATION,
@@ -56,6 +67,16 @@ CENTRE_CUTOFF: Final[int] = 75
 MIN_RIVER: Final[int] = 1
 MAX_RIVER_CENTRES: Final[int] = 4
 MAX_SACRED_CENTRES: Final[int] = 4
+MAX_HARVESTS: Final[int] = 3
+MAX_ROUTES: Final[int] = 3
+MAX_ALLIANCES: Final[int] = 3
+MAX_EMPIRES: Final[int] = 2
+# A harvest story is about a centre among the most populous (this percentile of the states'
+# places) or on high ground, where the land around cannot easily feed it.
+HUNGRY_CUTOFF: Final[int] = 90
+# A route joins two centres of one state that are this many steps apart over its own places.
+ROUTE_MIN_STEPS: Final[int] = 2
+ROUTE_MAX_STEPS: Final[int] = 8
 MAX_UNIONS: Final[int] = 2
 MAX_CHAINS: Final[int] = 2
 # A union needs room for several centres under several states.
@@ -150,7 +171,8 @@ class State:
 class Facts:
     """What the plan reads: the places, the states, the holy places, the adjacency, the groups.
 
-    ``groups`` maps a culture to the culture groups the game puts it in.
+    ``groups`` maps a culture to the culture groups the game puts it in; ``subjects`` are the
+    (overlord, subject) pairs of the start.
     """
 
     places: Mapping[str, Place]
@@ -158,6 +180,7 @@ class Facts:
     holy: frozenset[str]
     links: frozenset[tuple[str, str]]
     groups: Mapping[str, frozenset[str]] = field(default_factory=dict[str, frozenset[str]])
+    subjects: frozenset[tuple[str, str]] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,12 +194,13 @@ class Start:
 
 @dataclass(frozen=True, slots=True)
 class Opportunity:
-    """One story offered to one state at one place."""
+    """One story offered to one state at one place (and, for some, a second place)."""
 
     family: str
     bearer: str
     centre: str
     start: Start
+    other: str = ""
 
     @property
     def ident(self) -> str:
@@ -269,27 +293,50 @@ class Tally:
     years: dict[str, set[int]]
 
 
-def _chosen(
-    seed: int, family: str, candidates: Iterable[Place], limit: int, tally: Tally
+def _begin(  # noqa: PLR0913 - the stream, the place, its partner, the tally and the claim.
+    seed: int, family: str, place: Place, other: str, tally: Tally, *, claim: bool
+) -> Opportunity:
+    """The opportunity of the owner of ``place`` there: when it begins, and what it takes."""
+    owner = place.owner
+    start = _start(seed, family, owner)
+    taken = tally.years.setdefault(owner, set())
+    while start.year in taken:  # a state begins at most one story a year
+        start = Start(start.year + 1, start.until + 1, start.chance)
+    taken.add(start.year)
+    if claim:
+        tally.used.add(place.key)
+    tally.chains[owner] = tally.chains.get(owner, 0) + 1
+    return Opportunity(family, owner, place.key, start, other)
+
+
+def _chosen(  # noqa: PLR0913 - the candidates, their partner places and the rules of the family.
+    seed: int,
+    family: str,
+    candidates: Iterable[Place],
+    limit: int,
+    tally: Tally,
+    *,
+    others: Mapping[str, str] | None = None,
+    claim: bool = True,
 ) -> list[Opportunity]:
-    """Up to ``limit`` bearers, one place each, in the order the family's stream gives."""
+    """Up to ``limit`` bearers, one place each, in the order the family's stream gives.
+
+    ``others`` gives a second place for some candidates; a place that ``claim`` takes is the
+    centre of no other story, an anchor (a capital) is not.
+    """
     ordered = sorted(candidates, key=lambda place: (_rank(seed, family, place.key), place.key))
     found: list[Opportunity] = []
     for place in ordered:
         if len(found) == limit:
             break
-        if place.key in tally.used or tally.chains.get(place.owner, 0) >= MAX_CHAINS:
+        if claim and place.key in tally.used:
+            continue
+        if tally.chains.get(place.owner, 0) >= MAX_CHAINS:
             continue
         if any(opportunity.bearer == place.owner for opportunity in found):
             continue
-        start = _start(seed, family, place.owner)
-        taken = tally.years.setdefault(place.owner, set())
-        while start.year in taken:  # a state begins at most one story a year
-            start = Start(start.year + 1, start.until + 1, start.chance)
-        taken.add(start.year)
-        found.append(Opportunity(family, place.owner, place.key, start))
-        tally.used.add(place.key)
-        tally.chains[place.owner] = tally.chains.get(place.owner, 0) + 1
+        other = (others or {}).get(place.key, "")
+        found.append(_begin(seed, family, place, other, tally, claim=claim))
     return found
 
 
@@ -311,6 +358,135 @@ def sacred_centres(facts: Facts) -> list[Place]:
         state = facts.states.get(place.owner) if place is not None else None
         if place is not None and state is not None and state.religion == place.religion:
             found.append(place)
+    return found
+
+
+def harvest_centres(facts: Facts) -> list[Place]:
+    """Centres the land around cannot easily feed: on high ground or among the most populous."""
+    centres = _centres(facts)
+    owned = [place.population for place in facts.places.values() if place.owner in facts.states]
+    cutoff = _percentile(owned, HUNGRY_CUTOFF)
+    return [
+        place
+        for place in facts.places.values()
+        if place.key in centres
+        and place.owner in facts.states
+        and (place.relief in HIGHLAND_RELIEF or place.population >= cutoff)
+    ]
+
+
+def _steps(start: str, reach: Mapping[str, Sequence[str]], limit: int) -> dict[str, int]:
+    """How many steps each place within ``limit`` is from ``start``, over the given contacts."""
+    steps = {start: 0}
+    frontier = [start]
+    while frontier:
+        following: list[str] = []
+        for here in frontier:
+            if steps[here] == limit:
+                continue
+            for other in reach.get(here, ()):
+                if other not in steps:
+                    steps[other] = steps[here] + 1
+                    following.append(other)
+        frontier = following
+    return steps
+
+
+def _contacts(facts: Facts) -> dict[str, list[str]]:
+    near: dict[str, list[str]] = {key: [] for key in facts.places}
+    for first, second in sorted(facts.links):
+        near[first].append(second)
+        near[second].append(first)
+    return near
+
+
+def routes(facts: Facts, seed: int) -> dict[str, str]:
+    """For centres of states, the centre of the same state a route would join them to.
+
+    The two lie ``ROUTE_MIN_STEPS`` to ``ROUTE_MAX_STEPS`` steps apart over places the state
+    holds, so there is a real way between them; the other end is drawn from the family's stream.
+    """
+    centres = _centres(facts)
+    near = _contacts(facts)
+    found: dict[str, str] = {}
+    for key in sorted(centres):
+        owner = facts.places[key].owner
+        own = {tag: [o for o in near[tag] if facts.places[o].owner == owner] for tag in near}
+        steps = _steps(
+            key,
+            {here: own[here] for here in own if facts.places[here].owner == owner},
+            ROUTE_MAX_STEPS,
+        )
+        ends = [
+            other
+            for other, count in steps.items()
+            if other in centres and count >= ROUTE_MIN_STEPS and other != key
+        ]
+        if ends:
+            found[key] = min(ends, key=lambda other: (_rank(seed, ROUTE_MARKET, key, other), other))
+    return found
+
+
+def alliances(facts: Facts, seed: int) -> dict[str, str]:
+    """For the capital of a state, the capital of the neighbour it might form a council with.
+
+    Neighbours share a border and a faith or a main culture, and neither is the other's subject;
+    of the several the stream of the pair picks one.
+    """
+    capital = {tag: facts.places.get(state.capital) for tag, state in facts.states.items()}
+    borders: dict[str, set[str]] = {}
+    for first, second in facts.links:
+        one, two = facts.places[first].owner, facts.places[second].owner
+        if one != two and one in facts.states and two in facts.states:
+            borders.setdefault(one, set()).add(two)
+            borders.setdefault(two, set()).add(one)
+    found: dict[str, str] = {}
+    for tag in sorted(borders):
+        mine = capital[tag]
+        if mine is None:
+            continue
+        options: list[tuple[int, str]] = []
+        for neighbour in sorted(borders[tag]):
+            theirs = capital[neighbour]
+            if (
+                theirs is None
+                or (tag, neighbour) in facts.subjects
+                or (neighbour, tag) in facts.subjects
+            ):
+                continue
+            same_faith = facts.states[tag].religion == facts.states[neighbour].religion
+            same_people = bool(mine.culture) and mine.culture == theirs.culture
+            if same_faith or same_people:
+                options.append((_rank(seed, GREAT_ALLIANCE, tag, neighbour), theirs.key))
+        if options:
+            found[mine.key] = min(options)[1]
+    # two neighbours that would each choose the other make one council, the lower tag's
+    seated = {state.capital: tag for tag, state in facts.states.items()}
+    return {
+        mine: theirs
+        for mine, theirs in found.items()
+        if not (found.get(theirs) == mine and seated[mine] > seated[theirs])
+    }
+
+
+def peripheries(facts: Facts) -> dict[str, str]:
+    """For the capital of a state with subjects, the capital of its most distant subject."""
+    near = _contacts(facts)
+    found: dict[str, str] = {}
+    for tag, state in sorted(facts.states.items()):
+        subjects = [
+            subject for lord, subject in facts.subjects if lord == tag and subject in facts.states
+        ]
+        if state.capital not in facts.places or not subjects:
+            continue
+        steps = _steps(state.capital, near, len(facts.places))
+        far = [
+            (steps.get(facts.states[subject].capital, -1), facts.states[subject].capital)
+            for subject in subjects
+            if facts.states[subject].capital in facts.places
+        ]
+        if far:
+            found[state.capital] = max(far, key=lambda item: (item[0], item[1]))[1]
     return found
 
 
@@ -482,16 +658,73 @@ def plan_content(facts: Facts, seed: int) -> ContentPlan:
     """
     tally = Tally({}, set(), {})
     absences: list[Absence] = []
-    river = _chosen(seed, RIVER_CENTRE, river_centres(facts), MAX_RIVER_CENTRES, tally)
-    if not river:
-        absences.append(Absence(RIVER_CENTRE, "no centre of a state lies on a river"))
-    sacred = _chosen(seed, SACRED_CENTRE, sacred_centres(facts), MAX_SACRED_CENTRES, tally)
-    if not sacred:
-        absences.append(Absence(SACRED_CENTRE, "no holy place lies in a state of its own faith"))
+    stories: list[Opportunity] = []
+
+    def take(family: str, found: list[Opportunity], reason: str) -> None:
+        stories.extend(found)
+        if not found:
+            absences.append(Absence(family, reason))
+
+    take(
+        RIVER_CENTRE,
+        _chosen(seed, RIVER_CENTRE, river_centres(facts), MAX_RIVER_CENTRES, tally),
+        "no centre of a state lies on a river",
+    )
+    take(
+        SACRED_CENTRE,
+        _chosen(seed, SACRED_CENTRE, sacred_centres(facts), MAX_SACRED_CENTRES, tally),
+        "no holy place lies in a state of its own faith",
+    )
+    take(
+        HARVEST,
+        _chosen(seed, HARVEST, harvest_centres(facts), MAX_HARVESTS, tally),
+        "no centre of a state lies on high ground or among the most populous",
+    )
+    joined = routes(facts, seed)
+    take(
+        ROUTE_MARKET,
+        _chosen(
+            seed,
+            ROUTE_MARKET,
+            [facts.places[key] for key in joined],
+            MAX_ROUTES,
+            tally,
+            others=joined,
+        ),
+        "no state holds two centres joined by places of its own",
+    )
+    paired = alliances(facts, seed)
+    take(
+        GREAT_ALLIANCE,
+        _chosen(
+            seed,
+            GREAT_ALLIANCE,
+            [facts.places[key] for key in paired],
+            MAX_ALLIANCES,
+            tally,
+            others=paired,
+            claim=False,
+        ),
+        "no two neighbouring states share a faith or a people",
+    )
+    far = peripheries(facts)
+    take(
+        EMPIRE_PERIPHERY,
+        _chosen(
+            seed,
+            EMPIRE_PERIPHERY,
+            [facts.places[key] for key in far],
+            MAX_EMPIRES,
+            tally,
+            others=far,
+            claim=False,
+        ),
+        "no state holds subjects",
+    )
     formable: list[Formation] = []
     for family in FORMABLE_FAMILIES:
         found, reason = formations(facts, seed, family)
         formable.extend(found)
         if not found:
             absences.append(Absence(family, reason))
-    return ContentPlan(tuple(river + sacred), tuple(formable), tuple(absences))
+    return ContentPlan(tuple(stories), tuple(formable), tuple(absences))

@@ -7,10 +7,11 @@ import re
 import pytest
 
 from rnw.pdx import Block, parse
-from rnw.stories import (
+from rnw.stories import STORIES
+from rnw.storymodel import (
     AFFORD,
     CLEANUP,
-    STORIES,
+    LOCATION,
     Story,
     event_keys,
     outcomes,
@@ -43,7 +44,7 @@ def test_every_path_ends_and_ending_clears_the_variables(story: Story) -> None:
     assert outcomes(story)
     for node in story.nodes:
         for option in node.options:
-            removes = {f"remove_variable = {v}" for v in (story.centre, story.path)}
+            removes = {f"remove_variable = {v}" for v in story.variables()}
             ends = removes <= set(option.effects)
             assert ends == (option.follow is None), (node.number, option.key)
 
@@ -136,8 +137,14 @@ def test_location_modifiers_are_changed_in_the_scope_of_the_centre(story: Story)
     _scopes_of(parse(render_events(story)), (), found)
     for effect in ("add_location_modifier", "remove_location_modifier"):
         for scopes in found.get(effect, []):
-            assert f"var:{story.centre}" in scopes, (effect, scopes)
-    assert found.get("remove_location_modifier") or found.get("add_location_modifier")
+            assert f"var:{story.centre}" in scopes or (
+                story.other and f"var:{story.other}" in scopes
+            ), (effect, scopes)
+    if any(modifier.category == LOCATION for modifier in story.modifiers):
+        assert found.get("remove_location_modifier") or found.get("add_location_modifier")
+    # a country modifier on another country is applied inside the owner of the place's scope
+    for scopes in found.get("add_country_modifier", []):
+        assert not any(scope.startswith("var:") for scope in scopes) or "owner" in scopes, scopes
 
 
 def test_the_stories_name_no_tag_and_no_location() -> None:
@@ -149,9 +156,12 @@ def test_the_stories_name_no_tag_and_no_location() -> None:
 
 
 def test_the_paths_of_each_story_are_the_ones_designed() -> None:
-    """The river story has three first choices, each with its own ending; so has the sacred one."""
-    river, sacred = STORIES
+    """Every story has three first choices, each with its own endings."""
+    by_family = {story.family: story for story in STORIES}
+    river, sacred = by_family["river_centre"], by_family["sacred_centre"]
     assert sorted(outcomes(river)) == [
         ("1a", "2a"), ("1a", "2b"), ("1b", "3a"), ("1b", "3b"), ("1c", "4a"), ("1c", "4b"),
     ]  # fmt: skip
     assert len(outcomes(sacred)) == 6
+    for family in ("harvest", "route_market", "great_alliance", "empire_periphery"):
+        assert len(outcomes(by_family[family])) == 6, family

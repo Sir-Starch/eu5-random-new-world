@@ -19,6 +19,7 @@ from rnw.content import (
     RIVER_UNION,
     SACRED_CENTRE,
     START_YEAR,
+    STORY_FAMILIES,
     UNION_TERRITORY,
     WINDOW_YEARS,
     ContentPlan,
@@ -68,7 +69,8 @@ def test_a_river_world_offers_the_river_families() -> None:
     assert counts[RIVER_CENTRE] >= 1
     assert counts[SACRED_CENTRE] >= 1
     assert counts[RIVER_UNION] == 1
-    assert {absence.family for absence in plan.absences} <= set(FORMABLE_FAMILIES) - {RIVER_UNION}
+    held = {RIVER_CENTRE, SACRED_CENTRE, RIVER_UNION}
+    assert {absence.family for absence in plan.absences} <= set(FAMILIES) - held
     union = _unions(plan)[0]
     assert len(union.states) == 3
     assert len(union.centres) >= 3
@@ -191,7 +193,8 @@ def test_unions_do_not_overlap_and_stay_within_the_limit() -> None:
 def test_the_centre_ranks_are_the_ranked_places() -> None:
     """The ranks that make a centre are cities and towns."""
     assert {"city", "town"} == CENTRE_RANKS
-    assert set(FAMILIES) == {RIVER_CENTRE, SACRED_CENTRE, *FORMABLE_FAMILIES}
+    assert set(STORY_FAMILIES) | set(FORMABLE_FAMILIES) == set(FAMILIES)
+    assert len(FAMILIES) == len(set(FAMILIES)) == 11
 
 
 def test_a_union_is_a_connected_stretch_of_the_river_under_a_few_states() -> None:

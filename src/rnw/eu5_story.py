@@ -22,8 +22,6 @@ from typing import TYPE_CHECKING, Final
 
 from rnw import eu5_formation
 from rnw.content import (
-    RIVER_CENTRE,
-    SACRED_CENTRE,
     ContentPlan,
     Facts,
     Opportunity,
@@ -32,15 +30,13 @@ from rnw.content import (
 )
 from rnw.formations import SPECS
 from rnw.pdx import Block, parse
-from rnw.stories import (
+from rnw.stories import STORIES
+from rnw.storymodel import (
     BUILDING,
     CLEANUP,
     CLEANUP_MONTHS,
     PRIVILEGE,
-    RIVER_CENTRE_VARIABLE,
-    SACRED_CENTRE_VARIABLE,
     STATIC,
-    STORIES,
     Modifier,
     Privilege,
     Source,
@@ -63,10 +59,6 @@ PRIVILEGES_FILE: Final[str] = "in_game/common/estate_privileges/rnw_story.txt"
 EVENTS_DIR: Final[str] = "in_game/events"
 START_FILE: Final[str] = f"{EVENTS_DIR}/rnw_story.txt"
 LOCALIZATION: Final[str] = "main_menu/localization"
-CENTRE_VARIABLES: Final[Mapping[str, str]] = {
-    RIVER_CENTRE: RIVER_CENTRE_VARIABLE,
-    SACRED_CENTRE: SACRED_CENTRE_VARIABLE,
-}
 
 
 class StoryError(ValueError):
@@ -164,8 +156,15 @@ def privilege_block(privilege: Privilege, copied: Payload) -> str:
 def start_event(number: int, opportunity: Opportunity, story: Story) -> str:
     """The hidden event that starts a story for its bearer at its centre."""
     start = opportunity.start
-    variable = CENTRE_VARIABLES[opportunity.family]
     opening, closing = story.event(story.nodes[0].number), story.event(CLEANUP)
+    sets = f"\t\tset_variable = {{ name = {story.centre} value = location:{opportunity.centre} }}\n"
+    owns = f"\t\towns = location:{opportunity.centre}\n"
+    if story.holds_other:
+        owns += f"\t\towns = location:{opportunity.other}\n"
+    if story.other:
+        sets += (
+            f"\t\tset_variable = {{ name = {story.other} value = location:{opportunity.other} }}\n"
+        )
     return (
         f"{NAMESPACE}.{number} = {{\n"
         "\ttype = country_event\n"
@@ -177,9 +176,9 @@ def start_event(number: int, opportunity: Opportunity, story: Story) -> str:
         f"\t\tto = {start.until}.1.1\n"
         f"\t\tmonthly_chance = {start.chance}\n"
         "\t}\n\n"
-        f"\ttrigger = {{\n\t\towns = location:{opportunity.centre}\n\t}}\n\n"
+        f"\ttrigger = {{\n{owns}\t}}\n\n"
         "\timmediate = {\n"
-        f"\t\tset_variable = {{ name = {variable} value = location:{opportunity.centre} }}\n"
+        f"{sets}"
         f"\t\ttrigger_event_non_silently = {{ id = {opening} }}\n"
         f"\t\ttrigger_event_silently = {{ id = {closing} months = {CLEANUP_MONTHS} }}\n"
         "\t}\n"
@@ -283,6 +282,7 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     culture: Mapping[str, str] | None = None,
     seas: Mapping[str, Collection[str]] | None = None,
     groups: Mapping[str, Collection[str]] | None = None,
+    subjects: Collection[tuple[str, str]] = (),
 ) -> Facts:
     """The facts of a world from its parts: ``states`` are (tag, members, capital, religion)."""
     owner: dict[str, str] = {}
@@ -315,4 +315,5 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
         frozenset(key for key in holy if key in present),
         frozenset((a, b) for a, b in links if a in present and b in present),
         {name: frozenset(found) for name, found in (groups or {}).items()},
+        frozenset(subjects),
     )
