@@ -684,3 +684,12 @@
 - Installed: `rnw_exp_world_kpjmspjsw3` and the probe 0.3.0 ([INSTALLED](../../experiments/INSTALLED.md)). Experiment [038](../../experiments/038-lobby-list-and-colony/README.md) asks about five minutes.
 - No game launch by the agent, no push or publication.
 
+## 2026-10-23 — The third sitting (038): the list is quiet, the colony is a colony, C209-C211
+
+- [OWNER] *The countries do not flicker, the colony works*, with a screenshot of *Colony of Interlaken* (*Colonial Nation of Bern*, loyalty 81.46 per cent).
+- [V-GAME C209] The fixed grid with dimmed cards removes the flicker; `gui.log` is silent about the lobby. Dimming, the dead click and the search were not reported (UNKNOWN).
+- [V-GAME C210] The colony of type `colonial_nation` shows the game's own *Colony of Interlaken*, not the scripted name; with C207 neither type reaches the scripted names from `create_country_from_location`. The plan's colonial names (N4) are then the game's default unless the game's own colonization shows another path.
+- [V-GAME C211] The probe's log is clean; the rest of `error.log` is the vanilla baseline.
+- Hooks of N2 now answered in game: H1, H3 (`on_actions`), H6, H7 hold; H2 is negative for names made by the effect; H4 and H5 are open and block nothing.
+- No game launch by the agent, no push or publication.
+

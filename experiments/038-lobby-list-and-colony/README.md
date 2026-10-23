@@ -1,6 +1,6 @@
 # 038 - The lobby's list without hiding, and the colony's name
 
-2026-10-23, generator 0.10.7, algorithm epoch 17, probe 0.3.0. **NOT RUN.** It answers what [037](../037-console-session-2/README.md) left: the flags of the country list flicker and a search brings back the blank stretches (C205), and a plain vassal keeps the name of its location (C207). About five minutes.
+2026-10-23, generator 0.10.7, algorithm epoch 17, probe 0.3.0. **RUN by the owner (19:00 to 19:03): the flags no longer flicker; the colony works and keeps the game's own name for a colony, not the scripted one; see *Result*.** It answers what [037](../037-console-session-2/README.md) left: the flags of the country list flicker and a search brings back the blank stretches (C205), and a plain vassal keeps the name of its location (C207). About five minutes.
 
 ## What changed
 
@@ -29,3 +29,17 @@ Close the game. In the launcher playset keep the hub and **RNW probe: content ho
 ## Evidence
 
 [V-EXEC] `make check` passes; the reference world of epoch 17 (784 files, digest `2ee00cf1...3d10f`) differs from PRJ3 in the lobby GUI alone, whose differences from the game's file are now a `visible` of the selected-country panel, an `alpha` and an `enabled` of the card, and the guards of the start and join buttons. [UNKNOWN] everything in the table. The `alpha = "[TransparentIfFalse(...)]"` and `enabled` of an `action_tooltip` follow vanilla precedents (`bureaucracies_lateralview.gui`, `select_interaction_target_widgets.gui`); that they dim and disable a card of this list is not known until the log and the owner's eyes say so.
+
+## Result (owner, EU5 1.4.4, 2026-10-23 19:00 to 19:03; claims C209 to C211)
+
+The owner reported *the countries do not flicker, the colony works* with one screenshot; the agent read `debug.log`, `game.log`, `gui.log`, `error.log` and the autosave. The game was launched with PRJ3 and the playset was switched to KPJM at 19:00:49.
+
+| Row | Result | Evidence |
+| --- | --- | --- |
+| 1 flicker | **Gone** (C209). `gui.log` has no validation line for `multiplayer_lobby.gui` at all | [V-GAME] owner, `gui.log` |
+| 2 click, 3 search | Not reported: whether a New World card is dimmed, whether its click does nothing and whether a search leaves no blank stretch is not known; the log has no GUI error | [UNKNOWN] |
+| 4 colony | The decision made Interlaken a subject of type `colonial_nation` (the save: country `AAA11`, created 1337.7.31, `subject_type=colonial_nation`; the diplomacy tooltip: *Colonial Nation of Bern*, loyalty 81.46 per cent, a governor of Bern's court). The name the game shows is **Colony of Interlaken**: the game's own title for a colonial nation, built from the location. **The scripted name *Probe Colony* is not applied** to it either; the save stores `country_name="interlaken"` (C210) | [V-GAME] screenshot, save |
+| log | No `SET_CAPITAL_EFFECT`, no scope, key, picture or orphan line; the errors left are the vanilla ones of the baseline (the tributary subject type, the cabinet action, the coastal sea zones of generated land) | [V-GAME] `error.log` |
+
+What this decides (C210, C211): the scripted country names of the game are not reached by `create_country_from_location` with `vassal` or with `colonial_nation`, so the plan cannot give a colony of a generated world a name of its own by a scripted name made for this; a colony of a generated world gets *Colony of <its location>* from the game itself, which is a fitting name on land that no vanilla colony name belongs to. N4's colonial names are therefore only the game's default unless another path shows a way (the colonization of the game itself, which the scripted names are written for, is [UNKNOWN] and needs a colony settled the game's way).
+
