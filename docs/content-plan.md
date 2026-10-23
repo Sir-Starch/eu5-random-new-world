@@ -1,107 +1,125 @@
-# Random-first New World content: proposed design and implementation plan
+# Random-first New World content: design and staged plan
 
-**Status:** Proposed, 2026-10-23. No implementation or game launch is authorized by this document.
-**Baseline:** Generator 0.10.1; EU5 1.4.3 open beta, Steam build 26105915.
-**Evidence:** Existing behavior is labeled below. Every proposed behavior is [INFERRED design]; its acceptance by the running game is [UNKNOWN] until observed separately.
+**Status:** Proposed 2026-10-23; revised the same day after a check against the installed game (C175–C180). The owner has not accepted it. Nothing is implemented, and no game launch belongs to it.
+**Baseline:** Generator 0.10.1, algorithm epoch 11; EU5 1.4.3 open beta, Steam build 26105915.
+**Evidence:** Existing behaviour is labelled below. Every proposed behaviour is [INFERRED design]; whether the running game accepts it is [UNKNOWN] until observed.
 
 ## Design direction
 
-Generate geography and societies first. Identify meaningful opportunities within that world: a crowded river city, a maritime network, a fragmented cultural region, a sacred center, an exceptional deposit, or a large state with a difficult periphery. Those opportunities supply appropriate stories and political goals without prescribing their outcome.
+Generate geography and societies first. Then find the opportunities that world holds: a crowded river city, a maritime network, a fragmented cultural region, a sacred centre, an exceptional deposit, a large state with a difficult periphery. Those opportunities carry stories and political goals without prescribing their outcome.
 
-Vanilla supplies the mechanics: religions, buildings, technology, governments, estates, trade, colonization, and established scripting patterns. The generator supplies suitable places, participants, identities, and combinations of conditions. Players and AI determine what happens during the campaign.
+Vanilla supplies the mechanics: religions, buildings, technology, governments, estates, trade, colonization, country titles and established scripting patterns. The generator supplies places, participants, identities and combinations of conditions. Players and AI decide what happens in the campaign.
 
-Randomness governs the world's structure and available opportunities. Causal eligibility governs who receives them. Random event timing cannot substitute for either. A seed must not be rerolled until it contains a preferred historical analogue.
+Randomness governs the world's structure and its opportunities. Causal eligibility governs who receives them. Random event timing replaces neither. A seed is never rerolled until it contains a preferred historical analogue.
 
-This plan covers both native and colonial play. Its deliverables are adapted vanilla opportunities, new local stories, dynamic native and colonial identities, new formable countries, exceptional economic places, and more varied societies. The work is architectural and spans several verified stages; no calendar estimate is assigned.
+The plan covers native and colonial play. Its work is architectural and runs in verified stages (N0–N5 below); no calendar estimate is given.
 
-## Desired experience and current gaps
+## What the output does today
 
-| ID | Desired experience | Current gap | Tasks |
+| ID | Gap | Evidence | Stages |
 | --- | --- | --- | --- |
-| IS-1 | Content follows generated geography and societies; the same world code remains reproducible | GAP-1: reference remapping usually chooses a nearby compatible location, not a semantic role | 1, 3, 4, 10 |
-| IS-2 | A vanilla opportunity remains accessible, has a meaningful replacement, or has an explicit reason for absence | GAP-2: 58 events are retired; some retained buildings and privileges lose their unlock path | 1, 2, 4, 10 |
-| IS-3 | A native campaign offers consequential decisions and long-term goals | GAP-3: the generator does not emit original event chains | 5, 8, 9, 10 |
-| IS-4 | Native and colonial names express a stable identity and meaningful historical changes | GAP-4: generated base names exist, but the identity lifecycle is not designed | 2, 6, 7, 10 |
-| IS-5 | Regional consolidation offers different, intelligible political paths | GAP-5: historical formables are remapped; procedural formables do not exist | 2, 8, 10 |
-| IS-6 | Wealth and social structure create different strategic problems | GAP-6: exceptional historical resource places disappear; large-society patterns are limited | 3, 4, 9, 10 |
-| IS-7 | Old World preservation, independent world layers, and concealed geography remain intact | GAP-7: new triggers, names, and goals could violate those contracts without explicit checks | 2, 3, 6, 7, 8, 10 |
+| G1 | **Vanilla meaning sits on positionally chosen land.** Removed locations and provinces map to the nearest generated cell of their family; every vanilla region keeps its key and every vanilla area key is reused by the nearest generated area. 525 references to the 168 American region and area keys in 38 script files therefore keep their vanilla meaning on whatever land took the key. Part of this is intended: R7b's regional advances follow the region key. Part puts literal history on random land: eight American scripted country names (New Spain, Peru, New York and others) and historical formables such as the Aztecs over whatever generated region holds `mesoamerica_region`. | C179, C180; `build_remap`, `_land_areas` | N0, N1, N5 |
+| G2 | **Lost access.** World 6DIV retires 58 events (AZT 16, CHK 22, CSU 7, IRO 7, PUE 6), 39 modifiers and five historical natural-resource bonuses. Retained rewards lose their path: `great_temple_of_tenochtitlan` needs `has_or_had_tag = TNC`, `hurin_qusqu_privilege` a variable that only a retired CSU event sets. | C95, C97, C100; [natives](natives.md) | N0, N1, N3 |
+| G3 | **No original stories.** The generator emits no event chains; its event overrides add no event IDs. | `eu5_events.py` | N3, N4 |
+| G4 | **No procedural formables.** Historical formables follow G1. | C175 | N3, N4 |
+| G5 | **Exceptional resource places vanish** with the locations that held them. | `retired_base_modifiers` | N1 |
+| G6 | **The eleventh language is missing.** The game has eleven localization folders, Turkish among them with as many files as English; the export writes ten. Every new text inherits the gap. | C178 | N1 |
+| G7 | **Few society archetypes.** Only R7c's great empire is generated; the maritime, commercial and fractured archetypes of the [product spec](product-spec.md) are out of R7c's scope. | [natives](natives.md) | R7d |
+
+Not gaps, after the check against the installation:
+
+- **Native adjective equal to the name** is the vanilla convention: 520 of the 544 American country definitions have it (C177). The generator follows it and keeps doing so.
+- **Russian grammatical cases** need no inflection algorithm: vanilla's Russian custom localization falls back, for any tag without its own forms, to *державы X*, *державе X* and so on (C176). Whether the fallback reads as expected with a generated tag is [UNKNOWN runtime].
+- **Political-form titles** come from vanilla: `country_flavor` picks the title by government, rank and subject type (a tribe is a *people*, a colonial nation a *viceroyalty*) [V-LOCAL EU5 1.4.3, `customizable_localization/country_ranks.txt`]. A native state that changes government changes its title without new content.
+- **Target tags without a starting country** are vanilla practice: 95 of the 154 formable target tags have no country definition and no 1337 country (C175).
+
+Invariants for every stage: the Old World is preserved, the world layers stay independent, and nothing reveals concealed geography.
 
 ## Evidence and implementation anchors
 
-Project paths are relative to the repository. Installed-game paths below are relative to `game/` within the installation; derived game text remains local.
+Project paths are relative to the repository; installed-game paths are relative to `game/` in the installation. Derived game text stays local.
 
-- [V-EXEC inspection] [eu5_events.py](../src/rnw/eu5_events.py), `retire_events`, removes events of retired tags and follow-ups referenced only by those events. [eu5_remap.py](../src/rnw/eu5_remap.py), `build_remap`, maps removed locations to nearby compatible generated cells. Neither proves semantic accessibility.
-- [V-LOCAL EU5 1.4.3 / V-EXEC 0.10.1 audit] World 6DIV retires 58 events: AZT 16, CHK 22, CSU 7, IRO 7, PUE 6. It retires 39 related modifiers and five historical natural-resource bonuses. Its event overrides introduce no new event IDs. See [native societies](natives.md) and `retired_base_modifiers` in [eu5_nw_export.py](../src/rnw/eu5_nw_export.py).
-- [V-LOCAL EU5 1.4.3] `in_game/common/building_types/event_only_buildings.txt`, `great_temple_of_tenochtitlan`, requires `has_or_had_tag = TNC` and an unlock. `estate_privileges/clergy_estate.txt`, `hurin_qusqu_privilege`, requires a variable set by a retired CSU event. Keeping their definitions does not preserve their access paths.
-- [V-LOCAL EU5 1.4.3] `scripted_country_names/00_default.txt` supplies country/capital/location predicates. `scripted_effects/country_effects.txt`, `change_tag_cosmetic`, uses separate name and adjective effects. Conflicting-name precedence and preservation of manual names remain [UNKNOWN runtime].
-- [V-LOCAL EU5 1.4.3] `formable_countries/readme.txt` documents levels, territorial fractions, potential/allow conditions, names, adjectives, tags, flags, and formation effects. Acceptance of generated target tags and flags without creating a country in 1337 remains [UNKNOWN runtime].
-- [V-EXEC inspection] [eu5_natives.py](../src/rnw/eu5_natives.py), `new_tags`, `country_definitions`, and `country_names`, generates native identities; the current adjective equals the country name. [loc_keys.py](../src/rnw/loc_keys.py) reserves localization hashes.
-- [V-EXEC inspection] [layers.py](../src/rnw/layers.py), [rng.py](../src/rnw/rng.py), and `generate_societies` in [societies.py](../src/rnw/societies.py) establish layer ownership and named seed derivation. New features must not consume additional draws from the existing sequential native-society stream.
-- [V-EXEC inspection] [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md), sections A and G, defines rerolls and reproducibility. Names are not a separate rerollable layer. Any changed non-metadata mod output requires a new algorithm epoch and reference digest; the baseline epoch is 11.
-- [UNKNOWN runtime] Structural checks do not establish campaign accessibility. [AGENTS.md](../AGENTS.md) prohibits agent game launches in the current session. Future running-game checks need separate authorization and remain NOT-RUN until performed.
+- [V-EXEC inspection] `retire_events` in [eu5_events.py](../src/rnw/eu5_events.py) removes events of retired tags and the follow-ups only they fire. `build_remap` in [eu5_remap.py](../src/rnw/eu5_remap.py) maps removed locations to nearby generated cells and rewrites only location and province references. `_land_areas` in [eu5_newworld.py](../src/rnw/eu5_newworld.py) keeps region keys and reuses area keys by position (C179). None of this proves semantic accessibility.
+- [V-LOCAL EU5 1.4.3] `scripted_country_names/00_default.txt` holds twelve entries, eight American, each a country trigger (overlord tag or language) with capital and location triggers on province, area, region or subcontinent keys (C180).
+- [V-LOCAL EU5 1.4.3] `formable_countries/readme.txt` documents level, territorial fraction, potential and allow, form effect, name, adjective, tag, flag, colour and the territory lists. A formable-only target such as `ADU` consists of the formable entry, a flag definition, a coat of arms, a named colour and name and adjective keys (C175).
+- [V-LOCAL EU5 1.4.3] `customizable_localization/countries.txt` varies a country's name by trigger (`ADU_arabic` under Muslim or Arabic-speaking rule); `ru_EU5_custom_loc.txt` holds the Russian cases with their default fallbacks (C176).
+- [V-EXEC inspection] `new_tags`, `country_definitions` and `country_names` in [eu5_natives.py](../src/rnw/eu5_natives.py) generate native identities, flags and coats of arms; [loc_keys.py](../src/rnw/loc_keys.py) reserves localization hashes; `LANGUAGES` in [eu5_nw_export.py](../src/rnw/eu5_nw_export.py) lists the written languages (C178).
+- [V-EXEC inspection] [layers.py](../src/rnw/layers.py), [rng.py](../src/rnw/rng.py) and `generate_societies` in [societies.py](../src/rnw/societies.py) establish layer ownership and named seed derivation. New features must not consume draws from the existing sequential native-society stream.
+- [V-EXEC inspection] [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md), sections A and G, defines rerolls and reproducibility; names are not a separate layer. Any changed non-metadata output needs a new epoch and reference digest.
+- [V-EXEC inspection] `check_no_game_files` in [packaging/hub.py](../packaging/hub.py): the hub mod carries no game files.
+- [UNKNOWN runtime] Structural checks do not establish campaign accessibility. Agent game launches remain prohibited ([AGENTS.md](../AGENTS.md)); game checks are experiments the agent prepares and installs and the owner runs.
 
 ## Content model and vanilla adaptation
 
 ### Semantic opportunities
 
-Before serialization, build a compact content model with stable IDs, role types, eligible locations and connected areas, cultural/religious associations, prerequisites, incompatibilities, identity keys, story families, and consolidation goals. Compute it from existing graphs, fields, population, and societies, without another full-raster pass.
+Before serialization, build a compact content model: stable IDs, role types, eligible locations and connected areas, cultural and religious associations, prerequisites, incompatibilities, identity keys, story families and consolidation goals. Compute it from existing graphs, fields, population and societies, without another full-raster pass.
 
-An area may have several traits, but should not receive every narrative role. There is no mandatory Aztec, Inca, or Cahokia slot. No eligible role is a valid result recorded with its reason. A selected role missing one of its mandatory requirements is an export error. Never substitute an arbitrary country or repair an already-written mod in another pass.
+An area may have several traits but does not receive every narrative role. There is no mandatory Aztec, Inca or Cahokia slot. No eligible bearer is a valid result, recorded with its reason. A selected role that misses a mandatory requirement is an export error. Never substitute an arbitrary country or repair a written mod in another pass.
 
-### Three treatments of vanilla content
+### One decision for every vanilla consumer
 
-| Class | Treatment | Examples |
+Every consumer of an American tag, location, province, area, region or subcontinent key in the remap roots (`in_game/common`, `in_game/events`, `main_menu/common`) gets exactly one decision, recorded by vanilla ID in a committed table that holds identifiers only, no vanilla text. A consumer without a decision stops the export; a patch that adds consumers fails loudly until they are decided.
+
+| Decision | When | Examples |
 | --- | --- | --- |
-| General systems | Preserve and verify their references and conditions; do not duplicate them | Diseases, Columbian exchange, colonial revolution, general colonization |
-| Transferable gameplay role | Bind to a suitable generated society; replace literal historical actors, dates, and place identities | River-city decline, religious reform, irrigation, tribal consolidation |
-| Irreducibly historical narrative | Do not transplant literally; record the loss and, where useful, replace its gameplay purpose | A named ruler's rise or a particular dynasty's intrigue |
+| Keep | A general system, or a mechanic whose positional binding is acceptable | Diseases, Columbian exchange, colonial revolution, regional advances (R7b) |
+| Rebind | A transferable mechanic gated by a tag or key, with generic text, or a historical formable whose vanilla culture lives in the generated world | A culture-gated formable bound to the territory that culture holds; candidates found by N0 |
+| Neutralize | A literal historical identity on random land | The eight American scripted country names; formables gated only by positional region keys; a named ruler's chain |
+| Replace | The gameplay purpose of a neutralized or retired item is worth keeping; original content carries it | River-city decline → River centre; Tenochtitlan's temple → a building of the Sacred centre |
 
-Inventory all 58 retired events: original ID, original gameplay purpose, keep/adapt/retire decision, replacement or justified omission, dependent unlocks/variables/modifiers, and verification. Do not promise 58 direct replacements or treat event count as the measure of quality.
+R6 reuses vanilla American cultures by homeland, so a historical formable can stay meaningful when bound to its culture rather than to a region key; one bound only to positional keys cannot. The default for a tag-gated historical chain is to reuse its payload (modifiers, buildings, privileges, variables) from original events, not to rewrite its text: vanilla text names historical actors, and rewritten text would be new content anyway. Event count is not the measure of quality, and 58 direct replacements are not promised.
 
-Adapt religious buildings and privileges only for appropriate religions and political roles. Preserve vanilla properties and costs where suitable, use neutral original identities, and give each unlock a reachable path and political cost. A generic empire does not automatically inherit Tenochtitlan's temple.
+Adapt religious buildings and privileges only for suitable religions and political roles. Keep vanilla properties and costs where they fit, give them neutral original identities, and give each unlock a reachable path and a political cost. A generic empire does not inherit Tenochtitlan's temple.
 
-Replace historical natural-resource exceptions with rare suitable generated places: a major silver vein, a mercury deposit, or a rich fishery. Their position follows generated geography and resources, not Potosi's former coordinates. Calibrate output against installed vanilla local bonuses; do not award a country a flat superpower modifier for its archetype.
+Replace the historical natural-resource exceptions with rare suitable generated places: a major silver vein, a mercury deposit, a rich fishery. Their position follows generated geography and resources, not Potosí's former coordinates. Calibrate against installed vanilla local bonuses; no country gets a flat superpower modifier for its archetype.
+
+### Region keys chosen by content (option N5)
+
+The R7b design left "region keys chosen by content" out of scope ([R7 handoff](handoff/sonnet-r7-technology-and-empires.md)): region keys carry advances, units, unique buildings, country names, situations and colonial content, and the hierarchy places them at the vanilla positions. If chosen, the land layer gives each vanilla region and area key to the generated part most like its vanilla counterpart within the same subcontinent (climate, relief, coast, size), measured from the installed game's templates. Every *keep* consumer then becomes semantic at once, and R7b's families follow content instead of position. Costs: a land-layer change for every world (new epoch), a matching problem in `hierarchy`/`eu5_newworld`, and literal identities become more plausible doubles, so N1's neutralization stays mandatory. Decide after N0 has counted the positional mechanics.
+
+## Where the content lives
+
+- Story scripts and original localization are committed templates, copied unchanged into every world mod. The world-specific part is bindings only: start-state variables and flags on generated countries and locations, scripted triggers listing eligible locations, formable declarations, scripted country names and identity keys. Event text reads names through data functions such as `[ROOT.GetCountry.GetName]`, as vanilla's own fallback does (C176), rather than generated prose.
+- The hub mod carries no game files and stays so. A world mod is self-contained: a generator update never changes a campaign already running, and a story fix reaches new worlds through a new epoch.
+- Every key is written to all eleven language folders, so no raw key shows. Which languages receive authored prose is an owner decision (below).
 
 ## New local and colonial stories
 
-The initial complete authored catalogue comprises eight families of three to five nodes, including alternative branches. This is an authoring budget, not a guaranteed number of events per seed or campaign.
+The complete catalogue is eight families of three to five nodes, alternative branches included. This is an authoring budget, not a number of events per seed or campaign. The pilot (N3) builds the two marked families first.
 
 | Family | Eligibility | Decision and consequence |
 | --- | --- | --- |
-| River center | Dense population, a river, and an important settlement | Fund water/storage, extract more revenue, or grant autonomy; economic and political consequences |
-| Harvest and food supply | Appropriate agriculture and actual food shortage or dependence | Trade, relief, or changed obligations; expenditure versus unrest and resilience |
-| Route and market | Several populated centers with a real connection | Roads or trade agreements, tolls, or elite concessions; maintenance costs and market access |
-| Sacred center | Religious presence and a suitable holy site | Patronage, centralization, or priestly privileges; tension with secular power and other faiths |
-| Great alliance | Suitable neighboring societies with shared interests or an external threat | A council, submission, or continued independence; relations and a path to consolidation |
-| Empire and periphery | Distant or diverse holdings and actual subjects | Integration, concessions, or coercion; control and loyalty without a predetermined collapse |
-| Contact across the ocean | Actual contact with an outside power | Intermediaries, restrictions, or defense; responses to the actual partner |
-| Colony becomes a country | A developed colony, local interests, and a metropolitan relationship | Representation, mixed identity, or self-government; complement vanilla independence |
+| River centre (pilot) | Dense population, a river and an important settlement | Fund water and storage, extract more revenue or grant autonomy; economic and political consequences |
+| Sacred centre (pilot) | Religious presence and a suitable holy site | Patronage, centralization or priestly privileges; tension with secular power and other faiths |
+| Harvest and food supply | Suitable agriculture and actual food shortage or dependence | Trade, relief or changed obligations; expenditure against unrest and resilience |
+| Route and market | Several populated centres with a real connection | Roads or trade agreements, tolls or elite concessions; upkeep and market access |
+| Great alliance | Neighbouring societies with shared interests or an external threat | A council, submission or continued independence; relations and a path to consolidation |
+| Empire and periphery | Distant or diverse holdings and actual subjects | Integration, concessions or coercion; control and loyalty without a predetermined collapse |
+| Contact across the ocean | Actual contact with an outside power | Intermediaries, restrictions or defence; responses to the actual partner |
+| Colony becomes a country | A developed colony, local interests and a metropolitan relationship | Representation, mixed identity or self-government; complements vanilla independence |
 
-Events inspect the current owner and present conditions, not an immutable 1337 tag. On conquest or disappearance of a participant, explicitly terminate, suspend, or transfer the relevant chain. Never deliver an outcome to an obsolete owner.
+The pilot pair closes the two largest losses of G2 (CHK's river city, the AZT and CSU religious rewards), and both bearers can be conquered mid-chain, which tests ownership transitions early.
 
-Initial pacing values to test: at most two active original chains per country, at most one new chain start per year, and at least ten years between repeats of a repeatable family. Follow-ups and emergency consequences are handled separately. These are proposed tuning values, not verified balance results. Avoid synchronized starts in 1337 and fixed-year European discovery.
+Events inspect the current owner and present conditions, not an immutable 1337 tag. When a participant is conquered or disappears, the chain is explicitly ended, suspended or transferred; an outcome never reaches an obsolete owner.
 
-Choices need actual costs, different beneficiaries, and lasting consequences. AI evaluates affordability, war, relations, and utility; unavailable options are not offered. Namespace variables and document their lifecycle. Use supported game effects for economic shocks rather than pretending to simulate unsupported weather or moving rivers.
+Initial pacing to test: at most two active original chains per country, at most one new chain start per country per year, and at least ten years between repeats of a repeatable family. Follow-ups and emergency consequences are counted separately. These are tuning values, not verified balance. Avoid synchronized starts in 1337 and any assumption of a fixed year of European arrival.
 
-## Dynamic country identities
+Choices need actual costs, different beneficiaries and lasting consequences. AI weighs affordability, war, relations and utility; unavailable options are not offered. Variables are namespaced and their lifecycle documented. Economic shocks use supported game effects, not simulations of weather or moving rivers the game does not support.
+
+## Country identities
 
 ### Native countries
 
-Separate a stable identity root from political form. Give each country its own name, separate adjective, and a small number of meaningful transitions: tribe/city to union/state, or colony to independent country. A capital move, new ruler, or temporary occupation must not automatically replace its root identity.
-
-Use existing language corpora and name generation for roots, with original localized political formulas. Do not name every country after its capital, restore historical American names by coordinates, or present invented text as an authentic word of a real language.
-
-Cosmetic name changes do not change the tag, diplomatic identity, color, or flag. Actual formation of another country is a separate mechanic. Name and adjective forms require separate localization and checks in Russian and every supported language; adding an arbitrary suffix is not a general inflection algorithm.
+The generated name of a tag is its stable identity; its adjective stays equal to it, as in vanilla (C177). Titles follow government, rank and subject type through vanilla (above). A capital move, a new ruler or an occupation renames nothing. A real change of identity is a formable (below), not a chain of cosmetic renames. Names come from the existing language corpora; do not name every country after its capital, restore historical American names by coordinates, or present invented text as a word of a real language.
 
 ### Colonial countries
 
-Generate a finite catalogue of territorial and colonizer-language naming variants at export time: a local root, an exonym, a river/port identity, or a metropolitan/personal naming tradition. Selection follows the actual founder and place of foundation.
+The vanilla mechanism is `scripted_country_names` (C180). N1 neutralizes its eight American entries on generated land; colonies then take the engine's default name [UNKNOWN which; INFERRED from premises: reused area and region keys carry generated display names, so a default built from them reads generated geography]. N4 writes a finite world-specific catalogue in the same format: per generated area or region and colonizer language, a local root, a river or port identity, or a metropolitan naming tradition, selected by the founder and the place of foundation.
 
-The desired behavior is a persistent founding anchor and selected name. Moving the capital does not automatically select another name. Independence offers retaining the inherited identity or choosing a local one. Later substantive renaming is an explicit player/AI decision.
+Whether a scripted name is re-evaluated after a capital move, an overlord change or independence, and whether it overrides a player's manual name, are N2's questions, not established engine behaviour. If the engine re-evaluates on a capital move, the catalogue keys on the founding area rather than the capital, through a variable set at foundation. A transition the engine does not support stays blocked rather than imitated by a static name.
 
-Founding anchors, manual-name detection, and independence naming hooks are requirements to prove in task 2, not established engine capabilities. If a supported manual-name check exists, honor it. Otherwise do not automatically rename an existing country after creation; offer explicit decisions. An unsupported transition remains blocked rather than being declared complete with a static-name substitute.
-
-Visibility is part of the design: expose a selected name only when the game exposes that country or territory. Potential formables and requirements must not reveal unknown regions. This does not promise protection against a player reading local mod files.
+Visibility is part of the design: a selected name, a potential formable and its requirements appear only when the game exposes that country or territory. This does not promise protection against a player reading local mod files.
 
 ## New formable countries
 
@@ -109,153 +127,96 @@ Choose opportunities from the generated world. Export a finite set of identities
 
 | Family | Foundation | Distinct political path |
 | --- | --- | --- |
-| River-basin union | Connected river areas and several populated centers | Economic integration and administration of a connected territory |
-| Highland confederation | Connected inhabited valleys within a mountain region | Unity with meaningful local autonomy; not a collection of unrelated highland cells |
-| Maritime league | Populated coasts/islands with a valid sea connection | Multiple ports and actual maritime capabilities |
-| Cultural union | Related local societies with substantial population | Several centers and cultural inclusion; tiny diaspora pops do not establish eligibility |
-| Regional realm | A large connected region with several centers | Control and integration beyond taking one settlement |
-| Postcolonial federation | Related former colonial territories | Independence, political consolidation, and a new identity |
+| River-basin union (pilot) | Connected river areas and several populated centres | Economic integration and administration of a connected territory |
+| Highland confederation | Connected inhabited valleys in a mountain region | Unity with real local autonomy; not a set of unrelated highland cells |
+| Maritime league | Populated coasts or islands with a valid sea connection | Several ports and actual maritime capability |
+| Cultural union | Related local societies with substantial population | Several centres and cultural inclusion; tiny diaspora pops give no eligibility |
+| Regional realm | A large connected region with several centres | Control and integration beyond taking one settlement |
+| Postcolonial federation | Related former colonial territories | Independence, consolidation and a new identity |
 
-Relatedness uses verified vanilla culture groups/languages or an explicitly recorded political association among generated societies. This plan does not invent new cultural-family data. Substantial presence means the main population of suitable locations, not a small diaspora entry.
+Relatedness uses vanilla culture groups and languages or a recorded political association among generated societies; the plan invents no cultural-family data. Substantial presence means the main population of suitable locations.
 
-Support diplomatic/subject-based and direct territorial consolidation where installed mechanics permit it. Do not make every union a full-annexation checklist if vanilla conditions can express a different political path.
+A target follows the vanilla formable-only pattern of `ADU` (C175): the formable entry, a flag definition or coat of arms, a named colour and name and adjective keys, with no country definition and no country in 1337. The generator already writes flags and coats of arms for its native tags. Formables get their own adjective where the name is a political formula (*Kalumet Union* → *Kalumet*); the language rule is a template per supported language, not an inflection algorithm. The remaining risk, that a tag first seen in a mod behaves like `ADU`, is N2's question; a rejected branch stays blocked, and ghost starting countries are no workaround.
 
-Derive required territory from generated connected areas, with scale appropriate to that world. Generate names, adjectives, and symbols from the relevant identity. Consequences use suitable ranks, reforms, obligations, and relationships with checked prerequisites, rather than an identical permanent bonus for every formable.
+Support diplomatic or subject-based and direct territorial consolidation where installed mechanics permit; not every union is a full-annexation checklist. Required territory comes from generated connected areas at the scale of that world. Consequences use suitable ranks, reforms, obligations and relationships with checked prerequisites, not one permanent bonus for every formable. Prevent formation cycles and repeated rewards; keep potential visibility, progress and formation eligibility distinct. Historical formables that N0 keeps or rebinds stay beside the new ones without becoming the obligatory best continuation of every society.
 
-Reserve future tags, keys, and flags separately without creating empty countries in 1337. Prevent formation cycles and repeated rewards. Distinguish potential visibility, progress, and actual formation eligibility.
+## More varied societies (R7d)
 
-Each opportunity is an export-time declaration with fixed name/adjective/tag/flag keys and generated requirements. Creating arbitrary definitions during a campaign is neither needed nor claimed. If the engine rejects a new target tag or flag, that branch remains blocked pending a demonstrated compatible solution; ghost starting countries are not an acceptable workaround.
-
-Retain meaningful, accessible historical formables alongside new ones. They must not become the obligatory best continuation of every generated society. Overlapping paths should be intelligible choices without repeated rewards.
-
-## More varied societies
-
-Extend the existing large territorial state with four additional combinations of real traits: a maritime trade network, a highland confederation, a fragmented region with several centers, and a sacred center with political competitors. Not every combination needs a new government type.
-
-An archetype follows geography and social structure; randomness chooses among suitable combinations. Strength comes from population, infrastructure, trade, and organization. Weakness comes from connection costs, autonomy, relationships, and diversity. Neither inevitable collapse nor a giant empire is guaranteed.
+Four more combinations of real traits (a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors) belong to the peoples layer as a continuation of R7, not to the content stages. An archetype follows geography and social structure; randomness chooses among suitable combinations. Strength comes from population, infrastructure, trade and organization; weakness from connection costs, autonomy, relationships and diversity. Neither collapse nor a giant empire is guaranteed, and not every combination needs a new government type. Stories and formables read traits (river, coast, holy site, subjects), not archetype labels, so N3 and N4 do not wait for R7d.
 
 ## Randomness and layer ownership
 
-- Country names, political/religious roles, story opportunities, and formables use independent named streams within peoples, keyed by stable object IDs. Do not add draws to the current native-society stream or reshuffle every feature when adding one story family.
-- Natural-resource exceptions belong to resources and depend on land/resources, not peoples. Rerolling peoples does not move a deposit; rerolling resources does not change countries or their names.
-- Resource-related events inspect the actual resource during play. They do not reshape society generation after a resource reroll. Any additional resource-owned output is explicit in the layer comparison allowlist.
-- Definitions and opportunities reproduce from the world code, algorithm epoch, and input manifest. Campaign outcomes use the game's random state; the world code does not promise an identical campaign history.
-- New content does not migrate itself into existing saves. Each completed phase changing mod output raises the product version, starts a new epoch, and updates the reference world. Never rewrite a released epoch's digest.
+- Story opportunities, formables and colonial name catalogues use independent named streams in the peoples layer, keyed by stable object IDs. They add no draws to the current native-society stream, and adding one family does not reshuffle the others.
+- Exceptional resource places belong to the resources layer and depend on land and resources, not peoples. Rerolling peoples does not move a deposit; rerolling resources changes no country or name. Resource-related events inspect the actual resource in play; any further resource-owned output is explicit in the layer comparison allowlist.
+- Region keys chosen by content (N5) would belong to the land layer.
+- Definitions and opportunities reproduce from the world code, epoch and input manifest. Campaign outcomes use the game's random state; a world code does not promise an identical campaign.
+- New content does not migrate into existing saves. Each stage that changes mod output raises the product version, starts a new epoch and updates the reference world; a released epoch's digest is never rewritten.
 
 ## Scope and constraints
 
-Use the existing stack, delivery model, settings, and rare-empire control. No new public controls, separate story reroll layer, paid service, or dependency is proposed. Original prose and templates belong in the project; vanilla-derived output is generated locally from the player's installation.
+Use the existing stack, delivery model, settings and rare-empire control. No new public controls, story reroll layer, paid service or dependency. Original prose and templates belong in the project; vanilla-derived output is generated locally from the player's installation.
 
-Do not add mandatory historical doubles, fixed old capitals as hidden semantic anchors, duplicate disease/independence/trade systems, flat archetype strength bonuses, post-export repair layers, silent substitutions, a new history engine, an LLM inside the generator, or a replacement religion system. Preserve the Old World and existing profiles/saves. Push and publication are outside this request.
+Excluded: mandatory historical doubles, fixed old capitals as hidden anchors, duplicate disease, independence or trade systems, flat archetype bonuses, post-export repair layers, silent substitutions, a new history engine, an LLM in the generator, a replacement religion system, a name-inflection engine. Preserve the Old World and existing profiles and saves. Push and publication are outside this plan.
 
-## Implementation plan
+## Staged plan
 
-Each task includes implementation and its tests. Proposed new paths below do not imply those files already exist. Complete verified phases receive coherent local commits. A phase changing game-facing output installs a verified candidate in a new recorded test-mod folder under the existing project rules.
+Owner types as in the [roadmap](roadmap.md). Each stage includes its tests. A stage that changes output raises the version, starts an epoch, renews the reference world and installs a verified candidate in a new recorded `rnw_exp_*` folder. Game checks are experiments the agent prepares and the owner runs; until run they are NOT-RUN. Proposed paths do not imply that the files exist.
 
-- [ ] 1. Inventory content and gameplay losses
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-1/2. Add `docs/content.md` and claims-ledger entries; inspect `eu5_events.py`, `eu5_remap.py`, `eu5_nw_export.py`, local DHE files, and modifiers.
-  - Acceptance: all 58 events, 39 related modifiers, five natural exceptions, and known dependent readers have a decision and verification method. Maintain a separate preservation list for general colonial/religious systems.
-  - QA: add `tests/test_content_inventory.py` with synthetic chains; run `uv run pytest -q tests/test_content_inventory.py`. Cover a shared retained event, an adapted dependent event, an inaccessible privilege, and an unclassified source ID that must fail. Local source inventory reports drift after patches. Evidence: `local_data/content/task-01.json`.
-  - Depends on: none. Commit: `Document procedural content scope and source coverage`.
+- [ ] **N0. Inventory and decisions** — Opus design; offline, no output change.
+  - `rnw content-inventory GAME_DIR OUT` writes local JSON of every consumer: file, kind (tag, location, province, area, region, subcontinent), key and vanilla ID. The committed decision table (identifiers only) gives each one keep, rebind, neutralize or replace, with the verification method; `docs/content-plan.md` records the counts per decision.
+  - Acceptance: the 58 events, 39 modifiers, five natural bonuses, eight scripted names, the American formables and the region and area consumers of C179 all have a decision; the positional mechanics are counted for N5.
+  - QA: `tests/test_content_inventory.py` with synthetic chains: a shared retained event, an adapted dependent event, an inaccessible privilege, an unclassified ID that must fail; the local test reports drift after a patch.
+  - Commit: `Inventory the New World's vanilla content consumers and decide each`.
+- [ ] **N1. Correct the current output** — Sonnet implementable after N0; first game-facing candidate.
+  - Turkish localization (G6) needs no inventory and may go first.
+  - Neutralize and rebind per N0; record each retired reward as a loss until N3 replaces it; exceptional resource places in the resources layer (G5).
+  - QA: synthetic scripted names and formables neutralized or rebound by decision; rerolling peoples leaves the deposits, rerolling resources the countries; Old World unchanged; an unclassified consumer stops the export.
+  - Owner experiment: a Spanish and an English colony on a generated world carry no vanilla American name; a rebound formable appears only to its culture; an exceptional place shows its bonus; no new `error.log` lines.
+  - Commit: `Neutralize positional historical identities and add exceptional places`.
+- [ ] **N2. Hook experiment** — prepared by the agent, run by the owner; may share a session with N1's.
+  - Questions, each with its vanilla precedent: a mod-generated formable tag (`ADU`, C175); a world-specific scripted country name after a capital move, an overlord change, independence and a manual rename (C180); start-state variables and flags after save and load; the Russian fallback with a generated tag (C176); vanilla titles with a generated tag.
+  - Offline acceptance: valid syntax, verified anchors and a complete experiment record. An absent anchor fails; a skipped local test is not a pass. A branch whose hook fails stays blocked.
+  - Commit: `Add content hook probes and their experiment`.
+- [ ] **N3. Content model and river pilot** — Opus design, then Sonnet.
+  - `src/rnw/content.py` (roles, eligibility, absence reasons, incompatibilities, independent streams) and `src/rnw/eu5_content.py`, integrated before serialization in `eu5_nw_export.py`; no full-raster scan and no change to existing draws.
+  - River centre and Sacred centre with their branches, costs, AI choices, pacing, ownership transitions, termination and cleanup; the River-basin union formable; the replaced rewards of G2.
+  - QA: `tests/test_content.py` (river, island and highland graphs; disconnected and underpopulated failures; iteration-order invariance; non-interference when a family is added) and `tests/test_stories.py` (each eligible start to every outcome, stop on lost prerequisites, repeated rewards, cycles, unaffordable choices, vanished scopes, synchronized starts). A transition model is not proof of in-game effects.
+  - Owner experiment: a pilot chain to an outcome, its bearer conquered mid-chain, a formation, save and load, AI choices over a few decades. A forced event tests its effects, not its natural frequency.
+  - Commit: `Generate content roles and the river pilot`.
+- [ ] **N4. Expansion** — Sonnet implementable after N3.
+  - The remaining six story families and five formable families, one family or a small group per version; world-specific colonial names once N2 has answered; the postcolonial federation after them.
+  - QA per family as in N3, plus a structural eligibility witness per formable family and rejection of disconnected targets, diaspora-only eligibility, invalid rank, repeated formation and key or tag conflicts; visibility of undiscovered goals.
+- [ ] **N5. Region keys chosen by content** (option; owner decision after N0) — Opus design.
+  - Assign vanilla region and area keys by similarity within their subcontinent; R7b's families then follow content. Gate: the counted positional mechanics read sensibly on three worlds; Old World unchanged; a new epoch.
 
-- [ ] 2. Prove extension points before mass authoring
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-2/4/5/7. Inspect installed scripted names, country effects, the formables readme, and existing tag/localization checks. Prepare minimal synthetic fixtures and a bounded local experiment.
-  - Offline acceptance: valid syntax, verified source anchors, and a complete experiment specification. Fixtures do not establish engine behavior.
-  - Runtime acceptance, only in a separately authorized observation: name/adjective precedence and persistence; manual names; colony creation, capital/overlord changes, and independence; previously absent target tags without ghost starting countries; flags; chain state after save/load.
-  - QA: add hook fixtures/local checks, then run `uv run pytest -q tests/test_content_hooks.py tests/test_local_install.py -k 'content_hooks or native_calibration'`. An absent anchor must fail; skipped local tests are not passes. Runtime tests remain NOT-RUN until performed; an unsupported branch remains blocked without a visual imitation.
-  - Depends on: 1. Commit: `Add bounded content hook probes and compatibility checks`.
+Shared exporter, key registry and content-model edits have one owner at a time.
 
-- [ ] 3. Generate semantic roles and independent streams
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-1/6/7. Add `src/rnw/content.py` and `src/rnw/eu5_content.py`; integrate before serialization in `eu5_nw_export.py` using existing societies, hierarchy, rivers, layers, and RNG data.
-  - Acceptance: stable role IDs, eligibility and absence reasons, incompatibilities, independent streams, and explicit output ownership. No new full-raster scan or change to existing sequential draws.
-  - QA: `uv run pytest -q tests/test_content.py tests/test_layers.py tests/test_rng_noise.py`; cover river/island/highland graphs, disconnected and underpopulated failures, iteration-order invariance, and non-interference when adding a story family. Evidence: `local_data/content/task-03.json`.
-  - Depends on: 1; task 2 compatibility is required before a game-facing handoff. Commit: `Generate semantic content roles from world and societies`.
-
-- [ ] 4. Restore suitable vanilla opportunities and exceptional places
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-1/2/6. Implement in `eu5_content.py` and new `eu5_sites.py`. Change retirement/remapping only according to the explicit inventory; do not disable retirement globally.
-  - Acceptance: adapted transferable chains, reachable religious buildings/privileges, and resource exceptions. General vanilla systems remain single systems. Every adaptation has complete references and explicit applicability.
-  - QA: `uv run pytest -q tests/test_content_adaptation.py tests/test_sites.py tests/test_script_rewrites.py`; reject an incompatible religion/resource, vanished owner, missing unlock, duplicate bonus, and Old World changes. Evidence: `local_data/content/task-04.json`.
-  - Depends on: 2, 3. Commit: `Adapt native opportunities and generate exceptional resource sites`.
-
-- [ ] 5. Add eight original story families
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-3. Add `src/rnw/eu5_stories.py`, original templates/localization, and content-model inputs.
-  - Acceptance: the eight specified families, branches, pacing, costs/consequences, AI choices, ownership transitions, termination, and state cleanup. Committed prose does not copy vanilla passages.
-  - QA: `uv run pytest -q tests/test_stories.py`; model a path from each eligible start to every outcome and stop on lost prerequisites. Test repeated rewards, cycles, unaffordable choices, vanished scopes, and synchronized chain starts. A transition model is not proof of in-game effects. Evidence: `local_data/content/task-05.json`.
-  - Depends on: 2, 3, 4. Commit: `Add causal native and colonial story families`.
-
-- [ ] 6. Add native identity and separate adjective forms
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-4/7. Add `src/rnw/identity.py` and `src/rnw/eu5_identity.py`; use `names.py`, `eu5_natives.py`, and `loc_keys.py`. Keep mod/world display names in `worldname.py` separate.
-  - Acceptance: a stable root, separate name/adjective forms, and meaningful transitions without cosmetic tag changes or automatic destruction of manual names.
-  - QA: `uv run pytest -q tests/test_identity.py tests/test_natives_eu5.py`; same-input identity, seed variation, collision rejection, unchanged roots after capital/ruler changes, and valid original templates in Russian and supported languages. Evidence: `local_data/content/task-06.json`.
-  - Depends on: 2, 3. Commit: `Generate stable native identities and separate adjective forms`.
-
-- [ ] 7. Name colonies and handle independence
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-4/7. Extend `eu5_identity.py` through only the colony hooks proved in task 2; emit world-specific original localization.
-  - Acceptance target after proving each hook: founder/place-based names, a stable founding anchor, independence choices, and no historical-American naming by old coordinates. Unsupported transitions remain blocked. Do not alter colonial identities outside the generated geography.
-  - QA: `uv run pytest -q tests/test_colonial_identity.py`; cover different founders in one area, two colonies of one founder, moved capitals, changed overlords, independence, manual names, and a non-American colony. Check hidden-country and undiscovered-goal visibility. Evidence: `local_data/content/task-07.json`.
-  - Depends on: 2, 3, 6. Commit: `Name generated colonies from place and founding identity`.
-
-- [ ] 8. Generate six formable-country families
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-3/5/7. Add `src/rnw/formables.py` and `src/rnw/eu5_formables.py`; integrate semantic roles, identity, tag/key reservations, and historical-formable checks.
-  - Acceptance: finite export-time declarations with suitable connected targets, potential/allow conditions, fixed identities/flag keys, no ghost starting countries, and no reward cycles. Tag/flag acceptance is gated by task 2; unsupported branches remain blocked.
-  - QA: `uv run pytest -q tests/test_formables.py tests/test_identity.py tests/test_script_rewrites.py`; provide a structural eligibility witness for each family and reject disconnected targets, diaspora-only eligibility, invalid rank, repeated formation, and key/tag conflicts. Structural witnesses do not prove campaign attainability. Check undiscovered-goal visibility. Evidence: `local_data/content/task-08.json`.
-  - Depends on: 2, 3, 4, 6; the postcolonial branch also depends on 7. Commit: `Generate political goals and world-specific formable countries`.
-
-- [ ] 9. Diversify societies and balance their opportunities
-  - Recommended task executor category: unspecified-high
-  - Closes GAP-3/6. Extend `content.py` and, where necessary, societies, natives, development, and infrastructure without reshaping geography to fit a predetermined archetype.
-  - Acceptance: the four additional trait combinations described above have real advantages, constraints, stories, and goals. Examine low tribal-land development relative to vanilla without spreading developed-city bonuses everywhere to match an average.
-  - QA: `uv run pytest -q tests/test_content_archetypes.py tests/test_societies.py tests/test_development.py tests/test_empires.py`; reject unsuitable geography and flat super-bonuses, support worlds without empires, and prove structural variation beyond names/colors. Evidence: `local_data/content/task-09.json`.
-  - Depends on: 3-8. Commit: `Diversify generated societies through geography and institutions`.
-
-- [ ] 10. Verify integration and prepare the game-facing candidate
-  - Recommended task executor category: unspecified-high
-  - Closes all gaps. Add integration/local checks; update version, epoch, golden world, testing documentation, claims, research log, and experiment records for implemented changes.
-  - Offline QA: `uv sync --locked --group dev && make check`, then exact local tests with `EU5_GAME_DIR`. Run `RNW_REPRODUCE=1` reference generation only when the heavy check is authorized. Use fast synthetic graphs for the broad corpus and only the necessary representative full worlds; do not start mass heavy generation without approval.
-  - Compare Old World objects/files, resource and peoples rerolls, references/tags/flags/localization, input manifests, output digests, and epochs. For files containing several layers, compare owned fields rather than demanding false whole-file identity. Install only a new recorded test-mod candidate and verify its bytes.
-  - Runtime QA after separate authorization: a native chain/reform/formation; colonial discovery/foundation/naming/contact/disease; self-government/independence/renaming; conquest or disappearance of an actor; save/load; AI behavior and pacing. Prepared or accelerated scenarios test effects separately from natural frequency; forcing an event does not establish its normal occurrence rate.
-  - Evidence: `local_data/content/task-10/`; commit conclusions rather than derived logs/assets. Keep OFFLINE-PASS, NOT-RUN, and V-GAME separate. A successful start does not validate a long campaign.
-  - Depends on: 4-9, proved runtime hooks from 2, and separate permission for game observations. Commit: `Validate generated content end to end and record acceptance gates`.
-
-## Execution order
-
-1. Foundation: task 1, then 2 and 3. Resolve naming/tag limitations before mass authoring.
-2. Restoration and identity: tasks 4 and 6. These close existing losses but are not completion of the whole plan.
-3. New opportunities: tasks 5, 7, and 8 according to their dependencies.
-4. Variety and combined verification: task 9, then 10.
-
-Give shared exporter, key registry, and content-model edits one owner at a time. Parallel tasks do not imply concurrent edits to those integration points.
+Acceptance across stages: `uv sync --locked --group dev && make check`, then the exact local tests with `EU5_GAME_DIR`; `RNW_REPRODUCE=1` reference generation for each new epoch. Compare Old World files, peoples and resources rerolls, references, tags, flags, localization, input manifests, digests and epochs; for files holding several layers compare owned fields rather than demand whole-file identity. Evidence goes to `local_data/content/`; commit conclusions, not derived logs. Keep OFFLINE-PASS, NOT-RUN and V-GAME apart; a successful start does not validate a long campaign.
 
 ## Assessing interest
 
 | Dimension | Evidence to seek | Insufficient evidence |
 | --- | --- | --- |
-| Accessibility | A suitable bearer, attainable prerequisites, and a working outcome | A file or button exists |
-| Variety | Different worlds produce different goals, societies, and development paths | Different names and colors |
+| Accessibility | A suitable bearer, attainable prerequisites and a working outcome | A file or button exists |
+| Variety | Different worlds produce different goals, societies and development paths | Different names and colours |
 | Choice | Costs and beneficiaries vary with circumstances; alternatives make sense | A free best option |
-| Discovery | Contact, ownership, or knowledge reveals opportunities | All hidden realms/goals are visible before exploration |
-| Dynamics | Conquest, capital moves, independence, and save/load preserve causality | It worked once at startup |
+| Discovery | Contact, ownership or knowledge reveals opportunities | Hidden realms and goals visible before exploration |
+| Dynamics | Conquest, capital moves, independence and save/load preserve causality | It worked once at start |
 | Balance | Advantages and costs use normal mechanics and AI decisions | An archetype label grants power |
 
-The thought-experiment criterion is whether players on different seeds can describe different decisions they had to make. Event counts and invented percentages of vanilla interest are not substitutes.
+The criterion is whether players on different seeds can describe different decisions they had to make. Event counts and invented percentages of vanilla interest are no substitute.
 
 ## Final verification
 
-- [ ] F1. Reconcile the source inventory with every adaptation/omission; nothing disappears silently.
-- [ ] F2. Review code quality, determinism, layer ownership, and Old World preservation using completed checks only.
-- [ ] F3. Observe separately authorized game scenarios. While launches remain prohibited, the runtime result is NOT-RUN, not PASS.
-- [ ] F4. Map IS-1 through IS-7 to evidence and experiences from two materially different campaigns, with limits stated explicitly.
+- [ ] F1. Reconcile the inventory with every keep, rebind, neutralization and replacement; nothing disappears silently.
+- [ ] F2. Review code quality, determinism, layer ownership and Old World preservation from completed checks only.
+- [ ] F3. Run the owner's experiments of N1–N4; until run, the runtime result is NOT-RUN, not PASS.
+- [ ] F4. Map G1–G7 to evidence from two materially different campaigns, with limits stated.
 
-## Decisions proposed for adoption
+## Decisions for the owner
 
-Use a plausible random world by default; retain meaningful historical formables alongside generated ones; preserve player-chosen names; avoid additional settings. There are no blocking questions for this design proposal. Engine uncertainties belong to task 2 rather than being described as established capabilities.
+1. **Region keys by content (N5).** Recommendation: decide after N0; if positional mechanics are many, N5 is the one change that makes them semantic with vanilla data.
+2. **Languages of authored prose.** Recommendation: English and Russian authored; the other nine folders carry the English text until translated, so no raw key shows.
+3. **What 1.0.0 needs** ([ADR 0003](adr/0003-versioning.md): the first Workshop publication is the complete product). Recommendation: N0–N3 before 1.0.0, since N1 removes visible historical doubles and N3 shows the direction; N4 and R7d as later MINOR versions.
 
-The requested brainstorm and proposed plan are complete. Implementation and game observations have not begun. If this direction is accepted, resolve only changed scope or newly discovered limitations rather than repeating the baseline audit.
+Settled by this plan: a plausible random world by default; historical formables kept only where N0 keeps or rebinds them; player-chosen names preserved; no additional settings. Engine uncertainties belong to N2, not to the design.

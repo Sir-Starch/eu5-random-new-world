@@ -586,3 +586,12 @@
 - [UNKNOWN] Whether the engine binds an `Index` sampler in the terrain and water draws (the one precedent is the overlay's own shader and `tree.shader`); a failure is a missing or garbled drawing, or a crash at the first map frame as in C137 and C138. Whether the filter is applied in the lobby.
 - Searching the strings of `eu5.exe` for the slot names found nothing usable (`PdxTexture0` to `2` and the TI names only); nothing was derived from the binary. The shader cache's generated sources were read to see how samplers are declared (a `Texture2D` in `space1` each, bound by the engine at run time).
 - No EU5 launch by the agent, no push or publication.
+
+## 2026-10-23 — Content plan reviewed against the installation, C175–C180
+
+- [V-LOCAL C175] 95 of the 154 vanilla formable target tags have no country definition and no 1337 country (`ADU`, `AZT`): the plan's "target tags without ghost starting countries" is vanilla practice, not an engine unknown; only a mod-defined tag remains to be seen.
+- [V-LOCAL C176, C177] Russian case forms fall back to *державы X* for any tag without its own; 520 of 544 American definitions have the adjective equal to the name. The plan's task of separate native adjectives and Russian inflection is dropped; vanilla's `country_flavor` gives the political titles.
+- [V-LOCAL/V-EXEC C178] The game has a Turkish localization the export does not write; it becomes the first item of N1.
+- [V-EXEC/V-LOCAL C179, C180] Region and area keys survive by position (`_land_areas`); 525 references to them, among them eight American scripted country names, keep vanilla meaning on random land. The plan's G1 is widened from locations to these keys, with a decision per consumer (keep, rebind, neutralize, replace) and region keys by content as option N5.
+- [V-EXEC] `docs/content-plan.md` rewritten as stages N0–N5 with a river pilot, R7d split off, static templates in the world mod (the hub carries no game files) and three owner decisions. No code or output changed; no version or epoch change.
+- No EU5 launch by the agent, no push or publication.
