@@ -17,6 +17,8 @@ The probe is a small research mod, not a world: 21 files, English texts in all e
 
 ## Steps for the owner
 
+**The owner runs the [console sitting 036](../036-console-session/README.md) (rows 1 to 5), not the steps below, which stay as the record of what each asks.** Since the first write-up the probe also runs a story start in miniature (H7, row 3 of the sitting): a hidden dynamic event that is certain to open in the first year, a variable holding a location, a delayed event.
+
 1. Enable `RNW probe: content hooks` in the playset (the agent did not change any playset). It can be played with the vanilla map or with FX2E of [experiment 033](../033-new-world-content-n1/README.md). Start a game as **Bern** (`BRN`, a county in Switzerland).
 2. **H3.** At the start an event "Probe: start state" opens with options that show only when they hold: *The variable is set on FRA*, *Its value on FRA is 7*, *The variable is set on paris*, *Its value on paris is 3*. If it says *Neither variable is set*, the mod's `on_game_start` did not run. Close it, save, quit, load, and open the decision list: **Probe: read the start state** shows the same event again from the loaded game.
 3. **H1.** In the formables list, **Probe Realm** should be offered (it needs `bern` and `interlaken`). Form it. Check the name (*Probe Realm*, adjective *Probe*), the flag (green and white check pattern), the map colour (magenta) and the saved game after a load. Note any `error.log` line about `ZQP`.

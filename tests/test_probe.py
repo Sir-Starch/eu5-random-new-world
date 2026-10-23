@@ -99,3 +99,19 @@ def test_an_anchor_that_has_moved_stops_the_build(
     assert any(problem in found for found in eu5_probe.anchor_problems(root))
     with pytest.raises(eu5_probe.ProbeError, match="cannot be built"):
         _ = eu5_probe.build(root)
+
+
+def test_the_probe_runs_a_story_start_in_miniature(tmp_path: Path) -> None:
+    """A hidden window, a variable holding a location and a delayed event, all in the first year."""
+    files = eu5_probe.build(_install(tmp_path))
+    events = files["in_game/events/rnw_probe.txt"].decode("utf-8-sig")
+    block = parse(events).block("rnw_probe.3")
+    assert block is not None
+    window = block.block("dynamic_historical_event")
+    assert window is not None
+    assert window.first("tag") is not None
+    assert "hidden = yes" in events
+    assert "monthly_chance = 100" in events
+    assert "value = location:bern" in events
+    assert "trigger_event_non_silently = { id = rnw_probe.5 months = { 1 2 } }" in events
+    assert "remove_variable = rnw_probe_centre" in events

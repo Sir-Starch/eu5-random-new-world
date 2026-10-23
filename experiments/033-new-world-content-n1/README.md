@@ -11,7 +11,9 @@ What the candidate changes against the last installed world (6DIV, 0.10.1):
 
 Installed: `rnw_exp_world_fx2elamqlt`, **RNW: Continents FX2E**, code `RNW1-080G0-00003-EF38N-A0050-80813-BM0FB-H644` (continents, seed 3706823338, the same land as 6DIV with `empire_permille` 1000), 764 files; every file hashes to the export's own record (764 of 764, 26 records are not mod files). Installed beside `rnw_exp_hub`, `rnw_exp_world_6dive2c4l6` and `rnw_exp_world_cyhlrdiik7`, which are untouched. See [installed record](../INSTALLED.md).
 
-## What to see (owner's run; none of it is observed)
+## What to see (none of it is observed)
+
+**The owner runs the [console sitting 036](../036-console-session/README.md), not the list below, which would take a campaign; the list stays as the record of what each point asks.** Point 1 is read from the logs by the agent, point 4 is row 9 of the sitting, points 2, 3 and 5 are not in the sitting (a colony and a foreign culture's state need play; they wait for N4 and L1).
 
 1. Enable FX2E with the hub instead of 6DIV. Start any game. Keep `error.log` and `game.log` and compare with the 6DIV run: expect no new line about events, formables, scripted names, decisions, static modifiers or localization keys.
 2. A Spanish and an English colony (found one of each, or look at a colonial nation): neither is called *New Spain*, *Peru*, *New York* and the like. What the game calls them instead is [UNKNOWN] (the engine's default for a colonial nation); note it.

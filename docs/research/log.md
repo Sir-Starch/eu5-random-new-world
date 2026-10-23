@@ -647,3 +647,14 @@
 - [V-EXEC C194] Epoch 15, reference world of 782 files; 1,038 tests pass; the 13 local tests pass with `RNW_REPRODUCE=1`; `RNW_LAYERS=1` shows that the peoples' reroll changes the stories and the resources' leaves them.
 - [INFERRED] The decision table rows that name N3 are now carried in purpose (C196); the building of the plan's wording became a location modifier.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-23 — Experiments cost minutes: the console sitting 036, C197
+
+- Owner's correction: experiments 033 to 035 assumed play (a colony, decades of waiting, a formation across a campaign). A development experiment must cost minutes: either console commands or none. Recorded in `AGENTS.md`.
+- [V-LOCAL C197] The installed game has a console (`event`, `tag`, `effect`, `trigger`, `run_months`, `run_until`, `change_date`, `goto`, `conquer*`, `helplog`, `event_counts` and more); the names and the one-line help were read as text from `eu5.exe` (no format or code studied, nothing written to the interoperability register); the vanilla debug event `qa_debug_backdrop.1` shows `event <id>` is the way to fire an event on purpose. Argument forms and what refuses in single player are [UNKNOWN] until typed.
+- Experiment [036](../../experiments/036-console-session/README.md) replaces the owner's steps of 033 to 035 with one sitting of about fifteen minutes (ten rows, EIL2 plus the probe); the agent reads `error.log`, `game.log`, `debug.log` and the event log itself. 033 to 035 keep what each asks and decides.
+- The probe gained a story start in miniature (H7): a hidden `dynamic_historical_event` for Bern with a certain monthly chance in the first year, a variable holding a location, a delayed event; it has the shape of the stories' own start event. `rnw_exp_probe_hooks` was rebuilt and replaced in place (own folder, 21 files hash-identical to the generated tree, nothing else in the profile touched).
+- Open: a conquered bearer's chain and a save mid-chain are not in the sitting (covered offline); a colony's name and a culture's formable need play and wait for N4 and L1.
+- No game launch by the agent, no push or publication.
+- [V-EXEC] Two GUI tests fail now and then, with or without these changes (about one run in ten to forty): `test_new_world_visibility_is_a_default_and_leaves_the_existing_world_hidden` (cause found: `controller._work` publishes `Phase.FINISHED` before `refresh_library` has read the new world, so a poll between the two sees no selected world; the window itself repaints on the later `_changed`) and `test_a_missing_cover_keeps_the_visibility_checkbox_and_reports_the_problem` (asserts the notice text without pumping the queued update). Not changed here: moving the phase after the refresh alters what the window shows during the refresh and wants a look at the window; recorded for the GUI work.
+

@@ -21,6 +21,8 @@ A hidden event per bearer (`rnw_story.1001` and the next ones) is a `dynamic_his
 
 ## Steps for the owner
 
+**The owner runs the [console sitting 036](../036-console-session/README.md) (rows 6 to 8), not the steps below: waiting for a natural start takes decades of game time and a union a campaign. The console fires a story's first event at once (`event rnw_story.1001`) and its ending the same way.** Not covered by the sitting and read offline instead: that a conquered bearer's chain ends (step 4; `reachable` and the event guards, `tests/test_stories.py`), and a save in the middle of a chain.
+
 1. Enable EIL2 (or RI4I) with the hub and play any country the plan names. The names are in the world's `report.json` under `text_stats.stories.starts` (`river_centre:TAG`, `sacred_centre:TAG`); the start events are in `in_game/events/rnw_story.txt` of the mod.
 2. **Natural start.** Let the game run for decades with a bearer you follow (or watch the AI's through the event log). Note the year each event appears and the options the AI takes.
 3. **Forced start** (the console, if the game allows it): `event rnw_story.1001` or the number of a bearer you play, as that country. This tests the effects, not how often a story begins. Take one of the three options, watch the delayed event (a few years later), then its two endings.

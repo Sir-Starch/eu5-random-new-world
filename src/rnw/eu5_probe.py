@@ -13,7 +13,10 @@ missing one stops the build (``anchor_problems``); nothing is guessed.
 
 The probe makes the formable ``rnw_probe_f`` for the tag ``ZQP`` available to Bern (``BRN``),
 a county of two locations, a scripted name for the subject made from Interlaken, two variables
-set when a game starts, and decisions that found the subject and read the variables back.
+set when a game starts, and decisions that found the subject and read the variables back. It
+also runs the start of a story in miniature (H7): a hidden event with a dynamic historical window
+that is certain to open in the first months, a variable that holds a location, and a delayed
+event, so the owner sees in a few game months what a story needs decades to show.
 """
 
 from __future__ import annotations
@@ -37,6 +40,7 @@ COLONY: Final[str] = "interlaken"
 FORMABLE: Final[str] = "rnw_probe_f"
 SCRIPTED_NAME: Final[str] = "rnw_probe_colony_scripted_country_name"
 VARIABLE: Final[str] = "rnw_probe_start"
+CENTRE: Final[str] = "rnw_probe_centre"
 COUNTRY_VARIABLE: Final[tuple[str, str, int]] = ("FRA", VARIABLE, 7)
 LOCATION_VARIABLE: Final[tuple[str, str, int]] = ("paris", VARIABLE, 3)
 GAME: Final[str] = "game"
@@ -371,6 +375,67 @@ rnw_probe.2 = {{
 		name = rnw_probe.2.close
 	}}
 }}
+
+rnw_probe.3 = {{
+	type = country_event
+	hidden = yes
+	fire_only_once = yes
+
+	dynamic_historical_event = {{
+		tag = {HOST}
+		from = 1337.1.1
+		to = 1338.1.1
+		monthly_chance = 100
+	}}
+
+	trigger = {{
+		owns = location:{CAPITAL}
+	}}
+
+	immediate = {{
+		set_variable = {{ name = {CENTRE} value = location:{CAPITAL} }}
+		trigger_event_non_silently = {{ id = rnw_probe.4 }}
+	}}
+}}
+
+rnw_probe.4 = {{
+	type = country_event
+	title = rnw_probe.4.title
+	desc = rnw_probe.4.desc
+	outcome = neutral
+
+	option = {{
+		name = rnw_probe.4.kept
+		trigger = {{
+			exists = var:{CENTRE}
+			var:{CENTRE} ?= {{ owner ?= root }}
+		}}
+		trigger_event_non_silently = {{ id = rnw_probe.5 months = {{ 1 2 }} }}
+	}}
+	option = {{
+		name = rnw_probe.4.lost
+		trigger = {{
+			NOT = {{ exists = var:{CENTRE} }}
+		}}
+	}}
+}}
+
+rnw_probe.5 = {{
+	type = country_event
+	title = rnw_probe.5.title
+	desc = rnw_probe.5.desc
+	outcome = neutral
+
+	trigger = {{
+		exists = var:{CENTRE}
+		var:{CENTRE} ?= {{ owner ?= root }}
+	}}
+
+	option = {{
+		name = rnw_probe.5.close
+		remove_variable = {CENTRE}
+	}}
+}}
 """
 
 
@@ -439,6 +504,20 @@ def _texts(colony: str) -> dict[str, str]:
             "the mod's definition replaced the game's instead of adding to it."
         ),
         "rnw_probe.2.close": "Close",
+        "rnw_probe.4.title": "Probe: the dynamic start",
+        "rnw_probe.4.desc": (
+            "A hidden event of the mod, opened by its dynamic historical window (certain every "
+            f"month of the first year), stored {CAPITAL} in a variable and showed this. The "
+            "stories of the mod begin the same way."
+        ),
+        "rnw_probe.4.kept": "The variable holds a location that the host owns: go on",
+        "rnw_probe.4.lost": "The variable is missing",
+        "rnw_probe.5.title": "Probe: the delayed event",
+        "rnw_probe.5.desc": (
+            "One or two months after the choice: the next event of the chain arrived and the "
+            "variable still held its location. Closing removes the variable."
+        ),
+        "rnw_probe.5.close": "Close and remove the variable",
     }
 
 
@@ -456,8 +535,8 @@ def metadata() -> bytes:
         "supported_game_version": "1.4.*",
         "short_description": (
             "Research probe of the Random New World project: a formable of a tag no country "
-            "file defines, a scripted country name, start variables. Not a world; remove when "
-            "the experiment is done."
+            "file defines, a scripted country name, start variables, a story start in miniature. "
+            "Not a world; remove when the experiment is done."
         ),
         "tags": ["Utilities"],
         "relationships": [],
