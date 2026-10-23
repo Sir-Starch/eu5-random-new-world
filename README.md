@@ -1,5 +1,7 @@
 # EU5 Random New World
 
+**0.10.4, 2026-10-23:** the five historical natural-resource bonuses that vanished with the Americas (Potosí's silver, the mercury mine, the fisheries) come back as five rare places of the generated land: silver in the mountains, a mercury lode, a rich fishery, each with a modifier and names of the mod's own and the vanilla bonus size; they belong to the resources part of the world (C189, C190). This completes N1 of the [content plan](docs/content-plan.md) offline; not yet seen in game.
+
 **0.10.3, 2026-10-23:** the decisions of N0 are carried out: the American historical events, colonial names (New Spain, Peru, New York and others), the three colonial formables and the Panama canal are switched off on generated land by closing the gates vanilla gives them; the historical formables whose culture the world holds (Inca, Aztec, Maya, Iroquois, Pueblo) take the places of that culture as territory, and close when the culture is thin (C187, C188). Epoch 13; not yet seen in game. The exceptional resource places of the same stage follow.
 
 **0.10.2, 2026-10-23:** [OWNER] the mod uses exactly the game's official languages, taken from the installation; the world's name files are now written in all eleven of 1.4.3, Turkish included, which the fixed list of ten missed (C178, C186). [V-EXEC] Epoch 12, reference world of 754 files; the first step of N1 of the [content plan](docs/content-plan.md), not yet seen in game.

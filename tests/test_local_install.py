@@ -17,7 +17,7 @@ import pytest
 
 from rnw import content_report, epoch, splnet
 from rnw.app.discovery import find_games
-from rnw.app.worldcode import decode
+from rnw.app.worldcode import decode, encode, rolled
 from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_biomes import template_attributes
 from rnw.eu5_canvas import select_canvas
@@ -39,9 +39,10 @@ from rnw.eu5_lobby import (
 )
 from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
 from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map
-from rnw.eu5_natives import vanilla_natives
+from rnw.eu5_natives import DEFINITION_FILE, vanilla_natives
 from rnw.eu5_newworld import vanilla_geometry
 from rnw.eu5_nw_export import binding_problems, calibrate_development, export_new_world
+from rnw.eu5_places import SPECS
 from rnw.eu5_slots import CLIMATE_GROUPS, COAST_SLOTS, TOPOGRAPHY_GROUPS, SlotTables, synthesize
 from rnw.eu5_splines import GAME_FILE as SPLINE_GAME_FILE
 from rnw.eu5_splines import land_contacts
@@ -389,8 +390,52 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
         "events": 82,
     }
     assert 3 <= guarded["common/formable_countries"] <= 8
+    places = cast("dict[str, dict[str, str]]", report["text_stats"])["exceptional_places"]
+    assert len(places) >= 3  # silver, mercury and fish are found in any New World
+    assert set(places) <= {spec.modifier for spec in SPECS}
     if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
         pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
     output = cast("dict[str, object]", golden["output"])
     assert record.output_sha256 == output["sha256"]
     assert record.output_count == output["count"]
+
+
+def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
+    """Rerolling the peoples leaves the exceptional places, rerolling the resources the countries.
+
+    Three exports, about five minutes, so only with ``RNW_LAYERS=1`` (content plan, N1).
+    """
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None or os.environ.get("RNW_LAYERS") != "1":
+        pytest.skip("EU5_GAME_DIR and RNW_LAYERS=1 are needed")
+    golden = cast("dict[str, object]", json.loads(GOLDEN_WORLD.read_text(encoding="utf-8")))
+    code = decode(str(golden["code"]))
+
+    def made(name: str, text: str) -> tuple[dict[str, str], dict[str, str]]:
+        part = decode(text)
+        report = export_new_world(
+            Path(root_value),
+            tmp_path / "generated" / f"rnw_exp_{name}",
+            seed=part.seed,
+            settings=part.settings(),
+            world_code=text,
+        )
+        stats = cast("dict[str, dict[str, str]]", report["text_stats"])
+        files = cast("list[dict[str, str]]", report["files"])
+        wanted = ("main_menu/setup/1337/10_countries.txt", DEFINITION_FILE)
+        digests = {
+            record["path"].partition("/")[2]: record["sha256"]
+            for record in files
+            if record["path"].partition("/")[2] in wanted
+        }
+        assert len(digests) == len(wanted)
+        return stats["exceptional_places"], digests
+
+    base_places, base_countries = made("base", str(golden["code"]))
+    peoples_places, peoples_countries = made("peoples", encode(rolled(code, "peoples")))
+    resource_places, resource_countries = made("resources", encode(rolled(code, "resources")))
+    assert base_places
+    assert peoples_places == base_places
+    assert peoples_countries != base_countries
+    assert resource_places != base_places
+    assert resource_countries == base_countries

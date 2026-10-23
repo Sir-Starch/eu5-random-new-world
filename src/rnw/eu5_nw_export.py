@@ -142,6 +142,9 @@ from rnw.eu5_natives import (
 )
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
 from rnw.eu5_objects import PixelClasses, object_outputs
+from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
+from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
+from rnw.eu5_places import texts as place_texts
 from rnw.eu5_remap import build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
@@ -426,6 +429,7 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
     bodies: dict[str, str],
     biomes: CellBiomes,
     harbours: dict[str, int],
+    places: dict[int, Spec],
 ) -> list[str]:
     coastal = _coastal(world)
     lines: list[str] = []
@@ -443,6 +447,8 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
             if cell.key in harbours:
                 value = hundredths_text(harbours[cell.key])
                 body = body[:-1].rstrip() + f" natural_harbor_suitability = {value} }}"
+            if index in places:
+                body = body[:-1].rstrip() + f" modifier = {places[index].modifier} }}"
         elif cell.kind is CellClass.SEA:
             kind = "coastal_ocean" if coastal[index] else "ocean"
             body = TOPOGRAPHY.sub(f"topography = {kind}", body, count=1)
@@ -875,6 +881,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     development: Development,
     ports: tuple[list[str], dict[int, tuple[int, int]]],
     new_world_keys: set[str],
+    resources_seed: int,
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     bodies = _template_bodies(_read(game_dir, TEMPLATES))
     donors = _donor_map(
@@ -886,6 +893,16 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         bodies=bodies,
     )
     port_rows, port_pixels = ports
+    places = choose(
+        Cells(
+            land=[cell.kind is CellClass.LAND for cell in plan.cells],
+            material=biomes.raw_material,
+            topography=biomes.topography,
+            coastal=_coastal(world).tolist(),
+        ),
+        resources_seed,
+    )
+    used = [spec for spec in SPECS if spec in places.values()]
     instances = _locator_instances(plan, world, canvas, port_pixels)
     trimmed = _trimmed_instances(game_map, canvas)
     relocated = removed | set(trimmed)
@@ -919,7 +936,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         rewrite_templates(
             _read(game_dir, TEMPLATES),
             removed,
-            _template_lines(plan, world, donors, bodies, biomes, development.harbours),
+            _template_lines(plan, world, donors, bodies, biomes, development.harbours, places),
         ),
     )
     outputs[_mod_path(PORTS)] = _encode(
@@ -973,13 +990,22 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         )
     outputs[DEFINITION_FILE] = country_definitions(natives.countries)
     languages = official_languages(game_dir)
-    outputs.update(_localization(plan, country_names(natives.countries), natives.names, languages))
+    if used:
+        outputs[OUTPUT_PLACES] = modifiers_file(used, payloads(game_dir))
+    outputs.update(
+        _localization(
+            plan, country_names(natives.countries) | place_texts(used), natives.names, languages
+        )
+    )
     stats: dict[str, object] = {
         "ports": len(port_rows),
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
         "setup_identifiers_removed": len(setup.removed_ids),
         "base_modifiers_retired": sorted(retired),
         "languages": list(languages),
+        "exceptional_places": {
+            spec.modifier: plan.cells[index].key for index, spec in sorted(places.items())
+        },
     }
     return outputs, stats
 
@@ -2090,6 +2116,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 development=development,
                 ports=ports,
                 new_world_keys=new_world_keys,
+                resources_seed=resources_seed,
             ),
         )
         checkpoint()

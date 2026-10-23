@@ -625,3 +625,10 @@
 - [V-EXEC] In the reference world four of the five historical formables found too few places of their culture (the American cultures that dominate a location are 161 of the 242 vanilla ones, and Nahua, Quechua, Mohawk, Keres, Zuni and Maya are not among them there). That is the "no eligible bearer" outcome of the plan, not a defect; the owner's experiment looks at a world where a culture holds ground.
 - [UNKNOWN] That the engine takes `always = no` in the `potential` of a formable and in the `country_trigger` of a scripted name as it takes it elsewhere (vanilla uses `always = no` in many triggers); that no line of `error.log` follows. The exceptional resource places of N1 are still to come.
 - No game launch by the agent, no push or publication. Not installed.
+
+## 2026-10-23 — 0.10.4: exceptional resource places, C189, C190
+
+- [V-EXEC C189] The five historical natural-resource bonuses lost with the Americas (C182) are replaced by five places of the generated land: silver in mountains and hills, a mercury lode, a fishery on a coast, each a static modifier of the mod's own with the effect size read from the installation and original names. Epoch 14, reference world of 762 files, synthetic digests renewed; 994 tests pass and the 12 local tests pass with `RNW_REPRODUCE=1`.
+- [V-EXEC C190] The new local test with `RNW_LAYERS=1` (three exports) shows the layers keep to themselves: peoples rerolled leaves the places, resources rerolled leaves the countries.
+- N1 of the content plan is complete offline: Turkish (0.10.2), neutralization and rebinding (0.10.3), exceptional places (0.10.4). The owner's experiment (a colony without a vanilla American name, a rebound formable that appears only to its culture, an exceptional place that shows its bonus, no new `error.log` lines) is NOT-RUN.
+- No game launch by the agent, no push or publication.
