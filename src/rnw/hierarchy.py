@@ -302,30 +302,32 @@ def _balance(  # noqa: PLR0913 - balancing reads the layout, sources, targets an
     return handicap if best is None or error < best[0] else best[1]
 
 
-def balanced_parts(
+def balanced_parts(  # noqa: PLR0913 - the sources, their targets and how each may move or be taken.
     graph: ContactGraph,
     members: Sequence[int],
     sources: Sequence[Sequence[int]],
     targets: Sequence[int],
     *,
     movable: Sequence[bool],
+    pinned: Sequence[bool] | None = None,
 ) -> tuple[list[list[int]], list[list[int]]]:
     """Grow one part per source list over ``members``; return the parts and final sources.
 
     A capacity-constrained centroidal partition (Balzer et al. 2009): the handicaps are
     balanced with the sources held still, then every movable source moves to the cell
-    nearest its part's centre on its own landmass, and again. A movable part has one
-    pinned source; the sources of other parts (anchors) can be taken by a neighbour.
-    ``targets`` are relative part sizes, compared within each landmass and the islands
-    that join it.
+    nearest its part's centre on its own landmass, and again. The sources of a pinned part
+    (by default a movable one, which has a single source) always keep their part; the sources
+    of other parts (anchors) can be taken by a neighbour. ``targets`` are relative part sizes,
+    compared within each landmass and the islands that join it.
     """
     current = [list(nodes) for nodes in sources]
     layout = _layout(graph, members, current)
     handicap = [0] * len(current)
+    held = movable if pinned is None else pinned
     for _ in range(LLOYD_ROUNDS):
         checkpoint()
-        handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=movable)
-        groups = _groups(graph, layout, current, handicap, movable)
+        handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=held)
+        groups = _groups(graph, layout, current, handicap, held)
         for part, group in enumerate(groups):
             if movable[part]:
                 home = layout.piece_of[current[part][0]]
@@ -333,8 +335,8 @@ def balanced_parts(
                 middle = np.array(centre_of(graph, mainland), dtype=np.int64)
                 gap = ((graph.centres[mainland] - middle) ** 2).sum(axis=1)
                 current[part] = [mainland[int(np.argmin(gap))]]
-    handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=movable)
-    return _groups(graph, layout, current, handicap, movable), current
+    handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=held)
+    return _groups(graph, layout, current, handicap, held), current
 
 
 def split(graph: ContactGraph, members: Sequence[int], count: int) -> list[list[int]]:

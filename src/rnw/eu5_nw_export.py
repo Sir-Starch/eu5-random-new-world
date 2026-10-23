@@ -162,6 +162,18 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
+from rnw.eu5_seas import (
+    Coast,
+    SeaError,
+    VanillaPort,
+    Water,
+    current_text,
+    read_currents,
+    read_ports,
+    settle_coast,
+    shape_water,
+    verify_seas,
+)
 from rnw.eu5_slots import (
     CLIMATE_GROUPS,
     COAST_SLOTS,
@@ -209,6 +221,7 @@ from rnw.parallel import GIB, Stages, configure, cores, require_memory, stage_wo
 from rnw.pdx import Block, parse
 from rnw.pictures import center_column, cover, tagged, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
+from rnw.ports import ForeignCoast, coast_links, pair_lengths, plan_ports
 from rnw.progress import Progress, active, checkpoint, run_stage, running
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
@@ -216,13 +229,14 @@ from rnw.relief import COAST_HEIGHT
 from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.rng import derive_seed
+from rnw.seas import Shape
 from rnw.settings import canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Mapping, Sequence
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -432,14 +446,13 @@ def _set_field(body: str, name: str, value: str) -> str:
 
 def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every generated input.
     plan: Plan,
-    world: NewWorld,
     donors: list[str],
     bodies: dict[str, str],
     biomes: CellBiomes,
     harbours: dict[str, int],
     places: dict[int, Spec],
+    water: Water,
 ) -> list[str]:
-    coastal = _coastal(world)
     lines: list[str] = []
     for index, cell in enumerate(plan.cells):
         body = DONOR_MODIFIER.sub("", bodies[donors[index]])
@@ -458,9 +471,10 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
             if index in places:
                 body = body[:-1].rstrip() + f" modifier = {places[index].modifier} }}"
         elif cell.kind is CellClass.SEA:
-            kind = "coastal_ocean" if coastal[index] else "ocean"
-            body = TOPOGRAPHY.sub(f"topography = {kind}", body, count=1)
+            body = TOPOGRAPHY.sub(f"topography = {water.waters.topography[index]}", body, count=1)
             body = CURRENTS.sub("", body)
+            if index in water.flows:
+                body = body[:-1].rstrip() + f" {current_text(water.flows[index])} }}"
             body = _set_field(body, "climate", biomes.climate[index])
         else:
             body = _set_field(body, "climate", biomes.climate[index])
@@ -469,9 +483,24 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
 
 
 def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
-    plan: Plan, world: NewWorld, canvas: Canvas
+    plan: Plan,
+    world: NewWorld,
+    canvas: Canvas,
+    foreign: ForeignCoast,
+    vanilla: Mapping[str, VanillaPort],
 ) -> tuple[list[str], dict[int, tuple[int, int]]]:
-    """One port per coastal land cell, on its longest sea border, nearest its centre."""
+    """One port per land location, a port for every coastal sea zone (``rnw.ports``).
+
+    A land cell's port stands on its border with the sea it is given, nearest its centre. The
+    vanilla land whose port row named a replaced sea zone gets a row to the generated sea cell it
+    is given, with the coordinates of its old row.
+    """
+    links, needed = coast_links(world, foreign, pair_lengths(world))
+    chosen = plan_ports(links, needed)
+    if chosen.unserved:
+        names = ", ".join(plan.cells[sea].key for sea in chosen.unserved[:5])
+        message = f"{len(chosen.unserved)} coastal sea zones cannot be given a port: {names}"
+        raise NewWorldExportError(message)
     labels = world.labels
     width = labels.shape[1]
     land = np.array([cell.kind is CellClass.LAND for cell in plan.cells] + [False])
@@ -494,43 +523,41 @@ def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
     land_cells = np.concatenate([item[0] for item in pairs])
     sea_cells = np.concatenate([item[1] for item in pairs])
     pixels = np.concatenate([item[2] for item in pairs])
-    if not land_cells.size:
-        return [], {}
-    packed = land_cells * (len(plan.cells) + 1) + sea_cells
-    values, counts = np.unique(packed, return_counts=True)
-    best: dict[int, tuple[int, int]] = {}
-    for value, length in zip(values.tolist(), counts.tolist(), strict=True):
-        land_cell, sea_cell = divmod(value, len(plan.cells) + 1)
-        current = best.get(land_cell)
-        if current is None or length > current[1]:
-            best[land_cell] = (sea_cell, length)
     rows_out: list[str] = []
     positions: dict[int, tuple[int, int]] = {}
-    order = np.lexsort((pixels, packed))
-    packed_sorted, pixels_sorted = packed[order], pixels[order]
-    height = canvas.shape[0]
-    for land_cell in sorted(best):
-        sea_cell = best[land_cell][0]
-        key = land_cell * (len(plan.cells) + 1) + sea_cell
-        lo = np.searchsorted(packed_sorted, key, side="left")
-        hi = np.searchsorted(packed_sorted, key, side="right")
-        candidates = pixels_sorted[lo:hi]
-        centre = world.interior[land_cell]
-        distance = (candidates // width - centre[0]) ** 2 + (candidates % width - centre[1]) ** 2
-        pixel = int(candidates[int(np.argmin(distance))])
-        row, column = divmod(pixel, width)
-        x = int(_world_columns(canvas, np.array([column], dtype=np.int64))[0])
-        dock_row, dock_column = row, column
-        for d_row, d_column in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-            r, c = row + d_row, column + d_column
-            if 0 <= r < labels.shape[0] and 0 <= c < width and int(labels[r, c]) == sea_cell:
-                dock_row, dock_column = r, c
-                break
-        dock_x = int(_world_columns(canvas, np.array([dock_column], dtype=np.int64))[0])
-        positions[land_cell] = (dock_row, dock_x)
-        rows_out.append(
-            f"{plan.cells[land_cell].key};{plan.cells[sea_cell].key};{x};{height - 1 - row};x"
-        )
+    if land_cells.size:
+        stride = len(plan.cells) + 1
+        packed = land_cells * stride + sea_cells
+        order = np.lexsort((pixels, packed))
+        packed_sorted, pixels_sorted = packed[order], pixels[order]
+        height = canvas.shape[0]
+        for land_cell in sorted(cell for cell in chosen.port if cell >= 0):
+            sea_cell = chosen.port[land_cell]
+            key = land_cell * stride + sea_cell
+            lo = np.searchsorted(packed_sorted, key, side="left")
+            hi = np.searchsorted(packed_sorted, key, side="right")
+            candidates = pixels_sorted[lo:hi]
+            centre = world.interior[land_cell]
+            distance = (candidates // width - centre[0]) ** 2 + (
+                candidates % width - centre[1]
+            ) ** 2
+            pixel = int(candidates[int(np.argmin(distance))])
+            row, column = divmod(pixel, width)
+            x = int(_world_columns(canvas, np.array([column], dtype=np.int64))[0])
+            dock_row, dock_column = row, column
+            for d_row, d_column in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+                r, c = row + d_row, column + d_column
+                if 0 <= r < labels.shape[0] and 0 <= c < width and int(labels[r, c]) == sea_cell:
+                    dock_row, dock_column = r, c
+                    break
+            dock_x = int(_world_columns(canvas, np.array([dock_column], dtype=np.int64))[0])
+            positions[land_cell] = (dock_row, dock_x)
+            rows_out.append(
+                f"{plan.cells[land_cell].key};{plan.cells[sea_cell].key};{x};{height - 1 - row};x"
+            )
+    for number, key in enumerate(sorted(foreign.free), start=1):
+        row = vanilla[key]
+        rows_out.append(f"{key};{plan.cells[chosen.port[-number]].key};{row.x};{row.y};x")
     return rows_out, positions
 
 
@@ -899,6 +926,8 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     natives: NativeWorld,
     development: Development,
     ports: tuple[list[str], dict[int, tuple[int, int]]],
+    coast: Coast,
+    water: Water,
     new_world_keys: set[str],
     resources_seed: int,
 ) -> tuple[dict[str, bytes], dict[str, object]]:
@@ -955,7 +984,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         rewrite_templates(
             _read(game_dir, TEMPLATES),
             removed,
-            _template_lines(plan, world, donors, bodies, biomes, development.harbours, places),
+            _template_lines(plan, donors, bodies, biomes, development.harbours, places, water),
         ),
     )
     outputs[_mod_path(PORTS)] = _encode(
@@ -1018,6 +1047,19 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     )
     stats: dict[str, object] = {
         "ports": len(port_rows),
+        "vanilla_ports_relinked": sorted(coast.foreign.free),
+        "sea_cells_merged": coast.merged,
+        "water": {
+            "bodies": [len(cells) for cells in water.waters.bodies],
+            "passages": dict(sorted(Counter(p.kind.value for p in water.waters.passages).items())),
+            "shapes": dict(
+                sorted(
+                    Counter(
+                        Shape(water.waters.shape[cell]).name.lower() for cell in water.waters.sea()
+                    ).items()
+                )
+            ),
+        },
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
         "setup_identifiers_removed": len(setup.removed_ids),
         "base_modifiers_retired": sorted(retired),
@@ -2020,6 +2062,21 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 drawn=None if land_mask is None else fit(land_mask, canvas.mask.shape),
             ),
         )
+        vanilla_ports = read_ports(_read(game_dir, PORTS))
+        currents = read_currents(_read(game_dir, TEMPLATES))
+        coast = run_stage(
+            "settle coasts",
+            lambda: settle_coast(
+                game_map,
+                canvas,
+                world,
+                ports=vanilla_ports,
+                currents=currents,
+                removed=removed,
+            ),
+        )
+        world = coast.world
+        shapes = run_stage("water shapes", lambda: shape_water(coast))
         total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
         if total > MAX_LOCATIONS:
             message = (
@@ -2040,6 +2097,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 seed=seed,
                 settings=settings.new_world,
                 keys=loc_keys,
+                waters=shapes.waters,
             )
             return loc_keys, plan
 
@@ -2187,7 +2245,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             ),
         )
         checkpoint()
-        ports = _ports(plan, world, canvas)
+        ports = _ports(plan, world, canvas, coast.foreign, vanilla_ports)
         development = _plan_development(
             calibration,
             game_map=game_map,
@@ -2214,6 +2272,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 natives=natives,
                 development=development,
                 ports=ports,
+                coast=coast,
+                water=shapes,
                 new_world_keys=new_world_keys,
                 resources_seed=resources_seed,
             ),
@@ -2236,6 +2296,21 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         text_stats["stories"] = written.stats
         checkpoint()
         text_checks = _verify_texts(texts, plan, removed)
+        try:
+            text_checks.update(
+                verify_seas(
+                    (
+                        texts[_mod_path(PORTS)].decode("utf-8-sig"),
+                        texts[_mod_path(TEMPLATES)].decode("utf-8-sig"),
+                    ),
+                    plan,
+                    world,
+                    coast,
+                    shapes,
+                )
+            )
+        except SeaError as error:
+            raise NewWorldExportError(str(error)) from error
         text_checks.update(_verify_natives(natives, plan))
         text_checks.update(verify_technology(texts, natives, vanilla_start.result()))
         text_checks.update(

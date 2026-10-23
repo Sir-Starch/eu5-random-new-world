@@ -47,6 +47,8 @@ STAGES: Final[dict[str, StageInfo]] = {
     "vanilla material levels": StageInfo("Measuring the old terrain materials", 8),
     "vanilla natives": StageInfo("Reading the old native peoples", 4),
     "generate world": StageInfo("Generating continents, seas and relief", 26),
+    "settle coasts": StageInfo("Giving every coast a port", 3),
+    "water shapes": StageInfo("Shaping bays, straits and currents", 1),
     "identities": StageInfo("Naming locations, areas and regions", 9),
     "world checks": StageInfo("Checking the new world", 2),
     "water textures": StageInfo("Painting water and coasts", 14),

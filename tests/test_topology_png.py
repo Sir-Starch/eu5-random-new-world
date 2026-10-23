@@ -1,5 +1,8 @@
 """Raster topology helpers and the deterministic PNG writer."""
 
+# NumPy stubs type array comparisons, shapes and tolist() as Any.
+# pyright: reportAny=false
+
 from __future__ import annotations
 
 import hashlib
@@ -10,7 +13,13 @@ import numpy as np
 from PIL import Image
 
 from rnw.png import COLOR_PALETTE, COLOR_RGB, encode_png, read_chunks
-from rnw.topology import adjacency_pairs, component_counts, label_components, unpack_pairs
+from rnw.topology import (
+    adjacency_lengths,
+    adjacency_pairs,
+    component_counts,
+    label_components,
+    unpack_pairs,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -28,6 +37,17 @@ def test_components_use_four_connectivity() -> None:
     """Diagonal contact does not connect a label."""
     labels = np.array([[1, 0], [0, 1]], dtype=np.int32)
     assert component_counts(labels).tolist() == [2, 2]
+
+
+def test_adjacency_lengths_count_the_touching_pixels_of_each_pair() -> None:
+    labels = np.array([[0, 0, 1], [0, 2, 1]], dtype=np.int32)
+    pairs, lengths = adjacency_lengths(labels)
+    assert dict(zip(unpack_pairs(pairs), lengths.tolist(), strict=True)) == {
+        (0, 1): 1,
+        (0, 2): 2,
+        (1, 2): 1,
+    }
+    assert np.array_equal(pairs, adjacency_pairs(labels))
 
 
 def test_adjacency_pairs_optionally_include_corners() -> None:

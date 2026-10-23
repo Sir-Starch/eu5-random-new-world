@@ -1,0 +1,92 @@
+"""Currents for generated deep water: continued from the game's, bent round land."""
+
+# NumPy stubs type array comparisons, shapes and tolist() as Any.
+# pyright: reportAny=false
+
+from __future__ import annotations
+
+import math
+
+import pytest
+
+from rnw.currents import CurrentError, flow
+from rnw.seas import Topography, analyse
+from tests.block_worlds import block_world, cell
+
+OPEN_SEA = ["." * 20 for _ in range(10)]
+WITH_AN_ISLAND = [
+    "....................",
+    "....................",
+    "....................",
+    "....................",
+    "....................",
+    ".........######.....",
+    ".........######.....",
+    "....................",
+    "....................",
+    "....................",
+]
+
+
+def _deep(layout: list[str]) -> tuple[list[int], dict[int, list[tuple[int, int]]]]:
+    waters = analyse(block_world(layout))
+    deep = [n for n in waters.sea() if waters.topography[n] is Topography.DEEP_OCEAN]
+    samples = {cell(layout, row, 0): [(9000, 0)] for row in range(len(layout))}
+    return deep, samples
+
+
+def test_a_sample_beside_deep_water_is_continued_into_it_at_the_game_s_strength() -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    deep, samples = _deep(OPEN_SEA)
+    flows = flow(world, waters, samples)
+    assert set(flows) == set(deep)
+    assert deep
+    for x, y in flows.values():
+        assert abs(math.hypot(x, y) - 9000) < 2
+        assert x > 8900
+        assert abs(y) < 800
+
+
+def test_the_strength_is_the_mean_of_the_currents_that_are_continued() -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    samples = {
+        cell(OPEN_SEA, row, 0): [(8000, 0) if row % 2 else (0, 10000)]
+        for row in range(len(OPEN_SEA))
+    }
+    flows = flow(world, waters, samples)
+    assert flows
+    assert all(abs(math.hypot(*vector) - 9000) <= 2 for vector in flows.values())
+
+
+def test_a_current_flowing_into_land_is_bent_along_it() -> None:
+    """Flowing north-east towards an island to the east: the nearer the island, the more north."""
+    world = block_world(WITH_AN_ISLAND)
+    waters = analyse(world)
+    samples = {cell(WITH_AN_ISLAND, row, 0): [(6000, 6000)] for row in range(len(WITH_AN_ISLAND))}
+    flows = flow(world, waters, samples)
+    near = flows[cell(WITH_AN_ISLAND, 5, 6)]
+    far = flows[cell(WITH_AN_ISLAND, 0, 2)]
+    assert abs(far[1] - far[0]) < 700
+    assert near[1] > near[0] + 1500
+    assert abs(math.hypot(*near) - math.hypot(*far)) < 5
+
+
+def test_deep_water_with_no_current_of_the_game_beside_it_is_refused() -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    with pytest.raises(CurrentError, match="No current"):
+        _ = flow(world, waters, {})
+
+
+def test_a_world_without_deep_water_needs_no_currents() -> None:
+    world = block_world(["..#", ".#.", "#.."])
+    assert flow(world, analyse(world), {}) == {}
+
+
+def test_currents_are_the_same_every_time() -> None:
+    world = block_world(WITH_AN_ISLAND)
+    waters = analyse(world)
+    _, samples = _deep(WITH_AN_ISLAND)
+    assert flow(world, waters, samples) == flow(world, waters, samples)

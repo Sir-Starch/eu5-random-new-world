@@ -44,6 +44,20 @@ def adjacency_pairs(
     return np.unique(np.concatenate(parts))
 
 
+def adjacency_lengths(
+    labels: NDArray[np.int32],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Sorted unique touching label pairs (packed like ``adjacency_pairs``) and their lengths.
+
+    A length is the number of 4-neighbour pixel contacts between the two labels.
+    """
+    packed = np.concatenate(
+        [_packed(labels[:, :-1], labels[:, 1:]), _packed(labels[:-1], labels[1:])]
+    )
+    pairs, lengths = np.unique(packed, return_counts=True)
+    return pairs, lengths.astype(np.int64)
+
+
 def unpack_pairs(pairs: NDArray[np.int64]) -> list[tuple[int, int]]:
     """Expand packed pairs into Python tuples in sorted order."""
     mask = np.int64((1 << 32) - 1)

@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.eu5_canvas import NEW_WORLD
+from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.hierarchy import (
     absorb_small_pieces,
     balanced_parts,
@@ -38,6 +38,7 @@ from rnw.hierarchy import (
 from rnw.model import CellClass
 from rnw.names import NameGenerator
 from rnw.rng import SplitMix64, derive_seed
+from rnw.seanames import Placement, name_waters
 from rnw.topology import adjacency_pairs, unpack_pairs
 
 if TYPE_CHECKING:
@@ -51,6 +52,7 @@ if TYPE_CHECKING:
     from rnw.hierarchy import ContactGraph
     from rnw.loc_keys import KeySpace
     from rnw.newworld import NewWorld
+    from rnw.seas import Waters
     from rnw.settings import NewWorldSettings
 
 KEY_PREFIX: Final[dict[CellClass, str]] = {
@@ -59,10 +61,10 @@ KEY_PREFIX: Final[dict[CellClass, str]] = {
     CellClass.SEA: "rnw_sea_",
     CellClass.LAKE: "rnw_lake_",
 }
+# Water is named for its shape (``seanames``), not by a suffix.
 NAME_SUFFIX: Final[dict[CellClass, str]] = {
     CellClass.LAND: "",
     CellClass.WASTELAND: " Highlands",
-    CellClass.SEA: " Sea",
     CellClass.LAKE: " Lake",
 }
 # Vanilla American land holds 6.2 locations per province and 5.8 provinces per area, its
@@ -74,6 +76,9 @@ SEA_AREA_ZONES: Final[int] = 52
 # A region keeps its largest piece of water; other pieces below this join the water
 # around them, as an island below half a part joins its nearest part.
 MIN_SHORE_PIECE: Final[int] = SEA_AREA_ZONES // 4
+# A region's water is at least this many zones for each sea area the game gives it, whatever
+# its shore: the scripts name those areas, so each must have water (vanilla areas hold 11 to 52).
+MIN_AREA_ZONES: Final[int] = 6
 TARGET_SCALE: Final[int] = 1000
 COLOR_BITS: Final[int] = 24
 STRIP_ROWS: Final[int] = 1024
@@ -339,7 +344,7 @@ def _coasts(
     return coasts
 
 
-def _outside_contacts(
+def outside_contacts(
     game_map: Eu5Map, canvas: Canvas, world: NewWorld, offset: int
 ) -> set[tuple[int, int]]:
     """(vanilla label, generated cell) pairs that touch across the canvas edge."""
@@ -359,6 +364,43 @@ def _outside_contacts(
             if low < offset <= high:
                 contacts.add((low, high - offset))
     return contacts
+
+
+def _reserve(
+    graph: ContactGraph,
+    shores: dict[str, list[int]],
+    needs: dict[str, int],
+    taken: set[int],
+) -> dict[str, list[int]]:
+    """Give a region with too little shore the nearest free water to make up its need.
+
+    The scripts name the sea areas of a region (a handful of islands may have five), and an
+    area needs water. A region that has fewer zones on its shore than its areas need takes
+    the nearest zones, ring by ring (the lowest number first), that no other region's shore
+    and no ocean area has. Regions go in the order of their names.
+    """
+    held = set(taken) | {cell for cells in shores.values() for cell in cells}
+    reserved = {region: list(cells) for region, cells in shores.items()}
+    for region in sorted(shores):
+        shortfall = needs[region] - len(shores[region])
+        seen = set(shores[region])
+        frontier = sorted(seen)
+        extra: list[int] = []
+        while frontier and len(extra) < shortfall:
+            ring = sorted(
+                {
+                    other
+                    for cell in frontier
+                    for other, _ in graph.links[cell]
+                    if other not in seen and other not in held
+                }
+            )
+            seen.update(ring)
+            extra.extend(ring[: shortfall - len(extra)])
+            frontier = ring
+        held.update(extra)
+        reserved[region] = sorted([*shores[region], *extra])
+    return reserved
 
 
 def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and parents.
@@ -415,14 +457,31 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     start = {sea.name: [hosting[choice]] for sea, choice in zip(free, pairing, strict=True)}
     coastal = sum(sea.replaced for sea in seas if sea.coastal)
     length = max(1, len(shore))
+    own = {
+        region: sum(1 for sea in seas if sea.coastal and sea.region == region) for region in regions
+    }
+    ocean_sources = [
+        sorted(anchors[sea.name]) if sea.remaining else start[sea.name] for sea in oceans
+    ]
+    need = {region: own[region] * MIN_AREA_ZONES for region in regions}
+    floor = {region: need[region] * TARGET_SCALE for region in regions}
+    reserved = _reserve(
+        graph,
+        {region: coasts[region] for region in regions},
+        need,
+        {cell for nodes in ocean_sources for cell in nodes},
+    )
     parts, _ = balanced_parts(
         graph,
         cells,
-        [coasts[region] for region in regions]
-        + [sorted(anchors[sea.name]) if sea.remaining else start[sea.name] for sea in oceans],
-        [len(coasts[region]) * coastal * TARGET_SCALE // length for region in regions]
+        [reserved[region] for region in regions] + ocean_sources,
+        [
+            max(len(coasts[region]) * coastal * TARGET_SCALE // length, floor[region])
+            for region in regions
+        ]
         + [sea.replaced * TARGET_SCALE for sea in oceans],
         movable=[False] * len(regions) + [not sea.remaining for sea in oceans],
+        pinned=[True] * len(regions) + [not sea.remaining for sea in oceans],
     )
     parts = absorb_small_pieces(graph, parts, first=len(regions), minimum=MIN_SHORE_PIECE)
     areas: list[_Area] = []
@@ -526,7 +585,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         sea,
         [cell for cell, flag in enumerate(is_sea) if flag],
         _vanilla_seas(game_map, canvas, hierarchy, geometry),
-        _outside_contacts(game_map, canvas, world, count),
+        outside_contacts(game_map, canvas, world, count),
         coasts=coasts,
         parents=parents,
         keys=keys,
@@ -537,7 +596,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     return areas + sea_areas, anchored
 
 
-def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world and hierarchy.
+def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, hierarchy and water.
     game_map: Eu5Map,
     canvas: Canvas,
     world: NewWorld,
@@ -547,6 +606,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     seed: int,
     settings: NewWorldSettings,
     keys: KeySpace,
+    waters: Waters,
 ) -> Plan:
     """Assign keys, colours, names and parents to every generated cell.
 
@@ -554,7 +614,8 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     and provinces. Water near a shore joins the region of that shore and is split into
     its sea areas, the open ocean into the vanilla ocean areas the canvas touches; both
     then into provinces. Every part is compact and connected on its landmass or water
-    body, and every piece of a region's water touches the region's land.
+    body, and every piece of a region's water touches the region's land. Land is named at
+    random; water is named for its shape (``seanames``): one sea, one name.
     """
     areas, anchored = _hierarchy(game_map, canvas, world, hierarchy, geometry, settings, keys)
     plan = Plan(cells=[], anchored_sea_areas=sorted(anchored))
@@ -563,18 +624,30 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
     province_of = [""] * len(world.classes)
     area_of: list[_Area | None] = [None] * len(world.classes)
     for area in areas:
+        water = world.classes[area.provinces[0][0]] is CellClass.SEA
         if area.new:
             plan.new_areas[area.name] = []
             plan.area_region[area.name] = area.parents[0]
-            plan.display_overrides[area.name] = area_names.next()
+            if not water:
+                plan.display_overrides[area.name] = area_names.next()
         for cells in area.provinces:
             name = keys.next("rnw_prov_", 5)
-            plan.province_names[name] = province_names.next()
+            if not water:
+                plan.province_names[name] = province_names.next()
             if area.new:
                 plan.new_areas[area.name].append(name)
             for cell in cells:
                 province_of[cell] = name
                 area_of[cell] = area
+    placed: list[Placement | None] = [
+        None
+        if (area := area_of[cell]) is None or kind is not CellClass.SEA
+        else Placement(province_of[cell], area.name, area.parents[2] in OCEANS)
+        for cell, kind in enumerate(world.classes)
+    ]
+    sea = name_waters(world, waters, placed, seed=seed)
+    plan.province_names.update(sea.provinces)
+    plan.display_overrides.update(sea.areas)
     used = set(game_map.colors.tolist())
     colors = _colors(seed, len(world.classes), {int(value) for value in used})
     location_names = NameGenerator(seed, "locations")
@@ -587,7 +660,9 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world an
         plan.cells.append(
             PlannedCell(
                 key=keys.next(KEY_PREFIX[kind], 5),
-                name=location_names.next() + NAME_SUFFIX[kind],
+                name=sea.cells[index]
+                if kind is CellClass.SEA
+                else location_names.next() + NAME_SUFFIX[kind],
                 color=colors[index],
                 kind=kind,
                 province=province_of[index],

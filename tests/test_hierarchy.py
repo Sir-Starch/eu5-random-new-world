@@ -8,6 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from rnw.eu5_newworld import _reserve  # pyright: ignore[reportPrivateUsage]
 from rnw.hierarchy import (
     ContactGraph,
     PartitionError,
@@ -91,6 +92,19 @@ def test_anchored_parts_grow_from_their_anchors() -> None:
     assert 109 in parts[1]
 
 
+def test_pinned_sources_keep_their_part_whatever_its_target() -> None:
+    """A part that would shrink to nothing keeps the cells it is pinned to."""
+    graph = _grid(20, 10)
+    members = _land(graph)
+    sources = [[0, 1, 20], [199]]
+    parts, _ = balanced_parts(
+        graph, members, sources, [1, 1000], movable=[False, False], pinned=[True, True]
+    )
+    assert {0, 1, 20} <= set(parts[0])
+    assert 199 in parts[1]
+    assert all(len(pieces(graph, part)) == 1 for part in parts)
+
+
 def test_match_pairs_closest_first_and_runs_out() -> None:
     assert match([(0, 0), (0, 10), (0, 11)], [(0, 12), (0, 1)]) == [1, -1, 0]
     assert match([], [(0, 0)]) == []
@@ -120,3 +134,18 @@ def test_piece_counts_reach_the_key_count_on_the_widest_piece() -> None:
     assert piece_counts([[0] * 100, [0] * 10], 50, at_least=1) == [2, 1]
     assert piece_counts([[0] * 100, [0] * 10], 50, at_least=5) == [4, 1]
     assert piece_counts([[0] * 2, [0]], 50, at_least=9) == [2, 1]
+
+
+def test_a_region_with_too_little_shore_takes_the_nearest_free_water() -> None:
+    graph = _grid(10, 1)
+    shores = {"a": [0], "b": [9]}
+    reserved = _reserve(graph, shores, {"a": 3, "b": 1}, taken={5})
+    assert reserved == {"a": [0, 1, 2], "b": [9]}
+    assert shores == {"a": [0], "b": [9]}
+
+
+def test_reserved_water_stops_at_water_that_belongs_to_others() -> None:
+    graph = _grid(10, 1)
+    held = _reserve(graph, {"a": [0], "b": [9]}, {"a": 4, "b": 4}, taken={2})
+    assert held == {"a": [0, 1], "b": [6, 7, 8, 9]}
+    assert _reserve(graph, {"a": [0]}, {"a": 1}, taken=set()) == {"a": [0]}
