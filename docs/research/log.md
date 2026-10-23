@@ -617,3 +617,11 @@
 - [V-EXEC C186] Epoch 12 and a new reference world (754 files, two more than before); synthetic digests renewed; 978 tests pass and the 12 local tests pass with `RNW_REPRODUCE=1`. The window tests `test_window.py` failed once in four runs and passed on the others, with and without this change (timing of the controller thread); not investigated.
 - [UNKNOWN] A Turkish interface's reading of the new files. Authored text still carries the same names in every language; translation belongs to L1.
 - No game launch by the agent, no push or publication. Not installed: the owner's candidate of N1 follows the rest of the stage.
+
+## 2026-10-23 — 0.10.3: the decisions of N0 carried out, C187, C188
+
+- [V-EXEC C187] `eu5_content.py` carries the table into the scripts: 101 objects are neutralized by closing their gate, five culture-gated formables get the places where their culture dominates, the Nahuatl start effect gets a seat. Epoch 13, reference world of 761 files, synthetic digests renewed; 987 tests pass and the 12 local tests pass with `RNW_REPRODUCE=1`.
+- [V-LOCAL C188] Why gates and not deletion: the events stand in on-action pulse lists and fire one another, so deleting them would leave dangling references.
+- [V-EXEC] In the reference world four of the five historical formables found too few places of their culture (the American cultures that dominate a location are 161 of the 242 vanilla ones, and Nahua, Quechua, Mohawk, Keres, Zuni and Maya are not among them there). That is the "no eligible bearer" outcome of the plan, not a defect; the owner's experiment looks at a world where a culture holds ground.
+- [UNKNOWN] That the engine takes `always = no` in the `potential` of a formable and in the `country_trigger` of a scripted name as it takes it elsewhere (vanilla uses `always = no` in many triggers); that no line of `error.log` follows. The exceptional resource places of N1 are still to come.
+- No game launch by the agent, no push or publication. Not installed.

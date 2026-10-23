@@ -53,6 +53,7 @@ from rnw.eu5_biomes import (
     vanilla_locations,
 )
 from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, remainder_boxes, select_canvas
+from rnw.eu5_content import ContentError, carry_out
 from rnw.eu5_development import (
     VILLAGE,
     Development,
@@ -2146,21 +2147,26 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )
         rewrite = run_stage("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
         try:
-            text_checks.update(
-                check_decisions(
-                    game_dir,
-                    events=[event for found in rewrite.retired.values() for event in found],
-                    modifiers=[
-                        *rewrite.modifiers,
-                        *cast("list[str]", text_stats["base_modifiers_retired"]),
-                    ],
-                    removed_tags=removed_tags,
-                )
+            checked = check_decisions(
+                game_dir,
+                events=[event for found in rewrite.retired.values() for event in found],
+                modifiers=[
+                    *rewrite.modifiers,
+                    *cast("list[str]", text_stats["base_modifiers_retired"]),
+                ],
+                removed_tags=removed_tags,
             )
         except ValueError as error:
             raise NewWorldExportError(str(error)) from error
+        text_checks.update(checked.stats())
         scripts = rewrite.outputs
         scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
+        try:
+            text_stats["content"] = carry_out(
+                game_dir, scripts, checked, natives.pops, hierarchy, remap
+            )
+        except ContentError as error:
+            raise NewWorldExportError(str(error)) from error
         texts.update(scripts)
         checkpoint()
         text_checks.update(verify_country_tags(game_dir, texts))

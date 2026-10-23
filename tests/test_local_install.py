@@ -377,6 +377,18 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
         world_code=str(golden["code"]),
     )
     record = Record.from_json(report["record"])
+    stats = cast("dict[str, dict[str, dict[str, int]]]", report["text_stats"])
+    guarded = stats["content"]["guarded"]
+    # The same in every world: 82 events, the canal chain's advance and decisions, the
+    # pilgrimage, the eight scripted names; formables vary with the cultures a world holds.
+    assert {name: guarded[name] for name in guarded if name != "common/formable_countries"} == {
+        "common/advances": 1,
+        "common/decisions": 3,
+        "common/generic_actions": 1,
+        "common/scripted_country_names": 8,
+        "events": 82,
+    }
+    assert 3 <= guarded["common/formable_countries"] <= 8
     if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
         pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
     output = cast("dict[str, object]", golden["output"])
