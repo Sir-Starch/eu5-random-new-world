@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw.atlas import KINDS, Atlas, Country
-from rnw.wording import english
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -111,11 +110,11 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     labels = _trim(np.where(grown_mask(solid, margin), shrunk, 0).astype(np.int32))
     keys = tuple(cell.key for cell in plan.cells)
     names = tuple(
-        english(natives.names.get(cell.key) or plan.display_overrides.get(cell.key) or cell.name)
+        natives.names.get(cell.key) or plan.display_overrides.get(cell.key) or cell.name
         for cell in plan.cells
     )
-    areas = tuple(english(natives.names.get(cell.area, cell.area)) for cell in plan.cells)
-    regions = tuple(english(natives.names.get(cell.region, cell.region)) for cell in plan.cells)
+    areas = tuple(natives.names.get(cell.area, cell.area) for cell in plan.cells)
+    regions = tuple(natives.names.get(cell.region, cell.region) for cell in plan.cells)
     index_of = {key: number for number, key in enumerate(keys)}
     pops = [_main_pop(natives.pops.get(key, [])) for key in keys]
     cultures, culture_of = _vocabulary([culture for culture, _ in pops])

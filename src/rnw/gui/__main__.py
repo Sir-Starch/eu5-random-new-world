@@ -18,7 +18,7 @@ from rnw import __version__, _native
 from rnw.app import logs, paths
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.gui.controller import Controller
-from rnw.gui.text import TITLE
+from rnw.gui.text import TITLE, set_language
 from rnw.gui.window import MainWindow
 
 if TYPE_CHECKING:
@@ -76,6 +76,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             finally:
                 logs.stop()  # Windows cannot remove the folder while the log is open.
     controller = Controller(program_folder=paths.program_directory())
+    set_language(controller.window_language())
     window = MainWindow(controller)
     window.resize(WIDTH, HEIGHT)
     controller.discover()

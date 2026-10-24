@@ -1,0 +1,1763 @@
+["undo_roll"]
+source = "d3ba4753973fc1f9"
+text = '''引き直しを取り消す'''
+
+["task.undo"]
+source = "3ca5c54e7c549b10"
+text = '''前のバージョンに戻しています'''
+
+["copy_tag"]
+source = "6d38d2a846422e7f"
+text = '''タグをコピー'''
+
+["copy_picture"]
+source = "05decf94ea187240"
+text = '''画像をコピー'''
+
+["destination.library"]
+source = "09a9c9fa074db7d9"
+text = '''MODをライブラリに残す'''
+
+["destination.mod"]
+source = "0ad3383f1dce480d"
+text = '''MODをフォルダーにコピー'''
+
+["destination.world"]
+source = "172c07cba6c2dd6c"
+text = '''ワールドファイルのみ'''
+
+["destination_choose"]
+source = "9772ff884d42d946"
+text = '''保存先を選ぶ...'''
+
+["destination_missing"]
+source = "dd64b96d7c6d9026"
+text = '''先にこのワールドの保存先を選んでください。'''
+
+["tab.notes"]
+source = "8a7525b1492fb848"
+text = '''メモ'''
+
+["starred"]
+source = "e39b24993c31d7bb"
+text = '''お気に入り'''
+
+["user_tag"]
+source = "e1c92163bf9d061c"
+text = '''タグ（64文字まで）'''
+
+["notes_hint"]
+source = "6d8ef522499455f3"
+text = '''このワールドについてのメモ（16,384文字まで）'''
+
+["save_notes"]
+source = "eb76a6cc99ba6881"
+text = '''メモを保存'''
+
+["notes_saved"]
+source = "04965e23cd9e8fb9"
+text = '''メモを保存しました。'''
+
+["candidates"]
+source = "0e7b026bc70eba63"
+text = '''大陸を選ぶ...'''
+
+["candidates_hint"]
+source = "2292c2759a5d2df3"
+text = '''ワールドを作る前に、大陸のスケッチを6つ見比べられます。スケッチを見ると陸地が明らかになります。1つ選ぶと、そのシードと設定を使います。ロケーションが形作られるときに、最終的な海岸線は少しずれることがあります。'''
+
+["candidate_item"]
+source = "82a3979eef3cad60"
+text = "{number} · 陸地{land:g}%\nシード {seed}"
+
+["enqueue"]
+source = "34b25c1b963f3a59"
+text = '''キューに追加'''
+
+["run_queue"]
+source = "073afaf0ff8ea437"
+text = '''キューを実行'''
+
+["clear_queue"]
+source = "fd1d3b4b9147213b"
+text = '''キューを空にする'''
+
+["queue_empty"]
+source = "dd95d861c51b5f8b"
+text = '''先にワールドをキューに追加してください。'''
+
+["queue_count"]
+source = "bc608dfbf45c2100"
+text = '''待機中: {count}'''
+
+["game"]
+source = "5c412a262086b970"
+text = '''ゲーム'''
+
+["profile"]
+source = "d696a35bdd1883da"
+text = '''プロファイル'''
+
+["language"]
+source = "a4fe65264ef7dbb3"
+text = '''言語'''
+
+["language.game"]
+source = "3bbba19c86874410"
+text = '''ゲームと同じ: {language}'''
+
+["language.restart"]
+source = "0a1870181520b1b9"
+text = '''新しい言語は次回の起動から使われます。'''
+
+["browse"]
+source = "93c6b664dce6c207"
+text = '''参照…'''
+
+["settings"]
+source = "7a04083baf8daa20"
+text = '''設定…'''
+
+["settings_title"]
+source = "74a883a037bc227f"
+text = '''設定'''
+
+["game_status"]
+source = "660c5d42f3698876"
+text = '''Europa Universalis V · ビルド {build}'''
+
+["new_tab.world"]
+source = "78ae647dc5544d22"
+text = '''ワールド'''
+
+["new_tab.advanced"]
+source = "9f088dbebd6c3c70"
+text = '''詳細'''
+
+["new_tab.output"]
+source = "afd096dc8e3ce666"
+text = '''保存して遊ぶ'''
+
+["new_tab.queued"]
+source = "858dc646bc959251"
+text = '''保存して遊ぶ · キュー {count}'''
+
+["world_identity"]
+source = "96fc61ec457ed6f0"
+text = '''シードとワールドコード'''
+
+["land_tools"]
+source = "244bfdc5f13ec886"
+text = '''陸地の元データとプレビュー'''
+
+["output"]
+source = "1eeb900ab78c39cb"
+text = '''保存先'''
+
+["output_hint"]
+source = "fbb6fdcf5f923bd7"
+text = '''作ったワールドはすべてライブラリに残ります。MODをすぐEU5に追加することも、後のために取っておくことも、別のフォルダーにコピーを保存することもできます。ワールドファイルにはレシピと地図が入っています。'''
+
+["queue_title"]
+source = "a27578fd3a7a3f5e"
+text = '''複数のワールドを作る'''
+
+["queue_hint"]
+source = "af8bed5b076227c5"
+text = '''今の設定をキューに追加してから、次のワールドのシードやオプションを変えてください。すべて追加したらキューを実行します。'''
+
+["progress_details"]
+source = "a7d418eaf220511e"
+text = '''工程の詳細を表示'''
+
+["generation_install"]
+source = "ed7ffaf064794ac2"
+text = '''完成したMODはEU5のプロファイルに追加されます。'''
+
+["generation_keep"]
+source = "92b157d42d51b4a1"
+text = '''完成したワールドはライブラリに残ります。'''
+
+["generation_copy"]
+source = "c59824bd5b1eaa91"
+text = '''完成したMODは選んだフォルダーにコピーされます。'''
+
+["generation_file"]
+source = "35244f6f7d5aa65a"
+text = '''ワールドファイルは選んだ保存先に保存されます。'''
+
+["visibility"]
+source = "2764b4c1b7b57015"
+text = '''プレイの前に'''
+
+["world_visibility_hint"]
+source = "bc9b9de7e31abc1c"
+text = '''このワールドだけに適用されます。作り直さずに、MODの画像と国選択の地図を更新します。変更をゲームに読み込ませるにはEU5を再起動してください。'''
+
+["visibility_updated"]
+source = "2fce01cc9fc9abdf"
+text = '''このワールドの表示を変更しました。変更をゲームに読み込ませるにはEU5を再起動してください。'''
+
+["tab.tools"]
+source = "f692ca48462027a8"
+text = '''バージョンとファイル'''
+
+["world_versions"]
+source = "7ce072f0da5cf56e"
+text = '''バージョンを作る'''
+
+["world_share"]
+source = "39a5a934252b2aaa"
+text = '''共有と書き出し'''
+
+["world_details"]
+source = "29af469824c1ee6b"
+text = '''ワールドの詳細と検証'''
+
+["close"]
+source = "7d9eb7acb13e2462"
+text = '''閉じる'''
+
+["game_line"]
+source = "59a2ce96d6c17c2f"
+text = '''EU5 ビルド {build} · {game}'''
+
+["game_line_unknown"]
+source = "5d8e792ca5661482"
+text = '''EU5 · {game}'''
+
+["profile_line"]
+source = "0029a3aa08ba73e8"
+text = '''プロファイル · {profile}'''
+
+["game_missing"]
+source = "a61a4349f0cb79c8"
+text = '''EU5が見つかりません。ワールドファイルを開いて地図を見ることはできますが、ワールドを作るにはゲーム本体のファイルが必要です。設定を開いて、ゲームのフォルダーを選んでください。'''
+
+["profile_missing"]
+source = "b303732828e02c48"
+text = '''EU5のプロファイルが見つかりません。一度ゲームを起動してプロファイルを作らせるか、設定でそのフォルダーを選んでください。'''
+
+["not_a_game"]
+source = "a17bf5986615747f"
+text = '''そのフォルダーはEU5のインストール先ではありません（game/in_game/map_data がありません）。'''
+
+["not_a_profile"]
+source = "534de3c12b965d56"
+text = '''そのフォルダーは存在しません。'''
+
+["show_new_world"]
+source = "18ff780a82fcefac"
+text = '''プレイ前に新世界を表示する'''
+
+["show_new_world_hint"]
+source = "bc591758b90681d6"
+text = '''オフのとき、このワールドの画像と国選択の地図は未知の土地として覆われたままになります。あとからワールドのページで、作り直さずに変更できます。'''
+
+["about_generator"]
+source = "6ed5499d9096e55f"
+text = '''Random New WorldはEU5用の新世界の地図を作ります。作ったワールドはそれぞれ単独で完結したMODです。遊ぶにはプレイセットでチェックを入れてください。コードやワールドファイルを共有できます。ジェネレーター自体を有効にする必要はありません。'''
+
+["worlds"]
+source = "18f1b0bf915821d8"
+text = '''ワールド'''
+
+["new_world"]
+source = "3e28180bafaa6823"
+text = '''新しいワールド'''
+
+["new_world_running"]
+source = "d8ef0468b14744a5"
+text = '''新しいワールド · {percent} %'''
+
+["world_line"]
+source = "df1ed7e861e234e5"
+text = '''{when} · {place}'''
+
+["list.in_game"]
+source = "5cd2f5ec45977230"
+text = '''ゲーム内'''
+
+["list.kept"]
+source = "20b0afe7382b5bc7"
+text = '''ゲーム外'''
+
+["list.code_only"]
+source = "31f2d67ab5545388"
+text = '''コードのみ'''
+
+["stray_name"]
+source = "a4a24ec60180242e"
+text = '''古いワールド'''
+
+["stray_line"]
+source = "3b35f49baee714a7"
+text = '''{folder} · ゲーム内'''
+
+["type"]
+source = "3bda8904a9b25b31"
+text = '''ワールドの種類'''
+
+["type.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''超大陸'''
+
+["type.supercontinent.about"]
+source = "33a2ee4977ae11b4"
+text = '''新世界を横切る1つの巨大な陸塊と、いくつかの島。'''
+
+["type.continents"]
+source = "6c048f26d3b8b473"
+text = '''大陸'''
+
+["type.continents.about"]
+source = "ed5cc238d29c1abb"
+text = '''南北アメリカのように地峡でつながることの多い大きな大陸と、島々。'''
+
+["type.small_continents"]
+source = "9676e7e8b078ed3c"
+text = '''小大陸'''
+
+["type.small_continents.about"]
+source = "368289346c178b67"
+text = '''同じくらいの大きさの、離れた3つか4つの大陸。'''
+
+["type.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''群島'''
+
+["type.archipelago.about"]
+source = "e68ebd3c93716386"
+text = '''5〜11の大きな島と多くの小島。船の世界です。'''
+
+["type.islands"]
+source = "6cc98682072010a2"
+text = '''散らばる島々'''
+
+["type.islands.about"]
+source = "3dea08a0afa912dc"
+text = '''大きな陸塊のない、小島だらけの海。'''
+
+["quick"]
+source = "b22d2b06765851eb"
+text = '''基本'''
+
+["quick_hint"]
+source = "8c832a2fa2f25cec"
+text = '''ここでは大まかなバランスを選びます。正確な値は「詳細」で設定できます。'''
+
+["quick.custom"]
+source = "6cdfd271da635d49"
+text = '''カスタム'''
+
+["quick.land"]
+source = "b6baff9358ddd8f7"
+text = '''陸地'''
+
+["quick.land.about"]
+source = "bd552acf65a994a8"
+text = '''新世界のうち陸地が占める割合。陸地が多いほどロケーションは少し大きくなり、EU5が扱える32,000のロケーションに収まるようにします。'''
+
+["quick.land.little"]
+source = "117361268a0facb6"
+text = '''少ない'''
+
+["quick.land.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''普通'''
+
+["quick.land.much"]
+source = "81cb32c88ae337b4"
+text = '''多い'''
+
+["quick.peoples"]
+source = "1e0a8378b7a75bd9"
+text = '''先住民'''
+
+["quick.peoples.about"]
+source = "6c1001fb2140ade3"
+text = '''新世界に住む民族の数と、文化の中心地の数。'''
+
+["quick.peoples.few"]
+source = "9a4303881564a221"
+text = '''少ない'''
+
+["quick.peoples.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''普通'''
+
+["quick.peoples.many"]
+source = "98801fd897f5f12b"
+text = '''多い'''
+
+["quick.states"]
+source = "04b3dcb87be3e083"
+text = '''先住民の国家'''
+
+["quick.states.about"]
+source = "019db7cb7cc9699f"
+text = '''人の住む土地のうち、部族ではなく国家が治める割合。'''
+
+["quick.states.few"]
+source = "9a4303881564a221"
+text = '''少ない'''
+
+["quick.states.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''普通'''
+
+["quick.states.many"]
+source = "98801fd897f5f12b"
+text = '''多い'''
+
+["quick.empires"]
+source = "492aaf62e6d759a9"
+text = '''特異な民族'''
+
+["quick.empires.about"]
+source = "7d5f92b53bffae0b"
+text = '''文化の中心地ごとに、特異な先住民社会が興る確率。EU4のランダム新世界のファンタジー設定のような大帝国。ほかの国の何倍もの大きさで、進んだ政体と旧世界の技術、高い格式と王の道を持ち、隣国に恐れられ、従属国に恨まれます。あるいは、海で隔てられながら同盟を結ぶ海洋交易共和国の連盟、高地部族の連合、中心地どうしが張り合う分裂した王国、同じ信仰の競争相手に囲まれた神権国家である聖地。'''
+
+["quick.empires.never"]
+source = "6300ef800bb88429"
+text = '''なし'''
+
+["quick.empires.seldom"]
+source = "fa7a8dc69bbf7e83"
+text = '''まれ'''
+
+["quick.empires.sometimes"]
+source = "5bca0e3da0627549"
+text = '''時々'''
+
+["quick.empires.often"]
+source = "6f6f6b4ab1bd157a"
+text = '''よく'''
+
+["quick.wealth"]
+source = "41942c9793d8f0ae"
+text = '''金と銀'''
+
+["quick.wealth.about"]
+source = "95692635f7e43ddf"
+text = '''金、銀、宝石、真珠が出る頻度。'''
+
+["quick.wealth.scarce"]
+source = "4a996fcca93fb323"
+text = '''乏しい'''
+
+["quick.wealth.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''普通'''
+
+["quick.wealth.rich"]
+source = "dca900394dddb28e"
+text = '''豊富'''
+
+["seed"]
+source = "367ef06b8fbf3aaa"
+text = '''シード'''
+
+["random"]
+source = "67bc484430fe87ba"
+text = '''ランダム'''
+
+["code"]
+source = "8673890241aa4925"
+text = '''ワールドコード'''
+
+["copy"]
+source = "e21f935f11d7e966"
+text = '''コピー'''
+
+["paste"]
+source = "f3380f7b44bd70af"
+text = '''貼り付け'''
+
+["code_hint"]
+source = "f72a2cc345363493"
+text = '''ワールドコードを貼り付けると、同じ系統のジェネレーターが作ったのと同じワールドが得られます。'''
+
+["other_version"]
+source = "cd4edd423d1119be"
+text = '''このコードはジェネレーター{made}で作られました。こちらは{current}で、このコードから別のワールドを作ります。元のワールドはジェネレーター{made}で作れます。'''
+
+["other_changes"]
+source = "cb6ba02bc1591efa"
+text = '''このコードはウィンドウに表示されない設定も変更しています。それらは保持されます。'''
+
+["needs_land_image"]
+source = "481f1651885f3db0"
+text = '''このワールドの陸地は画像に描かれています。「画像から陸地」で画像を選んでください。'''
+
+["land_image"]
+source = "4b6ea32b544af5c3"
+text = '''画像から陸地…'''
+
+["land_image_tip"]
+source = "8169f244febce3d5"
+text = '''自分で描いた、またはほかで作った陸地の上にワールドを作ります。陸地を白、海を黒で、新世界の範囲と同じ縦横比で描いた画像を使います。残りはその上に作られます。'''
+
+["land_template"]
+source = "ec4afdef9bceb8d5"
+text = '''テンプレートを保存…'''
+
+["land_template_tip"]
+source = "933d156783ad138e"
+text = '''ゲームの地図から、新世界が占められる範囲の画像を書き出します。好きなソフトで陸地を白く塗って描いてください。'''
+
+["task.template"]
+source = "562fb1abc40a9754"
+text = '''テンプレートを描いています…'''
+
+["land_image_chosen"]
+source = "4d9e51e05f272e57"
+text = '''陸地は画像に描かれています（{id}）。'''
+
+["land_image_clear"]
+source = "925ff49784a59104"
+text = '''生成された陸地に戻す'''
+
+["land_image_title"]
+source = "9fa18dec8f915068"
+text = '''陸地の画像を選ぶ'''
+
+["land_image_files"]
+source = "63c1f6d6c9b93179"
+text = '''画像 (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)'''
+
+["rolled_code"]
+source = "c7a2542a82443e5b"
+text = '''これはその大陸の別バージョンです: {parts}を作り直しました。'''
+
+["bad_seed"]
+source = "44ef600e2e130e3a"
+text = '''シードは0から18446744073709551615までの整数です。'''
+
+["customize"]
+source = "c5276e27afba47df"
+text = '''カスタマイズ'''
+
+["customize_hint"]
+source = "c8bba9279cdcb41b"
+text = '''ここのどの値でも遊べるワールドになります。奇妙な形や乏しい金もお好みで。範囲はジェネレーターやゲームが壊れる手前で止まります。'''
+
+["customized"]
+source = "8b46c6074c90a678"
+text = '''ワールドの種類から変更: {count}'''
+
+["untested"]
+source = "089b71123d238bd4"
+text = '''未検証'''
+
+["untested_notice"]
+source = "8471a4d9a051d766"
+text = '''一部の値は検証済みの範囲を超えています。'''
+
+["reset"]
+source = "daee7606b339f3c3"
+text = '''リセット'''
+
+["reset_all"]
+source = "ca6a476ace72d566"
+text = '''すべてワールドの種類に戻す'''
+
+["group.land"]
+source = "e2c1842113819854"
+text = '''陸と海'''
+
+["group.map"]
+source = "be176b0015c424b7"
+text = '''地図'''
+
+["group.peoples"]
+source = "6dba535c0de36030"
+text = '''民族'''
+
+["control.new_world.land_permille"]
+source = "b6baff9358ddd8f7"
+text = '''陸地'''
+
+["control.new_world.land_permille.about"]
+source = "e0a693457850e1a8"
+text = '''新世界のうち陸地が占める割合。'''
+
+["control.new_world.feature_px"]
+source = "cd947acb27155143"
+text = '''陸塊の大きさ'''
+
+["control.new_world.feature_px.about"]
+source = "3002a5e7a5190fb3"
+text = '''大: 少数の大きな陸塊。小: 多くの島。'''
+
+["control.new_world.min_island_px"]
+source = "106d0e95fe3fe013"
+text = '''最小の島'''
+
+["control.new_world.min_island_px.about"]
+source = "ea723d77a203225f"
+text = '''これより小さい島は沈みます。'''
+
+["control.new_world.persistence_permille"]
+source = "86bba0d82da6f0d5"
+text = '''入り組んだ海岸'''
+
+["control.new_world.persistence_permille.about"]
+source = "de94bac1d3657790"
+text = '''高いほど海岸が入り組み、小島が増えます。'''
+
+["control.new_world.octaves"]
+source = "f60e7523e64525bf"
+text = '''海岸の細かさ'''
+
+["control.new_world.octaves.about"]
+source = "09cde1b5a935f8c7"
+text = '''海岸線の細部の層の数。'''
+
+["control.new_world.max_lake_px"]
+source = "3e9700a12bd157d6"
+text = '''最大の湖'''
+
+["control.new_world.max_lake_px.about"]
+source = "da8233bcf7ff8411"
+text = '''これより大きな閉じた水域は海のままです。'''
+
+["control.new_world.wasteland_permille"]
+source = "4b415ab1819fb1f6"
+text = '''不毛地帯'''
+
+["control.new_world.wasteland_permille.about"]
+source = "7f15f21996df4288"
+text = '''誰も入植できない陸地の割合。'''
+
+["control.new_world.precious_permille"]
+source = "1c32df89f67a4e86"
+text = '''金、銀、宝石'''
+
+["control.new_world.precious_permille.about"]
+source = "7d06204c56e8fbbe"
+text = '''金、銀、宝石、真珠が出る頻度。元の新世界との比較。'''
+
+["control.new_world.location_px"]
+source = "f9e8850d8a95bc43"
+text = '''ロケーションの大きさ'''
+
+["control.new_world.location_px.about"]
+source = "748f1d4ff3cd8629"
+text = '''小さいほどロケーションが増えます。EU5が扱えるのは全部で約32,000ロケーションで、それを超えるワールドはジェネレーターが作りません。'''
+
+["control.new_world.sea_zone_px"]
+source = "cce5eac2b6b2bfac"
+text = '''海域の大きさ'''
+
+["control.new_world.sea_zone_px.about"]
+source = "6b2ccfa728d8af25"
+text = '''小さいほど海域が増えます。'''
+
+["control.new_world.province_size"]
+source = "02583edafee78ebf"
+text = '''プロヴィンスあたりのロケーション'''
+
+["control.new_world.province_size.about"]
+source = "8d7d49eb6f791144"
+text = '''1つのプロヴィンスを作るロケーションの数。'''
+
+["control.natives.population_permille"]
+source = "5b828861aec15d60"
+text = '''人口'''
+
+["control.natives.population_permille.about"]
+source = "cdc165c3d5206790"
+text = '''先住民の人口。元の新世界の人口との比較。'''
+
+["control.natives.state_share_permille"]
+source = "827b094c2b486457"
+text = '''国家の土地'''
+
+["control.natives.state_share_permille.about"]
+source = "b923d647bb81644f"
+text = '''人の住む土地のうち、先住民の国家が治める割合（元のゲーム: 11 %）。'''
+
+["control.natives.state_spread_permille"]
+source = "8f96ec1c6d41080e"
+text = '''孤立した国家'''
+
+["control.natives.state_spread_permille.about"]
+source = "a5e368305d5e52f0"
+text = '''国家の土地のうち、大きな中心地から離れた小さな国家群にある割合（元のゲームの1337年: 約15 %）。'''
+
+["control.natives.organized_permille"]
+source = "f5701b4e75bb0076"
+text = '''組織された民族'''
+
+["control.natives.organized_permille.about"]
+source = "6321734327f6764c"
+text = '''部族にまとまっている文化の割合。'''
+
+["control.natives.hearths_per_10k"]
+source = "fd978882c9d4343d"
+text = '''文化の発祥地'''
+
+["control.natives.hearths_per_10k.about"]
+source = "071bc7006ab66c63"
+text = '''1万ロケーションあたりの古い文化の中心地。国家はその周りに育ちます。'''
+
+["control.natives.culture_locations"]
+source = "22cd15ccfd172dca"
+text = '''文化の大きさ'''
+
+["control.natives.culture_locations.about"]
+source = "c66e7ad7d8982807"
+text = '''1つの文化の平均ロケーション数。'''
+
+["control.natives.religion_locations"]
+source = "6b57337037e9608e"
+text = '''宗教の大きさ'''
+
+["control.natives.religion_locations.about"]
+source = "2ab84225cb22d337"
+text = '''1つの宗教の平均ロケーション数。'''
+
+["control.natives.tribe_locations"]
+source = "230525cb0038444c"
+text = '''部族の大きさ'''
+
+["control.natives.tribe_locations.about"]
+source = "67fc7774a8ba3e94"
+text = '''1つの部族の平均ロケーション数。'''
+
+["control.natives.empire_permille"]
+source = "492aaf62e6d759a9"
+text = '''特異な民族'''
+
+["control.natives.empire_permille.about"]
+source = "3a67bce42d61dc85"
+text = '''文化の発祥地ごとに、その周りに特異な社会が興る確率。大帝国（ほかの国の何倍もの大きさで、進んだ政体と旧世界の技術、高い格式と王の道を持ち、隣国に恐れられ、従属国に恨まれる国家）、海洋交易共和国の連盟、高地部族の連合、張り合う中心地からなる分裂した王国、または同じ信仰の競争相手に囲まれた聖地。'''
+
+["control.natives.state_locations"]
+source = "f02a5b0258f32933"
+text = '''国家の大きさ'''
+
+["control.natives.state_locations.about"]
+source = "55dbb684b36e32f9"
+text = '''先住民の国家1つの平均ロケーション数。'''
+
+["unit.percent"]
+source = "e97d7e5f669ea3fa"
+text = ''' %'''
+
+["unit.times"]
+source = "4d4655d116f71fcc"
+text = ''' ×'''
+
+["unit.px"]
+source = "bc913fd04325705c"
+text = ''' px'''
+
+["unit."]
+source = "e3b0c44298fc1c14"
+text = ''''''
+
+["install"]
+source = "6f9a79fcb2631bc9"
+text = '''完成したらゲームに追加'''
+
+["generate"]
+source = "49e49bb4401e67bd"
+text = '''作成'''
+
+["cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''キャンセル'''
+
+["cancelling"]
+source = "91b104db05da1b2d"
+text = '''キャンセル中…'''
+
+["progress"]
+source = "4664827f8e890192"
+text = '''進行状況'''
+
+["idle"]
+source = "e20846d20bcd60f0"
+text = '''準備完了。'''
+
+["running"]
+source = "b87aac63638e00ec"
+text = '''作業中: {stages}'''
+
+["finished"]
+source = "c15031f5b768b892"
+text = '''{seconds}秒で完了しました。'''
+
+["failed"]
+source = "b050917e5e3b9da2"
+text = "うまくいきませんでした: {message}\n\n{report_hint}"
+
+["report_hint"]
+source = "971e4fa23733b587"
+text = '''報告するには、設定を開いて「診断情報を保存」を押してください。'''
+
+["error_world_file"]
+source = "626c100184b9a4cf"
+text = '''このファイルは使えません。壊れているか、ワールドファイルではありません。（{detail}）'''
+
+["error_settings"]
+source = "f1edf544f93508bb"
+text = '''この設定は使えません。（{detail}）'''
+
+["cancelled"]
+source = "1e1e9d54a0a12f87"
+text = '''キャンセルしました。ゲームには何も変更していません。'''
+
+["ready_no_game"]
+source = "fbbc35b197ae01d4"
+text = '''先に設定でゲームのフォルダーを選んでください。'''
+
+["ready_no_profile"]
+source = "5410df6eb3b98906"
+text = '''設定でプロファイルを選ぶか、ゲームへの追加をオフにしてください。'''
+
+["ready_busy"]
+source = "3d09fa493c04b1f7"
+text = '''ジェネレーターは作業中です。'''
+
+["too_many_locations"]
+source = "b4a78edf445b4075"
+text = '''このワールドは約{count}ロケーションになります。EU5が扱えるのは約32,000で、ジェネレーターは{budget}未満に抑えます。ロケーションか海域を大きくするか、陸地を減らしてください。'''
+
+["outside_range"]
+source = "2ed39ef60bd66af6"
+text = '''このコードはジェネレーターが許す範囲を超える値を設定しています: {names}。'''
+
+["estimate"]
+source = "4ab7301404b8205d"
+text = '''約{count}ロケーション（EU5が扱えるのは約32,000）。'''
+
+["name_hint"]
+source = "453d4a9fcef62708"
+text = '''このワールドの名前（{limit}文字まで）'''
+
+["retitle_later"]
+source = "4bfbafc4c2ab883b"
+text = '''名前を保存しました。今はゲームがこのワールドのファイルを使っているため、MODリストには次にワールドを追加したときに名前が表示されます。'''
+
+["preview_hidden"]
+source = "04b86c1fa26bdb53"
+text = '''新世界は未知の土地として隠されています。'''
+
+["preview_shown"]
+source = "de7b43db7ffe45e6"
+text = '''新世界を表示しています。'''
+
+["preview_missing"]
+source = "c21d71a0de202b2f"
+text = '''このワールドには画像がありません。'''
+
+["zoom_hint"]
+source = "fe797f35f2c60a7c"
+text = '''ホイールで拡大縮小、ドラッグで移動、ダブルクリックで全体表示。'''
+
+["detail.code"]
+source = "8673890241aa4925"
+text = '''ワールドコード'''
+
+["detail.type"]
+source = "3bda8904a9b25b31"
+text = '''ワールドの種類'''
+
+["detail.seed"]
+source = "367ef06b8fbf3aaa"
+text = '''シード'''
+
+["detail.custom"]
+source = "4229eea49bd9ea3a"
+text = '''カスタム設定'''
+
+["detail.made"]
+source = "45a5300c04621100"
+text = '''作成日時'''
+
+["detail.build"]
+source = "2b24426392ccb3cc"
+text = '''ゲームのビルド'''
+
+["detail.generator"]
+source = "1ade60abe93f5cfc"
+text = '''ジェネレーター'''
+
+["detail.place"]
+source = "1daaa38f33cd860e"
+text = '''場所'''
+
+["detail.reproduce"]
+source = "1cd6bb5973fa2be5"
+text = '''再現'''
+
+["repro.none"]
+source = "05901bf63ea95e6e"
+text = '''ワールドが作成の記録を残すようになる前に作られたため、同じにならない場合があります。'''
+
+["repro.same_algorithm"]
+source = "66763ff6d6860af0"
+text = '''ジェネレーター{release}がこれと同じアルゴリズムで作りました。ゲームのファイルが同じなら、バイト単位で同じものができます。検証で確かめられます。'''
+
+["repro.identical"]
+source = "214b6041efb8bb29"
+text = '''検証済み: 作り直したところ、{count}個のファイルがすべて同じでした。'''
+
+["repro.differs"]
+source = "7a13d7a38d54b305"
+text = '''検証済み: 作り直したところ、{count}個のファイルが異なり、最初は{first}でした。'''
+
+["repro.other_algorithm"]
+source = "eae91d973c5bf75b"
+text = '''ジェネレーター{release}がこれとは異なるアルゴリズムで作ったため、同じコードでもここでは別のワールドになります。元のワールドはジェネレーター{release}で作れます。'''
+
+["repro.other_inputs"]
+source = "314a09e94f5efadf"
+text = '''作成後にゲームのファイルが変わっています（{count}件の違い）。同じコードでもこのゲームでは別のワールドになります。今のままで残すには、このワールドのMODを保管してください。'''
+
+["repro.newer_format"]
+source = "c904c7d67406f708"
+text = '''新しいジェネレーター（{release}）で作られており、その記録はこのジェネレーターでは読めません。'''
+
+["part.peoples"]
+source = "1c52fde02da2ec5e"
+text = '''新しい民族'''
+
+["part.resources"]
+source = "e34cf607cbcec7ff"
+text = '''新しい資源'''
+
+["part.peoples.button"]
+source = "32d36ec3dc905625"
+text = '''新しい民族'''
+
+["part.resources.button"]
+source = "9f2f4d34b10e5bf7"
+text = '''新しい資源'''
+
+["part.peoples.tip"]
+source = "7256de9b80a3a85e"
+text = '''この大陸のまま、国、文化、宗教、名前を作り直します。陸地は変わりません。'''
+
+["part.resources.tip"]
+source = "415cf8682ce69b67"
+text = '''この大陸のまま、原材料と金銀を作り直します。陸地と民族は変わりません。'''
+
+["edit_same_land"]
+source = "377b7ea7a3d96c06"
+text = '''同じ陸地で設定を変える'''
+
+["edit_same_land_tip"]
+source = "ccc60e6a8ad5a618"
+text = '''このワールドの設定をシードごと開き、同じ陸地のまま民族や資源の設定を変えます。'''
+
+["previous_version"]
+source = "21d886b74bc1abe1"
+text = '''前のバージョン'''
+
+["keep_both"]
+source = "6a44d37116dd7c0d"
+text = '''これもゲームに残す'''
+
+["keep_both_tip"]
+source = "bbdca9254f8bb1fa"
+text = '''チェックを入れない限り、新しいバージョンがゲーム内のこのワールドと置き換わります。ゲーム内のワールドは1つで1ギガバイト以上を使います。'''
+
+["not_world_file"]
+source = "cef953c94d5691f8"
+text = '''それはワールドファイル（.rnworld または .rnworld-mod）ではありません。'''
+
+["imported"]
+source = "8d0ea11d7ffb0c47"
+text = '''ワールドは覆われた状態でリストに入りました。地図を見るには公開してください。'''
+
+["imported_again"]
+source = "dd4ee3af9b0ca85e"
+text = '''このワールドはすでにあります。変更はありません。'''
+
+["no_mod_to_send"]
+source = "e3b7363ed3b4a1af"
+text = '''このワールドにはここで送るMODがありません。先にゲームに追加するか、作成してください。'''
+
+["open_world_file"]
+source = "b20aa10a6bcd2811"
+text = '''ワールドファイルを開く…'''
+
+["open_world_file_tip"]
+source = "3010238481b95870"
+text = '''.rnworld ファイルからワールドを、.rnworld-mod から作成済みのワールドを取り込みます。'''
+
+["world_files"]
+source = "7f058e5cf089a3eb"
+text = '''ワールドファイル (*.rnworld *.rnworld-mod)'''
+
+["export_file"]
+source = "ccb29307fc55e62c"
+text = '''ワールドファイルを保存…'''
+
+["export_file_tip"]
+source = "911be34bc5f2c7ca"
+text = '''このワールドのコード、記録、地図を、公開や送信用の小さなファイル1つに書き出します。ゲームのデータは何も含みません。'''
+
+["send_built"]
+source = "8af3933be4147db3"
+text = '''作成済みワールドを移す…'''
+
+["send_built_tip"]
+source = "047b2b02a2fa3fb3"
+text = '''MOD全体をファイルに書き出し、自分の別のマシンに持っていきます。'''
+
+["send_built_warning"]
+source = "6a88a7e91f2b232e"
+text = '''このファイルには、ゲームの地図から作られた画像を含むワールドのMOD（約1ギガバイト）が入ります。自分のマシン同士でワールドを移すためのもので、共有用ではありません。相手のマシンはゲームのファイルが同じときだけ受け入れます。続けますか？'''
+
+["copy_mod"]
+source = "f25df969e7e57e2d"
+text = '''MODをフォルダーにコピー…'''
+
+["copy_mod_tip"]
+source = "7e1479cc3c7ddb55"
+text = '''このワールドのMODを選んだフォルダーにコピーし、手作業で管理できるようにします。'''
+
+["task.copy"]
+source = "548e2087de0d5b96"
+text = '''MODをコピーしています…'''
+
+["task.receive"]
+source = "8d3b860b93f6e75e"
+text = '''作成済みワールドを取り込んでいます…'''
+
+["task.send"]
+source = "ff78a7d5ab27ab07"
+text = '''作成済みワールドを書き出しています…'''
+
+["file_saved"]
+source = "482f5b2eebc6b886"
+text = '''保存しました: {path}'''
+
+["tab.world"]
+source = "78ae647dc5544d22"
+text = '''ワールド'''
+
+["compare"]
+source = "219ddc366d9da259"
+text = '''比較…'''
+
+["compare_title"]
+source = "30a531d0e5c94ed2"
+text = '''ワールドの比較'''
+
+["compare_need_two"]
+source = "ef2be38dfe1c110d"
+text = '''比較するには、地図を公開したワールドが2つ必要です。'''
+
+["save_picture"]
+source = "bb1ed31b2c6d66f5"
+text = '''画像を保存…'''
+
+["save_picture_tip"]
+source = "fb774db84a221988"
+text = '''表示中の画像をPNGで保存します。新世界を公開していないあいだは覆われています。'''
+
+["picture_saved"]
+source = "482f5b2eebc6b886"
+text = '''保存しました: {path}'''
+
+["tab.maps"]
+source = "119e66d117ae8f0c"
+text = '''地図'''
+
+["layer.land"]
+source = "b6baff9358ddd8f7"
+text = '''地形'''
+
+["layer.countries"]
+source = "8faf7ec7ab20ca1c"
+text = '''国'''
+
+["layer.cultures"]
+source = "62461b1bcd7ae231"
+text = '''文化'''
+
+["layer.religions"]
+source = "ef1d1c23482f3289"
+text = '''宗教'''
+
+["layer.resources"]
+source = "e89b30aa1dc30a6a"
+text = '''資源'''
+
+["layer.development"]
+source = "21b6a798321a49f7"
+text = '''発展度'''
+
+["layer.land.tip"]
+source = "a03117b5186e8673"
+text = '''植生と気候。山は濃く、寒い土地には雪。'''
+
+["layer.countries.tip"]
+source = "193b9cf9c94c5ff7"
+text = '''どの土地を誰が治めているか。白い点が首都です。'''
+
+["layer.cultures.tip"]
+source = "dd6968b8e6ed78c4"
+text = '''ロケーションごとの文化。変わる所に線が入ります。'''
+
+["layer.religions.tip"]
+source = "d32998efe57520d8"
+text = '''ロケーションごとの宗教。変わる所に線が入ります。'''
+
+["layer.resources.tip"]
+source = "5c7040ce7d9f74c7"
+text = '''ロケーションごとの原材料。金、銀、宝石、真珠は光ります。'''
+
+["layer.development.tip"]
+source = "7346fc0b9c0af07a"
+text = '''ロケーションごとの初期の発展度。暗いほど低く、明るいほど高い。'''
+
+["reveal_world"]
+source = "d63e537d568b9aba"
+text = '''このワールドを公開'''
+
+["reveal_world_tip"]
+source = "6d03c0632ec309b2"
+text = '''このワールドの地図をジェネレーターで表示します。設定で変えない限り、ゲームのMODリストでは覆われたままです。'''
+
+["covered_maps"]
+source = "72895291a8506c4f"
+text = '''このワールドの新世界は、ゲームの中で出会えるように覆われています。プレイ前に国、文化、宗教、資源を見るには公開してください。'''
+
+["no_atlas"]
+source = "85953bb97408c28b"
+text = '''このワールドには地図帳がありません。地図帳の導入前に作られたか、ファイルが失われています。'''
+
+["facts_hint"]
+source = "c45ebe1186c80167"
+text = '''地図にカーソルを合わせると、そこに何があるか表示されます。'''
+
+["search_hint"]
+source = "9a81c8371c86e8ab"
+text = '''国、文化、宗教、資源、場所を探す'''
+
+["legend"]
+source = "7482e374b5bddc0a"
+text = '''凡例'''
+
+["legend.sea"]
+source = "76b3af333dbac074"
+text = '''海'''
+
+["legend.lake"]
+source = "52082793941524be"
+text = '''湖'''
+
+["legend.wasteland"]
+source = "4b415ab1819fb1f6"
+text = '''不毛地帯'''
+
+["legend.no_country"]
+source = "b70285418438b053"
+text = '''国なし'''
+
+["legend.none"]
+source = "dc937b59892604f5"
+text = '''なし'''
+
+["legend.uninhabited"]
+source = "abfd7adb689e5c89"
+text = '''無人'''
+
+["legend.lowest"]
+source = "5c590931c7cc2ade"
+text = '''最低'''
+
+["legend.middle"]
+source = "d93006ec2e4339d7"
+text = '''中間'''
+
+["legend.highest"]
+source = "d402ef10d054eac2"
+text = '''最高'''
+
+["found.country"]
+source = "701d021d08c54579"
+text = '''国'''
+
+["found.culture"]
+source = "51d7a2ae4335df12"
+text = '''文化'''
+
+["found.religion"]
+source = "f8a52d21e659b0e9"
+text = '''宗教'''
+
+["found.material"]
+source = "eb7a842ff958c49c"
+text = '''資源'''
+
+["found.place"]
+source = "e9463dccf0541a97"
+text = '''場所'''
+
+["kind.land"]
+source = "90eae63487cae2df"
+text = '''陸地'''
+
+["kind.sea"]
+source = "4a69f19c8c264850"
+text = '''海'''
+
+["kind.lake"]
+source = "6f021f0268d5dd0d"
+text = '''湖'''
+
+["kind.wasteland"]
+source = "a4b18daa52aed336"
+text = '''不毛地帯'''
+
+["no_country"]
+source = "140bedbf9c3f6d56"
+text = '''なし'''
+
+["fact.country"]
+source = "701d021d08c54579"
+text = '''国'''
+
+["fact.culture"]
+source = "51d7a2ae4335df12"
+text = '''文化'''
+
+["fact.religion"]
+source = "f8a52d21e659b0e9"
+text = '''宗教'''
+
+["fact.material"]
+source = "eb7a842ff958c49c"
+text = '''資源'''
+
+["fact.population"]
+source = "5b828861aec15d60"
+text = '''人口'''
+
+["fact.complexity"]
+source = "d5acfd8330f5caae"
+text = '''社会'''
+
+["summary"]
+source = "1a599cbd890423a0"
+text = '''国 {countries}（国家 {states}、部族 {tribes}） · 文化 {cultures} · 宗教 {religions} · ロケーション {locations}（陸地 {land}）'''
+
+["check"]
+source = "9d60841e0a7891df"
+text = '''検証'''
+
+["check_tip"]
+source = "6124291f2cd0c606"
+text = '''このワールドを作り直し、すべてのファイルを最初のときと比べます。ゲームが必要で、ワールド作成と同じくらい時間がかかります。'''
+
+["custom_none"]
+source = "140bedbf9c3f6d56"
+text = '''なし'''
+
+["custom_some"]
+source = "db3cb1c116f0a410"
+text = '''{count}件変更'''
+
+["place.in_game"]
+source = "c1f197d6ae0cecc7"
+text = '''ゲーム内: {path}'''
+
+["place.kept"]
+source = "716eb5c10a97acc1"
+text = '''ジェネレーターの側にあり、ゲーム外'''
+
+["place.code_only"]
+source = "90b380decd0f7b8d"
+text = '''ゲーム外です。追加するとコードから作り直します（約{seconds}秒）。'''
+
+["other_build"]
+source = "8da6ddee43ce8460"
+text = '''ゲームのビルド{made}向けに作られました。お使いのビルドは{current}です。追加するとお使いのビルド向けに作り直します。同じコードでもビルドが違えば別のワールドです。'''
+
+["other_build_same"]
+source = "bde12956110b557b"
+text = '''ゲームのビルド{made}向けに作られました。お使いのビルドは{current}ですが、作成に使ったファイルはどれも変わっていないため、そのまま動きます。'''
+
+["standalone"]
+source = "b6d7e4aa65dc2e7e"
+text = '''このワールドは完結したMODです。プレイセットでチェックを入れれば単独で遊べます。「ワールドファイルを保存」でコードと地図帳を共有できます。'''
+
+["add"]
+source = "c69a3dd1ca9d5040"
+text = '''ゲームに追加'''
+
+["remove"]
+source = "b81efb13538fe4b9"
+text = '''ゲームから外す'''
+
+["select_all_worlds"]
+source = "1fc9a387654d410f"
+text = '''すべて選択'''
+
+["selection_hint"]
+source = "b537ff237277d924"
+text = '''Ctrl+クリックで複数のワールドを、Shift+クリックで範囲を選択します。'''
+
+["selection_count"]
+source = "d5e9e37b3c98b203"
+text = '''{count}件選択 · ゲーム内 {installed}'''
+
+["remove_count"]
+source = "6c22a944e48e4042"
+text = '''ゲームから外す（{count}）'''
+
+["library_remove"]
+source = "9186f6da0ec3ba00"
+text = '''外す（{count}）'''
+
+["remove_tip"]
+source = "53f9a900e9ce46ea"
+text = '''選んだMODをEU5から外します。ワールドコードと画像は残ります。'''
+
+["remove_none"]
+source = "f639b98a2c61e291"
+text = '''先にインストール済みのワールドを選んでください。'''
+
+["remove_no_profile"]
+source = "30c0c5ebcba942a8"
+text = '''先に設定でEU5のプロファイルを選んでください。'''
+
+["delete_count"]
+source = "7376e41431243b45"
+text = '''ライブラリから削除（{count}）…'''
+
+["library_delete"]
+source = "22779a77f1c59d24"
+text = '''削除（{count}）…'''
+
+["delete_tip"]
+source = "aa0346399fc89243"
+text = '''選んだワールドを、保存した地図、メモ、保管中のMODファイル、インストール済みMODとともにライブラリから削除します。'''
+
+["delete_none"]
+source = "faf90f6fb115dc7f"
+text = '''先にライブラリのワールドを選んでください。'''
+
+["delete_many_title"]
+source = "5bbd021f21ab2acf"
+text = '''{count}件のワールドを削除しますか？'''
+
+["delete_many_question"]
+source = "8e07c808cd2bfc35"
+text = "これら{count}件のワールドをライブラリから完全に削除し、インストール済みMODをEU5から外しますか？保存した地図、メモ、保管中のMODファイルも削除されます。\n\n{names}"
+
+["batch_delete_failed"]
+source = "fdc1bce609452891"
+text = '''{done}件のワールドを削除したあと、「{name}」を削除できませんでした: {message}'''
+
+["batch_removed"]
+source = "1765dbfcf5b5a27a"
+text = '''選んだMODをEU5から外しました。ワールドコードと画像は残っています。'''
+
+["batch_deleted"]
+source = "5725dcdf7e2643f3"
+text = '''選んだワールドを削除しました。'''
+
+["batch_cancelled"]
+source = "0c2f571551bfe2ad"
+text = '''中断しました。リストにはすでに行った変更が表示されています。'''
+
+["open_folder"]
+source = "6a9084025c4bf3e1"
+text = '''フォルダーを開く'''
+
+["copy_code"]
+source = "49a0053f3b0d5045"
+text = '''コードをコピー'''
+
+["like_this"]
+source = "c5ac52caf1b41abe"
+text = '''この設定で新しいワールド'''
+
+["delete"]
+source = "c49b06b4c661ee22"
+text = '''ワールドを削除'''
+
+["delete_title"]
+source = "522a787a83dddac3"
+text = '''このワールドを削除しますか？'''
+
+["delete_question"]
+source = "fa99445b18d116c0"
+text = '''「{name}」をゲームとジェネレーターから外します。ワールドコードがあれば作り直せます。'''
+
+["task.add"]
+source = "d2d376a9e945a751"
+text = '''ゲームに追加しています…'''
+
+["task.remove"]
+source = "c191fce448827548"
+text = '''ゲームから外しています…'''
+
+["task.delete"]
+source = "43b5894c3e4e2b24"
+text = '''削除しています…'''
+
+["task.check"]
+source = "ec963ffc911b8401"
+text = '''検証しています…'''
+
+["task_failed"]
+source = "b050917e5e3b9da2"
+text = "うまくいきませんでした: {message}\n\n{report_hint}"
+
+["diagnostics"]
+source = "77d2c21988dc5725"
+text = '''診断情報を保存…'''
+
+["diagnostics_tip"]
+source = "d177e924fcd6fb51"
+text = '''バグ報告用に、ジェネレーターのログと、このマシン、ゲーム、ワールドについての報告を1つのファイルにまとめます。どこにも送信されません。名前とフォルダーは伏せられます。'''
+
+["diagnostics_title"]
+source = "52fe7bd9f8dba9b9"
+text = '''診断情報を保存'''
+
+["diagnostics_saved"]
+source = "ef867c11f7e5697d"
+text = "保存しました。必要なら中身を確認して、報告に添付してください:\n{path}"
+
+["diagnostics_failed"]
+source = "ba28e35f48d96465"
+text = '''ファイルを書き込めませんでした: {problem}'''
+
+["stray_about"]
+source = "f0866f985468cba5"
+text = '''このワールドは、記録を残さなかった以前のバージョンのジェネレーターで作られました。ゲーム内では{folder}として入っています。もう遊ばなくなったら外してください。'''
+
+["tick_unknown"]
+source = "4a3bdf3a4d535241"
+text = '''プレイセットのRNWワールドのうち、「{name}」だけにチェックが入っているか確かめてください。'''
+
+["tick_self_untick"]
+source = "c63e9e7f0d7290fa"
+text = '''プレイセットで「{name}」にチェックを入れ、ほかのRNWワールドのチェックを外してください。'''
+
+["tick_self"]
+source = "07849d445ea9ff7a"
+text = '''プレイセットで「{name}」にチェックを入れてください。'''
+
+["untick_others"]
+source = "bc66f4a33e6675ab"
+text = '''プレイセットでほかのRNWワールドのチェックを外してください。'''
+
+["next_fresh"]
+source = "26a83c991aa99660"
+text = '''EU5で: {tick} これでMODが読み込み直されます。そのあと1337年で新しいゲームを始めてください。'''
+
+["next_fresh_switch"]
+source = "d9bc2cd7b64f1d10"
+text = '''EU5で別のプレイセットに切り替えてから元に戻すとMODが読み込み直されます。そのあと1337年で新しいゲームを始めてください。'''
+
+["next_played"]
+source = "9ec3a8f4b480881a"
+text = '''EU5を起動してからすでにプレイしています。そのあとに別のワールドを始めるとゲームがクラッシュします。EU5を閉じてもう一度起動してください。{tick} そのあと1337年で新しいゲームを始めてください。'''
+
+["next_start"]
+source = "2d8795764c63fcc4"
+text = '''EU5を起動してください。{tick} そのあと1337年で新しいゲームを始めてください。'''
+
+["next_unknown"]
+source = "41f10e1b14772e13"
+text = '''{tick} EU5を起動してからまだゲームを始めていなければ、別のプレイセットに切り替えて戻し、1337年で新しいゲームを始めてください。始めていた場合は、先にEU5を再起動してください。'''
+
+["resources"]
+source = "e8929b864948ef37"
+text = '''{threads}スレッド、空きメモリ{free} GiB'''
+
+["resources_unknown"]
+source = "e23f2106daf4e4b1"
+text = '''{threads}スレッド'''
+
+["stage.load map"]
+source = "e537d733dce55d79"
+text = '''世界地図を読み込んでいます'''
+
+["stage.select canvas"]
+source = "08322653444624b8"
+text = '''置き換える範囲を選んでいます'''
+
+["stage.vanilla reads"]
+source = "3c8b16be15157a3f"
+text = '''ゲームのデータを読み込んでいます'''
+
+["stage.vanilla geometry"]
+source = "c88d0868aff1c0d6"
+text = '''元のロケーションを測っています'''
+
+["stage.vanilla localization keys"]
+source = "5d6474dd82c4cc82"
+text = '''ゲームのテキストキーを集めています'''
+
+["stage.vanilla climate"]
+source = "ec56f139832cf607"
+text = '''元の気候を測っています'''
+
+["stage.vanilla material levels"]
+source = "4933d186bbecc36b"
+text = '''元の地形素材を測っています'''
+
+["stage.vanilla natives"]
+source = "e3f4bfb6adec2c92"
+text = '''元の先住民を読み込んでいます'''
+
+["stage.generate world"]
+source = "e84556e6a019ab76"
+text = '''大陸、海、起伏を作っています'''
+
+["stage.settle coasts"]
+source = "e2cd040b59052112"
+text = '''すべての海岸に港を置いています'''
+
+["stage.water shapes"]
+source = "86189bc7022099c2"
+text = '''湾、海峡、海流を形作っています'''
+
+["stage.identities"]
+source = "e14e8033766d3d1b"
+text = '''ロケーション、エリア、地域に名前を付けています'''
+
+["stage.world checks"]
+source = "2f4b2b5e8a3f9d61"
+text = '''新しいワールドを検証しています'''
+
+["stage.water textures"]
+source = "4ef7590b1b28e969"
+text = '''水と海岸を塗っています'''
+
+["stage.biomes and rivers"]
+source = "d4bd6b2dd554ff95"
+text = '''気候、バイオーム、川を育てています'''
+
+["stage.slot tables"]
+source = "c84fa407cadaa012"
+text = '''地形素材を準備しています'''
+
+["stage.location rasters"]
+source = "f126e7af80e75f1c"
+text = '''ロケーションの地図を描いています'''
+
+["stage.png encoding"]
+source = "ca6ff7403235db3e"
+text = '''地図を圧縮しています'''
+
+["stage.terrain decals"]
+source = "afccac1753249f1e"
+text = '''地形を彫り出しています'''
+
+["stage.vegetation instances"]
+source = "3fa3e8fd70c4851a"
+text = '''木と草を植えています'''
+
+["stage.natives"]
+source = "de062b10c1938a64"
+text = '''先住民の社会を築いています'''
+
+["stage.stories"]
+source = "cbe749082c75686b"
+text = '''ワールドの物語と形成可能国を書いています'''
+
+["stage.atlas"]
+source = "2fa4552668c62056"
+text = '''ワールドの地図帳を描いています'''
+
+["stage.texts"]
+source = "f414224df1fa792b"
+text = '''名前、初期状態、スクリプトを書いています'''
+
+["stage.script remap"]
+source = "507ba7a241bfe7f0"
+text = '''ゲームのスクリプトを書き換えています'''
+
+["stage.spline network"]
+source = "cdd6a2ba75e40403"
+text = '''道の帯を敷いています'''
+
+["stage.selection cover"]
+source = "7e788576dbb4ecbe"
+text = '''プレイが始まるまで新世界を覆っています'''
+
+["stage.write files"]
+source = "7f9242d43d976453"
+text = '''MODを書き出しています'''
+
+["stage.land cells"]
+source = "0d6f25d525141973"
+text = '''陸のロケーションを育てています'''
+
+["stage.sea cells"]
+source = "42cc41a5bd88b8b7"
+text = '''海域を育てています'''
+
+["stage.relief"]
+source = "74ea42c343487a9a"
+text = '''山と谷を起こしています'''
+
+["stage.terrain"]
+source = "349511ebba803dea"
+text = '''地形を組み立てています'''
+
+["stage.candidates"]
+source = "2a892bfd45c8d0f3"
+text = '''大陸をスケッチしています'''
+
+["stage.install"]
+source = "a6e5d85ef9ce3cbc"
+text = '''ワールドをプロファイルにインストールしています'''
+
+["stage.compare inputs"]
+source = "1fe1e92443638ab8"
+text = '''ゲームのファイルを、このワールドの作成に使ったファイルと比べています'''
+
+["stage.waiting for the game"]
+source = "3796d1c0f7d512f6"
+text = '''ゲームが前のワールドを手放すのを待っています。プレイセットでチェックを外して適用するか、ゲームを閉じてください'''
+
+["error.code.prefix"]
+source = "a4ece9429a17cada"
+text = '''ワールドコードは{prefix}で始まります。'''
+
+["error.code.short"]
+source = "0dd5d68df589578a"
+text = '''ワールドコードが短すぎます。'''
+
+["error.code.typo"]
+source = "a95b743c53657352"
+text = '''ワールドコードに入力ミスがあります。チェック値が一致しません。'''
+
+["error.code.format"]
+source = "9faae2046129538f"
+text = '''このワールドコードは、より新しいか別のジェネレーターのものです。'''
+
+["error.code.damaged"]
+source = "81cbea66ce059baa"
+text = '''ワールドコードに含まれる変更済みの設定が壊れています。'''
+
+["error.code.extra"]
+source = "342b6e6badd7c5fa"
+text = '''ワールドコードの末尾に余分なデータがあります。'''
+
+["error.code.characters"]
+source = "2114e3add9ec678c"
+text = '''ワールドコードに使えない文字が含まれています。'''
+
+["error.destination.one"]
+source = "93130a85f7a96c32"
+text = '''ワールドの保存先を1つ選んでください。'''
+
+["error.destination.outside"]
+source = "5463f7a655b549db"
+text = '''保存先はゲームのフォルダーの外にしてください。'''
+
+["error.destination.folder"]
+source = "ad7b7c82ea68f13a"
+text = '''MOD用に既存のフォルダーを選んでください。'''
+
+["error.destination.exists"]
+source = "a64875e2c0f3edc3"
+text = '''{file}はすでにあります。ワールドファイルに別の名前を付けてください。'''
+
+["error.destination.profile"]
+source = "2f9f5b6d5619b37d"
+text = '''ワールドを追加するプロファイルがありません。プロファイルを選ぶか、追加しないでください。'''
+
+["error.land_image.gone"]
+source = "e6b07cf126932f17"
+text = '''このワールドの陸地は、ライブラリにもうない画像に描かれています。ワールドを作るには、ワールドファイルを開き直すか、画像を選んでください。'''
+
+["error.check.no_record"]
+source = "990ed1f85c2a9322"
+text = '''このワールドは記録が残されるようになる前に作られたため、検証できません。'''
+
+["error.check.bundle"]
+source = "c2284a0becacbcfe"
+text = '''ライブラリにあるワールドのファイルが、作成時のものではなくなっています。'''
+
+["error.install.in_use"]
+source = "8f4e29768c251b73"
+text = '''ゲームが{mod}を使っています。プレイセットでチェックを外して適用するか、ゲームを閉じてください。'''
+
+["error.pictures.missing"]
+source = "d3eddbbb04e82f93"
+text = '''{folder}の画像がないため、ゲーム内の画像を変更できません。'''
+
+["error.cover.missing"]
+source = "fd633ea58a7c310b"
+text = '''{folder}の国選択の覆いが保存されていません。'''
+
+["error.picture.unwritten"]
+source = "17b62235c3b8c217"
+text = '''{folder}の画像を書き込めませんでした。'''
+
+["error.transfer.bundle"]
+source = "3573ac4baa20047d"
+text = '''ライブラリにあるワールドのファイルに{name}がもうないため、移せません。'''
+
+["error.transfer.no_mod"]
+source = "f0d89be22465b46d"
+text = '''このファイルにはMODが入っていません。ワールドファイルとして開いてください。'''
+
+["error.transfer.no_record"]
+source = "d8408db42b98236e"
+text = '''このワールドは記録が残されるようになる前に作られたため、そのゲームを検証できません。'''
+
+["error.transfer.have"]
+source = "3e1d33d97a5fc3cf"
+text = '''このワールドはすでにライブラリにあります。このコピーを取り込むには、先に削除してください。'''
+
+["error.transfer.foreign"]
+source = "b48b43adec0095d1"
+text = '''ファイル内のMODはこのジェネレーターで作られたものではありません。'''
+
+["error.transfer.other_game"]
+source = "d14c4889ee041877"
+text = '''このゲームはワールドを作ったゲームとは違います。地図のファイルが異なります。ここでコードから作り直してください。'''
+
+["error.transfer.no_listing"]
+source = "afc60f3999f87cc1"
+text = '''ファイルにゲームのファイル一覧がないため、このゲームと照合できません。'''
+
+["error.transfer.changed"]
+source = "8dc1de34d02263d7"
+text = '''ワールドの作成に使ったゲームのファイルのうち{count}件が変わっています（例: {names}）。ここでコードから作り直してください。'''
+
+["error.mask.unreadable"]
+source = "d9f075c4781b2514"
+text = '''画像を読み込めません（{error}）。'''
+
+["error.mask.size"]
+source = "80dca932e860d07b"
+text = '''画像は{width} × {height}です。縦横それぞれ{side}ピクセル以上、全体で{millions}百万ピクセル以下にしてください。'''
+
+["error.mask.share"]
+source = "bf2f8fd0a968f2bc"
+text = '''画像の陸地は{share} %です。ワールドには{low} %から{high} %が必要です。白が陸、黒が海です。'''
+
+["error.mask.file"]
+source = "f05a267ab9f03342"
+text = '''{name}を読み込めません（{error}）。'''
+
+["error.mask.aspect"]
+source = "ec2c2a21a1b9bad6"
+text = '''画像の幅は高さの{given}倍ですが、新世界の範囲は{wanted}倍です。その比率で描いてください（例: {width} × {height}ピクセル）。'''
+
+["error.candidates.count"]
+source = "81923dac5a6dc04a"
+text = '''スケッチは1〜{count}個の間で選んでください。'''
+
+["error.candidates.drawn"]
+source = "75f72c48760efe1b"
+text = '''スケッチには生成された陸地が必要です。先に生成された陸地に戻してください。'''

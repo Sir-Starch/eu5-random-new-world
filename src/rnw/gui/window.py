@@ -53,15 +53,17 @@ from PySide6.QtWidgets import (
 )
 
 from rnw import __version__, parallel, worldfile, worldname
-from rnw.app import controls, diagnostics
+from rnw import atlas as atlas_module
+from rnw.app import controls, diagnostics, discovery
 from rnw.app import quick as quick_settings
 from rnw.app.library import Placement
 from rnw.gui.candidates import CandidatesDialog
 from rnw.gui.controller import NEW, STRAY, Controller, Phase, Task
 from rnw.gui.maps import CompareDialog, MapsPanel
 from rnw.gui.preview import PreviewView
-from rnw.gui.text import TITLE, text
+from rnw.gui.text import LANGUAGE_NAMES, TITLE, grouped, text
 from rnw.gui.theme import install as install_theme
+from rnw.languages import SOURCE
 from rnw.settings import WORLD_TYPES
 
 if TYPE_CHECKING:
@@ -87,6 +89,14 @@ class _Bridge(QObject):
     changed: Signal = Signal()
 
 
+def _problem_label() -> QLabel:
+    label = QLabel()
+    label.setStyleSheet(RED)
+    label.setWordWrap(True)
+    label.setVisible(False)
+    return label
+
+
 class SettingsDialog(QDialog):
     """The game, the profile and the choice of showing the New World in the mod list."""
 
@@ -110,18 +120,18 @@ class SettingsDialog(QDialog):
                 max(0, self.profile_choice.findData(controller.profile))
             )
         game_browse, profile_browse = QPushButton(text("browse")), QPushButton(text("browse"))
-        self.problem: QLabel = QLabel()
-        self.problem.setStyleSheet(RED)
-        self.problem.setWordWrap(True)
-        self.problem.setVisible(False)
+        self.problem: QLabel = _problem_label()
         grid.addWidget(QLabel(text("game")), 0, 0)
         grid.addWidget(self.game_choice, 0, 1)
         grid.addWidget(game_browse, 0, 2)
         grid.addWidget(QLabel(text("profile")), 1, 0)
         grid.addWidget(self.profile_choice, 1, 1)
         grid.addWidget(profile_browse, 1, 2)
+        grid.addWidget(QLabel(text("language")), 2, 0)
+        grid.addWidget(self._language_choice(), 2, 1)
         grid.setColumnStretch(1, 1)
         layout.addLayout(grid)
+        layout.addWidget(self.language_note)
         layout.addWidget(self.problem)
         for choice in (self.game_choice, self.profile_choice):
             choice.setSizeAdjustPolicy(
@@ -146,6 +156,29 @@ class SettingsDialog(QDialog):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(16)
         self.resize(760, self.sizeHint().height())
+
+    def _language_choice(self) -> QComboBox:
+        """The window's language: as the game's, or one of the official languages by name."""
+        controller = self.window_.controller
+        choice = QComboBox()
+        game = discovery.game_language(controller.game) if controller.game is not None else None
+        automatic = LANGUAGE_NAMES.get(game or "", LANGUAGE_NAMES[SOURCE])
+        choice.addItem(text("language.game", language=automatic), "")
+        for key, name in LANGUAGE_NAMES.items():
+            choice.addItem(name, key)
+        choice.setCurrentIndex(max(0, choice.findData(controller.preferences.language)))
+        self.language_note: QLabel = QLabel()
+        self.language_note.setWordWrap(True)
+        self.language_note.setVisible(False)
+
+        def picked(index: int) -> None:
+            value = cast("object", choice.itemData(index))
+            controller.set_language(value if isinstance(value, str) else "")
+            self.language_note.setText(text("language.restart"))
+            self.language_note.setVisible(True)
+
+        _ = choice.activated.connect(picked)
+        return choice
 
     def _pick_game(self, index: int) -> None:
         controller = self.window_.controller
@@ -1348,7 +1381,7 @@ class MainWindow(QMainWindow):
         problem = controller.problem()
         try:
             estimate = controller.estimated_locations()
-            self.estimate.setText(text("estimate", count=f"{estimate:,}"))
+            self.estimate.setText(text("estimate", count=grouped(estimate)))
             self.estimate.setStyleSheet(RED if estimate > controls.LOCATION_BUDGET else MUTED)
         except ValueError:
             self.estimate.setText("")
@@ -1430,7 +1463,7 @@ class MainWindow(QMainWindow):
             case Phase.IDLE:
                 return text("idle")
             case Phase.RUNNING:
-                return text("running", stages=", ".join(controller.running) or "…")
+                return text("running", stages=controller.running_text() or "…")
             case Phase.CANCELLING:
                 return text("cancelling")
             case Phase.FINISHED:
@@ -1440,6 +1473,16 @@ class MainWindow(QMainWindow):
                 return text("failed", message=controller.message, report_hint=text("report_hint"))
             case Phase.CANCELLED:
                 return text("cancelled")
+
+    def _show_maps(self, world: World) -> None:
+        controller = self.controller
+        found = controller.atlas(world)
+        self.maps.show_world(
+            found,
+            revealed=controller.revealed(world),
+            identity=sum(world.id.encode()),
+            words=controller.words(found) if found is not None else atlas_module.ENGLISH,
+        )
 
     def _refresh_world(self) -> None:
         controller = self.controller
@@ -1461,11 +1504,7 @@ class MainWindow(QMainWindow):
             f"{state} {text('zoom_hint')}" if shown else text("preview_missing")
         )
         placement = controller.placement(world)
-        self.maps.show_world(
-            controller.atlas(world),
-            revealed=controller.revealed(world),
-            identity=sum(world.id.encode()),
-        )
+        self._show_maps(world)
         self.maps.set_summary(controller.summary(world))
         game_build = controller.game.build_id if controller.game is not None else ""
         changed = controller.changed_count(world)
@@ -1544,7 +1583,7 @@ class MainWindow(QMainWindow):
             return
         if controller.busy:
             label = text(f"task.{controller.task.value}") if controller.task else ""
-            running = ", ".join(controller.running)
+            running = controller.running_text()
             self.task_line.setText(f"{label} {running}".strip())
             self.task_bar.setVisible(controller.task in {Task.ADD, Task.CHECK, Task.REROLL})
             self.task_bar.setValue(round(controller.fraction * PROGRESS_STEPS))

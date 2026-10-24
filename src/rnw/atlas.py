@@ -30,13 +30,17 @@ import numpy as np
 from PIL import Image
 
 from rnw.png import COLOR_RGB, encode_png
+from rnw.wording import Name, Phrase, english
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from numpy.typing import NDArray
 
-FORMAT: Final[int] = 1
+# Format 2 keeps names as phrases (``wording``), written in the viewer's language; format 1 kept
+# them as English text and is still read.
+FORMAT: Final[int] = 2
+READS: Final[frozenset[int]] = frozenset({1, 2})
 JSON_FILE: Final[str] = "atlas.json"
 LABELS_FILE: Final[str] = "atlas_labels.png"
 LAYERS: Final[tuple[str, ...]] = (
@@ -102,7 +106,7 @@ class Country:
     """A generated country as the atlas knows it."""
 
     tag: str
-    name: str
+    name: Name
     kind: str
     color: tuple[int, int, int]
     capital: int
@@ -116,10 +120,10 @@ class Facts:
     """What the atlas says of one location."""
 
     key: str
-    name: str
+    name: Name
     kind: str
-    area: str
-    region: str
+    area: Name
+    region: Name
     country: Country | None
     culture: str
     religion: str
@@ -148,10 +152,10 @@ class Atlas:
     scale: int
     labels: NDArray[np.int32]
     keys: tuple[str, ...]
-    names: tuple[str, ...]
+    names: tuple[Name, ...]
     kinds: NDArray[np.uint8]
-    areas: tuple[str, ...]
-    regions: tuple[str, ...]
+    areas: tuple[Name, ...]
+    regions: tuple[Name, ...]
     owner: NDArray[np.int32]
     culture: NDArray[np.int32]
     religion: NDArray[np.int32]
@@ -185,6 +189,38 @@ class Atlas:
 def pretty(key: str) -> str:
     """A readable name for an identifier: underscores to spaces, capitals to words."""
     return key.removeprefix("goods_").replace("_", " ").strip().title()
+
+
+# The atlas's own words in the legends, in English; a viewer gives its own (``Words``).
+LABELS: Final[dict[str, str]] = {
+    "sea": "Sea",
+    "lake": "Lake",
+    "wasteland": "Wasteland",
+    "no_country": "No country",
+    "none": "None",
+    "uninhabited": "Uninhabited",
+    "lowest": "Lowest",
+    "middle": "Middle",
+    "highest": "Highest",
+}
+STEPS: Final[tuple[tuple[int, str], ...]] = ((100, "lowest"), (500, "middle"), (900, "highest"))
+
+
+def _label(key: str) -> str:
+    return LABELS[key]
+
+
+@dataclass(frozen=True, slots=True)
+class Words:
+    """How a viewer writes what the atlas holds: its own legend words, the game's identifiers
+    (cultures, religions, materials) and the names of the world, which are phrases."""
+
+    label: Callable[[str], str] = _label
+    key: Callable[[str], str] = pretty
+    name: Callable[[Name], str] = english
+
+
+ENGLISH: Final[Words] = Words()
 
 
 def colour_of(key: str) -> tuple[int, int, int]:
@@ -228,7 +264,7 @@ def ramp(share: int) -> tuple[int, int, int]:
 
 
 def _table(
-    atlas: Atlas, layer: str
+    atlas: Atlas, layer: str, words: Words
 ) -> tuple[NDArray[np.uint8], list[tuple[str, tuple[int, int, int], int]]]:
     """Colour of every location for ``layer`` and the legend: label, colour, locations."""
     count = atlas.cells
@@ -243,14 +279,15 @@ def _table(
             old = legend.get(label, (colour, 0))
             legend[label] = (colour, old[1] + total)
 
-    paint(kinds == KINDS.index("sea"), SEA, "Sea")
-    paint(kinds == KINDS.index("lake"), LAKE, "Lake")
-    paint(kinds == KINDS.index("wasteland"), WASTELAND, "Wasteland")
+    paint(kinds == KINDS.index("sea"), SEA, words.label("sea"))
+    paint(kinds == KINDS.index("lake"), LAKE, words.label("lake"))
+    paint(kinds == KINDS.index("wasteland"), WASTELAND, words.label("wasteland"))
     land = kinds == KINDS.index("land")
     if layer == "countries":
-        paint(land & (atlas.owner < 0), UNCLAIMED, "No country")
+        paint(land & (atlas.owner < 0), UNCLAIMED, words.label("no_country"))
         for number, country in enumerate(atlas.countries):
-            paint(land & (atlas.owner == number), country.color, country.name or country.tag)
+            name = words.name(country.name) if country.name else country.tag
+            paint(land & (atlas.owner == number), country.color, name)
     elif layer in {"cultures", "religions", "resources", "land"}:
         field = {
             "cultures": "culture",
@@ -259,12 +296,12 @@ def _table(
             "land": "vegetation",
         }[layer]
         values = cast("NDArray[np.int32]", getattr(atlas, field))
-        paint(land & (values < 0), UNCLAIMED, "None")
+        paint(land & (values < 0), UNCLAIMED, words.label("none"))
         for index, key in enumerate(atlas.vocabulary[field]):
             colour = (250, 200, 40) if layer == "resources" and key in PRECIOUS else colour_of(key)
             if layer == "land":
                 colour = VEGETATION_COLOURS.get(key, colour)
-            paint(land & (values == index), colour, pretty(key))
+            paint(land & (values == index), colour, words.key(key))
         if layer == "land":
             _tint(colours, atlas, land)
             _shade(colours, atlas, land)
@@ -272,9 +309,9 @@ def _table(
         top = int(atlas.complexity[land].max()) if land.any() else 1
         for cell in np.flatnonzero(land):
             colours[cell] = ramp(int(atlas.complexity[cell]) * 1000 // max(1, top))
-        paint(land & (atlas.complexity <= 0), UNCLAIMED, "Uninhabited")
-        for step, label in ((100, "Lowest"), (500, "Middle"), (900, "Highest")):
-            legend[label] = (ramp(step), 0)
+        paint(land & (atlas.complexity <= 0), UNCLAIMED, words.label("uninhabited"))
+        for step, label in STEPS:
+            legend[words.label(label)] = (ramp(step), 0)
     return colours, [(label, colour, total) for label, (colour, total) in legend.items()]
 
 
@@ -316,11 +353,14 @@ def totals(atlas: Atlas) -> dict[str, int]:
     }
 
 
-def legend(atlas: Atlas, layer: str) -> list[tuple[str, tuple[int, int, int], int]]:
+def legend(
+    atlas: Atlas, layer: str, words: Words = ENGLISH
+) -> list[tuple[str, tuple[int, int, int], int]]:
     """The legend of a layer: what each colour is and how many locations have it, largest first."""
     _check_layer(layer)
-    _, entries = _table(atlas, layer)
-    fixed = [entry for entry in entries if entry[0] in {"Lowest", "Middle", "Highest"}]
+    _, entries = _table(atlas, layer, words)
+    steps = {words.label(label) for _, label in STEPS}
+    fixed = [entry for entry in entries if entry[0] in steps]
     rest = sorted((entry for entry in entries if entry not in fixed), key=lambda e: (-e[2], e[0]))
     return [*rest, *fixed]
 
@@ -349,7 +389,7 @@ def render(
     are marked in the countries layer. ``highlight`` locations are outlined, for a search.
     """
     _check_layer(layer)
-    colours, _ = _table(atlas, layer)
+    colours, _ = _table(atlas, layer, ENGLISH)
     labels = atlas.labels
     background = np.array(OUTSIDE, dtype=np.uint8)
     table = np.concatenate([background[np.newaxis], colours])
@@ -422,14 +462,15 @@ def describe(atlas: Atlas, cell: int) -> Facts | None:
     )
 
 
-def find(atlas: Atlas, query: str, *, limit: int = 40) -> list[Match]:
-    """Countries, cultures, religions, materials and places whose name contains ``query``."""
+def find(atlas: Atlas, query: str, *, limit: int = 40, words: Words = ENGLISH) -> list[Match]:
+    """Countries, cultures, religions, materials and places whose name contains ``query``, as
+    ``words`` write them (an identifier or a tag is found as well)."""
     needle = query.strip().casefold()
     if not needle:
         return []
     found: list[Match] = []
     for number, country in enumerate(atlas.countries):
-        label = country.name or country.tag
+        label = words.name(country.name) if country.name else country.tag
         if needle in label.casefold() or needle == country.tag.casefold():
             cells = np.flatnonzero(atlas.owner == number)
             found.append(Match("country", f"{label} ({country.tag})", tuple(int(c) for c in cells)))
@@ -440,12 +481,14 @@ def find(atlas: Atlas, query: str, *, limit: int = 40) -> list[Match]:
     ):
         values = cast("NDArray[np.int32]", getattr(atlas, field))
         for index, key in enumerate(atlas.vocabulary[field]):
-            if needle in pretty(key).casefold() or needle in key.casefold():
+            label = words.key(key)
+            if needle in label.casefold() or needle in key.casefold():
                 cells = np.flatnonzero(values == index)
-                found.append(Match(kind, pretty(key), tuple(int(c) for c in cells)))
+                found.append(Match(kind, label, tuple(int(c) for c in cells)))
     for cell, name in enumerate(atlas.names):
-        if name and needle in name.casefold() and atlas.kinds[cell] != KINDS.index("sea"):
-            found.append(Match("place", name, (cell,)))
+        written = words.name(name) if name else ""
+        if written and needle in written.casefold() and atlas.kinds[cell] != KINDS.index("sea"):
+            found.append(Match("place", written, (cell,)))
     return found[:limit]
 
 
@@ -464,7 +507,7 @@ def to_files(atlas: Atlas) -> tuple[bytes, bytes]:
         "countries": [
             {
                 "tag": c.tag,
-                "name": c.name,
+                "name": _write_name(c.name),
                 "kind": c.kind,
                 "color": list(c.color),
                 "capital": c.capital,
@@ -476,10 +519,10 @@ def to_files(atlas: Atlas) -> tuple[bytes, bytes]:
         ],
         "locations": {
             "key": list(atlas.keys),
-            "name": list(atlas.names),
+            "name": [_write_name(name) for name in atlas.names],
             "kind": atlas.kinds.tolist(),
-            "area": list(atlas.areas),
-            "region": list(atlas.regions),
+            "area": [_write_name(name) for name in atlas.areas],
+            "region": [_write_name(name) for name in atlas.regions],
             "owner": atlas.owner.tolist(),
             "culture": atlas.culture.tolist(),
             "religion": atlas.religion.tolist(),
@@ -510,7 +553,7 @@ def from_files(document: bytes, labels_png: bytes) -> Atlas:
 
 def _parse(document: bytes, labels_png: bytes) -> Atlas:
     data = cast("dict[str, object]", json.loads(document.decode("utf-8")))
-    if data.get("format") != FORMAT:
+    if data.get("format") not in READS:
         message = f"The atlas has format {data.get('format')!r}; this generator reads {FORMAT}"
         raise AtlasError(message)
     with Image.open(io.BytesIO(labels_png)) as image:
@@ -536,10 +579,10 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         scale=_int(data["scale"]),
         labels=labels,
         keys=tuple(str(v) for v in columns["key"]),
-        names=tuple(str(v) for v in columns["name"]),
+        names=tuple(_read_name(v) for v in columns["name"]),
         kinds=np.array(columns["kind"], dtype=np.uint8),
-        areas=tuple(str(v) for v in columns["area"]),
-        regions=tuple(str(v) for v in columns["region"]),
+        areas=tuple(_read_name(v) for v in columns["area"]),
+        regions=tuple(_read_name(v) for v in columns["region"]),
         owner=_int32(columns["owner"]),
         culture=_int32(columns["culture"]),
         religion=_int32(columns["religion"]),
@@ -554,6 +597,21 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         countries=countries,
         vocabulary=vocabulary,
     )
+
+
+def _write_name(name: Name) -> object:
+    """A name in the atlas: a proper word as text, a phrase as [term, word, compass points...]."""
+    return name if isinstance(name, str) else [name.term, name.word, *name.sectors]
+
+
+def _read_name(value: object) -> Name:
+    if isinstance(value, str):
+        return value
+    parts = [str(part) for part in cast("list[object]", value)] if isinstance(value, list) else []
+    if len(parts) < 2:  # noqa: PLR2004 - a phrase is a term and a word, then its compass points
+        message = f"Expected a name, found {value!r}"
+        raise TypeError(message)
+    return Phrase(parts[0], parts[1], tuple(parts[2:]))
 
 
 def _int(value: object) -> int:
@@ -575,7 +633,7 @@ def _country(item: dict[str, object]) -> Country:
     color = cast("list[object]", item["color"])
     return Country(
         tag=str(item["tag"]),
-        name=str(item["name"]),
+        name=_read_name(item["name"]),
         kind=str(item["kind"]),
         color=(_int(color[0]), _int(color[1]), _int(color[2])),
         capital=_int(item["capital"]),

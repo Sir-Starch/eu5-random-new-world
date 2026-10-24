@@ -29,7 +29,8 @@ def test_stages_report_start_end_running_set_and_weighted_share() -> None:
         ("write files", False),
         ("write files", True),
     ]
-    assert updates[0].running == (STAGES["generate world"].label,)
+    assert updates[0].running == ("generate world",)
+    assert updates[0].label == STAGES["generate world"].label
     assert updates[-1].running == ()
     expected = (STAGES["generate world"].weight + STAGES["write files"].weight) / TOTAL_WEIGHT
     assert updates[-1].fraction == pytest.approx(expected)

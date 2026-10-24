@@ -1,0 +1,1763 @@
+["undo_roll"]
+source = "d3ba4753973fc1f9"
+text = '''다시 굴리기 취소'''
+
+["task.undo"]
+source = "3ca5c54e7c549b10"
+text = '''이전 버전으로 되돌리는 중'''
+
+["copy_tag"]
+source = "6d38d2a846422e7f"
+text = '''태그 복사'''
+
+["copy_picture"]
+source = "05decf94ea187240"
+text = '''그림 복사'''
+
+["destination.library"]
+source = "09a9c9fa074db7d9"
+text = '''모드를 라이브러리에 보관'''
+
+["destination.mod"]
+source = "0ad3383f1dce480d"
+text = '''모드를 폴더에 복사'''
+
+["destination.world"]
+source = "172c07cba6c2dd6c"
+text = '''월드 파일만'''
+
+["destination_choose"]
+source = "9772ff884d42d946"
+text = '''저장 위치 선택...'''
+
+["destination_missing"]
+source = "dd64b96d7c6d9026"
+text = '''먼저 이 월드를 저장할 위치를 고르세요.'''
+
+["tab.notes"]
+source = "8a7525b1492fb848"
+text = '''메모'''
+
+["starred"]
+source = "e39b24993c31d7bb"
+text = '''즐겨찾기'''
+
+["user_tag"]
+source = "e1c92163bf9d061c"
+text = '''내 태그 (최대 64자)'''
+
+["notes_hint"]
+source = "6d8ef522499455f3"
+text = '''이 월드에 대한 메모 (최대 16,384자)'''
+
+["save_notes"]
+source = "eb76a6cc99ba6881"
+text = '''메모 저장'''
+
+["notes_saved"]
+source = "04965e23cd9e8fb9"
+text = '''메모를 저장했습니다.'''
+
+["candidates"]
+source = "0e7b026bc70eba63"
+text = '''대륙 고르기...'''
+
+["candidates_hint"]
+source = "2292c2759a5d2df3"
+text = '''월드를 만들기 전에 대륙 스케치 여섯 개를 미리 볼 수 있습니다. 스케치를 보면 그 땅이 드러납니다. 하나를 고르면 그 시드와 설정을 씁니다. 지역이 만들어지면서 최종 해안선이 조금 달라질 수 있습니다.'''
+
+["candidate_item"]
+source = "82a3979eef3cad60"
+text = "{number} · 육지 {land:g}%\n시드 {seed}"
+
+["enqueue"]
+source = "34b25c1b963f3a59"
+text = '''대기열에 추가'''
+
+["run_queue"]
+source = "073afaf0ff8ea437"
+text = '''대기열 실행'''
+
+["clear_queue"]
+source = "fd1d3b4b9147213b"
+text = '''대기열 비우기'''
+
+["queue_empty"]
+source = "dd95d861c51b5f8b"
+text = '''먼저 대기열에 월드를 추가하세요.'''
+
+["queue_count"]
+source = "bc608dfbf45c2100"
+text = '''대기 중: {count}'''
+
+["game"]
+source = "5c412a262086b970"
+text = '''게임'''
+
+["profile"]
+source = "d696a35bdd1883da"
+text = '''프로필'''
+
+["language"]
+source = "a4fe65264ef7dbb3"
+text = '''언어'''
+
+["language.game"]
+source = "3bbba19c86874410"
+text = '''게임과 같게: {language}'''
+
+["language.restart"]
+source = "0a1870181520b1b9"
+text = '''새 언어는 생성기를 다음에 실행할 때부터 적용됩니다.'''
+
+["browse"]
+source = "93c6b664dce6c207"
+text = '''찾아보기…'''
+
+["settings"]
+source = "7a04083baf8daa20"
+text = '''설정…'''
+
+["settings_title"]
+source = "74a883a037bc227f"
+text = '''설정'''
+
+["game_status"]
+source = "660c5d42f3698876"
+text = '''Europa Universalis V · 빌드 {build}'''
+
+["new_tab.world"]
+source = "78ae647dc5544d22"
+text = '''월드'''
+
+["new_tab.advanced"]
+source = "9f088dbebd6c3c70"
+text = '''고급'''
+
+["new_tab.output"]
+source = "afd096dc8e3ce666"
+text = '''저장하고 플레이'''
+
+["new_tab.queued"]
+source = "858dc646bc959251"
+text = '''저장하고 플레이 · 대기열 {count}'''
+
+["world_identity"]
+source = "96fc61ec457ed6f0"
+text = '''시드와 월드 코드'''
+
+["land_tools"]
+source = "244bfdc5f13ec886"
+text = '''땅의 출처와 미리보기'''
+
+["output"]
+source = "1eeb900ab78c39cb"
+text = '''저장 위치'''
+
+["output_hint"]
+source = "fbb6fdcf5f923bd7"
+text = '''모든 월드는 라이브러리에 남습니다. 모드를 지금 EU5에 추가하거나, 나중을 위해 보관하거나, 다른 폴더에 사본을 저장하세요. 월드 파일에는 만드는 법과 지도가 들어 있습니다.'''
+
+["queue_title"]
+source = "a27578fd3a7a3f5e"
+text = '''월드 여러 개 만들기'''
+
+["queue_hint"]
+source = "af8bed5b076227c5"
+text = '''지금 설정을 대기열에 넣은 다음, 다음 월드의 시드나 옵션을 바꾸세요. 다 넣었으면 대기열을 실행하세요.'''
+
+["progress_details"]
+source = "a7d418eaf220511e"
+text = '''단계 자세히 보기'''
+
+["generation_install"]
+source = "ed7ffaf064794ac2"
+text = '''완성된 모드는 EU5 프로필에 추가됩니다.'''
+
+["generation_keep"]
+source = "92b157d42d51b4a1"
+text = '''완성된 월드는 라이브러리에 남습니다.'''
+
+["generation_copy"]
+source = "c59824bd5b1eaa91"
+text = '''완성된 모드는 선택한 폴더에 복사됩니다.'''
+
+["generation_file"]
+source = "35244f6f7d5aa65a"
+text = '''월드 파일은 선택한 위치에 저장됩니다.'''
+
+["visibility"]
+source = "2764b4c1b7b57015"
+text = '''플레이하기 전에'''
+
+["world_visibility_hint"]
+source = "bc9b9de7e31abc1c"
+text = '''이 월드에만 적용됩니다. 다시 만들지 않고 모드 그림과 국가 선택 지도를 갱신합니다. 게임이 변경을 읽으려면 EU5를 다시 시작하세요.'''
+
+["visibility_updated"]
+source = "2fce01cc9fc9abdf"
+text = '''이 월드의 공개 여부를 바꿨습니다. 게임이 변경을 읽으려면 EU5를 다시 시작하세요.'''
+
+["tab.tools"]
+source = "f692ca48462027a8"
+text = '''버전과 파일'''
+
+["world_versions"]
+source = "7ce072f0da5cf56e"
+text = '''버전 만들기'''
+
+["world_share"]
+source = "39a5a934252b2aaa"
+text = '''공유와 내보내기'''
+
+["world_details"]
+source = "29af469824c1ee6b"
+text = '''월드 정보와 검사'''
+
+["close"]
+source = "7d9eb7acb13e2462"
+text = '''닫기'''
+
+["game_line"]
+source = "59a2ce96d6c17c2f"
+text = '''EU5 빌드 {build} · {game}'''
+
+["game_line_unknown"]
+source = "5d8e792ca5661482"
+text = '''EU5 · {game}'''
+
+["profile_line"]
+source = "0029a3aa08ba73e8"
+text = '''프로필 · {profile}'''
+
+["game_missing"]
+source = "a61a4349f0cb79c8"
+text = '''EU5를 찾지 못했습니다. 월드 파일을 열어 지도를 보는 것은 여전히 가능하지만, 월드를 만들려면 게임 자체의 파일이 필요합니다. 설정을 열어 게임 폴더를 고르세요.'''
+
+["profile_missing"]
+source = "b303732828e02c48"
+text = '''EU5 프로필을 찾지 못했습니다. 게임을 한 번 실행해 프로필을 만들거나, 설정에서 프로필 폴더를 고르세요.'''
+
+["not_a_game"]
+source = "a17bf5986615747f"
+text = '''그 폴더는 EU5 설치 폴더가 아닙니다 (game/in_game/map_data 없음).'''
+
+["not_a_profile"]
+source = "534de3c12b965d56"
+text = '''그 폴더는 없습니다.'''
+
+["show_new_world"]
+source = "18ff780a82fcefac"
+text = '''플레이 전에 신대륙 보여 주기'''
+
+["show_new_world_hint"]
+source = "bc591758b90681d6"
+text = '''끄면 이 월드의 그림과 국가 선택 지도가 미지의 땅으로 가려진 채 남습니다. 나중에 월드 페이지에서 다시 만들지 않고 바꿀 수 있습니다.'''
+
+["about_generator"]
+source = "6ed5499d9096e55f"
+text = '''Random New World는 EU5용 신대륙 지도를 만듭니다. 만든 월드 하나하나가 완결된 모드입니다. 플레이하려면 플레이세트에서 체크하세요. 코드나 월드 파일을 공유할 수 있습니다. 생성기 자체는 켤 필요가 없습니다.'''
+
+["worlds"]
+source = "18f1b0bf915821d8"
+text = '''월드'''
+
+["new_world"]
+source = "3e28180bafaa6823"
+text = '''새 월드'''
+
+["new_world_running"]
+source = "d8ef0468b14744a5"
+text = '''새 월드 · {percent} %'''
+
+["world_line"]
+source = "df1ed7e861e234e5"
+text = '''{when} · {place}'''
+
+["list.in_game"]
+source = "5cd2f5ec45977230"
+text = '''게임에 있음'''
+
+["list.kept"]
+source = "20b0afe7382b5bc7"
+text = '''게임에 없음'''
+
+["list.code_only"]
+source = "31f2d67ab5545388"
+text = '''코드만'''
+
+["stray_name"]
+source = "a4a24ec60180242e"
+text = '''예전 월드'''
+
+["stray_line"]
+source = "3b35f49baee714a7"
+text = '''{folder} · 게임에 있음'''
+
+["type"]
+source = "3bda8904a9b25b31"
+text = '''월드 종류'''
+
+["type.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''초대륙'''
+
+["type.supercontinent.about"]
+source = "33a2ee4977ae11b4"
+text = '''신대륙을 가로지르는 거대한 땅덩어리 하나와 섬 몇 개.'''
+
+["type.continents"]
+source = "6c048f26d3b8b473"
+text = '''대륙'''
+
+["type.continents.about"]
+source = "ed5cc238d29c1abb"
+text = '''아메리카처럼 지협으로 이어지는 경우가 많은 큰 대륙들과 섬들.'''
+
+["type.small_continents"]
+source = "9676e7e8b078ed3c"
+text = '''작은 대륙'''
+
+["type.small_continents.about"]
+source = "368289346c178b67"
+text = '''크기가 비슷한 따로 떨어진 대륙 서너 개.'''
+
+["type.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''군도'''
+
+["type.archipelago.about"]
+source = "e68ebd3c93716386"
+text = '''큰 섬 다섯에서 열하나와 작은 섬 여럿: 배의 세계입니다.'''
+
+["type.islands"]
+source = "6cc98682072010a2"
+text = '''흩어진 섬'''
+
+["type.islands.about"]
+source = "3dea08a0afa912dc"
+text = '''큰 땅덩어리 없이 작은 섬이 가득한 바다.'''
+
+["quick"]
+source = "b22d2b06765851eb"
+text = '''기본'''
+
+["quick_hint"]
+source = "8c832a2fa2f25cec"
+text = '''여기서는 대략적인 균형을 고릅니다. 정확한 값은 고급에서 정할 수 있습니다.'''
+
+["quick.custom"]
+source = "6cdfd271da635d49"
+text = '''사용자 지정'''
+
+["quick.land"]
+source = "b6baff9358ddd8f7"
+text = '''육지'''
+
+["quick.land.about"]
+source = "bd552acf65a994a8"
+text = '''신대륙에서 육지가 차지하는 비율입니다. 육지가 많을수록 지역이 조금 커져, 월드가 EU5가 감당하는 지역 32,000개 안에 머뭅니다.'''
+
+["quick.land.little"]
+source = "117361268a0facb6"
+text = '''적음'''
+
+["quick.land.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''보통'''
+
+["quick.land.much"]
+source = "81cb32c88ae337b4"
+text = '''많음'''
+
+["quick.peoples"]
+source = "1e0a8378b7a75bd9"
+text = '''원주민'''
+
+["quick.peoples.about"]
+source = "6c1001fb2140ade3"
+text = '''신대륙에 사는 민족의 수와 문화 중심지의 수.'''
+
+["quick.peoples.few"]
+source = "9a4303881564a221"
+text = '''적음'''
+
+["quick.peoples.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''보통'''
+
+["quick.peoples.many"]
+source = "98801fd897f5f12b"
+text = '''많음'''
+
+["quick.states"]
+source = "04b3dcb87be3e083"
+text = '''원주민 국가'''
+
+["quick.states.about"]
+source = "019db7cb7cc9699f"
+text = '''사람이 사는 땅 가운데 부족이 아닌 국가가 차지한 비율.'''
+
+["quick.states.few"]
+source = "9a4303881564a221"
+text = '''적음'''
+
+["quick.states.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''보통'''
+
+["quick.states.many"]
+source = "98801fd897f5f12b"
+text = '''많음'''
+
+["quick.empires"]
+source = "492aaf62e6d759a9"
+text = '''비범한 민족'''
+
+["quick.empires.about"]
+source = "7d5f92b53bffae0b"
+text = '''문화 중심지마다 비범한 원주민 사회가 일어날 확률입니다. EU4 무작위 신대륙의 판타지 설정 같은 대제국: 다른 나라보다 몇 배나 크고, 발전한 정부와 구대륙의 기술, 높은 등급과 왕의 길을 갖추었으며, 이웃은 두려워하고 봉신은 미워하는 나라입니다. 또는 바다로 갈라졌지만 동맹을 맺은 해상 교역 공화국들의 연맹, 고지대 부족 연합, 중심지끼리 서로 맞서는 분열된 왕국, 같은 신앙의 경쟁자들에 둘러싸인 신정 국가인 성지.'''
+
+["quick.empires.never"]
+source = "6300ef800bb88429"
+text = '''없음'''
+
+["quick.empires.seldom"]
+source = "fa7a8dc69bbf7e83"
+text = '''드묾'''
+
+["quick.empires.sometimes"]
+source = "5bca0e3da0627549"
+text = '''가끔'''
+
+["quick.empires.often"]
+source = "6f6f6b4ab1bd157a"
+text = '''자주'''
+
+["quick.wealth"]
+source = "41942c9793d8f0ae"
+text = '''금과 은'''
+
+["quick.wealth.about"]
+source = "95692635f7e43ddf"
+text = '''금, 은, 보석, 진주가 나오는 빈도.'''
+
+["quick.wealth.scarce"]
+source = "4a996fcca93fb323"
+text = '''부족'''
+
+["quick.wealth.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''보통'''
+
+["quick.wealth.rich"]
+source = "dca900394dddb28e"
+text = '''풍부'''
+
+["seed"]
+source = "367ef06b8fbf3aaa"
+text = '''시드'''
+
+["random"]
+source = "67bc484430fe87ba"
+text = '''무작위'''
+
+["code"]
+source = "8673890241aa4925"
+text = '''월드 코드'''
+
+["copy"]
+source = "e21f935f11d7e966"
+text = '''복사'''
+
+["paste"]
+source = "f3380f7b44bd70af"
+text = '''붙여넣기'''
+
+["code_hint"]
+source = "f72a2cc345363493"
+text = '''월드 코드를 붙여 넣으면 같은 계열의 생성기가 만든 똑같은 월드를 얻습니다.'''
+
+["other_version"]
+source = "cd4edd423d1119be"
+text = '''이 코드는 생성기 {made}에서 만들어졌습니다. 이것은 {current}이며, 이 코드로 다른 월드를 만듭니다. 원래 월드는 생성기 {made}에서 만들 수 있습니다.'''
+
+["other_changes"]
+source = "cb6ba02bc1591efa"
+text = '''이 코드는 창에 보이지 않는 설정도 바꿉니다. 그 설정은 유지됩니다.'''
+
+["needs_land_image"]
+source = "481f1651885f3db0"
+text = '''이 월드의 땅은 그림 위에 그려져 있습니다. '그림에서 땅 가져오기'로 그림을 고르세요.'''
+
+["land_image"]
+source = "4b6ea32b544af5c3"
+text = '''그림에서 땅 가져오기…'''
+
+["land_image_tip"]
+source = "8169f244febce3d5"
+text = '''직접 그렸거나 다른 곳에서 만든 땅 위에 월드를 짓습니다. 땅은 흰색, 바다는 검은색으로, 신대륙 영역의 비율에 맞춘 그림을 쓰세요. 나머지는 그 위에 생성됩니다.'''
+
+["land_template"]
+source = "ec4afdef9bceb8d5"
+text = '''견본 저장…'''
+
+["land_template_tip"]
+source = "933d156783ad138e"
+text = '''게임 지도에서 신대륙이 차지할 수 있는 영역의 그림을 저장합니다. 아무 프로그램에서나 그 위에 땅을 흰색으로 칠해 그리세요.'''
+
+["task.template"]
+source = "562fb1abc40a9754"
+text = '''견본을 그리는 중…'''
+
+["land_image_chosen"]
+source = "4d9e51e05f272e57"
+text = '''땅이 그림에 그려져 있습니다 ({id}).'''
+
+["land_image_clear"]
+source = "925ff49784a59104"
+text = '''생성된 땅으로 돌아가기'''
+
+["land_image_title"]
+source = "9fa18dec8f915068"
+text = '''땅 그림 고르기'''
+
+["land_image_files"]
+source = "63c1f6d6c9b93179"
+text = '''그림 (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)'''
+
+["rolled_code"]
+source = "c7a2542a82443e5b"
+text = '''이것은 그 대륙의 한 버전입니다: 다시 만든 부분 - {parts}.'''
+
+["bad_seed"]
+source = "44ef600e2e130e3a"
+text = '''시드는 0부터 18446744073709551615까지의 정수입니다.'''
+
+["customize"]
+source = "c5276e27afba47df"
+text = '''사용자 지정'''
+
+["customize_hint"]
+source = "c8bba9279cdcb41b"
+text = '''여기 있는 값은 무엇이든 플레이할 수 있는 월드를 만듭니다. 기이한 모양도, 부족한 금도 마음대로 고르세요. 범위는 생성기나 게임이 망가지기 직전에서 멈춥니다.'''
+
+["customized"]
+source = "8b46c6074c90a678"
+text = '''월드 종류에서 바뀐 값: {count}'''
+
+["untested"]
+source = "089b71123d238bd4"
+text = '''검증 안 됨'''
+
+["untested_notice"]
+source = "8471a4d9a051d766"
+text = '''일부 값이 검증된 범위를 벗어났습니다.'''
+
+["reset"]
+source = "daee7606b339f3c3"
+text = '''초기화'''
+
+["reset_all"]
+source = "ca6a476ace72d566"
+text = '''모두 월드 종류로 되돌리기'''
+
+["group.land"]
+source = "e2c1842113819854"
+text = '''땅과 바다'''
+
+["group.map"]
+source = "be176b0015c424b7"
+text = '''지도'''
+
+["group.peoples"]
+source = "6dba535c0de36030"
+text = '''민족'''
+
+["control.new_world.land_permille"]
+source = "b6baff9358ddd8f7"
+text = '''육지'''
+
+["control.new_world.land_permille.about"]
+source = "e0a693457850e1a8"
+text = '''신대륙에서 육지가 차지하는 비율.'''
+
+["control.new_world.feature_px"]
+source = "cd947acb27155143"
+text = '''땅덩어리 크기'''
+
+["control.new_world.feature_px.about"]
+source = "3002a5e7a5190fb3"
+text = '''크게: 큰 땅덩어리 몇 개. 작게: 섬 여러 개.'''
+
+["control.new_world.min_island_px"]
+source = "106d0e95fe3fe013"
+text = '''가장 작은 섬'''
+
+["control.new_world.min_island_px.about"]
+source = "ea723d77a203225f"
+text = '''이보다 작은 섬은 가라앉습니다.'''
+
+["control.new_world.persistence_permille"]
+source = "86bba0d82da6f0d5"
+text = '''들쭉날쭉한 해안'''
+
+["control.new_world.persistence_permille.about"]
+source = "de94bac1d3657790"
+text = '''높을수록 해안이 더 들쭉날쭉하고 작은 섬이 많아집니다.'''
+
+["control.new_world.octaves"]
+source = "f60e7523e64525bf"
+text = '''해안 세부'''
+
+["control.new_world.octaves.about"]
+source = "09cde1b5a935f8c7"
+text = '''해안선 세부의 층 수.'''
+
+["control.new_world.max_lake_px"]
+source = "3e9700a12bd157d6"
+text = '''가장 큰 호수'''
+
+["control.new_world.max_lake_px.about"]
+source = "da8233bcf7ff8411"
+text = '''이보다 큰 닫힌 물은 바다로 남습니다.'''
+
+["control.new_world.wasteland_permille"]
+source = "4b415ab1819fb1f6"
+text = '''황무지'''
+
+["control.new_world.wasteland_permille.about"]
+source = "7f15f21996df4288"
+text = '''아무도 정착할 수 없는 땅의 비율.'''
+
+["control.new_world.precious_permille"]
+source = "1c32df89f67a4e86"
+text = '''금, 은, 보석'''
+
+["control.new_world.precious_permille.about"]
+source = "7d06204c56e8fbbe"
+text = '''원래 신대륙과 비교해 금, 은, 보석, 진주가 나오는 빈도.'''
+
+["control.new_world.location_px"]
+source = "f9e8850d8a95bc43"
+text = '''지역 크기'''
+
+["control.new_world.location_px.about"]
+source = "748f1d4ff3cd8629"
+text = '''작을수록 지역이 많아집니다. EU5는 모두 합쳐 약 32,000개 지역을 감당하며, 그보다 많은 월드는 생성기가 거부합니다.'''
+
+["control.new_world.sea_zone_px"]
+source = "cce5eac2b6b2bfac"
+text = '''해역 크기'''
+
+["control.new_world.sea_zone_px.about"]
+source = "6b2ccfa728d8af25"
+text = '''작을수록 해역이 많아집니다.'''
+
+["control.new_world.province_size"]
+source = "02583edafee78ebf"
+text = '''주당 지역 수'''
+
+["control.new_world.province_size.about"]
+source = "8d7d49eb6f791144"
+text = '''주 하나를 이루는 지역의 수.'''
+
+["control.natives.population_permille"]
+source = "5b828861aec15d60"
+text = '''인구'''
+
+["control.natives.population_permille.about"]
+source = "cdc165c3d5206790"
+text = '''원래 신대륙의 인구와 비교한 원주민 인구.'''
+
+["control.natives.state_share_permille"]
+source = "827b094c2b486457"
+text = '''국가의 땅'''
+
+["control.natives.state_share_permille.about"]
+source = "b923d647bb81644f"
+text = '''사람이 사는 땅 가운데 원주민 국가가 차지한 비율 (원래 게임: 11 %).'''
+
+["control.natives.state_spread_permille"]
+source = "8f96ec1c6d41080e"
+text = '''외딴 국가'''
+
+["control.natives.state_spread_permille.about"]
+source = "a5e368305d5e52f0"
+text = '''국가의 땅 가운데 큰 중심지에서 떨어진 작은 국가 무리에 속한 비율 (원래 게임 1337년: 약 15 %).'''
+
+["control.natives.organized_permille"]
+source = "f5701b4e75bb0076"
+text = '''조직된 민족'''
+
+["control.natives.organized_permille.about"]
+source = "6321734327f6764c"
+text = '''부족으로 조직된 문화의 비율.'''
+
+["control.natives.hearths_per_10k"]
+source = "fd978882c9d4343d"
+text = '''문화의 발상지'''
+
+["control.natives.hearths_per_10k.about"]
+source = "071bc7006ab66c63"
+text = '''지역 1만 개당 오래된 문화 중심지 수. 국가는 그 주위에서 자라납니다.'''
+
+["control.natives.culture_locations"]
+source = "22cd15ccfd172dca"
+text = '''문화 크기'''
+
+["control.natives.culture_locations.about"]
+source = "c66e7ad7d8982807"
+text = '''문화 하나의 평균 지역 수.'''
+
+["control.natives.religion_locations"]
+source = "6b57337037e9608e"
+text = '''종교 크기'''
+
+["control.natives.religion_locations.about"]
+source = "2ab84225cb22d337"
+text = '''종교 하나의 평균 지역 수.'''
+
+["control.natives.tribe_locations"]
+source = "230525cb0038444c"
+text = '''부족 크기'''
+
+["control.natives.tribe_locations.about"]
+source = "67fc7774a8ba3e94"
+text = '''부족 하나의 평균 지역 수.'''
+
+["control.natives.empire_permille"]
+source = "492aaf62e6d759a9"
+text = '''비범한 민족'''
+
+["control.natives.empire_permille.about"]
+source = "3a67bce42d61dc85"
+text = '''문화의 발상지마다 그 주위에 비범한 사회가 일어날 확률: 대제국 (다른 나라보다 몇 배나 크고, 발전한 정부와 구대륙의 기술, 높은 등급과 왕의 길을 갖추었으며, 이웃은 두려워하고 봉신은 미워하는 나라), 해상 교역 공화국들의 연맹, 고지대 부족 연합, 서로 맞서는 중심지로 이루어진 분열된 왕국, 또는 같은 신앙의 경쟁자들에 둘러싸인 성지.'''
+
+["control.natives.state_locations"]
+source = "f02a5b0258f32933"
+text = '''국가 크기'''
+
+["control.natives.state_locations.about"]
+source = "55dbb684b36e32f9"
+text = '''원주민 국가 하나의 평균 지역 수.'''
+
+["unit.percent"]
+source = "e97d7e5f669ea3fa"
+text = ''' %'''
+
+["unit.times"]
+source = "4d4655d116f71fcc"
+text = ''' ×'''
+
+["unit.px"]
+source = "bc913fd04325705c"
+text = ''' px'''
+
+["unit."]
+source = "e3b0c44298fc1c14"
+text = ''''''
+
+["install"]
+source = "6f9a79fcb2631bc9"
+text = '''완성되면 게임에 추가'''
+
+["generate"]
+source = "49e49bb4401e67bd"
+text = '''만들기'''
+
+["cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''취소'''
+
+["cancelling"]
+source = "91b104db05da1b2d"
+text = '''취소하는 중…'''
+
+["progress"]
+source = "4664827f8e890192"
+text = '''진행 상황'''
+
+["idle"]
+source = "e20846d20bcd60f0"
+text = '''준비됨.'''
+
+["running"]
+source = "b87aac63638e00ec"
+text = '''작업 중: {stages}'''
+
+["finished"]
+source = "c15031f5b768b892"
+text = '''{seconds}초 만에 끝났습니다.'''
+
+["failed"]
+source = "b050917e5e3b9da2"
+text = "실패했습니다: {message}\n\n{report_hint}"
+
+["report_hint"]
+source = "971e4fa23733b587"
+text = '''알려 주시려면 설정을 열고 '진단 정보 저장'을 누르세요.'''
+
+["error_world_file"]
+source = "626c100184b9a4cf"
+text = '''이 파일은 쓸 수 없습니다. 손상되었거나 월드 파일이 아닙니다. ({detail})'''
+
+["error_settings"]
+source = "f1edf544f93508bb"
+text = '''이 설정은 쓸 수 없습니다. ({detail})'''
+
+["cancelled"]
+source = "1e1e9d54a0a12f87"
+text = '''취소했습니다. 게임에는 아무것도 바뀌지 않았습니다.'''
+
+["ready_no_game"]
+source = "fbbc35b197ae01d4"
+text = '''먼저 설정에서 게임 폴더를 고르세요.'''
+
+["ready_no_profile"]
+source = "5410df6eb3b98906"
+text = '''설정에서 프로필을 고르거나, 게임에 추가하기를 끄세요.'''
+
+["ready_busy"]
+source = "3d09fa493c04b1f7"
+text = '''생성기가 작업 중입니다.'''
+
+["too_many_locations"]
+source = "b4a78edf445b4075"
+text = '''이 월드는 지역이 약 {count}개가 됩니다. EU5는 약 32,000개를 감당하며, 생성기는 {budget}개 미만으로 유지합니다. 지역이나 해역 크기를 키우거나 육지를 줄이세요.'''
+
+["outside_range"]
+source = "2ed39ef60bd66af6"
+text = '''이 코드는 생성기가 허용하는 범위를 넘는 값을 설정합니다: {names}.'''
+
+["estimate"]
+source = "4ab7301404b8205d"
+text = '''약 {count}개 지역 (EU5는 약 32,000개를 감당합니다).'''
+
+["name_hint"]
+source = "453d4a9fcef62708"
+text = '''이 월드의 이름 (최대 {limit}자)'''
+
+["retitle_later"]
+source = "4bfbafc4c2ab883b"
+text = '''이름을 저장했습니다. 지금은 게임이 이 월드의 파일을 쓰고 있으므로, 월드를 다시 추가하면 모드 목록에 이름이 나타납니다.'''
+
+["preview_hidden"]
+source = "04b86c1fa26bdb53"
+text = '''신대륙이 미지의 땅으로 가려져 있습니다.'''
+
+["preview_shown"]
+source = "de7b43db7ffe45e6"
+text = '''신대륙이 보입니다.'''
+
+["preview_missing"]
+source = "c21d71a0de202b2f"
+text = '''이 월드에는 그림이 없습니다.'''
+
+["zoom_hint"]
+source = "fe797f35f2c60a7c"
+text = '''휠로 확대·축소, 끌어서 이동, 두 번 클릭으로 맞춤.'''
+
+["detail.code"]
+source = "8673890241aa4925"
+text = '''월드 코드'''
+
+["detail.type"]
+source = "3bda8904a9b25b31"
+text = '''월드 종류'''
+
+["detail.seed"]
+source = "367ef06b8fbf3aaa"
+text = '''시드'''
+
+["detail.custom"]
+source = "4229eea49bd9ea3a"
+text = '''사용자 지정 설정'''
+
+["detail.made"]
+source = "45a5300c04621100"
+text = '''만든 때'''
+
+["detail.build"]
+source = "2b24426392ccb3cc"
+text = '''게임 빌드'''
+
+["detail.generator"]
+source = "1ade60abe93f5cfc"
+text = '''생성기'''
+
+["detail.place"]
+source = "1daaa38f33cd860e"
+text = '''위치'''
+
+["detail.reproduce"]
+source = "1cd6bb5973fa2be5"
+text = '''재현'''
+
+["repro.none"]
+source = "05901bf63ea95e6e"
+text = '''월드가 만들어진 과정을 기록하기 전에 만들어졌으므로 똑같이 나오지 않을 수 있습니다.'''
+
+["repro.same_algorithm"]
+source = "66763ff6d6860af0"
+text = '''생성기 {release}이(가) 이 생성기와 같은 알고리즘으로 만들었습니다. 게임 파일이 같다면 바이트 단위까지 똑같이 나옵니다. 검사로 확인할 수 있습니다.'''
+
+["repro.identical"]
+source = "214b6041efb8bb29"
+text = '''검사 완료: 다시 만든 결과 파일 {count}개가 모두 같습니다.'''
+
+["repro.differs"]
+source = "7a13d7a38d54b305"
+text = '''검사 완료: 다시 만든 결과 파일 {count}개가 다르며, 첫 번째는 {first}입니다.'''
+
+["repro.other_algorithm"]
+source = "eae91d973c5bf75b"
+text = '''생성기 {release}이(가) 이것과 다른 알고리즘으로 만들었으므로, 같은 코드라도 여기서는 다른 월드가 나옵니다. 원래 월드는 생성기 {release}에서 만들 수 있습니다.'''
+
+["repro.other_inputs"]
+source = "314a09e94f5efadf"
+text = '''만든 뒤로 게임 파일이 바뀌었습니다 (차이 {count}개). 같은 코드라도 이 게임에서는 다른 월드가 나옵니다. 지금 모습 그대로 두려면 이 월드의 모드를 보관하세요.'''
+
+["repro.newer_format"]
+source = "c904c7d67406f708"
+text = '''더 새로운 생성기 ({release})에서 만들어졌으며, 이 생성기는 그 기록을 읽을 수 없습니다.'''
+
+["part.peoples"]
+source = "1c52fde02da2ec5e"
+text = '''새 민족'''
+
+["part.resources"]
+source = "e34cf607cbcec7ff"
+text = '''새 자원'''
+
+["part.peoples.button"]
+source = "32d36ec3dc905625"
+text = '''새 민족'''
+
+["part.resources.button"]
+source = "9f2f4d34b10e5bf7"
+text = '''새 자원'''
+
+["part.peoples.tip"]
+source = "7256de9b80a3a85e"
+text = '''같은 대륙에서 국가, 문화, 종교, 이름을 다시 만듭니다. 땅은 바뀌지 않습니다.'''
+
+["part.resources.tip"]
+source = "415cf8682ce69b67"
+text = '''같은 대륙에서 원자재와 금, 은을 다시 만듭니다. 땅과 민족은 바뀌지 않습니다.'''
+
+["edit_same_land"]
+source = "377b7ea7a3d96c06"
+text = '''같은 땅, 다른 설정'''
+
+["edit_same_land_tip"]
+source = "ccc60e6a8ad5a618"
+text = '''이 월드의 설정을 시드와 함께 열어, 같은 땅에서 민족이나 자원 설정을 바꿉니다.'''
+
+["previous_version"]
+source = "21d886b74bc1abe1"
+text = '''이전 버전'''
+
+["keep_both"]
+source = "6a44d37116dd7c0d"
+text = '''이것도 게임에 남기기'''
+
+["keep_both_tip"]
+source = "bbdca9254f8bb1fa"
+text = '''이것을 체크하지 않으면 새 버전이 게임 속 이 월드를 대신합니다. 게임에 있는 월드 하나는 1기가바이트가 넘습니다.'''
+
+["not_world_file"]
+source = "cef953c94d5691f8"
+text = '''월드 파일(.rnworld 또는 .rnworld-mod)이 아닙니다.'''
+
+["imported"]
+source = "8d0ea11d7ffb0c47"
+text = '''월드가 가려진 채 목록에 들어왔습니다. 지도를 보려면 공개하세요.'''
+
+["imported_again"]
+source = "dd4ee3af9b0ca85e"
+text = '''이미 가지고 있던 월드입니다. 그대로입니다.'''
+
+["no_mod_to_send"]
+source = "e3b7363ed3b4a1af"
+text = '''이 월드는 여기서 보낼 모드가 없습니다. 먼저 게임에 추가하거나 만드세요.'''
+
+["open_world_file"]
+source = "b20aa10a6bcd2811"
+text = '''월드 파일 열기…'''
+
+["open_world_file_tip"]
+source = "3010238481b95870"
+text = '''.rnworld 파일에서 월드를, .rnworld-mod 파일에서 이미 만든 월드를 가져옵니다.'''
+
+["world_files"]
+source = "7f058e5cf089a3eb"
+text = '''월드 파일 (*.rnworld *.rnworld-mod)'''
+
+["export_file"]
+source = "ccb29307fc55e62c"
+text = '''월드 파일 저장…'''
+
+["export_file_tip"]
+source = "911be34bc5f2c7ca"
+text = '''이 월드의 코드, 기록, 지도를 올리거나 보낼 작은 파일 하나에 씁니다. 게임의 데이터는 들어 있지 않습니다.'''
+
+["send_built"]
+source = "8af3933be4147db3"
+text = '''만든 월드 옮기기…'''
+
+["send_built_tip"]
+source = "047b2b02a2fa3fb3"
+text = '''모드 전체를 파일에 써서 다른 내 컴퓨터로 가져갑니다.'''
+
+["send_built_warning"]
+source = "6a88a7e91f2b232e"
+text = '''이 파일에는 게임 지도에서 만든 그림이 들어간 월드 모드(약 1기가바이트)가 담깁니다. 공유가 아니라 내 컴퓨터끼리 월드를 옮기기 위한 것입니다. 상대 컴퓨터는 게임 파일이 같을 때만 받아들입니다. 계속할까요?'''
+
+["copy_mod"]
+source = "f25df969e7e57e2d"
+text = '''모드를 폴더에 복사…'''
+
+["copy_mod_tip"]
+source = "7e1479cc3c7ddb55"
+text = '''이 월드의 모드를 고른 폴더에 복사해 직접 관리할 수 있게 합니다.'''
+
+["task.copy"]
+source = "548e2087de0d5b96"
+text = '''모드를 복사하는 중…'''
+
+["task.receive"]
+source = "8d3b860b93f6e75e"
+text = '''만든 월드를 들여오는 중…'''
+
+["task.send"]
+source = "ff78a7d5ab27ab07"
+text = '''만든 월드를 쓰는 중…'''
+
+["file_saved"]
+source = "482f5b2eebc6b886"
+text = '''저장함: {path}'''
+
+["tab.world"]
+source = "78ae647dc5544d22"
+text = '''월드'''
+
+["compare"]
+source = "219ddc366d9da259"
+text = '''비교…'''
+
+["compare_title"]
+source = "30a531d0e5c94ed2"
+text = '''월드 비교'''
+
+["compare_need_two"]
+source = "ef2be38dfe1c110d"
+text = '''비교하려면 지도를 공개한 월드가 두 개 있어야 합니다.'''
+
+["save_picture"]
+source = "bb1ed31b2c6d66f5"
+text = '''그림 저장…'''
+
+["save_picture_tip"]
+source = "fb774db84a221988"
+text = '''보이는 그림을 PNG로 저장합니다. 신대륙을 공개하기 전에는 가려져 있습니다.'''
+
+["picture_saved"]
+source = "482f5b2eebc6b886"
+text = '''저장함: {path}'''
+
+["tab.maps"]
+source = "119e66d117ae8f0c"
+text = '''지도'''
+
+["layer.land"]
+source = "b6baff9358ddd8f7"
+text = '''지형'''
+
+["layer.countries"]
+source = "8faf7ec7ab20ca1c"
+text = '''국가'''
+
+["layer.cultures"]
+source = "62461b1bcd7ae231"
+text = '''문화'''
+
+["layer.religions"]
+source = "ef1d1c23482f3289"
+text = '''종교'''
+
+["layer.resources"]
+source = "e89b30aa1dc30a6a"
+text = '''자원'''
+
+["layer.development"]
+source = "21b6a798321a49f7"
+text = '''발전도'''
+
+["layer.land.tip"]
+source = "a03117b5186e8673"
+text = '''식생과 기후. 산은 더 어둡고, 추운 곳에는 눈.'''
+
+["layer.countries.tip"]
+source = "193b9cf9c94c5ff7"
+text = '''누가 어느 땅을 가졌는지. 흰 점이 수도입니다.'''
+
+["layer.cultures.tip"]
+source = "dd6968b8e6ed78c4"
+text = '''지역마다의 문화. 바뀌는 곳에 선이 그어집니다.'''
+
+["layer.religions.tip"]
+source = "d32998efe57520d8"
+text = '''지역마다의 종교. 바뀌는 곳에 선이 그어집니다.'''
+
+["layer.resources.tip"]
+source = "5c7040ce7d9f74c7"
+text = '''지역마다의 원자재. 금, 은, 보석, 진주는 빛납니다.'''
+
+["layer.development.tip"]
+source = "7346fc0b9c0af07a"
+text = '''지역마다의 시작 발전도. 어두우면 낮고, 밝으면 높습니다.'''
+
+["reveal_world"]
+source = "d63e537d568b9aba"
+text = '''이 월드 공개'''
+
+["reveal_world_tip"]
+source = "6d03c0632ec309b2"
+text = '''이 월드의 지도를 생성기에서 보여 줍니다. 설정에서 바꾸지 않는 한 게임의 모드 목록에서는 계속 가려집니다.'''
+
+["covered_maps"]
+source = "72895291a8506c4f"
+text = '''이 월드의 신대륙은 게임 속에서 만날 수 있도록 가려져 있습니다. 플레이 전에 국가, 문화, 종교, 자원을 보려면 공개하세요.'''
+
+["no_atlas"]
+source = "85953bb97408c28b"
+text = '''이 월드에는 지도첩이 없습니다. 지도첩이 생기기 전에 만들어졌거나 파일이 사라졌습니다.'''
+
+["facts_hint"]
+source = "c45ebe1186c80167"
+text = '''지도 위로 마우스를 옮기면 그곳에 무엇이 있는지 보입니다.'''
+
+["search_hint"]
+source = "9a81c8371c86e8ab"
+text = '''국가, 문화, 종교, 자원, 장소 찾기'''
+
+["legend"]
+source = "7482e374b5bddc0a"
+text = '''범례'''
+
+["legend.sea"]
+source = "76b3af333dbac074"
+text = '''바다'''
+
+["legend.lake"]
+source = "52082793941524be"
+text = '''호수'''
+
+["legend.wasteland"]
+source = "4b415ab1819fb1f6"
+text = '''황무지'''
+
+["legend.no_country"]
+source = "b70285418438b053"
+text = '''국가 없음'''
+
+["legend.none"]
+source = "dc937b59892604f5"
+text = '''없음'''
+
+["legend.uninhabited"]
+source = "abfd7adb689e5c89"
+text = '''무인지'''
+
+["legend.lowest"]
+source = "5c590931c7cc2ade"
+text = '''가장 낮음'''
+
+["legend.middle"]
+source = "d93006ec2e4339d7"
+text = '''중간'''
+
+["legend.highest"]
+source = "d402ef10d054eac2"
+text = '''가장 높음'''
+
+["found.country"]
+source = "701d021d08c54579"
+text = '''국가'''
+
+["found.culture"]
+source = "51d7a2ae4335df12"
+text = '''문화'''
+
+["found.religion"]
+source = "f8a52d21e659b0e9"
+text = '''종교'''
+
+["found.material"]
+source = "eb7a842ff958c49c"
+text = '''자원'''
+
+["found.place"]
+source = "e9463dccf0541a97"
+text = '''장소'''
+
+["kind.land"]
+source = "90eae63487cae2df"
+text = '''육지'''
+
+["kind.sea"]
+source = "4a69f19c8c264850"
+text = '''바다'''
+
+["kind.lake"]
+source = "6f021f0268d5dd0d"
+text = '''호수'''
+
+["kind.wasteland"]
+source = "a4b18daa52aed336"
+text = '''황무지'''
+
+["no_country"]
+source = "140bedbf9c3f6d56"
+text = '''없음'''
+
+["fact.country"]
+source = "701d021d08c54579"
+text = '''국가'''
+
+["fact.culture"]
+source = "51d7a2ae4335df12"
+text = '''문화'''
+
+["fact.religion"]
+source = "f8a52d21e659b0e9"
+text = '''종교'''
+
+["fact.material"]
+source = "eb7a842ff958c49c"
+text = '''자원'''
+
+["fact.population"]
+source = "5b828861aec15d60"
+text = '''인구'''
+
+["fact.complexity"]
+source = "d5acfd8330f5caae"
+text = '''사회'''
+
+["summary"]
+source = "1a599cbd890423a0"
+text = '''국가 {countries} (국가 체제 {states}, 부족 {tribes}) · 문화 {cultures} · 종교 {religions} · 지역 {locations} (육지 {land})'''
+
+["check"]
+source = "9d60841e0a7891df"
+text = '''검사'''
+
+["check_tip"]
+source = "6124291f2cd0c606"
+text = '''이 월드를 다시 만들어 모든 파일을 처음과 비교합니다. 게임이 필요하며, 월드를 만드는 만큼 시간이 걸립니다.'''
+
+["custom_none"]
+source = "140bedbf9c3f6d56"
+text = '''없음'''
+
+["custom_some"]
+source = "db3cb1c116f0a410"
+text = '''바뀐 값 {count}'''
+
+["place.in_game"]
+source = "c1f197d6ae0cecc7"
+text = '''게임에 있음: {path}'''
+
+["place.kept"]
+source = "716eb5c10a97acc1"
+text = '''생성기 옆에 있음, 게임에 없음'''
+
+["place.code_only"]
+source = "90b380decd0f7b8d"
+text = '''게임에 없습니다. 추가하면 코드에서 다시 만듭니다 (약 {seconds}초).'''
+
+["other_build"]
+source = "8da6ddee43ce8460"
+text = '''게임 빌드 {made}용으로 만들어졌습니다. 현재 빌드는 {current}입니다. 추가하면 현재 빌드에 맞게 다시 만듭니다. 같은 코드라도 빌드가 다르면 다른 월드입니다.'''
+
+["other_build_same"]
+source = "bde12956110b557b"
+text = '''게임 빌드 {made}용으로 만들어졌고 현재 빌드는 {current}이지만, 만들 때 쓴 파일이 하나도 바뀌지 않았으므로 그대로 작동합니다.'''
+
+["standalone"]
+source = "b6d7e4aa65dc2e7e"
+text = '''이 월드는 완결된 모드입니다. 플레이세트에서 체크하면 그것만으로 플레이할 수 있습니다. '월드 파일 저장'으로 코드와 지도첩을 공유하세요.'''
+
+["add"]
+source = "c69a3dd1ca9d5040"
+text = '''게임에 추가'''
+
+["remove"]
+source = "b81efb13538fe4b9"
+text = '''게임에서 빼기'''
+
+["select_all_worlds"]
+source = "1fc9a387654d410f"
+text = '''모두 선택'''
+
+["selection_hint"]
+source = "b537ff237277d924"
+text = '''Ctrl+클릭으로 여러 월드를, Shift+클릭으로 범위를 선택합니다.'''
+
+["selection_count"]
+source = "d5e9e37b3c98b203"
+text = '''{count}개 선택 · 게임에 있음 {installed}'''
+
+["remove_count"]
+source = "6c22a944e48e4042"
+text = '''게임에서 빼기 ({count})'''
+
+["library_remove"]
+source = "9186f6da0ec3ba00"
+text = '''빼기 ({count})'''
+
+["remove_tip"]
+source = "53f9a900e9ce46ea"
+text = '''선택한 모드를 EU5에서 뺍니다. 월드 코드와 그림은 남습니다.'''
+
+["remove_none"]
+source = "f639b98a2c61e291"
+text = '''먼저 설치된 월드를 선택하세요.'''
+
+["remove_no_profile"]
+source = "30c0c5ebcba942a8"
+text = '''먼저 설정에서 EU5 프로필을 고르세요.'''
+
+["delete_count"]
+source = "7376e41431243b45"
+text = '''라이브러리에서 삭제 ({count})…'''
+
+["library_delete"]
+source = "22779a77f1c59d24"
+text = '''삭제 ({count})…'''
+
+["delete_tip"]
+source = "aa0346399fc89243"
+text = '''선택한 월드를 저장된 지도, 메모, 보관한 모드 파일, 설치된 모드와 함께 라이브러리에서 삭제합니다.'''
+
+["delete_none"]
+source = "faf90f6fb115dc7f"
+text = '''먼저 라이브러리에서 월드를 선택하세요.'''
+
+["delete_many_title"]
+source = "5bbd021f21ab2acf"
+text = '''월드 {count}개를 삭제할까요?'''
+
+["delete_many_question"]
+source = "8e07c808cd2bfc35"
+text = "이 월드 {count}개를 라이브러리에서 완전히 삭제하고 설치된 모드를 EU5에서 뺄까요? 저장된 지도, 메모, 보관한 모드 파일도 삭제됩니다.\n\n{names}"
+
+["batch_delete_failed"]
+source = "fdc1bce609452891"
+text = '''월드 {done}개를 삭제한 뒤 '{name}' 삭제에 실패했습니다: {message}'''
+
+["batch_removed"]
+source = "1765dbfcf5b5a27a"
+text = '''선택한 모드를 EU5에서 뺐습니다. 월드 코드와 그림은 남아 있습니다.'''
+
+["batch_deleted"]
+source = "5725dcdf7e2643f3"
+text = '''선택한 월드를 삭제했습니다.'''
+
+["batch_cancelled"]
+source = "0c2f571551bfe2ad"
+text = '''멈췄습니다. 목록에는 이미 반영된 변경이 보입니다.'''
+
+["open_folder"]
+source = "6a9084025c4bf3e1"
+text = '''폴더 열기'''
+
+["copy_code"]
+source = "49a0053f3b0d5045"
+text = '''코드 복사'''
+
+["like_this"]
+source = "c5ac52caf1b41abe"
+text = '''이 설정으로 새 월드'''
+
+["delete"]
+source = "c49b06b4c661ee22"
+text = '''월드 삭제'''
+
+["delete_title"]
+source = "522a787a83dddac3"
+text = '''이 월드를 삭제할까요?'''
+
+["delete_question"]
+source = "fa99445b18d116c0"
+text = ''''{name}' 월드를 게임과 생성기에서 뺍니다. 월드 코드로 다시 만들 수 있습니다.'''
+
+["task.add"]
+source = "d2d376a9e945a751"
+text = '''게임에 추가하는 중…'''
+
+["task.remove"]
+source = "c191fce448827548"
+text = '''게임에서 빼는 중…'''
+
+["task.delete"]
+source = "43b5894c3e4e2b24"
+text = '''삭제하는 중…'''
+
+["task.check"]
+source = "ec963ffc911b8401"
+text = '''검사하는 중…'''
+
+["task_failed"]
+source = "b050917e5e3b9da2"
+text = "실패했습니다: {message}\n\n{report_hint}"
+
+["diagnostics"]
+source = "77d2c21988dc5725"
+text = '''진단 정보 저장…'''
+
+["diagnostics_tip"]
+source = "d177e924fcd6fb51"
+text = '''버그 신고용으로 생성기의 로그와 이 컴퓨터, 게임, 내 월드에 대한 보고서를 파일 하나에 묶습니다. 어디에도 전송되지 않으며, 이름과 폴더는 가려집니다.'''
+
+["diagnostics_title"]
+source = "52fe7bd9f8dba9b9"
+text = '''진단 정보 저장'''
+
+["diagnostics_saved"]
+source = "ef867c11f7e5697d"
+text = "저장했습니다. 원하시면 살펴본 뒤 신고에 첨부하세요:\n{path}"
+
+["diagnostics_failed"]
+source = "ba28e35f48d96465"
+text = '''파일을 쓸 수 없습니다: {problem}'''
+
+["stray_about"]
+source = "f0866f985468cba5"
+text = '''이 월드는 기록을 남기지 않던 예전 버전의 생성기로 만들어졌습니다. 게임에는 {folder} 폴더로 들어 있습니다. 더 이상 플레이하지 않으면 빼 주세요.'''
+
+["tick_unknown"]
+source = "4a3bdf3a4d535241"
+text = '''플레이세트의 RNW 월드 가운데 '{name}'만 체크되어 있는지 확인하세요.'''
+
+["tick_self_untick"]
+source = "c63e9e7f0d7290fa"
+text = '''플레이세트에서 '{name}' 월드를 체크하고 다른 RNW 월드는 체크를 해제하세요.'''
+
+["tick_self"]
+source = "07849d445ea9ff7a"
+text = '''플레이세트에서 '{name}' 월드를 체크하세요.'''
+
+["untick_others"]
+source = "bc66f4a33e6675ab"
+text = '''플레이세트에서 다른 RNW 월드의 체크를 해제하세요.'''
+
+["next_fresh"]
+source = "26a83c991aa99660"
+text = '''EU5에서: {tick} 그러면 모드를 다시 불러옵니다. 그런 다음 1337년으로 새 게임을 시작하세요.'''
+
+["next_fresh_switch"]
+source = "d9bc2cd7b64f1d10"
+text = '''EU5에서 다른 플레이세트로 바꿨다가 원래대로 돌아오면 모드를 다시 불러옵니다. 그런 다음 1337년으로 새 게임을 시작하세요.'''
+
+["next_played"]
+source = "9ec3a8f4b480881a"
+text = '''EU5를 실행한 뒤 이미 플레이하셨습니다. 그 뒤에 다른 월드를 시작하면 게임이 튕깁니다. EU5를 닫고 다시 실행하세요. {tick} 그런 다음 1337년으로 새 게임을 시작하세요.'''
+
+["next_start"]
+source = "2d8795764c63fcc4"
+text = '''EU5를 실행하세요. {tick} 그런 다음 1337년으로 새 게임을 시작하세요.'''
+
+["next_unknown"]
+source = "41f10e1b14772e13"
+text = '''{tick} 그런 다음, EU5를 실행한 뒤 아직 게임을 시작하지 않았다면 다른 플레이세트로 바꿨다가 돌아와 1337년으로 새 게임을 시작하세요. 이미 시작했다면 먼저 EU5를 다시 실행하세요.'''
+
+["resources"]
+source = "e8929b864948ef37"
+text = '''스레드 {threads}개, 여유 메모리 {free} GiB'''
+
+["resources_unknown"]
+source = "e23f2106daf4e4b1"
+text = '''스레드 {threads}개'''
+
+["stage.load map"]
+source = "e537d733dce55d79"
+text = '''세계 지도를 읽는 중'''
+
+["stage.select canvas"]
+source = "08322653444624b8"
+text = '''바꿀 영역을 고르는 중'''
+
+["stage.vanilla reads"]
+source = "3c8b16be15157a3f"
+text = '''게임 데이터를 읽는 중'''
+
+["stage.vanilla geometry"]
+source = "c88d0868aff1c0d6"
+text = '''원래 지역을 재는 중'''
+
+["stage.vanilla localization keys"]
+source = "5d6474dd82c4cc82"
+text = '''게임의 텍스트 키를 모으는 중'''
+
+["stage.vanilla climate"]
+source = "ec56f139832cf607"
+text = '''원래 기후를 재는 중'''
+
+["stage.vanilla material levels"]
+source = "4933d186bbecc36b"
+text = '''원래 지형 재질을 재는 중'''
+
+["stage.vanilla natives"]
+source = "e3f4bfb6adec2c92"
+text = '''원래 원주민을 읽는 중'''
+
+["stage.generate world"]
+source = "e84556e6a019ab76"
+text = '''대륙, 바다, 기복을 만드는 중'''
+
+["stage.settle coasts"]
+source = "e2cd040b59052112"
+text = '''모든 해안에 항구를 두는 중'''
+
+["stage.water shapes"]
+source = "86189bc7022099c2"
+text = '''만, 해협, 해류를 빚는 중'''
+
+["stage.identities"]
+source = "e14e8033766d3d1b"
+text = '''지역, 구역, 권역에 이름을 붙이는 중'''
+
+["stage.world checks"]
+source = "2f4b2b5e8a3f9d61"
+text = '''새 월드를 검사하는 중'''
+
+["stage.water textures"]
+source = "4ef7590b1b28e969"
+text = '''물과 해안을 칠하는 중'''
+
+["stage.biomes and rivers"]
+source = "d4bd6b2dd554ff95"
+text = '''기후, 생물군계, 강을 키우는 중'''
+
+["stage.slot tables"]
+source = "c84fa407cadaa012"
+text = '''지형 재질을 준비하는 중'''
+
+["stage.location rasters"]
+source = "f126e7af80e75f1c"
+text = '''지역 지도를 그리는 중'''
+
+["stage.png encoding"]
+source = "ca6ff7403235db3e"
+text = '''지도를 압축하는 중'''
+
+["stage.terrain decals"]
+source = "afccac1753249f1e"
+text = '''지형을 깎는 중'''
+
+["stage.vegetation instances"]
+source = "3fa3e8fd70c4851a"
+text = '''나무와 풀을 심는 중'''
+
+["stage.natives"]
+source = "de062b10c1938a64"
+text = '''원주민 사회를 세우는 중'''
+
+["stage.stories"]
+source = "cbe749082c75686b"
+text = '''월드의 이야기와 형성 가능 국가를 쓰는 중'''
+
+["stage.atlas"]
+source = "2fa4552668c62056"
+text = '''월드의 지도첩을 그리는 중'''
+
+["stage.texts"]
+source = "f414224df1fa792b"
+text = '''이름, 시작 상태, 스크립트를 쓰는 중'''
+
+["stage.script remap"]
+source = "507ba7a241bfe7f0"
+text = '''게임 스크립트를 고쳐 쓰는 중'''
+
+["stage.spline network"]
+source = "cdd6a2ba75e40403"
+text = '''길의 띠를 까는 중'''
+
+["stage.selection cover"]
+source = "7e788576dbb4ecbe"
+text = '''플레이 시작 전까지 신대륙을 가리는 중'''
+
+["stage.write files"]
+source = "7f9242d43d976453"
+text = '''모드를 쓰는 중'''
+
+["stage.land cells"]
+source = "0d6f25d525141973"
+text = '''육지 지역을 키우는 중'''
+
+["stage.sea cells"]
+source = "42cc41a5bd88b8b7"
+text = '''해역을 키우는 중'''
+
+["stage.relief"]
+source = "74ea42c343487a9a"
+text = '''산과 골짜기를 세우는 중'''
+
+["stage.terrain"]
+source = "349511ebba803dea"
+text = '''지형을 짓는 중'''
+
+["stage.candidates"]
+source = "2a892bfd45c8d0f3"
+text = '''대륙을 스케치하는 중'''
+
+["stage.install"]
+source = "a6e5d85ef9ce3cbc"
+text = '''월드를 프로필에 설치하는 중'''
+
+["stage.compare inputs"]
+source = "1fe1e92443638ab8"
+text = '''게임 파일을 이 월드를 만들 때 쓴 파일과 비교하는 중'''
+
+["stage.waiting for the game"]
+source = "3796d1c0f7d512f6"
+text = '''게임이 이전 월드를 놓아주기를 기다리는 중: 플레이세트에서 체크를 해제하고 적용하거나 게임을 닫으세요'''
+
+["error.code.prefix"]
+source = "a4ece9429a17cada"
+text = '''월드 코드는 {prefix}(으)로 시작합니다.'''
+
+["error.code.short"]
+source = "0dd5d68df589578a"
+text = '''월드 코드가 너무 짧습니다.'''
+
+["error.code.typo"]
+source = "a95b743c53657352"
+text = '''월드 코드에 오타가 있습니다. 검사 값이 맞지 않습니다.'''
+
+["error.code.format"]
+source = "9faae2046129538f"
+text = '''이 월드 코드는 더 새롭거나 다른 생성기에서 나온 것입니다.'''
+
+["error.code.damaged"]
+source = "81cbea66ce059baa"
+text = '''월드 코드에 담긴 바뀐 설정이 손상되었습니다.'''
+
+["error.code.extra"]
+source = "342b6e6badd7c5fa"
+text = '''월드 코드 끝에 남는 데이터가 있습니다.'''
+
+["error.code.characters"]
+source = "2114e3add9ec678c"
+text = '''월드 코드에 들어갈 수 없는 문자가 있습니다.'''
+
+["error.destination.one"]
+source = "93130a85f7a96c32"
+text = '''월드를 저장할 위치를 하나만 고르세요.'''
+
+["error.destination.outside"]
+source = "5463f7a655b549db"
+text = '''저장 위치는 게임 폴더 밖이어야 합니다.'''
+
+["error.destination.folder"]
+source = "ad7b7c82ea68f13a"
+text = '''모드를 넣을 기존 폴더를 고르세요.'''
+
+["error.destination.exists"]
+source = "a64875e2c0f3edc3"
+text = '''이미 있는 파일입니다: {file}. 월드 파일에 다른 이름을 고르세요.'''
+
+["error.destination.profile"]
+source = "2f9f5b6d5619b37d"
+text = '''월드를 추가할 프로필이 없습니다. 프로필을 고르거나 추가하지 마세요.'''
+
+["error.land_image.gone"]
+source = "e6b07cf126932f17"
+text = '''이 월드의 땅은 라이브러리에 더 이상 없는 그림에 그려져 있습니다. 월드를 만들려면 월드 파일을 다시 열거나 그림을 고르세요.'''
+
+["error.check.no_record"]
+source = "990ed1f85c2a9322"
+text = '''이 월드는 기록을 남기기 전에 만들어졌으므로 검사할 수 없습니다.'''
+
+["error.check.bundle"]
+source = "c2284a0becacbcfe"
+text = '''라이브러리에 있는 월드 파일이 만들 때의 파일과 달라졌습니다.'''
+
+["error.install.in_use"]
+source = "8f4e29768c251b73"
+text = '''게임이 사용 중인 모드: {mod}. 플레이세트에서 체크를 해제하고 적용하거나 게임을 닫으세요.'''
+
+["error.pictures.missing"]
+source = "d3eddbbb04e82f93"
+text = '''다음 월드의 그림이 없어 게임 속 그림을 바꿀 수 없습니다: {folder}.'''
+
+["error.cover.missing"]
+source = "fd633ea58a7c310b"
+text = '''다음 월드의 국가 선택 가림막이 저장되어 있지 않습니다: {folder}.'''
+
+["error.picture.unwritten"]
+source = "17b62235c3b8c217"
+text = '''다음 월드의 그림을 쓸 수 없습니다: {folder}.'''
+
+["error.transfer.bundle"]
+source = "3573ac4baa20047d"
+text = '''라이브러리의 월드 파일에 더 이상 없는 파일이 있어 옮길 수 없습니다: {name}.'''
+
+["error.transfer.no_mod"]
+source = "f0d89be22465b46d"
+text = '''이 파일에는 모드가 없습니다. 월드 파일로 여세요.'''
+
+["error.transfer.no_record"]
+source = "d8408db42b98236e"
+text = '''이 월드는 기록을 남기기 전에 만들어졌으므로 그 게임을 검사할 수 없습니다.'''
+
+["error.transfer.have"]
+source = "3e1d33d97a5fc3cf"
+text = '''라이브러리에 이미 이 월드가 있습니다. 이 사본을 들이려면 먼저 삭제하세요.'''
+
+["error.transfer.foreign"]
+source = "b48b43adec0095d1"
+text = '''파일 속 모드는 이 생성기로 만든 것이 아닙니다.'''
+
+["error.transfer.other_game"]
+source = "d14c4889ee041877"
+text = '''이 게임은 월드를 만든 게임과 다릅니다. 지도 파일이 서로 다릅니다. 여기서 코드로 월드를 다시 만드세요.'''
+
+["error.transfer.no_listing"]
+source = "afc60f3999f87cc1"
+text = '''파일에 게임 파일 목록이 없어 이 게임과 대조할 수 없습니다.'''
+
+["error.transfer.changed"]
+source = "8dc1de34d02263d7"
+text = '''월드를 만들 때 쓴 게임 파일 가운데 {count}개가 바뀌었습니다 (예: {names}). 여기서 코드로 월드를 다시 만드세요.'''
+
+["error.mask.unreadable"]
+source = "d9f075c4781b2514"
+text = '''그림을 읽을 수 없습니다 ({error}).'''
+
+["error.mask.size"]
+source = "80dca932e860d07b"
+text = '''그림 크기가 {width} × {height}입니다. 가로세로 각각 {side}픽셀 이상, 전체 {millions}백만 픽셀 이하여야 합니다.'''
+
+["error.mask.share"]
+source = "bf2f8fd0a968f2bc"
+text = '''그림의 육지 비율이 {share} %입니다. 월드에는 {low} %에서 {high} % 사이가 필요합니다. 흰색이 육지, 검은색이 바다입니다.'''
+
+["error.mask.file"]
+source = "f05a267ab9f03342"
+text = '''읽을 수 없는 파일: {name} ({error}).'''
+
+["error.mask.aspect"]
+source = "ec2c2a21a1b9bad6"
+text = '''그림의 너비가 높이의 {given}배인데, 신대륙 영역은 {wanted}배입니다. 그 비율로 그리세요 (예: {width} × {height} 픽셀).'''
+
+["error.candidates.count"]
+source = "81923dac5a6dc04a"
+text = '''스케치는 1개에서 {count}개 사이로 고르세요.'''
+
+["error.candidates.drawn"]
+source = "75f72c48760efe1b"
+text = '''스케치에는 생성된 땅이 필요합니다. 먼저 생성된 땅으로 돌아가세요.'''

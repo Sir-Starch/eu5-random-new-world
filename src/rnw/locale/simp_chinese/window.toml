@@ -1,0 +1,1763 @@
+["undo_roll"]
+source = "d3ba4753973fc1f9"
+text = '''撤销重掷'''
+
+["task.undo"]
+source = "3ca5c54e7c549b10"
+text = '''正在恢复上一个版本'''
+
+["copy_tag"]
+source = "6d38d2a846422e7f"
+text = '''复制标签'''
+
+["copy_picture"]
+source = "05decf94ea187240"
+text = '''复制图片'''
+
+["destination.library"]
+source = "09a9c9fa074db7d9"
+text = '''把模组留在库中'''
+
+["destination.mod"]
+source = "0ad3383f1dce480d"
+text = '''把模组复制到文件夹'''
+
+["destination.world"]
+source = "172c07cba6c2dd6c"
+text = '''只要世界文件'''
+
+["destination_choose"]
+source = "9772ff884d42d946"
+text = '''选择位置...'''
+
+["destination_missing"]
+source = "dd64b96d7c6d9026"
+text = '''请先选择这个世界保存到哪里。'''
+
+["tab.notes"]
+source = "8a7525b1492fb848"
+text = '''备注'''
+
+["starred"]
+source = "e39b24993c31d7bb"
+text = '''收藏'''
+
+["user_tag"]
+source = "e1c92163bf9d061c"
+text = '''你的标签（最多64个字符）'''
+
+["notes_hint"]
+source = "6d8ef522499455f3"
+text = '''关于这个世界的备注（最多16,384个字符）'''
+
+["save_notes"]
+source = "eb76a6cc99ba6881"
+text = '''保存备注'''
+
+["notes_saved"]
+source = "04965e23cd9e8fb9"
+text = '''备注已保存。'''
+
+["candidates"]
+source = "0e7b026bc70eba63"
+text = '''选择大陆...'''
+
+["candidates_hint"]
+source = "2292c2759a5d2df3"
+text = '''创建世界前，可以先预览六幅大陆草图。这会揭开它们的陆地。选中一幅即可沿用它的种子和设置；地点形成时，最终的海岸线可能会略有移动。'''
+
+["candidate_item"]
+source = "82a3979eef3cad60"
+text = "{number} · 陆地{land:g}%\n种子 {seed}"
+
+["enqueue"]
+source = "34b25c1b963f3a59"
+text = '''加入队列'''
+
+["run_queue"]
+source = "073afaf0ff8ea437"
+text = '''运行队列'''
+
+["clear_queue"]
+source = "fd1d3b4b9147213b"
+text = '''清空队列'''
+
+["queue_empty"]
+source = "dd95d861c51b5f8b"
+text = '''请先往队列中加入一个世界。'''
+
+["queue_count"]
+source = "bc608dfbf45c2100"
+text = '''待处理：{count}'''
+
+["game"]
+source = "5c412a262086b970"
+text = '''游戏'''
+
+["profile"]
+source = "d696a35bdd1883da"
+text = '''档案'''
+
+["language"]
+source = "a4fe65264ef7dbb3"
+text = '''语言'''
+
+["language.game"]
+source = "3bbba19c86874410"
+text = '''跟随游戏：{language}'''
+
+["language.restart"]
+source = "0a1870181520b1b9"
+text = '''生成器下次启动时将使用新语言。'''
+
+["browse"]
+source = "93c6b664dce6c207"
+text = '''浏览…'''
+
+["settings"]
+source = "7a04083baf8daa20"
+text = '''设置…'''
+
+["settings_title"]
+source = "74a883a037bc227f"
+text = '''设置'''
+
+["game_status"]
+source = "660c5d42f3698876"
+text = '''Europa Universalis V · 版本 {build}'''
+
+["new_tab.world"]
+source = "78ae647dc5544d22"
+text = '''世界'''
+
+["new_tab.advanced"]
+source = "9f088dbebd6c3c70"
+text = '''高级'''
+
+["new_tab.output"]
+source = "afd096dc8e3ce666"
+text = '''保存并游玩'''
+
+["new_tab.queued"]
+source = "858dc646bc959251"
+text = '''保存并游玩 · 队列中 {count}'''
+
+["world_identity"]
+source = "96fc61ec457ed6f0"
+text = '''种子与世界代码'''
+
+["land_tools"]
+source = "244bfdc5f13ec886"
+text = '''陆地来源与预览'''
+
+["output"]
+source = "1eeb900ab78c39cb"
+text = '''保存位置'''
+
+["output_hint"]
+source = "fbb6fdcf5f923bd7"
+text = '''每个世界都会留在你的库中。你可以现在就把它的模组加入EU5，留待以后，或把副本保存到其他文件夹。世界文件包含配方和地图。'''
+
+["queue_title"]
+source = "a27578fd3a7a3f5e"
+text = '''生成多个世界'''
+
+["queue_hint"]
+source = "af8bed5b076227c5"
+text = '''把当前设置加入队列，然后为下一个世界更换种子或选项。全部加入后再运行队列。'''
+
+["progress_details"]
+source = "a7d418eaf220511e"
+text = '''显示各阶段详情'''
+
+["generation_install"]
+source = "ed7ffaf064794ac2"
+text = '''完成的模组将加入你的EU5档案。'''
+
+["generation_keep"]
+source = "92b157d42d51b4a1"
+text = '''完成的世界将留在你的库中。'''
+
+["generation_copy"]
+source = "c59824bd5b1eaa91"
+text = '''完成的模组将复制到所选文件夹。'''
+
+["generation_file"]
+source = "35244f6f7d5aa65a"
+text = '''世界文件将保存到所选位置。'''
+
+["visibility"]
+source = "2764b4c1b7b57015"
+text = '''游玩之前'''
+
+["world_visibility_hint"]
+source = "bc9b9de7e31abc1c"
+text = '''只对这个世界生效。无需重新生成即可更新其模组图片和国家选择地图。重启EU5后游戏才会读取这一变更。'''
+
+["visibility_updated"]
+source = "2fce01cc9fc9abdf"
+text = '''这个世界的显示设置已更改。重启EU5后游戏才会读取这一变更。'''
+
+["tab.tools"]
+source = "f692ca48462027a8"
+text = '''版本与文件'''
+
+["world_versions"]
+source = "7ce072f0da5cf56e"
+text = '''创建版本'''
+
+["world_share"]
+source = "39a5a934252b2aaa"
+text = '''分享与导出'''
+
+["world_details"]
+source = "29af469824c1ee6b"
+text = '''世界详情与检查'''
+
+["close"]
+source = "7d9eb7acb13e2462"
+text = '''关闭'''
+
+["game_line"]
+source = "59a2ce96d6c17c2f"
+text = '''EU5 版本 {build} · {game}'''
+
+["game_line_unknown"]
+source = "5d8e792ca5661482"
+text = '''EU5 · {game}'''
+
+["profile_line"]
+source = "0029a3aa08ba73e8"
+text = '''档案 · {profile}'''
+
+["game_missing"]
+source = "a61a4349f0cb79c8"
+text = '''未找到EU5。你仍可以打开世界文件并查看其地图，但创建世界需要游戏本身的文件。请打开设置并选择游戏文件夹。'''
+
+["profile_missing"]
+source = "b303732828e02c48"
+text = '''未找到EU5档案。请先运行一次游戏让它创建档案，或在设置中选择档案文件夹。'''
+
+["not_a_game"]
+source = "a17bf5986615747f"
+text = '''该文件夹不是EU5的安装目录（缺少 game/in_game/map_data）。'''
+
+["not_a_profile"]
+source = "534de3c12b965d56"
+text = '''该文件夹不存在。'''
+
+["show_new_world"]
+source = "18ff780a82fcefac"
+text = '''游玩前显示新大陆'''
+
+["show_new_world_hint"]
+source = "bc591758b90681d6"
+text = '''关闭时，这个世界的图片和国家选择地图会作为未知之地被遮盖。之后可在世界页面中更改，无需重新生成。'''
+
+["about_generator"]
+source = "6ed5499d9096e55f"
+text = '''Random New World为EU5生成新大陆地图。生成的每个世界都是一个独立完整的模组：在播放集中勾选它即可游玩。可以分享它的代码或世界文件。生成器本身无需启用。'''
+
+["worlds"]
+source = "18f1b0bf915821d8"
+text = '''世界'''
+
+["new_world"]
+source = "3e28180bafaa6823"
+text = '''新世界'''
+
+["new_world_running"]
+source = "d8ef0468b14744a5"
+text = '''新世界 · {percent} %'''
+
+["world_line"]
+source = "df1ed7e861e234e5"
+text = '''{when} · {place}'''
+
+["list.in_game"]
+source = "5cd2f5ec45977230"
+text = '''已在游戏中'''
+
+["list.kept"]
+source = "20b0afe7382b5bc7"
+text = '''不在游戏中'''
+
+["list.code_only"]
+source = "31f2d67ab5545388"
+text = '''仅代码'''
+
+["stray_name"]
+source = "a4a24ec60180242e"
+text = '''旧世界'''
+
+["stray_line"]
+source = "3b35f49baee714a7"
+text = '''{folder} · 已在游戏中'''
+
+["type"]
+source = "3bda8904a9b25b31"
+text = '''世界类型'''
+
+["type.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''超大陆'''
+
+["type.supercontinent.about"]
+source = "33a2ee4977ae11b4"
+text = '''一块横贯新大陆的巨大陆地，外加几座岛屿。'''
+
+["type.continents"]
+source = "6c048f26d3b8b473"
+text = '''大陆'''
+
+["type.continents.about"]
+source = "ed5cc238d29c1abb"
+text = '''大型大陆，常像美洲那样由地峡相连，另有岛屿。'''
+
+["type.small_continents"]
+source = "9676e7e8b078ed3c"
+text = '''小块大陆'''
+
+["type.small_continents.about"]
+source = "368289346c178b67"
+text = '''三到四块彼此分离、大小相近的大陆。'''
+
+["type.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''群岛'''
+
+["type.archipelago.about"]
+source = "e68ebd3c93716386"
+text = '''五到十一座大岛和许多小岛：舰船的世界。'''
+
+["type.islands"]
+source = "6cc98682072010a2"
+text = '''零散岛屿'''
+
+["type.islands.about"]
+source = "3dea08a0afa912dc"
+text = '''满是小岛的海洋，没有大块陆地。'''
+
+["quick"]
+source = "b22d2b06765851eb"
+text = '''基本设置'''
+
+["quick_hint"]
+source = "8c832a2fa2f25cec"
+text = '''在这里选择大致的平衡。“高级”中提供精确数值。'''
+
+["quick.custom"]
+source = "6cdfd271da635d49"
+text = '''自定义'''
+
+["quick.land"]
+source = "b6baff9358ddd8f7"
+text = '''陆地'''
+
+["quick.land.about"]
+source = "bd552acf65a994a8"
+text = '''新大陆中陆地所占的比例。陆地越多，地点就会稍大一些，以使世界保持在EU5可承受的32,000个地点以内。'''
+
+["quick.land.little"]
+source = "117361268a0facb6"
+text = '''少'''
+
+["quick.land.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''正常'''
+
+["quick.land.much"]
+source = "81cb32c88ae337b4"
+text = '''多'''
+
+["quick.peoples"]
+source = "1e0a8378b7a75bd9"
+text = '''原住民族'''
+
+["quick.peoples.about"]
+source = "6c1001fb2140ade3"
+text = '''新大陆上生活着多少个民族，有多少个文化中心。'''
+
+["quick.peoples.few"]
+source = "9a4303881564a221"
+text = '''少'''
+
+["quick.peoples.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''正常'''
+
+["quick.peoples.many"]
+source = "98801fd897f5f12b"
+text = '''多'''
+
+["quick.states"]
+source = "04b3dcb87be3e083"
+text = '''原住民国家'''
+
+["quick.states.about"]
+source = "019db7cb7cc9699f"
+text = '''有人居住的土地中，由国家而非部落掌握的比例。'''
+
+["quick.states.few"]
+source = "9a4303881564a221"
+text = '''少'''
+
+["quick.states.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''正常'''
+
+["quick.states.many"]
+source = "98801fd897f5f12b"
+text = '''多'''
+
+["quick.empires"]
+source = "492aaf62e6d759a9"
+text = '''非凡民族'''
+
+["quick.empires.about"]
+source = "7d5f92b53bffae0b"
+text = '''每个文化中心周围兴起非凡原住民社会的可能性。一个大帝国，如同EU4随机新大陆的幻想设定：疆域是他国数倍，拥有先进的政体、旧大陆的技术、更高的等级和王道，令邻国畏惧，为附庸所怨恨。或是一个海上贸易共和国联盟，彼此结盟却隔水相望；一个高地部落邦联；一个各中心互为对手的分裂王国；或是一个圣地，一个被同一信仰的对手环绕的神权国家。'''
+
+["quick.empires.never"]
+source = "6300ef800bb88429"
+text = '''从不'''
+
+["quick.empires.seldom"]
+source = "fa7a8dc69bbf7e83"
+text = '''很少'''
+
+["quick.empires.sometimes"]
+source = "5bca0e3da0627549"
+text = '''有时'''
+
+["quick.empires.often"]
+source = "6f6f6b4ab1bd157a"
+text = '''经常'''
+
+["quick.wealth"]
+source = "41942c9793d8f0ae"
+text = '''金银'''
+
+["quick.wealth.about"]
+source = "95692635f7e43ddf"
+text = '''黄金、白银、宝石和珍珠出现的频率。'''
+
+["quick.wealth.scarce"]
+source = "4a996fcca93fb323"
+text = '''稀少'''
+
+["quick.wealth.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''正常'''
+
+["quick.wealth.rich"]
+source = "dca900394dddb28e"
+text = '''丰富'''
+
+["seed"]
+source = "367ef06b8fbf3aaa"
+text = '''种子'''
+
+["random"]
+source = "67bc484430fe87ba"
+text = '''随机'''
+
+["code"]
+source = "8673890241aa4925"
+text = '''世界代码'''
+
+["copy"]
+source = "e21f935f11d7e966"
+text = '''复制'''
+
+["paste"]
+source = "f3380f7b44bd70af"
+text = '''粘贴'''
+
+["code_hint"]
+source = "f72a2cc345363493"
+text = '''粘贴世界代码，即可得到同类生成器生成的同一个世界。'''
+
+["other_version"]
+source = "cd4edd423d1119be"
+text = '''此代码由生成器{made}生成；当前为{current}，会用它生成另一个世界。原版世界由生成器{made}生成。'''
+
+["other_changes"]
+source = "cb6ba02bc1591efa"
+text = '''此代码还更改了窗口中未显示的设置；这些设置会被保留。'''
+
+["needs_land_image"]
+source = "481f1651885f3db0"
+text = '''这个世界的陆地绘制在一张图片上。请用“从图片导入陆地”选择该图片。'''
+
+["land_image"]
+source = "4b6ea32b544af5c3"
+text = '''从图片导入陆地…'''
+
+["land_image_tip"]
+source = "8169f244febce3d5"
+text = '''在你自己绘制或在别处制作的陆地上构建世界：白色表示陆地、黑色表示海洋，比例与新大陆区域一致。其余部分会在此基础上生成。'''
+
+["land_template"]
+source = "ec4afdef9bceb8d5"
+text = '''保存模板…'''
+
+["land_template_tip"]
+source = "933d156783ad138e"
+text = '''根据你游戏的地图，输出一张新大陆可占用区域的图片，以便在任意软件中在上面绘制陆地：把陆地涂成白色。'''
+
+["task.template"]
+source = "562fb1abc40a9754"
+text = '''正在绘制模板…'''
+
+["land_image_chosen"]
+source = "4d9e51e05f272e57"
+text = '''陆地绘制在图片上（{id}）。'''
+
+["land_image_clear"]
+source = "925ff49784a59104"
+text = '''改回生成的陆地'''
+
+["land_image_title"]
+source = "9fa18dec8f915068"
+text = '''选择陆地图片'''
+
+["land_image_files"]
+source = "63c1f6d6c9b93179"
+text = '''图片 (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)'''
+
+["rolled_code"]
+source = "c7a2542a82443e5b"
+text = '''这是其大陆的一个版本：重新生成了{parts}。'''
+
+["bad_seed"]
+source = "44ef600e2e130e3a"
+text = '''种子是0到18446744073709551615之间的整数。'''
+
+["customize"]
+source = "c5276e27afba47df"
+text = '''自定义'''
+
+["customize_hint"]
+source = "c8bba9279cdcb41b"
+text = '''这里的任何数值都仍能得到可玩的世界：奇特的形状和稀少的黄金都由你选择，范围止步于生成器或游戏会出错之处。'''
+
+["customized"]
+source = "8b46c6074c90a678"
+text = '''相对世界类型的改动：{count}'''
+
+["untested"]
+source = "089b71123d238bd4"
+text = '''未经测试'''
+
+["untested_notice"]
+source = "8471a4d9a051d766"
+text = '''部分数值超出了已测试的范围。'''
+
+["reset"]
+source = "daee7606b339f3c3"
+text = '''重置'''
+
+["reset_all"]
+source = "ca6a476ace72d566"
+text = '''全部恢复为世界类型'''
+
+["group.land"]
+source = "e2c1842113819854"
+text = '''陆地与海洋'''
+
+["group.map"]
+source = "be176b0015c424b7"
+text = '''地图'''
+
+["group.peoples"]
+source = "6dba535c0de36030"
+text = '''民族'''
+
+["control.new_world.land_permille"]
+source = "b6baff9358ddd8f7"
+text = '''陆地'''
+
+["control.new_world.land_permille.about"]
+source = "e0a693457850e1a8"
+text = '''新大陆中陆地所占的比例。'''
+
+["control.new_world.feature_px"]
+source = "cd947acb27155143"
+text = '''陆块大小'''
+
+["control.new_world.feature_px.about"]
+source = "3002a5e7a5190fb3"
+text = '''大：少数巨大陆块。小：众多岛屿。'''
+
+["control.new_world.min_island_px"]
+source = "106d0e95fe3fe013"
+text = '''最小岛屿'''
+
+["control.new_world.min_island_px.about"]
+source = "ea723d77a203225f"
+text = '''比这更小的岛会沉入海中。'''
+
+["control.new_world.persistence_permille"]
+source = "86bba0d82da6f0d5"
+text = '''海岸曲折度'''
+
+["control.new_world.persistence_permille.about"]
+source = "de94bac1d3657790"
+text = '''越高：海岸越曲折，小岛越多。'''
+
+["control.new_world.octaves"]
+source = "f60e7523e64525bf"
+text = '''海岸细节'''
+
+["control.new_world.octaves.about"]
+source = "09cde1b5a935f8c7"
+text = '''海岸线细节的层数。'''
+
+["control.new_world.max_lake_px"]
+source = "3e9700a12bd157d6"
+text = '''最大湖泊'''
+
+["control.new_world.max_lake_px.about"]
+source = "da8233bcf7ff8411"
+text = '''比这更大的封闭水域仍算作海。'''
+
+["control.new_world.wasteland_permille"]
+source = "4b415ab1819fb1f6"
+text = '''荒地'''
+
+["control.new_world.wasteland_permille.about"]
+source = "7f15f21996df4288"
+text = '''无人能够定居的陆地比例。'''
+
+["control.new_world.precious_permille"]
+source = "1c32df89f67a4e86"
+text = '''金银宝石'''
+
+["control.new_world.precious_permille.about"]
+source = "7d06204c56e8fbbe"
+text = '''黄金、白银、宝石和珍珠相对原版新大陆出现的频率。'''
+
+["control.new_world.location_px"]
+source = "f9e8850d8a95bc43"
+text = '''地点大小'''
+
+["control.new_world.location_px.about"]
+source = "748f1d4ff3cd8629"
+text = '''越小：地点越多。EU5总共约可承受32,000个地点；超过这一数量的世界生成器会拒绝生成。'''
+
+["control.new_world.sea_zone_px"]
+source = "cce5eac2b6b2bfac"
+text = '''海域大小'''
+
+["control.new_world.sea_zone_px.about"]
+source = "6b2ccfa728d8af25"
+text = '''越小：海域越多。'''
+
+["control.new_world.province_size"]
+source = "02583edafee78ebf"
+text = '''每省地点数'''
+
+["control.new_world.province_size.about"]
+source = "8d7d49eb6f791144"
+text = '''一个省由多少个地点组成。'''
+
+["control.natives.population_permille"]
+source = "5b828861aec15d60"
+text = '''人口'''
+
+["control.natives.population_permille.about"]
+source = "cdc165c3d5206790"
+text = '''原住民人口，相对原版新大陆的人口。'''
+
+["control.natives.state_share_permille"]
+source = "827b094c2b486457"
+text = '''国家所占土地'''
+
+["control.natives.state_share_permille.about"]
+source = "b923d647bb81644f"
+text = '''有人居住的土地中由原住民国家掌握的比例（原版：11 %）。'''
+
+["control.natives.state_spread_permille"]
+source = "8f96ec1c6d41080e"
+text = '''孤立国家'''
+
+["control.natives.state_spread_permille.about"]
+source = "a5e368305d5e52f0"
+text = '''国家土地中远离大型中心、以小群体存在的比例（原版1337年：约15 %）。'''
+
+["control.natives.organized_permille"]
+source = "f5701b4e75bb0076"
+text = '''有组织的民族'''
+
+["control.natives.organized_permille.about"]
+source = "6321734327f6764c"
+text = '''组织成部落的文化所占比例。'''
+
+["control.natives.hearths_per_10k"]
+source = "fd978882c9d4343d"
+text = '''文化发源地'''
+
+["control.natives.hearths_per_10k.about"]
+source = "071bc7006ab66c63"
+text = '''每10,000个地点中的古老文化中心数；国家围绕它们成长。'''
+
+["control.natives.culture_locations"]
+source = "22cd15ccfd172dca"
+text = '''文化规模'''
+
+["control.natives.culture_locations.about"]
+source = "c66e7ad7d8982807"
+text = '''一个文化平均拥有的地点数。'''
+
+["control.natives.religion_locations"]
+source = "6b57337037e9608e"
+text = '''宗教规模'''
+
+["control.natives.religion_locations.about"]
+source = "2ab84225cb22d337"
+text = '''一个宗教平均拥有的地点数。'''
+
+["control.natives.tribe_locations"]
+source = "230525cb0038444c"
+text = '''部落规模'''
+
+["control.natives.tribe_locations.about"]
+source = "67fc7774a8ba3e94"
+text = '''一个部落平均拥有的地点数。'''
+
+["control.natives.empire_permille"]
+source = "492aaf62e6d759a9"
+text = '''非凡民族'''
+
+["control.natives.empire_permille.about"]
+source = "3a67bce42d61dc85"
+text = '''每个文化发源地周围兴起非凡社会的概率：大帝国（疆域是他国数倍，拥有先进的政体、旧大陆的技术、更高的等级和王道，令邻国畏惧，为附庸所怨恨）、海上贸易共和国联盟、高地部落邦联、由互为对手的中心组成的分裂王国，或被同一信仰的对手环绕的圣地。'''
+
+["control.natives.state_locations"]
+source = "f02a5b0258f32933"
+text = '''国家规模'''
+
+["control.natives.state_locations.about"]
+source = "55dbb684b36e32f9"
+text = '''一个原住民国家平均拥有的地点数。'''
+
+["unit.percent"]
+source = "e97d7e5f669ea3fa"
+text = ''' %'''
+
+["unit.times"]
+source = "4d4655d116f71fcc"
+text = ''' ×'''
+
+["unit.px"]
+source = "bc913fd04325705c"
+text = ''' 像素'''
+
+["unit."]
+source = "e3b0c44298fc1c14"
+text = ''''''
+
+["install"]
+source = "6f9a79fcb2631bc9"
+text = '''完成后加入游戏'''
+
+["generate"]
+source = "49e49bb4401e67bd"
+text = '''生成'''
+
+["cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''取消'''
+
+["cancelling"]
+source = "91b104db05da1b2d"
+text = '''正在取消…'''
+
+["progress"]
+source = "4664827f8e890192"
+text = '''进度'''
+
+["idle"]
+source = "e20846d20bcd60f0"
+text = '''就绪。'''
+
+["running"]
+source = "b87aac63638e00ec"
+text = '''正在进行：{stages}'''
+
+["finished"]
+source = "c15031f5b768b892"
+text = '''用时{seconds}秒完成。'''
+
+["failed"]
+source = "b050917e5e3b9da2"
+text = "未能完成：{message}\n\n{report_hint}"
+
+["report_hint"]
+source = "971e4fa23733b587"
+text = '''如需报告，请打开设置并点击“保存诊断信息”。'''
+
+["error_world_file"]
+source = "626c100184b9a4cf"
+text = '''无法使用该文件：文件已损坏，或不是世界文件。（{detail}）'''
+
+["error_settings"]
+source = "f1edf544f93508bb"
+text = '''无法使用这些设置。（{detail}）'''
+
+["cancelled"]
+source = "1e1e9d54a0a12f87"
+text = '''已取消。你的游戏没有任何改动。'''
+
+["ready_no_game"]
+source = "fbbc35b197ae01d4"
+text = '''请先在设置中选择游戏文件夹。'''
+
+["ready_no_profile"]
+source = "5410df6eb3b98906"
+text = '''请在设置中选择档案，或关闭加入游戏。'''
+
+["ready_busy"]
+source = "3d09fa493c04b1f7"
+text = '''生成器正忙。'''
+
+["too_many_locations"]
+source = "b4a78edf445b4075"
+text = '''这个世界将有约{count}个地点；EU5约可承受32,000个，生成器会保持在{budget}以下。请增大地点或海域的大小，或减少陆地。'''
+
+["outside_range"]
+source = "2ed39ef60bd66af6"
+text = '''此代码设定的数值超出了生成器允许的范围：{names}。'''
+
+["estimate"]
+source = "4ab7301404b8205d"
+text = '''约{count}个地点（EU5约可承受32,000个）。'''
+
+["name_hint"]
+source = "453d4a9fcef62708"
+text = '''这个世界的名称（最多{limit}个字符）'''
+
+["retitle_later"]
+source = "4bfbafc4c2ab883b"
+text = '''名称已保存。游戏此刻正在使用这个世界的文件，因此模组列表会在世界再次加入后显示新名称。'''
+
+["preview_hidden"]
+source = "04b86c1fa26bdb53"
+text = '''新大陆作为未知之地被隐藏。'''
+
+["preview_shown"]
+source = "de7b43db7ffe45e6"
+text = '''新大陆已显示。'''
+
+["preview_missing"]
+source = "c21d71a0de202b2f"
+text = '''这个世界没有图片。'''
+
+["zoom_hint"]
+source = "fe797f35f2c60a7c"
+text = '''滚轮缩放，拖动移动，双击适应窗口。'''
+
+["detail.code"]
+source = "8673890241aa4925"
+text = '''世界代码'''
+
+["detail.type"]
+source = "3bda8904a9b25b31"
+text = '''世界类型'''
+
+["detail.seed"]
+source = "367ef06b8fbf3aaa"
+text = '''种子'''
+
+["detail.custom"]
+source = "4229eea49bd9ea3a"
+text = '''自定义设置'''
+
+["detail.made"]
+source = "45a5300c04621100"
+text = '''生成时间'''
+
+["detail.build"]
+source = "2b24426392ccb3cc"
+text = '''游戏版本'''
+
+["detail.generator"]
+source = "1ade60abe93f5cfc"
+text = '''生成器'''
+
+["detail.place"]
+source = "1daaa38f33cd860e"
+text = '''位置'''
+
+["detail.reproduce"]
+source = "1cd6bb5973fa2be5"
+text = '''重新生成'''
+
+["repro.none"]
+source = "05901bf63ea95e6e"
+text = '''生成于世界开始记录生成方式之前，因此结果可能不同。'''
+
+["repro.same_algorithm"]
+source = "66763ff6d6860af0"
+text = '''生成器{release}使用与本生成器相同的算法生成了它：只要游戏文件相同，结果会逐字节一致。检查即可确认。'''
+
+["repro.identical"]
+source = "214b6041efb8bb29"
+text = '''已检查：重新生成后，全部{count}个文件都相同。'''
+
+["repro.differs"]
+source = "7a13d7a38d54b305"
+text = '''已检查：重新生成后，有{count}个文件不同，第一个是{first}。'''
+
+["repro.other_algorithm"]
+source = "eae91d973c5bf75b"
+text = '''生成器{release}使用了与本生成器不同的算法，因此同一代码在这里会得到另一个世界。原版世界由生成器{release}生成。'''
+
+["repro.other_inputs"]
+source = "314a09e94f5efadf"
+text = '''游戏文件自生成以来已经改变（{count}处不同）：同一代码在这个游戏中会得到另一个世界。如需保持原样，请保留这个世界的模组。'''
+
+["repro.newer_format"]
+source = "c904c7d67406f708"
+text = '''由较新的生成器（{release}）生成，本生成器无法读取其记录。'''
+
+["part.peoples"]
+source = "1c52fde02da2ec5e"
+text = '''新的民族'''
+
+["part.resources"]
+source = "e34cf607cbcec7ff"
+text = '''新的资源'''
+
+["part.peoples.button"]
+source = "32d36ec3dc905625"
+text = '''新的民族'''
+
+["part.resources.button"]
+source = "9f2f4d34b10e5bf7"
+text = '''新的资源'''
+
+["part.peoples.tip"]
+source = "7256de9b80a3a85e"
+text = '''在同一块大陆上重新生成国家、文化、宗教和名称。陆地不变。'''
+
+["part.resources.tip"]
+source = "415cf8682ce69b67"
+text = '''在同一块大陆上重新生成原材料与金银。陆地和民族不变。'''
+
+["edit_same_land"]
+source = "377b7ea7a3d96c06"
+text = '''同样的陆地，换一套设置'''
+
+["edit_same_land_tip"]
+source = "ccc60e6a8ad5a618"
+text = '''带着种子打开这个世界的设置，在同一片陆地上更改民族或资源的设置。'''
+
+["previous_version"]
+source = "21d886b74bc1abe1"
+text = '''上一个版本'''
+
+["keep_both"]
+source = "6a44d37116dd7c0d"
+text = '''这个也保留在游戏中'''
+
+["keep_both_tip"]
+source = "bbdca9254f8bb1fa"
+text = '''除非勾选此项，新版本会在游戏中替换这个世界。游戏中的每个世界都占用1GB以上的空间。'''
+
+["not_world_file"]
+source = "cef953c94d5691f8"
+text = '''这不是世界文件（.rnworld 或 .rnworld-mod）。'''
+
+["imported"]
+source = "8d0ea11d7ffb0c47"
+text = '''世界已加入列表，处于遮盖状态。揭开它即可查看地图。'''
+
+["imported_again"]
+source = "dd4ee3af9b0ca85e"
+text = '''你已经有这个世界了；它保持原样。'''
+
+["no_mod_to_send"]
+source = "e3b7363ed3b4a1af"
+text = '''这个世界在这里没有可发送的模组：请先把它加入游戏，或先生成它。'''
+
+["open_world_file"]
+source = "b20aa10a6bcd2811"
+text = '''打开世界文件…'''
+
+["open_world_file_tip"]
+source = "3010238481b95870"
+text = '''从 .rnworld 文件导入世界，或从 .rnworld-mod 文件导入已构建的世界。'''
+
+["world_files"]
+source = "7f058e5cf089a3eb"
+text = '''世界文件 (*.rnworld *.rnworld-mod)'''
+
+["export_file"]
+source = "ccb29307fc55e62c"
+text = '''保存世界文件…'''
+
+["export_file_tip"]
+source = "911be34bc5f2c7ca"
+text = '''把这个世界的代码、记录和地图写入一个小文件，便于发布或发送。其中不含任何游戏内容。'''
+
+["send_built"]
+source = "8af3933be4147db3"
+text = '''迁移已构建的世界…'''
+
+["send_built_tip"]
+source = "047b2b02a2fa3fb3"
+text = '''把整个模组写入一个文件，带到你的另一台电脑上。'''
+
+["send_built_warning"]
+source = "6a88a7e91f2b232e"
+text = '''此文件包含世界的模组，约1GB，其中含有从游戏地图派生的图像。它用于在你自己的电脑之间迁移世界，而不是用于分享。另一台电脑只有在游戏文件相同时才会接受它。要继续吗？'''
+
+["copy_mod"]
+source = "f25df969e7e57e2d"
+text = '''把模组复制到文件夹…'''
+
+["copy_mod_tip"]
+source = "7e1479cc3c7ddb55"
+text = '''把这个世界的模组复制到你选择的文件夹，以便手动管理。'''
+
+["task.copy"]
+source = "548e2087de0d5b96"
+text = '''正在复制模组…'''
+
+["task.receive"]
+source = "8d3b860b93f6e75e"
+text = '''正在导入已构建的世界…'''
+
+["task.send"]
+source = "ff78a7d5ab27ab07"
+text = '''正在写出已构建的世界…'''
+
+["file_saved"]
+source = "482f5b2eebc6b886"
+text = '''已保存：{path}'''
+
+["tab.world"]
+source = "78ae647dc5544d22"
+text = '''世界'''
+
+["compare"]
+source = "219ddc366d9da259"
+text = '''比较…'''
+
+["compare_title"]
+source = "30a531d0e5c94ed2"
+text = '''比较世界'''
+
+["compare_need_two"]
+source = "ef2be38dfe1c110d"
+text = '''需要两个已揭开地图的世界才能比较。'''
+
+["save_picture"]
+source = "bb1ed31b2c6d66f5"
+text = '''保存图片…'''
+
+["save_picture_tip"]
+source = "fb774db84a221988"
+text = '''将显示的图片保存为PNG；在新大陆揭开之前，图片是被遮盖的。'''
+
+["picture_saved"]
+source = "482f5b2eebc6b886"
+text = '''已保存：{path}'''
+
+["tab.maps"]
+source = "119e66d117ae8f0c"
+text = '''地图'''
+
+["layer.land"]
+source = "b6baff9358ddd8f7"
+text = '''地形'''
+
+["layer.countries"]
+source = "8faf7ec7ab20ca1c"
+text = '''国家'''
+
+["layer.cultures"]
+source = "62461b1bcd7ae231"
+text = '''文化'''
+
+["layer.religions"]
+source = "ef1d1c23482f3289"
+text = '''宗教'''
+
+["layer.resources"]
+source = "e89b30aa1dc30a6a"
+text = '''资源'''
+
+["layer.development"]
+source = "21b6a798321a49f7"
+text = '''发展度'''
+
+["layer.land.tip"]
+source = "a03117b5186e8673"
+text = '''植被与气候；山地颜色较深，寒冷处有雪。'''
+
+["layer.countries.tip"]
+source = "193b9cf9c94c5ff7"
+text = '''哪片土地归谁所有；白点为首都。'''
+
+["layer.cultures.tip"]
+source = "dd6968b8e6ed78c4"
+text = '''每个地点的文化；变化处有分界线。'''
+
+["layer.religions.tip"]
+source = "d32998efe57520d8"
+text = '''每个地点的宗教；变化处有分界线。'''
+
+["layer.resources.tip"]
+source = "5c7040ce7d9f74c7"
+text = '''每个地点的原材料；黄金、白银、宝石和珍珠会发亮。'''
+
+["layer.development.tip"]
+source = "7346fc0b9c0af07a"
+text = '''每个地点的初始发展度：暗为低，亮为高。'''
+
+["reveal_world"]
+source = "d63e537d568b9aba"
+text = '''揭开这个世界'''
+
+["reveal_world_tip"]
+source = "6d03c0632ec309b2"
+text = '''在生成器中显示这个世界的地图。除非设置另有规定，游戏的模组列表仍会保持遮盖。'''
+
+["covered_maps"]
+source = "72895291a8506c4f"
+text = '''这个世界的新大陆被遮盖着，好让你在游戏中再去发现它。揭开它即可在游玩前查看其国家、文化、宗教和资源。'''
+
+["no_atlas"]
+source = "85953bb97408c28b"
+text = '''这个世界没有地图集：它生成于地图集出现之前，或其文件已经丢失。'''
+
+["facts_hint"]
+source = "c45ebe1186c80167"
+text = '''将鼠标移到地图上，查看那里有什么。'''
+
+["search_hint"]
+source = "9a81c8371c86e8ab"
+text = '''查找国家、文化、宗教、资源或地点'''
+
+["legend"]
+source = "7482e374b5bddc0a"
+text = '''图例'''
+
+["legend.sea"]
+source = "76b3af333dbac074"
+text = '''海洋'''
+
+["legend.lake"]
+source = "52082793941524be"
+text = '''湖泊'''
+
+["legend.wasteland"]
+source = "4b415ab1819fb1f6"
+text = '''荒地'''
+
+["legend.no_country"]
+source = "b70285418438b053"
+text = '''无国家'''
+
+["legend.none"]
+source = "dc937b59892604f5"
+text = '''无'''
+
+["legend.uninhabited"]
+source = "abfd7adb689e5c89"
+text = '''无人居住'''
+
+["legend.lowest"]
+source = "5c590931c7cc2ade"
+text = '''最低'''
+
+["legend.middle"]
+source = "d93006ec2e4339d7"
+text = '''中等'''
+
+["legend.highest"]
+source = "d402ef10d054eac2"
+text = '''最高'''
+
+["found.country"]
+source = "701d021d08c54579"
+text = '''国家'''
+
+["found.culture"]
+source = "51d7a2ae4335df12"
+text = '''文化'''
+
+["found.religion"]
+source = "f8a52d21e659b0e9"
+text = '''宗教'''
+
+["found.material"]
+source = "eb7a842ff958c49c"
+text = '''资源'''
+
+["found.place"]
+source = "e9463dccf0541a97"
+text = '''地点'''
+
+["kind.land"]
+source = "90eae63487cae2df"
+text = '''陆地'''
+
+["kind.sea"]
+source = "4a69f19c8c264850"
+text = '''海洋'''
+
+["kind.lake"]
+source = "6f021f0268d5dd0d"
+text = '''湖泊'''
+
+["kind.wasteland"]
+source = "a4b18daa52aed336"
+text = '''荒地'''
+
+["no_country"]
+source = "140bedbf9c3f6d56"
+text = '''无'''
+
+["fact.country"]
+source = "701d021d08c54579"
+text = '''国家'''
+
+["fact.culture"]
+source = "51d7a2ae4335df12"
+text = '''文化'''
+
+["fact.religion"]
+source = "f8a52d21e659b0e9"
+text = '''宗教'''
+
+["fact.material"]
+source = "eb7a842ff958c49c"
+text = '''资源'''
+
+["fact.population"]
+source = "5b828861aec15d60"
+text = '''人口'''
+
+["fact.complexity"]
+source = "d5acfd8330f5caae"
+text = '''社会'''
+
+["summary"]
+source = "1a599cbd890423a0"
+text = '''{countries}个国家（{states}个国家政权，{tribes}个部落） · {cultures}种文化 · {religions}种宗教 · {locations}个地点（陆地{land}个）'''
+
+["check"]
+source = "9d60841e0a7891df"
+text = '''检查'''
+
+["check_tip"]
+source = "6124291f2cd0c606"
+text = '''重新生成这个世界，并将每个文件与首次生成时比较。需要游戏；耗时与生成一个世界相同。'''
+
+["custom_none"]
+source = "140bedbf9c3f6d56"
+text = '''无'''
+
+["custom_some"]
+source = "db3cb1c116f0a410"
+text = '''改动{count}项'''
+
+["place.in_game"]
+source = "c1f197d6ae0cecc7"
+text = '''已在游戏中：{path}'''
+
+["place.kept"]
+source = "716eb5c10a97acc1"
+text = '''在生成器旁，不在游戏中'''
+
+["place.code_only"]
+source = "90b380decd0f7b8d"
+text = '''不在游戏中。加入时将根据代码重新生成（约{seconds}秒）。'''
+
+["other_build"]
+source = "8da6ddee43ce8460"
+text = '''为游戏版本{made}生成；你的版本是{current}。加入时会为你的版本重新生成：同一代码在另一个版本上就是另一个世界。'''
+
+["other_build_same"]
+source = "bde12956110b557b"
+text = '''为游戏版本{made}生成；你的版本是{current}，而生成它所用的文件都没有变化，因此可以照常使用。'''
+
+["standalone"]
+source = "b6d7e4aa65dc2e7e"
+text = '''这个世界是一个完整的模组：在播放集中勾选它即可单独游玩。用“保存世界文件”来分享它的代码和地图集。'''
+
+["add"]
+source = "c69a3dd1ca9d5040"
+text = '''加入游戏'''
+
+["remove"]
+source = "b81efb13538fe4b9"
+text = '''从游戏中移除'''
+
+["select_all_worlds"]
+source = "1fc9a387654d410f"
+text = '''全选'''
+
+["selection_hint"]
+source = "b537ff237277d924"
+text = '''按住Ctrl点击可选择多个世界；按住Shift点击可选择一个范围。'''
+
+["selection_count"]
+source = "d5e9e37b3c98b203"
+text = '''已选{count}个 · 在游戏中{installed}个'''
+
+["remove_count"]
+source = "6c22a944e48e4042"
+text = '''从游戏中移除（{count}）'''
+
+["library_remove"]
+source = "9186f6da0ec3ba00"
+text = '''移除（{count}）'''
+
+["remove_tip"]
+source = "53f9a900e9ce46ea"
+text = '''从EU5中移除所选模组。世界代码和图片会保留。'''
+
+["remove_none"]
+source = "f639b98a2c61e291"
+text = '''请先选择一个已安装的世界。'''
+
+["remove_no_profile"]
+source = "30c0c5ebcba942a8"
+text = '''请先在设置中选择EU5档案。'''
+
+["delete_count"]
+source = "7376e41431243b45"
+text = '''从库中删除（{count}）…'''
+
+["library_delete"]
+source = "22779a77f1c59d24"
+text = '''删除（{count}）…'''
+
+["delete_tip"]
+source = "aa0346399fc89243"
+text = '''从库中删除所选世界，连同其保存的地图、备注、保留的模组文件和已安装的模组。'''
+
+["delete_none"]
+source = "faf90f6fb115dc7f"
+text = '''请先在库中选择一个世界。'''
+
+["delete_many_title"]
+source = "5bbd021f21ab2acf"
+text = '''删除{count}个世界？'''
+
+["delete_many_question"]
+source = "8e07c808cd2bfc35"
+text = "要从库中永久删除这{count}个世界，并从EU5中移除其已安装的模组吗？它们保存的地图、备注和保留的模组文件都会被删除。\n\n{names}"
+
+["batch_delete_failed"]
+source = "fdc1bce609452891"
+text = '''删除{done}个世界后，未能删除“{name}”：{message}'''
+
+["batch_removed"]
+source = "1765dbfcf5b5a27a"
+text = '''所选模组已从EU5中移除。世界代码和图片已保留。'''
+
+["batch_deleted"]
+source = "5725dcdf7e2643f3"
+text = '''所选世界已删除。'''
+
+["batch_cancelled"]
+source = "0c2f571551bfe2ad"
+text = '''已停止。列表显示的是已完成的改动。'''
+
+["open_folder"]
+source = "6a9084025c4bf3e1"
+text = '''打开文件夹'''
+
+["copy_code"]
+source = "49a0053f3b0d5045"
+text = '''复制代码'''
+
+["like_this"]
+source = "c5ac52caf1b41abe"
+text = '''用这些设置新建世界'''
+
+["delete"]
+source = "c49b06b4c661ee22"
+text = '''删除世界'''
+
+["delete_title"]
+source = "522a787a83dddac3"
+text = '''删除这个世界？'''
+
+["delete_question"]
+source = "fa99445b18d116c0"
+text = '''“{name}”将从游戏和生成器中移除。它的世界代码可以重新生成它。'''
+
+["task.add"]
+source = "d2d376a9e945a751"
+text = '''正在加入游戏…'''
+
+["task.remove"]
+source = "c191fce448827548"
+text = '''正在从游戏中移除…'''
+
+["task.delete"]
+source = "43b5894c3e4e2b24"
+text = '''正在删除…'''
+
+["task.check"]
+source = "ec963ffc911b8401"
+text = '''正在检查…'''
+
+["task_failed"]
+source = "b050917e5e3b9da2"
+text = "未能完成：{message}\n\n{report_hint}"
+
+["diagnostics"]
+source = "77d2c21988dc5725"
+text = '''保存诊断信息…'''
+
+["diagnostics_tip"]
+source = "d177e924fcd6fb51"
+text = '''把生成器的日志以及关于本机、游戏和你的世界的报告打包成一个文件，用于报告错误。不会发送到任何地方；你的名字和文件夹会被隐去。'''
+
+["diagnostics_title"]
+source = "52fe7bd9f8dba9b9"
+text = '''保存诊断信息'''
+
+["diagnostics_saved"]
+source = "ef867c11f7e5697d"
+text = "已保存。如有需要可以先查看一下，再附到你的报告中：\n{path}"
+
+["diagnostics_failed"]
+source = "ba28e35f48d96465"
+text = '''无法写入文件：{problem}'''
+
+["stray_about"]
+source = "f0866f985468cba5"
+text = '''这个世界由早期版本的生成器生成，当时没有留下任何记录。它在游戏中的名称是{folder}。不再游玩时请将它移除。'''
+
+["tick_unknown"]
+source = "4a3bdf3a4d535241"
+text = '''请确认你的播放集中，RNW世界里只勾选了“{name}”。'''
+
+["tick_self_untick"]
+source = "c63e9e7f0d7290fa"
+text = '''在你的播放集中勾选“{name}”，并取消勾选其他RNW世界。'''
+
+["tick_self"]
+source = "07849d445ea9ff7a"
+text = '''在你的播放集中勾选“{name}”。'''
+
+["untick_others"]
+source = "bc66f4a33e6675ab"
+text = '''在你的播放集中取消勾选其他RNW世界。'''
+
+["next_fresh"]
+source = "26a83c991aa99660"
+text = '''在EU5中：{tick} 这会重新加载模组。然后开始一局1337年的新游戏。'''
+
+["next_fresh_switch"]
+source = "d9bc2cd7b64f1d10"
+text = '''在EU5中切换到另一个播放集再切换回来，这会重新加载模组，然后开始一局1337年的新游戏。'''
+
+["next_played"]
+source = "9ec3a8f4b480881a"
+text = '''启动EU5后你已经玩过一局，之后再开始另一个世界会导致游戏崩溃。请关闭EU5并重新启动。{tick} 然后开始一局1337年的新游戏。'''
+
+["next_start"]
+source = "2d8795764c63fcc4"
+text = '''启动EU5。{tick} 然后开始一局1337年的新游戏。'''
+
+["next_unknown"]
+source = "41f10e1b14772e13"
+text = '''{tick} 然后，如果启动EU5以来还没开始过游戏，就切换到另一个播放集再切换回来，并开始一局1337年的新游戏；否则请先重启EU5。'''
+
+["resources"]
+source = "e8929b864948ef37"
+text = '''{threads}个线程，可用内存{free} GiB'''
+
+["resources_unknown"]
+source = "e23f2106daf4e4b1"
+text = '''{threads}个线程'''
+
+["stage.load map"]
+source = "e537d733dce55d79"
+text = '''正在读取世界地图'''
+
+["stage.select canvas"]
+source = "08322653444624b8"
+text = '''正在选择要替换的区域'''
+
+["stage.vanilla reads"]
+source = "3c8b16be15157a3f"
+text = '''正在读取游戏数据'''
+
+["stage.vanilla geometry"]
+source = "c88d0868aff1c0d6"
+text = '''正在测量原有地点'''
+
+["stage.vanilla localization keys"]
+source = "5d6474dd82c4cc82"
+text = '''正在收集游戏的文本键'''
+
+["stage.vanilla climate"]
+source = "ec56f139832cf607"
+text = '''正在测量原有气候'''
+
+["stage.vanilla material levels"]
+source = "4933d186bbecc36b"
+text = '''正在测量原有地形材质'''
+
+["stage.vanilla natives"]
+source = "e3f4bfb6adec2c92"
+text = '''正在读取原有原住民'''
+
+["stage.generate world"]
+source = "e84556e6a019ab76"
+text = '''正在生成大陆、海洋和地势'''
+
+["stage.settle coasts"]
+source = "e2cd040b59052112"
+text = '''正在为每段海岸设置港口'''
+
+["stage.water shapes"]
+source = "86189bc7022099c2"
+text = '''正在塑造海湾、海峡和洋流'''
+
+["stage.identities"]
+source = "e14e8033766d3d1b"
+text = '''正在为地点、区域和地区命名'''
+
+["stage.world checks"]
+source = "2f4b2b5e8a3f9d61"
+text = '''正在检查新世界'''
+
+["stage.water textures"]
+source = "4ef7590b1b28e969"
+text = '''正在绘制水面和海岸'''
+
+["stage.biomes and rivers"]
+source = "d4bd6b2dd554ff95"
+text = '''正在培育气候、生物群系和河流'''
+
+["stage.slot tables"]
+source = "c84fa407cadaa012"
+text = '''正在准备地形材质'''
+
+["stage.location rasters"]
+source = "f126e7af80e75f1c"
+text = '''正在绘制地点地图'''
+
+["stage.png encoding"]
+source = "ca6ff7403235db3e"
+text = '''正在压缩地图'''
+
+["stage.terrain decals"]
+source = "afccac1753249f1e"
+text = '''正在雕琢地形'''
+
+["stage.vegetation instances"]
+source = "3fa3e8fd70c4851a"
+text = '''正在种植树木和草地'''
+
+["stage.natives"]
+source = "de062b10c1938a64"
+text = '''正在建立原住民社会'''
+
+["stage.stories"]
+source = "cbe749082c75686b"
+text = '''正在撰写世界的故事和可成立国家'''
+
+["stage.atlas"]
+source = "2fa4552668c62056"
+text = '''正在绘制世界的地图集'''
+
+["stage.texts"]
+source = "f414224df1fa792b"
+text = '''正在写入名称、开局状态和脚本'''
+
+["stage.script remap"]
+source = "507ba7a241bfe7f0"
+text = '''正在改写游戏脚本'''
+
+["stage.spline network"]
+source = "cdd6a2ba75e40403"
+text = '''正在铺设道路的条带'''
+
+["stage.selection cover"]
+source = "7e788576dbb4ecbe"
+text = '''正在遮盖新大陆，直到开始游玩'''
+
+["stage.write files"]
+source = "7f9242d43d976453"
+text = '''正在写入模组'''
+
+["stage.land cells"]
+source = "0d6f25d525141973"
+text = '''正在生成陆地地点'''
+
+["stage.sea cells"]
+source = "42cc41a5bd88b8b7"
+text = '''正在生成海域'''
+
+["stage.relief"]
+source = "74ea42c343487a9a"
+text = '''正在抬升山脉与河谷'''
+
+["stage.terrain"]
+source = "349511ebba803dea"
+text = '''正在构建地形'''
+
+["stage.candidates"]
+source = "2a892bfd45c8d0f3"
+text = '''正在绘制大陆草图'''
+
+["stage.install"]
+source = "a6e5d85ef9ce3cbc"
+text = '''正在把世界安装到你的档案中'''
+
+["stage.compare inputs"]
+source = "1fe1e92443638ab8"
+text = '''正在将游戏文件与生成这个世界时所用的文件比较'''
+
+["stage.waiting for the game"]
+source = "3796d1c0f7d512f6"
+text = '''正在等待游戏释放上一个世界：请在播放集中取消勾选并应用，或关闭游戏'''
+
+["error.code.prefix"]
+source = "a4ece9429a17cada"
+text = '''世界代码以{prefix}开头。'''
+
+["error.code.short"]
+source = "0dd5d68df589578a"
+text = '''世界代码太短。'''
+
+["error.code.typo"]
+source = "a95b743c53657352"
+text = '''世界代码有输入错误：校验值不匹配。'''
+
+["error.code.format"]
+source = "9faae2046129538f"
+text = '''此世界代码来自更新的或不同的生成器。'''
+
+["error.code.damaged"]
+source = "81cbea66ce059baa"
+text = '''世界代码中改动过的设置已损坏。'''
+
+["error.code.extra"]
+source = "342b6e6badd7c5fa"
+text = '''世界代码末尾有多余的数据。'''
+
+["error.code.characters"]
+source = "2114e3add9ec678c"
+text = '''世界代码中含有不可能出现在其中的字符。'''
+
+["error.destination.one"]
+source = "93130a85f7a96c32"
+text = '''请为世界只选择一个位置。'''
+
+["error.destination.outside"]
+source = "5463f7a655b549db"
+text = '''目标位置必须在游戏文件夹之外。'''
+
+["error.destination.folder"]
+source = "ad7b7c82ea68f13a"
+text = '''请为模组选择一个已存在的文件夹。'''
+
+["error.destination.exists"]
+source = "a64875e2c0f3edc3"
+text = '''{file}已存在。请为世界文件另选一个名称。'''
+
+["error.destination.profile"]
+source = "2f9f5b6d5619b37d"
+text = '''没有可以加入世界的档案。请选择一个档案，或不加入。'''
+
+["error.land_image.gone"]
+source = "e6b07cf126932f17"
+text = '''这个世界的陆地绘制在一张库中已不存在的图片上。请重新打开世界文件，或选择该图片，以生成世界。'''
+
+["error.check.no_record"]
+source = "990ed1f85c2a9322"
+text = '''这个世界生成于世界开始保留记录之前，因此无法检查。'''
+
+["error.check.bundle"]
+source = "c2284a0becacbcfe"
+text = '''库中这个世界的文件已不是生成它时的那些文件。'''
+
+["error.install.in_use"]
+source = "8f4e29768c251b73"
+text = '''游戏正在使用{mod}。请在播放集中取消勾选并应用，或关闭游戏。'''
+
+["error.pictures.missing"]
+source = "d3eddbbb04e82f93"
+text = '''{folder}的图片已丢失，因此无法更改它在游戏中的图片。'''
+
+["error.cover.missing"]
+source = "fd633ea58a7c310b"
+text = '''{folder}保存的国家选择遮盖已丢失。'''
+
+["error.picture.unwritten"]
+source = "17b62235c3b8c217"
+text = '''无法写入{folder}的图片。'''
+
+["error.transfer.bundle"]
+source = "3573ac4baa20047d"
+text = '''库中这个世界的文件已不再包含{name}，因此无法迁移。'''
+
+["error.transfer.no_mod"]
+source = "f0d89be22465b46d"
+text = '''此文件中没有模组。请把它作为世界文件打开。'''
+
+["error.transfer.no_record"]
+source = "d8408db42b98236e"
+text = '''这个世界生成于世界开始保留记录之前，因此无法检查它的游戏。'''
+
+["error.transfer.have"]
+source = "3e1d33d97a5fc3cf"
+text = '''库中已有这个世界。请先删除它，再接收这份副本。'''
+
+["error.transfer.foreign"]
+source = "b48b43adec0095d1"
+text = '''文件中的模组不是由本生成器生成的。'''
+
+["error.transfer.other_game"]
+source = "d14c4889ee041877"
+text = '''这不是生成该世界时所用的游戏：其地图文件不同。请在这里根据代码重新生成世界。'''
+
+["error.transfer.no_listing"]
+source = "afc60f3999f87cc1"
+text = '''该文件没有列出游戏文件，因此无法与这个游戏核对。'''
+
+["error.transfer.changed"]
+source = "8dc1de34d02263d7"
+text = '''生成该世界时所用的游戏文件中有{count}个已发生变化，例如{names}。请在这里根据代码重新生成世界。'''
+
+["error.mask.unreadable"]
+source = "d9f075c4781b2514"
+text = '''无法读取图片（{error}）。'''
+
+["error.mask.size"]
+source = "80dca932e860d07b"
+text = '''图片尺寸为{width} × {height}。每边至少需要{side}像素，总计不超过{millions}百万像素。'''
+
+["error.mask.share"]
+source = "bf2f8fd0a968f2bc"
+text = '''图片中陆地占{share} %；一个世界需要{low} %到{high} %。白色为陆地，黑色为海洋。'''
+
+["error.mask.file"]
+source = "f05a267ab9f03342"
+text = '''无法读取{name}（{error}）。'''
+
+["error.mask.aspect"]
+source = "ec2c2a21a1b9bad6"
+text = '''图片的宽度是高度的{given}倍，而新大陆区域是{wanted}倍。请按此比例绘制，例如{width} × {height}像素。'''
+
+["error.candidates.count"]
+source = "81923dac5a6dc04a"
+text = '''请选择1到{count}幅草图。'''
+
+["error.candidates.drawn"]
+source = "75f72c48760efe1b"
+text = '''草图需要生成的陆地。请先改回生成的陆地。'''

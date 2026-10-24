@@ -25,6 +25,7 @@ from typing import Final, cast
 from rnw import __version__
 from rnw.epoch import CURRENT, epoch_of
 from rnw.layers import PARTS, rolls_of
+from rnw.messages import say
 from rnw.rng import check_seed
 from rnw.settings import PRESETS, SettingsError, build_settings
 
@@ -187,22 +188,22 @@ def decode(text: str) -> WorldCode:
     """The code in ``text``; raises ``WorldCodeError`` with the reason if it is not one."""
     cleaned = "".join(FOLDED.get(char, char) for char in SEPARATORS.sub("", text).upper())
     if not cleaned.startswith(PREFIX):
-        message = f"A world code starts with {PREFIX}"
+        message = say("code.prefix", prefix=PREFIX)
         raise WorldCodeError(message)
     body = _from_base32(cleaned[len(PREFIX) :])
     if len(body) < HEAD.size + CHECK_BYTES:
-        message = "The world code is too short"
+        message = say("code.short")
         raise WorldCodeError(message)
     payload, check = body[:-CHECK_BYTES], body[-CHECK_BYTES:]
     if hashlib.sha256(payload).digest()[:CHECK_BYTES] != check:
-        message = "The world code has a typing mistake (its check does not match)"
+        message = say("code.typo")
         raise WorldCodeError(message)
     version, preset, seed, major, minor, patch, flags = cast(
         "tuple[int, int, int, int, int, int, int]", HEAD.unpack_from(payload)
     )
     names = {number: name for name, number in PRESET_IDS.items()}
     if version not in {FORMAT, COMPACT} or preset not in names:
-        message = "This world code is from a newer or different generator format"
+        message = say("code.format")
         raise WorldCodeError(message)
     changes: dict[str, object] | None = None
     rest = payload[HEAD.size :]
@@ -214,14 +215,14 @@ def decode(text: str) -> WorldCode:
             raw = zlib.decompress(rest[2 : 2 + length])
             parsed = cast("object", json.loads(raw))
         except (struct.error, zlib.error, ValueError) as error:
-            message = "The changed settings in the world code are damaged"
+            message = say("code.damaged")
             raise WorldCodeError(message) from error
         if not isinstance(parsed, dict):
-            message = "The changed settings in the world code are damaged"
+            message = say("code.damaged")
             raise WorldCodeError(message)
         changes = cast("dict[str, object]", parsed)
     elif rest:
-        message = "The world code has extra data"
+        message = say("code.extra")
         raise WorldCodeError(message)
     return WorldCode(names[preset], seed, f"{major}.{minor}.{patch}", changes)
 
@@ -277,7 +278,7 @@ def _expand(rest: bytes) -> dict[str, object]:
                 break
         document.setdefault(section, {})[field] = value
     if at != len(rest):
-        message = "The world code has extra data"
+        message = say("code.extra")
         raise WorldCodeError(message)
     return cast("dict[str, object]", document)
 
@@ -287,7 +288,7 @@ def format_of(text: str) -> int:
     cleaned = "".join(FOLDED.get(char, char) for char in SEPARATORS.sub("", text).upper())
     body = _from_base32(cleaned.removeprefix(PREFIX))
     if not body:
-        message = "The world code is too short"
+        message = say("code.short")
         raise WorldCodeError(message)
     return body[0]
 
@@ -309,7 +310,7 @@ def _to_base32(data: bytes) -> str:
 
 def _from_base32(digits: str) -> bytes:
     if not digits or any(char not in ALPHABET for char in digits):
-        message = "The world code has characters that cannot be part of one"
+        message = say("code.characters")
         raise WorldCodeError(message)
     bits = len(digits) * 5
     number = 0

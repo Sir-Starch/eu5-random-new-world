@@ -16,6 +16,7 @@ from rnw import atlas
 from rnw.atlas import AtlasError
 from rnw.eu5_atlas import build_atlas, grown_mask
 from rnw.newworld import NewWorld
+from rnw.wording import Phrase, render
 from tests.fakes import synthetic_atlas, synthetic_world
 
 
@@ -170,3 +171,30 @@ def test_a_builder_given_labels_of_the_wrong_shape_refuses() -> None:
     with pytest.raises(ValueError, match="differ in shape"):
         _ = build_atlas(world=world, plan=plan, biomes=biomes, natives=natives, mask=mask[:, :-1])
     assert isinstance(cast("object", world), NewWorld)
+
+
+def test_names_are_phrases_that_a_viewer_writes_in_its_own_language() -> None:
+    """Format 2 keeps names as phrases; format 1, English text, is still read."""
+    built = synthetic_atlas()
+    gulf = Phrase("gulf", "Akaira", ("north",))
+    named = replace(built, names=(gulf, *built.names[1:]))
+    document, picture = atlas.to_files(named)
+    again = atlas.from_files(document, picture)
+    assert again.names[0] == gulf
+    assert again.names[1:] == built.names[1:]
+    old = cast("dict[str, object]", json.loads(document))
+    old["format"] = 1
+    columns = cast("dict[str, list[object]]", old["locations"])
+    columns["name"] = ["Northern Gulf of Akaira", *columns["name"][1:]]
+    first = atlas.from_files(json.dumps(old).encode(), picture)
+    assert first.names[0] == "Northern Gulf of Akaira"
+    words = atlas.Words(
+        label=lambda key: f"<{key}>",
+        key=lambda key: key.upper(),
+        name=lambda name: render(name, "russian"),
+    )
+    labels = [label for label, _, _ in atlas.legend(again, "cultures", words)]
+    assert "<sea>" in labels
+    assert "A_CULTURE" in labels
+    found = atlas.find(again, "Аланд", words=words)
+    assert "place" in [match.kind for match in found]

@@ -98,7 +98,7 @@ def translate(domain: str, language: str, sources: Mapping[str, str]) -> dict[st
     found: dict[str, str] = {}
     for key, english in sources.items():
         entry = entries.get(key)
-        if entry is None or entry[0] != fingerprint(english) or not entry[1]:
+        if entry is None or entry[0] != fingerprint(english) or (english and not entry[1]):
             state = "missing" if entry is None else "stale" if entry[1] else "empty"
             message = f"The {language} translation of {key} ({domain}) is {state}"
             raise TranslationError(message)
@@ -127,7 +127,7 @@ def problems(domain: str, sources: Mapping[str, str], languages: Iterable[str]) 
                 found.append(f"{language}: {key} is missing")
                 continue
             source, text = entry
-            if not text:
+            if english and not text:
                 found.append(f"{language}: {key} is empty")
             elif source != fingerprint(english):
                 found.append(f"{language}: {key} is stale")

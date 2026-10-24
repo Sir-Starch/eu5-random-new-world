@@ -23,6 +23,7 @@ import numpy as np
 from rnw import tagfont
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_map import load_map
+from rnw.messages import say
 from rnw.newworld import land_stage
 from rnw.progress import checkpoint, run_stage, running
 
@@ -48,7 +49,7 @@ class CandidateError(ValueError):
 
 def check_count(count: int) -> None:
     if not 1 <= count <= MAX_COUNT:
-        message = f"Choose between 1 and {MAX_COUNT} candidates"
+        message = say("candidates.count", count=MAX_COUNT)
         raise CandidateError(message)
 
 
@@ -74,7 +75,7 @@ def sketch(game_dir: Path, settings: Settings, seeds: list[int]) -> list[Candida
     """
     check_count(len(seeds))
     if settings.mask.id:
-        message = "Candidates need generated land; clear the drawn land image first"
+        message = say("candidates.drawn")
         raise CandidateError(message)
     game_map = run_stage("load map", lambda: load_map(game_dir))
     shape = settings.new_world

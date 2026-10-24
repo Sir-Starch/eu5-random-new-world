@@ -17,7 +17,7 @@ from rnw.app import library, service
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.bundle import COVER_COPY
 from rnw.gui.controller import NEW, Controller, Phase, Task
-from rnw.gui.text import text
+from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.record import Verdict
 
 try:  # the window needs PySide6 and the system's graphics libraries
@@ -173,6 +173,31 @@ def test_the_library_and_world_page_fit_the_supported_window_size(
     assert (window.width(), window.height()) == (width, height)
     assert not window.world_visibility.visibleRegion().isEmpty()
     _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+@pytest.mark.parametrize("language", sorted(LANGUAGE_NAMES))
+def test_every_language_fits_the_smallest_supported_window(
+    tmp_path: Path, fake_export: Exporter, language: str
+) -> None:
+    """Translations run longer than English; none may widen the window or cut a button (L1)."""
+    set_language(language)
+    try:
+        window = _window(tmp_path, fake_export)
+        window.resize(1080, 760)
+        window.show()
+        QApplication.processEvents()
+        assert (window.width(), window.height()) == (1080, 760)
+        for button in window.new_page.findChildren(QPushButton):
+            if button.isVisibleTo(window):
+                assert button.width() >= button.minimumSizeHint().width(), button.text()
+        window.generate_button.click()
+        pump(lambda: window.controller.selected_world() is not None)
+        QApplication.processEvents()
+        assert (window.width(), window.height()) == (1080, 760)
+        _ = window.close()
+    finally:
+        set_language("english")
 
 
 @pytest.mark.usefixtures("application")

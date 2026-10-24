@@ -1,8 +1,24 @@
-"""Every string the window shows, in one place so a translation is one more table."""
+"""Every string the window shows, in English, and the language the window speaks.
+
+The English is here; the other official languages are the ``window`` catalogs
+(``rnw.translations``). The window starts in the language the player chose in its settings, else
+the language Steam runs the game in (``discovery.game_language``), else the system's, else
+English (``docs/localization.md`` §2.2). ``set_language`` is called once before the window is
+built; a change takes effect when the generator starts again.
+"""
 
 from __future__ import annotations
 
+import locale
+from functools import cache
 from typing import Final
+
+from rnw import translations
+from rnw.languages import SOURCE
+from rnw.messages import MESSAGES, Said
+from rnw.progress import STAGES
+from rnw.settings import SettingsError
+from rnw.worldfile import WorldFileError
 
 TITLE: Final[str] = "Random New World"
 GAME: Final[str] = "Europa Universalis V"
@@ -37,6 +53,9 @@ STRINGS: Final[dict[str, str]] = {
     # -- the game, the profile and the settings dialog --
     "game": "Game",
     "profile": "Profile",
+    "language": "Language",
+    "language.game": "As the game: {language}",
+    "language.restart": "The generator speaks the new language from its next start.",
     "browse": "Browse…",
     "settings": "Settings…",
     "settings_title": "Settings",
@@ -272,7 +291,7 @@ STRINGS: Final[dict[str, str]] = {
     "control.natives.state_locations": "State size",
     "control.natives.state_locations.about": "Locations of a native state, on average.",
     "unit.percent": " %",
-    "unit.times": " ×",  # noqa: RUF001 - the multiplication sign is meant
+    "unit.times": " ×",
     "unit.px": " px",
     "unit.": "",
     "install": "Add to the game when it is done",
@@ -285,6 +304,8 @@ STRINGS: Final[dict[str, str]] = {
     "finished": "Done in {seconds} s.",
     "failed": "It did not work: {message}\n\n{report_hint}",
     "report_hint": "To report it, open Settings and press Save diagnostics.",
+    "error_world_file": "The file cannot be used: it is damaged or not a world file. ({detail})",
+    "error_settings": "These settings cannot be used. ({detail})",
     "cancelled": "Cancelled. Nothing was changed in your game.",
     "ready_no_game": "Choose the game folder in Settings first.",
     "ready_no_profile": "Choose a profile in Settings, or turn adding to the game off.",
@@ -419,6 +440,15 @@ STRINGS: Final[dict[str, str]] = {
     "facts_hint": "Move over the map to see what lies there.",
     "search_hint": "Find a country, culture, religion, resource or place",
     "legend": "Legend",
+    "legend.sea": "Sea",
+    "legend.lake": "Lake",
+    "legend.wasteland": "Wasteland",
+    "legend.no_country": "No country",
+    "legend.none": "None",
+    "legend.uninhabited": "Uninhabited",
+    "legend.lowest": "Lowest",
+    "legend.middle": "Middle",
+    "legend.highest": "Highest",
     "found.country": "Country",
     "found.culture": "Culture",
     "found.religion": "Religion",
@@ -543,6 +573,112 @@ STRINGS: Final[dict[str, str]] = {
 }
 
 
+# Each official language by its own name, in the game's order of folders.
+LANGUAGE_NAMES: Final[dict[str, str]] = {
+    "braz_por": "Português (Brasil)",
+    "english": "English",
+    "french": "Français",
+    "german": "Deutsch",
+    "japanese": "日本語",
+    "korean": "한국어",
+    "polish": "Polski",
+    "russian": "Русский",
+    "simp_chinese": "简体中文",
+    "spanish": "Español",
+    "turkish": "Türkçe",
+}
+# The system's locales by their language code, for a window without a game to ask.
+LOCALES: Final[dict[str, str]] = {
+    "pt": "braz_por",
+    "en": "english",
+    "fr": "french",
+    "de": "german",
+    "ja": "japanese",
+    "ko": "korean",
+    "pl": "polish",
+    "ru": "russian",
+    "zh": "simp_chinese",
+    "es": "spanish",
+    "tr": "turkish",
+}
+# How each language groups the digits of a large number (30 871, 30.871, 30,871).
+GROUPING: Final[dict[str, str]] = {
+    "russian": "\u00a0",
+    "french": "\u00a0",
+    "polish": "\u00a0",
+    "german": ".",
+    "spanish": ".",
+    "braz_por": ".",
+    "turkish": ".",
+}
+STAGE: Final[str] = "stage."
+ERROR: Final[str] = "error."
+_language: list[str] = [SOURCE]
+
+
+def sources() -> dict[str, str]:
+    """Every English string of the window, by key: the sources of the ``window`` catalogs."""
+    return {
+        **STRINGS,
+        **{STAGE + name: info.label for name, info in STAGES.items()},
+        **{ERROR + key: english for key, english in MESSAGES.items()},
+    }
+
+
+def system_language() -> str | None:
+    """The official language of the system's locale, or None."""
+    code = (locale.getlocale()[0] or "").replace("-", "_").split("_")[0].lower()
+    return LOCALES.get(code)
+
+
+def choose_language(chosen: str, game: str | None, system: str | None) -> str:
+    """The player's choice, else the game's, else the system's, else English; one with a
+    catalog only (the window cannot speak a language it has no table for)."""
+    for language in (chosen, game, system):
+        if language and translations.has_catalog(translations.WINDOW, language):
+            return language
+    return SOURCE
+
+
+def set_language(language: str) -> None:
+    """Speak ``language`` from now on (before the window is built)."""
+    _language[0] = language if translations.has_catalog(translations.WINDOW, language) else SOURCE
+
+
+def language() -> str:
+    """The language the window speaks."""
+    return _language[0]
+
+
+@cache
+def _table(language: str) -> dict[str, str]:
+    return translations.translate(translations.WINDOW, language, sources())
+
+
 def text(key: str, **values: object) -> str:
-    """The string for ``key``, with ``{name}`` fields filled in."""
-    return STRINGS[key].format(**values)
+    """The string for ``key`` in the window's language, with ``{name}`` fields filled in."""
+    return _table(_language[0])[key].format(**values)
+
+
+def explain(error: BaseException) -> str:
+    """What went wrong, for the player: a message of the generator in the window's language; a
+    damaged world file or settings with a translated lead and the English detail; anything else as
+    it reads (it goes to a bug report)."""
+    said = error.args[0] if error.args else None
+    if isinstance(said, Said):
+        return text(ERROR + said.key, **said.values)
+    if isinstance(error, WorldFileError):
+        return text("error_world_file", detail=str(error))
+    if isinstance(error, SettingsError):
+        return text("error_settings", detail=str(error))
+    return str(error) or type(error).__name__
+
+
+def grouped(value: int) -> str:
+    """A whole number with its digits grouped as the window's language groups them."""
+    return f"{value:,}".replace(",", GROUPING.get(_language[0], ","))
+
+
+def stage_text(name: str) -> str:
+    """What the window calls a stage of the export."""
+    return _table(_language[0]).get(STAGE + name, name)

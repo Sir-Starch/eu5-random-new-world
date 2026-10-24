@@ -42,6 +42,7 @@ from rnw.bundle import COVER_COPY
 from rnw.landmask import LandMask, LandMaskError
 from rnw.landmask import read as read_land_mask
 from rnw.layers import land_key
+from rnw.messages import say
 from rnw.pictures import center_column, tagged, thumbnail
 from rnw.png import COLOR_RGB, encode_png
 from rnw.pngread import read_rgb
@@ -442,19 +443,17 @@ def write_cover(data: Path, world: World, mod: Path, *, covered: bool) -> bool:
 def show(data: Path, world: World, mod: Path, *, shown: bool) -> None:
     """Make the world's mod show the New World before it is played, or keep it hidden."""
     if picture(data, world, revealed=shown) is None or picture(data, world, revealed=False) is None:
-        message = (
-            f"The pictures for {world.folder} are missing; its in-game picture cannot be changed"
-        )
+        message = say("pictures.missing", folder=world.folder)
         raise OSError(message)
     cover = folder(data, world) / COVER_COPY
     if not cover.is_dir() or not any(path.is_file() for path in cover.rglob("*")):
-        message = f"The saved country-selection cover for {world.folder} is missing"
+        message = say("cover.missing", folder=world.folder)
         raise OSError(message)
     if not write_thumbnail(data, world, mod, revealed=shown):
-        message = f"The picture for {world.folder} could not be written"
+        message = say("picture.unwritten", folder=world.folder)
         raise OSError(message)
     if not write_cover(data, world, mod, covered=not shown):
-        message = f"The saved country-selection cover for {world.folder} is missing"
+        message = say("cover.missing", folder=world.folder)
         raise OSError(message)
 
 

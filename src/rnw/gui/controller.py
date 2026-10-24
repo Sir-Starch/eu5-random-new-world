@@ -25,6 +25,7 @@ from rnw.app import (
     diagnostics,
     discovery,
     exchange,
+    gamenames,
     install,
     library,
     logs,
@@ -48,12 +49,21 @@ from rnw.app.worldcode import (
     rolled,
     with_new_seed,
 )
-from rnw.gui.text import text
+from rnw.gui.text import (
+    choose_language,
+    explain,
+    grouped,
+    language,
+    stage_text,
+    system_language,
+    text,
+)
 from rnw.layers import PARTS, rolls_of
 from rnw.png import COLOR_RGB, encode_png
 from rnw.progress import STAGES, Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
 from rnw.settings import PRESETS, WORLD_TYPES, SettingsError, build_settings
+from rnw.wording import render
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -258,6 +268,20 @@ class Controller:
         self.refresh_library()
         return None
 
+    def window_language(self) -> str:
+        """The language the window should speak: the player's choice, the game's, the system's.
+
+        Read before the window is built, so the game is looked for once on its own here.
+        """
+        games = discovery.find_games(self.environment, self.program_folder)
+        game = discovery.game_language(games[0]) if games else None
+        return choose_language(self.preferences.language, game, system_language())
+
+    def set_language(self, language: str) -> None:
+        """Remember the window's language (empty: follow the game); it applies at the next start."""
+        self._remember(language=language)
+        self._changed()
+
     def _remember(self, **chosen: str) -> None:
         """Keep a folder the player chose by hand, so that the generator is not asked again."""
         self.preferences = replace(self.preferences, **chosen)
@@ -302,7 +326,7 @@ class Controller:
         try:
             code = decode(value)
         except WorldCodeError as error:
-            return str(error)
+            return explain(error)
         shown, other = controls.flat(code.changes)
         outside = [key for key, number in shown.items() if not controls.BY_KEY[key].allows(number)]
         if code.preset not in WORLD_TYPES or outside:
@@ -569,7 +593,7 @@ class Controller:
             code = rolled(decode(world.code), part)
             drawn = service.required_land_mask(self.data, world)
         except (WorldCodeError, service.LandImageError) as error:
-            return str(error)
+            return explain(error)
         game, data, generator = self.game, self.data, self.generator
         profile = self.profile if self.placement(world) is Placement.IN_GAME else None
         request = service.Request(
@@ -619,7 +643,7 @@ class Controller:
                     library.show(self.data, changed, mod, shown=show)
             library.save(self.data, changed)
         except OSError as error:
-            return str(error)
+            return explain(error)
         self.refresh_library()
         return None
 
@@ -645,9 +669,13 @@ class Controller:
         try:
             estimate = self.estimated_locations()
         except SettingsError as error:
-            return str(error)
+            return explain(error)
         if estimate > controls.LOCATION_BUDGET:
-            return text("too_many_locations", count=estimate, budget=controls.LOCATION_BUDGET)
+            return text(
+                "too_many_locations",
+                count=grouped(estimate),
+                budget=grouped(controls.LOCATION_BUDGET),
+            )
         wanted = self.world_code().settings().mask.id
         if wanted and (self.land_mask is None or self.land_mask.id != wanted):
             return text("needs_land_image")
@@ -659,7 +687,7 @@ class Controller:
         try:
             mask = landmask.read(path)
         except landmask.LandMaskError as error:
-            return str(error)
+            return explain(error)
         self.land_mask = mask
         self.other_changes["mask"] = {"id": mask.id}
         self.notice = ""
@@ -706,11 +734,15 @@ class Controller:
                 "done"
                 if name in self.finished
                 else "running"
-                if info.label in self.running
+                if name in self.running
                 else "waiting"
             )
-            rows.append((info.label, state))
+            rows.append((stage_text(name), state))
         return rows
+
+    def running_text(self) -> str:
+        """The stages that run now, in the window's language."""
+        return ", ".join(stage_text(name) for name in self.running)
 
     # -- the work ------------------------------------------------------------------------------
 
@@ -723,7 +755,7 @@ class Controller:
         try:
             seeds = candidates.roll(count)
         except candidates.CandidateError as error:
-            return str(error)
+            return explain(error)
         self.candidates, self.candidate_code = [], None
 
         def work(_progress: Progress) -> None:
@@ -846,7 +878,7 @@ class Controller:
             taken = exchange.import_world(self.data, path)
         except (exchange.ExchangeError, worldfile.WorldFileError, OSError) as error:
             logs.get().warning("world file %s refused: %s", path.name, error)
-            return str(error)
+            return explain(error)
         self.selection = taken.world.id
         self.last_import = taken
         self.refresh_library()
@@ -884,7 +916,7 @@ class Controller:
         try:
             _ = exchange.export_world(self.data, world, output)
         except (worldfile.WorldFileError, OSError) as error:
-            return str(error)
+            return explain(error)
         return None
 
     def send_built(self, world: World, output: Path) -> str | None:
@@ -908,6 +940,21 @@ class Controller:
         """The world's atlas, or None when it has none."""
         return library.atlas(self.data, world)
 
+    def words(self, found: Atlas) -> atlas.Words:
+        """How the window writes an atlas: its own legend words, the game's names of the
+        identifiers when the game is here (else the identifiers made readable), the world's
+        names in the window's language."""
+        speaking = language()
+        names: dict[str, str] = {}
+        if self.game is not None:
+            keys = frozenset(word for words in found.vocabulary.values() for word in words)
+            names = gamenames.game_names(self.game.directory, speaking, keys)
+        return atlas.Words(
+            label=lambda key: text(f"legend.{key}"),
+            key=lambda key: names.get(key) or atlas.pretty(key),
+            name=lambda name: render(name, speaking),
+        )
+
     def revealed(self, world: World) -> bool:
         """Whether the world's New World may be shown here."""
         return self.shown(world) or world.revealed
@@ -922,7 +969,9 @@ class Controller:
         found = self.atlas(world)
         if found is None:
             return ""
-        return text("summary", **atlas.totals(found))
+        return text(
+            "summary", **{key: grouped(value) for key, value in atlas.totals(found).items()}
+        )
 
     def maps_to_compare(self) -> list[tuple[World, Atlas]]:
         """The worlds whose maps may be shown and that have an atlas."""
@@ -938,7 +987,7 @@ class Controller:
             data = encode_png(atlas.render(found, layer), color_type=COLOR_RGB, compression="zlib")
             _ = output.write_bytes(data)
         except (OSError, atlas.AtlasError) as error:
-            return str(error)
+            return explain(error)
         return None
 
     def save_preview(self, world: World, output: Path) -> str | None:
@@ -949,7 +998,7 @@ class Controller:
         try:
             _ = output.write_bytes(source.read_bytes())
         except OSError as error:
-            return str(error)
+            return explain(error)
         return None
 
     def compatibility(self, world: World) -> bool | None:
@@ -1152,7 +1201,7 @@ class Controller:
             _ = (self.data / ERROR_LOG).write_text(traceback.format_exc(), encoding="utf-8")
         except OSError:
             pass
-        return str(error) or type(error).__name__
+        return explain(error)
 
     # -- bug reports ---------------------------------------------------------------------------
 
@@ -1176,7 +1225,7 @@ class Controller:
             _ = diagnostics.write(output, self.snapshot())
         except OSError as error:
             logs.get().exception("diagnostics could not be written")
-            return text("diagnostics_failed", problem=str(error))
+            return text("diagnostics_failed", problem=explain(error))
         return None
 
     # -- what to do in EU5 next ----------------------------------------------------------------

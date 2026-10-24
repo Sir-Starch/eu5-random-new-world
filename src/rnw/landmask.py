@@ -28,6 +28,7 @@ import numpy as np
 from PIL import Image
 
 from rnw.fields import box_blur
+from rnw.messages import say
 from rnw.png import COLOR_GRAY, encode_png
 
 if TYPE_CHECKING:
@@ -99,14 +100,13 @@ def _decode(data: bytes) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
             rgba = image.convert("RGBA")
             return np.asarray(rgba.convert("L")), np.asarray(rgba)[..., 3]
     except (OSError, ValueError, Image.DecompressionBombError) as error:
-        message = f"The picture cannot be read: {error}"
+        message = say("mask.unreadable", error=error)
         raise LandMaskError(message) from error
 
 
 def _refuse_size(width: int, height: int) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
-    message = (
-        f"The picture is {width} x {height}; it must be at least {MIN_SIDE} pixels each way "
-        f"and at most {MAX_PIXELS // 1_000_000} million in all"
+    message = say(
+        "mask.size", width=width, height=height, side=MIN_SIDE, millions=MAX_PIXELS // 1_000_000
     )
     raise LandMaskError(message)
 
@@ -117,10 +117,11 @@ def from_bytes(data: bytes) -> LandMask:
     land = (grey >= THRESHOLD) & (alpha >= THRESHOLD)
     mask = LandMask(land.astype(bool))
     if not MIN_LAND_PERMILLE <= mask.share <= MAX_LAND_PERMILLE:
-        message = (
-            f"The picture is {mask.share / 10:.1f} % land; a world needs between "
-            f"{MIN_LAND_PERMILLE / 10:.0f} % and {MAX_LAND_PERMILLE / 10:.0f} % "
-            "(white is land, black is sea)"
+        message = say(
+            "mask.share",
+            share=f"{mask.share / 10:.1f}",
+            low=f"{MIN_LAND_PERMILLE / 10:.0f}",
+            high=f"{MAX_LAND_PERMILLE / 10:.0f}",
         )
         raise LandMaskError(message)
     return mask
@@ -131,7 +132,7 @@ def read(path: Path) -> LandMask:
     try:
         return from_bytes(path.read_bytes())
     except OSError as error:
-        message = f"{path.name} cannot be read: {error}"
+        message = say("mask.file", name=path.name, error=error)
         raise LandMaskError(message) from error
 
 
@@ -147,10 +148,12 @@ def fit(mask: LandMask, shape: tuple[int, int]) -> NDArray[np.bool_]:
     wanted = width * PERMILLE // height
     given = columns * PERMILLE // rows
     if abs(given - wanted) * PERMILLE > ASPECT_PERMILLE * wanted:
-        message = (
-            f"The picture is {given / 1000:.2f} times as wide as it is high; the New World's "
-            f"area is {wanted / 1000:.2f}. Draw it in that proportion (for example "
-            f"{round(wanted * rows / 1000)} x {rows} pixels)"
+        message = say(
+            "mask.aspect",
+            given=f"{given / 1000:.2f}",
+            wanted=f"{wanted / 1000:.2f}",
+            width=round(wanted * rows / 1000),
+            height=rows,
         )
         raise LandMaskError(message)
     source_rows = np.arange(height, dtype=np.int64) * rows // height

@@ -191,3 +191,20 @@ def test_inside_a_proton_prefix_the_steam_stub_lists_the_library(tmp_path: Path)
     )
     games = discovery.find_games(environment)
     assert [(game.library, game.build_id) for game in games] == [(library, "26043558")]
+
+
+def test_the_games_language_is_steams_and_named_as_the_games_folders(tmp_path: Path) -> None:
+    """Steam keeps the per-game language in the app manifest under its own names (C269)."""
+    library = _library(tmp_path / "lib")
+    manifest = library / "steamapps" / "appmanifest_3450310.acf"
+    game = GameInstall(library / "steamapps" / "common" / "Europa Universalis V", library, "")
+    assert discovery.game_language(game) is None
+    for steam, folder in (("schinese", "simp_chinese"), ("russian", "russian")):
+        text = MANIFEST.replace(
+            '\t"InstalledDepots"',
+            f'\t"UserConfig"\n\t{{\n\t\t"language"\t\t"{steam}"\n\t}}\n\t"InstalledDepots"',
+        )
+        _ = manifest.write_text(text, encoding="utf-8")
+        assert discovery.game_language(game) == folder
+        # A game chosen by hand has no library, but its folder still says where Steam keeps it.
+        assert discovery.game_language(GameInstall(game.directory, None, "")) == folder

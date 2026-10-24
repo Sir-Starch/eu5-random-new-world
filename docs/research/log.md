@@ -862,3 +862,8 @@ Owner instruction: implement N5. Design, method, three-world audit and limits ar
 - [V-EXEC C274] Translations into ten languages, written for each language's own conventions as the game's translators use them (Russian infinitive options and names in apposition, German plural imperatives, French first person plural, Brazilian Portuguese Title Case titles and third person plural, Polish infinitives, Turkish jussives with names only before a fixed noun, Japanese *da/dearu* narration, Korean *-습니다* narration with no particle after a name, Chinese full-width punctuation).
 - [V-EXEC C273] Names: a rule-based transcription per script, measured against the game's own spellings; composed names are phrases rendered per language.
 - [V-EXEC] `uv run pytest`: all tests pass; the local suite with `RNW_REPRODUCE=1` remakes the epoch-29 reference world.
+
+## 2026-10-24 — L1: the generator's window in every language (0.11.6, C275)
+
+- [V-EXEC C275] `gui/text.py` chooses the window's language (the player's, else Steam's per-game language from the app manifest, else the system's), and the `window` catalogs translate its 441 strings into ten languages. The generator's messages to the player moved to `rnw/messages.py`: `say(key, ...)` prints English for the command line and the log and lets the window write the message in its language. The atlas keeps names as phrases (format 2) and the window writes them in its language; with the game installed, cultures, religions, materials and lands show the game's own names (`app/gamenames.py`). A test makes the window in every language at 1,080 by 760 pixels.
+- Found by looking at the captures: the estimate printed `30,871` in Russian; numbers are now grouped per language.

@@ -147,7 +147,7 @@ def test_a_built_world_is_refused_by_a_game_that_is_not_the_one_it_was_made_from
         _ = transfer.receive_mod(tmp_path / "two", path, game)
     _same_fingerprint(monkeypatch)
     _ = (game.directory / "game/a.txt").write_text("a patch", encoding="utf-8")
-    with pytest.raises(ExchangeError, match="game files the world read"):
+    with pytest.raises(ExchangeError, match="game files the world was made from"):
         _ = transfer.receive_mod(tmp_path / "two", path, game)
     assert not (tmp_path / "two" / "generated").exists()
 
@@ -191,10 +191,10 @@ def test_what_cannot_be_sent_or_received_says_why(
     mod = library.kept(tmp_path / "one", world)
     assert mod is not None
     (folder / "inputs.json").unlink()
-    with pytest.raises(ExchangeError, match="no longer has"):
+    with pytest.raises(ExchangeError, match="no longer include"):
         _ = transfer.send_mod(tmp_path / "one", world, mod, tmp_path / "x.rnworld-mod")
     compact = exchange.export_world(tmp_path / "one", world, tmp_path / "c.rnworld")
-    with pytest.raises(ExchangeError, match="no mod in it"):
+    with pytest.raises(ExchangeError, match="holds no mod"):
         _ = transfer.receive_mod(tmp_path / "two", compact, game)
     bare = worldfile.write_mod(
         tmp_path / "bare.rnworld-mod",
@@ -203,7 +203,7 @@ def test_what_cannot_be_sent_or_received_says_why(
         {"manifest.json": b"{}", "inputs.json": b"{}"},
         mod,
     )
-    with pytest.raises(ExchangeError, match="before records"):
+    with pytest.raises(ExchangeError, match="before worlds kept a record"):
         _ = transfer.receive_mod(tmp_path / "two", bare, game)
     with pytest.raises(WorldFileError):
         _ = worldfile.read(tmp_path / "missing.rnworld")

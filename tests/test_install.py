@@ -108,7 +108,7 @@ def test_a_world_that_cannot_be_moved_is_left_as_it_was(
     incoming = install.stage(
         _mod(tmp_path / "b", "rnw_exp_new_world", "two"), profile, replace=True
     )
-    with pytest.raises(install.WorldInUseError, match="untick it"):
+    with pytest.raises(install.WorldInUseError, match="Untick it"):
         _ = install.put_in_place(incoming)
     assert (target / "in_game.txt").read_text(encoding="utf-8") == "one"
     assert incoming.is_dir()

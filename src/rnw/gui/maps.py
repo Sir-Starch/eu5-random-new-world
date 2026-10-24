@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 
 from rnw import atlas as atlas_module
 from rnw.gui.preview import PreviewView
-from rnw.gui.text import text
+from rnw.gui.text import grouped, text
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -90,6 +90,7 @@ class MapsPanel(QWidget):
     def __init__(self) -> None:
         super().__init__()
         self._atlas: Atlas | None = None
+        self._words: atlas_module.Words = atlas_module.ENGLISH
         self._layer: str = atlas_module.LAYERS[0]
         self._highlight: tuple[int, ...] = ()
         self._matches: list[atlas_module.Match] = []
@@ -175,7 +176,14 @@ class MapsPanel(QWidget):
         """The layer shown now."""
         return self._layer
 
-    def show_world(self, atlas: Atlas | None, *, revealed: bool, identity: int = 0) -> None:
+    def show_world(
+        self,
+        atlas: Atlas | None,
+        *,
+        revealed: bool,
+        identity: int = 0,
+        words: atlas_module.Words = atlas_module.ENGLISH,
+    ) -> None:
         """Show the atlas of a world, or the reason there is nothing to show.
 
         ``identity`` tells one world from another so that the picture is drawn afresh for a new
@@ -192,6 +200,7 @@ class MapsPanel(QWidget):
             self.pages.setCurrentIndex(0)
             return
         self._identity = identity
+        self._words = words
         if atlas is not self._atlas:
             self._atlas = atlas
             self._highlight = ()
@@ -215,7 +224,7 @@ class MapsPanel(QWidget):
 
     def _legend(self, atlas: Atlas) -> None:
         self.legend_list.clear()
-        for label, colour, count in atlas_module.legend(atlas, self._layer):
+        for label, colour, count in atlas_module.legend(atlas, self._layer, self._words):
             swatch = QPixmap(SWATCH, SWATCH)
             swatch.fill(QColor(*colour))
             suffix = f"  ({count})" if count else ""
@@ -249,7 +258,9 @@ class MapsPanel(QWidget):
             if atlas is None
             else atlas_module.describe(atlas, atlas_module.cell_at(atlas, row, column))
         )
-        self.facts.setText(describe_text(facts) if facts is not None else text("facts_hint"))
+        self.facts.setText(
+            describe_text(facts, self._words) if facts is not None else text("facts_hint")
+        )
 
     def clear_facts(self) -> None:
         self.facts.setText(text("facts_hint"))
@@ -257,7 +268,11 @@ class MapsPanel(QWidget):
     def _searched(self, query: str) -> None:
         atlas = self._atlas
         self.results.clear()
-        self._matches = [] if atlas is None else atlas_module.find(atlas, query, limit=RESULTS)
+        self._matches = (
+            []
+            if atlas is None
+            else atlas_module.find(atlas, query, limit=RESULTS, words=self._words)
+        )
         for match in self._matches:
             self.results.addItem(f"{text(f'found.{match.kind}')}: {match.label}")
         if not self._matches:
@@ -330,22 +345,27 @@ class CompareDialog(QDialog):
             view.show_image(to_image(picture), f"{choice.currentIndex()}:{self._layer}")
 
 
-def describe_text(facts: atlas_module.Facts) -> str:
-    """What the atlas says of a location, in a few lines."""
-    lines = [f"{facts.name or facts.key}  ({text(f'kind.{facts.kind}')})"]
+def describe_text(
+    facts: atlas_module.Facts, words: atlas_module.Words = atlas_module.ENGLISH
+) -> str:
+    """What the atlas says of a location, in a few lines, as ``words`` write it."""
+    lines = [
+        f"{words.name(facts.name) if facts.name else facts.key}  ({text(f'kind.{facts.kind}')})"
+    ]
     if facts.kind == "land":
-        owner = facts.country.name if facts.country is not None else text("no_country")
+        country = facts.country
+        owner = words.name(country.name) if country is not None else text("no_country")
         lines.append(f"{text('fact.country')}: {owner}")
         if facts.culture:
-            culture = atlas_module.pretty(facts.culture)
-            religion = atlas_module.pretty(facts.religion)
+            culture = words.key(facts.culture)
+            religion = words.key(facts.religion)
             lines.append(f"{text('fact.culture')}: {culture} · {text('fact.religion')}: {religion}")
-        material = atlas_module.pretty(facts.material)
+        material = words.key(facts.material)
         land = " · ".join(
-            item for item in (facts.vegetation, facts.topography, facts.climate) if item
+            words.key(item) for item in (facts.vegetation, facts.topography, facts.climate) if item
         )
         lines.append(f"{text('fact.material')}: {material} · {land}")
         if facts.population:
-            population = f"{text('fact.population')}: {facts.population}"
+            population = f"{text('fact.population')}: {grouped(facts.population)}"
             lines.append(f"{population} · {text('fact.complexity')}: {facts.complexity}")
     return "\n".join(lines)

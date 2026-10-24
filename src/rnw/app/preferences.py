@@ -24,6 +24,8 @@ class Preferences:
     # not found: remembered, so that the question is asked once (ADR 0010, D).
     game_dir: str = ""
     profile_dir: str = ""
+    # The window's language as the player chose it; empty follows the game's (rnw.gui.text).
+    language: str = ""
 
 
 def load(data: Path) -> Preferences:
@@ -34,6 +36,7 @@ def load(data: Path) -> Preferences:
             show_new_world=row.get("show_new_world") is True,
             game_dir=str(row.get("game_dir", "")),
             profile_dir=str(row.get("profile_dir", "")),
+            language=str(row.get("language", "")),
         )
     return Preferences()
 

@@ -88,7 +88,11 @@ TOTAL_WEIGHT: Final[int] = sum(info.weight for info in STAGES.values())
 
 @dataclass(frozen=True, slots=True)
 class Update:
-    """One change of the job: the stage that moved, what runs now and how far along it is."""
+    """One change of the job: the stage that moved, what runs now and how far along it is.
+
+    ``running`` holds the names of the running stages; the window writes them in its language
+    (``rnw.gui.text``), ``label`` is the English of the stage that moved, for the log.
+    """
 
     stage: str
     label: str
@@ -159,7 +163,7 @@ class Progress:
                 label=STAGES[name].label if name in STAGES else name,
                 finished=finished,
                 fraction=self._share(),
-                running=tuple(STAGES[n].label if n in STAGES else n for n in self._running),
+                running=tuple(self._running),
             )
         if self._listener is not None:
             self._listener(update)

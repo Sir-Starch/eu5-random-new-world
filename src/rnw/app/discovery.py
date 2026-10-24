@@ -174,6 +174,33 @@ def _manifest(library: Path) -> Section | None:
     return None
 
 
+# Steam's names of the game's languages where they differ from the game's folders (C269).
+STEAM_LANGUAGES: Final[dict[str, str]] = {
+    "brazilian": "braz_por",
+    "schinese": "simp_chinese",
+    "koreana": "korean",
+    "latam": "spanish",
+}
+
+
+def game_language(game: GameInstall) -> str | None:
+    """The language Steam runs the game in, as the game's folder names it (C269).
+
+    Steam keeps it in the game's app manifest, ``UserConfig`` then ``MountedConfig``. None when
+    the game is not in a Steam library or the manifest says nothing.
+    """
+    library = game.library
+    if library is None and game.directory.parent.parent.name == "steamapps":
+        library = game.directory.parent.parent.parent
+    state = _manifest(library) if library is not None else None
+    for section in ("userconfig", "mountedconfig"):
+        config = state.get(section) if state is not None else None
+        language = config.get("language") if isinstance(config, dict) else None
+        if isinstance(language, str) and language:
+            return STEAM_LANGUAGES.get(language, language)
+    return None
+
+
 def is_game(directory: Path) -> bool:
     """Whether ``directory`` is an EU5 installation (it holds the map data)."""
     return directory.joinpath(*MAP_MARKER).is_dir()

@@ -24,6 +24,7 @@ from rnw.eu5_canvas import select_canvas
 from rnw.eu5_map import load_map
 from rnw.eu5_nw_export import export_new_world
 from rnw.inputs import compare
+from rnw.messages import say
 from rnw.parallel import cores
 from rnw.png import COLOR_GRAY, encode_png
 from rnw.progress import Cancelled, active, checkpoint, running
@@ -134,20 +135,20 @@ def _require_profile(request: Request) -> None:
         path for path in (request.output_folder, request.world_file) if path is not None
     ]
     if len(destinations) > 1 or (request.world_file is not None and request.install):
-        message = "Choose one destination for the world"
+        message = say("destination.one")
         raise install.InstallError(message)
     for destination in destinations:
         if destination.resolve().is_relative_to(request.game.directory.resolve()):
-            message = "The destination must be outside the game installation"
+            message = say("destination.outside")
             raise install.InstallError(message)
     if request.output_folder is not None and not request.output_folder.is_dir():
-        message = "Choose an existing folder for the mod"
+        message = say("destination.folder")
         raise install.InstallError(message)
     if request.world_file is not None and request.world_file.exists():
-        message = f"{request.world_file} exists already; choose a new world-file name"
+        message = say("destination.exists", file=request.world_file)
         raise install.InstallError(message)
     if request.install and request.profile is None:
-        message = "There is no profile to install into; choose one or turn installing off"
+        message = say("destination.profile")
         raise install.InstallError(message)
 
 
@@ -365,10 +366,7 @@ def required_land_mask(data: Path, world: World) -> LandMask | None:
         return None
     found = library.land_mask(data, world)
     if found is None or found.id != wanted:
-        message = (
-            "This world's land is drawn on an image that the library no longer has. Open the "
-            "world's file again, or give the image, to make the world"
-        )
+        message = say("land_image.gone")
         raise LandImageError(message)
     return found
 
@@ -441,7 +439,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
     """
     record = world.record
     if record is None:
-        message = "This world was made before records were kept, so it cannot be checked"
+        message = say("check.no_record")
         raise CheckError(message)
     started = time.monotonic()
     logs.get().info(
@@ -456,7 +454,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
         return Check(Verdict.OTHER_INPUTS, None, changed, [], time.monotonic() - started)
     expected = library.exported_outputs(data, world)
     if expected is None or manifest_digest(expected) != record.output_sha256:
-        message = "The world's bundle no longer holds the files its record was made from"
+        message = say("check.bundle")
         raise CheckError(message)
     run = export_new_world if exporter is None else exporter
     scratch = workspace(data) / f"{CHECK_PREFIX}{world.id}"

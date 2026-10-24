@@ -20,6 +20,7 @@ from rnw.app import exchange, install, library
 from rnw.app.exchange import ExchangeError, Imported
 from rnw.bundle import COVER_COPY
 from rnw.contract import aggregate_digest, fingerprint
+from rnw.messages import say
 from rnw.parallel import cores
 from rnw.record import Manifest
 
@@ -44,7 +45,7 @@ def send_mod(data: Path, world: World, mod: Path, output: Path) -> Path:
     for name in worldfile.BUNDLE_FILES:
         source = folder / name
         if not source.is_file():
-            message = f"The world's bundle no longer has {name}, so it cannot be transferred"
+            message = say("transfer.bundle", name=name)
             raise ExchangeError(message)
         bundle[name] = source.read_bytes()
     cover = folder / COVER_COPY
@@ -68,12 +69,12 @@ def receive_mod(data: Path, path: Path, game: GameInstall) -> Imported:
     """
     found = worldfile.read(path)
     if found.kind != worldfile.KIND_MOD:
-        message = "This file has no mod in it; open it as a world file"
+        message = say("transfer.no_mod")
         raise ExchangeError(message)
     world = exchange.checked_world(found.record)
     record = world.record
     if record is None:
-        message = "The world was made before records were kept, so its game cannot be checked"
+        message = say("transfer.no_record")
         raise ExchangeError(message)
     if found.atlas is not None:
         exchange.check_atlas(found.atlas)
@@ -84,13 +85,13 @@ def receive_mod(data: Path, path: Path, game: GameInstall) -> Imported:
     target = library.folder(data, world)
     final = target / world.folder
     if library.load_one(target) is not None or final.exists():
-        message = "The library already has this world; delete it first to take this copy"
+        message = say("transfer.have")
         raise ExchangeError(message)
     staged = target / f"{world.folder}.incoming"
     _ = worldfile.extract_mod(path, staged)
     if not install.is_rnw_mod(staged):
         shutil.rmtree(staged, ignore_errors=True)
-        message = "The mod in the file is not a mod of this project"
+        message = say("transfer.foreign")
         raise ExchangeError(message)
     _ = staged.rename(final)
     library.save(data, world)
@@ -110,20 +111,18 @@ def _same_game(game: GameInstall, fingerprint_sha256: str, listing: bytes | None
     """Raise unless ``game`` is the one the world was made from."""
     local = aggregate_digest(fingerprint(game.directory))
     if local != fingerprint_sha256:
-        message = (
-            "This game is not the one the world was made from: the files of its map differ. "
-            "Make the world again here from its code."
-        )
+        message = say("transfer.other_game")
         raise ExchangeError(message)
     if listing is None:
-        message = "The file lists no game files, so this game cannot be checked against it"
+        message = say("transfer.no_listing")
         raise ExchangeError(message)
     manifest = Manifest.from_json(cast("object", json.loads(listing.decode("utf-8"))))
     found = inputs.compare(game.directory, manifest, workers=cores())
     if not found.same:
         names = [*found.missing, *found.changed][:5]
-        message = (
-            f"{len(found.missing) + len(found.changed)} game files the world read are not as "
-            f"they were, for example {names}. Make the world again here from its code."
+        message = say(
+            "transfer.changed",
+            count=len(found.missing) + len(found.changed),
+            names=", ".join(names),
         )
         raise ExchangeError(message)

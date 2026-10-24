@@ -22,6 +22,7 @@ import time
 from typing import TYPE_CHECKING, Final
 
 from rnw.artifacts import when_free
+from rnw.messages import say
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -121,10 +122,7 @@ def _retire(target: Path) -> Path:
     try:
         _ = target.rename(place)
     except PermissionError as error:
-        message = (
-            f"The game is using {target.name}: untick it in the game's playset and apply "
-            "the playset, or close the game"
-        )
+        message = say("install.in_use", mod=target.name)
         raise WorldInUseError(message) from error
     return place
 

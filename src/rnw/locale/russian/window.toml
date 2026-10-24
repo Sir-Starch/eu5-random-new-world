@@ -1,0 +1,1763 @@
+["undo_roll"]
+source = "d3ba4753973fc1f9"
+text = '''Отменить переброс'''
+
+["task.undo"]
+source = "3ca5c54e7c549b10"
+text = '''Возвращаю предыдущую версию'''
+
+["copy_tag"]
+source = "6d38d2a846422e7f"
+text = '''Копировать метку'''
+
+["copy_picture"]
+source = "05decf94ea187240"
+text = '''Копировать картинку'''
+
+["destination.library"]
+source = "09a9c9fa074db7d9"
+text = '''Оставить мод в библиотеке'''
+
+["destination.mod"]
+source = "0ad3383f1dce480d"
+text = '''Скопировать мод в папку'''
+
+["destination.world"]
+source = "172c07cba6c2dd6c"
+text = '''Только файл мира'''
+
+["destination_choose"]
+source = "9772ff884d42d946"
+text = '''Выбрать место...'''
+
+["destination_missing"]
+source = "dd64b96d7c6d9026"
+text = '''Сначала выберите, куда сохранить этот мир.'''
+
+["tab.notes"]
+source = "8a7525b1492fb848"
+text = '''Заметки'''
+
+["starred"]
+source = "e39b24993c31d7bb"
+text = '''Избранное'''
+
+["user_tag"]
+source = "e1c92163bf9d061c"
+text = '''Ваша метка (до 64 символов)'''
+
+["notes_hint"]
+source = "6d8ef522499455f3"
+text = '''Заметки об этом мире (до 16 384 символов)'''
+
+["save_notes"]
+source = "eb76a6cc99ba6881"
+text = '''Сохранить заметки'''
+
+["notes_saved"]
+source = "04965e23cd9e8fb9"
+text = '''Заметки сохранены.'''
+
+["candidates"]
+source = "0e7b026bc70eba63"
+text = '''Выбрать материк...'''
+
+["candidates_hint"]
+source = "2292c2759a5d2df3"
+text = '''Перед созданием мира можно посмотреть шесть набросков материков. Это раскроет их сушу. Выберите один, чтобы взять его зерно и настройки; окончательная береговая линия может слегка сместиться, когда сложатся локации.'''
+
+["candidate_item"]
+source = "82a3979eef3cad60"
+text = "{number} · суша {land:g}%\nЗерно {seed}"
+
+["enqueue"]
+source = "34b25c1b963f3a59"
+text = '''В очередь'''
+
+["run_queue"]
+source = "073afaf0ff8ea437"
+text = '''Запустить очередь'''
+
+["clear_queue"]
+source = "fd1d3b4b9147213b"
+text = '''Очистить очередь'''
+
+["queue_empty"]
+source = "dd95d861c51b5f8b"
+text = '''Сначала добавьте мир в очередь.'''
+
+["queue_count"]
+source = "bc608dfbf45c2100"
+text = '''В очереди: {count}'''
+
+["game"]
+source = "5c412a262086b970"
+text = '''Игра'''
+
+["profile"]
+source = "d696a35bdd1883da"
+text = '''Профиль'''
+
+["language"]
+source = "a4fe65264ef7dbb3"
+text = '''Язык'''
+
+["language.game"]
+source = "3bbba19c86874410"
+text = '''Как в игре: {language}'''
+
+["language.restart"]
+source = "0a1870181520b1b9"
+text = '''Генератор заговорит на новом языке при следующем запуске.'''
+
+["browse"]
+source = "93c6b664dce6c207"
+text = '''Обзор…'''
+
+["settings"]
+source = "7a04083baf8daa20"
+text = '''Настройки…'''
+
+["settings_title"]
+source = "74a883a037bc227f"
+text = '''Настройки'''
+
+["game_status"]
+source = "660c5d42f3698876"
+text = '''Europa Universalis V · сборка {build}'''
+
+["new_tab.world"]
+source = "78ae647dc5544d22"
+text = '''Мир'''
+
+["new_tab.advanced"]
+source = "9f088dbebd6c3c70"
+text = '''Подробно'''
+
+["new_tab.output"]
+source = "afd096dc8e3ce666"
+text = '''Сохранить и играть'''
+
+["new_tab.queued"]
+source = "858dc646bc959251"
+text = '''Сохранить и играть · в очереди: {count}'''
+
+["world_identity"]
+source = "96fc61ec457ed6f0"
+text = '''Зерно и код мира'''
+
+["land_tools"]
+source = "244bfdc5f13ec886"
+text = '''Источники суши и наброски'''
+
+["output"]
+source = "1eeb900ab78c39cb"
+text = '''Куда сохранить'''
+
+["output_hint"]
+source = "fbb6fdcf5f923bd7"
+text = '''Каждый мир остаётся в вашей библиотеке. Его мод можно сразу добавить в EU5, отложить на потом или сохранить копию в другую папку. Файл мира содержит рецепт и карты.'''
+
+["queue_title"]
+source = "a27578fd3a7a3f5e"
+text = '''Создать несколько миров'''
+
+["queue_hint"]
+source = "af8bed5b076227c5"
+text = '''Добавьте текущие настройки в очередь, затем поменяйте зерно или параметры для следующего мира. Когда всё добавлено, запустите очередь.'''
+
+["progress_details"]
+source = "a7d418eaf220511e"
+text = '''Показать этапы'''
+
+["generation_install"]
+source = "ed7ffaf064794ac2"
+text = '''Готовый мод будет добавлен в ваш профиль EU5.'''
+
+["generation_keep"]
+source = "92b157d42d51b4a1"
+text = '''Готовый мир останется в вашей библиотеке.'''
+
+["generation_copy"]
+source = "c59824bd5b1eaa91"
+text = '''Готовый мод будет скопирован в выбранную папку.'''
+
+["generation_file"]
+source = "35244f6f7d5aa65a"
+text = '''Файл мира будет сохранён в выбранное место.'''
+
+["visibility"]
+source = "2764b4c1b7b57015"
+text = '''Перед игрой'''
+
+["world_visibility_hint"]
+source = "bc9b9de7e31abc1c"
+text = '''Только для этого мира. Обновляет картинку мода и карту выбора страны без повторной генерации. Перезапустите EU5, чтобы игра увидела изменение.'''
+
+["visibility_updated"]
+source = "2fce01cc9fc9abdf"
+text = '''Видимость этого мира изменена. Перезапустите EU5, чтобы игра увидела изменение.'''
+
+["tab.tools"]
+source = "f692ca48462027a8"
+text = '''Версии и файлы'''
+
+["world_versions"]
+source = "7ce072f0da5cf56e"
+text = '''Создать версию'''
+
+["world_share"]
+source = "39a5a934252b2aaa"
+text = '''Поделиться и экспортировать'''
+
+["world_details"]
+source = "29af469824c1ee6b"
+text = '''Сведения о мире и проверки'''
+
+["close"]
+source = "7d9eb7acb13e2462"
+text = '''Закрыть'''
+
+["game_line"]
+source = "59a2ce96d6c17c2f"
+text = '''EU5, сборка {build} · {game}'''
+
+["game_line_unknown"]
+source = "5d8e792ca5661482"
+text = '''EU5 · {game}'''
+
+["profile_line"]
+source = "0029a3aa08ba73e8"
+text = '''Профиль · {profile}'''
+
+["game_missing"]
+source = "a61a4349f0cb79c8"
+text = '''EU5 не найдена. Открывать файлы миров и смотреть их карты можно и так, но для создания мира нужны файлы самой игры. Откройте настройки и укажите её папку.'''
+
+["profile_missing"]
+source = "b303732828e02c48"
+text = '''Профиль EU5 не найден. Запустите игру один раз, чтобы она его создала, или укажите его папку в настройках.'''
+
+["not_a_game"]
+source = "a17bf5986615747f"
+text = '''В этой папке нет EU5 (отсутствует game/in_game/map_data).'''
+
+["not_a_profile"]
+source = "534de3c12b965d56"
+text = '''Такой папки нет.'''
+
+["show_new_world"]
+source = "18ff780a82fcefac"
+text = '''Показывать Новый Свет до начала игры'''
+
+["show_new_world_hint"]
+source = "bc591758b90681d6"
+text = '''Если выключено, картинки этого мира и карта выбора страны остаются скрытыми как неизведанные земли. Позже это можно изменить на странице мира без повторной генерации.'''
+
+["about_generator"]
+source = "6ed5499d9096e55f"
+text = '''Random New World создаёт для EU5 карты Нового Света. Каждый созданный мир — отдельный полноценный мод: отметьте его в наборе модов, чтобы играть. Делитесь его кодом или файлом мира. Сам генератор включать не нужно.'''
+
+["worlds"]
+source = "18f1b0bf915821d8"
+text = '''Миры'''
+
+["new_world"]
+source = "3e28180bafaa6823"
+text = '''Новый мир'''
+
+["new_world_running"]
+source = "d8ef0468b14744a5"
+text = '''Новый мир · {percent} %'''
+
+["world_line"]
+source = "df1ed7e861e234e5"
+text = '''{when} · {place}'''
+
+["list.in_game"]
+source = "5cd2f5ec45977230"
+text = '''в игре'''
+
+["list.kept"]
+source = "20b0afe7382b5bc7"
+text = '''не в игре'''
+
+["list.code_only"]
+source = "31f2d67ab5545388"
+text = '''только код'''
+
+["stray_name"]
+source = "a4a24ec60180242e"
+text = '''Старый мир'''
+
+["stray_line"]
+source = "3b35f49baee714a7"
+text = '''{folder} · в игре'''
+
+["type"]
+source = "3bda8904a9b25b31"
+text = '''Тип мира'''
+
+["type.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Сверхматерик'''
+
+["type.supercontinent.about"]
+source = "33a2ee4977ae11b4"
+text = '''Один огромный массив суши через весь Новый Свет и несколько островов.'''
+
+["type.continents"]
+source = "6c048f26d3b8b473"
+text = '''Материки'''
+
+["type.continents.about"]
+source = "ed5cc238d29c1abb"
+text = '''Крупные материки, часто связанные перешейками, как обе Америки, и острова.'''
+
+["type.small_continents"]
+source = "9676e7e8b078ed3c"
+text = '''Малые материки'''
+
+["type.small_continents.about"]
+source = "368289346c178b67"
+text = '''Три-четыре отдельных материка схожего размера.'''
+
+["type.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Архипелаг'''
+
+["type.archipelago.about"]
+source = "e68ebd3c93716386"
+text = '''От пяти до одиннадцати больших островов и множество малых: мир кораблей.'''
+
+["type.islands"]
+source = "6cc98682072010a2"
+text = '''Россыпь островов'''
+
+["type.islands.about"]
+source = "3dea08a0afa912dc"
+text = '''Море, полное мелких островов, без крупной суши.'''
+
+["quick"]
+source = "b22d2b06765851eb"
+text = '''Основное'''
+
+["quick_hint"]
+source = "8c832a2fa2f25cec"
+text = '''Здесь задаётся общий баланс. Точные значения — на вкладке «Подробно».'''
+
+["quick.custom"]
+source = "6cdfd271da635d49"
+text = '''своё'''
+
+["quick.land"]
+source = "b6baff9358ddd8f7"
+text = '''Суша'''
+
+["quick.land.about"]
+source = "bd552acf65a994a8"
+text = '''Какая доля Нового Света — суша. Чем больше суши, тем немного крупнее локации, чтобы мир уложился в 32 000 локаций, которые выдерживает EU5.'''
+
+["quick.land.little"]
+source = "117361268a0facb6"
+text = '''Мало'''
+
+["quick.land.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Обычно'''
+
+["quick.land.much"]
+source = "81cb32c88ae337b4"
+text = '''Много'''
+
+["quick.peoples"]
+source = "1e0a8378b7a75bd9"
+text = '''Коренные народы'''
+
+["quick.peoples.about"]
+source = "6c1001fb2140ade3"
+text = '''Сколько народов живёт в Новом Свете и сколько у них культурных центров.'''
+
+["quick.peoples.few"]
+source = "9a4303881564a221"
+text = '''Мало'''
+
+["quick.peoples.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Обычно'''
+
+["quick.peoples.many"]
+source = "98801fd897f5f12b"
+text = '''Много'''
+
+["quick.states"]
+source = "04b3dcb87be3e083"
+text = '''Коренные государства'''
+
+["quick.states.about"]
+source = "019db7cb7cc9699f"
+text = '''Какую часть заселённых земель держат государства, а не племена.'''
+
+["quick.states.few"]
+source = "9a4303881564a221"
+text = '''Мало'''
+
+["quick.states.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Обычно'''
+
+["quick.states.many"]
+source = "98801fd897f5f12b"
+text = '''Много'''
+
+["quick.empires"]
+source = "492aaf62e6d759a9"
+text = '''Необычные народы'''
+
+["quick.empires.about"]
+source = "7d5f92b53bffae0b"
+text = '''Насколько вероятно, что вокруг культурного центра поднимется необычное коренное общество. Великая империя, как в фэнтезийном режиме случайного Нового Света из EU4: одно государство во много раз больше прочих, с развитым правлением, технологиями Старого Света, более высоким рангом и царскими дорогами; соседи её боятся, вассалы её ненавидят. Или лига морских торговых республик — союзников, разделённых водой; конфедерация горных племён; раздробленное царство, чьи центры соперничают друг с другом; священный центр — теократия среди соперников той же веры.'''
+
+["quick.empires.never"]
+source = "6300ef800bb88429"
+text = '''Никогда'''
+
+["quick.empires.seldom"]
+source = "fa7a8dc69bbf7e83"
+text = '''Редко'''
+
+["quick.empires.sometimes"]
+source = "5bca0e3da0627549"
+text = '''Иногда'''
+
+["quick.empires.often"]
+source = "6f6f6b4ab1bd157a"
+text = '''Часто'''
+
+["quick.wealth"]
+source = "41942c9793d8f0ae"
+text = '''Золото и серебро'''
+
+["quick.wealth.about"]
+source = "95692635f7e43ddf"
+text = '''Как часто встречаются золото, серебро, самоцветы и жемчуг.'''
+
+["quick.wealth.scarce"]
+source = "4a996fcca93fb323"
+text = '''Скудно'''
+
+["quick.wealth.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Обычно'''
+
+["quick.wealth.rich"]
+source = "dca900394dddb28e"
+text = '''Богато'''
+
+["seed"]
+source = "367ef06b8fbf3aaa"
+text = '''Зерно'''
+
+["random"]
+source = "67bc484430fe87ba"
+text = '''Случайное'''
+
+["code"]
+source = "8673890241aa4925"
+text = '''Код мира'''
+
+["copy"]
+source = "e21f935f11d7e966"
+text = '''Копировать'''
+
+["paste"]
+source = "f3380f7b44bd70af"
+text = '''Вставить'''
+
+["code_hint"]
+source = "f72a2cc345363493"
+text = '''Вставьте код мира, чтобы получить тот же мир, созданный генератором той же версии.'''
+
+["other_version"]
+source = "cd4edd423d1119be"
+text = '''Этот код создан генератором {made}; здесь генератор {current}, и по этому коду он создаст другой мир. Оригинал создаёт генератор {made}.'''
+
+["other_changes"]
+source = "cb6ba02bc1591efa"
+text = '''Этот код меняет и настройки, которых нет в окне; они сохраняются.'''
+
+["needs_land_image"]
+source = "481f1651885f3db0"
+text = '''Суша этого мира нарисована на картинке. Укажите её кнопкой «Суша с картинки».'''
+
+["land_image"]
+source = "4b6ea32b544af5c3"
+text = '''Суша с картинки…'''
+
+["land_image_tip"]
+source = "8169f244febce3d5"
+text = '''Постройте мир на суше, которую вы нарисовали или сделали где-то ещё: белым — суша, чёрным — море, в пропорциях области Нового Света. Остальное будет создано поверх неё.'''
+
+["land_template"]
+source = "ec4afdef9bceb8d5"
+text = '''Сохранить шаблон…'''
+
+["land_template_tip"]
+source = "933d156783ad138e"
+text = '''Сохранить картинку области, которую может занять Новый Свет, по карте вашей игры, чтобы рисовать на ней сушу в любой программе: закрасьте сушу белым.'''
+
+["task.template"]
+source = "562fb1abc40a9754"
+text = '''Рисую шаблон…'''
+
+["land_image_chosen"]
+source = "4d9e51e05f272e57"
+text = '''Суша нарисована на картинке ({id}).'''
+
+["land_image_clear"]
+source = "925ff49784a59104"
+text = '''Вернуться к созданной суше'''
+
+["land_image_title"]
+source = "9fa18dec8f915068"
+text = '''Выберите картинку суши'''
+
+["land_image_files"]
+source = "63c1f6d6c9b93179"
+text = '''Картинки (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)'''
+
+["rolled_code"]
+source = "c7a2542a82443e5b"
+text = '''Это версия своего материка: заново созданы {parts}.'''
+
+["bad_seed"]
+source = "44ef600e2e130e3a"
+text = '''Зерно — целое число от 0 до 18446744073709551615.'''
+
+["customize"]
+source = "c5276e27afba47df"
+text = '''Настроить'''
+
+["customize_hint"]
+source = "c8bba9279cdcb41b"
+text = '''Любое значение здесь всё равно даёт играбельный мир: странные очертания и скудное золото — на ваш выбор, а пределы стоят там, где сломался бы генератор или игра.'''
+
+["customized"]
+source = "8b46c6074c90a678"
+text = '''изменено относительно типа мира: {count}'''
+
+["untested"]
+source = "089b71123d238bd4"
+text = '''не проверено'''
+
+["untested_notice"]
+source = "8471a4d9a051d766"
+text = '''Некоторые значения выходят за проверенные пределы.'''
+
+["reset"]
+source = "daee7606b339f3c3"
+text = '''Сбросить'''
+
+["reset_all"]
+source = "ca6a476ace72d566"
+text = '''Вернуть всё к типу мира'''
+
+["group.land"]
+source = "e2c1842113819854"
+text = '''Суша и море'''
+
+["group.map"]
+source = "be176b0015c424b7"
+text = '''Карта'''
+
+["group.peoples"]
+source = "6dba535c0de36030"
+text = '''Народы'''
+
+["control.new_world.land_permille"]
+source = "b6baff9358ddd8f7"
+text = '''Суша'''
+
+["control.new_world.land_permille.about"]
+source = "e0a693457850e1a8"
+text = '''Какая доля Нового Света — суша.'''
+
+["control.new_world.feature_px"]
+source = "cd947acb27155143"
+text = '''Размер массивов суши'''
+
+["control.new_world.feature_px.about"]
+source = "3002a5e7a5190fb3"
+text = '''Больше — несколько крупных массивов. Меньше — множество островов.'''
+
+["control.new_world.min_island_px"]
+source = "106d0e95fe3fe013"
+text = '''Наименьший остров'''
+
+["control.new_world.min_island_px.about"]
+source = "ea723d77a203225f"
+text = '''Острова меньше этого уходят под воду.'''
+
+["control.new_world.persistence_permille"]
+source = "86bba0d82da6f0d5"
+text = '''Изрезанность берегов'''
+
+["control.new_world.persistence_permille.about"]
+source = "de94bac1d3657790"
+text = '''Выше — более изрезанные берега и больше островков.'''
+
+["control.new_world.octaves"]
+source = "f60e7523e64525bf"
+text = '''Детальность берегов'''
+
+["control.new_world.octaves.about"]
+source = "09cde1b5a935f8c7"
+text = '''Слои подробностей береговой линии.'''
+
+["control.new_world.max_lake_px"]
+source = "3e9700a12bd157d6"
+text = '''Наибольшее озеро'''
+
+["control.new_world.max_lake_px.about"]
+source = "da8233bcf7ff8411"
+text = '''Замкнутые воды крупнее этого остаются морем.'''
+
+["control.new_world.wasteland_permille"]
+source = "4b415ab1819fb1f6"
+text = '''Пустоши'''
+
+["control.new_world.wasteland_permille.about"]
+source = "7f15f21996df4288"
+text = '''Доля суши, которую никто не может заселить.'''
+
+["control.new_world.precious_permille"]
+source = "1c32df89f67a4e86"
+text = '''Золото, серебро и самоцветы'''
+
+["control.new_world.precious_permille.about"]
+source = "7d06204c56e8fbbe"
+text = '''Как часто встречаются золото, серебро, самоцветы и жемчуг по сравнению с обычным Новым Светом.'''
+
+["control.new_world.location_px"]
+source = "f9e8850d8a95bc43"
+text = '''Размер локации'''
+
+["control.new_world.location_px.about"]
+source = "748f1d4ff3cd8629"
+text = '''Меньше — больше локаций. Всего EU5 выдерживает около 32 000 локаций; мир с большим числом генератор не создаст.'''
+
+["control.new_world.sea_zone_px"]
+source = "cce5eac2b6b2bfac"
+text = '''Размер морской зоны'''
+
+["control.new_world.sea_zone_px.about"]
+source = "6b2ccfa728d8af25"
+text = '''Меньше — больше морских зон.'''
+
+["control.new_world.province_size"]
+source = "02583edafee78ebf"
+text = '''Локаций в провинции'''
+
+["control.new_world.province_size.about"]
+source = "8d7d49eb6f791144"
+text = '''Из скольких локаций состоит провинция.'''
+
+["control.natives.population_permille"]
+source = "5b828861aec15d60"
+text = '''Население'''
+
+["control.natives.population_permille.about"]
+source = "cdc165c3d5206790"
+text = '''Коренное население по сравнению с населением обычного Нового Света.'''
+
+["control.natives.state_share_permille"]
+source = "827b094c2b486457"
+text = '''Земли государств'''
+
+["control.natives.state_share_permille.about"]
+source = "b923d647bb81644f"
+text = '''Доля заселённых земель, которую держат коренные государства (в обычной игре — 11 %).'''
+
+["control.natives.state_spread_permille"]
+source = "8f96ec1c6d41080e"
+text = '''Одиночные государства'''
+
+["control.natives.state_spread_permille.about"]
+source = "a5e368305d5e52f0"
+text = '''Доля земель государств в небольших группах вдали от великих центров (в 1337 году обычной игры — около 15 %).'''
+
+["control.natives.organized_permille"]
+source = "f5701b4e75bb0076"
+text = '''Организованные народы'''
+
+["control.natives.organized_permille.about"]
+source = "6321734327f6764c"
+text = '''Доля культур, объединённых в племена.'''
+
+["control.natives.hearths_per_10k"]
+source = "fd978882c9d4343d"
+text = '''Культурные очаги'''
+
+["control.natives.hearths_per_10k.about"]
+source = "071bc7006ab66c63"
+text = '''Древние центры культуры на 10 000 локаций; вокруг них растут государства.'''
+
+["control.natives.culture_locations"]
+source = "22cd15ccfd172dca"
+text = '''Размер культуры'''
+
+["control.natives.culture_locations.about"]
+source = "c66e7ad7d8982807"
+text = '''Сколько локаций в среднем у одной культуры.'''
+
+["control.natives.religion_locations"]
+source = "6b57337037e9608e"
+text = '''Размер религии'''
+
+["control.natives.religion_locations.about"]
+source = "2ab84225cb22d337"
+text = '''Сколько локаций в среднем у одной религии.'''
+
+["control.natives.tribe_locations"]
+source = "230525cb0038444c"
+text = '''Размер племени'''
+
+["control.natives.tribe_locations.about"]
+source = "67fc7774a8ba3e94"
+text = '''Сколько локаций в среднем у одного племени.'''
+
+["control.natives.empire_permille"]
+source = "492aaf62e6d759a9"
+text = '''Необычные народы'''
+
+["control.natives.empire_permille.about"]
+source = "3a67bce42d61dc85"
+text = '''Вероятность для каждого культурного очага, что вокруг него поднимется необычное общество: великая империя (одно государство во много раз больше прочих, с развитым правлением, технологиями Старого Света, более высоким рангом и царскими дорогами; соседи её боятся, вассалы ненавидят), лига морских торговых республик, конфедерация горных племён, раздробленное царство соперничающих центров или священный центр среди соперников той же веры.'''
+
+["control.natives.state_locations"]
+source = "f02a5b0258f32933"
+text = '''Размер государства'''
+
+["control.natives.state_locations.about"]
+source = "55dbb684b36e32f9"
+text = '''Сколько локаций в среднем у одного коренного государства.'''
+
+["unit.percent"]
+source = "e97d7e5f669ea3fa"
+text = ''' %'''
+
+["unit.times"]
+source = "4d4655d116f71fcc"
+text = ''' ×'''
+
+["unit.px"]
+source = "bc913fd04325705c"
+text = ''' пкс'''
+
+["unit."]
+source = "e3b0c44298fc1c14"
+text = ''''''
+
+["install"]
+source = "6f9a79fcb2631bc9"
+text = '''Добавить в игру, когда будет готово'''
+
+["generate"]
+source = "49e49bb4401e67bd"
+text = '''Создать'''
+
+["cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Отмена'''
+
+["cancelling"]
+source = "91b104db05da1b2d"
+text = '''Отменяю…'''
+
+["progress"]
+source = "4664827f8e890192"
+text = '''Ход работы'''
+
+["idle"]
+source = "e20846d20bcd60f0"
+text = '''Готово к работе.'''
+
+["running"]
+source = "b87aac63638e00ec"
+text = '''Идёт работа: {stages}'''
+
+["finished"]
+source = "c15031f5b768b892"
+text = '''Готово за {seconds} с.'''
+
+["failed"]
+source = "b050917e5e3b9da2"
+text = "Не получилось: {message}\n\n{report_hint}"
+
+["report_hint"]
+source = "971e4fa23733b587"
+text = '''Чтобы сообщить об ошибке, откройте настройки и нажмите «Сохранить диагностику».'''
+
+["error_world_file"]
+source = "626c100184b9a4cf"
+text = '''Файл нельзя использовать: он повреждён или это не файл мира. ({detail})'''
+
+["error_settings"]
+source = "f1edf544f93508bb"
+text = '''Эти настройки нельзя использовать. ({detail})'''
+
+["cancelled"]
+source = "1e1e9d54a0a12f87"
+text = '''Отменено. В игре ничего не изменилось.'''
+
+["ready_no_game"]
+source = "fbbc35b197ae01d4"
+text = '''Сначала укажите папку игры в настройках.'''
+
+["ready_no_profile"]
+source = "5410df6eb3b98906"
+text = '''Укажите профиль в настройках или отключите добавление в игру.'''
+
+["ready_busy"]
+source = "3d09fa493c04b1f7"
+text = '''Генератор занят.'''
+
+["too_many_locations"]
+source = "b4a78edf445b4075"
+text = '''В этом мире было бы около {count} локаций; EU5 выдерживает около 32 000, а генератор держится ниже {budget}. Увеличьте размер локации или морской зоны либо уменьшите долю суши.'''
+
+["outside_range"]
+source = "2ed39ef60bd66af6"
+text = '''Этот код задаёт значения за пределами допустимого: {names}.'''
+
+["estimate"]
+source = "4ab7301404b8205d"
+text = '''Около {count} локаций (EU5 выдерживает около 32 000).'''
+
+["name_hint"]
+source = "453d4a9fcef62708"
+text = '''Название мира (до {limit} символов)'''
+
+["retitle_later"]
+source = "4bfbafc4c2ab883b"
+text = '''Название сохранено. Файлы этого мира сейчас заняты игрой, поэтому новое название появится в списке модов, когда мир будет добавлен снова.'''
+
+["preview_hidden"]
+source = "04b86c1fa26bdb53"
+text = '''Новый Свет скрыт как неизведанные земли.'''
+
+["preview_shown"]
+source = "de7b43db7ffe45e6"
+text = '''Новый Свет показан.'''
+
+["preview_missing"]
+source = "c21d71a0de202b2f"
+text = '''У этого мира нет картинки.'''
+
+["zoom_hint"]
+source = "fe797f35f2c60a7c"
+text = '''Колесо — масштаб, перетаскивание — сдвиг, двойной щелчок — вписать.'''
+
+["detail.code"]
+source = "8673890241aa4925"
+text = '''Код мира'''
+
+["detail.type"]
+source = "3bda8904a9b25b31"
+text = '''Тип мира'''
+
+["detail.seed"]
+source = "367ef06b8fbf3aaa"
+text = '''Зерно'''
+
+["detail.custom"]
+source = "4229eea49bd9ea3a"
+text = '''Свои настройки'''
+
+["detail.made"]
+source = "45a5300c04621100"
+text = '''Создан'''
+
+["detail.build"]
+source = "2b24426392ccb3cc"
+text = '''Сборка игры'''
+
+["detail.generator"]
+source = "1ade60abe93f5cfc"
+text = '''Генератор'''
+
+["detail.place"]
+source = "1daaa38f33cd860e"
+text = '''Где'''
+
+["detail.reproduce"]
+source = "1cd6bb5973fa2be5"
+text = '''Повторное создание'''
+
+["repro.none"]
+source = "05901bf63ea95e6e"
+text = '''Создан до того, как миры стали хранить запись о том, как они сделаны, поэтому может получиться иначе.'''
+
+["repro.same_algorithm"]
+source = "66763ff6d6860af0"
+text = '''Генератор {release} создал его тем же алгоритмом, что и этот: при тех же файлах игры мир получится тем же байт в байт. Проверка покажет.'''
+
+["repro.identical"]
+source = "214b6041efb8bb29"
+text = '''Проверено: создан заново, все {count} его файлов совпадают.'''
+
+["repro.differs"]
+source = "7a13d7a38d54b305"
+text = '''Проверено: создан заново, не совпадают файлы ({count}), первый — {first}.'''
+
+["repro.other_algorithm"]
+source = "eae91d973c5bf75b"
+text = '''Генератор {release} создал его алгоритмом, отличным от здешнего, поэтому тот же код даст здесь другой мир. Оригинал создаёт генератор {release}.'''
+
+["repro.other_inputs"]
+source = "314a09e94f5efadf"
+text = '''Файлы игры изменились с тех пор, как он был создан (отличий: {count}): тот же код даст на этой игре другой мир. Сохраните мод этого мира, чтобы он остался как есть.'''
+
+["repro.newer_format"]
+source = "c904c7d67406f708"
+text = '''Создан более новым генератором ({release}), чью запись этот прочитать не может.'''
+
+["part.peoples"]
+source = "1c52fde02da2ec5e"
+text = '''новые народы'''
+
+["part.resources"]
+source = "e34cf607cbcec7ff"
+text = '''новые ресурсы'''
+
+["part.peoples.button"]
+source = "32d36ec3dc905625"
+text = '''Новые народы'''
+
+["part.resources.button"]
+source = "9f2f4d34b10e5bf7"
+text = '''Новые ресурсы'''
+
+["part.peoples.tip"]
+source = "7256de9b80a3a85e"
+text = '''Заново создать страны, культуры, религии и названия на этом же материке. Суша не меняется.'''
+
+["part.resources.tip"]
+source = "415cf8682ce69b67"
+text = '''Заново создать сырьё, золото и серебро на этом же материке. Суша и народы не меняются.'''
+
+["edit_same_land"]
+source = "377b7ea7a3d96c06"
+text = '''Та же суша, другие настройки'''
+
+["edit_same_land_tip"]
+source = "ccc60e6a8ad5a618"
+text = '''Открыть настройки этого мира с его зерном, чтобы изменить настройки народов или ресурсов на той же суше.'''
+
+["previous_version"]
+source = "21d886b74bc1abe1"
+text = '''Предыдущая версия'''
+
+["keep_both"]
+source = "6a44d37116dd7c0d"
+text = '''Оставить в игре и эту'''
+
+["keep_both_tip"]
+source = "bbdca9254f8bb1fa"
+text = '''Новая версия заменяет этот мир в игре, если здесь не стоит отметка. Каждый мир в игре занимает больше гигабайта.'''
+
+["not_world_file"]
+source = "cef953c94d5691f8"
+text = '''Это не файл мира (.rnworld или .rnworld-mod).'''
+
+["imported"]
+source = "8d0ea11d7ffb0c47"
+text = '''Мир добавлен в список скрытым. Раскройте его, чтобы увидеть карты.'''
+
+["imported_again"]
+source = "dd4ee3af9b0ca85e"
+text = '''Этот мир у вас уже был; он остался прежним.'''
+
+["no_mod_to_send"]
+source = "e3b7363ed3b4a1af"
+text = '''У этого мира здесь нет мода для отправки: сначала добавьте его в игру или создайте.'''
+
+["open_world_file"]
+source = "b20aa10a6bcd2811"
+text = '''Открыть файл мира…'''
+
+["open_world_file_tip"]
+source = "3010238481b95870"
+text = '''Взять мир из файла .rnworld или готовый мир из файла .rnworld-mod.'''
+
+["world_files"]
+source = "7f058e5cf089a3eb"
+text = '''Файлы миров (*.rnworld *.rnworld-mod)'''
+
+["export_file"]
+source = "ccb29307fc55e62c"
+text = '''Сохранить файл мира…'''
+
+["export_file_tip"]
+source = "911be34bc5f2c7ca"
+text = '''Записать код мира, его запись и карты в один небольшой файл, чтобы выложить или переслать. В нём нет ничего из игры.'''
+
+["send_built"]
+source = "8af3933be4147db3"
+text = '''Перенести готовый мир…'''
+
+["send_built_tip"]
+source = "047b2b02a2fa3fb3"
+text = '''Записать весь мод в файл, чтобы перенести на другой ваш компьютер.'''
+
+["send_built_warning"]
+source = "6a88a7e91f2b232e"
+text = '''Этот файл содержит мод мира — около гигабайта — с изображениями, полученными из карты игры. Он нужен, чтобы переносить мир между своими компьютерами, а не чтобы делиться им. Другой компьютер примет его, только если файлы игры там те же. Продолжить?'''
+
+["copy_mod"]
+source = "f25df969e7e57e2d"
+text = '''Скопировать мод в папку…'''
+
+["copy_mod_tip"]
+source = "7e1479cc3c7ddb55"
+text = '''Скопировать мод этого мира в выбранную папку, чтобы управлять им вручную.'''
+
+["task.copy"]
+source = "548e2087de0d5b96"
+text = '''Копирую мод…'''
+
+["task.receive"]
+source = "8d3b860b93f6e75e"
+text = '''Принимаю готовый мир…'''
+
+["task.send"]
+source = "ff78a7d5ab27ab07"
+text = '''Записываю готовый мир…'''
+
+["file_saved"]
+source = "482f5b2eebc6b886"
+text = '''Сохранено: {path}'''
+
+["tab.world"]
+source = "78ae647dc5544d22"
+text = '''Мир'''
+
+["compare"]
+source = "219ddc366d9da259"
+text = '''Сравнить…'''
+
+["compare_title"]
+source = "30a531d0e5c94ed2"
+text = '''Сравнение миров'''
+
+["compare_need_two"]
+source = "ef2be38dfe1c110d"
+text = '''Для сравнения нужны два мира с раскрытыми картами.'''
+
+["save_picture"]
+source = "bb1ed31b2c6d66f5"
+text = '''Сохранить картинку…'''
+
+["save_picture_tip"]
+source = "fb774db84a221988"
+text = '''Сохранить показанную картинку в PNG; она скрыта, пока Новый Свет не раскрыт.'''
+
+["picture_saved"]
+source = "482f5b2eebc6b886"
+text = '''Сохранено: {path}'''
+
+["tab.maps"]
+source = "119e66d117ae8f0c"
+text = '''Карты'''
+
+["layer.land"]
+source = "b6baff9358ddd8f7"
+text = '''Местность'''
+
+["layer.countries"]
+source = "8faf7ec7ab20ca1c"
+text = '''Страны'''
+
+["layer.cultures"]
+source = "62461b1bcd7ae231"
+text = '''Культуры'''
+
+["layer.religions"]
+source = "ef1d1c23482f3289"
+text = '''Религии'''
+
+["layer.resources"]
+source = "e89b30aa1dc30a6a"
+text = '''Ресурсы'''
+
+["layer.development"]
+source = "21b6a798321a49f7"
+text = '''Развитие'''
+
+["layer.land.tip"]
+source = "a03117b5186e8673"
+text = '''Растительность и климат; горы темнее, в холоде — снег.'''
+
+["layer.countries.tip"]
+source = "193b9cf9c94c5ff7"
+text = '''Кто чем владеет; столицы — белые точки.'''
+
+["layer.cultures.tip"]
+source = "dd6968b8e6ed78c4"
+text = '''Культура каждой локации; линии там, где она меняется.'''
+
+["layer.religions.tip"]
+source = "d32998efe57520d8"
+text = '''Религия каждой локации; линии там, где она меняется.'''
+
+["layer.resources.tip"]
+source = "5c7040ce7d9f74c7"
+text = '''Сырьё каждой локации; золото, серебро, самоцветы и жемчуг светятся.'''
+
+["layer.development.tip"]
+source = "7346fc0b9c0af07a"
+text = '''Начальное развитие каждой локации: темнее — ниже, ярче — выше.'''
+
+["reveal_world"]
+source = "d63e537d568b9aba"
+text = '''Раскрыть этот мир'''
+
+["reveal_world_tip"]
+source = "6d03c0632ec309b2"
+text = '''Показать карты этого мира в генераторе. В списке модов игры он останется скрытым, если в настройках не задано иное.'''
+
+["covered_maps"]
+source = "72895291a8506c4f"
+text = '''Новый Свет этого мира скрыт, чтобы вы могли открыть его уже в игре. Раскройте мир, чтобы увидеть его страны, культуры, религии и ресурсы до начала игры.'''
+
+["no_atlas"]
+source = "85953bb97408c28b"
+text = '''У этого мира нет атласа: он создан раньше, чем появились атласы, или его файлы пропали.'''
+
+["facts_hint"]
+source = "c45ebe1186c80167"
+text = '''Наведите курсор на карту, чтобы узнать, что там.'''
+
+["search_hint"]
+source = "9a81c8371c86e8ab"
+text = '''Найти страну, культуру, религию, ресурс или место'''
+
+["legend"]
+source = "7482e374b5bddc0a"
+text = '''Легенда'''
+
+["legend.sea"]
+source = "76b3af333dbac074"
+text = '''Море'''
+
+["legend.lake"]
+source = "52082793941524be"
+text = '''Озеро'''
+
+["legend.wasteland"]
+source = "4b415ab1819fb1f6"
+text = '''Пустошь'''
+
+["legend.no_country"]
+source = "b70285418438b053"
+text = '''Без страны'''
+
+["legend.none"]
+source = "dc937b59892604f5"
+text = '''Нет'''
+
+["legend.uninhabited"]
+source = "abfd7adb689e5c89"
+text = '''Необитаемо'''
+
+["legend.lowest"]
+source = "5c590931c7cc2ade"
+text = '''Наименьшее'''
+
+["legend.middle"]
+source = "d93006ec2e4339d7"
+text = '''Среднее'''
+
+["legend.highest"]
+source = "d402ef10d054eac2"
+text = '''Наибольшее'''
+
+["found.country"]
+source = "701d021d08c54579"
+text = '''Страна'''
+
+["found.culture"]
+source = "51d7a2ae4335df12"
+text = '''Культура'''
+
+["found.religion"]
+source = "f8a52d21e659b0e9"
+text = '''Религия'''
+
+["found.material"]
+source = "eb7a842ff958c49c"
+text = '''Ресурс'''
+
+["found.place"]
+source = "e9463dccf0541a97"
+text = '''Место'''
+
+["kind.land"]
+source = "90eae63487cae2df"
+text = '''суша'''
+
+["kind.sea"]
+source = "4a69f19c8c264850"
+text = '''море'''
+
+["kind.lake"]
+source = "6f021f0268d5dd0d"
+text = '''озеро'''
+
+["kind.wasteland"]
+source = "a4b18daa52aed336"
+text = '''пустошь'''
+
+["no_country"]
+source = "140bedbf9c3f6d56"
+text = '''нет'''
+
+["fact.country"]
+source = "701d021d08c54579"
+text = '''Страна'''
+
+["fact.culture"]
+source = "51d7a2ae4335df12"
+text = '''Культура'''
+
+["fact.religion"]
+source = "f8a52d21e659b0e9"
+text = '''Религия'''
+
+["fact.material"]
+source = "eb7a842ff958c49c"
+text = '''Ресурс'''
+
+["fact.population"]
+source = "5b828861aec15d60"
+text = '''Население'''
+
+["fact.complexity"]
+source = "d5acfd8330f5caae"
+text = '''Общество'''
+
+["summary"]
+source = "1a599cbd890423a0"
+text = '''Стран: {countries} (государств: {states}, племён: {tribes}) · культур: {cultures} · религий: {religions} · локаций: {locations} (суши: {land})'''
+
+["check"]
+source = "9d60841e0a7891df"
+text = '''Проверить'''
+
+["check_tip"]
+source = "6124291f2cd0c606"
+text = '''Создать этот мир заново и сравнить каждый файл с первым разом. Нужна игра; занимает столько же, сколько создание мира.'''
+
+["custom_none"]
+source = "140bedbf9c3f6d56"
+text = '''нет'''
+
+["custom_some"]
+source = "db3cb1c116f0a410"
+text = '''изменено: {count}'''
+
+["place.in_game"]
+source = "c1f197d6ae0cecc7"
+text = '''В игре: {path}'''
+
+["place.kept"]
+source = "716eb5c10a97acc1"
+text = '''Рядом с генератором, не в игре'''
+
+["place.code_only"]
+source = "90b380decd0f7b8d"
+text = '''Не в игре. При добавлении будет создан заново по коду (около {seconds} с).'''
+
+["other_build"]
+source = "8da6ddee43ce8460"
+text = '''Создан для сборки игры {made}; у вас {current}. При добавлении будет создан заново для вашей сборки: тот же код на другой сборке — это уже другой мир.'''
+
+["other_build_same"]
+source = "bde12956110b557b"
+text = '''Создан для сборки игры {made}; у вас {current}, и ни один файл, из которых он сделан, не изменился, так что он работает как есть.'''
+
+["standalone"]
+source = "b6d7e4aa65dc2e7e"
+text = '''Этот мир — полноценный мод: отметьте его в наборе модов, чтобы играть, он работает сам по себе. «Сохранить файл мира» позволяет поделиться его кодом и атласом.'''
+
+["add"]
+source = "c69a3dd1ca9d5040"
+text = '''Добавить в игру'''
+
+["remove"]
+source = "b81efb13538fe4b9"
+text = '''Убрать из игры'''
+
+["select_all_worlds"]
+source = "1fc9a387654d410f"
+text = '''Выбрать все'''
+
+["selection_hint"]
+source = "b537ff237277d924"
+text = '''Ctrl+щелчок — выбрать несколько миров; Shift+щелчок — выбрать диапазон.'''
+
+["selection_count"]
+source = "d5e9e37b3c98b203"
+text = '''Выбрано: {count} · в игре: {installed}'''
+
+["remove_count"]
+source = "6c22a944e48e4042"
+text = '''Убрать из игры ({count})'''
+
+["library_remove"]
+source = "9186f6da0ec3ba00"
+text = '''Убрать ({count})'''
+
+["remove_tip"]
+source = "53f9a900e9ce46ea"
+text = '''Убрать выбранные моды из EU5. Коды миров и картинки останутся.'''
+
+["remove_none"]
+source = "f639b98a2c61e291"
+text = '''Сначала выберите мир, добавленный в игру.'''
+
+["remove_no_profile"]
+source = "30c0c5ebcba942a8"
+text = '''Сначала укажите профиль EU5 в настройках.'''
+
+["delete_count"]
+source = "7376e41431243b45"
+text = '''Удалить из библиотеки ({count})…'''
+
+["library_delete"]
+source = "22779a77f1c59d24"
+text = '''Удалить ({count})…'''
+
+["delete_tip"]
+source = "aa0346399fc89243"
+text = '''Удалить выбранные миры из библиотеки вместе с сохранёнными картами, заметками, хранимыми файлами модов и модами в игре.'''
+
+["delete_none"]
+source = "faf90f6fb115dc7f"
+text = '''Сначала выберите мир в библиотеке.'''
+
+["delete_many_title"]
+source = "5bbd021f21ab2acf"
+text = '''Удалить миры ({count})?'''
+
+["delete_many_question"]
+source = "8e07c808cd2bfc35"
+text = "Безвозвратно удалить эти миры ({count}) из библиотеки и убрать их моды из EU5? Их сохранённые карты, заметки и хранимые файлы модов будут удалены.\n\n{names}"
+
+["batch_delete_failed"]
+source = "fdc1bce609452891"
+text = '''Не удалось удалить «{name}» после удаления миров ({done}): {message}'''
+
+["batch_removed"]
+source = "1765dbfcf5b5a27a"
+text = '''Выбранные моды убраны из EU5. Коды миров и картинки сохранены.'''
+
+["batch_deleted"]
+source = "5725dcdf7e2643f3"
+text = '''Выбранные миры удалены.'''
+
+["batch_cancelled"]
+source = "0c2f571551bfe2ad"
+text = '''Остановлено. Список показывает уже внесённые изменения.'''
+
+["open_folder"]
+source = "6a9084025c4bf3e1"
+text = '''Открыть папку'''
+
+["copy_code"]
+source = "49a0053f3b0d5045"
+text = '''Копировать код'''
+
+["like_this"]
+source = "c5ac52caf1b41abe"
+text = '''Новый мир с этими настройками'''
+
+["delete"]
+source = "c49b06b4c661ee22"
+text = '''Удалить мир'''
+
+["delete_title"]
+source = "522a787a83dddac3"
+text = '''Удалить этот мир?'''
+
+["delete_question"]
+source = "fa99445b18d116c0"
+text = '''«{name}» будет убран из игры и из генератора. Его код мира может создать его снова.'''
+
+["task.add"]
+source = "d2d376a9e945a751"
+text = '''Добавляю в игру…'''
+
+["task.remove"]
+source = "c191fce448827548"
+text = '''Убираю из игры…'''
+
+["task.delete"]
+source = "43b5894c3e4e2b24"
+text = '''Удаляю…'''
+
+["task.check"]
+source = "ec963ffc911b8401"
+text = '''Проверяю…'''
+
+["task_failed"]
+source = "b050917e5e3b9da2"
+text = "Не получилось: {message}\n\n{report_hint}"
+
+["diagnostics"]
+source = "77d2c21988dc5725"
+text = '''Сохранить диагностику…'''
+
+["diagnostics_tip"]
+source = "d177e924fcd6fb51"
+text = '''Упаковать журналы генератора и отчёт об этом компьютере, игре и ваших мирах в один файл для сообщения об ошибке. Ничего никуда не отправляется; ваше имя и папки затираются.'''
+
+["diagnostics_title"]
+source = "52fe7bd9f8dba9b9"
+text = '''Сохранить диагностику'''
+
+["diagnostics_saved"]
+source = "ef867c11f7e5697d"
+text = "Сохранено. Можете просмотреть файл и приложить его к сообщению:\n{path}"
+
+["diagnostics_failed"]
+source = "ba28e35f48d96465"
+text = '''Не удалось записать файл: {problem}'''
+
+["stray_about"]
+source = "f0866f985468cba5"
+text = '''Этот мир создан ранней версией генератора, которая не вела о нём записей. В игре он лежит как {folder}. Уберите его, когда перестанете в нём играть.'''
+
+["tick_unknown"]
+source = "4a3bdf3a4d535241"
+text = '''Проверьте, что из миров RNW в вашем наборе модов отмечен только «{name}».'''
+
+["tick_self_untick"]
+source = "c63e9e7f0d7290fa"
+text = '''Отметьте «{name}» и снимите отметки с остальных миров RNW в вашем наборе модов.'''
+
+["tick_self"]
+source = "07849d445ea9ff7a"
+text = '''Отметьте «{name}» в вашем наборе модов.'''
+
+["untick_others"]
+source = "bc66f4a33e6675ab"
+text = '''Снимите отметки с остальных миров RNW в вашем наборе модов.'''
+
+["next_fresh"]
+source = "26a83c991aa99660"
+text = '''В EU5: {tick} Это перезагрузит моды. Затем начните новую игру с 1337 года.'''
+
+["next_fresh_switch"]
+source = "d9bc2cd7b64f1d10"
+text = '''В EU5 переключитесь на другой набор модов и обратно на свой — это перезагрузит моды, — затем начните новую игру с 1337 года.'''
+
+["next_played"]
+source = "9ec3a8f4b480881a"
+text = '''После запуска EU5 вы уже играли, а другой мир, начатый после этого, обрушит игру. Закройте EU5 и запустите её снова. {tick} Затем начните новую игру с 1337 года.'''
+
+["next_start"]
+source = "2d8795764c63fcc4"
+text = '''Запустите EU5. {tick} Затем начните новую игру с 1337 года.'''
+
+["next_unknown"]
+source = "41f10e1b14772e13"
+text = '''{tick} Затем, если с запуска EU5 игру ещё не начинали, переключитесь на другой набор модов и обратно и начните новую игру с 1337 года; иначе сначала перезапустите EU5.'''
+
+["resources"]
+source = "e8929b864948ef37"
+text = '''Потоков: {threads}, свободной памяти: {free} ГиБ'''
+
+["resources_unknown"]
+source = "e23f2106daf4e4b1"
+text = '''Потоков: {threads}'''
+
+["stage.load map"]
+source = "e537d733dce55d79"
+text = '''Читаю карту мира'''
+
+["stage.select canvas"]
+source = "08322653444624b8"
+text = '''Выбираю область для замены'''
+
+["stage.vanilla reads"]
+source = "3c8b16be15157a3f"
+text = '''Читаю данные игры'''
+
+["stage.vanilla geometry"]
+source = "c88d0868aff1c0d6"
+text = '''Измеряю старые локации'''
+
+["stage.vanilla localization keys"]
+source = "5d6474dd82c4cc82"
+text = '''Собираю текстовые ключи игры'''
+
+["stage.vanilla climate"]
+source = "ec56f139832cf607"
+text = '''Измеряю старый климат'''
+
+["stage.vanilla material levels"]
+source = "4933d186bbecc36b"
+text = '''Измеряю старые материалы местности'''
+
+["stage.vanilla natives"]
+source = "e3f4bfb6adec2c92"
+text = '''Читаю старые коренные народы'''
+
+["stage.generate world"]
+source = "e84556e6a019ab76"
+text = '''Создаю материки, моря и рельеф'''
+
+["stage.settle coasts"]
+source = "e2cd040b59052112"
+text = '''Даю каждому берегу порт'''
+
+["stage.water shapes"]
+source = "86189bc7022099c2"
+text = '''Формирую заливы, проливы и течения'''
+
+["stage.identities"]
+source = "e14e8033766d3d1b"
+text = '''Даю имена локациям, областям и регионам'''
+
+["stage.world checks"]
+source = "2f4b2b5e8a3f9d61"
+text = '''Проверяю новый мир'''
+
+["stage.water textures"]
+source = "4ef7590b1b28e969"
+text = '''Рисую воду и берега'''
+
+["stage.biomes and rivers"]
+source = "d4bd6b2dd554ff95"
+text = '''Выращиваю климат, биомы и реки'''
+
+["stage.slot tables"]
+source = "c84fa407cadaa012"
+text = '''Готовлю материалы местности'''
+
+["stage.location rasters"]
+source = "f126e7af80e75f1c"
+text = '''Рисую карту локаций'''
+
+["stage.png encoding"]
+source = "ca6ff7403235db3e"
+text = '''Сжимаю карты'''
+
+["stage.terrain decals"]
+source = "afccac1753249f1e"
+text = '''Вылепливаю рельеф'''
+
+["stage.vegetation instances"]
+source = "3fa3e8fd70c4851a"
+text = '''Сажаю деревья и траву'''
+
+["stage.natives"]
+source = "de062b10c1938a64"
+text = '''Основываю коренные общества'''
+
+["stage.stories"]
+source = "cbe749082c75686b"
+text = '''Пишу сюжеты и формируемые страны мира'''
+
+["stage.atlas"]
+source = "2fa4552668c62056"
+text = '''Рисую атлас мира'''
+
+["stage.texts"]
+source = "f414224df1fa792b"
+text = '''Пишу названия, стартовую обстановку и скрипты'''
+
+["stage.script remap"]
+source = "507ba7a241bfe7f0"
+text = '''Переписываю скрипты игры'''
+
+["stage.spline network"]
+source = "cdd6a2ba75e40403"
+text = '''Прокладываю полосы дорог'''
+
+["stage.selection cover"]
+source = "7e788576dbb4ecbe"
+text = '''Скрываю Новый Свет до начала игры'''
+
+["stage.write files"]
+source = "7f9242d43d976453"
+text = '''Записываю мод'''
+
+["stage.land cells"]
+source = "0d6f25d525141973"
+text = '''Выращиваю сухопутные локации'''
+
+["stage.sea cells"]
+source = "42cc41a5bd88b8b7"
+text = '''Выращиваю морские зоны'''
+
+["stage.relief"]
+source = "74ea42c343487a9a"
+text = '''Поднимаю горы и долины'''
+
+["stage.terrain"]
+source = "349511ebba803dea"
+text = '''Строю местность'''
+
+["stage.candidates"]
+source = "2a892bfd45c8d0f3"
+text = '''Делаю наброски материков'''
+
+["stage.install"]
+source = "a6e5d85ef9ce3cbc"
+text = '''Устанавливаю мир в ваш профиль'''
+
+["stage.compare inputs"]
+source = "1fe1e92443638ab8"
+text = '''Сравниваю файлы игры с теми, из которых сделан мир'''
+
+["stage.waiting for the game"]
+source = "3796d1c0f7d512f6"
+text = '''Жду, пока игра отпустит предыдущий мир: снимите с него отметку в наборе модов и примените набор или закройте игру'''
+
+["error.code.prefix"]
+source = "a4ece9429a17cada"
+text = '''Код мира начинается с {prefix}.'''
+
+["error.code.short"]
+source = "0dd5d68df589578a"
+text = '''Код мира слишком короткий.'''
+
+["error.code.typo"]
+source = "a95b743c53657352"
+text = '''В коде мира опечатка: не сходится его контрольная сумма.'''
+
+["error.code.format"]
+source = "9faae2046129538f"
+text = '''Этот код мира создан более новым или другим генератором.'''
+
+["error.code.damaged"]
+source = "81cbea66ce059baa"
+text = '''Изменённые настройки в коде мира повреждены.'''
+
+["error.code.extra"]
+source = "342b6e6badd7c5fa"
+text = '''В конце кода мира остались лишние данные.'''
+
+["error.code.characters"]
+source = "2114e3add9ec678c"
+text = '''В коде мира есть символы, которых в нём быть не может.'''
+
+["error.destination.one"]
+source = "93130a85f7a96c32"
+text = '''Выберите одно место для мира.'''
+
+["error.destination.outside"]
+source = "5463f7a655b549db"
+text = '''Место назначения должно быть вне папки игры.'''
+
+["error.destination.folder"]
+source = "ad7b7c82ea68f13a"
+text = '''Выберите существующую папку для мода.'''
+
+["error.destination.exists"]
+source = "a64875e2c0f3edc3"
+text = '''{file} уже существует. Выберите другое имя для файла мира.'''
+
+["error.destination.profile"]
+source = "2f9f5b6d5619b37d"
+text = '''Нет профиля, в который можно добавить мир. Выберите профиль или не добавляйте мир.'''
+
+["error.land_image.gone"]
+source = "e6b07cf126932f17"
+text = '''Суша этого мира нарисована на картинке, которой больше нет в библиотеке. Откройте файл мира снова или укажите картинку, чтобы создать мир.'''
+
+["error.check.no_record"]
+source = "990ed1f85c2a9322"
+text = '''Этот мир создан до того, как миры стали хранить запись, поэтому проверить его нельзя.'''
+
+["error.check.bundle"]
+source = "c2284a0becacbcfe"
+text = '''Файлы мира в библиотеке уже не те, из которых он был создан.'''
+
+["error.install.in_use"]
+source = "8f4e29768c251b73"
+text = '''Игра использует {mod}. Снимите с него отметку в наборе модов и примените набор или закройте игру.'''
+
+["error.pictures.missing"]
+source = "d3eddbbb04e82f93"
+text = '''Картинки {folder} пропали, поэтому его картинку в игре изменить нельзя.'''
+
+["error.cover.missing"]
+source = "fd633ea58a7c310b"
+text = '''Сохранённое покрытие карты выбора страны для {folder} пропало.'''
+
+["error.picture.unwritten"]
+source = "17b62235c3b8c217"
+text = '''Не удалось записать картинку {folder}.'''
+
+["error.transfer.bundle"]
+source = "3573ac4baa20047d"
+text = '''В файлах мира в библиотеке больше нет {name}, поэтому перенести его нельзя.'''
+
+["error.transfer.no_mod"]
+source = "f0d89be22465b46d"
+text = '''В этом файле нет мода. Откройте его как файл мира.'''
+
+["error.transfer.no_record"]
+source = "d8408db42b98236e"
+text = '''Этот мир создан до того, как миры стали хранить запись, поэтому его игру проверить нельзя.'''
+
+["error.transfer.have"]
+source = "3e1d33d97a5fc3cf"
+text = '''Этот мир уже есть в библиотеке. Чтобы взять эту копию, сначала удалите его.'''
+
+["error.transfer.foreign"]
+source = "b48b43adec0095d1"
+text = '''Мод в файле создан не этим генератором.'''
+
+["error.transfer.other_game"]
+source = "d14c4889ee041877"
+text = '''Это не та игра, из которой создан мир: файлы её карты отличаются. Создайте мир здесь заново по его коду.'''
+
+["error.transfer.no_listing"]
+source = "afc60f3999f87cc1"
+text = '''В файле нет списка файлов игры, поэтому сверить с ним эту игру нельзя.'''
+
+["error.transfer.changed"]
+source = "8dc1de34d02263d7"
+text = '''Файлы игры, из которых создан мир, изменились ({count}), например {names}. Создайте мир здесь заново по его коду.'''
+
+["error.mask.unreadable"]
+source = "d9f075c4781b2514"
+text = '''Картинку не удаётся прочитать ({error}).'''
+
+["error.mask.size"]
+source = "80dca932e860d07b"
+text = '''Размер картинки — {width} × {height}. Нужно не меньше {side} пикселей по каждой стороне и не больше {millions} млн пикселей всего.'''
+
+["error.mask.share"]
+source = "bf2f8fd0a968f2bc"
+text = '''На картинке {share} % суши, а миру нужно от {low} % до {high} %. Белое — суша, чёрное — море.'''
+
+["error.mask.file"]
+source = "f05a267ab9f03342"
+text = '''Не удаётся прочитать {name} ({error}).'''
+
+["error.mask.aspect"]
+source = "ec2c2a21a1b9bad6"
+text = '''Картинка в {given} раза шире своей высоты, а область Нового Света — в {wanted}. Нарисуйте её в этих пропорциях, например {width} × {height} пикселей.'''
+
+["error.candidates.count"]
+source = "81923dac5a6dc04a"
+text = '''Выберите от 1 до {count} набросков.'''
+
+["error.candidates.drawn"]
+source = "75f72c48760efe1b"
+text = '''Для набросков нужна созданная суша. Сначала вернитесь к созданной суше.'''

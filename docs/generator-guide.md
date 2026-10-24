@@ -21,7 +21,7 @@ No profile is needed for the other destinations. [V-EXEC C143]
 The World tab holds the type, broad balance and visibility before playing. Advanced
 holds the seed, world code, land sources and exact values. Save and play holds the
 destination, installation choice and queue; Generate stays available below the tabs.
-Settings holds application paths and diagnostics. [V-EXEC C147]
+Settings holds application paths, the window's language and diagnostics. [V-EXEC C147] The window speaks the language Steam runs EU5 in, unless another is chosen there; a choice applies at the next start, and every official language of the game is available (C275).
 
 Choose a type and seed, or paste a code. The quick answers set the same values as
 Customize. Choose a continent sketches six seeds without building complete mods;

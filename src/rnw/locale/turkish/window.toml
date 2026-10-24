@@ -1,0 +1,1763 @@
+["undo_roll"]
+source = "d3ba4753973fc1f9"
+text = '''Yeniden çekimi geri al'''
+
+["task.undo"]
+source = "3ca5c54e7c549b10"
+text = '''Önceki sürüm geri getiriliyor'''
+
+["copy_tag"]
+source = "6d38d2a846422e7f"
+text = '''Etiketi kopyala'''
+
+["copy_picture"]
+source = "05decf94ea187240"
+text = '''Resmi kopyala'''
+
+["destination.library"]
+source = "09a9c9fa074db7d9"
+text = '''Modu kütüphanede tut'''
+
+["destination.mod"]
+source = "0ad3383f1dce480d"
+text = '''Modu bir klasöre kopyala'''
+
+["destination.world"]
+source = "172c07cba6c2dd6c"
+text = '''Yalnızca dünya dosyası'''
+
+["destination_choose"]
+source = "9772ff884d42d946"
+text = '''Hedef seç...'''
+
+["destination_missing"]
+source = "dd64b96d7c6d9026"
+text = '''Önce bu dünyanın nereye kaydedileceğini seçin.'''
+
+["tab.notes"]
+source = "8a7525b1492fb848"
+text = '''Notlar'''
+
+["starred"]
+source = "e39b24993c31d7bb"
+text = '''Favori'''
+
+["user_tag"]
+source = "e1c92163bf9d061c"
+text = '''Etiketiniz (en fazla 64 karakter)'''
+
+["notes_hint"]
+source = "6d8ef522499455f3"
+text = '''Bu dünya hakkında notlar (en fazla 16.384 karakter)'''
+
+["save_notes"]
+source = "eb76a6cc99ba6881"
+text = '''Notları kaydet'''
+
+["notes_saved"]
+source = "04965e23cd9e8fb9"
+text = '''Notlar kaydedildi.'''
+
+["candidates"]
+source = "0e7b026bc70eba63"
+text = '''Bir kıta seç...'''
+
+["candidates_hint"]
+source = "2292c2759a5d2df3"
+text = '''Dünya oluşturmadan önce altı kıta taslağına göz atın. Bu, taslakların karalarını açığa çıkarır. Tohumunu ve ayarlarını kullanmak için birini seçin; konumlar oluştukça son kıyı çizgisi biraz kayabilir.'''
+
+["candidate_item"]
+source = "82a3979eef3cad60"
+text = "{number} · %{land:g} kara\nTohum {seed}"
+
+["enqueue"]
+source = "34b25c1b963f3a59"
+text = '''Sıraya ekle'''
+
+["run_queue"]
+source = "073afaf0ff8ea437"
+text = '''Sırayı çalıştır'''
+
+["clear_queue"]
+source = "fd1d3b4b9147213b"
+text = '''Sırayı temizle'''
+
+["queue_empty"]
+source = "dd95d861c51b5f8b"
+text = '''Önce sıraya bir dünya ekleyin.'''
+
+["queue_count"]
+source = "bc608dfbf45c2100"
+text = '''{count} bekliyor'''
+
+["game"]
+source = "5c412a262086b970"
+text = '''Oyun'''
+
+["profile"]
+source = "d696a35bdd1883da"
+text = '''Profil'''
+
+["language"]
+source = "a4fe65264ef7dbb3"
+text = '''Dil'''
+
+["language.game"]
+source = "3bbba19c86874410"
+text = '''Oyunla aynı: {language}'''
+
+["language.restart"]
+source = "0a1870181520b1b9"
+text = '''Oluşturucu yeni dili bir sonraki açılışında kullanacak.'''
+
+["browse"]
+source = "93c6b664dce6c207"
+text = '''Gözat…'''
+
+["settings"]
+source = "7a04083baf8daa20"
+text = '''Ayarlar…'''
+
+["settings_title"]
+source = "74a883a037bc227f"
+text = '''Ayarlar'''
+
+["game_status"]
+source = "660c5d42f3698876"
+text = '''Europa Universalis V · sürüm {build}'''
+
+["new_tab.world"]
+source = "78ae647dc5544d22"
+text = '''Dünya'''
+
+["new_tab.advanced"]
+source = "9f088dbebd6c3c70"
+text = '''Gelişmiş'''
+
+["new_tab.output"]
+source = "afd096dc8e3ce666"
+text = '''Kaydet ve oyna'''
+
+["new_tab.queued"]
+source = "858dc646bc959251"
+text = '''Kaydet ve oyna · sırada {count}'''
+
+["world_identity"]
+source = "96fc61ec457ed6f0"
+text = '''Tohum ve dünya kodu'''
+
+["land_tools"]
+source = "244bfdc5f13ec886"
+text = '''Kara kaynakları ve önizlemeler'''
+
+["output"]
+source = "1eeb900ab78c39cb"
+text = '''Nereye kaydedilsin'''
+
+["output_hint"]
+source = "fbb6fdcf5f923bd7"
+text = '''Her dünya kütüphanenizde kalır. Modunu hemen EU5'e ekleyin, sonraya saklayın ya da bir kopyasını başka bir klasöre kaydedin. Dünya dosyası, tarifi ve haritaları içerir.'''
+
+["queue_title"]
+source = "a27578fd3a7a3f5e"
+text = '''Birkaç dünya oluştur'''
+
+["queue_hint"]
+source = "af8bed5b076227c5"
+text = '''Geçerli ayarları sıraya ekleyin, ardından bir sonraki dünya için tohumu ya da seçenekleri değiştirin. Hepsini eklediğinizde sırayı çalıştırın.'''
+
+["progress_details"]
+source = "a7d418eaf220511e"
+text = '''Aşama ayrıntılarını göster'''
+
+["generation_install"]
+source = "ed7ffaf064794ac2"
+text = '''Hazır mod EU5 profilinize eklenecek.'''
+
+["generation_keep"]
+source = "92b157d42d51b4a1"
+text = '''Hazır dünya kütüphanenizde kalacak.'''
+
+["generation_copy"]
+source = "c59824bd5b1eaa91"
+text = '''Hazır mod seçilen klasöre kopyalanacak.'''
+
+["generation_file"]
+source = "35244f6f7d5aa65a"
+text = '''Dünya dosyası seçilen hedefe kaydedilecek.'''
+
+["visibility"]
+source = "2764b4c1b7b57015"
+text = '''Oynamadan önce'''
+
+["world_visibility_hint"]
+source = "bc9b9de7e31abc1c"
+text = '''Yalnızca bu dünyayı etkiler. Mod resmini ve ülke seçimi haritasını yeniden oluşturmadan günceller. Oyunun değişikliği okuması için EU5'i yeniden başlatın.'''
+
+["visibility_updated"]
+source = "2fce01cc9fc9abdf"
+text = '''Bu dünyanın görünürlüğü değişti. Oyunun değişikliği okuması için EU5'i yeniden başlatın.'''
+
+["tab.tools"]
+source = "f692ca48462027a8"
+text = '''Sürümler ve dosyalar'''
+
+["world_versions"]
+source = "7ce072f0da5cf56e"
+text = '''Sürüm oluştur'''
+
+["world_share"]
+source = "39a5a934252b2aaa"
+text = '''Paylaş ve dışa aktar'''
+
+["world_details"]
+source = "29af469824c1ee6b"
+text = '''Dünya ayrıntıları ve denetimler'''
+
+["close"]
+source = "7d9eb7acb13e2462"
+text = '''Kapat'''
+
+["game_line"]
+source = "59a2ce96d6c17c2f"
+text = '''EU5 sürüm {build} · {game}'''
+
+["game_line_unknown"]
+source = "5d8e792ca5661482"
+text = '''EU5 · {game}'''
+
+["profile_line"]
+source = "0029a3aa08ba73e8"
+text = '''Profil · {profile}'''
+
+["game_missing"]
+source = "a61a4349f0cb79c8"
+text = '''EU5 bulunamadı. Dünya dosyalarını yine de açıp haritalarına bakabilirsiniz; ancak dünya oluşturmak için oyunun kendi dosyaları gerekir. Ayarları açıp oyunun klasörünü seçin.'''
+
+["profile_missing"]
+source = "b303732828e02c48"
+text = '''EU5 profili bulunamadı. Bir profil oluşturması için oyunu bir kez başlatın ya da klasörünü ayarlardan seçin.'''
+
+["not_a_game"]
+source = "a17bf5986615747f"
+text = '''Bu klasör bir EU5 kurulumu değil (game/in_game/map_data yok).'''
+
+["not_a_profile"]
+source = "534de3c12b965d56"
+text = '''Bu klasör yok.'''
+
+["show_new_world"]
+source = "18ff780a82fcefac"
+text = '''Yeni Dünya'yı oynamadan önce göster'''
+
+["show_new_world_hint"]
+source = "bc591758b90681d6"
+text = '''Kapalıyken bu dünyanın resimleri ve ülke seçimi haritası terra incognita olarak örtülü kalır. Bunu daha sonra dünyanın sayfasında, yeniden oluşturmadan değiştirebilirsiniz.'''
+
+["about_generator"]
+source = "6ed5499d9096e55f"
+text = '''Random New World, EU5 için Yeni Dünya haritaları oluşturur. Oluşturduğu her dünya kendi başına eksiksiz bir moddur: Oynamak için oynanış setinizde işaretleyin. Kodunu ya da dünya dosyasını paylaşın. Oluşturucunun kendisini etkinleştirmeniz gerekmez.'''
+
+["worlds"]
+source = "18f1b0bf915821d8"
+text = '''Dünyalar'''
+
+["new_world"]
+source = "3e28180bafaa6823"
+text = '''Yeni dünya'''
+
+["new_world_running"]
+source = "d8ef0468b14744a5"
+text = '''Yeni dünya · %{percent}'''
+
+["world_line"]
+source = "df1ed7e861e234e5"
+text = '''{when} · {place}'''
+
+["list.in_game"]
+source = "5cd2f5ec45977230"
+text = '''oyunda'''
+
+["list.kept"]
+source = "20b0afe7382b5bc7"
+text = '''oyunda değil'''
+
+["list.code_only"]
+source = "31f2d67ab5545388"
+text = '''yalnızca kod'''
+
+["stray_name"]
+source = "a4a24ec60180242e"
+text = '''Eski dünya'''
+
+["stray_line"]
+source = "3b35f49baee714a7"
+text = '''{folder} · oyunda'''
+
+["type"]
+source = "3bda8904a9b25b31"
+text = '''Dünya türü'''
+
+["type.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Süper kıta'''
+
+["type.supercontinent.about"]
+source = "33a2ee4977ae11b4"
+text = '''Yeni Dünya boyunca uzanan tek büyük kara parçası ve birkaç ada.'''
+
+["type.continents"]
+source = "6c048f26d3b8b473"
+text = '''Kıtalar'''
+
+["type.continents.about"]
+source = "ed5cc238d29c1abb"
+text = '''Amerikalar gibi çoğu zaman berzahlarla birbirine bağlanan büyük kıtalar ve adalar.'''
+
+["type.small_continents"]
+source = "9676e7e8b078ed3c"
+text = '''Küçük kıtalar'''
+
+["type.small_continents.about"]
+source = "368289346c178b67"
+text = '''Benzer büyüklükte üç ya da dört ayrı kıta.'''
+
+["type.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Takımada'''
+
+["type.archipelago.about"]
+source = "e68ebd3c93716386"
+text = '''Beş ile on bir arası büyük ada ve pek çok küçük ada: gemilerin dünyası.'''
+
+["type.islands"]
+source = "6cc98682072010a2"
+text = '''Dağınık adalar'''
+
+["type.islands.about"]
+source = "3dea08a0afa912dc"
+text = '''Büyük bir kara parçası olmayan, küçük adalarla dolu bir deniz.'''
+
+["quick"]
+source = "b22d2b06765851eb"
+text = '''Temel ayarlar'''
+
+["quick_hint"]
+source = "8c832a2fa2f25cec"
+text = '''Genel dengeyi burada seçin. Gelişmiş sekmesinde kesin değerler var.'''
+
+["quick.custom"]
+source = "6cdfd271da635d49"
+text = '''özel'''
+
+["quick.land"]
+source = "b6baff9358ddd8f7"
+text = '''Kara'''
+
+["quick.land.about"]
+source = "bd552acf65a994a8"
+text = '''Yeni Dünya'nın ne kadarının kara olduğu. Kara arttıkça konumlar biraz büyür, böylece dünya EU5'in kaldırabildiği 32.000 konumun altında kalır.'''
+
+["quick.land.little"]
+source = "117361268a0facb6"
+text = '''Az'''
+
+["quick.land.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Normal'''
+
+["quick.land.much"]
+source = "81cb32c88ae337b4"
+text = '''Çok'''
+
+["quick.peoples"]
+source = "1e0a8378b7a75bd9"
+text = '''Yerli halklar'''
+
+["quick.peoples.about"]
+source = "6c1001fb2140ade3"
+text = '''Yeni Dünya'da kaç halkın yaşadığı ve kaç kültür merkezi olduğu.'''
+
+["quick.peoples.few"]
+source = "9a4303881564a221"
+text = '''Az'''
+
+["quick.peoples.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Normal'''
+
+["quick.peoples.many"]
+source = "98801fd897f5f12b"
+text = '''Çok'''
+
+["quick.states"]
+source = "04b3dcb87be3e083"
+text = '''Yerli devletler'''
+
+["quick.states.about"]
+source = "019db7cb7cc9699f"
+text = '''Yerleşik toprakların ne kadarının kabilelerin değil devletlerin elinde olduğu.'''
+
+["quick.states.few"]
+source = "9a4303881564a221"
+text = '''Az'''
+
+["quick.states.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Normal'''
+
+["quick.states.many"]
+source = "98801fd897f5f12b"
+text = '''Çok'''
+
+["quick.empires"]
+source = "492aaf62e6d759a9"
+text = '''Olağanüstü halklar'''
+
+["quick.empires.about"]
+source = "7d5f92b53bffae0b"
+text = '''Her kültür merkezinin çevresinde olağanüstü bir yerli toplumun doğma olasılığı. EU4'ün rastgele Yeni Dünya'sının fantastik modundaki gibi büyük bir imparatorluk: diğerlerinden kat kat büyük, gelişmiş bir yönetimi, Eski Dünya teknolojisi, daha yüksek rütbesi ve kraliyet yolları olan, komşularının korktuğu ve vasallarının nefret ettiği bir devlet. Ya da müttefik ama sularla ayrılmış deniz ticareti cumhuriyetlerinden bir birlik; dağ kabilelerinden bir konfederasyon; merkezleri birbirinin rakibi olan parçalanmış bir krallık; veya aynı inançtan rakipler arasında bir teokrasi olan kutsal bir merkez.'''
+
+["quick.empires.never"]
+source = "6300ef800bb88429"
+text = '''Asla'''
+
+["quick.empires.seldom"]
+source = "fa7a8dc69bbf7e83"
+text = '''Seyrek'''
+
+["quick.empires.sometimes"]
+source = "5bca0e3da0627549"
+text = '''Bazen'''
+
+["quick.empires.often"]
+source = "6f6f6b4ab1bd157a"
+text = '''Sık'''
+
+["quick.wealth"]
+source = "41942c9793d8f0ae"
+text = '''Altın ve gümüş'''
+
+["quick.wealth.about"]
+source = "95692635f7e43ddf"
+text = '''Altın, gümüş, değerli taş ve incinin ne sıklıkla görüldüğü.'''
+
+["quick.wealth.scarce"]
+source = "4a996fcca93fb323"
+text = '''Kıt'''
+
+["quick.wealth.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Normal'''
+
+["quick.wealth.rich"]
+source = "dca900394dddb28e"
+text = '''Bol'''
+
+["seed"]
+source = "367ef06b8fbf3aaa"
+text = '''Tohum'''
+
+["random"]
+source = "67bc484430fe87ba"
+text = '''Rastgele'''
+
+["code"]
+source = "8673890241aa4925"
+text = '''Dünya kodu'''
+
+["copy"]
+source = "e21f935f11d7e966"
+text = '''Kopyala'''
+
+["paste"]
+source = "f3380f7b44bd70af"
+text = '''Yapıştır'''
+
+["code_hint"]
+source = "f72a2cc345363493"
+text = '''Aynı türden bir oluşturucunun ürettiği aynı dünyayı elde etmek için bir dünya kodu yapıştırın.'''
+
+["other_version"]
+source = "cd4edd423d1119be"
+text = '''Bu kod {made} oluşturucusundan; bu ise {current} ve bu koddan farklı bir dünya üretir. Özgün dünyayı {made} oluşturucusu üretir.'''
+
+["other_changes"]
+source = "cb6ba02bc1591efa"
+text = '''Bu kod pencerenin göstermediği ayarları da değiştiriyor; bunlar korunur.'''
+
+["needs_land_image"]
+source = "481f1651885f3db0"
+text = '''Bu dünyanın karası bir resim üzerine çizilmiş. Resmi “Resimden kara” ile seçin.'''
+
+["land_image"]
+source = "4b6ea32b544af5c3"
+text = '''Resimden kara…'''
+
+["land_image_tip"]
+source = "8169f244febce3d5"
+text = '''Dünyayı kendi çizdiğiniz ya da başka yerde hazırladığınız bir kara üzerine kurun: karayı beyaz, denizi siyah gösteren ve Yeni Dünya alanının oranlarında bir resim. Gerisi onun üzerine oluşturulur.'''
+
+["land_template"]
+source = "ec4afdef9bceb8d5"
+text = '''Şablonu kaydet…'''
+
+["land_template_tip"]
+source = "933d156783ad138e"
+text = '''Karanızı herhangi bir programda çizebilmeniz için, oyununuzun haritasından Yeni Dünya'nın kaplayabileceği alanın resmini çıkarın: karayı beyaza boyayın.'''
+
+["task.template"]
+source = "562fb1abc40a9754"
+text = '''Şablon çiziliyor…'''
+
+["land_image_chosen"]
+source = "4d9e51e05f272e57"
+text = '''Kara bir resim üzerine çizilmiş ({id}).'''
+
+["land_image_clear"]
+source = "925ff49784a59104"
+text = '''Oluşturulan karaya dön'''
+
+["land_image_title"]
+source = "9fa18dec8f915068"
+text = '''Kara resmini seçin'''
+
+["land_image_files"]
+source = "63c1f6d6c9b93179"
+text = '''Resimler (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)'''
+
+["rolled_code"]
+source = "c7a2542a82443e5b"
+text = '''Bu, kıtasının bir sürümü: {parts} yeniden oluşturuldu.'''
+
+["bad_seed"]
+source = "44ef600e2e130e3a"
+text = '''Tohum, 0 ile 18446744073709551615 arasında bir tam sayıdır.'''
+
+["customize"]
+source = "c5276e27afba47df"
+text = '''Özelleştir'''
+
+["customize_hint"]
+source = "c8bba9279cdcb41b"
+text = '''Buradaki her değer yine oynanabilir bir dünya verir: tuhaf şekiller ve kıt altın sizin tercihiniz; sınırlar, oluşturucunun ya da oyunun bozulacağı yerde biter.'''
+
+["customized"]
+source = "8b46c6074c90a678"
+text = '''dünya türünden farklı: {count}'''
+
+["untested"]
+source = "089b71123d238bd4"
+text = '''denenmedi'''
+
+["untested_notice"]
+source = "8471a4d9a051d766"
+text = '''Bazı değerler denenmiş aralığın dışında.'''
+
+["reset"]
+source = "daee7606b339f3c3"
+text = '''Sıfırla'''
+
+["reset_all"]
+source = "ca6a476ace72d566"
+text = '''Hepsini dünya türüne döndür'''
+
+["group.land"]
+source = "e2c1842113819854"
+text = '''Kara ve deniz'''
+
+["group.map"]
+source = "be176b0015c424b7"
+text = '''Harita'''
+
+["group.peoples"]
+source = "6dba535c0de36030"
+text = '''Halklar'''
+
+["control.new_world.land_permille"]
+source = "b6baff9358ddd8f7"
+text = '''Kara'''
+
+["control.new_world.land_permille.about"]
+source = "e0a693457850e1a8"
+text = '''Yeni Dünya'nın ne kadarının kara olduğu.'''
+
+["control.new_world.feature_px"]
+source = "cd947acb27155143"
+text = '''Kara parçalarının büyüklüğü'''
+
+["control.new_world.feature_px.about"]
+source = "3002a5e7a5190fb3"
+text = '''Büyük: birkaç büyük kara parçası. Küçük: çok sayıda ada.'''
+
+["control.new_world.min_island_px"]
+source = "106d0e95fe3fe013"
+text = '''En küçük ada'''
+
+["control.new_world.min_island_px.about"]
+source = "ea723d77a203225f"
+text = '''Bundan küçük adalar batar.'''
+
+["control.new_world.persistence_permille"]
+source = "86bba0d82da6f0d5"
+text = '''Girintili kıyılar'''
+
+["control.new_world.persistence_permille.about"]
+source = "de94bac1d3657790"
+text = '''Daha yüksek: daha girintili kıyılar ve daha çok adacık.'''
+
+["control.new_world.octaves"]
+source = "f60e7523e64525bf"
+text = '''Kıyı ayrıntısı'''
+
+["control.new_world.octaves.about"]
+source = "09cde1b5a935f8c7"
+text = '''Kıyı çizgisindeki ayrıntı katmanları.'''
+
+["control.new_world.max_lake_px"]
+source = "3e9700a12bd157d6"
+text = '''En büyük göl'''
+
+["control.new_world.max_lake_px.about"]
+source = "da8233bcf7ff8411"
+text = '''Bundan büyük kapalı sular deniz olarak kalır.'''
+
+["control.new_world.wasteland_permille"]
+source = "4b415ab1819fb1f6"
+text = '''Çorak topraklar'''
+
+["control.new_world.wasteland_permille.about"]
+source = "7f15f21996df4288"
+text = '''Kimsenin yerleşemeyeceği kara payı.'''
+
+["control.new_world.precious_permille"]
+source = "1c32df89f67a4e86"
+text = '''Altın, gümüş ve değerli taşlar'''
+
+["control.new_world.precious_permille.about"]
+source = "7d06204c56e8fbbe"
+text = '''Altın, gümüş, değerli taş ve incinin, oyunun özgün Yeni Dünya'sına göre ne sıklıkla görüldüğü.'''
+
+["control.new_world.location_px"]
+source = "f9e8850d8a95bc43"
+text = '''Konum büyüklüğü'''
+
+["control.new_world.location_px.about"]
+source = "748f1d4ff3cd8629"
+text = '''Daha küçük: daha çok konum. EU5 toplamda yaklaşık 32.000 konum kaldırır; oluşturucu daha fazlasını içeren bir dünyayı reddeder.'''
+
+["control.new_world.sea_zone_px"]
+source = "cce5eac2b6b2bfac"
+text = '''Deniz bölgesi büyüklüğü'''
+
+["control.new_world.sea_zone_px.about"]
+source = "6b2ccfa728d8af25"
+text = '''Daha küçük: daha çok deniz bölgesi.'''
+
+["control.new_world.province_size"]
+source = "02583edafee78ebf"
+text = '''Eyalet başına konum'''
+
+["control.new_world.province_size.about"]
+source = "8d7d49eb6f791144"
+text = '''Bir eyaletin kaç konumdan oluştuğu.'''
+
+["control.natives.population_permille"]
+source = "5b828861aec15d60"
+text = '''Nüfus'''
+
+["control.natives.population_permille.about"]
+source = "cdc165c3d5206790"
+text = '''Yerli nüfus, oyunun özgün Yeni Dünya nüfusuna göre.'''
+
+["control.natives.state_share_permille"]
+source = "827b094c2b486457"
+text = '''Devlet toprakları'''
+
+["control.natives.state_share_permille.about"]
+source = "b923d647bb81644f"
+text = '''Yerleşik toprakların yerli devletlerin elindeki payı (özgün oyunda: %11).'''
+
+["control.natives.state_spread_permille"]
+source = "8f96ec1c6d41080e"
+text = '''Yalnız devletler'''
+
+["control.natives.state_spread_permille.about"]
+source = "a5e368305d5e52f0"
+text = '''Devlet topraklarının büyük merkezlerden uzak, küçük devlet gruplarındaki payı (özgün oyunda 1337'de: yaklaşık %15).'''
+
+["control.natives.organized_permille"]
+source = "f5701b4e75bb0076"
+text = '''Örgütlü halklar'''
+
+["control.natives.organized_permille.about"]
+source = "6321734327f6764c"
+text = '''Kabileler hâlinde örgütlenmiş kültürlerin payı.'''
+
+["control.natives.hearths_per_10k"]
+source = "fd978882c9d4343d"
+text = '''Kültür ocakları'''
+
+["control.natives.hearths_per_10k.about"]
+source = "071bc7006ab66c63"
+text = '''10.000 konum başına eski kültür merkezleri; devletler bunların çevresinde büyür.'''
+
+["control.natives.culture_locations"]
+source = "22cd15ccfd172dca"
+text = '''Kültür büyüklüğü'''
+
+["control.natives.culture_locations.about"]
+source = "c66e7ad7d8982807"
+text = '''Bir kültürün ortalama konum sayısı.'''
+
+["control.natives.religion_locations"]
+source = "6b57337037e9608e"
+text = '''Din büyüklüğü'''
+
+["control.natives.religion_locations.about"]
+source = "2ab84225cb22d337"
+text = '''Bir dinin ortalama konum sayısı.'''
+
+["control.natives.tribe_locations"]
+source = "230525cb0038444c"
+text = '''Kabile büyüklüğü'''
+
+["control.natives.tribe_locations.about"]
+source = "67fc7774a8ba3e94"
+text = '''Bir kabilenin ortalama konum sayısı.'''
+
+["control.natives.empire_permille"]
+source = "492aaf62e6d759a9"
+text = '''Olağanüstü halklar'''
+
+["control.natives.empire_permille.about"]
+source = "3a67bce42d61dc85"
+text = '''Her kültür ocağının çevresinde olağanüstü bir toplumun doğma olasılığı: büyük bir imparatorluk (diğerlerinden kat kat büyük, gelişmiş bir yönetimi, Eski Dünya teknolojisi, daha yüksek rütbesi ve kraliyet yolları olan, komşularının korktuğu ve vasallarının nefret ettiği bir devlet), deniz ticareti cumhuriyetlerinden bir birlik, dağ kabilelerinden bir konfederasyon, birbirine rakip merkezlerden oluşan parçalanmış bir krallık ya da aynı inançtan rakiplerle çevrili kutsal bir merkez.'''
+
+["control.natives.state_locations"]
+source = "f02a5b0258f32933"
+text = '''Devlet büyüklüğü'''
+
+["control.natives.state_locations.about"]
+source = "55dbb684b36e32f9"
+text = '''Bir yerli devletin ortalama konum sayısı.'''
+
+["unit.percent"]
+source = "e97d7e5f669ea3fa"
+text = ''' %'''
+
+["unit.times"]
+source = "4d4655d116f71fcc"
+text = ''' ×'''
+
+["unit.px"]
+source = "bc913fd04325705c"
+text = ''' px'''
+
+["unit."]
+source = "e3b0c44298fc1c14"
+text = ''''''
+
+["install"]
+source = "6f9a79fcb2631bc9"
+text = '''Bitince oyuna ekle'''
+
+["generate"]
+source = "49e49bb4401e67bd"
+text = '''Oluştur'''
+
+["cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''İptal'''
+
+["cancelling"]
+source = "91b104db05da1b2d"
+text = '''İptal ediliyor…'''
+
+["progress"]
+source = "4664827f8e890192"
+text = '''İlerleme'''
+
+["idle"]
+source = "e20846d20bcd60f0"
+text = '''Hazır.'''
+
+["running"]
+source = "b87aac63638e00ec"
+text = '''Çalışıyor: {stages}'''
+
+["finished"]
+source = "c15031f5b768b892"
+text = '''{seconds} saniyede bitti.'''
+
+["failed"]
+source = "b050917e5e3b9da2"
+text = "Olmadı: {message}\n\n{report_hint}"
+
+["report_hint"]
+source = "971e4fa23733b587"
+text = '''Bildirmek için ayarları açıp “Tanılamayı kaydet” düğmesine basın.'''
+
+["error_world_file"]
+source = "626c100184b9a4cf"
+text = '''Dosya kullanılamıyor: hasarlı ya da bir dünya dosyası değil. ({detail})'''
+
+["error_settings"]
+source = "f1edf544f93508bb"
+text = '''Bu ayarlar kullanılamıyor. ({detail})'''
+
+["cancelled"]
+source = "1e1e9d54a0a12f87"
+text = '''İptal edildi. Oyununuzda hiçbir şey değişmedi.'''
+
+["ready_no_game"]
+source = "fbbc35b197ae01d4"
+text = '''Önce ayarlardan oyun klasörünü seçin.'''
+
+["ready_no_profile"]
+source = "5410df6eb3b98906"
+text = '''Ayarlardan bir profil seçin ya da oyuna eklemeyi kapatın.'''
+
+["ready_busy"]
+source = "3d09fa493c04b1f7"
+text = '''Oluşturucu meşgul.'''
+
+["too_many_locations"]
+source = "b4a78edf445b4075"
+text = '''Bu dünyada yaklaşık {count} konum olurdu; EU5 yaklaşık 32.000 konum kaldırır, oluşturucu ise {budget} altında kalır. Konum ya da deniz bölgesi büyüklüğünü artırın veya karayı azaltın.'''
+
+["outside_range"]
+source = "2ed39ef60bd66af6"
+text = '''Bu kod, oluşturucunun izin verdiğinin ötesinde değerler ayarlıyor: {names}.'''
+
+["estimate"]
+source = "4ab7301404b8205d"
+text = '''Yaklaşık {count} konum (EU5 yaklaşık 32.000 konum kaldırır).'''
+
+["name_hint"]
+source = "453d4a9fcef62708"
+text = '''Bu dünyanın adı (en fazla {limit} karakter)'''
+
+["retitle_later"]
+source = "4bfbafc4c2ab883b"
+text = '''Ad kaydedildi. Oyun şu an bu dünyanın dosyalarını kullanıyor; mod listesi adı, dünya yeniden eklendikten sonra gösterecek.'''
+
+["preview_hidden"]
+source = "04b86c1fa26bdb53"
+text = '''Yeni Dünya terra incognita olarak gizli.'''
+
+["preview_shown"]
+source = "de7b43db7ffe45e6"
+text = '''Yeni Dünya görünüyor.'''
+
+["preview_missing"]
+source = "c21d71a0de202b2f"
+text = '''Bu dünyanın resmi yok.'''
+
+["zoom_hint"]
+source = "fe797f35f2c60a7c"
+text = '''Yakınlaştırmak için kaydırın, taşımak için sürükleyin, sığdırmak için çift tıklayın.'''
+
+["detail.code"]
+source = "8673890241aa4925"
+text = '''Dünya kodu'''
+
+["detail.type"]
+source = "3bda8904a9b25b31"
+text = '''Dünya türü'''
+
+["detail.seed"]
+source = "367ef06b8fbf3aaa"
+text = '''Tohum'''
+
+["detail.custom"]
+source = "4229eea49bd9ea3a"
+text = '''Özel ayarlar'''
+
+["detail.made"]
+source = "45a5300c04621100"
+text = '''Oluşturulma'''
+
+["detail.build"]
+source = "2b24426392ccb3cc"
+text = '''Oyun sürümü'''
+
+["detail.generator"]
+source = "1ade60abe93f5cfc"
+text = '''Oluşturucu'''
+
+["detail.place"]
+source = "1daaa38f33cd860e"
+text = '''Konum'''
+
+["detail.reproduce"]
+source = "1cd6bb5973fa2be5"
+text = '''Yeniden oluşturma'''
+
+["repro.none"]
+source = "05901bf63ea95e6e"
+text = '''Dünyalar nasıl yapıldıklarının kaydını tutmaya başlamadan önce oluşturuldu; bu yüzden aynı çıkmayabilir.'''
+
+["repro.same_algorithm"]
+source = "66763ff6d6860af0"
+text = '''Oluşturucu {release} onu bu oluşturucunun algoritmasıyla yaptı: Oyun dosyaları aynıysa bayt bayt aynı çıkar. Denetim bunu gösterir.'''
+
+["repro.identical"]
+source = "214b6041efb8bb29"
+text = '''Denetlendi: yeniden oluşturuldu, {count} dosyasının hepsi aynı.'''
+
+["repro.differs"]
+source = "7a13d7a38d54b305"
+text = '''Denetlendi: yeniden oluşturuldu, {count} dosya aynı değil; ilki {first}.'''
+
+["repro.other_algorithm"]
+source = "eae91d973c5bf75b"
+text = '''Oluşturucu {release} onu bundan farklı bir algoritmayla yaptı; bu yüzden aynı kod burada başka bir dünya verir. Özgün dünyayı oluşturucu {release} üretir.'''
+
+["repro.other_inputs"]
+source = "314a09e94f5efadf"
+text = '''Oluşturulduğundan beri oyun dosyaları değişti ({count} fark): Aynı kod bu oyunda başka bir dünya verir. Olduğu gibi kalması için bu dünyanın modunu saklayın.'''
+
+["repro.newer_format"]
+source = "c904c7d67406f708"
+text = '''Kaydını bu oluşturucunun okuyamadığı daha yeni bir oluşturucu ({release}) tarafından yapıldı.'''
+
+["part.peoples"]
+source = "1c52fde02da2ec5e"
+text = '''yeni halklar'''
+
+["part.resources"]
+source = "e34cf607cbcec7ff"
+text = '''yeni kaynaklar'''
+
+["part.peoples.button"]
+source = "32d36ec3dc905625"
+text = '''Yeni halklar'''
+
+["part.resources.button"]
+source = "9f2f4d34b10e5bf7"
+text = '''Yeni kaynaklar'''
+
+["part.peoples.tip"]
+source = "7256de9b80a3a85e"
+text = '''Ülkeleri, kültürleri, dinleri ve adları aynı kıta üzerinde yeniden oluştur. Kara değişmez.'''
+
+["part.resources.tip"]
+source = "415cf8682ce69b67"
+text = '''Hammaddeleri, altını ve gümüşü aynı kıta üzerinde yeniden oluştur. Kara ve halklar değişmez.'''
+
+["edit_same_land"]
+source = "377b7ea7a3d96c06"
+text = '''Aynı kara, başka ayarlar'''
+
+["edit_same_land_tip"]
+source = "ccc60e6a8ad5a618"
+text = '''Aynı kara üzerinde halkların ya da kaynakların ayarlarını değiştirmek için bu dünyanın ayarlarını tohumuyla birlikte aç.'''
+
+["previous_version"]
+source = "21d886b74bc1abe1"
+text = '''Önceki sürüm'''
+
+["keep_both"]
+source = "6a44d37116dd7c0d"
+text = '''Bunu da oyunda tut'''
+
+["keep_both_tip"]
+source = "bbdca9254f8bb1fa"
+text = '''Bu işaretli değilse yeni sürüm bu dünyanın oyundaki yerini alır. Oyundaki her dünya bir gigabayttan fazla yer kaplar.'''
+
+["not_world_file"]
+source = "cef953c94d5691f8"
+text = '''Bu bir dünya dosyası değil (.rnworld ya da .rnworld-mod).'''
+
+["imported"]
+source = "8d0ea11d7ffb0c47"
+text = '''Dünya listenizde, örtülü olarak duruyor. Haritalarını görmek için açığa çıkarın.'''
+
+["imported_again"]
+source = "dd4ee3af9b0ca85e"
+text = '''Bu dünya zaten sizde vardı; olduğu gibi duruyor.'''
+
+["no_mod_to_send"]
+source = "e3b7363ed3b4a1af"
+text = '''Bu dünyanın burada gönderilecek modu yok: Önce oyuna ekleyin ya da oluşturun.'''
+
+["open_world_file"]
+source = "b20aa10a6bcd2811"
+text = '''Dünya dosyası aç…'''
+
+["open_world_file_tip"]
+source = "3010238481b95870"
+text = '''Bir dünyayı .rnworld dosyasından ya da hazır bir dünyayı .rnworld-mod dosyasından alın.'''
+
+["world_files"]
+source = "7f058e5cf089a3eb"
+text = '''Dünya dosyaları (*.rnworld *.rnworld-mod)'''
+
+["export_file"]
+source = "ccb29307fc55e62c"
+text = '''Dünya dosyasını kaydet…'''
+
+["export_file_tip"]
+source = "911be34bc5f2c7ca"
+text = '''Bu dünyanın kodunu, kaydını ve haritalarını paylaşmak ya da göndermek için küçük bir dosyaya yazın. İçinde oyundan hiçbir şey yoktur.'''
+
+["send_built"]
+source = "8af3933be4147db3"
+text = '''Hazır dünyayı aktar…'''
+
+["send_built_tip"]
+source = "047b2b02a2fa3fb3"
+text = '''Modun tamamını, başka bir bilgisayarınıza taşımak üzere bir dosyaya yazın.'''
+
+["send_built_warning"]
+source = "6a88a7e91f2b232e"
+text = '''Bu dosya dünyanın modunu, yaklaşık bir gigabaytı, oyunun haritasından türetilmiş resimlerle birlikte içerir. Paylaşmak için değil, dünyayı kendi bilgisayarlarınız arasında taşımak içindir. Diğer bilgisayar onu yalnızca aynı oyun dosyalarıyla kabul eder. Devam edilsin mi?'''
+
+["copy_mod"]
+source = "f25df969e7e57e2d"
+text = '''Modu bir klasöre kopyala…'''
+
+["copy_mod_tip"]
+source = "7e1479cc3c7ddb55"
+text = '''Elle yönetmek için bu dünyanın modunu seçtiğiniz bir klasöre kopyalayın.'''
+
+["task.copy"]
+source = "548e2087de0d5b96"
+text = '''Mod kopyalanıyor…'''
+
+["task.receive"]
+source = "8d3b860b93f6e75e"
+text = '''Hazır dünya alınıyor…'''
+
+["task.send"]
+source = "ff78a7d5ab27ab07"
+text = '''Hazır dünya yazılıyor…'''
+
+["file_saved"]
+source = "482f5b2eebc6b886"
+text = '''Kaydedildi: {path}'''
+
+["tab.world"]
+source = "78ae647dc5544d22"
+text = '''Dünya'''
+
+["compare"]
+source = "219ddc366d9da259"
+text = '''Karşılaştır…'''
+
+["compare_title"]
+source = "30a531d0e5c94ed2"
+text = '''Dünyaları karşılaştır'''
+
+["compare_need_two"]
+source = "ef2be38dfe1c110d"
+text = '''Karşılaştırmak için haritaları açık iki dünya gerekir.'''
+
+["save_picture"]
+source = "bb1ed31b2c6d66f5"
+text = '''Resmi kaydet…'''
+
+["save_picture_tip"]
+source = "fb774db84a221988"
+text = '''Gösterilen resmi PNG olarak kaydedin; Yeni Dünya açığa çıkarılmadıkça örtülüdür.'''
+
+["picture_saved"]
+source = "482f5b2eebc6b886"
+text = '''Kaydedildi: {path}'''
+
+["tab.maps"]
+source = "119e66d117ae8f0c"
+text = '''Haritalar'''
+
+["layer.land"]
+source = "b6baff9358ddd8f7"
+text = '''Arazi'''
+
+["layer.countries"]
+source = "8faf7ec7ab20ca1c"
+text = '''Ülkeler'''
+
+["layer.cultures"]
+source = "62461b1bcd7ae231"
+text = '''Kültürler'''
+
+["layer.religions"]
+source = "ef1d1c23482f3289"
+text = '''Dinler'''
+
+["layer.resources"]
+source = "e89b30aa1dc30a6a"
+text = '''Kaynaklar'''
+
+["layer.development"]
+source = "21b6a798321a49f7"
+text = '''Gelişmişlik'''
+
+["layer.land.tip"]
+source = "a03117b5186e8673"
+text = '''Bitki örtüsü ve iklim; dağlar daha koyu, soğukta kar.'''
+
+["layer.countries.tip"]
+source = "193b9cf9c94c5ff7"
+text = '''Hangi toprağın kimde olduğu; başkentler beyaz noktalardır.'''
+
+["layer.cultures.tip"]
+source = "dd6968b8e6ed78c4"
+text = '''Her konumun kültürü; değiştiği yerlerde çizgiler.'''
+
+["layer.religions.tip"]
+source = "d32998efe57520d8"
+text = '''Her konumun dini; değiştiği yerlerde çizgiler.'''
+
+["layer.resources.tip"]
+source = "5c7040ce7d9f74c7"
+text = '''Her konumun hammaddesi; altın, gümüş, değerli taşlar ve inciler parlar.'''
+
+["layer.development.tip"]
+source = "7346fc0b9c0af07a"
+text = '''Her konumun başlangıçtaki gelişmişliği: koyu düşük, parlak yüksektir.'''
+
+["reveal_world"]
+source = "d63e537d568b9aba"
+text = '''Bu dünyayı açığa çıkar'''
+
+["reveal_world_tip"]
+source = "6d03c0632ec309b2"
+text = '''Bu dünyanın haritalarını oluşturucuda göster. Ayarlar aksini söylemedikçe oyunun mod listesi onu örtülü tutmaya devam eder.'''
+
+["covered_maps"]
+source = "72895291a8506c4f"
+text = '''Bu dünyanın Yeni Dünya'sı, oyunda keşfedebilesiniz diye örtülü. Oynamadan önce ülkelerini, kültürlerini, dinlerini ve kaynaklarını görmek için açığa çıkarın.'''
+
+["no_atlas"]
+source = "85953bb97408c28b"
+text = '''Bu dünyanın atlası yok: Atlaslardan önce oluşturulmuş ya da dosyaları kaybolmuş.'''
+
+["facts_hint"]
+source = "c45ebe1186c80167"
+text = '''Orada ne olduğunu görmek için haritanın üzerinde gezinin.'''
+
+["search_hint"]
+source = "9a81c8371c86e8ab"
+text = '''Bir ülke, kültür, din, kaynak ya da yer bulun'''
+
+["legend"]
+source = "7482e374b5bddc0a"
+text = '''Açıklama'''
+
+["legend.sea"]
+source = "76b3af333dbac074"
+text = '''Deniz'''
+
+["legend.lake"]
+source = "52082793941524be"
+text = '''Göl'''
+
+["legend.wasteland"]
+source = "4b415ab1819fb1f6"
+text = '''Çorak toprak'''
+
+["legend.no_country"]
+source = "b70285418438b053"
+text = '''Ülkesiz'''
+
+["legend.none"]
+source = "dc937b59892604f5"
+text = '''Yok'''
+
+["legend.uninhabited"]
+source = "abfd7adb689e5c89"
+text = '''Issız'''
+
+["legend.lowest"]
+source = "5c590931c7cc2ade"
+text = '''En düşük'''
+
+["legend.middle"]
+source = "d93006ec2e4339d7"
+text = '''Orta'''
+
+["legend.highest"]
+source = "d402ef10d054eac2"
+text = '''En yüksek'''
+
+["found.country"]
+source = "701d021d08c54579"
+text = '''Ülke'''
+
+["found.culture"]
+source = "51d7a2ae4335df12"
+text = '''Kültür'''
+
+["found.religion"]
+source = "f8a52d21e659b0e9"
+text = '''Din'''
+
+["found.material"]
+source = "eb7a842ff958c49c"
+text = '''Kaynak'''
+
+["found.place"]
+source = "e9463dccf0541a97"
+text = '''Yer'''
+
+["kind.land"]
+source = "90eae63487cae2df"
+text = '''kara'''
+
+["kind.sea"]
+source = "4a69f19c8c264850"
+text = '''deniz'''
+
+["kind.lake"]
+source = "6f021f0268d5dd0d"
+text = '''göl'''
+
+["kind.wasteland"]
+source = "a4b18daa52aed336"
+text = '''çorak toprak'''
+
+["no_country"]
+source = "140bedbf9c3f6d56"
+text = '''yok'''
+
+["fact.country"]
+source = "701d021d08c54579"
+text = '''Ülke'''
+
+["fact.culture"]
+source = "51d7a2ae4335df12"
+text = '''Kültür'''
+
+["fact.religion"]
+source = "f8a52d21e659b0e9"
+text = '''Din'''
+
+["fact.material"]
+source = "eb7a842ff958c49c"
+text = '''Kaynak'''
+
+["fact.population"]
+source = "5b828861aec15d60"
+text = '''Nüfus'''
+
+["fact.complexity"]
+source = "d5acfd8330f5caae"
+text = '''Toplum'''
+
+["summary"]
+source = "1a599cbd890423a0"
+text = '''{countries} ülke ({states} devlet, {tribes} kabile) · {cultures} kültür · {religions} din · {locations} konum ({land} kara)'''
+
+["check"]
+source = "9d60841e0a7891df"
+text = '''Denetle'''
+
+["check_tip"]
+source = "6124291f2cd0c606"
+text = '''Bu dünyayı yeniden oluşturup her dosyayı ilk seferkiyle karşılaştır. Oyun gerekir; bir dünya oluşturmak kadar sürer.'''
+
+["custom_none"]
+source = "140bedbf9c3f6d56"
+text = '''yok'''
+
+["custom_some"]
+source = "db3cb1c116f0a410"
+text = '''{count} değişti'''
+
+["place.in_game"]
+source = "c1f197d6ae0cecc7"
+text = '''Oyunda: {path}'''
+
+["place.kept"]
+source = "716eb5c10a97acc1"
+text = '''Oluşturucunun yanında, oyunda değil'''
+
+["place.code_only"]
+source = "90b380decd0f7b8d"
+text = '''Oyunda değil. Eklendiğinde kodundan yeniden oluşturulur (yaklaşık {seconds} sn).'''
+
+["other_build"]
+source = "8da6ddee43ce8460"
+text = '''{made} oyun sürümü için oluşturuldu; sizdeki {current}. Eklendiğinde sizin sürümünüz için yeniden oluşturulur: Aynı kod başka bir sürümde ayrı bir dünyadır.'''
+
+["other_build_same"]
+source = "bde12956110b557b"
+text = '''{made} oyun sürümü için oluşturuldu; sizdeki {current} ve onu oluşturan dosyalardan hiçbiri değişmedi, bu yüzden olduğu gibi çalışır.'''
+
+["standalone"]
+source = "b6d7e4aa65dc2e7e"
+text = '''Bu dünya eksiksiz bir moddur: Oynamak için oynanış setinizde tek başına işaretleyin. Kodunu ve atlasını paylaşmak için “Dünya dosyasını kaydet” seçeneğini kullanın.'''
+
+["add"]
+source = "c69a3dd1ca9d5040"
+text = '''Oyuna ekle'''
+
+["remove"]
+source = "b81efb13538fe4b9"
+text = '''Oyundan çıkar'''
+
+["select_all_worlds"]
+source = "1fc9a387654d410f"
+text = '''Tümünü seç'''
+
+["selection_hint"]
+source = "b537ff237277d924"
+text = '''Birden çok dünya seçmek için Ctrl ile tıklayın; aralık seçmek için Shift ile tıklayın.'''
+
+["selection_count"]
+source = "d5e9e37b3c98b203"
+text = '''{count} seçili · {installed} oyunda'''
+
+["remove_count"]
+source = "6c22a944e48e4042"
+text = '''Oyundan çıkar ({count})'''
+
+["library_remove"]
+source = "9186f6da0ec3ba00"
+text = '''Çıkar ({count})'''
+
+["remove_tip"]
+source = "53f9a900e9ce46ea"
+text = '''Seçili modları EU5'ten çıkarın. Dünya kodları ve resimleri korunur.'''
+
+["remove_none"]
+source = "f639b98a2c61e291"
+text = '''Önce yüklü bir dünya seçin.'''
+
+["remove_no_profile"]
+source = "30c0c5ebcba942a8"
+text = '''Önce ayarlardan EU5 profilini seçin.'''
+
+["delete_count"]
+source = "7376e41431243b45"
+text = '''Kütüphaneden sil ({count})…'''
+
+["library_delete"]
+source = "22779a77f1c59d24"
+text = '''Sil ({count})…'''
+
+["delete_tip"]
+source = "aa0346399fc89243"
+text = '''Seçili dünyaları kaydedilmiş haritaları, notları, saklanan mod dosyaları ve yüklü modlarıyla birlikte kütüphaneden silin.'''
+
+["delete_none"]
+source = "faf90f6fb115dc7f"
+text = '''Önce kütüphaneden bir dünya seçin.'''
+
+["delete_many_title"]
+source = "5bbd021f21ab2acf"
+text = '''{count} dünya silinsin mi?'''
+
+["delete_many_question"]
+source = "8e07c808cd2bfc35"
+text = "Bu {count} dünya kütüphaneden kalıcı olarak silinip yüklü modları EU5'ten çıkarılsın mı? Kaydedilmiş haritaları, notları ve saklanan mod dosyaları silinecek.\n\n{names}"
+
+["batch_delete_failed"]
+source = "fdc1bce609452891"
+text = '''{done} dünya silindikten sonra “{name}” silinemedi: {message}'''
+
+["batch_removed"]
+source = "1765dbfcf5b5a27a"
+text = '''Seçili modlar EU5'ten çıkarıldı. Dünya kodları ve resimler korundu.'''
+
+["batch_deleted"]
+source = "5725dcdf7e2643f3"
+text = '''Seçili dünyalar silindi.'''
+
+["batch_cancelled"]
+source = "0c2f571551bfe2ad"
+text = '''Durduruldu. Liste, yapılmış değişiklikleri gösteriyor.'''
+
+["open_folder"]
+source = "6a9084025c4bf3e1"
+text = '''Klasörü aç'''
+
+["copy_code"]
+source = "49a0053f3b0d5045"
+text = '''Kodu kopyala'''
+
+["like_this"]
+source = "c5ac52caf1b41abe"
+text = '''Bu ayarlarla yeni dünya'''
+
+["delete"]
+source = "c49b06b4c661ee22"
+text = '''Dünyayı sil'''
+
+["delete_title"]
+source = "522a787a83dddac3"
+text = '''Bu dünya silinsin mi?'''
+
+["delete_question"]
+source = "fa99445b18d116c0"
+text = '''“{name}” oyundan ve oluşturucudan çıkarılacak. Dünya kodu onu yeniden oluşturabilir.'''
+
+["task.add"]
+source = "d2d376a9e945a751"
+text = '''Oyuna ekleniyor…'''
+
+["task.remove"]
+source = "c191fce448827548"
+text = '''Oyundan çıkarılıyor…'''
+
+["task.delete"]
+source = "43b5894c3e4e2b24"
+text = '''Siliniyor…'''
+
+["task.check"]
+source = "ec963ffc911b8401"
+text = '''Denetleniyor…'''
+
+["task_failed"]
+source = "b050917e5e3b9da2"
+text = "Olmadı: {message}\n\n{report_hint}"
+
+["diagnostics"]
+source = "77d2c21988dc5725"
+text = '''Tanılamayı kaydet…'''
+
+["diagnostics_tip"]
+source = "d177e924fcd6fb51"
+text = '''Hata bildirimi için oluşturucunun günlüklerini ve bu bilgisayar, oyun ve dünyalarınız hakkında bir raporu tek dosyada toplayın. Hiçbir şey bir yere gönderilmez; adınız ve klasörleriniz silinir.'''
+
+["diagnostics_title"]
+source = "52fe7bd9f8dba9b9"
+text = '''Tanılamayı kaydet'''
+
+["diagnostics_saved"]
+source = "ef867c11f7e5697d"
+text = "Kaydedildi. İsterseniz göz atın ve bildiriminize ekleyin:\n{path}"
+
+["diagnostics_failed"]
+source = "ba28e35f48d96465"
+text = '''Dosya yazılamadı: {problem}'''
+
+["stray_about"]
+source = "f0866f985468cba5"
+text = '''Bu dünya, hakkında kayıt tutmayan eski bir oluşturucu sürümüyle yapıldı. Oyunda {folder} olarak duruyor. Artık oynamadığınızda çıkarın.'''
+
+["tick_unknown"]
+source = "4a3bdf3a4d535241"
+text = '''Oynatma setinizdeki RNW dünyaları arasında yalnızca “{name}” işaretli olsun.'''
+
+["tick_self_untick"]
+source = "c63e9e7f0d7290fa"
+text = '''Oynatma setinizde “{name}” işaretleyin, diğer RNW dünyalarının işaretini kaldırın.'''
+
+["tick_self"]
+source = "07849d445ea9ff7a"
+text = '''Oynatma setinizde “{name}” işaretleyin.'''
+
+["untick_others"]
+source = "bc66f4a33e6675ab"
+text = '''Oynatma setinizdeki diğer RNW dünyalarının işaretini kaldırın.'''
+
+["next_fresh"]
+source = "26a83c991aa99660"
+text = '''EU5'te: {tick} Bu, modları yeniden yükler. Ardından 1337'de yeni bir oyun başlatın.'''
+
+["next_fresh_switch"]
+source = "d9bc2cd7b64f1d10"
+text = '''EU5'te başka bir oynanış setine geçip kendinizinkine dönün; bu modları yeniden yükler. Ardından 1337'de yeni bir oyun başlatın.'''
+
+["next_played"]
+source = "9ec3a8f4b480881a"
+text = '''EU5'i başlattıktan sonra oynadınız; bundan sonra başlatılan başka bir dünya oyunu çökertir. EU5'i kapatıp yeniden başlatın. {tick} Ardından 1337'de yeni bir oyun başlatın.'''
+
+["next_start"]
+source = "2d8795764c63fcc4"
+text = '''EU5'i başlatın. {tick} Ardından 1337'de yeni bir oyun başlatın.'''
+
+["next_unknown"]
+source = "41f10e1b14772e13"
+text = '''{tick} Ardından EU5 açıldığından beri hiç oyun başlatılmadıysa başka bir oynanış setine geçip geri dönün ve 1337'de yeni bir oyun başlatın; başlatıldıysa önce EU5'i yeniden başlatın.'''
+
+["resources"]
+source = "e8929b864948ef37"
+text = '''{threads} iş parçacığı, {free} GiB boş bellek'''
+
+["resources_unknown"]
+source = "e23f2106daf4e4b1"
+text = '''{threads} iş parçacığı'''
+
+["stage.load map"]
+source = "e537d733dce55d79"
+text = '''Dünya haritası okunuyor'''
+
+["stage.select canvas"]
+source = "08322653444624b8"
+text = '''Değiştirilecek alan seçiliyor'''
+
+["stage.vanilla reads"]
+source = "3c8b16be15157a3f"
+text = '''Oyunun verileri okunuyor'''
+
+["stage.vanilla geometry"]
+source = "c88d0868aff1c0d6"
+text = '''Eski konumlar ölçülüyor'''
+
+["stage.vanilla localization keys"]
+source = "5d6474dd82c4cc82"
+text = '''Oyunun metin anahtarları toplanıyor'''
+
+["stage.vanilla climate"]
+source = "ec56f139832cf607"
+text = '''Eski iklim ölçülüyor'''
+
+["stage.vanilla material levels"]
+source = "4933d186bbecc36b"
+text = '''Eski arazi malzemeleri ölçülüyor'''
+
+["stage.vanilla natives"]
+source = "e3f4bfb6adec2c92"
+text = '''Eski yerli halklar okunuyor'''
+
+["stage.generate world"]
+source = "e84556e6a019ab76"
+text = '''Kıtalar, denizler ve yer şekilleri oluşturuluyor'''
+
+["stage.settle coasts"]
+source = "e2cd040b59052112"
+text = '''Her kıyıya bir liman veriliyor'''
+
+["stage.water shapes"]
+source = "86189bc7022099c2"
+text = '''Koylar, boğazlar ve akıntılar şekillendiriliyor'''
+
+["stage.identities"]
+source = "e14e8033766d3d1b"
+text = '''Konumlara, alanlara ve bölgelere ad veriliyor'''
+
+["stage.world checks"]
+source = "2f4b2b5e8a3f9d61"
+text = '''Yeni dünya denetleniyor'''
+
+["stage.water textures"]
+source = "4ef7590b1b28e969"
+text = '''Su ve kıyılar boyanıyor'''
+
+["stage.biomes and rivers"]
+source = "d4bd6b2dd554ff95"
+text = '''İklim, biyomlar ve nehirler büyütülüyor'''
+
+["stage.slot tables"]
+source = "c84fa407cadaa012"
+text = '''Arazi malzemeleri hazırlanıyor'''
+
+["stage.location rasters"]
+source = "f126e7af80e75f1c"
+text = '''Konum haritası çiziliyor'''
+
+["stage.png encoding"]
+source = "ca6ff7403235db3e"
+text = '''Haritalar sıkıştırılıyor'''
+
+["stage.terrain decals"]
+source = "afccac1753249f1e"
+text = '''Arazi biçimlendiriliyor'''
+
+["stage.vegetation instances"]
+source = "3fa3e8fd70c4851a"
+text = '''Ağaçlar ve otlar dikiliyor'''
+
+["stage.natives"]
+source = "de062b10c1938a64"
+text = '''Yerli toplumlar kuruluyor'''
+
+["stage.stories"]
+source = "cbe749082c75686b"
+text = '''Dünyanın hikâyeleri ve kurulabilir ülkeleri yazılıyor'''
+
+["stage.atlas"]
+source = "2fa4552668c62056"
+text = '''Dünyanın atlası çiziliyor'''
+
+["stage.texts"]
+source = "f414224df1fa792b"
+text = '''Adlar, başlangıç durumu ve betikler yazılıyor'''
+
+["stage.script remap"]
+source = "507ba7a241bfe7f0"
+text = '''Oyunun betikleri yeniden yazılıyor'''
+
+["stage.spline network"]
+source = "cdd6a2ba75e40403"
+text = '''Yolların şeritleri döşeniyor'''
+
+["stage.selection cover"]
+source = "7e788576dbb4ecbe"
+text = '''Yeni Dünya oyun başlayana dek örtülüyor'''
+
+["stage.write files"]
+source = "7f9242d43d976453"
+text = '''Mod yazılıyor'''
+
+["stage.land cells"]
+source = "0d6f25d525141973"
+text = '''Kara konumları büyütülüyor'''
+
+["stage.sea cells"]
+source = "42cc41a5bd88b8b7"
+text = '''Deniz bölgeleri büyütülüyor'''
+
+["stage.relief"]
+source = "74ea42c343487a9a"
+text = '''Dağlar ve vadiler yükseltiliyor'''
+
+["stage.terrain"]
+source = "349511ebba803dea"
+text = '''Arazi kuruluyor'''
+
+["stage.candidates"]
+source = "2a892bfd45c8d0f3"
+text = '''Kıtaların taslağı çiziliyor'''
+
+["stage.install"]
+source = "a6e5d85ef9ce3cbc"
+text = '''Dünya profilinize kuruluyor'''
+
+["stage.compare inputs"]
+source = "1fe1e92443638ab8"
+text = '''Oyunun dosyaları, bu dünyanın yapıldığı dosyalarla karşılaştırılıyor'''
+
+["stage.waiting for the game"]
+source = "3796d1c0f7d512f6"
+text = '''Oyunun önceki dünyayı bırakması bekleniyor: Onu oynanış setinde işaretten çıkarıp seti uygulayın ya da oyunu kapatın'''
+
+["error.code.prefix"]
+source = "a4ece9429a17cada"
+text = '''Dünya kodu {prefix} ile başlar.'''
+
+["error.code.short"]
+source = "0dd5d68df589578a"
+text = '''Dünya kodu çok kısa.'''
+
+["error.code.typo"]
+source = "a95b743c53657352"
+text = '''Dünya kodunda bir yazım hatası var: Denetim toplamı tutmuyor.'''
+
+["error.code.format"]
+source = "9faae2046129538f"
+text = '''Bu dünya kodu daha yeni ya da farklı bir oluşturucudan geliyor.'''
+
+["error.code.damaged"]
+source = "81cbea66ce059baa"
+text = '''Dünya kodundaki değiştirilmiş ayarlar hasarlı.'''
+
+["error.code.extra"]
+source = "342b6e6badd7c5fa"
+text = '''Dünya kodunun sonunda fazladan veri kalmış.'''
+
+["error.code.characters"]
+source = "2114e3add9ec678c"
+text = '''Dünya kodunda, bir kodda bulunamayacak karakterler var.'''
+
+["error.destination.one"]
+source = "93130a85f7a96c32"
+text = '''Dünya için tek bir hedef seçin.'''
+
+["error.destination.outside"]
+source = "5463f7a655b549db"
+text = '''Hedef, oyunun klasörünün dışında olmalı.'''
+
+["error.destination.folder"]
+source = "ad7b7c82ea68f13a"
+text = '''Mod için var olan bir klasör seçin.'''
+
+["error.destination.exists"]
+source = "a64875e2c0f3edc3"
+text = '''{file} zaten var. Dünya dosyası için başka bir ad seçin.'''
+
+["error.destination.profile"]
+source = "2f9f5b6d5619b37d"
+text = '''Dünyanın ekleneceği bir profil yok. Bir profil seçin ya da eklemeyin.'''
+
+["error.land_image.gone"]
+source = "e6b07cf126932f17"
+text = '''Bu dünyanın karası, kütüphanede artık bulunmayan bir resme çizilmiş. Dünyayı oluşturmak için dünya dosyasını yeniden açın ya da resmi seçin.'''
+
+["error.check.no_record"]
+source = "990ed1f85c2a9322"
+text = '''Bu dünya, dünyalar kayıt tutmaya başlamadan önce oluşturulduğu için denetlenemez.'''
+
+["error.check.bundle"]
+source = "c2284a0becacbcfe"
+text = '''Kütüphanedeki dünya dosyaları artık onun yapıldığı dosyalar değil.'''
+
+["error.install.in_use"]
+source = "8f4e29768c251b73"
+text = '''Oyun {mod} modunu kullanıyor. Onu oynanış setinde işaretten çıkarıp seti uygulayın ya da oyunu kapatın.'''
+
+["error.pictures.missing"]
+source = "d3eddbbb04e82f93"
+text = '''{folder} resimleri eksik; bu yüzden oyundaki resmi değiştirilemez.'''
+
+["error.cover.missing"]
+source = "fd633ea58a7c310b"
+text = '''{folder} için kaydedilmiş ülke seçimi örtüsü eksik.'''
+
+["error.picture.unwritten"]
+source = "17b62235c3b8c217"
+text = '''{folder} resmi yazılamadı.'''
+
+["error.transfer.bundle"]
+source = "3573ac4baa20047d"
+text = '''Kütüphanedeki dünya dosyalarında artık {name} yok; bu yüzden aktarılamaz.'''
+
+["error.transfer.no_mod"]
+source = "f0d89be22465b46d"
+text = '''Bu dosyada mod yok. Onu dünya dosyası olarak açın.'''
+
+["error.transfer.no_record"]
+source = "d8408db42b98236e"
+text = '''Bu dünya, dünyalar kayıt tutmaya başlamadan önce oluşturulduğu için oyunu denetlenemez.'''
+
+["error.transfer.have"]
+source = "3e1d33d97a5fc3cf"
+text = '''Kütüphanede bu dünya zaten var. Bu kopyayı almak için önce onu silin.'''
+
+["error.transfer.foreign"]
+source = "b48b43adec0095d1"
+text = '''Dosyadaki mod bu oluşturucuyla yapılmamış.'''
+
+["error.transfer.other_game"]
+source = "d14c4889ee041877"
+text = '''Bu oyun, dünyanın yapıldığı oyun değil: Haritasının dosyaları farklı. Dünyayı burada kodundan yeniden oluşturun.'''
+
+["error.transfer.no_listing"]
+source = "afc60f3999f87cc1"
+text = '''Dosya hiçbir oyun dosyası listelemiyor; bu yüzden bu oyun onunla karşılaştırılamaz.'''
+
+["error.transfer.changed"]
+source = "8dc1de34d02263d7"
+text = '''Dünyanın yapıldığı oyun dosyalarından {count} tanesi artık eskisi gibi değil, örneğin {names}. Dünyayı burada kodundan yeniden oluşturun.'''
+
+["error.mask.unreadable"]
+source = "d9f075c4781b2514"
+text = '''Resim okunamıyor ({error}).'''
+
+["error.mask.size"]
+source = "80dca932e860d07b"
+text = '''Resim {width} × {height} boyutunda. Her yönde en az {side} piksel ve toplamda en fazla {millions} milyon piksel olmalı.'''
+
+["error.mask.share"]
+source = "bf2f8fd0a968f2bc"
+text = '''Resmin %{share} kadarı kara; bir dünya %{low} ile %{high} arasında kara ister. Beyaz kara, siyah denizdir.'''
+
+["error.mask.file"]
+source = "f05a267ab9f03342"
+text = '''{name} okunamıyor ({error}).'''
+
+["error.mask.aspect"]
+source = "ec2c2a21a1b9bad6"
+text = '''Resmin genişliği yüksekliğinin {given} katı; Yeni Dünya alanınınki ise {wanted} katı. Onu bu oranda çizin, örneğin {width} × {height} piksel.'''
+
+["error.candidates.count"]
+source = "81923dac5a6dc04a"
+text = '''1 ile {count} arasında taslak seçin.'''
+
+["error.candidates.drawn"]
+source = "75f72c48760efe1b"
+text = '''Taslaklar için oluşturulan kara gerekir. Önce oluşturulan karaya dönün.'''

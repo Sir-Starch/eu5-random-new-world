@@ -1,0 +1,1763 @@
+["undo_roll"]
+source = "d3ba4753973fc1f9"
+text = '''Cofnij ponowne losowanie'''
+
+["task.undo"]
+source = "3ca5c54e7c549b10"
+text = '''Przywracanie poprzedniej wersji'''
+
+["copy_tag"]
+source = "6d38d2a846422e7f"
+text = '''Kopiuj znacznik'''
+
+["copy_picture"]
+source = "05decf94ea187240"
+text = '''Kopiuj obraz'''
+
+["destination.library"]
+source = "09a9c9fa074db7d9"
+text = '''Zostaw mod w bibliotece'''
+
+["destination.mod"]
+source = "0ad3383f1dce480d"
+text = '''Skopiuj mod do folderu'''
+
+["destination.world"]
+source = "172c07cba6c2dd6c"
+text = '''Tylko plik świata'''
+
+["destination_choose"]
+source = "9772ff884d42d946"
+text = '''Wybierz miejsce...'''
+
+["destination_missing"]
+source = "dd64b96d7c6d9026"
+text = '''Najpierw wybierz, gdzie zapisać ten świat.'''
+
+["tab.notes"]
+source = "8a7525b1492fb848"
+text = '''Notatki'''
+
+["starred"]
+source = "e39b24993c31d7bb"
+text = '''Ulubiony'''
+
+["user_tag"]
+source = "e1c92163bf9d061c"
+text = '''Twój znacznik (do 64 znaków)'''
+
+["notes_hint"]
+source = "6d8ef522499455f3"
+text = '''Notatki o tym świecie (do 16 384 znaków)'''
+
+["save_notes"]
+source = "eb76a6cc99ba6881"
+text = '''Zapisz notatki'''
+
+["notes_saved"]
+source = "04965e23cd9e8fb9"
+text = '''Notatki zapisane.'''
+
+["candidates"]
+source = "0e7b026bc70eba63"
+text = '''Wybierz kontynent...'''
+
+["candidates_hint"]
+source = "2292c2759a5d2df3"
+text = '''Zanim utworzysz świat, obejrzyj sześć szkiców kontynentów. To odsłania ich lądy. Wybierz jeden, aby przejąć jego ziarno i ustawienia; ostateczna linia brzegowa może się nieco przesunąć, gdy powstaną lokacje.'''
+
+["candidate_item"]
+source = "82a3979eef3cad60"
+text = "{number} · {land:g}% lądu\nZiarno {seed}"
+
+["enqueue"]
+source = "34b25c1b963f3a59"
+text = '''Dodaj do kolejki'''
+
+["run_queue"]
+source = "073afaf0ff8ea437"
+text = '''Uruchom kolejkę'''
+
+["clear_queue"]
+source = "fd1d3b4b9147213b"
+text = '''Wyczyść kolejkę'''
+
+["queue_empty"]
+source = "dd95d861c51b5f8b"
+text = '''Najpierw dodaj świat do kolejki.'''
+
+["queue_count"]
+source = "bc608dfbf45c2100"
+text = '''Oczekuje: {count}'''
+
+["game"]
+source = "5c412a262086b970"
+text = '''Gra'''
+
+["profile"]
+source = "d696a35bdd1883da"
+text = '''Profil'''
+
+["language"]
+source = "a4fe65264ef7dbb3"
+text = '''Język'''
+
+["language.game"]
+source = "3bbba19c86874410"
+text = '''Jak w grze: {language}'''
+
+["language.restart"]
+source = "0a1870181520b1b9"
+text = '''Generator przejdzie na nowy język przy następnym uruchomieniu.'''
+
+["browse"]
+source = "93c6b664dce6c207"
+text = '''Przeglądaj…'''
+
+["settings"]
+source = "7a04083baf8daa20"
+text = '''Ustawienia…'''
+
+["settings_title"]
+source = "74a883a037bc227f"
+text = '''Ustawienia'''
+
+["game_status"]
+source = "660c5d42f3698876"
+text = '''Europa Universalis V · wersja {build}'''
+
+["new_tab.world"]
+source = "78ae647dc5544d22"
+text = '''Świat'''
+
+["new_tab.advanced"]
+source = "9f088dbebd6c3c70"
+text = '''Zaawansowane'''
+
+["new_tab.output"]
+source = "afd096dc8e3ce666"
+text = '''Zapisz i graj'''
+
+["new_tab.queued"]
+source = "858dc646bc959251"
+text = '''Zapisz i graj · w kolejce: {count}'''
+
+["world_identity"]
+source = "96fc61ec457ed6f0"
+text = '''Ziarno i kod świata'''
+
+["land_tools"]
+source = "244bfdc5f13ec886"
+text = '''Źródła lądu i podglądy'''
+
+["output"]
+source = "1eeb900ab78c39cb"
+text = '''Gdzie zapisać'''
+
+["output_hint"]
+source = "fbb6fdcf5f923bd7"
+text = '''Każdy świat zostaje w twojej bibliotece. Dodaj jego mod do EU5 od razu, zachowaj go na później albo zapisz kopię w innym folderze. Plik świata zawiera przepis i mapy.'''
+
+["queue_title"]
+source = "a27578fd3a7a3f5e"
+text = '''Utwórz kilka światów'''
+
+["queue_hint"]
+source = "af8bed5b076227c5"
+text = '''Dodaj bieżące ustawienia do kolejki, a potem zmień ziarno lub opcje następnego świata. Gdy wszystko dodasz, uruchom kolejkę.'''
+
+["progress_details"]
+source = "a7d418eaf220511e"
+text = '''Pokaż szczegóły etapów'''
+
+["generation_install"]
+source = "ed7ffaf064794ac2"
+text = '''Gotowy mod zostanie dodany do twojego profilu EU5.'''
+
+["generation_keep"]
+source = "92b157d42d51b4a1"
+text = '''Gotowy świat zostanie w twojej bibliotece.'''
+
+["generation_copy"]
+source = "c59824bd5b1eaa91"
+text = '''Gotowy mod zostanie skopiowany do wybranego folderu.'''
+
+["generation_file"]
+source = "35244f6f7d5aa65a"
+text = '''Plik świata zostanie zapisany w wybranym miejscu.'''
+
+["visibility"]
+source = "2764b4c1b7b57015"
+text = '''Przed grą'''
+
+["world_visibility_hint"]
+source = "bc9b9de7e31abc1c"
+text = '''Dotyczy tylko tego świata. Odświeża obraz jego moda i mapę wyboru kraju bez ponownego tworzenia. Uruchom EU5 ponownie, aby gra odczytała zmianę.'''
+
+["visibility_updated"]
+source = "2fce01cc9fc9abdf"
+text = '''Zmieniono widoczność tego świata. Uruchom EU5 ponownie, aby gra odczytała zmianę.'''
+
+["tab.tools"]
+source = "f692ca48462027a8"
+text = '''Wersje i pliki'''
+
+["world_versions"]
+source = "7ce072f0da5cf56e"
+text = '''Utwórz wersję'''
+
+["world_share"]
+source = "39a5a934252b2aaa"
+text = '''Udostępnij i eksportuj'''
+
+["world_details"]
+source = "29af469824c1ee6b"
+text = '''Szczegóły świata i sprawdzenia'''
+
+["close"]
+source = "7d9eb7acb13e2462"
+text = '''Zamknij'''
+
+["game_line"]
+source = "59a2ce96d6c17c2f"
+text = '''EU5, wersja {build} · {game}'''
+
+["game_line_unknown"]
+source = "5d8e792ca5661482"
+text = '''EU5 · {game}'''
+
+["profile_line"]
+source = "0029a3aa08ba73e8"
+text = '''Profil · {profile}'''
+
+["game_missing"]
+source = "a61a4349f0cb79c8"
+text = '''Nie znaleziono EU5. Pliki światów można otwierać i oglądać ich mapy także bez gry, ale do tworzenia świata potrzebne są pliki samej gry. Otwórz ustawienia i wskaż jej folder.'''
+
+["profile_missing"]
+source = "b303732828e02c48"
+text = '''Nie znaleziono profilu EU5. Uruchom grę raz, aby go utworzyła, albo wskaż jego folder w ustawieniach.'''
+
+["not_a_game"]
+source = "a17bf5986615747f"
+text = '''Ten folder nie jest instalacją EU5 (brak game/in_game/map_data).'''
+
+["not_a_profile"]
+source = "534de3c12b965d56"
+text = '''Ten folder nie istnieje.'''
+
+["show_new_world"]
+source = "18ff780a82fcefac"
+text = '''Pokaż Nowy Świat przed grą'''
+
+["show_new_world_hint"]
+source = "bc591758b90681d6"
+text = '''Gdy wyłączone, obrazy tego świata i mapa wyboru kraju pozostają zakryte jako terra incognita. Możesz to później zmienić na stronie świata bez ponownego tworzenia.'''
+
+["about_generator"]
+source = "6ed5499d9096e55f"
+text = '''Random New World tworzy mapy Nowego Świata dla EU5. Każdy utworzony świat jest osobnym, kompletnym modem: zaznacz go w swoim zestawie modów, aby w niego grać. Udostępniaj jego kod lub plik świata. Samego generatora nie trzeba włączać.'''
+
+["worlds"]
+source = "18f1b0bf915821d8"
+text = '''Światy'''
+
+["new_world"]
+source = "3e28180bafaa6823"
+text = '''Nowy świat'''
+
+["new_world_running"]
+source = "d8ef0468b14744a5"
+text = '''Nowy świat · {percent} %'''
+
+["world_line"]
+source = "df1ed7e861e234e5"
+text = '''{when} · {place}'''
+
+["list.in_game"]
+source = "5cd2f5ec45977230"
+text = '''w grze'''
+
+["list.kept"]
+source = "20b0afe7382b5bc7"
+text = '''poza grą'''
+
+["list.code_only"]
+source = "31f2d67ab5545388"
+text = '''tylko kod'''
+
+["stray_name"]
+source = "a4a24ec60180242e"
+text = '''Starszy świat'''
+
+["stray_line"]
+source = "3b35f49baee714a7"
+text = '''{folder} · w grze'''
+
+["type"]
+source = "3bda8904a9b25b31"
+text = '''Rodzaj świata'''
+
+["type.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Superkontynent'''
+
+["type.supercontinent.about"]
+source = "33a2ee4977ae11b4"
+text = '''Jeden wielki ląd przez cały Nowy Świat i kilka wysp.'''
+
+["type.continents"]
+source = "6c048f26d3b8b473"
+text = '''Kontynenty'''
+
+["type.continents.about"]
+source = "ed5cc238d29c1abb"
+text = '''Duże kontynenty, często połączone przesmykami jak obie Ameryki, oraz wyspy.'''
+
+["type.small_continents"]
+source = "9676e7e8b078ed3c"
+text = '''Małe kontynenty'''
+
+["type.small_continents.about"]
+source = "368289346c178b67"
+text = '''Trzy lub cztery oddzielne kontynenty podobnej wielkości.'''
+
+["type.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Archipelag'''
+
+["type.archipelago.about"]
+source = "e68ebd3c93716386"
+text = '''Od pięciu do jedenastu dużych wysp i wiele małych: świat statków.'''
+
+["type.islands"]
+source = "6cc98682072010a2"
+text = '''Rozsiane wyspy'''
+
+["type.islands.about"]
+source = "3dea08a0afa912dc"
+text = '''Morze pełne małych wysp, bez wielkiego lądu.'''
+
+["quick"]
+source = "b22d2b06765851eb"
+text = '''Podstawy'''
+
+["quick_hint"]
+source = "8c832a2fa2f25cec"
+text = '''Tu wybierasz ogólne proporcje. Karta „Zaawansowane” podaje dokładne wartości.'''
+
+["quick.custom"]
+source = "6cdfd271da635d49"
+text = '''własne'''
+
+["quick.land"]
+source = "b6baff9358ddd8f7"
+text = '''Ląd'''
+
+["quick.land.about"]
+source = "bd552acf65a994a8"
+text = '''Jaka część Nowego Świata to ląd. Więcej lądu oznacza nieco większe lokacje, aby świat zmieścił się w 32 000 lokacji, które wytrzymuje EU5.'''
+
+["quick.land.little"]
+source = "117361268a0facb6"
+text = '''Mało'''
+
+["quick.land.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Zwykle'''
+
+["quick.land.much"]
+source = "81cb32c88ae337b4"
+text = '''Dużo'''
+
+["quick.peoples"]
+source = "1e0a8378b7a75bd9"
+text = '''Ludy tubylcze'''
+
+["quick.peoples.about"]
+source = "6c1001fb2140ade3"
+text = '''Ile ludów żyje w Nowym Świecie i ile jest ośrodków kultury.'''
+
+["quick.peoples.few"]
+source = "9a4303881564a221"
+text = '''Mało'''
+
+["quick.peoples.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Zwykle'''
+
+["quick.peoples.many"]
+source = "98801fd897f5f12b"
+text = '''Dużo'''
+
+["quick.states"]
+source = "04b3dcb87be3e083"
+text = '''Państwa tubylcze'''
+
+["quick.states.about"]
+source = "019db7cb7cc9699f"
+text = '''Jaka część zamieszkanych ziem należy do państw, a nie do plemion.'''
+
+["quick.states.few"]
+source = "9a4303881564a221"
+text = '''Mało'''
+
+["quick.states.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Zwykle'''
+
+["quick.states.many"]
+source = "98801fd897f5f12b"
+text = '''Dużo'''
+
+["quick.empires"]
+source = "492aaf62e6d759a9"
+text = '''Niezwykłe ludy'''
+
+["quick.empires.about"]
+source = "7d5f92b53bffae0b"
+text = '''Jak prawdopodobne jest, że wokół ośrodka kultury powstanie niezwykłe społeczeństwo tubylcze. Wielkie imperium, jak w trybie fantasy losowego Nowego Świata z EU4: państwo wielokrotnie większe od pozostałych, z rozwiniętym ustrojem, techniką Starego Świata, wyższą rangą i królewskimi drogami, budzące strach sąsiadów i nienawiść wasali. Albo liga kupieckich republik morskich, sprzymierzonych, lecz rozdzielonych wodą; konfederacja górskich plemion; rozbite królestwo, którego ośrodki rywalizują ze sobą; albo święty ośrodek, teokracja wśród rywali tej samej wiary.'''
+
+["quick.empires.never"]
+source = "6300ef800bb88429"
+text = '''Nigdy'''
+
+["quick.empires.seldom"]
+source = "fa7a8dc69bbf7e83"
+text = '''Rzadko'''
+
+["quick.empires.sometimes"]
+source = "5bca0e3da0627549"
+text = '''Czasem'''
+
+["quick.empires.often"]
+source = "6f6f6b4ab1bd157a"
+text = '''Często'''
+
+["quick.wealth"]
+source = "41942c9793d8f0ae"
+text = '''Złoto i srebro'''
+
+["quick.wealth.about"]
+source = "95692635f7e43ddf"
+text = '''Jak często występują złoto, srebro, kamienie szlachetne i perły.'''
+
+["quick.wealth.scarce"]
+source = "4a996fcca93fb323"
+text = '''Skąpo'''
+
+["quick.wealth.normal"]
+source = "a7248eeb45eb1ce2"
+text = '''Zwykle'''
+
+["quick.wealth.rich"]
+source = "dca900394dddb28e"
+text = '''Obficie'''
+
+["seed"]
+source = "367ef06b8fbf3aaa"
+text = '''Ziarno'''
+
+["random"]
+source = "67bc484430fe87ba"
+text = '''Losowe'''
+
+["code"]
+source = "8673890241aa4925"
+text = '''Kod świata'''
+
+["copy"]
+source = "e21f935f11d7e966"
+text = '''Kopiuj'''
+
+["paste"]
+source = "f3380f7b44bd70af"
+text = '''Wklej'''
+
+["code_hint"]
+source = "f72a2cc345363493"
+text = '''Wklej kod świata, aby dostać ten sam świat, utworzony przez generator tego samego rodzaju.'''
+
+["other_version"]
+source = "cd4edd423d1119be"
+text = '''Ten kod pochodzi z generatora {made}; to jest {current}, który tworzy z niego inny świat. Oryginał tworzy generator {made}.'''
+
+["other_changes"]
+source = "cb6ba02bc1591efa"
+text = '''Ten kod zmienia też ustawienia, których okno nie pokazuje; zostają zachowane.'''
+
+["needs_land_image"]
+source = "481f1651885f3db0"
+text = '''Ląd tego świata jest narysowany na obrazie. Wskaż obraz przyciskiem „Ląd z obrazu”.'''
+
+["land_image"]
+source = "4b6ea32b544af5c3"
+text = '''Ląd z obrazu…'''
+
+["land_image_tip"]
+source = "8169f244febce3d5"
+text = '''Zbuduj świat na lądzie narysowanym przez ciebie lub zrobionym gdzie indziej: obraz z bielą jako lądem i czernią jako morzem, w proporcjach obszaru Nowego Świata. Reszta zostanie wygenerowana na nim.'''
+
+["land_template"]
+source = "ec4afdef9bceb8d5"
+text = '''Zapisz szablon…'''
+
+["land_template_tip"]
+source = "933d156783ad138e"
+text = '''Zapisać obraz obszaru, który może zająć Nowy Świat, z mapy twojej gry, aby narysować na nim ląd w dowolnym programie: pomaluj ląd na biało.'''
+
+["task.template"]
+source = "562fb1abc40a9754"
+text = '''Rysowanie szablonu…'''
+
+["land_image_chosen"]
+source = "4d9e51e05f272e57"
+text = '''Ląd jest narysowany na obrazie ({id}).'''
+
+["land_image_clear"]
+source = "925ff49784a59104"
+text = '''Wróć do wygenerowanego lądu'''
+
+["land_image_title"]
+source = "9fa18dec8f915068"
+text = '''Wybierz obraz lądu'''
+
+["land_image_files"]
+source = "63c1f6d6c9b93179"
+text = '''Obrazy (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)'''
+
+["rolled_code"]
+source = "c7a2542a82443e5b"
+text = '''To wersja jego kontynentu: ponownie utworzono {parts}.'''
+
+["bad_seed"]
+source = "44ef600e2e130e3a"
+text = '''Ziarno to liczba całkowita od 0 do 18446744073709551615.'''
+
+["customize"]
+source = "c5276e27afba47df"
+text = '''Dostosuj'''
+
+["customize_hint"]
+source = "c8bba9279cdcb41b"
+text = '''Każda wartość tutaj wciąż daje grywalny świat: dziwne kształty i skąpe złoto to twój wybór, a zakresy kończą się tam, gdzie zawiódłby generator lub gra.'''
+
+["customized"]
+source = "8b46c6074c90a678"
+text = '''zmienione względem rodzaju świata: {count}'''
+
+["untested"]
+source = "089b71123d238bd4"
+text = '''nieprzetestowane'''
+
+["untested_notice"]
+source = "8471a4d9a051d766"
+text = '''Niektóre wartości wykraczają poza przetestowany zakres.'''
+
+["reset"]
+source = "daee7606b339f3c3"
+text = '''Przywróć'''
+
+["reset_all"]
+source = "ca6a476ace72d566"
+text = '''Przywróć wszystko do rodzaju świata'''
+
+["group.land"]
+source = "e2c1842113819854"
+text = '''Ląd i morze'''
+
+["group.map"]
+source = "be176b0015c424b7"
+text = '''Mapa'''
+
+["group.peoples"]
+source = "6dba535c0de36030"
+text = '''Ludy'''
+
+["control.new_world.land_permille"]
+source = "b6baff9358ddd8f7"
+text = '''Ląd'''
+
+["control.new_world.land_permille.about"]
+source = "e0a693457850e1a8"
+text = '''Jaka część Nowego Świata to ląd.'''
+
+["control.new_world.feature_px"]
+source = "cd947acb27155143"
+text = '''Wielkość lądów'''
+
+["control.new_world.feature_px.about"]
+source = "3002a5e7a5190fb3"
+text = '''Duża: kilka wielkich lądów. Mała: wiele wysp.'''
+
+["control.new_world.min_island_px"]
+source = "106d0e95fe3fe013"
+text = '''Najmniejsza wyspa'''
+
+["control.new_world.min_island_px.about"]
+source = "ea723d77a203225f"
+text = '''Mniejsze wyspy toną.'''
+
+["control.new_world.persistence_permille"]
+source = "86bba0d82da6f0d5"
+text = '''Postrzępione wybrzeża'''
+
+["control.new_world.persistence_permille.about"]
+source = "de94bac1d3657790"
+text = '''Wyżej: bardziej postrzępione wybrzeża i więcej wysepek.'''
+
+["control.new_world.octaves"]
+source = "f60e7523e64525bf"
+text = '''Szczegóły wybrzeży'''
+
+["control.new_world.octaves.about"]
+source = "09cde1b5a935f8c7"
+text = '''Warstwy szczegółów linii brzegowej.'''
+
+["control.new_world.max_lake_px"]
+source = "3e9700a12bd157d6"
+text = '''Największe jezioro'''
+
+["control.new_world.max_lake_px.about"]
+source = "da8233bcf7ff8411"
+text = '''Większe zamknięte wody pozostają morzem.'''
+
+["control.new_world.wasteland_permille"]
+source = "4b415ab1819fb1f6"
+text = '''Pustkowia'''
+
+["control.new_world.wasteland_permille.about"]
+source = "7f15f21996df4288"
+text = '''Część lądu, której nikt nie może zasiedlić.'''
+
+["control.new_world.precious_permille"]
+source = "1c32df89f67a4e86"
+text = '''Złoto, srebro i kamienie'''
+
+["control.new_world.precious_permille.about"]
+source = "7d06204c56e8fbbe"
+text = '''Jak często występują złoto, srebro, kamienie szlachetne i perły w porównaniu ze zwykłym Nowym Światem.'''
+
+["control.new_world.location_px"]
+source = "f9e8850d8a95bc43"
+text = '''Wielkość lokacji'''
+
+["control.new_world.location_px.about"]
+source = "748f1d4ff3cd8629"
+text = '''Mniejsza: więcej lokacji. EU5 wytrzymuje łącznie około 32 000 lokacji; świata z większą liczbą generator nie utworzy.'''
+
+["control.new_world.sea_zone_px"]
+source = "cce5eac2b6b2bfac"
+text = '''Wielkość stref morskich'''
+
+["control.new_world.sea_zone_px.about"]
+source = "6b2ccfa728d8af25"
+text = '''Mniejsza: więcej stref morskich.'''
+
+["control.new_world.province_size"]
+source = "02583edafee78ebf"
+text = '''Lokacje na prowincję'''
+
+["control.new_world.province_size.about"]
+source = "8d7d49eb6f791144"
+text = '''Z ilu lokacji składa się prowincja.'''
+
+["control.natives.population_permille"]
+source = "5b828861aec15d60"
+text = '''Ludność'''
+
+["control.natives.population_permille.about"]
+source = "cdc165c3d5206790"
+text = '''Ludność tubylcza w porównaniu z ludnością zwykłego Nowego Świata.'''
+
+["control.natives.state_share_permille"]
+source = "827b094c2b486457"
+text = '''Ziemie państw'''
+
+["control.natives.state_share_permille.about"]
+source = "b923d647bb81644f"
+text = '''Część zamieszkanych ziem, którą trzymają państwa tubylcze (w zwykłej grze: 11 %).'''
+
+["control.natives.state_spread_permille"]
+source = "8f96ec1c6d41080e"
+text = '''Samotne państwa'''
+
+["control.natives.state_spread_permille.about"]
+source = "a5e368305d5e52f0"
+text = '''Część ziem państw w małych grupach z dala od wielkich ośrodków (w zwykłej grze w 1337 r.: około 15 %).'''
+
+["control.natives.organized_permille"]
+source = "f5701b4e75bb0076"
+text = '''Zorganizowane ludy'''
+
+["control.natives.organized_permille.about"]
+source = "6321734327f6764c"
+text = '''Część kultur zorganizowanych w plemiona.'''
+
+["control.natives.hearths_per_10k"]
+source = "fd978882c9d4343d"
+text = '''Ogniska kultury'''
+
+["control.natives.hearths_per_10k.about"]
+source = "071bc7006ab66c63"
+text = '''Dawne ośrodki kultury na 10 000 lokacji; wokół nich rosną państwa.'''
+
+["control.natives.culture_locations"]
+source = "22cd15ccfd172dca"
+text = '''Wielkość kultury'''
+
+["control.natives.culture_locations.about"]
+source = "c66e7ad7d8982807"
+text = '''Średnia liczba lokacji jednej kultury.'''
+
+["control.natives.religion_locations"]
+source = "6b57337037e9608e"
+text = '''Wielkość religii'''
+
+["control.natives.religion_locations.about"]
+source = "2ab84225cb22d337"
+text = '''Średnia liczba lokacji jednej religii.'''
+
+["control.natives.tribe_locations"]
+source = "230525cb0038444c"
+text = '''Wielkość plemienia'''
+
+["control.natives.tribe_locations.about"]
+source = "67fc7774a8ba3e94"
+text = '''Średnia liczba lokacji jednego plemienia.'''
+
+["control.natives.empire_permille"]
+source = "492aaf62e6d759a9"
+text = '''Niezwykłe ludy'''
+
+["control.natives.empire_permille.about"]
+source = "3a67bce42d61dc85"
+text = '''Szansa, że wokół danego ogniska kultury powstanie niezwykłe społeczeństwo: wielkie imperium (państwo wielokrotnie większe od pozostałych, z rozwiniętym ustrojem, techniką Starego Świata, wyższą rangą i królewskimi drogami, budzące strach sąsiadów i nienawiść wasali), liga kupieckich republik morskich, konfederacja górskich plemion, rozbite królestwo rywalizujących ośrodków albo święty ośrodek wśród rywali tej samej wiary.'''
+
+["control.natives.state_locations"]
+source = "f02a5b0258f32933"
+text = '''Wielkość państwa'''
+
+["control.natives.state_locations.about"]
+source = "55dbb684b36e32f9"
+text = '''Średnia liczba lokacji jednego państwa tubylczego.'''
+
+["unit.percent"]
+source = "e97d7e5f669ea3fa"
+text = ''' %'''
+
+["unit.times"]
+source = "4d4655d116f71fcc"
+text = ''' ×'''
+
+["unit.px"]
+source = "bc913fd04325705c"
+text = ''' px'''
+
+["unit."]
+source = "e3b0c44298fc1c14"
+text = ''''''
+
+["install"]
+source = "6f9a79fcb2631bc9"
+text = '''Dodaj do gry po zakończeniu'''
+
+["generate"]
+source = "49e49bb4401e67bd"
+text = '''Utwórz'''
+
+["cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Anuluj'''
+
+["cancelling"]
+source = "91b104db05da1b2d"
+text = '''Anulowanie…'''
+
+["progress"]
+source = "4664827f8e890192"
+text = '''Postęp'''
+
+["idle"]
+source = "e20846d20bcd60f0"
+text = '''Gotowe do pracy.'''
+
+["running"]
+source = "b87aac63638e00ec"
+text = '''Trwa praca: {stages}'''
+
+["finished"]
+source = "c15031f5b768b892"
+text = '''Gotowe w {seconds} s.'''
+
+["failed"]
+source = "b050917e5e3b9da2"
+text = "Nie udało się: {message}\n\n{report_hint}"
+
+["report_hint"]
+source = "971e4fa23733b587"
+text = '''Aby to zgłosić, otwórz ustawienia i kliknij „Zapisz diagnostykę”.'''
+
+["error_world_file"]
+source = "626c100184b9a4cf"
+text = '''Nie można użyć tego pliku: jest uszkodzony albo to nie plik świata. ({detail})'''
+
+["error_settings"]
+source = "f1edf544f93508bb"
+text = '''Nie można użyć tych ustawień. ({detail})'''
+
+["cancelled"]
+source = "1e1e9d54a0a12f87"
+text = '''Anulowano. W twojej grze nic się nie zmieniło.'''
+
+["ready_no_game"]
+source = "fbbc35b197ae01d4"
+text = '''Najpierw wskaż folder gry w ustawieniach.'''
+
+["ready_no_profile"]
+source = "5410df6eb3b98906"
+text = '''Wybierz profil w ustawieniach albo wyłącz dodawanie do gry.'''
+
+["ready_busy"]
+source = "3d09fa493c04b1f7"
+text = '''Generator jest zajęty.'''
+
+["too_many_locations"]
+source = "b4a78edf445b4075"
+text = '''Ten świat miałby około {count} lokacji; EU5 wytrzymuje około 32 000, a generator trzyma się poniżej {budget}. Zwiększ wielkość lokacji lub stref morskich albo zmniejsz ląd.'''
+
+["outside_range"]
+source = "2ed39ef60bd66af6"
+text = '''Ten kod ustawia wartości poza dozwolonym zakresem: {names}.'''
+
+["estimate"]
+source = "4ab7301404b8205d"
+text = '''Około {count} lokacji (EU5 wytrzymuje około 32 000).'''
+
+["name_hint"]
+source = "453d4a9fcef62708"
+text = '''Nazwa tego świata (do {limit} znaków)'''
+
+["retitle_later"]
+source = "4bfbafc4c2ab883b"
+text = '''Nazwa została zapisana. Gra korzysta teraz z plików tego świata, więc lista modów pokaże nazwę, gdy świat zostanie dodany ponownie.'''
+
+["preview_hidden"]
+source = "04b86c1fa26bdb53"
+text = '''Nowy Świat jest zakryty jako terra incognita.'''
+
+["preview_shown"]
+source = "de7b43db7ffe45e6"
+text = '''Nowy Świat jest widoczny.'''
+
+["preview_missing"]
+source = "c21d71a0de202b2f"
+text = '''Ten świat nie ma obrazu.'''
+
+["zoom_hint"]
+source = "fe797f35f2c60a7c"
+text = '''Kółko — powiększenie, przeciąganie — przesuwanie, dwuklik — dopasowanie.'''
+
+["detail.code"]
+source = "8673890241aa4925"
+text = '''Kod świata'''
+
+["detail.type"]
+source = "3bda8904a9b25b31"
+text = '''Rodzaj świata'''
+
+["detail.seed"]
+source = "367ef06b8fbf3aaa"
+text = '''Ziarno'''
+
+["detail.custom"]
+source = "4229eea49bd9ea3a"
+text = '''Własne ustawienia'''
+
+["detail.made"]
+source = "45a5300c04621100"
+text = '''Utworzono'''
+
+["detail.build"]
+source = "2b24426392ccb3cc"
+text = '''Wersja gry'''
+
+["detail.generator"]
+source = "1ade60abe93f5cfc"
+text = '''Generator'''
+
+["detail.place"]
+source = "1daaa38f33cd860e"
+text = '''Gdzie'''
+
+["detail.reproduce"]
+source = "1cd6bb5973fa2be5"
+text = '''Odtworzenie'''
+
+["repro.none"]
+source = "05901bf63ea95e6e"
+text = '''Utworzony, zanim światy zaczęły zapisywać, jak powstały, więc może nie wyjść tak samo.'''
+
+["repro.same_algorithm"]
+source = "66763ff6d6860af0"
+text = '''Generator {release} utworzył go tym samym algorytmem co ten: przy tych samych plikach gry wychodzi identyczny, bajt w bajt. Sprawdzenie to potwierdzi.'''
+
+["repro.identical"]
+source = "214b6041efb8bb29"
+text = '''Sprawdzono: utworzony ponownie, wszystkie {count} plików jest identycznych.'''
+
+["repro.differs"]
+source = "7a13d7a38d54b305"
+text = '''Sprawdzono: utworzony ponownie, plików różnych: {count}, pierwszy to {first}.'''
+
+["repro.other_algorithm"]
+source = "eae91d973c5bf75b"
+text = '''Generator {release} utworzył go innym algorytmem niż ten, więc ten sam kod daje tu inny świat. Oryginał tworzy generator {release}.'''
+
+["repro.other_inputs"]
+source = "314a09e94f5efadf"
+text = '''Pliki gry zmieniły się od jego utworzenia (różnic: {count}): ten sam kod daje w tej grze inny świat. Zachowaj mod tego świata, aby mieć go takim, jaki jest.'''
+
+["repro.newer_format"]
+source = "c904c7d67406f708"
+text = '''Utworzony przez nowszy generator ({release}), którego zapisu ten nie potrafi odczytać.'''
+
+["part.peoples"]
+source = "1c52fde02da2ec5e"
+text = '''nowe ludy'''
+
+["part.resources"]
+source = "e34cf607cbcec7ff"
+text = '''nowe zasoby'''
+
+["part.peoples.button"]
+source = "32d36ec3dc905625"
+text = '''Nowe ludy'''
+
+["part.resources.button"]
+source = "9f2f4d34b10e5bf7"
+text = '''Nowe zasoby'''
+
+["part.peoples.tip"]
+source = "7256de9b80a3a85e"
+text = '''Utworzyć ponownie kraje, kultury, religie i nazwy na tym samym kontynencie. Ląd się nie zmienia.'''
+
+["part.resources.tip"]
+source = "415cf8682ce69b67"
+text = '''Utworzyć ponownie surowce, złoto i srebro na tym samym kontynencie. Ląd i ludy się nie zmieniają.'''
+
+["edit_same_land"]
+source = "377b7ea7a3d96c06"
+text = '''Ten sam ląd, inne ustawienia'''
+
+["edit_same_land_tip"]
+source = "ccc60e6a8ad5a618"
+text = '''Otworzyć ustawienia tego świata z jego ziarnem, aby zmienić ustawienia ludów lub zasobów na tym samym lądzie.'''
+
+["previous_version"]
+source = "21d886b74bc1abe1"
+text = '''Poprzednia wersja'''
+
+["keep_both"]
+source = "6a44d37116dd7c0d"
+text = '''Zostaw w grze także ten'''
+
+["keep_both_tip"]
+source = "bbdca9254f8bb1fa"
+text = '''Nowa wersja zastępuje ten świat w grze, chyba że to pole jest zaznaczone. Każdy świat w grze zajmuje ponad gigabajt.'''
+
+["not_world_file"]
+source = "cef953c94d5691f8"
+text = '''To nie jest plik świata (.rnworld ani .rnworld-mod).'''
+
+["imported"]
+source = "8d0ea11d7ffb0c47"
+text = '''Świat jest na twojej liście, zakryty. Odsłoń go, aby zobaczyć mapy.'''
+
+["imported_again"]
+source = "dd4ee3af9b0ca85e"
+text = '''Ten świat już miałeś; pozostał bez zmian.'''
+
+["no_mod_to_send"]
+source = "e3b7363ed3b4a1af"
+text = '''Ten świat nie ma tu moda do wysłania: najpierw dodaj go do gry albo go utwórz.'''
+
+["open_world_file"]
+source = "b20aa10a6bcd2811"
+text = '''Otwórz plik świata…'''
+
+["open_world_file_tip"]
+source = "3010238481b95870"
+text = '''Wczytać świat z pliku .rnworld albo gotowy świat z pliku .rnworld-mod.'''
+
+["world_files"]
+source = "7f058e5cf089a3eb"
+text = '''Pliki światów (*.rnworld *.rnworld-mod)'''
+
+["export_file"]
+source = "ccb29307fc55e62c"
+text = '''Zapisz plik świata…'''
+
+["export_file_tip"]
+source = "911be34bc5f2c7ca"
+text = '''Zapisać kod, zapis powstania i mapy tego świata w jednym małym pliku do opublikowania lub wysłania. Nie zawiera niczego z gry.'''
+
+["send_built"]
+source = "8af3933be4147db3"
+text = '''Przenieś gotowy świat…'''
+
+["send_built_tip"]
+source = "047b2b02a2fa3fb3"
+text = '''Zapisać cały mod w pliku, aby przenieść go na inny twój komputer.'''
+
+["send_built_warning"]
+source = "6a88a7e91f2b232e"
+text = '''Ten plik zawiera mod świata, około gigabajta, z obrazami pochodzącymi z mapy gry. Służy do przenoszenia świata między twoimi komputerami, a nie do udostępniania. Drugi komputer przyjmie go tylko z tymi samymi plikami gry. Kontynuować?'''
+
+["copy_mod"]
+source = "f25df969e7e57e2d"
+text = '''Skopiuj mod do folderu…'''
+
+["copy_mod_tip"]
+source = "7e1479cc3c7ddb55"
+text = '''Skopiować mod tego świata do wybranego folderu, aby zarządzać nim ręcznie.'''
+
+["task.copy"]
+source = "548e2087de0d5b96"
+text = '''Kopiowanie moda…'''
+
+["task.receive"]
+source = "8d3b860b93f6e75e"
+text = '''Przyjmowanie gotowego świata…'''
+
+["task.send"]
+source = "ff78a7d5ab27ab07"
+text = '''Zapisywanie gotowego świata…'''
+
+["file_saved"]
+source = "482f5b2eebc6b886"
+text = '''Zapisano: {path}'''
+
+["tab.world"]
+source = "78ae647dc5544d22"
+text = '''Świat'''
+
+["compare"]
+source = "219ddc366d9da259"
+text = '''Porównaj…'''
+
+["compare_title"]
+source = "30a531d0e5c94ed2"
+text = '''Porównanie światów'''
+
+["compare_need_two"]
+source = "ef2be38dfe1c110d"
+text = '''Do porównania potrzebne są dwa światy z odsłoniętymi mapami.'''
+
+["save_picture"]
+source = "bb1ed31b2c6d66f5"
+text = '''Zapisz obraz…'''
+
+["save_picture_tip"]
+source = "fb774db84a221988"
+text = '''Zapisać pokazany obraz jako PNG; jest zakryty, dopóki Nowy Świat nie zostanie odsłonięty.'''
+
+["picture_saved"]
+source = "482f5b2eebc6b886"
+text = '''Zapisano: {path}'''
+
+["tab.maps"]
+source = "119e66d117ae8f0c"
+text = '''Mapy'''
+
+["layer.land"]
+source = "b6baff9358ddd8f7"
+text = '''Teren'''
+
+["layer.countries"]
+source = "8faf7ec7ab20ca1c"
+text = '''Kraje'''
+
+["layer.cultures"]
+source = "62461b1bcd7ae231"
+text = '''Kultury'''
+
+["layer.religions"]
+source = "ef1d1c23482f3289"
+text = '''Religie'''
+
+["layer.resources"]
+source = "e89b30aa1dc30a6a"
+text = '''Zasoby'''
+
+["layer.development"]
+source = "21b6a798321a49f7"
+text = '''Rozwój'''
+
+["layer.land.tip"]
+source = "a03117b5186e8673"
+text = '''Roślinność i klimat; góry ciemniejsze, śnieg w chłodzie.'''
+
+["layer.countries.tip"]
+source = "193b9cf9c94c5ff7"
+text = '''Kto trzyma które ziemie; stolice to białe punkty.'''
+
+["layer.cultures.tip"]
+source = "dd6968b8e6ed78c4"
+text = '''Kultura każdej lokacji; linie tam, gdzie się zmienia.'''
+
+["layer.religions.tip"]
+source = "d32998efe57520d8"
+text = '''Religia każdej lokacji; linie tam, gdzie się zmienia.'''
+
+["layer.resources.tip"]
+source = "5c7040ce7d9f74c7"
+text = '''Surowiec każdej lokacji; złoto, srebro, kamienie szlachetne i perły świecą.'''
+
+["layer.development.tip"]
+source = "7346fc0b9c0af07a"
+text = '''Początkowy rozwój każdej lokacji: ciemno to nisko, jasno to wysoko.'''
+
+["reveal_world"]
+source = "d63e537d568b9aba"
+text = '''Odsłoń ten świat'''
+
+["reveal_world_tip"]
+source = "6d03c0632ec309b2"
+text = '''Pokazać mapy tego świata w generatorze. Lista modów gry nadal go zakrywa, chyba że ustawienia mówią inaczej.'''
+
+["covered_maps"]
+source = "72895291a8506c4f"
+text = '''Nowy Świat tego świata jest zakryty, żebyś mógł go jeszcze odkryć w grze. Odsłoń go, aby zobaczyć jego kraje, kultury, religie i zasoby przed grą.'''
+
+["no_atlas"]
+source = "85953bb97408c28b"
+text = '''Ten świat nie ma atlasu: powstał przed atlasami albo jego pliki zniknęły.'''
+
+["facts_hint"]
+source = "c45ebe1186c80167"
+text = '''Najedź na mapę, aby zobaczyć, co tam leży.'''
+
+["search_hint"]
+source = "9a81c8371c86e8ab"
+text = '''Znajdź kraj, kulturę, religię, zasób lub miejsce'''
+
+["legend"]
+source = "7482e374b5bddc0a"
+text = '''Legenda'''
+
+["legend.sea"]
+source = "76b3af333dbac074"
+text = '''Morze'''
+
+["legend.lake"]
+source = "52082793941524be"
+text = '''Jezioro'''
+
+["legend.wasteland"]
+source = "4b415ab1819fb1f6"
+text = '''Pustkowie'''
+
+["legend.no_country"]
+source = "b70285418438b053"
+text = '''Bez kraju'''
+
+["legend.none"]
+source = "dc937b59892604f5"
+text = '''Brak'''
+
+["legend.uninhabited"]
+source = "abfd7adb689e5c89"
+text = '''Niezamieszkane'''
+
+["legend.lowest"]
+source = "5c590931c7cc2ade"
+text = '''Najniższy'''
+
+["legend.middle"]
+source = "d93006ec2e4339d7"
+text = '''Średni'''
+
+["legend.highest"]
+source = "d402ef10d054eac2"
+text = '''Najwyższy'''
+
+["found.country"]
+source = "701d021d08c54579"
+text = '''Kraj'''
+
+["found.culture"]
+source = "51d7a2ae4335df12"
+text = '''Kultura'''
+
+["found.religion"]
+source = "f8a52d21e659b0e9"
+text = '''Religia'''
+
+["found.material"]
+source = "eb7a842ff958c49c"
+text = '''Zasób'''
+
+["found.place"]
+source = "e9463dccf0541a97"
+text = '''Miejsce'''
+
+["kind.land"]
+source = "90eae63487cae2df"
+text = '''ląd'''
+
+["kind.sea"]
+source = "4a69f19c8c264850"
+text = '''morze'''
+
+["kind.lake"]
+source = "6f021f0268d5dd0d"
+text = '''jezioro'''
+
+["kind.wasteland"]
+source = "a4b18daa52aed336"
+text = '''pustkowie'''
+
+["no_country"]
+source = "140bedbf9c3f6d56"
+text = '''brak'''
+
+["fact.country"]
+source = "701d021d08c54579"
+text = '''Kraj'''
+
+["fact.culture"]
+source = "51d7a2ae4335df12"
+text = '''Kultura'''
+
+["fact.religion"]
+source = "f8a52d21e659b0e9"
+text = '''Religia'''
+
+["fact.material"]
+source = "eb7a842ff958c49c"
+text = '''Zasób'''
+
+["fact.population"]
+source = "5b828861aec15d60"
+text = '''Ludność'''
+
+["fact.complexity"]
+source = "d5acfd8330f5caae"
+text = '''Społeczeństwo'''
+
+["summary"]
+source = "1a599cbd890423a0"
+text = '''Kraje: {countries} (państwa: {states}, plemiona: {tribes}) · kultury: {cultures} · religie: {religions} · lokacje: {locations} (ląd: {land})'''
+
+["check"]
+source = "9d60841e0a7891df"
+text = '''Sprawdź'''
+
+["check_tip"]
+source = "6124291f2cd0c606"
+text = '''Utworzyć ten świat ponownie i porównać każdy plik z pierwszym razem. Wymaga gry; trwa tyle, co tworzenie świata.'''
+
+["custom_none"]
+source = "140bedbf9c3f6d56"
+text = '''brak'''
+
+["custom_some"]
+source = "db3cb1c116f0a410"
+text = '''zmienione: {count}'''
+
+["place.in_game"]
+source = "c1f197d6ae0cecc7"
+text = '''W grze: {path}'''
+
+["place.kept"]
+source = "716eb5c10a97acc1"
+text = '''Obok generatora, poza grą'''
+
+["place.code_only"]
+source = "90b380decd0f7b8d"
+text = '''Poza grą. Dodanie odtworzy go z kodu (około {seconds} s).'''
+
+["other_build"]
+source = "8da6ddee43ce8460"
+text = '''Utworzony dla wersji gry {made}; masz {current}. Dodanie odtworzy go dla twojej wersji: ten sam kod w innej wersji to osobny świat.'''
+
+["other_build_same"]
+source = "bde12956110b557b"
+text = '''Utworzony dla wersji gry {made}; masz {current}, a żaden z plików, z których powstał, się nie zmienił, więc działa bez zmian.'''
+
+["standalone"]
+source = "b6d7e4aa65dc2e7e"
+text = '''Ten świat to kompletny mod: zaznacz go w zestawie modów, aby w niego grać, samodzielnie. „Zapisz plik świata” pozwala udostępnić jego kod i atlas.'''
+
+["add"]
+source = "c69a3dd1ca9d5040"
+text = '''Dodaj do gry'''
+
+["remove"]
+source = "b81efb13538fe4b9"
+text = '''Usuń z gry'''
+
+["select_all_worlds"]
+source = "1fc9a387654d410f"
+text = '''Zaznacz wszystko'''
+
+["selection_hint"]
+source = "b537ff237277d924"
+text = '''Ctrl+klik zaznacza kilka światów; Shift+klik zaznacza zakres.'''
+
+["selection_count"]
+source = "d5e9e37b3c98b203"
+text = '''Zaznaczone: {count} · w grze: {installed}'''
+
+["remove_count"]
+source = "6c22a944e48e4042"
+text = '''Usuń z gry ({count})'''
+
+["library_remove"]
+source = "9186f6da0ec3ba00"
+text = '''Usuń ({count})'''
+
+["remove_tip"]
+source = "53f9a900e9ce46ea"
+text = '''Usunąć zaznaczone mody z EU5. Kody światów i obrazy zostaną zachowane.'''
+
+["remove_none"]
+source = "f639b98a2c61e291"
+text = '''Najpierw zaznacz zainstalowany świat.'''
+
+["remove_no_profile"]
+source = "30c0c5ebcba942a8"
+text = '''Najpierw wskaż profil EU5 w ustawieniach.'''
+
+["delete_count"]
+source = "7376e41431243b45"
+text = '''Skasuj z biblioteki ({count})…'''
+
+["library_delete"]
+source = "22779a77f1c59d24"
+text = '''Skasuj ({count})…'''
+
+["delete_tip"]
+source = "aa0346399fc89243"
+text = '''Skasować zaznaczone światy z biblioteki razem z zapisanymi mapami, notatkami, przechowywanymi plikami modów i zainstalowanymi modami.'''
+
+["delete_none"]
+source = "faf90f6fb115dc7f"
+text = '''Najpierw zaznacz świat w bibliotece.'''
+
+["delete_many_title"]
+source = "5bbd021f21ab2acf"
+text = '''Skasować światy ({count})?'''
+
+["delete_many_question"]
+source = "8e07c808cd2bfc35"
+text = "Trwale skasować te światy ({count}) z biblioteki i usunąć ich zainstalowane mody z EU5? Ich zapisane mapy, notatki i przechowywane pliki modów zostaną skasowane.\n\n{names}"
+
+["batch_delete_failed"]
+source = "fdc1bce609452891"
+text = '''Nie udało się skasować „{name}” po skasowaniu światów ({done}): {message}'''
+
+["batch_removed"]
+source = "1765dbfcf5b5a27a"
+text = '''Zaznaczone mody usunięto z EU5. Kody światów i obrazy zostały zachowane.'''
+
+["batch_deleted"]
+source = "5725dcdf7e2643f3"
+text = '''Zaznaczone światy zostały skasowane.'''
+
+["batch_cancelled"]
+source = "0c2f571551bfe2ad"
+text = '''Zatrzymano. Lista pokazuje już wprowadzone zmiany.'''
+
+["open_folder"]
+source = "6a9084025c4bf3e1"
+text = '''Otwórz folder'''
+
+["copy_code"]
+source = "49a0053f3b0d5045"
+text = '''Kopiuj kod'''
+
+["like_this"]
+source = "c5ac52caf1b41abe"
+text = '''Nowy świat z tymi ustawieniami'''
+
+["delete"]
+source = "c49b06b4c661ee22"
+text = '''Skasuj świat'''
+
+["delete_title"]
+source = "522a787a83dddac3"
+text = '''Skasować ten świat?'''
+
+["delete_question"]
+source = "fa99445b18d116c0"
+text = '''„{name}” zostanie usunięty z gry i z generatora. Jego kod świata może go odtworzyć.'''
+
+["task.add"]
+source = "d2d376a9e945a751"
+text = '''Dodawanie do gry…'''
+
+["task.remove"]
+source = "c191fce448827548"
+text = '''Usuwanie z gry…'''
+
+["task.delete"]
+source = "43b5894c3e4e2b24"
+text = '''Kasowanie…'''
+
+["task.check"]
+source = "ec963ffc911b8401"
+text = '''Sprawdzanie…'''
+
+["task_failed"]
+source = "b050917e5e3b9da2"
+text = "Nie udało się: {message}\n\n{report_hint}"
+
+["diagnostics"]
+source = "77d2c21988dc5725"
+text = '''Zapisz diagnostykę…'''
+
+["diagnostics_tip"]
+source = "d177e924fcd6fb51"
+text = '''Spakować dzienniki generatora i raport o tym komputerze, grze i twoich światach do jednego pliku na potrzeby zgłoszenia błędu. Nic nie jest nigdzie wysyłane; twoje imię i foldery są zamazywane.'''
+
+["diagnostics_title"]
+source = "52fe7bd9f8dba9b9"
+text = '''Zapisz diagnostykę'''
+
+["diagnostics_saved"]
+source = "ef867c11f7e5697d"
+text = "Zapisano. Przejrzyj plik, jeśli chcesz, i dołącz go do zgłoszenia:\n{path}"
+
+["diagnostics_failed"]
+source = "ba28e35f48d96465"
+text = '''Nie udało się zapisać pliku: {problem}'''
+
+["stray_about"]
+source = "f0866f985468cba5"
+text = '''Ten świat utworzyła wcześniejsza wersja generatora, która nie prowadziła o nim zapisu. W grze leży jako {folder}. Usuń go, gdy przestaniesz w niego grać.'''
+
+["tick_unknown"]
+source = "4a3bdf3a4d535241"
+text = '''Upewnij się, że spośród światów RNW w twoim zestawie modów zaznaczony jest tylko „{name}”.'''
+
+["tick_self_untick"]
+source = "c63e9e7f0d7290fa"
+text = '''Zaznacz „{name}” i odznacz pozostałe światy RNW w swoim zestawie modów.'''
+
+["tick_self"]
+source = "07849d445ea9ff7a"
+text = '''Zaznacz „{name}” w swoim zestawie modów.'''
+
+["untick_others"]
+source = "bc66f4a33e6675ab"
+text = '''Odznacz pozostałe światy RNW w swoim zestawie modów.'''
+
+["next_fresh"]
+source = "26a83c991aa99660"
+text = '''W EU5: {tick} To przeładuje mody. Potem rozpocznij nową grę w 1337 r.'''
+
+["next_fresh_switch"]
+source = "d9bc2cd7b64f1d10"
+text = '''W EU5 przełącz się na inny zestaw modów i z powrotem na swój, co przeładuje mody, a potem rozpocznij nową grę w 1337 r.'''
+
+["next_played"]
+source = "9ec3a8f4b480881a"
+text = '''Od uruchomienia EU5 już grałeś, a inny świat uruchomiony potem wywoła awarię gry. Zamknij EU5 i uruchom ją ponownie. {tick} Potem rozpocznij nową grę w 1337 r.'''
+
+["next_start"]
+source = "2d8795764c63fcc4"
+text = '''Uruchom EU5. {tick} Potem rozpocznij nową grę w 1337 r.'''
+
+["next_unknown"]
+source = "41f10e1b14772e13"
+text = '''{tick} Następnie, jeśli od uruchomienia EU5 nie rozpoczęto żadnej gry, przełącz się na inny zestaw modów i z powrotem, a potem rozpocznij nową grę w 1337 r.; w przeciwnym razie najpierw uruchom EU5 ponownie.'''
+
+["resources"]
+source = "e8929b864948ef37"
+text = '''Wątki: {threads}, wolna pamięć: {free} GiB'''
+
+["resources_unknown"]
+source = "e23f2106daf4e4b1"
+text = '''Wątki: {threads}'''
+
+["stage.load map"]
+source = "e537d733dce55d79"
+text = '''Wczytywanie mapy świata'''
+
+["stage.select canvas"]
+source = "08322653444624b8"
+text = '''Wybieranie obszaru do zastąpienia'''
+
+["stage.vanilla reads"]
+source = "3c8b16be15157a3f"
+text = '''Wczytywanie danych gry'''
+
+["stage.vanilla geometry"]
+source = "c88d0868aff1c0d6"
+text = '''Mierzenie dawnych lokacji'''
+
+["stage.vanilla localization keys"]
+source = "5d6474dd82c4cc82"
+text = '''Zbieranie kluczy tekstów gry'''
+
+["stage.vanilla climate"]
+source = "ec56f139832cf607"
+text = '''Mierzenie dawnego klimatu'''
+
+["stage.vanilla material levels"]
+source = "4933d186bbecc36b"
+text = '''Mierzenie dawnych materiałów terenu'''
+
+["stage.vanilla natives"]
+source = "e3f4bfb6adec2c92"
+text = '''Wczytywanie dawnych ludów tubylczych'''
+
+["stage.generate world"]
+source = "e84556e6a019ab76"
+text = '''Tworzenie kontynentów, mórz i rzeźby terenu'''
+
+["stage.settle coasts"]
+source = "e2cd040b59052112"
+text = '''Port dla każdego wybrzeża'''
+
+["stage.water shapes"]
+source = "86189bc7022099c2"
+text = '''Kształtowanie zatok, cieśnin i prądów'''
+
+["stage.identities"]
+source = "e14e8033766d3d1b"
+text = '''Nadawanie nazw lokacjom, obszarom i regionom'''
+
+["stage.world checks"]
+source = "2f4b2b5e8a3f9d61"
+text = '''Sprawdzanie nowego świata'''
+
+["stage.water textures"]
+source = "4ef7590b1b28e969"
+text = '''Malowanie wody i wybrzeży'''
+
+["stage.biomes and rivers"]
+source = "d4bd6b2dd554ff95"
+text = '''Klimat, biomy i rzeki'''
+
+["stage.slot tables"]
+source = "c84fa407cadaa012"
+text = '''Przygotowanie materiałów terenu'''
+
+["stage.location rasters"]
+source = "f126e7af80e75f1c"
+text = '''Rysowanie mapy lokacji'''
+
+["stage.png encoding"]
+source = "ca6ff7403235db3e"
+text = '''Kompresja map'''
+
+["stage.terrain decals"]
+source = "afccac1753249f1e"
+text = '''Rzeźbienie terenu'''
+
+["stage.vegetation instances"]
+source = "3fa3e8fd70c4851a"
+text = '''Sadzenie drzew i trawy'''
+
+["stage.natives"]
+source = "de062b10c1938a64"
+text = '''Zakładanie społeczeństw tubylczych'''
+
+["stage.stories"]
+source = "cbe749082c75686b"
+text = '''Pisanie historii i formowalnych krajów świata'''
+
+["stage.atlas"]
+source = "2fa4552668c62056"
+text = '''Rysowanie atlasu świata'''
+
+["stage.texts"]
+source = "f414224df1fa792b"
+text = '''Pisanie nazw, sytuacji początkowej i skryptów'''
+
+["stage.script remap"]
+source = "507ba7a241bfe7f0"
+text = '''Przepisywanie skryptów gry'''
+
+["stage.spline network"]
+source = "cdd6a2ba75e40403"
+text = '''Wytyczanie pasów dróg'''
+
+["stage.selection cover"]
+source = "7e788576dbb4ecbe"
+text = '''Zakrywanie Nowego Świata do początku gry'''
+
+["stage.write files"]
+source = "7f9242d43d976453"
+text = '''Zapisywanie moda'''
+
+["stage.land cells"]
+source = "0d6f25d525141973"
+text = '''Wzrost lokacji lądowych'''
+
+["stage.sea cells"]
+source = "42cc41a5bd88b8b7"
+text = '''Wzrost stref morskich'''
+
+["stage.relief"]
+source = "74ea42c343487a9a"
+text = '''Wypiętrzanie gór i dolin'''
+
+["stage.terrain"]
+source = "349511ebba803dea"
+text = '''Budowanie terenu'''
+
+["stage.candidates"]
+source = "2a892bfd45c8d0f3"
+text = '''Szkicowanie kontynentów'''
+
+["stage.install"]
+source = "a6e5d85ef9ce3cbc"
+text = '''Instalowanie świata w twoim profilu'''
+
+["stage.compare inputs"]
+source = "1fe1e92443638ab8"
+text = '''Porównywanie plików gry z tymi, z których powstał ten świat'''
+
+["stage.waiting for the game"]
+source = "3796d1c0f7d512f6"
+text = '''Czekanie, aż gra zwolni poprzedni świat: odznacz go w zestawie modów i zastosuj zestaw albo zamknij grę'''
+
+["error.code.prefix"]
+source = "a4ece9429a17cada"
+text = '''Kod świata zaczyna się od {prefix}.'''
+
+["error.code.short"]
+source = "0dd5d68df589578a"
+text = '''Kod świata jest za krótki.'''
+
+["error.code.typo"]
+source = "a95b743c53657352"
+text = '''W kodzie świata jest literówka: nie zgadza się jego suma kontrolna.'''
+
+["error.code.format"]
+source = "9faae2046129538f"
+text = '''Ten kod świata pochodzi z nowszego lub innego generatora.'''
+
+["error.code.damaged"]
+source = "81cbea66ce059baa"
+text = '''Zmienione ustawienia w kodzie świata są uszkodzone.'''
+
+["error.code.extra"]
+source = "342b6e6badd7c5fa"
+text = '''Na końcu kodu świata zostały nadmiarowe dane.'''
+
+["error.code.characters"]
+source = "2114e3add9ec678c"
+text = '''Kod świata zawiera znaki, które nie mogą być jego częścią.'''
+
+["error.destination.one"]
+source = "93130a85f7a96c32"
+text = '''Wybierz jedno miejsce dla świata.'''
+
+["error.destination.outside"]
+source = "5463f7a655b549db"
+text = '''Miejsce docelowe musi leżeć poza folderem gry.'''
+
+["error.destination.folder"]
+source = "ad7b7c82ea68f13a"
+text = '''Wybierz istniejący folder dla moda.'''
+
+["error.destination.exists"]
+source = "a64875e2c0f3edc3"
+text = '''{file} już istnieje. Wybierz inną nazwę pliku świata.'''
+
+["error.destination.profile"]
+source = "2f9f5b6d5619b37d"
+text = '''Nie ma profilu, do którego można dodać świat. Wybierz profil albo nie dodawaj świata.'''
+
+["error.land_image.gone"]
+source = "e6b07cf126932f17"
+text = '''Ląd tego świata jest narysowany na obrazie, którego biblioteka już nie ma. Otwórz ponownie plik świata albo wskaż obraz, aby utworzyć świat.'''
+
+["error.check.no_record"]
+source = "990ed1f85c2a9322"
+text = '''Ten świat powstał, zanim światy zaczęły prowadzić zapis, więc nie da się go sprawdzić.'''
+
+["error.check.bundle"]
+source = "c2284a0becacbcfe"
+text = '''Pliki świata w bibliotece nie są już tymi, z których powstał.'''
+
+["error.install.in_use"]
+source = "8f4e29768c251b73"
+text = '''Gra używa {mod}. Odznacz go w zestawie modów i zastosuj zestaw albo zamknij grę.'''
+
+["error.pictures.missing"]
+source = "d3eddbbb04e82f93"
+text = '''Brakuje obrazów {folder}, więc nie można zmienić jego obrazu w grze.'''
+
+["error.cover.missing"]
+source = "fd633ea58a7c310b"
+text = '''Brakuje zapisanego zakrycia mapy wyboru kraju dla {folder}.'''
+
+["error.picture.unwritten"]
+source = "17b62235c3b8c217"
+text = '''Nie udało się zapisać obrazu {folder}.'''
+
+["error.transfer.bundle"]
+source = "3573ac4baa20047d"
+text = '''Pliki świata w bibliotece nie zawierają już {name}, więc nie da się go przenieść.'''
+
+["error.transfer.no_mod"]
+source = "f0d89be22465b46d"
+text = '''Ten plik nie zawiera moda. Otwórz go jako plik świata.'''
+
+["error.transfer.no_record"]
+source = "d8408db42b98236e"
+text = '''Ten świat powstał, zanim światy zaczęły prowadzić zapis, więc nie da się sprawdzić jego gry.'''
+
+["error.transfer.have"]
+source = "3e1d33d97a5fc3cf"
+text = '''Biblioteka już ma ten świat. Aby przyjąć tę kopię, najpierw go skasuj.'''
+
+["error.transfer.foreign"]
+source = "b48b43adec0095d1"
+text = '''Mod z pliku nie został utworzony przez ten generator.'''
+
+["error.transfer.other_game"]
+source = "d14c4889ee041877"
+text = '''To nie ta gra, z której powstał świat: pliki jej mapy się różnią. Utwórz świat tutaj ponownie z jego kodu.'''
+
+["error.transfer.no_listing"]
+source = "afc60f3999f87cc1"
+text = '''Plik nie zawiera listy plików gry, więc nie da się z nim porównać tej gry.'''
+
+["error.transfer.changed"]
+source = "8dc1de34d02263d7"
+text = '''Pliki gry, z których powstał świat, zmieniły się ({count}), na przykład {names}. Utwórz świat tutaj ponownie z jego kodu.'''
+
+["error.mask.unreadable"]
+source = "d9f075c4781b2514"
+text = '''Nie da się odczytać obrazu ({error}).'''
+
+["error.mask.size"]
+source = "80dca932e860d07b"
+text = '''Obraz ma {width} × {height}. Musi mieć co najmniej {side} pikseli w każdą stronę i najwyżej {millions} mln pikseli łącznie.'''
+
+["error.mask.share"]
+source = "bf2f8fd0a968f2bc"
+text = '''Ląd zajmuje {share} % obrazu; świat potrzebuje od {low} % do {high} %. Biel to ląd, czerń to morze.'''
+
+["error.mask.file"]
+source = "f05a267ab9f03342"
+text = '''Nie da się odczytać {name} ({error}).'''
+
+["error.mask.aspect"]
+source = "ec2c2a21a1b9bad6"
+text = '''Obraz jest {given} razy szerszy niż wyższy, a obszar Nowego Świata {wanted} razy. Narysuj go w tych proporcjach, na przykład {width} × {height} pikseli.'''
+
+["error.candidates.count"]
+source = "81923dac5a6dc04a"
+text = '''Wybierz od 1 do {count} szkiców.'''
+
+["error.candidates.drawn"]
+source = "75f72c48760efe1b"
+text = '''Szkice wymagają wygenerowanego lądu. Najpierw wróć do wygenerowanego lądu.'''

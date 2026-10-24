@@ -167,6 +167,24 @@ From the game's own events (economy and others):
   (*…물갈이하라.*, *…물러나게 해라.*).
 - **Chinese**: short, plain; full-width punctuation, “…”.
 
+### 2.9 The game's own words for its interface [V-LOCAL]
+
+Where the generator names a part of the game's interface, it uses the game's word in that
+language (`MODS_GUI_TAB_MODS`, `MOD_OPEN_IN_FOLDER`, `SETTINGS_CATEGORY_PLAYSETS` and others):
+
+| | Playset | Mods | Open in Folder |
+|---|---|---|---|
+| Russian | набор (модов) | Модификации | Открыть в папке |
+| German | Gruppe | Mods | Ordner öffnen |
+| French | playset | Mods | Ouvrir dans le dossier |
+| Spanish | colección | Mods | Abrir en carpeta |
+| Portuguese (Brazil) | Condição de Jogo | Mods | Abrir na pasta |
+| Polish | zestaw modów | Mody | Otwórz w folderze |
+| Turkish | oynanış seti | Modlar | Klasörde Aç |
+| Japanese | プレイセット | MOD | フォルダで開く |
+| Korean | 플레이세트 | 모드 | 폴더에서 열기 |
+| Chinese | 播放集 | 模组 | 在文件夹中打开 |
+
 ## 3. Rules for writing
 
 ### 3.1 Every language
@@ -325,12 +343,21 @@ Done (2026-10-24):
   `[ROOT.GetCountry.GetFlavorRank]` left the English of *A Priesthood With a Seat*: its gender
   varies by rank and no Russian, German or Polish sentence could agree with it.
 
-Next, in this order, each a commit:
+- **the window (0.11.6):** the window speaks the player's choice, else the game's language (Steam's
+  app manifest, `discovery.game_language`), else the system's (`gui/text.py`: `choose_language`,
+  `set_language`; a menu in Settings, effective at the next start); 441 strings in ten languages
+  (`window.toml`: the window's strings, the export's stages, and the generator's messages to the
+  player, `rnw/messages.py`, raised with `say(key)` so the command line and the log keep English
+  and the window writes them in its language; a damaged world file or settings get a translated
+  lead with the English detail); numbers grouped as each language groups them; the atlas in
+  format 2 keeps names as phrases, and the window writes them in its language, with the game's
+  own names of cultures, religions, materials and lands when the game is installed
+  (`app/gamenames.py`; Russian and Polish culture stems completed as adjectives of *culture*).
+  `tests/test_window.py` checks that every language fits the smallest supported window.
 
-1. The window: language detection (§2.2), a language menu, `window.toml` for every language,
-   progress stages, the atlas in format 2 (names as phrases, rendered in the window's language).
-2. The Workshop description in every language (Steam takes one per language), the hub's texts,
-   the world's title in the mod list (`.metadata`; whether the launcher can show more than one
-   language is [UNKNOWN]).
-3. Owner review in game and in the window (roadmap gate), in one sitting with whatever else is
-   due.
+Next:
+
+1. The Workshop description in every language (Steam takes one per language) and the hub's
+   texts; the world's title in the mod list (`.metadata`) is English, and whether the launcher can
+   show more than one language is [UNKNOWN].
+2. Owner review in game and in the window (roadmap gate), in a sitting held for other reasons.
