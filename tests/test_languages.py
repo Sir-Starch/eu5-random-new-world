@@ -40,14 +40,12 @@ def test_an_installation_without_english_is_refused(tmp_path: Path) -> None:
         _ = official_languages(tmp_path / "missing")
 
 
-def test_a_world_writes_its_names_in_every_language_it_is_given() -> None:
-    """Both files of the names exist for every language, Turkish among them."""
+def test_a_world_writes_its_names_in_every_language_it_is_given(tmp_path: Path) -> None:
+    """Names exist for every language, Turkish among them, without empty override files."""
     cell = PlannedCell("a", "Alpha", 1, CellClass.LAND, "p", "ar", "r", "s", "c")
-    files = _localization(Plan(cells=[cell]), {}, {}, ("english", "turkish"))
+    files = _localization(tmp_path, Plan(cells=[cell]), {}, {}, ("english", "turkish"))
     assert sorted(files) == [
-        "main_menu/localization/english/replace/rnw_new_world_replace_l_english.yml",
         "main_menu/localization/english/rnw_new_world_l_english.yml",
-        "main_menu/localization/turkish/replace/rnw_new_world_replace_l_turkish.yml",
         "main_menu/localization/turkish/rnw_new_world_l_turkish.yml",
     ]
     turkish = files["main_menu/localization/turkish/rnw_new_world_l_turkish.yml"].decode(

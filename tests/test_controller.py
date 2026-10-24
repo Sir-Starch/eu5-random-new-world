@@ -222,6 +222,31 @@ def test_a_world_is_made_selected_hidden_and_managed(tmp_path: Path, fake_export
     assert changes
 
 
+def test_finished_is_published_only_after_the_new_world_is_in_the_library(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    refreshing, release = threading.Event(), threading.Event()
+    refresh = controller.refresh_library
+
+    def paused_refresh() -> None:
+        refreshing.set()
+        assert release.wait(10)
+        refresh()
+
+    monkeypatch.setattr(controller, "refresh_library", paused_refresh)
+    assert controller.start() is None
+    try:
+        assert refreshing.wait(10)
+        assert controller.phase is Phase.RUNNING
+        assert controller.selected_world() is None
+    finally:
+        release.set()
+        controller.wait(10)
+    assert controller.phase is Phase.FINISHED
+    assert controller.selected_world() is not None
+
+
 def test_like_this_takes_type_and_values_with_a_new_seed(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

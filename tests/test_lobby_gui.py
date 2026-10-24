@@ -62,6 +62,11 @@ def test_world_country_cards_are_dimmed_and_cannot_be_chosen_and_start_guards_re
     assert 'enabled = "[And4(GameLobby.CanStart,' in patched
     assert 'visible = "[Not(IsLobbyOpen)]"' in patched
     assert "GameLobby.SetRandomPlayableObserverCharacter" in patched
+    assert "SetRoot(LobbyView.GetSelectedPlayable.GetCountry.MakeScope)" not in patched
+    assert (
+        "GuiScope.AddScope('rnw_country', LobbyView.GetSelectedPlayable.GetCountry.MakeScope)"
+        in patched
+    )
 
 
 def test_the_list_stays_the_games_own_fixed_grid_and_no_card_is_hidden() -> None:

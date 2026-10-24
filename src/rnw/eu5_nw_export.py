@@ -117,6 +117,7 @@ from rnw.eu5_lobby import (
     unknown_colour,
 )
 from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
+from rnw.eu5_localization import LocalizationError, map_name_files
 from rnw.eu5_map import (
     ADJACENCIES,
     DEFAULT_MAP,
@@ -310,10 +311,6 @@ UNTESTED: Final[tuple[str, ...]] = (
         "that EU5 builds river meshes and river modifiers from them is untested."
     ),
     "nodes.dat and other derived caches are vanilla and may not match the new map.",
-    (
-        "Display-name overrides for reused area/region keys use a replace/ folder; whether "
-        "EU5 honours it is unknown."
-    ),
     "Colonisation, exploration, movement, naval routes, ports, save/load and startup time.",
     (
         "Development entries keyed by generated location keys, per-port harbour values and "
@@ -712,7 +709,11 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
 
 
 def _localization(
-    plan: Plan, extra: dict[str, str], renamed: dict[str, str], languages: tuple[str, ...]
+    game_dir: Path,
+    plan: Plan,
+    extra: dict[str, str],
+    renamed: dict[str, str],
+    languages: tuple[str, ...],
 ) -> dict[str, bytes]:
     names = {cell.key: cell.name for cell in plan.cells}
     names.update(extra)
@@ -726,7 +727,10 @@ def _localization(
     for language in languages:
         base = f"main_menu/localization/{language}"
         files[f"{base}/rnw_new_world_l_{language}.yml"] = _yaml(language, names)
-        files[f"{base}/replace/rnw_new_world_replace_l_{language}.yml"] = _yaml(language, overrides)
+        try:
+            files.update(map_name_files(game_dir, language, overrides))
+        except LocalizationError as error:
+            raise NewWorldExportError(str(error)) from error
     return files
 
 
@@ -1105,7 +1109,11 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         outputs[OUTPUT_PLACES] = modifiers_file(used, payloads(game_dir))
     outputs.update(
         _localization(
-            plan, country_names(natives.countries) | place_texts(used), natives.names, languages
+            game_dir,
+            plan,
+            country_names(natives.countries) | place_texts(used),
+            natives.names,
+            languages,
         )
     )
     stats: dict[str, object] = {
@@ -1348,15 +1356,27 @@ def vanilla_localization_keys(game_dir: Path) -> set[str]:
     return keys
 
 
-def verify_localization(outputs: dict[str, bytes], vanilla_hashes: set[int]) -> dict[str, object]:
+def verify_localization(
+    outputs: dict[str, bytes], vanilla_hashes: set[int], *, game_dir: Path | None = None
+) -> dict[str, object]:
     """Generated localization keys share no hash with each other or with vanilla keys.
 
-    Files under ``replace`` override vanilla keys on purpose and are not checked.
+    A localization file overriding an installed path must retain exactly its original keys.
+    Every other file defines new keys; a ``replace/`` directory grants no exception.
     """
     keys: set[str] = set()
     for path, data in outputs.items():
-        if path.endswith(".yml") and "/localization/" in path and "/replace/" not in path:
-            keys |= set(LOC_KEY.findall(data.decode("utf-8-sig")))
+        if not path.endswith(".yml") or "/localization/" not in path:
+            continue
+        written = Counter(LOC_KEY.findall(data.decode("utf-8-sig")))
+        original = None if game_dir is None else game_dir / "game" / path
+        if original is not None and original.is_file():
+            expected = Counter(LOC_KEY.findall(original.read_text(encoding="utf-8-sig")))
+            if written != expected:
+                message = f"Localization override {path} changes the installed keys"
+                raise NewWorldExportError(message)
+        else:
+            keys.update(written)
     hashes = [key_hash(key) for key in sorted(keys)]
     clashes = len(hashes) - len(set(hashes)) + len(set(hashes) & vanilla_hashes)
     if clashes:
@@ -2567,7 +2587,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         texts.update(scripts)
         checkpoint()
         text_checks.update(verify_country_tags(game_dir, texts))
-        text_checks.update(verify_localization(texts, vanilla_hashes))
+        text_checks.update(verify_localization(texts, vanilla_hashes, game_dir=game_dir))
         text_stats["scripts_remapped"] = rewrite.remapped
         text_stats["illustrations_dropped"] = rewrite.illustrations
         text_stats["monuments_dropped"] = rewrite.monuments

@@ -293,9 +293,10 @@ def test_the_context_menu_loses_select_for_a_country_of_the_new_world() -> None:
     assert patched is not None
     assert entry not in patched
     assert "And3(IsLobbyOpen, IsCountryPlayable(Country.Self), Not(" in patched
-    assert f"GetScriptedGui('{SCRIPTED_GUI}').IsShown(GuiScope.SetRoot(Country.MakeScope).End)" in (
-        patched
-    )
+    assert (
+        f"GetScriptedGui('{SCRIPTED_GUI}').IsShown("
+        "GuiScope.AddScope('rnw_country', Country.MakeScope).End)"
+    ) in patched
     assert "GetContinent" not in patched
     assert "GameRule" not in patched
     assert hide_select_entry("nothing here") is None
@@ -304,14 +305,15 @@ def test_the_context_menu_loses_select_for_a_country_of_the_new_world() -> None:
 
 
 def test_the_scripted_gui_reads_the_capitals_continent() -> None:
-    """A country scope, shown when the capital is on the New World's continent; no game rule."""
+    """The country's saved scope is optional; only an American capital makes it shown."""
     gui = parse(scripted_gui_text()).block(SCRIPTED_GUI)
     assert gui is not None
-    scope = gui.first("scope")
-    assert scope is not None
-    assert scope.value == "country"
+    assert gui.first("scope") is None
+    scopes = gui.block("saved_scopes")
+    assert scopes is not None
+    assert [entry.value for entry in scopes.words()] == ["rnw_country"]
     assert gui.block("is_shown") is not None
-    assert "capital.continent = continent:america" in scripted_gui_text()
+    assert "continent = continent:america" in scripted_gui_text()
     assert "has_game_rule" not in scripted_gui_text()
 
 
@@ -321,7 +323,14 @@ def test_the_scripted_gui_asks_a_country_that_is_none_nothing() -> None:
     assert shown is not None
     block = shown.block("is_shown")
     assert block is not None
-    assert next((entry.key, entry.value) for entry in block.entries) == ("country_exists", "this")
+    assert next((entry.key, entry.value) for entry in block.entries) == (
+        "exists",
+        "scope:rnw_country.capital",
+    )
+    capital = block.first("scope:rnw_country.capital")
+    assert capital is not None
+    assert capital.op == "?="
+    assert "country_exists" not in scripted_gui_text()
 
 
 # Stand-ins for the game's sampler macros: a sampler is a texture read through one sampler state.

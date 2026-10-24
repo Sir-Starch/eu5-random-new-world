@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.eu5_lobby_gui import GUI_FILES
+from rnw.eu5_lobby_gui import COUNTRY_SCOPE, GUI_FILES, new_world_country
 from rnw.eu5_lobby_gui import scripted_gui_text as location_scripted_gui_text
 
 if TYPE_CHECKING:
@@ -108,9 +108,7 @@ REF: Final[re.Pattern[str]] = re.compile(r"\bRef\s*=\s*(\w+)")
 INDEX: Final[re.Pattern[str]] = re.compile(r"\bIndex\s*=\s*(\d+)")
 INCLUDE_NAMES: Final[re.Pattern[str]] = re.compile(r"Includes\s*=\s*\{(.*?)\}", re.DOTALL)
 SELECT: Final[str] = 'visible = "[And(IsLobbyOpen, IsCountryPlayable(Country.Self))]"'
-NEW_WORLD_COUNTRY: Final[str] = (
-    f"GetScriptedGui('{SCRIPTED_GUI}').IsShown(GuiScope.SetRoot(Country.MakeScope).End)"
-)
+NEW_WORLD_COUNTRY: Final[str] = new_world_country("Country")
 NOTE: Final[str] = "// Random New World: the New World is covered where nothing is known (C136)."
 
 
@@ -859,12 +857,13 @@ def hide_select_entry(text: str) -> str | None:
 def scripted_gui_text() -> str:
     """The scripted GUI that tells the context menu whether a country is of the New World.
 
-    A lobby with no country selected asks it of a country that is none, which the game logs as a
-    script error for every such question (263 a session, C249): ``country_exists`` comes first.
+    The lobby can ask with no country selected. A saved optional scope, rather than a typed
+    country root, lets ``exists`` reject it without evaluating a country trigger on none.
     """
     return (
         "# Random New World: is the country's capital in the generated New World?\n"
-        f"{SCRIPTED_GUI} = {{\n\tscope = country\n\tis_shown = {{\n"
-        "\t\tcountry_exists = this\n"
-        f"\t\tcapital.continent = continent:{CONTINENT}\n\t}}\n}}\n"
+        f"{SCRIPTED_GUI} = {{\n\tsaved_scopes = {{ {COUNTRY_SCOPE} }}\n\tis_shown = {{\n"
+        f"\t\texists = scope:{COUNTRY_SCOPE}.capital\n"
+        f"\t\tscope:{COUNTRY_SCOPE}.capital ?= {{\n"
+        f"\t\t\tcontinent = continent:{CONTINENT}\n\t\t}}\n\t}}\n}}\n"
     ) + location_scripted_gui_text()

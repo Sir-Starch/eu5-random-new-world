@@ -1099,6 +1099,9 @@ class Controller:
         logs.get().info(
             "task %s ended: %s %s", self.task.value if self.task else "?", outcome.value, message
         )
+        # Publish a terminal phase only when the library already contains the result. The
+        # window may react to FINISHED before the worker returns from this method.
+        self.refresh_library()
         with self._lock:
             self.phase, self.result, self.message = outcome, result, message
             self.running = ()
@@ -1106,7 +1109,7 @@ class Controller:
                 self.fraction = 1.0
             if result is not None:
                 self.selection = result.world.id
-        self.refresh_library()
+        self._changed()
 
     def _explain(self, error: Exception) -> str:
         """The error for the player; the traceback goes to the log and to a file for a report."""

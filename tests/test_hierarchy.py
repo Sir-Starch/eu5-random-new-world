@@ -8,7 +8,14 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw.eu5_newworld import _reserve  # pyright: ignore[reportPrivateUsage]
+from rnw.eu5_newworld import (
+    IdentityError,
+    _Area,  # pyright: ignore[reportPrivateUsage]
+    _check_pieces,  # pyright: ignore[reportPrivateUsage]
+    _reserve,  # pyright: ignore[reportPrivateUsage]
+    _sea_areas,  # pyright: ignore[reportPrivateUsage]
+    _SeaArea,  # pyright: ignore[reportPrivateUsage]
+)
 from rnw.hierarchy import (
     ContactGraph,
     PartitionError,
@@ -23,6 +30,7 @@ from rnw.hierarchy import (
     split,
     split_landmasses,
 )
+from rnw.loc_keys import KeySpace
 
 SPACING = 10
 
@@ -149,3 +157,42 @@ def test_reserved_water_stops_at_water_that_belongs_to_others() -> None:
     held = _reserve(graph, {"a": [0], "b": [9]}, {"a": 4, "b": 4}, taken={2})
     assert held == {"a": [0, 1], "b": [6, 7, 8, 9]}
     assert _reserve(graph, {"a": [0]}, {"a": 1}, taken=set()) == {"a": [0]}
+
+
+def test_ocean_with_only_a_vanilla_remainder_needs_no_empty_generated_area() -> None:
+    """Seed 210: the coastal region takes all water even at the ocean's two anchors."""
+    graph = _grid(4, 2)
+    seas = [
+        _SeaArea("coast", "r", coastal=True, replaced=100, centre=(0, 0), remaining=frozenset()),
+        _SeaArea(
+            "ocean", "o", coastal=False, replaced=1, centre=(50, 50), remaining=frozenset({99})
+        ),
+    ]
+    areas, anchored = _sea_areas(
+        graph,
+        list(range(8)),
+        seas,
+        {(99, 6), (99, 7)},
+        coasts={"r": [0, 1, 2, 3]},
+        parents={"r": ("r", "s", "america"), "ocean": ("o", "os", "ocean")},
+        keys=KeySpace(set()),
+    )
+    assert anchored == {"ocean"}
+    assert [area.name for area in areas] == ["coast"]
+    assert sorted(cell for area in areas for part in area.provinces for cell in part) == list(
+        range(8)
+    )
+    _check_pieces(graph, areas, depth=2, exempt=anchored)
+
+
+@pytest.mark.parametrize("provinces", [[], [[]], [[0], []]])
+def test_empty_generated_area_or_province_fails_with_identity_error(
+    provinces: list[list[int]],
+) -> None:
+    with pytest.raises(IdentityError, match="area empty has an empty province or no provinces"):
+        _check_pieces(
+            _grid(2, 1),
+            [_Area("empty", ("r", "s", "c"), provinces, new=False)],
+            depth=2,
+            exempt=set(),
+        )

@@ -503,6 +503,10 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
             provinces = split(graph, area, max(1, _rounded(len(area), SEA_PROVINCE_ZONES)))
             areas.append(_Area(name, parents[region], provinces, key < 0))
     for sea, part in zip(oceans, parts[len(regions) :], strict=True):
+        # An unpinned ocean may give every generated zone to the shore regions. Its vanilla
+        # remainder still defines the area; it needs no generated area with zero provinces.
+        if not part and sea.remaining:
+            continue
         provinces = [
             province
             for piece in (pieces(graph, part) if sea.remaining else [part])
@@ -535,6 +539,9 @@ def _check_pieces(graph: ContactGraph, areas: list[_Area], *, depth: int, exempt
     """
     levels: list[dict[str, list[int]]] = [{} for _ in range(depth)]
     for area in areas:
+        if not area.provinces or any(not cells for cells in area.provinces):
+            message = f"Generated area {area.name} has an empty province or no provinces"
+            raise IdentityError(message)
         names = (area.name, *area.parents[:2])
         for number, cells in enumerate(area.provinces):
             levels[0][f"{area.name}/{number}"] = cells

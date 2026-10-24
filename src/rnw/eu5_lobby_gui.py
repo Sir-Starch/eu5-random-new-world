@@ -8,9 +8,19 @@ MAP_MARKERS: Final[str] = "game/in_game/gui/map_markers.gui"
 GUI_FILES: Final[tuple[str, str]] = (MULTIPLAYER_LOBBY, MAP_MARKERS)
 LOCATION_SCRIPTED_GUI: Final[str] = "rnw_new_world_location"
 COUNTRY_SCRIPTED_GUI: Final[str] = "rnw_new_world_country"
+COUNTRY_SCOPE: Final[str] = "rnw_country"
+
+
+def new_world_country(country: str) -> str:
+    """Ask about an optional country without giving the scripted GUI an empty typed root."""
+    return (
+        f"GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown("
+        f"GuiScope.AddScope('{COUNTRY_SCOPE}', {country}.MakeScope).End)"
+    )
+
+
 COUNTRY_SELECTED: Final[str] = (
-    f"Not(GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown("
-    "GuiScope.SetRoot(LobbyView.GetSelectedPlayable.GetCountry.MakeScope).End))"
+    f"Not({new_world_country('LobbyView.GetSelectedPlayable.GetCountry')})"
 )
 
 
@@ -27,9 +37,7 @@ class GuiEdit:
 # that ignores invisible cards, makes the list build every card of the game at once; the owner saw
 # the flags of that list flicker hard and the blank stretches return in a search (experiment 037).
 # The grid stays the game's own, so the list is laid out and searched as in the vanilla lobby.
-CARD_OLD_WORLD: Final[str] = (
-    f"Not(GetScriptedGui('{COUNTRY_SCRIPTED_GUI}').IsShown(GuiScope.SetRoot(Country.MakeScope).End))"
-)
+CARD_OLD_WORLD: Final[str] = f"Not({new_world_country('Country')})"
 _COUNTRY_LIST_ANCHOR: Final[str] = (
     "item = {\n\t\t\t\t\t\t\t\t\twidget = {\n\t\t\t\t\t\t\t\t\t\tsize = { 100% 90% }\n"
 )

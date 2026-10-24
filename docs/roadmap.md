@@ -1,5 +1,7 @@
 # Dependency-aware roadmap
 
+**Maintenance 2026-10-24, 0.11.3:** fixes for the seed-210 empty ocean area, the lobby's absent-country scope and duplicate map-name definitions, plus the application's completion race ([046](../experiments/046-sitting-fixes/README.md), C257-C261). These are offline fixes; no new in-game acceptance is claimed. The 0.11.2 sitting already established the confederation and a theocracy in a save (C254); the remaining R7d behaviour stays open.
+
 All engine validation gates target the currently detected EU5 build, then repeat on future patches. The only in-game result so far is metadata recognition; the owner requested no more game launches in this session [V-GAME C11–C12]. The D0 T2 mod candidate and T3-capable world model exist offline under the [implementation contract](implementation-contract.md) and [ADR 0002](adr/0002-d0-generator-stack.md); in-game acceptance remains pending. “Opus design/implement” needs architecture and production work; “Sonnet implementable” is bounded work. See [backlog](handoff/sonnet-5.5-backlog.md).
 
 | Phase | Owner type | Depends on / acceptance gate |

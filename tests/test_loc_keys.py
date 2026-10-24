@@ -141,9 +141,34 @@ def test_generated_localization_must_not_collide() -> None:
     """A generated key sharing a hash with vanilla or with another generated key fails."""
     vanilla = key_hashes(["flavor_brapru.1301.entry"])
     names = "main_menu/localization/english/rnw_new_world_l_english.yml"
-    replace = "main_menu/localization/english/replace/rnw_new_world_replace_l_english.yml"
-    clean = {names: b'l_english:\n rnw_loc_00001: "A"\n', replace: b'l_english:\n TAKEN: "B"\n'}
+    clean = {names: b'l_english:\n rnw_loc_00001: "A"\n'}
     assert verify_localization(clean, vanilla) == {"localization_keys": 1}
     clashing = {names: b'l_english:\n rnw_loc_05454: "A"\n'}
     with pytest.raises(NewWorldExportError, match="1 generated localization keys collide"):
         _ = verify_localization(clashing, vanilla)
+    with pytest.raises(NewWorldExportError, match="1 generated localization keys collide"):
+        _ = verify_localization(
+            {"main_menu/localization/english/replace/a.yml": next(iter(clashing.values()))},
+            vanilla,
+        )
+
+
+def test_same_path_localization_keeps_its_keys_and_new_keys_still_cannot_collide(
+    tmp_path: Path,
+) -> None:
+    name = "main_menu/localization/english/area_l_english.yml"
+    original = 'l_english:\n kept: "Old World"\n renamed: "Before"\n'
+    _write(tmp_path, f"game/{name}", original)
+    vanilla = key_hashes(["kept", "renamed", "flavor_brapru.1301.entry"])
+    outputs = {name: original.replace('"Before"', '"After"').encode()}
+    assert verify_localization(outputs, vanilla, game_dir=tmp_path) == {"localization_keys": 0}
+    for broken in (
+        original.replace(' renamed: "Before"\n', ""),
+        original + ' new: "Extra"\n',
+        original + ' renamed: "Duplicate"\n',
+    ):
+        with pytest.raises(NewWorldExportError, match="changes the installed keys"):
+            _ = verify_localization({name: broken.encode()}, vanilla, game_dir=tmp_path)
+    outputs["main_menu/localization/english/new.yml"] = b'l_english:\n rnw_loc_05454: "A"\n'
+    with pytest.raises(NewWorldExportError, match="1 generated localization keys collide"):
+        _ = verify_localization(outputs, vanilla, game_dir=tmp_path)

@@ -1,6 +1,6 @@
 # 045 - Varied societies
 
-2026-10-24, generator 0.11.2, algorithm epoch 26. **NOT GAME VALIDATED, NOT RUN.** Claims C251-C253; design in [natives](../../docs/natives.md) (*More varied societies*). It keeps everything of [044](../044-sea-sitting/README.md) and adds four extraordinary societies besides the great empire.
+2026-10-24, generator 0.11.2, algorithm epoch 26. **RUN, PARTIAL:** the owner's sitting and its limits are recorded below (C254-C256). Claims C251-C253 describe implementation; design in [natives](../../docs/natives.md) (*More varied societies*). It keeps everything of [044](../044-sea-sitting/README.md) and adds four extraordinary societies besides the great empire. The follow-up fixes are [046](../046-sitting-fixes/README.md), generator 0.11.3; they have no separate game sitting.
 
 ## Why
 
@@ -42,4 +42,4 @@ The owner played the installed world (`rnw_exp_world_2r7bql6dk3`) as a 1337 game
 - 27,573 map-mode errors in one burst at 07:09:54 (vanilla `map_modes.txt` lines 1620 and 1693, `scope:actor` none), not attributed (C255).
 - The duplicate-key warnings of the mod's `replace/` localization file (C256) are unresolved.
 
-Not done: no change to the generated files. A fix of the lobby guard cannot be checked offline: it changes a mod file, so it starts a new epoch and a new reference world, and it needs one short sitting to confirm. Nothing is asked of the owner now.
+At the time of this log reading, no generated file was changed. The follow-up [046](../046-sitting-fixes/README.md) implements the lobby and localization changes with a new epoch and reference world. Their engine verdict remains open; no separate owner sitting is requested.
