@@ -849,8 +849,9 @@ class MainWindow(QMainWindow):
         world = self.controller.selected_world()
         if world is not None:
             problem = self.controller.set_world_visibility(world, show=checked)
-            self._tell(problem or text("visibility_updated"))
+            # Refresh first: showing a world that was not shown yet clears the notice.
             self.refresh()
+            self._tell(problem or text("visibility_updated"))
 
     def _tools_page(self) -> QScrollArea:
         page, layout = self._scroll_page()
