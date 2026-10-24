@@ -1010,35 +1010,68 @@ class Controller:
 
     def remove_selected(self) -> str | None:
         """Take the selected world, or stray, out of the game; returns why not, or None."""
-        world, stray = self.selected_world(), self.selected_stray()
-        reason = self.world_problem()
+        return self.remove_entries((self.selection,))
+
+    def removal_problem(self) -> str | None:
+        """Removing a mod needs its profile, but never the game installation."""
+        if self.busy:
+            return text("ready_busy")
+        if self.profile is None:
+            return text("remove_no_profile")
+        return None
+
+    def removable_entries(self, selections: tuple[str, ...]) -> tuple[str, ...]:
+        """Installed folders among known library entries and strays, in selection order."""
+        folders = {
+            world.id: world.folder
+            for world in self.worlds
+            if self.placement(world) is Placement.IN_GAME
+        }
+        folders.update((f"{STRAY}{path.name}", path.name) for path in self.strays)
+        return tuple(dict.fromkeys(folders[key] for key in selections if key in folders))
+
+    def remove_entries(self, selections: tuple[str, ...]) -> str | None:
+        """Remove a snapshot of installed entries, keeping their library records."""
+        reason = self.removal_problem()
         profile = self.profile
         if reason is not None or profile is None:
             return reason
-        if world is not None:
-            folder = world.folder
-        elif stray is not None:
-            folder = stray.name
-        else:
+        folders = self.removable_entries(selections)
+        if not folders:
             return None
 
-        def work(_progress: Progress) -> None:
-            service.remove_from_game(folder, profile)
+        def work(progress: Progress) -> None:
+            progress.checkpoint()
+            # The installer validates every target before removing the first folder.
+            _ = install.uninstall(folders, profile.directory)
 
-        return self._run(Task.REMOVE, self.selection, work)
+        return self._run(Task.REMOVE, ", ".join(selections), work)
 
     def delete_selected(self) -> str | None:
         """Take the selected world out of the game and forget it; returns why not, or None."""
-        world = self.selected_world()
-        reason = self.world_problem()
-        if reason is not None or world is None:
-            return reason
+        return self.delete_entries((self.selection,))
+
+    def delete_entries(self, selections: tuple[str, ...]) -> str | None:
+        """Forget the selected library worlds; strays and unknown IDs are never deleted."""
+        if self.busy:
+            return text("ready_busy")
+        worlds = tuple(world for world in self.worlds if world.id in selections)
+        if not worlds:
+            return None
         data, profile = self.data, self.profile
 
-        def work(_progress: Progress) -> None:
-            service.delete(world, data, profile)
+        def work(progress: Progress) -> None:
+            for count, world in enumerate(worlds):
+                progress.checkpoint()
+                try:
+                    service.delete(world, data, profile)
+                except (OSError, install.InstallError) as error:
+                    message = text(
+                        "batch_delete_failed", name=self.name(world), done=count, message=error
+                    )
+                    raise RuntimeError(message) from error
 
-        return self._run(Task.DELETE, world.id, work)
+        return self._run(Task.DELETE, ", ".join(world.id for world in worlds), work)
 
     def _run(
         self, task: Task, target: str, work: Callable[[Progress], service.Result | None]

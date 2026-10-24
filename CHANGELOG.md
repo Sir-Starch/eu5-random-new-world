@@ -6,6 +6,7 @@ All notable changes to Random New World. The project has one product version ([A
 
 ## [Unreleased]
 
+- Generator library: select several worlds with Ctrl/Shift or Select all, then remove their mods from EU5 directly below the list. Codes and pictures stay in the library. A separate bulk deletion asks once before deleting library records and kept files. Selection survives list updates; removal no longer needs the game installation, and deletion errors stop the batch visibly (C266).
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 

@@ -49,6 +49,14 @@ and Copy picture follow the world's visibility; layer export requires a revealed
 Notes holds personal notes, a favourite and a tag. Versions and files groups rerolls,
 sharing, world details, reproduction checks and deletion. [V-EXEC C143, C147]
 
+Select several entries with Ctrl-click or Shift-click, or use Select all above the library.
+Remove from game below the list takes out only selected installed mods, keeping their
+codes and pictures. It also handles earlier mods without library records, and needs only
+the profile, not the game installation. Delete from library asks once before deleting the
+selected recorded worlds, their notes, kept files and installed mods. Both buttons show
+how many entries they affect. Errors stop the batch and appear below the list; any changes
+already made are reflected there. Selection survives list updates. [V-EXEC C266]
+
 Add to queue captures the current settings, seed and destination. Change the seed or
 settings and add another job. Run queue works sequentially; Cancel or a failure stops
 before the next job and leaves unfinished jobs pending. [V-EXEC C143]

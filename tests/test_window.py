@@ -23,6 +23,7 @@ from rnw.record import Verdict
 try:  # the window needs PySide6 and the system's graphics libraries
     from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
     from PySide6.QtGui import QDragEnterEvent, QDropEvent
+    from PySide6.QtTest import QTest
     from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QPushButton
 
     from rnw.gui.maps import CompareDialog
@@ -322,6 +323,106 @@ def test_delete_asks_first(
     window.delete_button.click()
     controller.wait(10)
     pump(lambda: not controller.worlds)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_multiple_worlds_can_be_selected_and_removed_from_the_library_panel(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    for seed in (11, 22, 33):
+        _ = controller.set_seed(str(seed))
+        assert controller.start() is None
+        controller.wait(10)
+        assert controller.phase is Phase.FINISHED
+    window.resize(1080, 760)
+    window.show()
+    window.refresh()
+    QApplication.processEvents()
+    listing = window.world_list
+    first = listing.visualItemRect(listing.item(1)).center()
+    second = listing.visualItemRect(listing.item(2)).center()
+    third = listing.visualItemRect(listing.item(3)).center()
+    QTest.mouseClick(listing.viewport(), Qt.MouseButton.LeftButton, pos=first)
+    QTest.mouseClick(
+        listing.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.ControlModifier, second
+    )
+    selected = set(window.selected_entries())
+    assert len(selected) == 2
+    window.refresh()
+    assert set(window.selected_entries()) == selected
+    # Changing a row's label rebuilds the list and must still preserve the selection.
+    world = next(world for world in controller.worlds if world.id in selected)
+    assert controller.rename(world, "Renamed") is None
+    window.refresh()
+    assert set(window.selected_entries()) == selected
+    QTest.mouseClick(listing.viewport(), Qt.MouseButton.LeftButton, pos=first)
+    QTest.mouseClick(
+        listing.viewport(), Qt.MouseButton.LeftButton, Qt.KeyboardModifier.ShiftModifier, third
+    )
+    assert len(window.selected_entries()) == 3
+    window.select_all_button.click()
+    assert len(listing.selectedItems()) == 3
+    assert NEW not in window.selected_entries()
+    assert window.library_remove.isEnabled()
+    controller.game = None
+    window.refresh()
+    window.library_remove.click()
+    controller.wait(10)
+    assert controller.phase is Phase.FINISHED, controller.message
+    window.refresh()
+    assert len(controller.worlds) == 3
+    assert all(
+        controller.placement(world) is library.Placement.CODE_ONLY for world in controller.worlds
+    )
+    assert not window.library_remove.isEnabled()
+    assert window.library_delete.isEnabled()
+    assert len(window.selected_entries()) == 3
+    assert window.library_status.text() == text("batch_removed")
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_bulk_delete_confirms_the_selected_names_once_and_keeps_the_other_world(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    for seed in (11, 22, 33):
+        _ = controller.set_seed(str(seed))
+        assert controller.start() is None
+        controller.wait(10)
+    window.refresh()
+    listing = window.world_list
+    listing.setCurrentRow(1)
+    listing.item(2).setSelected(True)
+    selected = set(window.selected_entries())
+    assert len(selected) == 2
+    kept = next(world for world in controller.worlds if world.id not in selected)
+    answers = [QMessageBox.StandardButton.No, QMessageBox.StandardButton.Yes]
+    questions: list[str] = []
+
+    def answer(
+        _parent: MainWindow, _title: str, question: str, *_args: object
+    ) -> QMessageBox.StandardButton:
+        questions.append(question)
+        return answers.pop(0)
+
+    monkeypatch.setattr(QMessageBox, "question", answer)
+    window.library_delete.click()
+    assert len(controller.worlds) == 3
+    window.library_delete.click()
+    controller.wait(10)
+    window.refresh()
+    assert len(questions) == 2
+    assert questions[0] == questions[1]
+    assert controller.worlds == [kept]
+    assert controller.placement(kept) is library.Placement.IN_GAME
+    assert window.library_status.text() == text("batch_deleted")
+    assert not window.selected_entries()
+    assert not window.library_delete.isEnabled()
     _ = window.close()
 
 

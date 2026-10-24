@@ -57,6 +57,13 @@ Long work runs through Controller's cancellable worker and reports completion or
 error. A failed or cancelled queue stops before the next item. Candidate previews are
 shown only after the player explicitly requests them. World maps start covered.
 Keyboard focus and activation use Qt's native controls; no custom animation is added.
+The library uses native extended selection (Ctrl-click, Shift-click, Ctrl+A) and a visible
+Select all button. Its footer counts selected entries and installed mods, with separate
+Remove from game and Delete from library actions. Removal keeps codes and pictures;
+deletion asks once for the selected library worlds. Earlier mods without library records
+can be removed alongside recorded worlds. Refreshing or renaming preserves selection.
+The active world's Remove and Delete actions also apply to a multiple selection and show
+its count. Batch errors remain visible below the list, including after a row disappears.
 
 ## 7. Surfaces
 

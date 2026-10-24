@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import threading
 from dataclasses import replace
 from typing import TYPE_CHECKING
@@ -220,6 +221,94 @@ def test_a_world_is_made_selected_hidden_and_managed(tmp_path: Path, fake_export
     assert controller.worlds == []
     assert controller.selection == NEW
     assert changes
+
+
+def test_batch_removal_handles_installed_kept_and_stray_without_the_game(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    for seed, installed in ((11, True), (22, True), (33, False)):
+        controller.install = installed
+        _ = controller.set_seed(str(seed))
+        assert controller.start() is None
+        _finish(controller)
+    stray = tmp_path / "profile/mod/rnw_exp_older"
+    (stray / ".metadata").mkdir(parents=True)
+    _ = (stray / ".metadata/metadata.json").write_text("{}", encoding="utf-8")
+    (stray / "in_game/map_data").mkdir(parents=True)
+    unrelated = tmp_path / "profile/mod/another_mod/keep.txt"
+    unrelated.parent.mkdir()
+    _ = unrelated.write_text("untouched", encoding="utf-8")
+    controller.refresh_library()
+    worlds = tuple(controller.worlds)
+    selected = (NEW, *(world.id for world in worlds), f"{STRAY}{stray.name}", worlds[0].id)
+    controller.game = None
+    assert len(controller.removable_entries(selected)) == 3
+    assert controller.remove_entries(selected) is None
+    _finish(controller)
+    assert len(controller.worlds) == 3
+    assert not controller.strays
+    assert not stray.exists()
+    assert unrelated.read_text(encoding="utf-8") == "untouched"
+    for world in worlds:
+        assert controller.placement(world) is (
+            Placement.KEPT if world.seed == 33 else Placement.CODE_ONLY
+        )
+        assert library.folder(controller.data, world).is_dir()
+    runs = controller.runs
+    assert controller.remove_entries(selected) is None
+    assert controller.runs == runs
+
+
+def test_batch_delete_stops_on_error_and_keeps_unprocessed_records(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    for seed in (11, 22, 33):
+        _ = controller.set_seed(str(seed))
+        assert controller.start() is None
+        _finish(controller)
+    first, second, third = controller.worlds
+    original = shutil.rmtree
+
+    def remove_tree(path: Path, *, ignore_errors: bool = False) -> None:
+        if path == library.folder(controller.data, second):
+            if ignore_errors:
+                return
+            message = "permission denied"
+            raise PermissionError(message)
+        original(path, ignore_errors=ignore_errors)
+
+    monkeypatch.setattr(shutil, "rmtree", remove_tree)
+    controller.game = None
+    assert controller.delete_entries(tuple(world.id for world in controller.worlds)) is None
+    controller.wait(10)
+    assert controller.phase is Phase.FAILED
+    assert controller.name(second) in controller.message
+    assert "after deleting 1 worlds" in controller.message
+    assert "permission denied" in controller.message
+    assert {world.id for world in controller.worlds} == {second.id, third.id}
+    assert controller.placement(third) is Placement.IN_GAME
+    assert not library.folder(controller.data, first).exists()
+
+
+def test_library_deletion_needs_neither_game_nor_profile_and_refuses_busy_work(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    assert controller.start() is None
+    _finish(controller)
+    [world] = controller.worlds
+    controller.game = controller.profile = None
+    controller.phase = Phase.RUNNING
+    assert controller.delete_entries((world.id,)) is not None
+    assert controller.remove_entries((world.id,)) is not None
+    controller.phase = Phase.IDLE
+    assert controller.remove_entries((world.id,)) is not None
+    assert controller.delete_entries((NEW, world.id, world.id, "unknown")) is None
+    _finish(controller)
+    assert not controller.worlds
 
 
 def test_finished_is_published_only_after_the_new_world_is_in_the_library(

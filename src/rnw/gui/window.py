@@ -16,9 +16,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast, override
 
-from PySide6.QtCore import QObject, Qt, QUrl, Signal
+from PySide6.QtCore import QItemSelectionModel, QObject, Qt, QUrl, Signal
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QIcon, QImage, QPixmap
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QAbstractSpinBox,
     QApplication,
     QCheckBox,
@@ -399,12 +400,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(root)
         layout.addLayout(self._header())
         splitter = QSplitter(Qt.Orientation.Horizontal)
-        self.world_list = QListWidget()
-        self.world_list.setIconSize(QPixmap(*ICON_SIZE).size())
-        self.world_list.setMinimumWidth(220)
-        self.world_list.setWordWrap(True)
-        _ = self.world_list.currentItemChanged.connect(self._picked)
-        splitter.addWidget(self.world_list)
+        splitter.addWidget(self._library_panel())
         self.stack = QStackedWidget()
         self.new_page = self._new_page()
         self.world_page = self._world_page()
@@ -420,6 +416,39 @@ class MainWindow(QMainWindow):
         status = self.statusBar()
         status.addPermanentWidget(QLabel(f"v{__version__}"))
         status.addWidget(self.resources)
+
+    def _library_panel(self) -> QWidget:
+        panel = QWidget()
+        layout = QVBoxLayout(panel)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.select_all_button: QPushButton = QPushButton(text("select_all_worlds"))
+        _ = self.select_all_button.clicked.connect(self._select_all_worlds)
+        layout.addWidget(self.select_all_button)
+        self.world_list = QListWidget()
+        self.world_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.world_list.setIconSize(QPixmap(*ICON_SIZE).size())
+        self.world_list.setMinimumWidth(220)
+        self.world_list.setWordWrap(True)
+        self.world_list.setToolTip(text("selection_hint"))
+        _ = self.world_list.currentItemChanged.connect(self._picked)
+        _ = self.world_list.itemSelectionChanged.connect(self._refresh_selection)
+        layout.addWidget(self.world_list, 1)
+        hint = QLabel(text("selection_hint"))
+        hint.setWordWrap(True)
+        layout.addWidget(hint)
+        self.selection_label: QLabel = QLabel()
+        layout.addWidget(self.selection_label)
+        self.library_remove: QPushButton = QPushButton()
+        _ = self.library_remove.clicked.connect(self._remove_entries)
+        layout.addWidget(self.library_remove)
+        self.library_delete: QPushButton = QPushButton()
+        _ = self.library_delete.clicked.connect(self._delete_entries)
+        layout.addWidget(self.library_delete)
+        self.library_status: QLabel = QLabel()
+        self.library_status.setWordWrap(True)
+        self.library_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(self.library_status)
+        return panel
 
     def _header(self) -> QHBoxLayout:
         row = QHBoxLayout()
@@ -1063,6 +1092,7 @@ class MainWindow(QMainWindow):
         else:
             self.stack.setCurrentWidget(self.new_page)
         self._refresh_new()
+        self._refresh_selection()
         self._report_transfer_failure()
         controller = self.controller
         if (
@@ -1111,6 +1141,16 @@ class MainWindow(QMainWindow):
 
     def _refresh_list(self) -> None:
         controller = self.controller
+        selected = tuple(
+            cast("object", item.data(Qt.ItemDataRole.UserRole))
+            for item in self.world_list.selectedItems()
+        )
+        current = cast("QListWidgetItem | None", self.world_list.currentItem())
+        current_id = (
+            cast("object", current.data(Qt.ItemDataRole.UserRole)) if current is not None else None
+        )
+        preserve = current_id == controller.selection
+        _ = self.world_list.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         listed = controller.listed()
         key = (
             str(controller.preferences.show_new_world),
@@ -1146,7 +1186,6 @@ class MainWindow(QMainWindow):
                 )
                 item.setData(Qt.ItemDataRole.UserRole, f"{STRAY}{stray.name}")
                 self.world_list.addItem(item)
-            _ = self.world_list.blockSignals(False)  # noqa: FBT003 - Qt's own call
         running = controller.busy and controller.task is Task.GENERATE
         if self.world_list.count():
             self.world_list.item(0).setText(
@@ -1156,12 +1195,99 @@ class MainWindow(QMainWindow):
             )
         for row in range(self.world_list.count()):
             item = self.world_list.item(row)
+            item.setSelected(
+                item.data(Qt.ItemDataRole.UserRole) in selected
+                if preserve
+                else item.data(Qt.ItemDataRole.UserRole) == controller.selection
+            )
             if item.data(Qt.ItemDataRole.UserRole) == controller.selection:
-                if self.world_list.currentRow() != row:
-                    _ = self.world_list.blockSignals(True)  # noqa: FBT003 - Qt's own call
-                    self.world_list.setCurrentRow(row)
-                    _ = self.world_list.blockSignals(False)  # noqa: FBT003 - Qt's own call
-                break
+                self.world_list.setCurrentItem(item, QItemSelectionModel.SelectionFlag.NoUpdate)
+        _ = self.world_list.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+
+    def selected_entries(self) -> tuple[str, ...]:
+        """The selected world and stray IDs, excluding the new-world action."""
+        return tuple(
+            key
+            for item in self.world_list.selectedItems()
+            if isinstance(key := cast("object", item.data(Qt.ItemDataRole.UserRole)), str)
+            and key != NEW
+        )
+
+    def _refresh_selection(self) -> None:
+        controller = self.controller
+        selected = self.selected_entries()
+        installed = len(controller.removable_entries(selected))
+        worlds = sum(world.id in selected for world in controller.worlds)
+        self.selection_label.setText(
+            text("selection_count", count=len(selected), installed=installed)
+        )
+        self.select_all_button.setEnabled(bool(controller.worlds or controller.strays))
+        problem = controller.removal_problem() or (text("remove_none") if not installed else None)
+        self.library_remove.setText(text("remove_count", count=installed))
+        self.library_remove.setEnabled(problem is None)
+        self.library_remove.setToolTip(problem or text("remove_tip"))
+        problem = (
+            text("ready_busy") if controller.busy else text("delete_none") if not worlds else None
+        )
+        self.library_delete.setText(text("delete_count", count=worlds))
+        self.library_delete.setEnabled(problem is None)
+        self.library_delete.setToolTip(problem or "")
+        multiple = len(selected) > 1
+        self.remove_button.setText(
+            text("remove_count", count=installed) if multiple else text("remove")
+        )
+        self.delete_button.setText(
+            text("delete_count", count=worlds) if multiple else text("delete")
+        )
+        message = ""
+        if controller.task in {Task.REMOVE, Task.DELETE}:
+            if controller.busy:
+                message = text(f"task.{controller.task.value}")
+            elif controller.phase is Phase.FAILED:
+                message = text(
+                    "task_failed", message=controller.message, report_hint=text("report_hint")
+                )
+            elif controller.phase is Phase.FINISHED:
+                message = text(
+                    "batch_removed" if controller.task is Task.REMOVE else "batch_deleted"
+                )
+            elif controller.phase is Phase.CANCELLED:
+                message = text("batch_cancelled")
+        self.library_status.setText(message)
+        self.library_status.setVisible(bool(message))
+
+    def _select_all_worlds(self) -> None:
+        self.world_list.selectAll()
+        if self.world_list.count():
+            self.world_list.item(0).setSelected(False)
+
+    def _remove_entries(self) -> None:
+        problem = self.controller.remove_entries(self.selected_entries())
+        if problem:
+            self.library_status.setText(problem)
+            self.library_status.show()
+
+    def _delete_entries(self) -> None:
+        selected = self.selected_entries()
+        worlds = [world for world in self.controller.worlds if world.id in selected]
+        if not worlds:
+            return
+        answer = QMessageBox.question(
+            self,
+            text("delete_many_title", count=len(worlds)),
+            text(
+                "delete_many_question",
+                count=len(worlds),
+                names="\n".join(self.controller.name(world) for world in worlds),
+            ),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if answer == QMessageBox.StandardButton.Yes:
+            problem = self.controller.delete_entries(selected)
+            if problem:
+                self.library_status.setText(problem)
+                self.library_status.show()
 
     def _world_item(self, world: World, depth: int = 0) -> QListWidgetItem:
         controller = self.controller
@@ -1371,9 +1497,13 @@ class MainWindow(QMainWindow):
         problem = controller.world_problem()
         self.add_button.setVisible(placement is not Placement.IN_GAME)
         self.remove_button.setVisible(placement is Placement.IN_GAME)
-        for button in (self.add_button, self.remove_button, self.delete_button):
-            button.setEnabled(problem is None)
-            button.setToolTip(problem or "")
+        for button, reason in (
+            (self.add_button, problem),
+            (self.remove_button, controller.removal_problem()),
+            (self.delete_button, text("ready_busy") if controller.busy else None),
+        ):
+            button.setEnabled(reason is None)
+            button.setToolTip(reason or "")
         self.like_button.setEnabled(not controller.busy)
         self.check_button.setEnabled(not controller.busy and controller.game is not None)
         can_change = not controller.busy and controller.game is not None
@@ -1427,7 +1557,7 @@ class MainWindow(QMainWindow):
         if stray is None:
             return
         self.stray_about.setText(text("stray_about", folder=stray.name))
-        problem = self.controller.world_problem()
+        problem = self.controller.removal_problem()
         self.stray_remove.setEnabled(problem is None)
         self.stray_remove.setToolTip(problem or "")
 
@@ -1665,6 +1795,9 @@ class MainWindow(QMainWindow):
             self.task_line.setText(problem)
 
     def _remove(self) -> None:
+        if len(self.selected_entries()) > 1:
+            self._remove_entries()
+            return
         problem = self.controller.remove_selected()
         if problem:
             self.task_line.setText(problem)
@@ -1675,6 +1808,9 @@ class MainWindow(QMainWindow):
             self.controller.like(world)
 
     def _delete(self) -> None:
+        if len(self.selected_entries()) > 1:
+            self._delete_entries()
+            return
         world = self.controller.selected_world()
         if world is None:
             return

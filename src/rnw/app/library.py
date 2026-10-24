@@ -347,7 +347,7 @@ def retitle(world: World, mod: Path) -> bool:
 
 def forget(data: Path, world: World) -> None:
     """Delete the world's folder in the generator's data (its kept mod included)."""
-    shutil.rmtree(folder(data, world), ignore_errors=True)
+    shutil.rmtree(folder(data, world))
 
 
 def kept(data: Path, world: World) -> Path | None:
