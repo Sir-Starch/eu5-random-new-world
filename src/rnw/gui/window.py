@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast, override
 
-from PySide6.QtCore import QItemSelectionModel, QObject, Qt, QUrl, Signal
+from PySide6.QtCore import QItemSelectionModel, QObject, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QIcon, QImage, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -72,7 +72,7 @@ if TYPE_CHECKING:
     from rnw.app.library import World
 
 GIB: Final[float] = float(1 << 30)
-PROGRESS_STEPS: Final[int] = 1000
+PROGRESS_STEPS: Final[int] = 100
 MARKS: Final[dict[str, str]] = {"done": "✓", "running": "▶", "waiting": "·"}
 CLOSE_WAIT: Final[float] = 15.0
 RED: Final[str] = "color: #b00020;"
@@ -81,6 +81,19 @@ ICON_SIZE: Final[tuple[int, int]] = (96, 48)
 DATE: Final[str] = "%Y-%m-%d %H:%M"
 # Before the name of a version of a continent already listed above it.
 VERSION_MARK: Final[str] = "\u21b3 "
+
+
+def _progress_percent(fraction: float) -> int:
+    """The one rounded percentage used by the progress bar and world list."""
+    return min(100, max(0, math.floor(fraction * 100 + 0.5)))
+
+
+def _duration_clock(seconds: float) -> str:
+    """A compact, language-neutral countdown for the ETA line."""
+    total = max(1, math.ceil(seconds))
+    hours, remainder = divmod(total, 3600)
+    minutes, seconds_left = divmod(remainder, 60)
+    return f"{hours}:{minutes:02d}:{seconds_left:02d}" if hours else f"{minutes}:{seconds_left:02d}"
 
 
 class _Bridge(QObject):
@@ -367,6 +380,7 @@ class MainWindow(QMainWindow):
     cancel_button: QPushButton
     bar: QProgressBar
     status: QLabel
+    eta: QLabel
     stage_list: QListWidget
     # a world
     world_page: QWidget
@@ -422,6 +436,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(TITLE)
         self.setAcceptDrops(True)
         self._build()
+        self._eta_timer: QTimer = QTimer(self)
+        self._eta_timer.setInterval(1000)
+        _ = self._eta_timer.timeout.connect(self._refresh_eta)
         _ = self._bridge.changed.connect(self.refresh)
         controller.subscribe(self._bridge.changed.emit)
         self.refresh()
@@ -785,7 +802,13 @@ class MainWindow(QMainWindow):
         self.bar = QProgressBar()
         self.bar.setRange(0, PROGRESS_STEPS)
         self.status = QLabel()
-        self.status.setWordWrap(True)
+        self.status.setWordWrap(False)
+        self.status.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self.status.setFixedHeight(self.status.fontMetrics().height() + 4)
+        self.eta = QLabel()
+        self.eta.setWordWrap(False)
+        self.eta.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
+        self.eta.setFixedHeight(self.eta.fontMetrics().height() + 4)
         self.stage_list = QListWidget()
         self.stage_list.setSelectionMode(QListWidget.SelectionMode.NoSelection)
         self.stage_list.setFixedHeight(140)
@@ -796,6 +819,7 @@ class MainWindow(QMainWindow):
         self.progress_details.setArrowType(Qt.ArrowType.RightArrow)
         progress_layout.addWidget(self.bar)
         progress_layout.addWidget(self.status)
+        progress_layout.addWidget(self.eta)
         progress_layout.addWidget(self.progress_details, alignment=Qt.AlignmentFlag.AlignLeft)
         progress_layout.addWidget(self.stage_list)
         self.stage_list.setVisible(False)
@@ -1226,7 +1250,7 @@ class MainWindow(QMainWindow):
         running = controller.busy and controller.task is Task.GENERATE
         if self.world_list.count():
             self.world_list.item(0).setText(
-                text("new_world_running", percent=round(controller.fraction * 100))
+                text("new_world_running", percent=_progress_percent(controller.fraction))
                 if running
                 else text("new_world")
             )
@@ -1402,12 +1426,34 @@ class MainWindow(QMainWindow):
             self.type_choice,
         ):
             widget.setEnabled(not busy)
-        self.bar.setValue(round(controller.fraction * PROGRESS_STEPS) if generating else 0)
-        self.status.setText(self._status_line() if generating else text("idle"))
+        self.bar.setValue(_progress_percent(controller.fraction) if generating else 0)
+        status = self._status_line() if generating else text("idle")
+        self.status.setText(status)
+        self.status.setToolTip(status)
+        self._refresh_eta_state()
         self.stage_list.clear()
         for label, state in controller.stage_rows():
             mark = MARKS[state] if generating else MARKS["waiting"]
             self.stage_list.addItem(QListWidgetItem(f"{mark}  {label}"))
+
+    def _refresh_eta_state(self) -> None:
+        """Show and start the ETA timer only for one live world generation."""
+        active = self.controller.task is Task.GENERATE and self.controller.phase is Phase.RUNNING
+        self.eta.setVisible(active)
+        if active:
+            self._refresh_eta()
+            if not self._eta_timer.isActive():
+                self._eta_timer.start()
+        else:
+            self._eta_timer.stop()
+
+    def _refresh_eta(self) -> None:
+        """Refresh the countdown without rebuilding the rest of the window."""
+        remaining = self.controller.estimated_remaining()
+        if remaining is None:
+            self.eta.clear()
+            return
+        self.eta.setText(text("eta", time=_duration_clock(remaining)))
 
     def _refresh_destination(self, problem: str | None) -> None:
         controller, busy = self.controller, self.controller.busy
@@ -1586,7 +1632,7 @@ class MainWindow(QMainWindow):
             running = controller.running_text()
             self.task_line.setText(f"{label} {running}".strip())
             self.task_bar.setVisible(controller.task in {Task.ADD, Task.CHECK, Task.REROLL})
-            self.task_bar.setValue(round(controller.fraction * PROGRESS_STEPS))
+            self.task_bar.setValue(_progress_percent(controller.fraction))
             return
         self.task_bar.setVisible(False)
         self.task_line.setText(

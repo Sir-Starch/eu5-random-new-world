@@ -6,6 +6,7 @@ All notable changes to Random New World. The project has one product version ([A
 
 ## [Unreleased]
 
+- Generator progress keeps its stage description on one fixed-height line, shows a live ETA that adapts to the weighted stage pace measured in the current run, and uses the same rounded percentage in the world list and progress bar.
 - The Workshop description is rewritten for players, as EU5 mod pages are: what a world holds, a quick start, the window's choices, why there is a program, the limits, a FAQ and links, with an emoji for each section. It is kept in Steam's markup, ready to paste, in all eleven official languages, and each text is checked against Steam's limit of 8,000 bytes (C277).
 - Generator library: select several worlds with Ctrl/Shift or Select all, then remove their mods from EU5 directly below the list. Codes and pictures stay in the library. A separate bulk deletion asks once before deleting library records and kept files. Selection survives list updates; removal no longer needs the game installation, and deletion errors stop the batch visibly (C266). The library panel takes its width from the splitter alone: its texts wrap or clip instead of setting a minimum, so a wide font or an error that names a long Windows path no longer widens the window past 1080 pixels.
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.

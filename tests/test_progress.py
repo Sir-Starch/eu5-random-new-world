@@ -62,6 +62,19 @@ def test_the_whole_table_adds_up_to_a_full_bar() -> None:
     assert job.fraction == 1.0
 
 
+def test_eta_counts_down_and_adjusts_when_a_stage_takes_longer_than_expected() -> None:
+    """The ETA starts from the reference run and adapts to the live weighted stage pace."""
+    job = Progress()
+    job.begin("generate world")
+    started = job._stage_started["generate world"]
+    early = job.estimated_remaining(now=started + 4)
+    later = job.estimated_remaining(now=started + 8)
+    overrun = job.estimated_remaining(now=started + 45)
+
+    assert later < early
+    assert overrun > later
+
+
 def test_cancel_stops_at_the_next_checkpoint_or_stage_start() -> None:
     """After cancel(), a checkpoint raises, a new stage does not start, and stages stop running."""
     job, updates = _collect()

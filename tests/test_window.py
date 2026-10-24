@@ -176,6 +176,45 @@ def test_the_library_and_world_page_fit_the_supported_window_size(
 
 
 @pytest.mark.usefixtures("application")
+def test_progress_height_and_percent_display_stay_in_sync(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.resize(1080, 760)
+    window.show()
+    window.controller.task = Task.GENERATE
+    window.controller.phase = Phase.RUNNING
+    window.controller.fraction = 0.975
+    window.controller.running = ("water textures",)
+    window.refresh()
+    QApplication.processEvents()
+    height = window.height()
+    status_height = window.status.height()
+
+    window.controller.running = (
+        "water textures",
+        "biomes and rivers",
+        "identities",
+        "script remap",
+        "spline network",
+    )
+    window.refresh()
+    QApplication.processEvents()
+
+    assert window.height() == height
+    assert window.status.height() == status_height
+    assert not window.status.wordWrap()
+    assert window.bar.value() == 98
+    assert window.bar.text() == "98%"
+    assert "98 %" in window.world_list.item(0).text()
+
+    window.controller.phase = Phase.IDLE
+    window.controller.task = None
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 @pytest.mark.parametrize("language", sorted(LANGUAGE_NAMES))
 def test_every_language_fits_the_smallest_supported_window(
     tmp_path: Path, fake_export: Exporter, language: str

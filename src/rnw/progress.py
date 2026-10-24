@@ -13,6 +13,7 @@ progress is a module-level value that stage threads read.
 from __future__ import annotations
 
 import threading
+import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
@@ -84,6 +85,10 @@ STAGES: Final[dict[str, StageInfo]] = {
     ),
 }
 TOTAL_WEIGHT: Final[int] = sum(info.weight for info in STAGES.values())
+# A full reference generation was measured at 90-150 seconds (ADR 0010). Start from its
+# midpoint, then let this run's weighted progress calibrate the estimate to the player's machine.
+ETA_PRIOR_SECONDS: Final[float] = 120.0
+ETA_PRIOR_FRACTION: Final[float] = 0.2
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,6 +114,8 @@ class Progress:
         self._lock: threading.Lock = threading.Lock()
         self._running: list[str] = []
         self._done: set[str] = set()
+        self._stage_started: dict[str, float] = {}
+        self._started_at: float = time.monotonic()
         self._cancelled: threading.Event = threading.Event()
 
     @property
@@ -130,6 +137,36 @@ class Progress:
         with self._lock:
             self._running.clear()
             self._done.clear()
+            self._stage_started.clear()
+            self._started_at = time.monotonic()
+
+    def estimated_remaining(self, *, now: float | None = None) -> float:
+        """Estimate seconds left from the weighted stages and this run's observed pace.
+
+        A running weighted stage advances smoothly for the estimate only; the reported progress
+        fraction remains tied to completed stages. The prior damps noisy early estimates, then
+        the player's actual elapsed time takes over as more weighted work completes.
+        """
+        current = time.monotonic() if now is None else now
+        with self._lock:
+            elapsed = max(0.0, current - self._started_at)
+            completed = sum(STAGES[name].weight for name in self._done if name in STAGES)
+            partial = 0.0
+            for name in self._running:
+                info = STAGES.get(name)
+                started = self._stage_started.get(name)
+                if info is None or info.weight <= 0 or started is None:
+                    continue
+                expected = ETA_PRIOR_SECONDS * info.weight / TOTAL_WEIGHT
+                share = min(0.9, max(0.0, current - started) / max(expected, 0.1))
+                partial += info.weight * share
+        fraction = min(1.0, (completed + partial) / TOTAL_WEIGHT)
+        if fraction <= 0.0:
+            return max(0.0, ETA_PRIOR_SECONDS - elapsed)
+        observed_total = elapsed / fraction
+        confidence = fraction / (fraction + ETA_PRIOR_FRACTION)
+        total = ETA_PRIOR_SECONDS * (1.0 - confidence) + observed_total * confidence
+        return max(0.0, total - elapsed)
 
     def checkpoint(self) -> None:
         """Raise ``Cancelled`` if a cancel was asked for."""
@@ -150,14 +187,17 @@ class Progress:
         return min(1.0, done / TOTAL_WEIGHT)
 
     def _move(self, name: str, *, finished: bool, completed: bool = True) -> None:
+        now = time.monotonic()
         with self._lock:
             if finished:
                 if name in self._running:
                     self._running.remove(name)
+                _ = self._stage_started.pop(name, None)
                 if completed:
                     self._done.add(name)
             else:
                 self._running.append(name)
+                self._stage_started[name] = now
             update = Update(
                 stage=name,
                 label=STAGES[name].label if name in STAGES else name,

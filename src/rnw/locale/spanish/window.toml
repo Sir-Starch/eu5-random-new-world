@@ -786,6 +786,10 @@ text = '''Listo.'''
 source = "b87aac63638e00ec"
 text = '''Trabajando: {stages}'''
 
+["eta"]
+source = "fb8476b38ef48519"
+text = '''Quedan unos {time}'''
+
 ["finished"]
 source = "c15031f5b768b892"
 text = '''Hecho en {seconds} s.'''

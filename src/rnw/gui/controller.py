@@ -744,6 +744,18 @@ class Controller:
         """The stages that run now, in the window's language."""
         return ", ".join(stage_text(name) for name in self.running)
 
+    def estimated_remaining(self) -> float | None:
+        """Estimated seconds left in the active weighted generation."""
+        with self._lock:
+            if (
+                self.phase is not Phase.RUNNING
+                or self.task is not Task.GENERATE
+                or "waiting for the game" in self.running
+            ):
+                return None
+            progress = self._progress
+        return progress.estimated_remaining() if progress is not None else None
+
     # -- the work ------------------------------------------------------------------------------
 
     def sketch_candidates(self, count: int = 6) -> str | None:

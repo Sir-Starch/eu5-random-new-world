@@ -301,6 +301,7 @@ STRINGS: Final[dict[str, str]] = {
     "progress": "Progress",
     "idle": "Ready.",
     "running": "Working: {stages}",
+    "eta": "About {time} left",
     "finished": "Done in {seconds} s.",
     "failed": "It did not work: {message}\n\n{report_hint}",
     "report_hint": "To report it, open Settings and press Save diagnostics.",
