@@ -878,3 +878,9 @@ Owner instruction: implement N5. Design, method, three-world audit and limits ar
 - [OWNER 2026-10-24] Asked for the Workshop description to read as EU5 mod pages on the Workshop do, not as a repository: what a player needs to know, sections with icons, a FAQ and links at the end.
 - The text is now Steam's markup, ready to paste (`docs/workshop/<language>.bbcode`), with an emoji per section: what a world holds, quick start, the window's choices, why a program, good to know, FAQ (seeing the map first, native countries, other mods, multiplayer, Ironman and achievements, worlds without the generator, Windows warnings, Linux and Steam Deck, removal, bug reports with *Save diagnostics*), links. Unverified answers keep bracketed notes (`[Until tested:]`, `[Confirm in the release sitting.]`).
 - [SOURCE C277] Steam's limit is 8,000 bytes, not characters: the first Russian translation was 9,316 bytes and was rewritten more tightly (7,885). The English lost a few clauses so that the others fit with room to spare. `tests/test_workshop.py` now compares markup and links in order, the notes, and the byte size.
+
+## 2026-10-24 — Installed the 0.11.6 generator hub (C278)
+
+- [V-LOCAL C278] The EU5 profile's `rnw_exp_hub` held version 0.9.14. The installed game manifest is build 26142040.
+- [V-EXEC C278] Built the 0.11.6 Windows wheel from the current checkout and assembled a hub with the twelve runtime versions already present in the local 0.9.17 hub artifact; they match the current lock. The package inventory and game-file boundary checks passed; all 3,247 installed files match the prepared candidate. A separate generated-world folder is present after the update and was not its target.
+- [UNKNOWN C278] No game was launched; the rebuilt launcher has not been newly exercised through the game's Open in folder flow. No generated-world output changed, so the algorithm epoch and golden digest did not change.
