@@ -374,6 +374,7 @@ class MainWindow(QMainWindow):
     customized: QLabel
     reset_all: QPushButton
     estimate: QLabel
+    estimate_help: QLabel
     install_box: QCheckBox
     generate_button: QPushButton
     cancel_button: QPushButton
@@ -537,8 +538,18 @@ class MainWindow(QMainWindow):
         outer.addWidget(self.notice)
         self.estimate = QLabel()
         self.estimate.setWordWrap(True)
+        self.estimate_help = QLabel("ⓘ")
+        self.estimate_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.estimate_help.setStyleSheet(MUTED)
+        self.estimate_help.setVisible(False)
+        estimate_box = QHBoxLayout()
+        estimate_box.setContentsMargins(0, 0, 0, 0)
+        estimate_box.setSpacing(6)
+        estimate_box.addWidget(self.estimate)
+        estimate_box.addWidget(self.estimate_help, 0, Qt.AlignmentFlag.AlignVCenter)
+        estimate_box.addStretch(1)
         row = QHBoxLayout()
-        row.addWidget(self.estimate, 1)
+        row.addLayout(estimate_box, 1)
         self.generate_button = QPushButton(text("generate"))
         self.generate_button.setDefault(True)
         self.generate_button.setMinimumWidth(160)
@@ -1385,6 +1396,23 @@ class MainWindow(QMainWindow):
     def _ocean_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
         self.controller.set_value("new_world.expand_oceans", int(checked))
 
+    def _refresh_estimate(self, controller: Controller) -> None:
+        try:
+            estimate = controller.estimated_locations()
+            tip = text("estimate_tip")
+            self.estimate.setText(text("estimate", count=grouped(estimate)))
+            style = RED if estimate > controls.LOCATION_BUDGET else MUTED
+            self.estimate.setStyleSheet(style)
+            self.estimate.setToolTip(tip)
+            self.estimate_help.setStyleSheet(style)
+            self.estimate_help.setToolTip(tip)
+            self.estimate_help.setVisible(True)
+        except ValueError:
+            self.estimate.setText("")
+            self.estimate.setToolTip("")
+            self.estimate_help.setToolTip("")
+            self.estimate_help.setVisible(False)
+
     def _refresh_ocean_option(self, busy: bool) -> None:  # noqa: FBT001 - UI state
         _ = self.expand_oceans.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
@@ -1421,12 +1449,7 @@ class MainWindow(QMainWindow):
         self.customized.setText(text("customized", count=count) if count else "")
         self.reset_all.setEnabled(bool(count) and not busy)
         problem = controller.problem()
-        try:
-            estimate = controller.estimated_locations()
-            self.estimate.setText(text("estimate", count=grouped(estimate)))
-            self.estimate.setStyleSheet(RED if estimate > controls.LOCATION_BUDGET else MUTED)
-        except ValueError:
-            self.estimate.setText("")
+        self._refresh_estimate(controller)
         self._refresh_destination(problem)
         _ = self.show_new_world.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         self.show_new_world.setChecked(controller.preferences.show_new_world)

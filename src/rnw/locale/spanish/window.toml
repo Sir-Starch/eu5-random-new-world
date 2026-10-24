@@ -594,6 +594,14 @@ text = '''Pueblos'''
 source = "b6baff9358ddd8f7"
 text = '''Tierra'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Ampliar la generación hacia los océanos'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Recomendado: da más espacio al Nuevo Mundo para que sus continentes no tengan que seguir el contorno de América. Conserva el Viejo Mundo y las islas protegidas.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Cuánto del Nuevo Mundo es tierra.'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''Este código fija valores fuera de lo que permite el generador: {names}.'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''Unas {count} localizaciones (EU5 admite unas 32.000).'''
+source = "8141923fca351c19"
+text = '''Total mundial: unas {count} localizaciones (límite del motor de EU5: ~32 000).'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "En EU5, las localizaciones incluyen provincias terrestres, zonas marítimas y lagos de todo el mundo (~22 000 pertenecen al Viejo Mundo fijo).\n\nEl motor utiliza un índice de 16 bits (~32 767 como máximo). Para evitar fallos, el generador se mantiene por debajo de 31 200.\n\nPor qué «mucha tierra» puede mostrar menos localizaciones:\nLas zonas marítimas también son localizaciones. Más tierra significa menos océano (menos zonas marítimas), y el tamaño de las celdas terrestres aumenta automáticamente en grandes masas de tierra para no superar el límite. En consecuencia, el total puede disminuir; es un ajuste de presupuesto normal y no un error."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''Elige entre 1 y {count} bocetos.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Los bocetos necesitan tierra generada. Vuelve primero a la tierra generada.'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''Ampliar la generación hacia los océanos'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Recomendado: da más espacio al Nuevo Mundo para que sus continentes no tengan que seguir el contorno de América. Conserva el Viejo Mundo y las islas protegidas.'''

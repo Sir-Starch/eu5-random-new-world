@@ -594,6 +594,14 @@ text = '''Ludy'''
 source = "b6baff9358ddd8f7"
 text = '''Ląd'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Rozszerz obszar generowania na oceany'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat i chronione wyspy.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Jaka część Nowego Świata to ląd.'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''Ten kod ustawia wartości poza dozwolonym zakresem: {names}.'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''Około {count} lokacji (EU5 wytrzymuje około 32 000).'''
+source = "8141923fca351c19"
+text = '''Łącznie na świecie: około {count} lokacji (limit silnika EU5: ~32 000).'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "W EU5 lokacje obejmują prowincje lądowe, strefy morskie oraz jeziora na całym świecie (~22 000 przypada na niezmieniony Stary Świat).\n\nSilnik korzysta z 16-bitowego indeksu (maksymalnie ~32 767). Aby zapobiec awariom, generator utrzymuje łączną liczbę bezpiecznie poniżej 31 200.\n\nDlaczego przy wyborze „dużo lądu” liczba lokacji może spaść:\nStrefy morskie to również lokacje. Więcej lądu oznacza mniejszą powierzchnię oceanu (mniej stref morskich), a rozmiar komórek lądowych jest automatycznie zwiększany przy dużych lądach, by nie przekroczyć limitu silnika. W rezultacie łączna liczba może być mniejsza — to normalne równoważenie budżetu, a nie błąd."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''Wybierz od 1 do {count} szkiców.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Szkice wymagają wygenerowanego lądu. Najpierw wróć do wygenerowanego lądu.'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''Rozszerz obszar generowania na oceany'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat i chronione wyspy.'''

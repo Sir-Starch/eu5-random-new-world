@@ -594,6 +594,14 @@ text = '''Povos'''
 source = "b6baff9358ddd8f7"
 text = '''Terra'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Expandir a geração para os oceanos'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo e as ilhas protegidas.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Quanto do Novo Mundo é terra.'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''Este código define valores além do que o gerador permite: {names}.'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''Cerca de {count} localizações (o EU5 aguenta cerca de 32.000).'''
+source = "8141923fca351c19"
+text = '''Total mundial: cerca de {count} localizações (limite do motor do EU5: ~32.000).'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "No EU5, as localizações incluem províncias terrestres, zonas marítimas e lagos em todo o mundo (~22.000 pertencem ao Velho Mundo fixo).\n\nO motor usa um índice de 16 bits (máximo de ~32.767). Para evitar travamentos, o gerador mantém o total abaixo de 31.200.\n\nPor que «muita terra» pode exibir menos localizações:\nZonas marítimas também são localizações. Mais terra significa menos oceano (menos zonas marítimas), e o tamanho das células terrestres aumenta automaticamente para grandes massas a fim de respeitar o limite. O total pode diminuir; isso é um balanceamento de orçamento esperado, não um erro."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''Escolha entre 1 e {count} esboços.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Os esboços precisam de terra gerada. Volte primeiro à terra gerada.'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''Expandir a geração para os oceanos'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo e as ilhas protegidas.'''

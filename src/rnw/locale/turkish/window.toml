@@ -594,6 +594,14 @@ text = '''Halklar'''
 source = "b6baff9358ddd8f7"
 text = '''Kara'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Üretim alanını okyanuslara genişlet'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya ve korunan adalar değişmez.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Yeni Dünya'nın ne kadarının kara olduğu.'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''Bu kod, oluşturucunun izin verdiğinin ötesinde değerler ayarlıyor: {names}.'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''Yaklaşık {count} konum (EU5 yaklaşık 32.000 konum kaldırır).'''
+source = "8141923fca351c19"
+text = '''Dünya toplamı: yaklaşık {count} konum (EU5 motor sınırı: ~32.000).'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "EU5'te konumlar kara vilayetlerini, deniz bölgelerini ve gölleri içerir (yaklaşık 22.000 tanesi sabit Eski Dünya'ya aittir).\n\nOyun motoru 16 bitlik bir dizin kullanır (en fazla ~32.767). Çökmeleri önlemek için oluşturucu toplamı güvenli bir şekilde 31.200'ün altında tutar.\n\n«Çok kara» seçildiğinde neden daha az konum görünebilir:\nDeniz bölgeleri de birer konumdur. Daha fazla kara daha az okyanus (daha az deniz bölgesi) anlamına gelir ve büyük kara kütlelerinde motor sınırını aşmamak için kara hücrelerinin boyutu otomatik olarak büyütülür. Sonuç olarak toplam konum sayısı azalabilir; bu bir hata değil, beklenen bütçe dengelemesidir."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''1 ile {count} arasında taslak seçin.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Taslaklar için oluşturulan kara gerekir. Önce oluşturulan karaya dönün.'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''Üretim alanını okyanuslara genişlet'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya ve korunan adalar değişmez.'''

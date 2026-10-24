@@ -594,6 +594,14 @@ text = '''Völker'''
 source = "b6baff9358ddd8f7"
 text = '''Land'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Erzeugungsgebiet auf die Ozeane erweitern'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Empfohlen: Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht dem Umriss Amerikas folgen müssen. Die Alte Welt und geschützte Inseln bleiben erhalten.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Wie viel der Neuen Welt Land ist.'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''Dieser Code setzt Werte jenseits dessen, was der Generator erlaubt: {names}.'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''Etwa {count} Orte (EU5 verkraftet etwa 32.000).'''
+source = "8141923fca351c19"
+text = '''Weltweit insgesamt: etwa {count} Orte (EU5-Engine-Limit: ~32.000).'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "In EU5 zählen neben Landprovinzen auch Seezonen und Seen weltweit als Orte (rund 22.000 davon entfallen auf die unveränderte Alte Welt).\n\nDie Engine nutzt einen 16-Bit-Index (maximal ~32.767). Um Abstürze zu verhindern, hält der Generator die Gesamtzahl sicher unter 31.200.\n\nWarum bei „viel Land“ weniger Orte angezeigt werden können:\nSeezonen sind ebenfalls Orte. Mehr Land bedeutet weniger Meeresfläche (weniger Seezonen), und bei großen Landmassen werden die Landorte automatisch vergrößert, um das Limit nicht zu überschreiten. Die Gesamtzahl kann dadurch sinken – dies ist eine reguläre Budgetanpassung und kein Fehler."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''Wählen Sie zwischen 1 und {count} Skizzen.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Skizzen brauchen erzeugtes Land. Kehren Sie zuerst zu erzeugtem Land zurück.'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''Erzeugungsgebiet auf die Ozeane erweitern'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Empfohlen: Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht dem Umriss Amerikas folgen müssen. Die Alte Welt und geschützte Inseln bleiben erhalten.'''

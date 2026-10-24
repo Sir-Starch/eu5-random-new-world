@@ -331,7 +331,18 @@ STRINGS: Final[dict[str, str]] = {
         "generator keeps below {budget}. Raise the location or sea zone size, or lower the land."
     ),
     "outside_range": "This code sets values beyond what the generator allows: {names}.",
-    "estimate": "About {count} locations (EU5 takes about 32,000).",
+    "estimate": "World total: about {count} locations (EU5 engine limit: ~32,000).",
+    "estimate_tip": (
+        "In EU5, locations include land provinces, sea zones, and lakes across the entire globe "
+        "(~22,000 belong to the fixed Old World).\n\n"
+        "The engine uses a 16-bit index (~32,767 maximum). To prevent crashes, the generator "
+        "keeps the total safely below 31,200.\n\n"
+        "Why “much land” can show fewer locations:\n"
+        "Sea zones are also counted as locations. More land means less sea area (fewer sea "
+        "zones), and the generator automatically scales up land location sizes for larger "
+        "landmasses to stay within the engine limit. Total locations may decrease as a result; "
+        "this is expected behavior, not an error."
+    ),
     # -- a world --
     "name_hint": "Name of this world (up to {limit} characters)",
     "retitle_later": (

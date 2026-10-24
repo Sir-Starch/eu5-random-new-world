@@ -594,6 +594,14 @@ text = '''Peuples'''
 source = "b6baff9358ddd8f7"
 text = '''Terres'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Étendre la génération aux océans'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Recommandé : laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde et les îles protégées.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Quelle part du Nouveau Monde est faite de terres.'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''Ce code fixe des valeurs au-delà de ce que permet le générateur : {names}.'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''Environ {count} lieux (EU5 en supporte environ 32 000).'''
+source = "8141923fca351c19"
+text = '''Total mondial : environ {count} lieux (limite du moteur EU5 : ~32 000).'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "Dans EU5, les lieux comprennent les provinces terrestres, les zones maritimes et les lacs du monde entier (~22 000 appartiennent à l'Ancien Monde inchangé).\n\nLe moteur utilise un index 16 bits (~32 767 au maximum). Pour éviter les plantages, le générateur reste prudemment sous 31 200.\n\nPourquoi « beaucoup de terres » peut afficher moins de lieux :\nLes zones maritimes sont aussi des lieux. Plus de terre signifie moins d'océan (moins de zones maritimes), et la taille des cellules terrestres augmente automatiquement pour les grandes masses afin de respecter la limite. Le total peut donc diminuer ; c'est un équilibrage normal et non une erreur."
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''Choisissez entre 1 et {count} esquisses.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Les esquisses demandent des terres générées. Revenez d'abord aux terres générées.'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''Étendre la génération aux océans'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Recommandé : laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde et les îles protégées.'''

@@ -594,6 +594,14 @@ text = '''民族'''
 source = "b6baff9358ddd8f7"
 text = '''陆地'''
 
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''将生成范围扩展至大洋'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界及受保护的岛屿。'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''新大陆中陆地所占的比例。'''
@@ -851,8 +859,12 @@ source = "2ed39ef60bd66af6"
 text = '''此代码设定的数值超出了生成器允许的范围：{names}。'''
 
 ["estimate"]
-source = "4ab7301404b8205d"
-text = '''约{count}个地点（EU5约可承受32,000个）。'''
+source = "8141923fca351c19"
+text = '''全球总计：约{count}个地点（EU5引擎上限：~32,000）。'''
+
+["estimate_tip"]
+source = "34f3f38a503b4cdc"
+text = "在EU5中，“地点”不仅包含陆地省份，还包括全球的海域和湖泊（其中约22,000个属于固定的旧大陆）。\n\n游戏引擎采用16位索引（最大约32,767）。为防止游戏崩溃，生成器将总数严格控制在31,200以下。\n\n为什么选择“陆地较多”时地点数量可能会减少：\n海域同样被计为地点。陆地面积增加意味着海洋面积缩小（海域地点减少），同时生成器会自动放大大型陆地的地块尺寸以避免超出引擎上限。因此地点总数可能会减少，这是正常的预算平衡机制，并非错误。"
 
 ["name_hint"]
 source = "453d4a9fcef62708"
@@ -1781,11 +1793,3 @@ text = '''请选择1到{count}幅草图。'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''草图需要生成的陆地。请先改回生成的陆地。'''
-
-["control.new_world.expand_oceans"]
-source = "eff9e124228b96ba"
-text = '''将生成范围扩展至大洋'''
-
-["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界及受保护的岛屿。'''
