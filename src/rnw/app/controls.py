@@ -124,6 +124,10 @@ CONTROLS: Final[tuple[Control, ...]] = (
 )
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
 GROUPS: Final[tuple[str, ...]] = ("land", "map", "peoples")
+# The Advanced tab's controls: all of them but the ocean checkbox, which the new-world page holds.
+ADVANCED: Final[tuple[Control, ...]] = tuple(
+    control for control in CONTROLS if control.field != "expand_oceans"
+)
 
 
 def estimated_locations(settings: Settings) -> int:

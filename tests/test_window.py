@@ -271,11 +271,19 @@ def test_the_new_world_page_shows_types_and_needs_a_game(
     """Every world type is offered; without a game, Generate is off and says why."""
     window = _window(tmp_path, fake_export, game=False)
     assert window.stack.currentWidget() is window.new_page
-    assert window.type_choice.count() == 5
-    window.type_choice.setCurrentIndex(3)
+    assert window.type_choice.count() == 7
+    window.type_choice.setCurrentIndex(5)
     assert window.controller.preset == "archipelago"
+    assert window.controller.mode is None
     assert not window.generate_button.isEnabled()
     assert window.problem_line.text() == text("game_missing")
+    window.type_choice.setCurrentIndex(1)
+    assert window.controller.mode == "chaos"
+    assert window.type_choice.currentData() == "chaos"
+    assert window.type_about.text() == text("type.chaos.about")
+    window.type_choice.setCurrentIndex(0)
+    assert window.controller.mode == "random"
+    assert window.type_about.text() == text("type.random.about")
     _ = window.close()
 
 

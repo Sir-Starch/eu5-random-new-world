@@ -338,6 +338,22 @@ text = '''Dağınık adalar'''
 source = "3dea08a0afa912dc"
 text = '''Büyük bir kara parçası olmayan, küçük adalarla dolu bir deniz.'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''Rastgele'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''Beş dünya türünden biri; seçildiğinde ve her Rastgele basışında çekilir. Gelişmiş değerler çekilen türün değerleridir.'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''Tam kaos'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''Rastgele çekilen bir dünya türü ve her Gelişmiş değer oynanabilir aralık içinde rastgele çekilir. Her Rastgele basışında yeniden çekilir.'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''Temel ayarlar'''

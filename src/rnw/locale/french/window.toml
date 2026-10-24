@@ -338,6 +338,22 @@ text = '''Îles éparses'''
 source = "3dea08a0afa912dc"
 text = '''Une mer pleine de petites îles, sans grande masse de terre.'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''Aléatoire'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''Un des cinq types de monde, tiré au sort lorsqu'on le choisit et à chaque pression sur le bouton Aléatoire. Les valeurs Avancé sont celles du type tiré.'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''Chaos total'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''Un type de monde tiré au sort, et chaque valeur Avancé tirée au sort dans sa plage jouable. Chaque pression sur le bouton Aléatoire tire à nouveau.'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''L'essentiel'''

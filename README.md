@@ -26,7 +26,7 @@ Each seed produces new continents, coastlines, relief, climate, rivers, seas, re
 
 | Layer | What the generator makes |
 |---|---|
-| **Land** | Five world types (supercontinent, continents, small continents, archipelago, scattered islands), coastlines that follow the seed, an optional land outline you draw yourself; recommended ocean expansion gives continents room beyond the familiar outline of the Americas |
+| **Land** | Five world types (supercontinent, continents, small continents, archipelago, scattered islands), with Random (one of them, drawn) and Total Chaos (a drawn type and every advanced value drawn), coastlines that follow the seed, an optional land outline you draw yourself; recommended ocean expansion gives continents room beyond the familiar outline of the Americas |
 | **Physical world** | Relief, climate, biomes, terrain materials and vegetation from one model; rivers from drainage; vanilla-calibrated coast and shelf profiles |
 | **Seas** | One port for every coastal sea zone; names taken from the water's shape (gulfs, straits, capes, island waters); depth and topography; ocean lanes and currents that continue the game's own; strait crossings armies can use |
 | **Political map** | Compact, connected locations, provinces, areas and regions. The original American region and area keys are matched to the generated ones by physical similarity |

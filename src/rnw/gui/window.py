@@ -54,7 +54,7 @@ from PySide6.QtWidgets import (
 
 from rnw import __version__, parallel, worldfile, worldname
 from rnw import atlas as atlas_module
-from rnw.app import controls, diagnostics, discovery
+from rnw.app import controls, diagnostics, discovery, random_types
 from rnw.app import quick as quick_settings
 from rnw.app.library import Placement
 from rnw.gui.candidates import CandidatesDialog
@@ -64,7 +64,6 @@ from rnw.gui.preview import PreviewView
 from rnw.gui.text import LANGUAGE_NAMES, TITLE, grouped, text
 from rnw.gui.theme import install as install_theme
 from rnw.languages import SOURCE
-from rnw.settings import WORLD_TYPES
 
 if TYPE_CHECKING:
     from PySide6.QtGui import QDragEnterEvent, QDropEvent
@@ -782,7 +781,7 @@ class MainWindow(QMainWindow):
         types = QGroupBox(text("type"))
         layout = QVBoxLayout(types)
         self.type_choice = QComboBox()
-        for name in WORLD_TYPES:
+        for name in random_types.CHOICES:
             self.type_choice.addItem(text(f"type.{name}"), name)
         self.type_about = QLabel()
         self.type_about.setWordWrap(True)
@@ -866,9 +865,7 @@ class MainWindow(QMainWindow):
             section = QGroupBox(text(f"group.{group}"))
             grid = QGridLayout(section)
             grid.setColumnStretch(1, 1)
-            for row, control in enumerate(
-                c for c in controls.CONTROLS if c.group == group and c.field != "expand_oceans"
-            ):
+            for row, control in enumerate(c for c in controls.ADVANCED if c.group == group):
                 line = _ControlRow(control, self)
                 line.place(grid, row)
                 self.rows.append(line)
@@ -1405,9 +1402,10 @@ class MainWindow(QMainWindow):
         self.land_image_button.setEnabled(not busy)
         self.land_template_button.setEnabled(not busy and controller.game is not None)
         _ = self.type_choice.blockSignals(True)  # noqa: FBT003 - Qt synchronization
-        self.type_choice.setCurrentIndex(WORLD_TYPES.index(controller.preset))
+        shown = controller.mode or controller.preset
+        self.type_choice.setCurrentIndex(random_types.CHOICES.index(shown))
         _ = self.type_choice.blockSignals(False)  # noqa: FBT003 - Qt synchronization
-        self.type_about.setText(text(f"type.{controller.preset}.about"))
+        self.type_about.setText(text(f"type.{shown}.about"))
         if not self.seed_edit.hasFocus():
             self.seed_edit.setText(str(controller.seed))
         if not self.code_edit.hasFocus():
@@ -1685,8 +1683,12 @@ class MainWindow(QMainWindow):
         self.refresh()
 
     def _pick_type(self, index: int) -> None:
-        if 0 <= index < len(WORLD_TYPES):
-            self.controller.set_preset(WORLD_TYPES[index])
+        if 0 <= index < len(random_types.CHOICES):
+            choice = random_types.CHOICES[index]
+            if choice in random_types.MODES:
+                self.controller.set_mode(choice)
+            else:
+                self.controller.set_preset(choice)
 
     def _toggle_customize(self, shown: bool) -> None:  # noqa: FBT001 - Qt's signal argument
         self.customize_box.setVisible(shown)

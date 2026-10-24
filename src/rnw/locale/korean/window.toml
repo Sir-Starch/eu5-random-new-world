@@ -338,6 +338,22 @@ text = '''흩어진 섬'''
 source = "3dea08a0afa912dc"
 text = '''큰 땅덩어리 없이 작은 섬이 가득한 바다.'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''무작위'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''다섯 가지 세계 유형 중 하나를 고를 때와 무작위 버튼을 누를 때마다 무작위로 뽑습니다. 고급 값은 뽑힌 유형의 값입니다.'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''완전한 혼돈'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''세계 유형을 무작위로 뽑고, 고급 값도 모두 플레이 가능한 범위 안에서 무작위로 뽑습니다. 무작위 버튼을 누를 때마다 다시 뽑습니다.'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''기본'''

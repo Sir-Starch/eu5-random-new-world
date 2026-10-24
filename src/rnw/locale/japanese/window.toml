@@ -338,6 +338,22 @@ text = '''散らばる島々'''
 source = "3dea08a0afa912dc"
 text = '''大きな陸塊のない、小島だらけの海。'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''ランダム'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''5種類の世界タイプのどれかを、選んだときと「ランダム」を押すたびに無作為に選びます。詳細の値は選ばれたタイプのものです。'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''完全なカオス'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''世界タイプを無作為に選び、詳細の値もすべて再生可能な範囲内で無作為に選びます。「ランダム」を押すたびに選び直します。'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''基本'''

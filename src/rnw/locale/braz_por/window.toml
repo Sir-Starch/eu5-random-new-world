@@ -338,6 +338,22 @@ text = '''Ilhas espalhadas'''
 source = "3dea08a0afa912dc"
 text = '''Um mar cheio de ilhas pequenas, sem nenhuma grande massa de terra.'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''Aleatório'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''Um dos cinco tipos de mundo, sorteado ao ser escolhido e a cada pressão no botão Aleatória. Os valores Avançado são os do tipo sorteado.'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''Caos total'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''Um tipo de mundo sorteado ao acaso, e cada valor Avançado sorteado dentro de sua faixa jogável. Cada pressão no botão Aleatória sorteia de novo.'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''O básico'''

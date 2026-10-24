@@ -338,6 +338,22 @@ text = '''Rozsiane wyspy'''
 source = "3dea08a0afa912dc"
 text = '''Morze pełne małych wysp, bez wielkiego lądu.'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''Losowy'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''Jeden z pięciu typów świata, wylosowany przy wyborze i przy każdym naciśnięciu przycisku Losowe. Wartości Zaawansowane są te wylosowanego typu.'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''Totalny chaos'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''Wylosowany typ świata i każda wartość Zaawansowane wylosowana w grywalnym zakresie. Każde naciśnięcie przycisku Losowe losuje na nowo.'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''Podstawy'''

@@ -32,6 +32,7 @@ from rnw.app import (
     paths,
     preferences,
     quick,
+    random_types,
     service,
     session,
     transfer,
@@ -164,6 +165,8 @@ class Controller:
         self.game: GameInstall | None = None
         self.profile: Profile | None = None
         self.preset: str = "continents"
+        # The random world type chosen in the window (``random_types``), None for a world type.
+        self.mode: str | None = None
         self.seed: int = random_seed()
         self.changes: dict[str, int] = {}
         self.other_changes: dict[str, object] = {}
@@ -291,11 +294,25 @@ class Controller:
 
     def set_preset(self, name: str) -> None:
         """Choose a world type; the changed values go back to the type's own."""
-        if name in PRESETS and name in WORLD_TYPES and name != self.preset:
+        if name in PRESETS and name in WORLD_TYPES and (name != self.preset or self.mode):
+            self.mode = None
             self.preset = name
             self.changes, self.other_changes = {}, {}
             self.notice = ""
             self._changed()
+
+    def set_mode(self, mode: str) -> None:
+        """Choose Random or Total Chaos: a world type is drawn now and with each new seed."""
+        if mode in random_types.MODES:
+            self.mode = mode
+            self.other_changes, self.notice = {}, ""
+            self._draw()
+            self._changed()
+
+    def _draw(self) -> None:
+        """Draw the world type, and for Total Chaos the Advanced values, of the random mode."""
+        if self.mode is not None:
+            self.preset, self.changes = random_types.draw(self.mode)
 
     def set_seed(self, value: str) -> str | None:
         """Take a seed typed as a number, or a world code pasted in its place."""
@@ -315,10 +332,12 @@ class Controller:
         return None
 
     def randomize(self) -> None:
-        """A new random seed, on a land of its own: every roll goes back to 0."""
+        """A new random seed, on a land of its own: every roll goes back to 0. In a random
+        mode the world type, and the Advanced values of Total Chaos, are drawn again."""
         self.seed = random_seed()
         _ = self.other_changes.pop("rolls", None)
         self.notice = ""
+        self._draw()
         self._changed()
 
     def use_code(self, value: str) -> str | None:
@@ -332,7 +351,7 @@ class Controller:
         if code.preset not in WORLD_TYPES or outside:
             names = ", ".join(text(f"control.{key}") for key in outside) or code.preset
             return text("outside_range", names=names)
-        self.preset, self.seed = code.preset, code.seed
+        self.mode, self.preset, self.seed = None, code.preset, code.seed
         self.changes = {
             key: number
             for key, number in shown.items()
@@ -500,7 +519,7 @@ class Controller:
         except WorldCodeError:
             return
         shown, other = controls.flat(code.resolved_changes())
-        self.preset = code.preset
+        self.mode, self.preset = None, code.preset
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
         _ = self.other_changes.pop("rolls", None)
@@ -521,7 +540,7 @@ class Controller:
         except WorldCodeError:
             return
         shown, other = controls.flat(code.resolved_changes())
-        self.preset, self.seed = code.preset, code.seed
+        self.mode, self.preset, self.seed = None, code.preset, code.seed
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
         self.land_mask = library.land_mask(self.data, world)

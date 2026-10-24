@@ -16,6 +16,7 @@ from rnw.app.worldcode import WorldCode, decode, encode, new_code
 from rnw.eu5_lobby import SCRIPTED_GUI_FILE
 from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
 from rnw.record import Verdict
+from rnw.settings import WORLD_TYPES
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -938,3 +939,47 @@ def test_a_code_that_names_an_image_cannot_be_made_without_it(
     assert "land image" in (controller.problem() or "")
     assert controller.choose_land_image(picture) is None
     assert controller.problem() is None
+
+
+def test_a_random_type_is_drawn_and_its_world_comes_back_from_its_code(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Total Chaos draws a type and its Advanced values; the code brings the same world back,
+    and a world type chosen by hand ends the draw."""
+    controller = _controller(tmp_path, fake_export)
+    controller.set_mode("chaos")
+    assert controller.mode == "chaos"
+    assert controller.preset in WORLD_TYPES
+    assert controller.changes
+    assert controller.estimated_locations() <= controls.LOCATION_BUDGET
+    drawn = (controller.preset, dict(controller.changes))
+    code = controller.code
+    controller.set_preset("continents")
+    assert (controller.mode, controller.changes) == (None, {})
+    assert controller.use_code(code) is None
+    assert controller.mode is None
+    assert (controller.preset, controller.changes) == drawn
+    controller.set_mode("chaos")
+    controller.set_preset(controller.preset)
+    assert (controller.mode, controller.changes) == (None, {})
+
+
+def test_random_draws_again_with_each_new_seed_and_keeps_its_mode(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Random gives a world type with its own values; the random button draws it again."""
+    controller = _controller(tmp_path, fake_export)
+    controller.set_value("natives.population_permille", 2000)
+    controller.set_mode("random")
+    assert controller.mode == "random"
+    assert controller.preset in WORLD_TYPES
+    assert controller.changes == {}
+    seed = controller.seed
+    controller.randomize()
+    assert controller.seed != seed
+    assert controller.mode == "random"
+    assert controller.changes == {}
+    controller.set_mode("chaos")
+    controller.randomize()
+    assert controller.mode == "chaos"
+    assert controller.estimated_locations() <= controls.LOCATION_BUDGET

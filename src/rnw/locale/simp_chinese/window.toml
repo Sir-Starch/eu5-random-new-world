@@ -338,6 +338,22 @@ text = '''零散岛屿'''
 source = "3dea08a0afa912dc"
 text = '''满是小岛的海洋，没有大块陆地。'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''随机'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''从五种世界类型中随机抽取一种，选择时及每次点击“随机”时重新抽取。高级设置取抽中类型的值。'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''彻底混沌'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''随机抽取世界类型，并在可游玩范围内随机抽取所有高级设置的值。每次点击“随机”都会重新抽取。'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''基本设置'''

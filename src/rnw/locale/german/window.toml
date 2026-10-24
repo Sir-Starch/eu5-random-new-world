@@ -338,6 +338,22 @@ text = '''Verstreute Inseln'''
 source = "3dea08a0afa912dc"
 text = '''Ein Meer voller kleiner Inseln, ohne große Landmasse.'''
 
+["type.random"]
+source = "67bc484430fe87ba"
+text = '''Zufällig'''
+
+["type.random.about"]
+source = "a3b72a5d39f009d1"
+text = '''Einer der fünf Welttypen, bei der Auswahl und bei jedem Druck auf die Schaltfläche Zufällig gezogen. Die Werte unter Erweitert sind die des gezogenen Typs.'''
+
+["type.chaos"]
+source = "2e113a659e47144a"
+text = '''Totales Chaos'''
+
+["type.chaos.about"]
+source = "c956856b61703fce"
+text = '''Ein zufällig gezogener Welttyp, und jeder Wert unter Erweitert zufällig gezogen innerhalb seines spielbaren Bereichs. Jeder Druck auf Zufällig zieht neu.'''
+
 ["quick"]
 source = "b22d2b06765851eb"
 text = '''Grundlagen'''
