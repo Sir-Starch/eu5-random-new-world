@@ -58,7 +58,7 @@
 - [V-GAME owner observation] V1a loads and renders; owner reported a crack along the map wrap, city models with a corner in water, brown pixel patches in white desert and green city ground in sand (C55).
 - [V-LOCAL] Found that most biome material lists are shorter than 16, that the shader clamps slots to 15, and that material 0 is `fallback_material`; vanilla city ground is green for every non-Mediterranean biome (C54, C56).
 - [V-EXEC] Generator 0.5.0: seam strait, shore-aware city points, slots limited to each biome's list, no desert wetlands.
-- [V-GAME owner review] V1a.1 (commit 123a907) installed, checked in game and accepted (C58).
+- [V-GAME owner review] V1a.1 (commit 80b0a2d) installed, checked in game and accepted (C58).
 
 ## 2026-10-19 — V1b rivers
 
@@ -329,8 +329,8 @@
 
 - [OWNER] Commit each completed, verified phase before reporting completion; no separate
   request is needed. The standing rule is explicit in `AGENTS.md`.
-- [V-EXEC] `bc62844` records release packaging and CI; its exact index snapshot passes
-  the three release tests. `7feda14` records the integrated generator 0.9.24 and its tests;
+- [V-EXEC] `d390810` records release packaging and CI; its exact index snapshot passes
+  the three release tests. `237fa7f` records the integrated generator 0.9.24 and its tests;
   its exact index snapshot passes 811 Python tests with 8 optional skips.
 - [V-EXEC] `uv sync --locked --group dev && make check` passes: formatting, lint,
   strict types, 811 Python tests (8 skips), and 23 Rust tests. Local agent verification
@@ -418,7 +418,7 @@
 ## 2026-10-22 — R7b: technology from the societies (Sonnet)
 
 - [OWNER] The 0.9.27 cover candidate was uncommitted at the start of R7b, as the handoff foresaw;
-  the owner asked for it to be committed first (`f9f7e2c`). Base builds of four worlds were made on it.
+  the owner asked for it to be committed first (`b4661b2`). Base builds of four worlds were made on it.
 - [V-EXEC C159] Generator 0.9.28 (epoch 4): a state's `starting_technology_level` follows the rank of its
   capital's complexity on the vanilla American distribution (11 × 0, 17 × 1, 191 × 2), a great empire gets
   the highest, a tribe none; the template follows the level within one level of the culture's own
@@ -540,7 +540,7 @@
   in play is not shown.
 - Wording corrected across the documents (README, C164 to C166, experiments 029 and 030, the register, the roadmap,
   `natives.md`): a defect in 0.9.30 is **not** an established fact, the report was most likely an observation error, and the
-  order-preserving rebuild of 0.9.31 is a precaution, not a verified fix. The history of the commit `ceea893`, whose
+  order-preserving rebuild of 0.9.31 is a precaution, not a verified fix. The history of the commit `b6fd2da`, whose
   message says 0.9.30 drew no road, is left as it was.
 
 ## 2026-10-23 — The map's frame is black over the New World (owner), C168, C169, C170; 0.9.32
