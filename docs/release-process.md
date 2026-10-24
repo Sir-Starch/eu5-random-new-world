@@ -45,7 +45,7 @@ The maintainer performs the external publication after accepting the candidate:
 Workshop publication is a separate owner action and is gated on the tested delivery route and current legal review:
 
 - [ ] Upload only the hub mod and generator package. Never upload a generated world or a package containing derived vanilla map data.
-- [ ] Use the reviewed Workshop description, preview image, and approved screenshots. Remove every editorial bracketed note before upload.
+- [ ] Use the reviewed Workshop description (`docs/workshop/<language>.bbcode`, one per language, pasted without its first `source:` line), preview image, and approved screenshots. Remove every editorial bracketed note before upload.
 - [ ] Confirm the item is free, the required dependency notices travel with it, and the installation/removal instructions match the published build.
 - [ ] Verify the Workshop page and downloaded item after publication. Record the item identifier and exact product/game versions in the project notes.
 

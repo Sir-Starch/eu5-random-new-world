@@ -28,7 +28,7 @@ rewritten.
 | The generator window | `gui/text.py` (about 470 strings), `progress.py` stage names | English only |
 | Atlas: names shown in the window's maps | `eu5_atlas.py` (`atlas.json` keeps rendered English strings) | English |
 | A world's title in the launcher's mod list | `worldname.py`, `.metadata` | English; whether the list can show another language is [UNKNOWN] |
-| Steam Workshop text | `docs/workshop-description.md`, `docs/workshop/<language>.md` | Every language; `tests/test_workshop.py` |
+| Steam Workshop text | `docs/workshop/<language>.bbcode` ([rules](workshop-description.md)) | Every language; `tests/test_workshop.py` |
 
 Organizations and governments of the extraordinary societies use vanilla types and their vanilla
 names, so they need nothing. Technical error details from deep in the export stay English (they
@@ -355,12 +355,14 @@ Done (2026-10-24):
   (`app/gamenames.py`; Russian and Polish culture stems completed as adjectives of *culture*).
   `tests/test_window.py` checks that every language fits the smallest supported window.
 
-- **the Workshop description:** `docs/workshop/<language>.md` for the ten languages, each
-  recording the fingerprint of the English below the line of `docs/workshop-description.md`;
-  the window's words for its controls and the game's for its interface (§2.9); our bracketed
-  notes stay English for whoever uploads. `tests/test_workshop.py` fails on a missing or
-  outdated translation and on a lost note, link, path or section. Change the English, then every
-  translation, then the fingerprints.
+- **the Workshop description:** in Steam's markup, ready to paste: `docs/workshop/english.bbcode`
+  and `docs/workshop/<language>.bbcode` for the ten other languages, each starting with the
+  fingerprint of the English it was made from; the window's words for its controls and the game's
+  for its interface (§2.9); our bracketed notes stay English for whoever uploads. Steam takes
+  8,000 bytes of UTF-8 (C277), which binds the Russian text first. `tests/test_workshop.py` fails
+  on a missing or outdated translation, on markup or links unlike the English, on a lost note and
+  on a text over the limit. Change the English, then every translation, then the fingerprints
+  ([Workshop description](workshop-description.md)).
 - **the metadata:** a mod's `metadata.json` holds one title and one description, with no field
   for another language (C276, interoperability R-003). The hub's and the worlds' stay English;
   the Workshop's own title and description per language are set at upload, and whether the game's
