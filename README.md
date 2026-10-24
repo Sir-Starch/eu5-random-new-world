@@ -35,6 +35,31 @@ Each seed produces new continents, coastlines, relief, climate, rivers, seas, re
 | **Content** | Stories and formable countries planned from the finished world; colonial names built from each region's generated name; the historical American content is rebound, neutralised or replaced decision by decision |
 | **Before you play** | The New World stays terra incognita in the generator, in the game's mod list and at country selection until you choose to see it |
 
+## Screenshots
+
+The generator's window (Qt, the platform's own controls) on a demo library. The New World stays covered until you choose to show it; the pictures of the worlds here have been shown.
+
+<table>
+<tr>
+<td width="50%"><img src="docs/images/01-new-world.png" alt="The new-world page: a world type and a few broad choices"><br><sub>Pick a world type and a few broad choices; exact values are one tab away.</sub></td>
+<td width="50%"><img src="docs/images/02-customize.png" alt="Seed, world code and exact values for land and sea"><br><sub>Or set every value by hand, within the range that still plays.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/03-generating.png" alt="A world being generated, with the stages listed"><br><sub>A world takes a few minutes; every stage is shown and the work can be cancelled.</sub></td>
+<td width="50%"><img src="docs/images/04-world.png" alt="A finished world in the library, its New World shown on the map"><br><sub>Every world is kept in the library, with its picture, notes and versions.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/05-maps-cultures.png" alt="The cultures of a world on its map, with a search"><br><sub>Maps of the finished world: cultures, with a search for any people, country or place.</sub></td>
+<td width="50%"><img src="docs/images/08-maps-religions.png" alt="The religions of a world on its map"><br><sub>Religions, countries, resources and development have their own layers.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/images/06-maps-development.png" alt="Start development of a world on its map"><br><sub>Where the peoples are many and where the land is empty.</sub></td>
+<td width="50%"><img src="docs/images/07-world-covered.png" alt="A world whose New World is covered as terra incognita"><br><sub>By default the New World stays terra incognita, here and in the game, until you play it.</sub></td>
+</tr>
+</table>
+
+*Europa Universalis V* is © Paradox Interactive AB. The Old World in these pictures is the game's own map; the New World is generated. The screenshots illustrate this unofficial mod and generator.
+
 ## How it works
 
 EU5 builds its map from files when it loads mods. A mod is data: it cannot run code, and script cannot create land, mountains or rivers. The generation therefore runs in a separate program that reads the player's own installation and writes a mod. The generator does not change or hook into the game.
