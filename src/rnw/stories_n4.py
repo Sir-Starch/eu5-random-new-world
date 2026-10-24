@@ -73,27 +73,27 @@ def harvest() -> Story:
     centre, path = HARVEST_CENTRE_VARIABLE, HARVEST_PATH_VARIABLE
     end = (f"remove_variable = {centre}", f"remove_variable = {path}")
     first = prose("""
-        The rains came late and the grain came in thin. In [target_location.GetNameWithNoTooltip]
-        the granaries stand half empty, the price of bread has doubled in a month and the city
-        eats more than the fields around it have ever grown. The reeves have come to the court
-        with their tallies. They agree that the winter will be hard, and agree on little else.
+        The rains came late and the harvest came in thin. In [target_location.GetNameWithNoTooltip]
+        the granaries stand half empty, bread costs twice what it did a month ago, and the city eats
+        more than its fields have ever grown. The reeves have brought their tallies to court. By
+        their count the stores will last until midwinter, and not a day longer.
     """)
     merchants = prose("""
-        The grain that fed [target_location.GetNameWithNoTooltip] last winter came by the hands
-        of a few merchant houses, and they have not forgotten who needed it. They keep the stores
-        of the lower town, they set the price in the market and they now ask the court to write
-        down what they have been doing for a year.
+        The grain that fed [target_location.GetNameWithNoTooltip] last winter passed through the
+        hands of a few merchant houses, and they remember who needed it. They hold the stores of the
+        lower town and set the price in the market. Now they ask the court to put in writing what
+        they have done for a year without asking.
     """)
     villages = prose("""
-        The villages that gave up their seed grain last winter have not forgotten it. At the
-        spring markets of [target_location.GetNameWithNoTooltip] the farmers sell less and ask
-        more, and the carters talk of fields left fallow. The stewards say the levy was needed.
-        The farmers say it was a theft.
+        Last winter the villages gave up their seed grain, and they have not forgiven it. At the
+        spring markets of [target_location.GetNameWithNoTooltip] the farmers bring less and ask
+        more, and the carters talk of fields left fallow. The stewards still call the levy a
+        necessity. In the villages they have another word for it.
     """)
     fields = prose("""
-        Two harvests on, the drained fields beyond [target_location.GetNameWithNoTooltip] bear
-        grain where there was reed. Families from the crowded lanes have asked for the new land,
-        and the stewards have asked for the tithe of it.
+        Two harvests on, the drained fields outside [target_location.GetNameWithNoTooltip] grow
+        grain where reeds once stood. Families from the crowded lanes have asked for a share of the
+        new land, and the stewards have asked for a tithe of it.
     """)
     nodes = (
         Node(
@@ -116,7 +116,7 @@ def harvest() -> Story:
                 ),
                 Option(
                     "b",
-                    "Ration the stores and requisition from the villages.",
+                    "Ration the stores and take grain from the villages.",
                     (
                         _food(centre, "0.1"),
                         location(centre, "rnw_harvest_rationing", 6),
@@ -128,7 +128,7 @@ def harvest() -> Story:
                 ),
                 Option(
                     "c",
-                    "Open new fields and drain the wet margins of the plain.",
+                    "Break new ground and drain the wet edges of the plain.",
                     (
                         gold(-2),
                         location(centre, "rnw_harvest_new_fields", 20),
@@ -155,7 +155,7 @@ def harvest() -> Story:
                 ),
                 Option(
                     "b",
-                    "Break their hold and build public granaries.",
+                    "Break their hold. The city will keep its own granaries.",
                     (gold(-2), location(centre, "rnw_harvest_public_granaries", 20), *end),
                     45,
                     trigger=AFFORD,
@@ -182,7 +182,7 @@ def harvest() -> Story:
                 ),
                 Option(
                     "b",
-                    "Hold to the levy; it saved the city.",
+                    "The levy saved the city. We owe them nothing.",
                     (gold(2), "add_stability = stability_mild_penalty", *end),
                     45,
                 ),
@@ -206,7 +206,7 @@ def harvest() -> Story:
                 ),
                 Option(
                     "b",
-                    "Sell the new land and its grain abroad.",
+                    "Sell the new land and ship its grain abroad.",
                     (gold(3), *end),
                     45,
                 ),
@@ -227,21 +227,21 @@ def harvest() -> Story:
             LOCATION,
             Source(STATIC, "enforced_rationing_policy"),
             "Rationing",
-            "The stores are shared out by the stewards, and the city eats less and grumbles more.",
+            "The stewards share out the stores. The city eats less and grumbles more.",
         ),
         Modifier(
             "rnw_harvest_new_fields",
             LOCATION,
             Source(STATIC, "cultivators_grange_clearing_modifier"),
             "New Fields",
-            "Drained margins and cleared ground bring in more grain every year.",
+            "Drained marsh and cleared ground bring in more grain each year.",
         ),
         Modifier(
             "rnw_harvest_grain_charter",
             COUNTRY,
             Source(STATIC, "trusted_merchants"),
             "Charter of the Grain Merchants",
-            "The grain houses are trusted with the trade, and they trade for the whole country.",
+            "The grain houses hold the trade by charter and carry it for the whole country.",
         ),
         Modifier(
             "rnw_harvest_public_granaries",
@@ -255,7 +255,7 @@ def harvest() -> Story:
             LOCATION,
             Source(STATIC, "iro_three_sisters_harvest"),
             "Fields of the Many Families",
-            "Many small plots, each sown with three crops together, yield more than one large one.",
+            "Small plots, each sown with three crops together, yield more than one great field.",
         ),
     )
     return Story("harvest", "rnw_harvest", centre, path, nodes, modifiers)
@@ -266,28 +266,28 @@ def route() -> Story:
     centre, other, path = ROUTE_FROM_VARIABLE, ROUTE_TO_VARIABLE, ROUTE_PATH_VARIABLE
     end = tuple(f"remove_variable = {name}" for name in (centre, other, path))
     first = prose("""
-        [target_location.GetNameWithNoTooltip] and [other_location.GetNameWithNoTooltip] lie a
-        few days apart over a track that the rains wash out every spring. Grain goes one way and
-        cloth the other, and every cart pays the toll of each village between. The guilds of both
-        cities have come to the court with the same plea and with different plans.
+        [target_location.GetNameWithNoTooltip] and [other_location.GetNameWithNoTooltip] lie a few
+        days apart, joined by a track the rains wash away each spring. Grain goes one way and cloth
+        the other, and every cart pays a toll at every village in between. The guilds of both cities
+        have come to court with the same complaint and two very different plans.
     """)
     opened = prose("""
-        The first caravans crossed the new road before the last stones were set. Between
-        [target_location.GetNameWithNoTooltip] and [other_location.GetNameWithNoTooltip] the carts
-        now pass in a day, and the clerks of both cities have begun to quarrel over whose market
-        the road serves.
+        The first caravans crossed the new road before the last stones were laid. Carts now make the
+        journey between [target_location.GetNameWithNoTooltip] and
+        [other_location.GetNameWithNoTooltip] in a day, and the clerks of the two cities have
+        already begun quarrelling over whose market the road was built for.
     """)
     tolls = prose("""
-        The merchants who built the road have found that a toll is a thing that grows. The
-        carters of [other_location.GetNameWithNoTooltip] pay twice what they did and the guilds of
-        [target_location.GetNameWithNoTooltip] sell their cloth at the gate for the price of the
-        road. Each side says the other has the ear of the court.
+        The merchants who built the road have learned that a toll, once set, tends to grow. The
+        carters of [other_location.GetNameWithNoTooltip] pay twice what they did, and the cloth of
+        [target_location.GetNameWithNoTooltip] costs as much at the gate as the road itself. Each
+        city is sure the other has the ear of the court.
     """)
     fairs = prose("""
-        The villages between the two cities have kept their pact. On every crossing a fair is
-        held twice a year, and the traders of [target_location.GetNameWithNoTooltip] and
-        [other_location.GetNameWithNoTooltip] meet there half way, to the profit of both and the
-        annoyance of the guilds of each.
+        The villages along the way have kept their pact. Twice a year a fair is held at every
+        crossing, and the traders of [target_location.GetNameWithNoTooltip] and
+        [other_location.GetNameWithNoTooltip] meet there halfway, to the profit of both and the
+        annoyance of their guilds.
     """)
     nodes = (
         Node(
@@ -297,7 +297,7 @@ def route() -> Story:
             (
                 Option(
                     "a",
-                    "Build a paved road between the two cities.",
+                    "Pave a road between the two cities.",
                     (
                         gold(-4),
                         country("rnw_route_road_works", 8),
@@ -311,7 +311,7 @@ def route() -> Story:
                 ),
                 Option(
                     "b",
-                    "Let the merchants build it and keep the tolls.",
+                    "Let the merchants build it, and let them keep the tolls.",
                     (
                         country("rnw_route_toll_charter", 12),
                         location(centre, "rnw_route_tollgates", 15),
@@ -322,7 +322,7 @@ def route() -> Story:
                 ),
                 Option(
                     "c",
-                    "Make a pact with the villages between: a market day at every crossing.",
+                    "Make a pact with the villages: a market day at every crossing.",
                     (
                         location(centre, "rnw_route_market_days", 10),
                         location(other, "rnw_route_market_days", 10),
@@ -348,7 +348,7 @@ def route() -> Story:
                 ),
                 Option(
                     "b",
-                    "Charge a toll at each end and let the road look to itself.",
+                    "Put a toll at each end and let the road pay for itself.",
                     (gold(3), location(other, "rnw_route_tolls_resented", 10), *end),
                     45,
                 ),
@@ -372,7 +372,7 @@ def route() -> Story:
                 ),
                 Option(
                     "b",
-                    "Let the tolls stand; the road is theirs.",
+                    "They built the road. The tolls are theirs to set.",
                     (gold(2), "add_stability = stability_mild_penalty", *end),
                     45,
                 ),
@@ -398,7 +398,7 @@ def route() -> Story:
                 ),
                 Option(
                     "b",
-                    "Leave the fairs to the villages.",
+                    "The fairs belong to the villages. Leave them be.",
                     ("add_stability = stability_weak_bonus", *end),
                     45,
                 ),
@@ -412,35 +412,35 @@ def route() -> Story:
             COUNTRY,
             Source(STATIC, "fra_royal_postal_roads_expansion"),
             "Road Works",
-            "The court pays for roads and the work goes quickly.",
+            "The court pays for the roads, and the work goes quickly.",
         ),
         Modifier(
             "rnw_route_paved_road",
             LOCATION,
             Source(STATIC, "improved_flow_of_goods"),
             "A Paved Road",
-            "Goods move more easily and the roadside towns grow.",
+            "Goods move more easily, and the towns along the road grow.",
         ),
         Modifier(
             "rnw_route_toll_charter",
             COUNTRY,
             Source(STATIC, "merchant_benefits"),
             "Charter of the Road Merchants",
-            "The merchants who keep the road are given the right of the toll.",
+            "The merchants who keep the road hold the right to toll it.",
         ),
         Modifier(
             "rnw_route_tollgates",
             LOCATION,
             Source(STATIC, "merchant_expedition"),
             "Tollgates",
-            "A toll house at the gate brings merchants and their warehouses to the city.",
+            "A toll house at the gate draws merchants and their warehouses into the city.",
         ),
         Modifier(
             "rnw_route_market_days",
             LOCATION,
             Source(STATIC, "influx_of_merchants_modifier"),
             "Market Days",
-            "Traders from the villages along the way come to town on fair days.",
+            "Traders from the villages along the road come to town on fair days.",
         ),
         Modifier(
             "rnw_route_royal_road",
@@ -454,7 +454,7 @@ def route() -> Story:
             LOCATION,
             Source(STATIC, "upset_merchants"),
             "Resented Tolls",
-            "The merchants pay and grumble, and they bring less.",
+            "The merchants pay, grumble, and come less often.",
         ),
         Modifier(
             "rnw_route_chartered_fairs",
@@ -483,27 +483,27 @@ def alliance() -> Story:
     centre, other, path = ALLIANCE_HOME_VARIABLE, ALLIANCE_SEAT_VARIABLE, ALLIANCE_PATH_VARIABLE
     end = tuple(f"remove_variable = {name}" for name in (centre, other, path))
     first = prose("""
-        Envoys of [target_country.GetName] have come to [target_location.GetNameWithNoTooltip].
-        The two courts keep the same gods or speak the same tongue, they have the same enemies on
-        the same borders, and for generations they have sent each other nothing but complaints.
-        The envoys propose a council where the rulers of both would speak as equals. The court's
-        own counsellors would rather it were not so.
+        Envoys of [target_country.GetName] have arrived in [target_location.GetNameWithNoTooltip].
+        Our two courts share their gods or their tongue, and their enemies on the same borders, yet
+        for generations they have exchanged nothing but complaints. The envoys propose a council
+        where our rulers would speak as equals. Our own counsellors would rather the envoys had
+        stayed at home.
     """)
     met = prose("""
-        The rulers of [target_country.GetName] and of this court have met three times, and each
-        time they have parted with less suspicion. The council has begun to settle small quarrels
-        along the border before they become large ones. Some at court say it should bind the two
-        crowns more closely. Others say it should stay a council.
+        Our ruler and the ruler of [target_country.GetName] have met three times, and each time they
+        parted with less suspicion. The council has begun to settle small quarrels on the border
+        before they grow into large ones. The matchmakers at court are already drawing up lists. The
+        old counsellors think a council is close enough.
     """)
     bristles = prose("""
-        The court of [target_country.GetName] took the offer of protection for what it was. Its
-        envoys have left, its merchants have been recalled, and a letter has come in the hand of
-        its ruler, asking by what right this court speaks of deference.
+        The court of [target_country.GetName] understood our offer of protection exactly as it was
+        meant. Its envoys have gone, its merchants have been called home, and a letter has come in
+        its ruler's own hand, asking by what right we speak of deference.
     """)
     closed = prose("""
-        The court of [target_country.GetName] has taken its answer and turned elsewhere. Its
-        envoys now sit in the lanes of the other neighbours, and a border that was quiet is
-        watched from both sides. The counsellors ask whether the refusal was wise.
+        The court of [target_country.GetName] has had its answer and looked elsewhere. Its envoys
+        now wait in the halls of our other neighbours, and a border that was quiet is watched from
+        both sides. Our counsellors wonder aloud whether the refusal was wise.
     """)
     nodes = (
         Node(
@@ -513,7 +513,7 @@ def alliance() -> Story:
             (
                 Option(
                     "a",
-                    "Sit in a council of equals.",
+                    "We will sit with them as equals.",
                     (
                         gold(-2),
                         country("rnw_alliance_council", 10),
@@ -527,7 +527,7 @@ def alliance() -> Story:
                 ),
                 Option(
                     "b",
-                    "Offer protection and ask for deference.",
+                    "Offer them our protection, and ask for their deference.",
                     (
                         country("rnw_alliance_pressure", 10),
                         _mutual("outrageous_demands"),
@@ -538,7 +538,7 @@ def alliance() -> Story:
                 ),
                 Option(
                     "c",
-                    "Thank them and keep your own counsel.",
+                    "Thank them and keep our own counsel.",
                     (
                         country("rnw_alliance_closed_doors", 10),
                         _mutual("denied_aid"),
@@ -557,7 +557,7 @@ def alliance() -> Story:
             (
                 Option(
                     "a",
-                    "Bind the two courts by marriage and treaty.",
+                    "Bind our houses by marriage and treaty.",
                     (
                         gold(-2),
                         country("rnw_alliance_kinship", 15),
@@ -570,7 +570,7 @@ def alliance() -> Story:
                 ),
                 Option(
                     "b",
-                    "Keep the council as it is.",
+                    "A council is enough.",
                     ("add_stability = stability_weak_bonus", *end),
                     50,
                 ),
@@ -596,7 +596,7 @@ def alliance() -> Story:
                 ),
                 Option(
                     "b",
-                    "Stand firm.",
+                    "We said what we meant.",
                     (
                         "add_prestige = prestige_weak_bonus",
                         "add_stability = stability_mild_penalty",
@@ -614,7 +614,7 @@ def alliance() -> Story:
             (
                 Option(
                     "a",
-                    "Send a second embassy with an open hand.",
+                    "Send a second embassy, with open hands.",
                     (
                         gold(-2),
                         _without("rnw_alliance_closed_doors"),
@@ -647,28 +647,28 @@ def alliance() -> Story:
             COUNTRY,
             Source(STATIC, "iro_earn_tribal_trust"),
             "Trust of the Council",
-            "A neighbour who has sat at the council is believed abroad.",
+            "A ruler who keeps a council with the neighbours is trusted abroad.",
         ),
         Modifier(
             "rnw_alliance_pressure",
             COUNTRY,
             Source(STATIC, "iro_too_aggressive_consolidation"),
             "Pressure on the Neighbour",
-            "Demands of deference have made the court's word worth less abroad.",
+            "Our demands for deference have made our word worth less abroad.",
         ),
         Modifier(
             "rnw_alliance_closed_doors",
             COUNTRY,
             Source(STATIC, "iro_forbade_foreign_contact"),
             "Closed Counsels",
-            "The court keeps its own counsel, and its borders are watched more closely.",
+            "The court keeps its own counsel and watches its borders more closely.",
         ),
         Modifier(
             "rnw_alliance_kinship",
             COUNTRY,
             Source(STATIC, "union_of_crowns_pact_modifier"),
             "Kinship of the Courts",
-            "Two courts joined by marriage and treaty support each other's rule.",
+            "Two courts bound by marriage and treaty uphold each other's rule.",
         ),
     )
     return Story(
@@ -689,27 +689,28 @@ def empire() -> Story:
     centre, other, path = EMPIRE_HOME_VARIABLE, EMPIRE_FAR_VARIABLE, EMPIRE_PATH_VARIABLE
     end = tuple(f"remove_variable = {name}" for name in (centre, other, path))
     first = prose("""
-        The reach of this court has outgrown its roads. In [other_location.GetNameWithNoTooltip],
-        far from [target_location.GetNameWithNoTooltip], the people keep their own customs and
-        their own lords, send their dues late and their sons never. The governors write that the
-        province is quiet. The merchants write that it is not.
+        Our realm has outgrown its roads. In [other_location.GetNameWithNoTooltip], far from
+        [target_location.GetNameWithNoTooltip], the people keep their own customs and their own
+        lords. They send their dues late and their sons never. The governors write that the province
+        is quiet. The merchants write that it is not.
     """)
     governor = prose("""
         The governor of [other_location.GetNameWithNoTooltip] writes that the garrison is paid and
-        the dues arrive. He also writes that he has taken a house in the old quarter and a wife
-        from a local family, and that the old lords now dine at his table. The court is not sure
-        whether to be pleased.
+        the dues arrive on time. He also writes that he has taken a house in the old quarter and a
+        wife from a local family, and that the old lords now dine at his table. The court cannot
+        decide whether to be pleased.
     """)
     charters = prose("""
-        Word of the charter of [other_location.GetNameWithNoTooltip] reached the other far
-        provinces faster than any tax collector. Delegations from three more have asked for the
-        same, and the nobles of the heartland ask why the periphery is paid for its distance.
+        News of the charter granted to [other_location.GetNameWithNoTooltip] reached the other far
+        provinces faster than any tax collector. Three more have sent delegations asking for the
+        same, and the nobles of the heartland want to know why the provinces are rewarded for being
+        far away.
     """)
     settlers = prose("""
         The settlers from the heartland have built their houses along the road into
-        [other_location.GetNameWithNoTooltip]. They speak the court's tongue and keep the court's
-        gods, and the old families of the province keep their distance. A quarrel in the market
-        has already ended in knives.
+        [other_location.GetNameWithNoTooltip]. They speak our tongue and keep our gods, and the old
+        families of the province keep their distance. A quarrel in the market has already ended in
+        knives.
     """)
     nodes = (
         Node(
@@ -719,7 +720,7 @@ def empire() -> Story:
             (
                 Option(
                     "a",
-                    "Send a governor with a garrison.",
+                    "Send a governor, and a garrison with him.",
                     (
                         gold(-3),
                         country("rnw_empire_governors", 15),
@@ -769,7 +770,7 @@ def empire() -> Story:
                 ),
                 Option(
                     "b",
-                    "Let him stay; a governor who belongs is a governor who holds.",
+                    "Let him stay. A governor who belongs is a governor who holds.",
                     ("add_legitimacy = legitimacy_weak_bonus", *end),
                     50,
                 ),
@@ -783,7 +784,7 @@ def empire() -> Story:
             (
                 Option(
                     "a",
-                    "Extend the charters to every province that asks.",
+                    "Grant a charter to every province that asks.",
                     (
                         "add_legitimacy = legitimacy_weak_bonus",
                         "add_stability = stability_weak_penalty",
@@ -793,7 +794,7 @@ def empire() -> Story:
                 ),
                 Option(
                     "b",
-                    "Refuse; the charter was a favour.",
+                    "The charter was a favour, not a precedent.",
                     (
                         unlocation(other, "rnw_empire_charter"),
                         "add_stability = stability_mild_penalty",
@@ -812,13 +813,13 @@ def empire() -> Story:
             (
                 Option(
                     "a",
-                    "Give the old families a seat in the town council.",
+                    "Give the old families seats on the town council.",
                     ("add_stability = stability_weak_bonus", *end),
                     55,
                 ),
                 Option(
                     "b",
-                    "Back the settlers against the old families.",
+                    "Stand by the settlers.",
                     (gold(2), "add_stability = stability_mild_penalty", *end),
                     45,
                 ),
@@ -839,21 +840,24 @@ def empire() -> Story:
             LOCATION,
             Source(STATIC, "minority_prospers"),
             "Charter of Customs",
-            "A province that keeps its own customs is quiet, and it prospers.",
+            "A province left to its own customs stays quiet and prospers.",
         ),
         Modifier(
             "rnw_empire_concessions",
             COUNTRY,
             Source(STATIC, "giving_appanage_grant_admin_autonomy"),
-            "Concessions to the Periphery",
-            "Rule from the heartland loosens its grip on the far lands.",
+            "Concessions to the Provinces",
+            "The heartland's grip on the far lands has loosened.",
         ),
         Modifier(
             "rnw_empire_settlers",
             LOCATION,
             Source(STATIC, "birth_of_a_new_city_dip"),
             "New Neighbours",
-            "Settlers from the heartland draw their kin to the province and its markets.",
+            (
+                "Settlers from the heartland draw their kin after them, and the province's "
+                "markets grow."
+            ),
         ),
     )
     return Story(

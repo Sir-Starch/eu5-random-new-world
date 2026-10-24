@@ -55,7 +55,7 @@ SPECS: Final[tuple[Spec, ...]] = (
         ("mountains",),
         coastal=False,
         name="Great Silver Lode",
-        description="A mountain of silver richer than any other mine of the known world.",
+        description="A mountain of silver, richer than any other mine in the known world.",
     ),
     Spec(
         "rnw_rich_silver_vein",
@@ -64,7 +64,7 @@ SPECS: Final[tuple[Spec, ...]] = (
         ("hills", "mountains"),
         coastal=False,
         name="Rich Silver Vein",
-        description="A silver vein that outdoes every other mine of the region.",
+        description="A vein of silver richer than any other mine in the region.",
     ),
     Spec(
         "rnw_silver_seam",
@@ -82,7 +82,7 @@ SPECS: Final[tuple[Spec, ...]] = (
         ("mountains", "hills"),
         coastal=False,
         name="Mercury Lode",
-        description="A mine of cinnabar, prized for its quicksilver far beyond its region.",
+        description="A cinnabar mine whose quicksilver is prized far beyond the region.",
     ),
     Spec(
         "rnw_rich_fishery",
@@ -91,7 +91,7 @@ SPECS: Final[tuple[Spec, ...]] = (
         (),
         coastal=True,
         name="Rich Fishing Grounds",
-        description="Waters so full of fish that they feed the coasts around them.",
+        description="Waters so full of fish that they feed every coast nearby.",
     ),
 )
 
@@ -185,7 +185,7 @@ def modifiers_file(used: Sequence[Spec], effects: Mapping[str, str]) -> bytes:
 
 
 def texts(used: Sequence[Spec]) -> dict[str, str]:
-    """The localization of the kinds that were placed (English, until L1 translates it)."""
+    """The English texts of the kinds that were placed, by key (the catalogs translate them)."""
     found: dict[str, str] = {}
     for spec in used:
         found[f"{NAME_KEY}{spec.modifier}"] = spec.name

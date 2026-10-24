@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import wording
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.hierarchy import (
     absorb_small_pieces,
@@ -41,6 +42,7 @@ from rnw.names import NameGenerator
 from rnw.rng import SplitMix64, derive_seed
 from rnw.seanames import Placement, name_waters
 from rnw.topology import adjacency_pairs, unpack_pairs
+from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -63,11 +65,10 @@ KEY_PREFIX: Final[dict[CellClass, str]] = {
     CellClass.SEA: "rnw_sea_",
     CellClass.LAKE: "rnw_lake_",
 }
-# Water is named for its shape (``seanames``), not by a suffix.
-NAME_SUFFIX: Final[dict[CellClass, str]] = {
-    CellClass.LAND: "",
-    CellClass.WASTELAND: " Highlands",
-    CellClass.LAKE: " Lake",
+# Water is named for its shape (``seanames``); wastelands and lakes by a term (``wording``).
+NAME_TERM: Final[dict[CellClass, str]] = {
+    CellClass.WASTELAND: wording.HIGHLANDS,
+    CellClass.LAKE: wording.LAKE,
 }
 # Vanilla American land holds 6.2 locations per province and 5.8 provinces per area, its
 # sea areas 8.6 zones per province and 52 per area (local 1.4.1 definitions.txt and
@@ -99,7 +100,7 @@ class PlannedCell:
     """Identity of one generated cell."""
 
     key: str
-    name: str
+    name: Name
     color: int
     kind: CellClass
     province: str
@@ -114,10 +115,10 @@ class Plan:
     """All identities and display names for one generated New World."""
 
     cells: list[PlannedCell]
-    province_names: dict[str, str] = field(default_factory=dict)
+    province_names: dict[str, Name] = field(default_factory=dict)
     new_areas: dict[str, list[str]] = field(default_factory=dict)
     area_region: dict[str, str] = field(default_factory=dict)
-    display_overrides: dict[str, str] = field(default_factory=dict)
+    display_overrides: dict[str, Name] = field(default_factory=dict)
     dropped_areas: list[str] = field(default_factory=list)
     anchored_sea_areas: list[str] = field(default_factory=list)
     physical_keys: list[dict[str, object]] = field(default_factory=list)
@@ -697,7 +698,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
                 key=keys.next(KEY_PREFIX[kind], 5),
                 name=sea.cells[index]
                 if kind is CellClass.SEA
-                else location_names.next() + NAME_SUFFIX[kind],
+                else _land_name(location_names.next(), kind),
                 color=colors[index],
                 kind=kind,
                 province=province_of[index],
@@ -724,6 +725,12 @@ def _area_parents(hierarchy: dict[str, Location]) -> dict[str, tuple[str, str, s
         location.area: (location.region, location.subcontinent, location.continent)
         for location in hierarchy.values()
     }
+
+
+def _land_name(word: str, kind: CellClass) -> Name:
+    """A land cell's name: its word, with the term of a wasteland or a lake."""
+    term = NAME_TERM.get(kind)
+    return word if term is None else Phrase(term, word)
 
 
 def _is_new_world(hierarchy: dict[str, Location], name: str) -> bool:

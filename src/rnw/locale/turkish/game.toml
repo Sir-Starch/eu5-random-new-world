@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''Nehir Yatağını Değiştiriyor'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''Kimse hatırlamaz ne zamandan beri, büyük nehir [target_location.GetNameWithNoTooltip] şehrini besler. Taşkınları kara tarlaları yarattı, mavnaları tahılı taşıdı, iskeleleri şehri zengin etti. Ama artık nehrin yatağı her bahar biraz daha kayıyor. Balçık eski kanalları tıkıyor, sel sular aşağı sokaklara kadar çıkıyor ve ambarlarda kâhyaların bildirdiğinden daha az tahıl var.\n\nŞehrin ileri gelenleri saraya geldi. Her birinin bir çaresi var ve her çarenin bedelini başkası ödesin istiyorlar.'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''Setler yapılsın, yeni kanallar kazılsın.'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''Hazine değil, mavnalar ödesin. Kıyılar bugüne kadar dayandı.'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''Kıyıları en iyi nehir loncaları bilir. Bıraksınlar onlar baksın.'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''Setler Dayanıyor'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''Bahar seli her zamanki gibi geldi ama bu yıl yeni setlerde durdu. Eskiden suyun pazar yerlerinde bir ay boyunca durduğu [target_location.GetNameWithNoTooltip] şehrinin aşağı sokaklarında su, rıhtımları geçmedi. Şimdi kıyı bekçileri satın aldığımız bu huzuru ne yapacağımızı soruyor.'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''Yeni kıyılara ambarlar yapılsın.'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''Artan para hazinede kalsın.'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''Nehir Hakkını Alıyor'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''Geçiş vergileri hazineyi doldurdu, kıyılarla ise kimse ilgilenmedi. Bu bahar nehir kabardı, en zayıf yeri buldu ve yarıp geçti. Sular çekildiğinde [target_location.GetNameWithNoTooltip] şehrinin aşağı mahalleleri çamura gömülmüş, kuyular kirlenmiş, mavnalar sokakların ortasında karaya oturmuştu. Tahsildarlar her verginin eksiksiz ödendiğini bildiriyor. Gelecek yıl ödeyecek kimse kalmayacak.'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''Ne pahasına olursa olsun kanallar hemen temizlensin!'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''Tahıl depoları yükseğe taşınsın, aşağı şehir kendi kendine kurusun.'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''Kıyı Bekçileri'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''Birkaç yıldır kıyılara nehir loncaları bakıyor. Bunu sarayın hiçbir zaman yapamadığı kadar ucuza yapıyorlar, ama kendileri için yapıyorlar: Kendi iskeleleri nehrin en sağlam iskeleleri ve [target_location.GetNameWithNoTooltip] şehrindeki mahalleleri epey zenginleşti. Şimdi haklarının yazılı bir berata geçirilip mühürlenmesini istiyorlar.'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''Berat mühürlensin.'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''Kıyılar bizimdir, gelirleri de öyle.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''Nehir İşleri Vergisi'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''Setleri ve kanalları hazine ödüyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''Yeni Setler'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''Yüksek kıyılar seli sokaklardan uzak tutuyor ama bazı tarlaları da yutuyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''Sele Karşı Güvende'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''Kıyılardaki ambarlar ve selsiz geçen yıllar sayesinde şehir büyüyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''Nehir Geçiş Vergileri'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''Nehir ticaretinden alınan vergiler hazineyi dolduruyor, ama pek bir şey inşa edilmiyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''Balçık ve Kirli Kuyular'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''Sel sokaklarda çamur, kuyularda pislik bıraktı.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''Loncaların Kıyı Bekçileri'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''Nehir loncaları kıyılara bakıyor ve mahalleleri gelişiyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''Devredilen Yetki'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''Nehir artık loncaların elinde ve herkes sarayın onlara boyun eğdiğini görüyor.'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''Kapıdaki Hacılar'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''Her mevsim [target_location.GetNameWithNoTooltip] şehrine daha çok hacı geliyor. Dar sokaklarda uyuyor, eski taşların dibine adaklar bırakıyor ve tapınağın adını sarayın adını bile duymadığı köylere taşıyorlar. Rahipler tapınağın duvarlarına sığmadığından, kâhyalar ise hazineye sığmadığından yakınıyor.'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''Tapınağa vakıf bağlansın, hacı yolu taş döşensin.'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''Adaklar da servettir. Hazine onlardan öşür alsın.'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''Başrahibe zümreler arasında bir yer verilsin.'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''Tapınak Gelişiyor'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''Vakıf, kâhyaların imkânsız dediği şeyi başardı. Yol taş döşendi, hanlar doldu ve [target_location.GetNameWithNoTooltip] şehrine gelen hacılar artık ticaret için kalıyor. Rahipler bu işi büyük bir mabetle taçlandırmak istiyor ve ilk taşı bizim koymamızı rica ediyor.'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''Büyük mabet inşa edilsin.'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''Yol yeter. Adaklar yolun bakımına gitsin.'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''Rahipler Homurdanıyor'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''Öşür hazineyi doldurdu ve [target_location.GetNameWithNoTooltip] şehrinin rahipleri bunu fark etti. Adakların onları sunanlara ve taşlara bakanlara ait olduğunu söylüyorlar. Bazıları bunu vaazlarında söylemeye başladı bile ve hacılar dinliyor.'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''Öşrün bir kısmı tapınağa geri verilsin.'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''Öşür kalsın, vaazlara cevap verilsin.'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''Söz Sahibi Bir Rahiplik'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''[target_location.GetNameWithNoTooltip] şehrinin başrahibi artık zümreler arasında oturuyor ve tapınağın kadim tarikatının meclislerimizde sözü var. Rahipler minnettar. Diğer zümreler ise bu sözün kendilerine kaça patlayacağını hesaplıyor.'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''Rahiplik meclislerimize kabul edilsin.'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''Onların yeri tapınaktır. Orada kalsınlar.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''Vakıflı Tapınak'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''Zengin bir tapınak ve taş döşeli bir yol hacıları çekiyor, rahiplerin itibarı artıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''Büyük Mabet'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''Eski taşların üzerine yükselen mabet bütün ülkenin müminlerini çekiyor.'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''Tapınağın Başrahipliği'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''Tapınağın başrahibi yalnızca inanca hesap verir ve zümreler arasında oturur.'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''Kıt Bir Hasat'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''Yağmurlar geç geldi ve hasat kıt oldu. [target_location.GetNameWithNoTooltip] şehrinde ambarlar yarı yarıya boş, ekmek bir ayda iki katına çıktı ve şehir, tarlalarının şimdiye dek verdiğinden fazlasını yiyor. Kethüdalar çetelelerini saraya getirdi. Hesaplarına göre erzak kış ortasına kadar yetecek, bir gün bile fazla değil.'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''Tepelerin ötesindeki diyarlardan tahıl alınsın.'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''Erzak karneye bağlansın, köylerden tahıl toplansın.'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''Yeni topraklar açılsın, ovanın bataklık kenarları kurutulsun.'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''Tahıl Tüccarları'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''Geçen kış [target_location.GetNameWithNoTooltip] şehrini besleyen tahıl birkaç tüccar hanesinin elinden geçti ve kimin ona muhtaç olduğunu unutmadılar. Aşağı şehrin depoları onlarda, pazardaki fiyatı da onlar belirliyor. Şimdi bir yıldır kimseye sormadan yaptıklarının saray tarafından yazıya geçirilmesini istiyorlar.'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''Tahıl tüccarlarına berat verilsin.'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''Tekelleri kırılsın. Şehrin kendi ambarları olacak.'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''Köyler Unutmuyor'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''Geçen kış köyler tohumluk tahıllarını vermek zorunda kaldı ve bunu affetmediler. [target_location.GetNameWithNoTooltip] şehrinin bahar pazarlarında köylüler daha az getirip daha çok istiyor, arabacılar da nadasa bırakılan tarlalardan söz ediyor. Kâhyalar o el koymayı hâlâ zorunluluk diye anıyor. Köylerde ise bunun başka bir adı var.'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''Köylerin zararı akçe ve tohumla ödensin.'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''O el koyma şehri kurtardı. Onlara bir borcumuz yok.'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''Yeni Tarlalar Ürün Veriyor'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''İki hasat sonra [target_location.GetNameWithNoTooltip] şehrinin dışındaki kurutulmuş tarlalarda, bir zamanlar sazlık olan yerde başak sallanıyor. Kalabalık sokaklardan aileler yeni topraktan pay istiyor, kâhyalar da ondan öşür.'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''Yeni toprak şehrin ailelerine verilsin.'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''Yeni toprak satılsın, tahılı dışarıya gönderilsin.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''Dışarıdan Gelen Tahıl'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''Satın alınan tahıl ekmeği ucuz tutuyor ve şehir büyüyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''Karne'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''Kâhyalar erzakı paylaştırıyor. Şehir daha az yiyor, daha çok söyleniyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''Yeni Tarlalar'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''Kurutulan bataklıklar ve açılan topraklar her yıl daha çok tahıl veriyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''Tahıl Tüccarlarının Beratı'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''Tahıl haneleri ticareti beratla yürütüyor ve bütün ülke için yürütüyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''Kamu Ambarları'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''Bolluk yıllarında dolan ambarlar kıtlık yıllarında şehri besliyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''Çok Ailenin Tarlaları'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''Üç ürünün bir arada ekildiği küçük tarlalar tek büyük tarladan fazla ürün veriyor.'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''İki Şehir Arasında Bir Yol'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''[target_location.GetNameWithNoTooltip] ile [other_location.GetNameWithNoTooltip] arasında birkaç günlük yol var ve onları birleştiren patikayı her bahar yağmurlar alıp götürüyor. Bir yöne tahıl, öbür yöne kumaş gidiyor ve her araba aradaki her köyde geçiş vergisi ödüyor. İki şehrin loncaları da aynı şikâyetle ama bambaşka iki planla saraya geldi.'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''İki şehir arasına taş döşeli bir yol yapılsın.'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''Yolu tüccarlar yapsın, geçiş vergisini de onlar alsın.'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''Köylerle anlaşılsın: Her kavşakta bir pazar günü.'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''Yol Açıldı'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''İlk kervanlar, son taşlar döşenmeden yeni yoldan geçti. Arabalar artık [target_location.GetNameWithNoTooltip] ile [other_location.GetNameWithNoTooltip] arasını bir günde alıyor ve iki şehrin kâtipleri yolun hangi pazara hizmet ettiği konusunda şimdiden kavgaya tutuştu.'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''Yola muhafız konsun ve bakımı yapılsın.'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''İki uçta da vergi alınsın, yol kendi masrafını çıkarsın.'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''Vergiler Ağırlaşıyor'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''Yolu yapan tüccarlar, bir kez konan geçiş vergisinin büyümeye meyilli olduğunu öğrendi. [other_location.GetNameWithNoTooltip] şehrinin arabacıları eskisinin iki katını ödüyor, [target_location.GetNameWithNoTooltip] şehrinin kumaşı ise kapıda yolun kendisi kadar tutuyor. Her iki şehir de sarayın öbürünü dinlediğinden emin.'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''Vergiler eski oranla sınırlansın.'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''Yolu onlar yaptı. Vergiyi de onlar belirlesin.'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''Pazar Günleri'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''Yol boyundaki köyler sözünü tuttu. Yılda iki kez her kavşakta panayır kuruluyor ve [target_location.GetNameWithNoTooltip] ile [other_location.GetNameWithNoTooltip] şehirlerinin tüccarları orada yarı yolda buluşuyor; bu iki tarafın da işine geliyor, loncalarını ise kızdırıyor.'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''Panayırlara berat verilsin, her kavşağa bir subaşı gönderilsin.'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''Panayırlar köylerindir. Kendi hâllerine bırakılsın.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''Yol Çalışmaları'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''Yolları saray ödüyor ve iş hızla ilerliyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''Taş Döşeli Yol'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''Mallar daha kolay taşınıyor ve yol boyundaki kasabalar büyüyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''Yol Tüccarlarının Beratı'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''Yolun bakımını üstlenen tüccarlar ondan geçiş vergisi alma hakkına sahip.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''Gümrük Kapıları'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''Kapıdaki gümrük evi tüccarları ve depolarını şehre çekiyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''Pazar Günleri'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''Panayır günlerinde yol boyundaki köylerin tüccarları şehre geliyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''Sarayın Yolu'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''Muhafızlı bir yol ticareti sarayın elinde tutuyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''Nefret Edilen Vergiler'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''Tüccarlar ödüyor, söyleniyor ve daha seyrek geliyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''Beratlı Panayırlar'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''Mevsiminde kurulan büyük bir panayır depoları ve hanları dolduruyor.'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''Komşu Vadiden Elçiler'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''[target_country.GetName] devletinin elçileri [target_location.GetNameWithNoTooltip] şehrine geldi. İki sarayın tanrıları ya da dili ortak, aynı sınırlarda aynı düşmanları var; yine de nesillerdir birbirlerine şikâyetten başka bir şey göndermediler. Elçiler, hükümdarlarımızın eşit olarak konuşacağı bir meclis öneriyor. Bizim danışmanlarımız ise elçilerin evlerinde oturmasını tercih ederdi.'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''Onlarla eşit olarak oturacağız.'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''Onlara himayemiz önerilsin, karşılığında saygı beklensin.'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''Teşekkür edilsin, niyetimiz kendimize saklansın.'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''Meclis Toplanıyor'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''Hükümdarımız ile [target_country.GetName] devletinin hükümdarı üç kez buluştu ve her seferinde daha az kuşkuyla ayrıldılar. Meclis küçük sınır anlaşmazlıklarını büyümeden çözmeye başladı. Saraydaki çöpçatanlar şimdiden liste yapıyor. Yaşlı danışmanlar ise bir meclisin bu kadar yakınlık için yeterli olduğunu düşünüyor.'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''Hanedanlarımız evlilik ve antlaşmayla bağlansın.'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''Bir meclis yeter.'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''Komşu Diken Diken'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''[target_country.GetName] devletinin sarayı himaye teklifimizi tam da kastedildiği gibi anladı. Elçileri gitti, tüccarları geri çağrıldı ve hükümdarlarının kendi eliyle yazdığı bir mektup geldi: Hangi hakla saygıdan söz ettiğimizi soruyor.'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''Talepten vazgeçilsin, hediyeler gönderilsin.'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''Ne demek istediysek onu dedik.'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''Kapanan Bir Kapı'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''[target_country.GetName] devleti cevabımızı aldı ve yüzünü başka yere çevirdi. Elçileri şimdi diğer komşularımızın salonlarında bekliyor ve bir zamanlar sakin olan sınır iki taraftan da gözetleniyor. Danışmanlarımız reddetmenin akıllıca olup olmadığını yüksek sesle sorguluyor.'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''Açık elle ikinci bir elçilik gönderilsin.'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''Ret geçerli kalsın.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''Komşular Meclisi'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''Saray müzakerelerini bir komşuyla paylaşıyor ve soylular söz hakkı kazanıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''Meclisin Güveni'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''Komşularıyla meclis kuran bir hükümdara yabancı diyarlarda da güvenilir.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''Komşuya Baskı'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''Saygı taleplerimiz sözümüzün yabancı diyarlardaki değerini düşürdü.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''Kapalı Kapılar'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''Saray niyetini kendine saklıyor ve sınırlarını daha sıkı gözetliyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''Sarayların Akrabalığı'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''Evlilik ve antlaşmayla bağlanan iki saray birbirinin iktidarına destek oluyor.'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''Uzak Vilayetler'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''Devletimiz yollarından büyük oldu. [target_location.GetNameWithNoTooltip] şehrinden uzaktaki [other_location.GetNameWithNoTooltip] yöresinde halk kendi töresiyle ve kendi beylerinin altında yaşıyor. Vergilerini geç, oğullarını hiç göndermiyorlar. Valiler vilayetin sakin olduğunu yazıyor. Tüccarlar tersini yazıyor.'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''Bir vali gönderilsin, yanında da bir garnizon.'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''Vilayete kendi töresi için bir berat verilsin.'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''Aralarına merkezden aileler yerleştirilsin.'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''Valinin Uzun Kolu'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''[other_location.GetNameWithNoTooltip] yöresinin valisi garnizonun maaşını aldığını, vergilerin zamanında geldiğini yazıyor. Ayrıca eski mahallede bir ev tuttuğunu, yerli bir aileden kız aldığını ve eski beylerin artık onun sofrasında yemek yediğini de yazıyor. Sarayda buna sevinilip sevinilmeyeceğini bilen yok.'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''Valiler birkaç yılda bir değiştirilsin.'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''Kalsın. Oralı olmuş bir vali yöreyi elinde tutar.'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''Beratlar Çoğalıyor'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''[other_location.GetNameWithNoTooltip] yöresine verilen beratın haberi diğer uzak vilayetlere her tahsildardan hızlı ulaştı. Üç vilayet daha aynısını istemek için heyet gönderdi ve merkezin soyluları vilayetlerin uzak oldukları için neden ödüllendirildiğini bilmek istiyor.'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''İsteyen her vilayete berat verilsin.'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''O berat bir lütuftu, emsal değil.'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''Yeni Komşular'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''Merkezden gelen yerleşimciler evlerini [other_location.GetNameWithNoTooltip] yöresine giden yol boyunca kurdu. Bizim dilimizi konuşuyor, bizim tanrılarımıza tapıyorlar; vilayetin eski aileleri ise onlardan uzak duruyor. Pazardaki bir kavga şimdiden bıçakla bitti.'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''Eski ailelere şehir meclisinde yer verilsin.'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''Yerleşimcilerin arkasında durulsun.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''Sadık Valiler'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''Uzak vilayetlerdeki valiler onları sarayın elinde tutuyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''Töre Beratı'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''Kendi töresine bırakılan vilayet sakin kalır ve gelişir.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''Vilayetlere Tavizler'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''Merkezin uzak topraklar üzerindeki hâkimiyeti gevşedi.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''Yeni Komşular'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''Merkezden gelen yerleşimciler akrabalarını da peşlerinden getiriyor ve vilayetin pazarları büyüyor.'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''Kıyıda Yabancılar'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''[target_country.GetName] devletinin gemileri [target_location.GetNameWithNoTooltip] şehri yakınlarında kıyı açığına demir attı. Denizcileri okyanusu geçtiklerini, hükümdarlarının ticaret, belki de ticaretten fazlasını istediğini söylüyor. Kıyıda daha önce kimse böylesini görmemişti. İleri gelenler üç kez toplandı ama hiçbir karara varamadı.'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''Elçileri kabul edilsin, onlarla ticaret yapılsın.'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''Sadece tek bir limana girmelerine izin verilsin, orası da gözetlensin.'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''Kıyı onlara karşı ayaklandırılsın!'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''Yabancıların Tüccarları'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''Yabancılar daha çok gemi ve daha çok malla geri döndü. Tüccarları [target_location.GetNameWithNoTooltip] şehrinin rıhtımında bir ev, iç bölgelerden mal alma hakkı ve sarayda bir huzur istiyor. Bizim tüccarlarımız ise tam tersini istiyor.'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''Rıhtımda evleri verilsin.'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''Kıyıda tutulsunlar, iç bölgelere giden yollara sokulmasınlar.'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''Tek Limandaki Nöbet'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''Yabancılar kendilerine verilen tek limandan ayrılmıyor ve [target_location.GetNameWithNoTooltip] şehrinin nöbetçileri her hafta gemilerini sayıyor. İç bölgelerde yabancıların hastalık ve tuhaf tanrılar getirdiği fısıldanıyor. İleri gelenler tek açık limanın sağduyu mu yoksa düpedüz korku mu olduğunu soruyor.'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''Nöbet ve tek liman sürsün.'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''Kavgaları yatıştırmak için ikinci bir liman açılsın.'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''Kıyı Hazır Bekliyor'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''Koca bir mevsim boyunca askerler [target_location.GetNameWithNoTooltip] şehri yakınlarındaki kıyıda bekledi, ama yabancılar karaya çıkmadı. Gemileri resifin ötesinde gelip gidiyor ve tarlalarda adamlara ihtiyaç var.'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''Askerler terhis edilsin, bir elçi gönderilsin.'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''Nöbet yıl boyunca sürsün.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''Yabancılara Hoş Geldin'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''Okyanusun ötesinden gelen elçiler yeni bilgiler getiriyor ve sesimiz daha uzağa ulaşıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''Tek Açık Liman'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''Her yabancı gemi tek bir limana uğramak zorunda ve o limanın rıhtımları ile depoları büyüyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''Kıyı Askerleri'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''Kıyı silahlandı ve daha çok adam çağrılabilir.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''Kıyı Nöbeti'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''Kıyı boyunca gözcüler ve işaret ateşleri her çıkarmayı pahalıya patlatıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''Rıhtımda Bir Ev'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''Yabancıların tüccarları rıhtımda bir ev ve bir depo tutuyor.'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''Bir Koloni Meclisi'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''[target_location.GetNameWithNoTooltip] şehrinin yerleşimcileri ilk kez valinin izni olmadan meclis hâlinde toplandı. [target_country.GetName] devletine vergi ödüyor, komşularıyla kendileri savaşıyor ve babalarının geride bıraktığına benzemeyen bir toprağı sürüyorlar. Ne olduklarını bilmek istiyorlar: tebaa mı, bir halk mı, yoksa bir ülke mi?'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''Eski yurttan meclisinde yer istensin.'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''Ne eski yurduz ne de yerliler. Biz kendi başımıza bir halkız.'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''Özyönetim talep edilsin.'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''Meclis Cevap Veriyor'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''[target_country.GetName] devletinin meclisi dilekçeyi dinledi. Üyeleri, zamanla ve en çok ödeyenlere yer verilebileceğini söylüyor. En zengin koloniciler fiyatı makul buluyor ve şimdiden paralarını sayıyor. Daha yoksul yerleşimciler ise meclise gelmeyi bıraktı.'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''Bir yerin bedeli ödensin.'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''Parayla alınan yer, yer değildir.'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''İki Dünyanın Halkı'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''[target_location.GetNameWithNoTooltip] şehrinde eski yurdu hiç görmemiş bir nesil yetişti. Yarısı eski dil, yarısı kıyının kelimeleri olan kendine has bir ağızla konuşuyor ve denizi değil nehri türkülerine konu ediyor. Eski yurdun subayları, kendi adına bile karşılık vermeyen bir halka emir vermenin zor olduğundan yakınıyor.'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''Mahkemeler koloni ağzıyla görülsün.'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''Eski yurdun diline ve kanununa bağlı kalınsın.'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''Bağımsızlığa Giden Yol'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''[target_location.GetNameWithNoTooltip] şehrinin meclisi koca bir mevsimdir vergilerini ödemeyi reddediyor. [target_country.GetName] devleti sert bir mektup ve birkaç gemiyle karşılık verdi. Milis kaptanları hazır olduklarını söylüyor. Meclisin yaşlı üyeleri ise bağımsızlığın getirdiğinden fazlasına mal olan bir kelime olduğunu söylüyor.'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''Milis toplansın, savaşa hazırlanılsın.'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''Vergilere karşılık özerklik pazarlığı yapılsın.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''Masada Yer'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''Eski yurdun meclisindeki bir söz hakkı koloniyi ona bağlıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''Bir Koloni Halkı'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''Kendi ağzı ve kendi türküleri olan bir halk komşularının saygısını kazanıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''Özgürlük Çağrıları'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''Meclisteki nutuklar koloninin eski yurda bağlılığını gevşetiyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''Akrabalık Bağları'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''Parayla alınan meclis koltukları büyük aileleri eski yurda bağlıyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''Milis Ayakta'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''Silah taşıyabilen herkes deftere yazıldı ve talimleri iyi gidiyor.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''Tanınan Özerklik'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''Koloni kendini yönetiyor, daha az ödüyor ve bu yüzden sadık.'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''Aynı nehir üzerindeki şehirler nesillerdir birbirleriyle ticaret yapıyor, birlikte inşa ediyor ve birbirlerine hesap veriyor. Bu şehirlerin çoğuna sahip olan bir güç onları tek bir devlette birleştirebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''Tek Nehrin Pazarları'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''Nehir şehirleri mallarını tek bir pazar gibi satıyor.'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''Aynı sıradağların vadileri geçitlerinin ardında ayrı yaşar ve özgürlükleri dışında pek az şeyde anlaşır. Bu vadilerin çoğuna sahip olan bir güç onları her vadiye kendi meclisini bırakarak bir konfederasyonda, {name} adı altında, birleştirebilir.'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''Vadiler Ahdi'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''Vadiler kendi meclislerini koruyor ve her dış güce karşı birlikte duruyor.'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''Aynı kıyının limanları aynı sularda yol alır ve aynı fırtınalardan korkar. Bu limanların çoğuna sahip olan bir güç, birlikte ticaret yapıp denizlerini savunmaları için onları bir birlikte toplayabilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''Birliğin Beratı'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''Tek bir berat bütün limanların tüccarlarını ve meclislerini birbirine bağlıyor.'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''Aynı halkın şehirleri farklı hükümdarların altında olsalar da tek bir dil konuşur ve aynı töreleri yaşatır. Bu şehirlerin çoğuna sahip olan bir güç onları bir toplulukta bir araya getirebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''Tek Halk'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''Tek dil ve tek töre topluluğu bir arada tutuyor ve itibarını yükseltiyor.'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''Koca bir bölge, her biri yalnızca birkaç şehrine sahip pek çok hükümdar arasında bölünmüş. Bölgenin çoğuna sahip olan bir güç onu tek bir devlette birleştirebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''Devletin İdaresi'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''Yeni bir idare bütün bölgeye uzanıyor ve vilayetleri boyun eğiyor.'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''Aynı kıyıdaki koloniler, tek bir eski ülkeden ya da birkaçından gelenlerce kurulmuş olsalar da artık aynı şikâyeti ve aynı geleceği paylaşıyor. Bu kıyının yeterli kısmına sahip olan ve başkenti bu kolonilerin arasında bulunan bir yerleşimci devlet kendini federasyon ilan edebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''Bir Millet Doğdu'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''Genç bir yerleşimci milleti hızla büyüyor ve isyancılara karşı sabırsız.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''Büyük Gümüş Damarı'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''Bilinen dünyanın tüm madenlerinden zengin, gümüşten bir dağ.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''Zengin Gümüş Damarı'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''Bölgedeki tüm madenlerden zengin bir gümüş damarı.'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''Gümüş Yatağı'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''Çevresindeki madenlerden zengin bir gümüş yatağı.'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''Cıva Damarı'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''Cıvası bölgenin çok ötesinde aranan bir zincifre madeni.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''Zengin Balıkçılık Sahaları'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''Sular öyle balık dolu ki çevredeki bütün kıyıları besliyor.'''

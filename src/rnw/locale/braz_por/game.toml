@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''O Rio Muda de Curso'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''Desde tempos imemoriais, o grande rio alimenta [target_location.GetNameWithNoTooltip]. Suas cheias formaram as terras negras, suas barcaças levaram os grãos e seus atracadouros enriqueceram a cidade. Mas agora o canal avança um pouco mais a cada primavera. O lodo entope os velhos canais, a água sobe até as ruas baixas e os celeiros guardam menos do que os intendentes informam.\n\nOs anciãos da cidade compareceram à corte. Cada um traz seu remédio, e cada remédio deve ser pago por outra pessoa.'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''Ergam diques e cavem novos canais.'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''Que paguem as barcaças, não o tesouro. As margens aguentaram até agora.'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''As guildas do rio conhecem melhor as margens. Que cuidem delas.'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''Os Diques Resistem'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''A cheia da primavera veio como sempre, mas neste ano parou nos novos diques. Nas ruas baixas de [target_location.GetNameWithNoTooltip], onde a água costumava ficar um mês inteiro nos mercados, ela não passou dos cais. Agora os guardiões das margens perguntam o que pretendemos fazer com a paz que compramos.'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''Construam celeiros nas novas margens.'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''Guardem o excedente no tesouro.'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''O Rio Cobra o que É Seu'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''Os pedágios encheram o tesouro, e ninguém cuidou das margens. Nesta primavera o rio subiu, encontrou o trecho mais fraco e o rompeu. Quando a água baixou, os bairros baixos de [target_location.GetNameWithNoTooltip] estavam sob a lama, os poços contaminados e barcaças encalhadas no meio das ruas. Os coletores informam que cada pedágio foi pago integralmente. No ano que vem não restará ninguém para pagá-los.'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''Desobstruam os canais imediatamente, custe o que custar!'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''Levem os depósitos de grãos para o alto e deixem a cidade baixa secar.'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''Os Guardiões das Margens'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''Há alguns anos as guildas do rio cuidam das margens. Fazem isso mais barato do que a corte jamais fez, e fazem para si mesmas: seus atracadouros são os mais bem construídos do rio, e o bairro delas em [target_location.GetNameWithNoTooltip] enriqueceu. Agora querem que seus direitos sejam registrados em uma carta selada.'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''Selem a carta.'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''As margens são nossas, e as rendas delas também.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''Taxa das Obras do Rio'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''O tesouro paga os diques e os canais.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''Novos Diques'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''Margens altas mantêm as cheias longe das ruas, ao custo de alguns campos.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''A Salvo das Cheias'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''Com celeiros nas margens e anos sem enchente, a cidade cresce.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''Pedágios Fluviais'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''Os pedágios sobre o comércio do rio enchem o tesouro, mas pouco se constrói.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''Lodo e Poços Contaminados'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''A cheia deixou lama nas ruas e imundície nos poços.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''Guardiões das Margens das Guildas'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''As guildas do rio cuidam das margens, e o bairro delas prospera.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''Autoridade Cedida'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''O rio agora está nas mãos das guildas, e todos veem que a corte lhes obedece.'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''Peregrinos às Portas'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''A cada estação chegam mais peregrinos a [target_location.GetNameWithNoTooltip]. Dormem nas vielas, deixam oferendas junto às velhas pedras e levam o nome do santuário para aldeias das quais a corte nunca ouviu falar. Os sacerdotes reclamam que o santuário ficou pequeno para seus muros; os intendentes, que ficou grande demais para o tesouro.'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''Doem bens ao santuário e calcem o caminho dos peregrinos.'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''Oferendas também são riqueza. Que o tesouro fique com o dízimo.'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''Deem ao sumo sacerdote um assento entre os estamentos.'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''O Santuário Prospera'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''A doação conseguiu o que os intendentes julgavam impossível. O caminho está calçado, as hospedarias estão cheias e os peregrinos que chegam a [target_location.GetNameWithNoTooltip] agora ficam para negociar. Os sacerdotes querem coroar a obra com um grande templo e nos pedem que lancemos a pedra fundamental.'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''Ergam o grande templo.'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''O caminho basta. Que as oferendas o mantenham.'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''Os Sacerdotes Murmuram'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''O dízimo encheu o tesouro, e os sacerdotes de [target_location.GetNameWithNoTooltip] perceberam. As oferendas, dizem eles, pertencem a quem as deu e a quem cuida das pedras. Alguns já começaram a dizer isso nos sermões, e os peregrinos estão ouvindo.'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''Devolvam parte do dízimo ao santuário.'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''Mantenham o dízimo e respondam aos sermões.'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''Um Sacerdócio com Assento'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''O sumo sacerdote de [target_location.GetNameWithNoTooltip] agora tem assento entre os estamentos, e a antiga ordem do santuário tem voz em nossos conselhos. Os sacerdotes estão gratos. Os outros estamentos fazem as contas do quanto essa voz lhes custará.'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''Recebam o sacerdócio em nossos conselhos.'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''O lugar deles é no santuário. Que fiquem lá.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''Santuário Dotado'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''Um santuário rico e um caminho calçado atraem os peregrinos, e o prestígio dos sacerdotes cresce.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''O Grande Templo'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''Um templo erguido sobre as velhas pedras atrai os fiéis de todo o país.'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''Sumo Sacerdócio do Santuário'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''O sumo sacerdote do santuário responde somente à fé e tem assento entre os estamentos.'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''Uma Colheita Fraca'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''As chuvas chegaram tarde e a colheita foi fraca. Em [target_location.GetNameWithNoTooltip] os celeiros estão meio vazios, o pão custa o dobro do que custava há um mês e a cidade come mais do que seus campos jamais produziram. Os capatazes trouxeram suas contas à corte. Pelos cálculos deles, as reservas durarão até o meio do inverno, e nem um dia a mais.'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''Comprem grãos das terras além das colinas.'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''Racionem as reservas e requisitem grãos das aldeias.'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''Abram novas terras e drenem as bordas alagadas da planície.'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''Os Mercadores de Grãos'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''Os grãos que alimentaram [target_location.GetNameWithNoTooltip] no último inverno passaram pelas mãos de algumas poucas casas comerciais, e elas lembram muito bem quem precisava deles. Controlam os armazéns da cidade baixa e fixam o preço no mercado. Agora pedem à corte que ponha no papel o que vêm fazendo há um ano sem pedir licença.'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''Concedam a carta aos mercadores de grãos.'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''Quebrem o domínio deles. A cidade terá seus próprios celeiros.'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''As Aldeias Não Esquecem'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''No último inverno as aldeias entregaram seus grãos de semente, e não perdoaram. Nos mercados de primavera de [target_location.GetNameWithNoTooltip] os camponeses trazem menos e pedem mais, e os carroceiros falam de campos deixados em pousio. Os intendentes ainda chamam a requisição de necessidade. Nas aldeias, ela tem outro nome.'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''Indenizem as aldeias com moedas e sementes.'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''A requisição salvou a cidade. Não lhes devemos nada.'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''Os Novos Campos Frutificam'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''Duas colheitas depois, os campos drenados nos arredores de [target_location.GetNameWithNoTooltip] dão grãos onde antes havia juncos. Famílias das vielas apinhadas pedem uma parte da nova terra, e os intendentes pedem o dízimo dela.'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''Entreguem a nova terra às famílias da cidade.'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''Vendam a nova terra e exportem seus grãos.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''Grãos do Estrangeiro'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''Os grãos comprados mantêm o pão barato, e a cidade cresce.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''Racionamento'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''Os intendentes repartem as reservas. A cidade come menos e resmunga mais.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''Novos Campos'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''Pântanos drenados e terras desbravadas rendem mais grãos a cada ano.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''Carta dos Mercadores de Grãos'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''As casas de grãos detêm o comércio por carta e o conduzem para todo o país.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''Celeiros Públicos'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''Celeiros enchidos nos anos bons alimentam a cidade nos anos ruins.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''Campos das Muitas Famílias'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''Pequenos lotes, cada um semeado com três culturas juntas, rendem mais que um grande campo.'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''Uma Estrada Entre Duas Cidades'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''[target_location.GetNameWithNoTooltip] e [other_location.GetNameWithNoTooltip] ficam a poucos dias de viagem, ligadas por uma trilha que as chuvas levam a cada primavera. Os grãos seguem num sentido e o tecido no outro, e cada carroça paga pedágio em cada aldeia pelo caminho. As guildas das duas cidades vieram à corte com a mesma queixa e dois planos bem diferentes.'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''Calcem uma estrada entre as duas cidades.'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''Que os mercadores a construam, e que fiquem com os pedágios.'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''Façam um pacto com as aldeias: um dia de feira em cada encruzilhada.'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''A Estrada Está Aberta'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''As primeiras caravanas cruzaram a nova estrada antes que as últimas pedras fossem assentadas. Agora uma carroça vai de [target_location.GetNameWithNoTooltip] a [other_location.GetNameWithNoTooltip] em um dia, e os escrivães das duas cidades já brigam sobre a qual mercado a estrada serve.'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''Ponham guarnição na estrada e a mantenham em bom estado.'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''Um pedágio em cada ponta, e que a estrada se pague sozinha.'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''Os Pedágios Pesam'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''Os mercadores que construíram a estrada aprenderam que um pedágio, uma vez cobrado, tende a crescer. Os carroceiros de [other_location.GetNameWithNoTooltip] pagam o dobro do que pagavam, e o tecido de [target_location.GetNameWithNoTooltip] custa no portão tanto quanto a própria estrada. Cada cidade tem certeza de que a outra tem o ouvido da corte.'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''Limitem os pedágios à tarifa antiga.'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''Eles construíram a estrada. Cabe a eles fixar os pedágios.'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''Os Dias de Feira'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''As aldeias ao longo do caminho cumpriram o pacto. Duas vezes por ano uma feira acontece em cada encruzilhada, e os comerciantes de [target_location.GetNameWithNoTooltip] e de [other_location.GetNameWithNoTooltip] se encontram ali a meio caminho, para proveito de ambos e irritação de suas guildas.'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''Concedam carta às feiras e enviem um meirinho a cada encruzilhada.'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''As feiras pertencem às aldeias. Deixem-nas em paz.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''Obras na Estrada'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''A corte paga pelas estradas, e as obras avançam depressa.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''Uma Estrada Calçada'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''As mercadorias circulam com mais facilidade, e as vilas ao longo da estrada crescem.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''Carta dos Mercadores da Estrada'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''Os mercadores que mantêm a estrada têm o direito de cobrar pedágio.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''Postos de Pedágio'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''Um posto de pedágio no portão atrai para a cidade os mercadores e seus armazéns.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''Dias de Feira'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''Nos dias de feira, comerciantes das aldeias ao longo da estrada vêm à cidade.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''A Estrada da Corte'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''Uma estrada guarnecida mantém o comércio nas mãos da corte.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''Pedágios Odiados'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''Os mercadores pagam, resmungam e vêm menos.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''Feiras com Carta'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''Uma grande feira na temporada enche os armazéns e as estalagens.'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''Enviados do Vale Vizinho'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''Enviados de [target_country.GetName] chegaram a [target_location.GetNameWithNoTooltip]. Nossas duas cortes compartilham seus deuses ou sua língua, e os mesmos inimigos nas mesmas fronteiras, e ainda assim por gerações só trocaram queixas. Os enviados propõem um conselho em que nossos governantes falem de igual para igual. Nossos próprios conselheiros prefeririam que eles tivessem ficado em casa.'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''Vamos nos sentar com eles como iguais.'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''Ofereçam-lhes nossa proteção e exijam deferência.'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''Agradeçam-lhes e guardem nossos planos para nós.'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''O Conselho se Reúne'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''Nosso governante e o de [target_country.GetName] já se encontraram três vezes, e a cada vez se despediram com menos desconfiança. O conselho começou a resolver pequenas brigas de fronteira antes que se tornem grandes. Os casamenteiros da corte já estão fazendo listas. Os velhos conselheiros acham que um conselho já é proximidade suficiente.'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''Unam nossas casas por casamento e tratado.'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''Um conselho basta.'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''O Vizinho se Eriça'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''A corte de [target_country.GetName] entendeu nossa oferta de proteção exatamente como ela foi feita. Seus enviados partiram, seus mercadores foram chamados de volta, e chegou uma carta do próprio punho de seu governante perguntando com que direito falamos em deferência.'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''Retirem a exigência e enviem presentes.'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''Dissemos o que queríamos dizer.'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''Uma Porta Fechada'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''A corte de [target_country.GetName] recebeu nossa resposta e voltou os olhos para outro lado. Seus enviados agora aguardam nos salões de nossos outros vizinhos, e uma fronteira antes tranquila é vigiada dos dois lados. Nossos conselheiros se perguntam em voz alta se a recusa foi sensata.'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''Enviem uma segunda embaixada, de mãos abertas.'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''A recusa está mantida.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''Conselho de Vizinhos'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''A corte compartilha suas deliberações com um vizinho, e a nobreza ganha voz.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''Confiança do Conselho'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''Um governante que se aconselha com os vizinhos inspira confiança no exterior.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''Pressão Sobre o Vizinho'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''Nossas exigências de deferência desvalorizaram nossa palavra no exterior.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''Portas Fechadas'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''A corte guarda seus planos para si e vigia suas fronteiras mais de perto.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''Parentesco das Cortes'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''Duas cortes unidas por casamento e tratado sustentam o poder uma da outra.'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''As Províncias Distantes'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''Nosso reino cresceu mais do que suas estradas. Em [other_location.GetNameWithNoTooltip], longe de [target_location.GetNameWithNoTooltip], o povo vive segundo seus próprios costumes e sob seus próprios senhores. Mandam seus tributos com atraso e seus filhos nunca. Os governadores escrevem que a província está calma. Os mercadores escrevem o contrário.'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''Enviem um governador, e com ele uma guarnição.'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''Concedam à província uma carta de seus próprios costumes.'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''Assentem entre eles famílias do coração do reino.'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''O Braço do Governador'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''O governador de [other_location.GetNameWithNoTooltip] escreve que a guarnição está paga e que os tributos chegam em dia. Escreve também que arranjou uma casa no bairro velho e uma esposa de família local, e que os antigos senhores agora jantam à sua mesa. A corte não sabe se deve ficar satisfeita.'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''Troquem os governadores a cada poucos anos.'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''Deixem-no ficar. Um governador que pertence ao lugar segura a província.'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''As Cartas se Multiplicam'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''A notícia da carta concedida a [other_location.GetNameWithNoTooltip] chegou às outras províncias distantes mais depressa que qualquer coletor de impostos. Mais três enviaram delegações pedindo o mesmo, e a nobreza do coração do reino quer saber por que as províncias são recompensadas por estarem longe.'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''Concedam uma carta a toda província que pedir.'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''A carta foi um favor, não um precedente.'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''Novos Vizinhos'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''Os colonos do coração do reino construíram suas casas ao longo da estrada para [other_location.GetNameWithNoTooltip]. Falam nossa língua e cultuam nossos deuses, e as velhas famílias da província mantêm distância. Uma briga no mercado já terminou em facadas.'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''Deem às velhas famílias assentos no conselho da cidade.'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''Fiquem do lado dos colonos.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''Governadores Leais'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''Os governadores das províncias distantes as mantêm nas mãos da corte.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''Carta de Costumes'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''Uma província entregue aos seus costumes fica calma e prospera.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''Concessões às Províncias'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''O domínio do coração do reino sobre as terras distantes afrouxou.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''Novos Vizinhos'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''Os colonos do coração do reino trazem seus parentes, e os mercados da província crescem.'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''Estrangeiros na Praia'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''Navios de [target_country.GetName] lançaram âncora diante da costa, perto de [target_location.GetNameWithNoTooltip]. Seus marinheiros dizem ter cruzado o oceano e que seus governantes querem comerciar, e talvez mais do que comerciar. Ninguém no litoral jamais tinha visto algo assim. Os anciãos já se reuniram três vezes e não decidiram nada.'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''Recebam seus enviados e comerciem com eles.'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''Abram-lhes um único porto, e vigiem-no.'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''Levantem o litoral contra eles!'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''Os Mercadores Estrangeiros'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''Os estrangeiros voltaram com mais navios e mais mercadorias. Seus mercadores querem uma casa no cais de [target_location.GetNameWithNoTooltip], o direito de comprar no interior e uma audiência na corte. Nossos próprios comerciantes querem exatamente o contrário.'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''Deem-lhes sua casa no cais.'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''Mantenham-nos no litoral e longe das estradas do interior.'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''Vigia no Porto Único'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''Os estrangeiros se limitam ao único porto que lhes foi dado, e os vigias de [target_location.GetNameWithNoTooltip] contam seus navios toda semana. No interior, sussurra-se que eles trazem doenças e deuses estranhos. Os anciãos perguntam se o porto único foi prudência ou puro medo.'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''Mantenham a vigia e o porto único.'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''Abram um segundo porto para acalmar as disputas.'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''O Litoral Está Pronto'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''Durante uma estação inteira as milícias ficaram de prontidão na praia junto a [target_location.GetNameWithNoTooltip], e os estrangeiros não desembarcaram. Seus navios vão e vêm além do recife, e os homens fazem falta nos campos.'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''Dispensem as milícias e enviem um emissário.'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''Mantenham a vigia o ano inteiro.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''Boas-vindas aos Forasteiros'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''Enviados de além-mar trazem novos conhecimentos, e nossa voz chega mais longe.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''O Único Porto Aberto'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''Todo navio estrangeiro deve aportar em um só porto, cujos cais e armazéns crescem.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''Milícias do Litoral'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''O litoral pegou em armas, e mais homens podem ser convocados.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''A Vigia Costeira'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''Vigias e fogueiras de sinal ao longo da praia tornam caro qualquer desembarque.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''Uma Casa no Cais'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''Os mercadores estrangeiros mantêm uma casa e um armazém no cais.'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''Uma Assembleia Colonial'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''Pela primeira vez, os colonos de [target_location.GetNameWithNoTooltip] se reuniram em assembleia sem a licença do governador. Pagam impostos a [target_country.GetName], enfrentam sozinhos seus vizinhos e cultivam uma terra que não é aquela que seus pais deixaram. Querem saber o que são: súditos, um povo ou um país.'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''Peçam à metrópole assentos em seu conselho.'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''Não somos a metrópole nem os nativos. Somos um povo próprio.'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''Exijam o autogoverno.'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''O Conselho Responde'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''O conselho de [target_country.GetName] ouviu a petição. Assentos poderão ser concedidos, respondem seus membros, com o tempo e a quem pagar mais. Os colonos mais ricos acham o preço justo e já contam suas moedas. Os mais pobres deixaram de comparecer à assembleia.'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''Paguem o preço de um assento.'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''Assento comprado com moedas não é assento.'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''Um Povo de Dois Mundos'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''Nasceu em [target_location.GetNameWithNoTooltip] uma geração que nunca viu a metrópole. Ela fala um falar próprio, metade a velha língua e metade palavras do litoral, e canta o rio em vez do mar. Os oficiais da metrópole reclamam que é difícil comandar um povo que não atende pelo próprio nome.'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''Permitam que os tribunais julguem no falar colonial.'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''Mantenham a língua e a lei da metrópole.'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''O Caminho da Independência'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''Há uma estação inteira a assembleia de [target_location.GetNameWithNoTooltip] se recusa a pagar seus tributos. [target_country.GetName|U] respondeu com uma carta severa e alguns navios. Os capitães da milícia dizem estar prontos. Os membros mais velhos da assembleia dizem que independência é uma palavra que custa mais do que rende.'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''Convoquem a milícia e preparem-se para a guerra.'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''Negociem a autonomia em troca dos tributos.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''Assentos à Mesa'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''Uma voz no conselho da metrópole prende a colônia a ela.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''Um Povo Colonial'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''Um povo com seu próprio falar e suas próprias canções conquista o respeito dos vizinhos.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''Agitação Pela Liberdade'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''Os discursos na assembleia afrouxam a lealdade da colônia à metrópole.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''Laços de Parentesco'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''Assentos no conselho comprados com moedas prendem as grandes famílias à metrópole.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''A Milícia a Postos'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''Todo homem capaz de portar armas está alistado, e o treino vai bem.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''Autonomia Concedida'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''A colônia governa a si mesma, paga menos e, por isso, é leal.'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''As cidades de um mesmo rio comerciam, constroem e respondem umas às outras há gerações. Uma potência que domine a maioria delas pode uni-las em um só Estado: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''Mercados de um Só Rio'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''As cidades do rio vendem suas mercadorias como um só mercado.'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''Os vales de uma mesma serra vivem separados atrás de seus desfiladeiros e quase só concordam quanto à sua liberdade. Uma potência que domine a maioria deles pode uni-los numa confederação, {name}, deixando a cada vale o seu próprio conselho.'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''Pacto dos Vales'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''Os vales mantêm seus próprios conselhos e se unem contra qualquer poder de fora.'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''Os portos de uma mesma costa navegam as mesmas águas e temem as mesmas tempestades. Uma potência que domine a maioria deles pode uni-los numa liga, {name}, para comerciar juntos e defender seu mar.'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''Carta da Liga'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''Uma só carta une os mercadores e os conselhos de todos os portos.'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''As cidades de um mesmo povo falam uma só língua e guardam os mesmos costumes sob muitos senhores. Uma potência que domine a maioria delas pode reuni-las numa comunidade: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''Um Só Povo'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''Uma língua e um costume mantêm a comunidade unida e elevam seu prestígio.'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''Uma região inteira está dividida entre muitos senhores, cada um com algumas de suas cidades. Uma potência que domine a maior parte dela pode uni-la em um só reino: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''Administração do Reino'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''Uma nova administração se estende por toda a região, e suas províncias se submetem.'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''Colônias de uma mesma costa, fundadas a partir de um só velho país ou de vários, passaram a partilhar uma mesma queixa e um mesmo futuro. Um Estado de colonos que domine o bastante dessa costa, com sua capital entre elas, pode se proclamar federação: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''Nasce uma Nação'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''Uma jovem nação de colonos cresce depressa e tem pouca paciência com rebeldes.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''Grande Filão de Prata'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''Uma montanha de prata, mais rica que qualquer outra mina do mundo conhecido.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''Rico Veio de Prata'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''Um veio de prata mais rico que qualquer outra mina da região.'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''Jazida de Prata'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''Uma jazida de prata mais rica que as minas ao redor.'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''Filão de Mercúrio'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''Uma mina de cinábrio cujo mercúrio é cobiçado muito além da região.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''Ricos Pesqueiros'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''Águas tão cheias de peixes que alimentam todas as costas vizinhas.'''

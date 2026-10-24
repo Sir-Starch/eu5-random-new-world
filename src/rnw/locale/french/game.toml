@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''Le fleuve change de lit'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''De mémoire d'homme, le grand fleuve a toujours nourri la ville de [target_location.GetNameWithNoTooltip]. Ses crues ont déposé les terres noires, ses barges ont porté le grain et ses quais ont fait la fortune de la ville. Mais à chaque printemps, le chenal se déplace un peu plus. La vase engorge les vieux canaux, les eaux montent jusque dans les rues basses, et les greniers contiennent moins que ce qu'annoncent les intendants.\n\nLes anciens de la ville se sont présentés à la cour. Chacun a son remède, et chaque remède doit être payé par quelqu'un d'autre.'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''Élevons des digues et creusons de nouveaux canaux.'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''Que les barges paient, et non le trésor. Les berges ont tenu jusqu'ici.'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''Les guildes du fleuve connaissent mieux les berges. Qu'elles s'en chargent.'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''Les digues tiennent'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''La crue de printemps est venue comme chaque année, mais cette fois elle s'est arrêtée aux nouvelles digues. Dans les rues basses de [target_location.GetNameWithNoTooltip], où l'eau stagnait jadis un mois entier sur les marchés, elle n'a pas dépassé les quais. Les gardiens des berges demandent à présent ce que nous comptons faire de la paix que nous avons achetée.'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''Bâtissons des greniers sur les nouvelles berges.'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''Gardons l'excédent au trésor.'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''Le fleuve reprend son dû'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''Les péages ont rempli le trésor, et personne ne s'est soucié des berges. Ce printemps, le fleuve est monté, a trouvé le tronçon le plus faible et l'a emporté. Quand l'eau s'est retirée, les quartiers bas de [target_location.GetNameWithNoTooltip] gisaient sous la boue, les puits étaient souillés et des barges restaient échouées au milieu des rues. Les percepteurs rapportent que chaque péage a été payé en entier. L'an prochain, il ne restera plus personne pour les payer.'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''Dégageons les chenaux sur-le-champ, quoi qu'il en coûte !'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''Montons les réserves de grain sur les hauteurs et laissons la ville basse sécher.'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''Les gardiens des berges'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''Depuis quelques années, ce sont les guildes du fleuve qui entretiennent les berges. Elles le font à moindre coût que la cour ne l'a jamais fait, et elles le font pour elles-mêmes : leurs quais sont les mieux bâtis du fleuve, et leur quartier de [target_location.GetNameWithNoTooltip] s'est enrichi. Elles veulent désormais que leurs droits soient couchés dans une charte scellée.'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''Scellons la charte.'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''Les berges sont à nous, et leurs revenus aussi.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''Taxe des travaux du fleuve'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''Le trésor paie les digues et les canaux.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''Nouvelles digues'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''De hautes berges tiennent les crues hors des rues, au prix de quelques champs.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''À l'abri des crues'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''Avec des greniers sur les berges et des années sans crue, la ville grandit.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''Péages fluviaux'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''Les péages sur le commerce fluvial remplissent le trésor, mais l'on construit peu.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''Vase et puits souillés'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''La crue a laissé de la boue dans les rues et des immondices dans les puits.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''Gardiens des berges des guildes'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''Les guildes du fleuve entretiennent les berges, et leur quartier prospère.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''Autorité cédée'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''Le fleuve est désormais aux mains des guildes, et chacun voit bien que la cour leur obéit.'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''Des pèlerins aux portes'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''Chaque saison amène davantage de pèlerins à [target_location.GetNameWithNoTooltip]. Ils dorment dans les ruelles, déposent des offrandes au pied des vieilles pierres et rapportent le nom du sanctuaire dans des villages dont la cour n'a jamais entendu parler. Les prêtres se plaignent qu'il soit devenu trop grand pour ses murs ; les intendants, qu'il soit devenu trop grand pour le trésor.'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''Dotons le sanctuaire et pavons la route des pèlerins.'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''Les offrandes sont une richesse. Que le trésor en prélève la dîme.'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''Accordons au grand prêtre un siège parmi les ordres.'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''Le sanctuaire prospère'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''La dotation a accompli ce que les intendants jugeaient impossible. La route est pavée, les hospices sont pleins, et les pèlerins qui viennent à [target_location.GetNameWithNoTooltip] restent désormais pour commercer. Les prêtres voudraient couronner l'œuvre par un grand temple et nous prient d'en poser la première pierre.'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''Élevons le grand temple.'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''La route suffit. Que les offrandes l'entretiennent.'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''Les prêtres murmurent'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''La dîme a rempli le trésor, et les prêtres de [target_location.GetNameWithNoTooltip] l'ont remarqué. Les offrandes, disent-ils, appartiennent à ceux qui les ont faites et à ceux qui veillent sur les pierres. Quelques-uns commencent à le dire dans leurs sermons, et les pèlerins écoutent.'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''Rendons une partie de la dîme au sanctuaire.'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''Gardons la dîme et répondons aux sermons.'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''Un clergé qui siège'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''Le grand prêtre de [target_location.GetNameWithNoTooltip] siège désormais parmi les ordres, et l'antique confrérie du sanctuaire a voix dans nos conseils. Les prêtres sont reconnaissants. Les autres ordres calculent ce que cette voix va leur coûter.'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''Accueillons le clergé dans nos conseils.'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''Leur place est au sanctuaire. Qu'ils y restent.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''Sanctuaire doté'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''Un sanctuaire richement doté et une route pavée attirent les pèlerins, et l'influence des prêtres grandit.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''Le grand temple'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''Un temple élevé sur les vieilles pierres attire les fidèles de tout le pays.'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''Grande prêtrise du sanctuaire'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''Le grand prêtre du sanctuaire ne répond qu'à la foi et siège parmi les ordres.'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''Une maigre récolte'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''Les pluies sont venues tard et la récolte a été maigre. À [target_location.GetNameWithNoTooltip], les greniers sont à moitié vides, le pain coûte deux fois plus cher qu'il y a un mois, et la ville mange plus que ses champs n'ont jamais produit. Les baillis ont apporté leurs comptes à la cour. À les en croire, les réserves dureront jusqu'au cœur de l'hiver, et pas un jour de plus.'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''Achetons du grain aux terres d'au-delà des collines.'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''Rationnons les réserves et prélevons le grain des villages.'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''Défrichons de nouvelles terres et asséchons les bords marécageux de la plaine.'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''Les marchands de grain'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''Le grain qui a nourri [target_location.GetNameWithNoTooltip] l'hiver dernier est passé par les mains de quelques maisons de commerce, et elles se souviennent de qui en avait besoin. Elles tiennent les entrepôts de la ville basse et fixent les prix au marché. Elles demandent à présent à la cour de mettre par écrit ce qu'elles font depuis un an sans rien demander à personne.'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''Accordons leur charte aux marchands de grain.'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''Brisons leur emprise. La ville aura ses propres greniers.'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''Les villages n'oublient pas'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''L'hiver dernier, les villages ont dû céder leur grain de semence, et ils ne l'ont pas pardonné. Aux marchés de printemps de [target_location.GetNameWithNoTooltip], les paysans apportent moins et demandent plus, et les charretiers parlent de champs laissés en friche. Les intendants qualifient toujours la réquisition de nécessité. Dans les villages, on a un autre mot pour cela.'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''Dédommageons les villages en monnaie et en semences.'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''La réquisition a sauvé la ville. Nous ne leur devons rien.'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''Les nouveaux champs donnent'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''Deux récoltes plus tard, les champs asséchés aux portes de [target_location.GetNameWithNoTooltip] portent du blé là où poussaient les roseaux. Des familles des ruelles surpeuplées réclament leur part de la nouvelle terre, et les intendants réclament la dîme.'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''Donnons la nouvelle terre aux familles de la ville.'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''Vendons la nouvelle terre et exportons son grain.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''Grain venu d'ailleurs'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''Le grain acheté garde le pain bon marché, et la ville grandit.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''Rationnement'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''Les intendants répartissent les réserves. La ville mange moins et grogne davantage.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''Nouveaux champs'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''Les marais asséchés et les terres défrichées donnent chaque année plus de grain.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''Charte des marchands de grain'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''Les maisons de grain tiennent le commerce par charte et le mènent pour tout le pays.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''Greniers publics'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''Les greniers remplis les bonnes années nourrissent la ville les mauvaises.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''Champs des nombreuses familles'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''De petites parcelles, où poussent ensemble trois cultures, rendent plus qu'un grand champ.'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''Une route entre deux villes'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''Quelques jours de marche séparent [target_location.GetNameWithNoTooltip] et [other_location.GetNameWithNoTooltip], le long d'une piste que les pluies emportent chaque printemps. Le grain va dans un sens, le drap dans l'autre, et chaque charrette paie un péage à chaque village traversé. Les guildes des deux villes sont venues à la cour avec la même plainte et deux projets bien différents.'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''Pavons une route entre les deux villes.'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''Laissons les marchands la construire, et qu'ils gardent les péages.'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''Concluons un pacte avec les villages : un jour de marché à chaque carrefour.'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''La route est ouverte'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''Les premières caravanes ont emprunté la nouvelle route avant même que les dernières pierres soient posées. Une charrette relie désormais [target_location.GetNameWithNoTooltip] et [other_location.GetNameWithNoTooltip] en une journée, et les greffiers des deux villes se disputent déjà pour savoir à quel marché la route profite.'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''Mettons une garnison sur la route et entretenons-la.'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''Un péage à chaque bout, et que la route se paie elle-même.'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''Les péages s'alourdissent'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''Les marchands qui ont bâti la route ont appris qu'un péage, une fois établi, a tendance à grossir. Les charretiers de [other_location.GetNameWithNoTooltip] paient le double de ce qu'ils payaient, et le drap de [target_location.GetNameWithNoTooltip] coûte autant à la porte que la route elle-même. Chaque ville est persuadée que l'autre a l'oreille de la cour.'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''Plafonnons les péages à l'ancien tarif.'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''Ils ont bâti la route. À eux de fixer les péages.'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''Les jours de marché'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''Les villages le long de la route ont tenu leur pacte. Deux fois l'an, une foire se tient à chaque carrefour, et les marchands de [target_location.GetNameWithNoTooltip] et de [other_location.GetNameWithNoTooltip] s'y retrouvent à mi-chemin, au profit des deux et au grand dam de leurs guildes.'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''Accordons une charte aux foires et envoyons un bailli à chaque carrefour.'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''Les foires appartiennent aux villages. Laissons-les faire.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''Travaux routiers'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''La cour paie les routes, et les travaux vont bon train.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''Une route pavée'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''Les marchandises circulent plus facilement, et les bourgs le long de la route grandissent.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''Charte des marchands de la route'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''Les marchands qui entretiennent la route ont le droit d'y lever un péage.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''Barrières de péage'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''Une maison de péage à la porte attire en ville les marchands et leurs entrepôts.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''Jours de marché'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''Les jours de foire, les marchands des villages le long de la route viennent en ville.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''La route de la cour'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''Une route gardée maintient le commerce entre les mains de la cour.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''Péages honnis'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''Les marchands paient, grognent, et viennent moins souvent.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''Foires à charte'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''Une grande foire en saison remplit les entrepôts et les auberges.'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''Des envoyés de la vallée voisine'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''Des envoyés de [target_country.GetName] sont arrivés à [target_location.GetNameWithNoTooltip]. Nos deux cours partagent leurs dieux ou leur langue, et les mêmes ennemis aux mêmes frontières, et pourtant elles n'échangent depuis des générations que des récriminations. Les envoyés proposent un conseil où nos souverains parleraient d'égal à égal. Nos propres conseillers auraient préféré qu'ils restent chez eux.'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''Siégeons avec eux d'égal à égal.'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''Offrons-leur notre protection et exigeons leur déférence.'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''Remercions-les et gardons nos desseins pour nous.'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''Le conseil se réunit'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''Notre souverain et celui de [target_country.GetName] se sont rencontrés trois fois, et chaque fois ils se sont quittés moins méfiants. Le conseil a commencé à régler les petites querelles de frontière avant qu'elles ne s'enveniment. Les marieurs de la cour dressent déjà leurs listes. Les vieux conseillers estiment qu'un conseil, c'est déjà bien assez.'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''Unissons nos maisons par le mariage et le traité.'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''Un conseil suffit.'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''Le voisin se hérisse'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''La cour de [target_country.GetName] a compris notre offre de protection exactement comme elle était voulue. Ses envoyés sont partis, ses marchands ont été rappelés, et une lettre de la main même de son souverain nous demande de quel droit nous parlons de déférence.'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''Retirons notre exigence et envoyons des présents.'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''Nous avons dit ce que nous pensions.'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''Une porte fermée'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''La cour de [target_country.GetName] a reçu notre réponse et s'est tournée ailleurs. Ses envoyés font désormais antichambre chez nos autres voisins, et une frontière autrefois paisible est surveillée des deux côtés. Nos conseillers se demandent tout haut si le refus était sage.'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''Envoyons une seconde ambassade, les mains ouvertes.'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''Le refus tient.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''Conseil des voisins'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''La cour partage ses délibérations avec un voisin, et sa noblesse y gagne voix au chapitre.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''Confiance du conseil'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''Un souverain qui tient conseil avec ses voisins inspire confiance à l'étranger.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''Pression sur le voisin'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''Nos exigences de déférence ont déprécié notre parole à l'étranger.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''Portes closes'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''La cour garde ses desseins pour elle et surveille ses frontières de plus près.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''Parenté des cours'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''Deux cours unies par le mariage et le traité soutiennent mutuellement leur pouvoir.'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''Les provinces lointaines'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''Notre royaume a dépassé ses routes. À [other_location.GetNameWithNoTooltip], loin de [target_location.GetNameWithNoTooltip], les gens vivent selon leurs propres coutumes et sous leurs propres seigneurs. Ils envoient leurs redevances en retard et leurs fils jamais. Les gouverneurs écrivent que la province est calme. Les marchands écrivent le contraire.'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''Envoyons un gouverneur, et une garnison avec lui.'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''Accordons à la province une charte de ses propres coutumes.'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''Installons parmi eux des familles du cœur du pays.'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''La main du gouverneur'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''Le gouverneur de [other_location.GetNameWithNoTooltip] écrit que la garnison est payée et que les redevances arrivent à l'heure. Il écrit aussi qu'il a pris une maison dans le vieux quartier et une épouse dans une famille du pays, et que les anciens seigneurs dînent désormais à sa table. La cour ne sait trop s'il faut s'en réjouir.'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''Remplaçons les gouverneurs tous les quelques ans.'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''Qu'il reste. Un gouverneur qui est des leurs tient la province.'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''Les chartes se multiplient'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''La nouvelle de la charte accordée à [other_location.GetNameWithNoTooltip] a gagné les autres provinces lointaines plus vite que n'importe quel percepteur. Trois autres ont envoyé des délégations pour réclamer la même, et la noblesse du cœur du pays veut savoir pourquoi les provinces sont récompensées d'être loin.'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''Accordons une charte à toute province qui la demande.'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''La charte était une faveur, non un précédent.'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''De nouveaux voisins'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''Les colons venus du cœur du pays ont bâti leurs maisons le long de la route de [other_location.GetNameWithNoTooltip]. Ils parlent notre langue et honorent nos dieux, et les vieilles familles de la province se tiennent à distance. Une querelle au marché s'est déjà terminée au couteau.'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''Donnons aux vieilles familles des sièges au conseil de la ville.'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''Soutenons les colons.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''Gouverneurs loyaux'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''Les gouverneurs des provinces lointaines les tiennent dans la main de la cour.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''Charte des coutumes'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''Une province laissée à ses coutumes reste calme et prospère.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''Concessions aux provinces'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''L'emprise du cœur du pays sur les terres lointaines s'est relâchée.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''De nouveaux voisins'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''Les colons du cœur du pays font venir leur parenté, et les marchés de la province grandissent.'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''Des étrangers sur le rivage'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''Des navires de [target_country.GetName] ont jeté l'ancre au large de la côte, près de [target_location.GetNameWithNoTooltip]. Leurs marins disent avoir traversé l'océan, et que leurs souverains veulent commercer, et peut-être plus que commercer. Personne sur la côte n'a jamais rien vu de tel. Les anciens se sont réunis trois fois sans rien décider.'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''Recevons leurs envoyés et commerçons avec eux.'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''Ne leur ouvrons qu'un seul port, et surveillons-le.'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''Soulevons la côte contre eux !'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''Les marchands des étrangers'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''Les étrangers sont revenus avec davantage de navires et de marchandises. Leurs marchands veulent une maison sur le quai de [target_location.GetNameWithNoTooltip], le droit d'acheter dans l'arrière-pays et une audience à la cour. Nos propres marchands veulent exactement l'inverse.'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''Donnons-leur leur maison sur le quai.'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''Gardons-les sur la côte, loin des routes de l'intérieur.'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''Guet au port unique'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''Les étrangers s'en tiennent au seul port qu'on leur a accordé, et les guetteurs de [target_location.GetNameWithNoTooltip] comptent leurs navires chaque semaine. Dans l'arrière-pays, on murmure qu'ils apportent la maladie et des dieux inconnus. Les anciens se demandent si ce port unique relevait de la prudence ou de la simple peur.'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''Maintenons le guet et le port unique.'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''Ouvrons un second port pour apaiser les querelles.'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''La côte est prête'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''Une saison entière, les levées ont tenu le rivage près de [target_location.GetNameWithNoTooltip], et les étrangers n'ont pas débarqué. Leurs navires vont et viennent au-delà du récif, et l'on a besoin des hommes aux champs.'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''Renvoyons les levées et dépêchons un envoyé.'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''Maintenons le guet toute l'année.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''Accueil des étrangers'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''Les envoyés d'outre-océan apportent un savoir nouveau, et notre voix porte plus loin.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''Le seul port ouvert'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''Tout navire étranger doit relâcher dans un seul port, dont les quais et les entrepôts grandissent.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''Levées de la côte'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''La côte a pris les armes, et davantage d'hommes peuvent être appelés.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''Le guet de la côte'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''Des guetteurs et des feux le long du rivage rendent tout débarquement coûteux.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''Une maison sur le quai'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''Les marchands étrangers tiennent une maison et un entrepôt sur le quai.'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''Une assemblée coloniale'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''Pour la première fois, les colons de [target_location.GetNameWithNoTooltip] se sont réunis en assemblée sans l'autorisation du gouverneur. Ils paient l'impôt à [target_country.GetName], combattent seuls leurs voisins et cultivent une terre qui n'est pas celle que leurs pères ont quittée. Ils veulent savoir ce qu'ils sont : des sujets, un peuple ou un pays.'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''Demandons à la mère patrie des sièges dans son conseil.'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''Nous ne sommes ni la mère patrie ni les indigènes. Nous sommes un peuple à part entière.'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''Exigeons l'autonomie.'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''Le conseil répond'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''Le conseil de [target_country.GetName] a entendu la pétition. Des sièges pourront être accordés, répondent ses membres, avec le temps et à ceux qui paieront le plus. Les colons les plus riches trouvent le prix raisonnable et comptent déjà leurs pièces. Les plus pauvres ne viennent plus à l'assemblée.'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''Payons le prix d'un siège.'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''Un siège acheté à prix d'or n'est pas un siège.'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''Un peuple de deux mondes'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''Une génération est née à [target_location.GetNameWithNoTooltip] qui n'a jamais vu la mère patrie. Elle parle un parler bien à elle, moitié l'ancienne langue, moitié les mots de la côte, et elle chante le fleuve plutôt que la mer. Les officiers de la mère patrie se plaignent qu'il est difficile de commander un peuple qui ne répond pas à son propre nom.'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''Autorisons les tribunaux à juger dans le parler colonial.'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''Tenons-nous-en à la langue et à la loi de la mère patrie.'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''Le chemin de l'indépendance'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''Depuis une saison entière, l'assemblée de [target_location.GetNameWithNoTooltip] refuse de payer ses redevances. [target_country.GetName|U] a répondu par une lettre sévère et quelques navires. Les capitaines de la milice se disent prêts. Les membres les plus âgés de l'assemblée rappellent que l'indépendance est un mot qui coûte plus qu'il ne rapporte.'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''Levons la milice et préparons la guerre.'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''Négocions l'autonomie en échange des redevances.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''Des sièges à la table'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''Une voix au conseil de la mère patrie attache la colonie à celle-ci.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''Un peuple colonial'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''Un peuple qui a son propre parler et ses propres chants gagne le respect de ses voisins.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''Agitation pour la liberté'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''Les discours de l'assemblée relâchent la loyauté de la colonie envers la mère patrie.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''Liens de parenté'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''Des sièges au conseil achetés à prix d'or attachent les grandes familles à la mère patrie.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''La milice sur pied'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''Tout homme en âge de porter les armes est inscrit sur les rôles, et l'exercice se fait bien.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''Autonomie accordée'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''La colonie se gouverne elle-même, paie moins, et en est d'autant plus loyale.'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''Les villes d'un même fleuve commercent, bâtissent et répondent les unes des autres depuis des générations. Une puissance qui en tient la plupart peut les réunir en un seul État : {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''Marchés d'un même fleuve'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''Les villes du fleuve vendent leurs marchandises comme sur un seul marché.'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''Les vallées d'une même chaîne vivent chacune derrière ses cols et ne s'accordent guère que sur leur liberté. Une puissance qui en tient la plupart peut les lier en une confédération, {name}, en laissant à chaque vallée son propre conseil.'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''Pacte des vallées'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''Les vallées gardent leurs propres conseils et font front commun contre toute puissance extérieure.'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''Les ports d'une même côte naviguent sur les mêmes eaux et craignent les mêmes tempêtes. Une puissance qui en tient la plupart peut les unir en une ligue, {name}, pour commercer ensemble et défendre leur mer.'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''Charte de la ligue'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''Une seule charte lie les marchands et les conseils de chaque port.'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''Les villes d'un même peuple parlent une seule langue et gardent les mêmes coutumes sous des maîtres différents. Une puissance qui en tient la plupart peut les rassembler en une communauté : {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''Un seul peuple'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''Une langue et une coutume communes soudent la communauté et rehaussent son prestige.'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''Toute une région est partagée entre de nombreux souverains, chacun ne tenant que quelques-unes de ses villes. Une puissance qui en tient la plus grande partie peut l'unir en un seul royaume : {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''Administration du royaume'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''Une administration nouvelle s'étend sur toute la région, et ses provinces rentrent dans le rang.'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''Des colonies d'une même côte, fondées par un seul vieux pays ou par plusieurs, en sont venues à partager un même grief et un même avenir. Un État de colons qui tient une part suffisante de cette côte, et dont la capitale se trouve parmi elles, peut se proclamer fédération : {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''Une nation est née'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''Une jeune nation de colons grandit vite et a peu de patience envers les rebelles.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''Grand filon d'argent'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''Une montagne d'argent, plus riche que toute autre mine du monde connu.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''Riche veine d'argent'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''Une veine d'argent plus riche que toute autre mine de la région.'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''Gisement d'argent'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''Un gisement d'argent plus riche que les mines alentour.'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''Filon de mercure'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''Une mine de cinabre dont le vif-argent est recherché bien au-delà de la région.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''Riches pêcheries'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''Des eaux si poissonneuses qu'elles nourrissent toutes les côtes voisines.'''

@@ -18,9 +18,10 @@ to a stretch of water that ``seas.analyse`` found:
   language shows its own; an area of coastal water is a sea, a coast or an ocean by what it
   holds, or the sea that fills most of it).
 
-A province is named after the name most of its cells share, or after its area. The words are
-English while the mod is written (the owner's rule of 2026-10-23: translations come before 1.0.0,
-roadmap L1) and live in ``TERMS``, one pattern per kind of water, so a translation is one table.
+A province is named after the name most of its cells share, or after its area. Names are
+phrases (``wording.Phrase``): a kind of water, a word and, for a part of a body, its compass
+points; each of the game's languages writes them by its own grammar when the files are written
+(roadmap L1).
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -30,12 +31,14 @@ from __future__ import annotations
 
 import math
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
+from rnw import wording
 from rnw.names import NameGenerator
 from rnw.seas import DEEP_HOPS, PassageKind, Shape, Topography
+from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -62,7 +65,7 @@ AXIS_SCALE: Final[int] = 1000
 
 
 class Kind(StrEnum):
-    """A kind of named water; ``TERMS`` holds its words."""
+    """A kind of named water; ``wording`` holds its words in every language."""
 
     SEA = "sea"
     OCEAN = "ocean"
@@ -78,34 +81,10 @@ class Kind(StrEnum):
     ARCHIPELAGO = "archipelago"
 
 
-# One pattern per kind: the word of the place goes where ``{name}`` stands.
-TERMS: Final[dict[Kind, str]] = {
-    Kind.SEA: "{name} Sea",
-    Kind.OCEAN: "{name} Ocean",
-    Kind.GULF: "Gulf of {name}",
-    Kind.BAY: "{name} Bay",
-    Kind.STRAIT: "{name} Strait",
-    Kind.CHANNEL: "{name} Channel",
-    Kind.SOUND: "{name} Sound",
-    Kind.COAST: "{name} Coast",
-    Kind.CAPE: "Cape {name}",
-    Kind.ISLAND: "{name} Island",
-    Kind.ISLANDS: "{name} Islands",
-    Kind.ARCHIPELAGO: "{name} Archipelago",
-}
-# Eight points of the compass, then a name for the part of a body that lies in the middle.
-SECTORS: Final[tuple[str, ...]] = (
-    "Eastern",
-    "North Eastern",
-    "Northern",
-    "North Western",
-    "Western",
-    "South Western",
-    "Southern",
-    "South Eastern",
-)
-CENTRAL: Final[str] = "Central"
-FAR: Final[str] = "Far"
+# Eight points of the compass (east first, then counter-clockwise), then the middle of a body.
+SECTORS: Final[tuple[str, ...]] = wording.SECTORS
+CENTRAL: Final[str] = wording.CENTRAL
+FAR: Final[str] = wording.FAR
 PASSAGES: Final[dict[PassageKind, Kind]] = {
     PassageKind.STRAIT: Kind.STRAIT,
     PassageKind.CHANNEL: Kind.CHANNEL,
@@ -130,23 +109,23 @@ class Placement:
 
 @dataclass(frozen=True, slots=True)
 class SeaNames:
-    """Texts for the cells, provinces and areas of generated water, keyed by cell number and key.
+    """Names of the cells, provinces and areas of generated water, keyed by cell number and key.
 
-    A text may refer to a key of the game's localization as ``$key$``.
+    A name may be the game's own text under a key (``wording.reference``).
     """
 
-    cells: dict[int, str]
-    provinces: dict[str, str]
-    areas: dict[str, str]
+    cells: dict[int, Name]
+    provinces: dict[str, Name]
+    areas: dict[str, Name]
 
 
-def reference(key: str) -> str:
-    """The text that shows another key's text, in whichever language the game is in."""
-    return f"${key}$"
+def reference(key: str) -> Phrase:
+    """The name that shows another key's text, in whichever language the game is in."""
+    return wording.reference(key)
 
 
-def _name(kind: Kind, word: str) -> str:
-    return TERMS[kind].format(name=word)
+def _name(kind: Kind, word: str) -> Phrase:
+    return Phrase(kind.value, word)
 
 
 def _neighbours(world: NewWorld) -> list[list[int]]:
@@ -213,11 +192,11 @@ def name_waters(
     neighbours = _neighbours(world)
     links = {cell: [other for other in neighbours[cell] if other in sea] for cell in sorted(sea)}
     words = NameGenerator(seed, "seas")
-    names: dict[int, str] = {}
+    names: dict[int, Name] = {}
     for passage in waters.passages:
         text = _name(PASSAGES[passage.kind], words.next())
         names.update(dict.fromkeys(passage.cells, text))
-    body_text: dict[int, str] = {}
+    body_text: dict[int, Phrase] = {}
     for index, cells in enumerate(waters.bodies):
         kind = _body_kind(len(cells))
         body_text[index] = _name(kind, words.next())
@@ -247,7 +226,7 @@ def _name_coasts(
     placed: Sequence[Placement | None],
     graph: tuple[Sequence[Sequence[int]], Mapping[int, Sequence[int]]],
     words: NameGenerator,
-    names: dict[int, str],
+    names: dict[int, Name],
 ) -> None:
     """Capes, bays, coasts and island waters: one name for each group.
 
@@ -287,9 +266,9 @@ def _name_areas(
     world: NewWorld,
     waters: Waters,
     placed: Sequence[Placement | None],
-    body_text: Mapping[int, str],
+    body_text: Mapping[int, Phrase],
     words: NameGenerator,
-) -> dict[str, str]:
+) -> dict[str, Name]:
     """A text for every area of water: the game's for its oceans, ours for the coastal water."""
     cells_of: dict[str, list[int]] = {}
     ocean: dict[str, bool] = {}
@@ -298,7 +277,7 @@ def _name_areas(
         assert placement is not None  # noqa: S101 - a sea cell is placed
         cells_of.setdefault(placement.area, []).append(cell)
         ocean[placement.area] = placement.ocean
-    text: dict[str, str] = {}
+    text: dict[str, Name] = {}
     dominated: dict[int, list[str]] = {}
     for area in sorted(cells_of):
         cells = cells_of[area]
@@ -331,8 +310,8 @@ def _share_body(  # noqa: PLR0913, PLR0917 - areas of one body are told apart by
     body: int,
     areas: Sequence[str],
     cells_of: Mapping[str, Sequence[int]],
-    name: str,
-) -> dict[str, str]:
+    name: Phrase,
+) -> dict[str, Name]:
     """Areas that are mostly one body: its name, and a compass point when it has several."""
     if len(areas) == 1:
         return {areas[0]: name}
@@ -345,20 +324,22 @@ def _share_body(  # noqa: PLR0913, PLR0917 - areas of one body are told apart by
             int(value) for value in world.centroids[inside].sum(axis=0) // len(inside) - centre
         )
         spots[area] = (math.isqrt(row * row + column * column), _sector(row, column))
-    texts: dict[str, str] = {}
-    taken: set[str] = set()
+    texts: dict[str, Name] = {}
+    taken: set[tuple[str, ...]] = set()
     nearest = min(areas, key=lambda area: (spots[area][0], area))
     for area in sorted(areas, key=lambda area: (spots[area][0], area)):
-        word = CENTRAL if area == nearest else SECTORS[spots[area][1]]
-        while word in taken:
-            word = f"{FAR} {word}"
-        taken.add(word)
-        texts[area] = f"{word} {name}"
+        sectors = (CENTRAL if area == nearest else SECTORS[spots[area][1]],)
+        while sectors in taken:
+            sectors = (FAR, *sectors)
+        taken.add(sectors)
+        texts[area] = replace(name, sectors=sectors)
     return texts
 
 
-def _own_areas(area_text: Mapping[str, str], placed: Sequence[Placement | None]) -> dict[str, str]:
-    """The texts of the areas that are not the game's ocean areas."""
+def _own_areas(
+    area_text: Mapping[str, Name], placed: Sequence[Placement | None]
+) -> dict[str, Name]:
+    """The names of the areas that are not the game's ocean areas."""
     own = {placement.area for placement in placed if placement is not None and not placement.ocean}
     return {area: text for area, text in area_text.items() if area in own}
 
@@ -366,16 +347,16 @@ def _own_areas(area_text: Mapping[str, str], placed: Sequence[Placement | None])
 def _name_provinces(
     sea: set[int],
     placed: Sequence[Placement | None],
-    names: Mapping[int, str],
-    area_text: Mapping[str, str],
-) -> dict[str, str]:
+    names: Mapping[int, Name],
+    area_text: Mapping[str, Name],
+) -> dict[str, Name]:
     """A province takes the name that at least two of its cells share, else its area's."""
     cells_of: dict[str, list[int]] = {}
     for cell in sorted(sea):
         placement = placed[cell]
         assert placement is not None  # noqa: S101 - a sea cell is placed
         cells_of.setdefault(placement.province, []).append(cell)
-    provinces: dict[str, str] = {}
+    provinces: dict[str, Name] = {}
     for province, cells in cells_of.items():
         counts = Counter(names[cell] for cell in cells)
         shared = [

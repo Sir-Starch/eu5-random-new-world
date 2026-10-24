@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''Река меняет русло'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''Сколько помнят старики, великая река кормила город [target_location.GetNameWithNoTooltip]. Её разливы оставляли на полях чёрный ил, её баржи возили зерно, а пристани принесли городу богатство. Но теперь русло с каждой весной уходит всё дальше. Ил забивает старые каналы, паводок добирается до нижних улиц, а в житницах меньше хлеба, чем значится в отчётах управителей.\n\nГородские старейшины явились ко двору. У каждого есть верное средство, и каждое оплачивать предлагается кому-то другому.'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''Насыпать дамбы и прорыть новые каналы.'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''Пусть платят баржи, а не казна. Берега стояли до сих пор — простоят и дальше.'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''Речные цеха знают берега лучше нас. Пусть сами за ними и смотрят.'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''Дамбы выстояли'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''Весенний паводок пришёл, как приходит всегда, но в этом году остановился у новых дамб. На нижних улицах города [target_location.GetNameWithNoTooltip], где вода прежде месяц стояла на рынках, она так и не поднялась выше причалов. Теперь смотрители берегов спрашивают, как мы распорядимся купленным покоем.'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''Поставить житницы на новых берегах.'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''Оставить излишки в казне.'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''Река берёт своё'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''Пошлины пополняли казну, а до берегов никому не было дела. Этой весной река поднялась, нашла самое слабое место и прорвалась. Когда вода сошла, нижние кварталы города [target_location.GetNameWithNoTooltip] лежали под слоем грязи, колодцы были отравлены, а баржи сидели на мели прямо посреди улиц. Сборщики докладывают, что все пошлины уплачены сполна. На будущий год платить их будет некому.'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''Немедленно расчистить протоки, чего бы это ни стоило!'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''Перенести хлебные склады повыше, а нижний город пусть сохнет сам.'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''Хранители берегов'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''Уже несколько лет берегами ведают речные цеха. Обходится это дешевле, чем когда-либо обходилось двору, но стараются цеха прежде всего для себя: их пристани — лучшие на реке, а их квартал в городе [target_location.GetNameWithNoTooltip] заметно разбогател. Теперь они хотят, чтобы их права записали в грамоту и скрепили печатью.'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''Скрепить грамоту печатью.'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''Берега принадлежат нам, а с ними и доходы.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''Сбор на речные работы'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''Казна оплачивает дамбы и каналы.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''Новые дамбы'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''Высокие берега не пускают паводок на улицы, но забирают часть полей.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''Без страха перед паводком'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''Житницы на берегах и годы без наводнений дают городу расти.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''Речные пошлины'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''Пошлины с речной торговли наполняют казну, а строится мало.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''Ил и гнилые колодцы'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''Паводок оставил грязь на улицах и нечистоты в колодцах.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''Цеховые смотрители берегов'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''Речные цеха следят за берегами, и их квартал процветает.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''Уступленная власть'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''Рекой теперь распоряжаются цеха, и все видят, что двор пляшет под их дудку.'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''Паломники у ворот'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''С каждым сезоном в город [target_location.GetNameWithNoTooltip] приходит всё больше паломников. Они ночуют прямо в переулках, оставляют подношения у древних камней и разносят имя святыни по деревням, о которых двор и не слыхивал. Жрецы жалуются, что святилищу тесно в его стенах, управители — что казне тесно с таким святилищем.'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''Одарить святилище и замостить дорогу паломников.'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''Подношения — тоже богатство. Пусть казна берёт с них десятину.'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''Дать верховному жрецу место среди сословий.'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''Святилище процветает'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''Дар казны сделал то, во что управители не верили. Дорога замощена, странноприимные дома полны, и паломники, приходящие в город [target_location.GetNameWithNoTooltip], теперь задерживаются, чтобы поторговать. Жрецы хотят увенчать дело великим храмом и просят нас заложить первый камень.'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''Возвести великий храм.'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''Хватит и дороги. Пусть подношения идут на её содержание.'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''Ропот жрецов'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''Десятина пополнила казну, и жрецы святилища в городе [target_location.GetNameWithNoTooltip] это заметили. Подношения, говорят они, принадлежат тем, кто их принёс, и тем, кто ухаживает за камнями. Кое-кто уже твердит это в проповедях, и паломники прислушиваются.'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''Вернуть святилищу часть десятины.'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''Десятину оставить, а на проповеди ответить.'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''Жречество в совете'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''Верховный жрец из города [target_location.GetNameWithNoTooltip] теперь заседает среди сословий, а древний орден святилища получил голос в нашем совете. Жрецы благодарны. Прочие сословия подсчитывают, во что им обойдётся этот голос.'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''Принять жречество в наш совет.'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''Их место при святилище. Пусть там и остаются.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''Одарённое святилище'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''Богатое святилище и мощёная дорога привлекают паломников, и влияние жрецов растёт.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''Великий храм'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''Храм над древними камнями собирает верующих со всей страны.'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''Верховное жречество святилища'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''Верховный жрец святилища отвечает только перед верой и заседает среди сословий.'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''Скудный урожай'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''Дожди запоздали, и урожай вышел скудным. В городе [target_location.GetNameWithNoTooltip] житницы наполовину пусты, хлеб за месяц подорожал вдвое, а едоков больше, чем окрестные поля когда-либо могли прокормить. Старосты принесли ко двору свои бирки. По их счёту запасов хватит до середины зимы, и ни днём дольше.'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''Купить зерно в землях за холмами.'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''Ввести пайки и забрать зерно у деревень.'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''Распахать новые земли и осушить сырые окраины равнины.'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''Хлебные торговцы'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''Зерно, которым город [target_location.GetNameWithNoTooltip] кормился прошлой зимой, прошло через руки нескольких купеческих домов, и они хорошо помнят, кто в нём нуждался. Склады нижнего города у них, цену на рынке назначают они. Теперь они просят двор записать на бумаге то, что они целый год делали без спроса.'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''Пожаловать хлебным торговцам грамоту.'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''Сломить их хватку. У города будут свои житницы.'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''Деревни не забыли'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''Прошлой зимой деревни отдали семенное зерно и до сих пор этого не простили. На весенних торгах в городе [target_location.GetNameWithNoTooltip] крестьяне привозят меньше, а просят больше, и возчики толкуют о брошенных под паром полях. Управители по-прежнему называют поборы вынужденной мерой. В деревнях для них есть другое слово.'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''Вернуть деревням долг монетой и семенами.'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''Поборы спасли город. Мы им ничего не должны.'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''Новые поля родят'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''Прошло два урожая, и на осушенных полях у города [target_location.GetNameWithNoTooltip] колосится хлеб там, где прежде шумел камыш. Семьи из тесных переулков просят себе долю новой земли, а управители — десятину с неё.'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''Отдать новую землю городским семьям.'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''Продать новую землю, а её зерно вывозить на сторону.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''Привозное зерно'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''Купленное зерно держит хлеб дешёвым, а город растёт.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''Пайки'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''Управители делят запасы. Город ест меньше и ворчит больше.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''Новые поля'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''Осушенные болота и расчищенные земли с каждым годом дают больше зерна.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''Грамота хлебных торговцев'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''Хлебные дома держат торговлю по грамоте и ведут её на всю страну.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''Общественные житницы'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''Житницы, наполненные в добрые годы, кормят город в худые.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''Поля многих семей'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''Маленькие наделы, где растут вместе три культуры, дают больше одного большого поля.'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''Дорога между двумя городами'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''Между городами [target_location.GetNameWithNoTooltip] и [other_location.GetNameWithNoTooltip] несколько дней пути по тропе, которую каждую весну размывают дожди. В одну сторону везут зерно, в другую — сукно, и с каждой телеги берут пошлину в каждой деревне по дороге. Цеха обоих городов пришли ко двору с одной жалобой и двумя совсем разными замыслами.'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''Проложить мощёную дорогу между городами.'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''Пусть дорогу строят купцы, и пошлины пусть берут они же.'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''Договориться с деревнями: у каждого перекрёстка — свой торговый день.'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''Дорога открыта'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''Первые караваны прошли по новой дороге раньше, чем легли последние камни. Теперь телеги добираются от города [target_location.GetNameWithNoTooltip] до города [other_location.GetNameWithNoTooltip] за день, а писари обоих городов уже спорят, чьему рынку служит дорога.'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''Поставить на дороге стражу и держать её в порядке.'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''Брать пошлину на обоих концах, и пусть дорога сама себя содержит.'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''Пошлины тяжелеют'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''Купцы, построившие дорогу, убедились, что однажды назначенная пошлина имеет обыкновение расти. Возчики из города [other_location.GetNameWithNoTooltip] платят вдвое против прежнего, а сукно из города [target_location.GetNameWithNoTooltip] у ворот стоит столько же, сколько сама дорога. Каждый город уверен, что двор слушает другого.'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''Ограничить пошлины прежней ставкой.'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''Дорогу строили они. Им и назначать пошлины.'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''Торговые дни'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''Деревни у дороги держат уговор. Дважды в год у каждого перекрёстка собирается ярмарка, и торговцы из городов [target_location.GetNameWithNoTooltip] и [other_location.GetNameWithNoTooltip] встречаются там на полпути — к выгоде обоих и к досаде их цехов.'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''Пожаловать ярмаркам грамоты и послать к каждому перекрёстку пристава.'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''Ярмарки — дело деревень. Пусть так и остаётся.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''Дорожные работы'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''Двор платит за дороги, и работа спорится.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''Мощёная дорога'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''Товары идут легче, и города вдоль дороги растут.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''Грамота дорожных купцов'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''Купцы, содержащие дорогу, получили право брать с неё пошлину.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''Заставы'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''Застава у городских ворот притягивает купцов и их склады.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''Торговые дни'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''В ярмарочные дни в город съезжаются торговцы из деревень вдоль дороги.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''Государева дорога'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''Дорога под охраной держит торговлю в руках двора.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''Ненавистные пошлины'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''Купцы платят, ворчат и приезжают всё реже.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''Жалованные ярмарки'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''Большая ярмарка в сезон наполняет склады и постоялые дворы.'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''Послы из соседней долины'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''В город [target_location.GetNameWithNoTooltip] прибыли послы державы [target_country.GetName]. У наших дворов общие боги или общий язык, общие враги на тех же границах, и всё же поколениями они не посылали друг другу ничего, кроме жалоб. Послы предлагают совет, где наши правители говорили бы на равных. Наши собственные советники предпочли бы, чтобы послы сидели дома.'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''Мы сядем с ними за один стол как равные.'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''Предложить им наше покровительство и потребовать почтения.'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''Поблагодарить их и остаться при своём мнении.'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''Совет собирается'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''Наш правитель и правитель державы [target_country.GetName] встречались трижды, и всякий раз расставались с меньшей подозрительностью. Совет начал улаживать мелкие пограничные ссоры, пока те не переросли в крупные. Придворные свахи уже составляют списки. Старые советники считают, что и совета вполне довольно.'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''Скрепить союз наших домов браком и договором.'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''Совета довольно.'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''Сосед ощетинился'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''При дворе державы [target_country.GetName] наше предложение покровительства поняли ровно так, как оно и было задумано. Послы уехали, купцы отозваны, а от их правителя пришло письмо, собственноручное, с вопросом, по какому праву мы говорим о почтении.'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''Отказаться от требования и отправить дары.'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''Мы сказали то, что хотели сказать.'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''Закрытая дверь'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''Держава [target_country.GetName] получила наш ответ и обратила взор в другую сторону. Её послы теперь дожидаются приёма у других наших соседей, а за спокойной прежде границей следят с обеих сторон. Советники вслух гадают, мудро ли было отказывать.'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''Отправить второе посольство — с открытыми руками.'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''Отказ остаётся в силе.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''Совет соседей'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''Двор делится своими замыслами с соседом, и знать получает голос.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''Доверие совета'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''Правителю, который держит совет с соседями, доверяют и за границей.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''Давление на соседа'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''Требования почтения обесценили наше слово за границей.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''Закрытые двери'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''Двор держит свои замыслы при себе и пристальнее следит за границами.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''Родство дворов'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''Два двора, связанные браком и договором, поддерживают власть друг друга.'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''Дальние провинции'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''Наша держава переросла свои дороги. В краю [other_location.GetNameWithNoTooltip], вдали от города [target_location.GetNameWithNoTooltip], люди живут по своим обычаям и под своими господами. Подати они присылают с опозданием, а сыновей в войско не присылают вовсе. Наместники пишут, что в провинции спокойно. Купцы пишут обратное.'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''Послать наместника, а с ним и гарнизон.'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''Даровать провинции грамоту на её собственные обычаи.'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''Поселить среди них семьи из сердца страны.'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''Длинная рука наместника'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''Наместник края [other_location.GetNameWithNoTooltip] пишет, что гарнизону платят, а подати приходят в срок. Ещё он пишет, что купил дом в старом квартале, взял жену из местной семьи и что старые господа теперь обедают за его столом. При дворе не знают, радоваться ли этому.'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''Менять наместников каждые несколько лет.'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''Пусть остаётся. Наместник, который здесь свой, удержит край.'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''Грамоты множатся'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''Весть о грамоте, дарованной краю [other_location.GetNameWithNoTooltip], разлетелась по дальним провинциям быстрее любого сборщика податей. Ещё три провинции прислали посольства с той же просьбой, а знать из сердца страны хочет знать, с какой стати окраины награждают за то, что они далеко.'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''Даровать грамоту каждой провинции, которая попросит.'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''Грамота была милостью, а не обычаем.'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''Новые соседи'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''Поселенцы из сердца страны выстроили дома вдоль дороги в край [other_location.GetNameWithNoTooltip]. Они говорят на нашем языке и чтут наших богов, а старые семьи провинции держатся от них в стороне. Одна ссора на рынке уже кончилась ножами.'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''Дать старым семьям места в городском совете.'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''Встать на сторону поселенцев.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''Верные наместники'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''Наместники в дальних провинциях держат их в руке двора.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''Грамота на обычаи'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''Провинция, оставленная при своих обычаях, живёт спокойно и богатеет.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''Уступки провинциям'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''Хватка сердца страны на дальних землях ослабла.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''Новые соседи'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''Поселенцы из сердца страны зовут за собой родню, и рынки провинции растут.'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''Чужаки на берегу'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''У побережья близ города [target_location.GetNameWithNoTooltip] бросили якорь корабли державы [target_country.GetName]. Моряки говорят, что пересекли океан и что их правители хотят торговать, а может, и не только торговать. Никто на побережье прежде не видел ничего подобного. Старейшины собирались уже трижды и ничего не решили.'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''Принять их послов и торговать с ними.'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''Пустить их только в один порт и не спускать с него глаз.'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''Поднять побережье против них!'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''Купцы чужаков'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''Чужаки вернулись, и кораблей с товарами у них стало больше. Их купцы хотят дом на пристани города [target_location.GetNameWithNoTooltip], право закупать товар в глубине страны и приём при дворе. Наши собственные торговцы хотят ровно обратного.'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''Дать им дом на пристани.'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''Держать их на побережье и не пускать на дороги вглубь страны.'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''Дозор у единственного порта'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''Чужаки держатся единственного порта, который им отвели, и дозорные города [target_location.GetNameWithNoTooltip] каждую неделю пересчитывают их корабли. В глубине страны шепчутся, что чужаки несут с собой болезни и странных богов. Старейшины спрашивают, чем был единственный открытый порт — благоразумием или попросту страхом.'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''Сохранить дозор и единственный порт.'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''Открыть второй порт, чтобы унять раздоры.'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''Побережье наготове'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''Целый сезон ополчение простояло на берегу у города [target_location.GetNameWithNoTooltip], а чужаки так и не высадились. Их корабли приходят и уходят за рифом, а людей давно ждут в полях.'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''Распустить ополчение и отправить посла.'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''Держать дозор весь год.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''Радушие к чужеземцам'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''Послы из-за океана приносят новые знания, и наш голос слышен дальше.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''Единственный открытый порт'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''Все чужеземные корабли заходят в один порт, и его пристани и склады растут.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''Береговое ополчение'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''Побережье взялось за оружие, и под знамёна можно призвать больше людей.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''Береговой дозор'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''Дозорные и сигнальные огни вдоль берега дорого обойдутся любому десанту.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''Дом на пристани'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''Купцы чужаков держат на пристани дом и склад.'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''Колониальное собрание'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''Впервые поселенцы города [target_location.GetNameWithNoTooltip] собрались на сход без дозволения наместника. Они платят подати державе [target_country.GetName], сами воюют с соседями и пашут землю, которая не похожа на ту, что оставили их отцы. Теперь они хотят понять, кто они такие: подданные, народ или страна.'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''Просить старую родину о местах в её совете.'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''Мы не старая родина и не туземцы. Мы — свой народ.'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''Требовать самоуправления.'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''Совет отвечает'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''Совет державы [target_country.GetName] выслушал прошение. Места, отвечают его члены, могут быть даны — со временем и тем, кто больше заплатит. Богатейшие колонисты находят цену справедливой и уже пересчитывают монеты. Поселенцы победнее перестали ходить на сход.'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''Уплатить цену места.'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''Купленное место — не место.'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''Народ двух миров'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''В городе [target_location.GetNameWithNoTooltip] выросло поколение, никогда не видевшее старой родины. Оно говорит на собственном наречии — наполовину старый язык, наполовину слова побережья — и поёт о реке, а не о море. Офицеры старой родины жалуются, что трудно командовать народом, который не откликается на собственное имя.'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''Позволить судам вести дела на колониальном наречии.'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''Держаться языка и закона старой родины.'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''Путь к независимости'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''Уже целый сезон собрание города [target_location.GetNameWithNoTooltip] отказывается платить подати. Держава [target_country.GetName] ответила суровым письмом и несколькими кораблями. Капитаны ополчения говорят, что готовы. Старшие члены собрания говорят, что независимость — слово, которое стоит дороже, чем приносит.'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''Созвать ополчение и готовиться к войне.'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''Выторговать самоуправление в обмен на подати.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''Места за столом'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''Голос в совете старой родины привязывает к ней колонию.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''Колониальный народ'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''Народ со своим наречием и своими песнями заслуживает уважения соседей.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''Призывы к свободе'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''Речи в собрании подтачивают верность колонии старой родине.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''Узы родства'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''Купленные места в совете привязывают знатные семьи к старой родине.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''Ополчение под ружьём'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''Каждый, кто способен носить оружие, вписан в списки, и муштра идёт исправно.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''Дарованное самоуправление'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''Колония правит собой сама, платит меньше и за это верна.'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''Города на одной реке поколениями торговали, строили и держали ответ друг перед другом. Держава, которой принадлежит большая их часть, может объединить их в одно государство — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''Рынки одной реки'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''Прибрежные города реки торгуют как единый рынок.'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''Долины одного хребта живут порознь, каждая за своими перевалами, и сходятся разве что в любви к свободе. Держава, которой принадлежит большая их часть, может связать их в конфедерацию — {name}, — оставив каждой долине её собственный совет.'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''Договор долин'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''Долины сохраняют свои советы и стоят заодно против любой внешней силы.'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''Порты одного побережья ходят по одним водам и боятся одних штормов. Держава, которой принадлежит большая их часть, может объединить их в лигу — {name}, — чтобы вместе торговать и защищать своё море.'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''Хартия лиги'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''Единая хартия связывает купцов и советы всех портов.'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''Города одного народа говорят на одном языке и хранят одни обычаи, хоть и живут под разными правителями. Держава, которой принадлежит большая их часть, может собрать их в содружество — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''Единый народ'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''Один язык и одни обычаи скрепляют содружество и поднимают его престиж.'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''Целый регион поделён между множеством правителей, и каждому принадлежит лишь несколько его городов. Держава, которой принадлежит большая его часть, может объединить его в одно царство — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''Управление царством'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''Новое управление охватывает весь регион, и его провинции покоряются.'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''Колонии одного побережья, основанные выходцами из одной старой страны или из нескольких, пришли к общей обиде и общему будущему. Держава поселенцев, которой принадлежит достаточная часть побережья и чья столица лежит среди этих колоний, может провозгласить себя федерацией — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''Рождение нации'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''Молодая нация поселенцев быстро растёт и не терпит мятежников.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''Великая серебряная жила'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''Целая гора серебра, богаче любого другого рудника известного мира.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''Богатая серебряная жила'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''Серебряная жила богаче любого другого рудника в регионе.'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''Серебряный пласт'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''Пласт серебра богаче окрестных рудников.'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''Ртутная жила'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''Киноварный рудник, чью ртуть ценят далеко за пределами региона.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''Богатые промыслы'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''Воды так богаты рыбой, что кормят всё окрестное побережье.'''

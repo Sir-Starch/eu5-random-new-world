@@ -129,8 +129,9 @@ else a `Coast` (at least 40 per cent coastal cells), an `Ocean` (at least 70 per
 cells of the reference world have 244 names (the first generated worlds had one each); 366 of the
 cells refer to a vanilla ocean area by key.
 
-The words are English while the mod is written (the owner's rule of 2026-10-23); `seanames.TERMS`
-is one pattern per kind of water, so the translation of L1 is one table. Names are drawn from the
+Names are phrases (a kind of water, a word, compass points), written in each of the game's
+languages by `wording` since 0.11.5 (*Northern Gulf of Akaira*, *Северная часть залива Акайра*,
+*アカイラ湾北部*; [localization](localization.md) §3.3). Names are drawn from the
 land layer's seed and nothing else, so rerolling the peoples or the resources leaves them.
 
 ## Currents (`rnw.currents`)

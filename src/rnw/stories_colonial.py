@@ -76,25 +76,25 @@ def contact() -> Story:
     end = tuple(f"remove_variable = {name}" for name in (centre, other, path))
     first = prose("""
         Ships of [target_country.GetName] have anchored off the coast near
-        [target_location.GetNameWithNoTooltip]. The sailors say they come from beyond the ocean
-        and that their rulers wish for trade and, perhaps, for more. The elders of the coast have
-        never seen their like, and no two of them agree on what to do.
+        [target_location.GetNameWithNoTooltip]. Their sailors say they have crossed the ocean, and
+        that their rulers want trade, and perhaps more than trade. Nobody on the coast has ever seen
+        their like. The elders have met three times and settled nothing.
     """)
     merchants = prose("""
-        The strangers have come back with more ships and more goods. Their merchants ask for a
-        house at the quay of [target_location.GetNameWithNoTooltip], for the right to buy inland
-        and for a hearing at court. The traders of the coast ask for the opposite.
+        The strangers have returned with more ships and more goods. Their merchants want a house on
+        the quay of [target_location.GetNameWithNoTooltip], the right to buy inland and a hearing at
+        court. Our own traders want exactly the opposite.
     """)
     watch = prose("""
         The strangers keep to the one port they were given, and the watchmen of
-        [target_location.GetNameWithNoTooltip] count their ships every week. Rumours go inland
-        that the strangers carry sickness and strange gods. The elders ask whether the single port
-        is wisdom or only fear.
+        [target_location.GetNameWithNoTooltip] count their ships every week. Inland, people whisper
+        that the strangers bring sickness and strange gods. The elders ask whether one open port is
+        prudence or plain fear.
     """)
     ready = prose("""
-        The levies have stood on the shore at [target_location.GetNameWithNoTooltip] for a
-        season, and the strangers have not landed. Their ships come and go beyond the reef, and
-        the men of the coast are needed in the fields.
+        For a whole season the levies have stood on the shore at
+        [target_location.GetNameWithNoTooltip], and the strangers have not landed. Their ships come
+        and go beyond the reef, and the men are wanted back in the fields.
     """)
     nodes = (
         Node(
@@ -115,7 +115,7 @@ def contact() -> Story:
                 ),
                 Option(
                     "b",
-                    "Admit them to one port only, and watch it.",
+                    "Let them into one port only, and watch it.",
                     (
                         location(centre, "rnw_contact_one_port", 15),
                         "add_stability = stability_weak_bonus",
@@ -126,7 +126,7 @@ def contact() -> Story:
                 ),
                 Option(
                     "c",
-                    "Raise the coast against them.",
+                    "Raise the coast against them!",
                     (
                         country("rnw_contact_coast_levies", 8),
                         location(centre, "rnw_contact_coast_watch", 8),
@@ -141,18 +141,18 @@ def contact() -> Story:
         ),
         Node(
             2,
-            "The Merchants of the Strangers",
+            "The Strangers' Merchants",
             merchants,
             (
                 Option(
                     "a",
-                    "Grant them a house at the quay.",
+                    "Give them their house on the quay.",
                     (location(centre, "rnw_contact_trading_house", 15), *end),
                     55,
                 ),
                 Option(
                     "b",
-                    "Bar them from the inland roads and keep the trade at the coast.",
+                    "Keep them on the coast and off the inland roads.",
                     (gold(2), "add_stability = stability_weak_bonus", *end),
                     45,
                 ),
@@ -161,7 +161,7 @@ def contact() -> Story:
         ),
         Node(
             3,
-            "The Watch at the Single Port",
+            "Watch at the Single Port",
             watch,
             (
                 Option(
@@ -172,7 +172,7 @@ def contact() -> Story:
                 ),
                 Option(
                     "b",
-                    "Open a second port to ease the quarrels.",
+                    "Open a second port and ease the quarrels.",
                     (
                         gold(-2),
                         unlocation(centre, "rnw_contact_one_port"),
@@ -223,35 +223,35 @@ def contact() -> Story:
             COUNTRY,
             Source(STATIC, "iro_welcoming_to_outsiders"),
             "Welcome to Outsiders",
-            "Envoys from beyond the ocean bring new knowledge, and the court is heard farther.",
+            "Envoys from beyond the ocean bring new knowledge, and our voice carries farther.",
         ),
         Modifier(
             "rnw_contact_one_port",
             LOCATION,
             Source(STATIC, "entry_port_modifier"),
             "The One Open Port",
-            "All the strangers' ships come to one port, and its quays and warehouses grow.",
+            "Every foreign ship must put in at one port, and its quays and warehouses grow.",
         ),
         Modifier(
             "rnw_contact_coast_levies",
             COUNTRY,
             Source(STATIC, "enhanced_colonial_militia"),
             "Levies of the Coast",
-            "The coast has raised its men, and more of them can be called.",
+            "The coast has taken up arms, and more men can be called.",
         ),
         Modifier(
             "rnw_contact_coast_watch",
             LOCATION,
             Source(STATIC, "hun_city_league_obligation"),
             "The Coast Watch",
-            "Men and beacons along the shore make a landing costly.",
+            "Lookouts and beacons along the shore make any landing costly.",
         ),
         Modifier(
             "rnw_contact_trading_house",
             LOCATION,
             Source(STATIC, "surveyed_smugglers_cove"),
-            "A House at the Quay",
-            "The strangers' merchants keep a house and a warehouse at the quay.",
+            "A House on the Quay",
+            "The strangers' merchants keep a house and a warehouse on the quay.",
         ),
     )
     return Story(
@@ -291,26 +291,27 @@ def colony() -> Story:
     centre, other, path = COLONY_HOME_VARIABLE, COLONY_SEAT_VARIABLE, COLONY_PATH_VARIABLE
     end = tuple(f"remove_variable = {name}" for name in (centre, other, path))
     first = prose("""
-        The settlers of [target_location.GetNameWithNoTooltip] have met in assembly for the first
-        time without the governor's leave. They owe taxes to [target_country.GetName], they have
-        neighbours to fight and a land that is not the one their fathers left. They ask what they
-        are in the end: subjects, a people or a country.
+        For the first time, the settlers of [target_location.GetNameWithNoTooltip] have met in
+        assembly without the governor's leave. They pay taxes to [target_country.GetName], fight
+        their own neighbours and farm a land that is not the one their fathers left. They want to
+        know what they are: subjects, a people or a country.
     """)
     council = prose("""
-        The council of [target_country.GetName] has heard the petition. Its members say that
-        seats may be given, in time, to those who pay most, and the richest colonists say the price
-        is fair. The poorer settlers say it is not.
+        The council of [target_country.GetName] has heard the petition. Seats may be granted, its
+        members reply, in time, and to those who pay the most. The richest colonists think the price
+        fair and are already counting their coin. The poorer settlers have stopped coming to the
+        assembly.
     """)
     people = prose("""
-        A generation has been born in [target_location.GetNameWithNoTooltip] that has never seen
-        the old country. It speaks a tongue of its own, half the old language and half the words
-        of the coast, and its songs are of the river and not of the sea. The officers of the old
-        country complain that it is hard to give orders to a people that does not answer to a name.
+        A generation has been born in [target_location.GetNameWithNoTooltip] that has never seen the
+        old country. It speaks a tongue of its own, half the old language and half the words of the
+        coast, and it sings of the river rather than the sea. The old country's officers complain
+        that it is hard to command a people that will not answer to its name.
     """)
     road = prose("""
-        The assembly of [target_location.GetNameWithNoTooltip] has refused its dues for a season.
-        [target_country.GetName] has sent a stern letter and a few ships. The captains of the
-        militia say they are ready, and the older members of the assembly say that independence
+        For a whole season the assembly of [target_location.GetNameWithNoTooltip] has refused to pay
+        its dues. [target_country.GetName] has answered with a stern letter and a few ships. The
+        militia captains say they are ready. The older members of the assembly say that independence
         is a word that costs more than it buys.
     """)
     nodes = (
@@ -332,7 +333,7 @@ def colony() -> Story:
                 ),
                 Option(
                     "b",
-                    "Proclaim a colonial identity, neither of the old country nor of the natives.",
+                    "We are neither the old country nor the natives. We are a people of our own.",
                     (country("rnw_colony_people", 15), set_to(path, 2)),
                     35,
                     Follow(3, (36, 60)),
@@ -358,14 +359,14 @@ def colony() -> Story:
             (
                 Option(
                     "a",
-                    "Accept the price of a seat.",
+                    "Pay the price of a seat.",
                     (gold(-2), country("rnw_colony_ties", 15), *end),
                     55,
                     trigger=AFFORD,
                 ),
                 Option(
                     "b",
-                    "Refuse a seat bought with coin.",
+                    "A seat bought with coin is no seat at all.",
                     ("add_legitimacy = legitimacy_weak_bonus", *end),
                     45,
                 ),
@@ -379,7 +380,7 @@ def colony() -> Story:
             (
                 Option(
                     "a",
-                    "Recognise the colonial tongue in the courts.",
+                    "Let the courts hear cases in the colonial tongue.",
                     (
                         "add_legitimacy = legitimacy_weak_bonus",
                         "add_stability = stability_weak_bonus",
@@ -407,7 +408,7 @@ def colony() -> Story:
             (
                 Option(
                     "a",
-                    "Raise the militia and prepare for war.",
+                    "Call out the militia and prepare for war.",
                     (country("rnw_colony_militia", 5), *end),
                     45,
                 ),
@@ -441,7 +442,7 @@ def colony() -> Story:
             COUNTRY,
             Source(STATIC, "culture_influence_power"),
             "A Colonial People",
-            "A people of its own tongue and songs is respected by its neighbours.",
+            "A people with its own tongue and songs earns its neighbours' respect.",
         ),
         Modifier(
             "rnw_colony_agitation",
@@ -455,21 +456,21 @@ def colony() -> Story:
             COUNTRY,
             Source(STATIC, "receiving_strengthen_family_ties"),
             "Ties of Kinship",
-            "Seats in the council bought with coin tie the great families to the old country.",
+            "Council seats bought with coin bind the great families to the old country.",
         ),
         Modifier(
             "rnw_colony_militia",
             COUNTRY,
             Source(STATIC, "nap_struggle_for_independence"),
             "The Militia Stands",
-            "Every man who can bear arms is enrolled, and they are well drilled.",
+            "Every man who can bear arms is on the rolls, and they drill well.",
         ),
         Modifier(
             "rnw_colony_autonomy",
             COUNTRY,
             Source(STATIC, "receiving_appanage_grant_admin_autonomy"),
             "Autonomy Granted",
-            "The colony governs itself and pays less, and is loyal for it.",
+            "The colony governs itself and pays less, and it is loyal for it.",
         ),
     )
     return Story(

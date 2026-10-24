@@ -29,6 +29,7 @@ from rnw.content import (
     State,
 )
 from rnw.formations import SPECS
+from rnw.game_texts import Text, localize
 from rnw.pdx import Block, parse
 from rnw.stories import STORIES
 from rnw.storymodel import (
@@ -47,10 +48,14 @@ from rnw.storymodel import (
     render_events,
     render_hook,
 )
+from rnw.wording import english
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
     from pathlib import Path
+
+    from rnw.game_texts import Entry
+    from rnw.wording import Name
 
 NAMESPACE: Final[str] = "rnw_story"
 FIRST_START: Final[int] = 1001
@@ -206,30 +211,55 @@ def _yaml(language: str, entries: Mapping[str, str]) -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
 
 
+def _formations(
+    game_dir: Path,
+    plan: ContentPlan,
+    identities: Sequence[eu5_formation.Identity],
+    files: dict[str, bytes],
+    texts: dict[str, Entry],
+) -> list[str]:
+    """Add the formables' files and texts; return their families' founding modifiers."""
+    families = {formation.family for formation in plan.formations}
+    specs = [spec for spec in SPECS if spec.family in families]
+    eu5_formation.check_installation(game_dir, specs)
+    for path, text in eu5_formation.files(plan.formations, identities).items():
+        files[path] = text.encode("utf-8-sig")
+    texts.update(eu5_formation.texts(plan.formations, identities))
+    for spec in specs:
+        for key in (
+            f"STATIC_MODIFIER_NAME_{spec.modifier.name}",
+            f"STATIC_MODIFIER_DESC_{spec.modifier.name}",
+        ):
+            texts[key] = Text(key)
+    return [
+        modifier_block(spec.modifier, payload(game_dir, spec.modifier.source)) for spec in specs
+    ]
+
+
 def build(  # noqa: PLR0913 - the stories need the plan, the installation and the world's identities.
     game_dir: Path,
     plan: ContentPlan,
     *,
-    names: Mapping[str, str],
+    names: Mapping[str, Name],
     tags: Sequence[str],
     languages: Sequence[str],
     seed: int,
     taken: frozenset[tuple[int, int, int]],
-    regions: Mapping[str, str] | None = None,
+    regions: Mapping[str, Name] | None = None,
 ) -> Written:
     """Every file of the stories, formables and colonial names of one world.
 
     ``regions`` are the regions of the generated land with their names; each gets colonial names.
     """
     files: dict[str, bytes] = {}
-    texts: dict[str, str] = {}
+    texts: dict[str, Entry] = {}
     present = {opportunity.family for opportunity in plan.opportunities}
     stories = [story for story in STORIES if story.pulse is not None or story.family in present]
     modifiers: list[str] = []
     privileges: list[str] = []
     for story in stories:
         files[f"{EVENTS_DIR}/{story.namespace}.txt"] = render_events(story).encode("utf-8-sig")
-        texts.update(event_keys(story))
+        texts.update({key: Text(key) for key in event_keys(story)})
         modifiers += [modifier_block(m, payload(game_dir, m.source)) for m in story.modifiers]
         privileges += [privilege_block(p, payload(game_dir, p.source)) for p in story.privileges]
     ids: dict[str, str] = {}
@@ -240,17 +270,8 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         files[PULSE_FILE] = render_hook(stories).encode("utf-8-sig")
     identities: list[eu5_formation.Identity] = []
     if plan.formations:
-        families = {formation.family for formation in plan.formations}
-        specs = [spec for spec in SPECS if spec.family in families]
-        eu5_formation.check_installation(game_dir, specs)
         identities = eu5_formation.identities(plan.formations, names, tags, seed, taken)
-        for path, text in eu5_formation.files(plan.formations, identities).items():
-            files[path] = text.encode("utf-8-sig")
-        texts.update(eu5_formation.texts(plan.formations, identities))
-        for spec in specs:
-            modifiers.append(modifier_block(spec.modifier, payload(game_dir, spec.modifier.source)))
-            texts[f"STATIC_MODIFIER_NAME_{spec.modifier.name}"] = spec.modifier.title
-            texts[f"STATIC_MODIFIER_DESC_{spec.modifier.name}"] = spec.modifier.text
+        modifiers += _formations(game_dir, plan, identities, files, texts)
     if regions:
         colonial_names.check_installation(game_dir)
         files[colonial_names.NAMES_FILE] = colonial_names.script(list(regions)).encode("utf-8-sig")
@@ -261,7 +282,9 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         files[PRIVILEGES_FILE] = "\n".join(privileges).encode("utf-8-sig")
     if texts:
         for language in languages:
-            files[f"{LOCALIZATION}/{language}/rnw_story_l_{language}.yml"] = _yaml(language, texts)
+            files[f"{LOCALIZATION}/{language}/rnw_story_l_{language}.yml"] = _yaml(
+                language, localize(texts, language)
+            )
     stats: dict[str, object] = {
         "opportunities": plan.count(),
         "starts": ids,
@@ -271,7 +294,7 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         "formations": {
             identity.tag: {
                 "family": formation.family,
-                "name": identity.name,
+                "name": english(identity.name),
                 "places": len(formation.places),
                 "states": list(formation.states),
                 **({"basis": formation.basis} if formation.basis else {}),

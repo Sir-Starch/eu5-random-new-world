@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "eu5-random-new-world"
-version = "0.11.4"
+version = "0.11.5"
 description = "Procedurally generated New Worlds for Europa Universalis V"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -80,9 +80,12 @@ ignore = ["D", "COM812", "ISC001", "T201", "CPY001"]
 max-complexity = 12
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "PLR2004", "SLF001"]
+# Tests compare texts in every script of the game's languages (RUF001).
+"tests/**" = ["S101", "PLR2004", "SLF001", "RUF001"]
 # Scripts for the packaging jobs, run by path rather than imported.
 "packaging/**" = ["INP001"]
+# Letters of other scripts that look like Latin ones are what these modules write.
+"src/rnw/{translit,wording}.py" = ["RUF001"]
 
 [tool.basedpyright]
 typeCheckingMode = "all"

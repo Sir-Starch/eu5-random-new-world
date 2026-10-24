@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''流れを変える大河'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''人々の記憶にある限り、大河は[target_location.GetNameWithNoTooltip]を養ってきた。氾濫は黒い沃土を運び、川船は穀物を運び、船着き場は町に富をもたらした。だが今、流路は春が来るたびに少しずつずれていく。泥が古い運河をふさぎ、出水は下町の通りにまで達し、穀倉の蓄えは差配役の報告よりも少ない。\n\n町の長老たちが宮廷に参上した。誰もが妙案を持ってきたが、どの案も費用は他人持ちである。'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''堤を築き、新しい運河を掘れ。'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''払うのは川船であって、国庫ではない。堤はこれまでも持ちこたえてきた。'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''堤のことは川のギルドが一番よく知っている。彼らに任せよう。'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''堤は持ちこたえた'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''春の出水はいつものようにやって来たが、今年は新しい堤の前で止まった。かつては水が市場に一月も居座った[target_location.GetNameWithNoTooltip]の下町でも、水は岸壁を越えなかった。いま堤の番人たちは、買い取ったこの平穏をどう使うつもりかと問うている。'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''新しい岸辺に穀倉を建てよ。'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''余剰は国庫に納めておけ。'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''川は取り分を取り立てる'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''通行税は国庫を満たしたが、堤は顧みられなかった。この春、川は水かさを増し、最も弱い箇所を見つけて決壊させた。水が引いたとき、[target_location.GetNameWithNoTooltip]の下町は泥に埋まり、井戸は汚れ、川船が通りの真ん中で立ち往生していた。徴税人によれば、通行税は一銭残らず納められたという。来年それを納める者は、もう誰も残っていない。'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''費用はいくらかかってもよい、すぐに水路をさらえ！'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''穀物蔵を高台へ移し、下町は乾くに任せよ。'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''堤の番人'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''ここ数年、堤を守ってきたのは川のギルドである。彼らは宮廷がかつてやったよりも安く仕事をこなすが、それは自分たちのためでもある。彼らの船着き場は川で一番立派に造られ、[target_location.GetNameWithNoTooltip]にある彼らの街区はすっかり豊かになった。いま彼らは、自分たちの権利を特許状に記し、封印してほしいと願い出ている。'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''特許状に封印を押せ。'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''堤はわれらのものだ。そこからの収入もな。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''治水工事の課税'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''国庫が堤と運河の費用を賄っている。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''新しい堤'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''高い堤が出水を通りから締め出すが、畑の一部が犠牲になる。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''洪水の心配なし'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''岸辺の穀倉と洪水のない年月のおかげで、町は大きくなっていく。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''河川通行税'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''川の交易にかかる通行税が国庫を潤すが、ほとんど何も建てられない。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''泥と汚れた井戸'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''洪水は通りに泥を、井戸に汚物を残していった。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''ギルドの堤番'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''川のギルドが堤を守り、彼らの街区は栄えている。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''譲り渡した権限'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''川はいまやギルドの手にあり、宮廷が彼らの言いなりなのは誰の目にも明らかだ。'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''門前の巡礼者'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''季節がめぐるごとに、[target_location.GetNameWithNoTooltip]を訪れる巡礼者は増えていく。彼らは路地で眠り、古い石に供物を捧げ、宮廷が聞いたこともない村々へ聖地の名を持ち帰る。神官たちは聖所が壁に収まりきらなくなったと嘆き、差配役たちは国庫に収まりきらなくなったと嘆く。'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''聖所に寄進し、巡礼路を石で舗装せよ。'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''供物もまた富だ。国庫に十分の一税を納めさせよ。'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''大神官に身分の列の席を与えよ。'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''栄える聖所'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''寄進は、差配役たちが無理だと言っていたことを成し遂げた。道は舗装され、宿坊は満ち、[target_location.GetNameWithNoTooltip]を訪れる巡礼者は今では商いのために逗留するようになった。神官たちはこの事業を大神殿で締めくくりたいと望み、その礎石をわれらの手で据えてほしいと願っている。'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''大神殿を建立せよ。'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''道だけで十分だ。供物はその維持に充てよ。'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''神官たちの不平'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''十分の一税は国庫を満たし、[target_location.GetNameWithNoTooltip]の神官たちはそれに気づいた。供物は捧げた者と石を守る者のものだと彼らは言う。説教の場でそれを口にする者も出はじめ、巡礼者たちは耳を傾けている。'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''十分の一税の一部を聖所に返せ。'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''十分の一税は手放さず、説教には言葉で応じよ。'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''席を得た神官団'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''[target_location.GetNameWithNoTooltip]の大神官は今や身分の列に連なり、聖所の古い教団はわれらの評議会で発言権を得た。神官たちは感謝している。ほかの身分の者たちは、その発言権が自分たちに何をもたらすか勘定している。'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''神官団をわれらの評議会に迎え入れよ。'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''彼らの居場所は聖所だ。そこから出すな。'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''寄進を受けた聖所'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''豊かな聖所と舗装路が巡礼者を引き寄せ、神官たちの威信が高まっている。'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''大神殿'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''古い石の上に建てられた神殿が、国じゅうの信徒を引き寄せている。'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''聖所の大神官職'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''聖所の大神官は信仰に対してのみ責任を負い、身分の列に連なる。'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''乏しい収穫'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''雨が遅れ、収穫は乏しかった。[target_location.GetNameWithNoTooltip]の穀倉は半ば空になり、パンの値は一月で倍に跳ね上がり、町は周りの畑がかつて実らせたこともないほどの量を食べている。代官たちは割り符を宮廷に持参した。彼らの勘定では、蓄えは真冬までしかもたず、一日たりとも延びはしないという。'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''丘の向こうの土地から穀物を買い付けよ。'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''蓄えを配給制にし、村々から穀物を徴発せよ。'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''新たな土地を拓き、平野の湿った縁を干拓せよ。'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''穀物商人'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''昨冬[target_location.GetNameWithNoTooltip]を養った穀物は、わずかな商家の手を経て運ばれた。彼らは誰がそれを必要としていたかをよく覚えている。下町の蔵を押さえ、市場の値を決めているのも彼らだ。いま彼らは、この一年断りもなくやってきたことを宮廷に書面で認めてほしいと願い出ている。'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''穀物商人に特許状を与えよ。'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''彼らの支配を打ち砕け。町は自前の穀倉を持つ。'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''村々は忘れない'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''昨冬、村々は種籾を差し出し、いまだにそれを許していない。[target_location.GetNameWithNoTooltip]の春の市では、農民たちは持ち込む量を減らして値を吊り上げ、荷車引きたちは休耕地の噂をしている。差配役たちは今もあの徴発をやむをえぬ措置と呼ぶ。村では別の言葉で呼ばれている。'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''金と種籾で村々に償え。'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''あの徴発が町を救ったのだ。借りなどない。'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''実りをもたらす新しい畑'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''二度の収穫を経て、[target_location.GetNameWithNoTooltip]の郊外の干拓地では、かつて葦が茂っていた場所に麦が実っている。狭い路地に暮らす家族たちは新しい土地の分け前を求め、差配役たちはその十分の一税を求めている。'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''新しい土地を町の家族たちに与えよ。'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''新しい土地を売り、その穀物は国外に出荷せよ。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''輸入穀物'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''買い入れた穀物がパンを安く保ち、町は大きくなっていく。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''配給制'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''差配役が蓄えを分配している。町は食べる量が減り、不平が増えた。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''新しい畑'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''干拓した沼地と切り拓いた土地が、年ごとに多くの穀物をもたらしている。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''穀物商人の特許状'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''穀物商家が特許状により交易を握り、国全体のために取引している。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''公営の穀倉'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''豊作の年に満たした穀倉が、凶作の年に町を養う。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''多くの家族の畑'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''三つの作物をまとめて植えた小さな区画は、一枚の大きな畑よりも多くを実らせる。'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''二つの町を結ぶ道'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''[target_location.GetNameWithNoTooltip]と[other_location.GetNameWithNoTooltip]は数日の道のりを隔てており、両者を結ぶ小道は春ごとに雨で流されてしまう。一方へは穀物が、もう一方へは毛織物が運ばれ、荷車は途中の村を通るたびに通行料を払う。両方の町のギルドが、同じ不満と、まるで違う二つの計画を携えて宮廷にやって来た。'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''二つの町の間に石畳の道を敷け。'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''道は商人に造らせ、通行料も彼らに取らせればよい。'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''村々と約定を結べ。辻ごとに市の立つ日を設けるのだ。'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''道は開かれた'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''最後の石が敷かれる前から、最初の隊商は新しい道を通っていった。今では荷車が[target_location.GetNameWithNoTooltip]と[other_location.GetNameWithNoTooltip]の間を一日で行き来し、両方の町の書記たちは、この道がどちらの市場のために造られたのかで早くも言い争っている。'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''道に守備兵を置き、手入れを怠るな。'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''両端で通行料を取り、道の費用は道に払わせよ。'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''重くなる通行料'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''道を造った商人たちは、通行料というものは一度決めると膨らんでいくものだと学んだ。[other_location.GetNameWithNoTooltip]の荷車引きはかつての倍を払い、[target_location.GetNameWithNoTooltip]の毛織物は門に着くまでに道そのものと同じくらいの値がつく。どちらの町も、宮廷が相手の言い分ばかり聞いていると思い込んでいる。'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''通行料を以前の額で頭打ちにせよ。'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''道を造ったのは彼らだ。通行料も彼らが決めればいい。'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''市の立つ日'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''道沿いの村々は約定を守った。年に二度、辻ごとに市が立ち、[target_location.GetNameWithNoTooltip]と[other_location.GetNameWithNoTooltip]の商人たちはそこで道半ばに落ち合う。両者には得になるが、それぞれのギルドにとっては面白くない話である。'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''市に特許状を与え、辻ごとに代官を送れ。'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''市は村々のものだ。好きにさせておけ。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''道路工事'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''宮廷が道の費用を出し、工事ははかどっている。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''石畳の道'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''品物の行き来が楽になり、道沿いの町々が大きくなっていく。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''道の商人の特許状'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''道を維持する商人たちが、通行料を取る権利を持っている。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''関所'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''門の関所が商人とその倉庫を町に呼び寄せている。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''市の立つ日'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''市の日には、道沿いの村々から商人が町にやって来る。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''宮廷の道'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''守備兵の立つ道が、交易を宮廷の手に留めている。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''恨まれる通行料'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''商人たちは払いはするが、不平をこぼし、足が遠のいている。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''特許を得た定期市'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''季節の大市が倉庫と宿屋を満たしている。'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''隣の谷からの使節'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''[target_country.GetName]の使節が[target_location.GetNameWithNoTooltip]に到着した。われらと彼らの宮廷は同じ神々を祀るか同じ言葉を話し、同じ国境に同じ敵を抱えている。それでいて、何世代にもわたって互いに送り合ってきたのは苦情ばかりだった。使節たちは、両国の君主が対等に語り合う評議会を提案している。わが方の顧問たちは、使節が国許にとどまっていてくれればよかったと思っている。'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''対等の立場で、彼らと席を同じくしよう。'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''われらの庇護を申し出て、敬意を求めよ。'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''礼を述べ、こちらの腹の内は明かすな。'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''評議会の開催'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''わが君主と[target_country.GetName]の君主はすでに三度会い、そのたびに猜疑の念を和らげて別れた。評議会は、国境の小さな諍いが大きくなる前に収めはじめている。宮廷の仲人たちはもう縁組の候補を書き出している。老いた顧問たちは、評議会だけでも十分に近しいと考えている。'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''婚姻と条約で両家を結べ。'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''評議会で十分だ。'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''逆立つ隣国'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''[target_country.GetName]の宮廷は、われらの庇護の申し出をまさにその意図どおりに受け取った。使節は去り、商人は呼び戻され、君主自らの手になる書状が届いた。いかなる権利があって敬意などと口にするのか、と。'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''要求を取り下げ、贈り物を送れ。'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''言うべきことを言ったまでだ。'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''閉ざされた扉'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''[target_country.GetName]はわれらの返答を受け取り、よそへ目を向けた。今ではその使節がほかの隣国の広間で待っており、穏やかだった国境は双方から見張られている。顧問たちは、拒んだのは賢明だったのかと口に出して首をかしげている。'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''胸襟を開いて、二度目の使節を送れ。'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''拒絶は撤回しない。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''隣国との評議会'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''宮廷が隣国と協議を共にし、貴族が発言権を得ている。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''評議会の信頼'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''隣国と評議会を持つ君主は、国外でも信頼される。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''隣国への圧力'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''敬意を求めたことで、国外におけるわれらの言葉の重みが下がった。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''閉ざされた門'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''宮廷は腹の内を明かさず、国境の見張りを強めている。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''宮廷同士の縁'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''婚姻と条約で結ばれた二つの宮廷が、互いの支配を支え合っている。'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''遠方の属州'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''わが国は道の届く範囲を越えて大きくなった。[target_location.GetNameWithNoTooltip]から遠く離れた[other_location.GetNameWithNoTooltip]では、人々は自分たちの慣習に従い、自分たちの領主の下で暮らしている。貢納は遅れて届き、息子たちは決して送られてこない。総督たちは属州は平穏だと書き送ってくる。商人たちはその逆を書き送ってくる。'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''総督を送れ。守備隊も付けてな。'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''属州に、独自の慣習を認める特許状を与えよ。'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''中心地の家族を彼らの間に入植させよ。'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''総督の長い腕'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''[other_location.GetNameWithNoTooltip]の総督は、守備隊には給金が払われ、貢納は期日どおりに届いていると書いてきた。さらに、旧市街に家を構え、土地の家から妻を娶り、古くからの領主たちが今では自分の食卓で食事をしているとも書いている。宮廷はこれを喜ぶべきかどうか決めかねている。'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''総督は数年ごとに交代させよ。'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''留任させよ。土地に根を下ろした総督こそ属州を保てる。'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''増える特許状'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''[other_location.GetNameWithNoTooltip]に特許状が与えられたという知らせは、どんな徴税人よりも速くほかの遠方の属州に伝わった。さらに三つの属州が同じものを求めて使節を送ってきており、中心地の貴族たちは、遠くにあるというだけでなぜ属州が報われるのかと問いただしている。'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''求める属州すべてに特許状を与えよ。'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''あの特許状は恩恵であって、前例ではない。'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''新しい隣人'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''中心地から来た入植者たちが、[other_location.GetNameWithNoTooltip]へ通じる道沿いに家を建てた。彼らはわれらの言葉を話し、われらの神々を敬う。属州の古い家々は彼らと距離を置いている。市場でのいさかいが、すでに刃傷沙汰になった。'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''古い家々に町の評議会の議席を与えよ。'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''入植者の側に立て。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''忠実な総督'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''遠方の属州の総督が、属州を宮廷の掌中に留めている。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''慣習の特許状'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''独自の慣習を許された属州は平穏を保ち、栄えている。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''属州への譲歩'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''中心地の遠方の土地への締めつけが緩んでいる。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''新しい隣人'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''中心地からの入植者が親族を呼び寄せ、属州の市場が大きくなっている。'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''浜辺の異人'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''[target_country.GetName]の船が、[target_location.GetNameWithNoTooltip]近くの沖合に錨を下ろした。水夫たちは大洋を越えてきたと言い、彼らの君主は交易を、そしておそらくは交易以上のものを望んでいるという。このような者たちを見たことのある者は、沿岸には一人もいない。長老たちは三度集まったが、何ひとつ決まらなかった。'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''彼らの使節を迎え、交易せよ。'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''入港は一つの港だけに限り、そこを見張れ。'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''沿岸を挙げて彼らに立ち向かえ！'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''異人の商人'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''異人たちは、さらに多くの船と品物を携えて戻ってきた。彼らの商人は、[target_location.GetNameWithNoTooltip]の波止場に商館を、内陸で買い付ける権利を、そして宮廷での謁見を求めている。わが国の商人たちの望みは、そのまったく逆である。'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''波止場の商館を与えてやれ。'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''彼らを沿岸にとどめ、内陸の道には近づけるな。'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''唯一の港の見張り'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''異人たちは与えられた唯一の港から出ようとせず、[target_location.GetNameWithNoTooltip]の見張りは毎週その船を数えている。内陸では、異人は病と見知らぬ神々を連れてくるとささやかれている。長老たちは、港を一つだけ開いたのは賢明だったのか、ただの恐れだったのかと問うている。'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''見張りと唯一の港を維持せよ。'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''二つ目の港を開き、揉め事を和らげよ。'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''備える沿岸'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''まる一季節のあいだ、民兵は[target_location.GetNameWithNoTooltip]近くの浜辺に立ち続けたが、異人たちは上陸してこなかった。彼らの船は岩礁の向こうを行き来しており、男たちの手は畑で必要とされている。'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''民兵を解散させ、使者を送れ。'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''見張りは一年じゅう続けよ。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''異人の歓迎'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''大洋の彼方からの使節が新しい知識をもたらし、われらの声は遠くまで届く。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''唯一の開かれた港'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''異国の船はすべて一つの港に寄港せねばならず、その波止場と倉庫は大きくなっている。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''沿岸の民兵'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''沿岸の民は武器を取り、より多くの兵を召集できる。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''沿岸の見張り'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''浜辺に並ぶ見張りとのろし台が、いかなる上陸にも高い代償を払わせる。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''波止場の商館'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''異人の商人が波止場に商館と倉庫を構えている。'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''植民地議会'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''[target_location.GetNameWithNoTooltip]の入植者たちが、初めて総督の許しを得ずに集会を開いた。彼らは[target_country.GetName]に税を納め、隣人とは自分たちだけで戦い、父祖が後にしたのとは違う土地を耕している。いま彼らは、自分たちが何者なのかを知りたがっている。臣民なのか、一つの民なのか、それとも一つの国なのか。'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''本国に、その評議会の議席を請願せよ。'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''われらは本国の者でも先住民でもない。われらはわれら自身の民だ。'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''自治を要求せよ。'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''評議会の返答'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''[target_country.GetName]の評議会は請願を聞き届けた。議席はいずれ与えられることもあろう、最も多く払う者に、とその議員たちは答えている。最も裕福な植民者たちはその値を妥当と見て、すでに金を数えている。貧しい入植者たちは、もう集会に来なくなった。'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''議席の代価を払え。'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''金で買った議席など議席ではない。'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''二つの世界の民'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''[target_location.GetNameWithNoTooltip]には、本国を一度も見たことのない世代が育った。彼らは半分は古い言葉、半分は沿岸の言葉という独自の言葉を話し、海ではなく川を歌う。本国の士官たちは、自分の名にさえ応えない民に命令するのは難しいとこぼしている。'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''裁判を植民地の言葉で行うことを認めよ。'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''本国の言葉と法を守れ。'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''独立への道'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''[target_location.GetNameWithNoTooltip]の議会は、まる一季節にわたって貢納を拒んでいる。[target_country.GetName]は厳しい書状と数隻の船で応じた。民兵隊の隊長たちは用意はできていると言う。議会の年長の者たちは、独立とは得るものより高くつく言葉だと言う。'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''民兵を召集し、戦に備えよ。'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''貢納と引き換えに自治を交渉せよ。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''食卓の席'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''本国の評議会での発言権が、植民地を本国につなぎとめている。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''植民地の民'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''独自の言葉と歌を持つ民は、隣人たちの敬意を集める。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''自由を求める扇動'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''議会での演説が、本国に対する植民地の忠誠を揺るがしている。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''縁故の絆'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''金で買った評議会の議席が、名家を本国に結びつけている。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''立ち上がる民兵'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''武器を取れる者は皆名簿に載り、訓練も行き届いている。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''認められた自治'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''植民地は自らを治め、納める額は減ったが、そのぶん忠実である。'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''一つの川に沿う町々は、何世代にもわたって交易し、ともに築き、互いに責任を負ってきた。その大半を押さえた勢力は、それらを一つの国家に束ねることができる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''一つの川の市場'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''川沿いの町々が、一つの市場として品物を売っている。'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''一つの山脈の谷々は、それぞれの峠の向こうで別々に暮らし、自らの自由のほかにはほとんど意見が合わない。その大半を押さえた勢力は、谷ごとの評議会を残したまま、それらを連合、{name}にまとめることができる。'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''谷々の盟約'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''谷々は独自の評議会を保ちつつ、外からのいかなる勢力にも団結して立ち向かう。'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''一つの海岸の港々は同じ海を行き、同じ嵐を恐れる。その大半を押さえた勢力は、ともに交易し自らの海を守るために、それらを同盟、{name}に結集することができる。'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''同盟の憲章'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''一つの憲章が、すべての港の商人と評議会を結びつけている。'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''一つの民の町々は、多くの支配者の下にあっても一つの言葉を話し、同じ慣習を守っている。その大半を押さえた勢力は、それらを共同体にまとめることができる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''一つの民'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''一つの言葉と一つの慣習が共同体を結束させ、その威信を高めている。'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''一つの地方全体が多くの支配者に分割され、それぞれがわずかな町を領しているにすぎない。その大半を押さえた勢力は、地方を一つの国に統一することができる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''王国の行政'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''新たな行政が地方全体に行き渡り、その属州は服従しつつある。'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''一つの海岸に並ぶ植民地は、一つの旧国から、あるいはいくつもの国から入植したものだが、今では同じ不満と同じ未来を分かち合うようになった。その海岸の十分な部分を押さえ、首都をそれらの植民地のなかに置く入植者の国家は、連邦を名乗ることができる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''国民の誕生'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''入植者の若い国は急速に成長しており、反乱者には容赦がない。'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''大銀鉱脈'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''知られた世界のどの鉱山よりも豊かな、銀でできた山。'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''豊かな銀脈'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''この地方のどの鉱山よりも豊かな銀の鉱脈。'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''銀の鉱床'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''周りの鉱山よりも豊かな銀の鉱床。'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''水銀鉱脈'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''その水銀が地方の外まで遠く珍重される辰砂の鉱山。'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''豊かな漁場'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''魚があまりに豊富で、近隣のあらゆる沿岸を養う海。'''

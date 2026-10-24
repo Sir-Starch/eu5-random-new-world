@@ -44,6 +44,7 @@ from rnw.names import MarkovNames, name_key
 from rnw.newworld import NewWorld
 from rnw.pdx import parse
 from rnw.societies import STATE, TRIBE, Polity, Societies
+from rnw.wording import adjective, render
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -243,10 +244,15 @@ def test_country_texts_parse_and_name_every_tag() -> None:
     assert {entry.key for entry in definitions.entries} == {"QQA", "QQB"}
     assert country_names(countries) == {
         "QQA": "Xatlan",
-        "QQA_ADJ": "Xatlan",
+        "QQA_ADJ": adjective("Xatlan"),
         "QQB": "Xatlan",
-        "QQB_ADJ": "Xatlan",
+        "QQB_ADJ": adjective("Xatlan"),
     }
+    # Each language forms the adjective the way the game's own texts complete it (C272).
+    assert [render(adjective("Xatlan"), language) for language in ("english", "russian")] == [
+        "Xatlan",
+        "Шатланск",
+    ]
 
 
 def test_prune_setup_writes_generated_pops() -> None:

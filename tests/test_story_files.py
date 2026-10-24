@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import pytest
@@ -272,15 +273,21 @@ def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path)
     assert ' rnw_union_1_f: "$XYZ$"' in english
 
 
-def test_the_texts_are_written_in_every_language_the_same(tmp_path: Path) -> None:
-    """Until L1 translates them, each language carries the English text."""
+def test_the_texts_are_written_in_every_language_from_its_catalog(tmp_path: Path) -> None:
+    """Each language has the same keys, its own translations and its own names (L1)."""
     files = _build(_install(tmp_path))
-    english = files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"]
-    turkish = files[f"{LOCALIZATION}/turkish/rnw_story_l_turkish.yml"]
-    assert english.decode("utf-8-sig").replace("l_english:", "l_x:") == turkish.decode(
-        "utf-8-sig"
-    ).replace("l_turkish:", "l_x:")
-    assert b"rnw_river.1.title" in english
+
+    def entries(language: str) -> dict[str, str]:
+        text = files[f"{LOCALIZATION}/{language}/rnw_story_l_{language}.yml"].decode("utf-8-sig")
+        return dict(re.findall(r'^ (\S+): "(.*)"$', text, flags=re.MULTILINE))
+
+    english, turkish = entries("english"), entries("turkish")
+    assert english.keys() == turkish.keys()
+    assert english["rnw_river.1.title"] == "The River Turns"
+    assert turkish["rnw_river.1.title"] == "Nehir Yatağını Değiştiriyor"
+    assert turkish["XYZ"] == "Alto Birliği"
+    assert turkish["rnw_union_1_f"] == "$XYZ$"
+    assert "Alto Birliği" in turkish["rnw_union_1_f_desc"]
     assert len(STORIES) == len({story.family for story in STORIES}) == 8
 
 

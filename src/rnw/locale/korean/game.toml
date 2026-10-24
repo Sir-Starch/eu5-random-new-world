@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''물길을 바꾸는 강'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''사람들이 기억하는 한, 큰 강은 언제나 [target_location.GetNameWithNoTooltip]의 젖줄이었습니다. 강의 범람은 검은 옥토를 남겼고, 강의 거룻배는 곡식을 실어 날랐으며, 강의 나루터는 도시를 부유하게 만들었습니다. 그러나 이제 물길은 봄이 올 때마다 조금씩 더 멀어지고 있습니다. 진흙이 오래된 운하를 막고, 물난리가 아랫동네 거리까지 차오르며, 곡물 창고에는 관리인들이 보고한 것보다 적은 곡식이 남아 있습니다.\n\n도시의 원로들이 궁정에 찾아왔습니다. 저마다 묘안을 내놓았지만, 어느 묘안이든 그 값은 남이 치러야 합니다.'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''제방을 쌓고 새 운하를 파라.'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''돈은 국고가 아니라 거룻배가 내야 한다. 둑은 지금까지도 버텨 왔다.'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''둑은 강의 길드가 가장 잘 안다. 그들에게 맡겨라.'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''제방이 버티다'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''봄 홍수는 여느 해처럼 찾아왔지만, 올해는 새 제방 앞에서 멈췄습니다. 예전에는 물이 한 달씩 시장에 고여 있던 [target_location.GetNameWithNoTooltip]의 아랫동네 거리에서도, 물은 부두를 넘지 않았습니다. 이제 제방 관리인들은 우리가 사들인 이 평화를 어떻게 쓸 생각인지 묻고 있습니다.'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''새 강둑에 곡물 창고를 지어라.'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''남은 돈은 국고에 넣어 두어라.'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''강이 제 몫을 거두다'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''통행세는 국고를 채웠지만, 둑을 돌보는 이는 아무도 없었습니다. 올봄 강물이 불어나 가장 약한 곳을 찾아내 터뜨렸습니다. 물이 빠지자 [target_location.GetNameWithNoTooltip]의 아랫동네는 진흙에 파묻혔고, 우물은 더럽혀졌으며, 거룻배들이 거리 한복판에 얹혀 있었습니다. 징수관들은 통행세가 한 푼도 빠짐없이 걷혔다고 보고합니다. 내년에는 그것을 낼 사람이 아무도 남지 않을 것입니다.'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''비용이 얼마가 들든 당장 물길을 치워라!'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''곡물 창고를 높은 곳으로 옮기고, 아랫동네는 저절로 마르게 두어라.'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''둑의 파수꾼'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''몇 해 전부터 둑을 돌보는 것은 강의 길드입니다. 그들은 궁정이 해 온 것보다 싸게 일을 해내지만, 그것은 어디까지나 자신들을 위해서입니다. 그들의 나루터는 강에서 가장 잘 지어졌고, [target_location.GetNameWithNoTooltip]에 있는 그들의 구역은 크게 부유해졌습니다. 이제 그들은 자신들의 권리를 특허장에 적고 봉인해 달라고 청하고 있습니다.'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''특허장을 봉인하라.'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''둑은 우리 것이고, 거기서 나오는 수입도 마찬가지다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''치수 공사 부과금'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''국고가 제방과 운하 공사비를 대고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''새 제방'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''높은 둑이 홍수를 거리 밖으로 막아 주지만, 그 대가로 밭 일부를 잃었습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''홍수 걱정 없음'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''강둑의 곡물 창고와 홍수 없는 세월 덕분에 도시가 커지고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''강 통행세'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''강 교역에 매긴 통행세가 국고를 채우지만, 지어지는 것은 거의 없습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''진흙과 더러워진 우물'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''홍수가 거리에는 진흙을, 우물에는 오물을 남겼습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''길드의 둑 파수꾼'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''강의 길드가 둑을 지키고, 그들의 구역은 번성하고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''넘겨준 권한'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''이제 강은 길드의 손에 있고, 궁정이 그들의 말을 따른다는 것은 누구나 압니다.'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''성문 앞의 순례자들'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''철이 바뀔 때마다 [target_location.GetNameWithNoTooltip]에 찾아오는 순례자가 늘고 있습니다. 그들은 골목에서 잠을 자고, 오래된 돌 앞에 제물을 바치며, 궁정이 이름조차 들어 본 적 없는 마을들로 성소의 이름을 퍼뜨립니다. 사제들은 성소가 담장 안에 다 들어가지 않는다고 하소연하고, 관리인들은 국고로 감당할 수 없다고 하소연합니다.'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''성소에 재물을 바치고 순례길을 포장하라.'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''제물도 재물이다. 국고가 십일조를 거두게 하라.'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''대사제에게 신분 의회의 자리를 내주어라.'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''번창하는 성소'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''기부금은 관리인들이 불가능하다고 했던 일을 해냈습니다. 길은 포장되었고, 숙소는 가득 찼으며, [target_location.GetNameWithNoTooltip]에 찾아오는 순례자들은 이제 장사를 하러 눌러앉습니다. 사제들은 이 일을 대신전으로 마무리하고 싶어 하며, 우리에게 첫 주춧돌을 놓아 달라고 청합니다.'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''대신전을 세워라.'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''길이면 충분하다. 제물은 길을 유지하는 데 쓰게 하라.'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''사제들의 불평'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''십일조가 국고를 채우자, [target_location.GetNameWithNoTooltip]의 사제들도 그것을 눈치챘습니다. 그들은 제물이란 바친 자와 돌을 돌보는 자의 것이라고 말합니다. 몇몇은 벌써 설교에서 그렇게 말하기 시작했고, 순례자들은 귀를 기울이고 있습니다.'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''십일조의 일부를 성소에 돌려주어라.'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''십일조는 지키고, 설교에는 말로 응수하라.'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''자리를 얻은 사제단'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''[target_location.GetNameWithNoTooltip]의 대사제는 이제 신분 의회에 자리를 잡았고, 성소의 오랜 교단은 우리의 평의회에서 발언권을 얻었습니다. 사제들은 고마워합니다. 다른 신분들은 그 발언권이 자신들에게 얼마나 큰 대가를 치르게 할지 셈하고 있습니다.'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''사제단을 우리 평의회에 맞아들여라.'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''그들의 자리는 성소다. 거기 머물게 하라.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''기부를 받은 성소'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''부유한 성소와 포장된 길이 순례자를 끌어들이고, 사제들의 위신이 높아지고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''대신전'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''오래된 돌 위에 세운 신전이 온 나라의 신자들을 끌어모으고 있습니다.'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''성소의 대사제직'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''성소의 대사제는 오직 신앙 앞에서만 책임을 지며, 신분 의회에 자리를 차지합니다.'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''흉작'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''비가 늦게 내린 탓에 수확이 형편없었습니다. [target_location.GetNameWithNoTooltip]의 곡물 창고는 반쯤 비었고, 빵값은 한 달 만에 두 배로 뛰었으며, 도시는 주변 들판이 지금껏 거둔 것보다 더 많이 먹어 치우고 있습니다. 관리들이 셈 막대를 들고 궁정에 왔습니다. 그들의 계산으로는 비축분이 한겨울까지만 버티고, 단 하루도 더 가지 않는다고 합니다.'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''언덕 너머 땅에서 곡식을 사 와라.'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''비축분을 배급제로 돌리고 마을에서 곡식을 징발하라.'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''새 땅을 일구고 평야의 축축한 가장자리를 말려라.'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''곡물 상인들'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''지난겨울 [target_location.GetNameWithNoTooltip]의 굶주림을 막은 곡식은 몇몇 상가의 손을 거쳐 들어왔고, 그들은 누가 곡식을 필요로 했는지 똑똑히 기억합니다. 그들은 아랫동네의 창고를 쥐고 시장의 값을 정합니다. 이제 그들은 지난 한 해 허락도 없이 해 온 일을 궁정이 문서로 인정해 달라고 청합니다.'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''곡물 상인들에게 특허장을 내려라.'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''그들의 손아귀를 부숴라. 도시는 자체 곡물 창고를 갖는다.'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''잊지 않는 마을들'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''지난겨울 마을들은 씨앗으로 쓸 곡식을 내놓아야 했고, 아직도 그 일을 용서하지 않았습니다. [target_location.GetNameWithNoTooltip]의 봄 장터에서 농민들은 적게 가져오고 비싸게 부르며, 수레꾼들은 묵혀 둔 밭 이야기를 합니다. 관리인들은 지금도 그 징발을 불가피한 조치라고 부릅니다. 마을에서는 그것을 다른 말로 부릅니다.'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''돈과 씨앗으로 마을에 보상하라.'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''그 징발이 도시를 살렸다. 우리는 그들에게 빚진 것이 없다.'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''결실을 맺는 새 밭'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''두 번의 수확이 지나자, [target_location.GetNameWithNoTooltip] 바깥의 간척지에서는 갈대가 서 있던 자리에 곡식이 여물고 있습니다. 비좁은 골목의 가족들은 새 땅을 나눠 달라고 청하고, 관리인들은 그 땅의 십일조를 청합니다.'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''새 땅을 도시의 가족들에게 내주어라.'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''새 땅을 팔고, 거기서 난 곡식은 나라 밖으로 실어 보내라.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''수입 곡물'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''사들인 곡식이 빵값을 싸게 유지하고, 도시는 커지고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''배급제'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''관리인들이 비축분을 나눠 줍니다. 도시는 덜 먹고 더 투덜댑니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''새 밭'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''물을 뺀 습지와 개간한 땅이 해마다 더 많은 곡식을 냅니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''곡물 상인의 특허장'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''곡물 상가들이 특허장으로 교역을 쥐고, 온 나라를 위해 거래합니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''공공 곡물 창고'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''풍년에 채운 곡물 창고가 흉년에 도시를 먹여 살립니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''여러 가족의 밭'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''세 가지 작물을 함께 심은 작은 밭뙈기들이 큰 밭 하나보다 더 많이 거둡니다.'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''두 도시 사이의 길'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''[target_location.GetNameWithNoTooltip]에서 [other_location.GetNameWithNoTooltip]까지는 며칠 거리이며, 두 곳을 잇는 오솔길은 봄마다 비에 쓸려 나갑니다. 한쪽으로는 곡식이, 다른 쪽으로는 모직물이 오가고, 수레는 지나는 마을마다 통행료를 냅니다. 두 도시의 길드가 같은 불만과 전혀 다른 두 계획을 들고 궁정에 찾아왔습니다.'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''두 도시 사이에 포장도로를 깔아라.'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''길은 상인들이 내게 하고, 통행료도 그들이 걷게 하라.'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''마을들과 약조를 맺어라. 갈림길마다 장날을 두는 것이다.'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''길이 열리다'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''마지막 돌이 놓이기도 전에 첫 대상들이 새 길을 지나갔습니다. 이제 수레는 [target_location.GetNameWithNoTooltip]에서 [other_location.GetNameWithNoTooltip]까지 하루 만에 오가고, 두 도시의 서기들은 이 길이 어느 시장을 위해 놓인 것인지를 두고 벌써 다투고 있습니다.'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''길에 수비대를 두고 보수를 게을리하지 마라.'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''양쪽 끝에서 통행료를 걷어, 길이 제 비용을 스스로 치르게 하라.'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''무거워지는 통행료'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''길을 낸 상인들은 한번 정한 통행료가 자꾸만 불어나기 마련이라는 것을 배웠습니다. [other_location.GetNameWithNoTooltip]의 수레꾼들은 예전의 두 배를 내고, [target_location.GetNameWithNoTooltip]의 모직물은 성문에 닿을 무렵이면 길 자체만큼 값이 나갑니다. 두 도시 모두 궁정이 상대편 말만 듣는다고 굳게 믿고 있습니다.'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''통행료를 예전 요율로 묶어라.'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''길을 낸 것은 그들이다. 통행료도 그들이 정하게 하라.'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''장날'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''길가의 마을들은 약조를 지켰습니다. 해마다 두 번 갈림길마다 장이 서고, [target_location.GetNameWithNoTooltip]의 상인들과 [other_location.GetNameWithNoTooltip]의 상인들은 그곳에서 길 중간에 만납니다. 양쪽 모두에게 이득이지만, 각자의 길드에는 못마땅한 일입니다.'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''장터에 특허장을 내리고 갈림길마다 관리를 보내라.'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''장터는 마을들의 것이다. 그냥 내버려 두어라.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''도로 공사'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''궁정이 길 비용을 대고, 공사는 빠르게 진척되고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''포장도로'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''물건이 오가기 쉬워지고, 길가의 고을들이 커지고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''길 상인의 특허장'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''길을 관리하는 상인들이 통행료를 걷을 권리를 갖고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''관문'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''성문 앞의 관문이 상인과 그들의 창고를 도시로 끌어들이고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''장날'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''장날이면 길가 마을의 상인들이 도시로 몰려옵니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''궁정의 길'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''수비대가 지키는 길이 교역을 궁정의 손에 묶어 두고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''원성 높은 통행료'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''상인들은 돈을 내고 투덜대며, 발길이 점점 뜸해집니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''특허받은 장터'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''제철에 서는 큰 장이 창고와 여관을 가득 채웁니다.'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''이웃 골짜기에서 온 사절'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''[target_country.GetName] 측의 사절단이 [target_location.GetNameWithNoTooltip]에 도착했습니다. 우리 두 궁정은 같은 신을 섬기거나 같은 말을 쓰며, 같은 국경에서 같은 적을 마주하고 있습니다. 그런데도 여러 세대 동안 서로에게 보낸 것이라고는 불평뿐이었습니다. 사절들은 두 나라의 군주가 대등하게 이야기를 나눌 평의회를 제안합니다. 우리 쪽 조언가들은 사절들이 차라리 고향에 머물러 있었기를 바랍니다.'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''그들과 대등한 자리에 앉겠다.'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''우리의 보호를 제안하고, 그 대가로 예우를 요구하라.'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''감사를 전하되, 우리 속내는 드러내지 마라.'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''평의회가 열리다'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''우리 군주와 [target_country.GetName] 측의 군주는 이미 세 번 만났고, 만날 때마다 의심을 조금씩 덜고 헤어졌습니다. 평의회는 국경의 작은 다툼이 커지기 전에 수습하기 시작했습니다. 궁정의 중매쟁이들은 벌써 혼처 명단을 적고 있습니다. 나이 든 조언가들은 평의회만으로도 충분히 가깝다고 여깁니다.'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''혼인과 조약으로 두 가문을 묶어라.'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''평의회로 충분하다.'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''곤두선 이웃'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''[target_country.GetName] 측의 궁정은 우리의 보호 제안을 정확히 그 의도대로 받아들였습니다. 사절들은 떠났고, 상인들은 소환되었으며, 군주가 손수 쓴 서한이 도착했습니다. 무슨 권리로 예우를 운운하느냐는 내용입니다.'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''요구를 거두고 선물을 보내라.'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''할 말을 했을 뿐이다.'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''닫힌 문'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''[target_country.GetName] 측은 우리의 답을 받고 다른 곳으로 눈을 돌렸습니다. 이제 그 사절들은 우리의 다른 이웃들의 궁정에서 기다리고 있고, 평온하던 국경은 양쪽에서 감시를 받고 있습니다. 조언가들은 거절이 현명했는지를 대놓고 되묻고 있습니다.'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''흉금을 터놓고 두 번째 사절단을 보내라.'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''거절은 번복하지 않는다.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''이웃과의 평의회'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''궁정이 이웃과 의논을 나누고, 귀족들이 발언권을 얻었습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''평의회의 신뢰'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''이웃과 평의회를 여는 군주는 나라 밖에서도 신뢰를 얻습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''이웃에 대한 압박'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''예우를 요구한 탓에 나라 밖에서 우리 말의 무게가 떨어졌습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''닫힌 대문'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''궁정은 속내를 감추고 국경 감시를 강화하고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''궁정 간의 인척 관계'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''혼인과 조약으로 맺어진 두 궁정이 서로의 통치를 떠받치고 있습니다.'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''먼 속주'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''우리나라는 길이 닿는 범위보다 더 커져 버렸습니다. [target_location.GetNameWithNoTooltip]에서 멀리 떨어진 [other_location.GetNameWithNoTooltip]에서는 사람들이 자기네 관습을 따르며 자기네 영주 아래에서 살아갑니다. 공물은 늦게 보내고, 아들들은 결코 보내지 않습니다. 총독들은 속주가 평온하다고 써 보냅니다. 상인들은 그 반대라고 써 보냅니다.'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''총독을 보내라. 수비대도 함께.'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''속주에 고유의 관습을 인정하는 특허장을 내려라.'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''중심지의 가족들을 그들 사이에 정착시켜라.'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''총독의 긴 팔'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''[other_location.GetNameWithNoTooltip]의 총독은 수비대가 급료를 받고 있고 공물도 제때 들어온다고 써 보냈습니다. 또한 구시가에 집을 마련하고 그 고장 집안에서 아내를 맞았으며, 옛 영주들이 이제 자기 식탁에서 식사한다고도 썼습니다. 궁정은 이를 기뻐해야 할지 갈피를 잡지 못하고 있습니다.'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''총독은 몇 해마다 교체하라.'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''그대로 두어라. 그 땅에 뿌리내린 총독이라야 속주를 붙잡아 둔다.'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''늘어나는 특허장'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''[other_location.GetNameWithNoTooltip]에 특허장이 내려졌다는 소식은 어떤 징세관보다도 빨리 다른 먼 속주들에 퍼졌습니다. 세 곳이 더 같은 것을 청하러 사절을 보냈고, 중심지의 귀족들은 멀리 있다는 이유만으로 왜 속주가 보상을 받느냐고 따집니다.'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''청하는 속주마다 특허장을 내려라.'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''그 특허장은 은혜였지, 선례가 아니다.'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''새 이웃'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''중심지에서 온 정착민들이 [other_location.GetNameWithNoTooltip] 방면으로 향하는 길을 따라 집을 지었습니다. 그들은 우리 말을 쓰고 우리 신을 섬기며, 속주의 오랜 집안들은 그들과 거리를 두고 있습니다. 시장에서 벌어진 다툼이 벌써 칼부림으로 끝났습니다.'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''오랜 집안들에게 도시 의회의 자리를 내주어라.'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''정착민들 편에 서라.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''충성스러운 총독'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''먼 속주의 총독들이 속주를 궁정의 손아귀에 붙잡아 두고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''관습의 특허장'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''고유의 관습을 인정받은 속주는 평온을 지키며 번영합니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''속주에 대한 양보'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''먼 땅에 대한 중심지의 장악력이 느슨해졌습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''새 이웃'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''중심지에서 온 정착민들이 친척을 불러들이고, 속주의 시장이 커지고 있습니다.'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''해안의 이방인'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''[target_country.GetName] 측의 배들이 [target_location.GetNameWithNoTooltip] 근처 앞바다에 닻을 내렸습니다. 선원들은 대양을 건너왔다고 하며, 그들의 군주가 교역을, 어쩌면 교역 이상의 것을 원한다고 합니다. 해안의 누구도 이런 이들을 본 적이 없습니다. 원로들은 세 번이나 모였지만 아무것도 정하지 못했습니다.'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''그들의 사절을 맞아들이고 교역하라.'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''항구 한 곳만 열어 주고, 그곳을 감시하라.'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''해안을 일으켜 그들에게 맞서라!'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''이방인의 상인들'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''이방인들이 더 많은 배와 물건을 싣고 돌아왔습니다. 그들의 상인들은 [target_location.GetNameWithNoTooltip]의 부두에 상관을, 내륙에서 물건을 사들일 권리를, 그리고 궁정의 알현을 원합니다. 우리 상인들은 정확히 그 반대를 원합니다.'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''부두의 상관을 내주어라.'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''그들을 해안에 묶어 두고 내륙으로 가는 길에는 들이지 마라.'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''단 하나의 항구를 지키는 파수'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''이방인들은 허락받은 단 하나의 항구를 벗어나지 않고, [target_location.GetNameWithNoTooltip]의 파수꾼들은 매주 그들의 배를 셉니다. 내륙에서는 이방인이 병과 낯선 신을 데려온다는 소문이 돕니다. 원로들은 항구를 하나만 연 것이 신중함이었는지, 아니면 그저 두려움이었는지 묻고 있습니다.'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''파수와 단 하나의 항구를 유지하라.'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''두 번째 항구를 열어 다툼을 누그러뜨려라.'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''채비를 갖춘 해안'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''한 철 내내 민병이 [target_location.GetNameWithNoTooltip] 근처 해안을 지켰지만, 이방인들은 상륙하지 않았습니다. 그들의 배는 암초 너머를 오가고, 밭에서는 일손이 아쉽습니다.'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''민병을 해산하고 사신을 보내라.'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''한 해 내내 파수를 유지하라.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''이방인 환대'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''대양 너머의 사절들이 새로운 지식을 가져오고, 우리의 목소리가 더 멀리 닿습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''단 하나의 열린 항구'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''모든 이국 배는 한 항구에만 들러야 하며, 그 항구의 부두와 창고가 커지고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''해안 민병'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''해안 사람들이 무기를 들었고, 더 많은 병력을 소집할 수 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''해안 파수'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''해안을 따라 늘어선 파수꾼과 봉화가 어떤 상륙에도 큰 대가를 치르게 합니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''부두의 상관'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''이방인 상인들이 부두에 상관과 창고를 두고 있습니다.'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''식민지 의회'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''[target_location.GetNameWithNoTooltip]의 정착민들이 처음으로 총독의 허락 없이 회의를 열었습니다. 그들은 [target_country.GetName] 측에 세금을 바치고, 이웃과는 스스로 싸우며, 아버지들이 떠나온 땅과는 다른 땅을 일굽니다. 이제 그들은 자신들이 무엇인지 알고 싶어 합니다. 신민인지, 하나의 민족인지, 아니면 하나의 나라인지.'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''본국에 그 평의회의 자리를 청원하라.'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''우리는 본국 사람도, 원주민도 아니다. 우리는 우리 자신의 민족이다.'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''자치를 요구하라.'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''평의회의 답변'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''[target_country.GetName] 측의 평의회가 청원을 들었습니다. 자리는 언젠가 주어질 수도 있다고, 가장 많이 내는 자에게라고 평의원들은 답합니다. 가장 부유한 식민자들은 그 값이 적당하다 여기고 벌써 돈을 세고 있습니다. 가난한 정착민들은 더는 회의에 나오지 않습니다.'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''자리의 값을 치러라.'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''돈으로 산 자리는 자리가 아니다.'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''두 세계의 민족'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''[target_location.GetNameWithNoTooltip]에서 본국을 한 번도 본 적 없는 세대가 자라났습니다. 그들은 절반은 옛말, 절반은 해안의 말인 그들만의 말을 쓰고, 바다가 아니라 강을 노래합니다. 본국의 장교들은 제 이름에도 대답하지 않는 민족을 부리기가 어렵다고 불평합니다.'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''법정에서 식민지 말로 재판하도록 허락하라.'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''본국의 말과 법을 지켜라.'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''독립으로 가는 길'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''[target_location.GetNameWithNoTooltip]의 의회가 한 철 내내 공물 납부를 거부하고 있습니다. [target_country.GetName] 측은 엄한 서한과 배 몇 척으로 응답했습니다. 민병대장들은 준비가 되었다고 말합니다. 의회의 원로들은 독립이란 얻는 것보다 치르는 값이 더 큰 말이라고 말합니다.'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''민병을 소집하고 전쟁에 대비하라.'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''공물을 대가로 자치를 협상하라.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''식탁의 자리'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''본국 평의회의 발언권이 식민지를 본국에 붙잡아 둡니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''식민지의 민족'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''자신만의 말과 노래를 가진 민족은 이웃들의 존중을 받습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''자유를 향한 선동'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''의회의 연설들이 본국에 대한 식민지의 충성을 흔들고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''인척의 끈'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''돈으로 산 평의회 자리가 명문가들을 본국에 묶어 둡니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''일어선 민병'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''무기를 들 수 있는 자는 모두 명부에 올랐고, 훈련도 잘되고 있습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''인정받은 자치'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''식민지는 스스로를 다스리며 덜 바치고, 그 덕에 충성스럽습니다.'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''한 강을 따라 선 도시들은 여러 세대 동안 교역하고, 함께 짓고, 서로에게 책임을 져 왔습니다. 그 대부분을 손에 넣은 세력은 도시들을 하나의 나라로 묶을 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''한 강의 시장'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''강가의 도시들이 하나의 시장처럼 물건을 팝니다.'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''한 산맥의 골짜기들은 저마다 고개 너머에서 따로 살며, 자신들의 자유 말고는 좀처럼 뜻을 모으지 못합니다. 그 대부분을 손에 넣은 세력은 골짜기마다 제 평의회를 남겨 둔 채 그들을 하나의 연합으로 묶을 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''골짜기들의 맹약'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''골짜기들은 저마다의 평의회를 지키며, 바깥의 어떤 세력에도 함께 맞섭니다.'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''한 해안의 항구들은 같은 바다를 누비고 같은 폭풍을 두려워합니다. 그 대부분을 손에 넣은 세력은 함께 교역하고 그들의 바다를 지키도록 항구들을 하나의 동맹으로 묶을 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''동맹 헌장'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''하나의 헌장이 모든 항구의 상인과 평의회를 묶습니다.'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''한 민족의 도시들은 여러 군주 아래 있어도 한 말을 쓰고 같은 관습을 지킵니다. 그 대부분을 손에 넣은 세력은 도시들을 하나의 공동체로 모을 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''하나의 민족'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''하나의 말과 하나의 관습이 공동체를 결속시키고 그 위신을 높입니다.'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''한 지역 전체가 여러 군주에게 나뉘어 있고, 저마다 도시 몇 곳만을 쥐고 있습니다. 그 대부분을 손에 넣은 세력은 지역을 하나의 나라로 통일할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''왕국의 행정'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''새로운 행정이 지역 전체에 미치고, 그 속주들이 복종하고 있습니다.'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''한 해안의 식민지들은 한 옛 나라에서, 혹은 여러 나라에서 온 이들이 세운 것이지만, 이제는 같은 불만과 같은 미래를 나누게 되었습니다. 그 해안의 상당 부분을 차지하고 수도를 그 식민지들 사이에 둔 정착민의 나라는 스스로 연방임을 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''국민의 탄생'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''젊은 정착민의 나라가 빠르게 자라나고 있으며, 반역자에게는 인내심이 없습니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''대은광맥'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''알려진 세계의 어느 광산보다도 풍부한, 은으로 된 산입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''풍부한 은맥'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''이 지역의 어느 광산보다도 풍부한 은맥입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''은 광상'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''주변 광산들보다 풍부한 은 광상입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''수은 광맥'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''그 수은이 지역 밖 먼 곳에서도 귀하게 여겨지는 진사 광산입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''풍요로운 어장'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''물고기가 하도 많아 주변의 모든 해안을 먹여 살리는 바다입니다.'''

@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from rnw import wording
 from rnw.content import (
     CULTURAL_UNION,
     FORMABLE_FAMILIES,
@@ -36,7 +37,9 @@ from rnw.eu5_formation import (
     texts,
 )
 from rnw.formations import BY_FAMILY, SPECS
+from rnw.game_texts import localize
 from rnw.pdx import parse
+from rnw.wording import Phrase, render
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -104,8 +107,9 @@ def test_every_formable_family_has_exactly_one_spec_and_one_rule() -> None:
 
 
 def test_the_specs_do_not_share_names_pictures_or_modifiers() -> None:
-    """Each family is its own tag stem, name suffix, emblem and founding modifier."""
-    for field in ("stem", "suffix", "emblem"):
+    """Each family is its own tag stem (which names it in every language), emblem and modifier."""
+    assert {spec.stem for spec in SPECS} == set(wording.FORMATIONS)
+    for field in ("stem", "emblem"):
         values = [getattr(spec, field) for spec in SPECS]
         assert len(values) == len(set(values)), field
     names = [spec.modifier.name for spec in SPECS]
@@ -324,7 +328,13 @@ def test_every_family_writes_a_formable_of_its_own_level_rank_and_modifier() -> 
     """The entry carries the family's level, fraction, allow, rank change and founding modifier."""
     for spec in SPECS:
         formation = _formation(spec.family)
-        identity = Identity("XYZ", "Alto X", "Alto", (1, 2, 3), ("green", "white"))
+        identity = Identity(
+            "XYZ",
+            Phrase(wording.FORMATION + spec.stem, "Alto"),
+            wording.adjective("Alto"),
+            (1, 2, 3),
+            ("green", "white"),
+        )
         text = block(formation, identity)
         entry = parse(text).block(key_of(formation))
         assert entry is not None
@@ -351,9 +361,16 @@ def test_the_league_asks_for_ports_and_nobody_else_asks_for_anything_more() -> N
 def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
     """One flag, arms, colour and four keys per formation; the arms use the family's emblem."""
     made = [_formation(spec.family, 0) for spec in SPECS]
+    seats = ("Kaira", "Tolan", "Ingari", "Mekapisk", "Huande", "Saumqeir")
     who = [
-        Identity(f"X{n}Z", f"Name{n}", f"Adj{n}", (n, n, n), ("green", "white"))
-        for n in range(len(made))
+        Identity(
+            f"X{n}Z",
+            Phrase(wording.FORMATION + spec.stem, seats[n]),
+            wording.adjective(seats[n]),
+            (n, n, n),
+            ("green", "white"),
+        )
+        for n, spec in enumerate(SPECS)
     ]
     written = files(made, who)
     arms = written["main_menu/common/coat_of_arms/coat_of_arms/rnw_formations.txt"]
@@ -361,12 +378,17 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
         assert spec.emblem in arms
     assert FORMABLES_FILE in written
     keys = texts(made, who)
-    for formation, identity in zip(made, who, strict=True):
-        assert identity.tag in keys
-        assert f"{identity.tag}_ADJ" in keys
-        assert keys[key_of(formation)] == f"${identity.tag}$"
-        assert "{name}" not in keys[f"{key_of(formation)}_desc"]
-        assert identity.name in keys[f"{key_of(formation)}_desc"]
+    for language in ("english", "russian", "japanese"):
+        written_keys = localize(keys, language)
+        for formation, identity in zip(made, who, strict=True):
+            assert written_keys[identity.tag] == render(identity.name, language)
+            assert written_keys[f"{identity.tag}_ADJ"] == render(identity.adjective, language)
+            assert written_keys[key_of(formation)] == f"${identity.tag}$"
+            description = written_keys[f"{key_of(formation)}_desc"]
+            assert "{name}" not in description
+            assert render(identity.name, language) in description
+    assert localize(keys, "russian")[who[0].tag] == "Кайрский союз"
+    assert localize(keys, "german")[who[0].tag] == "Kairanische Union"
 
 
 def test_a_colonial_shore_needs_a_coast_not_a_state() -> None:
@@ -389,7 +411,14 @@ def test_the_federation_is_visible_to_countries_of_settlers_and_not_named_by_tag
     spec = BY_FAMILY[POSTCOLONIAL_FEDERATION]
     assert spec.potential == ("culture ?= { is_culture_native_american = no }",)
     formation = Formation(POSTCOLONIAL_FEDERATION, 0, ("loc_a", "loc_b"), (), (), "loc_a")
-    text = block(formation, Identity("XYZ", "Alto Federation", "Alto", (1, 2, 3), ("red", "blue")))
+    alto = Identity(
+        "XYZ",
+        Phrase(wording.FORMATION + "federation", "Alto"),
+        wording.adjective("Alto"),
+        (1, 2, 3),
+        ("red", "blue"),
+    )
+    text = block(formation, alto)
     assert "is_culture_native_american = no" in text
     assert "OR = {" not in text
     assert "tag = " not in text.replace("\ttag = XYZ", "")

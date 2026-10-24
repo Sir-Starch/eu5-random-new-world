@@ -18,6 +18,7 @@ from rnw.colonial_names import (
     texts,
 )
 from rnw.pdx import Block, parse
+from rnw.wording import render
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -50,14 +51,17 @@ def test_a_colony_is_named_by_its_founder_and_the_region_of_its_capital() -> Non
 
 
 def test_the_names_put_the_regions_name_after_the_word_for_new() -> None:
-    """A template of the tradition's language, with the generated name left as it is."""
+    """English keeps the founder's word; other languages write *new* their own way."""
     found = texts(REGIONS)
     english = next(t for t in TRADITIONS if t.name == "english")
-    assert found[entry_id(english, "north_region")] == "New Ingari"
-    assert found[f"{entry_id(english, 'north_region')}_ADJ"] == "New Ingari"
-    assert found[entry_id(TRADITIONS[0], "south_region")] == "Nueva Taku"
+    key = entry_id(english, "north_region")
+    assert render(found[key], "english") == "New Ingari"
+    assert found[f"{key}_ADJ"] == found[key]
+    assert render(found[entry_id(TRADITIONS[0], "south_region")], "english") == "Nueva Taku"
+    assert render(found[entry_id(TRADITIONS[0], "south_region")], "russian") == "Новый Таку"
+    assert render(found[key], "german") == "Neu-Ingari"
+    assert render(found[key], "japanese") == "ニュー・インガリ"
     assert len(found) == 2 * len(REGIONS) * len(TRADITIONS)
-    assert all('"' not in value for value in found.values())
 
 
 def _install(root: Path, *, drop: str = "") -> Path:

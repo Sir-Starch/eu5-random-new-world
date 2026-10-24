@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''Rzeka zmienia koryto'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''Odkąd sięga ludzka pamięć, wielka rzeka żywiła miasto [target_location.GetNameWithNoTooltip]. Jej wylewy zostawiały na polach czarny muł, jej barki woziły zboże, a przystanie przyniosły miastu bogactwo. Teraz jednak nurt z każdą wiosną odchodzi coraz dalej. Muł zatyka stare kanały, woda podchodzi pod dolne ulice, a w spichlerzach leży mniej, niż wykazują rachunki zarządców.\n\nStarszyzna miasta stawiła się u dworu. Każdy ma swój sposób, a za każdy sposób ma zapłacić ktoś inny.'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''Usypać wały i przekopać nowe kanały.'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''Niech płacą barki, a nie skarbiec. Brzegi jakoś dotąd wytrzymały.'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''Cechy rzeczne znają brzegi najlepiej. Niech same o nie dbają.'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''Wały wytrzymały'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''Wiosenna powódź przyszła jak co roku, ale tym razem zatrzymała się na nowych wałach. Na dolnych ulicach miasta [target_location.GetNameWithNoTooltip], gdzie woda stała dawniej na targach przez cały miesiąc, nie podniosła się ponad nabrzeża. Teraz strażnicy brzegów pytają, co zrobimy z kupionym spokojem.'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''Postawić spichlerze na nowych brzegach.'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''Zatrzymać nadwyżkę w skarbcu.'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''Rzeka bierze swoje'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''Cła napełniały skarbiec, a o brzegi nikt nie dbał. Tej wiosny rzeka wezbrała, znalazła najsłabsze miejsce i przerwała wał. Kiedy woda opadła, dolne dzielnice miasta [target_location.GetNameWithNoTooltip] leżały pod warstwą błota, studnie były zatrute, a barki tkwiły na mieliźnie pośrodku ulic. Poborcy meldują, że wszystkie cła zostały zapłacone co do grosza. W przyszłym roku nie będzie już komu ich płacić.'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''Natychmiast oczyścić kanały, bez względu na koszty!'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''Przenieść magazyny zboża wyżej, a dolne miasto niech samo obeschnie.'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''Strażnicy brzegów'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''Od kilku lat brzegów pilnują cechy rzeczne. Robią to taniej, niż kiedykolwiek robił to dwór, ale robią to dla siebie: ich przystanie są najlepiej zbudowane na całej rzece, a ich dzielnica w mieście [target_location.GetNameWithNoTooltip] mocno się wzbogaciła. Teraz chcą, by ich prawa spisano w przywileju i opatrzono pieczęcią.'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''Opatrzyć przywilej pieczęcią.'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''Brzegi należą do nas, a razem z nimi dochody.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''Danina na roboty rzeczne'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''Skarbiec płaci za wały i kanały.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''Nowe wały'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''Wysokie brzegi trzymają powódź z dala od ulic, choć zabierają część pól.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''Bezpieczni od powodzi'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''Spichlerze na brzegach i lata bez powodzi pozwalają miastu rosnąć.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''Cła rzeczne'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''Cła od handlu rzecznego napełniają skarbiec, ale buduje się niewiele.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''Muł i zatrute studnie'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''Powódź zostawiła błoto na ulicach i nieczystości w studniach.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''Cechowi strażnicy brzegów'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''Cechy rzeczne pilnują brzegów, a ich dzielnica kwitnie.'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''Oddana władza'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''Rzeka jest teraz w rękach cechów i wszyscy widzą, że dwór tańczy, jak mu zagrają.'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''Pielgrzymi u bram'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''Z każdą porą roku do miasta [target_location.GetNameWithNoTooltip] przybywa więcej pielgrzymów. Śpią w zaułkach, składają ofiary przy starych kamieniach i roznoszą imię sanktuarium po wioskach, o których dwór nigdy nie słyszał. Kapłani skarżą się, że sanktuarium nie mieści się już w swoich murach, a zarządcy, że skarbiec nie mieści już sanktuarium.'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''Uposażyć sanktuarium i wybrukować drogę pielgrzymów.'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''Ofiary to też bogactwo. Niech skarbiec bierze z nich dziesięcinę.'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''Dać arcykapłanowi miejsce wśród stanów.'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''Sanktuarium rozkwita'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''Uposażenie dokonało tego, w co zarządcy nie wierzyli. Droga jest wybrukowana, gospody są pełne, a pielgrzymi przybywający do miasta [target_location.GetNameWithNoTooltip] zostają teraz, by handlować. Kapłani chcą uwieńczyć dzieło wielką świątynią i proszą nas o położenie kamienia węgielnego.'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''Wznieść wielką świątynię.'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''Droga wystarczy. Niech ofiary idą na jej utrzymanie.'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''Kapłani szemrzą'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''Dziesięcina napełniła skarbiec, a kapłani z miasta [target_location.GetNameWithNoTooltip] to zauważyli. Ofiary, mówią, należą do tych, którzy je złożyli, i do tych, którzy doglądają kamieni. Niektórzy powtarzają to już w kazaniach, a pielgrzymi słuchają.'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''Zwrócić sanktuarium część dziesięciny.'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''Zatrzymać dziesięcinę i odpowiedzieć na kazania.'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''Kapłaństwo z miejscem w radzie'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''Arcykapłan z miasta [target_location.GetNameWithNoTooltip] zasiada teraz wśród stanów, a starożytny zakon sanktuarium ma głos w naszych radach. Kapłani są wdzięczni. Pozostałe stany liczą, ile będzie je ten głos kosztował.'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''Przyjąć kapłaństwo do naszych rad.'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''Ich miejsce jest w sanktuarium. Niech tam zostaną.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''Uposażone sanktuarium'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''Bogate sanktuarium i brukowana droga przyciągają pielgrzymów, a znaczenie kapłanów rośnie.'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''Wielka świątynia'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''Świątynia wzniesiona nad starymi kamieniami przyciąga wiernych z całego kraju.'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''Arcykapłaństwo sanktuarium'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''Arcykapłan sanktuarium odpowiada tylko przed wiarą i zasiada wśród stanów.'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''Marne żniwa'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''Deszcze przyszły późno i zbiory wypadły marnie. W mieście [target_location.GetNameWithNoTooltip] spichlerze są w połowie puste, chleb w ciągu miesiąca zdrożał dwukrotnie, a miasto zjada więcej, niż okoliczne pola kiedykolwiek urodziły. Sołtysi przynieśli do dworu swoje karby. Według ich rachunków zapasów starczy do połowy zimy i ani dnia dłużej.'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''Kupić zboże w krainach za wzgórzami.'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''Wydzielać zapasy i zabrać zboże wsiom.'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''Zaorać nowe grunty i osuszyć podmokłe skraje równiny.'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''Kupcy zbożowi'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''Zboże, które zeszłej zimy wykarmiło miasto [target_location.GetNameWithNoTooltip], przeszło przez ręce kilku domów kupieckich, a te dobrze pamiętają, kto go potrzebował. Trzymają magazyny dolnego miasta i ustalają ceny na targu. Teraz proszą dwór, by spisał to, co od roku robią bez pytania.'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''Nadać kupcom zbożowym przywilej.'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''Złamać ich władzę. Miasto będzie miało własne spichlerze.'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''Wsie nie zapominają'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''Zeszłej zimy wsie oddały ziarno siewne i do dziś tego nie wybaczyły. Na wiosennych targach w mieście [target_location.GetNameWithNoTooltip] chłopi przywożą mniej, a żądają więcej, a furmani opowiadają o polach leżących odłogiem. Zarządcy wciąż nazywają rekwizycję koniecznością. Na wsi mają na nią inne słowo.'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''Wynagrodzić wsiom straty monetą i ziarnem.'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''Rekwizycja uratowała miasto. Nic im nie jesteśmy winni.'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''Nowe pola rodzą'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''Po dwóch żniwach na osuszonych polach pod miastem [target_location.GetNameWithNoTooltip] rośnie zboże tam, gdzie dawniej szumiały trzciny. Rodziny z ciasnych zaułków proszą o część nowej ziemi, a zarządcy o dziesięcinę z niej.'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''Oddać nową ziemię rodzinom z miasta.'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''Sprzedać nową ziemię, a jej zboże wywozić za granicę.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''Zboże z zagranicy'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''Kupione zboże utrzymuje niskie ceny chleba, a miasto rośnie.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''Racjonowanie'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''Zarządcy wydzielają zapasy. Miasto je mniej i więcej narzeka.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''Nowe pola'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''Osuszone mokradła i wykarczowane grunty z każdym rokiem dają więcej zboża.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''Przywilej kupców zbożowych'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''Domy zbożowe prowadzą handel na mocy przywileju i prowadzą go dla całego kraju.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''Spichlerze publiczne'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''Spichlerze napełniane w dobrych latach karmią miasto w złych.'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''Pola wielu rodzin'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''Małe działki, na których rosną razem trzy uprawy, dają więcej niż jedno wielkie pole.'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''Droga między dwoma miastami'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''Miasta [target_location.GetNameWithNoTooltip] i [other_location.GetNameWithNoTooltip] dzieli kilka dni drogi szlakiem, który co wiosnę rozmywają deszcze. W jedną stronę jedzie zboże, w drugą sukno, a każdy wóz płaci myto w każdej wsi po drodze. Cechy obu miast przyszły do dworu z tą samą skargą i dwoma zupełnie różnymi planami.'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''Wybrukować drogę między oboma miastami.'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''Niech zbudują ją kupcy i niech zatrzymają myto.'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''Zawrzeć umowę ze wsiami: dzień targowy na każdym rozstaju.'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''Droga otwarta'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''Pierwsze karawany przeszły nową drogą, zanim położono ostatnie kamienie. Wozy pokonują teraz drogę z miasta [target_location.GetNameWithNoTooltip] do miasta [other_location.GetNameWithNoTooltip] w jeden dzień, a pisarze obu miast już się kłócą, któremu targowi droga służy.'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''Obsadzić drogę strażą i utrzymywać ją w dobrym stanie.'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''Pobierać myto na obu końcach, a droga niech sama się utrzymuje.'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''Myto coraz cięższe'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''Kupcy, którzy zbudowali drogę, przekonali się, że raz ustalone myto ma skłonność do wzrostu. Furmani z miasta [other_location.GetNameWithNoTooltip] płacą dwa razy więcej niż dawniej, a sukno z miasta [target_location.GetNameWithNoTooltip] kosztuje przy bramie tyle, co sama droga. Każde miasto jest pewne, że to drugie ma posłuch u dworu.'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''Ograniczyć myto do dawnej stawki.'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''To oni zbudowali drogę. Niech sami ustalają myto.'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''Dni targowe'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''Wsie przy drodze dotrzymały umowy. Dwa razy w roku na każdym rozstaju odbywa się jarmark, a kupcy z miast [target_location.GetNameWithNoTooltip] i [other_location.GetNameWithNoTooltip] spotykają się tam w pół drogi, ku pożytkowi obu stron i ku irytacji ich cechów.'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''Nadać jarmarkom przywileje i wysłać na każdy rozstaj wójta.'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''Jarmarki należą do wsi. Zostawić je w spokoju.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''Budowa dróg'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''Dwór płaci za drogi i praca idzie szybko.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''Brukowana droga'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''Towary podróżują łatwiej, a miasteczka przy drodze rosną.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''Przywilej kupców drogowych'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''Kupcy utrzymujący drogę mają prawo pobierać z niej myto.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''Rogatki'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''Komora celna przy bramie ściąga do miasta kupców i ich magazyny.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''Dni targowe'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''W dni jarmarczne do miasta zjeżdżają kupcy ze wsi przy drodze.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''Droga dworska'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''Strzeżona droga utrzymuje handel w rękach dworu.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''Znienawidzone myto'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''Kupcy płacą, narzekają i przyjeżdżają coraz rzadziej.'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''Jarmarki z przywilejem'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''Wielki jarmark w sezonie zapełnia magazyny i gospody.'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''Posłowie z sąsiedniej doliny'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''Do miasta [target_location.GetNameWithNoTooltip] przybyli posłowie państwa [target_country.GetName]. Nasze dwory łączą wspólni bogowie albo wspólny język, a także ci sami wrogowie na tych samych granicach, a jednak od pokoleń słały sobie wyłącznie skargi. Posłowie proponują radę, w której nasi władcy mówiliby jak równy z równym. Nasi doradcy woleliby, żeby posłowie zostali w domu.'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''Zasiądziemy z nimi jak równy z równym.'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''Zaoferować im naszą opiekę i zażądać uległości.'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''Podziękować im i zachować nasze zamiary dla siebie.'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''Rada się zbiera'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''Nasz władca i władca państwa [target_country.GetName] spotkali się już trzy razy i za każdym razem rozstawali się z mniejszą podejrzliwością. Rada zaczęła łagodzić drobne spory graniczne, zanim urosną do wielkich. Dworskie swatki już układają listy. Starzy doradcy uważają, że rada to i tak dość bliskości.'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''Związać nasze rody małżeństwem i traktatem.'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''Rada wystarczy.'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''Sąsiad się jeży'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''Dwór państwa [target_country.GetName] zrozumiał naszą propozycję opieki dokładnie tak, jak ją pomyślano. Jego posłowie wyjechali, kupców odwołano, a od władcy przyszedł list pisany własną ręką, w którym pyta, jakim prawem mówimy o uległości.'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''Wycofać żądanie i posłać dary.'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''Powiedzieliśmy, co mieliśmy na myśli.'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''Zamknięte drzwi'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''Państwo [target_country.GetName] otrzymało naszą odpowiedź i zwróciło się w inną stronę. Jego posłowie czekają teraz w salach naszych pozostałych sąsiadów, a granicy, która była spokojna, pilnuje się z obu stron. Nasi doradcy zastanawiają się na głos, czy odmowa była rozsądna.'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''Wysłać drugie poselstwo, z otwartymi rękami.'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''Odmowa pozostaje w mocy.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''Rada sąsiadów'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''Dwór dzieli się naradami z sąsiadem, a szlachta zyskuje głos.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''Zaufanie rady'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''Władcy, który radzi się sąsiadów, ufa się także za granicą.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''Nacisk na sąsiada'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''Nasze żądania uległości obniżyły wartość naszego słowa za granicą.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''Zamknięte drzwi'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''Dwór zachowuje swoje zamiary dla siebie i baczniej pilnuje granic.'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''Pokrewieństwo dworów'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''Dwa dwory związane małżeństwem i traktatem wspierają nawzajem swoją władzę.'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''Dalekie prowincje'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''Nasze państwo przerosło swoje drogi. W krainie [other_location.GetNameWithNoTooltip], z dala od miasta [target_location.GetNameWithNoTooltip], ludzie żyją według własnych obyczajów i pod własnymi panami. Daniny przysyłają z opóźnieniem, a synów do wojska nie przysyłają wcale. Namiestnicy piszą, że w prowincji panuje spokój. Kupcy piszą coś zupełnie innego.'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''Wysłać namiestnika, a z nim garnizon.'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''Nadać prowincji przywilej na jej własne obyczaje.'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''Osiedlić między nimi rodziny z serca kraju.'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''Długie ramię namiestnika'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''Namiestnik krainy [other_location.GetNameWithNoTooltip] pisze, że garnizon dostaje żołd, a daniny przychodzą na czas. Pisze też, że kupił dom w starej dzielnicy, pojął żonę z miejscowego rodu, a dawni panowie jadają teraz przy jego stole. Na dworze nie wiedzą, czy się z tego cieszyć.'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''Zmieniać namiestników co kilka lat.'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''Niech zostanie. Namiestnik, który jest tam swój, utrzyma prowincję.'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''Przywilejów przybywa'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''Wieść o przywileju nadanym krainie [other_location.GetNameWithNoTooltip] dotarła do innych dalekich prowincji szybciej niż jakikolwiek poborca. Trzy kolejne przysłały poselstwa z tą samą prośbą, a szlachta z serca kraju chce wiedzieć, dlaczego prowincje nagradza się za to, że leżą daleko.'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''Nadać przywilej każdej prowincji, która o niego poprosi.'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''Przywilej był łaską, a nie precedensem.'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''Nowi sąsiedzi'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''Osadnicy z serca kraju wybudowali domy wzdłuż drogi do krainy [other_location.GetNameWithNoTooltip]. Mówią naszym językiem i czczą naszych bogów, a stare rody prowincji trzymają się od nich z dala. Jedna kłótnia na targu skończyła się już nożami.'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''Dać starym rodom miejsca w radzie miejskiej.'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''Stanąć po stronie osadników.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''Wierni namiestnicy'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''Namiestnicy w dalekich prowincjach trzymają je w ręku dworu.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''Przywilej obyczajów'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''Prowincja pozostawiona przy swoich obyczajach jest spokojna i się bogaci.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''Ustępstwa wobec prowincji'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''Uścisk serca kraju na dalekich ziemiach osłabł.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''Nowi sąsiedzi'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''Osadnicy z serca kraju ściągają za sobą krewnych, a targi prowincji rosną.'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''Obcy na brzegu'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''Statki państwa [target_country.GetName] rzuciły kotwicę u wybrzeża w pobliżu miasta [target_location.GetNameWithNoTooltip]. Ich żeglarze mówią, że przepłynęli ocean i że ich władcy chcą handlować, a może nie tylko handlować. Nikt na wybrzeżu nie widział dotąd nic podobnego. Starszyzna zbierała się już trzy razy i niczego nie postanowiła.'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''Przyjąć ich posłów i handlować z nimi.'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''Wpuścić ich tylko do jednego portu i nie spuszczać go z oka.'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''Podnieść wybrzeże przeciwko nim!'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''Kupcy obcych'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''Obcy wrócili z większą liczbą statków i towarów. Ich kupcy chcą domu na nabrzeżu w mieście [target_location.GetNameWithNoTooltip], prawa do zakupów w głębi kraju i posłuchania u dworu. Nasi własni kupcy chcą dokładnie odwrotnie.'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''Dać im dom na nabrzeżu.'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''Trzymać ich na wybrzeżu, z dala od dróg w głąb kraju.'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''Straż przy jedynym porcie'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''Obcy trzymają się jedynego portu, który im wyznaczono, a strażnicy z miasta [target_location.GetNameWithNoTooltip] co tydzień liczą ich statki. W głębi kraju szepcze się, że obcy przywożą choroby i dziwnych bogów. Starszyzna pyta, czy jedyny otwarty port był roztropnością, czy zwykłym strachem.'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''Utrzymać straż i jedyny port.'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''Otworzyć drugi port, by złagodzić spory.'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''Wybrzeże w gotowości'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''Przez całą porę roku pospolite ruszenie stało na brzegu pod miastem [target_location.GetNameWithNoTooltip], a obcy nie wylądowali. Ich statki przypływają i odpływają za rafą, a ludzie są potrzebni na polach.'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''Rozpuścić pospolite ruszenie i wysłać posła.'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''Utrzymać straż przez cały rok.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''Gościnność wobec obcych'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''Posłowie zza oceanu przynoszą nową wiedzę, a nasz głos sięga dalej.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''Jedyny otwarty port'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''Każdy obcy statek musi zawinąć do jednego portu, którego nabrzeża i magazyny rosną.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''Pospolite ruszenie wybrzeża'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''Wybrzeże chwyciło za broń i można powołać więcej ludzi.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''Straż wybrzeża'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''Czaty i ognie sygnałowe wzdłuż brzegu sprawiają, że każde lądowanie słono kosztuje.'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''Dom na nabrzeżu'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''Kupcy obcych utrzymują na nabrzeżu dom i magazyn.'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''Zgromadzenie kolonialne'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''Po raz pierwszy osadnicy z miasta [target_location.GetNameWithNoTooltip] zebrali się na zgromadzenie bez zgody namiestnika. Płacą podatki państwu [target_country.GetName], sami walczą z sąsiadami i uprawiają ziemię, która nie jest tą, którą opuścili ich ojcowie. Chcą wiedzieć, kim są: poddanymi, ludem czy krajem.'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''Prosić starą ojczyznę o miejsca w jej radzie.'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''Nie jesteśmy ani starą ojczyzną, ani tubylcami. Jesteśmy własnym ludem.'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''Żądać samorządu.'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''Rada odpowiada'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''Rada państwa [target_country.GetName] wysłuchała petycji. Miejsca, odpowiadają jej członkowie, mogą zostać przyznane, z czasem i tym, którzy zapłacą najwięcej. Najbogatsi koloniści uważają cenę za uczciwą i już liczą monety. Biedniejsi osadnicy przestali przychodzić na zgromadzenie.'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''Zapłacić cenę miejsca.'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''Miejsce kupione za monety to żadne miejsce.'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''Lud dwóch światów'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''W mieście [target_location.GetNameWithNoTooltip] wyrosło pokolenie, które nigdy nie widziało starej ojczyzny. Mówi własną gwarą, w połowie starym językiem, w połowie słowami wybrzeża, i śpiewa o rzece, a nie o morzu. Oficerowie starej ojczyzny skarżą się, że trudno rozkazywać ludowi, który nie odpowiada na własne imię.'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''Pozwolić sądom orzekać w gwarze kolonialnej.'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''Trzymać się języka i prawa starej ojczyzny.'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''Droga do niepodległości'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''Od całej pory roku zgromadzenie miasta [target_location.GetNameWithNoTooltip] odmawia płacenia danin. Państwo [target_country.GetName] odpowiedziało surowym listem i kilkoma statkami. Kapitanowie milicji mówią, że są gotowi. Starsi członkowie zgromadzenia mówią, że niepodległość to słowo, które kosztuje więcej, niż daje.'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''Zwołać milicję i szykować się do wojny.'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''Wynegocjować samorząd w zamian za daniny.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''Miejsca przy stole'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''Głos w radzie starej ojczyzny wiąże z nią kolonię.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''Lud kolonialny'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''Lud z własną gwarą i własnymi pieśniami zyskuje szacunek sąsiadów.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''Wezwania do wolności'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''Mowy na zgromadzeniu osłabiają wierność kolonii wobec starej ojczyzny.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''Więzy pokrewieństwa'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''Kupione za monety miejsca w radzie wiążą wielkie rody ze starą ojczyzną.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''Milicja pod bronią'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''Każdy, kto może nosić broń, jest wpisany do rejestru, a musztra idzie sprawnie.'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''Nadany samorząd'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''Kolonia rządzi się sama, płaci mniej i jest za to wierna.'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''Miasta nad jedną rzeką od pokoleń handlują, budują i odpowiadają przed sobą nawzajem. Potęga, która trzyma większość z nich, może złączyć je w jedno państwo: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''Targi jednej rzeki'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''Miasta nad rzeką sprzedają towary jak jeden wspólny targ.'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''Doliny jednego pasma żyją osobno za swoimi przełęczami i zgadzają się chyba tylko co do swojej wolności. Potęga, która trzyma większość z nich, może związać je w konfederację, {name}, i zostawić każdej dolinie własną radę.'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''Przymierze dolin'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''Doliny zachowują własne rady i stają razem przeciw każdej obcej sile.'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''Porty jednego wybrzeża pływają po tych samych wodach i boją się tych samych sztormów. Potęga, która trzyma większość z nich, może połączyć je w ligę, {name}, by razem handlowały i broniły swojego morza.'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''Statut ligi'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''Jeden statut wiąże kupców i rady wszystkich portów.'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''Miasta jednego ludu mówią jednym językiem i trzymają się tych samych obyczajów pod wieloma władcami. Potęga, która trzyma większość z nich, może zebrać je we wspólnotę: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''Jeden lud'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''Jeden język i jeden obyczaj spajają wspólnotę i podnoszą jej prestiż.'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''Cały region jest podzielony między wielu władców, z których każdy trzyma tylko kilka jego miast. Potęga, która trzyma większą jego część, może zjednoczyć go w jedno królestwo: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''Administracja królestwa'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''Nowa administracja obejmuje cały region, a jego prowincje się podporządkowują.'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''Kolonie jednego wybrzeża, założone przez przybyszów z jednego starego kraju albo z kilku, doszły do wspólnej krzywdy i wspólnej przyszłości. Państwo osadników, które trzyma dość tego wybrzeża i ma stolicę pośród nich, może ogłosić się federacją: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''Narodziny narodu'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''Młody naród osadników szybko rośnie i nie ma cierpliwości do buntowników.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''Wielka żyła srebra'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''Cała góra srebra, bogatsza niż jakakolwiek inna kopalnia znanego świata.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''Bogata żyła srebra'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''Żyła srebra bogatsza niż jakakolwiek inna kopalnia w regionie.'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''Pokład srebra'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''Pokład srebra bogatszy niż okoliczne kopalnie.'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''Żyła rtęci'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''Kopalnia cynobru, której rtęć ceni się daleko poza regionem.'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''Bogate łowiska'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''Wody tak pełne ryb, że wykarmiają całe okoliczne wybrzeże.'''

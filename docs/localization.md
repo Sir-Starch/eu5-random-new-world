@@ -308,17 +308,29 @@ as a claim, not used as a gate.
 
 ## 5. Status and next steps
 
-Done (2026-10-24): the inventory (§1), the observations (§2), the rules (§3), the design (§4).
+Done (2026-10-24):
+
+- the inventory (§1), the observations (§2), the rules (§3), the design (§4);
+- **the world's mod (0.11.5, epoch 29):** `translations.py` with catalogs for the ten languages
+  besides English (`src/rnw/locale/<language>/game.toml`, 252 texts each) and the release check
+  (`tests/test_translations.py`); the English of the stories, formables and places rewritten
+  against §3.2 before translation (the repeated *agree on nothing else* device, five *X say A, Y
+  say B* antitheses, vague *some/others*, the country's voice brought in as the game writes it;
+  every option keeps its order and effects); `translit.py` (§2.3; agreement with the game's own
+  spellings of 4,107 one-word American names: Russian 52 %, Japanese 49 %, Korean 58 %, Chinese
+  49 %, C273); `wording.py` (§3.3): water, highlands, lakes, compass parts, country adjectives,
+  formable names and colonial names in every language; the names travel as phrases through
+  `seanames`, `eu5_newworld`, `eu5_natives`, `eu5_formation` and `colonial_names`, and
+  `game_texts.localize` writes each key once per language. The token
+  `[ROOT.GetCountry.GetFlavorRank]` left the English of *A Priesthood With a Seat*: its gender
+  varies by rank and no Russian, German or Polish sentence could agree with it.
 
 Next, in this order, each a commit:
 
-1. `translations.py`, the catalogs' format, the release check and packaging of the data files.
-2. Rewrite the English of the stories, formables and places against §3.2 (keep every option's
-   order and effects), then translate them into the ten languages.
-3. `wording.py` and `translit.py`: phrases through `seanames`, `eu5_newworld`, `eu5_natives`,
-   `eu5_formation`, `colonial_names`; country adjectives; per-language rendering in the export.
-   This changes the world's files: new product version, epoch, golden digests, reference world.
-4. The window: language detection (§2.2), a language menu, `window.toml` for every language,
-   progress stages, the atlas in format 2.
-5. The Workshop description in every language (Steam takes one per language), the hub's texts.
-6. Claims, research log, changelog, roadmap, installation of a candidate.
+1. The window: language detection (§2.2), a language menu, `window.toml` for every language,
+   progress stages, the atlas in format 2 (names as phrases, rendered in the window's language).
+2. The Workshop description in every language (Steam takes one per language), the hub's texts,
+   the world's title in the mod list (`.metadata`; whether the launcher can show more than one
+   language is [UNKNOWN]).
+3. Owner review in game and in the window (roadmap gate), in one sitting with whatever else is
+   due.

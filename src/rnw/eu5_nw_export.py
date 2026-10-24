@@ -221,6 +221,7 @@ from rnw.eu5_terrain import (
     terrain_outputs,
 )
 from rnw.eu5_water import water_outputs
+from rnw.game_texts import Text, localize, untranslated
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.landmask import LandMask, fit
 from rnw.languages import official_languages
@@ -248,6 +249,7 @@ from rnw.settings import canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
+from rnw.wording import render
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -255,8 +257,10 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.settings import Settings
+    from rnw.wording import Name
     from rnw.worldname import Label
 
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
@@ -712,24 +716,26 @@ def _yaml(language: str, entries: dict[str, str]) -> bytes:
 def _localization(
     game_dir: Path,
     plan: Plan,
-    extra: dict[str, str],
-    renamed: dict[str, str],
+    extra: Mapping[str, Entry],
+    renamed: Mapping[str, Name],
     languages: tuple[str, ...],
 ) -> dict[str, bytes]:
-    names = {cell.key: cell.name for cell in plan.cells}
+    """The world's names and texts, written in each language (``wording``, ``translations``)."""
+    names: dict[str, Entry] = {cell.key: cell.name for cell in plan.cells}
     names.update(extra)
     names.update(plan.province_names)
     fresh = {area for area in plan.new_areas if area.startswith("rnw_")}
     names.update({area: plan.display_overrides[area] for area in sorted(fresh)})
     overrides = {key: value for key, value in plan.display_overrides.items() if key not in fresh}
-    for table in (names, overrides):
-        table.update({key: renamed[key] for key in table if key in renamed})
+    names.update({key: renamed[key] for key in names if key in renamed})
+    overrides.update({key: renamed[key] for key in overrides if key in renamed})
     files: dict[str, bytes] = {}
     for language in languages:
         base = f"main_menu/localization/{language}"
-        files[f"{base}/rnw_new_world_l_{language}.yml"] = _yaml(language, names)
+        files[f"{base}/rnw_new_world_l_{language}.yml"] = _yaml(language, localize(names, language))
+        written = {key: render(name, language) for key, name in overrides.items()}
         try:
-            files.update(map_name_files(game_dir, language, overrides))
+            files.update(map_name_files(game_dir, language, written))
         except LocalizationError as error:
             raise NewWorldExportError(str(error)) from error
     return files
@@ -1112,7 +1118,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         _localization(
             game_dir,
             plan,
-            country_names(natives.countries) | place_texts(used),
+            {**country_names(natives.countries), **{key: Text(key) for key in place_texts(used)}},
             natives.names,
             languages,
         )
@@ -1144,6 +1150,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         "setup_identifiers_removed": len(setup.removed_ids),
         "base_modifiers_retired": sorted(retired),
         "languages": list(languages),
+        "untranslated_languages": untranslated(languages),
         "exceptional_places": {
             spec.modifier: plan.cells[index].key for index, spec in sorted(places.items())
         },

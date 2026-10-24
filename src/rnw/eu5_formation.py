@@ -16,16 +16,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from rnw import wording
 from rnw.eu5_empires import rank_levels
 from rnw.eu5_natives import hsv_rgb
 from rnw.formations import BY_FAMILY, Spec
+from rnw.game_texts import Described, formation_description
 from rnw.rng import derive_seed
+from rnw.wording import Phrase
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from pathlib import Path
 
     from rnw.content import Formation
+    from rnw.game_texts import Entry
+    from rnw.wording import Name
 
 FORMABLES_FILE: Final[str] = "in_game/common/formable_countries/rnw_formations.txt"
 FLAGS_FILE: Final[str] = "main_menu/common/flag_definitions/rnw_formations.txt"
@@ -45,11 +50,15 @@ class FormationError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class Identity:
-    """What a formation needs of the world besides its places: a tag, a name, a colour."""
+    """What a formation needs of the world besides its places: a tag, a name, a colour.
+
+    The name is the family's term with the seat's word, written by each language its own way
+    (``wording``: *Kaira Union*, *Кайрский союз*, *Unia Kairańska*), and so is the adjective.
+    """
 
     tag: str
-    name: str
-    adjective: str
+    name: Phrase
+    adjective: Phrase
     colour: tuple[int, int, int]
     colours: tuple[str, str]
 
@@ -146,7 +155,7 @@ def files(formations: Sequence[Formation], identities: Sequence[Identity]) -> di
 
 def identities(
     formations: Sequence[Formation],
-    names: Mapping[str, str],
+    names: Mapping[str, Name],
     tags: Sequence[str],
     seed: int,
     taken: frozenset[tuple[int, int, int]],
@@ -156,6 +165,9 @@ def identities(
     used = set(taken)
     for formation, tag in zip(formations, tags, strict=True):
         seat = names.get(formation.seat, formation.seat)
+        if not isinstance(seat, str):
+            message = f"The seat {formation.seat} of a formation has the composed name {seat}"
+            raise FormationError(message)
         draw = derive_seed(seed, "content", "union", tag)
         colour = (0, 0, 0)
         for step in range(360):
@@ -167,25 +179,27 @@ def identities(
         count = len(ARMS_COLOURS)
         first = (draw >> 8) % count
         second = (first + 1 + (draw >> 16) % (count - 1)) % count
-        suffix = BY_FAMILY[formation.family].suffix
         found.append(
             Identity(
-                tag, f"{seat} {suffix}", seat, colour, (ARMS_COLOURS[first], ARMS_COLOURS[second])
+                tag,
+                Phrase(wording.FORMATION + BY_FAMILY[formation.family].stem, seat),
+                wording.adjective(seat),
+                colour,
+                (ARMS_COLOURS[first], ARMS_COLOURS[second]),
             )
         )
     return found
 
 
-def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) -> dict[str, str]:
+def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) -> dict[str, Entry]:
     """The localization of the formations: names, adjectives, formable keys and descriptions."""
-    found: dict[str, str] = {}
+    found: dict[str, Entry] = {}
     for formation, identity in zip(formations, identities_of, strict=True):
-        spec = BY_FAMILY[formation.family]
         key = key_of(formation)
         found[identity.tag] = identity.name
         found[f"{identity.tag}_ADJ"] = identity.adjective
         # The formables list asks for the formable's own key (vanilla: ``SWI_f: "$SWI$"``);
         # without it the game shows the key and logs it as a missing localization.
-        found[key] = f"${identity.tag}$"
-        found[f"{key}_desc"] = spec.description.format(name=identity.name)
+        found[key] = wording.reference(identity.tag)
+        found[f"{key}_desc"] = Described(formation_description(formation.family), identity.name)
     return found

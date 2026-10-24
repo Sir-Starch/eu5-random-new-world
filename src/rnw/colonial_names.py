@@ -8,8 +8,9 @@ closed on generated land by N1; this module writes the generated world's own, in
 For each region of the generated land and each founder's naming tradition one entry makes a
 colony whose overlord speaks that language, with its capital in that region, *the New X* of the
 tradition, where X is the generated name of the region (a local root, as *New Granada* and *New
-Mexico* took theirs). A tradition is a template of its language, not an inflection engine: the
-region's name is put after the word for *new* and left as it is.
+Mexico* took theirs). The name is a phrase (``wording``): English keeps the founder's word
+(*Nueva X*, *Nieuw-X*), the other languages write *new* as the game's own translations of the
+colonial names do (*Новая X*, *Neu-X*, *Yeni X*, *ヌエバ・X*).
 
 Whether the game applies a scripted name to a colony made by its own colonization is observed only
 for the effect of sitting 038, ``create_country_from_location`` (it did not, C207, C210); the
@@ -21,9 +22,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from rnw import wording
+from rnw.wording import Phrase
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
     from pathlib import Path
+
+    from rnw.wording import Name
 
 NAMES_FILE: Final[str] = "in_game/common/scripted_country_names/rnw_colonial_names.txt"
 LANGUAGES_DIR: Final[str] = "game/in_game/common/languages"
@@ -36,10 +42,10 @@ class ColonialNameError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class Tradition:
-    """How the colonies of one founder's people are named: its trigger and its word for *new*."""
+    """How the colonies of one founder's people are named: its trigger, by the founder's language
+    (``wording.TRADITIONS`` holds the words)."""
 
     name: str
-    pattern: str
     founder: str
     needs: str
 
@@ -50,31 +56,26 @@ DUTCH: Final[str] = f"any_primary_or_accepted_culture = {{ has_culture_group = {
 TRADITIONS: Final[tuple[Tradition, ...]] = (
     Tradition(
         "spanish",
-        "Nueva {root}",
         "culture.language = language:spanish_language",
         "spanish_language",
     ),
     Tradition(
         "portuguese",
-        "Nova {root}",
         "culture.language = language:portuguese_language",
         "portuguese_language",
     ),
     Tradition(
         "english",
-        "New {root}",
         "culture.language = language:english_language",
         "english_language",
     ),
     Tradition(
         "french",
-        "Nouvelle-{root}",
         "culture.language = language:french_language",
         "french_language",
     ),
     Tradition(
         "dutch",
-        "Nieuw-{root}",
         DUTCH,
         "netherlandish_group",
     ),
@@ -118,12 +119,16 @@ def script(regions: Sequence[str]) -> str:
     )
 
 
-def texts(regions: Mapping[str, str]) -> dict[str, str]:
+def texts(regions: Mapping[str, Name]) -> dict[str, Name]:
     """The names and adjectives, by the key the game looks up (the adjective is the name)."""
-    found: dict[str, str] = {}
+    found: dict[str, Name] = {}
     for region in sorted(regions):
+        root = regions[region]
+        if not isinstance(root, str):
+            message = f"The region {region} has the composed name {root}"
+            raise ColonialNameError(message)
         for tradition in TRADITIONS:
-            name = tradition.pattern.format(root=regions[region])
+            name = Phrase(wording.COLONY + tradition.name, root)
             found[entry_id(tradition, region)] = name
             found[f"{entry_id(tradition, region)}_ADJ"] = name
     return found

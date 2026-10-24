@@ -51,6 +51,7 @@ from rnw.eu5_splines import land_contacts
 from rnw.eu5_story import START_FILE
 from rnw.eu5_terrain import DecalStore
 from rnw.formations import SPECS as FORMATION_SPECS
+from rnw.game_texts import sources, untranslated
 from rnw.geography import color_summary, read_locations, summary
 from rnw.languages import official_languages
 from rnw.model import WATER_CLASSES, CellClass
@@ -58,6 +59,7 @@ from rnw.pdx import parse
 from rnw.record import Record
 from rnw.stories import STORIES
 from rnw.storymodel import render_events, render_hook
+from rnw.translations import GAME, problems
 
 GOLDEN_WORLD = Path(__file__).with_name("golden_world.json")
 
@@ -340,6 +342,9 @@ def test_local_languages_are_the_installations_own() -> None:
         if folder.is_dir()
     }
     assert set(languages) == shipped
+    # The release check of L1: every language the game ships has current translations.
+    assert untranslated(languages) == []
+    assert problems(GAME, sources(), languages) == []
 
 
 def test_local_game_files_take_the_selection_cover() -> None:

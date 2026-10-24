@@ -1,0 +1,1007 @@
+["rnw_river.1.title"]
+source = "92e0bd96d3f7d7cb"
+text = '''大河改道'''
+
+["rnw_river.1.desc"]
+source = "626a705f44cf2607"
+text = '''自有人记事以来，这条大河便一直滋养着[target_location.GetNameWithNoTooltip]。它的洪水淤积出黑色的沃土，它的驳船运送粮食，它的码头让这座城市富庶起来。可如今，河道每年春天都会再偏移一些。淤泥堵塞了旧运河，洪水漫进了下城的街巷，粮仓里的存粮也比管事们上报的要少。\n\n城中的长老们来到了宫廷。每人都带来了一剂良方，而每一剂良方都要别人来掏钱。'''
+
+["rnw_river.1.a"]
+source = "82f2af7fc49fa90d"
+text = '''修筑堤坝，开凿新渠。'''
+
+["rnw_river.1.b"]
+source = "1d3aeeb4a84aaa1d"
+text = '''该掏钱的是驳船，不是国库。河岸撑到现在，还能接着撑。'''
+
+["rnw_river.1.c"]
+source = "f8be85141a01ff6a"
+text = '''河岸的事，河上的行会最清楚。让他们自己去管。'''
+
+["rnw_river.2.title"]
+source = "6a275641a35939ba"
+text = '''堤坝守住了'''
+
+["rnw_river.2.desc"]
+source = "1730944712d980e7"
+text = '''春汛如期而至，但今年它在新堤前止住了脚步。[target_location.GetNameWithNoTooltip]的下城街巷，过去洪水会在集市里一泡就是一个月，如今水却没漫过码头。护堤人前来询问，我们打算如何使用这份花钱买来的太平。'''
+
+["rnw_river.2.a"]
+source = "9e79ef1545fd4538"
+text = '''在新河岸上修建粮仓。'''
+
+["rnw_river.2.b"]
+source = "759e276ad8df9603"
+text = '''把结余留在国库。'''
+
+["rnw_river.3.title"]
+source = "4a122d8033ed158d"
+text = '''大河讨债'''
+
+["rnw_river.3.desc"]
+source = "725fb974622a5736"
+text = '''通行税填满了国库，河岸却无人过问。今年春天，河水暴涨，找到最薄弱的一段，冲决而出。洪水退去后，[target_location.GetNameWithNoTooltip]的下城埋在淤泥之下，水井尽被污染，驳船搁浅在街道中央。税吏禀报说，每一笔通行税都已足额缴清。到了明年，就没有人能再来缴了。'''
+
+["rnw_river.3.a"]
+source = "1f90ed5c7e74788b"
+text = '''立刻疏浚河道，不惜一切代价！'''
+
+["rnw_river.3.b"]
+source = "6b1f172f635f13c1"
+text = '''把粮仓迁到高处，下城就让它自己晾干吧。'''
+
+["rnw_river.4.title"]
+source = "d2f2732e667707f6"
+text = '''护岸人'''
+
+["rnw_river.4.desc"]
+source = "b5613a29ee18d1f6"
+text = '''这几年来，河岸一直由河上的行会看护。他们花的钱比宫廷以往任何时候都少，但他们也是为了自己：他们的码头是全河修得最好的，他们在[target_location.GetNameWithNoTooltip]的街区也富了起来。如今他们希望把自己的权利写进特许状，再盖上印信。'''
+
+["rnw_river.4.a"]
+source = "dd1b6bf31029741d"
+text = '''在特许状上盖印。'''
+
+["rnw_river.4.b"]
+source = "0be0f5f1950156b6"
+text = '''河岸归我们所有，河岸的收益也一样。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_works_levy"]
+source = "a523fe899a7ea525"
+text = '''治河工役捐'''
+
+["STATIC_MODIFIER_DESC_rnw_river_works_levy"]
+source = "2f5f4e6ef6a29203"
+text = '''国库承担修堤开渠的费用。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_embankments"]
+source = "ae3489a3d912387e"
+text = '''新筑堤坝'''
+
+["STATIC_MODIFIER_DESC_rnw_river_embankments"]
+source = "a76eafa92c87b566"
+text = '''高堤将洪水挡在街巷之外，代价是占去了一些田地。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_flood_security"]
+source = "1ae8af4d8317f884"
+text = '''免于水患'''
+
+["STATIC_MODIFIER_DESC_rnw_river_flood_security"]
+source = "e1c9f75f6ca103d6"
+text = '''岸边有粮仓，年年无水灾，城市日渐壮大。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_toll_regime"]
+source = "2325272caa1fc50d"
+text = '''河道通行税'''
+
+["STATIC_MODIFIER_DESC_rnw_river_toll_regime"]
+source = "7bc728fde2c624c0"
+text = '''河上贸易的通行税充实了国库，却几乎没有建起什么。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_silted"]
+source = "6645f38bbe916505"
+text = '''淤泥与污井'''
+
+["STATIC_MODIFIER_DESC_rnw_river_silted"]
+source = "71d43f13b24b2c87"
+text = '''洪水在街上留下了淤泥，在井里留下了污秽。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_guild_wardens"]
+source = "49b7b65e12987132"
+text = '''行会护岸人'''
+
+["STATIC_MODIFIER_DESC_rnw_river_guild_wardens"]
+source = "005b04e0edd2a62e"
+text = '''河上的行会看护着河岸，他们的街区日益兴旺。'''
+
+["STATIC_MODIFIER_NAME_rnw_river_ceded_authority"]
+source = "426cada75292d210"
+text = '''让渡的权力'''
+
+["STATIC_MODIFIER_DESC_rnw_river_ceded_authority"]
+source = "04b40955826a764e"
+text = '''大河如今掌握在行会手中，人人都看得出宫廷对他们言听计从。'''
+
+["rnw_sacred.1.title"]
+source = "14db3bc6b023c41f"
+text = '''门前的朝圣者'''
+
+["rnw_sacred.1.desc"]
+source = "fbb674e14759b2da"
+text = '''每到一季，来[target_location.GetNameWithNoTooltip]的朝圣者就更多一些。他们睡在小巷里，在古老的石头前留下供品，又把圣地的名字带回宫廷从未听说过的村庄。祭司们抱怨圣所的围墙已经容不下它了；管事们则抱怨国库已经容不下它了。'''
+
+["rnw_sacred.1.a"]
+source = "3081223f1c8bccd8"
+text = '''向圣所捐赠，并铺砌朝圣之路。'''
+
+["rnw_sacred.1.b"]
+source = "1ea92073f4910495"
+text = '''供品也是财富。让国库从中抽取什一税。'''
+
+["rnw_sacred.1.c"]
+source = "eb18d88fda18c1ba"
+text = '''让大祭司在等级会议中占有一席。'''
+
+["rnw_sacred.2.title"]
+source = "e59e8a0a9dcaf42a"
+text = '''圣所兴盛'''
+
+["rnw_sacred.2.desc"]
+source = "9b927b118cf86cc9"
+text = '''这笔捐赠办成了管事们认为办不成的事。道路铺好了，客舍住满了，来到[target_location.GetNameWithNoTooltip]的朝圣者如今会留下来做买卖。祭司们想以一座大神殿为这项事业画上句号，并请求我们为它奠下第一块基石。'''
+
+["rnw_sacred.2.a"]
+source = "a8546ab9c5e84d1e"
+text = '''兴建大神殿。'''
+
+["rnw_sacred.2.b"]
+source = "1d7789d49a751d66"
+text = '''有路就够了。让供品去维护这条路吧。'''
+
+["rnw_sacred.3.title"]
+source = "b738cb2aebdb6289"
+text = '''祭司的怨言'''
+
+["rnw_sacred.3.desc"]
+source = "43d99291120fc2da"
+text = '''什一税填满了国库，[target_location.GetNameWithNoTooltip]的祭司们也注意到了这一点。他们说，供品理应属于献上它们的人和看护石头的人。已经有人在布道时这样讲了，朝圣者们都在听。'''
+
+["rnw_sacred.3.a"]
+source = "8ef903596e032ae3"
+text = '''把部分什一税退还给圣所。'''
+
+["rnw_sacred.3.b"]
+source = "b9ee3667a4b96cea"
+text = '''什一税照收，用言辞回应那些布道。'''
+
+["rnw_sacred.4.title"]
+source = "10c7c5c30cb195f0"
+text = '''有了席位的祭司团'''
+
+["rnw_sacred.4.desc"]
+source = "8c892f0f18621ad5"
+text = '''[target_location.GetNameWithNoTooltip]的大祭司如今跻身于等级会议之中，圣所的古老教团也在我们的议事会上有了发言权。祭司们心怀感激。其他等级则在盘算，这份发言权会让他们付出多少代价。'''
+
+["rnw_sacred.4.a"]
+source = "4330d21686c0ce81"
+text = '''欢迎祭司团进入我们的议事会。'''
+
+["rnw_sacred.4.b"]
+source = "21757a395a14481c"
+text = '''他们的位置在圣所。让他们待在那里。'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_endowment"]
+source = "d89ae9c084fe8693"
+text = '''受捐的圣所'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_endowment"]
+source = "b66728b3884d01a5"
+text = '''富足的圣所和铺砌的道路吸引着朝圣者，祭司的威望日渐提升。'''
+
+["STATIC_MODIFIER_NAME_rnw_sacred_great_temple"]
+source = "f882d7291f2780eb"
+text = '''大神殿'''
+
+["STATIC_MODIFIER_DESC_rnw_sacred_great_temple"]
+source = "ab9fc088bd475eb8"
+text = '''建在古老石头之上的神殿，吸引着举国的信众。'''
+
+["rnw_sacred_priesthood"]
+source = "f5ddb8a6f494aa7f"
+text = '''圣所大祭司职'''
+
+["rnw_sacred_priesthood_desc"]
+source = "702d509ab2bca453"
+text = '''圣所的大祭司只对信仰负责，并在等级会议中占有一席。'''
+
+["rnw_harvest.1.title"]
+source = "7414bd76241e6373"
+text = '''歉收'''
+
+["rnw_harvest.1.desc"]
+source = "8d3e07bbbc63f306"
+text = '''雨水来迟，收成微薄。[target_location.GetNameWithNoTooltip]的粮仓已空了一半，面包价格一个月内翻了一倍，城里吃掉的粮食比周边田地历来产出的还要多。里正们带着记账的竹签来到宫廷。照他们的算法，存粮只够撑到隆冬，一天也多不了。'''
+
+["rnw_harvest.1.a"]
+source = "b9128dbfc34c11ef"
+text = '''从丘陵那边的地方购买粮食。'''
+
+["rnw_harvest.1.b"]
+source = "48ca59b7247e6e46"
+text = '''存粮实行配给，并向各村征粮。'''
+
+["rnw_harvest.1.c"]
+source = "59b06a6dfe15e6f5"
+text = '''开垦新地，排干平原边缘的湿地。'''
+
+["rnw_harvest.2.title"]
+source = "b864653930eba4f6"
+text = '''粮商'''
+
+["rnw_harvest.2.desc"]
+source = "8613f15217b19cb9"
+text = '''去年冬天养活[target_location.GetNameWithNoTooltip]的粮食，经过了少数几家商号之手，而他们清楚地记得当时是谁需要粮食。下城的仓库在他们手里，市场的粮价由他们来定。如今他们请求宫廷，把他们这一年来不请自为的事写成文书。'''
+
+["rnw_harvest.2.a"]
+source = "3ea1c894f5f58390"
+text = '''授予粮商特许状。'''
+
+["rnw_harvest.2.b"]
+source = "e750455aaa79a190"
+text = '''打破他们的垄断。城里要有自己的粮仓。'''
+
+["rnw_harvest.3.title"]
+source = "b8dc6154ad1a5ba9"
+text = '''村庄不会忘记'''
+
+["rnw_harvest.3.desc"]
+source = "5effe1c27c476a5d"
+text = '''去年冬天，各村交出了种粮，至今仍未释怀。在[target_location.GetNameWithNoTooltip]的春市上，农民们带来的少了，要价却高了，车夫们说起了撂荒的田地。管事们至今仍称那次征粮是不得已之举。村子里的人对此另有说法。'''
+
+["rnw_harvest.3.a"]
+source = "aeb2ec223c206740"
+text = '''用钱和种子补偿各村。'''
+
+["rnw_harvest.3.b"]
+source = "4cd56e1f7e49ab8c"
+text = '''那次征粮救了这座城。我们什么也不欠他们。'''
+
+["rnw_harvest.4.title"]
+source = "3ce7ba744b922586"
+text = '''新田结实'''
+
+["rnw_harvest.4.desc"]
+source = "486ef3cd8f067612"
+text = '''两季收成之后，[target_location.GetNameWithNoTooltip]城外排干的田地上，往日芦苇丛生之处已长出了庄稼。拥挤小巷里的人家请求分得一份新地，管事们则要求从中抽取什一税。'''
+
+["rnw_harvest.4.a"]
+source = "de93940b4373a913"
+text = '''把新地分给城里的人家。'''
+
+["rnw_harvest.4.b"]
+source = "c4df8221ae4cfb2b"
+text = '''卖掉新地，把那里的粮食运往外国。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_bought_grain"]
+source = "7900f536a98f53b1"
+text = '''外购粮食'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_bought_grain"]
+source = "1f67be7e997a813f"
+text = '''买来的粮食让面包保持便宜，城市不断壮大。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_rationing"]
+source = "de6c8e4aead4b07e"
+text = '''配给'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_rationing"]
+source = "01c25979dab3a732"
+text = '''管事们分配存粮。城里吃得少了，怨言却多了。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_new_fields"]
+source = "eec28f043b4893e4"
+text = '''新田'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_new_fields"]
+source = "331936206e72ec4b"
+text = '''排干的沼泽和开垦的土地，一年比一年产出更多粮食。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_grain_charter"]
+source = "ebbe64679fd1d263"
+text = '''粮商特许状'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_grain_charter"]
+source = "69aad4155c615edd"
+text = '''粮商凭特许状掌握贸易，并为整个国家经营。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_public_granaries"]
+source = "7dbd345b2a99d507"
+text = '''公仓'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_public_granaries"]
+source = "4cd7ab6bfd85feb0"
+text = '''丰年装满的粮仓，在荒年养活了这座城。'''
+
+["STATIC_MODIFIER_NAME_rnw_harvest_shared_fields"]
+source = "71166726228ef47f"
+text = '''众家之田'''
+
+["STATIC_MODIFIER_DESC_rnw_harvest_shared_fields"]
+source = "95c8419beae21455"
+text = '''三种作物套种的小块田地，收成胜过一整块大田。'''
+
+["rnw_route.1.title"]
+source = "17b79f9baa1ed0d8"
+text = '''两城之间的路'''
+
+["rnw_route.1.desc"]
+source = "ddbf1581c0b6184c"
+text = '''[target_location.GetNameWithNoTooltip]与[other_location.GetNameWithNoTooltip]相距不过几日路程，连接两地的小径每年春天都会被雨水冲毁。粮食往一头运，布匹往另一头运，每辆车经过沿途每个村子都要交一次过路费。两座城的行会带着同样的怨言、截然不同的两套方案来到了宫廷。'''
+
+["rnw_route.1.a"]
+source = "d78f7e1033b86865"
+text = '''在两城之间铺一条石板路。'''
+
+["rnw_route.1.b"]
+source = "01a8f4fc68cb4769"
+text = '''让商人去修路，过路费也归他们收。'''
+
+["rnw_route.1.c"]
+source = "3580ca452039d687"
+text = '''与各村立约：每个路口都设一个集日。'''
+
+["rnw_route.2.title"]
+source = "a052755d15b37de5"
+text = '''道路开通'''
+
+["rnw_route.2.desc"]
+source = "68ac73a0974b8662"
+text = '''最后一块石头还没铺好，第一批商队就已经走上了新路。如今马车从[target_location.GetNameWithNoTooltip]到[other_location.GetNameWithNoTooltip]只需一天，两城的文书们已经为这条路究竟服务于哪一边的市场吵了起来。'''
+
+["rnw_route.2.a"]
+source = "7f5b2c593742c5ae"
+text = '''在路上驻兵，并保持道路完好。'''
+
+["rnw_route.2.b"]
+source = "c3409d39e4a5cbc5"
+text = '''两头各设一道关卡收费，让这条路自负盈亏。'''
+
+["rnw_route.3.title"]
+source = "90116ff1a796c6a4"
+text = '''过路费越来越重'''
+
+["rnw_route.3.desc"]
+source = "c1fe956ac01de067"
+text = '''修路的商人们发现，过路费一旦定下，就会越涨越高。[other_location.GetNameWithNoTooltip]的车夫要交的钱是从前的两倍，[target_location.GetNameWithNoTooltip]的布匹运到城门口时，价钱已经和这条路本身差不多了。两座城都认定宫廷只听对方的。'''
+
+["rnw_route.3.a"]
+source = "e923c85312c866f6"
+text = '''把过路费限定在旧有的标准。'''
+
+["rnw_route.3.b"]
+source = "7e020e3a8a2c3706"
+text = '''路是他们修的。过路费就由他们来定。'''
+
+["rnw_route.4.title"]
+source = "10f26d56a6e76b94"
+text = '''集日'''
+
+["rnw_route.4.desc"]
+source = "aaf0c0ee103e6317"
+text = '''沿途的村庄守住了约定。每年两次，每个路口都会开设集市，[target_location.GetNameWithNoTooltip]和[other_location.GetNameWithNoTooltip]的商人在半路上相会，两边都得了好处，却让各自的行会很不痛快。'''
+
+["rnw_route.4.a"]
+source = "cbae934ee2f13376"
+text = '''授予集市特许状，并向每个路口派驻一名差官。'''
+
+["rnw_route.4.b"]
+source = "13982e51c2013d53"
+text = '''集市是村子的事。随他们去吧。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_road_works"]
+source = "66ad90cecaf4bd40"
+text = '''修路工程'''
+
+["STATIC_MODIFIER_DESC_rnw_route_road_works"]
+source = "8e72bb5a1ffc090e"
+text = '''宫廷出钱修路，工程进展迅速。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_paved_road"]
+source = "98fcf86049be9ec6"
+text = '''石板路'''
+
+["STATIC_MODIFIER_DESC_rnw_route_paved_road"]
+source = "f659c880bb37a357"
+text = '''货物运输更加便利，沿途的城镇日渐兴旺。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_toll_charter"]
+source = "1becfec2af2080e4"
+text = '''路商特许状'''
+
+["STATIC_MODIFIER_DESC_rnw_route_toll_charter"]
+source = "77d89d175cf34976"
+text = '''维护道路的商人有权在路上收取过路费。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tollgates"]
+source = "59a6708e1f27a073"
+text = '''关卡'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tollgates"]
+source = "0eb630f29a131442"
+text = '''城门前的关卡把商人和他们的货栈引进了城。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_market_days"]
+source = "3799c1d3a4c60003"
+text = '''集日'''
+
+["STATIC_MODIFIER_DESC_rnw_route_market_days"]
+source = "131c4b31d90a3282"
+text = '''每逢集日，沿途村庄的商人便纷纷进城。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_royal_road"]
+source = "9f6f82b77f43df6c"
+text = '''宫廷之路'''
+
+["STATIC_MODIFIER_DESC_rnw_route_royal_road"]
+source = "656bc06618361b8b"
+text = '''有兵驻守的道路，让贸易牢牢掌握在宫廷手中。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_tolls_resented"]
+source = "2783775338f9a5e5"
+text = '''怨声载道的过路费'''
+
+["STATIC_MODIFIER_DESC_rnw_route_tolls_resented"]
+source = "70c644c2e242f783"
+text = '''商人们交着钱，发着牢骚，来得越来越少。'''
+
+["STATIC_MODIFIER_NAME_rnw_route_chartered_fairs"]
+source = "400ab144d804cb98"
+text = '''特许集市'''
+
+["STATIC_MODIFIER_DESC_rnw_route_chartered_fairs"]
+source = "1f6b8a428c613b72"
+text = '''应季的大集让货栈和客栈都满满当当。'''
+
+["rnw_alliance.1.title"]
+source = "0a9723a4376aee4a"
+text = '''邻谷来使'''
+
+["rnw_alliance.1.desc"]
+source = "bd5bab3bfb9c7e73"
+text = '''[target_country.GetName]的使节抵达了[target_location.GetNameWithNoTooltip]。我们两国宫廷供奉同样的神祇，或说着同样的语言，在同样的边境上面对同样的敌人，可世世代代以来，彼此往来的只有抱怨。使节们提议设立一个议事会，让两国君主平起平坐地对话。我们自己的谋臣们却宁愿这些使节待在家里别来。'''
+
+["rnw_alliance.1.a"]
+source = "15a2cfcd922dca1b"
+text = '''我们愿与他们平起平坐。'''
+
+["rnw_alliance.1.b"]
+source = "7a151d25cff53199"
+text = '''向他们提供我们的庇护，并要求他们表示恭顺。'''
+
+["rnw_alliance.1.c"]
+source = "de59b81b969ac9c8"
+text = '''向他们致谢，我们的打算不必告诉他们。'''
+
+["rnw_alliance.2.title"]
+source = "df87f78fb7bb254c"
+text = '''议事会召开'''
+
+["rnw_alliance.2.desc"]
+source = "f5c51924af6a43bb"
+text = '''我们的君主与[target_country.GetName]的君主已经见了三次面，每一次分别时，彼此的猜疑都少了几分。议事会已开始在边境的小纠纷闹大之前将其平息。宫中的媒人们已经在拟名单了。老谋臣们却认为，有个议事会就已经够亲近了。'''
+
+["rnw_alliance.2.a"]
+source = "f7553e538c2c5d60"
+text = '''以联姻和条约将两家结为一体。'''
+
+["rnw_alliance.2.b"]
+source = "d5231e75b558f470"
+text = '''有议事会就够了。'''
+
+["rnw_alliance.3.title"]
+source = "95d1851c898dcd26"
+text = '''邻国怒目'''
+
+["rnw_alliance.3.desc"]
+source = "f7a5f1fa41415482"
+text = '''[target_country.GetName]的宫廷完全读懂了我们提供庇护的用意。他们的使节走了，商人被召回了，他们的君主还亲笔写来一封信，质问我们凭什么谈论恭顺。'''
+
+["rnw_alliance.3.a"]
+source = "a3f03c95f2201b69"
+text = '''撤回要求，并送去礼物。'''
+
+["rnw_alliance.3.b"]
+source = "c3606a1ff3772d42"
+text = '''我们说的就是我们的本意。'''
+
+["rnw_alliance.4.title"]
+source = "4994a20174264735"
+text = '''关上的门'''
+
+["rnw_alliance.4.desc"]
+source = "99b9a3176855a9b6"
+text = '''[target_country.GetName]收到我们的答复后，便把目光转向了别处。他们的使节如今在我们其他邻国的殿堂里等候接见，一条原本安宁的边界如今被双方严密监视。我们的谋臣们公开议论，当初拒绝是否明智。'''
+
+["rnw_alliance.4.a"]
+source = "4259618be211b74a"
+text = '''再派一个使团，以诚相待。'''
+
+["rnw_alliance.4.b"]
+source = "e93860b578aaccc1"
+text = '''拒绝不变。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_council"]
+source = "770bd2d09ef98473"
+text = '''邻国议事会'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_council"]
+source = "7e12330fb21cd9ec"
+text = '''宫廷与邻国共商国事，贵族因此获得了发言权。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_trust"]
+source = "92b82fb0dfb1d768"
+text = '''议事会之信'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_trust"]
+source = "51030e82704b3b5d"
+text = '''与邻国共设议事会的君主，在外国也受人信赖。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_pressure"]
+source = "4d41271ee4c1c9b5"
+text = '''施压邻国'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_pressure"]
+source = "2e3fdc370d3f6800"
+text = '''我们对恭顺的要求，让我们的话在外国不再那么有分量。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_closed_doors"]
+source = "d1172dac1d7b4be4"
+text = '''闭门谢客'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_closed_doors"]
+source = "1297419ab21e731f"
+text = '''宫廷不露心机，并加紧了对边境的监视。'''
+
+["STATIC_MODIFIER_NAME_rnw_alliance_kinship"]
+source = "39af4f6133d6df49"
+text = '''宫廷姻亲'''
+
+["STATIC_MODIFIER_DESC_rnw_alliance_kinship"]
+source = "348f802c9c5898e2"
+text = '''以联姻和条约结合的两个宫廷，相互支撑着对方的统治。'''
+
+["rnw_empire.1.title"]
+source = "62131d2aa18b57b3"
+text = '''边远行省'''
+
+["rnw_empire.1.desc"]
+source = "b3f20f53e083d0d6"
+text = '''我国的疆域已经超出了道路所能及的范围。在远离[target_location.GetNameWithNoTooltip]的[other_location.GetNameWithNoTooltip]，人们按自己的习俗生活，听命于自己的领主。他们的贡赋总是迟到，他们的儿子从不应征。总督们来信说那个行省一切太平。商人们来信却说恰恰相反。'''
+
+["rnw_empire.1.a"]
+source = "fdce9c056aae7a98"
+text = '''派一位总督去，再给他配一支驻军。'''
+
+["rnw_empire.1.b"]
+source = "8812b394529a3f72"
+text = '''授予该省一份承认其固有习俗的特许状。'''
+
+["rnw_empire.1.c"]
+source = "5c69a3d7bef4e4b7"
+text = '''从腹地迁移人家到他们中间定居。'''
+
+["rnw_empire.2.title"]
+source = "41d67ad90c64b242"
+text = '''总督的长臂'''
+
+["rnw_empire.2.desc"]
+source = "92d302c32a7ac0ac"
+text = '''[other_location.GetNameWithNoTooltip]的总督来信说，驻军的饷银已经付清，贡赋也按时送到。他还写道，他在老城区置了宅子，娶了当地人家的女儿，如今旧日的领主们都在他的餐桌旁用饭。宫廷拿不准这究竟该不该高兴。'''
+
+["rnw_empire.2.a"]
+source = "907c999481100ab0"
+text = '''每隔几年就撤换总督。'''
+
+["rnw_empire.2.b"]
+source = "c88e953a927b6081"
+text = '''让他留下。在当地扎了根的总督，才守得住一个省。'''
+
+["rnw_empire.3.title"]
+source = "f762ad04d9157935"
+text = '''特许状越来越多'''
+
+["rnw_empire.3.desc"]
+source = "fb8833f438984ce3"
+text = '''[other_location.GetNameWithNoTooltip]获得特许状的消息，比任何税吏都更快地传遍了其他边远行省。又有三个省派来使团求取同样的待遇，而腹地的贵族们想知道，为什么这些行省仅仅因为离得远就能得到奖赏。'''
+
+["rnw_empire.3.a"]
+source = "457ea5dfb53e0233"
+text = '''凡是请求的行省，一律授予特许状。'''
+
+["rnw_empire.3.b"]
+source = "a301d5f22d7e2ae7"
+text = '''那份特许状是恩典，不是先例。'''
+
+["rnw_empire.4.title"]
+source = "2664836ec5cbc723"
+text = '''新邻居'''
+
+["rnw_empire.4.desc"]
+source = "f169c081cb60dbfa"
+text = '''来自腹地的移民沿着通往[other_location.GetNameWithNoTooltip]的道路盖起了房屋。他们说我们的语言，敬我们的神明，而该省的老家族都与他们保持着距离。集市上的一场争吵已经动了刀子。'''
+
+["rnw_empire.4.a"]
+source = "ec34ab3bd43f2394"
+text = '''让老家族在城镇议会中占有席位。'''
+
+["rnw_empire.4.b"]
+source = "cd86a45da7beedf3"
+text = '''站在移民一边。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_governors"]
+source = "0a5b658f90379880"
+text = '''忠诚的总督'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_governors"]
+source = "935eed9d151d7f60"
+text = '''边远行省的总督们，让这些地方牢牢握在宫廷手中。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_charter"]
+source = "d89d5d11954b3e88"
+text = '''习俗特许状'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_charter"]
+source = "67f1426d24223a0f"
+text = '''得以保留自身习俗的行省安定而兴旺。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_concessions"]
+source = "7728535fb503cff5"
+text = '''对行省的让步'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_concessions"]
+source = "69956a726e8024ef"
+text = '''腹地对边远之地的掌控已经松动。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_settlers"]
+source = "2664836ec5cbc723"
+text = '''新邻居'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_settlers"]
+source = "17a5f3daf73206d0"
+text = '''来自腹地的移民招来了自己的亲族，该省的市场随之扩大。'''
+
+["rnw_contact.1.title"]
+source = "3ae4dd728bdb0317"
+text = '''岸边的异乡人'''
+
+["rnw_contact.1.desc"]
+source = "df50117779215e8b"
+text = '''[target_country.GetName]的船只在[target_location.GetNameWithNoTooltip]附近的近海下了锚。水手们说，他们横渡了大洋，他们的君主想要通商，或许还不止于通商。沿岸从没有人见过这样的人。长老们已经聚议了三次，却什么也没定下来。'''
+
+["rnw_contact.1.a"]
+source = "1910e1304b98965e"
+text = '''接见他们的使节，与他们通商。'''
+
+["rnw_contact.1.b"]
+source = "7937e04750afd2ba"
+text = '''只许他们进入一个港口，并严加监视。'''
+
+["rnw_contact.1.c"]
+source = "11a4bdfc1552603a"
+text = '''发动沿海军民抵御他们！'''
+
+["rnw_contact.2.title"]
+source = "7983278f691c0b78"
+text = '''异乡人的商人'''
+
+["rnw_contact.2.desc"]
+source = "ef63c05517b4c517"
+text = '''异乡人带着更多的船和更多的货物回来了。他们的商人想在[target_location.GetNameWithNoTooltip]的码头上设一座商馆，想得到在内地采购的权利，还想在宫廷觐见。我们自己的商人想要的恰恰相反。'''
+
+["rnw_contact.2.a"]
+source = "532b58aea7fb3c34"
+text = '''给他们码头上的商馆。'''
+
+["rnw_contact.2.b"]
+source = "0c029953515255ad"
+text = '''把他们留在沿海，不许他们踏上通往内地的道路。'''
+
+["rnw_contact.3.title"]
+source = "079ea349cfe3a666"
+text = '''独港之守'''
+
+["rnw_contact.3.desc"]
+source = "bd655dadc4c1ee5f"
+text = '''异乡人守在分给他们的那唯一一个港口，[target_location.GetNameWithNoTooltip]的守望人每周都清点他们的船只。内地有人私下传言，说异乡人带来了疾病和古怪的神。长老们在问，只开一个港口，究竟是审慎，还是不过是害怕。'''
+
+["rnw_contact.3.a"]
+source = "1e43074d26db018a"
+text = '''维持守望，只开一港。'''
+
+["rnw_contact.3.b"]
+source = "18a10769a3286589"
+text = '''再开一个港口，平息纷争。'''
+
+["rnw_contact.4.title"]
+source = "b4aca21e2ef18f6d"
+text = '''海岸严阵以待'''
+
+["rnw_contact.4.desc"]
+source = "1e9691bfcfdd1bf4"
+text = '''整整一季，民兵都守在[target_location.GetNameWithNoTooltip]附近的岸边，而异乡人始终没有登陆。他们的船在礁石外来来去去，田里却正缺人手。'''
+
+["rnw_contact.4.a"]
+source = "02c8d386760acd8b"
+text = '''解散民兵，派出使者。'''
+
+["rnw_contact.4.b"]
+source = "1b2c4caead85259b"
+text = '''全年保持守望。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_envoys"]
+source = "3a4b29a9714541fa"
+text = '''礼遇外人'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_envoys"]
+source = "729e657d6aa92bd0"
+text = '''来自大洋彼岸的使节带来新的知识，我们的声音也传得更远。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_one_port"]
+source = "56ce4ad09470858c"
+text = '''唯一开放的港口'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_one_port"]
+source = "5d539180c62a73a6"
+text = '''所有外国船只只能停靠一个港口，那里的码头与货栈日益扩大。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_levies"]
+source = "509d6eec1459b499"
+text = '''沿海民兵'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_levies"]
+source = "fce2c8d02af1c098"
+text = '''沿海民众已经拿起武器，可以征召更多的人。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_coast_watch"]
+source = "88485444dd90d0e9"
+text = '''海岸守望'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_coast_watch"]
+source = "609d59a2ba620e2a"
+text = '''沿岸的守望人和烽火，让任何登陆都要付出高昂代价。'''
+
+["STATIC_MODIFIER_NAME_rnw_contact_trading_house"]
+source = "a65956d37608b7b4"
+text = '''码头商馆'''
+
+["STATIC_MODIFIER_DESC_rnw_contact_trading_house"]
+source = "677d5a04d51ada02"
+text = '''异乡人的商人在码头上开设了一座商馆和一座货栈。'''
+
+["rnw_colony.1.title"]
+source = "3bafba0715862ffc"
+text = '''殖民地议会'''
+
+["rnw_colony.1.desc"]
+source = "c8d8e5f0a246762b"
+text = '''[target_location.GetNameWithNoTooltip]的定居者第一次未经总督许可便聚集开会。他们向[target_country.GetName]纳税，独自与邻人作战，耕种着一片与父辈离开的故土全然不同的土地。他们想弄明白，自己究竟是什么：臣民，一个民族，还是一个国家。'''
+
+["rnw_colony.1.a"]
+source = "18ea970c2dae5691"
+text = '''请求母国在其议事会中给予席位。'''
+
+["rnw_colony.1.b"]
+source = "78883393dc15b435"
+text = '''我们既非母国之人，也非土著。我们是自成一族的民族。'''
+
+["rnw_colony.1.c"]
+source = "83c0be28b1a43ab7"
+text = '''要求自治。'''
+
+["rnw_colony.2.title"]
+source = "4c9d51a8c556a96d"
+text = '''议事会的答复'''
+
+["rnw_colony.2.desc"]
+source = "49e5e4450323965e"
+text = '''[target_country.GetName]的议事会听取了请愿。议员们答复说，席位终究可以给，但要假以时日，而且给出价最高的人。最富有的殖民者认为这个价钱公道，已经在数钱了。较穷的定居者则不再来参加集会。'''
+
+["rnw_colony.2.a"]
+source = "dadb41b04277541c"
+text = '''支付一个席位的价钱。'''
+
+["rnw_colony.2.b"]
+source = "4c832e53c147637c"
+text = '''花钱买来的席位，算不得席位。'''
+
+["rnw_colony.3.title"]
+source = "f4bf7d63a4d3a1bd"
+text = '''两个世界的民族'''
+
+["rnw_colony.3.desc"]
+source = "72874c1b77edcded"
+text = '''[target_location.GetNameWithNoTooltip]长大了一代从未见过母国的人。他们说着自己的话，一半是旧语言，一半是沿海的词汇，唱的是河流而不是大海。母国的军官们抱怨说，一个连自己名字都不应的民族，实在难以号令。'''
+
+["rnw_colony.3.a"]
+source = "4dccb1f3aa419324"
+text = '''允许法庭用殖民地的方言审案。'''
+
+["rnw_colony.3.b"]
+source = "25ca88317c73e9fe"
+text = '''坚守母国的语言和法律。'''
+
+["rnw_colony.4.title"]
+source = "cc28034e30b28491"
+text = '''独立之路'''
+
+["rnw_colony.4.desc"]
+source = "4afe03380f72542d"
+text = '''[target_location.GetNameWithNoTooltip]的议会已经整整一季拒缴贡赋。[target_country.GetName]回以一封措辞严厉的信和几艘船。民兵队长们说他们已经准备好了。议会里的老成员们则说，独立这个词，代价比回报更大。'''
+
+["rnw_colony.4.a"]
+source = "e0b50e27ca5752a0"
+text = '''召集民兵，准备开战。'''
+
+["rnw_colony.4.b"]
+source = "f81a5ccc554b892b"
+text = '''以贡赋为条件，谈判争取自治。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_seats"]
+source = "19b05cd1227a3987"
+text = '''席上之位'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_seats"]
+source = "35d8070d605cc25c"
+text = '''在母国议事会中的发言权，把殖民地与母国拴在一起。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_people"]
+source = "965f2f1d27c77c16"
+text = '''殖民地民族'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_people"]
+source = "cbdc8f7671baa079"
+text = '''拥有自己语言和歌谣的民族，赢得了邻人的尊重。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_agitation"]
+source = "2c4e3678ec504b17"
+text = '''自由的鼓动'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_agitation"]
+source = "566573d138563416"
+text = '''议会中的演说动摇了殖民地对母国的忠诚。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_ties"]
+source = "38fd2d27ec0c93ad"
+text = '''亲族纽带'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_ties"]
+source = "11ab605470b32411"
+text = '''花钱买来的议事会席位，把名门望族与母国拴在一起。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_militia"]
+source = "c71fedb49a6849da"
+text = '''民兵整装'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_militia"]
+source = "0d44147d7a9b13de"
+text = '''凡能持械者皆已登记在册，操练也很得力。'''
+
+["STATIC_MODIFIER_NAME_rnw_colony_autonomy"]
+source = "075e0c03d12b32d2"
+text = '''获准自治'''
+
+["STATIC_MODIFIER_DESC_rnw_colony_autonomy"]
+source = "1aab7d35e37c0d1d"
+text = '''殖民地自行治理，缴纳得少了，也因此更加忠诚。'''
+
+["rnw_formation_river_union_desc"]
+source = "5b8b5e625bb3285e"
+text = '''同一条河上的城镇，世世代代彼此通商、共同营建、相互担责。掌握其中大部分城镇的势力，可以将它们合为一国：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_union_markets"]
+source = "1758a19ed6f78b11"
+text = '''一河之市'''
+
+["STATIC_MODIFIER_DESC_rnw_union_markets"]
+source = "35e82961b75fd09a"
+text = '''沿河的城镇如同一个市场般出售货物。'''
+
+["rnw_formation_highland_confederation_desc"]
+source = "5ff11ac4c39084b3"
+text = '''同一山脉中的山谷各自隐居于隘口之后，除了自身的自由，几乎在任何事上都难以达成一致。掌握其中大部分山谷的势力，可以将它们结为邦联——{name}，同时让每个山谷保留自己的议事会。'''
+
+["STATIC_MODIFIER_NAME_rnw_confederation_compact"]
+source = "c828bbbe1c9caffb"
+text = '''众谷之盟'''
+
+["STATIC_MODIFIER_DESC_rnw_confederation_compact"]
+source = "2b00edec1dbe262f"
+text = '''各山谷保留自己的议事会，并共同抵御任何外来势力。'''
+
+["rnw_formation_maritime_league_desc"]
+source = "b09619f6c5942d64"
+text = '''同一海岸的港口航行于同一片水域，畏惧同样的风暴。掌握其中大部分港口的势力，可以将它们联合为同盟——{name}，共同通商，保卫他们的海洋。'''
+
+["STATIC_MODIFIER_NAME_rnw_league_charter"]
+source = "777162eb8d78057f"
+text = '''同盟宪章'''
+
+["STATIC_MODIFIER_DESC_rnw_league_charter"]
+source = "6a6dc6321e67a016"
+text = '''一部宪章将各港口的商人和议事会联系在一起。'''
+
+["rnw_formation_cultural_union_desc"]
+source = "8b80689c689faa06"
+text = '''同一民族的城镇，虽然分属众多统治者，却说着同一种语言，守着同样的习俗。掌握其中大部分城镇的势力，可以将它们集结为一个共同体：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_commonwealth_unity"]
+source = "b38f452e164c7f27"
+text = '''同一民族'''
+
+["STATIC_MODIFIER_DESC_rnw_commonwealth_unity"]
+source = "5ae17460ed132f2e"
+text = '''同一种语言和同一种习俗凝聚着共同体，并提升了它的威望。'''
+
+["rnw_formation_regional_realm_desc"]
+source = "c52eb5c1af067a93"
+text = '''整个地区被众多统治者瓜分，每人只占有其中寥寥几座城镇。掌握该地区大部分地方的势力，可以将其统一为一国：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_realm_administration"]
+source = "cabaec1d33271337"
+text = '''王国行政'''
+
+["STATIC_MODIFIER_DESC_rnw_realm_administration"]
+source = "55a8e093ca32dc59"
+text = '''新的行政体系覆盖整个地区，各行省纷纷归顺。'''
+
+["rnw_formation_postcolonial_federation_desc"]
+source = "d73fc53c1ceb15cf"
+text = '''同一海岸的殖民地，无论是由一个旧国还是由数国移民所建，如今已有了共同的怨愤和共同的未来。一个掌握该海岸足够多土地、且首都位于这些殖民地之中的移民国家，可以宣布自己为联邦：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_federation_founded"]
+source = "25d53c2568486691"
+text = '''一个民族的诞生'''
+
+["STATIC_MODIFIER_DESC_rnw_federation_founded"]
+source = "8d9be49878681ff7"
+text = '''年轻的移民国家迅速成长，对叛乱者毫不容情。'''
+
+["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
+source = "61c095abd8a44d84"
+text = '''大银矿脉'''
+
+["STATIC_MODIFIER_DESC_rnw_great_silver_lode"]
+source = "cba1648eeab5bc95"
+text = '''一座白银之山，比已知世界的任何矿山都更加富饶。'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_silver_vein"]
+source = "9730852a6920c6e7"
+text = '''富银矿脉'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_silver_vein"]
+source = "f8ed17270025a40e"
+text = '''一条比本地区任何矿山都更富饶的银矿脉。'''
+
+["STATIC_MODIFIER_NAME_rnw_silver_seam"]
+source = "4947e8d1400471b5"
+text = '''银矿层'''
+
+["STATIC_MODIFIER_DESC_rnw_silver_seam"]
+source = "419bfa5c860eb040"
+text = '''一层比周边矿山更富饶的银矿。'''
+
+["STATIC_MODIFIER_NAME_rnw_mercury_lode"]
+source = "f550959a0f3b4e81"
+text = '''水银矿脉'''
+
+["STATIC_MODIFIER_DESC_rnw_mercury_lode"]
+source = "e2ae91b4b0e37676"
+text = '''一座朱砂矿，其出产的水银远在本地区之外也备受珍视。'''
+
+["STATIC_MODIFIER_NAME_rnw_rich_fishery"]
+source = "fd02bbaa88e35d77"
+text = '''丰饶渔场'''
+
+["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
+source = "e4dab3f18185b9fa"
+text = '''这片水域鱼群丰富，足以养活周边所有海岸。'''

@@ -11,6 +11,8 @@ import layout  # noqa: E402
 analysis = Analysis(
     [str(root / "packaging" / "entry.py")],
     pathex=[str(root / "src")],
+    # The translation catalogs are data files of the package (rnw.translations).
+    datas=[(str(root / "src" / "rnw" / "locale"), "rnw/locale")],
     excludes=list(layout.EXCLUDED_MODULES),
 )
 analysis.binaries = [item for item in analysis.binaries if layout.wanted(item[0])]

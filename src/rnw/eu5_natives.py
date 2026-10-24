@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
+from rnw import wording
 from rnw.archetypes import (
     FRACTURED_REALM,
     HIGHLAND_CONFEDERATION,
@@ -92,6 +93,7 @@ from rnw.societies import (
     hearth_domains,
     travel_from,
 )
+from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
@@ -134,7 +136,6 @@ NAME_LINE: Final[re.Pattern[str]] = re.compile(r'^ *([A-Za-z0-9_]+):\d* *"([^"]*
 # A place-name corpus needs this many vanilla names; smaller ones back off from the
 # language to its family, then to the culture's religion, then to the whole Americas.
 MIN_CORPUS: Final[int] = 40
-WASTELAND_SUFFIX: Final[str] = " Highlands"
 DEFINITION_FILE: Final[str] = "in_game/setup/countries/rnw_natives.txt"
 CLIMATES: Final[tuple[str, ...]] = (
     "arctic", "subpolar", "continental", "oceanic", "mediterranean", "subtropical",
@@ -309,7 +310,7 @@ class NativeWorld:
     ranks: dict[str, tuple[str, str]]
     markets: tuple[str, ...]
     holy_sites: dict[str, str]
-    names: dict[str, str]
+    names: dict[str, Name]
     vassals: tuple[tuple[str, str], ...]
     complexity: dict[str, int]
     population: dict[str, int]
@@ -1352,10 +1353,12 @@ def _place_names(
     cells: _Cells,
     culture_of: list[str],
     namer: PlaceNamer,
-) -> dict[str, str]:
+) -> dict[str, Name]:
     """Names of land and wasteland locations, provinces and areas in local languages."""
     culture: dict[int, str] = dict(zip(cells.cells, culture_of, strict=True))
-    names = {plan.cells[cell].key: namer.name(culture[cell]) for cell in cells.cells}
+    names: dict[str, Name] = {
+        plan.cells[cell].key: namer.name(culture[cell]) for cell in cells.cells
+    }
     near: dict[int, list[str]] = {}
     for first, second in world.edges:
         for waste, land in ((first, second), (second, first)):
@@ -1363,7 +1366,7 @@ def _place_names(
                 near.setdefault(waste, []).append(culture[land])
     for waste in sorted(near):
         culture[waste] = _majority(near[waste])
-        names[plan.cells[waste].key] = namer.name(culture[waste]) + WASTELAND_SUFFIX
+        names[plan.cells[waste].key] = Phrase(wording.HIGHLANDS, namer.name(culture[waste]))
     members: dict[str, list[str]] = {}
     for cell, value in sorted(culture.items()):
         members.setdefault(plan.cells[cell].province, []).append(value)
@@ -1397,7 +1400,7 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
     cultures: list[str],
     neighbours: list[set[int]],
     seed: int,
-    names: dict[str, str],
+    names: dict[str, Name],
     namer: PlaceNamer,
     loc_keys: KeySpace,
 ) -> list[Country]:
@@ -1416,7 +1419,9 @@ def _countries_of(  # noqa: PLR0913 - a country draws on every identity table.
         areas = religion_areas[int(societies.religion[polity.capital])] | {
             plan.cells[cells.cells[node]].area for node in polity.members
         }
-        name = names[keys[polity.capital]] if is_state else namer.name(cultures[polity.culture])
+        name = (
+            _word(names[keys[polity.capital]]) if is_state else namer.name(cultures[polity.culture])
+        )
         include = _include(
             vanilla,
             cultures[polity.culture],
@@ -2231,13 +2236,21 @@ def country_definitions(countries: tuple[Country, ...]) -> bytes:
     return "\n".join(lines).encode("utf-8-sig")
 
 
-def country_names(countries: tuple[Country, ...]) -> dict[str, str]:
-    """Localization keys of the country names and adjectives."""
-    names: dict[str, str] = {}
+def country_names(countries: tuple[Country, ...]) -> dict[str, Name]:
+    """Localization keys of the country names and adjectives (each language forms its own)."""
+    names: dict[str, Name] = {}
     for country in countries:
         names[country.tag] = country.name
-        names[f"{country.tag}_ADJ"] = country.name
+        names[f"{country.tag}_ADJ"] = wording.adjective(country.name)
     return names
+
+
+def _word(name: Name) -> str:
+    """The proper word of a settled place's name, which is never a phrase."""
+    if not isinstance(name, str):
+        message = f"A settled place has the composed name {name}"
+        raise TypeError(message)
+    return name
 
 
 def city_lines(ranks: dict[str, tuple[str, str]]) -> str:
