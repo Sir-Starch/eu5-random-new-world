@@ -4,7 +4,8 @@ The hierarchy is built from the generated cells, top-down, as compact connected 
 (``hierarchy.py``): the land is split into the vanilla American subcontinents and
 regions, each region into areas and each area into provinces; the sea into the vanilla
 sea areas the canvas touches, then into provinces. Vanilla keys go to the generated part
-nearest their vanilla position, so script references to them keep resolving; areas a
+by physical similarity within their original parent (N5), so script references keep
+resolving on comparable land; subcontinents keep their positions. Areas a
 region needs beyond its vanilla ones get new keys. Water near a shore belongs to the
 region of that shore, as in vanilla. Provinces and locations are new.
 Stamping vanilla areas onto cells by position instead left areas and regions in pieces
@@ -48,6 +49,7 @@ if TYPE_CHECKING:
 
     from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
+    from rnw.eu5_regionkeys import KeyMatcher
     from rnw.geography import Location
     from rnw.hierarchy import ContactGraph
     from rnw.loc_keys import KeySpace
@@ -118,6 +120,7 @@ class Plan:
     display_overrides: dict[str, str] = field(default_factory=dict)
     dropped_areas: list[str] = field(default_factory=list)
     anchored_sea_areas: list[str] = field(default_factory=list)
+    physical_keys: list[dict[str, object]] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -127,6 +130,7 @@ class VanillaGeometry:
     rows: NDArray[np.int64]
     columns: NDArray[np.int64]
     areas: tuple[str, ...]
+    pixels: NDArray[np.int64]
 
 
 def vanilla_geometry(
@@ -149,6 +153,7 @@ def vanilla_geometry(
         rows=(row_sum.astype(np.int64) // pixels),
         columns=(column_sum.astype(np.int64) // pixels),
         areas=areas,
+        pixels=pixels,
     )
 
 
@@ -248,14 +253,22 @@ def _keyed(
     )
 
 
-def _land_areas(
-    graph: ContactGraph, cells: list[int], tally: _Tally, province_size: int, keys: KeySpace
+def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and physical matching.
+    graph: ContactGraph,
+    cells: list[int],
+    tally: _Tally,
+    province_size: int,
+    keys: KeySpace,
+    *,
+    physical: KeyMatcher,
 ) -> list[_Area]:
     """Top-down: subcontinents and regions keep their vanilla keys, areas reuse theirs.
 
-    Every vanilla region and subcontinent gets one part sized by its vanilla location
-    count; a region has at least as many areas as its vanilla counterpart, so every
-    vanilla area key is reused by the generated area nearest to it.
+    Subcontinents retain their positions and relative sizes. Regions start as equal
+    compact parts without identities: the old positional rebalance could shrink a
+    region below its count of child areas (three cells for Chaco's four in the reference).
+    Final region and area boundaries receive keys by physical similarity before
+    provinces are made; size is scored, never rebalanced after scoring.
     """
     areas: list[_Area] = []
     subcontinents = sorted(tally.children[NEW_WORLD])
@@ -263,15 +276,26 @@ def _land_areas(
         subcontinents, _keyed(graph, cells, tally, subcontinents), strict=True
     ):
         regions = sorted(tally.children[subcontinent])
-        for region, region_cells in zip(
-            regions, _keyed(graph, sub_cells, tally, regions), strict=True
-        ):
+        region_parts = split(graph, sub_cells, len(regions))
+        positional = match(
+            [centre_of(graph, part) for part in region_parts],
+            [tally.centre(key) for key in regions],
+        )
+        regional_keys = physical.pair(
+            region_parts,
+            regions,
+            positional,
+            minimum={region: len(tally.children[region]) for region in regions},
+        )
+        for region_cells, region_key in zip(region_parts, regional_keys, strict=True):
+            region = regions[region_key]
             vanilla = sorted(tally.children[region])
             wanted = _rounded(len(region_cells), province_size * AREA_PROVINCES)
             parts = split(graph, region_cells, min(len(region_cells), max(len(vanilla), wanted)))
             pairing = match(
                 [centre_of(graph, part) for part in parts], [tally.centre(key) for key in vanilla]
             )
+            pairing = physical.pair(parts, vanilla, pairing)
             for part, key in zip(parts, pairing, strict=True):
                 name = vanilla[key] if key >= 0 else keys.next("rnw_area_", 4)
                 provinces = split(graph, part, max(1, _rounded(len(part), province_size)))
@@ -567,10 +591,10 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     geometry: VanillaGeometry,
     settings: NewWorldSettings,
     keys: KeySpace,
+    physical: KeyMatcher,
 ) -> tuple[list[_Area], set[str]]:
     """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
     count = len(game_map.keys)
-    pixels = np.bincount(game_map.labels.ravel(), minlength=count).astype(np.int64)
     is_land = [kind in LAND_FAMILY for kind in world.classes]
     is_sea = [kind is CellClass.SEA for kind in world.classes]
     land = contact_graph(world.centroids, world.edges, is_land)
@@ -578,9 +602,10 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     areas = _land_areas(
         land,
         [cell for cell, flag in enumerate(is_land) if flag],
-        _vanilla_land(game_map, canvas, hierarchy, geometry, pixels),
+        _vanilla_land(game_map, canvas, hierarchy, geometry, geometry.pixels),
         settings.province_size,
         keys,
+        physical=physical,
     )
     region_of = {
         cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
@@ -614,6 +639,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     settings: NewWorldSettings,
     keys: KeySpace,
     waters: Waters,
+    physical: KeyMatcher,
 ) -> Plan:
     """Assign keys, colours, names and parents to every generated cell.
 
@@ -624,8 +650,10 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     body, and every piece of a region's water touches the region's land. Land is named at
     random; water is named for its shape (``seanames``): one sea, one name.
     """
-    areas, anchored = _hierarchy(game_map, canvas, world, hierarchy, geometry, settings, keys)
-    plan = Plan(cells=[], anchored_sea_areas=sorted(anchored))
+    areas, anchored = _hierarchy(
+        game_map, canvas, world, hierarchy, geometry, settings, keys, physical
+    )
+    plan = Plan(cells=[], anchored_sea_areas=sorted(anchored), physical_keys=physical.assignments)
     province_names = NameGenerator(seed, "provinces")
     area_names = NameGenerator(seed, "areas")
     province_of = [""] * len(world.classes)

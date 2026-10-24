@@ -35,6 +35,7 @@ from rnw.eu5_export import ExportError, export_candidate
 from rnw.eu5_map import Eu5ContractError
 from rnw.eu5_nw_export import NewWorldExportError, export_new_world
 from rnw.eu5_objects import ObjectBudgetError
+from rnw.eu5_regionkeys import RegionKeyError
 from rnw.eu5_remap import RemapError
 from rnw.geography import GeographyError, color_summary, read_locations, summary
 from rnw.layers import rolls_of
@@ -65,6 +66,7 @@ FAILURES: Final[tuple[type[Exception], ...]] = (
     OutputPathError,
     PngFormatError,
     RemapError,
+    RegionKeyError,
     ResourceError,
     SettingsError,
     ValidationError,

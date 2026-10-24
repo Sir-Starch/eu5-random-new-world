@@ -158,6 +158,7 @@ from rnw.eu5_objects import PixelClasses, object_outputs
 from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
 from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
+from rnw.eu5_regionkeys import physical_keys
 from rnw.eu5_remap import build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
@@ -2252,16 +2253,27 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
 
         def identify() -> tuple[KeySpace, Plan]:
             loc_keys = KeySpace(localization.result())
+            geometry = geometries.result()
+            physical = physical_keys(
+                game_map,
+                hierarchy,
+                reads.result()[1],
+                unpack_pairs(climates.result().locations.pairs),
+                world=world,
+                biomes=weathering.result()[0],
+                pixels=geometry.pixels.tolist(),
+            )
             plan = plan_identities(
                 game_map,
                 canvas,
                 world,
                 hierarchy,
-                geometries.result(),
+                geometry,
                 seed=seed,
                 settings=settings.new_world,
                 keys=loc_keys,
                 waters=shapes.waters,
+                physical=physical,
             )
             return loc_keys, plan
 
@@ -2279,7 +2291,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             return stats
 
         water = stages.submit("water textures", build_water)
-        identities = stages.submit("identities", identify)
         checks = stages.submit(
             "world checks", lambda: _check_world(game_map, canvas, world, final_labels)
         )
@@ -2303,6 +2314,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             return biomes, biome_stats, _rivers(world, canvas, climate, seed)
 
         weathering = stages.submit("biomes and rivers", weather)
+        identities = stages.submit("identities", identify)
         store, vanilla_attributes, new_world_keys, calibration = reads.result()
         geometry = geometries.result()
         vanilla_hashes = localization.result()
@@ -2724,6 +2736,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 "regions": len({cell.region for cell in plan.cells}),
                 "dropped_vanilla_areas": plan.dropped_areas,
                 "sea_areas_grown_from_their_remainder": plan.anchored_sea_areas,
+                "physical_keys": plan.physical_keys,
             },
             "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
             "text_stats": text_stats,

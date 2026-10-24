@@ -100,6 +100,21 @@ Path: `game/in_game/gfx/map/spline_network/spline_network.splnet`, 31,615,438 by
 - [UNKNOWN] The record explains the technical reason for preserving Old World strips but does not resolve protection of those particular contents or the permission for their local reproduction. General UGC permission (P1) is relevant; technical necessity and private output alone do not establish the answer. No conclusion of infringement is made either.
 - A game patch that changes the file stops the build (`parse` refuses an unknown format number, numbering or reference) and the file is made anew from the patched installation.
 
+### R-001 follow-up: hierarchy assignment in N5 (2026-10-24, 0.11.4)
+
+[V-EXEC] N5 changes the generated hierarchy order, which also changes the one-based
+location indexes consumed by the existing spline writer. Rebuilding the network with
+those indexes is necessary for the same road/anchor interface described above; no
+additional official API or editor has been established, and no new format research or
+binary layout is introduced. The existing reader/writer and local-generation boundary
+remain the mechanism. `spline_problems` decodes the written file and checks retained
+vanilla strips by location identity and exact polyline geometry, every generated land
+contact and every setup road. The N5 reference export passes those checks. Its rasters,
+climate templates, resources, shaders and other graphics match epoch 27 byte for byte;
+the spline file is the sole changed graphics binary. The derived network stays in the
+unshared world under `local_data/n5/`; only code, synthetic fixtures, identifiers and
+verification digests enter the repository. See [N5](n5-region-keys.md).
+
 ## R-002 — Optional country scopes and localization text overrides
 
 **2026-10-24, generator 0.11.3; EU5 1.4.4 executable (build 26142040) on 1.4.3 data (build 26105915), C258-C259; [experiment 046](../../experiments/046-sitting-fixes/README.md).** This records the text interfaces touched by this maintenance change. It introduces no binary format or executable analysis.

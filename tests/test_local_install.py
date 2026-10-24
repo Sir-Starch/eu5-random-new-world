@@ -40,7 +40,7 @@ from rnw.eu5_lobby import (
     sampler_include,
 )
 from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
-from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map
+from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map, read_class_lists
 from rnw.eu5_natives import DEFINITION_FILE, vanilla_natives
 from rnw.eu5_newworld import vanilla_geometry
 from rnw.eu5_nw_export import binding_problems, calibrate_development, export_new_world
@@ -477,6 +477,21 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
         world_code=str(golden["code"]),
     )
     record = Record.from_json(report["record"])
+    original = read_locations(game_dir / DEFINITIONS)
+    seas = set(read_class_lists(game_dir / "game/in_game/map_data/default.map")["sea_zones"])
+    sea_areas = {place.area for place in original if place.key in seas}
+    land = [
+        place for place in original if place.continent == "america" and place.area not in sea_areas
+    ]
+    physical = cast(
+        "list[dict[str, object]]", cast("dict[str, object]", report["generated"])["physical_keys"]
+    )
+    expected = {name for place in land for name in (place.region, place.area)}
+    assert {row["key"] for row in physical} == expected
+    assert len(physical) == len(expected)  # every original land key exactly once, N5
+    assert sum(cast("int", row["cost"]) for row in physical) <= sum(
+        cast("int", row["positional_cost"]) for row in physical
+    )
     stats = cast("dict[str, dict[str, dict[str, int]]]", report["text_stats"])
     guarded = stats["content"]["guarded"]
     # The same in every world: 82 events, the canal chain's advance and decisions, the
