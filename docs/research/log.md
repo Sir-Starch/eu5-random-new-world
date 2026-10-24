@@ -847,3 +847,10 @@ Owner instruction: implement N5. Design, method, three-world audit and limits ar
 - [UNKNOWN] C221 (whether the game's own colonization path gives a colony the scripted name) stays open and blocks nothing; if it is ever asked, it is asked from the console of a world mod, not by a mod of its own.
 - Standing rule added to `AGENTS.md`: *One mod: the map*.
 
+
+## 2026-10-24 — L1: how the game writes its languages (C268–C272)
+
+- [OWNER] Finish L1: translate everything, improve the English while doing it, keep to EU5's style and keep the texts free of the marks of machine-written prose; record the observations and rules so that someone else can continue.
+- [V-LOCAL C268–C272] Read the installed localization of all eleven languages (1.4.4 executable on 1.4.3 data): the game's language is Steam's per-game language in `appmanifest_3450310.acf`; the 6,167 American location names are transliterated in Russian, Japanese, Korean and Chinese and kept in Latin elsewhere; geographic names follow one pattern per language; country adjectives are stems in Russian and Polish and `-isch` adjectives in German; Russian declension of countries falls back to a generic noun for tags it does not know, so generated tags need nothing.
+- [SOURCE] Marks of machine-written prose: Wikipedia's *Signs of AI writing* and Russian guides (Habr/Bothub, goodtarget, Skillbox), accessed 2026-10-24.
+- Everything, with the rules for each language, the design (catalogs with source hashes, phrases rendered per language, rule-based transliteration) and the next steps, is in [localization](../localization.md). No code or generated output changed.

@@ -28,6 +28,7 @@ The project's documentation, grouped by purpose. Technical claims carry evidence
 | [Natives](natives.md) | Peoples, cultures, religions, states, technology and extraordinary societies (R6, R7) |
 | [Economy](economy.md) | Start development, harbours and market villages (R7a) |
 | [R7a design](r7a-development.md), [R7b and R7c design](r7-technology-and-empires.md) | Design notes written before those slices were implemented |
+| [Localization](localization.md) | How EU5 writes its eleven languages, the rules for the mod's texts and names, the translation design and its status (L1) |
 | [Generator window](gui-design.md) | Layout, spacing and interaction rules of the Qt window |
 | [Architecture](architecture.md) | The architecture options as weighed at the start *(historical)* |
 
