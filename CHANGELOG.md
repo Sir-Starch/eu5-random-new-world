@@ -13,6 +13,7 @@ All notable changes to Random New World. The project has one product version ([A
 ## 0.11.6 — 2026-10-24
 
 - **L1: the generator's window in every official language.** The window starts in the language Steam runs the game in, or in the one chosen in Settings (the change applies at the next start). All its texts are translated into the ten other official languages: export stages, messages and errors included. Numbers are grouped the local way. Maps show place names in the window's language, and, when the game is installed, the game's own names for cultures, religions, resources and terrain. Every language is tested to fit the smallest supported window size. The atlas beside a world's mod is now format 2, which stores names as phrases; format 1 is still read. The mod's files are unchanged, so this stays in epoch 29.
+- The Workshop description is written in every official language (`docs/workshop/`), each checked against its English source. A mod's metadata holds one language only, so the mod list's titles stay English (C276).
 
 ## 0.11.5 — 2026-10-24
 

@@ -1,12 +1,12 @@
 # Workshop description (draft)
 
-Draft of the Steam Workshop text for release 1.0.0 ([ADR 0009](adr/0009-hub-mod-with-generator.md)). It is converted to Steam's markup when the item is published. Every statement must hold for the published build; the bracketed notes are for us and are removed.
+Draft of the Steam Workshop text for release 1.0.0 ([ADR 0009](adr/0009-hub-mod-with-generator.md)). It is converted to Steam's markup when the item is published. Every statement must hold for the published build; the bracketed notes are for us and are removed. Steam takes one description per language: the translations are in [workshop/](workshop/), each recording the fingerprint of the English text below the line it was made from (`tests/test_workshop.py` fails on a missing or outdated one).
 
 ---
 
 ## Random New World
 
-A generator of New Worlds for Europa Universalis V. It makes the Americas anew: continents, coasts, relief, climate, rivers, vegetation, resources, provinces and native peoples, and keeps the Old World as Paradox made it. **Every world it makes is a complete map mod of its own.** Play it on its own, keep as many as you like, delete them, or share one: it does not need this generator to run, and you may upload it as your own map.
+A generator of New Worlds for Europa Universalis V. It makes the Americas anew: continents, coasts, relief, climate, rivers, vegetation, resources, provinces and native peoples, and keeps the Old World as Paradox made it. **Every world it makes is a complete map mod of its own.** Play it on its own, keep as many as you like, delete them, or share a world's code: the world plays without this generator, and anyone with the same game version makes the same world from its code.
 
 You do not enable this item in a playset. It only carries the generator.
 
@@ -24,6 +24,8 @@ So the generation runs in a small program that comes with this item. It reads yo
 4. In the game, tick that world (only one world at a time) and start a new game. If you already played a campaign since starting EU5, restart EU5 first. The generator tells you exactly what to do.
 
 The generator keeps every world you made, with its code. Until you choose to see it in Settings, the New World stays terra incognita everywhere before you play: in the generator's pictures, in the game's mod list, and on the map of the game's new-game screen. One setting turns all of that off. A world code recreates the same world, byte for byte, on any computer with the same game version.
+
+The generator speaks every language of the game and starts in the one Steam runs EU5 in.
 
 ## What the program does and does not do
 

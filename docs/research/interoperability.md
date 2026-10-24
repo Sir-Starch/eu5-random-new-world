@@ -127,6 +127,18 @@ verification digests enter the repository. See [N5](n5-region-keys.md).
 
 **Compatibility and distribution.** Missing GUI anchors or missing/ambiguous requested localization keys stop generation. The localization validator requires original-path overrides to retain the installed key set and still rejects newly generated key hashes that collide with vanilla. Source and tests hold interface identifiers and synthetic text only. The installed GUI and localization copies are created on the player's machine, recorded in the world's input/output manifests, kept under ignored local paths and never committed or distributed. Existing shader generation is unchanged; its broader register entry remains a separate task when that rendering mechanism is next changed.
 
+## R-003 — The languages of a mod's metadata
+
+**2026-10-24, generator 0.11.6; EU5 1.4.4 executable (build 26142040) on 1.4.3 data (build 26105915), C276.** This records a read of the executable's printable strings. No file format is written, and no code was disassembled or decompiled.
+
+**Necessity.** L1 requires everything a player sees in one of the game's official languages. The game's mod list shows the title and description of each mod's `.metadata/metadata.json`: the hub's and every generated world's. Whether that file can carry a text per language decides whether those two texts can be translated or stay English.
+
+**Available documented mechanisms.** The installed game documents no metadata fields; the eight Workshop mods installed on this machine carry one `name` and one `short_description` each and no field for a language, and no `metadata.json` ships with the installation [V-LOCAL]. Steam's per-language title and description of a Workshop item are documented by Steam, but whether the game's list shows them is not.
+
+**What is studied or changed.** The printable strings of the installed `eu5.exe`, read with `strings` in the terminal and not stored: the field names that stand beside `short_description` (`supported_game_version`, `relationships`, `game_custom_data`, `provider_id`, `rel_type`, `resource_type`), none of them for a language, and the place of `localized_name`, among the modifier-type fields. Nothing is changed.
+
+**Compatibility and distribution.** The generator keeps writing the fields the game's own mods use, in English. Only the field names above enter the repository. Whether the Workshop's translations reach the in-game list is [UNKNOWN] until the item is uploaded.
+
 ## Earlier cases to record when they are next touched
 
 Listed from the module names, not re-audited: the compressed object files of `in_game/gfx/map/map_objects` and the instance tiles (`rnw/lzav.py`, `rnw/eu5_objects.py`, `rnw/terrain_tiles.py`), the texture and terrain-decal files (`rnw/dds.py`, `rnw/eu5_terrain.py`), the derived `locations.png` and `rivers.png` (PNG is an open format; the content is derived), the shader and GUI files the cover modifies (text; `rnw/eu5_lobby.py`), and `nodes.dat`, which is not read or regenerated (opaque, [V-LOCAL] `eu5_export.UNCHANGED_INPUTS`).
