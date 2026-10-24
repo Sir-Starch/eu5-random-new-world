@@ -767,3 +767,11 @@
 - [V-EXEC C246] The generated landmasses were 100 pixels and more apart: the reference world had two pairs of locations within 12 pixels. `rnw.straits`: near landmasses (within 36 pixels, 2,000 pixels or more) are brought together to a channel of 5 or 6 pixels by a tapered growth that merges nothing and cuts no water off; every pair of lands of different landmasses that a run of at most 9 pixels of sea divides is a crossing, written as the game writes them and read back (`verify_crossings`; independently from the written files: the same 6 pairs in the reference world). The presets 0 to 78 crossings. Epoch 24.
 - [UNKNOWN C247] The engine's verdict on generated crossing rows; nothing is asked.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-24 — The owner's sitting with the sea work, 0.11.0, C248-C249
+
+- [OWNER] "Tested, looks good."
+- [V-GAME C248] The sitting (05:05 to 05:13): the launcher's playset was switched to the 0.10.14 world (`rnw_exp_world_5zovefqzyg`), a 1337 game was played as an observer to 1337.8.8. The logs, read by the agent: no `Coastal Seazone` and no `has no port setup` line (the 00:50 session of the 0.10.11 world had 48 zones and two locations; the zones in that log match that world's adjacency, not the 0.10.12 world's) and nothing in `error.log`, `debug.log` or `game.log` about adjacencies, closed zones, topography, currents, `rnw_sea_` or `rnw_loc_`.
+- [V-GAME C249] 263 script errors a session from the lobby's scripted GUI asked about no country (observer games, nothing selected); not from the sea work, harmless, to be repaired with the next change of the lobby.
+- S1 is accepted: 0.11.0 (ADR 0003: MINOR rises when a roadmap phase is accepted in game). No file of a world changes; epoch 24.
+- No game launch by the agent, no push or publication.
