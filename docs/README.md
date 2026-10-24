@@ -15,6 +15,7 @@ The project's documentation, grouped by purpose. Technical claims carry evidence
 |---|---|
 | [Product specification](product-spec.md) | Vision, the player's journey and the target feature set |
 | [Roadmap](roadmap.md) | Phases, dependencies and acceptance gates |
+| [Release process](release-process.md) | Internal gates and owner hand-off for GitHub and Workshop publication |
 | [Content plan](content-plan.md) | The vanilla content tied to the Americas, decided object by object, and the stories and formables that replace it (N0–N5) |
 | [Changelog](../CHANGELOG.md) | Progress release by release |
 

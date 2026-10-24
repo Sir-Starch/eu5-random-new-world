@@ -4,7 +4,10 @@ Access date: 2026-10-13 unless a row says otherwise. These are research leads an
 
 | Source | Target/version and actual contents | License / reliability |
 |---|---|---|
-| [Paradox User Agreement](https://legal.paradoxplaza.com/eula) | Updated 2026-01-21; §§1,3,5,8 cover game rights, updates, UGC/mods, launcher | Official primary legal terms; see [legal](../legal.md) |
+| [Paradox User Agreement](https://legal.paradoxplaza.com/eula) | Updated 2026-01-21; rechecked 2026-10-24. §§1,3,5,8 cover game rights, updates, UGC/mods, launcher | Official primary legal terms; see [legal](../legal.md) |
+| [Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/) | Accessed 2026-10-24; revised 2026-04-20. §§6.A–B, 6.D cover Steam UGC and Workshop upload terms | Official primary terms; see [legal](../legal.md) |
+| [Steam Workshop submission information](https://steamcommunity.com/workshop/workshopsubmitinfo/) | Accessed 2026-10-24; says item rules vary by product and submission accepts the Workshop Legal Agreement | Official Valve page; see [legal](../legal.md) |
+| [Europa Universalis V on Steam](https://store.steampowered.com/app/3450310/Europa_Universalis_V/) | Accessed 2026-10-24; lists Steam Workshop and links a third-party EULA to Paradox's User Agreement | Official game listing; see [legal](../legal.md) |
 | [Paradox EU5 1.4 announcement](https://www.paradoxinteractive.com/media/press-releases/paradox-interactive/relive-and-rewrite-the-history-of-spain-and-morocco-in-across-the-pillars) | 2026-10-01 announcement of 1.4 update, not a modding specification | Official primary release announcement |
 | [EU5 1.4 open-beta Steam news](https://store.steampowered.com/news/app/3450310/view/713414124781961436) | 1.4 beta news; page content was not reliably retrievable in this session | Official game publisher channel; local manifest is stronger version evidence |
 | [EU5 wiki map modding](https://eu5.paradoxwikis.com/Map_modding) | Target version unclear; page returned access error | Community lead only; no claim sourced from its inaccessible contents |
