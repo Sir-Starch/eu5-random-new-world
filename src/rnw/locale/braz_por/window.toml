@@ -351,8 +351,8 @@ source = "2e113a659e47144a"
 text = '''Caos total'''
 
 ["type.chaos.about"]
-source = "c956856b61703fce"
-text = '''Um tipo de mundo sorteado ao acaso, e cada valor Avançado sorteado dentro de sua faixa jogável. Cada pressão no botão Aleatória sorteia de novo.'''
+source = "4796005ed198012e"
+text = '''Um tipo de mundo sorteado ao acaso ao ser escolhido, e cada valor Avançado sorteado dentro de sua faixa jogável.'''
 
 ["quick"]
 source = "b22d2b06765851eb"

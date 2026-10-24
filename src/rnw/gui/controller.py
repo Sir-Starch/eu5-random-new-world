@@ -332,12 +332,13 @@ class Controller:
         return None
 
     def randomize(self) -> None:
-        """A new random seed, on a land of its own: every roll goes back to 0. In a random
-        mode the world type, and the Advanced values of Total Chaos, are drawn again."""
+        """A new random seed, on a land of its own: every roll goes back to 0. Random draws its
+        world type again; Total Chaos keeps its values, which it draws only when chosen."""
         self.seed = random_seed()
         _ = self.other_changes.pop("rolls", None)
         self.notice = ""
-        self._draw()
+        if self.mode == random_types.RANDOM:
+            self._draw()
         self._changed()
 
     def use_code(self, value: str) -> str | None:

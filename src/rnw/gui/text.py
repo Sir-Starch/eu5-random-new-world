@@ -146,8 +146,8 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "type.chaos": "Total Chaos",
     "type.chaos.about": (
-        "A world type drawn at random, and every Advanced value drawn at random within its "
-        "playable range. Each press of Random draws again."
+        "A world type drawn at random when chosen, and every Advanced value drawn at random "
+        "within its playable range."
     ),
     "quick": "World basics",
     "quick_hint": "Choose the broad balance here. Advanced offers exact values.",

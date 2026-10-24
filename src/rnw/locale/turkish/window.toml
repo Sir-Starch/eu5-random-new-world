@@ -351,8 +351,8 @@ source = "2e113a659e47144a"
 text = '''Tam kaos'''
 
 ["type.chaos.about"]
-source = "c956856b61703fce"
-text = '''Rastgele çekilen bir dünya türü ve her Gelişmiş değer oynanabilir aralık içinde rastgele çekilir. Her Rastgele basışında yeniden çekilir.'''
+source = "4796005ed198012e"
+text = '''Seçildiğinde rastgele çekilen bir dünya türü ve her Gelişmiş değer oynanabilir aralık içinde rastgele çekilir.'''
 
 ["quick"]
 source = "b22d2b06765851eb"

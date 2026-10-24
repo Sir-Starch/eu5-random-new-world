@@ -351,8 +351,8 @@ source = "2e113a659e47144a"
 text = '''Totales Chaos'''
 
 ["type.chaos.about"]
-source = "c956856b61703fce"
-text = '''Ein zufällig gezogener Welttyp, und jeder Wert unter Erweitert zufällig gezogen innerhalb seines spielbaren Bereichs. Jeder Druck auf Zufällig zieht neu.'''
+source = "4796005ed198012e"
+text = '''Ein beim Auswählen zufällig gezogener Welttyp, und jeder Wert unter Erweitert zufällig gezogen innerhalb seines spielbaren Bereichs.'''
 
 ["quick"]
 source = "b22d2b06765851eb"

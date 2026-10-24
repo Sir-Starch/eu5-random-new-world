@@ -351,8 +351,8 @@ source = "2e113a659e47144a"
 text = '''Chaos total'''
 
 ["type.chaos.about"]
-source = "c956856b61703fce"
-text = '''Un type de monde tiré au sort, et chaque valeur Avancé tirée au sort dans sa plage jouable. Chaque pression sur le bouton Aléatoire tire à nouveau.'''
+source = "4796005ed198012e"
+text = '''Un type de monde tiré au sort lorsqu'on le choisit, et chaque valeur Avancé tirée au sort dans sa plage jouable.'''
 
 ["quick"]
 source = "b22d2b06765851eb"

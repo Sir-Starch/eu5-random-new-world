@@ -979,7 +979,18 @@ def test_random_draws_again_with_each_new_seed_and_keeps_its_mode(
     assert controller.seed != seed
     assert controller.mode == "random"
     assert controller.changes == {}
+
+
+def test_the_random_button_leaves_total_chaos_alone(tmp_path: Path, fake_export: Exporter) -> None:
+    """Total Chaos is not part of Random: its button only gives a new seed, and its type and
+    Advanced values stay until another one is chosen."""
+    controller = _controller(tmp_path, fake_export)
     controller.set_mode("chaos")
-    controller.randomize()
+    drawn = (controller.preset, dict(controller.changes))
+    seed = controller.seed
+    for _ in range(5):
+        controller.randomize()
+    assert controller.seed != seed
+    assert (controller.preset, controller.changes) == drawn
     assert controller.mode == "chaos"
     assert controller.estimated_locations() <= controls.LOCATION_BUDGET

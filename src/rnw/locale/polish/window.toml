@@ -351,8 +351,8 @@ source = "2e113a659e47144a"
 text = '''Totalny chaos'''
 
 ["type.chaos.about"]
-source = "c956856b61703fce"
-text = '''Wylosowany typ świata i każda wartość Zaawansowane wylosowana w grywalnym zakresie. Każde naciśnięcie przycisku Losowe losuje na nowo.'''
+source = "4796005ed198012e"
+text = '''Wylosowany przy wyborze typ świata i każda wartość Zaawansowane wylosowana w grywalnym zakresie.'''
 
 ["quick"]
 source = "b22d2b06765851eb"
