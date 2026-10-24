@@ -42,7 +42,7 @@ wheels = [
 ]
 
 [[package]]
-name = "eu5-rnw-research"
+name = "eu5-random-new-world"
 version = "0.11.4"
 source = { editable = "." }
 dependencies = [
