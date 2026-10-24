@@ -1,5 +1,10 @@
 name: check
 on: [push, pull_request]
+permissions:
+  contents: read
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   checks:
     strategy:

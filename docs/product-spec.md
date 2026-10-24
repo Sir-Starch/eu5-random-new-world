@@ -1,6 +1,6 @@
 # Product specification: genuine Random New World
 
-**Vision.** A normal historical Old World opens onto an unknown, procedurally generated New World. Each seed changes coastlines, islands, terrain, resources, routes and societies. Political reshuffling on vanilla geography is a fallback diagnostic, not the product. This is a target specification; EU5 1.4.1 map override feasibility remains [UNKNOWN C13].
+**Vision.** A normal historical Old World opens onto an unknown, procedurally generated New World. Each seed changes coastlines, islands, terrain, resources, routes and societies. Political reshuffling on vanilla geography is a fallback diagnostic, not the product. This is the target specification for 1.0.0; the [roadmap](roadmap.md) tracks how much of it exists.
 
 ## Player journey
 

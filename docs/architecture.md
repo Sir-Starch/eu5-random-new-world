@@ -1,5 +1,8 @@
 # Architecture options and decision gates
 
+> [!NOTE]
+> **Historical record.** The options below were written before the experiments decided between them. Option C was chosen: a standalone generator writes one complete mod per world on the player's machine and is delivered in a Workshop item ([ADR 0009](adr/0009-hub-mod-with-generator.md), [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md)).
+
 The production architecture is conditional on [experiments 002–006](../experiments/) and [feasibility](feasibility.md). [ADR 0001](adr/0001-python-research-tooling.md) decides only the research kit stack. The D0 offline generator and an ID-preserving EU5 exporter now exist ([ADR 0002](adr/0002-d0-generator-stack.md)); neither is game validated.
 
 | Option | Benefits | Costs and evidence gate |

@@ -1,5 +1,8 @@
 # Feasibility and ambition ladder
 
+> [!NOTE]
+> **Historical record** of the research stage (EU5 1.4.1, October 2026), kept for its evidence. Since then T2 and T3 have been observed in game (C34, C45). Current status: [roadmap](roadmap.md) and [changelog](../CHANGELOG.md).
+
 Current verdict for EU5 **1.4.1 open beta, Steam build 25905365**: the highest tier established in-game is **none of T0–T5**. Only metadata discovery passed a limited startup check [V-GAME, C11]. T1.5–T3 remain plausible research targets because relevant static data exists [V-LOCAL, C03–C09], but no geography override or playability has been observed [UNKNOWN, C13]. This is a confidence limit, not a finding that genuine RNW is impossible. On 2026-10-14 an offline T2 candidate (moved land–sea pixels between existing IDs) was generated and validated outside the game; it does not change any tier classification until tested in game [V-EXEC C28; UNKNOWN C13]. **Update:** in game, a mod-provided `locations.png` reshaped existing location outlines, including land–sea boundaries [V-GAME C34]. That is the first observed T2 behavior; drawn terrain, movement and save behavior are not yet established, so T2 is not yet playable-verified.
 
 Capability terms: **Verified possible** means observed in game for 1.4.1; **Strongly supported** means multiple local interfaces exist but a game test is missing; **Plausible but unverified** means an experiment is needed; **Technically difficult** means numerous coupled assets/contracts must be solved; **Blocked via supported interfaces** requires evidence of an actual engine restriction, which we do not have.

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Sir-Starch/eu5-random-new-world/security/advisories/new
+    about: Please report security problems privately.
+  - name: A bug in Europa Universalis V itself
+    url: https://forum.paradoxplaza.com/
+    about: Problems that also happen without this mod belong on Paradox's forum.

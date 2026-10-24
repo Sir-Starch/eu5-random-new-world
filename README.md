@@ -1,109 +1,130 @@
-# EU5 Random New World
+<div align="center">
 
-**0.11.4, 2026-10-24:** [V-EXEC C262-C265] N5 assigns the American land region and area keys by physical similarity ([design and audit](docs/research/n5-region-keys.md), C262-C265). All 14 regions and 135 land areas retain their original parents; climate, relief, coast and relative size come from the installed templates and the generated physical model. A global integer assignment chooses the closest available counterparts, with position used for ties only. Three worlds reduce the total template difference by 18.91 to 22.26 per cent and preserve the Old World. Region parts are built before names are assigned, with room for every original area (the reference no longer drops `moqoit_area`). Epoch 28, reference world of 814 files. The candidate is installed; engine and campaign results remain NOT-RUN.
+<img src="packaging/assets/rnw-avatar.png" alt="Random New World" width="160">
 
-**0.11.3, 2026-10-24:** fixes from the 0.11.2 sitting and the seed-210 regression ([046](experiments/046-sitting-fixes/README.md), C257-C261). The sea planner no longer emits an empty generated area when an ocean area survives entirely in vanilla water. The lobby handles an absent selected country through an optional saved scope; map-name replacements occupy their installed localization paths instead of defining the same keys in an extra file. The window reports completion after its library contains the finished world. Epoch 27. Offline checks and a new candidate; the engine's verdict on the lobby and localization changes remains open.
+# Random New World for Europa Universalis V
 
-**0.11.2, 2026-10-24:** more varied societies (R7d, [natives](docs/natives.md), C251-C253). Besides the great empire a world can hold a sea league (3 to 5 republics with a port on one sea, allied in a ring, a city and a market at the hub's port), a highland confederation (3 to 6 landed tribes of one faith in one `tribal_confederation`), a fractured realm (3 or 4 centres that are each other's rivals) and a sacred centre (a theocracy among rivals of its faith), each with the records the vanilla 1337 setup already uses and a cost beside every gain. The rare-empire chance decides once for every hearth's domain; 0 leaves the world byte for byte as 0.11.1 made it. The window calls the control *Extraordinary peoples*. Epoch 26, reference world of 792 files. Nothing has been run in game; the engine's verdict on the theocracy, the tribes in a confederation and the alliances at the start is open ([experiment 045](experiments/045-varied-societies/README.md)).
+**A generator that replaces the Americas with a procedurally generated New World and leaves the Old World as Paradox made it.**
 
-**0.11.1, 2026-10-24:** two faults that the logs of the owner's sitting showed ([sea geography](docs/sea-geography.md), C249-C250). The game's closed ocean has no locator of units and battles (its 47 zones have none, every other sea zone has both); the generated closed zones had them and the engine logged `map object locator "combat" is incomplete` and the same for `unit_stack` when the 0.10.14 world loaded: they have none now, and the export reads the two files back. The lobby's scripted GUI, asked about a country that is none while nothing is selected, wrote 263 script errors a session: it asks `country_exists` first. Epoch 25, reference world of 792 files. Nothing has been run in game.
+[![check](https://github.com/Sir-Starch/eu5-random-new-world/actions/workflows/check.yml/badge.svg)](https://github.com/Sir-Starch/eu5-random-new-world/actions/workflows/check.yml)
+[![Licence: MPL-2.0](https://img.shields.io/badge/licence-MPL--2.0-brightgreen.svg)](LICENSE)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)
+![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
+![EU5 1.4](https://img.shields.io/badge/EU5-1.4.x-8B6F47.svg)
+![Status: pre-release](https://img.shields.io/badge/status-pre--release%200.x-orange.svg)
 
-**0.11.0, 2026-10-24:** [V-GAME owner] the sea phase (S1 of the [roadmap](docs/roadmap.md)) is accepted in game: the owner played the 0.10.14 world as an observer for four months of the game and found it good ("tested, looks good"), and the logs read by the agent hold no port line (the 0.10.11 world had 48 zones and two locations) and nothing about the closed zones, the lanes, the topography, the currents or the crossing rows ([sea geography](docs/sea-geography.md), C248). MINOR rises with the acceptance (ADR 0003); no file of a world changes, so the epoch stays 24 and the reference world is the one of 0.10.14. The same logs show a fault the sea work did not make: the lobby's scripted GUI is asked about a country that is none while no country is selected, 263 lines of script errors a session (C249).
+</div>
 
-**0.10.14, 2026-10-24:** [OWNER] strait crossings ([design](docs/sea-geography.md), C245-C247). The game links two land locations that a narrow sea zone separates, close enough for an army to cross without a navy: 184 rows in `adjacencies.csv`, the two points of each 1 to 9 pixels apart. The generated landmasses lay 100 pixels and more apart, so no row could be written. Landmasses that come within 36 pixels are now brought together at their nearest points to a channel of 5 or 6 pixels (each grows towards the other, the growth tapering off; nothing merged or cut off), and every pair of lands of different landmasses that a run of at most 9 pixels of one sea zone divides has a row with the narrowest run's two points, read back from the written files. The reference world has six crossings, the presets 0 to 78. Epoch 24, reference world of 792 files. Nothing has been run in game.
+---
 
-**0.10.13, 2026-10-24:** [V-GAME owner's sitting of 1.4.4] the open ocean is closed to ships, and the 0.10.12 world's was not ([design](docs/sea-geography.md), C241-C244). The game's open ocean is 46 great zones of impassable `ocean_wasteland` (56 per cent of the sea) between lanes of deep ocean one or two cells wide that the currents follow; the owner's maps showed grey everywhere in the game's oceans and teal, with an arrow in every zone, round the generated New World. The canvas replaced 390 of the game's 750 lanes: where such a course ran over generated deep water, the generated cells are a lane with that current, and the other deep water is closed (cut into zones of about 48 cells, one location each, in both lists as the game's are); water that would not reach the game's is joined by the cheapest string of deep cells. The reference world's 1,193 deep cells are 420 lanes and 36 closed zones, 1,190 passable zones in the one water of the game's, read back from the written files. Cells beside the game's own land (Saint Helena's port) are now always coastal. Epoch 23, reference world of 793 files. Nothing has been run in game.
+Each seed produces new continents, coastlines, relief, climate, rivers, seas, resources, provinces and native civilisations. The generator writes them as an ordinary EU5 mod. Every world is a self-contained map mod, has a short **world code**, and can be rebuilt byte for byte from that code with the same game version.
 
-**0.10.12, 2026-10-24:** sea geography ([design](docs/sea-geography.md), C232-C240). The 48 coastal sea zones without a port in the owner's log, and the two islands (Bermuda, Saint Helena) that lost theirs, were the rule of one port per land chosen by the longest border: the ports are now assigned so that every coastal zone has one wherever the land can give it (where it cannot, the sea cells merge, 16 of 1,942 in the reference world). Every sea cell was `<word> Sea`; water is now named for its shape as in the game: one name for a sea, a gulf or a bay, straits, channels and sounds, runs of coast, capes, island waters, and the game's own ocean areas keep their names in every language (the reference world's 1,926 sea cells have 233 names). The game's own kinds of water are used (deep ocean two or more cells from land, inland sea for enclosed waters, narrows for straits), and the generated deep water continues the game's ocean currents. A fault this uncovered in the sea areas of regions with little shore (the Caribbean lost all its water) is repaired. Epoch 22, reference world of 793 files. Nothing has been run in game.
+> [!IMPORTANT]
+> **Pre-release (0.x).** No public release or Workshop item exists yet. The maintainer has played much of the generated New World in game; see [`CHANGELOG.md`](CHANGELOG.md) and the [experiment records](experiments/). Expect breaking changes until 1.0.0, the first Steam Workshop publication ([ADR 0003](docs/adr/0003-versioning.md)).
 
-**0.10.11, 2026-10-23:** the offline audit of N0 to N4 (F1 and F2 of the [content plan](docs/content-plan.md), [audit](docs/research/n0-n4-audit.md)). It read the mod object by object against the game's scripts and the owner's last `error.log` line by line, and found what the tests had not: the remap did not rewrite `province_definition:` (18 engine errors, the log's "vanilla baseline" was not all vanilla), the stories' hidden events had no title (16 more lines, and 2 of the probe's), and the DLC models of the pyramids of Teotihuacan and Cholula were moved to random places. All three are repaired (epoch 21, reference world of 793 files); the export now refuses a world in which an object of the game's scripts vanished that nothing retires or names a key the world lacks; every replaced object says what carries it in the generated world, or that none does (131 are carried, 22 are not, each with a reason); the layer test compares every file of three worlds. Nothing has been run in game.
+## Features
 
-**0.10.10, 2026-10-23:** what waits for the ocean to be crossed (N4 of the [content plan](docs/content-plan.md), third version, which completes N4 offline): *Contact across the ocean* and *Colony becomes a country* (stories that begin in play, through the game's yearly pulse, for a native country that meets ships and for a colonial nation that asks what it is), a *Postcolonial federation* (a formable of settlers on a coast, replacing the three vanilla colonial formables) and 70 colonial names, *New X* in five founders' words, X the generated name of each region (C218-C220). Epoch 20; not yet seen in game.
+| Layer | What the generator makes |
+|---|---|
+| **Land** | Five world types (supercontinent, continents, small continents, archipelago, scattered islands), coastlines that follow the seed, an optional land outline you draw yourself |
+| **Physical world** | Relief, climate, biomes, terrain materials and vegetation from one model; rivers from drainage; vanilla-calibrated coast and shelf profiles |
+| **Seas** | One port for every coastal sea zone; names taken from the water's shape (gulfs, straits, capes, island waters); depth and topography; ocean lanes and currents that continue the game's own; strait crossings armies can use |
+| **Political map** | Compact, connected locations, provinces, areas and regions. The original American region and area keys are matched to the generated ones by physical similarity |
+| **Peoples** | Native cultures and religions with homelands, states, tribes and vassals; rare great empires, sea leagues, highland confederations, fractured realms and sacred centres, each with causes and weaknesses |
+| **Economy** | Start development, harbours, market villages and technology levels derived from each society |
+| **Content** | Stories and formable countries planned from the finished world; colonial names built from each region's generated name; the historical American content is rebound, neutralised or replaced decision by decision |
+| **Before you play** | The New World stays terra incognita in the generator, in the game's mod list and at country selection until you choose to see it |
 
-**0.10.9, 2026-10-23:** four more stories (N4 of the [content plan](docs/content-plan.md), second version): *Harvest and food supply* (a thin harvest in a city the land cannot easily feed), *Route and market* (a road between two cities of one state, and who pays for it), *Great alliance* (a council of neighbours who share a faith or a people, with opinions of both courts) and *Empire and periphery* (a far province of a state that holds subjects); each with three first choices, delayed consequences and six endings, planned from the finished world and recorded as an absence where a world has no bearer (C215-C217). Epoch 19; not yet seen in game.
+## How it works
 
-**0.10.8, 2026-10-23:** four more families of formable countries (N4 of the [content plan](docs/content-plan.md), first version): beside the river-basin union a world now offers, where its land and peoples allow, a *Highland confederation* (connected valleys on high ground), a *Maritime league* (ports joined by land or by a shared sea, with at least three ports), a *Cultural commonwealth* (the places of one culture group) and a *Regional realm* (a large region under several states). Each is a formable of a new tag with its own territory, level, rank, flag and founding modifier copied from a vanilla one (C212-C214). Epoch 18; not yet seen in game.
+EU5 builds its map from files when it loads mods. A mod is data: it cannot run code, and script cannot create land, mountains or rivers. The generation therefore runs in a separate program that reads the player's own installation and writes a mod. The generator does not change or hook into the game.
 
-**0.10.7, 2026-10-23:** [V-GAME C205-C208] the owner's second sitting showed that the flicker of the lobby's country list was not the percentage size: the list as a vertical list of every card still flickered and a search brought back blank stretches. The list is now the game's own fixed grid again and the countries of the New World are **dimmed and cannot be chosen** instead of hidden (their names show in the list). The start hook through `on_actions` works beside the game's start (C206), and a plain vassal keeps the name of its location (C207): the probe now founds a `colonial_nation`. Epoch 17, reference world of 784 files. [V-GAME C209-C211] the owner's third sitting: the countries no longer flicker, and a colony founded by a decision is a *Colony of Interlaken* (the game's own name, not a scripted one); [experiment 038](experiments/038-lobby-list-and-colony/README.md).
+```mermaid
+flowchart LR
+    G[("EU5 installation<br/>(read only)")] --> R["Read and fingerprint<br/>the map contract"]
+    C(["World code<br/>preset + seed + settings"]) --> W
+    R --> W["Generate the New World<br/>Python + Rust core"]
+    W --> V{"Validators<br/>fail loudly"}
+    V --> M[/"World mod<br/>mod/rnw_exp_world_…"/]
+    M --> P(("Play a new<br/>1337 campaign"))
+```
 
-**0.10.6, 2026-10-23:** [V-GAME C198-C204] the owner's console sitting on **1.4.4** (the game's executable was updated that morning; its data is 1.4.3's and the generator accepts it unchanged) showed which hooks a mod has (a formable of a new tag, a dynamic start, the yearly pulse) and found faults of ours, fixed here: the lobby's country cards had a percentage size that the engine refuses in a `vbox` (flags flickered; cause [INFERRED]), two DLC picture files compared with removed locations 79,000 times in a session, the river story removed a location modifier in the wrong scope, and the unions and the probe's decisions lacked the keys the game looks up. The probe's own `on_game_start` had replaced the game's start in that sitting; it now hooks it as the game does. Epoch 16, reference world of 784 files. [UNKNOWN] whether the flicker is gone: [experiment 037](experiments/037-console-session-2/README.md).
+- **Old World preserved.** Pixels, keys and contacts outside the New World canvas are checked against the installed game.
+- **Deterministic.** The same code, generator version and game build give identical files on any machine, with any thread count. A reference world's digest is pinned in the test suite.
+- **Fails loudly.** An unknown game build, an undecided vanilla script object or a broken invariant stops the export. No output is silently repaired.
+- **Native core.** Hot kernels (noise, distance fields, drainage, terrain slots, LZAV) are in Rust and bit-identical to the Python reference implementations in [`tests/reference/`](tests/reference/).
 
-**0.10.5, 2026-10-23:** the content model and the first stories (N3 of the [content plan](docs/content-plan.md)): each world offers, where its land and peoples allow, a *River centre* (a river city turned against by its river), a *Sacred centre* (a shrine and its high priest) and a *River-basin union* (a formable of a new tag), each with choices, costs and endings, and records why a family has none; original texts and mechanics copied from the retired historical chains (C193-C196). Epoch 15; not yet seen in game.
+See [architecture](docs/architecture.md), [ADR 0009](docs/adr/0009-hub-mod-with-generator.md) (delivery) and [ADR 0010](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md) (layered, reproducible worlds) for the design.
 
-**0.10.4, 2026-10-23:** the five historical natural-resource bonuses that vanished with the Americas (Potosí's silver, the mercury mine, the fisheries) come back as five rare places of the generated land: silver in the mountains, a mercury lode, a rich fishery, each with a modifier and names of the mod's own and the vanilla bonus size; they belong to the resources part of the world (C189, C190). This completes N1 of the [content plan](docs/content-plan.md) offline; not yet seen in game.
+## Getting started
 
-**0.10.3, 2026-10-23:** the decisions of N0 are carried out: the American historical events, colonial names (New Spain, Peru, New York and others), the three colonial formables and the Panama canal are switched off on generated land by closing the gates vanilla gives them; the historical formables whose culture the world holds (Inca, Aztec, Maya, Iroquois, Pueblo) take the places of that culture as territory, and close when the culture is thin (C187, C188). Epoch 13; not yet seen in game. The exceptional resource places of the same stage follow.
+### Requirements
 
-**0.10.2, 2026-10-23:** [OWNER] the mod uses exactly the game's official languages, taken from the installation; the world's name files are now written in all eleven of 1.4.3, Turkish included, which the fixed list of ten missed (C178, C186). [V-EXEC] Epoch 12, reference world of 754 files; the first step of N1 of the [content plan](docs/content-plan.md), not yet seen in game.
+- **Europa Universalis V 1.4.x**, installed through Steam (Windows, or Linux through Proton). The generator checks the installed build and refuses one it has not been verified against.
+- **Python 3.12+** and [**uv**](https://docs.astral.sh/uv/).
+- A stable **Rust** toolchain ([rustup](https://rustup.rs/)) to build the native core.
+- About **7.5 GB of free memory** while a world is generated, which takes a few minutes.
 
-**0.10.1, 2026-10-23:** [V-GAME owner C173] the 0.10.0 cover shows vanilla terra-incognita drawings, including dragons, but its country-list filter did not remove the large blank region. [V-EXEC C174] The new candidate replaces fixed country rows with a vertical list that excludes invisible widgets from layout and removes the ineffective filter. [UNKNOWN] The engine's layout behavior awaits the owner's run of [experiment 032](experiments/032-lobby-list-layout/README.md); no agent game launch. The earlier undiscovered-capital warnings are gone from the owner's log (C171).
+### Run from source
 
-**Opinions, 2026-10-23:** the opinions of the great empires named capitals that their holders had not discovered, 17 warnings per start (C170); generator **0.9.33** makes each holder discover its partner's capital area and checks it on the written records (C171); not yet seen in game.
+```sh
+git clone https://github.com/Sir-Starch/eu5-random-new-world.git
+cd eu5-random-new-world
+uv sync --locked --group dev     # builds the Rust extension as part of the package
+uv run rnw gui                   # the generator's window
+```
 
-**Map frame, 2026-10-23:** at country selection the cover of the New World reached beyond the map's north and south edges and cut the wooden table of the frame black over the New World's longitudes (C169); generator **0.9.32** (epoch 8) keeps the cover on the map; not yet seen in game ([experiment 027](experiments/027-map-shader-scope/README.md)).
+The window finds EU5 and your profile on its own. Missing folders can be chosen under *Settings*. From the command line:
 
-**Roads, 2026-10-23:** 0.9.29 logged 125,820 missing-road-strip errors (C161). Generator **0.9.30** writes the spline network for the generated locations (C162, C163; [interoperability register](docs/research/interoperability.md) R-001); **0.9.31** keeps vanilla's segment and point order as a precaution (C165). The owner's tests load it with no strip error and show a road network in the Roads lens (C166); an early report of vanished roads in 0.9.30 was an observation error: the owner's screen recording shows the proximity lens in observer mode, not Roads, and roads drawn on the map at zoom, so 0.9.30 drew roads too (C168). A 5.7-minute run at maximum speed logged no strip error (C167); roads built in play are not yet confirmed ([experiment 029](experiments/029-spline-strips/README.md)).
+```sh
+uv run rnw find-game                                      # installations and profiles found (read only)
+uv run rnw world-code --preset small_continents --seed 42 # print a world code
+uv run rnw world CODE --install                           # build that world and add it to the game
+uv run rnw worlds                                         # the worlds you have made
+uv run rnw --help                                         # everything else
+```
 
-**R7 offline complete, 2026-10-22:** generator **0.9.28** gives each native state a technology level from its society and keeps cultures in the regional family of their land (R7b, C159); **0.9.29** gives great empires the Old World's level, a vanilla rank, royal roads, feared neighbours and resentful vassals (R7c, C160). Offline checks pass; nothing is validated in game. [Experiment 028](experiments/028-technology-and-empires/README.md) is installed as `rnw_exp_world_canszr3phf` and awaits the owner's test.
+### Play a world
 
-**Shader regression, 2026-10-22:** the owner confirms full New World concealment in
-0.9.26, but loading art and character backgrounds fail [V-GAME owner / V-LOCAL C153].
-Generator **0.9.27** isolates the cover in a private map-mesh include and restores the
-vanilla dependency graphs for loading and scene shaders; offline checks pass, while
-the running-game retest remains open [V-EXEC / UNKNOWN C154]. See
-[experiment 027](experiments/027-map-shader-scope/README.md).
+1. Generate a world. It appears in the game's mod list as **RNW: *type* *tag*** (for example *RNW: Small continents 7K3Q*).
+2. In the EU5 launcher, enable that world in a playset, **one world at a time**.
+3. Start a **new 1337 campaign**. If you have already played a campaign in this session, restart EU5 first: the engine crashes when a different world starts after a campaign in the same process.
 
-Research and bootstrap repository for a future Europa Universalis V Random New World generator. The target is **genuinely generated geography and civilizations** with a historical Old World, not a shuffle of vanilla owners.
+The [generator guide](docs/generator-guide.md) covers world files, rerolls, queues and the atlas.
 
-**Cover failure, 2026-10-22:** the owner's EU5 1.4.3 test of a 0.9.20 world reveals
-trees, rivers, resources and cities at close zoom and allows starting as a covered
-New World country [V-GAME owner / V-LOCAL C150]. The political-lens success of C139
-does not cover these routes. Follow-up: [experiment 026](experiments/026-close-zoom-cover/README.md).
-Generator **0.9.26** adds an expanded cover and lobby UI safeguards, verified offline
-against the exact installed build [V-EXEC C151]. Native map picking is not intercepted;
-the new concealment and UI start guards require an in-game retest [UNKNOWN].
+## Documentation
 
-**Patch check, 2026-10-22:** generator **0.9.25** accepts the locally checked **1.4.3 open beta, Steam build 26105915**. The installation tests and a full reference-world export pass offline; the output preserves pixels outside the canvas and loses no Old World contacts [V-LOCAL/V-EXEC C148–C149]. Worlds built from 1.4.2 should be regenerated because their full-file overrides can undo patch changes [INFERRED C148]. **1.4.3 loading and playability remain unverified**; EU5 was not launched. See [the patch record](experiments/025-patch-1-4-3/README.md). The dated entries below describe earlier milestones.
+The [documentation index](docs/README.md) lists everything. The main entry points:
 
-**Actual status, 2026-10-13:** Local EU5 is the Steam `1.4-open-beta` branch, build 25905365, running as **1.4.1** through Proton [V-LOCAL C01; V-GAME C02]. An isolated metadata-only `rnw_exp_*` mod was recognized and version-matched in the game log [V-GAME C11], but complete error-free loading, content override, changed start state, boundaries, new locations and playability remain unverified [UNKNOWN C13]. The isolated profile opened an unresponsive first-run Select Language screen, so the game was closed and **will not be launched again in this session** at the owner's request [V-GAME C12]. The full result of experiment 001 is **INCONCLUSIVE**; experiments 002–006 are **NOT-RUN**.
+- **Using it:** [generator guide](docs/generator-guide.md), [product specification](docs/product-spec.md)
+- **Design:** [architecture](docs/architecture.md), [natives](docs/natives.md), [economy](docs/economy.md), [sea geography](docs/sea-geography.md), [terrain and biomes](docs/terrain-biomes.md), [content plan](docs/content-plan.md), [decision records](docs/adr/)
+- **Progress:** [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md), [experiments](experiments/README.md)
+- **Evidence:** [findings](docs/research/findings.md), [claims ledger](docs/research/claims-ledger.md), [interoperability register](docs/research/interoperability.md)
 
-**Update, 2026-10-14:** the first deterministic geography generator exists offline. `rnw generate` stages an `rnw_exp_*` mod candidate that moves real land–sea boundaries between existing American location IDs while preserving the Old World and every cell contact; it is reproducible byte for byte and **NOT GAME VALIDATED** [V-EXEC C28–C30]. See [ADR 0002](docs/adr/0002-d0-generator-stack.md).
-
-## Setup and checks
-
-Python 3.12+ and [`uv`](https://docs.astral.sh/uv/) are required. From the repository root:
+## Development
 
 ```sh
 uv sync --locked --group dev
-make check
-uv run rnw --help
+make check        # ruff format + lint, basedpyright, pytest, cargo fmt/clippy/test
 ```
 
-`make check` runs Ruff formatting/lint, basedpyright and pytest. CI runs the same checks on Linux and Windows. Without game files, the local-installation test skips automatically. With an installed game, read-only inspection is available:
+CI runs the same checks on Linux and Windows. Tests use synthetic fixtures and need no game. With a local installation, `EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py` adds read-only checks against it.
 
-```sh
-EU5_GAME_DIR='/path/to/Europa Universalis V'
-uv run rnw inspect "$EU5_GAME_DIR"
-uv run rnw coupling "$EU5_GAME_DIR" local_data/coupling.json
-uv run rnw fingerprint "$EU5_GAME_DIR" local_data/map-contract.json
-uv run rnw synth --seed 1 --preset archipelago --output generated/rnw_synth_demo
-uv run rnw newworld --game-dir "$EU5_GAME_DIR" --seed 42 --preset continents --output generated/rnw_exp_new_world --replace
-uv run rnw install-mod --replace generated/rnw_exp_new_world/rnw_exp_new_world "$EU5_USER_DIR"
-EU5_GAME_DIR="$EU5_GAME_DIR" uv run pytest -q tests/test_local_install.py
-```
+| Path | Contents |
+|---|---|
+| [`src/rnw/`](src/rnw/) | The generator: world model, geography, seas, peoples, content, EU5 exporters, validators, CLI |
+| [`src/rnw/app/`](src/rnw/app/), [`src/rnw/gui/`](src/rnw/gui/) | Headless application core and the Qt window |
+| [`native/`](native/) | Rust crate behind `rnw._native` |
+| [`packaging/`](packaging/) | Application and Workshop-item builds, release tooling, third-party notices |
+| [`tests/`](tests/) | Test suite, Python reference kernels, golden digests |
+| [`docs/`](docs/), [`experiments/`](experiments/) | Design, decisions, evidence and in-game experiment records |
 
-The coupling command performs a **broad lexical scan** with false positives; its raw output is gitignored [V-EXEC C10]. The fingerprint records hashes of the installed map-contract files without copying them [V-EXEC C20]. The corrected color audit finds 28,582 declarations, all 28,573 hierarchy keys covered, and nine declarations outside the hierarchy [V-EXEC C05]. A metadata-only validation kit is available with `uv run rnw prepare-mod generated/rnw_exp_001_metadata` and `uv run rnw install-mod generated/rnw_exp_001_metadata USER_DIR`. It does not edit playsets or launch the game. `rnw synth` writes a synthetic world (no game data). `rnw generate` refuses unknown build fingerprints (unless `--accept-build DIGEST`), existing outputs and paths outside `generated/`; it writes the mod plus `manifest.json`, `report.md`/`report.json`, `settings.json` and a local `preview.png`. Its outputs derive from game rasters and must stay local. `rnw newworld` takes about a minute and a half and 7.5 GiB of free memory on the continents preset: it reads the cores and the free memory of the machine and sizes its threads and working sets from them ([ADR 0006](docs/adr/0006-machine-resources.md)), refuses to start with less than 7.5 GiB free (`--ignore-memory` starts anyway), and gives the same files for any thread count (`RNW_THREADS`, `RNW_MEMORY` in MiB override the readings for benchmarks). Follow [testing](docs/testing.md) before any future in-game test and [INSTALLED](experiments/INSTALLED.md) for removal. No additional game launch is requested now.
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. In particular, **never commit files from the game or anything derived from them.** [AGENTS.md](AGENTS.md) holds the project's working rules, which coding agents read too.
 
-The application window (Qt) opens with `uv run --group gui rnw gui`; `uv run rnw world-code --seed 42` prints a world code and `uv run rnw world CODE` makes that world headless (it installs into the game profile only with `--install`). `uv run --group packaging python packaging/build.py` freezes the window into `dist/RandomNewWorld` ([ADR 0007](docs/adr/0007-application-window-and-packaging.md)).
+## Legal
 
-## Licence
+*Europa Universalis* and *Paradox Interactive* are trademarks of Paradox Interactive AB. This project is **not affiliated with or endorsed by Paradox Interactive**.
 
-Code and mod files are under the [Mozilla Public License 2.0](LICENSE) ([why](docs/legal.md)). Generated worlds are made locally from the player's own EU5 installation and are not covered by it; they are never distributed.
+This repository contains no game files. A generated world is built on your computer from your own copy of the game. It contains material derived from the game, is not covered by this project's licence, and is subject to [Paradox's user agreement](https://legal.paradoxplaza.com/eula). See [legal notes](docs/legal.md) for the reasoning and open questions.
 
-## Document map
-
-- [Findings](docs/research/findings.md), [claims ledger](docs/research/claims-ledger.md), [sources](docs/research/sources.md), [inventory](docs/research/game-install-inventory.md), [EU4 lessons](docs/research/eu4-rnw-analysis.md), [research log](docs/research/log.md)
-- [Feasibility and tier matrix](docs/feasibility.md), [product spec](docs/product-spec.md), [architecture](docs/architecture.md), [ADR 0001](docs/adr/0001-python-research-tooling.md), [ADR 0002](docs/adr/0002-d0-generator-stack.md), [roadmap](docs/roadmap.md), [testing](docs/testing.md), [legal](docs/legal.md)
-- [Implementation contract](docs/implementation-contract.md), [Opus handoff](docs/handoff/opus-5.5.md), [Sonnet backlog](docs/handoff/sonnet-5.5-backlog.md), [experiment records](experiments/)
-
-The recommended direction is an **external deterministic generator emitting a complete per-build EU5 mod**, conditional on map override experiments. The runner-up is an ID-preserving geographic redraw if new IDs fail but boundary changes work [INFERRED C14]. Neither is yet proven in game.
+The code and mod files are licensed under the [Mozilla Public License 2.0](LICENSE). Bundled third-party components keep their own licences ([notices](packaging/THIRD_PARTY_NOTICES.md)). To report a vulnerability, follow [SECURITY.md](SECURITY.md).

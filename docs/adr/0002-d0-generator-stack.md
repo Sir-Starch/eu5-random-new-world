@@ -4,7 +4,7 @@
 
 ## Context
 
-The [implementation contract](../implementation-contract.md) asks for a seeded, deterministic geography change exported as an isolated `rnw_exp_*` mod for EU5 1.4.1, with offline proof and no game launch. The location raster has 134,217,728 pixels [V-LOCAL C03]. Map override behavior, new IDs and visual terrain requirements are unknown [UNKNOWN C13, C25].
+The [implementation contract](https://github.com/Sir-Starch/eu5-random-new-world/blob/ea518eed2fa36d8659a467d42d3e4643a76051c2/docs/implementation-contract.md) asks for a seeded, deterministic geography change exported as an isolated `rnw_exp_*` mod for EU5 1.4.1, with offline proof and no game launch. The location raster has 134,217,728 pixels [V-LOCAL C03]. Map override behavior, new IDs and visual terrain requirements are unknown [UNKNOWN C13, C25].
 
 ## Decision
 

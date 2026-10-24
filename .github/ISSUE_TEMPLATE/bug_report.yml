@@ -1,0 +1,73 @@
+name: Bug report
+description: Something in the generator or a generated world does not work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting! Please **do not attach game files, saves or generated worlds**. A world code is enough to rebuild a world.
+        For a security problem, use the repository's *Security* tab instead (see SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Generator version
+      description: The version of Random New World you used. The diagnostics report names it.
+      placeholder: "0.11.4"
+    validations:
+      required: true
+  - type: input
+    id: code
+    attributes:
+      label: World code
+      description: The code of the affected world, if any (for example `RNW1-…`).
+  - type: input
+    id: game
+    attributes:
+      label: EU5 version and Steam build
+      placeholder: "1.4.4 (build 26142040)"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows
+        - Linux (Proton)
+        - Steam Deck
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it go wrong?
+      options:
+        - The generator (window or command line)
+        - Loading the world in EU5
+        - Playing the world in EU5
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+      description: Steps to reproduce help a lot. Screenshots are welcome if they show the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: |
+        Attach the file from `rnw diagnostics-file` (or *Settings → Diagnostics* in the window). It holds the generator's logs and the tail of the game's logs, with your home folder, user name, Steam IDs and e-mail addresses replaced. Please read it before attaching.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I attached no game files, saves or generated worlds.
+          required: true

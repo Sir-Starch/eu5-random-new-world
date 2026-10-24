@@ -1,4 +1,7 @@
-# Using the independent generator (0.9.24)
+# Using the generator
+
+> [!NOTE]
+> Written for 0.9.24. Later releases added controls (for example *Extraordinary peoples*) without changing the workflow; see the [changelog](../CHANGELOG.md).
 
 Run from source with `uv sync --locked --group dev` and `uv run rnw gui`.
 The Linux folder package runs with `./RandomNewWorld`; its command line is

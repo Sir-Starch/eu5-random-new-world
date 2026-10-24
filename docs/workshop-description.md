@@ -29,7 +29,7 @@ The generator keeps every world you made, with its code. Until you choose to see
 
 - It reads your EU5 installation and writes only two places: the world mods it makes (`mod/rnw_world_…` in your EU5 documents folder) and its own data folder.
 - It does not use the network, does not need administrator rights, does not touch the registry and does not change any game file.
-- Its source code is public under the Mozilla Public License 2.0: [repository link]. Every release is built from a tagged commit by an automatic build, and the SHA-256 checksum of every file is published there.
+- Its source code is public under the Mozilla Public License 2.0: https://github.com/Sir-Starch/eu5-random-new-world. Every release is built from a tagged commit by an automatic build, and the SHA-256 checksum of every file is published there.
 - Whether you trust a program is your decision. You can read the code, compare the checksums, or build it yourself.
 
 ## Windows warnings

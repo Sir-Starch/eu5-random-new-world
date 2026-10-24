@@ -85,7 +85,7 @@ That `first` holds the opinion of `second` is inferred from the vassals holding 
 
 ## More varied societies (R7d, societies)
 
-**Status:** implemented on 2026-10-24 (generator 0.11.2, algorithm epoch 26, C251-C253); NOT GAME VALIDATED. The name R7d is shared with the spline network of 2026-10-22 (0.9.30, C162-C163, below); this is the *more varied societies* of the [content plan](content-plan.md), gap G7. No Opus design preceded it; the design is this section and the claims it cites.
+**Status:** implemented on 2026-10-24 (generator 0.11.2, algorithm epoch 26, C251-C253); NOT GAME VALIDATED. The name R7d is shared with the spline network of 2026-10-22 (0.9.30, C162-C163, below); this is the *more varied societies* of the [content plan](content-plan.md), gap G7. No separate design document preceded it; the design is this section and the claims it cites.
 
 **Goal.** Four more combinations of real traits besides the great empire: a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors. An archetype follows geography and social structure; randomness only chooses among suitable combinations. Strength comes from population, ports and organization, weakness from separation, autonomy and rivalry; nothing is a flat bonus and no label grants power. The new files change no engine, define or interface file, and no binary format is read or written ([interoperability register](research/interoperability.md): nothing to record).
 
@@ -122,7 +122,7 @@ Over 31 searched worlds (the peoples stage alone, at 1000 permille) the options 
 
 ## Technology and regional families (R7b)
 
-**Status:** implemented on 2026-10-22 (generator 0.9.28, algorithm epoch 4, C159); NOT GAME VALIDATED, in-game test pending (see the experiment of R7c). Designed in [sonnet-r7-technology-and-empires](handoff/sonnet-r7-technology-and-empires.md), claims C155–C157.
+**Status:** implemented on 2026-10-22 (generator 0.9.28, algorithm epoch 4, C159); NOT GAME VALIDATED, in-game test pending (see the experiment of R7c). Designed in [R7b and R7c design](r7-technology-and-empires.md), claims C155–C157.
 
 **Why.** An age-of-traditions advance above a country's `starting_technology_level` starts unresearched, so a higher level starts a country with more advances (C155). Vanilla gives 191 of its 223 American states level 2, 17 level 1 and 11 level 0. Up to 0.9.27 the generator wrote no level, so a state took its culture's template level or one complexity threshold: 109 of 131 states started at level 0 (C156). Advances and units of the Americas follow three regional families chosen by the capital's region or area (`is_capital_mesoamerica`, `is_capital_in_south_america_or_carribean`); the culture followed only the climate, so a Mixtec state could get the woodland advances (C157).
 

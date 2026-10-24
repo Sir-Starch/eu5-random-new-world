@@ -1,0 +1,8 @@
+# Same bytes on every platform: generated output and its golden digests depend on it.
+* text=auto eol=lf
+
+*.png binary
+
+# Language statistics: research records are documentation.
+docs/** linguist-documentation
+experiments/** linguist-documentation

@@ -1,0 +1,27 @@
+name: Idea or feature request
+description: Suggest a change to the generated New World or to the generator.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The project follows a [roadmap](https://github.com/Sir-Starch/eu5-random-new-world/blob/main/docs/roadmap.md) and prefers the game's own mechanisms over new ones ("vanilla first"). Ideas that fit EU5's systems are easiest to adopt.
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What should the New World or the generator do?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: What does it add to a campaign? A historical or gameplay reference helps.
+    validations:
+      required: true
+  - type: textarea
+    id: vanilla
+    attributes:
+      label: Vanilla mechanisms
+      description: If you know which EU5 data or mechanics this could use, name them.

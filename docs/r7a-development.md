@@ -1,6 +1,6 @@
-# R7a: development and market villages from the generated world (Sonnet task)
+# R7a: development and market villages from the generated world
 
-**Designed by Opus 5.5 on 2026-10-19 for Sonnet 5.5 to implement.** It is the first slice of roadmap phase R7. It changes generated output and is NOT GAME VALIDATED. Do not launch the game; the owner batches in-game tests (experiment 012 below). Read [AGENTS.md](../../AGENTS.md), [natives](../natives.md), claims C67–C74 and this page before starting.
+**Design of 2026-10-19**, written before implementation, for the first slice of roadmap phase R7. **Status: implemented** in generator 0.9.2 and audited in 0.9.3 ([economy](economy.md), C73–C76); in-game record: [experiment 012](../experiments/012-development/README.md). Background: [natives](natives.md) and claims C67–C74.
 
 ## Problem
 
@@ -77,7 +77,7 @@ Generated cities stay low because they stand on poor land. This is a watch item,
 
 **Second revision (2026-10-19).** A fixed saturation of 800 passed on continents 3706823338 (state members 4.11, capitals 3.89) but failed on archipelago 5 (members 6.39 = 1.55×, capitals 6.42): island state land gets about 2 more development from its physical rules, and no single constant satisfied both worlds (continents needed `full` ≤ about 880, archipelago ≥ about 825). Vanilla's keyed entries compensate terrain in the same way (Mesoamerica +12 on jungle, Great Plains +5), so `full` is now fitted per world: `fit_full` takes the smallest candidate in 250…3000 (step 5) for which the estimated mean development of state capitals and members together is closest to the vanilla mean. On archipelago 5's complexities it gives `full` = 1115 and capitals 4.42, members 4.30.
 
-**Audit revision (2026-10-19, Opus, product version 0.9.3).** The owner rejected the remaining weaknesses. An audit on cached worlds found: (1) rivers are not spread alike in vanilla and generated land (generated cities have a river in 857–1000‰ of cases, vanilla cities in 111‰), so leaving the river term out biased the calibration; the estimate now includes it with river size taken from `rivers.png` [INFERRED]. (2) Generated cities and towns stand on poorer land than the rest of generated state land, while vanilla cities stand on better land than vanilla state land, so one state-land curve cannot reach both class means; the saturation is now fitted per settlement class (cities, towns, other state land). (3) A new invariant keeps every Old World development entry identical to vanilla. Tribes and unorganised land stay below vanilla for reasons of land and authored vanilla bonuses (see [economy](../economy.md)); they are not fitted. Cities and towns join the acceptance criteria (0.75–1.5× vanilla).
+**Audit revision (2026-10-19, product version 0.9.3).** The owner rejected the remaining weaknesses. An audit on cached worlds found: (1) rivers are not spread alike in vanilla and generated land (generated cities have a river in 857–1000‰ of cases, vanilla cities in 111‰), so leaving the river term out biased the calibration; the estimate now includes it with river size taken from `rivers.png` [INFERRED]. (2) Generated cities and towns stand on poorer land than the rest of generated state land, while vanilla cities stand on better land than vanilla state land, so one state-land curve cannot reach both class means; the saturation is now fitted per settlement class (cities, towns, other state land). (3) A new invariant keeps every Old World development entry identical to vanilla. Tribes and unorganised land stay below vanilla for reasons of land and authored vanilla bonuses (see [economy](economy.md)); they are not fitted. Cities and towns join the acceptance criteria (0.75–1.5× vanilla).
 
 ### C. Harbour suitability
 
@@ -148,7 +148,7 @@ In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B
 ## Acceptance (offline)
 
 1. `uv sync --locked --group dev && make check` passes, and the optional local tests pass.
-2. Raise PATCH per [ADR 0003](../adr/0003-versioning.md): 0.9.1 → 0.9.2, or the next PATCH if the owner has accepted R6 in the meantime. Update golden digests only if they change; `rnw synth` output should not change.
+2. Raise PATCH per [ADR 0003](adr/0003-versioning.md): 0.9.1 → 0.9.2, or the next PATCH if the owner has accepted R6 in the meantime. Update golden digests only if they change; `rnw synth` output should not change.
 3. Build three worlds, one at a time, each in the foreground under `timeout 1200` and each into `generated/rnw_exp_new_world --replace` (the CLI accepts only `rnw_exp_*` outputs; do not create other bundles). Build continents 3706823338 first, then archipelago 5, then a fresh random continents seed. Copy each `report.json` to gitignored `local_data/` before the next build, so the bundle that remains is the fresh seed for the owner. Confirm with `pgrep -af rnw` that nothing is left running. On each world:
    - every invariant passes;
    - estimated mean development of cities, towns, state capitals and state members is each within 0.75–1.5 × the vanilla value (cities and towns since the audit revision);
@@ -162,8 +162,8 @@ In `tests/test_local_install.py`, add an optional test that asserts on 1.4.1: `B
 4. Documentation:
    - new `docs/economy.md` (the R7 page: mechanism, method, settings, checks, open work);
    - claim C75 with the three builds;
-   - a [research log](../research/log.md) entry;
-   - a status line on the [roadmap](../roadmap.md) R7 row;
+   - a [research log](research/log.md) entry;
+   - a status line on the [roadmap](roadmap.md) R7 row;
    - record `experiments/012-development/README.md` with status NOT-RUN.
 5. One commit for the phase.
 
