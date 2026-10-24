@@ -537,7 +537,6 @@ class MainWindow(QMainWindow):
         self.notice.setStyleSheet(RED)
         outer.addWidget(self.notice)
         self.estimate = QLabel()
-        self.estimate.setWordWrap(True)
         self.estimate_help = QLabel("ⓘ")
         self.estimate_help.setCursor(Qt.CursorShape.PointingHandCursor)
         self.estimate_help.setStyleSheet(MUTED)
