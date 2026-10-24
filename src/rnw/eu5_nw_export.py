@@ -168,8 +168,8 @@ from rnw.eu5_seas import (
     VanillaPort,
     Water,
     current_text,
-    read_currents,
     read_ports,
+    read_waters,
     settle_coast,
     shape_water,
     verify_seas,
@@ -973,7 +973,11 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     lists = {
         "sea_zones": [c.key for c in plan.cells if c.kind is CellClass.SEA],
         "lakes": [c.key for c in plan.cells if c.kind is CellClass.LAKE],
-        "impassable_mountains": [c.key for c in plan.cells if c.kind is CellClass.WASTELAND],
+        "impassable_mountains": [
+            cell.key
+            for index, cell in enumerate(plan.cells)
+            if cell.kind is CellClass.WASTELAND or index in water.zones
+        ],
     }
     outputs[_mod_path(DEFAULT_MAP)] = _encode(
         game_dir, DEFAULT_MAP, rewrite_class_lists(_read(game_dir, DEFAULT_MAP), removed, lists)
@@ -1058,6 +1062,13 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
                         Shape(water.waters.shape[cell]).name.lower() for cell in water.waters.sea()
                     ).items()
                 )
+            ),
+            "lanes": len(water.lanes),
+            "lanes_added_to_link": water.linked,
+            "closed_seas": water.sealed,
+            "impassable_zones": len(water.zones),
+            "topography": dict(
+                sorted(Counter(str(kind) for kind in water.waters.topography if kind).items())
             ),
         },
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
@@ -2063,20 +2074,21 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             ),
         )
         vanilla_ports = read_ports(_read(game_dir, PORTS))
-        currents = read_currents(_read(game_dir, TEMPLATES))
-        coast = run_stage(
+        vanilla_waters = read_waters(_read(game_dir, TEMPLATES))
+        settled = run_stage(
             "settle coasts",
             lambda: settle_coast(
                 game_map,
                 canvas,
                 world,
                 ports=vanilla_ports,
-                currents=currents,
+                vanilla=vanilla_waters,
                 removed=removed,
             ),
         )
+        shapes = run_stage("water shapes", lambda: shape_water(settled))
+        coast = shapes.coast
         world = coast.world
-        shapes = run_stage("water shapes", lambda: shape_water(coast))
         total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
         if total > MAX_LOCATIONS:
             message = (
@@ -2302,6 +2314,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     (
                         texts[_mod_path(PORTS)].decode("utf-8-sig"),
                         texts[_mod_path(TEMPLATES)].decode("utf-8-sig"),
+                        texts[_mod_path(DEFAULT_MAP)].decode("utf-8-sig"),
                     ),
                     plan,
                     world,

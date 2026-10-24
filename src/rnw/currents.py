@@ -29,8 +29,6 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.seas import Topography
-
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
@@ -88,15 +86,19 @@ def _nearest_sources(
 
 
 def flow(
-    world: NewWorld, waters: Waters, samples: Mapping[int, Sequence[Vector]]
+    world: NewWorld,
+    waters: Waters,
+    samples: Mapping[int, Sequence[Vector]],
+    lanes: Sequence[int],
 ) -> dict[int, Vector]:
-    """The current of every deep-ocean cell of ``waters``.
+    """The current of every lane cell, which are the deep-ocean cells that carry one.
 
-    ``samples`` maps a generated sea cell to the currents of the game's zones that touch it.
-    Raises ``CurrentError`` when there are none to continue.
+    ``samples`` maps a generated sea cell to the currents the game gives it: those of its zones
+    that touch it, and of the lanes that ran over it. Raises ``CurrentError`` when there are
+    none to continue.
     """
     sea = set(waters.sea())
-    deep = [cell for cell in sorted(sea) if waters.topography[cell] is Topography.DEEP_OCEAN]
+    deep = sorted(set(lanes) & sea)
     sources = {
         cell: (
             sum(x for x, _ in vectors) / len(vectors),

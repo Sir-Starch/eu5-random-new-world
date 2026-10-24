@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from rnw.model import CellClass
@@ -17,7 +18,7 @@ from rnw.seanames import (
     name_waters,
     reference,
 )
-from rnw.seas import Waters, analyse
+from rnw.seas import Topography, Waters, analyse
 from tests.block_worlds import block_world, cell
 
 if TYPE_CHECKING:
@@ -170,3 +171,30 @@ def test_the_compass_sector_of_an_offset_is_one_of_eight_by_integers() -> None:
     assert _sector(-4, 10) == 0
     assert _sector(-5, 10) == 1
     assert _sector(0, 0) == 0
+
+
+def test_a_zone_of_impassable_ocean_is_an_ocean_of_its_own_unless_its_area_is_the_games() -> None:
+    far = cell(ISLAND, 0, 0)
+    world = block_world(ISLAND)
+    waters = analyse(world)
+    shut = replace(
+        waters,
+        topography=tuple(
+            Topography.OCEAN_WASTELAND if number == far else kind
+            for number, kind in enumerate(waters.topography)
+        ),
+    )
+    placed = [
+        Placement("province", "an_area", ocean=False)
+        if world.classes[number] is CellClass.SEA
+        else None
+        for number in range(len(world.classes))
+    ]
+    names = name_waters(world, shut, placed, seed=1)
+    assert names.cells[far].endswith(" Ocean")
+    assert names.cells[far] != names.areas["an_area"]
+    ocean = [
+        Placement("province", "pacific_area", ocean=True) if placement else None
+        for placement in placed
+    ]
+    assert name_waters(world, shut, ocean, seed=1).cells[far] == reference("pacific_area")

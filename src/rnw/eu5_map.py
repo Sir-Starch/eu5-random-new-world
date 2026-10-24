@@ -117,14 +117,19 @@ def _hash(game_dir: Path, relative: str) -> FileFingerprint:
     return FileFingerprint(relative, source.stat().st_size, digest)
 
 
-def read_class_lists(path: Path) -> dict[str, list[str]]:
-    """Read the location tokens of the class lists in ``default.map``."""
-    text = COMMENT.sub("", path.read_text(encoding="utf-8-sig"))
+def class_lists(text: str) -> dict[str, list[str]]:
+    """The location tokens of the class lists in the text of a ``default.map``."""
+    text = COMMENT.sub("", text)
     found: dict[str, list[str]] = {name: [] for name, _ in CLASS_LISTS}
     for match in LIST_BLOCK.finditer(text):
         if match.group(1) in found:
             found[match.group(1)].extend(match.group(2).split())
     return found
+
+
+def read_class_lists(path: Path) -> dict[str, list[str]]:
+    """Read the location tokens of the class lists in ``default.map``."""
+    return class_lists(path.read_text(encoding="utf-8-sig"))
 
 
 def flip_row(z: float, height: int) -> int:

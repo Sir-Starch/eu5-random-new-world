@@ -1,9 +1,12 @@
 # Sea geography
 
-Generator 0.10.12, epoch 22 (2026-10-24; claims C232–C240). The generated New World was land with a sea
+Generator 0.10.13, epoch 23 (2026-10-24; claims C232–C244). The generated New World was land with a sea
 poured round it: every sea cell was `<random word> Sea`, a coastal zone could have no port, and the
-game's own kinds of water (deep ocean with its currents, inland sea, narrows) were not used. This
-page says what the water of a world is now, why, and what is not known until a game reads it.
+game's own kinds of water (deep ocean with its currents, inland sea, narrows) were not used. 0.10.12
+fixed the ports, the names, the topography and gave the deep water currents; the owner's first sitting
+with it (2026-10-24) showed what it had missed, that the game's open ocean is closed to ships: 0.10.13
+adds lanes and impassable water. This page says what the water of a world is now, why, and what is not
+known until a game reads it.
 
 ## What the game does with water
 
@@ -29,6 +32,17 @@ Read from the installation and from the owner's logs, not assumed:
   east north }`, a vector of 79 to 105 (about 92) that follows the real gyres (the north
   equatorial currents run west at about 90, the counter-currents east, the Gulf Stream east-north-
   east) and that the *Sea Currents* map mode draws as an arrow [V-LOCAL C236].
+- **Closed ocean.** Most of the open ocean is closed to ships. 46 great zones of the topography
+  `ocean_wasteland` (all of them, and one atoll, in both the `sea_zones` and the
+  `impassable_mountains` list, the list "that blocks unit movement") fill 56 per cent of the sea's
+  area, a median of 445,000 pixels each against 20,000 for a deep zone and 3,500 for a coastal one.
+  Between them the 750 deep zones run as lanes one or two cells wide, two to four cells from land,
+  that the currents follow (a lane cell's current points at its neighbour in the lane within a
+  median 4 degrees); round the lands the coastal and ocean zones form a band that touches the
+  closed ocean as often as the lanes. Everything ships may enter, the Old World's and the
+  New World's, is one connected water. The owner's maps of 1.4.4 show the same: grey where the
+  topography map and the *Naval Range* map have the closed ocean, teal where ships may go
+  [V-LOCAL C241; V-GAME owner's sitting of 2026-10-24].
 - **Names.** All the zones of the Black Sea are the Black Sea, the five central Mediterranean zones
   the Central Mediterranean Sea, 64 zones the North Eastern Atlantic, 49 the South China Sea, 33 the
   Caspian; the coast is full of bays, gulfs, capes, straits and coasts (109, 43, 96, 53 and 46 of
@@ -61,7 +75,7 @@ touches and no land is named twice, every coastal land has a row, every sea besi
 one, and every sea template has the topography and, when deep, the current that was planned. An
 independent check that reads only the written `locations.png`, `named_locations`, `default.map` and
 `ports.csv` (as the engine does) finds no sea zone beside land without a port and no land beside the
-sea without a row, but the 4 Arctic zones and 37 Arctic locations that vanilla itself leaves (C238).
+sea without a row, but the 4 Arctic zones and 37 Arctic locations that vanilla itself leaves (C233).
 
 ## The shape of the water (`rnw.seas`)
 
@@ -82,12 +96,14 @@ big a cell is:
   and a plain **coast** between.
 - **Depth.** The number of cells from land through water. The game's topography is: narrow →
   `narrows`; in a body → `inland_sea`; touches land → `coastal_ocean`; one cell → `ocean`; two or
-  more (or water no land touches at all) → `deep_ocean`.
+  more (or water no land touches at all) → `deep_ocean`, which the lanes then divide into the
+  lanes proper (`deep_ocean`, with a current) and closed water (`ocean_wasteland`, below).
 
 The reference world has twelve bodies (99, 11, 10, 8, 6, 5, 5, 3, 3, 3, 2 and 2 cells), 13
-passages, and 204 coastal, 342 ocean, 1,193 deep, 157 inland-sea and 30 narrows cells; the five
-presets give from 29 to 247 narrows and from 136 to 590 inland-sea cells (the island world, whose
-archipelago is one great inland sea like the South China Sea) (C235).
+passages, and 215 coastal, 368 ocean, 157 inland-sea and 30 narrows cells, 420 lanes and 36 closed
+zones (1,226 sea cells, folded from 1,942); the five presets give from 22 to 221 narrows and from
+123 to 715 inland-sea cells (the island world, whose archipelago is one great inland sea like the
+South China Sea) (C235, C243).
 
 ## Names (`rnw.seanames`)
 
@@ -101,6 +117,7 @@ A name belongs to a stretch of water, as in the game:
 | body of 2 to 5 | `X Bay` | all |
 | a run of coast, bay or cape in one province | `X Coast`, `X Bay`, `Cape X` | the run |
 | water round small islands | `X Island`, `X Islands`, `X Archipelago` | all cells that touch the same islands |
+| a closed zone in coastal water | `X Ocean`, its own | the zone |
 | everything else | the name of its area | |
 
 An area of the game's own oceans keeps the game's name and the generated zones refer to it by its
@@ -108,8 +125,9 @@ key (`$pacific_north_area$`, which every language resolves to its own text; the 
 files of all eleven languages). An area of coastal water is named for the sea that fills at least
 half of it, with a compass point when a sea has several areas (`Northern X Sea`, `Central X Sea`),
 else a `Coast` (at least 40 per cent coastal cells), an `Ocean` (at least 70 per cent deep) or a
-`Sea`. A province takes the name that at least two of its cells share, else its area's. 1,926 sea
-cells of the reference world have 233 names (the first generated worlds had one each).
+`Sea`. A province takes the name that at least two of its cells share, else its area's. 1,226 sea
+cells of the reference world have 244 names (the first generated worlds had one each); 366 of the
+cells refer to a vanilla ocean area by key.
 
 The words are English while the mod is written (the owner's rule of 2026-10-23); `seanames.TERMS`
 is one pattern per kind of water, so the translation of L1 is one table. Names are drawn from the
@@ -117,14 +135,55 @@ land layer's seed and nothing else, so rerolling the peoples or the resources le
 
 ## Currents (`rnw.currents`)
 
-The generated deep water continues the game's currents. Each generated deep zone takes the blend of
-the currents of the game's zones that touch the generated water (79 generated cells touch the game's deep zones, in 126 contacts, in the reference
-world), weighted by the inverse square of the distance through the water over
-its four nearest sources, bent away from land within six scales (the part of a current that flows
-into the nearest land is taken out, more the nearer it is), smoothed twice over its deep neighbours
-and given the mean strength of the sources. Integer geometry and IEEE `+ - * /` and square root in a
-fixed order: byte-identical on every platform. Deep water that no current reaches through water
-(a pocket) takes the nearest one over the land; no source at all stops the export (`CurrentError`).
+A lane continues the game's currents. Each lane cell takes the blend of the currents that the
+game gives its neighbourhood (the courses of the game's lanes that ran over generated cells, and the
+lanes of the game's that touch the generated water), weighted by the inverse square of the distance
+through the water over its four nearest sources, bent away from land within six scales (the part of
+a current that flows into the nearest land is taken out, more the nearer it is), smoothed twice
+over its lane neighbours and given the mean strength of the sources. Integer geometry and IEEE
+`+ - * /` and square root in a fixed order: byte-identical on every platform. A lane that no
+current reaches through water (a pocket) takes the nearest one over the land; no source at all stops
+the export (`CurrentError`).
+
+## Lanes and closed ocean (`rnw.lanes`)
+
+Generator 0.10.12 made every cell two or more cells from land deep ocean and gave each a
+current: 1,193 cells of the reference world, a ship could go anywhere, and the Sea Currents map
+was an arrow in every zone, where the game has lines of arrows between closed ocean (C241). Now
+the deep cells are told apart as the game's are:
+
+- **Courses.** The canvas replaced 390 of the game's 750 deep zones (14 stretches of lanes, each
+  joining two to twelve of the lanes that stay), and with them the course of the gyres through the
+  Atlantic and the eastern Pacific [V-EXEC C242]. A generated deep cell over which such a course ran
+  by at least half of its pixels is a lane, with the mean current of what ran there (`courses_over`);
+  where generated land cuts a course the lane stops at the coast, as the current would. A deep
+  cell that touches a lane of the game's continues it. So the generated gyres lie where the
+  game's did, and the game's currents at the edge of the canvas meet lanes.
+- **Linked.** Every stretch of passable water (coastal and ocean cells, inland seas, narrows, lanes)
+  must reach the game's own, so that a ship can come from the Old World to every coast. A stretch
+  that does not is joined to water that does by the cheapest string of deep cells, which become a
+  lane; a cell costs one, and three more for every cell it lies from land beyond three (a lane keeps
+  to the coast). The reference world needed one cell, the presets none to three. A stretch no
+  deep water can join (a sea that the land closes) is counted, not joined.
+- **Closed.** The other deep cells are closed to ships, as the game's. Each connected stretch is
+  cut into zones of about 48 cells (the game's median zone is 32 cells of a generated sea cell, its
+  mean 78; `hierarchy.split`: compact and connected) and the cells of a zone are folded into one
+  location (`ports.relabel`, as when sea cells merge for ports): `topography = ocean_wasteland`
+  in its template, and its key in both lists. The reference world's 1,193 deep cells became 420
+  lanes and 36 closed zones of 746,000 pixels at most; across the five presets 262 to 352 lanes and
+  29 to 36 zones.
+- **Currents.** A lane cell's current is the blend of the nearest courses and anchors through the
+  water, bent away from the land it flows towards (`currents`): where a course ran over it, the
+  current of the course. Arrows are on lanes only; every one of the 420 points along its lane.
+- **Land of the game's.** A sea cell that touches land of the game's own (Bermuda, Saint Helena,
+  the land at the canvas's edge) is on a coast, whatever the generated land does: it is coastal
+  water, never a closed zone. (The first run of 0.10.13 closed the zone that holds Saint Helena's port.)
+- **Checked.** The export reads its files back (`verify_seas`): the impassable zones, and only
+  they, are in the impassable list and have no current; every lane is deep and has its current;
+  every sea cell that is not closed is reached from the game's water. Read back from the mod's
+  `locations.png`, `named_locations` and `default.map` alone, as the game does, the 1,190
+  passable generated zones are in the one water of 4,500 zones with the game's, the 36 closed zones touch no land
+  and every coastal land and every coastal passable zone has its port [V-EXEC C243].
 
 ## A fault this uncovered
 
@@ -138,13 +197,14 @@ vanilla coastal area has water on every preset tried (C237).
 
 ## What is not done, and what is not known
 
-- Crossings of straits (`adjacencies.csv` rows of type `sea`: 135 in the game, for the narrowest
-  straits only) are not generated: how the engine uses them and whether a generated crossing would
-  change the balance of islands is not known, and a crossing joins two lands that the geography
-  separates [UNKNOWN C240].
+- Crossings of straits (`adjacencies.csv`, type `sea`) are the next phase (C245).
+- A gyre is not closed: where the generated land cuts the course of a current, the lane ends at the
+  coast and the flow does not go round the land to join the lane behind it. Ships go round by the
+  coastal water, which is passable.
 - River mouths are not named (the game has estuaries and deltas), and a few sea cells of a pixel or
   a few dozen pixels remain along the seam and the canvas edge, as before.
 - [UNKNOWN] Whether `error.log` is free of the port lines after this; whether the engine takes
-  generated `deep_ocean` zones with their currents, `inland_sea` and `narrows`, a whole-value
-  `$key$` as a location name and a province name, and how the map shows them; the Sea Currents map
-  mode of the new water. The next sitting of a batch reads them (no sitting is asked for this).
+  generated `ocean_wasteland` zones listed as the game's are (and keeps ships out of them),
+  `deep_ocean` lanes with their currents, `inland_sea` and `narrows`, a whole-value `$key$` as a
+  location name and a province name, and how the map shows them; the Sea Currents map mode of the
+  new water. The next sitting of a batch reads them (no sitting is asked for this) [UNKNOWN C244].

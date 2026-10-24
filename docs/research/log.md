@@ -749,3 +749,13 @@
 - [UNKNOWN C239, C240] The engine's verdict on the new water and its names, and strait crossings (not generated), are read in a later sitting; nothing is asked now.
 - No game launch by the agent, no push or publication.
 
+
+## 2026-10-24 — The closed ocean: lanes and impassable water, 0.10.13, C241-C244
+
+- [OWNER] After playing 0.10.12 (two screenshots of the topography map, one of Naval Range): "in vanilla most of the ocean is impassable (grey) and there are clear lines of currents between, so the developers draw routes across the oceans; ours is all passable and there is a huge spam of arrows in some areas. I do not know whether that is this world or a systemic fault. Strait crossings also need studying and improving." ([design](../sea-geography.md))
+- [V-LOCAL C241] The grey is 46 zones of `topography = ocean_wasteland`, in both `sea_zones` and `impassable_mountains`: 56 per cent of the sea's pixels, a median of 445,000 px a zone. Between them the 750 deep zones are lanes one or two cells wide, two to four cells from land, that the currents follow (median 4 degrees); all the open water is one connected network. A systemic fault: 0.10.12 made all 1,193 deep cells of the reference world deep ocean with a current, and 314 of its 464 contacts with the game's water are with closed zones that it continued with open ones.
+- [V-EXEC C242] The canvas replaced 390 of the 750 lanes (14 stretches with two to twelve remaining ends each). The footprint of the replaced lanes laid over the generated cells is the design's key: where they ran over generated deep water, those cells are lanes with the current that ran there (the gyres stay where the game's were), and the rest is closed.
+- [V-EXEC C243] `rnw.lanes` (courses, anchors, linking by the cheapest deep string, zones of about 48 cells), `eu5_seas.courses_over`, the impassable lists, `verify_seas` (lists, lanes, reach), `analyse(shore=...)` (cells beside the game's land are coastal: the first run closed Saint Helena's port). Reference world: 420 lanes, 36 closed zones, 1,226 sea cells (from 1,942); presets 262 to 352 lanes. The written files read back: one water with the game's, no closed zone beside land, no port missing. Epoch 23.
+- [SOURCE] The EU5 wiki's map-modding page (via search summary): `adjacencies.csv`, type `sea`, the `Through` location "lets the adjacency be blockaded"; the game's own text: a strait "connects two locations separated by a seazone but close enough so armies can cross it without the need of a navy" (C245, the next phase).
+- [UNKNOWN C244] The engine's verdict on generated closed zones; nothing is asked.
+- No game launch by the agent, no push or publication.

@@ -39,7 +39,7 @@ from rnw.model import CellClass
 from rnw.topology import euclidean_distance
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Collection, Sequence
 
     from numpy.typing import NDArray
 
@@ -94,13 +94,18 @@ class PassageKind(StrEnum):
 
 
 class Topography(StrEnum):
-    """The game's types of water (``common/topography``) that a generated sea cell takes."""
+    """The game's types of water (``common/topography``) that a generated sea cell takes.
+
+    ``analyse`` gives every cell of the open ocean ``DEEP_OCEAN``; which of them are lanes and which
+    are shut, ``OCEAN_WASTELAND``, is for ``rnw.lanes`` to say.
+    """
 
     COASTAL_OCEAN = "coastal_ocean"
     OCEAN = "ocean"
     DEEP_OCEAN = "deep_ocean"
     INLAND_SEA = "inland_sea"
     NARROWS = "narrows"
+    OCEAN_WASTELAND = "ocean_wasteland"
 
 
 @dataclass(frozen=True, slots=True)
@@ -305,8 +310,12 @@ def _exterior(lab: NDArray[np.int32], count: int) -> NDArray[np.bool_]:
     return flags
 
 
-def analyse(world: NewWorld) -> Waters:
-    """The shape of the water of ``world``."""
+def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
+    """The shape of the water of ``world``.
+
+    ``shore`` are sea cells that touch land the world does not hold: the game's own land at the
+    edge of the canvas. They are as much on a coast as a cell that touches the world's land.
+    """
     count = len(world.classes)
     sea = np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)
     solid = np.array(
@@ -328,8 +337,11 @@ def analyse(world: NewWorld) -> Waters:
     narrow = sea & _shares(lab, narrow_at, water, count)
     enclosed = sea & _shares(lab, enclosed_at, water, count) & ~narrow
     enclosed |= _pockets(sea & ~narrow & ~enclosed, _exterior(lab, count), sea_links)
+    foreign = set(shore)
     coast = [
-        cell for cell in range(count) if sea[cell] and any(not sea[o] for o in neighbours[cell])
+        cell
+        for cell in range(count)
+        if sea[cell] and (cell in foreign or any(not sea[o] for o in neighbours[cell]))
     ]
     hop = _hops(sea_links, coast, count)
     hop[sea & (hop < 0)] = FAR_HOPS

@@ -39,7 +39,7 @@ def test_a_sample_beside_deep_water_is_continued_into_it_at_the_game_s_strength(
     world = block_world(OPEN_SEA)
     waters = analyse(world)
     deep, samples = _deep(OPEN_SEA)
-    flows = flow(world, waters, samples)
+    flows = flow(world, waters, samples, deep)
     assert set(flows) == set(deep)
     assert deep
     for x, y in flows.values():
@@ -55,7 +55,8 @@ def test_the_strength_is_the_mean_of_the_currents_that_are_continued() -> None:
         cell(OPEN_SEA, row, 0): [(8000, 0) if row % 2 else (0, 10000)]
         for row in range(len(OPEN_SEA))
     }
-    flows = flow(world, waters, samples)
+    deep, _ = _deep(OPEN_SEA)
+    flows = flow(world, waters, samples, deep)
     assert flows
     assert all(abs(math.hypot(*vector) - 9000) <= 2 for vector in flows.values())
 
@@ -64,8 +65,9 @@ def test_a_current_flowing_into_land_is_bent_along_it() -> None:
     """Flowing north-east towards an island to the east: the nearer the island, the more north."""
     world = block_world(WITH_AN_ISLAND)
     waters = analyse(world)
+    deep, _ = _deep(WITH_AN_ISLAND)
     samples = {cell(WITH_AN_ISLAND, row, 0): [(6000, 6000)] for row in range(len(WITH_AN_ISLAND))}
-    flows = flow(world, waters, samples)
+    flows = flow(world, waters, samples, deep)
     near = flows[cell(WITH_AN_ISLAND, 5, 6)]
     far = flows[cell(WITH_AN_ISLAND, 0, 2)]
     assert abs(far[1] - far[0]) < 700
@@ -76,17 +78,28 @@ def test_a_current_flowing_into_land_is_bent_along_it() -> None:
 def test_deep_water_with_no_current_of_the_game_beside_it_is_refused() -> None:
     world = block_world(OPEN_SEA)
     waters = analyse(world)
+    deep, _ = _deep(OPEN_SEA)
     with pytest.raises(CurrentError, match="No current"):
-        _ = flow(world, waters, {})
+        _ = flow(world, waters, {}, deep)
 
 
 def test_a_world_without_deep_water_needs_no_currents() -> None:
     world = block_world(["..#", ".#.", "#.."])
-    assert flow(world, analyse(world), {}) == {}
+    assert flow(world, analyse(world), {}, []) == {}
 
 
 def test_currents_are_the_same_every_time() -> None:
     world = block_world(WITH_AN_ISLAND)
     waters = analyse(world)
-    _, samples = _deep(WITH_AN_ISLAND)
-    assert flow(world, waters, samples) == flow(world, waters, samples)
+    deep, samples = _deep(WITH_AN_ISLAND)
+    assert flow(world, waters, samples, deep) == flow(world, waters, samples, deep)
+
+
+def test_only_the_cells_given_as_lanes_carry_a_current() -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    deep, samples = _deep(OPEN_SEA)
+    lanes = deep[::3]
+    flows = flow(world, waters, samples, lanes)
+    assert set(flows) == set(lanes)
+    assert lanes

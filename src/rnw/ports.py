@@ -217,7 +217,7 @@ def settle_seas(world: NewWorld, foreign: ForeignCoast | None = None) -> Settled
         merged[sea] = target
     if not merged:
         return Settled(world, foreign, tuple(range(len(world.classes))), 0)
-    settled, cell_of = _relabel(world, merged)
+    settled, cell_of = relabel(world, merged)
     return Settled(settled, foreign.renumbered(cell_of), cell_of, len(merged))
 
 
@@ -267,8 +267,12 @@ def _merge(
         needed.add(target)
 
 
-def _relabel(world: NewWorld, merged: Mapping[int, int]) -> tuple[NewWorld, tuple[int, ...]]:
-    """The world with each merged cell relabelled to what it was folded into, cells renumbered."""
+def relabel(world: NewWorld, merged: Mapping[int, int]) -> tuple[NewWorld, tuple[int, ...]]:
+    """The world with each merged cell relabelled to what it was folded into, cells renumbered.
+
+    ``merged`` maps a cell to the one it becomes part of; a chain of such steps is followed to
+    its end. The second value gives the new number of every old cell.
+    """
     count = len(world.classes)
     final = list(range(count))
     for sea in sorted(merged):

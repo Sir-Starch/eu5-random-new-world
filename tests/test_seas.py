@@ -67,6 +67,18 @@ def test_depth_counts_the_cells_from_land_and_names_the_game_s_topography() -> N
     assert waters.topography[island] is None
 
 
+def test_a_cell_beside_land_the_world_does_not_hold_is_on_a_coast_too() -> None:
+    """The game's own islet inside the canvas: its water is coastal, and deep ocean is not."""
+    layout = ["#" + "." * 14 for _ in range(9)]
+    world = block_world(layout)
+    islet = cell(layout, 4, 10)
+    waters = analyse(world, shore=[islet])
+    assert waters.hop[islet] == 0
+    assert waters.topography[islet] is Topography.COASTAL_OCEAN
+    assert waters.topography[cell(layout, 4, 11)] is Topography.OCEAN
+    assert analyse(world).topography[islet] is Topography.DEEP_OCEAN
+
+
 def test_the_water_of_a_small_island_is_the_island_s() -> None:
     waters = analyse(block_world(OPEN_SEA_WITH_AN_ISLAND))
     ring = [

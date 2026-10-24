@@ -11,6 +11,8 @@ to a stretch of water that ``seas.analyse`` found:
   coastal cells keep the coast's names below);
 * a coastal cell is a cape, a bay, the water of an island or a plain coast, each connected group
   of one kind within one province being one named place;
+* a zone of impassable ocean in coastal water is an ocean of its own, as the game's great zones
+  are named after the ocean they fill;
 * every other cell takes the name of its area, as the open zones of the game's ocean areas do
   (an area of the game's own oceans keeps the game's name, referred to by its key so that every
   language shows its own; an area of coastal water is a sea, a coast or an ocean by what it
@@ -33,7 +35,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from rnw.names import NameGenerator
-from rnw.seas import DEEP_HOPS, PassageKind, Shape
+from rnw.seas import DEEP_HOPS, PassageKind, Shape, Topography
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -229,6 +231,12 @@ def name_waters(
         if placement is None:  # pragma: no cover - every sea cell is placed
             message = f"Sea cell {cell} has no province or area"
             raise ValueError(message)
+        if (
+            cell not in names
+            and waters.topography[cell] is Topography.OCEAN_WASTELAND
+            and not placement.ocean
+        ):
+            names[cell] = _name(Kind.OCEAN, words.next())
         _ = names.setdefault(cell, area_text[placement.area])
     provinces = _name_provinces(sea, placed, names, area_text)
     return SeaNames(names, provinces, _own_areas(area_text, placed))
