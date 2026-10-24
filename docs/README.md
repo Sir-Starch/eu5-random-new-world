@@ -65,6 +65,7 @@ The project's documentation, grouped by purpose. Technical claims carry evidence
 | [Research log](research/log.md) | Chronological working log |
 | [Installation inventory](research/game-install-inventory.md) | Layout of the EU5 1.4.1 installation as first inspected |
 | [N0–N4 audit](research/n0-n4-audit.md), [N5 region keys](research/n5-region-keys.md) | Offline audits of the content plan |
+| [Canvas expansion](research/canvas-expansion.md) | Why large ocean locations constrain generation, and a proposed wider domain with preserved ocean names |
 | [EU4 analysis](research/eu4-rnw-analysis.md) | What EU4's Random New World does and does not tell us |
 | [Feasibility](feasibility.md) | The original ambition ladder (T0–T5) *(historical)* |
 
