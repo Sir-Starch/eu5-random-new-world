@@ -193,9 +193,12 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
 
 def _lakes(data: bytes, canvas: NDArray[np.bool_]) -> tuple[bytes, int]:
     """Drop lake mesh transforms (x, y, z, quaternion, scale) centred in the canvas."""
+    if len(data) % LAKE_RECORD:
+        message = "Lake mesh transforms do not contain complete 40-byte records"
+        raise ValueError(message)
     rows, columns = canvas.shape
     kept: list[bytes] = []
-    for offset in range(0, len(data) - len(data) % LAKE_RECORD, LAKE_RECORD):
+    for offset in range(0, len(data), LAKE_RECORD):
         x, _, z = struct.unpack_from("<3f", data, offset)
         row, column = rows - 1 - int(z), int(x)
         inside = 0 <= row < rows and 0 <= column < columns and bool(canvas[row, column])

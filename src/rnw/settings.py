@@ -92,6 +92,8 @@ class NewWorldSettings:
     ocean_band_px: int
     # Gold, silver, gems and pearls against their vanilla frequency (1000: as in vanilla).
     precious_permille: int = 1000
+    # 1: a fixed ocean sector; 0: the original distance band around vanilla America.
+    expand_oceans: int = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,6 +214,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "wasteland_permille": (0, 500),
     "province_size": (1, 32),
     "ocean_band_px": (0, 8192),
+    "expand_oceans": (0, 1),
     "population_permille": (0, 5000),
     "hearths_per_10k": (0, 100),
     "hearth_reach_steps": (1, 100),
@@ -268,7 +271,7 @@ PRESETS: Final[dict[str, Settings]] = {
             min_island_px=600,
             min_lake_px=80,
             max_lake_px=4000,
-            location_px=46,
+            location_px=53,
             sea_zone_px=120,
             min_cell_px=300,
             min_sea_cell_px=2000,
@@ -344,7 +347,7 @@ PRESETS["supercontinent"] = replace(
         persistence_permille=470,
         min_island_px=6000,
         # More land, so larger locations keep the map under the engine's location cap.
-        location_px=54,
+        location_px=61,
     ),
 )
 PRESETS["small_continents"] = replace(
@@ -353,6 +356,7 @@ PRESETS["small_continents"] = replace(
     new_world=replace(
         PRESETS["continents"].new_world,
         land_permille=300,
+        location_px=47,
         feature_px=1000,
         min_island_px=1200,
     ),

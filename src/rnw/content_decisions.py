@@ -50,6 +50,7 @@ class Verdict:
 
 
 REASONS: Final[Mapping[str, str]] = {
+    "coast": "Discovery follows the sea areas of the generated American coast, including new ones.",
     "generic": "A general mechanic; the key only places it, and the remap keeps it working.",
     "positional": (
         "Follows the vanilla region or area key by position; accepted until N5 chooses keys "
@@ -244,10 +245,11 @@ def _common(table: _Table) -> None:
         KEEP,
         "positional",
         """
-        discovered_any_in_americas_trigger is_capital_in_south_america
+        is_capital_in_south_america
         is_capital_in_south_america_or_carribean is_capital_mesoamerica
         """,
     )
+    add("common/scripted_triggers", REBIND, "coast", "discovered_any_in_americas_trigger", "S2")
     add(
         "common/situations",
         KEEP,

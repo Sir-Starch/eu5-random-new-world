@@ -1765,3 +1765,11 @@ text = '''Elige entre 1 y {count} bocetos.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Los bocetos necesitan tierra generada. Vuelve primero a la tierra generada.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Ampliar la generación hacia los océanos'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Recomendado: da más espacio al Nuevo Mundo para que sus continentes no tengan que seguir el contorno de América. Conserva el Viejo Mundo y las islas protegidas.'''

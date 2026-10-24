@@ -30,6 +30,14 @@ final location boundaries can move the coast slightly. A supplied land image dis
 this choice; use Save land template and Load land image for externally drawn land.
 [V-EXEC C143, C144]
 
+*Expand generation into the oceans* on the World tab is checked by default and
+recommended. It gives the New World a wider, fixed ocean sector so continents can
+grow beyond the original American silhouette. The Old World and protected islands
+stay. Uncheck it to use the original distance band around vanilla America. The
+choice is part of the world code and applies to sketches, land templates and layer
+rerolls. Codes from before 0.12.0 choose the original canvas; their usual warning
+about a different algorithm epoch still applies. [V-EXEC C282–C284]
+
 On a finished world, New peoples and New resources keep the continent and roll only
 the selected part. The previous version remains in the library. Versions replace
 the installed mod by default; Keep both retains both installed mods. Undo roll

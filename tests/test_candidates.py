@@ -36,7 +36,8 @@ def test_sketches_use_the_worlds_land_stage_and_leave_no_mod(
     def load(_root: Path) -> MapStub:
         return MapStub(np.zeros((160, 192), dtype=np.int32))
 
-    def select(_map: MapStub, _band: int) -> Canvas:
+    def select(_map: MapStub, _band: int, *, expanded: bool) -> Canvas:
+        assert expanded
         return canvas
 
     monkeypatch.setattr(candidates, "load_map", load)

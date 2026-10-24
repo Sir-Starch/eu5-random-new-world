@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from rnw.eu5_canvas import Canvas
+    from rnw.eu5_canvas import Canvas, OceanRemainder
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_regionkeys import KeyMatcher
     from rnw.geography import Location
@@ -111,6 +111,31 @@ class PlannedCell:
 
 
 @dataclass(slots=True)
+class OceanPlan:
+    """Final shared keys, additional remainder locations and bounded pixel assignments."""
+
+    retained: set[str] = field(default_factory=set)
+    extra: list[PlannedCell] = field(default_factory=list)
+    sources: dict[str, str] = field(default_factory=dict)
+    patches: list[tuple[OceanRemainder, int]] = field(default_factory=list)
+    anchors: dict[str, tuple[int, int]] = field(default_factory=dict)
+    stats: dict[str, int] = field(default_factory=dict)
+
+    def paint(self, target: NDArray[np.generic], canvas: Canvas, *, clear: bool = False) -> None:
+        """Apply only the planned remainder runs (or clear their allowed-change mask)."""
+        width = canvas.shape[1]
+        for part, color in self.patches:
+            value = False if clear else ((color >> 16) & 255, (color >> 8) & 255, color & 255)
+            for row, left, right in part.runs.tolist():
+                start = (left - canvas.roll) % width
+                length = right - left
+                first = min(length, width - start)
+                target[row, start : start + first] = value
+                if first < length:
+                    target[row, : length - first] = value
+
+
+@dataclass(slots=True)
 class Plan:
     """All identities and display names for one generated New World."""
 
@@ -122,6 +147,7 @@ class Plan:
     dropped_areas: list[str] = field(default_factory=list)
     anchored_sea_areas: list[str] = field(default_factory=list)
     physical_keys: list[dict[str, object]] = field(default_factory=list)
+    oceans: OceanPlan | None = None
 
 
 @dataclass(frozen=True, slots=True, eq=False)

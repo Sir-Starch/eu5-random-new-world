@@ -343,6 +343,10 @@ def test_lands_of_one_landmass_or_a_sea_wider_than_the_games_crossings_make_none
     assert _strait(STRAIT, block=10)[2] == []
 
 
+def test_a_short_gap_across_two_sea_zones_cannot_name_one_as_its_crossing() -> None:
+    assert _strait(["AAA12BBB", "AAA12BBB", "33333333"], block=2)[2] == []
+
+
 def test_the_rows_that_say_what_the_world_has_pass_and_any_other_stops_the_export() -> None:
     world, plan, found = _strait()
     height = world.labels.shape[0]

@@ -1765,3 +1765,11 @@ text = '''请选择1到{count}幅草图。'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''草图需要生成的陆地。请先改回生成的陆地。'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''将生成范围扩展至大洋'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界及受保护的岛屿。'''

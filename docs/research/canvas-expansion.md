@@ -1,6 +1,7 @@
 # Expanding the New World into the oceans
 
-2026-10-24; generator 0.11.6; feasibility assessment, **not implemented**.
+2026-10-24. The assessment below describes 0.11.6; the approved implementation
+is in **0.12.0, epoch 30** (C282–C285), recorded after it.
 Claims C280–C281. The owner proposes a fixed, wider generation domain, including
 the American side of the Atlantic and Pacific, while retaining the Old World,
 important islands and the names of surviving vanilla oceans.
@@ -124,3 +125,68 @@ lint, then stops at the pre-existing interpreter-discovery problem in basedpyrig
 (reports Python 3.14 and cannot resolve the Python 3.12 environment's packages).
 The complete suite is not claimed to pass for this phase. No implementation,
 version, epoch or generated-world digest changed.
+
+
+## Approved implementation: 0.12.0, epoch 30
+
+[V-EXEC C282] Both policies are available. `new_world.expand_oceans` is an integer
+0/1 in the settings and the append-only world-code fields. It defaults to 1; the
+World tab's translated checkbox and recommendation control it. 0 calls the old
+selector unchanged. Codes predating 0.12.0 resolve an absent flag to 0, and seed
+changes and layer rerolls preserve it. A new epoch still means an old code is not
+promised to reproduce the old release's complete output.
+
+The expanded policy adds the fixed x sector [1600, 6500) on the 16384-wide reference
+map, scaled proportionally by map width, to the original northern extension at the
+reference 1600-pixel band. These limits leave Hawaii and the western Pacific on the
+protected side and Atlantic room before the African waters; protected Oceania and
+other non-American continents' waters and their 96-pixel guards take precedence.
+Only eligible Atlantic/Pacific sea pixels are added. On the fingerprint above the
+mask has **53,240,944 pixels**, 40.19% more than the legacy **37,978,627**, and is
+identical for every seed. Both sketches and saved land templates use the chosen
+policy. The sector does not ingest `south_pacific_ocean` wholesale.
+
+[V-EXEC C283] Closed-ocean remnants are labelled locally and encoded by row runs
+(`Canvas.ocean_parts`). `eu5_oceans` assigns generated closed cells by installed
+closed-water overlap and boundary contacts, then finds connected components of
+generated cells and retained remainders. Each source's largest retained component
+(or largest generated one when nothing remains) keeps its vanilla key and colour;
+other components get collision-free new keys with `$original_key$` localization.
+Several internal cells may be one final location through connected retained water.
+New passable coasts and lanes are excluded from these unions. Serialization emits
+each identity once and relocates retained locators to valid final points. No exported
+mod is repaired afterward, and no water is reserved to keep a closed location alive.
+
+Ocean identity splits can recolour retained ocean pixels outside the geography
+canvas, while preserving their water and their name. The report therefore records
+`outside_canvas_identical` truthfully and separately verifies
+`outside_canvas_except_ocean_identities_identical`. The final identity cap includes
+new remainder locations and counts aliases once. For the audited expanded reference,
+329,005 outside pixels change only their closed-ocean identity; all 66,634,570
+protected pixels and 21,728 protected hierarchy records remain unchanged. Each
+changed/new closed-ocean location is connected. The independent port audit compares
+the vanilla Arctic exceptions by source identity and exact old coastline contacts;
+a 58-pixel `chukchi_sea` remainder beside `indigiir` retains an existing vanilla
+port omission rather than constituting a new one.
+
+[V-EXEC C284] Wider land exposed two old assumptions. The crossing planner now
+requires its chosen through-zone to touch both land endpoints, including when a
+short gap contains two sea zones. The N0 decision for
+`discovered_any_in_americas_trigger` is explicitly REBIND/coast/S2; it is generated
+from the finished American sea areas, so an old coastal region can become landlocked
+and new coastal areas count. The installed OR/area shape is checked and missing or
+changed anchors fail. Default land spacing is 53 px for continents, 47 for small
+continents and 61 for supercontinents (island presets keep 46); the location-budget
+estimate uses separate coefficients for the wider canvas. It rejects overcrowded
+settings, and both physical and final identity counts retain the 32,000 cap.
+
+The 60%-land supercontinent check (seed 99, location spacing 70) has 29,098 locations
+before ocean aliases against an estimate of 29,340; physical connectivity, ports and
+Old World contacts pass. This is a physical-model check, not a full export or an
+engine result. No new material, object or spline binary layout is used; [R-004 of the
+interoperability register](interoperability.md#r-004--expanded-geography-through-the-existing-visual-map-interfaces)
+records the interfaces whose output now covers the expanded domain.
+
+[UNKNOWN] No EU5 launch or owner sitting accompanies this phase. Expanded geography,
+merged ocean identities and the newly rebound discovery trigger have offline
+evidence only. Packaging and installation evidence is recorded in experiment 049.

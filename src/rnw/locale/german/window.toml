@@ -1765,3 +1765,11 @@ text = '''Wählen Sie zwischen 1 und {count} Skizzen.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Skizzen brauchen erzeugtes Land. Kehren Sie zuerst zu erzeugtem Land zurück.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Erzeugungsgebiet auf die Ozeane erweitern'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Empfohlen: Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht dem Umriss Amerikas folgen müssen. Die Alte Welt und geschützte Inseln bleiben erhalten.'''

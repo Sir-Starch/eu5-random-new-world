@@ -430,7 +430,13 @@ def _verify_templates(templates_text: str, plan: Plan, water: Water) -> dict[str
                 raise SeaError(message)
             currents += 1
         found[str(planned)] += 1
-    expected = Counter(str(kind) for kind in water.waters.topography if kind is not None)
+    # Several internal closed cells may be one connected final ocean location.
+    identities = {cell.key: number for number, cell in enumerate(plan.cells)}
+    expected = Counter(
+        str(water.waters.topography[number])
+        for number in identities.values()
+        if water.waters.topography[number] is not None
+    )
     if found != expected:
         message = f"Sea templates written {dict(found)}, planned {dict(expected)}"
         raise SeaError(message)
@@ -512,9 +518,14 @@ def crossings(world: NewWorld, landmass: Sequence[int]) -> list[Crossing]:
     sea = np.array([kind is CellClass.SEA for kind in world.classes] + [False], dtype=bool)
     water = sea[world.labels]
     found: list[Crossing] = []
+    touching = _touching(world)
     gaps = narrow_gaps(world.labels, water, land, CROSSING_PX)
     for gap in sorted(gaps.values(), key=lambda item: (item.first, item.second)):
         if landmass[gap.first] == landmass[gap.second] or not sea[gap.through]:
+            continue
+        # A short raster gap may cross two different sea zones. The game requires
+        # the named through-zone to touch both ends of a single crossing.
+        if gap.through not in touching[gap.first] or gap.through not in touching[gap.second]:
             continue
         start, stop = (
             ((gap.line, gap.start), (gap.line, gap.stop))

@@ -228,6 +228,11 @@ STRINGS: Final[dict[str, str]] = {
     "group.map": "Map",
     "group.peoples": "Peoples",
     "control.new_world.land_permille": "Land",
+    "control.new_world.expand_oceans": "Expand generation into the oceans",
+    "control.new_world.expand_oceans.about": (
+        "Recommended: gives the New World more room, so its continents need not follow "
+        "the outline of the Americas. Keeps the Old World and protected islands."
+    ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
     "control.new_world.feature_px": "Size of landmasses",
     "control.new_world.feature_px.about": ("Large: a few great landmasses. Small: many islands."),

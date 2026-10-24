@@ -22,6 +22,16 @@ def test_a_default_world_is_a_short_code_that_round_trips() -> None:
     assert code.generator == __version__
 
 
+def test_ocean_mode_is_explicit_and_older_codes_keep_the_original_canvas() -> None:
+    original = WorldCode("continents", 42, "0.11.99")
+    assert decode(encode(original)).settings().new_world.expand_oceans == 0
+    assert new_code("continents", 42).settings().new_world.expand_oceans == 1
+    narrow = new_code("continents", 42, {"new_world": {"expand_oceans": 0}})
+    assert decode(encode(narrow)).settings().new_world.expand_oceans == 0
+    assert worldcode.with_new_seed(original, 43).settings().new_world.expand_oceans == 0
+    assert worldcode.rolled(original, "resources").settings().new_world.expand_oceans == 0
+
+
 def test_changed_settings_travel_with_the_code() -> None:
     """A change of a setting is part of the code; the decoded settings apply it."""
     changes: dict[str, object] = {"new_world": {"land_permille": 500}}

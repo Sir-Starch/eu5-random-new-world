@@ -1765,3 +1765,11 @@ text = '''Choisissez entre 1 et {count} esquisses.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Les esquisses demandent des terres générées. Revenez d'abord aux terres générées.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Étendre la génération aux océans'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Recommandé : laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde et les îles protégées.'''

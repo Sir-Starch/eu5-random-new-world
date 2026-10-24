@@ -50,3 +50,4 @@ Experiments in the running game are kept short: a console sitting of about fifte
 | [046](046-sitting-fixes/README.md) | Fixes from sitting 045 and the seed-210 regression |
 | [047](047-region-keys/README.md) | Region and area keys chosen by physical content (N5) |
 | [048](048-localization/README.md) | The world's mod in every official language (L1) |
+| [049](049-ocean-expansion/README.md) | Optional ocean expansion, connected ocean names, both canvas policies and verified offline candidates |

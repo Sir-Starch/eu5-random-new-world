@@ -79,7 +79,10 @@ def sketch(game_dir: Path, settings: Settings, seeds: list[int]) -> list[Candida
         raise CandidateError(message)
     game_map = run_stage("load map", lambda: load_map(game_dir))
     shape = settings.new_world
-    canvas = run_stage("select canvas", lambda: select_canvas(game_map, shape.ocean_band_px))
+    canvas = run_stage(
+        "select canvas",
+        lambda: select_canvas(game_map, shape.ocean_band_px, expanded=bool(shape.expand_oceans)),
+    )
     seam = (canvas.roll - canvas.col0) % int(game_map.labels.shape[1])
     found: list[Candidate] = []
     with running("candidates"):

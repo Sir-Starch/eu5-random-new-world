@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import io
+import struct
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -19,6 +20,19 @@ from tests.test_dds import _file  # pyright: ignore[reportPrivateUsage]
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+
+def test_lake_transforms_keep_protected_records_and_reject_an_incomplete_record() -> None:
+    inside = struct.pack("<10f", 3, 0, 7, 0, 0, 0, 1, 1, 1, 1)
+    outside = struct.pack("<10f", 30, 0, 7, 0, 0, 0, 1, 1, 1, 1)
+    mask = np.zeros((10, 10), dtype=bool)
+    mask[2, 3] = True
+    kept, removed = eu5_water._lakes(inside + outside, mask)  # pyright: ignore[reportPrivateUsage]
+    assert kept == outside
+    assert removed == 1
+    with pytest.raises(ValueError, match="40-byte"):
+        _ = eu5_water._lakes(outside + b"x", mask)  # pyright: ignore[reportPrivateUsage]
+
 
 ROWS, COLUMNS = 300, 220
 

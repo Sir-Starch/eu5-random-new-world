@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from rnw.app.worldcode import WorldCode
     from rnw.landmask import LandMask
     from rnw.progress import Progress
+    from rnw.settings import Settings
     from rnw.worldname import Label
 
 WAIT_PAUSE: Final[float] = 2.0
@@ -376,7 +377,9 @@ TEMPLATE_AREA: Final[int] = 90
 TEMPLATE_OUTSIDE: Final[int] = 20
 
 
-def land_template(game: GameInstall, output: Path) -> tuple[int, int]:
+def land_template(
+    game: GameInstall, output: Path, settings: Settings = PRESETS["continents"]
+) -> tuple[int, int]:
     """Write a picture of the area the New World can fill, to draw land on; returns its size.
 
     Dark grey is the area, black is outside it. The player paints land in white (any program),
@@ -384,7 +387,11 @@ def land_template(game: GameInstall, output: Path) -> tuple[int, int]:
     of the map's size and is for the player's own use: it is cut from the installed game's map.
     """
     game_map = load_map(game.directory)
-    canvas = select_canvas(game_map, PRESETS["continents"].new_world.ocean_band_px)
+    canvas = select_canvas(
+        game_map,
+        settings.new_world.ocean_band_px,
+        expanded=bool(settings.new_world.expand_oceans),
+    )
     shrunk = canvas.mask[::TEMPLATE_STEP, ::TEMPLATE_STEP]
     grey = np.where(shrunk, TEMPLATE_AREA, TEMPLATE_OUTSIDE).astype(np.uint8)
     output.parent.mkdir(parents=True, exist_ok=True)

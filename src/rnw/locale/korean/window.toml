@@ -1765,3 +1765,11 @@ text = '''스케치는 1개에서 {count}개 사이로 고르세요.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''스케치에는 생성된 땅이 필요합니다. 먼저 생성된 땅으로 돌아가세요.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''생성 영역을 대양으로 확장'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''권장: 신세계의 생성 공간을 넓혀 대륙이 아메리카의 윤곽에 얽매이지 않게 합니다. 구세계와 보호 대상 섬은 보존됩니다.'''

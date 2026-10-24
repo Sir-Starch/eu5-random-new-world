@@ -102,6 +102,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("new_world.location_px", "map", 40, 90, unit="px"),
     Control("new_world.sea_zone_px", "map", 80, 240, unit="px"),
     Control("new_world.province_size", "map", 3, 10),
+    Control("new_world.expand_oceans", "map", 0, 1),
     Control(
         "natives.population_permille", "peoples", 250, 3000, factor=1000, decimals=2, unit="times"
     ),
@@ -128,9 +129,11 @@ GROUPS: Final[tuple[str, ...]] = ("land", "map", "peoples")
 def estimated_locations(settings: Settings) -> int:
     """Locations the world of ``settings`` will have, roughly (within about 600, C118)."""
     world = settings.new_world
-    land = LAND_CELLS * world.land_permille // (world.location_px * world.location_px)
+    land_area = 48_000 if world.expand_oceans else LAND_CELLS
+    sea_area = 50_000 if world.expand_oceans else SEA_ZONES
+    land = land_area * world.land_permille // (world.location_px * world.location_px)
     water = 1000 - world.land_permille
-    sea = SEA_ZONES * water // (world.sea_zone_px * world.sea_zone_px)
+    sea = sea_area * water // (world.sea_zone_px * world.sea_zone_px)
     return OUTSIDE_LOCATIONS + land + sea + LAKES
 
 

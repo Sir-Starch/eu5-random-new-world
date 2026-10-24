@@ -1765,3 +1765,11 @@ text = '''Escolha entre 1 e {count} esboços.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Os esboços precisam de terra gerada. Volte primeiro à terra gerada.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Expandir a geração para os oceanos'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo e as ilhas protegidas.'''

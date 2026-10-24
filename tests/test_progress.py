@@ -66,7 +66,7 @@ def test_eta_counts_down_and_adjusts_when_a_stage_takes_longer_than_expected() -
     """The ETA starts from the reference run and adapts to the live weighted stage pace."""
     job = Progress()
     job.begin("generate world")
-    started = job._stage_started["generate world"]
+    started = job._stage_started["generate world"]  # pyright: ignore[reportPrivateUsage]
     early = job.estimated_remaining(now=started + 4)
     later = job.estimated_remaining(now=started + 8)
     overrun = job.estimated_remaining(now=started + 45)

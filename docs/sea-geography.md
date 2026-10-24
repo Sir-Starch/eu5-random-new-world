@@ -1,5 +1,13 @@
 # Sea geography
 
+**S2, 0.12.0 (2026-10-24):** the generator offers optional, recommended ocean
+expansion alongside the original canvas. Its fixed sector, connected named-ocean
+identities, protected waters and offline verification are recorded in
+[canvas expansion](research/canvas-expansion.md). The American coastal-discovery
+trigger is rebound to the finished world's sea areas, so a formerly coastal region
+can become landlocked without dangling script references. This extends S1; it has
+no new in-game result. [V-EXEC / UNKNOWN C282–C284]
+
 Generator 0.11.1, epoch 25 (2026-10-24; claims C232–C250). The generated New World was land with a sea
 poured round it: every sea cell was `<random word> Sea`, a coastal zone could have no port, and the
 game's own kinds of water (deep ocean with its currents, inland sea, narrows) were not used. 0.10.12

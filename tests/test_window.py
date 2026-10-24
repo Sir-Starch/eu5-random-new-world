@@ -15,6 +15,7 @@ import pytest
 
 from rnw.app import library, service
 from rnw.app.discovery import Environment, GameInstall, Profile
+from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
@@ -756,3 +757,19 @@ def test_world_files_are_written_opened_and_dropped_on_the_window(
     assert not plain.isAccepted()
     for window in (first, second, third):
         _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_ocean_checkbox_is_in_the_world_code_and_follows_pasted_codes(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    assert window.expand_oceans.isChecked()
+    window.expand_oceans.click()
+    assert decode(window.controller.code).settings().new_world.expand_oceans == 0
+    code = encode(new_code("continents", 123))
+    assert window.controller.use_code(code) is None
+    assert window.expand_oceans.isChecked()
+    assert decode(window.controller.code).settings().new_world.expand_oceans == 1
+    _ = window.close()

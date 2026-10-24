@@ -65,6 +65,7 @@ CHANGE_FIELDS: Final[tuple[str, ...]] = (
     "rolls.resources",
     "rolls.peoples",
     "mask.id",
+    "new_world.expand_oceans",
 )
 FIELD_NUMBERS: Final[dict[str, int]] = {name: number for number, name in enumerate(CHANGE_FIELDS)}
 ALPHABET: Final[str] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
@@ -96,9 +97,18 @@ class WorldCode:
     generator: str
     changes: dict[str, object] | None = None
 
+    def resolved_changes(self) -> dict[str, object]:
+        """Explicit legacy canvas choice when a code predates the ocean option."""
+        changes = copy.deepcopy(self.changes) if self.changes else {}
+        if _generator_parts(self.generator) < (0, 12, 0):
+            section = changes.setdefault("new_world", {})
+            if isinstance(section, dict):
+                _ = cast("dict[str, object]", section).setdefault("expand_oceans", 0)
+        return changes
+
     def settings(self):  # noqa: ANN201 - Settings is imported lazily by callers that need it
         """The settings this code stands for (the preset with its changes applied)."""
-        return build_settings(self.preset, dict(self.changes) if self.changes else None)
+        return build_settings(self.preset, self.resolved_changes())
 
 
 def random_seed() -> int:
@@ -139,7 +149,7 @@ def rolled(code: WorldCode, part: str) -> WorldCode:
     if part not in PARTS:
         message = f"Unknown part {part!r}; choose one of {', '.join(PARTS)}"
         raise WorldCodeError(message)
-    changes = copy.deepcopy(code.changes) if code.changes else {}
+    changes = code.resolved_changes()
     section = cast("dict[str, object]", changes.setdefault("rolls", {}))
     section[part] = rolls_of(code.settings())[part] + 1
     return _checked(code.preset, code.seed, changes)
@@ -147,7 +157,7 @@ def rolled(code: WorldCode, part: str) -> WorldCode:
 
 def with_new_seed(code: WorldCode, seed: int | None = None) -> WorldCode:
     """The same settings on a new land: a new seed (random unless given), every roll back to 0."""
-    changes = copy.deepcopy(code.changes) if code.changes else {}
+    changes = code.resolved_changes()
     _ = changes.pop("rolls", None)
     return _checked(code.preset, random_seed() if seed is None else check_seed(seed), changes)
 

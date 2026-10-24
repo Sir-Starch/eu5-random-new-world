@@ -567,6 +567,15 @@ class MainWindow(QMainWindow):
         world, layout = self._scroll_page()
         layout.addWidget(self._types())
         layout.addWidget(self._quick())
+        self.expand_oceans: QCheckBox = QCheckBox(text("control.new_world.expand_oceans"))
+        self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
+        self.expand_oceans.setToolTip(text("control.new_world.expand_oceans.about"))
+        _ = self.expand_oceans.toggled.connect(self._ocean_toggled)
+        layout.addWidget(self.expand_oceans)
+        ocean_hint = QLabel(text("control.new_world.expand_oceans.about"))
+        ocean_hint.setWordWrap(True)
+        ocean_hint.setStyleSheet(MUTED)
+        layout.addWidget(ocean_hint)
         self.show_new_world: QCheckBox = QCheckBox(text("show_new_world"))
         self.show_new_world.setChecked(self.controller.preferences.show_new_world)
         visibility = QGroupBox(text("visibility"))
@@ -857,7 +866,9 @@ class MainWindow(QMainWindow):
             section = QGroupBox(text(f"group.{group}"))
             grid = QGridLayout(section)
             grid.setColumnStretch(1, 1)
-            for row, control in enumerate(c for c in controls.CONTROLS if c.group == group):
+            for row, control in enumerate(
+                c for c in controls.CONTROLS if c.group == group and c.field != "expand_oceans"
+            ):
                 line = _ControlRow(control, self)
                 line.place(grid, row)
                 self.rows.append(line)
@@ -1374,6 +1385,15 @@ class MainWindow(QMainWindow):
             )
         return item
 
+    def _ocean_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
+        self.controller.set_value("new_world.expand_oceans", int(checked))
+
+    def _refresh_ocean_option(self, busy: bool) -> None:  # noqa: FBT001 - UI state
+        _ = self.expand_oceans.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
+        _ = self.expand_oceans.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.expand_oceans.setEnabled(not busy)
+
     def _refresh_new(self) -> None:
         controller = self.controller
         busy = controller.busy
@@ -1414,6 +1434,7 @@ class MainWindow(QMainWindow):
         self.show_new_world.setChecked(controller.preferences.show_new_world)
         _ = self.show_new_world.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.show_new_world.setEnabled(not busy)
+        self._refresh_ocean_option(busy)
         generating = controller.task in {Task.GENERATE, Task.QUEUE, Task.CANDIDATES}
         self.cancel_button.setEnabled(controller.phase is Phase.RUNNING and generating)
         self.cancel_button.setVisible(busy and generating)

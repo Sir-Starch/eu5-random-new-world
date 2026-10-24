@@ -18,6 +18,7 @@ from rnw.eu5_content import (
     guard_text,
     matches,
     places,
+    rebind_discovery,
     rebind_game_start,
     selector_of,
 )
@@ -45,6 +46,35 @@ ev.3 = { type = country_event trigger = { tag = ABC } }
 ev.4 = { type = country_event }
 ev.2 = { type = country_event }
 """
+
+
+def test_discovery_uses_current_coastal_areas_and_preserves_other_triggers() -> None:
+    text = (
+        "before = { always = yes }\n"
+        "discovered_any_in_americas_trigger = { OR = { "
+        "has_discovered_area = area:removed_coast } }\n"
+        "after = { always = no }\n"
+    )
+    rewritten = rebind_discovery(text, ["new_coast", "existing_coast", "new_coast"])
+    assert rewritten.startswith("before = { always = yes }\n")
+    assert rewritten.endswith("after = { always = no }\n")
+    assert "removed_coast" not in rewritten
+    gate = parse(rewritten).block("discovered_any_in_americas_trigger")
+    assert gate is not None
+    areas = gate.block("OR")
+    assert areas is not None
+    assert [entry.value for entry in areas.entries] == ["area:existing_coast", "area:new_coast"]
+
+
+def test_discovery_rebinding_requires_its_installed_anchor_and_nonempty_water() -> None:
+    with pytest.raises(ContentError, match="expected OR"):
+        _ = rebind_discovery("unrelated = { always = yes }", ["coast"])
+    with pytest.raises(ContentError, match="shape changed"):
+        _ = rebind_discovery(
+            "discovered_any_in_americas_trigger = { OR = { always = yes } }", ["coast"]
+        )
+    with pytest.raises(ContentError, match="expected OR"):
+        _ = rebind_discovery("discovered_any_in_americas_trigger = { OR = {} }", [])
 
 
 def test_a_gate_is_closed_in_the_block_vanilla_gives_it() -> None:
@@ -300,6 +330,7 @@ def test_every_edit_the_table_asks_for_has_a_way_to_be_made() -> None:
         ):
             assert category in GATES or category in UNGATED, key
         if verdict.decision is Decision.REBIND:
-            assert (
-                category == "common/formable_countries" or key == "common/on_action:on_game_start"
-            )
+            assert category == "common/formable_countries" or key in {
+                "common/on_action:on_game_start",
+                "common/scripted_triggers:discovered_any_in_americas_trigger",
+            }

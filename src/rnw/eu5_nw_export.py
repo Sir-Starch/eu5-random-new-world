@@ -155,6 +155,7 @@ from rnw.eu5_natives import (
 )
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
 from rnw.eu5_objects import PixelClasses, object_outputs
+from rnw.eu5_oceans import emitted_cells, plan_oceans
 from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
 from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
@@ -479,7 +480,12 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
     water: Water,
 ) -> list[str]:
     lines: list[str] = []
+    seen: set[str] = set()
+    retained: set[str] = plan.oceans.retained if plan.oceans is not None else set()
     for index, cell in enumerate(plan.cells):
+        if cell.key in seen or cell.key in retained:
+            continue
+        seen.add(cell.key)
         body = DONOR_MODIFIER.sub("", bodies[donors[index]])
         if cell.kind in {CellClass.LAND, CellClass.WASTELAND}:
             for name, values in (
@@ -504,6 +510,10 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
         else:
             body = _set_field(body, "climate", biomes.climate[index])
         lines.append(f"{cell.key} = {body}")
+    if plan.oceans is not None:
+        lines.extend(
+            f"{cell.key} = {bodies[plan.oceans.sources[cell.key]]}" for cell in plan.oceans.extra
+        )
     return lines
 
 
@@ -644,7 +654,11 @@ def _locator_instances(
     }
     out: dict[str, list[str]] = {name: [] for name in wanted}
     out["generated_map_object_locators_dock.txt"] = []
+    seen: set[str] = set()
     for index, cell in enumerate(plan.cells):
+        if cell.key in seen or (plan.oceans is not None and cell.key in plan.oceans.retained):
+            continue
+        seen.add(cell.key)
         for name, kinds in wanted.items():
             if cell.kind in kinds and not (index in closed and name in NO_UNITS):
                 out[name].append(_instance(cell.key, int(rows[index]), int(columns[index]), height))
@@ -656,7 +670,7 @@ def _locator_instances(
     return out
 
 
-def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
+def _trimmed_instances(game_map: Eu5Map, canvas: Canvas, plan: Plan) -> dict[str, str]:
     """Locator instances at the interior point of each trimmed ocean zone's remainder."""
     height, width = canvas.shape
     rolled = canvas.rolled(game_map.labels)
@@ -675,6 +689,13 @@ def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
         x = (left + column - canvas.roll) % width
         key = game_map.keys[zone]
         out[key] = _instance(key, top + row, x, height)
+    if plan.oceans is not None:
+        out.update(
+            {
+                key: _instance(key, row, column, canvas.shape[0])
+                for key, (row, column) in plan.oceans.anchors.items()
+            }
+        )
     return out
 
 
@@ -693,7 +714,7 @@ def _additions(plan: Plan) -> HierarchyAdditions:
     additions = HierarchyAdditions()
     provinces: dict[str, list[str]] = {}
     area_of_province: dict[str, str] = {}
-    for cell in plan.cells:
+    for cell in emitted_cells(plan):
         provinces.setdefault(cell.province, []).append(cell.key)
         area_of_province[cell.province] = cell.area
     new_area_provinces = {p for members in plan.new_areas.values() for p in members}
@@ -721,7 +742,7 @@ def _localization(
     languages: tuple[str, ...],
 ) -> dict[str, bytes]:
     """The world's names and texts, written in each language (``wording``, ``translations``)."""
-    names: dict[str, Entry] = {cell.key: cell.name for cell in plan.cells}
+    names: dict[str, Entry] = {cell.key: cell.name for cell in emitted_cells(plan)}
     names.update(extra)
     names.update(plan.province_names)
     fresh = {area for area in plan.new_areas if area.startswith("rnw_")}
@@ -974,7 +995,7 @@ def _mod_path(relative: str) -> str:
     return relative.removeprefix("game/")
 
 
-def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan.
+def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the shared plan.
     game_dir: Path,
     *,
     game_map: Eu5Map,
@@ -1014,7 +1035,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     )
     used = [spec for spec in SPECS if spec in places.values()]
     instances = _locator_instances(plan, world, canvas, port_pixels, water.zones)
-    trimmed = _trimmed_instances(game_map, canvas)
+    trimmed = _trimmed_instances(game_map, canvas, plan)
     relocated = removed | set(trimmed)
     kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
     removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
@@ -1024,7 +1045,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         game_dir,
         NAMED_COLORS,
         rewrite_named_colors(
-            _read(game_dir, NAMED_COLORS), removed, [(c.key, c.color) for c in plan.cells]
+            _read(game_dir, NAMED_COLORS), removed, [(c.key, c.color) for c in emitted_cells(plan)]
         ),
     )
     outputs[_mod_path(DEFINITIONS)] = _encode(
@@ -1033,14 +1054,18 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         rewrite_definitions(_read(game_dir, DEFINITIONS), removed, _additions(plan)),
     )
     lists = {
-        "sea_zones": [c.key for c in plan.cells if c.kind is CellClass.SEA],
-        "lakes": [c.key for c in plan.cells if c.kind is CellClass.LAKE],
+        "sea_zones": [c.key for c in emitted_cells(plan) if c.kind is CellClass.SEA],
+        "lakes": [c.key for c in emitted_cells(plan) if c.kind is CellClass.LAKE],
         "impassable_mountains": [
             cell.key
             for index, cell in enumerate(plan.cells)
-            if cell.kind is CellClass.WASTELAND or index in water.zones
+            if (cell.kind is CellClass.WASTELAND or index in water.zones)
+            and (plan.oceans is None or cell.key not in plan.oceans.retained)
         ],
     }
+    lists["impassable_mountains"] = list(dict.fromkeys(lists["impassable_mountains"]))
+    if plan.oceans is not None:
+        lists["impassable_mountains"].extend(cell.key for cell in plan.oceans.extra)
     outputs[_mod_path(DEFAULT_MAP)] = _encode(
         game_dir, DEFAULT_MAP, rewrite_class_lists(_read(game_dir, DEFAULT_MAP), removed, lists)
     )
@@ -1125,6 +1150,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
     )
     stats: dict[str, object] = {
         "ports": len(port_rows),
+        "oceans": {} if plan.oceans is None else plan.oceans.stats,
         "vanilla_ports_relinked": sorted(coast.foreign.free),
         "sea_cells_merged": coast.merged,
         "strait_crossings": len(water.crossings),
@@ -1244,6 +1270,8 @@ def _rasters(
     colors = np.array([cell.color for cell in plan.cells], dtype=np.int64)
     palette = np.stack([(colors >> 16) & 0xFF, (colors >> 8) & 0xFF, colors & 0xFF], axis=1)
     rgb = game_map.rgb
+    if plan.oceans is not None:
+        plan.oceans.paint(rgb, canvas)
     canvas.put(rgb, palette.astype(np.uint8)[world.labels])
     water = np.array(
         [cell.kind in {CellClass.SEA, CellClass.LAKE} for cell in plan.cells], dtype=bool
@@ -2093,6 +2121,14 @@ def _preview(final_rgb_classes: NDArray[np.uint8]) -> bytes:
     return encode_png(final_rgb_classes, color_type=COLOR_RGB, compression="zlib")
 
 
+def _check_identity_budget(game_map: Eu5Map, removed: set[str], plan: Plan) -> None:
+    """The final cap includes split remainders and counts shared identities once."""
+    final_count = len(game_map.keys) - len(removed) + len(emitted_cells(plan))
+    if final_count > MAX_LOCATIONS:
+        message = f"{final_count} final location identities exceed the {MAX_LOCATIONS} safety cap"
+        raise NewWorldExportError(message)
+
+
 def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
     game_dir: Path,
     output: Path,
@@ -2184,7 +2220,12 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
 
     game_map, hierarchy = run_stage("load map", load)
     canvas = run_stage(
-        "select canvas", lambda: select_canvas(game_map, settings.new_world.ocean_band_px)
+        "select canvas",
+        lambda: select_canvas(
+            game_map,
+            settings.new_world.ocean_band_px,
+            expanded=bool(settings.new_world.expand_oceans),
+        ),
     )
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
@@ -2282,6 +2323,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 waters=shapes.waters,
                 physical=physical,
             )
+            if settings.new_world.expand_oceans:
+                plan.oceans = plan_oceans(
+                    game_map, canvas, world, plan, hierarchy, shapes.zones, loc_keys
+                )
             return loc_keys, plan
 
         def build_water() -> dict[str, int]:
@@ -2326,6 +2371,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         geometry = geometries.result()
         vanilla_hashes = localization.result()
         loc_keys, plan = identities.result()
+        if plan.oceans is not None:
+            removed -= plan.oceans.retained
+        _check_identity_budget(game_map, removed, plan)
         biomes, biome_stats, (river_codes, carved, river_stats) = weathering.result()
         slot_tables, slot_stats = run_stage(
             "slot tables",
@@ -2529,6 +2577,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     int(geometry.columns[i]),
                 )
                 for i in np.flatnonzero(canvas.removed).tolist()
+                if game_map.keys[i] in removed
             ],
             plan,
             np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
@@ -2593,7 +2642,19 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         scripts.update(holy_site_outputs(game_dir, remap, natives.holy_sites))
         try:
             text_stats["content"] = carry_out(
-                game_dir, scripts, checked, natives.pops, hierarchy, remap
+                game_dir,
+                scripts,
+                checked,
+                natives.pops,
+                hierarchy,
+                remap,
+                sea_areas=sorted(
+                    {
+                        cell.area
+                        for cell in plan.cells
+                        if cell.kind is CellClass.SEA and cell.continent == NEW_WORLD
+                    }
+                ),
             )
         except ContentError as error:
             raise NewWorldExportError(str(error)) from error
@@ -2682,6 +2743,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         del vanilla, decoded
         outside = changed.copy()
         canvas.put(outside, np.zeros(canvas.mask.shape, dtype=bool))
+        if plan.oceans is not None:
+            plan.oceans.paint(outside, canvas, clear=True)
         if np.any(outside):
             message = "locations.png changed outside the New World canvas"
             raise NewWorldExportError(message)
@@ -2745,7 +2808,12 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 "sea_areas_grown_from_their_remainder": plan.anchored_sea_areas,
                 "physical_keys": plan.physical_keys,
             },
-            "invariants": {**world_checks, **text_checks, "outside_canvas_identical": True},
+            "invariants": {
+                **world_checks,
+                **text_checks,
+                "outside_canvas_identical": plan.oceans is None or not plan.oceans.patches,
+                "outside_canvas_except_ocean_identities_identical": True,
+            },
             "text_stats": text_stats,
             "natives": natives.stats,
             "technology": natives.technology,

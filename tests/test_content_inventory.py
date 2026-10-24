@@ -245,7 +245,7 @@ def test_the_table_is_consistent() -> None:
         assert verdict.reason in REASONS, key
         needs_stage = verdict.decision in {Decision.REBIND, Decision.REPLACE}
         assert bool(verdict.stage) == needs_stage, key
-        assert verdict.stage in {"", "N1", "N3", "N4"}, key
+        assert verdict.stage in {"", "N1", "N3", "N4", "S2"}, key
     stages = {stage for rules in RETIRED_STAGES.values() for stage in rules.values()}
     assert stages <= {"N1", "N3", "N4"}
 

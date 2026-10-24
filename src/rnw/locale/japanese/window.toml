@@ -1765,3 +1765,11 @@ text = '''スケッチは1〜{count}個の間で選んでください。'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''スケッチには生成された陸地が必要です。先に生成された陸地に戻してください。'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''生成範囲を海洋に拡張'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''推奨：新世界の生成範囲を広げ、大陸が南北アメリカの輪郭に制約されないようにします。旧世界と保護対象の島々は維持されます。'''

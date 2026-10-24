@@ -1765,3 +1765,11 @@ text = '''Wybierz od 1 do {count} szkiców.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Szkice wymagają wygenerowanego lądu. Najpierw wróć do wygenerowanego lądu.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Rozszerz obszar generowania na oceany'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat i chronione wyspy.'''

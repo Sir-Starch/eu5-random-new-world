@@ -1765,3 +1765,11 @@ text = '''1 ile {count} arasında taslak seçin.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Taslaklar için oluşturulan kara gerekir. Önce oluşturulan karaya dönün.'''
+
+["control.new_world.expand_oceans"]
+source = "eff9e124228b96ba"
+text = '''Üretim alanını okyanuslara genişlet'''
+
+["control.new_world.expand_oceans.about"]
+source = "7a529727359a6f72"
+text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya ve korunan adalar değişmez.'''

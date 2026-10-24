@@ -327,7 +327,7 @@ class Controller:
             code = decode(value)
         except WorldCodeError as error:
             return explain(error)
-        shown, other = controls.flat(code.changes)
+        shown, other = controls.flat(code.resolved_changes())
         outside = [key for key, number in shown.items() if not controls.BY_KEY[key].allows(number)]
         if code.preset not in WORLD_TYPES or outside:
             names = ", ".join(text(f"control.{key}") for key in outside) or code.preset
@@ -499,7 +499,7 @@ class Controller:
             code = decode(world.code)
         except WorldCodeError:
             return
-        shown, other = controls.flat(code.changes)
+        shown, other = controls.flat(code.resolved_changes())
         self.preset = code.preset
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
@@ -520,7 +520,7 @@ class Controller:
             code = decode(world.code)
         except WorldCodeError:
             return
-        shown, other = controls.flat(code.changes)
+        shown, other = controls.flat(code.resolved_changes())
         self.preset, self.seed = code.preset, code.seed
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
@@ -704,7 +704,9 @@ class Controller:
         game = self.game
 
         def work(_progress: Progress) -> None:
-            _ = service.land_template(game, output)
+            _ = service.land_template(
+                game, output, build_settings(self.preset, self._change_document())
+            )
 
         return self._run(Task.TEMPLATE, str(output), work)
 

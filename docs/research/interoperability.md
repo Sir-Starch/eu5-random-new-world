@@ -139,6 +139,73 @@ verification digests enter the repository. See [N5](n5-region-keys.md).
 
 **Compatibility and distribution.** The generator keeps writing the fields the game's own mods use, in English. Only the field names above enter the repository. Whether the Workshop's translations reach the in-game list is [UNKNOWN] until the item is uploaded.
 
-## Earlier cases to record when they are next touched
+## R-004 — Expanded geography through the existing visual-map interfaces
 
-Listed from the module names, not re-audited: the compressed object files of `in_game/gfx/map/map_objects` and the instance tiles (`rnw/lzav.py`, `rnw/eu5_objects.py`, `rnw/terrain_tiles.py`), the texture and terrain-decal files (`rnw/dds.py`, `rnw/eu5_terrain.py`), the derived `locations.png` and `rivers.png` (PNG is an open format; the content is derived), the shader and GUI files the cover modifies (text; `rnw/eu5_lobby.py`), and `nodes.dat`, which is not read or regenerated (opaque, [V-LOCAL] `eu5_export.UNCHANGED_INPUTS`).
+**2026-10-24, generator 0.12.0, epoch 30; EU5 1.4.4 executable / build 26142040 on
+1.4.3 data; C282–C285.** This records the earlier binary interfaces when the ocean
+expansion next changes their generated contents. It introduces no executable-code
+analysis or new binary layout. Source inspection and synthetic round trips are
+separate evidence from an engine result, which remains unverified for this domain.
+
+**Necessity and official mechanisms checked.** `locations.png` describes gameplay
+locations, while separate terrain, material, object and water assets draw the
+land. Changing the first alone leaves old relief, trees, foam or lake meshes over
+new geography (C45, C50–C52). Installed text templates classify locations and name
+assets; they do not supply per-seed terrain tiles, object transforms or water
+pixels. The existing map editor/API investigation is recorded in R-001. No
+accessible documented batch interface that generates these layers from an arbitrary
+seed has been established; this is the boundary of that investigation, not proof
+that no official editor exists.
+
+**Data and structures studied or written.**
+
+- `in_game/map_data/locations.png`, `rivers.png`, preview and metadata PNGs use an
+  open image format. RGB location colours resolve through named locations; indexed
+  river pixels carry the game's observed water/land/channel codes. The generator
+  keeps ancillary image chunks, writes the same dimensions and checks its decoded
+  output against declarations and the permitted changes. Expanded ocean identity
+  recolouring is restricted to explicit row runs of retained closed-ocean
+  components; protected land and other continents' water are not recoloured.
+- `gfx/terrain2` height/material decal `.info`/`.bin` pairs: the independent
+  `terrain_tiles.py` reader/writer uses the observed south-up image, one-channel
+  8/16-bit samples, 128-pixel tiles with a two-pixel border, mip levels and
+  independently compressed LZAV tile streams indexed by offsets and lengths.
+  `parse_info` rejects unsupported headers/channel/sample structures. The existing
+  strip/band rebuild and native kernels now cover the wider domain; their equality
+  tests remain the implementation evidence. The decal cache is JSON, not an
+  executable or a new binary interface.
+- Generated vegetation and ground-clutter `.bin` files under `gfx/map/map_objects`
+  hold ten little-endian 32-bit floats per transform (position, quaternion, scale;
+  40 bytes). The existing adapter keeps outside records, samples new instances from
+  its calibrated fields and enforces the instance budget. Inline transform blocks
+  are text. `lakes.bin` uses the same 40-byte transform size: records centred on
+  replaced geography are omitted, retained records are byte-identical. Its writer
+  now rejects an incomplete record instead of discarding a trailing byte; synthetic
+  tests check exact retention and refusal.
+- `gfx/map/water/watercolor_rgb_waterspec_a.dds` and `foam_map.dds` retain their DDS
+  framing and use the existing reader/writer for changed water/coast pixels and
+  compression blocks. Original shallow water and foam cannot remain where the new
+  land/sea boundary moved; the new values derive from the local game's calibration.
+- `spline_network.splnet` is rebuilt for the new location indexes and land contacts
+  through the same R-001 reader/writer. No spline-format change is introduced;
+  spline verification still checks carried Old World polylines and every generated
+  land contact. The optional pre-play cover keeps its existing installed-file
+  anchors and mechanisms; this phase changes its geographic grid, not its shader
+  or GUI patch logic.
+
+**Compatibility and distribution.** All source assets are read from the owner's
+installation and written only into a locally generated world. Existing fingerprint,
+input recording, format guards, native/reference equality tests, synthetic fixtures,
+output validators and independent raster audits provide the compatibility evidence
+for the named build; they do not promise the next patch will work. This register and
+project-authored code contain structural descriptions and identifiers, not copied
+assets. Derived rasters, binary files and raw audit material stay under ignored
+`generated/`, `local_data/` or local build folders. They are not uploaded or committed.
+The legal limits of observation, reproduction and distribution in the framework
+above continue to apply; this technical record supplies no additional clearance.
+
+## Earlier cases still outside this phase
+
+`nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).
+The cover's shader/GUI text interfaces retain their earlier evidence records and
+have not been reverse-engineered again in this phase.

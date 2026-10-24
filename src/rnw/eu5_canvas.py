@@ -1,9 +1,10 @@
 """Choose the replaceable New World canvas on the EU5 map (read-only).
 
-The canvas is every pixel of the ``america`` continent plus ocean-continent sea pixels
-within ``band_px`` of it, minus a guard zone around every other continent so that no
-Old World location gains or loses a contact. Ocean zones cut by the band keep their key
-and their largest remaining part; their other fragments join the canvas.
+The original canvas follows ``america`` with an ocean distance band. Optional expansion
+adds a fixed longitudinal ocean sector and retains the northern extension. Both protect
+other continents and their waters. Expanded closed-ocean remainders are recorded as row
+runs for the connected final identities planned by ``eu5_oceans``; their fragments no
+longer veto the entire ocean's inclusion.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -28,10 +29,34 @@ NEW_WORLD: Final[str] = "america"
 OCEANS: Final[frozenset[str]] = frozenset({"atlantic_ocean_continent", "pacific_ocean_continent"})
 GUARD_PX: Final[int] = 96
 MIN_REMAINDER_PX: Final[int] = 3000
+REFERENCE_WIDTH: Final[int] = 16384
+EXPANDED_BAND_PX: Final[int] = 1600
+OCEAN_SECTOR: Final[tuple[int, int]] = (1600, 6500)
 
 
 class CanvasError(ValueError):
     """The canvas cannot be placed without crossing the map seam."""
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class OceanRemainder:
+    """One connected closed-ocean remainder, as (row, left, right) rolled runs."""
+
+    source: int
+    runs: NDArray[np.int64]
+    pixels: int
+
+
+def remainder_runs(mask: NDArray[np.bool_], top: int, left: int) -> NDArray[np.int64]:
+    """Encode a bounded component by row, without retaining another large raster."""
+    found: list[tuple[int, int, int]] = []
+    for row in range(mask.shape[0]):
+        ends = np.flatnonzero(np.diff(np.pad(mask[row], 1).astype(np.int8)))
+        found.extend(
+            (top + row, left + start, left + stop)
+            for start, stop in zip(ends[::2].tolist(), ends[1::2].tolist(), strict=True)
+        )
+    return np.asarray(found, dtype=np.int64).reshape(-1, 3)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -44,6 +69,7 @@ class Canvas:
     shape: tuple[int, int]
     removed: NDArray[np.bool_]
     trimmed: NDArray[np.bool_]
+    ocean_parts: tuple[OceanRemainder, ...] = ()
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""
@@ -136,7 +162,7 @@ def remainder_boxes(
     }  # fmt: skip
 
 
-def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
+def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> Canvas:
     """Return the canvas for ``band_px`` of ocean around the New World."""
     count = len(game_map.keys)
     continents = np.array(game_map.continents, dtype=object)
@@ -146,17 +172,49 @@ def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
     roll = _roll_for(new_world[game_map.labels].any(axis=0))
     rolled = np.roll(game_map.labels, roll, axis=1)
     inside_new = new_world[rolled]
-    near_new = distance_from(inside_new, band_px + 1, octagonal=True) <= band_px
+    band = max(1, EXPANDED_BAND_PX * rolled.shape[1] // REFERENCE_WIDTH) if expanded else band_px
+    near_new = distance_from(inside_new, band + 1, octagonal=True) <= band
     other = ~new_world & ~ocean
     near_other = distance_from(other[rolled], GUARD_PX + 1) <= GUARD_PX
     canvas = inside_new | ((ocean & sea)[rolled] & near_new & ~near_other)
+    if expanded:
+        # A fixed longitudinal sector, east of Hawaii and west of the African waters.
+        # Coordinates are fractions of the installed map, not a shipped raster. The
+        # old band supplies Alaska's northern extension; the sector supplies southern
+        # width independently of America's coast. All protected waters keep their guard.
+        columns = (np.arange(rolled.shape[1], dtype=np.int64) - roll) % rolled.shape[1]
+        sector = (columns * REFERENCE_WIDTH >= OCEAN_SECTOR[0] * rolled.shape[1]) & (
+            columns * REFERENCE_WIDTH < OCEAN_SECTOR[1] * rolled.shape[1]
+        )
+        canvas |= (ocean & sea)[rolled] & sector[np.newaxis, :] & ~near_other
     zones = np.unique(rolled[canvas & ~inside_new])
     boxes = remainder_boxes(rolled, canvas, zones, count)
+    ocean_parts: list[OceanRemainder] = []
     for zone in zones.tolist():
         if zone not in boxes:
             continue
         window = boxes[zone]
         part = (rolled[window] == zone) & ~canvas[window]
+        # Closed-ocean remainders are partitioned into connected identities by the
+        # ocean planner. Their geometry no longer vetoes the generation domain.
+        if expanded and game_map.ambiguous[zone]:
+            components = label_components(
+                part.astype(np.int32), wrap_x=part.shape[1] == rolled.shape[1]
+            )
+            sizes = np.bincount(components[part])
+            ocean_parts.extend(
+                OceanRemainder(
+                    zone,
+                    remainder_runs(
+                        part & (components == component), window[0].start, window[1].start
+                    ),
+                    int(sizes[component]),
+                )
+                for component in sorted(
+                    np.flatnonzero(sizes).tolist(), key=lambda n: (-sizes[n], n)
+                )
+            )
+            continue
         components = label_components(part.astype(np.int32))
         sizes = np.bincount(components[part])
         keep = int(np.argmax(sizes))
@@ -184,4 +242,5 @@ def select_canvas(game_map: Eu5Map, band_px: int) -> Canvas:
         shape=(int(rolled.shape[0]), int(rolled.shape[1])),
         removed=removed,
         trimmed=trimmed,
+        ocean_parts=tuple(ocean_parts),
     )

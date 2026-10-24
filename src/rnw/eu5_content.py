@@ -53,6 +53,7 @@ NEUTRALIZED_REASONS: Final[frozenset[str]] = frozenset({"identity", "canal"})
 ALWAYS_NO: Final[str] = "always = no"
 FORMABLES: Final[str] = "common/formable_countries"
 GAME_START: Final[str] = "common/on_action:on_game_start"
+DISCOVERY: Final[str] = "common/scripted_triggers:discovered_any_in_americas_trigger"
 NAHUATL: Final[str] = "nahuatl"
 TENOCHTITLAN: Final[str] = "tenochtitlan"
 TERRITORY_KEYS: Final[frozenset[str]] = frozenset({"regions", "areas", "provinces", "locations"})
@@ -418,6 +419,29 @@ def rebind_game_start(scripts: Scripts, file: str, *, old_seat: str, seat: str |
     raise ContentError(message)
 
 
+def rebind_discovery(text: str, areas: Sequence[str]) -> str:
+    """Bind the installed coastal-discovery trigger to the actual generated sea areas."""
+    block = parse(text).block("discovered_any_in_americas_trigger")
+    gate = None if block is None else block.block("OR")
+    if not areas or block is None or gate is None or len(block.entries) != 1:
+        message = "The American coastal-discovery trigger has no expected OR or sea areas"
+        raise ContentError(message)
+    if any(
+        entry.key != "has_discovered_area"
+        or not isinstance(entry.value, str)
+        or not entry.value.startswith("area:")
+        for entry in gate.entries
+    ):
+        message = "The American coastal-discovery trigger's installed shape changed"
+        raise ContentError(message)
+    body = (
+        "\n\tOR = {\n"
+        + "".join(f"\t\thas_discovered_area = area:{area}\n" for area in sorted(set(areas)))
+        + "\t}\n"
+    )
+    return text[: block.open + 1] + body + text[block.close :]
+
+
 def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the world and the remap.
     game_dir: Path,
     scripts: dict[str, bytes],
@@ -425,6 +449,8 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     pops: Mapping[str, Sequence[str]],
     hierarchy: Mapping[str, Location],
     remap: Mapping[str, str],
+    *,
+    sea_areas: Sequence[str] = (),
 ) -> dict[str, object]:
     """Write every decision of the table that edits scripts into ``scripts``; return the counts.
 
@@ -442,6 +468,9 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
             rebound.setdefault(consumer.files[0], []).append(consumer.ident)
         elif key == GAME_START:
             seat_file = consumer.files[0]
+        elif key == DISCOVERY:
+            file = consumer.files[0]
+            store.write(file, rebind_discovery(store.read(file), sea_areas))
         else:
             message = f"{key} is to be rebound, and nothing here knows how"
             raise ContentError(message)
