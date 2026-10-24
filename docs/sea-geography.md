@@ -1,6 +1,6 @@
 # Sea geography
 
-Generator 0.10.14, epoch 24 (2026-10-24; claims C232–C247). The generated New World was land with a sea
+Generator 0.11.1, epoch 25 (2026-10-24; claims C232–C250). The generated New World was land with a sea
 poured round it: every sea cell was `<random word> Sea`, a coastal zone could have no port, and the
 game's own kinds of water (deep ocean with its currents, inland sea, narrows) were not used. 0.10.12
 fixed the ports, the names, the topography and gave the deep water currents; the owner's first sitting
@@ -178,6 +178,7 @@ the deep cells are told apart as the game's are:
 - **Land of the game's.** A sea cell that touches land of the game's own (Bermuda, Saint Helena,
   the land at the canvas's edge) is on a coast, whatever the generated land does: it is coastal
   water, never a closed zone. (The first run of 0.10.13 closed the zone that holds Saint Helena's port.)
+- **No units.** The game's closed zones have no `combat` and no `unit_stack` locator (every other location has both; its vfx locators cover all): the generated closed zones have none either. The first closed zones had them and the engine logged `map object locator is incomplete` (C250), which `verify_locators` now reads back.
 - **Checked.** The export reads its files back (`verify_seas`): the impassable zones, and only
   they, are in the impassable list and have no current; every lane is deep and has its current;
   every sea cell that is not closed is reached from the game's water. Read back from the mod's

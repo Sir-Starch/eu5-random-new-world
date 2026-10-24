@@ -20,3 +20,8 @@ The 00:50 log is the 0.10.11 world's (every zone it names lacks a port in that w
 ## What it settles, and what it does not
 
 Settled: the port lines are gone; the engine took the closed zones, the lanes and their currents, the narrows and the crossing rows without a complaint; the owner found the map good. Not settled by a look: whether ships keep out of the closed zones, what an army does at a crossing, what the Sea Currents map shows (C244, C247). The 263 errors of the lobby's scripted GUI (C249) are a fault of the lobby's GUI, not of the sea work.
+
+## What it led to
+
+Two messages of this session's `error.log` that the 0.10.11 world's did not have were the sea work's or the lobby's own: the combat and unit-stack locators "incomplete" (the closed zones had locators, which the game's closed ocean lacks, C250) and the lobby's scripted GUI asked about no country (C249). Generator 0.11.1 (epoch 25) gives the closed zones neither locator and guards the scripted GUI; the reference world `RNW1-0826C-SYW6B-MW73Y-C005G-20813-G0HNQ-QV` (792 files, digest `0b2efd8a…9f54`) is installed as recorded in [INSTALLED](../INSTALLED.md). Whether both lines are gone is read from the next session's log; nothing is asked.
+

@@ -54,6 +54,14 @@ CURRENT: Final[re.Pattern[str]] = re.compile(
     r"movement_assistance\s*=\s*\{\s*(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)\s*\}"
 )
 TOPOGRAPHY: Final[re.Pattern[str]] = re.compile(r"topography\s*=\s*([A-Za-z_]+)")
+# The game gives the closed ocean no stack of units and no battle: its 47 zones of
+# ``ocean_wasteland`` and its wastelands have no locator of these two kinds, every other location
+# has [V-LOCAL C250].
+NO_UNITS: Final[tuple[str, ...]] = (
+    "generated_map_object_locators_unit_stack.txt",
+    "generated_map_object_locators_combat.txt",
+)
+LOCATOR_ID: Final[re.Pattern[str]] = re.compile(r"\bid=(\w+)")
 PORT_COLUMNS: Final[int] = 4
 ADJACENCY_COLUMNS: Final[int] = 8
 STRIP_ROWS: Final[int] = 1024
@@ -569,3 +577,28 @@ def verify_crossings(
         )
         raise SeaError(message)
     return {"crossings_checked": len(seen)}
+
+
+def verify_locators(files: Mapping[str, str], plan: Plan, water: Water) -> dict[str, object]:
+    """Read the locators of units and battles (``files`` by their names) as written.
+
+    Every generated land, sea and lake location has one of each and a closed zone has none, as
+    the game's own map has it; the engine logs ``map object locator is incomplete`` otherwise
+    (the first closed zones had them, C250).
+    """
+    expected = {
+        cell.key
+        for number, cell in enumerate(plan.cells)
+        if cell.kind in {CellClass.LAND, CellClass.SEA, CellClass.LAKE}
+        and number not in water.zones
+    }
+    ours = {cell.key for cell in plan.cells}
+    for name in NO_UNITS:
+        found = {key for key in LOCATOR_ID.findall(files[name]) if key in ours}
+        if found != expected:
+            message = (
+                f"{name} has {len(found - expected)} locators too many and "
+                f"{len(expected - found)} too few"
+            )
+            raise SeaError(message)
+    return {"locators_checked": len(expected)}

@@ -775,3 +775,11 @@
 - [V-GAME C249] 263 script errors a session from the lobby's scripted GUI asked about no country (observer games, nothing selected); not from the sea work, harmless, to be repaired with the next change of the lobby.
 - S1 is accepted: 0.11.0 (ADR 0003: MINOR rises when a roadmap phase is accepted in game). No file of a world changes; epoch 24.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-24 — Two faults of the sitting's log, 0.11.1, C249-C250
+
+- [V-GAME C250] The 0.10.14 world's load logged `map object locator "combat" is incomplete!` and the same for `unit_stack`; the 0.10.11 world's did not. The game's own locators of both kinds cover every land, sea and lake location and none of its 47 closed zones or its wastelands, while the generated closed zones had them (the only difference between the two worlds' locators). They have none now (epoch 25), and `verify_locators` reads the files back.
+- [V-GAME C249] The lobby's scripted GUI asked of a country that is none (observer game, nothing selected): 263 script errors a session. It asks `country_exists = this` first.
+- Reference world of epoch 25 `RNW1-0826C-SYW6B-MW73Y-C005G-20813-G0HNQ-QV`, 792 files, digest `0b2efd8a…9f54` under hash seeds 1 and 7; make check and the local tests pass. The land cache was not stale: epoch 25 keys fresh entries.
+- [UNKNOWN] Whether both lines are gone: the next session's log. Nothing is asked.
+- No game launch by the agent, no push or publication.

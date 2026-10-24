@@ -13,7 +13,11 @@ import numpy as np
 import pytest
 
 from rnw.eu5_newworld import Plan, PlannedCell
+from rnw.eu5_nw_export import (
+    _locator_instances,  # pyright: ignore[reportPrivateUsage]
+)
 from rnw.eu5_seas import (
+    NO_UNITS,
     Coast,
     SeaError,
     VanillaPort,
@@ -26,6 +30,7 @@ from rnw.eu5_seas import (
     read_ports,
     read_waters,
     verify_crossings,
+    verify_locators,
     verify_seas,
 )
 from rnw.model import CellClass
@@ -373,3 +378,42 @@ def test_a_crossing_through_a_sea_that_does_not_touch_both_lands_stops_the_expor
     row = _row(plan, found[0], height).replace(plan.cells[found[0].through].key, far)
     with pytest.raises(SeaError, match="does not touch both"):
         _ = verify_crossings(text + row + "\n", plan, world, canvas, found)
+
+
+def _locator_keys(instances: dict[str, list[str]], name: str) -> set[str]:
+    return {
+        line.split("=")[1] for line in "".join(instances[name]).split() if line.startswith("id=")
+    }
+
+
+def _closed_world() -> tuple[NewWorld, Plan, Water, Canvas]:
+    world, plan = _world_with_ports()
+    water = _water(world, shut=(_water(world).waters.sea()[-1],), docks=())
+    canvas = cast("Canvas", cast("object", SimpleNamespace(col0=0, roll=0, shape=(10, 14))))
+    return world, plan, water, canvas
+
+
+def test_the_closed_ocean_has_no_stack_of_units_and_no_battle_as_in_the_game() -> None:
+    world, plan, water, canvas = _closed_world()
+    shut = plan.cells[next(iter(water.zones))].key
+    instances = _locator_instances(plan, world, canvas, {}, water.zones)
+    for name in NO_UNITS:
+        keys = _locator_keys(instances, name)
+        assert shut not in keys
+        assert len(keys) == len(plan.cells) - 1
+    # The game's vfx locators cover every location, the closed ocean too.
+    assert shut in _locator_keys(instances, "generated_locators_vfx.txt")
+
+
+def test_written_locators_that_hold_what_was_planned_pass_and_any_other_stops_the_export() -> None:
+    world, plan, water, canvas = _closed_world()
+    instances = _locator_instances(plan, world, canvas, {}, water.zones)
+    files = {name: "".join(instances[name]) for name in NO_UNITS}
+    assert verify_locators(files, plan, water) == {"locators_checked": len(plan.cells) - 1}
+    shut = plan.cells[next(iter(water.zones))].key
+    extra = {name: text + f"id={shut}\n" for name, text in files.items()}
+    with pytest.raises(SeaError, match="1 locators too many and 0 too few"):
+        _ = verify_locators(extra, plan, water)
+    short = {name: text.replace(f"id={plan.cells[0].key}\n", "") for name, text in files.items()}
+    with pytest.raises(SeaError, match="0 locators too many and 1 too few"):
+        _ = verify_locators(short, plan, water)

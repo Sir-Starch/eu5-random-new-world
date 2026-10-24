@@ -116,6 +116,7 @@ from rnw.eu5_map import (
     LOCATIONS,
     LOCATOR_FILES,
     LOCATOR_OVERRIDE,
+    MAP_OBJECTS,
     NAMED_COLORS,
     PORTS,
     RIVER_LAND,
@@ -163,6 +164,7 @@ from rnw.eu5_rewrite import (
     rewrite_templates,
 )
 from rnw.eu5_seas import (
+    NO_UNITS,
     Coast,
     SeaError,
     VanillaPort,
@@ -173,6 +175,7 @@ from rnw.eu5_seas import (
     settle_coast,
     shape_water,
     verify_crossings,
+    verify_locators,
     verify_seas,
 )
 from rnw.eu5_slots import (
@@ -595,7 +598,11 @@ def _instance(key: str, row: int, x: int, height: int) -> str:
 
 
 def _locator_instances(
-    plan: Plan, world: NewWorld, canvas: Canvas, ports: dict[int, tuple[int, int]]
+    plan: Plan,
+    world: NewWorld,
+    canvas: Canvas,
+    ports: dict[int, tuple[int, int]],
+    closed: frozenset[int],
 ) -> dict[str, list[str]]:
     height = canvas.shape[0]
     columns = _world_columns(canvas, world.interior[:, 1])
@@ -618,7 +625,7 @@ def _locator_instances(
     out["generated_map_object_locators_dock.txt"] = []
     for index, cell in enumerate(plan.cells):
         for name, kinds in wanted.items():
-            if cell.kind in kinds:
+            if cell.kind in kinds and not (index in closed and name in NO_UNITS):
                 out[name].append(_instance(cell.key, int(rows[index]), int(columns[index]), height))
         if index in ports:
             row, x = ports[index]
@@ -976,7 +983,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         resources_seed,
     )
     used = [spec for spec in SPECS if spec in places.values()]
-    instances = _locator_instances(plan, world, canvas, port_pixels)
+    instances = _locator_instances(plan, world, canvas, port_pixels, water.zones)
     trimmed = _trimmed_instances(game_map, canvas)
     relocated = removed | set(trimmed)
     kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
@@ -2349,6 +2356,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     plan,
                     world,
                     coast,
+                    shapes,
+                )
+            )
+            text_checks.update(
+                verify_locators(
+                    {
+                        name: texts[_mod_path(f"{MAP_OBJECTS}/{name}")].decode("utf-8-sig")
+                        for name in NO_UNITS
+                    },
+                    plan,
                     shapes,
                 )
             )

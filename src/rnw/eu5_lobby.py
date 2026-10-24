@@ -857,9 +857,14 @@ def hide_select_entry(text: str) -> str | None:
 
 
 def scripted_gui_text() -> str:
-    """The scripted GUI that tells the context menu whether a country is of the New World."""
+    """The scripted GUI that tells the context menu whether a country is of the New World.
+
+    A lobby with no country selected asks it of a country that is none, which the game logs as a
+    script error for every such question (263 a session, C249): ``country_exists`` comes first.
+    """
     return (
         "# Random New World: is the country's capital in the generated New World?\n"
         f"{SCRIPTED_GUI} = {{\n\tscope = country\n\tis_shown = {{\n"
+        "\t\tcountry_exists = this\n"
         f"\t\tcapital.continent = continent:{CONTINENT}\n\t}}\n}}\n"
     ) + location_scripted_gui_text()

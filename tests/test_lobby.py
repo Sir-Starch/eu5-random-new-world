@@ -315,6 +315,15 @@ def test_the_scripted_gui_reads_the_capitals_continent() -> None:
     assert "has_game_rule" not in scripted_gui_text()
 
 
+def test_the_scripted_gui_asks_a_country_that_is_none_nothing() -> None:
+    """The lobby asks it of a country that is none while nothing is selected (C249)."""
+    shown = parse(scripted_gui_text()).block(SCRIPTED_GUI)
+    assert shown is not None
+    block = shown.block("is_shown")
+    assert block is not None
+    assert next((entry.key, entry.value) for entry in block.entries) == ("country_exists", "this")
+
+
 # Stand-ins for the game's sampler macros: a sampler is a texture read through one sampler state.
 HARNESS_HEAD = """SamplerState RnwHarnessSampler : register(s0);
 #define PdxTextureSampler2D Texture2D
