@@ -436,7 +436,9 @@ class MainWindow(QMainWindow):
         hint = QLabel(text("selection_hint"))
         hint.setWordWrap(True)
         layout.addWidget(hint)
+        # The splitter gives the panel its width: no text in it may set a minimum.
         self.selection_label: QLabel = QLabel()
+        self.selection_label.setWordWrap(True)
         layout.addWidget(self.selection_label)
         self.library_remove: QPushButton = QPushButton()
         _ = self.library_remove.clicked.connect(self._remove_entries)
@@ -446,6 +448,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.library_delete)
         self.library_status: QLabel = QLabel()
         self.library_status.setWordWrap(True)
+        # An error names a path, one unbreakable word that would widen the whole window.
+        self.library_status.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.library_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(self.library_status)
         return panel
@@ -1223,15 +1227,15 @@ class MainWindow(QMainWindow):
         )
         self.select_all_button.setEnabled(bool(controller.worlds or controller.strays))
         problem = controller.removal_problem() or (text("remove_none") if not installed else None)
-        self.library_remove.setText(text("remove_count", count=installed))
+        self.library_remove.setText(text("library_remove", count=installed))
         self.library_remove.setEnabled(problem is None)
         self.library_remove.setToolTip(problem or text("remove_tip"))
         problem = (
             text("ready_busy") if controller.busy else text("delete_none") if not worlds else None
         )
-        self.library_delete.setText(text("delete_count", count=worlds))
+        self.library_delete.setText(text("library_delete", count=worlds))
         self.library_delete.setEnabled(problem is None)
-        self.library_delete.setToolTip(problem or "")
+        self.library_delete.setToolTip(problem or text("delete_tip"))
         multiple = len(selected) > 1
         self.remove_button.setText(
             text("remove_count", count=installed) if multiple else text("remove")

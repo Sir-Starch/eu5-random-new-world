@@ -22,9 +22,9 @@ from rnw.record import Verdict
 
 try:  # the window needs PySide6 and the system's graphics libraries
     from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
-    from PySide6.QtGui import QDragEnterEvent, QDropEvent
+    from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont
     from PySide6.QtTest import QTest
-    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QPushButton
+    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QPushButton, QWidget
 
     from rnw.gui.maps import CompareDialog
     from rnw.gui.window import MainWindow, SettingsDialog
@@ -172,6 +172,30 @@ def test_the_library_and_world_page_fit_the_supported_window_size(
     QApplication.processEvents()
     assert (window.width(), window.height()) == (width, height)
     assert not window.world_visibility.visibleRegion().isEmpty()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_library_panel_leaves_its_width_to_the_splitter(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """A wide font or an error naming a Windows path wraps or clips; it never widens the window."""
+    window = _window(tmp_path, fake_export)
+    window.setFont(QFont("Sans Serif", 12))
+    window.resize(1080, 760)
+    window.show()
+    path = r"C:\Users\runneradmin\AppData\Local\rnw\worlds\6rf2nzt4dv\mod\map_data\locations.png"
+    window.library_status.setText(
+        text(
+            "batch_delete_failed", name="Small continents", done=2, message=f"Access denied: {path}"
+        )
+    )
+    window.library_status.show()
+    QApplication.processEvents()
+    panel = window.world_list.parent()
+    assert isinstance(panel, QWidget)
+    assert panel.minimumSizeHint().width() == window.world_list.minimumWidth()
+    assert (window.width(), window.height()) == (1080, 760)
     _ = window.close()
 
 

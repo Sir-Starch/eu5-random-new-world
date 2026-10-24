@@ -469,10 +469,16 @@ STRINGS: Final[dict[str, str]] = {
     "selection_hint": "Ctrl-click to select several worlds; Shift-click to select a range.",
     "selection_count": "{count} selected · {installed} in the game",
     "remove_count": "Remove from game ({count})",
+    "library_remove": "Remove ({count})",
     "remove_tip": "Remove the selected mods from EU5. Keep their world codes and pictures.",
     "remove_none": "Select an installed world first.",
     "remove_no_profile": "Choose the EU5 profile in Settings first.",
     "delete_count": "Delete from library ({count})…",
+    "library_delete": "Delete ({count})…",
+    "delete_tip": (
+        "Delete the selected worlds from the library, with their saved maps, notes, kept mod "
+        "files and installed mods."
+    ),
     "delete_none": "Select a world in the library first.",
     "delete_many_title": "Delete {count} worlds?",
     "delete_many_question": (
