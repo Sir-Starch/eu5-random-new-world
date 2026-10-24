@@ -264,7 +264,7 @@ def migrate_visibility(data: Path, *, default: bool) -> list[World]:
     return migrated
 
 
-_ATLASES: dict[tuple[str, int, int], Atlas] = {}
+_ATLASES: dict[tuple[str, int, int, int, int], Atlas] = {}
 
 
 def atlas(data: Path, world: World) -> Atlas | None:
@@ -273,9 +273,11 @@ def atlas(data: Path, world: World) -> Atlas | None:
     folder_path = folder(data, world)
     document, labels = folder_path / ATLAS_JSON, folder_path / ATLAS_LABELS
     try:
-        key = (str(folder_path), document.stat().st_mtime_ns, labels.stat().st_mtime_ns)
+        first, second = document.stat(), labels.stat()
     except OSError:
         return None
+    # Sizes too: two writes within one tick of the file system's clock share a time.
+    key = (str(folder_path), first.st_mtime_ns, first.st_size, second.st_mtime_ns, second.st_size)
     if key not in _ATLASES:
         try:
             _ATLASES[key] = atlas_from_files(document.read_bytes(), labels.read_bytes())

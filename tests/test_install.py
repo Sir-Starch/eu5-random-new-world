@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
@@ -57,6 +58,7 @@ def test_a_foreign_folder_of_the_same_name_is_never_replaced(tmp_path: Path) -> 
     assert install.installed_mods(tmp_path / "nowhere") == []
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="a read-only folder holds no file on Windows")
 def test_a_world_whose_files_the_game_holds_is_retired_and_deleted_later(tmp_path: Path) -> None:
     """The folder moves aside in one rename, the new world goes in, the held rest stays hidden.
 

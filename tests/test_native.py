@@ -40,7 +40,8 @@ def _streams() -> list[bytes]:
     return [noise, runs, *shorts]
 
 
-@pytest.mark.parametrize("raw", _streams())
+# Named ids: the streams as ids would be too long for a Windows environment variable.
+@pytest.mark.parametrize("raw", _streams(), ids=["noise", "runs", "one", "eight", "twenty"])
 def test_lzav_decoder_equals_the_reference(raw: bytes) -> None:
     """Literal-only and run-length streams decode to the original in both decoders."""
     for stream in (lzav.encode(raw), lzav.encode_literals(raw)):

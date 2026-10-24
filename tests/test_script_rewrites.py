@@ -111,7 +111,7 @@ def test_removed_map_ids_are_dropped_not_remapped() -> None:
 def _write(root: Path, relative: str, text: str) -> None:
     path = root / relative
     path.parent.mkdir(parents=True, exist_ok=True)
-    _ = path.write_text(text, encoding="utf-8")
+    _ = path.write_text(text, encoding="utf-8", newline="\n")
 
 
 def test_scripts_of_the_game_and_its_dlc_are_rewritten(tmp_path: Path) -> None:

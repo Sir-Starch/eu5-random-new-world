@@ -285,6 +285,7 @@ def test_a_missing_cover_keeps_the_visibility_checkbox_and_reports_the_problem(
     window = _window(tmp_path, fake_export)
     window.generate_button.click()
     pump(lambda: window.controller.phase is Phase.FINISHED)
+    pump(window.world_visibility.isEnabled)
     world = window.controller.selected_world()
     assert world is not None
     cover = library.folder(window.controller.data, world) / COVER_COPY

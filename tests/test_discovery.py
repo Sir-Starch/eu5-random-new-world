@@ -181,8 +181,9 @@ def test_inside_a_proton_prefix_the_steam_stub_lists_the_library(tmp_path: Path)
     """The Windows build in the game's prefix reads the stub's "LibraryFolders" (capitalised)."""
     stub = _library(tmp_path / "drive_c" / "Program Files (x86)" / "Steam", with_game=False)
     library = _library(tmp_path / "S")
+    escaped = str(library).replace(chr(92), chr(92) * 2)
     _ = (stub / "steamapps" / "libraryfolders.vdf").write_text(
-        f'"LibraryFolders"\n{{\n\t"1"\n\t{{\n\t\t"path"\t\t"{library}"\n\t}}\n}}\n',
+        f'"LibraryFolders"\n{{\n\t"1"\n\t{{\n\t\t"path"\t\t"{escaped}"\n\t}}\n}}\n',
         encoding="utf-8",
     )
     environment = Environment(

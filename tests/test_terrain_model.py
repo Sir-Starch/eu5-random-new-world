@@ -271,6 +271,7 @@ def test_inline_instances_are_rewritten_in_place(tmp_path: Path) -> None:
     _ = path.write_text(
         f'{first} 0 0 0 1 1 1 1\n"}}\n{second}',
         encoding="utf-8",
+        newline="\n",
     )
     values = np.array([[5, 0, 6, 0, 0, 0, 1, 1, 1, 1], [7, 0, 8, 0, 0, 0, 1, 1, 1, 1]], np.float32)
     text = rewrite_inline(path, {"a": values}).decode("utf-8")

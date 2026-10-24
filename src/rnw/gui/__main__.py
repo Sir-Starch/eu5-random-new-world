@@ -71,7 +71,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     threading.excepthook = _log_thread
     if SELF_TEST in arguments:
         with TemporaryDirectory(prefix="rnw-self-test-") as temporary:
-            return self_test(application, Controller(data=Path(temporary)))
+            try:
+                return self_test(application, Controller(data=Path(temporary)))
+            finally:
+                logs.stop()  # Windows cannot remove the folder while the log is open.
     controller = Controller(program_folder=paths.program_directory())
     window = MainWindow(controller)
     window.resize(WIDTH, HEIGHT)

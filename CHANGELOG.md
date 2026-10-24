@@ -7,6 +7,7 @@ All notable changes to Random New World. The project has one product version ([A
 ## [Unreleased]
 
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
+- Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it.
 
 ## 0.11.4 — 2026-10-24
 
