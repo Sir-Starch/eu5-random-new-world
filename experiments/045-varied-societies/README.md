@@ -30,3 +30,16 @@ Whether the engine takes the records is the open question (C253): a theocracy ov
 ## Offline evidence
 
 [V-EXEC] `make check` passes (1,314 tests); the reference world `RNW1-0826C-SYW6B-MW73Y-C005G-40813-G0TQW-2Z` holds two confederations and has the digest `7113a7f6…0662` (792 files) under hash seeds 1 and 7, and the layers test passes; a world at 0 permille is byte-identical to the 0.11.1 export but for `.metadata` (818 files). Every export passes `verify_archetypes`, which reads the written records back against the plan. Of 31 worlds searched with the peoples stage alone, one held all four kinds at 1000 permille: this one.
+
+## The owner's sitting (2026-10-24, 07:07 to 07:15)
+
+The owner played the installed world (`rnw_exp_world_2r7bql6dk3`) as a 1337 game: the lobby at 07:08, a save loaded at 07:08:26, play to 1341.8.12, the autosave at quit at 07:15:42. No console commands and no list was asked of the owner; the logs and the autosave were read afterwards. Claims C254-C256.
+
+- The game stayed up. The average frame delta of the session was 2 to 7 ms (`performance_degradation.log`); the one long frame, 1.58 s, is at the 1337 load.
+- The highland confederation is in the save: `tribal_confederation` created 1337.1.1 with NGK (leader), XUI and TQT, as the mod's `15_international_organizations.txt` names them. NGJ (Hopi, a native of this world) is a theocracy with `theocratic_elective`, most likely the sacred centre. The sea league, the fractured realm, and the alliances and rivals are not checked by name yet.
+- No engine line names a R7d record (`tribal_confederation`, `theocratic_elective`, `scripted_mutual`, `rival`, `land_vs_naval`) as an error.
+- The guard of 0.11.1 did not stop the lobby's errors: 214 `Script system error!` at `common/scripted_guis/rnw_new_world.txt:4`, all at 07:08, before a country was selected (C254). The claim of C249 that it fixed them is wrong. The cause is inferred to be the lobby's `COUNTRY_SELECTED` expression, untested.
+- 27,573 map-mode errors in one burst at 07:09:54 (vanilla `map_modes.txt` lines 1620 and 1693, `scope:actor` none), not attributed (C255).
+- The duplicate-key warnings of the mod's `replace/` localization file (C256) are unresolved.
+
+Not done: no change to the generated files. A fix of the lobby guard cannot be checked offline: it changes a mod file, so it starts a new epoch and a new reference world, and it needs one short sitting to confirm. Nothing is asked of the owner now.

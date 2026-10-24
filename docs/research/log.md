@@ -793,3 +793,10 @@
 - Found on the way, not R7d's: seed 210 of the continents preset fails in `plan_identities` (IndexError: an area without provinces).
 - No game launch by the agent, no push or publication.
 
+
+## 2026-10-24 — The owner's sitting of 0.11.2 (045), logs read: C254-C256
+
+- [V-GAME C254] The session (07:07 to 07:15, EU5 1.4.4, world `rnw_exp_world_2r7bql6dk3`) ran to 1341.8.12. The save holds the highland confederation (NGK, XUI, TQT) and a theocracy of NGJ. The guard of 0.11.1 (`common/scripted_guis/rnw_new_world.txt`, `country_exists = this` first) did not stop the 214 lobby errors at `:4`: the `is_shown` block raises them. C249's claim of the fix is wrong; the cause is inferred to be the lobby's `COUNTRY_SELECTED` expression (untested).
+- [V-GAME C255] 27,573 vanilla map-mode errors, one burst at 07:09:54 (`scope:actor` none in `nobles_percentage` and `burghers_percentage`), not attributed to the mod or to a vanilla state.
+- [V-GAME C256] The duplicate-key warnings of the mod's `replace/` localization against vanilla area and region names: which text wins is unknown.
+- Fixed nothing: a lobby fix changes a mod file (a new epoch and reference world) and needs a short sitting to confirm; no game launch by the agent, no push or publication.
