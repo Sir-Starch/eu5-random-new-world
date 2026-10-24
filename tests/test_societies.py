@@ -21,7 +21,9 @@ from rnw.societies import (
     LandGraph,
     Societies,
     generate_societies,
+    hearth_domains,
     land_routes,
+    travel_from,
     trunk_roads,
 )
 
@@ -322,3 +324,27 @@ def test_a_route_needs_an_allowed_source() -> None:
     """The capital must be inside the allowed land."""
     with pytest.raises(ValueError, match="allowed"):
         _ = trunk_roads(_roads(2, [(0, 1)]), {1}, 0, [1])
+
+
+def test_a_location_belongs_to_the_nearest_hearth_and_an_unreached_one_to_none() -> None:
+    graph = _grid()
+    last = ROWS * COLUMNS - 1
+    domains = hearth_domains(graph, (0, last))
+    assert domains[0] == 0
+    assert domains[last] == 1
+    assert set(domains[:last].tolist()) == {0, 1}
+    assert domains[10] == 0
+    assert domains[last - 9] == 1
+    assert domains[ROWS * COLUMNS :].tolist() == [-1] * ISLAND
+    assert hearth_domains(graph, ()).tolist() == [-1] * len(graph.capacity)
+
+
+def test_travel_costs_run_over_land_and_sea_links_and_miss_what_neither_reaches() -> None:
+    graph = _grid()
+    cost = travel_from(graph, 0)
+    assert cost[0] == 0
+    assert cost[1] == STEP_COST
+    assert cost[COLUMNS] == STEP_COST
+    assert cost[ROWS * COLUMNS] == -1
+    linked = replace(graph, links=np.array([[0, ROWS * COLUMNS]], dtype=np.int64))
+    assert travel_from(linked, 0)[ROWS * COLUMNS] == graph.link_cost + STEP_COST

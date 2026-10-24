@@ -25,7 +25,7 @@ import numpy as np
 from rnw.rng import SplitMix64, derive_seed
 
 if TYPE_CHECKING:
-    from collections.abc import Collection
+    from collections.abc import Collection, Sequence
 
     from numpy.typing import NDArray
 
@@ -76,13 +76,18 @@ class LandGraph:
 
 @dataclass(frozen=True, slots=True)
 class Polity:
-    """A state (owns its members) or a tribe (holds their pops); capital is a member."""
+    """A state (owns its members) or a tribe (holds their pops); capital is a member.
+
+    A ``landed`` tribe owns its members like a state, as the confederates of vanilla's
+    Haudenosaunee do (R7d).
+    """
 
     kind: str
     members: tuple[int, ...]
     capital: int
     culture: int
     great: bool = False
+    landed: bool = False
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -495,6 +500,23 @@ def land_routes(
             elif reach == known and node < before[other]:
                 before[other] = node
     return np.array(cost, dtype=np.int64), np.array(before, dtype=np.int64)
+
+
+def hearth_domains(graph: LandGraph, hearths: Sequence[int]) -> NDArray[np.int64]:
+    """The hearth each location is nearest to by travel cost, sea links included; -1 without one.
+
+    The domain of a hearth is what its extraordinary society, if one rises, is drawn from (R7d).
+    """
+    if not hearths:
+        return np.full(len(graph.capacity), -1, dtype=np.int64)
+    _, owner = _Graph(graph).grow(list(hearths))
+    return owner
+
+
+def travel_from(graph: LandGraph, source: int) -> NDArray[np.int64]:
+    """Travel cost from ``source`` to each location over land contacts and sea links; -1 if none."""
+    cost, _ = _Graph(graph).grow([source])
+    return cost
 
 
 def trunk_roads(

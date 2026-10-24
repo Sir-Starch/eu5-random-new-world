@@ -24,7 +24,7 @@ The plan covers native and colonial play. Its work is architectural and runs in 
 | G4 | **No procedural formables.** Historical formables follow G1. | C175 | N3, N4 |
 | G5 | **Exceptional resource places vanish** with the locations that held them. | `retired_base_modifiers` | N1 |
 | G6 | **The eleventh language is missing.** The game has eleven official languages, Turkish among them with as many files as English; the export writes ten from a fixed list (`LANGUAGES`), so a language a patch adds would be missed as well. Every new text inherits the gap. | C178 | N1, L1 |
-| G7 | **Few society archetypes.** Only R7c's great empire is generated; the maritime, commercial and fractured archetypes of the [product spec](product-spec.md) are out of R7c's scope. | [natives](natives.md) | R7d |
+| G7 | **Few society archetypes.** Only R7c's great empire was generated; the maritime, commercial and fractured archetypes of the [product spec](product-spec.md) were out of R7c's scope. **Closed offline in 0.11.2** (R7d, [natives](natives.md), C251-C253): a sea league, a highland confederation, a fractured realm and a sacred centre. | [natives](natives.md) | R7d |
 
 Not gaps, after the check against the installation:
 
@@ -142,7 +142,7 @@ Support diplomatic or subject-based and direct territorial consolidation where i
 
 ## More varied societies (R7d)
 
-Four more combinations of real traits (a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors) belong to the peoples layer as a continuation of R7, not to the content stages; like them, R7d is part of 1.0.0. An archetype follows geography and social structure; randomness chooses among suitable combinations. Strength comes from population, infrastructure, trade and organization; weakness from connection costs, autonomy, relationships and diversity. Neither collapse nor a giant empire is guaranteed, and not every combination needs a new government type. Stories and formables read traits (river, coast, holy site, subjects), not archetype labels, so N3 and N4 do not wait for R7d.
+**Done offline in 0.11.2** (2026-10-24, [natives](natives.md), C251-C253; NOT GAME VALIDATED). Four more combinations of real traits (a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors) belong to the peoples layer as a continuation of R7, not to the content stages; like them, R7d is part of 1.0.0. An archetype follows geography and social structure; randomness chooses among suitable combinations. Strength comes from population, infrastructure, trade and organization; weakness from connection costs, autonomy, relationships and diversity. Neither collapse nor a giant empire is guaranteed, and not every combination needs a new government type: a fractured realm writes rivalries only. Stories and formables read traits (river, coast, holy site, subjects), not archetype labels, so N3 and N4 did not wait for R7d, and a group adds no story of its own: its relations are alliances, rivalries and one organization, and the ranks of a league's ports are the ordinary ranks the stories already read (so a league can change which places the stories offer, as any rank does). The name R7d is also the log's name of the spline network (0.9.30); the two are different work.
 
 ## Randomness and layer ownership
 

@@ -18,10 +18,34 @@ from __future__ import annotations
 import re
 from collections import Counter
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Final
+from itertools import combinations
+from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
+from rnw.archetypes import (
+    FRACTURED_REALM,
+    HIGHLAND_CONFEDERATION,
+    KINDS,
+    SACRED_CENTRE,
+    SEA_LEAGUE,
+    Group,
+    Rules,
+    Structure,
+    alliance_pairs,
+    options,
+    plan_archetypes,
+    rival_pairs,
+)
+from rnw.eu5_archetypes import (
+    ArchetypeCalibration,
+    archetype_calibration,
+    archetype_report,
+    currency_lines,
+    government_fields,
+    merge_knowledge,
+    partner_knowledge,
+)
 from rnw.eu5_biomes import latitude_tenths
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_empires import (
@@ -61,13 +85,16 @@ from rnw.societies import (
     PERMILLE,
     STATE,
     STEP_COST,
+    TOWN,
     LandGraph,
     Societies,
     generate_societies,
+    hearth_domains,
+    travel_from,
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Collection, Mapping, Sequence
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -88,6 +115,12 @@ COUNTRY_DIR: Final[str] = "game/in_game/setup/countries"
 RANK_DIR: Final[str] = "game/in_game/common/country_ranks"
 BIAS_DIR: Final[str] = "game/in_game/common/biases"
 ROADS_FILE: Final[str] = f"{SETUP}/09_roads.txt"
+DIPLOMACY_FILE: Final[str] = f"{SETUP}/12_diplomacy.txt"
+RIVALS_FILE: Final[str] = f"{SETUP}/20_rivals.txt"
+ORGANIZATIONS_FILE: Final[str] = f"{SETUP}/15_international_organizations.txt"
+GOVERNMENT_TYPE_DIR: Final[str] = "game/in_game/common/government_types"
+SOCIETAL_VALUE_DIR: Final[str] = "game/in_game/common/societal_values"
+ORGANIZATION_TYPE_DIR: Final[str] = "game/in_game/common/international_organizations"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
 NAMED_COLORS: Final[str] = "game/main_menu/common/named_colors/02_map.txt"
 COUNTRY_NAME: Final[re.Pattern[str]] = re.compile(
@@ -111,6 +144,7 @@ VEGETATIONS: Final[tuple[str, ...]] = (
     "desert", "sparse", "grasslands", "farmland", "woods", "forest", "jungle",
 )  # fmt: skip
 TOPOGRAPHIES: Final[tuple[str, ...]] = ("flatland", "hills", "plateau", "mountains", "wetlands")
+HIGHLAND_TOPOGRAPHIES: Final[frozenset[str]] = frozenset({"hills", "mountains", "plateau"})
 # Farming potential (permille) by template field [INFERRED design]: warm wet climates and
 # open land farm best; cool tropical highlands farm like lowlands elsewhere; rivers
 # lift dry land most (irrigation), coasts a little.
@@ -239,6 +273,7 @@ class VanillaNatives:
     families: Families = field(default_factory=lambda: Families({}, {}))
     state_levels: tuple[int, ...] = ()
     empire: EmpireCalibration | None = None
+    archetypes: ArchetypeCalibration | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -260,6 +295,9 @@ class Country:
     level: int | None = None
     great: bool = False
     rank: str = ""
+    landed: bool = False
+    currency: tuple[tuple[str, int], ...] = ()
+    archetype: str = ""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -280,6 +318,11 @@ class NativeWorld:
     roads: tuple[tuple[str, str], ...] = ()
     opinions: tuple[tuple[str, str, str], ...] = ()
     extraordinary: dict[str, object] = field(default_factory=dict)
+    alliances: tuple[tuple[str, str], ...] = ()
+    rivals: tuple[tuple[str, str], ...] = ()
+    confederations: tuple[tuple[str, ...], ...] = ()
+    confederation_date: str = ""
+    archetypes: dict[str, object] = field(default_factory=dict)
 
 
 def _milli(value: str) -> int:
@@ -618,6 +661,14 @@ def vanilla_natives(
             pops=pops,
             tag_cultures=tag_cultures,
         ),
+        archetypes=_archetype_calibration(
+            game_dir,
+            setup_text=setup_text,
+            american=american,
+            levels=levels,
+            templates=template_texts,
+            pops=pops,
+        ),
     )
 
 
@@ -662,6 +713,40 @@ def _empire_calibration(  # noqa: PLR0913 - the calibration reads the setup, tem
         american=american,
         pops=pops,
         cultures=tag_cultures,
+    )
+
+
+def _archetype_calibration(  # noqa: PLR0913 - the calibration reads the setup, templates and pops.
+    game_dir: Path,
+    *,
+    setup_text: str,
+    american: list[str],
+    levels: dict[str, int],
+    templates: dict[str, str],
+    pops: dict[str, list[tuple[str, int, str, str]]],
+) -> ArchetypeCalibration:
+    """Governments, confederation, positions and precedents of the four societies (R7d)."""
+
+    def texts(directory: str) -> list[str]:
+        return [
+            path.read_text(encoding="utf-8-sig")
+            for path in sorted((game_dir / directory).glob("*.txt"))
+        ]
+
+    return archetype_calibration(
+        setup_text=setup_text,
+        diplomacy_text=_text(game_dir, DIPLOMACY_FILE),
+        rivals_text=_text(game_dir, RIVALS_FILE),
+        io_text=_text(game_dir, ORGANIZATIONS_FILE),
+        american=american,
+        governments=template_governments(templates, setup_text),
+        levels=levels,
+        templates=templates,
+        government_texts=texts(GOVERNMENT_TYPE_DIR),
+        value_texts=texts(SOCIETAL_VALUE_DIR),
+        io_type_texts=texts(ORGANIZATION_TYPE_DIR),
+        pops=pops,
+        year=SETUP.rsplit("/", 1)[1],
     )
 
 
@@ -1482,7 +1567,6 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         namer=namer,
         loc_keys=loc_keys,
     )
-    ranks = _rank_setups(societies, keys, cultures, vanilla)
     able = {
         number
         for number, country in enumerate(countries)
@@ -1506,16 +1590,33 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         religions=religions,
         cultures=cultures,
     )
-    # An opinion needs its holder to know the partner's capital (C170): the area is discovered.
+    varied = _archetypes(
+        societies,
+        graph,
+        cells,
+        vanilla,
+        tuple(countries),
+        near=near,
+        bound={number for pair in pairs for number in pair},
+        chance=settings.empire_permille,
+        seed=seed,
+    )
+    societies, countries = varied.societies, list(varied.countries)
+    ranks = _rank_setups(societies, keys, cultures, vanilla)
+    # An opinion or a relation needs its holder to know the partner's capital (C170): the area is
+    # discovered.
+    capital_areas = {
+        country.tag: node_areas[polity.capital]
+        for country, polity in zip(countries, societies.polities, strict=True)
+    }
     before = sum(len(country.areas) for country in countries)
     countries = list(
-        discover_opinion_partners(
+        discover_areas(
             countries,
-            opinions,
-            {
-                country.tag: node_areas[polity.capital]
-                for country, polity in zip(countries, societies.polities, strict=True)
-            },
+            merge_knowledge(
+                opinion_knowledge(opinions, capital_areas),
+                partner_knowledge(varied.pairs, capital_areas),
+            ),
         )
     )
     discovered = sum(len(country.areas) for country in countries) - before
@@ -1556,6 +1657,9 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         "holy_sites_placed": len(holy),
         "names_in_local_languages": len(names),
         "vassals": len(vassals),
+        "extraordinary_societies": dict(
+            Counter(str(group["kind"]) for group in groups_of(varied.report))
+        ),
         "areas_discovered_for_opinions": discovered,
     }
     return NativeWorld(
@@ -1572,6 +1676,13 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         roads=roads,
         opinions=opinions,
         extraordinary=extraordinary,
+        alliances=varied.alliances,
+        rivals=varied.rivals,
+        confederations=varied.confederations,
+        confederation_date=(
+            vanilla.archetypes.confederation_date if vanilla.archetypes is not None else ""
+        ),
+        archetypes=varied.report,
         technology=_technology(
             societies,
             cells,
@@ -1586,13 +1697,25 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
     )
 
 
+def groups_of(report: Mapping[str, object]) -> list[Mapping[str, object]]:
+    """The groups of an ``archetypes`` report section, none for a world without calibration."""
+    groups = report.get("groups", [])
+    return cast("list[Mapping[str, object]]", groups)
+
+
 def discover_opinion_partners(
     countries: Sequence[Country],
     opinions: Sequence[tuple[str, str, str]],
     capital_areas: Mapping[str, str],
 ) -> tuple[Country, ...]:
     """The countries, each discovering the areas ``opinion_knowledge`` names; the others stay."""
-    known = opinion_knowledge(opinions, capital_areas)
+    return discover_areas(countries, opinion_knowledge(opinions, capital_areas))
+
+
+def discover_areas(
+    countries: Sequence[Country], known: Mapping[str, frozenset[str]]
+) -> tuple[Country, ...]:
+    """The countries, each discovering the areas ``known`` names for it; the others stay."""
     return tuple(
         replace(country, areas=tuple(sorted({*country.areas, *known[country.tag]})))
         if country.tag in known
@@ -1722,6 +1845,260 @@ def _empires(  # noqa: PLR0913 - the empires read the graph, the polities and th
     return tuple(sorted(roads)), tuple(opinions), extraordinary_report(calibration, records)
 
 
+@dataclass(frozen=True, slots=True, eq=False)
+class _Varied:
+    """The extraordinary societies of R7d, applied: the peoples and countries they change and what
+    they write."""
+
+    societies: Societies
+    countries: tuple[Country, ...]
+    alliances: tuple[tuple[str, str], ...]
+    rivals: tuple[tuple[str, str], ...]
+    confederations: tuple[tuple[str, ...], ...]
+    pairs: tuple[tuple[str, str], ...]
+    report: dict[str, object]
+
+
+# What each kind writes and what it costs its members, for the report [INFERRED design].
+CAUSES: Final[dict[str, tuple[str, ...]]] = {
+    SEA_LEAGUE: (
+        "republic government, as Tlaxcala",
+        "a port town for every member; a city and a market at the hub's port",
+        "naval position on land_vs_naval",
+    ),
+    HIGHLAND_CONFEDERATION: (
+        "landed tribes of one religion, as the Haudenosaunee",
+        "membership of one tribal confederation (mutual defence)",
+        "the confederates' tribal cohesion",
+    ),
+    FRACTURED_REALM: ("one religion and complex capitals; no centre dominant",),
+    SACRED_CENTRE: (
+        "theocracy, as Tibet and Venda",
+        "spiritualist and traditionalist positions",
+        "the most populous place of the faith",
+    ),
+}
+WEAKNESSES: Final[dict[str, tuple[str, ...]]] = {
+    SEA_LEAGUE: ("alliances, not subjects: no member leads", "separated by water"),
+    HIGHLAND_CONFEDERATION: ("no leader country", "tribal technology", "highland travel costs"),
+    FRACTURED_REALM: ("every centre is the rival of the centres it touches",),
+    SACRED_CENTRE: ("the competitors of its faith are its rivals",),
+}
+UNWRITTEN: Final[dict[str, tuple[str, ...]]] = {
+    SEA_LEAGUE: ("diversity: cultures and religions differ, reported only",),
+    HIGHLAND_CONFEDERATION: ("diversity: reported only",),
+    FRACTURED_REALM: ("diversity: reported only",),
+    SACRED_CENTRE: ("diversity: reported only",),
+}
+
+
+def archetype_structure(  # noqa: PLR0913 - the selection reads the peoples, the map and the bonds.
+    societies: Societies,
+    graph: LandGraph,
+    cells: _Cells,
+    countries: Sequence[Country],
+    *,
+    near: Sequence[set[int]],
+    bound: Collection[int],
+) -> Structure:
+    """What ``rnw.archetypes`` reads of the generated peoples."""
+    polities = societies.polities
+    population = societies.population
+    owner = np.full(len(population), -1, dtype=np.int64)
+    for number, polity in enumerate(polities):
+        owner[list(polity.members)] = number
+    cradle: set[int] = set()
+    for zone in range(int(societies.religion.max()) + 1 if len(population) else 0):
+        members = np.flatnonzero(societies.religion == zone)
+        top = int(members[int(np.argmax(population[members]))])
+        if owner[top] >= 0:
+            cradle.add(int(owner[top]))
+    domain = hearth_domains(graph, societies.hearths)
+    elsewhere = len(societies.hearths)
+    ports: list[dict[int, int]] = []
+    for polity in polities:
+        best: dict[int, int] = {}
+        for node in sorted(polity.members):
+            for sea in cells.seas[node]:
+                if sea not in best or population[node] > population[best[sea]]:
+                    best[sea] = node
+        ports.append(best)
+    return Structure(
+        state=[polity.kind == STATE for polity in polities],
+        free=[not polity.great and number not in bound for number, polity in enumerate(polities)],
+        level=[-1 if country.level is None else country.level for country in countries],
+        population=[int(population[list(polity.members)].sum()) for polity in polities],
+        locations=[len(polity.members) for polity in polities],
+        near=near,
+        religion=[int(societies.religion[polity.capital]) for polity in polities],
+        complexity=[int(societies.complexity[polity.capital]) for polity in polities],
+        highland=[
+            PERMILLE
+            * sum(1 for node in polity.members if cells.topography[node] in HIGHLAND_TOPOGRAPHIES)
+            // len(polity.members)
+            for polity in polities
+        ],
+        ports=ports,
+        domain=[
+            int(domain[polity.capital]) if domain[polity.capital] >= 0 else elsewhere
+            for polity in polities
+        ],
+        domains=elsewhere + 1,
+        cradle=frozenset(cradle),
+    )
+
+
+def _league_ranks(
+    societies: Societies, groups: Sequence[Group]
+) -> tuple[dict[int, str], tuple[int, ...]]:
+    """Ranks and markets with the league's ports: a city and a market at the hub's, a town each.
+
+    A rank that a port has already is never lowered.
+    """
+    ranks = dict(societies.ranks)
+    markets = list(societies.markets)
+    for group in groups:
+        if group.kind != SEA_LEAGUE:
+            continue
+        for number, port in enumerate(group.ports):
+            if number == 0:
+                ranks[port] = CITY
+                if port not in markets:
+                    markets.append(port)
+            else:
+                _ = ranks.setdefault(port, TOWN)
+    return ranks, tuple(markets)
+
+
+def _group_record(  # noqa: PLR0913 - a record names each number of its group.
+    group: Group,
+    societies: Societies,
+    graph: LandGraph,
+    countries: Sequence[Country],
+    *,
+    near: Sequence[set[int]],
+    relations: tuple[int, int],
+) -> dict[str, object]:
+    """One group of the ``archetypes`` report."""
+    polities = [societies.polities[number] for number in group.members]
+    total = sum(int(societies.population[list(p.members)].sum()) for p in polities)
+    cost = travel_from(graph, societies.polities[group.hub].capital)
+    steps = [
+        (int(cost[p.capital]) + STEP_COST // 2) // STEP_COST
+        for p in polities[1:]
+        if cost[p.capital] >= 0
+    ]
+    apart = sum(1 for a, b in combinations(group.members, 2) if b not in near[a])
+    return {
+        "kind": group.kind,
+        "domain": group.domain,
+        "hub": countries[group.hub].tag,
+        "tags": [countries[number].tag for number in group.members],
+        "locations": sum(len(p.members) for p in polities),
+        "population_milli": total,
+        "population_share_permille": share(total, int(societies.population.sum())),
+        "religions": len({int(societies.religion[p.capital]) for p in polities}),
+        "cultures": len({p.culture for p in polities}),
+        "median_steps_to_hub": median(steps),
+        "pairs_without_land_contact": apart,
+        "alliances": relations[0],
+        "rivalries": relations[1],
+        "causes": list(CAUSES[group.kind]),
+        "weaknesses": list(WEAKNESSES[group.kind]),
+        "unwritten": list(UNWRITTEN[group.kind]),
+    }
+
+
+def _archetypes(  # noqa: PLR0913 - the societies read the peoples, the bonds and the chance.
+    societies: Societies,
+    graph: LandGraph,
+    cells: _Cells,
+    vanilla: VanillaNatives,
+    countries: tuple[Country, ...],
+    *,
+    near: Sequence[set[int]],
+    bound: Collection[int],
+    chance: int,
+    seed: int,
+) -> _Varied:
+    """Sea leagues, highland confederations, fractured realms and sacred centres (R7d).
+
+    The rare-empire chance decides, once for every hearth's domain, whether the domain has one and
+    which. The peoples change only where a group says so: a league's members take the republic and
+    its ports ranks and a market; a confederation's tribes own their land; a sacred centre takes
+    the theocracy. The rest is relations: alliances, rivalries, one organization.
+    """
+    calibration = vanilla.archetypes
+    rules = (
+        Rules(calibration.republic_level, calibration.confederate_density)
+        if calibration is not None
+        else Rules(0, 0)
+    )
+    structure = archetype_structure(societies, graph, cells, countries, near=near, bound=bound)
+    found = options(structure, rules)
+    groups = plan_archetypes(structure, rules, chance=chance, seed=seed)
+    if groups and calibration is None:
+        message = "No archetype calibration for the extraordinary societies"
+        raise NativesError(message)
+    if calibration is None:
+        return _Varied(societies, countries, (), (), (), (), {})
+    polities = list(societies.polities)
+    changed = list(countries)
+    alliances: list[tuple[str, str]] = []
+    rivals: list[tuple[str, str]] = []
+    confederations: list[tuple[str, ...]] = []
+    knowledge: list[tuple[str, str]] = []
+    records: list[dict[str, object]] = []
+    for group in groups:
+        tags = [countries[number].tag for number in group.members]
+        bonds = alliance_pairs(group)
+        feuds = rival_pairs(group, near)
+        sliders = calibration.sliders.get(group.kind, ())
+        for number in group.members:
+            changed[number] = replace(changed[number], archetype=group.kind)
+        if group.kind == SEA_LEAGUE:
+            for number in group.members:
+                changed[number] = replace(
+                    changed[number],
+                    include=calibration.republic_include,
+                    government=government_fields(calibration.republic_government, (), sliders),
+                )
+        elif group.kind == HIGHLAND_CONFEDERATION:
+            for number in group.members:
+                polities[number] = replace(polities[number], landed=True)
+                changed[number] = replace(
+                    changed[number], landed=True, currency=calibration.cohesion
+                )
+            confederations.append(tuple(tags))
+            knowledge += [(a, b) for a in tags for b in tags if a != b]
+        elif group.kind == SACRED_CENTRE:
+            changed[group.hub] = replace(
+                changed[group.hub],
+                government=government_fields(
+                    changed[group.hub].government, calibration.theocracy, sliders
+                ),
+            )
+        alliances += [(countries[a].tag, countries[b].tag) for a, b in bonds]
+        rivals += [(countries[a].tag, countries[b].tag) for a, b in feuds]
+        knowledge += [(countries[a].tag, countries[b].tag) for a, b in (*bonds, *feuds)]
+        knowledge += [(countries[b].tag, countries[a].tag) for a, b in bonds]
+        records.append(
+            _group_record(
+                group, societies, graph, countries, near=near, relations=(len(bonds), len(feuds))
+            )
+        )
+    ranks, markets = _league_ranks(societies, groups)
+    return _Varied(
+        societies=replace(societies, polities=tuple(polities), ranks=ranks, markets=markets),
+        countries=tuple(changed),
+        alliances=tuple(alliances),
+        rivals=tuple(rivals),
+        confederations=tuple(confederations),
+        pairs=tuple(knowledge),
+        report=archetype_report(calibration, {kind: len(found[kind]) for kind in KINDS}, records),
+    )
+
+
 def _technology(  # noqa: PLR0913 - the report reads the countries, the zones and both choices.
     societies: Societies,
     cells: _Cells,
@@ -1807,7 +2184,7 @@ def country_records(countries: tuple[Country, ...]) -> str:
     parts: list[str] = ["\n\t# RNW generated natives\n"]
     for country in countries:
         lines = [f"\t{country.tag} = {{\n"]
-        if country.kind == STATE:
+        if country.kind == STATE or country.landed:
             lines.append("\t\town_control_core = {\n")
             lines.append(_locations_block(country.members, "\t\t"))
             lines.append("\t\t}\n")
@@ -1828,6 +2205,8 @@ def country_records(countries: tuple[Country, ...]) -> str:
         lines.append("\t\tgovernment = {\n")
         lines.extend(f"\t\t\t{key} = {value}\n" for key, value in country.government)
         lines.append("\t\t\truler = random\n\t\t}\n")
+        if country.currency:
+            lines.append(currency_lines(country.currency))
         lines.append("\t}\n")
         parts.append("".join(lines))
     return "".join(parts)

@@ -35,6 +35,14 @@ from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
+from rnw.eu5_archetypes import (
+    Bonds,
+    Expected,
+    alliance_lines,
+    archetype_problems,
+    confederation_lines,
+    rival_lines,
+)
 from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
@@ -345,10 +353,21 @@ SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
     BUILDINGS_FILE: (("locations",), ("building_manager",)),
     "03_markets.txt": (("market_manager",),),
     "09_roads.txt": (("road_network",),),
-    "12_diplomacy.txt": (("diplomacy_manager",),),
+    "12_diplomacy.txt": (("diplomacy_manager",), ("diplomacy_manager",)),
+    "15_international_organizations.txt": (("international_organization_manager",),),
     DEVELOPMENT_FILE: (("development",),),
     "18_opinions.txt": (("diplomacy_manager",),),
+    "20_rivals.txt": (("diplomacy_manager",),),
 }
+
+
+# The setup files the extraordinary societies of R7d write into or read back.
+ARCHETYPE_FILES: Final[tuple[str, ...]] = (
+    COUNTRIES_FILE,
+    "12_diplomacy.txt",
+    "15_international_organizations.txt",
+    "20_rivals.txt",
+)
 
 
 # The smallest working set of an export: its peak with one thread and the thinnest bands
@@ -1055,9 +1074,13 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         BUILDINGS_FILE: (city_lines(natives.ranks), building_lines(development.villages)),
         "03_markets.txt": (market_lines(natives.markets),),
         "09_roads.txt": (road_lines(natives.roads),),
-        "12_diplomacy.txt": (vassal_lines(natives.vassals),),
+        "12_diplomacy.txt": (vassal_lines(natives.vassals), alliance_lines(natives.alliances)),
+        "15_international_organizations.txt": (
+            confederation_lines(natives.confederation_date, natives.confederations),
+        ),
         DEVELOPMENT_FILE: (development_lines(development.terms),),
         "18_opinions.txt": (opinion_lines(natives.opinions),),
+        "20_rivals.txt": (rival_lines(natives.rivals),),
     }
     for name, text in setup.texts.items():
         relative = f"{SETUP_DIR}/{name}"
@@ -1731,6 +1754,78 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
         "empire_countries": len(relations.empires),
         "empire_road_pairs": len(natives.roads),
         "empire_opinions": len(natives.opinions),
+    }
+
+
+def verify_archetypes(  # noqa: PLR0913, PLR0917 - every record of the plan is checked on the final texts.
+    outputs: dict[str, bytes],
+    natives: NativeWorld,
+    plan: Plan,
+    vanilla: VanillaNatives,
+    originals: dict[str, str],
+    gone: set[str],
+) -> dict[str, object]:
+    """The extraordinary societies write what the plan says, and only that (R7d).
+
+    Every generated country writes the template, government, currency and holding it was planned
+    with; every group is disjoint, of free countries and of one kind, with the relations that
+    kind has; the alliances, rivalries and confederations of the setup files are the plan's, once
+    each, beside the vanilla entries of the Old World; and the holder of a relation has discovered
+    the area of its partner's capital. ``originals`` holds the vanilla texts by file name; a file
+    the export left unchanged is not among the outputs and is vanilla's.
+    """
+
+    def text(name: str) -> str:
+        path = _mod_path(f"{SETUP_DIR}/{name}")
+        return outputs[path].decode("utf-8-sig") if path in outputs else originals[name]
+
+    calibration = vanilla.archetypes
+    groups = cast("list[dict[str, object]]", natives.archetypes.get("groups", []))
+    if calibration is None:
+        problems = ["No archetype calibration"] if groups else []
+    else:
+        subjects = {tag for pair in natives.vassals for tag in pair}
+        area_of = {cell.key: cell.area for cell in plan.cells}
+        problems = archetype_problems(
+            texts={name: text(name) for name in ARCHETYPE_FILES},
+            originals=originals,
+            countries={
+                country.tag: Expected(
+                    tag=country.tag,
+                    state=country.kind == "state",
+                    landed=country.landed,
+                    include=country.include,
+                    government=country.government,
+                    currency=country.currency,
+                    members=country.members,
+                    capital=country.capital,
+                    archetype=country.archetype,
+                    free=not country.great and country.tag not in subjects,
+                )
+                for country in natives.countries
+            },
+            bonds=Bonds(
+                groups=tuple(
+                    (str(group["kind"]), tuple(cast("list[str]", group["tags"])))
+                    for group in groups
+                ),
+                alliances=natives.alliances,
+                rivals=natives.rivals,
+                confederations=natives.confederations,
+            ),
+            calibration=calibration,
+            capital_areas={country.tag: area_of[country.capital] for country in natives.countries},
+            gone=gone,
+        )
+    if problems:
+        extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
+        message = f"Extraordinary societies: {problems[0]}{extra}"
+        raise NewWorldExportError(message)
+    return {
+        "archetype_groups": len(groups),
+        "archetype_alliances": len(natives.alliances),
+        "archetype_rivalries": len(natives.rivals),
+        "archetype_confederations": len(natives.confederations),
     }
 
 
@@ -2431,6 +2526,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 removed | removed_tags,
             )
         )
+        text_checks.update(
+            verify_archetypes(
+                texts,
+                natives,
+                plan,
+                vanilla_start.result(),
+                {name: _read(game_dir, f"{SETUP_DIR}/{name}") for name in ARCHETYPE_FILES},
+                removed | removed_tags,
+            )
+        )
         rewrite = run_stage("script remap", lambda: remap_scripts(game_dir, remap, removed_tags))
         try:
             checked = check_decisions(
@@ -2605,6 +2710,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "natives": natives.stats,
             "technology": natives.technology,
             "extraordinary": natives.extraordinary,
+            "archetypes": natives.archetypes,
             "development": development.stats,
             "biomes": biome_stats,
             "terrain": terrain_stats,

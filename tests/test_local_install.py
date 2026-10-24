@@ -203,6 +203,27 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
         "opinion_irritated",
     )
     assert len(vanilla.empire.largest) == 5
+    # R7d: the republic, the theocracy, the confederates and the positions of the four societies
+    archetypes = vanilla.archetypes
+    assert archetypes is not None
+    assert archetypes.republic_include == "amerindian_advanced_republic_not_nahuatl_no_coast"
+    assert dict(archetypes.republic_government) == {
+        "type": "republic",
+        "heir_selection": "oligarchic_elective",
+    }
+    assert archetypes.republic_level == 2
+    assert dict(archetypes.theocracy) == {
+        "type": "theocracy",
+        "heir_selection": "theocratic_elective",
+    }
+    assert dict(archetypes.cohesion) == {"gold": 100, "stability": 33, "tribal_cohesion": 90}
+    assert 1500 <= archetypes.confederate_density <= 1800
+    assert dict(archetypes.sliders["sea_league"]) == {"land_vs_naval": 60}
+    assert dict(archetypes.sliders["sacred_centre"]) == {
+        "spiritualist_vs_humanist": -90,
+        "traditionalist_vs_innovative": -90,
+    }
+    assert (archetypes.alliances, archetypes.rivals, archetypes.confederations) == (22, 45, 1)
 
 
 def test_local_spline_network_is_read_and_written_back_exactly() -> None:

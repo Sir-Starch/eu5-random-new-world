@@ -6,6 +6,8 @@
 
 **S10 (R7c), done 2026-10-22** (generator 0.9.29, [natives](../natives.md), C160): great empires with causes and weaknesses; [experiment 028](../../experiments/028-technology-and-empires/README.md) is prepared and installed and awaits the owner's batched game test, the R7 gate.
 
+**S11 (R7d, societies), done 2026-10-24** (generator 0.11.2, [natives](../natives.md), C251-C253): a sea league, a highland confederation, a fractured realm and a sacred centre from the generated peoples, each with causes and weaknesses in the game's own records; no handoff document preceded it (the design is in natives). Not the spline network that the log also calls R7d (0.9.30).
+
 R7b and R7c were designed on 2026-10-22 in [sonnet-r7-technology-and-empires](sonnet-r7-technology-and-empires.md): technology and regional families from the societies, then great empires with explicit causes and weaknesses. S01–S05 are research-kit tasks from before the generator.
 
 Tasks below are ordered by dependency and do not assume unverified EU5 geography support. Read [AGENTS.md](../../AGENTS.md), [feasibility](../feasibility.md) and [testing](../testing.md) first. Do not launch the game without renewed owner authorization; the current session's owner requested no further launches [V-GAME C12].

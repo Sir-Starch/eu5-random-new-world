@@ -110,7 +110,9 @@ class NativeSettings:
     # Share of the state land given to lone states away from the hearths' clusters.
     state_spread_permille: int = 0
     # Chance, per hearth, that a great empire rises around it (EU4's fantasy native empires):
-    # one state of many times the usual size with an advanced government. 0: none.
+    # one state of many times the usual size with an advanced government. The same chance, per
+    # hearth's domain, raises a sea league, a highland confederation, a fractured realm or a
+    # sacred centre (R7d). 0: none of them.
     empire_permille: int = 0
 
 

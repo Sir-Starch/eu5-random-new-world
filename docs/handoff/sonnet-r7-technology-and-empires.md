@@ -266,7 +266,7 @@ Use synthetic fixtures only (new `tests/test_empires.py`, plus `tests/test_socie
 
 ## Out of scope
 
-- The other extraordinary archetypes of the [product spec](../product-spec.md): the maritime culture, the commercial network and the fractured successor realm. They need their own Opus design after this experiment.
+- The other extraordinary archetypes of the [product spec](../product-spec.md): the maritime culture, the commercial network and the fractured successor realm. *Done since, without an Opus design, as R7d (societies) in 0.11.2: [natives](../natives.md), C251-C253.*
 - Tributaries. The `tributary` subject type needs a tribal or horde overlord or `allow_tributary_subject`, and no American advance gives that (C158).
 - Region keys chosen by content.
 - Tribal confederations of generated tribes (vanilla's Haudenosaunee confederation joins landed tribes), alliances, stability or other `currency_data`, `tolerated_cultures`, court languages.

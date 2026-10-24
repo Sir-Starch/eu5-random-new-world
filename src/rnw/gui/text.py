@@ -145,12 +145,15 @@ STRINGS: Final[dict[str, str]] = {
     "quick.states.few": "Few",
     "quick.states.normal": "Normal",
     "quick.states.many": "Many",
-    "quick.empires": "Great empires",
+    "quick.empires": "Extraordinary peoples",
     "quick.empires.about": (
-        "How likely a great native empire is to rise around each centre of culture, as the "
-        "fantasy setting of EU4's random New World: one state many times the size of the "
-        "others, with an advanced government, the Old World's technology, a higher rank and "
-        "royal roads, feared by its neighbours and resented by its vassals."
+        "How likely an extraordinary native society is to rise around each centre of culture. "
+        "A great empire, as the fantasy setting of EU4's random New World: one state many times "
+        "the size of the others, with an advanced government, the Old World's technology, a "
+        "higher rank and royal roads, feared by its neighbours and resented by its vassals. "
+        "Or a league of sea-trading republics, allied but divided by water; a confederation of "
+        "highland tribes; a fractured realm whose centres are each other's rivals; or a "
+        "sacred centre, a theocracy among rivals of its own faith."
     ),
     "quick.empires.never": "Never",
     "quick.empires.seldom": "Seldom",
@@ -257,12 +260,14 @@ STRINGS: Final[dict[str, str]] = {
     "control.natives.religion_locations.about": "Locations of a religion, on average.",
     "control.natives.tribe_locations": "Tribe size",
     "control.natives.tribe_locations.about": "Locations of a tribe, on average.",
-    "control.natives.empire_permille": "Great empires",
+    "control.natives.empire_permille": "Extraordinary peoples",
     "control.natives.empire_permille.about": (
-        "Chance, for each cultural hearth, that a great empire rises around it: one state "
-        "many times the size of the others, with an advanced government, the Old World's "
-        "technology, a higher rank and royal roads, feared by its neighbours and resented by "
-        "its vassals."
+        "Chance, for each cultural hearth, that an extraordinary society rises around it: a "
+        "great empire (one state many times the size of the others, with an advanced "
+        "government, the Old World's technology, a higher rank and royal roads, feared by its "
+        "neighbours and resented by its vassals), a league of sea-trading republics, a "
+        "confederation of highland tribes, a fractured realm of rival centres or a sacred "
+        "centre with rivals of its faith."
     ),
     "control.natives.state_locations": "State size",
     "control.natives.state_locations.about": "Locations of a native state, on average.",
