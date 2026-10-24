@@ -1,11 +1,11 @@
 # Sea geography
 
-Generator 0.10.13, epoch 23 (2026-10-24; claims C232–C244). The generated New World was land with a sea
+Generator 0.10.14, epoch 24 (2026-10-24; claims C232–C247). The generated New World was land with a sea
 poured round it: every sea cell was `<random word> Sea`, a coastal zone could have no port, and the
 game's own kinds of water (deep ocean with its currents, inland sea, narrows) were not used. 0.10.12
 fixed the ports, the names, the topography and gave the deep water currents; the owner's first sitting
 with it (2026-10-24) showed what it had missed, that the game's open ocean is closed to ships: 0.10.13
-adds lanes and impassable water. This page says what the water of a world is now, why, and what is not
+adds lanes and impassable water and 0.10.14 the straits an army can cross. This page says what the water of a world is now, why, and what is not
 known until a game reads it.
 
 ## What the game does with water
@@ -185,6 +185,38 @@ the deep cells are told apart as the game's are:
   passable generated zones are in the one water of 4,500 zones with the game's, the 36 closed zones touch no land
   and every coastal land and every coastal passable zone has its port [V-EXEC C243].
 
+## Straits and crossings (`rnw.straits`)
+
+The game links two land locations that a narrow sea zone separates, "close enough to each other so
+armies can cross it without the need of a navy" (`adjacencies.csv`, type `sea`: the two locations, the
+sea zone between, a point on each). Its own 184 rows say what close is: the two points lie 1 to 9
+pixels apart (median 3), each on its own location, and the sea zone touches both; 100 rows join
+different landmasses, 84 two places of one landmass; an army that crosses is the attacker, with a
+combat penalty, and the sea zone's control can blockade the crossing [V-LOCAL, SOURCE C245]. The
+generated landmasses lay a sea cell or more apart, 100 pixels and more, so there was nothing to
+write (the reference world had two pairs of locations within 12 pixels). Two steps, both in the land
+layer's seed and nothing else:
+
+- **Pinch.** Two landmasses of at least 2,000 pixels that come within 36 pixels of each other are
+  brought together at their nearest points to a channel of 5 or 6 pixels: each grows the same
+  distance towards the other (a disk of that radius round the facing coast), the growth tapering off
+  over twice the gap, so the shores keep their shape away from the strait. Nothing is merged, no third
+  landmass is touched (nothing is added within 6 pixels of one), no water is cut off, and no land is
+  added where the coast margin, the border or the wrap seam forbid it; otherwise the pinch is not made.
+  The channel is narrow
+  water (`narrows`) and is named for it, a strait or a sound.
+- **Crossings.** On the finished cells, every pair of land cells of different landmasses that a run
+  of at most 9 pixels (the game's widest) of one sea cell divides along a row or a column is a
+  crossing; its two points are on the narrowest run, one on each location, written as the game writes
+  them (`eu5_seas.crossings`, `eu5_nw_export._crossing_rows`). The reference world has six, the
+  presets 0 (a supercontinent) to 78 (the islands). Places of one landmass are not joined: there
+  is no row for a bay, as the generated world has no estuary a path does not go round.
+
+The export reads `adjacencies.csv` back (`verify_crossings`): each row names two land cells of
+different landmasses and a sea cell that touches both, its points lie on its two cells, at most 9
+pixels apart, and the rows are exactly the world's crossings. Read back from the written files alone
+the same six pairs are found, and the game's 135 rows outside the replaced Americas stay (C246).
+
 ## A fault this uncovered
 
 The planner of sea areas gave each land region the water near its shore by growing parts from its
@@ -197,12 +229,12 @@ vanilla coastal area has water on every preset tried (C237).
 
 ## What is not done, and what is not known
 
-- Crossings of straits (`adjacencies.csv`, type `sea`) are the next phase (C245).
 - A gyre is not closed: where the generated land cuts the course of a current, the lane ends at the
   coast and the flow does not go round the land to join the lane behind it. Ships go round by the
   coastal water, which is passable.
 - River mouths are not named (the game has estuaries and deltas), and a few sea cells of a pixel or
   a few dozen pixels remain along the seam and the canvas edge, as before.
+- [UNKNOWN C247] Whether the engine lets armies cross by a generated row, with the penalty and the blockade, and whether the points are only the crossing's picture or also its cost.
 - [UNKNOWN] Whether `error.log` is free of the port lines after this; whether the engine takes
   generated `ocean_wasteland` zones listed as the game's are (and keeps ships out of them),
   `deep_ocean` lanes with their currents, `inland_sea` and `narrows`, a whole-value `$key$` as a

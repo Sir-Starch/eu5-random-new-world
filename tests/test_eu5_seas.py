@@ -20,21 +20,24 @@ from rnw.eu5_seas import (
     VanillaWater,
     Water,
     courses_over,
+    crossings,
     current_text,
     foreign_coast,
     read_ports,
     read_waters,
+    verify_crossings,
     verify_seas,
 )
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast
 from rnw.seas import Topography, analyse
-from tests.block_worlds import block_world
+from tests.block_worlds import block_world, cell
 
 if TYPE_CHECKING:
     from rnw.currents import Vector
     from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
+    from rnw.eu5_seas import Crossing
     from rnw.newworld import NewWorld
 
 PORTS = """LandProvince;SeaZone;x;y;
@@ -280,3 +283,93 @@ def test_a_course_is_where_a_replaced_deep_zone_ran_over_a_generated_cell() -> N
     assert courses[0].permille == 750
     assert courses[0].vector == (9000, 1000)
     assert 1 not in courses
+
+
+STRAIT = ["AAA1BBB", "AAA1BBB", "AAA1BBB", "2222222"]
+
+
+def _plan_of(world: NewWorld) -> Plan:
+    return Plan(
+        cells=[
+            PlannedCell(
+                key=f"rnw_{'loc' if kind is CellClass.LAND else 'sea'}_{index:05d}",
+                name="x",
+                color=index + 1,
+                kind=kind,
+                province="p",
+                area="a",
+                region="r",
+                subcontinent="s",
+                continent="c",
+            )
+            for index, kind in enumerate(world.classes)
+        ]
+    )
+
+
+def _strait(layout: list[str] = STRAIT, block: int = 4) -> tuple[NewWorld, Plan, list[Crossing]]:
+    world = block_world(layout, block=block)
+    waters = analyse(world)
+    return world, _plan_of(world), crossings(world, waters.landmass.tolist())
+
+
+def _row(plan: Plan, item: Crossing, height: int, *, swap: bool = False) -> str:
+    (r1, c1), (r2, c2) = item.start, item.stop
+    first, second = plan.cells[item.first].key, plan.cells[item.second].key
+    if swap:
+        c1, c2 = c2, c1
+    through = plan.cells[item.through].key
+    return f"{first};{second};sea;{through};{c1};{height - 1 - r1};{c2};{height - 1 - r2};xxx"
+
+
+def test_two_lands_a_narrow_sea_cell_divides_are_a_crossing_through_it() -> None:
+    world, plan, found = _strait()
+    left, right, between = (cell(STRAIT, 0, column) for column in (0, 4, 3))
+    assert [(c.first, c.second, c.through) for c in found] == [(left, right, between)]
+    assert found[0].start == (0, 11)
+    assert found[0].stop == (0, 16)
+    assert world.classes[between] is CellClass.SEA
+    assert plan.cells[between].key.startswith("rnw_sea")
+
+
+def test_lands_of_one_landmass_or_a_sea_wider_than_the_games_crossings_make_none() -> None:
+    joined = ["AAA1BBB", "AAA1BBB", "AAACBBB", "2222222"]
+    assert _strait(joined)[2] == []
+    assert _strait(STRAIT, block=10)[2] == []
+
+
+def test_the_rows_that_say_what_the_world_has_pass_and_any_other_stops_the_export() -> None:
+    world, plan, found = _strait()
+    height = world.labels.shape[0]
+    canvas = cast("Canvas", cast("object", SimpleNamespace(col0=0, roll=0, shape=(height, 28))))
+    text = "From;To;Type;Through;start_x;start_y;stop_x;stop_y;Comment\n"
+    rows = _row(plan, found[0], height)
+    assert verify_crossings(text + rows + "\n", plan, world, canvas, found) == {
+        "crossings_checked": 1
+    }
+    with pytest.raises(SeaError, match="not the world's"):
+        _ = verify_crossings(text, plan, world, canvas, found)
+    with pytest.raises(SeaError, match="twice"):
+        _ = verify_crossings(text + rows + "\n" + rows + "\n", plan, world, canvas, found)
+    with pytest.raises(SeaError, match="point off"):
+        _ = verify_crossings(
+            text + _row(plan, found[0], height, swap=True) + "\n", plan, world, canvas, found
+        )
+    stranger = rows.replace(";sea;", ";land;")
+    with pytest.raises(SeaError, match="not a sea crossing"):
+        _ = verify_crossings(text + stranger + "\n", plan, world, canvas, found)
+    other = rows.replace(plan.cells[found[0].through].key, plan.cells[cell(STRAIT, 3, 0)].key)
+    with pytest.raises(SeaError, match="not the world's"):
+        _ = verify_crossings(text + other + "\n", plan, world, canvas, found)
+
+
+def test_a_crossing_through_a_sea_that_does_not_touch_both_lands_stops_the_export() -> None:
+    layout = [*STRAIT, "3333333"]
+    world, plan, found = _strait(layout)
+    height = world.labels.shape[0]
+    canvas = cast("Canvas", cast("object", SimpleNamespace(col0=0, roll=0, shape=(height, 28))))
+    text = "From;To;Type;Through;start_x;start_y;stop_x;stop_y;Comment\n"
+    far = plan.cells[cell(layout, 4, 0)].key
+    row = _row(plan, found[0], height).replace(plan.cells[found[0].through].key, far)
+    with pytest.raises(SeaError, match="does not touch both"):
+        _ = verify_crossings(text + row + "\n", plan, world, canvas, found)

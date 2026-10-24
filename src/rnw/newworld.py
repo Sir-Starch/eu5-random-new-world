@@ -29,6 +29,7 @@ from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
 from rnw.relief import generate_relief
 from rnw.rng import derive_seed
+from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
@@ -285,6 +286,20 @@ def _land_from_mask(
         )
         raise LandMaskError(message)
     return _classify(domain, land, shore, settings)
+
+
+def _off_limits(
+    domain: NDArray[np.bool_], settings: NewWorldSettings, seam: int | None
+) -> NDArray[np.bool_]:
+    """Pixels where no land may be added after the coasts are drawn: a coast margin from what
+    lies outside the domain, from the border and from the strait at the wrap seam."""
+    guard = ~domain
+    guard[[0, -1], :] = True
+    guard[:, [0, -1]] = True
+    if seam is not None and 0 < seam < domain.shape[1]:
+        columns = np.arange(domain.shape[1], dtype=np.int64)
+        guard |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
+    return distance_from(guard, settings.coast_margin_px, octagonal=True) < settings.coast_margin_px
 
 
 def _large_parts(mask: NDArray[np.bool_], minimum: int) -> NDArray[np.bool_]:
@@ -597,6 +612,7 @@ def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings an
         land, ocean, lakes, _ = land_stage(domain, seed, settings, seam)
     else:
         land, ocean, lakes = _land_from_mask(domain, drawn, settings, seam)
+    land, ocean, _ = pinch(land, ocean, _off_limits(domain, settings, seam))
     with Stages(stage_workers()) as stages:
         land_job = stages.submit(
             "land cells",

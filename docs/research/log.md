@@ -759,3 +759,11 @@
 - [SOURCE] The EU5 wiki's map-modding page (via search summary): `adjacencies.csv`, type `sea`, the `Through` location "lets the adjacency be blockaded"; the game's own text: a strait "connects two locations separated by a seazone but close enough so armies can cross it without the need of a navy" (C245, the next phase).
 - [UNKNOWN C244] The engine's verdict on generated closed zones; nothing is asked.
 - No game launch by the agent, no push or publication.
+
+## 2026-10-24 — Strait crossings, 0.10.14, C245-C247
+
+- [OWNER] "Strait crossings also need studying and improving."
+- [V-LOCAL C245] `adjacencies.csv` of 1.4.3: 184 rows of type `sea` (49 in the replaced Americas, 135 stay in the mod; C240's 135 was the mod's file) and two canals. A row is two land locations, the sea zone between and two pixels, each on its own location and 1 to 9 pixels apart; the game's text says a strait connects locations "close enough ... so armies can cross it without the need of a navy" and the crossing penalises the attacker. [SOURCE] the wiki's map-modding page (via search summary): `Through` "lets the adjacency be blockaded".
+- [V-EXEC C246] The generated landmasses were 100 pixels and more apart: the reference world had two pairs of locations within 12 pixels. `rnw.straits`: near landmasses (within 36 pixels, 2,000 pixels or more) are brought together to a channel of 5 or 6 pixels by a tapered growth that merges nothing and cuts no water off; every pair of lands of different landmasses that a run of at most 9 pixels of sea divides is a crossing, written as the game writes them and read back (`verify_crossings`; independently from the written files: the same 6 pairs in the reference world). The presets 0 to 78 crossings. Epoch 24.
+- [UNKNOWN C247] The engine's verdict on generated crossing rows; nothing is asked.
+- No game launch by the agent, no push or publication.

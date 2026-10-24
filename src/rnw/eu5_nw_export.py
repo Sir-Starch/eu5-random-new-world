@@ -172,6 +172,7 @@ from rnw.eu5_seas import (
     read_waters,
     settle_coast,
     shape_water,
+    verify_crossings,
     verify_seas,
 )
 from rnw.eu5_slots import (
@@ -480,6 +481,30 @@ def _template_lines(  # noqa: PLR0913, PLR0917 - a template line reads every gen
             body = _set_field(body, "climate", biomes.climate[index])
         lines.append(f"{cell.key} = {body}")
     return lines
+
+
+def _crossing_rows(plan: Plan, canvas: Canvas, water: Water) -> list[str]:
+    """The rows of ``adjacencies.csv`` for the straits between generated lands (``rnw.straits``).
+
+    As the game writes them: the two land locations, ``sea``, the sea zone between, the point on
+    the first and the point on the second (map x, then y from the south), a comment.
+    """
+    rows: list[str] = []
+    height = canvas.shape[0]
+    for item in sorted(
+        water.crossings,
+        key=lambda crossing: (plan.cells[crossing.first].key, plan.cells[crossing.second].key),
+    ):
+        columns = _world_columns(
+            canvas, np.array([item.start[1], item.stop[1]], dtype=np.int64)
+        ).tolist()
+        first, second = plan.cells[item.first].key, plan.cells[item.second].key
+        through = plan.cells[item.through].key
+        start_y, stop_y = height - 1 - item.start[0], height - 1 - item.stop[0]
+        rows.append(
+            f"{first};{second};sea;{through};{columns[0]};{start_y};{columns[1]};{stop_y};xxx"
+        )
+    return rows
 
 
 def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
@@ -995,7 +1020,11 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         game_dir, PORTS, rewrite_csv(_read(game_dir, PORTS), removed, (0, 1), port_rows)
     )
     outputs[_mod_path(ADJACENCIES)] = _encode(
-        game_dir, ADJACENCIES, rewrite_csv(_read(game_dir, ADJACENCIES), removed, (0, 1, 3), [])
+        game_dir,
+        ADJACENCIES,
+        rewrite_csv(
+            _read(game_dir, ADJACENCIES), removed, (0, 1, 3), _crossing_rows(plan, canvas, water)
+        ),
     )
     for relative in LOCATOR_FILES:
         name = relative.rsplit("/", 1)[1]
@@ -1053,6 +1082,7 @@ def _text_outputs(  # noqa: PLR0913 - every rewritten file needs the shared plan
         "ports": len(port_rows),
         "vanilla_ports_relinked": sorted(coast.foreign.free),
         "sea_cells_merged": coast.merged,
+        "strait_crossings": len(water.crossings),
         "water": {
             "bodies": [len(cells) for cells in water.waters.bodies],
             "passages": dict(sorted(Counter(p.kind.value for p in water.waters.passages).items())),
@@ -2320,6 +2350,15 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     world,
                     coast,
                     shapes,
+                )
+            )
+            text_checks.update(
+                verify_crossings(
+                    texts[_mod_path(ADJACENCIES)].decode("utf-8-sig"),
+                    plan,
+                    world,
+                    canvas,
+                    shapes.crossings,
                 )
             )
         except SeaError as error:
