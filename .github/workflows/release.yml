@@ -20,8 +20,8 @@ jobs:
         os: [ubuntu-22.04, macos-14]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: |
           for archive in dist/source/*.tar.gz; do uv run python packaging/release.py audit "$archive"; done
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: RandomNewWorld-${{ runner.os }}
           path: |
@@ -52,8 +52,8 @@ jobs:
   windows-build:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
@@ -64,7 +64,7 @@ jobs:
       - run: uv run python packaging/hub.py
       - name: Package standalone and Workshop layouts
         run: uv run python packaging/release.py windows dist/rnw_exp_hub dist/release --tag "$RELEASE_TAG"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: RandomNewWorld-Windows
           path: dist/release/*.zip
@@ -72,7 +72,7 @@ jobs:
     needs: windows-build
     runs-on: windows-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: RandomNewWorld-Windows
           path: packages
