@@ -2,6 +2,8 @@
 
 2026-10-23, probe `rnw_exp_probe_hooks`. **NOT RUN.** Stage N2 of the [content plan](../../docs/content-plan.md); claims C191-C192. The agent prepared and installed the probe; the owner runs it. No agent launch.
 
+**Retired.** 2026-10-24, owner: the probe mod is retired and its code deleted (`eu5_probe.py`, `rnw probe-hooks`, `tests/test_probe.py`); the player enables the map and nothing else, and anything the game needs sits in the world's mod. This record stays as history.
+
 The probe is a small research mod, not a world: 21 files, English texts in all eleven languages, made by `rnw probe-hooks GAME_DIR generated/rnw_exp_probe_hooks` from the installation (every vanilla anchor it leans on is checked first, and a missing one stops the build; `test_local_hook_probe_anchors_hold` repeats the check on a patch). It uses vanilla tags and locations only (Bern, Interlaken, France, Paris), so it runs on the vanilla map and on any generated world.
 
 ## What it asks, and the vanilla precedent for each

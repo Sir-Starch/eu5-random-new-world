@@ -838,3 +838,12 @@ Owner instruction: implement N5. Design, method, three-world audit and limits ar
 - [SOURCE C267] Read the Steam Subscriber Agreement as revised 2026-04-20, the Workshop submission page, the EU5 Steam listing and its linked Paradox User Agreement (updated 2026-01-21). Steam's general UGC terms grant Valve a broad licence, allow product-specific Workshop terms, and require uploaders to have sufficient rights. The EU5 listing points to Paradox's UGC terms, which include mods, scripts and programs and require free, non-commercial UGC.
 - [UNKNOWN C267] The published terms do not resolve whether every file in the proposed hub has the rights needed for these grants, particularly where content incorporates EU5-derived material. Keep generated worlds local; owner/legal review is still required before uploading the hub.
 - [V-EXEC] Added [release process](../release-process.md), linking the existing versioning, roadmap, legal, and artifact workflow gates into an internal checklist. No CI workflow, tag, release, Workshop item, or account was changed.
+
+## 2026-10-24 — The probe mod is retired
+
+- [OWNER] A third mod is too many: everything the game needs is built into the map's mod; the player enables the map only, and events and the rest are part of that same mod. There is to be no separate probe.
+- [V-LOCAL] The probe `rnw_exp_probe_hooks` (0.4.0, 21 files) was research only: a formable of the tag `ZQP`, two test decisions that found subjects, start variables and a story start in miniature, all on vanilla tags. No world declared it as a relationship (`relationships` is empty in every installed mod) and nothing in a world's files refers to it. What it settled is already in the worlds' own mod: the formable of a mod-defined tag (C199), the start hook through `on_actions` (C206), the dynamic start and the delayed event (C199), keys the game looks up (C201).
+- [V-EXEC] Deleted `src/rnw/eu5_probe.py`, the `probe-hooks` command, `tests/test_probe.py` and the two local probe tests; removed `rnw_exp_probe_hooks` from the owner's profile with `rnw uninstall-mod` (game closed; playsets and settings hash-identical) and `generated/rnw_exp_probe_hooks`. No generated output changed, so no version, epoch or digest moved.
+- [UNKNOWN] C221 (whether the game's own colonization path gives a colony the scripted name) stays open and blocks nothing; if it is ever asked, it is asked from the console of a world mod, not by a mod of its own.
+- Standing rule added to `AGENTS.md`: *One mod: the map*.
+

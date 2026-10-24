@@ -162,30 +162,6 @@ def content_inventory(
         raise typer.Exit(1)
 
 
-@app.command("probe-hooks")
-def probe_hooks(
-    game_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)],
-    output: Annotated[Path, typer.Argument()],
-) -> None:
-    """Write the hook probe mod of the content plan (N2) into a new rnw_exp_probe_hooks folder."""
-    from rnw import eu5_probe  # noqa: PLC0415 - the command is rare.
-
-    if output.name != eu5_probe.NAME or output.exists():
-        message = f"Output must be a new {eu5_probe.NAME} directory"
-        raise typer.BadParameter(message)
-    _check_output_outside_game(game_dir, output)
-    try:
-        files = eu5_probe.build(game_dir)
-        eu5_probe.check(files)
-    except eu5_probe.ProbeError as error:
-        raise typer.BadParameter(str(error)) from error
-    for relative, data in sorted(files.items()):
-        target = output / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        _ = target.write_bytes(data)
-    typer.echo(f"Wrote {len(files)} files: {output}")
-
-
 @app.command()
 def fingerprint(
     game_dir: Annotated[Path, typer.Argument(exists=True, file_okay=False)],

@@ -12,8 +12,8 @@ Mexico* took theirs). A tradition is a template of its language, not an inflecti
 region's name is put after the word for *new* and left as it is.
 
 Whether the game applies a scripted name to a colony made by its own colonization is observed only
-for the effect the probe used (it did not, C207, C210); the entries are in the vanilla format and
-cost nothing where the game does not use them.
+for the effect of sitting 038, ``create_country_from_location`` (it did not, C207, C210); the
+entries are in the vanilla format and cost nothing where the game does not use them.
 """
 
 from __future__ import annotations

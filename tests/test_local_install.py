@@ -15,7 +15,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from rnw import colonial_names, content_report, epoch, eu5_probe, splnet
+from rnw import colonial_names, content_report, epoch, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
 from rnw.content import FAMILIES
@@ -342,18 +342,6 @@ def test_local_languages_are_the_installations_own() -> None:
     assert set(languages) == shipped
 
 
-def test_local_hook_probe_anchors_hold() -> None:
-    """The hook probe of N2 finds every vanilla anchor it leans on and its scripts read."""
-    root_value = os.environ.get("EU5_GAME_DIR")
-    if root_value is None:
-        pytest.skip("EU5_GAME_DIR is not set")
-    game_dir = Path(root_value)
-    assert eu5_probe.anchor_problems(game_dir) == []
-    files = eu5_probe.build(game_dir)
-    eu5_probe.check(files)
-    assert len(files) == 10 + len(official_languages(game_dir))
-
-
 def test_local_game_files_take_the_selection_cover() -> None:
     """Every game file the cover of C136 changes or reads is laid out as the cover expects."""
     root_value = os.environ.get("EU5_GAME_DIR")
@@ -423,19 +411,6 @@ def test_local_story_scripts_use_only_words_the_game_uses() -> None:
     # the formables' words are checked on the vanilla names they use
     for spec in FORMATION_SPECS:
         written += f"\n{spec.rank} {spec.emblem[:-4]} " + " ".join((*spec.allow, *spec.potential))
-    assert _unknown_words(root_value, written, ours) == []
-
-
-def test_local_probe_scripts_use_only_words_the_game_uses() -> None:
-    """The probe's own scripts, the colonization copied from the charter goal among them."""
-    root_value = os.environ.get("EU5_GAME_DIR")
-    if root_value is None:
-        pytest.skip("EU5_GAME_DIR is not set")
-    files = eu5_probe.build(Path(root_value))
-    written = "\n".join(
-        data.decode("utf-8-sig") for path, data in sorted(files.items()) if path.endswith(".txt")
-    )
-    ours = {eu5_probe.TAG, f"{eu5_probe.TAG}_ADJ", f"map_{eu5_probe.TAG}", "ZQP"}
     assert _unknown_words(root_value, written, ours) == []
 
 
