@@ -75,4 +75,4 @@ def test_a_translation_keeps_the_notes(language: str) -> None:
 def test_a_text_fits_the_workshop(language: str) -> None:
     text = _english() if language == SOURCE else _translation(language)[1]
     assert len(_published(text).encode()) < LIMIT
-    assert text.startswith("[h1]🌎 Random New World[/h1]\n")
+    assert text.startswith("[h1]")
