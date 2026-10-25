@@ -85,6 +85,10 @@ Total: **2366** timestamped records.
 **196 posting** warnings. **42** categories distinguish the stage and command.
 These records generally lack country/target context; totals cannot be assigned
 to generated natives or used as a measured expansion rate. Work ID: TR46-L04.
+[061's follow-up](tr46-ai-diagnostics.md), C333–C336, validates every line,
+documents the inherited unguarded war-score division and binds the three
+building clamps to Old World identities. Missing command actors/reasons and
+division operands remain unknown; no native AI fix is inferred.
 
 | Stage | Command identifier | Records |
 |---|---|---:|

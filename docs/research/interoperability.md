@@ -491,6 +491,41 @@ substantial game-script block, token dictionary, save or derived dump is
 distributed. Only aggregate findings and identifiers enter the repository;
 no generated binary/output interface, version or epoch changes.
 
+### Follow-up: AI diagnostics and named-country attribution (2026-10-25, 061)
+
+[V-LOCAL / V-EXEC / INFERRED / UNKNOWN C333–C336] The interoperability need
+is to distinguish defects in generated countries/map data from inherited or
+unattributed AI diagnostics before changing the generator. The original text
+log supplies no actor, target or failed condition for command rejection, and
+no operands for the expansion-score division. Installed expansion-target
+README/scripts explain the war-target interface but do not recover those
+runtime values. The existing C326 read-only save extractions bind the three
+named building-warning countries and check for shared landed-state capital
+IDs; snapshots cannot recover the anonymous earlier commands or evaluations.
+Both source saves pass original hashes and ZIP CRCs, cached extractions match
+their research manifest, and no new save token or writing capability is added.
+
+Narrow read-only string cross-references and disassembly of the installed
+1.4.4 executable (Steam 26142040, SHA-256 recorded in 061) inspect only the
+command gate/logging paths, building-count clamp and zero-divisor diagnostic
+branch. This addresses what the log records and the observed list bound;
+it does not reconstruct every command validator, final planner score, a
+complete engine state layout or the missing runtime cause. No protection,
+memory, executable, installation or engine behavior is altered, and no hook
+or replacement binary is produced. Text files and the complete archived
+RNW inventory supply the override/score evidence separately from this limited
+binary inspection. The eight mounted Workshop directories remain an effective-
+content attribution limit.
+
+Helpers, per-line rows, hashes and derived disassembly remain private under
+ignored `local_data/tr46-ai/`. Only aggregate findings, identifiers and
+diagnostic addresses are documented in [061](../../experiments/061-ai-diagnostics/README.md)
+and [the AI findings](tr46-ai-diagnostics.md). No proprietary executable
+excerpt, script body, token dictionary, log or save data is distributed.
+No generated output/binary interface, product version, epoch or installation
+changes. These checks are specific to the hashed local build, not a general
+AI API or compatibility claim.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

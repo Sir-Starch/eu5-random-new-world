@@ -36,6 +36,12 @@ destinations are all Old World; inherited no-travel and delayed-return lifecycle
 edges are documented in [the expedition findings](tr46-expeditions.md).
 Anonymous resumes/starts and L02 remain unattributed; no new output is changed.
 
+[061](../../experiments/061-ai-diagnostics/README.md) separates L04 into anonymous
+command rejections, inherited war-score division by zero and three building-list
+clamps naming Old World countries. [The AI findings](tr46-ai-diagnostics.md)
+record the source/saved-identity checks and missing error-time context; no
+native AI or generated-output change follows.
+
 [058](../../experiments/058-impassable-highlands/README.md) addresses TR46-01/02
 in 0.12.8: compatible impassable cells are indivisible administrative units,
 and mountain sources regain locally derived vanilla crest detail. Physical
@@ -450,8 +456,27 @@ All 42 execution/posting categories are in the companion catalog.
 `common/ai_scripted_expansion_target/attack_neighbors.txt:40`, clocks 04:20:24,
 05:02:25, 05:02:28. Three building-candidate truncations also clamp for NAV,
 ABA43, IFA (`1622`, `1623`, `2015`). There is no actor context on the division
-errors and most AI warnings; none can yet be assigned to extraordinary natives.
-Closure: establish origin and affected actors before connecting these to TR46-05.
+errors or any of the 57,352 command warnings.
+
+[V-LOCAL / V-EXEC / UNKNOWN C333–C336] [061's findings](tr46-ai-diagnostics.md)
+preserve three subproblems: **L04a** anonymous command rejection, **L04b**
+neighboring-war-target division, **L04c** building-list truncation. RNW does
+not override the installed expansion-target file: line 40 opens the score block,
+line 42 divides by capital distance without a script-side zero guard. Neither
+attacker nor target is logged. Generated starting states and both checkpoints'
+landed states have distinct capital IDs within each set; this does not recover
+the error-time distance or exclude other zero-distance causes.
+
+The building branch clamps **232→2**, **7→0**, **9→0**. Saved full handles bind
+NAV and IFA to retained Old World identities, and ABA43 to an explicitly
+released Novgorodian country with capital `rokiskis`; none belongs to the
+original native creation closure. The count producer and actual construction
+outcome remain unknown. Command messages give neither cabinet-action type nor
+failed prerequisite; their totals cannot measure native frontier failure or
+the expansion rate. Preserve the eight-mounted-Workshop confounder. No AI
+bonus, global vanilla patch, capital move or output change is justified.
+L04 remains open for the omitted actors/state, with the inherited calculation
+and three named Old World actors documented; no new campaign is requested.
 
 ### TR46-L05 — Tordesillas option text has a broken scope
 

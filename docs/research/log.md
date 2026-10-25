@@ -1370,3 +1370,43 @@ pass: 1,969 Python, 14 skips, 23 Rust, format/lint/types clean. No source/output
 version/epoch, installation/profile/save/settings/playset change, game launch,
 process control, push or publication. Full findings: [TR46 expeditions](tr46-expeditions.md).
 The next independent block is L04's AI command rejections/expansion arithmetic.
+
+## 2026-10-25 — TR46 AI diagnostics and expansion scoring (061)
+
+[V-GAME logs / V-LOCAL / V-EXEC / UNKNOWN C333] Recount every original ai.log
+line: 57,352 records, 57,156 execution and 196 posting, 42 stage/command
+categories. Cabinet assignment contributes 35,724 (62.29%), but the action,
+actor, target and failed prerequisite are absent. Limited installed diagnostic
+inspection confirms the command-name-only branches; it cannot identify a
+specific engine race, rejected frontier action or native warning frequency.
+Do not turn message counts into rates without successful-command totals.
+
+[V-LOCAL / V-EXEC / UNKNOWN C334] RNW does not override the neighboring-war-
+target content. Installed score opens at line 40 and divides by capital distance
+at line 42 without a script guard. The README identifies future war targets,
+not colonization. Three division errors omit attacker and target. All 202
+native state start capitals are distinct, as are the capital IDs within the
+777/597 landed location countries at the saved checkpoints. Neither snapshots
+nor a limited zero-divisor branch inspection establish error-time distance,
+scope/position or the final planner result. No global vanilla patch follows.
+
+[V-GAME logs / V-LOCAL / V-EXEC / UNKNOWN C335] Building truncations clamp
+232→2 for NAV, 7→0 for ABA43 and 9→0 for IFA. Their saved full handles bind to
+Old World countries, outside the original native creation closure. ABA43 is
+an explicitly released Novgorodian country at rokiskis; its dynamic tag does
+not make it an RNW native. Installed code bounds the list, but the producing
+count mismatch and later construction outcomes remain unknown. Snapshot land
+counts are not the state at the error clocks.
+
+[V-EXEC / UNKNOWN C336] Preserve three L04 subproblems and C300's mounted-mod
+confounder. No new attribution reverses 059's observed conquest/consolidation
+or explains native frontier selection and league defeat. No AI bonus, global
+vanilla script change, warning suppression or generated-capital adjustment.
+All 37 original evidence and 732 copied world hashes match, both save CRCs and
+cached-extraction hashes pass, current build/fingerprint remain unchanged.
+Record limited binary/save inspection in interoperability R-005. Required
+locked sync/full check: 1,969 Python pass, 14 skip, 23 Rust, format/lint/types
+clean. Documentation only; version 0.12.8/epoch 38 and installed LSI3 unchanged.
+No game launch, source/output/install/profile/save/settings/playset edit,
+process control, push or publication. Full findings: [TR46 AI diagnostics](tr46-ai-diagnostics.md).
+The next independent block is L05's Tordesillas option text and its scope.

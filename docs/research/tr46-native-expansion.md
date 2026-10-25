@@ -195,6 +195,10 @@ the large unowned spaces. It does not measure a vanilla-normal rate.
    cannot override the saved evidence of conquest, nor establish why a
    particular society lost. Expedition and other independent log issues retain
    their own rows in the [problem register](tr46-observer-audit.md).
+   [061's follow-up](tr46-ai-diagnostics.md), C333–C336, documents the inherited
+   capital-distance division and identifies the three building clamps as Old
+   World cases. Command actors/actions and division operands remain unknown;
+   no new native AI or balance change is justified.
 
 ## 6. Verification and local reproduction record
 
