@@ -67,16 +67,19 @@ def land_contacts(
     ``labels`` is the raster of the finished map, ``land`` and ``generated`` say per label whether
     it is land and whether it is new. A contact is two 4-neighbouring pixels of different land
     labels; the point is the contact pixel pair nearest to the mean of the pairs (so it lies on the
-    border), in map pixels with x from the left and y from the bottom. A contact across the map's
-    seam is refused: nothing here knows how to draw it.
+    border), in map pixels with x from the left and y from the bottom. Left and right
+    map edges touch; means and distances use the shorter cylindrical displacement.
     """
-    height = labels.shape[0]
-    if np.any(_wanted(labels[:, -1], labels[:, 0], land, generated)):
-        message = "A land contact of a generated location crosses the seam of the map"
-        raise SplineError(message)
+    height, width = labels.shape
     codes: list[NDArray[np.int64]] = []
     xs: list[NDArray[np.float64]] = []
     ys: list[NDArray[np.float64]] = []
+    seam_rows = np.flatnonzero(_wanted(labels[:, -1], labels[:, 0], land, generated))
+    low = np.minimum(labels[seam_rows, -1], labels[seam_rows, 0]).astype(np.int64)
+    high = np.maximum(labels[seam_rows, -1], labels[seam_rows, 0]).astype(np.int64)
+    codes.append((low << 32) | high)
+    xs.append(np.zeros(seam_rows.size, dtype=np.float64))
+    ys.append((height - seam_rows - 0.5).astype(np.float64))
     for top in range(0, height, BAND):
         band = labels[top : top + BAND + 1]
         sideways = band if top + BAND >= height else band[:-1]
@@ -92,10 +95,15 @@ def land_contacts(
             ys.append((height - (top + rows + shift[1])).astype(np.float64))
     code, x, y = np.concatenate(codes), np.concatenate(xs), np.concatenate(ys)
     unique, inverse = np.unique(code, return_inverse=True)
+    origin = np.zeros(len(unique), dtype=np.float64)
+    origin[inverse[::-1]] = x[::-1]
+    unrolled: NDArray[np.float64] = (
+        origin[inverse] + (x - origin[inverse] + width / 2) % width - width / 2
+    )
     count = np.maximum(np.bincount(inverse, minlength=len(unique)), 1)
-    mean_x = np.bincount(inverse, weights=x, minlength=len(unique)) / count
+    mean_x = np.bincount(inverse, weights=unrolled, minlength=len(unique)) / count
     mean_y = np.bincount(inverse, weights=y, minlength=len(unique)) / count
-    away = (x - mean_x[inverse]) ** 2 + (y - mean_y[inverse]) ** 2
+    away = (unrolled - mean_x[inverse]) ** 2 + (y - mean_y[inverse]) ** 2
     order = np.lexsort((np.arange(len(code)), away, inverse))
     chosen = order[np.searchsorted(inverse[order], np.arange(len(unique)))]
     mask = (1 << 32) - 1
@@ -115,13 +123,23 @@ def _wanted(
     return (first != second) & land[first] & land[second] & (generated[first] | generated[second])
 
 
-def road_path(start: Point, border: Point, end: Point) -> NDArray[np.float32]:
+def road_path(
+    start: Point, border: Point, end: Point, *, map_width: int | None = None
+) -> NDArray[np.float32]:
     """A smooth road from ``start`` to ``end`` through ``border``, a point every ``SPACING`` pixels.
 
     A quadratic curve whose middle is the border point, cut into equal steps along its length. Its
     ends are exactly the two anchors.
     """
     first, middle, last = (np.array(point, dtype=np.float64) for point in (start, border, end))
+    if map_width is not None:
+        if map_width <= 0:
+            message = "The spline map width must be positive"
+            raise SplineError(message)
+        for point in (first, last):
+            point[0] = (
+                middle[0] + (point[0] - middle[0] + map_width / 2) % map_width - map_width / 2
+            )
     control = 2.0 * middle - (first + last) / 2.0
     rough = max(2, math.ceil((np.hypot(*(middle - first)) + np.hypot(*(last - middle))) / SPACING))
     t = (np.arange(8 * rough + 1, dtype=np.float64) / (8 * rough))[:, None]
@@ -131,17 +149,20 @@ def road_path(start: Point, border: Point, end: Point) -> NDArray[np.float32]:
     at = np.arange(steps + 1, dtype=np.float64) * (float(along[-1]) / steps)
     path = np.stack([np.interp(at, along, curve[:, 0]), np.interp(at, along, curve[:, 1])], axis=1)
     path = path.astype(np.float32)
+    if map_width is not None:
+        path[:, 0] %= map_width
     path[0], path[-1] = np.array(start, dtype=np.float32), np.array(end, dtype=np.float32)
     return path
 
 
-def build_splines(
+def build_splines(  # noqa: PLR0913 - the network needs identities, geometry and map width.
     vanilla: bytes,
     *,
     vanilla_keys: Sequence[str],
     mod_keys: Sequence[str],
     contacts: Mapping[tuple[str, str], Point],
     anchors: Mapping[str, Point],
+    map_width: int | None = None,
 ) -> tuple[bytes, dict[str, object]]:
     """The mod's spline network from the game's.
 
@@ -180,7 +201,7 @@ def build_splines(
     strips: list[NewStrip] = []
     for (first, second), border in sorted(contacts.items()):
         low, high = sorted((new_index[first], new_index[second]))
-        path = road_path(positions[low], border, positions[high])
+        path = road_path(positions[low], border, positions[high], map_width=map_width)
         strips.append(NewStrip(low, high, path))
     result = rebuild(network, mapping, fresh_anchors, strips)
     stats: dict[str, object] = {
@@ -189,6 +210,11 @@ def build_splines(
         "anchors": len(result.anchors),
         "strips": len(result.strips),
         "strips_added": len(strips),
+        "wrapped_strips_added": sum(
+            bool(np.any(np.abs(np.diff(strip.path[:, 0])) > map_width / 2)) for strip in strips
+        )
+        if map_width is not None
+        else 0,
         "anchors_added": len(fresh_anchors),
         "segments": len(result.segments),
         "points": len(result.anchors) + len(result.point_xy),
@@ -215,6 +241,7 @@ def spline_problems(  # noqa: PLR0913 - the file, the game's, the keys and what 
     mod_keys: Sequence[str],
     contacts: Collection[tuple[str, str]],
     roads: Collection[tuple[str, str]],
+    map_width: int | None = None,
 ) -> list[str]:
     """What is wrong with the mod's spline network, checked against the game's and the map.
 
@@ -254,6 +281,11 @@ def spline_problems(  # noqa: PLR0913 - the file, the game's, the keys and what 
                 problems.append(f"The vanilla strip {ident} changed its geometry")
         elif ident not in wanted:
             problems.append(f"The strip {ident} is neither vanilla's nor a land contact")
+        elif map_width is not None:
+            path = polyline(network, ident)
+            dx = (np.diff(path[:, 0]) + map_width / 2) % map_width - map_width / 2
+            if np.any(np.hypot(dx, np.diff(path[:, 1])) > SPACING + 0.5):
+                problems.append(f"The generated strip {ident} has a discontinuous step")
     absent = len(carried.keys() - network.strips.keys())
     if absent:
         problems.append(f"{absent} vanilla strips of locations that are still there were lost")

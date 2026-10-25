@@ -43,7 +43,7 @@ def test_sketches_use_the_worlds_land_stage_and_leave_no_mod(
     monkeypatch.setattr(candidates, "load_map", load)
     monkeypatch.setattr(candidates, "select_canvas", select)
     settings = replace(PRESETS["continents"], new_world=SMALL)
-    expected, _sea, lakes, _height = land_stage(domain.copy(), 42, SMALL, 0)
+    expected, _sea, lakes, _height = land_stage(domain.copy(), 42, SMALL)
     found = candidates.sketch(tmp_path, settings, [42, 91])
     tile = found[0].picture
     assert found[0].seed == 42

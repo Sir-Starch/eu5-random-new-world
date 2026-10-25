@@ -929,3 +929,31 @@ Owner instruction: implement N5. Design, method, three-world audit and limits ar
 - [OWNER] “Собери в игру”: install the correction in the main game-side generator.
 - [V-EXEC C288] Prepared the canonical `rnw_exp_hub` from the verified 0.12.1 Windows package, changing only its candidate metadata back to the standard hub identity. Wheel/source equality, locked runtime versions, executable inventory and game-file exclusion pass. Updated the existing installed hub from 0.12.0; all 3,254 files match the candidate and metadata/package versions agree. The installed window/native/world-code self-test passes under isolated Wine.
 - [V-EXEC C288] Backed up the prior 3,254-file hub outside the profile and verified all hashes before replacement. All nine profile-root hashes, 3,254 other-mod size/time records and both existing mod folders survive. The separate candidate generator is preserved. Detailed installation and removal record: [INSTALLED](../../experiments/INSTALLED.md). No algorithm/source/version change, world regeneration, library/save/playset edit, EU5 launch, push or publication.
+
+
+### 2026-10-25 — Correct the map-wrap division (0.12.2, epoch 32)
+
+[OWNER report; generator installed: 0.12.1] Four worlds all had land near Japan; no continent continued
+through the other map edge. [V-EXEC C289] The previous noise-origin fix left an
+explicit 24 px seam channel and coast ramp. Removed that workaround from all
+land paths, corrected horizontal terrain halos and crop-coordinate fine noise,
+continued water distances/blur/detail and road contacts across the cylinder.
+C56's engine attribution was an inference, not an established limitation; the
+historical crack remains observed and the new engine rendering remains [UNKNOWN].
+
+[V-EXEC C290–C291] Whole/rolled synthetic continents decode to identical height
+and material pixels; full checks pass (1,881 Python, 14 skips, 23 Rust). The full
+candidate has one 2,109,356-pixel passable landmass crossing 1,297 seam rows and
+74 wrapped roads. Independent read-back protects 21,728 Old World records and
+66,634,570 pixels. Updated the main Windows hub to 0.12.2 with a verified backup,
+added one new world and preserved the profile and all previous mods. The installed
+self-test passes and new Windows/Linux wrap sample digests agree. See
+[051](../../experiments/051-wrap-continuity/README.md), the ledger and the
+interoperability register; raw files stay local. No EU5 launch or manual sitting.
+
+[V-EXEC C292] All four owner presets share one seed; their exact land parameters
+now produce seam-crossing landmasses, including the 27,440,633-pixel supercontinent.
+The epoch-32 reference uses peoples roll 3 for complete story/formable coverage,
+with 651 map/graphics files identical to the installed candidate. A fresh no-cache
+hash-seed-7 reproduction passes in 160.12 s, and 12 read-only installation tests
+pass. The reference digest is pinned in `tests/golden_world.json`.

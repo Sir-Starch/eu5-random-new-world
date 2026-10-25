@@ -130,15 +130,18 @@ mod _native {
 
     /// Step distance to the nearest source pixel, capped at `limit`.
     #[pyfunction]
+    #[pyo3(signature = (sources, limit, octagonal, wrap_x=false))]
     fn distance_from<'py>(
         py: Python<'py>,
         sources: PyReadonlyArray2<'py, bool>,
         limit: i32,
         octagonal: bool,
+        wrap_x: bool,
     ) -> PyResult<Bound<'py, PyArray2<i32>>> {
         let shape = sources.as_array().dim();
         let flags = sources.as_slice()?;
-        let out = py.detach(|| distance::distance_from(flags, shape, limit, octagonal));
+        let out =
+            py.detach(|| distance::distance_from_wrapped(flags, shape, limit, octagonal, wrap_x));
         shaped(py, shape, out)
     }
 

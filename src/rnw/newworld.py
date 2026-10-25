@@ -1,9 +1,8 @@
 """Generate a complete New World inside an arbitrary domain mask (T3, game-independent).
 
 The domain is the set of pixels that may be replaced. A ring of ocean is kept along its
-border so generated seas meet the surrounding (protected) ocean, and a strait along an
-optional seam column where the map wraps: EU5 does not stitch terrain across the wrap,
-so land there shows a crack [V-GAME owner observation, 1.4.1]. Land carries a
+border so generated seas meet the surrounding (protected) ocean. The map wrap is
+inside this continuous crop and imposes no coast or land budget. Land carries a
 continuous relief field (``relief.py``); the highest cells become wastelands. Everything
 is integer arithmetic driven by named SplitMix64 streams, so equal inputs give equal
 outputs.
@@ -47,14 +46,13 @@ STRIP_ROWS: Final[int] = 1024
 FIELD_ORIGIN_LIMIT: Final[int] = 1 << 24
 INTERIOR_LIMIT: Final[int] = 512
 SHORE_LIMIT: Final[int] = 64
-# Land keeps clear of the domain edge and of a SEAM_GAP_PX strait at the wrap. Elevation
+# Land keeps clear of the domain edge. Elevation
 # falls over a ramp of EDGE_RAMP_MARGINS coast margins whose start moves inland by up to
 # EDGE_SHIFT_RAMPS ramps of warped noise with a period of EDGE_SHIFT_PERIOD_PERMILLE of the
 # ramp, so coasts neither trace the canvas
-# nor run as a straight canal along the seam. The ramp does not grow with the feature size:
+# nor run as a straight canal along a strait axis. The ramp does not grow with the feature size:
 # a wide ramp leaves only the canvas core for the land budget, and every seed then fills
 # the same outline [V-EXEC C64].
-SEAM_GAP_PX: Final[int] = 24
 EDGE_RAMP_MARGINS: Final[int] = 4
 EDGE_SHIFT_RAMPS: Final[int] = 2
 EDGE_SHIFT_PERIOD_PERMILLE: Final[int] = 2500
@@ -119,11 +117,6 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
     return out
 
 
-def _seam_gap(columns: NDArray[np.int64], seam: int) -> NDArray[np.int64]:
-    """Distance in pixels to the seam between columns ``seam - 1`` and ``seam``."""
-    return np.where(columns >= seam, columns - seam, seam - 1 - columns)
-
-
 def _edge_offset(
     seed: int,
     wobble: NDArray[np.int32],
@@ -167,22 +160,16 @@ MIN_KEPT_PERCENT: Final[int] = 50
 
 
 def land_stage(
-    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings, seam: int | None
+    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation."""
     margin = settings.coast_margin_px
     ramp = EDGE_RAMP_MARGINS * margin
     shift_px = EDGE_SHIFT_RAMPS * ramp
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
-    sources = ~domain
-    sources[[0, -1], :] = True
-    sources[:, [0, -1]] = True
-    guard = sources.copy()
-    strait = np.zeros(domain.shape, dtype=bool)
-    if seam is not None and 0 < seam < domain.shape[1]:
-        columns = np.arange(domain.shape[1], dtype=np.int64)
-        strait |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
-        guard |= strait
+    guard = ~domain
+    guard[[0, -1], :] = True
+    guard[:, [0, -1]] = True
     relief = _field(
         seed,
         "new_world_elevation",
@@ -202,8 +189,6 @@ def land_stage(
     offset = _edge_offset(seed, wobble, ramp=ramp, shift_px=shift_px, shift_period=shift_period)
     del wobble
     open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
-    open_shore |= strait & ~(distance_from(sources, margin, octagonal=True) < margin)
-    del sources
     # A sea cut off from open water (around a protected islet) gets a strait: its shortest
     # path to open water joins the guard and the coasts are drawn again, so the strait has
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
@@ -217,7 +202,7 @@ def land_stage(
         land, shore, elevation = _coasts(
             domain, guard, relief, offset, ramp=ramp, settings=settings
         )
-    del relief, offset, guard, strait, open_shore
+    del relief, offset, guard, open_shore
     land &= _large_parts(land, settings.min_island_px)
     return (*_classify(domain, land, shore, settings), elevation)
 
@@ -251,12 +236,11 @@ def _land_from_mask(
     domain: NDArray[np.bool_],
     drawn: NDArray[np.bool_],
     settings: NewWorldSettings,
-    seam: int | None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Land, ocean and lakes of a land that is drawn, not generated (``rnw.landmask``).
 
     The land keeps off the canvas's edge, as generated land does (the coast margin from what
-    lies outside the domain, the border and the strait at the wrap seam); specks under
+    lies outside the domain and the border); specks under
     ``min_island_px`` go. A drawing that loses most of its land to that is refused, since it
     asks for land where the New World cannot be.
     """
@@ -264,9 +248,6 @@ def _land_from_mask(
     guard = ~domain
     guard[[0, -1], :] = True
     guard[:, [0, -1]] = True
-    if seam is not None and 0 < seam < domain.shape[1]:
-        columns = np.arange(domain.shape[1], dtype=np.int64)
-        guard |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
     shore = distance_from(guard, margin, octagonal=True) < margin
     del guard
     wanted = drawn & domain
@@ -300,17 +281,12 @@ def _land_from_mask(
     return _classify(domain, land, shore, settings)
 
 
-def _off_limits(
-    domain: NDArray[np.bool_], settings: NewWorldSettings, seam: int | None
-) -> NDArray[np.bool_]:
+def _off_limits(domain: NDArray[np.bool_], settings: NewWorldSettings) -> NDArray[np.bool_]:
     """Pixels where no land may be added after the coasts are drawn: a coast margin from what
-    lies outside the domain, from the border and from the strait at the wrap seam."""
+    lies outside the domain and from the border."""
     guard = ~domain
     guard[[0, -1], :] = True
     guard[:, [0, -1]] = True
-    if seam is not None and 0 < seam < domain.shape[1]:
-        columns = np.arange(domain.shape[1], dtype=np.int64)
-        guard |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
     return distance_from(guard, settings.coast_margin_px, octagonal=True) < settings.coast_margin_px
 
 
@@ -613,7 +589,7 @@ def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings an
     drawing's and the generator makes the rest on it.
 
     ``seam`` is the crop column where the world map wraps (cells left of it continue at
-    the right map edge); a strait keeps land away from it. With ``split_at_seam`` the
+    the right map edge). It does not affect geography. With ``split_at_seam`` the
     cells the seam still crosses are split before the world is described, which gives the
     world of ``split_at_column`` without describing it twice.
 
@@ -621,10 +597,10 @@ def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings an
     built beside each other when the machine has the cores and the memory for it.
     """
     if drawn is None:
-        land, ocean, lakes, _ = land_stage(domain, seed, settings, seam)
+        land, ocean, lakes, _ = land_stage(domain, seed, settings)
     else:
-        land, ocean, lakes = _land_from_mask(domain, drawn, settings, seam)
-    land, ocean, _ = pinch(land, ocean, _off_limits(domain, settings, seam))
+        land, ocean, lakes = _land_from_mask(domain, drawn, settings)
+    land, ocean, _ = pinch(land, ocean, _off_limits(domain, settings))
     with Stages(stage_workers()) as stages:
         land_job = stages.submit(
             "land cells",

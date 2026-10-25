@@ -168,11 +168,14 @@ def _grids() -> list[np.ndarray]:
 
 @pytest.mark.parametrize("limit", [0, 1, 2, 3, 9, 40, 500])
 @pytest.mark.parametrize("octagonal", [False, True])
-def test_step_distance_equals_the_reference(limit: int, *, octagonal: bool) -> None:
+@pytest.mark.parametrize("wrap_x", [False, True])
+def test_step_distance_equals_the_reference(limit: int, *, octagonal: bool, wrap_x: bool) -> None:
     """Diamond and octagonal steps, limits below, at and far above the grid size."""
     for sources in _grids():
-        native = topology.distance_from(sources, limit, octagonal=octagonal)
-        expected = reference_topology.distance_from(sources, limit, octagonal=octagonal)
+        native = topology.distance_from(sources, limit, octagonal=octagonal, wrap_x=wrap_x)
+        expected = reference_topology.distance_from(
+            sources, limit, octagonal=octagonal, wrap_x=wrap_x
+        )
         assert native.dtype == np.int32
         assert np.array_equal(native, expected)
 

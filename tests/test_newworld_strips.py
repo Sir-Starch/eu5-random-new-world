@@ -53,10 +53,10 @@ def test_the_strip_coast_model_equals_the_whole_raster_one(
     """Land, ocean, lakes and elevation agree: edge offset, penalty and land budget."""
     from tests.test_newworld import SMALL  # noqa: PLC0415 - the settings of the world tests
 
-    domain, seam = _domains()[domain_index]
+    domain, _seam = _domains()[domain_index]
     monkeypatch.setattr(newworld, "STRIP_ROWS", strip)
-    native = newworld.land_stage(domain.copy(), 7 + domain_index, SMALL, seam)
-    expected = reference_newworld.land_model(domain.copy(), 7 + domain_index, SMALL, seam)
+    native = newworld.land_stage(domain.copy(), 7 + domain_index, SMALL)
+    expected = reference_newworld.land_model(domain.copy(), 7 + domain_index, SMALL)
     for ours, theirs in zip(native, expected, strict=True):
         assert np.array_equal(ours, theirs)
     assert native[0].any()

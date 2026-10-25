@@ -133,11 +133,27 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the tab
     old_distance, new_distance = (d[start:stop].astype(np.int64) for d in distances)
     synthetic = _synthesize(table, new_distance, reach, start)
     for channel in range(4):
-        synthetic[..., channel] = box_blur(synthetic[..., channel], BLUR)
+        padded = np.pad(synthetic[..., channel], ((0, 0), (BLUR, BLUR)), mode="wrap")
+        synthetic[..., channel] = box_blur(padded, BLUR)[:, BLUR:-BLUR]
     synthetic = synthetic[first - start : last - start]
     noise = fractal_noise(
         key, 0, first, columns, last - first, period=96, octaves=3, persistence_permille=500
     )
+    other = fractal_noise(
+        key,
+        columns,
+        first,
+        columns,
+        last - first,
+        period=96,
+        octaves=3,
+        persistence_permille=500,
+    )
+    position = np.arange(columns, dtype=np.int64) * 1000 // columns
+    weight = position * position * (3000 - 2 * position) // 1_000_000
+    # At either map edge the same section of noise is sampled. Smooth endpoint
+    # weights also preserve its slope, rather than resetting the texture at x=0.
+    noise = (other * (1000 - weight) + noise * weight) // 1000
     synthetic[..., :3] += (noise * 6 // NOISE_SCALE)[..., None]
     calm = np.minimum(old_distance, new_distance)[first - start : last - start]
     keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
@@ -161,8 +177,12 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
     fresh_water = _downsample(new_water, factor, any_true=False)
     touched = _downsample(canvas, factor, any_true=True)
     # Distances are at most reach + 1 steps, which a byte holds.
-    old_distance = distance_from(~old_water, reach + 1, octagonal=True).astype(np.uint8)
-    new_distance = distance_from(~fresh_water, reach + 1, octagonal=True).astype(np.uint8)
+    old_distance = distance_from(~old_water, reach + 1, octagonal=True, wrap_x=True).astype(
+        np.uint8
+    )
+    new_distance = distance_from(~fresh_water, reach + 1, octagonal=True, wrap_x=True).astype(
+        np.uint8
+    )
     del old_water, fresh_water
     rows, columns = touched.shape
     strip = band_rows(

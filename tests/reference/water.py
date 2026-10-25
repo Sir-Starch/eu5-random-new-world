@@ -70,12 +70,17 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
     old_water = _downsample(vanilla_water, factor, any_true=False)
     fresh_water = _downsample(new_water, factor, any_true=False)
     touched = _downsample(canvas, factor, any_true=True)
-    old_distance = distance_from(~old_water, reach + 1, octagonal=True).astype(np.int64)
-    new_distance = distance_from(~fresh_water, reach + 1, octagonal=True).astype(np.int64)
+    old_distance = distance_from(~old_water, reach + 1, octagonal=True, wrap_x=True).astype(
+        np.int64
+    )
+    new_distance = distance_from(~fresh_water, reach + 1, octagonal=True, wrap_x=True).astype(
+        np.int64
+    )
     table = _profile_table(image, old_distance, reach)
     synthetic = _synthesize(table, new_distance, reach)
     for channel in range(4):
-        synthetic[..., channel] = box_blur(synthetic[..., channel], 2)
+        padded = np.pad(synthetic[..., channel], ((0, 0), (2, 2)), mode="wrap")
+        synthetic[..., channel] = box_blur(padded, 2)[:, 2:-2]
     rows, columns = touched.shape
     noise = fractal_noise(
         derive_seed(seed, stream),
@@ -87,6 +92,19 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
         octaves=3,
         persistence_permille=500,
     )
+    other = fractal_noise(
+        derive_seed(seed, stream),
+        columns,
+        0,
+        columns,
+        rows,
+        period=96,
+        octaves=3,
+        persistence_permille=500,
+    )
+    position = np.arange(columns, dtype=np.int64) * 1000 // columns
+    weight = position * position * (3000 - 2 * position) // 1_000_000
+    noise = (other * (1000 - weight) + noise * weight) // 1000
     synthetic[..., :3] += (noise * 6 // NOISE_SCALE)[..., None]
     calm = np.minimum(old_distance, new_distance)
     keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]

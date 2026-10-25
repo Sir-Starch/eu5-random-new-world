@@ -150,7 +150,7 @@ def pinch(
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], int]:
     """Land and ocean with the near landmasses brought together to straits; how many were made.
 
-    ``off_limits`` are the pixels that may not become land (the edge of the area, the seam).
+    ``off_limits`` are the pixels that may not become land (the edge of the domain).
     """
     comps = label_components(land.astype(np.int32))
     sizes = np.bincount(comps.ravel())

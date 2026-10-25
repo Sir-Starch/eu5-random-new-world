@@ -127,3 +127,22 @@ The normal playset's existing Workshop mods were not intentionally modified. On 
 
 
 2026-10-25 main generator update (owner: “Собери в игру”, C288): updated the existing `mod/rnw_exp_hub` from 0.12.0 to **0.12.1**, rather than requiring the separate candidate folder. All **3,254** installed files match the prepared canonical hub; its metadata and embedded package version agree. The prior hub is backed up byte for byte outside the profile at ignored `local_data/japan-island/hub-backup-before-main-0.12.1/` (3,254 checked files). All nine profile-root hashes and the 3,254 other-mod file size/time records are preserved; the two existing mod folders stay the same. No world, library record, save, playset or game-installation file was changed. The installed Windows generator's offscreen window/native/world-code self-test passes in the isolated Wine prefix; EU5 was not launched. The separate `rnw_exp_generator_0121` folder was not removed. Exact removal of the main generator, if requested: `uv run rnw uninstall-mod rnw_exp_hub --user-dir USER_DIR`. Installation and self-test reports remain under ignored `local_data/japan-island/main-hub-*`.
+
+
+2026-10-25 continuous map wrap ([051](051-wrap-continuity/README.md), C289–C291):
+updated the existing main `mod/rnw_exp_hub` **0.12.1 → 0.12.2** (3,254 files,
+all hash-verified against the canonical package), with a verified 3,254-file
+backup at ignored `local_data/wrap-continuity/hub-backup-before-0.12.2/`. Added
+only `mod/rnw_exp_wrap_continuity`, **RNW: Small continents SEOH**, epoch 32,
+code `RNW1-0826C-SYW6B-MW73Y-C0060-40813-G11P6-36` (815 files including metadata;
+813 non-metadata files, digest `1621ae318330529795f46ebd8a43e78e92b8e48c78b58925903edb5203a486cc`).
+The world's final raster has a 2,109,356-pixel passable landmass crossing the seam
+and 74 wrapped road strips. All nine profile-root hashes, 6,442 other-mod file
+size/time records and six previous mod folders are preserved. The installed
+Windows generator passes its isolated offscreen self-test; new cylindrical
+sample bytes match Linux. No EU5 launch, playset edit, existing-world replacement,
+library change or save change. Exact removal with EU5 closed: `uv run rnw
+uninstall-mod rnw_exp_wrap_continuity --user-dir USER_DIR`; removing the main
+hub, only if requested, is `uv run rnw uninstall-mod rnw_exp_hub --user-dir USER_DIR`.
+The separate old generator candidate is preserved. Logs, backup and audit data
+remain under ignored `local_data/wrap-continuity/`.

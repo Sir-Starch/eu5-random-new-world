@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -23,7 +24,10 @@ from rnw.eu5_terrain import (
     _write_where,  # pyright: ignore[reportPrivateUsage]
 )
 from rnw.fields import upsample
-from rnw.terrain_tiles import LayerFormat
+from rnw.terrain_tiles import LayerFormat, parse_info, read_level0
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 ROWS, COLUMNS = 340, 290
 DECAL = Decal("heightmap_x_16", 25, 20, 290, 250)
@@ -34,12 +38,13 @@ class FakeStore:
     """The two methods of ``DecalStore`` that ``_rebuild_decal`` reads, with synthetic layers."""
 
     game_dir: Path = Path()
+    decal: Decal = DECAL
     layers: dict[str, tuple[LayerFormat, np.ndarray]] = field(default_factory=dict)
 
     def layer(self, _decal: str, kind: str) -> tuple[LayerFormat, np.ndarray]:
         """Vanilla layers: a ramp of heights and stripes of materials."""
         if kind not in self.layers:
-            rows, columns = DECAL.rows * 2, DECAL.columns * 2
+            rows, columns = self.decal.rows * 2, self.decal.columns * 2
             ramp = (np.arange(rows * columns, dtype=np.int64) % 60_000).reshape(rows, columns)
             if kind == "height":
                 self.layers[kind] = (LayerFormat(columns, rows, "<u2"), ramp.astype(np.uint16))
@@ -75,7 +80,9 @@ def _world(seed: int) -> tuple[TerrainInputs, SlotTables]:
     inputs = TerrainInputs(
         codes=codes,
         vanilla_water=water,
-        relief=lambda rows, columns: relief[rows, columns].astype(np.int32),
+        relief=lambda rows, columns: relief[rows][
+            :, np.arange(columns.start, columns.stop) % COLUMNS
+        ].astype(np.int32),
         labels=labels,
         rivers=rivers,
     )
@@ -135,3 +142,69 @@ def test_samples_that_do_not_fit_a_layer_fail_loudly() -> None:
     with pytest.raises(TerrainRangeError, match="do not fit"):
         _write_where(target, np.full((2, 2), -1, dtype=np.int64), mask)
     _write_where(target, np.full((2, 2), -1, dtype=np.int64), ~mask)  # masked out: not checked
+
+
+@pytest.mark.parametrize("band", [17, 170])
+def test_wrapped_terrain_equals_one_continuous_continent(band: int) -> None:
+    """Separate edge decals and a decal spanning the noise cut reproduce the unrolled land.
+
+    A continent with relief, a river and location borders is computed once in the
+    middle of a map, then moved onto the display seam. Decoded heights and material
+    samples must agree exactly, including the shoreline on either side of the seam.
+    """
+    height, width, roll = 180, 400, 200
+    rows, columns = np.indices((height, width))
+    land = (rows >= 20) & (rows < 160) & (columns >= 100) & (columns < 300)
+    codes = land.astype(np.int8)
+    labels = np.where(land, np.where(columns < 200, 1, 3), 0).astype(np.int32)
+    relief = np.where(land, 12000 + columns * 19 + rows * 11, 0).astype(np.int32)
+    rivers = land & (rows == 80)
+    _, original_tables = _world(7)
+    water = np.zeros(9, dtype=bool)
+    water[0] = True
+    tables = replace(original_tables, water=water)
+
+    def inputs(shift: int) -> TerrainInputs:
+        moved_relief = np.roll(relief, -shift, axis=1)
+
+        def sample(row_slice: slice, column_slice: slice) -> np.ndarray:
+            columns: NDArray[np.int64] = (
+                np.arange(column_slice.start, column_slice.stop, dtype=np.int64) % width
+            )
+            return moved_relief[row_slice][:, columns]
+
+        return TerrainInputs(
+            codes=np.roll(codes, -shift, axis=1),
+            vanilla_water=np.roll(~land, -shift, axis=1),
+            relief=sample,
+            labels=np.roll(labels, -shift, axis=1),
+            rivers=np.roll(rivers, -shift, axis=1),
+            noise_roll=shift,
+        )
+
+    def render(decal: Decal, source: TerrainInputs) -> tuple[np.ndarray, np.ndarray]:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            files, materials = _rebuild_decal(
+                decal,
+                FakeStore(decal=decal),  # pyright: ignore[reportArgumentType]
+                source,
+                tables,
+                seed=42,
+                pool=pool,
+                band=band,
+            )
+        layer, spans = parse_info(files[f"in_game/{decal.name}_height.info"].decode())
+        heights = read_level0(layer, spans, files[f"in_game/{decal.name}_height.bin"])
+        return heights, materials
+
+    reference = render(Decal("continuous", 5, 0, 170, width), inputs(0))
+    wrapped = inputs(roll)
+    # One edge decal on each side, and a single decal that crosses the outside cut.
+    left = render(Decal("left", 5, 0, 170, 60), wrapped)
+    right = render(Decal("right", 5, width - 60, 170, 60), wrapped)
+    whole = render(Decal("whole", 5, 0, 170, width), wrapped)
+    for index in (0, 1):
+        expected = np.roll(reference[index], -roll * 2, axis=1)
+        assert np.array_equal(left[index], expected[:, :120])
+        assert np.array_equal(right[index], expected[:, -120:])
+        assert np.array_equal(whole[index], expected)

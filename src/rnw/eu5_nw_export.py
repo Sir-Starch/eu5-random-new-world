@@ -1917,6 +1917,7 @@ def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan
             mod_keys=mod_keys,
             contacts=contacts,
             anchors=world_anchors(game_map, plan, world, canvas, final),
+            map_width=int(final.shape[1]),
         )
     except SplineError as error:
         message = f"Spline network: {error}"
@@ -1929,6 +1930,7 @@ def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan
         mod_keys=mod_keys,
         contacts=list(contacts),
         roads=[*roads, *natives.roads],
+        map_width=int(final.shape[1]),
     )
     if problems:
         extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
@@ -2426,6 +2428,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     relief=relief_window,
                     labels=final_labels,
                     rivers=rivers < RIVER_CLASSES,
+                    noise_roll=seam,
                 )
                 return terrain_outputs(store, inputs, slot_tables, seed, spool)
 

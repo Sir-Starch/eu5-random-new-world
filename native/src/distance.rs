@@ -12,6 +12,17 @@ pub fn distance_from(
     limit: i32,
     octagonal: bool,
 ) -> Vec<i32> {
+    distance_from_wrapped(sources, (height, width), limit, octagonal, false)
+}
+
+/// Step distances on a cylinder when `wrap_x` is set; rows never wrap.
+pub fn distance_from_wrapped(
+    sources: &[bool],
+    (height, width): (usize, usize),
+    limit: i32,
+    octagonal: bool,
+    wrap_x: bool,
+) -> Vec<i32> {
     let mut distance = vec![limit; sources.len()];
     let mut frontier: Vec<u32> = Vec::new();
     for (index, &source) in sources.iter().enumerate() {
@@ -30,8 +41,10 @@ pub fn distance_from(
             let (row, column) = (at as usize / width, at as usize % width);
             let up = row > 0;
             let down = row + 1 < height;
-            let left = column > 0;
-            let right = column + 1 < width;
+            let left = column > 0 || wrap_x;
+            let right = column + 1 < width || wrap_x;
+            let left_at = row * width + if column > 0 { column - 1 } else { width - 1 };
+            let right_at = row * width + if column + 1 < width { column + 1 } else { 0 };
             let mut reach = |target: usize| {
                 if distance[target] > step {
                     distance[target] = step;
@@ -46,23 +59,23 @@ pub fn distance_from(
                 reach(at + width);
             }
             if left {
-                reach(at - 1);
+                reach(left_at);
             }
             if right {
-                reach(at + 1);
+                reach(right_at);
             }
             if diagonal {
                 if up && left {
-                    reach(at - width - 1);
+                    reach(left_at - width);
                 }
                 if up && right {
-                    reach(at - width + 1);
+                    reach(right_at - width);
                 }
                 if down && left {
-                    reach(at + width - 1);
+                    reach(left_at + width);
                 }
                 if down && right {
-                    reach(at + width + 1);
+                    reach(right_at + width);
                 }
             }
         }

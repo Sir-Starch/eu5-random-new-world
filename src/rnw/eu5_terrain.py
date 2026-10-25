@@ -19,6 +19,7 @@ import json
 import re
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
@@ -258,6 +259,7 @@ class TerrainInputs:
     relief: Callable[[slice, slice], NDArray[np.int32]]
     labels: NDArray[np.int32]
     rivers: NDArray[np.bool_]
+    noise_roll: int = 0
 
 
 class TerrainRangeError(ValueError):
@@ -267,12 +269,12 @@ class TerrainRangeError(ValueError):
 def _band_window(decal: Decal, shape: tuple[int, int], first: int, last: int) -> Window:
     """The window that computes rows ``first`` to ``last`` (of the decal) of one decal."""
     row0 = max(0, decal.row0 + first - BAND_HALO)
-    column0 = max(0, decal.column0 - MARGIN)
+    column0 = decal.column0 - MARGIN
     return Window(
         row0,
         min(shape[0], decal.row0 + last + BAND_HALO),
         column0,
-        min(shape[1], decal.column0 + decal.columns + MARGIN),
+        decal.column0 + decal.columns + MARGIN,
         (decal.row0 + first - row0) * 2,
         (decal.column0 - column0) * 2,
     )
@@ -306,28 +308,39 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
     codes = inputs.codes
     window = _band_window(decal, (int(codes.shape[0]), int(codes.shape[1])), first, last)
     rows = slice(window.row0, window.row1)
-    columns = slice(window.column0, window.column1)
-    origin = (window.column0 * 2, window.row0 * 2)
-    core = (
-        slice(window.inner_row, window.inner_row + (last - first) * 2),
-        slice(window.inner_column, window.inner_column + decal.columns * 2),
-    )
-    land, inside, heights = decal_heights(
-        codes[rows, columns],
-        inputs.vanilla_water[rows, columns],
-        inputs.relief(rows, columns),
-        seed=seed,
-        origin=origin,
-        core=core,
-    )
-    target = slice(first * 2, last * 2)
-    height_image, material_image = images
-    _write_where(height_image[target], heights, inside)
-    del heights
-    labels = np.repeat(np.repeat(inputs.labels[rows, columns], 2, axis=0), 2, axis=1)
-    rivers = np.repeat(np.repeat(inputs.rivers[rows, columns], 2, axis=0), 2, axis=1)
-    slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
-    _write_where(material_image[target], slots, inside)
+    width = int(codes.shape[1])
+    columns = np.arange(window.column0, window.column1, dtype=np.int64) % width
+    local_codes = codes[rows][:, columns]
+    local_water = inputs.vanilla_water[rows][:, columns]
+    relief = inputs.relief(rows, slice(window.column0, window.column1))
+    labels = np.repeat(np.repeat(inputs.labels[rows][:, columns], 2, axis=0), 2, axis=1)
+    rivers = np.repeat(np.repeat(inputs.rivers[rows][:, columns], 2, axis=0), 2, axis=1)
+    # The noise lives in the same rolled coordinates as the land. Its cut is at
+    # the canvas's outside edge, not the world seam. Split a decal at that cut so
+    # neither a sampling window nor a noise origin restarts at the world wrap.
+    cut = (-inputs.noise_roll) % width
+    breaks = [0, decal.columns]
+    if decal.column0 < cut < decal.column0 + decal.columns:
+        breaks.insert(1, cut - decal.column0)
+    for left, right in pairwise(breaks):
+        core = (
+            slice(window.inner_row, window.inner_row + (last - first) * 2),
+            slice(window.inner_column + left * 2, window.inner_column + right * 2),
+        )
+        origin = (
+            ((decal.column0 + left + inputs.noise_roll) % width) * 2
+            - (window.inner_column + left * 2),
+            window.row0 * 2,
+        )
+        land, inside, heights = decal_heights(
+            local_codes, local_water, relief, seed=seed, origin=origin, core=core
+        )
+        target = (slice(first * 2, last * 2), slice(left * 2, right * 2))
+        height_image, material_image = images
+        _write_where(height_image[target], heights, inside)
+        del heights
+        slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
+        _write_where(material_image[target], slots, inside)
 
 
 def _rebuild_decal(  # noqa: PLR0913 - a decal reads the store, the inputs, the tables and the bands.

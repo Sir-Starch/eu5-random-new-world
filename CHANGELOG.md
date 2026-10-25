@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.12.2 — 2026-10-25
+
+- The New World can continue across the map edges as one continent. Removed the mandatory seam strait that had isolated the former-Alaska part near Japan, including its coast ramp and exclusion of drawn land. Terrain sampling and fine detail now continue across the wrap; water distance, foam blur and detail use horizontal wrapping, and roads cover contacts across the seam by the short route. Existing worlds retain their geography; newly generated worlds use epoch 32. Checked offline; the new seam terrain and road rendering have not been observed in game (C289–C290).
+
 ## 0.12.1 — 2026-10-25
 
 - Seeded placement of the land-noise lattice removes fixed high-variance positions that favoured recurring island outlines in the narrow former-Alaska part of the canvas near Japan. One origin applies to the whole New World across the map wrap; there is no regional land quota or island deletion rule. A lobe may stay ocean or contain islands according to the seed. Existing worlds keep their maps; newly generated worlds use epoch 31 (C286–C287, checked offline).

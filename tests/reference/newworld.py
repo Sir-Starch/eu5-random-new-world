@@ -21,9 +21,7 @@ from rnw.newworld import (
     MAX_STRAITS,
     OUTSIDE,
     PERMILLE,
-    SEAM_GAP_PX,
     _field,  # pyright: ignore[reportPrivateUsage]
-    _seam_gap,  # pyright: ignore[reportPrivateUsage]
     open_sea,
     stray_strait,
 )
@@ -66,7 +64,7 @@ def cell_sums(
 
 
 def land_model(
-    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings, seam: int | None
+    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation."""
     margin = settings.coast_margin_px
@@ -77,11 +75,6 @@ def land_model(
     sources[[0, -1], :] = True
     sources[:, [0, -1]] = True
     guard = sources.copy()
-    strait = np.zeros(domain.shape, dtype=bool)
-    if seam is not None and 0 < seam < domain.shape[1]:
-        columns = np.arange(domain.shape[1], dtype=np.int64)
-        strait |= (_seam_gap(columns, seam) < SEAM_GAP_PX)[np.newaxis, :]
-        guard |= strait
     relief = _field(
         seed,
         "new_world_elevation",
@@ -110,7 +103,6 @@ def land_model(
     inland = shift_px * np.clip(NOISE_SCALE // 2 + shift * 5 // 4, 0, NOISE_SCALE) // NOISE_SCALE
     offset = wobble.astype(np.int64) * ramp // (3 * NOISE_SCALE) - inland
     open_shore = distance_from(open_sea(domain), margin, octagonal=True) < margin
-    open_shore |= strait & ~(distance_from(sources, margin, octagonal=True) < margin)
     # A sea cut off from open water (around a protected islet) gets a strait: its shortest
     # path to open water joins the guard and the coasts are drawn again, so the strait has
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].

@@ -52,3 +52,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 | [048](048-localization/README.md) | The world's mod in every official language (L1) |
 | [049](049-ocean-expansion/README.md) | Optional ocean expansion, connected ocean names, both canvas policies and verified offline candidates |
 | [050](050-seeded-land-origin/README.md) | Seed-positioned land-noise lattice: recurring former-Alaska islands, spatial bias and verified offline candidates |
+
+- [051 — Continuous map wrap](051-wrap-continuity/README.md): remove the mandatory seam strait, continue terrain/water sampling and roads across the map edges; 0.12.2, epoch 32; offline verification, no game launch.

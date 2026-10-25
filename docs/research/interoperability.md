@@ -216,6 +216,28 @@ checks. No new closed structure, executable analysis, engine patch, shipped game
 asset or post-export correction is introduced. Derived binaries and diagnostic
 rasters stay local under ignored paths. Engine results remain [UNKNOWN].
 
+### Follow-up: cylindrical map continuity (2026-10-25, 0.12.2 / epoch 32)
+
+[V-EXEC C289–C290] Removing the forced seam strait changes the contents written
+through the R-004 interfaces, for the same interoperability need and official
+interface limits recorded above. No binary layout or engine file is changed.
+The existing height/material writer receives windows with wrapped horizontal
+neighbours and crop-coordinate detail; the existing DDS writer receives wrapped
+coast distances/blur and periodic detail. Synthetic decoded tiles are compared
+against one continuous continent rendered before rolling it across the map edges.
+
+R-001 now also writes generated strips for land contacts between the last and first
+map columns. Curves use the short cylindrical displacement and store each point
+inside the map's coordinate range. The format, anchor numbering and serializer
+are unchanged. A read-only audit of the current vanilla network finds no
+wrap-crossing segment and no out-of-range point, so it supplies no positive engine
+example for these contacts. Read-back checks establish short cylindrical steps,
+exact endpoints and unchanged retained Old World polylines; their engine rendering
+remains [UNKNOWN]. No executable analysis or engine/shader patch is introduced.
+All local source binaries, generated rasters, strips and audit outputs remain
+unshared under ignored paths. This follow-up introduces no additional legal
+clearance beyond the framework and limits above.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

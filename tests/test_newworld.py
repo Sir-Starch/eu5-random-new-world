@@ -14,7 +14,6 @@ import numpy as np
 from rnw.model import CellClass
 from rnw.newworld import (
     LAND_KINDS,
-    SEAM_GAP_PX,
     NewWorld,
     derive_world,
     generate_new_world,
@@ -70,34 +69,47 @@ def test_land_outline_changes_with_the_seed() -> None:
     assert not any(np.any(mask[:, 440:]) for mask in masks)
 
 
-def test_seam_column_gets_a_strait() -> None:
-    """No land lies within the seam gap; land remains on both sides."""
+def test_the_map_seam_does_not_change_the_generated_geography() -> None:
+    """Moving the display seam cannot create water or restart the land field."""
     domain = np.ones((160, 400), dtype=bool)
     world = generate_new_world(domain, seed=3, settings=SMALL, seam=200)
     mask = _land_mask(world)
-    assert not np.any(mask[:, 200 - SEAM_GAP_PX : 200 + SEAM_GAP_PX])
-    assert np.any(mask[:, :200])
-    assert np.any(mask[:, 200:])
     plain = generate_new_world(domain, seed=3, settings=SMALL)
-    assert not np.array_equal(plain.labels, world.labels)
+    assert np.array_equal(plain.labels, world.labels)
+    assert np.array_equal(plain.elevation, world.elevation)
+    assert np.any(mask[:, 199] & mask[:, 200])
+    shifted = generate_new_world(domain, seed=3, settings=SMALL, seam=97)
+    assert np.array_equal(shifted.labels, world.labels)
 
 
 def test_a_small_canvas_lobe_has_no_reserved_land() -> None:
-    """A lobe cut off by the seam can be all ocean, or hold seed-driven land."""
+    """A narrow lobe can be all ocean, or hold seed-driven land."""
     domain = np.zeros((300, 600), dtype=bool)
     domain[20:280, 170:580] = True
     domain[100:200, 20:170] = True
     settings = replace(SMALL, feature_px=160, land_permille=300, coast_margin_px=4)
     areas: list[int] = []
     for seed in range(16):
-        land, ocean, lakes, _ = land_stage(domain, seed, settings, 170)
+        land, ocean, lakes, _ = land_stage(domain, seed, settings)
         assert np.array_equal(land | ocean | lakes, domain)
-        assert not np.any(land[:, 170 - SEAM_GAP_PX : 170 + SEAM_GAP_PX])
         assert land[:, 170:].any()
         areas.append(int(np.count_nonzero(land[:, :170])))
     assert min(areas) == 0
     assert max(areas) > 0
     assert len(set(areas)) > len(areas) // 2
+
+
+def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:
+    """A drawn continent is continuous even when its display crosses both map edges."""
+    domain = np.ones((160, 400), dtype=bool)
+    drawn = np.zeros(domain.shape, dtype=bool)
+    drawn[30:130, 60:340] = True
+    plain = generate_new_world(domain, seed=3, settings=SMALL, drawn=drawn)
+    cut = generate_new_world(
+        domain, seed=3, settings=SMALL, drawn=drawn, seam=200, split_at_seam=True
+    )
+    assert np.array_equal(_land_mask(cut), _land_mask(plain))
+    assert np.all(_land_mask(cut)[40:120, 190:210])
 
 
 def test_city_points_move_away_from_the_shore() -> None:

@@ -83,12 +83,11 @@ def sketch(game_dir: Path, settings: Settings, seeds: list[int]) -> list[Candida
         "select canvas",
         lambda: select_canvas(game_map, shape.ocean_band_px, expanded=bool(shape.expand_oceans)),
     )
-    seam = (canvas.roll - canvas.col0) % int(game_map.labels.shape[1])
     found: list[Candidate] = []
     with running("candidates"):
         for seed in seeds:
             checkpoint()
-            land, _ocean, lakes, _relief = land_stage(canvas.mask.copy(), seed, shape, seam)
+            land, _ocean, lakes, _relief = land_stage(canvas.mask.copy(), seed, shape)
             found.append(_draw(seed, canvas.mask, land, lakes))
     return found
 

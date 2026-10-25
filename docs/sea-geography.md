@@ -212,7 +212,7 @@ layer's seed and nothing else:
   distance towards the other (a disk of that radius round the facing coast), the growth tapering off
   over twice the gap, so the shores keep their shape away from the strait. Nothing is merged, no third
   landmass is touched (nothing is added within 6 pixels of one), no water is cut off, and no land is
-  added where the coast margin, the border or the wrap seam forbid it; otherwise the pinch is not made.
+  added where the coast margin or the canvas border forbid it; otherwise the pinch is not made.
   The channel is narrow
   water (`narrows`) and is named for it, a strait or a sound.
 - **Crossings.** On the finished cells, every pair of land cells of different landmasses that a run

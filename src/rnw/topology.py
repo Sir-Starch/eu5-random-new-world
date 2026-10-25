@@ -113,13 +113,14 @@ def euclidean_distance(sources: NDArray[np.bool_], limit: int) -> NDArray[np.int
 
 
 def distance_from(
-    sources: NDArray[np.bool_], limit: int, *, octagonal: bool = False
+    sources: NDArray[np.bool_], limit: int, *, octagonal: bool = False, wrap_x: bool = False
 ) -> NDArray[np.int32]:
     """Step distance to the nearest source pixel, capped at ``limit``.
 
     Steps are 4-neighbour; ``octagonal`` also allows diagonal steps on every second
     round, which approximates Euclidean distance better than the diamond metric.
+    With ``wrap_x`` the left and right columns touch; the poles stay separate.
     """
     return _native.distance_from(
-        np.ascontiguousarray(sources, dtype=np.bool_), int(limit), octagonal
+        np.ascontiguousarray(sources, dtype=np.bool_), int(limit), octagonal, wrap_x
     )

@@ -85,11 +85,55 @@ def test_contacts_do_not_depend_on_the_band_that_is_scanned(
         assert land_contacts(LABELS, LAND, GENERATED) == whole
 
 
-def test_a_contact_across_the_seam_is_refused() -> None:
-    """A generated land location that touches the other edge of the map stops the build."""
+def test_contacts_include_the_other_edge_of_the_map() -> None:
+    """Generated land on the two map edges shares a normal land contact at x=0."""
     wrapped = np.array([[1, 0, 0, 2]], dtype=np.int32)
-    with pytest.raises(SplineError, match="seam"):
-        _ = land_contacts(wrapped, np.array([True, True, True]), np.array([False, True, False]))
+    found = land_contacts(wrapped, np.array([True, True, True]), np.array([False, True, False]))
+    assert found[(1, 2)] == (0.0, 0.5)
+
+
+def test_a_road_across_the_map_wrap_uses_the_short_path() -> None:
+    """A road between the edges is short on the cylinder and keeps its actual anchors."""
+    start, border, end = (990.5, 20.5), (0.0, 25.0), (12.5, 30.5)
+    path = road_path(start, border, end, map_width=1000)
+    assert path[0].tolist() == list(start)
+    assert path[-1].tolist() == list(end)
+    assert len(path) < 20
+    dx = (np.diff(path[:, 0]) + 500) % 1000 - 500
+    assert float(np.hypot(dx, np.diff(path[:, 1])).max()) <= SPACING + 0.5
+    assert np.all((path[:, 0] < 30) | (path[:, 0] > 970))
+
+
+def test_wrapped_road_survives_serialization_and_rejects_a_planar_detour() -> None:
+    """Read-back validation measures short steps across the cylinder, including the wrap."""
+    anchors = {"west": (990.5, 20.5), "east": (12.5, 30.5)}
+    contacts = {("west", "east"): (0.0, 25.0)}
+    vanilla = serialize(EMPTY)
+    data, stats = build_splines(
+        vanilla,
+        vanilla_keys=[],
+        mod_keys=list(anchors),
+        contacts=contacts,
+        anchors=anchors,
+        map_width=1000,
+    )
+    assert stats["wrapped_strips_added"] == 1
+
+    def check(payload: bytes) -> list[str]:
+        return spline_problems(
+            payload,
+            vanilla,
+            vanilla_keys=[],
+            mod_keys=list(anchors),
+            contacts=list(contacts),
+            roads=list(contacts),
+            map_width=1000,
+        )
+
+    assert check(data) == []
+    network = parse(data)
+    network.point_xy[:, 0] = 500
+    assert any("discontinuous step" in problem for problem in check(serialize(network)))
 
 
 def test_a_road_runs_from_anchor_to_anchor_through_the_border_point() -> None:
