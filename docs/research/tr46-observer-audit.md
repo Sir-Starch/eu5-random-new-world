@@ -232,8 +232,9 @@ Thus native war activity exists; declarations do not establish territorial gain.
 colonization starts are not completed colonies; neither measure gives borders,
 growth rate, eligibility or AI intent. No vanilla control campaign was run.
 No claim that extraordinary societies specifically are expanding is established
-by the aggregate. The binary saves were preserved, not decoded. Their `_19`
-copy is a late campaign checkpoint, not an assumed 1337 baseline.
+by the aggregate. At the initial audit the binary saves were preserved, not
+decoded. Their `_19` copy is a late campaign checkpoint, not an assumed 1337
+baseline. The read-only follow-up below now binds both checkpoints.
 
 **Work entry points:** `societies.py`, `archetypes.py`, `eu5_natives.py`,
 `eu5_archetypes.py`, `eu5_empires.py`, `eu5_technology.py`, `eu5_development.py`;
@@ -247,6 +248,21 @@ without assuming they explain all stagnation.
 tag-based start/end land and subject counts for ordinary natives, great empires
 and each extraordinary archetype; an explanation of whether the observed low
 growth is expected or a generation defect. No new long campaign is requested.
+
+**Investigated [C325–C328; experiment 059]:** both frozen saves carry vanilla's
+default `western_colonisation_only` rule; American native capitals are excluded
+from ordinary AI charters. Missing colonization technology is not the explanation
+for the nine extraordinary member countries examined. Read-only save binding and
+independent owner/list checks establish the checkpoints as **1497.4.1 / 1590.11.11**.
+The empires own **53 / 98 / 121** and **86 / 119 / 142** locations across start
+and checkpoints; WBU owns **7 / 69 / 149**, ending as LIA. Every league member
+has no owned land by 1497. Ordinary states consolidate from 193 countries with
+563 locations to 36 with land and 314 locations in 1590. The broad no-expansion
+claim is not supported; acquisition of initially unowned land is not observed.
+The [full findings](tr46-native-expansion.md) include all extraordinary members,
+subjects, ordinary/pop cohorts, QDL's civil-war successor and history limits.
+Frontier selection and vanilla-normal growth/resilience remain unknown; no AI
+bonus, rule override, new campaign or game-facing change is justified here.
 
 ### TR46-06a — Persistent physical seam
 
@@ -437,11 +453,16 @@ identify the tag/name source and validate its effective name/localization path.
 diplomatic capacity under the engine's worst-case DIP-0 ruler check; the
 warning threshold is 0.5 and it reports DIP 28 needed to fall within the limit.
 [V-LOCAL] GVQ is present in TR46's generated `rnw_natives.txt` and written
-1337 country setup; it is not established here as an extraordinary archetype.
+1337 country setup. Follow-up C327 establishes it as a **sea-league member**, with
+two initial alliances to VDE and MIN (experiment 059).
 Vanilla DWS / Dawasir also warns at `3570` (0.64781, DIP 10).
 This is a conditional setup warning, not proof of actual ruler capacity or
 stagnation. Closure: audit generated alliances/subjects/relations and budgets,
-then explain or correct the generated excess by construction.
+then explain or correct the generated excess by construction. C328 confirms that
+vanilla alliance upkeep is variable; a ring with two alliances per member does
+not guarantee sufficient capacity. The unsupported source-comment guarantee is
+corrected, with no alliance/output change. Actual start capacity and the cause
+of the league's defeat remain unknown; see the [follow-up](tr46-native-expansion.md).
 
 ### TR46-L08 — Incomplete map locators
 

@@ -400,6 +400,68 @@ identifiers and aggregate findings enter the repository; no protected mountain
 source is distributed with the generator. Existing compatibility fingerprints,
 input manifests and local-generation/distribution boundaries continue to apply.
 
+## R-005 — Read-only TR46 save-state analysis
+
+**2026-10-25; original generator 0.12.3 / epoch 33 campaign, EU5 1.4.4 executable
+(Steam 26142040) on 1.4.3 data (26105915); C326–C328;
+[experiment 059](../../experiments/059-native-expansion/README.md).** This is a
+private diagnostic reader, not a new generator interface or save writer.
+
+**Necessity.** The owner asks whether generated societies expand. Names in the
+game log cannot distinguish a defeated state, a renamed formable, an unrelated
+reused country slot and a civil-war successor. Current owners, direct subjects,
+researched advances and the saved game rules are needed to distinguish a map
+generation defect from vanilla AI restrictions. The owner already supplied a
+long campaign; requiring another campaign or modifying its saves is unnecessary.
+
+**Available mechanisms and their limit.** The frozen 1337 setup and text logs
+are read with the existing script/text readers. They do not provide exact late
+ownership. The two `.eu5` files expose standard ZIP entries, but `gamestate`
+and `string_lookup` are binary rather than the script text accepted by that
+reader. No applicable standalone official exporter was identified in the local
+research; this does not assert that no official API exists anywhere. A live
+console inspection would require a separately restricted game launch and is
+not used. Standard-library ZIP decompression requires no game executable,
+downloaded token database, third-party binary, key or change to access controls.
+
+**Studied structures.** On the owner's frozen copies only: the ZIP framing and
+CRCs; length-prefixed UTF-8 strings following the lookup's version/opaque header;
+little-endian token framing for assignment, containers, scalar values and
+per-save string references, including compact reference/number widths. The
+reader understands only token forms actually encountered and rejects unknown
+forms. Fixed metadata keys are narrowly enumerated. It traverses the selected
+country, location, cabinet, colony, diplomacy, timeline and rule containers.
+Country handles retain all generation bits; a matching low slot is not an
+identity. Dates are checked against the recorded final date and the 1337
+ownership baseline. The opaque lookup-header payload and unrelated save
+semantics are not claimed to be fully understood.
+
+**Validation and limits.** Both original file hashes and ZIP CRCs pass. All
+68,108,132 / 75,749,957 tokens are consumed with balanced containers and no
+unknown token; 30,565 definition IDs, 201 retained original start capitals and
+738 initial native ownership records bind to the frozen setup. Every current
+country's owned-location list agrees with independently counted location-owner
+references. Private synthetic checks cover anonymous containers, reference
+widths, complete handles, fixed-point values and invalid/truncated framing.
+Timeline evidence handles QDL's successor separately from a reused
+slot and WBU's civil-war copy separately from WBU/LIA. Ownership histories do
+not always include current civil-war transfers: 172 / 102 disagreements with
+current-owner snapshots, including 23 native locations in the earlier save.
+Consequently they are not an exhaustive acquisition/event history. This
+validation supports the reported aggregates, not arbitrary saves, future
+versions, lifetime peaks or a generic save specification.
+
+**Compatibility and distribution.** No save is changed, serialized or loaded
+by the game, and no game/profile file is written. The independent diagnostic
+helpers, raw saves, decompressed strings, scripts and detailed dumps remain in
+ignored `local_data/tr46-expansion/`; the original evidence remains frozen under
+053's local archive. Git receives identifiers, aggregate findings, hashes and
+these interface notes only. No protected token table, substantial game-script
+excerpt, executable code, assets or save content is distributed. There is no
+generator version/epoch or installed-output change, no runtime hook and no
+general save API. Any reuse against another format/build requires fresh
+validation rather than assuming these two successful parses establish support.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

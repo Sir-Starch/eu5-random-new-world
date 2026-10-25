@@ -181,3 +181,19 @@ Whether EU5 1.4.1 accepts the new tags, pop-type tribes on generated locations a
 ## Terra incognita edge
 
 The terra incognita shader blends visibility over one location pixel, so its edge follows the pixel steps of the location raster in vanilla and generated land alike (C69). A shader patch tried in R6b is removed at the owner's request (C72). The generated map itself is fixed instead: borders are bent again where one cell used to undo the bending everywhere (C71), natives know their coastal seas, and the terrain coastline follows the raster as closely as in vanilla (C72).
+
+## TR46 long-run expansion follow-up (2026-10-25)
+
+[V-LOCAL / V-EXEC C325–C328] In the archived 0.12.3 observer campaign, the saved
+vanilla default `western_colonisation_only` rule excludes American capitals
+from ordinary AI colonial charters. This does not prevent the observed conquest
+and consolidation: the two empires grow 53→121 and 86→142 locations, and a
+fractured-realm member grows 7→149 while forming LIA. The sea league loses all
+owned land by the first preserved checkpoint, 1497.4.1. Frontier settlement is
+a distinct geographically gated cabinet action, with no active use globally at
+either preserved checkpoint; its exact AI selection boundary remains unknown.
+No rule override, AI bonus or claim of vanilla-normal growth follows from this
+one run. See [the complete findings](research/tr46-native-expansion.md) and
+[experiment 059](../experiments/059-native-expansion/README.md) for every actual
+extraordinary society's land/subjects, ordinary/pop cohorts, successor handling,
+conditional league-capacity warning and the limits of saved histories.

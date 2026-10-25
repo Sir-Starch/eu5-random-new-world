@@ -318,8 +318,8 @@ def plan_archetypes(
 def alliance_pairs(group: Group) -> tuple[tuple[int, int], ...]:
     """The alliances of a sea league: a ring from the hub through the members and back.
 
-    Every member holds two, so that none strains its diplomatic capacity. A group has at least
-    three members, so the pairs are distinct.
+    Every member holds two. Counts alone do not bound vanilla's variable alliance upkeep
+    (TR46-L07; experiment 059). A group has at least three members, so the pairs are distinct.
     """
     if group.kind != SEA_LEAGUE:
         return ()

@@ -1274,3 +1274,54 @@ launch, process control, push or publication.
 The related TR46-01/02 block has an offline candidate and recorded runtime limits.
 The next independent block is native expansion/colonization eligibility (TR46-05),
 using the frozen original campaign as its evidence, not a new long playthrough.
+
+## 2026-10-25 — TR46 native expansion and the saved vanilla rule (059)
+
+[V-LOCAL / V-EXEC C325] Inspect installed colonization rules, defines, advances,
+frontier cabinet action and neighbouring-conquest planner. Vanilla defaults to
+western_colonisation_only with europe as its allowed capital continent. Frontier
+settlement is a separate geographically gated mechanism; only 89 of 202 starting
+TR46 states meet its geographic part, neither empire nor any league member.
+Other eligibility and the engine's frontier-rule interaction are not inferred.
+The installed American start has 223 states, 321 pop countries and 493 of 4,434
+passable locations owned, versus TR46 202/457/738 of 6,656; both about 11.1%,
+not an equal-area/population or control-campaign comparison. The current
+installation remains build 26142040 with map fingerprint 592e8309…03009a.
+
+[V-EXEC C326] Read both frozen saves without launch or mutation; ZIP CRCs and
+original hashes pass. A private fail-on-unknown token reader consumes 68,108,132 /
+75,749,957 tokens with balanced containers. Dates: 1497.4.1 / 1590.11.11. Validate
+30,565 definition IDs, 201 retained original start capitals, 738 initial native
+ownership records and all 2,653 / 2,619 current country lists against independently
+counted location owners. QDL needs an explicit civil-war successor binding;
+WBU/LIA preserves its original object separately from a civil-war copy. Saved
+histories omit some current transfers (172 / 102 disagreements, 23 native in the
+earlier checkpoint); do not derive exact lifetime peaks or event causes. Register
+the narrow read-only interface in interoperability R-005; raw data/helpers stay
+ignored under local_data/tr46-expansion.
+
+[V-EXEC C327] Both saves use the vanilla western-only rule and native capitals
+remain American. All nine actual extraordinary member countries have colonies
+researched. The empires grow 53→98→121 and 86→119→142; WBU 7→69→149, becoming
+LIA. The league loses all land. The ordinary-state cohort consolidates from 193
+landed states/563 locations to 50/387 and 36/314; every original state together
+holds 738→710→733 locations, with land in 202→54→40 countries. The 457 original
+pop countries keep that type and own no land at either checkpoint. No native
+active charter among 10/16 globally, no active frontier action globally, no
+acquisition outside initial native state land in current holdings or recorded
+histories. Keep the history and vanilla-control limitations. Record every actual
+archetype's land/direct subjects and all 659 rows privately; public aggregate
+findings: [TR46 native expansion](tr46-native-expansion.md).
+
+[V-LOCAL / V-EXEC / INFERRED / UNKNOWN C328] No blanket expansion failure is
+established; no AI/technology/rule/balance change follows. Frontier selection,
+vanilla-normal growth and league resilience remain explicit unknowns. L07 now
+has a known archetype: GVQ is in the three-member league. Its two alliances are
+not a capacity guarantee because vanilla upkeep varies. Correct that source
+comment only; the conditional DIP-0 setup warning does not establish actual
+starting ruler overcapacity or explain defeat. This is an evidence phase, no
+game-facing candidate to install, version/epoch stay 0.12.8/38. Required sync and
+make check pass: 1,969 Python, 14 skips, 23 Rust, format/lint/types clean. Separate
+Workshop fix 90f531e landed before this check; 058's prior failures remain a
+historical result. No profile/save/settings/playset/install change, game launch,
+process control, push or publication.
