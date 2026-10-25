@@ -1,10 +1,10 @@
-source: 61df0c1ae6ee14f4
+source: e26dbff50eb6f5e2
 
 [h1]Random New World (RNW) Generator[/h1]
 
-Generador procedural del Nuevo Mundo para EU5, inspirado en el sistema RNW de EU4, pero programado desde cero para generar continentes completos en lugar de unir piezas prefabricadas.
+Generador procedural del Nuevo Mundo para EU5 — programado desde cero para generar continentes completos en lugar de unir piezas.
 
-Reemplaza América por una masa continental totalmente procedural manteniendo el Viejo Mundo intacto. Cada mundo generado se exporta como un mod local independiente con un [b]Código del mundo[/b] (seed) corto: tus amigos con la misma versión del juego pueden generar exactamente el mismo mapa para multijugador.
+Reemplaza América por un mapa procedural manteniendo el Viejo Mundo intacto. Cada mundo se exporta como un mod local con un [b]Código del mundo[/b] (seed) para multijugador.
 
 [quote][b]⚠️ IMPORTANTE: No actives ESTE artículo del Workshop en tu colección.[/b]
 Este artículo solo descarga la herramienta generadora externa. Los mundos creados aparecerán en tu lista de mods como mods locales independientes (ej. [i]"RNW: Small continents 7K3Q"[/i]); activa uno de ellos en su lugar.[/quote]
@@ -13,7 +13,7 @@ Este artículo solo descarga la herramienta generadora externa. Los mundos cread
 [list]
 [*][b]5 arquetipos de mundo:[/b] Supercontinente, Continentes, Continentes pequeños, Archipiélago o Islas dispersas.
 [*][b]Generación geográfica coherente:[/b] El relieve, las zonas climáticas, las cuencas fluviales, el terreno y la vegetación (bosques, desiertos, selvas) se simulan conjuntamente en un modelo unificado.
-[*][b]Diseño marítimo y naval:[/b] Golfos, estrechos y cabos con nombres procedurales, puertos naturales en las costas y conexión fluida con las corrientes y rutas marítimas del juego base.
+[*][b]Lienzo ampliado (+40 %) y océanos dinámicos:[/b] El área de generación es un 40 % mayor que la silueta de la América original al aprovechar el espacio oceánico circundante. Los océanos y páramos oceánicos (Ocean Wastelands) base no se eliminan, sino que adaptan dinámicamente sus límites, corrientes y rutas marítimas a las nuevas costas, puertos naturales, golfos y estrechos.
 [*][b]Nativos procedurales:[/b] Poblado con naciones nativas (tags), culturas, religiones, tribus descentralizadas, estados asentados y redes de vasallos.
 [*][b]Escenarios tipo «High American» / Fantasy:[/b] Probabilidad opcional de generar civilizaciones avanzadas («Pueblos extraordinarios»): grandes imperios, ligas mercantes marítimas, confederaciones del altiplano, reinos fragmentados o centros religiosos.
 [*][b]Contenido dinámico:[/b] Naciones formables procedurales, nombres coloniales regionales y ambientación propia para cada mundo.
@@ -37,7 +37,7 @@ Este artículo solo descarga la herramienta generadora externa. Los mundos cread
 [/list]
 
 [h2]¿Por qué un generador externo?[/h2]
-El motor de scripts de EU5 no puede generar mapas de altura, mallas de terreno o ríos dinámicamente en tiempo de ejecución. Esta herramienta lee tu instalación de EU5 y compila un mod de mapa estático estándar.
+El motor de EU5 no puede generar mapas de altura en tiempo de ejecución. Esta herramienta compila un mod de mapa estándar.
 [list]
 [*]No modifica los archivos originales del juego.
 [*]No requiere tener el juego abierto: funciona de forma totalmente independiente.
@@ -64,8 +64,8 @@ A: Incompatible con mods de conversión total, otros mods de mapa y cualquiera q
 [b]P: ¿Funciona el multijugador?[/b]
 A: Sí, en teoría: cada jugador genera localmente el mismo mod con el [b]Código del mundo[/b] compartido en la misma versión de EU5, lo que da una suma de comprobación idéntica. [i][TODO: Confirm after MP testing][/i]
 
-[b]P: ¿Ironman y logros?[/b]
-A: Modifica la suma de comprobación (checksum). [i][TODO: Confirm EU5 achievement rules with modded checksums][/i]
+[b]P: ¿Modo Ironman y logros?[/b]
+R: ¡Tanto Ironman como los logros son totalmente compatibles! Aunque el mundo generado cambia el checksum, EU5 permite desbloquear logros siempre que no uses reglas de juego que los bloqueen.
 
 [b]P: ¿Qué ocurre si me desuscribo del generador?[/b]
 A: Los mundos generados son mods locales independientes y seguirán funcionando aunque anules la suscripción a este artículo de Workshop. Para desinstalar limpiamente, haz clic en [b]Borrar mundo[/b] en el generador antes de desuscribirte.

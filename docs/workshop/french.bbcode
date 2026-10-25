@@ -1,23 +1,23 @@
-source: 61df0c1ae6ee14f4
+source: e26dbff50eb6f5e2
 
 [h1]Random New World (RNW) Generator[/h1]
 
-Générateur procédural de Nouveau Monde pour EU5, inspiré du système RNW d'EU4 — mais conçu de zéro pour générer de véritables continents plutôt que d'assembler des tuiles prédéfinies.
+Générateur procédural de Nouveau Monde pour EU5 — crée des continents complets plutôt que d'assembler des tuiles.
 
-Remplace les Amériques par une masse continentale entièrement procédurale tout en laissant l'Ancien Monde intact. Chaque monde généré est exporté comme un mod local autonome avec un court [b]Code du monde[/b] (seed), permettant à des amis sur la même version du jeu de générer exactement la même carte en multijoueur.
+Remplace les Amériques par des terres procédurales en préservant l'Ancien Monde. Chaque monde est un mod local autonome avec un [b]Code du monde[/b] (seed) pour le multijoueur.
 
 [quote][b]⚠️ IMPORTANT : N'activez PAS cet objet du Workshop dans votre playset.[/b]
-Cet objet télécharge uniquement l'outil de génération externe. Les mondes générés apparaîtront dans votre liste de mods comme des mods locaux distincts (ex. [i]"RNW: Small continents 7K3Q"[/i]) — c'est l'un d'eux qu'il faut activer.[/quote]
+Cet objet télécharge uniquement le générateur. Les mondes générés apparaissent comme des mods locaux distincts (ex. [i]"RNW: Small continents 7K3Q"[/i]) — activez ceux-là.[/quote]
 
 [h2]Fonctionnalités[/h2]
 [list]
 [*][b]5 archétypes de mondes :[/b] Supercontinent, Continents, Petits continents, Archipel ou Îles éparses.
-[*][b]Génération cohérente de la carte :[/b] Le relief, les zones climatiques, les bassins fluviaux, le terrain et la végétation (forêts, déserts, jungles) sont simulés ensemble dans un modèle unifié.
-[*][b]Agencement maritime & naval :[/b] Golfes, détroits et caps nommés procéduralement, ports naturels sur les côtes, et intégration parfaite aux courants et routes maritimes du jeu de base.
-[*][b]Peuples autochtones procéduraux :[/b] Rempli de pays (tags), cultures, religions, tribus décentralisées, États sédentaires et réseaux de vassaux.
-[*][b]Scénarios « High American » / Fantasy :[/b] Chance optionnelle de faire apparaître des sociétés avancées (« Peuples extraordinaires ») — grands empires, ligues marchandes maritimes, confédérations des montagnes, royaumes divisés ou centres religieux.
+[*][b]Génération cohérente de la carte :[/b] Relief, climat, bassins fluviaux, terrain et végétation sont simulés dans un modèle unifié.
+[*][b]Zone étendue (+40 %) et océans dynamiques :[/b] Le canevas de génération est 40 % plus vaste que l'empreinte des Amériques de base grâce à l'intégration des eaux environnantes. Les océans et déserts océaniques (Ocean Wastelands) du jeu de base ne sont pas supprimés mais remodèlent dynamiquement leurs frontières, courants et routes maritimes autour des nouvelles côtes, ports naturels, golfes et détroits.
+[*][b]Peuples autochtones procéduraux :[/b] Pays (tags), cultures, religions, tribus, États sédentaires et réseaux de vassaux.
+[*][b]Scénarios « High American » / Fantasy :[/b] Sociétés avancées (« Peuples extraordinaires ») : grands empires, ligues marchandes, confédérations, royaumes divisés ou centres religieux.
 [*][b]Contenu dynamique :[/b] Nations formables procédurales, noms coloniaux régionaux et saveur propre à chaque monde.
-[*][b]Véritable Terra Incognita (sans spoiler) :[/b] Le Nouveau Monde reste masqué sur la carte du salon et dans la vignette du mod par défaut, afin de ne pas dévoiler la géographie avant vos explorateurs.
+[*][b]Véritable Terra Incognita (sans spoiler) :[/b] Le Nouveau Monde reste masqué dans le salon et la vignette du mod jusqu'à son exploration en jeu.
 [/list]
 
 [h2]Comment l'utiliser[/h2]
@@ -37,7 +37,7 @@ Cet objet télécharge uniquement l'outil de génération externe. Les mondes g�
 [/list]
 
 [h2]Pourquoi un générateur externe ?[/h2]
-Le moteur de script d'EU5 ne peut pas générer dynamiquement de cartes de hauteur, de maillages de terrain ou de réseaux fluviaux en jeu. Cet outil lit votre installation d'EU5 et compile un mod de carte statique standard.
+Le moteur d'EU5 ne peut pas générer de relief en jeu. Cet outil lit votre installation et compile un mod de carte standard.
 [list]
 [*]Ne modifie aucun fichier du jeu de base.
 [*]Ne nécessite pas que le jeu soit ouvert — fonctionne de manière totalement autonome.
@@ -49,9 +49,9 @@ Le moteur de script d'EU5 ne peut pas générer dynamiquement de cartes de haute
 [h2]Limites connues & Prérequis[/h2]
 [list]
 [*][b]Nouvelles parties uniquement :[/b] Non compatible avec les sauvegardes existantes.
-[*][b]Redémarrage entre différentes cartes RNW :[/b] Lancer une partie sur une carte RNW, revenir au menu et charger une autre carte RNW dans la même session fait planter EU5. Redémarrez le jeu lors d'un changement de monde.
+[*][b]Redémarrage entre différentes cartes RNW :[/b] Recharger une autre carte RNW dans la même session fait planter EU5. Redémarrez le jeu lors d'un changement de monde.
 [*][b]Mises à jour du jeu :[/b] Les mises à jour majeures d'EU5 peuvent nécessiter une mise à jour du générateur. Pour poursuivre une ancienne sauvegarde après un patch, régénérez son monde avec le même Code du monde.
-[*][b]Mémoire vive (RAM) :[/b] Nécessite environ 7,5 Go de RAM libre pendant la compilation. Sur les configurations modestes, vous pouvez fermer EU5 et lancer le générateur directement depuis le dossier du mod pour libérer de la mémoire (le générateur ne nécessite pas que le jeu soit lancé).
+[*][b]Mémoire vive (RAM) :[/b] Nécessite environ 7,5 Go de RAM libre pendant la compilation. Sur petite config, fermez EU5 et lancez le générateur depuis le dossier du mod pour libérer la RAM (le jeu n'a pas besoin de tourner).
 [/list]
 
 [h2]FAQ[/h2]
@@ -64,8 +64,8 @@ A : Incompatible avec les conversions totales, les autres mods de carte ou tout 
 [b]Q : Le mode multijoueur fonctionne-t-il ?[/b]
 A : Oui, en théorie : chaque joueur génère exactement le même mod localement grâce au [b]Code du monde[/b] partagé sur la même version d'EU5, ce qui donne une somme de contrôle identique. [i][TODO: Confirm after MP testing][/i]
 
-[b]Q : Mode Ironman & Succès ?[/b]
-A : Modifie la somme de contrôle (checksum). [i][TODO: Confirm EU5 achievement rules with modded checksums][/i]
+[b]Q : Ironman et succès (achievements) ?[/b]
+R : Le mode Ironman et les succès sont entièrement pris en charge ! Bien qu'un monde généré modifie la somme de contrôle (checksum), EU5 permet de débloquer les succès tant que les règles de jeu utilisées sont compatibles.
 
 [b]Q : Que se passe-t-il si je me désabonne du générateur ?[/b]
 A : Vos mondes générés sont des mods locaux autonomes et continueront de fonctionner même si vous vous désabonnez de cet objet du Workshop. Pour une désinstallation propre, cliquez d'abord sur [b]Supprimer le monde[/b] dans le générateur avant de vous désabonner.
