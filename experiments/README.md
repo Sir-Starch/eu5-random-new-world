@@ -64,3 +64,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [055 — Wrapped river raster](055-wrap-river-raster/README.md): owner retains full mainland wrap; planar river starts/joins preserve the continuous network and remove the written-data cause of TR46’s missing-source errors; 0.12.5, epoch 35.
 
 - [056 — Primary terrain wrap](056-primary-terrain-wrap/README.md): extend the primary edge sources across the boundary, preserve interior samples, replace outside-only duplicates and retain full mainland wrap; 0.12.6 / epoch 36, rendered seam still unobserved.
+
+- [057 — Local sea routes](057-local-sea-routes/README.md): remove arbitrary closed-ocean size partitions, bound nearby-coast detours and retain ports/passable water in script replacements; exact TR46 BU2A, 0.12.7 / epoch 37, offline verification and installation.

@@ -1,5 +1,21 @@
 # Sea geography
 
+**TR46 follow-up, 0.12.7 / epoch 37 (2026-10-25):** local shipping routes,
+connected closed-water locations and access-preserving script replacements
+supersede the older size-based zoning and global-connectivity-only rule below.
+See [experiment 057](../experiments/057-local-sea-routes/README.md), C317–C320.
+The local criterion is a generator policy: coastal water and retained navigable
+contacts within six typical sea-cell widths by water get a route at most twice
+that water-only distance. Distances sum integer centroid lengths; they do not
+predict engine travel time or modify retained geography. Inherited current
+lanes stay; only necessary deep cells open before closed components are folded.
+Every connected generated closed component is one physical location, with the
+existing connected vanilla-identity planner still applying at the boundary.
+Genuinely distinct retained vanilla waters keep their identities. A removed
+port maps to a generated port; removed navigable sea maps to navigable sea.
+The same replacement is used by waypoints and callbacks. Missing compatible
+destinations fail export. [V-EXEC C318; engine outcome UNKNOWN]
+
 **S2, 0.12.0 (2026-10-24):** the generator offers optional, recommended ocean
 expansion alongside the original canvas. Its fixed sector, connected named-ocean
 identities, protected waters and offline verification are recorded in
@@ -174,11 +190,11 @@ the deep cells are told apart as the game's are:
   lane; a cell costs one, and three more for every cell it lies from land beyond three (a lane keeps
   to the coast). The reference world needed one cell, the presets none to three. A stretch no
   deep water can join (a sea that the land closes) is counted, not joined.
-- **Closed.** The other deep cells are closed to ships, as the game's. Each connected stretch is
-  cut into zones of about 48 cells (the game's median zone is 32 cells of a generated sea cell, its
-  mean 78; `hierarchy.split`: compact and connected) and the cells of a zone are folded into one
-  location (`ports.relabel`, as when sea cells merge for ports): `topography = ocean_wasteland`
-  in its template, and its key in both lists. The reference world's 1,193 deep cells became 420
+- **Closed.** The other deep cells are closed to ships, as the game's. Since 0.12.7,
+  each connected stretch is folded into one physical location (`ports.relabel`):
+  `topography = ocean_wasteland` in its template, and its key in both lists.
+  The former target of 48 cells per zone manufactured adjacent unrelated oceans
+  in TR46 and is removed (C317–C318). In the older S1 reference, 1,193 deep cells became 420
   lanes and 36 closed zones of 746,000 pixels at most; across the five presets 262 to 352 lanes and
   29 to 36 zones.
 - **Currents.** A lane cell's current is the blend of the nearest courses and anchors through the

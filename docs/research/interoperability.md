@@ -346,6 +346,31 @@ asserted. Original/derived assets, executable excerpts and raw measurements stay
 local and ignored. The existing compatibility fingerprint, local-generation
 boundary and legal limits still apply, without additional clearance.
 
+### Follow-up: maritime identities and script access (2026-10-25, 0.12.7 / epoch 37)
+
+[V-LOCAL / V-EXEC C317–C319] TR46's inherited sea graph was globally connected
+but left large local detours; arbitrary closed-water partitions created adjacent
+unrelated ocean names. Script replacements also mapped vanilla port landfalls
+to inland land. Initial geography construction now adds bounded local lanes,
+folds connected closed water without a size partition and retains access roles
+in the shared script remap. This uses R-004's existing locations PNG and text
+interfaces (`default.map`, definitions, templates, ports, adjacency, locators
+and scripts). No additional binary structure or engine modification is needed.
+
+The existing R-001 spline writer renumbers anchors to the changed definition
+order. Independent comparison by location keys and point coordinates verifies
+unchanged road geometry, rather than requiring identical numeric anchor IDs.
+Terrain, water-texture and river formats are unchanged; generated resources stay
+local under the same installation-derived boundary. Synthetic fixtures cover
+local routes, closed-component identity and port/passable-water replacement.
+
+Limited read-only tracing of the port/water assertion in the current executable
+locates a destination-change routine and its checks, but does not establish
+the runtime caller, affected object or cause. Public text/data interfaces and
+the log lack that information. No executable bytes are changed or distributed;
+disassembly and raw measurements stay ignored. This incomplete trace is not
+treated as a new engine movement contract. The engine outcome remains unknown.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

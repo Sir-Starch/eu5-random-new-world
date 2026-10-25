@@ -1172,3 +1172,52 @@ full mainland wrap. The rendered crack/coast and exact treaty allocation retain
 their explicit engine-evidence limits. The next independent work block is
 maritime basin identity/routes/ports (TR46-03/04, L02/L03), using the frozen audit
 and the separately preserved later session where relevant.
+
+## 2026-10-25 — TR46 maritime geography (0.12.7 / epoch 37)
+
+[V-LOCAL / V-EXEC / INFERRED C317] Reconstructed a concrete five-name closed-ocean
+chain: the 48-cell quota split one connected stretch and coastal-area naming
+assigned unrelated ocean names. Global lane reachability also allowed large
+local detours, including northern pairs whose route through retained water was
+roughly 20–24 times the short water route. They were not globally unreachable.
+Vanilla itself has adjacent distinct closed waters, so adjacency alone is not
+an error. All three remapped western-voyage landfalls lack ports; the existing
+one-based definition-index contract maps the two failed log IDs to two of them.
+The original VFS confounder and runtime-mapping inference are retained. Limited
+static inspection of the separate port/water assertion gives no runtime caller
+or location, so L02 stays unattributed.
+
+[V-EXEC C318] Add local water connections within six typical sea-cell widths
+with a maximum twofold geometric detour, continue retained navigable contacts,
+and fold connected closed water without size partitions. Shared script remapping
+retains port and navigable-water roles, consistently in waypoints and callbacks;
+missing compatible destinations fail. No output repair or engine patch. Version
+0.12.7, epoch 37; updated reference and synthetic digests. Existing text/PNG and
+spline interfaces are covered in the interoperability register.
+
+[V-EXEC C319] Complete check passes 1,962 Python tests (14 skipped) and 23 Rust
+tests, with clean format/lint/types. Independent final-file audit validates all
+3,700 local pairs (max factor 1.90849), 29 opened cells and 20 literal sea-voyage
+waypoints. No adjacent generated closed identities differ arbitrarily. Terrain,
+water textures, rivers, nonempty population records and all 59,404 road strips'
+coordinates remain exact. All 50,987,808 nonsea pixels retain their keys, including
+30,434,666 retained pixels with exact RGB. Recolouring affects 25 generated
+land/lake identities but not their geography; country setup changes only sea
+areas discovered. All 861 bundle records hash correctly. BU2A: 833 files,
+9bea353c…1746e. Reference: 832 files, 2cccf2b2…e770f, all content families; fresh
+hash-seed-7/no-cache reproduction passes 13 local checks, one skip, 220.16 s.
+Windows/Linux maritime/access parity and the isolated offscreen self-test pass.
+Engine appearance/navigation/voyage outcomes remain unknown; other expedition
+lifecycle problems remain open. See [057](../../experiments/057-local-sea-routes/README.md).
+
+[V-EXEC C320] Installed BU2A into new rnw_exp_tr46_maritime (835 files) and
+updated main hub 0.12.6→0.12.7 (3,258 files). The old 3,256-file hub is checked
+in an external backup and retained without a sweep. Nine root hashes, 16,314
+other-mod size/time records and seven prior directory entries remain exact.
+Both log and live-process checks say EU5 is closed. No existing world/save/
+playset/settings/library edits, launch, process control or publication.
+
+The maritime block has offline corrections and explicit remaining evidence
+limits. The next independent block is impassable-land grouping and physical
+mountain relief (TR46-01/02); they still require separate evidence and have not
+been implemented in this phase.

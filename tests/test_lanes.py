@@ -5,11 +5,12 @@
 
 from __future__ import annotations
 
+from collections import deque
 from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.lanes import COURSE_PERMILLE, ZONE_CELLS, Course, LaneError, plan_lanes
+from rnw.lanes import COURSE_PERMILLE, Course, LaneError, plan_lanes
 from rnw.seas import Topography, analyse
 from tests.block_worlds import block_world, cell
 
@@ -94,15 +95,14 @@ def test_no_cell_that_touches_the_games_water_stops_the_export() -> None:
         _ = plan_lanes(world, waters, {}, set(), set())
 
 
-def test_shut_water_is_cut_into_connected_zones_of_about_the_same_size() -> None:
+def test_connected_closed_water_is_one_zone_without_an_arbitrary_size_partition() -> None:
     layout = ["#" + "." * 39 for _ in range(30)]
     world = block_world(layout)
     waters = analyse(world)
     docks = {cell(layout, row, 39) for row in range(30)}
     lanes = plan_lanes(world, waters, {}, set(), docks)
-    sizes = [len(zone) for zone in lanes.zones]
-    assert len(sizes) > 5
-    assert all(ZONE_CELLS // 3 <= size <= ZONE_CELLS * 2 for size in sizes)
+    assert len(lanes.zones) == 1
+    assert len(lanes.zones[0]) > 48 * 5
     seen: set[int] = set()
     for zone in lanes.zones:
         assert not seen & set(zone)
@@ -142,3 +142,36 @@ def test_a_closed_sea_that_no_deep_water_joins_is_counted_not_joined() -> None:
     corner = cell(layout, 1, 1)
     lanes = plan_lanes(world, waters, {}, set(), {corner})
     assert lanes.sealed >= 1
+
+
+def test_globally_connected_lanes_also_join_nearby_opposite_coasts() -> None:
+    layout = ["#.......#" for _ in range(25)]
+    world = block_world(layout)
+    waters = analyse(world)
+    lanes = plan_lanes(world, waters, {}, set(), {cell(layout, 0, 4)})
+    assert lanes.sealed == 0
+    assert lanes.shortcuts > 0
+    shut = {n for zone in lanes.zones for n in zone}
+    links: dict[int, list[int]] = {n: [] for n in waters.sea()}
+    for a, b in world.edges:
+        if a in links and b in links:
+            links[a].append(b)
+            links[b].append(a)
+    # Independent breadth-first traversal: uniform blocks have equal edge lengths.
+    for row in range(25):
+        start, end = cell(layout, row, 1), cell(layout, row, 7)
+        distance, queue = {start: 0}, deque([start])
+        while queue:
+            here = queue.popleft()
+            for other in links[here]:
+                if other not in shut and other not in distance:
+                    distance[other] = 1 + distance[here]
+                    queue.append(other)
+        assert distance[end] <= 2 * 6
+
+
+def test_every_retained_passable_water_contact_continues_into_open_water() -> None:
+    world, waters, docks = _setup()
+    lanes = plan_lanes(world, waters, {}, set(), docks)
+    assert docks <= lanes.lanes
+    assert lanes.shortcuts > 0

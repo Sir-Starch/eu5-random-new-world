@@ -19,9 +19,10 @@ and which water is shut.
   every coast. A stretch that does not is joined to the water that does by the cheapest
   string of deep cells (one cell wide, the nearer to land the cheaper: lanes lie close to
   coasts), which becomes a lane.
-* **Zones.** The deep cells that are no lane are impassable. Each connected stretch of them is
-  cut into zones of about ``ZONE_CELLS`` cells (the game's median zone is 32 cells, its mean 78),
-  each of which becomes one location when the export folds its cells together.
+* **Local routes.** Nearby coasts and retained-water contacts get bounded detours
+  through ``sea_routes``, independently of global reachability.
+* **Zones.** Each connected stretch of closed deep water becomes one location.
+  A size target must not manufacture neighbouring oceans with unrelated names.
 
 Nothing here draws a random number; ties go to the lower cell.
 """
@@ -35,7 +36,7 @@ import heapq
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw.hierarchy import contact_graph, pieces, split
+from rnw.sea_routes import shorten_routes
 from rnw.seas import Topography
 
 if TYPE_CHECKING:
@@ -48,8 +49,6 @@ if TYPE_CHECKING:
 Vector = tuple[int, int]
 # The share of a cell, in permille, that a course must cover for the cell to be a lane.
 COURSE_PERMILLE: Final[int] = 500
-# About this many cells to a zone of impassable water.
-ZONE_CELLS: Final[int] = 48
 # A string of deep cells that joins water to water costs one a cell, and more the farther it
 # runs from land than this many cells (a lane keeps to the coasts).
 NEAR_HOPS: Final[int] = 3
@@ -76,6 +75,8 @@ class Lanes:
     zones: tuple[tuple[int, ...], ...]
     linked: int
     sealed: int
+    local_pairs: int = 0
+    shortcuts: int = 0
 
 
 def plan_lanes(
@@ -107,8 +108,17 @@ def plan_lanes(
         raise LaneError(message)
     before = len(lanes)
     sealed = _join(links, waters, deep, lanes, docks)
+    linked = len(lanes) - before
+    local_pairs, shortcuts = shorten_routes(world, waters, deep, lanes, docks)
     shut = sorted(deep - lanes)
-    return Lanes(frozenset(lanes), _zones(world, shut), len(lanes) - before, sealed)
+    return Lanes(
+        frozenset(lanes),
+        tuple(tuple(s) for s in _stretches(links, shut)),
+        linked,
+        sealed,
+        local_pairs,
+        shortcuts,
+    )
 
 
 def _links(world: NewWorld, waters: Waters) -> dict[int, list[int]]:
@@ -216,17 +226,3 @@ def _route(
 
 def _cost(waters: Waters, cell: int) -> int:
     return 1 + FAR_COST * max(0, int(waters.hop[cell]) - NEAR_HOPS)
-
-
-def _zones(world: NewWorld, shut: Sequence[int]) -> tuple[tuple[int, ...], ...]:
-    """The shut cells cut into connected zones of about ``ZONE_CELLS`` cells."""
-    keep = [False] * len(world.classes)
-    for cell in shut:
-        keep[cell] = True
-    graph = contact_graph(world.centroids, world.edges, keep)
-    zones: list[tuple[int, ...]] = []
-    for stretch in pieces(graph, shut):
-        count = max(1, round(len(stretch) / ZONE_CELLS))
-        parts = split(graph, stretch, count) if count > 1 else [stretch]
-        zones.extend(tuple(sorted(part)) for part in parts)
-    return tuple(sorted(zones))

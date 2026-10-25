@@ -171,6 +171,10 @@ GOLDEN_MANIFESTS = {
         "continents": "d3e537c4e39ec82bcd1e950835218b48fedfa8593c66964be508ecc509ef26f5",
         "archipelago": "87ce847fea5150e19d2b3bbb3b1ee1f47a4d30a1f78fc27e7c46d5524df5c362",
     },
+    37: {
+        "continents": "02105da224e39870ff73b42676ab4512e6490c91d1be400e5a30e6babb0e06c3",
+        "archipelago": "48d2e14db3446f54d46ad21d0239d9dcc28e94dd6e6e146849d07615e14af365",
+    },
 }
 
 

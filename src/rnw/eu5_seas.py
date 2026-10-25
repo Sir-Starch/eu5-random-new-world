@@ -290,6 +290,8 @@ class Water:
     linked: int
     sealed: int
     crossings: tuple[Crossing, ...] = ()
+    local_pairs: int = 0
+    shortcuts: int = 0
 
 
 def shape_water(coast: Coast) -> Water:
@@ -318,7 +320,18 @@ def shape_water(coast: Coast) -> Water:
             sources.setdefault(cell, []).append(course.vector)
     flows = flow(world, waters, sources, sorted(lanes))
     strait_rows = tuple(crossings(world, waters.landmass.tolist()))
-    return Water(final, waters, lanes, zones, flows, chosen.linked, chosen.sealed, strait_rows)
+    return Water(
+        final,
+        waters,
+        lanes,
+        zones,
+        flows,
+        chosen.linked,
+        chosen.sealed,
+        strait_rows,
+        chosen.local_pairs,
+        chosen.shortcuts,
+    )
 
 
 def _decimal(hundredths: int) -> str:

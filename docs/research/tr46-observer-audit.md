@@ -23,6 +23,13 @@ outside-only terrain copies with padded primary sources in 0.12.6. Exact
 written-data checks pass; TR46-06a stays open until its engine appearance is
 observed. No visual closure is inferred from the river or terrain tests.
 
+[057](../../experiments/057-local-sea-routes/README.md) addresses the documented
+causes of TR46-03/04 and the western-voyage part of L03 in 0.12.7. The five-zone
+chain is identified, nearby-coast detours receive an explicit construction
+criterion, and script replacements retain ports/passable water. Written-data
+verification is separate from engine behaviour. L02 remains unattributed;
+mining-survey lifecycle failures and the other L03 diagnostics remain open.
+
 **Owner decision (2026-10-25):** retain full mainland crossing through the map
 seam and fix its support. Do not restore the mandatory seam strait or prohibit
 land at the edge. This resolves the policy question in TR46-06b, not the reported
@@ -156,6 +163,19 @@ one navigable location or one name across the whole world.
 an audit of neighbouring TR46 water identities; sensible regional names and
 partitions without artificial strings of unrelated “oceans”.
 
+**Cause and offline correction [C317–C319]:** the reconstructed chain is
+`rnw_sea_00240` → `rnw_sea_00023` → `rnw_sea_00177` → `rnw_sea_00284` →
+`rnw_sea_00455` (Tziskoas, Vakkwaukmoal, Giaxhuihoax, Xuatchian and Taichuaxlak
+Ocean). It lies in one connected closed-water stretch partitioned at a target
+of 48 internal cells; each coastal-area piece then received a separate ocean
+name. This is a concrete matching case, not proof it is the owner's exact chain.
+0.12.7 removes that size partition. Distinct adjacent closed waters also exist
+in vanilla (ten pairs in the current raster, including Baffin Bay/Labrador Sea),
+so the rule is not to rename every connected sea on Earth as one ocean. Retained
+vanilla identities and navigable sea zones stay distinct. Final TR46 read-back
+checks for no arbitrary adjacent generated closed identities. Engine acceptance
+and overall regional naming appearance remain unobserved.
+
 ### TR46-04 — Local maritime routes and detours
 
 **Observed:** two visually neighbouring landmasses often have no direct sea
@@ -175,6 +195,18 @@ the cause of every reported detour.
 **Closure evidence:** documented local routing criteria; TR46 near-neighbour
 route cases with bounded detours, valid ports and retained Old World contacts;
 separate results for ship lanes and army crossings.
+
+**Cause and offline correction [C317–C319]:** inherited current footprints plus
+global reachability did not bound local detours. In the original physical
+model, `rnw_sea_00308` → `rnw_sea_00403` has a 557-pixel water-only route but a
+5,257-pixel navigable detour (rounded centroid-length metric). Other northern
+pairs initially appear disconnected inside the canvas but are connected through
+retained water at a detour of roughly 20–24 times their short local route. They
+must not be reported as globally unreachable. 0.12.7 adds local connections
+before folding closed water and continues every retained navigable contact.
+See 057 for the explicit criterion and final written-file checks. The owner's
+exact selected ships/ports were not recorded, and engine route cost remains
+unknown; this establishes matching geographic defects and their data correction.
 
 ### TR46-05 — Expansion of extraordinary societies and native states
 
@@ -323,6 +355,12 @@ port; the exact subsystem and cause are [UNKNOWN]. Investigate with TR46-04;
 do not equate one assertion with every bad route. Closure requires identifying
 the failing case and validating the corresponding written port/adjacency data.
 
+**Follow-up [C317]:** limited read-only tracing finds the diagnostic in a
+destination-change routine, with separate port/water checks and recursive
+handling of associated objects. It supplies no runtime caller or failing
+location. It is not evidence that the assertion is the western voyage. Keep
+L02 open despite the access-role and port checks in 057.
+
 ### TR46-L03 — Expedition routing and lifecycle failures
 
 `error.log:1419–1420`, **06:12:25**; `1434–1435`, **06:17:45**;
@@ -337,6 +375,20 @@ waypoints without ending; **38** resumes target a non-stalled expedition;
 that cannot start. The survey records include many countries and do not by
 themselves prove generated-ocean routing caused the failures. Closure separates
 the sea-path defects from vanilla/script lifecycle failures and records attribution.
+
+**Western-voyage cause and offline correction [C317–C319]:** archived TR46
+definitions are byte-identical to the pre-maritime candidate. Under the existing
+one-based definition-index contract (C162), IDs 21039 and 21247 correspond to
+`rnw_loc_02500` and `rnw_loc_02659`. Both are literal landfalls in the rewritten
+western voyage, and both lack ports. The third landfall `rnw_loc_02759` also
+lacks a port, with no corresponding recorded failure. Installed vanilla instead
+uses the ports of Bahama, Guanahani and Inagua (plus a sea-zone alternative).
+The nearest-land remapper had discarded that coastal role. This mapping is an
+inference from C162/the archived definitions and matching script targets, not
+a decoded runtime save or proof about other mounted mods. 0.12.7 preserves port
+and navigable-water roles consistently in waypoints and callbacks. Other L03
+lifecycle counts remain the original open entries; no mining-survey fix or
+new engine run is claimed.
 
 ### TR46-L04 — AI command rejection and expansion calculation
 

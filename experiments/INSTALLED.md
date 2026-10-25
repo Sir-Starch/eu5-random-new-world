@@ -260,3 +260,27 @@ records are preserved; no game launch or process control was performed.
 Exact local audit: ignored `local_data/tr46-boundary/terrain-installed.json`.
 Removal, with EU5 closed: remove only `mod/rnw_exp_tr46_terrain/`. Restoring the
 old hub is a separate action; no rollback or removal was performed here.
+
+2026-10-25 maritime geography ([057](057-local-sea-routes/README.md), C317–C320):
+with EU5 closed (log and live-process checks agree), added new
+`mod/rnw_exp_tr46_maritime`, **RNW: Continents BU2A**, generator **0.12.7 / epoch
+37**, code `RNW1-040XN-DR20S-1RQ4T-Z0060-E02AN-B0G`. All **835** mod files
+match the export, metadata included. Its 833-file nonmetadata digest is
+`9bea353cf4d9b7ee7fee6500c944e45c39cd5e23b57454299fa61edf6d41746e`.
+The exact TR46 seed/settings retain full mainland wrap and the coast/river/
+terrain corrections, with local sea routes, connected closed-water zoning and
+access-preserving script replacements. Engine navigation/voyage appearance
+remains unobserved.
+
+Updated main `mod/rnw_exp_hub` **0.12.6 → 0.12.7**, all **3,258** files
+hash-verified against the Windows package and its source/dependency/metadata
+versions. The previous **3,256** files are checked in the external ignored
+`local_data/tr46-maritime/hub-backup-before-0.12.7/` and retained at
+`mod/.rnw-install/retired/rnw_exp_hub_before_maritime_0127/`. No retired sweep.
+Nine profile-root hashes, 16,314 other-mod file size/time records and seven
+prior directory entries remain exact. Existing worlds, saves, playsets, settings
+and library records are preserved. No game launch or process control.
+
+Exact local audit: ignored `local_data/tr46-maritime/installed.json`.
+Removal, with EU5 closed: remove only `mod/rnw_exp_tr46_maritime/`. Restoring
+the old hub is a separate action; no rollback/removal was performed here.

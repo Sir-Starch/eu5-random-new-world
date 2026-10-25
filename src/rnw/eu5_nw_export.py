@@ -160,7 +160,7 @@ from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
 from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
 from rnw.eu5_regionkeys import physical_keys
-from rnw.eu5_remap import build_remap, remap_scripts
+from rnw.eu5_remap import RemapAccess, build_remap, remap_scripts
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
     drop_block_entries,
@@ -1165,6 +1165,8 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
             ),
             "lanes": len(water.lanes),
             "lanes_added_to_link": water.linked,
+            "local_route_pairs": water.local_pairs,
+            "lanes_added_for_local_routes": water.shortcuts,
             "closed_seas": water.sealed,
             "impassable_zones": len(water.zones),
             "topography": dict(
@@ -2586,6 +2588,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             plan,
             np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
             _removed_provinces(hierarchy, removed),
+            access=RemapAccess(
+                port_keys=frozenset(vanilla_ports),
+                port_cells=frozenset(ports[1]),
+                navigable_keys=frozenset(
+                    key
+                    for i, key in enumerate(game_map.keys)
+                    if game_map.classes[i] is CellClass.SEA and not game_map.ambiguous[i]
+                ),
+                closed_seas=shapes.zones,
+            ),
         )
         spline_data, spline_stats = run_stage(
             "spline network",

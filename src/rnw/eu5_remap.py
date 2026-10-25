@@ -3,7 +3,8 @@
 Removing vanilla locations leaves holy sites, scripted geographies, formables,
 expedition routes and events pointing at nothing; EU5 1.4.1 crashed while setting up a
 holy site whose location was removed [V-GAME]. Each removed location is mapped to the
-nearest generated cell of the same family, and only syntactic location references are
+nearest generated cell of the same family and access role (ports and passable
+water remain accessible), and only syntactic location references are
 rewritten: ``location:KEY`` scopes, ``location``/``connected_location`` values and the
 items of ``location``/``locations``/``waypoints`` and ``province_definition``/
 ``provinces`` lists (repeats dropped). Removed provinces map to the province of their
@@ -80,17 +81,31 @@ FAMILY: Final[dict[CellClass, frozenset[CellClass]]] = {
 }
 
 
+@dataclass(frozen=True, slots=True)
+class RemapAccess:
+    """Access roles of installed places and their compatible generated destinations."""
+
+    port_keys: frozenset[str] = frozenset()
+    port_cells: frozenset[int] = frozenset()
+    navigable_keys: frozenset[str] = frozenset()
+    closed_seas: frozenset[int] = frozenset()
+
+
 def build_remap(
     removed: list[tuple[str, CellClass, int, int]],
     plan: Plan,
     centres: NDArray[np.int64],
     provinces: dict[str, list[str]],
+    *,
+    access: RemapAccess,
 ) -> dict[str, str]:
     """Map removed location (and province) keys to generated keys.
 
     ``removed`` holds (key, class, row, column) in the same coordinates as ``centres``,
     which gives each generated cell's centre. ``provinces`` lists each removed province's
-    locations in definition order.
+    locations in definition order. Removed ports require a generated port, and
+    passable water requires passable water. These are geographic roles shared by
+    every script reference, including expedition waypoints and their callbacks.
     """
     remap: dict[str, str] = {}
     by_family: dict[frozenset[CellClass], NDArray[np.int64]] = {}
@@ -99,8 +114,15 @@ def build_remap(
         by_family[family] = np.array(members, dtype=np.int64)
     for key, kind, row, column in removed:
         pool = by_family[FAMILY[kind]]
+        if key in access.port_keys:
+            pool = np.array([i for i in pool.tolist() if i in access.port_cells], dtype=np.int64)
+        elif key in access.navigable_keys:
+            pool = np.array(
+                [i for i in pool.tolist() if i not in access.closed_seas], dtype=np.int64
+            )
         if not pool.size:
-            pool = by_family[FAMILY[CellClass.LAND]]
+            message = f"No generated replacement preserves the geographic role of {key}"
+            raise RemapError(message)
         delta = centres[pool] - np.array([row, column], dtype=np.int64)
         best = int(pool[int(np.argmin((delta * delta).sum(axis=1)))])
         remap[key] = plan.cells[best].key
