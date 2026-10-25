@@ -517,9 +517,23 @@ closure keeps the two tests separate.
 `error.log:1210–1269`, **05:56:43–05:56:44**: **40** unknown formatting tags
 and **20** country-name text-data failures. The string contains control bytes;
 retain it in the local raw log, not as a rendered country name in documentation.
-Affected tag and name producer are [UNKNOWN]; generated names, a formable,
-a colony, vanilla content and other resources need attribution. Closure:
-identify the tag/name source and validate its effective name/localization path.
+
+**Investigation and attribution [C347]:** exactly one second prior, at `game.log:7389`
+(05:56:42), a civil war breaks out in Morocco:
+`CIVIL WAR: \x15TOOLTIP:DYNASTY,623 \x15L; Wattasid\x15!\x15! Rebels against Morocco`.
+The rebel faction's country name is formatted by vanilla scripts using the dynasty
+tooltip macro:
+`\x15TOOLTIP:DYNASTY,623 \x15L; Wattasid\x15!\x15! Rebels`.
+When the Jomini map renderer (`countryname.cpp:1135`, binary RVA `0x9c36748`) generates
+the short country acronym for display on small territory, it tokenizes by spaces and takes
+the first character of each token without stripping formatting control codes (`\x15`),
+producing the raw string `\x15.\x15.W.R.`.
+`pdx_text_formatter.cpp:807` (binary RVA `0x90d9e75`) subsequently attempts to parse
+`\x15.\x15.W.R.` and misidentifies `.\x15.w.r.` as an unknown formatting tag (40 times),
+causing `countryname.cpp:1135` to report `Failed getting text data for country name`
+(20 times).
+This is an **engine/vanilla civil war formatting defect** on Old World Morocco. RNW does
+not create civil war dynasty names, acronyms, or dynasty tooltip macros. **CLOSED [V-GAME / V-LOCAL executable]**.
 
 ### TR46-L07 — A generated country exceeds the start relation budget
 
@@ -541,11 +555,23 @@ of the league's defeat remain unknown; see the [follow-up](tr46-native-expansion
 ### TR46-L08 — Incomplete map locators
 
 `error.log:327–329`, **04:04:33**: incomplete `vfx` locator, plus two notices
-that `city` and `vfx` locator transforms changed. Earlier occurrences of this
-family are documented in C97; that history is not proof the current file is
-correct. Inspect written versus inherited locator coverage; no automatic engine
-locator-generation command was executed. Closure identifies the actual omission
-and distinguishes stale overrides from required generated locators.
+that `city` and `vfx` locator transforms changed.
+
+**Investigation and generator fix (0.13.1 / epoch 40, C348):**
+Binary analysis of `game_object_locators.cpp:1158` (RVA `0x73a1fbf` / `0x73a20f3`)
+reveals that the engine checks every defined location in `definitions.txt` for a
+corresponding entry in `generated_locators_vfx.txt`. In vanilla EU5, all 28,573
+locations have a VFX locator (exact 1:1 match).
+In TR46 with `expand_oceans`, 21 `rnw_ocean_*` locations were added to `definitions.txt`.
+Their locators were placed in `_trimmed_instances`, but line 1100 of `eu5_nw_export.py`
+filtered `fresh += [instance for key, instance in trimmed.items() if key in held]`,
+where `held` contains only vanilla locator keys. Consequently, all 21 `rnw_ocean_*`
+locations were omitted from `generated_locators_vfx.txt` (30,544 locators versus
+30,565 defined locations), triggering line 1158.
+Generator 0.13.1 directly appends `plan.oceans.anchors` to `instances["generated_locators_vfx.txt"]`,
+restoring complete VFX locator coverage (30,565 locations), and verifies it in `verify_locators`.
+The two transform override notices (`manual_locators_database.cpp:212`) are standard engine
+diagnostics whenever `locators_override.txt` is updated by a mod (C97). **FIXED [V-EXEC]**.
 
 ### TR46-L09 — Startup data/DLC/script inconsistencies
 

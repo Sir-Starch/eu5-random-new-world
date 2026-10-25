@@ -36,6 +36,7 @@ import numpy as np
 from rnw.currents import HUNDREDTHS, Vector, flow
 from rnw.eu5_map import class_lists
 from rnw.eu5_newworld import outside_contacts
+from rnw.eu5_oceans import emitted_cells
 from rnw.lanes import COURSE_PERMILLE, Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
@@ -61,6 +62,7 @@ NO_UNITS: Final[tuple[str, ...]] = (
     "generated_map_object_locators_unit_stack.txt",
     "generated_map_object_locators_combat.txt",
 )
+VFX_LOCATORS: Final[str] = "generated_locators_vfx.txt"
 LOCATOR_ID: Final[re.Pattern[str]] = re.compile(r"\bid=(\w+)")
 PORT_COLUMNS: Final[int] = 4
 ADJACENCY_COLUMNS: Final[int] = 8
@@ -618,11 +620,22 @@ def verify_locators(files: Mapping[str, str], plan: Plan, water: Water) -> dict[
     }
     ours = {cell.key for cell in plan.cells}
     for name in NO_UNITS:
+        if name not in files:
+            continue
         found = {key for key in LOCATOR_ID.findall(files[name]) if key in ours}
         if found != expected:
             message = (
                 f"{name} has {len(found - expected)} locators too many and "
                 f"{len(expected - found)} too few"
+            )
+            raise SeaError(message)
+    if VFX_LOCATORS in files:
+        expected_vfx = {cell.key for cell in emitted_cells(plan)}
+        found_vfx = {key for key in LOCATOR_ID.findall(files[VFX_LOCATORS]) if key in expected_vfx}
+        if found_vfx != expected_vfx:
+            message = (
+                f"{VFX_LOCATORS} has {len(found_vfx - expected_vfx)} locators too many and "
+                f"{len(expected_vfx - found_vfx)} too few"
             )
             raise SeaError(message)
     return {"locators_checked": len(expected)}

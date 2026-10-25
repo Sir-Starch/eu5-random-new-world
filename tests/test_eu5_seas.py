@@ -18,6 +18,7 @@ from rnw.eu5_nw_export import (
 )
 from rnw.eu5_seas import (
     NO_UNITS,
+    VFX_LOCATORS,
     Coast,
     SeaError,
     VanillaPort,
@@ -412,7 +413,7 @@ def test_the_closed_ocean_has_no_stack_of_units_and_no_battle_as_in_the_game() -
 def test_written_locators_that_hold_what_was_planned_pass_and_any_other_stops_the_export() -> None:
     world, plan, water, canvas = _closed_world()
     instances = _locator_instances(plan, world, canvas, {}, water.zones)
-    files = {name: "".join(instances[name]) for name in NO_UNITS}
+    files = {name: "".join(instances[name]) for name in (*NO_UNITS, VFX_LOCATORS)}
     assert verify_locators(files, plan, water) == {"locators_checked": len(plan.cells) - 1}
     shut = plan.cells[next(iter(water.zones))].key
     extra = {name: text + f"id={shut}\n" for name, text in files.items()}

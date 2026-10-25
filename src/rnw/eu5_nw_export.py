@@ -178,6 +178,7 @@ from rnw.eu5_rewrite import (
 from rnw.eu5_rivers import RiverRasterError, encode_rivers
 from rnw.eu5_seas import (
     NO_UNITS,
+    VFX_LOCATORS,
     Coast,
     SeaError,
     VanillaPort,
@@ -669,10 +670,15 @@ def _locator_instances(
             out["generated_map_object_locators_dock.txt"].append(
                 _instance(cell.key, row, x, height)
             )
+    if plan.oceans is not None:
+        out["generated_locators_vfx.txt"].extend(
+            _instance(key, row, column, height)
+            for key, (row, column) in plan.oceans.anchors.items()
+        )
     return out
 
 
-def _trimmed_instances(game_map: Eu5Map, canvas: Canvas, plan: Plan) -> dict[str, str]:
+def _trimmed_instances(game_map: Eu5Map, canvas: Canvas) -> dict[str, str]:
     """Locator instances at the interior point of each trimmed ocean zone's remainder."""
     height, width = canvas.shape
     rolled = canvas.rolled(game_map.labels)
@@ -691,13 +697,6 @@ def _trimmed_instances(game_map: Eu5Map, canvas: Canvas, plan: Plan) -> dict[str
         x = (left + column - canvas.roll) % width
         key = game_map.keys[zone]
         out[key] = _instance(key, top + row, x, height)
-    if plan.oceans is not None:
-        out.update(
-            {
-                key: _instance(key, row, column, canvas.shape[0])
-                for key, (row, column) in plan.oceans.anchors.items()
-            }
-        )
     return out
 
 
@@ -1037,7 +1036,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     )
     used = [spec for spec in SPECS if spec in places.values()]
     instances = _locator_instances(plan, world, canvas, port_pixels, water.zones)
-    trimmed = _trimmed_instances(game_map, canvas, plan)
+    trimmed = _trimmed_instances(game_map, canvas)
     relocated = removed | set(trimmed)
     kept_provinces = {hierarchy[key].province for key in hierarchy if key not in removed}
     removed_provinces = {hierarchy[key].province for key in removed if key in hierarchy}
@@ -2556,7 +2555,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 verify_locators(
                     {
                         name: texts[_mod_path(f"{MAP_OBJECTS}/{name}")].decode("utf-8-sig")
-                        for name in NO_UNITS
+                        for name in (*NO_UNITS, VFX_LOCATORS)
                     },
                     plan,
                     shapes,

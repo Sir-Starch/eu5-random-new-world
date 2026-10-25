@@ -1509,4 +1509,8 @@ continuous Tordesillas allocation is accepted.
 or algorithm output changes, so epoch stays 39 and golden reference world remains
 unchanged (`tests/golden_world.json`). Full test suite passes: 1,978 Python tests,
 14 skip, 23 Rust tests; format, lint and types clean.
-The next independent block is L06's corrupted country-name formatting.
+
+## 2026-10-26 — TR46 diagnostic closure: L06 attributed to vanilla, L08 VFX locators fixed (0.13.1 / epoch 40)
+
+- [V-GAME logs / V-LOCAL executable C347] Traced `error.log:1210–1269` (40 unknown formatting tags `.\x15.w.r.` and 20 country-name failures `\x15.\x15.W.R.`) to Morocco civil war at `game.log:7389` (`CIVIL WAR: \x15TOOLTIP:DYNASTY,623 \x15L; Wattasid\x15!\x15! Rebels against Morocco`). Binary analysis of `eu5.exe` at `pdx_text_formatter.cpp:807` and `countryname.cpp:1135` reveals that Jomini's acronym generator splits words and takes initial letters without stripping Paradox escape control bytes (`\x15`), producing `\x15.\x15.W.R.`. Attributed 100% to vanilla engine/scripts in Old World Morocco; no RNW defect (TR46-L06 CLOSED).
+- [V-LOCAL executable / V-EXEC C348] Resolved `error.log:327` (`map object locator "vfx" is incomplete!`). In vanilla EU5, all 28,573 locations require a VFX locator (1:1 match in `definitions.txt`). In TR46 with `expand_oceans`, 21 `rnw_ocean_*` locations were added to `definitions.txt` but omitted from `generated_locators_vfx.txt` because `_trimmed_instances` filtered `if key in held` (where `held` only has vanilla keys). Generator 0.13.1 / epoch 40 appends `plan.oceans.anchors` to `generated_locators_vfx.txt` and verifies full coverage via `verify_locators` (TR46-L08 FIXED). Reference world digest updated to `af903212dd4c9addacdc06d8c4c676920e29f3803fc82568f3c65a8152112e7e`.

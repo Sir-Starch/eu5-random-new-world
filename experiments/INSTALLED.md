@@ -338,3 +338,15 @@ records remain intact. No game launch, process control or publication.
 Exact audit: ignored `local_data/tr46-treaty-fix/installed.json`.
 Removal with EU5 closed: remove only `mod/rnw_exp_tr46_treaty/`; hub rollback
 is a separate action, not performed.
+
+2026-10-26 map object VFX locator completion ([tr46-observer-audit](../docs/research/tr46-observer-audit.md), C348):
+with EU5 closed (process check confirmed), added new `mod/rnw_exp_tr46_vfx`,
+**RNW: Continents 3TTE**, **0.13.1 / epoch 40**,
+`RNW1-040XN-DR20S-1RQ4T-Z0060-J01KM-KKG` (same TR46 seed/settings). All **840** files
+hash-verified. It retains all previous geography, terrain, relief, river, maritime, and
+Tordesillas wrap fixes, and supplies the 21 missing `vfx` locators for `rnw_ocean_*`
+locations in `generated_locators_vfx.txt` (30,565 locations total, 100% complete).
+Updated main `mod/rnw_exp_hub` **0.12.9 → 0.13.1** via `packaging/hub.py --replace`
+and `rnw install-mod --replace`. Existing worlds (`rnw_exp_tr46_treaty` and prior),
+playsets, settings, saves and library records are preserved. No game launch or process control.
+Removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_tr46_vfx --user-dir USER_DIR`.
