@@ -69,6 +69,8 @@ WINDOWS = [
     (2**64 - 1, 5, 10, 35, 20, 16),
     (12345, 1000, 2000, 257, 131, 7),
     (99, 3, 4, 100, 3, 1000),
+    # The seed-positioned land fields start up to 2**24 pixels from the origin.
+    (2**64 - 1, 2**24 - 1, 2**24 - 17, 67, 39, 4096),
 ]
 
 

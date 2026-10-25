@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 import numpy as np
 import pytest
 
@@ -73,3 +75,47 @@ def test_the_threshold_counts_like_a_partition() -> None:
         assert newworld._threshold(values, mask, permille) == expected  # pyright: ignore[reportPrivateUsage]
     with pytest.raises(ValueError, match="keeps no pixel"):
         _ = newworld._threshold(values, mask, 0)  # pyright: ignore[reportPrivateUsage]
+
+
+def test_the_land_field_has_no_fixed_high_variance_positions() -> None:
+    """Changing seeds moves lattice nodes, instead of favouring the same map pixels.
+
+    With a fixed origin a node has about four times the variance of a cell's centre.
+    At a positive sea level that favours land at the same nodes in every world.
+    """
+    samples = np.array(
+        [
+            newworld._field(  # pyright: ignore[reportPrivateUsage]
+                seed,
+                "new_world_elevation",
+                shape=(33, 33),
+                period=32,
+                octaves=1,
+                persistence_permille=500,
+            )[[0, 16, 32], [0, 16, 32]]
+            for seed in range(256)
+        ]
+    )
+    variances = np.var(samples, axis=0)
+    assert variances.max() / variances.min() < 1.5
+
+
+@pytest.mark.parametrize("strip", [1, 7, 64])
+def test_the_seeded_field_origin_is_shared_by_all_strips(
+    monkeypatch: pytest.MonkeyPatch, strip: int
+) -> None:
+    """The noise stays continuous at strip boundaries and at the world-map seam."""
+    field = partial(
+        newworld._field,  # pyright: ignore[reportPrivateUsage]
+        42,
+        "new_world_elevation",
+        shape=(79, 131),
+        period=53,
+        octaves=4,
+        persistence_permille=470,
+    )
+    monkeypatch.setattr(newworld, "STRIP_ROWS", 1000)
+    whole = field()
+    monkeypatch.setattr(newworld, "STRIP_ROWS", strip)
+    actual = field()
+    assert np.array_equal(actual, whole)

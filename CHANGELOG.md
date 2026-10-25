@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.12.1 — 2026-10-25
+
+- Seeded placement of the land-noise lattice removes fixed high-variance positions that favoured recurring island outlines in the narrow former-Alaska part of the canvas near Japan. One origin applies to the whole New World across the map wrap; there is no regional land quota or island deletion rule. A lobe may stay ocean or contain islands according to the seed. Existing worlds keep their maps; newly generated worlds use epoch 31 (C286–C287, checked offline).
+
 ## 0.12.0 — 2026-10-24
 
 - **Optional ocean expansion (S2).** *Expand generation into the oceans* is enabled by default and recommended. It adds a fixed ocean sector around the Americas, preserving the Old World and protected islands; unchecking it uses the original coast-following canvas. The choice travels in the world code, sketches, land templates and rerolls. Codes made before 0.12.0 select the original canvas. The canvas grows from 37,978,627 to 53,240,944 pixels on the current map contract.

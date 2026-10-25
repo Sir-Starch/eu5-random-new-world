@@ -204,6 +204,18 @@ assets. Derived rasters, binary files and raw audit material stay under ignored
 The legal limits of observation, reproduction and distribution in the framework
 above continue to apply; this technical record supplies no additional clearance.
 
+### Follow-up: seed-positioned land fields (2026-10-25, 0.12.1 / epoch 31)
+
+[V-EXEC C286] Moving the noise origin changes the generated land and the values
+written through all the map, terrain, spline, object and water interfaces listed
+in R-004 and R-001. The interoperability need and the official-interface limits
+above still apply: each visual layer must depict the newly generated geography.
+This change studies only our own integer noise and synthetic fixtures; it reads
+the same fingerprinted local inputs and uses the existing serializers and format
+checks. No new closed structure, executable analysis, engine patch, shipped game
+asset or post-export correction is introduced. Derived binaries and diagnostic
+rasters stay local under ignored paths. Engine results remain [UNKNOWN].
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

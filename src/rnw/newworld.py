@@ -28,7 +28,7 @@ from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
 from rnw.relief import generate_relief
-from rnw.rng import derive_seed
+from rnw.rng import SplitMix64, derive_seed
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
@@ -44,6 +44,7 @@ WOBBLE_PERIOD: Final[int] = 48
 WOBBLE_PASSES: Final[int] = 64
 WOBBLE_REPAIRS: Final[int] = 16
 STRIP_ROWS: Final[int] = 1024
+FIELD_ORIGIN_LIMIT: Final[int] = 1 << 24
 INTERIOR_LIMIT: Final[int] = 512
 SHORE_LIMIT: Final[int] = 64
 # Land keeps clear of the domain edge and of a SEAM_GAP_PX strait at the wrap. Elevation
@@ -88,16 +89,27 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
     octaves: int,
     persistence_permille: int,
 ) -> NDArray[np.int32]:
-    """Fractal noise for the whole crop, computed in row strips to bound memory."""
+    """Fractal noise on a seed-positioned lattice, in memory-bounded row strips.
+
+    A fixed lattice gives the same pixels high variance in every world: its nodes
+    vary much more than the spaces between them. In a narrow part of the canvas
+    (such as the old Alaska) that favours the same island outline. Draw the phase
+    across many periods so no position in the canvas owns a lattice node, and
+    changing feature size does not keep sampling the same few nodes. The origin
+    belongs to the whole field, including both sides of the map seam, not a strip
+    or a connected part of the domain. Coordinates stay well inside integer limits.
+    """
     height, width = shape
     key = derive_seed(seed, stream)
+    origin = SplitMix64(derive_seed(seed, stream, "origin"))
+    x0, y0 = origin.below(FIELD_ORIGIN_LIMIT), origin.below(FIELD_ORIGIN_LIMIT)
     out = np.empty(shape, dtype=np.int32)
     for row in range(0, height, STRIP_ROWS):
         rows = min(STRIP_ROWS, height - row)
         out[row : row + rows] = fractal_noise(
             key,
-            0,
-            row,
+            x0,
+            y0 + row,
             width,
             rows,
             period=period,

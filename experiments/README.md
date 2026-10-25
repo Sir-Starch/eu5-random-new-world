@@ -51,3 +51,4 @@ Experiments in the running game are kept short: a console sitting of about fifte
 | [047](047-region-keys/README.md) | Region and area keys chosen by physical content (N5) |
 | [048](048-localization/README.md) | The world's mod in every official language (L1) |
 | [049](049-ocean-expansion/README.md) | Optional ocean expansion, connected ocean names, both canvas policies and verified offline candidates |
+| [050](050-seeded-land-origin/README.md) | Seed-positioned land-noise lattice: recurring former-Alaska islands, spatial bias and verified offline candidates |

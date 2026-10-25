@@ -18,6 +18,7 @@ from rnw.newworld import (
     NewWorld,
     derive_world,
     generate_new_world,
+    land_stage,
     open_sea,
     seal_pockets,
     split_at_column,
@@ -79,6 +80,24 @@ def test_seam_column_gets_a_strait() -> None:
     assert np.any(mask[:, 200:])
     plain = generate_new_world(domain, seed=3, settings=SMALL)
     assert not np.array_equal(plain.labels, world.labels)
+
+
+def test_a_small_canvas_lobe_has_no_reserved_land() -> None:
+    """A lobe cut off by the seam can be all ocean, or hold seed-driven land."""
+    domain = np.zeros((300, 600), dtype=bool)
+    domain[20:280, 170:580] = True
+    domain[100:200, 20:170] = True
+    settings = replace(SMALL, feature_px=160, land_permille=300, coast_margin_px=4)
+    areas: list[int] = []
+    for seed in range(16):
+        land, ocean, lakes, _ = land_stage(domain, seed, settings, 170)
+        assert np.array_equal(land | ocean | lakes, domain)
+        assert not np.any(land[:, 170 - SEAM_GAP_PX : 170 + SEAM_GAP_PX])
+        assert land[:, 170:].any()
+        areas.append(int(np.count_nonzero(land[:, :170])))
+    assert min(areas) == 0
+    assert max(areas) > 0
+    assert len(set(areas)) > len(areas) // 2
 
 
 def test_city_points_move_away_from_the_shore() -> None:
