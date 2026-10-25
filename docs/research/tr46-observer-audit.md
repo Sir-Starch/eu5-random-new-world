@@ -42,6 +42,14 @@ clamps naming Old World countries. [The AI findings](tr46-ai-diagnostics.md)
 record the source/saved-identity checks and missing error-time context; no
 native AI or generated-output change follows.
 
+[062](../../experiments/062-tordesillas/README.md) traces L05 to inherited
+event/localization sources and records its missing rendering context. The
+[treaty findings](tr46-tordesillas.md) recover SPA west / GBR east and the
+retained line location from the original final save. The owner clarifies 06b:
+the right-edge territory is the **western continuation of the same mainland**,
+crossing the seam, yet it was counted as Britain's east. Exact observation-time
+allocation is still unreconstructed; no text or geography fix is inferred.
+
 [058](../../experiments/058-impassable-highlands/README.md) addresses TR46-01/02
 in 0.12.8: compatible impassable cells are indivisible administrative units,
 and mountain sources regain locally derived vanilla crest detail. Physical
@@ -120,7 +128,7 @@ comparisons are [UNKNOWN], unless another evidence label is given explicitly.
 | TR46-04 | 4 | Implausible sea connections force long detours between nearby lands |
 | TR46-05 | 5 | Extraordinary societies and large native states appear to expand very little |
 | TR46-06a | 6, visual | Terrain/texture crack persists at the horizontal map boundary |
-| TR46-06b | 6, gameplay/design | Wrapped “Alaska” counts as east in the Spain/Britain colonial division; vanilla comparison and wrap policy are unresolved |
+| TR46-06b | 6, gameplay | Western mainland continuation across the raster seam counts as Britain's east; full wrap is retained, precise allocation remains unresolved |
 | TR46-07 | 7 | Remnants of removed vanilla “Alaska” remain near Chukotka |
 
 ### TR46-01 — Merge compatible connected impassable land
@@ -291,38 +299,44 @@ L01's seam-adjacent river failures are another boundary defect, not proof of the
 visual crack's cause.
 
 **Closure evidence:** an explanation and verified visible result at both edges
-and relevant zooms. If choosing the no-wrap alternative in 06b, record that as
-an explicit design decision and prove it avoids the observed boundary problem;
-do not claim the original renderer path was repaired.
+and relevant zooms while preserving full mainland wrap, as the owner chose
+in 06b. Written-data checks in 056 do not establish the engine's appearance.
 
 ### TR46-06b — “Alaska”, colonial east/west and the wrap decision
 
 **Observed:** during a colonial division between **Spain (west)** and
 **Britain (east)**, the generated “Alaska” at the **right edge of the raster**
-was counted for Britain's east. “Alaska” here describes the owner's geographic
-comparison, not a confirmed country, area or location key.
+was counted for Britain's east. **Owner clarification (2026-10-25): this is
+the western part of the same mainland, continuing through the raster seam**,
+not geographically eastern America. “Alaska” is a comparison, not a confirmed
+location/area key. Preserve the difference between raster position and the
+reported mainland-relative direction.
 
-**Unresolved questions to answer together:**
+**Established follow-up:** C304 documents vanilla American islands on both
+sides of the raster boundary; that is not proof of equivalent large-mainland
+behavior. The owner chose to **retain full mainland wrap and fix its support**.
+C305 traces `is_east_of` to a map-dependent cyclic comparison; its exact loaded
+span remains unknown. C339 now recovers the final save's SPA west / GBR east,
+dates 1549.10.2–1568.10.22 and retained line **24717 / `rnw_loc_01224`**.
+This advances the earlier missing-line limit; it is post-treaty state, not the
+line/claim state at the reported observation. Details: [062](tr46-tordesillas.md).
 
-1. Does vanilla Alaska actually cross the raster boundary, and which land,
-   island, sea and hierarchy records occur on the right edge?
-2. How does vanilla's colonial division classify that territory: coordinate,
-   meridian, region/area membership, scripted lists or another mechanism?
-3. Does generated reassignment of the retained American hierarchy keys change
-   the intended treaty side independently of longitude?
-4. Should generated continents cross this boundary at all? Compare preserving
-   cylindrical geography with an explicit prohibition on crossing land. The
-   owner is open to dropping land wrap if that better matches vanilla; the
-   main currently reported objection is the visible crack.
+**Remaining work:** identify the affected western-mainland location and
+distinguish the side background from actual province claims, ownership/top-owner
+and area-conflict overrides. Establish the engine's comparison point/span and
+the observation-time line before changing allocation. Retained hierarchy
+names do not themselves select a meridian side. The original situation's map
+color/tooltip blocks match vanilla; only two fallback colony keys are remapped.
 
 **Work entry points:** vanilla map and American hierarchy; installed Tordesillas
 situation/events/triggers, `eu5_content.py`, `eu5_remap.py`, `hierarchy.py`,
 `newworld.py`, `landmask.py`. L05 is a separate confirmed treaty-text error;
 its existence does not prove wrong geographic allocation.
 
-**Closure evidence:** a recorded vanilla comparison and reasoned wrap-policy
-decision, followed by treaty-side tests on the resulting geography. No policy
-has been changed or accepted in this documentation phase.
+**Closure evidence:** demonstrate correct classification/claims for the same
+mainland on both sides of the raster seam under the retained full-wrap policy.
+The reported allocation remains open; a text fix cannot close it. No new owner
+campaign or repeat policy choice is requested.
 
 ### TR46-07 — Removed-Alaska remnants near Chukotka
 
@@ -478,15 +492,21 @@ bonus, global vanilla patch, capital move or output change is justified.
 L04 remains open for the omitted actors/state, with the inherited calculation
 and three named Old World actors documented; no new campaign is requested.
 
-### TR46-L05 — Tordesillas option text has a broken scope
+### TR46-L05 — Tordesillas option text fails to resolve a scope
 
 `error.log:1730–1733`, **06:37:42**, mirrored at `debug.log:48917–48920`:
 four diagnostics resolve to **one localization failure** for
 `treaty_of_tordesillas.5.c`, referencing `overlord.GetNameWithNoTooltip`.
-The `overlord` data type/promotion cannot be resolved. Investigate the installed
-event option, scope and effective localization. This confirms broken text,
-not which side owns the Alaska-like territory. Closure tests text and 06b's
-geographic allocation separately.
+The `overlord` data type/promotion cannot be resolved. [062](tr46-tordesillas.md),
+C337–C340, finds no RNW event/text override; all 11 installed languages use the
+same scope dependency. Event `.5` handles a colony-transfer demand and saves
+the top overlord only for a subject. Its subject-only `.c` forwards the event;
+major/observer and delayed rendering contexts remain unrecorded. Bare named
+scopes occur elsewhere in vanilla, so adding an explicit accessor is not an
+established fix. Neither save preserves the failed event's context. Keep open
+for scope/rendering attribution, with no global vanilla patch or output change.
+This confirms a text failure, not the cause of 06b's western-mainland allocation;
+closure keeps the two tests separate.
 
 ### TR46-L06 — Corrupted country-name formatting
 
@@ -625,7 +645,8 @@ recorded as context, not invented corruption failures.
 This is a future triage order, **not authorization to implement in this audit**:
 
 1. **Boundary and replacement integrity:** TR46-07, 06a/06b and L01 together;
-   establish vanilla Alaska/treaty behaviour and choose wrap policy explicitly.
+   establish vanilla Alaska/treaty behaviour while retaining full mainland wrap
+   under the owner's settled decision.
 2. **Maritime geography:** TR46-03/04 with L02/L03; separate basin identity,
    naming, navigable partitioning, local routes and port validity.
 3. **Impassable land:** TR46-01/02; grouping and physical relief need separate

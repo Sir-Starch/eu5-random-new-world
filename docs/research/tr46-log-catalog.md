@@ -71,10 +71,10 @@ not deduplicated defects. Mirrors in other logs are excluded from these totals.
 | `movement.cpp:156` | 589 | 1523 / 06:27:09 | 2362 / 06:57:48 | TR46-L10 | No alternative religion for a movement |
 | `pdx_assert.cpp:231` | 1 | 1574 / 06:32:02 | 1574 / 06:32:02 | TR46-L02 | Destination port/water assertion |
 | `ai_tick_context.cpp:169` | 3 | 1622 / 06:34:36 | 2015 / 06:46:18 | TR46-L04 | Building-candidate truncation exceeds available count |
-| `pdx_data_factory.cpp:1357` | 1 | 1730 / 06:37:42 | 1730 / 06:37:42 | TR46-L05 | Treaty text cannot find overlord data type |
-| `pdx_data_factory.cpp:1367` | 1 | 1731 / 06:37:42 | 1731 / 06:37:42 | TR46-L05 | Treaty text cannot promote overlord data |
-| `pdx_data_factory.cpp:1044` | 1 | 1732 / 06:37:42 | 1732 / 06:37:42 | TR46-L05 | Treaty text statement conversion fails |
-| `pdx_data_localize.cpp:192` | 1 | 1733 / 06:37:42 | 1733 / 06:37:42 | TR46-L05 | Tordesillas option localization fails |
+| `pdx_data_factory.cpp:1357` | 1 | 1730 / 06:37:42 | 1730 / 06:37:42 | TR46-L05 | Inherited treaty option cannot resolve overlord; error-time scope missing (062) |
+| `pdx_data_factory.cpp:1367` | 1 | 1731 / 06:37:42 | 1731 / 06:37:42 | TR46-L05 | Same option failure: cannot promote overlord data |
+| `pdx_data_factory.cpp:1044` | 1 | 1732 / 06:37:42 | 1732 / 06:37:42 | TR46-L05 | Same option failure: statement conversion fails |
+| `pdx_data_localize.cpp:192` | 1 | 1733 / 06:37:42 | 1733 / 06:37:42 | TR46-L05 | Same option failure: .5.c text, not evidence of wrong geographic allocation |
 | `pdx_ecs_entity_3d_utils.cpp:608` | 7 | 1907 / 06:43:21 | 1913 / 06:43:23 | TR46-L11 | Cargo-locator entity attachment fails |
 
 Total: **2366** timestamped records.

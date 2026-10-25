@@ -67,6 +67,7 @@ The project's documentation, grouped by purpose. Technical claims carry evidence
 | [TR46 native expansion](research/tr46-native-expansion.md) | Saved vanilla AI colonization rule, native conquest and consolidation, extraordinary societies' land/subjects, successors and frontier evidence limits |
 | [TR46 expeditions](research/tr46-expeditions.md) | Corrected mining/Pacific counts, inherited no-travel and return-event gaps, anonymous calls and port/water assertion evidence limits |
 | [TR46 AI diagnostics](research/tr46-ai-diagnostics.md) | Anonymous command rejections, inherited war-score division by zero, Old World building-list clamps and limits of attribution to native expansion |
+| [TR46 Tordesillas](research/tr46-tordesillas.md) | Inherited option-text failure, conditional overlord scope, recovered saved division line and clarified western-mainland seam allocation |
 | [Installation inventory](research/game-install-inventory.md) | Layout of the EU5 1.4.1 installation as first inspected |
 | [N0–N4 audit](research/n0-n4-audit.md), [N5 region keys](research/n5-region-keys.md) | Offline audits of the content plan |
 | [Canvas expansion](research/canvas-expansion.md) | Why large ocean locations constrain generation, and a proposed wider domain with preserved ocean names |

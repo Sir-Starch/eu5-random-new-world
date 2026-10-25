@@ -1410,3 +1410,45 @@ clean. Documentation only; version 0.12.8/epoch 38 and installed LSI3 unchanged.
 No game launch, source/output/install/profile/save/settings/playset edit,
 process control, push or publication. Full findings: [TR46 AI diagnostics](tr46-ai-diagnostics.md).
 The next independent block is L05's Tordesillas option text and its scope.
+
+## 2026-10-25 — TR46 Tordesillas text and saved division line (062)
+
+[V-GAME logs / V-LOCAL / V-EXEC C337] L05's four records and debug mirrors
+are one failed `treaty_of_tordesillas.5.c` localization. Full original world
+inventory and all 55 localization files show no RNW event/text override.
+All 11 installed languages depend on `overlord`; ten use the logged accessor,
+Russian its case-customization accessor. Do not infer effective UI language,
+eleven runtime failures or a clean vanilla control from inherited sources;
+eight mounted Workshop directories remain a confounder.
+
+[V-LOCAL / INFERRED / UNKNOWN C338] The colony-transfer event conditionally
+saves top_overlord for a subject; subject-only .c forwards after two days,
+initial demand schedules after seven. Event is major for actor. Bare saved
+overlord references also occur in installed vanilla, so an explicit accessor
+is not an established syntax fix. Missing scope at rendering fits the log;
+actual recipient/subject status/options/scopes/observer context are absent.
+Neither saved event queue retains a Tordesillas string. No global text/event
+patch or claim that the transfer/treaty itself failed.
+
+[V-GAME owner / V-EXEC C339] Correct 06b's wording: the **western continuation
+of the same mainland** crosses the raster seam to its right edge but counted
+as Britain's east. Preserve the already chosen full mainland wrap. Reuse the
+validated save reader to recover the final treaty's SPA west / GBR east,
+1549.10.2–1568.10.22 and retained line 24717 / rnw_loc_01224; early record
+empty. This advances C305's missing-line limit but not the observation-time
+line history, affected location or exact engine comparison point/span.
+Original situation has only two fallback-key replacements; tooltip/map-color
+blocks match vanilla. Distinguish geographic background from province claims,
+top ownership and area-conflict overrides. Text resolution and western-mainland
+allocation remain separate open conditions. Record bounded map/RTTI inspection
+and the read-only situation/event-root traversal in interoperability R-005.
+
+[V-EXEC C340] All 37 evidence and 732 archived world hashes pass, both saves'
+hashes/ZIP CRCs and prior structure/extraction manifest hashes pass. No new
+save token. Build/executable/map fingerprint unchanged. Required locked sync
+and full checks pass: 1,969 Python, 14 skips, 23 Rust, format/lint/types clean.
+Documentation only: generator 0.12.8/epoch 38 and installed LSI3/hub unchanged;
+no game launch, source/output/install/profile/save/settings/playset edit,
+process control, push or publication. No new owner campaign requested.
+Full findings: [TR46 Tordesillas](tr46-tordesillas.md).
+The next independent block is L06's corrupted country-name formatting.

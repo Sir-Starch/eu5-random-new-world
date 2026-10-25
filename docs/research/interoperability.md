@@ -526,6 +526,35 @@ No generated output/binary interface, product version, epoch or installation
 changes. These checks are specific to the hashed local build, not a general
 AI API or compatibility claim.
 
+### Follow-up: Tordesillas context and saved division line (2026-10-25, 062)
+
+[V-LOCAL / V-EXEC / INFERRED / UNKNOWN C337–C340] The interoperability need
+is to separate an inherited option-text failure from the owner's western-
+mainland allocation report while preserving the chosen full map wrap. Logs
+name the option but omit recipient, scopes and comparison operands. Installed
+event/localization/situation/action/trigger/effect text supplies the conditional
+scope graph and map-color precedence, but cannot recover the failed rendering
+or observation-time line. The existing R-005 reader traverses only the two
+validated saves' `situation_manager` and `event_manager` roots, preserving repeated
+keys and anonymous lists. It recovers retained post-treaty sides/dates/line;
+queued event records do not retain the failed event. No new token, save writer,
+general reader API or game hook is added. Frozen hashes and ZIP CRCs pass.
+
+The C305 static `CIsEastOfTrigger` trace is reused. A bounded read-only follow-up
+checks references to its map global, the initialization path and RTTI identifying
+`CMap`/`CJominiMap`. It does not establish the loaded coordinate span or engine
+location point. Addresses are specific to the same hashed 1.4.4 executable:
+global RVA **0xfb268a8**, inspected initialization **0x31b9950–0x31ba8f4**,
+base-constructor entry **0x777f2f0**, vtable RVAs **0xc837848 / 0xcd42658**.
+No protection, executable, memory or installation is changed; no replacement
+engine code or binary output is produced. Exact excerpts, save roots, text
+sources, hashes and diagnostic helpers remain ignored in
+`local_data/tr46-treaty/`; only identifiers and aggregate findings are committed.
+No protected token dictionary, substantial script/translation or disassembly is
+distributed. No generated-output interface, version, epoch or installation change.
+The exact runtime allocation and missing text context remain explicitly unknown;
+neither uncertainty justifies a worldwide vanilla patch or warning suppression.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

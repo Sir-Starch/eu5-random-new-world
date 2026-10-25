@@ -74,3 +74,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [060 — Expedition lifecycle](060-expedition-lifecycle/README.md): correct 177 mining surveys plus one Pacific crossing; inherited no-travel and delayed-return edges, saved active expeditions and unattributed starts/resumes/port assertion; no generated-output change.
 
 - [061 — AI diagnostics](061-ai-diagnostics/README.md): exhaustive anonymous command warnings, inherited unguarded capital-distance division and three Old World building-list clamps; no attributable native AI defect or generated-output change.
+
+- [062 — Tordesillas](062-tordesillas/README.md): inherited option localization and conditional overlord scope, original saved treaty sides/line and the owner's clarified western-mainland wrap symptom; no generated-output change.
