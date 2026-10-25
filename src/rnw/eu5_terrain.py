@@ -3,7 +3,8 @@
 Height and material decal layers that overlap the visual coast footprint are rebuilt. Heights follow
 the vanilla coast profile at the shore and the continuous relief field inland (the same
 field that set cell topography), with fine detail noise whose amplitude grows with
-height. Materials are biome slots rebuilt from the location data by the vanilla rules
+height and overlapping vanilla mountain height detail on the generated ranges. Materials
+are biome slots rebuilt from the location data by the vanilla rules
 (``eu5_slots.py``), so each location's biome, coast, borders and rivers render the way
 vanilla does. Mountain and volcano decals inside the canvas are disabled in their
 instance files and in the decal cache. Values marked [V-EXEC] were measured on build
@@ -26,6 +27,7 @@ from typing import TYPE_CHECKING, Final, cast
 import numpy as np
 
 from rnw import _native
+from rnw.eu5_mountains import FULL, LOW
 from rnw.eu5_slots import LEVELS, REACH, SlotTables, level_counts, synthesize
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
@@ -40,6 +42,8 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from numpy.typing import NDArray
+
+    from rnw.eu5_mountains import MountainRelief
 
 TERRAIN: Final[str] = "game/in_game/gfx/terrain2"
 DECAL_CACHE: Final[str] = f"{TERRAIN}/terrain_cache/ingame_decals.json"
@@ -224,8 +228,9 @@ COAST_APRON: Final[int] = (max(REACH, WATER_PROFILE[-1][0] + COAST_SMOOTH + 2) +
 BAND_HALO: Final[int] = CAP_REACH + 8
 BAND_ROWS: Final[int] = 128
 MIN_BAND_ROWS: Final[int] = 16
-# Working memory of a band per location pixel of its window [V-EXEC C102].
-BAND_BYTES: Final[int] = 600
+# Working memory per location pixel of a band window: the original 600-byte
+# allowance (C102), plus distance, gain and sampled mountain-detail arrays.
+BAND_BYTES: Final[int] = 800
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -319,6 +324,7 @@ class TerrainInputs:
     labels: NDArray[np.int32]
     rivers: NDArray[np.bool_]
     noise_roll: int = 0
+    mountains: MountainRelief | None = None
 
 
 class TerrainRangeError(ValueError):
@@ -392,6 +398,9 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
     relief = inputs.relief(rows, slice(window.column0, window.column1))
     labels = np.repeat(np.repeat(inputs.labels[rows][:, columns], 2, axis=0), 2, axis=1)
     rivers = np.repeat(np.repeat(inputs.rivers[rows][:, columns], 2, axis=0), 2, axis=1)
+    river_reach = (
+        distance_from(rivers, 12, octagonal=True) if inputs.mountains is not None else None
+    )
     # The noise lives in the same rolled coordinates as the land. Its cut is at
     # the canvas's outside edge, not the world seam. Split a decal at that cut so
     # neither a sampling window nor a noise origin restarts at the world wrap.
@@ -416,6 +425,15 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         land, inside, heights = decal_heights(
             local_codes, local_water, relief, seed=seed, origin=origin, core=core
         )
+        if inputs.mountains is not None and river_reach is not None:
+            detail = inputs.mountains.sample(
+                (origin[0] + core[1].start, origin[1] + core[0].start), heights.shape
+            )
+            gain = np.clip((heights - LOW) * 1000 // (FULL - LOW), 0, 1000)
+            heights += np.where(inside, detail * gain // 1000 * river_reach[core] // 12, 0)
+            if np.any(heights > np.iinfo(np.uint16).max):
+                message = "Mountain detail exceeds the terrain height range"
+                raise TerrainRangeError(message)
         target = (slice(first * 2, last * 2), slice(left * 2, right * 2))
         height_image, material_image = images
         _write_where(height_image[target], heights, inside)
@@ -529,6 +547,7 @@ def terrain_outputs(
         "mountain_decals_disabled": len(disabled) - padded,
         "periodic_heightmap_instances": 0,
         "padded_heightmaps": padded,
+        "mountain_height_stamps": len(inputs.mountains.placements) if inputs.mountains else 0,
     }
     return materials_world, stats
 

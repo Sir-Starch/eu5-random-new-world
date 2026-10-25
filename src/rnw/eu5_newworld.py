@@ -18,7 +18,7 @@ inside one another [V-GAME owner, 1.4.1].
 from __future__ import annotations
 
 import itertools
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -42,6 +42,7 @@ from rnw.names import NameGenerator
 from rnw.rng import SplitMix64, derive_seed
 from rnw.seanames import Placement, name_waters
 from rnw.topology import adjacency_pairs, unpack_pairs
+from rnw.wastelands import location_units
 from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
@@ -49,6 +50,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_biomes import CellBiomes
     from rnw.eu5_canvas import Canvas, OceanRemainder
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_regionkeys import KeyMatcher
@@ -58,6 +60,7 @@ if TYPE_CHECKING:
     from rnw.newworld import NewWorld
     from rnw.seas import Waters
     from rnw.settings import NewWorldSettings
+    from rnw.wastelands import LocationUnits
 
 KEY_PREFIX: Final[dict[CellClass, str]] = {
     CellClass.LAND: "rnw_loc_",
@@ -619,21 +622,36 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     settings: NewWorldSettings,
     keys: KeySpace,
     physical: KeyMatcher,
+    units: LocationUnits,
 ) -> tuple[list[_Area], set[str]]:
     """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
     count = len(game_map.keys)
     is_land = [kind in LAND_FAMILY for kind in world.classes]
     is_sea = [kind is CellClass.SEA for kind in world.classes]
-    land = contact_graph(world.centroids, world.edges, is_land)
+    land = contact_graph(
+        units.centres,
+        units.edges,
+        [flag and units.owner[cell] == cell for cell, flag in enumerate(is_land)],
+    )
     sea = contact_graph(world.centroids, world.edges, is_sea)
     areas = _land_areas(
         land,
-        [cell for cell, flag in enumerate(is_land) if flag],
+        [cell for cell, flag in enumerate(is_land) if flag and units.owner[cell] == cell],
         _vanilla_land(game_map, canvas, hierarchy, geometry, geometry.pixels),
         settings.province_size,
         keys,
         physical=physical,
     )
+    areas = [
+        replace(
+            area,
+            provinces=[
+                sorted(member for cell in province for member in units.members[cell])
+                for province in area.provinces
+            ],
+        )
+        for area in areas
+    ]
     region_of = {
         cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
     }
@@ -649,7 +667,8 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         parents=parents,
         keys=keys,
     )
-    _check_pieces(land, areas, depth=len(LEVELS), exempt=set())
+    physical_land = contact_graph(world.centroids, world.edges, is_land)
+    _check_pieces(physical_land, areas, depth=len(LEVELS), exempt=set())
     _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
     _check_shores(sea, sea_areas, coasts)
     return areas + sea_areas, anchored
@@ -667,6 +686,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     keys: KeySpace,
     waters: Waters,
     physical: KeyMatcher,
+    biomes: CellBiomes,
 ) -> Plan:
     """Assign keys, colours, names and parents to every generated cell.
 
@@ -677,8 +697,20 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     body, and every piece of a region's water touches the region's land. Land is named at
     random; water is named for its shape (``seanames``): one sea, one name.
     """
+    units = location_units(
+        world,
+        list(
+            zip(
+                biomes.climate,
+                biomes.vegetation,
+                biomes.topography,
+                biomes.raw_material,
+                strict=True,
+            )
+        ),
+    )
     areas, anchored = _hierarchy(
-        game_map, canvas, world, hierarchy, geometry, settings, keys, physical
+        game_map, canvas, world, hierarchy, geometry, settings, keys, physical, units
     )
     plan = Plan(cells=[], anchored_sea_areas=sorted(anchored), physical_keys=physical.assignments)
     province_names = NameGenerator(seed, "provinces")
@@ -734,6 +766,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
                 continent=continent,
             )
         )
+    plan.cells = [plan.cells[unit] for unit in units.owner]
     reused = {cell.area for cell in plan.cells} | {cell.region for cell in plan.cells}
     override_names = NameGenerator(seed, "overrides")
     for name in sorted(reused):

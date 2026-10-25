@@ -66,3 +66,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [056 — Primary terrain wrap](056-primary-terrain-wrap/README.md): extend the primary edge sources across the boundary, preserve interior samples, replace outside-only duplicates and retain full mainland wrap; 0.12.6 / epoch 36, rendered seam still unobserved.
 
 - [057 — Local sea routes](057-local-sea-routes/README.md): remove arbitrary closed-ocean size partitions, bound nearby-coast detours and retain ports/passable water in script replacements; exact TR46 BU2A, 0.12.7 / epoch 37, offline verification and installation.
+
+- [058 — Impassable highlands](058-impassable-highlands/README.md): compatible impassable location units and continuous vanilla-derived mountain height detail; exact TR46 LSI3, 0.12.8 / epoch 38, offline read-back and installation.

@@ -284,3 +284,31 @@ and library records are preserved. No game launch or process control.
 Exact local audit: ignored `local_data/tr46-maritime/installed.json`.
 Removal, with EU5 closed: remove only `mod/rnw_exp_tr46_maritime/`. Restoring
 the old hub is a separate action; no rollback/removal was performed here.
+
+
+2026-10-25 impassable highlands ([058](058-impassable-highlands/README.md), C321–C324):
+with EU5 closed (log/live checks agree), added new `mod/rnw_exp_tr46_highlands`,
+**RNW: Continents LSI3**, **0.12.8 / epoch 38**,
+`RNW1-040XN-DR20S-1RQ4T-Z0060-G00F6-A2G`. All **835** files hash-verified;
+833 nonmetadata files digest
+`69cafca4b98adfcfaa8fd0fec8ea352be9ce0a6fb851ab5c9dbfdf77df1b6392`.
+It retains exact TR46 seed/settings, the prior maritime/coast/river/wrap fixes,
+and adds compatible impassable units and mountain height detail. Administrative
+regrouping also rebinds generated native culture/religion and dependent setup;
+this is a new start, not a modification of the original observer world/save.
+Final game appearance remains unobserved.
+
+Updated main `mod/rnw_exp_hub` **0.12.7 → 0.12.8**, **3,262** files checked
+against the Windows package and source/dependency/metadata versions. The old
+**3,258** files are externally backed up under ignored
+`local_data/tr46-highlands/hub-backup-before-0.12.8/` and retained at
+`mod/.rnw-install/retired/rnw_exp_hub_before_highlands_0128/`. No retired sweep.
+Nine root-file hashes, 20,405 other-mod size/time records and eight prior folder
+entries are preserved. Existing worlds, saves, playsets, settings and library
+records remain intact. No game launch, process control or publication.
+
+Exact audit: ignored `local_data/tr46-highlands/installed.json`.
+Removal with EU5 closed: remove only `mod/rnw_exp_tr46_highlands/`; hub rollback
+is a separate action, not performed. The final full check still has 18 unrelated
+Workshop-text failures from `0735263`; all map tests and local reproduction pass
+(058 records the precise scope).

@@ -137,6 +137,7 @@ from rnw.eu5_map import (
     open_png,
     read_class_lists,
 )
+from rnw.eu5_mountains import mountain_relief
 from rnw.eu5_natives import (
     COUNTRY_DIR,
     DEFINITION_FILE,
@@ -2327,6 +2328,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 keys=loc_keys,
                 waters=shapes.waters,
                 physical=physical,
+                biomes=weathering.result()[0],
             )
             if settings.new_world.expand_oceans:
                 plan.oceans = plan_oceans(
@@ -2432,6 +2434,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     labels=final_labels,
                     rivers=rivers < RIVER_CLASSES,
                     noise_roll=seam,
+                    mountains=mountain_relief(store, carved, seed=seed, column0=0),
                 )
                 return terrain_outputs(store, inputs, slot_tables, seed, spool)
 

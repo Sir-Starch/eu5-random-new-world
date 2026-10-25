@@ -30,6 +30,12 @@ criterion, and script replacements retain ports/passable water. Written-data
 verification is separate from engine behaviour. L02 remains unattributed;
 mining-survey lifecycle failures and the other L03 diagnostics remain open.
 
+[058](../../experiments/058-impassable-highlands/README.md) addresses TR46-01/02
+in 0.12.8: compatible impassable cells are indivisible administrative units,
+and mountain sources regain locally derived vanilla crest detail. Physical
+fields and identity aggregation remain distinct. Runtime appearance is still
+unobserved; this does not settle native expansion or close the visual claim.
+
 **Owner decision (2026-10-25):** retain full mainland crossing through the map
 seam and fix its support. Do not restore the mandatory seam strait or prohibit
 land at the edge. This resolves the policy question in TR46-06b, not the reported

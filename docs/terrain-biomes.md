@@ -98,3 +98,23 @@ horizontal world edge, reusing their textures; both cache and instance records
 agree. These outside placements supply boundary/halo samples while interior
 coverage stays identical. [UNKNOWN] The candidate's actual engine rendering;
 synthetic source-coverage checks do not prove CPU admission or mesh extent.
+
+## Impassable units and mountain detail (0.12.8)
+
+[V-LOCAL / V-EXEC C321–C323] [Experiment 058](../experiments/058-impassable-highlands/README.md)
+separates physical sampling from impassable location identities. Connected samples
+with identical climate, vegetation, topography and resource attributes are one
+indivisible node for administrative partitioning, then one location; their
+continuous relief and drainage are retained. TR46's 668 impassable samples yield
+88 compatible locations. This is not one global wasteland or a claim to reproduce
+Paradox's exact authoring algorithm.
+
+The initial primary height sources also sample fine eroded detail from the three
+installed ordinary mountain height layers. Integer, band-independent sampling
+follows elevated land, fades near river lines and low terrain, and continues into
+periodic edge padding. This supplies the missing fine-detail role noted under
+Open work above; it does not add separate mesh objects. The exact blend, resource
+bounds, local numeric/visual comparison and remaining engine uncertainty are in
+058. Neither biome grouping alone nor a height-source plot proves final game
+appearance. No engine files are patched and no derived game resources are shipped
+with the generator.

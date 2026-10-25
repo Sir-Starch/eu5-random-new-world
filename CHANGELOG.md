@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.12.8 — 2026-10-25
+
+- Compatible connected impassable land becomes one location before provinces and areas are built, retaining distinct biome boundaries. Generated highlands gain fine eroded height detail sampled from the installed vanilla mountain sources, with continuous wrap support and preserved river lines. Epoch 38; checked offline, final game appearance remains unobserved. Administrative regrouping can rebind native cultures/religions and their dependent start data.
+
 ## 0.12.7 — 2026-10-25
 
 - Nearby coasts now receive short local shipping connections as well as global access to the Old World; retained navigable boundary contacts continue into open water. Connected closed water is no longer divided into arbitrary 48-cell oceans with unrelated names. Script replacements preserve ports and passable water, fixing the inland landfalls found in TR46's western voyage. Epoch 37; checked offline, engine navigation and expedition outcomes remain unobserved.

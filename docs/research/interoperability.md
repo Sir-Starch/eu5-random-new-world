@@ -371,6 +371,35 @@ the log lack that information. No executable bytes are changed or distributed;
 disassembly and raw measurements stay ignored. This incomplete trace is not
 treated as a new engine movement contract. The engine outcome remains unknown.
 
+### Follow-up: impassable units and mountain height sources (2026-10-25, 0.12.8 / epoch 38)
+
+[V-LOCAL / V-EXEC / INFERRED C321–C323] Vanilla mountains include additive,
+locally placed height sources in addition to the primary heightmaps. RNW removed
+obsolete placements but did not generate their fine eroded-detail role. The
+independent generator now reads the three ordinary installed mountain height
+`.info`/`.bin` pairs through the existing R-004 reader, inspects cached scales
+and strengths, and samples their heights into the initial primary source bands.
+The shader's existing height-transform/addition semantics inform this research;
+our overlapping-crest construction is explicitly not an exact simulation of the
+vanilla decal stack. No shader, executable or game-installation file is modified.
+
+Why these data are needed and the limits of accessible editor/batch interfaces
+remain those of R-004: location templates alone cannot supply per-seed eroded
+height samples. No new binary layout is inferred. Shape/range guards, synthetic
+band/wrap equality, Windows/Linux sampling parity and full decoded-source
+read-back check the writer. Primary source dimensions, mip levels, tile borders
+and LZAV streams retain the existing contract. Mountain contributions use the
+same continuous crop at both display edges and in periodic padding, without
+new outside-only instances. Runtime appearance remains unobserved.
+
+Impassable aggregation uses the existing PNG and text location interfaces.
+Roads retain their semantic paths through R-001 while definition indices change.
+All decoded game sources, composed rasters, raw measurements and built mod files
+stay local and ignored. Only independently authored algorithms, synthetic fixtures,
+identifiers and aggregate findings enter the repository; no protected mountain
+source is distributed with the generator. Existing compatibility fingerprints,
+input manifests and local-generation/distribution boundaries continue to apply.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

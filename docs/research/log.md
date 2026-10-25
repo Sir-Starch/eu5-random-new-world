@@ -1221,3 +1221,56 @@ The maritime block has offline corrections and explicit remaining evidence
 limits. The next independent block is impassable-land grouping and physical
 mountain relief (TR46-01/02); they still require separate evidence and have not
 been implemented in this phase.
+
+## 2026-10-25 — TR46 impassable locations and mountain relief (0.12.8 / epoch 38)
+
+[V-LOCAL / V-EXEC / INFERRED C321] TR46's 668 impassable samples form ten land
+components, the largest fragmented into 252 locations. Vanilla Siberian units
+already cover hundreds of thousands of pixels but differ in biome; exact
+Paradox authoring rules remain unknown. The fine mountain-height role is also
+missing: vanilla adds thousands of ordinary eroded height stamps, while RNW
+removed the former American placements without supplying their equivalent role.
+Primary-only height statistics are not final vanilla rendered heights. Identity
+fragmentation and missing fine relief are separate causes and tests.
+
+[V-EXEC C322] Contract compatible connected impassable samples before hierarchy
+partitioning, retaining physical relief/drainage and every biome distinction.
+The graph expands again for connectivity checks. Primary terrain synthesis now
+samples local vanilla mountain height sources in integer, continuous crop
+coordinates, with bounded overlap, elevation gain and zero contribution on river
+lines. Padding samples the same mountains across the seam. Increase the band
+working-set allowance for the new arrays. No new format, shader/engine change,
+output repair or companion mod. See [058](../../experiments/058-impassable-highlands/README.md)
+and interoperability R-004.
+
+[V-EXEC / INFERRED C323] LSI3 has 88 connected compatible impassable locations;
+the largest is 426,155 pixels. Independent read-back checks 570,425,344 source
+height samples including padding: 12,103,913 rise, maximum addition 13,099,
+maximum final height 52,690; none fall. Outside-domain, river and low samples,
+materials/water textures/river PNG, retained RGB and all 59,404 road paths are
+preserved. All 861 bundle entries hash correctly; 76 nonmetadata files change.
+Native regional-family matching responds to the changed hierarchy: generated
+culture/religion, diaspora, names and dependent start data can change. Retained
+population records remain exact; this is not an isolated civilization-AI trial.
+The local same-scale height plot shows sharper crests, not engine rendering.
+
+Final `uv sync --locked --group dev && make check`: format/lint/types clean,
+1,951 Python pass, 14 skip, **18 failures** in the unchanged Workshop description
+files/tests from separate commit `0735263` (ten stale source fingerprints, eight
+over the byte limit). No green full-suite claim; unrelated text work is not
+mixed into the map change. Separate Rust format/clippy/tests pass all 23 tests.
+Reference: 832 files, 711a0e02…c88800, all content families; fresh hash-seed-7/
+no-cache reproduction passes 13 local checks, one skip, 248.40 seconds. LSI3:
+833 files, 69cafca4…1b6392. Windows/Linux four-case parity and the final isolated
+offscreen generator self-test pass. Final game appearance remains unknown.
+
+[V-EXEC C324] With EU5 closed, installed LSI3 as new rnw_exp_tr46_highlands,
+835 checked files, and updated the main generator 0.12.7→0.12.8, 3,262 checked
+files. The prior 3,258 files are externally backed up and retained without a
+sweep. Nine root hashes, 20,405 other-mod size/time records and eight prior folder
+entries remain exact. No existing world/save/playset/settings/library edit,
+launch, process control, push or publication.
+
+The related TR46-01/02 block has an offline candidate and recorded runtime limits.
+The next independent block is native expansion/colonization eligibility (TR46-05),
+using the frozen original campaign as its evidence, not a new long playthrough.

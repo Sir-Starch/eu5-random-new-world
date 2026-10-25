@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from rnw.eu5_mountains import Mountain, MountainRelief
 from rnw.eu5_slots import SlotTables
 from rnw.eu5_terrain import (
     BAND_HALO,
@@ -145,7 +146,8 @@ def test_samples_that_do_not_fit_a_layer_fail_loudly() -> None:
 
 
 @pytest.mark.parametrize("band", [17, 170])
-def test_wrapped_terrain_equals_one_continuous_continent(band: int) -> None:
+@pytest.mark.parametrize("mountains", [False, True])
+def test_wrapped_terrain_equals_one_continuous_continent(band: int, *, mountains: bool) -> None:
     """Separate edge decals and a decal spanning the noise cut reproduce the unrolled land.
 
     A continent with relief, a river and location borders is computed once in the
@@ -180,6 +182,12 @@ def test_wrapped_terrain_equals_one_continuous_continent(band: int) -> None:
             labels=np.roll(labels, -shift, axis=1),
             rivers=np.roll(rivers, -shift, axis=1),
             noise_roll=shift,
+            mountains=MountainRelief(
+                (np.full((64, 64), 40000, dtype=np.uint16),),
+                (Mountain(140, 400, 112, 0, 1), Mountain(210, 430, 144, 0, 3)),
+            )
+            if mountains
+            else None,
         )
 
     def render(decal: Decal, source: TerrainInputs) -> tuple[np.ndarray, np.ndarray]:
@@ -198,6 +206,15 @@ def test_wrapped_terrain_equals_one_continuous_continent(band: int) -> None:
         return heights, materials
 
     reference = render(Decal("continuous", 5, 0, 170, width), inputs(0))
+    if mountains:
+        bare = render(Decal("continuous", 5, 0, 170, width), replace(inputs(0), mountains=None))
+        assert np.any(reference[0] > bare[0])
+        assert np.all(reference[0] >= bare[0])
+        river_row = (80 - 5) * 2
+        assert np.array_equal(
+            reference[0][river_row : river_row + 2], bare[0][river_row : river_row + 2]
+        )
+        assert np.array_equal(reference[1], bare[1])
     wrapped = inputs(roll)
     # One edge decal on each side, and a single decal that crosses the outside cut.
     left = render(Decal("left", 5, 0, 170, 60), wrapped)
