@@ -1,5 +1,11 @@
 # 052 — Physical terrain seam and comb-shaped coasts
 
+**Later owner evidence (2026-10-25):** on another 0.12.3 world, **Continents
+TR46**, the owner still observes the wrap crack. See [TR46-06a in the campaign
+register](../../docs/research/tr46-observer-audit.md#tr46-06a--persistent-physical-seam),
+C299 and experiment 053. This does not test the exact MKEA world below, but the
+offline placement tests must not be cited as a general in-game seam fix.
+
 2026-10-25; generator 0.12.3, epoch 33. Target: EU5 1.4.4 executable (build
 26142040), 1.4.3 data (26105915), unchanged map contract. No game launch.
 

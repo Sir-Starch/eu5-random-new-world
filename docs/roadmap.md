@@ -2,6 +2,12 @@
 
 Phases of the project, what each depends on and the gate that accepts it. Engine gates target the installed EU5 build and are repeated after every game patch. Progress release by release is in the [changelog](../CHANGELOG.md).
 
+**Open campaign findings (2026-10-25):** the [TR46 register](research/tr46-observer-audit.md)
+and [complete log catalog](research/tr46-log-catalog.md) track the owner's seven
+0.12.3 observations and additional diagnostics. Earlier phase acceptance does
+not close these regressions or quality defects. This is a documentation-only
+audit; no phase, generator version, algorithm epoch or wrap policy is changed.
+
 **Where it stands (0.12.0, 2026-10-24).** The owner has accepted physical geography (V1) and the sea phase (S1) in game. The natives (R6) and the economy and societies of R7 load and play in game, with the remaining open points recorded in their experiments. The content plan (N0–N5) is implemented offline, and N1–N3 have been seen in console sittings. The world's mod, the generator's window and the Workshop text are written in all eleven official languages (L1, offline). The column *Kind of work* records what each phase needed when it was planned: design and production work, or bounded implementation.
 
 The optional ocean expansion (S2) is implemented offline in 0.12.0, epoch 30: a fixed wider canvas, connected named oceans and the original-canvas checkbox. See [the design and audit](research/canvas-expansion.md). Its engine result is unverified.

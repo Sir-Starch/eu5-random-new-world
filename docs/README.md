@@ -63,6 +63,7 @@ The project's documentation, grouped by purpose. Technical claims carry evidence
 | [Interoperability register](research/interoperability.md) | Each reverse-engineered EU5 format: why it is needed and how compatibility is kept without distributing Paradox's files |
 | [Sources](research/sources.md) | External sources with dates and target versions |
 | [Research log](research/log.md) | Chronological working log |
+| [TR46 problem register](research/tr46-observer-audit.md), [log catalog](research/tr46-log-catalog.md) | Open issues from the long 0.12.3 observer campaign: all seven owner observations, evidence, investigation entry points and closure criteria; exhaustive session diagnostics |
 | [Installation inventory](research/game-install-inventory.md) | Layout of the EU5 1.4.1 installation as first inspected |
 | [N0–N4 audit](research/n0-n4-audit.md), [N5 region keys](research/n5-region-keys.md) | Offline audits of the content plan |
 | [Canvas expansion](research/canvas-expansion.md) | Why large ocean locations constrain generation, and a proposed wider domain with preserved ocean names |

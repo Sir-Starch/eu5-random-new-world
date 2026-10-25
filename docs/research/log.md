@@ -991,3 +991,43 @@ All 826 files match the verified export manifest. Nine profile-root hashes and
 6,528 existing mod-file size/time records are preserved, including the retired
 old world; no sweep, game launch or playset/save/library change. See
 [installed list](../../experiments/INSTALLED.md) and ignored `reinstalled.json`.
+
+
+### 2026-10-25 — TR46 long observer campaign: documentation only
+
+[OWNER] Record all seven reported problems and inspect the latest long-game logs;
+no fixes now. [V-LOCAL/V-GAME logs C298] Identified **RNW: Continents TR46**, code
+`RNW1-040XN-DR20S-1RQ4T-Z0060-602JM-HB0`, generator 0.12.3 / epoch 33,
+EU5 1.4.4 / Steam build 26142040. Session 04:03:47–07:01:39 reaches 1590.11.11,
+saves and exits normally. Preserved logs, three screenshots, two unchanged
+campaign autosaves and selected world files under ignored
+`local_data/tr46-observer-20261025/`; all 807 world files are hash-inventoried.
+
+[V-GAME owner C299] The [TR46 register](tr46-observer-audit.md) retains the seven
+owner observations as stable work items, splitting the seam appearance from
+the colonial east/west and wrap-policy question. Each has evidence, unknowns,
+code/data entry points and closure criteria. The three screenshots belong to
+Chukotka remnants, not the seam or mountain complaint. Experiment 052 now links
+the subsequent report that a different 0.12.3 world's crack persists.
+
+[V-GAME logs C300/C302] Added twelve diagnostic groups, including five missing
+river sources (698 pixels), the nonfatal port/water assertion, unreachable
+western-voyage waypoints, AI/script errors, treaty text, malformed country names,
+GVQ's setup relation budget, locators and presentation/environment failures.
+The [catalog](tr46-log-catalog.md) accounts for all 2,366 current error records
+(61 origins) and 57,352 AI warnings (42 command/stage categories), without
+counting mirrors twice. [V-EXEC C301] Starting-name matches show 137 native
+attacking declarations but none of the 210 colony starts. Growth, extraordinary
+archetype behaviour and comparison with vanilla remain unknown.
+
+[V-LOCAL C303] Excluded the stale event CSV, earlier rotated errors and earlier
+crash from campaign attribution; recorded missing-DLC/startup background and
+eight additional Workshop VFS mounts as confounders. No fixes, game launch,
+probe, mod installation, save/playset change or new manual sitting. Version and
+epoch remain 0.12.3 / 33 because only documentation changed.
+
+[V-EXEC] Locked development sync and the complete project check pass with a
+writable temporary uv cache (the default home cache is read-only in this
+sandbox): 1,888 Python tests passed, 14 skipped; 23 Rust tests passed; formatting,
+lint and types clean. Evidence inventories, log counts and documentation links
+are checked separately; these checks do not close the recorded gameplay issues.
