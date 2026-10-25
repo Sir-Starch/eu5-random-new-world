@@ -166,3 +166,16 @@ unverified. Exact removal with EU5 closed: `uv run rnw uninstall-mod
 rnw_exp_physical_seam --user-dir USER_DIR`; main hub removal, only if wanted:
 `uv run rnw uninstall-mod rnw_exp_hub --user-dir USER_DIR`. The local backup and
 prepared candidate remain outside the profile.
+
+
+2026-10-25 reinstallation at the owner's explicit request (C297): the profile no
+longer contained `mod/rnw_exp_physical_seam`. Reinstalled **RNW: Supercontinent MKEA**,
+0.12.3 / epoch 33, from the verified local export through an incoming copy and one
+rename. All **826** installed files match the export manifest; non-metadata digest
+remains `883e1abf7c211cdcefe2e6b822b1d56fcb5c3078ef23f13959094477197a0e7b`.
+Nine profile-root hashes, 6,528 existing mod-file size/time records and three old
+mod folders are preserved. A retired old world inside `.rnw-install/retired/`
+was deliberately left untouched; no installer sweep was run. No game launch,
+process control, playset, save, library or generator update. Exact removal with
+EU5 closed remains `uv run rnw uninstall-mod rnw_exp_physical_seam --user-dir USER_DIR`.
+Evidence: ignored `local_data/physical-seam/reinstalled.json`.

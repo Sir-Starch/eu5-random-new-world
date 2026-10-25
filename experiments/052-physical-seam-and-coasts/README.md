@@ -81,3 +81,13 @@ Exact removal, with EU5 closed: `uv run rnw uninstall-mod rnw_exp_physical_seam
 uninstall-mod rnw_exp_hub --user-dir USER_DIR`. Backups and staged candidates remain
 outside the profile. [UNKNOWN] The new candidate's physical seam in the engine;
 no game launch or manual sitting was requested or performed.
+
+
+## Reinstallation requested by the owner
+
+[V-EXEC C297] The world's profile folder had been removed since the initial
+installation. Restored the same verified 826-file candidate without replacing
+any existing mod. Nine root hashes, 6,528 other-mod file size/time records, three
+previous folders and the retired old world are preserved. No playset is edited
+or game launched. The original version, world code, digest and removal command
+above still apply; local verification is in `reinstalled.json`.

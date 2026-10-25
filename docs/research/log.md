@@ -981,3 +981,13 @@ and 66,634,570 pixels; 40,960 boundary/halo source checks pass. Installed main h
 preservation of the old/active world and all profile roots. Installed Windows
 self-test passes; precision and both synthetic digests agree across platforms.
 The candidate's actual seam appearance remains unknown, not a claimed game pass.
+
+
+### 2026-10-25 — Reinstall the requested world
+
+[V-EXEC C297] At the owner's explicit request, restored the missing
+`rnw_exp_physical_seam` (**RNW: Supercontinent MKEA**, 0.12.3) into the game profile.
+All 826 files match the verified export manifest. Nine profile-root hashes and
+6,528 existing mod-file size/time records are preserved, including the retired
+old world; no sweep, game launch or playset/save/library change. See
+[installed list](../../experiments/INSTALLED.md) and ignored `reinstalled.json`.
