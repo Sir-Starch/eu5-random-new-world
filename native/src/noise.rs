@@ -7,7 +7,9 @@
 use crate::hash::{GAMMA, hash_point, mix64};
 use rayon::prelude::*;
 
-pub const UNIT: i64 = 256;
+// A continent's period reaches 4,000 pixels: 8-bit fractions would hold each
+// value for about 16 pixels, then jump, imprinting a comb on thresholded coasts.
+pub const UNIT: i64 = 1 << 16;
 pub const NOISE_SCALE: i64 = 1 << 15;
 const PERMILLE: i64 = 1000;
 const SUBPIXEL: i64 = 16;

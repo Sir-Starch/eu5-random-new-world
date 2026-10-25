@@ -23,7 +23,7 @@ PERMILLE: Final[int] = 1000
 
 
 def _smooth(t: NDArray[np.int64]) -> NDArray[np.int64]:
-    """Smoothstep in units of 1/256: 3t^2 - 2t^3."""
+    """Fixed-point smoothstep: 3t^2 - 2t^3."""
     return (t * t * (3 * UNIT - 2 * t)) // (UNIT * UNIT)
 
 

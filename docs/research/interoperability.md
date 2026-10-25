@@ -238,6 +238,41 @@ All local source binaries, generated rasters, strips and audit outputs remain
 unshared under ignored paths. This follow-up introduces no additional legal
 clearance beyond the framework and limits above.
 
+### Follow-up: world-edge decal coverage and coast precision (2026-10-25, 0.12.3 / epoch 33)
+
+[V-GAME owner C293] A physical crack remains in 0.12.2 despite continuous decoded
+height pixels. [V-LOCAL C295] The installed terrain compute shader tests decal
+positions with an inclusive lower and exclusive upper bound and initializes an
+new height page to zero before applying its decals. Original heightmaps end at the world boundary;
+they do not describe periodic data beyond it. This follow-up uses the existing
+terrain instance interface for a cylindrical world, without changing a shader.
+
+**Necessity and method.** The generated land can cross the wrap; the corresponding
+terrain placements must supply boundary vertices and page halos too. The text
+mechanism is vanilla's repeated decal instances. For each first/last-column
+heightmap, the generator makes a placement shifted by plus/minus the world width,
+in `terrain_cache/ingame_decals.json` and a matching instance `.json` in the
+original asset's folder. The same local height/material textures are reused and
+all original placements remain. Cache rebuilding therefore has the same placement
+records as the baked path. Geometry mismatches or missing source anchors stop the
+build. No new binary format or layer that repairs generated heights is introduced.
+
+Shader and data-file inspection establish the half-open sampling contract; a
+small read-only executable xref/disassembly investigation of terrain render,
+initialization and properties routines did **not** establish exact mesh extents
+or CPU acceptance of outside placements. Those remain [UNKNOWN], as does the
+candidate's engine appearance. No process was attached, code changed, memory
+written or game launched. Only identifiers and our synthetic geometry tests are
+committed; executable excerpts and screenshots stay ignored and local.
+
+[V-EXEC C294] Raising the independent integer-noise interpolation precision also
+changes the values written through the existing height, material, water, object
+and spline interfaces of R-004/R-001. Their formats, necessity, official-interface
+limits and local-only generation boundary are unchanged. Native/reference and
+cross-platform comparisons verify the arithmetic, not engine behaviour. The legal
+framework and its limits above continue to apply; no additional clearance is
+inferred from this technical research.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

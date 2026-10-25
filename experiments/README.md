@@ -54,3 +54,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 | [050](050-seeded-land-origin/README.md) | Seed-positioned land-noise lattice: recurring former-Alaska islands, spatial bias and verified offline candidates |
 
 - [051 — Continuous map wrap](051-wrap-continuity/README.md): remove the mandatory seam strait, continue terrain/water sampling and roads across the map edges; 0.12.2, epoch 32; offline verification, no game launch.
+
+- [052 — Physical seam and coast teeth](052-physical-seam-and-coasts/README.md): exact owner-world regression, precise noise interpolation and periodic terrain placements; 0.12.3, epoch 33, offline candidate.

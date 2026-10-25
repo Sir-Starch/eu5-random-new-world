@@ -82,3 +82,19 @@ The interim patch transfer copied river and border bands from unrelated places a
 [V-EXEC C289–C290] The wrap is an interior column of one rolled generation crop, not a second domain. Land masks, elevation, climate and drainage are generated before display coordinates are restored. Neither generated nor drawn land gets a special exclusion band there. The split of location identities keeps compact bounding boxes and interior points; it does not separate landmasses.
 
 Height and material decal windows read their horizontal halo modulo the map width. Detail and material noise use the rolled coordinates of that same crop, so the noise cut is outside its replaceable domain. A synthetic continent rendered whole and then rolled produces exactly the same decoded height and material pixels, including both world edges and arbitrary row bands. Water distance and blur also wrap horizontally, with periodic detail noise. Road contacts include both map edges and their curves use the shorter cylindrical displacement; read-back validation checks their steps and preserves every retained vanilla polyline. The engine rendering of the new wrap contacts has not been observed.
+
+## Boundary placement and coast precision (0.12.3)
+
+[V-GAME owner C293] 0.12.2 still shows a physical crack and regular straight teeth
+in large-continent coasts. [V-EXEC C294] Interpolation had only 256 fractional
+positions across a 3,600-pixel octave: long flat stretches then large jumps.
+The shared integer kernel now uses 65,536 fractions; derivative-bound tests reject
+the old jumps without smoothing or repairing a finished coast.
+
+[V-LOCAL/V-EXEC C295] A pixel-continuous field also needs periodic **placements**.
+The terrain compute shader accepts a decal's lower boundary and excludes its
+upper boundary. The first/last column assets are now placed once more beyond each
+horizontal world edge, reusing their textures; both cache and instance records
+agree. These outside placements supply boundary/halo samples while interior
+coverage stays identical. [UNKNOWN] The candidate's actual engine rendering;
+synthetic source-coverage checks do not prove CPU admission or mesh extent.

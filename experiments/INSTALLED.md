@@ -146,3 +146,23 @@ uninstall-mod rnw_exp_wrap_continuity --user-dir USER_DIR`; removing the main
 hub, only if requested, is `uv run rnw uninstall-mod rnw_exp_hub --user-dir USER_DIR`.
 The separate old generator candidate is preserved. Logs, backup and audit data
 remain under ignored `local_data/wrap-continuity/`.
+
+
+2026-10-25 physical seam / coast candidate ([052](052-physical-seam-and-coasts/README.md),
+C293–C296): main `mod/rnw_exp_hub` **0.12.2 → 0.12.3** (all 3,254 files checked),
+with a checked 3,254-file backup at ignored
+`local_data/physical-seam/hub-backup-before-0.12.3/`. Added only
+`mod/rnw_exp_physical_seam`, **RNW: Supercontinent MKEA**, epoch 33,
+code `RNW1-081WG-1HAWD-H0XFH-T0060-60840-3C082-243AG-0C700-KHRXR`:
+826 checked files including metadata, 824 non-metadata files, digest
+`883e1abf7c211cdcefe2e6b822b1d56fcb5c3078ef23f13959094477197a0e7b`.
+It retains the observed seed/shape/density/empire parameters, fixes noise precision
+and includes eight periodic heightmap placements. Nine profile-root hashes,
+4,052 other-mod file size/time records and three old folders are preserved.
+The active old world is not patched; the hub carries no game assets. No game
+launch, process control, playset/save/library edit or installation-file write.
+Installed Windows self-test and precision sample pass; engine appearance remains
+unverified. Exact removal with EU5 closed: `uv run rnw uninstall-mod
+rnw_exp_physical_seam --user-dir USER_DIR`; main hub removal, only if wanted:
+`uv run rnw uninstall-mod rnw_exp_hub --user-dir USER_DIR`. The local backup and
+prepared candidate remain outside the profile.

@@ -957,3 +957,27 @@ The epoch-32 reference uses peoples roll 3 for complete story/formable coverage,
 with 651 map/graphics files identical to the installed candidate. A fresh no-cache
 hash-seed-7 reproduction passes in 160.12 s, and 12 read-only installation tests
 pass. The reference digest is pinned in `tests/golden_world.json`.
+
+
+### 2026-10-25 — Physical seam and comb-shaped coasts (0.12.3, epoch 33)
+
+[V-GAME owner C293] The 0.12.2 supercontinent has a physical crack and regular
+straight coastal teeth. [V-EXEC C294] The shared noise kernel interpolated a
+3,600-pixel octave with only 256 fractions; corrected to 65,536 before thresholding.
+[V-LOCAL/V-EXEC C295] The terrain shader's half-open decal bounds also omit the
+world endpoint and outside halos. Eight periodic placements reuse opposite-edge
+heightmaps in both cached and source-instance records. Synthetic geometry tests
+supply the missing sources without new interior overlap. Exact CPU admission and
+candidate rendering remain [UNKNOWN]; limited read-only static inspection did not
+establish them. No engine patch or agent game launch. See
+[052](../../experiments/052-physical-seam-and-coasts/README.md) and the R-004 follow-up.
+
+[V-EXEC C296] Release checks pass (1,888 Python, 14 skips, 23 Rust), plus 12 local
+read-only tests and a fresh no-cache reference reproduction (194.02 s). The owner's
+observed seed/shape becomes the epoch-33 reference (824 files, digest in
+`tests/golden_world.json`). Independent read-back preserves 21,728 Old World records
+and 66,634,570 pixels; 40,960 boundary/halo source checks pass. Installed main hub
+0.12.3 and only the new **Supercontinent MKEA** world, with verified backup and
+preservation of the old/active world and all profile roots. Installed Windows
+self-test passes; precision and both synthetic digests agree across platforms.
+The candidate's actual seam appearance remains unknown, not a claimed game pass.

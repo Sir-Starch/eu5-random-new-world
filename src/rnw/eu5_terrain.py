@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from dataclasses import dataclass, field
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
@@ -442,9 +443,11 @@ def terrain_outputs(
     disabled, cache_out = _disable_decals(store, codes)
     sink.update(disabled)
     sink["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
+    periodic = sum("/instances/rnw_wrap_" in path for path in disabled)
     stats: dict[str, object] = {
         "decals_rebuilt": [decal.name for decal in touched],
-        "mountain_decals_disabled": len(disabled),
+        "mountain_decals_disabled": len(disabled) - periodic,
+        "periodic_heightmap_instances": periodic,
     }
     return materials_world, stats
 
@@ -456,15 +459,77 @@ def _inside(codes: NDArray[np.int8], x: float, y: float) -> bool:
     return 0 <= row < rows and 0 <= column < columns and bool(codes[row, column] != OUTSIDE)
 
 
+def _periodic_heightmaps(store: DecalStore) -> tuple[list[dict[str, object]], dict[str, bytes]]:
+    """Continue edge decals outside the world for boundary vertices and page halos.
+
+    Vanilla's IntersectsDecal uses [0, 1): no original decal covers x=width,
+    although the terrain mesh samples that boundary. A periodic placement of the
+    first/last column supplies it without overlapping any interior decal. Both
+    the baked cache and editor instances describe the same placements.
+    """
+    width = store.map_shape[1] * LOCATION_UNITS
+    entries: list[dict[str, object]] = []
+    files: dict[str, bytes] = {}
+    for entry in store.cache:
+        name = str(entry["decal_name"])
+        if not HEIGHTMAP.fullmatch(name):
+            continue
+        transform = cast("dict[str, object]", entry["decal_transform"])
+        position = cast("dict[str, float]", transform["position"])
+        scale = cast("dict[str, float]", transform["scale"])
+        size = cast("dict[str, int]", entry["decal_size"])
+        half = size["x"] * scale["x"] / 2
+        shifts: list[tuple[str, int]] = []
+        if position["x"] - half == 0:
+            shifts.append(("east", width))
+        if position["x"] + half == width:
+            shifts.append(("west", -width))
+        if not shifts:
+            continue
+        folder = store.game_dir / TERRAIN / "decals" / name / "instances"
+        instances = [
+            json.loads(path.read_text(encoding="utf-8-sig"))
+            for path in sorted(folder.glob("*.json"))
+        ]
+        active = [item for item in instances if item.get("disabled") is False]
+        if len(active) != 1 or transform.get("rotation") != 0:
+            message = f"Expected one unrotated edge heightmap instance for {name}"
+            raise TerrainRangeError(message)
+        instance = cast("dict[str, object]", active[0])
+        geometry = {
+            "position.x": position["x"],
+            "position.y": position["y"],
+            "scale.x": scale["x"],
+            "scale.y": scale["y"],
+            "rotation": 0,
+        }
+        if any(instance.get(key) != value for key, value in geometry.items()):
+            message = f"Heightmap instance and cached geometry disagree for {name}"
+            raise TerrainRangeError(message)
+        for side, shift in shifts:
+            moved = deepcopy(entry)
+            moved_transform = cast("dict[str, object]", moved["decal_transform"])
+            cast("dict[str, float]", moved_transform["position"])["x"] += shift
+            entries.append(moved)
+            moved_instance = instance | {"position.x": position["x"] + shift}
+            path = f"in_game/gfx/terrain2/decals/{name}/instances/rnw_wrap_{side}.json"
+            files[path] = ("﻿" + json.dumps(moved_instance, indent="\t") + "\n").encode("utf-8")
+    if not entries:
+        message = "No edge heightmaps were found for periodic terrain placement"
+        raise TerrainRangeError(message)
+    return entries, files
+
+
 def _disable_decals(store: DecalStore, codes: NDArray[np.int8]) -> tuple[dict[str, bytes], bytes]:
-    """Disable mountain/volcano decals over the canvas in instances and in the cache."""
+    """Place periodic heightmaps and disable obsolete mountains in instances and cache."""
     kept: list[dict[str, object]] = []
     for entry in store.cache:
         name = str(entry["decal_name"])
         position = cast("dict[str, dict[str, float]]", entry["decal_transform"])["position"]
         if HEIGHTMAP.fullmatch(name) or not _inside(codes, position["x"], position["y"]):
             kept.append(entry)
-    files: dict[str, bytes] = {}
+    periodic, files = _periodic_heightmaps(store)
+    kept.extend(periodic)
     decals = store.game_dir / TERRAIN / "decals"
     for folder in sorted(path for path in decals.iterdir() if path.is_dir()):
         if HEIGHTMAP.fullmatch(folder.name) or not (folder / "instances").is_dir():

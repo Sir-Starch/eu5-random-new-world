@@ -73,3 +73,17 @@ def test_noise_depends_on_key_and_is_smooth() -> None:
     first = value_noise(1, 0, 0, 32, 32, period=8)
     assert not np.array_equal(first, value_noise(2, 0, 0, 32, 32, period=8))
     assert int(np.abs(np.diff(first, axis=1)).max()) < 32768
+
+
+@pytest.mark.parametrize("period", [1600, 3600, 4096])
+def test_continent_noise_resolves_pixels_instead_of_large_stair_steps(period: int) -> None:
+    """The cubic interpolant's derivative bounds pixel changes at continent scale.
+
+    Its largest slope is 1.5 times the corner difference / period. Four units
+    allow integer rounding of fractions and final samples. The old 8-bit
+    fractions exceeded this bound by repeatedly holding then jumping.
+    """
+    field = value_noise(1234, 1000, 2000, 1600, 3, period=period)
+    bound = int(np.ceil(1.5 * 65535 / period)) + 4
+    assert int(np.abs(np.diff(field, axis=1)).max()) <= bound
+    assert np.count_nonzero(np.diff(field[0]) == 0) < field.shape[1] // 4

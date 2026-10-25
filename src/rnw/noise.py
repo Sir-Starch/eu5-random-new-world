@@ -21,7 +21,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 NOISE_SCALE: Final[int] = 1 << 15
-UNIT: Final[int] = 256
+# Fractional interpolation must resolve every pixel of the largest continent.
+UNIT: Final[int] = 1 << 16
 
 
 def value_noise(  # noqa: PLR0913 - a field needs key, origin, size and period.
