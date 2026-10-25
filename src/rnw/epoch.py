@@ -71,6 +71,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 12, 6),
     (0, 12, 7),
     (0, 12, 8),
+    (0, 12, 9),
 )
 
 

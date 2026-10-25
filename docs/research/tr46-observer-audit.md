@@ -316,27 +316,20 @@ reported mainland-relative direction.
 sides of the raster boundary; that is not proof of equivalent large-mainland
 behavior. The owner chose to **retain full mainland wrap and fix its support**.
 C305 traces `is_east_of` to a map-dependent cyclic comparison; its exact loaded
-span remains unknown. C339 now recovers the final save's SPA west / GBR east,
+span remains unknown. C339 recovers the final save's SPA west / GBR east,
 dates 1549.10.2–1568.10.22 and retained line **24717 / `rnw_loc_01224`**.
-This advances the earlier missing-line limit; it is post-treaty state, not the
-line/claim state at the reported observation. Details: [062](tr46-tordesillas.md).
+Details: [062](tr46-tordesillas.md).
 
-**Remaining work:** identify the affected western-mainland location and
-distinguish the side background from actual province claims, ownership/top-owner
-and area-conflict overrides. Establish the engine's comparison point/span and
-the observation-time line before changing allocation. Retained hierarchy
-names do not themselves select a meridian side. The original situation's map
-color/tooltip blocks match vanilla; only two fallback colony keys are remapped.
-
-**Work entry points:** vanilla map and American hierarchy; installed Tordesillas
-situation/events/triggers, `eu5_content.py`, `eu5_remap.py`, `hierarchy.py`,
-`newworld.py`, `landmask.py`. L05 is a separate confirmed treaty-text error;
-its existence does not prove wrong geographic allocation.
-
-**Closure evidence:** demonstrate correct classification/claims for the same
-mainland on both sides of the raster seam under the retained full-wrap policy.
-The reported allocation remains open; a text fix cannot close it. No new owner
-campaign or repeat policy choice is requested.
+**Generator fix (0.12.9 / epoch 39, C341–C344):** `eu5_treaty.py` exposes
+continuous New World dry-land longitude coordinates via vanilla scripted
+geographies and script values ($O(\log(\text{width}))$ bitmasks) and rewrites
+situation comparison predicates (`is_east_of`) and province distribution iterators
+(`every_east_of_province_definition` / `every_west_of_province_definition`)
+with strict count guards. On TR46 (QW6O), the 164 generated locations and 30
+provinces of the wrapped mainland at raster right evaluate uniformly west of the
+line in both triggers and province allocation (where raw vanilla `is_east_of`
+evaluated east). Candidate installed as `rnw_exp_tr46_treaty`. Engine runtime
+behavior and treaty event execution remain unobserved [UNKNOWN].
 
 ### TR46-07 — Removed-Alaska remnants near Chukotka
 

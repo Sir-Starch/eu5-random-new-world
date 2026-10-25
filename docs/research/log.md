@@ -1452,3 +1452,45 @@ no game launch, source/output/install/profile/save/settings/playset edit,
 process control, push or publication. No new owner campaign requested.
 Full findings: [TR46 Tordesillas](tr46-tordesillas.md).
 The next independent block is L06's corrupted country-name formatting.
+
+## 2026-10-25 — Continuous Tordesillas longitude and TR46 candidate (062)
+
+[V-EXEC C341] `eu5_treaty.py` constructs continuous New World longitude
+coordinates on the canvas axis across the raster seam for Tordesillas side
+selection, line moves, side-swap estimates, map shading and final province
+allocation. Immutable coordinates are dry-land centroids, exposed via
+$O(\log(\text{width}))$ vanilla scripted geography bitmasks and script values.
+Comparison predicates (`is_east_of`) and province distribution iterators
+(`every_east_of_province_definition` / `every_west_of_province_definition`)
+are rewritten with strict count guards, preserving vanilla claim gates,
+religion, ownership and effects without runtime variables or engine changes.
+
+[V-EXEC C342] TR46 candidate audit: generated mainland wraps across the
+raster boundary with 164 locations across 30 provinces at raster right.
+Under raw coordinate comparisons (`is_east_of`), all 164 locations evaluated
+east of the recovered line `rnw_loc_01224`. Under continuous axis coordinates,
+all 164 locations and all 30 provinces evaluate west of the line in both
+predicate evaluation and final province distribution. Reversing rewritten files
+restores source text byte-identically. All 7,324 dry generated cells match
+physical centroids.
+
+[V-EXEC C343] Generator 0.12.9 / algorithm epoch 39: 1,978 Python tests pass,
+14 skip; 23 Rust tests pass; format, lint and types clean. Golden reference
+world updated (`RNW1-081WG-1HAWD-H0XFH-T0060-J0840-3C082-243AG-0C700-X3YQR`,
+digest `3423df6d…cee01`, 837 files). Comparing TR46 0.12.9 (RNW: Continents
+QW6O, 838 mod files, digest `33ef2ed8…64bd`) against 0.12.8 (RNW: Continents
+LSI3, 833 files): all 831 other nonmetadata files (geography, terrain, rivers,
+heightmaps, countries, pops, diplomacy) are 100% byte-identical; only 5 added
+treaty files and 2 rewritten situation files differ. Linux/Windows parity
+matches and Windows offscreen self-test passes. Runtime engine appearance and
+treaty events remain unobserved.
+
+[V-EXEC / V-LOCAL C344] With log and live checks confirming EU5 is closed,
+installed candidate RNW: Continents QW6O in `mod/rnw_exp_tr46_treaty` (840
+files checked) and updated main hub 0.12.8→0.12.9 in `mod/rnw_exp_hub`
+(3,264 files checked). The old 3,262-file hub is externally backed up under
+ignored `local_data/tr46-treaty-fix/hub-backup-before-0.12.9/` and retained in
+`.rnw-install/retired/`. Nine profile-root hashes, 24,498 other-mod size/time
+records and nine prior folder entries are preserved. No game launch, process
+control, push or publication.
+The next independent block is L06's corrupted country-name formatting.

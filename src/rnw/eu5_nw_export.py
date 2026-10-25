@@ -223,6 +223,8 @@ from rnw.eu5_terrain import (
     level_shares,
     terrain_outputs,
 )
+from rnw.eu5_treaty import adapt as adapt_treaty
+from rnw.eu5_treaty import coordinates as treaty_coordinates
 from rnw.eu5_water import water_outputs
 from rnw.game_texts import Text, localize, untranslated
 from rnw.geography import parse_locations, read_locations, read_named_colors
@@ -2678,6 +2680,18 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         except ContentError as error:
             raise NewWorldExportError(str(error)) from error
         try:
+            text_stats["treaty_longitudes"] = adapt_treaty(
+                game_dir,
+                scripts,
+                treaty_coordinates(
+                    game_map,
+                    canvas=canvas,
+                    world=world,
+                    plan=plan,
+                    geometry=geometry,
+                    definitions=texts[_mod_path(DEFINITIONS)].decode("utf-8-sig"),
+                ),
+            )
             text_stats["script_outcomes"] = check_outcomes(
                 game_dir, scripts, checked, _present_keys(plan)
             )

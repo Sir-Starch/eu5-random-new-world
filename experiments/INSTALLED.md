@@ -312,3 +312,29 @@ Removal with EU5 closed: remove only `mod/rnw_exp_tr46_highlands/`; hub rollback
 is a separate action, not performed. The final full check still has 18 unrelated
 Workshop-text failures from `0735263`; all map tests and local reproduction pass
 (058 records the precise scope).
+
+2026-10-25 continuous Tordesillas longitude ([062](062-tordesillas/README.md), C341–C344):
+with EU5 closed (log and live-process checks agree), added new `mod/rnw_exp_tr46_treaty`,
+**RNW: Continents QW6O**, **0.12.9 / epoch 39**,
+`RNW1-040XN-DR20S-1RQ4T-Z0060-J01KM-KKG`. All **840** files hash-verified;
+836 nonmetadata files digest
+`33ef2ed83f6e12cb6d074793bf274dfc492c967ea68bcfdcb3499ce299cf64bd`.
+It retains exact TR46 seed/settings, the prior highlands/maritime/coast/river/wrap fixes,
+and adds continuous New World longitude coordinates across the raster seam for Tordesillas
+side selection, line moves, side-swap estimates, map shading and final province claims.
+All 831 other nonmetadata files (geography, terrain, rivers, countries, pops, diplomacy)
+are byte-identical to the previous candidate. Final game appearance and treaty events
+remain unobserved.
+
+Updated main `mod/rnw_exp_hub` **0.12.8 → 0.12.9**, **3,264** files checked
+against the Windows package and source/dependency/metadata versions. The old
+**3,262** files are externally backed up under ignored
+`local_data/tr46-treaty-fix/hub-backup-before-0.12.9/` and retained at
+`mod/.rnw-install/retired/rnw_exp_hub_before_treaty_0129/`. No retired sweep.
+Nine root-file hashes, 24,498 other-mod size/time records and nine prior folder
+entries are preserved. Existing worlds, saves, playsets, settings and library
+records remain intact. No game launch, process control or publication.
+
+Exact audit: ignored `local_data/tr46-treaty-fix/installed.json`.
+Removal with EU5 closed: remove only `mod/rnw_exp_tr46_treaty/`; hub rollback
+is a separate action, not performed.

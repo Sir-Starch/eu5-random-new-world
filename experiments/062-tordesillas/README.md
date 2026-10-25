@@ -44,10 +44,41 @@ Full sources, scope graph, saved values and remaining questions:
 source saves retain their hashes and pass ZIP CRCs. Prior extraction/structure
 manifest hashes pass, no reader token change. Build/executable/map fingerprint
 unchanged. Private artifacts and bounded static inspection are registered in
-interoperability R-005. No game launch, source/output/version/epoch/install/
-profile/save/settings/playset change, process control, push or publication.
-LSI3 and hub 0.12.8 remain installed; no new owner test is requested.
+interoperability R-005.
 
-Required locked sync/full checks: **1,969 Python pass, 14 skip, 23 Rust**,
-format/lint/types clean. Private check SHA-256:
-`1c783df9697a439f48403fc83775e0d4631d043df5eec022b40c767d7e3c7023`.
+### Generator construction and candidate verification (0.12.9 / epoch 39)
+
+[V-EXEC C341] `eu5_treaty.py` constructs continuous New World dry-land longitude
+coordinates on the canvas axis across the raster seam for Tordesillas side
+selection, line moves, side-swap estimates, map shading and final province
+distribution. Immutable coordinates are exposed via $O(\log(\text{width}))$
+vanilla scripted geography bitmasks and script values. Predicates (`is_east_of`)
+and distribution iterators (`every_east_of_province_definition` /
+`every_west_of_province_definition`) are rewritten with strict count guards.
+Vanilla claim gates, religion, ownership, existing claims and province effects
+are strictly preserved.
+
+[V-EXEC C342] On TR46 candidate, 1 wrapped mainland crosses the boundary with
+164 locations across 30 provinces at raster right (`x >= cut`). Under raw
+coordinates (`is_east_of`), all 164 evaluated east of line `rnw_loc_01224`.
+Under continuous axis coordinates, all 164 locations and 30 provinces evaluate
+west of the line in both triggers and province distribution. All 7,324 dry
+generated cells match physical centroids.
+
+[V-EXEC C343] Full test suite: **1,978 Python pass, 14 skip, 23 Rust**, format,
+lint and types clean. Golden reference world updated (`RNW1-081WG-1HAWD-H0XFH-T0060-J0840-3C082-243AG-0C700-X3YQR`,
+digest `3423df6d…cee01`, 837 files).
+Comparing TR46 candidate 0.12.9 (**RNW: Continents QW6O**, 838 mod files, digest
+`33ef2ed8…64bd`) against 0.12.8 (RNW: Continents LSI3, 833 files): all 831 other
+nonmetadata files are 100% byte-identical; only 5 added treaty files and 2
+rewritten situation files differ. Linux/Windows parity matches; Windows offscreen
+self-test passes. Runtime engine appearance and treaty events remain unobserved.
+
+[V-EXEC / V-LOCAL C344] With log and live checks confirming EU5 is closed,
+installed candidate **RNW: Continents QW6O** in `mod/rnw_exp_tr46_treaty`
+(840 files checked) and updated main hub 0.12.8→0.12.9 in `mod/rnw_exp_hub`
+(3,264 files checked). The old 3,262-file hub is externally backed up under
+ignored `local_data/tr46-treaty-fix/hub-backup-before-0.12.9/` and retained in
+`.rnw-install/retired/`. Nine profile-root hashes, 24,498 other-mod size/time
+records and nine prior folder entries are preserved. No game launch, process
+control, push or publication.

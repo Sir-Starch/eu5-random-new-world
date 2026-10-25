@@ -551,7 +551,9 @@ engine code or binary output is produced. Exact excerpts, save roots, text
 sources, hashes and diagnostic helpers remain ignored in
 `local_data/tr46-treaty/`; only identifiers and aggregate findings are committed.
 No protected token dictionary, substantial script/translation or disassembly is
-distributed. No generated-output interface, version, epoch or installation change.
+distributed. The 0.12.9 generator export implements the continuous longitude
+axis via vanilla scripted geographies and values (`rnw_treaty_longitudes.txt`)
+and parsed script rewrites, introducing no new closed binary format or engine patch.
 The exact runtime allocation and missing text context remain explicitly unknown;
 neither uncertainty justifies a worldwide vanilla patch or warning suppression.
 
