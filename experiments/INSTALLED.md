@@ -179,3 +179,32 @@ was deliberately left untouched; no installer sweep was run. No game launch,
 process control, playset, save, library or generator update. Exact removal with
 EU5 closed remains `uv run rnw uninstall-mod rnw_exp_physical_seam --user-dir USER_DIR`.
 Evidence: ignored `local_data/physical-seam/reinstalled.json`.
+
+
+2026-10-25 TR46 removed-coast correction ([054](054-tr46-coast-footprint/README.md),
+C304–C308): with EU5 closed, added exactly one visible world folder,
+`mod/rnw_exp_tr46_coast`, **RNW: Continents 56AP**, generator **0.12.4 / epoch 34**,
+code `RNW1-040XN-DR20S-1RQ4T-Z0060-801CM-6D0`. All **827** mod files, metadata
+included, match the verified export; the 825-file non-metadata digest is
+`b8a8417db97aec4e429d034b854f73575c3be296a5e57d5eadc5c175b958a853`.
+This retains TR46's exact seed and settings and corrects the old coast's offshore
+height/material and water-colour/foam footprint. It does not repair the dateline
+crack or river serialization, and its appearance has not been observed in game.
+
+Updated the existing main `mod/rnw_exp_hub` **0.12.3 → 0.12.4**, all **3,254**
+files hash-verified against the final Windows package, with package and metadata
+versions matching. The old generator's 3,254 files have a checked backup outside
+the profile at ignored `local_data/tr46-boundary/hub-backup-before-0.12.4/`.
+The swap also retains the old hub at
+`mod/.rnw-install/retired/rnw_exp_hub_before_coast_0124/`; existing retired
+content was not swept. The generator hub contains no game content.
+
+Nine existing profile-root files retain hashes; 4,061 other-mod files retain
+sizes and modification times; all three prior visible mod folders remain.
+Original TR46, saves, playsets, settings and library records were preserved.
+No game launch, process control or publication. Evidence and exact installed
+paths: ignored `local_data/tr46-boundary/installed.json`.
+Exact candidate removal, with EU5 closed: remove only the profile folder
+`mod/rnw_exp_tr46_coast/`. Do not sweep other retired worlds. The generator can
+be restored from the verified external backup if separately requested; no
+rollback or removal was performed here.

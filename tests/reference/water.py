@@ -77,6 +77,8 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
         np.int64
     )
     table = _profile_table(image, old_distance, reach)
+    affected = distance_from(old_distance != new_distance, 3, octagonal=True, wrap_x=True) <= 2
+    touched |= old_water & fresh_water & affected
     synthetic = _synthesize(table, new_distance, reach)
     for channel in range(4):
         padded = np.pad(synthetic[..., channel], ((0, 0), (2, 2)), mode="wrap")

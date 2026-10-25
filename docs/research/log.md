@@ -1031,3 +1031,51 @@ writable temporary uv cache (the default home cache is read-only in this
 sandbox): 1,888 Python tests passed, 14 skipped; 23 Rust tests passed; formatting,
 lint and types clean. Evidence inventories, log counts and documentation links
 are checked separately; these checks do not close the recorded gameplay issues.
+
+
+### 2026-10-25 — TR46 boundary investigation and offshore-coast correction (0.12.4)
+
+[OWNER] Proceed with related work until an important product choice is needed
+or the next task is independent. [V-LOCAL C304] Rechecked the current installation:
+unchanged map fingerprint, 1.4.4 executable on 1.4.3 data. Vanilla American land
+exists at both raster edges, including Aleutian/Bering islands. [V-LOCAL
+executable / INFERRED C305] Limited read-only tracing of `CIsEastOfTrigger` shows
+map-span comparisons in both coordinate directions, so a purely linear
+right/left interpretation of the colonial division is unsupported. Exact treaty
+line/runtime locations and the numeric span remain unknown; no treaty is patched.
+
+[V-LOCAL/V-EXEC C306] Found the Chukotka remnant's written-data cause: the old
+island's offshore visual footprint lies outside its location mask. Height and
+material inputs now include their coast support in original water; water colour
+and foam include changed distance/blur support. Retained land stays exact and
+no location/hierarchy/gameplay identity changes. This is the initial field domain,
+not an output repair layer. Added removed-island rim, protected-land, wrap and
+adjacent-decal regressions; band/strip equality tests pass. Version 0.12.4,
+epoch 34, new synthetic goldens and reference world recorded; no engine/shader
+change or generated-asset distribution.
+
+[V-EXEC C307] Full check passes: 1,896 Python tests, 14 skips, 23 Rust tests;
+clean formatting/lint/types. The 824-file reference has digest e36228d2…f769a6
+and all story/formable families; a fresh hash-seed-7, no-cache local run passes
+13 tests with one skip in 193.36 s. The exact TR46 seed becomes **Continents
+56AP**, 825 nonmetadata files, b8a8417d…8a853. Independent read-back changes ten
+common files (two northern edge height/material layer pairs and two water DDSs),
+keeps 19,950,952 retained land samples exact and lowers all 19 previously
+above-shore samples among 5,850 changed off-canvas water height samples.
+All 853 bundle entries hash correctly. The Windows hub and native/coast sample
+match the Linux source and field hashes and pass the isolated offscreen self-test.
+
+[V-EXEC C308] Installed the new 827-file world `rnw_exp_tr46_coast` and updated
+the main 3,254-file hub to 0.12.4, with a checked external old-hub backup and no
+retired sweep. Nine root hashes, 4,061 other-mod size/time records and all three
+prior folders remain. No save/playset/library change, EU5 launch or new sitting.
+See [054](../../experiments/054-tr46-coast-footprint/README.md),
+[installation record](../../experiments/INSTALLED.md) and the R-004 follow-up.
+
+The map crack remains open. The serialized original TR46 river raster has six
+source-less edge fragments; five sizes match the game's loading errors. River
+network validation before world placement cannot settle the final serialized
+pieces. Continuing this boundary work depends on the important policy choice
+presented to the owner: preserve full mainland wrap and support its rendering /
+river serialization, or prohibit generated land crossing and change world shapes.
+The coast correction does not depend on that choice and has been completed.

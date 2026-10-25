@@ -183,6 +183,14 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
     new_distance = distance_from(~fresh_water, reach + 1, octagonal=True, wrap_x=True).astype(
         np.uint8
     )
+    # A removed coast affects colour and foam outside its location-colour mask.
+    # Rebuild precisely the original water whose distance to land changed; retained
+    # shores and the shared open ocean keep their original pixels. This is the input
+    # footprint of the coast field, not a correction of an already written texture.
+    affected = (
+        distance_from(old_distance != new_distance, BLUR + 1, octagonal=True, wrap_x=True) <= BLUR
+    )
+    touched |= old_water & fresh_water & affected
     del old_water, fresh_water
     rows, columns = touched.shape
     strip = band_rows(

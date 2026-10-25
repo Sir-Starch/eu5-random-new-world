@@ -273,6 +273,29 @@ cross-platform comparisons verify the arithmetic, not engine behaviour. The lega
 framework and its limits above continue to apply; no additional clearance is
 inferred from this technical research.
 
+### Follow-up: removed coast's offshore support (2026-10-25, 0.12.4 / epoch 34)
+
+[V-LOCAL/V-EXEC C306–C307] TR46's remaining Alaska-shaped shelf is traced to the
+location mask omitting the original coast's offshore visual support. The R-004
+height/material writer now receives an input footprint that includes adjacent
+original water within the existing shelf/material reach; water DDS synthesis
+includes the support of changed distance and blur fields. The same serializers
+write final assets directly. Formats, source asset ownership and distribution
+limits are unchanged. Synthetic tests cover the removed-island rim, retained
+land, decal/map edges and band/strip equality; decoded written-world checks keep
+19,950,952 retained land samples exact on the affected tiles. This is no new
+closed format, post-export repair pass or engine patch. All binaries and raw
+measurements remain local. Engine appearance is not inferred from these checks.
+
+[V-LOCAL executable / INFERRED C305] To assess the reported colonial east/west
+allocation before changing content, a limited read-only trace follows the
+installed `is_east_of` registration through factory/RTTI to `CIsEastOfTrigger`.
+The evaluator compares coordinates with a map-dependent positive/negative span;
+its exact numeric value is not established here. No code, process memory or
+installation is changed; no executable excerpt is distributed. This static
+investigation supplies evidence about an existing scripting interface, not a
+new executable interface or permission to redistribute protected resources.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

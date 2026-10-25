@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.12.4 — 2026-10-25
+
+- Replaced coastlines now include their offshore visual footprint. Height and material synthesis covers the old shelf beside removed islands, including across decal and map boundaries, while retaining Old World land. Water colour and foam are rebuilt where the changed coast affects their distance field and blur, even outside the replaced location colours. This addresses the remaining original-Alaska shelf rims near Chukotka reported in TR46. Location identities and land generation are unchanged. Epoch 34; checked offline, rendered result not yet observed in game.
+
 ## 0.12.3 — 2026-10-25
 
 - Continent-scale noise now interpolates with 16-bit fractions. The former 8-bit fractions held the large-scale field flat for about 14 pixels, then jumped, producing long straight teeth on thresholded coasts. This fixes the field itself, including climate and relief that use the shared kernel; no post-generation coast smoothing. Epoch 33.

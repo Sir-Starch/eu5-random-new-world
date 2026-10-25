@@ -9,6 +9,12 @@ the available session logs. No fix, regeneration, installation or game launch.
 Every item below is **OPEN**. A recorded symptom is not an established cause.
 This is the starting list for subsequent work; the owner need not retell it.
 
+**Follow-up:** [054](../../experiments/054-tr46-coast-footprint/README.md) records
+the vanilla/treaty findings and the 0.12.4 correction of the removed coast's
+offshore visual footprint (TR46-07). Written-file and preservation checks pass;
+the rendered result remains unobserved. TR46-06a and L01 remain separate open
+boundary problems. The observations below retain their original 0.12.3 scope.
+
 ## 1. Session and preserved evidence
 
 [V-LOCAL C298] The enabled playset and the session's mounted mod identify

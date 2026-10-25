@@ -105,3 +105,44 @@ def test_the_decoder_reads_a_png_through_pillow() -> None:
         buffer, format="PNG"
     )
     assert eu5_water._decode(buffer.getvalue()).shape == (4, 5, 4)  # pyright: ignore[reportPrivateUsage]
+
+
+@pytest.mark.parametrize("factor", [2, 4])
+def test_removed_island_rebuilds_its_offshore_water_without_repainting_retained_shore(
+    monkeypatch: pytest.MonkeyPatch, factor: int
+) -> None:
+    """An unchanged location's water can lose an old island's colour/foam footprint."""
+    rows, columns = 128, 192
+    old = np.ones((rows, columns), dtype=bool)
+    old[40:70, 30:50] = False
+    old[40:70, 135:155] = False
+    fresh = old.copy()
+    fresh[40:70, 30:50] = True
+    mask = old != fresh
+    rgba = np.full((rows, columns, 4), 100, dtype=np.uint8)
+    rgba[..., 3] = 255
+    # A synthetic shallow-water stripe extends outside the removed island's colour.
+    rgba[39:71, 25:30, :3] = 220
+    captured: list[np.ndarray] = []
+
+    def decode(_data: bytes) -> np.ndarray:
+        return rgba
+
+    monkeypatch.setattr(eu5_water, "_decode", decode)
+
+    def capture(_data: bytes, result: np.ndarray, _changed: np.ndarray) -> bytes:
+        captured.append(result)
+        return b"synthetic"
+
+    monkeypatch.setattr(eu5_water, "rewrite", capture)
+
+    def scale(array: np.ndarray) -> np.ndarray:
+        return np.repeat(np.repeat(array, factor, axis=0), factor, axis=1)
+
+    masks = (scale(old), scale(fresh), scale(mask))
+    _ = eu5_water._rebuild(  # pyright: ignore[reportPrivateUsage]
+        b"synthetic", factor=factor, reach=12, masks=masks, seed=3, stream="coast_test"
+    )
+    result = captured[0]
+    assert np.any(result[40:70, 27:30, :3] != rgba[40:70, 27:30, :3])
+    assert np.array_equal(result[:, 100:], rgba[:, 100:])

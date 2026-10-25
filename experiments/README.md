@@ -58,3 +58,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [052 — Physical seam and coast teeth](052-physical-seam-and-coasts/README.md): exact owner-world regression, precise noise interpolation and periodic terrain placements; 0.12.3, epoch 33, offline candidate.
 
 - [053 — TR46 long observer campaign](053-tr46-observer/README.md): retrospective documentation only; all seven owner problems, twelve log diagnostic groups and an exhaustive catalog; 0.12.3 / EU5 1.4.4, no new launch or fix.
+
+- [054 — Removed coast footprint](054-tr46-coast-footprint/README.md): vanilla Alaska crosses the raster edges; treaty direction is wrap-aware; 0.12.4 / epoch 34 rebuilds the offshore visual support left beside removed Alaska, with exact TR46 read-back and retained-land checks.

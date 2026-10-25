@@ -1,6 +1,6 @@
 """Regenerate EU5 1.4.1 visual terrain under a generated New World.
 
-Height and material decal layers that overlap the canvas are rebuilt. Heights follow
+Height and material decal layers that overlap the visual coast footprint are rebuilt. Heights follow
 the vanilla coast profile at the shore and the continuous relief field inland (the same
 field that set cell topography), with fine detail noise whose amplitude grows with
 height. Materials are biome slots rebuilt from the location data by the vanilla rules
@@ -26,13 +26,14 @@ from typing import TYPE_CHECKING, Final, cast
 import numpy as np
 
 from rnw import _native
-from rnw.eu5_slots import LEVELS, SlotTables, level_counts, synthesize
+from rnw.eu5_slots import LEVELS, REACH, SlotTables, level_counts, synthesize
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
 from rnw.relief import COAST_HEIGHT
 from rnw.rng import derive_seed
 from rnw.terrain_tiles import LayerFormat, parse_info, read_level0, write_layer
+from rnw.topology import distance_from
 
 if TYPE_CHECKING:
     from collections.abc import Buffer, Callable, MutableMapping
@@ -158,6 +159,9 @@ CAP_REACH: Final[int] = 64
 EIGHTHS: Final[int] = 8
 MARGIN: Final[int] = 128
 COAST_SMOOTH: Final[int] = 3
+# The visual coast reaches beyond the location-colour boundary. Include the support
+# of the shelf and materials (decal samples), plus height smoothing, in location pixels.
+COAST_APRON: Final[int] = (max(REACH, WATER_PROFILE[-1][0] + COAST_SMOOTH + 2) + 1) // 2
 # A decal is rebuilt in bands of whole location rows. Each band is computed in a window
 # that reaches BAND_HALO rows past it: a height depends on locations at most CAP_REACH
 # rows away (the coast cap), plus a row for the bilinear step and one for the blur, and
@@ -267,6 +271,24 @@ class TerrainRangeError(ValueError):
     """A generated sample does not fit the decal layer it is written to."""
 
 
+def coast_codes(codes: NDArray[np.int8], vanilla_water: NDArray[np.bool_]) -> NDArray[np.int8]:
+    """The visual footprint of changed shores, including adjacent original water.
+
+    Location colours do not describe the whole original shelf. Replacing an island
+    without its offshore height/material samples leaves a raised rim on that boundary.
+    This window-sized input mask includes the coast's support before synthesis; it
+    never changes retained land or location identities. Horizontal halos are supplied
+    by the caller, exactly as for coast distances and material sampling.
+    """
+    changed = (codes != OUTSIDE) & ((codes == WATER_CODE) != vanilla_water)
+    if not np.any(changed):
+        return codes
+    near = distance_from(changed, COAST_APRON + 1, octagonal=True) <= COAST_APRON
+    result = codes.copy()
+    result[(codes == OUTSIDE) & vanilla_water & near] = WATER_CODE
+    return result
+
+
 def _band_window(decal: Decal, shape: tuple[int, int], first: int, last: int) -> Window:
     """The window that computes rows ``first`` to ``last`` (of the decal) of one decal."""
     row0 = max(0, decal.row0 + first - BAND_HALO)
@@ -311,8 +333,8 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
     rows = slice(window.row0, window.row1)
     width = int(codes.shape[1])
     columns = np.arange(window.column0, window.column1, dtype=np.int64) % width
-    local_codes = codes[rows][:, columns]
     local_water = inputs.vanilla_water[rows][:, columns]
+    local_codes = coast_codes(codes[rows][:, columns], local_water)
     relief = inputs.relief(rows, slice(window.column0, window.column1))
     labels = np.repeat(np.repeat(inputs.labels[rows][:, columns], 2, axis=0), 2, axis=1)
     rivers = np.repeat(np.repeat(inputs.rivers[rows][:, columns], 2, axis=0), 2, axis=1)
@@ -401,7 +423,8 @@ def terrain_outputs(
 ) -> tuple[NDArray[np.uint8], dict[str, object]]:
     """Mod files for every decal layer touched by the canvas, plus decal disabling.
 
-    ``inputs.codes`` is -1 outside the canvas, 0 for water and 1 for land. The files go
+    ``inputs.codes`` is -1 outside the location canvas, 0 for water and 1 for land.
+    Changed shores also include their original offshore visual support. The files go
     into ``sink`` as each decal is done, so they do not pile up in memory; returns the
     final material raster (two pixels per location pixel) and statistics. Each decal is
     rebuilt in bands on a few threads, sized to the cores and to the free memory; the
@@ -409,16 +432,7 @@ def terrain_outputs(
     """
     codes = inputs.codes
     materials_world = store.world_materials()
-    touched = [
-        decal
-        for decal in store.decals
-        if np.any(
-            codes[
-                decal.row0 : decal.row0 + decal.rows, decal.column0 : decal.column0 + decal.columns
-            ]
-            != OUTSIDE
-        )
-    ]
+    touched = [decal for decal in store.decals if _touches_coast(decal, codes)]
     columns = max((decal.columns for decal in touched), default=0) + 2 * MARGIN
     thin = BAND_BYTES * columns * (2 * BAND_HALO + MIN_BAND_ROWS)
     workers = worker_count(DECAL_THREADS, bytes_each=thin)
@@ -450,6 +464,19 @@ def terrain_outputs(
         "periodic_heightmap_instances": periodic,
     }
     return materials_world, stats
+
+
+def _touches_coast(decal: Decal, codes: NDArray[np.int8]) -> bool:
+    """A neighbouring decal can contain the offshore support of a replaced coast."""
+    rows, columns = codes.shape
+    row0 = max(0, decal.row0 - COAST_APRON)
+    row1 = min(rows, decal.row0 + decal.rows + COAST_APRON)
+    for shift in (-columns, 0, columns):
+        left = max(0, decal.column0 - COAST_APRON + shift)
+        right = min(columns, decal.column0 + decal.columns + COAST_APRON + shift)
+        if left < right and np.any(codes[row0:row1, left:right] != OUTSIDE):
+            return True
+    return False
 
 
 def _inside(codes: NDArray[np.int8], x: float, y: float) -> bool:
