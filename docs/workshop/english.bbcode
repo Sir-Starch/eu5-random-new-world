@@ -11,7 +11,7 @@ This workshop item only downloads the external generator tool. The worlds you ge
 [list]
 [*][b]5 Landmass Archetypes:[/b] Supercontinent, Continents, Small Continents, Archipelago, or Scattered Islands.
 [*][b]Coherent Map Generation:[/b] Elevation, climate zones, river basins, terrain, and vegetation (forests, deserts, jungles) are simulated together rather than placed randomly.
-[*][b]Expanded Canvas & Maritime Layout:[/b] The generation canvas is expanded by 40% compared to the vanilla Americas footprint by claiming surrounding ocean space — while keeping all vanilla oceans and ocean wastelands intact by dynamically reshaping their borders, currents, and sea lanes around the new coastlines, complete with natural harbors and named gulfs, straits, and capes.
+[*][b]Expanded Canvas & Maritime Layout:[/b] Canvas expanded by 40% over vanilla Americas; oceans, currents, sea lanes, and harbors dynamically adapt to new coastlines, gulfs, and straits.
 [*][b]Procedural Natives:[/b] Populated with native tags, cultures, religions, decentralized tribes, settled states, and subject/vassal networks.
 [*][b]High American / Fantasy Scenarios:[/b] Optional chance to spawn advanced setups ("Extraordinary peoples") — sprawling empires, maritime merchant leagues, highland confederations, shattered realms, or religious centers.
 [*][b]Dynamic Content:[/b] Procedural formable nations, regional colonial naming, and world-specific flavor.
@@ -30,7 +30,7 @@ This workshop item only downloads the external generator tool. The worlds you ge
 [list]
 [*][b]Quick Presets:[/b] Convenient dropdowns for landmass size, native density, advanced empire ("Extraordinary peoples") spawn chance, and precious metal (gold/silver) abundance.
 [*][b]Advanced Sliders:[/b] Fine-tune individual generation parameters under [b]Customize[/b] (clamped to keep every combination playable).
-[*][b]Shape Preview & Rerolls:[/b] Use [b]Choose a continent...[/b] to preview 6 coastline sketches before committing. Satisfied with the geography? Use [b]New peoples[/b] or [b]New resources[/b] to reroll political setups or trade goods without changing the terrain.
+[*][b]Shape Preview & Rerolls:[/b] Use [b]Choose a continent...[/b] to preview 6 sketches. Use [b]New peoples[/b] or [b]New resources[/b] to reroll setups or goods without changing the land.
 [*][b]World Atlas:[/b] Built-in viewer to inspect political, culture, religion, resource, and development mapmodes outside the game.
 [/list]
 
@@ -49,12 +49,12 @@ EU5's scripting engine cannot dynamically generate heightmaps, terrain meshes, o
 [*][b]New saves only:[/b] Not save-game compatible with existing campaigns.
 [*][b]Restart between different RNW maps:[/b] Starting a campaign on one RNW map, exiting to menu, and loading a different RNW map in the same session will crash EU5. Restart the game when switching worlds.
 [*][b]Game updates:[/b] Major EU5 patches may require a generator update. To continue an old save after a patch, regenerate its world using the same World Code.
-[*][b]RAM usage:[/b] Requires ~7.5 GB of free RAM during map compilation. On systems with limited memory, you can close EU5 and run the generator directly from the mod folder to free up RAM (the generator does not require the game to be running).
+[*][b]RAM usage:[/b] Requires ~7.5 GB free RAM during compilation. On lower-spec PCs, close EU5 and run the generator from the mod folder.
 [/list]
 
 [h2]FAQ[/h2]
 [b]Q: Can I preview the map or play as a New World native?[/b]
-A: Yes. By default, New World tags are hidden/unselectable in the lobby to prevent spoilers. Click [b]Reveal this world[/b] in the generator (or toggle [b]Show the New World before you play it[/b]) to unmask the lobby map and play as a native tag. [i][TODO: Confirm in release build][/i]
+A: Yes. Click [b]Reveal this world[/b] (or toggle [b]Show the New World before you play it[/b]) to unmask the lobby and play as a native tag. [i][TODO: Confirm in release build][/i]
 
 [b]Q: Is it compatible with other mods?[/b]
 A: Incompatible with overhaul mods, other map mods, or anything modifying provinces/history in the Americas. UI and Old World flavor mods should work, though compatibility is currently untested.
@@ -63,10 +63,10 @@ A: Incompatible with overhaul mods, other map mods, or anything modifying provin
 A: Yes, in theory — every player generates the exact same mod locally using the shared [b]World Code[/b] on the same EU5 patch, resulting in an identical checksum. [i][TODO: Confirm after MP testing][/i]
 
 [b]Q: Ironman & Achievements?[/b]
-A: Both Ironman and Achievements are fully supported! While a generated world changes the checksum for multiplayer parity, EU5 does not block achievements for modded checksums as long as achievement-compatible game rules are used.
+A: Fully supported! While a generated world changes the checksum for multiplayer parity, EU5 permits achievements with modified checksums under default game rules.
 
 [b]Q: What happens if I unsubscribe from the generator?[/b]
-A: Your generated worlds are standalone local mods and will continue to work even if you unsubscribe from this Workshop item. To cleanly uninstall, click [b]Delete world[/b] inside the generator first, then unsubscribe.
+A: Worlds are standalone local mods and continue working. To uninstall, click [b]Delete world[/b] in the generator first, then unsubscribe.
 
 [b]Q: Windows SmartScreen / Antivirus warnings?[/b]
 A: Every release includes a VirusTotal scan link on GitHub. [i][TODO: Leave either the unsigned Smart App Control note OR the signed certificate note here before publishing][/i]

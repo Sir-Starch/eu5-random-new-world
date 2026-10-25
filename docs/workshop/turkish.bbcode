@@ -1,4 +1,4 @@
-source: e26dbff50eb6f5e2
+source: 19647a27622ade88
 
 [h1]Random New World (RNW) Generator[/h1]
 
@@ -13,7 +13,7 @@ Bu öğe yalnızca harici oluşturucuyu indirir. Oluşturulan dünyalar mod list
 [list]
 [*][b]5 Kara Arketipi:[/b] Süper kıta, Kıtalar, Küçük kıtalar, Takımada veya Dağınık adalar.
 [*][b]Tutarlı Harita:[/b] Yükselti, iklim, nehir havzaları, arazi ve bitki örtüsü tek modelde birlikte simüle edilir.
-[*][b]Genişletilmiş Alan (+%40) ve Dinamik Okyanuslar:[/b] Oluşturma alanı, çevredeki okyanus alanını kullanarak vanilya Amerika kıtalarının kapladığı alandan %40 daha büyüktür. Vanilya okyanusları ve okyanus çoraklıkları (Ocean Wastelands) silinmez; sınırlarını, akıntılarını ve deniz yollarını yeni kıyılara, doğal limanlara, körfezlere ve boğazlara göre dinamik olarak yeniden şekillendirir.
+[*][b]Genişletilmiş Alan (+%40) ve Dinamik Okyanuslar:[/b] Vanilya Amerika'dan %40 daha geniş alan; okyanuslar, akıntılar, deniz yolları ve limanlar yeni kıyılara dinamik olarak uyum sağlar.
 [*][b]Prosedürel Yerliler:[/b] Yerli ülkeler (tag), kültürler, dinler, kabileler, yerleşik devletler ve vasal ağları.
 [*][b]Gelişmiş Senaryolar:[/b] Gelişmiş toplumlar («Olağanüstü halklar»): büyük imparatorluklar, ticaret birlikleri, dağ konfederasyonları, parçalanmış diyarlar veya kutsal merkezler.
 [*][b]Dinamik İçerik:[/b] Kurulabilir ülkeler, bölgesel koloni adları ve dünyaya özgü içerikler.
@@ -32,7 +32,7 @@ Bu öğe yalnızca harici oluşturucuyu indirir. Oluşturulan dünyalar mod list
 [list]
 [*][b]Temel ayarlar:[/b] Kara boyutu, yerli yoğunluğu, büyük imparatorluk («Olağanüstü halklar») şansı ve altın/gümüş için açılır menüler.
 [*][b]Gelişmiş Ayarlar:[/b] [b]Özelleştir[/b] sekmesinden tüm parametreleri ayarlayın (aralıklar oynanabilir dünyalar üretir).
-[*][b]Önizleme ve Yenileme:[/b] 6 kıyı taslağı için [b]Bir kıta seç...[/b] özelliğini kullanın. Araziyi koruyarak siyaseti veya malları yenilemek için [b]Yeni halklar[/b] veya [b]Yeni kaynaklar[/b] butonlarını kullanın.
+[*][b]Önizleme ve Yenileme:[/b] [b]Bir kıta seç...[/b] 6 kıyı taslağı sunar. [b]Yeni halklar[/b] veya [b]Yeni kaynaklar[/b] karayı değiştirmeden siyaseti veya malları yeniler.
 [*][b]Dünya Atlası:[/b] Siyasi, kültür, din, kaynak ve kalkınma haritalarını oyun dışından inceleyin.
 [/list]
 
@@ -51,12 +51,12 @@ EU5 betik motoru çalışma esnasında yükseklik haritası ve nehir üretemez. 
 [*][b]Yalnızca yeni kayıtlar:[/b] Mevcut kayıtlı oyunlarla uyumlu değildir.
 [*][b]Haritalar arası yeniden başlatma:[/b] Farklı bir RNW haritasına geçerken çökmeyi önlemek için EU5'i yeniden başlatın.
 [*][b]Oyun güncellemeleri:[/b] Büyük EU5 yamalarından sonra eski kayda devam etmek için dünyayı aynı Dünya kodu ile yeniden oluşturun.
-[*][b]Bellek (RAM) kullanımı:[/b] ~7,5 GB boş RAM gerekir. Belleği az sistemlerde EU5'i kapatıp oluşturucuyu doğrudan mod klasöründen çalıştırabilirsiniz (oyunun açık olması gerekmez).
+[*][b]Bellek (RAM) kullanımı:[/b] Derleme için ~7,5 GB boş RAM gerekir. Düşük sistemlerde EU5'i kapatıp oluşturucuyu mod klasöründen çalıştırın.
 [/list]
 
 [h2]Sıkça Sorulan Sorular (FAQ)[/h2]
 [b]S: Haritayı önceden görebilir miyim veya yerli bir ülke olarak oynayabilir miyim?[/b]
-A: Evet. Lobideki sisi kaldırmak ve yerli bir ülkeyle oynamak için [b]Bu dünyayı açığa çıkar[/b] düğmesine tıklayın (veya [b]Yeni Dünya'yı oynamadan önce göster[/b] seçeneğini açın). [i][TODO: Confirm in release build][/i]
+A: Evet. Lobiyi açmak ve yerli oynamak için [b]Bu dünyayı açığa çıkar[/b] düğmesine tıklayın (veya [b]Yeni Dünya'yı oynamadan önce göster[/b] seçeneğini açın). [i][TODO: Confirm in release build][/i]
 
 [b]S: Diğer modlarla uyumlu mu?[/b]
 A: Kapsamlı modlar, diğer harita modları ve Amerika'yı değiştiren modlarla uyumsuzdur. Arayüz ve Eski Dünya modları çalışmalıdır.
@@ -65,10 +65,10 @@ A: Kapsamlı modlar, diğer harita modları ve Amerika'yı değiştiren modlarla
 A: Evet: her oyuncu aynı sürümde aynı [b]Dünya kodu[/b] ile oluşturduğunda birebir aynı checksum elde edilir. [i][TODO: Confirm after MP testing][/i]
 
 [b]S: Ironman ve Başarımlar (Achievements)?[/b]
-C: Hem Ironman hem de Başarımlar tamamen desteklenmektedir! Oluşturulan dünya checksum değerini değiştirse de, başarım engelleyici oyun kuralları kullanılmadığı sürece EU5'te başarımlar kazanılabilir.
+C: Tamamen desteklenir! Dünya çok oyunculu için checksum değiştirse de EU5 varsayılan kurallarla değiştirilmiş checksum altında başarımlara izin verir.
 
 [b]S: Oluşturucu aboneliğinden çıkarsam ne olur?[/b]
-A: Dünyalar bağımsız yerel modlardır ve abonelikten çıksanız da kalır. Tamamen kaldırmak için önce [b]Dünyayı sil[/b] butonuna tıklayın, ardından abonelikten çıkın.
+A: Dünyalar bağımsız yerel modlardır ve abonelikten çıksanız da çalışır. Silmek için abonelikten çıkmadan önce [b]Dünyayı sil[/b] butonuna tıklayın.
 
 [b]S: Windows SmartScreen / Antivirüs uyarıları?[/b]
 A: Her sürüm, GitHub üzerinde VirusTotal tarama bağlantısı içerir. [i][TODO: Leave either the unsigned Smart App Control note OR the signed certificate note here before publishing][/i]

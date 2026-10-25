@@ -1,4 +1,4 @@
-source: e26dbff50eb6f5e2
+source: 19647a27622ade88
 
 [h1]Random New World (RNW) Generator[/h1]
 
@@ -13,7 +13,7 @@ Cet objet télécharge uniquement le générateur. Les mondes générés apparai
 [list]
 [*][b]5 archétypes de mondes :[/b] Supercontinent, Continents, Petits continents, Archipel ou Îles éparses.
 [*][b]Génération cohérente de la carte :[/b] Relief, climat, bassins fluviaux, terrain et végétation sont simulés dans un modèle unifié.
-[*][b]Zone étendue (+40 %) et océans dynamiques :[/b] Le canevas de génération est 40 % plus vaste que l'empreinte des Amériques de base grâce à l'intégration des eaux environnantes. Les océans et déserts océaniques (Ocean Wastelands) du jeu de base ne sont pas supprimés mais remodèlent dynamiquement leurs frontières, courants et routes maritimes autour des nouvelles côtes, ports naturels, golfes et détroits.
+[*][b]Zone étendue (+40 %) et océans dynamiques :[/b] Canevas 40 % plus vaste que les Amériques de base ; océans, courants, routes et ports naturels s'adaptent dynamiquement aux nouvelles côtes.
 [*][b]Peuples autochtones procéduraux :[/b] Pays (tags), cultures, religions, tribus, États sédentaires et réseaux de vassaux.
 [*][b]Scénarios « High American » / Fantasy :[/b] Sociétés avancées (« Peuples extraordinaires ») : grands empires, ligues marchandes, confédérations, royaumes divisés ou centres religieux.
 [*][b]Contenu dynamique :[/b] Nations formables procédurales, noms coloniaux régionaux et saveur propre à chaque monde.
@@ -32,7 +32,7 @@ Cet objet télécharge uniquement le générateur. Les mondes générés apparai
 [list]
 [*][b]L'essentiel :[/b] Menus déroulants pratiques pour la taille des terres, la densité des autochtones, la fréquence des empires (« Peuples extraordinaires ») et l'abondance d'or et d'argent.
 [*][b]Paramètres avancés :[/b] Ajustez chaque curseur sous [b]Personnaliser[/b] (toutes les plages garantissent un monde jouable).
-[*][b]Aperçu des formes & Relances :[/b] Utilisez [b]Choisir un continent...[/b] pour prévisualiser 6 esquisses de côtes. Satisfait du relief ? Utilisez [b]Nouveaux peuples[/b] ou [b]Nouvelles ressources[/b] pour relancer la politique ou les marchandises sans toucher au terrain.
+[*][b]Aperçu des formes & Relances :[/b] [b]Choisir un continent...[/b] montre 6 esquisses. [b]Nouveaux peuples[/b] ou [b]Nouvelles ressources[/b] relancent politique ou biens sans changer la terre.
 [*][b]Atlas du monde :[/b] Visionneuse intégrée pour inspecter les cartes politiques, culturelles, religieuses, de ressources et de développement hors du jeu.
 [/list]
 
@@ -51,12 +51,12 @@ Le moteur d'EU5 ne peut pas générer de relief en jeu. Cet outil lit votre inst
 [*][b]Nouvelles parties uniquement :[/b] Non compatible avec les sauvegardes existantes.
 [*][b]Redémarrage entre différentes cartes RNW :[/b] Recharger une autre carte RNW dans la même session fait planter EU5. Redémarrez le jeu lors d'un changement de monde.
 [*][b]Mises à jour du jeu :[/b] Les mises à jour majeures d'EU5 peuvent nécessiter une mise à jour du générateur. Pour poursuivre une ancienne sauvegarde après un patch, régénérez son monde avec le même Code du monde.
-[*][b]Mémoire vive (RAM) :[/b] Nécessite environ 7,5 Go de RAM libre pendant la compilation. Sur petite config, fermez EU5 et lancez le générateur depuis le dossier du mod pour libérer la RAM (le jeu n'a pas besoin de tourner).
+[*][b]Mémoire vive (RAM) :[/b] Nécessite environ 7,5 Go de RAM libre. Sur petite config, fermez EU5 et lancez le générateur depuis le dossier du mod.
 [/list]
 
 [h2]FAQ[/h2]
 [b]Q : Puis-je voir la carte à l'avance ou jouer un autochtone ?[/b]
-A : Oui. Par défaut, les pays du Nouveau Monde sont masqués dans le salon pour éviter les spoilers. Cliquez sur [b]Dévoiler ce monde[/b] dans le générateur (ou cochez [b]Montrer le Nouveau Monde avant d'y jouer[/b]) pour révéler la carte et choisir un pays autochtone. [i][TODO: Confirm in release build][/i]
+A : Oui. Cliquez sur [b]Dévoiler ce monde[/b] (ou cochez [b]Montrer le Nouveau Monde avant d'y jouer[/b]) pour révéler le salon et choisir un pays autochtone. [i][TODO: Confirm in release build][/i]
 
 [b]Q : Est-il compatible avec d'autres mods ?[/b]
 A : Incompatible avec les conversions totales, les autres mods de carte ou tout mod touchant aux provinces ou à l'histoire en Amérique. Les mods d'interface et d'ambiance pour l'Ancien Monde devraient fonctionner, bien que la compatibilité ne soit pas encore testée.
@@ -65,10 +65,10 @@ A : Incompatible avec les conversions totales, les autres mods de carte ou tout 
 A : Oui, en théorie : chaque joueur génère exactement le même mod localement grâce au [b]Code du monde[/b] partagé sur la même version d'EU5, ce qui donne une somme de contrôle identique. [i][TODO: Confirm after MP testing][/i]
 
 [b]Q : Ironman et succès (achievements) ?[/b]
-R : Le mode Ironman et les succès sont entièrement pris en charge ! Bien qu'un monde généré modifie la somme de contrôle (checksum), EU5 permet de débloquer les succès tant que les règles de jeu utilisées sont compatibles.
+R : Entièrement pris en charge ! Même si un monde modifie le checksum pour le multijoueur, EU5 autorise les succès avec un checksum modifié sous les règles standard.
 
 [b]Q : Que se passe-t-il si je me désabonne du générateur ?[/b]
-A : Vos mondes générés sont des mods locaux autonomes et continueront de fonctionner même si vous vous désabonnez de cet objet du Workshop. Pour une désinstallation propre, cliquez d'abord sur [b]Supprimer le monde[/b] dans le générateur avant de vous désabonner.
+A : Les mondes sont autonomes et continuent de fonctionner. Pour supprimer, cliquez sur [b]Supprimer le monde[/b] dans le générateur avant de vous désabonner.
 
 [b]Q : Alertes Windows SmartScreen / Antivirus ?[/b]
 A : Chaque version inclut un lien vers une analyse VirusTotal sur GitHub. [i][TODO: Leave either the unsigned Smart App Control note OR the signed certificate note here before publishing][/i]

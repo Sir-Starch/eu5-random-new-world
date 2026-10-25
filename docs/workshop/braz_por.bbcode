@@ -1,4 +1,4 @@
-source: e26dbff50eb6f5e2
+source: 19647a27622ade88
 
 [h1]Random New World (RNW) Generator[/h1]
 
@@ -13,7 +13,7 @@ Este item apenas baixa a ferramenta geradora externa. Os mundos gerados aparecer
 [list]
 [*][b]5 arquétipos de massa de terra:[/b] Supercontinente, Continentes, Pequenos continentes, Arquipélago ou Ilhas dispersas.
 [*][b]Geração de mapa coerente:[/b] Relevo, zonas climáticas, bacias hidrográficas, terreno e vegetação (florestas, desertos, selvas) são simulados em conjunto em um modelo unificado.
-[*][b]Área expandida (+40%) e oceanos dinâmicos:[/b] A área de geração é 40% maior que o formato original das Américas ao utilizar o espaço oceânico ao redor. Os oceanos e áreas oceânicas intransitáveis (Ocean Wastelands) originais não são removidos, mas remodelam dinamicamente seus limites, correntes e rotas marítimas ao redor das novas costas, portos naturais, golfos e estreitos.
+[*][b]Área expandida (+40%) e oceanos dinâmicos:[/b] Área 40% maior que a original; oceanos, correntes, rotas marítimas e portos adaptam-se dinamicamente às novas costas.
 [*][b]Povos nativos procedurais:[/b] Povoado com países nativos (tags), culturas, religiões, tribos descentralizadas, estados sedentários e redes de vassalos.
 [*][b]Cenários «High American» / Fantasia:[/b] Chance opcional de gerar sociedades avançadas («Povos extraordinários») — grandes impérios, ligas mercantes marítimas, confederações das terras altas, reinos fragmentados ou centros sagrados.
 [*][b]Conteúdo dinâmico:[/b] Nações formáveis procedurais, nomes coloniais regionais e ambientação própria para cada mundo.
@@ -32,7 +32,7 @@ Este item apenas baixa a ferramenta geradora externa. Os mundos gerados aparecer
 [list]
 [*][b]O básico:[/b] Menus suspensos práticos para tamanho da terra, densidade de nativos, chance de grandes impérios («Povos extraordinários») e abundância de ouro e prata.
 [*][b]Ajustes avançados:[/b] Ajuste parâmetros individuais em [b]Personalizar[/b] (todos os limites garantem mundos jogáveis).
-[*][b]Prévia de formas e novos sorteios:[/b] Use [b]Escolher um continente...[/b] para visualizar 6 rascunhos de litoral. Satisfeito com o relevo? Use [b]Novos povos[/b] ou [b]Novos recursos[/b] para sortear a política ou mercadorias sem alterar o terreno.
+[*][b]Prévia de formas e novos sorteios:[/b] [b]Escolher um continente...[/b] mostra 6 esboços. [b]Novos povos[/b] ou [b]Novos recursos[/b] sorteiam política ou bens sem mudar a terra.
 [*][b]Atlas do mundo:[/b] Visualizador integrado para inspecionar mapas políticos, culturas, religiões, recursos e desenvolvimento fora do jogo.
 [/list]
 
@@ -51,12 +51,12 @@ O motor de script do EU5 não consegue gerar mapas de relevo, malhas de terreno 
 [*][b]Apenas novos jogos:[/b] Não é compatível com jogos salvos existentes.
 [*][b]Reinicie entre mapas RNW diferentes:[/b] Iniciar uma campanha em um mapa RNW, sair para o menu e carregar outro mapa RNW na mesma sessão causará o fechamento do EU5. Reinicie o jogo ao trocar de mundo.
 [*][b]Atualizações do jogo:[/b] Atualizações grandes do EU5 podem exigir uma atualização do gerador. Para continuar um save antigo após um patch, gere o mundo novamente usando o mesmo Código do mundo.
-[*][b]Uso de memória RAM:[/b] Requer cerca de 7,5 GB de RAM livre durante a compilação. Em sistemas com menos memória, feche o EU5 e execute o gerador diretamente da pasta do mod para liberar RAM (o gerador não precisa do jogo aberto).
+[*][b]Uso de memória RAM:[/b] Requer cerca de 7,5 GB de RAM livre. Em computadores modestos, feche o EU5 e execute o gerador na pasta do mod.
 [/list]
 
 [h2]Perguntas frequentes (FAQ)[/h2]
 [b]P: Posso visualizar o mapa com antecedência ou jogar com um nativo?[/b]
-A: Sim. Por padrão, as nações do Novo Mundo ficam ocultas no lobby para evitar spoilers. Clique em [b]Revelar este mundo[/b] no gerador (ou marque [b]Mostrar o Novo Mundo antes de jogar[/b]) para exibir o mapa e jogar com uma nação nativa. [i][TODO: Confirm in release build][/i]
+A: Sim. Clique em [b]Revelar este mundo[/b] (ou marque [b]Mostrar o Novo Mundo antes de jogar[/b]) para exibir o lobby e jogar com uma nação nativa. [i][TODO: Confirm in release build][/i]
 
 [b]P: É compatível com outros mods?[/b]
 A: Incompatível com conversões totais, outros mods de mapa ou qualquer mod que altere províncias ou a história das Américas. Mods de interface e de imersão do Velho Mundo devem funcionar, embora ainda não tenham sido testados.
@@ -65,10 +65,10 @@ A: Incompatível com conversões totais, outros mods de mapa ou qualquer mod que
 A: Sim, em teoria: todos os jogadores geram o mesmo mod localmente usando o mesmo [b]Código do mundo[/b] na mesma versão do EU5, gerando um checksum idêntico. [i][TODO: Confirm after MP testing][/i]
 
 [b]P: Ironman e conquistas (achievements)?[/b]
-R: Tanto o modo Ironman quanto as conquistas funcionam perfeitamente! Embora um mundo gerado mude o checksum, o EU5 permite desbloquear conquistas desde que você use regras de jogo compatíveis.
+R: Totalmente compatíveis! Embora o mundo altere o checksum para o multijogador, o EU5 permite conquistas com checksum modificado sob as regras padrão.
 
 [b]P: O que acontece se eu cancelar a inscrição do gerador?[/b]
-A: Seus mundos gerados são mods locais autônomos e continuarão funcionando mesmo se você cancelar a inscrição deste item na Oficina. Para uma desinstalação completa, clique primeiro em [b]Excluir mundo[/b] no gerador e depois cancele a inscrição.
+A: Os mundos são mods autônomos e continuam funcionando. Para remover, clique em [b]Excluir mundo[/b] no gerador antes de cancelar a inscrição.
 
 [b]P: Avisos do Windows SmartScreen ou antivírus?[/b]
 A: Cada versão disponibiliza no GitHub um link para o relatório do VirusTotal. [i][TODO: Leave either the unsigned Smart App Control note OR the signed certificate note here before publishing][/i]

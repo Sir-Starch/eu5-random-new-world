@@ -1,4 +1,4 @@
-source: e26dbff50eb6f5e2
+source: 19647a27622ade88
 
 [h1]Random New World (RNW) Generator[/h1]
 
@@ -13,7 +13,7 @@ Dieses Workshop-Objekt lädt lediglich das externe Generator-Tool herunter. Die 
 [list]
 [*][b]5 Landmassen-Archetypen:[/b] Superkontinent, Kontinente, Kleine Kontinente, Archipel oder Verstreute Inseln.
 [*][b]Zusammenhängende Kartengenerierung:[/b] Höhenprofil, Klimazonen, Flusseinzugsgebiete, Gelände und Vegetation (Wälder, Wüsten, Dschungel) werden in einem einheitlichen Modell simuliert.
-[*][b]Erweiterter Canvas (+40%) & Dynamische Ozeane:[/b] Der Generierungsbereich ist durch die Einbeziehung angrenzender Meeresflächen um 40 % größer als das Vanilla-Amerika – alle Vanilla-Ozeane und Ozean-Ödländer (Ocean Wastelands) bleiben erhalten und passen ihre Grenzen, Meeresströmungen und Seewege dynamisch an die neuen Küsten, Naturhäfen, Meerengen und Golfe an.
+[*][b]Erweiterter Canvas (+40%) & Dynamische Ozeane:[/b] Bereich um 40 % größer als Vanilla-Amerika; Ozeane, Strömungen, Seewege und Naturhäfen passen sich dynamisch an neue Küsten an.
 [*][b]Prozedurale Ureinwohner:[/b] Bevölkert mit einheimischen Nationen (Tags), Kulturen, Religionen, dezentralisierten Stämmen, sesshaften Staaten und Vasallennetzwerken.
 [*][b]High-American- / Fantasy-Szenarien:[/b] Optionale Chance auf fortschrittliche Zivilisationen („Außergewöhnliche Völker“) – Großreiche, maritime Handelsligen, Hochland-Konföderationen, zerfallene Reiche oder religiöse Zentren.
 [*][b]Dynamische Inhalte:[/b] Prozedurale gründbare Nationen, regionale Kolonialnamen und weltspezifisches Flavor.
@@ -32,7 +32,7 @@ Dieses Workshop-Objekt lädt lediglich das externe Generator-Tool herunter. Die 
 [list]
 [*][b]Grundlagen:[/b] Praktische Auswahllisten für Landmassengröße, Ureinwohnerdichte, Chance auf Großreiche („Außergewöhnliche Völker“) sowie Gold- und Silbervorkommen.
 [*][b]Erweiterte Einstellungen:[/b] Passt einzelne Parameter unter [b]Anpassen[/b] an (alle Bereiche sind auf spielbare Ergebnisse begrenzt).
-[*][b]Form-Vorschau & Neu auswürfeln:[/b] Klickt auf [b]Kontinent wählen...[/b], um 6 Küstenskizzen vorab zu prüfen. Zufrieden mit der Geografie? Mit [b]Neue Völker[/b] oder [b]Neue Rohstoffe[/b] könnt ihr Politik oder Ressourcen neu auswürfeln, ohne das Terrain zu verändern.
+[*][b]Form-Vorschau & Neu auswürfeln:[/b] [b]Kontinent wählen...[/b] zeigt 6 Küstenskizzen. [b]Neue Völker[/b] oder [b]Neue Rohstoffe[/b] würfeln Politik oder Waren neu aus, ohne das Land zu ändern.
 [*][b]Weltatlas:[/b] Integrierter Betrachter zur Inspektion von Nationen, Kulturen, Religionen, Ressourcen und Entwicklungsstufen außerhalb des Spiels.
 [/list]
 
@@ -51,12 +51,12 @@ Die Skript-Engine von EU5 kann Höhenkarten, Geländemodelle oder Flussläufe ni
 [*][b]Nur neue Spielstände:[/b] Nicht kompatibel mit bestehenden Kampagnen.
 [*][b]Neustart zwischen verschiedenen RNW-Karten:[/b] Das Starten einer Kampagne, Beenden ins Hauptmenü und Laden einer anderen RNW-Karte in derselben Sitzung lässt EU5 abstürzen. Startet das Spiel beim Weltwechsel neu.
 [*][b]Spiel-Updates:[/b] Große Patches von EU5 erfordern ggf. ein Generator-Update. Um einen alten Spielstand fortzusetzen, generiert die Welt mit demselben Weltcode neu.
-[*][b]Arbeitsspeicher (RAM):[/b] Benötigt ca. 7,5 GB freien RAM während der Kartenerstellung. Auf schwächeren Systemen kann EU5 geschlossen und der Generator direkt im Mod-Ordner gestartet werden, um RAM freizugeben (das Spiel muss nicht laufen).
+[*][b]Arbeitsspeicher (RAM):[/b] Benötigt ca. 7,5 GB freien RAM beim Erstellen. Auf schwächeren PCs EU5 schließen und Generator im Mod-Ordner starten.
 [/list]
 
 [h2]FAQ[/h2]
 [b]F: Kann ich die Karte vorab ansehen oder als Ureinwohner spielen?[/b]
-A: Ja. Standardmäßig sind Nationen der Neuen Welt in der Lobby verborgen, um Spoiler zu vermeiden. Klickt im Generator auf [b]Diese Welt aufdecken[/b] (oder aktiviert [b]Die Neue Welt vor dem Spielen zeigen[/b]), um die Lobby-Karte aufzudecken und als Ureinwohner zu starten. [i][TODO: Confirm in release build][/i]
+A: Ja. Klickt auf [b]Diese Welt aufdecken[/b] (oder aktiviert [b]Die Neue Welt vor dem Spielen zeigen[/b]), um die Lobby aufzudecken und als Ureinwohner zu spielen. [i][TODO: Confirm in release build][/i]
 
 [b]F: Ist der Mod mit anderen Mods kompatibel?[/b]
 A: Inkompatibel mit Overhaul-Mods, anderen Karten-Mods und Mods, die Provinzen oder Geschichte in Amerika ändern. UI- und Alte-Welt-Mods sollten funktionieren, sind aber derzeit ungetestet.
@@ -65,10 +65,10 @@ A: Inkompatibel mit Overhaul-Mods, anderen Karten-Mods und Mods, die Provinzen o
 A: Ja, theoretisch: Alle Spieler generieren mit demselben [b]Weltcode[/b] auf derselben EU5-Version exakt dieselbe Mod, was zu einer identischen Prüfsumme führt. [i][TODO: Confirm after MP testing][/i]
 
 [b]F: Ironman und Achievements?[/b]
-A: Sowohl Ironman als auch Achievements werden vollständig unterstützt! Eine generierte Welt ändert zwar die Prüfsumme (Checksum), aber EU5 schaltet Achievements trotzdem frei, solange kompatible Spielregeln genutzt werden.
+A: Vollständig unterstützt! Eine Welt ändert zwar die Checksum für Multiplayer, aber EU5 erlaubt Achievements mit modifizierter Checksum bei Standard-Regeln.
 
 [b]F: Was passiert, wenn ich den Generator deabonniere?[/b]
-A: Eure erstellten Welten sind eigenständige lokale Mods und funktionieren auch nach dem Deabonnieren dieses Workshop-Objekts weiter. Zum sauberen Entfernen klickt zuerst im Generator auf [b]Welt löschen[/b] und deabonniert erst danach.
+A: Welten sind eigenständige Mods und bleiben nach Deabonnieren erhalten. Zum Entfernen vorab im Generator auf [b]Welt löschen[/b] klicken.
 
 [b]F: Windows SmartScreen / Antivirus-Warnungen?[/b]
 A: Jedes Release enthält auf GitHub einen Link zu einem VirusTotal-Scan. [i][TODO: Leave either the unsigned Smart App Control note OR the signed certificate note here before publishing][/i]

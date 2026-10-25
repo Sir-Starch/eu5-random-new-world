@@ -1,4 +1,4 @@
-source: e26dbff50eb6f5e2
+source: 19647a27622ade88
 
 [h1]Random New World (RNW) Generator[/h1]
 
@@ -13,7 +13,7 @@ Ten przedmiot pobiera jedynie zewnętrzny generator. Utworzone światy pojawią 
 [list]
 [*][b]5 typów lądu:[/b] Superkontynent, Kontynenty, Małe kontynenty, Archipelag lub Rozsiane wyspy.
 [*][b]Spójna generacja mapy:[/b] Ukształtowanie terenu, strefy klimatyczne, dorzecza, rodzaj podłoża i roślinność (lasy, pustynie, dżungle) są symulowane wspólnie w jednolitym modelu.
-[*][b]Powiększony obszar (+40%) i dynamiczne oceany:[/b] Kanwa generacji jest o 40% większa niż obrys podstawowych Ameryk dzięki wykorzystaniu okolicznych wód. Oceany i pustkowia oceaniczne (Ocean Wastelands) z podstawowej gry nie są usuwane, lecz dynamicznie dopasowują swoje granice, prądy morskie i szlaki żeglugowe do nowych wybrzeży, naturalnych portów, zatok i cieśnin.
+[*][b]Powiększony obszar (+40%) i dynamiczne oceany:[/b] Kanwa o 40% większa niż w grze podstawowej; oceany, prądy, szlaki morskie i porty dynamicznie dopasowują się do nowych wybrzeży.
 [*][b]Proceduralne ludy tubylcze:[/b] Zaludniony państwami (tagami), kulturami, religiami, zdecentralizowanymi plemionami, osiadłymi państwami i sieciami wasali.
 [*][b]Scenariusze «High American» / Fantasy:[/b] Opcjonalna szansa na zaawansowane cywilizacje («Niezwykłe ludy») — potężne imperia, morskie ligi kupieckie, górskie konfederacje, rozbite królestwa lub ośrodki religijne.
 [*][b]Dynamiczna zawartość:[/b] Proceduralne państwa formowalne, regionalne nazewnictwo kolonialne i unikalny klimat dla każdego świata.
@@ -32,7 +32,7 @@ Ten przedmiot pobiera jedynie zewnętrzny generator. Utworzone światy pojawią 
 [list]
 [*][b]Podstawy:[/b] Wygodne listy rozwijane rozmiaru lądu, gęstości zaludnienia, szansy na imperia («Niezwykłe ludy») oraz obfitości złota i srebra.
 [*][b]Zaawansowane suwaki:[/b] Dopasuj poszczególne parametry w zakładce [b]Dostosuj[/b] (wszystkie zakresy zapewniają w pełni grywalny świat).
-[*][b]Podgląd kształtu i przelosowania:[/b] Użyj [b]Wybierz kontynent...[/b], aby przejrzeć 6 szkiców wybrzeży. Podoba Ci się ukształtowanie lądu? Użyj przycisków [b]Nowe ludy[/b] lub [b]Nowe zasoby[/b], aby wylosować na nowo układ polityczny lub surowce bez zmian w terenie.
+[*][b]Podgląd kształtu i przelosowania:[/b] [b]Wybierz kontynent...[/b] daje 6 szkiców wybrzeży. [b]Nowe ludy[/b] lub [b]Nowe zasoby[/b] losują politykę lub surowce bez zmian w lądzie.
 [*][b]Atlas świata:[/b] Wbudowana przeglądarka map politycznych, kultur, religii, zasobów i rozwoju poza grą.
 [/list]
 
@@ -51,12 +51,12 @@ Silnik skryptowy EU5 nie potrafi dynamicznie tworzyć map wysokości, siatek ter
 [*][b]Tylko nowe zapisy:[/b] Brak kompatybilności z istniejącymi zapisami gier.
 [*][b]Restart między różnymi mapami RNW:[/b] Rozpoczęcie gry na jednej mapie RNW, wyjście do menu i wczytanie innej mapy RNW w tej samej sesji spowoduje błąd EU5. Zrestartuj grę przy zmianie świata.
 [*][b]Aktualizacje gry:[/b] Główne aktualizacje EU5 mogą wymagać nowej wersji generatora. Aby kontynuować stary zapis po patchu, wygeneruj świat ponownie z tym samym Kodem świata.
-[*][b]Pamięć RAM:[/b] Wymaga około 7,5 GB wolnej pamięci RAM podczas kompilacji. Na słabszych konfiguracjach można zamknąć EU5 i uruchomić generator bezpośrednio z folderu moda, aby zwolnić pamięć (generator nie wymaga uruchomionej gry).
+[*][b]Pamięć RAM:[/b] Wymaga ok. 7,5 GB wolnego RAM-u. Na słabszych komputerach zamknij EU5 i uruchom generator z folderu moda.
 [/list]
 
 [h2]Często zadawane pytania (FAQ)[/h2]
 [b]P: Czy mogę podejrzeć mapę lub zagrać jako tubylec?[/b]
-A: Tak. Domyślnie państwa Nowego Świata są ukryte w poczekalni, aby uniknąć spoilerów. Kliknij [b]Odsłoń ten świat[/b] w generatorze (lub zaznacz [b]Pokaż Nowy Świat przed grą[/b]), aby odsłonić mapę i wybrać państwo tubylcze. [i][TODO: Confirm in release build][/i]
+A: Tak. Kliknij [b]Odsłoń ten świat[/b] (lub zaznacz [b]Pokaż Nowy Świat przed grą[/b]), aby odsłonić mapę i wybrać państwo tubylcze. [i][TODO: Confirm in release build][/i]
 
 [b]P: Czy mod jest kompatybilny z innymi modami?[/b]
 A: Niekompatybilny z modami typu overhaul, innymi modami mapy oraz modyfikacjami prowincji i historii w Amerykach. Modyfikacje interfejsu i klimatu Starego Świata powinny działać, choć nie były testowane.
@@ -65,10 +65,10 @@ A: Niekompatybilny z modami typu overhaul, innymi modami mapy oraz modyfikacjami
 A: Tak, w teorii: każdy gracz generuje identyczny mod lokalnie z tego samego [b]Kodu świata[/b] na tej samej wersji EU5, uzyskując identyczną sumę kontrolną. [i][TODO: Confirm after MP testing][/i]
 
 [b]P: Ironman i osiągnięcia (achievements)?[/b]
-O: Zarówno tryb Ironman, jak i osiągnięcia działają w pełni! Chociaż wygenerowany świat zmienia sumę kontrolną (checksum), EU5 pozwala na zdobywanie osiągnięć przy standardowych zasadach gry.
+O: W pełni obsługiwane! Choć świat zmienia sumę kontrolną dla trybu wieloosobowego, EU5 pozwala zdobywać osiągnięcia ze zmienioną sumą przy zasadach domyślnych.
 
 [b]P: Co się stanie, jeśli anuluję subskrypcję generatora?[/b]
-A: Twoje wygenerowane światy są osobnymi lokalnymi modami i będą działać nadal. Aby całkowicie usunąć mod, najpierw kliknij [b]Skasuj świat[/b] w generatorze, a dopiero potem anuluj subskrypcję.
+A: Światy są osobnymi modami i działają nadal. Aby usunąć mod, najpierw kliknij [b]Skasuj świat[/b] w generatorze, a dopiero potem anuluj subskrypcję.
 
 [b]P: Ostrzeżenia Windows SmartScreen / antywirusa?[/b]
 A: Każde wydanie zawiera link do raportu VirusTotal na GitHubie. [i][TODO: Leave either the unsigned Smart App Control note OR the signed certificate note here before publishing][/i]
