@@ -1122,3 +1122,53 @@ size/time records and five prior directory entries are unchanged. A later owner
 session has an unterminated log but no live EU5/Wine process; its logs were
 preserved separately, not substituted for frozen TR46. No launch, save/playset/
 settings/library change or publication.
+
+
+### 2026-10-25 — Periodic support in primary terrain sources (0.12.6)
+
+[V-LOCAL / INFERRED C313] Retained the owner's mainland-wrap decision. Installed
+shader inspection separates its half-open source test from the clamped in-world
+decal-grid lookup; earlier periodic-placement tests did not prove CPU admission.
+The interface explicitly supports non-power-of-two source dimensions. Exact
+admission and the cause of the rendered crack remain unproved; no new engine
+trace/patch, game launch or manual sitting is used to claim otherwise.
+
+[V-EXEC C314] Each of eight edge primaries now includes 512 location pixels of
+periodic support, with matching 9216×4096 source size, cached geometry and the
+existing active instance. The primary centres stay inside the map and their
+bounds overlap its edge grid cells. Outside-only copies are removed. Initial
+band synthesis covers the support and any periodic noise cut; only in-world
+material cores enter the final world raster. Layer header/sample mismatch and
+unexpected geometry fail loudly. No full-map repair, added blend layer or
+geography restriction. Version 0.12.6, epoch 36; updated synthetic/reference
+goldens and interoperability R-004.
+
+[V-EXEC C315] Full check: 1,956 Python tests pass, 14 skip; 23 Rust tests pass;
+format/lint/types clean. Independent KUIG read-back preserves 536,870,912 original
+level-zero height/material samples, verifies 67,108,864 opposite-edge support
+samples and all 861 bundle entries. All changes are terrain2 paths: 25 changed,
+16 added, eight outside-only copies omitted. Every nonterrain file is exact,
+including the corrected rivers. Sixteen primaries, eight padded, give unique
+coverage at boundary vertices and tested ±1536-unit halos. Windows/Linux layer
+bytes and the offscreen self-test agree. The reference retains all content
+families (832 files, 2bebfb66…c0f8dc); KUIG has 833 files, 9b5a912e…15c3d2.
+Rendered disappearance of the crack, CPU admission and every engine LOD remain
+unobserved; larger source dimensions naturally change the mip pyramid. See
+[056](../../experiments/056-primary-terrain-wrap/README.md).
+
+[V-EXEC C315] A fresh, no-cache reference reproduction with hash seed 7 passes
+13 local installation checks with one skip in 210.43 s.
+
+[V-EXEC C316] Installed KUIG in new rnw_exp_tr46_terrain (835 files checked)
+and updated main hub 0.12.5→0.12.6 (3,256 files). The previous hub is externally
+backed up and retained without a sweep. Nine profile-root hashes, 12,223 other-
+mod size/time records and six prior directory entries remain exact. Log and
+live-process checks agree that EU5 is closed. No existing world/save/playset/
+settings/library modification, launch, process control or publication.
+
+The boundary block now has documented offline corrections for the removed
+coast, river serialization and primary terrain support, with the owner choosing
+full mainland wrap. The rendered crack/coast and exact treaty allocation retain
+their explicit engine-evidence limits. The next independent work block is
+maritime basin identity/routes/ports (TR46-03/04, L02/L03), using the frozen audit
+and the separately preserved later session where relevant.

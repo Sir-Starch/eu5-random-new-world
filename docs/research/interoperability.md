@@ -319,6 +319,33 @@ cuts and independently parsed written images provide compatibility evidence for
 the current fingerprint only. The necessity, distribution boundary and legal
 limits above continue to apply; this is no additional clearance.
 
+### Follow-up: primary heightmap source support (2026-10-25, 0.12.6 / epoch 36)
+
+[V-LOCAL / V-EXEC C313–C315] The owner's 0.12.3 crack persists despite the
+outside-only copies. Installed shader inspection separates the half-open decal
+bounds test from its in-world, clamped grid lookup; earlier tests proved only
+the bounds geometry, not CPU admission. The source virtual-texture interface
+explicitly accounts for non-power-of-two source sizes. No new executable-code
+trace establishes admission, and no such claim is made.
+
+The existing R-004 writer now constructs each edge primary with periodic source
+support: 9216×4096 height/material `.info`/`.bin` layers in the same tiled, bordered,
+LZAV format. Cached size/position and the original active JSON instance change
+in agreement; no outside-only copy remains. A header/sample-size mismatch fails
+before serialization. The independent program needs this source domain to supply
+boundary/halo terrain through the game's existing heightmap interface. Templates
+and scripts do not populate these pixels; official-interface investigation and
+its limits remain those of R-004. No new closed format, engine/shader patch,
+installation edit or post-output repair is introduced.
+
+Synthetic band/worker/wrap equality, Windows/native byte equality and decoded
+TR46 read-back verify 536,870,912 unchanged original level-zero samples and
+67,108,864 opposite-edge support samples. Source-size changes naturally alter
+the mip pyramid; neither renderer equivalence nor disappearance of the crack is
+asserted. Original/derived assets, executable excerpts and raw measurements stay
+local and ignored. The existing compatibility fingerprint, local-generation
+boundary and legal limits still apply, without additional clearance.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

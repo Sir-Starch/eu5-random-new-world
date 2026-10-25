@@ -236,3 +236,27 @@ for the original TR46 campaign evidence. No game launch or process control.
 Exact installation audit: ignored `local_data/tr46-boundary/rivers-installed.json`.
 Removal, with EU5 closed: remove only `mod/rnw_exp_tr46_rivers/`. Restoring the
 old hub from the checked backup is a separate action; no rollback was performed.
+
+
+2026-10-25 primary terrain wrap ([056](056-primary-terrain-wrap/README.md),
+C313–C316): with EU5 closed (log and live-process checks agree), added new
+`mod/rnw_exp_tr46_terrain`, **RNW: Continents KUIG**, generator **0.12.6 / epoch
+36**, code `RNW1-040XN-DR20S-1RQ4T-Z0060-C05RD-5A0`. All **835** mod files,
+metadata included, match the export; its 833-file nonmetadata digest is
+`9b5a912ec9908dba4969164896b3a85844a151eeee53eecd8f8e1934cf15c3d2`.
+It keeps the exact TR46 seed/settings and the 0.12.4 coast / 0.12.5 river fixes,
+and uses padded primary heightmap sources across the boundary. Its rendered
+seam remains unobserved; this is an offline-verified candidate.
+
+Updated the main `mod/rnw_exp_hub` **0.12.5 → 0.12.6**, all **3,256** files
+hash-verified against the Windows package, with matching source/dependency/
+package/metadata versions. The old hub has a verified 3,256-file external backup
+at ignored `local_data/tr46-boundary/hub-backup-before-0.12.6/` and is retained
+at `mod/.rnw-install/retired/rnw_exp_hub_before_terrain_0126/`. No retired sweep.
+Nine root-file hashes, 12,223 other-mod size/time records and six prior directory
+entries remain exact. All prior worlds, saves, playsets, settings and library
+records are preserved; no game launch or process control was performed.
+
+Exact local audit: ignored `local_data/tr46-boundary/terrain-installed.json`.
+Removal, with EU5 closed: remove only `mod/rnw_exp_tr46_terrain/`. Restoring the
+old hub is a separate action; no rollback or removal was performed here.

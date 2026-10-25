@@ -18,6 +18,10 @@ addresses L01’s written-data cause in 0.12.5: all 716 planar river components
 have one start, with only 12 marker changes and continuous physical fields.
 Engine error absence/rendering is not yet observed. The observations below
 retain their original 0.12.3 scope.
+[056](../../experiments/056-primary-terrain-wrap/README.md) replaces the former
+outside-only terrain copies with padded primary sources in 0.12.6. Exact
+written-data checks pass; TR46-06a stays open until its engine appearance is
+observed. No visual closure is inferred from the river or terrain tests.
 
 **Owner decision (2026-10-25):** retain full mainland crossing through the map
 seam and fix its support. Do not restore the mandatory seam strait or prohibit

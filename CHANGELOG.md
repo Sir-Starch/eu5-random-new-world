@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.12.6 — 2026-10-25
+
+- Primary edge heightmaps now contain periodic source pixels beyond the world boundary, with matching source dimensions, cached geometry and original instances. Interior height/material samples keep their alignment and values. This replaces outside-only duplicate placements and provides primary source coverage for boundary vertices and tested page halos while preserving full mainland wrap. A stale layer size now fails before writing. Epoch 36; checked offline, the reported terrain crack remains open pending engine appearance.
+
 ## 0.12.5 — 2026-10-25
 
 - Rivers crossing the map seam now receive the starts and tributary markers required by each planar raster fragment. The continuous drainage, channel widths and carved valleys are retained; networks away from the seam keep their exact raster codes. This addresses TR46’s missing river-source errors without changing the continent shape or restoring a seam strait. Epoch 35; checked offline, engine rendering remains unobserved.

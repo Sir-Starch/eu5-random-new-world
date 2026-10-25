@@ -105,6 +105,11 @@ def write_layer(north_up: NDArray[np.integer], layer: LayerFormat) -> tuple[str,
     NumPy and Python version is ``tests/reference/tiles.py``. Values wider than the sample
     type keep their low bytes.
     """
+    if north_up.shape != (layer.height, layer.width):
+        message = (
+            f"layer samples {north_up.shape} disagree with declared {layer.height, layer.width}"
+        )
+        raise TileFormatError(message)
     sizes, data = _native.pack_layer(
         np.ascontiguousarray(north_up.astype(np.uint16, copy=False)), layer.sample_bytes
     )
