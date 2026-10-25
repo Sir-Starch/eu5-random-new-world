@@ -462,6 +462,35 @@ generator version/epoch or installed-output change, no runtime hook and no
 general save API. Any reuse against another format/build requires fresh
 validation rather than assuming these two successful parses establish support.
 
+### Follow-up: expedition lifecycle evidence (2026-10-25, 060)
+
+[V-LOCAL / V-EXEC C329–C332] The same two frozen saves and private reader now
+traverse the `expedition_manager` database and selected countries' capitals.
+The interoperability need is to distinguish an active blocked route from a
+failed expedition absent from the snapshots, without another game launch.
+Text logs omit identities for anonymous starts/resumes and the port/water
+assertion; the saves cannot recover a missing historical transition either.
+No new token form is added. Tombstoned database slots are excluded; complete
+object handles and the previously validated location-ID binding are preserved.
+ZIP CRCs and all 37 original evidence-file hashes pass. Private helpers/results
+stay under ignored `local_data/tr46-expeditions/`; no save writer or general
+save API is shipped.
+
+Installed text documentation/type/event/action files supply the lifecycle
+contract and allow exact comparisons of the unchanged Pacific start/Dadinga
+event blocks. They expose a no-travel mining start and an immediate resume
+before a delayed return choice, but do not record runtime option selection or
+the effective loaded content from other mounted mods. Limited read-only
+string cross-references and disassembly inspect the exhausted-route diagnostic
+and possible callers of the previously located destination-change routine.
+This addresses the gap in the logs without translating code or adding an
+engine hook. It does not establish a complete state layout, default-loading
+behavior, runtime caller or cause for the anonymous errors. No bytes, memory,
+installation or protection mechanism are changed. No executable excerpt,
+substantial game-script block, token dictionary, save or derived dump is
+distributed. Only aggregate findings and identifiers enter the repository;
+no generated binary/output interface, version or epoch changes.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

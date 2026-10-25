@@ -45,7 +45,7 @@ not deduplicated defects. Mirrors in other logs are excluded from these totals.
 | `pdx_gui_widget.cpp:3891` | 3 | 369 / 04:05:05 | 379 / 04:15:31 | TR46-L11 | Map-mode input action absent |
 | `particle_event.h:114` | 5 | 370 / 04:14:50 | 386 / 04:30:33 | TR46-L11 | Missing waves effect entity |
 | `state_event.h:391` | 5 | 371 / 04:14:50 | 387 / 04:30:33 | TR46-L11 | Boat foam-stop state-machine error |
-| `expedition_manager.cpp:675` | 178 | 380 / 04:19:49 | 2352 / 06:57:17 | TR46-L03 | Mining survey exhausts waypoints without ending |
+| `expedition_manager.cpp:675` | 178 | 380 / 04:19:49 | 2352 / 06:57:17 | TR46-L03 | 177 mining surveys and one Pacific crossing exhaust waypoints without ending; corrected by C329 |
 | `jomini_scriptvalue.cpp:275` | 3 | 381 / 04:20:24 | 534 / 05:02:28 | TR46-L04 | Division by zero in neighbouring expansion target |
 | `expedition_effects.cpp:352` | 38 | 383 / 04:27:45 | 2010 / 06:46:12 | TR46-L03 | Resume requested for a non-stalled expedition |
 | `jomini_custom_text.h:93` | 478 | 394 / 04:40:31 | 2204 / 06:49:27 | TR46-L11 | Invalid subunit text object for type/prefix |

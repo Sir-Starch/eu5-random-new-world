@@ -70,3 +70,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [058 — Impassable highlands](058-impassable-highlands/README.md): compatible impassable location units and continuous vanilla-derived mountain height detail; exact TR46 LSI3, 0.12.8 / epoch 38, offline read-back and installation.
 
 - [059 — Native expansion](059-native-expansion/README.md): read-only binding of both original TR46 saves, vanilla AI colonization rule, conquest/consolidation and each extraordinary society's land/subjects; no balance or generated-output change.
+
+- [060 — Expedition lifecycle](060-expedition-lifecycle/README.md): correct 177 mining surveys plus one Pacific crossing; inherited no-travel and delayed-return edges, saved active expeditions and unattributed starts/resumes/port assertion; no generated-output change.

@@ -1325,3 +1325,48 @@ make check pass: 1,969 Python, 14 skips, 23 Rust, format/lint/types clean. Separ
 Workshop fix 90f531e landed before this check; 058's prior failures remain a
 historical result. No profile/save/settings/playset/install change, game launch,
 process control, push or publication.
+
+## 2026-10-25 — TR46 expedition lifecycle and corrected subtype counts (060)
+
+[V-GAME logs / V-EXEC C329] Read every exhausted-route message rather than
+assigning an origin's first subtype to all its rows: 177 mining surveys and
+one Pacific crossing, not 178 mining surveys. Total catalog counts remain
+unchanged. Mining has 46 owner tags/locations, all retained Old World: 136
+Europe, 34 Asia, seven Africa. No owner tag is an original RNW tag. The separate
+Pacific failure is Spain at Dadinga Bay, ID 16084, error.log:1824, 06:41:55.
+Use C326's independently bound original definitions; keep C300's eight mounted
+Workshop resources as an attribution limit.
+
+[V-LOCAL / V-EXEC / INFERRED C330] RNW does not override mining type/events/
+effects. Installed eligibility accepts a capital-only mineral highland, while
+route construction excludes the capital and adds it as return. The documented
+duplicate-waypoint rule yields zero travel in a private script model. Thirty-three
+affected tags already have that set at the frozen start; those tags account
+for 138 later errors, without proving every later launch's state. Capital
+comparisons and the README's default-completion/no-travel distinction are
+recorded; loaded defaults and wait semantics are not reverse-engineered into
+an asserted binary defect. No generated-ocean or global vanilla patch follows.
+
+[V-LOCAL / V-EXEC / INFERRED / UNKNOWN C331] The Pacific start, Dadinga callback
+and complete event .5 are byte-identical to installed vanilla. The first two
+options resume at the final initial stop while scheduling return-choice .6
+ten days later, with no intervening route or pause. This is a matching inherited
+lifecycle gap; actual option selection/state and delayed resolution remain
+unknown. It is separate from 057's western-voyage access-role correction.
+
+[V-EXEC / UNKNOWN C332] Traverse both saves' expedition managers with the
+existing narrow reader: one mining survey waiting on construction and two
+relic expeditions in 1497, two cartographic surveys in 1590; no active Pacific
+or western voyage. These snapshots cannot recover the failed transitions.
+The 38 invalid resumes, 38 invalid-leader starts, four unavailable-type starts
+and L02 assertion remain unattributed. Generic action files and possible
+static destination-change callers do not supply runtime identities. Register
+this limited text/save/static investigation in interoperability R-005; private
+helpers and raw results stay ignored under local_data/tr46-expeditions.
+
+[V-EXEC C332] All 37 original evidence-file hashes and 732 archived world hashes
+match. Current build/fingerprint remain unchanged. Locked sync and full check
+pass: 1,969 Python, 14 skips, 23 Rust, format/lint/types clean. No source/output,
+version/epoch, installation/profile/save/settings/playset change, game launch,
+process control, push or publication. Full findings: [TR46 expeditions](tr46-expeditions.md).
+The next independent block is L04's AI command rejections/expansion arithmetic.

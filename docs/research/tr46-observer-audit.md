@@ -30,6 +30,12 @@ criterion, and script replacements retain ports/passable water. Written-data
 verification is separate from engine behaviour. L02 remains unattributed;
 mining-survey lifecycle failures and the other L03 diagnostics remain open.
 
+[060](../../experiments/060-expedition-lifecycle/README.md) corrects L03's
+subtype count: **177** mining surveys plus **one** Pacific crossing. The mining
+destinations are all Old World; inherited no-travel and delayed-return lifecycle
+edges are documented in [the expedition findings](tr46-expeditions.md).
+Anonymous resumes/starts and L02 remain unattributed; no new output is changed.
+
 [058](../../experiments/058-impassable-highlands/README.md) addresses TR46-01/02
 in 0.12.8: compatible impassable cells are indivisible administrative units,
 and mountain sources regain locally derived vanilla crest detail. Physical
@@ -383,6 +389,10 @@ handling of associated objects. It supplies no runtime caller or failing
 location. It is not evidence that the assertion is the western voyage. Keep
 L02 open despite the access-role and port checks in 057.
 
+**Follow-up [C332]:** neither frozen checkpoint retains the missing assertion
+case. Possible static call sites and nearby log timestamps do not identify its
+runtime caller or failing destination. See [060's evidence limits](tr46-expeditions.md#4-unattributed-resumes-launches-and-l02).
+
 ### TR46-L03 — Expedition routing and lifecycle failures
 
 `error.log:1419–1420`, **06:12:25**; `1434–1435`, **06:17:45**;
@@ -391,8 +401,9 @@ three discarded `western_ocean_voyage_expedition` waypoints: location ID
 **21039** once, **21247** twice. Runtime ID-to-key mapping and route owners are
 not established here. These supply concrete cases for TR46-04.
 
-Other expedition diagnostics: **178** mining surveys fail after exhausting
-waypoints without ending; **38** resumes target a non-stalled expedition;
+Other expedition diagnostics, corrected in 060: **177** mining surveys and
+**one Pacific crossing** fail after exhausting waypoints without ending;
+**38** resumes target a non-stalled expedition;
 **38** starts use a leader that fails requirements; **4** starts use a type
 that cannot start. The survey records include many countries and do not by
 themselves prove generated-ocean routing caused the failures. Closure separates
@@ -411,6 +422,20 @@ a decoded runtime save or proof about other mounted mods. 0.12.7 preserves port
 and navigable-water roles consistently in waypoints and callbacks. Other L03
 lifecycle counts remain the original open entries; no mining-survey fix or
 new engine run is claimed.
+
+**Lifecycle follow-up [C329–C332]:** [full findings](tr46-expeditions.md).
+All 177 mining destinations are retained Old World locations (136 Europe,
+34 Asia, seven Africa; 46 tags/locations). RNW does not override the mining
+type/events/effects. Vanilla allows a capital-only eligible mine but excludes
+the capital from survey stops, leaving no travel; 33 affected tags have that
+set in frozen 1337 data. This is an inherited content edge, not a reconstruction
+of every later launch. The Pacific failure is SPA at Dadinga Bay (ID 16084),
+06:41:55, `error.log:1824`. The vanilla-identical event resumes there while
+scheduling the return choice ten days later; its first two options provide no
+intervening route or pause. Exact option selection remains unknown. Neither
+snapshot retains the failed voyages. Keep the anonymous 38 resumes, 38 leader
+failures and four unavailable types unattributed; no global vanilla patch,
+ocean change or engine-runtime closure is claimed.
 
 ### TR46-L04 — AI command rejection and expansion calculation
 
