@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.12.5 — 2026-10-25
+
+- Rivers crossing the map seam now receive the starts and tributary markers required by each planar raster fragment. The continuous drainage, channel widths and carved valleys are retained; networks away from the seam keep their exact raster codes. This addresses TR46’s missing river-source errors without changing the continent shape or restoring a seam strait. Epoch 35; checked offline, engine rendering remains unobserved.
+
 ## 0.12.4 — 2026-10-25
 
 - Replaced coastlines now include their offshore visual footprint. Height and material synthesis covers the old shelf beside removed islands, including across decal and map boundaries, while retaining Old World land. Water colour and foam are rebuilt where the changed coast affects their distance field and blur, even outside the replaced location colours. This addresses the remaining original-Alaska shelf rims near Chukotka reported in TR46. Location identities and land generation are unchanged. Epoch 34; checked offline, rendered result not yet observed in game.

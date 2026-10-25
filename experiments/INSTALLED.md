@@ -208,3 +208,31 @@ Exact candidate removal, with EU5 closed: remove only the profile folder
 `mod/rnw_exp_tr46_coast/`. Do not sweep other retired worlds. The generator can
 be restored from the verified external backup if separately requested; no
 rollback or removal was performed here.
+
+
+2026-10-25 wrapped river serialization ([055](055-wrap-river-raster/README.md),
+C309–C312): added new `mod/rnw_exp_tr46_rivers`, **RNW: Continents R7SE**,
+version **0.12.5 / epoch 35**, code
+`RNW1-040XN-DR20S-1RQ4T-Z0060-A01VN-AKG`. All **827** mod files match the
+verified export; its 825-file nonmetadata digest is
+`b392f2c9a5f29425f6765cdb2b43e84326af89697186a1a0ffdac22da95b972b`.
+Only rivers.png differs from the 0.12.4 coast candidate, at 12 drawing markers.
+No existing TR46 world or save was rewritten.
+
+Updated main `mod/rnw_exp_hub` **0.12.4 → 0.12.5**, all **3,256** files checked
+against the final Windows package. The old 3,254-file hub has a checked external
+backup at ignored `local_data/tr46-boundary/hub-backup-before-0.12.5/` and is
+retained at `mod/.rnw-install/retired/rnw_exp_hub_before_river_0125/`. No retired
+sweep. Nine profile-root hashes, 8,142 other-mod file size/time records and all
+five prior mod-directory entries (including the hidden staging directory) are
+preserved. Playsets, settings, saves and library records are untouched.
+
+A later owner session left an unterminated debug log: the log-only session helper
+reports `played`, but repeated live-process checks find no EU5 or Wine process.
+Installation uses that live absence; the stale log is not rewritten. The later
+session's logs were copied separately under ignored
+`local_data/tr46-boundary/later-session-20261025-1637/`; they are not substituted
+for the original TR46 campaign evidence. No game launch or process control.
+Exact installation audit: ignored `local_data/tr46-boundary/rivers-installed.json`.
+Removal, with EU5 closed: remove only `mod/rnw_exp_tr46_rivers/`. Restoring the
+old hub from the checked backup is a separate action; no rollback was performed.

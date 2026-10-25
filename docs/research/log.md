@@ -1079,3 +1079,46 @@ pieces. Continuing this boundary work depends on the important policy choice
 presented to the owner: preserve full mainland wrap and support its rendering /
 river serialization, or prohibit generated land crossing and change world shapes.
 The coast correction does not depend on that choice and has been completed.
+
+
+### 2026-10-25 — Mainland wrap policy and river serialization (0.12.5)
+
+[OWNER] Preserve full mainland crossing through the seam and correct its support.
+This supersedes the pending policy question at the end of the previous entry;
+no seam strait, mainland exclusion or treaty patch is authorized by this choice.
+
+[V-LOCAL executable / V-EXEC C309] Limited read-only tracing of the installed
+river-component discovery routine checks neighbouring coordinates against the
+raster bounds instead of wrapping. It counts green markers in each discovered
+component and reports zero or multiple starts. The original TR46 raster has six
+source-less edge fragments; five sizes (107, 502, 65, 16, 8) match the campaign
+errors exactly. The sixth (48 pixels) has no matching message and remains an
+explicit attribution limit. No executable/process/installation is changed.
+
+[V-EXEC C310] The adapter now serializes affected continuous trees into planar
+drawing fragments before writing rivers.png. Each fragment receives one leaf
+start and valid tributary markers; uncut networks retain their bytes. Sparse
+traversal only visits networks contacting the seam, and palette writes use
+strips. Hydrology, width classes and carved valleys stay continuous. Isolated
+points cannot draw a line and are explicitly counted, not turned into a new
+spring or rerouted river. Invalid topology fails loudly. Version 0.12.5, epoch 35.
+
+Verification and installation are recorded in [055](../../experiments/055-wrap-river-raster/README.md).
+The separate terrain-render crack stays open; this river phase makes no claim
+that the engine draws the seam correctly.
+
+[V-EXEC C311] Full check passes: 1,949 Python tests, 14 skips, 23 Rust tests;
+format/lint/types clean. Exact TR46 changes only rivers.png at 12 markers, keeps
+all 792,805 channel pixels and gives every one of 716 planar components one
+start. All 853 bundle manifest entries hash correctly. The 824-file reference
+is reproduced fresh with hash seed 7/no cache: 13 local checks pass, one skips
+in 236.01 s. The Windows hub matches source and locked dependencies; its
+offscreen self-test and 180-position river parity with Linux pass.
+
+[V-EXEC C312] Installed R7SE in new rnw_exp_tr46_rivers (827 files) and updated
+the main hub 0.12.4→0.12.5 (3,256 files), preserving the old hub externally and
+in the retired area without sweeping it. Nine root hashes, 8,142 other-mod
+size/time records and five prior directory entries are unchanged. A later owner
+session has an unterminated log but no live EU5/Wine process; its logs were
+preserved separately, not substituted for frozen TR46. No launch, save/playset/
+settings/library change or publication.

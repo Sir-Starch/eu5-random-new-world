@@ -174,6 +174,7 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
+from rnw.eu5_rivers import RiverRasterError, encode_rivers
 from rnw.eu5_seas import (
     NO_UNITS,
     Coast,
@@ -242,8 +243,8 @@ from rnw.progress import Progress, active, checkpoint, run_stage, running
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
-from rnw.rivers import JOIN, SOURCE, carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rivers import STEP as RIVER_STEP
+from rnw.rivers import carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rng import derive_seed
 from rnw.seas import Shape
 from rnw.settings import canonical_json, run_spec, spec_digest
@@ -267,8 +268,6 @@ if TYPE_CHECKING:
 TEMPLATES: Final[str] = "game/in_game/map_data/location_templates.txt"
 MAX_LOCATIONS: Final[int] = 32_000
 RIVER_CLASSES: Final[int] = 16
-RIVER_SOURCE: Final[int] = 0
-RIVER_JOIN: Final[int] = 1
 # Vanilla uses widths 4, 5, 11 and 15 on 61.5%, 23.9%, 8.1% and 6.2% of Old World river
 # pixels [V-EXEC C59]; valleys are cut in proportion (vanilla rivers lie a median 318
 # and a quarter of them over 950 height units below the 17-pixel local mean).
@@ -1317,15 +1316,16 @@ def _rivers(
     elevation = world.elevation
     rivers = generate_rivers(land, elevation, rain, seed=seed)
     classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
-    codes = np.full(land.shape, RIVER_LAND, dtype=np.uint8)
-    body = classes >= 0
-    codes[body] = np.array(RIVER_WIDTH_CODES, dtype=np.uint8)[classes[body]]
-    codes[rivers.role == SOURCE] = RIVER_SOURCE
-    codes[rivers.role == JOIN] = RIVER_JOIN
     problems = network_problems(rivers.role, ~land)
     if any(problems.values()):
         message = f"generated rivers break the raster rules: {problems}"
         raise NewWorldExportError(message)
+    try:
+        codes, raster_stats = encode_rivers(
+            rivers, classes, RIVER_WIDTH_CODES, seam=(canvas.roll - canvas.col0) % world_width
+        )
+    except RiverRasterError as exc:
+        raise NewWorldExportError(str(exc)) from exc
     carved = carve_valleys(
         elevation,
         classes,
@@ -1337,6 +1337,7 @@ def _rivers(
     stats: dict[str, object] = dict(rivers.stats)
     stats["pixels_per_1000_land"] = int(rivers.stats["pixels"]) * 1000 // max(1, land_pixels)
     stats["problems"] = problems
+    stats["raster"] = raster_stats
     stats["width_pixels"] = {
         str(code): int(np.count_nonzero(codes == code)) for code in RIVER_WIDTH_CODES
     }

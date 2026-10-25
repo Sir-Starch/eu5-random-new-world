@@ -13,7 +13,16 @@ This is the starting list for subsequent work; the owner need not retell it.
 the vanilla/treaty findings and the 0.12.4 correction of the removed coast's
 offshore visual footprint (TR46-07). Written-file and preservation checks pass;
 the rendered result remains unobserved. TR46-06a and L01 remain separate open
-boundary problems. The observations below retain their original 0.12.3 scope.
+boundary problems. [055](../../experiments/055-wrap-river-raster/README.md)
+addresses L01’s written-data cause in 0.12.5: all 716 planar river components
+have one start, with only 12 marker changes and continuous physical fields.
+Engine error absence/rendering is not yet observed. The observations below
+retain their original 0.12.3 scope.
+
+**Owner decision (2026-10-25):** retain full mainland crossing through the map
+seam and fix its support. Do not restore the mandatory seam strait or prohibit
+land at the edge. This resolves the policy question in TR46-06b, not the reported
+treaty assignment or physical crack; their remaining evidence limits still apply.
 
 ## 1. Session and preserved evidence
 

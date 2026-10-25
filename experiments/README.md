@@ -60,3 +60,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [053 — TR46 long observer campaign](053-tr46-observer/README.md): retrospective documentation only; all seven owner problems, twelve log diagnostic groups and an exhaustive catalog; 0.12.3 / EU5 1.4.4, no new launch or fix.
 
 - [054 — Removed coast footprint](054-tr46-coast-footprint/README.md): vanilla Alaska crosses the raster edges; treaty direction is wrap-aware; 0.12.4 / epoch 34 rebuilds the offshore visual support left beside removed Alaska, with exact TR46 read-back and retained-land checks.
+
+- [055 — Wrapped river raster](055-wrap-river-raster/README.md): owner retains full mainland wrap; planar river starts/joins preserve the continuous network and remove the written-data cause of TR46’s missing-source errors; 0.12.5, epoch 35.

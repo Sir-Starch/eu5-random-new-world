@@ -296,6 +296,29 @@ installation is changed; no executable excerpt is distributed. This static
 investigation supplies evidence about an existing scripting interface, not a
 new executable interface or permission to redistribute protected resources.
 
+### Follow-up: planar river drawing fragments (2026-10-25, 0.12.5 / epoch 35)
+
+[V-LOCAL executable / V-EXEC C309–C310] The same open PNG interface in R-004
+needs an explicit planar drawing start for each fragment of a continuous river
+crossing the map seam. Logical-network validation before world placement missed
+five source-less fragments named in TR46's loader errors. The installed text/data
+and observed palette describe river roles but do not establish whether component
+discovery wraps. A limited read-only xref/disassembly trace of the specific
+missing-source diagnostic establishes coordinate bounds and marker counting in
+that routine. It does not establish every river-mesh rendering rule or engine
+appearance. No executable byte, memory or installation is changed; no executable
+excerpt, game raster or raw trace enters the repository.
+
+The independent adapter constructs the final PNG codes directly from the logical
+network: valid starts/joins on planar trees, original width classes, exact uncut
+networks. It neither changes the PNG format nor patches an engine, shader or
+already written world. Hydrology and carved valleys remain continuous. A point
+with no remaining raster edge is explicitly counted as a non-line primitive,
+without rerouting its physical river. Invalid topology fails loudly. Synthetic
+cuts and independently parsed written images provide compatibility evidence for
+the current fingerprint only. The necessity, distribution boundary and legal
+limits above continue to apply; this is no additional clearance.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).
