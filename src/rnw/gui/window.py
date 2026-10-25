@@ -16,7 +16,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast, override
 
-from PySide6.QtCore import QItemSelectionModel, QObject, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QItemSelectionModel, QObject, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QIcon, QImage, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -99,6 +99,14 @@ class _Bridge(QObject):
     """Carries 'something changed' from the work thread to the window's thread."""
 
     changed: Signal = Signal()
+
+
+class _EstimateLabel(QLabel):
+    """Shows the location estimate on one line when there is space without widening the window."""
+
+    @override
+    def minimumSizeHint(self) -> QSize:
+        return QSize(0, super().minimumSizeHint().height())
 
 
 def _problem_label() -> QLabel:
@@ -536,7 +544,7 @@ class MainWindow(QMainWindow):
         self.notice.setWordWrap(True)
         self.notice.setStyleSheet(RED)
         outer.addWidget(self.notice)
-        self.estimate = QLabel()
+        self.estimate = _EstimateLabel()
         self.estimate_help = QLabel("ⓘ")
         self.estimate_help.setCursor(Qt.CursorShape.PointingHandCursor)
         self.estimate_help.setStyleSheet(MUTED)
