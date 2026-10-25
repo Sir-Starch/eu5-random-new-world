@@ -108,3 +108,15 @@ uv run rnw uninstall-mod rnw_exp_generator_0121 --user-dir USER_DIR
 
 [UNKNOWN] Engine rendering and campaign behaviour of the epoch-31 world. No EU5
 launch, push, publication or request for a manual check is part of this phase.
+
+
+## Follow-up: main installed generator (C288)
+
+[V-EXEC] On the owner's subsequent “Собери в игру”, the canonical `rnw_exp_hub`
+is updated in place from 0.12.0 to **0.12.1**. All 3,254 installed files match
+the verified package and its installed offscreen Windows self-test passes. The
+old hub is backed up and hash-verified outside the profile. Nine profile-root
+hashes, 3,254 other-mod size/time records and both existing mod folders survive.
+The usual hub launcher now opens the corrected generator; the separate candidate
+folder is preserved. No source/epoch change, world regeneration or EU5 launch.
+See [INSTALLED](../INSTALLED.md) for the exact installation and removal record.
