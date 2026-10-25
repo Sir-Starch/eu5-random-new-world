@@ -258,6 +258,58 @@ text = '''Gdy wyłączone, obrazy tego świata i mapa wyboru kraju pozostają za
 source = "6ed5499d9096e55f"
 text = '''Random New World tworzy mapy Nowego Świata dla EU5. Każdy utworzony świat jest osobnym, kompletnym modem: zaznacz go w swoim zestawie modów, aby w niego grać. Udostępniaj jego kod lub plik świata. Samego generatora nie trzeba włączać.'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''O programie…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''O programie Random New World'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''Informacje o programie'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Generator proceduralnego Nowego Świata dla Europa Universalis V'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World tworzy proceduralną geografię, klimaty, biomy, rzeki, kultury i imperia dla Europa Universalis V, pozostawiając Stary Świat nienaruszonym.\n\nKażdy wygenerowany świat to kompletny, samodzielny mod: włącz go w zestawie modów, aby zagrać. Dziel się kodem świata lub plikiem eksportu."
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''Autor'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''Licencja'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''Łącza'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''Repozytorium GitHub'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''Dokumentacja'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''Zgłoś problem'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''Dziennik zmian'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V jest zastrzeżonym znakiem towarowym Paradox Interactive AB. Ten projekt jest nieoficjalny i nie jest powiązany z Paradox Interactive.'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''Światy'''
@@ -1793,3 +1845,4 @@ text = '''Wybierz od 1 do {count} szkiców.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Szkice wymagają wygenerowanego lądu. Najpierw wróć do wygenerowanego lądu.'''
+

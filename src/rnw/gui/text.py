@@ -115,6 +115,28 @@ STRINGS: Final[dict[str, str]] = {
         "mod of its own: tick it in your playset to play it. Share its code or world file. "
         "This generator does not need to be enabled."
     ),
+    "about": "About…",
+    "about_title": "About Random New World",
+    "about_tip": "About this application",
+    "about_subtitle": "Procedural New World generator for Europa Universalis V",
+    "about_description": (
+        "Random New World generates genuine procedural geography, climates, "
+        "biomes, rivers, societies, and native empires for Europa Universalis V, "
+        "while preserving the Old World intact.\n\n"
+        "Every generated world is a complete, self-contained mod: enable it in your "
+        "playset to play. Share its world code or export file."
+    ),
+    "about_author": "Author",
+    "about_license": "Licence",
+    "about_links": "Links",
+    "about_homepage": "GitHub Repository",
+    "about_documentation": "Documentation",
+    "about_issues": "Report an Issue",
+    "about_changelog": "Changelog",
+    "about_disclaimer": (
+        "Europa Universalis V is a registered trademark of Paradox Interactive AB. "
+        "This project is unofficial and not affiliated with Paradox Interactive."
+    ),
     # -- the list of worlds --
     "worlds": "Worlds",
     "new_world": "New world",

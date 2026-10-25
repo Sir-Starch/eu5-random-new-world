@@ -258,6 +258,58 @@ text = '''Desligado, as imagens deste mundo e o mapa de escolha de país ficam c
 source = "6ed5499d9096e55f"
 text = '''O Random New World cria mapas do Novo Mundo para o EU5. Cada mundo criado é um mod completo por si só: marque-o na sua Condição de Jogo para jogar. Compartilhe o código ou o arquivo do mundo. O gerador em si não precisa ser ativado.'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''Sobre…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''Sobre Random New World'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''Informações sobre este aplicativo'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Gerador procedural do Novo Mundo para Europa Universalis V'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World gera geografia procedural, climas, biomas, rios, culturas e impérios para Europa Universalis V, preservando o Velho Mundo intacto.\n\nCada mundo gerado é um mod completo e independente: ative-o no seu conjunto de mods para jogar. Compartilhe o código do mundo ou o arquivo de exportação."
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''Autor'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''Licença'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''Links'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''Repositório GitHub'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''Documentação'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''Relatar um problema'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''Registro de alterações'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V é uma marca registrada da Paradox Interactive AB. Este projeto não é oficial e não é afiliado à Paradox Interactive.'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''Mundos'''
@@ -1793,3 +1845,4 @@ text = '''Escolha entre 1 e {count} esboços.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Os esboços precisam de terra gerada. Volte primeiro à terra gerada.'''
+

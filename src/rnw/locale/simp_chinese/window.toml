@@ -258,6 +258,58 @@ text = '''关闭时，这个世界的图片和国家选择地图会作为未知�
 source = "6ed5499d9096e55f"
 text = '''Random New World为EU5生成新大陆地图。生成的每个世界都是一个独立完整的模组：在播放集中勾选它即可游玩。可以分享它的代码或世界文件。生成器本身无需启用。'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''关于…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''关于 Random New World'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''关于本程序'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Europa Universalis V 随机新大陆生成器'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World 为 Europa Universalis V 生成真实的程序化地理、气候、群系、河流、土著文化和帝国，同时完整保留旧世界。\n\n生成的每个世界都是一个独立完整的模组：在模组集中启用即可游玩。可分享世界代码或导出文件。"
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''作者'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''许可证'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''链接'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''GitHub 仓库'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''文档'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''反馈问题'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''更新日志'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V 是 Paradox Interactive AB 的注册商标。本项目为非官方社区工具，与 Paradox Interactive 无关联。'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''世界'''
@@ -1793,3 +1845,4 @@ text = '''请选择1到{count}幅草图。'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''草图需要生成的陆地。请先改回生成的陆地。'''
+

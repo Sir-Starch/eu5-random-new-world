@@ -258,6 +258,58 @@ text = '''Если выключено, картинки этого мира и �
 source = "6ed5499d9096e55f"
 text = '''Random New World создаёт для EU5 карты Нового Света. Каждый созданный мир — отдельный полноценный мод: отметьте его в наборе модов, чтобы играть. Делитесь его кодом или файлом мира. Сам генератор включать не нужно.'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''О программе…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''О программе Random New World'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''Информация о программе'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Генератор случайного Нового Света для Europa Universalis V'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World создаёт процедурную географию, климат, биомы, реки, культуры и империи Нового Света для Europa Universalis V, сохраняя Старый Свет нетронутым.\n\nКаждый созданный мир — это самостоятельный полноценный мод: включите его в наборе модов для игры. Делитесь кодом мира или файлом экспорта."
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''Автор'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''Лицензия'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''Ссылки'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''Репозиторий GitHub'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''Документация'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''Сообщить об ошибке'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''Список изменений'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V — зарегистрированный товарный знак Paradox Interactive AB. Этот проект является неофициальным и не связан с Paradox Interactive.'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''Миры'''
@@ -1793,3 +1845,4 @@ text = '''Выберите от 1 до {count} набросков.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Для набросков нужна созданная суша. Сначала вернитесь к созданной суше.'''
+

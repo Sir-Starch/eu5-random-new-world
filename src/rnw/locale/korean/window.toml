@@ -258,6 +258,58 @@ text = '''끄면 이 월드의 그림과 국가 선택 지도가 미지의 땅�
 source = "6ed5499d9096e55f"
 text = '''Random New World는 EU5용 신대륙 지도를 만듭니다. 만든 월드 하나하나가 완결된 모드입니다. 플레이하려면 플레이세트에서 체크하세요. 코드나 월드 파일을 공유할 수 있습니다. 생성기 자체는 켤 필요가 없습니다.'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''정보…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''Random New World 정보'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''이 프로그램 정보'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Europa Universalis V 절차적 신대륙 생성기'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World는 구세계를 온전히 유지하면서 Europa Universalis V를 위한 절차적 지리, 기후, 생태계, 강, 토착 문화 및 제국을 생성합니다.\n\n생성된 각 세계는 완전한 독립 모드입니다. 플레이셋에서 활성화하여 플레이하세요. 세계 코드나 내보내기 파일을 공유할 수 있습니다."
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''제작자'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''라이선스'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''링크'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''GitHub 저장소'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''문서'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''이슈 보고'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''변경 내역'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V는 Paradox Interactive AB의 등록 상표입니다. 본 프로젝트는 비공식이며 Paradox Interactive와 관련이 없습니다.'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''월드'''
@@ -1793,3 +1845,4 @@ text = '''스케치는 1개에서 {count}개 사이로 고르세요.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''스케치에는 생성된 땅이 필요합니다. 먼저 생성된 땅으로 돌아가세요.'''
+

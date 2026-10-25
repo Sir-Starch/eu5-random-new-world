@@ -91,14 +91,23 @@ class PreviewView(QGraphicsView):
             return
         factor = math.pow(ZOOM_STEP, event.angleDelta().y() / 120)
         scale = self.transform().m11() * factor
-        if scale < self._fit_scale() or scale > ZOOM_LIMIT:
+        fit = self._fit_scale()
+        if scale < fit:
+            if not self._fitted:
+                self.fit()
+                event.accept()
+            return
+        if scale > ZOOM_LIMIT:
+            event.accept()
             return
         self.scale(factor, factor)
         self._fitted = False
+        event.accept()
 
     @override
     def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         self.fit()
+        event.accept()
         super().mouseDoubleClickEvent(event)
 
     @override
@@ -108,5 +117,13 @@ class PreviewView(QGraphicsView):
             self.fit()
 
     def _fit_scale(self) -> float:
-        width = self._item.pixmap().width()
-        return min(1.0, self.viewport().width() / width) * 0.98 if width else 1.0
+        pixmap = self._item.pixmap()
+        if pixmap.isNull():
+            return 1.0
+        width = pixmap.width()
+        height = pixmap.height()
+        vw = self.viewport().width()
+        vh = self.viewport().height()
+        if not width or not height or not vw or not vh:
+            return 1.0
+        return min(1.0, vw / width, vh / height) * 0.98

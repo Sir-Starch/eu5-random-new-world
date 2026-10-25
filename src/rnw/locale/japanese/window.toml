@@ -258,6 +258,58 @@ text = '''オフのとき、このワールドの画像と国選択の地図は�
 source = "6ed5499d9096e55f"
 text = '''Random New WorldはEU5用の新世界の地図を作ります。作ったワールドはそれぞれ単独で完結したMODです。遊ぶにはプレイセットでチェックを入れてください。コードやワールドファイルを共有できます。ジェネレーター自体を有効にする必要はありません。'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''このアプリについて…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''Random New World について'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''このアプリケーションについて'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Europa Universalis V 用プロシージャル新世界ジェネレーター'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World は旧世界をそのまま保ちながら、Europa Universalis V 向けに本格的なプロシージャル地理、気候、バイオーム、河川、文化、帝国を生成します。\n\n生成された各世界は独立した完全なModです。プレイセットで有効化してプレイしてください。ワールドコードやエクスポートファイルを共有できます。"
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''作者'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''ライセンス'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''リンク'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''GitHub リポジトリ'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''ドキュメント'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''問題を報告'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''更新履歴'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V は Paradox Interactive AB の登録商標です。本プロジェクトは非公式であり、Paradox Interactive とは一切関係ありません。'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''ワールド'''
@@ -1793,3 +1845,4 @@ text = '''スケッチは1〜{count}個の間で選んでください。'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''スケッチには生成された陸地が必要です。先に生成された陸地に戻してください。'''
+

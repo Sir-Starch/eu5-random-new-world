@@ -6,6 +6,9 @@ All notable changes to Random New World. The project has one product version ([A
 
 ## [Unreleased]
 
+- Generator interface improvements:
+  - Fixed preview zoom and drag on the "World" tab. The scale constraint now considers both width and height rather than width alone, enabling smooth wheel zoom, scroll drag, and double-click fit on height-constrained preview views.
+  - Added an "About…" dialog with application details, version, author, licence, legal disclaimer, and links to the GitHub repository, documentation, issues tracker, and changelog. Accessible from the main window header and the Settings dialog, translated into all eleven official languages.
 - Two draws in the window's world type list. **Random** draws one of the five world types, and **Total Chaos** draws a type and every Advanced value within its playable range. Random draws its world type again at each press of the random button; Total Chaos is drawn only when chosen, and its button press only gives a new seed. Both draws stay inside the location budget. The world made is an ordinary world of the type drawn: its values travel in its world code, as any other choice does. No generated output changes. Checked offline: three Total Chaos worlds were made on build 26142040 and finished without error.
 - Generator progress keeps its stage description on one fixed-height line, shows a live ETA that adapts to the weighted stage pace measured in the current run, and uses the same rounded percentage in the world list and progress bar.
 - The Workshop description is rewritten for players, as EU5 mod pages are: what a world holds, a quick start, the window's choices, why there is a program, the limits, a FAQ and links, with an emoji for each section. It is kept in Steam's markup, ready to paste, in all eleven official languages, and each text is checked against Steam's limit of 8,000 bytes (C277).

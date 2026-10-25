@@ -23,12 +23,21 @@ from rnw.record import Verdict
 
 try:  # the window needs PySide6 and the system's graphics libraries
     from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
-    from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont
+    from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QImage, QMouseEvent, QWheelEvent
     from PySide6.QtTest import QTest
-    from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox, QPushButton, QWidget
+    from PySide6.QtWidgets import (
+        QApplication,
+        QFileDialog,
+        QLabel,
+        QMessageBox,
+        QPushButton,
+        QWidget,
+    )
 
     from rnw.gui.maps import CompareDialog
-    from rnw.gui.window import MainWindow, SettingsDialog
+    from rnw.gui.preview import PreviewView
+    from rnw.gui.text import TITLE
+    from rnw.gui.window import AboutDialog, MainWindow, SettingsDialog
 except ImportError:
     pytest.skip("PySide6 is not available", allow_module_level=True)
 
@@ -781,3 +790,102 @@ def test_ocean_checkbox_is_in_the_world_code_and_follows_pasted_codes(
     assert window.expand_oceans.isChecked()
     assert decode(window.controller.code).settings().new_world.expand_oceans == 1
     _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_about_dialog_and_header_button(tmp_path: Path, fake_export: Exporter) -> None:
+    window = _window(tmp_path, fake_export)
+    assert window.about_button.text() == text("about")
+    assert window.about_button.toolTip() == text("about_tip")
+    dialog = AboutDialog(window)
+    dialog.show()
+    QApplication.processEvents()
+    assert TITLE in dialog.windowTitle()
+    labels = dialog.findChildren(QLabel)
+    texts = " ".join(lbl.text() for lbl in labels)
+    assert "https://github.com/Sir-Starch/eu5-random-new-world" in texts
+    assert "https://github.com/Sir-Starch/eu5-random-new-world/issues" in texts
+    assert "CHANGELOG.md" in texts
+    assert "docs" in texts
+    _ = dialog.close()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_preview_view_zooms_drags_and_fits(application: QApplication) -> None:
+    view = PreviewView()
+    view.resize(800, 280)
+    image = QImage(2048, 1024, QImage.Format.Format_RGB32)
+    image.fill(0xFF0000)
+    view.show_image(image, "test_preview")
+    initial_scale = view.transform().m11()
+    assert initial_scale > 0
+
+    # Zoom in via wheel
+    wheel = QWheelEvent(
+        QPoint(100, 100),
+        view.mapToGlobal(QPoint(100, 100)),
+        QPoint(0, 0),
+        QPoint(0, 120),
+        Qt.MouseButton.NoButton,
+        Qt.KeyboardModifier.NoModifier,
+        Qt.ScrollPhase.NoScrollPhase,
+        False,  # noqa: FBT003
+    )
+    view.wheelEvent(wheel)
+    zoomed_scale = view.transform().m11()
+    assert zoomed_scale > initial_scale
+
+    # Zoom in more to enable scrollbars for dragging
+    for _ in range(3):
+        view.wheelEvent(wheel)
+
+    hbar = view.horizontalScrollBar()
+    vbar = view.verticalScrollBar()
+    assert hbar.maximum() > 0
+    assert vbar.maximum() > 0
+    h_before, v_before = hbar.value(), vbar.value()
+
+    pos1 = QPoint(200, 200)
+    pos2 = QPoint(150, 150)
+    press = QMouseEvent(
+        QMouseEvent.Type.MouseButtonPress,
+        pos1,
+        view.viewport().mapToGlobal(pos1),
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    _ = application.sendEvent(view.viewport(), press)
+    move = QMouseEvent(
+        QMouseEvent.Type.MouseMove,
+        pos2,
+        view.viewport().mapToGlobal(pos2),
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    _ = application.sendEvent(view.viewport(), move)
+    release = QMouseEvent(
+        QMouseEvent.Type.MouseButtonRelease,
+        pos2,
+        view.viewport().mapToGlobal(pos2),
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.NoButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    _ = application.sendEvent(view.viewport(), release)
+    assert (hbar.value(), vbar.value()) != (h_before, v_before)
+
+    # Double click resets fit
+    dbl = QMouseEvent(
+        QMouseEvent.Type.MouseButtonDblClick,
+        pos1,
+        view.mapToGlobal(pos1),
+        Qt.MouseButton.LeftButton,
+        Qt.MouseButton.LeftButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    view.mouseDoubleClickEvent(dbl)
+    reset_scale = view.transform().m11()
+    assert abs(reset_scale - initial_scale) < 1e-4

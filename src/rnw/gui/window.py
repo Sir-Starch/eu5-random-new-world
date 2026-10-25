@@ -164,18 +164,28 @@ class SettingsDialog(QDialog):
         about = QLabel(text("about_generator"))
         about.setWordWrap(True)
         layout.addWidget(about)
-        layout.addWidget(self._diagnostics_button(), alignment=Qt.AlignmentFlag.AlignLeft)
-        close = QPushButton(text("close"))
-        close.setDefault(True)
-        layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
+        layout.addLayout(self._footer())
         _ = game_browse.clicked.connect(self._browse_game)
         _ = profile_browse.clicked.connect(self._browse_profile)
         _ = self.game_choice.activated.connect(self._pick_game)
         _ = self.profile_choice.activated.connect(self._pick_profile)
-        _ = close.clicked.connect(self.accept)
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(16)
         self.resize(760, self.sizeHint().height())
+
+    def _footer(self) -> QHBoxLayout:
+        buttons = QHBoxLayout()
+        buttons.addWidget(self._diagnostics_button())
+        about_button = QPushButton(text("about"))
+        about_button.setToolTip(text("about_tip"))
+        _ = about_button.clicked.connect(self._about)
+        buttons.addWidget(about_button)
+        buttons.addStretch(1)
+        close = QPushButton(text("close"))
+        close.setDefault(True)
+        _ = close.clicked.connect(self.accept)
+        buttons.addWidget(close)
+        return buttons
 
     def _language_choice(self) -> QComboBox:
         """The window's language: as the game's, or one of the official languages by name."""
@@ -252,6 +262,86 @@ class SettingsDialog(QDialog):
             if problem is None:
                 self.profile_choice.insertItem(0, folder)
                 self.profile_choice.setCurrentIndex(0)
+
+    def _about(self) -> None:
+        _ = AboutDialog(self.window_).exec()
+
+
+class AboutDialog(QDialog):
+    """Information about the program, author, licence and links."""
+
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.setWindowTitle(text("about_title"))
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(14)
+
+        header = QVBoxLayout()
+        title = QLabel(f"{TITLE} {__version__}")
+        title_font = QFont(title.font())
+        title_font.setPointSizeF(title_font.pointSizeF() * 1.3)
+        title_font.setBold(True)
+        title.setFont(title_font)
+        header.addWidget(title)
+
+        subtitle = QLabel(text("about_subtitle"))
+        subtitle.setStyleSheet(MUTED)
+        header.addWidget(subtitle)
+        layout.addLayout(header)
+
+        description = QLabel(text("about_description"))
+        description.setWordWrap(True)
+        layout.addWidget(description)
+
+        meta_box = QGroupBox()
+        meta_layout = QGridLayout(meta_box)
+        meta_layout.addWidget(QLabel(f"<b>{text('about_author')}:</b>"), 0, 0)
+        meta_layout.addWidget(QLabel("Sir Starch &lt;starch@sirstarch.com&gt;"), 0, 1)
+        meta_layout.addWidget(QLabel(f"<b>{text('about_license')}:</b>"), 1, 0)
+        meta_layout.addWidget(QLabel("Mozilla Public License 2.0 (MPL-2.0)"), 1, 1)
+        meta_layout.setColumnStretch(1, 1)
+        layout.addWidget(meta_box)
+
+        links_box = QGroupBox(text("about_links"))
+        links_layout = QVBoxLayout(links_box)
+        links: tuple[tuple[str, str], ...] = (
+            (text("about_homepage"), "https://github.com/Sir-Starch/eu5-random-new-world"),
+            (
+                text("about_documentation"),
+                "https://github.com/Sir-Starch/eu5-random-new-world/tree/main/docs",
+            ),
+            (text("about_issues"), "https://github.com/Sir-Starch/eu5-random-new-world/issues"),
+            (
+                text("about_changelog"),
+                "https://github.com/Sir-Starch/eu5-random-new-world/blob/main/CHANGELOG.md",
+            ),
+        )
+        for name, url in links:
+            html = "".join(
+                (
+                    f"• &nbsp; <a href='{url}'>{name}</a>: &nbsp; ",
+                    f"<a href='{url}' style='text-decoration: none;'>{url}</a>",
+                )
+            )
+            link_label = QLabel(html)
+            link_label.setTextFormat(Qt.TextFormat.RichText)
+            link_label.setOpenExternalLinks(True)
+            link_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+            links_layout.addWidget(link_label)
+        layout.addWidget(links_box)
+
+        disclaimer = QLabel(text("about_disclaimer"))
+        disclaimer.setWordWrap(True)
+        disclaimer.setStyleSheet(MUTED)
+        layout.addWidget(disclaimer)
+
+        close = QPushButton(text("close"))
+        close.setDefault(True)
+        _ = close.clicked.connect(self.accept)
+        layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.resize(580, self.sizeHint().height())
 
 
 class _ControlRow:
@@ -360,6 +450,7 @@ class MainWindow(QMainWindow):
     game_line: QLabel
     problem_line: QLabel
     settings_button: QPushButton
+    about_button: QPushButton
     world_list: QListWidget
     stack: QStackedWidget
     resources: QLabel
@@ -530,6 +621,10 @@ class MainWindow(QMainWindow):
         self.settings_button = QPushButton(text("settings"))
         _ = self.settings_button.clicked.connect(self._settings)
         row.addWidget(self.settings_button, alignment=Qt.AlignmentFlag.AlignTop)
+        self.about_button = QPushButton(text("about"))
+        self.about_button.setToolTip(text("about_tip"))
+        _ = self.about_button.clicked.connect(self._about)
+        row.addWidget(self.about_button, alignment=Qt.AlignmentFlag.AlignTop)
         return row
 
     def _new_page(self) -> QWidget:
@@ -1711,6 +1806,9 @@ class MainWindow(QMainWindow):
     def _settings(self) -> None:
         _ = SettingsDialog(self).exec()
         self.refresh()
+
+    def _about(self) -> None:
+        _ = AboutDialog(self).exec()
 
     def _pick_type(self, index: int) -> None:
         if 0 <= index < len(random_types.CHOICES):

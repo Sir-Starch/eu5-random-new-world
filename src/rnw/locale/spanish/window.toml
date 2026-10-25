@@ -258,6 +258,58 @@ text = '''Desactivado, las imágenes de este mundo y el mapa de selección de pa
 source = "6ed5499d9096e55f"
 text = '''Random New World crea mapas del Nuevo Mundo para EU5. Cada mundo que crea es un mod completo por sí mismo: márcalo en tu colección para jugarlo. Comparte su código o su archivo de mundo. No hace falta activar el generador.'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''Acerca de…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''Acerca de Random New World'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''Información sobre esta aplicación'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Generador procedimental del Nuevo Mundo para Europa Universalis V'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World genera geografía procedimental, climas, biomas, ríos, culturas e imperios para Europa Universalis V, preservando el Viejo Mundo intacto.\n\nCada mundo generado es un mod completo e independiente: actívalo en tu conjunto de mods para jugar. Comparte su código de mundo o archivo de exportación."
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''Autor'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''Licencia'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''Enlaces'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''Repositorio GitHub'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''Documentación'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''Informar de un problema'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''Registro de cambios'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V es una marca registrada de Paradox Interactive AB. Este proyecto no es oficial ni está afiliado a Paradox Interactive.'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''Mundos'''
@@ -1793,3 +1845,4 @@ text = '''Elige entre 1 y {count} bocetos.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Los bocetos necesitan tierra generada. Vuelve primero a la tierra generada.'''
+

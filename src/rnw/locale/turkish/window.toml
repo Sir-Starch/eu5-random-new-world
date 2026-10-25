@@ -258,6 +258,58 @@ text = '''Kapalıyken bu dünyanın resimleri ve ülke seçimi haritası terra i
 source = "6ed5499d9096e55f"
 text = '''Random New World, EU5 için Yeni Dünya haritaları oluşturur. Oluşturduğu her dünya kendi başına eksiksiz bir moddur: Oynamak için oynanış setinizde işaretleyin. Kodunu ya da dünya dosyasını paylaşın. Oluşturucunun kendisini etkinleştirmeniz gerekmez.'''
 
+["about"]
+source = "a26ed0ddb5a99c42"
+text = '''Hakkında…'''
+
+["about_title"]
+source = "10ed43ca224868f4"
+text = '''Random New World Hakkında'''
+
+["about_tip"]
+source = "913f7ad2bdaa4f8c"
+text = '''Bu uygulama hakkında bilgiler'''
+
+["about_subtitle"]
+source = "3e1dc6d90c130516"
+text = '''Europa Universalis V için prosedürel Yeni Dünya üreticisi'''
+
+["about_description"]
+source = "175e3e1514d0eec1"
+text = "Random New World, Eski Dünya'yı korurken Europa Universalis V için prosedürel coğrafya, iklimler, biyomlar, nehirler, kültürler ve imparatorluklar üretir.\n\nÜretilen her dünya bağımsız, eksiksiz bir moddur: oynamak için mod listenizde etkinleştirin. Dünya kodunu veya dışa aktarım dosyasını paylaşabilirsiniz."
+
+["about_author"]
+source = "d95082a2ee57f3e4"
+text = '''Yazar'''
+
+["about_license"]
+source = "f3ec8e880a46c8a6"
+text = '''Lisans'''
+
+["about_links"]
+source = "9024c197d84940e4"
+text = '''Bağlantılar'''
+
+["about_homepage"]
+source = "d6730b7b4d624dda"
+text = '''GitHub Deposu'''
+
+["about_documentation"]
+source = "c205924de0fe636c"
+text = '''Belgeler'''
+
+["about_issues"]
+source = "f6a30a10bc27be0a"
+text = '''Sorun Bildir'''
+
+["about_changelog"]
+source = "ead07c84baac57a9"
+text = '''Değişiklik Günlüğü'''
+
+["about_disclaimer"]
+source = "96548116da2f0d56"
+text = '''Europa Universalis V, Paradox Interactive AB'nin tescilli ticari markasıdır. Bu proje gayriresmidir ve Paradox Interactive ile hiçbir bağlantısı yoktur.'''
+
 ["worlds"]
 source = "18f1b0bf915821d8"
 text = '''Dünyalar'''
@@ -1793,3 +1845,4 @@ text = '''1 ile {count} arasında taslak seçin.'''
 ["error.candidates.drawn"]
 source = "75f72c48760efe1b"
 text = '''Taslaklar için oluşturulan kara gerekir. Önce oluşturulan karaya dönün.'''
+
