@@ -75,4 +75,6 @@ Experiments in the running game are kept short: a console sitting of about fifte
 
 - [061 — AI diagnostics](061-ai-diagnostics/README.md): exhaustive anonymous command warnings, inherited unguarded capital-distance division and three Old World building-list clamps; no attributable native AI defect or generated-output change.
 
-- [062 — Tordesillas](062-tordesillas/README.md): inherited option localization and conditional overlord scope, original saved treaty sides/line and the owner's clarified western-mainland wrap symptom; no generated-output change.
+- [062 — Tordesillas](062-tordesillas/README.md): continuous New World longitude axis across the raster seam, situation comparison and distribution rewrites, candidate QW6O, 0.12.9 / epoch 39.
+
+- [063 — Visual wrap and relief acceptance](063-visual-wrap-and-relief-acceptance/README.md): owner in-game visual review confirms seam absence and improved mountain relief; all completed work accepted; product version rises to 0.13.0, epoch 39.

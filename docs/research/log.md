@@ -1493,4 +1493,20 @@ ignored `local_data/tr46-treaty-fix/hub-backup-before-0.12.9/` and retained in
 `.rnw-install/retired/`. Nine profile-root hashes, 24,498 other-mod size/time
 records and nine prior folder entries are preserved. No game launch, process
 control, push or publication.
+
+## 2026-10-25 — In-game acceptance of wrap, mountains and TR46 candidate (063 / 0.13.0)
+
+[V-GAME owner C345] Owner visually reviewed candidate `rnw_exp_tr46_treaty`
+(RNW: Continents QW6O, 0.12.9) in EU5 1.4.4: the seam/crack at the horizontal
+map wrap is confirmed absent (TR46-06a CLOSED [V-GAME]); impassable mountain
+relief is visibly improved and accepted for release (TR46-01 / TR46-02 ACCEPTED
+[V-GAME], further aesthetic ridge improvements postponed to post-release); all
+done work on the cylindrical wrap, river continuity, local sea routes, and
+continuous Tordesillas allocation is accepted.
+
+[V-EXEC C346] Product version rises from 0.12.9 to **0.13.0** under ADR 0003
+(MINOR rises when a roadmap/campaign phase is accepted in game). No world file
+or algorithm output changes, so epoch stays 39 and golden reference world remains
+unchanged (`tests/golden_world.json`). Full test suite passes: 1,978 Python tests,
+14 skip, 23 Rust tests; format, lint and types clean.
 The next independent block is L06's corrupted country-name formatting.

@@ -120,16 +120,16 @@ absence of gameplay defects. All raw game material stays outside Git.
 Only item 7 has the attached screenshots. The proposed causes and vanilla
 comparisons are [UNKNOWN], unless another evidence label is given explicitly.
 
-| ID | Owner's point | Open problem |
+| ID | Owner's point | Status / Disposition |
 |---|---|---|
-| TR46-01 | 1 | Impassable land remains split into many small locations |
-| TR46-02 | 2 | Impassable relief, especially mountains, is flat and discontinuous |
-| TR46-03 | 3 | Too many distinct, adjacent named oceans / sea zones |
-| TR46-04 | 4 | Implausible sea connections force long detours between nearby lands |
-| TR46-05 | 5 | Extraordinary societies and large native states appear to expand very little |
-| TR46-06a | 6, visual | Terrain/texture crack persists at the horizontal map boundary |
-| TR46-06b | 6, gameplay | Western mainland continuation across the raster seam counts as Britain's east; full wrap is retained, precise allocation remains unresolved |
-| TR46-07 | 7 | Remnants of removed vanilla “Alaska” remain near Chukotka |
+| TR46-01 | 1 | Compatible impassable units merged (0.12.8); **ACCEPTED [V-GAME]** (063) |
+| TR46-02 | 2 | Height detail stamps added (0.12.8); **ACCEPTED [V-GAME]** (063, aesthetic ridges post-release) |
+| TR46-03 | 3 | Ocean zoning & connected water (0.12.7); **ACCEPTED [V-GAME]** (063) |
+| TR46-04 | 4 | Local shallow routes & port waypoints (0.12.7); **ACCEPTED [V-GAME]** (063) |
+| TR46-05 | 5 | Vanilla AI colonization rule & empire consolidation documented (059) |
+| TR46-06a | 6, visual | Physical seam absent in game; **CLOSED [V-GAME]** (063) |
+| TR46-06b | 6, gameplay | Continuous Tordesillas axis across seam (0.12.9); **ACCEPTED [V-GAME]** (063) |
+| TR46-07 | 7 | Offshore visual shelf footprint rebuilt (0.12.4); **ACCEPTED [V-GAME]** (063) |
 
 ### TR46-01 — Merge compatible connected impassable land
 
@@ -168,6 +168,13 @@ mountains at the same camera scale. No new mountain screenshot was supplied.
 **Closure evidence:** a numerical and visual reference comparison explaining
 the physical discrepancy, with continuous, visibly substantial generated
 ranges. Keep this open independently of TR46-01 and the seam defect.
+
+**In-game verification (2026-10-25, 063 / 0.13.0):** the owner visually verified
+the candidate in game and confirmed that the mountain relief is improved and
+accepted for release ("горы стали лучше (не идеал и с красотой горных хребтов
+ваниллы не сравнится, но я откладываю это на пост-релиз), вся проделанная работа
+принимается"). **TR46-01 and TR46-02 ACCEPTED [V-GAME]**; further aesthetic
+improvements to vanilla-style mountain ridges deferred to post-release.
 
 ### TR46-03 — Adjacent oceans and sea identities
 
@@ -301,6 +308,10 @@ visual crack's cause.
 **Closure evidence:** an explanation and verified visible result at both edges
 and relevant zooms while preserving full mainland wrap, as the owner chose
 in 06b. Written-data checks in 056 do not establish the engine's appearance.
+
+**In-game verification (2026-10-25, 063 / 0.13.0):** the owner visually verified
+candidate `rnw_exp_tr46_treaty` (RNW: Continents QW6O, 0.12.9) in EU5 1.4.4 and
+confirmed that the seam crack is absent ("шов отсутствует"). **TR46-06a CLOSED [V-GAME]**.
 
 ### TR46-06b — “Alaska”, colonial east/west and the wrap decision
 

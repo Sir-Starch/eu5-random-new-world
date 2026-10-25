@@ -13,6 +13,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.13.0 — 2026-10-25
+
+- In-game acceptance of the cylindrical wrap, impassable mountain relief and TR46 candidate fixes by the owner (C345-C346). ADR 0003: MINOR rises when a roadmap/campaign phase is accepted in game. The visual seam at the horizontal map wrap is confirmed absent in game (TR46-06a CLOSED [V-GAME]). Impassable mountains are visibly improved and accepted for release (TR46-01 / TR46-02 ACCEPTED [V-GAME], further aesthetic ridge improvements postponed to post-release). No file of a world changes; epoch stays 39 and the reference world is the one of 0.12.9.
+
 ## 0.12.9 — 2026-10-25
 
 - Tordesillas follows the continuous New World longitude axis across the raster seam. Its side selection, line moves, side-swap estimates, map shading and final province claims use the same generated coordinates; the western continuation of a mainland is no longer treated as east merely because it is drawn at raster right. Vanilla religion, ownership, existing-claim and province-granularity rules are preserved. Coordinates are immutable native geography/value data, with no campaign startup repair or engine modification. Offline candidate; engine behavior remains unobserved.
