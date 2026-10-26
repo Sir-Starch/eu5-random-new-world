@@ -282,6 +282,7 @@ class Water:
     ``flows`` the current of each lane cell, ``linked`` how many deep cells were made lanes to
     join water to the game's, ``sealed`` how many stretches of water no lane could join,
     ``crossings`` the pairs of lands that a strait divides narrowly enough to cross.
+    ``completed`` counts deep cells opened to finish ocean-lane ends.
     """
 
     coast: Coast
@@ -294,6 +295,7 @@ class Water:
     crossings: tuple[Crossing, ...] = ()
     local_pairs: int = 0
     shortcuts: int = 0
+    completed: int = 0
 
 
 def shape_water(coast: Coast) -> Water:
@@ -333,6 +335,7 @@ def shape_water(coast: Coast) -> Water:
         strait_rows,
         chosen.local_pairs,
         chosen.shortcuts,
+        chosen.completed,
     )
 
 
@@ -503,6 +506,13 @@ def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, obje
     if water.sealed == 0 and cut_off:
         message = f"{len(cut_off)} sea cells cannot be reached by sea from the game's water"
         raise SeaError(message)
+    navigable = set(sea) - shut
+    terminals = (navigable - water.lanes) | set(coast.docks)
+    for cell in sorted(water.lanes - terminals):
+        neighbours = touching[cell] & navigable
+        if not neighbours & terminals and len(neighbours) <= 1:
+            message = f"Ocean lane {cell} ends in closed water"
+            raise SeaError(message)
     return {"sea_cells_reached": len(reached), "sea_cells_cut_off": len(cut_off)}
 
 

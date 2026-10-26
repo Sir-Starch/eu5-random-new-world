@@ -53,6 +53,7 @@ PRESET_DIGESTS = {
     38: "71b4a1a32c222cad6f4bd0bfa499361f8d2bbe89e4bda4e6661499fcc7985a1a",
     39: "71b4a1a32c222cad6f4bd0bfa499361f8d2bbe89e4bda4e6661499fcc7985a1a",
     40: "71b4a1a32c222cad6f4bd0bfa499361f8d2bbe89e4bda4e6661499fcc7985a1a",
+    41: "71b4a1a32c222cad6f4bd0bfa499361f8d2bbe89e4bda4e6661499fcc7985a1a",
 }
 
 

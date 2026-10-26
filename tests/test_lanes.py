@@ -175,3 +175,50 @@ def test_every_retained_passable_water_contact_continues_into_open_water() -> No
     lanes = plan_lanes(world, waters, {}, set(), docks)
     assert docks <= lanes.lanes
     assert lanes.shortcuts > 0
+
+
+def _ocean_ends(world: NewWorld, waters: Waters, lanes: set[int], docks: set[int]) -> set[int]:
+    """Independent degree check, including the coastal band as legitimate destinations."""
+    sea = set(waters.sea())
+    deep = {n for n in sea if waters.topography[n] is Topography.DEEP_OCEAN}
+    allowed = sea - (deep - lanes)
+    terminals = (sea - deep) | docks
+    neighbours: dict[int, set[int]] = {n: set() for n in allowed}
+    for first, second in world.edges:
+        if first in allowed and second in allowed:
+            neighbours[first].add(second)
+            neighbours[second].add(first)
+    return {
+        n for n in lanes - terminals if not neighbours[n] & terminals and len(neighbours[n]) <= 1
+    }
+
+
+@pytest.mark.parametrize("gap", [False, True])
+def test_inherited_courses_cross_the_ocean_even_when_both_coasts_already_reach_the_game(
+    *, gap: bool
+) -> None:
+    # Both shores have their own retained-water contact. Global connectivity therefore
+    # accepts the two halves of this crossing, even with a closed cell between them.
+    layout = ["#" + "." * 19 + "#" for _ in range(15)]
+    world = block_world(layout)
+    waters = analyse(world)
+    docks = {cell(layout, 0, column) for column in (1, 19)}
+    row = 7
+    course = {
+        cell(layout, row, column): Course(800, CURRENT)
+        for column in range(3, 18 if gap else 10)
+        if column != 10
+    }
+    planned = plan_lanes(world, waters, course, set(), docks)
+    assert not _ocean_ends(world, waters, set(planned.lanes), docks)
+    # A gap is joined; an inherited lane ending where an old coast used to be
+    # continues ahead to the new shore instead of looping back into its own stem.
+    assert {cell(layout, row, column) for column in range(3, 18)} <= planned.lanes
+    assert all(waters.topography[n] is Topography.DEEP_OCEAN for n in planned.lanes)
+    assert planned.completed > 0
+
+
+def test_a_lane_that_already_ends_at_coastal_water_needs_no_continuation() -> None:
+    world, waters, docks = _setup()
+    planned = plan_lanes(world, waters, _course(5, 3, 20), set(), docks)
+    assert planned.completed == 0

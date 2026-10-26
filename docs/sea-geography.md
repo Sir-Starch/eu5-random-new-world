@@ -172,6 +172,24 @@ the export (`CurrentError`).
 
 ## Lanes and closed ocean (`rnw.lanes`)
 
+**Course ends, 0.13.2 (2026-10-26):** 657Q exposed a gap between two inherited
+lane fragments which both already reached retained water, and two courses
+ending far from a new coast. Global connectivity and the bounded local-coast
+criterion did not require their completion. The initial lane plan now continues
+each open-ocean end through closed deep cells to another lane, coastal water or
+retained navigable water. It excludes its incoming stem and junction from the
+destinations, prefers a destination within 45 degrees of its outward heading,
+and chooses the shortest water-only path by integer centroid length. A search
+stops at the first existing navigable cell: it cannot walk existing water to
+pretend a forward destination was reachable through the closed ocean. If land
+blocks every forward destination, the shortest reachable turn is chosen; if no
+destination is reachable, generation fails with `LaneError`. Each added path
+opens cells and cannot disconnect existing water. An independent export check
+rejects a deep lane tip which touches neither coastal water nor a retained-water
+contact. In 657Q the four original tips become zero, with eleven additional
+lane cells, including the one-cell Ruaziasleir gap. [V-EXEC C349–C351;
+engine movement after the change UNKNOWN]
+
 Generator 0.10.12 made every cell two or more cells from land deep ocean and gave each a
 current: 1,193 cells of the reference world, a ship could go anywhere, and the Sea Currents map
 was an arrow in every zone, where the game has lines of arrows between closed ocean (C241). Now

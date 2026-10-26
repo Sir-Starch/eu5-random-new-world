@@ -1169,6 +1169,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
             "lanes_added_to_link": water.linked,
             "local_route_pairs": water.local_pairs,
             "lanes_added_for_local_routes": water.shortcuts,
+            "lanes_added_for_course_ends": water.completed,
             "closed_seas": water.sealed,
             "impassable_zones": len(water.zones),
             "topography": dict(

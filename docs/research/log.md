@@ -1514,3 +1514,31 @@ unchanged (`tests/golden_world.json`). Full test suite passes: 1,978 Python test
 
 - [V-GAME logs / V-LOCAL executable C347] Traced `error.log:1210–1269` (40 unknown formatting tags `.\x15.w.r.` and 20 country-name failures `\x15.\x15.W.R.`) to Morocco civil war at `game.log:7389` (`CIVIL WAR: \x15TOOLTIP:DYNASTY,623 \x15L; Wattasid\x15!\x15! Rebels against Morocco`). Binary analysis of `eu5.exe` at `pdx_text_formatter.cpp:807` and `countryname.cpp:1135` reveals that Jomini's acronym generator splits words and takes initial letters without stripping Paradox escape control bytes (`\x15`), producing `\x15.\x15.W.R.`. Attributed 100% to vanilla engine/scripts in Old World Morocco; no RNW defect (TR46-L06 CLOSED).
 - [V-LOCAL executable / V-EXEC C348] Resolved `error.log:327` (`map object locator "vfx" is incomplete!`). In vanilla EU5, all 28,573 locations require a VFX locator (1:1 match in `definitions.txt`). In TR46 with `expand_oceans`, 21 `rnw_ocean_*` locations were added to `definitions.txt` but omitted from `generated_locators_vfx.txt` because `_trimmed_instances` filtered `if key in held` (where `held` only has vanilla keys). Generator 0.13.1 / epoch 40 appends `plan.oceans.anchors` to `generated_locators_vfx.txt` and verifies full coverage via `verify_locators` (TR46-L08 FIXED). Reference world digest updated to `af903212dd4c9addacdc06d8c4c676920e29f3803fc82568f3c65a8152112e7e`.
+
+## 2026-10-26 — 657Q ocean-course ends (0.13.2 / epoch 41)
+
+- [V-GAME owner / V-LOCAL / V-EXEC C349] Reconstructed the installed 657Q
+  supercontinent from its exact code and matched all final sea topographies.
+  Four open-ocean tips survive the old global/local reachability checks. The
+  Ruaziasleir tooltip includes endpoint `rnw_sea_00875`; one internal cell at
+  480-permille inherited-course coverage separates it from another lane fragment.
+  Both halves already reach retained water. Build/fingerprint unchanged.
+- [V-EXEC C350] Complete deep ends before folding closed water: water-only paths
+  to existing water, excluding the incoming stem/junction, preferring the forward
+  45-degree cone and stopping at the first navigable destination. A blocked
+  heading takes a reachable turn; no destination fails loudly. An independent
+  export check rejects deep tips even in a globally reachable component.
+- [V-EXEC C351] 657Q has 165 lanes, eleven opened cells and zero tips. Independent
+  raster/template read-back preserves 51,341,116 nonsea identity pixels,
+  30,434,666 retained nonsea RGB pixels, 558 terrain2 files, rivers, 54,773 road
+  strips and 21,525 populated location records. Full check: 1,987 Python pass,
+  14 skip, 23 Rust pass; types/lint/format clean. Local game checks 12 pass,
+  two opt-in skips. Windows offscreen self-test and four-case Linux/Windows
+  parity pass. Epoch-41 reference: 837 files, `667a51aa…7386e`.
+- [V-EXEC C352] Installed the separate EVXP world and updated the generator hub
+  0.13.1→0.13.2 with verified external/retired backups. Checked all 820 world and
+  3,264 hub files; preserved 1,639 other-mod file size/time records, nine root
+  hashes and seven library records. The owner's revealed-world preference is
+  retained through the normal presentation writer. No game launch, process
+  control, save/playset/setting/library change, push or publication. Engine
+  movement after this correction remains [UNKNOWN]. See [064](../../experiments/064-ocean-course-ends/README.md).

@@ -1,7 +1,8 @@
-"""Bound local coastal detours before deciding which deep water stays closed.
+"""Bound local coastal detours and complete ocean courses before closing deep water.
 
 An inherited current can connect the world while leaving nearby coasts a voyage
-apart. Keep its lanes and add only the deep cells needed for local connections.
+apart, or stop in the middle of an ocean. Keep its lanes and add only the deep cells
+needed for local connections and continuations to existing navigable water.
 Distances are integer centroid lengths through water, never through land. This
 is an offline geographic criterion, not the engine's travel-time calculation.
 """
@@ -27,13 +28,18 @@ MAX_DETOUR: Final[int] = 2
 Graph = dict[int, list[tuple[int, int]]]
 
 
-def _distances(
+class LaneError(ValueError):
+    """The generated water cannot be given complete lanes to the game's water."""
+
+
+def _distances(  # noqa: PLR0913 - bounded paths, an optional goal and terminal stops.
     links: Mapping[int, Sequence[tuple[int, int]]],
     start: int,
     allowed: Collection[int],
     limit: int,
     *,
     target: int | None = None,
+    stop_at: Collection[int] = (),
 ) -> tuple[dict[int, int], dict[int, int]]:
     if start not in allowed:
         return {}, {}
@@ -46,6 +52,8 @@ def _distances(
             continue
         if cell == target:
             break
+        if cell in stop_at:
+            continue
         for other, length in links[cell]:
             step = distance + length
             if other in allowed and step <= limit and step < best.get(other, step + 1):
@@ -110,3 +118,94 @@ def shorten_routes(
             lanes.add(start)
             allowed.add(start)
     return len(pairs), len(lanes) - before
+
+
+def _ends(
+    links: Mapping[int, Sequence[tuple[int, int]]],
+    lanes: Collection[int],
+    allowed: Collection[int],
+    terminals: Collection[int],
+) -> list[int]:
+    return [
+        cell
+        for cell in sorted(lanes)
+        if cell not in terminals
+        and not any(other in terminals for other, _ in links[cell])
+        and sum(other in allowed for other, _ in links[cell]) <= 1
+    ]
+
+
+def _stem(
+    links: Graph, start: int, allowed: set[int], terminals: set[int]
+) -> tuple[set[int], int | None]:
+    """Exclude the incoming branch, including its junction, from a continuation's targets."""
+    branch = {start}
+    cell = start
+    incoming = None
+    while True:
+        following = [other for other, _ in links[cell] if other in allowed and other not in branch]
+        if cell in terminals or len(following) != 1:
+            return branch, incoming
+        other = following[0]
+        if incoming is None:
+            incoming = other
+        branch.add(other)
+        cell = other
+
+
+def _continuation(
+    links: Graph, start: int, shut: set[int], targets: set[int], forward: set[int]
+) -> list[int] | None:
+    """Shortest closed-water route ahead; otherwise the shortest reachable turn to open water.
+
+    Existing lanes are destinations only: a search cannot walk back along its own lane.
+    A complete search proves whether geography permits a forward destination before choosing
+    a turn. Both choices are geographic planning, before any closed zones are folded.
+    """
+    best, parent = _distances(links, start, shut | targets | {start}, 1 << 62, stop_at=targets)
+    reached = targets & best.keys()
+    ahead = reached & forward
+    if not reached:
+        return None
+    end = min(ahead or reached, key=lambda cell: (best[cell], cell))
+    path = [end]
+    while path[-1] != start:
+        path.append(parent[path[-1]])
+    return path
+
+
+def complete_routes(
+    world: NewWorld, waters: Waters, deep: set[int], lanes: set[int], docks: Collection[int]
+) -> int:
+    """Continue open-ocean ends to another lane, a coast or retained navigable water.
+
+    Global reachability allows a lane attached at just one end. Its incoming stem and junction
+    cannot be its destination: that would make a little loop at the same dead end. Prefer
+    destinations within 45 degrees of the stem's outward heading, measured with integer dot
+    and cross products. If land blocks every such route, take the shortest reachable turn.
+    Each iteration opens closed cells; it cannot create another end or close existing water.
+    Return the number opened, or raise when no continuation exists.
+    """
+    sea = set(waters.sea())
+    links = _links(world, sea)
+    terminals = (sea - deep) | (set(docks) & sea)
+    before = len(lanes)
+    while ends := _ends(links, lanes, sea - (deep - lanes), terminals):
+        start = ends[0]
+        shut = deep - lanes
+        branch, incoming = _stem(links, start, sea - shut, terminals)
+        targets = sea - shut - branch
+        forward: set[int] = set()
+        if incoming is not None:
+            dr, dc = (int(v) for v in world.centroids[start] - world.centroids[incoming])
+            for cell in sorted(targets):
+                row, column = (int(v) for v in world.centroids[cell] - world.centroids[start])
+                dot = dr * row + dc * column
+                if dot > 0 and dot >= abs(dr * column - dc * row):
+                    forward.add(cell)
+        path = _continuation(links, start, shut, targets, forward)
+        if path is None:
+            message = f"Ocean lane {start} ends in closed water with no continuation"
+            raise LaneError(message)
+        lanes.update(deep.intersection(path))
+    return len(lanes) - before

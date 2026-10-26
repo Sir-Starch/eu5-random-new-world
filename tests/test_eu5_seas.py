@@ -253,6 +253,15 @@ def test_a_sea_that_ships_cannot_reach_stops_the_export() -> None:
         _ = verify_seas(_written(plan, water), plan, world, water.coast, water)
 
 
+def test_a_reachable_lane_ending_in_closed_ocean_stops_the_export() -> None:
+    world, plan = _world_with_ports()
+    # All water is reachable, but the final deep cell is a cul-de-sac, away from
+    # both the coastal band and the retained-water contact.
+    water = _water(world, docks=(1,))
+    with pytest.raises(SeaError, match="ends in closed water"):
+        _ = verify_seas(_written(plan, water), plan, world, water.coast, water)
+
+
 @final
 class _Canvas:
     """A canvas that is the map itself: nothing rolled, the crop at its left edge."""

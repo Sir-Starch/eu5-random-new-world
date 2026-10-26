@@ -21,6 +21,8 @@ and which water is shut.
   coasts), which becomes a lane.
 * **Local routes.** Nearby coasts and retained-water contacts get bounded detours
   through ``sea_routes``, independently of global reachability.
+* **Ends.** Open-ocean ends continue to another lane, coastal water or a retained-water
+  contact. Reachability from one end alone is not a complete ocean route.
 * **Zones.** Each connected stretch of closed deep water becomes one location.
   A size target must not manufacture neighbouring oceans with unrelated names.
 
@@ -36,7 +38,7 @@ import heapq
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw.sea_routes import shorten_routes
+from rnw.sea_routes import LaneError, complete_routes, shorten_routes
 from rnw.seas import Topography
 
 if TYPE_CHECKING:
@@ -53,10 +55,7 @@ COURSE_PERMILLE: Final[int] = 500
 # runs from land than this many cells (a lane keeps to the coasts).
 NEAR_HOPS: Final[int] = 3
 FAR_COST: Final[int] = 3
-
-
-class LaneError(ValueError):
-    """The generated water cannot be given lanes the game's own water can be reached by."""
+__all__ = ["COURSE_PERMILLE", "Course", "LaneError", "Lanes", "plan_lanes"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +76,7 @@ class Lanes:
     sealed: int
     local_pairs: int = 0
     shortcuts: int = 0
+    completed: int = 0
 
 
 def plan_lanes(
@@ -110,6 +110,7 @@ def plan_lanes(
     sealed = _join(links, waters, deep, lanes, docks)
     linked = len(lanes) - before
     local_pairs, shortcuts = shorten_routes(world, waters, deep, lanes, docks)
+    completed = complete_routes(world, waters, deep, lanes, docks)
     shut = sorted(deep - lanes)
     return Lanes(
         frozenset(lanes),
@@ -118,6 +119,7 @@ def plan_lanes(
         sealed,
         local_pairs,
         shortcuts,
+        completed,
     )
 
 

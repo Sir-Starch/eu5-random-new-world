@@ -354,3 +354,28 @@ Removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_tr46_vfx --user-dir U
 2026-10-26 generator GUI update (owner request: "Обнови установленный генератор в игру"):
 updated main `mod/rnw_exp_hub` (version **0.13.1**, **3,264** files) in the normal profile with the latest generator interface improvements from commit 59a052c (preview zoom and drag fix on World tab, About dialog with links and translations across all eleven languages). Built via `packaging/hub.py --replace` and installed via `rnw.app.install.install(..., replace=True)`. All 3,264 installed files match `dist/rnw_exp_hub` (19 files updated, 3,245 identical). The prior hub is backed up byte for byte outside the profile at ignored `local_data/hub-update-20261026/hub-backup-before-gui-update/` (3,264 checked files). All 9 profile-root hashes and 1,639 other-mod file size/time records across the two existing worlds (`rnw_exp_world_657q5j3q3n` and `rnw_exp_world_dsnlfhrxqb`) are preserved; no playset, save, or library record changed. The installed Windows generator passes its offscreen window/native/world-code self-test under isolated Wine (`Random New World 0.13.1: window, native kernels and world codes work`). No game launch or process control.
 
+
+2026-10-26 completed ocean courses ([064](064-ocean-course-ends/README.md), C349–C352):
+with EU5 closed (logs and live check), installed new `mod/rnw_exp_657q_lanes`,
+**RNW: Supercontinent EVXP**, **0.13.2 / epoch 41**, same seed/settings as 657Q,
+`RNW1-081RF-FZCZT-X8CJN-T006G-40860-2AG63-YG1W8-8G3GH-149XR-08TM0-33AGE-Y`.
+All **820** installed files hash-verified. The owner's revealed-world preference
+is retained; 818 nonmetadata files have digest
+`2b9d21108311b1aa441313e63a7e093a94a32ce36115a7dab767c9c4cb60d196`.
+The canonical covered export has 838 nonmetadata files, digest
+`cc1ba4e7fe06c9cf11a15c5a6831057eb3e9671fbc71f8e3ee7b8d86fcac24ec`.
+
+Updated only generator hub `mod/rnw_exp_hub` **0.13.1→0.13.2**, all **3,264**
+files verified, including source/package/metadata versions. Prior hub is backed
+up byte for byte at ignored `local_data/657q-lanes/hub-backup-before-0.13.2/`
+and retained at `mod/.rnw-install/retired/rnw_exp_hub_before_lanes_0132/`;
+no retired-folder sweep. Windows offscreen self-test and lane parity pass.
+Preserved all **1,639** other-mod file size/time records across the original
+657Q and DSNL worlds, **nine** profile-root hashes and **seven** library records.
+No existing world, save, playset, setting or library entry was changed. No game
+launch, process control or publication. Exact audit: ignored
+`local_data/657q-lanes/installed.json`.
+
+Removal with EU5 closed: remove only `mod/rnw_exp_657q_lanes/`, or use
+`uv run rnw uninstall-mod rnw_exp_657q_lanes --user-dir USER_DIR`.
+Hub rollback is a separate action, not performed.

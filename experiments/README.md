@@ -78,3 +78,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [062 — Tordesillas](062-tordesillas/README.md): continuous New World longitude axis across the raster seam, situation comparison and distribution rewrites, candidate QW6O, 0.12.9 / epoch 39.
 
 - [063 — Visual wrap and relief acceptance](063-visual-wrap-and-relief-acceptance/README.md): owner in-game visual review confirms seam absence and improved mountain relief; all completed work accepted; product version rises to 0.13.0, epoch 39.
+
+- [064 — Ocean course ends](064-ocean-course-ends/README.md): reconstruct 657Q's interrupted Ruaziasleir lane, complete ocean tips before folding closed zones, and independently reject reachable dead ends; 0.13.2 / epoch 41.

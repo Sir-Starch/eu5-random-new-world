@@ -371,6 +371,27 @@ the log lack that information. No executable bytes are changed or distributed;
 disassembly and raw measurements stay ignored. This incomplete trace is not
 treated as a new engine movement contract. The engine outcome remains unknown.
 
+### Follow-up: complete ocean courses (2026-10-26, 0.13.2 / epoch 41)
+
+[V-EXEC C349–C352] 657Q reveals a passable lane interrupted by one internal
+cell classified as closed ocean, and two other inherited courses ending in
+open water. The independent generator needs to supply continuous navigation
+data for its changed coastline: the inherited vanilla course and global
+reachability alone cannot express this requirement. The existing R-004
+location PNG and text interfaces carry the completed lanes, templates,
+currents, closed-water lists and associated identities. No new file format,
+executable study, engine patch or runtime repair is introduced.
+
+Folding the newly separated closed-water components changes numeric location
+indices. The existing R-001 spline reader/writer therefore reindexes the same
+land-road strips through its already documented binary structures. No spline
+format changes. Synthetic tests, installed-build fingerprinting and an
+independent raster/template read-back verify the intended data. Original and
+derived maps, binary files and raw reports remain local and ignored; only
+project-authored code, synthetic fixtures, descriptions and digests are
+distributed. The official-interface limits and legal uncertainty recorded in
+R-004/R-001 remain unchanged. Engine movement after this correction is unknown.
+
 ### Follow-up: impassable units and mountain height sources (2026-10-25, 0.12.8 / epoch 38)
 
 [V-LOCAL / V-EXEC / INFERRED C321–C323] Vanilla mountains include additive,

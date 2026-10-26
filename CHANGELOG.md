@@ -16,6 +16,10 @@ All notable changes to Random New World. The project has one product version ([A
 - Repository prepared for publication: new README, changelog, contribution, security and conduct documents, issue and pull-request templates, documentation index. Completed agent hand-off notes were retired, and the history was cleaned of local machine details.
 - Windows fixes found by the first CI run on Windows. The window's self-test closes its log before removing its temporary folder. The atlas cache also compares file sizes, so a file rewritten within one clock tick is not served stale. Tests now write fixtures with LF line endings, escape Windows paths in Steam's VDF, use short test ids, and wait for the window to enable a control before clicking it. A notice about a world's visibility is no longer wiped by the refresh that the change triggers.
 
+## 0.13.2 — 2026-10-26
+
+- Ocean routes continue to another lane, coastal water or retained navigable water instead of ending inside impassable ocean (C349–C352). The 657Q report reproduced four open-ocean ends; the gap beside Ruaziasleir Coast is one closed internal cell. The planner opens it and completes the other two ends, adding eleven lane cells in total. Continuations prefer the incoming course's outward direction and cannot loop straight back into their own stem. An independent export check rejects reachable lanes with an open-ocean dead end. Version 0.13.2, algorithm epoch 41; checked offline, with no EU5 launch.
+
 ## 0.13.1 — 2026-10-26
 
 - Map object VFX locator generation completed for all expanded ocean locations (C348). When `expand_oceans` adds new `rnw_ocean_*` wasteland locations to `definitions.txt`, their positions are now explicitly exported into `generated_locators_vfx.txt`. In vanilla EU5, all 28,573 locations require a VFX locator; with ocean expansion, all 30,565 locations now have full 1:1 locator coverage, eliminating the engine's `map object locator "vfx" is incomplete!` startup error. Validated offline with an explicit test in `verify_locators`. Algorithm epoch 40 with updated reference world digest.
