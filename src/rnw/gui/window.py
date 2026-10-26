@@ -78,6 +78,7 @@ RED: Final[str] = "color: #b00020;"
 MUTED: Final[str] = ""
 ICON_SIZE: Final[tuple[int, int]] = (96, 48)
 DATE: Final[str] = "%Y-%m-%d %H:%M"
+QUICK_LEVELS_INLINE: Final[int] = 3
 # Before the name of a version of a continent already listed above it.
 VERSION_MARK: Final[str] = "\u21b3 "
 
@@ -412,24 +413,27 @@ class _QuickRow:
         self.label: QLabel = QLabel(text(f"quick.{quick.name}"))
         self.label.setToolTip(about)
         self.buttons: dict[str, QPushButton] = {}
+        self.levels: QGridLayout = QGridLayout()
         self.custom: QLabel = QLabel(text("quick.custom"))
         self.custom.setStyleSheet(MUTED)
-        for level in quick.levels:
+        columns = 2 if len(quick.levels) > QUICK_LEVELS_INLINE else len(quick.levels) + 1
+        for column in range(columns):
+            self.levels.setColumnStretch(column, 1)
+        for index, level in enumerate(quick.levels):
             button = QPushButton(text(f"quick.{quick.name}.{level.name}"))
             button.setCheckable(True)
             button.setToolTip(about)
             _ = button.clicked.connect(lambda _checked=False, name=level.name: self._pick(name))
             self.buttons[level.name] = button
+            row, column = divmod(index, columns)
+            self.levels.addWidget(button, row, column)
+        row, column = divmod(len(quick.levels), columns)
+        self.levels.addWidget(self.custom, row, column)
 
     def place(self, grid: QGridLayout, row: int) -> None:
         """Put the row's widgets into ``grid``."""
         grid.addWidget(self.label, row, 0)
-        levels = QHBoxLayout()
-        for button in self.buttons.values():
-            levels.addWidget(button)
-        levels.addWidget(self.custom)
-        levels.addStretch(1)
-        grid.addLayout(levels, row, 1)
+        grid.addLayout(self.levels, row, 1)
 
     def refresh(self, level: str | None, *, enabled: bool) -> None:
         """Press the button of ``level``; none when the controls hold a custom mix."""
