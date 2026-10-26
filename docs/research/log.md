@@ -1622,3 +1622,13 @@ Subsequent captures restore execution in a final cleanup step, with final
 state R / TracerPid 0. No launch, termination, game-memory workaround or profile
 change. Read-only executable/PE-unwind research is recorded in R-006; all raw
 artifacts stay under ignored `local_data/hang-1346-20261026/`.
+
+[V-EXEC C364–C365] Follow-up recovery advice: preserved and hash-verified the
+latest autosave (**1 April 1342**, metadata and ZIP CRCs checked), without
+editing the profile or asking for another run. Owner was advised that closure
+was safe for the already-preserved diagnostics; agent did not terminate EU5,
+and its PID was later absent. Offline stack/definition/spline binding narrows
+the path-refinement lead to the two locations across the raster seam,
+rnw_loc_01100 / rnw_loc_05111. Captured intermediate vectors and canonical
+spline wrap need further attribution; no replacement encoding is presented
+as a verified fix. See 066; no source, output, version or installation change.

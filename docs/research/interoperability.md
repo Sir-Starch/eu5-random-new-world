@@ -642,6 +642,16 @@ hashed executable. The independent generator's interoperability with the
 engine is the research purpose; this entry asserts no general legal permission
 or established fault in either component.
 
+**Recovery follow-up (C364–C365).** The existing R-005 reader checks the copied
+latest autosave's ZIP CRCs and metadata date/version only, without new tokens,
+a save writer or a full state extraction. Existing R-001 spline parsing and
+the copied R-006 stack fields identify the seam-crossing location pair and
+its installed polyline. No new spline layout or binary writer is introduced.
+The exact intermediate-point producer remains unknown, so no file-encoding
+or engine fix is claimed. Private save/route data remains in the same ignored
+folder. No new live attachment occurred; the requested read-only dimension
+check found the process already gone.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).

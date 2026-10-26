@@ -138,3 +138,38 @@ dump, installation change or test mod was made. The necessary read-only
 binary analysis is documented in [interoperability R-006](../../docs/research/interoperability.md).
 The completed generator checks above remain applicable because only research
 documentation changed; they do not validate the game's path-refinement code.
+
+## Recovery advice and offline route follow-up
+
+[V-EXEC C364] On the owner's follow-up asking what to do, the same process
+was still using about five cores with no log progress. Advised closing it
+through Steam after evidence preservation, without requesting another test
+run. The agent did not terminate the process. A later read found that the PID
+had gone away; the agent did not attach or launch anything in that follow-up.
+Copied the latest autosave, `autosave_fdd3388a-bf4c-4ea8-8bc0-975505dd4157.eu5`,
+to ignored `local_data/hang-1346-20261026/` and verified its SHA-256 against the
+untouched source. Both ZIP entries pass CRC checks using the existing R-005
+reader. Its version field is **1.4.4** and metadata date integer **55558080**
+decodes by the previously validated save-date convention to **1 April 1342**.
+That is a recovery checkpoint, not a promise of stable continuation.
+
+[V-LOCAL / V-EXEC / INFERRED C365] Offline follow-up binds the saved refinement
+state's two location fields, through the same installed one-based definition
+order, to **20209 / rnw_loc_01100** and **20357 / rnw_loc_05111**. Their written
+unit-stack/city anchors are **(16364.5, 6533.5)** and **(13.5, 6476.5)**: opposite
+sides of the 16,384-wide raster seam. The installed network has their strip,
+with 26 points and a canonical-coordinate wrap from approximately
+**(16383.08, 6483.15)** to **(0.56, 6480.56)**. Its cylindrical step is short;
+its ordinary planar step is over 16,382 pixels. The captured refinement
+vectors are **(16380, 6490)** and **(8188, 6490)**. This is a concrete seam-route
+lead, stronger than a general screenshot or system-failure hypothesis.
+
+[UNKNOWN C365] The saved vectors are not the written anchor positions.
+Neither the exact point-generation operation producing them nor the unit's
+identity has been recovered. A canonical spline jump alone does not prove
+that the file is invalid or that changing its encoding would fix the engine.
+No replacement strip, map edit, engine switch, disabled rendering or new
+candidate is justified as a verified fix yet. All decoding uses existing
+private stack data and the existing spline reader; route coordinates and
+binary-derived data stay ignored in `route-spline.json`. A read of live map
+dimensions could not proceed because the process had already exited.
