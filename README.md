@@ -19,6 +19,8 @@
 
 Each seed produces new continents, coastlines, relief, climate, rivers, seas, resources, provinces and native civilisations. The generator writes them as an ordinary EU5 mod. Every world is a self-contained map mod, has a short **world code**, and can be rebuilt byte for byte from that code with the same game version.
 
+![A generated New World beside the preserved Old World in Europa Universalis V](docs/images/showcase/00-world-overview.png)
+
 Installed RNW worlds with a readable world code appear in the generator's library automatically. New worlds carry recovery data for their atlas, pictures and generation record, so their library entry can be restored from the mod itself.
 
 > [!IMPORTANT]
@@ -38,6 +40,36 @@ Installed RNW worlds with a readable world code appear in the generator's librar
 | **Before you play** | The New World stays terra incognita in the generator, in the game's mod list and at country selection until you choose to see it |
 
 ## Screenshots
+
+### In game
+
+<details>
+<summary>Eight in-game screenshots — geography, native societies, oceans and dynamic content</summary>
+
+Click a screenshot to view it at full size.
+
+<table>
+<tr>
+<td width="50%"><a href="docs/images/showcase/01-procedural-continents.png"><img src="docs/images/showcase/01-procedural-continents.png" alt="Full-Scale Procedural Continents — Simulated Relief, Climate &amp; Biomes"></a></td>
+<td width="50%"><a href="docs/images/showcase/02-lobby-terra-incognita.png"><img src="docs/images/showcase/02-lobby-terra-incognita.png" alt="True Terra Incognita in the lobby (optional)"></a></td>
+</tr>
+<tr>
+<td width="50%"><a href="docs/images/showcase/03-ocean-navigation.png"><img src="docs/images/showcase/03-ocean-navigation.png" alt="40% Expanded Canvas: Dynamic Sea Lanes, Currents &amp; Reshaped Ocean Wastelands"></a></td>
+<td width="50%"><a href="docs/images/showcase/04-playable-native-societies.png"><img src="docs/images/showcase/04-playable-native-societies.png" alt="Playable Native Societies — With Full Ironman &amp; Achievement Support!"></a></td>
+</tr>
+<tr>
+<td width="50%"><a href="docs/images/showcase/05-native-realms.png"><img src="docs/images/showcase/05-native-realms.png" alt="Procedural Native Realms, Tribes, Cultures &amp; Religions (1337 Start)"></a></td>
+<td width="50%"><a href="docs/images/showcase/06-script-compatible-regions.png"><img src="docs/images/showcase/06-script-compatible-regions.png" alt="Vanilla region &amp; subcontinent keys dynamically remapped for full script compatibility"></a></td>
+</tr>
+<tr>
+<td width="50%"><a href="docs/images/showcase/07-ai-colonization.png"><img src="docs/images/showcase/07-ai-colonization.png" alt="Full AI Colonization Support: New oceans won&#x27;t stop Europe from creating horrific borders by 1837+"></a></td>
+<td width="50%"><a href="docs/images/showcase/08-dynamic-content.png"><img src="docs/images/showcase/08-dynamic-content.png" alt="Dynamic Content: Procedural colonial names, custom formable nations, and adapted historical &amp; regional events"></a></td>
+</tr>
+</table>
+
+</details>
+
+### Generator
 
 The current generator window (Qt, the platform's own controls) with the owner's generated worlds in the library. Supercontinent EVXP is the featured world throughout the overview and map views. The screenshots show the current 0.13.4 interface, including its covered view and the maps available after revealing the world.
 
