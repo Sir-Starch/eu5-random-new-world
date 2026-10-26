@@ -1595,3 +1595,30 @@ visually inspected. Four other records, 7,491 mod-file stat records, nine root
 hashes, preferences and original source bundle preserved. No source/package/mod
 change, new version, generation or game launch. Legacy thumbnail substitution
 remains an implementation limitation. See [065](../../experiments/065-installed-world-recovery/README.md).
+
+## 2026-10-26 — EVXP hang on 22 December 1341
+
+[V-GAME owner/recording / V-LOCAL C358] Preserved the stopped session before
+the owner's restart. Steam recording shows progress from the screenshot's
+30 May to 22 December, followed by an unresponsive window and forced close.
+The owner independently reports normal progress past that date on the same
+world after restarting. [INFERRED / UNKNOWN C359] No immediate screenshot
+freeze, invariably failing date or particular cause is established. A
+Spectacle pipe diagnostic and real river/VFX/treaty load errors cannot be
+assigned causality; partial logs and an already-terminated process leave no
+hang stack. [V-EXEC C360] Executable/build/map fingerprint rechecked; locked
+sync/full check passes 1,999 Python tests, 14 skips and 23 Rust tests. No source,
+world, profile or version change, game launch, termination or new owner
+test. See [066](../../experiments/066-1341-hang/README.md); raw evidence stays
+under ignored `local_data/hang-1341-20261026/`.
+
+[V-GAME owner / V-EXEC C361–C363] The owner then reported another live hang,
+on 2 March 1346. Captured its logs, CPU use and bounded thread state. Actual
+resumed samples point to prolonged unit-graphics path-refinement work; the
+triggering route and whether the generated map or engine is responsible are
+unknown. An early debugger detach left a group stop, which was disclosed and
+corrected; the identical paused snapshots are excluded as execution evidence.
+Subsequent captures restore execution in a final cleanup step, with final
+state R / TracerPid 0. No launch, termination, game-memory workaround or profile
+change. Read-only executable/PE-unwind research is recorded in R-006; all raw
+artifacts stay under ignored `local_data/hang-1346-20261026/`.

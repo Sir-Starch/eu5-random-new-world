@@ -597,6 +597,51 @@ and parsed script rewrites, introducing no new closed binary format or engine pa
 The exact runtime allocation and missing text context remain explicitly unknown;
 neither uncertainty justifies a worldwide vanilla patch or warning suppression.
 
+## R-006 — Live EVXP hang and unit-graphics path refinement
+
+**2026-10-26; EU5 1.4.4 executable, Steam 26142040, SHA-256
+`725a4c6ca50c0ef738f5ef0c00660637365ad01eebd462b39d61eac202714009`;
+EVXP 0.13.2 / epoch 41; C361–C363, [066](../../experiments/066-1341-hang/README.md).**
+
+**Necessity and available mechanisms.** The owner asks whether recurring
+hangs arise from the independently generated map or taking a screenshot.
+Logs of the first episode omit the stalled operation; the second is still
+open. Standard GDB and elfutils provide registers, but their ordinary stack
+walk lacks the Windows executable's DWARF metadata. No applicable official
+out-of-process EU5 hang analyzer was identified locally. No restricted game
+launch, test campaign, console modification or engine patch is used.
+
+**Studied structures.** Bounded copies of five threads' registers and stack
+regions, Linux process/maps/thread counters, the installed executable's PE
+function/unwind metadata, and disassembly restricted to the recovered update,
+priority-container and task-scheduling functions. PE x64 unwind data is a
+documented platform interface, not a newly reverse-engineered EU5 file format:
+[Microsoft, x64 exception handling](https://learn.microsoft.com/en-us/cpp/build/exception-handling-x64?view=msvc-170)
+([SOURCE], accessed 2026-10-26, MSVC x64 documentation). Direct return sites
+are checked against calls; indirect sites remain unlabelled. Embedded source
+and registration identifiers connect the recovered task to unit graphics and
+path refinement. This does not reconstruct the complete engine, prove route
+validity or attribute a map/Proton/driver defect. No runtime object is changed
+to force the task to finish.
+
+**Observation boundary and correction.** Brief debugger attachments stop
+threads and perform ordinary debugger bookkeeping. An initial detach left a
+group stop; it was disclosed, explicitly continued, and its identical snapshots
+are excluded as duration evidence. Later captures always restore execution
+in a final cleanup step and verify R / TracerPid 0. No persistent hook,
+code/data patch, saved-game write, game termination or replacement binary is
+produced. These are not described as completely nonintrusive observations.
+
+**Compatibility and distribution.** All stacks, register/heap fragments,
+executable excerpts, private helpers and logs remain in ignored
+`local_data/hang-1346-20261026/`. Only diagnostic addresses, identifiers and
+aggregate conclusions enter the repository. No protected resources or memory
+dump are distributed; no new generated binary file, product version, epoch,
+reference world or installation is produced. Addresses apply only to the
+hashed executable. The independent generator's interoperability with the
+engine is the research purpose; this entry asserts no general legal permission
+or established fault in either component.
+
 ## Earlier cases still outside this phase
 
 `nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).
