@@ -59,6 +59,9 @@ This is a read-only investigation of Steam build 25905365 on `1.4-open-beta`, pl
 
 ## Mainland-wrap unit hang, 2026-10-26
 
+The original engine-only interpretation below is superseded by the 0.13.5
+vanilla identity comparison at the end of this section.
+
 [V-GAME owner / V-LOCAL / V-EXEC C370–C372] In the pinned EU5 1.4.4 executable
 (Steam 26142040), the owner reproduces a hang after raising Towa's troops and
 unpausing EVXP 0.13.2. A bounded live route capture identifies horizontal
@@ -74,3 +77,14 @@ encoding or disabling later path tightening is not an established remedy.
 No engine/memory patch or geography workaround is shipped. Visual continuity,
 offline cylindrical geometry and stable engine unit movement are separate
 claims. The first 1341 episode lacks the comparable route capture.
+
+**Correction, 0.13.5 (C374–C378).** [V-GAME owner / V-LOCAL / V-EXEC]
+Working vanilla crossings keep one identity on both raster edges. RNW's legacy
+generation instead split every crossing cell, manufacturing a straight boundary
+and additional adjacency. That is a generator defect; the old refiner trace
+does not exclude correcting its input. Removed the split from cell construction
+and the land cache. Written EVXP now follows the vanilla identity representation,
+removes the specific artificial Towa transition and places the earlier pair's
+anchors together in one coordinate chart. Shape, rivers and Old World nonsea
+pixels are preserved. [UNKNOWN] Post-fix movement in EU5 remains unobserved.
+See [068](../../experiments/068-continuous-location-identities/README.md).

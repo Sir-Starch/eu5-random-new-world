@@ -55,15 +55,24 @@ SCRIPT_FILES: Final[tuple[str, ...]] = (
     "game/in_game/gfx/map/map_objects/dynamic_game_objects.txt",
 )
 VALUE_KEYS: Final[frozenset[str]] = frozenset(
-    {"location", "connected_location", "only_in_location"}
+    {"location", "connected_location", "only_in_location", "area"}
 )
 LIST_KEYS: Final[frozenset[str]] = frozenset(
-    {"location", "locations", "waypoints", "province_definition", "provinces", "map_id"}
+    {
+        "location",
+        "locations",
+        "waypoints",
+        "province_definition",
+        "provinces",
+        "map_id",
+        "areas",
+        "discovered_areas",
+    }
 )
 DROP_KEYS: Final[frozenset[str]] = frozenset({"map_id"})
 WORD: Final[re.Pattern[str]] = re.compile(r"[A-Za-z0-9_]+")
 SCOPE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![A-Za-z0-9_])(location|province|province_definition):([A-Za-z_][A-Za-z0-9_]*)"
+    r"(?<![A-Za-z0-9_])(location|province|province_definition|area):([A-Za-z_][A-Za-z0-9_]*)"
 )
 IMAGES: Final[str] = "in_game/gfx/images/"
 CITY_DATA: Final[str] = "in_game/gfx/map/city_data/"
@@ -91,13 +100,14 @@ class RemapAccess:
     closed_seas: frozenset[int] = frozenset()
 
 
-def build_remap(
+def build_remap(  # noqa: PLR0913 - geographic levels share their location bindings.
     removed: list[tuple[str, CellClass, int, int]],
     plan: Plan,
     centres: NDArray[np.int64],
     provinces: dict[str, list[str]],
     *,
     access: RemapAccess,
+    areas: dict[str, list[str]] | None = None,
 ) -> dict[str, str]:
     """Map removed location (and province) keys to generated keys.
 
@@ -132,6 +142,13 @@ def build_remap(
             if key in remap:
                 remap[province] = province_of[remap[key]]
                 break
+    area_of = {cell.key: cell.area for cell in plan.cells}
+    for area, members in (areas or {}).items():
+        destinations = Counter(area_of[remap[key]] for key in members if key in remap)
+        if not destinations:
+            message = f"No generated replacement for removed area {area}"
+            raise RemapError(message)
+        remap[area] = min(destinations, key=lambda name: (-destinations[name], name))
     return remap
 
 

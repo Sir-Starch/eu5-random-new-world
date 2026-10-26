@@ -440,6 +440,27 @@ identifiers and aggregate findings enter the repository; no protected mountain
 source is distributed with the generator. Existing compatibility fingerprints,
 input manifests and local-generation/distribution boundaries continue to apply.
 
+### Follow-up: continuous raster-edge identities (2026-10-26, 0.13.5 / epoch 42)
+
+[V-LOCAL / V-EXEC C375–C378] Vanilla uses one named colour/location identity
+on both raster edges, whereas the generator's legacy split invented a separate
+location for each side. Removing that construction step restores the existing
+location, locator and adjacency contract without a new file format or engine
+modification. The current adapters write the PNGs, definitions and terrain
+binaries. Existing R-001 spline writing receives the resulting identity graph;
+neither its binary layout nor point/segment encoding changes. Written read-back
+checks the full physical-class raster, Old World nonsea RGB, locator ownership
+and complete bundle hashes. Only sixteen existing material files differ among
+558 terrain2 files; height sources/placements and rivers remain exact.
+
+Initial script/setup binding also maps wholly removed area identifiers through
+the same geographic location replacements before their consumers are written.
+This is a text interface, not a new closed binary contract or a later repair
+of generated output. Missing bindings still fail the existing validators.
+All locally derived map files, package copies and diagnostic images stay
+ignored; the distributed change is original generator code and synthetic tests.
+See [068](../../experiments/068-continuous-location-identities/README.md).
+
 ## R-005 — Read-only TR46 save-state analysis
 
 **2026-10-25; original generator 0.12.3 / epoch 33 campaign, EU5 1.4.4 executable
@@ -690,6 +711,18 @@ comparison helper and logs stay ignored. The purpose remains interoperability
 of generated wrapped geography, not distribution or alteration of the engine.
 No executable patch, memory edit, new binary format, mod workaround or promised
 playable repair results from the arithmetic comparison.
+
+**Correction after vanilla comparison (C374–C378).** The dimensional arithmetic
+trace does not establish valid generator input or the absence of a data-level
+repair. The owner points out working vanilla crossings; local raster comparison
+identifies the generator's forced planar split as a concrete data defect. C373's
+broader interpretation is superseded. Version 0.13.5 removes that split at
+construction time, preserving a location's identity across the raster edge.
+It does not copy or patch engine instructions, suppress unit rendering or add
+a repair hook. No further process attachment or game launch is used in 068;
+the source defect is verified offline and post-fix game movement remains a
+separate unknown. R-006's private binary observations remain diagnostic evidence
+of the old failing task, not a prerequisite for distributing an engine patch.
 
 ## Earlier cases still outside this phase
 

@@ -47,10 +47,9 @@ def cache_key(
     domain: NDArray[np.bool_],
     seed: int,
     settings: NewWorldSettings,
-    seam: int | None,
     drawn: NDArray[np.bool_] | None,
 ) -> str:
-    spec = (1, epoch.CURRENT, seed, replace(settings, precious_permille=0), seam, domain.shape)
+    spec = (2, epoch.CURRENT, seed, replace(settings, precious_permille=0), domain.shape)
     digest = hashlib.sha256(repr(spec).encode("ascii"))
     for raster in (domain, drawn):
         digest.update(b"none" if raster is None else b"raster")
@@ -61,16 +60,15 @@ def cache_key(
     return digest.hexdigest()
 
 
-def get_world(  # noqa: PLR0913
+def get_world(
     cache: Path | None,
     domain: NDArray[np.bool_],
     *,
     seed: int,
     settings: NewWorldSettings,
-    seam: int | None,
     drawn: NDArray[np.bool_] | None,
 ) -> NewWorld:
-    target = None if cache is None else cache / cache_key(domain, seed, settings, seam, drawn)
+    target = None if cache is None else cache / cache_key(domain, seed, settings, drawn)
     if target is not None and target.exists():
         return _read(target, domain.shape)
     world = seal_pockets(
@@ -78,8 +76,6 @@ def get_world(  # noqa: PLR0913
             domain.copy(),
             seed=seed,
             settings=settings,
-            seam=seam,
-            split_at_seam=True,
             drawn=drawn,
         )
     )

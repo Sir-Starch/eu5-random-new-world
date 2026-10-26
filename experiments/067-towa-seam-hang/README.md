@@ -172,4 +172,14 @@ checks verify the recorded diagnosis and unchanged generator, not a game fix.
 
 ## Installation and removal
 
-No candidate, test mod, package or profile change. Nothing to remove.
+**Subsequent correction:** [068](../068-continuous-location-identities/README.md)
+compares the working vanilla representation and finds the generator's forced
+seam split. The claim that already-split cells excluded a generator-level
+repair was incorrect: vanilla continues the same identity across the cut.
+The midpoint trace remains evidence of the observed failure branch, not proof
+that valid wrapped geography requires an engine patch. Version 0.13.5 fixes
+identity construction and installs a separate candidate; post-fix runtime
+acceptance remains unobserved.
+
+No candidate, package or profile change occurred in 067. The subsequent
+candidate installation and removal belong to 068.

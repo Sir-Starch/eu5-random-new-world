@@ -45,6 +45,9 @@ The **minimal mandatory map override set is unknown**. `default.map` names sever
 
 ## Later observed constraint: mainland wrap, 2026-10-26
 
+The original engine-only interpretation below is superseded by the 0.13.5
+identity-construction correction at the end of this section.
+
 [V-GAME owner / V-LOCAL / V-EXEC C370–C372] On EU5 1.4.4 executable 26142040,
 EVXP's immediately reproducible Towa troop-raising hang exposes an engine
 horizontal midpoint calculation using the map's height. A bounded route
@@ -56,3 +59,14 @@ not establish stable unit movement across a wrapped mainland.
 neither a corrected-engine runtime comparison nor a clean-vanilla crossing
 test was performed. No binary patch or replacement geography is part of this
 diagnosis. See [067](../experiments/067-towa-seam-hang/README.md).
+
+**Correction following vanilla comparison (0.13.5, C374–C378).** The preceding
+trace was not sufficient to conclude that mainland wrap needs an engine repair.
+[V-GAME owner / V-LOCAL / V-EXEC] Vanilla uses continuous location identities
+across the raster edge; RNW's forced split introduced a different, defective
+adjacency structure. Version 0.13.5 removes that split at construction time.
+The corrected owner-world's physical-class raster and retained Old World land
+are exact, with continuous IDs and correctly placed anchors; a separate candidate
+is prepared. [UNKNOWN] Runtime movement and hang resolution still require game
+observation, distinct from the verified data correction. See
+[068](../experiments/068-continuous-location-identities/README.md).

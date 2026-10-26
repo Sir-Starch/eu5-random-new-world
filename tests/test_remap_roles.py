@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 
@@ -65,4 +67,41 @@ def test_missing_access_is_an_error_instead_of_an_incompatible_replacement(kind:
                 navigable_keys=frozenset({"required"}) if kind is CellClass.SEA else frozenset(),
                 closed_seas=frozenset({2, 3}),
             ),
+        )
+
+
+def test_a_dropped_area_uses_the_area_of_its_geographic_replacements() -> None:
+    plan = _plan()
+    plan.cells = [replace(cell, area=cell.key + "_area") for cell in plan.cells]
+    remap = build_remap(
+        [("old_sea", CellClass.SEA, 0, 0)],
+        plan,
+        np.array([[0, 20], [0, 30], [0, 0], [0, 10]], dtype=np.int64),
+        {},
+        access=RemapAccess(navigable_keys=frozenset({"old_sea"}), closed_seas=frozenset({2})),
+        areas={"lost_area": ["old_sea"]},
+    )
+    assert remap["lost_area"] == "lane_area"
+    script = (
+        "area = lost_area trigger = { has_discovered_area = area:lost_area } "
+        "areas = { lost_area kept_area lane_area } "
+        "discovered_areas = { lost_area lane_area }"
+    )
+    rewritten, _ = remap_text(script, remap)
+    assert "lost_area" not in rewritten
+    assert "area = lane_area" in rewritten
+    assert "area:lane_area" in rewritten
+    assert "areas = {  kept_area lane_area }" in rewritten
+    assert "discovered_areas = {  lane_area }" in rewritten
+
+
+def test_a_dropped_area_without_any_compatible_location_is_an_error() -> None:
+    with pytest.raises(RemapError, match="removed area lost_area"):
+        _ = build_remap(
+            [],
+            _plan(),
+            np.zeros((4, 2), dtype=np.int64),
+            {},
+            access=RemapAccess(),
+            areas={"lost_area": ["absent"]},
         )

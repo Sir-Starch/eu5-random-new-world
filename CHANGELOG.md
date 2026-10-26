@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.13.5 — 2026-10-26
+
+- Generated locations keep one identity across the map's raster edge, as vanilla does.
+  Removed the legacy seam split for land, sea, lakes and wastelands, including from the
+  land cache. This removes the artificial straight border and the extra adjacency in
+  the owner's immediately reproducible Towa troop-raising case. Mainland, relief and
+  rivers are preserved; no engine patch or replacement geography. Epoch 42. Written
+  output and reproducibility checked offline; post-fix movement in game is unobserved.
+- When a generated region has no counterpart for a former sea area, setup discoveries
+  and script references use the same geographic replacement binding. A vanished
+  discovery area no longer retires an otherwise retained country. Existing validators
+  still reject unresolved references and incompatible destinations.
+
 All notable changes to Random New World. The project has one product version ([ADR 0003](docs/adr/0003-versioning.md)): `0.MINOR.PATCH` is development, MINOR rises when the owner accepts a roadmap phase in game, and the first Steam Workshop publication will be 1.0.0. Any change to generated output raises at least PATCH. A change to any file of a world's mod other than `.metadata` also starts a new **algorithm epoch** with a new reference world.
 
 `C###` numbers refer to the [claims ledger](docs/research/claims-ledger.md). Evidence labels (`[V-GAME]`, `[V-EXEC]`, …) are explained in [CONTRIBUTING](CONTRIBUTING.md#evidence-labels). Entries without an in-game result have been checked offline only.

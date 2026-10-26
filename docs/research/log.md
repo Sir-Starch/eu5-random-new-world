@@ -1671,3 +1671,41 @@ has been verified, no game binary/memory/map is patched and no new product
 version or candidate is claimed. A later optional read finds the process gone
 without attachment; agent did not terminate it. See 067 and R-006; complete
 capture/derived arithmetic stay private and ignored.
+
+## 2026-10-26 — Restore vanilla-style location identity at the raster edge
+
+[V-GAME owner / V-LOCAL / V-EXEC C374–C375] Owner corrects the earlier
+interpretation by pointing to working vanilla crossings. Local comparison finds
+the actual representational difference: the production cache still forcibly
+splits crossing cells, unlike vanilla's shared colour/identity. The synthetic
+production call makes 171 cells rather than 157 and fails equality with the
+continuous model. C373's broad repair boundary is withdrawn; the old arithmetic
+trace remains evidence of that failing branch, not valid generator input.
+
+[V-EXEC C376–C378] 0.13.5 / epoch 42 removes the legacy split and its cache
+input. Corrected EVXP preserves the entire physical-class raster, all 30,434,666
+retained nonsea Old World RGB pixels, rivers and height sources/placements.
+Only sixteen existing material files differ among 558 terrain2 files. Towa's
+false transition disappears; the earlier pair remains distinct but has seam-
+continuous identities and nearby same-side unit anchors. All 6312 generated
+anchors and 865 bundle files check. A dropped-area regression in the former
+reference is fixed through initial shared source bindings, preserving GRL and
+all script references without relaxing validators. EVXP offers all story
+families and becomes the epoch-42 reference, 837 files, digest 76c17c96…f4d5b0.
+
+Full check: 2005 Python/23 Rust pass; format/lint/types clean. Fresh reference
+suite: 13 pass/one opt-in skip, 213.41 s. Final Windows self-test and Linux/
+Windows geometry plus area-binding parity pass. Prepared a separate candidate
+and self-describing receipt. No engine patch or campaign migration. Post-fix
+game behavior is unobserved and no new owner sitting is requested. See
+[068](../../experiments/068-continuous-location-identities/README.md).
+
+[V-EXEC C379] Installed the new **RNW: Supercontinent EVXP fixed** and its
+29-file entry into both generator libraries; 848 installed mod files verify.
+Updated the generator-only hub 0.13.3→0.13.5, 3266 files checked, with external
+and retired verified backups. Preserved all 820 original EVXP file hashes,
+4225 other-mod size/time records, nine root hashes, 111 save-file stat records,
+eleven old library records and two preference files. No sweep or playset edit.
+Host check finds no EU5 process; stale log state remains `played` after forced
+closure and is not mistaken for a live session. No game launch or campaign
+migration. The source defect is fixed; post-fix engine acceptance is unobserved.

@@ -1,4 +1,4 @@
-"""New World cells: seed-driven coasts, the seam strait and city points (synthetic domains)."""
+"""New World cells: seed-driven coasts, continuous identities and city points."""
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
 # pyright: reportAny=false
@@ -20,7 +20,6 @@ from rnw.newworld import (
     land_stage,
     open_sea,
     seal_pockets,
-    split_at_column,
     stray_strait,
     unported_cells,
     wobble_borders,
@@ -69,17 +68,13 @@ def test_land_outline_changes_with_the_seed() -> None:
     assert not any(np.any(mask[:, 440:]) for mask in masks)
 
 
-def test_the_map_seam_does_not_change_the_generated_geography() -> None:
-    """Moving the display seam cannot create water or restart the land field."""
+def test_continent_cells_continue_through_the_middle_of_the_canvas() -> None:
+    """A canvas has no reserved artificial boundary through its generated land."""
     domain = np.ones((160, 400), dtype=bool)
-    world = generate_new_world(domain, seed=3, settings=SMALL, seam=200)
+    world = generate_new_world(domain, seed=3, settings=SMALL)
     mask = _land_mask(world)
-    plain = generate_new_world(domain, seed=3, settings=SMALL)
-    assert np.array_equal(plain.labels, world.labels)
-    assert np.array_equal(plain.elevation, world.elevation)
     assert np.any(mask[:, 199] & mask[:, 200])
-    shifted = generate_new_world(domain, seed=3, settings=SMALL, seam=97)
-    assert np.array_equal(shifted.labels, world.labels)
+    assert np.any(world.labels[:, 199][mask[:, 199]] == world.labels[:, 200][mask[:, 199]])
 
 
 def test_a_small_canvas_lobe_has_no_reserved_land() -> None:
@@ -104,12 +99,8 @@ def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:
     domain = np.ones((160, 400), dtype=bool)
     drawn = np.zeros(domain.shape, dtype=bool)
     drawn[30:130, 60:340] = True
-    plain = generate_new_world(domain, seed=3, settings=SMALL, drawn=drawn)
-    cut = generate_new_world(
-        domain, seed=3, settings=SMALL, drawn=drawn, seam=200, split_at_seam=True
-    )
-    assert np.array_equal(_land_mask(cut), _land_mask(plain))
-    assert np.all(_land_mask(cut)[40:120, 190:210])
+    world = generate_new_world(domain, seed=3, settings=SMALL, drawn=drawn)
+    assert np.all(_land_mask(world)[40:120, 190:210])
 
 
 def test_city_points_move_away_from_the_shore() -> None:
@@ -200,17 +191,3 @@ def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:
     assert sealed.classes[1:3] == (CellClass.LAND, CellClass.LAND)
     assert unported_cells(sealed) == []
     assert seal_pockets(sealed) is sealed
-
-
-def test_splitting_at_the_seam_while_generating_equals_splitting_afterwards() -> None:
-    """One description of the split world is the world of ``split_at_column``, cell for cell."""
-    domain = np.ones((160, 400), dtype=bool)
-    plain = split_at_column(generate_new_world(domain, seed=3, settings=SMALL, seam=200), 200)
-    direct = generate_new_world(domain, seed=3, settings=SMALL, seam=200, split_at_seam=True)
-    assert np.array_equal(plain.labels, direct.labels)
-    assert plain.classes == direct.classes
-    assert plain.edges == direct.edges
-    for name in ("pixels", "centroids", "interior", "mean_elevation", "spread", "elevation"):
-        assert np.array_equal(getattr(plain, name), getattr(direct, name))
-    unsplit = generate_new_world(domain, seed=3, settings=SMALL, seam=200)
-    assert len(direct.classes) >= len(unsplit.classes)

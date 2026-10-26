@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from functools import partial
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
@@ -574,13 +574,11 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
     return merge_small(grow_regions(mask, seed_sites(key, mask, spacing)), smallest)
 
 
-def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings and what shapes it
+def generate_new_world(
     domain: NDArray[np.bool_],
     *,
     seed: int,
     settings: NewWorldSettings,
-    seam: int | None = None,
-    split_at_seam: bool = False,
     drawn: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
@@ -588,10 +586,8 @@ def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings an
     With ``drawn`` (a land mask fitted to the domain, ``rnw.landmask``) the land is the
     drawing's and the generator makes the rest on it.
 
-    ``seam`` is the crop column where the world map wraps (cells left of it continue at
-    the right map edge). It does not affect geography. With ``split_at_seam`` the
-    cells the seam still crosses are split before the world is described, which gives the
-    world of ``split_at_column`` without describing it twice.
+    Cells belong to this continuous canvas. Projecting it across the game's raster
+    boundary must retain each cell's identity on both sides, just as vanilla does.
 
     The land cells, the sea cells and the relief depend only on the masks, so they are
     built beside each other when the machine has the cores and the memory for it.
@@ -648,8 +644,6 @@ def generate_new_world(  # noqa: PLR0913 - the domain, the seed, the settings an
     ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
     for index in ranked[:wasteland]:
         kinds[index] = CellClass.WASTELAND
-    if split_at_seam and seam is not None:
-        kinds = _split_crossing_cells(labels, kinds, seam)
     return derive_world(labels, tuple(kinds), relief)
 
 
@@ -754,49 +748,3 @@ def seal_pockets(world: NewWorld) -> NewWorld:
     for index in cells:
         kinds[index] = CellClass.WASTELAND
     return replace(world, classes=tuple(kinds))
-
-
-def _split_crossing_cells(
-    labels: NDArray[np.int32], kinds: list[CellClass], column: int
-) -> list[CellClass]:
-    """Give every part of a cell that crosses ``column`` but the largest a cell of its own.
-
-    ``labels`` is changed in place; returns the classes with those of the new cells added.
-    """
-    kinds = list(kinds)
-    if not 0 < column < labels.shape[1]:
-        return kinds
-    left = labels[:, column - 1]
-    right = labels[:, column]
-    crossing = np.unique(left[(left == right) & (left >= 0)])
-    for cell in cast("list[int]", crossing.tolist()):
-        rows, columns = np.nonzero(labels == cell)
-        top, bottom = int(rows.min()), int(rows.max()) + 1
-        start, end = int(columns.min()), int(columns.max()) + 1
-        window = labels[top:bottom, start:end]
-        mine = window == cell
-        side = np.zeros(mine.shape, dtype=np.int32)
-        side[:, max(0, column - start) :] = 1
-        parts = label_components(np.where(mine, side, -1).astype(np.int32))
-        ids = np.unique(parts[mine])
-        sizes = [int(np.count_nonzero(parts[mine] == part)) for part in ids.tolist()]
-        keep = ids[int(np.argmax(sizes))]
-        for part in ids.tolist():
-            if part == keep:
-                continue
-            window[mine & (parts == part)] = len(kinds)
-            kinds.append(kinds[cell])
-    return kinds
-
-
-def split_at_column(world: NewWorld, column: int) -> NewWorld:
-    """Split every cell that crosses ``column`` so no cell spans it.
-
-    Used for a map seam: each side's 4-connected parts become separate cells (the
-    largest part keeps the original index), so every cell stays connected.
-    """
-    if not 0 < column < world.labels.shape[1]:
-        return world
-    labels = world.labels.copy()
-    kinds = _split_crossing_cells(labels, list(world.classes), column)
-    return derive_world(labels, tuple(kinds), world.elevation)

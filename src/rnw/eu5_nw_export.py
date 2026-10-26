@@ -161,7 +161,7 @@ from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
 from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
 from rnw.eu5_regionkeys import physical_keys
-from rnw.eu5_remap import RemapAccess, build_remap, remap_scripts
+from rnw.eu5_remap import RemapAccess, build_remap, remap_scripts, remap_text
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
     drop_block_entries,
@@ -973,6 +973,18 @@ def _removed_provinces(hierarchy: dict[str, Location], removed: set[str]) -> dic
     }
 
 
+def _removed_areas(
+    hierarchy: dict[str, Location], removed: set[str], dropped: list[str]
+) -> dict[str, list[str]]:
+    """Wholly replaced areas that the generated geography no longer uses."""
+    wanted = set(dropped)
+    areas: dict[str, list[str]] = {}
+    for key, location in hierarchy.items():
+        if location.area in wanted:
+            areas.setdefault(location.area, []).append(key)
+    return {area: members for area, members in areas.items() if all(k in removed for k in members)}
+
+
 def _setup_texts(game_dir: Path) -> dict[str, str]:
     return {
         path.name: path.read_text(encoding="utf-8-sig")
@@ -1014,6 +1026,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     water: Water,
     new_world_keys: set[str],
     resources_seed: int,
+    area_replacements: dict[str, str],
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     bodies = _template_bodies(_read(game_dir, TEMPLATES))
     donors = _donor_map(
@@ -1104,7 +1117,12 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     if (rewritten := rewrite_override_locators(override, removed)) != override:
         outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
     setup = prune_setup(
-        _setup_texts(game_dir), gone, {c.key: natives.pops.get(c.key, []) for c in plan.cells}
+        {
+            name: remap_text(text, area_replacements)[0]
+            for name, text in _setup_texts(game_dir).items()
+        },
+        gone,
+        {c.key: natives.pops.get(c.key, []) for c in plan.cells},
     )
     additions: dict[str, tuple[str, ...]] = {
         COUNTRIES_FILE: (country_records(natives.countries),),
@@ -2278,7 +2296,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 canvas.mask,
                 seed=seed,
                 settings=settings.new_world,
-                seam=seam,
                 drawn=None if land_mask is None else fit(land_mask, canvas.mask.shape),
             ),
         )
@@ -2488,6 +2505,32 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )
         checkpoint()
         ports = _ports(plan, world, canvas, coast.foreign, vanilla_ports)
+        remap = build_remap(
+            [
+                (
+                    game_map.keys[i],
+                    game_map.classes[i],
+                    int(geometry.rows[i]),
+                    int(geometry.columns[i]),
+                )
+                for i in np.flatnonzero(canvas.removed).tolist()
+                if game_map.keys[i] in removed
+            ],
+            plan,
+            np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
+            _removed_provinces(hierarchy, removed),
+            areas=_removed_areas(hierarchy, removed, plan.dropped_areas),
+            access=RemapAccess(
+                port_keys=frozenset(vanilla_ports),
+                port_cells=frozenset(ports[1]),
+                navigable_keys=frozenset(
+                    key
+                    for i, key in enumerate(game_map.keys)
+                    if game_map.classes[i] is CellClass.SEA and not game_map.ambiguous[i]
+                ),
+                closed_seas=shapes.zones,
+            ),
+        )
         development = _plan_development(
             calibration,
             game_map=game_map,
@@ -2518,6 +2561,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 water=shapes,
                 new_world_keys=new_world_keys,
                 resources_seed=resources_seed,
+                area_replacements={key: remap[key] for key in plan.dropped_areas if key in remap},
             ),
         )
         written = run_stage(
@@ -2579,31 +2623,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             verify_development(texts, plan, natives, development, calibration, new_world_keys)
         )
         checkpoint()
-        remap = build_remap(
-            [
-                (
-                    game_map.keys[i],
-                    game_map.classes[i],
-                    int(geometry.rows[i]),
-                    int(geometry.columns[i]),
-                )
-                for i in np.flatnonzero(canvas.removed).tolist()
-                if game_map.keys[i] in removed
-            ],
-            plan,
-            np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
-            _removed_provinces(hierarchy, removed),
-            access=RemapAccess(
-                port_keys=frozenset(vanilla_ports),
-                port_cells=frozenset(ports[1]),
-                navigable_keys=frozenset(
-                    key
-                    for i, key in enumerate(game_map.keys)
-                    if game_map.classes[i] is CellClass.SEA and not game_map.ambiguous[i]
-                ),
-                closed_seas=shapes.zones,
-            ),
-        )
         spline_data, spline_stats = run_stage(
             "spline network",
             lambda: _spline_outputs(

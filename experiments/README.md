@@ -86,3 +86,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [066 — EVXP hangs](066-1341-hang/README.md): preserve the 1341 session and recording, then inspect the live 1346 recurrence; unit-graphics path-refinement work is implicated, with its triggering input unresolved.
 
 - [067 — Towa seam hang](067-towa-seam-hang/README.md): immediate troop-raising repetition and bounded route capture identify an engine horizontal midpoint using map height; five live points reproduced exactly, safe mod-level repair unresolved.
+
+- [068 — Continuous location identities](068-continuous-location-identities/README.md): correct 067's repair premise, follow vanilla's shared identities across the raster edge, remove forced cell splitting and bind vanished sea areas consistently; 0.13.5 / epoch 42, corrected EVXP reference and separate candidate.
