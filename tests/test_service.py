@@ -452,7 +452,7 @@ def test_a_world_without_a_record_or_a_bundle_cannot_be_checked(tmp_path: Path) 
     """Both are errors that say why, not a pass."""
     export = FakeExport()
     world, game = _checked(tmp_path, export)
-    with pytest.raises(service.CheckError, match="before worlds kept a record"):
+    with pytest.raises(service.CheckError, match="no reproducibility record"):
         _ = service.check(replace(world, record=None), game=game, data=tmp_path / "data")
     (library.folder(tmp_path / "data", world) / "manifest.json").unlink()
     with pytest.raises(service.CheckError, match="no longer the ones"):

@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pytest
 
 from rnw import atlas as atlas_module
 from rnw import landmask, worldfile
-from rnw.app import exchange, install, library, transfer
+from rnw.app import exchange, install, library, recovery, transfer
 from rnw.app.exchange import ExchangeError
 from rnw.app.library import Placement
 from rnw.app.worldcode import encode, new_code
+from rnw.record import manifest_digest, output_entries
 from rnw.worldfile import WorldFileError
 from tests.fakes import build_game, build_world, synthetic_atlas
 
@@ -132,6 +134,40 @@ def test_a_built_world_is_sent_and_received_whole_for_the_samebuild_game(
         _ = transfer.receive_mod(tmp_path / "two", path, game)
 
 
+def test_a_recovered_folder_alias_transfers_to_a_safe_standard_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _same_fingerprint(monkeypatch)
+    game = build_game(tmp_path / "game")
+    world = build_world(tmp_path / "one", game)
+    mod = library.kept(tmp_path / "one", world)
+    assert mod is not None
+    alias = replace(world, mod_folder="rnw_exp_manual_export")
+    moved = mod.rename(mod.with_name(alias.folder))
+    library.save(tmp_path / "one", alias)
+    recovery.rebase_bundle(library.folder(tmp_path / "one", alias), alias.folder)
+    metadata = moved / install.METADATA
+    original = json.dumps({"id": alias.folder, "name": "World"}).encode()
+    _ = metadata.write_bytes(original)
+    path = transfer.send_mod(tmp_path / "one", alias, moved, tmp_path / "alias.rnworld-mod")
+    received = transfer.receive_mod(tmp_path / "two", path, game).world
+    assert received.mod_folder == ""
+    kept = library.kept(tmp_path / "two", received)
+    assert kept is not None
+    assert (
+        json.loads((kept / install.METADATA).read_text(encoding="utf-8-sig"))["id"]
+        == received.folder
+    )
+    assert metadata.read_bytes() == original
+    assert received.record is not None
+    manifest = cast(
+        "dict[str, object]",
+        json.loads((library.folder(tmp_path / "two", received) / library.MANIFEST).read_text()),
+    )
+    files = cast("list[dict[str, object]]", manifest["files"])
+    assert manifest_digest(output_entries(files, received.folder)) == received.record.output_sha256
+
+
 def test_a_built_world_is_refused_by_a_game_that_is_not_the_one_it_was_made_from(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -203,7 +239,7 @@ def test_what_cannot_be_sent_or_received_says_why(
         {"manifest.json": b"{}", "inputs.json": b"{}"},
         mod,
     )
-    with pytest.raises(ExchangeError, match="before worlds kept a record"):
+    with pytest.raises(ExchangeError, match="no reproducibility record"):
         _ = transfer.receive_mod(tmp_path / "two", bare, game)
     with pytest.raises(WorldFileError):
         _ = worldfile.read(tmp_path / "missing.rnworld")

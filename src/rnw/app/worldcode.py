@@ -30,6 +30,7 @@ from rnw.rng import check_seed
 from rnw.settings import PRESETS, SettingsError, build_settings
 
 PREFIX: Final[str] = "RNW1"
+IN_TEXT: Final[re.Pattern[str]] = re.compile(r"\bRNW1(?:-[A-Za-z0-9]+)+", re.IGNORECASE)
 FORMAT: Final[int] = 1
 COMPACT: Final[int] = 2
 # The fields a compact code can change, by number. Append only: a number, once given, names

@@ -68,7 +68,7 @@ def checked_world(record: dict[str, object]) -> World:
     except WorldCodeError as error:
         message = f"The world in the file has a code that cannot be read: {error}"
         raise ExchangeError(message) from error
-    return replace(world, revealed=False)
+    return replace(world, revealed=False, mod_folder="")
 
 
 def export_world(data: Path, world: World, output: Path) -> Path:

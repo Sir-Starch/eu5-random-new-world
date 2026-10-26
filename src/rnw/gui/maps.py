@@ -102,6 +102,11 @@ class MapsPanel(QWidget):
         _ = self.pages.addWidget(self._covered_page())
         _ = self.pages.addWidget(self._maps_page())
 
+    @override
+    def minimumSizeHint(self) -> QSize:
+        """Yields width to the splitter so the layer buttons do not widen the window (ADR 0007)."""
+        return QSize(0, super().minimumSizeHint().height())
+
     # -- the two pages -------------------------------------------------------------------------
 
     def _covered_page(self) -> QWidget:

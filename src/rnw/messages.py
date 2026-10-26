@@ -30,7 +30,9 @@ MESSAGES: Final[dict[str, str]] = {
         "This world's land is drawn on a picture the library no longer has. Open the world's "
         "file again, or choose the picture, to make the world."
     ),
-    "check.no_record": "This world was made before worlds kept a record, so it cannot be checked.",
+    "check.no_record": (
+        "This world has no reproducibility record, so its original output cannot be checked."
+    ),
     "check.bundle": "The world's files in the library are no longer the ones it was made from.",
     # the game and the profile
     "install.in_use": (
@@ -48,7 +50,7 @@ MESSAGES: Final[dict[str, str]] = {
     ),
     "transfer.no_mod": "This file holds no mod. Open it as a world file.",
     "transfer.no_record": (
-        "This world was made before worlds kept a record, so its game cannot be checked."
+        "This world has no reproducibility record, so its game files cannot be verified."
     ),
     "transfer.have": "The library already has this world. Delete it first to take this copy.",
     "transfer.foreign": "The mod in the file was not made by this generator.",

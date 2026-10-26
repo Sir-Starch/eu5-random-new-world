@@ -33,7 +33,7 @@ from typing import TYPE_CHECKING, Final, cast
 from rnw import worldname
 from rnw.app import install
 from rnw.app.paths import workspace
-from rnw.app.worldcode import WorldCodeError, decode
+from rnw.app.worldcode import IN_TEXT, WorldCodeError, decode
 from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import Atlas, AtlasError
@@ -98,11 +98,14 @@ class World:
     starred: bool = False
     user_tag: str = ""
     show_new_world: bool | None = None
+    # An adopted installed mod may have a nonstandard folder. Its library folder
+    # remains the normal id-based one; adopting never renames a player's mod.
+    mod_folder: str = ""
 
     @property
     def folder(self) -> str:
         """The mod's folder and id."""
-        return f"{FOLDER_PREFIX}{self.id}"
+        return self.mod_folder or f"{FOLDER_PREFIX}{self.id}"
 
 
 def world_id(code: str, game_build: str) -> str:
@@ -113,7 +116,7 @@ def world_id(code: str, game_build: str) -> str:
 
 def folder(data: Path, world: World) -> Path:
     """The world's folder in the generator's data."""
-    return workspace(data) / world.folder
+    return workspace(data) / f"{FOLDER_PREFIX}{world.id}"
 
 
 def document(world: World) -> dict[str, object]:
@@ -160,6 +163,16 @@ def world_of(row: dict[str, object]) -> World | None:
     """
     if row.get("schema") != SCHEMA:
         return None
+    mod_folder = str(row.get("mod_folder", ""))
+    if mod_folder and (
+        not mod_folder.startswith(install.PREFIX)
+        or any(
+            char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-"
+            for char in mod_folder
+        )
+    ):
+        message = "An installed mod folder must be a simple RNW folder name"
+        raise ValueError(message)
     return World(
         id=str(row["id"]),
         code=str(row["code"]),
@@ -184,6 +197,7 @@ def world_of(row: dict[str, object]) -> World | None:
             if row.get("show_new_world") is False
             else None
         ),
+        mod_folder=mod_folder,
     )
 
 
@@ -206,7 +220,7 @@ def load(data: Path) -> list[World]:
     worlds = [
         world
         for path in sorted(root.glob(f"{FOLDER_PREFIX}*/{RECORD}"))
-        if (world := _read(path)) is not None and path.parent.name == world.folder
+        if (world := _read(path)) is not None and path.parent.name == f"{FOLDER_PREFIX}{world.id}"
     ]
     return sorted(worlds, key=lambda world: (-world.created, world.id))
 
@@ -362,7 +376,28 @@ def installed(profile: Path | None, world: World) -> Path | None:
     if profile is None:
         return None
     mod = profile / install.MODS / world.folder
-    return mod if install.is_rnw_mod(mod) else None
+    if not install.is_rnw_mod(mod) or (world.mod_folder and not _matches_mod(mod, world)):
+        return None
+    return mod
+
+
+def _matches_mod(mod: Path, world: World) -> bool:
+    """Generic export folder names can belong to different worlds in different profiles."""
+    try:
+        receipt = mod / ".metadata/rnw-library" / RECORD
+        path = receipt if receipt.is_file() else mod / install.METADATA
+        row = cast("dict[str, object]", json.loads(path.read_text(encoding="utf-8-sig")))
+        if receipt.is_file():
+            candidate = str(row.get("code", ""))
+            build = str(row.get("game_build", ""))
+            if world.game_build and build and world.game_build != build:
+                return False
+        else:
+            match = IN_TEXT.search(str(row.get("short_description", "")))
+            candidate = match.group() if match is not None else ""
+        return decode(candidate) == decode(world.code)
+    except (OSError, ValueError, TypeError, AttributeError):
+        return False
 
 
 def placement(data: Path, profile: Path | None, world: World) -> Placement:
@@ -382,7 +417,7 @@ def strays(profile: Path | None, worlds: list[World]) -> list[Path]:
     """Generated worlds in the profile that the library does not know."""
     if profile is None:
         return []
-    known = {world.folder for world in worlds}
+    known = {world.folder for world in worlds if installed(profile, world) is not None}
     return [
         mod
         for mod in install.installed_mods(profile)

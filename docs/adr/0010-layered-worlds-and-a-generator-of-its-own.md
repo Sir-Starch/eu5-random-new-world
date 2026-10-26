@@ -169,3 +169,31 @@ Per world: a note, a star, a tag of the player's; compare two worlds side by sid
 ## Consequences
 
 The world code stays the only thing a player needs to share a world, and grows by two small numbers. A variant is a world like any other: nothing in the mod, the library or the installer needs to know it is one, except the library's grouping. The pictures make the generator useful before the game is opened, which is also what a viewer without the game needs. The cost is code in the export (a pictures stage, the seeds of the parts) and in the window (a pictures page, the part buttons, a first-run page), and a new kind of file to read as hostile.
+
+## Installed-world recovery (owner request, 2026-10-26)
+
+The owner identified automatic recognition of installed RNW mods as basic library
+functionality after a direct export appeared as an “Older world” (C353–C356).
+The application now adopts readable world codes in place. A nonstandard mod
+folder is a validated local alias; the library keeps its normal id-based folder.
+Alias matching checks the code (and a recorded build when available) before
+binding a mod in another profile, so a generic folder name cannot remove an
+unrelated world. Transfers normalize aliases in their private extracted copy.
+
+New application-generated mods carry `.metadata/rnw-library/`: the public world
+record, original input/output manifests, atlas, pictures, optional drawn-land
+image and saved selection cover. These are existing locally generated artifacts,
+not a second mod or game content repair. Notes, favourites and private user tags
+are omitted. Receipt records, settings and bundle hashes are checked in staging;
+publication into the library is atomic. A code-only adoption can be upgraded
+when a copied receipt finishes arriving, preserving personal fields. Existing
+records and unrelated bundle files are never overwritten by adoption.
+
+For an older code-only mod the original game build and exact output remain
+unknown; the current installation is not substituted as historical evidence.
+Legacy thumbnails can supply a preview but are not presented as a restored atlas.
+Mods lacking readable identification remain visible as unregistered. Polling
+small metadata files lets an open window notice external changes while retaining
+selection and unsaved notes. No map raster is hashed on the UI thread. The
+algorithm epoch stays 41: this feature changes application/library data and
+`.metadata` only. The canonical reference world is still the one of 0.13.2.

@@ -33,6 +33,7 @@ from rnw.app import (
     preferences,
     quick,
     random_types,
+    recovery,
     service,
     session,
     transfer,
@@ -184,6 +185,7 @@ class Controller:
         self.result: service.Result | None = None
         self.checks: dict[str, service.Check] = {}
         self.worlds: list[World] = []
+        self._library_signature: recovery.Signature = ()
         self.strays: list[Path] = []
         self.selection: str = NEW
         self.preferences: preferences.Preferences = preferences.load(self.data)
@@ -441,12 +443,27 @@ class Controller:
 
     def refresh_library(self) -> None:
         """Read the worlds and the strays in the game again."""
+        previous_stray = self.selected_stray()
+        _ = recovery.adopt(self.data, self._profile_dir())
         self.worlds = library.load(self.data)
         self.strays = library.strays(self._profile_dir(), self.worlds)
+        if previous_stray is not None:
+            adopted = next((w for w in self.worlds if w.folder == previous_stray.name), None)
+            if adopted is not None:
+                self.selection = adopted.id
         known = self.selected_world() is not None or self.selected_stray() is not None
         if self.selection != NEW and not known:
             self.selection = NEW
+        self._library_signature = recovery.signature(self.data, self._profile_dir())
         self._changed()
+
+    def poll_library(self) -> None:
+        """Notice externally added worlds without interrupting generation or editing the list."""
+        if (
+            not self.busy
+            and recovery.signature(self.data, self._profile_dir()) != self._library_signature
+        ):
+            self.refresh_library()
 
     def select(self, selection: str) -> None:
         """Show the new-world page (``NEW``), a world (its id) or a stray (``STRAY`` + folder)."""

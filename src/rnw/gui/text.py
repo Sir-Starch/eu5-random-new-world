@@ -145,7 +145,7 @@ STRINGS: Final[dict[str, str]] = {
     "list.in_game": "in the game",
     "list.kept": "not in the game",
     "list.code_only": "code only",
-    "stray_name": "Older world",
+    "stray_name": "Unregistered world",
     "stray_line": "{folder} · in the game",
     # -- a new world --
     "type": "World type",
@@ -385,7 +385,8 @@ STRINGS: Final[dict[str, str]] = {
     "detail.place": "Where",
     "detail.reproduce": "Made again",
     "repro.none": (
-        "Made before worlds kept a record of how they were made, so it may not come out the same."
+        "This world has no reproducibility record. Its original game build and exact output "
+        "cannot be verified."
     ),
     "repro.same_algorithm": (
         "Generator {release} made it with the algorithm of this one: it comes out the same, "
@@ -485,7 +486,7 @@ STRINGS: Final[dict[str, str]] = {
         "The New World of this world is covered, so you can still meet it in the game. "
         "Reveal it to see its countries, cultures, religions and resources before you play."
     ),
-    "no_atlas": "This world has no atlas: it was made before atlases, or its files are gone.",
+    "no_atlas": "This world's atlas is missing. Open a world file with its maps to restore it.",
     "facts_hint": "Move over the map to see what lies there.",
     "search_hint": "Find a country, culture, religion, resource or place",
     "legend": "Legend",
@@ -593,8 +594,8 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "diagnostics_failed": "The file could not be written: {problem}",
     "stray_about": (
-        "This world was made by an earlier version of the generator, which kept no record "
-        "of it. It is in the game as {folder}. Remove it when you no longer play it."
+        "The generator could not recover this mod's library entry. It is in the game "
+        "as {folder}. Its files have been left unchanged."
     ),
     # -- what to do in EU5 next --
     "tick_unknown": "Make sure only “{name}” is ticked among the RNW worlds in your playset.",

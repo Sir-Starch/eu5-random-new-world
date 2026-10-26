@@ -19,6 +19,8 @@
 
 Each seed produces new continents, coastlines, relief, climate, rivers, seas, resources, provinces and native civilisations. The generator writes them as an ordinary EU5 mod. Every world is a self-contained map mod, has a short **world code**, and can be rebuilt byte for byte from that code with the same game version.
 
+Installed RNW worlds with a readable world code appear in the generator's library automatically. New worlds carry recovery data for their atlas, pictures and generation record, so their library entry can be restored from the mod itself.
+
 > [!IMPORTANT]
 > **Pre-release (0.x).** No public release or Workshop item exists yet. The maintainer has played much of the generated New World in game; see [`CHANGELOG.md`](CHANGELOG.md) and the [experiment records](experiments/). Expect breaking changes until 1.0.0, the first Steam Workshop publication ([ADR 0003](docs/adr/0003-versioning.md)).
 

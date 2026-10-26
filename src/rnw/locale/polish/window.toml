@@ -339,8 +339,8 @@ source = "31f2d67ab5545388"
 text = '''tylko kod'''
 
 ["stray_name"]
-source = "a4a24ec60180242e"
-text = '''Starszy świat'''
+source = "652aec2b439f9cc1"
+text = "Niezarejestrowany świat"
 
 ["stray_line"]
 source = "3b35f49baee714a7"
@@ -979,8 +979,8 @@ source = "1cd6bb5973fa2be5"
 text = '''Odtworzenie'''
 
 ["repro.none"]
-source = "05901bf63ea95e6e"
-text = '''Utworzony, zanim światy zaczęły zapisywać, jak powstały, więc może nie wyjść tak samo.'''
+source = "ff9f69a21f3ce02b"
+text = "Ten świat nie ma zapisu odtwarzalności. Nie można sprawdzić pierwotnej wersji gry ani dokładnej zawartości moda."
 
 ["repro.same_algorithm"]
 source = "66763ff6d6860af0"
@@ -1215,8 +1215,8 @@ source = "72895291a8506c4f"
 text = '''Nowy Świat tego świata jest zakryty, żebyś mógł go jeszcze odkryć w grze. Odsłoń go, aby zobaczyć jego kraje, kultury, religie i zasoby przed grą.'''
 
 ["no_atlas"]
-source = "85953bb97408c28b"
-text = '''Ten świat nie ma atlasu: powstał przed atlasami albo jego pliki zniknęły.'''
+source = "87cac289c6484f74"
+text = "Brakuje atlasu tego świata. Otwórz plik świata z jego mapami, aby go przywrócić."
 
 ["facts_hint"]
 source = "c45ebe1186c80167"
@@ -1519,8 +1519,8 @@ source = "ba28e35f48d96465"
 text = '''Nie udało się zapisać pliku: {problem}'''
 
 ["stray_about"]
-source = "f0866f985468cba5"
-text = '''Ten świat utworzyła wcześniejsza wersja generatora, która nie prowadziła o nim zapisu. W grze leży jako {folder}. Usuń go, gdy przestaniesz w niego grać.'''
+source = "d3dcd2e05fba5145"
+text = "Generator nie mógł odzyskać wpisu tego moda w bibliotece. W grze znajduje się w folderze {folder}. Jego pliki pozostały bez zmian."
 
 ["tick_unknown"]
 source = "4a3bdf3a4d535241"
@@ -1763,8 +1763,8 @@ source = "e6b07cf126932f17"
 text = '''Ląd tego świata jest narysowany na obrazie, którego biblioteka już nie ma. Otwórz ponownie plik świata albo wskaż obraz, aby utworzyć świat.'''
 
 ["error.check.no_record"]
-source = "990ed1f85c2a9322"
-text = '''Ten świat powstał, zanim światy zaczęły prowadzić zapis, więc nie da się go sprawdzić.'''
+source = "28aeb84f6374f291"
+text = "Ten świat nie ma zapisu odtwarzalności, więc nie można sprawdzić jego pierwotnej zawartości."
 
 ["error.check.bundle"]
 source = "c2284a0becacbcfe"
@@ -1795,8 +1795,8 @@ source = "f0d89be22465b46d"
 text = '''Ten plik nie zawiera moda. Otwórz go jako plik świata.'''
 
 ["error.transfer.no_record"]
-source = "d8408db42b98236e"
-text = '''Ten świat powstał, zanim światy zaczęły prowadzić zapis, więc nie da się sprawdzić jego gry.'''
+source = "5b8bd7b86c53e97e"
+text = "Ten świat nie ma zapisu odtwarzalności, więc nie można zweryfikować jego plików gry."
 
 ["error.transfer.have"]
 source = "3e1d33d97a5fc3cf"

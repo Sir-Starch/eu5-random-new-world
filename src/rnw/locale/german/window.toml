@@ -339,8 +339,8 @@ source = "31f2d67ab5545388"
 text = '''nur Code'''
 
 ["stray_name"]
-source = "a4a24ec60180242e"
-text = '''Ältere Welt'''
+source = "652aec2b439f9cc1"
+text = "Nicht registrierte Welt"
 
 ["stray_line"]
 source = "3b35f49baee714a7"
@@ -979,8 +979,8 @@ source = "1cd6bb5973fa2be5"
 text = '''Neu erstellt'''
 
 ["repro.none"]
-source = "05901bf63ea95e6e"
-text = '''Erstellt, bevor Welten aufzeichneten, wie sie entstanden; sie kommt daher womöglich nicht gleich heraus.'''
+source = "ff9f69a21f3ce02b"
+text = "Für diese Welt fehlt der Reproduzierbarkeitsnachweis. Ihre ursprüngliche Spielversion und der genaue Modinhalt können nicht geprüft werden."
 
 ["repro.same_algorithm"]
 source = "66763ff6d6860af0"
@@ -1215,8 +1215,8 @@ source = "72895291a8506c4f"
 text = '''Die Neue Welt dieser Welt ist verdeckt, damit Sie sie erst im Spiel kennenlernen. Decken Sie sie auf, um ihre Länder, Kulturen, Religionen und Rohstoffe vor dem Spielen zu sehen.'''
 
 ["no_atlas"]
-source = "85953bb97408c28b"
-text = '''Diese Welt hat keinen Atlas: Sie wurde vor den Atlanten erstellt, oder ihre Dateien fehlen.'''
+source = "87cac289c6484f74"
+text = "Der Atlas dieser Welt fehlt. Öffne eine Weltdatei mit ihren Karten, um ihn wiederherzustellen."
 
 ["facts_hint"]
 source = "c45ebe1186c80167"
@@ -1519,8 +1519,8 @@ source = "ba28e35f48d96465"
 text = '''Die Datei konnte nicht geschrieben werden: {problem}'''
 
 ["stray_about"]
-source = "f0866f985468cba5"
-text = '''Diese Welt wurde von einer früheren Fassung des Generators erstellt, die keine Aufzeichnung über sie führte. Sie liegt im Spiel als {folder}. Entfernen Sie sie, wenn Sie sie nicht mehr spielen.'''
+source = "d3dcd2e05fba5145"
+text = "Der Generator konnte den Bibliothekseintrag dieses Mods nicht wiederherstellen. Im Spiel liegt er im Ordner {folder}. Seine Dateien bleiben unverändert."
 
 ["tick_unknown"]
 source = "4a3bdf3a4d535241"
@@ -1763,8 +1763,8 @@ source = "e6b07cf126932f17"
 text = '''Das Land dieser Welt ist auf einem Bild gezeichnet, das die Bibliothek nicht mehr hat. Öffnen Sie die Weltdatei erneut oder wählen Sie das Bild, um die Welt zu erstellen.'''
 
 ["error.check.no_record"]
-source = "990ed1f85c2a9322"
-text = '''Diese Welt wurde erstellt, bevor Welten Aufzeichnungen führten, und kann daher nicht geprüft werden.'''
+source = "28aeb84f6374f291"
+text = "Für diese Welt fehlt der Reproduzierbarkeitsnachweis. Ihr ursprünglicher Modinhalt kann daher nicht geprüft werden."
 
 ["error.check.bundle"]
 source = "c2284a0becacbcfe"
@@ -1795,8 +1795,8 @@ source = "f0d89be22465b46d"
 text = '''Diese Datei enthält keinen Mod. Öffnen Sie sie als Weltdatei.'''
 
 ["error.transfer.no_record"]
-source = "d8408db42b98236e"
-text = '''Diese Welt wurde erstellt, bevor Welten Aufzeichnungen führten, daher kann ihr Spiel nicht geprüft werden.'''
+source = "5b8bd7b86c53e97e"
+text = "Für diese Welt fehlt der Reproduzierbarkeitsnachweis. Ihre Spieldateien können daher nicht geprüft werden."
 
 ["error.transfer.have"]
 source = "3e1d33d97a5fc3cf"

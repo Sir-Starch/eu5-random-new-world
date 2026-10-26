@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Final, Protocol, cast
 import numpy as np
 
 from rnw import __version__, worldname
-from rnw.app import exchange, install, library, logs
+from rnw.app import exchange, install, library, logs, recovery
 from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
 from rnw.eu5_canvas import select_canvas
@@ -223,6 +223,7 @@ def generate(
     library.save(request.data, world)
     installed = None
     mod = output / world.folder
+    recovery.write(request.data, world, mod)
     if request.show_new_world:
         library.show(request.data, world, mod, shown=True)
     if request.output_folder is not None:
@@ -289,6 +290,7 @@ def add_to_game(  # noqa: PLR0913 - a world, where it goes and how the work is s
             library.show(data, selected, kept, shown=shown)
         if selected != world:
             library.save(data, selected)
+        recovery.write(data, selected, kept)
         installed = _install(kept, profile.directory, progress)
         return Result(
             selected, library.folder(data, selected), installed, time.monotonic() - started, {}

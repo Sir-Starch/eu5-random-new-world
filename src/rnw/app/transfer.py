@@ -16,7 +16,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, cast
 
 from rnw import inputs, worldfile
-from rnw.app import exchange, install, library
+from rnw.app import exchange, install, library, recovery
 from rnw.app.exchange import ExchangeError, Imported
 from rnw.bundle import COVER_COPY
 from rnw.contract import aggregate_digest, fingerprint
@@ -103,6 +103,16 @@ def receive_mod(data: Path, path: Path, game: GameInstall) -> Imported:
         exchange.keep_atlas(target, found.atlas)
     if found.land_mask is not None:
         exchange.keep_land_mask(target, found.land_mask)
+    if found.record.get("mod_folder") and found.record["mod_folder"] != world.folder:
+        metadata = final / install.METADATA
+        value = cast("object", json.loads(metadata.read_text(encoding="utf-8-sig")))
+        if not isinstance(value, dict):
+            message = "The transferred mod's metadata must be an object"
+            raise ExchangeError(message)
+        document = cast("dict[str, object]", value)
+        document["id"] = world.folder
+        _ = metadata.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8-sig")
+        recovery.rebase_bundle(target, world.folder)
     exchange.draw_previews(target)
     return Imported(world, created=True)
 

@@ -540,7 +540,15 @@ class MainWindow(QMainWindow):
         _ = self._eta_timer.timeout.connect(self._refresh_eta)
         _ = self._bridge.changed.connect(self.refresh)
         controller.subscribe(self._bridge.changed.emit)
+        self._library_timer: QTimer = QTimer(self)
+        self._library_timer.setInterval(2000)
+        _ = self._library_timer.timeout.connect(self._poll_library)
+        self._library_timer.start()
         self.refresh()
+
+    def _poll_library(self) -> None:
+        if self.isVisible():
+            self.controller.poll_library()
 
     # -- construction ---------------------------------------------------------------------------
 

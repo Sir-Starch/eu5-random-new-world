@@ -60,8 +60,14 @@ Keyboard focus and activation use Qt's native controls; no custom animation is a
 The library uses native extended selection (Ctrl-click, Shift-click, Ctrl+A) and a visible
 Select all button. Its footer counts selected entries and installed mods, with separate
 Remove from game and Delete from library actions. Removal keeps codes and pictures;
-deletion asks once for the selected library worlds. Earlier mods without library records
-can be removed alongside recorded worlds. Refreshing or renaming preserves selection.
+deletion asks once for the selected library worlds. Installed RNW worlds with a readable
+code or recovery bundle enter the library automatically, without renaming their mod
+folders. Worlds without either stay visible as unregistered, rather than being called
+old. Missing provenance is shown explicitly. The visible window polls small metadata
+and library-record changes every two seconds; unchanged polls do not reload or redraw.
+Generation suspends polling. Metadata-first copies can gain their verified atlas/record
+when the rest arrives, preserving personal fields. Refreshing or renaming preserves
+selection and unsaved notes.
 The active world's Remove and Delete actions also apply to a multiple selection and show
 its count. Batch errors remain visible below the list, including after a row disappears.
 

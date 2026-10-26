@@ -20,6 +20,7 @@ from rnw.bundle import COVER_COPY
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.record import Verdict
+from tests.test_recovery import _mod  # pyright: ignore[reportPrivateUsage]
 
 try:  # the window needs PySide6 and the system's graphics libraries
     from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
@@ -83,6 +84,30 @@ def _window(tmp_path: Path, export: Exporter, *, game: bool = True) -> MainWindo
     (tmp_path / "profile" / "mod").mkdir(parents=True)
     controller.profile = Profile(tmp_path / "profile", "linux", has_mods=True)
     return MainWindow(controller)
+
+
+@pytest.mark.usefixtures("application")
+def test_an_open_window_adopts_external_mods_without_losing_unsaved_notes(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window._library_timer.setInterval(5)  # pyright: ignore[reportPrivateUsage]
+    window.show()
+    try:
+        _ = _mod(tmp_path / "profile")
+        pump(lambda: len(window.controller.worlds) == 1)
+        world = window.controller.worlds[0]
+        window.controller.select(world.id)
+        pump(lambda: window.details["code"].text() == world.code)
+        assert window.controller.name(world) == "Vinland"
+        window.notes_edit.setPlainText("unsaved campaign notes")
+        _ = _mod(tmp_path / "profile", "rnw_exp_second")
+        pump(lambda: len(window.controller.worlds) == 2)
+        assert window.controller.selection == world.id
+        assert window.notes_edit.toPlainText() == "unsaved campaign notes"
+        assert not window.controller.strays
+    finally:
+        _ = window.close()
 
 
 @pytest.mark.usefixtures("application")

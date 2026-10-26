@@ -339,8 +339,8 @@ source = "31f2d67ab5545388"
 text = '''코드만'''
 
 ["stray_name"]
-source = "a4a24ec60180242e"
-text = '''예전 월드'''
+source = "652aec2b439f9cc1"
+text = "등록되지 않은 세계"
 
 ["stray_line"]
 source = "3b35f49baee714a7"
@@ -979,8 +979,8 @@ source = "1cd6bb5973fa2be5"
 text = '''재현'''
 
 ["repro.none"]
-source = "05901bf63ea95e6e"
-text = '''월드가 만들어진 과정을 기록하기 전에 만들어졌으므로 똑같이 나오지 않을 수 있습니다.'''
+source = "ff9f69a21f3ce02b"
+text = "이 세계에는 재현 기록이 없습니다. 원래 게임 빌드와 모드의 정확한 내용을 검증할 수 없습니다."
 
 ["repro.same_algorithm"]
 source = "66763ff6d6860af0"
@@ -1215,8 +1215,8 @@ source = "72895291a8506c4f"
 text = '''이 월드의 신대륙은 게임 속에서 만날 수 있도록 가려져 있습니다. 플레이 전에 국가, 문화, 종교, 자원을 보려면 공개하세요.'''
 
 ["no_atlas"]
-source = "85953bb97408c28b"
-text = '''이 월드에는 지도첩이 없습니다. 지도첩이 생기기 전에 만들어졌거나 파일이 사라졌습니다.'''
+source = "87cac289c6484f74"
+text = "이 세계의 지도책이 없습니다. 지도가 포함된 세계 파일을 열어 복구하세요."
 
 ["facts_hint"]
 source = "c45ebe1186c80167"
@@ -1519,8 +1519,8 @@ source = "ba28e35f48d96465"
 text = '''파일을 쓸 수 없습니다: {problem}'''
 
 ["stray_about"]
-source = "f0866f985468cba5"
-text = '''이 월드는 기록을 남기지 않던 예전 버전의 생성기로 만들어졌습니다. 게임에는 {folder} 폴더로 들어 있습니다. 더 이상 플레이하지 않으면 빼 주세요.'''
+source = "d3dcd2e05fba5145"
+text = "이 모드의 라이브러리 항목을 복구하지 못했습니다. 게임 내 폴더는 {folder}입니다. 파일은 변경되지 않았습니다."
 
 ["tick_unknown"]
 source = "4a3bdf3a4d535241"
@@ -1763,8 +1763,8 @@ source = "e6b07cf126932f17"
 text = '''이 월드의 땅은 라이브러리에 더 이상 없는 그림에 그려져 있습니다. 월드를 만들려면 월드 파일을 다시 열거나 그림을 고르세요.'''
 
 ["error.check.no_record"]
-source = "990ed1f85c2a9322"
-text = '''이 월드는 기록을 남기기 전에 만들어졌으므로 검사할 수 없습니다.'''
+source = "28aeb84f6374f291"
+text = "이 세계에는 재현 기록이 없어 원래 모드의 내용을 검증할 수 없습니다."
 
 ["error.check.bundle"]
 source = "c2284a0becacbcfe"
@@ -1795,8 +1795,8 @@ source = "f0d89be22465b46d"
 text = '''이 파일에는 모드가 없습니다. 월드 파일로 여세요.'''
 
 ["error.transfer.no_record"]
-source = "d8408db42b98236e"
-text = '''이 월드는 기록을 남기기 전에 만들어졌으므로 그 게임을 검사할 수 없습니다.'''
+source = "5b8bd7b86c53e97e"
+text = "이 세계에는 재현 기록이 없어 게임 파일을 검증할 수 없습니다."
 
 ["error.transfer.have"]
 source = "3e1d33d97a5fc3cf"

@@ -339,8 +339,8 @@ source = "31f2d67ab5545388"
 text = '''仅代码'''
 
 ["stray_name"]
-source = "a4a24ec60180242e"
-text = '''旧世界'''
+source = "652aec2b439f9cc1"
+text = "未登记的世界"
 
 ["stray_line"]
 source = "3b35f49baee714a7"
@@ -979,8 +979,8 @@ source = "1cd6bb5973fa2be5"
 text = '''重新生成'''
 
 ["repro.none"]
-source = "05901bf63ea95e6e"
-text = '''生成于世界开始记录生成方式之前，因此结果可能不同。'''
+source = "ff9f69a21f3ce02b"
+text = "此世界没有复现记录，无法验证原始游戏版本和模组的确切内容。"
 
 ["repro.same_algorithm"]
 source = "66763ff6d6860af0"
@@ -1215,8 +1215,8 @@ source = "72895291a8506c4f"
 text = '''这个世界的新大陆被遮盖着，好让你在游戏中再去发现它。揭开它即可在游玩前查看其国家、文化、宗教和资源。'''
 
 ["no_atlas"]
-source = "85953bb97408c28b"
-text = '''这个世界没有地图集：它生成于地图集出现之前，或其文件已经丢失。'''
+source = "87cac289c6484f74"
+text = "此世界的地图集缺失。请打开包含其地图的世界文件以恢复地图集。"
 
 ["facts_hint"]
 source = "c45ebe1186c80167"
@@ -1519,8 +1519,8 @@ source = "ba28e35f48d96465"
 text = '''无法写入文件：{problem}'''
 
 ["stray_about"]
-source = "f0866f985468cba5"
-text = '''这个世界由早期版本的生成器生成，当时没有留下任何记录。它在游戏中的名称是{folder}。不再游玩时请将它移除。'''
+source = "d3dcd2e05fba5145"
+text = "生成器未能恢复此模组的库记录。它在游戏中的文件夹为 {folder}。其文件未被更改。"
 
 ["tick_unknown"]
 source = "4a3bdf3a4d535241"
@@ -1763,8 +1763,8 @@ source = "e6b07cf126932f17"
 text = '''这个世界的陆地绘制在一张库中已不存在的图片上。请重新打开世界文件，或选择该图片，以生成世界。'''
 
 ["error.check.no_record"]
-source = "990ed1f85c2a9322"
-text = '''这个世界生成于世界开始保留记录之前，因此无法检查。'''
+source = "28aeb84f6374f291"
+text = "此世界没有复现记录，因此无法验证模组的原始内容。"
 
 ["error.check.bundle"]
 source = "c2284a0becacbcfe"
@@ -1795,8 +1795,8 @@ source = "f0d89be22465b46d"
 text = '''此文件中没有模组。请把它作为世界文件打开。'''
 
 ["error.transfer.no_record"]
-source = "d8408db42b98236e"
-text = '''这个世界生成于世界开始保留记录之前，因此无法检查它的游戏。'''
+source = "5b8bd7b86c53e97e"
+text = "此世界没有复现记录，因此无法验证其游戏文件。"
 
 ["error.transfer.have"]
 source = "3e1d33d97a5fc3cf"

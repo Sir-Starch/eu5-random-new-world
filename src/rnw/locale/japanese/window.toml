@@ -339,8 +339,8 @@ source = "31f2d67ab5545388"
 text = '''コードのみ'''
 
 ["stray_name"]
-source = "a4a24ec60180242e"
-text = '''古いワールド'''
+source = "652aec2b439f9cc1"
+text = "未登録のワールド"
 
 ["stray_line"]
 source = "3b35f49baee714a7"
@@ -979,8 +979,8 @@ source = "1cd6bb5973fa2be5"
 text = '''再現'''
 
 ["repro.none"]
-source = "05901bf63ea95e6e"
-text = '''ワールドが作成の記録を残すようになる前に作られたため、同じにならない場合があります。'''
+source = "ff9f69a21f3ce02b"
+text = "このワールドには再現記録がありません。元のゲームビルドとMODの正確な内容は検証できません。"
 
 ["repro.same_algorithm"]
 source = "66763ff6d6860af0"
@@ -1215,8 +1215,8 @@ source = "72895291a8506c4f"
 text = '''このワールドの新世界は、ゲームの中で出会えるように覆われています。プレイ前に国、文化、宗教、資源を見るには公開してください。'''
 
 ["no_atlas"]
-source = "85953bb97408c28b"
-text = '''このワールドには地図帳がありません。地図帳の導入前に作られたか、ファイルが失われています。'''
+source = "87cac289c6484f74"
+text = "このワールドの地図帳がありません。地図を含むワールドファイルを開いて復元してください。"
 
 ["facts_hint"]
 source = "c45ebe1186c80167"
@@ -1519,8 +1519,8 @@ source = "ba28e35f48d96465"
 text = '''ファイルを書き込めませんでした: {problem}'''
 
 ["stray_about"]
-source = "f0866f985468cba5"
-text = '''このワールドは、記録を残さなかった以前のバージョンのジェネレーターで作られました。ゲーム内では{folder}として入っています。もう遊ばなくなったら外してください。'''
+source = "d3dcd2e05fba5145"
+text = "このMODのライブラリ項目を復元できませんでした。ゲーム内のフォルダーは {folder} です。ファイルは変更されていません。"
 
 ["tick_unknown"]
 source = "4a3bdf3a4d535241"
@@ -1763,8 +1763,8 @@ source = "e6b07cf126932f17"
 text = '''このワールドの陸地は、ライブラリにもうない画像に描かれています。ワールドを作るには、ワールドファイルを開き直すか、画像を選んでください。'''
 
 ["error.check.no_record"]
-source = "990ed1f85c2a9322"
-text = '''このワールドは記録が残されるようになる前に作られたため、検証できません。'''
+source = "28aeb84f6374f291"
+text = "このワールドには再現記録がないため、元のMODの内容を検証できません。"
 
 ["error.check.bundle"]
 source = "c2284a0becacbcfe"
@@ -1795,8 +1795,8 @@ source = "f0d89be22465b46d"
 text = '''このファイルにはMODが入っていません。ワールドファイルとして開いてください。'''
 
 ["error.transfer.no_record"]
-source = "d8408db42b98236e"
-text = '''このワールドは記録が残されるようになる前に作られたため、そのゲームを検証できません。'''
+source = "5b8bd7b86c53e97e"
+text = "このワールドには再現記録がないため、ゲームファイルを検証できません。"
 
 ["error.transfer.have"]
 source = "3e1d33d97a5fc3cf"

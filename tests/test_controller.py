@@ -567,7 +567,7 @@ def test_what_is_known_of_a_world_being_made_again_follows_its_record(
     other = replace(world, record=replace(world.record, algorithm=epoch.CURRENT + 1))
     assert "differs from this one" in controller.reproduction(other)
     assert world.record.release in controller.reproduction(other)
-    assert "before worlds kept a record" in controller.reproduction(replace(world, record=None))
+    assert "no reproducibility record" in controller.reproduction(replace(world, record=None))
 
 
 def _answer(
@@ -610,7 +610,7 @@ def test_a_check_is_refused_without_a_game_or_a_record_and_a_failure_is_shown(
     assert controller.check_selected() is not None
     controller.game = GameInstall(tmp_path / "game", None, "26043558")
     controller.worlds = [replace(world, record=None)]
-    assert "before worlds kept a record" in (controller.check_selected() or "")
+    assert "no reproducibility record" in (controller.check_selected() or "")
     assert calls == []
     controller.worlds = [world]
     assert controller.check_selected() is None

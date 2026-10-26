@@ -339,8 +339,8 @@ source = "31f2d67ab5545388"
 text = '''só o código'''
 
 ["stray_name"]
-source = "a4a24ec60180242e"
-text = '''Mundo antigo'''
+source = "652aec2b439f9cc1"
+text = "Mundo não registrado"
 
 ["stray_line"]
 source = "3b35f49baee714a7"
@@ -979,8 +979,8 @@ source = "1cd6bb5973fa2be5"
 text = '''Recriação'''
 
 ["repro.none"]
-source = "05901bf63ea95e6e"
-text = '''Criado antes de os mundos guardarem um registro de como foram feitos, então pode não sair igual.'''
+source = "ff9f69a21f3ce02b"
+text = "Este mundo não tem registro de reprodução. Não é possível verificar a versão original do jogo nem o conteúdo exato do mod."
 
 ["repro.same_algorithm"]
 source = "66763ff6d6860af0"
@@ -1215,8 +1215,8 @@ source = "72895291a8506c4f"
 text = '''O Novo Mundo deste mundo está coberto para que você ainda possa descobri-lo no jogo. Revele-o para ver os países, culturas, religiões e recursos antes de jogar.'''
 
 ["no_atlas"]
-source = "85953bb97408c28b"
-text = '''Este mundo não tem atlas: foi criado antes dos atlas, ou os arquivos dele sumiram.'''
+source = "87cac289c6484f74"
+text = "O atlas deste mundo está ausente. Abra um arquivo de mundo com seus mapas para restaurá-lo."
 
 ["facts_hint"]
 source = "c45ebe1186c80167"
@@ -1519,8 +1519,8 @@ source = "ba28e35f48d96465"
 text = '''Não foi possível gravar o arquivo: {problem}'''
 
 ["stray_about"]
-source = "f0866f985468cba5"
-text = '''Este mundo foi criado por uma versão anterior do gerador, que não guardou nenhum registro dele. Ele está no jogo como {folder}. Tire-o quando não jogar mais com ele.'''
+source = "d3dcd2e05fba5145"
+text = "O gerador não conseguiu recuperar a entrada deste mod na biblioteca. No jogo, ele está na pasta {folder}. Seus arquivos não foram alterados."
 
 ["tick_unknown"]
 source = "4a3bdf3a4d535241"
@@ -1763,8 +1763,8 @@ source = "e6b07cf126932f17"
 text = '''A terra deste mundo está desenhada numa imagem que a biblioteca não tem mais. Abra de novo o arquivo do mundo ou escolha a imagem para criar o mundo.'''
 
 ["error.check.no_record"]
-source = "990ed1f85c2a9322"
-text = '''Este mundo foi criado antes de os mundos guardarem um registro, então não pode ser verificado.'''
+source = "28aeb84f6374f291"
+text = "Este mundo não tem registro de reprodução, portanto não é possível verificar seu conteúdo original."
 
 ["error.check.bundle"]
 source = "c2284a0becacbcfe"
@@ -1795,8 +1795,8 @@ source = "f0d89be22465b46d"
 text = '''Este arquivo não tem nenhum mod. Abra-o como arquivo de mundo.'''
 
 ["error.transfer.no_record"]
-source = "d8408db42b98236e"
-text = '''Este mundo foi criado antes de os mundos guardarem um registro, então o jogo dele não pode ser verificado.'''
+source = "5b8bd7b86c53e97e"
+text = "Este mundo não tem registro de reprodução, portanto não é possível verificar os arquivos do jogo."
 
 ["error.transfer.have"]
 source = "3e1d33d97a5fc3cf"
