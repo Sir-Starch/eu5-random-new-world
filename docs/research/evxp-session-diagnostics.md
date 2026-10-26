@@ -494,3 +494,41 @@ section as 10.81 MB (4.00 MB reserved, 3.55 ms). These are writer telemetry, not
 death or affected-location counters. The screenshot's 29.648M value still is
 not independently reconstructed. The two observer-mode country counters
 remain consistent with the country-scoped vanilla UI queries described above.
+
+## Colonial range and East Asian AI
+
+[V-LOCAL / INFERRED / UNKNOWN C387] The current EVXP fixed 0.13.5 session's
+`game.log` reaches 1 January 1727 and records 928 `COLONISATION: ... starts
+colonising ...` entries. None names Ashikaga or any of the Japanese, Korean, or
+Yuan polity names checked in this run. `error.log` contains no colonial,
+charter, or range diagnostic. The stable two-file snapshot is in ignored
+`local_data/colonial-ai-20261026/logs/` (SHA-256 recorded in the claims ledger).
+This shows no logged Japanese start by that cutoff; it does not record failed
+target evaluations or explain any one country's range.
+
+The installed 1.4.4 vanilla `setup_area_preferences` adds
+`avoid_american_colonization` to **every AI country whose capital is outside
+America**. That exploration preference applies a `-0.9` modifier to the
+American continent. The same vanilla effect removes it for Castile, Portugal,
+Spain, Russia (noted as relevant for Alaska), selected western European tags
+after 1437, and selected Scandinavian tags after 1637; it has no Ashikaga or
+Japan exception. It is a negative AI preference, not a colonization eligibility
+gate: the generic colonial-charter AI list still admits countries with
+`can_colonize`, other than rebels and building countries. The generated world
+retains the `america` continent ID, and the installed RNW world has no override
+for the vanilla preference scripts. For an AI-controlled Ashikaga, this
+explains the lack of American colonization; if the player controls Ashikaga,
+the AI preference does not apply. The absence is not evidence of a Random New
+World script error.
+
+This preference is separate from the `Within Colonial Range` overlay. Vanilla
+advances grant colonial-range values and modifiers, while the range trigger is
+engine-provided; the installed scripts do not expose its distance calculation.
+If the American locations are not yellow for Ashikaga in that map mode, that
+indicates they are outside Ashikaga's effective range at that moment, regardless
+of AI preference. The screenshot does not include Ashikaga's numeric range or a
+hovered American target, and counting visible sea locations does not establish
+the engine's range test. RNW replaces geography and water topology but leaves
+the AI preference intact, so the available evidence cannot tell whether a
+particular range boundary follows generated geometry or signals a map-distance
+defect. No such defect is established from this screenshot or the logs.
