@@ -559,3 +559,69 @@ engine's exact distance calculation and current country values are not exposed
 in these logs/scripts, the exact yellow/gray cutoff remains unverified. A
 count of reachable sea zones or naval range alone does not establish colonial
 range.
+
+## Final follow-up: campaign reached 1 January 1849
+
+[OWNER / V-LOCAL / V-EXEC / INFERRED / UNKNOWN C389] A stable, read-only
+snapshot of the 28 log files was captured after the owner saved and closed the
+campaign, under ignored `local_data/campaign-1849-20261026/logs/`; raw logs are
+not committed. `game.log` records `NEW YEAR: 1849` at 20:25:50 and continues
+through 20:29:29. It does not record a 1850 rollover, so the evidence proves
+entry into 1849, not completion of the entire calendar year. At 20:29:23–29,
+`debug.log` records the persistent writer serializing game managers, including
+the situation and disease managers, then `Savegame time 5.878` and
+`Quit: Quit from inside game`, followed by `Game->MainMenu`. This is consistent
+with the owner's save and an orderly exit; the save file itself was not read
+or independently validated.
+
+The three current-launch error rotations contain **21,820 timestamped
+records**, **53 source-line origins** and **464 exact message variants**;
+**12,724** records were added after the 19:01:35 checkpoint. These are repeated
+log records, not that many independent defects. The largest new families are
+6,934 unknown lowercase-`l` text-format tags, 2,922 list-position caps, 1,655
+rejected `policy_vote` proposals and 1,011 invalid `sub_unit` display-text
+lookups. Other repeated failures include 78 expeditions explicitly failed
+after exhausting their routes, 67 same-province migration attempts, 27
+`resume_expedition` calls on expeditions that were not stalled and 15 cargo
+locator attachment failures; smaller families are seven wrong-type script
+values, five truncated building-candidate lists and one rejected invalid
+`calligrapher` artist. These indicate broken or rejected individual actions
+and text lookups, but they did not prevent the campaign from progressing to
+1849. No direct Great Pestilence, colonial-range or colonization error appears
+in the current error logs. The AI log has 181,546 `[AI Warning]` records and
+no line containing `colon` or `range`. No explicit fatal, crash, assertion,
+out-of-memory or segmentation-fault marker appears in the current error logs.
+
+[V-LOCAL / INFERRED C389] Most of the newly frequent list caps cite vanilla
+script sites. Although the world mod carries a copy of
+`common/scripted_effects/situation_effects.txt`, its edits are confined to
+Tordesillas handling; the three capped-list sites around lines 1004, 1043 and
+1082 are unchanged. Other repeated source files for list caps, policy votes,
+same-province migration and invalid artist creation are not overridden by the
+world mod. This weighs against attributing those repeated errors to EVXP.
+The text-format and sub-unit messages have no logged callsite, so their exact
+origin and visible impact remain unknown.
+
+[V-LOCAL / INFERRED / UNKNOWN C389] The log still records Great Pestilence
+starting on 1 March 1540 and records no end by the 1849 tail. No related error
+is present. Vanilla has no time limit for its outcome: regional infection,
+disease exhaustion and the remaining uninfected American-country threshold
+must all be met. A 309-year span with no end entry is therefore compatible
+with unmet outcome conditions; the logs do not say which condition remained
+false, or prove the final UI state. The observer-panel zeroes remain
+country-scoped values, not a global count of zero affected locations.
+
+[V-LOCAL / INFERRED / UNKNOWN C389] The final `game.log` contains **1,875
+colonization-start records**, including **144** attributed to Muscovy and
+**none** attributed to Ashikaga. None of the checked Japanese, Korean or
+Chinese polity labels appears as a colonizer. These are starts, not completed
+colonies, and country renames/control cannot be reconstructed from these
+records alone. This extends the pattern seen through 1795 and remains
+consistent with the default western-only AI colonization/exploration rules
+reported by the owner; it does not measure Japan's live range overlay or prove
+the saved rule state. `event_log.csv` is stale from 23 October and was not used
+to infer the campaign's final state.
+
+The frozen manifest records the snapshot hashes. No save, settings, playset,
+installed mod, game process or game installation was changed, and EU5 was not
+launched for this follow-up.

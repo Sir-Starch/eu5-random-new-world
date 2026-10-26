@@ -1755,3 +1755,20 @@ is consistent with the overlay difference. Coordinate distances are not the
 engine's range metric, and rule state, port ownership and exact cutoff remain
 unknown. No mod script defect is established. Frozen logs and source details
 are recorded in [the diagnostic audit](evxp-session-diagnostics.md#colonial-range-and-east-asian-ai).
+
+## 2026-10-26 — EVXP campaign reached 1849
+
+[OWNER / V-LOCAL / V-EXEC / INFERRED / UNKNOWN C389] After the owner saved and
+closed the campaign, the stable log snapshot reaches 1 January 1849. The final
+debug entries show game-manager serialization followed by `Quit from inside
+game` and a Game→MainMenu transition; the save itself was not read. The current
+launch has 21,820 timestamped error records, with repeated formatting,
+list-cap, rejected-policy and sub-unit-text families, plus recurring failed
+expeditions and same-province migrations. There is no direct Pestilence or
+colonial-range error and no explicit fatal/crash marker. Great Pestilence has
+no logged end after its 1540 start; vanilla outcome conditions have no timeout,
+so its exact final state remains unknown. Colonization logs total 1,875 starts,
+144 by Muscovy and none by Ashikaga or the East Asian labels checked. The
+campaign's progress and orderly exit support runtime continuity through 1849,
+not a claim that all scripts are error-free or that the save was reload-tested.
+The full evidence and limits are in [the final audit](evxp-session-diagnostics.md#final-follow-up-campaign-reached-1-january-1849).
