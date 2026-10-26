@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "eu5-random-new-world"
-version = "0.13.3"
+version = "0.13.4"
 description = "Procedurally generated New Worlds for Europa Universalis V"
 readme = "README.md"
 requires-python = ">=3.12"

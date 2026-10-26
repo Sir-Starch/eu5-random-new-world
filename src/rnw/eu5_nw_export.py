@@ -2925,16 +2925,16 @@ def mod_metadata(name: str, title: str, world_code: str | None) -> bytes:
     """The mod's metadata: a complete map mod that names its world and how to make it again."""
     import json  # noqa: PLC0415
 
-    code = f" World code {world_code}." if world_code else ""
+    code = f" World code: {world_code}." if world_code else ""
     payload: dict[str, object] = {
         "name": title,
         "id": name,
         "version": __version__,
         "supported_game_version": SUPPORTED_GAME,
         "short_description": (
-            "A New World for Europa Universalis V made by the Random New World generator. "
-            f"A complete map mod: play it on its own, the generator is not needed.{code} "
-            f"{STATUS}"
+            "A procedurally generated New World for Europa Universalis V, made with "
+            f"Random New World Generator.{code} Play this map on its own; get the generator "
+            "on Steam Workshop to create your own worlds."
         ),
         "tags": ["Map"],
         "picture": "thumbnail.png",

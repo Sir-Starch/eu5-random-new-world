@@ -53,12 +53,14 @@ def test_every_glyph_is_five_by_seven_and_what_it_cannot_draw_is_refused() -> No
 
 
 def test_the_mods_metadata_carries_the_title_and_the_world_code() -> None:
-    """The name is the label's title, with no seed; the code and the status are in the text."""
+    """The metadata introduces the generator and code without exposing internal status."""
     data = mod_metadata("rnw_exp_world_x", "RNW: Islands 7K3Q", "RNW1-CODE")
     assert data.startswith(b"\xef\xbb\xbf")
     document = cast("dict[str, str]", json.loads(data.decode("utf-8-sig")))
     assert document["name"] == "RNW: Islands 7K3Q"
     assert document["id"] == "rnw_exp_world_x"
     assert "RNW1-CODE" in document["short_description"]
-    assert "NOT GAME VALIDATED" in document["short_description"]
+    assert "Random New World Generator" in document["short_description"]
+    assert "Steam Workshop" in document["short_description"]
+    assert "NOT GAME VALIDATED" not in document["short_description"]
     assert "seed" not in document["name"]

@@ -1577,3 +1577,7 @@ that is the next implementation phase, separate from this one-world registration
   and receipt independently show a successful native 0.13.3 generation. No new
   world creation/removal by this hub update, game launch, process control,
   playset/settings/save change, push or publication. [065](../../experiments/065-installed-world-recovery/README.md).
+
+## 2026-10-26 — map mod descriptions
+
+- [V-EXEC] Generated New World mod metadata now carries a player-facing description with the generator name, reproducible world code when available and a Steam Workshop call to action. The internal game-validation status remains in the generator report, not the player-facing description. Metadata is excluded from world output digests; algorithm epoch 41 is unchanged. Product version 0.13.4.
