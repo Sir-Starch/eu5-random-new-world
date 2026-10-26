@@ -652,8 +652,29 @@ or engine fix is claimed. Private save/route data remains in the same ignored
 folder. No new live attachment occurred; the requested read-only dimension
 check found the process already gone.
 
+**Towa follow-up (C366–C369, [067](../../experiments/067-towa-seam-hang/README.md)).**
+The owner's immediate troop-raising reproduction motivates bounded reads of
+the same pinned path-construction and cost routines, the adjacency parser's
+recognized type strings, command registration and direct spline-lookup call
+sites. Their purpose is to distinguish generated route data from an engine
+operation at the seam. No full-engine reconstruction, patch or binary writer
+is produced. Existing R-001 parsing surveys vanilla strips without finding
+a wrapped-land encoding exemplar. A 64-byte `nodes.dat` header was inspected
+without decoding its structure or deriving any semantics; that file remains
+an unchanged opaque input, not a generated or redistributed format.
+
+Private capture helpers under `local_data/towa-seam-20261026/` are prepared to
+read a recovered unit record and bounded candidate arrays in one owner
+reproduction. Headers remain untyped; no general object-layout contract is
+asserted. Offline frame replay matches all 17 prior returns, and executable
+hash/PE-record preparation passes. No new live attachment or successful heap
+capture has occurred yet. Cleanup explicitly restores the pre-attachment
+execution state and checks detach, addressing C363. All memory, disassembly,
+logs and helpers stay ignored; nothing is distributed or installed.
+
 ## Earlier cases still outside this phase
 
-`nodes.dat` is not read or regenerated (opaque; `eu5_export.UNCHANGED_INPUTS`).
+Beyond the limited header observation recorded above, `nodes.dat` remains
+undecoded and is not regenerated (`eu5_export.UNCHANGED_INPUTS`).
 The cover's shader/GUI text interfaces retain their earlier evidence records and
 have not been reverse-engineered again in this phase.

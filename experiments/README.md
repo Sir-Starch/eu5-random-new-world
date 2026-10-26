@@ -84,3 +84,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [065 — Installed-world recovery](065-installed-world-recovery/README.md): recognize installed RNW codes in place, restore self-describing worlds after library loss, handle partial copies and update the open window automatically; 0.13.3 / epoch 41.
 
 - [066 — EVXP hangs](066-1341-hang/README.md): preserve the 1341 session and recording, then inspect the live 1346 recurrence; unit-graphics path-refinement work is implicated, with its triggering input unresolved.
+
+- [067 — Towa seam hang](067-towa-seam-hang/README.md): owner's immediate troop-raising reproduction, separate wrap/terrain history and bounded route capture prepared; exact malformed input and repair remain unresolved.

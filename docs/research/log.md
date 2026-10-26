@@ -1632,3 +1632,27 @@ the path-refinement lead to the two locations across the raster seam,
 rnw_loc_01100 / rnw_loc_05111. Captured intermediate vectors and canonical
 spline wrap need further attribution; no replacement encoding is presented
 as a verified fix. See 066; no source, output, version or installation change.
+
+## 2026-10-26 — Towa troop-raising seam reproduction
+
+[V-GAME owner / V-LOCAL / V-EXEC C366–C367] Owner independently reproduces
+the hang immediately on raising troops for seam-spanning Towa. Preserved the
+new logs and console records; no process remains for inspection. Installed
+Towa is KVF with 71 initial locations across 20 provinces. History separates
+the 0.12.2 mainland/contact/spline wrap from 0.12.6's primary terrain extension;
+the latter preserved geography and roads. Neither change is isolated as causal.
+
+[V-LOCAL / V-EXEC / UNKNOWN C368–C369] Vanilla offers no matching wrapped
+land-road example. Cylindrical spline tests do not establish engine behavior;
+the path-tightening command gates a later stage than the captured search.
+No guessed data rewrite or switch is shipped. Prepared a bounded, hash-pinned
+route capture, with offline replay matching all 17 previous stack returns and
+explicit detach/execution-state checks. Its live heap capture remains pending.
+Requested one immediate owner reproduction because missing heap data cannot
+be recovered after process exit. No agent launch, installation, output or
+version change. See [067](../../experiments/067-towa-seam-hang/README.md) and
+R-006; all raw executable/memory/log data stays ignored.
+
+[V-EXEC C369] Locked sync/full check passes 1,999 Python tests, 14 skips and
+23 Rust tests, with format/lint/types clean. These verify the unchanged
+generator, not a hang remedy or the pending live heap capture.
