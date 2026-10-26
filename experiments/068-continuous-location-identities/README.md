@@ -125,11 +125,33 @@ directory sweep occurs. Live host inspection finds EU5 absent; the forced-close
 session's log still reads `played`, so that stale flag is not represented as
 a live-game result.
 
-[UNKNOWN C378] Post-fix troop raising, movement and campaign stability have
-not been observed in EU5. No further owner sitting is requested in this phase.
+At delivery, post-fix movement was unobserved (C378); the owner's subsequent
+crossing test is recorded below (C380).
 Changed location identities require a new campaign; no existing world or save
 is migrated or overwritten. No engine binary, shader/define workaround,
 impassable stripe, seam channel, companion mod or runtime repair is added.
+
+## Owner crossing test: 22F4, 2026-10-26
+
+[V-GAME owner C380] In **RNW: Supercontinent 22F4**, generator **0.13.5 /
+epoch 42**, EU5 **1.4.4 / build 26142040**, the owner raised Tayxlamati's
+troops, conquered its western neighbour and moved units across the seam from
+**Qesgaqim to Hoaamla**, without a crash or hang. This verifies the corrected
+generator's seam-traversal scenario in game.
+
+[V-LOCAL / V-EXEC C380] Tayxlamati is **YSO**. Written unit anchors place
+Qesgaqim (`rnw_loc_01670`) at **(448.5, 6113.5)** and Hoaamla
+(`rnw_loc_02145`) at **(16142.5, 5776.5)**: opposite sides of the 16384-wide
+raster, only **690** pixels apart horizontally through the wrap. Eleven of
+Tayxlamati's initial locations share an identity across the edge. Session logs
+mount this world and record its war against **Cheilceiktsua**. One positive-
+position assertion remains at **16:35:13**; execution continues and the session
+exits normally at **16:38:26**. The successful crossing does not imply that
+this residual diagnostic is fixed.
+
+Reproduction code: `RNW1-081TQ-133V9-9SN7B-4006G-A0870-3C082-241Z8-0Y448-1R8GJ-4YW04-DA01Q-0VXV0`.
+Supporting logs, world record and coordinate audit stay ignored under
+`local_data/seam-identities/22f4-crossing/`.
 
 ## Private artifacts and removal
 

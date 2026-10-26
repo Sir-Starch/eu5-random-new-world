@@ -7,7 +7,9 @@
   land cache. This removes the artificial straight border and the extra adjacency in
   the owner's immediately reproducible Towa troop-raising case. Mainland, relief and
   rivers are preserved; no engine patch or replacement geography. Epoch 42. Written
-  output and reproducibility checked offline; post-fix movement in game is unobserved.
+  output and reproducibility checked offline; the owner's
+  [22F4 test](experiments/068-continuous-location-identities/README.md#owner-crossing-test-22f4-2026-10-26)
+  verifies post-fix troop movement across the seam without a hang (C380).
 - When a generated region has no counterpart for a former sea area, setup discoveries
   and script references use the same geographic replacement binding. A vanished
   discovery area no longer retires an otherwise retained country. Existing validators

@@ -67,6 +67,6 @@ across the raster edge; RNW's forced split introduced a different, defective
 adjacency structure. Version 0.13.5 removes that split at construction time.
 The corrected owner-world's physical-class raster and retained Old World land
 are exact, with continuous IDs and correctly placed anchors; a separate candidate
-is prepared. [UNKNOWN] Runtime movement and hang resolution still require game
-observation, distinct from the verified data correction. See
-[068](../experiments/068-continuous-location-identities/README.md).
+is prepared. [V-GAME owner C380] The subsequent
+[22F4 crossing test](../experiments/068-continuous-location-identities/README.md#owner-crossing-test-22f4-2026-10-26)
+verifies post-fix seam traversal without a hang.

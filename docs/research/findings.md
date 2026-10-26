@@ -86,5 +86,5 @@ does not exclude correcting its input. Removed the split from cell construction
 and the land cache. Written EVXP now follows the vanilla identity representation,
 removes the specific artificial Towa transition and places the earlier pair's
 anchors together in one coordinate chart. Shape, rivers and Old World nonsea
-pixels are preserved. [UNKNOWN] Post-fix movement in EU5 remains unobserved.
-See [068](../../experiments/068-continuous-location-identities/README.md).
+pixels are preserved. [V-GAME owner C380] Post-fix seam traversal is now verified
+in the [22F4 crossing test](../../experiments/068-continuous-location-identities/README.md#owner-crossing-test-22f4-2026-10-26).
