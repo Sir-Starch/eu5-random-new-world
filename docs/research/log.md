@@ -1722,3 +1722,18 @@ The lower Great Pestilence counters query the player's country, explaining
 observer zeros; the displayed death arithmetic remains unverified. Other
 diagnostics retain source and attribution limits. Documentation only, full
 check passes; no output change, game intervention or new owner test requested.
+
+## 2026-10-26 — EVXP campaign continuation through 1682
+
+[V-LOCAL / V-EXEC / INFERRED / UNKNOWN C385–C386] Read and hashed a stable
+27-file follow-up snapshot while the game remained running. The session now has
+9,096 error-log records; the largest repeated delta is 3,340 movement-religion
+warnings. New actionable signatures include same-province migrations from
+`settle_the_frontier` and a Pacific-crossing route exhaustion; the cargo-locator
+error is mirrored in ECS output. AI warnings grow to 92,956 complete entries.
+The game log reaches 1682, with no Great Pestilence end entry after its 1540
+start. The installed outcome has no calendar timeout and depends on infection
+coverage, disease exhaustion and remaining uninfected American countries; logs
+cannot identify the unmet predicate or confirm current UI state. Snapshot and
+analysis are recorded in [the audit follow-up](evxp-session-diagnostics.md#follow-up-campaign-continued-through-1682).
+Documentation only; no game or generated content changed.

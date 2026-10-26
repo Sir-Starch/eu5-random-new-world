@@ -1,6 +1,6 @@
 # EVXP fixed — current-session diagnostic audit
 
-2026-10-26; claims C381–C384. EU5 **1.4.4**, Steam **26142040**,
+2026-10-26; claims C381–C386. EU5 **1.4.4**, Steam **26142040**,
 executable SHA-256 **725a4c6c…14009**. Active world **EVXP fixed 0.13.5 /
 epoch 42**, `rnw_exp_evxp_identities`.
 
@@ -9,16 +9,17 @@ epoch 42**, `rnw_exp_evxp_identities`.
 [V-LOCAL / V-EXEC C381] The owner left EU5 running. A host process listing
 binds PID 4018904 (`MainThread`) to the Proton EU5 executable. Preserve the
 28 available log files with original hashes in ignored
-`local_data/pestilence-20261026/`; the captured current-session error interval
-is **16:57:15–18:07:33 CET**. This is a fixed audit cutoff, not the game's
-subsequent end time. Both current error files end with complete records.
+`local_data/pestilence-20261026/`; the first captured current-session error
+interval is **16:57:15–18:07:33 CET**. A separate continuation snapshot through
+19:01:35 CET is analyzed below. These are fixed audit cutoffs, not the game's
+end time. Both current error files in the first snapshot end with complete records.
 `error.1.log` belongs to this launch, whereas `error.2.log` through
 `error.5.log` predate it. The event CSV is from 23 October and supplies no
 current event trace.
 
-There are **5,149 timestamped error-log records**, **50 engine origins** and
-**427 exact message variants**. Continuation lines belong to their preceding
-record. Mirrors in `debug.log`, `game.log`, `gui.log` and `ecs.log` are not
+At the first cutoff there are **5,149 timestamped error-log records**, **50
+engine origins** and **427 exact message variants**. Continuation lines belong
+to their preceding record. Mirrors in `debug.log`, `game.log`, `gui.log` and `ecs.log` are not
 added again. An origin or a repeated warning is not a distinct defect.
 
 The process first loaded **22F4** data, switched to **EVXP fixed** at 16:57:38,
@@ -425,3 +426,71 @@ Counts are reconciled to every origin and complete AI category; frozen original
 hashes are rechecked. Locked sync and full check pass: **2,005 Python tests,
 14 skips, 23 Rust tests**, format/lint/types clean. Code tests cannot establish
 engine acceptance of the already logged defects.
+
+## Follow-up: campaign continued through 1682
+
+[V-LOCAL / V-EXEC C385] A read-only snapshot of all 27 current `.log` files was
+captured at **19:01:36 CET** under ignored
+`local_data/pestilence-20261026/followup-1901/`; every file was stable during
+its read and has a recorded SHA-256. PID 4018904 was still running at capture.
+`error.1.log` is unchanged, and the first 1,177 parsed records of the new
+`error.log` exactly match the first snapshot, so the **3,947** following records
+are a clean delta from **18:07:35–19:01:28**. The current-launch total is now
+**9,096 errors, 52 origins and 445 exact variants**. These remain log records,
+not 9,096 independently established defects.
+
+| New error records | Logged signature | Reading and limit |
+|---:|---|---|
+| 3,340 | `movement.cpp:156`: “No other religions to move away from a movement to” | Same family as the initial 125; the session total is 3,465. Actor and movement-selection context remain absent. |
+| 351 | `jomini_custom_text.h:93/:108`: invalid `sub_unit` for `subunit_type_`, `subunit_prefix`, and `subunit_structure_army_levy` (117 each) | Repeated presentation/custom-text failures; caller and visible impact are not identified. |
+| 90 | `expedition_manager.cpp:675`: route exhausted without adding a waypoint or ending the expedition | 89 mining surveys and one Pacific crossing; the engine logs that it fails these expeditions. Across the launch this is 230 mining surveys plus one Pacific crossing. |
+| 72 | `common_effects.cpp:3246`: `propose_resolution 'policy_vote'` rejected at `imperial_circles.txt:375` | Repeats the earlier rejected-resolution family. |
+| 55 | `common_effects.cpp:2498`: migration from and to the same province; 51 at `settle_the_frontier.txt:111`, four at `reformation.txt:871` | Immediate callers are identified, but no log gives the scopes or whether a generated location caused the equality. The installed frontier script checks that source and target exist, then passes them to `add_migration` without an explicit distinct-province guard. This is a concrete rejected no-op, with effective VFS attribution still bounded. |
+| 24 | `expedition_effects.cpp:352`: `resume_expedition` called when the expedition is not stalled | Repeated invalid lifecycle calls; caller is not logged. |
+| 5 + 1 | `common_effects.cpp:2698` cannot find heavy-infantry subunits at Kobda, Sadak, Ushkan, Manysai and Tumain; `:2758` reports an empty mercenary subunit array | Five failed creation attempts and one follow-on empty-array error; eligibility and callers remain unknown. |
+| 4 | `pdx_ecs_entity_3d_utils.cpp:608`: failed to attach entity to `cargo_lctr` | Also appears four times in `ecs.log`; count mirrors are not added twice. Runtime impact is unknown. |
+| 2 | `jomini_scriptlists.cpp:414`: list position capped at `artist_events.txt:2579` | Bounded list-index diagnostic. |
+| 2 | `jomini_scriptvalue.cpp:1965`: `none/any` value at `events/hre.txt:1047` and `:852` | Two wrong-type script values; whether the guarded branches were reached is unknown. |
+| 1 | `ai_tick_context.cpp:169`: building candidate truncation 56 with only two candidates for BRB | Engine clamps the candidate count; downstream choice is not recorded. |
+
+The table totals all **3,947** new error-log records. Eighteen exact message
+variants are new to this launch; the only new error origins are the candidate
+truncation and cargo-locator attachment diagnostics. Four cargo-locator lines
+are mirrored in ECS output. No direct Great Pestilence error appears.
+
+`ai.log` now has **92,956 complete warnings** and one unfinished tail; the
+previous partial final record was completed in the continuation. This snapshot
+adds **40,341** complete AI warnings and five command/warning categories:
+`assign_commander`, `cancel_construction`, `deposit_food`, `redeem_bonds`, and
+“too many loans.” The largest new groups are invalid `set_cabinet_action`
+(26,898), `change_trade_capacity` (3,040), `disband_subunit` (2,072),
+`build_road` (1,559), and `diplomaticactioncommand` (1,376). They are rejected
+AI commands or AI-context warnings, not proof that each command changed game
+state. `debug.log` adds 5,239 timestamped entries, mostly the already known
+missing river ambience alias (1,500) and `MapHeight` sound limit (1,493).
+Four ECS attach failures mirror the error log; the additional dedicated-server
+lines are speed and pause toggles.
+
+### Great Pestilence after the continuation
+
+[V-LOCAL / INFERRED / UNKNOWN C386] `game.log` reaches **1 January 1682** at
+19:01:02. It records Great Pestilence starting on 1 March 1540, but no end entry
+through the captured tail at 19:01:28. The same log does record other situation
+starts and ends during this period. This is evidence of no logged Pestilence
+completion, not a readout of its current UI state or disease counters.
+
+The installed 1.4.4 `common/situations/great_pestilence.txt` has no calendar
+timeout in its outcome. It requires all three region flags (Caribbean,
+Mesoamerica and Andes), the disease to be inactive, and no more than 30 settled
+American countries left without `had_great_pestilence`. The disease script can
+also spread into new colonies while the situation is ongoing. Thus a long-lived
+situation is compatible with the installed script if any outcome condition is
+still unmet; the logs do not expose which one, and a save-state inspection would
+be needed to say whether the situation remains active or identify an unmet
+condition. No mod or engine defect is established by the missing end entry.
+
+At 19:01:13, `debug.log` records the `disease_outbreak_manager` serialization
+section as 10.81 MB (4.00 MB reserved, 3.55 ms). These are writer telemetry, not
+death or affected-location counters. The screenshot's 29.648M value still is
+not independently reconstructed. The two observer-mode country counters
+remain consistent with the country-scoped vanilla UI queries described above.
