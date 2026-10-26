@@ -672,6 +672,25 @@ capture has occurred yet. Cleanup explicitly restores the pre-attachment
 execution state and checks detach, addressing C363. All memory, disassembly,
 logs and helpers stay ignored; nothing is distributed or installed.
 
+**Completed capture and dimensional defect (C370–C373).** On the owner's
+requested repetition, the prepared bounded capture reads the hot refiner's
+caller arrays (12-byte float point records, 4-byte location indices and flag
+bytes), a unit record, path-manager dimensions and a small raster header.
+Those are local diagnostic layouts, not a supported save or file interface.
+The debugger detaches with R / TracerPid 0 checked. A later attempt to read
+the corresponding adjacency objects finds the process gone and does not
+attach; that additional collector is not represented as tested.
+
+Inspection stays in the recovered routine: horizontal subdivision uses the
+height field where horizontal normalization uses width. A private independent
+float32 replay checks the dimension load, division factor and five exact live
+route points. Only aggregate results and diagnostic addresses enter the
+repository; instruction excerpts, heap records, the full route, synthetic
+comparison helper and logs stay ignored. The purpose remains interoperability
+of generated wrapped geography, not distribution or alteration of the engine.
+No executable patch, memory edit, new binary format, mod workaround or promised
+playable repair results from the arithmetic comparison.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

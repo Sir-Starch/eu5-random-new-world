@@ -56,3 +56,21 @@ This is a read-only investigation of Steam build 25905365 on `1.4-open-beta`, pl
 ## 0.10.0 owner test and 0.10.1 list candidate (2026-10-23)
 
 [V-GAME owner C173] Vanilla TI drawings, including dragons, are now visible in 0.10.0. The scripted lobby filter did not remove the blank list region. [V-LOCAL C174] The exported list still assigns fixed 74-pixel rows to hidden widgets; vanilla lists can use vbox/ignoreinvisible=yes. [INFERRED] Collapsing those widgets' layout space addresses the gap. 0.10.1 generates that layout and removes the failed filter; regression and anchor checks verify the emitted content. [UNKNOWN] The engine's resulting scrolling, card width and list compaction await the owner's run of experiment 032; no agent launch is authorized.
+
+## Mainland-wrap unit hang, 2026-10-26
+
+[V-GAME owner / V-LOCAL / V-EXEC C370–C372] In the pinned EU5 1.4.4 executable
+(Steam 26142040), the owner reproduces a hang after raising Towa's troops and
+unpausing EVXP 0.13.2. A bounded live route capture identifies horizontal
+midpoint subdivision using **map height instead of map width**, followed by
+normalization by width. Float32 replay matches the erroneous midpoint and
+four subsequent bisections exactly. Continuous mainland exposes this engine
+defect; the affected location identities are already split at the raster seam.
+See [067](../../experiments/067-towa-seam-hang/README.md).
+
+[UNKNOWN C373] A data-only repair retaining full mainland continuity is not
+verified. The terrain-crack fix is not isolated as causal; changing spline
+encoding or disabling later path tightening is not an established remedy.
+No engine/memory patch or geography workaround is shipped. Visual continuity,
+offline cylindrical geometry and stable engine unit movement are separate
+claims. The first 1341 episode lacks the comparable route capture.

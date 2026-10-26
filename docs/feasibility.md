@@ -42,3 +42,17 @@ The **minimal mandatory map override set is unknown**. `default.map` names sever
 5. **Distribution rights:** A full modified vanilla map may be a derivative asset. Generate locally from a lawful user installation until rights are clarified; distribute original generator code and original assets only. [SOURCE C15; INFERRED]
 
 **Recommended conditional approach:** external deterministic generator emitting a complete EU5 mod from the player's installed version; validate all cross-references and raster/graph invariants before installation. **Runner-up:** T2 ID-preserving reshape with generated visual layers, if new IDs fail but boundary changes load. Neither approach is yet verified. Do not silently redefine the target as T0 ownership randomization.
+
+## Later observed constraint: mainland wrap, 2026-10-26
+
+[V-GAME owner / V-LOCAL / V-EXEC C370–C372] On EU5 1.4.4 executable 26142040,
+EVXP's immediately reproducible Towa troop-raising hang exposes an engine
+horizontal midpoint calculation using the map's height. A bounded route
+capture and independent arithmetic reproduce five erroneous points exactly.
+Offline cylindrical adjacency and a visually continuous seam therefore do
+not establish stable unit movement across a wrapped mainland.
+
+[UNKNOWN C373] A safe data-only remedy preserving that mainland is unresolved;
+neither a corrected-engine runtime comparison nor a clean-vanilla crossing
+test was performed. No binary patch or replacement geography is part of this
+diagnosis. See [067](../experiments/067-towa-seam-hang/README.md).

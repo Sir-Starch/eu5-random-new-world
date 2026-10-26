@@ -1656,3 +1656,18 @@ R-006; all raw executable/memory/log data stays ignored.
 [V-EXEC C369] Locked sync/full check passes 1,999 Python tests, 14 skips and
 23 Rust tests, with format/lint/types clean. These verify the unchanged
 generator, not a hang remedy or the pending live heap capture.
+
+[V-GAME owner / V-LOCAL / V-EXEC C370–C373] Owner confirms the freeze begins
+after unpausing and leaves one immediate repetition open. Captured 144 route
+points, IDs/flags and unit state from the same engine refiner family; verified
+detach and R / TracerPid 0, preserved 27 logs. Horizontal midpoint subdivision
+loads the captured map's **height 8192** instead of **width 16384**, then
+normalizes by width. Independent float32 replay matches the wrong midpoint
+and four subsequent bisections bit for bit. The generated seam crossing
+exposes this engine defect; rewriting the road spline or undoing the terrain
+crack fix is not an established repair. The two location identities are already
+split at the seam. No safe data-only repair preserving mainland continuity
+has been verified, no game binary/memory/map is patched and no new product
+version or candidate is claimed. A later optional read finds the process gone
+without attachment; agent did not terminate it. See 067 and R-006; complete
+capture/derived arithmetic stay private and ignored.

@@ -5,8 +5,9 @@
 [V-GAME owner C366] The owner independently reproduced a hang immediately
 after raising troops for **Towa**, whose territory occupies both sides of the
 raster seam. This sharply narrows the recurring EVXP hang investigated in
-[066](../066-1341-hang/README.md). Whether it happened while paused or after
-unpausing is not yet confirmed by the owner. No new agent launch occurred.
+[066](../066-1341-hang/README.md). The owner subsequently confirmed that the
+freeze begins **after unpausing**, and agreed to one immediate repeat (C370).
+No new agent launch occurred.
 
 [V-LOCAL / V-EXEC C366] Preserved 28 logs from the owner's 05:58 session,
 playset information and console records in ignored
@@ -83,12 +84,91 @@ save files or mod data. See [interoperability R-006](../../docs/research/interop
 One immediate owner reproduction, leaving the hung process open, was requested
 because the terminated process's omitted heap buffers cannot be recovered
 from its logs or saved stack. No date waiting or campaign is requested.
-This capture is pending; no successful live result or fix is claimed.
+At this preparation stage capture was pending. The completed capture and its
+findings follow below; preparation alone did not establish a remedy.
 
 [V-EXEC C369] Locked dependency synchronization and the complete project check
 pass: **1,999 Python tests, 14 skips, 23 Rust tests**, formatting, lint and
 types. Documentation diff checks pass. These checks do not establish a runtime
 hang remedy or exercise the pending heap capture.
+
+## Owner repetition and completed capture
+
+[V-GAME owner / V-LOCAL / V-EXEC C370] On the owner's **"ready"** message,
+captured PID **3893335** at **14:41:38 +01:00**, without starting the game.
+The pinned executable hash passed. The process has **95 threads**; hot
+`Task_BN 10` is in **70793b0**, called by **707b6e0**, the same refinement
+family as 066. Preserved the caller's **144 path points**, matching location
+and flag arrays, the unit record and small candidate arrays. A separate
+snapshot preserves **27 logs** from the 14:39 session. The final positive
+position assertion is at **14:41:16**. The debugger detached and cleanup
+verified **R (running), TracerPid 0**; this is not a recovery of the hung game.
+
+[V-EXEC C370] A later attempt to collect the adjacency objects found no EU5
+process and did not attach. The agent did not terminate or launch the game.
+The main route capture is already preserved; the added adjacency-object
+collector therefore remains untested. No new owner sitting is required for
+the conclusion below. Private files have a hash manifest.
+
+## Identified horizontal-wrap arithmetic defect
+
+[V-LOCAL / V-EXEC C371] The captured path-manager fields are **width 16,384**
+at offset **+0x08**, **height 8,192** at **+0x0c**, horizontal wrap enabled and
+vertical wrap disabled. The executable's subdivision branch at RVA
+**707f3b3** loads **+0x0c** when choosing the horizontal periodic displacement.
+The same branch's later horizontal normalization at **707f437** loads **+0x08**.
+The factor loaded for division is independently checked as **0.5**. This
+mixes the vertical period into horizontal midpoint construction.
+
+[V-EXEC C371] Replaying those float32 operations on the captured anchor and
+adjacency control point produces midpoint **(12253.25, 6115.75)**. Using the
+horizontal period instead produces **(16349.25, 6115.75)**, close to the seam.
+The wrong first midpoint and **four subsequent bisections** all match points
+in the live route **bit for bit**, including the current refinement endpoint.
+Synthetic positive-coordinate examples in both crossing directions reproduce
+the same error, while an ordinary noncrossing example agrees. Negative input
+alone is therefore not necessary for this dimensional mistake.
+
+[V-LOCAL / V-EXEC C372] The unit's stored location route starts in
+**rnw_loc_01306**, then visits **rnw_loc_01329**, **rnw_loc_05117**,
+**rnw_loc_01342** and **rnw_loc_01383**. The middle pair crosses the seam;
+written anchors are on their respective sides. A bounded raster-crop read
+confirms that the two identities already lie on separate planar sides, so
+an additional location split is not the missing feature. The runtime path
+has a negative boundary control point and then progressively visits
+unrelated Old World IDs as its intermediate coordinates move across the map.
+This is not the installed short wrapped spline's point list. Its canonical
+points are all nonnegative; the recovered land-unit branch appends adjacency
+control points directly. Rewriting that spline is not an established remedy.
+
+[INFERRED from C370–C372] The generated mainland's seam crossing exposes an
+engine-side horizontal midpoint defect, which sends the graphical route
+refiner into unrelated parts of the map. This accounts concretely for the
+captured Towa task. It establishes more than a merely stale framebuffer or
+a coincidence with taking a screenshot. Neither a formal infinite loop nor
+the exact operation of the first 1341 episode is proven. A clean-vanilla
+crossing experiment and a corrected-engine runtime comparison were not run.
+
+## Repair boundary
+
+[V-EXEC / UNKNOWN C373] The offending instructions belong to the installed
+game executable, not generated terrain or spline files. C367 separates the
+terrain-crack fix from the earlier introduction of mainland wrap; no evidence
+isolates that visual fix as causal. No verified data-only remedy preserving
+the requested continuous mainland is available yet. No engine switch is
+claimed to repair the arithmetic. The correct-period replay is diagnostic
+evidence, not a tested binary patch or a playable fix.
+
+No executable, memory, installed world or save is patched. No channel,
+impassable seam, scripted replacement crossing, removed route or disabled
+unit rendering is shipped. Product version **0.13.4 / epoch 41** and golden
+world remain unchanged. The owner was informed that the immediate cause is
+identified but a safe mod-level repair is not ready.
+
+[V-EXEC C373] Post-capture locked sync/full check again passes **1,999 Python
+tests, 14 skips and 23 Rust tests**, with formatting, lint, types and diff
+checks clean. The private arithmetic replay passes independently. These
+checks verify the recorded diagnosis and unchanged generator, not a game fix.
 
 ## Installation and removal
 
