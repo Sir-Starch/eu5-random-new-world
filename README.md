@@ -39,24 +39,24 @@ Installed RNW worlds with a readable world code appear in the generator's librar
 
 ## Screenshots
 
-The generator's window (Qt, the platform's own controls) on a demo library. The New World stays covered until you choose to show it; the pictures of the worlds here have been shown.
+The current generator window (Qt, the platform's own controls) with the owner's generated worlds in the library. Supercontinent EVXP is the featured world throughout the overview and map views. The screenshots show the current 0.13.4 interface, including its covered view and the maps available after revealing the world.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/01-new-world.png" alt="The new-world page: a world type and a few broad choices"><br><sub>Pick a world type and a few broad choices; exact values are one tab away.</sub></td>
-<td width="50%"><img src="docs/images/02-customize.png" alt="Seed, world code and exact values for land and sea"><br><sub>Or set every value by hand, within the range that still plays.</sub></td>
+<td width="50%"><img src="docs/images/01-new-world.png" alt="The current new-world page beside a library of generated worlds"><br><sub>Choose a world type and broad settings; Supercontinent EVXP and other generated worlds stay in the library.</sub></td>
+<td width="50%"><img src="docs/images/02-customize.png" alt="Advanced world settings with a seed and reproducible world code"><br><sub>Set a seed, copy a world code, or adjust exact values.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/03-generating.png" alt="A world being generated, with the stages listed"><br><sub>A world takes a few minutes; every stage is shown and the work can be cancelled.</sub></td>
-<td width="50%"><img src="docs/images/04-world.png" alt="A finished world in the library, its New World shown on the map"><br><sub>Every world is kept in the library, with its picture, notes and versions.</sub></td>
+<td width="50%"><img src="docs/images/03-world-overview.png" alt="Supercontinent EVXP's overview with its covered New World preview"><br><sub>Supercontinent EVXP's overview keeps its New World covered by default.</sub></td>
+<td width="50%"><img src="docs/images/04-world-maps.png" alt="The generated land layer for Supercontinent EVXP"><br><sub>Reveal the world to inspect its geography and the summary of its peoples.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/05-maps-cultures.png" alt="The cultures of a world on its map, with a search"><br><sub>Maps of the finished world: cultures, with a search for any people, country or place.</sub></td>
-<td width="50%"><img src="docs/images/08-maps-religions.png" alt="The religions of a world on its map"><br><sub>Religions, countries, resources and development have their own layers.</sub></td>
+<td width="50%"><img src="docs/images/05-world-countries.png" alt="Countries in Supercontinent EVXP on the generated map"><br><sub>See Supercontinent EVXP's countries and search for peoples and places.</sub></td>
+<td width="50%"><img src="docs/images/06-world-development.png" alt="Start development in Supercontinent EVXP"><br><sub>Inspect start development and other map layers alongside terrain.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/06-maps-development.png" alt="Start development of a world on its map"><br><sub>Where the peoples are many and where the land is empty.</sub></td>
-<td width="50%"><img src="docs/images/07-world-covered.png" alt="A world whose New World is covered as terra incognita"><br><sub>By default the New World stays terra incognita, here and in the game, until you play it.</sub></td>
+<td width="50%"><img src="docs/images/07-world-covered.png" alt="Supercontinent EVXP's map stays covered until the player reveals it"><br><sub>The world stays covered in the Maps tab until you choose to reveal it.</sub></td>
+<td width="50%"><img src="docs/images/08-world-religions.png" alt="Religions in Supercontinent EVXP shown on the map"><br><sub>Religions have their own map layer and legend.</sub></td>
 </tr>
 </table>
 
