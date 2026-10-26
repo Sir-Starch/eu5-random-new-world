@@ -1581,3 +1581,17 @@ that is the next implementation phase, separate from this one-world registration
 ## 2026-10-26 — map mod descriptions
 
 - [V-EXEC] Generated New World mod metadata now carries a player-facing description with the generator name, reproducible world code when available and a Steam Workshop call to action. The internal game-validation status remains in the generator report, not the player-facing description. Metadata is excluded from world output digests; algorithm epoch 41 is unchanged. Product version 0.13.4.
+
+## 2026-10-26 — EVXP Windows-library preview correction
+
+[V-EXEC C357] Confirmed the owner's square EVXP image is a source-data error,
+not zoom: Windows 0.13.3 recovered the receipt-less 0.13.2 mod by copying its
+512×512 thumbnail as both previews. Original Linux/export previews are
+2048×1024. C355 tested a temporary copy with an added receipt; the installed
+EVXP had none. Restored the verified 29-file original bundle into the Windows
+library, preserving personal fields and backing up its three prior files.
+Record/manifests, full previews and 6,910-location atlas checked; revealed image
+visually inspected. Four other records, 7,491 mod-file stat records, nine root
+hashes, preferences and original source bundle preserved. No source/package/mod
+change, new version, generation or game launch. Legacy thumbnail substitution
+remains an implementation limitation. See [065](../../experiments/065-installed-world-recovery/README.md).

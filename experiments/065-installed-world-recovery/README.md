@@ -98,3 +98,37 @@ Ignored evidence: `local_data/world-recovery/` (`check.log`, Qt render, actual
 receipt round trip, Linux/Windows parity, final package build/test logs,
 `installed.json`, source-guard log and verified old-hub backup). Source changes
 are in local commit `434df83`; the algorithm reference remains unchanged.
+
+## EVXP preview correction in the Windows library
+
+[V-EXEC C357] The owner's subsequent screenshot shows a square EVXP preview
+beside four wide previews. The installed 0.13.2 EVXP mod has no recovery
+receipt. Windows 0.13.3 adopted it through `_legacy` / `_restore`, copying
+`.metadata/thumbnail.png` into both library preview files. All three 512×512
+files have SHA-256 `3c1e861c…c46336`. The main viewer displays an already cropped
+source; zoom is not the cause. The prior reply attributing the crop to zoom
+was unsupported and incorrect.
+
+The original full previews remain in the Linux library and direct export:
+2048×1024, revealed SHA-256 `c37fb418…8ad0`, hidden `50b34c4c…14362`.
+C355's successful recovery used a receipt added to a temporary copy; it did
+not establish that the existing installed EVXP carried that receipt. This
+explains why the generator opened through the game had incomplete data while
+the native library had the full bundle. The world's older generator version
+does not require cropping its preview.
+
+Restored the Windows library entry from the verified original bundle, retaining
+its id, installed-folder alias, name, visibility and personal fields. All 29
+staged/installed files match; record/manifests pass recovery checks and the
+atlas contains 6,910 locations. Both full previews were checked and the revealed
+image was visually inspected. The three previous files are backed up in ignored
+`local_data/evxp-preview-restoration/original-library-entry/` and retained at
+`generated/.rnw-evxp-preview-before-restoration` in the Windows library. Four
+other records, 7,491 installed mod-file size/time records, nine profile-root
+hashes, preferences and the source Linux bundle remain exact.
+
+This is a library-data repair: no source/package, mod file, product version or
+algorithm change. Legacy thumbnail substitution in 0.13.3 remains a known
+limitation; this correction does not claim a general implementation fix. The
+open viewer caches its loaded pixmap until another world is selected. No game
+launch or process control. Ignored audit: `local_data/evxp-preview-restoration/`.
