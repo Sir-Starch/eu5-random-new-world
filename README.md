@@ -4,154 +4,185 @@
 
 # Random New World for Europa Universalis V
 
-**A generator that replaces the Americas with a procedurally generated New World and leaves the Old World as Paradox made it.**
+**A standalone procedural New World generator for EU5 — full-scale continents, physical geography, and native societies with an untouched vanilla Old World.**
 
 [![check](https://github.com/Sir-Starch/eu5-random-new-world/actions/workflows/check.yml/badge.svg)](https://github.com/Sir-Starch/eu5-random-new-world/actions/workflows/check.yml)
-[![Licence: MPL-2.0](https://img.shields.io/badge/licence-MPL--2.0-brightgreen.svg)](LICENSE)
+[![License: MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](LICENSE)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)
 ![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
 ![EU5 1.4](https://img.shields.io/badge/EU5-1.4.x-8B6F47.svg)
+![Ironman & Achievements](https://img.shields.io/badge/Ironman%20%26%20Achievements-supported-success.svg)
 ![Status: pre-release](https://img.shields.io/badge/status-pre--release%200.x-orange.svg)
 
 </div>
 
 ---
 
-Each seed produces new continents, coastlines, relief, climate, rivers, seas, resources, provinces and native civilisations. The generator writes them as an ordinary EU5 mod. Every world is a self-contained map mod, has a short **world code**, and can be rebuilt byte for byte from that code with the same game version.
+**Random New World (RNW)** is a standalone desktop application (Python + Rust + Qt) that replaces the Americas with a procedurally generated landmass while keeping the Old World completely vanilla. 
 
-Installed RNW worlds with a readable world code appear in the generator's library automatically. New worlds carry recovery data for their atlas, pictures and generation record, so their library entry can be restored from the mod itself.
+Each seed simulates elevation, climate zones, drainage basins, sea currents, resources, provinces, and native civilizations from scratch, compiling the result into a standard, self-contained EU5 map mod. Every world has a short shareable **World Code** and reproduces byte-for-byte on any machine running the same game build and generator version.
+
+Installed RNW mods with a valid world code are detected automatically in the generator's library. Generated mods also embed recovery metadata for their atlas, preview images, and generation records, allowing library entries to be restored directly from the mod folder.
 
 > [!IMPORTANT]
-> **Pre-release (0.x).** No public release or Workshop item exists yet. The maintainer has played much of the generated New World in game; see [`CHANGELOG.md`](CHANGELOG.md) and the [experiment records](experiments/). Expect breaking changes until 1.0.0, the first Steam Workshop publication ([ADR 0003](docs/adr/0003-versioning.md)).
+> **Pre-release (`0.x`).** Preparing for the `1.0.0` Steam Workshop release ([ADR 0003](docs/adr/0003-versioning.md)). Core systems have been extensively verified in-game (see [`CHANGELOG.md`](CHANGELOG.md) and [experiment records](experiments/)), but world codes and internal formats may still change prior to `1.0.0`.
 
 ## Features
 
-| Layer | What the generator makes |
+| Layer | Capabilities |
 |---|---|
-| **Land** | Five world types (supercontinent, continents, small continents, archipelago, scattered islands), with Random (one of them, drawn) and Total Chaos (a drawn type and every advanced value drawn), coastlines that follow the seed, an optional land outline you draw yourself; recommended ocean expansion gives continents room beyond the familiar outline of the Americas |
-| **Physical world** | Relief, climate, biomes, terrain materials and vegetation from one model; rivers from drainage; vanilla-calibrated coast and shelf profiles |
-| **Seas** | One port for every coastal sea zone; names taken from the water's shape (gulfs, straits, capes, island waters); depth and topography; ocean lanes and currents that continue the game's own; strait crossings armies can use |
-| **Political map** | Compact, connected locations, provinces, areas and regions. The original American region and area keys are matched to the generated ones by physical similarity |
-| **Peoples** | Native cultures and religions with homelands, states, tribes and vassals; rare great empires, sea leagues, highland confederations, fractured realms and sacred centres, each with causes and weaknesses |
-| **Economy** | Start development, harbours, market villages and technology levels derived from each society |
-| **Content** | Stories and formable countries planned from the finished world; colonial names built from each region's generated name; the historical American content is rebound, neutralised or replaced decision by decision |
-| **Before you play** | The New World stays terra incognita in the generator, in the game's mod list and at country selection until you choose to see it |
+| **Landmasses & Canvas** | Five archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*), plus **Random** and **Total Chaos** modes, coastline sketch previews, and custom hand-drawn outlines. Optional **+40% ocean expansion** (`53.2M px` canvas) claims surrounding ocean space beyond the vanilla Americas footprint. |
+| **Physical Geography** | Unified elevation, climate, biome, terrain material, and vegetation simulation; drainage-driven river networks; vanilla-calibrated continental shelves and coastlines. |
+| **Seas & Navigation** | Guaranteed natural harbors for coastal sea zones; shape-aware water naming (gulfs, straits, bays, capes); dynamic reshaping of vanilla oceans and impassable `ocean_wasteland` basins; continuous ocean currents, shipping lanes, and army strait crossings (`adjacencies.csv`). |
+| **Political & Region Keys** | Compact, connected locations, provinces, areas, and regions. Vanilla American region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
+| **Native Societies** | Procedural native cultures, religions, homelands, settled states, decentralized tribes, and subject networks. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) with balanced structural tradeoffs. |
+| **Economy & Institutions** | Starting development, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. |
+| **Dynamic Content & L10n** | Procedural regional stories, formable nations, rare resource deposits, and colonial naming (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
+| **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
 
 ## Screenshots
 
-The current generator window (Qt, the platform's own controls) with the owner's generated worlds in the library. Supercontinent EVXP is the featured world throughout the overview and map views. The screenshots show the current 0.13.4 interface, including its covered view and the maps available after revealing the world.
+The generator interface (native Qt controls) displaying generated worlds in the library, featuring **Supercontinent EVXP** (`v0.13.4`) in both spoiler-free (*Terra Incognita*) and revealed atlas mapmodes.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/01-new-world.png" alt="The current new-world page beside a library of generated worlds"><br><sub>Choose a world type and broad settings; Supercontinent EVXP and other generated worlds stay in the library.</sub></td>
-<td width="50%"><img src="docs/images/02-customize.png" alt="Advanced world settings with a seed and reproducible world code"><br><sub>Set a seed, copy a world code, or adjust exact values.</sub></td>
+<td width="50%"><img src="docs/images/01-new-world.png" alt="New World setup page and world library"><br><sub>Select a landmass archetype and presets alongside your library of generated worlds.</sub></td>
+<td width="50%"><img src="docs/images/02-customize.png" alt="Advanced customization sliders and World Code"><br><sub>Fine-tune generation parameters, enter a seed, or share a reproducible World Code.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/03-world-overview.png" alt="Supercontinent EVXP's overview with its covered New World preview"><br><sub>Supercontinent EVXP's overview keeps its New World covered by default.</sub></td>
-<td width="50%"><img src="docs/images/04-world-maps.png" alt="The generated land layer for Supercontinent EVXP"><br><sub>Reveal the world to inspect its geography and the summary of its peoples.</sub></td>
+<td width="50%"><img src="docs/images/03-world-overview.png" alt="Spoiler-free world overview"><br><sub>By default, the New World stays hidden behind Terra Incognita to preserve exploration.</sub></td>
+<td width="50%"><img src="docs/images/04-world-maps.png" alt="Revealed physical map in the built-in Atlas"><br><sub>Reveal the world to inspect physical geography and society summaries in the built-in Atlas.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/05-world-countries.png" alt="Countries in Supercontinent EVXP on the generated map"><br><sub>See Supercontinent EVXP's countries and search for peoples and places.</sub></td>
-<td width="50%"><img src="docs/images/06-world-development.png" alt="Start development in Supercontinent EVXP"><br><sub>Inspect start development and other map layers alongside terrain.</sub></td>
+<td width="50%"><img src="docs/images/05-world-countries.png" alt="Political mapmode in the Atlas"><br><sub>Browse generated native states, tribes, and search for specific cultures or locations.</sub></td>
+<td width="50%"><img src="docs/images/06-world-development.png" alt="Starting development mapmode"><br><sub>Inspect starting development, harbors, and economic layers alongside terrain.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/07-world-covered.png" alt="Supercontinent EVXP's map stays covered until the player reveals it"><br><sub>The world stays covered in the Maps tab until you choose to reveal it.</sub></td>
-<td width="50%"><img src="docs/images/08-world-religions.png" alt="Religions in Supercontinent EVXP shown on the map"><br><sub>Religions have their own map layer and legend.</sub></td>
+<td width="50%"><img src="docs/images/07-world-covered.png" alt="Covered Atlas view"><br><sub>The Atlas tab remains locked behind a spoiler guard until revealed.</sub></td>
+<td width="50%"><img src="docs/images/08-world-religions.png" alt="Religions mapmode and legend"><br><sub>Generated religious families with dedicated map layers and interactive legends.</sub></td>
 </tr>
 </table>
 
-*Europa Universalis V* is © Paradox Interactive AB. The Old World in these pictures is the game's own map; the New World is generated. The screenshots illustrate this unofficial mod and generator.
+*Europa Universalis V* is © Paradox Interactive AB. The Old World shown in these screenshots belongs to the base game; the New World is procedurally generated.
 
-## How it works
+## How It Works
 
-EU5 builds its map from files when it loads mods. A mod is data: it cannot run code, and script cannot create land, mountains or rivers. The generation therefore runs in a separate program that reads the player's own installation and writes a mod. The generator does not change or hook into the game.
+EU5 compiles its map topology, meshes, and splines during initial mod loading — runtime scripts cannot dynamically generate heightmaps, terrain materials, or river networks. **Random New World** runs as an external compiler that reads your local EU5 installation (read-only) and outputs a standard static map mod without modifying vanilla files or hooking into the game binary.
 
 ```mermaid
 flowchart LR
-    G[("EU5 installation<br/>(read only)")] --> R["Read and fingerprint<br/>the map contract"]
-    C(["World code<br/>preset + seed + settings"]) --> W
-    R --> W["Generate the New World<br/>Python + Rust core"]
-    W --> V{"Validators<br/>fail loudly"}
-    V --> M[/"World mod<br/>mod/rnw_exp_world_…"/]
-    M --> P(("Play a new<br/>1337 campaign"))
+    G[("EU5 Installation<br/>(read-only)")] --> R["Verify & fingerprint<br/>map contract"]
+    C(["World Code<br/>archetype + seed + params"]) --> W
+    R --> W["Compile New World<br/>Python + Rust core"]
+    W --> V{"Strict Validators<br/>(fail-fast)"}
+    V --> M[/"Standalone Mod<br/>mod/rnw_exp_world_…"/]
+    M --> P(("Play 1337 Campaign<br/>(Ironman & Achievements OK)"))
+
 ```
 
-- **Old World preserved.** Pixels, keys and contacts outside the New World canvas are checked against the installed game.
-- **Deterministic.** The same code, generator version and game build give identical files on any machine, with any thread count. A reference world's digest is pinned in the test suite.
-- **Fails loudly.** An unknown game build, an undecided vanilla script object or a broken invariant stops the export. No output is silently repaired.
-- **Native core.** Hot kernels (noise, distance fields, drainage, terrain slots, LZAV) are in Rust and bit-identical to the Python reference implementations in [`tests/reference/`](tests/reference/).
+* **Untouched Old World:** Every pixel, province key, and adjacency outside the New World canvas is verified against the vanilla installation baseline.
+* **Bit-for-Byte Deterministic:** Identical World Codes, generator versions, and game builds produce identical files across operating systems and CPU thread counts. Reference world digests are pinned in CI.
+* **Fail-Fast Invariants:** Unverified game builds, unhandled vanilla script references, or broken map invariants halt compilation immediately — never emitting silently corrupted mods.
+* **Native Rust Core:** Compute-heavy kernels (simplex/domain-warped noise, distance fields, drainage routing, terrain slot assignment, LZAV compression) are written in Rust and verified bit-identical against Python reference implementations in [`tests/reference/`](https://www.google.com/search?q=tests/reference/).
 
-See [architecture](docs/architecture.md), [ADR 0009](docs/adr/0009-hub-mod-with-generator.md) (delivery) and [ADR 0010](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md) (layered, reproducible worlds) for the design.
+For deep dives into the engineering, see [Architecture](https://www.google.com/search?q=docs/architecture.md), [ADR 0009 (Hub Mod Delivery)](https://www.google.com/search?q=docs/adr/0009-hub-mod-with-generator.md), and [ADR 0010 (Layered Reproducible Worlds)](https://www.google.com/search?q=docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md).
 
-## Getting started
+## Getting Started
 
-### Requirements
+### For Players (Standalone Binary / Steam Workshop)
 
-- **Europa Universalis V 1.4.x**, installed through Steam (Windows, or Linux through Proton). The generator checks the installed build and refuses one it has not been verified against.
-- **Python 3.12+** and [**uv**](https://docs.astral.sh/uv/).
-- A stable **Rust** toolchain ([rustup](https://rustup.rs/)) to build the native core.
-- About **7.5 GB of free memory** while a world is generated, which takes a few minutes.
+Once `1.0.0` is published, no Python or Rust installation is required:
 
-### Run from source
+1. Subscribe to **Random New World** on the Steam Workshop (or download the standalone archive from [GitHub Releases](https://www.google.com/search?q=https://github.com/Sir-Starch/eu5-random-new-world/releases) — every release includes SHA-256 checksums and VirusTotal scans).
+2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works out of the box on Windows and on Linux/Steam Deck via Proton).
+3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (~2–3 minutes; requires ~7.5 GB of free RAM).
+4. Enable the newly created world mod (e.g., *RNW: Small continents 7K3Q*) in your playset — **only one RNW world mod at a time** — and start a new 1337 campaign. *(Do not enable the generator hub item itself in your playset).*
+
+> [!NOTE]
+> **Switching between RNW maps:** If you have already loaded into a campaign during your current game session, restart EU5 before starting a campaign on a different RNW map. Switching overhaul map mods within the same process will crash the engine.
+
+---
+
+### Build & Run from Source
+
+#### Requirements
+
+* **Europa Universalis V (`1.4.x`)** installed via Steam (Windows or Linux/Proton).
+* **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
+* Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
+* **~7.5 GB of free RAM** during world compilation.
+
+#### Launch the GUI
 
 ```sh
-git clone https://github.com/Sir-Starch/eu5-random-new-world.git
+git clone [https://github.com/Sir-Starch/eu5-random-new-world.git](https://github.com/Sir-Starch/eu5-random-new-world.git)
 cd eu5-random-new-world
-uv sync --locked --group dev     # builds the Rust extension as part of the package
-uv run rnw gui                   # the generator's window
+uv sync --locked --group dev     # compiles the Rust core extension automatically
+uv run rnw gui                   # launches the Qt desktop application
+
 ```
 
-The window finds EU5 and your profile on its own. Missing folders can be chosen under *Settings*. From the command line:
+The application detects your EU5 installation and user profile automatically (custom paths can be configured in *Settings*).
+
+#### Command-Line Interface (CLI)
 
 ```sh
-uv run rnw find-game                                      # installations and profiles found (read only)
-uv run rnw world-code --preset small_continents --seed 42 # print a world code
-uv run rnw world CODE --install                           # build that world and add it to the game
-uv run rnw worlds                                         # the worlds you have made
-uv run rnw --help                                         # everything else
+uv run rnw find-game                                       # detect EU5 installations and profiles (read-only)
+uv run rnw world-code --preset small_continents --seed 42  # generate and print a shareable World Code
+uv run rnw world CODE --install                            # compile a world from a code and install to EU5
+uv run rnw worlds                                          # list locally generated worlds
+uv run rnw --help                                          # view all CLI commands and flags
+
 ```
 
-### Play a world
-
-1. Generate a world. It appears in the game's mod list as **RNW: *type* *tag*** (for example *RNW: Small continents 7K3Q*).
-2. In the EU5 launcher, enable that world in a playset, **one world at a time**.
-3. Start a **new 1337 campaign**. If you have already played a campaign in this session, restart EU5 first: the engine crashes when a different world starts after a campaign in the same process.
-
-The [generator guide](docs/generator-guide.md) covers world files, rerolls, queues and the atlas.
+See the [Generator Guide](https://www.google.com/search?q=docs/generator-guide.md) for details on `.rnw` world files, political/resource rerolls, batch queues, and the built-in Atlas.
 
 ## Documentation
 
-The [documentation index](docs/README.md) lists everything. The main entry points:
+The [Documentation Index](https://www.google.com/search?q=docs/README.md) provides a full map of the repository:
 
-- **Using it:** [generator guide](docs/generator-guide.md), [product specification](docs/product-spec.md)
-- **Design:** [architecture](docs/architecture.md), [natives](docs/natives.md), [economy](docs/economy.md), [sea geography](docs/sea-geography.md), [terrain and biomes](docs/terrain-biomes.md), [content plan](docs/content-plan.md), [decision records](docs/adr/)
-- **Progress:** [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md), [experiments](experiments/README.md)
-- **Evidence:** [findings](docs/research/findings.md), [claims ledger](docs/research/claims-ledger.md), [interoperability register](docs/research/interoperability.md)
+* **User Guides:** [Generator Guide](https://www.google.com/search?q=docs/generator-guide.md) · [Product Specification](https://www.google.com/search?q=docs/product-spec.md) · [Localization](https://www.google.com/search?q=docs/localization.md)
+* **System Design:** [Architecture](https://www.google.com/search?q=docs/architecture.md) · [Terrain & Biomes](https://www.google.com/search?q=docs/terrain-biomes.md) · [Sea Geography](https://www.google.com/search?q=docs/sea-geography.md) · [Native Societies](https://www.google.com/search?q=docs/natives.md) · [Economy](https://www.google.com/search?q=docs/economy.md) · [Content Plan](https://www.google.com/search?q=docs/content-plan.md) · [Architecture Decision Records (ADRs)](https://www.google.com/search?q=docs/adr/)
+* **Project Tracking:** [Roadmap](https://www.google.com/search?q=docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](https://www.google.com/search?q=experiments/README.md)
+* **Verification & Audits:** [Engine Findings](https://www.google.com/search?q=docs/research/findings.md) · [Claims Ledger (`C01–C277`)](https://www.google.com/search?q=docs/research/claims-ledger.md) · [Interoperability Register](https://www.google.com/search?q=docs/research/interoperability.md)
 
-## Development
+## Development & Verification
 
 ```sh
 uv sync --locked --group dev
-make check        # ruff format + lint, basedpyright, pytest, cargo fmt/clippy/test
+make check        # runs ruff (format + lint), basedpyright, pytest, and cargo (fmt, clippy, test)
+
 ```
 
-CI runs the same checks on Linux and Windows. Tests use synthetic fixtures and need no game. With a local installation, `EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py` adds read-only checks against it.
+CI executes the full verification suite across Linux and Windows using synthetic fixtures (no game installation required). When an EU5 installation is present locally, run read-only contract verification against the live game files:
 
-| Path | Contents |
-|---|---|
-| [`src/rnw/`](src/rnw/) | The generator: world model, geography, seas, peoples, content, EU5 exporters, validators, CLI |
-| [`src/rnw/app/`](src/rnw/app/), [`src/rnw/gui/`](src/rnw/gui/) | Headless application core and the Qt window |
-| [`native/`](native/) | Rust crate behind `rnw._native` |
-| [`packaging/`](packaging/) | Application and Workshop-item builds, release tooling, third-party notices |
-| [`tests/`](tests/) | Test suite, Python reference kernels, golden digests |
-| [`docs/`](docs/), [`experiments/`](experiments/) | Design, decisions, evidence and in-game experiment records |
+```sh
+EU5_GAME_DIR=/path/to/eu5 uv run pytest -q tests/test_local_install.py
 
-Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. In particular, **never commit files from the game or anything derived from them.** [AGENTS.md](AGENTS.md) holds the project's working rules, which coding agents read too.
+```
 
-## Legal
+| Directory | Contents |
+| --- | --- |
+| [`src/rnw/`](https://www.google.com/search?q=src/rnw/) | Core generator pipeline: world model, physical geography, seas, societies, content, EU5 exporters, validators, CLI |
+| [`src/rnw/app/`](https://www.google.com/search?q=src/rnw/app/), [`src/rnw/gui/`](https://www.google.com/search?q=src/rnw/gui/) | Headless application controller and Qt desktop interface |
+| [`native/`](https://www.google.com/search?q=native/) | Rust crate powering `rnw._native` hot kernels |
+| [`packaging/`](https://www.google.com/search?q=packaging/) | Standalone binary builders, Workshop staging, release automation, third-party notices |
+| [`tests/`](https://www.google.com/search?q=tests/) | Automated test suite, Python reference kernels, and golden world digests |
+| [`docs/`](https://www.google.com/search?q=docs/), [`experiments/`](https://www.google.com/search?q=experiments/) | Technical specifications, ADRs, verification ledgers, and in-game experiment logs |
 
-*Europa Universalis* and *Paradox Interactive* are trademarks of Paradox Interactive AB. This project is **not affiliated with or endorsed by Paradox Interactive**.
+## Contributing
 
-This repository contains no game files. A generated world is built on your computer from your own copy of the game. It contains material derived from the game, is not covered by this project's licence, and is subject to [Paradox's user agreement](https://legal.paradoxplaza.com/eula). See [legal notes](docs/legal.md) for the reasoning and open questions.
+Contributions, bug reports, and pull requests are welcome! Please read [CONTRIBUTING.md](https://www.google.com/search?q=CONTRIBUTING.md) before opening a PR.
 
-The code and mod files are licensed under the [Mozilla Public License 2.0](LICENSE). Bundled third-party components keep their own licences ([notices](packaging/THIRD_PARTY_NOTICES.md)). To report a vulnerability, follow [SECURITY.md](SECURITY.md).
+* **Strict clean-room rule:** Never commit proprietary game files or data extracted from an EU5 installation into this repository.
+* **Architectural invariants:** See [AGENTS.md](AGENTS.md) for engineering rules, verification evidence labels (`[V-EXEC]`, `[V-GAME]`), and coding guidelines.
+
+## License & Legal
+
+**Random New World Generator** is an independent, third-party open-source software application licensed under the **[Mozilla Public License 2.0 (MPL-2.0)](https://www.google.com/search?q=LICENSE)**. Anyone is welcome to inspect the source code, submit pull requests, or build upon the project on GitHub, provided that all MPL-2.0 license terms, copyright notices, and source-code disclosure requirements are strictly respected. Bundled third-party libraries retain their respective licenses ([`THIRD_PARTY_NOTICES.md`](https://www.google.com/search?q=packaging/THIRD_PARTY_NOTICES.md)).
+
+* **No Game Assets Included:** This repository contains zero proprietary files from *Europa Universalis V*. Generated map mods are compiled locally on the user's machine from their own legitimate copy of the game; generated mod output is subject to [Paradox Interactive's EULA](https://legal.paradoxplaza.com/eula) (see [Legal Notes](https://www.google.com/search?q=docs/legal.md)).
+* **Workshop Redistribution Policy:** Re-uploading the generator tool itself or redistributing unmodified builds on the Steam Workshop without explicit permission from the author is prohibited.
+* **Security:** To report a security issue, please follow [SECURITY.md](SECURITY.md).
+
+*Europa Universalis* and *Paradox Interactive* are registered trademarks of Paradox Interactive AB. This project is **not affiliated with or endorsed by Paradox Interactive**.
