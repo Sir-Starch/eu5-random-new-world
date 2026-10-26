@@ -78,7 +78,6 @@ RED: Final[str] = "color: #b00020;"
 MUTED: Final[str] = ""
 ICON_SIZE: Final[tuple[int, int]] = (96, 48)
 DATE: Final[str] = "%Y-%m-%d %H:%M"
-QUICK_LEVELS_INLINE: Final[int] = 3
 # Before the name of a version of a continent already listed above it.
 VERSION_MARK: Final[str] = "\u21b3 "
 
@@ -413,22 +412,17 @@ class _QuickRow:
         self.label: QLabel = QLabel(text(f"quick.{quick.name}"))
         self.label.setToolTip(about)
         self.buttons: dict[str, QPushButton] = {}
-        self.levels: QGridLayout = QGridLayout()
+        self.levels: QHBoxLayout = QHBoxLayout()
         self.custom: QLabel = QLabel(text("quick.custom"))
         self.custom.setStyleSheet(MUTED)
-        columns = 2 if len(quick.levels) > QUICK_LEVELS_INLINE else len(quick.levels) + 1
-        for column in range(columns):
-            self.levels.setColumnStretch(column, 1)
-        for index, level in enumerate(quick.levels):
+        for level in quick.levels:
             button = QPushButton(text(f"quick.{quick.name}.{level.name}"))
             button.setCheckable(True)
             button.setToolTip(about)
             _ = button.clicked.connect(lambda _checked=False, name=level.name: self._pick(name))
             self.buttons[level.name] = button
-            row, column = divmod(index, columns)
-            self.levels.addWidget(button, row, column)
-        row, column = divmod(len(quick.levels), columns)
-        self.levels.addWidget(self.custom, row, column)
+            self.levels.addWidget(button)
+        self.levels.addWidget(self.custom)
 
     def place(self, grid: QGridLayout, row: int) -> None:
         """Put the row's widgets into ``grid``."""
@@ -563,6 +557,8 @@ class MainWindow(QMainWindow):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(self._library_panel())
         self.stack = QStackedWidget()
+        # Scrollable pages must not force the splitter's right-hand pane to its content width.
+        self.stack.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)
         self.new_page = self._new_page()
         self.world_page = self._world_page()
         self.stray_page = self._stray_page()
