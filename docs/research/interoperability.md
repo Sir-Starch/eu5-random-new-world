@@ -392,6 +392,25 @@ project-authored code, synthetic fixtures, descriptions and digests are
 distributed. The official-interface limits and legal uncertainty recorded in
 R-004/R-001 remain unchanged. Engine movement after this correction is unknown.
 
+### Follow-up: local library recovery metadata (2026-10-26, 0.13.3)
+
+[V-EXEC C354–C356] Installed-world recognition reads the generator's own world
+codes and JSON records. New application-generated worlds copy their existing
+library bundle into `.metadata/rnw-library/` so loss of a separate application
+library does not lose the original record, atlas or pictures. These are the
+project's existing JSON/PNG artifacts and locally generated cover text; no new
+closed format, EU5 binary structure or executable is studied or written.
+Recognition changes library records only, with installed folder aliases and
+read-only code/build matching; it never patches a mod to make it recognizable.
+
+The metadata payload is produced locally from the completed world. Derived
+images and cover resources stay local under the same R-004 boundary and are
+not included in the published generator. Notes, favourites and private user
+tags are excluded. The existing compatibility checks, distribution limits and
+uncertainty remain unchanged. Additional metadata has not been observed in a
+running game here; this phase establishes application recovery and unchanged
+nonmetadata files, not new engine behaviour.
+
 ### Follow-up: impassable units and mountain height sources (2026-10-25, 0.12.8 / epoch 38)
 
 [V-LOCAL / V-EXEC / INFERRED C321–C323] Vanilla mountains include additive,

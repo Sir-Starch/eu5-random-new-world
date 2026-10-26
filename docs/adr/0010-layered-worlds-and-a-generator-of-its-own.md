@@ -186,8 +186,9 @@ image and saved selection cover. These are existing locally generated artifacts,
 not a second mod or game content repair. Notes, favourites and private user tags
 are omitted. Receipt records, settings and bundle hashes are checked in staging;
 publication into the library is atomic. A code-only adoption can be upgraded
-when a copied receipt finishes arriving, preserving personal fields. Existing
-records and unrelated bundle files are never overwritten by adoption.
+when a copied receipt finishes arriving, preserving personal fields and its
+local id. Complete existing records are not replaced, and unrelated bundle
+files are never overwritten by adoption.
 
 For an older code-only mod the original game build and exact output remain
 unknown; the current installation is not substituted as historical evidence.

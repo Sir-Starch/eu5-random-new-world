@@ -390,3 +390,24 @@ only metadata id changed. Original 657Q/DSNL, seven prior library records,
 No save/playset/settings/map change or game launch.
 Updated removal: `uv run rnw uninstall-mod rnw_exp_world_rbsvu4fogp --user-dir USER_DIR`.
 Audit: ignored `local_data/657q-library/registered.json`.
+
+2026-10-26 automatic installed-world recovery ([065](065-installed-world-recovery/README.md), C354–C356):
+updated only `mod/rnw_exp_hub` **0.13.2→0.13.3**. All **3,266** installed files
+hash-verified against `build/windows/world-recovery-installed/rnw_exp_hub`;
+all Python sources, type stubs and translation catalogs match the current source.
+The first source guard stopped before profile writes when a concurrently saved
+maps-panel change differed; the final package includes that fix and passes its
+Windows offscreen self-test and recovery parity.
+
+Prior **3,264-file** hub is backed up byte for byte under ignored
+`local_data/world-recovery/hub-backup-before-0.13.3/` and retained at
+`mod/.rnw-install/retired/rnw_exp_hub_before_recovery_0133/`; no retired sweep.
+The immediate installation baseline had **one library record**, **820 files**
+in the existing EVXP mod and **nine profile-root files**; all remain exact.
+These counts describe that snapshot. No map mod was created, renamed, removed
+or edited by this update. Original EVXP is still `rnw_exp_world_rbsvu4fogp`.
+A subsequent read-only check sees an independently generated native 0.13.3 world
+with a matching 29-file recovery receipt. No game launch, process control,
+playset/settings/save change or publication. Audit: ignored
+`local_data/world-recovery/installed.json`.
+Hub rollback is a separate action, not performed; EVXP removal stays as above.

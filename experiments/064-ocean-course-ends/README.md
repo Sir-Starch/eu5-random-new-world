@@ -90,7 +90,7 @@ the latter remains **UNKNOWN**.
 
 ## Library registration correction (2026-10-26)
 
-[V-GAME owner screenshot / V-EXEC C353] EVXP appeared as “Older world” because
+[V-LOCAL owner screenshot / V-EXEC C353] EVXP appeared as “Older world” because
 its direct export was installed without a library record. This is an installation
 integration omission, not an old generator. Registered its existing bundle in
 the active library under standard id `rbsvu4fogp`, preserving display name

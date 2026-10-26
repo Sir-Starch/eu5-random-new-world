@@ -1545,7 +1545,7 @@ unchanged (`tests/golden_world.json`). Full test suite passes: 1,978 Python test
 
 ## 2026-10-26 — EVXP library registration correction
 
-[V-GAME owner screenshot / V-EXEC C353] The direct 657Q fix export lacked a
+[V-LOCAL owner screenshot / V-EXEC C353] The direct 657Q fix export lacked a
 library record and showed as Older world. Registered its verified bundle under
 `rbsvu4fogp`, retained Supercontinent EVXP, atlas/previews/code/record, and moved
 only its unreferenced folder to `rnw_exp_world_rbsvu4fogp`. All 820 files checked,
@@ -1553,3 +1553,27 @@ only metadata id changed. Existing seven records, other worlds and root hashes
 preserved. No regeneration, game launch or product version change. The owner
 then requested automatic recognition of installed RNW worlds as normal functionality;
 that is the next implementation phase, separate from this one-world registration.
+
+## 2026-10-26 — Automatic installed-world recovery (0.13.3 / epoch 41)
+
+- [V-EXEC C354] After the EVXP registration omission, the owner requested automatic
+  recognition as basic functionality. Readable installed codes now enter the
+  library in place; new application-generated mods carry checked recovery data
+  in .metadata. No original build/record is invented for legacy code-only worlds.
+  Recovery is atomic, finishes metadata-first copies, preserves personal fields,
+  checks folder aliases across profiles and handles built transfers safely.
+  The visible window notices small metadata changes without losing selection or
+  unsaved notes. All revised wording is translated into every official language.
+- [V-EXEC C355] Full check: 1,999 Python pass, 14 skip, 23 Rust pass; types/lint/
+  format clean. Real-copy recovery restores EVXP's 6,910-cell atlas and exact
+  provenance/previews, with all 818 nonmetadata files unchanged. Qt UI inspected;
+  Windows offscreen self-test and two-case Linux/Windows recovery parity pass.
+  Epoch 41/reference unchanged; extra metadata has no new in-game observation.
+- [V-EXEC C356] Final source/catalog/package checks and 3,266-file hub installation
+  pass, with 3,264-file external/retired old-hub backups. The immediate baseline
+  (one library record, 820 other-mod files, nine root hashes) stays exact.
+  Source guard required a rebuild for a concurrently saved maps-panel change;
+  no profile write occurred before that was resolved. A later existing app log
+  and receipt independently show a successful native 0.13.3 generation. No new
+  world creation/removal by this hub update, game launch, process control,
+  playset/settings/save change, push or publication. [065](../../experiments/065-installed-world-recovery/README.md).
