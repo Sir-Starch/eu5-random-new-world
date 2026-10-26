@@ -1709,3 +1709,16 @@ eleven old library records and two preference files. No sweep or playset edit.
 Host check finds no EU5 process; stale log state remains `played` after forced
 closure and is not mistaken for a live session. No game launch or campaign
 migration. The source defect is fixed; post-fix engine acceptance is unobserved.
+
+## 2026-10-26 — Current EVXP session diagnostics
+
+[V-LOCAL / V-EXEC / INFERRED / UNKNOWN C381–C384] The owner's disease-panel
+question expands to an exhaustive audit of the current launch's errors. The
+[catalog](evxp-session-diagnostics.md) accounts for every captured origin and
+AI category, separates initial 22F4 loading from EVXP fixed, and identifies
+actionable treaty-loader, river-export, locator and starting-building issues.
+These logs do not validate the earlier offline treaty/river contracts in engine.
+The lower Great Pestilence counters query the player's country, explaining
+observer zeros; the displayed death arithmetic remains unverified. Other
+diagnostics retain source and attribution limits. Documentation only, full
+check passes; no output change, game intervention or new owner test requested.
