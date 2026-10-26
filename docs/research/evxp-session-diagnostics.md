@@ -497,38 +497,65 @@ remain consistent with the country-scoped vanilla UI queries described above.
 
 ## Colonial range and East Asian AI
 
-[V-LOCAL / INFERRED / UNKNOWN C387] The current EVXP fixed 0.13.5 session's
-`game.log` reaches 1 January 1727 and records 928 `COLONISATION: ... starts
-colonising ...` entries. None names Ashikaga or any of the Japanese, Korean, or
-Yuan polity names checked in this run. `error.log` contains no colonial,
-charter, or range diagnostic. The stable two-file snapshot is in ignored
-`local_data/colonial-ai-20261026/logs/` (SHA-256 recorded in the claims ledger).
-This shows no logged Japanese start by that cutoff; it does not record failed
-target evaluations or explain any one country's range.
+[V-LOCAL / V-EXEC C387–C388] C387's earlier cutoff was 1 January 1727. A
+captured continuation now reaches **1 January 1795** and contains **1,460**
+colonization-start log records: **131** by Muscovy and **zero** by Ashikaga.
+These are start events, not unique completed colonies. The captured
+`error.log` and `ai.log` contain no lines with colonial, colonization,
+charter, or range terms. The stable three-file snapshot and hashes are under
+ignored `local_data/colonial-ai-20261026/followup-1795/`. These logs show no
+Japanese start through that cutoff, but do not record failed target checks,
+the selected game rules, or current country range values.
 
-The installed 1.4.4 vanilla `setup_area_preferences` adds
-`avoid_american_colonization` to **every AI country whose capital is outside
-America**. That exploration preference applies a `-0.9` modifier to the
-American continent. The same vanilla effect removes it for Castile, Portugal,
-Spain, Russia (noted as relevant for Alaska), selected western European tags
-after 1437, and selected Scandinavian tags after 1637; it has no Ashikaga or
-Japan exception. It is a negative AI preference, not a colonization eligibility
-gate: the generic colonial-charter AI list still admits countries with
-`can_colonize`, other than rebels and building countries. The generated world
-retains the `america` continent ID, and the installed RNW world has no override
-for the vanilla preference scripts. For an AI-controlled Ashikaga, this
-explains the lack of American colonization; if the player controls Ashikaga,
-the AI preference does not apply. The absence is not evidence of a Random New
-World script error.
+[V-LOCAL C388] The installed vanilla rules set both `ai_colonisation_rule` and
+`ai_exploration_rule` to western-only by default. The colonization define allows
+AI capitals on Europe to colonize under that rule; the exploration trigger
+likewise requires Europe (or a European overlord for a subject), unless the
+respective `all_countries_*` rule is selected. Ashikaga's Asian capital has no
+exception. The vanilla setup also gives non-American-capital AI countries a
+`-0.9` American exploration preference. Muscovy is eligible under the default
+because its capital is European, and receives additional Siberia/Alaska
+exploration preferences from vanilla country effects/events. The current logs
+show its route advancing through Yakutia, Koryak and Itelmen locations.
 
-This preference is separate from the `Within Colonial Range` overlay. Vanilla
-advances grant colonial-range values and modifiers, while the range trigger is
-engine-provided; the installed scripts do not expose its distance calculation.
-If the American locations are not yellow for Ashikaga in that map mode, that
-indicates they are outside Ashikaga's effective range at that moment, regardless
-of AI preference. The screenshot does not include Ashikaga's numeric range or a
-hovered American target, and counting visible sea locations does not establish
-the engine's range test. RNW replaces geography and water topology but leaves
-the AI preference intact, so the available evidence cannot tell whether a
-particular range boundary follows generated geometry or signals a map-distance
-defect. No such defect is established from this screenshot or the logs.
+[OWNER / INFERRED C388] The owner reports leaving the game rules at their
+defaults. If so, the default western-only AI rules explain why AI-controlled
+Japan does not explore and colonize America. The exact rule state is not
+independently read from the campaign save; logs do not print it. Selecting
+`all_countries_colonize` and `all_countries_explore` at setup would remove this
+AI eligibility restriction in a future campaign. These rules do not set the
+`Within Colonial Range` overlay and do not prevent a player-controlled Japan
+from colonizing.
+
+[V-LOCAL / V-EXEC C388] The range overlay is a separate calculation. Vanilla
+starts with `naval_range = 1000` and `colonial_range = 1000` as distinct
+modifiers; advances add colonial range. The active RNW world does not override
+the game-rule file, colonization defines, exploration preferences or vanilla
+static modifiers containing `colonial_range`; those relevant static-modifier
+blocks match vanilla exactly. The mod carries a modified copy of
+`exploration_triggers.txt` to add generated American sea areas to its discovery
+check, but its `country_can_start_exploration_trigger` block matches vanilla
+exactly. Its `_hardcoded.txt` retains the vanilla calls that initialize area
+preferences. The mod does replace map geography and port positions.
+
+For one generated Alaska-region target, `rnw_loc_00677`, its map port is
+(2683, 7083). In the active map's 16384-pixel-wide wrapped coordinate grid,
+the northern Japanese-region port Shumushu (14804, 6337) is about **4,328**
+straight-line map units away; the far-eastern Siberian port Nuvuqaq (16328,
+7431) is about **2,761**. This makes that target about 1.57 times farther from
+the Japanese-side candidate than the Siberian-side candidate. These are
+coordinate comparisons, **not** asserted engine colonial-distance values;
+ownership of those two source ports at the relevant date is not established by
+the logs. The difference is nevertheless consistent with Muscovy gaining
+nearer source ports as it colonizes Siberia while Japan remains farther away.
+
+[INFERRED / UNKNOWN C388] The observed asymmetry is consistent with vanilla
+AI rules and preferences plus the active world's geography; no logged script
+or range error, nor active-mod range override, points to a mod logic defect.
+The default rules explain AI Japan's lack of colonization, while port geography
+and possibly different advance-derived colonial-range totals explain the
+overlay. The screenshot has no hovered target or numeric range. Since the
+engine's exact distance calculation and current country values are not exposed
+in these logs/scripts, the exact yellow/gray cutoff remains unverified. A
+count of reachable sea zones or naval range alone does not establish colonial
+range.

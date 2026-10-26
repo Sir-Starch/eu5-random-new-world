@@ -1737,3 +1737,21 @@ coverage, disease exhaustion and remaining uninfected American countries; logs
 cannot identify the unmet predicate or confirm current UI state. Snapshot and
 analysis are recorded in [the audit follow-up](evxp-session-diagnostics.md#follow-up-campaign-continued-through-1682).
 Documentation only; no game or generated content changed.
+
+## 2026-10-26 — East Asian colonization and the range overlay
+
+[OWNER / V-LOCAL / V-EXEC / INFERRED / UNKNOWN C388] A stable read-only
+follow-up of the EVXP campaign logs reaches 1 January 1795: 1,460 logged
+colonization starts, 131 by Muscovy and none by Ashikaga; current error/AI logs
+have no colonial/range/charter keyword diagnostics. Installed vanilla rules
+default AI exploration and colonization to western-only, while generated RNW
+ports place the same Alaska target substantially nearer the far-eastern
+Siberian candidate than the northern Japanese-region candidate in wrapped map
+coordinates. The mod's copied exploration trigger keeps the vanilla AI
+eligibility block unchanged and only expands discovery checks for generated
+American sea areas. The default rule explains AI Japan's absence if the owner
+left it unchanged; port geography, plus unknown advance-derived range totals,
+is consistent with the overlay difference. Coordinate distances are not the
+engine's range metric, and rule state, port ownership and exact cutoff remain
+unknown. No mod script defect is established. Frozen logs and source details
+are recorded in [the diagnostic audit](evxp-session-diagnostics.md#colonial-range-and-east-asian-ai).
