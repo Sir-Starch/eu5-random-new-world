@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, cast, final
 import numpy as np
 import pytest
 
-from rnw.eu5_newworld import Plan, PlannedCell
+from rnw.eu5_newworld import OceanPlan, Plan, PlannedCell
 from rnw.eu5_nw_export import (
     _locator_instances,  # pyright: ignore[reportPrivateUsage]
 )
@@ -431,3 +431,22 @@ def test_written_locators_that_hold_what_was_planned_pass_and_any_other_stops_th
     short = {name: text.replace(f"id={plan.cells[0].key}\n", "") for name, text in files.items()}
     with pytest.raises(SeaError, match="0 locators too many and 1 too few"):
         _ = verify_locators(short, plan, water)
+
+
+def test_vfx_remainders_do_not_duplicate_retained_ocean_locators() -> None:
+    world, plan, water, canvas = _closed_world()
+    retained = plan.cells[-1].key
+    extra = replace(plan.cells[-1], key="rnw_ocean_extra")
+    plan.oceans = OceanPlan(
+        retained={retained},
+        extra=[extra],
+        anchors={retained: (2, 3), extra.key: (3, 4)},
+    )
+    instances = _locator_instances(plan, world, canvas, {}, water.zones)
+    ids = _locator_keys(instances, VFX_LOCATORS)
+    assert extra.key in ids
+    assert retained not in ids  # Its existing/repositioned locator is written separately.
+    files = {VFX_LOCATORS: "".join(instances[VFX_LOCATORS]) + f"id={retained}\n"}
+    _ = verify_locators(files, plan, water)
+    with pytest.raises(SeaError, match="repeats a location"):
+        _ = verify_locators({VFX_LOCATORS: files[VFX_LOCATORS] + f"id={extra.key}\n"}, plan, water)

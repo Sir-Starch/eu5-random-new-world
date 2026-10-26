@@ -28,6 +28,7 @@ def _validate(codes: np.ndarray, water: np.ndarray, seam: int) -> None:
     # Independent consumer: put the crop at its final world positions, then parse
     # planar components just as the loader does. Boundary terminals are permitted.
     placed = np.roll(codes, -seam, axis=1)
+    assert np.all(placed[:, -1] >= 16)
     wet = np.roll(water, -seam, axis=1).copy()
     wet[:, (0, -1)] = True
     role = np.where(placed < 16, BODY, NONE).astype(np.int8)
@@ -58,9 +59,9 @@ def test_every_cut_of_a_fork_serializes_valid_pieces(seam: int) -> None:
     water[:, 45:] = True
     _validate(codes, water, seam)
     assert np.array_equal(rivers.role, original)
-    assert np.count_nonzero(codes < 16) + stats["isolated_points"] == np.count_nonzero(
-        original != NONE
-    )
+    assert np.count_nonzero(codes < 16) + stats["isolated_points"] + stats[
+        "boundary_pixels"
+    ] == np.count_nonzero(original != NONE)
     assert np.all(codes[(codes < 16) & (codes > 1)] == 11)
 
 
@@ -78,9 +79,9 @@ def test_real_generated_trees_at_many_seam_positions(seed: int) -> None:
         _validate(codes, ~land, seam)
         body = (codes > 1) & (codes < 16)
         assert np.array_equal(codes[body], np.array(WIDTHS, dtype=np.uint8)[classes[body]])
-        assert np.count_nonzero(codes < 16) + stats["isolated_points"] == np.count_nonzero(
-            rivers.role != NONE
-        )
+        assert np.count_nonzero(codes < 16) + stats["isolated_points"] + stats[
+            "boundary_pixels"
+        ] == np.count_nonzero(rivers.role != NONE)
     assert crossings > 0
 
 
@@ -92,7 +93,7 @@ def test_uncut_network_and_inputs_remain_exact() -> None:
     expected[rivers.role == SOURCE] = SOURCE
     expected[rivers.role == JOIN] = JOIN
     assert np.array_equal(codes, expected)
-    assert stats == {"cut_networks": 0, "fragments": 0, "isolated_points": 0}
+    assert stats == {"cut_networks": 0, "fragments": 0, "isolated_points": 0, "boundary_pixels": 0}
 
 
 def test_one_pixel_fragment_is_counted_without_inventing_a_line() -> None:
@@ -105,7 +106,7 @@ def test_one_pixel_fragment_is_counted_without_inventing_a_line() -> None:
     )
     assert codes[2, 2] == 255
     assert codes[2, 3] == SOURCE
-    assert stats == {"cut_networks": 1, "fragments": 1, "isolated_points": 1}
+    assert stats == {"cut_networks": 1, "fragments": 1, "isolated_points": 0, "boundary_pixels": 1}
     assert rivers.role[2, 2] == SOURCE
 
 

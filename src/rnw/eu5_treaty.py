@@ -12,11 +12,14 @@ startup repair, engine changes, new raster pass or treaty-balance changes are ne
 
 from __future__ import annotations
 
+import json
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from rnw.game_texts import Text, localize
 from rnw.geography import parse_locations
+from rnw.languages import official_languages
 from rnw.model import CellClass
 from rnw.pdx import Block, Edits, Entry, parse
 
@@ -121,7 +124,7 @@ def coordinates(  # noqa: PLR0913 - already-built physical and identity tables, 
     )
 
 
-def metadata(axis: Longitudes) -> dict[str, bytes]:
+def metadata(axis: Longitudes, languages: tuple[str, ...] = ("english",)) -> dict[str, bytes]:
     """Readonly coordinates encoded in O(log(width)) native geography memberships.
 
     Location and province bits are separate: listing a province in a geography
@@ -130,6 +133,7 @@ def metadata(axis: Longitudes) -> dict[str, bytes]:
     """
     geographies: list[str] = []
     values: list[str] = []
+    names: dict[str, Text] = {}
     for name, kind, positions in (
         (LOCATION, "location", axis.locations),
         (PROVINCE, "province_definition", axis.provinces),
@@ -140,6 +144,7 @@ def metadata(axis: Longitudes) -> dict[str, bytes]:
             if not keys:
                 continue
             geography = f"{name}_bit_{bit}"
+            names[geography] = Text("rnw_treaty_meridian")
             rows = [" ".join(keys[i : i + 8]) for i in range(0, len(keys), 8)]
             geographies.append(
                 f"{geography} = {{\n\t{kind} = {{\n"
@@ -152,13 +157,25 @@ def metadata(axis: Longitudes) -> dict[str, bytes]:
             )
         values.append(f"{name} = {{\n\tvalue = 0\n{''.join(additions)}}}\n")
     trigger = (
-        f'{TRIGGER} = {{\n\thidden_trigger = {{\n\t\t{LOCATION} > "$target$.{LOCATION}"\n\t}}\n}}\n'
+        f"{TRIGGER} = {{\n\thidden_trigger = {{\n\t\t{LOCATION} > {{\n"
+        f"\t\t\t$target$ = {{ add = {LOCATION} }}\n\t\t}}\n\t}}\n}}\n"
     )
-    return {
-        PREFIX + "scripted_geography/rnw_treaty_longitudes.txt": "\n".join(geographies).encode(),
-        PREFIX + "script_values/rnw_treaty_longitudes.txt": "\n".join(values).encode(),
-        PREFIX + "scripted_triggers/rnw_treaty_longitudes.txt": trigger.encode(),
+    outputs = {
+        PREFIX + "scripted_geography/rnw_treaty_longitudes.txt": "\n".join(geographies).encode(
+            "utf-8-sig"
+        ),
+        PREFIX + "script_values/rnw_treaty_longitudes.txt": "\n".join(values).encode("utf-8-sig"),
+        PREFIX + "scripted_triggers/rnw_treaty_longitudes.txt": trigger.encode("utf-8-sig"),
     }
+    for language in languages:
+        labels = localize(names, language)
+        text = f"l_{language}:\n" + "".join(
+            f" {key}: {json.dumps(value, ensure_ascii=False)}\n" for key, value in labels.items()
+        )
+        outputs[f"main_menu/localization/{language}/rnw_treaty_l_{language}.yml"] = text.encode(
+            "utf-8-sig"
+        )
+    return outputs
 
 
 def _entries(block: Block) -> list[Entry]:
@@ -209,12 +226,10 @@ def replace_distribution(text: str) -> str:
         start = text.index("{", entry.start, entry.end)
         edits.deletions.append((entry.start, start))
         edits.insert(entry.start, "every_province_definition = ")
-        target = (
-            f"situation:treaty_of_tordesillas.var:var_line_location.province_definition.{PROVINCE}"
-        )
+        target = "situation:treaty_of_tordesillas.var:var_line_location.province_definition"
         edits.insert(
             limit.open + 1,
-            f'\n\t\t\t\t\t{PROVINCE} {operator} "{target}"\n',
+            f"\n\t\t\t\t\t{PROVINCE} {operator} {{ {target} = {{ add = {PROVINCE} }} }}\n",
         )
     return edits.apply(text)
 
@@ -236,7 +251,7 @@ def adapt(game_dir: Path, outputs: dict[str, bytes], axis: Longitudes) -> dict[s
         else (game_dir / "game" / EFFECTS).read_bytes().decode("utf-8-sig")
     )
     outputs[EFFECTS] = replace_distribution(text).encode("utf-8-sig")
-    outputs.update(metadata(axis))
+    outputs.update(metadata(axis, official_languages(game_dir)))
     return {
         "location_coordinates": len(axis.locations),
         "province_coordinates": len(axis.provinces),

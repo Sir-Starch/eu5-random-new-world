@@ -4,6 +4,14 @@
 executable SHA-256 **725a4c6c…14009**. Active world **EVXP fixed 0.13.5 /
 epoch 42**, `rnw_exp_evxp_identities`.
 
+**Correction follow-up, 0.13.6 / epoch 43 (C390–C392):** the
+[campaign mod fixes](../../experiments/069-campaign-mod-fixes/README.md)
+correct G01's treaty representation/encoding/localization, G02's boundary river
+drawing, G03's duplicate retained-ocean VFX records and G04's incompatible initial
+guild levels. These are verified offline, not a replay of this campaign. The
+two locator rectangle warnings, five minority-culture initialization warnings
+and other unresolved attributions below are not claimed fixed.
+
 ## Scope and attribution
 
 [V-LOCAL / V-EXEC C381] The owner left EU5 running. A host process listing

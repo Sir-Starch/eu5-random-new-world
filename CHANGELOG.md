@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.13.6 — 2026-10-26
+
+- Correct the mod defects identified in the owner's completed EVXP campaign.
+  Treaty comparisons use native scoped numeric values; generated treaty files
+  carry UTF-8 BOMs and geography labels in all eleven official languages.
+- River drawing fragments stop before the final raster column: EU5 discovers
+  components with bounded coordinates but its line walker can normalize that
+  column's next neighbour to column zero, joining unrelated drawing fragments.
+  Physical drainage, carved valleys and continuous location identities stay intact.
+- Write exactly one VFX locator per final location, including retained oceans;
+  reject duplicate identifiers and incomplete whole-world VFX coverage.
+- Derive starting town templates from the installed guild-capacity rules and
+  generated development/population. Initial guild levels fit even at the lowest
+  market access; vanilla building rules and generated population are preserved.
+  Epoch 43; offline candidate, with no new EU5 launch or save migration.
+
 ## 0.13.5 — 2026-10-26
 
 - Generated locations keep one identity across the map's raster edge, as vanilla does.

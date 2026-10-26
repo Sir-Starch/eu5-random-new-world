@@ -1005,3 +1005,7 @@ text = '''Bogate łowiska'''
 ["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
 source = "e4dab3f18185b9fa"
 text = '''Wody tak pełne ryb, że wykarmiają całe okoliczne wybrzeże.'''
+
+["rnw_treaty_meridian"]
+source = "91430246d65837db"
+text = "Południk traktatu"

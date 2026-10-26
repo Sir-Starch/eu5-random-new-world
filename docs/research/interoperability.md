@@ -319,6 +319,36 @@ cuts and independently parsed written images provide compatibility evidence for
 the current fingerprint only. The necessity, distribution boundary and legal
 limits above continue to apply; this is no additional clearance.
 
+### Follow-up: boundary river walker (2026-10-26, 0.13.6 / epoch 43)
+
+[V-LOCAL executable / V-EXEC C390] The EVXP loader failures establish that
+C309's bounded component search was not the complete drawing contract. A
+limited read-only trace of the adjoining line walker in the same installed
+1.4.4 executable (SHA-256 `725a4c6c…14009`) finds an out-of-range neighbour
+normalized to coordinate zero. A channel in the last raster column can
+therefore lead into a separately discovered first-column fragment. The installed
+vanilla river raster has no channel pixels in either outer column. Text scripts,
+the PNG palette and the earlier component trace did not supply this distinction;
+no programmatic official river-generation interface has been established.
+
+The independent serializer now constructs drawing trees in a domain ending
+before the last column, counting its omitted line pixels and any isolated
+non-line point. It changes no physical river, height field, location identity,
+engine, shader or already written mod. Exact uncut networks are preserved;
+synthetic cuts check the final placed boundary and independently parse its
+sources and junctions. This uses R-004's existing PNG interface and distribution
+boundary. Raw traces remain ignored under `local_data/release-100/`; only the
+interoperability finding and independently authored code/tests are committed.
+The engine's rendered result remains unobserved; the legal limits above remain.
+
+[V-LOCAL / UNKNOWN C391] A separate bounded trace of the locator warning and
+province rectangle construction establishes an ordinary linear distance check
+against a rectangle that may extend across a horizontal world boundary. It
+does not establish a portable canonical side for the two reported locations.
+No locator regeneration, executable alteration or coordinate workaround ships
+from this investigation. The culture-setup warning was also inspected locally;
+its runtime omission of the five written minority cultures remains unexplained.
+
 ### Follow-up: primary heightmap source support (2026-10-25, 0.12.6 / epoch 36)
 
 [V-LOCAL / V-EXEC C313–C315] The owner's 0.12.3 crack persists despite the

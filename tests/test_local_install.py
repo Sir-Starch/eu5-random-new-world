@@ -41,7 +41,7 @@ from rnw.eu5_lobby import (
 )
 from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
 from rnw.eu5_map import DEFINITIONS, RIVER_LAND, RIVER_WATER, load_map, read_class_lists
-from rnw.eu5_natives import DEFINITION_FILE, vanilla_natives
+from rnw.eu5_natives import DEFAULT_CITY, DEFAULT_TOWN, DEFINITION_FILE, vanilla_natives
 from rnw.eu5_newworld import vanilla_geometry
 from rnw.eu5_nw_export import binding_problems, calibrate_development, export_new_world
 from rnw.eu5_places import SPECS
@@ -50,6 +50,7 @@ from rnw.eu5_splines import GAME_FILE as SPLINE_GAME_FILE
 from rnw.eu5_splines import land_contacts
 from rnw.eu5_story import START_FILE
 from rnw.eu5_terrain import DecalStore
+from rnw.eu5_towns import plan_towns
 from rnw.formations import SPECS as FORMATION_SPECS
 from rnw.game_texts import sources, untranslated
 from rnw.geography import color_summary, read_locations, summary
@@ -174,6 +175,18 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
     assert "PAM" in vanilla.reserved_tags
     assert any(culture.state_include for culture in vanilla.cultures.values())
     assert any(culture.city_setup for culture in vanilla.cultures.values())
+    # Every urban template the generator can select must support the native-capacity adapter,
+    # including cultures absent from this epoch's reference world.
+    templates = {("city", DEFAULT_CITY), ("town", DEFAULT_TOWN)}
+    templates.update(
+        (rank, setup)
+        for culture in vanilla.cultures.values()
+        for rank, setup in (("city", culture.city_setup), ("town", culture.town_setup))
+        if setup
+    )
+    ranks = {f"{rank}_{setup}": (rank, setup) for rank, setup in sorted(templates)}
+    towns = plan_towns(root, ranks, dict.fromkeys(ranks, 0), dict.fromkeys(ranks, 0))
+    assert towns.ranks.keys() == ranks.keys()
     # R7b: the vanilla state levels (4 landed countries have none) and the family triggers
     assert vanilla.state_levels == (0,) * 11 + (1,) * 17 + (2,) * 191
     assert vanilla.families.by_region == dict.fromkeys(

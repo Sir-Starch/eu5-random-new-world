@@ -224,6 +224,7 @@ from rnw.eu5_terrain import (
     level_shares,
     terrain_outputs,
 )
+from rnw.eu5_towns import plan_towns
 from rnw.eu5_treaty import adapt as adapt_treaty
 from rnw.eu5_treaty import coordinates as treaty_coordinates
 from rnw.eu5_water import water_outputs
@@ -672,8 +673,8 @@ def _locator_instances(
             )
     if plan.oceans is not None:
         out["generated_locators_vfx.txt"].extend(
-            _instance(key, row, column, height)
-            for key, (row, column) in plan.oceans.anchors.items()
+            _instance(cell.key, *plan.oceans.anchors[cell.key], height)
+            for cell in plan.oceans.extra
         )
     return out
 
@@ -1048,6 +1049,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         resources_seed,
     )
     used = [spec for spec in SPECS if spec in places.values()]
+    towns = plan_towns(game_dir, natives.ranks, development.initial, natives.population)
     instances = _locator_instances(plan, world, canvas, port_pixels, water.zones)
     trimmed = _trimmed_instances(game_map, canvas)
     relocated = removed | set(trimmed)
@@ -1126,7 +1128,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     )
     additions: dict[str, tuple[str, ...]] = {
         COUNTRIES_FILE: (country_records(natives.countries),),
-        BUILDINGS_FILE: (city_lines(natives.ranks), building_lines(development.villages)),
+        BUILDINGS_FILE: (city_lines(towns.ranks), building_lines(development.villages)),
         "03_markets.txt": (market_lines(natives.markets),),
         "09_roads.txt": (road_lines(natives.roads),),
         "12_diplomacy.txt": (vassal_lines(natives.vassals), alliance_lines(natives.alliances)),
@@ -1149,6 +1151,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         if text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
     outputs.update(country_definition_outputs(game_dir, setup.removed_ids))
+    outputs.update(towns.files())
     retired = retired_base_modifiers(bodies, removed)
     if retired:
         outputs[_mod_path(BASE_VALUES)] = _encode(
@@ -1168,6 +1171,10 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         )
     )
     stats: dict[str, object] = {
+        "starting_towns": {
+            "adjusted_locations": towns.adjusted_locations,
+            "derived_templates": len(towns.definitions),
+        },
         "ports": len(port_rows),
         "oceans": {} if plan.oceans is None else plan.oceans.stats,
         "vanilla_ports_relinked": sorted(coast.foreign.free),
@@ -2604,6 +2611,12 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     },
                     plan,
                     shapes,
+                    all_locations=frozenset(
+                        location.key
+                        for location in parse_locations(
+                            texts[_mod_path(DEFINITIONS)].decode("utf-8-sig")
+                        )
+                    ),
                 )
             )
             text_checks.update(

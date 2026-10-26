@@ -615,7 +615,13 @@ def verify_crossings(
     return {"crossings_checked": len(seen)}
 
 
-def verify_locators(files: Mapping[str, str], plan: Plan, water: Water) -> dict[str, object]:
+def verify_locators(
+    files: Mapping[str, str],
+    plan: Plan,
+    water: Water,
+    *,
+    all_locations: frozenset[str] | None = None,
+) -> dict[str, object]:
     """Read the locators of units and battles (``files`` by their names) as written.
 
     Every generated land, sea and lake location has one of each and a closed zone has none, as
@@ -640,12 +646,23 @@ def verify_locators(files: Mapping[str, str], plan: Plan, water: Water) -> dict[
             )
             raise SeaError(message)
     if VFX_LOCATORS in files:
-        expected_vfx = {cell.key for cell in emitted_cells(plan)}
-        found_vfx = {key for key in LOCATOR_ID.findall(files[VFX_LOCATORS]) if key in expected_vfx}
+        expected_vfx = (
+            set(all_locations)
+            if all_locations is not None
+            else {cell.key for cell in emitted_cells(plan)}
+        )
+        found_vfx = set(LOCATOR_ID.findall(files[VFX_LOCATORS]))
+        if all_locations is None:
+            found_vfx &= expected_vfx
         if found_vfx != expected_vfx:
             message = (
                 f"{VFX_LOCATORS} has {len(found_vfx - expected_vfx)} locators too many and "
                 f"{len(expected_vfx - found_vfx)} too few"
             )
+            raise SeaError(message)
+    for name, text in files.items():
+        identifiers = LOCATOR_ID.findall(text)
+        if len(identifiers) != len(set(identifiers)):
+            message = f"{name} repeats a location locator"
             raise SeaError(message)
     return {"locators_checked": len(expected)}

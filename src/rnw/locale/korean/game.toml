@@ -1005,3 +1005,7 @@ text = '''풍요로운 어장'''
 ["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
 source = "e4dab3f18185b9fa"
 text = '''물고기가 하도 많아 주변의 모든 해안을 먹여 살리는 바다입니다.'''
+
+["rnw_treaty_meridian"]
+source = "91430246d65837db"
+text = "조약 자오선"

@@ -1005,3 +1005,7 @@ text = '''豊かな漁場'''
 ["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
 source = "e4dab3f18185b9fa"
 text = '''魚があまりに豊富で、近隣のあらゆる沿岸を養う海。'''
+
+["rnw_treaty_meridian"]
+source = "91430246d65837db"
+text = "条約の子午線"

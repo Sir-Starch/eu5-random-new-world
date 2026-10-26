@@ -18,7 +18,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -112,6 +112,7 @@ class Development:
     harbours: dict[str, int]
     villages: tuple[tuple[str, str], ...]
     stats: dict[str, object]
+    initial: dict[str, int] = field(default_factory=dict)
 
 
 def to_milli(value: str) -> int:
@@ -546,7 +547,13 @@ def build_development(
     villages = market_villages(
         states, natives.complexity, natives.population, calibration.village_permille
     )
-    parts = Development(terms=terms, harbours=harbours, villages=villages, stats={})
+    initial = {
+        key: site_value(calibration.rules, replace(site, keyed=PERMILLE * terms.get(key, 0)))
+        for key, site in zip(keys, sites, strict=True)
+    }
+    parts = Development(
+        terms=terms, harbours=harbours, villages=villages, stats={}, initial=initial
+    )
     stats = _stats(calibration, natives, cells, parts, len(states))
     stats["society_full_permille"] = {
         "state_land": fulls[CAPITAL],

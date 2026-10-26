@@ -88,3 +88,5 @@ Experiments in the running game are kept short: a console sitting of about fifte
 - [067 — Towa seam hang](067-towa-seam-hang/README.md): immediate troop-raising repetition and bounded route capture identify an engine horizontal midpoint using map height; five live points reproduced exactly, safe mod-level repair unresolved.
 
 - [068 — Continuous location identities](068-continuous-location-identities/README.md): correct 067's repair premise, follow vanilla's shared identities across the raster edge, remove forced cell splitting and bind vanished sea areas consistently; 0.13.5 / epoch 42, corrected EVXP reference and separate candidate.
+
+- [069 — Campaign mod corrections](069-campaign-mod-fixes/README.md): correct treaty scripts/labels, boundary river drawing, duplicate VFX records and initial guild capacities from the completed EVXP audit; 0.13.6 / epoch 43, reproduced reference and separately installed candidate, unresolved attributions retained.

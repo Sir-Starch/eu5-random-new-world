@@ -1005,3 +1005,7 @@ text = '''Zengin Balıkçılık Sahaları'''
 ["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
 source = "e4dab3f18185b9fa"
 text = '''Sular öyle balık dolu ki çevredeki bütün kıyıları besliyor.'''
+
+["rnw_treaty_meridian"]
+source = "91430246d65837db"
+text = "Antlaşma meridyeni"

@@ -1,9 +1,10 @@
 """Serialize continuous rivers into EU5's planar, palette-indexed river raster.
 
 The physical network lives in the rolled geography. The engine discovers its raster
-components without horizontal wrapping, and requires one green start per component
-(C309). A river crossing world column zero therefore needs separate drawing starts,
-although its hydrology, width and carved valley continue through the boundary.
+components without wrapping, but its line walker normalizes an out-of-bounds neighbour
+to column zero, including the neighbour after the last column. Drawing into the last
+column can therefore join separately discovered fragments. Construct drawing endpoints
+before that column; the physical network and carved valley remain continuous.
 """
 
 # NumPy stubs type scalar indexing as Any.
@@ -31,7 +32,7 @@ class RiverRasterError(ValueError):
     """A logical river cannot be represented by the supported raster contract."""
 
 
-def _neighbours(role: NDArray[np.int8], pixel: Pixel, seam: int | None) -> list[Pixel]:
+def _neighbours(role: NDArray[np.int8], pixel: Pixel, cut: int | None) -> list[Pixel]:
     rows, columns = role.shape
     r, c = pixel
     return [
@@ -39,12 +40,12 @@ def _neighbours(role: NDArray[np.int8], pixel: Pixel, seam: int | None) -> list[
         for dr, dc in NEIGHBOURS4
         if 0 <= r + dr < rows
         and 0 <= c + dc < columns
-        and (seam is None or (c < seam) == (c + dc < seam))
+        and c + dc != cut
         and role[r + dr, c + dc] != NONE
     ]
 
 
-def _distances(role: NDArray[np.int8], start: Pixel, seam: int | None) -> dict[Pixel, int]:
+def _distances(role: NDArray[np.int8], start: Pixel, cut: int | None) -> dict[Pixel, int]:
     """Only visit river pixels reachable from a seam contact, never the whole map."""
     distances = {start: 0}
     queue = deque([start])
@@ -52,7 +53,7 @@ def _distances(role: NDArray[np.int8], start: Pixel, seam: int | None) -> dict[P
         pixel = queue.popleft()
         if len(distances) % 4096 == 0:
             checkpoint()
-        for other in _neighbours(role, pixel, seam):
+        for other in _neighbours(role, pixel, cut):
             if other not in distances:
                 distances[other] = distances[pixel] + 1
                 queue.append(other)
@@ -64,10 +65,10 @@ def _fragment(
     rivers: Rivers,
     pixels: dict[Pixel, int],
     from_mouth: dict[Pixel, int],
-    seam: int,
+    cut: int,
 ) -> None:
     """Give a planar tree a leaf start and one tributary marker per confluence."""
-    neighbours = {p: _neighbours(rivers.role, p, seam) for p in pixels}
+    neighbours = {p: _neighbours(rivers.role, p, cut) for p in pixels}
     if sum(map(len, neighbours.values())) != 2 * (len(pixels) - 1):
         message = "a boundary river fragment is not a tree"
         raise RiverRasterError(message)
@@ -132,12 +133,13 @@ def encode_rivers(
     *,
     seam: int,
 ) -> tuple[NDArray[np.uint8], dict[str, int]]:
-    """Write final palette codes, including drawing starts on both sides of a cut.
+    """Write final palette codes within the native walker's bounded drawing domain.
 
     Uncut networks retain their exact bytes. Only networks with a horizontal edge
-    crossing ``seam`` are visited. Connected fragments of two or more pixels keep
-    every channel pixel and width. An isolated point has no line to draw and is
-    omitted from this rendering layer (counted explicitly); physical fields keep it.
+    touching the final raster column are visited. Its channel pixels are not line
+    primitives in this domain and are explicitly counted. Every other fragment of
+    two or more pixels keeps its channel pixels and widths. An isolated point has
+    no line to draw and is also counted explicitly; physical fields keep both.
     Input network validation belongs to the caller; invalid fragment topology fails
     loudly, rather than dropping a river or trying another geographical layout.
     """
@@ -150,14 +152,15 @@ def encode_rivers(
         codes[first:last] = np.where(block >= 0, table[np.maximum(block, 0)], 255)
     codes[rivers.role == SOURCE] = SOURCE
     codes[rivers.role == JOIN] = JOIN
-    stats = {"cut_networks": 0, "fragments": 0, "isolated_points": 0}
+    stats = {"cut_networks": 0, "fragments": 0, "isolated_points": 0, "boundary_pixels": 0}
     if not 0 < seam < codes.shape[1]:
         return codes, stats
-    contacts = np.flatnonzero((rivers.role[:, seam - 1] != NONE) & (rivers.role[:, seam] != NONE))
+    cut = seam - 1
+    contacts = np.flatnonzero(rivers.role[:, cut] != NONE)
     visited: set[Pixel] = set()
     for row in contacts.tolist():
         checkpoint()
-        start = (row, seam)
+        start = (row, cut)
         if start in visited:
             continue
         network = _distances(rivers.role, start, None)
@@ -168,16 +171,17 @@ def encode_rivers(
             raise RiverRasterError(message)
         from_mouth = _distances(rivers.role, _mouth(rivers.role, sources[0]), None)
         for r, c in network:
-            codes[r, c] = widths[int(classes[r, c])]
-        remaining = set(network)
+            codes[r, c] = 255 if c == cut else widths[int(classes[r, c])]
+        remaining = {p for p in network if p[1] != cut}
+        stats["boundary_pixels"] += len(network) - len(remaining)
         while remaining:
-            piece = _distances(rivers.role, min(remaining), seam)
+            piece = _distances(rivers.role, min(remaining), cut)
             remaining.difference_update(piece)
             if len(piece) == 1:
                 codes[next(iter(piece))] = 255
                 stats["isolated_points"] += 1
                 continue
-            _fragment(codes, rivers, piece, from_mouth, seam)
+            _fragment(codes, rivers, piece, from_mouth, cut)
             stats["fragments"] += 1
         stats["cut_networks"] += 1
     return codes, stats

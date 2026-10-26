@@ -1772,3 +1772,8 @@ so its exact final state remains unknown. Colonization logs total 1,875 starts,
 campaign's progress and orderly exit support runtime continuity through 1849,
 not a claim that all scripts are error-free or that the save was reload-tested.
 The full evidence and limits are in [the final audit](evxp-session-diagnostics.md#final-follow-up-campaign-reached-1-january-1849).
+
+## 2026-10-26 — Completed-campaign mod corrections
+
+- [V-LOCAL / V-EXEC / INFERRED C390–C391] Correct the attributable EVXP treaty, river drawing, duplicate VFX and initial guild-capacity defects in 0.13.6/epoch 43. Preserve physical geography, population and vanilla rules; retain unresolved locator/culture/runtime attribution instead of silencing warnings. The bounded interoperability finding and exact limits are in [069](../../experiments/069-campaign-mod-fixes/README.md) and the existing campaign audit.
+- [V-EXEC C392] Full checks, independent reference reproduction, Windows/Wine self-test, platform parity and archive audits pass. Install the separate EVXP RC world and updated generator-only hub with verified preservation/backups, as recorded in [INSTALLED](../../experiments/INSTALLED.md). No EU5 launch or publication; the new candidate's engine result remains unknown, so no 1.0.0 completion claim.

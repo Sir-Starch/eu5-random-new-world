@@ -1005,3 +1005,7 @@ text = '''Ricos Pesqueiros'''
 ["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
 source = "e4dab3f18185b9fa"
 text = '''Águas tão cheias de peixes que alimentam todas as costas vizinhas.'''
+
+["rnw_treaty_meridian"]
+source = "91430246d65837db"
+text = "Meridiano do tratado"

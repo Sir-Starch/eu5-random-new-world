@@ -1005,3 +1005,7 @@ text = '''丰饶渔场'''
 ["STATIC_MODIFIER_DESC_rnw_rich_fishery"]
 source = "e4dab3f18185b9fa"
 text = '''这片水域鱼群丰富，足以养活周边所有海岸。'''
+
+["rnw_treaty_meridian"]
+source = "91430246d65837db"
+text = "条约经线"

@@ -13,6 +13,7 @@ from rnw.eu5_newworld import Plan, PlannedCell, VanillaGeometry
 from rnw.eu5_treaty import (
     LOCATION,
     PROVINCE,
+    TRIGGER,
     Longitudes,
     TreatyError,
     coordinates,
@@ -22,6 +23,7 @@ from rnw.eu5_treaty import (
 )
 from rnw.model import CellClass
 from rnw.pdx import Block, parse
+from rnw.translations import catalog_languages
 from rnw.wording import reference
 
 if TYPE_CHECKING:
@@ -31,8 +33,12 @@ if TYPE_CHECKING:
 
 def _decoded(axis: Longitudes, name: str, kind: str) -> dict[str, int]:
     files = metadata(axis)
-    geography = parse(files["in_game/common/scripted_geography/rnw_treaty_longitudes.txt"].decode())
-    values = parse(files["in_game/common/script_values/rnw_treaty_longitudes.txt"].decode())
+    geography = parse(
+        files["in_game/common/scripted_geography/rnw_treaty_longitudes.txt"].decode("utf-8-sig")
+    )
+    values = parse(
+        files["in_game/common/script_values/rnw_treaty_longitudes.txt"].decode("utf-8-sig")
+    )
     value = values.block(name)
     assert value is not None
     result = dict.fromkeys(axis.locations if kind == "location" else axis.provinces, 0)
@@ -79,6 +85,45 @@ def test_all_coordinate_bits_round_trip_without_province_bits_leaking_into_locat
     values = files["in_game/common/script_values/rnw_treaty_longitudes.txt"].decode()
     assert "set_variable" not in values
     assert "on_game_start" not in "".join(files)
+
+
+def test_generated_treaty_metadata_is_encoded_and_named_in_every_catalog_language() -> None:
+    files = metadata(Longitudes(16, {"a": 3, "b": 12}, {"p": 5}), catalog_languages())
+    assert all(content.startswith(b"\xef\xbb\xbf") for content in files.values())
+    geography = parse(
+        files["in_game/common/scripted_geography/rnw_treaty_longitudes.txt"].decode("utf-8-sig")
+    )
+    keys = {entry.key for entry in geography.entries}
+    for language in catalog_languages():
+        text = files[f"main_menu/localization/{language}/rnw_treaty_l_{language}.yml"].decode(
+            "utf-8-sig"
+        )
+        assert text.startswith(f"l_{language}:\n")
+        assert {line.split(":", 1)[0].strip() for line in text.splitlines()[1:]} == keys
+
+
+def test_numeric_comparison_reads_the_value_inside_the_target_scope() -> None:
+    axis = Longitudes(64, {"west": 3, "east": 59}, {"p": 5})
+    files = metadata(axis)
+    root = parse(
+        files["in_game/common/scripted_triggers/rnw_treaty_longitudes.txt"].decode("utf-8-sig")
+    )
+    hidden = root.block(TRIGGER, "hidden_trigger")
+    assert hidden is not None
+    comparison = hidden.first(LOCATION)
+    assert comparison is not None
+    assert comparison.op == ">"
+    assert isinstance(comparison.value, Block)
+    target = comparison.value.block("$target$")
+    assert target is not None
+    addition = target.first("add")
+    assert addition is not None
+    assert addition.value == LOCATION
+    # The target is a native scope block, not a quoted macro/numeric path that
+    # the current engine rejects while loading the scripted trigger.
+    assert '"$target$.' not in files[
+        "in_game/common/scripted_triggers/rnw_treaty_longitudes.txt"
+    ].decode("utf-8-sig")
 
 
 @pytest.mark.parametrize(

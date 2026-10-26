@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 def test_release_tag_must_match_the_product_version() -> None:
     release.check_tag(f"v{__version__}")
     with pytest.raises(ValueError, match="does not match"):
-        release.check_tag("v1.0.0")
+        release.check_tag("v0.0.0")
 
 
 def test_release_archives_cannot_carry_derived_game_data(tmp_path: Path) -> None:

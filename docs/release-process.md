@@ -51,4 +51,16 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-As of 2026-10-24, P1 is not ready for publication. L1 localization and U1's Windows application review remain open; R9's current-build package matrix remains a gate, and N5 has offline evidence but no in-game validation [UNKNOWN C265]. The published Steam and EU5 terms have been reviewed, but rights clearance for the proposed package remains [UNKNOWN C267]; ADR 0009 also leaves Windows trust and Workshop acceptance checks open [UNKNOWN]. These are recorded gates, not requests for an extra game sitting. Manual checks should be grouped into one short sitting only when the remaining work depends on them ([roadmap](roadmap.md); [ADR 0009](adr/0009-hub-mod-with-generator.md); [legal notes](legal.md)).
+As of 2026-10-26, the confirmed mod-output defects from the completed EVXP
+campaign have a checked **0.13.6 / epoch 43 candidate**, not a 1.0.0 tag (C390–C392).
+All eleven language catalogs, the Linux checks, Windows/Wine self-test and
+platform comparisons pass; the Windows and Workshop-layout archives pass the
+file audit. The corrected treaty and river representation have not been loaded
+in EU5, and the audit retains unresolved locator/culture/runtime attributions.
+The 0.13.5 campaign through 1849 does not validate these later corrections.
+
+Publication, native-Windows trust and Workshop acceptance remain separate
+boundaries under ADR 0009; no upload, signing or remote CI result is inferred
+from a local Wine check. The Steam/EU5 terms review and its remaining rights
+limits are recorded in [legal notes](legal.md), C267. These are recorded limits,
+not requests for another campaign or a new game sitting.
