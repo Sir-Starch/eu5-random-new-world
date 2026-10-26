@@ -1777,3 +1777,65 @@ The full evidence and limits are in [the final audit](evxp-session-diagnostics.m
 
 - [V-LOCAL / V-EXEC / INFERRED C390–C391] Correct the attributable EVXP treaty, river drawing, duplicate VFX and initial guild-capacity defects in 0.13.6/epoch 43. Preserve physical geography, population and vanilla rules; retain unresolved locator/culture/runtime attribution instead of silencing warnings. The bounded interoperability finding and exact limits are in [069](../../experiments/069-campaign-mod-fixes/README.md) and the existing campaign audit.
 - [V-EXEC C392] Full checks, independent reference reproduction, Windows/Wine self-test, platform parity and archive audits pass. Install the separate EVXP RC world and updated generator-only hub with verified preservation/backups, as recorded in [INSTALLED](../../experiments/INSTALLED.md). No EU5 launch or publication; the new candidate's engine result remains unknown, so no 1.0.0 completion claim.
+
+## 2026-10-26 — Generated-country AI personalities
+
+[V-LOCAL C393] The installed 1.4.3 setup explicitly assigns eight defined AI
+personalities to 94 countries in `main_menu/setup/1337/26_ai_personalities.txt`;
+the installed definitions also mark `ai_balanced` as the default. Generated tags
+were absent from that assignment file, matching the owner's observation that the
+New World appeared uniformly Balanced. This does not determine the engine's
+initialization for every unlisted tag.
+
+[V-EXEC C394] RNW 0.13.7 first replaced the default with seeded assignments
+weighted by vanilla frequencies. The owner clarified that plausible strategic
+behavior matters more than reproducing that frequency distribution: a powerful
+empire and a vulnerable border state should not receive interchangeable behavior.
+
+[V-EXEC C395] RNW 0.13.8/epoch 45 replaces frequency sampling with a deterministic,
+explainable classifier. It uses generated population and technology as a comparative
+power proxy, land neighbors, markets/coasts, empire prey and threat opinions,
+rivalries, alliances, subjects/overlords, confederations and society archetypes.
+Protection links are excluded from threatening-border comparisons; archetype and
+relationship signals precede ordinary border/coastal defaults. Every sovereign
+decision records its context and human-readable reason in `report.json`; pop-only
+tribes remain unassigned. On the 313-country reference, profiles are
+Balanced 1, Cautious 240, Defensive 12, Expansionist 42, Friendly 4, Isolationist 2
+and Opportunistic 12. This distribution follows that generated world's signals,
+not a target quota. The power proxy is not a military-strength estimate, so the
+specific behavioral effect of the resulting profiles in EU5 remains [UNKNOWN].
+The 850-file canonical reference digest is
+`2fb15ba6b2e6109d23cc1c6da9f4452b126ef9e8e95ecdaecbe8b47774d12b4e`.
+
+`make check` passes: 2,018 Python tests (14 skipped), 23 Rust tests, formatting,
+lint and type checks. The offline Windows-layout Wine self-test passes. Installed a
+separate 881-file 0.13.8 candidate and updated the generator-only hub from 0.13.7
+to 0.13.8. The former hub is backed up byte for byte; the previously installed
+world, all other pre-existing mod files, playsets, settings and continue-game data
+are preserved. No EU5 launch or playset change; the in-game AI result is unobserved.
+
+## 2026-10-27 — Balanced as the generated-country baseline
+
+[V-LOCAL C396] In the installed setup, only 5 of the 94 countries with an explicit
+personality entry are Balanced, but `ai_balanced` is also `default = yes` in the
+personality definitions. Those 94 hand-picked overrides do not describe the whole
+vanilla country population; Balanced is the fallback. The previous contextual
+classifier overread relative population and ordinary borders, making Balanced
+nearly absent. The report also omitted the `confederated` input used for some
+decisions.
+
+[V-EXEC C397] RNW 0.13.9/epoch 46 now keeps vanilla Balanced as the generated
+baseline. A specialized profile requires a direct empire threat or designated prey,
+a declared rivalry, subject/alliance ties, both a coast and an established market,
+or a defined society archetype. Mere power advantage, a larger neighbor, a coast
+alone or isolation do not override the default. On the 313-country reference,
+222 are Balanced (71%), 49 Defensive, 29 Cautious, 6 Friendly, 4 Expansionist and
+3 Opportunistic. The report records each decision and includes confederation status;
+canonical digest `003d59758186470cda2fd2ce531ed154cb5875a405316b92eb36ad121a10b55e`.
+The behavior is deterministic and no target quotas are used. `make check` passes:
+2,018 Python tests (14 skipped), 23 Rust tests, format, lint and type checks. Installed
+a new world whose resource-only reroll retains the reference's four empires and all
+313 AI decisions; all 881 files match the prepared candidate. Updated the 3,270-file
+hub 0.13.8→0.13.9 and passed its isolated Wine self-test. All ten previously installed
+worlds, other mod files, and three profile-root files are unchanged. No EU5 launch or
+playset change; actual AI behavior remains unknown.

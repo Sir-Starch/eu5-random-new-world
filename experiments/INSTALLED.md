@@ -1,5 +1,69 @@
 # Installed experiments
 
+2026-10-27, **0.13.9 / epoch 46 Balanced baseline and contextual AI**, C396–C397:
+installed **RNW: Supercontinent LQCS** into new `mod/rnw_exp_world_lqcst6xtaq`
+(881 files), code `RNW1-081RF-FZCZT-X8CJN-T006G-J0870-2AG63-YG1W8-8G3GH-149XR-08TM0-31P0F-71BD0`.
+All files match the prepared candidate. Its 850-file canonical digest is
+`0a2314e9a314f639b3f20ddc16a50f84d719488b71ada7c115dcfcc7e8b292be`. In the
+313-country reference, Balanced is the baseline for 222 (71%); the four great
+empires are Expansionist, their 49 explicit targets Defensive, 29 subjects Cautious,
+six confederates Friendly, and three market-focused sea-league members Opportunistic.
+The candidate preserves the same four empires and personality decisions, with only
+the resource layer rerolled. Reference digest: 850 files,
+`003d59758186470cda2fd2ce531ed154cb5875a405316b92eb36ad121a10b55e`.
+
+Updated only the generator hub `mod/rnw_exp_hub` **0.13.8→0.13.9** (3,270 files,
+all hashes match the built candidate). The Windows-layout Wine self-test exits 0:
+`Random New World 0.13.9: window, native kernels and world codes work`. The previous
+hub is retained byte for byte at ignored
+`local_data/ai-balanced-baseline-0.13.9/hub-backup-before-0.13.9/` (3,270 files).
+All ten previously installed worlds, all other existing mod files, and
+`playsets.json`, `pdx_settings.json`, `continue_game.json` are unchanged. No EU5
+launch or playset change; in-game behavior remains unknown. Built wheel SHA-256
+`8779d473201af9f88d5ea90634e8b5c9cabdf05f9a91b027a2f0e9451fa2dc95`; launcher
+SHA-256 `0ab741888f9ccedf83c91e9f2438d1983ca92fb3611dbe7cf0f25be6796ef8e9`.
+
+Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_world_lqcst6xtaq --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
+The generator hub is separate; its previous version is retained in the backup above.
+
+2026-10-26, **0.13.8 / epoch 45 context-based AI personalities**, C395:
+installed **RNW: Supercontinent EK6O** into new `mod/rnw_exp_world_ek6og4sohg`
+(881 files), code `RNW1-081JQ-69DVY-H34JE-P006G-G0860-2AG63-YG1W8-8G3GH-149XR-08TM0-350CQ-G`.
+All files match the prepared candidate. Its 850-file canonical digest is
+`70ba230197166fcc247ba1f34458bd85172a406327f1a18db7736a2e857ac813`. Country
+personalities follow each generated country's power proxy, neighbors, diplomacy,
+markets/coasts and society archetype; the report records each decision and reason.
+The deterministic 313-country reference digest is
+`2fb15ba6b2e6109d23cc1c6da9f4452b126ef9e8e95ecdaecbe8b47774d12b4e`.
+Updated only the generator hub `mod/rnw_exp_hub` **0.13.7→0.13.8** (3,270 files,
+all match the built candidate). Its offline Windows-layout Wine self-test passes.
+The previous hub is retained byte for byte at ignored
+`local_data/ai-personality-context-0.13.8/hub-backup-before-0.13.8/` (3,270 files).
+The existing `rnw_exp_world_nwtsag67v6` world (881 files), every other pre-existing
+mod file and `playsets.json`, `pdx_settings.json`, `continue_game.json` are unchanged.
+No EU5 launch or playset change; in-game behavior is unknown.
+
+Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_world_ek6og4sohg --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
+The generator hub is separate; its previous version is retained in the backup above.
+
+2026-10-26, **0.13.7 / epoch 44 generated-country AI personalities**, C393–C394:
+installed **RNW: Supercontinent NWTS** into new `mod/rnw_exp_world_nwtsag67v6`
+(881 files), code `RNW1-081RF-FZCZT-X8CJN-T006G-E0860-2AG63-YG1W8-8G3GH-149XR-08TM0-3EHEQ-T`.
+The 850-file canonical reference has SHA-256
+`3451a8ffc3b26633322101a96a445002631265b74c3f69c2b150be88ae6b1f2e`; the installed
+world matches its prepared candidate in every file. It assigns 313 generated sovereign
+countries across the eight personalities defined by the installed game and omits pop-only
+tribes. Updated only generator hub `mod/rnw_exp_hub` **0.13.6→0.13.7** (3,270 files,
+all match the built package). Its Windows-layout offscreen self-test passes under isolated
+Wine: window, native kernels and world codes work. The previous **3,268-file** hub is
+verified byte for byte at ignored `local_data/ai-personalities/hub-backup-before-0.13.7/`
+(manifest SHA-256 `b813866c7b1a3db1515dce8991ec8f09fd256fa134f814cf154e64e3a67e4942`).
+No EU5 launch, playset or save change, or replacement of an existing world. Engine behavior
+of the new assignments remains unobserved.
+
+Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_world_nwtsag67v6 --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
+The generator hub is separate; its previous version is retained in the backup above.
+
 2026-10-26, **0.13.6 / epoch 43 campaign mod corrections**, [069](069-campaign-mod-fixes/README.md), C390–C392: installed **RNW: Supercontinent EVXP RC** into new `mod/rnw_exp_evxp_release` (860 files checked), library id `hjni42sc2r` in both native and Windows libraries (29 kept files each, full 6,874-location atlas and verified recovery). Treaty scripts/labels, boundary river drawing, duplicate ocean VFX and initial guild capacities corrected; exact location raster and all 24 height files retained. Reference: 849 canonical files, `f544876d…457e7b`. Updated generator-only `mod/rnw_exp_hub` 0.13.5→0.13.6 (3,268 files/source/catalogs checked). Preserved 820 original EVXP hashes, 7,620 other-mod size/time records, nine profile-root hashes, 134 save-file stat records, sixteen prior library records and two preferences. EU5 is closed; no game launch, playset edit or existing-world/save replacement. These corrections apply to newly generated worlds, not the completed campaign.
 
 Exact removal: Remove **Supercontinent EVXP RC** in the generator, or `uv run rnw uninstall-mod rnw_exp_evxp_release --user-dir USER_DIR` with EU5 closed. The hub is separate. Its verified backups remain under ignored `local_data/release-100/hub-backup-before-0136` and the profile's `.rnw-install/retired/rnw_exp_hub_before_release_0136`; no cleanup sweep is performed.

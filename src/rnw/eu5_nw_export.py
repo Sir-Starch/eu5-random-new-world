@@ -35,6 +35,26 @@ from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
+from rnw.eu5_ai import (
+    PERSONALITIES,
+    AiDecision,
+    AiPersonalityError,
+    Assignments,
+    CountryContext,
+    vanilla_profiles,
+)
+from rnw.eu5_ai import (
+    assignments as ai_assignments,
+)
+from rnw.eu5_ai import (
+    decide as decide_ai_personalities,
+)
+from rnw.eu5_ai import (
+    lines as ai_personality_lines,
+)
+from rnw.eu5_ai import (
+    verify as verify_ai_personalities,
+)
 from rnw.eu5_archetypes import (
     Bonds,
     Expected,
@@ -141,6 +161,7 @@ from rnw.eu5_mountains import mountain_relief
 from rnw.eu5_natives import (
     COUNTRY_DIR,
     DEFINITION_FILE,
+    Country,
     NativeWorld,
     VanillaNatives,
     build_natives,
@@ -357,6 +378,7 @@ DONOR_MODIFIER: Final[re.Pattern[str]] = re.compile(
 # their additions in ``_text_outputs``.
 SETUP_INSERTS: Final[dict[str, tuple[tuple[str, ...], ...]]] = {
     COUNTRIES_FILE: (("countries", "countries"),),
+    PERSONALITIES: (("countries", "countries"),),
     BUILDINGS_FILE: (("locations",), ("building_manager",)),
     "03_markets.txt": (("market_manager",),),
     "09_roads.txt": (("road_network",),),
@@ -1009,6 +1031,177 @@ def _mod_path(relative: str) -> str:
     return relative.removeprefix("game/")
 
 
+def _ai_assignment_records(
+    game_dir: Path, natives: NativeWorld, world: NewWorld, plan: Plan
+) -> tuple[AiDecision, ...]:
+    try:
+        return decide_ai_personalities(
+            _ai_country_contexts(natives, world, plan), vanilla_profiles(game_dir)
+        )
+    except AiPersonalityError as error:
+        raise NewWorldExportError(str(error)) from error
+
+
+@dataclass(frozen=True, slots=True)
+class _AiDiplomacy:
+    allies: dict[str, set[str]]
+    rivals: dict[str, set[str]]
+    threatened_by: dict[str, set[str]]
+    prey_targets: dict[str, set[str]]
+    subjects: dict[str, set[str]]
+    overlords: dict[str, str]
+    confederated: dict[str, set[str]]
+
+
+def _ai_active_countries(natives: NativeWorld) -> dict[str, Country]:
+    active = {
+        country.tag: country
+        for country in natives.countries
+        if country.kind == STATE or country.landed
+    }
+    if len(active) != sum(country.kind == STATE or country.landed for country in natives.countries):
+        message = "Generated AI-country tags are not unique"
+        raise AiPersonalityError(message)
+    owner: dict[str, str] = {}
+    for tag, country in active.items():
+        for key in country.members:
+            previous = owner.setdefault(key, tag)
+            if previous != tag:
+                message = f"AI-personality ownership overlaps at {key}: {previous} and {tag}"
+                raise AiPersonalityError(message)
+    return active
+
+
+def _ai_geography(
+    world: NewWorld, plan: Plan, owner: Mapping[str, str], tags: set[str]
+) -> tuple[dict[str, set[str]], set[str]]:
+    neighbors: dict[str, set[str]] = {tag: set() for tag in tags}
+    coastal: set[str] = set()
+    for first, second in world.edges:
+        if not (0 <= first < len(plan.cells) and 0 <= second < len(plan.cells)):
+            message = f"AI-personality context has an invalid generated edge: {(first, second)}"
+            raise AiPersonalityError(message)
+        first_cell, second_cell = plan.cells[first], plan.cells[second]
+        kinds = first_cell.kind, second_cell.kind
+        if kinds in {(CellClass.LAND, CellClass.SEA), (CellClass.SEA, CellClass.LAND)}:
+            land_cell = first_cell if kinds[0] is CellClass.LAND else second_cell
+            tag = owner.get(land_cell.key)
+            if tag is not None:
+                coastal.add(tag)
+        elif kinds == (CellClass.LAND, CellClass.LAND):
+            first_tag, second_tag = owner.get(first_cell.key), owner.get(second_cell.key)
+            if first_tag and second_tag and first_tag != second_tag:
+                neighbors[first_tag].add(second_tag)
+                neighbors[second_tag].add(first_tag)
+    return neighbors, coastal
+
+
+def _ai_mutual_links(pairs: Sequence[tuple[str, str]], tags: set[str]) -> dict[str, set[str]]:
+    links: dict[str, set[str]] = {tag: set() for tag in tags}
+    for first, second in pairs:
+        if first in tags and second in tags:
+            links[first].add(second)
+            links[second].add(first)
+    return links
+
+
+def _ai_opinion_links(
+    opinions: Sequence[tuple[str, str, str]], tags: set[str]
+) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    threatened_by: dict[str, set[str]] = {tag: set() for tag in tags}
+    prey_targets: dict[str, set[str]] = {tag: set() for tag in tags}
+    for first, second, kind in opinions:
+        if first in tags and second in tags:
+            if kind == FEAR:
+                threatened_by[first].add(second)
+            elif kind == PREY:
+                prey_targets[first].add(second)
+    return threatened_by, prey_targets
+
+
+def _ai_diplomacy(natives: NativeWorld, tags: set[str]) -> _AiDiplomacy:
+    alliances = _ai_mutual_links(natives.alliances, tags)
+    confederated_members: dict[str, set[str]] = {tag: set() for tag in tags}
+    for group in natives.confederations:
+        members = set(group) & tags
+        for tag in members:
+            confederated_members[tag].update(members - {tag})
+            alliances[tag].update(members - {tag})
+    rivals = _ai_mutual_links(natives.rivals, tags)
+    threatened_by, prey_targets = _ai_opinion_links(natives.opinions, tags)
+    subjects: dict[str, set[str]] = {tag: set() for tag in tags}
+    overlords: dict[str, str] = {}
+    for lord, subject in natives.vassals:
+        if lord in tags and subject in tags:
+            subjects[lord].add(subject)
+            overlords[subject] = lord
+    return _AiDiplomacy(
+        allies=alliances,
+        rivals=rivals,
+        threatened_by=threatened_by,
+        prey_targets=prey_targets,
+        subjects=subjects,
+        overlords=overlords,
+        confederated=confederated_members,
+    )
+
+
+def _ai_country_contexts(
+    natives: NativeWorld, world: NewWorld, plan: Plan
+) -> tuple[CountryContext, ...]:
+    """Summarize generated power, geography and diplomacy for the contextual classifier."""
+    active = _ai_active_countries(natives)
+    owner = {key: tag for tag, country in active.items() for key in country.members}
+    tags = set(active)
+    neighbors, coastal = _ai_geography(world, plan, owner, tags)
+    diplomacy = _ai_diplomacy(natives, tags)
+    market_locations = set(natives.markets)
+    result: list[CountryContext] = []
+    for tag, country in active.items():
+        population = sum(natives.population.get(key, 0) for key in country.members)
+        level = max(0, country.level or 0)
+        power = max(1, population) * (2 + level)
+        result.append(
+            CountryContext(
+                tag=tag,
+                landed=True,
+                great=country.great,
+                archetype=country.archetype,
+                level=level,
+                population=population,
+                power=power,
+                coastal=tag in coastal,
+                market=bool(market_locations.intersection(country.members)),
+                neighbors=tuple(sorted(neighbors[tag])),
+                allies=tuple(sorted(diplomacy.allies[tag])),
+                rivals=tuple(sorted(diplomacy.rivals[tag])),
+                threatened_by=tuple(sorted(diplomacy.threatened_by[tag])),
+                prey_targets=tuple(sorted(diplomacy.prey_targets[tag])),
+                subjects=tuple(sorted(diplomacy.subjects[tag])),
+                overlord=diplomacy.overlords.get(tag, ""),
+                confederated=bool(diplomacy.confederated[tag]),
+            )
+        )
+    return tuple(result)
+
+
+def _insert_setup_additions(
+    name: str,
+    text: str,
+    additions: Mapping[str, tuple[str, ...]],
+    ai_assignments: Assignments,
+) -> str:
+    for path, addition in zip(SETUP_INSERTS.get(name, ()), additions.get(name, ()), strict=True):
+        if addition:
+            text = insert_into_block(text, path, addition)
+    if name == PERSONALITIES:
+        try:
+            verify_ai_personalities(text, ai_assignments)
+        except AiPersonalityError as error:
+            raise NewWorldExportError(str(error)) from error
+    return text
+
+
 def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the shared plan.
     game_dir: Path,
     *,
@@ -1126,8 +1319,11 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         gone,
         {c.key: natives.pops.get(c.key, []) for c in plan.cells},
     )
+    ai_decisions = _ai_assignment_records(game_dir, natives, world, plan)
+    ai_records = ai_assignments(ai_decisions)
     additions: dict[str, tuple[str, ...]] = {
         COUNTRIES_FILE: (country_records(natives.countries),),
+        PERSONALITIES: (ai_personality_lines(ai_records),),
         BUILDINGS_FILE: (city_lines(towns.ranks), building_lines(development.villages)),
         "03_markets.txt": (market_lines(natives.markets),),
         "09_roads.txt": (road_lines(natives.roads),),
@@ -1139,17 +1335,14 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         "18_opinions.txt": (opinion_lines(natives.opinions),),
         "20_rivals.txt": (rival_lines(natives.rivals),),
     }
-    for name, text in setup.texts.items():
+    for name, original_text in setup.texts.items():
         relative = f"{SETUP_DIR}/{name}"
+        setup_text = original_text
         if name == DEVELOPMENT_FILE:
-            text = drop_block_entries(text, ("development",), new_world_keys)  # noqa: PLW2901
-        for path, addition in zip(
-            SETUP_INSERTS.get(name, ()), additions.get(name, ()), strict=True
-        ):
-            if addition:
-                text = insert_into_block(text, path, addition)  # noqa: PLW2901
-        if text != _read(game_dir, relative):
-            outputs[_mod_path(relative)] = _encode(game_dir, relative, text)
+            setup_text = drop_block_entries(setup_text, ("development",), new_world_keys)
+        setup_text = _insert_setup_additions(name, setup_text, additions, ai_records)
+        if setup_text != _read(game_dir, relative):
+            outputs[_mod_path(relative)] = _encode(game_dir, relative, setup_text)
     outputs.update(country_definition_outputs(game_dir, setup.removed_ids))
     outputs.update(towns.files())
     retired = retired_base_modifiers(bodies, removed)
@@ -1203,6 +1396,32 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         },
         "setup_records_deleted": {k: v for k, v in setup.deleted.items() if v},
         "setup_identifiers_removed": len(setup.removed_ids),
+        "ai_personalities": dict(sorted(Counter(profile for _, profile in ai_records).items())),
+        "ai_personality_decisions": [
+            {
+                "tag": decision.tag,
+                "profile": decision.profile,
+                "reason": decision.reason,
+                "context": {
+                    "population": decision.context.population,
+                    "technology_level": decision.context.level,
+                    "power_proxy": decision.context.power,
+                    "great_empire": decision.context.great,
+                    "archetype": decision.context.archetype,
+                    "neighbors": list(decision.context.neighbors),
+                    "allies": list(decision.context.allies),
+                    "rivals": list(decision.context.rivals),
+                    "threatened_by": list(decision.context.threatened_by),
+                    "prey_targets": list(decision.context.prey_targets),
+                    "subjects": list(decision.context.subjects),
+                    "overlord": decision.context.overlord,
+                    "confederated": decision.context.confederated,
+                    "market": decision.context.market,
+                    "coastal": decision.context.coastal,
+                },
+            }
+            for decision in ai_decisions
+        ],
         "base_modifiers_retired": sorted(retired),
         "languages": list(languages),
         "untranslated_languages": untranslated(languages),

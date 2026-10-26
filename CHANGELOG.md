@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.13.9 — 2026-10-27
+
+- Keep vanilla's `ai_balanced` as the normal baseline. Countries receive a more
+  distinctive personality only for explicit threats, rivalries, diplomatic ties,
+  a great empire's designated prey, or a defining society archetype; a coastline,
+  population advantage or ordinary border alone no longer forces a personality.
+  The report includes every selection signal, including confederation membership.
+  Epoch 46; offline candidate, with no EU5 launch.
+
+## 0.13.8 — 2026-10-26
+
+- Choose generated countries' vanilla AI personalities from their generated context: comparative
+  population and technology, borders, markets and coasts, empires' prey and threats, rivalries,
+  alliances, subjects and extraordinary-society archetypes. Selection is deterministic and each
+  country's profile has an auditable reason in `report.json`; Balanced remains for ordinary border
+  states without a defining strategic signal. Epoch 45; offline candidate, with no EU5 launch.
+
+## 0.13.7 — 2026-10-26
+
+- Generated landed New World countries receive a reproducible AI personality assignment, sampled
+  by the frequencies of explicit country assignments in the installed game's 1337 setup. Pop-only
+  tribal groups remain unassigned; vanilla personality definitions and the setup file are read
+  locally and validated. Epoch 44;
+  game behavior not yet rechecked.
+
 ## 0.13.6 — 2026-10-26
 
 - Correct the mod defects identified in the owner's completed EVXP campaign.
