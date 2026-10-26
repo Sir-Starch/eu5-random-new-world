@@ -379,3 +379,14 @@ launch, process control or publication. Exact audit: ignored
 Removal with EU5 closed: remove only `mod/rnw_exp_657q_lanes/`, or use
 `uv run rnw uninstall-mod rnw_exp_657q_lanes --user-dir USER_DIR`.
 Hub rollback is a separate action, not performed.
+
+2026-10-26 EVXP library-registration correction (C353): moved only the
+unreferenced `mod/rnw_exp_657q_lanes/` to standard library folder
+`mod/rnw_exp_world_rbsvu4fogp/` and registered the verified bundle, atlas,
+previews, code and record in the active generator library. Display name stays
+**Supercontinent EVXP**, version 0.13.2 / epoch 41. All 820 files checked;
+only metadata id changed. Original 657Q/DSNL, seven prior library records,
+4,903 other-mod size/time records and nine profile-root hashes preserved.
+No save/playset/settings/map change or game launch.
+Updated removal: `uv run rnw uninstall-mod rnw_exp_world_rbsvu4fogp --user-dir USER_DIR`.
+Audit: ignored `local_data/657q-library/registered.json`.

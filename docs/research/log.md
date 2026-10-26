@@ -1542,3 +1542,14 @@ unchanged (`tests/golden_world.json`). Full test suite passes: 1,978 Python test
   retained through the normal presentation writer. No game launch, process
   control, save/playset/setting/library change, push or publication. Engine
   movement after this correction remains [UNKNOWN]. See [064](../../experiments/064-ocean-course-ends/README.md).
+
+## 2026-10-26 — EVXP library registration correction
+
+[V-GAME owner screenshot / V-EXEC C353] The direct 657Q fix export lacked a
+library record and showed as Older world. Registered its verified bundle under
+`rbsvu4fogp`, retained Supercontinent EVXP, atlas/previews/code/record, and moved
+only its unreferenced folder to `rnw_exp_world_rbsvu4fogp`. All 820 files checked,
+only metadata id changed. Existing seven records, other worlds and root hashes
+preserved. No regeneration, game launch or product version change. The owner
+then requested automatic recognition of installed RNW worlds as normal functionality;
+that is the next implementation phase, separate from this one-world registration.

@@ -87,3 +87,18 @@ reports. Installation and exact removal are recorded in
 [INSTALLED](../INSTALLED.md). The original world and campaign remain intact.
 Written-data correctness is separate from an observed engine movement result;
 the latter remains **UNKNOWN**.
+
+## Library registration correction (2026-10-26)
+
+[V-GAME owner screenshot / V-EXEC C353] EVXP appeared as “Older world” because
+its direct export was installed without a library record. This is an installation
+integration omission, not an old generator. Registered its existing bundle in
+the active library under standard id `rbsvu4fogp`, preserving display name
+**Supercontinent EVXP**, full atlas (6,910 locations), previews, code and epoch-41
+record. The unreferenced installed folder moved from `rnw_exp_657q_lanes` to
+`rnw_exp_world_rbsvu4fogp`; only `.metadata/metadata.json` changed (its id).
+All 820 files checked; 7 existing library records, 4,903 other-mod size/time
+records and 9 profile-root hashes preserved. No regeneration, map/save/playset
+change or game launch. The library now has eight worlds, EVXP is `IN_GAME`,
+and no unregistered worlds remain. Version and epoch stay 0.13.2 / 41.
+Ignored audit: `local_data/657q-library/registered.json`.
