@@ -115,9 +115,9 @@ flowchart LR
 * **Untouched Old World:** Every pixel, province key, and adjacency outside the New World canvas is verified against the vanilla installation baseline.
 * **Bit-for-Byte Deterministic:** Identical World Codes, generator versions, and game builds produce identical files across operating systems and CPU thread counts. Reference world digests are pinned in CI.
 * **Fail-Fast Invariants:** Unverified game builds, unhandled vanilla script references, or broken map invariants halt compilation immediately — never emitting silently corrupted mods.
-* **Native Rust Core:** Compute-heavy kernels (simplex/domain-warped noise, distance fields, drainage routing, terrain slot assignment, LZAV compression) are written in Rust and verified bit-identical against Python reference implementations in [`tests/reference/`](https://www.google.com/search?q=tests/reference/).
+* **Native Rust Core:** Compute-heavy kernels (simplex/domain-warped noise, distance fields, drainage routing, terrain slot assignment, LZAV compression) are written in Rust and verified bit-identical against Python reference implementations in [`tests/reference/`](tests/reference/).
 
-For deep dives into the engineering, see [Architecture](https://www.google.com/search?q=docs/architecture.md), [ADR 0009 (Hub Mod Delivery)](https://www.google.com/search?q=docs/adr/0009-hub-mod-with-generator.md), and [ADR 0010 (Layered Reproducible Worlds)](https://www.google.com/search?q=docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md).
+For deep dives into the engineering, see [Architecture](docs/architecture.md), [ADR 0009 (Hub Mod Delivery)](docs/adr/0009-hub-mod-with-generator.md), and [ADR 0010 (Layered Reproducible Worlds)](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md).
 
 ## Getting Started
 
@@ -125,7 +125,7 @@ For deep dives into the engineering, see [Architecture](https://www.google.com/s
 
 Once `1.0.0` is published, no Python or Rust installation is required:
 
-1. Subscribe to **Random New World** on the Steam Workshop (or download the standalone archive from [GitHub Releases](https://www.google.com/search?q=https://github.com/Sir-Starch/eu5-random-new-world/releases) — every release includes SHA-256 checksums and VirusTotal scans).
+1. Subscribe to **Random New World** on the Steam Workshop (or download the standalone archive from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases) — every release includes SHA-256 checksums and VirusTotal scans).
 2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works out of the box on Windows and on Linux/Steam Deck via Proton).
 3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (~2–3 minutes; requires ~7.5 GB of free RAM).
 4. Enable the newly created world mod (e.g., *RNW: Small continents 7K3Q*) in your playset — **only one RNW world mod at a time** — and start a new 1337 campaign. *(Do not enable the generator hub item itself in your playset).*
@@ -147,7 +147,7 @@ Once `1.0.0` is published, no Python or Rust installation is required:
 #### Launch the GUI
 
 ```sh
-git clone [https://github.com/Sir-Starch/eu5-random-new-world.git](https://github.com/Sir-Starch/eu5-random-new-world.git)
+git clone https://github.com/Sir-Starch/eu5-random-new-world.git
 cd eu5-random-new-world
 uv sync --locked --group dev     # compiles the Rust core extension automatically
 uv run rnw gui                   # launches the Qt desktop application
@@ -167,16 +167,16 @@ uv run rnw --help                                          # view all CLI comman
 
 ```
 
-See the [Generator Guide](https://www.google.com/search?q=docs/generator-guide.md) for details on `.rnw` world files, political/resource rerolls, batch queues, and the built-in Atlas.
+See the [Generator Guide](docs/generator-guide.md) for details on `.rnw` world files, political/resource rerolls, batch queues, and the built-in Atlas.
 
 ## Documentation
 
-The [Documentation Index](https://www.google.com/search?q=docs/README.md) provides a full map of the repository:
+The [Documentation Index](docs/README.md) provides a full map of the repository:
 
-* **User Guides:** [Generator Guide](https://www.google.com/search?q=docs/generator-guide.md) · [Product Specification](https://www.google.com/search?q=docs/product-spec.md) · [Localization](https://www.google.com/search?q=docs/localization.md)
-* **System Design:** [Architecture](https://www.google.com/search?q=docs/architecture.md) · [Terrain & Biomes](https://www.google.com/search?q=docs/terrain-biomes.md) · [Sea Geography](https://www.google.com/search?q=docs/sea-geography.md) · [Native Societies](https://www.google.com/search?q=docs/natives.md) · [Economy](https://www.google.com/search?q=docs/economy.md) · [Content Plan](https://www.google.com/search?q=docs/content-plan.md) · [Architecture Decision Records (ADRs)](https://www.google.com/search?q=docs/adr/)
-* **Project Tracking:** [Roadmap](https://www.google.com/search?q=docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](https://www.google.com/search?q=experiments/README.md)
-* **Verification & Audits:** [Engine Findings](https://www.google.com/search?q=docs/research/findings.md) · [Claims Ledger (`C01–C277`)](https://www.google.com/search?q=docs/research/claims-ledger.md) · [Interoperability Register](https://www.google.com/search?q=docs/research/interoperability.md)
+* **User Guides:** [Generator Guide](docs/generator-guide.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
+* **System Design:** [Architecture](docs/architecture.md) · [Terrain & Biomes](docs/terrain-biomes.md) · [Sea Geography](docs/sea-geography.md) · [Native Societies](docs/natives.md) · [Economy](docs/economy.md) · [Content Plan](docs/content-plan.md) · [Architecture Decision Records (ADRs)](docs/adr/)
+* **Project Tracking:** [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](experiments/README.md)
+* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C277`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
 
 ## Development & Verification
 
@@ -195,25 +195,25 @@ EU5_GAME_DIR=/path/to/eu5 uv run pytest -q tests/test_local_install.py
 
 | Directory | Contents |
 | --- | --- |
-| [`src/rnw/`](https://www.google.com/search?q=src/rnw/) | Core generator pipeline: world model, physical geography, seas, societies, content, EU5 exporters, validators, CLI |
-| [`src/rnw/app/`](https://www.google.com/search?q=src/rnw/app/), [`src/rnw/gui/`](https://www.google.com/search?q=src/rnw/gui/) | Headless application controller and Qt desktop interface |
-| [`native/`](https://www.google.com/search?q=native/) | Rust crate powering `rnw._native` hot kernels |
-| [`packaging/`](https://www.google.com/search?q=packaging/) | Standalone binary builders, Workshop staging, release automation, third-party notices |
-| [`tests/`](https://www.google.com/search?q=tests/) | Automated test suite, Python reference kernels, and golden world digests |
-| [`docs/`](https://www.google.com/search?q=docs/), [`experiments/`](https://www.google.com/search?q=experiments/) | Technical specifications, ADRs, verification ledgers, and in-game experiment logs |
+| [`src/rnw/`](src/rnw/) | Core generator pipeline: world model, physical geography, seas, societies, content, EU5 exporters, validators, CLI |
+| [`src/rnw/app/`](src/rnw/app/), [`src/rnw/gui/`](src/rnw/gui/) | Headless application controller and Qt desktop interface |
+| [`native/`](native/) | Rust crate powering `rnw._native` hot kernels |
+| [`packaging/`](packaging/) | Standalone binary builders, Workshop staging, release automation, third-party notices |
+| [`tests/`](tests/) | Automated test suite, Python reference kernels, and golden world digests |
+| [`docs/`](docs/), [`experiments/`](experiments/) | Technical specifications, ADRs, verification ledgers, and in-game experiment logs |
 
 ## Contributing
 
-Contributions, bug reports, and pull requests are welcome! Please read [CONTRIBUTING.md](https://www.google.com/search?q=CONTRIBUTING.md) before opening a PR.
+Contributions, bug reports, and pull requests are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.
 
 * **Strict clean-room rule:** Never commit proprietary game files or data extracted from an EU5 installation into this repository.
 * **Architectural invariants:** See [AGENTS.md](AGENTS.md) for engineering rules, verification evidence labels (`[V-EXEC]`, `[V-GAME]`), and coding guidelines.
 
 ## License & Legal
 
-**Random New World Generator** is an independent, third-party open-source software application licensed under the **[Mozilla Public License 2.0 (MPL-2.0)](https://www.google.com/search?q=LICENSE)**. Anyone is welcome to inspect the source code, submit pull requests, or build upon the project on GitHub, provided that all MPL-2.0 license terms, copyright notices, and source-code disclosure requirements are strictly respected. Bundled third-party libraries retain their respective licenses ([`THIRD_PARTY_NOTICES.md`](https://www.google.com/search?q=packaging/THIRD_PARTY_NOTICES.md)).
+**Random New World Generator** is an independent, third-party open-source software application licensed under the **[Mozilla Public License 2.0 (MPL-2.0)](LICENSE)**. Anyone is welcome to inspect the source code, submit pull requests, or build upon the project on GitHub, provided that all MPL-2.0 license terms, copyright notices, and source-code disclosure requirements are strictly respected. Bundled third-party libraries retain their respective licenses ([`THIRD_PARTY_NOTICES.md`](packaging/THIRD_PARTY_NOTICES.md)).
 
-* **No Game Assets Included:** This repository contains zero proprietary files from *Europa Universalis V*. Generated map mods are compiled locally on the user's machine from their own legitimate copy of the game; generated mod output is subject to [Paradox Interactive's EULA](https://legal.paradoxplaza.com/eula) (see [Legal Notes](https://www.google.com/search?q=docs/legal.md)).
+* **No Game Assets Included:** This repository contains zero proprietary files from *Europa Universalis V*. Generated map mods are compiled locally on the user's machine from their own legitimate copy of the game; generated mod output is subject to [Paradox Interactive's EULA](https://legal.paradoxplaza.com/eula) (see [Legal Notes](docs/legal.md)).
 * **Workshop Redistribution Policy:** Re-uploading the generator tool itself or redistributing unmodified builds on the Steam Workshop without explicit permission from the author is prohibited.
 * **Security:** To report a security issue, please follow [SECURITY.md](SECURITY.md).
 
