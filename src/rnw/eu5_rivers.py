@@ -79,7 +79,19 @@ def _fragment(
     # Keep the original drawing head when it belongs to this piece; otherwise
     # choose the endpoint furthest upstream in the original, uncut tree. This is a
     # drawing start, not a new geographical spring or an extra drainage basin.
-    root = min(leaves, key=lambda p: (rivers.role[p] != SOURCE, -from_mouth[p], p))
+    leaves.sort(key=lambda p: (rivers.role[p] != SOURCE, -from_mouth[p], p))
+    # A cut can put two short arms at the far end of a fork. Starting at the
+    # old head makes neither arm long enough for a join marker; another leaf
+    # can orient the very same tree without adding or removing river pixels.
+    root: Pixel | None = None
+    for leaf in leaves:
+        checkpoint()
+        if _drawable_root(leaf, neighbours):
+            root = leaf
+            break
+    if root is None:
+        message = "a boundary confluence has no room for its join marker"
+        raise RiverRasterError(message)
     codes[root] = SOURCE
     stack = [(root, root)]
     while stack:
@@ -107,6 +119,20 @@ def _fragment(
     ):
         message = "serialized boundary river has invalid starts or joins"
         raise RiverRasterError(message)
+
+
+def _drawable_root(root: Pixel, neighbours: dict[Pixel, list[Pixel]]) -> bool:
+    """Whether orienting this unchanged tree from a leaf permits every join marker."""
+    stack = [(root, root)]
+    while stack:
+        pixel, parent = stack.pop()
+        children = [p for p in neighbours[pixel] if p != parent]
+        if len(children) > 2:  # noqa: PLR2004
+            return False
+        if len(children) == 2 and not any(len(neighbours[p]) == 2 for p in children):  # noqa: PLR2004
+            return False
+        stack.extend((p, pixel) for p in children)
+    return True
 
 
 def _mouth(role: NDArray[np.int8], source: Pixel) -> Pixel:

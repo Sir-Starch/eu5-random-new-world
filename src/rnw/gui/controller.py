@@ -61,6 +61,7 @@ from rnw.gui.text import (
     text,
 )
 from rnw.layers import PARTS, rolls_of
+from rnw.messages import Said
 from rnw.png import COLOR_RGB, encode_png
 from rnw.progress import STAGES, Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
@@ -169,6 +170,7 @@ class Controller:
         # The random world type chosen in the window (``random_types``), None for a world type.
         self.mode: str | None = None
         self.seed: int = random_seed()
+        self._generation_seed: int | None = None
         self.changes: dict[str, int] = {}
         self.other_changes: dict[str, object] = {}
         self.install: bool = True
@@ -342,6 +344,24 @@ class Controller:
         if self.mode == random_types.RANDOM:
             self._draw()
         self._changed()
+
+    def retry_new_seed(self) -> str | None:
+        """Retry a failed generation with the same settings and a different seed."""
+        if self.task is not Task.GENERATE or self.phase is not Phase.FAILED:
+            return text("ready_busy")
+        reason = self.problem()
+        if reason is not None:
+            return reason
+        previous = {self.seed, self._generation_seed}
+        seed = random_seed()
+        # A random collision must not repeat the failed world.
+        while seed in previous:
+            seed = (seed + 1) % (SEED_MAX + 1)
+        self.seed = seed
+        _ = self.other_changes.pop("rolls", None)
+        self.notice = ""
+        self._changed()
+        return self.start()
 
     def use_code(self, value: str) -> str | None:
         """Take the type, seed and settings of a pasted code; returns the problem, or None."""
@@ -883,6 +903,7 @@ class Controller:
         if reason is not None or self.game is None:
             return reason
         request = self._request()
+        self._generation_seed = request.code.seed
         generator = self.generator
 
         def work(progress: Progress) -> service.Result:
@@ -1252,7 +1273,38 @@ class Controller:
             _ = (self.data / ERROR_LOG).write_text(traceback.format_exc(), encoding="utf-8")
         except OSError:
             pass
-        return explain(error)
+        from rnw.currents import CurrentError  # noqa: PLC0415 - load generation code only on failure
+        from rnw.eu5_nw_export import LocationLimitError  # noqa: PLC0415
+        from rnw.eu5_rivers import RiverRasterError  # noqa: PLC0415
+        from rnw.eu5_seas import SeaError  # noqa: PLC0415
+        from rnw.ports import PortError  # noqa: PLC0415
+        from rnw.sea_routes import LaneError  # noqa: PLC0415
+
+        cause: BaseException | None = error
+        while cause is not None:
+            if self.task is Task.GENERATE and isinstance(cause, LocationLimitError):
+                return text(
+                    "generation_location_limit",
+                    count=grouped(cause.count),
+                    limit=grouped(cause.limit),
+                )
+            if self.task is Task.GENERATE and isinstance(
+                cause, (CurrentError, LaneError, PortError, SeaError)
+            ):
+                return text("generation_sea_error", detail=str(cause))
+            if self.task is Task.GENERATE and isinstance(cause, RiverRasterError):
+                return text("generation_river_error", detail=str(cause))
+            if self.task is Task.GENERATE and isinstance(cause, OSError):
+                return text("generation_file_error", detail=str(cause))
+            cause = cause.__cause__
+        detail = explain(error)
+        if (
+            self.task is Task.GENERATE
+            and not isinstance(error, (SettingsError, worldfile.WorldFileError))
+            and not (error.args and isinstance(error.args[0], Said))
+        ):
+            return text("generation_unexpected_error", detail=detail)
+        return detail
 
     # -- bug reports ---------------------------------------------------------------------------
 

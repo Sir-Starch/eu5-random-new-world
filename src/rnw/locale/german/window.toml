@@ -1846,3 +1846,27 @@ text = '''Wählen Sie zwischen 1 und {count} Skizzen.'''
 source = "75f72c48760efe1b"
 text = '''Skizzen brauchen erzeugtes Land. Kehren Sie zuerst zu erzeugtem Land zurück.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''Mit neuem Startwert erzeugen'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''Der Generator konnte für diese Welt keinen stimmigen Ozean erzeugen. Technisches Detail: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''Eine Datei konnte nicht gelesen oder geschrieben werden. Prüfe ihren Speicherort, die Berechtigungen und den freien Speicherplatz. Technisches Detail: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''Ein unerwarteter Fehler hat die Welterstellung gestoppt. Technisches Detail: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''Diese Welt hat {count} Orte und überschreitet damit die Sicherheitsgrenze von {limit}. Erhöhe unter Erweitert die Größe der Land- oder Seeorte oder versuche einen anderen Startwert.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''Der Generator konnte für diese Welt kein gültiges Flussnetz zeichnen. Technisches Detail: {detail}'''

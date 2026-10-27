@@ -17,6 +17,7 @@ from rnw.app import library, service
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
+from rnw.eu5_seas import SeaError
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.record import Verdict
@@ -250,6 +251,47 @@ def test_progress_height_and_percent_display_stay_in_sync(
 
 
 @pytest.mark.usefixtures("application")
+def test_generation_failure_wraps_and_retry_uses_a_new_seed(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    controller.install = False
+    _ = controller.set_seed("17")
+    old_settings = controller.world_code().settings()
+
+    def broken(request: service.Request, progress: Progress | None = None) -> service.Result:
+        del request, progress
+        cause = SeaError("Lane rnw_sea_01445 is not deep ocean")
+        message = "export failed"
+        raise ValueError(message) from cause
+
+    controller.generator = broken
+    window.resize(1080, 760)
+    window.show()
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FAILED)
+    QApplication.processEvents()
+    assert window.failure_details.isVisible()
+    assert not window.failure_details.geometry().intersects(window.bar.geometry())
+    assert "consistent ocean" in window.failure_details.toPlainText()
+    assert "rnw_sea_01445" in window.failure_details.toPlainText()
+    assert window.retry_button.isVisible()
+    controller.message = "Long detail " * 1000
+    window.refresh()
+    QApplication.processEvents()
+    assert window.failure_details.verticalScrollBar().maximum() > 0
+    assert (window.width(), window.height()) == (1080, 760)
+    monkeypatch.setattr("rnw.gui.controller.random_seed", lambda: 17)
+    window.retry_button.click()
+    pump(lambda: controller.phase is Phase.FAILED and controller.runs == 2)
+    assert controller.seed == 18
+    assert controller.world_code().settings() == old_settings
+    assert (window.width(), window.height()) == (1080, 760)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 @pytest.mark.parametrize("language", sorted(LANGUAGE_NAMES))
 def test_every_language_fits_the_smallest_supported_window(
     tmp_path: Path, fake_export: Exporter, language: str
@@ -265,6 +307,14 @@ def test_every_language_fits_the_smallest_supported_window(
         for button in window.new_page.findChildren(QPushButton):
             if button.isVisibleTo(window):
                 assert button.width() >= button.minimumSizeHint().width(), button.text()
+        window.controller.task = Task.GENERATE
+        window.controller.phase = Phase.FAILED
+        window.controller.message = "A detail about the failed world"
+        window.refresh()
+        QApplication.processEvents()
+        assert window.retry_button.isVisible()
+        assert window.retry_button.width() >= window.retry_button.minimumSizeHint().width()
+        assert (window.width(), window.height()) == (1080, 760)
         window.generate_button.click()
         pump(lambda: window.controller.selected_world() is not None)
         QApplication.processEvents()

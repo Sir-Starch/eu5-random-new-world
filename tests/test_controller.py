@@ -14,6 +14,7 @@ from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.library import Placement
 from rnw.app.worldcode import WorldCode, decode, encode, new_code
 from rnw.eu5_lobby import SCRIPTED_GUI_FILE
+from rnw.eu5_nw_export import LocationLimitError
 from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
 from rnw.record import Verdict
 from rnw.settings import WORLD_TYPES
@@ -390,8 +391,46 @@ def test_a_failure_is_explained_and_logged(tmp_path: Path, fake_export: Exporter
     controller.generator = broken
     _ = controller.start()
     controller.wait(10)
-    assert (controller.phase, controller.message) == (Phase.FAILED, "the map is gone")
+    assert controller.phase is Phase.FAILED
+    assert "unexpected error" in controller.message
+    assert "the map is gone" in controller.message
     assert "RuntimeError" in (controller.data / "last-error.log").read_text(encoding="utf-8")
+
+
+def test_generation_explains_the_location_limit(tmp_path: Path, fake_export: Exporter) -> None:
+    def broken(request: service.Request, progress: Progress | None = None) -> service.Result:
+        del request, progress
+        raise LocationLimitError(32264, 32000)
+
+    controller = _controller(tmp_path, fake_export)
+    controller.generator = broken
+    _ = controller.start()
+    controller.wait(10)
+    assert controller.phase is Phase.FAILED
+    assert "32,264" in controller.message
+    assert "32,000" in controller.message
+    assert "Advanced" in controller.message
+
+
+def test_retry_avoids_both_the_failed_and_the_current_seed(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def broken(request: service.Request, progress: Progress | None = None) -> service.Result:
+        del request, progress
+        message = "failure"
+        raise RuntimeError(message)
+
+    controller = _controller(tmp_path, fake_export)
+    controller.generator = broken
+    assert controller.set_seed("17") is None
+    assert controller.start() is None
+    controller.wait(10)
+    assert controller.phase is Phase.FAILED
+    assert controller.set_seed("18") is None
+    monkeypatch.setattr("rnw.gui.controller.random_seed", lambda: 17)
+    assert controller.retry_new_seed() is None
+    controller.wait(10)
+    assert controller.seed == 19
 
 
 def test_strays_are_listed_and_can_be_removed(tmp_path: Path, fake_export: Exporter) -> None:

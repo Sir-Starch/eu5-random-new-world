@@ -937,6 +937,12 @@ class MainWindow(QMainWindow):
         self.status.setWordWrap(False)
         self.status.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
         self.status.setFixedHeight(self.status.fontMetrics().height() + 4)
+        self.status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.failure_details: QPlainTextEdit = QPlainTextEdit()
+        self.failure_details.setReadOnly(True)
+        self.failure_details.setMinimumHeight(80)
+        self.failure_details.setMaximumHeight(140)
+        self.failure_details.setVisible(False)
         self.eta = QLabel()
         self.eta.setWordWrap(False)
         self.eta.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Fixed)
@@ -951,7 +957,11 @@ class MainWindow(QMainWindow):
         self.progress_details.setArrowType(Qt.ArrowType.RightArrow)
         progress_layout.addWidget(self.bar)
         progress_layout.addWidget(self.status)
+        progress_layout.addWidget(self.failure_details)
         progress_layout.addWidget(self.eta)
+        self.retry_button: QPushButton = QPushButton(text("retry_new_seed"))
+        _ = self.retry_button.clicked.connect(self._retry_new_seed)
+        progress_layout.addWidget(self.retry_button, alignment=Qt.AlignmentFlag.AlignLeft)
         progress_layout.addWidget(self.progress_details, alignment=Qt.AlignmentFlag.AlignLeft)
         progress_layout.addWidget(self.stage_list)
         self.stage_list.setVisible(False)
@@ -1582,14 +1592,25 @@ class MainWindow(QMainWindow):
         ):
             widget.setEnabled(not busy)
         self.bar.setValue(_progress_percent(controller.fraction) if generating else 0)
-        status = self._status_line() if generating else text("idle")
-        self.status.setText(status)
-        self.status.setToolTip(status)
+        self._refresh_progress_message(generating)
         self._refresh_eta_state()
         self.stage_list.clear()
         for label, state in controller.stage_rows():
             mark = MARKS[state] if generating else MARKS["waiting"]
             self.stage_list.addItem(QListWidgetItem(f"{mark}  {label}"))
+
+    def _refresh_progress_message(self, generating: bool) -> None:  # noqa: FBT001 - view state
+        controller = self.controller
+        status = self._status_line() if generating else text("idle")
+        failed = controller.phase is Phase.FAILED
+        self.status.setText(status)
+        self.status.setToolTip(status)
+        self.status.setVisible(not failed)
+        self.failure_details.setVisible(failed)
+        if failed and self.failure_details.toPlainText() != status:
+            self.failure_details.setPlainText(status)
+        self.retry_button.setVisible(failed and controller.task is Task.GENERATE)
+        self.retry_button.setEnabled(controller.problem() is None)
 
     def _refresh_eta_state(self) -> None:
         """Show and start the ETA timer only for one live world generation."""
@@ -1837,6 +1858,11 @@ class MainWindow(QMainWindow):
 
     def _generate(self) -> None:
         problem = self.controller.start()
+        if problem:
+            self.status.setText(problem)
+
+    def _retry_new_seed(self) -> None:
+        problem = self.controller.retry_new_seed()
         if problem:
             self.status.setText(problem)
 

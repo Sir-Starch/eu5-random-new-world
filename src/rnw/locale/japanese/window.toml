@@ -1846,3 +1846,27 @@ text = '''スケッチは1〜{count}個の間で選んでください。'''
 source = "75f72c48760efe1b"
 text = '''スケッチには生成された陸地が必要です。先に生成された陸地に戻してください。'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''別のシードで生成'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''この世界の海洋を整合性のある形で生成できませんでした。技術的な詳細: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''ファイルを読み書きできませんでした。場所、アクセス権、空き容量を確認してください。技術的な詳細: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''予期しないエラーにより世界の生成が停止しました。技術的な詳細: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''この世界のロケーション数は{count}で、安全上限の{limit}を超えています。詳細設定で陸または海のロケーションのサイズを大きくするか、別のシードを試してください。'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''この世界の有効な河川網を描画できませんでした。技術的な詳細: {detail}'''

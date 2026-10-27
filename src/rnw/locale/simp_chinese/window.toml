@@ -1846,3 +1846,27 @@ text = '''请选择1到{count}幅草图。'''
 source = "75f72c48760efe1b"
 text = '''草图需要生成的陆地。请先改回生成的陆地。'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''使用新种子生成'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''生成器无法为此世界构建一致的海洋。技术详情：{detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''无法读取或写入文件。请检查文件位置、权限和可用磁盘空间。技术详情：{detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''意外错误导致世界生成停止。技术详情：{detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''此世界有 {count} 个地点，超过了 {limit} 的安全上限。请在高级设置中增大陆地或海洋地点的大小，或尝试其他种子。'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''生成器无法为此世界绘制有效的河流网络。技术详情：{detail}'''

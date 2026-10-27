@@ -95,6 +95,49 @@ def test_a_dropped_area_uses_the_area_of_its_geographic_replacements() -> None:
     assert "discovered_areas = {  lane_area }" in rewritten
 
 
+def test_identical_location_and_province_names_keep_their_own_bindings() -> None:
+    plan = _plan()
+    plan.cells = [replace(cell, area=cell.key + "_area") for cell in plan.cells]
+    remap = build_remap(
+        [("shared", CellClass.SEA, 0, 0)],
+        plan,
+        np.array([[0, 20], [0, 30], [0, 0], [0, 10]], dtype=np.int64),
+        {"shared": ["shared"]},
+        access=RemapAccess(navigable_keys=frozenset({"shared"}), closed_seas=frozenset({2})),
+        areas={"lost_area": ["shared"]},
+    )
+    assert remap["shared"] == "lane"
+    assert remap.areas["lost_area"] == "lane_area"
+    script = (
+        "location = shared waypoints = { shared } "
+        "location:shared province:shared province_definition:shared "
+        "provinces = { shared } area:lost_area"
+    )
+    rewritten, _ = remap_text(script, remap)
+    assert "location = lane" in rewritten
+    assert "waypoints = { lane }" in rewritten
+    assert "location:lane " in rewritten
+    assert "province:lane_province" in rewritten
+    assert "province_definition:lane_province" in rewritten
+    assert "provinces = { lane_province }" in rewritten
+    assert "area:lane_area" in rewritten
+
+
+def test_identical_area_and_province_names_use_the_scope() -> None:
+    plan = _plan()
+    plan.cells = [replace(cell, area=cell.key + "_area") for cell in plan.cells]
+    remap = build_remap(
+        [("old_sea", CellClass.SEA, 0, 0)],
+        plan,
+        np.array([[0, 20], [0, 30], [0, 0], [0, 10]], dtype=np.int64),
+        {"shared": ["old_sea"]},
+        access=RemapAccess(),
+        areas={"shared": ["old_sea"]},
+    )
+    rewritten, _ = remap_text("province:shared area:shared", remap)
+    assert rewritten == "province:closed_province area:closed_area"
+
+
 def test_a_dropped_area_without_any_compatible_location_is_an_error() -> None:
     with pytest.raises(RemapError, match="removed area lost_area"):
         _ = build_remap(

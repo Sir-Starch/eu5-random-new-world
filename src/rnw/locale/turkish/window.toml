@@ -1846,3 +1846,27 @@ text = '''1 ile {count} arasında taslak seçin.'''
 source = "75f72c48760efe1b"
 text = '''Taslaklar için oluşturulan kara gerekir. Önce oluşturulan karaya dönün.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''Yeni tohumla oluştur'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''Oluşturucu bu dünya için tutarlı bir okyanus oluşturamadı. Teknik ayrıntı: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''Bir dosya okunamadı veya yazılamadı. Konumunu, izinleri ve kullanılabilir disk alanını kontrol edin. Teknik ayrıntı: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''Beklenmeyen bir hata dünya oluşturmayı durdurdu. Teknik ayrıntı: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''Bu dünyada {count} konum var ve bu sayı {limit} güvenlik sınırını aşıyor. Gelişmiş ayarlarda kara veya deniz konumlarının boyutunu artırın ya da başka bir tohum deneyin.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''Oluşturucu bu dünya için geçerli bir nehir ağı çizemedi. Teknik ayrıntı: {detail}'''

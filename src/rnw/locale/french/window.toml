@@ -1846,3 +1846,27 @@ text = '''Choisissez entre 1 et {count} esquisses.'''
 source = "75f72c48760efe1b"
 text = '''Les esquisses demandent des terres générées. Revenez d'abord aux terres générées.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''Générer avec une autre graine'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''Le générateur n’a pas pu créer un océan cohérent pour ce monde. Détail technique : {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''Impossible de lire ou d’écrire un fichier. Vérifiez son emplacement, les autorisations et l’espace disque disponible. Détail technique : {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''Une erreur inattendue a interrompu la génération du monde. Détail technique : {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''Ce monde contient {count} lieux, au-delà de la limite de sécurité de {limit}. Augmentez la taille des lieux terrestres ou maritimes dans Avancé, ou essayez une autre graine.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''Le générateur n’a pas pu dessiner un réseau fluvial valide pour ce monde. Détail technique : {detail}'''

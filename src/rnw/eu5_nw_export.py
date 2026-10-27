@@ -410,6 +410,15 @@ class NewWorldExportError(ValueError):
     """Generated output failed an offline invariant."""
 
 
+class LocationLimitError(NewWorldExportError):
+    """A generated world exceeds the safety limit on location identities."""
+
+    def __init__(self, count: int, limit: int) -> None:
+        self.count: int = count
+        self.limit: int = limit
+        super().__init__(f"{count} locations exceed the {limit} safety cap")
+
+
 def _world_columns(canvas: Canvas, columns: NDArray[np.int64]) -> NDArray[np.int64]:
     return (columns + canvas.col0 - canvas.roll) % canvas.shape[1]
 
@@ -2379,8 +2388,7 @@ def _check_identity_budget(game_map: Eu5Map, removed: set[str], plan: Plan) -> N
     """The final cap includes split remainders and counts shared identities once."""
     final_count = len(game_map.keys) - len(removed) + len(emitted_cells(plan))
     if final_count > MAX_LOCATIONS:
-        message = f"{final_count} final location identities exceed the {MAX_LOCATIONS} safety cap"
-        raise NewWorldExportError(message)
+        raise LocationLimitError(final_count, MAX_LOCATIONS)
 
 
 def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
@@ -2561,13 +2569,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         shapes = run_stage("water shapes", lambda: shape_water(settled))
         coast = shapes.coast
         world = coast.world
-        total = len(game_map.keys) - int(np.count_nonzero(canvas.removed)) + len(world.classes)
-        if total > MAX_LOCATIONS:
-            message = (
-                f"{total} locations exceed the {MAX_LOCATIONS} safety cap (vanilla has under "
-                "28,600; a 16-bit limit is suspected); raise location_px or sea_zone_px"
-            )
-            raise NewWorldExportError(message)
+        # The exact budget is checked after identities are planned: an early
+        # cell count double-counts generated sea cells sharing retained oceans.
         final_labels = _final_labels(game_map, canvas, world)
 
         def identify() -> tuple[KeySpace, Plan]:
@@ -2807,7 +2810,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 water=shapes,
                 new_world_keys=new_world_keys,
                 resources_seed=resources_seed,
-                area_replacements={key: remap[key] for key in plan.dropped_areas if key in remap},
+                area_replacements={
+                    key: remap.areas[key] for key in plan.dropped_areas if key in remap.areas
+                },
             ),
         )
         written = run_stage(

@@ -77,6 +77,26 @@ STRINGS: Final[dict[str, str]] = {
         "world. Run the queue when you have added everything."
     ),
     "progress_details": "Show stage details",
+    "retry_new_seed": "Generate with a new seed",
+    "generation_sea_error": (
+        "The generator could not build a consistent ocean for this world. "
+        "Technical detail: {detail}"
+    ),
+    "generation_file_error": (
+        "The generator could not read or write a file. Check its location, permissions and "
+        "available disk space. Technical detail: {detail}"
+    ),
+    "generation_location_limit": (
+        "This world has {count} locations, above the safety limit of {limit}. "
+        "Increase the land or sea location size in Advanced, or try a different seed."
+    ),
+    "generation_river_error": (
+        "The generator could not draw a valid river network for this world. "
+        "Technical detail: {detail}"
+    ),
+    "generation_unexpected_error": (
+        "An unexpected error stopped world generation. Technical detail: {detail}"
+    ),
     "generation_install": "The finished mod will be added to your EU5 profile.",
     "generation_keep": "The finished world will stay in your library.",
     "generation_copy": "The finished mod will be copied to the selected folder.",

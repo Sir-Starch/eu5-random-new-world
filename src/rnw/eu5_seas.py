@@ -356,6 +356,7 @@ class Water:
 def shape_water(coast: Coast) -> Water:
     """Choose the lanes, fold the shut deep water into zones, and give the lanes their currents."""
     waters = analyse(coast.world, coast.shore)
+    original_topography = waters.topography
     chosen = plan_lanes(
         coast.world, waters, coast.courses, coast.samples, coast.docks, preferred=coast.designed
     )
@@ -368,11 +369,24 @@ def shape_water(coast: Coast) -> Water:
         world, cell_of, final = coast.world, tuple(range(len(coast.world.classes))), coast
     lanes = frozenset(cell_of[cell] for cell in chosen.lanes)
     zones = frozenset(cell_of[zone[0]] for zone in chosen.zones)
+    # Folding a basin changes the cell graph and the scale used by water analysis.
+    # Reanalysis can therefore give a planned lane a different water classification.
+    # Classify the surviving cells on the original geometry, where lanes were chosen.
+    kept = (cell for cell in range(len(coast.world.classes)) if cell not in fold)
+    kinds = {cell_of[cell]: original_topography[cell] for cell in kept}
     topography = tuple(
-        Topography.OCEAN_WASTELAND if cell in zones else kind
-        for cell, kind in enumerate(waters.topography)
+        Topography.OCEAN_WASTELAND if cell in zones else kinds[cell]
+        for cell in range(len(world.classes))
     )
     waters = replace(waters, topography=topography)
+    if any(waters.topography[cell] is not Topography.DEEP_OCEAN for cell in lanes):
+        message = "A planned ocean lane is not deep water"
+        raise SeaError(message)
+    if any(
+        kind is Topography.DEEP_OCEAN and cell not in lanes for cell, kind in enumerate(topography)
+    ):
+        message = "Deep ocean water is missing a lane"
+        raise SeaError(message)
     sources: dict[int, list[Vector]] = {
         cell: list(vectors) for cell, vectors in final.samples.items()
     }
@@ -381,7 +395,7 @@ def shape_water(coast: Coast) -> Water:
             sources.setdefault(cell, []).append(course.vector)
     flows = flow(world, waters, sources, sorted(lanes), axes=final.designed_axes)
     strait_rows = tuple(crossings(world, waters.landmass.tolist()))
-    return Water(
+    result = Water(
         final,
         waters,
         lanes,
@@ -394,6 +408,9 @@ def shape_water(coast: Coast) -> Water:
         chosen.shortcuts,
         chosen.completed,
     )
+    # Check the finished water graph before building expensive textures and scripts.
+    _ = _verify_reach(world, final, result)
+    return result
 
 
 def _decimal(hundredths: int) -> str:

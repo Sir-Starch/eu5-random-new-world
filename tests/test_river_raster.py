@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from rnw.eu5_rivers import RiverRasterError, encode_rivers
+from rnw.eu5_rivers import RiverRasterError, _fragment, encode_rivers  # pyright: ignore[reportPrivateUsage]
 from rnw.rivers import (
     BODY,
     JOIN,
@@ -117,3 +117,30 @@ def test_invalid_continuous_network_fails_instead_of_dropping_a_river() -> None:
         _ = encode_rivers(
             rivers, np.where(rivers.role != NONE, 0, -1).astype(np.int8), WIDTHS, seam=12
         )
+
+
+def test_boundary_fork_chooses_a_drawable_start_without_losing_pixels() -> None:
+    role = np.full((7, 8), NONE, dtype=np.int8)
+    points = {(3, 1), (3, 2), (3, 3), (3, 4), (2, 3)}
+    for p in points:
+        role[p] = BODY
+    role[3, 1] = SOURCE
+    rivers = Rivers(role, np.ones(role.shape, dtype=np.int64), {})
+    codes = np.where(role != NONE, 4, 255).astype(np.uint8)
+    _fragment(codes, rivers, dict.fromkeys(points, 0), dict.fromkeys(points, 0), -1)
+    assert set(zip(*np.where(codes < 16), strict=True)) == points
+    assert codes[3, 2] == JOIN
+    assert codes[3, 1] != SOURCE
+    assert np.count_nonzero(codes == SOURCE) == 1
+
+
+def test_boundary_fork_without_any_drawable_start_still_fails() -> None:
+    role = np.full((7, 8), NONE, dtype=np.int8)
+    points = {(3, 2), (3, 3), (3, 4), (2, 3)}
+    for p in points:
+        role[p] = BODY
+    role[3, 2] = SOURCE
+    rivers = Rivers(role, np.ones(role.shape, dtype=np.int64), {})
+    codes = np.where(role != NONE, 4, 255).astype(np.uint8)
+    with pytest.raises(RiverRasterError, match="no room"):
+        _fragment(codes, rivers, dict.fromkeys(points, 0), dict.fromkeys(points, 0), -1)

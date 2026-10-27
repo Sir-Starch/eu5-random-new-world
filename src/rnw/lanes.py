@@ -25,8 +25,8 @@ and which water is shut.
 * **Ends.** Open-ocean ends continue to another lane, coastal water or a retained-water
   contact. Reachability from one end alone is not a complete ocean route.
 * **Zones.** Each connected stretch of closed deep water becomes one location.
-  A patch without an interior in the cell graph is navigable, not an isolated ocean.
-  A size target must not manufacture neighbouring oceans with unrelated names.
+  A patch without an interior can join navigable water when doing so keeps complete routes;
+  otherwise it stays closed. A size target must not manufacture neighbouring oceans.
 
 Nothing here draws a random number; ties go to the lower cell.
 """
@@ -126,9 +126,8 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
     local_pairs, shortcuts = shorten_routes(world, waters, deep, lanes, docks)
     completed = complete_routes(world, waters, deep, lanes, docks)
     shortcuts += cross_oceans(world, waters, deep, lanes, docks=docks, sources=sources)
-    # A closed patch needs an interior: a cell with closed water on at least two
-    # sides. Isolated cells and single-edge slivers are part of the surrounding
-    # navigable water, not separate ocean basins. This is done before folding.
+    # Open slivers only where they fit the navigable network. A single-edge patch
+    # with no further contact must remain closed: opening it would end a lane.
     navigable = set(links) - (deep - lanes)
     reached = {
         cell
@@ -136,12 +135,16 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         if sources.intersection(stretch)
         for cell in stretch
     }
+    terminals = (set(links) - deep) | set(docks)
     for zone in _stretches(links, deep - lanes):
         inside = set(zone)
         has_interior = any(sum(other in inside for other in links[cell]) >= 2 for cell in zone)  # noqa: PLR2004 - two sides form an interior.
-        if not has_interior and any(other in reached for cell in zone for other in links[cell]):
+        if not has_interior and _sliver_is_route(zone, links, reached, terminals):
             lanes.update(zone)
             reached.update(zone)
+    # Crossings and small navigable patches can themselves add an open-ocean
+    # end, so the planner completes those too before the water is zoned.
+    completed += complete_routes(world, waters, deep, lanes, docks)
     shut = sorted(deep - lanes)
     return Lanes(
         frozenset(lanes),
@@ -152,6 +155,26 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         shortcuts,
         completed,
     )
+
+
+def _sliver_is_route(
+    zone: Sequence[int],
+    links: Mapping[int, Sequence[int]],
+    reached: Collection[int],
+    terminals: Collection[int],
+) -> bool:
+    """Open a one- or two-cell patch only when it will not create a dead end."""
+    available = set(reached)
+    ends = set(terminals)
+    contacts = {cell: set(links[cell]) & available for cell in zone}
+    if not any(contacts.values()):
+        return False
+    if len(zone) == 1:
+        cell = zone[0]
+        return cell in ends or len(contacts[cell]) >= 2 or bool(contacts[cell] & ends)  # noqa: PLR2004
+    # A connected zone without an interior has at most two cells. Both ends
+    # must already touch navigable water (or the retained water directly).
+    return all(contacts[cell] or cell in ends for cell in zone)
 
 
 def _links(world: NewWorld, waters: Waters) -> dict[int, list[int]]:

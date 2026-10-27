@@ -1846,3 +1846,27 @@ text = '''스케치는 1개에서 {count}개 사이로 고르세요.'''
 source = "75f72c48760efe1b"
 text = '''스케치에는 생성된 땅이 필요합니다. 먼저 생성된 땅으로 돌아가세요.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''다른 시드로 생성'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''이 세계의 바다를 일관되게 생성하지 못했습니다. 기술 세부 정보: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''파일을 읽거나 쓸 수 없습니다. 파일 위치, 권한 및 디스크 여유 공간을 확인하세요. 기술 세부 정보: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''예기치 않은 오류로 세계 생성이 중단되었습니다. 기술 세부 정보: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''이 세계의 지점 수는 {count}개로 안전 한도인 {limit}개를 초과합니다. 고급 설정에서 육지 또는 바다 지점 크기를 늘리거나 다른 시드를 사용하세요.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''이 세계에 유효한 강줄기를 그리지 못했습니다. 기술 세부 정보: {detail}'''

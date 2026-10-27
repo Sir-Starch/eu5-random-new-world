@@ -1,5 +1,18 @@
 # Installed experiments
 
+2026-10-27, **generator hub 0.13.15 / epoch 52**: the normal-profile
+`mod/rnw_exp_hub` was updated from 0.13.14 with the local updater. Its isolated
+Wine self-test passed and the installed copy matches the candidate. The previous
+hub remains at `.rnw-hub-backups/0.13.14-1793124238391900973` in the same profile.
+
+2026-10-27, **0.13.15 / epoch 52 failure-world candidate**: installed the owner's
+previously failing seed and settings as a separate `mod/rnw_exp_user_fixed_01315`,
+code `RNW1-0824F-DZ40R-9PZFC-2006G-Y0870-3VG42-1M1Z8-0Y448-1R8GJ-4YW04-DA01M-7B59G`.
+All 852 installed files match the staged candidate; its 850-file canonical digest is
+`2af33c948fd58481627f71f82a50344f8d4f380120e7417a3c7e0c9c9bb02c63`. The game
+was not launched; in-game behavior remains unobserved. With EU5 closed, remove only
+`mod/rnw_exp_user_fixed_01315`.
+
 2026-10-27, **0.13.14 / epoch 51 water candidate**, C405: installed a separate
 world generated from KZWN's seed and settings as `mod/rnw_exp_kzwn_hydrology_01314`,
 code `RNW1-08247-10EET-R73D8-Y006G-W0851-Z80Y4-481R8-GJ4YW-04DA0-1Q74N-A0`.

@@ -1846,3 +1846,27 @@ text = '''Wybierz od 1 do {count} szkiców.'''
 source = "75f72c48760efe1b"
 text = '''Szkice wymagają wygenerowanego lądu. Najpierw wróć do wygenerowanego lądu.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''Generuj z nowym ziarnem'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''Generator nie mógł utworzyć spójnego oceanu dla tego świata. Szczegóły techniczne: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''Nie udało się odczytać lub zapisać pliku. Sprawdź jego położenie, uprawnienia i wolne miejsce na dysku. Szczegóły techniczne: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''Nieoczekiwany błąd przerwał generowanie świata. Szczegóły techniczne: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''Ten świat ma {count} lokacji i przekracza limit bezpieczeństwa wynoszący {limit}. Zwiększ rozmiar lokacji lądowych lub morskich w ustawieniach zaawansowanych albo spróbuj innego ziarna.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''Generator nie mógł narysować poprawnej sieci rzecznej dla tego świata. Szczegóły techniczne: {detail}'''

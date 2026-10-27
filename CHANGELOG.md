@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.13.15 — 2026-10-27
+
+- Keep sea classifications consistent with planned ocean lanes when closed water is folded,
+  complete any route ends introduced by later crossings and check navigation before the
+  expensive export stages. Epoch 52.
+- Keep location, province and area replacements separate when vanilla reuses a name. Choose a
+  drawable river-fragment start when the first one leaves no room for a confluence marker,
+  without changing the physical river or discarding its drawing pixels.
+- Check the location limit against final identities, avoiding a premature refusal when generated
+  sea cells share a retained ocean identity.
+- Show generation errors in a selectable, scrollable panel with explanations for ocean,
+  river, location-limit, file and unexpected errors. Offer an immediate retry with a different
+  seed and the same settings.
+
 ## 0.13.14 — 2026-10-27
 
 - Align currents on straight designed crossings to the band's geometry. The direction is

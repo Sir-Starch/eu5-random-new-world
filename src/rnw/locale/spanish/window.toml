@@ -1846,3 +1846,27 @@ text = '''Elige entre 1 y {count} bocetos.'''
 source = "75f72c48760efe1b"
 text = '''Los bocetos necesitan tierra generada. Vuelve primero a la tierra generada.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''Generar con otra semilla'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''El generador no pudo crear un océano coherente para este mundo. Detalle técnico: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''No se pudo leer o escribir un archivo. Comprueba su ubicación, los permisos y el espacio disponible. Detalle técnico: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''Un error inesperado detuvo la generación del mundo. Detalle técnico: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''Este mundo tiene {count} ubicaciones, por encima del límite de seguridad de {limit}. Aumenta el tamaño de las ubicaciones terrestres o marítimas en Avanzado, o prueba otra semilla.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''El generador no pudo dibujar una red de ríos válida para este mundo. Detalle técnico: {detail}'''

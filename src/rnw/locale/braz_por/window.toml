@@ -1846,3 +1846,27 @@ text = '''Escolha entre 1 e {count} esboços.'''
 source = "75f72c48760efe1b"
 text = '''Os esboços precisam de terra gerada. Volte primeiro à terra gerada.'''
 
+
+["retry_new_seed"]
+source = "616e3b176052b958"
+text = '''Gerar com outra semente'''
+
+["generation_sea_error"]
+source = "59cda87b6dcfc08c"
+text = '''O gerador não conseguiu criar um oceano consistente para este mundo. Detalhe técnico: {detail}'''
+
+["generation_file_error"]
+source = "9fb1e9710c36801b"
+text = '''Não foi possível ler ou gravar um arquivo. Verifique o local, as permissões e o espaço em disco. Detalhe técnico: {detail}'''
+
+["generation_unexpected_error"]
+source = "385c18532f5953e5"
+text = '''Um erro inesperado interrompeu a geração do mundo. Detalhe técnico: {detail}'''
+
+["generation_location_limit"]
+source = "8ef86c5ef04fbee6"
+text = '''Este mundo tem {count} localidades, acima do limite de segurança de {limit}. Aumente o tamanho das localidades terrestres ou marítimas em Avançado, ou tente outra semente.'''
+
+["generation_river_error"]
+source = "7983d60076c0a425"
+text = '''O gerador não conseguiu desenhar uma rede de rios válida para este mundo. Detalhe técnico: {detail}'''

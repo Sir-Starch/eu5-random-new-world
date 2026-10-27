@@ -62,7 +62,7 @@ from rnw.eu5_empires import (
     travel_steps,
     unlinked,
 )
-from rnw.eu5_remap import remap_text
+from rnw.eu5_remap import GeographicRemap, remap_text
 from rnw.eu5_technology import (
     TRIGGER_FILE,
     Families,
@@ -2288,7 +2288,10 @@ def holy_site_outputs(
 
     Only sites on removed vanilla locations (keys of ``remap``) move.
     """
-    merged = remap | {key: value for key, value in moved.items() if key in remap}
+    changes = {key: value for key, value in moved.items() if key in remap}
+    merged = (
+        remap.with_locations(changes) if isinstance(remap, GeographicRemap) else remap | changes
+    )
     outputs: dict[str, bytes] = {}
     for path in sorted((game_dir / HOLY_SITE_DIR).glob("*.txt")):
         raw = path.read_bytes()

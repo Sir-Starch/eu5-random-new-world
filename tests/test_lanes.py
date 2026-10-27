@@ -10,11 +10,20 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from rnw.lanes import COURSE_PERMILLE, Course, LaneError, plan_lanes
+from rnw import lanes as lane_module
+from rnw.lanes import (
+    COURSE_PERMILLE,
+    Course,
+    LaneError,
+    _sliver_is_route,  # pyright: ignore[reportPrivateUsage]
+    plan_lanes,
+)
 from rnw.seas import Topography, analyse
 from tests.block_worlds import block_world, cell
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from rnw.newworld import NewWorld
     from rnw.seas import Waters
 
@@ -238,6 +247,52 @@ def test_inherited_courses_cross_the_ocean_even_when_both_coasts_already_reach_t
     assert {cell(layout, row, column) for column in range(3, 18)} <= planned.lanes
     assert all(waters.topography[n] is Topography.DEEP_OCEAN for n in planned.lanes)
     assert planned.completed > 0
+
+
+def test_crossings_cannot_leave_a_new_dead_end(monkeypatch: pytest.MonkeyPatch) -> None:
+    world, waters, docks = _setup()
+    injected: list[int] = []
+
+    def crossing(  # noqa: PLR0913 - matches the planner's crossing callback
+        world: NewWorld,
+        waters: Waters,
+        deep: set[int],
+        lanes: set[int],
+        *,
+        docks: Collection[int],
+        sources: Collection[int],
+    ) -> int:
+        del sources
+        links: dict[int, set[int]] = {n: set() for n in waters.sea()}
+        for first, second in world.edges:
+            if first in links and second in links:
+                links[first].add(second)
+                links[second].add(first)
+        allowed = set(links) - (deep - lanes)
+        terminals = (set(links) - deep) | set(docks)
+        choices = [
+            n
+            for n in sorted(deep - lanes)
+            if len(links[n] & allowed) == 1 and links[n] & lanes and not links[n] & terminals
+        ]
+        assert choices
+        injected.append(choices[0])
+        lanes.add(choices[0])
+        return 1
+
+    monkeypatch.setattr(lane_module, "cross_oceans", crossing)
+    planned = plan_lanes(world, waters, _course(5, 3, 18), set(), docks)
+    assert injected[0] in planned.lanes
+    assert not _ocean_ends(world, waters, set(planned.lanes), docks)
+
+
+def test_a_sliver_opens_only_when_it_does_not_end_in_closed_water() -> None:
+    links = {0: [1], 1: [0, 2], 2: [1, 3], 3: [2]}
+    assert not _sliver_is_route([1], links, {0}, set())
+    assert _sliver_is_route([1], links, {0}, {0})
+    assert _sliver_is_route([1], links, {0, 2}, set())
+    assert not _sliver_is_route([1, 2], links, {0}, set())
+    assert _sliver_is_route([1, 2], links, {0, 3}, set())
 
 
 def test_a_lane_that_already_ends_at_coastal_water_needs_no_continuation() -> None:

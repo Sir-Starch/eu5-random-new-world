@@ -12,8 +12,11 @@ from typing import TYPE_CHECKING, cast, final
 import numpy as np
 import pytest
 
+from rnw import eu5_nw_export, eu5_seas
 from rnw.eu5_newworld import OceanPlan, Plan, PlannedCell
 from rnw.eu5_nw_export import (
+    LocationLimitError,
+    _check_identity_budget,  # pyright: ignore[reportPrivateUsage]
     _locator_instances,  # pyright: ignore[reportPrivateUsage]
 )
 from rnw.eu5_seas import (
@@ -32,21 +35,26 @@ from rnw.eu5_seas import (
     foreign_coast,
     read_ports,
     read_waters,
+    shape_water,
     verify_crossings,
     verify_locators,
     verify_seas,
 )
+from rnw.lanes import Course
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast
 from rnw.seas import Topography, analyse
 from tests.block_worlds import block_world, cell
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
+
     from rnw.currents import Vector
     from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
     from rnw.eu5_seas import Crossing
     from rnw.newworld import NewWorld
+    from rnw.seas import Waters
 
 PORTS = """LandProvince;SeaZone;x;y;
 stockholm;stockholms_skargard;8532;6945;x
@@ -158,6 +166,46 @@ def _water(world: NewWorld, *, shut: tuple[int, ...] = (), docks: tuple[int, ...
         world, ForeignCoast(), {}, {}, frozenset(docks or (max(waters.sea()),)), frozenset(), 0
     )
     return Water(coast, replace(waters, topography=topography), lanes, frozenset(shut), flows, 0, 0)
+
+
+def test_ocean_folding_keeps_the_classification_used_to_plan_lanes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A new analysis of folded cells must not reclassify a planned lane."""
+    layout = ["#" + "." * 19 for _ in range(12)]
+    world = block_world(layout, block=10)
+    anchor = cell(layout, 5, 19)
+    coast = Coast(
+        world,
+        ForeignCoast(),
+        {anchor: [(9000, 0)]},
+        {cell(layout, 5, column): Course(800, (9000, 0)) for column in range(3, 18)},
+        frozenset(cell(layout, row, 19) for row in range(12)),
+        frozenset(),
+        0,
+    )
+    calls = 0
+
+    def changing_analysis(world: NewWorld, shore: Collection[int] = ()) -> Waters:
+        nonlocal calls
+        calls += 1
+        result = analyse(world, shore)
+        if calls == 2:
+            result = replace(
+                result,
+                topography=tuple(
+                    Topography.OCEAN if kind is Topography.DEEP_OCEAN else kind
+                    for kind in result.topography
+                ),
+            )
+        return result
+
+    monkeypatch.setattr(eu5_seas, "analyse", changing_analysis)
+    result = shape_water(coast)
+    assert calls == 2
+    assert result.lanes
+    assert result.zones
+    assert all(result.waters.topography[n] is Topography.DEEP_OCEAN for n in result.lanes)
 
 
 def test_written_ports_and_templates_that_hold_what_was_planned_pass() -> None:
@@ -492,3 +540,18 @@ def test_vfx_remainders_do_not_duplicate_retained_ocean_locators() -> None:
     _ = verify_locators(files, plan, water)
     with pytest.raises(SeaError, match="repeats a location"):
         _ = verify_locators({VFX_LOCATORS: files[VFX_LOCATORS] + f"id={extra.key}\n"}, plan, water)
+
+
+def test_identity_budget_counts_retained_oceans_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    _, plan = _world_with_ports()
+    retained = replace(plan.cells[1], key="old_ocean")
+    added = replace(plan.cells[2], key="new_sea")
+    plan.cells = [retained, added]
+    plan.oceans = OceanPlan(retained={"old_ocean"})
+    game = _map(["old_ocean", "old_land"], [CellClass.SEA, CellClass.LAND])
+    monkeypatch.setattr(eu5_nw_export, "MAX_LOCATIONS", 3)
+    _check_identity_budget(game, set(), plan)
+    monkeypatch.setattr(eu5_nw_export, "MAX_LOCATIONS", 2)
+    with pytest.raises(LocationLimitError) as caught:
+        _check_identity_budget(game, set(), plan)
+    assert caught.value.count == 3

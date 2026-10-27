@@ -1882,3 +1882,10 @@ interpolated flow. Generator hub updated to 0.13.14 in the owner's profile with
 passing Wine self-test. Test suite passes 2,056 Python tests (14 skipped), 23 Rust tests,
 and local installation suite (12 passed, 2 skipped). In-game rendering and movement
 remain unobserved.
+
+[V-EXEC C406] RNW 0.13.15 / epoch 52 keeps water classification stable across
+folding, prevents one-sided open-ocean slivers, and checks sea connectivity early.
+Geographic replacement distinguishes identical names in different scopes; river
+fragment starts are chosen for a valid drawing without changing the physical network.
+The owner's failed world now completes offline and is installed separately; failure
+messages and new-seed retry are available in the window. No EU5 launch.

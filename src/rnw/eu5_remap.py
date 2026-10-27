@@ -100,6 +100,31 @@ class RemapAccess:
     closed_seas: frozenset[int] = frozenset()
 
 
+class GeographicRemap(dict[str, str]):
+    """Bindings by geographic scope; vanilla can reuse a name across scopes."""
+
+    def __init__(
+        self, locations: dict[str, str], provinces: dict[str, str], areas: dict[str, str]
+    ) -> None:
+        super().__init__({**provinces, **areas, **locations})
+        self.locations: dict[str, str] = locations
+        self.provinces: dict[str, str] = provinces
+        self.areas: dict[str, str] = areas
+
+    def with_locations(self, changes: dict[str, str]) -> GeographicRemap:
+        return GeographicRemap(self.locations | changes, self.provinces, self.areas)
+
+
+def _scope_map(remap: dict[str, str], scope: str) -> dict[str, str]:
+    if not isinstance(remap, GeographicRemap):
+        return remap
+    if scope in {"province", "province_definition", "provinces"}:
+        return remap.provinces
+    if scope in {"area", "areas", "discovered_areas"}:
+        return remap.areas
+    return remap.locations
+
+
 def build_remap(  # noqa: PLR0913 - geographic levels share their location bindings.
     removed: list[tuple[str, CellClass, int, int]],
     plan: Plan,
@@ -108,7 +133,7 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
     *,
     access: RemapAccess,
     areas: dict[str, list[str]] | None = None,
-) -> dict[str, str]:
+) -> GeographicRemap:
     """Map removed location (and province) keys to generated keys.
 
     ``removed`` holds (key, class, row, column) in the same coordinates as ``centres``,
@@ -137,19 +162,21 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
         best = int(pool[int(np.argmin((delta * delta).sum(axis=1)))])
         remap[key] = plan.cells[best].key
     province_of = {cell.key: cell.province for cell in plan.cells}
+    province_remap: dict[str, str] = {}
     for province, keys in provinces.items():
         for key in keys:
             if key in remap:
-                remap[province] = province_of[remap[key]]
+                province_remap[province] = province_of[remap[key]]
                 break
     area_of = {cell.key: cell.area for cell in plan.cells}
+    area_remap: dict[str, str] = {}
     for area, members in (areas or {}).items():
         destinations = Counter(area_of[remap[key]] for key in members if key in remap)
         if not destinations:
             message = f"No generated replacement for removed area {area}"
             raise RemapError(message)
-        remap[area] = min(destinations, key=lambda name: (-destinations[name], name))
-    return remap
+        area_remap[area] = min(destinations, key=lambda name: (-destinations[name], name))
+    return GeographicRemap(remap, province_remap, area_remap)
 
 
 def _list_edits(block: Block, remap: dict[str, str], edits: Edits, text: str, *, drop: bool) -> int:
@@ -174,15 +201,17 @@ def _walk(block: Block, remap: dict[str, str], edits: Edits, text: str) -> int:
         value = entry.value
         if isinstance(value, Block):
             if entry.key in LIST_KEYS:
-                count += _list_edits(value, remap, edits, text, drop=entry.key in DROP_KEYS)
+                scoped = _scope_map(remap, entry.key)
+                count += _list_edits(value, scoped, edits, text, drop=entry.key in DROP_KEYS)
             count += _walk(value, remap, edits, text)
         elif entry.key in VALUE_KEYS:
+            scoped = _scope_map(remap, entry.key)
             bare = value.strip('"')
-            if bare in remap and ":" not in value:
+            if bare in scoped and ":" not in value:
                 start = entry.end - len(value)
                 edits.deletions.append((start, entry.end))
                 quote = '"' if value.startswith('"') else ""
-                edits.insert(start, f"{quote}{remap[bare]}{quote}")
+                edits.insert(start, f"{quote}{scoped[bare]}{quote}")
                 count += 1
     return count
 
@@ -202,9 +231,10 @@ def remap_text(text: str, remap: dict[str, str]) -> tuple[str, int]:
     covered = sorted(edits.deletions)
     for match in SCOPE.finditer(text):
         key = match.group(2)
-        if key in remap and not any(start <= match.start(2) < end for start, end in covered):
+        scoped = _scope_map(remap, match.group(1))
+        if key in scoped and not any(start <= match.start(2) < end for start, end in covered):
             edits.deletions.append((match.start(2), match.end(2)))
-            edits.insert(match.start(2), remap[key])
+            edits.insert(match.start(2), scoped[key])
             count += 1
     return (edits.apply(text) if count else text), count
 
