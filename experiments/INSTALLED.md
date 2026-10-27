@@ -1,5 +1,14 @@
 # Installed experiments
 
+2026-10-27, **0.13.14 / epoch 51 water candidate**, C405: installed a separate
+world generated from KZWN's seed and settings as `mod/rnw_exp_kzwn_hydrology_01314`,
+code `RNW1-08247-10EET-R73D8-Y006G-W0851-Z80Y4-481R8-GJ4YW-04DA0-1Q74N-A0`.
+All 853 installed files match the staged candidate; its 851-file canonical digest
+is `43485292984e47e9b3088afe4262c43359b1e93a313cc90b2ef69f9cf9b1897e`.
+Existing worlds were not changed. No game was launched; in-game appearance and
+movement remain unobserved. With EU5 closed, remove only
+`mod/rnw_exp_kzwn_hydrology_01314`.
+
 2026-10-27, **generator hub 0.13.14 / epoch 51**: updated the normal-profile
 `mod/rnw_exp_hub` from 0.13.13 with the local updater; its isolated Wine self-test
 passes and the installed copy matches the candidate. The previous hub remains in
