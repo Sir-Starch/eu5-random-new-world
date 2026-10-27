@@ -164,8 +164,9 @@ Keep the three L04 subproblems and their missing evidence explicit. Do not add
 native AI bonuses, replace worldwide vanilla scripts, suppress diagnostics,
 alter the selected game rule or relocate capitals to make the log quiet.
 No attributable generated-data defect has been established in this block.
-Vanilla-normal warning frequency, the actual rejected actions, the source of
-zero distance and the building-list producer remain **[UNKNOWN]**.
+A clean vanilla control now supplies a second campaign's background counts
+(C402, section 7). Comparable per-year rates, the actual rejected actions, the
+source of zero distance and the building-list producer remain **[UNKNOWN]**.
 
 ## 6. Private reproduction and verification
 
@@ -199,3 +200,31 @@ playset modification, game launch, process control, push or publication.
 [V-EXEC C336] Required locked sync and full check pass: **1,969 Python tests,
 14 skips, 23 Rust tests**, formatting/lint/types clean. Private `check.log`
 SHA-256: **`8a7af4d199f4b88f2dbce9950fc80ca70f928954a8fc1339546bf9fef99b9ca9`**.
+
+## 7. Vanilla control through 1632
+
+[V-GAME owner / V-EXEC C402] On 2026-10-27, the owner ran a campaign to 1632
+with every mod disabled in the active `RNW` playset; the game showed standard
+vanilla America. The full `game.log` records **47,935** script-system errors
+across **343** `(source, error)` pairs. The largest are **27,579** invalid
+`cabinet_action` comparisons at vanilla
+`common/cabinet_actions/frustrate_annexation.txt:20` and **8,405** invalid
+`is_situation_active` targets at vanilla `common/subject_types/tributary.txt:66`.
+No located script-error pair names an RNW file. The complete list is retained
+in the ignored [campaign audit](../../local_data/campaign-1632-20261027/audit.md)
+and `script-errors-game-log.tsv`.
+
+The same vanilla `ai.log` contains **88,540** invalid-command execution
+warnings across **43** command names, including **55,771** `set_cabinet_action`
+records (**62.99%**), plus **141** invalid-command posting warnings. The earlier
+TR46 campaign had 57,156 execution warnings, of which 35,724 (**62.29%**) named
+`set_cabinet_action` (C333). These raw totals come from campaigns of different
+lengths and are not rates. The similar dominant command share establishes that
+this warning family occurs without RNW; it does not identify which action failed,
+which country attempted it, or why the engine rejected it.
+
+C336's eight Workshop mounts remain a confounder for the original TR46 session.
+C402 is an independent no-mod control and supersedes that limitation only for
+the repeated base-game script errors and AI warning families observed here. It
+does not settle the anonymous actors in the older campaign's division and
+building diagnostics or establish their indirect effects.

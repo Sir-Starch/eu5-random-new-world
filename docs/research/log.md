@@ -1848,3 +1848,11 @@ completion detects cyclic tips as well as degree-one ends. The FWL3 land mask re
 the separately installed candidate and generator hub were verified offline. Actual appearance and
 navigation remain [UNKNOWN] without a new game session. Details and limits are in
 [sea geography](../sea-geography.md) and [INSTALLED](../../experiments/INSTALLED.md).
+
+## 2026-10-27 — Vanilla control campaign to 1632
+
+[V-GAME owner / V-EXEC C402] The owner completed a vanilla campaign with all mods disabled.
+Its full logs show recurring base-game script errors and AI command rejections, including the
+same dominant `set_cabinet_action` warning family previously seen in TR46. Those message families
+are not attributable to RNW; the missing actors and failure reasons remain unknown. Full counts
+and the comparison limits are in [the AI diagnostics](tr46-ai-diagnostics.md#7-vanilla-control-through-1632).
