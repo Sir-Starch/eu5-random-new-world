@@ -15,6 +15,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 import tomllib
 from pathlib import Path
@@ -95,6 +96,36 @@ def verify_copy(folder: Path, wanted: dict[str, str]) -> None:
         raise ValueError(msg)
 
 
+def check_eu5_not_running() -> None:
+    """Ensure EU5 is not running before modifying the profile's hub."""
+    if sys.platform == "win32":
+        tasklist = shutil.which("tasklist")
+        if tasklist is None:
+            msg = "Cannot check whether EU5 is running"
+            raise ValueError(msg)
+        found = subprocess.run(  # noqa: S603 - fixed executable and arguments
+            [tasklist, "/fi", "IMAGENAME eq eu5.exe", "/nh", "/fo", "csv"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output = (found.stdout or "") + (found.stderr or "")
+        if found.returncode != 0 or "eu5.exe" in output.lower():
+            msg = "EU5 is running, or its process state could not be checked"
+            raise ValueError(msg)
+        return
+    pgrep = shutil.which("pgrep")
+    if pgrep is None:
+        msg = "Cannot check whether EU5 is running"
+        raise ValueError(msg)
+    found = subprocess.run(  # noqa: S603 - fixed executable and arguments
+        [pgrep, "-if", r"[\\/]eu5[.]exe([[:space:]]|$)"], check=False, capture_output=True
+    )
+    if found.returncode != 1:
+        msg = "EU5 is running, or its process state could not be checked"
+        raise ValueError(msg)
+
+
 def install(candidate: Path, profile: Path, version: str) -> Path:
     """Stage and verify a new hub; keep the former hub intact and roll back on failure."""
     target = profile / "mod" / hub.MOD_ID
@@ -112,16 +143,7 @@ def install(candidate: Path, profile: Path, version: str) -> Path:
     if not isinstance(old_version, str) or not re.fullmatch(r"\d+\.\d+\.\d+", old_version):
         msg = "The installed hub has no valid version"
         raise ValueError(msg)
-    pgrep = shutil.which("pgrep")
-    if pgrep is None:
-        msg = "Cannot check whether EU5 is running"
-        raise ValueError(msg)
-    found = subprocess.run(  # noqa: S603 - fixed executable and arguments
-        [pgrep, "-if", r"[\\/]eu5[.]exe([[:space:]]|$)"], check=False, capture_output=True
-    )
-    if found.returncode != 1:
-        msg = "EU5 is running, or its process state could not be checked"
-        raise ValueError(msg)
+    check_eu5_not_running()
     stamp = f"{time.time_ns()}"
     incoming = profile / "mod" / f".rnw-hub-incoming-{stamp}"
     backup = profile / ".rnw-hub-backups" / f"{old_version}-{stamp}"
