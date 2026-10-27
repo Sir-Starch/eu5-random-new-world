@@ -41,7 +41,7 @@ from rnw.lanes import COURSE_PERMILLE, Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
 from rnw.sea_corridors import CorridorAxis, corridor_axes
-from rnw.sea_routes import cyclic_end
+from rnw.sea_routes import cyclic_end, navigation_links
 from rnw.seas import Topography, Waters, analyse
 from rnw.straits import CROSSING_PX, narrow_gaps
 
@@ -374,6 +374,7 @@ def shape_water(coast: Coast) -> Water:
     # Classify the surviving cells on the original geometry, where lanes were chosen.
     kept = (cell for cell in range(len(coast.world.classes)) if cell not in fold)
     kinds = {cell_of[cell]: original_topography[cell] for cell in kept}
+    kinds.update({cell_of[cell]: Topography.OCEAN for cell in chosen.ordinary})
     topography = tuple(
         Topography.OCEAN_WASTELAND if cell in zones else kinds[cell]
         for cell in range(len(world.classes))
@@ -582,12 +583,13 @@ def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, obje
         raise SeaError(message)
     navigable = set(sea) - shut
     terminals = (navigable - water.lanes) | set(coast.docks)
+    routes = navigation_links(world, water.waters)
     for cell in sorted(water.lanes - terminals):
-        neighbours = touching[cell] & navigable
+        neighbours = {other for other, _ in routes[cell]} & navigable
         if not neighbours & terminals and len(neighbours) <= 1:
             message = f"Ocean lane {cell} ends in closed water"
             raise SeaError(message)
-    tip = cyclic_end(world, water.lanes, navigable, terminals)
+    tip = cyclic_end(world, water.lanes, navigable, terminals, links=routes)
     if tip is not None:
         message = f"Ocean lane {tip} has a cyclic end in closed water"
         raise SeaError(message)

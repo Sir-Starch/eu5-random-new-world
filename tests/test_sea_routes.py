@@ -5,16 +5,59 @@
 from __future__ import annotations
 
 from collections import deque
+from dataclasses import replace
+from typing import TYPE_CHECKING
 
+import numpy as np
+
+from rnw import sea_routes
+from rnw.model import CellClass
+from rnw.newworld import derive_world
 from rnw.sea_routes import (
     _continuation,  # pyright: ignore[reportPrivateUsage]
     _leaf_block,  # pyright: ignore[reportPrivateUsage]
     _links,  # pyright: ignore[reportPrivateUsage]
     complete_routes,
     cross_oceans,
+    navigation_links,
 )
 from rnw.seas import Topography, analyse
 from tests.block_worlds import block_world, cell
+
+if TYPE_CHECKING:
+    import pytest
+
+
+def test_a_pixel_contact_is_not_an_ocean_current_exit() -> None:
+    labels = np.repeat(np.arange(3, dtype=np.int32), 20)[None, :].repeat(40, axis=0)
+    labels[:-1, 19] = 3
+    world = derive_world(labels, (CellClass.SEA,) * 4, np.zeros(labels.shape, dtype=np.int32))
+    waters = replace(
+        analyse(world),
+        scale=20,
+        topography=(
+            Topography.OCEAN,
+            Topography.DEEP_OCEAN,
+            Topography.OCEAN,
+            Topography.OCEAN_WASTELAND,
+        ),
+    )
+    links = navigation_links(world, waters)
+    assert 0 not in {other for other, _ in links[1]}
+    assert 2 in {other for other, _ in links[1]}
+    # A natural shallow channel retains even this narrow contact.
+    shallow = replace(waters, topography=(Topography.OCEAN,) * 4)
+    assert 0 in {other for other, _ in navigation_links(world, shallow)[1]}
+
+
+def test_route_opening_measurements_are_independent_of_strip_height(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    world = block_world(["#.......#"] * 13)
+    waters = analyse(world)
+    expected = navigation_links(world, waters)
+    monkeypatch.setattr(sea_routes, "STRIP_ROWS", 7)
+    assert navigation_links(world, waters) == expected
 
 
 def test_a_forward_destination_cannot_be_reached_by_walking_through_another_terminal() -> None:

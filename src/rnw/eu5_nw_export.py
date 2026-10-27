@@ -2551,7 +2551,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         # The corridor planner depends on the physical water mask, not on cell
         # identities. Recompute it on cached worlds as well as freshly made ones.
         ocean = _ocean_pixels(world)
-        designed = designed_corridors(ocean, bands, settings.new_world.sea_zone_px)
+        designed = designed_corridors(
+            ocean, bands, settings.new_world.sea_zone_px, domain=canvas.mask
+        )
         del ocean
         vanilla_ports = read_ports(_read(game_dir, PORTS))
         settled = run_stage(

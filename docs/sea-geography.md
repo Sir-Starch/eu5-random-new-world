@@ -1,5 +1,23 @@
 # Sea geography
 
+**Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
+example exposed a defect in the preceding acceptance criteria. A copied crescent
+of current had only six pixels of contact at one end, while its arrows pointed
+across the passage into closed water. Reachability and an edge count did not
+establish a complete, correctly directed current. [V-GAME owner / V-EXEC C408]
+
+Internal vanilla current footprints are now directional samples, not mandatory
+lane outlines. Continuous routes are selected from actual generated shores and
+currents entering the replacement boundary. An unowned canvas boundary is not
+treated as a coast. Deep-route interfaces require a shared opening of at least
+half the typical sea-cell width, measured from the final raster in strips; this
+is a generator geometry policy, not an engine movement limit. Natural shallow
+channels retain all their contacts. A one-location passage without another
+current location or a live boundary current is ordinary, navigable sea. The
+current direction of a clear two-sided passage follows its actual exits,
+including exits into ordinary sea. These choices precede final zoning and are
+checked again on the folded water graph. [V-EXEC; engine result UNKNOWN]
+
 **Crossing direction, 0.13.14 / epoch 51:** connected designed bands with a
 clear principal axis carry currents along that axis. Their shared direction follows
 the aggregate projection of the inherited currents; an exact tie uses a deterministic

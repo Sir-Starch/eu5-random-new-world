@@ -119,12 +119,12 @@ def test_a_narrow_lane_follows_its_course_in_both_directions(east: int) -> None:
         assert y == 0
 
 
-def test_an_ambiguous_perpendicular_current_does_not_choose_a_corridor_direction() -> None:
+def test_a_perpendicular_source_cannot_point_through_a_clear_corridor_wall() -> None:
     world = block_world(OPEN_SEA)
     waters = analyse(world)
     lane = [cell(OPEN_SEA, 5, column) for column in range(2, 18)]
     currents = flow(world, waters, {lane[0]: [(0, 9000)]}, lane)
-    assert currents[lane[7]] == (0, 9000)
+    assert currents[lane[7]] == (9000, 0)
 
 
 @pytest.mark.parametrize("east", [3000, -3000])

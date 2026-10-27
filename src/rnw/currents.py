@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.sea_routes import navigation_links
 from rnw.seas import Topography
 
 if TYPE_CHECKING:
@@ -47,27 +48,10 @@ SMOOTHING_ROUNDS: Final[int] = 2
 # A current shorter than this (after bending and smoothing) has no direction left.
 MIN_NORM: Final[float] = 1e-9
 CORRIDOR_NEIGHBOURS: Final[int] = 2
-MIN_ALONG_SHARE: Final[float] = 0.25
 
 
 class CurrentError(ValueError):
     """The generated deep water has no current of the game's to continue."""
-
-
-def _length(world: NewWorld, first: int, second: int) -> int:
-    row = int(world.centroids[first, 0] - world.centroids[second, 0])
-    column = int(world.centroids[first, 1] - world.centroids[second, 1])
-    return max(1, math.isqrt(row * row + column * column))
-
-
-def _sea_links(world: NewWorld, sea: set[int]) -> dict[int, list[tuple[int, int]]]:
-    links: dict[int, list[tuple[int, int]]] = {cell: [] for cell in sorted(sea)}
-    for first, second in world.edges:
-        if first in sea and second in sea:
-            length = _length(world, first, second)
-            links[first].append((second, length))
-            links[second].append((first, length))
-    return {cell: sorted(others) for cell, others in links.items()}
 
 
 def _nearest_sources(
@@ -120,7 +104,11 @@ def flow(
     if not deep:
         return {}
     strength = math.fsum(math.sqrt(x * x + y * y) for x, y in sources.values()) / len(sources)
-    links = _sea_links(world, sea)
+    links = {
+        cell: [(other, length) for other, length in neighbours if other in sea]
+        for cell, neighbours in navigation_links(world, waters).items()
+        if cell in sea
+    }
     nearest = _nearest_sources(links, sorted(sources))
     blended: dict[int, tuple[float, float]] = {}
     for cell in deep:
@@ -132,7 +120,7 @@ def flow(
     blended = _bend(world, waters, deep, blended)
     for _ in range(SMOOTHING_ROUNDS):
         blended = _smooth(blended, links)
-    blended = _follow_corridors(world, blended, links)
+    blended = _follow_corridors(world, blended, links, waters)
     if axes:
         blended = _follow_designed(blended, axes)
     return {cell: _scaled(blended[cell], strength) for cell in deep}
@@ -238,16 +226,23 @@ def _follow_corridors(
     world: NewWorld,
     current: Mapping[int, tuple[float, float]],
     links: Mapping[int, Sequence[tuple[int, int]]],
+    waters: Waters,
 ) -> dict[int, tuple[float, float]]:
     """Align unbranched corridors with their actual geometry, retaining the flow's sense.
 
     Only two-sided, approximately straight stretches have an unambiguous axis. Junctions,
-    ends and sharp bends retain the interpolated flow: choosing an arm there by cell number
-    would invent a current direction. A perpendicular current is equally ambiguous.
+    ends and sharp bends retain the interpolated flow. Ordinary water at a route's ends
+    participates in its axis too; the old source vector cannot point through a closed wall.
     """
     result = dict(current)
     for cell, (x, y) in current.items():
         neighbours = [other for other, _ in links[cell] if other in current]
+        if len(neighbours) != CORRIDOR_NEIGHBOURS:
+            neighbours = [
+                other
+                for other, _ in links[cell]
+                if other in current or waters.topography[other] is not Topography.DEEP_OCEAN
+            ]
         if len(neighbours) != CORRIDOR_NEIGHBOURS:
             continue
         first, second = neighbours
@@ -264,10 +259,7 @@ def _follow_corridors(
             continue
         east, north = east / length, north / length
         along = x * east + y * north
-        # A near-perpendicular inherited current does not decide which way this corridor flows.
-        if abs(along) < norm * MIN_ALONG_SHARE:
-            continue
-        sign = 1 if along > 0 else -1
+        sign = 1 if along >= 0 else -1
         result[cell] = (sign * norm * east, sign * norm * north)
     return result
 

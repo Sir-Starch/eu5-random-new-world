@@ -1,5 +1,25 @@
 # Installed experiments
 
+2026-10-27, **0.13.16 / epoch 53, 4TXC water correction**, C408: installed
+**RNW: 4TXC water correction** as a separate `mod/rnw_exp_world_obnxpx65bd`,
+code `RNW1-081CV-WXEC2-QHSVZ-G006H-00870-3X022-1K1Z8-0Y448-1R8GR-4YW04-DA01M-GT9HG`.
+All **860** installed files match the prepared candidate, including its 29-file
+recovery bundle. Complete entries with atlas, previews and cover files are present
+in both the native and Windows generator libraries. The covered canonical export
+has 849 nonmetadata files, digest
+`f154e74785fc3d946b0350579aad61de3f5abc863b8a4ae50fbf8ed87c2da674`;
+the installed copy follows the owner's revealed-world setting. All 860 files of
+the original `rnw_exp_world_4txcca23uo` were hash-checked and preserved.
+No playset, save or game installation was changed, and no game was launched.
+With EU5 closed, remove only `mod/rnw_exp_world_obnxpx65bd`, or use the generator
+to remove **4TXC water correction**.
+
+Updated `mod/rnw_exp_hub` to **0.13.16**, with current-source checks, installed-file
+verification and passing isolated Wine self-test. The previous 0.13.15 hub remains
+at `.rnw-hub-backups/0.13.15-1793127129958169746`; the intermediate 0.13.16 copy
+before final source formatting remains at
+`.rnw-hub-backups/0.13.16-1793138480127917814`, under the same profile.
+
 2026-10-27, **generator hub 0.13.15 / epoch 52**: the normal-profile
 `mod/rnw_exp_hub` was updated from 0.13.14 with the local updater. Its isolated
 Wine self-test passed and the installed copy matches the candidate. The previous

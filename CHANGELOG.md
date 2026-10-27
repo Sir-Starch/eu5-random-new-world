@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.13.16 — 2026-10-27
+
+- Build ocean routes from the generated shores and live current entries. Interior remnants
+  of the old world's current footprints no longer impose curved fragments on the new map.
+- Require an opening of useful width where a deep route meets other water; a few touching
+  pixels no longer count as a completed ocean route. Natural shallow channels keep their
+  contacts. Isolated one-location gaps remain navigable ordinary sea without current arrows.
+- Align unambiguous current passages with their actual exits, including ordinary water at
+  their ends. Preserve the generated land and relief. Epoch 53.
+
 ## 0.13.15 — 2026-10-27
 
 - Keep sea classifications consistent with planned ocean lanes when closed water is folded,

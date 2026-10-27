@@ -1889,3 +1889,16 @@ Geographic replacement distinguishes identical names in different scopes; river
 fragment starts are chosen for a valid drawing without changing the physical network.
 The owner's failed world now completes offline and is installed separately; failure
 messages and new-seed retry are available in the window. No EU5 launch.
+
+## 2026-10-27 — Actual ocean exits instead of copied current remnants
+
+[V-GAME owner / V-EXEC C408] The owner's 4TXC screenshot exposed a current crescent
+with only six pixels at one nominal sea contact. Earlier reachability checks accepted
+it and missed the visible defect. Version 0.13.16 plans interior routes on the finished
+geography rather than preserving the old world's current outlines, requires useful
+opening width at deep-route interfaces, and treats isolated short connectors as
+ordinary sea. The exact written comparison removes that crescent's current and has
+zero land-mask differences. The corrected world and its complete library records,
+plus the verified generator hub, are installed separately. The reference export was
+independently reproduced; tracked-code checks and Python/Rust suites pass. New game
+rendering remains unobserved. Details and limits are in C408 and the installed record.

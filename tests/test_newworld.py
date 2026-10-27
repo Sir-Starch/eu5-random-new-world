@@ -174,7 +174,7 @@ def test_a_vanishing_cell_does_not_undo_the_wobble() -> None:
         assert np.unique(parts[moved == cell]).size == 1
 
 
-def test_sea_cells_respect_current_band_edges_without_moving_the_coast() -> None:
+def test_sea_cells_follow_actual_routes_without_moving_the_coast() -> None:
     domain = np.ones((160, 192), dtype=bool)
     bands = np.zeros(domain.shape, dtype=bool)
     bands[35:55, :] = True
@@ -184,10 +184,12 @@ def test_sea_cells_respect_current_band_edges_without_moving_the_coast() -> None
     assert np.array_equal(_land_mask(world), _land_mask(plain))
     assert np.array_equal(world.elevation, plain.elevation)
     assert np.array_equal(world.labels[_land_mask(world)], plain.labels[_land_mask(plain)])
+    ocean = np.array([k is CellClass.SEA for k in world.classes])[world.labels]
+    routes = designed_corridors(ocean, bands, SMALL.sea_zone_px, domain=domain)
     for number, kind in enumerate(world.classes):
         if kind is CellClass.SEA:
             mask = world.labels == number
-            assert np.all(bands[mask]) or not np.any(bands[mask])
+            assert np.all(routes[mask]) or not np.any(routes[mask])
             assert np.unique(label_components(mask.astype(np.int32))[mask]).size == 1
 
 
@@ -201,7 +203,7 @@ def test_banded_sea_strips_equal_whole_mask_partition(monkeypatch: pytest.Monkey
     expected = np.full(ocean.shape, -1, dtype=np.int32)
     offset = 0
     crossings = designed_corridors(ocean, bands, spacing)
-    for mask in (ocean & bands, crossings, ocean & ~bands & ~crossings):
+    for mask in (crossings, ocean & ~crossings):
         if not np.any(mask):
             continue
         part = renumber(

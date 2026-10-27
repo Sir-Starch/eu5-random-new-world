@@ -192,7 +192,11 @@ def _straighten(
 
 
 def designed_corridors(  # noqa: C901, PLR0912, PLR0915 - shore diagram and route selection.
-    ocean: NDArray[np.bool_], bands: NDArray[np.bool_], spacing: int
+    ocean: NDArray[np.bool_],
+    bands: NDArray[np.bool_],
+    spacing: int,
+    *,
+    domain: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.bool_]:
     """Return water-only, straightened crossing bands derived from the generated coasts."""
     tile = max(1, spacing // 2)
@@ -202,7 +206,18 @@ def designed_corridors(  # noqa: C901, PLR0912, PLR0915 - shore diagram and rout
     if not len(rows) or not len(cols):
         return np.zeros(ocean.shape, dtype=bool)
     water = ocean[np.ix_(rows, cols)]
-    shore = _shore(water)
+    if domain is None:
+        shore = _shore(water)
+    else:
+        if domain.shape != ocean.shape:
+            message = "Ocean route domain does not fit its water"
+            raise ValueError(message)
+        inside = domain[np.ix_(rows, cols)]
+        land = np.pad(inside & ~water, 1)
+        shore = water & (land[:-2, 1:-1] | land[2:, 1:-1] | land[1:-1, :-2] | land[1:-1, 2:])
+        # Outside the replacement domain is not a coastline. Only inherited
+        # currents entering there supply offshore route terminals.
+        shore |= water & bands[np.ix_(rows, cols)] & _shore(inside)
     links = _graph(water)
     if not links or not np.any(shore):
         return np.zeros(ocean.shape, dtype=bool)
@@ -247,10 +262,6 @@ def designed_corridors(  # noqa: C901, PLR0912, PLR0915 - shore diagram and rout
     for _ in range((2 * spacing + tile - 1) // tile):
         frontier = {other for cell in frontier for other, _ in links[cell]} - allowed
         allowed.update(frontier)
-    sampled_bands = bands[np.ix_(rows, cols)] & water
-    allowed.update(
-        int(r) * grid_width + int(c) for r, c in zip(*np.nonzero(sampled_bands), strict=True)
-    )
     paths: list[list[tuple[int, int]]] = []
     for distance, first, second in sorted(crossings.values()):
         left, right = [first], [second]
@@ -275,5 +286,5 @@ def designed_corridors(  # noqa: C901, PLR0912, PLR0915 - shore diagram and rout
     result = np.empty(ocean.shape, dtype=bool)
     for first in range(0, height, STRIP_ROWS):
         rows = slice(first, min(height, first + STRIP_ROWS))
-        result[rows] = drawn[rows] & ocean[rows] & ~bands[rows]
+        result[rows] = drawn[rows] & ocean[rows]
     return result

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections import deque
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -32,6 +33,32 @@ COAST = ["#" + "." * 19 for _ in range(12)]
 CURRENT = (9000, 0)
 
 
+@pytest.mark.parametrize("preferred", [False, True])
+def test_a_small_gap_between_normal_seas_is_normal_water_without_a_current(
+    *,
+    preferred: bool,
+) -> None:
+    layout = ["....."] * 5
+    world = block_world(layout)
+    center = cell(layout, 2, 2)
+    kinds = [Topography.OCEAN] * len(world.classes)
+    kinds[center] = Topography.DEEP_OCEAN
+    waters = replace(analyse(world), topography=tuple(kinds))
+    planned = plan_lanes(
+        world,
+        waters,
+        {0: Course(800, CURRENT)},
+        set(),
+        {0},
+        preferred={center} if preferred else (),
+    )
+    assert center in planned.ordinary
+    assert center not in planned.lanes
+    assert all(center not in zone for zone in planned.zones)
+    continued = plan_lanes(world, waters, {}, {center}, {0})
+    assert center in continued.lanes
+
+
 def _setup() -> tuple[NewWorld, Waters, set[int]]:
     world = block_world(COAST)
     waters = analyse(world)
@@ -43,17 +70,17 @@ def _course(row: int, first: int, last: int, permille: int = 800) -> dict[int, C
     return {cell(COAST, row, column): Course(permille, CURRENT) for column in range(first, last)}
 
 
-def test_the_deep_cells_a_course_ran_over_are_lanes_and_the_rest_is_shut() -> None:
+def test_old_course_footprints_do_not_make_compulsory_lanes() -> None:
     world = block_world(COAST)
     waters = analyse(world)
     deep = {n for n in waters.sea() if waters.topography[n] is Topography.DEEP_OCEAN}
     docks = {cell(COAST, row, 19) for row in range(len(COAST))}
     lanes = plan_lanes(world, waters, _course(5, 3, 18), set(), docks)
     ran = {cell(COAST, 5, column) for column in range(3, 18)}
-    assert ran <= lanes.lanes
+    assert not ran <= lanes.lanes
     assert lanes.lanes <= deep
     shut = {cell for zone in lanes.zones for cell in zone}
-    assert shut == deep - lanes.lanes
+    assert shut == deep - lanes.lanes - lanes.ordinary
     assert lanes.sealed == 0
 
 
@@ -225,11 +252,9 @@ def _ocean_ends(world: NewWorld, waters: Waters, lanes: set[int], docks: set[int
 
 
 @pytest.mark.parametrize("gap", [False, True])
-def test_inherited_courses_cross_the_ocean_even_when_both_coasts_already_reach_the_game(
-    *, gap: bool
-) -> None:
-    # Both shores have their own retained-water contact. Global connectivity therefore
-    # accepts the two halves of this crossing, even with a closed cell between them.
+def test_an_old_partial_course_does_not_force_an_unnecessary_ocean_crossing(*, gap: bool) -> None:
+    # The two coasts already have a short connection around the basin. A fragment
+    # left at the old continent's position is not a reason to carve a new lane.
     layout = ["#" + "." * 19 + "#" for _ in range(15)]
     world = block_world(layout)
     waters = analyse(world)
@@ -242,11 +267,8 @@ def test_inherited_courses_cross_the_ocean_even_when_both_coasts_already_reach_t
     }
     planned = plan_lanes(world, waters, course, set(), docks)
     assert not _ocean_ends(world, waters, set(planned.lanes), docks)
-    # A gap is joined; an inherited lane ending where an old coast used to be
-    # continues ahead to the new shore instead of looping back into its own stem.
-    assert {cell(layout, row, column) for column in range(3, 18)} <= planned.lanes
-    assert all(waters.topography[n] is Topography.DEEP_OCEAN for n in planned.lanes)
-    assert planned.completed > 0
+    assert not planned.lanes
+    assert planned.completed == 0
 
 
 def test_crossings_cannot_leave_a_new_dead_end(monkeypatch: pytest.MonkeyPatch) -> None:

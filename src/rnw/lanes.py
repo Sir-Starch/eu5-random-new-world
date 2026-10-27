@@ -8,9 +8,8 @@ owner's maps of 1.4.4, C241]. A generated ocean that is deep everywhere would be
 everywhere and carry a current in every zone. This module chooses which deep cells are lanes
 and which water is shut.
 
-* **Courses.** Deep cells mostly covered by a replaced game current become lanes. The world
-  generator builds sea cells against the current bands so their edges follow the bands rather
-  than a random overlap. Where land cuts a course, it can end at the coast.
+* **Courses.** Replaced game currents supply direction, not compulsory interior footprints.
+  The world generator builds sea cells against routes on the finished physical geography.
 * **Anchors.** A deep cell that touches a lane of the game's own continues it.
 * **Linked.** Every stretch of passable water (coastal and ocean cells round the lands, inland
   seas, narrows, lanes) must reach the game's own water, so ships can come from the Old World to
@@ -26,7 +25,7 @@ and which water is shut.
   contact. Reachability from one end alone is not a complete ocean route.
 * **Zones.** Each connected stretch of closed deep water becomes one location.
   A patch without an interior can join navigable water when doing so keeps complete routes;
-  otherwise it stays closed. A size target must not manufacture neighbouring oceans.
+  isolated short passages are ordinary sea. A size target must not manufacture neighbouring oceans.
 
 Nothing here draws a random number; ties go to the lower cell.
 """
@@ -40,7 +39,13 @@ import heapq
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw.sea_routes import LaneError, complete_routes, cross_oceans, shorten_routes
+from rnw.sea_routes import (
+    LaneError,
+    complete_routes,
+    cross_oceans,
+    navigation_links,
+    shorten_routes,
+)
 from rnw.seas import Topography
 
 if TYPE_CHECKING:
@@ -79,6 +84,7 @@ class Lanes:
     local_pairs: int = 0
     shortcuts: int = 0
     completed: int = 0
+    ordinary: frozenset[int] = frozenset()
 
 
 def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geometry.
@@ -102,11 +108,9 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         for cell in range(len(world.classes))
         if waters.topography[cell] is Topography.DEEP_OCEAN
     }
-    lanes = {
-        cell
-        for cell in deep
-        if cell in anchors or (cell in courses and courses[cell].permille >= COURSE_PERMILLE)
-    }
+    # Old current footprints describe the former geography, not mandatory routes
+    # on this world's coasts. Only live boundary currents must be continued.
+    lanes = deep.intersection(anchors)
     sources = set(anchors) | {
         cell for cell, course in courses.items() if course.permille >= COURSE_PERMILLE
     }
@@ -136,16 +140,24 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         for cell in stretch
     }
     terminals = (set(links) - deep) | set(docks)
+    ordinary: set[int] = set()
     for zone in _stretches(links, deep - lanes):
         inside = set(zone)
         has_interior = any(sum(other in inside for other in links[cell]) >= 2 for cell in zone)  # noqa: PLR2004 - two sides form an interior.
         if not has_interior and _sliver_is_route(zone, links, reached, terminals):
-            lanes.update(zone)
+            ordinary.update(zone)
             reached.update(zone)
     # Crossings and small navigable patches can themselves add an open-ocean
     # end, so the planner completes those too before the water is zoned.
-    completed += complete_routes(world, waters, deep, lanes, docks)
-    shut = sorted(deep - lanes)
+    completed += complete_routes(world, waters, deep - ordinary, lanes, docks)
+    # A one-location gap between ordinary seas is ordinary sea too. It is not
+    # an independent ocean current unless it continues a live boundary current.
+    isolated = {
+        cell for cell in lanes - set(anchors) if not any(other in lanes for other in links[cell])
+    }
+    ordinary.update(isolated)
+    lanes.difference_update(isolated)
+    shut = sorted(deep - lanes - ordinary)
     return Lanes(
         frozenset(lanes),
         tuple(tuple(s) for s in _stretches(links, shut)),
@@ -154,6 +166,7 @@ def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geo
         local_pairs,
         shortcuts,
         completed,
+        frozenset(ordinary),
     )
 
 
@@ -179,12 +192,10 @@ def _sliver_is_route(
 
 def _links(world: NewWorld, waters: Waters) -> dict[int, list[int]]:
     """The sea cells and the sea cells each touches, sorted."""
-    links: dict[int, list[int]] = {cell: [] for cell in waters.sea()}
-    for first, second in world.edges:
-        if first in links and second in links:
-            links[first].append(second)
-            links[second].append(first)
-    return {cell: sorted(others) for cell, others in links.items()}
+    return {
+        cell: [other for other, _ in neighbours]
+        for cell, neighbours in navigation_links(world, waters).items()
+    }
 
 
 def _stretches(links: Mapping[int, Sequence[int]], cells: Collection[int]) -> list[list[int]]:

@@ -580,15 +580,16 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
     return merge_small(grow_regions(mask, seed_sites(key, mask, spacing)), smallest)
 
 
-def _sea_cells(
+def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement domain.
     ocean: NDArray[np.bool_],
     *,
     key: int,
     spacing: int,
     smallest: int,
     bands: NDArray[np.bool_] | None,
+    domain: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.int32]:
-    """Partition sea with straight Euclidean borders, preserving current-band boundaries."""
+    """Partition actual ocean routes separately from ordinary water."""
 
     def sea_part(mask: NDArray[np.bool_]) -> NDArray[np.int32]:
         sites = seed_sites(key, mask, spacing)
@@ -604,19 +605,17 @@ def _sea_cells(
         message = "Current bands do not fit the world"
         raise ValueError(message)
     result = np.full(ocean.shape, -1, dtype=np.int32)
-    corridors = designed_corridors(ocean, bands, spacing)
+    corridors = designed_corridors(ocean, bands, spacing, domain=domain)
     offset = 0
-    for category in ("inherited", "crossing", "open"):
+    for category in ("crossing", "open"):
         mask = np.empty(ocean.shape, dtype=np.bool_)
         present = False
         for start in range(0, len(ocean), STRIP_ROWS):
             rows = slice(start, min(len(ocean), start + STRIP_ROWS))
-            if category == "inherited":
-                mask[rows] = ocean[rows] & bands[rows]
-            elif category == "crossing":
+            if category == "crossing":
                 mask[rows] = corridors[rows]
             else:
-                mask[rows] = ocean[rows] & ~bands[rows] & ~corridors[rows]
+                mask[rows] = ocean[rows] & ~corridors[rows]
             present = present or bool(np.any(mask[rows]))
         if not present:
             continue
@@ -674,6 +673,7 @@ def generate_new_world(
                 spacing=settings.sea_zone_px,
                 smallest=settings.min_sea_cell_px,
                 bands=sea_bands,
+                domain=domain,
             ),
         )
         relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed))

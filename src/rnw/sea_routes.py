@@ -13,9 +13,12 @@ from __future__ import annotations
 
 import heapq
 import math
+from collections import Counter
 from typing import TYPE_CHECKING, Final
 
 from rnw.sea_policy import MAX_DETOUR
+from rnw.seas import Topography
+from rnw.topology import adjacency_lengths, unpack_pairs
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
@@ -28,6 +31,7 @@ if TYPE_CHECKING:
 LOCAL_SCALES: Final[int] = 6
 MIN_CYCLIC_BLOCK: Final[int] = 3
 Graph = dict[int, list[tuple[int, int]]]
+STRIP_ROWS: Final[int] = 256
 
 
 class LaneError(ValueError):
@@ -52,7 +56,7 @@ def cross_oceans(  # noqa: C901, PLR0912, PLR0913, PLR0915 - water diagram and r
     Islands participate naturally. Only crossings that improve navigation are opened.
     """
     sea = set(waters.sea())
-    links = _links(world, sea)
+    links = navigation_links(world, waters)
     shores: dict[int, set[int]] = {}
     for first, second in world.edges:
         if first in sea and waters.landmass[second] >= 0:
@@ -182,6 +186,43 @@ def _links(world: NewWorld, sea: Collection[int]) -> Graph:
     return {cell: sorted(others) for cell, others in links.items()}
 
 
+def navigation_links(world: NewWorld, waters: Waters) -> Graph:
+    """A deep route needs a shared opening at least half a typical band wide.
+
+    Merely touching at a few pixels does not continue an ocean current. Natural
+    shallow channels keep all their contacts; this width applies only at deep
+    route interfaces. Measure borders in strips without counting band seams twice.
+    """
+    links = _links(world, waters.sea())
+    deep = {cell for cell in links if waters.topography[cell] is Topography.DEEP_OCEAN}
+    if not deep:
+        return links
+    lengths: Counter[tuple[int, int]] = Counter()
+    for start in range(0, len(world.labels), STRIP_ROWS):
+        rows = world.labels[start : start + STRIP_ROWS]
+        pairs, sizes = adjacency_lengths(rows)
+        lengths.update(dict(zip(unpack_pairs(pairs), sizes.tolist(), strict=True)))
+        if start:
+            seam = world.labels[start - 1 : start + 1]
+            # Only vertical contacts across this strip seam belong to this pass.
+            first, second = seam[0], seam[1]
+            for a, b in zip(first.tolist(), second.tolist(), strict=True):
+                if a != b:
+                    lengths[min(a, b), max(a, b)] += 1
+    sizes = sorted(int(world.pixels[cell]) for cell in links)
+    scale = min(waters.scale, math.isqrt(sizes[len(sizes) // 2]))
+    opening = max(1, scale // 2)
+    return {
+        cell: [
+            (other, distance)
+            for other, distance in neighbours
+            if (cell not in deep and other not in deep)
+            or lengths[min(cell, other), max(cell, other)] >= opening
+        ]
+        for cell, neighbours in links.items()
+    }
+
+
 def shorten_routes(
     world: NewWorld,
     waters: Waters,
@@ -196,7 +237,7 @@ def shorten_routes(
     enclosed seas, land, existing lanes and water outside this world stay intact.
     """
     sea = set(waters.sea())
-    links = _links(world, sea)
+    links = navigation_links(world, waters)
     ends = {cell for cell in sea if waters.hop[cell] == 0 or cell in docks}
     limit = LOCAL_SCALES * waters.scale
     paths: dict[int, dict[int, int]] = {}
@@ -360,10 +401,14 @@ def cyclic_end(
     lanes: Collection[int],
     navigable: Collection[int],
     terminals: Collection[int],
+    *,
+    links: Graph | None = None,
 ) -> int | None:
     """A cyclic ocean tip attached at one junction, if one remains in the final water graph."""
     cells = set(navigable)
-    block = _leaf_block(_links(world, cells), set(lanes), cells, set(terminals))
+    block = _leaf_block(
+        _links(world, cells) if links is None else links, set(lanes), cells, set(terminals)
+    )
     return None if block is None else block[1]
 
 
@@ -380,7 +425,7 @@ def complete_routes(
     Return the number opened, or raise when no continuation exists.
     """
     sea = set(waters.sea())
-    links = _links(world, sea)
+    links = navigation_links(world, waters)
     terminals = (sea - deep) | (set(docks) & sea)
     before = len(lanes)
     while True:

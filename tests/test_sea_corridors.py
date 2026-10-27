@@ -30,14 +30,35 @@ def test_a_wide_ocean_gets_a_straight_crossing_without_changing_land() -> None:
     assert np.array_equal(result, designed_corridors(ocean, bands, 20))
 
 
-def test_a_crossing_never_paints_land_or_the_existing_current() -> None:
+def test_a_crossing_never_paints_land_and_does_not_mutate_source_currents() -> None:
     ocean = np.ones((400, 700), dtype=np.bool_)
     ocean[130:270, 300:400] = False
     bands = np.zeros(ocean.shape, dtype=np.bool_)
     bands[20:40] = ocean[20:40]
+    before = bands.copy()
     result = designed_corridors(ocean, bands, 20)
     assert not np.any(result & ~ocean)
-    assert not np.any(result & bands)
+    assert np.array_equal(bands, before)
+
+
+def test_an_interior_old_current_fragment_does_not_define_a_new_route() -> None:
+    ocean = np.ones((300, 500), dtype=np.bool_)
+    ocean[10:-10, :10] = False
+    ocean[10:-10, -10:] = False
+    domain = np.ones(ocean.shape, dtype=np.bool_)
+    empty = np.zeros(ocean.shape, dtype=np.bool_)
+    old = empty.copy()
+    old[90:130, 160:260] = True
+    assert np.array_equal(
+        designed_corridors(ocean, empty, 20, domain=domain),
+        designed_corridors(ocean, old, 20, domain=domain),
+    )
+
+
+def test_a_replacement_boundary_is_not_an_invented_coast() -> None:
+    ocean = np.ones((120, 200), dtype=np.bool_)
+    empty = np.zeros(ocean.shape, dtype=np.bool_)
+    assert not np.any(designed_corridors(ocean, empty, 20, domain=ocean))
 
 
 def test_corridor_clipping_is_independent_of_strip_size(monkeypatch: pytest.MonkeyPatch) -> None:
