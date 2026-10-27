@@ -51,13 +51,15 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-As of 2026-10-26, the confirmed mod-output defects from the completed EVXP
-campaign have a checked **0.13.6 / epoch 43 candidate**, not a 1.0.0 tag (C390–C392).
-All eleven language catalogs, the Linux checks, Windows/Wine self-test and
-platform comparisons pass; the Windows and Workshop-layout archives pass the
-file audit. The corrected treaty and river representation have not been loaded
-in EU5, and the audit retains unresolved locator/culture/runtime attributions.
-The 0.13.5 campaign through 1849 does not validate these later corrections.
+As of 2026-10-27, the current product is still a **0.13.9 / epoch 46 development
+candidate**, not a 1.0.0 release. The owner's latest FWL3 campaign loaded and ran
+from 1337 through 1 January 1366 with a normal exit, but it exposed a generated
+government/template defect: EU5 strips three monarchy records from JOQ after its
+government is changed to a theocracy. Sixteen generated-map locator warnings also
+remain (C398). The product gates listed above are not accepted, and this campaign
+does not substitute for the required phase, language, compatibility, legal,
+packaging and platform acceptance evidence. The older EVXP 0.13.6 candidate and
+its 0.13.5 campaign do not validate the current 0.13.9 output.
 
 Publication, native-Windows trust and Workshop acceptance remain separate
 boundaries under ADR 0009; no upload, signing or remote CI result is inferred

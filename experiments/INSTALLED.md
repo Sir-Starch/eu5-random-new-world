@@ -26,6 +26,18 @@ SHA-256 `0ab741888f9ccedf83c91e9f2438d1983ca92fb3611dbe7cf0f25be6796ef8e9`.
 Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_world_lqcst6xtaq --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
 The generator hub is separate; its previous version is retained in the backup above.
 
+2026-10-27 owner-run campaign, **RNW: Continents FWL3**, generator **0.13.9 / epoch 46**:
+the active world was `mod/rnw_exp_world_fwl3ibw2cf` (862 files), code
+`RNW1-080MP-B37XH-BH660-M006G-J0870-3T062-1V1Z8-0Y448-1R8GJ-4YW04-DA01K-0VEM0`.
+After loading this world, the campaign advanced from 1 May 1337 through 1 January
+1366 and exited normally. The read-only log audit found an incompatible generated
+government/template combination and 16 locator warnings; see C398. The stable
+selected logs, installed metadata and generated report are preserved under ignored
+`local_data/campaign-1366-20261027/` with SHA-256 manifest. This records the owner's
+session; no game launch or profile change was performed by the agent.
+
+Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_world_fwl3ibw2cf --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
+
 2026-10-26, **0.13.8 / epoch 45 context-based AI personalities**, C395:
 installed **RNW: Supercontinent EK6O** into new `mod/rnw_exp_world_ek6og4sohg`
 (881 files), code `RNW1-081JQ-69DVY-H34JE-P006G-G0860-2AG63-YG1W8-8G3GH-149XR-08TM0-350CQ-G`.
