@@ -1,5 +1,18 @@
 # Installed experiments
 
+2026-10-27, **generator hub 0.13.10**, C400: updated the existing
+`mod/rnw_exp_hub` from 0.13.9 to 0.13.10. All 3,270 installed files match the
+built candidate; its isolated Wine self-test reports the window, native kernels
+and world codes working. The previous hub is retained in
+`.rnw-hub-backups/0.13.9-1793061576765973647` under the same EU5 profile.
+No EU5 launch, world mod, save or playset change was performed.
+
+The repeatable updater is `packaging/update_local_hub.py --profile PROFILE`;
+it builds and self-tests the current version, checks sources, retains the old
+hub and verifies the installed files. The normal-profile removal remains
+`uv run rnw uninstall-mod rnw_exp_hub --user-dir USER_DIR` with EU5 closed;
+the backup is separate and retained.
+
 2026-10-27, **0.13.10 / epoch 47 sacred-centre correction**, C399: installed
 **RNW: Continents DNIW** as `mod/rnw_exp_fwl3_01310` (853 files, all compared
 with the generated candidate). It reproduces the settings and seed of FWL3 with

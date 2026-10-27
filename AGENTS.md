@@ -32,6 +32,14 @@ it over, unless the owner asks for source-only work (owner, 2026-10-22). Do the 
 and verification yourself. Use a new `rnw_exp_*` folder, record it in `experiments/INSTALLED.md`,
 and preserve existing worlds and playset entries. Game launch remains separately restricted.
 
+Whenever a new generator version is completed, also build, self-test and install its hub in
+the owner's existing EU5 profile automatically before handing it over (owner, 2026-10-27).
+Run `uv run python packaging/update_local_hub.py --profile PROFILE` with the profile recorded
+in `experiments/INSTALLED.md`; this verifies the candidate, retains the former hub as a backup,
+and verifies the installed copy. Do not wait for a separate request to update the hub. Record
+the installed version and backup in `experiments/INSTALLED.md`. If installation cannot complete,
+report the precise blocker. The owner's source-only request remains an exception.
+
 **Experiments for the owner cost minutes, never a campaign** (owner, 2026-10-23). Do not ask for a colony, a war, decades of game time or a long playthrough. Hand over console commands (`event`, `tag`, `effect`, `run_until`, `goto`; [experiment 036](experiments/036-console-session/README.md), C197), keep a sitting to about fifteen minutes, and read `error.log`, `game.log` and the event log yourself instead of asking the owner to report them. What the console cannot reach is covered offline or by a probe built to show it within a few game months; if neither is possible, it is not yet an experiment.
 
 **Manual testing is rare and comes in big batches** (owner, 2026-10-23). The owner does not go into the game after each menu item. Whatever tests, the logs of a session the owner played anyway, saves and offline checks can settle is settled that way, and an unseen detail stays a recorded [UNKNOWN] that blocks nothing; it is not a request. Ask the owner into the game only when something the work depends on cannot be judged by tests, and then once, for everything that is due together (a list of rows for one sitting, as 036 was), not per feature or per fix. Do not close a status report with a list of things to check, and do not make the owner's checking the next step of a plan: carry on with the plan.
