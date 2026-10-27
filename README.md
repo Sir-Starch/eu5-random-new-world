@@ -24,7 +24,7 @@ Each seed simulates elevation, climate zones, drainage basins, sea currents, res
 
 Installed RNW mods with a valid world code are detected automatically in the generator's library. Generated mods also embed recovery metadata for their atlas, preview images, and generation records, allowing library entries to be restored directly from the mod folder.
 
-![A generated New World beside the preserved Old World in Europa Universalis V](docs/images/showcase/00-world-overview.png)
+![Random New World procedural generation showcase](docs/images/showcase/rnw_showcase_full.gif)
 
 > [!IMPORTANT]
 > **Pre-release (`0.x`).** Preparing for the `1.0.0` Steam Workshop release ([ADR 0003](docs/adr/0003-versioning.md)). Core systems have been extensively verified in-game (see [`CHANGELOG.md`](CHANGELOG.md) and [experiment records](experiments/)), but world codes and internal formats may still change prior to `1.0.0`.
