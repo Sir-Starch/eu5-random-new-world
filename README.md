@@ -29,6 +29,9 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 > [!IMPORTANT]
 > **Pre-release (`0.x`).** Preparing for the `1.0.0` Steam Workshop release ([ADR 0003](docs/adr/0003-versioning.md)). Core systems have been extensively verified in-game (see [`CHANGELOG.md`](CHANGELOG.md) and [experiment records](experiments/)), but world codes and internal formats may still change prior to `1.0.0`.
 
+Read [Known limitations](docs/known-limitations.md) before playing: supported game
+build, save and mod compatibility, and what remains unverified in the current version.
+
 ## Features
 
 | Layer | Capabilities |
@@ -173,7 +176,7 @@ See the [Generator Guide](docs/generator-guide.md) for details on `.rnw` world f
 
 The [Documentation Index](docs/README.md) provides a full map of the repository:
 
-* **User Guides:** [Generator Guide](docs/generator-guide.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
+* **User Guides:** [Known limitations](docs/known-limitations.md) · [Generator Guide](docs/generator-guide.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
 * **System Design:** [Architecture](docs/architecture.md) · [Terrain & Biomes](docs/terrain-biomes.md) · [Sea Geography](docs/sea-geography.md) · [Native Societies](docs/natives.md) · [Economy](docs/economy.md) · [Content Plan](docs/content-plan.md) · [Architecture Decision Records (ADRs)](docs/adr/)
 * **Project Tracking:** [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](experiments/README.md)
 * **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C405`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
