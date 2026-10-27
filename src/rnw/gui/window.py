@@ -615,7 +615,10 @@ class MainWindow(QMainWindow):
         row = QHBoxLayout()
         lines = QVBoxLayout()
         self.game_line = QLabel()
+        # The full game and profile paths are in the tooltip; the heading must yield
+        # space to the buttons when a platform uses wider fonts.
         self.game_line.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.game_line.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         self.problem_line = QLabel()
         self.problem_line.setStyleSheet(RED)
         self.problem_line.setWordWrap(True)

@@ -29,9 +29,7 @@ def _profile_and_candidate(root: Path) -> tuple[Path, Path]:
 
 
 def test_install_preserves_previous_hub(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(
-        subprocess, "run", Mock(return_value=subprocess.CompletedProcess([], 1))
-    )
+    monkeypatch.setattr(subprocess, "run", Mock(return_value=subprocess.CompletedProcess([], 1)))
     profile, candidate = _profile_and_candidate(tmp_path)
     backup = updater.install(candidate, profile, "0.13.10")
     assert (backup / "marker").read_text(encoding="utf-8") == "old"
@@ -41,9 +39,7 @@ def test_install_preserves_previous_hub(tmp_path: Path, monkeypatch: pytest.Monk
 def test_failed_installed_verification_restores_previous_hub(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(
-        subprocess, "run", Mock(return_value=subprocess.CompletedProcess([], 1))
-    )
+    monkeypatch.setattr(subprocess, "run", Mock(return_value=subprocess.CompletedProcess([], 1)))
     profile, candidate = _profile_and_candidate(tmp_path)
     actual_verify = updater.verify_copy
 
