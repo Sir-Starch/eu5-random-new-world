@@ -19,9 +19,13 @@ and which water is shut.
   coasts), which becomes a lane.
 * **Local routes.** Nearby coasts and retained-water contacts get bounded detours
   through ``sea_routes``, independently of global reachability.
+* **Crossings.** A water-distance diagram of shore stretches identifies useful crossings
+  between distant coasts and retained water. A crossing opens only when it improves the
+  existing network's detour.
 * **Ends.** Open-ocean ends continue to another lane, coastal water or a retained-water
   contact. Reachability from one end alone is not a complete ocean route.
 * **Zones.** Each connected stretch of closed deep water becomes one location.
+  A patch without an interior in the cell graph is navigable, not an isolated ocean.
   A size target must not manufacture neighbouring oceans with unrelated names.
 
 Nothing here draws a random number; ties go to the lower cell.
@@ -36,7 +40,7 @@ import heapq
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw.sea_routes import LaneError, complete_routes, shorten_routes
+from rnw.sea_routes import LaneError, complete_routes, cross_oceans, shorten_routes
 from rnw.seas import Topography
 
 if TYPE_CHECKING:
@@ -109,6 +113,26 @@ def plan_lanes(
     linked = len(lanes) - before
     local_pairs, shortcuts = shorten_routes(world, waters, deep, lanes, docks)
     completed = complete_routes(world, waters, deep, lanes, docks)
+    sources = set(anchors) | {
+        cell for cell, course in courses.items() if course.permille >= COURSE_PERMILLE
+    }
+    shortcuts += cross_oceans(world, waters, deep, lanes, docks=docks, sources=sources)
+    # A closed patch needs an interior: a cell with closed water on at least two
+    # sides. Isolated cells and single-edge slivers are part of the surrounding
+    # navigable water, not separate ocean basins. This is done before folding.
+    navigable = set(links) - (deep - lanes)
+    reached = {
+        cell
+        for stretch in _stretches(links, navigable)
+        if sources.intersection(stretch)
+        for cell in stretch
+    }
+    for zone in _stretches(links, deep - lanes):
+        inside = set(zone)
+        has_interior = any(sum(other in inside for other in links[cell]) >= 2 for cell in zone)  # noqa: PLR2004 - two sides form an interior.
+        if not has_interior and any(other in reached for cell in zone for other in links[cell]):
+            lanes.update(zone)
+            reached.update(zone)
     shut = sorted(deep - lanes)
     return Lanes(
         frozenset(lanes),

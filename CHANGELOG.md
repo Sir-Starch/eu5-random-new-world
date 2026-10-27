@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.12 — 2026-10-27
+
+- Plan crossings between distant shore stretches and retained water from the generated geography,
+  remove isolated closed-water slivers before zoning, and name impassable water for its area.
+- Partition generated sea cells by Euclidean distance so their shared borders do not develop the
+  large Manhattan-distance elbows seen in the owner's hover screenshot. Epoch 49; game rendering
+  and navigation remain unverified.
+
 ## 0.13.11 — 2026-10-27
 
 - Build sea locations against the installed game's current bands, rather than approximating their

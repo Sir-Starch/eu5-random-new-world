@@ -1,5 +1,20 @@
 # Installed experiments
 
+2026-10-27, **0.13.12 / epoch 49 water candidate**, C403: installed a separate
+world generated from KZWN's seed and settings as `mod/rnw_exp_kzwn_hydrology_01312`,
+code `RNW1-08247-10EET-R73D8-Y006G-R0851-Z80Y4-481R8-GJ4YW-04DA0-1G21A-EG`.
+All 853 installed files match the staged candidate; its 851-file canonical digest
+is `3fb0b43ea2ddd7c34b1d3d997a5b01c5d3765fba7378e99d16362d60354e3e06`.
+The original KZWN was not changed. No game was launched; appearance and movement
+remain unobserved. With EU5 closed, remove only `mod/rnw_exp_kzwn_hydrology_01312`.
+
+2026-10-27, **generator hub 0.13.12 / epoch 49**: the normal-profile
+`mod/rnw_exp_hub` was updated from 0.13.11 by the verified local updater. Its
+isolated Wine self-test passes, and the new sea Voronoi kernel agrees byte for
+byte with Linux on the synthetic parity fixture. The previous hub remains at
+`.rnw-hub-backups/0.13.11-1793079003526968561` under the same profile. EU5
+was not launched by the updater; its running-process guard passed at installation.
+
 2026-10-27, **0.13.11 / epoch 48 ocean-current candidate**, C401: installed
 **RNW: Continents 7FUA** as `mod/rnw_exp_hydrology_final_01311`. It uses the
 land settings and seed of FWL3, with code

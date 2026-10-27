@@ -32,6 +32,25 @@ from tests.reference import tiles as reference_tiles
 from tests.reference import topology as reference_topology
 
 
+def test_sea_voronoi_matches_brute_force_squared_distances() -> None:
+    rng = np.random.default_rng(123)
+    mask = rng.random((23, 31)) > 0.3
+    seeds = np.full(mask.shape, -1, dtype=np.int32)
+    positions = [(1, 2), (4, 25), (12, 16), (20, 3), (20, 28)]
+    for label, (row, column) in enumerate(positions):
+        seeds[row, column] = label
+    expected = np.full(mask.shape, -1, dtype=np.int32)
+    for row, column in zip(*np.nonzero(mask), strict=True):
+        expected[row, column] = min(
+            range(len(positions)),
+            key=lambda label: (
+                (int(row) - positions[label][0]) ** 2 + (int(column) - positions[label][1]) ** 2,
+                label,
+            ),
+        )
+    np.testing.assert_array_equal(_native.sea_voronoi(mask, seeds), expected)
+
+
 def _streams() -> list[bytes]:
     generator = np.random.default_rng(7)
     noise = bytes(generator.integers(0, 256, 3000, dtype=np.uint8))

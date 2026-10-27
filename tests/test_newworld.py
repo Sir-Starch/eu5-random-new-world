@@ -201,7 +201,11 @@ def test_banded_sea_strips_equal_whole_mask_partition(monkeypatch: pytest.Monkey
     offset = 0
     for inside in (True, False):
         mask = ocean & (bands if inside else ~bands)
-        part = renumber(newworld._cells(mask, key=key, spacing=spacing, smallest=smallest))  # pyright: ignore[reportPrivateUsage]
+        part = renumber(
+            newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+                mask, key=key, spacing=spacing, smallest=smallest, bands=None
+            )
+        )
         expected[mask] = part[mask] + offset
         offset += int(part.max()) + 1
     monkeypatch.setattr(newworld, "STRIP_ROWS", 7)

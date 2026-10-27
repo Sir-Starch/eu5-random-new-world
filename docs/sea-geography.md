@@ -1,5 +1,17 @@
 # Sea geography
 
+**Crossings and sea-cell geometry, 0.13.12 / epoch 49:** water-distance regions
+grown from geographically spaced shore stretches and retained-water contacts identify
+crossings between distant coasts. An available voyage longer than twice the water-only
+crossing opens that crossing, provided it connects to a reachable current source. The
+shore spacing derives from water area and shoreline length. Closed patches without an
+interior in the sea-cell graph are navigable when reachable from a current; isolated
+basins without a source remain closed. Connected closed water is still folded once and
+uses its area's or body's name, rather than inventing an ocean for each fragment.
+Sea cells use deterministic Euclidean nearest-site borders, split into connected pieces
+where the coast or a current band cuts them. Land generation is unchanged. [V-EXEC;
+engine rendering and movement UNKNOWN]
+
 **TR46 follow-up, 0.12.7 / epoch 37 (2026-10-25):** local shipping routes,
 connected closed-water locations and access-preserving script replacements
 supersede the older size-based zoning and global-connectivity-only rule below.
@@ -141,7 +153,7 @@ A name belongs to a stretch of water, as in the game:
 | body of 2 to 5 | `X Bay` | all |
 | a run of coast, bay or cape in one province | `X Coast`, `X Bay`, `Cape X` | the run |
 | water round small islands | `X Island`, `X Islands`, `X Archipelago` | all cells that touch the same islands |
-| a closed zone in coastal water | `X Ocean`, its own | the zone |
+| a closed zone | its body's or area's name | the geographic body or area |
 | everything else | the name of its area | |
 
 An area of the game's own oceans keeps the game's name and the generated zones refer to it by its

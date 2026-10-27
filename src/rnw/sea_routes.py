@@ -33,6 +33,112 @@ class LaneError(ValueError):
     """The generated water cannot be given complete lanes to the game's water."""
 
 
+def cross_oceans(  # noqa: C901, PLR0912, PLR0913, PLR0915 - water diagram and routes.
+    world: NewWorld,
+    waters: Waters,
+    deep: set[int],
+    lanes: set[int],
+    *,
+    docks: Collection[int] = (),
+    sources: Collection[int] | None = None,
+) -> int:
+    """Connect neighbouring landmasses across water when their existing voyage is circuitous.
+
+    A multi-source water-distance diagram starts at shores grouped by their landmass and
+    position. Its boundaries identify neighbouring stretches and their shortest crossing,
+    even across an ocean much wider than a local coastal connection. Shore grouping scales
+    with the water's area divided by its shoreline, so long coasts get multiple crossings.
+    Islands participate naturally. Only crossings that improve navigation are opened.
+    """
+    sea = set(waters.sea())
+    links = _links(world, sea)
+    shores: dict[int, set[int]] = {}
+    for first, second in world.edges:
+        if first in sea and waters.landmass[second] >= 0:
+            shores.setdefault(first, set()).add(int(waters.landmass[second]))
+        if second in sea and waters.landmass[first] >= 0:
+            shores.setdefault(second, set()).add(int(waters.landmass[first]))
+    retained = len(waters.landmass_cells)
+    for cell in sea.intersection(docks):
+        shores.setdefault(cell, set()).add(retained)
+    if not shores:
+        return 0
+    area = sum(int(world.pixels[cell]) for cell in sea)
+    width = max(waters.scale, area // (len(shores) * waters.scale))
+    # One closest shore stretch owns each water cell. Ties are deterministic.
+    best: dict[int, tuple[int, tuple[int, int, int]]] = {}
+    parent: dict[int, int] = {}
+    heap: list[tuple[int, tuple[int, int, int], int]] = []
+    for cell, masses in sorted(shores.items()):
+        row, column = (int(value) for value in world.centroids[cell])
+        shore = (min(masses), row // width, column // width)
+        best[cell] = (0, shore)
+        heapq.heappush(heap, (0, shore, cell))
+    while heap:
+        distance, shore, cell = heapq.heappop(heap)
+        if best[cell] != (distance, shore):
+            continue
+        for other, length in links[cell]:
+            candidate = (distance + length, shore)
+            if other not in best or candidate < best[other]:
+                best[other] = candidate
+                parent[other] = cell
+                heapq.heappush(heap, (*candidate, other))
+    crossings: dict[tuple[tuple[int, int, int], tuple[int, int, int]], tuple[int, int, int]] = {}
+    for cell, neighbours in links.items():
+        if cell not in best:
+            continue
+        distance, mass = best[cell]
+        for other, length in neighbours:
+            if other not in best or best[other][1] == mass:
+                continue
+            other_distance, other_mass = best[other]
+            pair = (min(mass, other_mass), max(mass, other_mass))
+            candidate = (distance + length + other_distance, min(cell, other), max(cell, other))
+            if candidate < crossings.get(pair, (1 << 62, 1 << 62, 1 << 62)):
+                crossings[pair] = candidate
+    allowed = sea - (deep - lanes)
+    reached_sources = _reachable(links, allowed, sources) if sources is not None else allowed.copy()
+    before = len(lanes)
+    for distance, first, second in sorted(crossings.values()):
+        path = [first, second]
+        for start in (first, second):
+            cell = start
+            while cell in parent:
+                cell = parent[cell]
+                path.append(cell)
+        start, end = first, second
+        while start in parent:
+            start = parent[start]
+        while end in parent:
+            end = parent[end]
+        if start not in reached_sources and end not in reached_sources:
+            continue
+        reached, _ = _distances(links, start, allowed, distance * MAX_DETOUR, target=end)
+        if end not in reached:
+            opened = deep.intersection(path)
+            lanes.update(opened)
+            allowed.update(opened)
+            reached_sources = _reachable(links, allowed, reached_sources)
+    return len(lanes) - before
+
+
+def _reachable(
+    links: Mapping[int, Sequence[tuple[int, int]]],
+    allowed: Collection[int],
+    sources: Collection[int],
+) -> set[int]:
+    """Water reachable from current sources, without crossing closed water."""
+    seen = set(sources) & set(allowed)
+    pending = list(seen)
+    while pending:
+        for other, _ in links[pending.pop()]:
+            if other in allowed and other not in seen:
+                seen.add(other)
+                pending.append(other)
+    return seen
+
+
 def _distances(  # noqa: PLR0913 - bounded paths, an optional goal and terminal stops.
     links: Mapping[int, Sequence[tuple[int, int]]],
     start: int,

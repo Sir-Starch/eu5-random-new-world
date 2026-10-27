@@ -101,8 +101,8 @@ def test_connected_closed_water_is_one_zone_without_an_arbitrary_size_partition(
     waters = analyse(world)
     docks = {cell(layout, row, 39) for row in range(30)}
     lanes = plan_lanes(world, waters, {}, set(), docks)
-    assert len(lanes.zones) == 1
-    assert len(lanes.zones[0]) > 48 * 5
+    # Cross-ocean lanes may divide the closed water, but no artificial size cap does.
+    assert max(map(len, lanes.zones)) > 48 * 5
     seen: set[int] = set()
     for zone in lanes.zones:
         assert not seen & set(zone)
@@ -125,6 +125,19 @@ def test_lanes_and_zones_are_the_same_for_the_same_world() -> None:
     first = plan_lanes(world, waters, _course(5, 3, 18), set(), docks)
     second = plan_lanes(world, waters, _course(5, 3, 18), set(), docks)
     assert first == second
+
+
+def test_closed_zones_have_an_interior_in_the_sea_graph() -> None:
+    world, waters, docks = _setup()
+    planned = plan_lanes(world, waters, _course(5, 3, 18), set(), docks)
+    neighbours: dict[int, set[int]] = {cell: set() for cell in waters.sea()}
+    for first, second in world.edges:
+        if first in neighbours and second in neighbours:
+            neighbours[first].add(second)
+            neighbours[second].add(first)
+    for zone in planned.zones:
+        inside = set(zone)
+        assert any(len(neighbours[cell] & inside) >= 2 for cell in zone)
 
 
 def test_a_closed_sea_that_no_deep_water_joins_is_counted_not_joined() -> None:

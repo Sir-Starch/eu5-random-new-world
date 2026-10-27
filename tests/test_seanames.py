@@ -180,7 +180,7 @@ def test_the_compass_sector_of_an_offset_is_one_of_eight_by_integers() -> None:
     assert _sector(0, 0) == 0
 
 
-def test_a_zone_of_impassable_ocean_is_an_ocean_of_its_own_unless_its_area_is_the_games() -> None:
+def test_impassable_water_uses_its_geographic_area_name() -> None:
     far = cell(ISLAND, 0, 0)
     world = block_world(ISLAND)
     waters = analyse(world)
@@ -198,8 +198,7 @@ def test_a_zone_of_impassable_ocean_is_an_ocean_of_its_own_unless_its_area_is_th
         for number in range(len(world.classes))
     ]
     names = name_waters(world, shut, placed, seed=1)
-    assert english(names.cells[far]).endswith(" Ocean")
-    assert names.cells[far] != names.areas["an_area"]
+    assert names.cells[far] == names.areas["an_area"]
     ocean = [
         Placement("province", "pacific_area", ocean=True) if placement else None
         for placement in placed

@@ -13,6 +13,7 @@ pub mod raster;
 pub mod slots;
 pub mod terrain;
 pub mod tiles;
+pub mod voronoi;
 
 use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
 use pyo3::prelude::*;
@@ -171,6 +172,24 @@ mod _native {
         let shape = sources.as_array().dim();
         let (labels, flags) = (labels.as_slice()?, sources.as_slice()?);
         let out = py.detach(|| distance::nearest_label(labels, flags, shape, limit));
+        shaped(py, shape, out)
+    }
+
+    /// Assign masked pixels to their closest seed in Euclidean distance.
+    #[pyfunction]
+    fn sea_voronoi<'py>(
+        py: Python<'py>,
+        mask: PyReadonlyArray2<'py, bool>,
+        seeds: PyReadonlyArray2<'py, i32>,
+    ) -> PyResult<Bound<'py, PyArray2<i32>>> {
+        let shape = mask.as_array().dim();
+        if seeds.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "raster shapes differ",
+            ));
+        }
+        let (flags, sites) = (mask.as_slice()?, seeds.as_slice()?);
+        let out = py.detach(|| voronoi::partition(flags, sites, shape.1));
         shaped(py, shape, out)
     }
 

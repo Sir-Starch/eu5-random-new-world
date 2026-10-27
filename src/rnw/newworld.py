@@ -587,9 +587,18 @@ def _sea_cells(
     smallest: int,
     bands: NDArray[np.bool_] | None,
 ) -> NDArray[np.int32]:
-    """Partition sea inside and outside current bands separately, preserving their boundaries."""
+    """Partition sea with straight Euclidean borders, preserving current-band boundaries."""
+
+    def sea_part(mask: NDArray[np.bool_]) -> NDArray[np.int32]:
+        sites = seed_sites(key, mask, spacing)
+        nearest = _native.sea_voronoi(np.ascontiguousarray(mask), sites)
+        # A coast or a current band may cut a Voronoi cell into separate pieces.
+        # They are distinct cells before small connected pieces are merged.
+        parts = label_components(nearest)
+        return merge_small(np.where(mask, parts, -1).astype(np.int32), smallest)
+
     if bands is None:
-        return _cells(ocean, key=key, spacing=spacing, smallest=smallest)
+        return sea_part(ocean)
     if bands.shape != ocean.shape:
         message = "Current bands do not fit the world"
         raise ValueError(message)
@@ -604,7 +613,7 @@ def _sea_cells(
             present = present or bool(np.any(mask[rows]))
         if not present:
             continue
-        part = renumber(_cells(mask, key=key, spacing=spacing, smallest=smallest))
+        part = renumber(sea_part(mask))
         maximum = -1
         for start in range(0, len(ocean), STRIP_ROWS):
             rows = slice(start, min(len(ocean), start + STRIP_ROWS))
