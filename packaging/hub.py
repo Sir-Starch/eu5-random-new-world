@@ -125,14 +125,14 @@ def version_fields(version: str) -> tuple[int, int, int, int]:
 def metadata(version: str) -> bytes:
     """The hub's ``metadata.json``, in the form the game reads (UTF-8 with BOM)."""
     payload: dict[str, object] = {
-        "name": "Random New World: generator (test, NOT GAME VALIDATED)",
+        "name": "Random New World Generator",
         "id": MOD_ID,
         "version": version,
         "supported_game_version": "1.4.*",
         "short_description": (
-            "Makes New World maps for EU5, each a complete mod of its own. Do not enable "
-            "this mod: in the Mods window press Open in folder on it and start Random New "
-            "World Generator."
+            "Procedural New World map generator for Europa Universalis V. Creates complete, "
+            "independent standalone map mods. Do not enable this mod in your playset: in "
+            "the Mods menu, select Open in folder and run Random New World Generator."
         ),
         "tags": ["Map"],
         "picture": "thumbnail.png",

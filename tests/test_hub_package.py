@@ -73,6 +73,11 @@ def test_the_hub_is_a_test_mod_the_installer_may_replace(tmp_path: Path) -> None
     text = hub.metadata("0.9.13").decode("utf-8-sig")
     payload = cast("dict[str, object]", json.loads(text))
     assert (payload["id"], payload["version"]) == (hub.MOD_ID, "0.9.13")
+    assert payload["name"] == "Random New World Generator"
+    assert "test" not in cast("str", payload["name"]).lower()
+    assert "not game validated" not in cast("str", payload["name"]).lower()
+    assert "test" not in cast("str", payload["short_description"]).lower()
+    assert "not game validated" not in cast("str", payload["short_description"]).lower()
     mod = tmp_path / hub.MOD_ID
     (mod / ".metadata").mkdir(parents=True)
     _ = (mod / ".metadata" / "metadata.json").write_bytes(hub.metadata("0.9.13"))
