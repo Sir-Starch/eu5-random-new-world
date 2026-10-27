@@ -570,7 +570,7 @@ def _record_problems(text: str, countries: Mapping[str, Expected]) -> list[str]:
         if record is None:
             problems.append(f"{tag} has no country record")
             continue
-        if includes[tag][0] != [expected.include]:
+        if includes[tag][0] != ([expected.include] if expected.include else []):
             problems.append(f"{tag} does not write its template {expected.include}")
         if any(record.government.get(key) != value for key, value in expected.government):
             problems.append(f"{tag} writes the government {record.government}")
@@ -619,9 +619,12 @@ def _group_problems(
         elif kind == SACRED_CENTRE:
             fields = dict(calibration.theocracy)
             wanted = {(tags[0], other) for other in tags[1:]}
-            if any(dict(members[0].government).get(k) != v for k, v in fields.items()) or {
-                pair for pair in rivals if set(pair) <= set(tags)
-            } != wanted | {(b, a) for a, b in wanted}:
+            if (
+                members[0].include
+                or any(dict(members[0].government).get(k) != v for k, v in fields.items())
+                or {pair for pair in rivals if set(pair) <= set(tags)}
+                != wanted | {(b, a) for a, b in wanted}
+            ):
                 problems.append(f"The sacred centre {tags} is not a theocracy with rivals")
         elif {pair for pair in rivals if set(pair) <= set(tags)} - inside:
             problems.append(f"The fractured realm {tags} has rivals outside it")

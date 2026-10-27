@@ -343,6 +343,7 @@ def _country(tag: str, calibration: ArchetypeCalibration) -> Country:
     if tag == "SCA":
         return replace(
             base,
+            include="",
             government=government_fields(
                 base.government, calibration.theocracy, calibration.sliders[SACRED_CENTRE]
             ),
@@ -463,6 +464,13 @@ def test_the_planned_groups_and_their_records_have_no_problems() -> None:
     assert record["CNA"].currency == world.calibration.cohesion
     assert record["LGA"].government["land_vs_naval"] == "60"
     assert record["PLN"].government["type"] == "monarchy"
+
+
+def test_sacred_centre_rejects_an_inherited_monarchy_template() -> None:
+    world = _world()
+    countries = [replace(c, include="monarchy_t") if c.tag == "SCA" else c for c in world.countries]
+    problems = _written(countries, world.bonds, world.calibration).problems()
+    assert any("sacred centre" in problem for problem in problems)
 
 
 def test_a_tribe_that_is_not_landed_holds_pops_without_owning_a_location() -> None:

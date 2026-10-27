@@ -248,6 +248,13 @@ def test_a_sacred_centre_is_a_theocracy_and_the_rival_of_its_competitors() -> No
     centre = [c for c in varied.countries if c.archetype == SACRED_CENTRE]
     assert len(centre) == 3
     hub, *others = centre
+    assert hub.include == ""
+    record = parse(country_records((hub,))).block(hub.tag)
+    assert record is not None
+    assert record.first("include") is None
+    level = record.first("starting_technology_level")
+    assert level is not None
+    assert level.value == str(hub.level)
     assert dict(hub.government) == {
         "type": "theocracy",
         "heir_selection": "theocratic_elective",

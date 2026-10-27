@@ -1763,7 +1763,7 @@ def _technology_problems(
     levels: dict[str, int] = {}
     for country in natives.countries:
         includes, written = records.get(country.tag, ([], []))
-        if includes != [country.include]:
+        if includes != ([country.include] if country.include else []):
             problems.append(f"{country.tag} does not write its template {country.include}")
         elif country.kind != "state":
             if written:
@@ -1777,7 +1777,7 @@ def _technology_problems(
         else:
             level, template = int(written[0]), vanilla.levels.get(country.include, 0)
             levels[country.tag] = level
-            if not template <= level <= template + 1:
+            if country.include and not template <= level <= template + 1:
                 problems.append(
                     f"{country.tag} has level {level}, its template {country.include} {template}"
                 )

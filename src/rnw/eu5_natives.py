@@ -2079,6 +2079,9 @@ def _archetypes(  # noqa: PLR0913 - the societies read the peoples, the bonds an
         elif group.kind == SACRED_CENTRE:
             changed[group.hub] = replace(
                 changed[group.hub],
+                # Tibet's vanilla theocracy needs no country template. The American
+                # monarchy templates contain laws and privileges forbidden to it.
+                include="",
                 government=government_fields(
                     changed[group.hub].government, calibration.theocracy, sliders
                 ),
@@ -2199,7 +2202,8 @@ def country_records(countries: tuple[Country, ...]) -> str:
             lines.append("\t\tadd_pops_from_locations = {\n")
             lines.append(_locations_block(country.members, "\t\t"))
             lines.append("\t\t}\n")
-        lines.append(f'\t\tinclude = "{country.include}"\n')
+        if country.include:
+            lines.append(f'\t\tinclude = "{country.include}"\n')
         if country.level is not None:
             lines.append(f"\t\tstarting_technology_level = {country.level}\n")
         if country.rank:

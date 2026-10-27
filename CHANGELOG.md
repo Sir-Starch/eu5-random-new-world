@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.10 — 2026-10-27
+
+- Set up sacred centres as theocracies without inheriting monarchy laws and
+  privileges, following the vanilla Tibetan setup. Epoch 47; offline candidate.
+
 ## 0.13.9 — 2026-10-27
 
 - Keep vanilla's `ai_balanced` as the normal baseline. Countries receive a more

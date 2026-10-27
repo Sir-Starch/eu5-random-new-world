@@ -1,5 +1,15 @@
 # Installed experiments
 
+2026-10-27, **0.13.10 / epoch 47 sacred-centre correction**, C399: installed
+**RNW: Continents DNIW** as `mod/rnw_exp_fwl3_01310` (853 files, all compared
+with the generated candidate). It reproduces the settings and seed of FWL3 with
+code `RNW1-080MP-B37XH-BH660-M006G-M0870-3T062-1V1Z8-0Y448-1R8GJ-4YW04-DA01Q-PE480`.
+JOQ writes theocracy and technology level 2 without the monarchy template.
+The canonical digest is `85a25456b48836f110030914f64967df0f5b964ee71a167f354f52c1ee71029e`
+(851 files). No game launch was performed; game behavior is unobserved.
+
+Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_fwl3_01310 --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
+
 2026-10-27, **0.13.9 / epoch 46 Balanced baseline and contextual AI**, C396–C397:
 installed **RNW: Supercontinent LQCS** into new `mod/rnw_exp_world_lqcst6xtaq`
 (881 files), code `RNW1-081RF-FZCZT-X8CJN-T006G-J0870-2AG63-YG1W8-8G3GH-149XR-08TM0-31P0F-71BD0`.
