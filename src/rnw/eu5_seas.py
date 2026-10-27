@@ -40,6 +40,7 @@ from rnw.eu5_oceans import emitted_cells
 from rnw.lanes import COURSE_PERMILLE, Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
+from rnw.sea_routes import cyclic_end
 from rnw.seas import Topography, Waters, analyse
 from rnw.straits import CROSSING_PX, narrow_gaps
 
@@ -272,6 +273,29 @@ def courses_over(
                 ),
             )
     return courses
+
+
+def current_bands(
+    game_map: Eu5Map, canvas: Canvas, vanilla: Mapping[str, VanillaWater]
+) -> np.ndarray[tuple[int, ...], np.dtype[np.bool_]]:
+    """The replaced vanilla current footprints, in the generation canvas's coordinates."""
+    lane = np.zeros(len(game_map.keys) + 1, dtype=np.bool_)
+    for label, key in enumerate(game_map.keys):
+        water = vanilla.get(key)
+        if (
+            canvas.removed[label]
+            and water is not None
+            and water.topography == Topography.DEEP_OCEAN
+            and water.current is not None
+        ):
+            lane[label] = True
+    height, crop = canvas.mask.shape
+    columns = (np.arange(crop, dtype=np.int64) + canvas.col0) % canvas.shape[1]
+    bands = np.empty((height, crop), dtype=np.bool_)
+    for start in range(0, height, STRIP_ROWS):
+        rows = slice(start, min(height, start + STRIP_ROWS))
+        bands[rows] = lane[canvas.rolled(game_map.labels, rows)[:, columns]] & canvas.mask[rows]
+    return bands
 
 
 @dataclass(frozen=True, slots=True)
@@ -513,6 +537,10 @@ def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, obje
         if not neighbours & terminals and len(neighbours) <= 1:
             message = f"Ocean lane {cell} ends in closed water"
             raise SeaError(message)
+    tip = cyclic_end(world, water.lanes, navigable, terminals)
+    if tip is not None:
+        message = f"Ocean lane {tip} has a cyclic end in closed water"
+        raise SeaError(message)
     return {"sea_cells_reached": len(reached), "sea_cells_cut_off": len(cut_off)}
 
 

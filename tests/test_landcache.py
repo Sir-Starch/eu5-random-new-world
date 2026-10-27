@@ -68,6 +68,7 @@ def test_cache_identity_contains_every_geography_input() -> None:
     assert landcache.cache_key(domain, 43, SMALL, None) != original
     assert landcache.cache_key(domain, 42, replace(SMALL, land_permille=300), None) != original
     assert landcache.cache_key(domain, 42, SMALL, domain) != original
+    assert landcache.cache_key(domain, 42, SMALL, None, domain) != original
     domain[50:60, 50:60] = False
     assert landcache.cache_key(domain, 42, SMALL, None) != original
 

@@ -48,10 +48,11 @@ def cache_key(
     seed: int,
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None,
+    sea_bands: NDArray[np.bool_] | None = None,
 ) -> str:
     spec = (2, epoch.CURRENT, seed, replace(settings, precious_permille=0), domain.shape)
     digest = hashlib.sha256(repr(spec).encode("ascii"))
-    for raster in (domain, drawn):
+    for raster in (domain, drawn, sea_bands):
         digest.update(b"none" if raster is None else b"raster")
         if raster is not None:
             for row in range(0, len(raster), STRIP):
@@ -60,15 +61,16 @@ def cache_key(
     return digest.hexdigest()
 
 
-def get_world(
+def get_world(  # noqa: PLR0913 - the cache key includes each independent geography input.
     cache: Path | None,
     domain: NDArray[np.bool_],
     *,
     seed: int,
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None,
+    sea_bands: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
-    target = None if cache is None else cache / cache_key(domain, seed, settings, drawn)
+    target = None if cache is None else cache / cache_key(domain, seed, settings, drawn, sea_bands)
     if target is not None and target.exists():
         return _read(target, domain.shape)
     world = seal_pockets(
@@ -77,6 +79,7 @@ def get_world(
             seed=seed,
             settings=settings,
             drawn=drawn,
+            sea_bands=sea_bands,
         )
     )
     if target is not None:

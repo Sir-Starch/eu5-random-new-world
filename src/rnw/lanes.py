@@ -8,11 +8,9 @@ owner's maps of 1.4.4, C241]. A generated ocean that is deep everywhere would be
 everywhere and carry a current in every zone. This module chooses which deep cells are lanes
 and which water is shut.
 
-* **Courses.** The canvas replaced a great part of the game's own lanes (390 of its 750 deep
-  zones), and each of them ran in some direction: the course of the current. A generated deep
-  cell on which a course ran by at least ``COURSE_PERMILLE`` of its area is a lane, carrying
-  that current (``currents``). Where the generated land cuts a course, the lane ends at the
-  coast, as the current would.
+* **Courses.** Deep cells mostly covered by a replaced game current become lanes. The world
+  generator builds sea cells against the current bands so their edges follow the bands rather
+  than a random overlap. Where land cuts a course, it can end at the coast.
 * **Anchors.** A deep cell that touches a lane of the game's own continues it.
 * **Linked.** Every stretch of passable water (coastal and ocean cells round the lands, inland
   seas, narrows, lanes) must reach the game's own water, so ships can come from the Old World to

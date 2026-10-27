@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 # Its available route may be at most twice the unrestricted water-only route.
 LOCAL_SCALES: Final[int] = 6
 MAX_DETOUR: Final[int] = 2
+MIN_CYCLIC_BLOCK: Final[int] = 3
 Graph = dict[int, list[tuple[int, int]]]
 
 
@@ -174,6 +175,91 @@ def _continuation(
     return path
 
 
+def _leaf_block(  # noqa: C901, PLR0912, PLR0915 - iterative block-cut traversal.
+    links: Graph, lanes: set[int], allowed: set[int], terminals: set[int]
+) -> tuple[set[int], int, int] | None:
+    """Find a cyclic deep-water end attached to the rest of navigation at one junction.
+
+    Degree-one tests miss a broad tip with a loop. The block-cut graph exposes such a tip
+    without interpreting a valid route between two coasts as a dead end. A virtual vertex
+    joins terminal water for this test only; no such edge is written to the map.
+    """
+    root = -1
+    graph = {cell: [other for other, _ in links[cell] if other in allowed] for cell in allowed}
+    contacts = sorted(terminals & allowed)
+    graph[root] = contacts
+    for cell in contacts:
+        graph[cell].append(root)
+    discovered: dict[int, int] = {}
+    low: dict[int, int] = {}
+    parent: dict[int, int] = {}
+    blocks: list[set[int]] = []
+    edge_stack: list[tuple[int, int]] = []
+    clock = 0
+    for start in [root, *sorted(allowed)]:
+        if start in discovered:
+            continue
+        discovered[start] = low[start] = clock
+        clock += 1
+        stack = [start]
+        positions = {start: 0}
+        while stack:
+            here = stack[-1]
+            index = positions[here]
+            if index < len(graph[here]):
+                other = graph[here][index]
+                positions[here] += 1
+                if other not in discovered:
+                    parent[other] = here
+                    discovered[other] = low[other] = clock
+                    clock += 1
+                    edge_stack.append((here, other))
+                    positions[other] = 0
+                    stack.append(other)
+                elif parent.get(here) != other and discovered[other] < discovered[here]:
+                    low[here] = min(low[here], discovered[other])
+                    edge_stack.append((here, other))
+                continue
+            _ = stack.pop()
+            if here not in parent:
+                continue
+            previous = parent[here]
+            low[previous] = min(low[previous], low[here])
+            if low[here] >= discovered[previous]:
+                block: set[int] = set()
+                while edge_stack:
+                    edge = edge_stack.pop()
+                    block.update(edge)
+                    if edge == (previous, here):
+                        break
+                blocks.append(block)
+    membership: dict[int, int] = {}
+    for block in blocks:
+        for cell in block:
+            membership[cell] = membership.get(cell, 0) + 1
+    for block in sorted(blocks, key=min):
+        junctions = {cell for cell in block if membership[cell] > 1}
+        if len(junctions) != 1 or len(block) < MIN_CYCLIC_BLOCK or not block <= lanes:
+            continue
+        junction = next(iter(junctions))
+        distances, _ = _distances(links, junction, block, 1 << 62)
+        tip = max(block - {junction}, key=lambda cell: (distances[cell], -cell))
+        return block, tip, junction
+    return None
+
+
+def cyclic_end(
+    world: NewWorld,
+    lanes: Collection[int],
+    navigable: Collection[int],
+    terminals: Collection[int],
+) -> int | None:
+    """A cyclic ocean tip attached at one junction, if one remains in the final water graph."""
+    cells = set(navigable)
+    block = _leaf_block(_links(world, cells), set(lanes), cells, set(terminals))
+    return None if block is None else block[1]
+
+
 def complete_routes(
     world: NewWorld, waters: Waters, deep: set[int], lanes: set[int], docks: Collection[int]
 ) -> int:
@@ -190,10 +276,20 @@ def complete_routes(
     links = _links(world, sea)
     terminals = (sea - deep) | (set(docks) & sea)
     before = len(lanes)
-    while ends := _ends(links, lanes, sea - (deep - lanes), terminals):
-        start = ends[0]
+    while True:
         shut = deep - lanes
-        branch, incoming = _stem(links, start, sea - shut, terminals)
+        allowed = sea - shut
+        ends = _ends(links, lanes, allowed, terminals)
+        if ends:
+            start = ends[0]
+            branch, incoming = _stem(links, start, allowed, terminals)
+        else:
+            block = _leaf_block(links, lanes, allowed, terminals)
+            if block is None:
+                break
+            branch, start, incoming = block
+            stem, _ = _stem(links, incoming, allowed - (branch - {incoming}), terminals)
+            branch.update(stem)
         targets = sea - shut - branch
         forward: set[int] = set()
         if incoming is not None:

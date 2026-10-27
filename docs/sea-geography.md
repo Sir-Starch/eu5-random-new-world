@@ -8,7 +8,7 @@ The local criterion is a generator policy: coastal water and retained navigable
 contacts within six typical sea-cell widths by water get a route at most twice
 that water-only distance. Distances sum integer centroid lengths; they do not
 predict engine travel time or modify retained geography. Inherited current
-lanes stay; only necessary deep cells open before closed components are folded.
+lanes follow the band geometry described below; necessary deep cells open before closed components are folded.
 Every connected generated closed component is one physical location, with the
 existing connected vanilla-identity planner still applying at the boundary.
 Genuinely distinct retained vanilla waters keep their identities. A removed
@@ -160,17 +160,28 @@ land layer's seed and nothing else, so rerolling the peoples or the resources le
 
 ## Currents (`rnw.currents`)
 
-A lane continues the game's currents. Each lane cell takes the blend of the currents that the
-game gives its neighbourhood (the courses of the game's lanes that ran over generated cells, and the
-lanes of the game's that touch the generated water), weighted by the inverse square of the distance
-through the water over its four nearest sources, bent away from land within six scales (the part of
-a current that flows into the nearest land is taken out, more the nearer it is), smoothed twice
-over its lane neighbours and given the mean strength of the sources. Integer geometry and IEEE
-`+ - * /` and square root in a fixed order: byte-identical on every platform. A lane that no
-current reaches through water (a pocket) takes the nearest one over the land; no source at all stops
-the export (`CurrentError`).
+A lane continues the game's currents. Each lane cell blends its four nearest sources through
+navigable water, weighted by inverse-square distance, bends away from nearby land, and is smoothed
+twice over lane neighbours. On a two-sided, approximately straight stretch it follows the lane's
+axis when the inherited current has an unambiguous direction along it; junctions, ends and
+near-perpendicular sources retain their interpolated direction. It takes the mean strength of the
+sources. A lane without a source reachable through navigable water, or a cancelled direction,
+stops export (`CurrentError`); neither closed water nor land supplies a shortcut. Arithmetic is
+performed in a fixed order. [V-EXEC; in-game appearance UNKNOWN]
 
 ## Lanes and closed ocean (`rnw.lanes`)
+
+**Current bands, 0.13.11:** the generation canvas reads the footprints of the installed game's
+replaced deep-ocean currents. The world generator partitions ocean inside and outside these bands
+separately; sea-cell borders do not wobble across the band edges. Thus the old current's outline,
+clipped by the new land, is built into the sea locations instead of approximated by whichever random
+locations it happens to overlap. The band raster is part of the land cache key. Coastal settlement,
+connections and completed ends may still alter or extend the outline. This is not a simulation of
+new ocean gyres. Course completion also looks for cyclic deep-water ends attached to the navigable
+network at only one junction: a wide tip can have no degree-one cell and still lead nowhere. The
+block-cut check joins terminal water only for analysis; no artificial connections are written. A
+synthetic two-coast loop remains unchanged, while a one-ended loop is extended to the opposite coast.
+[V-EXEC C401; in-game appearance UNKNOWN]
 
 **Course ends, 0.13.2 (2026-10-26):** 657Q exposed a gap between two inherited
 lane fragments which both already reached retained water, and two courses
@@ -198,7 +209,7 @@ the deep cells are told apart as the game's are:
 - **Courses.** The canvas replaced 390 of the game's 750 deep zones (14 stretches of lanes, each
   joining two to twelve of the lanes that stay), and with them the course of the gyres through the
   Atlantic and the eastern Pacific [V-EXEC C242]. A generated deep cell over which such a course ran
-  by at least half of its pixels is a lane, with the mean current of what ran there (`courses_over`);
+  by at least half of its pixels is a candidate lane, with the mean current of what ran there (`courses_over`);
   where generated land cuts a course the lane stops at the coast, as the current would. A deep
   cell that touches a lane of the game's continues it. So the generated gyres lie where the
   game's did, and the game's currents at the edge of the canvas meet lanes.
@@ -216,8 +227,8 @@ the deep cells are told apart as the game's are:
   lanes and 36 closed zones of 746,000 pixels at most; across the five presets 262 to 352 lanes and
   29 to 36 zones.
 - **Currents.** A lane cell's current is the blend of the nearest courses and anchors through the
-  water, bent away from the land it flows towards (`currents`): where a course ran over it, the
-  current of the course. Arrows are on lanes only; every one of the 420 points along its lane.
+  water, bent away from the land it flows towards (`currents`). Arrows are on lanes only; the
+  current rules above explain when the flow can be aligned with a lane's axis.
 - **Land of the game's.** A sea cell that touches land of the game's own (Bermuda, Saint Helena,
   the land at the canvas's edge) is on a coast, whatever the generated land does: it is coastal
   water, never a closed zone. (The first run of 0.10.13 closed the zone that holds Saint Helena's port.)

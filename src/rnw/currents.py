@@ -10,12 +10,10 @@ replaces a great part of the Atlantic and the Pacific, so without currents of it
 would be a hole in every gyre.
 
 ``flow`` continues the game's currents into the generated deep water. Each generated deep zone
-takes a blend of the currents of the game's zones that touch the generated water, weighted by the
-inverse square of how far they are through the water (the four nearest sources of each zone), is
-bent away from the land it flows towards (so a current runs along a coast, not into it), smoothed
-over its neighbours and given the strength the game's currents have. Integer geometry and IEEE
-arithmetic (+, -, *, /, square root) only, taken in a fixed order, so the result is identical on
-every platform.
+takes a blend of the four nearest sources through navigable water, weighted by inverse square
+distance, bent away from land and smoothed. On unambiguous two-sided stretches its direction
+follows the lane. A lane without a reachable source or a cancelled direction is an error.
+Integer geometry and IEEE arithmetic are taken in a fixed order.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -28,6 +26,8 @@ import math
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
+
+from rnw.seas import Topography
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -45,6 +45,8 @@ BEND_SCALES: Final[int] = 6
 SMOOTHING_ROUNDS: Final[int] = 2
 # A current shorter than this (after bending and smoothing) has no direction left.
 MIN_NORM: Final[float] = 1e-9
+CORRIDOR_NEIGHBOURS: Final[int] = 2
+MIN_ALONG_SHARE: Final[float] = 0.25
 
 
 class CurrentError(ValueError):
@@ -97,7 +99,9 @@ def flow(
     that touch it, and of the lanes that ran over it. Raises ``CurrentError`` when there are
     none to continue.
     """
-    sea = set(waters.sea())
+    sea = {
+        cell for cell in waters.sea() if waters.topography[cell] is not Topography.OCEAN_WASTELAND
+    }
     deep = sorted(set(lanes) & sea)
     sources = {
         cell: (
@@ -115,19 +119,17 @@ def flow(
     strength = math.fsum(math.sqrt(x * x + y * y) for x, y in sources.values()) / len(sources)
     links = _sea_links(world, sea)
     nearest = _nearest_sources(links, sorted(sources))
-    ordered = sorted(sources)
-    nearby = world.centroids[ordered]
     blended: dict[int, tuple[float, float]] = {}
     for cell in deep:
         reached = nearest[cell]
-        if not reached:  # water cut off from every source: the nearest one over the land
-            offsets = nearby - world.centroids[cell]
-            closest = int(np.argmin((offsets * offsets).sum(axis=1)))
-            reached = [(ordered[closest], _length(world, cell, ordered[closest]))]
+        if not reached:
+            message = f"No current reaches ocean lane {cell} through navigable water"
+            raise CurrentError(message)
         blended[cell] = _blend(reached, sources)
     blended = _bend(world, waters, deep, blended)
     for _ in range(SMOOTHING_ROUNDS):
         blended = _smooth(blended, links)
+    blended = _follow_corridors(world, blended, links)
     return {cell: _scaled(blended[cell], strength) for cell in deep}
 
 
@@ -198,11 +200,50 @@ def _smooth(
     return smoothed
 
 
+def _follow_corridors(
+    world: NewWorld,
+    current: Mapping[int, tuple[float, float]],
+    links: Mapping[int, Sequence[tuple[int, int]]],
+) -> dict[int, tuple[float, float]]:
+    """Align unbranched corridors with their actual geometry, retaining the flow's sense.
+
+    Only two-sided, approximately straight stretches have an unambiguous axis. Junctions,
+    ends and sharp bends retain the interpolated flow: choosing an arm there by cell number
+    would invent a current direction. A perpendicular current is equally ambiguous.
+    """
+    result = dict(current)
+    for cell, (x, y) in current.items():
+        neighbours = [other for other, _ in links[cell] if other in current]
+        if len(neighbours) != CORRIDOR_NEIGHBOURS:
+            continue
+        first, second = neighbours
+        r1, c1 = (int(v) for v in world.centroids[first] - world.centroids[cell])
+        r2, c2 = (int(v) for v in world.centroids[second] - world.centroids[cell])
+        # Both arms must point into opposite half-planes and form at least a 90-degree angle.
+        if r1 * r2 + c1 * c2 >= 0:
+            continue
+        east = float(c2 - c1)
+        north = float(r1 - r2)
+        length = math.hypot(east, north)
+        norm = math.hypot(x, y)
+        if length < MIN_NORM or norm < MIN_NORM:
+            continue
+        east, north = east / length, north / length
+        along = x * east + y * north
+        # A near-perpendicular inherited current does not decide which way this corridor flows.
+        if abs(along) < norm * MIN_ALONG_SHARE:
+            continue
+        sign = 1 if along > 0 else -1
+        result[cell] = (sign * norm * east, sign * norm * north)
+    return result
+
+
 def _scaled(vector: tuple[float, float], strength: float) -> Vector:
-    """The direction of ``vector`` at the game's strength, in hundredths (east for none)."""
+    """The direction of ``vector`` at the game's strength, in hundredths."""
     x, y = vector
     norm = math.sqrt(x * x + y * y)
     if norm < MIN_NORM:
-        return round(strength), 0
+        message = "Contradictory current sources have no direction"
+        raise CurrentError(message)
     factor = strength / norm
     return round(x * factor), round(y * factor)

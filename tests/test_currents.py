@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import pytest
 
@@ -103,3 +104,44 @@ def test_only_the_cells_given_as_lanes_carry_a_current() -> None:
     flows = flow(world, waters, samples, lanes)
     assert set(flows) == set(lanes)
     assert lanes
+
+
+@pytest.mark.parametrize("east", [8000, -8000])
+def test_a_narrow_lane_follows_its_course_in_both_directions(east: int) -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    lane = [cell(OPEN_SEA, 5, column) for column in range(2, 18)]
+    samples = {lane[0]: [(east, 5000)]}
+    currents = flow(world, waters, samples, lane)
+    for number in lane[1:-1]:
+        x, y = currents[number]
+        assert x * east > 0
+        assert y == 0
+
+
+def test_an_ambiguous_perpendicular_current_does_not_choose_a_corridor_direction() -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    lane = [cell(OPEN_SEA, 5, column) for column in range(2, 18)]
+    currents = flow(world, waters, {lane[0]: [(0, 9000)]}, lane)
+    assert currents[lane[7]] == (0, 9000)
+
+
+def test_a_source_across_closed_water_does_not_feed_a_current() -> None:
+    layout = ["." * 9 for _ in range(5)]
+    world = block_world(layout)
+    waters = analyse(world)
+    topography = list(waters.topography)
+    for row in range(len(layout)):
+        topography[cell(layout, row, 4)] = Topography.OCEAN_WASTELAND
+    waters = replace(waters, topography=tuple(topography))
+    with pytest.raises(CurrentError, match="through navigable water"):
+        _ = flow(world, waters, {cell(layout, 2, 0): [(9000, 0)]}, [cell(layout, 2, 8)])
+
+
+def test_opposing_sources_do_not_invent_an_eastward_current() -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    lane = cell(OPEN_SEA, 5, 5)
+    with pytest.raises(CurrentError, match="no direction"):
+        _ = flow(world, waters, {lane: [(9000, 0), (-9000, 0)]}, [lane])

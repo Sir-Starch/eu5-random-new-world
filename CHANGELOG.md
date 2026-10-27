@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.11 — 2026-10-27
+
+- Build sea locations against the installed game's current bands, rather than approximating their
+  shape with unrelated sea-cell borders. Complete cyclic open-ocean ends, align unambiguous narrow
+  currents with their routes, and reject currents without a reachable, unambiguous source. Epoch 48;
+  offline candidate, with no new EU5 launch.
+
 ## 0.13.10 — 2026-10-27
 
 - Set up sacred centres as theocracies without inheriting monarchy laws and

@@ -24,8 +24,10 @@ from rnw.eu5_seas import (
     VanillaPort,
     VanillaWater,
     Water,
+    _verify_reach,  # pyright: ignore[reportPrivateUsage]
     courses_over,
     crossings,
+    current_bands,
     current_text,
     foreign_coast,
     read_ports,
@@ -262,6 +264,28 @@ def test_a_reachable_lane_ending_in_closed_ocean_stops_the_export() -> None:
         _ = verify_seas(_written(plan, water), plan, world, water.coast, water)
 
 
+def test_a_cyclic_ocean_tip_also_fails_the_final_water_check() -> None:
+    layout = ["#" + "." * 19 + "#" for _ in range(15)]
+    world = block_world(layout)
+    waters = analyse(world)
+    sea = set(waters.sea())
+    deep = {n for n in sea if waters.topography[n] is Topography.DEEP_OCEAN}
+    lanes = {cell(layout, 6, column) for column in range(3, 7)}
+    lanes |= {cell(layout, row, column) for row in (6, 7) for column in (6, 7)}
+    closed = deep - lanes
+    waters = replace(
+        waters,
+        topography=tuple(
+            Topography.OCEAN_WASTELAND if n in closed else kind
+            for n, kind in enumerate(waters.topography)
+        ),
+    )
+    coast = Coast(world, ForeignCoast(), {}, {}, frozenset({cell(layout, 6, 1)}), frozenset(), 0)
+    water = Water(coast, waters, frozenset(lanes), frozenset(closed), {}, 0, 1)
+    with pytest.raises(SeaError, match="cyclic end"):
+        _ = _verify_reach(world, coast, water)
+
+
 @final
 class _Canvas:
     """A canvas that is the map itself: nothing rolled, the crop at its left edge."""
@@ -270,6 +294,7 @@ class _Canvas:
         self.removed = removed
         self.col0 = 0
         self.shape = (4, 4)
+        self.mask = np.ones((4, 4), dtype=np.bool_)
 
     def rolled(self, labels: np.ndarray, rows: slice) -> np.ndarray:
         return labels[rows]
@@ -298,6 +323,23 @@ def test_a_course_is_where_a_replaced_deep_zone_ran_over_a_generated_cell() -> N
     assert courses[0].permille == 750
     assert courses[0].vector == (9000, 1000)
     assert 1 not in courses
+
+
+def test_current_bands_keep_only_replaced_currents_inside_the_canvas() -> None:
+    keys = ("current", "retained", "ordinary")
+    labels = np.array([[0, 0, 1, 2]] * 4, dtype=np.int32)
+    game_map = SimpleNamespace(keys=keys, labels=labels)
+    canvas = _Canvas(np.array([True, False, True]))
+    canvas.mask[0, 0] = False
+    waters = {
+        "current": VanillaWater("deep_ocean", (9000, 0)),
+        "retained": VanillaWater("deep_ocean", (9000, 0)),
+        "ordinary": VanillaWater("ocean", None),
+    }
+    bands = current_bands(
+        cast("Eu5Map", cast("object", game_map)), cast("Canvas", cast("object", canvas)), waters
+    )
+    assert np.array_equal(bands, (labels == 0) & canvas.mask)
 
 
 STRAIT = ["AAA1BBB", "AAA1BBB", "AAA1BBB", "2222222"]

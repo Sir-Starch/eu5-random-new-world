@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from rnw import newworld
 from rnw.model import CellClass
 from rnw.newworld import (
     LAND_KINDS,
@@ -25,9 +26,11 @@ from rnw.newworld import (
     wobble_borders,
 )
 from rnw.settings import NewWorldSettings
+from rnw.synth import renumber
 from rnw.topology import distance_from, label_components
 
 if TYPE_CHECKING:
+    import pytest
     from numpy.typing import NDArray
 
 SMALL = NewWorldSettings(
@@ -168,6 +171,44 @@ def test_a_vanishing_cell_does_not_undo_the_wobble() -> None:
     parts = label_components(moved)
     for cell in range(3):
         assert np.unique(parts[moved == cell]).size == 1
+
+
+def test_sea_cells_respect_current_band_edges_without_moving_the_coast() -> None:
+    domain = np.ones((160, 192), dtype=bool)
+    bands = np.zeros(domain.shape, dtype=bool)
+    bands[35:55, :] = True
+    bands[100:120, :] = True
+    plain = generate_new_world(domain, seed=3, settings=SMALL)
+    world = generate_new_world(domain, seed=3, settings=SMALL, sea_bands=bands)
+    assert np.array_equal(_land_mask(world), _land_mask(plain))
+    assert np.array_equal(world.elevation, plain.elevation)
+    assert np.array_equal(world.labels[_land_mask(world)], plain.labels[_land_mask(plain)])
+    for number, kind in enumerate(world.classes):
+        if kind is CellClass.SEA:
+            mask = world.labels == number
+            assert np.all(bands[mask]) or not np.any(bands[mask])
+            assert np.unique(label_components(mask.astype(np.int32))[mask]).size == 1
+
+
+def test_banded_sea_strips_equal_whole_mask_partition(monkeypatch: pytest.MonkeyPatch) -> None:
+    ocean = np.ones((32, 45), dtype=np.bool_)
+    ocean[12:20, 12:18] = False
+    bands = np.zeros(ocean.shape, dtype=np.bool_)
+    bands[4:10] = True
+    bands[24:28, 5:40] = True
+    key, spacing, smallest = 11, 8, 4
+    expected = np.full(ocean.shape, -1, dtype=np.int32)
+    offset = 0
+    for inside in (True, False):
+        mask = ocean & (bands if inside else ~bands)
+        part = renumber(newworld._cells(mask, key=key, spacing=spacing, smallest=smallest))  # pyright: ignore[reportPrivateUsage]
+        expected[mask] = part[mask] + offset
+        offset += int(part.max()) + 1
+    monkeypatch.setattr(newworld, "STRIP_ROWS", 7)
+    actual = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+        ocean, key=key, spacing=spacing, smallest=smallest, bands=bands
+    )
+    assert np.array_equal(actual, expected)
 
 
 def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:

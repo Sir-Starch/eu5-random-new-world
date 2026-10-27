@@ -204,6 +204,7 @@ from rnw.eu5_seas import (
     SeaError,
     VanillaPort,
     Water,
+    current_bands,
     current_text,
     read_ports,
     read_waters,
@@ -2515,6 +2516,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 game_dir, game_map, geometries.result(), reads.result()[1], hierarchy
             ),
         )
+        vanilla_waters = read_waters(_read(game_dir, TEMPLATES))
+        bands = current_bands(game_map, canvas, vanilla_waters)
         world = run_stage(
             "generate world",
             lambda: landcache.get_world(
@@ -2523,10 +2526,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 seed=seed,
                 settings=settings.new_world,
                 drawn=None if land_mask is None else fit(land_mask, canvas.mask.shape),
+                sea_bands=bands,
             ),
         )
         vanilla_ports = read_ports(_read(game_dir, PORTS))
-        vanilla_waters = read_waters(_read(game_dir, TEMPLATES))
         settled = run_stage(
             "settle coasts",
             lambda: settle_coast(

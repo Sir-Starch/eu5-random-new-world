@@ -505,7 +505,7 @@ def _absorb_orphans(
 
 
 def wobble_borders(
-    labels: NDArray[np.int32], kinds: list[CellClass], seed: int
+    labels: NDArray[np.int32], kinds: list[CellClass], seed: int, *, fixed_sea: bool = False
 ) -> NDArray[np.int32]:
     """Bend straight cell borders into curves; classes, coasts and cell count are kept.
 
@@ -531,6 +531,11 @@ def wobble_borders(
     del rows, columns, offsets
     valid = (labels >= 0) & (source >= 0)
     same = valid & (kind[np.maximum(source, 0)] == kind[np.maximum(labels, 0)])
+    if fixed_sea:
+        sea_kind = list(CellClass).index(CellClass.SEA)
+        for start in range(0, shape[0], STRIP_ROWS):
+            rows = slice(start, min(shape[0], start + STRIP_ROWS))
+            same[rows] &= kind[np.maximum(labels[rows], 0)] != sea_kind
     moved = np.where(same, source, labels).astype(np.int32)
     del source, same, valid
     counts = np.bincount(moved[moved >= 0], minlength=len(kinds))
@@ -574,12 +579,48 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
     return merge_small(grow_regions(mask, seed_sites(key, mask, spacing)), smallest)
 
 
+def _sea_cells(
+    ocean: NDArray[np.bool_],
+    *,
+    key: int,
+    spacing: int,
+    smallest: int,
+    bands: NDArray[np.bool_] | None,
+) -> NDArray[np.int32]:
+    """Partition sea inside and outside current bands separately, preserving their boundaries."""
+    if bands is None:
+        return _cells(ocean, key=key, spacing=spacing, smallest=smallest)
+    if bands.shape != ocean.shape:
+        message = "Current bands do not fit the world"
+        raise ValueError(message)
+    result = np.full(ocean.shape, -1, dtype=np.int32)
+    offset = 0
+    for inside in (True, False):
+        mask = np.empty(ocean.shape, dtype=np.bool_)
+        present = False
+        for start in range(0, len(ocean), STRIP_ROWS):
+            rows = slice(start, min(len(ocean), start + STRIP_ROWS))
+            mask[rows] = ocean[rows] & (bands[rows] if inside else ~bands[rows])
+            present = present or bool(np.any(mask[rows]))
+        if not present:
+            continue
+        part = renumber(_cells(mask, key=key, spacing=spacing, smallest=smallest))
+        maximum = -1
+        for start in range(0, len(ocean), STRIP_ROWS):
+            rows = slice(start, min(len(ocean), start + STRIP_ROWS))
+            result[rows][mask[rows]] = part[rows][mask[rows]] + offset
+            maximum = max(maximum, int(part[rows].max()))
+        offset += maximum + 1
+    return result
+
+
 def generate_new_world(
     domain: NDArray[np.bool_],
     *,
     seed: int,
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None = None,
+    sea_bands: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
@@ -611,11 +652,12 @@ def generate_new_world(
         sea_job = stages.submit(
             "sea cells",
             partial(
-                _cells,
+                _sea_cells,
                 ocean,
                 key=derive_seed(seed, "nw_sea_sites"),
                 spacing=settings.sea_zone_px,
                 smallest=settings.min_sea_cell_px,
+                bands=sea_bands,
             ),
         )
         relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed))
@@ -635,7 +677,7 @@ def generate_new_world(
         kinds.extend([kind] * present)
         del numbered
     del land_cells, sea_cells, lake_cells
-    labels = wobble_borders(labels, kinds, seed)
+    labels = wobble_borders(labels, kinds, seed, fixed_sea=sea_bands is not None)
     count = len(kinds)
     pixels, _, _, total, _ = _cell_sums(labels, relief, count)
     mean_relief = total // np.maximum(1, pixels)

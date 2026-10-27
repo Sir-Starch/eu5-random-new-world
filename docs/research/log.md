@@ -1839,3 +1839,12 @@ a new world whose resource-only reroll retains the reference's four empires and 
 hub 0.13.8→0.13.9 and passed its isolated Wine self-test. All ten previously installed
 worlds, other mod files, and three profile-root files are unchanged. No EU5 launch or
 playset change; actual AI behavior remains unknown.
+
+## 2026-10-27 — Ocean-current geometry
+
+[V-GAME owner / V-EXEC C401] The owner's maps exposed broad irregular current patches and ocean
+ends. Sea-cell generation now follows the installed game's replaced current bands, and route
+completion detects cyclic tips as well as degree-one ends. The FWL3 land mask remains identical;
+the separately installed candidate and generator hub were verified offline. Actual appearance and
+navigation remain [UNKNOWN] without a new game session. Details and limits are in
+[sea geography](../sea-geography.md) and [INSTALLED](../../experiments/INSTALLED.md).

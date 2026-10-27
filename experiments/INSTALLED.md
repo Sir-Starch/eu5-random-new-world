@@ -1,5 +1,21 @@
 # Installed experiments
 
+2026-10-27, **0.13.11 / epoch 48 ocean-current candidate**, C401: installed
+**RNW: Continents 7FUA** as `mod/rnw_exp_hydrology_final_01311`. It uses the
+land settings and seed of FWL3, with code
+`RNW1-080MP-B37XH-BH660-M006G-P0870-3T062-1V1Z8-0Y448-1R8GJ-4YW04-DA01N-BAGYG`.
+All 853 installed files match the prepared candidate; the 851-file canonical
+digest is `a32d513c592b0530973ee425a98902ac3fd88d93068b7e0a2a1e6baa63a88e6c`.
+No existing world or playset was replaced and EU5 was not launched. In-game
+appearance and navigation are unobserved.
+
+Exact removal with EU5 closed: `uv run rnw uninstall-mod rnw_exp_hydrology_final_01311 --user-dir '/mnt/games/SteamLibrary/steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V'`.
+
+2026-10-27, **generator hub 0.13.11**, C401: updated `mod/rnw_exp_hub` from
+0.13.10 after the candidate/source checks and isolated Wine self-test. The
+previous hub is retained in `.rnw-hub-backups/0.13.10-1793069444467045353`
+under the same EU5 profile; the updater verified the installed files.
+
 2026-10-27, **generator hub 0.13.10**, C400: updated the existing
 `mod/rnw_exp_hub` from 0.13.9 to 0.13.10. All 3,270 installed files match the
 built candidate; its isolated Wine self-test reports the window, native kernels
