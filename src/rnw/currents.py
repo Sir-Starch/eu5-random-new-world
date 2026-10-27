@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from rnw.newworld import NewWorld
+    from rnw.sea_corridors import CorridorAxis
     from rnw.seas import Waters
 
 # A current: hundredths of the game's unit, east then north.
@@ -92,6 +93,8 @@ def flow(
     waters: Waters,
     samples: Mapping[int, Sequence[Vector]],
     lanes: Sequence[int],
+    *,
+    axes: Mapping[int, CorridorAxis] | None = None,
 ) -> dict[int, Vector]:
     """The current of every lane cell, which are the deep-ocean cells that carry one.
 
@@ -130,7 +133,38 @@ def flow(
     for _ in range(SMOOTHING_ROUNDS):
         blended = _smooth(blended, links)
     blended = _follow_corridors(world, blended, links)
+    if axes:
+        blended = _follow_designed(blended, axes)
     return {cell: _scaled(blended[cell], strength) for cell in deep}
+
+
+def _follow_designed(
+    current: Mapping[int, tuple[float, float]], axes: Mapping[int, CorridorAxis]
+) -> dict[int, tuple[float, float]]:
+    """Align a straight designed band, keeping one consistent source-derived direction.
+
+    A band's sign is chosen from the sum of source-derived projections along it.
+    An exact tie uses the canonical positive axis; a zero current remains zero and
+    is rejected by the ordinary current validator.
+    """
+    groups: dict[int, list[tuple[int, int, int]]] = {}
+    for cell, (group, east, north) in sorted(axes.items()):
+        if cell in current and (east or north):
+            groups.setdefault(group, []).append((cell, east, north))
+    result = dict(current)
+    for members in groups.values():
+        projection = math.fsum(
+            current[cell][0] * east + current[cell][1] * north for cell, east, north in members
+        )
+        direction = -1 if projection < 0 else 1
+        for cell, east, north in members:
+            length = math.hypot(east, north)
+            strength = math.hypot(*current[cell])
+            result[cell] = (
+                direction * strength * east / length,
+                direction * strength * north / length,
+            )
+    return result
 
 
 def _blend(

@@ -10,7 +10,7 @@ from dataclasses import replace
 
 import pytest
 
-from rnw.currents import CurrentError, flow
+from rnw.currents import CurrentError, _follow_designed, flow  # pyright: ignore[reportPrivateUsage]
 from rnw.seas import Topography, analyse
 from tests.block_worlds import block_world, cell
 
@@ -125,6 +125,33 @@ def test_an_ambiguous_perpendicular_current_does_not_choose_a_corridor_direction
     lane = [cell(OPEN_SEA, 5, column) for column in range(2, 18)]
     currents = flow(world, waters, {lane[0]: [(0, 9000)]}, lane)
     assert currents[lane[7]] == (0, 9000)
+
+
+@pytest.mark.parametrize("east", [3000, -3000])
+def test_designed_crossing_aligns_to_its_band_and_preserves_flow_direction(east: int) -> None:
+    world = block_world(OPEN_SEA)
+    waters = analyse(world)
+    lane = [cell(OPEN_SEA, 5, column) for column in range(2, 18)]
+    axes = dict.fromkeys(lane, (1, 100, 0))
+    currents = flow(world, waters, {lane[0]: [(east, 9000)]}, lane, axes=axes)
+    assert all(vector[0] * east > 0 and vector[1] == 0 for vector in currents.values())
+
+
+def test_each_designed_band_uses_one_direction_from_the_combined_current() -> None:
+    currents = {0: (8.0, 7.0), 1: (-2.0, 6.0), 2: (-9.0, 5.0)}
+    axes = {0: (1, 1, 0), 1: (1, 1, 0), 2: (2, 1, 0)}
+    result = _follow_designed(currents, axes)
+    assert result[0][0] > 0
+    assert result[1][0] > 0
+    assert result[2][0] < 0
+    assert all(vector[1] == 0 for vector in result.values())
+
+
+def test_a_designed_band_breaks_an_exact_perpendicular_tie_deterministically() -> None:
+    lane = {0: (0.0, 9.0), 1: (0.0, 7.0)}
+    axes = {0: (1, 1, 0), 1: (1, 1, 0)}
+    result = _follow_designed(lane, axes)
+    assert result == {0: (9.0, 0.0), 1: (7.0, 0.0)}
 
 
 def test_a_source_across_closed_water_does_not_feed_a_current() -> None:

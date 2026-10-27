@@ -81,12 +81,14 @@ class Lanes:
     completed: int = 0
 
 
-def plan_lanes(
+def plan_lanes(  # noqa: PLR0913 - currents, retained contacts, and designed geometry.
     world: NewWorld,
     waters: Waters,
     courses: Mapping[int, Course],
     anchors: Collection[int],
     docks: Collection[int],
+    *,
+    preferred: Collection[int] = (),
 ) -> Lanes:
     """Choose the lanes of ``world`` and cut the deep water between them into zones.
 
@@ -105,6 +107,16 @@ def plan_lanes(
         for cell in deep
         if cell in anchors or (cell in courses and courses[cell].permille >= COURSE_PERMILLE)
     }
+    sources = set(anchors) | {
+        cell for cell, course in courses.items() if course.permille >= COURSE_PERMILLE
+    }
+    # A designed crossing is only a current when its navigable component has a
+    # real source. This decision precedes both final zoning and current vectors.
+    proposed = deep.intersection(preferred)
+    provisional = set(links) - (deep - lanes - proposed)
+    for stretch in _stretches(links, provisional):
+        if sources.intersection(stretch):
+            lanes.update(proposed.intersection(stretch))
     if not any(cell in docks for cell in links):
         message = "No cell of the generated water touches the game's water"
         raise LaneError(message)
@@ -113,9 +125,6 @@ def plan_lanes(
     linked = len(lanes) - before
     local_pairs, shortcuts = shorten_routes(world, waters, deep, lanes, docks)
     completed = complete_routes(world, waters, deep, lanes, docks)
-    sources = set(anchors) | {
-        cell for cell, course in courses.items() if course.permille >= COURSE_PERMILLE
-    }
     shortcuts += cross_oceans(world, waters, deep, lanes, docks=docks, sources=sources)
     # A closed patch needs an interior: a cell with closed water on at least two
     # sides. Isolated cells and single-edge slivers are part of the surrounding

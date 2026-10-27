@@ -1,5 +1,24 @@
 # Sea geography
 
+**Crossing direction, 0.13.14 / epoch 51:** connected designed bands with a
+clear principal axis carry currents along that axis. Their shared direction follows
+the aggregate projection of the inherited currents; an exact tie uses a deterministic
+axis direction. Broad junctions keep their interpolated flow. The axis is computed
+from integer moments of the band and no source-less current is manufactured.
+[V-EXEC; engine rendering and movement UNKNOWN]
+
+**Continuous crossings, 0.13.13 / epoch 50:** the generator plans a water-only
+network on a coarse sample of the finished land mask before it partitions sea
+locations. Shore-to-shore crossings are added where the existing coastal and
+inherited-current network requires a substantial detour. A crossing's centreline
+is straightened only across water at full raster resolution, widened to a typical
+sea-cell width and clipped to water. Sea cells are partitioned inside the designed
+bands separately; only bands reachable from a real current source become currents.
+The final graph still checks local connections and course ends. A small, detached
+retained-ocean remainder joins an edge-adjacent navigable sea if the principal
+vanilla identity remains; a fragment surrounded by protected land stays intact.
+This cannot guarantee an engine-rendered appearance: [V-EXEC; game result UNKNOWN].
+
 **Crossings and sea-cell geometry, 0.13.12 / epoch 49:** water-distance regions
 grown from geographically spaced shore stretches and retained-water contacts identify
 crossings between distant coasts. An available voyage longer than twice the water-only
@@ -170,18 +189,18 @@ languages by `wording` since 0.11.5 (*Northern Gulf of Akaira*, *Северна�
 *アカイラ湾北部*; [localization](localization.md) §3.3). Names are drawn from the
 land layer's seed and nothing else, so rerolling the peoples or the resources leaves them.
 
-## Currents (`rnw.currents`)
+## Currents (`rnw.currents`, `rnw.sea_corridors`)
 
 A lane continues the game's currents. Each lane cell blends its four nearest sources through
 navigable water, weighted by inverse-square distance, bends away from nearby land, and is smoothed
-twice over lane neighbours. On a two-sided, approximately straight stretch it follows the lane's
-axis when the inherited current has an unambiguous direction along it; junctions, ends and
-near-perpendicular sources retain their interpolated direction. It takes the mean strength of the
-sources. A lane without a source reachable through navigable water, or a cancelled direction,
-stops export (`CurrentError`); neither closed water nor land supplies a shortcut. Arithmetic is
-performed in a fixed order. [V-EXEC; in-game appearance UNKNOWN]
+twice over lane neighbours. On a two-sided, approximately straight stretch or designed crossing
+corridor (`_follow_designed`), it follows the band's principal axis when supported by source-derived
+projections along it; junctions, ends and near-perpendicular sources retain their interpolated
+direction. It takes the mean strength of the sources. A lane without a source reachable through
+navigable water, or a cancelled direction, stops export (`CurrentError`); neither closed water
+nor land supplies a shortcut. Arithmetic is performed in a fixed order. [V-EXEC; in-game appearance UNKNOWN]
 
-## Lanes and closed ocean (`rnw.lanes`)
+## Lanes and closed ocean (`rnw.lanes`, `rnw.sea_corridors`, `rnw.eu5_oceans`)
 
 **Current bands, 0.13.11:** the generation canvas reads the footprints of the installed game's
 replaced deep-ocean currents. The world generator partitions ocean inside and outside these bands

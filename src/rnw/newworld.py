@@ -28,6 +28,7 @@ from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
 from rnw.relief import generate_relief
 from rnw.rng import SplitMix64, derive_seed
+from rnw.sea_corridors import designed_corridors
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
@@ -603,13 +604,19 @@ def _sea_cells(
         message = "Current bands do not fit the world"
         raise ValueError(message)
     result = np.full(ocean.shape, -1, dtype=np.int32)
+    corridors = designed_corridors(ocean, bands, spacing)
     offset = 0
-    for inside in (True, False):
+    for category in ("inherited", "crossing", "open"):
         mask = np.empty(ocean.shape, dtype=np.bool_)
         present = False
         for start in range(0, len(ocean), STRIP_ROWS):
             rows = slice(start, min(len(ocean), start + STRIP_ROWS))
-            mask[rows] = ocean[rows] & (bands[rows] if inside else ~bands[rows])
+            if category == "inherited":
+                mask[rows] = ocean[rows] & bands[rows]
+            elif category == "crossing":
+                mask[rows] = corridors[rows]
+            else:
+                mask[rows] = ocean[rows] & ~bands[rows] & ~corridors[rows]
             present = present or bool(np.any(mask[rows]))
         if not present:
             continue

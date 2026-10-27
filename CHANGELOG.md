@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.13.14 — 2026-10-27
+
+- Align currents on straight designed crossings to the band's geometry. The direction is
+  chosen consistently along each band from its continued source currents; ambiguous broad
+  junctions retain their interpolated flow. Epoch 51; game rendering remains unverified.
+
+## 0.13.13 — 2026-10-27
+
+- Plan useful crossings over the generated water before partitioning sea locations. Their
+  centre lines are simplified through unobstructed water and their bands become connected
+  sea-cell geometry, while actual currents still require a reachable existing source.
+- Join small, disconnected retained-ocean remainders to an adjacent navigable sea when they
+  share an edge; preserve principal vanilla identities and landlocked remnants. Epoch 50;
+  in-game rendering and navigation remain unverified.
+
 ## 0.13.12 — 2026-10-27
 
 - Plan crossings between distant shore stretches and retained water from the generated geography,

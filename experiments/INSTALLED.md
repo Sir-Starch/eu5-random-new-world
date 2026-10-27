@@ -1,5 +1,24 @@
 # Installed experiments
 
+2026-10-27, **generator hub 0.13.14 / epoch 51**: updated the normal-profile
+`mod/rnw_exp_hub` from 0.13.13 with the local updater; its isolated Wine self-test
+passes and the installed copy matches the candidate. The previous hub remains in
+`.rnw-hub-backups/0.13.13-1793080736711652959` under the same profile.
+
+2026-10-27, **0.13.13 / epoch 50 water candidate**, C404: installed a separate
+world generated from KZWN's seed and settings as `mod/rnw_exp_kzwn_hydrology_01313`,
+code `RNW1-08247-10EET-R73D8-Y006G-T0851-Z80Y4-481R8-GJ4YW-04DA0-1MRFX-R0`.
+All 853 installed files match the staged candidate; its 851-file canonical digest
+is `6ae3c08617ec146ad28f4ad9671a1437f0cd77e3ffd6d2d2f6b8a9ca3caafcc8`.
+The existing KZWN worlds were not changed. No game was launched; in-game appearance
+and movement remain unobserved. With EU5 closed, remove only
+`mod/rnw_exp_kzwn_hydrology_01313`.
+
+2026-10-27, **generator hub 0.13.13 / epoch 50**: updated the normal-profile
+`mod/rnw_exp_hub` from 0.13.12 using the local updater; its isolated Wine self-test
+passes and the installed copy matches the candidate. The previous hub remains in
+`.rnw-hub-backups/0.13.12-1793080188361834887` under the same profile.
+
 2026-10-27, **0.13.12 / epoch 49 water candidate**, C403: installed a separate
 world generated from KZWN's seed and settings as `mod/rnw_exp_kzwn_hydrology_01312`,
 code `RNW1-08247-10EET-R73D8-Y006G-R0851-Z80Y4-481R8-GJ4YW-04DA0-1G21A-EG`.

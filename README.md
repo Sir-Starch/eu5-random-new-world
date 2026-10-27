@@ -176,7 +176,7 @@ The [Documentation Index](docs/README.md) provides a full map of the repository:
 * **User Guides:** [Generator Guide](docs/generator-guide.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
 * **System Design:** [Architecture](docs/architecture.md) · [Terrain & Biomes](docs/terrain-biomes.md) · [Sea Geography](docs/sea-geography.md) · [Native Societies](docs/natives.md) · [Economy](docs/economy.md) · [Content Plan](docs/content-plan.md) · [Architecture Decision Records (ADRs)](docs/adr/)
 * **Project Tracking:** [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](experiments/README.md)
-* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C277`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
+* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C405`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
 
 ## Development & Verification
 

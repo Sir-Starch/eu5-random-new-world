@@ -10,6 +10,7 @@ geography canvas. No game files or exported output are repaired.
 # pyright: reportAny=false
 from __future__ import annotations
 
+from collections import Counter
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -51,6 +52,48 @@ def _neighbours(part: OceanRemainder, canvas: Canvas, world: NewWorld) -> set[in
                 found.add(int(world.labels[row, column]))
     found.discard(-1)
     return found
+
+
+def _adjacent_navigable_color(  # noqa: PLR0913, PLR0917 - original and generated neighbours.
+    part: OceanRemainder,
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    plan: Plan,
+    closed: frozenset[int],
+) -> int | None:
+    """Choose the longest shared edge with actual navigable water, if one exists.
+
+    The remainder is small, so walk only its row runs. Generated and retained
+    neighbours are read in their respective coordinate systems. A corner contact
+    is not enough to make the resulting location connected.
+    """
+    contacts: Counter[int] = Counter()
+    height, width = canvas.shape
+    crop_width = world.labels.shape[1]
+
+    def contact(row: int, column: int) -> None:
+        if not 0 <= row < height:
+            return
+        column %= width
+        crop = column - canvas.col0
+        if 0 <= crop < crop_width:
+            cell = int(world.labels[row, crop])
+            if cell >= 0:
+                if world.classes[cell] is CellClass.SEA and cell not in closed:
+                    contacts[plan.cells[cell].color] += 1
+                return
+        old = int(game_map.labels[row, (column - canvas.roll) % width])
+        if game_map.classes[old] is CellClass.SEA and not game_map.ambiguous[old]:
+            contacts[int(game_map.colors[old])] += 1
+
+    for row, left, right in part.runs.tolist():
+        contact(row, left - 1)
+        contact(row, right)
+        for column in range(left, right):
+            contact(row - 1, column)
+            contact(row + 1, column)
+    return min(contacts, key=lambda color: (-contacts[color], color)) if contacts else None
 
 
 def _overlap(game_map: Eu5Map, canvas: Canvas, world: NewWorld, cells: set[int]) -> dict[int, int]:
@@ -184,6 +227,11 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
     count = len(world.classes)
     used = {int(value) for value in game_map.colors.tolist()} | {cell.color for cell in plan.cells}
     color_cursor = 1
+    sea_pixels = [
+        int(world.pixels[cell]) for cell in range(count) if world.classes[cell] is CellClass.SEA
+    ]
+    typical_area = int(np.median(sea_pixels)) if sea_pixels else 0
+    absorbed = 0
     for source, components in sorted(groups.items()):
         original = game_map.keys[source]
         location = hierarchy[original]
@@ -197,6 +245,17 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
             components.values(), key=lambda nodes: (*(-v for v in weight(nodes)), min(nodes))
         )
         for number, nodes in enumerate(ordered):
+            # Preserve the principal vanilla identity and every substantive or
+            # generated component. Tiny isolated remainders may instead join an
+            # actually adjacent, navigable sea location without inventing an ocean.
+            if number and len(nodes) == 1 and nodes[0] >= count:
+                part = canvas.ocean_parts[nodes[0] - count]
+                if part.pixels < typical_area:
+                    color = _adjacent_navigable_color(part, game_map, canvas, world, plan, closed)
+                    if color is not None:
+                        result.patches.append((part, color))
+                        absorbed += 1
+                        continue
             if number == 0:
                 name, color, province = original, int(game_map.colors[source]), location.province
                 result.retained.add(name)
@@ -239,6 +298,7 @@ def plan_oceans(  # noqa: PLR0913, PLR0917 - planning reads the map and generate
         "named_ocean_sources": len(groups),
         "shared_ocean_locations": len(result.retained),
         "ocean_remainder_fragments": len(canvas.ocean_parts),
+        "ocean_fragments_absorbed": absorbed,
         "ocean_identity_recolours": sum(part.pixels for part, _ in result.patches),
     }
     return result

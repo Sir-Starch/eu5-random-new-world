@@ -88,3 +88,11 @@ removes the specific artificial Towa transition and places the earlier pair's
 anchors together in one coordinate chart. Shape, rivers and Old World nonsea
 pixels are preserved. [V-GAME owner C380] Post-fix seam traversal is now verified
 in the [22F4 crossing test](../../experiments/068-continuous-location-identities/README.md#owner-crossing-test-22f4-2026-10-26).
+
+## Ocean current bands, sea-cell borders and crossing corridors, 2026-10-27
+
+[V-LOCAL / V-EXEC C401, C403–C405]
+- **Replaced current bands (0.13.11):** Ocean is partitioned inside and outside the footprints of the replaced vanilla deep-ocean currents. Current outlines are built into location geometry rather than randomly overlapped; cyclic tip completion handles loops connected at single junctions.
+- **Euclidean sea-cell boundaries (0.13.12):** Manhattan distance growth created irregular 42-pixel departures from straight chords on shared sea borders, contributing to hover/outline discrepancies. Euclidean seed distance reduces chord departure to ~1 pixel while preserving land masks and naming impassable zones by their body/area.
+- **Pre-partitioning crossing corridors (0.13.13):** Planning water crossings on coarse land masks prior to location partitioning allows centerlines through open water to be simplified and widened into dedicated sea-cell bands without raster distortion. Edge-adjacent retained ocean remainders merge into neighboring navigable seas while keeping landlocked remnants intact.
+- **Designed band current alignment (0.13.14):** Currents along straight crossing corridors follow the band's principal axis, directed by aggregate projection of inherited source currents; ambiguous multi-junctions retain interpolated flow.

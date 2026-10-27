@@ -28,7 +28,7 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -40,6 +40,7 @@ from rnw.eu5_oceans import emitted_cells
 from rnw.lanes import COURSE_PERMILLE, Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
+from rnw.sea_corridors import CorridorAxis, corridor_axes
 from rnw.sea_routes import cyclic_end
 from rnw.seas import Topography, Waters, analyse
 from rnw.straits import CROSSING_PX, narrow_gaps
@@ -169,6 +170,8 @@ class Coast:
     docks: frozenset[int]
     shore: frozenset[int]
     merged: int
+    designed: frozenset[int] = frozenset()
+    designed_axes: dict[int, CorridorAxis] = field(default_factory=dict)
 
     def renumbered(self, world: NewWorld, cell_of: Sequence[int], keep: Collection[int]) -> Coast:
         """This coast in ``world``, whose cells are the old ones folded as ``cell_of`` says.
@@ -183,6 +186,8 @@ class Coast:
             frozenset(cell_of[cell] for cell in self.docks if cell in keep),
             frozenset(cell_of[cell] for cell in self.shore if cell in keep),
             self.merged,
+            frozenset(cell_of[cell] for cell in self.designed if cell in keep),
+            {cell_of[cell]: axis for cell, axis in self.designed_axes.items() if cell in keep},
         )
 
 
@@ -194,6 +199,7 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
     ports: Mapping[str, VanillaPort],
     vanilla: Mapping[str, VanillaWater],
     removed: Collection[str],
+    designed: np.ndarray[tuple[int, ...], np.dtype[np.bool_]] | None = None,
 ) -> Coast:
     """Settle the sea cells of ``world`` against ports; collect the game's lanes beside it."""
     contacts = outside_contacts(game_map, canvas, world, len(game_map.keys))
@@ -214,6 +220,29 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         docks.add(settled.cell_of[cell])
         if water.topography == Topography.DEEP_OCEAN and water.current is not None:
             samples.setdefault(settled.cell_of[cell], []).append(water.current)
+    designed_cells: set[int] = set()
+    axes: dict[int, CorridorAxis] = {}
+    if designed is not None:
+        if designed.shape != settled.world.labels.shape:
+            message = "Designed ocean corridors do not fit the generated world"
+            raise ValueError(message)
+        coverage = np.zeros(len(settled.world.classes), dtype=np.int64)
+        for start in range(0, designed.shape[0], STRIP_ROWS):
+            rows = slice(start, min(designed.shape[0], start + STRIP_ROWS))
+            labels = settled.world.labels[rows]
+            inside = designed[rows] & (labels >= 0)
+            coverage += np.bincount(labels[inside], minlength=len(coverage))
+        designed_cells = {
+            cell
+            for cell, size in enumerate(coverage.tolist())
+            if settled.world.classes[cell] is CellClass.SEA
+            and size * PERMILLE >= COURSE_PERMILLE * int(settled.world.pixels[cell])
+        }
+        sizes = [int(settled.world.pixels[cell]) for cell in designed_cells]
+        scale = math.isqrt(int(np.median(sizes))) if sizes else 1
+        axes = corridor_axes(
+            designed, settled.world.labels, designed_cells, scale, len(settled.world.classes)
+        )
     return Coast(
         settled.world,
         settled.foreign,
@@ -222,6 +251,8 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         frozenset(docks),
         frozenset(shore),
         settled.merged,
+        frozenset(designed_cells),
+        axes,
     )
 
 
@@ -325,7 +356,9 @@ class Water:
 def shape_water(coast: Coast) -> Water:
     """Choose the lanes, fold the shut deep water into zones, and give the lanes their currents."""
     waters = analyse(coast.world, coast.shore)
-    chosen = plan_lanes(coast.world, waters, coast.courses, coast.samples, coast.docks)
+    chosen = plan_lanes(
+        coast.world, waters, coast.courses, coast.samples, coast.docks, preferred=coast.designed
+    )
     fold = {cell: zone[0] for zone in chosen.zones for cell in zone[1:]}
     if fold:
         world, cell_of = relabel(coast.world, fold)
@@ -346,7 +379,7 @@ def shape_water(coast: Coast) -> Water:
     for cell, course in final.courses.items():
         if cell in lanes and course.permille >= COURSE_PERMILLE:
             sources.setdefault(cell, []).append(course.vector)
-    flows = flow(world, waters, sources, sorted(lanes))
+    flows = flow(world, waters, sources, sorted(lanes), axes=final.designed_axes)
     strait_rows = tuple(crossings(world, waters.landmass.tolist()))
     return Water(
         final,

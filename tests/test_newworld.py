@@ -25,6 +25,7 @@ from rnw.newworld import (
     unported_cells,
     wobble_borders,
 )
+from rnw.sea_corridors import designed_corridors
 from rnw.settings import NewWorldSettings
 from rnw.synth import renumber
 from rnw.topology import distance_from, label_components
@@ -199,8 +200,10 @@ def test_banded_sea_strips_equal_whole_mask_partition(monkeypatch: pytest.Monkey
     key, spacing, smallest = 11, 8, 4
     expected = np.full(ocean.shape, -1, dtype=np.int32)
     offset = 0
-    for inside in (True, False):
-        mask = ocean & (bands if inside else ~bands)
+    crossings = designed_corridors(ocean, bands, spacing)
+    for mask in (ocean & bands, crossings, ocean & ~bands & ~crossings):
+        if not np.any(mask):
+            continue
         part = renumber(
             newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
                 mask, key=key, spacing=spacing, smallest=smallest, bands=None

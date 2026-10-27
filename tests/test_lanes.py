@@ -140,6 +140,15 @@ def test_closed_zones_have_an_interior_in_the_sea_graph() -> None:
         assert any(len(neighbours[cell] & inside) >= 2 for cell in zone)
 
 
+def test_designed_crossing_only_opens_where_a_current_can_reach_it() -> None:
+    world, waters, docks = _setup()
+    route = {cell(COAST, 5, column) for column in range(3, 18)}
+    without_source = plan_lanes(world, waters, {}, set(), docks, preferred=route)
+    assert not route <= without_source.lanes
+    with_source = plan_lanes(world, waters, {}, {cell(COAST, 5, 19)}, docks, preferred=route)
+    assert route <= with_source.lanes
+
+
 def test_a_closed_sea_that_no_deep_water_joins_is_counted_not_joined() -> None:
     layout = [
         "####################",

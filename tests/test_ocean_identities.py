@@ -153,3 +153,85 @@ def test_a_lane_separates_closed_water_even_when_it_has_the_same_ocean_parent() 
     )
     assert plan.cells[0].key != plan.cells[2].key
     assert plan.cells[1].key == "new_1"
+
+
+def test_a_tiny_remainder_joins_its_adjacent_navigable_sea() -> None:
+    labels = np.zeros((10, 10), dtype=np.int32)
+    labels[5, 0] = 1
+    world = derive_world(labels, (CellClass.SEA, CellClass.SEA), labels.copy())
+    original = _canvas()
+    main = original.ocean_parts[1]
+    tiny = OceanRemainder(0, np.array([[5, 4, 5]], dtype=np.int64), 1)
+    canvas = Canvas(
+        original.roll,
+        original.col0,
+        original.mask,
+        original.shape,
+        original.removed,
+        original.trimmed,
+        (main, tiny),
+    )
+    plan = _plan(world.classes)
+    oceans = plan_oceans(_map(), canvas, world, plan, _hierarchy(), frozenset({0}), KeySpace(set()))
+    assert oceans.retained == {"old_ocean"}
+    assert not oceans.extra
+    assert [(part.pixels, color) for part, color in oceans.patches] == [(1, plan.cells[1].color)]
+    assert oceans.stats["ocean_fragments_absorbed"] == 1
+
+
+def test_tiny_remainder_cannot_join_water_across_land() -> None:
+    labels = np.zeros((10, 10), dtype=np.int32)
+    labels[5, 0] = 1
+    world = derive_world(labels, (CellClass.SEA, CellClass.LAND), labels.copy())
+    original = _canvas()
+    tiny = OceanRemainder(0, np.array([[5, 4, 5]], dtype=np.int64), 1)
+    canvas = Canvas(
+        original.roll,
+        original.col0,
+        original.mask,
+        original.shape,
+        original.removed,
+        original.trimmed,
+        (original.ocean_parts[1], tiny),
+    )
+    plan = _plan(world.classes)
+    oceans = plan_oceans(_map(), canvas, world, plan, _hierarchy(), frozenset({0}), KeySpace(set()))
+    assert len(oceans.extra) == 1
+    assert oceans.stats["ocean_fragments_absorbed"] == 0
+
+
+def test_tiny_remainder_can_join_retained_vanilla_sea() -> None:
+    labels = np.zeros((10, 10), dtype=np.int32)
+    labels[5, 0] = 1
+    world = derive_world(labels, (CellClass.SEA, CellClass.LAND), labels.copy())
+    game = _map()
+    old_labels = game.labels.copy()
+    old_labels[5, 3] = 1
+    game = cast(
+        "Eu5Map",
+        cast(
+            "object",
+            SimpleNamespace(
+                keys=("old_ocean", "nearby_sea"),
+                colors=np.array([0x123456, 0x654321]),
+                classes=(CellClass.SEA, CellClass.SEA),
+                continents=("pacific_ocean_continent",) * 2,
+                ambiguous=np.array([True, False]),
+                labels=old_labels,
+            ),
+        ),
+    )
+    original = _canvas()
+    tiny = OceanRemainder(0, np.array([[5, 4, 5]], dtype=np.int64), 1)
+    canvas = Canvas(
+        original.roll,
+        original.col0,
+        original.mask,
+        original.shape,
+        original.removed,
+        original.trimmed,
+        (original.ocean_parts[1], tiny),
+    )
+    plan = _plan(world.classes)
+    oceans = plan_oceans(game, canvas, world, plan, _hierarchy(), frozenset({0}), KeySpace(set()))
+    assert [(part.pixels, color) for part, color in oceans.patches] == [(1, 0x654321)]

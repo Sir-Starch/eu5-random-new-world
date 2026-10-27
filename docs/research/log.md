@@ -1856,3 +1856,29 @@ Its full logs show recurring base-game script errors and AI command rejections, 
 same dominant `set_cabinet_action` warning family previously seen in TR46. Those message families
 are not attributable to RNW; the missing actors and failure reasons remain unknown. Full counts
 and the comparison limits are in [the AI diagnostics](tr46-ai-diagnostics.md#7-vanilla-control-through-1632).
+
+## 2026-10-27 — Ocean crossings, sea-cell geometry and designed current corridors
+
+[V-GAME owner / V-EXEC C403] Owner screenshots on KZWN showed a hover-fill versus
+outline mismatch and distant coasts separated by closed water. In the installed
+0.13.11 raster, the longest shared boundary departed 42 pixels from its chord.
+RNW 0.13.12 / epoch 49 switches sea-cell growth to Euclidean seed distance (reducing
+chord departure to 1.03 pixels), opens useful crossings between distant coasts and
+retained contacts, and names impassable zones by their area or body. Candidate
+and hub verified offline.
+
+[V-EXEC C404] RNW 0.13.13 / epoch 50 plans useful crossings over generated water
+before partitioning sea locations (`rnw.sea_corridors`). Centerlines across
+unobstructed water are simplified and widened into connected sea-cell bands.
+Small disconnected retained-ocean remainders merge into an adjacent navigable
+sea when sharing an edge, preserving principal vanilla identities and landlocked
+remnants (`rnw.eu5_oceans`). Staged and verified candidate `mod/rnw_exp_kzwn_hydrology_01313`
+and updated hub to 0.13.13.
+
+[V-EXEC C405] RNW 0.13.14 / epoch 51 aligns currents along straight designed crossing
+bands with a clear principal axis (`rnw.currents`). Direction is chosen from the
+aggregate projection of source currents along the band; broad junctions keep
+interpolated flow. Generator hub updated to 0.13.14 in the owner's profile with
+passing Wine self-test. Test suite passes 2,056 Python tests (14 skipped), 23 Rust tests,
+and local installation suite (12 passed, 2 skipped). In-game rendering and movement
+remain unobserved.

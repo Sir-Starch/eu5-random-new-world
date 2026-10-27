@@ -15,6 +15,8 @@ import heapq
 import math
 from typing import TYPE_CHECKING, Final
 
+from rnw.sea_policy import MAX_DETOUR
+
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
@@ -24,7 +26,6 @@ if TYPE_CHECKING:
 # A neighbouring coast is at most six typical sea-cell widths away by water.
 # Its available route may be at most twice the unrestricted water-only route.
 LOCAL_SCALES: Final[int] = 6
-MAX_DETOUR: Final[int] = 2
 MIN_CYCLIC_BLOCK: Final[int] = 3
 Graph = dict[int, list[tuple[int, int]]]
 

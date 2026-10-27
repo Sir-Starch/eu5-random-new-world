@@ -273,6 +273,7 @@ from rnw.relief import COAST_HEIGHT
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.rivers import carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rng import derive_seed
+from rnw.sea_corridors import designed_corridors
 from rnw.seas import Shape
 from rnw.settings import canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
@@ -2434,6 +2435,16 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
         )
 
 
+def _ocean_pixels(world: NewWorld) -> NDArray[np.bool_]:
+    """The generated sea mask, in bounded strips and independent of cell numbers."""
+    sea_class = np.array([kind is CellClass.SEA for kind in world.classes] + [False])
+    ocean = np.empty(world.labels.shape, dtype=np.bool_)
+    for first in range(0, ocean.shape[0], 1024):
+        rows = slice(first, min(ocean.shape[0], first + 1024))
+        ocean[rows] = sea_class[world.labels[rows]]
+    return ocean
+
+
 def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every stage of the export.
     spool: Spool,
     recorder: inputs.InputRecorder,
@@ -2529,6 +2540,11 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 sea_bands=bands,
             ),
         )
+        # The corridor planner depends on the physical water mask, not on cell
+        # identities. Recompute it on cached worlds as well as freshly made ones.
+        ocean = _ocean_pixels(world)
+        designed = designed_corridors(ocean, bands, settings.new_world.sea_zone_px)
+        del ocean
         vanilla_ports = read_ports(_read(game_dir, PORTS))
         settled = run_stage(
             "settle coasts",
@@ -2539,6 +2555,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 ports=vanilla_ports,
                 vanilla=vanilla_waters,
                 removed=removed,
+                designed=designed,
             ),
         )
         shapes = run_stage("water shapes", lambda: shape_water(settled))
