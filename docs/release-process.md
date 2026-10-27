@@ -51,17 +51,17 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-As of 2026-10-27, the current product is still a **0.13.10 / epoch 47 development
-candidate**, not a 1.0.0 release. The owner's latest FWL3 campaign loaded and ran
-from 1337 through 1 January 1366 with a normal exit, but it exposed a generated
-government/template defect: EU5 strips three monarchy records from JOQ after its
-government is changed to a theocracy. Version 0.13.10 removes the incompatible
-template from new sacred centres; the change has not been observed in game.
-Sixteen locator warnings, including generated and vanilla objects, also remain
-unattributed (C398). The product gates listed above are not accepted, and this campaign
-does not substitute for the required phase, language, compatibility, legal,
-packaging and platform acceptance evidence. The older EVXP 0.13.6 candidate and
-its 0.13.5 campaign do not validate the current 0.13.10 output.
+As of 2026-10-28, the current product is **0.13.16 / epoch 53**, a development
+candidate rather than a 1.0.0 release (`pyproject.toml`, [changelog](../CHANGELOG.md)).
+The 0.13.16 4TXC world candidate is installed separately and its 860 files match
+the prepared candidate, and its hub passes the isolated Wine self-test [V-EXEC C408].
+The target is EU5 1.4.4 / Steam build 26142040 on fingerprinted 1.4.3 map data
+[V-LOCAL C408]. EU5 was not launched, so rendering and navigation for the new
+water routes remain unverified [UNKNOWN]. The most recent long-campaign evidence
+is EVXP 0.13.5, which reached 1849 [V-LOCAL / V-EXEC C389]. That campaign predates
+the 0.13.6 corrections and does not validate them or any later generator output
+[INFERRED C389, C390–C392, C408]. The 1.0.0 product, language, compatibility,
+legal, packaging and platform gates listed above remain unaccepted.
 
 Publication, native-Windows trust and Workshop acceptance remain separate
 boundaries under ADR 0009; no upload, signing or remote CI result is inferred

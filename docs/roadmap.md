@@ -11,9 +11,11 @@ was resolved in 0.13.5 (C374–C380) by restoring vanilla continuous identities.
 personalities were calibrated to vanilla Balanced baseline in 0.13.9 (C396–C397).
 Sea geography and ocean currents were refined in 0.13.11–0.13.14 (epochs 48–51, C401–C405):
 replaced-band current partitioning, Euclidean borders, continuous water-only crossing
-corridors, and axis-aligned currents on designed crossing bands.
+corridors, and axis-aligned currents on designed crossing bands. Versions 0.13.15–0.13.16
+(epochs 52–53, C408) then fixed route ends and planned deep-water routes from generated
+shores, requiring useful-width openings and aligning currents to their actual exits.
 
-**Where it stands (0.13.14, 2026-10-27).** The owner has accepted physical geography (V1) and the sea phase (S1) in game. The natives (R6) and the economy and societies of R7 load and play in game, with the remaining open points recorded in their experiments. The content plan (N0–N5) is implemented offline, and N1–N3 have been seen in console sittings. The world's mod, the generator's window and the Workshop text are written in all eleven official languages (L1, offline). The optional ocean expansion (S2) is implemented offline (0.12.0, epoch 30). The column *Kind of work* records what each phase needed when it was planned: design and production work, or bounded implementation.
+**Where it stands (0.13.16 / epoch 53, 2026-10-28).** The owner has accepted physical geography (V1) and the original sea phase (S1) in game; the 0.13.11–0.13.16 sea refinements remain offline candidates. The 0.13.16 4TXC candidate is installed and its files are verified, but EU5 was not launched, so its rendering and navigation are not game-validated [V-EXEC C408]. The natives (R6) and the economy and societies of R7 load and play in game, with the remaining open points recorded in their experiments. The content plan (N0–N5) is implemented offline, and N1–N3 have been seen in console sittings. The world's mod, the generator's window and the Workshop text are written in all eleven official languages (L1, offline). The optional ocean expansion (S2) is implemented offline (0.12.0, epoch 30). The column *Kind of work* records what each phase needed when it was planned: design and production work, or bounded implementation.
 
 The optional ocean expansion (S2) is implemented offline in 0.12.0, epoch 30: a fixed wider canvas, connected named oceans and the original-canvas checkbox. See [the design and audit](research/canvas-expansion.md). Its engine result is unverified.
 
