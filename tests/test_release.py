@@ -79,6 +79,8 @@ def test_release_archives_cannot_carry_derived_game_data(tmp_path: Path) -> None
 def test_checksum_file_covers_each_artifact(tmp_path: Path) -> None:
     _ = (tmp_path / "linux.tar.gz").write_bytes(b"linux")
     _ = (tmp_path / "windows.zip").write_bytes(b"windows")
+    # uv build creates this helper, which the artifact uploader omits by default.
+    _ = (tmp_path / ".gitignore").write_text("*", encoding="ascii")
     path = release.checksums(tmp_path)
     expected = hashlib.sha256(b"linux").hexdigest()
     assert f"{expected}  linux.tar.gz" in path.read_text(encoding="ascii")

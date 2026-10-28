@@ -78,7 +78,7 @@ def checksums(folder: Path) -> Path:
     target = folder / "SHA256SUMS"
     lines: list[str] = []
     for file in sorted(folder.iterdir()):
-        if not file.is_file() or file == target:
+        if not file.is_file() or file == target or file.name.startswith("."):
             continue
         with file.open("rb") as handle:
             digest = hashlib.file_digest(handle, "sha256").hexdigest()

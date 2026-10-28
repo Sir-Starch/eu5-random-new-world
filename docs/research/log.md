@@ -2028,3 +2028,12 @@ Ubuntu 22.04’s system Python 3.10 during direct cargo validation. The extensio
 had already built under uv’s 3.12. Makefile and general-CI Rust commands now
 run through uv as well; the same 1.0.0 target and epoch 59 are retained.
 The failed job and corrected commands are recorded in C433.
+
+## 2026-10-28 — Publish checksums only for delivered files (C434)
+
+Exclude uv’s hidden source-output helper from SHA256SUMS: the artifact uploader
+omits it, so including its hash makes verification of a download fail. The
+existing archive-checksum regression now includes that helper. The Windows
+artifact list now includes only the ZIPs and checksum manifest, avoiding a
+duplicate intermediate standalone tree. Product target
+1.0.0, epoch and all world bytes remain unchanged.
