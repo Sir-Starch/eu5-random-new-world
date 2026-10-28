@@ -1979,6 +1979,14 @@ watersheds and all other game-facing data remain exact. The
 [separate dossier](map-wrap-dossier.md#visual-source-extension-restored-01320--epoch-57-c418)
 owns the new visibility report, verification, delivery and rendering uncertainty.
 
+## 2026-10-28 — Visibility refresh instructions (C429)
+
+The owner reports that EU5 1.4.5 picks up a world's visibility-file change by
+closing and reopening the Mods manager from the main menu; a game restart is not
+needed. Generator 0.13.23 updates the visibility hint and confirmation in English
+and all ten locale catalogs. This concerns the visibility update only; it does not
+change the existing guidance for loading a different map after a campaign.
+
 ## 2026-10-28 — Release policy and 1.0.0 readiness (C430)
 
 At the owner's request, revised ADR 0003: one target per release cycle, no
@@ -1993,3 +2001,22 @@ the edited remote workflow is not yet exercised. The single current audit,
 including the stale local dist hub and remaining final-candidate/publication
 boundaries, is in [release process](../release-process.md#current-readiness).
 No game launch, tag, push or publication.
+
+## 2026-10-28 — 1.0.0 release candidate (C431–C432)
+
+At the owner’s request, prepared the complete local 1.0.0 candidate and its
+release texts, official-language Workshop descriptions and current GUI images.
+Epoch 59 stays: independent full exports retain its 867-file digest. Corrected
+the optional reference test’s stale event count for the existing 1.4.5 DLC gate.
+Public packaging omits build receipts and absolute bytecode filenames. All local
+checks, fresh package self-tests and CLI parity pass; the verified hub and a
+separate complete world are installed with prior files preserved.
+
+The owner additionally requested VirusTotal MCP installation and use. OAuth
+connection and two binary submissions completed; both exact hashes return zero
+malicious/suspicious detections (71 undetected, four unsupported). The reports
+do not establish signing or universal safety. Current evidence, package scope
+and external publication boundaries are maintained in
+[release process](../release-process.md#current-readiness), with reusable
+[release notes](../releases/1.0.0.md) and delivery in INSTALLED. No EU5 launch,
+source push or publication.

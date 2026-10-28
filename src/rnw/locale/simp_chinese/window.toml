@@ -191,12 +191,12 @@ source = "2764b4c1b7b57015"
 text = '''游玩之前'''
 
 ["world_visibility_hint"]
-source = "bc9b9de7e31abc1c"
-text = '''只对这个世界生效。无需重新生成即可更新其模组图片和国家选择地图。重启EU5后游戏才会读取这一变更。'''
+source = "6a31a45fb98a79a3"
+text = '''仅适用于此世界。无需重新生成即可更新模组图片和国家选择地图。要让EU5重新载入更改，请在主菜单中关闭再重新打开模组管理器。'''
 
 ["visibility_updated"]
-source = "2fce01cc9fc9abdf"
-text = '''这个世界的显示设置已更改。重启EU5后游戏才会读取这一变更。'''
+source = "83ddb4528c0c8352"
+text = '''此世界的可见性已更改。要让EU5重新载入更改，请在主菜单中关闭再重新打开模组管理器。'''
 
 ["tab.tools"]
 source = "f692ca48462027a8"

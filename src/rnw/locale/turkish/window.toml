@@ -191,12 +191,12 @@ source = "2764b4c1b7b57015"
 text = '''Oynamadan önce'''
 
 ["world_visibility_hint"]
-source = "bc9b9de7e31abc1c"
-text = '''Yalnızca bu dünyayı etkiler. Mod resmini ve ülke seçimi haritasını yeniden oluşturmadan günceller. Oyunun değişikliği okuması için EU5'i yeniden başlatın.'''
+source = "6a31a45fb98a79a3"
+text = '''Yalnızca bu dünyayı etkiler. Yeniden oluşturmadan mod resmini ve ülke seçimi haritasını günceller. EU5'in değişikliği yeniden yüklemesi için ana menüde mod yöneticisini kapatıp yeniden açın.'''
 
 ["visibility_updated"]
-source = "2fce01cc9fc9abdf"
-text = '''Bu dünyanın görünürlüğü değişti. Oyunun değişikliği okuması için EU5'i yeniden başlatın.'''
+source = "83ddb4528c0c8352"
+text = '''Bu dünyanın görünürlüğü değiştirildi. EU5'in değişikliği yeniden yüklemesi için ana menüde mod yöneticisini kapatıp yeniden açın.'''
 
 ["tab.tools"]
 source = "f692ca48462027a8"

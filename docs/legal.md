@@ -22,6 +22,17 @@ Limits: copyright protects the code, not the idea of a generated New World; anyo
 
 **Screenshots (owner, 2026-10-24 and 2026-10-26).** Screenshots of the generator's window and of generated worlds in game, which show the Old World's map from the game beside the generated New World, may be published in the README (`docs/images/`) and on the Workshop page. The owner decided this on a language model's reading, which they shared, of the rules on screenshots and videos of Paradox's games in the [Paradox user agreement](https://legal.paradoxplaza.com/eula) (not checked against the agreement's text here; not legal advice), and it does not clear files of the game, textures, models or the rasters a world is made of, which are never published [INFERRED C15; UNKNOWN C267]. The README says that the game is Paradox's and that the project is unofficial. On 2026-10-26 the owner asked for the README screenshots to feature the existing **Supercontinent EVXP**. The current 0.13.4 generator was rendered against a temporary copy of the owner's generated-world library; the installed profile was read only. The screenshots use the platform's plain light style and omit local paths, hardware metrics and machine-identifying details.
 
+**1.0.0 preparation review (2026-10-28).** [SOURCE] Rechecked the
+[Paradox User Agreement](https://legal.paradoxplaza.com/eula) (§5, updated
+2026-01-21), [Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/)
+(§6), and [Mozilla’s MPL FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/)
+(Q7–Q8), accessed 2026-10-28. The generator/runtime-only distribution boundary
+and the item-specific rights uncertainty of C267 remain. Corrected the README’s
+blanket ban on generator re-uploads to describe the existing MPL redistribution
+conditions; no licence change is made. [INFERRED from MPL-2.0 and the FAQ] MPL
+rights in our code do not clear the game-derived world files or override platform
+terms. No account agreement is accepted by this review.
+
 **Public repository (2026-10-24).** Before the repository was first published on GitHub (`Sir-Starch/eu5-random-new-world`), every revision of its history was checked for game files and personal data. No game asset, derived raster, log, save or screenshot had ever been committed. Local machine details (installation paths, hardware, operating system) were replaced in all revisions, and the commits carry the maintainer's public address. The rule is kept by tests: `packaging/allowlist.py` rejects any path of the game or of a generated world, both in the repository and in every release archive. The README states that the project is not affiliated with Paradox Interactive and that *Europa Universalis* is Paradox's trademark.
 
 **Third-party references.** [SOURCE] [EU5 Engine Atlas](https://github.com/mattebin/eu5-engine-atlas) advertises MIT but targets 1.3.11; [EU5 Modding Project](https://github.com/HLJSXK/eu5-modding-project) lacks a clear software license in its README; the [Co-op toolkit](https://github.com/Europa-Universalis-5-Modding-Co-op/community-mod-toolkit/) was not reviewed. No third-party code or game assets are vendored. Before using any outside code or data, pin a revision, inspect its license and check redistribution compatibility. The current repository contains only project-authored research, code and synthetic tests [V-EXEC].

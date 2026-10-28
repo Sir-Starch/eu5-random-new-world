@@ -1,7 +1,7 @@
 # Known limitations
 
-Current as of **28 October 2026 — RNW 0.13.22**. This is a development build;
-the first public release, 1.0.0, is still pending.
+Current as of **28 October 2026 — RNW 1.0.0**, targeting EU5 1.4.5 / build 26211608.
+The release preparation and publication status is tracked in [release process](release-process.md).
 
 - **Specific EU5 build only.** Current checks target the public EU5 **1.4.5,
   Steam build 26211608**, including Across the Pillars script adaptation.
@@ -22,7 +22,7 @@ the first public release, 1.0.0, is still pending.
   reached 1490 and accepts the previous work; some coastal current directions
   remain imperfect and are not a release blocker (C411). The **0.13.19** independent
   seam watersheds and **0.13.20** restored visual source extension have offline
-  checks; their combined rendering is unobserved in game (C417–C418). Neither campaign
+  checks; the combined world was later observed in the owner’s 0.13.20 / EU5 1.4.4 campaign reaching 1768 (C419). Detailed seam-rendering acceptance remains unverified (C417–C419). Neither campaign
   progress nor acceptance proves every mechanic. The owner’s short **1.4.5**
   session reaches 1342 on 0.13.21; the newly adapted DLC expeditions and Golden
   Century interactions have offline verification, without an engine-completion
@@ -32,7 +32,7 @@ the first public release, 1.0.0, is still pending.
   After the owner reported worse visibility with the workaround removed, 0.13.20
   restores its previous source extension while retaining mechanical wrap fixes.
   Since 0.13.19, independent river basins stop channels crossing the display edge and require genuine water outlets;
-  their rendering and gameplay acceptance remain unverified. Earlier observations
+  detailed river-rendering acceptance remains unverified. Earlier observations
   of disappearance remain valid; a historical comparison is planned in the [separate dossier](research/map-wrap-dossier.md).
   [V-GAME owner / V-EXEC C412–C418; exact engine cause UNKNOWN]
 - **Some campaign diagnostics remain unresolved.** QUXQ’s nine map-edge locator warnings place every object on its own identity;
@@ -47,6 +47,9 @@ the first public release, 1.0.0, is still pending.
   location limits stop generation with an error. A different-seed retry is
   available; every seed/settings combination is not guaranteed to succeed.
   [V-EXEC C406]
+- **Windows binaries are unsigned.** Smart App Control may block the generator.
+  No signing, scanner verdict or universal antivirus acceptance is claimed; no
+  administrator access is required. [ADR 0009](adr/0009-hub-mod-with-generator.md)
 - **Platform testing is limited.** The owner smoke-tested the packaged generator's
   launch, generation and mod installation on Windows 11 (C428). Windows CLI/CI,
   memory and performance measurements, macOS, signing and public Workshop

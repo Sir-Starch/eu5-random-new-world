@@ -489,14 +489,14 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     )
     stats = cast("dict[str, dict[str, dict[str, int]]]", report["text_stats"])
     guarded = stats["content"]["guarded"]
-    # The same in every world: 82 events, the canal chain's advance and decisions, the
-    # pilgrimage, the eight scripted names; formables vary with the cultures a world holds.
+    # On 1.4.5: 83 events (including the DLC diaspora), the canal chain's advance and decisions,
+    # the pilgrimage and eight scripted names; formables vary with the world's cultures.
     assert {name: guarded[name] for name in guarded if name != "common/formable_countries"} == {
         "common/advances": 1,
         "common/decisions": 3,
         "common/generic_actions": 1,
         "common/scripted_country_names": 8,
-        "events": 82,
+        "events": 83,
     }
     assert 3 <= guarded["common/formable_countries"] <= 8
     # The two American monuments of the DLC packs (Teotihuacan, Cholula) are dropped with their

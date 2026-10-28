@@ -31,7 +31,7 @@ Build pre-tag artifacts with `workflow_dispatch`: `tag` is the intended numeric 
 - [ ] CI is green on the release commit for the required Linux and Windows checks (P1). A run on another commit is not evidence for this candidate.
 - [ ] The release workflow's tag check matches `pyproject.toml`; package self-tests and archive audits pass ([release workflow](../.github/workflows/release.yml), [`packaging/release.py`](../packaging/release.py)).
 - [ ] The source archive and every platform archive are present, and the published SHA-256 files cover every archive being handed off. Verify each checksum against the downloaded candidate files.
-- [ ] The candidate contains the correct third-party notices and no game assets, generated-world files, local logs, saves, or screenshots.
+- [ ] The candidate contains the correct third-party notices and no game assets, generated-world files, local logs, saves, or unapproved screenshots. Approved documentation images may travel with the source archive.
 - [ ] Keep the workflow artifacts as a candidate until the maintainer accepts them. The workflow uploads build artifacts for review; it does not create a GitHub release or publish to the Workshop.
 
 ## GitHub release hand-off
@@ -53,29 +53,25 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-Audit date: **2026-10-28**. The inspected working tree targets **0.13.23 / epoch
-59**, including the already pending visibility instructions; it is not a frozen
-1.0.0 candidate. This audit changes the release rules and packaging checks,
-without changing generated world bytes. The compatibility target remains public
-**EU5 1.4.5 / Steam build 26211608**, including Across the Pillars
-([compatibility audit](research/compatibility-1-4-5.md), C425–C427).
+Preparation date: **2026-10-28**. **RNW 1.0.0 / epoch 59** is a local release
+candidate for **EU5 1.4.5 / Steam build 26211608**, including Across the Pillars
+adaptation. Publication is pending. This section supersedes the 0.13.23 audit
+(C430); historical game observations keep their original versions.
 
-| Area | Evidence and remaining action |
+| Area | Evidence and remaining boundary |
 |---|---|
-| Source checks | [V-EXEC C430] Locked sync and `make check`: formatting, lint, strict typing, 2,140 Python tests passed (14 optional skips), Rust format/clippy and 23 tests passed. This is local working-tree evidence, not remote CI on a release tag. |
-| Installed game and languages | [V-EXEC C430] The read-only local suite passes 12 tests against EU5 1.4.5, including its own official language list, content decisions and map/lobby contracts. Two opt-in full-world/layer checks skip. Catalog source fingerprints, window and Workshop translations also pass the full suite. No new game launch or campaign is required by this audit. |
-| Reproduction | [V-EXEC C427] Epoch 59's 867-file reference digest was independently reproduced during the 1.4.5 adaptation. No world-byte change in this phase; no new epoch. Retain that reference at the final version-only transition and verify it as part of the final candidate. Intermediate main builds additionally need their exact source commit. |
-| Existing local hub | [V-EXEC C430] `dist/rnw_exp_hub` passes file/binary safety checks but its metadata is **0.13.1** and its sources differ from the checkout. It is stale, unrelated to the updated installed profile hub; do not upload this folder as 1.0.0. Build the final hub from the pinned release commit. |
-| Source archive | [V-EXEC C430] A working-tree 0.13.23 sdist builds, passes the archive audit and has a SHA-256 manifest. It is an audit sample under ignored `local_data/`, not a release asset. Final archives must come from the frozen release commit. |
-| Release pipeline | [V-EXEC C430] Added clean exact-tag/full-candidate-SHA gates, pinned both builders to its resolved SHA, added source checksums, retained Windows checksums and checked them before the Windows smoke. Synthetic tests cover mismatched HEAD, modified/staged/untracked files and invalid tags/SHA selectors, including a pre-tag build. The edited workflow still needs a successful remote run on the final tag. |
-| Platform route | [V-GAME owner C428] Windows 11 launch, generation and mod installation passed for 0.13.22 without reported warnings. Linux/Proton has earlier owner evidence (C111–C115). Neither is an exact-1.0.0 artifact check. macOS is unverified; its build job is not a support guarantee. |
-| Acceptance and known limits | [V-GAME / UNKNOWN C411, C419–C428] Existing owner acceptance and campaigns stand; the DLC completion, balance and wrap limits stay in [known limitations](known-limitations.md). These unknowns do not demand another campaign or automatically block the release. Future hydrology, society, content and Tauri work in the roadmap is not silently added to 1.0.0. Record the owner's final scope acceptance with the candidate. |
-| Public metadata and text | **Not prepared as 1.0.0 yet:** package/lockfile still say 0.13.23; the classifier is Alpha; README and limitations still say pre-release, and no dated 1.0.0 changelog entry exists. Set these together in the final release-preparation commit. Recheck screenshots against its window and all Workshop languages against the final English. Keep the private-package classifier unless PyPI publication is separately intended. |
-| Trust and Workshop | **Owner publication boundary:** signing, scanner submissions, Workshop acceptance/download and the item-specific Steam/EU5 rights review remain as recorded in [ADR 0009](adr/0009-hub-mod-with-generator.md) and [legal notes](legal.md), C267. Before shipping unsigned binaries, state the Windows trust limitation in player text as ADR 0009 requires; a no-warning smoke is not a signing or Smart App Control result. Verify actual upload/download acceptance at publication, not by pretending it can be established offline. |
+| Product and player text | [V-EXEC C431] Version/lockfile and stable classifier set to 1.0.0; dated changelog and release notes prepared. README, contribution/security policy, limitations and all eleven Workshop descriptions agree on the supported build and unsigned-Windows limitation. Eight current GUI screenshots use a demo copy of the existing EVXP library. Future roadmap expansion is not a 1.0.0 inclusion promise. |
+| Local checks | [V-EXEC C431] Locked sync and full checks pass: 2,140 Python tests (14 optional skips), 23 Rust tests, formatting, lint and strict typing. The local reference test’s event expectation is corrected from 82 to 83 for the already adapted D009 diaspora gate; generator output is unchanged. The full installed-game suite with reproduction passes 13 tests; one opt-in layer check is skipped. |
+| Languages | [V-EXEC C431] All player-visible catalog keys and fingerprints pass, as do all eleven Workshop texts and their byte limits. Official languages are also checked against the installed 1.4.5 game, rather than assumed from a static list. |
+| World reproduction | [V-EXEC C431] The 1.0.0 exporter reproduces all **867** nonmetadata files of epoch 59, digest `23c0437734288ffa913061f627838855c97962185fe939da18b313ccb1bd9c85`. The reference code and frozen digest stay unchanged. Product version/GUI wording do not consume another epoch. |
+| Packages | [V-EXEC C431] Fresh Windows standalone/Workshop and native Linux packages are built locally, audited and self-tested. The hub’s installed copy and Windows CLI run under isolated Wine; this is not a new native Windows owner test. Source archive and final checksum/build manifests are prepared from the clean source commit. Do not use the old `dist/rnw_exp_hub` 0.13.1 folder. |
+| Local installation | [V-EXEC C431] The 1.0.0 generator hub is installed through the verified updater. Previous 0.13.23 hub retained at `.rnw-hub-backups/0.13.23-1793224526723633799`. Installed a separate 878-file world candidate with both library entries, preserving 6,002 prior-world files and nine profile-root files. Exact preservation checks are in [INSTALLED](../experiments/INSTALLED.md). No EU5 launch or control. |
+| VirusTotal | [SOURCE / V-EXEC C432] At the owner’s explicit request, configured the official MCP endpoint with OAuth and submitted only the two distributable project Windows binaries. Both analyses completed: zero malicious/suspicious, 71 undetected and four unsupported engines each. Exact report links are in the [release notes](releases/1.0.0.md#windows-binary-scans). This is not an archive-wide, dependency-wide, signing or universal safety claim. |
+| Game/platform limits | Existing owner acceptance, Windows 11 smoke C428 and campaign evidence remain valid at their recorded versions. Known wrap, DLC completion, balance and multiplayer limits remain disclosed; no further game sitting is requested. macOS remains unverified and is not included in the local package set. |
+| Source/licences | [V-EXEC / SOURCE C431] Third-party notices and texts travel with the packages; no game assets or generated worlds belong in public archives. Rechecked current source terms and corrected README redistribution wording to match the existing MPL. C267’s item-specific legal uncertainty remains a publication boundary, not a new legal clearance. |
+| External publication | **Pending:** push and successful CI on the exact candidate commit, final stable tag/remote artifacts, GitHub release and Workshop upload/download acceptance. No such action is inferred from local checks or performed without explicit owner authorization. No code-signing route has been configured; the unsigned state is stated in player text. |
 
-**Disposition:** the local code, translation and source-archive checks pass. A
-publishable 1.0.0 still needs its final version/text commit, matching tagged
-platform artifacts and checksums with successful CI, and the owner-controlled
-publication/trust decisions above. No tag, push, GitHub release, scanner upload
-or Workshop action is performed by this audit. Detailed policy is in ADR 0003;
-this table is the single current readiness record.
+The locally prepared candidate, source commit, package hashes and verification
+record are handed off together. The [release notes](releases/1.0.0.md) are ready
+to reuse. Keep the stable tag uncreated until the exact candidate is accepted;
+pre-tag CI can use its full commit SHA under the same 1.0.0 target.

@@ -1,5 +1,29 @@
 # Installed experiments
 
+2026-10-28, **RNW 1.0.0 / epoch 59 release candidate**, C431: installed
+**RNW: RNW 1.0.0 candidate** in the new `mod/rnw_exp_world_l2ukzb7ihj`, code
+`RNW1-081RF-FZCZT-X8CJN-T0400-00860-2AG63-YG1W8-8G3GH-149XR-08TM0-37FSE-J`.
+All **878** installed files match the candidate, including its recovery bundle;
+both native and Windows libraries contain complete entries. Its **867** canonical
+nonmetadata files retain epoch 59’s digest
+`23c0437734288ffa913061f627838855c97962185fe939da18b313ccb1bd9c85`.
+The independent full reference check passes on EU5 1.4.5 / 26211608 (13 tests,
+one opt-in layer check skipped). Installation preserves **6,002** existing-world
+file hashes, **3,272** updated-hub hashes and **nine** profile-root hashes.
+No game, playset, save or existing world was changed or launched. With EU5
+closed, removal is limited to `mod/rnw_exp_world_l2ukzb7ihj` or this candidate’s
+Remove action in the generator; library deletion is separate.
+
+Built, self-tested and installed the **1.0.0 generator hub** with build-machine
+installer receipts omitted and relative bytecode filenames. The updater verified
+all **3,272** installed files and its isolated Wine self-test. The original
+0.13.23 hub is retained at `.rnw-hub-backups/0.13.23-1793224526723633799`; an
+intermediate 1.0.0 build remains at `.rnw-hub-backups/1.0.0-1793224940439895089`
+beneath the same normal profile. Exact local audits: ignored
+`local_data/release-1.0.0/`; public packages contain neither these records nor
+the installed world. No publication or account action other than the explicitly
+requested VirusTotal OAuth/analysis (C432).
+
 2026-10-28, **generator hub 0.13.23 / epoch 59**: updated `mod/rnw_exp_hub`
 with the Total Chaos layout fix and the current working-tree sources. The
 updater verified the package, its isolated Wine self-test and the installed copy.

@@ -43,7 +43,7 @@ wheels = [
 
 [[package]]
 name = "eu5-random-new-world"
-version = "0.13.22"
+version = "1.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },

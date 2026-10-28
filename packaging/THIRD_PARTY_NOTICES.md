@@ -14,7 +14,7 @@ The runtime libraries remain separate and replaceable files.
 | Typer, Rich, Shellingham, markdown-it-py, mdurl, annotated-doc | MIT | Their installed distribution metadata and licence files |
 | Pygments | BSD-2-Clause | https://github.com/pygments/pygments |
 | The Rust dependencies of rnw._native | The licences named in native/Cargo.lock and the crates' metadata | https://crates.io/ |
-| PyInstaller (native development packages) | GPL-2.0 with the bootloader exception | https://pyinstaller.org/en/stable/license.html |
+| PyInstaller (native packages) | GPL-2.0 with the bootloader exception | https://pyinstaller.org/en/stable/license.html |
 
 The Windows layouts preserve the runtime wheels' distribution metadata, notices and
 licence files. Native packages carry copied runtime licence files under licenses/.
@@ -22,6 +22,7 @@ The versions and source URLs of Python packages are listed in licenses/packages.
 Qt's corresponding source is available from the Qt links above, for the version named
 there; the LGPL text is at https://www.gnu.org/licenses/lgpl-3.0.html.
 
-These are development packages. Public release remains subject to the distribution
-checks in docs/legal.md, including complete notices for bundled native libraries,
-code signing, and platform validation. No EU5 assets belong in these packages.
+Release packages contain only the generator and its runtime dependencies.
+Complete notices travel with the package; the checked source is published with
+the matching product version. Windows binaries are currently unsigned.
+No EU5 assets or locally generated world files belong in these packages.

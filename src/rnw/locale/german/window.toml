@@ -191,12 +191,12 @@ source = "2764b4c1b7b57015"
 text = '''Vor dem Spielen'''
 
 ["world_visibility_hint"]
-source = "bc9b9de7e31abc1c"
-text = '''Gilt nur für diese Welt. Aktualisiert ihr Mod-Bild und die Karte der Länderwahl, ohne sie neu zu erstellen. Starten Sie EU5 neu, damit das Spiel die Änderung liest.'''
+source = "6a31a45fb98a79a3"
+text = '''Gilt nur für diese Welt. Aktualisiert ihr Mod-Bild und die Karte der Länderauswahl, ohne sie neu zu erstellen. Damit EU5 die Änderung neu lädt, schließen Sie den Mod-Manager im Hauptmenü und öffnen ihn wieder.'''
 
 ["visibility_updated"]
-source = "2fce01cc9fc9abdf"
-text = '''Die Sichtbarkeit dieser Welt wurde geändert. Starten Sie EU5 neu, damit das Spiel die Änderung liest.'''
+source = "83ddb4528c0c8352"
+text = '''Die Sichtbarkeit dieser Welt wurde geändert. Schließen Sie den Mod-Manager im Hauptmenü und öffnen Sie ihn wieder, damit EU5 die Änderung neu lädt.'''
 
 ["tab.tools"]
 source = "f692ca48462027a8"

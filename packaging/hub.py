@@ -16,7 +16,7 @@ Every module is compiled to ``.pyc`` with unchecked hashes, so Python never need
 into the mod folder (the launcher passes ``-B`` as well). The only programs in the hub are the
 launcher and the interpreter's ``python.exe`` and ``pythonw.exe``. Nothing is signed or
 published. maturin comes from the range in ``build-system.requires``, not from the lock.
-Until the hub carries an in-game window it is a development stand-in for the Workshop item.
+The hub carries only the generator; all gameplay content belongs to generated world mods.
 """
 
 from __future__ import annotations
@@ -252,6 +252,10 @@ def remove_scripts(site: Path) -> None:
     """Drop the entry-point scripts the installer wrote for this machine."""
     for name in SCRIPT_FOLDERS:
         shutil.rmtree(site / name, ignore_errors=True)
+    # Installer receipts describe the build machine, not the distributed program.
+    for info in site.glob("*.dist-info"):
+        for name in ("direct_url.json", "uv_cache.json"):
+            (info / name).unlink(missing_ok=True)
 
 
 def check_programs(root: Path) -> None:
@@ -283,7 +287,7 @@ def compile_modules(*folders: Path) -> None:
     for folder in folders:
         _run([
             sys.executable, "-m", "compileall", "-q", "-j", "0",
-            "--invalidation-mode", "unchecked-hash", str(folder),
+            "--invalidation-mode", "unchecked-hash", "-s", str(folder), str(folder),
         ])  # fmt: skip
 
 

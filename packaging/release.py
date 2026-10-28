@@ -128,6 +128,10 @@ def windows(
                 "Use rnw.cmd --help for the command line.",
                 "Add portable.txt beside the launcher to keep data in a data/ folder there.",
                 "EU5 is required to generate; world files and their maps open without it.",
+                "Targets EU5 1.4.5 / Steam build 26211608. Start a new 1337 campaign.",
+                "Windows binaries are unsigned. Smart App Control may block the generator.",
+                f"Source (MPL-2.0): https://github.com/Sir-Starch/eu5-random-new-world/tree/v{__version__}",
+                "Third-party notices and licences: THIRD_PARTY_NOTICES.md and licenses/.",
             )
         )
         + "\n",

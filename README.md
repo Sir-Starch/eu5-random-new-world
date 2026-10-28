@@ -10,9 +10,9 @@
 [![License: MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](LICENSE)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)
 ![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
-![EU5 1.4](https://img.shields.io/badge/EU5-1.4.x-8B6F47.svg)
+![EU5 1.4.5](https://img.shields.io/badge/EU5-1.4.5-8B6F47.svg)
 ![Ironman & Achievements](https://img.shields.io/badge/Ironman%20%26%20Achievements-supported-success.svg)
-![Status: pre-release](https://img.shields.io/badge/status-pre--release%200.x-orange.svg)
+![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue.svg)
 
 </div>
 
@@ -27,7 +27,7 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 ![Random New World procedural generation showcase](docs/images/showcase/rnw_showcase_full.gif)
 
 > [!IMPORTANT]
-> **Pre-release (`0.x`).** Preparing for the `1.0.0` Steam Workshop release ([ADR 0003](docs/adr/0003-versioning.md)). Core systems have been extensively verified in-game (see [`CHANGELOG.md`](CHANGELOG.md) and [experiment records](experiments/)), but world codes and internal formats may still change prior to `1.0.0`.
+> **Compatibility:** RNW 1.0.0 targets EU5 **1.4.5, Steam build 26211608**. Start a new campaign and keep its generated world mod. Exact regeneration needs the original algorithm and game inputs; updating the generator does not migrate saves.
 
 Read [Known limitations](docs/known-limitations.md) before playing: supported game
 build, save and mod compatibility, and what remains unverified in the current version.
@@ -121,7 +121,7 @@ flowchart LR
 ```
 
 * **Untouched Old World:** Every pixel, province key, and adjacency outside the New World canvas is verified against the vanilla installation baseline.
-* **Bit-for-Byte Deterministic:** Identical World Codes, generator versions, and game builds produce identical files across operating systems and CPU thread counts. Reference world digests are pinned in CI.
+* **Bit-for-Byte Deterministic:** Frozen releases with the same algorithm epoch, resolved settings, seed and game inputs produce identical world files across operating systems and CPU thread counts (excluding presentation metadata). Synthetic digests are checked in CI; the full game-derived reference is verified locally.
 * **Fail-Fast Invariants:** Unverified game builds, unhandled vanilla script references, or broken map invariants halt compilation immediately — never emitting silently corrupted mods.
 * **Native Rust Core:** Compute-heavy kernels (simplex/domain-warped noise, distance fields, drainage routing, terrain slot assignment, LZAV compression) are written in Rust and verified bit-identical against Python reference implementations in [`tests/reference/`](tests/reference/).
 
@@ -133,13 +133,15 @@ For deep dives into the engineering, see [Architecture](docs/architecture.md), [
 
 Once `1.0.0` is published, no Python or Rust installation is required:
 
-1. Subscribe to **Random New World** on the Steam Workshop (or download the standalone archive from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases) — every release includes SHA-256 checksums and VirusTotal scans).
-2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works on Windows and on Linux/Steam Deck via Proton). The packaged Windows 0.13.22 flow was owner-smoke-tested on Windows 11 through Steam: launch, generate, and install a world mod; the exact EU5 build was not captured.
-3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (~2–3 minutes; requires ~7.5 GB of free RAM).
+1. Subscribe to **Random New World** on the Steam Workshop (or download the standalone archive from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases) — release archives include SHA-256 checksums).
+2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works on Windows and on Linux/Steam Deck via Proton).
+3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (usually a few minutes; allow about 7.5 GB of free RAM).
 4. Enable the newly created world mod (e.g., *RNW: Small continents 7K3Q*) in your playset — **only one RNW world mod at a time** — and start a new 1337 campaign. *(Do not enable the generator hub item itself in your playset).*
 
 > [!NOTE]
-> **Switching between RNW maps:** If you have already loaded into a campaign during your current game session, restart EU5 before starting a campaign on a different RNW map. Switching overhaul map mods within the same process will crash the engine.
+> **Windows:** the generator is unsigned. Smart App Control may block it. No administrator access is required. See [known limitations](docs/known-limitations.md) for platform testing and trust limits.
+>
+> **Switching between RNW maps:** If you have already loaded into a campaign during your current game session, restart EU5 before starting a campaign on a different RNW map. Reloading map overhauls within the same process has caused mixed map data and a crash.
 
 ---
 
@@ -175,7 +177,7 @@ uv run rnw --help                                          # view all CLI comman
 
 ```
 
-See the [Generator Guide](docs/generator-guide.md) for details on `.rnw` world files, political/resource rerolls, batch queues, and the built-in Atlas.
+See the [Generator Guide](docs/generator-guide.md) for details on `.rnworld` world files, political/resource rerolls, batch queues, and the built-in Atlas.
 
 ## Documentation
 
@@ -184,7 +186,7 @@ The [Documentation Index](docs/README.md) provides a full map of the repository:
 * **User Guides:** [Known limitations](docs/known-limitations.md) · [Generator Guide](docs/generator-guide.md) · [Dynamic Content Catalogue](docs/content-catalog.md) · [Complete Event Reference](docs/content-reference.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
 * **System Design:** [Architecture](docs/architecture.md) · [Terrain & Biomes](docs/terrain-biomes.md) · [Sea Geography](docs/sea-geography.md) · [Native Societies](docs/natives.md) · [Economy](docs/economy.md) · [Content Plan](docs/content-plan.md) · [Architecture Decision Records (ADRs)](docs/adr/)
 * **Project Tracking:** [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](experiments/README.md)
-* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C427`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
+* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
 
 ## Development & Verification
 
@@ -222,7 +224,7 @@ Contributions, bug reports, and pull requests are welcome! Please read [CONTRIBU
 **Random New World Generator** is an independent, third-party open-source software application licensed under the **[Mozilla Public License 2.0 (MPL-2.0)](LICENSE)**. Anyone is welcome to inspect the source code, submit pull requests, or build upon the project on GitHub, provided that all MPL-2.0 license terms, copyright notices, and source-code disclosure requirements are strictly respected. Bundled third-party libraries retain their respective licenses ([`THIRD_PARTY_NOTICES.md`](packaging/THIRD_PARTY_NOTICES.md)).
 
 * **No Game Assets Included:** This repository contains zero proprietary files from *Europa Universalis V*. Generated map mods are compiled locally on the user's machine from their own legitimate copy of the game; generated mod output is subject to [Paradox Interactive's EULA](https://legal.paradoxplaza.com/eula) (see [Legal Notes](docs/legal.md)).
-* **Workshop Redistribution Policy:** Re-uploading the generator tool itself or redistributing unmodified builds on the Steam Workshop without explicit permission from the author is prohibited.
+* **Redistribution:** The generator may be redistributed under MPL-2.0, retaining its licence and notices and providing the covered source as required. Generated world mods contain game-derived data and are for local use, not public upload. Workshop distribution also remains subject to the platform and game terms.
 * **Security:** To report a security issue, please follow [SECURITY.md](SECURITY.md).
 
 *Europa Universalis* and *Paradox Interactive* are registered trademarks of Paradox Interactive AB. This project is **not affiliated with or endorsed by Paradox Interactive**.

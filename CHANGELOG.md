@@ -2,11 +2,31 @@
 
 ## Unreleased
 
-- Adopt release-based versioning: ordinary main commits share a release target;
-  define PATCH, MINOR and MAJOR against the supported public contract and keep
-  algorithm epochs independent of product release size.
-- Pin release builds to their exact tag or pre-tag candidate commit and include checksum manifests
-  with source and Windows candidate archives.
+## 1.0.0 — 2026-10-28
+
+- First stable product candidate: locally generated continents, terrain, climate,
+  rivers, seas and native societies, with the vanilla Old World preserved.
+- Includes five landmass archetypes, optional ocean expansion and extraordinary
+  societies, regional stories, formable countries and colonial names.
+- Ships the generator, atlas, world library, World Codes and all eleven official
+  EU5 languages. Worlds remain local; release packages contain no game assets.
+- Targets EU5 1.4.5 / Steam build 26211608, with Across the Pillars geography
+  adaptation. The DLC remains optional. Algorithm epoch stays 59; pre-1.0 worlds
+  and saves are preserved rather than migrated.
+- Keep the Total Chaos controls aligned and explain visibility refresh through
+  EU5’s main-menu Mods manager in every official language.
+- Adopt release-based versioning, pin candidate builds to exact commits, and
+  include SHA-256 manifests with source and platform archives.
+- State unsigned-Windows and campaign compatibility limits in the player guides.
+  Remove build-machine installation receipts and absolute bytecode filenames
+  from the Windows runtime package; include reports for the two project binaries.
+
+## 0.13.23 — 2026-10-28
+
+- Keep the world basics buttons aligned when Total Chaos produces custom values.
+- Visibility changes now tell players to close and reopen the Mods manager from
+  EU5's main menu so the game reloads the updated world mod, without restarting
+  EU5. The updated instructions are included in all ten translated catalogs.
 
 ## 0.13.22 — 2026-10-28
 

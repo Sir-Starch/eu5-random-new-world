@@ -1,6 +1,6 @@
 # Contributing to Random New World
 
-Thank you for your interest! The project is in pre-release development (0.x), so the design still moves. For anything larger than a small fix, please **open an issue first** so we can agree on the approach before you write code.
+Thank you for your interest! The project uses release-based versioning and preserves the public compatibility contract defined in [ADR 0003](docs/adr/0003-versioning.md). For anything larger than a small fix, please **open an issue first** so we can agree on the approach before you write code.
 
 ## Ground rules
 
@@ -72,7 +72,7 @@ Consequential claims get an entry in the [claims ledger](docs/research/claims-le
 
 - Record architectural decisions as an [ADR](docs/adr/). Mark a replaced ADR as superseded instead of deleting it.
 - Keep design documents in [`docs/`](docs/) and in-game experiment records in [`experiments/`](experiments/).
-- Write in English. Before 1.0.0, every player-facing string is translated into each of the game's official languages, which are read from the installed game ([roadmap](docs/roadmap.md) L1).
+- Write in English. Every player-facing string ships translated into each of the game's official languages, which are read from the installed game ([roadmap](docs/roadmap.md) L1).
 
 ## Commits and pull requests
 

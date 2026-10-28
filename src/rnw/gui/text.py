@@ -104,9 +104,13 @@ STRINGS: Final[dict[str, str]] = {
     "visibility": "Before you play",
     "world_visibility_hint": (
         "Applies to this world only. Updates its mod picture and country-selection map "
-        "without generating it again. Restart EU5 to read the change."
+        "without generating it again. To reload the change in EU5, close and reopen the "
+        "Mods manager from the main menu."
     ),
-    "visibility_updated": "This world's visibility was updated. Restart EU5 to read the change.",
+    "visibility_updated": (
+        "This world's visibility was updated. Close and reopen the Mods manager from "
+        "the main menu to reload it in EU5."
+    ),
     "tab.tools": "Versions and files",
     "world_versions": "Create a version",
     "world_share": "Share and export",

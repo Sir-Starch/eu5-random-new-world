@@ -191,12 +191,12 @@ source = "2764b4c1b7b57015"
 text = '''Antes de jogar'''
 
 ["world_visibility_hint"]
-source = "bc9b9de7e31abc1c"
-text = '''Vale só para este mundo. Atualiza a imagem do mod e o mapa de escolha de país sem criá-lo de novo. Reinicie o EU5 para o jogo ler a mudança.'''
+source = "6a31a45fb98a79a3"
+text = '''Vale só para este mundo. Atualiza a imagem do mod e o mapa de seleção de país sem gerá-lo de novo. Para o EU5 carregar a mudança, feche e reabra o gerenciador de mods no menu principal.'''
 
 ["visibility_updated"]
-source = "2fce01cc9fc9abdf"
-text = '''A visibilidade deste mundo mudou. Reinicie o EU5 para o jogo ler a mudança.'''
+source = "83ddb4528c0c8352"
+text = '''A visibilidade deste mundo foi alterada. Feche e reabra o gerenciador de mods no menu principal para o EU5 carregar a mudança.'''
 
 ["tab.tools"]
 source = "f692ca48462027a8"
