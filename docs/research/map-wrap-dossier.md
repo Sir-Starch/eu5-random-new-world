@@ -81,6 +81,17 @@ Do not suppress the warnings or move correct anchors just to silence them.
 Measurements: ignored `local_data/quxq-wrap/audit/locators.{py,json}`.
 The two retained-vanilla ocean warnings remain outside this attribution.
 
+### 0.13.20 locator follow-up (C423)
+
+[V-EXEC] The installed Restored visual wrap world's `locations.png` and four
+city/combat/unit-stack/VFX locator files are SHA-256-identical to the QUXQ
+files measured in C414. The repeated nine messages therefore concern the
+same own-identity coordinates, not newly displaced anchors. Do not relocate
+them or split their identities to clear the diagnostics. This comparison
+does not identify the two later contextless position assertions or establish
+every runtime path's validity. Evidence: ignored
+`local_data/observer-campaign-20261028/fix-assessment/coordinates.json`.
+
 ## Rivers: a separate content and engine contract (C415)
 
 [V-GAME owner] The Rivers lens shows the same RNW gaps as the terrain view.

@@ -1,6 +1,6 @@
 # Completed observer campaign — RNW 0.13.20
 
-2026-10-28; C419–C421. Read-only audit of the owner's campaign on EU5
+2026-10-28; C419–C423. Read-only audit of the owner's campaign on EU5
 **1.4.4 / Steam 26142040**, using **RNW: Restored visual wrap**,
 `rnw_exp_world_7yzo7v4bu5`, generator **0.13.20 / epoch 57**.
 
@@ -104,3 +104,66 @@ are unchanged by this audit.
 tests / 14 skipped** and **23 Rust tests**. Snapshot hashes, successive-year
 coverage and local documentation links were checked independently. These
 offline checks do not resolve the runtime attribution limits above.
+
+## Fix assessment, 2026-10-28
+
+The owner subsequently asks which findings need a correction. This assessment
+does not implement or install a generator update.
+
+### A01 requires a generator correction, not a warning filter (C422)
+
+[V-LOCAL / V-EXEC] Both installed vanilla precedents used to select
+`theocratic_elective` also supply **`monogamous_marriage`** and
+**`heir_special_succession`**: Tibet explicitly, Venda through its
+`subsaharan_theocracy` template plus an explicit succession-policy override.
+The succession definition has `empty_heir_religion_law`; the special policy's
+potential requires exactly that tag. Reusing the American monarchy's
+`heir_any_religion` would reintroduce the incompatible-law problem of C398.
+
+The parliament needs separate selection: Tibet uses `council`, whose potential
+requires `allow_council_parliament`, while Venda uses `assembly`, also used
+by the American country templates. Copying Tibet's parliament solely because
+it is the first theocracy is not justified. Viakna's actual faith is
+`tain_feyentun_religion`, not Catholicism; vanilla's monogamy allowance excludes
+Catholic theocracies, not this faith. These source conditions support the
+targeted combination **monogamy / special succession / assembly** for this
+case. Other generated faiths must be checked against the installed rules.
+
+[INFERRED from these source contracts and C420] This is a **normal-priority
+output-correctness fix**, warranted even without a demonstrated campaign
+failure. These policies carry real effects; absent initialization is not merely
+a misspelled diagnostic. Implement the nested `laws` and `parliament` records
+in the initial country model/writer, calibrate from installed compatible
+precedents, and reject incomplete or incompatible sacred-centre output.
+Keep the selected technology, native societal axes and template-free setup;
+do not import a whole Old World template, restore monarchy inheritance or add
+a post-start repair event. Verify nested-policy compatibility, written output
+and unaffected non-sacred countries. A completed implementation changes world
+files and therefore requires the normal version/epoch/golden/delivery cycle.
+It is **not implemented by this investigation**. The logs still do not prove
+a broken succession, and this finding alone does not require abandoning the
+existing campaign.
+
+### A02 and anonymous runtime failures: no supported RNW patch yet (C423)
+
+[V-EXEC] A fresh read of the installed 0.13.20 output checks **25,033**
+`id`/`position` records naming generated map objects in the map-object files
+and generated port-locator file. All coordinates are finite, and every
+horizontal x/z pair lies strictly inside the 16,384 × 8,192 map bounds.
+All **307** generated land-owning states have city anchors; their capital
+keys and city x/z pairs are pairwise distinct. This excludes missing, zero,
+out-of-range or coincident **initial** anchors in that checked set, not an
+invalid runtime path or zero evaluated distance centuries later.
+
+| Finding | Decision |
+|---|---|
+| Nine seam locator warnings | No anchor relocation or identity split. The current raster and all four relevant city/combat/unit-stack/VFX files are SHA-256-identical to C414's measured QUXQ files; see the [dossier follow-up](map-wrap-dossier.md#01320-locator-follow-up-c423). That existing own-pixel evidence applies directly to these bytes. |
+| Seven AI-score divisions | Do not clamp the denominator or move capitals. The missing attacker/target prevents connecting the failed runtime calculation to generated data; the initial-state checks above find no shared capital or city point. A blanket vanilla-score override changes Old World AI without a demonstrated RNW correction. Keep the diagnosis open (C334). |
+| Two position assertions | Keep unresolved and do not dismiss. The new initial-anchor checks pass, but the messages contain no failed runtime point, route or caller. They do not justify a coordinate offset, a map-edge strait, disabling expansion or reverting the verified seam-route correction. |
+| Mining surveys / mercenaries | No RNW patch justified by this run. The inherited mining callback omits a capital-completion branch, retaining C330's concrete lifecycle lead, while the three mercenary failures are in Asia. Neither relocating native capitals nor granting technology/units would address an established generated-data fault. |
+| Generic AI, tag and UI failures | Retain the attribution limits above. Counts, temporal proximity and a dynamic tag alone do not identify the failed RNW object or a corrective generator invariant. No global script/interface workaround follows. |
+
+[V-EXEC] Machine-readable coordinate and government checks remain ignored in
+`local_data/observer-campaign-20261028/fix-assessment/`. No current save-state
+or error-time runtime reconstruction is claimed. This investigation changes
+documentation only; the prior full checks apply to unchanged generator code.

@@ -11,6 +11,14 @@ The [audit](observer-01320-audit.md) holds the scope, counts and actionable
 findings; hashed raw evidence remains ignored. No game launch/control, output
 change, version bump, new installation or owner test request.
 
+[V-LOCAL / V-EXEC / INFERRED C422–C423] Follow-up
+[fix assessment](observer-01320-audit.md#fix-assessment-2026-10-28) confirms
+a targeted initial-government correction is warranted, with compatible
+vanilla law/parliament precedents. All 25,033 checked generated locator
+records and 307 landed capitals pass initial coordinate/distinctness checks;
+the nine seam warnings concern bytes already measured in C414. No speculative
+coordinate/AI workaround is justified. Research only; no fix is implemented.
+
 ## 2026-10-13
 
 - Initialized the repository and evidence policy before inspecting the game. No game behavior has yet been verified.
