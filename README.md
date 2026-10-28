@@ -52,26 +52,29 @@ Planned work includes deeper hydrology, more varied continental geography and so
 ### In game
 
 <details>
-<summary>Eight in-game screenshots — geography, native societies, oceans and dynamic content</summary>
+<summary>Nine in-game screenshots — geography, native societies, oceans and dynamic content</summary>
 
 Click a screenshot to view it at full size.
 
 <table>
 <tr>
-<td width="50%"><a href="docs/images/showcase/01-procedural-continents.png"><img src="docs/images/showcase/01-procedural-continents.png" alt="Full-Scale Procedural Continents — Simulated Relief, Climate &amp; Biomes"></a></td>
+<td colspan="2"><a href="docs/images/showcase/01-procedural-continents.png"><img src="docs/images/showcase/01-procedural-continents.png" alt="Full-Scale Procedural Continents — Simulated Relief, Climate &amp; Biomes"></a></td>
+</tr>
+<tr>
 <td width="50%"><a href="docs/images/showcase/02-lobby-terra-incognita.png"><img src="docs/images/showcase/02-lobby-terra-incognita.png" alt="True Terra Incognita in the lobby (optional)"></a></td>
-</tr>
-<tr>
 <td width="50%"><a href="docs/images/showcase/03-ocean-navigation.png"><img src="docs/images/showcase/03-ocean-navigation.png" alt="40% Expanded Canvas: Dynamic Sea Lanes, Currents &amp; Reshaped Ocean Wastelands"></a></td>
+</tr>
+<tr>
 <td width="50%"><a href="docs/images/showcase/04-playable-native-societies.png"><img src="docs/images/showcase/04-playable-native-societies.png" alt="Playable Native Societies — With Full Ironman &amp; Achievement Support!"></a></td>
-</tr>
-<tr>
 <td width="50%"><a href="docs/images/showcase/05-native-realms.png"><img src="docs/images/showcase/05-native-realms.png" alt="Procedural Native Realms, Tribes, Cultures &amp; Religions (1337 Start)"></a></td>
-<td width="50%"><a href="docs/images/showcase/06-script-compatible-regions.png"><img src="docs/images/showcase/06-script-compatible-regions.png" alt="Vanilla region &amp; subcontinent keys dynamically remapped for full script compatibility"></a></td>
 </tr>
 <tr>
+<td width="50%"><a href="docs/images/showcase/06-script-compatible-regions.png"><img src="docs/images/showcase/06-script-compatible-regions.png" alt="Vanilla region &amp; subcontinent keys dynamically remapped for full script compatibility"></a></td>
 <td width="50%"><a href="docs/images/showcase/07-ai-colonization.png"><img src="docs/images/showcase/07-ai-colonization.png" alt="Full AI Colonization Support: New oceans won&#x27;t stop Europe from creating horrific borders by 1837+"></a></td>
-<td width="50%"><a href="docs/images/showcase/08-dynamic-content.png"><img src="docs/images/showcase/08-dynamic-content.png" alt="Dynamic Content: Procedural colonial names, custom formable nations, and adapted historical &amp; regional events"></a></td>
+</tr>
+<tr>
+<td width="50%"><a href="docs/images/showcase/08-east-colonization.png"><img src="docs/images/showcase/08-east-colonization.png" alt="East Meets West: Turn off the European-only colonization rule and watch Asian powers settle the New World from across the Pacific"></a></td>
+<td width="50%"><a href="docs/images/showcase/09-dynamic-content.png"><img src="docs/images/showcase/09-dynamic-content.png" alt="Dynamic Content: Procedural colonial names, custom formable nations, and adapted historical &amp; regional events"></a></td>
 </tr>
 </table>
 
