@@ -9,6 +9,7 @@ import pytest
 from rnw.archetypes import HIGHLAND_CONFEDERATION, SEA_LEAGUE
 from rnw.eu5_archetypes import (
     ArchetypeCalibration,
+    TheocracyInstitutions,
     alliance_lines,
     confederation_lines,
     rival_lines,
@@ -25,6 +26,11 @@ CALIBRATION = ArchetypeCalibration(
     republic_government=(("type", "republic"), ("heir_selection", "oligarchic_elective")),
     republic_level=2,
     theocracy=(("type", "theocracy"), ("heir_selection", "theocratic_elective")),
+    theocracy_institutions=TheocracyInstitutions(
+        (("marriage_law", "monogamous_marriage"), ("heir_religion_law", "heir_special_succession")),
+        "assembly",
+        ("catholic",),
+    ),
     confederation_date="1337.1.1",
     cohesion=COHESION,
     confederate_density=0,

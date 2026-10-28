@@ -77,6 +77,15 @@ class ArchetypeError(ValueError):
 
 
 @dataclass(frozen=True, slots=True, eq=False)
+class TheocracyInstitutions:
+    """Compatible initial laws and parliament, read from vanilla precedents."""
+
+    laws: tuple[tuple[str, str], ...]
+    parliament: str
+    excluded_religions: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, eq=False)
 class ArchetypeCalibration:
     """What the vanilla data gives the four societies: governments, organisation, positions."""
 
@@ -84,6 +93,7 @@ class ArchetypeCalibration:
     republic_government: tuple[tuple[str, str], ...]
     republic_level: int
     theocracy: tuple[tuple[str, str], ...]
+    theocracy_institutions: TheocracyInstitutions
     confederation_date: str
     cohesion: tuple[tuple[str, int], ...]
     confederate_density: int
@@ -174,6 +184,169 @@ def theocracy_government(
         message = f"The government type {THEOCRACY} does not allow the heir selection {heir}"
         raise ArchetypeError(message)
     return (("type", THEOCRACY), ("heir_selection", heir))
+
+
+def _institutions(
+    block: Block, templates: Mapping[str, str], trail: tuple[str, ...] = ()
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Resolve just the nested institutions; do not inherit technology or other setup."""
+    laws: dict[str, str] = {}
+    parliament: dict[str, str] = {}
+    for name in _includes(block):
+        if name in trail or name not in templates:
+            message = f"Missing or recursive theocracy template {name}"
+            raise ArchetypeError(message)
+        inherited, assembly = _institutions(parse(templates[name]), templates, (*trail, name))
+        laws.update(inherited)
+        parliament.update(assembly)
+    government = block.block("government")
+    if government is not None:
+        laws.update(_fields(government.block("laws")))
+        parliament.update(_fields(government.block("parliament")))
+    return laws, parliament
+
+
+def _marriage_exclusions(policy: Block) -> tuple[str, ...]:
+    """Recognize vanilla's non-Catholic-theocracy allowance, failing on other conditions."""
+    allow = policy.block("allow")
+    if policy.first("potential") is None:
+        if allow is None:
+            return ()
+        tooltip = allow.block("custom_tooltip")
+        either = tooltip.block("OR") if tooltip is not None else None
+        if (
+            len(allow.entries) == 1
+            and either is not None
+            and {entry.key for entry in either.entries} == {"government_type", "religion"}
+        ):
+            government, religion = either.first("government_type"), either.first("religion")
+            if (
+                government is not None
+                and government.op == "!="
+                and government.value == "government_type:theocracy"
+                and religion is not None
+                and religion.op == "!="
+                and isinstance(religion.value, str)
+                and religion.value.startswith("religion:")
+                and tooltip is not None
+                and {entry.key for entry in tooltip.entries} == {"text", "OR"}
+            ):
+                return (religion.value.removeprefix("religion:"),)
+    message = "Unsupported theocracy marriage-policy conditions"
+    raise ArchetypeError(message)
+
+
+def theocracy_institutions(  # noqa: PLR0913 - binds the installed institutional definitions.
+    setup_text: str,
+    templates: Mapping[str, str],
+    american: Collection[str],
+    *,
+    government: tuple[tuple[str, str], ...],
+    law_texts: Sequence[str],
+    heir_texts: Sequence[str],
+    parliament_texts: Sequence[str],
+) -> TheocracyInstitutions:
+    """Complete the same vanilla theocracy precedents with laws and a native assembly.
+
+    The two laws must agree among those precedents. Parliament comes from American
+    templates, excluding types with a special potential such as Tibet's council.
+    Unknown compatibility conditions stop generation rather than being guessed.
+    """
+    holder = parse(setup_text).block("countries", "countries")
+    required = ("marriage_law", "heir_religion_law")
+    choices: set[tuple[tuple[str, str], ...]] = set()
+    for entry in holder.entries if holder is not None else []:
+        if not isinstance(entry.value, Block):
+            continue
+        fields = _fields(entry.value.block("government"))
+        if any(fields.get(key) != value for key, value in government):
+            continue
+        laws, _ = _institutions(entry.value, templates)
+        if any(key not in laws for key in required):
+            message = f"The vanilla theocracy {entry.key} lacks required initial laws"
+            raise ArchetypeError(message)
+        choices.add(tuple((key, laws[key]) for key in required))
+    if len(choices) != 1:
+        message = "Vanilla theocracies do not agree on their initial laws"
+        raise ArchetypeError(message)
+    laws = next(iter(choices))
+    definitions = {entry.key: entry.value for text in law_texts for entry in parse(text).entries}
+    policies: dict[str, Block] = {}
+    for law, policy in laws:
+        definition = definitions.get(law)
+        found = definition.block(policy) if isinstance(definition, Block) else None
+        if found is None:
+            message = f"The theocracy policy {law} = {policy} is not defined"
+            raise ArchetypeError(message)
+        policies[law] = found
+    excluded = _marriage_exclusions(policies["marriage_law"])
+    _check_heir_policy(
+        policies["heir_religion_law"], dict(government)["heir_selection"], heir_texts
+    )
+    parliament = _native_parliament(setup_text, templates, american, parliament_texts)
+    return TheocracyInstitutions(laws, parliament, excluded)
+
+
+def _check_heir_policy(policy: Block, heir: str, heir_texts: Sequence[str]) -> None:
+    """A special-succession policy must match the selected succession's custom tag."""
+    successions = [parse(text).block(heir) for text in heir_texts]
+    tags = {
+        word
+        for succession in successions
+        if succession
+        for word in _words(succession.block("custom_tags"))
+    }
+    potential = policy.block("potential")
+    succession = potential.block("succession_law") if potential is not None else None
+    tag = succession.first("has_tag") if succession is not None else None
+    if (
+        policy.first("allow") is not None
+        or potential is None
+        or len(potential.entries) != 1
+        or succession is None
+        or len(succession.entries) != 1
+        or tag is None
+        or tag.op != "="
+        or not isinstance(tag.value, str)
+        or tag.value not in tags
+    ):
+        message = "The theocracy heir-religion policy is incompatible with its succession"
+        raise ArchetypeError(message)
+
+
+def _native_parliament(
+    setup_text: str,
+    templates: Mapping[str, str],
+    american: Collection[str],
+    parliament_texts: Sequence[str],
+) -> str:
+    """Choose a native template's parliament without an extra eligibility potential."""
+    parliaments = {
+        entry.key: entry.value for text in parliament_texts for entry in parse(text).entries
+    }
+    assemblies: Counter[str] = Counter()
+    for name in sorted(american_includes(setup_text, american)):
+        _, fields = _institutions(parse(templates[name]), templates, (name,))
+        kind = fields.get("parliament_type", "")
+        definition = parliaments.get(kind)
+        if not isinstance(definition, Block) or definition.first("potential") is not None:
+            continue
+        if _fields(definition).get("type") != "country":
+            continue
+        allow = definition.block("allow")
+        absent = allow.block("NOT") if allow is not None else None
+        if allow is not None and not (
+            len(allow.entries) == 1
+            and absent is not None
+            and len(absent.entries) == 1
+            and absent.first("has_country_modifier") is not None
+        ):
+            continue
+        assemblies[kind] += 1
+    if not assemblies:
+        message = "No American template supplies an unrestricted country parliament"
+        raise ArchetypeError(message)
+    return min(assemblies, key=lambda key: (-assemblies[key], key))
 
 
 def _currency(block: Block) -> tuple[tuple[str, int], ...]:
@@ -307,6 +480,9 @@ def archetype_calibration(  # noqa: PLR0913 - the calibration reads every vanill
     levels: Mapping[str, int],
     templates: Mapping[str, str],
     government_texts: Sequence[str],
+    law_texts: Sequence[str],
+    heir_texts: Sequence[str],
+    parliament_texts: Sequence[str],
     value_texts: Sequence[str],
     io_type_texts: Sequence[str],
     pops: Mapping[str, Sequence[tuple[str, int, str, str]]],
@@ -326,11 +502,21 @@ def archetype_calibration(  # noqa: PLR0913 - the calibration reads every vanill
     if not alliances or not rivals:
         message = "Vanilla's 1337 setup holds no alliance or no rival record to follow"
         raise ArchetypeError(message)
+    theocracy = theocracy_government(setup_text, government_texts)
     return ArchetypeCalibration(
         republic_include=name,
         republic_government=fields,
         republic_level=level,
-        theocracy=theocracy_government(setup_text, government_texts),
+        theocracy=theocracy,
+        theocracy_institutions=theocracy_institutions(
+            setup_text,
+            templates,
+            american,
+            government=theocracy,
+            law_texts=law_texts,
+            heir_texts=heir_texts,
+            parliament_texts=parliament_texts,
+        ),
         confederation_date=f"{year}.1.1",
         cohesion=cohesion,
         confederate_density=density,
@@ -418,7 +604,7 @@ def currency_lines(cohesion: Sequence[tuple[str, int]]) -> str:
     return f"\t\tcurrency_data = {{\n{body}\t\t}}\n"
 
 
-def _fields(entry_value: str | Block) -> dict[str, str]:
+def _fields(entry_value: str | Block | None) -> dict[str, str]:
     if not isinstance(entry_value, Block):
         return {}
     return {
@@ -477,6 +663,8 @@ class WrittenCountry:
     pop: bool
     owned: tuple[str, ...]
     capital: str
+    laws: dict[str, str]
+    parliament: str
 
 
 def written_countries(text: str, tags: Collection[str]) -> dict[str, WrittenCountry]:
@@ -495,6 +683,12 @@ def written_countries(text: str, tags: Collection[str]) -> dict[str, WrittenCoun
             pop=kind is not None and kind.value == "pop",
             owned=tuple(_words(entry.value.block("own_control_core"))),
             capital=capital.value if capital is not None and isinstance(capital.value, str) else "",
+            laws=_fields(government.block("laws")) if government is not None else {},
+            parliament=(
+                _fields(government.block("parliament")).get("parliament_type", "")
+                if government is not None
+                else ""
+            ),
         )
     return found
 
@@ -510,6 +704,8 @@ def archetype_report(
             "republic_template": calibration.republic_include,
             "republic_government": dict(calibration.republic_government),
             "theocracy": dict(calibration.theocracy),
+            "theocracy_laws": dict(calibration.theocracy_institutions.laws),
+            "theocracy_parliament": calibration.theocracy_institutions.parliament,
             "confederation_date": calibration.confederation_date,
             "confederate_currency": dict(calibration.cohesion),
             "confederate_density_milli": calibration.confederate_density,
@@ -537,6 +733,9 @@ class Expected:
     capital: str
     archetype: str
     free: bool
+    laws: tuple[tuple[str, str], ...] = ()
+    parliament: str = ""
+    religion: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -574,6 +773,8 @@ def _record_problems(text: str, countries: Mapping[str, Expected]) -> list[str]:
             problems.append(f"{tag} does not write its template {expected.include}")
         if any(record.government.get(key) != value for key, value in expected.government):
             problems.append(f"{tag} writes the government {record.government}")
+        if record.laws != dict(expected.laws) or record.parliament != expected.parliament:
+            problems.append(f"{tag} writes incompatible government institutions")
         if record.currency != expected.currency:
             problems.append(f"{tag} writes the currency {record.currency}")
         if expected.state or expected.landed:
@@ -618,9 +819,13 @@ def _group_problems(
                 problems.append(f"The confederation {tags} is not made of confederate tribes")
         elif kind == SACRED_CENTRE:
             fields = dict(calibration.theocracy)
+            institutions = calibration.theocracy_institutions
             wanted = {(tags[0], other) for other in tags[1:]}
             if (
                 members[0].include
+                or members[0].laws != institutions.laws
+                or members[0].parliament != institutions.parliament
+                or members[0].religion in institutions.excluded_religions
                 or any(dict(members[0].government).get(k) != v for k, v in fields.items())
                 or {pair for pair in rivals if set(pair) <= set(tags)}
                 != wanted | {(b, a) for a, b in wanted}

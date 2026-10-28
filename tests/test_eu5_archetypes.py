@@ -18,6 +18,7 @@ from rnw.eu5_archetypes import (
     ArchetypeError,
     Bonds,
     Expected,
+    TheocracyInstitutions,
     alliance_lines,
     american_includes,
     archetype_calibration,
@@ -34,6 +35,7 @@ from rnw.eu5_archetypes import (
     rival_lines,
     slider_targets,
     theocracy_government,
+    theocracy_institutions,
     written_confederations,
     written_countries,
     written_pairs,
@@ -58,15 +60,20 @@ SETUP = """countries = {
 \t\t\tcurrency_data = { gold = 100 stability = 33 tribal_cohesion = 90 } }
 \t\tPOP = { type = pop add_pops_from_locations = { a5 } include = "pop_t" }
 \t\tTIB = { own_control_core = { old1 } government = { type = theocracy
-\t\t\their_selection = theocratic_elective } }
+\t\t\their_selection = theocratic_elective
+\t\t\tlaws = { marriage_law = monogamous_marriage heir_religion_law = heir_special_succession } } }
 \t\tVNA = { own_control_core = { old2 } government = { type = theocracy
-\t\t\their_selection = theocratic_elective } }
+\t\t\their_selection = theocratic_elective
+\t\t\tlaws = { marriage_law = monogamous_marriage heir_religion_law = heir_special_succession } } }
 \t\tOLD = { own_control_core = { old3 } government = { type = theocracy } }
 \t}
 }
 """
 TEMPLATES = {
-    "republic_t": "government = { type = republic land_vs_naval = -70 }",
+    "republic_t": (
+        "government = { type = republic land_vs_naval = -70 "
+        "parliament = { parliament_type = assembly } }"
+    ),
     "monarchy_t": "government = { land_vs_naval = -90 spiritualist_vs_humanist = -60 }",
     "tribe_t": (
         "government = { land_vs_naval = 60 spiritualist_vs_humanist = -90"
@@ -81,6 +88,23 @@ GOVERNMENTS = {
 }
 LEVELS = {"republic_t": 2, "monarchy_t": 1}
 GOVERNMENT_TYPES = ["theocracy = { heir_selection = theocratic_elective heir_selection = other }"]
+LAWS = [
+    """marriage_law = {
+    monogamous_marriage = {
+        allow = { custom_tooltip = { text = test_marriage
+            OR = { government_type != government_type:theocracy religion != religion:catholic }
+        } }
+    }
+}
+heir_religion_law = {
+    heir_special_succession = { potential = { succession_law = { has_tag = special_tag } } }
+}
+"""
+]
+HEIRS = ["theocratic_elective = { custom_tags = { special_tag } }"]
+PARLIAMENTS = [
+    "assembly = { type = country allow = { NOT = { has_country_modifier = test_modifier } } }"
+]
 VALUES = [
     "land_vs_naval = { }\nspiritualist_vs_humanist = { }\ntraditionalist_vs_innovative = { }\n"
 ]
@@ -127,6 +151,9 @@ def _calibration(**changes: object) -> ArchetypeCalibration:
         levels=LEVELS,
         templates=TEMPLATES,
         government_texts=GOVERNMENT_TYPES,
+        law_texts=LAWS,
+        heir_texts=HEIRS,
+        parliament_texts=PARLIAMENTS,
         value_texts=VALUES,
         io_type_texts=IO_TYPES,
         pops=POPS,
@@ -200,6 +227,96 @@ def test_a_theocracy_takes_the_heir_selection_vanilla_writes_if_the_type_allows_
         _ = theocracy_government("countries = { countries = { } }", GOVERNMENT_TYPES)
 
 
+def _institutions(**changes: object) -> TheocracyInstitutions:
+    arguments: dict[str, object] = {
+        "setup_text": SETUP,
+        "templates": TEMPLATES,
+        "american": AMERICAN,
+        "government": theocracy_government(SETUP, GOVERNMENT_TYPES),
+        "law_texts": LAWS,
+        "heir_texts": HEIRS,
+        "parliament_texts": PARLIAMENTS,
+    }
+    arguments.update(changes)
+    return theocracy_institutions(**arguments)  # pyright: ignore[reportArgumentType]
+
+
+def test_theocracy_laws_resolve_template_inheritance_and_explicit_overrides() -> None:
+    direct = _calibration().theocracy_institutions
+    assert direct.laws == (
+        ("marriage_law", "monogamous_marriage"),
+        ("heir_religion_law", "heir_special_succession"),
+    )
+    assert direct.parliament == "assembly"
+    assert direct.excluded_religions == ("catholic",)
+    setup = SETUP.replace(
+        "own_control_core = { old2 }", 'own_control_core = { old2 } include = "foreign"'
+    ).replace(
+        "laws = { marriage_law = monogamous_marriage heir_religion_law = heir_special_succession }",
+        "laws = { heir_religion_law = heir_special_succession }",
+        1,
+    )
+    # Give the first peer an inherited marriage policy and a deliberately incompatible
+    # inherited succession; its explicit succession must win.
+    setup = setup.replace(
+        "own_control_core = { old1 }", 'own_control_core = { old1 } include = "foreign"'
+    )
+    templates = {
+        **TEMPLATES,
+        "foreign": (
+            "government = { laws = { marriage_law = monogamous_marriage "
+            "heir_religion_law = inherited_wrong } }"
+        ),
+    }
+    inherited = _institutions(setup_text=setup, templates=templates)
+    assert inherited.laws == direct.laws
+    assert inherited.parliament == direct.parliament
+    assert inherited.excluded_religions == direct.excluded_religions
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        (
+            {"setup_text": SETUP.replace("marriage_law = monogamous_marriage", "other = x", 1)},
+            "lacks required",
+        ),
+        ({"setup_text": SETUP.replace("monogamous_marriage", "different", 1)}, "do not agree"),
+        ({"law_texts": []}, "not defined"),
+        ({"heir_texts": ["theocratic_elective = { }"]}, "incompatible"),
+        (
+            {"law_texts": [LAWS[0].replace("has_tag = special_tag", "has_tag = wrong")]},
+            "incompatible",
+        ),
+        (
+            {"parliament_texts": ["assembly = { type = country potential = { tag = SOME } }"]},
+            "No American",
+        ),
+        (
+            {
+                "parliament_texts": [
+                    "assembly = { type = country allow = { religion = religion:restricted } }"
+                ]
+            },
+            "No American",
+        ),
+        (
+            {
+                "law_texts": [
+                    LAWS[0].replace("allow = { custom_tooltip", "potential = { custom_tooltip")
+                ]
+            },
+            "Unsupported",
+        ),
+    ],
+)
+def test_incomplete_or_incompatible_theocracy_calibration_fails(
+    changes: dict[str, object], message: str
+) -> None:
+    with pytest.raises(ArchetypeError, match=message):
+        _ = _institutions(**changes)
+
+
 def test_a_confederation_needs_a_defined_type_american_members_and_cohesion() -> None:
     found = confederation_calibration(ORGANIZATIONS, SETUP, AMERICAN, IO_TYPES, POPS)
     assert found == ((("gold", 100), ("stability", 33), ("tribal_cohesion", 90)), 1, 1500)
@@ -223,6 +340,9 @@ def test_vanilla_without_an_alliance_or_a_rival_fails_the_calibration() -> None:
         "levels": LEVELS,
         "templates": TEMPLATES,
         "government_texts": GOVERNMENT_TYPES,
+        "law_texts": LAWS,
+        "heir_texts": HEIRS,
+        "parliament_texts": PARLIAMENTS,
         "value_texts": VALUES,
         "io_type_texts": IO_TYPES,
         "pops": POPS,
@@ -344,6 +464,8 @@ def _country(tag: str, calibration: ArchetypeCalibration) -> Country:
         return replace(
             base,
             include="",
+            laws=calibration.theocracy_institutions.laws,
+            parliament=calibration.theocracy_institutions.parliament,
             government=government_fields(
                 base.government, calibration.theocracy, calibration.sliders[SACRED_CENTRE]
             ),
@@ -398,6 +520,9 @@ class _World:
                 capital=c.capital,
                 archetype=c.archetype,
                 free=self.free[c.tag],
+                laws=c.laws,
+                parliament=c.parliament,
+                religion=c.religion,
             )
             for c in self.countries
         }
@@ -473,6 +598,17 @@ def test_sacred_centre_rejects_an_inherited_monarchy_template() -> None:
     assert any("sacred centre" in problem for problem in problems)
 
 
+@pytest.mark.parametrize("field", ["laws", "parliament", "religion"])
+def test_sacred_centre_rejects_an_incompatible_plan_even_if_the_writer_matches(field: str) -> None:
+    world = _world()
+    changes: dict[str, object] = {"laws": (), "parliament": "", "religion": "catholic"}
+    countries = [
+        replace(c, **{field: changes[field]}) if c.tag == "SCA" else c for c in world.countries
+    ]
+    broken = _written(countries, world.bonds, world.calibration)
+    assert any("sacred centre" in problem for problem in broken.problems())
+
+
 def test_a_tribe_that_is_not_landed_holds_pops_without_owning_a_location() -> None:
     world = _world()
     calibration = world.calibration
@@ -538,6 +674,22 @@ def _forget(world: _World) -> None:
 
 ALLIED = "first = LGB second = LGC type = alliance }"
 BREAKS = {
+    "missing_law": _Break(
+        "incompatible government institutions",
+        _edit("10_countries.txt", "marriage_law = monogamous_marriage", "wrong_law = missing"),
+    ),
+    "incompatible_succession_policy": _Break(
+        "incompatible government institutions",
+        _edit(
+            "10_countries.txt",
+            "heir_religion_law = heir_special_succession",
+            "heir_religion_law = inherited_wrong",
+        ),
+    ),
+    "wrong_parliament": _Break(
+        "incompatible government institutions",
+        _edit("10_countries.txt", "parliament_type = assembly", "parliament_type = restricted"),
+    ),
     "template": _Break(
         "does not write its template",
         _edit("10_countries.txt", 'include = "republic_t"', 'include = "monarchy_t"'),

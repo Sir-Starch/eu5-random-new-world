@@ -2184,6 +2184,9 @@ def verify_archetypes(  # noqa: PLR0913, PLR0917 - every record of the plan is c
                     capital=country.capital,
                     archetype=country.archetype,
                     free=not country.great and country.tag not in subjects,
+                    laws=country.laws,
+                    parliament=country.parliament,
+                    religion=country.religion,
                 )
                 for country in natives.countries
             },

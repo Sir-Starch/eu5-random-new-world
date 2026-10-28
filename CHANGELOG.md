@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.21 — 2026-10-28
+
+- Sacred-centre theocracies now start with compatible marriage and heir-religion
+  laws and a native assembly, read from the installed game's precedents.
+  Generation rejects incomplete or incompatible government institutions before
+  installing a world. Existing worlds and saves are preserved.
+
 ## 0.13.20 — 2026-10-28
 
 - Restore the previous periodic primary terrain-source extension at the owner’s

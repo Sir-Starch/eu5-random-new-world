@@ -303,6 +303,8 @@ class Country:
     landed: bool = False
     currency: tuple[tuple[str, int], ...] = ()
     archetype: str = ""
+    laws: tuple[tuple[str, str], ...] = ()
+    parliament: str = ""
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -781,6 +783,9 @@ def _archetype_calibration(  # noqa: PLR0913 - the calibration reads the setup, 
         levels=levels,
         templates=templates,
         government_texts=texts(GOVERNMENT_TYPE_DIR),
+        law_texts=texts("game/in_game/common/laws"),
+        heir_texts=texts("game/in_game/common/heir_selections"),
+        parliament_texts=texts("game/in_game/common/parliament_types"),
         value_texts=texts(SOCIETAL_VALUE_DIR),
         io_type_texts=texts(ORGANIZATION_TYPE_DIR),
         pops=pops,
@@ -2175,11 +2180,17 @@ def _archetypes(  # noqa: PLR0913 - the societies read the peoples, the bonds an
             confederations.append(tuple(tags))
             knowledge += [(a, b) for a in tags for b in tags if a != b]
         elif group.kind == SACRED_CENTRE:
+            institutions = calibration.theocracy_institutions
+            if changed[group.hub].religion in institutions.excluded_religions:
+                message = f"The sacred centre {tags[0]} has no compatible marriage policy"
+                raise NativesError(message)
             changed[group.hub] = replace(
                 changed[group.hub],
                 # Tibet's vanilla theocracy needs no country template. The American
                 # monarchy templates contain laws and privileges forbidden to it.
                 include="",
+                laws=institutions.laws,
+                parliament=institutions.parliament,
                 government=government_fields(
                     changed[group.hub].government, calibration.theocracy, sliders
                 ),
@@ -2314,6 +2325,13 @@ def country_records(countries: tuple[Country, ...]) -> str:
         lines.append("\t\t}\n")
         lines.append("\t\tgovernment = {\n")
         lines.extend(f"\t\t\t{key} = {value}\n" for key, value in country.government)
+        if country.laws:
+            lines.append("\t\t\tlaws = {\n")
+            lines.extend(f"\t\t\t\t{key} = {value}\n" for key, value in country.laws)
+            lines.append("\t\t\t}\n")
+        if country.parliament:
+            lines.append("\t\t\tparliament = {\n")
+            lines.append(f"\t\t\t\tparliament_type = {country.parliament}\n\t\t\t}}\n")
         lines.append("\t\t\truler = random\n\t\t}\n")
         if country.currency:
             lines.append(currency_lines(country.currency))

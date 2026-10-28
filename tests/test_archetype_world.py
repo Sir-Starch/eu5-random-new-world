@@ -19,7 +19,7 @@ from rnw.archetypes import (
     Rules,
     plan_archetypes,
 )
-from rnw.eu5_archetypes import ArchetypeCalibration
+from rnw.eu5_archetypes import ArchetypeCalibration, TheocracyInstitutions
 from rnw.eu5_natives import (
     Country,
     NativesError,
@@ -51,6 +51,11 @@ CALIBRATION = ArchetypeCalibration(
     republic_government=(("type", "republic"), ("heir_selection", "oligarchic_elective")),
     republic_level=2,
     theocracy=(("type", "theocracy"), ("heir_selection", "theocratic_elective")),
+    theocracy_institutions=TheocracyInstitutions(
+        (("marriage_law", "monogamous_marriage"), ("heir_religion_law", "heir_special_succession")),
+        "assembly",
+        ("catholic",),
+    ),
     confederation_date="1337.1.1",
     cohesion=(("gold", 100), ("stability", 33), ("tribal_cohesion", 90)),
     confederate_density=0,
@@ -272,9 +277,27 @@ def test_a_sacred_centre_is_a_theocracy_and_the_rival_of_its_competitors() -> No
         "heir_selection": "theocratic_elective",
         "spiritualist_vs_humanist": "-90",
     }
+    government = record.block("government")
+    assert government is not None
+    laws = government.block("laws")
+    assert laws is not None
+    assert {e.key: e.value for e in laws.entries} == dict(CALIBRATION.theocracy_institutions.laws)
+    parliament = government.block("parliament")
+    assert parliament is not None
+    kind = parliament.first("parliament_type")
+    assert kind is not None
+    assert kind.value == "assembly"
+    assert all(not c.laws and not c.parliament for c in others)
     assert all(dict(c.government) == {"type": "monarchy"} for c in others)
     held = {(a, b) for a, b in varied.rivals if hub.tag in (a, b)}
     assert held == {(hub.tag, c.tag) for c in others} | {(c.tag, hub.tag) for c in others}
+
+
+def test_a_sacred_centre_with_an_excluded_faith_fails_before_serialization() -> None:
+    faiths = tuple(sorted({c.religion for c in _countries()}))
+    institutions = replace(CALIBRATION.theocracy_institutions, excluded_religions=faiths)
+    with pytest.raises(NativesError, match="no compatible marriage policy"):
+        _ = _apply(calibration=replace(CALIBRATION, theocracy_institutions=institutions))
 
 
 def test_a_fractured_realm_is_a_set_of_returned_rivalries_between_touching_centres() -> None:

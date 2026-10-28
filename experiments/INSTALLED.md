@@ -721,3 +721,32 @@ lint and types. Audit: ignored `local_data/wrap-visual-restored/` (written-audit
 full-check, Windows self-test, candidate, installation and delivery reports).
 Exact removal when requested:
 `uv run rnw uninstall-mod rnw_exp_world_7yzo7v4bu5 --user-dir USER_DIR`.
+
+2026-10-28, **0.13.21 / epoch 58 — complete sacred-centre governments**
+(C424; [correction evidence](../docs/research/observer-01320-audit.md#implemented-correction--01321--epoch-58-c424)).
+Installed new **RNW: Complete sacred-centre governments**,
+`mod/rnw_exp_world_5fpdl42jbl`, **862 files hash-verified**, with complete
+recovery metadata and entries in both native and Windows generator libraries.
+Code: `RNW1-081RF-FZCZT-X8CJN-T006H-A0860-2AG63-YG1W8-8G3GH-149XR-08TM0-3BKDH-D`.
+The independently reproduced canonical reference has **851 files**, SHA-256
+`f85cb19da0d6b78f5d93d8d15dad87d50c3bf5aa7edcf6023725fc31f71f5e25`.
+Only UUV's two initial government blocks change; all **850** other canonical
+file hashes match 0.13.20. This is a separate world, not a save migration.
+
+Updated the existing generator-only hub **0.13.20→0.13.21** through
+`update_local_hub`, with current-source/package/installed-copy verification
+and a passing isolated Windows generator self-test. All **3,274** hub files
+are verified. The former hub's **3,274 files** remain under the profile at
+`.rnw-hub-backups/0.13.20-1793177280743500399`.
+The installed Windows and Linux generators agree on actual installed-game
+government calibration and the synthetic country writer's bytes.
+
+World installation hash-preserved all **4,262 files** of the five existing
+world mods, the updated hub and **nine profile-root files**. Both copied
+library entries and the recovery bundle load correctly. EU5 was closed;
+no EU5 launch/control, existing-world replacement, save, setting or playset
+change. New in-game acceptance remains unobserved.
+Audit: ignored `local_data/theocracy-init/` (full/local checks, output comparison,
+independent reproduction, Windows parity, world installation and hub reports).
+Exact removal when requested, with EU5 closed:
+`uv run rnw uninstall-mod rnw_exp_world_5fpdl42jbl --user-dir USER_DIR`.

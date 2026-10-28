@@ -167,3 +167,44 @@ invalid runtime path or zero evaluated distance centuries later.
 `local_data/observer-campaign-20261028/fix-assessment/`. No current save-state
 or error-time runtime reconstruction is claimed. This investigation changes
 documentation only; the prior full checks apply to unchanged generator code.
+
+## Implemented correction — 0.13.21 / epoch 58 (C424)
+
+[V-LOCAL / V-EXEC] At the owner's request, A01 is implemented in the initial
+country model and writer. Sacred centres receive typed nested laws and
+parliament records. Calibration resolves the selected vanilla theocracies'
+template inheritance and explicit overrides, requires agreement on the two
+laws, checks the succession policy's tag and the marriage-policy restriction,
+and selects an American template's parliament without a special eligibility
+potential. Missing, conflicting or unsupported calibration stops generation;
+an excluded faith also fails before serialization. Other countries keep their
+templates and initial records. No startup repair, game-rule override or
+engine/interface patch is added. A02 and the unattributed diagnostics retain
+their existing dispositions.
+
+[V-EXEC] Synthetic regressions cover inherited-law overrides, missing and
+conflicting policies, incompatible succession tags, marriage restrictions,
+restricted parliaments, excluded faiths, and missing/wrong written institutions.
+The final validator also rejects an incompatible plan even when its writer
+faithfully serializes it. Full checks pass: **2,132 Python tests / 14 skipped**,
+**23 Rust tests**, formatting, lint and types; the installed-game read-only
+suite passes **12 / 2 optional skips**. The built and installed Windows
+generator passes its offscreen self-test and produces the same calibrated
+institutions and synthetic country bytes as Linux.
+
+[V-EXEC] The new reference retains the previous seed and settings. Its
+canonical **851-file** digest is
+`f85cb19da0d6b78f5d93d8d15dad87d50c3bf5aa7edcf6023725fc31f71f5e25`.
+Only `main_menu/setup/1337/10_countries.txt` changes from 0.13.20; **850**
+canonical file hashes are identical, including geography, rivers, locators,
+routes and the cover. Removing the two newly written nested blocks restores
+the entire previous country file exactly: only **UUV / Viakna** changes.
+The revealed candidate separately has **830** other nonmetadata files unchanged.
+An independent complete export reproduces the canonical digest exactly,
+with no changed game inputs or differing output files.
+
+The reference, output comparison, checks and platform parity reports remain
+ignored under `local_data/theocracy-init/`. Delivery is recorded in
+[INSTALLED](../../experiments/INSTALLED.md). **[UNKNOWN]** New engine acceptance
+of these complete fields has not been observed; no EU5 launch or control is
+performed, and the owner's existing campaign is preserved.

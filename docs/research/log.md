@@ -19,6 +19,13 @@ records and 307 landed capitals pass initial coordinate/distinctness checks;
 the nine seam warnings concern bytes already measured in C414. No speculative
 coordinate/AI workaround is justified. Research only; no fix is implemented.
 
+[V-LOCAL / V-EXEC C424] The owner's requested correction is implemented in
+**0.13.21 / epoch 58**: sacred centres receive compatible initial nested laws
+and a native assembly, with source-calibration, plan and written-file checks.
+The [correction evidence](observer-01320-audit.md#implemented-correction--01321--epoch-58-c424)
+records the exact one-country output delta and verification; delivery is in
+[INSTALLED](../../experiments/INSTALLED.md). No engine launch or runtime repair.
+
 ## 2026-10-13
 
 - Initialized the repository and evidence policy before inspecting the game. No game behavior has yet been verified.
