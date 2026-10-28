@@ -130,9 +130,8 @@ def metadata(version: str) -> bytes:
         "version": version,
         "supported_game_version": "1.4.*",
         "short_description": (
-            "Procedural New World map generator for Europa Universalis V. Creates complete, "
-            "independent standalone map mods. Do not enable this mod in your playset: in "
-            "the Mods menu, select Open in folder and run Random New World Generator."
+            "Procedural New World map generator. Do not enable this mod in a playset: "
+            "click Open in folder and run Random New World Generator."
         ),
         "tags": ["Map"],
         "picture": "thumbnail.png",
