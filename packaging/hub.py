@@ -125,7 +125,7 @@ def version_fields(version: str) -> tuple[int, int, int, int]:
 def metadata(version: str) -> bytes:
     """The hub's ``metadata.json``, in the form the game reads (UTF-8 with BOM)."""
     payload: dict[str, object] = {
-        "name": "Random New World Generator",
+        "name": "Random New World (RNW) Generator",
         "id": MOD_ID,
         "version": version,
         "supported_game_version": "1.4.*",
