@@ -419,6 +419,40 @@ def test_quick_buttons_set_the_controls_and_follow_the_sliders(
 
 
 @pytest.mark.usefixtures("application")
+def test_chaos_custom_labels_keep_quick_buttons_aligned(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Custom values leave the same full-width button area as preset values."""
+    window = _window(tmp_path, fake_export)
+    window.show()
+    try:
+        window.type_choice.setCurrentIndex(1)
+        for row in window.quick_rows:
+            row.refresh(None, enabled=True)
+        QApplication.processEvents()
+        rows = window.quick_rows
+        assert all(row.custom.isVisibleTo(window) for row in rows)
+        right_edges = [list(row.buttons.values())[-1].geometry().right() for row in rows]
+        assert len(set(right_edges)) == 1
+        chaos_edges = [
+            (next(iter(row.buttons.values())).geometry().left(), edge)
+            for row, edge in zip(rows, right_edges, strict=True)
+        ]
+        window.type_choice.setCurrentIndex(0)
+        QApplication.processEvents()
+        assert all(not row.custom.isVisibleTo(window) for row in rows)
+        assert chaos_edges == [
+            (
+                next(iter(row.buttons.values())).geometry().left(),
+                list(row.buttons.values())[-1].geometry().right(),
+            )
+            for row in rows
+        ]
+    finally:
+        _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_a_made_world_opens_hidden_and_shows_when_the_setting_says_so(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

@@ -1,5 +1,12 @@
 # Installed experiments
 
+2026-10-28, **generator hub 0.13.23 / epoch 59**: updated `mod/rnw_exp_hub`
+with the Total Chaos layout fix and the current working-tree sources. The
+updater verified the package, its isolated Wine self-test and the installed copy.
+The previous 0.13.22 hub remains at
+`.rnw-hub-backups/0.13.22-1793223433182403940` under the normal profile.
+No game was launched. [V-EXEC]
+
 2026-10-28, **0.13.17 / epoch 54, viable native countries**, C410: installed
 **Viable native states** as a separate `mod/rnw_exp_world_quxq5nsxpx`, code
 `RNW1-081RF-FZCZT-X8CJN-T006H-20860-2AG63-YG1W8-8G3GH-149XR-08TM0-3F1EA-C`.

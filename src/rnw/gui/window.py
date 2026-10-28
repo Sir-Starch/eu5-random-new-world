@@ -415,6 +415,11 @@ class _QuickRow:
         self.levels: QHBoxLayout = QHBoxLayout()
         self.custom: QLabel = QLabel(text("quick.custom"))
         self.custom.setStyleSheet(MUTED)
+        self.heading: QVBoxLayout = QVBoxLayout()
+        self.heading.setContentsMargins(0, 0, 0, 0)
+        self.heading.setSpacing(0)
+        self.heading.addWidget(self.label)
+        self.heading.addWidget(self.custom)
         for level in quick.levels:
             button = QPushButton(text(f"quick.{quick.name}.{level.name}"))
             button.setCheckable(True)
@@ -422,11 +427,10 @@ class _QuickRow:
             _ = button.clicked.connect(lambda _checked=False, name=level.name: self._pick(name))
             self.buttons[level.name] = button
             self.levels.addWidget(button)
-        self.levels.addWidget(self.custom)
 
     def place(self, grid: QGridLayout, row: int) -> None:
         """Put the row's widgets into ``grid``."""
-        grid.addWidget(self.label, row, 0)
+        grid.addLayout(self.heading, row, 0)
         grid.addLayout(self.levels, row, 1)
 
     def refresh(self, level: str | None, *, enabled: bool) -> None:
