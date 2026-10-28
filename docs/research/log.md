@@ -1,5 +1,16 @@
 # Research log
 
+## 2026-10-28 — Completed 0.13.20 observer campaign audit
+
+[V-GAME logs / V-LOCAL / V-EXEC C419–C421] Read-only review identifies
+Restored visual wrap 0.13.20 / epoch 57, reaching 1768-10-05 and exiting
+normally. No severe RNW-caused defect is established, but Viakna's sacred-centre
+government still lacks three initial fields (C411/C420). Generic AI/position
+failures remain unattributed; all three mercenary failures are in Asia.
+The [audit](observer-01320-audit.md) holds the scope, counts and actionable
+findings; hashed raw evidence remains ignored. No game launch/control, output
+change, version bump, new installation or owner test request.
+
 ## 2026-10-13
 
 - Initialized the repository and evidence policy before inspecting the game. No game behavior has yet been verified.
