@@ -2020,3 +2020,11 @@ and external publication boundaries are maintained in
 [release process](../release-process.md#current-readiness), with reusable
 [release notes](../releases/1.0.0.md) and delivery in INSTALLED. No EU5 launch,
 source push or publication.
+
+## 2026-10-28 — CI selects the project Python for Rust checks (C433)
+
+The first remote 1.0.0 candidate passes its Python checks, then PyO3 finds
+Ubuntu 22.04’s system Python 3.10 during direct cargo validation. The extension
+had already built under uv’s 3.12. Makefile and general-CI Rust commands now
+run through uv as well; the same 1.0.0 target and epoch 59 are retained.
+The failed job and corrected commands are recorded in C433.

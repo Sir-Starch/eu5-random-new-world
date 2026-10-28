@@ -15,4 +15,4 @@ test:
 	uv run pytest -q
 
 rust:
-	cd native && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+	cd native && uv run cargo fmt --check && uv run cargo clippy --all-targets -- -D warnings && uv run cargo test

@@ -25,11 +25,11 @@ jobs:
       - run: uv run ruff check .
       - run: uv run basedpyright
       - run: uv run pytest -q
-      - run: cargo fmt --check
+      - run: uv run cargo fmt --check
         working-directory: native
-      - run: cargo clippy --all-targets -- -D warnings
+      - run: uv run cargo clippy --all-targets -- -D warnings
         working-directory: native
-      - run: cargo test
+      - run: uv run cargo test
         working-directory: native
   package:
     needs: checks
