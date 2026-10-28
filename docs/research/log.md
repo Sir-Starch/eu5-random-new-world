@@ -1911,3 +1911,13 @@ definitions, linked from the public documentation. Eligibility and actual effect
 are distinguished from narrative wording and historical design notes. A regression
 check keeps the reference synchronized; it requires no game installation. Product
 output is unchanged. Verification and its limits are recorded in C409.
+
+## Viable remote countries, 2026-10-28
+
+[V-LOCAL / V-EXEC / INFERRED C410] Moved remote settlement planning before population,
+required vanilla-calibrated agrarian support for every landed country, and planned
+trading towns for disconnected landed groups. The same reference drops from 73 states
+without peasants to zero, and from 11 isolated states to five, preserving geography.
+Demographic support and graph market coverage do not prove engine income or later AI
+development [UNKNOWN]. Verification, reproduction and installation are recorded in
+C410 and [INSTALLED](../../experiments/INSTALLED.md).

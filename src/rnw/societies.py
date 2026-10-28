@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import heapq
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -88,6 +88,24 @@ class Polity:
     culture: int
     great: bool = False
     landed: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class StateFloor:
+    """Least agrarian population and share supporting a landed country, from vanilla.
+
+    Population is in milli-pops, share in permille. The game-independent default only
+    requires a nonzero farming population; the adapter supplies the installed baseline.
+    """
+
+    peasants: int = 1
+    share: int = 1
+
+    def supports(self, population: int, peasants: int) -> bool:
+        return peasants >= self.peasants and peasants * PERMILLE >= population * self.share
+
+
+MINIMUM_STATE_SUPPORT: Final[StateFloor] = StateFloor()
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -307,7 +325,8 @@ def _state_land(  # noqa: PLR0913 - the core, the share and how the outliers are
     reach: int = 0,
     pocket: int = 1,
     rng: SplitMix64 | None = None,
-) -> NDArray[np.bool_]:
+    floor: StateFloor = MINIMUM_STATE_SUPPORT,
+) -> tuple[NDArray[np.bool_], NDArray[np.int64]]:
     """State land: ``share`` permille of the inhabited land, mostly the most complex.
 
     ``spread`` permille of it goes to pockets away from the core, as the small groups of
@@ -315,47 +334,59 @@ def _state_land(  # noqa: PLR0913 - the core, the share and how the outliers are
     an inhabited location at least ``reach`` from all other state land, drawn by its
     potential, and takes the nearest one to three times ``pocket`` locations.
     """
-    candidates = np.flatnonzero(inhabited & (complexity > 0))
+    complexity = complexity.copy()
+    minimum = (floor.share * PERMILLE + PEASANT_PEAK - 1) // PEASANT_PEAK
+    candidates = np.flatnonzero(inhabited & (complexity >= minimum))
     wanted = int(np.count_nonzero(inhabited)) * share // PERMILLE
     outlying = wanted * spread // PERMILLE if moves is not None and rng is not None else 0
     order = candidates[np.argsort(-complexity[candidates], kind="stable")][: wanted - outlying]
     land = np.zeros(len(complexity), dtype=bool)
     land[order] = True
     if outlying == 0 or moves is None or rng is None or potential is None:
-        return land
+        return land, complexity
     placed = 0
     while placed < outlying:
         taken = np.flatnonzero(land).tolist()
         cost, _ = moves.grow(taken, limit=reach) if taken else (np.full(len(land), -1), None)
-        pool = np.flatnonzero(inhabited & ~land & (cost < 0))
+        # A remote state needs a local farming centre, rather than ownership imposed
+        # on wholly tribal land outside every hearth. Poor islands remain tribal.
+        farmable = inhabited & ~land & (potential >= minimum)
+        pool = np.flatnonzero(farmable & (cost < 0))
         if pool.size == 0:
             break
         weights = np.maximum(1, potential[pool])
         pick = rng.below(int(weights.sum()))
         start = int(pool[int(np.searchsorted(np.cumsum(weights), pick, side="right"))])
         size = min(outlying - placed, pocket * (1 + rng.below(3)))
-        near, _ = moves.grow([start], allowed=inhabited & ~land, limit=reach)
-        reached = np.flatnonzero(near >= 0)
+        near, _ = moves.grow([start], allowed=farmable, limit=reach)
+        local = int(potential[start]) * np.maximum(0, reach - near) // max(1, reach)
+        reached = np.flatnonzero((near >= 0) & (local >= minimum))
         members = reached[np.argsort(near[reached], kind="stable")][: max(1, size)]
         land[members] = True
+        complexity[members] = np.maximum(complexity[members], local[members])
         placed += int(members.size)
-    return land
+    return land, complexity
 
 
-def _states(
+def _states(  # noqa: PLR0913 - capitals need population, eligibility and target size.
     graph: _Graph,
     land: NDArray[np.bool_],
     population: NDArray[np.int64],
     *,
     locations: int,
     rng: SplitMix64,
+    eligible: NDArray[np.bool_],
 ) -> list[tuple[int, list[int]]]:
     """Capitals and members of states covering ``land``; big capitals grow farther."""
     nodes = np.flatnonzero(land).tolist()
-    if not nodes:
+    if not nodes or not np.any(land & eligible):
         return []
     jitter = np.array([PERMILLE + rng.below(HEARTH_JITTER) for _ in range(len(population))])
-    order = [int(node) for node in np.argsort(-(population * jitter), kind="stable") if land[node]]
+    order = [
+        int(node)
+        for node in np.argsort(-(population * jitter), kind="stable")
+        if land[node] and eligible[node]
+    ]
     wanted = max(1, (len(nodes) + locations // 2) // locations)
     capitals = _spaced_seeds(graph, order, wanted=wanted, spacing=2 * STEP_COST, allowed=land)
     peak = max(1, int(population[capitals].max()))
@@ -382,6 +413,9 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
     *,
     chance: int,
     seed: int,
+    eligible: NDArray[np.bool_],
+    peasants: NDArray[np.int64],
+    floor: StateFloor,
 ) -> list[tuple[int, list[int]]]:
     """Capitals and members of the great empires: each hearth raises one with ``chance`` permille.
 
@@ -400,7 +434,7 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
             continue
         free = inhabited & ~taken
         near, _ = graph.grow([hearth], allowed=free, limit=2 * STEP_COST)
-        candidates = np.flatnonzero((near >= 0) & inhabited)
+        candidates = np.flatnonzero((near >= 0) & inhabited & eligible)
         if not candidates.size:
             continue
         capital = int(candidates[int(np.argmax(population[candidates]))])
@@ -408,6 +442,8 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
         reached = np.flatnonzero(reach >= 0)
         size = max(EMPIRE_FLOOR, len(inhabited) * share // PERMILLE)
         members = reached[np.argsort(reach[reached], kind="stable")][:size]
+        if not floor.supports(int(population[members].sum()), int(peasants[members].sum())):
+            continue
         taken[members] = True
         empires.append((capital, sorted(members.tolist())))
     return empires
@@ -455,6 +491,33 @@ def _ranks(
         if local and local[0].capital not in markets:
             markets.append(local[0].capital)
     return ranks, tuple(markets)
+
+
+def regional_markets(graph: LandGraph, societies: Societies) -> Societies:
+    """Plan a trading town in every disconnected group of landed countries.
+
+    Land contacts and shared coastal waters connect a group, through its own land only.
+    Existing centres serve their group; an unserved group uses its most populous country's
+    capital. Vanilla American market centres are towns or cities, never tribal wilderness.
+    This is a settlement plan, not an estimate of the engine's market access or profits.
+    """
+    states = [p for p in societies.polities if p.kind == STATE or p.landed]
+    states.sort(key=lambda p: (-int(societies.population[list(p.members)].sum()), p.capital))
+    land = np.zeros(len(graph.capacity), dtype=bool)
+    for state in states:
+        land[list(state.members)] = True
+    moves = _Graph(graph)
+    ranks = dict(societies.ranks)
+    markets = list(societies.markets)
+    _, covered = moves.grow(markets, allowed=land)
+    for state in states:
+        if covered[state.capital] < 0:
+            markets.append(state.capital)
+            _, local = moves.grow([state.capital], allowed=land)
+            covered[local >= 0] = 0
+    for market in markets:
+        _ = ranks.setdefault(market, TOWN)
+    return replace(societies, ranks=ranks, markets=tuple(markets))
 
 
 def land_routes(
@@ -542,7 +605,12 @@ def trunk_roads(
 
 
 def generate_societies(
-    graph: LandGraph, settings: NativeSettings, *, seed: int, target: int
+    graph: LandGraph,
+    settings: NativeSettings,
+    *,
+    seed: int,
+    target: int,
+    state_floor: StateFloor = MINIMUM_STATE_SUPPORT,
 ) -> Societies:
     """Native societies for one land graph; ``target`` is the total in milli-pops."""
     count = len(graph.capacity)
@@ -554,6 +622,18 @@ def generate_societies(
     food = _food(moves, graph.potential, reach // 2)
     hearths = _hearths(moves, food, wanted=wanted, reach=reach, rng=rng)
     complexity = _complexity(moves, hearths, graph.potential, reach=reach, rng=rng)
+    state_land, complexity = _state_land(
+        complexity,
+        graph.capacity > 0,
+        settings.state_share_permille,
+        spread=settings.state_spread_permille,
+        moves=moves,
+        potential=graph.potential,
+        reach=reach,
+        pocket=settings.state_locations,
+        rng=SplitMix64(derive_seed(seed, "state-land")),
+        floor=state_floor,
+    )
     population = _population(
         graph.capacity, complexity, target * settings.population_permille // PERMILLE, rng
     )
@@ -571,19 +651,18 @@ def generate_societies(
         culture[members] = inner[members] + zones
         zones += made
     inhabited = population > 0
-    state_land = _state_land(
-        complexity,
-        inhabited,
-        settings.state_share_permille,
-        spread=settings.state_spread_permille,
-        moves=moves,
-        potential=graph.potential,
-        reach=reach,
-        pocket=settings.state_locations,
-        rng=rng,
-    )
+    agrarian = peasants * PERMILLE >= population * state_floor.share
+    eligible = (peasants >= state_floor.peasants) & agrarian
     empires = _empires(
-        moves, hearths, population, inhabited, chance=settings.empire_permille, seed=seed
+        moves,
+        hearths,
+        population,
+        inhabited,
+        chance=settings.empire_permille,
+        seed=seed,
+        eligible=eligible,
+        peasants=peasants,
+        floor=state_floor,
     )
     empire_land = np.zeros(count, dtype=bool)
     for _, members in empires:
@@ -596,17 +675,23 @@ def generate_societies(
         Polity(STATE, tuple(members), capital, int(culture[capital]))
         for capital, members in _states(
             moves,
-            state_land & ~empire_land,
+            state_land & inhabited & agrarian & ~empire_land,
             population,
             locations=settings.state_locations,
             rng=rng,
+            eligible=eligible,
         )
     ]
+    # State-land share is a placement budget: a component without a supported capital
+    # is available to tribes, rather than becoming an economically empty country.
+    state_land = empire_land.copy()
+    for polity in polities:
+        state_land[list(polity.members)] = True
     polities += _tribes(
         moves, culture, inhabited & ~state_land & ~empire_land, population, settings, rng
     )
     ranks, markets = _ranks(polities, population, hearths, moves, reach)
-    return Societies(
+    societies = Societies(
         complexity=complexity,
         population=population,
         peasants=peasants,
@@ -617,3 +702,4 @@ def generate_societies(
         ranks=ranks,
         markets=markets,
     )
+    return regional_markets(graph, societies)

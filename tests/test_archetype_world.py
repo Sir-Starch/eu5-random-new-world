@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import cast
 
 import numpy as np
@@ -30,9 +31,20 @@ from rnw.eu5_natives import (
     archetype_structure,
     country_records,
     discover_areas,
+    state_economy,
 )
 from rnw.pdx import parse
-from rnw.societies import CITY, STATE, STEP_COST, TOWN, TRIBE, LandGraph, Polity, Societies
+from rnw.societies import (
+    CITY,
+    STATE,
+    STEP_COST,
+    TOWN,
+    TRIBE,
+    LandGraph,
+    Polity,
+    Societies,
+    StateFloor,
+)
 
 CALIBRATION = ArchetypeCalibration(
     republic_include="republic_t",
@@ -104,7 +116,7 @@ def _societies(**changes: object) -> Societies:
     fields: dict[str, object] = {
         "complexity": np.full(NODES, 800, dtype=np.int64),
         "population": population,
-        "peasants": np.zeros(NODES, dtype=np.int64),
+        "peasants": population // 3,
         "religion": religion,
         "culture": np.arange(NODES, dtype=np.int64),
         "hearths": HEARTHS,
@@ -213,8 +225,8 @@ def test_a_league_takes_the_republic_ranks_for_its_ports_and_a_ring_of_alliances
         }
     assert len(varied.alliances) == 3
     assert {tag for pair in varied.alliances for tag in pair} == {c.tag for c in league}
-    assert varied.societies.ranks == {0: CITY, 1: TOWN, 2: TOWN, 6: CITY}
-    assert varied.societies.markets == (6, 0)
+    assert varied.societies.ranks == {0: CITY, 1: TOWN, 2: TOWN, 3: TOWN, 6: CITY, 9: TOWN}
+    assert varied.societies.markets == (6, 0, 9, 3)
     assert before.ranks == {6: CITY}
     assert countries[league[0].tag].landed is False
 
@@ -344,3 +356,40 @@ def test_the_structure_reads_the_domains_ports_and_cradles() -> None:
     assert {0, 3, 6, 9} == set(structure.cradle) & {0, 3, 6, 9}
     assert structure.level[3] == -1
     assert structure.level[0] == 2
+
+
+def test_unsupported_tribes_cannot_gain_land_through_a_confederation() -> None:
+    societies = _societies()
+    graph = _graph()
+    societies.peasants[3:6] = 0
+    varied = _archetypes(
+        societies,
+        graph,
+        _cells(),
+        _vanilla(CALIBRATION),
+        _countries(),
+        near=_neighbours(societies, graph.edges),
+        bound=set(),
+        chance=1000,
+        seed=3,
+    )
+    assert not varied.confederations
+    assert not any(p.landed for p in varied.societies.polities)
+    assert any(c.archetype == SEA_LEAGUE for c in varied.countries)
+
+
+def test_economic_validation_includes_landed_tribes_and_reports_isolation() -> None:
+    societies = _societies()
+    graph = _graph()
+    near = _neighbours(societies, graph.edges)
+    floor = StateFloor(peasants=100, share=100)
+    report = state_economy(societies, near, floor)
+    assert report["without_peasants"] == 0
+    assert report["landed_countries"] == 10
+    assert report["isolated_countries"] == 3
+    polities = list(societies.polities)
+    polities[3] = replace(polities[3], landed=True)
+    societies = replace(societies, polities=tuple(polities))
+    societies.peasants[3] = 0
+    with pytest.raises(NativesError, match="lacks farming support"):
+        _ = state_economy(societies, near, floor)

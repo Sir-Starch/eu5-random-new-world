@@ -29,6 +29,7 @@ from rnw.eu5_natives import (
     match_homelands,
     new_tags,
     overlord_level,
+    state_population_floor,
     template_governments,
     template_levels,
     vanilla_colors,
@@ -544,3 +545,32 @@ def test_a_great_empire_takes_a_template_that_can_lead_vassals() -> None:
     assert _include(vanilla, "weak", level=1, coastal=True) == "tier_zero"
     assert _include(vanilla, "weak", level=1, coastal=True, empire=True) == advanced
     assert _include(vanilla, "nobody", level=2, coastal=True, empire=True) == advanced
+
+
+def test_state_floor_reads_only_american_landed_countries() -> None:
+    pops = {
+        "one": [("peasants", 300, "c", "r"), ("tribesmen", 700, "c", "r")],
+        "two": [("peasants", 200, "c", "r"), ("tribesmen", 1800, "c", "r")],
+        "three": [("peasants", 50, "c", "r")],
+        "outside": [("tribesmen", 900, "c", "r")],
+    }
+    countries: dict[str, tuple[str, list[str], list[str]]] = {
+        "AAA": ("land", ["one"], []),
+        "BBB": ("land", ["two", "three"], []),
+        "POP": ("pop", ["outside"], []),
+        "OLD": ("land", ["outside"], []),
+    }
+    floor = state_population_floor({"one", "two", "three"}, pops, countries)
+    assert floor.peasants == 250
+    assert floor.share == 121
+    assert floor.supports(2050, 250)
+    assert not floor.supports(2000, 200)
+    assert not floor.supports(10_000, 250)
+
+
+@pytest.mark.parametrize("pops", [{}, {"one": [("tribesmen", 1000, "c", "r")]}])
+def test_an_absent_or_zero_agrarian_baseline_stops_the_calibration(
+    pops: dict[str, list[tuple[str, int, str, str]]],
+) -> None:
+    with pytest.raises(NativesError, match="agrarian baseline"):
+        _ = state_population_floor({"one"}, pops, {"AAA": ("land", ["one"], [])})

@@ -83,14 +83,17 @@ from rnw.pdx import Block, parse
 from rnw.rng import SplitMix64, derive_seed, hash_grid
 from rnw.societies import (
     CITY,
+    MINIMUM_STATE_SUPPORT,
     PERMILLE,
     STATE,
     STEP_COST,
     TOWN,
     LandGraph,
     Societies,
+    StateFloor,
     generate_societies,
     hearth_domains,
+    regional_markets,
     travel_from,
 )
 from rnw.wording import Name, Phrase
@@ -275,6 +278,7 @@ class VanillaNatives:
     state_levels: tuple[int, ...] = ()
     empire: EmpireCalibration | None = None
     archetypes: ArchetypeCalibration | None = None
+    state_floor: StateFloor = MINIMUM_STATE_SUPPORT
 
 
 @dataclass(frozen=True, slots=True)
@@ -670,6 +674,39 @@ def vanilla_natives(
             templates=template_texts,
             pops=pops,
         ),
+        state_floor=state_population_floor(set(american), pops, countries),
+    )
+
+
+def state_population_floor(
+    american: set[str],
+    pops: dict[str, list[tuple[str, int, str, str]]],
+    countries: dict[str, tuple[str, list[str], list[str]]],
+) -> StateFloor:
+    """The least peasant population and share of vanilla's American landed countries.
+
+    This is an input eligibility baseline, not an estimate of engine income. Pop-only
+    countries and countries outside America never lower the required farming support.
+    """
+    totals = [
+        (
+            sum(amount for key in members for _, amount, _, _ in pops.get(key, [])),
+            sum(
+                amount
+                for key in members
+                for kind, amount, _, _ in pops.get(key, [])
+                if kind == "peasants"
+            ),
+        )
+        for kind, members, _ in countries.values()
+        if kind == "land" and members and set(members) <= american
+    ]
+    if not totals or any(population <= 0 or peasants <= 0 for population, peasants in totals):
+        message = "Vanilla American landed countries lack a positive agrarian baseline"
+        raise NativesError(message)
+    return StateFloor(
+        peasants=min(peasants for _, peasants in totals),
+        share=max(1, min(peasants * PERMILLE // population for population, peasants in totals)),
     )
 
 
@@ -1553,7 +1590,9 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         ],
     )
     target = vanilla.population_per_location * len(cells.cells)
-    societies = generate_societies(graph, settings, seed=seed, target=target)
+    societies = generate_societies(
+        graph, settings, seed=seed, target=target, state_floor=vanilla.state_floor
+    )
     keys = [plan.cells[cell].key for cell in cells.cells]
     religions, cultures, state = _identities(societies, cells, vanilla, seed)
     namer = PlaceNamer(vanilla, seed)
@@ -1666,6 +1705,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
             Counter(str(group["kind"]) for group in groups_of(varied.report))
         ),
         "areas_discovered_for_opinions": discovered,
+        "state_economy": state_economy(societies, near, vanilla.state_floor),
     }
     return NativeWorld(
         pops=pops,
@@ -1700,6 +1740,47 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
             vassals=len(vassals),
         ),
     )
+
+
+def state_economy(
+    societies: Societies, near: Sequence[set[int]], floor: StateFloor
+) -> dict[str, object]:
+    """Reject unsupported landed countries and report the population behind the verdict.
+
+    Confederation members are landed too. These are demographic checks; actual income
+    and later AI development still depend on the game's economy and require game evidence.
+    """
+    landed = {
+        number
+        for number, polity in enumerate(societies.polities)
+        if polity.kind == STATE or polity.landed
+    }
+    peasants: list[int] = []
+    shares: list[int] = []
+    isolated: list[int] = []
+    for number in sorted(landed):
+        members = list(societies.polities[number].members)
+        population = int(societies.population[members].sum())
+        farmers = int(societies.peasants[members].sum())
+        if not floor.supports(population, farmers):
+            message = (
+                f"Landed country at {societies.polities[number].capital} lacks farming support"
+            )
+            raise NativesError(message)
+        peasants.append(farmers)
+        shares.append(farmers * PERMILLE // max(1, population))
+        if not near[number] & landed:
+            isolated.append(farmers)
+    return {
+        "minimum_peasants_milli": floor.peasants,
+        "minimum_peasant_share_permille": floor.share,
+        "landed_countries": len(landed),
+        "without_peasants": peasants.count(0),
+        "least_peasants_milli": min(peasants, default=0),
+        "least_peasant_share_permille": min(shares, default=0),
+        "isolated_countries": len(isolated),
+        "least_isolated_peasants_milli": min(isolated, default=0),
+    }
 
 
 def groups_of(report: Mapping[str, object]) -> list[Mapping[str, object]]:
@@ -1905,6 +1986,7 @@ def archetype_structure(  # noqa: PLR0913 - the selection reads the peoples, the
     *,
     near: Sequence[set[int]],
     bound: Collection[int],
+    state_floor: StateFloor = MINIMUM_STATE_SUPPORT,
 ) -> Structure:
     """What ``rnw.archetypes`` reads of the generated peoples."""
     polities = societies.polities
@@ -1930,7 +2012,15 @@ def archetype_structure(  # noqa: PLR0913 - the selection reads the peoples, the
         ports.append(best)
     return Structure(
         state=[polity.kind == STATE for polity in polities],
-        free=[not polity.great and number not in bound for number, polity in enumerate(polities)],
+        free=[
+            not polity.great
+            and number not in bound
+            and state_floor.supports(
+                int(population[list(polity.members)].sum()),
+                int(societies.peasants[list(polity.members)].sum()),
+            )
+            for number, polity in enumerate(polities)
+        ],
         level=[-1 if country.level is None else country.level for country in countries],
         population=[int(population[list(polity.members)].sum()) for polity in polities],
         locations=[len(polity.members) for polity in polities],
@@ -2039,7 +2129,15 @@ def _archetypes(  # noqa: PLR0913 - the societies read the peoples, the bonds an
         if calibration is not None
         else Rules(0, 0)
     )
-    structure = archetype_structure(societies, graph, cells, countries, near=near, bound=bound)
+    structure = archetype_structure(
+        societies,
+        graph,
+        cells,
+        countries,
+        near=near,
+        bound=bound,
+        state_floor=vanilla.state_floor,
+    )
     found = options(structure, rules)
     groups = plan_archetypes(structure, rules, chance=chance, seed=seed)
     if groups and calibration is None:
@@ -2096,8 +2194,11 @@ def _archetypes(  # noqa: PLR0913 - the societies read the peoples, the bonds an
             )
         )
     ranks, markets = _league_ranks(societies, groups)
+    settled = replace(societies, polities=tuple(polities), ranks=ranks, markets=markets)
+    if confederations:
+        settled = regional_markets(graph, settled)
     return _Varied(
-        societies=replace(societies, polities=tuple(polities), ranks=ranks, markets=markets),
+        societies=settled,
         countries=tuple(changed),
         alliances=tuple(alliances),
         rivals=tuple(rivals),

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.17 — 2026-10-28
+
+- Build remote states around local farming centres before allocating population. Landed
+  countries must meet the installed vanilla Americas’ minimum peasant population and share;
+  insufficient settlements remain tribal, including would-be confederation members.
+- Give disconnected groups of landed countries a trading town and local market, reusing
+  existing centres within a group. Preserve the population budget and vanilla expansion rules.
+  Epoch 54; actual income and subsequent AI development remain unverified in game.
+
 ## 0.13.16 — 2026-10-27
 
 - Build ocean routes from the generated shores and live current entries. Interior remnants

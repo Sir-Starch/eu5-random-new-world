@@ -17,12 +17,16 @@ from rnw.societies import (
     EMPIRE_FLOOR,
     STATE,
     STEP_COST,
+    TOWN,
     TRIBE,
     LandGraph,
+    Polity,
     Societies,
+    StateFloor,
     generate_societies,
     hearth_domains,
     land_routes,
+    regional_markets,
     travel_from,
     trunk_roads,
 )
@@ -192,6 +196,74 @@ def test_lone_states_spread_state_land_into_small_groups() -> None:
     assert abs(sum(many) - sum(one)) <= max(2, sum(one) // 10)
 
 
+@pytest.mark.parametrize("seed", [3, 4, 77])
+@pytest.mark.parametrize("chance", [0, 1000])
+def test_remote_states_have_farming_support_before_population_is_allocated(
+    seed: int, chance: int
+) -> None:
+    graph = _grid()
+    floor = StateFloor(peasants=338, share=122)
+    societies = generate_societies(
+        graph,
+        replace(SETTINGS, state_spread_permille=600, empire_permille=chance),
+        seed=seed,
+        target=4_000_000,
+        state_floor=floor,
+    )
+    states = [p for p in societies.polities if p.kind == STATE]
+    assert states
+    costs = [travel_from(graph, hearth) for hearth in societies.hearths]
+    remote = [
+        p
+        for p in states
+        if all(
+            d[p.capital] < 0 or d[p.capital] >= SETTINGS.hearth_reach_steps * STEP_COST
+            for d in costs
+        )
+    ]
+    assert remote
+    assert all(societies.complexity[p.capital] > 0 for p in remote)
+    assert all(
+        floor.supports(
+            int(societies.population[list(p.members)].sum()),
+            int(societies.peasants[list(p.members)].sum()),
+        )
+        for p in states
+    )
+    assert all(_connected(set(p.members), graph.edges) for p in societies.polities)
+    assert int(societies.population.sum()) <= 4_000_000
+    assert np.all(societies.peasants <= societies.population)
+
+
+def test_poor_islands_do_not_become_empty_states_and_population_is_not_granted() -> None:
+    graph = _grid()
+    graph.potential[ROWS * COLUMNS :] = 0
+    societies = generate_societies(
+        graph,
+        replace(SETTINGS, state_spread_permille=600, organized_permille=1000),
+        seed=3,
+        target=4_000_000,
+        state_floor=StateFloor(peasants=338, share=122),
+    )
+    island = set(range(ROWS * COLUMNS, len(graph.capacity)))
+    assert any(island & set(p.members) for p in societies.polities if p.kind == TRIBE)
+    assert not any(island & set(p.members) for p in societies.polities if p.kind == STATE)
+    assert np.all(societies.complexity[sorted(island)] == 0)
+    assert 4_000_000 - len(graph.capacity) <= societies.population.sum() <= 4_000_000
+
+
+def test_insufficient_population_remains_tribal_even_on_fertile_land() -> None:
+    societies = generate_societies(
+        _grid(),
+        replace(SETTINGS, organized_permille=1000, empire_permille=1000),
+        seed=3,
+        target=40_000,
+        state_floor=StateFloor(peasants=338, share=122),
+    )
+    assert not any(p.kind == STATE for p in societies.polities)
+    assert any(p.kind == TRIBE for p in societies.polities)
+
+
 def _digest(societies: Societies) -> str:
     """Everything a world is made of, as one hash."""
     digest = hashlib.sha256()
@@ -205,16 +277,16 @@ def _digest(societies: Societies) -> str:
     return digest.hexdigest()
 
 
-# Taken from 0.9.14, before great empires existed: with none, the societies are those bytes.
+# Pinned agrarian state placement (0.13.17): no-empires worlds remain deterministic.
 NO_EMPIRES: dict[int, str] = {
-    3: "8918da688fcbf1b52ccd3ef3f7ada1b5732a338ec7cb35e7a73c4c1f5c6ebeeb",
-    4: "b14448be80550c2c17aa917a3c9f4595ae05727bdecc1781e3ab255011609865",
-    77: "6c86f55e823202a4eefc711ad66395101cd47c893c4cb19f818639deae0deb43",
+    3: "b2a7b4a79af091d6f95c15abbb9418703ae6a8114426101cd8074d19be9fe6b4",
+    4: "8d64ce781d9676daaed9b3dbba71d03c34194c21b655726feb8e50841c588313",
+    77: "7a565459ddd5f9be22c3dd461b92c0030f5147e9a28b61e955cc1c910b797772",
 }
 
 
-def test_without_great_empires_the_societies_are_those_of_before() -> None:
-    """A chance of 0 draws nothing from the world's own stream: the bytes do not move."""
+def test_without_great_empires_the_societies_match_the_reference() -> None:
+    """Pin the complete society output for the current algorithm epoch."""
     graph = _grid()
     for seed, digest in NO_EMPIRES.items():
         societies = generate_societies(graph, SETTINGS, seed=seed, target=4_000_000)
@@ -243,7 +315,7 @@ def test_great_empires_are_large_connected_states_apart_from_the_rest() -> None:
         assert len(empire.members) >= EMPIRE_FLOOR
         assert len(empire.members) > ordinary
         assert all(societies.population[node] > 0 for node in empire.members)
-    assert societies.ranks[empires[0].capital] == CITY
+    assert any(societies.ranks.get(empire.capital) == CITY for empire in empires)
 
 
 def test_a_higher_chance_raises_more_empires() -> None:
@@ -348,3 +420,34 @@ def test_travel_costs_run_over_land_and_sea_links_and_miss_what_neither_reaches(
     assert cost[ROWS * COLUMNS] == -1
     linked = replace(graph, links=np.array([[0, ROWS * COLUMNS]], dtype=np.int64))
     assert travel_from(linked, 0)[ROWS * COLUMNS] == graph.link_cost + STEP_COST
+
+
+@pytest.mark.parametrize("linked", [False, True])
+def test_remote_state_groups_have_trading_towns_and_share_existing_markets(*, linked: bool) -> None:
+    graph = _roads(5, [(0, 1), (2, 3)], links=[(1, 2)] if linked else [])
+    zero = np.zeros(5, dtype=np.int64)
+    before = Societies(
+        complexity=zero,
+        population=np.full(5, 3000, dtype=np.int64),
+        peasants=zero,
+        religion=zero,
+        culture=zero,
+        hearths=(),
+        polities=(
+            Polity(STATE, (0, 1), 0, 0),
+            Polity(STATE, (2, 3), 2, 0),
+            Polity(TRIBE, (4,), 4, 0),
+        ),
+        ranks={0: CITY},
+        markets=(0,),
+    )
+    result = regional_markets(graph, before)
+    assert result.markets == ((0,) if linked else (0, 2))
+    assert result.ranks == ({0: CITY} if linked else {0: CITY, 2: TOWN})
+    assert result.population is before.population
+    assert result.polities == before.polities
+    assert regional_markets(graph, result).markets == result.markets
+    landed = replace(
+        before, polities=(*before.polities[:2], replace(before.polities[2], landed=True))
+    )
+    assert 4 in regional_markets(graph, landed).markets

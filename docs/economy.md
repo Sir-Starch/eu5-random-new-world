@@ -46,6 +46,16 @@ Estimated mean development (vanilla Americas: city 12.28, town 6.38, state capit
 
 The rank correlation of term and population is 657, 628 and 573‰ (vanilla 507‰). Of the land a hearth reaches, 912–933‰ gets a term (`coverage_permille`); that land is 229–295‰ of all land (`civilised_permille`), depending on whether a world has 3 or 4 hearths. Two builds of seed 3717486232 are byte-identical (715 files). Harbour values and market villages reproduce the vanilla distribution and share.
 
+## Agrarian support and regional markets (0.13.17)
+
+[V-LOCAL / V-EXEC / INFERRED C410] Country placement now requires the installed vanilla
+Americas’ minimum peasant population and share and plans trading towns for disconnected
+landed groups. Remote state sites establish local farming complexity before the global
+population allocation, so they no longer inherit zero peasants merely for being outside
+a principal hearth. See [native state generation](natives.md#algorithm-implemented) for
+the mechanism and its limits. These are demographic and settlement checks, not an engine
+income calculation or a promise of later AI development [UNKNOWN].
+
 ## Measured differences that are not fitted
 
 Tribes and unorganised land stay below vanilla (0.1–0.4 against 1.26 and 0.78, C76). The physical part over all generated land equals vanilla's (−4.0 to −4.5 against −4.26), but the generator puts civilisations on the best land (state capitals −1.3 to −2.0 against −6.2 for vanilla capitals in jungles and highlands), so generated tribal land is poorer than vanilla's (−4.3 to −4.6 against −3.25). Vanilla also gives land outside states authored regional bonuses (Great Plains +5, tribes inside Mesoamerica +12). A fit for tribes would need the full civilisation term on all tribal land with complexity above 0.25 and still stays below vanilla (0.6–1.1), so it is not made: tribal land earns development only from hearth complexity and its own land.

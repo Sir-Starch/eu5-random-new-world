@@ -171,6 +171,8 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
     assert len(vanilla.religions) > 50
     assert vanilla.density["tropical"] > 5 * vanilla.density["subpolar"]
     assert vanilla.population_per_location > 1000
+    assert vanilla.state_floor.peasants == 338
+    assert vanilla.state_floor.share == 122
     assert {"amerindian_tribe", "amerindian_monarchy"} <= vanilla.templates
     assert "PAM" in vanilla.reserved_tags
     assert any(culture.state_include for culture in vanilla.cultures.values())

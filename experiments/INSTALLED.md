@@ -1,5 +1,31 @@
 # Installed experiments
 
+2026-10-28, **0.13.17 / epoch 54, viable native countries**, C410: installed
+**Viable native states** as a separate `mod/rnw_exp_world_quxq5nsxpx`, code
+`RNW1-081RF-FZCZT-X8CJN-T006H-20860-2AG63-YG1W8-8G3GH-149XR-08TM0-3F1EA-C`.
+Its **862** installed files match the prepared revealed-world candidate, including
+its complete recovery bundle. Complete atlas, preview, record and cover entries
+are registered in both the native and Windows generator libraries. The canonical
+covered export has **851** nonmetadata files, digest
+`68212db87594d811dea01a2d120917ee6ad0d5919b492f52c3b41e28e6e58808`,
+independently reproduced by a second complete export. The same reference settings
+now produce 307 landed states, none without peasants, and five physically isolated
+states instead of eleven; its location raster is byte-identical to 0.13.16.
+Demographic support and local markets do not establish engine income or later AI
+behavior. No game was launched.
+
+Updated `mod/rnw_exp_hub` to **0.13.17**, with current-source, package and installed-copy
+verification, a passing isolated Wine self-test, and Linux/installed-Windows society
+parity on three seeds. The former 0.13.16 hub remains at
+`.rnw-hub-backups/0.13.16-1793148121269931926`; an intermediate 0.13.17 build also remains
+at `.rnw-hub-backups/0.13.17-1793148232746096052` under the same normal profile.
+The world installation hash-preserved all **862 files in each of the three existing
+world mods**, all **3,274** files of the updated hub, and **nine** profile-root files.
+No existing world, playset, save, setting or game-installation file was edited.
+Exact audit: ignored `local_data/state-viability/installed.json`.
+With EU5 closed, removal is limited to `mod/rnw_exp_world_quxq5nsxpx`, or use the
+generator to remove **Viable native states**; hub rollback is a separate action.
+
 2026-10-27, **0.13.16 / epoch 53, 4TXC water correction**, C408: installed
 **RNW: 4TXC water correction** as a separate `mod/rnw_exp_world_obnxpx65bd`,
 code `RNW1-081CV-WXEC2-QHSVZ-G006H-00870-3X022-1K1Z8-0Y448-1R8GR-4YW04-DA01M-GT9HG`.
