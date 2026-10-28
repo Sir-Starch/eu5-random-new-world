@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.19 — 2026-10-28
+
+- Generate independent river catchments on either side of the display seam, with
+  closed boundaries and genuine sea/lake outlets. Preserve the expanded canvas
+  and mainland crossings. Epoch 56.
+- Follow every main river to actual water and reject inland endings. Encode the
+  planned network without cutting pixels or inventing sources at the seam.
+
 ## 0.13.18 — 2026-10-28
 
 - Remove the extended terrain sources and shifted primary placements used to conceal

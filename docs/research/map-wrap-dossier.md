@@ -87,8 +87,8 @@ Thus a visual bridge alone would not establish a connected gameplay river.
 The owner reports no vanilla river crossing the display edge. [V-LOCAL C390]
 The installed vanilla river raster contains no channel pixels in either outer column.
 
-[V-EXEC] `eu5_rivers.encode_rivers` intentionally omits last-column channel pixels
-and gives the resulting planar fragments independent sources. The QUXQ reference
+[V-EXEC] In 0.13.17–0.13.18, `eu5_rivers.encode_rivers` intentionally omitted
+last-column channel pixels and gave the planar fragments independent sources. The QUXQ reference
 reports **5 cut networks, 29 fragments and 56 omitted boundary pixels**, while
 valley carving uses the original continuous physical network. This directly
 explains a content-side discontinuity and why valleys need not match the game's
@@ -101,16 +101,53 @@ restoring edge pixels is not a verified fix. Those findings retain their narrow
 interoperability value ([R-004](interoperability.md)). No supported data interface
 joining a complete cross-edge river has been established [UNKNOWN].
 
-**Recommendation for the owner's decision:** retain the expanded canvas and
-continuous mainland/location identities. Prefer river generation that plans
-separate, sea-draining basins on each side of the display edge, with no channel
-crossing it, over a new engine patch. It must produce valid rivers by construction,
-not erase a stripe from finished channels or create false mouths on inland land.
-A side without an outlet must be handled explicitly during planning; a global
-artificial mountain ridge or mandatory sea strait is not proposed. This policy is
-**not implemented** pending the owner's decision. Existing river serialization
-is retained in 0.13.18 because removing it would discard separate loader-validity
-work, rather than just remove a crack-concealment measure.
+### Approved watershed policy, 0.13.19 / epoch 56 (C417)
+
+[OWNER, 2026-10-28] Retain the expanded canvas, mainland crossings and continuous
+location identities. Treat the seam as a watershed boundary, generate flow on each
+side independently and require actual water outlets. Do not truncate channels on
+land or create artificial mouths on the seam. This replaces the pending proposal.
+
+[V-EXEC] The exporter now plans each side as a separate closed drainage domain.
+Each gets its own coarse relief/rain grid, deterministic noise stream, catchment
+accumulation and river-density threshold. Rain is sampled at each domain's actual
+world coordinates, including divides not aligned to the coarse grid. The native
+priority flood seeds only genuine water inside that domain; the outside border
+is closed, never water. A domain with no coarse water outlet fails explicitly.
+
+The first and last world raster columns are reserved **before generation**, as
+required by the existing river-walker contract. This is a channel-domain constraint,
+not a cut through an existing river: land, water and uncarved relief are unchanged.
+No mountain ridge or strait is inserted. Drawing writes directly into disjoint views
+of shared role/flow buffers, retaining bounded working memory without an additional
+whole-map merge. Valleys and final codes consume that same planned network.
+
+The former fragment cutting and source/join reorientation are removed. The
+serializer preserves every channel pixel and fails if one occupies the closed
+boundary. A separate validator follows each main line from its source, excluding
+incoming tributary joins, and requires its terminal to be in or beside **actual
+water on its own side**. A wet tributary cannot excuse a dry main-line end.
+
+[V-EXEC] Synthetic tests cover 24 seed/divide combinations, partial coarse cells,
+divides at crop ends and outside it, independent changes to the opposite side's
+relief and rainfall, rejection of an outlet-free side, and a dry main line with a
+wet tributary. Placement tests validate the final world raster without pretending
+its edges are water. Linux and Windows agree on role, accumulated flow and palette
+bytes for three independent cases. Full checks: **2,107 Python pass / 14 skip;
+23 Rust pass**, clean format/lint/types; local installation contract **12 pass /
+2 optional long checks skip**. The Windows generator self-test passes.
+
+[V-EXEC] Independent read-back of the written reference finds **328 complete
+networks**, all 328 main outlets at real water, **340,898 channel pixels**, **zero
+edge channels and zero pixels lost by serialization**. The canonical 835-file
+reference digest is
+`30f266abefbdae047540bb6ed9329fd00229b403743c6ebe564f2dc6c6ee7586`.
+Eleven relevant location, hierarchy, adjacency, locator and spline files match the
+previous reference exactly. No route/hang correction or physical land mask was
+removed. Installation and exact removal are in [INSTALLED](../../experiments/INSTALLED.md).
+Raw candidate, byte-level audit and parity evidence stay under ignored
+`local_data/seam-watersheds/`. No EU5 launch or in-game check was performed;
+rendering and gameplay acceptance of these new networks remain [UNKNOWN].
 
 ## Visual rollback boundary (C416)
 

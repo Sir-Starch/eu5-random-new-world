@@ -1929,3 +1929,9 @@ fissure from generated river breaks and wrap-box locator warnings; remove only
 the visual primary-source extension, retaining mechanical wrap and hang fixes.
 The [dedicated dossier](map-wrap-dossier.md) owns the integrity evidence,
 uncertainties, public-search result and planned owner-run historical comparison.
+
+[V-EXEC C417] Implement the owner's approved independent watershed policy in
+0.13.19 / epoch 56. Written rivers retain every planned pixel and all main lines
+reach real water; mechanical wrap files remain exact. The
+[dedicated dossier](map-wrap-dossier.md#approved-watershed-policy-01319--epoch-56-c417)
+records implementation, verification, delivery and the unobserved engine result.

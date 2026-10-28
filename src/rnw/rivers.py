@@ -85,6 +85,10 @@ class Drainage:
     flow: NDArray[np.int64]
 
 
+class RiverGenerationError(ValueError):
+    """A river domain cannot drain to genuine water."""
+
+
 def drainage(
     land: NDArray[np.bool_], height: NDArray[np.int64], rain: NDArray[np.int64], key: int
 ) -> Drainage:
@@ -411,13 +415,14 @@ def _downstream(tree: Drainage, start: int, limit: int) -> list[int]:
     return out
 
 
-def draw_rivers(
+def draw_rivers(  # noqa: PLR0913 - explicit coarse grid and optional shared raster buffers.
     land: NDArray[np.bool_],
     tree: Drainage,
     found: list[Stream],
     *,
     columns: int,
     seed: int,
+    output: Rivers | None = None,
 ) -> Rivers:
     """Draw streams at full resolution, largest catchment first, each from its head down.
 
@@ -425,12 +430,19 @@ def draw_rivers(
     meets water (a mouth: its head becomes the SOURCE) or comes next to a river drawn
     before (a confluence: a JOIN pixel beside a river pixel, the head stays a free end).
     Streams that reach neither, or have fewer than MIN_STREAM_PX land pixels, are
-    dropped.
+    dropped. ``output`` supplies reusable role/flow views; both are initialized here.
     """
+    role = np.empty(land.shape, dtype=np.int8) if output is None else output.role
+    flow = np.empty(land.shape, dtype=np.int64) if output is None else output.flow
+    if role.shape != land.shape or flow.shape != land.shape:
+        message = "River output buffers must match the drawing domain"
+        raise RiverGenerationError(message)
+    role.fill(NONE)
+    flow.fill(0)
     canvas = _Canvas(
         land=land,
-        role=np.full(land.shape, NONE, dtype=np.int8),
-        flow=np.zeros(land.shape, dtype=np.int64),
+        role=role,
+        flow=flow,
         owner=np.full(land.shape, -1, dtype=np.int32),
     )
     stats = {"streams": len(found), "mouths": 0, "joins": 0, "dropped": 0}
@@ -493,6 +505,7 @@ def generate_rivers(
     rain: NDArray[np.int64],
     *,
     seed: int,
+    output: Rivers | None = None,
 ) -> Rivers:
     """Rivers for a raster: ``land`` and ``height`` at full resolution, ``rain`` coarse.
 
@@ -501,6 +514,9 @@ def generate_rivers(
     shape = (-(-land.shape[0] // STEP), -(-land.shape[1] // STEP))
     count, weight = _coarse_land_and_height(land, height, STRIP_ROWS)
     coarse_land = count >= PERMILLE // 2
+    if np.all(coarse_land):
+        message = "River domain has no water outlet; its closed boundary is not a mouth"
+        raise RiverGenerationError(message)
     coarse_height = weight * PERMILLE // np.maximum(1, count)
     valleys = warped_noise(
         derive_seed(seed, "river_valleys"),
@@ -516,7 +532,7 @@ def generate_rivers(
     tree = drainage(coarse_land, routing, weight, derive_seed(seed, "drainage"))
     threshold = river_threshold(tree, int(np.count_nonzero(land)))
     found = streams(tree, threshold, MIN_STREAM_CELLS)
-    rivers = draw_rivers(land, tree, found, columns=shape[1], seed=seed)
+    rivers = draw_rivers(land, tree, found, columns=shape[1], seed=seed, output=output)
     rivers.stats["threshold"] = threshold
     return rivers
 
@@ -615,3 +631,55 @@ def network_problems(role: NDArray[np.int8], water: NDArray[np.bool_]) -> dict[s
         "networks_without_one_source": int(np.count_nonzero(sources != 1)),
         "networks_without_mouth": int(np.count_nonzero(mouths == 0)),
     }
+
+
+def _main_outlet(role: NDArray[np.int8], start: tuple[int, int]) -> tuple[int, int] | None:
+    """Follow the main line downstream; JOIN neighbours enter from upstream."""
+    pixel, parent = start, start
+    visited: set[tuple[int, int]] = set()
+    rows, columns = role.shape
+    while pixel not in visited:
+        visited.add(pixel)
+        r, c = pixel
+        following = [
+            (r + dr, c + dc)
+            for dr, dc in NEIGHBOURS4
+            if 0 <= r + dr < rows
+            and 0 <= c + dc < columns
+            and (r + dr, c + dc) != parent
+            and role[r + dr, c + dc] not in (NONE, JOIN)
+        ]
+        if not following:
+            return pixel
+        if len(following) != 1:
+            return None
+        parent, pixel = pixel, following[0]
+    return None
+
+
+def outlet_problems(role: NDArray[np.int8], water: NDArray[np.bool_]) -> dict[str, int]:
+    """Each main line must end in or beside actual water within its own domain.
+
+    A wet tributary elsewhere in the component cannot excuse a dry main-line end.
+    Raster borders are closed boundaries, never implicit water. Scan starts in strips
+    and visit only main-line pixels; no whole-map component or neighbour arrays.
+    """
+    problems = {"ambiguous_outlets": 0, "inland_mouths": 0}
+    rows, columns = role.shape
+    for first in range(0, rows, STRIP_ROWS):
+        checkpoint()
+        rr, cc = np.where(role[first : first + STRIP_ROWS] == SOURCE)
+        for row, column in zip(rr.tolist(), cc.tolist(), strict=True):
+            end = _main_outlet(role, (row + first, column))
+            if end is None:
+                problems["ambiguous_outlets"] += 1
+                continue
+            r, c = end
+            wet = any(
+                water[r + dr, c + dc]
+                for dr, dc in ((0, 0), *NEIGHBOURS4)
+                if 0 <= r + dr < rows and 0 <= c + dc < columns
+            )
+            if role[end] != BODY or not wet:
+                problems["inland_mouths"] += 1
+    return problems

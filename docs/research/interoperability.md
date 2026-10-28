@@ -360,6 +360,17 @@ No locator regeneration, executable alteration or coordinate workaround ships
 from this investigation. The culture-setup warning was also inspected locally;
 its runtime omission of the five written minority cultures remains unexplained.
 
+### Follow-up: independent river watersheds (2026-10-28, 0.13.19 / epoch 56)
+
+[V-EXEC C417] Replace planar channel cutting with independent closed drainage
+domains and genuine water outlets before drawing. The R-004 palette PNG writer
+now preserves the planned pixels and rejects edge channels; valleys, terrain and
+other derived visual binaries still use their already documented serializers.
+No new closed format or engine/shader patch is introduced. Prior bounded walker
+findings explain the boundary constraint without distributing executable material.
+The [separate dossier](map-wrap-dossier.md#approved-watershed-policy-01319--epoch-56-c417)
+owns the policy, written-file evidence and remaining game-validation limit.
+
 ### Follow-up: primary heightmap source support (2026-10-25, 0.12.6 / epoch 36)
 
 [V-LOCAL / V-EXEC C313–C315] The owner's 0.12.3 crack persists despite the

@@ -671,3 +671,26 @@ new candidate under `local_data/quxq-wrap/release/`. Local game contract tests:
 12 pass, 2 optional long checks skip. Game appearance of this rollback is untested.
 Exact removal, when requested:
 `uv run rnw uninstall-mod rnw_exp_world_35yxpmsi2m --user-dir USER_DIR`.
+
+2026-10-28, **0.13.19 / epoch 56 — independent seam watersheds** (C417;
+[separate dossier](../docs/research/map-wrap-dossier.md#approved-watershed-policy-01319--epoch-56-c417)).
+Installed new **RNW: Independent seam watersheds**, `mod/rnw_exp_world_nmi2sayogz`,
+**846 files verified**, and complete entries in both native and Windows libraries.
+Code: `RNW1-081RF-FZCZT-X8CJN-T006H-60860-2AG63-YG1W8-8G3GH-149XR-08TM0-311X4-9`.
+Canonical reference: **835 files**, SHA-256
+`30f266abefbdae047540bb6ed9329fd00229b403743c6ebe564f2dc6c6ee7586`.
+Independent PNG read-back verifies 328 real river outlets and lossless serialization;
+11 location/route/locator files match the previous reference.
+
+Generator-only hub updated **0.13.18→0.13.19** by `update_local_hub`, with installed
+source/catalog verification and a passing Windows offscreen generator self-test.
+Backup beneath the profile:
+`.rnw-hub-backups/0.13.18-1793161726304827036`.
+Three synthetic river cases agree byte for byte between Linux and the installed
+Windows generator. All **862 QUXQ hashes**, **846 previous-candidate hashes** and
+**nine profile-root hashes** are preserved; both library copies load correctly.
+EU5 was closed; no launch, game input, existing-world replacement, save or playset
+change. In-game appearance of the new rivers is unobserved.
+Audit: ignored `local_data/seam-watersheds/` (written-audit, full-check, local-check,
+platform parity, candidate and installation reports). Exact removal when requested:
+`uv run rnw uninstall-mod rnw_exp_world_nmi2sayogz --user-dir USER_DIR`.

@@ -196,7 +196,7 @@ from rnw.eu5_rewrite import (
     rewrite_override_locators,
     rewrite_templates,
 )
-from rnw.eu5_rivers import RiverRasterError, encode_rivers
+from rnw.eu5_rivers import RiverRasterError, encode_rivers, watershed_spans
 from rnw.eu5_seas import (
     NO_UNITS,
     VFX_LOCATORS,
@@ -270,8 +270,17 @@ from rnw.progress import Progress, active, checkpoint, run_stage, running
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
+from rnw.rivers import (
+    NONE,
+    RiverGenerationError,
+    Rivers,
+    carve_valleys,
+    flow_classes,
+    generate_rivers,
+    network_problems,
+    outlet_problems,
+)
 from rnw.rivers import STEP as RIVER_STEP
-from rnw.rivers import carve_valleys, flow_classes, generate_rivers, network_problems
 from rnw.rng import derive_seed
 from rnw.sea_corridors import designed_corridors
 from rnw.seas import Shape
@@ -1547,34 +1556,88 @@ def _rasters(
     return rgb, rivers
 
 
-def _rivers(
-    world: NewWorld, canvas: Canvas, climate: ClimateGrid, seed: int
-) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
-    """River codes for ``rivers.png`` and relief with carved valleys, in crop coordinates.
-
-    Rain comes from the final climate grid (world coordinates) at each coarse river
-    cell's centre. Codes follow the vanilla raster: 0 source, 1 join, then widths 4, 5,
-    11 and 15 in vanilla proportions by catchment [V-EXEC C59].
-    """
-    land_kind = np.array(
-        [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
-    )
-    land = land_kind[world.labels]
-    height, width_crop = land.shape
+def _basin_rain(
+    shape: tuple[int, int], left: int, canvas: Canvas, climate: ClimateGrid
+) -> NDArray[np.int64]:
+    """Sample rain at this basin grid's centres, including an unaligned divide."""
+    height, width_crop = shape
     world_width = canvas.shape[1]
     coarse_rows = -(-height // RIVER_STEP)
     coarse_columns = -(-width_crop // RIVER_STEP)
     centre_rows = np.arange(coarse_rows, dtype=np.int64) * RIVER_STEP + RIVER_STEP // 2
-    centre_columns = np.arange(coarse_columns, dtype=np.int64) * RIVER_STEP + RIVER_STEP // 2
+    centre_columns = left + np.minimum(
+        np.arange(coarse_columns, dtype=np.int64) * RIVER_STEP + RIVER_STEP // 2,
+        width_crop - 1,
+    )
     grid_rows = np.clip(centre_rows // CLIMATE_STEP, 0, climate.rain.shape[0] - 1)
     grid_columns = np.clip(
         _world_columns(canvas, centre_columns) % world_width // CLIMATE_STEP,
         0,
         climate.rain.shape[1] - 1,
     )
-    rain = climate.rain[grid_rows[:, np.newaxis], grid_columns[np.newaxis, :]]
+    return climate.rain[grid_rows[:, np.newaxis], grid_columns[np.newaxis, :]]
+
+
+def _river_basins(
+    land: NDArray[np.bool_],
+    elevation: NDArray[np.int32],
+    canvas: Canvas,
+    climate: ClimateGrid,
+    seed: int,
+) -> Rivers:
+    """Plan separate sea-draining basins; the seam contributes no synthetic water."""
+    seam = (canvas.roll - canvas.col0) % canvas.shape[1]
+    spans = watershed_spans(land.shape[1], seam)
+    rivers = Rivers(
+        np.empty(land.shape, dtype=np.int8),
+        np.empty(land.shape, dtype=np.int64),
+        dict.fromkeys(("streams", "mouths", "joins", "dropped", "pixels"), 0),
+    )
+    for column in (seam - 1, seam):
+        if 0 <= column < land.shape[1]:
+            rivers.role[:, column] = NONE
+            rivers.flow[:, column] = 0
+    thresholds: list[int] = []
+    for left, right in spans:
+        domain = land[:, left:right]
+        target = Rivers(rivers.role[:, left:right], rivers.flow[:, left:right], {})
+        try:
+            found = generate_rivers(
+                domain,
+                elevation[:, left:right],
+                _basin_rain(domain.shape, left, canvas, climate),
+                seed=derive_seed(seed, f"river_basin_{left}"),
+                output=target,
+            )
+        except RiverGenerationError as exc:
+            raise NewWorldExportError(str(exc)) from exc
+        problems = outlet_problems(found.role, ~domain)
+        if any(problems.values()):
+            message = f"river basin {left}:{right} has invalid outlets: {problems}"
+            raise NewWorldExportError(message)
+        thresholds.append(found.stats["threshold"])
+        for key, value in found.stats.items():
+            if key != "threshold":
+                rivers.stats[key] = rivers.stats.get(key, 0) + value
+    rivers.stats.update(
+        watershed_domains=len(spans),
+        outlets_checked=rivers.stats["mouths"],
+        threshold_min=min(thresholds, default=0),
+        threshold_max=max(thresholds, default=0),
+    )
+    return rivers
+
+
+def _rivers(
+    world: NewWorld, canvas: Canvas, climate: ClimateGrid, seed: int
+) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
+    """River codes and valleys from the same independently planned watershed domains."""
+    land_kind = np.array(
+        [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
+    )
+    land = land_kind[world.labels]
     elevation = world.elevation
-    rivers = generate_rivers(land, elevation, rain, seed=seed)
+    rivers = _river_basins(land, elevation, canvas, climate, seed)
     classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
     problems = network_problems(rivers.role, ~land)
     if any(problems.values()):
@@ -1582,7 +1645,10 @@ def _rivers(
         raise NewWorldExportError(message)
     try:
         codes, raster_stats = encode_rivers(
-            rivers, classes, RIVER_WIDTH_CODES, seam=(canvas.roll - canvas.col0) % world_width
+            rivers,
+            classes,
+            RIVER_WIDTH_CODES,
+            seam=(canvas.roll - canvas.col0) % canvas.shape[1],
         )
     except RiverRasterError as exc:
         raise NewWorldExportError(str(exc)) from exc
