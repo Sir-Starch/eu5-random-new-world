@@ -5,7 +5,7 @@
 This documents the existing Qt Widgets interface, extracted from `gui/window.py`,
 `gui/maps.py` and `gui/preview.py`. ADR 0007 chooses the platform's controls and theme.
 The owner's 2026-10-22 screenshots authorize reorganizing the interface around generation,
-world management and application paths. Keep Qt Widgets and platform typography.
+world management and application paths. Keep Qt Widgets and platform typography for the current implementation. The owner has requested a future Tauri interface; its design and migration are planned in the [roadmap](roadmap.md), and do not describe the current window.
 
 ## 1. Structure
 

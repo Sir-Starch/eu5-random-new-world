@@ -51,16 +51,17 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-As of 2026-10-28, the current product is **0.13.16 / epoch 53**, a development
+As of 2026-10-28, the current product is **0.13.17 / epoch 54**, a development
 candidate rather than a 1.0.0 release (`pyproject.toml`, [changelog](../CHANGELOG.md)).
-The 0.13.16 4TXC world candidate is installed separately and its 860 files match
-the prepared candidate, and its hub passes the isolated Wine self-test [V-EXEC C408].
+The 0.13.17 candidate and updated hub are installed and verified; the hub passes
+its Windows self-test [V-EXEC C410].
 The target is EU5 1.4.4 / Steam build 26142040 on fingerprinted 1.4.3 map data
 [V-LOCAL C408]. EU5 was not launched, so rendering and navigation for the new
-water routes remain unverified [UNKNOWN]. The most recent long-campaign evidence
+water routes and the latest changes to income and AI development remain unverified
+[UNKNOWN C408, C410]. The most recent long-campaign evidence
 is EVXP 0.13.5, which reached 1849 [V-LOCAL / V-EXEC C389]. That campaign predates
 the 0.13.6 corrections and does not validate them or any later generator output
-[INFERRED C389, C390–C392, C408]. The 1.0.0 product, language, compatibility,
+[INFERRED C389, C390–C392, C408, C410]. The 1.0.0 product, language, compatibility,
 legal, packaging and platform gates listed above remain unaccepted.
 
 Publication, native-Windows trust and Workshop acceptance remain separate

@@ -45,6 +45,8 @@ build, save and mod compatibility, and what remains unverified in the current ve
 | **Dynamic Content & L10n** | [Procedural regional stories, formable nations, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
 | **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
 
+Planned work includes deeper hydrology, more varied continental geography and societies, additional dynamic content, and a modern Tauri interface. See the [roadmap](docs/roadmap.md) for scope and status.
+
 ## Screenshots
 
 ### In game

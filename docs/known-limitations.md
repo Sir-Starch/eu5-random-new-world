@@ -1,6 +1,6 @@
 # Known limitations
 
-Current as of **28 October 2026 — RNW 0.13.16**. This is a development build;
+Current as of **28 October 2026 — RNW 0.13.17**. This is a development build;
 the first public release, 1.0.0, is still pending.
 
 - **Specific EU5 build only.** Current checks target EU5 **1.4.4, Steam build
@@ -18,9 +18,9 @@ the first public release, 1.0.0, is still pending.
   guarantee that an old save remains usable. [V-EXEC C141; INFERRED from ADR 0003]
 - **Latest changes still await game validation.** The latest long campaign
   reached 1849 on **0.13.5 / EU5 1.4.4**. Subsequent treaty, river, starting-building
-  and AI changes, and the **0.13.11–0.13.16 ocean-route refinements**, have offline
+  and AI changes, and the **0.13.11–0.13.16 ocean-route refinements**, and **0.13.17 agrarian and market changes**, have offline
   checks, but their current in-game behavior is unverified. That campaign does
-  not validate the current build. [V-LOCAL/V-EXEC C389–C392, C397, C408; UNKNOWN]
+  not validate the current build. [V-LOCAL/V-EXEC C389–C392, C397, C408, C410; UNKNOWN]
 - **Some campaign diagnostics remain unresolved.** Warnings about map-edge
   city/unit placement and absent minority-culture populations appeared in the
   0.13.5 campaign; their gameplay impact and causes remain uncertain. AI expansion and

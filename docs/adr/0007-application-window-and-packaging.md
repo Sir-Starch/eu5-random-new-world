@@ -2,6 +2,8 @@
 
 **Status:** On hold 2026-10-21. It was written as the consequence of [ADR 0004](0004-generator-application.md); the owner then said the mod should live inside the game and that a separate generator program is hardly a normal solution, and [ADR 0009](0009-hub-mod-with-generator.md) (2026-10-21) makes it the generator's window, started from the mod's own folder. The code (`rnw/gui/`, `packaging/`) stays and works; the headless core is needed in every model. The PyInstaller package is not the Windows delivery: ADR 0009 (Trust on Windows) ships the embeddable Python with a signed launcher instead, because antivirus heuristics flag PyInstaller's stock bootloader and Smart App Control blocks unsigned programs.
 
+The existing application still uses Qt. On 2026-10-28 the owner requested a future transition to Tauri; its scope and integration remain to be designed ([roadmap](../roadmap.md)). This historical decision is not yet replaced by an implemented Tauri architecture.
+
 ## Context
 
 ADR 0004 requires a window for Windows and Linux with game and profile discovery, presets, a seed that can be copied and pasted, a preview, progress per stage with a cancel button, validation and installation, and no terminal and no Python for the player. The core for all of that exists without a toolkit (`rnw/app/`: discovery, world codes, history, installation, a generate service with progress and cancel). What remains is a window and a package.
