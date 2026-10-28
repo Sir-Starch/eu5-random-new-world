@@ -66,10 +66,11 @@ The installation is the Windows build (`binaries/eu5.exe`, no native Linux binar
 
 [V-GAME owner] The packaged 0.13.22 generator launched from EU5's **Open in folder**
 path on Windows 11 via Steam, generated a world and installed it as a world mod.
-The owner reported no antivirus warning; the product and Windows security settings
-were not recorded. The exact EU5 build was not captured. This run does not identify
-the SmartScreen/Mark-of-the-Web or Smart App Control state, and it was not an
-observed Workshop download.
+The owner reported no antivirus or other warning pop-ups, and that the generator
+opened immediately. The antivirus product and Windows security settings were not
+recorded. The exact EU5 build was not captured. The run did not identify the
+SmartScreen/Mark-of-the-Web or Smart App Control state, and it was not an observed
+Workshop download.
 
 A program in a Workshop item meets three Windows checks, each with its own trigger:
 

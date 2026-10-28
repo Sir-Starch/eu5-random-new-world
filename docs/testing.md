@@ -4,7 +4,7 @@ This document describes offline checks and owner-run in-game tests. Agents do no
 
 ## Owner-run Windows smoke — C428
 
-[V-GAME owner, 2026-10-28] The packaged RNW 0.13.22 hub opened from EU5's **Open in folder** path on Windows 11 via Steam. It generated a world and installed it as a world mod, matching the reported Linux workflow. The exact EU5 build and antivirus product/settings were not captured. This smoke does not establish byte-identical cross-platform output or that the generated world was loaded and played.
+[V-GAME owner, 2026-10-28] The packaged RNW 0.13.22 hub opened from EU5's **Open in folder** path on Windows 11 via Steam. It opened immediately with no antivirus or other warning pop-ups, then generated a world and installed it as a world mod, matching the reported Linux workflow. The exact EU5 build and antivirus product/settings were not captured. This smoke does not establish byte-identical cross-platform output or that the generated world was loaded and played.
 
 ## Current runnable checks
 
