@@ -1,6 +1,6 @@
 # ADR 0010: Layered worlds, a page of pictures, world files, and a generator that stands on its own
 
-**Status:** Accepted 2026-10-22 with the owner's answers (at the end). Offline implementation through G4 and the G5 artifact workflow is present in 0.9.23 (C143–C146); game acceptance, native Windows/macOS validation and remote CI remain separate gates. See the [generator guide](../generator-guide.md), [log](../research/log.md) and [claims ledger](../research/claims-ledger.md). Builds on [ADR 0009](0009-hub-mod-with-generator.md) (the hub mod and the generator window) and [ADR 0007](0007-application-window-and-packaging.md) (the window).
+**Status:** Accepted 2026-10-22 with the owner's answers (at the end). Offline implementation through G4 and the G5 artifact workflow is present in 0.9.23 (C143–C146); game acceptance, broader native Windows/macOS validation and remote CI remain separate gates. The first packaged Windows 11 launch/generate/install smoke passed by owner report (C428). See the [generator guide](../generator-guide.md), [log](../research/log.md) and [claims ledger](../research/claims-ledger.md). Builds on [ADR 0009](0009-hub-mod-with-generator.md) (the hub mod and the generator window) and [ADR 0007](0007-application-window-and-packaging.md) (the window).
 
 ## Requirements (owner, 2026-10-22)
 

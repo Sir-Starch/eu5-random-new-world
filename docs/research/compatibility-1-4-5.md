@@ -130,8 +130,14 @@ the updated hub and **nine** profile-root files. Exact delivery and removal are
 in [INSTALLED](../../experiments/INSTALLED.md). No game installation, existing world,
 save, setting or playset was changed; no EU5 process was launched or controlled.
 
-[UNKNOWN] The engine has not run this new candidate. Syntax, geographic bindings,
-deterministic output and packaged-generator operation are verified separately
-from completing the adapted expeditions, treasure fleets or Golden Century
-interactions. These remain part of the eventual combined release acceptance;
-no extra game sitting is requested by this audit.
+[UNKNOWN] The generated world has not been loaded and played; adapted expeditions,
+treasure fleets and Golden Century interactions remain unverified.
+
+## Owner-run Windows generator smoke — C428
+
+[V-GAME owner, 2026-10-28] On Windows 11 via Steam, the packaged RNW 0.13.22 hub
+opened through EU5's **Open in folder** command. The generator launched, generated
+a world and installed it as a world mod, matching the owner's Linux workflow. The
+exact EU5 build was not captured. This verifies the packaged generator lifecycle
+on one Windows system; it does not establish byte-identical output across
+platforms or in-game behavior of the generated world.

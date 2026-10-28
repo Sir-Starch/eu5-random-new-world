@@ -47,9 +47,10 @@ the first public release, 1.0.0, is still pending.
   location limits stop generation with an error. A different-seed retry is
   available; every seed/settings combination is not guaranteed to succeed.
   [V-EXEC C406]
-- **Platform testing is limited.** Linux and Windows-runtime checks under
-  Wine/Proton exist; native Windows, macOS, signing and the public Workshop
-  delivery route remain unverified. [V-EXEC/UNKNOWN C145, C392, C408]
+- **Platform testing is limited.** The owner smoke-tested the packaged generator's
+  launch, generation and mod installation on Windows 11 (C428). Windows CLI/CI,
+  memory and performance measurements, macOS, signing and public Workshop
+  delivery remain unverified. [V-GAME owner C428; UNKNOWN]
 - **Mod-list titles remain English.** The generator and world texts have all
   eleven official languages, but EU5 mod metadata carries a single title and
   description. Translation coverage is checked offline; language acceptance

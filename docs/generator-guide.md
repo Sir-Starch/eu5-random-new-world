@@ -121,7 +121,8 @@ is the stronger test. [V-EXEC C143]
 
 The release workflow creates artifacts from a version tag, checks the tag against
 `pyproject.toml`, runs self-tests and checks for game assets. It does not publish a
-release or Workshop item. Linux and Windows-through-Wine self-tests were run locally;
-macOS, native Windows, signing and GitHub Actions execution are still unverified.
+release or Workshop item. Linux and Windows-through-Wine self-tests were run locally. The packaged Windows
+generator also passed an owner-run Windows 11 launch/generate/install smoke (C428).
+Native Windows CLI/CI, macOS, signing and GitHub Actions execution remain unverified.
 See [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) and
 [legal](legal.md) before public distribution. [V-EXEC/UNKNOWN C145]

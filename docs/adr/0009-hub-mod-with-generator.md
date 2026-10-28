@@ -62,6 +62,15 @@ The installation is the Windows build (`binaries/eu5.exe`, no native Linux binar
 
 ## Trust on Windows
 
+### Owner-run smoke — C428 (2026-10-28)
+
+[V-GAME owner] The packaged 0.13.22 generator launched from EU5's **Open in folder**
+path on Windows 11 via Steam, generated a world and installed it as a world mod.
+The owner reported no antivirus warning; the product and Windows security settings
+were not recorded. The exact EU5 build was not captured. This run does not identify
+the SmartScreen/Mark-of-the-Web or Smart App Control state, and it was not an
+observed Workshop download.
+
 A program in a Workshop item meets three Windows checks, each with its own trigger:
 
 - **SmartScreen** ("Windows protected your PC") looks only at files that carry the Mark of the Web, which browsers and some other downloaders write; the Steam client is reported not to write it for the games it installs [SOURCE: Lawrence 2024; AssetHoard; nothing from Valve, and nothing about Workshop items]. Expected: no prompt for the generator from the Workshop [INFERRED; check with `dir /r` in experiment 020].
@@ -93,7 +102,7 @@ If Paradox ever publishes a code-mod interface for EU5, as Cities: Skylines II h
 - **018 (owner, Steam account):** upload a private test item with a harmless executable at the top of the folder and in `generator/`: is it accepted, does it download, does the game log anything about a file at the top. Fallback: the generator moves into `generator/` only (019 showed the game ignores that folder), or, if the Workshop refuses programs, the generator comes from a code host and the description says so. I take no account action.
 - **019 (owner, Linux with Proton):** [done](../../experiments/019-linux-proton-launch/README.md).
 - **021 (owner, Linux):** [the hub's generator from the game](../../experiments/021-hub-generator-in-game/README.md): `packaging/hub.py` builds the hub; offline under Proton its launcher passes the self-test and its Python generates the 733 reference files (C111).
-- **020 (owner or a tester, Windows 11 with Defender's defaults and Smart App Control on):** does the launcher start, do Workshop files carry the Mark of the Web (`dir /r`), what Defender says; then again once the two binaries are signed.
+- **020 (partial, C428):** the owner confirmed the current generator launches and runs on Windows 11, with no antivirus warning reported. Still unknown: Defender identity/settings, Mark of the Web on Workshop files, SmartScreen and Smart App Control state, and behavior after signing. Workshop delivery itself remains untested.
 - **Offline (mine):** the Windows layout builder and the launcher (done, C111), the hub mod's in-game files, the world mod's status keys and the product name `rnw_world` (development builds keep `rnw_exp_*`), tested without the game.
 
 ## Consequences

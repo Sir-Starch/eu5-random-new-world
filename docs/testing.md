@@ -1,6 +1,10 @@
 # Validation protocol
 
-This document describes offline checks and future in-game tests. No more EU5 launches will be performed in the current research session at the owner's request. The existing first-run Select Language issue is recorded in [experiment 001](../experiments/001-metadata/README.md).
+This document describes offline checks and owner-run in-game tests. Agents do not launch or control EU5. The existing first-run Select Language issue is recorded in [experiment 001](../experiments/001-metadata/README.md).
+
+## Owner-run Windows smoke — C428
+
+[V-GAME owner, 2026-10-28] The packaged RNW 0.13.22 hub opened from EU5's **Open in folder** path on Windows 11 via Steam. It generated a world and installed it as a world mod, matching the reported Linux workflow. The exact EU5 build and antivirus product/settings were not captured. This smoke does not establish byte-identical cross-platform output or that the generated world was loaded and played.
 
 ## Current runnable checks
 
@@ -25,7 +29,7 @@ The D0 suite adds generator and exporter checks [V-EXEC C28–C31]:
 
 ## Determinism and completeness gate
 
-For the same seed, settings schema, generator version and target game build, compare hashes of every emitted file on Linux and Windows; require byte identity [INFERRED]. Fix ordering, RNG algorithm/version, line endings, BOM handling, numerical rules, image encoding/compression and archive metadata. Change the schema or generator version intentionally when output changes. Test that all generated IDs resolve and every Old World reference remains valid. Linux status: the synthetic golden digests pass and a repeated EU5 export was byte-identical [V-EXEC C28,C31]. Windows byte identity of the synthetic outputs is a pending CI result; EU5 PNG bytes depend on the zlib build, so cross-platform comparison of EU5 outputs uses the recorded pixel digests.
+For the same seed, settings schema, generator version and target game build, compare hashes of every emitted file on Linux and Windows; require byte identity [INFERRED]. Fix ordering, RNG algorithm/version, line endings, BOM handling, numerical rules, image encoding/compression and archive metadata. Change the schema or generator version intentionally when output changes. Test that all generated IDs resolve and every Old World reference remains valid. Linux status: the synthetic golden digests pass and a repeated EU5 export was byte-identical [V-EXEC C28,C31]. The owner-run Windows smoke (C428) verifies packaged launch, generation and mod installation, not output identity. Windows byte identity of synthetic outputs remains a pending CI result; EU5 PNG bytes depend on the zlib build, so cross-platform comparison of EU5 outputs uses recorded pixel digests.
 
 ## In-game test protocol when the owner next authorizes it
 

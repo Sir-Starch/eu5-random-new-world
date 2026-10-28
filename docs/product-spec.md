@@ -36,7 +36,7 @@ Generate empty wilderness, small decentralized societies, regional states and co
 
 - [OWNER 2026-10-19] Generated terrain must look deliberate at every zoom level: coherent biome regions, smooth ecotones, mountain chains, rivers and valleys; no pixel-scale patchwork or patch seams. Visual layers and gameplay templates must come from the same climate/biome model. See [terrain-biomes](terrain-biomes.md).
 - [OWNER 2026-10-23] The mod and the generator use exactly the game's official languages, everywhere. Text is written in English during development; everything a player sees is translated before 1.0.0 ([roadmap](roadmap.md) L1).
-- [INFERRED] Identical seed, settings, generator version and game-build fingerprint must produce byte-identical mod output on Windows and Linux; this is a future acceptance test, not a current result.
+- [INFERRED] Identical seed, settings, generator version and game-build fingerprint must produce byte-identical mod output on Windows and Linux; this remains a future acceptance test. The owner-run Windows smoke (C428) verifies launch, generation and installation, without a cross-platform digest comparison.
 - [INFERRED] Geography must be connected as intended, with no orphan sea zones, broken coastlines or Old World pixel/identifier changes. Ship and land route behavior must be observed in game before release.
 - [INFERRED] Every society needs coherent pops, ownership, culture, religion, economy and diplomacy. Exploration, colonization, trade and conquest must be tested in an actual campaign.
 - [SOURCE C15] Distribution should use original assets and generator code; local generation from the player's installation is the conservative path for modified vanilla rasters.
