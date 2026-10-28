@@ -19,7 +19,8 @@ from __future__ import annotations
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from copy import deepcopy
+from dataclasses import dataclass, field, replace
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
 
@@ -47,6 +48,10 @@ if TYPE_CHECKING:
 TERRAIN: Final[str] = "game/in_game/gfx/terrain2"
 DECAL_CACHE: Final[str] = f"{TERRAIN}/terrain_cache/ingame_decals.json"
 LOCATION_UNITS: Final[int] = 4
+# Location pixels of periodic source data beyond each primary map edge. On the
+# installed 65536-unit terrain this covers coarse page borders and normal samples
+# (C313). Primary placements keep their centres and most of their bounds in-world.
+WRAP_PADDING: Final[int] = 512
 HEIGHTMAP: Final[re.Pattern[str]] = re.compile(r"heightmap_\d+_\d+")
 OUTSIDE: Final[int] = -1
 DECAL_THREADS: Final[int] = 8
@@ -69,6 +74,56 @@ class Decal:
     column0: int
     rows: int
     columns: int
+
+
+def _padded_decal(decal: Decal, width: int) -> Decal:
+    left = WRAP_PADDING if decal.column0 == 0 else 0
+    right = WRAP_PADDING if decal.column0 + decal.columns == width else 0
+    return replace(decal, column0=decal.column0 - left, columns=decal.columns + left + right)
+
+
+def _decal_layer(
+    store: DecalStore, decal: Decal, kind: str
+) -> tuple[LayerFormat, NDArray[np.uint16] | NDArray[np.uint8]]:
+    """Initial samples of a primary placement, with periodic source support if needed."""
+    layer, image = store.layer(decal.name, kind)
+    if image.shape == (decal.rows * 2, decal.columns * 2):
+        return layer, image
+    original = next(item for item in store.decals if item.name == decal.name)
+    if decal != _padded_decal(original, store.map_shape[1]) or image.shape != (
+        original.rows * 2,
+        original.columns * 2,
+    ):
+        message = f"Unexpected padded heightmap geometry for {decal.name}"
+        raise TerrainRangeError(message)
+    left = original.column0 - decal.column0
+    right = decal.columns - original.columns - left
+    pieces: list[NDArray[np.uint16] | NDArray[np.uint8]] = []
+    for padding, is_left in ((left, True), (right, False)):
+        if not padding:
+            continue
+        peers = [
+            item
+            for item in store.decals
+            if item.row0 == original.row0
+            and item.rows == original.rows
+            and (
+                item.column0 + item.columns == store.map_shape[1] if is_left else item.column0 == 0
+            )
+        ]
+        if len(peers) != 1 or padding > peers[0].columns:
+            message = f"Expected one opposite-edge heightmap for {decal.name}"
+            raise TerrainRangeError(message)
+        _, peer = store.layer(peers[0].name, kind)
+        piece = peer[:, -padding * 2 :] if is_left else peer[:, : padding * 2]
+        pieces.append(piece.copy())
+        del peer
+    if left:
+        pieces.insert(1, image)
+    else:
+        pieces.insert(0, image)
+    combined = cast("NDArray[np.uint16] | NDArray[np.uint8]", np.concatenate(pieces, axis=1))
+    return replace(layer, width=decal.columns * 2), combined
 
 
 def heightmap_decals(cache: list[dict[str, object]], map_rows: int) -> list[Decal]:
@@ -402,8 +457,8 @@ def _rebuild_decal(  # noqa: PLR0913 - a decal reads the store, the inputs, the 
     The decal is cut into bands of ``band`` location rows that run on ``pool``; the files
     are the same for any band size.
     """
-    height_layer, vanilla_height = store.layer(decal.name, "height")
-    material_layer, vanilla_materials = store.layer(decal.name, "materials")
+    height_layer, vanilla_height = _decal_layer(store, decal, "height")
+    material_layer, vanilla_materials = _decal_layer(store, decal, "materials")
     height_image = np.array(vanilla_height, dtype=np.uint16)
     material_image = np.array(vanilla_materials, dtype=np.uint8)
     rows = decal.rows
@@ -453,7 +508,12 @@ def terrain_outputs(
     """
     codes = inputs.codes
     materials_world = store.world_materials()
-    touched = [decal for decal in store.decals if _touches_coast(decal, codes)]
+    plans = [_padded_decal(decal, store.map_shape[1]) for decal in store.decals]
+    touched = [
+        plan
+        for plan, original in zip(plans, store.decals, strict=True)
+        if plan != original or _touches_coast(plan, codes)
+    ]
     columns = max((decal.columns for decal in touched), default=0) + 2 * MARGIN
     thin = BAND_BYTES * columns * (2 * BAND_HALO + MIN_BAND_ROWS)
     workers = worker_count(DECAL_THREADS, bytes_each=thin)
@@ -471,16 +531,22 @@ def terrain_outputs(
             )
             sink.update(files)
             del files
+            left, right = (
+                max(0, decal.column0),
+                min(store.map_shape[1], decal.column0 + decal.columns),
+            )
             materials_world[
-                decal.row0 * 2 : (decal.row0 + decal.rows) * 2,
-                decal.column0 * 2 : (decal.column0 + decal.columns) * 2,
-            ] = image
+                decal.row0 * 2 : (decal.row0 + decal.rows) * 2, left * 2 : right * 2
+            ] = image[:, (left - decal.column0) * 2 : (right - decal.column0) * 2]
     disabled, cache_out = _disable_decals(store, codes)
     sink.update(disabled)
     sink["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
+    padded = sum(plan != original for plan, original in zip(plans, store.decals, strict=True))
     stats: dict[str, object] = {
         "decals_rebuilt": [decal.name for decal in touched],
-        "mountain_decals_disabled": len(disabled),
+        "mountain_decals_disabled": len(disabled) - padded,
+        "periodic_heightmap_instances": 0,
+        "padded_heightmaps": padded,
         "mountain_height_stamps": len(inputs.mountains.placements) if inputs.mountains else 0,
     }
     return materials_world, stats
@@ -506,15 +572,76 @@ def _inside(codes: NDArray[np.int8], x: float, y: float) -> bool:
     return 0 <= row < rows and 0 <= column < columns and bool(codes[row, column] != OUTSIDE)
 
 
-def _disable_decals(store: DecalStore, codes: NDArray[np.int8]) -> tuple[dict[str, bytes], bytes]:
-    """Disable obsolete mountains; preserve vanilla primary placement geometry."""
-    kept: list[dict[str, object]] = []
+def _wrapped_heightmaps(store: DecalStore) -> tuple[dict[str, dict[str, object]], dict[str, bytes]]:
+    """Extend primary edge bounds over periodic source pixels, including cache rebuilds.
+
+    These placements overlap the map's edge grid cells, while their outside support
+    contains the opposite edge's actual terrain. No extra outside-only placement is
+    needed. Cache geometry and the existing active editor instance stay identical.
+    """
+    width = store.map_shape[1] * LOCATION_UNITS
+    entries: dict[str, dict[str, object]] = {}
     files: dict[str, bytes] = {}
+    for entry in store.cache:
+        name = str(entry["decal_name"])
+        if not HEIGHTMAP.fullmatch(name):
+            continue
+        transform = cast("dict[str, object]", entry["decal_transform"])
+        position = cast("dict[str, float]", transform["position"])
+        scale = cast("dict[str, float]", transform["scale"])
+        size = cast("dict[str, int]", entry["decal_size"])
+        half = size["x"] * scale["x"] / 2
+        left = WRAP_PADDING if position["x"] - half == 0 else 0
+        right = WRAP_PADDING if position["x"] + half == width else 0
+        if not (left or right):
+            continue
+        folder = store.game_dir / TERRAIN / "decals" / name / "instances"
+        instances = [
+            (path, json.loads(path.read_text(encoding="utf-8-sig")))
+            for path in sorted(folder.glob("*.json"))
+        ]
+        active = [(path, item) for path, item in instances if item.get("disabled") is False]
+        if len(active) != 1 or transform.get("rotation") != 0 or scale["x"] != 2:  # noqa: PLR2004
+            message = f"Expected one unrotated edge heightmap instance at scale 2 for {name}"
+            raise TerrainRangeError(message)
+        path, raw_instance = active[0]
+        instance = cast("dict[str, object]", raw_instance)
+        geometry = {
+            "position.x": position["x"],
+            "position.y": position["y"],
+            "scale.x": scale["x"],
+            "scale.y": scale["y"],
+            "rotation": 0,
+        }
+        if any(instance.get(key) != value for key, value in geometry.items()):
+            message = f"Heightmap instance and cached geometry disagree for {name}"
+            raise TerrainRangeError(message)
+        moved = deepcopy(entry)
+        moved_transform = cast("dict[str, object]", moved["decal_transform"])
+        shift = (right - left) * LOCATION_UNITS / 2
+        cast("dict[str, float]", moved_transform["position"])["x"] += shift
+        cast("dict[str, int]", moved["decal_size"])["x"] += (left + right) * LOCATION_UNITS // 2
+        entries[name] = moved
+        moved_instance = instance | {"position.x": position["x"] + shift}
+        relative = f"in_game/gfx/terrain2/decals/{name}/instances/{path.name}"
+        files[relative] = ("\ufeff" + json.dumps(moved_instance, indent="\t") + "\n").encode(
+            "utf-8"
+        )
+    if not entries:
+        message = "No edge heightmaps were found for periodic source support"
+        raise TerrainRangeError(message)
+    return entries, files
+
+
+def _disable_decals(store: DecalStore, codes: NDArray[np.int8]) -> tuple[dict[str, bytes], bytes]:
+    """Extend primary heightmaps and disable obsolete mountains in instances and cache."""
+    kept: list[dict[str, object]] = []
+    wrapped, files = _wrapped_heightmaps(store)
     for entry in store.cache:
         name = str(entry["decal_name"])
         position = cast("dict[str, dict[str, float]]", entry["decal_transform"])["position"]
         if HEIGHTMAP.fullmatch(name) or not _inside(codes, position["x"], position["y"]):
-            kept.append(entry)
+            kept.append(wrapped.get(name, entry))
     decals = store.game_dir / TERRAIN / "decals"
     for folder in sorted(path for path in decals.iterdir() if path.is_dir()):
         if HEIGHTMAP.fullmatch(folder.name) or not (folder / "instances").is_dir():

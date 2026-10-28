@@ -694,3 +694,30 @@ change. In-game appearance of the new rivers is unobserved.
 Audit: ignored `local_data/seam-watersheds/` (written-audit, full-check, local-check,
 platform parity, candidate and installation reports). Exact removal when requested:
 `uv run rnw uninstall-mod rnw_exp_world_nmi2sayogz --user-dir USER_DIR`.
+
+2026-10-28, **0.13.20 / epoch 57 — prior visual wrap extension restored** (C418;
+[dedicated dossier](../docs/research/map-wrap-dossier.md#visual-source-extension-restored-01320--epoch-57-c418)).
+Installed new **RNW: Restored visual wrap**, `mod/rnw_exp_world_7yzo7v4bu5`,
+**862 files verified**, and complete entries in both native and Windows libraries.
+Code: `RNW1-081RF-FZCZT-X8CJN-T006H-80860-2AG63-YG1W8-8G3GH-149XR-08TM0-37C66-3`.
+Canonical reference: **851 files**, SHA-256
+`de9fa8ae001c436bf3a5b6fb90ea342787069da4c326cdf84e0c8ec8d98e9995`.
+Only terrain2 differs from 0.13.19; river bytes/statistics and all other world
+content remain exact. The eight periodic source extensions preserve every
+original level-zero sample and reproduce their opposite halos exactly.
+
+Generator-only hub updated **0.13.19→0.13.20** with source/catalog and installed
+copy verification; Windows offscreen generator self-test passes. Backup beneath
+the profile: `.rnw-hub-backups/0.13.19-1793163552140074180`.
+The initial attempt stopped while EU5 was running; final delivery succeeded only
+after it was closed, without agent process control. The four existing worlds
+(**3,400 files**, including QUXQ and the owner's newer world) and **nine
+profile-root hashes** are preserved. Both new library copies load correctly.
+No existing-world, save or playset replacement, EU5 launch or game input.
+Restored-candidate rendering remains unobserved.
+
+Verification: 2,116 Python tests pass/14 skip, 23 Rust tests pass, clean format,
+lint and types. Audit: ignored `local_data/wrap-visual-restored/` (written-audit,
+full-check, Windows self-test, candidate, installation and delivery reports).
+Exact removal when requested:
+`uv run rnw uninstall-mod rnw_exp_world_7yzo7v4bu5 --user-dir USER_DIR`.

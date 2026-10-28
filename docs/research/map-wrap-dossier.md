@@ -19,8 +19,9 @@ separate the crack from a particular generated world or campaign age.
 limitation in the tested installation, not evidence of corrupt RNW geography.
 The exact engine operation, render-path dependence and hardware scope remain
 [UNKNOWN]. File integrity does not identify the renderer's internal cause.
-RNW will not conceal it with terrain-source extensions, shader changes or an
-artificial strait. This policy does not remove support required by game mechanics.
+The initial 0.13.18–0.13.19 policy removed the terrain-source extension. The
+owner subsequently requested its restoration (C418 below). No engine/shader patch
+or artificial strait is introduced; mechanical support remains in place.
 
 [V-GAME owner C58, C345] The owner previously saw the crack disappear. Those
 observations remain valid for those sittings. The present vanilla reproduction
@@ -177,6 +178,45 @@ layers match, and all **16 primary placements** equal vanilla exactly. The
 canonical hidden-world reference includes the 20 optional selection-cover files
 retained separately for the revealed candidate. Delivery is recorded in
 [INSTALLED](../../experiments/INSTALLED.md).
+
+## Visual source extension restored, 0.13.20 / epoch 57 (C418)
+
+[V-GAME owner report] After the visual rollback, the owner reports that the seam
+is much more prominent, including at the furthest zoom, and asks to restore the
+previous successful visual approach. This is a new observation under the owner's
+current conditions, not a reason to discard the earlier zoom-specific vanilla
+reproduction or the earlier genuine disappearance. The exact rendering cause
+remains unknown.
+
+[OWNER / V-EXEC] Restore the **exact** `eu5_terrain.py` implementation from
+`ebec95e` (0.13.17), with its synthetic coverage and source-padding tests. Each of
+eight edge sources again has 512 location pixels / 1024 source samples of periodic
+support, 9216 × 4096 source dimensions and matching primary/cache placement.
+Do not restore the old river cutter, outside-only duplicate placements or a seam
+strait. The 0.13.19 independent watersheds, outlet checks, continuous identities
+and route/hang corrections remain unchanged.
+
+This is a data-only visual workaround, generated directly from the installed
+sources and current physical fields. It does not claim to repair the engine or
+establish every zoom/LOD's appearance. Original source interfaces and compatibility
+guards remain those documented in [R-004](interoperability.md) and experiment 056.
+Raw builds and verification stay under ignored `local_data/wrap-visual-restored/`.
+
+[V-EXEC] Full checks pass: **2,116 Python tests / 14 skips, 23 Rust tests**,
+clean formatting/lint/types. The Windows generator self-test passes. Independent
+read-back of the 851-file candidate (digest
+`de9fa8ae001c436bf3a5b6fb90ea342787069da4c326cdf84e0c8ec8d98e9995`)
+finds changes in **41 terrain2 paths only** (25 modified, 16 added). All files
+outside terrain2 and all river statistics are exact against 0.13.19, retaining
+its 328 genuine outlets and 340,898 channel pixels. All **536,870,912 original
+height/material samples** match the unpadded reference, and **67,108,864 halo
+samples** match their opposite sources. Eight padded primary placements agree
+with their written active instances. Delivery is recorded in
+[INSTALLED](../../experiments/INSTALLED.md); this does not establish the restored
+candidate's rendered appearance.
+
+The owner-run historical comparison remains useful for the potential report;
+restoring the previous technique does not replace that evidence.
 
 ## Planned historical comparison, owner-run only
 

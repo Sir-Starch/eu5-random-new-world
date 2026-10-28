@@ -1935,3 +1935,9 @@ uncertainties, public-search result and planned owner-run historical comparison.
 reach real water; mechanical wrap files remain exact. The
 [dedicated dossier](map-wrap-dossier.md#approved-watershed-policy-01319--epoch-56-c417)
 records implementation, verification, delivery and the unobserved engine result.
+
+[V-EXEC C418] Restore the owner's previous data-only visual wrap extension in
+0.13.20 / epoch 57. Written output differs only under terrain2; independent river
+watersheds and all other game-facing data remain exact. The
+[separate dossier](map-wrap-dossier.md#visual-source-extension-restored-01320--epoch-57-c418)
+owns the new visibility report, verification, delivery and rendering uncertainty.

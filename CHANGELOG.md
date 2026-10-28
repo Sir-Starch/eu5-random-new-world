@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.20 — 2026-10-28
+
+- Restore the previous periodic primary terrain-source extension at the owner’s
+  request after the unpadded version exposed a more prominent map seam. Epoch 57.
+- Retain independent river watersheds, genuine-outlet validation and all mechanical
+  wrap corrections. Rendering of this combination remains unverified in game.
+
 ## 0.13.19 — 2026-10-28
 
 - Generate independent river catchments on either side of the display seam, with

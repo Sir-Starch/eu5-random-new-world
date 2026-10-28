@@ -1,6 +1,6 @@
 # Known limitations
 
-Current as of **28 October 2026 — RNW 0.13.19**. This is a development build;
+Current as of **28 October 2026 — RNW 0.13.20**. This is a development build;
 the first public release, 1.0.0, is still pending.
 
 - **Specific EU5 build only.** Current checks target EU5 **1.4.4, Steam build
@@ -18,18 +18,18 @@ the first public release, 1.0.0, is still pending.
   guarantee that an old save remains usable. [V-EXEC C141; INFERRED from ADR 0003]
 - **Verification has limits.** The owner reports QUXQ **0.13.17 / EU5 1.4.4**
   reached 1490 and accepts the previous work; some coastal current directions
-  remain imperfect and are not a release blocker (C411). The **0.13.18** visual
-  workaround removal and **0.13.19** independent seam watersheds are verified
-  offline and installed, but unobserved in game (C416–C417). Neither campaign
+  remain imperfect and are not a release blocker (C411). The **0.13.19** independent
+  seam watersheds and **0.13.20** restored visual source extension have offline
+  checks; their combined rendering is unobserved in game (C417–C418). Neither campaign
   progress nor acceptance proves every mechanic.
 - **World-edge terrain and rivers.** The owner reproduces a close-zoom terrain
-  crack in mod-free vanilla at Kitagnaq. RNW accepts this rendering limitation;
-  0.13.18 removes its visual source-extension workaround while retaining the
-  mechanical wrap fixes. In 0.13.19, independent river basins
-  stop channels crossing the display edge and require genuine water outlets;
+  crack in mod-free vanilla at Kitagnaq. RNW accepts this rendering limitation.
+  After the owner reported worse visibility with the workaround removed, 0.13.20
+  restores its previous source extension while retaining mechanical wrap fixes.
+  Since 0.13.19, independent river basins stop channels crossing the display edge and require genuine water outlets;
   their rendering and gameplay acceptance remain unverified. Earlier observations
   of disappearance remain valid; a historical comparison is planned in the [separate dossier](research/map-wrap-dossier.md).
-  [V-GAME owner / V-EXEC C412–C417; exact engine cause UNKNOWN]
+  [V-GAME owner / V-EXEC C412–C418; exact engine cause UNKNOWN]
 - **Some campaign diagnostics remain unresolved.** QUXQ’s nine map-edge locator warnings place every object on its own identity;
   their reported distances match an unnormalized wrap-box comparison (C414).
   Gameplay consequences and absent minority-culture diagnostics remain uncertain. AI expansion and

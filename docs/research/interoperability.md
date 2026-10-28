@@ -284,6 +284,18 @@ No new closed format, engine patch or distribution permission is introduced.
 All new crack research, including the still-valid earlier disappearance and the
 planned historical comparison, is kept in the [dedicated dossier](map-wrap-dossier.md).
 
+### Follow-up: visual-source extension restored (2026-10-28, 0.13.20 / epoch 57)
+
+[OWNER / V-EXEC C418] Restore the exact prior periodic primary-source construction
+of 056 after the owner reports worse seam visibility without it. R-004's existing
+height/material binaries, cache geometry and instance interfaces are unchanged;
+all data are still generated locally from the installed game. No new format,
+engine/shader patch or redistribution permission is introduced. Compatibility
+guards reject missing sources and inconsistent instance/cache geometry. Current
+river-domain planning and mechanical wrap corrections remain unchanged. The
+[dedicated dossier](map-wrap-dossier.md#visual-source-extension-restored-01320--epoch-57-c418)
+records the policy reversal, evidence and rendering limit.
+
 ### Follow-up: removed coast's offshore support (2026-10-25, 0.12.4 / epoch 34)
 
 [V-LOCAL/V-EXEC C306–C307] TR46's remaining Alaska-shaped shelf is traced to the
