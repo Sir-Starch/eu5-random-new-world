@@ -525,6 +525,22 @@ All locally derived map files, package copies and diagnostic images stay
 ignored; the distributed change is original generator code and synthetic tests.
 See [068](../../experiments/068-continuous-location-identities/README.md).
 
+### Follow-up: EU5 1.4.5 compatibility (2026-10-28, 0.13.22 / epoch 59)
+
+[V-LOCAL / V-EXEC C425–C427] The public build 26211608 retains the ten researched
+map-contract files exactly. Existing R-004/R-001 readers and writers remain
+necessary for generated worlds; this update introduces no new binary format,
+serializer change or executable investigation. All 851 previous canonical world
+files, including every binary, match the 0.13.21 reference exactly; only sixteen
+locally derived D009 text overrides are added. The existing text remap carries
+fixed expedition waypoints, callbacks and coastal province references; one literal
+historical event receives its normal trigger gate. Missing decisions or references
+still stop generation. DLC entitlement conditions are preserved. Protected text
+and derived world assets remain on the player's machine; only independent code,
+synthetic fixtures, identifiers and hashes are committed. The
+[compatibility audit](compatibility-1-4-5.md) records the inspected interfaces and
+verification limits. No new distribution permission is inferred.
+
 ## R-005 — Read-only TR46 save-state analysis
 
 **2026-10-25; original generator 0.12.3 / epoch 33 campaign, EU5 1.4.4 executable

@@ -144,7 +144,7 @@ Once `1.0.0` is published, no Python or Rust installation is required:
 
 #### Requirements
 
-* **Europa Universalis V (`1.4.x`)** installed via Steam (Windows or Linux/Proton).
+* **Europa Universalis V (`1.4.5`, verified Steam build 26211608)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
 * **~7.5 GB of free RAM** during world compilation.
@@ -181,7 +181,7 @@ The [Documentation Index](docs/README.md) provides a full map of the repository:
 * **User Guides:** [Known limitations](docs/known-limitations.md) · [Generator Guide](docs/generator-guide.md) · [Dynamic Content Catalogue](docs/content-catalog.md) · [Complete Event Reference](docs/content-reference.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
 * **System Design:** [Architecture](docs/architecture.md) · [Terrain & Biomes](docs/terrain-biomes.md) · [Sea Geography](docs/sea-geography.md) · [Native Societies](docs/natives.md) · [Economy](docs/economy.md) · [Content Plan](docs/content-plan.md) · [Architecture Decision Records (ADRs)](docs/adr/)
 * **Project Tracking:** [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](experiments/README.md)
-* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C405`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
+* **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C427`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)
 
 ## Development & Verification
 

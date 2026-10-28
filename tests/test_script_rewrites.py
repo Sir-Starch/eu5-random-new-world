@@ -9,7 +9,7 @@ import pytest
 
 from rnw.eu5_events import mentions, names_tag, retire_events, retire_modifiers
 from rnw.eu5_nw_export import DONOR_MODIFIER, retired_base_modifiers
-from rnw.eu5_remap import RemapError, remap_scripts, remap_text
+from rnw.eu5_remap import GeographicRemap, RemapError, remap_scripts, remap_text
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -112,6 +112,53 @@ def _write(root: Path, relative: str, text: str) -> None:
     path = root / relative
     path.parent.mkdir(parents=True, exist_ok=True)
     _ = path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def test_dlc_expedition_routes_callbacks_and_rewards_share_bindings(tmp_path: Path) -> None:
+    """D009's fixed route and later callbacks must name the same generated places.
+
+    The owner encountered eight missing initial waypoint keys on 1.4.5. A world
+    compiled before the DLC shipped cannot override files it had never read.
+    Synthetic DLC scripts exercise their complete remap at the mounted paths.
+    """
+    root = tmp_path / "game/dlc/D009_across_the_pillars"
+    route = "in_game/common/expedition_types/search.txt"
+    event = "in_game/events/expeditions/search.txt"
+    coast = "in_game/common/scripted_triggers/fleet.txt"
+    text = (
+        'search = {\n potential = { has_dlc = "d009_across_the_pillars" }\n'
+        " origin = closest_non_rural_port\n waypoints = { old_port old_inland }\n"
+        " on_arrive_to_waypoint = {\n"
+        "  if = { limit = { scope:location = location:old_port }\n"
+        "   scope:expedition = { add_new_waypoint = location:old_inland }\n"
+        "   trigger_event_non_silently = search.1\n  }\n }\n}\n"
+    )
+    callback = (
+        "namespace = search\nsearch.1 = {\n"
+        " immediate = { create_character = { birth_location = location:old_inland } }\n"
+        " option = { location:old_inland = { add_location_modifier = { modifier = found } }\n"
+        "  scope:expedition = { add_new_waypoint = location:old_port\n"
+        "   add_new_waypoint = location:old_european_port }\n }\n}\n"
+    )
+    _write(root, route, text)
+    _write(root, event, callback)
+    _write(root, coast, "coast = { province_definition = province_definition:old_port }\n")
+    remap = GeographicRemap(
+        {"old_port": "new_port", "old_inland": "new_inland"},
+        {"old_port": "new_sea_province"},
+        {},
+    )
+    rewrite = remap_scripts(tmp_path, remap, set())
+    assert set(rewrite.outputs) == {route, event, coast}
+    assert rewrite.outputs[route].decode() == text.replace("old_port", "new_port").replace(
+        "old_inland", "new_inland"
+    )
+    assert rewrite.outputs[event].decode() == callback.replace("old_port", "new_port").replace(
+        "old_inland", "new_inland"
+    )
+    assert rewrite.outputs[coast] == (
+        b"coast = { province_definition = province_definition:new_sea_province }\n"
+    )
 
 
 def test_scripts_of_the_game_and_its_dlc_are_rewritten(tmp_path: Path) -> None:

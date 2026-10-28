@@ -1,5 +1,16 @@
 # Research log
 
+## 2026-10-28 — Public 1.4.5 and Across the Pillars
+
+[V-GAME owner/logs / V-LOCAL / V-EXEC C425–C427] The public build retains the
+map contract but adds DLC consumers absent from earlier worlds. Adapt their
+fixed geography with the existing remap, retain dynamic colonial mechanics,
+and gate one literal historical incident. RNW 0.13.22 / epoch 59 adds sixteen
+text overrides; all 851 previous canonical files remain exact. Independent
+reproduction, complete checks, packaged-generator parity and separate world/hub
+delivery pass. The [compatibility audit](compatibility-1-4-5.md) owns the sources,
+log attribution, DLC decisions and remaining engine-acceptance boundary.
+
 ## 2026-10-28 — Completed 0.13.20 observer campaign audit
 
 [V-GAME logs / V-LOCAL / V-EXEC C419–C421] Read-only review identifies

@@ -199,6 +199,10 @@ def _common(table: _Table) -> None:
         """
         circumnavigation_expedition pacific_crossing_expedition
         western_ocean_voyage_expedition
+        cibola_expedition city_of_caesars_expedition el_dorado_expedition
+        fountain_of_youth_expedition norumbega_expedition quivira_expedition
+        saguenay_expedition sierra_de_la_plata_expedition
+        gold_fleet_nueva_espana_expedition gold_fleet_tierra_firme_expedition
         """,
     )
     add("common/formable_countries", REBIND, "culture", "AZT_f INC_f IRO_f MAY_f PUE_f", "N1")
@@ -250,6 +254,8 @@ def _common(table: _Table) -> None:
         """,
     )
     add("common/scripted_triggers", REBIND, "coast", "discovered_any_in_americas_trigger", "S2")
+    # D009's fleet uses coastal province identities; the geographic remap carries them.
+    add("common/scripted_triggers", KEEP, "generic", "is_on_pacific_coast_americas")
     add(
         "common/situations",
         KEEP,
@@ -294,6 +300,9 @@ def _events(table: _Table) -> None:
         circumnavigation_expedition_events.20 pacific_crossing_events.6
         pacific_crossing_events.9 exploration_monthly.39 qa_debug.29
         great_pirate_era.1 great_pirate_era.5 great_pirate_era.6 flavor_ned.7
+        seven_cities.30 seven_cities_norumbega.11 seven_cities_quivira.10
+        seven_cities_saguenay.2 seven_cities_saguenay.3
+        seven_cities_saguenay.10 seven_cities_saguenay.11
         """,
     )
     add(
@@ -320,6 +329,7 @@ def _events(table: _Table) -> None:
         flavor_por.72 flavor_por.73 flavor_por.74 flavor_por.75 flavor_por.76
         flavor_por.77 flavor_iro.30 flavor_iro.31 flavor_iro.32 flavor_iro.62
         flavor_iro.63 flavor_iro.64 prices.10 prices.15
+        d009_sephardi_diaspora.8
         """,
     )
     # The silver and Potosi chain: the exceptional places of N1 carry the purpose.

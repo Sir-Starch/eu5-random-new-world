@@ -51,18 +51,24 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-As of 2026-10-28, the current product is **0.13.17 / epoch 54**, a development
+As of 2026-10-28, the current product is **0.13.22 / epoch 59**, a development
 candidate rather than a 1.0.0 release (`pyproject.toml`, [changelog](../CHANGELOG.md)).
-The 0.13.17 candidate and updated hub are installed and verified; the hub passes
-its Windows self-test [V-EXEC C410].
-The target is EU5 1.4.4 / Steam build 26142040 on fingerprinted 1.4.3 map data
-[V-LOCAL C408]. EU5 was not launched, so rendering and navigation for the new
-water routes and the latest changes to income and AI development remain unverified
-[UNKNOWN C408, C410]. The most recent long-campaign evidence
-is EVXP 0.13.5, which reached 1849 [V-LOCAL / V-EXEC C389]. That campaign predates
-the 0.13.6 corrections and does not validate them or any later generator output
-[INFERRED C389, C390–C392, C408, C410]. The 1.0.0 product, language, compatibility,
-legal, packaging and platform gates listed above remain unaccepted.
+The current compatibility target is the public **EU5 1.4.5 / Steam build
+26211608**, including Across the Pillars. The map contract is unchanged from
+1.4.3/1.4.4, while the new DLC requires explicit script adaptation. The
+[compatibility audit](research/compatibility-1-4-5.md), C425–C427, distinguishes
+fixed historical geography from dynamic colonial mechanics and records offline
+checks and delivery.
+
+The owner's 1.4.5 session loads 0.13.20 then 0.13.21, reaches 1342 and exits
+normally; it exposes missing DLC waypoints that 0.13.22 addresses. It does not
+validate completion of the newly adapted expeditions or Golden Century content
+[V-GAME owner/logs / UNKNOWN new engine result C425–C427]. The latest recorded
+long-campaign evidence is Restored visual wrap / **0.13.20 on EU5 1.4.4**, reaching
+1768, with the limits of C419–C423. It predates the complete-government and DLC
+corrections. The 1.0.0 product, language, compatibility, legal, packaging and
+platform gates above therefore remain separate acceptance boundaries; this patch
+is not a declaration that 1.0.0 is ready to publish.
 
 Publication, native-Windows trust and Workshop acceptance remain separate
 boundaries under ADR 0009; no upload, signing or remote CI result is inferred

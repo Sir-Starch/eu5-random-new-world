@@ -1,12 +1,14 @@
 # Known limitations
 
-Current as of **28 October 2026 — RNW 0.13.20**. This is a development build;
+Current as of **28 October 2026 — RNW 0.13.22**. This is a development build;
 the first public release, 1.0.0, is still pending.
 
-- **Specific EU5 build only.** Current checks target EU5 **1.4.4, Steam build
-  26142040**, with the fingerprinted 1.4.3 game data. Compatibility with other
-  patches is not established; a `1.4.x` label is not a guarantee.
-  [V-LOCAL C198, C408]
+- **Specific EU5 build only.** Current checks target the public EU5 **1.4.5,
+  Steam build 26211608**, including Across the Pillars script adaptation.
+  Compatibility with later patches is not established; a `1.4.x` metadata label
+  is not a guarantee. Worlds generated before 0.13.22 lack the new DLC overrides;
+  use a newly generated world for this compatibility candidate. Existing saves
+  are not migrated. [V-LOCAL / V-EXEC C425–C427; compatibility audit](research/compatibility-1-4-5.md)
 - **New campaigns, one world at a time.** Start in 1337 with one RNW world mod
   enabled. Keep that exact mod for its saves: regenerating or rerolling a world
   is not a save migration. Restart EU5 before switching maps or replacing a
@@ -21,7 +23,10 @@ the first public release, 1.0.0, is still pending.
   remain imperfect and are not a release blocker (C411). The **0.13.19** independent
   seam watersheds and **0.13.20** restored visual source extension have offline
   checks; their combined rendering is unobserved in game (C417–C418). Neither campaign
-  progress nor acceptance proves every mechanic.
+  progress nor acceptance proves every mechanic. The owner’s short **1.4.5**
+  session reaches 1342 on 0.13.21; the newly adapted DLC expeditions and Golden
+  Century interactions have offline verification, without an engine-completion
+  observation. [V-GAME owner/logs / V-EXEC / UNKNOWN C425–C427]
 - **World-edge terrain and rivers.** The owner reproduces a close-zoom terrain
   crack in mod-free vanilla at Kitagnaq. RNW accepts this rendering limitation.
   After the owner reported worse visibility with the workaround removed, 0.13.20

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.22 — 2026-10-28
+
+- Adapt Across the Pillars to generated worlds on EU5 1.4.5: retain its eight
+  legendary-city expeditions, two treasure fleets and their location-bound
+  callbacks through the geographic remap, preserving the DLC requirements.
+- Gate the historical Brazilian-to-New-Amsterdam diaspora event, consistent with
+  other literal American historical incidents. Dynamic colonial situation content
+  retains vanilla behavior. Epoch 59; existing worlds and saves are preserved.
+
 ## 0.13.21 — 2026-10-28
 
 - Sacred-centre theocracies now start with compatible marriage and heir-religion

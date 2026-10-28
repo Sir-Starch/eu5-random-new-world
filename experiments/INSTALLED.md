@@ -750,3 +750,30 @@ Audit: ignored `local_data/theocracy-init/` (full/local checks, output compariso
 independent reproduction, Windows parity, world installation and hub reports).
 Exact removal when requested, with EU5 closed:
 `uv run rnw uninstall-mod rnw_exp_world_5fpdl42jbl --user-dir USER_DIR`.
+
+
+2026-10-28, **0.13.22 / epoch 59 — EU5 1.4.5 + Across the Pillars**
+(C425–C427; [compatibility audit](../docs/research/compatibility-1-4-5.md)).
+Installed **RNW: EU5 1.4.5 + DLC**, `mod/rnw_exp_world_jzrscmin4p`,
+**878 files hash-verified**, with complete recovery metadata and complete entries
+in both native and Windows generator libraries. Code:
+`RNW1-081RF-FZCZT-X8CJN-T006H-C0860-2AG63-YG1W8-8G3GH-149XR-08TM0-33VNG-D`.
+The independently reproduced covered reference has **867** nonmetadata files,
+SHA-256 `23c0437734288ffa913061f627838855c97962185fe939da18b313ccb1bd9c85`.
+All **851** former canonical files are exact; only sixteen DLC text overrides
+are added. The installed candidate follows the owner's revealed-world setting.
+
+Updated the generator-only hub **0.13.21→0.13.22** using `update_local_hub`,
+with source/package/installed-copy verification and passing isolated Windows
+generator self-test. Its **3,274 files** are verified. The previous hub remains
+at `.rnw-hub-backups/0.13.21-1793214280813313914` beneath the normal profile.
+Linux and the installed Windows generator agree on the complete current
+655-consumer inventory and the synthetic expedition rewrite.
+
+World installation hash-preserves all **5,124 files of six existing worlds**,
+the updated hub and **nine profile-root files**. No game installation, existing
+world, playset, save or setting was edited. EU5 was closed; no game launch or
+control. Adapted DLC gameplay remains unobserved. This candidate is a separate
+world, not a migration for old saves. Audits: ignored `local_data/compat-145/`.
+Exact removal when requested, with EU5 closed:
+`uv run rnw uninstall-mod rnw_exp_world_jzrscmin4p --user-dir USER_DIR`.

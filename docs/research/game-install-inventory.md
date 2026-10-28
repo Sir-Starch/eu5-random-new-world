@@ -4,8 +4,8 @@ Observed 2026-10-13 on Linux x86_64 with a Wayland desktop. All game paths below
 
 | Item | Observation | Evidence |
 |---|---|---|
-| Steam identity | App 3450310, `1.4-open-beta` branch, build 26142040 (**1.4.4**) since 2026-10-23 11:24 CEST; it replaced the executable only, `game/`, `clausewitz/` and `jomini/` are 1.4.3's (build 26105915 since 2026-10-22 16:24 CEST; 26043558 before, C148); the map-contract fingerprint is unchanged (C198) | [V-LOCAL] `steamapps/appmanifest_3450310.acf` (`buildid`, `LastUpdated`), file times, `rnw fingerprint` |
-| Running version | **1.4.4** in the owner's sitting of 2026-10-23 17:02 (`successfully matched game version 1.4.4`; the saves say `1.4.4`); 1.4.3 data was seen from 2026-10-22 on | [V-GAME] `debug.log`, save, C198 |
+| Steam identity | App 3450310, `public` branch, build 26211608 (**1.4.5**), updated 2026-10-28 19:35:18 CET; all ten map-contract hashes match 1.4.3/1.4.4; D009 adds gameplay scripts | [V-LOCAL C425] Steam manifest, fingerprints and [compatibility audit](compatibility-1-4-5.md) |
+| Running version | **1.4.5**, owner session 2026-10-28 19:46–19:51; RNW 0.13.20 then 0.13.21 | [V-GAME owner/logs C425] `debug.log`; metadata matching alone does not establish compatibility |
 | Executable | Windows PE `binaries/eu5.exe`, running under Steam Proton | [V-LOCAL] `file binaries/eu5.exe`; [V-GAME] Proton process and logs |
 | Display | Wayland desktop, Steam active; Vulkan renderer reported an NVIDIA GPU | [V-LOCAL] environment commands; [V-GAME] debug log |
 | User data | `steamapps/compatdata/3450310/pfx/drive_c/users/steamuser/Documents/Paradox Interactive/Europa Universalis V/` in the same Steam library | [V-LOCAL] directory inspection |
