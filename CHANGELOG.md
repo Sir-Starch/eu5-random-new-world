@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.18 — 2026-10-28
+
+- Remove the extended terrain sources and shifted primary placements used to conceal
+  the world-edge crack, now reproduced by the owner in vanilla. Retain continuous
+  geography, location identities and all route/hang corrections. Epoch 55.
+- Separate the terrain crack, river discontinuity and locator diagnostics in a
+  dedicated evidence dossier, including an owner-run historical comparison plan.
+
 ## 0.13.17 — 2026-10-28
 
 - Build remote states around local farming centres before allocating population. Landed

@@ -313,6 +313,11 @@ in 06b. Written-data checks in 056 do not establish the engine's appearance.
 candidate `rnw_exp_tr46_treaty` (RNW: Continents QW6O, 0.12.9) in EU5 1.4.4 and
 confirmed that the seam crack is absent ("шов отсутствует"). **TR46-06a CLOSED [V-GAME]**.
 
+**2026-10-28 clarification (C412):** the earlier disappearance remains observed.
+The new mod-free Kitagnaq reproduction limits the general closure claim; exact
+conditions and an owner-run historical comparison are tracked exclusively in the
+[wrap dossier](map-wrap-dossier.md). Mechanical seam fixes remain in force.
+
 ### TR46-06b — “Alaska”, colonial east/west and the wrap decision
 
 **Observed:** during a colonial division between **Spain (west)** and

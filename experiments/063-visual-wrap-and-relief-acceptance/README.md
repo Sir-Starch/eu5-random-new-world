@@ -4,6 +4,11 @@
 Candidate: **RNW: Continents QW6O** ([`rnw_exp_tr46_treaty`](../INSTALLED.md)), generator **0.12.9 / epoch 39**, code `RNW1-040XN-DR20S-1RQ4T-Z0060-J01KM-KKG`.
 Evidence: claims C345–C346; [TR46 register](../../docs/research/tr46-observer-audit.md), TR46-06a, TR46-01/02 and 06b.
 
+> **2026-10-28 scope clarification (C412):** the recorded disappearance remains a
+> valid owner observation for this sitting. The owner now reproduces a fissure in
+> mod-free vanilla; a universal engine fix is not established. Reproducing the
+> accepted historical candidate is planned in the [separate dossier](../../docs/research/map-wrap-dossier.md).
+
 ## Owner review and in-game findings
 
 [V-GAME owner C345] The owner visually reviewed candidate `rnw_exp_tr46_treaty` in game and accepted the results:

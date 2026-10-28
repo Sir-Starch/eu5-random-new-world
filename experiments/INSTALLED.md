@@ -644,3 +644,30 @@ with a matching 29-file recovery receipt. No game launch, process control,
 playset/settings/save change or publication. Audit: ignored
 `local_data/world-recovery/installed.json`.
 Hub rollback is a separate action, not performed; EVXP removal stays as above.
+
+2026-10-28, **0.13.18 / epoch 55 — visual wrap workaround removed** (C416;
+[dedicated dossier](../docs/research/map-wrap-dossier.md)). Installed new
+**RNW: Vanilla terrain placement**, `mod/rnw_exp_world_35yxpmsi2m`, **846 files
+verified**, with complete entries in both native and Windows libraries. Canonical
+reference: 835 files, SHA-256
+`e694e0b479e29280afe1a40d50d3103c49237b932c28eb2306adad6ec44bbbd9`, code
+`RNW1-081RF-FZCZT-X8CJN-T006H-40860-2AG63-YG1W8-8G3GH-149XR-08TM0-32CDS-0`.
+Only terrain2 changes from the previous reference; river/location/route/setup files
+are exact. Existing QUXQ's **862 hashes** and **nine profile-root hashes** remain
+unchanged. No save or playset edit; the candidate is a separate world, not a campaign
+migration.
+
+Built and self-tested the Windows generator, then installed hub **0.13.18** after
+EU5 was closed. Its actual pre-update metadata was **0.13.16**; its **3,274-file**
+copy is retained at
+`.rnw-hub-backups/0.13.16-1793160623899843015` beneath the profile. Installed hub
+files and current Python/catalog sources were verified by `update_local_hub`.
+The first installation attempt had correctly stopped while EU5 was running;
+no process was launched, closed or controlled to complete delivery. The Windows
+offscreen self-test runs the generator only, not EU5.
+
+Audits and full check outputs remain ignored under `local_data/quxq-wrap/audit/`;
+new candidate under `local_data/quxq-wrap/release/`. Local game contract tests:
+12 pass, 2 optional long checks skip. Game appearance of this rollback is untested.
+Exact removal, when requested:
+`uv run rnw uninstall-mod rnw_exp_world_35yxpmsi2m --user-dir USER_DIR`.

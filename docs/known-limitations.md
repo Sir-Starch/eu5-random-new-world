@@ -1,6 +1,6 @@
 # Known limitations
 
-Current as of **28 October 2026 — RNW 0.13.17**. This is a development build;
+Current as of **28 October 2026 — RNW 0.13.18**. This is a development build;
 the first public release, 1.0.0, is still pending.
 
 - **Specific EU5 build only.** Current checks target EU5 **1.4.4, Steam build
@@ -16,14 +16,22 @@ the first public release, 1.0.0, is still pending.
   also needs the matching generator algorithm and game inputs. A newer generator
   or game patch can change the result; regeneration after an update does not
   guarantee that an old save remains usable. [V-EXEC C141; INFERRED from ADR 0003]
-- **Latest changes still await game validation.** The latest long campaign
-  reached 1849 on **0.13.5 / EU5 1.4.4**. Subsequent treaty, river, starting-building
-  and AI changes, and the **0.13.11–0.13.16 ocean-route refinements**, and **0.13.17 agrarian and market changes**, have offline
-  checks, but their current in-game behavior is unverified. That campaign does
-  not validate the current build. [V-LOCAL/V-EXEC C389–C392, C397, C408, C410; UNKNOWN]
-- **Some campaign diagnostics remain unresolved.** Warnings about map-edge
-  city/unit placement and absent minority-culture populations appeared in the
-  0.13.5 campaign; their gameplay impact and causes remain uncertain. AI expansion and
+- **Verification has limits.** The owner reports QUXQ **0.13.17 / EU5 1.4.4**
+  reached 1490 and accepts the previous work; some coastal current directions
+  remain imperfect and are not a release blocker (C411). The **0.13.18** visual
+  workaround removal is verified offline and installed, but unobserved in game
+  (C416). Neither campaign progress nor acceptance proves every mechanic.
+- **World-edge terrain and rivers.** The owner reproduces a close-zoom terrain
+  crack in mod-free vanilla at Kitagnaq. RNW accepts this rendering limitation;
+  0.13.18 removes its visual source-extension workaround while retaining the
+  mechanical wrap fixes. Rivers crossing the edge are currently serialized as
+  separate networks and can visibly break. The intended river policy awaits the
+  owner's decision. Earlier observations of disappearance remain valid; a
+  historical comparison is planned in the [separate dossier](research/map-wrap-dossier.md).
+  [V-GAME owner / V-EXEC C412–C416; exact engine cause UNKNOWN]
+- **Some campaign diagnostics remain unresolved.** QUXQ’s nine map-edge locator warnings place every object on its own identity;
+  their reported distances match an unnormalized wrap-box comparison (C414).
+  Gameplay consequences and absent minority-culture diagnostics remain uncertain. AI expansion and
   society balance are not fully validated. [V-LOCAL C391; UNKNOWN C328, C397]
 - **Other mods and multiplayer are unverified.** Map overhauls and mods changing
   the Americas can conflict with RNW's files. No compatibility guarantee is made

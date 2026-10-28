@@ -227,70 +227,7 @@ def test_wrapped_terrain_equals_one_continuous_continent(band: int, *, mountains
         assert np.array_equal(whole[index], expected)
 
 
-@dataclass(eq=False)
-class EdgeStore:
-    """Two independent source tiles with distinguishable samples at both edges."""
-
-    map_shape: tuple[int, int] = (ROWS, COLUMNS)
-    decals: tuple[Decal, ...] = (
-        Decal("heightmap_1_16", 0, 0, ROWS, COLUMNS // 2),
-        Decal("heightmap_2_16", 0, COLUMNS // 2, ROWS, COLUMNS // 2),
-    )
-
-    def layer(self, name: str, kind: str) -> tuple[LayerFormat, np.ndarray]:
-        decal = next(d for d in self.decals if d.name == name)
-        r, c = np.indices((ROWS * 2, decal.columns * 2))
-        c += decal.column0 * 2
-        values = r * 17 + c * 29
-        image = (
-            (values % 60_000).astype(np.uint16)
-            if kind == "height"
-            else (values % 16).astype(np.uint8)
-        )
-        return LayerFormat(image.shape[1], image.shape[0], image.dtype.str), image
-
-    def paths(self, name: str, kind: str) -> tuple[str, Path, Path]:
-        return f"in_game/{name}_{kind}", Path(), Path()
-
-
 def test_layer_header_must_match_its_samples() -> None:
     """A changed footprint cannot silently write stale source dimensions."""
     with pytest.raises(TileFormatError, match="disagree with declared"):
         _ = write_layer(np.zeros((12, 24), dtype=np.uint16), LayerFormat(20, 12, "<u2"))
-
-
-@pytest.mark.parametrize("roll", [0, 2, COLUMNS - 2])
-@pytest.mark.parametrize(("band", "threads"), [(13, 1), (500, 3)])
-def test_padded_sources_equal_periodic_independently_rebuilt_tiles(
-    monkeypatch: pytest.MonkeyPatch, roll: int, band: int, threads: int
-) -> None:
-    """Every interior and halo sample agrees, including a noise cut inside the padding."""
-    from rnw import eu5_terrain  # noqa: PLC0415
-
-    monkeypatch.setattr(eu5_terrain, "WRAP_PADDING", 4)
-    store = EdgeStore()
-    inputs, tables = _world(11)
-    inputs = replace(inputs, noise_roll=roll)
-    reference: dict[str, list[np.ndarray]] = {"height": [], "materials": []}
-    padded: dict[str, list[np.ndarray]] = {"height": [], "materials": []}
-    with ThreadPoolExecutor(max_workers=threads) as pool:
-        for decal in store.decals:
-            for wrapped, result in ((False, reference), (True, padded)):
-                plan = eu5_terrain._padded_decal(decal, COLUMNS) if wrapped else decal  # pyright: ignore[reportPrivateUsage]
-                files, _ = _rebuild_decal(
-                    plan,
-                    store,  # pyright: ignore[reportArgumentType]
-                    inputs,
-                    tables,
-                    seed=11,
-                    pool=pool,
-                    band=band,
-                )
-                for kind in reference:
-                    stem = f"in_game/{decal.name}_{kind}"
-                    layer, spans = parse_info(files[f"{stem}.info"].decode())
-                    result[kind].append(read_level0(layer, spans, files[f"{stem}.bin"]))
-    for kind, images in reference.items():
-        first, last = images
-        assert np.array_equal(padded[kind][0], np.concatenate([last[:, -8:], first], axis=1))
-        assert np.array_equal(padded[kind][1], np.concatenate([last, first[:, :8]], axis=1))

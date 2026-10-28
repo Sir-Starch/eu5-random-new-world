@@ -1921,3 +1921,11 @@ without peasants to zero, and from 11 isolated states to five, preserving geogra
 Demographic support and graph market coverage do not prove engine income or later AI
 development [UNKNOWN]. Verification, reproduction and installation are recorded in
 C410 and [INSTALLED](../../experiments/INSTALLED.md).
+
+## World-wrap boundary, 2026-10-28
+
+[V-GAME owner / V-EXEC / INFERRED C412–C416] Separate the mod-free terrain
+fissure from generated river breaks and wrap-box locator warnings; remove only
+the visual primary-source extension, retaining mechanical wrap and hang fixes.
+The [dedicated dossier](map-wrap-dossier.md) owns the integrity evidence,
+uncertainties, public-search result and planned owner-run historical comparison.

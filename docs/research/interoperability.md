@@ -273,6 +273,17 @@ cross-platform comparisons verify the arithmetic, not engine behaviour. The lega
 framework and its limits above continue to apply; no additional clearance is
 inferred from this technical research.
 
+### Follow-up: visual-source extension withdrawn (2026-10-28, 0.13.18 / epoch 55)
+
+[V-GAME owner / V-EXEC C412–C416] A mod-free vanilla reproduction and read-only
+Steam-manifest comparison separate the close-zoom fissure from RNW output damage.
+Remove the primary-source padding, size/placement shifts and instance rewrites of
+056; do not restore outside-only duplicate placements. The R-004 serializers,
+header guards, continuous field samples and mechanical wrap support remain.
+No new closed format, engine patch or distribution permission is introduced.
+All new crack research, including the still-valid earlier disappearance and the
+planned historical comparison, is kept in the [dedicated dossier](map-wrap-dossier.md).
+
 ### Follow-up: removed coast's offshore support (2026-10-25, 0.12.4 / epoch 34)
 
 [V-LOCAL/V-EXEC C306–C307] TR46's remaining Alaska-shaped shelf is traced to the

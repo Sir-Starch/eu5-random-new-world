@@ -87,6 +87,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 13, 15),
     (0, 13, 16),
     (0, 13, 17),
+    (0, 13, 18),
 )
 
 

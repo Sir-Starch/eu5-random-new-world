@@ -15,11 +15,24 @@ corridors, and axis-aligned currents on designed crossing bands. Versions 0.13.1
 (epochs 52–53, C408) then fixed route ends and planned deep-water routes from generated
 shores, requiring useful-width openings and aligning currents to their actual exits.
 
-**Where it stands (0.13.17 / epoch 54, 2026-10-28).** The owner has accepted physical geography (V1) and the original sea phase (S1) in game; the 0.13.11–0.13.16 sea refinements remain offline candidates. The 0.13.16 4TXC candidate is installed and its files are verified, but EU5 was not launched, so its rendering and navigation are not game-validated [V-EXEC C408]. The 0.13.17 agrarian and market changes are checked offline and installed, but their effect on income and AI development is unverified in game [V-EXEC / UNKNOWN C410]. Earlier versions of the natives (R6) and the economy and societies of R7 load and play in game, with the remaining open points recorded in their experiments. The content plan (N0–N5) is implemented offline, and N1–N3 have been seen in console sittings. The world's mod, the generator's window and the Workshop text are written in all eleven official languages (L1, offline). The optional ocean expansion (S2) is implemented offline (0.12.0, epoch 30). The column *Kind of work* records what each phase needed when it was planned: design and production work, or bounded implementation.
+**Where it stands (0.13.18 / epoch 55, 2026-10-28).** The owner has accepted physical geography (V1) and the original sea phase (S1) in game; the 0.13.11–0.13.16 sea refinements remain offline candidates. The 0.13.16 4TXC candidate is installed and its files are verified, but EU5 was not launched, so its rendering and navigation are not game-validated [V-EXEC C408]. The 0.13.17 agrarian and market changes are checked offline and installed, but their effect on income and AI development is unverified in game [V-EXEC / UNKNOWN C410]. Earlier versions of the natives (R6) and the economy and societies of R7 load and play in game, with the remaining open points recorded in their experiments. The content plan (N0–N5) is implemented offline, and N1–N3 have been seen in console sittings. The world's mod, the generator's window and the Workshop text are written in all eleven official languages (L1, offline). The optional ocean expansion (S2) is implemented offline (0.12.0, epoch 30). The column *Kind of work* records what each phase needed when it was planned: design and production work, or bounded implementation.
+
+The owner reports QUXQ reached 1490 and accepts the previous work (C411).
+Version 0.13.18 removes only the visual terrain-source workaround and is checked
+offline and installed (C416); all mechanical seam fixes remain. The separate
+[wrap dossier](research/map-wrap-dossier.md) records the vanilla limitation and
+pending river policy.
 
 The optional ocean expansion (S2) is implemented offline in 0.12.0, epoch 30: a fixed wider canvas, connected named oceans and the original-canvas checkbox. See [the design and audit](research/canvas-expansion.md). Its engine result is unverified.
 
 ## Planned expansion (owner, 2026-10-28)
+
+**World-wrap investigation:** keep mechanical wrap and route/hang fixes. Stop
+visual concealment of the vanilla fissure; maintain its evidence separately in the
+[Paradox report dossier](research/map-wrap-dossier.md). Plan one owner-run
+comparison of the historical accepted commits/candidates where the crack actually
+disappeared, with fixed coordinates, zooms and render conditions. Decide river
+policy from that dossier; no new land-at-seam restriction is adopted here.
 
 These are future work, not implemented capabilities. Scope, order and release gates will be refined during design; no release date or 1.0.0 inclusion is decided here.
 
