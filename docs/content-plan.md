@@ -1,5 +1,10 @@
 # Random-first New World content: design and staged plan
 
+For the implemented stories, choices, formable countries and other campaign
+additions, see the [player catalogue](content-catalog.md) and
+[complete reference](content-reference.md). This document records design and
+stage history; its baseline gap descriptions are not the current content list.
+
 **Status:** Proposed 2026-10-23 and revised the same day after a check against the installed game (C175–C180). The owner placed its whole scope, R7d included, in 1.0.0 and settled its languages (2026-10-23); the owner authorized N5 on 2026-10-24; its design and offline evidence are in [N5](research/n5-region-keys.md). N0 to N4 are done offline (C181–C220; N1 to N3 were seen in game in part, C199–C211, N4 not at all) and F1 and F2 of the final verification are done offline too ([audit](research/n0-n4-audit.md), C222–C231, generator 0.10.11); no game launch belongs to the plan.
 **Baseline:** Generator 0.10.1, algorithm epoch 11; EU5 1.4.3 open beta, Steam build 26105915. (N5 completed offline in 0.11.4, epoch 28.)
 **Evidence:** Existing behaviour is labelled below. Every proposed behaviour is [INFERRED design]; whether the running game accepts it is [UNKNOWN] until observed.

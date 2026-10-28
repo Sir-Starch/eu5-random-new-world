@@ -42,7 +42,7 @@ build, save and mod compatibility, and what remains unverified in the current ve
 | **Political & Region Keys** | Compact, connected locations, provinces, areas, and regions. Vanilla American region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
 | **Native Societies** | Procedural native cultures, religions, homelands, settled states, decentralized tribes, and subject networks. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) with balanced structural tradeoffs. |
 | **Economy & Institutions** | Starting development, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. |
-| **Dynamic Content & L10n** | Procedural regional stories, formable nations, rare resource deposits, and colonial naming (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
+| **Dynamic Content & L10n** | [Procedural regional stories, formable nations, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
 | **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
 
 ## Screenshots
@@ -176,7 +176,7 @@ See the [Generator Guide](docs/generator-guide.md) for details on `.rnw` world f
 
 The [Documentation Index](docs/README.md) provides a full map of the repository:
 
-* **User Guides:** [Known limitations](docs/known-limitations.md) · [Generator Guide](docs/generator-guide.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
+* **User Guides:** [Known limitations](docs/known-limitations.md) · [Generator Guide](docs/generator-guide.md) · [Dynamic Content Catalogue](docs/content-catalog.md) · [Complete Event Reference](docs/content-reference.md) · [Product Specification](docs/product-spec.md) · [Localization](docs/localization.md)
 * **System Design:** [Architecture](docs/architecture.md) · [Terrain & Biomes](docs/terrain-biomes.md) · [Sea Geography](docs/sea-geography.md) · [Native Societies](docs/natives.md) · [Economy](docs/economy.md) · [Content Plan](docs/content-plan.md) · [Architecture Decision Records (ADRs)](docs/adr/)
 * **Project Tracking:** [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md) · [In-Game Experiments](experiments/README.md)
 * **Verification & Audits:** [Engine Findings](docs/research/findings.md) · [Claims Ledger (`C01–C405`)](docs/research/claims-ledger.md) · [Interoperability Register](docs/research/interoperability.md)

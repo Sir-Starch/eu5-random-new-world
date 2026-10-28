@@ -1902,3 +1902,12 @@ zero land-mask differences. The corrected world and its complete library records
 plus the verified generator hub, are installed separately. The reference export was
 independently reproduced; tracked-code checks and Python/Rust suites pass. New game
 rendering remains unobserved. Details and limits are in C408 and the installed record.
+
+## Public dynamic content catalogue, 2026-10-28
+
+[V-EXEC C409] Added the [player catalogue](../content-catalog.md) and a
+[complete reference](../content-reference.md) generated from the original content
+definitions, linked from the public documentation. Eligibility and actual effects
+are distinguished from narrative wording and historical design notes. A regression
+check keeps the reference synchronized; it requires no game installation. Product
+output is unchanged. Verification and its limits are recorded in C409.

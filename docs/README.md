@@ -8,6 +8,8 @@ The project's documentation, grouped by purpose. Technical claims carry evidence
 |---|---|
 | [Known limitations](known-limitations.md) | Current player-facing limits, compatibility and unverified behavior |
 | [Generator guide](generator-guide.md) | The window, world codes and files, rerolls, the queue, the command line |
+| [Dynamic content catalogue](content-catalog.md) | Stories, choices, formable countries, colonial names and exceptional places; conditions and how to inspect a specific world |
+| [Complete content reference](content-reference.md) | Every original event, choice, effect, delay, modifier and formable family, generated from the definitions |
 | [Workshop description](workshop-description.md) | The player-facing Steam Workshop text for 1.0.0, in Steam's markup and every official language |
 
 ## Product and plan
