@@ -5,15 +5,43 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Version tag to validate (vMAJOR.MINOR.PATCH)
+        description: Target version (vMAJOR.MINOR.PATCH)
         required: true
+        type: string
+      commit:
+        description: Full candidate commit SHA (leave empty to require the frozen tag)
+        required: false
         type: string
 permissions:
   contents: read
 env:
   RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  CANDIDATE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.commit || '' }}
 jobs:
+  validate:
+    runs-on: ubuntu-22.04
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.CANDIDATE_COMMIT || env.RELEASE_TAG }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Qt runtime libraries
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+      - run: uv sync --locked --group dev
+      - name: Validate target version and exact source commit
+        id: source
+        run: |
+          uv run python packaging/release.py check-ref --tag "$RELEASE_TAG" --commit "$CANDIDATE_COMMIT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - run: make check
   native:
+    needs: validate
     strategy:
       fail-fast: false
       matrix:
@@ -21,6 +49,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.validate.outputs.commit }}
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.12'
@@ -38,11 +68,17 @@ jobs:
       - run: ./dist/RandomNewWorld/RandomNewWorld --cli world-code --seed 42
       - name: Package native application
         run: uv run python packaging/release.py native dist/RandomNewWorld dist/release --tag "$RELEASE_TAG"
-      - run: uv build --out-dir dist/source
+      - name: Build canonical source archive
+        if: runner.os == 'Linux'
+        run: uv build --sdist --out-dir dist/source
       - name: Audit source distribution
+        if: runner.os == 'Linux'
         shell: bash
         run: |
           for archive in dist/source/*.tar.gz; do uv run python packaging/release.py audit "$archive"; done
+      - name: Source archive checksums
+        if: runner.os == 'Linux'
+        run: uv run python packaging/release.py checksum dist/source
       - uses: actions/upload-artifact@v7
         with:
           name: RandomNewWorld-${{ runner.os }}
@@ -50,9 +86,12 @@ jobs:
             dist/release/*
             dist/source/*
   windows-build:
+    needs: validate
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.validate.outputs.commit }}
       - uses: astral-sh/setup-uv@v7
         with:
           python-version: '3.12'
@@ -67,7 +106,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: RandomNewWorld-Windows
-          path: dist/release/*.zip
+          path: dist/release/*
   windows-test:
     needs: windows-build
     runs-on: windows-latest
@@ -78,6 +117,12 @@ jobs:
           path: packages
       - shell: pwsh
         run: |
+          Get-Content packages/SHA256SUMS | ForEach-Object {
+            $hash, $name = $_ -split '  ', 2
+            if ((Get-FileHash (Join-Path packages $name) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hash) {
+              throw "Checksum mismatch: $name"
+            }
+          }
           Get-ChildItem packages/*.zip | ForEach-Object { Expand-Archive $_.FullName -DestinationPath expanded }
           $env:QT_QPA_PLATFORM = 'offscreen'
           $env:RNW_DATA = Join-Path $env:RUNNER_TEMP 'rnw-self-test'

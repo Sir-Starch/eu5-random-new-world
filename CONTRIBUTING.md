@@ -34,13 +34,20 @@ The second test rebuilds the reference world and compares its digest. It takes a
 
 ## Changes to generated output
 
-A change that alters what the generator writes must, **in the same commit**:
+Ordinary commits do not raise the product version. Add a player-relevant
+[`CHANGELOG.md`](CHANGELOG.md) entry under *Unreleased* and update the affected
+golden digests with the change. A non-`.metadata` world change needs a new epoch
+relative to the previous frozen release, with its reference world in
+`tests/golden_world.json`. Several commits may refine the same pending epoch;
+frozen epochs and their goldens never change.
 
-- raise at least the PATCH part of `version` in `pyproject.toml` ([ADR 0003](docs/adr/0003-versioning.md));
-- update the golden digests the tests pin;
-- if any file of a world's mod other than `.metadata` changes, start a new **algorithm epoch** in [`src/rnw/epoch.py`](src/rnw/epoch.py) and record the new reference world in `tests/golden_world.json` ([ADR 0010](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md)).
-
-Add a [`CHANGELOG.md`](CHANGELOG.md) entry under *Unreleased*.
+Use one target version per release cycle. PATCH is compatible correction or
+maintenance, MINOR adds compatible capabilities or deprecations, and MAJOR breaks
+the documented public contract. Choose the largest required increase in the
+whole batch. Follow [ADR 0003](docs/adr/0003-versioning.md) for examples, candidate
+identity, epoch rules and hotfixes, and the [release process](docs/release-process.md)
+for the final version/lockfile/changelog/tag checks. A development world needs
+its exact source commit and inputs; a version alone is insufficient.
 
 ## Performance
 
@@ -70,7 +77,7 @@ Consequential claims get an entry in the [claims ledger](docs/research/claims-le
 ## Commits and pull requests
 
 - Keep commits coherent and buildable, and make sure `make check` passes on each one.
-- Write commit subjects in the imperative mood. Generator releases are prefixed with their version, for example `0.11.4: …`.
+- Write commit subjects in the imperative mood. Only release commits are prefixed with their version, for example `1.0.1: …`; normal changes have descriptive subjects.
 - **Sign off every commit** (`git commit -s`) to certify the [Developer Certificate of Origin](https://developercertificate.org/). The project accepts contributions under its licence (MPL-2.0) on that basis.
 - Fill in the pull request template. Say how the change was verified, and whether it changes generated output.
 

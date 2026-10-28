@@ -103,7 +103,7 @@ A hash proves a file is whole; it does not make a rebuild a reproduction. So eac
 | Field | What it fixes |
 |---|---|
 | `format` | the version of the record's own layout, so an old record is always readable |
-| `algorithm` | the **epoch**: an integer raised whenever the files a world is made of change for the same inputs (the rule of ADR 0003, made explicit; the product version still moves for everything). The code carries the epoch, not the release |
+| `algorithm` | the **epoch**: an integer raised whenever the files a world is made of change for the same inputs (one pending epoch per release cycle; frozen epochs never change, per revised ADR 0003). The code carries the epoch, not the release |
 | `release` | the product version, and for repository releases the tag and the commit, so the player is told which release makes the original |
 | `settings`, `seed`, `rolls` | every resolved value; the preset is only a label, and the epoch fixes what a short code resolves to (the preset tables are part of the algorithm) |
 | `game` | the EU5 version and the Steam build id (labels), the mod's `supported_game_version`, and an **inputs manifest**: every game file the export read, with its hash, kept in the bundle and as one digest in the record. The world's id still comes from the Steam build id: changing the scheme would orphan every library made so far. The inputs digest, not the id, says whether a patch touched what a world read (phase G0b: a patch that touched nothing keeps its mod instead of making it again) |
@@ -112,6 +112,7 @@ A hash proves a file is whole; it does not make a rebuild a reproduction. So eac
 - **Opening a world** compares the record with the running generator and game and says one of five things, never a silent sixth: *identical* (same epoch, same inputs digest: made again byte for byte); *same algorithm, inputs not compared yet* (what the window says before a check: hashing the game's files takes a second, a rebuild two minutes); *other inputs* (the game changed files the world read, which are listed; what is made is a world of its own, not a reproduction); *other epoch* (names the release that made it; this generator would make a different world from the same code, and says so first); *newer format* (cannot be read). The record, the atlas and the pictures open in every case: they are data.
 - **Check reproducibility:** make the world again and compare its output digest with the record, naming the first differing file. It is the check CI already makes on a reference world (C120), offered to the player.
 - **Releases stay.** The last release of every epoch stays published and the program links to it. After an EU5 patch that changes inputs not even the old release reproduces a world [INFERRED]; the program says so, and offers to archive a world that matters as a built mod (the transfer function, G3b).
+- **Development cycles (ADR 0003, revised 2026-10-28).** Ordinary main commits keep the cycle's product target and may refine its pending epoch/reference. Only frozen releases promise reproduction by version/epoch; development candidates additionally require the exact source commit and inputs.
 - **Tests.** Golden digests are keyed by epoch; the digest of a released epoch never changes, and a changed digest without a new epoch fails. A fixture per verdict. The inputs are recorded by the interpreter's audit hook (`rnw.inputs`), which sees every open of every thread, so the list is complete by construction; a game file opened after the record is made is an error.
 
 ### H. What needs the game, and what does not (owner, 2026-10-22)
@@ -141,7 +142,7 @@ Enforced, not promised:
 
 Per world: a note, a star, a tag of the player's; compare two worlds side by side on any picture; search of a country, a culture or a material across a world; copy the code, the tag, the picture; save a picture (spoiler-safe by default); a history of the rolls with undo; open the folder; a summary line (countries, tribes, empires, gold and silver, land share). Per session: **Candidates**, a contact sheet of several continents rolled from the land stage alone (a sketch is cheaper than a world: no vegetation, no decals), to pick before generating; drag and drop of codes and files; a queue of worlds to generate, one after another. Every operation also exists as a command (`rnw reroll CODE --part peoples`), for scripts and for players without the window.
 
-## Phases (each: PATCH or MINOR bump, golden digests, [claims ledger](../research/claims-ledger.md), owner's review)
+## Phases (release target per ADR 0003, golden digests, [claims ledger](../research/claims-ledger.md), owner's review)
 
 | Phase | Contents | Gate |
 |---|---|---|

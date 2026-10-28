@@ -1,8 +1,8 @@
 """The algorithm epoch: which releases make the same world from the same code (ADR 0010, G).
 
 A world code names the release that made it, but most releases change the window, the packaging
-or the text and nothing a world is made of. The epoch says what matters: **two releases of the
-same epoch make byte-identical mods from the same settings, seed and game files**, apart from the
+or the text and nothing a world is made of. The epoch says what matters: **two frozen releases
+of the same epoch make byte-identical mods from the same settings, seed and game files**, apart from
 mod's ``.metadata`` (its title, version and picture), which is presentation and is written anew.
 
 ``ALGORITHM_SINCE`` lists the first release of every epoch. A release before the first entry is
@@ -11,11 +11,14 @@ changes the generator:
 
 * A change that alters any file of a world's mod other than ``.metadata`` (the land, the peoples,
   the texts, the cover's shaders, a preset's values, the order of a random stream) is a new epoch:
-  append an entry for the release that carries it, in the same change.
+  append an entry for the cycle's target release, or refresh its existing pending epoch
+  reference, in the same change. Never change a frozen release's entry.
 * A change that alters none (the window, the packaging, a picture, the metadata, speed that
   proves equal bytes) is not.
-* The release version still moves for everything (ADR 0003). The epoch is what a reproducibility
-  record (``rnw.record``) and a world code's promise are made of.
+* Ordinary commits keep the cycle's target version (ADR 0003). Output changes within a cycle
+  may refine one pending epoch and its reference before its tag is frozen. Frozen epochs and
+  goldens never change. Reproduction promises apply to frozen releases; development builds
+  additionally need their exact source commit and inputs.
 
 CI cannot make the game's files, so it cannot see a change of the real export; it does pin the
 presets (``tests/test_epoch.py``) and the synthetic world's bytes, and a player or a developer with

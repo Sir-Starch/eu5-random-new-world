@@ -1978,3 +1978,18 @@ records implementation, verification, delivery and the unobserved engine result.
 watersheds and all other game-facing data remain exact. The
 [separate dossier](map-wrap-dossier.md#visual-source-extension-restored-01320--epoch-57-c418)
 owns the new visibility report, verification, delivery and rendering uncertainty.
+
+## 2026-10-28 — Release policy and 1.0.0 readiness (C430)
+
+At the owner's request, revised ADR 0003: one target per release cycle, no
+per-commit main bumps, explicit public compatibility and PATCH/MINOR/MAJOR
+criteria, one pending epoch with immutable frozen releases. Aligned the agent,
+contribution and PR rules and ADR 0010. No product or epoch bump for this phase.
+
+Fixed the candidate pipeline's manual-ref ambiguity and missing source/Windows
+checksum hand-off; pre-tag builds accept a full candidate SHA so a failed
+candidate does not consume a stable version. Synthetic source-gate regressions and all local checks pass;
+the edited remote workflow is not yet exercised. The single current audit,
+including the stale local dist hub and remaining final-candidate/publication
+boundaries, is in [release process](../release-process.md#current-readiness).
+No game launch, tag, push or publication.

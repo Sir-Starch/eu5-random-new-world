@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Adopt release-based versioning: ordinary main commits share a release target;
+  define PATCH, MINOR and MAJOR against the supported public contract and keep
+  algorithm epochs independent of product release size.
+- Pin release builds to their exact tag or pre-tag candidate commit and include checksum manifests
+  with source and Windows candidate archives.
+
 ## 0.13.22 — 2026-10-28
 
 - Adapt Across the Pillars to generated worlds on EU5 1.4.5: retain its eight
