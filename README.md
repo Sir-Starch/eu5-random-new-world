@@ -82,7 +82,7 @@ Click a screenshot to view it at full size.
 
 ### Generator
 
-The generator interface (native Qt controls) displaying generated worlds in the library, featuring **Supercontinent EVXP** (`v0.13.4`) in both spoiler-free (*Terra Incognita*) and revealed atlas mapmodes.
+The generator interface (native Qt controls) displaying generated worlds in the library, featuring **Supercontinent QUXQ** (`v0.13.17`) in its world overview and revealed atlas mapmodes.
 
 <table>
 <tr>

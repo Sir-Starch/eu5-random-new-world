@@ -17,7 +17,17 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast, override
 
 from PySide6.QtCore import QItemSelectionModel, QObject, QSize, Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QIcon, QImage, QPixmap
+from PySide6.QtGui import (
+    QCloseEvent,
+    QColor,
+    QDesktopServices,
+    QFont,
+    QIcon,
+    QImage,
+    QPainter,
+    QPainterPath,
+    QPixmap,
+)
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QAbstractSpinBox,
@@ -115,6 +125,35 @@ def _problem_label() -> QLabel:
     label.setWordWrap(True)
     label.setVisible(False)
     return label
+
+
+def _new_world_icon() -> QIcon:
+    """Use the platform folder icon, with a small folder-plus fallback for bare Qt sessions."""
+    themed = QIcon.fromTheme("folder-new", QIcon.fromTheme("document-new"))
+    if not themed.isNull():
+        return themed
+
+    pixmap = QPixmap(48, 48)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    folder = QPainterPath()
+    folder.moveTo(9, 15)
+    folder.lineTo(9, 11)
+    folder.lineTo(20, 11)
+    folder.lineTo(24, 15)
+    folder.lineTo(39, 15)
+    folder.lineTo(39, 37)
+    folder.lineTo(9, 37)
+    folder.closeSubpath()
+    painter.setPen(QColor("#79673a"))
+    painter.setBrush(QColor("#d0ae59"))
+    painter.drawPath(folder)
+    painter.setPen(QColor("#29251b"))
+    painter.drawLine(24, 20, 24, 32)
+    painter.drawLine(18, 26, 30, 26)
+    painter.end()
+    return QIcon(pixmap)
 
 
 class SettingsDialog(QDialog):
@@ -1383,7 +1422,7 @@ class MainWindow(QMainWindow):
             self.world_list.clear()
             first = QListWidgetItem(text("new_world"))
             first.setData(Qt.ItemDataRole.UserRole, NEW)
-            first.setIcon(QIcon.fromTheme("document-new"))
+            first.setIcon(_new_world_icon())
             self.world_list.addItem(first)
             for world, depth in listed:
                 self.world_list.addItem(self._world_item(world, depth))

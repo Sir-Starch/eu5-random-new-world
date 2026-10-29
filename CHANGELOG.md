@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep the New world library action visible when the platform has no matching icon theme.
+
 ## 1.0.0 — 2026-10-29
 
 - First stable release: locally generated continents, terrain, climate,
