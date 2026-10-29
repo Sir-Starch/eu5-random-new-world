@@ -38,9 +38,9 @@ Build pre-tag artifacts with `workflow_dispatch`: `tag` is the intended numeric 
 
 The maintainer performs the external publication after accepting the candidate:
 
-- [ ] Create the GitHub release for the reviewed version tag and attach the matching source archive, application archives, checksum files and `BUILD-INFO.json` release manifest.
-- [ ] Use the prepared release notes and link to the source tag. Do not add generated worlds or derived game files.
-- [ ] Download the posted assets once and recheck their checksums against the candidate.
+- [x] Create the GitHub release for the reviewed version tag and attach the matching source archive, application archives, checksum files and `BUILD-INFO.json` release manifest.
+- [x] Use the prepared release notes and link to the source tag. Do not add generated worlds or derived game files.
+- [x] Download the posted assets once and recheck their checksums against the candidate.
 
 ## Steam Workshop hand-off
 
@@ -60,8 +60,8 @@ the retained local folder name. Future hub updates recognise both the legacy
 Preparation date: **2026-10-29**. **RNW 1.0.0 / epoch 59** is ready for
 publication for **EU5 1.4.5 / Steam build 26211608**, including Across the
 Pillars adaptation. The owner confirms that the mod is ready, tested and the
-rules have already been studied (C437). Preparation and acceptance are complete;
-the tag, release creation and Workshop upload are the remaining publication actions.
+rules have already been studied (C437). Preparation and acceptance are complete.
+GitHub Release 1.0.0 is published (C439); the owner is preparing the Workshop page.
 Earlier per-experiment UNKNOWN/NOT-RUN entries remain historical evidence limits.
 They are not automatically additional release gates, and no new game test is
 claimed or requested by this acceptance record.
@@ -74,15 +74,14 @@ claimed or requested by this acceptance record.
 | Languages and world output | [V-EXEC C431] All player-visible catalog keys/fingerprints and eleven Workshop texts pass the release checks against the installed game's official languages. The 1.0.0 exporter reproduces all **867** nonmetadata files of epoch 59, SHA-256 `23c0437734288ffa913061f627838855c97962185fe939da18b313ccb1bd9c85`; the frozen reference is unchanged. |
 | Exact-source CI | The local hand-off `BUILD-INFO.json` binds the full candidate SHA to successful general and release workflow runs. The release workflow runs Linux and Windows checks, packages and self-tests both app variants, builds platform archives and validates the Windows packages on Windows. |
 | Downloaded packages | The hand-off contains CI Windows standalone and Workshop/Proton ZIPs, Linux archive and Python sdist. Their embedded SHA256SUMS match; archive audits found no game assets or generated worlds. The Windows artifact contains only the two delivery ZIPs and checksum manifest. The complete source archive and Workshop text bundle are also present. |
-| Installed candidate | [V-EXEC C435] Installed the 3,272-file Windows hub from the CI artifact with package/source verification and a passing isolated Wine self-test. The prior hub is retained at `.rnw-hub-backups/1.0.0-1793232100930439192`. The separately installed 878-file world remains a local candidate with both library entries; it is not part of a public archive. No EU5 launch or control. |
+| Installed hub | [V-EXEC C438] Installed the 3,272-file Windows hub with the permanent Workshop ID, package/source verification and a passing isolated Wine self-test. The prior hub is retained at `.rnw-hub-backups/1.0.0-1793234743835704438`. The separately installed 878-file world remains a local candidate with both library entries; it is not part of a public archive. No EU5 launch or control. |
 | VirusTotal | The exact launcher and native extension from the hand-off candidate were scanned. The manifest records each binary's SHA-256, size, report URL and per-engine totals. Timeouts and failed engines are unknown results, not clean results. These file scans do not cover archives or every dependency and are not a safety guarantee. |
 | Game and platform limits | Owner observations and Windows 11 smoke C428 remain valid at their recorded versions. Known wrap, DLC completion, balance and multiplayer limits remain disclosed. macOS is not an offered package or a verified game route. These disclosed limits are accepted for 1.0.0 (C437). |
 | Source/licences | [V-EXEC / SOURCE C431] Third-party notices and licences travel with the packages; no game assets or generated worlds are included. A 2026-10-29 check found the Steam Subscriber Agreement revision dated 2026-09-10 and Paradox's 2026-01-21 agreement; the owner confirms that the rules have been studied and accepts the audited hub distribution (C437). C267 retains the limits of the source interpretation, without imposing another approval process. Windows binaries remain unsigned and this is stated in player-facing text. |
-| External publication | **Pending:** stable `v1.0.0` tag, GitHub Release and Workshop upload/download acceptance. CI uploads candidate artifacts only. No tag, release, account agreement or Workshop publication has been performed. |
+| External publication | [V-EXEC C439] The stable `v1.0.0` tag and [GitHub Release](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.0.0) are published; all downloaded asset checksums match. The owner is preparing the Workshop page. |
 
 The candidate packages, source, checksums and verification records are available
 in the local `dist/release-1.0.0/` hand-off folder. Include its `BUILD-INFO.json`
 manifest when handing off or publishing the package set. Keep generated worlds out of
 public distributions. Product acceptance and terms review are complete (C437).
-The remaining unchecked hand-off items track publication itself, not defects or
-unmet preparation requirements.
+The remaining unchecked hand-off items track the owner-managed Workshop page and its published item.

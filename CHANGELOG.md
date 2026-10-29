@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-## 1.0.0 — 2026-10-28
+## 1.0.0 — 2026-10-29
 
-- First stable product candidate: locally generated continents, terrain, climate,
+- First stable release: locally generated continents, terrain, climate,
   rivers, seas and native societies, with the vanilla Old World preserved.
 - Includes five landmass archetypes, optional ocean expansion and extraordinary
   societies, regional stories, formable countries and colonial names.

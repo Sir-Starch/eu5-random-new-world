@@ -2082,3 +2082,11 @@ checks and the real Windows generator self-test under Wine pass. The installed
 hub is hash-verified and its predecessor retained; the refreshed Workshop archive
 changes only metadata relative to the audited CI runtime. No binary rescan or
 algorithm epoch change is needed.
+
+## 2026-10-29 — GitHub release 1.0.0 (C439)
+
+The owner requested GitHub publication while preparing the Workshop page.
+Tagged and published 1.0.0 at `73ba1bc`; tagged CI passed on Linux and Windows,
+including the Windows hub self-test. The released files and their checksums
+match after download, and the exact released launcher and native extension have
+completed VirusTotal reports. The owner manages the Workshop page separately.
