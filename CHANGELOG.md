@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Keep the New world library action visible when the platform has no matching icon theme.
+- Replace the hub avatar with the owner's in-game map and generator screenshot design.
 
 ## 1.0.0 — 2026-10-29
 

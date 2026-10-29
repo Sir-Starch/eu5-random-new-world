@@ -88,6 +88,15 @@ The release's Workshop-text bundle already strips those headers and has a README
 for the publisher. The hub does not require a separate README to be usable: its
 metadata gives the launch instruction, and the page carries the full guide.
 
+For a preview-only update, prepare the 512×512 image with `packaging/hub.py`'s
+`write_thumbnail` from `packaging/assets/rnw-avatar.png`. The owner can submit a
+SteamCMD VDF containing only `appid` (`3450310`), `publishedfileid` (`3829217331`)
+and `previewfile` (the image's absolute path). Omit `contentfolder` and unrelated
+fields so the update changes only the preview, as described in the
+[Steamworks guide](https://partner.steamgames.com/doc/features/workshop/implementation#SteamCmdIntegration).
+This needs no new generator release or hub rebuild. Keep the source avatar updated
+for future packages; published release archives and tags remain frozen.
+
 For later updates preserve the public mod ID and existing Workshop item, use the
 reviewed package for the new release and check the downloaded item. Do not upload
 `rnw_exp_world_*`, game-derived data, local library records or diagnostics. The
