@@ -46,6 +46,19 @@ The interim patch transfer copied river and border bands from unrelated places a
 | 7b. Rivers (V1b) | `rivers.py`, `eu5_nw_export.py` | On a 4-pixel grid, a priority flood from all water gives every land cell a downstream neighbour, so depressions are crossed; routing adds fractal valley noise so flow converges. The square root of rainfall accumulates downstream; the catchment threshold gives 16 river pixels per 1000 land pixels (vanilla 15.7). Streams split at confluences (larger branch continues); rivers to the sea need 12 cells. Each stream is drawn from its head down a smoothed, slightly meandering line until it reaches water (up to 3 px into it; the head becomes the source) or meets a river drawn before (a join pixel beside one river pixel). Widths 4/5/11/15 follow catchment in vanilla shares; valleys of 350–1,150 units are carved within 6 px; slot 6 runs along rivers. The export refuses any violation of the vanilla raster rules (C59). |
 | 8. Location shapes | `newworld.py` | Cell borders are bent by a smooth displacement field, then cut-off pieces are re-attached, so borders and the bands along them are organic rather than polygonal. A cell that would vanish or split keeps its original shape; before generator 0.9.1 such a cell undid the bending everywhere (C71). The map wrap does not constrain land: one continuous crop is generated before it is placed across the two map edges (0.12.2, C289–C290). Administrative cells that cross the display seam are split without changing the land mask. A strait is cut wherever generated land would enclose the sea around a protected Old World islet (C61). City points maximise `min(2 × distance to the cell border, distance to water)`, so coastal cities stand inland. |
 
+## Climate/vegetation consistency follow-up (2026-10-29)
+
+[V-EXEC C443] RNW 1.0.0's classifier initially conditions vegetation votes on the
+selected climate, but its empty-vote fallback and subsequent neighbour smoothing
+can discard that constraint. A synthetic 13-cell call to `assign_biomes` gives a
+zero-rainfall-index centre `arid` climate and `forest` vegetation, although the
+calibration fixture contains only arid/desert and tropical/forest pairs. Disabling
+only vegetation smoothing changes that centre to desert. This establishes a
+classifier consistency defect; its prevalence in generated worlds is unmeasured,
+and it does not establish a general ban on forests in dry or continental climates.
+[Issue #4](https://github.com/Sir-Starch/eu5-random-new-world/issues/4) contains the
+game-independent reproduction and tracks a construction-time correction.
+
 ## Acceptance results (seed 42, continents) [V-EXEC C51–C53]
 
 - **Slot-rule fidelity:** rebuilding a 1600×2400 vanilla Mediterranean crop from vanilla templates gives 85.6% agreement on structural classes. Coast slot choice is right on 96% of coast pixels. The optional local test requires at least 80%.
