@@ -2052,3 +2052,12 @@ digest do not change. A same-day check of Steam's current Subscriber Agreement
 (updated 2026-01-21) leaves C267 unresolved; no account agreement was accepted.
 The roadmap's 1.0.0 game acceptance is also still open. No stable tag or
 publication has been created.
+
+## 2026-10-29 — Final hand-off manifest and binary reports (C436)
+
+The final documentation candidate `1cdfa3c1546540b3b086a95b2fa0fcacb5206430`
+passes all general and release CI jobs. Downloaded package checksums and archive
+allowlist audits pass. VirusTotal completed analysis of both exact Windows
+binaries; hashes, report links and full outcomes are carried with the hand-off
+manifest, with engine timeouts and failures recorded as unknown. Version 1.0.0,
+epoch 59 and world bytes remain unchanged. Publication gates remain open.
