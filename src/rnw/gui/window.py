@@ -152,7 +152,7 @@ def _new_world_icon() -> QIcon:
     painter.setPen(QColor("#29251b"))
     painter.drawLine(24, 20, 24, 32)
     painter.drawLine(18, 26, 30, 26)
-    painter.end()
+    _ = painter.end()
     return QIcon(pixmap)
 
 

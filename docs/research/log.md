@@ -2090,3 +2090,10 @@ Tagged and published 1.0.0 at `73ba1bc`; tagged CI passed on Linux and Windows,
 including the Windows hub self-test. The released files and their checksums
 match after download, and the exact released launcher and native extension have
 completed VirusTotal reports. The owner manages the Workshop page separately.
+
+## 2026-10-29 — CI icon return value (C440)
+
+The icon fallback introduced an unused Boolean return from `QPainter.end()`,
+which strict type checking rejects. Explicitly discard that result. Locked sync
+and full local checks pass; this typing-only correction changes no world output
+or runtime behavior and requires no version, epoch or installation update.
