@@ -15,11 +15,11 @@ Complete each gate and retain its evidence before making a stable release tag.
 Build pre-tag candidates by full commit SHA as described below, so a failed
 candidate can be fixed without consuming the 1.0.0 version.
 
-- [ ] **Product gates:** P1 dependencies R9, R10, U1, N0–N5 and L1 are accepted as described in the [roadmap](roadmap.md). The 1.0.0 product is complete and validated in game, as required by ADR 0003.
-- [ ] **Game compatibility:** record the exact EU5 version and Steam build tested. Recheck the map-contract fingerprint and game-facing behavior for that build; a matching `1.4.*` metadata value alone is not compatibility evidence ([AGENTS.md](../AGENTS.md), [claims ledger](research/claims-ledger.md); [INFERRED C18]).
+- [x] **Product acceptance:** the owner confirms that the mod is ready and tested (2026-10-29, C437). Earlier roadmap experiment statuses retain their original evidence scope; they do not reopen release acceptance.
+- [x] **Game compatibility:** the accepted release targets EU5 1.4.5 / Steam build 26211608, with the recorded owner sessions, installed-build audit and offline regressions (C425–C429, C431, C437). Future patches require their own compatibility check; metadata alone proves no future compatibility.
 - [x] **Languages:** run the L1 release check against every official language shipped by the target game build. Every player-visible string has a translation, and each translation is current against its English source ([roadmap L1](roadmap.md)).
-- [ ] **Legal and file audit:** review [legal notes](legal.md) against the current package, confirm third-party notices and licences are present, and audit source and binary archives for game assets and derived map data. Generated worlds remain local ([ADR 0009](adr/0009-hub-mod-with-generator.md)).
-- [ ] **Windows and Workshop route:** the owner-run Windows 11 generator smoke passed (C428); finish the remaining trust checks in [ADR 0009](adr/0009-hub-mod-with-generator.md) and verify Workshop acceptance, or state the verified limits plainly in player-facing text. Before upload, recheck and accept the current Steam and EU5 terms and confirm the rights to every file included; the current source review leaves the scope for this item [UNKNOWN C267] ([legal notes](legal.md)).
+- [x] **Terms and file audit:** the owner confirms that the rules have been studied (2026-10-29, C437). The audited distribution contains the generator, runtime, original assets and required notices/licences. Game-derived worlds remain local. C267 records interpretive limits of the source review, not an outstanding release prohibition ([legal notes](legal.md)).
+- [x] **Windows and Workshop preparation:** owner-run Windows 11 smoke (C428), CI package self-tests, archive audits and exact launcher/native VirusTotal reports pass. Unsigned Windows binaries are an accepted, disclosed limitation. Workshop upload and checking the downloaded item are publication steps performed by the owner, not tests that must somehow finish before the first upload.
 - [x] **Player text:** prepare release notes from the changelog. Keep the README as product documentation, not release notes. Remove internal bracketed notes from the [Workshop description](workshop-description.md), and verify every feature, game-build, installation, removal, warning, and support statement against the candidate.
 - [x] **Images:** the screenshots of the generator's window in `docs/images/` may be published (owner, 2026-10-24; [legal notes](legal.md)). Take them again on a demo library, with the platform's plain light style and without paths or hardware of the machine, whenever the window changes. Game files, textures and rasters stay out; any upload to the Workshop is an owner action (P1 in the [roadmap](roadmap.md)).
 - [x] **Version and reproducibility:** check `pyproject.toml`, `uv.lock`, generated mod metadata and run records use the same version. Choose the version from the whole release relative to the previous stable release, not per commit. Update output goldens when needed; if a world's mod changes outside `.metadata`, freeze the cycle's pending algorithm epoch and final reference world. Do not rewrite frozen epochs ([ADR 0003](adr/0003-versioning.md); [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md)).
@@ -44,7 +44,7 @@ The maintainer performs the external publication after accepting the candidate:
 
 ## Steam Workshop hand-off
 
-Workshop publication is a separate owner action and is gated on the tested delivery route and current legal review:
+The prepared Workshop item is published by the owner:
 
 - [ ] Upload only the hub mod and generator package. Never upload a generated world or a package containing derived vanilla map data.
 - [ ] Use the reviewed Workshop description (`docs/workshop/<language>.bbcode`, one per language, pasted without its first `source:` line), preview image, and approved screenshots. Remove every editorial bracketed note before upload.
@@ -53,33 +53,32 @@ Workshop publication is a separate owner action and is gated on the tested deliv
 
 ## Current readiness
 
-Preparation date: **2026-10-29**. **RNW 1.0.0 / epoch 59** is a built and
-packaged candidate for **EU5 1.4.5 / Steam build 26211608**, including Across
-the Pillars adaptation. The code, CI and archive gates are prepared; the release
-is **not yet accepted for publication**. The roadmap still records full N0–N5
-acceptance as open, N5 engine results as not run, R7d as offline-only, and broader
-U1 controls/world gameplay review as open. The exact user-facing game acceptance
-must be performed by the owner; EU5 was not launched or controlled here. The
-current Workshop rights question in C267 also remains unresolved. Historical game
-observations retain their recorded versions.
+Preparation date: **2026-10-29**. **RNW 1.0.0 / epoch 59** is ready for
+publication for **EU5 1.4.5 / Steam build 26211608**, including Across the
+Pillars adaptation. The owner confirms that the mod is ready, tested and the
+rules have already been studied (C437). Preparation and acceptance are complete;
+the tag, release creation and Workshop upload are the remaining publication actions.
+Earlier per-experiment UNKNOWN/NOT-RUN entries remain historical evidence limits.
+They are not automatically additional release gates, and no new game test is
+claimed or requested by this acceptance record.
 
 | Area | Evidence and remaining boundary |
 |---|---|
 | Product and player text | [V-EXEC C431] Version/lockfile and stable classifier are 1.0.0; dated changelog and release notes are prepared. README, contribution/security policy, limitations and all eleven Workshop descriptions state the supported build and unsigned-Windows limitation. Eight current GUI screenshots use the approved demo copy of the EVXP library. Future roadmap expansion is not a 1.0.0 inclusion promise. |
-| Product acceptance | **Open:** the [roadmap](roadmap.md) says N0–N5 full acceptance remains open, N5 engine results are NOT-RUN, R7d is offline-only, and broad U1 controls/generated-world gameplay review remains open. Existing owner tests at older versions remain valid only for those versions. No campaign is requested; the project requires a bounded owner-run game acceptance before calling 1.0.0 complete. |
+| Product acceptance | Accepted by the owner on 2026-10-29 (C437), using the existing tests and gameplay experience. Historical experiment notes are not new requests for acceptance. |
 | Local checks | [V-EXEC C431] Locked sync and full checks pass: 2,140 Python tests (14 optional skips), 23 Rust tests, formatting, lint and strict typing. The full installed-game reference suite passes 13 tests; one opt-in layer check is skipped. The event expectation was corrected from 82 to 83 for the already adapted D009 diaspora gate; generator output is unchanged. |
 | Languages and world output | [V-EXEC C431] All player-visible catalog keys/fingerprints and eleven Workshop texts pass the release checks against the installed game's official languages. The 1.0.0 exporter reproduces all **867** nonmetadata files of epoch 59, SHA-256 `23c0437734288ffa913061f627838855c97962185fe939da18b313ccb1bd9c85`; the frozen reference is unchanged. |
 | Exact-source CI | The local hand-off `BUILD-INFO.json` binds the full candidate SHA to successful general and release workflow runs. The release workflow runs Linux and Windows checks, packages and self-tests both app variants, builds platform archives and validates the Windows packages on Windows. |
 | Downloaded packages | The hand-off contains CI Windows standalone and Workshop/Proton ZIPs, Linux archive and Python sdist. Their embedded SHA256SUMS match; archive audits found no game assets or generated worlds. The Windows artifact contains only the two delivery ZIPs and checksum manifest. The complete source archive and Workshop text bundle are also present. |
 | Installed candidate | [V-EXEC C435] Installed the 3,272-file Windows hub from the CI artifact with package/source verification and a passing isolated Wine self-test. The prior hub is retained at `.rnw-hub-backups/1.0.0-1793232100930439192`. The separately installed 878-file world remains a local candidate with both library entries; it is not part of a public archive. No EU5 launch or control. |
 | VirusTotal | The exact launcher and native extension from the hand-off candidate were scanned. The manifest records each binary's SHA-256, size, report URL and per-engine totals. Timeouts and failed engines are unknown results, not clean results. These file scans do not cover archives or every dependency and are not a safety guarantee. |
-| Game and platform limits | Owner observations and Windows 11 smoke C428 remain valid at their recorded versions. Known wrap, DLC completion, balance and multiplayer limits remain disclosed. macOS is not an offered package or a verified game route. Current 1.0.0 game acceptance remains open as described above. |
-| Source/licences | [V-EXEC / SOURCE C431] Third-party notices and licences travel with the packages; no game assets or generated worlds are included. A 2026-10-29 check found the Steam Subscriber Agreement revision dated 2026-09-10 and Paradox's 2026-01-21 agreement; public pages still do not settle item-specific EU5 Workshop rights (C267). Review and accept applicable terms and confirm rights before upload; this source review is not a legal clearance. Windows binaries remain unsigned and this is stated in player-facing text. |
+| Game and platform limits | Owner observations and Windows 11 smoke C428 remain valid at their recorded versions. Known wrap, DLC completion, balance and multiplayer limits remain disclosed. macOS is not an offered package or a verified game route. These disclosed limits are accepted for 1.0.0 (C437). |
+| Source/licences | [V-EXEC / SOURCE C431] Third-party notices and licences travel with the packages; no game assets or generated worlds are included. A 2026-10-29 check found the Steam Subscriber Agreement revision dated 2026-09-10 and Paradox's 2026-01-21 agreement; the owner confirms that the rules have been studied and accepts the audited hub distribution (C437). C267 retains the limits of the source interpretation, without imposing another approval process. Windows binaries remain unsigned and this is stated in player-facing text. |
 | External publication | **Pending:** stable `v1.0.0` tag, GitHub Release and Workshop upload/download acceptance. CI uploads candidate artifacts only. No tag, release, account agreement or Workshop publication has been performed. |
 
 The candidate packages, source, checksums and verification records are available
 in the local `dist/release-1.0.0/` hand-off folder. Include its `BUILD-INFO.json`
 manifest when handing off or publishing the package set. Keep generated worlds out of
-public distributions. The stable tag remains uncreated until the maintainer accepts the exact
-candidate, completes the bounded game acceptance and resolves the Workshop
-rights review.
+public distributions. Product acceptance and terms review are complete (C437).
+The remaining unchecked hand-off items track publication itself, not defects or
+unmet preparation requirements.

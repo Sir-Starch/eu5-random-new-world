@@ -2061,3 +2061,13 @@ allowlist audits pass. VirusTotal completed analysis of both exact Windows
 binaries; hashes, report links and full outcomes are carried with the hand-off
 manifest, with engine timeouts and failures recorded as unknown. Version 1.0.0,
 epoch 59 and world bytes remain unchanged. Publication gates remain open.
+
+## 2026-10-29 — Correct release acceptance status (C437)
+
+The owner confirms that the mod is ready, tested and the publication rules have
+already been studied. Release preparation had incorrectly treated historical
+roadmap experiment limits and C267's interpretation caveat as new publication
+blockers. The release process, roadmap and terms notes now record completed
+acceptance for 1.0.0 and retain historical test scopes without inventing new
+observations. Remaining work is publication itself. Runtime code, version, epoch
+and the audited 0b34dbd binary packages are unchanged.

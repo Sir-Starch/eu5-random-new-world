@@ -8,7 +8,7 @@ This is project risk analysis, not legal advice. [SOURCE] The [Paradox User Agre
 
 **Generator delivery.** Decided on 2026-10-21 ([ADR 0009](adr/0009-hub-mod-with-generator.md), replacing ADR 0004 and ADR 0008): one free Workshop item carries the data mod and the generator; the generator builds the world on the player's machine from the player's installation, and the world, which holds derived vanilla files, is never uploaded. No Workshop subscription, upload or publish action has been performed.
 
-**Steam Workshop terms (2026-10-24).** [SOURCE] The [Steam Workshop submission page](https://steamcommunity.com/workshop/workshopsubmitinfo/) says item rules vary by product and submission accepts the Workshop legal agreement. The [Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/), revised 2026-04-20, §§6.A–B and 6.D describes a broad, free licence to Valve for uploaded UGC, lets product-specific terms supplement or change the general Workshop terms, and requires uploaders to have sufficient rights. EU5's [Steam product page](https://store.steampowered.com/app/3450310/Europa_Universalis_V/) links its third-party EULA to the [Paradox User Agreement](https://legal.paradoxplaza.com/eula?locale=en), updated 2026-01-21; its §5 covers mods, scripts and programs, requires free, non-commercial UGC, and grants Paradox broad rights over UGC made available. These are the current source terms we found, not a conclusion that every proposed file is cleared for upload. [UNKNOWN C267] Their interaction for this item and the rights in any file that incorporates game-derived material still need owner/legal review. The conservative rule remains: publish the generator and original assets only; generate derived worlds locally and never upload them.
+**Steam Workshop terms (2026-10-24).** [SOURCE] The [Steam Workshop submission page](https://steamcommunity.com/workshop/workshopsubmitinfo/) says item rules vary by product and submission accepts the Workshop legal agreement. The [Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/), revised 2026-04-20, §§6.A–B and 6.D describes a broad, free licence to Valve for uploaded UGC, lets product-specific terms supplement or change the general Workshop terms, and requires uploaders to have sufficient rights. EU5's [Steam product page](https://store.steampowered.com/app/3450310/Europa_Universalis_V/) links its third-party EULA to the [Paradox User Agreement](https://legal.paradoxplaza.com/eula?locale=en), updated 2026-01-21; its §5 covers mods, scripts and programs, requires free, non-commercial UGC, and grants Paradox broad rights over UGC made available. These are the current source terms we found, not a conclusion that every proposed file is cleared for upload. [UNKNOWN C267] The review records interpretive limits for platform terms and game-derived material. The owner confirms the rules review is complete for the audited generator hub (2026-10-29, C437); this note does not require another review before its publication. The conservative rule remains: publish the generator and original assets only; generate derived worlds locally and never upload them.
 
 **Licence (decided 2026-10-21 at the owner's request).** The project's code and mod files are under the **Mozilla Public License 2.0** (`LICENSE`, Mozilla's text; `license = "MPL-2.0"` in `pyproject.toml` and `native/Cargo.toml`). Original art and prose added later, such as Workshop images, go under CC BY 4.0. A first choice of GPL-3.0-only was replaced the same day after a second opinion the owner relayed, because the owner's interests include the chance that Paradox might one day take the mechanism into the game. Reasons:
 
@@ -27,7 +27,7 @@ Limits: copyright protects the code, not the idea of a generated New World; anyo
 2026-01-21), [Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/)
 (§6), and [Mozilla’s MPL FAQ](https://www.mozilla.org/en-US/MPL/2.0/FAQ/)
 (Q7–Q8), accessed 2026-10-28. The generator/runtime-only distribution boundary
-and the item-specific rights uncertainty of C267 remain. Corrected the README’s
+remains. C267 preserves interpretive uncertainty; the owner has since confirmed the rules review and release acceptance (C437). Corrected the README’s
 blanket ban on generator re-uploads to describe the existing MPL redistribution
 conditions; no licence change is made. [INFERRED from MPL-2.0 and the FAQ] MPL
 rights in our code do not clear the game-derived world files or override platform
@@ -45,8 +45,12 @@ links to the [Paradox User Agreement](https://legal.paradoxplaza.com/eula?locale
 which still states its 2026-01-21 update; §5 covers UGC and limits the creator's
 rights to original contributions. These public pages do not identify any EU5
 Workshop app-specific terms or settle all rights questions for this proposed
-item. C267 therefore remains unresolved. No agreement was accepted and no
-Workshop action was taken.
+item. That absence does not establish a prohibition on the audited hub. The owner
+confirms on 2026-10-29 that the rules have already been studied and the mod is
+ready for publication (C437). C267 remains a record of interpretive limits, not
+an outstanding release gate. This acceptance covers the generator/runtime and
+original assets; game-derived worlds remain excluded. No new legal guarantee,
+account agreement acceptance or completed Workshop upload is claimed here.
 
 **Public repository (2026-10-24).** Before the repository was first published on GitHub (`Sir-Starch/eu5-random-new-world`), every revision of its history was checked for game files and personal data. No game asset, derived raster, log, save or screenshot had ever been committed. Local machine details (installation paths, hardware, operating system) were replaced in all revisions, and the commits carry the maintainer's public address. The rule is kept by tests: `packaging/allowlist.py` rejects any path of the game or of a generated world, both in the repository and in every release archive. The README states that the project is not affiliated with Paradox Interactive and that *Europa Universalis* is Paradox's trademark.
 
