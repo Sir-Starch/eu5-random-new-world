@@ -39,6 +39,9 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   requested by the owner. Design their representation with hydrology and sea routes.
 - **Societies and dynamic content:** broaden state structures, relationships and
   context-sensitive stories through the existing R6/R7 and N0–N5 systems.
+- **Optional historical societies:** explore an opt-in setting for historically
+  inspired peoples and settlements on generated maps, including Norse/Vinland
+  settlements (Reddit community suggestion, added 2026-10-29).
 - **Tauri interface:** design a migration preserving generation, library, atlas,
   localization, accessibility and cancellation workflows. Qt remains current
   until an implemented replacement is accepted.
