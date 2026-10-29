@@ -2,7 +2,7 @@
 
 **Status:** Qt window choice implemented and current in 1.0.0. Windows delivery is governed by [ADR 0009](0009-hub-mod-with-generator.md), replacing this record's earlier packaging scope. Native/development builds still use PyInstaller. The earlier owner-direction history is in [the archived roadmap](../archive/roadmap-through-1.0.md).
 
-The existing application still uses Qt. On 2026-10-28 the owner requested a future transition to Tauri; its scope and integration remain to be designed ([roadmap](../roadmap.md)). This historical decision is not yet replaced by an implemented Tauri architecture.
+The existing application still uses Qt. On 2026-10-28 the owner requested a transition to Tauri; [ADR 0011](0011-tauri-window.md) records the implemented candidate. This decision stays current until the owner accepts that window and its delivery.
 
 ## Context
 

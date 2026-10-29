@@ -43,6 +43,12 @@ libraries, licence text and source information. PyInstaller's exception applies
 to its development/native packaging route. Rust dependency licences are recorded
 in the wheel SBOM. Do not relicense third-party or Paradox content as project work.
 
+The candidate Tauri window (ADR 0011, not yet distributed) adds Tauri 2 and its plugins
+(MIT/Apache-2.0), Svelte (MIT) and bundled Inter, Fraunces and JetBrains Mono fonts (SIL OFL
+1.1). Before it ships, its package must carry these notices, the `Cargo.lock`/`package-lock.json`
+dependency licences and the OFL text; the platform web views (WebView2, WebKitGTK) are system
+components, not redistributed by the window.
+
 ## Reviewed platform terms
 
 The reviewed sources are the [Paradox User Agreement](https://legal.paradoxplaza.com/eula?locale=en)

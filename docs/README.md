@@ -36,7 +36,7 @@ formats and constants. Historical per-feature unknowns are not new release gates
 | [Content catalogue](content-catalog.md) | Player stories, choices, formables and exceptional places |
 | [Generated content reference](content-reference.md) | Exact definitions; maintained by `build_content_reference.py` |
 | [Localization](localization.md) | Official-language discovery, catalogues, grammar and translation maintenance |
-| [Generator window](gui-design.md) | Current Qt interface design and interaction rules |
+| [Generator window](gui-design.md) | Qt interface rules and the candidate Tauri window's design |
 | [Workshop description](workshop-description.md) | Reviewed BBCode text in each official language |
 
 ## Decision records
@@ -57,6 +57,7 @@ queue of work. The release-level version policy is ADR 0003.
 | [0008](adr/0008-workshop-worlds.md) | Superseded finite-world delivery proposal; final decision is 0009 |
 | [0009](adr/0009-hub-mod-with-generator.md) | Current Workshop generator hub and independent app delivery |
 | [0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) | Implemented layers, world files, reproducibility and installed-world recovery |
+| [0011](adr/0011-tauri-window.md) | Candidate Tauri window over a Python bridge; Qt stays current until accepted |
 
 ## Research and evidence
 

@@ -58,10 +58,10 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   generated states and use them to inform starting relationships and subsequent
   events, goals or mission-style content through the existing society/story systems
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)).
-- **Generator interface and settings:** fully rework the interface and expose
-  more generation settings as part of the planned Tauri migration, preserving
-  generation, library, atlas, localization, accessibility and cancellation
-  workflows. Qt remains current until an implemented replacement is accepted.
+- **Generator interface and settings:** the Tauri window and its rebuilt maps are
+  implemented as a candidate ([ADR 0011](adr/0011-tauri-window.md)); Qt remains current
+  until the owner accepts it. Remaining: Windows/WebView2 (including Proton) delivery
+  in the hub, and exposing more generation settings.
 - **Resource distribution sliders:** add individual frequency controls for
   ordinary RGOs alongside the existing precious-resource control. Keep resource
   selection tied to climate and terrain, with vanilla weights as the defaults.

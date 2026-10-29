@@ -230,8 +230,11 @@ class Controller:
         self.games = discovery.find_games(self.environment, self.program_folder)
         chosen = Path(self.preferences.game_dir) if self.preferences.game_dir else None
         if chosen is not None and discovery.is_game(chosen):
+            # A folder the player chose that discovery found too keeps what discovery knows of
+            # it (its build); one it did not find is taken as it is.
+            known = next((item for item in self.games if item.directory == chosen), None)
             self.games = [
-                GameInstall(chosen, None, ""),
+                known or GameInstall(chosen, None, ""),
                 *(item for item in self.games if item.directory != chosen),
             ]
         self.profiles = discovery.find_profiles(self.environment, self.games)

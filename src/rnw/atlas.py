@@ -9,10 +9,11 @@ No game raster or text is in it, so it can travel with a world file and be opene
 is not (``rnw.record``, H).
 
 The pictures are drawn from the atlas, not stored: ``render`` paints one layer (land, countries,
-cultures, religions, resources, development) from palettes by integer arithmetic, so the same atlas
-gives the same bytes on every machine; ``describe`` answers what lies at a pixel; ``find`` locates
-a country, culture, religion, material or place by name. This module reads no game file and
-imports no game reader.
+cultures, religions, resources, development, population, climate, terrain, areas) from palettes by
+integer arithmetic, so the same atlas gives the same bytes on every machine; ``lens`` gives a
+layer's colour, legend entry and border value per location, for a viewer that paints the box
+itself; ``describe`` answers what lies at a pixel; ``find`` locates a country, culture, religion,
+material or place by name. This module reads no game file and imports no game reader.
 """
 
 # NumPy stubs type array arithmetic and indexing as Any.
@@ -23,6 +24,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, cast
 
@@ -50,7 +52,15 @@ LAYERS: Final[tuple[str, ...]] = (
     "religions",
     "resources",
     "development",
+    "population",
+    "climate",
+    "terrain",
+    "areas",
 )
+# Layers whose colours run along a ramp rather than naming one thing per colour.
+RAMPS: Final[frozenset[str]] = frozenset({"development", "population"})
+# Layers that draw lines where their value changes between two land locations.
+BORDERED: Final[frozenset[str]] = frozenset({"countries", "cultures", "religions", "areas"})
 KINDS: Final[tuple[str, ...]] = ("land", "wasteland", "sea", "lake")
 OUTSIDE: Final[tuple[int, int, int]] = (14, 20, 30)
 SEA: Final[tuple[int, int, int]] = (30, 58, 110)
@@ -86,6 +96,35 @@ RAMP: Final[tuple[tuple[int, int, int], ...]] = (
     (230, 120, 70),
     (250, 220, 110),
 )
+# Population: the ramp from the fewest people to the most, by the square root of the count.
+POPULATION_RAMP: Final[tuple[tuple[int, int, int], ...]] = (
+    (32, 44, 72),
+    (36, 92, 120),
+    (52, 148, 132),
+    (150, 196, 98),
+    (246, 230, 120),
+)
+CLIMATE_COLOURS: Final[dict[str, tuple[int, int, int]]] = {
+    "arctic": (226, 236, 246),
+    "subpolar": (168, 196, 214),
+    "cold_arid": (176, 160, 136),
+    "cold_semi_arid": (192, 182, 140),
+    "continental": (110, 162, 120),
+    "oceanic": (84, 170, 160),
+    "mediterranean": (196, 176, 84),
+    "hot_semi_arid": (214, 158, 92),
+    "arid": (228, 196, 128),
+    "tropical": (52, 150, 82),
+}
+TERRAIN_COLOURS: Final[dict[str, tuple[int, int, int]]] = {
+    "flatland": (164, 196, 120),
+    "plateau": (200, 178, 120),
+    "hills": (164, 142, 92),
+    "mountains": (128, 104, 84),
+    "wetlands": (88, 150, 140),
+    "hills_wasteland": (140, 132, 118),
+    "mountain_wasteland": (108, 102, 98),
+}
 MAX_PIXELS: Final[int] = 64_000_000
 MAX_CELLS: Final[int] = 1 << 24
 SHADES: Final[tuple[tuple[str, int], ...]] = (
@@ -221,6 +260,20 @@ class Words:
 
 
 ENGLISH: Final[Words] = Words()
+# Layers that colour one vocabulary of the atlas, and the field each reads.
+VOCABULARY_LAYERS: Final[dict[str, str]] = {
+    "cultures": "culture",
+    "religions": "religion",
+    "resources": "material",
+    "land": "vegetation",
+    "climate": "climate",
+    "terrain": "topography",
+}
+PALETTES: Final[dict[str, dict[str, tuple[int, int, int]]]] = {
+    "land": VEGETATION_COLOURS,
+    "climate": CLIMATE_COLOURS,
+    "terrain": TERRAIN_COLOURS,
+}
 
 
 def colour_of(key: str) -> tuple[int, int, int]:
@@ -249,35 +302,51 @@ def _hsv(hue: int, saturation: int, value: int) -> tuple[int, int, int]:
     )[sector]
 
 
-def ramp(share: int) -> tuple[int, int, int]:
-    """The development ramp at ``share`` of 0 to 1000."""
-    span = len(RAMP) - 1
+def ramp(share: int, colours: tuple[tuple[int, int, int], ...] = RAMP) -> tuple[int, int, int]:
+    """The ramp ``colours`` (development's by default) at ``share`` of 0 to 1000."""
+    span = len(colours) - 1
     scaled = max(0, min(1000, share)) * span
     low, rest = divmod(scaled, 1000)
     if low >= span:
-        return RAMP[span]
-    first, second = RAMP[low], RAMP[low + 1]
+        return colours[span]
+    first, second = colours[low], colours[low + 1]
     return cast(
         "tuple[int, int, int]",
         tuple((a * (1000 - rest) + b * rest) // 1000 for a, b in zip(first, second, strict=True)),
     )
 
 
-def _table(
+@dataclass(frozen=True, slots=True, eq=False)
+class Lens:
+    """One layer as a viewer paints it: per location a colour, the legend entry it belongs to
+    (-1 on a ramp) and the value whose change draws a border; the legend, largest first."""
+
+    layer: str
+    colours: NDArray[np.uint8]
+    classes: NDArray[np.int32]
+    values: NDArray[np.int32]
+    legend: tuple[tuple[str, tuple[int, int, int], int], ...]
+    ramp: tuple[tuple[int, int, int], ...]
+
+
+def _paint(
     atlas: Atlas, layer: str, words: Words
-) -> tuple[NDArray[np.uint8], list[tuple[str, tuple[int, int, int], int]]]:
-    """Colour of every location for ``layer`` and the legend: label, colour, locations."""
+) -> tuple[NDArray[np.uint8], NDArray[np.int32], list[tuple[str, tuple[int, int, int], int]]]:
+    """Colour and legend entry of every location for ``layer``, and the legend entries in the
+    order they were first painted: label, colour, locations."""
     count = atlas.cells
     colours = np.zeros((count, 3), dtype=np.uint8)
+    classes = np.full(count, -1, dtype=np.int32)
     kinds = atlas.kinds
-    legend: dict[str, tuple[tuple[int, int, int], int]] = {}
+    legend: dict[str, tuple[int, tuple[int, int, int], int]] = {}
 
     def paint(cell_mask: NDArray[np.bool_], colour: tuple[int, int, int], label: str) -> None:
         colours[cell_mask] = colour
         total = int(np.count_nonzero(cell_mask))
         if total:
-            old = legend.get(label, (colour, 0))
-            legend[label] = (colour, old[1] + total)
+            number, _, old = legend.get(label, (len(legend), colour, 0))
+            legend[label] = (number, colour, old + total)
+            classes[cell_mask] = number
 
     paint(kinds == KINDS.index("sea"), SEA, words.label("sea"))
     paint(kinds == KINDS.index("lake"), LAKE, words.label("lake"))
@@ -288,31 +357,67 @@ def _table(
         for number, country in enumerate(atlas.countries):
             name = words.name(country.name) if country.name else country.tag
             paint(land & (atlas.owner == number), country.color, name)
-    elif layer in {"cultures", "religions", "resources", "land"}:
-        field = {
-            "cultures": "culture",
-            "religions": "religion",
-            "resources": "material",
-            "land": "vegetation",
-        }[layer]
+    elif layer == "areas":
+        areas, names = _area_index(atlas)
+        for number, name in enumerate(names):
+            label = words.name(name) if name else words.label("none")
+            paint(land & (areas == number), colour_of(english(name) or "-"), label)
+    elif layer in VOCABULARY_LAYERS:
+        field = VOCABULARY_LAYERS[layer]
+        palette = PALETTES.get(layer, {})
         values = cast("NDArray[np.int32]", getattr(atlas, field))
         paint(land & (values < 0), UNCLAIMED, words.label("none"))
         for index, key in enumerate(atlas.vocabulary[field]):
             colour = (250, 200, 40) if layer == "resources" and key in PRECIOUS else colour_of(key)
-            if layer == "land":
-                colour = VEGETATION_COLOURS.get(key, colour)
+            colour = palette.get(key, colour)
             paint(land & (values == index), colour, words.key(key))
         if layer == "land":
             _tint(colours, atlas, land)
             _shade(colours, atlas, land)
     else:
-        top = int(atlas.complexity[land].max()) if land.any() else 1
-        for cell in np.flatnonzero(land):
-            colours[cell] = ramp(int(atlas.complexity[cell]) * 1000 // max(1, top))
-        paint(land & (atlas.complexity <= 0), UNCLAIMED, words.label("uninhabited"))
+        source, ramp_colours = (
+            (atlas.complexity, RAMP)
+            if layer == "development"
+            else (atlas.population, POPULATION_RAMP)
+        )
+        inhabited = land & (source > 0) if layer == "population" else land
+        top = int(source[inhabited].max()) if inhabited.any() else 1
+        root = math.isqrt(max(1, top))
+        for cell in np.flatnonzero(inhabited):
+            value = int(source[cell])
+            share = (
+                value * 1000 // max(1, top)
+                if layer == "development"
+                else math.isqrt(value) * 1000 // root
+            )
+            colours[cell] = ramp(share, ramp_colours)
+        paint(land & (source <= 0), UNCLAIMED, words.label("uninhabited"))
         for step, label in STEPS:
-            legend[words.label(label)] = (ramp(step), 0)
-    return colours, [(label, colour, total) for label, (colour, total) in legend.items()]
+            _ = legend.setdefault(words.label(label), (len(legend), ramp(step, ramp_colours), 0))
+    entries = sorted(legend.items(), key=lambda item: item[1][0])
+    return colours, classes, [(label, colour, total) for label, (_, colour, total) in entries]
+
+
+def _table(
+    atlas: Atlas, layer: str, words: Words
+) -> tuple[NDArray[np.uint8], list[tuple[str, tuple[int, int, int], int]]]:
+    """Colour of every location for ``layer`` and the legend: label, colour, locations."""
+    colours, _, entries = _paint(atlas, layer, words)
+    return colours, entries
+
+
+def _area_index(atlas: Atlas) -> tuple[NDArray[np.int32], list[Name]]:
+    """Each location's area as a number, and the areas' names in order of first appearance."""
+    numbers: dict[str, int] = {}
+    names: list[Name] = []
+    areas = np.empty(atlas.cells, dtype=np.int32)
+    for cell, name in enumerate(atlas.areas):
+        key = json.dumps(_write_name(name))
+        if key not in numbers:
+            numbers[key] = len(names)
+            names.append(name)
+        areas[cell] = numbers[key]
+    return areas, names
 
 
 def _tint(colours: NDArray[np.uint8], atlas: Atlas, land: NDArray[np.bool_]) -> None:
@@ -357,12 +462,33 @@ def legend(
     atlas: Atlas, layer: str, words: Words = ENGLISH
 ) -> list[tuple[str, tuple[int, int, int], int]]:
     """The legend of a layer: what each colour is and how many locations have it, largest first."""
+    return list(lens(atlas, layer, words).legend)
+
+
+def lens(atlas: Atlas, layer: str, words: Words = ENGLISH) -> Lens:
+    """``layer`` as a viewer paints it: colours, legend entries (as ``legend`` orders them),
+    border values and, for a ramp, its colours from lowest to highest."""
     _check_layer(layer)
-    _, entries = _table(atlas, layer, words)
+    colours, classes, entries = _paint(atlas, layer, words)
     steps = {words.label(label) for _, label in STEPS}
-    fixed = [entry for entry in entries if entry[0] in steps]
-    rest = sorted((entry for entry in entries if entry not in fixed), key=lambda e: (-e[2], e[0]))
-    return [*rest, *fixed]
+    fixed = [number for number, entry in enumerate(entries) if entry[0] in steps]
+    rest = sorted(
+        (number for number in range(len(entries)) if number not in fixed),
+        key=lambda number: (-entries[number][2], entries[number][0]),
+    )
+    order = [*rest, *fixed]
+    position = np.full(len(entries) + 1, -1, dtype=np.int32)
+    position[np.array(order, dtype=np.int64)] = np.arange(len(order), dtype=np.int32)
+    remapped = np.where(classes >= 0, position[classes], -1).astype(np.int32)
+    ramp_colours = (RAMP if layer == "development" else POPULATION_RAMP) if layer in RAMPS else ()
+    return Lens(
+        layer=layer,
+        colours=colours,
+        classes=remapped,
+        values=_value_map(atlas, layer),
+        legend=tuple(entries[number] for number in order),
+        ramp=ramp_colours,
+    )
 
 
 def _check_layer(layer: str) -> None:
@@ -377,6 +503,10 @@ def _value_map(atlas: Atlas, layer: str) -> NDArray[np.int32]:
         return atlas.owner
     if layer in {"cultures", "religions"}:
         return getattr(atlas, "culture" if layer == "cultures" else "religion")
+    if layer == "areas":
+        return _area_index(atlas)[0]
+    if layer in VOCABULARY_LAYERS and layer != "land":
+        return cast("NDArray[np.int32]", getattr(atlas, VOCABULARY_LAYERS[layer]))
     return np.arange(atlas.cells, dtype=np.int32)
 
 
@@ -394,7 +524,7 @@ def render(
     background = np.array(OUTSIDE, dtype=np.uint8)
     table = np.concatenate([background[np.newaxis], colours])
     picture = table[labels]
-    if borders and layer in {"countries", "cultures", "religions"}:
+    if borders and layer in BORDERED:
         values = np.concatenate([np.array([-2], dtype=np.int32), _value_map(atlas, layer)])[labels]
         land = np.concatenate([np.array([False]), atlas.kinds == KINDS.index("land")])[labels]
         edge = np.zeros(labels.shape, dtype=bool)

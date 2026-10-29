@@ -17,3 +17,8 @@ experiments/*/output/
 # Local notes and backups that never belong in the repository.
 .debug-journal.md
 *.bundle
+# The Tauri window's dependencies and builds.
+desktop/node_modules/
+desktop/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/

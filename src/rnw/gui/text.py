@@ -644,6 +644,87 @@ STRINGS: Final[dict[str, str]] = {
     # -- the status bar --
     "resources": "{threads} threads, {free} GiB free memory",
     "resources_unknown": "{threads} threads",
+    # -- the new lenses of the maps --
+    "layer.population": "Population",
+    "layer.population.tip": "How many people live in each location: dark is few, bright is many.",
+    "layer.climate": "Climate",
+    "layer.climate.tip": "The climate of each location, from arctic to tropical.",
+    "layer.terrain": "Terrain",
+    "layer.terrain.tip": "Flatland, hills, plateaus, mountains and wetlands.",
+    "layer.areas": "Areas",
+    "layer.areas.tip": "The areas the locations are grouped into; lines where one ends.",
+    "found.area": "Area",
+    "fact.area": "Area",
+    "fact.terrain": "Land",
+    # -- the Tauri window: its library --
+    "library.filter": "Filter worlds",
+    "library.all": "All",
+    "library.in_game": "In the game",
+    "library.empty": "No worlds yet. Make one, or open a world file.",
+    "library.no_match": "No world matches.",
+    "library.clear": "Clear",
+    "library.tick": "Select for several",
+    "library.no_game": "EU5 not found",
+    "library.no_profile": "No EU5 profile",
+    "copied": "Copied.",
+    "shortcuts": "Keyboard shortcuts",
+    "shortcut.new": "New world",
+    "shortcut.open": "Open world file",
+    "shortcut.generate": "Generate",
+    "shortcut.settings": "Settings",
+    "shortcut.paste": "Paste a world code anywhere",
+    "shortcut.library": "Move through the library",
+    "shortcut.lenses": "Map lenses",
+    "shortcut.zoom": "Zoom in, out, fit the map",
+    "shortcut.overlays": "Names and country borders on the map",
+    "shortcut.clear": "Let go of a selection on the map",
+    "settings.theme": "Appearance",
+    "settings.theme.system": "System",
+    "settings.theme.dark": "Dark",
+    "settings.theme.light": "Light",
+    # -- the Tauri window: a new world --
+    "forge.eyebrow": "Forge",
+    "forge.drawn": "Drawn this time: {type}. A new seed draws again.",
+    "dock.budget": "Locations",
+    "dock.forging": "Making the world…",
+    "dock.open_world": "Open the world",
+    "candidates.use": "Use this continent",
+    # -- the Tauri window: a world --
+    "stat.countries": "countries",
+    "stat.split": "{states} states · {tribes} tribes",
+    "stat.cultures": "cultures",
+    "stat.religions": "religions",
+    "stat.land": "land locations",
+    "stat.locations": "{count} with seas and lakes",
+    "world.danger": "Danger zone",
+    "world.terra_incognita": "Terra incognita",
+    "world.versions_intro": (
+        "A version keeps this continent and makes one part of it again. Versions stand under "
+        "their world in the library."
+    ),
+    "world.like_tip": "Open a new world with this world's type and settings and a fresh seed.",
+    "world.undo_tip": "Go back to the version this one was made from.",
+    "compare.linked": "Move together",
+    # -- the Tauri window: the maps --
+    "map.loading": "Unrolling the atlas…",
+    "map.political": "Country borders",
+    "map.labels": "Names",
+    "map.locations": "Location borders when zoomed in",
+    "map.copy_view": "Copy this view as a picture",
+    "map.copied": "The view is in the clipboard.",
+    "map.focus": "Map only",
+    "map.fit": "Fit the map",
+    "map.zoom_in": "Zoom in",
+    "map.zoom_out": "Zoom out",
+    "map.minimap": "Overview: click to move there",
+    "map.clear": "Clear",
+    "map.no_results": "Nothing found.",
+    "map.showing": "Showing {name}",
+    "map.legend_filter": "Filter the legend",
+    "map.legend_hint": (
+        "Click an entry to show only it, double-click to go there. Click a location to keep "
+        "its card."
+    ),
 }
 
 
@@ -727,6 +808,11 @@ def language() -> str:
 @cache
 def _table(language: str) -> dict[str, str]:
     return translations.translate(translations.WINDOW, language, sources())
+
+
+def table() -> dict[str, str]:
+    """Every string of the window in its language, by key (for a window drawn elsewhere)."""
+    return dict(_table(_language[0]))
 
 
 def text(key: str, **values: object) -> str:

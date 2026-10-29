@@ -1,0 +1,32 @@
+[package]
+name = "random-new-world"
+version = "1.0.0"
+description = "The Random New World generator's window (ADR 0011)"
+authors = ["Sir Starch <starch@sirstarch.com>"]
+license = "MPL-2.0"
+edition = "2021"
+rust-version = "1.85"
+publish = false
+
+[[bin]]
+name = "random-new-world"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["image-png"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["sync", "time"] }
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

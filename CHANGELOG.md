@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add a candidate Tauri window (ADR 0011) beside the Qt window: one look on every
+  system, a searchable library with multi-select, a generation dock with the
+  location budget, stage timeline and queue, and world pages with stats, versions,
+  sharing and notes. Language and appearance change without a restart.
+- Rebuild the map viewer: WebGL lenses with sharp borders at any zoom, place
+  names, minimap, hover and pinned location cards, legend isolation and search
+  that zoom to their match, area search, linked comparison and copying the view.
+- Add population, climate, terrain and areas lenses to the atlas, the Qt maps,
+  PNG export and the CLI; the existing lenses draw the same bytes.
+- Keep a chosen game folder's discovered build instead of showing it as unknown.
 - Keep the New world library action visible when the platform has no matching icon theme.
 - Replace the hub avatar with the owner's in-game map and generator screenshot design.
 

@@ -1870,3 +1870,283 @@ text = '''この世界のロケーション数は{count}で、安全上限の{li
 ["generation_river_error"]
 source = "7983d60076c0a425"
 text = '''この世界の有効な河川網を描画できませんでした。技術的な詳細: {detail}'''
+
+["layer.population"]
+source = "5b828861aec15d60"
+text = '''人口'''
+
+["layer.population.tip"]
+source = "4249dc47babb25f8"
+text = '''各地点に住む人の数。暗いほど少なく、明るいほど多い。'''
+
+["layer.climate"]
+source = "b56901697f36e278"
+text = '''気候'''
+
+["layer.climate.tip"]
+source = "4ab9b6c4836b8d1e"
+text = '''各地点の気候。北極から熱帯まで。'''
+
+["layer.terrain"]
+source = "5dd6e0396c9df27d"
+text = '''地形'''
+
+["layer.terrain.tip"]
+source = "c718bc88486586ab"
+text = '''平地、丘陵、高原、山岳、湿地。'''
+
+["layer.areas"]
+source = "2d36715a6cc6b6dd"
+text = '''エリア'''
+
+["layer.areas.tip"]
+source = "496b18aa8214e795"
+text = '''地点がまとめられたエリア。境目に線が引かれる。'''
+
+["found.area"]
+source = "024dc204d7ba77a8"
+text = '''エリア'''
+
+["fact.area"]
+source = "024dc204d7ba77a8"
+text = '''エリア'''
+
+["fact.terrain"]
+source = "b6baff9358ddd8f7"
+text = '''土地'''
+
+["library.filter"]
+source = "9405de3c80fc31a5"
+text = '''ワールドを絞り込む'''
+
+["library.all"]
+source = "a52ace420f2175d0"
+text = '''すべて'''
+
+["library.in_game"]
+source = "63734772475c67a9"
+text = '''ゲーム内'''
+
+["library.empty"]
+source = "066e3f9c76822999"
+text = '''まだワールドがありません。作成するか、ワールドファイルを開いてください。'''
+
+["library.no_match"]
+source = "abdf411206f82768"
+text = '''一致するワールドはありません。'''
+
+["library.clear"]
+source = "83b12c2216efb4fd"
+text = '''解除'''
+
+["library.tick"]
+source = "da9f0ca533b851cf"
+text = '''複数選択'''
+
+["library.no_game"]
+source = "166fde6d55146ed4"
+text = '''EU5が見つかりません'''
+
+["library.no_profile"]
+source = "9d9affb980ff6790"
+text = '''EU5のプロファイルなし'''
+
+["copied"]
+source = "d249818eccabb507"
+text = '''コピーしました。'''
+
+["shortcuts"]
+source = "e9bef0b0f3c25e6e"
+text = '''キーボードショートカット'''
+
+["shortcut.new"]
+source = "3e28180bafaa6823"
+text = '''新しいワールド'''
+
+["shortcut.open"]
+source = "d7715ffe2cb8a39b"
+text = '''ワールドファイルを開く'''
+
+["shortcut.generate"]
+source = "49e49bb4401e67bd"
+text = '''作成'''
+
+["shortcut.settings"]
+source = "74a883a037bc227f"
+text = '''設定'''
+
+["shortcut.paste"]
+source = "a0cbac928b377e75"
+text = '''どこでもワールドコードを貼り付け'''
+
+["shortcut.library"]
+source = "385e50bf636176ea"
+text = '''ライブラリ内を移動'''
+
+["shortcut.lenses"]
+source = "7f6a5f50bb078b85"
+text = '''地図のレンズ'''
+
+["shortcut.zoom"]
+source = "124bf74cb076cc32"
+text = '''地図の拡大、縮小、全体表示'''
+
+["shortcut.overlays"]
+source = "d7e93e32dd9de6fb"
+text = '''地図上の名前と国境'''
+
+["shortcut.clear"]
+source = "4788a6fce18c48bd"
+text = '''地図上の選択を解除'''
+
+["settings.theme"]
+source = "3907fa7f80722a6f"
+text = '''外観'''
+
+["settings.theme.system"]
+source = "6725e7bbcd28f3a8"
+text = '''システム'''
+
+["settings.theme.dark"]
+source = "60acc53f13a5d1bf"
+text = '''ダーク'''
+
+["settings.theme.light"]
+source = "dbcd5e7bb7a0f538"
+text = '''ライト'''
+
+["forge.eyebrow"]
+source = "8899ecd1626db63d"
+text = '''創造'''
+
+["forge.drawn"]
+source = "8e6fcbccb2f17d49"
+text = '''今回の抽選: {type}。新しいシードで再抽選します。'''
+
+["dock.budget"]
+source = "95c61170318a2851"
+text = '''地点'''
+
+["dock.forging"]
+source = "99756b11702a3e59"
+text = '''ワールドを作成中…'''
+
+["dock.open_world"]
+source = "a8243d8157edb905"
+text = '''ワールドを開く'''
+
+["candidates.use"]
+source = "aae71e996aabed80"
+text = '''この大陸を使う'''
+
+["stat.countries"]
+source = "e45d4cbade71ec65"
+text = '''国'''
+
+["stat.split"]
+source = "ba292b3ee344e071"
+text = '''国家 {states} · 部族 {tribes}'''
+
+["stat.cultures"]
+source = "3b8eabb29418aa50"
+text = '''文化'''
+
+["stat.religions"]
+source = "7d60abb4e9019361"
+text = '''宗教'''
+
+["stat.land"]
+source = "34d38cc16d524dd7"
+text = '''陸上の地点'''
+
+["stat.locations"]
+source = "2b72d3517e051498"
+text = '''海と湖を含めて {count}'''
+
+["world.danger"]
+source = "fd8b8dae44216610"
+text = '''危険な操作'''
+
+["world.terra_incognita"]
+source = "c151b299877b72b0"
+text = '''未知の大地'''
+
+["world.versions_intro"]
+source = "659fa904ea0ef96e"
+text = '''バージョンはこの大陸をそのまま残し、一部だけを作り直します。バージョンはライブラリで元のワールドの下に並びます。'''
+
+["world.like_tip"]
+source = "8e527b1ee5bf78cb"
+text = '''このワールドのタイプと設定で、新しいシードのワールドを開きます。'''
+
+["world.undo_tip"]
+source = "c210c5be0859b53b"
+text = '''このバージョンの元になったバージョンに戻ります。'''
+
+["compare.linked"]
+source = "ce0303d2209dd81a"
+text = '''連動して動かす'''
+
+["map.loading"]
+source = "a1c8685cea230a2c"
+text = '''地図帳を広げています…'''
+
+["map.political"]
+source = "95f628f9473e39cd"
+text = '''国境'''
+
+["map.labels"]
+source = "c3b29e6eef2cc49b"
+text = '''名前'''
+
+["map.locations"]
+source = "c07bab24e0e4b905"
+text = '''拡大時に地点の境界'''
+
+["map.copy_view"]
+source = "ca4d11c8805190b1"
+text = '''この表示を画像としてコピー'''
+
+["map.copied"]
+source = "994104d88d448af5"
+text = '''表示をクリップボードにコピーしました。'''
+
+["map.focus"]
+source = "ad6b25be8a5b09fb"
+text = '''地図のみ'''
+
+["map.fit"]
+source = "cca7aec3cf35006e"
+text = '''地図を全体表示'''
+
+["map.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''拡大'''
+
+["map.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''縮小'''
+
+["map.minimap"]
+source = "abc938e8f3734fc6"
+text = '''概観: クリックでその場所へ移動'''
+
+["map.clear"]
+source = "83b12c2216efb4fd"
+text = '''解除'''
+
+["map.no_results"]
+source = "eb1fa11281bc28f6"
+text = '''見つかりません。'''
+
+["map.showing"]
+source = "2a5f7a682264ac8f"
+text = '''{name} を表示中'''
+
+["map.legend_filter"]
+source = "085abe7dabfb0721"
+text = '''凡例を絞り込む'''
+
+["map.legend_hint"]
+source = "e7c0b115f7a8cf13"
+text = '''項目をクリックするとそれだけを表示し、ダブルクリックでその場所へ移動します。地点をクリックするとカードを固定します。'''

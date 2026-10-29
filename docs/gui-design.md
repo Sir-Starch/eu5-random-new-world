@@ -5,7 +5,7 @@
 This documents the existing Qt Widgets interface, extracted from `gui/window.py`,
 `gui/maps.py` and `gui/preview.py`. ADR 0007 chooses the platform's controls and theme.
 The owner's 2026-10-22 screenshots authorize reorganizing the interface around generation,
-world management and application paths. Keep Qt Widgets and platform typography for the current implementation. The owner has requested a future Tauri interface; its design and migration are planned in the [roadmap](roadmap.md), and do not describe the current window.
+world management and application paths. Keep Qt Widgets and platform typography for the current implementation. The candidate Tauri window ([ADR 0011](adr/0011-tauri-window.md)) is described in §9; §1–§8 describe the Qt window, which stays current until the owner accepts the replacement.
 
 ## 1. Structure
 
@@ -80,3 +80,36 @@ Use native window chrome, frames and separators. No web styling or additional sh
 Keep labels and tooltips meaningful, preserve native keyboard navigation, and avoid
 colour as the only status signal. Exercise empty, busy, failed and completed states in
 offscreen Qt tests. Capture the desktop window in light and dark themes for layout review.
+
+## 9. The Tauri window (candidate)
+
+**Look.** One design on every system: dark ink with brass accents, or parchment in light mode
+(System/Dark/Light in Settings, kept per machine). Inter for text, Fraunces for titles and map
+names, JetBrains Mono for codes; all bundled. Tokens live in `desktop/src/app.css`; components
+use them rather than literal colours. Motion is short and disabled by `prefers-reduced-motion`.
+
+**Structure.** A library sidebar (filter, All/In the game/Favourite, thumbnails, versions drawn
+as branches under their world, Ctrl/Shift/checkbox multi-select with a batch bar, a global task
+line and the game/profile chip) beside one page. The new-world page reads top to bottom (type
+cards, world basics, seed and code, land sources, Customize, where to save) with a fixed dock:
+location budget meter, summary, Generate, progress with ETA and stage timeline, outcome and
+retry, queue. A world page has a picture banner, inline rename and favourite, the add/remove
+action, and tabs: World (stats, next step, details and check, visibility, delete), Maps,
+Create a version, Share and export, Notes. Messages that the Qt window wrote under a page are
+toasts; questions are in-window dialogs.
+
+**Maps.** Ten lenses (keys 1–0), country borders, names and location borders as overlays,
+search over countries, cultures, religions, resources, areas and places, a legend that previews
+on hover, isolates on click and zooms on double-click, a hover card and a pinned location card
+whose values isolate their country, culture, religion, resource or area, a minimap, zoom
+controls, map-only focus, PNG export of the exact lens and copying the current view. Compare
+shows two worlds with linked cameras.
+
+**Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+V of a world code anywhere, arrows in
+the library, `?` for the list. Every control is a native button/input with a visible focus
+ring and a text label or `aria-label`; state is never shown by colour alone.
+
+**Verification.** `make desktop` (types, unit tests, build, Rust shell); `tests/test_bridge.py`
+covers the protocol, state, atlas transfer and that every interface string key exists in the
+window catalogues. Screens are reviewed in a browser through `npm run dev` with
+`RNW_DATA=<copy of a library>` and in the built window on WebKitGTK.

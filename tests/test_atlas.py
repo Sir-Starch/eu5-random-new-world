@@ -198,3 +198,24 @@ def test_names_are_phrases_that_a_viewer_writes_in_its_own_language() -> None:
     assert "A_CULTURE" in labels
     found = atlas.find(again, "Аланд", words=words)
     assert "place" in [match.kind for match in found]
+
+
+def test_a_lens_names_each_locations_legend_entry_and_keeps_the_legacy_pictures() -> None:
+    """Every location's class is its legend entry; ramps leave land unclassed; the classic
+    layers draw what ``render`` drew before lenses (their legend is the lens's)."""
+    built = synthetic_atlas()
+    for layer in atlas.LAYERS:
+        lens = atlas.lens(built, layer)
+        assert lens.colours.shape == (built.cells, 3)
+        assert lens.legend == tuple(atlas.legend(built, layer))
+        for cell in range(built.cells):
+            entry = int(lens.classes[cell])
+            if entry >= 0 and layer != "land":
+                assert tuple(int(v) for v in lens.colours[cell]) == lens.legend[entry][1]
+        assert bool(lens.ramp) == (layer in atlas.RAMPS)
+    land = np.flatnonzero(built.kinds == atlas.KINDS.index("land"))
+    population = atlas.lens(built, "population")
+    inhabited = [cell for cell in land if built.population[cell] > 0]
+    assert all(population.classes[cell] == -1 for cell in inhabited)
+    areas = atlas.lens(built, "areas")
+    assert len({int(areas.values[cell]) for cell in land}) == len({built.areas[c] for c in land})

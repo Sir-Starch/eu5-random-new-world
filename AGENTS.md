@@ -11,8 +11,9 @@ work that depends on game files, and audit changed inputs after a game patch.
 
 Read [docs/README.md](docs/README.md) for the document map and
 [architecture](docs/architecture.md) for code ownership and invariants.
-Read the relevant subsystem document for the task. The shipping interface is Qt;
-Tauri is planned future work, not an instruction to migrate it incidentally.
+Read the relevant subsystem document for the task. The shipping interface is Qt; the Tauri
+window in `desktop/` is an implemented candidate ([ADR 0011](docs/adr/0011-tauri-window.md))
+that drives the same controller. Keep both working until the owner accepts the switch.
 
 ## Current instructions and historical evidence
 

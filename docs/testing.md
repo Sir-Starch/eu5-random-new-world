@@ -29,7 +29,10 @@ uv run rnw --help
 ```
 
 `make check` runs formatting, lint, strict Python types, Python tests, Rust format,
-clippy and tests. CI runs Linux/Windows checks and package self-tests. The 1.0.0
+clippy and tests. `make desktop` checks the candidate Tauri window (ADR 0011): Svelte/TypeScript
+types, Vitest, the production build and the Rust shell's format, clippy and tests. Run
+`RNW_DATA=/path/to/library-copy npm run dev` in `desktop/` to review it in a browser, and
+`desktop/src-tauri/target/release/random-new-world --self-test` after `npx tauri build`. CI runs Linux/Windows checks and package self-tests. The 1.0.0
 verification passed 2,142 Python tests with 14 optional skips and 23 Rust tests
 (C438); these are a dated baseline, not permanent expected test counts.
 
