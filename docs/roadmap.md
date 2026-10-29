@@ -37,11 +37,27 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
 - **Continental variety:** develop more realistic lakes, inland seas, narrow land
   connections and coastal formations, including the Gdańsk/Crimea-like examples
   requested by the owner. Design their representation with hydrology and sea routes.
+- **The Wall preset:** add a selectable landmass preset with a long, narrow
+  north–south continental barrier inspired by the EU4 RNW scenario
+  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtciacccl1h/)).
+- **Ready-made fantasy maps:** add land-shape presets such as a Kerbin-inspired
+  map within the New World generation area, using the existing land-mask workflow.
+  Verify that workflow alongside the presets
+  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtj2ndbo2gz/)).
 - **Societies and dynamic content:** broaden state structures, relationships and
   context-sensitive stories through the existing R6/R7 and N0–N5 systems.
-- **Optional historical societies:** explore an opt-in setting for historically
-  inspired peoples and settlements on generated maps, including Norse/Vinland
-  settlements (Reddit community suggestion, added 2026-10-29).
+- **Optional Easter egg countries:** add country scenarios inspired by EU4 RNW
+  Easter eggs, including Vinland, Secret Denmark and Atlantis
+  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtdzylmh2mb/)).
+- **Optional alternative-history settlements:** add an opt-in setting for
+  historically inspired peoples and overseas settlements, including Norse/Vinland
+  settlements, integrated into the generated societies
+  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtcqs3rwjgi/),
+  first added 2026-10-29).
+- **Generated national histories:** generate coherent pre-1337 histories for
+  generated states and use them to inform starting relationships and subsequent
+  events, goals or mission-style content through the existing society/story systems
+  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)).
 - **Tauri interface:** design a migration preserving generation, library, atlas,
   localization, accessibility and cancellation workflows. Qt remains current
   until an implemented replacement is accepted.
