@@ -58,9 +58,16 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   generated states and use them to inform starting relationships and subsequent
   events, goals or mission-style content through the existing society/story systems
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)).
-- **Tauri interface:** design a migration preserving generation, library, atlas,
-  localization, accessibility and cancellation workflows. Qt remains current
-  until an implemented replacement is accepted.
+- **Generator interface and settings:** fully rework the interface and expose
+  more generation settings as part of the planned Tauri migration, preserving
+  generation, library, atlas, localization, accessibility and cancellation
+  workflows. Qt remains current until an implemented replacement is accepted.
+- **Resource distribution sliders:** add individual frequency controls for
+  ordinary RGOs alongside the existing precious-resource control. Keep resource
+  selection tied to climate and terrain, with vanilla weights as the defaults.
+  Explain that the sliders change relative placement probabilities, so increasing
+  one resource leaves fewer locations for others; they do not directly change
+  production per location. These controls are planned for a future update.
 - **World-wrap research:** retain the accepted mechanical fixes and visual source
   extension. Use the [dedicated dossier](research/map-wrap-dossier.md) for new
   evidence relevant to a possible Paradox report. A historical rendering comparison
