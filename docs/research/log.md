@@ -2037,3 +2037,18 @@ existing archive-checksum regression now includes that helper. The Windows
 artifact list now includes only the ZIPs and checksum manifest, avoiding a
 duplicate intermediate standalone tree. Product target
 1.0.0, epoch and all world bytes remain unchanged.
+
+## 2026-10-29 — Final 1.0.0 candidate CI and package audit (C435)
+
+The exact-source CI and release workflows now pass on candidate commit
+`5645d763f81f23acd4f065ab110aab7a7c9165b1`, including the Windows validation
+job. Downloaded candidate archives match their embedded checksums and pass the
+release file audit. The verified Windows hub is installed with the isolated Wine
+self-test passing and the previous hub retained. VirusTotal completed both exact CI-binary scans with zero malicious or
+suspicious detections; the reports also include engine failures and timeouts,
+which remain unknown results. Version 1.0.0, epoch 59 and the reference-world
+digest do not change. A same-day check of Steam's current Subscriber Agreement
+(Revision Date 2026-09-10), the Workshop submission page and Paradox's agreement
+(updated 2026-01-21) leaves C267 unresolved; no account agreement was accepted.
+The roadmap's 1.0.0 game acceptance is also still open. No stable tag or
+publication has been created.

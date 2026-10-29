@@ -33,6 +33,21 @@ conditions; no licence change is made. [INFERRED from MPL-2.0 and the FAQ] MPL
 rights in our code do not clear the game-derived world files or override platform
 terms. No account agreement is accepted by this review.
 
+**1.0.0 publication review (2026-10-29).** [SOURCE] Rechecked the live
+[Steam Subscriber Agreement](https://store.steampowered.com/subscriber_agreement/)
+and the [Workshop submission page](https://steamcommunity.com/workshop/workshopsubmitinfo/)
+and its linked legal page. The current Steam agreement says it was revised
+2026-09-10. Sections 6.A, 6.B and 6.D grant Valve broad rights to uploaded UGC,
+allow app-specific terms to supplement or change Workshop terms, and require the
+uploader to warrant sufficient rights. The Workshop page says accepted items and
+rules vary by product. The current [EU5 Steam listing](https://store.steampowered.com/app/3450310/Europa_Universalis_V/)
+links to the [Paradox User Agreement](https://legal.paradoxplaza.com/eula?locale=en),
+which still states its 2026-01-21 update; §5 covers UGC and limits the creator's
+rights to original contributions. These public pages do not identify any EU5
+Workshop app-specific terms or settle all rights questions for this proposed
+item. C267 therefore remains unresolved. No agreement was accepted and no
+Workshop action was taken.
+
 **Public repository (2026-10-24).** Before the repository was first published on GitHub (`Sir-Starch/eu5-random-new-world`), every revision of its history was checked for game files and personal data. No game asset, derived raster, log, save or screenshot had ever been committed. Local machine details (installation paths, hardware, operating system) were replaced in all revisions, and the commits carry the maintainer's public address. The rule is kept by tests: `packaging/allowlist.py` rejects any path of the game or of a generated world, both in the repository and in every release archive. The README states that the project is not affiliated with Paradox Interactive and that *Europa Universalis* is Paradox's trademark.
 
 **Third-party references.** [SOURCE] [EU5 Engine Atlas](https://github.com/mattebin/eu5-engine-atlas) advertises MIT but targets 1.3.11; [EU5 Modding Project](https://github.com/HLJSXK/eu5-modding-project) lacks a clear software license in its README; the [Co-op toolkit](https://github.com/Europa-Universalis-5-Modding-Co-op/community-mod-toolkit/) was not reviewed. No third-party code or game assets are vendored. Before using any outside code or data, pin a revision, inspect its license and check redistribution compatibility. The current repository contains only project-authored research, code and synthetic tests [V-EXEC].
