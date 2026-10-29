@@ -17,6 +17,9 @@
   EU5’s main-menu Mods manager in every official language.
 - Adopt release-based versioning, pin candidate builds to exact commits, and
   include SHA-256 manifests with source and platform archives.
+- Publish the hub as Random New World (RNW), with permanent mod ID
+  `sirstarch.randomnewworld`; retain the local `rnw_exp_hub` folder and safely
+  update hubs carrying the earlier internal ID.
 - State unsigned-Windows and campaign compatibility limits in the player guides.
   Remove build-machine installation receipts and absolute bytecode filenames
   from the Windows runtime package; include reports for the two project binaries.

@@ -43,7 +43,11 @@ def check_candidate(candidate: Path, version: str) -> None:
         "dict[str, object]",
         json.loads((candidate / ".metadata/metadata.json").read_text(encoding="utf-8-sig")),
     )
-    if metadata.get("id") != hub.MOD_ID or metadata.get("version") != version:
+    if (
+        metadata.get("id") != hub.MOD_ID
+        or metadata.get("name") != hub.MOD_NAME
+        or metadata.get("version") != version
+    ):
         msg = "Hub metadata does not match the current product version"
         raise ValueError(msg)
     site = candidate / "generator/site"
@@ -128,7 +132,7 @@ def check_eu5_not_running() -> None:
 
 def install(candidate: Path, profile: Path, version: str) -> Path:
     """Stage and verify a new hub; keep the former hub intact and roll back on failure."""
-    target = profile / "mod" / hub.MOD_ID
+    target = profile / "mod" / hub.MOD_FOLDER
     if not target.is_dir():
         msg = f"No existing development hub at {target}"
         raise ValueError(msg)
@@ -136,7 +140,7 @@ def install(candidate: Path, profile: Path, version: str) -> Path:
         "dict[str, object]",
         json.loads((target / ".metadata/metadata.json").read_text(encoding="utf-8-sig")),
     )
-    if old.get("id") != hub.MOD_ID:
+    if old.get("id") not in {hub.MOD_ID, hub.LEGACY_MOD_ID}:
         msg = "The installed mod is not the development hub"
         raise ValueError(msg)
     old_version = old.get("version")
@@ -199,7 +203,7 @@ def main() -> None:
         existing_cargo = ROOT / "build/windows/cargo"
         if existing_cargo.is_dir():
             (hub.WORK / "cargo").symlink_to(existing_cargo, target_is_directory=True)
-        candidate = hub.build(work / hub.MOD_ID, replace=False)
+        candidate = hub.build(work / hub.MOD_FOLDER, replace=False)
     check_candidate(candidate, version)
     prefix = ROOT / "local_data/hub-updates/wine-prefix"
     self_test(candidate, prefix, version)

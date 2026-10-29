@@ -43,7 +43,10 @@ if TYPE_CHECKING:
 
 ROOT: Final[Path] = Path(__file__).resolve().parent.parent
 WORK: Final[Path] = ROOT / "build" / "windows"
-MOD_ID: Final[str] = "rnw_exp_hub"
+MOD_ID: Final[str] = "sirstarch.randomnewworld"
+MOD_NAME: Final[str] = "Random New World (RNW)"
+MOD_FOLDER: Final[str] = "rnw_exp_hub"
+LEGACY_MOD_ID: Final[str] = "rnw_exp_hub"
 LAUNCHER: Final[str] = "Random New World Generator.exe"
 PYTHON_VERSION: Final[tuple[int, int]] = (3, 12)
 RUST_TARGET: Final[str] = "x86_64-pc-windows-gnu"
@@ -125,7 +128,7 @@ def version_fields(version: str) -> tuple[int, int, int, int]:
 def metadata(version: str) -> bytes:
     """The hub's ``metadata.json``, in the form the game reads (UTF-8 with BOM)."""
     payload: dict[str, object] = {
-        "name": "Random New World (RNW) Generator",
+        "name": MOD_NAME,
         "id": MOD_ID,
         "version": version,
         "supported_game_version": "1.4.*",
@@ -329,7 +332,7 @@ def build(output: Path, *, replace: bool) -> Path:
     if output.exists() and not replace:
         message = f"{output} exists; pass --replace to rebuild it"
         raise BuildError(message)
-    stage = WORK / "stage" / MOD_ID
+    stage = WORK / "stage" / MOD_FOLDER
     shutil.rmtree(stage, ignore_errors=True)
     generator = stage / "generator"
     python, site = generator / "python", generator / "site"
@@ -363,7 +366,7 @@ def build(output: Path, *, replace: bool) -> Path:
 class Options(argparse.Namespace):
     """The command line of the build."""
 
-    output: Path = ROOT / "dist" / MOD_ID
+    output: Path = ROOT / "dist" / MOD_FOLDER
     replace: bool = False
 
 

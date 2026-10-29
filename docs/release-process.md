@@ -44,7 +44,11 @@ The maintainer performs the external publication after accepting the candidate:
 
 ## Steam Workshop hand-off
 
-The prepared Workshop item is published by the owner:
+The prepared Workshop item is published by the owner. Use name **Random New World (RNW)**,
+ID **`sirstarch.randomnewworld`**, path **`rnw_exp_hub`** (the form already prefixes
+`mod/`), version **1.0.0**, and tag **Map**. The permanent ID is independent of
+the retained local folder name. Future hub updates recognise both the legacy
+`rnw_exp_hub` ID and the permanent ID; new packages always write the permanent ID.
 
 - [ ] Upload only the hub mod and generator package. Never upload a generated world or a package containing derived vanilla map data.
 - [ ] Use the reviewed Workshop description (`docs/workshop/<language>.bbcode`, one per language, pasted without its first `source:` line), preview image, and approved screenshots. Remove every editorial bracketed note before upload.

@@ -6,9 +6,10 @@ import json
 import shutil
 import subprocess
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from unittest.mock import Mock
 
+import hub
 import pytest
 import update_local_hub as updater
 
@@ -16,26 +17,51 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-def _profile_and_candidate(root: Path) -> tuple[Path, Path]:
+def _profile_and_candidate(root: Path, installed_id: str = hub.LEGACY_MOD_ID) -> tuple[Path, Path]:
     profile = root / "profile"
     old = profile / "mod/rnw_exp_hub"
     (old / ".metadata").mkdir(parents=True)
     _ = (old / ".metadata/metadata.json").write_text(
-        json.dumps({"id": "rnw_exp_hub", "version": "0.13.9"}), encoding="utf-8"
+        json.dumps({"id": installed_id, "version": "0.13.9"}), encoding="utf-8"
     )
     _ = (old / "marker").write_text("old", encoding="utf-8")
     candidate = root / "candidate"
     candidate.mkdir()
     _ = (candidate / "marker").write_text("new", encoding="utf-8")
+    (candidate / ".metadata").mkdir()
+    _ = (candidate / ".metadata/metadata.json").write_bytes(hub.metadata("0.13.10"))
     return profile, candidate
 
 
-def test_install_preserves_previous_hub(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("installed_id", [hub.LEGACY_MOD_ID, hub.MOD_ID])
+def test_install_preserves_previous_hub(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, installed_id: str
+) -> None:
     monkeypatch.setattr(updater, "check_eu5_not_running", Mock())
-    profile, candidate = _profile_and_candidate(tmp_path)
+    profile, candidate = _profile_and_candidate(tmp_path, installed_id)
     backup = updater.install(candidate, profile, "0.13.10")
     assert (backup / "marker").read_text(encoding="utf-8") == "old"
     assert (profile / "mod/rnw_exp_hub/marker").read_text(encoding="utf-8") == "new"
+    metadata = cast(
+        "dict[str, object]",
+        json.loads(
+            (profile / "mod/rnw_exp_hub/.metadata/metadata.json").read_text(encoding="utf-8-sig")
+        ),
+    )
+    assert metadata["id"] == hub.MOD_ID
+    previous = cast(
+        "dict[str, object]", json.loads((backup / ".metadata/metadata.json").read_text())
+    )
+    assert previous["id"] == installed_id
+
+
+def test_foreign_id_is_not_replaced(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(updater, "check_eu5_not_running", Mock())
+    profile, candidate = _profile_and_candidate(tmp_path, "another.mod")
+    with pytest.raises(ValueError, match="not the development hub"):
+        _ = updater.install(candidate, profile, "0.13.10")
+    assert (profile / "mod/rnw_exp_hub/marker").read_text(encoding="utf-8") == "old"
+    assert not (profile / ".rnw-hub-backups").exists()
 
 
 def test_failed_installed_verification_restores_previous_hub(

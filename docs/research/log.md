@@ -2071,3 +2071,14 @@ blockers. The release process, roadmap and terms notes now record completed
 acceptance for 1.0.0 and retain historical test scopes without inventing new
 observations. Remaining work is publication itself. Runtime code, version, epoch
 and the audited 0b34dbd binary packages are unchanged.
+
+## 2026-10-29 — Permanent Workshop hub identity (C438)
+
+Use **Random New World (RNW)** and **`sirstarch.randomnewworld`** for publication;
+retain `rnw_exp_hub` as the local folder. The builder and updater now distinguish
+those identities and safely recognise the pre-publication internal ID. Migration,
+repeat updates, rejection of foreign metadata and rollback are checked. Full
+checks and the real Windows generator self-test under Wine pass. The installed
+hub is hash-verified and its predecessor retained; the refreshed Workshop archive
+changes only metadata relative to the audited CI runtime. No binary rescan or
+algorithm epoch change is needed.

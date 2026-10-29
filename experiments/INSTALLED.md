@@ -813,3 +813,14 @@ Exact removal when requested, with EU5 closed:
 Installed the hub from the [release workflow artifact](https://github.com/Sir-Starch/eu5-random-new-world/actions/runs/40781022865), pinned to candidate `5645d763f81f23acd4f065ab110aab7a7c9165b1`. The downloaded archive checksum and package/source audit passed. `update_local_hub.py --candidate` verified current Python/catalog sources, ran the isolated Windows GUI/native/world-code self-test under Wine, and installed **3,272 files**. The previous same-version local build is preserved beneath the normal profile at `.rnw-hub-backups/1.0.0-1793232100930439192`. This replaced only the generator hub; no EU5 launch/control, world, playset, save or setting change.
 
 The separate **878-file** world candidate `rnw_exp_world_l2ukzb7ihj` and its entries in both generator libraries remain local to the profile. World code: `RNW1-081RF-FZCZT-X8CJN-T0400-00860-2AG63-YG1W8-8G3GH-149XR-08TM0-37FSE-J`. Its epoch-59 reference has 867 nonmetadata files and digest `23c0437734288ffa913061f627838855c97962185fe939da18b313ccb1bd9c85`. Neither this world nor its generated game data is part of a public archive. Audit and receipts remain under ignored `local_data/release-1.0.0/`.
+
+2026-10-29, **1.0.0 public hub identity** (C438).
+Updated the existing `mod/rnw_exp_hub` to display **Random New World (RNW)**
+with permanent metadata ID **`sirstarch.randomnewworld`**. The folder remains
+`rnw_exp_hub`. Reused the audited 0b34dbd CI runtime; only
+`.metadata/metadata.json` differs from that candidate. The standard updater
+passed its candidate/source audit and isolated Wine GUI/native/world-code
+self-test, installed and verified all **3,272 files**, and retained the former
+hub at `.rnw-hub-backups/1.0.0-1793234743835704438`. Future updates accept both
+the former internal ID and the permanent ID. No EU5 launch/control or world,
+playset or save edit.
