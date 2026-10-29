@@ -1,6 +1,11 @@
 # Start economy (phase R7)
 
-**Status:** R7a implemented on 2026-10-19 (product version 0.9.2, claims C73–C75) and revised after an audit (0.9.3, C76), NOT GAME VALIDATED. Designed in [R7a design](r7a-development.md); in-game test pending (experiment 012). It covers start development, harbour suitability and market villages. Technology (R7b, 0.9.28, C159) and great empires with causes and weaknesses (R7c, 0.9.29, C160, including their royal roads) are implemented offline and described in [natives](natives.md); institutions, ordinary roads and other buildings are open work, and the R7 gate (a region plays through exploration, colonisation and conquest without broken logs) awaits the in-game test of experiment 028.
+**Current scope:** start development, harbours, market villages and the later
+agrarian/market refinements are part of released 1.0.0. The owner accepted the
+tested product (C437). The calculations below preserve their original calibration
+builds and implementation measurements; an early experiment's pending status is
+not a current acceptance request. The original [R7a design](archive/r7a-development.md)
+is archived; current society/technology mechanisms are in [natives](natives.md).
 
 ## Goal
 
@@ -62,7 +67,7 @@ Tribes and unorganised land stay below vanilla (0.1–0.4 against 1.26 and 0.78,
 
 ## Settings
 
-None. Presets (R8) will own a development control.
+Use the current `settings.py` and `app/controls.py` for exposed controls and ranges; historical calibration values on this page are not a second settings schema.
 
 ## Checks
 
@@ -75,9 +80,13 @@ None. Presets (R8) will own a development control.
 
 Each generated land location draws its raw material from the vanilla frequencies of similar locations: the same climate, vegetation, topography and coast, falling back to fewer of them. Up to 0.9.13 those frequencies were the Old World's, so a generated America had elephants (55 locations of one world), horses (87), wheat (261), rice (225), millet (215), silk (36), tea (25) and camels (17) and none of maize, potatoes, cocoa, tobacco or chili, which in vanilla only America has. They are now the vanilla New World's: in the continents world of seed 42 no Old-World-only material is left and maize holds 380 locations, chili 86, cocoa 73, potatoes 44, tobacco 15. `new_world.precious_permille` weighs gold, silver, gems and pearls against the rest (1000: their vanilla share; the window offers 0 to 3 times); a class whose only materials it removes falls back to a coarser class.
 
-## Open work
+## Research limits and possible refinements
 
-- Institutions, roads and other buildings (terraces, walls, culture buildings).
+- Additional authored buildings and more detailed economy behavior are possible future scope. Existing technology, empires and royal roads are implemented; vanilla institutions spread through the normal game mechanisms.
 - The engine's river size (experiment 012) and the effect of `development` on pops after the start.
-- Technology per society (R7b) and great empires with explicit causes and weaknesses (R7c) are implemented offline ([natives](natives.md), C159, C160; design [R7b and R7c design](r7-technology-and-empires.md)); their in-game test is [experiment 028](../experiments/028-technology-and-empires/README.md). Institutions need no setup: the vanilla 1337 Americas have none and they spread in game (C155). Ordinary roads, rivals and other buildings need nothing either: the vanilla Americas have none (C155).
-- Whether the engine honours entries for new keys (experiment 012).
+- Technology and empire implementation evidence is in [natives](natives.md),
+  C159–C160 and [experiment 028](../experiments/028-technology-and-empires/README.md).
+  R7d later added starting alliances/rivalries for its societies. The original
+  [R7b/R7c design](archive/r7-technology-and-empires.md) retains the vanilla survey
+  and its date; it does not require those features to be implemented again.
+- Experiment 012 records the original development-entry question and its observed scope. It is historical evidence, not a new prerequisite for the accepted release.

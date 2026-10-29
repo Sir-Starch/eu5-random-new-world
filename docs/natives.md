@@ -1,6 +1,11 @@
 # Native societies (phase R6)
 
-**Status:** R6a implemented on 2026-10-19 (generator 0.8.0, C67–C68). The owner's first run loads it and shows the states with names, flags and rulers (C69); the rest is untested in game. R6b (generator 0.9.0–0.9.1, C70–C72) adds place names in local languages, vassals and coastal seas known to natives, and fixes unbent location borders; in-game test pending (experiment 011). **R7b (generator 0.9.28, C159)** gives every state a technology level from its capital's complexity and makes cultures follow the regional family of their land (below), and **R7c (0.9.29, C160)** gives great empires explicit causes and weaknesses; in-game test pending (experiment 028). **R7d (societies, 0.11.2, C251-C253)** adds a sea league, a highland confederation, a fractured realm and a sacred centre ([below](#more-varied-societies-r7d-societies)); in-game test pending (experiment 045). The generated New World is no longer empty in 1337: it has native pops, states, tribes, towns, markets and holy sites, derived from the same physical model as the terrain.
+**Current scope:** released 1.0.0 generates native populations, states, tribes,
+identity zones, markets, technology, empires and other extraordinary societies.
+The owner accepted the tested product (C437). Sections below preserve dated
+vanilla surveys, algorithms and per-experiment observations; their old pending
+states are not current assignments. Current code is mapped in [architecture](architecture.md),
+and campaign limits are in [known limitations](known-limitations.md).
 
 ## Goal of the first slice
 
@@ -119,7 +124,7 @@ That `first` holds the opinion of `second` is inferred from the vassals holding 
 
 ## More varied societies (R7d, societies)
 
-**Status:** implemented on 2026-10-24 (generator 0.11.2, algorithm epoch 26, C251-C253); NOT GAME VALIDATED. The name R7d is shared with the spline network of 2026-10-22 (0.9.30, C162-C163, below); this is the *more varied societies* of the [content plan](content-plan.md), gap G7. No separate design document preceded it; the design is this section and the claims it cites.
+**Implementation record:** introduced on 2026-10-24 (generator 0.11.2, algorithm epoch 26, C251-C253). The unrun cases at that point retain their historical scope; the product is accepted for 1.0.0. The name R7d is shared with the spline network of 2026-10-22 (0.9.30, C162-C163, below); this is the *more varied societies* of the [content plan](content-plan.md), gap G7. No separate design document preceded it; the design is this section and the claims it cites.
 
 **Goal.** Four more combinations of real traits besides the great empire: a maritime trade network, a highland confederation, a fragmented region with several centres, a sacred centre with political competitors. An archetype follows geography and social structure; randomness only chooses among suitable combinations. Strength comes from population, ports and organization, weakness from separation, autonomy and rivalry; nothing is a flat bonus and no label grants power. The new files change no engine, define or interface file, and no binary format is read or written ([interoperability register](research/interoperability.md): nothing to record).
 
@@ -152,11 +157,11 @@ Over 31 searched worlds (the peoples stage alone, at 1000 permille) the options 
 
 **Checks.** `archetype_problems` (export, `verify_archetypes`): every generated country writes the template, government fields, currency and holding it was planned with; groups are disjoint, of free countries, and of one kind; a league is a ring of republics (every member two alliances) and an alliance joins members of one league; a confederation is made of landed tribes that write the confederates' currency and is one organization of the setup; a realm's rivalries and a centre's are returned and join members of one group; the alliances, rivalries and organizations of the setup files are the plan's, once each, beside vanilla's Old World entries; and the holder of every relation has discovered the area of its partner's capital. Tests: `tests/test_archetypes.py`, `test_eu5_archetypes.py`, `test_archetype_world.py`, `test_archetype_export.py`.
 
-**Open.** Whether the engine takes these records is untested (C253): a theocracy over a monarchy-derived template, tribes of the plain template in a confederation, alliances at the start and rivals beyond a rank's number have no American precedent. The effect of the positions on the axes is the game's. Not generated: tributaries (still C158), a leader for a confederation, a head for a league, alliances between leagues and empires, and varied societies of other kinds (a commercial network on land, a successor realm that has a name). Seed 210 of the continents preset fails in `plan_identities`, a land-layer fault that is not R7d's.
+**Questions recorded at 0.11.2 (C253).** At that point, these records were not yet observed in the engine: a theocracy over a monarchy-derived template, tribes of the plain template in a confederation, alliances at the start and rivals beyond a rank's number have no American precedent. The effect of the positions on the axes is the game's. Not generated: tributaries (still C158), a leader for a confederation, a head for a league, alliances between leagues and empires, and varied societies of other kinds (a commercial network on land, a successor realm that has a name). The seed-210 `plan_identities` failure belonged to that implementation snapshot; subsequent work is recorded in [experiment 046](../experiments/046-sitting-fixes/README.md).
 
 ## Technology and regional families (R7b)
 
-**Status:** implemented on 2026-10-22 (generator 0.9.28, algorithm epoch 4, C159); NOT GAME VALIDATED, in-game test pending (see the experiment of R7c). Designed in [R7b and R7c design](r7-technology-and-empires.md), claims C155–C157.
+**Implementation record:** introduced on 2026-10-22 (generator 0.9.28, algorithm epoch 4, C159). Its original test scope is recorded with R7c; it is not a new game-test request. Designed in [R7b and R7c design](archive/r7-technology-and-empires.md), claims C155–C157.
 
 **Why.** An age-of-traditions advance above a country's `starting_technology_level` starts unresearched, so a higher level starts a country with more advances (C155). Vanilla gives 191 of its 223 American states level 2, 17 level 1 and 11 level 0. Up to 0.9.27 the generator wrote no level, so a state took its culture's template level or one complexity threshold: 109 of 131 states started at level 0 (C156). Advances and units of the Americas follow three regional families chosen by the capital's region or area (`is_capital_mesoamerica`, `is_capital_in_south_america_or_carribean`); the culture followed only the climate, so a Mixtec state could get the woodland advances (C157).
 
@@ -188,7 +193,7 @@ Vanilla is 11 / 17 / 191 of 219, so the level histograms are the vanilla quantil
 
 **Checks.** `verify_technology` (export): every generated state writes one level of the vanilla set and a tribe none; levels do not fall along the rising complexity of the capitals (great empires apart); every state has `L(template) ≤ level ≤ L(template) + 1`; every vassal lord has `level ≥ overlord_level` and `L(template) ≥ overlord_level`. Tests: `tests/test_technology.py` (families, calibration, quantiles, template rule, records, report helpers, rejections) and the optional local test of `tests/test_local_install.py` (11/17/191, the family lists and 380 / 276 / 74 cultures by family).
 
-**Open.** Whether the engine honours a written `starting_technology_level` for new tags and researches the advances of the level, and whether the written level alone makes a lord's vassals valid (the log pattern of C99), are in-game questions.
+**Historical engine question (0.9.28).** Whether the engine honours a written `starting_technology_level` for new tags and researches the advances of the level, and whether the written level alone makes a lord's vassals valid (the log pattern of C99), are in-game questions.
 
 ## Checks
 
@@ -202,14 +207,26 @@ Vanilla is 11 / 17 / 191 of 219, so the level histograms are the vanilla quantil
 - Land that reaches no port (`unported_cells`, `seal_pockets`): a land cell that no coast reaches without crossing wasteland becomes wasteland, and the export fails if any remains (3 locations of seed 319218363 were logged as isolated, C95).
 - `tests/test_local_install.py` reads the vanilla calibration.
 
-## In-game questions (experiment 010)
+## Original 1.4.1 experiment scope (experiment 010)
 
-Whether EU5 1.4.1 accepts the new tags, pop-type tribes on generated locations and engine-drawn coats of arms; whether rulers and dynasties are generated; how the political map, diplomacy and AI behave; colonisation of land with native pops; and `error.log`.
+The first R6 experiment asked whether EU5 1.4.1 accepts new tags, pop-type tribes
+on generated locations and engine-drawn coats of arms; whether rulers and
+dynasties are generated; and how the political map, diplomacy, AI and colonisation
+behave. Its observations and logs remain in experiment 010 and later records.
+This is the original research scope, not a current list of untested product features.
 
-## Open work
+## Further development ideas
 
-- Alliances and rivalries between states; mixed-culture border locations; a rare-civilisation preset; tribes are invisible on the political map because pop-type countries own no land (as in vanilla).
-- Religions with special mechanics (for example Nahuatl or Inti situations and generic actions) may expect vanilla geography; scripts were only remapped to the nearest generated location.
+These are research/refinement topics, not unfinished release acceptance. Choose
+new implementation scope through the [roadmap](roadmap.md) when requested.
+
+- Broader diplomacy beyond the existing R7d alliances and rivalries, mixed-culture
+  border locations and additional society configurations. Pop-type tribes own no
+  land and are invisible on the political ownership map, as in vanilla.
+- Further religion-specific content. The original R6 remapping was positional;
+  the implemented N0–N5 system now supplies explicit content decisions and geographic
+  matching ([content plan](content-plan.md)). Assess a particular mechanic there
+  instead of treating every vanilla religion as an unresolved R6 task.
 - Generated cultures and religions (instead of vanilla ones) for the alternative-history presets.
 
 ## Terra incognita edge

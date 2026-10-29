@@ -11,9 +11,10 @@ it. Internal file-format numbers and the private Rust crate version are not
 product versions. Published versions follow [SemVer 2.0.0](https://semver.org/spec/v2.0.0.html)
 [SOURCE, specification 2.0.0, accessed 2026-10-28].
 
-1.0.0 is the first complete product release. Preparing it does not declare its
-acceptance or authorize publication. The [release process](../release-process.md)
-records the evidence and remaining gates. Historical 0.x versions and epochs stay
+1.0.0 is the first stable product release, published on 2026-10-29 (C439).
+Preparing a future target does not itself declare acceptance or authorize
+publication. The [release process](../release-process.md) records build and
+publication steps. Historical 0.x versions and epochs stay
 as recorded; do not renumber them.
 
 ## What compatibility means for RNW
@@ -57,8 +58,6 @@ require a product release. If a shipped package itself must be corrected, use PA
   a cycle that changes shipped code, and keep it across its implementation
   commits. Documentation-only work may keep the previous number. Choose PATCH,
   MINOR or MAJOR from the table; promote an unpublished target if the scope grows.
-  Before the first stable release the next target is 1.0.0, once its preparation
-  begins. This decision alone does not change the current 0.x package.
 - **Development builds are identified by commit.** A working tree or untagged
   `main` build is not a stable release even if its package has a three-part number.
   Retain its full commit SHA and artifact checksum (and the diff if dirty) with

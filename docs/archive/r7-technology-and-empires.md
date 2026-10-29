@@ -1,8 +1,12 @@
 # R7b and R7c: technology and great empires from the societies
 
+> Historical pre-implementation design. Implemented behavior is described in
+> [Economy](../economy.md) and [Native societies](../natives.md).
+> Its experiment requests are not a current task list.
+
 **Design of 2026-10-22**, written before implementation, for the two slices that finish roadmap phase R7 offline after [R7a](r7a-development.md): R7b (technology and regional families) and R7c (great empires). Both change generated output.
 
-**Status: implemented.** R7b is generator 0.9.28 (C159) and R7c 0.9.29 (C160); see [natives](natives.md) and [experiment 028](../experiments/028-technology-and-empires/README.md). Background: [natives](natives.md), [economy](economy.md), section A of [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) (the peoples layer) and claims C155–C158.
+**Status: implemented.** R7b is generator 0.9.28 (C159) and R7c 0.9.29 (C160); see [natives](../natives.md) and [experiment 028](../../experiments/028-technology-and-empires/README.md). Background: [natives](../natives.md), [economy](../economy.md), section A of [ADR 0010](../adr/0010-layered-worlds-and-a-generator-of-its-own.md) (the peoples layer) and claims C155–C158.
 
 ## Where R7 stands
 
@@ -10,8 +14,8 @@ The roadmap gate for R7 has two parts. A generated region must play through expl
 
 | Part of R7 | State |
 |---|---|
-| Pops, markets, ranks | Done in R6 ([natives](natives.md)). |
-| Development, harbours, market villages | Done in R7a ([economy](economy.md)). |
+| Pops, markets, ranks | Done in R6 ([natives](../natives.md)). |
+| Development, harbours, market villages | Done in R7a ([economy](../economy.md)). |
 | Institutions | Nothing to do: `08_institutions.txt` names no American location, and institutions spread in game [V-EXEC C155]. |
 | Roads of ordinary states, rivals | Nothing to do: the vanilla 1337 Americas have none (`09_roads.txt`, `20_rivals.txt`) [V-EXEC C155]. |
 | Technology | **R7b** |
@@ -48,7 +52,7 @@ Generated regions keep the vanilla keys and take the part nearest each key's van
 
 ### A great empire is only large
 
-The one great empire of that world (ERY) has 58 locations and 1,425 pop units. Vanilla's largest American states are Mayapan (COC, 892) and the Tarascans (TAR, 535). ERY has three vassals and level 2, like 191 vanilla states. It has no rank, no roads, and no diplomatic weakness [V-EXEC C156]. Its culture, Atakapa, belongs to the north family, but its capital lies in the south family. The product spec asks for strength from technology, infrastructure and organisation, with weaknesses such as logistical strain and factionalism ([product spec](product-spec.md)). The natives page records that the generator "cannot make the technology of the Western powers". This was true of templates. It is not true of `starting_technology_level`.
+The one great empire of that world (ERY) has 58 locations and 1,425 pop units. Vanilla's largest American states are Mayapan (COC, 892) and the Tarascans (TAR, 535). ERY has three vassals and level 2, like 191 vanilla states. It has no rank, no roads, and no diplomatic weakness [V-EXEC C156]. Its culture, Atakapa, belongs to the north family, but its capital lies in the south family. The product spec asks for strength from technology, infrastructure and organisation, with weaknesses such as logistical strain and factionalism ([product spec](../product-spec.md)). The natives page records that the generator "cannot make the technology of the Western powers". This was true of templates. It is not true of `starting_technology_level`.
 
 ## R7b: technology from the societies (task S09)
 
@@ -122,7 +126,7 @@ Add `tests/test_technology.py` and update `tests/test_natives_eu5.py`, with synt
 ### Acceptance (offline)
 
 1. `uv sync --locked --group dev && make check` passes, and so do the optional local tests.
-2. Raise PATCH ([ADR 0003](adr/0003-versioning.md)) and start a new algorithm epoch with a new reference world, as the last epoch commit did (`rnw/epoch.py`, `tests/test_epoch.py`, `tests/test_synth.py`, `tests/golden_world.json`; renew with `RNW_REPRODUCE=1 EU5_GAME_DIR=... uv run pytest tests/test_local_install.py -k reference`).
+2. Raise PATCH ([ADR 0003](../adr/0003-versioning.md)) and start a new algorithm epoch with a new reference world, as the last epoch commit did (`rnw/epoch.py`, `tests/test_epoch.py`, `tests/test_synth.py`, `tests/golden_world.json`; renew with `RNW_REPRODUCE=1 EU5_GAME_DIR=... uv run pytest tests/test_local_install.py -k reference`).
 3. **Base builds first.** Before you change any code, build these worlds on the clean starting commit:
    - continents 3706823338;
    - archipelago 5;
@@ -140,7 +144,7 @@ Add `tests/test_technology.py` and update `tests/test_natives_eu5.py`, with synt
 4. Documentation:
    - a section *Technology and regional families (R7b)* in `docs/natives.md`, and correct its sentence on Western technology;
    - the next free claim with the builds;
-   - a [research log](research/log.md) entry;
+   - a [research log](../research/log.md) entry;
    - a status line on the roadmap R7 row;
 5. One commit.
 
@@ -240,7 +244,7 @@ Use synthetic fixtures only (new `tests/test_empires.py`, plus `tests/test_socie
    - the roadmap R7 row: offline complete, gate pending in game;
    - S10 marked done in the backlog;
    - an experiment record with status NOT-RUN, under the next free number.
-5. Install for the owner, as [AGENTS.md](../AGENTS.md) requires. Make the code with `rnw world-code --preset continents --seed 3706823338 --settings <the 1000 file>`, then run `rnw world CODE --install`. Record the folder and its removal in [INSTALLED](../experiments/INSTALLED.md) and the code in the experiment record. The game stays closed, and nothing else in the profile changes.
+5. Install for the owner, as [AGENTS.md](../../AGENTS.md) requires. Make the code with `rnw world-code --preset continents --seed 3706823338 --settings <the 1000 file>`, then run `rnw world CODE --install`. Record the folder and its removal in [INSTALLED](../../experiments/INSTALLED.md) and the code in the experiment record. The game stays closed, and nothing else in the profile changes.
 6. One commit.
 
 ## Experiment (owner, one batched test for R7b and R7c)
@@ -263,7 +267,7 @@ Use synthetic fixtures only (new `tests/test_empires.py`, plus `tests/test_socie
 
 ## Out of scope
 
-- The other extraordinary archetypes of the [product spec](product-spec.md): the maritime culture, the commercial network and the fractured successor realm. *Done since, without a separate design, as R7d (societies) in 0.11.2: [natives](natives.md), C251-C253.*
+- The other extraordinary archetypes of the [product spec](../product-spec.md): the maritime culture, the commercial network and the fractured successor realm. *Done since, without a separate design, as R7d (societies) in 0.11.2: [natives](../natives.md), C251-C253.*
 - Tributaries. The `tributary` subject type needs a tribal or horde overlord or `allow_tributary_subject`, and no American advance gives that (C158).
 - Region keys chosen by content.
 - Tribal confederations of generated tribes (vanilla's Haudenosaunee confederation joins landed tribes), alliances, stability or other `currency_data`, `tolerated_cultures`, court languages.

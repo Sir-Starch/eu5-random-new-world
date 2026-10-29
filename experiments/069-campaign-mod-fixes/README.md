@@ -97,4 +97,4 @@ in [INSTALLED](../INSTALLED.md).
 The game-facing corrections remain an offline candidate, separate from the
 completed 0.13.5 campaign. No EU5 launch, tag, push, upload or publication occurs.
 The remaining 1.0.0 evidence boundary is recorded in
-[release readiness](../../docs/release-process.md#current-readiness).
+[release readiness](../../docs/release-process.md#published-baseline).

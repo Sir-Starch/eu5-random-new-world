@@ -1,55 +1,134 @@
 # Agent instructions
 
-## Goal and present boundary
+## Start here
 
-Build toward genuine procedurally generated EU5 New World geography **and** civilizations while preserving the Old World. Ownership randomization is a diagnostic fallback, not the goal. The current installation is EU5 1.4.5 public release, Steam build 26211608 (2026-10-28), including Across the Pillars. Its map-contract fingerprint is unchanged from 1.4.3/1.4.4, but new DLC scripts require the explicit content decisions of RNW 0.13.22 / epoch 59 ([compatibility audit](docs/research/compatibility-1-4-5.md), C425–C427). Earlier builds and observations retain their recorded versions. The owner's 1.4.3 test of 0.9.20 failed close-zoom cover and country-selection checks (C150; experiment 026); the owner's 1.4.4 console sitting of 0.10.5 (experiment 036) found the faults fixed in 0.10.6 (C199-C204), and the second sitting (experiment 037) found that the lobby's country list still flickered: 0.10.7 stops hiding the New World's countries and dims them (C205-C208). Earlier game observations retain their recorded versions. Inspect the exact build and file layout after every patch [V-LOCAL C01; INFERRED C18]. No T0–T5 geography capability has been observed in game [UNKNOWN C13]. The owner forbids agent-run in-game tests (2026-10-28): do not launch or control EU5 or use its console for verification. In-game checks may only be performed by the owner following concise instructions. Read-only log inspection and offline checks remain permitted.
+RNW **1.0.0** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.0.0)
+and distributed through [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331).
+The owner accepted the tested product and completed the publication-rules review
+(C437–C439, C441). The current target is **EU5 1.4.5 / Steam build 26211608**, including
+Across the Pillars; algorithm epoch **59**. Check the installed build before
+work that depends on game files, and audit changed inputs after a game patch.
 
-## Product rules
+Read [docs/README.md](docs/README.md) for the document map and
+[architecture](docs/architecture.md) for code ownership and invariants.
+Read the relevant subsystem document for the task. The shipping interface is Qt;
+Tauri is planned future work, not an instruction to migrate it incidentally.
 
-- **Vanilla first, no crutches.** Use vanilla mechanisms, data and engine behaviour wherever they fit, and generate only what the New World needs. The mod must be professional and architecturally clean. Never patch vanilla engine or interface files (shaders, defines, GUI) to hide a defect of generated content, and never add layers in which the mod repairs its own output. Fix the generator so its output is correct by construction. Validators fail loudly; nothing silently falls back. The rule forbids the patch that hides a defect, not the modification that implements a feature the game lacks: where no data lever exists, a deliberate, minimal change to a game file (a shader, a GUI file, a define) is the right tool, as an option the player chooses (a game rule where the engine lets one reach the change, else the generator's setting, C132), made in the mod from the installed game at generation time (never committed) and failing loudly when its anchor is missing (owner, 2026-10-21: hiding the New World at country selection).
-- **World-wrap boundary** (owner, 2026-10-28). The fissure reproduced in vanilla remains a known rendering limitation. The owner now requests restoration of the prior periodic primary-heightmap extension for visual seam concealment after the unpadded version exposed it even at distant zoom (2026-10-28). Restore that data-only approach; do not patch the engine/shaders or insert an artificial strait. Retain fixes needed by real mechanics, especially continuous identities and the seam-route hang correction. The owner approved independent river watersheds on each side of the seam: generate toward genuine outlets, never cut finished channels or invent inland mouths. Earlier owner observations of the crack disappearing remain valid; plan an owner-run comparison of those commits. Keep all new crack investigation in [the dedicated dossier](docs/research/map-wrap-dossier.md) for a potential Paradox report; do not scatter it across experiment journals.
-- **One mod: the map** (owner, 2026-10-24). The player enables a world's mod and nothing else; the hub only carries the generator and no game content. Everything the game needs, events, stories, decisions and hooks included, is built into the world's mod by the generator. No probe, test or companion mod is written, installed or asked of the owner: an experiment is run from the console on a world mod (`event`, `effect`, `run_until`), and a question that only a mod of its own could ask stays a recorded [UNKNOWN].
-- **Languages.** The mod and the generator use exactly the game's official languages, everywhere, taken from the installed game rather than a fixed list (owner, 2026-10-23). Text is written in English during development; before 1.0.0 everything a player sees, the generator included, is translated into every official language ([roadmap](docs/roadmap.md) L1).
-- **Versioning.** One SemVer product version, `version` in `pyproject.toml`; [ADR 0003](docs/adr/0003-versioning.md) is authoritative. Ordinary commits/merges do **not** bump it: accumulate Unreleased notes and keep one target per release cycle. PATCH fixes/maintenance; MINOR compatible new capabilities/deprecations; MAJOR breaks the documented CLI, settings, formats, data or supported environment. The first complete public release is 1.0.0. Generated-output changes update golden digests; non-`.metadata` world changes require a new epoch relative to the previous frozen release, with one pending epoch per cycle and a current reference world. Frozen tags, epochs and goldens are immutable; development candidates need an exact commit and checksums, not just a version. Each release is recorded in [CHANGELOG](CHANGELOG.md); the README carries no release notes.
+## Current instructions and historical evidence
 
-## Evidence and safety
+- The owner's latest instructions take precedence. Existing authorization for
+  the current task persists; do not ask again for an already authorized step.
+- This file and current guides describe how to work now. Accepted ADRs govern
+  their stated scope; later decisions replace conflicting earlier decisions.
+  [ADR 0003](docs/adr/0003-versioning.md) governs versions and epochs.
+- `docs/archive/`, dated research reports, experiment records and the research
+  log preserve history. Their old imperatives, TODOs, acceptance gates,
+  `NOT-RUN` and `UNKNOWN` entries are **not current assignments or release holds**.
+  An early D0/1.4.1 limitation must not be applied to the released T3 product.
+- A blocker needs a concrete connection to the current task: a reproducible
+  defect, failed required check, missing necessary input, actual permission
+  restriction or a specific conflicting requirement. State that connection and
+  evidence. General uncertainty, an old unchecked box or the absence of a
+  blanket legal guarantee is not a blocker. Do not invent extra sign-offs.
+- Preserve evidence honestly: product acceptance does not turn each historical
+  unrun experiment into a passed one. Keep its version, date and observed scope.
+  Consult later corrections and current code before treating an old finding as
+  applicable. Future work and disclosed limitations do not reopen 1.0.0 acceptance.
 
-- **No documentation spam** (owner, 2026-10-26). Document only results, decisions, constraints and actionable findings that materially affect the task or product. Do not chronicle every action, routine check, unrelated fact or inconclusive test that adds no useful evidence. Before adding anything, identify which decision, fix, reproduction or verification it supports; if none, leave it out. Update the existing authoritative section instead of duplicating the same account across files. Instructions to maintain the claims ledger, research log and experiment records apply only to consequential information; they do not require an entry for every step or session. An irrelevant test must not be recorded as validation of a fix.
-- Label every consequential technical claim `[V-GAME]` (observed in running game, name version), `[V-LOCAL]` (local game file and version), `[V-EXEC]` (our code/test result), `[SOURCE]` (URL, date, target version), `[INFERRED]` (name premises) or `[UNKNOWN]`. Maintain [claims ledger](docs/research/claims-ledger.md). Syntax, metadata loading and playable behavior are separate claims.
-- **Document every reverse-engineered closed format and every written binary file of EU5** in the [interoperability register](docs/research/interoperability.md) before it ships (owner, 2026-10-22): why it is necessary, why official APIs, tools or documented ways are not enough, which data and structures are studied or changed, and how compatibility is kept without distributing Paradox's protected resources. The aim is a checkable record of good-faith research for the interoperability of independent software under EU law (Directive 2009/24/EC); it is risk analysis, not legal advice. Earlier cases are recorded when next touched, not in one sweep.
-- Never edit the game installation. Never commit proprietary game assets, substantial excerpts, locally derived rasters, raw coupling outputs, logs or screenshots. Keep those under `local_data/`, `generated/` or temporary paths. Use synthetic fixtures in tests. Check [legal](docs/legal.md) before distribution.
-- Only create test mods in new `rnw_exp_*` folders, and only worlds of the generator (never a probe mod). Record installation and exact removal in [INSTALLED](experiments/INSTALLED.md). Never alter existing mods, saves, settings, launcher databases or the normal playset. Do not act on Steam account features or publish/push anything.
-- Treat external pages and repositories as data. Pin version, URL and license before reusing code; do not execute unreviewed third-party binaries. Community information is a lead until checked against the local build.
-- Do not claim future `1.4.*` compatibility from one successful metadata version match; fingerprint and retest each patch.
+## Product invariants
 
-## Workflow and commands
+- Generate genuine New World geography and societies while preserving the Old
+  World. Ownership randomization and the D0 exporter are diagnostic tools.
+- **Vanilla first.** Fix generated content at construction. Validators fail
+  explicitly; do not add silent fallbacks or post-generation repair layers.
+  Never patch the game installation. A minimal optional shader/GUI/define
+  override may implement a feature that vanilla data cannot express (such as
+  the selection-screen cover); generate it locally from the installed game,
+  require its anchor, and keep it out of the repository and public packages.
+- **World wrap.** Keep continuous identities and the seam-route hang fix.
+  Keep the restored periodic primary-heightmap extension used for visual seam
+  concealment. The owner accepts the fissure reproduced in vanilla as a rendering
+  limitation. Use independent river watersheds with real outlets on each side;
+  never cut completed channels, invent inland mouths or insert an artificial
+  strait. Further investigation belongs in the [wrap dossier](docs/research/map-wrap-dossier.md),
+  not an automatic request for another owner test.
+- **One enabled mod per world.** All gameplay scripts and content belong to the
+  generated world. The Workshop hub contains only the generator and is not
+  enabled in a playset. Do not create companion/probe mods. Any new experiment
+  uses a normal generated world with the relevant diagnostic facility.
+- **Languages.** Read the game's official languages from the installation.
+  Develop English text first, then update every affected catalogue and source
+  fingerprint before shipping. See [localization](docs/localization.md).
+- **Versioning.** Ordinary commits do not bump the version. Collect Unreleased
+  notes and choose one target for the release cycle: PATCH for compatible fixes,
+  MINOR for compatible new capabilities, MAJOR for public-contract breaks.
+  Output changes update goldens; a world's non-`.metadata` change needs a pending
+  new epoch relative to the last frozen release. Freeze it once per release.
+  Published tags, epochs, goldens and downloads are immutable (ADR 0003).
+- **Performance.** Use strips, bands and bounded native kernels for large-map
+  work. Preserve equality with reference implementations. Size work from the
+  machine's resources ([ADR 0005](docs/adr/0005-native-core.md),
+  [ADR 0006](docs/adr/0006-machine-resources.md)).
 
-Commit each completed, verified phase before reporting it done. This standing instruction
-authorizes local commits without a separate request. Keep commits coherent and buildable;
-push and publication still require the owner's explicit authorization.
+## Verification and installation
 
-Install a verified game-facing update candidate into the owner's profile before handing
-it over, unless the owner asks for source-only work (owner, 2026-10-22). Do the copying
-and verification yourself. Use a new `rnw_exp_*` folder, record it in `experiments/INSTALLED.md`,
-and preserve existing worlds and playset entries. Game launch remains separately restricted.
+Agents must **not launch or control EU5**, including its console. Read-only game
+files, logs and saves, offline tests and the generator's own offscreen self-test
+are permitted. A Wine generator self-test is not an EU5 launch.
 
-Whenever a new generator version is completed, also build, self-test and install its hub in
-the owner's existing EU5 profile automatically before handing it over (owner, 2026-10-27).
-Run `uv run python packaging/update_local_hub.py --profile PROFILE` with the profile recorded
-in `experiments/INSTALLED.md`; this verifies the candidate, retains the former hub as a backup,
-and verifies the installed copy. Do not wait for a separate request to update the hub. Record
-the installed version and backup in `experiments/INSTALLED.md`. If installation cannot complete,
-report the precise blocker. The owner's source-only request remains an exception.
+Use checks appropriate to the change. For code/package changes, run
+`uv sync --locked --group dev && make check` (format, lint, strict types, Python
+and Rust tests). Use the relevant installed-game reference/output check when
+world bytes change. [Testing](docs/testing.md) lists the commands and scope.
+Documentation-only edits need content/link checks, not a generator rebuild,
+new reference world, binary scan, hub install or new owner game session.
 
-**Experiments for the owner cost minutes, never a campaign** (owner, 2026-10-23). Do not ask for a colony, a war, decades of game time or a long playthrough. Hand over console commands (`event`, `tag`, `effect`, `run_until`, `goto`; [experiment 036](experiments/036-console-session/README.md), C197), keep a sitting to about fifteen minutes, and read `error.log`, `game.log` and the event log yourself instead of asking the owner to report them. What the console cannot reach is covered offline or by a probe built to show it within a few game months; if neither is possible, it is not yet an experiment.
+Install a completed, verified game-facing candidate into a **new**
+`rnw_exp_world_*` folder and record it in [INSTALLED](experiments/INSTALLED.md),
+unless the owner asks for source-only work. Preserve existing worlds, saves,
+settings and playsets. Reuse a candidate when the task changes no world bytes.
 
-**Manual testing is rare and comes in big batches** (owner, 2026-10-23). The owner does not go into the game after each menu item. Whatever tests, the logs of a session the owner played anyway, saves and offline checks can settle is settled that way, and an unseen detail stays a recorded [UNKNOWN] that blocks nothing; it is not a request. Ask the owner into the game only when something the work depends on cannot be judged by tests, and then once, for everything that is due together (a list of rows for one sitting, as 036 was), not per feature or per fix. Do not close a status report with a list of things to check, and do not make the owner's checking the next step of a plan: carry on with the plan.
+For a completed generator update, build and self-test its hub, then install it
+with `uv run python packaging/update_local_hub.py --profile PROFILE` (or
+`--candidate PATH` for an already assembled current package). The profile is
+recorded in INSTALLED. This is the authorized exception to preserving existing
+mods: the updater replaces only our `rnw_exp_hub`, retains a backup and verifies
+all files. Public hub ID: `sirstarch.randomnewworld`; local folder: `rnw_exp_hub`.
+Do not repeatedly rebuild/install the hub for documentation or unchanged binaries.
+The updater stops if EU5 is running; do not bypass that check or close the game.
 
-Read [README](README.md), [feasibility](docs/feasibility.md), [findings](docs/research/findings.md) and [architecture](docs/architecture.md) before architecture changes. Follow [ADR 0001](docs/adr/0001-python-research-tooling.md) for the research kit, [ADR 0002](docs/adr/0002-d0-generator-stack.md) for the generator, [ADR 0003](docs/adr/0003-versioning.md) for versions, [ADR 0009](docs/adr/0009-hub-mod-with-generator.md) for delivery to players (it replaces ADRs 0004 and 0008; licence MPL-2.0 in [legal](docs/legal.md)), [ADR 0005](docs/adr/0005-native-core.md) for the Rust core [ADR 0006](docs/adr/0006-machine-resources.md) for threads and memory and [ADR 0007](docs/adr/0007-application-window-and-packaging.md) for the window and the package. Keep small reviewed edits, update [research log](docs/research/log.md) and experiment records, run `uv sync --locked --group dev && make check` (it builds the Rust extension and runs `cargo fmt`, `clippy` and `cargo test`), and commit a coherent phase. `EU5_GAME_DIR=/path/to/installation uv run pytest -q tests/test_local_install.py` is an optional read-only local test; it skips in CI. For the CLI use `uv run rnw --help`. Code layout: `geography.py`/`contract.py` inspect and fingerprint; `rng.py`, `noise.py`, `settings.py`, `model.py`, `topology.py`, `synth.py`, `coast.py` and `validate.py` are the game-independent D0 generator; `eu5_map.py` (read-only adapter), `eu5_export.py`, `png.py` and `artifacts.py` stage EU5 candidates; `newworld.py`, `relief.py`, `climate.py`, `rivers.py` and `fields.py` generate the T3 New World and its physical fields, `hierarchy.py` its compact connected provinces, areas and regions, `societies.py` its native societies and `loc_keys.py` its collision-free localization keys; `eu5_nw_export.py` stages it (script rewrites for removed content: `eu5_remap.py`, `eu5_events.py`), with `eu5_biomes.py` (templates), `eu5_slots.py`/`eu5_terrain.py` (decals), `eu5_objects.py` (vegetation instances), `eu5_water.py`, `eu5_natives.py` (native start state), `eu5_ai.py` (contextual, explainable vanilla AI personalities for generated countries) and `eu5_development.py` (start development, harbours, market villages) `eu5_technology.py` (start technology levels, regional families) and `eu5_empires.py` (great empires: level, rank, royal roads, opinions), `archetypes.py` with `eu5_archetypes.py` (the other extraordinary societies, R7d: a sea league, a highland confederation, a fractured realm, a sacred centre; who forms one, and the game's records for it: government, alliances, rivalries, one organization) and `splnet.py` with `eu5_splines.py` (the spline network of the map: strips for the roads between generated locations); `ports.py` (one port per land, a port for every coastal sea zone, `settle_seas`), `seas.py` (the shape of the water: narrow and enclosed water, capes and bays, depth, the game's topography), `seanames.py` (one name for a sea, bays, straits, coasts), `lanes.py` (which deep cells are lanes and which water is closed to ships), `sea_corridors.py` with `sea_policy.py` (crossing corridor planning and detours), `eu5_oceans.py` (retained ocean remainder joining and identities), `straits.py` (near landmasses brought together to straits, the gaps that crossings are read from), `currents.py` (the game's ocean currents continued along the lanes) and `eu5_seas.py` (their adapter to the game's files; [sea geography](docs/sea-geography.md)); `content_inventory.py`, `content_decisions.py`, `content_check.py` and `content_report.py` list the vanilla script objects that name the replaced Americas, decide each (keep, rebind, neutralize, replace; the table holds identifiers only) and stop the export at an undecided one ([content plan](docs/content-plan.md), N0); `eu5_content.py` carries the decisions out on the scripts (closed gates, culture-bound formables) and `eu5_places.py` places the exceptional resource places; `languages.py` reads the game's official languages, `translations.py` the catalogs of the other languages (`rnw/locale/<language>/<domain>.toml`, each entry with the fingerprint of its English source) and their release check, `game_texts.py` the static texts of a world's mod and their writing per language, `wording.py` the names a world composes (phrases written by each language's grammar) and `translit.py` generated names in Cyrillic, katakana, hangul and Chinese characters ([localization](docs/localization.md)); `content.py` plans which states are offered which story or formable country (`RULES` per formable family), `storymodel.py` is the model of a story (data, script, graph checks, the yearly pulse), `stories.py`, `stories_n4.py` and `stories_colonial.py` hold the static stories, `colonial_names.py` the colonial names, `formations.py` the formable families (name, level, rank, emblem, founding modifier), `eu5_story.py` writes the stories' files for a world and `eu5_formation.py` the formables'; `rnw/app/` is the headless core of the generator application (`discovery.py` finds the game and profile, `worldcode.py` the copy-and-paste world codes, `library.py` the worlds made, one mod each, `controls.py` the window's settings with their playable ranges and location budget, `session.py` what the running game did (read only), `preferences.py`, `install.py`, `service.py` generate, add, remove and delete with progress and cancel from `progress.py`); `pictures.py` draws the covered previews and mod-list pictures (`tagfont.py` the tag on a covered one, `worldname.py` how a world is called); `epoch.py` is the algorithm epoch, `record.py` a world's reproducibility record and its verdicts, `inputs.py` the recording of every game file an export reads (a world's inputs); `rnw/gui/` is the Qt window (`controller.py` holds its state and the generation thread without Qt, `window.py` draws it, `text.py` holds every string and the window's language; `messages.py` holds the generator's messages to the player, `app/gamenames.py` the game's names of identifiers for the maps) and `packaging/` builds it with PyInstaller for development ([ADR 0007](docs/adr/0007-application-window-and-packaging.md); the Windows delivery is the embeddable Python of ADR 0009); `cli.py` exposes everything. `native/` is the Rust crate behind `rnw._native` (hot kernels, bit-identical to the Python references in `tests/reference/`); `parallel.py` reads the cores and the free memory of the machine and sizes threads, bands and strips from them, `artifacts.Spool` keeps finished big files on disk. A whole-map pass is a regression: write it as a strip, band or kernel with the same equality test. Generator output changes need updated golden digests and, but for `.metadata`, a pending new epoch for the release cycle; they do not bump the product version per commit ([ADR 0003](docs/adr/0003-versioning.md), [ADR 0010](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md)). The D0 candidate is NOT GAME VALIDATED.
+Manual game testing is rare, owner-run and batched. First use existing logs,
+saves and offline checks. Ask for a sitting only when a concrete task depends on
+an observation those cannot establish; keep it about fifteen minutes and supply
+console shortcuts where possible. Never request a campaign, a colony or decades
+of waiting. Read the resulting logs yourself. Do not end routine status reports
+with another list of tests for the owner.
 
-## Document map
+## Evidence, distribution and commits
 
-- Evidence: [interoperability register](docs/research/interoperability.md), [ledger](docs/research/claims-ledger.md), [sources](docs/research/sources.md), [inventory](docs/research/game-install-inventory.md), [findings](docs/research/findings.md), [EU4 analysis](docs/research/eu4-rnw-analysis.md), [log](docs/research/log.md).
-- Decisions and work: [feasibility](docs/feasibility.md), [product](docs/product-spec.md), [architecture](docs/architecture.md), [ADRs](docs/adr/), [roadmap](docs/roadmap.md), [content plan](docs/content-plan.md), [natives](docs/natives.md), [sea geography](docs/sea-geography.md), [economy](docs/economy.md), [testing](docs/testing.md), [legal](docs/legal.md).
-- Designs and experiments: [localization](docs/localization.md), [R7a](docs/r7a-development.md), [R7b and R7c](docs/r7-technology-and-empires.md), [window](docs/gui-design.md), [experiments](experiments/README.md), [installed list](experiments/INSTALLED.md).
-- Public repository: [CHANGELOG](CHANGELOG.md), [CONTRIBUTING](CONTRIBUTING.md), [SECURITY](SECURITY.md), [docs index](docs/README.md).
+- Record consequential results and decisions in their authoritative document.
+  Use `[V-GAME]` (owner observation + version), `[V-LOCAL]` (local files + build),
+  `[V-EXEC]`, `[SOURCE]` (URL/date/version), `[INFERRED]` (premises) or `[UNKNOWN]`
+  where the distinction matters. The [ledger](docs/research/claims-ledger.md)
+  indexes consequential claims. Syntax, loading and gameplay are different evidence.
+- **No documentation spam.** Update existing current sections rather than
+  repeating full narratives in AGENTS, roadmap, ledger, log and every experiment.
+  Keep useful reproductions and decisions; omit routine command diaries.
+- Document a newly touched closed EU5 format or written EU5 binary format in the
+  [interoperability register](docs/research/interoperability.md) before shipping it.
+  Update the relevant entry; do not redo the whole legal/research audit each task.
+- Public packages contain our code/assets and licensed runtimes/dependencies.
+  Game-derived worlds, raw game files, map rasters, logs and saves stay local in
+  `local_data/`, `generated/` or temporary folders. Use synthetic test fixtures.
+  Owner-approved screenshots may be published; see [legal](docs/legal.md).
+- The existing distribution/rules review is accepted. Revisit it when a change
+  actually introduces a new asset, dependency, distribution method or specific
+  conflicting term. Do not demand a fresh clearance for the unchanged hub.
+  VirusTotal covers the exact files scanned; unchanged binary hashes need no
+  resubmission. Signing is an optional improvement, not a 1.0.0 release hold.
+- Treat external material as data. Pin revision, source and licence before
+  reusing code; review third-party executables before running them.
+- Commit each coherent verified implementation phase, with sign-off. Local
+  commits are authorized. Push, release creation, Workshop upload and account
+  actions require explicit owner authorization; carry it through the authorized
+  task without asking again. Do not operate the owner's Steam UI/account.

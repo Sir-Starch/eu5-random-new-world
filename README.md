@@ -131,9 +131,9 @@ For deep dives into the engineering, see [Architecture](docs/architecture.md), [
 
 ### For Players (Standalone Binary / Steam Workshop)
 
-Once `1.0.0` is published, no Python or Rust installation is required:
+No Python or Rust installation is required for the [released packages](https://github.com/Sir-Starch/eu5-random-new-world/releases/latest):
 
-1. Subscribe to **Random New World** on the Steam Workshop (or download the standalone archive from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases) — release archives include SHA-256 checksums).
+1. Subscribe to [**Random New World** on the Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331) (or download the standalone archive from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases) — release archives include SHA-256 checksums).
 2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works on Windows and on Linux/Steam Deck via Proton).
 3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (usually a few minutes; allow about 7.5 GB of free RAM).
 4. Enable the newly created world mod (e.g., *RNW: Small continents 7K3Q*) in your playset — **only one RNW world mod at a time** — and start a new 1337 campaign. *(Do not enable the generator hub item itself in your playset).*

@@ -1,5 +1,7 @@
 # Terrain and biome synthesis (phase V1)
 
+The terrain/biome pipeline ships in 1.0.0. The dated implementation and vanilla surveys below explain its construction; they are not a new validation queue. Current world-wrap policy is in [AGENTS](../AGENTS.md) and the [wrap dossier](research/map-wrap-dossier.md).
+
 **Status:** V1a implemented on 2026-10-19 and reviewed by the owner in game (C55): it loads and renders; four defects led to V1a.1 (generator 0.5.0, below), which the owner accepted in game (C58). V1b rivers implemented on 2026-10-19 (generator 0.6.0, C59–C60) and accepted by the owner in game (C64); the same review led to V1b.1 (generator 0.7.0, below), accepted in game (C66).
 
 ## Problem
@@ -69,13 +71,16 @@ The interim patch transfer copied river and border bands from unrelated places a
   | Brown pixel-staircase patches in white desert | Slots 13–15 in 13-entry biomes such as `arid_hills_desert_biome` render `fallback_material` | Only listed slots are written on generated land; desert cells no longer become wetlands, which have no biome |
   | Green city ground in sand | Vanilla `city_materials` gives every non-Mediterranean biome the green peasant decal; models come from donor cultures | Not changed: an override would also change Old World deserts; native cultures are R6 |
 
-## Open work
+## V1-era limits and later refinements
+
+This list records the original V1 scope and measurements. Later terrain changes
+are described below; future hydrology and relief work belongs in [roadmap](roadmap.md).
 
 - **V1b rivers:** accepted in game (C64). Lakes end rivers (no outflows yet); splits and deltas are not generated.
 - **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Accepted in game (C66).
 - Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
 - Erosion for more natural valleys.
-- The mod is about 1.3 GB, because instance files are whole-file overrides.
+- The V1 measurement was about 1.3 GB per built world, because instance files are whole-file overrides; this is not the size of the generator hub.
 
 ## Continuous map wrap (0.12.2)
 
@@ -113,7 +118,7 @@ The initial primary height sources also sample fine eroded detail from the three
 installed ordinary mountain height layers. Integer, band-independent sampling
 follows elevated land, fades near river lines and low terrain, and continues into
 periodic edge padding. This supplies the missing fine-detail role noted under
-Open work above; it does not add separate mesh objects. The exact blend, resource
+the V1-era limits above; it does not add separate mesh objects. The exact blend, resource
 bounds, local numeric/visual comparison and remaining engine uncertainty are in
 058. Neither biome grouping alone nor a height-source plot proves final game
 appearance. No engine files are patched and no derived game resources are shipped

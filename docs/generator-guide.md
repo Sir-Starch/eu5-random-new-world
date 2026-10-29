@@ -1,7 +1,6 @@
 # Using the generator
 
-> [!NOTE]
-> Written for 0.9.24. Later releases added controls (for example *Extraordinary peoples*) without changing the workflow; see the [changelog](../CHANGELOG.md).
+RNW 1.0.0 targets EU5 1.4.5 / Steam build 26211608.
 
 Run from source with `uv sync --locked --group dev` and `uv run rnw gui`.
 The Linux folder package runs with `./RandomNewWorld`; its command line is
@@ -47,8 +46,10 @@ restores the previous version in the game. Previous version opens its library pa
 Maps start covered. Reveal this world exposes the six atlas layers without exposing
 its thumbnail in EU5. Show the New World belongs to each world: choose it before
 generation or change it on the finished world's World tab. It updates that world's
-picture and existing mod's selection cover without generating geography again; restart
-EU5 to read the change. The new-world choice remembers a default for future generations.
+picture and existing mod's selection cover without generating geography again. From
+EU5's main menu, close and reopen the Mods manager to read that visibility update
+(owner observation on 1.4.5, C429). Restart the game before switching actual worlds
+or replacing a loaded map. The new-world choice remembers a default for future generations.
 Old records inherit the previously saved global choice once, so changing the default
 leaves existing worlds alone. Missing cover sources produce an explicit error. [V-EXEC C147]
 
@@ -105,24 +106,34 @@ data in `data/` beside it, for both the window and CLI. [V-EXEC C143]
 
 ## Reproduction, cache and releases
 
-The algorithm epoch remains 1 in 0.9.24: this release changes application presentation
-and per-world preferences; the generation algorithm and its reference digest are unchanged.
-The 0.9.23 reference world's 739 mod files match the recorded digest (C144).
-The local land cache includes the epoch, seed, settings,
-canvas and drawn mask in its identity and checks every cached file before use.
-Corruption fails with the exact cache entry to remove. The two measured exports took
-132 s cold and 105 s warm on this session's machine; this is a measurement, not a
-promise of a particular speed on another machine. [V-EXEC C144]
+Released 1.0.0 uses algorithm epoch 59. Exact reproduction needs the recorded
+algorithm, resolved settings/rolls and game inputs; the version alone is not
+sufficient for development builds. The local cache keys include the algorithm
+and relevant inputs and are checked before use. Follow the [version policy](adr/0003-versioning.md)
+when making new releases; older output is not silently migrated.
 
 New input manifests also record directory listings, so a patch adding scripts is
 detected as well as changed or removed files. Old manifests remain readable; those
 without directory listings retain C141's limitation, and a full reproduction check
 is the stronger test. [V-EXEC C143]
 
-The release workflow creates artifacts from a version tag, checks the tag against
-`pyproject.toml`, runs self-tests and checks for game assets. It does not publish a
-release or Workshop item. Linux and Windows-through-Wine self-tests were run locally. The packaged Windows
-generator also passed an owner-run Windows 11 launch/generate/install smoke (C428).
-Native Windows CLI/CI, macOS, signing and GitHub Actions execution remain unverified.
-See [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) and
-[legal](legal.md) before public distribution. [V-EXEC/UNKNOWN C145]
+Release packages are available on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases)
+and through the [Workshop hub](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331).
+Tagged Linux/Windows CI, Windows package self-tests, owner Windows 11 smoke and
+Linux/Proton use are recorded (C428, C438–C439, C441). Windows binaries are unsigned;
+see [known limitations](known-limitations.md) for platform and campaign limits.
+
+## Library shared by installed copies
+
+The generator stores its library outside the application/mod folder: by default
+`%LOCALAPPDATA%\RandomNewWorld` on Windows (inside EU5's prefix for Proton),
+`~/.local/share/random-new-world` on Linux, or the platform equivalent. `RNW_DATA`
+or `portable.txt` can choose a different location. The Workshop application can
+therefore show records from an earlier local copy. It also recognises existing
+local RNW world mods and can restore their library data from recovery metadata.
+Those worlds are not bundled in the Workshop hub (C441).
+
+**Code only** means that a library record remains, but the application currently
+finds neither a matching installed mod nor a kept built-mod folder for it. Codes,
+notes and available pictures can remain usable. Add to the game regenerates when
+needed; retain the original game inputs/version when exact reproduction matters.

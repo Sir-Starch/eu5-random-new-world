@@ -1,5 +1,11 @@
 # Interoperability register: closed formats and binary files of EU5
 
+Current distribution policy is in [legal notes](../legal.md), with the accepted
+1.0.0 review recorded in C437. The dated legal-source analysis below preserves
+its interpretive limits; it is not an outstanding clearance request. Maintain
+the relevant technical case when its format or use changes, rather than repeating
+the whole review for unchanged code or documentation.
+
 **Standing rule (owner, 2026-10-22).** Every time the project reverse-engineers a closed format of EU5 or writes a modified binary file of the game, this register records, before the change ships:
 
 1. **Why it is necessary** for the mod to work.

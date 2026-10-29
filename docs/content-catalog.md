@@ -159,7 +159,7 @@ locations follow the resources seed, so rerolling peoples does not move them.
 
 Starting **great empires, sea leagues, highland confederations, fractured realms
 and sacred centres** are described in [Native societies](natives.md#more-varied-societies-r7d-societies)
-and [Technology and empires](r7-technology-and-empires.md). They are starting
+and [Technology and empires](archive/r7-technology-and-empires.md). They are starting
 political arrangements, distinct from the similarly named formable and story
 families. Their presence does not itself promise a story or a formation goal;
 content eligibility is evaluated separately. [V-EXEC C251–C253, C409]

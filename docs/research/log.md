@@ -1,5 +1,10 @@
 # Research log
 
+Chronological history. Dated plans and instructions below are retained as evidence,
+not current task assignments. Follow [AGENTS](../../AGENTS.md) and the
+[current document map](../README.md); later corrections and owner decisions
+supersede earlier pending states.
+
 ## 2026-10-28 — Public 1.4.5 and Across the Pillars
 
 [V-GAME owner/logs / V-LOCAL / V-EXEC C425–C427] The public build retains the
@@ -135,7 +140,7 @@ records the exact one-country output delta and verification; delivery is in
 - [V-LOCAL]/[V-EXEC] Read the vanilla 1337 economy setup of the Americas (C73). Development is the sum of rules in `14_development.txt`. The Americas get their civilisation level from region, province and location entries (Mesoamerica 12, Andes 10, and so on). They have no institutions or roads. Their buildings are 88, 79 of them market villages in state capitals. Build 25905365 is unchanged.
 - [V-EXEC] The 0.9.1 build of seed 517130602 keeps the American region entries, so development follows the old region positions, not the generated societies (C74). Every generated port gets harbour 0.50 (vanilla American harbour values: 758‰ at zero, 13 of 1,092 negative). Generated natives have no buildings.
 - [V-EXEC] Probes: copying vanilla's per-class bonus would over-develop states (8.7–10.6 against 4.1), because generated hearths lie on better land. A term of 12 × complexity lands near vanilla's class means. Coast enclosure predicts vanilla harbour values only weakly (Spearman 0.10–0.19).
-- Designed R7a for Sonnet in [R7a design](../r7a-development.md): drop the positional entries; a society term `round(B × complexity / 1000)` with B calibrated from vanilla (12); harbour values quantile-mapped from the vanilla American distribution by shelter; market villages in the vanilla share of capitals, most complex first. It adds invariants, a report section, offline acceptance on three worlds and experiment 012 for the owner. No code changed.
+- Designed R7a for Sonnet in [R7a design](../archive/r7a-development.md): drop the positional entries; a society term `round(B × complexity / 1000)` with B calibrated from vanilla (12); harbour values quantile-mapped from the vanilla American distribution by shelter; market villages in the vanilla share of capitals, most complex first. It adds invariants, a report section, offline acceptance on three worlds and experiment 012 for the owner. No code changed.
 
 ## 2026-10-19 — R7a implemented (product version 0.9.2)
 
@@ -446,7 +451,7 @@ records the exact one-country output delta and verification; delivery is in
 - [V-LOCAL/V-EXEC C158] Vanilla levers for extraordinary societies: `country_rank`, start-up
   opinions (the Andes and Mayapan records), and roads, whose 1,646 pairs all join locations in
   pixel contact. Tributaries are out of reach for native monarchies.
-- Design [R7b and R7c design](../r7-technology-and-empires.md):
+- Design [R7b and R7c design](../archive/r7-technology-and-empires.md):
   R7b (S09) levels by complexity on the vanilla quantiles, templates that follow the level, the
   family in the homeland vector; R7c (S10) empires at `min(T, S + 1)` with the highest American
   rank and royal roads, feared by neighbours and resented by vassals. No generated output changed;
@@ -823,7 +828,7 @@ records the exact one-country output delta and verification; delivery is in
 
 ## 2026-10-24 — R7d (societies): four more extraordinary societies, 0.11.2, C251-C253
 
-- [OWNER] "Выполни R7d". Two things carry the name: the spline network of 2026-10-22 (0.9.30, C162-C163, done) and the *more varied societies* of the content plan (gap G7, open). This is the second; the roadmap and the natives page now say *R7d (societies)*. No Opus design existed ([R7c handoff](../r7-technology-and-empires.md): "they need their own Opus design"); the design is the [natives](../natives.md) section, written after a survey of the installation.
+- [OWNER] "Выполни R7d". Two things carry the name: the spline network of 2026-10-22 (0.9.30, C162-C163, done) and the *more varied societies* of the content plan (gap G7, open). This is the second; the roadmap and the natives page now say *R7d (societies)*. No Opus design existed ([R7c handoff](../archive/r7-technology-and-empires.md): "they need their own Opus design"); the design is the [natives](../natives.md) section, written after a survey of the installation.
 - [V-LOCAL C251] Each of the four combinations has a record that the vanilla 1337 setup already uses: Tlaxcala's republic, the 22 alliances, the Haudenosaunee's `tribal_confederation` of landed tribes with one `currency_data`, the Burke feud's mutual rivals, and the theocracies of Tibet and Venda (the faith is not Christian); and the game's societal values are two-sided axes (a naval position gains sea trade and loses land trade). The survey also found why the other axes stay alone: `mercantilism_vs_free_trade` and `outward_vs_inward` hold an age.
 - [V-EXEC C252] Generator 0.11.2, algorithm epoch 26: `rnw.archetypes` (who forms a sea league, a highland confederation, a fractured realm or a sacred centre, drawn once for every hearth's domain by the rare-empire chance), `rnw.eu5_archetypes` (the calibration from the installation, the lines, the checks), `hearth_domains`, landed tribes, `verify_archetypes`, report section `archetypes`, window texts (*Extraordinary peoples*). A chance of 0 is byte-identical to 0.11.1 (818 files, but `.metadata`). Exports at 1000 permille give each kind in some world and all four in continents 208; 31 worlds searched with the peoples stage alone; the reference world (`RNW1-0826C-SYW6B-MW73Y-C005G-40813-G0TQW-2Z`, 792 files, `7113a7f6…0662` under hash seeds 1 and 7) holds two confederations. `make check` (1,314 tests) and the 16 local tests with reproduction and layers pass. Installed as `rnw_exp_world_2r7bql6dk3` (continents 208 at 1000 permille).
 - [UNKNOWN C253] The engine's verdict on a theocracy over a monarchy template, tribes of the plain template in a confederation, alliances and rivals at the start. Nothing is asked of the owner; the next session's `error.log` tells ([experiment 045](../../experiments/045-varied-societies/README.md)).
@@ -1999,7 +2004,7 @@ checksum hand-off; pre-tag builds accept a full candidate SHA so a failed
 candidate does not consume a stable version. Synthetic source-gate regressions and all local checks pass;
 the edited remote workflow is not yet exercised. The single current audit,
 including the stale local dist hub and remaining final-candidate/publication
-boundaries, is in [release process](../release-process.md#current-readiness).
+boundaries, is in [release process](../release-process.md#published-baseline).
 No game launch, tag, push or publication.
 
 ## 2026-10-28 — 1.0.0 release candidate (C431–C432)
@@ -2017,7 +2022,7 @@ connection and two binary submissions completed; both exact hashes return zero
 malicious/suspicious detections (71 undetected, four unsupported). The reports
 do not establish signing or universal safety. Current evidence, package scope
 and external publication boundaries are maintained in
-[release process](../release-process.md#current-readiness), with reusable
+[release process](../release-process.md#published-baseline), with reusable
 [release notes](../releases/1.0.0.md) and delivery in INSTALLED. No EU5 launch,
 source push or publication.
 
@@ -2097,3 +2102,14 @@ The icon fallback introduced an unused Boolean return from `QPainter.end()`,
 which strict type checking rejects. Explicitly discard that result. Locked sync
 and full local checks pass; this typing-only correction changes no world output
 or runtime behavior and requires no version, epoch or installation update.
+
+## 2026-10-29 — Current guidance and historical evidence (C441–C442)
+
+Following the owner’s report of older worlds in the Workshop-installed generator,
+a read-only audit matches all downloaded hub files to the prepared upload and
+locates the displayed records in the separate local application library. The documentation now
+uses the released baseline, current architecture and practical development/release
+workflows. Superseded proposals and completed implementation checklists are
+archived with navigation preserved. Historical unknowns remain scoped evidence,
+not automatic tasks or renewed acceptance requirements. No runtime or frozen
+release files change.

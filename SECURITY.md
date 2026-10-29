@@ -8,7 +8,7 @@ The latest stable release receives security fixes. Fixes also go to `main`, whic
 
 | Version | Supported |
 |---|---|
-| Latest stable (1.0.0 at first publication) | ✅ |
+| Latest stable (currently 1.0.0) | ✅ |
 | Earlier stable / 0.x | ❌ |
 
 ## Reporting a vulnerability

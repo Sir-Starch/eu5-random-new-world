@@ -1,44 +1,58 @@
-# Product specification: genuine Random New World
+# Product specification
 
-**Vision.** A normal historical Old World opens onto an unknown, procedurally generated New World. Each seed changes coastlines, islands, terrain, resources, routes and societies. Political reshuffling on vanilla geography is a fallback diagnostic, not the product. This is the target specification for 1.0.0; the [roadmap](roadmap.md) tracks how much of it exists.
+Random New World generates New World geography and societies for EU5 while
+preserving the vanilla Old World. The released 1.0.0 product is accepted by the
+owner (C437); [roadmap](roadmap.md) separates its shipping scope from future work.
 
 ## Player journey
 
-1. In the game, press Open in folder on Random New World and start its generator, which finds the game ([ADR 0009](adr/0009-hub-mod-with-generator.md)). Choose a preset, a continent type or a few advanced controls; the seed is random unless one is entered or pasted, and it can be copied, saved and reused.
-2. Inspect a preview showing land/sea, navigation, climate, resources and broad civilization distribution. Reroll without touching the active game profile.
-3. Generate with visible progress; the generator validates the world and installs it in place as one local mod, the generated world. In the game's main menu the player ticks it once in the playset beside Random New World, applies the playset and starts a new 1337 campaign; a later world loads when the playset is applied again, without closing the game [V-GAME C88, C93]; a new game without that reload would mix two worlds [V-GAME C85]. Options applied at game start are game rules in the game's setup screen where the engine allows; whether the New World is shown before it is played (the generator's pictures, the mod-list picture and the cover at country selection) is one setting of the generator, hidden by default (C133).
-4. Explore without a full New World reveal. Save the seed, settings and generator/build fingerprints for reproducibility.
+1. Get the standalone application or subscribe to the Workshop hub. In EU5 use
+   **Open in folder** on Random New World and launch **Random New World Generator**.
+2. Choose a landmass type and settings, or paste a World Code. Previews start
+   covered; reveal the world only when wanted. The atlas supports geography,
+   societies, resources and comparison.
+3. Generate one local world mod. The application validates it and can install it
+   into the profile. Enable that world in the playset and start a new 1337 campaign.
+   The generator hub itself is not enabled. Keep the world's mod with its saves.
+4. Reuse the code, export a compact world file, or reroll peoples/resources while
+   retaining the land. A different algorithm epoch or changed game inputs can
+   change regeneration; the application reports the distinction.
 
-## Controls and feasibility
+See the [guide](generator-guide.md) for operations and
+[known limitations](known-limitations.md) for save and game compatibility.
 
-“Tool” means controllable in a future standalone generator without asserting game acceptance; “engine pending” means the relevant mod override/playability test has not run. See [capability matrix](feasibility.md).
+## Shipping scope
 
-| Control | Presets / range concept | Feasibility |
-|---|---|---|
-| Seed and preview/reroll | Explicit seed and preview | Tool feasible [INFERRED C14]; engine output pending |
-| Continental layout, fragmentation and landmass size | Few large masses ↔ many smaller masses | T1.5/T2/T3 engine pending [UNKNOWN C13] |
-| Archipelagos, islands, inland seas, straits | Low ↔ high, topology constrained | T1.5/T2/T3 engine pending [UNKNOWN C13] |
-| Topography, climate and vegetation | Coherent distributions, optional volatility | T1 engine pending [V-LOCAL C08; UNKNOWN C13] |
-| Resources and settlement opportunities | Scarce ↔ abundant, geographically conditioned | T1 and setup pending [V-LOCAL C08–C09] |
-| Population density and urbanization | Sparse ↔ dense, with empty regions | T0/setup pending [V-LOCAL C09] |
-| Number, scale and political fragmentation of societies | Few large ↔ many small | T0/T3 setup pending [V-LOCAL C09] |
-| Economy, institutions and technology | Grounded variation with rare advanced clusters | T0/T3 setup pending [V-LOCAL C09] |
-| Extraordinary-civilization frequency/intensity | Never, Seldom (default), Sometimes, Often: the chance per cultural hearth of a great native empire, after EU4's Fantasy Random New World [SOURCE C122] | Implemented as `natives.empire_permille` (0.9.15, C125, C126); gameplay pending |
-| Historical plausibility ↔ alternative history | Grounded default, opt-in fantasy | Content design feasible; gameplay pending [UNKNOWN C13] |
+- Five landmass archetypes, Random/Total Chaos choices, adjustable geography,
+  continent sketches, optional drawn land and optional larger ocean canvas.
+- Coherent relief, climate, biomes, rivers and sea geography from shared models.
+- New location hierarchy, native countries and tribes, cultures, religions,
+  demographics, economy and technology; optional extraordinary societies have
+  geographic/social causes and trade-offs.
+- Stories, formable countries, colonial names, exceptional resource places and
+  explicit adaptations of vanilla content tied to the removed Americas.
+- A Qt desktop generator, independent CLI, library, atlas, recovery, layer
+  variants, portable mode, progress and cancellation.
+- Player-visible text in every official language of the installed target build.
 
-Presets: **Historical-ish** (plausible, rare anomalies), **Unpredictable** (more geography and polity variation), **Chaotic** (high fragmentation and terrain variety), and **Legendary** (opt-in higher chance of extraordinary or fantasy societies). Exact numeric distributions require balance tests; no odds are invented here [UNKNOWN]. The default should be grounded, with extraordinary outcomes uncommon and fantasy disabled [INFERRED product decision].
+Actual control ranges and presets live in `settings.py` and `app/controls.py`;
+this document does not invent a second list of presets or odds. Content definitions
+are indexed by the [catalogue](content-catalog.md).
 
-## Civilizations
+## Engineering requirements
 
-Generate empty wilderness, small decentralized societies, regional states and complex powers. Exceptional outcomes could be a continental empire, advanced maritime culture, commercial network or fractured successor realm. Their strength must come from populations, production, institutions, technology, infrastructure, geography and organization, with weaknesses such as logistical strain, factionalism or resource dependence [INFERRED product design]. Flat superpower modifiers are excluded. Exact EU5 mechanics and required files remain subject to T0/T3 validation [UNKNOWN C09,C13].
+Generate valid content at construction; reject failed invariants explicitly.
+Preserve the Old World's pixels, identities and references. Derive visual layers
+and gameplay templates from the same model. Keep generation deterministic across
+supported platforms/thread counts under the recorded epoch and game inputs.
+Use tests and reference exports as described in [testing](testing.md); preserve
+the scope of engine observations without turning every research unknown into a gate.
 
-## Quality bars
+Ship the generator and original/licensed assets; derive the built world on the
+player's machine. Strength comes from land, population, technology and organization
+rather than arbitrary superpower modifiers. Use vanilla mechanisms where they fit.
+The accepted world-edge rendering limitation and deliberate optional selection
+cover are described in the current architecture and limitations.
 
-- [OWNER 2026-10-19] Generated terrain must look deliberate at every zoom level: coherent biome regions, smooth ecotones, mountain chains, rivers and valleys; no pixel-scale patchwork or patch seams. Visual layers and gameplay templates must come from the same climate/biome model. See [terrain-biomes](terrain-biomes.md).
-- [OWNER 2026-10-23] The mod and the generator use exactly the game's official languages, everywhere. Text is written in English during development; everything a player sees is translated before 1.0.0 ([roadmap](roadmap.md) L1).
-- [INFERRED] Identical seed, settings, generator version and game-build fingerprint must produce byte-identical mod output on Windows and Linux; this remains a future acceptance test. The owner-run Windows smoke (C428) verifies launch, generation and installation, without a cross-platform digest comparison.
-- [INFERRED] Geography must be connected as intended, with no orphan sea zones, broken coastlines or Old World pixel/identifier changes. Ship and land route behavior must be observed in game before release.
-- [INFERRED] Every society needs coherent pops, ownership, culture, religion, economy and diplomacy. Exploration, colonization, trade and conquest must be tested in an actual campaign.
-- [SOURCE C15] Distribution should use original assets and generator code; local generation from the player's installation is the conservative path for modified vanilla rasters.
-
-EU4's officially advertised randomized discovery and indigenous/colonial play [SOURCE C16] are design inspirations. EU4 algorithm, settings and rarity are not established here; see [analysis](research/eu4-rnw-analysis.md).
+The [initial product proposal](archive/product-spec-initial.md) preserves early
+control ideas and capability questions. They are historical design material.

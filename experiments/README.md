@@ -1,12 +1,20 @@
 # Experiments
 
-Each experiment checks one question about EU5 in the running game or offline: its setup, the game build, the result with evidence labels, and how to remove whatever it installed. Experiments are numbered in the order they were planned. Numbers without a folder (016–018, 020) have no record. Installed test mods are listed in [INSTALLED.md](INSTALLED.md).
+This directory is the historical evidence archive. Each numbered experiment records one question about EU5 in the running game or offline: its setup, the game build, the result with evidence labels, and how to remove whatever it installed. Experiments are numbered in the order they were planned. Numbers without a folder (016–018, 020) have no record. Installed test mods are listed in [INSTALLED.md](INSTALLED.md).
 
 An installed world must also have its full application library and recovery receipt, not
 just the game mod: use the application's generation/install flow or `recovery.write`, and
 verify its atlas, previews, reproducibility record, input manifest and selection-cover copy.
 
-Experiments in the running game are kept short: a console sitting of about fifteen minutes, with the logs read afterwards. Anything a sitting cannot reach is checked offline or with a probe mod.
+Dated NOT-RUN/PENDING/FAILED labels describe that experiment's original result;
+they are not current tasks or release holds. Do not execute the archive as a
+checklist. Consult later fixes, [current architecture](../docs/architecture.md)
+and [testing](../docs/testing.md) before reusing a protocol.
+
+New game experiments are owner-run only, short and batched, with logs read
+afterwards. Use a normal generated world, never a standalone probe or companion
+mod. Archived probe records explain earlier investigations; they grant no current
+authorization to create or install one.
 
 | # | Experiment |
 |---|---|

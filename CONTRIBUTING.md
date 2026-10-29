@@ -6,9 +6,9 @@ Thank you for your interest! The project uses release-based versioning and prese
 
 These rules come from the project's working rules in [AGENTS.md](AGENTS.md). Pull requests that break them cannot be merged.
 
-1. **No game files, ever.** Do not commit anything from an EU5 installation, and do not commit anything derived from one: rasters, script excerpts, logs, saves, screenshots or generated worlds. Tests use **synthetic fixtures**. The gitignored folders `local_data/` and `generated/` exist for local material. In issues, share a **world code** rather than a world.
+1. **No game files, ever.** Do not commit anything from an EU5 installation, and do not commit anything derived from one: rasters, script excerpts, logs, saves or generated worlds. Owner-approved documentation screenshots are the exception described in [legal notes](docs/legal.md); raw captures are local by default. Tests use **synthetic fixtures**. The gitignored folders `local_data/` and `generated/` exist for local material. In issues, share a **world code** rather than a world.
 2. **Vanilla first, no crutches.** Use the game's own mechanisms and data wherever they fit, and generate only what the New World needs. Fix the generator so its output is correct by construction. Never add a layer that repairs or hides the generator's own output. Validators fail loudly; nothing silently falls back.
-3. **Never edit the game installation**, and never touch existing mods, saves, settings or playsets outside a new `rnw_exp_*` folder.
+3. **Never edit the game installation**, and preserve existing worlds, saves, settings and playsets. Install test worlds in new `rnw_exp_world_*` folders. The verified hub updater is the explicit exception: it backs up and replaces only our generator hub.
 4. **Deterministic output.** The same code, version and game build must produce identical bytes on every platform and with any thread count.
 5. **Reverse-engineered formats are documented.** Every closed EU5 format the generator reads or writes is recorded in the [interoperability register](docs/research/interoperability.md) before it ships.
 
@@ -70,13 +70,19 @@ Consequential claims get an entry in the [claims ledger](docs/research/claims-le
 
 ## Documentation
 
+Current guides and accepted decisions govern work. Dated records in research,
+experiments and `docs/archive/` preserve their original evidence and do not
+create new tasks or release holds. `[UNKNOWN]` records a limit of knowledge;
+connect it to a concrete current defect or dependency before calling it a blocker.
+Owner acceptance and completed reviews do not need to be requested repeatedly.
+
 - Record architectural decisions as an [ADR](docs/adr/). Mark a replaced ADR as superseded instead of deleting it.
 - Keep design documents in [`docs/`](docs/) and in-game experiment records in [`experiments/`](experiments/).
 - Write in English. Every player-facing string ships translated into each of the game's official languages, which are read from the installed game ([roadmap](docs/roadmap.md) L1).
 
 ## Commits and pull requests
 
-- Keep commits coherent and buildable, and make sure `make check` passes on each one.
+- Keep commits coherent and buildable. Run appropriate checks for the change; full code/package checks use `make check`. Documentation-only edits need content/link checks rather than a generator rebuild.
 - Write commit subjects in the imperative mood. Only release commits are prefixed with their version, for example `1.0.1: …`; normal changes have descriptive subjects.
 - **Sign off every commit** (`git commit -s`) to certify the [Developer Certificate of Origin](https://developercertificate.org/). The project accepts contributions under its licence (MPL-2.0) on that basis.
 - Fill in the pull request template. Say how the change was verified, and whether it changes generated output.

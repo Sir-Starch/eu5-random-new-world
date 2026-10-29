@@ -1,5 +1,7 @@
 # Sea geography
 
+Sea geography, optional ocean expansion and the route/current refinements below ship in the accepted 1.0.0 scope (C437). Dated observations describe their particular revisions; an UNKNOWN engine detail does not automatically require a new owner sitting. See [known limitations](known-limitations.md) for current player scope.
+
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent
 of current had only six pixels of contact at one end, while its arrows pointed
@@ -331,7 +333,12 @@ the world. Now the shore zones of a region are pinned to it, and a region with f
 six for each of its areas takes the nearest free water to make up the need (`_reserve`), so every
 vanilla coastal area has water on every preset tried (C237).
 
-## What is not done, and what is not known
+## Original S1/S2 research limits (2026-10-24)
+
+These statements record the C244–C247 snapshot. C248 subsequently records the
+owner's positive sitting and disappearance of the port errors. Later route and
+current planning at the start of this page supersedes the old lane-end model;
+the remaining engine questions retain their observed scope, not a new test request.
 
 - A gyre is not closed: where the generated land cuts the course of a current, the lane ends at the
   coast and the flow does not go round the land to join the lane behind it. Ships go round by the
@@ -343,4 +350,4 @@ vanilla coastal area has water on every preset tried (C237).
   generated `ocean_wasteland` zones listed as the game's are (and keeps ships out of them),
   `deep_ocean` lanes with their currents, `inland_sea` and `narrows`, a whole-value `$key$` as a
   location name and a province name, and how the map shows them; the Sea Currents map mode of the
-  new water. The next sitting of a batch reads them (no sitting is asked for this) [UNKNOWN C244].
+  new water [UNKNOWN at that revision, C244; later observations C248, C419].

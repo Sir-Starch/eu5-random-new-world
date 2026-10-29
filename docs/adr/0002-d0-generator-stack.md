@@ -1,6 +1,6 @@
 # ADR 0002: D0 generator stack and ID-preserving first exporter
 
-**Status:** Accepted 2026-10-14 for the D0 candidate. Revisit after experiments 002–005 or a measured performance problem.
+**Status:** Historical D0 decision, accepted 2026-10-14. Retained for the diagnostic exporter and its original evidence. The shipping T3 generator and Rust core are described in [current architecture](../architecture.md) and [ADR 0005](0005-native-core.md); early experiment requests below are not current prerequisites.
 
 ## Context
 
@@ -9,7 +9,7 @@ The [implementation contract](https://github.com/Sir-Starch/eu5-random-new-world
 ## Decision
 
 - **Language and arrays.** Python 3.12 with NumPy for raster work and Pillow only for decoding PNGs. A full export takes about 10 s and stays in memory comfortably on the research machine [V-EXEC C28]. A Rust core is not needed yet.
-- **Determinism.** RNG v1 is SplitMix64 with SHA-256-derived named streams and counter-based lattice hashing [SOURCE/V-EXEC C33]. Noise, thresholds and settings are integers (fractions in permille), so no float formatting or platform math enters the output. Output changes require a new version; since [ADR 0003](0003-versioning.md) this is the one product version.
+- **Determinism.** RNG v1 is SplitMix64 with SHA-256-derived named streams and counter-based lattice hashing [SOURCE/V-EXEC C33]. Noise, thresholds and settings are integers (fractions in permille), so no float formatting or platform math enters the output. The original per-change version rule is superseded by [ADR 0003](0003-versioning.md): use one release target and pending epoch per cycle.
 - **PNG writing.** Our own encoder uses the Up filter for every row. `stored` mode is fully specified and used for synthetic golden tests. EU5 outputs use zlib level 6; their bytes are reproducible for one zlib build, so manifests also record encoding-independent pixel digests and the zlib version. Colour, gamma and palette chunks are copied verbatim from the source PNG.
 - **Model and exporter split.** `model`, `synth`, `coast`, `topology` and `validate` know nothing about EU5. `eu5_map` reads game files; `eu5_export` writes the package. The model supports new cells (T3); the first EU5 exporter preserves IDs (T2) and only moves land–sea pixels while keeping every cell contact.
 - **Minimal override set.** The candidate emits `locations.png` and `rivers.png` only, because IDs, colours and class lists do not change and the river layer carries a water mask [V-EXEC C24]. Visual terrain is not edited because the American relief source is unknown [C25].

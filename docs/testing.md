@@ -1,65 +1,80 @@
-# Validation protocol
+# Verification during development
 
-This document describes offline checks and owner-run in-game tests. Agents do not launch or control EU5. The existing first-run Select Language issue is recorded in [experiment 001](../experiments/001-metadata/README.md).
+Use the checks that establish the behavior changed by the task. Historical
+experiment statuses retain their date/build; they are not an instruction to
+rerun all experiments or reopen release acceptance. The owner has accepted 1.0.0
+(C437); its tagged CI and published downloads are checked (C439).
 
-## Owner-run Windows smoke — C428
+## Choose checks by change
 
-[V-GAME owner, 2026-10-28] The packaged RNW 0.13.22 hub opened from EU5's **Open in folder** path on Windows 11 via Steam. It opened immediately with no antivirus or other warning pop-ups, then generated a world and installed it as a world mod, matching the reported Linux workflow. The exact EU5 build and antivirus product/settings were not captured. This smoke does not establish byte-identical cross-platform output or that the generated world was loaded and played.
+| Change | Useful verification |
+|---|---|
+| Documentation only | Read the changed current guidance, validate local links/anchors and examples; generated documentation checks if relevant |
+| Application or packaging code | Relevant regression tests, then locked sync and `make check`; packaged generator self-test for affected layouts |
+| Generated world output | Synthetic regressions, affected goldens, installed-game reference/output checks and epoch policy in ADR 0003 |
+| Performance or parallel kernels | Equality with `tests/reference/`, thread-count parity and a relevant resource measurement |
+| Game patch or serializer input contract | Installed version/build, input fingerprint and changed-file inspection; relevant read-only game tests |
+| A specific engine-only question | Existing owner logs/saves first; one bounded owner sitting only if the task depends on evidence unavailable offline |
 
-## Current runnable checks
+Run the full code/package checks once after the implementation stabilizes. Repeat
+when new code, failures or unresolved concerns justify it. A documentation edit
+needs no binary rebuild, VirusTotal resubmission, reference export or profile update.
 
-`uv sync --locked --group dev && make check` runs format, lint, static typing and synthetic unit tests [V-EXEC]. `EU5_GAME_DIR=/path/to/Europa\ Universalis\ V uv run pytest -q tests/test_local_install.py` enables a local-only parse check; it skips when the variable is absent and is excluded from CI by default [V-EXEC]. `uv run rnw inspect "$EU5_GAME_DIR"` and `uv run rnw coupling "$EU5_GAME_DIR" local_data/coupling.json` produce counts and a gitignored broad coupling inventory, not proof of in-game behavior [V-EXEC C05,C10]. `uv run rnw fingerprint "$EU5_GAME_DIR" local_data/map-contract.json` produces only stable file digests and sizes, so later beta builds can be compared before generating output [V-EXEC C20].
+## Commands
 
-The D0 suite adds generator and exporter checks [V-EXEC C28–C31]:
+```sh
+uv sync --locked --group dev
+make check
+uv run rnw --help
+```
 
-- `tests/test_rng_noise.py`: SplitMix64 reference vectors, stream independence, NumPy/Python hash equality, noise window consistency.
-- `tests/test_synth.py`: every seed/preset passes all validators; same seed is identical; presets differ measurably; seed-1 bundles match committed golden digests, keyed by algorithm epoch (the cross-platform gate once CI runs on Windows).
-- `tests/test_epoch.py`, `tests/test_record.py`, `tests/test_inputs.py`: the epoch table and the pinned presets of the running epoch, the reproducibility record and its five verdicts, the recording of game files read. `tests/golden_world.json` is the reference world of the epoch: `RNW_REPRODUCE=1 EU5_GAME_DIR=... uv run pytest tests/test_local_install.py -k reference` makes it again (about 90 s, 7.5 GiB) and compares the digest of its files; `rnw verify-world` does the same for a world of the library. `RNW_LAYERS=1 EU5_GAME_DIR=... uv run pytest tests/test_local_install.py -k layers` makes three worlds (the reference code, the same with the peoples rolled once and with the resources rolled once; about 5 minutes) and shows that the peoples' reroll leaves the exceptional resource places and changes the countries and the stories, and the resources' reroll moves the places and leaves both byte-identical. Since 0.10.11 the layer test compares every file of the three mods, not a chosen few: the resources' reroll changes exactly `in_game/map_data/location_templates.txt`, the peoples' reroll only files of the start, the countries, the common scripts, the events and the texts, never the land's or the resources'.
-- `tests/test_validate.py`: negative fixtures for orphan sea, duplicate/reserved colour, duplicate/invalid key, broken parent, changed protected pixel, vanished or split cells, undeclared labels, frozen-pixel change, ineligible change and new contacts.
-- `tests/test_coast.py`: topology preserved, displacement bounded by pass count, field sign controls direction, size floor/cap.
-- `tests/test_eu5_export.py`: a synthetic EU5-shaped installation (`tests/fixtures_eu5.py`, no game data) exercises the adapter, the full export, repeatability, the fingerprint refusal and unsafe output paths.
-- `tests/test_local_install.py` (local only): raster colours, unused declarations, river water mask and locator rows on the real installation (C23–C26).
-- `tests/test_societies.py` and `tests/test_natives_eu5.py` (R6a): native societies on synthetic graphs (determinism, population total, state share, connected and nested zones, disjoint polities); homeland vectors, matching, fresh tags, colours and the setup texts. The local test also reads the vanilla native calibration (C67).
-- `tests/test_technology.py` (R7b): the family triggers, the vanilla level calibration, the quantile levels, the template rule, the written level, the report helpers and every rejection of `verify_technology`; the local test also reads the vanilla levels (11 / 17 / 191) and the family lists (C155, C157).
-- `tests/test_empires.py` and the road tests of `tests/test_societies.py` (R7c): the calibration (`min(T, S + 1)`, the highest American rank, the road bound, the four opinion types), the road targets and `trunk_roads` (lines, ties, islands, sea links), the opinions, the written lines and every rejection of `verify_empires`; the local test also reads level 3, `rank_duchy` and a road bound near 1,000 permille (C158).
-- `tests/test_archetypes.py`, `tests/test_eu5_archetypes.py`, `tests/test_archetype_world.py` and `tests/test_archetype_export.py` (R7d, societies): the four selections and the draw (a chance of 0 chooses nothing, a higher one the same domains and more, no polity twice, determinism, the rules of population, land and density), the calibration from small vanilla-shaped texts (the republic, the theocracy, the confederates' currency and density, the positions, every refusal), the lines and the readers of the written files, `archetype_problems` (the plan accepted; each broken record refused with its own complaint: template, position, currency, ownership, a missing, repeated or old alliance, rivalry or organization, an undiscovered capital, a bound or unknown member), `_archetypes` on a made-up world of twenty-one locations (each kind written, ranks and markets of the ports, landed tribes with their currency, a chance of 0 changing nothing, a missing calibration refused), `hearth_domains` and `travel_from`, and `verify_archetypes` on its texts; the local test also reads the vanilla republic, theocracy, confederates (cohesion 90, density about 1,641 milli-pops), positions (60, -90, -90) and counts (22 alliances, 45 rivals, 1 confederation) (C251).
-- `tests/test_splnet.py` and `tests/test_splines.py` (R7d): the spline network format (write and read back, numbering, every refusal), `rebuild` (what leaves, renumbering, shared segments, new strips), the land contacts of a raster (bands, seam), the road curve and the mod's file with its checks; the local test reads vanilla's file and writes it back byte for byte, and finds a strip for each of its 50,580 land contacts and 1,646 roads (C162).
+`make check` runs formatting, lint, strict Python types, Python tests, Rust format,
+clippy and tests. CI runs Linux/Windows checks and package self-tests. The 1.0.0
+verification passed 2,142 Python tests with 14 optional skips and 23 Rust tests
+(C438); these are a dated baseline, not permanent expected test counts.
 
-`uv run rnw generate --game-dir "$EU5_GAME_DIR" --seed N --preset continents --output generated/rnw_exp_NAME` re-decodes the written PNGs and compares them with the installation before it finishes; its `report.json` lists every invariant. Not yet covered: port/dock placement quality beyond freezing, river path continuity beyond freezing, start-state references (no setup is rewritten) and anything in game. Synthetic fixtures belong in Git; game-derived rasters and logs do not.
+Optional read-only game-input checks:
 
-## Determinism and completeness gate
+```sh
+EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py
+RNW_REPRODUCE=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py -k reference
+RNW_LAYERS=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py -k layers
+```
 
-For the same seed, settings schema, generator version and target game build, compare hashes of every emitted file on Linux and Windows; require byte identity [INFERRED]. Fix ordering, RNG algorithm/version, line endings, BOM handling, numerical rules, image encoding/compression and archive metadata. Change the schema or generator version intentionally when output changes. Test that all generated IDs resolve and every Old World reference remains valid. Linux status: the synthetic golden digests pass and a repeated EU5 export was byte-identical [V-EXEC C28,C31]. The owner-run Windows smoke (C428) verifies packaged launch, generation and mod installation, not output identity. Windows byte identity of synthetic outputs remains a pending CI result; EU5 PNG bytes depend on the zlib build, so cross-platform comparison of EU5 outputs uses recorded pixel digests.
+The reference export compares the frozen epoch's output with
+`tests/golden_world.json`. The layer check compares land/resources/peoples
+rerolls. They take substantially longer than synthetic tests and need the local
+game inputs; use them when those outputs are affected. Do not rewrite a frozen
+epoch's reference to make a failure pass. See [ADR 0003](adr/0003-versioning.md).
 
-## In-game test protocol when the owner next authorizes it
+Tests use synthetic fixtures in Git. Actual game rasters, saves, logs and exports
+stay local. `tests/test_native.py` compares native kernels with independent
+references. Content, localization, world-code, library/recovery, path safety and
+packaging have subsystem tests in `tests/`; consult current test files rather
+than a historical catalogue of file names. `docs/build_content_reference.py --check`
+checks the generated content reference.
 
-1. Record exact app build/branch and ensure the game is closed. Use an isolated `-userdir` profile; do not edit the normal playset or existing mods. Resolve the isolated profile's first-run input problem before attempting geography tests.
-2. On that same build/profile, capture a complete vanilla baseline error/debug log and startup time, from process start to a stable main menu and, for gameplay tests, a loaded 1337 campaign. Do not compare incomplete logs.
-3. Generate one `rnw_exp_*` mod into `generated/`, inspect its manifest and file hashes, then use `rnw install-mod` only into the isolated profile. Enable only that test mod in the isolated playset. Record the exact mod path in `experiments/INSTALLED.md`.
-4. Start once per necessary experiment, capture complete logs, and run `uv run rnw logdiff baseline.log current.log`. Review all new messages manually; this text diff strips volatile timestamps but cannot determine error significance.
-5. Capture game-window-only screenshots where relevant. For start-state changes verify owner/culture/pop in the 1337 view. For map edits verify visible boundary/class, selection, land and naval movement, exploration/colonization/conquest as appropriate, and save/reload. Measure startup time against the same-build baseline.
-6. Mark `PASSED` only for the exact observed behavior, with version and evidence. A syntax check or version match alone cannot pass a geometry experiment. Record `FAILED`, `INCONCLUSIVE`, `PENDING-HUMAN-VALIDATION` or `NOT-RUN` honestly. Re-run critical tests after each beta patch [INFERRED C18].
+## Packages and engine observations
 
-`rnw prepare-mod generated/rnw_exp_001_metadata` and `rnw install-mod generated/rnw_exp_001_metadata USER_DIR` are the current metadata validation kit [V-EXEC]. They do **not** enable a launcher playset or run the game. A prepared, NOT GAME VALIDATED geography candidate exists locally for experiment 004 (`rnw generate`, C28); experiments 002–003 still come first. The temporary test folder can be removed as described in [INSTALLED](../experiments/INSTALLED.md).
+The generator's `--self-test` exercises the window, native kernels and world
+codes without launching EU5. The release workflow runs native and Windows-layout
+self-tests and archive allowlist/checksum checks. Self-tests do not establish all
+engine behavior; owner sessions and their logs supply that separate evidence.
+Synthetic cross-platform goldens are checked in CI. Real-world reproduction also
+records the game inputs and image encoding/pixel digests; do not broaden a result
+beyond what its actual comparison measured.
 
-`tests/test_terrain_model.py` covers the V1 models on synthetic data: exact bilinear upsampling, noise determinism, the Euclidean distance against brute force, label spreading, rain shadow, relief invariants, latitude anchors, k-nearest-neighbour votes and graph smoothing, coherence statistics, slot rules on a two-location island, slots limited to short biome material lists, biome rule resolution, level counting, instance sampling and inline instance rewriting [V-EXEC]. `tests/test_newworld.py` checks on synthetic domains that coastlines follow the seed rather than the domain outline (C64), that thin domain arms stay sea, independence of the land mask and elevation from the display seam, drawn continents across that seam, straits for seas enclosed around protected islets, and shore-aware city points; `tests/test_rivers.py` checks drainage, the stream tree, the river raster rules, size classes and valley carving. With `EU5_GAME_DIR` set, `test_local_slot_rules_reproduce_vanilla_structure` rebuilds a vanilla decal crop from vanilla templates and requires at least 80% agreement on structural slot classes (85.6% measured, C51). Biome coherence, instance densities and biome material counts of a full build are in its `report.json` (`biomes.coherence`, `biomes.materials`, `terrain.objects`; C53, C57); `biomes.materials.default_biome_locations` must be 0.
+Agents must not launch or control EU5, its console or its playsets. If new game
+observation is necessary, prepare a normal generated world with its library and
+recovery receipt. Give the owner a short combined sitting, with console shortcuts
+where practical, then read the complete relevant logs yourself. Capture the exact
+RNW version/code, EU5 build and scope of the observation. Preserve existing worlds
+and saves. No standalone probe/companion mods, campaign-length requests or automatic
+owner-test to-do list follows from an `UNKNOWN` entry.
 
-`tests/test_native.py` compares every Rust kernel of [ADR 0005](adr/0005-native-core.md) with its NumPy or pure-Python reference in `tests/reference/` bit for bit: LZAV decode and encode (including malformed streams), value and fractal noise (windows, huge keys, negative coordinates, non-contiguous input), step and Euclidean distances, label spreading and connected components, upsampling, block means and box blurs on signed values, the vegetation pixel keys and sampling, drainage, the best pixel per label, the material slot synthesis with and without rivers, the layer packer and the decal heights. `tests/test_parallel.py` covers the thread, memory and band rules (including container limits and the refusal below the needed memory) and the stage executor (order on one worker, overlap, errors, the rule for when stages overlap). The slot and height kernels are also checked with a `core`: the result must be the same slice of the whole window. Every banded or stripped function ([ADR 0006](adr/0006-machine-resources.md)) has a test that equals its whole-raster specification for strip heights from one row to the whole raster: `test_terrain_bands.py` (a decal for any band height and thread count; the halo), `test_water.py`, `test_dds.py`, `test_object_strips.py`, `test_relief_strips.py`, `test_newworld_strips.py` (cell sums, the coast model, the land threshold), `test_rivers.py` (valleys, coarse statistics, network checks), `test_terrain_model.py` (climate grid), `test_canvas_put.py` and `test_spool.py`. `make check` also runs `cargo fmt --check`, `cargo clippy -D warnings` and `cargo test` in `native/`. The acceptance test of a kernel change is a full export whose `manifest.json` file hashes equal those of the previous build (`RNW_TIMING=1` prints stage times and the peak memory).
-
-The application core ([ADR 0004](adr/0004-generator-application.md)) is tested without a window: `tests/test_discovery.py` (KeyValues, Steam libraries on other drives, Proton and native profiles, the Windows registry and moved Documents folder through fakes), `test_worldcode.py` (round trip, forgiving input, damage detection, the version promise), `test_install.py` (only `rnw_exp_*` mods are replaced or removed), `test_service.py` (generate, install, history, failure and cancel, with a stand-in export), `test_progress.py` (weights, running set, cancel across threads, every announced stage has a label) and `test_app_storage.py`. `basedpyright` runs with `pythonPlatform = "All"` so Windows-only and POSIX-only branches are checked on both CI systems.
-
-The window ([ADR 0007](adr/0007-application-window-and-packaging.md)) is tested offscreen (`QT_QPA_PLATFORM=offscreen`, set in `tests/conftest.py`): `tests/test_controller.py` covers the choices and the generation lifecycle without Qt, `tests/test_window.py` drives the widgets (seed typing, paste and copy, generate to the end, cancel). It skips itself where PySide6 or the system graphics libraries are missing. `packaging/build.py` builds the folder and `RandomNewWorld --self-test` is the smoke test the CI packaging job runs on Linux and Windows.
-
-
-The water of a world ([sea geography](sea-geography.md)) is tested on small worlds drawn as blocks of characters (`tests/block_worlds.py`): `tests/test_ports.py` (the port plan, augmenting paths, settling a coast, the vanilla islet's one port, every refusal), `tests/test_seas.py` (depth and the game's topography, the island's water, a strait, a lagoon, a hole in an archipelago, cape, bay and coast), `tests/test_seanames.py` (one name for the cells of a sea, a strait, an island, the area that is mostly a sea and its compass point, the game's ocean areas by key, seeds), `tests/test_straits.py` (the narrowest gap between labels along rows and columns, the pinch: two landmasses and one sea kept, a strait of 5 or 6 pixels, the taper, land too far or too small or off limits left, a third landmass not joined, repeatability), `tests/test_lanes.py` (lanes from courses and anchors, joining water that cannot reach the game's by the cheapest deep string, the sealed sea, zones cut compact and connected), `tests/test_currents.py` (strength, the bend along land, no source refused, only lanes carry a current, repeatability) and `tests/test_eu5_seas.py` (the port rows, currents and impassable lists as the game writes them, the courses of replaced lanes over generated cells, the crossings of a strait and every refusal of `verify_crossings`, vanilla land free or held, every refusal of `verify_seas`); `adjacency_lengths` is in `tests/test_topology_png.py`, the pinned parts and the reserve of water in `tests/test_hierarchy.py`. The reference world's digest of epoch 24 and the independent reading of its written map files are in the local tests (C238).
-
-The content stages of the [content plan](content-plan.md) have their own tests: `tests/test_content_inventory.py` (the inventory of the vanilla consumers of the replaced Americas, decisions per consumer, the export refusing an undecided one, with synthetic scripts; `test_local_content_consumers_all_have_a_decision` repeats it on the installation and fails on drift both ways), `tests/test_eu5_content.py` (neutralizing by closing a gate, rebinding formables to a culture's places), `tests/test_places.py` (exceptional resource places), `tests/test_languages.py` (the official languages from the installation), `tests/test_content.py`, `tests/test_content_stories.py`, `tests/test_formations.py`, `tests/test_stories.py`, `tests/test_story_files.py` and `tests/test_colonial_names.py` (the content model and its eligibility rules for every family, the story graphs and their yearly pulse, the formable files, the colonial names; `test_local_story_scripts_use_only_words_the_game_uses` checks on the installation that every word the stories, the hook, the formables and the names write is a word of the game's own scripts, which catches a misspelt effect before the engine does). Since the owner's sitting 036 they also hold what the engine's own verdict taught (C200-C204): the probe uses only effects and keys the game has and hooks the start through `on_actions`; every formable has its `<id>` and `<id>_desc`; a story changes a location modifier only inside the scope of its centre; `tests/test_script_rewrites.py` drops the pictures of removed places; `tests/test_lobby_gui.py` keeps the lobby's list the game's own fixed grid and dims and disables the cards of the New World instead of hiding them. None of them proves an effect in game: the experiments `033` to `037` of `experiments/` do, once the owner has run them. Since the audit of N0 to N4 ([audit](research/n0-n4-audit.md), C222-C231) the export itself refuses a world whose scripts lost an object that nothing retires or still name a key the world lacks (`content_check.check_outcomes`, tested with synthetic scripts in `tests/test_content_inventory.py`), the decision table says what carries each replaced object (`CARRIERS`, checked by the same tests and by the local drift test), `tests/test_script_rewrites.py` covers the `province_definition:` scope and the dropped DLC monuments, and `tests/test_story_files.py` reads every hidden event for the game's own head.
-
-[V-EXEC C290] Wrap regressions additionally compare decoded height/material tiles of a continuous synthetic continent before and after rolling it across the map edges (`test_terrain_bands.py`), native cylindrical distances against an independent tiled Python reference, and serialized road strips with short cylindrical steps (`test_splines.py`). These are output checks; they do not establish engine rendering.
-
-[V-EXEC C294–C295] `test_rng_noise.py` now bounds the derivative of continent-scale
-value noise, independently of its native/reference equality. `test_terrain_wrap.py`
-checks the installed shader's half-open source-coverage contract at the upper
-world endpoint and outside halos, exact modulo-world source coordinates, no new
-interior overlap and cache/instance geometry agreement. These detect failures the
-level-0 image comparisons of C290 missed; engine admission/rendering stays unknown.
+A log warning is a lead until attributed: compare a suitable vanilla/session
+baseline and reproduce the affected behavior. A concrete failing invariant or
+reproducible RNW defect needs a fix; an unrelated inherited warning does not prove
+one. Historical reproductions remain in [experiments](../experiments/README.md),
+[research](README.md#research-and-evidence) and the
+[archived validation protocol](archive/validation-protocol-0.x.md).

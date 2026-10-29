@@ -1,80 +1,79 @@
 # Documentation
 
-The project's documentation, grouped by purpose. Technical claims carry evidence labels (`[V-GAME]`, `[V-EXEC]`, …; see [CONTRIBUTING](../CONTRIBUTING.md#evidence-labels)) and `C###` numbers from the [claims ledger](research/claims-ledger.md).
+RNW 1.0.0 is released and accepted for EU5 1.4.5 / Steam build 26211608
+(epoch 59). Start with [AGENTS.md](../AGENTS.md) for working instructions and
+[architecture](architecture.md) for current code. This index distinguishes current
+guidance from the historical record; an old unchecked box is not a current task.
 
-## Using the generator
+## Current guides
+
+| Document | Purpose |
+|---|---|
+| [Generator guide](generator-guide.md) | Installation, window/CLI workflow, library, world files and recovery |
+| [Known limitations](known-limitations.md) | Accepted compatibility, save, platform and gameplay limits |
+| [Product specification](product-spec.md) | Shipping player journey and engineering requirements |
+| [Architecture](architecture.md) | Current pipeline, module map and invariants |
+| [Capability overview](feasibility.md) | Implemented T3 route and boundaries of the product |
+| [Roadmap](roadmap.md) | Released scope and owner-requested future directions |
+| [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
+| [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
+| [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |
+| [Changelog](../CHANGELOG.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
+
+## Subsystem references
+
+These pages combine implemented models with **dated** calibration and observations.
+Use their stated build when interpreting numbers; current code owns actual settings,
+formats and constants. Historical per-feature unknowns are not new release gates.
 
 | Document | Contents |
 |---|---|
-| [Known limitations](known-limitations.md) | Current player-facing limits, compatibility and unverified behavior |
-| [Generator guide](generator-guide.md) | The window, world codes and files, rerolls, the queue, the command line |
-| [Dynamic content catalogue](content-catalog.md) | Stories, choices, formable countries, colonial names and exceptional places; conditions and how to inspect a specific world |
-| [Complete content reference](content-reference.md) | Every original event, choice, effect, delay, modifier and formable family, generated from the definitions |
-| [Workshop description](workshop-description.md) | The player-facing Steam Workshop text for 1.0.0, in Steam's markup and every official language |
-
-## Product and plan
-
-| Document | Contents |
-|---|---|
-| [Product specification](product-spec.md) | Vision, the player's journey and the target feature set |
-| [Roadmap](roadmap.md) | Phases, dependencies and acceptance gates |
-| [Release process](release-process.md) | Internal gates and owner hand-off for GitHub and Workshop publication |
-| [Content plan](content-plan.md) | The vanilla content tied to the Americas, decided object by object, and the stories and formables that replace it (N0–N5) |
-| [Changelog](../CHANGELOG.md) | Progress release by release |
-
-## Design
-
-| Document | Contents |
-|---|---|
-| [Terrain and biomes](terrain-biomes.md) | Relief, climate, biomes, materials, vegetation and rivers (V1) |
-| [Sea geography](sea-geography.md) | Ports, names, depth, lanes, currents and strait crossings (S1) |
-| [Natives](natives.md) | Peoples, cultures, religions, states, technology and extraordinary societies (R6, R7) |
-| [Economy](economy.md) | Start development, harbours and market villages (R7a) |
-| [R7a design](r7a-development.md), [R7b and R7c design](r7-technology-and-empires.md) | Design notes written before those slices were implemented |
-| [Localization](localization.md) | How EU5 writes its eleven languages, the rules for the mod's texts and names, the translation design and its status (L1) |
-| [Generator window](gui-design.md) | Layout, spacing and interaction rules of the Qt window |
-| [Architecture](architecture.md) | The architecture options as weighed at the start *(historical)* |
-
-## Engineering
-
-| Document | Contents |
-|---|---|
-| [Testing](testing.md) | Test suites, reproducibility and the in-game testing protocol |
-| [Legal notes](legal.md) | Licence choice, Paradox's terms, distribution of generated worlds, dependencies |
+| [Terrain and biomes](terrain-biomes.md) | Relief, climate, materials, vegetation and rivers |
+| [Sea geography](sea-geography.md) | Ports, depth, lanes, currents and crossings |
+| [Native societies](natives.md) | Peoples, identity zones, states, technology and extraordinary societies |
+| [Economy](economy.md) | Starting development, harbours, markets and agrarian support |
+| [Content plan](content-plan.md) | Current content inventory/disposition and story/formable architecture |
+| [Content catalogue](content-catalog.md) | Player stories, choices, formables and exceptional places |
+| [Generated content reference](content-reference.md) | Exact definitions; maintained by `build_content_reference.py` |
+| [Localization](localization.md) | Official-language discovery, catalogues, grammar and translation maintenance |
+| [Generator window](gui-design.md) | Current Qt interface design and interaction rules |
+| [Workshop description](workshop-description.md) | Reviewed BBCode text in each official language |
 
 ## Decision records
 
-| ADR | Decision | Status |
-|---|---|---|
-| [0001](adr/0001-python-research-tooling.md) | Python for the research and validation kit | Accepted |
-| [0002](adr/0002-d0-generator-stack.md) | D0 generator stack and ID-preserving first exporter | Accepted (D0) |
-| [0003](adr/0003-versioning.md) | One product version for the mod and its output | Accepted |
-| [0004](adr/0004-generator-application.md) | The generator as a local application with a window | Superseded by 0008 |
-| [0005](adr/0005-native-core.md) | A Rust core for the hot kernels | Accepted |
-| [0006](adr/0006-machine-resources.md) | The export reads the machine and bounds its memory | Accepted |
-| [0007](adr/0007-application-window-and-packaging.md) | Qt window, PyInstaller for development builds | On hold; window kept under 0009 |
-| [0008](adr/0008-workshop-worlds.md) | Worlds as Workshop mods | Replaced by 0009 |
-| [0009](adr/0009-hub-mod-with-generator.md) | One Workshop mod that carries the generator | Accepted |
-| [0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) | Layered, reproducible worlds and a standalone generator | Accepted |
+Accepted decisions apply to their scope; a later decision supersedes conflicting
+parts. ADR context and implementation-phase tables explain history, not a new
+queue of work. The release-level version policy is ADR 0003.
+
+| ADR | Current role |
+|---|---|
+| [0001](adr/0001-python-research-tooling.md) | Python research/validation tooling |
+| [0002](adr/0002-d0-generator-stack.md) | Historical D0 diagnostic exporter; shipping T3 uses the current architecture |
+| [0003](adr/0003-versioning.md) | Product releases, public compatibility contract and algorithm epochs |
+| [0004](adr/0004-generator-application.md) | Superseded delivery proposal; final decision is 0009 |
+| [0005](adr/0005-native-core.md) | Rust kernels and reference equality |
+| [0006](adr/0006-machine-resources.md) | Resource-aware threads, bands and memory |
+| [0007](adr/0007-application-window-and-packaging.md) | Current Qt choice/native development packaging; Windows delivery follows 0009 |
+| [0008](adr/0008-workshop-worlds.md) | Superseded finite-world delivery proposal; final decision is 0009 |
+| [0009](adr/0009-hub-mod-with-generator.md) | Current Workshop generator hub and independent app delivery |
+| [0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) | Implemented layers, world files, reproducibility and installed-world recovery |
 
 ## Research and evidence
 
-| Document | Contents |
-|---|---|
-| [Findings](research/findings.md) | What is known about EU5's map and mod loading |
-| [Claims ledger](research/claims-ledger.md) | Every consequential claim with its evidence, game build and date |
-| [Interoperability register](research/interoperability.md) | Each reverse-engineered EU5 format: why it is needed and how compatibility is kept without distributing Paradox's files |
-| [Sources](research/sources.md) | External sources with dates and target versions |
-| [Research log](research/log.md) | Chronological working log |
-| [TR46 problem register](research/tr46-observer-audit.md), [log catalog](research/tr46-log-catalog.md) | Open issues from the long 0.12.3 observer campaign: all seven owner observations, evidence, investigation entry points and closure criteria; exhaustive session diagnostics |
-| [TR46 native expansion](research/tr46-native-expansion.md) | Saved vanilla AI colonization rule, native conquest and consolidation, extraordinary societies' land/subjects, successors and frontier evidence limits |
-| [TR46 expeditions](research/tr46-expeditions.md) | Corrected mining/Pacific counts, inherited no-travel and return-event gaps, anonymous calls and port/water assertion evidence limits |
-| [TR46 AI diagnostics](research/tr46-ai-diagnostics.md) | Anonymous command rejections, inherited war-score division by zero, Old World building-list clamps and limits of attribution to native expansion |
-| [TR46 Tordesillas](research/tr46-tordesillas.md) | Inherited option-text failure, conditional overlord scope, recovered saved division line and clarified western-mainland seam allocation |
-| [Installation inventory](research/game-install-inventory.md) | Layout of the EU5 1.4.1 installation as first inspected |
-| [N0–N4 audit](research/n0-n4-audit.md), [N5 region keys](research/n5-region-keys.md) | Offline audits of the content plan |
-| [Canvas expansion](research/canvas-expansion.md) | Why large ocean locations constrain generation, and a proposed wider domain with preserved ocean names |
-| [EU4 analysis](research/eu4-rnw-analysis.md) | What EU4's Random New World does and does not tell us |
-| [Feasibility](feasibility.md) | The original ambition ladder (T0–T5) *(historical)* |
+The [claims ledger](research/claims-ledger.md) and [research log](research/log.md)
+preserve dates, builds, corrections and owner observations. They do not override
+current instructions or turn uncertainty into a publication prohibition.
 
-In-game experiments, each with its setup, result and removal, are in [`experiments/`](../experiments/README.md).
+| Record | Scope |
+|---|---|
+| [Interoperability register](research/interoperability.md) | Closed formats and written binaries, with source/compatibility rationale |
+| [1.4.5 compatibility audit](research/compatibility-1-4-5.md) | Target-build fingerprints and DLC dispositions |
+| [World-wrap dossier](research/map-wrap-dossier.md) | Authoritative seam investigation, accepted data policy and historical comparisons |
+| [TR46 register](research/tr46-observer-audit.md), [log catalogue](research/tr46-log-catalog.md) | Dated campaign findings; attribution and later fixes must be read before treating an item as open |
+| [TR46 expansion](research/tr46-native-expansion.md), [expeditions](research/tr46-expeditions.md), [AI](research/tr46-ai-diagnostics.md), [Tordesillas](research/tr46-tordesillas.md) | Detailed subsystem evidence from that campaign |
+| [EVXP diagnostics](research/evxp-session-diagnostics.md), [0.13.20 observer audit](research/observer-01320-audit.md) | Later owner campaigns and diagnostic attribution |
+| [N0–N4 audit](research/n0-n4-audit.md), [N5 matching](research/n5-region-keys.md), [canvas expansion](research/canvas-expansion.md) | Implementation-time investigations and comparisons |
+| [Initial findings](research/findings.md), [installation inventory](research/game-install-inventory.md) | EU5 1.4.1 survey, retained as historical evidence |
+| [Sources](research/sources.md), [EU4 analysis](research/eu4-rnw-analysis.md) | External references and their dates/target versions |
+| [Experiments](../experiments/README.md), [installation history](../experiments/INSTALLED.md) | Original setups, observations and installation/removal records |
+| [Design archive](archive/README.md) | Superseded proposals, completed implementation plans and pre-release checklists |

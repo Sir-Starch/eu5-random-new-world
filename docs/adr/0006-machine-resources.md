@@ -23,4 +23,9 @@ EU5 asks for 16 GB of RAM at the minimum (Intel Core i7-8700K or Ryzen 5 3600, s
 
 ## Consequences
 
-Memory and speed trade through two numbers the machine sets, so a slower, smaller machine gets the same world. The halo of a band is an engineering constant that must grow with the distance reach it covers: `BAND_HALO` is derived from `CAP_REACH`, and the test of the halo guards it. A new whole-map pass is a regression of this decision: it must be a strip, band or kernel with the same equality test. The C428 Windows smoke did not measure memory. Windows and macOS memory figures remain unknown; the platform calls are tested in this repository only on Linux.
+Memory and speed trade through two numbers the machine sets, so a slower, smaller machine gets the same world. The halo of a band is an engineering constant that must grow with the distance reach it covers: `BAND_HALO` is derived from `CAP_REACH`, and the test of the halo guards it. A new whole-map pass is a regression of this decision: it must be a strip, band or kernel with the same equality test.
+
+The original peak-memory measurements above are Linux results. The later Windows
+smoke (C428) and passing Linux/Windows CI (C439) establish their own scope, not a
+cross-platform peak-memory comparison. Measure the affected workload when tuning
+resource use; do not treat the absence of every platform measurement as a release hold.

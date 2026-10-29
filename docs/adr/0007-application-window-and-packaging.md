@@ -1,6 +1,6 @@
 # ADR 0007: The application window is Qt, packaged with PyInstaller
 
-**Status:** On hold 2026-10-21. It was written as the consequence of [ADR 0004](0004-generator-application.md); the owner then said the mod should live inside the game and that a separate generator program is hardly a normal solution, and [ADR 0009](0009-hub-mod-with-generator.md) (2026-10-21) makes it the generator's window, started from the mod's own folder. The code (`rnw/gui/`, `packaging/`) stays and works; the headless core is needed in every model. The PyInstaller package is not the Windows delivery: ADR 0009 (Trust on Windows) specifies the embeddable Python layout. The packaged 0.13.22 generator has since passed one owner-run Windows 11 launch/generate/install smoke (C428); signing and broader Windows trust checks remain open.
+**Status:** Qt window choice implemented and current in 1.0.0. Windows delivery is governed by [ADR 0009](0009-hub-mod-with-generator.md), replacing this record's earlier packaging scope. Native/development builds still use PyInstaller. The earlier owner-direction history is in [the archived roadmap](../archive/roadmap-through-1.0.md).
 
 The existing application still uses Qt. On 2026-10-28 the owner requested a future transition to Tauri; its scope and integration remain to be designed ([roadmap](../roadmap.md)). This historical decision is not yet replaced by an implemented Tauri architecture.
 

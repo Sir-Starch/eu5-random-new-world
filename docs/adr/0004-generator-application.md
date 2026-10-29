@@ -1,6 +1,6 @@
 # ADR 0004: Deliver the generator as a local application with a window
 
-**Status:** Superseded 2026-10-21 by [ADR 0008](0008-workshop-worlds.md) (owner direction: the mod lives inside the game and is published on the Workshop; no separate generator program for the player). Kept for its evidence about reloads and the engine.
+**Status:** Superseded 2026-10-21 by [ADR 0008](0008-workshop-worlds.md) (owner direction: the mod lives inside the game and is published on the Workshop; no separate generator program for the player). The final delivery decision is [ADR 0009](0009-hub-mod-with-generator.md). Kept for its evidence about reloads and the engine; earlier prohibitions on a separate generator below are historical owner-direction changes.
 
 ## Context
 

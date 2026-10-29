@@ -1,6 +1,8 @@
 # ADR 0001: Python for the research and validation kit
 
-**Status:** Accepted 2026-10-13 for research tooling only. The production raster/geometry implementation remains undecided.
+**Status:** Accepted 2026-10-13 for research tooling. The production stack was
+subsequently decided in ADRs 0002 and 0005; see the [current architecture](../architecture.md).
+The context and initial CLI boundary below describe the original 1.4.1 research kit.
 
 ## Context
 
@@ -18,4 +20,9 @@ Use Python 3.12+, `uv` lockfile, Typer CLI, Ruff, basedpyright and pytest for th
 | Rust now | Explicit types and fast raster pipeline, but higher startup cost before override feasibility is known [INFERRED]. |
 | Python orchestration plus Rust/native core later | Viable if benchmarks show a real bottleneck; complicates packaging, so defer [INFERRED]. |
 
-Future generator work must specify a versioned RNG, ordered iteration, canonical encodings/line endings, stable compression and byte-for-byte cross-platform golden tests before claiming reproducibility [UNKNOWN]. Do not rely on Python hash iteration, random global state, or platform-dependent floating-point output. The current CLI has no seed or generator, so determinism is a future requirement rather than an achieved claim.
+The research decision required a versioned RNG, ordered iteration, canonical
+encodings/line endings, stable compression and cross-platform goldens for the
+future generator. At that point the CLI had no seed or generator. These mechanisms
+are now implemented; [ADR 0003](0003-versioning.md) defines the released
+reproduction contract. Do not rely on Python hash iteration, random global state
+or platform-dependent floating-point output.

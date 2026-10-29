@@ -1,5 +1,11 @@
 # Localization (L1)
 
+**Shipping status:** 1.0.0 includes the official languages read from EU5, with
+catalogue coverage/source fingerprints checked for the target build (C431).
+The owner accepted the product (C437). Dated design questions below retain their
+original scope; maintain coverage for changed text instead of reopening the whole
+language acceptance process.
+
 This document holds what was found about how EU5 writes its texts in its eleven official
 languages, the rules the mod and the generator follow when they write theirs, the design of the
 translation machinery, and where the work stands. It is written so that someone else can pick L1
@@ -324,7 +330,7 @@ does), segment into the source's digraphs (`tl`, `tz`, `ts`, `ch`, `sh`, `kw`, `
 agreement and, more importantly, read by eye for naturalness; the measured agreement is recorded
 as a claim, not used as a gate.
 
-## 5. Status and next steps
+## 5. Implementation record (2026-10-24)
 
 Done (2026-10-24):
 
@@ -368,7 +374,9 @@ Done (2026-10-24):
   the Workshop's own title and description per language are set at upload, and whether the game's
   list shows them is [UNKNOWN].
 
-Next:
+## Translation maintenance
 
-1. Owner review in game and in the window (roadmap gate), in a sitting held for other reasons;
-   native readers for the Workshop texts before the upload, if any can be found.
+For changed English text, update affected official-language catalogues and source
+fingerprints, then run the release coverage checks. Use owner/native-reader
+feedback for specific wording problems when available. No additional blanket
+language-acceptance session is pending for the released 1.0.0 scope.

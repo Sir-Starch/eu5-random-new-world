@@ -1,4 +1,10 @@
-# Installed experiments
+# Installation history
+
+These are dated installation, replacement and removal records, not a declaration
+that every listed folder still exists. Inspect the filesystem for current state;
+an old removal command is not an instruction to delete anything now. Current hub
+identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
+actual Workshop download and separate local library were checked in C441.
 
 2026-10-28, **RNW 1.0.0 / epoch 59 release candidate**, C431: installed
 **RNW: RNW 1.0.0 candidate** in the new `mod/rnw_exp_world_l2ukzb7ihj`, code

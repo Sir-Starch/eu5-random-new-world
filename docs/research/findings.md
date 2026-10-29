@@ -1,5 +1,10 @@
 # EU5 1.4.1 technical findings
 
+Historical investigation of the original build. Its initial unknowns and
+metadata-only observations are not the current feasibility verdict or a release
+checklist. Use [current architecture](../architecture.md) for implemented
+capabilities and the later ledger rows for corrections and subsequent builds.
+
 This is a read-only investigation of Steam build 25905365 on `1.4-open-beta`, plus one metadata-only startup experiment. Claim IDs refer to the [ledger](claims-ledger.md). Paths are relative to the [installation root](game-install-inventory.md). A file's presence establishes a data dependency, not that a mod can replace it.
 
 ## Geography contracts seen in the installation

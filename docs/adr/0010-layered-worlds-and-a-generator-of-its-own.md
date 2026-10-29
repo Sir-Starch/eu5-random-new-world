@@ -1,6 +1,6 @@
 # ADR 0010: Layered worlds, a page of pictures, world files, and a generator that stands on its own
 
-**Status:** Accepted 2026-10-22 with the owner's answers (at the end). Offline implementation through G4 and the G5 artifact workflow is present in 0.9.23 (C143–C146); game acceptance, broader native Windows/macOS validation and remote CI remain separate gates. The first packaged Windows 11 launch/generate/install smoke passed by owner report (C428). See the [generator guide](../generator-guide.md), [log](../research/log.md) and [claims ledger](../research/claims-ledger.md). Builds on [ADR 0009](0009-hub-mod-with-generator.md) (the hub mod and the generator window) and [ADR 0007](0007-application-window-and-packaging.md) (the window).
+**Status:** Accepted 2026-10-22; implemented and shipped in 1.0.0. Windows/Linux CI and release delivery are checked (C438–C439, C441); the owner accepted the product (C437). The dated code snapshot and phase table below preserve design history, not open release gates. [Current architecture](../architecture.md) and [generator guide](../generator-guide.md) describe the implementation.
 
 ## Requirements (owner, 2026-10-22)
 
@@ -11,7 +11,7 @@
 5. The names of the map mods must be more convenient and shorter.
 6. And the quality-of-life that follows from these.
 
-## What exists (read from the code, 0.9.20)
+## Historical code snapshot (0.9.20)
 
 - **One seed drives everything, through named streams.** A world is a preset, a 64-bit seed and changed settings, written as a world code (`rnw.app.worldcode`). Every stage draws from `derive_seed(seed, "<stream>")`; the land (`newworld`, `relief`, `rivers`), the raw materials (`eu5_biomes._raw_materials`, stream `raw_material`) and the peoples (`eu5_natives.build_natives`: societies, cultures, religions, tags, colours, countries and place names) each take the seed as an argument [V-LOCAL: `grep derive_seed`]. No stage after the land reads `raw_material` except the texts that write it [V-LOCAL: grep]. So the parts are separable by giving each its own seed [INFERRED; the acceptance tests below prove it].
 - **A world code is append-only.** Format 2 writes a change as the number of its field in `CHANGE_FIELDS` and an unsigned LEB128 value; a number, once given, names its field for good. A code also carries the generator version.
@@ -142,7 +142,7 @@ Enforced, not promised:
 
 Per world: a note, a star, a tag of the player's; compare two worlds side by side on any picture; search of a country, a culture or a material across a world; copy the code, the tag, the picture; save a picture (spoiler-safe by default); a history of the rolls with undo; open the folder; a summary line (countries, tribes, empires, gold and silver, land share). Per session: **Candidates**, a contact sheet of several continents rolled from the land stage alone (a sketch is cheaper than a world: no vegetation, no decals), to pick before generating; drag and drop of codes and files; a queue of worlds to generate, one after another. Every operation also exists as a command (`rnw reroll CODE --part peoples`), for scripts and for players without the window.
 
-## Phases (release target per ADR 0003, golden digests, [claims ledger](../research/claims-ledger.md), owner's review)
+## Historical implementation slices (completed for the accepted 1.0.0 scope)
 
 | Phase | Contents | Gate |
 |---|---|---|
@@ -196,6 +196,6 @@ unknown; the current installation is not substituted as historical evidence.
 Legacy thumbnails can supply a preview but are not presented as a restored atlas.
 Mods lacking readable identification remain visible as unregistered. Polling
 small metadata files lets an open window notice external changes while retaining
-selection and unsaved notes. No map raster is hashed on the UI thread. The
-algorithm epoch stays 41: this feature changes application/library data and
+selection and unsaved notes. No map raster is hashed on the UI thread. At its 0.13.3 implementation, the
+algorithm epoch stayed 41: this feature changes application/library data and
 `.metadata` only. The canonical reference world is still the one of 0.13.2.
