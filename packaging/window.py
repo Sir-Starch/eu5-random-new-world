@@ -28,6 +28,7 @@ LOADER_NOTICE: Final[Path] = ROOT / "packaging" / "licenses" / "WebView2Loader.t
 # runtime is part of every component.
 BUNDLED_DEVELOPMENT: Final[tuple[str, ...]] = ("svelte",)
 LICENCE_WORDS: Final[tuple[str, ...]] = ("license", "licence", "copying", "notice", "copyright")
+NODE_TOOLS: Final[frozenset[str]] = frozenset(("npm", "npx"))
 
 
 class WindowError(RuntimeError):
@@ -47,10 +48,23 @@ def loader_beside(target: str | None) -> bool:
 
 
 def _run(command: list[str], *, cwd: Path, env: dict[str, str] | None = None) -> None:
-    if shutil.which(command[0]) is None:
+    if os.name == "nt" and command[0] in NODE_TOOLS:
+        found = shutil.which(f"{command[0]}.cmd") or shutil.which(command[0])
+    else:
+        found = shutil.which(command[0])
+    if found is None:
         message = f"{command[0]} is not installed"
         raise WindowError(message)
-    _ = subprocess.run(command, check=True, cwd=cwd, env=env)  # noqa: S603 - fixed tools, our arguments
+    invocation = platform_command(command, windows=os.name == "nt")
+    _ = subprocess.run(invocation, check=True, cwd=cwd, env=env)  # noqa: S603 - fixed tools, our arguments
+
+
+def platform_command(command: list[str], *, windows: bool) -> list[str]:
+    """Run Windows' npm and npx batch shims through cmd.exe."""
+    if windows and command[0] in NODE_TOOLS:
+        # CreateProcess cannot launch npm.cmd or npx.cmd directly.
+        return ["cmd.exe", "/d", "/s", "/c", subprocess.list2cmdline(command)]
+    return command
 
 
 def build(destination: Path, work: Path, *, target: str | None = None) -> Path:
