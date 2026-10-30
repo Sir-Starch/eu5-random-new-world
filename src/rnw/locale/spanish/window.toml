@@ -294,6 +294,10 @@ text = '''Enlaces'''
 source = "d6730b7b4d624dda"
 text = '''Repositorio GitHub'''
 
+["about_workshop"]
+source = "5d79db3dfface0b8"
+text = '''Steam Workshop'''
+
 ["about_documentation"]
 source = "c205924de0fe636c"
 text = '''Documentación'''

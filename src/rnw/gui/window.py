@@ -373,6 +373,10 @@ class AboutDialog(QDialog):
         links: tuple[tuple[str, str], ...] = (
             (text("about_homepage"), "https://github.com/Sir-Starch/eu5-random-new-world"),
             (
+                text("about_workshop"),
+                "https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331",
+            ),
+            (
                 text("about_documentation"),
                 "https://github.com/Sir-Starch/eu5-random-new-world/tree/main/docs",
             ),

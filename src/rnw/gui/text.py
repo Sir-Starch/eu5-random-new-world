@@ -154,6 +154,7 @@ STRINGS: Final[dict[str, str]] = {
     "about_license": "Licence",
     "about_links": "Links",
     "about_homepage": "GitHub Repository",
+    "about_workshop": "Steam Workshop",
     "about_documentation": "Documentation",
     "about_issues": "Report an Issue",
     "about_changelog": "Changelog",

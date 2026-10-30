@@ -6,6 +6,7 @@
   const HOME = "https://github.com/Sir-Starch/eu5-random-new-world";
   const LINKS = [
     ["about_homepage", HOME],
+    ["about_workshop", "https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331"],
     ["about_documentation", `${HOME}/tree/main/docs`],
     ["about_issues", `${HOME}/issues`],
     ["about_changelog", `${HOME}/blob/main/CHANGELOG.md`],
