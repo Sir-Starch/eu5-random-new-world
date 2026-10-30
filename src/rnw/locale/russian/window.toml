@@ -2147,3 +2147,15 @@ text = '''Показать или скрыть боковую панель'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Выбран'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''Племена'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''Показывать племена'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''Племена — тоже страны, но политическая карта игры их не закрашивает; эта карта тоже, если здесь не стоит отметка.'''

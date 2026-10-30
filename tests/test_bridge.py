@@ -13,18 +13,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
+import pytest
 
 from rnw import atlas
 from rnw.app import library, service
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.gui import text, view
-from rnw.gui.bridge import Bridge, serve
+from rnw.gui.bridge import Bridge, BridgeError, serve
 from rnw.gui.controller import NEW, Controller, Phase
+from rnw.png import COLOR_RGB, encode_png
 from tests.fakes import synthetic_atlas
 
 if TYPE_CHECKING:
-    import pytest
-
     from rnw.app.service import Exporter
     from rnw.progress import Progress
 
@@ -141,6 +141,27 @@ def test_the_atlas_reaches_the_viewer_whole(tmp_path: Path, fake_export: Exporte
         assert np.array_equal(classes, lens.classes)
         assert len(cast("list[object]", sent["legend"])) == len(lens.legend)
     _ = json.dumps(bundle)
+
+
+def test_the_window_saves_the_map_it_drew(tmp_path: Path, fake_export: Exporter) -> None:
+    """A map picture is drawn by the window, as shown; the bridge only writes it, as a PNG."""
+    bridge = _bridge(tmp_path, fake_export)
+    drawn = encode_png(
+        np.zeros((2, 3, 3), dtype=np.uint8), color_type=COLOR_RGB, compression="zlib"
+    )
+    output = tmp_path / "map.png"
+    data = "data:image/png;base64," + base64.b64encode(drawn).decode("ascii")
+    message = bridge.call("save_png", {"path": str(output), "data": data})
+    assert message == text.text("picture_saved", path=str(output))
+    assert output.read_bytes() == drawn
+    for wrong in (
+        "data:image/png;base64,bm90IGEgcGljdHVyZQ==",
+        "data:text/plain;base64,AAAA",
+        "%%%",
+    ):
+        with pytest.raises(BridgeError):
+            _ = bridge.call("save_png", {"path": str(tmp_path / "no.png"), "data": wrong})
+    assert not (tmp_path / "no.png").exists()
 
 
 def test_a_covered_world_has_no_atlas_for_the_viewer(tmp_path: Path, fake_export: Exporter) -> None:

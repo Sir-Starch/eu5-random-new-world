@@ -15,6 +15,12 @@
 - Rebuild the map viewer: WebGL lenses with sharp borders at any zoom, place
   names, minimap, hover and pinned location cards, legend isolation and search
   that zoom to their match, area search, linked comparison and copying the view.
+  The physical map opens first and lies under every lens: shaded relief,
+  softened vegetation and climate, sea depth, region and sea names, cities.
+  Countries shows states as the game does, with tribes as an option; resources
+  are coloured by family, mark riches and name each location up close; cultures,
+  religions and areas keep neighbours apart and are named where they are
+  broadest. A saved map picture is the lens as drawn.
 - Add population, climate, terrain and areas lenses to the atlas, the Qt maps,
   PNG export and the CLI; the existing lenses draw the same bytes.
 - Keep a chosen game folder's discovered build instead of showing it as unknown.

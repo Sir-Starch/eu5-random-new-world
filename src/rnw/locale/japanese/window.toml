@@ -2147,3 +2147,15 @@ text = '''サイドパネルの表示/非表示'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''選択中'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''部族'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''部族を表示'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''部族も国ですが、ゲームの政治マップでは色が付きません。ここにチェックを入れない限り、この地図でも同じです。'''

@@ -1,6 +1,8 @@
 // A world's atlas as the map viewer uses it: the box of locations unrolled from the bridge's
 // runs, each layer's colours, legend entries and border values, and what is known of a location.
 
+import { style, type StyledLens } from "./lenses";
+import { poles } from "./relief";
 import type { AtlasBundle, CountryInfo } from "./types";
 
 export const OUTSIDE = -1;
@@ -48,8 +50,20 @@ export interface Label {
   text: string;
   x: number;
   y: number;
+  /** Pixels of what is named. */
   weight: number;
+  /** How far the name's point lies from the edge of what is named, in pixels. */
+  room: number;
   colour: string;
+  kind: "country" | "tribe" | "class" | "region" | "sea";
+}
+
+export interface Settlement {
+  cell: number;
+  x: number;
+  y: number;
+  city: boolean;
+  name: string;
 }
 
 function bytes(base64: string): Uint8Array {
@@ -92,6 +106,7 @@ export class WorldAtlas {
   readonly sumY: Float64Array;
   readonly box: Int32Array;
   private lenses = new Map<string, Lens>();
+  private styled = new Map<string, StyledLens>();
   private labelCache = new Map<string, Label[]>();
 
   constructor(data: AtlasBundle) {
@@ -127,7 +142,8 @@ export class WorldAtlas {
     }
   }
 
-  lens(layer: string): Lens {
+  /** A lens as the bridge sent it. */
+  source(layer: string): Lens {
     let found = this.lenses.get(layer);
     if (!found) {
       const source = this.data.layers[layer];
@@ -142,6 +158,23 @@ export class WorldAtlas {
       this.lenses.set(layer, found);
     }
     return found;
+  }
+
+  /** A lens as the window paints it (``style``); without ``tribes`` the countries lens leaves
+   *  tribes uncoloured, as the game's political map does, under one legend entry. */
+  lens(layer: string, tribes = true, tribesLabel = "Tribes"): StyledLens {
+    const key = layer === "countries" ? `${layer}|${tribes}` : layer;
+    let found = this.styled.get(key);
+    if (!found) {
+      found = style(this, this.source(layer), tribes, tribesLabel);
+      this.styled.set(key, found);
+    }
+    return found;
+  }
+
+  /** Whether a country is shown as one: states always, tribes when asked. */
+  shown(owner: number, tribes: boolean): boolean {
+    return owner >= 0 && (tribes || this.data.countries[owner]?.kind === "state");
   }
 
   cellAt(x: number, y: number): number {
@@ -207,8 +240,8 @@ export class WorldAtlas {
   }
 
   /** Cells sharing a lens's legend entry with ``cell`` (its country, culture...). */
-  classCells(layer: string, entry: number): number[] {
-    const classes = this.lens(layer).classes;
+  classCells(layer: string, entry: number, tribes = true): number[] {
+    const classes = this.lens(layer, tribes).classes;
     const out: number[] = [];
     for (let c = 0; c < this.cells; c++) if (classes[c] === entry) out.push(c);
     return out;
@@ -275,69 +308,82 @@ export class WorldAtlas {
     return found.slice(0, limit);
   }
 
-  /** Where to write each legend entry of a layer: the centre of its largest contiguous mass is
-   *  approximated by the centroid of its pixels, weighted by size. */
-  labelsFor(layer: string): Label[] {
-    const cached = this.labelCache.get(layer);
+  /** The names a lens writes large, each where what it names is broadest (``poles``):
+   *  regions and seas on the physical map, countries on the political one, the classes of
+   *  cultures, religions and areas. Scattered lenses (resources, climate, terrain, the ramps)
+   *  write no large names. */
+  labelsFor(layer: string, names: "regions" | "countries" | "classes" | "none", tribes = true): Label[] {
+    const key = `${layer}|${names}|${tribes}`;
+    const cached = this.labelCache.get(key);
     if (cached) return cached;
-    const lens = this.lens(layer);
     const d = this.data;
     const out: Label[] = [];
-    if (layer === "countries") {
-      const sx = new Float64Array(d.countries.length);
-      const sy = new Float64Array(d.countries.length);
-      const sa = new Float64Array(d.countries.length);
-      for (let c = 0; c < this.cells; c++) {
-        const owner = d.owner[c];
-        if (owner < 0 || d.kind[c] !== LAND) continue;
-        sx[owner] += this.sumX[c];
-        sy[owner] += this.sumY[c];
-        sa[owner] += this.area[c];
-      }
-      d.countries.forEach((country, n) => {
-        if (sa[n] > 0) {
-          out.push({
-            text: country.name,
-            x: sx[n] / sa[n],
-            y: sy[n] / sa[n],
-            weight: sa[n],
-            colour: country.color,
-          });
-        }
+    const push = (
+      entries: { x: number; y: number; room: number; area: number }[],
+      describe: (k: number) => { text: string; colour: string; kind: Label["kind"] } | null,
+    ): void => {
+      entries.forEach((entry, k) => {
+        if (entry.area <= 0) return;
+        const about = describe(k);
+        if (about?.text) out.push({ ...about, x: entry.x, y: entry.y, weight: entry.area, room: entry.room });
       });
-    } else if (layer !== "development" && layer !== "population" && layer !== "land") {
-      const n = lens.legend.length;
-      const sx = new Float64Array(n);
-      const sy = new Float64Array(n);
-      const sa = new Float64Array(n);
-      for (let c = 0; c < this.cells; c++) {
-        const k = lens.classes[c];
-        if (k < 0 || d.kind[c] !== LAND) continue;
-        sx[k] += this.sumX[c];
-        sy[k] += this.sumY[c];
-        sa[k] += this.area[c];
-      }
-      lens.legend.forEach((entry, k) => {
-        if (sa[k] > 0) {
-          out.push({
-            text: entry.label,
-            x: sx[k] / sa[k],
-            y: sy[k] / sa[k],
-            weight: sa[k],
-            colour: entry.colour,
-          });
-        }
+    };
+    if (names === "countries") {
+      const found = poles(this, (c) => (d.kind[c] === LAND && this.shown(d.owner[c], tribes) ? d.owner[c] : -1), d.countries.length);
+      push(found, (k) => {
+        const country = d.countries[k];
+        return { text: country.name, colour: country.color, kind: country.kind === "state" ? "country" : "tribe" };
       });
+    } else if (names === "classes") {
+      const lens = this.lens(layer, tribes);
+      const found = poles(this, (c) => (d.kind[c] === LAND && lens.opacity[c] > 0 ? lens.classes[c] : -1), lens.legend.length);
+      push(found, (k) => ({ text: lens.legend[k].label, colour: lens.legend[k].colour, kind: "class" }));
+    } else if (names === "regions") {
+      for (const [kinds, field, kind] of [
+        [[LAND, WASTELAND], d.region, "region"],
+        [[SEA], d.names, "sea"],
+      ] as const) {
+        const index = new Map<string, number>();
+        const titles: string[] = [];
+        const classOf = new Int32Array(this.cells).fill(-1);
+        for (let c = 0; c < this.cells; c++) {
+          const title = field[c];
+          if (!title || !(kinds as readonly number[]).includes(d.kind[c]) || title.startsWith("$")) continue;
+          let k = index.get(title);
+          if (k === undefined) {
+            k = titles.length;
+            index.set(title, k);
+            titles.push(title);
+          }
+          classOf[c] = k;
+        }
+        const found = poles(this, (c) => classOf[c], titles.length);
+        push(found, (k) => ({ text: titles[k], colour: "", kind }));
+      }
     }
     out.sort((a, b) => b.weight - a.weight);
-    this.labelCache.set(layer, out);
+    this.labelCache.set(key, out);
     return out;
   }
 
-  /** Capitals, as pixel positions with their country. */
-  capitals(): { x: number; y: number; country: CountryInfo }[] {
+  /** Cities and towns, as pixel positions. */
+  settlements(): Settlement[] {
+    const d = this.data;
+    const words = d.raw.settlement ?? [];
+    const out: Settlement[] = [];
+    for (let c = 0; c < this.cells; c++) {
+      const index = d.settlement[c];
+      if (index < 0 || d.kind[c] !== LAND) continue;
+      const [x, y] = this.centre(c);
+      out.push({ cell: c, x, y, city: words[index] === "city", name: d.names[c] || d.keys[c] });
+    }
+    return out;
+  }
+
+  /** Capitals, as pixel positions with their country; states' only, unless ``tribes``. */
+  capitals(tribes = true): { x: number; y: number; country: CountryInfo }[] {
     return this.data.countries
-      .filter((country) => country.capital >= 0)
+      .filter((country) => country.capital >= 0 && (tribes || country.kind === "state"))
       .map((country) => {
         const [x, y] = this.centre(country.capital);
         return { x, y, country };

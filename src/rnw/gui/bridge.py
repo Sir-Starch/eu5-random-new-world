@@ -20,6 +20,8 @@ codes, and exits with 0: the packaging jobs run it on the built folder.
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import json
 import os
 import queue
@@ -30,7 +32,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import IO, TYPE_CHECKING, Final, cast
 
-from rnw import __version__, _native, atlas
+from rnw import __version__, _native
 from rnw.app import logs, paths, random_types
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.gui import text as window
@@ -51,6 +53,9 @@ POLL: Final[float] = 2.0
 CLOSE_WAIT: Final[float] = 15.0
 SELF_TEST: Final[str] = "--self-test"
 DESCRIPTION: Final[str] = "The generator behind the Tauri window, spoken to as JSON lines."
+PNG_URL: Final[str] = "data:image/png;base64,"
+PNG_SIGNATURE: Final[bytes] = b"\x89PNG\r\n\x1a\n"
+NOT_PNG: Final[str] = "The picture is not a PNG data URL"
 
 Params = dict[str, object]
 
@@ -161,7 +166,7 @@ class Bridge:
             "export_file": self.export_file,
             "send_built": self.send_built,
             "copy_mod": self.copy_mod,
-            "save_map": self.save_map,
+            "save_png": self.save_png,
             "save_preview": self.save_preview,
             "picture": self.picture,
             "folder": self.folder,
@@ -321,13 +326,20 @@ class Bridge:
     def copy_mod(self, params: Params) -> str | None:
         return self.controller.copy_mod_to(self._world(params), Path(_str(params, "path")))
 
-    def save_map(self, params: Params) -> str:
-        world, path, layer = self._world(params), _str(params, "path"), _str(params, "layer")
-        if layer not in atlas.LAYERS:
-            message = f"Unknown layer {layer!r}"
-            raise BridgeError(message)
-        problem = self.controller.save_map(world, layer, Path(path))
-        return problem or window.text("picture_saved", path=path)
+    def save_png(self, params: Params) -> str:
+        """Write a picture the window drew (a map as it is shown) from its PNG data URL."""
+        path, data = _str(params, "path"), _str(params, "data")
+        try:
+            raw = base64.b64decode(data.removeprefix(PNG_URL), validate=True)
+        except binascii.Error as error:
+            raise BridgeError(NOT_PNG) from error
+        if not data.startswith(PNG_URL) or not raw.startswith(PNG_SIGNATURE):
+            raise BridgeError(NOT_PNG)
+        try:
+            _ = Path(path).write_bytes(raw)
+        except OSError as error:
+            return window.explain(error)
+        return window.text("picture_saved", path=path)
 
     def save_preview(self, params: Params) -> str:
         world, path = self._world(params), _str(params, "path")

@@ -724,6 +724,12 @@ STRINGS: Final[dict[str, str]] = {
         "Click an entry to show only it, double-click to go there. Click a location to keep "
         "its card."
     ),
+    "map.tribes": "Tribes",
+    "map.show_tribes": "Show tribes",
+    "map.show_tribes_tip": (
+        "Tribes are countries too, but the game's political map leaves them uncoloured; so does "
+        "this map unless this is ticked."
+    ),
 }
 
 

@@ -21,20 +21,25 @@ const OVERLAYS: MapOverlays = {
   labels: true,
 };
 
-function remembered(): MapOverlays {
+function remembered(): { overlays: MapOverlays; tribes: boolean } {
   try {
-    const value = JSON.parse(localStorage.getItem(STORE) ?? "{}") as { overlays?: Partial<MapOverlays> };
-    return { ...OVERLAYS, ...value.overlays };
+    const value = JSON.parse(localStorage.getItem(STORE) ?? "{}") as {
+      overlays?: Partial<MapOverlays>;
+      tribes?: boolean;
+    };
+    return { overlays: { ...OVERLAYS, ...value.overlays }, tribes: value.tribes === true };
   } catch {
-    return { ...OVERLAYS };
+    return { overlays: { ...OVERLAYS }, tribes: false };
   }
 }
 
 export class MapSession {
   /** The atlas of the world the viewer shows; null while it loads or when none is shown. */
   atlas = $state.raw<WorldAtlas | null>(null);
-  layer = $state("countries");
-  overlays = $state<MapOverlays>(remembered());
+  layer = $state("land");
+  overlays = $state<MapOverlays>(remembered().overlays);
+  /** Tribes coloured and bordered like states; the game's political map leaves them out. */
+  tribes = $state(remembered().tribes);
   /** What a legend entry, a search result or a link in a location's card isolated. */
   match = $state.raw<Highlight | null>(null);
   /** What the pointer rests on in the legend or the search results, lit for a moment. */
@@ -55,12 +60,12 @@ export class MapSession {
 
   /** The cells of one entry of the current lens's legend. */
   classCells(index: number): number[] {
-    return this.atlas ? this.atlas.classCells(this.layer, index) : [];
+    return this.atlas ? this.atlas.classCells(this.layer, index, this.tribes) : [];
   }
 
   remember(): void {
     try {
-      localStorage.setItem(STORE, JSON.stringify({ overlays: $state.snapshot(this.overlays) }));
+      localStorage.setItem(STORE, JSON.stringify({ overlays: $state.snapshot(this.overlays), tribes: this.tribes }));
     } catch {
       // Storage is a convenience.
     }

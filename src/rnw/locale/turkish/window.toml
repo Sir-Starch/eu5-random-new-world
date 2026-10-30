@@ -2147,3 +2147,15 @@ text = '''Yan paneli göster veya gizle'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Seçildi'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''Kabileler'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''Kabileleri göster'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''Kabileler de ülkedir, ama oyunun siyasi haritası onları renklendirmez; bu işaretlenmedikçe bu harita da öyle yapar.'''

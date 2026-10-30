@@ -2147,3 +2147,15 @@ text = '''Mostrar ou ocultar o painel lateral'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Escolhido'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''Tribos'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''Mostrar tribos'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''Tribos também são países, mas o mapa político do jogo as deixa sem cor; este mapa também, a menos que isto esteja marcado.'''

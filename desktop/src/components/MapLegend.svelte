@@ -7,12 +7,14 @@
   import type { Match } from "../lib/atlas";
   import { map } from "../lib/mapSession.svelte";
   import Icon from "./Icon.svelte";
+  import Check from "./ui/Check.svelte";
 
   let query = $state("");
   let cursor = $state(0);
 
   const atlas = $derived(map.atlas);
-  const lens = $derived(atlas?.lens(map.layer) ?? null);
+  const lens = $derived(atlas?.lens(map.layer, map.tribes, t("map.tribes")) ?? null);
+  const tribes = $derived(atlas ? atlas.data.countries.filter((country) => country.kind !== "state").length : 0);
   const ramp = $derived(app.info?.ramps.includes(map.layer) ?? false);
   const entries = $derived(
     (lens?.legend ?? []).map((entry, index) => ({ ...entry, index })).filter((entry) => entry.count > 0),
@@ -101,6 +103,11 @@
       <span class="title">{t("legend")}</span>
       <span class="faint">{t(`layer.${map.layer}`)}</span>
     </div>
+    {#if map.layer === "countries" && tribes}
+      <div class="option" title={t("map.show_tribes_tip")}>
+        <Check checked={map.tribes} label={`${t("map.show_tribes")} · ${tribes}`} onchange={(value) => (map.tribes = value)} />
+      </div>
+    {/if}
     {#if ramp && lens}
       <div class="ramp">
         <div class="ramp-bar" style:background={`linear-gradient(90deg, ${lens.ramp.join(",")})`}></div>
@@ -215,6 +222,11 @@
   }
   .legend-head .title {
     font-weight: 600;
+  }
+  .option {
+    flex: none;
+    padding: 0 12px 6px;
+    font-size: 12.5px;
   }
   .ramp {
     flex: none;

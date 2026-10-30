@@ -112,6 +112,7 @@ CLIMATE_COLOURS: Final[dict[str, tuple[int, int, int]]] = {
     "continental": (110, 162, 120),
     "oceanic": (84, 170, 160),
     "mediterranean": (196, 176, 84),
+    "subtropical": (156, 196, 106),
     "hot_semi_arid": (214, 158, 92),
     "arid": (228, 196, 128),
     "tropical": (52, 150, 82),

@@ -2147,3 +2147,15 @@ text = '''Seitenleiste ein- oder ausblenden'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Gewählt'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''Stämme'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''Stämme zeigen'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''Stämme sind auch Länder, doch die politische Karte des Spiels färbt sie nicht ein; diese Karte auch nicht, außer wenn dies angehakt ist.'''

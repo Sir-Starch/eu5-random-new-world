@@ -113,13 +113,28 @@ play (destination, install, visibility, queue); under every tab stay the locatio
 queue and Generate. Folded sections stay folded. Messages that the Qt window wrote under a page
 are toasts; questions are in-window dialogs.
 
-**Maps.** Ten lenses (keys 1–0; chosen in the inspector, or in the toolbar while the inspector is
-hidden), country borders, names and location borders as overlays, one search field over
-countries, cultures, religions, resources, areas and places, a legend that previews on hover,
-isolates on click and zooms on double-click, a hover card and a pinned location card whose values
-isolate their country, culture, religion, resource or area, a minimap, zoom in the toolbar,
-map-only focus that keeps the view's centre, PNG export of the exact lens and copying the current
-view. Compare shows two worlds with linked cameras.
+**Maps.** The physical map is the default lens and the ground under every other (owner review
+2026-10-30: the physical map had become less beautiful, tribes were mixed with countries and
+resource names hung anywhere). It is drawn from the atlas, which holds no heightmap: vegetation
+and climate colours softened across locations, relief shaded from each location's topography
+and roughened where it is mountainous, wetlands and snow, water darkening from the coast into
+the open ocean around the New World, region and sea names, cities and towns. The other lenses
+lay their colours over it as strongly as each needs, so the relief shows through; land that
+holds nothing of a lens shows the physical map faded. Countries colours states only, as the
+game's political map does; Show tribes in its legend adds them (kept per machine). Cultures,
+religions and areas are coloured so that neighbours differ and named where each is broadest.
+Resources are coloured by family (crops, animals, the sea, cash crops, wood and stone, metals,
+riches), mark gold, silver, gems, pearls and amber, and name each location's resource up close;
+development and population fade into the physical map at their low end and write their values
+up close; climate and terrain keep the full relief. Country borders come in on other lenses as
+the map is brought closer. Ten lenses (keys 1–0; chosen in the inspector, or in the toolbar
+while the inspector is hidden), country borders, names and location borders as overlays, one
+search field over countries, cultures, religions, resources, areas and places, a legend that
+previews on hover, isolates on click and zooms on double-click, a hover card and a pinned
+location card whose values isolate their country, culture, religion, resource or area, a
+minimap, zoom in the toolbar, map-only focus that keeps the view's centre, a PNG of the whole
+lens as it is drawn (names included, one pixel per atlas pixel) and copying the current view.
+Compare shows two worlds with linked cameras. The Qt window keeps its own flat pictures.
 
 **Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+B, Ctrl+I, Ctrl+V of a world code
 anywhere, arrows in the library, `?` for the list. Every control is a native button/input or a

@@ -2147,3 +2147,15 @@ text = '''显示或隐藏侧边栏'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''已选'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''部落'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''显示部落'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''部落也是国家，但游戏的政治地图不为它们着色；除非勾选此项，这张地图也一样。'''

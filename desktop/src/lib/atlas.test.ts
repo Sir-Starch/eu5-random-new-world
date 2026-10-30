@@ -67,6 +67,6 @@ describe("atlas", () => {
     const lens = atlas.lens("countries");
     expect(lens.legend[1].label).toBe("Aland");
     expect(atlas.classCells("countries", 1)).toEqual([0]);
-    expect(atlas.labelsFor("countries")[0].text).toBe("Aland");
+    expect(atlas.labelsFor("countries", "countries")[0].text).toBe("Aland");
   });
 });

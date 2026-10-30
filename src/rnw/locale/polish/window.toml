@@ -2147,3 +2147,15 @@ text = '''Pokaż lub ukryj panel boczny'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Wybrany'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''Plemiona'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''Pokaż plemiona'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''Plemiona też są państwami, ale mapa polityczna gry ich nie koloruje; ta mapa również, chyba że to jest zaznaczone.'''

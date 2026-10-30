@@ -4,7 +4,7 @@
   // the inspector through the shared session.
   import { onDestroy, onMount, untrack, type Snippet } from "svelte";
   import { app, grouped, t } from "../lib/app.svelte";
-  import type { Facts } from "../lib/atlas";
+  import { LAND, type Facts } from "../lib/atlas";
   import { loadAtlas } from "../lib/atlasCache";
   import {
     between,
@@ -15,7 +15,8 @@
     zoomAt,
     type Camera,
   } from "../lib/camera";
-  import { createRenderer, type Renderer, type Theme } from "../lib/mapgl";
+  import { profile, PRECIOUS_MARKS } from "../lib/lenses";
+  import { createRenderer, OCEAN_CSS, paintBox, type Renderer, type Theme } from "../lib/mapgl";
   import type { MapSession } from "../lib/mapSession.svelte";
   import { copyImage, saveFile } from "../lib/native";
   import Icon from "./Icon.svelte";
@@ -92,7 +93,7 @@
     rendererKind = renderer.kind;
     canvas = renderer.canvas;
     renderer.setAtlas(found);
-    renderer.setLens(session.layer);
+    renderer.setLens(session.layer, session.tribes, t("map.tribes"));
     renderer.setFlags(-1, -1, null);
     readTheme();
     resize();
@@ -130,7 +131,8 @@
     frame = 0;
     if (!renderer || !atlas) return;
     renderer.draw(cam, session.overlays, theme);
-    drawLabels();
+    const context = labelCanvas?.getContext("2d");
+    if (context) drawLabels(context, cam, view, window.devicePixelRatio || 1);
     drawMinimapView();
   }
 
@@ -153,69 +155,189 @@
     request();
   }
 
-  function drawLabels(): void {
-    const context = labelCanvas?.getContext("2d");
-    if (!context || !atlas) return;
-    const dpr = window.devicePixelRatio || 1;
-    context.setTransform(dpr, 0, 0, dpr, 0, 0);
-    context.clearRect(0, 0, view.width, view.height);
+  // How each kind of name is written: its largest size, how it grows with what it names (by the
+  // square root of its pixels and by how deep its point lies inside), its letters and its ink.
+  const NAMES = {
+    country: { max: 20, area: 0.34, room: 1.5, upper: true, spacing: 0.06, weight: 600, italic: false, fill: "rgba(30, 24, 16, 0.9)", halo: "rgba(255, 251, 240, 0.62)" },
+    tribe: { max: 14, area: 0.26, room: 1.2, upper: false, spacing: 0, weight: 500, italic: true, fill: "rgba(36, 30, 20, 0.82)", halo: "rgba(255, 251, 240, 0.55)" },
+    class: { max: 18, area: 0.18, room: 0.9, upper: false, spacing: 0.02, weight: 600, italic: false, fill: "rgba(30, 24, 16, 0.86)", halo: "rgba(255, 251, 240, 0.58)" },
+    region: { max: 18, area: 0.16, room: 0.55, upper: true, spacing: 0.24, weight: 500, italic: false, fill: "rgba(52, 40, 24, 0.74)", halo: "rgba(250, 245, 230, 0.42)" },
+    sea: { max: 16, area: 0.14, room: 0.6, upper: false, spacing: 0.06, weight: 400, italic: true, fill: "rgba(214, 232, 250, 0.9)", halo: "rgba(10, 26, 54, 0.5)" },
+  } as const;
+  const FONT = '"Noto Sans Variable", "Noto Sans", sans-serif';
+
+  /** Names, places and notes over the map, drawn on ``context`` for ``camera`` and ``size``. */
+  function drawLabels(context: CanvasRenderingContext2D, camera: Camera, size: { width: number; height: number }, ratio: number): void {
+    if (!atlas) return;
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.clearRect(0, 0, size.width, size.height);
     if (!session.overlays.labels) return;
+    const layer = session.layer;
+    const look = profile(layer);
+    const tribes = session.tribes;
     const placed: [number, number, number, number][] = [];
-    const light = theme.ink[0] > 30;
-    const fill = light ? "rgba(36, 26, 12, 0.92)" : "rgba(246, 240, 226, 0.95)";
-    const halo = light ? "rgba(250, 244, 230, 0.85)" : "rgba(6, 8, 12, 0.78)";
+    const free = (box: [number, number, number, number]): boolean =>
+      !placed.some((p) => box[0] < p[2] && box[2] > p[0] && box[1] < p[3] && box[3] > p[1]);
+    const visible = (sx: number, sy: number, margin: number): boolean =>
+      sx > -margin && sy > -margin && sx < size.width + margin && sy < size.height + margin;
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.lineJoin = "round";
-    const layer = session.layer;
-    const labels = atlas.labelsFor(layer);
-    for (const label of labels) {
-      const size = Math.min(26, Math.sqrt(label.weight) * cam.scale * 0.21);
-      if (size < 10) continue;
-      const [sx, sy] = toScreen(cam, label.x, label.y);
-      if (sx < -200 || sy < -40 || sx > view.width + 200 || sy > view.height + 40) continue;
-      const upper = layer === "countries";
-      const text = upper ? label.text.toLocaleUpperCase() : label.text;
-      context.font = `${upper ? 600 : 500} ${size.toFixed(1)}px "Noto Sans Variable", "Noto Sans", sans-serif`;
-      if ("letterSpacing" in context) {
-        (context as unknown as { letterSpacing: string }).letterSpacing = upper
-          ? `${(size * 0.12).toFixed(1)}px`
-          : "0px";
+    const spacing = (value: number): void => {
+      if ("letterSpacing" in context) (context as unknown as { letterSpacing: string }).letterSpacing = `${value.toFixed(1)}px`;
+    };
+
+    // Places first, so names make way for them: cities and towns, capitals, riches.
+    const marks: (() => void)[] = [];
+    if (layer === "land" || layer === "countries") {
+      for (const place of atlas.settlements()) {
+        if (camera.scale < (place.city ? 0.28 : 0.55)) continue;
+        const [sx, sy] = toScreen(camera, place.x, place.y);
+        if (!visible(sx, sy, 20)) continue;
+        const r = place.city ? 3.6 : 2.4;
+        placed.push([sx - r - 1, sy - r - 1, sx + r + 1, sy + r + 1]);
+        marks.push(() => {
+          context.beginPath();
+          context.arc(sx, sy, r, 0, Math.PI * 2);
+          context.fillStyle = place.city ? "#fbf6ea" : "#2a2218";
+          context.strokeStyle = place.city ? "#2a2218" : "rgba(251, 246, 234, 0.85)";
+          context.lineWidth = place.city ? 1.6 : 1.2;
+          context.fill();
+          context.stroke();
+        });
+        if (camera.scale >= 1.1) {
+          context.font = `${place.city ? 600 : 500} 11px ${FONT}`;
+          spacing(0);
+          const width = context.measureText(place.name).width;
+          const box: [number, number, number, number] = [sx + r + 3, sy - 7, sx + r + 5 + width, sy + 7];
+          if (free(box)) {
+            placed.push(box);
+            marks.push(() => {
+              context.font = `${place.city ? 600 : 500} 11px ${FONT}`;
+              context.textAlign = "left";
+              context.lineWidth = 3;
+              context.strokeStyle = "rgba(255, 251, 240, 0.7)";
+              context.strokeText(place.name, box[0], sy);
+              context.fillStyle = "rgba(30, 24, 16, 0.92)";
+              context.fillText(place.name, box[0], sy);
+              context.textAlign = "center";
+            });
+          }
+        }
       }
-      const width = context.measureText(text).width;
-      const box: [number, number, number, number] = [
-        sx - width / 2 - 4,
-        sy - size / 2 - 2,
-        sx + width / 2 + 4,
-        sy + size / 2 + 2,
-      ];
-      if (placed.some((p) => box[0] < p[2] && box[2] > p[0] && box[1] < p[3] && box[3] > p[1])) {
-        continue;
-      }
-      placed.push(box);
-      context.lineWidth = Math.max(2.5, size * 0.22);
-      context.strokeStyle = halo;
-      context.strokeText(text, sx, sy);
-      context.fillStyle = fill;
-      context.fillText(text, sx, sy);
-      if (placed.length > 260) break;
     }
-    if (layer === "countries" && cam.scale > 0.9) {
-      for (const capital of atlas.capitals()) {
-        const [sx, sy] = toScreen(cam, capital.x, capital.y);
-        if (sx < -10 || sy < -10 || sx > view.width + 10 || sy > view.height + 10) continue;
-        const r = Math.min(5, 2 + cam.scale * 0.6);
-        context.beginPath();
-        context.moveTo(sx, sy - r);
-        context.lineTo(sx + r, sy);
-        context.lineTo(sx, sy + r);
-        context.lineTo(sx - r, sy);
-        context.closePath();
-        context.fillStyle = light ? "#2a1f10" : "#fbf4e2";
-        context.strokeStyle = halo;
-        context.lineWidth = 2;
-        context.stroke();
-        context.fill();
+    if (layer === "countries" && camera.scale > 0.45) {
+      for (const capital of atlas.capitals(tribes)) {
+        const [sx, sy] = toScreen(camera, capital.x, capital.y);
+        if (!visible(sx, sy, 10)) continue;
+        const r = Math.min(5, 2.5 + camera.scale * 0.6);
+        placed.push([sx - r, sy - r, sx + r, sy + r]);
+        marks.push(() => {
+          context.beginPath();
+          context.moveTo(sx, sy - r);
+          context.lineTo(sx + r, sy);
+          context.lineTo(sx, sy + r);
+          context.lineTo(sx - r, sy);
+          context.closePath();
+          context.fillStyle = "#fbf4e2";
+          context.strokeStyle = "rgba(20, 16, 10, 0.85)";
+          context.lineWidth = 1.4;
+          context.fill();
+          context.stroke();
+        });
+      }
+    }
+    if (layer === "resources") {
+      // Riches marked: from afar gold and silver only, and never one on another.
+      const raw = atlas.data.raw.material ?? [];
+      const near = camera.scale >= 0.55;
+      for (let c = 0; c < atlas.cells; c++) {
+        const material = raw[atlas.data.material[c]] ?? "";
+        const colour = PRECIOUS_MARKS[material];
+        if (!colour || atlas.data.kind[c] !== LAND) continue;
+        if (!near && material !== "goods_gold" && material !== "silver") continue;
+        const [x, y] = atlas.centre(c);
+        const [sx, sy] = toScreen(camera, x, y);
+        if (!visible(sx, sy, 10)) continue;
+        const r = Math.max(2.6, Math.min(6, 2 + camera.scale * 1.6));
+        const box: [number, number, number, number] = [sx - r - 1, sy - r - 1, sx + r + 1, sy + r + 1];
+        if (!free(box)) continue;
+        placed.push(box);
+        marks.push(() => {
+          context.beginPath();
+          context.moveTo(sx, sy - r);
+          context.lineTo(sx + r * 0.8, sy);
+          context.lineTo(sx, sy + r);
+          context.lineTo(sx - r * 0.8, sy);
+          context.closePath();
+          context.fillStyle = colour;
+          context.strokeStyle = "rgba(20, 16, 10, 0.9)";
+          context.lineWidth = 1.2;
+          context.fill();
+          context.stroke();
+        });
+      }
+    }
+
+    // Large names: regions and seas, countries, classes; largest first.
+    let written = 0;
+    for (const label of atlas.labelsFor(layer, look.names, tribes)) {
+      const style = NAMES[label.kind];
+      const size = Math.min(
+        style.max,
+        Math.sqrt(label.weight) * camera.scale * style.area,
+        label.room * camera.scale * style.room,
+      );
+      if (size < (label.kind === "country" || label.kind === "tribe" ? 9 : 10)) continue;
+      const [sx, pole] = toScreen(camera, label.x, label.y);
+      if (!visible(sx, pole, 200)) continue;
+      const text = style.upper ? label.text.toLocaleUpperCase() : label.text;
+      context.font = `${style.italic ? "italic " : ""}${style.weight} ${size.toFixed(1)}px ${FONT}`;
+      spacing(size * style.spacing);
+      const width = context.measureText(text).width;
+      // At its point, or just under or over it when a capital or a city stands there.
+      const sy = [pole, pole + size * 0.95, pole - size * 0.95].find((y) =>
+        free([sx - width / 2 - 4, y - size / 2 - 2, sx + width / 2 + 4, y + size / 2 + 2]),
+      );
+      if (sy === undefined) continue;
+      placed.push([sx - width / 2 - 4, sy - size / 2 - 2, sx + width / 2 + 4, sy + size / 2 + 2]);
+      context.lineWidth = Math.max(2.5, size * 0.22);
+      context.strokeStyle = style.halo;
+      context.strokeText(text, sx, sy);
+      context.fillStyle = style.fill;
+      context.fillText(text, sx, sy);
+      if (++written > 260) break;
+    }
+    spacing(0);
+    for (const mark of marks) mark();
+
+    // Up close, what each location holds: its resource, its people, its development.
+    if (look.spots) {
+      const d = atlas.data;
+      context.font = `500 10.5px ${FONT}`;
+      for (let c = 0; c < atlas.cells; c++) {
+        if (d.kind[c] !== LAND) continue;
+        if (Math.sqrt(atlas.area[c]) * camera.scale < 46) continue;
+        const [x, y] = atlas.centre(c);
+        const [sx, sy] = toScreen(camera, x, y);
+        if (!visible(sx, sy, 40)) continue;
+        const text =
+          look.spots === "resource"
+            ? atlas.word("material", d.material[c])
+            : look.spots === "population"
+              ? d.population[c] > 0 ? grouped(d.population[c]) : ""
+              : d.population[c] > 0 ? String(d.complexity[c]) : "";
+        if (!text) continue;
+        const width = context.measureText(text).width;
+        const top = PRECIOUS_MARKS[d.raw.material?.[d.material[c]] ?? ""] && look.spots === "resource" ? 12 : 0;
+        const box: [number, number, number, number] = [sx - width / 2 - 2, sy + top - 7, sx + width / 2 + 2, sy + top + 7];
+        if (!free(box)) continue;
+        placed.push(box);
+        context.lineWidth = 3;
+        context.strokeStyle = "rgba(255, 251, 240, 0.68)";
+        context.strokeText(text, sx, sy + top);
+        context.fillStyle = "rgba(26, 20, 12, 0.9)";
+        context.fillText(text, sx, sy + top);
       }
     }
   }
@@ -228,30 +350,12 @@
   function paintMinimap(): void {
     if (!atlas) return;
     const found = atlas;
-    const current = found.lens(session.layer);
-    const ratio = found.height / found.width;
     const w = MINI;
-    const h = Math.max(1, Math.round(MINI * ratio));
+    const h = Math.max(1, Math.round(MINI * (found.height / found.width)));
     miniImage = document.createElement("canvas");
     miniImage.width = w;
     miniImage.height = h;
-    const context = miniImage.getContext("2d");
-    if (!context) return;
-    const pixels = context.createImageData(w, h);
-    for (let y = 0; y < h; y++) {
-      const ay = Math.min(found.height - 1, Math.floor(((y + 0.5) / h) * found.height));
-      for (let x = 0; x < w; x++) {
-        const ax = Math.min(found.width - 1, Math.floor(((x + 0.5) / w) * found.width));
-        const c = found.labels[ay * found.width + ax];
-        if (c < 0) continue;
-        const o = (y * w + x) * 4;
-        pixels.data[o] = current.colours[c * 3];
-        pixels.data[o + 1] = current.colours[c * 3 + 1];
-        pixels.data[o + 2] = current.colours[c * 3 + 2];
-        pixels.data[o + 3] = 255;
-      }
-    }
-    context.putImageData(pixels, 0, 0);
+    miniImage.getContext("2d")?.putImageData(paintBox(found, found.lens(session.layer, session.tribes, t("map.tribes")), w, h), 0, 0);
   }
 
   function drawMinimapView(): void {
@@ -419,9 +523,10 @@
 
   $effect(() => {
     const current = session.layer;
+    const tribes = session.tribes;
     if (renderer && atlas) {
       untrack(() => {
-        renderer?.setLens(current);
+        renderer?.setLens(current, tribes, t("map.tribes"));
         paintMinimap();
         request();
       });
@@ -430,6 +535,7 @@
 
   $effect(() => {
     $state.snapshot(session.overlays);
+    void session.tribes;
     untrack(() => session.remember());
     request();
   });
@@ -458,11 +564,46 @@
 
   // -- pictures ----------------------------------------------------------------------------------
 
+  /** The whole New World in this lens, one pixel per atlas pixel, with what is drawn over it:
+   *  the picture saved is the map as it is shown. */
+  function picture(): string {
+    if (!renderer || !atlas) return "";
+    const width = atlas.width;
+    const height = atlas.height;
+    const target = renderer.canvas;
+    const kept = [target.width, target.height];
+    const whole: Camera = { x: 0, y: 0, scale: 1 };
+    target.width = width;
+    target.height = height;
+    renderer.draw(whole, session.overlays, theme, 1);
+    const out = document.createElement("canvas");
+    out.width = width;
+    out.height = height;
+    const context = out.getContext("2d");
+    if (context) {
+      context.fillStyle = OCEAN_CSS;
+      context.fillRect(0, 0, width, height);
+      context.drawImage(target, 0, 0);
+      const names = document.createElement("canvas");
+      names.width = width;
+      names.height = height;
+      const pen = names.getContext("2d");
+      if (pen) {
+        drawLabels(pen, whole, { width, height }, 1);
+        context.drawImage(names, 0, 0);
+      }
+    }
+    [target.width, target.height] = kept;
+    draw();
+    return context ? out.toDataURL("image/png") : "";
+  }
+
   async function savePicture(): Promise<void> {
-    const layer = session.layer;
-    const name = `${(atlas?.data.name ?? "world").replace(/\s+/g, "-")}-${layer}.png`;
+    const name = `${(atlas?.data.name ?? "world").replace(/\s+/g, "-")}-${session.layer}.png`;
     const path = await saveFile(t("save_picture"), name, [{ name: "PNG", extensions: ["png"] }]);
-    if (path) await app.report("save_map", { id: world, layer, path }, t("picture_saved", { path }));
+    if (!path) return;
+    const data = picture();
+    if (data) await app.report("save_png", { path, data }, t("picture_saved", { path }));
   }
 
   async function copyView(): Promise<void> {
@@ -473,7 +614,7 @@
     out.height = renderer.canvas.height;
     const context = out.getContext("2d");
     if (!context) return;
-    context.fillStyle = getComputedStyle(host).getPropertyValue("--map-bg") || "#14171b";
+    context.fillStyle = OCEAN_CSS;
     context.fillRect(0, 0, out.width, out.height);
     context.drawImage(renderer.canvas, 0, 0);
     context.drawImage(labelCanvas, 0, 0);
@@ -547,7 +688,7 @@
 
 </script>
 
-<div class="viewer" class:compact data-renderer={rendererKind}>
+<div class="viewer" class:compact data-renderer={rendererKind} style:--ocean={OCEAN_CSS}>
   {#if !compact}
     <div class="pane-head toolbar">
       {@render head?.()}
@@ -732,7 +873,7 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    background: var(--map-bg);
+    background: var(--ocean);
     container-type: size;
   }
   .canvas-host {

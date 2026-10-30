@@ -2147,3 +2147,15 @@ text = '''사이드 패널 표시/숨기기'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''선택됨'''
+
+["map.tribes"]
+source = "5ba6198f78ffedef"
+text = '''부족'''
+
+["map.show_tribes"]
+source = "fa27b2a2c46e563f"
+text = '''부족 표시'''
+
+["map.show_tribes_tip"]
+source = "f44b63a2f6a8c558"
+text = '''부족도 국가이지만 게임의 정치 지도에서는 색이 칠해지지 않습니다. 이 항목을 선택하지 않으면 이 지도도 마찬가지입니다.'''
