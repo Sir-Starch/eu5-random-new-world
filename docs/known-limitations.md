@@ -37,6 +37,12 @@ for the published artifacts and [roadmap](roadmap.md) for future work.
   location limits and content checks reject failed invariants explicitly.
   The application offers another-seed retry; every settings/seed combination is
   not promised to succeed. [V-EXEC C406]
+- **The window needs a system web view.** The generator's window draws with WebView2 on
+  Windows and WebKitGTK 4.1 on Linux. EU5's Proton prefix has no WebView2, so the hub run
+  through Proton opens the classic window instead; whether the new window works in a prefix
+  with WebView2 installed is untested. Native Linux players get it from the Linux package.
+  A window that opens but draws badly can be replaced by the classic one in Settings or with
+  `--classic`. [V-LOCAL / V-EXEC C444]
 - **Unsigned Windows binaries.** Smart App Control may block them. The generator
   needs no administrator access. Scanner reports cover specific files and are
   not a signature or universal acceptance by antivirus software. The limitation

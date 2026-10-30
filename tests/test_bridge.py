@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 from rnw import atlas
-from rnw.app import library, service
+from rnw.app import library, preferences, service
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.gui import text, view
 from rnw.gui.bridge import Bridge, BridgeError, serve
@@ -69,6 +69,19 @@ def test_hello_gives_the_strings_choices_and_a_state_that_is_json(
     assert new["choice"] == "continents"
     assert new["destination"] == "library"
     _ = json.dumps(hello)
+
+
+def test_the_window_choice_is_kept_for_the_next_start(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Use the classic window: remembered in the preferences that rnw.gui.start reads."""
+    bridge = _bridge(tmp_path, fake_export)
+    _ = bridge.call("set_window", {"classic": True})
+    assert preferences.load(bridge.controller.data).window == "classic"
+    shown = cast("dict[str, object]", bridge.state()["preferences"])
+    assert shown["window"] == "classic"
+    _ = bridge.call("set_window", {"classic": False})
+    assert preferences.load(bridge.controller.data).window == ""
 
 
 def test_the_window_changes_the_new_world_as_the_qt_window_did(

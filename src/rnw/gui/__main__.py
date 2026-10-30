@@ -1,87 +1,70 @@
 """Start the application: ``rnw-gui``, ``python -m rnw.gui`` or the packaged program.
 
-``--self-test`` opens the window without showing it, checks that the native kernels and
-the world codes work, and exits with 0: the packaging jobs run it on the built folder.
+The Tauri window opens; the classic Qt window opens instead when it is chosen or when the Tauri
+window cannot open (``rnw.gui.start``). ``--self-test`` checks the classic window offscreen and,
+when there is one, the Tauri window's shell and bridge; a package must carry the Tauri window.
+The packaging jobs run it on the built folder.
 """
 
 from __future__ import annotations
 
 import sys
-import threading
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
-from PySide6.QtWidgets import QApplication
-
-from rnw import __version__, _native
-from rnw.app import logs, paths
-from rnw.app.worldcode import decode, encode, new_code
-from rnw.gui.controller import Controller
-from rnw.gui.text import TITLE, set_language
-from rnw.gui.window import MainWindow
+from rnw.app import paths
+from rnw.gui import start
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from types import TracebackType
 
-WIDTH, HEIGHT = 1080, 760
 SELF_TEST = "--self-test"
 
 
-def self_test(application: QApplication, controller: Controller) -> int:
-    """Check the parts a broken package would miss; returns the exit code."""
-    window = MainWindow(controller)
-    application.processEvents()
-    code = new_code("continents", 42)
-    if decode(encode(code)) != code:
+def self_test(arguments: Sequence[str]) -> int:
+    """Both windows' self-tests; the exit code is 0 when every one that must pass did."""
+    from rnw.gui import classic  # noqa: PLC0415 - Qt only when it is needed
+
+    code = classic.main(arguments)
+    folder = paths.program_directory()
+    window = start.find_window(folder)
+    if window is None:
+        if start.packaged(folder):
+            print("The Tauri window is missing from this package", file=sys.stderr)
+            return 1
+        print("No Tauri window is built in this checkout; only the classic window was checked")
+        return code
+    with TemporaryDirectory(prefix="rnw-window-test-") as temporary:
+        answer, output = start.self_test(window, Path(temporary))
+    print(output)
+    if answer != 0 or start.SELF_TEST_LINE not in output:
+        print(f"The Tauri window's self-test failed (exit code {answer})", file=sys.stderr)
         return 1
-    if _native.configure_threads(1) < 1:
-        return 1
-    _ = window.close()
-    print(f"{TITLE} {__version__}: window, native kernels and world codes work")
-    return 0
-
-
-def _log_uncaught(
-    kind: type[BaseException], value: BaseException, trace: TracebackType | None
-) -> None:
-    """Put an error nothing caught into the log, with its traceback, then let Python print it."""
-    logs.get().critical("uncaught %s", kind.__name__, exc_info=(kind, value, trace))
-    sys.__excepthook__(kind, value, trace)
-
-
-def _log_thread(arguments: threading.ExceptHookArgs) -> None:
-    value = arguments.exc_value
-    if arguments.exc_type is not SystemExit and value is not None:
-        logs.get().critical(
-            "uncaught %s in thread %s",
-            arguments.exc_type.__name__,
-            arguments.thread.name if arguments.thread else "?",
-            exc_info=(arguments.exc_type, value, arguments.exc_traceback),
-        )
+    return code
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Open the window, look for the game and profile, run until it is closed."""
+    """Open the Tauri window, or the classic one when it is chosen or the Tauri one cannot."""
     arguments = list(sys.argv if argv is None else argv)
-    application = QApplication(arguments)
-    application.setApplicationName(TITLE)
-    sys.excepthook = _log_uncaught
-    threading.excepthook = _log_thread
     if SELF_TEST in arguments:
-        with TemporaryDirectory(prefix="rnw-self-test-") as temporary:
-            try:
-                return self_test(application, Controller(data=Path(temporary)))
-            finally:
-                logs.stop()  # Windows cannot remove the folder while the log is open.
-    controller = Controller(program_folder=paths.program_directory())
-    set_language(controller.window_language())
-    window = MainWindow(controller)
-    window.resize(WIDTH, HEIGHT)
-    controller.discover()
-    window.show()
-    return application.exec()
+        return self_test(arguments)
+    choice = start.choose(arguments)
+    instead = choice.reason
+    if choice.program is not None:
+        forwarded = [argument for argument in arguments[1:] if argument != start.CLASSIC]
+        outcome = start.run_window(choice.program, forwarded)
+        if outcome.opened:
+            return outcome.code
+        instead = outcome.reason
+        print(f"The classic window opens: {instead}", file=sys.stderr)
+    try:
+        from rnw.gui import classic  # noqa: PLC0415 - Qt only when it is needed
+    except ImportError as error:
+        print(f"The classic window needs PySide6 ({error})", file=sys.stderr)
+        return 2
+    kept = [argument for argument in arguments if argument != start.CLASSIC]
+    return classic.main(kept, instead=instead)
 
 
 if __name__ == "__main__":

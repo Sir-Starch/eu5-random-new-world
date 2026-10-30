@@ -6,6 +6,9 @@ target ``x86_64-pc-windows-gnu`` installed. It writes ``dist/rnw_exp_hub`` (igno
 - ``.metadata/metadata.json``, ``.metadata/thumbnail.png`` (the avatar in ``assets/``, made
   512 pixels square) and ``LICENSE``;
 - ``Random New World Generator.exe``, the launcher from ``packaging/launcher``;
+- ``generator/window``: the Tauri window (ADR 0011) cross-built for Windows, with the WebView2
+  loader it links; the launcher starts ``rnw.gui``, which opens it, or the classic Qt window when
+  it cannot open (no WebView2, as in most Proton prefixes);
 - ``generator/python``: the official embeddable CPython, pinned by SHA-256, whose ``._pth``
   names ``../site`` as the only place to import from;
 - ``generator/site``: the locked Windows wheels, installed with their hashes, Qt cut down to
@@ -14,8 +17,9 @@ target ``x86_64-pc-windows-gnu`` installed. It writes ``dist/rnw_exp_hub`` (igno
 
 Every module is compiled to ``.pyc`` with unchecked hashes, so Python never needs to write
 into the mod folder (the launcher passes ``-B`` as well). The only programs in the hub are the
-launcher and the interpreter's ``python.exe`` and ``pythonw.exe``. Nothing is signed or
-published. maturin comes from the range in ``build-system.requires``, not from the lock.
+launcher, the window and the interpreter's ``python.exe`` and ``pythonw.exe``. Building the
+window needs Node.js and npm as well. Nothing is signed or published. maturin comes from the
+range in ``build-system.requires``, not from the lock.
 The hub carries only the generator; all gameplay content belongs to generated world mods.
 """
 
@@ -36,6 +40,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
 
 import allowlist
+import window
 from notices import write_notices
 
 if TYPE_CHECKING:
@@ -75,8 +80,10 @@ EMBEDDED_PYTHON: Final[Download] = Download(
 )
 PATH_FILE: Final[str] = "python312._pth"
 PATH_LINES: Final[tuple[str, ...]] = ("python312.zip", ".", "../site", "import site")
+WINDOW: Final[str] = f"generator/window/{window.program(RUST_TARGET)}"
 PROGRAMS: Final[tuple[str, ...]] = (
     LAUNCHER,
+    WINDOW,
     "generator/python/python.exe",
     "generator/python/pythonw.exe",
 )
@@ -262,7 +269,7 @@ def remove_scripts(site: Path) -> None:
 
 
 def check_programs(root: Path) -> None:
-    """The hub's programs are exactly the launcher and the interpreter's two."""
+    """The hub's programs are exactly the launcher, the window and the interpreter's two."""
     found = sorted(
         path.relative_to(root).as_posix()
         for path in root.rglob("*")
@@ -349,8 +356,10 @@ def build(output: Path, *, replace: bool) -> Path:
     remove_scripts(site)
     compile_modules(site)
     build_launcher(stage, __version__)
+    _ = window.build(stage / "generator" / "window", WORK / "window", target=RUST_TARGET)
     check_programs(stage)
     write_notices(stage)
+    window.write_notices(stage, RUST_TARGET)
     check_no_game_files(stage)
     if output.exists():
         shutil.rmtree(output)
@@ -358,7 +367,7 @@ def build(output: Path, *, replace: bool) -> Path:
     _ = shutil.move(stage, output)
     mib = 1 << 20
     print(f"{output}: {size(output) / mib:.0f} MiB ({removed / mib:.0f} MiB of Qt left out)")
-    for path in (wheel, output / LAUNCHER):
+    for path in (wheel, output / LAUNCHER, output / WINDOW):
         print(f"sha256 {hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}")
     return output
 

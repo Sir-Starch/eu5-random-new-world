@@ -192,6 +192,7 @@ class SettingsDialog(QDialog):
         layout.addLayout(grid)
         layout.addWidget(self.language_note)
         layout.addWidget(self.problem)
+        layout.addLayout(self._window_choice())
         for choice in (self.game_choice, self.profile_choice):
             choice.setSizeAdjustPolicy(
                 QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -225,6 +226,20 @@ class SettingsDialog(QDialog):
         _ = close.clicked.connect(self.accept)
         buttons.addWidget(close)
         return buttons
+
+    def _window_choice(self) -> QVBoxLayout:
+        """Which window opens at the next start: this classic one, or the Tauri window."""
+        controller = self.window_.controller
+        self.classic_box: QCheckBox = QCheckBox(text("settings.classic_window"))
+        self.classic_box.setChecked(controller.preferences.window == "classic")
+        _ = self.classic_box.toggled.connect(controller.set_window)
+        hint = QLabel(text("settings.classic_window.about"))
+        hint.setWordWrap(True)
+        rows = QVBoxLayout()
+        rows.setSpacing(2)
+        rows.addWidget(self.classic_box)
+        rows.addWidget(hint)
+        return rows
 
     def _language_choice(self) -> QComboBox:
         """The window's language: as the game's, or one of the official languages by name."""

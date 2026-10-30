@@ -178,6 +178,7 @@ class Bridge:
             "pick_game": self.pick_game,
             "pick_profile": self.pick_profile,
             "set_language": self.set_language,
+            "set_window": lambda p: c.set_window(_bool(p, "classic")),
             "save_diagnostics": lambda p: c.save_diagnostics(Path(_str(p, "path"))),
             "diagnostics_name": self.diagnostics_name,
         }

@@ -2159,3 +2159,11 @@ text = '''Kabileleri göster'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''Kabileler de ülkedir, ama oyunun siyasi haritası onları renklendirmez; bu işaretlenmedikçe bu harita da öyle yapar.'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''Klasik pencereyi kullan'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''Bir sonraki açılıştan itibaren. Bu yeni pencere açılamadığında klasik pencere de kendiliğinden açılır.'''

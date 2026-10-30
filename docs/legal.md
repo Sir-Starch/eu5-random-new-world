@@ -43,11 +43,16 @@ libraries, licence text and source information. PyInstaller's exception applies
 to its development/native packaging route. Rust dependency licences are recorded
 in the wheel SBOM. Do not relicense third-party or Paradox content as project work.
 
-The candidate Tauri window (ADR 0011, not yet distributed) adds Tauri 2 and its plugins
-(MIT/Apache-2.0), Svelte (MIT) and bundled Noto Sans and JetBrains Mono fonts (SIL OFL
-1.1). Before it ships, its package must carry these notices, the `Cargo.lock`/`package-lock.json`
-dependency licences and the OFL text; the platform web views (WebView2, WebKitGTK) are system
-components, not redistributed by the window.
+The Tauri window (ADR 0011) ships in the hub and the native packages. It adds Tauri 2 and
+its plugins (MIT/Apache-2.0), the crates it links (their licences, including BSL-1.0 and
+MPL-2.0 ones, listed per crate), Svelte (MIT) and bundled Noto Sans and JetBrains Mono fonts
+(SIL OFL 1.1). Packages carry `licenses/window/crates.txt` and `npm.txt` with every distinct
+licence file of those crates and npm packages. The Windows window carries Microsoft's
+`WebView2Loader.dll` 1.0.3800.47, byte-identical to the one in the Microsoft.Web.WebView2 SDK
+package; that SDK's licence is BSD-3-Clause-style and its text travels as
+`licenses/window/WebView2Loader.txt` [SOURCE nuget.org Microsoft.Web.WebView2 1.0.3800.47,
+2026-10-30]. The web views themselves (the WebView2 runtime, WebKitGTK) are system
+components and are not redistributed.
 
 ## Reviewed platform terms
 

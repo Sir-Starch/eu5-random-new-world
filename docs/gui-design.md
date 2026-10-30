@@ -5,7 +5,7 @@
 This documents the existing Qt Widgets interface, extracted from `gui/window.py`,
 `gui/maps.py` and `gui/preview.py`. ADR 0007 chooses the platform's controls and theme.
 The owner's 2026-10-22 screenshots authorize reorganizing the interface around generation,
-world management and application paths. Keep Qt Widgets and platform typography for the current implementation. The candidate Tauri window ([ADR 0011](adr/0011-tauri-window.md)) is described in §9; §1–§8 describe the Qt window, which stays current until the owner accepts the replacement.
+world management and application paths. The Tauri window ([ADR 0011](adr/0011-tauri-window.md)), the generator's window since 2026-10-30, is described in §9; §1–§8 describe the classic Qt window, its fallback, which keeps Qt Widgets and platform typography.
 
 ## 1. Structure
 
@@ -81,7 +81,7 @@ Keep labels and tooltips meaningful, preserve native keyboard navigation, and av
 colour as the only status signal. Exercise empty, busy, failed and completed states in
 offscreen Qt tests. Capture the desktop window in light and dark themes for layout review.
 
-## 9. The Tauri window (candidate)
+## 9. The Tauri window
 
 **Look.** A workbench that sits beside the game, the same on every system (owner reviews
 2026-10-30: the first candidate read as a website, the second as the old layout repainted).

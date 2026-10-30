@@ -18,7 +18,7 @@
 
 ---
 
-**Random New World (RNW)** is a standalone desktop application (Python + Rust + Qt) that replaces the Americas with a procedurally generated landmass while keeping the Old World completely vanilla.
+**Random New World (RNW)** is a standalone desktop application (Python + Rust, with a Tauri window) that replaces the Americas with a procedurally generated landmass while keeping the Old World completely vanilla.
 
 Each seed simulates elevation, climate zones, drainage basins, sea currents, resources, provinces, and native civilizations from scratch, compiling the result into a standard, self-contained EU5 map mod. Every world has a short shareable **World Code** and reproduces byte-for-byte on any machine running the same game build and generator version.
 
@@ -45,7 +45,7 @@ build, save and mod compatibility, and what remains unverified in the current ve
 | **Dynamic Content & L10n** | [Procedural regional stories, formable nations, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
 | **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
 
-Planned work includes deeper hydrology, more varied continental geography and societies, additional dynamic content, and a modern Tauri interface. See the [roadmap](docs/roadmap.md) for scope and status.
+Planned work includes deeper hydrology, more varied continental geography and societies, and additional dynamic content. See the [roadmap](docs/roadmap.md) for scope and status.
 
 ## Screenshots
 
@@ -82,7 +82,7 @@ Click a screenshot to view it at full size.
 
 ### Generator
 
-The generator interface (native Qt controls) displaying generated worlds in the library, featuring **Supercontinent QUXQ** (`v0.13.17`) in its world overview and revealed atlas mapmodes.
+The classic generator window (Qt), now the fallback of the Tauri window, displaying generated worlds in the library, featuring **Supercontinent QUXQ** (`v0.13.17`) in its world overview and revealed atlas mapmodes.
 
 <table>
 <tr>
@@ -160,7 +160,7 @@ No Python or Rust installation is required for the [released packages](https://g
 git clone https://github.com/Sir-Starch/eu5-random-new-world.git
 cd eu5-random-new-world
 uv sync --locked --group dev     # compiles the Rust core extension automatically
-uv run rnw gui                   # launches the Qt desktop application
+uv run rnw gui                   # opens the window (--classic: the Qt window)
 
 ```
 
@@ -206,7 +206,7 @@ EU5_GAME_DIR=/path/to/eu5 uv run pytest -q tests/test_local_install.py
 | Directory | Contents |
 | --- | --- |
 | [`src/rnw/`](src/rnw/) | Core generator pipeline: world model, physical geography, seas, societies, content, EU5 exporters, validators, CLI |
-| [`src/rnw/app/`](src/rnw/app/), [`src/rnw/gui/`](src/rnw/gui/) | Headless application controller and Qt desktop interface |
+| [`src/rnw/app/`](src/rnw/app/), [`src/rnw/gui/`](src/rnw/gui/) | Headless application controller, window choice, Tauri bridge and the classic Qt window |
 | [`native/`](native/) | Rust crate powering `rnw._native` hot kernels |
 | [`packaging/`](packaging/) | Standalone binary builders, Workshop staging, release automation, third-party notices |
 | [`tests/`](tests/) | Automated test suite, Python reference kernels, and golden world digests |

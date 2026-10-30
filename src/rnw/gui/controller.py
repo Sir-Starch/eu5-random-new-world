@@ -292,6 +292,11 @@ class Controller:
         self._remember(language=language)
         self._changed()
 
+    def set_window(self, classic: bool) -> None:  # noqa: FBT001 - the dialog's box
+        """Remember which window opens at the next start: the classic one, or the Tauri one."""
+        self._remember(window="classic" if classic else "")
+        self._changed()
+
     def _remember(self, **chosen: str) -> None:
         """Keep a folder the player chose by hand, so that the generator is not asked again."""
         self.preferences = replace(self.preferences, **chosen)

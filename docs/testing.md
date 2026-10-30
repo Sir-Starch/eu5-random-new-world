@@ -29,10 +29,13 @@ uv run rnw --help
 ```
 
 `make check` runs formatting, lint, strict Python types, Python tests, Rust format,
-clippy and tests. `make desktop` checks the candidate Tauri window (ADR 0011): Svelte/TypeScript
-types, Vitest, the production build and the Rust shell's format, clippy and tests. Run
-`RNW_DATA=/path/to/library-copy npm run dev` in `desktop/` to review it in a browser, and
-`desktop/src-tauri/target/release/random-new-world --self-test` after `npx tauri build`. CI runs Linux/Windows checks and package self-tests. The 1.0.0
+clippy and tests. `make desktop` checks the Tauri window (ADR 0011): Svelte/TypeScript types, Vitest, the
+production build and the Rust shell's format, clippy and tests. Run
+`RNW_DATA=/path/to/library-copy npm run dev` in `desktop/` to review it in a browser. After
+`npx tauri build --no-bundle` in `desktop/`, `uv run rnw gui` opens that build and
+`QT_QPA_PLATFORM=offscreen uv run python -m rnw.gui --self-test` checks both windows; package
+self-tests require the Tauri window. The real window can be captured without a display in
+`dbus-run-session kwin_wayland --virtual` with `spectacle -b -n -f`. CI runs Linux/Windows checks and package self-tests. The 1.0.0
 verification passed 2,142 Python tests with 14 optional skips and 23 Rust tests
 (C438); these are a dated baseline, not permanent expected test counts.
 

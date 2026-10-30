@@ -55,9 +55,12 @@ jobs:
         with:
           python-version: '3.12'
       - uses: dtolnay/rust-toolchain@stable
-      - name: Qt runtime libraries
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Qt runtime libraries and the window's WebKitGTK
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3 libwebkit2gtk-4.1-dev libxdo-dev libssl-dev librsvg2-dev
       - run: uv sync --locked --group dev --group packaging
       - run: uv run pytest -q
       - run: uv run --group packaging python packaging/build.py
@@ -98,6 +101,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-gnu
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
       - run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64
       - run: uv sync --locked --group dev
       - run: uv run python packaging/hub.py
@@ -129,8 +135,10 @@ jobs:
           $env:QT_QPA_PLATFORM = 'offscreen'
           $env:RNW_DATA = Join-Path $env:RUNNER_TEMP 'rnw-self-test'
           foreach ($folder in @('RandomNewWorld-Windows', 'rnw_exp_hub')) {
-            & "expanded/$folder/generator/python/python.exe" -B -I -X utf8 -m rnw.gui --self-test
+            $output = & "expanded/$folder/generator/python/python.exe" -B -I -X utf8 -m rnw.gui --self-test
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $output
+            if (-not ($output -match 'window shell and bridge work')) { throw "The Tauri window's self-test did not run in $folder" }
             & "expanded/$folder/generator/python/python.exe" -B -I -X utf8 -m rnw.cli world-code --seed 42
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }

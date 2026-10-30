@@ -6,6 +6,16 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-30, **generator hub 1.0.0 with the Tauri window**, C444: updated `mod/rnw_exp_hub`
+with `update_local_hub` from the working tree that makes the Tauri window the generator's
+window (classic Qt window as fallback). The hub now holds `generator/window/random-new-world.exe`
+and its WebView2 loader beside the unchanged launcher; the updater verified current sources,
+ran the isolated Wine self-test (classic window, native kernels and world codes; window shell
+and bridge) and verified all **3,457** installed files. EU5's Proton prefix has no WebView2,
+so launching the hub through Proton opens the classic window by itself. The previous hub
+(3,272 files) is retained at `.rnw-hub-backups/1.0.0-1793353704689297103` under the same
+normal profile. No EU5 launch, world mod, save, playset or setting change. [V-EXEC]
+
 2026-10-28, **RNW 1.0.0 / epoch 59 release candidate**, C431: installed
 **RNW: RNW 1.0.0 candidate** in the new `mod/rnw_exp_world_l2ukzb7ihj`, code
 `RNW1-081RF-FZCZT-X8CJN-T0400-00860-2AG63-YG1W8-8G3GH-149XR-08TM0-37FSE-J`.

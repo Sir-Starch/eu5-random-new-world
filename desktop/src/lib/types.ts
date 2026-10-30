@@ -180,7 +180,7 @@ export interface State {
   game: GameState;
   games: string[];
   profiles: string[];
-  preferences: { show_new_world: boolean; language: string };
+  preferences: { show_new_world: boolean; language: string; window: string };
   resources: string;
   selection: string;
   library: LibraryEntry[];

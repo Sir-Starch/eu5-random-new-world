@@ -2159,3 +2159,11 @@ text = '''Stämme zeigen'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''Stämme sind auch Länder, doch die politische Karte des Spiels färbt sie nicht ein; diese Karte auch nicht, außer wenn dies angehakt ist.'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''Klassisches Fenster verwenden'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''Ab dem nächsten Start. Das klassische Fenster öffnet sich auch von selbst, wenn dieses neue es nicht kann.'''

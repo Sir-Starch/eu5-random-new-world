@@ -11,9 +11,10 @@ work that depends on game files, and audit changed inputs after a game patch.
 
 Read [docs/README.md](docs/README.md) for the document map and
 [architecture](docs/architecture.md) for code ownership and invariants.
-Read the relevant subsystem document for the task. The shipping interface is Qt; the Tauri
-window in `desktop/` is an implemented candidate ([ADR 0011](docs/adr/0011-tauri-window.md))
-that drives the same controller. Keep both working until the owner accepts the switch.
+Read the relevant subsystem document for the task. The generator's window is the Tauri
+window in `desktop/` ([ADR 0011](docs/adr/0011-tauri-window.md), accepted 2026-10-30); the
+classic Qt window stays as its fallback, opened when chosen or when the Tauri window cannot
+open (`rnw.gui.start`). Both drive the same controller; keep both working.
 
 ## Current instructions and historical evidence
 

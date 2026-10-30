@@ -22,8 +22,10 @@ The built world is local and is excluded from public distribution.
 Windows/Proton delivery uses the official embeddable Python, locked runtime
 wheels, the project package, a small launcher and `_native.pyd`. Native Linux
 application archives are also offered. PyInstaller remains the native/development
-packaging tool; it is not the Windows hub delivery mechanism. The current window
-uses Qt. The [roadmap](../roadmap.md) records a future Tauri design request.
+packaging tool; it is not the Windows hub delivery mechanism. The hub carries the
+Tauri window in `generator/window` and the classic Qt window; the launcher's `rnw.gui`
+opens the Tauri window, or the Qt one where there is no WebView2, as in Proton
+([ADR 0011](0011-tauri-window.md)).
 
 The application also works independently of Workshop. Its library is in the
 platform's normal application data directory, or a user-selected/portable folder.

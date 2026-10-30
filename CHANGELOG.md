@@ -3,8 +3,13 @@
 ## Unreleased
 
 - Add the Gameplay and Utilities categories alongside Map to the next Workshop upload.
-- Add a candidate Tauri window (ADR 0011) beside the Qt window: one look on every
-  system, a workbench sized to sit beside the game (default 1160×740, minimum
+- The generator's window is now a Tauri window (ADR 0011), in the Workshop hub and
+  the Linux package; the Qt window stays as the classic window. The classic window
+  opens by itself where there is no web view (no WebView2, as in Proton; no
+  WebKitGTK), and on request: Use the classic window in Settings, `--classic` or
+  `RNW_WINDOW=classic`. Self-tests check both windows; the packages carry the
+  window's licence notices, including Microsoft's WebView2 loader. The window looks
+  the same on every system: a workbench sized to sit beside the game (default 1160×740, minimum
   860×560). A searchable library with multi-select, a view in the middle and an
   inspector; both side panes resize and hide (Ctrl+B, Ctrl+I). A world opens on its
   map, with its details, versions, files, lenses, legend, search and notes in the

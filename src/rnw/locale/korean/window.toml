@@ -2159,3 +2159,11 @@ text = '''부족 표시'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''부족도 국가이지만 게임의 정치 지도에서는 색이 칠해지지 않습니다. 이 항목을 선택하지 않으면 이 지도도 마찬가지입니다.'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''클래식 창 사용'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''다음 실행부터 적용됩니다. 이 새 창을 열 수 없을 때도 클래식 창이 자동으로 열립니다.'''

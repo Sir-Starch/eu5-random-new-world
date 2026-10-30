@@ -1,6 +1,7 @@
 //! Random New World's window: a web view drawing the generator's state, and the bridge to the
 //! generator (ADR 0011). `--self-test` starts the bridge, asks it for the window's first state
-//! and exits without opening a window.
+//! and exits without opening a window. When the window cannot be made (no web view on the
+//! system) it exits with `NO_WINDOW`, so that `rnw.gui` opens the classic window instead.
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -16,6 +17,8 @@ use tauri::{Emitter, Manager, RunEvent};
 use bridge::{resolve, Bridge, Launch};
 
 const CLOSE_WAIT: Duration = Duration::from_secs(15);
+/// The exit code of a window that could not be made; `rnw.gui.start` knows it.
+const NO_WINDOW: i32 = 3;
 
 struct Shell(Arc<Bridge>);
 
@@ -92,6 +95,12 @@ fn main() {
     if std::env::args().any(|argument| argument == "--self-test") {
         std::process::exit(self_test());
     }
+    // Without a web view (no WebView2 runtime, as in most Proton prefixes) Tauri would open an
+    // empty window and an error box; leave at once instead, for the classic window to open.
+    if let Err(problem) = tauri::webview_version() {
+        eprintln!("No web view to draw the window: {problem}");
+        std::process::exit(NO_WINDOW);
+    }
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -114,8 +123,14 @@ fn main() {
             app.manage(Shell(Arc::new(bridge)));
             Ok(())
         })
-        .build(tauri::generate_context!())
-        .expect("the window could not be built");
+        .build(tauri::generate_context!());
+    let app = match app {
+        Ok(app) => app,
+        Err(problem) => {
+            eprintln!("The window could not be made: {problem}");
+            std::process::exit(NO_WINDOW);
+        }
+    };
     app.run(|handle, event| {
         if let RunEvent::Exit = event {
             if let Some(shell) = handle.try_state::<Shell>() {

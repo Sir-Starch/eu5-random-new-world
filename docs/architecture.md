@@ -1,6 +1,6 @@
 # Current architecture
 
-RNW 1.0.0 is an external Python/Rust generator with a Qt desktop application.
+RNW 1.0.0 is an external Python/Rust generator with a desktop application: a Tauri window (Svelte/TypeScript and a Rust shell) and the classic Qt window as its fallback.
 It reads the player's EU5 installation and emits one self-contained local world
 mod. The Old World is preserved. Free-topology New World generation, native
 societies and campaign content are implemented; the early T0–T5 research matrix
@@ -51,7 +51,7 @@ Paths below are relative to `src/rnw/` unless stated otherwise.
 | Discovery, world library and recovery | `app/discovery.py`, `app/paths.py`, `app/library.py`, `app/recovery.py`, `app/worldcode.py`, `app/preferences.py` |
 | Generation and installation service | `app/service.py`, `app/controls.py`, `app/install.py`, `progress.py`, `app/session.py`; session inspection is read-only |
 | Atlas, previews and world naming | `pictures.py`, `tagfont.py`, `worldname.py`, `atlas.py`; the viewer reads library data, not map-generation inputs |
-| UI and text | `gui/controller.py`, `gui/window.py`, `gui/maps.py`, `gui/text.py`, `messages.py`, `app/gamenames.py`; the candidate Tauri window is `gui/bridge.py` + `gui/view.py` (JSON-lines protocol and state) and repository `desktop/` (Svelte interface, Rust shell) |
+| UI and text | `gui/controller.py`, `gui/window.py`, `gui/maps.py`, `gui/text.py`, `messages.py`, `app/gamenames.py`; `gui/start.py` chooses the window; the Tauri window is `gui/bridge.py` + `gui/view.py` (JSON-lines protocol and state) and repository `desktop/` (Svelte interface, Rust shell); the classic window is `gui/classic.py` + `gui/window.py` |
 | Version and reproducibility | `epoch.py`, `record.py`, `inputs.py`; product version comes from `pyproject.toml` |
 | CLI | `cli.py`; run `uv run rnw --help` for current commands |
 | Native kernels and bounded resources | repository `native/`, `parallel.py`, `artifacts.Spool`; equality references in `tests/reference/` |
@@ -75,8 +75,8 @@ They do not define the capabilities or output set of `eu5_nw_export.py`.
   An existing local library in a Workshop install is expected; it is not bundled
   world content. Installed-world recovery may adopt existing local RNW mods.
 
-Qt is the shipping UI. The Tauri window ([ADR 0011](adr/0011-tauri-window.md)) is an
-implemented candidate driving the same `Controller` through `rnw.gui.bridge`; it does
-not change the hub until the owner accepts it and its delivery.
+The Tauri window ([ADR 0011](adr/0011-tauri-window.md)) is the UI: it drives the same
+`Controller` through `rnw.gui.bridge`. The classic Qt window opens when chosen or when
+the Tauri window cannot open (no WebView2 in a Proton prefix, no WebKitGTK).
 The original architecture alternatives are preserved in
 [the archive](archive/architecture-options.md).

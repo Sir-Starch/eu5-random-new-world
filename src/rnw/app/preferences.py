@@ -26,6 +26,8 @@ class Preferences:
     profile_dir: str = ""
     # The window's language as the player chose it; empty follows the game's (rnw.gui.text).
     language: str = ""
+    # Which window opens: empty for the Tauri window, "classic" for the Qt one (rnw.gui.start).
+    window: str = ""
 
 
 def load(data: Path) -> Preferences:
@@ -37,6 +39,7 @@ def load(data: Path) -> Preferences:
             game_dir=str(row.get("game_dir", "")),
             profile_dir=str(row.get("profile_dir", "")),
             language=str(row.get("language", "")),
+            window=str(row.get("window", "")),
         )
     return Preferences()
 

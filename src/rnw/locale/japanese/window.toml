@@ -2159,3 +2159,11 @@ text = '''部族を表示'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''部族も国ですが、ゲームの政治マップでは色が付きません。ここにチェックを入れない限り、この地図でも同じです。'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''クラシックウィンドウを使う'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''次回の起動から適用されます。この新しいウィンドウが開けないときも、クラシックウィンドウが自動で開きます。'''

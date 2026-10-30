@@ -627,14 +627,17 @@ def diagnostics_file(
 
 
 @app.command()
-def gui() -> None:
-    """Open the generator application's window (needs the optional PySide6 group)."""
-    try:
-        from rnw.gui.__main__ import main  # noqa: PLC0415 - Qt is optional for the command line
-    except ImportError as error:
-        typer.echo(f"Error: the window needs PySide6 ({error})", err=True)
-        raise typer.Exit(code=2) from error
-    raise typer.Exit(code=main())
+def gui(
+    *,
+    classic: Annotated[
+        bool, typer.Option("--classic", help="Open the classic Qt window instead.")
+    ] = False,
+) -> None:
+    """Open the generator's window: the Tauri window, or the classic Qt window (which needs the
+    optional PySide6 group) when asked for or when the Tauri window cannot open."""
+    from rnw.gui.__main__ import main  # noqa: PLC0415 - the window only when it is asked for
+
+    raise typer.Exit(code=main(["rnw-gui", *(["--classic"] if classic else [])]))
 
 
 @app.command()

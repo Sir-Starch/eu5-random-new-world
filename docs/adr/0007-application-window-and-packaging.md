@@ -1,8 +1,8 @@
 # ADR 0007: The application window is Qt, packaged with PyInstaller
 
-**Status:** Qt window choice implemented and current in 1.0.0. Windows delivery is governed by [ADR 0009](0009-hub-mod-with-generator.md), replacing this record's earlier packaging scope. Native/development builds still use PyInstaller. The earlier owner-direction history is in [the archived roadmap](../archive/roadmap-through-1.0.md).
+**Status:** Qt window choice implemented in 1.0.0; since 2026-10-30 the classic fallback beside the Tauri window (ADR 0011). Windows delivery is governed by [ADR 0009](0009-hub-mod-with-generator.md), replacing this record's earlier packaging scope. Native/development builds still use PyInstaller. The earlier owner-direction history is in [the archived roadmap](../archive/roadmap-through-1.0.md).
 
-The existing application still uses Qt. On 2026-10-28 the owner requested a transition to Tauri; [ADR 0011](0011-tauri-window.md) records the implemented candidate. This decision stays current until the owner accepts that window and its delivery.
+On 2026-10-30 the owner made the Tauri window ([ADR 0011](0011-tauri-window.md)) the generator's window. This record's Qt window stays as the classic fallback (`rnw.gui.classic`), opened when chosen or when the Tauri window cannot open; its packaging decisions still apply.
 
 ## Context
 

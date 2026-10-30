@@ -681,6 +681,10 @@ STRINGS: Final[dict[str, str]] = {
     "settings.theme.system": "System",
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
+    "settings.classic_window": "Use the classic window",
+    "settings.classic_window.about": (
+        "From the next start. The classic window also opens by itself when this new one cannot."
+    ),
     "panes.library": "Show or hide the library",
     "panes.inspector": "Show or hide the side panel",
     # -- the Tauri window: a new world --

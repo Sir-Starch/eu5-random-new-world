@@ -31,7 +31,7 @@ See the [guide](generator-guide.md) for operations and
   geographic/social causes and trade-offs.
 - Stories, formable countries, colonial names, exceptional resource places and
   explicit adaptations of vanilla content tied to the removed Americas.
-- A Qt desktop generator, independent CLI, library, atlas, recovery, layer
+- A desktop generator (Tauri window, classic Qt fallback), independent CLI, library, atlas, recovery, layer
   variants, portable mode, progress and cancellation.
 - Player-visible text in every official language of the installed target build.
 

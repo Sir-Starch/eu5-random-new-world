@@ -2159,3 +2159,11 @@ text = '''显示部落'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''部落也是国家，但游戏的政治地图不为它们着色；除非勾选此项，这张地图也一样。'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''使用经典窗口'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''下次启动时生效。新窗口无法打开时，也会自动打开经典窗口。'''

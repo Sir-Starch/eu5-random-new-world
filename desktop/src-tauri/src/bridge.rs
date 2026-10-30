@@ -29,18 +29,35 @@ pub struct Launch {
 
 const MODULE: [&str; 2] = ["-m", "rnw.gui.bridge"];
 
-/// The interpreter of a packaged generator beside the window's program, if there is one: the
-/// hub's `generator/python` (Windows) or a `generator/python/bin` of a Linux archive.
+/// The interpreter of a packaged generator near the window's program, if there is one: the
+/// hub's `generator/python` (Windows) or a `generator/python/bin` of a Linux archive, beside the
+/// program or, for a program in `generator/window`, beside its folder.
 fn packaged(folder: &Path) -> Option<PathBuf> {
-    let candidates = [
-        folder.join("generator").join("python").join("python.exe"),
-        folder
-            .join("generator")
-            .join("python")
-            .join("bin")
-            .join("python3"),
-    ];
+    let mut candidates = Vec::new();
+    for generator in [
+        Some(folder.join("generator")),
+        folder.parent().map(Path::to_path_buf),
+    ]
+    .into_iter()
+    .flatten()
+    {
+        candidates.push(generator.join("python").join("python.exe"));
+        candidates.push(generator.join("python").join("bin").join("python3"));
+    }
     candidates.into_iter().find(|path| path.is_file())
+}
+
+/// The program of a frozen (PyInstaller) application whose `window` folder holds the window:
+/// it serves the bridge when started with `--bridge`.
+fn frozen(folder: &Path) -> Option<PathBuf> {
+    if folder.file_name()? != "window" {
+        return None;
+    }
+    let application = folder.parent()?;
+    ["RandomNewWorld.exe", "RandomNewWorld"]
+        .iter()
+        .map(|name| application.join(name))
+        .find(|path| path.is_file())
 }
 
 /// The source checkout above `start`, recognised by the bridge's own module.
@@ -52,7 +69,8 @@ fn checkout(start: &Path) -> Option<PathBuf> {
 }
 
 /// Decide how to start the bridge. `RNW_PYTHON` names an interpreter that has the generator;
-/// else a packaged one beside the program; else `uv run` in the source checkout (development).
+/// else a packaged one near the program, or the frozen application the program belongs to;
+/// else `uv run` in the source checkout (development).
 pub fn resolve(program_folder: &Path, current: &Path, python: Option<PathBuf>) -> Option<Launch> {
     let flags = |list: &[&str]| -> Vec<String> {
         list.iter()
@@ -68,10 +86,22 @@ pub fn resolve(program_folder: &Path, current: &Path, python: Option<PathBuf>) -
         });
     }
     if let Some(program) = packaged(program_folder) {
+        let folder = program
+            .ancestors()
+            .find(|folder| folder.file_name().is_some_and(|name| name == "python"))
+            .and_then(Path::parent)
+            .map(Path::to_path_buf);
         return Some(Launch {
             program,
             args: flags(&["-B", "-I", "-X", "utf8"]),
-            folder: Some(program_folder.to_path_buf()),
+            folder,
+        });
+    }
+    if let Some(program) = frozen(program_folder) {
+        return Some(Launch {
+            folder: program.parent().map(Path::to_path_buf),
+            program,
+            args: vec!["--bridge".to_string()],
         });
     }
     let root = checkout(program_folder).or_else(|| checkout(current))?;
@@ -242,6 +272,34 @@ mod tests {
             launch.args,
             ["-B", "-I", "-X", "utf8", "-m", "rnw.gui.bridge"]
         );
+        std::fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn a_window_inside_the_generator_finds_its_interpreter() {
+        let root = std::env::temp_dir().join(format!("rnw-shell-inside-{}", std::process::id()));
+        let generator = root.join("generator");
+        let python = generator.join("python").join("python.exe");
+        let window = generator.join("window");
+        std::fs::create_dir_all(python.parent().expect("a folder")).expect("folders");
+        std::fs::create_dir_all(&window).expect("folders");
+        std::fs::write(&python, b"").expect("a file");
+        let launch = resolve(&window, Path::new("/nowhere"), None).expect("a launch");
+        assert_eq!(launch.program, python);
+        assert_eq!(launch.folder, Some(generator));
+        std::fs::remove_dir_all(root).expect("cleanup");
+    }
+
+    #[test]
+    fn a_frozen_application_serves_its_window_with_bridge() {
+        let root = std::env::temp_dir().join(format!("rnw-shell-frozen-{}", std::process::id()));
+        let window = root.join("window");
+        std::fs::create_dir_all(&window).expect("folders");
+        let program = root.join("RandomNewWorld");
+        std::fs::write(&program, b"").expect("a file");
+        let launch = resolve(&window, Path::new("/nowhere"), None).expect("a launch");
+        assert_eq!(launch.program, program);
+        assert_eq!(launch.args, ["--bridge"]);
         std::fs::remove_dir_all(root).expect("cleanup");
     }
 

@@ -65,7 +65,8 @@ def check_candidate(candidate: Path, version: str) -> None:
 
 
 def self_test(candidate: Path, prefix: Path, version: str) -> None:
-    """Run the real Windows generator offscreen in a dedicated Wine prefix."""
+    """Run the real Windows generator offscreen in a dedicated Wine prefix: the classic window
+    and the Tauri window's shell with its bridge (it opens no window)."""
     env = os.environ.copy()
     env.update(WINEPREFIX=str(prefix.resolve()), WINEDEBUG="-all", QT_QPA_PLATFORM="offscreen")
     wine = shutil.which("wine")
@@ -87,7 +88,8 @@ def self_test(candidate: Path, prefix: Path, version: str) -> None:
         text=True,
         timeout=180,
     )
-    if f"Random New World {version}" not in result.stdout:
+    lines = (f"Random New World {version}: window,", f"Random New World {version}: window shell")
+    if not all(line in result.stdout for line in lines):
         msg = f"Unexpected self-test result: {result.stdout} {result.stderr}"
         raise ValueError(msg)
     print(result.stdout.strip())

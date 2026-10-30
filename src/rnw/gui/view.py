@@ -131,6 +131,7 @@ def state(controller: Controller, choices: Choices) -> dict[str, object]:
         "preferences": {
             "show_new_world": c.preferences.show_new_world,
             "language": c.preferences.language,
+            "window": c.preferences.window,
         },
         "resources": _resources(),
         "selection": c.selection,

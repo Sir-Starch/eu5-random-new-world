@@ -17,7 +17,7 @@ its downloaded hub matches the prepared package (C441).
 | Societies and economy (R6/R7) | Countries and tribes, populations, cultures, religions, markets, technology, empires and varied societies | [Natives](natives.md), [economy](economy.md) |
 | Content (N0–N5) | Vanilla content dispositions, adapted geography keys, stories, formations and colonial names | [Content plan](content-plan.md), [catalogue](content-catalog.md) |
 | Languages (L1) | Generator and world text in the official languages discovered from the installed game; eleven for this build | [Localization](localization.md) |
-| Generator (R8/U1/G0–G4) | Qt window, world library, atlas, codes/files, layer rerolls, queue, recovery and installation | [Guide](generator-guide.md), [GUI design](gui-design.md) |
+| Generator (R8/U1/G0–G4) | Tauri window with the classic Qt window as fallback, world library, atlas, codes/files, layer rerolls, queue, recovery and installation | [Guide](generator-guide.md), [GUI design](gui-design.md) |
 | Runtime and delivery (R9/R10/G5/P1) | Rust kernels, bounded memory, Windows/Proton hub, native Linux application, tagged CI and public releases | [ADRs](README.md#decision-records), [release process](release-process.md) |
 
 The phase codes remain useful identifiers in research records; they are not a
@@ -58,10 +58,10 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   generated states and use them to inform starting relationships and subsequent
   events, goals or mission-style content through the existing society/story systems
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)).
-- **Generator interface and settings:** the Tauri window and its rebuilt maps are
-  implemented as a candidate ([ADR 0011](adr/0011-tauri-window.md)); Qt remains current
-  until the owner accepts it. Remaining: Windows/WebView2 (including Proton) delivery
-  in the hub, and exposing more generation settings.
+- **Generator interface and settings:** the Tauri window and its rebuilt maps are the
+  generator's window ([ADR 0011](adr/0011-tauri-window.md)); the classic Qt window is its
+  fallback. Remaining: the window under Proton with a WebView2 runtime, and exposing more
+  generation settings.
 - **Resource distribution sliders:** add individual frequency controls for
   ordinary RGOs alongside the existing precious-resource control. Keep resource
   selection tied to climate and terrain, with vanilla weights as the defaults.

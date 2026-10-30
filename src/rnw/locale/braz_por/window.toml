@@ -2159,3 +2159,11 @@ text = '''Mostrar tribos'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''Tribos também são países, mas o mapa político do jogo as deixa sem cor; este mapa também, a menos que isto esteja marcado.'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''Usar a janela clássica'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''A partir da próxima abertura. A janela clássica também abre sozinha quando esta nova não consegue abrir.'''

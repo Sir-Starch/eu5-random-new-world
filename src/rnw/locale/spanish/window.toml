@@ -2159,3 +2159,11 @@ text = '''Mostrar tribus'''
 ["map.show_tribes_tip"]
 source = "f44b63a2f6a8c558"
 text = '''Las tribus también son países, pero el mapa político del juego las deja sin color; este mapa también, salvo que esto esté marcado.'''
+
+["settings.classic_window"]
+source = "d20a1931880987ab"
+text = '''Usar la ventana clásica'''
+
+["settings.classic_window.about"]
+source = "ab220ff06d3f952f"
+text = '''A partir del próximo inicio. La ventana clásica también se abre sola cuando esta nueva no puede.'''

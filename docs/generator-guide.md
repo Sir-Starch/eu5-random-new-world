@@ -2,11 +2,18 @@
 
 RNW 1.0.0 targets EU5 1.4.5 / Steam build 26211608.
 
-Run from source with `uv sync --locked --group dev` and `uv run rnw gui`.
-The Linux folder package runs with `./RandomNewWorld`; its command line is
-`./RandomNewWorld --cli --help`. The Windows folder has the launcher and `rnw.cmd`.
-The Workshop layout uses the same Windows runtime, also usable through Proton.
-The generator needs no Workshop installation. [V-EXEC C143, C145]
+Run from source with `uv sync --locked --group dev` and `uv run rnw gui` (build the window
+first with `npx tauri build --no-bundle` in `desktop/`). The Linux folder package runs with
+`./RandomNewWorld`; its command line is `./RandomNewWorld --cli --help`. The Windows folder
+has the launcher and `rnw.cmd`. The Workshop layout uses the same Windows runtime, also usable
+through Proton. The generator needs no Workshop installation. [V-EXEC C143, C145]
+
+The generator opens its window, which needs the system's web view: WebView2 on Windows
+(Windows 11 and current Windows 10 have it) or WebKitGTK 4.1 on Linux. Where there is none,
+as in a Proton prefix, the classic window opens instead, by itself. *Use the classic window*
+in Settings opens the classic one from the next start; so do `--classic` on the command line
+(`rnw gui --classic` from source) and `RNW_WINDOW=classic`. Use them when the window opens
+but does not draw properly on a machine. [V-EXEC C444]
 
 The window discovers EU5 and its profile. Choose missing folders in Settings; the
 choices are remembered. Without EU5, open compact world files and view their maps.
@@ -17,9 +24,12 @@ No profile is needed for the other destinations. [V-EXEC C143]
 
 ## Continent, resources and peoples
 
-The World tab holds the type, broad balance and visibility before playing. Advanced
-holds the seed, world code, land sources and exact values. Save and play holds the
-destination, installation choice and queue; Generate stays available below the tabs.
+The library is on the left, the selected world or the new world in the middle and its
+inspector on the right; both side panels hide (Ctrl+B, Ctrl+I). For a new world the
+inspector's World tab holds the type, broad balance, seed and world code; Advanced holds the
+exact values; Save and play holds the destination, installation choice, visibility and
+queue; Generate stays below the tabs. The middle shows the continent sketches, the land image
+and the progress. The classic window keeps its own tabs ([GUI design](gui-design.md)).
 Settings holds application paths, the window's language and diagnostics. [V-EXEC C147] The window speaks the language Steam runs EU5 in, unless another is chosen there; a choice applies at the next start, and every official language of the game is available (C275).
 
 Choose a type and seed, or paste a code. The quick answers set the same values as
@@ -43,7 +53,7 @@ the installed mod by default; Keep both retains both installed mods. Undo roll
 restores the previous version in the game. Previous version opens its library page.
 [V-EXEC C142, C143]
 
-Maps start covered. Reveal this world exposes the six atlas layers without exposing
+Maps start covered. Reveal this world exposes the atlas's ten lenses without exposing
 its thumbnail in EU5. Show the New World belongs to each world: choose it before
 generation or change it on the finished world's World tab. It updates that world's
 picture and existing mod's selection cover without generating geography again. From
