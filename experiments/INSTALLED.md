@@ -946,3 +946,28 @@ same profile, retaining the former hub at
 `rnw_exp_world_plqlumps6g` is reused: this is an interface change with no world-byte
 or epoch change. Evidence remains under ignored `local_data/wall-checkbox/`;
 hub candidate: `local_data/hub-updates/1.1.0-1793365445154648166/rnw_exp_hub`.
+
+
+2026-10-30, **1.1.0 development — secondary-continent placement beside The Wall** (C447).
+[V-EXEC] Added a broad procedural density component for side land, retaining local
+coast detail and one land budget. Full checks pass (2,246 Python tests, 15 optional
+skips; 23 native Rust tests), as do native/Windows package self-tests and four-seed
+Linux/Windows coast/region parity. Six full-resolution seed comparisons and a
+regression that fails the former field cover continental composition.
+The installed-game suite passes 14 tests (one opt-in skip), including the unchanged
+867-file ordinary reference (`94fcf2d4…77a4bcc`).
+
+Installed new candidate `rnw_exp_world_qh2eoqjmqu` (**The Wall · 1000**, seed 1000)
+in the same Windows/Proton profile, with records in both libraries. All 896 installed
+files match; 865 nonmetadata files have SHA-256
+`e0bd506886c33cf3872ca896a12264e23b51b21d77d2c807b1a12fc3f1ca9ec7`.
+Export checks report no split cells, unreachable seas, unported land or lost Old
+World contacts. All nine existing mod directories and nine profile-root files
+are preserved. No playset, save or preference edit; no EU5 launch/control by the agent.
+
+The verified, self-tested hub is installed with the former hub retained at
+`.rnw-hub-backups/1.1.0-1793367341020351311`.
+Hub candidate: `local_data/hub-updates/1.1.0-1793367165919223097/rnw_exp_hub`;
+wheel SHA-256 `8bac372109dbc3e6a4bdd7c4644b89978d086434a2b6216bc555513f3466512a`.
+This remains unpublished 1.1.0 / pending epoch 60; existing worlds are untouched.
+Evidence: ignored `local_data/wall-variety/`.

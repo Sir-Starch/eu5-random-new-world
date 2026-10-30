@@ -166,12 +166,6 @@ def land_stage(
     """Return land, ocean, lake masks and the shaped elevation."""
     if settings.landform:
         return _wall_land(domain, seed, settings)
-    margin = settings.coast_margin_px
-    ramp = EDGE_RAMP_MARGINS * margin
-    shift_px = EDGE_SHIFT_RAMPS * ramp
-    shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
-    guard = ~domain
-    guard[:, [0, -1]] = True
     relief = _field(
         seed,
         "new_world_elevation",
@@ -180,6 +174,22 @@ def land_stage(
         octaves=settings.octaves,
         persistence_permille=settings.persistence_permille,
     )
+    return _natural_land(domain, seed, settings, relief)
+
+
+def _natural_land(
+    domain: NDArray[np.bool_],
+    seed: int,
+    settings: NewWorldSettings,
+    relief: NDArray[np.int32],
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
+    """Construct natural coasts from a density field, preserving the requested land budget."""
+    margin = settings.coast_margin_px
+    ramp = EDGE_RAMP_MARGINS * margin
+    shift_px = EDGE_SHIFT_RAMPS * ramp
+    shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
+    guard = ~domain
+    guard[:, [0, -1]] = True
     wobble = _field(
         seed,
         "new_world_edge",
@@ -212,12 +222,39 @@ def land_stage(
 def _wall_land(
     domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
-    """Build the barrier before classification; ordinary geography supplies the side land."""
+    """Build the barrier and seed both continental placement and local coasts beside it.
+
+    Splitting the canvas leaves broad northern and southern pockets. Local coast
+    noise alone scatters land through each pocket, repeating that composition even
+    on different seeds. A longer wavelength lets whole regions become ocean or
+    continent; the original field supplies bays, peninsulas and islands. Both
+    scales follow feature size, with one sea level for all the side land.
+    """
     centre, half = wall.geometry(domain, settings)
     sides = domain.copy()
     gap = half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
     sides[:, max(0, centre - gap) : centre + gap + 1] = False
-    land, _, _, elevation = land_stage(sides, seed, replace(settings, landform=0))
+    relief = _field(
+        seed,
+        "wall_continents",
+        shape=domain.shape,
+        period=4 * settings.feature_px,
+        octaves=settings.octaves,
+        persistence_permille=settings.persistence_permille,
+    )
+    detail = _field(
+        seed,
+        "new_world_elevation",
+        shape=domain.shape,
+        period=settings.feature_px,
+        octaves=settings.octaves,
+        persistence_permille=settings.persistence_permille,
+    )
+    relief *= 2
+    relief += detail
+    relief //= 3
+    del detail
+    land, _, _, elevation = _natural_land(sides, seed, settings, relief)
     land |= wall.coast(domain, seed, settings)
     return (*_classify(domain, land, _off_limits(domain, settings), settings), elevation)
 

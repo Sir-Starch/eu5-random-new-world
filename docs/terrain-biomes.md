@@ -157,7 +157,13 @@ navigable straits. No scenario is selected and no count or probability of passag
 is prescribed. **Allow gaps in the wall** is enabled by default; disabling it imposes
 a continuous straight land core on the same field. The polar endpoints remain land.
 
-Ordinary geography supplies secondary land outside an ocean gap on either side.
+Secondary land outside an ocean gap on either side uses a continuous density field
+with a broad continental component (four times the feature scale, two-thirds of
+the density) and the ordinary local coast component (one-third). One sea level
+sets its land budget across both sides. This lets a seed leave whole broad regions
+as ocean rather than distributing local land through every large canvas pocket.
+The protected-domain boundaries still constrain where land can occur. There are
+no continent positions, counts or scenario templates in this field.
 The regular relief, climate, rivers, locations, societies and content pipeline runs
 on the result; a longitudinal mountain spine adds the scenario's defining relief.
 Locations touching the polar endpoints become wasteland. Construction rejects a
@@ -196,3 +202,27 @@ reproduction. The pending epoch-60 reference now has 867 files / `94fcf2d4…77a
 the frozen epoch-59 reference is untouched. See [installation record](../experiments/INSTALLED.md)
 for the new world and backed-up hub. Evidence stays under ignored `local_data/the-wall/`.
 These are offline results; no EU5 launch or new engine observation is claimed.
+
+### Secondary-continent placement follow-up
+
+[V-LOCAL/V-EXEC, 2026-10-30] The owner reported repeated compositions in three
+Wall worlds. Recovery records show that UED2 and OJB5 share seed
+12140331280324730264, while 7FQK uses 15379157863967449931. Six full-resolution
+land-stage runs confirmed changing outlines, but local-scale noise repeatedly
+populated the canvas's broad northern and southern pockets. The additional
+continental component above changes that broader occupancy too. A synthetic
+regression requires each of two large side regions to be entirely ocean on some
+seeds and substantially land on others; the former field fails it. Strip parity,
+protected pixels and the Wall's existing continuity checks remain covered.
+Evidence and before/after six-seed sheets stay in ignored `local_data/wall-variety/`.
+
+The full default-settings seed-1000 export has 865 nonmetadata files
+(`e0bd5068…f1ca9ec7`) and zero split generated cells, unreachable sea zones,
+unported land cells or lost Old World contacts. Full checks pass (2,246 Python
+tests, 15 optional skips; 23 native Rust tests). Native and Windows package
+self-tests pass, and four synthetic seeds produce identical coast digests and
+regional land counts in Linux and the packaged Windows generator under Wine.
+The installed-game suite passes 14 tests (one opt-in skip), including independent
+reproduction of the unchanged 867-file ordinary reference (`94fcf2d4…77a4bcc`).
+The corrected geometry invalidates the development land cache; the release
+target remains 1.1.0 / pending epoch 60. Existing worlds are preserved.

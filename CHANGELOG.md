@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Give The Wall's secondary continents a broader procedural placement field, so
+  seeds can leave whole side regions as ocean instead of repeatedly scattering
+  land through the same canvas pockets. Existing worlds remain untouched.
+
 - Simplify generation progress: show the current stages once in the stage list,
   keeping the time estimate below the progress bar.
 

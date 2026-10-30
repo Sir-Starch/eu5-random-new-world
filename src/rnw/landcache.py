@@ -50,7 +50,7 @@ def cache_key(
     drawn: NDArray[np.bool_] | None,
     sea_bands: NDArray[np.bool_] | None = None,
 ) -> str:
-    spec = (4, epoch.CURRENT, seed, replace(settings, precious_permille=0), domain.shape)
+    spec = (5, epoch.CURRENT, seed, replace(settings, precious_permille=0), domain.shape)
     digest = hashlib.sha256(repr(spec).encode("ascii"))
     for raster in (domain, drawn, sea_bands):
         digest.update(b"none" if raster is None else b"raster")

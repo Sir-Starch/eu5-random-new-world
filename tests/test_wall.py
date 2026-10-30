@@ -8,7 +8,7 @@ from dataclasses import replace
 import numpy as np
 import pytest
 
-from rnw import __version__, wall
+from rnw import __version__, newworld, wall
 from rnw.app.worldcode import WorldCode, decode, encode
 from rnw.model import CellClass
 from rnw.newworld import LAND_KINDS, generate_new_world, land_stage
@@ -138,3 +138,36 @@ def test_density_field_forms_islands_and_passages_with_no_prescribed_count() -> 
         centre, _ = wall.geometry(domain, settings)
         assert continuous[:, centre].all()
         assert not (land & ~continuous).any()
+
+
+def test_seed_can_leave_a_broad_side_region_entirely_ocean() -> None:
+    """A new seed changes where continents occur, beyond changing their local shores."""
+    domain = np.ones((640, 960), dtype=bool)
+    settings = replace(
+        SMALL, landform=1, land_permille=187, wall_width_permille=140, feature_px=100
+    )
+    centre, half = wall.geometry(domain, settings)
+    gap = half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
+    regions = [(slice(top, top + 192), slice(60, centre - gap - 30)) for top in (64, 384)]
+    counts: list[list[int]] = [[], []]
+    for seed in (0, 1, 5, 6):
+        land, ocean, lakes, _ = land_stage(domain, seed, settings)
+        assert np.array_equal(land | ocean | lakes, domain)
+        for region, found in zip(regions, counts, strict=True):
+            found.append(int(np.count_nonzero(land[region])))
+    for region, found in zip(regions, counts, strict=True):
+        assert min(found) == 0
+        assert max(found) > domain[region].size // 4
+
+
+def test_wall_secondary_land_does_not_depend_on_strip_height(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    domain = np.ones((320, 480), dtype=bool)
+    domain[80:160, :100] = False
+    settings = replace(SMALL, landform=1, land_permille=250)
+    expected = land_stage(domain, 42, settings)
+    monkeypatch.setattr(newworld, "STRIP_ROWS", 16)
+    actual = land_stage(domain, 42, settings)
+    assert all(np.array_equal(a, b) for a, b in zip(expected, actual, strict=True))
+    assert not actual[0][~domain].any()
