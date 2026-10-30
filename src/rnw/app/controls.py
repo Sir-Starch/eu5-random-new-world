@@ -16,7 +16,7 @@ import math
 from dataclasses import dataclass
 from typing import Final, cast
 
-from rnw.settings import PRESETS, Settings
+from rnw.settings import PRESETS, RESOURCE_FIELDS, Settings
 
 STEPS: Final[int] = 1000
 # Locations of a world, estimated from its settings (C118): those outside the New World on
@@ -45,7 +45,7 @@ class Control:
 
     @property
     def section(self) -> str:
-        """The settings section: ``new_world`` or ``natives``."""
+        """The settings section: ``new_world``, ``natives`` or ``resources``."""
         return self.key.split(".", 1)[0]
 
     @property
@@ -98,7 +98,6 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("new_world.octaves", "land", 5, 8),
     Control("new_world.max_lake_px", "land", 1000, 20_000, logarithmic=True, unit="px"),
     Control("new_world.wasteland_permille", "land", 0, 200, factor=10, decimals=1, unit="percent"),
-    Control("new_world.precious_permille", "land", 0, 3000, factor=1000, decimals=2, unit="times"),
     Control("new_world.location_px", "map", 40, 90, unit="px"),
     Control("new_world.sea_zone_px", "map", 80, 240, unit="px"),
     Control("new_world.province_size", "map", 3, 10),
@@ -121,9 +120,16 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("natives.religion_locations", "peoples", 20, 200, logarithmic=True),
     Control("natives.tribe_locations", "peoples", 4, 15),
     Control("natives.empire_permille", "peoples", 0, 1000, factor=10, decimals=1, unit="percent"),
+    Control(
+        "new_world.precious_permille", "resources", 0, 3000, factor=1000, decimals=2, unit="times"
+    ),
+    *(
+        Control(f"resources.{name}", "resources", 0, 3000, factor=1000, decimals=2, unit="times")
+        for name in RESOURCE_FIELDS
+    ),
 )
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
-GROUPS: Final[tuple[str, ...]] = ("land", "map", "peoples")
+GROUPS: Final[tuple[str, ...]] = ("land", "map", "peoples", "resources")
 # The Advanced tab's controls: all of them but the ocean checkbox, which the new-world page holds.
 ADVANCED: Final[tuple[Control, ...]] = tuple(
     control for control in CONTROLS if control.field != "expand_oceans"

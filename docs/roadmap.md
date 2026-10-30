@@ -25,6 +25,15 @@ list of unfinished prerequisites. Detailed observations keep their original game
 build and scope. Known limitations are in [one current page](known-limitations.md).
 An unobserved detail alone does not reopen acceptance or require another game session.
 
+## In development — 1.1.0
+
+- **Resource distribution sliders:** Advanced → Resources now offers individual
+  0–3× placement weights for all 34 ordinary New World RGOs alongside the existing
+  precious-resource control, in both windows and every official language. Defaults
+  retain vanilla weights and climate/terrain matching. These are relative placement
+  probabilities: increasing one leaves fewer locations for others and does not
+  change production per location. See [economy](economy.md#resource-frequency-controls-110).
+
 ## Future work requested by the owner
 
 These are directions, not promises for 1.0.0 or automatic tasks for every agent.
@@ -62,12 +71,6 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   generator's window ([ADR 0011](adr/0011-tauri-window.md)); the classic Qt window is its
   fallback. Remaining: the window under Proton with a WebView2 runtime, and exposing more
   generation settings.
-- **Resource distribution sliders:** add individual frequency controls for
-  ordinary RGOs alongside the existing precious-resource control. Keep resource
-  selection tied to climate and terrain, with vanilla weights as the defaults.
-  Explain that the sliders change relative placement probabilities, so increasing
-  one resource leaves fewer locations for others; they do not directly change
-  production per location. These controls are planned for a future update.
 - **World-wrap research:** retain the accepted mechanical fixes and visual source
   extension. Use the [dedicated dossier](research/map-wrap-dossier.md) for new
   evidence relevant to a possible Paradox report. A historical rendering comparison

@@ -80,6 +80,41 @@ Use the current `settings.py` and `app/controls.py` for exposed controls and ran
 
 Each generated land location draws its raw material from the vanilla frequencies of similar locations: the same climate, vegetation, topography and coast, falling back to fewer of them. Up to 0.9.13 those frequencies were the Old World's, so a generated America had elephants (55 locations of one world), horses (87), wheat (261), rice (225), millet (215), silk (36), tea (25) and camels (17) and none of maize, potatoes, cocoa, tobacco or chili, which in vanilla only America has. They are now the vanilla New World's: in the continents world of seed 42 no Old-World-only material is left and maize holds 380 locations, chili 86, cocoa 73, potatoes 44, tobacco 15. `new_world.precious_permille` weighs gold, silver, gems and pearls against the rest (1000: their vanilla share; the window offers 0 to 3 times); a class whose only materials it removes falls back to a coarser class.
 
+## Resource frequency controls (1.1.0)
+
+Advanced → Resources offers 34 ordinary New World raw materials individually,
+alongside the existing gold/silver/gems/pearls control, in the Tauri and classic
+windows. Each slider ranges from 0 to 3×: 1× preserves vanilla frequencies and 0
+excludes the resource. These multiply the vanilla New World's sampled placement
+weights in the existing climate/vegetation/topography/coast pools. They change
+relative probabilities, not exact location counts or production per location;
+increasing one resource leaves fewer locations for others.
+
+The settings document stores ordinary weights under `resources`, keyed by RGO
+identifier, as integer permille (for example `{"resources":{"maize":3000,"coal":0}}`).
+The validated document range is 0–5000, as for the existing precious-resource setting;
+the window's range is 0–3000. All-default ordinary weights are omitted from canonical
+settings, preserving older documents. World codes use new append-only field numbers;
+old codes remain readable. Resource changes retain the continent identity and land cache.
+
+An emptied habitat pool uses the existing progressively coarser matching classes,
+retaining the coast/inland distinction. If none contains an enabled resource, generation
+fails explicitly; it never restores a disabled material or silently inserts stone.
+Synthetic tests cover scaling, zero weights, deterministic draws, habitat restrictions,
+code round trips and both windows. The installed-game check compares the control list
+with the actual New World RGOs, so a future game addition requires a deliberate update.
+
+[V-LOCAL / V-EXEC, 2026-10-30] On EU5 1.4.6 / Steam build 26300913,
+two complete 867-file exports of the same reference continent differ only in
+`in_game/map_data/location_templates.txt`. Setting maize/iron to 3×, fish to 0.5×
+and coal to 0 changes their location counts **501→983**, **76→140**, **350→236**
+and **13→0**, respectively. All other template attributes, geography files and
+Old World resource assignments remain equal. The default-weight reference retains
+epoch 59's output digest `23c04377…bd9c85`; the frozen reference is preserved and
+the 1.1.0 cycle has pending epoch 60. The weighted candidate and generator hub are
+installed as recorded in [INSTALLED](../experiments/INSTALLED.md). These are offline
+construction/output checks, with no EU5 launch or gameplay observation.
+
 ## Research limits and possible refinements
 
 - Additional authored buildings and more detailed economy behavior are possible future scope. Existing technology, empires and royal roads are implemented; vanilla institutions spread through the normal game mechanisms.

@@ -53,6 +53,14 @@ the installed mod by default; Keep both retains both installed mods. Undo roll
 restores the previous version in the game. Previous version opens its library page.
 [V-EXEC C142, C143]
 
+Advanced → Resources (Customize in the classic window) has a separate frequency
+slider for each ordinary New World resource and the existing precious-resource slider.
+1× uses vanilla weights; 0 excludes a resource. Climate and terrain still guide placement.
+These are relative probabilities: more of one resource leaves fewer locations for others,
+without changing production per location. Reset restores a slider to 1×; Reset all restores
+the world type's settings. The world code keeps the values. Generation stops with an
+explanation if no enabled resource suits a location.
+
 Maps start covered. Reveal this world exposes the atlas's ten lenses without exposing
 its thumbnail in EU5. Show the New World belongs to each world: choose it before
 generation or change it on the finished world's World tab. It updates that world's

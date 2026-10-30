@@ -2171,3 +2171,283 @@ text = '''Utiliser la fenêtre classique'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''À partir du prochain démarrage. La fenêtre classique s'ouvre aussi d'elle-même quand cette nouvelle fenêtre ne le peut pas.'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "Ressources"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "Poids relatifs de placement : 1× reprend les fréquences du jeu de base ; 0 retire une ressource. Le climat et le relief guident toujours le placement. Plus d’une ressource laisse moins de lieux aux autres ; la production par lieu reste inchangée. La génération s’arrête si aucune ressource activée ne convient à un lieu."
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "Alun"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "Ambre"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "Cire d’abeille"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "Piment"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "Argile"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "Charbon"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "Cacao"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "Cuivre"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "Coton"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "Teintures"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "Plantes à fibres"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "Poisson"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "Fruits"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "Fourrures"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "Encens"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "Fer"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "Ivoire"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "Plomb"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "Légumineuses"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "Bétail"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "Bois"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "Maïs"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "Marbre"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "Remèdes"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "Mercure"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "Pommes de terre"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "Sel"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "Salpêtre"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "Sable"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "Pierre"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "Étain"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "Tabac"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "Gibier"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "Laine"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."

@@ -2171,3 +2171,283 @@ text = '''クラシックウィンドウを使う'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''次回の起動から適用されます。この新しいウィンドウが開けないときも、クラシックウィンドウが自動で開きます。'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "資源"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "相対的な配置の重み：1×は基本ゲームの頻度、0は資源の除外。気候と地形も引き続き配置に影響する。ある資源を増やすと他の資源に使える地点は減るが、地点ごとの生産量は変わらない。配置可能な有効資源がない地点があると生成は停止する。"
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "ミョウバン"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "琥珀"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "蜜蝋"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "唐辛子"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "粘土"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "石炭"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "カカオ"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "銅"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "綿花"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "染料"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "繊維作物"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "魚"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "果物"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "毛皮"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "香料"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "鉄"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "象牙"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "鉛"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "豆類"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "家畜"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "木材"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "トウモロコシ"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "大理石"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "薬材"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "水銀"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "ジャガイモ"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "塩"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "硝石"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "砂"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "石材"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "錫"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "タバコ"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "狩猟肉"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "羊毛"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "基本ゲームに対する相対的な配置の重み。0にするとこの資源は配置されない。"

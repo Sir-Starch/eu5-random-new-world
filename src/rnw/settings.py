@@ -119,6 +119,50 @@ class NativeSettings:
 
 
 @dataclass(frozen=True, slots=True)
+class ResourceSettings:
+    """Relative ordinary New World RGO weights, in permille of vanilla frequencies."""
+
+    alum: int = 1000
+    amber: int = 1000
+    beeswax: int = 1000
+    chili: int = 1000
+    clay: int = 1000
+    coal: int = 1000
+    cocoa: int = 1000
+    copper: int = 1000
+    cotton: int = 1000
+    dyes: int = 1000
+    fiber_crops: int = 1000
+    fish: int = 1000
+    fruit: int = 1000
+    fur: int = 1000
+    incense: int = 1000
+    iron: int = 1000
+    ivory: int = 1000
+    lead: int = 1000
+    legumes: int = 1000
+    livestock: int = 1000
+    lumber: int = 1000
+    maize: int = 1000
+    marble: int = 1000
+    medicaments: int = 1000
+    mercury: int = 1000
+    potato: int = 1000
+    salt: int = 1000
+    saltpeter: int = 1000
+    sand: int = 1000
+    stone: int = 1000
+    tin: int = 1000
+    tobacco: int = 1000
+    wild_game: int = 1000
+    wool: int = 1000
+
+
+RESOURCES: Final[ResourceSettings] = ResourceSettings()
+RESOURCE_FIELDS: Final[tuple[str, ...]] = tuple(item.name for item in fields(RESOURCES))
+
+
+@dataclass(frozen=True, slots=True)
 class RollSettings:
     """Rerolls of a part of a world on the same seed (``rnw.layers``): 0 is the seed's own."""
 
@@ -170,6 +214,7 @@ class Settings:
     natives: NativeSettings = NATIVES
     rolls: RollSettings = ROLLS
     mask: MaskSettings = MASK
+    resources: ResourceSettings = RESOURCES
 
     def to_json_data(self) -> dict[str, object]:
         """Return the schema-tagged document; no rolls are written while all are 0, so that the
@@ -181,6 +226,8 @@ class Settings:
             del data["rolls"]
         if self.mask == MASK:
             del data["mask"]
+        if self.resources == RESOURCES:
+            del data["resources"]
         return {"schema": SCHEMA_VERSION, **data}
 
 
@@ -230,6 +277,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "resources": (0, 65_535),
     "peoples": (0, 65_535),
     "id": (0, (1 << 48) - 1),
+    **dict.fromkeys(RESOURCE_FIELDS, (0, 5000)),
 }
 PRESETS: Final[dict[str, Settings]] = {
     "continents": Settings(
@@ -427,6 +475,7 @@ def _merge[
         NativeSettings,
         RollSettings,
         MaskSettings,
+        ResourceSettings,
     )
 ](base: T, section: str, override: object) -> T:
     if not isinstance(override, dict):
@@ -458,7 +507,8 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         raise SettingsError(message)
     base = PRESETS[name]
     unknown = sorted(
-        set(data) - {"synthetic", "geography", "coast", "new_world", "natives", "rolls", "mask"}
+        set(data)
+        - {"synthetic", "geography", "coast", "new_world", "natives", "rolls", "mask", "resources"}
     )
     if unknown:
         message = f"Unknown settings sections: {', '.join(unknown)}"
@@ -476,6 +526,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         natives=_merge(base.natives, "natives", data.get("natives", {})),
         rolls=_merge(base.rolls, "rolls", data.get("rolls", {})),
         mask=_merge(base.mask, "mask", data.get("mask", {})),
+        resources=_merge(base.resources, "resources", data.get("resources", {})),
     )
 
 

@@ -177,6 +177,7 @@
       {@const changed = members.filter((c) => n?.values[c.key]?.changed).length}
       <Section id={`new.group.${group}`} title={t(`group.${group}`)}>
         {#snippet aside()}{#if changed}<span class="changed">{t("custom_some", { count: changed })}</span>{/if}{/snippet}
+        {#if group === "resources"}<p class="hint">{t("group.resources.about")}</p>{/if}
         <div class="values">
           {#each members as control (control.key)}
             {#if n?.values[control.key]}

@@ -850,3 +850,36 @@ self-test, installed and verified all **3,272 files**, and retained the former
 hub at `.rnw-hub-backups/1.0.0-1793234743835704438`. Future updates accept both
 the former internal ID and the permanent ID. No EU5 launch/control or world,
 playset or save edit.
+
+2026-10-30, **1.1.0 development / pending epoch 60 — resource frequency sliders**.
+Installed new **RNW: Resource frequencies**, `mod/rnw_exp_world_5o4wtpm757`,
+**898 files hash-verified**, on EU5 1.4.6 / Steam build **26300913**. Its code sets
+maize/iron to 3×, fish to 0.5× and coal to 0; all 34 ordinary resources have independent
+controls in both windows and all eleven languages. The 867 nonmetadata files have
+SHA-256 `18ded1367dc9155b4784773754d348d7f23b05bee2760fe7e9d8205ac52db2fc`.
+Native and Windows/Proton libraries both contain complete records and recovery assets.
+The candidate keeps the normal covered-world presentation. All eleven pre-existing
+mod directories and nine profile-root files are preserved; no playset/save/setting
+change, existing-world replacement or EU5 launch/control.
+
+The full-export comparison changes only `location_templates.txt`, preserves all
+non-resource template attributes and Old World resource assignments, and measures
+maize **501→983**, iron **76→140**, fish **350→236**, coal **13→0**. The default-weight
+867-file reference retains `23c04377…bd9c85`. Full checks pass: **2,215 Python tests**
+(15 optional skips), **23 Rust tests**, format/lint/types; desktop checks pass **13
+Vitest tests**, **5 Rust shell tests**, types and production build. The read-only
+installed-game suite passes **13 tests** (two opt-in skips). Both native self-tests
+and the Windows hub's offscreen window/native/code and shell/bridge self-tests pass.
+
+The standard updater installed the **1.1.0** generator-only hub into this profile's
+`mod/rnw_exp_hub`, after source/catalog/package and installed-copy verification.
+Previous hub: `.rnw-hub-backups/1.0.0-1793357953112577661`. The cached local build's
+Windows wheel SHA-256 is `70ba3585c83adfeb037e189d0e4d1993d78b588fda0c5b55272bfb1f73598a73`.
+This is an unpublished development build, not a 1.1.0 release. Exact source and
+working diff, export comparisons, screenshots, build/self-test logs and installation
+receipt remain under ignored `local_data/resource-sliders/`; the hub candidate is
+under `local_data/hub-updates/1.1.0-1793357868762179148/`.
+
+Independent pending-epoch reference reproduction passes on build 26300913
+(`RNW_REPRODUCE=1`, 867 files, `23c04377…bd9c85`). The installed Windows generator
+also passes the specific 34-resource settings/code/weight/catalog parity check.

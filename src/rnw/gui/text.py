@@ -284,6 +284,13 @@ STRINGS: Final[dict[str, str]] = {
     "group.land": "Land and sea",
     "group.map": "Map",
     "group.peoples": "Peoples",
+    "group.resources": "Resources",
+    "group.resources.about": (
+        "Relative placement weights: 1× uses vanilla frequencies; 0 removes a resource. "
+        "Climate and terrain still guide placement. More of one resource leaves fewer "
+        "locations for others; production per location is unchanged. Generation stops if "
+        "no enabled resource suits a location."
+    ),
     "control.new_world.land_permille": "Land",
     "control.new_world.expand_oceans": "Expand generation into the oceans",
     "control.new_world.expand_oceans.about": (
@@ -736,6 +743,47 @@ STRINGS: Final[dict[str, str]] = {
         "this map unless this is ticked."
     ),
 }
+RESOURCE_NAMES: Final[dict[str, str]] = {
+    "alum": "Alum",
+    "amber": "Amber",
+    "beeswax": "Beeswax",
+    "chili": "Chili",
+    "clay": "Clay",
+    "coal": "Coal",
+    "cocoa": "Cocoa",
+    "copper": "Copper",
+    "cotton": "Cotton",
+    "dyes": "Dyes",
+    "fiber_crops": "Fiber crops",
+    "fish": "Fish",
+    "fruit": "Fruit",
+    "fur": "Fur",
+    "incense": "Incense",
+    "iron": "Iron",
+    "ivory": "Ivory",
+    "lead": "Lead",
+    "legumes": "Legumes",
+    "livestock": "Livestock",
+    "lumber": "Lumber",
+    "maize": "Maize",
+    "marble": "Marble",
+    "medicaments": "Medicaments",
+    "mercury": "Mercury",
+    "potato": "Potatoes",
+    "salt": "Salt",
+    "saltpeter": "Saltpeter",
+    "sand": "Sand",
+    "stone": "Stone",
+    "tin": "Tin",
+    "tobacco": "Tobacco",
+    "wild_game": "Wild game",
+    "wool": "Wool",
+}
+for _resource, _label in RESOURCE_NAMES.items():
+    STRINGS[f"control.resources.{_resource}"] = _label
+    STRINGS[f"control.resources.{_resource}.about"] = (
+        "Relative placement weight against vanilla. 0 removes this resource."
+    )
 
 
 # Each official language by its own name, in the game's order of folders.

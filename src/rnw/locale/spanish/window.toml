@@ -2171,3 +2171,283 @@ text = '''Usar la ventana clásica'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''A partir del próximo inicio. La ventana clásica también se abre sola cuando esta nueva no puede.'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "Recursos"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "Pesos relativos de distribución: 1× usa las frecuencias del juego base; 0 elimina un recurso. El clima y el terreno siguen guiando la distribución. Más de un recurso deja menos lugares para los demás; la producción por lugar no cambia. La generación se detiene si ningún recurso activado es adecuado para un lugar."
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "Alumbre"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "Ámbar"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "Cera de abeja"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "Chile"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "Arcilla"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "Carbón"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "Cacao"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "Cobre"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "Algodón"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "Tintes"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "Cultivos de fibra"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "Pescado"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "Fruta"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "Pieles"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "Incienso"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "Hierro"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "Marfil"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "Plomo"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "Legumbres"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "Ganado"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "Madera"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "Maíz"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "Mármol"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "Medicamentos"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "Mercurio"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "Patatas"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "Sal"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "Salitre"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "Arena"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "Piedra"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "Estaño"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "Tabaco"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "Caza"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "Lana"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."

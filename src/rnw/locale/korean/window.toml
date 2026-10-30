@@ -2171,3 +2171,283 @@ text = '''클래식 창 사용'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''다음 실행부터 적용됩니다. 이 새 창을 열 수 없을 때도 클래식 창이 자동으로 열립니다.'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "자원"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "상대적인 배치 가중치입니다. 1×는 기본 게임의 빈도를 사용하고 0은 자원을 제외합니다. 기후와 지형도 계속 배치에 영향을 줍니다. 한 자원을 늘리면 다른 자원이 차지할 장소가 줄지만 장소별 생산량은 바뀌지 않습니다. 활성화된 자원 중 장소에 적합한 것이 없으면 생성이 중단됩니다."
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "명반"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "호박"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "밀랍"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "고추"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "점토"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "석탄"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "코코아"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "구리"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "목화"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "염료"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "섬유 작물"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "생선"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "과일"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "모피"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "향료"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "철"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "상아"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "납"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "콩류"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "가축"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "목재"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "옥수수"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "대리석"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "약재"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "수은"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "감자"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "소금"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "초석"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "모래"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "석재"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "주석"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "담배"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "사냥감"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "양모"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."

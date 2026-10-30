@@ -22,6 +22,7 @@ from rnw.eu5_seas import SeaError
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.record import Verdict
+from rnw.settings import RESOURCE_FIELDS
 from tests.test_recovery import _mod  # pyright: ignore[reportPrivateUsage]
 
 try:  # the window needs PySide6 and the system's graphics libraries
@@ -1062,3 +1063,29 @@ def test_preview_view_zooms_drags_and_fits(application: QApplication) -> None:
     view.mouseDoubleClickEvent(dbl)
     reset_scale = view.transform().m11()
     assert abs(reset_scale - initial_scale) < 1e-4
+
+
+@pytest.mark.usefixtures("application")
+def test_resource_sliders_save_independently_in_the_world_code_and_reset(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The classic window uses the resource controls, with independent values and reset."""
+    window = _window(tmp_path, fake_export)
+    window.customize_button.setChecked(True)
+    rows = {row.control.field: row for row in window.rows if row.control.section == "resources"}
+    assert set(rows) == set(RESOURCE_FIELDS)
+    rows["maize"].slider.setValue(0)
+    rows["iron"].number.setValue(3)
+    pump(lambda: window.controller.value("resources.iron") == 3000)
+    settings = decode(window.controller.code).settings()
+    assert (settings.resources.maize, settings.resources.iron, settings.resources.fish) == (
+        0,
+        3000,
+        1000,
+    )
+    rows["maize"].reset.click()
+    pump(lambda: window.controller.value("resources.maize") == 1000)
+    assert window.controller.value("resources.iron") == 3000
+    window.reset_all.click()
+    pump(lambda: not window.controller.changes)
+    _ = window.close()

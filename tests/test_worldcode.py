@@ -9,7 +9,7 @@ import pytest
 from rnw import __version__, epoch
 from rnw.app import worldcode
 from rnw.app.worldcode import WorldCode, WorldCodeError, decode, encode, new_code, reproduces
-from rnw.settings import NativeSettings, NewWorldSettings
+from rnw.settings import NativeSettings, NewWorldSettings, ResourceSettings
 
 
 def test_a_default_world_is_a_short_code_that_round_trips() -> None:
@@ -119,6 +119,7 @@ def test_every_setting_of_the_new_world_and_its_peoples_has_a_field_number() -> 
     """The append-only list names every field a world code can change."""
     names = [f"new_world.{item.name}" for item in fields(NewWorldSettings)]
     names += [f"natives.{item.name}" for item in fields(NativeSettings)]
+    names += [f"resources.{item.name}" for item in fields(ResourceSettings)]
     assert set(names) <= set(worldcode.CHANGE_FIELDS)
     assert len(set(worldcode.CHANGE_FIELDS)) == len(worldcode.CHANGE_FIELDS)
     assert len(worldcode.CHANGE_FIELDS) < 256

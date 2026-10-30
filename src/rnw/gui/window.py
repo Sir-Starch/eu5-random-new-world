@@ -1106,9 +1106,15 @@ class MainWindow(QMainWindow):
             section = QGroupBox(text(f"group.{group}"))
             grid = QGridLayout(section)
             grid.setColumnStretch(1, 1)
+            offset = 0
+            if group == "resources":
+                explanation = QLabel(text("group.resources.about"))
+                explanation.setWordWrap(True)
+                grid.addWidget(explanation, 0, 0, 1, 4)
+                offset = 1
             for row, control in enumerate(c for c in controls.ADVANCED if c.group == group):
                 line = _ControlRow(control, self)
-                line.place(grid, row)
+                line.place(grid, row + offset)
                 self.rows.append(line)
             box.addWidget(section)
         self.reset_all = QPushButton(text("reset_all"))

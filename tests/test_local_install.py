@@ -20,7 +20,7 @@ from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
 from rnw.content import FAMILIES
 from rnw.contract import CONTRACT_FILES, fingerprint
-from rnw.eu5_biomes import template_attributes
+from rnw.eu5_biomes import PRECIOUS, template_attributes
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_formation import FORMABLES_FILE
 from rnw.eu5_lobby import (
@@ -58,6 +58,7 @@ from rnw.languages import official_languages
 from rnw.model import WATER_CLASSES, CellClass
 from rnw.pdx import parse
 from rnw.record import Record
+from rnw.settings import RESOURCE_FIELDS
 from rnw.stories import STORIES
 from rnw.storymodel import render_events, render_hook
 from rnw.translations import GAME, problems
@@ -600,3 +601,21 @@ def test_local_layers_keep_to_themselves(tmp_path: Path) -> None:
         assert owned in by_peoples, owned
     # The names of colonies follow the land's regions, whoever lives there.
     assert colonial_names.NAMES_FILE not in by_peoples
+
+
+def test_local_new_world_ordinary_resources_have_individual_controls() -> None:
+    """A game patch adding a New World RGO requires a deliberate control/catalog update."""
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    root = Path(root_value)
+    attributes = template_attributes(
+        (root / "game/in_game/map_data/location_templates.txt").read_text(encoding="utf-8-sig")
+    )
+    places = read_locations(root / DEFINITIONS)
+    materials = {
+        attributes[place.key]["raw_material"]
+        for place in places
+        if place.continent == "america" and "raw_material" in attributes.get(place.key, {})
+    }
+    assert materials - PRECIOUS == set(RESOURCE_FIELDS)

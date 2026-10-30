@@ -2171,3 +2171,283 @@ text = '''Klasik pencereyi kullan'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''Bir sonraki açılıştan itibaren. Bu yeni pencere açılamadığında klasik pencere de kendiliğinden açılır.'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "Kaynaklar"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "Göreli yerleşim ağırlıkları: 1× temel oyundaki sıklığı kullanır; 0 kaynağı kaldırır. İklim ve arazi yerleşimi belirlemeye devam eder. Bir kaynağın artması diğerlerine daha az yer bırakır; konum başına üretim değişmez. Etkin kaynaklardan hiçbiri bir konuma uygun değilse üretim durur."
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "Şap"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "Kehribar"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "Balmumu"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "Acı biber"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "Kil"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "Kömür"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "Kakao"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "Bakır"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "Pamuk"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "Boyalar"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "Lif bitkileri"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "Balık"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "Meyve"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "Kürk"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "Tütsü"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "Demir"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "Fildişi"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "Kurşun"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "Baklagiller"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "Çiftlik hayvanları"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "Kereste"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "Mısır"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "Mermer"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "İlaçlar"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "Cıva"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "Patates"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "Tuz"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "Güherçile"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "Kum"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "Taş"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "Kalay"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "Tütün"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "Av hayvanları"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "Yün"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."

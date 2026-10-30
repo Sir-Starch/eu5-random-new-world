@@ -18,10 +18,12 @@ import pytest
 from rnw import atlas
 from rnw.app import library, preferences, service
 from rnw.app.discovery import Environment, GameInstall, Profile
+from rnw.app.worldcode import decode
 from rnw.gui import text, view
 from rnw.gui.bridge import Bridge, BridgeError, serve
 from rnw.gui.controller import NEW, Controller, Phase
 from rnw.png import COLOR_RGB, encode_png
+from rnw.settings import RESOURCE_FIELDS
 from tests.fakes import synthetic_atlas
 
 if TYPE_CHECKING:
@@ -231,3 +233,22 @@ def test_the_self_test_passes(capsys: pytest.CaptureFixture[str]) -> None:
 
     assert self_test() == 0
     assert "bridge, native kernels and world codes work" in capsys.readouterr().out
+
+
+def test_resource_controls_reach_the_tauri_window_and_survive_its_actions(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The Tauri bridge exposes every RGO, stores shown multiples, and resets them."""
+    bridge = _bridge(tmp_path, fake_export)
+    hello = cast("dict[str, dict[str, object]]", bridge.call("hello", {}))
+    controls = cast("list[dict[str, object]]", hello["static"]["controls"])
+    members = [row for row in controls if str(row["key"]).startswith("resources.")]
+    assert {row["key"] for row in members} == {f"resources.{name}" for name in RESOURCE_FIELDS}
+    assert all(row["group"] == "resources" and row["advanced"] for row in members)
+    _ = bridge.call("set_value", {"key": "resources.maize", "value": 0.0})
+    _ = bridge.call("set_value", {"key": "resources.iron", "value": 3.0})
+    settings = decode(bridge.controller.code).settings()
+    assert (settings.resources.maize, settings.resources.iron) == (0, 3000)
+    _ = bridge.call("reset_value", {"key": "resources.maize"})
+    assert bridge.controller.value("resources.maize") == 1000
+    assert bridge.controller.value("resources.iron") == 3000

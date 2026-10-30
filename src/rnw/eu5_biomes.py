@@ -31,6 +31,7 @@ from rnw.fields import block_mean
 from rnw.model import CellClass
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed, hash_point
+from rnw.settings import RESOURCES, ResourceSettings, SettingsError
 from rnw.topology import adjacency_pairs, distance_from
 
 if TYPE_CHECKING:
@@ -440,6 +441,7 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
     cells: Generated,
     seed: int,
     precious_permille: int = 1000,
+    resources: ResourceSettings = RESOURCES,
     material_seed: int | None = None,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics.
@@ -559,6 +561,7 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
         fields=(climate, vegetation, topography),
         seed=seed if material_seed is None else material_seed,
         precious_permille=precious_permille,
+        resources=resources,
     )
     result = CellBiomes(tuple(climate), tuple(vegetation), tuple(topography), raw)
     stats: dict[str, object] = {
@@ -580,6 +583,7 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     fields: tuple[list[str], list[str], list[str]],
     seed: int,
     precious_permille: int = 1000,
+    resources: ResourceSettings = RESOURCES,
 ) -> tuple[str, ...]:
     """Draw each land cell's raw material from vanilla frequencies of similar locations.
 
@@ -588,7 +592,9 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     of its maize, potatoes, cocoa, tobacco or chili (C116). Similar means the same climate,
     vegetation, topography and coast, falling back to fewer of them. ``precious_permille``
     weighs gold, silver, gems and pearls against the rest (1000: their vanilla share); a
-    class whose only materials it removes falls back to a coarser class.
+    class whose only materials it removes falls back to a coarser class. Ordinary materials
+    use their individual ``resources`` weights. No new material is introduced into a class;
+    if even its coastal/inland pool is empty, generation fails explicitly.
     """
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     mask = np.int64((1 << 32) - 1)
@@ -612,6 +618,10 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
         )
         for table, key in zip(tables, keys, strict=True):
             table.setdefault(key, Counter())[row["raw_material"]] += 1
+    tables = [
+        {key: _weighted(counter, precious_permille, resources) for key, counter in table.items()}
+        for table in tables
+    ]
     climate, vegetation, topography = fields
     stream = derive_seed(seed, "raw_material")
     out: list[str] = []
@@ -627,24 +637,26 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
             (flag,),
         )
         counter = next(
-            (
-                weighted
-                for table, key in zip(tables, keys, strict=True)
-                if key in table and (weighted := _weighted(table[key], precious_permille))
-            ),
-            Counter({"stone": 1}),
+            (table[key] for table, key in zip(tables, keys, strict=True) if table.get(key)),
+            None,
         )
+        if counter is None:
+            message = f"No enabled raw materials for {flag} locations; increase resource weights"
+            raise SettingsError(message)
         out.append(_pick(counter, hash_point(stream, cell, 0)))
     return tuple(out)
 
 
-def _weighted(counter: Counter[str], precious_permille: int) -> Counter[str]:
-    """``counter`` with the precious materials weighed by ``precious_permille``."""
-    if precious_permille == PERMILLE:
+def _weighted(
+    counter: Counter[str], precious_permille: int, resources: ResourceSettings = RESOURCES
+) -> Counter[str]:
+    """Scale placement frequencies, keeping the original counts at vanilla defaults."""
+    if precious_permille == PERMILLE and resources == RESOURCES:
         return counter
     weighted = Counter(
         {
-            name: count * (precious_permille if name in PRECIOUS else PERMILLE)
+            name: count
+            * (precious_permille if name in PRECIOUS else getattr(resources, name, PERMILLE))
             for name, count in counter.items()
         }
     )

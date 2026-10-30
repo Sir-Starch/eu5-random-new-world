@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Target 1.1.0, with pending algorithm epoch 60. Add separate 0–3× frequency sliders
+  for all 34 ordinary New World resources in both generator windows and all official
+  languages. Keep the precious-resource control, vanilla default weights and habitat
+  matching. World codes preserve each weight. Explain relative placement probabilities
+  and unchanged production per location; fail explicitly when no enabled resource fits.
+
 - Add the Gameplay and Utilities categories alongside Map to the next Workshop upload.
 - The generator's window is now a Tauri window (ADR 0011), in the Workshop hub and
   the Linux package; the Qt window stays as the classic window. The classic window

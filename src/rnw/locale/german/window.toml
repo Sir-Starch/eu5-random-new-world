@@ -2171,3 +2171,283 @@ text = '''Klassisches Fenster verwenden'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''Ab dem nächsten Start. Das klassische Fenster öffnet sich auch von selbst, wenn dieses neue es nicht kann.'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "Ressourcen"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "Relative Platzierungsgewichte: 1× entspricht dem Grundspiel, 0 entfernt eine Ressource. Klima und Gelände bestimmen weiterhin die Verteilung. Mehr von einer Ressource lässt weniger Orte für andere übrig; die Produktion je Ort bleibt gleich. Ohne passende aktivierte Ressource wird die Erzeugung abgebrochen."
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "Alaun"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "Bernstein"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "Bienenwachs"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "Chili"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "Ton"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "Kohle"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "Kakao"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "Kupfer"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "Baumwolle"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "Farbstoffe"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "Faserpflanzen"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "Fisch"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "Obst"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "Pelze"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "Weihrauch"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "Eisen"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "Elfenbein"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "Blei"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "Hülsenfrüchte"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "Vieh"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "Bauholz"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "Mais"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "Marmor"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "Heilmittel"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "Quecksilber"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "Kartoffeln"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "Salz"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "Salpeter"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "Sand"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "Stein"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "Zinn"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "Tabak"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "Wild"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "Wolle"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "Relatives Platzierungsgewicht gegenüber dem Grundspiel. 0 entfernt diese Ressource."

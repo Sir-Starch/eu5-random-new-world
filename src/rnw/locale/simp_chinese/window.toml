@@ -2171,3 +2171,283 @@ text = '''使用经典窗口'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''下次启动时生效。新窗口无法打开时，也会自动打开经典窗口。'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "资源"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "相对分布权重：1×使用原版频率，0移除该资源。气候和地形仍会影响分布。增加一种资源会减少其他资源可占据的地点，但不改变每个地点的产量。如果某个地点没有适合的已启用资源，生成将停止。"
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "明矾"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "琥珀"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "蜂蜡"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "辣椒"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "黏土"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "煤炭"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "可可"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "铜"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "棉花"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "染料"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "纤维作物"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "鱼"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "水果"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "毛皮"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "熏香"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "铁"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "象牙"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "铅"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "豆类"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "牲畜"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "木材"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "玉米"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "大理石"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "药材"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "汞"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "马铃薯"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "盐"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "硝石"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "沙"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "石料"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "锡"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "烟草"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "野味"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "羊毛"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "相对于原版的分布权重。设为0可移除此资源。"

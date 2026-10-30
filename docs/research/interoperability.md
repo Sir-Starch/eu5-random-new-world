@@ -816,3 +816,15 @@ Beyond the limited header observation recorded above, `nodes.dat` remains
 undecoded and is not regenerated (`eu5_export.UNCHANGED_INPUTS`).
 The cover's shader/GUI text interfaces retain their earlier evidence records and
 have not been reverse-engineered again in this phase.
+
+### R-004 follow-up: ordinary resource weights (2026-10-30, 1.1.0 pending)
+
+The existing `location_templates.txt` reader/writer now applies individual ordinary
+RGO weights when constructing generated New World `raw_material` values. Climate,
+vegetation, topography and coast matching, identifiers and text syntax remain the
+same; no new binary format, game executable change or bundled game asset is
+introduced. Zero-weight resources are excluded before selection, and an empty
+eligible pool fails explicitly. Synthetic habitat/weight tests and the installed
+New World RGO inventory check cover this interface; full-export comparison and
+candidate installation are recorded in [economy](../economy.md#resource-frequency-controls-110)
+and [INSTALLED](../../experiments/INSTALLED.md).

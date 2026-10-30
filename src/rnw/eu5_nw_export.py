@@ -284,7 +284,8 @@ from rnw.rivers import STEP as RIVER_STEP
 from rnw.rng import derive_seed
 from rnw.sea_corridors import designed_corridors
 from rnw.seas import Shape
-from rnw.settings import canonical_json, run_spec, spec_digest
+from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
+from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
@@ -2707,6 +2708,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 attributes=reads.result()[1],
                 seed=seed,
                 precious_permille=settings.new_world.precious_permille,
+                resources=settings.resources,
                 material_seed=resources_seed,
             )
             return biomes, biome_stats, _rivers(world, canvas, climate, seed)
@@ -3359,6 +3361,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     attributes: dict[str, dict[str, str]],
     seed: int,
     precious_permille: int = 1000,
+    resources: ResourceSettings = RESOURCE_DEFAULTS,
     material_seed: int | None = None,
 ) -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
     """Climate, vegetation, topography and raw material of every generated cell."""
@@ -3390,6 +3393,7 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
         cells=cells,
         seed=seed,
         precious_permille=precious_permille,
+        resources=resources,
         material_seed=material_seed,
     )
     stats["coherence"] = _coherence(game_map, attributes, vanilla.locations.pairs, world, biomes)

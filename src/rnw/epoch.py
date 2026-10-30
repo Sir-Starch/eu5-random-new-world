@@ -95,6 +95,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 13, 20),
     (0, 13, 21),
     (0, 13, 22),
+    (1, 1, 0),  # Pending: ordinary resource placement controls.
 )
 
 

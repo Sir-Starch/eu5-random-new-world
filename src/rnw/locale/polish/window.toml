@@ -2171,3 +2171,283 @@ text = '''Używaj klasycznego okna'''
 ["settings.classic_window.about"]
 source = "ab220ff06d3f952f"
 text = '''Od następnego uruchomienia. Klasyczne okno otwiera się też samo, gdy to nowe nie może.'''
+
+["group.resources"]
+source = "e89b30aa1dc30a6a"
+text = "Surowce"
+
+["group.resources.about"]
+source = "fc2206254ef4d13c"
+text = "Względne wagi rozmieszczenia: 1× odpowiada grze podstawowej, 0 usuwa surowiec. Klimat i teren nadal wpływają na rozmieszczenie. Więcej jednego surowca oznacza mniej miejsc dla pozostałych; produkcja w lokacji się nie zmienia. Generowanie zatrzyma się, jeśli żaden włączony surowiec nie pasuje do lokacji."
+
+["control.resources.alum"]
+source = "e1075959f4aa30a0"
+text = "Ałun"
+
+["control.resources.alum.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.amber"]
+source = "a5cccbcead7dcd65"
+text = "Bursztyn"
+
+["control.resources.amber.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.beeswax"]
+source = "e51c1c59e4582f3c"
+text = "Wosk pszczeli"
+
+["control.resources.beeswax.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.chili"]
+source = "cec50fd4cb13e84b"
+text = "Chili"
+
+["control.resources.chili.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.clay"]
+source = "05947b7bdbad0f30"
+text = "Glina"
+
+["control.resources.clay.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.coal"]
+source = "4cc1d6e9f8574bb5"
+text = "Węgiel"
+
+["control.resources.coal.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.cocoa"]
+source = "527859c0ad13e24c"
+text = "Kakao"
+
+["control.resources.cocoa.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.copper"]
+source = "d35b0efe21288fd5"
+text = "Miedź"
+
+["control.resources.copper.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.cotton"]
+source = "38ba2144543153b7"
+text = "Bawełna"
+
+["control.resources.cotton.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.dyes"]
+source = "bffa19d72a210421"
+text = "Barwniki"
+
+["control.resources.dyes.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.fiber_crops"]
+source = "ba858395ff20a463"
+text = "Rośliny włókniste"
+
+["control.resources.fiber_crops.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.fish"]
+source = "3f3f8baad08c9ccc"
+text = "Ryby"
+
+["control.resources.fish.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.fruit"]
+source = "779089b3f7575162"
+text = "Owoce"
+
+["control.resources.fruit.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.fur"]
+source = "db0e2c9d6e0a5bcb"
+text = "Futra"
+
+["control.resources.fur.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.incense"]
+source = "2dd4e6b11cd3fb7e"
+text = "Kadzidło"
+
+["control.resources.incense.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.iron"]
+source = "bd223c81de7e86da"
+text = "Żelazo"
+
+["control.resources.iron.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.ivory"]
+source = "f3adb67e9237d2bd"
+text = "Kość słoniowa"
+
+["control.resources.ivory.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.lead"]
+source = "645978287991a6f4"
+text = "Ołów"
+
+["control.resources.lead.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.legumes"]
+source = "e818145968d17410"
+text = "Rośliny strączkowe"
+
+["control.resources.legumes.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.livestock"]
+source = "bb63d8718ecd871f"
+text = "Zwierzęta hodowlane"
+
+["control.resources.livestock.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.lumber"]
+source = "69745f64b66161f1"
+text = "Drewno"
+
+["control.resources.lumber.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.maize"]
+source = "637a42a546ae3a36"
+text = "Kukurydza"
+
+["control.resources.maize.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.marble"]
+source = "6c6bb0a51a20223e"
+text = "Marmur"
+
+["control.resources.marble.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.medicaments"]
+source = "ecccbad2359f1319"
+text = "Medykamenty"
+
+["control.resources.medicaments.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.mercury"]
+source = "6a7367ef7970d165"
+text = "Rtęć"
+
+["control.resources.mercury.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.potato"]
+source = "c0db23fce130033e"
+text = "Ziemniaki"
+
+["control.resources.potato.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.salt"]
+source = "150fe5514030b143"
+text = "Sól"
+
+["control.resources.salt.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.saltpeter"]
+source = "5760006b9ecd457d"
+text = "Saletra"
+
+["control.resources.saltpeter.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.sand"]
+source = "82855c11ae69b065"
+text = "Piasek"
+
+["control.resources.sand.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.stone"]
+source = "6ffa6b8b1c9fa11c"
+text = "Kamień"
+
+["control.resources.stone.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.tin"]
+source = "6377a61141439508"
+text = "Cyna"
+
+["control.resources.tin.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.tobacco"]
+source = "d00a0fc156922e1b"
+text = "Tytoń"
+
+["control.resources.tobacco.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.wild_game"]
+source = "c0ee4ab2a7682557"
+text = "Zwierzyna łowna"
+
+["control.resources.wild_game.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
+
+["control.resources.wool"]
+source = "5f91efa41797d91d"
+text = "Wełna"
+
+["control.resources.wool.about"]
+source = "315ae64b7c4b8091"
+text = "Względna waga rozmieszczenia w porównaniu z grą podstawową. 0 usuwa ten surowiec."
