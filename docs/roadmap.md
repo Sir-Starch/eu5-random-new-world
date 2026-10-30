@@ -59,8 +59,9 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
 - **Mountains and hills:** done in the pending 1.1.0: continuous chains with massifs of varied
   height, ridged crests, stamps of the installed mountain sources turned along the ranges and
   their material layers ([terrain](terrain-biomes.md#mountains-and-hills-pending-110--epoch-60)).
-  Remaining: fine-scale ground roughness at vanilla's strength (the native detail kernel),
-  erosion-shaped valleys and ranges that follow drainage, and the lakes' conical rise in flat country.
+  Fine ground grain at vanilla's roughness and the lakes' conical rise are fixed the same day.
+  Remaining: erosion-shaped valleys and ranges that follow drainage, and the bank of a lake in a range
+  (the terrain's coastal cap makes it steep).
 - **The Wall preset:** implemented for the pending 1.1.0 cycle: a procedural straight
   north-south continent or island chain, optional natural gaps, a mountain spine,
   polar wasteland endpoints and side land, with shape controls in both windows. See [terrain](terrain-biomes.md#the-wall).

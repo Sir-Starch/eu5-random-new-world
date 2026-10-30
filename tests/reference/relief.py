@@ -26,6 +26,7 @@ from rnw.relief import (
     HILL_HEIGHT,
     INLAND_LIMIT,
     INLAND_SLOPE,
+    LAKE_RAMP,
     MASSIF_FLOOR,
     MASSIF_HIGH,
     MASSIF_LOW,
@@ -129,10 +130,14 @@ def _inland(land: NDArray[np.bool_]) -> NDArray[np.int64]:
     return np.where(land, upsample(padded, step, shape), 0)
 
 
-def generate_relief(land: NDArray[np.bool_], *, seed: int) -> NDArray[np.int32]:
+def generate_relief(
+    land: NDArray[np.bool_], *, seed: int, lakes: NDArray[np.bool_] | None = None
+) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed."""
     shape = (int(land.shape[0]), int(land.shape[1]))
     inland = _inland(land)
+    sea = inland if lakes is None else _inland(land | lakes)
+    lake = None if lakes is None else _inland(~lakes)
     broad = _field(seed, "relief_broad", shape, step=16, period=1600, octaves=3)
     envelope = np.zeros(shape, dtype=np.int64)
     for stream, period, core, flank, share in CHAINS:
@@ -162,13 +167,19 @@ def generate_relief(land: NDArray[np.bool_], *, seed: int) -> NDArray[np.int32]:
     plateau_noise = _field(seed, "relief_plateau", shape, step=8, period=1000, octaves=3)
     plateau = smoothstep(plateau_noise, 9800, 14700) * (PERMILLE - strength) // PERMILLE
     plateau = plateau * PLATEAU_HEIGHT // PERMILLE
-    base = COAST_HEIGHT + np.minimum(inland, INLAND_LIMIT * 8) * INLAND_SLOPE // 8
-    broad_ramp = np.minimum(inland, BROAD_RAMP * 8) * PERMILLE // (BROAD_RAMP * 8)
+    base = COAST_HEIGHT + np.minimum(sea, INLAND_LIMIT * 8) * INLAND_SLOPE // 8
+    broad_ramp = np.minimum(sea, BROAD_RAMP * 8) * PERMILLE // (BROAD_RAMP * 8)
     relief_ramp = np.minimum(inland, RELIEF_RAMP * 8) * PERMILLE // (RELIEF_RAMP * 8)
+    low_ramp = relief_ramp
+    if lake is not None:
+        sea_ramp = np.minimum(sea, RELIEF_RAMP * 8) * PERMILLE // (RELIEF_RAMP * 8)
+        lake_ramp = np.minimum(lake, LAKE_RAMP * 8) * PERMILLE // (LAKE_RAMP * 8)
+        low_ramp = np.minimum(sea_ramp, lake_ramp)
     result = (
         base
         + broad * BROAD_HEIGHT // NOISE_SCALE * broad_ramp // PERMILLE
-        + (mountain + hills + plateau) * relief_ramp // PERMILLE
+        + mountain * relief_ramp // PERMILLE
+        + (hills + plateau) * low_ramp // PERMILLE
     )
     result = np.maximum(result, COAST_HEIGHT)
     return np.where(land, result, 0).astype(np.int32)

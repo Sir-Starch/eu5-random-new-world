@@ -13,8 +13,8 @@ use std::collections::HashMap;
 
 const OUTSIDE: i8 = -1;
 const WATER_CODE: i8 = 0;
-const DETAIL_OCTAVES: u32 = 3;
-const PERSISTENCE: i64 = 500;
+const CREST_OCTAVES: u32 = 3;
+const CREST_PERSISTENCE: i64 = 500;
 const PERMILLE: i64 = 1000;
 const LAND_THRESHOLD: i64 = 500;
 
@@ -196,6 +196,10 @@ pub fn heights(
     );
     let origin = (origin.0 + core.column0 as i64, origin.1 + core.row0 as i64);
     let (detail_period, crest_period) = (params.get("detail_period")?, params.get("crest_period")?);
+    let (detail_octaves, detail_persistence) = (
+        u32::try_from(params.get("detail_octaves")?).map_err(|_| "detail_octaves".to_string())?,
+        params.get("detail_persistence")?,
+    );
     let (detail, crest) = rayon::join(
         || {
             fractal_window(
@@ -203,8 +207,8 @@ pub fn heights(
                 origin,
                 (core.columns, core.rows),
                 detail_period,
-                DETAIL_OCTAVES,
-                PERSISTENCE,
+                detail_octaves,
+                detail_persistence,
             )
         },
         || {
@@ -213,14 +217,17 @@ pub fn heights(
                 origin,
                 (core.columns, core.rows),
                 crest_period,
-                DETAIL_OCTAVES,
-                PERSISTENCE,
+                CREST_OCTAVES,
+                CREST_PERSISTENCE,
             )
         },
     );
     let noise_scale = params.get("noise_scale")?;
-    let (detail_base, detail_permille) =
-        (params.get("detail_base")?, params.get("detail_permille")?);
+    let (detail_base, detail_permille, detail_reach) = (
+        params.get("detail_base")?,
+        params.get("detail_permille")?,
+        params.get("detail_reach")?,
+    );
     let (crest_full, crest_height) = (params.get("crest_full")?, params.get("crest_height")?);
     let (shore, slope, eighths) = (
         params.get("shore_height")?,
@@ -234,7 +241,8 @@ pub fn heights(
                 return profile(offshore[at], table, eighths);
             }
             let raised = (smooth[at] - coast_height).max(0);
-            let amplitude = detail_base + (raised * detail_permille).div_euclid(PERMILLE);
+            let amplitude =
+                detail_base + (raised.min(detail_reach) * detail_permille).div_euclid(PERMILLE);
             let ridge = noise_scale - crest[at].abs().min(noise_scale);
             let crests = ((ridge * ridge).div_euclid(noise_scale) * raised.min(crest_full))
                 .div_euclid(crest_full);

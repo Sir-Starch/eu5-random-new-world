@@ -215,7 +215,8 @@ rows treat specially.
 The owner reported on 2026-10-30 [V-GAME owner observation] that generated mountains and hills
 were still unrealistic and monotonous beside vanilla's: from far away the ranges looked like
 artifacts rather than chains, they were one height over wide areas, and close up nothing said why
-the land was impassable, since it looked rather flat. Raising the ridges was suggested.
+the land was impassable, since it looked rather flat. Raising the ridges was suggested. After that build the
+owner asked for the fine grain of the ground and for the cones round lakes to be fixed too; both are below.
 
 **Diagnosis.** [V-EXEC 2026-10-30, EU5 1.4.6 / 26300913; vanilla from the installed primary
 heightmaps, ours from the full pipeline (relief, terrain detail and stamps) on the 8192 × 10075
@@ -236,29 +237,49 @@ by hand along the ranges at scales 0.015–1.3 and strengths 0.01–0.8).
 | Chains | `relief._chain` | The axis of a chain is the zero line of a low-frequency noise (periods 1,100 and 700 pixels, a second family narrower and weaker), displaced by a finer noise. The distance to it is the noise divided by its smoothed slope, so a chain keeps its width where the noise is flat and forks where lines cross; a noise that crosses zero too gently (closed rings round a faint extreme) fades out. A crest zone of 100 pixels and a whole chain of 300 pixels (half-widths; each wanders between half and three halves) rise through a smoothstep, the crest zone squared so it is sharper. |
 | Massifs | `relief._strength` | A massif noise (period 520) sets each stretch's height between 0.38 and 1 of the peak, so ranges climb to peaks and fall to passes; a presence noise only thins them to 0.38, it no longer cuts chains apart. |
 | Ridges | `relief._ridged` | Ridged multifractal of five octaves, 128 to 8 pixels: each octave's crest (one at the zero line, squared) lets a share through to the next, so fine ridges grow on high crests and the low ground between stays smooth, as erosion leaves it. A quarter of a chain's height holds without ridges; the peak is 28,000 units. |
-| Hills | `relief` | Foothills (a 48-pixel blur of the chains' strength) and hill country carry a 72-pixel and a 20-pixel noise up to 6,800 units. Plateaus and the broad tilt are unchanged. |
+| Hills | `relief` | Foothills (a 48-pixel blur of the chains' strength) and hill country carry a 72-pixel and a 20-pixel noise up to 6,800 units. Plateaus are unchanged. The inland rise is 4 units per pixel (it was 6) and follows the distance to the sea, with lakes counted as land (below). |
+| Fine grain | `eu5_terrain.decal_heights`, `native/src/terrain.rs` | The terrain's detail noise, added to the relief at decal resolution, is a fractal from 64 down to 4 decal pixels whose octaves fall by a quarter each (it was three octaves halving), with an amplitude of 600 units plus 0.6 of the height above the coast, up to 7,500. The installed heightmaps' mean height difference grows with distance to a power of about 0.4–0.6, and this reproduces that exponent. Octaves, persistence and the amplitude's reach are parameters of the native kernel, equal to `tests/reference/terrain.py`. |
+| Lakes | `relief.generate_relief(lakes=...)` | The inland rise and the broad tilt follow the distance to the sea, so a lake no longer stands in a cone. Mountains still fade out over 40 pixels at any shore, so no range ends in a cliff into a lake; hills and plateaus rise from a lake's shore over 16 pixels (40 from the sea), not out of a bowl of flat ground. |
 | Stamps | `eu5_mountains.mountain_relief` | One stamp per 30-pixel cell (jittered) where the smoothed relief reaches 10,500. Its crest is turned onto the range's axis: the axis is the direction of least slope energy of the smoothed relief (an integer structure tensor over 8-pixel cells, 32 directions) and each source's own crest axis is found from the spread of its top pixels. Where there is no clear axis the turn is random. Size (44–106 pixels across, stretched 1.0–1.7 along), strength (0.04–0.15 of the source) and the draw within 0.7–1.3 of that rise with the height there. Overlaps keep the highest crest. They show above 11,000 units, and nothing rises past 52,000. |
 | Stamp materials | `eu5_terrain._lay_stamp_slots` | Each installed stamp also has a material layer (slots 10, 11, 12 in the pattern of its valleys; 255 where it lays none) that vanilla blends with the lower slot winning (`materialblendmode: min` in its decal parameters). Generated land now carries it: coasts, rivers and borders (slots 0–9) stay, the variations take the stamp's slot on the mountains, and a biome whose list lacks the slot takes the slot its list holds (one with no variation at all keeps its own). Where stamps overlap the highest one decides, not the lowest slot: vanilla overlaps far less, and the minimum turned every dense massif into slot 10. |
 
-**Measured** [V-EXEC 2026-10-30; share of land, installed expanded canvas; before → after → vanilla outside
+**Measured** [V-EXEC 2026-10-30; share of land, installed expanded canvas; 1.0.0 relief → now → vanilla outside
 the Tibetan plateau, Eurasia and Africa]:
 
 | Height (decal units) | > 9,000 | > 12,000 | > 14,000 | > 18,000 | > 22,000 | > 28,000 | > 34,000 |
 |---|---|---|---|---|---|---|---|
-| World with 24 % land | 20.0 → 53.2 → 49.9 % | 8.9 → 25.2 → 28.0 % | 5.7 → 15.8 → 19.2 % | 3.5 → 6.4 → 6.6 % | 2.6 → 3.0 → 2.8 % | 1.4 → 0.8 → 0.9 % | 0.4 → 0.1 → 0.3 % |
-| World with 34 % land | 27.4 → 58.9 | 14.1 → 29.4 | 9.5 → 18.9 | 5.6 → 6.8 | 4.1 → 2.7 | 1.9 → 0.6 | 0.4 → 0.1 |
+| World with 24 % land | 20.0 → 56.5 → 49.9 % | 8.9 → 27.6 → 28.0 % | 5.7 → 17.3 → 19.2 % | 3.5 → 7.1 → 6.6 % | 2.6 → 3.3 → 2.8 % | 1.4 → 0.9 → 0.9 % | 0.4 → 0.1 → 0.3 % |
+| World with 34 % land | 27.4 → 62.7 | 14.1 → 33.0 | 9.5 → 21.7 | 5.6 → 8.5 | 4.1 → 3.2 | 1.9 → 0.7 | 0.4 → 0.1 |
 
-On four cached worlds measured with the final constants (11 %, 19 %, 24 % and 34 % land) the share
-above 28,000 is 0.1, 0.5, 0.8 and 0.6 %: it falls with land size, as an island world has few ranges.
-The tallest sample is 44,000–46,000 (before 49,600; vanilla's primary heightmap 43,100).
-Mean absolute height difference by lag, for ground whose 48-pixel mean is 15,000–22,000 (the same
-for 22,000 and over): lag 2/8/32 pixels, vanilla 533/1,336/2,589; before 320/1,175/3,686; after
-435/1,328/3,057. Local relief over 20-pixel windows (median, 22,000 and over): vanilla 8,781, before
-5,186, after 8,200; hills of mean 9,000–14,000: vanilla 2,523, before 957, after 2,007.
+On two more cached worlds (11 % and 19 % land) the share above 28,000 is 0.1 and 0.5 %: it falls with land
+size, as an island world has few ranges. The tallest sample is 44,000–48,000 (1.0.0: 49,600; vanilla's
+primary heightmap 43,100).
 
-Relief on the full canvas takes about 14 s (it took 6 s); the stamps' planning 0.4 s. A full export
-of continents seed 1001 takes 218 s on the development machine (a local timing, not a benchmark). Strips of any height give the same
-relief (`tests/reference/relief.py`), bands and columns the same stamps and slots, and the
+Mean absolute height difference at decal resolution, by distance in decal pixels (1/4/16/64), for
+ground whose 96-pixel mean is in the class; vanilla / before the grain / now:
+
+| Class | Vanilla | Before the grain | Now |
+|---|---|---|---|
+| 6,000–8,000 | 47 / 118 / 262 / 500 | 9 / 32 / 107 / 332 | 32 / 108 / 248 / 586 |
+| 8,000–11,000 | 62 / 188 / 477 / 1,009 | 21 / 81 / 272 / 828 | 62 / 215 / 521 / 1,222 |
+| 11,000–15,000 | 119 / 392 / 996 / 2,066 | 52 / 191 / 612 / 1,621 | 112 / 387 / 947 / 2,038 |
+
+Over 20-pixel windows (median local relief): hills of mean 9,000–14,000, vanilla 2,523, 1.0.0 957, after the
+mountains 2,007, now 3,164; 14,000–22,000: 6,603, 5,236, 5,062, 6,523; 22,000 and over: 8,781, 5,186,
+8,200, 8,646.
+
+**Lakes.** [V-EXEC] The relief took the distance to the sea from a mask in which a lake was water, so
+every lake raised the ground round it in a pyramid up to 320 pixels across (its facets were the
+medial axis of that distance). A world has about 230 lakes, so the pyramids overlapped and lowered the
+interior ground nearly everywhere: counting lakes as land lifts the median relief of the land in the
+first 2,304 rows of one world from 9,645 to 10,346, and with the grain the share of the whole world above
+9,000 from 53 to 62 %. The inland rise was reduced from 6 to 4 units per pixel to bring the shares back to
+the table above.
+
+Relief on the full canvas takes 17–20 s (it took 6 s before the mountains); the stamps' planning 0.4 s;
+the terrain and stamps of 4,096 rows 18 s. A full export of continents seed 1001 takes 227 s on the
+development machine (a local timing, not a benchmark). Strips of any height give the same relief with and
+without lakes (`tests/reference/relief.py`), bands and columns the same stamps and slots, and the
 band-to-band, seam and roll tests hold with the stamps' materials. Full exports of six presets
 (continents 1001, wall 9, archipelago 42, supercontinent 42, islands 7, small continents 42) pass
 every cell, port, route, river and contact invariant; the rivers, the topography of each cell and the
@@ -266,11 +287,12 @@ biomes follow the new relief, so every world differs from the one before.
 
 [UNKNOWN] How the engine renders the result: the heights and slots are measured, and the maps in
 both windows draw their relief from location topography, not from these heights. The stamps' material
-blending is inferred from the decal parameters, not observed. Lowland and hill ground is still
-smoother than vanilla at 2–8 pixels (lag 2, ground of 6,000–8,000: 25 before, 36 after, vanilla 117): the 64-pixel terrain detail noise has too little weight at fine scales, and
-raising its amplitude barely moves it, so it would need more octaves in the native kernel. The
-conical rise round every lake in flat country (the inland distance counts a lake as sea) is not
-part of this change.
+blending is inferred from the decal parameters, not observed. Ground of 6,000–8,000 still has 17 %
+more height difference than vanilla at 64 decal pixels and 38 % more at 128, from the rise inland
+and the hill field rather than the grain; hills are rougher than vanilla's median in 20-pixel windows
+but not at its 90th percentile (5,456 against 9,124). The bank of a lake in the terrain stage is the
+coastal cap, a rise of 300 units per decal pixel from the lake's own height, so a lake in a range has
+a steep bank.
 
 ## The Wall
 

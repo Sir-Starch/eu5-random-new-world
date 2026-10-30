@@ -68,9 +68,16 @@ OUTSIDE: Final[int] = -1
 DECAL_THREADS: Final[int] = 8
 WATER_CODE: Final[int] = 0
 LAND_CODE: Final[int] = 1
+# Fine grain of the ground: a fractal from 64 down to 4 decal pixels whose octaves fall by
+# a quarter each, the roughness exponent of the installed heightmaps (their mean height
+# difference grows with distance to a power of about 0.4--0.6), with an amplitude that grows
+# with height above the coast up to ``DETAIL_REACH`` units [V-EXEC 2026-10-30].
 DETAIL_PERIOD: Final[int] = 64
-DETAIL_BASE: Final[int] = 250
-DETAIL_PERMILLE: Final[int] = 60
+DETAIL_OCTAVES: Final[int] = 5
+DETAIL_PERSISTENCE: Final[int] = 750
+DETAIL_BASE: Final[int] = 600
+DETAIL_PERMILLE: Final[int] = 600
+DETAIL_REACH: Final[int] = 7500
 CREST_PERIOD: Final[int] = 48
 CREST_FULL: Final[int] = 16000
 CREST_HEIGHT: Final[int] = 2600
@@ -284,6 +291,9 @@ def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the cor
         "eighths": EIGHTHS,
         "coast_height": COAST_HEIGHT,
         "detail_period": DETAIL_PERIOD,
+        "detail_octaves": DETAIL_OCTAVES,
+        "detail_persistence": DETAIL_PERSISTENCE,
+        "detail_reach": DETAIL_REACH,
         "crest_period": CREST_PERIOD,
         "noise_scale": NOISE_SCALE,
         "detail_base": DETAIL_BASE,

@@ -827,7 +827,7 @@ def generate_new_world(
                 domain=domain,
             ),
         )
-        relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed))
+        relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed, lakes=lakes))
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
         land_cells, sea_cells, relief = land_job.result(), sea_job.result(), relief_job.result()
     if settings.landform:

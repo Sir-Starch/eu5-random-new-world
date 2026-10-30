@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 COAST_HEIGHT: Final[int] = 5700
 INLAND_LIMIT: Final[int] = 320
 DISTANCE_STEP: Final[int] = 4
-INLAND_SLOPE: Final[int] = 6
+INLAND_SLOPE: Final[int] = 4
 BROAD_HEIGHT: Final[int] = 1300
 MOUNTAIN_PEAK: Final[int] = 28000
 HILL_HEIGHT: Final[int] = 6800
@@ -45,6 +45,7 @@ PLATEAU_HEIGHT: Final[int] = 6500
 FOOTHILL_RADIUS: Final[int] = 48
 BROAD_RAMP: Final[int] = 120
 RELIEF_RAMP: Final[int] = 40
+LAKE_RAMP: Final[int] = 16  # pixels over which hills and plateaus rise from a lake's shore
 WARP_PERMILLE: Final[int] = 400
 # (stream, period of the axis noise, half-widths in pixels of the crest zone and of the whole
 # chain, strength in permille) of each family of chains. A chain's own width wanders between
@@ -224,9 +225,12 @@ def _strength(seed: int, shape: tuple[int, int], row0: int) -> NDArray[np.int64]
     return envelope * height // PERMILLE * link // PERMILLE
 
 
-def _relief_strip(
+def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grids, the seed and rows.
     land: NDArray[np.bool_],
     grid: NDArray[np.int64],
+    sea_grid: NDArray[np.int64],
+    lake_grid: NDArray[np.int64] | None,
+    *,
     seed: int,
     first: int,
     last: int,
@@ -239,14 +243,16 @@ def _relief_strip(
     shape = (stop - start, columns)
     window = land[start:stop]
     lattice = start // DISTANCE_STEP
-    inland = np.where(
-        window,
-        upsample(
-            grid[lattice : lattice + (shape[0] - 1) // DISTANCE_STEP + 2],
-            DISTANCE_STEP,
-            shape,
-        ),
-        0,
+    rows_needed = (shape[0] - 1) // DISTANCE_STEP + 2
+    # Mountains fade out at any shore. The base rise and the broad tilt follow the distance to
+    # the sea alone, or each lake would stand in a cone, and hills and plateaus rise from a lake
+    # over a short ramp, not a bowl of flat ground.
+    inland = upsample(grid[lattice : lattice + rows_needed], DISTANCE_STEP, shape)
+    sea = upsample(sea_grid[lattice : lattice + rows_needed], DISTANCE_STEP, shape)
+    lake = (
+        None
+        if lake_grid is None
+        else upsample(lake_grid[lattice : lattice + rows_needed], DISTANCE_STEP, shape)
     )
     broad = _field(seed, "relief_broad", shape, step=16, period=1600, octaves=3, row0=start)
     strength = _strength(seed, shape, start)
@@ -276,21 +282,33 @@ def _relief_strip(
     plateau = smoothstep(plateau_noise, 9800, 14700) * (PERMILLE - strength) // PERMILLE
     plateau = plateau * PLATEAU_HEIGHT // PERMILLE
     del plateau_noise, strength
-    base = COAST_HEIGHT + np.minimum(inland, INLAND_LIMIT * 8) * INLAND_SLOPE // 8
-    broad_ramp = np.minimum(inland, BROAD_RAMP * 8) * PERMILLE // (BROAD_RAMP * 8)
+    base = COAST_HEIGHT + np.minimum(sea, INLAND_LIMIT * 8) * INLAND_SLOPE // 8
+    broad_ramp = np.minimum(sea, BROAD_RAMP * 8) * PERMILLE // (BROAD_RAMP * 8)
     relief_ramp = np.minimum(inland, RELIEF_RAMP * 8) * PERMILLE // (RELIEF_RAMP * 8)
+    low_ramp = relief_ramp
+    if lake is not None:
+        sea_ramp = np.minimum(sea, RELIEF_RAMP * 8) * PERMILLE // (RELIEF_RAMP * 8)
+        low_ramp = np.minimum(
+            sea_ramp, np.minimum(lake, LAKE_RAMP * 8) * PERMILLE // (LAKE_RAMP * 8)
+        )
     height = (
         base
         + broad * BROAD_HEIGHT // NOISE_SCALE * broad_ramp // PERMILLE
-        + (mountain + hills + plateau) * relief_ramp // PERMILLE
+        + mountain * relief_ramp // PERMILLE
+        + (hills + plateau) * low_ramp // PERMILLE
     )
     height = np.maximum(height, COAST_HEIGHT)
     core = slice(first - start, last - start)
     return np.where(window[core], height[core], 0).astype(np.int32)
 
 
-def generate_relief(land: NDArray[np.bool_], *, seed: int) -> NDArray[np.int32]:
+def generate_relief(
+    land: NDArray[np.bool_], *, seed: int, lakes: NDArray[np.bool_] | None = None
+) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed.
+
+    ``lakes`` are the enclosed waters inside the land: the distance to the sea, which sets the
+    inland rise, reaches over them, and hills rise from their shores over ``LAKE_RAMP`` pixels.
 
     The raster is cut into strips of ``STRIP_ROWS`` rows (a multiple of the coarsest noise
     step) that run on a few threads; the result is the same for any strip height and any
@@ -306,12 +324,16 @@ def generate_relief(land: NDArray[np.bool_], *, seed: int) -> NDArray[np.int32]:
     )
     strip = max(STRIP_ALIGN, (height - 2 * HALO) // STRIP_ALIGN * STRIP_ALIGN)
     grid = _inland_grid(land, strip)
+    sea_grid = grid if lakes is None else _inland_grid(land | lakes, strip)
+    lake_grid = None if lakes is None else _inland_grid(~lakes, strip)
     out = np.empty((rows, columns), dtype=np.int32)
 
     def run(first: int) -> None:
         checkpoint()
         last = min(rows, first + strip)
-        out[first:last] = _relief_strip(land, grid, seed, first, last)
+        out[first:last] = _relief_strip(
+            land, grid, sea_grid, lake_grid, seed=seed, first=first, last=last
+        )
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
         for _ in pool.map(run, range(0, rows, strip)):

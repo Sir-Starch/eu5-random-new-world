@@ -21,8 +21,11 @@ from rnw.eu5_terrain import (
     CREST_HEIGHT,
     CREST_PERIOD,
     DETAIL_BASE,
+    DETAIL_OCTAVES,
     DETAIL_PERIOD,
     DETAIL_PERMILLE,
+    DETAIL_PERSISTENCE,
+    DETAIL_REACH,
     EIGHTHS,
     OUTSIDE,
     SHORE_HEIGHT,
@@ -44,13 +47,28 @@ def _upsample(values: NDArray[np.generic], factor: int) -> NDArray[np.int64]:
 
 
 def _noise(  # noqa: PLR0913 - a strip-computed field needs origin, size and octaves.
-    key: int, x0: int, y0: int, width: int, height: int, *, period: int
+    key: int,
+    x0: int,
+    y0: int,
+    width: int,
+    height: int,
+    *,
+    period: int,
+    octaves: int = 3,
+    persistence: int = 500,
 ) -> NDArray[np.int64]:
     out = np.empty((height, width), dtype=np.int64)
     for row in range(0, height, 1024):
         rows = min(1024, height - row)
         out[row : row + rows] = fractal_noise(
-            key, x0, y0 + row, width, rows, period=period, octaves=3, persistence_permille=500
+            key,
+            x0,
+            y0 + row,
+            width,
+            rows,
+            period=period,
+            octaves=octaves,
+            persistence_permille=persistence,
         )
     return out
 
@@ -116,9 +134,10 @@ def heights(  # noqa: PLR0913 - one window's height needs relief, coast, origin 
     smooth = upsample(filled, 2, shape)
     x0, y0 = origin
     detail = _noise(derive_seed(seed, "terrain_detail"), x0, y0, shape[1], shape[0],
-                    period=DETAIL_PERIOD)  # fmt: skip
+                    period=DETAIL_PERIOD, octaves=DETAIL_OCTAVES,
+                    persistence=DETAIL_PERSISTENCE)  # fmt: skip
     raised = np.maximum(0, smooth - COAST_HEIGHT)
-    amplitude = DETAIL_BASE + raised * DETAIL_PERMILLE // PERMILLE
+    amplitude = DETAIL_BASE + np.minimum(raised, DETAIL_REACH) * DETAIL_PERMILLE // PERMILLE
     crest = NOISE_SCALE - np.minimum(
         np.abs(_noise(derive_seed(seed, "terrain_crests"), x0, y0, shape[1], shape[0],
                       period=CREST_PERIOD)),

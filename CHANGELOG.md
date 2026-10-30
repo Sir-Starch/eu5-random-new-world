@@ -10,10 +10,15 @@
   there, so ridges and valley networks run the way real ones do (they sat at random angles, all one
   size and strength). The stamps' own material layers are laid over the mountains, giving the
   eroded pattern of crests and valleys that vanilla's mountains have. The share of land above
-  14,000 units goes from 5.7 % to 15.8 % (vanilla outside the Tibetan plateau: 19 %), and the local
-  relief of crest zones and hills from about 60 % and 40 % of vanilla's to 93 % and 80 %. The
-  tallest peaks stay at vanilla's height (they were already there; what was missing was the graded ground and
-  ridge structure). Rivers, cell topography and biomes follow the new relief. Existing worlds remain untouched.
+  14,000 units goes from 5.7 % to 17.3 % (vanilla outside the Tibetan plateau: 19 %), and the local
+  relief of crest zones from about 60 % of vanilla's to 98 %. The tallest peaks stay at vanilla's height
+  (they were already there; what was missing was the graded ground and ridge structure). The ground has
+  the fine grain of vanilla's: the terrain's detail noise now follows the installed heightmaps' roughness
+  from 64 down to 4 pixels (at 1, 4 and 16 pixels a plain's height differences were a fifth, a quarter and
+  two fifths of vanilla's, and are now two thirds, nine tenths and nine tenths). Lakes no longer stand in
+  cones of rising ground that lowered the interior wherever lakes overlapped, and hills rise from a
+  lake's shore instead of out of a flat bowl. Rivers, cell topography and biomes follow the new relief.
+  Existing worlds remain untouched.
 
 - Rework coasts, water bodies and drainage together (pending epoch 60). Coasts are drawn from a
   bent density field, so continents have capes, hooked peninsulas and gulfs with narrow mouths
