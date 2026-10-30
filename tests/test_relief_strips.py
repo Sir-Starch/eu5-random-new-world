@@ -48,7 +48,8 @@ def test_strips_of_any_height_equal_the_whole_raster(
     result = relief.generate_relief(land, seed=seed)
     assert np.array_equal(result, reference_relief.generate_relief(land, seed=seed))
     assert result.dtype == np.int32
-    assert int(result.max()) > relief.COAST_HEIGHT + 100
+    assert np.unique(result[land]).size > 50
+    assert int(result.max()) > relief.COAST_HEIGHT
 
 
 def test_a_window_must_start_on_the_noise_lattice() -> None:

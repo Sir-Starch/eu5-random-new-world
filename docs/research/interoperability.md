@@ -510,6 +510,19 @@ identifiers and aggregate findings enter the repository; no protected mountain
 source is distributed with the generator. Existing compatibility fingerprints,
 input manifests and local-generation/distribution boundaries continue to apply.
 
+### Follow-up: mountain stamp material layers (2026-10-30, pending 1.1.0 / epoch 60)
+
+[V-LOCAL / V-EXEC / INFERRED] The three ordinary installed mountain decals each have a material
+layer beside the height layer already read (R-004): the same 1024-pixel `.info`/`.bin` layer
+format, one byte per sample, slots 10, 11 and 12 in the pattern of the stamp's valleys and 255
+where it lays none. Their instance parameters name `materialblendmode: min`, which we read as the
+lower slot winning over the terrain's own. The generator reads them through the existing reader and
+lays the slot of the stamp that is highest at each generated mountain pixel over the variation
+slots, after the biome's material list has been applied; coasts, rivers and borders (slots 0–9) are
+untouched. No new binary layout, shader, executable or installation file is involved. The blend
+mode and the engine's drawing of the result are inferred from parameters and not observed. Decoded
+sources stay local; only the algorithm, synthetic fixtures and aggregate findings enter the repository.
+
 ### Follow-up: continuous raster-edge identities (2026-10-26, 0.13.5 / epoch 42)
 
 [V-LOCAL / V-EXEC C375–C378] Vanilla uses one named colour/location identity

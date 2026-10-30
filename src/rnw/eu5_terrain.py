@@ -6,9 +6,10 @@ field that set cell topography), with fine detail noise whose amplitude grows wi
 height and overlapping vanilla mountain height detail on the generated ranges. Materials
 are biome slots rebuilt from the location data by the vanilla rules
 (``eu5_slots.py``), so each location's biome, coast, borders and rivers render the way
-vanilla does. Mountain and volcano decals inside the canvas are disabled in their
-instance files and in the decal cache. Values marked [V-EXEC] were measured on build
-25905365.
+vanilla does; on the mountains the stamps' own slots lay the eroded pattern of their valleys
+over the variations (``_lay_stamp_slots``). Mountain and volcano decals inside the canvas are
+disabled in their instance files and in the decal cache. Values marked [V-EXEC] were measured
+on build 25905365.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -27,8 +28,18 @@ from typing import TYPE_CHECKING, Final, cast
 import numpy as np
 
 from rnw import _native
-from rnw.eu5_mountains import FULL, LOW
-from rnw.eu5_slots import LEVELS, REACH, SlotTables, level_counts, synthesize
+from rnw.eu5_mountains import CAP, FULL, LOW
+from rnw.eu5_slots import (
+    LEVELS,
+    NO_MATERIAL,
+    REACH,
+    SLOTS,
+    VARIATION,
+    SlotTables,
+    level_counts,
+    slot_remap,
+    synthesize,
+)
 from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
@@ -377,6 +388,25 @@ def _write_where(
     np.copyto(target, values, where=mask, casting="unsafe")
 
 
+def _lay_stamp_slots(
+    slots: NDArray[np.uint8],
+    stamped: NDArray[np.uint8],
+    labels: NDArray[np.int32],
+    tables: SlotTables,
+) -> NDArray[np.uint8]:
+    """Blend the mountain stamps' slots in as vanilla's ``min`` mode does: the lower slot wins.
+
+    Coasts, rivers and borders (slots 0--9) stay; the stamps turn the variations into their
+    eroded pattern of valleys and crests. A biome that lists fewer materials than the slot needs
+    takes the slot its list can hold, as every written slot does, and one that lists no
+    variation at all keeps what it has.
+    """
+    count = np.clip(tables.materials[labels], 0, SLOTS)
+    remapped = slot_remap()[count, np.minimum(stamped, SLOTS - 1)]
+    shown = (stamped != NO_MATERIAL) & (remapped >= VARIATION)
+    return np.where(shown, np.minimum(slots, remapped), slots).astype(np.uint8)
+
+
 def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inputs and the images.
     decal: Decal,
     *,
@@ -425,12 +455,15 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         land, inside, heights = decal_heights(
             local_codes, local_water, relief, seed=seed, origin=origin, core=core
         )
+        stamped = None
         if inputs.mountains is not None and river_reach is not None:
-            detail = inputs.mountains.sample(
-                (origin[0] + core[1].start, origin[1] + core[0].start), heights.shape
-            )
+            window_origin = (origin[0] + core[1].start, origin[1] + core[0].start)
+            detail, laid = inputs.mountains.stamp(window_origin, heights.shape)
+            # The stamps' own slots show where their heights do: on the mountains.
+            stamped = np.where(inside & (heights >= LOW), laid, NO_MATERIAL)
             gain = np.clip((heights - LOW) * 1000 // (FULL - LOW), 0, 1000)
-            heights += np.where(inside, detail * gain // 1000 * river_reach[core] // 12, 0)
+            raised = heights + np.where(inside, detail * gain // 1000 * river_reach[core] // 12, 0)
+            heights = np.minimum(raised, np.maximum(heights, CAP))
             if np.any(heights > np.iinfo(np.uint16).max):
                 message = "Mountain detail exceeds the terrain height range"
                 raise TerrainRangeError(message)
@@ -439,6 +472,8 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
         _write_where(height_image[target], heights, inside)
         del heights
         slots = synthesize(labels, land, rivers, tables, seed=seed, origin=origin, core=core)
+        if stamped is not None:
+            slots = _lay_stamp_slots(slots, stamped, labels[core], tables)
         _write_where(material_image[target], slots, inside)
 
 

@@ -36,11 +36,11 @@ The interim patch transfer copied river and border bands from unrelated places a
 | Stage | Module | Method |
 |---|---|---|
 | 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (protected-domain or longitudinal canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
-| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow noise zero lines (belts) whose width and edges vary, cut into segments by a presence noise, with ridged crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. |
+| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. See [Mountains and hills](#mountains-and-hills-pending-110--epoch-60). |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
 | 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation within the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
 | 4. Coherence | `eu5_biomes.py` | Class scores are smoothed over the location adjacency graph: 3 rounds for climate, 1 for vegetation. Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. Desert cells never become wetlands, because no biome covers that combination (C54). |
-| 5. Material slots | `eu5_slots.py` | The vanilla rules above, applied to the generated labels and templates. Band edges, variation families and levels come from uniformised integer noise in absolute decal coordinates, so adjacent decals agree. Each label's biome is resolved through `biomes.txt` (most specific rule); a slot its material list lacks becomes the same variation level of the first family, else the highest listed level, else slot 0. |
+| 5. Material slots | `eu5_slots.py` | The vanilla rules above, applied to the generated labels and templates. Band edges, variation families and levels come from uniformised integer noise in absolute decal coordinates, so adjacent decals agree. Each label's biome is resolved through `biomes.txt` (most specific rule); a slot its material list lacks becomes the same variation level of the first family, else the highest listed level, else slot 0. On mountains the installed stamps' own slots are laid over the variations (below). |
 | 6. Gameplay consistency | `eu5_nw_export.py` | Each location template gets the model's climate, vegetation and topography. Raw materials are drawn from vanilla frequencies for the same climate, vegetation, topography and coastal flag. |
 | 7. Vegetation instances | `eu5_objects.py` | Vanilla instances inside the canvas are dropped. New instances are sampled per material pixel at the Old World density for the pixel's (vegetation, climate, topography, slot) class. Rotation and scale are copied from vanilla records of the same file. The engine caps the mesh map objects of a game at 2^24 (16,777,216) and drops those loaded last, so the new instances may not outnumber the removed ones (all densities scale down together by a recorded factor; 1% of the budget stays unused, `ObjectBudgetError` otherwise). Vanilla holds 15.9 million, the 0.9.8 world 19.5 million (C95). |
 | 7b. Rivers (V1b) | `rivers.py`, `eu5_nw_export.py` | On a 4-pixel grid, a priority flood from all water gives every land cell a downstream neighbour, so depressions are crossed; routing adds fractal valley noise so flow converges. The square root of rainfall accumulates downstream; the catchment threshold gives 16 river pixels per 1000 land pixels (vanilla 15.7). Streams split at confluences (larger branch continues); rivers to the sea need 12 cells. Each stream is drawn from its head down a smoothed, slightly meandering line until it reaches water (up to 3 px into it; the head becomes the source) or meets a river drawn before (a join pixel beside one river pixel). Widths 4/5/11/15 follow catchment in vanilla shares; valleys of 350–1,150 units are carved within 6 px; slot 6 runs along rivers. The export refuses any violation of the vanilla raster rules (C59). |
@@ -92,7 +92,7 @@ are described below; future hydrology and relief work belongs in [roadmap](roadm
 - **V1b rivers:** accepted in game (C64). Lakes ended rivers (no outflows) until the pending 1.1.0 (see
   [below](#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)); splits and deltas are not generated.
 - **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Accepted in game (C66).
-- Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
+- Mountain stamps on generated ranges (vanilla covers about 57% of mountain interiors with them): placed along the ranges since pending 1.1.0, with their materials ([below](#mountains-and-hills-pending-110--epoch-60)).
 - Erosion for more natural valleys.
 - The V1 measurement was about 1.3 GB per built world, because instance files are whole-file overrides; this is not the size of the generator hub.
 
@@ -209,6 +209,68 @@ unobserved offline results; they do not reopen 1.0.0 acceptance. Not modelled ye
 splits, valley carving driven by drainage (relief is still generated first), lakes that follow
 depressions or climate (endorheic basins in arid land), and sea straits that the armies' crossing
 rows treat specially.
+
+## Mountains and hills (pending 1.1.0 / epoch 60)
+
+The owner reported on 2026-10-30 [V-GAME owner observation] that generated mountains and hills
+were still unrealistic and monotonous beside vanilla's: from far away the ranges looked like
+artifacts rather than chains, they were one height over wide areas, and close up nothing said why
+the land was impassable, since it looked rather flat. Raising the ridges was suggested.
+
+**Diagnosis.** [V-EXEC 2026-10-30, EU5 1.4.6 / 26300913; vanilla from the installed primary
+heightmaps, ours from the full pipeline (relief, terrain detail and stamps) on the 8192 × 10075
+expanded canvas of a cached world with 24 % land.] The tallest terrain was not short: 2.6 % of the land
+stood above 22,000 and 1.4 % above 28,000 (vanilla outside the Tibetan plateau: 2.8 % and 0.9 %), but
+it stood in a few blobs, and the graded ground that makes a range, the hill country and the
+foothills, was missing (5.7 % above 14,000 against 19 %). Over 20-pixel windows the old crest zones
+had three fifths of the vanilla's local relief and the hills two fifths. So higher ridges alone would have
+made taller blobs; what lacked was graded height, ridge structure and variety.
+The causes, each in the code: a belt threshold that swells into broad blobs wherever the noise is
+flat; one crest height along a chain; a presence noise that cut chains into isolated segments; smooth
+hills; and stamps of the installed mountain height sources placed at random in eight directions,
+all at one size and a strength of 0.2 on a 32-pixel lattice, joined by the maximum (vanilla places them
+by hand along the ranges at scales 0.015–1.3 and strengths 0.01–0.8).
+
+| Stage | Module | Construction |
+|---|---|---|
+| Chains | `relief._chain` | The axis of a chain is the zero line of a low-frequency noise (periods 1,100 and 700 pixels, a second family narrower and weaker), displaced by a finer noise. The distance to it is the noise divided by its smoothed slope, so a chain keeps its width where the noise is flat and forks where lines cross; a noise that crosses zero too gently (closed rings round a faint extreme) fades out. A crest zone of 100 pixels and a whole chain of 300 pixels (half-widths; each wanders between half and three halves) rise through a smoothstep, the crest zone squared so it is sharper. |
+| Massifs | `relief._strength` | A massif noise (period 520) sets each stretch's height between 0.38 and 1 of the peak, so ranges climb to peaks and fall to passes; a presence noise only thins them to 0.38, it no longer cuts chains apart. |
+| Ridges | `relief._ridged` | Ridged multifractal of five octaves, 128 to 8 pixels: each octave's crest (one at the zero line, squared) lets a share through to the next, so fine ridges grow on high crests and the low ground between stays smooth, as erosion leaves it. A quarter of a chain's height holds without ridges; the peak is 28,000 units. |
+| Hills | `relief` | Foothills (a 48-pixel blur of the chains' strength) and hill country carry a 72-pixel and a 20-pixel noise up to 6,800 units. Plateaus and the broad tilt are unchanged. |
+| Stamps | `eu5_mountains.mountain_relief` | One stamp per 30-pixel cell (jittered) where the smoothed relief reaches 10,500. Its crest is turned onto the range's axis: the axis is the direction of least slope energy of the smoothed relief (an integer structure tensor over 8-pixel cells, 32 directions) and each source's own crest axis is found from the spread of its top pixels. Where there is no clear axis the turn is random. Size (44–106 pixels across, stretched 1.0–1.7 along), strength (0.04–0.15 of the source) and the draw within 0.7–1.3 of that rise with the height there. Overlaps keep the highest crest. They show above 11,000 units, and nothing rises past 52,000. |
+| Stamp materials | `eu5_terrain._lay_stamp_slots` | Each installed stamp also has a material layer (slots 10, 11, 12 in the pattern of its valleys; 255 where it lays none) that vanilla blends with the lower slot winning (`materialblendmode: min` in its decal parameters). Generated land now carries it: coasts, rivers and borders (slots 0–9) stay, the variations take the stamp's slot on the mountains, and a biome whose list lacks the slot takes the slot its list holds (one with no variation at all keeps its own). Where stamps overlap the highest one decides, not the lowest slot: vanilla overlaps far less, and the minimum turned every dense massif into slot 10. |
+
+**Measured** [V-EXEC 2026-10-30; share of land, installed expanded canvas; before → after → vanilla outside
+the Tibetan plateau, Eurasia and Africa]:
+
+| Height (decal units) | > 9,000 | > 12,000 | > 14,000 | > 18,000 | > 22,000 | > 28,000 | > 34,000 |
+|---|---|---|---|---|---|---|---|
+| World with 24 % land | 20.0 → 53.2 → 49.9 % | 8.9 → 25.2 → 28.0 % | 5.7 → 15.8 → 19.2 % | 3.5 → 6.4 → 6.6 % | 2.6 → 3.0 → 2.8 % | 1.4 → 0.8 → 0.9 % | 0.4 → 0.1 → 0.3 % |
+| World with 34 % land | 27.4 → 58.9 | 14.1 → 29.4 | 9.5 → 18.9 | 5.6 → 6.8 | 4.1 → 2.7 | 1.9 → 0.6 | 0.4 → 0.1 |
+
+On four cached worlds measured with the final constants (11 %, 19 %, 24 % and 34 % land) the share
+above 28,000 is 0.1, 0.5, 0.8 and 0.6 %: it falls with land size, as an island world has few ranges.
+The tallest sample is 44,000–46,000 (before 49,600; vanilla's primary heightmap 43,100).
+Mean absolute height difference by lag, for ground whose 48-pixel mean is 15,000–22,000 (the same
+for 22,000 and over): lag 2/8/32 pixels, vanilla 533/1,336/2,589; before 320/1,175/3,686; after
+435/1,328/3,057. Local relief over 20-pixel windows (median, 22,000 and over): vanilla 8,781, before
+5,186, after 8,200; hills of mean 9,000–14,000: vanilla 2,523, before 957, after 2,007.
+
+Relief on the full canvas takes about 14 s (it took 6 s); the stamps' planning 0.4 s. A full export
+of continents seed 1001 takes 218 s on the development machine (a local timing, not a benchmark). Strips of any height give the same
+relief (`tests/reference/relief.py`), bands and columns the same stamps and slots, and the
+band-to-band, seam and roll tests hold with the stamps' materials. Full exports of six presets
+(continents 1001, wall 9, archipelago 42, supercontinent 42, islands 7, small continents 42) pass
+every cell, port, route, river and contact invariant; the rivers, the topography of each cell and the
+biomes follow the new relief, so every world differs from the one before.
+
+[UNKNOWN] How the engine renders the result: the heights and slots are measured, and the maps in
+both windows draw their relief from location topography, not from these heights. The stamps' material
+blending is inferred from the decal parameters, not observed. Lowland and hill ground is still
+smoother than vanilla at 2–8 pixels (lag 2, ground of 6,000–8,000: 25 before, 36 after, vanilla 117): the 64-pixel terrain detail noise has too little weight at fine scales, and
+raising its amplitude barely moves it, so it would need more octaves in the native kernel. The
+conical rise round every lake in flat country (the inland distance counts a lake as sea) is not
+part of this change.
 
 ## The Wall
 

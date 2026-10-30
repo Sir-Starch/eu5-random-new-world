@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Rework mountains and hills (pending epoch 60). Ranges are now continuous chains of one
+  realistic width that fork and arc, with massifs of different heights, passes between them and
+  lower secondary ranges, instead of broad one-height blobs cut into segments. Crests carry
+  erosion-like ridges that grow on high ground and leave valleys smooth, and the vanilla
+  mountain stamps are turned along each range's axis and sized and strengthened by the height
+  there, so ridges and valley networks run the way real ones do (they sat at random angles, all one
+  size and strength). The stamps' own material layers are laid over the mountains, giving the
+  eroded pattern of crests and valleys that vanilla's mountains have. The share of land above
+  14,000 units goes from 5.7 % to 15.8 % (vanilla outside the Tibetan plateau: 19 %), and the local
+  relief of crest zones and hills from about 60 % and 40 % of vanilla's to 93 % and 80 %. The
+  tallest peaks stay at vanilla's height (they were already there; what was missing was the graded ground and
+  ridge structure). Rivers, cell topography and biomes follow the new relief. Existing worlds remain untouched.
+
 - Rework coasts, water bodies and drainage together (pending epoch 60). Coasts are drawn from a
   bent density field, so continents have capes, hooked peninsulas and gulfs with narrow mouths
   instead of rounded blobs. Lakes now follow the installed game's own: about 11 per million

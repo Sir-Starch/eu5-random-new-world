@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from rnw.eu5_mountains import Mountain, MountainRelief
-from rnw.eu5_slots import SlotTables
+from rnw.eu5_slots import VARIATION, SlotTables
 from rnw.eu5_terrain import (
     BAND_HALO,
     CAP_REACH,
@@ -184,7 +184,8 @@ def test_wrapped_terrain_equals_one_continuous_continent(band: int, *, mountains
             noise_roll=shift,
             mountains=MountainRelief(
                 (np.full((64, 64), 40000, dtype=np.uint16),),
-                (Mountain(140, 400, 112, 0, 1), Mountain(210, 430, 144, 0, 3)),
+                (Mountain(140, 400, 150, 112, 0, 1, 200), Mountain(210, 430, 170, 144, 0, 3, 200)),
+                (np.full((64, 64), 11, dtype=np.uint8),),
             )
             if mountains
             else None,
@@ -214,7 +215,11 @@ def test_wrapped_terrain_equals_one_continuous_continent(band: int, *, mountains
         assert np.array_equal(
             reference[0][river_row : river_row + 2], bare[0][river_row : river_row + 2]
         )
-        assert np.array_equal(reference[1], bare[1])
+        # The stamps' slots lower the variations they cover and touch nothing else.
+        assert np.all(reference[1] <= bare[1])
+        assert np.any(reference[1] < bare[1])
+        assert np.all(reference[1][reference[1] < bare[1]] >= VARIATION)
+        assert np.all(reference[1][bare[1] < VARIATION] == bare[1][bare[1] < VARIATION])
     wrapped = inputs(roll)
     # One edge decal on each side, and a single decal that crosses the outside cut.
     left = render(Decal("left", 5, 0, 170, 60), wrapped)

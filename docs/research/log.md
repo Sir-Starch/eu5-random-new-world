@@ -2113,3 +2113,12 @@ workflows. Superseded proposals and completed implementation checklists are
 archived with navigation preserved. Historical unknowns remain scoped evidence,
 not automatic tasks or renewed acceptance requirements. No runtime or frozen
 release files change.
+
+## 2026-10-30 — Mountains and hills (C449)
+
+The owner found the generated mountains and hills unrealistic and monotonous. Measured against the
+installed primary heightmaps, the old pipeline matched vanilla's tallest terrain but lacked graded
+ground and ridge structure, so higher ridges alone would not have helped. Relief (chains by distance
+to a noise zero line, massifs, ridged multifractal, hill country), the mountain stamps (turned along
+the range, varied in size and strength) and their material layers are rebuilt; the reference world's
+digest is refreshed within the pending epoch 60. Details and numbers are in the terrain guide.
