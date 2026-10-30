@@ -81,8 +81,9 @@ released binaries, moving the tag, changing the version or rescanning them.
 
 ## Workshop page and updates
 
-Upload the generator hub only. Use tag **Map**, the hub's `.metadata` preview and
-the reviewed descriptions in `docs/workshop/<language>.bbcode`. Translation
+Upload the generator hub only. Use tags **Map**, **Gameplay** and **Utilities**,
+the hub's `.metadata` preview and the reviewed descriptions in
+`docs/workshop/<language>.bbcode`. Translation
 `source:` headers are internal and omitted when pasting; the English file has none.
 The release's Workshop-text bundle already strips those headers and has a README
 for the publisher. The hub does not require a separate README to be usable: its

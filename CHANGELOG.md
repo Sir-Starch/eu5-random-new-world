@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add the Gameplay and Utilities categories alongside Map to the next Workshop upload.
 - Add a candidate Tauri window (ADR 0011) beside the Qt window: one look on every
   system, a workbench sized to sit beside the game (default 1160×740, minimum
   860×560). A searchable library with multi-select, a view in the middle and an

@@ -75,6 +75,7 @@ def test_public_hub_identity_keeps_the_replaceable_install_folder(tmp_path: Path
     assert (payload["id"], payload["version"]) == (hub.MOD_ID, "0.9.13")
     assert payload["name"] == "Random New World (RNW)"
     assert payload["id"] == "sirstarch.randomnewworld"
+    assert payload["tags"] == ["Map", "Gameplay", "Utilities"]
     assert "test" not in cast("str", payload["name"]).lower()
     assert "not game validated" not in cast("str", payload["name"]).lower()
     assert "test" not in cast("str", payload["short_description"]).lower()
