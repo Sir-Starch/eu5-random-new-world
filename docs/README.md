@@ -68,6 +68,7 @@ current instructions or turn uncertainty into a publication prohibition.
 | Record | Scope |
 |---|---|
 | [Interoperability register](research/interoperability.md) | Closed formats and written binaries, with source/compatibility rationale |
+| [1.4.6 compatibility check](research/compatibility-1-4-6.md) | Installed build, input delta and offline checks |
 | [1.4.5 compatibility audit](research/compatibility-1-4-5.md) | Target-build fingerprints and DLC dispositions |
 | [World-wrap dossier](research/map-wrap-dossier.md) | Authoritative seam investigation, accepted data policy and historical comparisons |
 | [TR46 register](research/tr46-observer-audit.md), [log catalogue](research/tr46-log-catalog.md) | Dated campaign findings; attribution and later fixes must be read before treating an item as open |
