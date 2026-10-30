@@ -17,6 +17,14 @@
   above the location budget and Generate; the middle shows the continent sketches
   to pick from, the land image, progress with its stages, and the outcome. Language
   and appearance change without a restart.
+- The classic Qt window, the fallback where the new window cannot open (as in
+  Proton), draws the maps as the new window does: the physical map under every
+  lens, states with tribes as an option, the same palettes (one file for both
+  windows), names, cities, capitals and riches at every zoom, a legend that
+  lights, isolates and zooms, one search with areas, a pinned location card with
+  links, lens keys 1–0, copying the view and saving the lens as drawn. Its library
+  gains the filter and views, its new world a budget meter, and it answers the new
+  window's shortcuts. Sea and area names use the game's names in both windows.
 - Rebuild the map viewer: WebGL lenses with sharp borders at any zoom, place
   names, minimap, hover and pinned location cards, legend isolation and search
   that zoom to their match, area search, linked comparison and copying the view.

@@ -24,14 +24,14 @@ from PIL import Image
 
 from rnw import __version__, parallel, worldname
 from rnw import atlas as atlas_module
-from rnw.app import controls, gamenames, quick, random_types
+from rnw.app import controls, quick, random_types
 from rnw.app.library import Placement
+from rnw.gui import mapstyle
 from rnw.gui.controller import NEW, STRAY, Controller, Phase, Task
 from rnw.gui.text import GROUPING, LANGUAGE_NAMES, TITLE, grouped, language, table, text
 from rnw.layers import PARTS
 from rnw.png import COLOR_RGB, encode_png
 from rnw.settings import WORLD_TYPES
-from rnw.wording import render
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -462,18 +462,8 @@ def _hex(colour: tuple[int, int, int]) -> str:
 
 def words_for(controller: Controller, found: Atlas) -> atlas_module.Words:
     """The window's words for an atlas: legend words, the game's names of the identifiers
-    (regions too), names of the world in the window's language."""
-    speaking = language()
-    names: dict[str, str] = {}
-    if controller.game is not None:
-        keys = {word for words in found.vocabulary.values() for word in words}
-        keys |= {region for region in found.regions if isinstance(region, str)}
-        names = gamenames.game_names(controller.game.directory, speaking, frozenset(keys))
-    return atlas_module.Words(
-        label=lambda key: text(f"legend.{key}"),
-        key=lambda key: names.get(key) or atlas_module.pretty(key),
-        name=lambda name: render(name, speaking),
-    )
+    (regions too), names of the world in the window's language; as the classic window's."""
+    return controller.words(found)
 
 
 def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | None:
@@ -487,9 +477,7 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
     height, width = found.size
 
     def name(value: object) -> str:
-        if isinstance(value, str) and value.endswith("_region"):
-            return words.key(value)
-        return words.name(value) if value else ""  # pyright: ignore[reportArgumentType]
+        return mapstyle.written(value, words)
 
     layers: dict[str, object] = {}
     for layer in atlas_module.LAYERS:

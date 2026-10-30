@@ -24,9 +24,11 @@ from PySide6.QtGui import (
     QFont,
     QIcon,
     QImage,
+    QKeySequence,
     QPainter,
     QPainterPath,
     QPixmap,
+    QShortcut,
 )
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -103,6 +105,15 @@ def _duration_clock(seconds: float) -> str:
     hours, remainder = divmod(total, 3600)
     minutes, seconds_left = divmod(remainder, 60)
     return f"{hours}:{minutes:02d}:{seconds_left:02d}" if hours else f"{minutes}:{seconds_left:02d}"
+
+
+# The engine's limit of locations the budget meter runs to, and how near the budget turns it amber.
+ENGINE_LOCATIONS: Final[int] = 32_000
+BUDGET_NEAR: Final[float] = 0.94
+# What the library's filter reads of each entry.
+FILTER_TEXT: Final[int] = Qt.ItemDataRole.UserRole + 1
+FILTER_PLACE: Final[int] = Qt.ItemDataRole.UserRole + 2
+FILTER_STARRED: Final[int] = Qt.ItemDataRole.UserRole + 3
 
 
 class _Bridge(QObject):
@@ -625,8 +636,10 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.stack)
         splitter.setStretchFactor(1, 1)
         splitter.setSizes([250, 950])
+        self.splitter: QSplitter = splitter
         layout.addWidget(splitter, 1)
         self.setCentralWidget(root)
+        self._shortcuts()
         self.resources = QLabel()
         status = self.statusBar()
         status.addPermanentWidget(QLabel(f"v{__version__}"))
@@ -639,6 +652,22 @@ class MainWindow(QMainWindow):
         self.select_all_button: QPushButton = QPushButton(text("select_all_worlds"))
         _ = self.select_all_button.clicked.connect(self._select_all_worlds)
         layout.addWidget(self.select_all_button)
+        find = QHBoxLayout()
+        self.library_filter: QLineEdit = QLineEdit()
+        self.library_filter.setPlaceholderText(text("library.filter"))
+        self.library_filter.setClearButtonEnabled(True)
+        self.library_view: QComboBox = QComboBox()
+        for key, label in (
+            ("all", "library.all"),
+            ("in_game", "library.in_game"),
+            ("starred", "starred"),
+        ):
+            self.library_view.addItem(text(label), key)
+        find.addWidget(self.library_filter, 1)
+        find.addWidget(self.library_view)
+        layout.addLayout(find)
+        _ = self.library_filter.textChanged.connect(self._filter_library)
+        _ = self.library_view.currentIndexChanged.connect(self._filter_library)
         self.world_list = QListWidget()
         self.world_list.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.world_list.setIconSize(QPixmap(*ICON_SIZE).size())
@@ -708,19 +737,9 @@ class MainWindow(QMainWindow):
         self.notice.setWordWrap(True)
         self.notice.setStyleSheet(RED)
         outer.addWidget(self.notice)
-        self.estimate = _EstimateLabel()
-        self.estimate_help = QLabel("ⓘ")
-        self.estimate_help.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.estimate_help.setStyleSheet(MUTED)
-        self.estimate_help.setVisible(False)
-        estimate_box = QHBoxLayout()
-        estimate_box.setContentsMargins(0, 0, 0, 0)
-        estimate_box.setSpacing(6)
-        estimate_box.addWidget(self.estimate)
-        estimate_box.addWidget(self.estimate_help, 0, Qt.AlignmentFlag.AlignVCenter)
-        estimate_box.addStretch(1)
+        estimates = self._estimates()
         row = QHBoxLayout()
-        row.addLayout(estimate_box, 1)
+        row.addLayout(estimates, 1)
         self.generate_button = QPushButton(text("generate"))
         self.generate_button.setDefault(True)
         self.generate_button.setMinimumWidth(160)
@@ -743,6 +762,32 @@ class MainWindow(QMainWindow):
         _ = self.generate_button.clicked.connect(self._generate)
         _ = self.cancel_button.clicked.connect(self.controller.cancel)
         return page
+
+    def _estimates(self) -> QVBoxLayout:
+        """The location estimate, its help mark and the budget meter under them."""
+        self.estimate = _EstimateLabel()
+        self.estimate_help = QLabel("ⓘ")
+        self.estimate_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.estimate_help.setStyleSheet(MUTED)
+        self.estimate_help.setVisible(False)
+        estimate_box = QHBoxLayout()
+        estimate_box.setContentsMargins(0, 0, 0, 0)
+        estimate_box.setSpacing(6)
+        estimate_box.addWidget(self.estimate)
+        estimate_box.addWidget(self.estimate_help, 0, Qt.AlignmentFlag.AlignVCenter)
+        estimate_box.addStretch(1)
+        # The location budget as a meter, as the Tauri window shows it: green, amber near the
+        # limit, red over it.
+        self.budget_meter: QProgressBar = QProgressBar()
+        self.budget_meter.setRange(0, ENGINE_LOCATIONS)
+        self.budget_meter.setTextVisible(False)
+        self.budget_meter.setFixedHeight(6)
+        self.budget_meter.setToolTip(text("estimate_tip"))
+        estimates = QVBoxLayout()
+        estimates.setSpacing(3)
+        estimates.addLayout(estimate_box)
+        estimates.addWidget(self.budget_meter)
+        return estimates
 
     def _new_world_tab(self) -> QScrollArea:
         world, layout = self._scroll_page()
@@ -1446,7 +1491,11 @@ class MainWindow(QMainWindow):
                     f"{text('stray_name')}\n{text('stray_line', folder=stray.name)}"
                 )
                 item.setData(Qt.ItemDataRole.UserRole, f"{STRAY}{stray.name}")
+                item.setData(FILTER_TEXT, stray.name.casefold())
+                item.setData(FILTER_PLACE, Placement.IN_GAME.value)
+                item.setData(FILTER_STARRED, False)  # noqa: FBT003 - a stray is no favourite
                 self.world_list.addItem(item)
+            self._filter_library()
         running = controller.busy and controller.task is Task.GENERATE
         if self.world_list.count():
             self.world_list.item(0).setText(
@@ -1464,6 +1513,23 @@ class MainWindow(QMainWindow):
             if item.data(Qt.ItemDataRole.UserRole) == controller.selection:
                 self.world_list.setCurrentItem(item, QItemSelectionModel.SelectionFlag.NoUpdate)
         _ = self.world_list.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+
+    def _filter_library(self) -> None:
+        """Hide the worlds that do not hold the filter's words or are not in the chosen view;
+        the new world stays first."""
+        needle = self.library_filter.text().strip().casefold()
+        view = cast("str", self.library_view.currentData())
+        for row in range(1, self.world_list.count()):
+            item = self.world_list.item(row)
+            words = cast("str", item.data(FILTER_TEXT) or "")
+            place = cast("object", item.data(FILTER_PLACE))
+            starred = cast("object", item.data(FILTER_STARRED))
+            hidden = bool(needle) and needle not in words
+            if view == "in_game":
+                hidden = hidden or place != Placement.IN_GAME.value
+            elif view == "starred":
+                hidden = hidden or starred is not True
+            item.setHidden(hidden)
 
     def selected_entries(self) -> tuple[str, ...]:
         """The selected world and stray IDs, excluding the new-world action."""
@@ -1561,6 +1627,10 @@ class MainWindow(QMainWindow):
         item = QListWidgetItem(f"{title}\n{VERSION_MARK * depth}{line}")
         item.setToolTip(world.user_tag)
         item.setData(Qt.ItemDataRole.UserRole, world.id)
+        words = (controller.name(world), world.user_tag, world.preset, world.id, line)
+        item.setData(FILTER_TEXT, " ".join(words).casefold())
+        item.setData(FILTER_PLACE, controller.placement(world).value)
+        item.setData(FILTER_STARRED, world.starred)
         picture = controller.picture(world)
         if picture is not None:
             item.setIcon(
@@ -1583,12 +1653,24 @@ class MainWindow(QMainWindow):
             tip = text("estimate_tip")
             self.estimate.setText(text("estimate", count=grouped(estimate)))
             style = RED if estimate > controls.LOCATION_BUDGET else MUTED
+            near = estimate > controls.LOCATION_BUDGET * BUDGET_NEAR
+            colour = (
+                "#d2453c"
+                if estimate > controls.LOCATION_BUDGET
+                else "#d9a23e"
+                if near
+                else "#52b071"
+            )
+            self.budget_meter.setValue(min(estimate, ENGINE_LOCATIONS))
+            self.budget_meter.setStyleSheet(f"QProgressBar::chunk {{ background: {colour}; }}")
+            self.budget_meter.setVisible(True)
             self.estimate.setStyleSheet(style)
             self.estimate.setToolTip(tip)
             self.estimate_help.setStyleSheet(style)
             self.estimate_help.setToolTip(tip)
             self.estimate_help.setVisible(True)
         except ValueError:
+            self.budget_meter.setVisible(False)
             self.estimate.setText("")
             self.estimate.setToolTip("")
             self.estimate_help.setToolTip("")
@@ -1893,6 +1975,40 @@ class MainWindow(QMainWindow):
         if isinstance(selection, str):
             self.controller.select(selection)
 
+    def _shortcuts(self) -> None:
+        """The Tauri window's keys: new world, open a world file, generate, settings, the
+        library shown or hidden, and a world code pasted anywhere."""
+        for keys, action in (
+            ("Ctrl+N", self._new_world),
+            ("Ctrl+O", self._open_world_file),
+            ("Ctrl+Return", self._generate_from_keys),
+            ("Ctrl+Enter", self._generate_from_keys),
+            ("Ctrl+,", self._settings),
+            ("Ctrl+B", self._toggle_library),
+            ("Ctrl+V", self._paste_code),
+        ):
+            shortcut = QShortcut(QKeySequence(keys), self)
+            _ = shortcut.activated.connect(action)
+
+    def _new_world(self) -> None:
+        self.controller.select(NEW)
+
+    def _generate_from_keys(self) -> None:
+        if self.stack.currentWidget() is self.new_page and self.generate_button.isEnabled():
+            self._generate()
+
+    def _toggle_library(self) -> None:
+        library = self.splitter.widget(0)
+        if library is not None:
+            library.setVisible(not library.isVisible())
+
+    def _paste_code(self) -> None:
+        """A world code pasted outside a text field opens the new world with it."""
+        pasted = QApplication.clipboard().text().strip()
+        if pasted.upper().startswith("RNW"):
+            self.controller.select(NEW)
+            self._paste()
+
     def _settings(self) -> None:
         _ = SettingsDialog(self).exec()
         self.refresh()
@@ -2071,11 +2187,12 @@ class MainWindow(QMainWindow):
         if not chosen:
             return
         output = Path(chosen)
-        problem = (
-            self.controller.save_map(world, self.maps.layer, output)
-            if on_maps
-            else self.controller.save_preview(world, output)
-        )
+        if on_maps:
+            drawn = self.maps.drawn_image()
+            saved = drawn is not None and drawn.save(str(output), b"PNG")
+            problem = None if saved else text("covered_maps")
+        else:
+            problem = self.controller.save_preview(world, output)
         self._tell(problem or text("picture_saved", path=chosen))
 
     def _compare(self) -> None:
@@ -2086,7 +2203,7 @@ class MainWindow(QMainWindow):
         if len(entries) < 2:  # noqa: PLR2004 - two worlds are compared
             self._tell(text("compare_need_two"))
             return
-        _ = CompareDialog(self, entries, self.maps.layer).exec()
+        _ = CompareDialog(self, entries, self.maps.layer, self.controller.words).exec()
 
     def _reroll(self, part: str) -> None:
         self._tell(self.controller.reroll_selected(part, keep_both=self.keep_both.isChecked()))

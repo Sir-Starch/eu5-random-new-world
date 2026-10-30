@@ -227,8 +227,10 @@ class Atlas:
 
 
 def pretty(key: str) -> str:
-    """A readable name for an identifier: underscores to spaces, capitals to words."""
-    return key.removeprefix("goods_").replace("_", " ").strip().title()
+    """A readable name for an identifier: underscores to spaces, capitals to words; a region or
+    an area without the word that says so."""
+    plain = key.removeprefix("goods_").removesuffix("_region").removesuffix("_area")
+    return plain.replace("_", " ").strip().title()
 
 
 # The atlas's own words in the legends, in English; a viewer gives its own (``Words``).

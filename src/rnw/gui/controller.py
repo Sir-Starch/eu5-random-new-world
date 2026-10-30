@@ -51,6 +51,7 @@ from rnw.app.worldcode import (
     rolled,
     with_new_seed,
 )
+from rnw.gui import mapstyle
 from rnw.gui.text import (
     choose_language,
     explain,
@@ -1027,8 +1028,7 @@ class Controller:
         speaking = language()
         names: dict[str, str] = {}
         if self.game is not None:
-            keys = frozenset(word for words in found.vocabulary.values() for word in words)
-            names = gamenames.game_names(self.game.directory, speaking, keys)
+            names = gamenames.game_names(self.game.directory, speaking, mapstyle.identifiers(found))
         return atlas.Words(
             label=lambda key: text(f"legend.{key}"),
             key=lambda key: names.get(key) or atlas.pretty(key),

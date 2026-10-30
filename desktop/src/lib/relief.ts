@@ -9,43 +9,15 @@
 
 import type { WorldAtlas } from "./atlas";
 import { LAND, LAKE, SEA, WASTELAND } from "./atlas";
+import { CLIMATE_TINTS, COLOURS, hex, TOPOGRAPHY, VEGETATION, type RGB } from "./style";
+
+export { VEGETATION };
 
 export const STEP = 2;
 
-type RGB = [number, number, number];
-
-// The land by vegetation: sand to rainforest.
-export const VEGETATION: Record<string, RGB> = {
-  desert: [226, 206, 152],
-  sparse: [198, 188, 130],
-  grasslands: [166, 192, 106],
-  woods: [116, 160, 86],
-  forest: [74, 128, 72],
-  jungle: [48, 114, 68],
-};
-// How far each climate pulls the land toward a colour (0..1): snow in the cold, dust in the dry.
-const CLIMATE: Record<string, [RGB, number]> = {
-  arctic: [[240, 244, 248], 0.78],
-  subpolar: [[214, 224, 218], 0.36],
-  cold_arid: [[196, 184, 160], 0.3],
-  cold_semi_arid: [[196, 186, 150], 0.16],
-  arid: [[234, 212, 160], 0.22],
-  hot_semi_arid: [[222, 196, 138], 0.12],
-  mediterranean: [[206, 196, 128], 0.08],
-};
-// Topography: how high it stands (0..1), how rough it is (0..1), and the rock it shows.
-const TOPOGRAPHY: Record<string, { height: number; rough: number; rock: number }> = {
-  wetlands: { height: 0, rough: 0.02, rock: 0 },
-  flatland: { height: 0.05, rough: 0.06, rock: 0 },
-  plateau: { height: 0.3, rough: 0.16, rock: 0.14 },
-  hills: { height: 0.24, rough: 0.45, rock: 0.1 },
-  mountains: { height: 0.55, rough: 1, rock: 0.36 },
-  hills_wasteland: { height: 0.45, rough: 0.8, rock: 0.5 },
-  mountain_wasteland: { height: 0.7, rough: 1, rock: 0.6 },
-};
-const ROCK: RGB = [148, 136, 122];
-const WETLAND: RGB = [98, 132, 100];
-const SNOW: RGB = [246, 247, 250];
+const ROCK = hex(COLOURS.rock);
+const WETLAND = hex(COLOURS.wetland);
+const SNOW = hex(COLOURS.snow);
 
 /** The land of a location on the physical map, before softening and shade. */
 export function physicalColour(atlas: WorldAtlas, cell: number): RGB {
@@ -55,7 +27,7 @@ export function physicalColour(atlas: WorldAtlas, cell: number): RGB {
   const climate = raw.climate?.[d.climate[cell]] ?? "";
   const topography = raw.topography?.[d.topography[cell]] ?? "";
   let rgb: RGB = [...(VEGETATION[vegetation] ?? VEGETATION.grasslands)];
-  const tint = CLIMATE[climate];
+  const tint = CLIMATE_TINTS[climate];
   if (tint) rgb = mix(rgb, tint[0], tint[1]);
   if (topography === "wetlands") rgb = mix(rgb, WETLAND, 0.32);
   const rock = TOPOGRAPHY[topography]?.rock ?? 0;

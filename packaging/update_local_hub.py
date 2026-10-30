@@ -55,7 +55,7 @@ def check_candidate(candidate: Path, version: str) -> None:
         msg = "The installed package version does not match the current product"
         raise ValueError(msg)
     for path in (ROOT / "src/rnw").rglob("*"):
-        if path.is_file() and path.suffix in {".py", ".toml"}:
+        if path.is_file() and path.suffix in {".py", ".toml", ".json"}:
             installed = site / "rnw" / path.relative_to(ROOT / "src/rnw")
             if not installed.is_file() or installed.read_bytes() != path.read_bytes():
                 msg = f"Hub source differs from the checkout: {path}"

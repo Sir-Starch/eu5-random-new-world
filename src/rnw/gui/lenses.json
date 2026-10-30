@@ -1,0 +1,75 @@
+{
+  "_about": "How the windows draw the lenses of a world's map: the colours of the physical map that lies under every lens, the water, each thematic lens's palette and how strongly it covers the land. Read by the classic window (rnw.gui.mapstyle) and the Tauri window (desktop/src/lib/lenses.ts, relief.ts, mapgl.ts), so both draw the same map.",
+  "profiles": {
+    "land": { "physical": true, "shade": 1, "borders": 0, "political": 0.3, "names": "regions", "spots": null, "opacity": 225 },
+    "countries": { "physical": false, "shade": 0.7, "borders": 0, "political": 0.82, "names": "countries", "spots": null, "opacity": 232 },
+    "cultures": { "physical": false, "shade": 0.6, "borders": 0.42, "political": 0.22, "names": "classes", "spots": null, "opacity": 218 },
+    "religions": { "physical": false, "shade": 0.6, "borders": 0.42, "political": 0.22, "names": "classes", "spots": null, "opacity": 218 },
+    "resources": { "physical": false, "shade": 0.55, "borders": 0, "political": 0.2, "names": "none", "spots": "resource", "opacity": 228 },
+    "development": { "physical": false, "shade": 0.5, "borders": 0, "political": 0.28, "names": "none", "spots": "development", "opacity": 225 },
+    "population": { "physical": false, "shade": 0.5, "borders": 0, "political": 0.28, "names": "none", "spots": "population", "opacity": 225 },
+    "climate": { "physical": false, "shade": 0.8, "borders": 0.18, "political": 0.22, "names": "none", "spots": null, "opacity": 200 },
+    "terrain": { "physical": false, "shade": 1, "borders": 0, "political": 0.22, "names": "none", "spots": null, "opacity": 205 },
+    "areas": { "physical": false, "shade": 0.6, "borders": 0.38, "political": 0.3, "names": "classes", "spots": null, "opacity": 210 }
+  },
+  "qualitative": [
+    "#c9a26b", "#8fb27a", "#c97f6b", "#7fa6c4", "#b58fc0", "#d4c27a", "#6fb5a8", "#c48aa0",
+    "#a3a36a", "#9db4d8", "#d19a5a", "#84c2a0", "#b77c5c", "#9a8fc8", "#cdb79a", "#7c9c8a"
+  ],
+  "palettes": {
+    "climate": {
+      "arctic": "#e8eef4", "subpolar": "#a9c3d6", "cold_arid": "#b9a88c", "cold_semi_arid": "#c8bd92",
+      "continental": "#7fae86", "oceanic": "#6cb4b0", "mediterranean": "#cfb35e", "subtropical": "#9cc46a",
+      "hot_semi_arid": "#d9a066", "arid": "#e6c98a", "tropical": "#3f9a5c"
+    },
+    "terrain": {
+      "flatland": "#a9c480", "wetlands": "#5f9c8e", "plateau": "#c9b07e", "hills": "#a88c62",
+      "mountains": "#85705c", "hills_wasteland": "#9a9284", "mountain_wasteland": "#7a746e"
+    },
+    "resources": {
+      "wheat": "#e6cf6a", "maize": "#e0c24e", "rice": "#d8d892", "potato": "#c4b168", "legumes": "#a9c46a",
+      "millet": "#d2c07a", "fruit": "#e39a5a", "chili": "#d8743c", "olives": "#9aa65a", "wine": "#9a4a6a",
+      "sugar": "#e8b8c0",
+      "livestock": "#b98a5a", "horses": "#a47548", "wild_game": "#8a6a44", "fur": "#6e5a48", "wool": "#d9ccb2",
+      "ivory": "#efe4cc", "beeswax": "#d9b24a", "elephants": "#9b8d7c", "camels": "#c8a874",
+      "fish": "#4f9fc4", "whale": "#3f7aa4",
+      "cotton": "#e4e0f0", "tobacco": "#8c6a2e", "dyes": "#b04a8a", "incense": "#c08ab0", "fiber_crops": "#a5b48a",
+      "medicaments": "#6aa88a", "cocoa": "#6b4226", "coffee": "#5a3a2a", "tea": "#5f8a4a", "silk": "#d6a0c8",
+      "spices": "#b4502e", "pepper": "#7a3a2a", "cloves": "#8a4a3a", "saffron": "#e07a2a",
+      "lumber": "#4f7a3a", "stone": "#9a9a94", "marble": "#d6d6d2", "clay": "#b5704a", "sand": "#e0cc98",
+      "coal": "#45454c", "iron": "#6e7884", "copper": "#c06a3a", "tin": "#a8b4bc", "lead": "#5e6470",
+      "mercury": "#b8b8cc", "salt": "#f2f2ee", "saltpeter": "#d8d4c4", "alum": "#c8d0d8", "sulfur": "#d8d050",
+      "goods_gold": "#f2c230", "silver": "#c8ccd6", "gems": "#3cc8b4", "pearls": "#f0e6f0", "amber": "#e09a28"
+    }
+  },
+  "precious": {
+    "goods_gold": "#f2c230", "silver": "#dfe3ea", "gems": "#3cc8b4", "pearls": "#f6eef6", "amber": "#e09a28"
+  },
+  "vegetation": {
+    "desert": "#e2ce98", "sparse": "#c6bc82", "grasslands": "#a6c06a", "woods": "#74a056",
+    "forest": "#4a8048", "jungle": "#307244"
+  },
+  "climate_tints": {
+    "arctic": ["#f0f4f8", 0.78], "subpolar": ["#d6e0da", 0.36], "cold_arid": ["#c4b8a0", 0.3],
+    "cold_semi_arid": ["#c4ba96", 0.16], "arid": ["#ead4a0", 0.22], "hot_semi_arid": ["#dec48a", 0.12],
+    "mediterranean": ["#cec480", 0.08]
+  },
+  "topography": {
+    "wetlands": { "height": 0, "rough": 0.02, "rock": 0 },
+    "flatland": { "height": 0.05, "rough": 0.06, "rock": 0 },
+    "plateau": { "height": 0.3, "rough": 0.16, "rock": 0.14 },
+    "hills": { "height": 0.24, "rough": 0.45, "rock": 0.1 },
+    "mountains": { "height": 0.55, "rough": 1, "rock": 0.36 },
+    "hills_wasteland": { "height": 0.45, "rough": 0.8, "rock": 0.5 },
+    "mountain_wasteland": { "height": 0.7, "rough": 1, "rock": 0.6 }
+  },
+  "colours": {
+    "rock": "#94887a", "wetland": "#628464", "snow": "#f6f7fa",
+    "unclaimed": "#5c6054", "faded": "#8f8b7e", "tribal": "#a69c84",
+    "shallow": "#3b6ea3", "deep": "#1a3666", "lake_shallow": "#6199cc", "lake_deep": "#4075b3",
+    "ocean": "#162e59"
+  },
+  "coast_depth": 16,
+  "tribe_opacity": 150,
+  "ramp_opacity": [105, 140]
+}

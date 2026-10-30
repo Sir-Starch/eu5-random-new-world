@@ -152,6 +152,8 @@ def test_the_palettes_are_stable_and_the_ramp_is_a_ramp() -> None:
     assert atlas.ramp(1000) == atlas.RAMP[-1]
     assert atlas.pretty("goods_gold") == "Gold"
     assert atlas.pretty("wild_game") == "Wild Game"
+    assert atlas.pretty("great_plains_region") == "Great Plains"
+    assert atlas.pretty("guayana_sea_zones_area") == "Guayana Sea Zones"
 
 
 def test_the_growth_of_a_mask_reaches_exactly_the_radius() -> None:

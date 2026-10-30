@@ -36,6 +36,9 @@ Rewriting those rules in Rust or TypeScript would duplicate tested behaviour.
   the first state and exits without a window.
 - **Self-contained look.** Noto Sans and JetBrains Mono are bundled; the web view makes
   no network requests (CSP allows only the app's own files, data images and Tauri IPC).
+- **One map look.** The lenses' palettes, water and physical colours and per-lens profiles
+  are `rnw/gui/lenses.json`, imported by the interface and read by `rnw.gui.mapstyle`, which
+  draws the same maps for the classic window on the processor (the fallback under Proton).
 - **Delivery.** `rnw.gui` (`rnw.gui.start`) opens the window and waits for it; it imports no
   Qt until it needs the classic window. The window is `generator/window/random-new-world.exe`
   in the hub (cross-built with the GNU toolchain, with Microsoft's `WebView2Loader.dll` beside

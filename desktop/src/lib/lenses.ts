@@ -1,137 +1,37 @@
 // How each lens looks: what it paints over the physical map, how much relief shows through, which
-// lines it draws, what it names and what it writes in a location seen up close; and the colours
-// of its classes. The bridge sends each lens's classes and legend; the colours of the thematic
-// lenses are chosen here, for the map rather than for an identifier's hash.
+// lines it draws, what it names and what it writes in a location seen up close (the profiles and
+// palettes in ``style``); and the colours of its classes. The bridge sends each lens's classes
+// and legend; the colours of the thematic lenses are chosen here, for the map rather than for an
+// identifier's hash.
 
 import type { Lens, WorldAtlas } from "./atlas";
 import { LAND } from "./atlas";
-import { VEGETATION } from "./relief";
+import {
+  CLIMATES,
+  COLOURS,
+  PRECIOUS_MARKS,
+  PROFILES,
+  QUALITATIVE,
+  RAMP_OPACITY,
+  RESOURCES,
+  TERRAIN,
+  TRIBE_OPACITY,
+  VEGETATION,
+  hex,
+  toHex,
+  type LensProfile,
+  type RGB,
+} from "./style";
 
-export interface LensProfile {
-  /** The land is the physical map itself rather than a colour per location. */
-  physical: boolean;
-  /** How much of the relief's shade shows on the land, 0..1. */
-  shade: number;
-  /** Ink of the lines where the lens's own value changes, 0 for none. */
-  borders: number;
-  /** Ink of country borders when they are shown. */
-  political: number;
-  /** Names written large: regions and seas, countries, the lens's classes, or none. */
-  names: "regions" | "countries" | "classes" | "none";
-  /** What is written in each location when it is large enough to hold it. */
-  spots: "resource" | "population" | "development" | null;
-  /** Opacity of the lens's colour over the physical map, 0..255; a ramp fades with its value. */
-  opacity: number;
-}
+export { PRECIOUS_MARKS, PROFILES };
 
-const BASE: LensProfile = {
-  physical: false,
-  shade: 0.6,
-  borders: 0,
-  political: 0.32,
-  names: "none",
-  spots: null,
-  opacity: 225,
-};
+export type { LensProfile };
 
-export const PROFILES: Record<string, LensProfile> = {
-  land: { ...BASE, physical: true, shade: 1, political: 0.3, names: "regions" },
-  countries: { ...BASE, shade: 0.7, political: 0.82, names: "countries", opacity: 232 },
-  cultures: { ...BASE, borders: 0.42, political: 0.22, names: "classes", opacity: 218 },
-  religions: { ...BASE, borders: 0.42, political: 0.22, names: "classes", opacity: 218 },
-  resources: { ...BASE, shade: 0.55, political: 0.2, spots: "resource", opacity: 228 },
-  development: { ...BASE, shade: 0.5, political: 0.28, spots: "development" },
-  population: { ...BASE, shade: 0.5, political: 0.28, spots: "population" },
-  climate: { ...BASE, shade: 0.8, borders: 0.18, political: 0.22, opacity: 200 },
-  terrain: { ...BASE, shade: 1, political: 0.22, opacity: 205 },
-  areas: { ...BASE, borders: 0.38, political: 0.3, names: "classes", opacity: 210 },
-};
+const BASE: LensProfile = PROFILES.cultures;
 
 export function profile(layer: string): LensProfile {
   return PROFILES[layer] ?? BASE;
 }
-
-type RGB = [number, number, number];
-
-function hex(colour: string): RGB {
-  const value = Number.parseInt(colour.slice(1), 16);
-  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
-}
-
-function toHex([r, g, b]: RGB): string {
-  return `#${[r, g, b].map((v) => Math.round(v).toString(16).padStart(2, "0")).join("")}`;
-}
-
-// Muted colours that stay apart from one another, for classes that only need to differ from
-// their neighbours: cultures, religions, areas.
-const QUALITATIVE: RGB[] = [
-  "#c9a26b", "#8fb27a", "#c97f6b", "#7fa6c4", "#b58fc0", "#d4c27a", "#6fb5a8", "#c48aa0",
-  "#a3a36a", "#9db4d8", "#d19a5a", "#84c2a0", "#b77c5c", "#9a8fc8", "#cdb79a", "#7c9c8a",
-].map(hex);
-
-// Climates from the poles to the equator.
-const CLIMATES: Record<string, RGB> = {
-  arctic: hex("#e8eef4"),
-  subpolar: hex("#a9c3d6"),
-  cold_arid: hex("#b9a88c"),
-  cold_semi_arid: hex("#c8bd92"),
-  continental: hex("#7fae86"),
-  oceanic: hex("#6cb4b0"),
-  mediterranean: hex("#cfb35e"),
-  subtropical: hex("#9cc46a"),
-  hot_semi_arid: hex("#d9a066"),
-  arid: hex("#e6c98a"),
-  tropical: hex("#3f9a5c"),
-};
-
-const TERRAIN: Record<string, RGB> = {
-  flatland: hex("#a9c480"),
-  wetlands: hex("#5f9c8e"),
-  plateau: hex("#c9b07e"),
-  hills: hex("#a88c62"),
-  mountains: hex("#85705c"),
-  hills_wasteland: hex("#9a9284"),
-  mountain_wasteland: hex("#7a746e"),
-};
-
-// Raw materials by family, so the map reads as farmland, hunting grounds, plantations, quarries
-// and mines rather than as confetti: crops yellow-green, animals brown, the sea blue, cash crops
-// purple to red, wood green, building stone grey-beige, metals steel, riches gold.
-const RESOURCES: Record<string, RGB> = {
-  // crops
-  wheat: hex("#e6cf6a"), maize: hex("#e0c24e"), rice: hex("#d8d892"), potato: hex("#c4b168"),
-  legumes: hex("#a9c46a"), millet: hex("#d2c07a"), fruit: hex("#e39a5a"), chili: hex("#d8743c"),
-  olives: hex("#9aa65a"), wine: hex("#9a4a6a"), sugar: hex("#e8b8c0"),
-  // animals
-  livestock: hex("#b98a5a"), horses: hex("#a47548"), wild_game: hex("#8a6a44"), fur: hex("#6e5a48"),
-  wool: hex("#d9ccb2"), ivory: hex("#efe4cc"), beeswax: hex("#d9b24a"), elephants: hex("#9b8d7c"),
-  camels: hex("#c8a874"),
-  // the sea
-  fish: hex("#4f9fc4"), whale: hex("#3f7aa4"),
-  // cash crops
-  cotton: hex("#e4e0f0"), tobacco: hex("#8c6a2e"), dyes: hex("#b04a8a"), incense: hex("#c08ab0"),
-  fiber_crops: hex("#a5b48a"), medicaments: hex("#6aa88a"), cocoa: hex("#6b4226"),
-  coffee: hex("#5a3a2a"), tea: hex("#5f8a4a"), silk: hex("#d6a0c8"), spices: hex("#b4502e"),
-  pepper: hex("#7a3a2a"), cloves: hex("#8a4a3a"), saffron: hex("#e07a2a"),
-  // wood and stone
-  lumber: hex("#4f7a3a"), stone: hex("#9a9a94"), marble: hex("#d6d6d2"), clay: hex("#b5704a"),
-  sand: hex("#e0cc98"),
-  // minerals and metals
-  coal: hex("#45454c"), iron: hex("#6e7884"), copper: hex("#c06a3a"), tin: hex("#a8b4bc"),
-  lead: hex("#5e6470"), mercury: hex("#b8b8cc"), salt: hex("#f2f2ee"), saltpeter: hex("#d8d4c4"),
-  alum: hex("#c8d0d8"), sulfur: hex("#d8d050"),
-  // riches
-  goods_gold: hex("#f2c230"), silver: hex("#c8ccd6"), gems: hex("#3cc8b4"), pearls: hex("#f0e6f0"),
-  amber: hex("#e09a28"),
-};
-
-export const PRECIOUS_MARKS: Record<string, string> = {
-  goods_gold: "#f2c230",
-  silver: "#dfe3ea",
-  gems: "#3cc8b4",
-  pearls: "#f6eef6",
-  amber: "#e09a28",
-};
 
 function hashed(key: string): RGB {
   let h = 2166136261;
@@ -198,9 +98,9 @@ export interface StyledLens extends Lens {
 }
 
 // The bridge's colour for land without a country, culture, value...
-const UNCLAIMED = "#5c6054";
-const FADED = "#8f8b7e";
-const TRIBAL = "#a69c84";
+const UNCLAIMED = COLOURS.unclaimed;
+const FADED = COLOURS.faded;
+const TRIBAL = COLOURS.tribal;
 
 export function style(atlas: WorldAtlas, lens: Lens, tribes: boolean, tribesLabel: string): StyledLens {
   const layer = lens.layer;
@@ -272,7 +172,7 @@ export function style(atlas: WorldAtlas, lens: Lens, tribes: boolean, tribesLabe
       const owner = d.owner[c];
       if (kind[c] !== LAND || owner < 0) continue;
       if (!tribal[owner]) opacity[c] = look.opacity;
-      else if (tribes) opacity[c] = 150;
+      else if (tribes) opacity[c] = TRIBE_OPACITY;
     }
   } else if (layer === "cultures" || layer === "religions" || layer === "areas") {
     const field = layer === "cultures" ? "culture" : layer === "religions" ? "religion" : "";
@@ -310,7 +210,7 @@ export function style(atlas: WorldAtlas, lens: Lens, tribes: boolean, tribesLabe
     for (let c = 0; c < cells; c++) {
       if (kind[c] !== LAND || source[c] <= 0) continue;
       const share = layer === "development" ? source[c] / top : Math.sqrt(source[c] / top);
-      opacity[c] = Math.round(105 + 140 * share);
+      opacity[c] = Math.round(RAMP_OPACITY[0] + RAMP_OPACITY[1] * share);
     }
   }
   // Land that holds nothing of the lens shows the physical map, faded; so does its swatch.

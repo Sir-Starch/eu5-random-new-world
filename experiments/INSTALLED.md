@@ -6,6 +6,16 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-30, **generator hub 1.0.0, classic window drawing the new maps**: updated
+`mod/rnw_exp_hub` with `update_local_hub` from the working tree in which the classic Qt window
+(the Proton fallback) draws the maps as the Tauri window does. The updater verified current
+sources (now `.json` too), ran the isolated Wine self-test (both windows) and verified all
+**3,460** installed files; its EU5 process check passed at installation, after the game's logs
+had last been written. Under Wine, the installed hub's Python drew the classic maps offscreen
+from a library copy: about one second per lens. The previous hub is retained at
+`.rnw-hub-backups/1.0.0-1793355880481098759`. No EU5 launch, world mod, save, playset or
+setting change by the agent. [V-EXEC]
+
 2026-10-30, **generator hub 1.0.0 with the Tauri window**, C444: updated `mod/rnw_exp_hub`
 with `update_local_hub` from the working tree that makes the Tauri window the generator's
 window (classic Qt window as fallback). The hub now holds `generator/window/random-new-world.exe`

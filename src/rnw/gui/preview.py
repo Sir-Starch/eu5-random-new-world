@@ -78,6 +78,14 @@ class PreviewView(QGraphicsView):
             return row, column
         return None
 
+    def is_fitted(self) -> bool:
+        """Whether the whole picture is shown, as a double-click or a resize leaves it."""
+        return self._fitted
+
+    def keep_fit(self, *, fitted: bool) -> None:
+        """Say whether the view shows the whole picture after a subclass moved it."""
+        self._fitted = fitted
+
     def fit(self) -> None:
         """Show the whole picture."""
         self.resetTransform()

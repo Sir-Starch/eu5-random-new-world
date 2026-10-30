@@ -11,6 +11,7 @@ import type { Camera } from "./camera";
 import { LAKE, LAND, SEA, type WorldAtlas } from "./atlas";
 import { profile, type StyledLens } from "./lenses";
 import { relief, STEP, type Relief } from "./relief";
+import { COAST_DEPTH, COLOURS, unit } from "./style";
 
 const TEX_W = 1024;
 export const HOVER = 1;
@@ -43,14 +44,13 @@ export interface Renderer {
 
 // -- colours shared by both renderers ---------------------------------------------------------
 
-const SHALLOW: [number, number, number] = [0.23, 0.43, 0.64];
-const DEEP: [number, number, number] = [0.1, 0.21, 0.4];
-const LAKE_SHALLOW: [number, number, number] = [0.38, 0.6, 0.8];
-const LAKE_DEEP: [number, number, number] = [0.25, 0.46, 0.7];
-const COAST_DEPTH = 16;
+const SHALLOW = unit(COLOURS.shallow);
+const DEEP = unit(COLOURS.deep);
+const LAKE_SHALLOW = unit(COLOURS.lake_shallow);
+const LAKE_DEEP = unit(COLOURS.lake_deep);
 /** The open ocean around the New World's sea zones; the viewer's background is the same. */
-export const OCEAN: [number, number, number] = [0.085, 0.18, 0.35];
-export const OCEAN_CSS = `rgb(${OCEAN.map((v) => Math.round(v * 255)).join(", ")})`;
+export const OCEAN = unit(COLOURS.ocean);
+export const OCEAN_CSS = COLOURS.ocean;
 
 const VERTEX = `#version 300 es
 in vec2 aPos;

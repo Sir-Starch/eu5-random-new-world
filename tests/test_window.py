@@ -11,6 +11,7 @@ import sys
 import time
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 
 from rnw.app import library, service
@@ -769,6 +770,69 @@ def test_the_maps_tab_is_covered_until_revealed_and_then_draws_layers_and_answer
 
 
 @pytest.mark.usefixtures("application")
+def test_the_maps_isolate_pin_show_tribes_and_save_what_is_drawn(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """A legend entry shows alone; Show tribes redraws; a click pins and unpins a card; the
+    saved picture is the whole lens as drawn."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    maps = window.maps
+    maps.reveal_button.click()
+    pump(lambda: maps.pages.currentIndex() == 1)
+    maps.select_layer("countries")
+    plain = maps.picture()
+    entry = next(
+        item
+        for row in range(maps.legend_list.count())
+        if (item := maps.legend_list.item(row)).text().startswith("Aland")
+    )
+    maps.legend_list.itemClicked.emit(entry)
+    alone = maps.picture()
+    assert plain is not None
+    assert alone is not None
+    assert not (plain == alone).all()
+    assert maps.chip.isVisibleTo(maps)
+    maps.tribes_box.setChecked(True)
+    assert maps.picture() is not None
+    found = controller.atlas(controller.worlds[0])
+    assert found is not None
+    rows, columns = np.nonzero(found.labels == int(found.countries[0].capital) + 1)
+    pinned = maps.card.isVisibleTo(maps)
+    maps.map_view.clicked.emit(int(rows[0]), int(columns[0]))
+    assert maps.card.isVisibleTo(maps) is not pinned
+    maps.map_view.clicked.emit(int(rows[0]), int(columns[0]))
+    assert maps.card.isVisibleTo(maps) is pinned
+    drawn = maps.drawn_image()
+    assert drawn is not None
+    assert (drawn.height(), drawn.width()) == found.size
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_library_filters_by_words_and_by_view(tmp_path: Path, fake_export: Exporter) -> None:
+    """Filter worlds and the In the game / Favourite views hide entries; New world stays."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.world_list.count() > 1)
+    rows = window.world_list.count()
+    window.library_filter.setText("no such world")
+    assert all(window.world_list.item(row).isHidden() for row in range(1, rows))
+    assert not window.world_list.item(0).isHidden()
+    window.library_filter.setText("")
+    window.library_view.setCurrentIndex(window.library_view.findData("starred"))
+    assert all(window.world_list.item(row).isHidden() for row in range(1, rows))
+    window.library_view.setCurrentIndex(window.library_view.findData("all"))
+    assert not window.world_list.item(1).isHidden()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_pictures_are_saved_and_two_worlds_are_compared(
     tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -794,7 +858,7 @@ def test_pictures_are_saved_and_two_worlds_are_compared(
     entries = [("one", controller.atlas(only)), ("two", controller.atlas(only))]
     assert all(found is not None for _name, found in entries)
     dialog = CompareDialog(window, [(name, found) for name, found in entries if found], "land")
-    dialog.layer_buttons.button(1).click()
+    dialog.lens_choice.setCurrentIndex(1)
     assert len(dialog.views) == 2
     dialog.choices[1].setCurrentIndex(0)
     _ = dialog.close()

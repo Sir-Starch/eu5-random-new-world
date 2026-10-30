@@ -15,6 +15,9 @@ world choices, exact values and delivery. Each tab owns one vertical scroll area
 primary Generate action and a short status remain fixed below them; queue controls and
 stage details are disclosed when requested. The library scrolls independently.
 Worlds have an overview, maps, and personal notes. Secondary operations use dialogs.
+The library has the Tauri window's filter (words, and All/In the game/Favourite) and keys
+(Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+B for the library, Ctrl+V of a world code); a
+meter under the location estimate turns amber near the budget and red over it.
 Minimum supported window: 1080 by 760; desktop testing also covers 1440 by 900.
 
 ## 2. Colour
@@ -44,8 +47,14 @@ Path selectors shrink independently of path length and expose full paths in tool
 
 QPushButton, QToolButton, QComboBox, QLineEdit, QCheckBox, QListWidget and QGroupBox
 retain Qt's normal, hover, pressed, focus and disabled states. QDialogButtonBox supplies
-accept and cancel actions. PreviewView handles map fit, zoom and pan. MapsPanel owns
-layer selection, legend, search and location inspection. SettingsDialog owns application
+accept and cancel actions. PreviewView handles map fit, zoom and pan. MapsPanel draws the maps as the Tauri window
+does (`rnw.gui.mapstyle`, palettes and profiles shared through `rnw/gui/lenses.json`): the
+physical map under every lens, Show tribes, names written at every zoom, cities, capitals and
+riches, values up close, a legend that lights an entry under the pointer, isolates it on a
+click and zooms to it on a double-click, one search, a pinned location card whose values
+isolate what they name, lens keys 1–0, copying the view and saving the lens as drawn. It
+draws with NumPy and the native kernels on the processor and Qt Widgets, so it needs no web
+view or OpenGL and runs under Proton as it is. SettingsDialog owns application
 paths and diagnostics. Visibility belongs to each world's configuration and overview;
 the new-world choice remembers a default but never changes existing worlds.
 Candidate selection reuses QListWidget icons and native buttons. World actions are grouped
