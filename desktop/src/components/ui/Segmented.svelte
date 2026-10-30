@@ -1,4 +1,5 @@
 <script lang="ts">
+  // Adjoining buttons of which one is chosen; a value of null chooses none (a custom value).
   let {
     options,
     value,
@@ -32,37 +33,45 @@
 
 <style>
   .segmented {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 3px;
-    padding: 3px;
-    border-radius: 11px;
-    background: var(--bg-2);
-    border: 1px solid var(--line);
+    display: flex;
+    min-width: 0;
   }
   button {
-    min-height: 30px;
-    padding: 0 14px;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-2);
-    font: 550 13px var(--font);
-    cursor: pointer;
-    transition: all var(--speed) var(--ease);
+    flex: 1 1 0;
+    min-width: 0;
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--line-2);
+    border-radius: 0;
+    margin-left: -1px;
+    background: var(--raised);
+    color: var(--text);
+    font: 400 12.5px var(--font);
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  button:first-child {
+    margin-left: 0;
+    border-radius: var(--radius) 0 0 var(--radius);
+  }
+  button:last-child {
+    border-radius: 0 var(--radius) var(--radius) 0;
   }
   button:hover:not(:disabled):not(.on) {
-    background: var(--hover);
-    color: var(--text);
+    background: var(--raised-hover);
   }
   button.on {
-    background: var(--panel-3);
-    color: var(--text);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25), inset 0 0 0 1px var(--line-2);
+    position: relative;
+    z-index: 1;
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  button:focus-visible {
+    z-index: 2;
   }
   button:disabled {
     opacity: 0.5;
-    cursor: not-allowed;
   }
 </style>

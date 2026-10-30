@@ -1939,10 +1939,6 @@ text = '''일치하는 월드가 없습니다.'''
 source = "83b12c2216efb4fd"
 text = '''해제'''
 
-["library.tick"]
-source = "da9f0ca533b851cf"
-text = '''여러 개 선택'''
-
 ["library.no_game"]
 source = "166fde6d55146ed4"
 text = '''EU5를 찾을 수 없음'''
@@ -2015,10 +2011,6 @@ text = '''어둡게'''
 source = "dbcd5e7bb7a0f538"
 text = '''밝게'''
 
-["forge.eyebrow"]
-source = "8899ecd1626db63d"
-text = '''제작'''
-
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''이번 추첨: {type}. 새 시드로 다시 추첨합니다.'''
@@ -2062,10 +2054,6 @@ text = '''육지 지역'''
 ["stat.locations"]
 source = "2b72d3517e051498"
 text = '''바다와 호수 포함 {count}'''
-
-["world.danger"]
-source = "fd8b8dae44216610"
-text = '''위험 구역'''
 
 ["world.terra_incognita"]
 source = "c151b299877b72b0"

@@ -38,7 +38,7 @@
   <Modal title={modal.title} width={500} onclose={() => answer(false)}>
     <p class="body">{modal.body}</p>
     {#snippet footer()}
-      <button class="btn ghost" onclick={() => answer(false)}>{t("cancel")}</button>
+      <button class="btn" onclick={() => answer(false)}>{t("cancel")}</button>
       <button class="btn {modal.kind === 'confirm' && modal.danger ? 'danger solid' : 'primary'}" onclick={() => answer(true)}>
         {modal.kind === "confirm" ? modal.confirm : ""}
       </button>
@@ -48,7 +48,7 @@
   <Modal title={modal.title} width={560} onclose={() => path(null)}>
     <input class="input mono" bind:value={typed} onkeydown={(event) => event.key === "Enter" && path(typed || null)} />
     {#snippet footer()}
-      <button class="btn ghost" onclick={() => path(null)}>{t("cancel")}</button>
+      <button class="btn" onclick={() => path(null)}>{t("cancel")}</button>
       <button class="btn primary" onclick={() => path(typed || null)}>OK</button>
     {/snippet}
   </Modal>
@@ -65,28 +65,17 @@
 <style>
   .body {
     white-space: pre-line;
-    line-height: 1.6;
-    color: var(--text-2);
+    line-height: 1.5;
   }
   dl {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 10px 18px;
+    gap: 6px 14px;
     margin: 0;
     align-items: center;
   }
   dd {
     margin: 0;
     color: var(--text-2);
-  }
-  kbd {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--line-2);
-    border-bottom-width: 2px;
-    background: var(--panel-2);
-    font: 600 12px var(--mono);
-    white-space: nowrap;
   }
 </style>

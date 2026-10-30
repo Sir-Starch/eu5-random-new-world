@@ -35,7 +35,7 @@ Rewriting those rules in Rust or TypeScript would duplicate tested behaviour.
   `generator/python` beside the program is run isolated (`-B -I`); else a source checkout runs
   through `uv`. `RNW_DATA` selects the library folder. `--self-test` starts the bridge, asks for
   the first state and exits without a window.
-- **Self-contained look.** Inter, Fraunces and JetBrains Mono are bundled; the web view makes
+- **Self-contained look.** Noto Sans and JetBrains Mono are bundled; the web view makes
   no network requests (CSP allows only the app's own files, data images and Tauri IPC).
 
 ## Consequences

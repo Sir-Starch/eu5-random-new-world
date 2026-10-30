@@ -18,6 +18,8 @@
   const page = $derived(
     !s ? "loading" : s.world ? "world" : s.stray ? "stray" : "new",
   );
+  const generating = $derived(!!s?.busy && (s.task === "generate" || s.task === "queue"));
+  const percent = $derived(Math.round((s?.fraction ?? 0) * 100));
   let sketched = 0;
   let lastSelection = "";
   let lastResult = "";
@@ -108,6 +110,37 @@
     }
   }
 
+  // The library's width, dragged at its edge and kept per machine like the theme.
+  const WIDTH = "rnw.library";
+  let side = $state(storedWidth());
+  function storedWidth(): number {
+    try {
+      const value = Number(localStorage.getItem(WIDTH));
+      return value >= 180 && value <= 440 ? value : 240;
+    } catch {
+      return 240;
+    }
+  }
+  function resizing(event: PointerEvent): void {
+    const handle = event.currentTarget as HTMLElement;
+    handle.setPointerCapture(event.pointerId);
+    const start = event.clientX - side;
+    const move = (next: PointerEvent): void => {
+      side = Math.max(180, Math.min(440, next.clientX - start));
+    };
+    const up = (): void => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      try {
+        localStorage.setItem(WIDTH, String(side));
+      } catch {
+        // Storage is a convenience.
+      }
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+  }
+
   onMount(() => {
     void app.start().then(deepLink);
     void onDrop((paths) => {
@@ -126,25 +159,22 @@
 
 {#if app.failed}
   <div class="fatal">
-    <Icon name="alert" size={32} />
-    <h1>{app.info?.title ?? "Random New World"}</h1>
+    <h1><Icon name="alert" />{app.info?.title ?? "Random New World"}</h1>
     <p class="selectable mono">{app.failed}</p>
   </div>
 {:else if !s}
-  <div class="splash">
-    <div class="mark" aria-hidden="true">
-      <svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" /><path d="M6 13c5 1 7-3 11-2s5 5 9 4M5.5 20c4-1 6 2 10 1s6-4 11-2" /></svg>
-    </div>
-  </div>
+  <div class="splash"><span class="spinner"></span><span class="faint">Random New World</span></div>
 {:else}
-  <div class="shell" class:focus={app.mapFocus && page === "world" && app.worldTab === "map"}>
+  <div class="shell" class:focus={app.mapFocus && page === "world" && app.worldTab === "map"} style:--side={`${side}px`}>
     <div class="side"><Sidebar onOpenFile={openWorldFile} /></div>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="splitter" onpointerdown={resizing}></div>
     <main>
       {#if s.game.problem}
-        <div class="banner">
-          <Icon name="warning" size={16} />
+        <div class="msg warn banner">
+          <Icon name="warning" />
           <span>{s.game.problem}</span>
-          <button class="btn small" onclick={() => (app.modal = { kind: "settings" })}>{t("settings_title")}</button>
+          <button class="btn small" onclick={() => (app.modal = { kind: "settings" })}>{t("settings")}</button>
         </div>
       {/if}
       <div class="page">
@@ -157,6 +187,26 @@
         {/if}
       </div>
     </main>
+    <footer class="status">
+      <button
+        class="item game"
+        title={s.game.problem || `${s.game.directory}\n${s.game.profile}`}
+        onclick={() => (app.modal = { kind: "settings" })}
+      >
+        <span class="dot" class:ok={!s.game.problem} class:warn={!!s.game.problem}></span>
+        <span class="text">{s.game.problem ? t(s.game.found ? "library.no_profile" : "library.no_game") : s.game.status}</span>
+      </button>
+      {#if s.busy && !(generating && page === "new")}
+        <span class="item task">
+          <span class="spinner"></span>
+          <span class="text">{s.running || (generating ? t("dock.forging") : t(`task.${s.task}`))}</span>
+          {#if generating}<span class="num">{percent} %</span>{/if}
+        </span>
+      {/if}
+      <span class="item resources faint num">{s.resources}</span>
+      <button class="btn icon small ghost" title={t("settings_title")} aria-label={t("settings_title")} onclick={() => (app.modal = { kind: "settings" })}><Icon name="settings" /></button>
+      <button class="btn icon small ghost" title={t("about_title")} aria-label={t("about_title")} onclick={() => (app.modal = { kind: "about" })}><Icon name="info" /></button>
+    </footer>
   </div>
 {/if}
 
@@ -176,20 +226,30 @@
 <style>
   .shell {
     display: grid;
-    grid-template-columns: 296px minmax(0, 1fr);
+    grid-template-columns: var(--side) 1px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) 24px;
     height: 100vh;
-    transition: grid-template-columns 240ms var(--ease);
-    background:
-      radial-gradient(1200px 600px at 85% -10%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 60%),
-      radial-gradient(900px 500px at 10% 110%, color-mix(in srgb, var(--sea) 7%, transparent), transparent 60%),
-      var(--bg);
   }
   .shell.focus {
-    grid-template-columns: 0 minmax(0, 1fr);
+    grid-template-columns: 0 0 minmax(0, 1fr);
   }
   .side {
     min-width: 0;
     overflow: hidden;
+  }
+  .splitter {
+    position: relative;
+    background: var(--line);
+    cursor: col-resize;
+    z-index: 5;
+  }
+  .splitter::after {
+    content: "";
+    position: absolute;
+    inset: 0 -3px;
+  }
+  .focus .splitter {
+    display: none;
   }
   main {
     display: flex;
@@ -202,21 +262,57 @@
     min-height: 0;
   }
   .banner {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 20px;
-    background: var(--warn-soft);
-    border-bottom: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
-    color: var(--text);
-    font-size: 13px;
-  }
-  .banner :global(svg) {
-    color: var(--warn);
     flex: none;
+    align-items: center;
+    border-radius: 0;
+    border-width: 0 0 1px 3px;
   }
   .banner span {
     flex: 1;
+  }
+  .status {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    padding: 0 4px 0 2px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    height: 22px;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  .item .text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .game {
+    flex: 0 1 auto;
+    border: 0;
+    border-radius: var(--radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+  .game:hover {
+    background: var(--hover);
+  }
+  .task {
+    flex: 0 1 auto;
+    border-left: 1px solid var(--line);
+  }
+  .resources {
+    margin-left: auto;
+    flex: none;
   }
   .splash,
   .fatal {
@@ -224,28 +320,23 @@
     display: grid;
     place-content: center;
     justify-items: center;
-    gap: 14px;
-    padding: 40px;
-    text-align: center;
+    gap: 10px;
+    padding: 32px;
+  }
+  .splash {
+    grid-auto-flow: column;
+    align-items: center;
+  }
+  .fatal h1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .fatal :global(svg) {
     color: var(--danger);
   }
-  .splash svg {
-    width: 64px;
-    height: 64px;
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 1.4;
-    stroke-linecap: round;
-    animation: fade 1.2s ease-in-out infinite alternate;
-  }
-  .splash circle {
-    fill: var(--accent-soft);
-  }
-  @media (max-width: 1000px) {
-    .shell {
-      grid-template-columns: 250px minmax(0, 1fr);
-    }
+  .fatal p {
+    max-width: 720px;
+    overflow-wrap: anywhere;
   }
 </style>

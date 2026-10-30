@@ -2,7 +2,6 @@
   import { untrack } from "svelte";
   import { app, t } from "../lib/app.svelte";
   import type { Camera } from "../lib/camera";
-  import Icon from "./Icon.svelte";
   import MapViewer from "./MapViewer.svelte";
   import Modal from "./ui/Modal.svelte";
 
@@ -49,14 +48,10 @@
 
 <Modal title={t("compare_title")} wide onclose={() => (app.modal = null)}>
   <div class="bar">
-    <div class="lenses">
-      {#each app.info?.layers ?? [] as name (name)}
-        <button class:on={layer === name} onclick={() => (layer = name)}>{t(`layer.${name}`)}</button>
-      {/each}
-    </div>
-    <button class="btn small" class:on={linked} aria-pressed={linked} onclick={() => (linked = !linked)}>
-      <Icon name="compare" size={14} />{t("compare.linked")}
-    </button>
+    <select class="input lens" bind:value={layer} aria-label={t("legend")}>
+      {#each app.info?.layers ?? [] as name (name)}<option value={name}>{t(`layer.${name}`)}</option>{/each}
+    </select>
+    <label class="check"><input type="checkbox" bind:checked={linked} /><span>{t("compare.linked")}</span></label>
   </div>
   <div class="panes">
     {#each [0, 1] as side (side)}
@@ -83,31 +78,14 @@
 <style>
   .bar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 0 20px 12px;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
   }
-  .lenses {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-  .lenses button {
-    height: 30px;
-    padding: 0 12px;
-    border-radius: 999px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--text-2);
-    font: 550 12.5px var(--font);
-    cursor: pointer;
-  }
-  .lenses button.on,
-  .btn.on {
-    background: var(--accent-soft);
-    border-color: var(--accent-line);
-    color: var(--accent);
+  .lens {
+    width: auto;
+    min-width: 160px;
   }
   .panes {
     flex: 1;
@@ -116,16 +94,15 @@
     grid-template-columns: 1fr 1fr;
     gap: 1px;
     background: var(--line);
-    border-top: 1px solid var(--line);
   }
   .pane {
     display: flex;
     flex-direction: column;
     min-height: 0;
-    background: var(--panel);
+    background: var(--bg);
   }
   .pane select {
-    margin: 10px;
+    margin: 6px;
     width: auto;
   }
   .map {

@@ -15,64 +15,61 @@
   }
 </script>
 
-<Modal title={t("candidates")} width={980} onclose={() => (app.modal = null)}>
-  <p class="dim hint">{t("candidates_hint")}</p>
+<Modal title={t("candidates")} width={900} onclose={() => (app.modal = null)}>
+  <p class="hint intro">{t("candidates_hint")}</p>
   <div class="grid" role="listbox" aria-label={t("candidates")}>
     {#each app.now?.candidates ?? [] as candidate, index (candidate.seed)}
       <button class="candidate" class:on={chosen === index} role="option" aria-selected={chosen === index}
         onclick={() => (chosen = index)} ondblclick={() => choose(index)}>
         <span class="picture">
-          {#if pictures[index]}<img src={pictures[index]} alt="" />{:else}<span class="loading"></span>{/if}
+          {#if pictures[index]}<img src={pictures[index]} alt="" />{/if}
         </span>
         <span class="caption">
-          <strong>{index + 1}</strong>
-          <span class="land">{candidate.land.toFixed(1)} %</span>
+          <span class="num">{index + 1}</span>
+          <span class="num">{candidate.land.toFixed(1)} %</span>
           <span class="mono faint seed">{candidate.seed}</span>
         </span>
       </button>
     {/each}
   </div>
   {#snippet footer()}
-    <button class="btn ghost" onclick={() => (app.modal = null)}>{t("cancel")}</button>
+    <button class="btn" onclick={() => (app.modal = null)}>{t("cancel")}</button>
     <button class="btn primary" onclick={() => choose()}>{t("candidates.use")}</button>
   {/snippet}
 </Modal>
 
 <style>
-  .hint {
-    margin-bottom: 16px;
-    font-size: 13px;
+  .intro {
+    margin-bottom: 10px;
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 8px;
   }
   .candidate {
     display: grid;
-    gap: 8px;
-    padding: 8px;
-    border-radius: 14px;
-    border: 1px solid var(--line);
-    background: var(--bg-2);
+    gap: 4px;
+    padding: 4px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line-2);
+    background: var(--panel);
     color: var(--text);
-    cursor: pointer;
     font: inherit;
-    transition: all var(--speed) var(--ease);
   }
   .candidate:hover {
     border-color: var(--line-3);
   }
   .candidate.on {
-    border-color: var(--accent-line);
-    box-shadow: var(--glow);
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent);
   }
   .picture {
     display: block;
     aspect-ratio: 2 / 1;
-    border-radius: 9px;
     overflow: hidden;
-    background: var(--panel-3);
+    background: var(--field);
   }
   .picture img {
     width: 100%;
@@ -80,23 +77,12 @@
     object-fit: contain;
     image-rendering: pixelated;
   }
-  .loading {
-    display: block;
-    height: 100%;
-    background: linear-gradient(90deg, var(--panel-3), var(--panel-2), var(--panel-3));
-    background-size: 200% 100%;
-    animation: shimmer 1.4s linear infinite;
-  }
   .caption {
     display: flex;
     align-items: baseline;
     gap: 10px;
-    padding: 0 4px 2px;
-    font-size: 13px;
-  }
-  .land {
-    color: var(--ok);
-    font-weight: 600;
+    padding: 0 2px;
+    font-size: 12px;
   }
   .seed {
     margin-left: auto;

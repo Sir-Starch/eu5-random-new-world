@@ -8,9 +8,9 @@
 <div class="toasts" aria-live="polite">
   {#each app.toasts as toast (toast.id)}
     <div class="toast {toast.kind}" role={toast.kind === "error" ? "alert" : "status"}>
-      <Icon name={ICONS[toast.kind]} size={17} />
+      <Icon name={ICONS[toast.kind]} />
       <p class="selectable">{toast.text}</p>
-      <button class="btn icon small ghost" aria-label={t("close")} onclick={() => app.dismiss(toast.id)}><Icon name="x" size={14} /></button>
+      <button class="btn icon small ghost" aria-label={t("close")} title={t("close")} onclick={() => app.dismiss(toast.id)}><Icon name="x" /></button>
     </div>
   {/each}
 </div>
@@ -18,51 +18,55 @@
 <style>
   .toasts {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
+    right: 12px;
+    bottom: 34px;
     z-index: 60;
     display: grid;
-    gap: 10px;
-    width: min(420px, calc(100vw - 40px));
+    gap: 6px;
+    width: min(380px, calc(100vw - 24px));
   }
   .toast {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 12px 8px 12px 14px;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--panel-2) 96%, transparent);
-    backdrop-filter: blur(14px);
+    gap: 8px;
+    padding: 7px 4px 7px 10px;
     border: 1px solid var(--line-2);
+    border-left: 3px solid var(--text-3);
+    border-radius: var(--radius);
+    background: var(--panel);
     box-shadow: var(--shadow);
-    font-size: 13px;
-    line-height: 1.5;
-    animation: rise 180ms var(--ease);
+    font-size: 12.5px;
+    line-height: 1.45;
   }
-  .toast :global(svg:first-child) {
-    flex: none;
-    margin-top: 2px;
+  .toast > :global(svg:first-child) {
+    margin-top: 1px;
   }
   .toast p {
     flex: 1;
     overflow-wrap: anywhere;
   }
-  .success :global(svg:first-child) {
+  .success {
+    border-left-color: var(--ok);
+  }
+  .success > :global(svg:first-child) {
     color: var(--ok);
   }
   .warning {
-    border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+    border-left-color: var(--warn);
   }
-  .warning :global(svg:first-child) {
+  .warning > :global(svg:first-child) {
     color: var(--warn);
   }
   .error {
-    border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+    border-left-color: var(--danger);
   }
-  .error :global(svg:first-child) {
+  .error > :global(svg:first-child) {
     color: var(--danger);
   }
-  .info :global(svg:first-child) {
-    color: var(--sea);
+  .info {
+    border-left-color: var(--accent);
+  }
+  .info > :global(svg:first-child) {
+    color: var(--accent-text);
   }
 </style>

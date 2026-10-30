@@ -83,20 +83,28 @@ offscreen Qt tests. Capture the desktop window in light and dark themes for layo
 
 ## 9. The Tauri window (candidate)
 
-**Look.** One design on every system: dark ink with brass accents, or parchment in light mode
-(System/Dark/Light in Settings, kept per machine). Inter for text, Fraunces for titles and map
-names, JetBrains Mono for codes; all bundled. Tokens live in `desktop/src/app.css`; components
-use them rather than literal colours. Motion is short and disabled by `prefers-reduced-motion`.
+**Look.** A compact tool window that sits beside the game, the same on every system (owner
+review 2026-10-30: the first candidate read as a website). Neutral greys with one blue accent
+for selection, focus and the primary action; light and dark (System/Dark/Light in Settings,
+kept per machine). Noto Sans 13 px for text and map names, JetBrains Mono for codes; both
+bundled. Controls are 26 px high with 3 px corners; panels are flat and divided by hairlines,
+without cards, gradients, glows or blur. Checkboxes and radio buttons, not switches; a list,
+not picture cards, for the world type. Icons are a small 16-unit, one-pixel set used only in
+toolbars and icon buttons; other buttons carry text. Tokens live in `desktop/src/app.css`;
+components use them rather than literal colours. The only motion is the busy spinner.
+Default window 1160×740, minimum 860×560.
 
-**Structure.** A library sidebar (filter, All/In the game/Favourite, thumbnails, versions drawn
-as branches under their world, Ctrl/Shift/checkbox multi-select with a batch bar, a global task
-line and the game/profile chip) beside one page. The new-world page reads top to bottom (type
-cards, world basics, seed and code, land sources, Customize, where to save) with a fixed dock:
-location budget meter, summary, Generate, progress with ETA and stage timeline, outcome and
-retry, queue. A world page has a picture banner, inline rename and favourite, the add/remove
-action, and tabs: World (stats, next step, details and check, visibility, delete), Maps,
-Create a version, Share and export, Notes. Messages that the Qt window wrote under a page are
-toasts; questions are in-window dialogs.
+**Structure.** A resizable library (filter with All/In the game/Favourite, New world as its
+first row, thumbnails, versions drawn as branches under their world, Ctrl/Shift/Ctrl+A
+multi-select with Remove/Delete below) beside one page, and a status bar with the game and
+profile, the running task and the machine's resources. The new-world page is a form in titled
+groups (world, seed and code, land sources, Customize with slider rows, where to save) above a
+fixed bar: location budget meter, hint or problem, Add to queue and Generate; while working,
+progress with stage, ETA, stage details and Cancel; afterwards the outcome with retry, and the
+queue. A world page has a compact header (picture, inline rename, favourite, place, add/remove,
+folder) and tabs: World (details and check, visibility, delete), Maps, Create a version, Share
+and export, Notes; commands are listed as a button beside its explanation. Messages that the Qt
+window wrote under a page are toasts; questions are in-window dialogs.
 
 **Maps.** Ten lenses (keys 1–0), country borders, names and location borders as overlays,
 search over countries, cultures, religions, resources, areas and places, a legend that previews

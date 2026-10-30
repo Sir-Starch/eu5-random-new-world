@@ -6,7 +6,7 @@
   let {
     title,
     onclose,
-    width = 560,
+    width = 520,
     children,
     footer,
     wide = false,
@@ -41,9 +41,9 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="backdrop" onkeydown={key} onclick={(event) => event.target === event.currentTarget && onclose()}>
   <div
-    class="dialog card"
+    class="dialog"
     class:wide
-    style:width={wide ? undefined : `min(${width}px, calc(100vw - 48px))`}
+    style:width={wide ? undefined : `min(${width}px, calc(100vw - 32px))`}
     role="dialog"
     aria-modal="true"
     aria-label={title}
@@ -52,7 +52,7 @@
   >
     <header>
       <h2>{title}</h2>
-      <button class="btn icon ghost close" aria-label={t("close")} onclick={onclose}>
+      <button class="btn icon small ghost close" aria-label={t("close")} title={t("close")} onclick={onclose}>
         <Icon name="x" />
       </button>
     </header>
@@ -68,31 +68,41 @@
     z-index: 50;
     display: grid;
     place-items: center;
-    background: rgba(4, 6, 10, 0.55);
-    backdrop-filter: blur(4px);
-    animation: fade 140ms var(--ease);
+    background: rgba(0, 0, 0, 0.4);
   }
   .dialog {
-    max-height: calc(100vh - 48px);
+    max-height: calc(100vh - 32px);
     display: flex;
     flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
     box-shadow: var(--shadow);
-    animation: rise 180ms var(--ease);
     outline: none;
   }
   .dialog.wide {
-    width: calc(100vw - 48px);
-    height: calc(100vh - 48px);
+    width: calc(100vw - 32px);
+    height: calc(100vh - 32px);
   }
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 18px 20px 12px 24px;
+    height: 34px;
+    padding: 0 6px 0 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 4px 4px 0 0;
+  }
+  h2 {
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .body {
-    padding: 4px 24px 22px;
+    padding: 14px;
     min-height: 0;
     flex: 1;
   }
@@ -104,8 +114,11 @@
   footer {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
-    padding: 14px 24px 18px;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
     border-top: 1px solid var(--line);
+    background: var(--panel);
+    border-radius: 0 0 4px 4px;
   }
 </style>

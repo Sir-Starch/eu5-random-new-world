@@ -3,10 +3,9 @@
   import { copyText, openFile, pickFolder, readText, saveFile } from "../lib/native";
   import GenerateDock from "./GenerateDock.svelte";
   import Icon from "./Icon.svelte";
+  import Check from "./ui/Check.svelte";
   import ControlRow from "./ui/ControlRow.svelte";
   import Segmented from "./ui/Segmented.svelte";
-  import Toggle from "./ui/Toggle.svelte";
-  import TypeGlyph from "./ui/TypeGlyph.svelte";
 
   const s = $derived(app.now);
   const n = $derived(s?.new);
@@ -14,7 +13,6 @@
   let seedText = $state<string | null>(null);
   let codeText = $state<string | null>(null);
   let advanced = $state(false);
-  let openGroups = $state<Record<string, boolean>>({ land: true, map: true, peoples: true });
 
   const IMAGES = [{ name: "PNG, JPEG, BMP, TIFF", extensions: ["png", "jpg", "jpeg", "bmp", "tif", "tiff"] }];
 
@@ -54,6 +52,7 @@
   }
 
   async function destination(kind: string): Promise<void> {
+    if (kind === n?.destination) return;
     await app.call("set_destination", { kind });
     if (kind !== "library") await chooseTarget(kind);
   }
@@ -72,493 +71,227 @@
 
 <div class="page">
   <div class="content scroll">
-    <header class="hero">
-      <div class="hero-text">
-        <span class="eyebrow">{t("forge.eyebrow")}</span>
-        <h1>{t("new_world")}</h1>
-        <p class="dim">{t(`type.${n?.choice}.about`)}</p>
-      </div>
-      <div class="code-pill" title={t("code_hint")}>
-        <span class="eyebrow">{t("code")}</span>
-        <code class="selectable">{n?.code}</code>
-        <button class="btn icon small ghost" title={t("copy")} aria-label={t("copy")} onclick={copyCode}><Icon name="copy" size={15} /></button>
-        <button class="btn icon small ghost" title={t("paste")} aria-label={t("paste")} disabled={busy} onclick={paste}><Icon name="paste" size={15} /></button>
-      </div>
-    </header>
-
-    {#if n?.notice}
-      <div class="callout warn"><Icon name="warning" /><p>{n.notice}</p></div>
-    {/if}
-
-    <section class="section">
-      <h3>{t("type")}</h3>
-      <div class="types" role="radiogroup" aria-label={t("type")}>
-        {#each app.info?.choices ?? [] as choice (choice)}
-          <button
-            class="type"
-            class:on={n?.choice === choice}
-            class:mode={app.info?.modes.includes(choice)}
-            role="radio"
-            aria-checked={n?.choice === choice}
-            disabled={busy}
-            title={t(`type.${choice}.about`)}
-            onclick={() => app.call("set_choice", { choice })}
-          >
-            <span class="glyph"><TypeGlyph kind={choice} /></span>
-            <span class="type-name">{t(`type.${choice}`)}</span>
-          </button>
-        {/each}
-      </div>
-      {#if n?.mode}
-        <p class="faint small">{t("forge.drawn", { type: t(`type.${n.preset}`) })}</p>
+    <div class="sheet">
+      {#if n?.notice}
+        <div class="msg warn"><Icon name="warning" /><p>{n.notice}</p></div>
       {/if}
-    </section>
 
-    <section class="section card padded">
-      <div class="section-head">
-        <h3>{t("quick")}</h3>
-        <p class="faint small">{t("quick_hint")}</p>
-      </div>
-      <div class="quick">
-        {#each app.info?.quick ?? [] as item (item.name)}
-          <div class="quick-row">
-            <div class="quick-name" title={t(`quick.${item.name}.about`)}>
-              <span>{t(`quick.${item.name}`)}</span>
-              {#if n && n.quick[item.name] === null}<span class="badge warn">{t("quick.custom")}</span>{/if}
-              <span class="faint small about">{t(`quick.${item.name}.about`)}</span>
-            </div>
+      <section>
+        <h3 class="group-title">{t("new_tab.world")}</h3>
+        <div class="form">
+          <label class="label" for="world-type">{t("type")}</label>
+          <select
+            id="world-type"
+            class="input"
+            value={n?.choice}
+            disabled={busy}
+            onchange={(event) => app.call("set_choice", { choice: (event.currentTarget as HTMLSelectElement).value })}
+          >
+            {#each app.info?.choices ?? [] as choice (choice)}
+              <option value={choice}>{t(`type.${choice}`)}</option>
+            {/each}
+          </select>
+          <p class="span hint">
+            {t(`type.${n?.choice}.about`)}
+            {#if n?.mode}{t("forge.drawn", { type: t(`type.${n.preset}`) })}{/if}
+          </p>
+
+          {#each app.info?.quick ?? [] as item (item.name)}
+            <span class="label" title={t(`quick.${item.name}.about`)}>
+              {t(`quick.${item.name}`)}{#if n && n.quick[item.name] === null}<span class="custom"> · {t("quick.custom")}</span>{/if}
+            </span>
             <Segmented
               label={t(`quick.${item.name}`)}
               disabled={busy}
               value={n?.quick[item.name] ?? null}
-              options={item.levels.map((level) => ({ value: level, label: t(`quick.${item.name}.${level}`) }))}
+              options={item.levels.map((level) => ({ value: level, label: t(`quick.${item.name}.${level}`), title: t(`quick.${item.name}.about`) }))}
               onchange={(level) => app.call("set_quick", { name: item.name, level })}
             />
-          </div>
-        {/each}
-      </div>
-      <div class="divider"></div>
-      <Toggle
-        checked={(n?.values["new_world.expand_oceans"]?.shown ?? 0) > 0}
-        disabled={busy}
-        label={t("control.new_world.expand_oceans")}
-        hint={t("control.new_world.expand_oceans.about")}
-        onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
-      />
-    </section>
+          {/each}
 
-    <section class="section card padded">
-      <div class="section-head"><h3>{t("world_identity")}</h3></div>
-      <div class="identity">
-        <label class="field">
-          <span class="field-label">{t("seed")}</span>
-          <div class="inline">
+          <div class="span spaced">
+            <Check
+              checked={(n?.values["new_world.expand_oceans"]?.shown ?? 0) > 0}
+              disabled={busy}
+              label={t("control.new_world.expand_oceans")}
+              hint={t("control.new_world.expand_oceans.about")}
+              onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h3 class="group-title">{t("world_identity")}</h3>
+        <div class="form">
+          <label class="label" for="seed">{t("seed")}</label>
+          <div class="row">
             <input
+              id="seed"
               class="input mono"
               value={seedText ?? n?.seed ?? ""}
               disabled={busy}
               inputmode="numeric"
-              aria-label={t("seed")}
               oninput={(event) => (seedText = (event.currentTarget as HTMLInputElement).value)}
               onblur={seedDone}
               onkeydown={(event) => event.key === "Enter" && (event.currentTarget as HTMLInputElement).blur()}
             />
-            <button class="btn" disabled={busy} onclick={() => app.call("randomize")} title={t("random")}>
-              <Icon name="dice" size={16} />{t("random")}
-            </button>
+            <button class="btn" disabled={busy} onclick={() => app.call("randomize")}>{t("random")}</button>
           </div>
-        </label>
-        <label class="field">
-          <span class="field-label">{t("code")}</span>
-          <div class="inline">
+          <label class="label" for="code">{t("code")}</label>
+          <div class="row">
             <input
+              id="code"
               class="input mono"
               value={codeText ?? n?.code ?? ""}
               placeholder={t("code_hint")}
+              title={t("code_hint")}
               disabled={busy}
-              aria-label={t("code")}
               oninput={(event) => (codeText = (event.currentTarget as HTMLInputElement).value)}
               onblur={codeDone}
               onkeydown={(event) => event.key === "Enter" && (event.currentTarget as HTMLInputElement).blur()}
             />
-            <button class="btn icon" onclick={copyCode} title={t("copy")} aria-label={t("copy")}><Icon name="copy" size={16} /></button>
-            <button class="btn icon" disabled={busy} onclick={paste} title={t("paste")} aria-label={t("paste")}><Icon name="paste" size={16} /></button>
+            <button class="btn icon" onclick={copyCode} title={t("copy")} aria-label={t("copy")}><Icon name="copy" /></button>
+            <button class="btn icon" disabled={busy} onclick={paste} title={t("paste")} aria-label={t("paste")}><Icon name="paste" /></button>
           </div>
-          <span class="faint small">{t("code_hint")}</span>
-        </label>
-      </div>
-    </section>
-
-    <section class="section card padded">
-      <div class="section-head"><h3>{t("land_tools")}</h3></div>
-      <div class="tools">
-        <button class="tool" disabled={!n?.candidates_enabled} onclick={() => app.act("sketch_candidates")}>
-          <span class="tool-icon"><Icon name="grid" /></span>
-          <span class="tool-text"><strong>{t("candidates")}</strong><span class="faint small">{t("candidates_hint")}</span></span>
-        </button>
-        <div class="tool land" class:chosen={!!n?.land_mask}>
-          <span class="tool-icon"><Icon name="image" /></span>
-          <span class="tool-text">
-            <strong>{n?.land_mask ? n.land_mask_text : t("land_image")}</strong>
-            <span class="faint small">{t("land_image_tip")}</span>
-            <span class="tool-actions">
-              <button class="btn small" disabled={busy} onclick={landImage}><Icon name="upload" size={14} />{t("land_image")}</button>
-              {#if n?.land_mask}
-                <button class="btn small ghost" disabled={busy} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
-              {/if}
-              <button class="btn small ghost" disabled={!n?.template_enabled} title={t("land_template_tip")} onclick={template}><Icon name="download" size={14} />{t("land_template")}</button>
-            </span>
-          </span>
+          <p class="span hint">{t("code_hint")}</p>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="section card">
-      <button class="collapse" onclick={() => (advanced = !advanced)} aria-expanded={advanced}>
-        <Icon name="sliders" />
-        <span class="collapse-text">
-          <h3>{t("customize")}</h3>
-          <span class="faint small">{n?.changed ? t("customized", { count: n.changed }) : t("customize_hint")}</span>
-        </span>
-        {#if n?.changed}<span class="badge accent">{n.changed}</span>{/if}
-        <Icon name={advanced ? "chevronDown" : "chevronRight"} />
-      </button>
-      {#if advanced}
-        <div class="advanced">
-          <p class="faint small">{t("customize_hint")}</p>
-          {#each groups as group (group)}
-            <div class="group">
-              <button class="group-head" onclick={() => (openGroups[group] = !openGroups[group])} aria-expanded={openGroups[group]}>
-                <span class="eyebrow">{t(`group.${group}`)}</span>
-                <Icon name={openGroups[group] ? "chevronDown" : "chevronRight"} size={14} />
-              </button>
-              {#if openGroups[group]}
-                {#each controls.filter((c) => c.group === group) as control (control.key)}
-                  {#if n?.values[control.key]}
-                    <ControlRow {control} value={n.values[control.key]} disabled={busy} />
-                  {/if}
-                {/each}
-              {/if}
+      <section>
+        <h3 class="group-title">{t("land_tools")}</h3>
+        <div class="form">
+          <span class="label top">{t("quick.land")}</span>
+          <div class="stack">
+            <div class="row wrap">
+              <button class="btn" disabled={!n?.candidates_enabled} title={t("candidates_hint")} onclick={() => app.act("sketch_candidates")}>{t("candidates")}</button>
+              <button class="btn" disabled={busy} title={t("land_image_tip")} onclick={landImage}>{t("land_image")}</button>
+              <button class="btn" disabled={!n?.template_enabled} title={t("land_template_tip")} onclick={template}>{t("land_template")}</button>
             </div>
-          {/each}
-          <button class="btn small" disabled={!n?.changed || busy} onclick={() => app.call("reset_values")}>
-            <Icon name="undo" size={14} />{t("reset_all")}
+            {#if n?.land_mask}
+              <div class="row chosen">
+                <Icon name="image" />
+                <span class="selectable path" title={n.land_mask}>{n.land_mask_text}</span>
+                <button class="btn small" disabled={busy} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
+              </div>
+            {/if}
+            <p class="hint">{t("candidates_hint")}</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="group-title custom-head">
+          <button class="disclose" onclick={() => (advanced = !advanced)} aria-expanded={advanced}>
+            <Icon name={advanced ? "chevronDown" : "chevronRight"} />
+            {t("customize")}
+            <span class="faint">{n?.changed ? t("custom_some", { count: n.changed }) : ""}</span>
           </button>
         </div>
-      {/if}
-    </section>
+        {#if advanced}
+          <p class="hint">{t("customize_hint")}</p>
+          <div class="form controls">
+            {#each groups as group (group)}
+              <h4 class="full sub">{t(`group.${group}`)}</h4>
+              {#each controls.filter((c) => c.group === group) as control (control.key)}
+                {#if n?.values[control.key]}
+                  <ControlRow {control} value={n.values[control.key]} disabled={busy} />
+                {/if}
+              {/each}
+            {/each}
+            <div class="span">
+              <button class="btn small" disabled={!n?.changed || busy} onclick={() => app.call("reset_values")}>{t("reset_all")}</button>
+            </div>
+          </div>
+        {/if}
+      </section>
 
-    <section class="section card padded">
-      <div class="section-head">
-        <h3>{t("output")}</h3>
-        <p class="faint small">{t("output_hint")}</p>
-      </div>
-      <Segmented
-        label={t("output")}
-        disabled={busy}
-        value={n?.destination ?? "library"}
-        options={(app.info?.destinations ?? []).map((key) => ({ value: key, label: t(`destination.${key}`) }))}
-        onchange={destination}
-      />
-      {#if n && n.destination !== "library"}
-        <div class="target">
-          <Icon name={n.destination === "mod" ? "folder" : "file"} size={16} />
-          <span class="mono selectable path" title={n.target}>{n.target || t("destination_missing")}</span>
-          <button class="btn small" disabled={busy} onclick={() => chooseTarget()}>{t("destination_choose")}</button>
+      <section>
+        <h3 class="group-title">{t("output")}</h3>
+        <div class="form">
+          <div class="span stack" role="radiogroup" aria-label={t("output")}>
+            {#each app.info?.destinations ?? [] as key (key)}
+              <label class="check" class:disabled={busy}>
+                <input type="radio" name="destination" checked={(n?.destination ?? "library") === key} disabled={busy} onchange={() => destination(key)} />
+                <span>{t(`destination.${key}`)}</span>
+              </label>
+            {/each}
+            <p class="hint">{t("output_hint")}</p>
+          </div>
+          {#if n && n.destination !== "library"}
+            <div class="span row">
+              <input class="input mono" readonly value={n.target} placeholder={t("destination_missing")} title={n.target} />
+              <button class="btn" disabled={busy} onclick={() => chooseTarget()}>{t("destination_choose")}</button>
+            </div>
+          {:else}
+            <div class="span">
+              <Check
+                checked={!!n?.install}
+                disabled={busy}
+                label={t("install")}
+                hint={n?.install ? t("generation_install") : t("generation_keep")}
+                onchange={(value) => app.call("set_install", { value })}
+              />
+            </div>
+          {/if}
+          <div class="span">
+            <Check
+              checked={!!s?.preferences.show_new_world}
+              disabled={busy}
+              label={t("show_new_world")}
+              hint={t("show_new_world_hint")}
+              onchange={(value) => app.call("set_show_new_world", { value })}
+            />
+          </div>
         </div>
-      {:else}
-        <div class="spaced">
-          <Toggle
-            checked={!!n?.install}
-            disabled={busy}
-            label={t("install")}
-            hint={n?.install ? t("generation_install") : t("generation_keep")}
-            onchange={(value) => app.call("set_install", { value })}
-          />
-        </div>
-      {/if}
-      <div class="divider"></div>
-      <Toggle
-        checked={!!s?.preferences.show_new_world}
-        disabled={busy}
-        label={t("show_new_world")}
-        hint={t("show_new_world_hint")}
-        onchange={(value) => app.call("set_show_new_world", { value })}
-      />
-    </section>
+      </section>
+    </div>
   </div>
 
-  <aside class="side scroll">
-    <GenerateDock />
-  </aside>
+  <GenerateDock />
 </div>
 
 <style>
   .page {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 340px;
+    display: flex;
+    flex-direction: column;
     height: 100%;
     min-height: 0;
   }
   .content {
-    padding: 28px 32px 48px;
+    flex: 1;
+    min-height: 0;
+  }
+  .sheet {
     display: grid;
-    gap: 18px;
-    align-content: start;
-    min-height: 0;
+    gap: 16px;
+    max-width: 820px;
+    padding: 12px 16px 20px;
   }
-  .side {
-    padding: 28px 24px 28px 0;
-    min-height: 0;
+  section {
+    display: grid;
+    gap: 8px;
   }
-  .hero {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 20px;
-    flex-wrap: wrap;
-    padding-bottom: 4px;
+  .custom {
+    color: var(--warn);
+    font-size: 12px;
   }
-  .hero-text {
+  .spaced {
+    padding-top: 4px;
+  }
+  .stack {
     display: grid;
     gap: 6px;
-    max-width: 640px;
-  }
-  .hero h1 {
-    font-size: 36px;
-  }
-  .code-pill {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 6px 6px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--line-2);
-    background: var(--panel);
-    max-width: 100%;
     min-width: 0;
   }
-  .code-pill code {
-    font-size: 12px;
-    color: var(--text-2);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 280px;
+  .wrap {
+    flex-wrap: wrap;
   }
-  .section {
-    display: grid;
-    gap: 12px;
-  }
-  .padded {
-    padding: 18px 20px;
-  }
-  .section-head {
-    display: grid;
-    gap: 3px;
-  }
-  .small {
-    font-size: 12.5px;
-    line-height: 1.45;
-  }
-  .types {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-    gap: 10px;
-  }
-  .type {
-    display: grid;
-    gap: 8px;
-    padding: 10px;
-    border-radius: 14px;
+  .chosen {
+    padding: 4px 6px;
     border: 1px solid var(--line);
+    border-radius: var(--radius);
     background: var(--panel);
-    color: var(--text-2);
-    cursor: pointer;
-    text-align: center;
-    font: 600 12.5px var(--font);
-    transition: all var(--speed) var(--ease);
-  }
-  .type:hover:not(:disabled) {
-    border-color: var(--line-3);
-    color: var(--text);
-    transform: translateY(-1px);
-  }
-  .type.on {
-    border-color: var(--accent-line);
-    background: linear-gradient(180deg, var(--accent-soft), transparent 80%), var(--panel);
-    color: var(--text);
-    box-shadow: var(--glow);
-  }
-  .type:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .glyph {
-    display: block;
-    aspect-ratio: 4 / 3;
-    border-radius: 10px;
-    background: var(--bg-2);
-    padding: 6px;
-  }
-  .type.mode .glyph {
-    background: linear-gradient(135deg, var(--sea-soft), var(--accent-soft));
-  }
-  .quick {
-    display: grid;
-    gap: 4px;
-  }
-  .quick-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 8px 0;
-    flex-wrap: wrap;
-  }
-  .quick-name {
-    display: grid;
-    grid-template-columns: auto auto;
-    justify-content: start;
-    align-items: center;
-    gap: 2px 10px;
-    font-weight: 550;
-    max-width: 420px;
-  }
-  .quick-name .about {
-    grid-column: 1 / -1;
-    font-weight: 400;
-  }
-  .divider {
-    height: 1px;
-    background: var(--line);
-    margin: 4px 0;
-  }
-  .identity {
-    display: grid;
-    gap: 14px;
-  }
-  .field {
-    display: grid;
-    gap: 6px;
-  }
-  .field-label {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text-2);
-  }
-  .inline {
-    display: flex;
-    gap: 8px;
-  }
-  .inline .input {
-    flex: 1;
-  }
-  .tools {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
-  }
-  .tool {
-    display: flex;
-    gap: 14px;
-    padding: 14px;
-    border-radius: 12px;
-    border: 1px solid var(--line);
-    background: var(--bg-2);
-    color: var(--text);
-    text-align: left;
-    font: inherit;
-  }
-  button.tool {
-    cursor: pointer;
-    transition: border-color var(--speed) var(--ease);
-  }
-  button.tool:hover:not(:disabled) {
-    border-color: var(--accent-line);
-  }
-  button.tool:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-  .tool.chosen {
-    border-color: var(--accent-line);
-  }
-  .tool-icon {
-    flex: none;
-    display: grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: var(--accent-soft);
-    color: var(--accent);
-  }
-  .tool-text {
-    display: grid;
-    gap: 4px;
-    align-content: start;
-  }
-  .tool-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 6px;
-  }
-  .collapse {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-    padding: 18px 20px;
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    text-align: left;
-    font: inherit;
-  }
-  .collapse > :global(svg:first-child) {
-    color: var(--accent);
-  }
-  .collapse-text {
-    flex: 1;
-    display: grid;
-    gap: 2px;
-  }
-  .advanced {
-    padding: 0 20px 18px;
-    display: grid;
-    gap: 14px;
-  }
-  .advanced > .btn {
-    justify-self: start;
-  }
-  .group {
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 4px 14px 6px;
-    background: var(--bg-2);
-  }
-  .group-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 10px 0 6px;
-    border: 0;
-    background: none;
-    color: var(--text-2);
-    cursor: pointer;
-  }
-  .target {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line-3);
     color: var(--text-2);
   }
   .path {
@@ -569,20 +302,36 @@
     white-space: nowrap;
     font-size: 12px;
   }
-  .spaced {
-    padding-top: 4px;
+  .custom-head {
+    gap: 0;
   }
-  @media (max-width: 1160px) {
-    .page {
-      grid-template-columns: 1fr;
-      overflow: auto;
-    }
-    .content {
-      overflow: visible;
-    }
-    .side {
-      padding: 0 32px 32px;
-      overflow: visible;
-    }
+  .disclose {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 6px 0 0;
+    border: 0;
+    background: none;
+    color: var(--text-2);
+    font: 600 12px var(--font);
+  }
+  .disclose:hover {
+    color: var(--text);
+  }
+  .disclose .faint {
+    font-weight: 400;
+    margin-left: 4px;
+  }
+  .controls {
+    gap: 4px 12px;
+  }
+  .sub {
+    margin: 6px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-3);
+  }
+  .sub:first-child {
+    margin-top: 0;
   }
 </style>

@@ -1939,10 +1939,6 @@ text = '''Eşleşen dünya yok.'''
 source = "83b12c2216efb4fd"
 text = '''Temizle'''
 
-["library.tick"]
-source = "da9f0ca533b851cf"
-text = '''Birden çok seç'''
-
 ["library.no_game"]
 source = "166fde6d55146ed4"
 text = '''EU5 bulunamadı'''
@@ -2015,10 +2011,6 @@ text = '''Koyu'''
 source = "dbcd5e7bb7a0f538"
 text = '''Açık'''
 
-["forge.eyebrow"]
-source = "8899ecd1626db63d"
-text = '''Atölye'''
-
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''Bu sefer çıkan: {type}. Yeni bir tohum yeniden çeker.'''
@@ -2062,10 +2054,6 @@ text = '''kara yeri'''
 ["stat.locations"]
 source = "2b72d3517e051498"
 text = '''denizler ve göllerle {count}'''
-
-["world.danger"]
-source = "fd8b8dae44216610"
-text = '''Tehlikeli bölge'''
 
 ["world.terra_incognita"]
 source = "c151b299877b72b0"

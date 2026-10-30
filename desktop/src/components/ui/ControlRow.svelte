@@ -18,6 +18,8 @@
   const share = $derived((position / control.steps) * 100);
   const defaultShare = $derived((value.default_position / control.steps) * 100);
   const shown = $derived(typed ?? value.shown.toFixed(control.decimals));
+  const about = $derived(t(`control.${control.key}.about`));
+  const fallback = $derived(`${value.default.toFixed(control.decimals)}${control.unit ? ` ${control.unit}` : ""}`);
 
   function send(next: number): void {
     const now = performance.now();
@@ -50,13 +52,10 @@
   }
 </script>
 
-<div class="row" class:changed={value.changed}>
-  <div class="name" title={t(`control.${control.key}.about`)}>
-    <span class="label">{t(`control.${control.key}`)}</span>
-    <span class="about">{t(`control.${control.key}.about`)}</span>
-  </div>
+<div class="label" class:changed={value.changed} title={about}>{t(`control.${control.key}`)}</div>
+<div class="control" class:changed={value.changed}>
   <div class="slider" style:--share={`${share}%`} style:--default={`${defaultShare}%`}>
-    <span class="tick" title={`${value.default.toFixed(control.decimals)}${control.unit ? ` ${control.unit}` : ""}`}></span>
+    <span class="tick" title={fallback}></span>
     <input
       type="range"
       min="0"
@@ -64,6 +63,7 @@
       step="1"
       value={position}
       {disabled}
+      title={about}
       aria-label={t(`control.${control.key}`)}
       oninput={slid}
       onchange={settled}
@@ -81,115 +81,84 @@
       onblur={commit}
       onkeydown={(event) => event.key === "Enter" && (event.currentTarget as HTMLInputElement).blur()}
     />
-    {#if control.unit}<span class="unit">{control.unit}</span>{/if}
+    <span class="unit">{control.unit}</span>
   </label>
   <button
-    class="btn icon small ghost reset"
-    title={t("reset")}
+    class="btn icon small ghost"
+    title={`${t("reset")}: ${fallback}`}
     aria-label={t("reset")}
     disabled={!value.changed || disabled}
     onclick={() => app.call("reset_value", { key: control.key })}
   >
-    <Icon name="undo" size={15} />
+    <Icon name="undo" />
   </button>
 </div>
 
 <style>
-  .row {
-    display: grid;
-    grid-template-columns: minmax(180px, 1.1fr) minmax(160px, 1.4fr) 112px 30px;
-    align-items: center;
-    gap: 16px;
-    padding: 10px 4px;
-    border-top: 1px solid var(--line);
-  }
-  .row:first-child {
-    border-top: 0;
-  }
-  .name {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
-  }
   .label {
-    font-weight: 550;
-    display: flex;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .label.changed {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .control {
+    display: grid;
+    grid-template-columns: minmax(80px, 1fr) 96px 22px;
     align-items: center;
     gap: 8px;
   }
-  .changed .label::after {
-    content: "";
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 10px var(--accent);
-  }
-  .about {
-    color: var(--text-3);
-    font-size: 12px;
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
   .slider {
     position: relative;
-    height: 28px;
+    height: 22px;
     display: flex;
     align-items: center;
   }
   .tick {
     position: absolute;
-    left: calc(var(--default) * 0.98 + 1%);
-    top: 4px;
-    width: 2px;
-    height: 20px;
-    border-radius: 2px;
-    background: var(--line-3);
-    transform: translateX(-1px);
-    pointer-events: auto;
+    left: calc(6px + (100% - 12px) * var(--default) / 100%);
+    top: 15px;
+    width: 1px;
+    height: 5px;
+    background: var(--text-3);
   }
   input[type="range"] {
     appearance: none;
     -webkit-appearance: none;
     width: 100%;
-    height: 6px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--accent) var(--share), var(--panel-3) var(--share));
-    outline: none;
-    cursor: pointer;
+    height: 4px;
     margin: 0;
-    position: relative;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent) var(--share), var(--line-2) var(--share));
+    outline: none;
   }
   input[type="range"]:disabled {
     opacity: 0.5;
-    cursor: not-allowed;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
-    background: var(--text);
-    border: 3px solid var(--accent);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-    transition: transform 100ms var(--ease);
+    background: var(--raised);
+    border: 1px solid var(--line-3);
   }
   input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background: var(--text);
-    border: 3px solid var(--accent);
+    background: var(--raised);
+    border: 1px solid var(--line-3);
   }
   input[type="range"]:hover::-webkit-slider-thumb {
-    transform: scale(1.12);
+    border-color: var(--accent);
   }
   input[type="range"]:focus-visible::-webkit-slider-thumb {
-    box-shadow: 0 0 0 4px var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
   }
   .number {
     position: relative;
@@ -197,24 +166,18 @@
     align-items: center;
   }
   .number .input {
+    height: 22px;
     text-align: right;
-    padding-right: 30px;
-    min-height: 32px;
+    padding-right: 26px;
+  }
+  .changed .number .input {
+    color: var(--accent-text);
   }
   .unit {
     position: absolute;
-    right: 10px;
+    right: 6px;
     color: var(--text-3);
-    font-size: 12px;
+    font-size: 11.5px;
     pointer-events: none;
-  }
-  @media (max-width: 1180px) {
-    .row {
-      grid-template-columns: 1fr 104px 30px;
-    }
-    .slider {
-      grid-column: 1 / -1;
-      grid-row: 2;
-    }
   }
 </style>

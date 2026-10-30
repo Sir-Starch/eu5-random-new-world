@@ -2,10 +2,8 @@
   import { app, t } from "../lib/app.svelte";
   import { pickFolder, saveFile } from "../lib/native";
   import { theme, setTheme, type ThemeChoice } from "../lib/theme.svelte";
-  import Icon from "./Icon.svelte";
   import Modal from "./ui/Modal.svelte";
-  import Segmented from "./ui/Segmented.svelte";
-  import Toggle from "./ui/Toggle.svelte";
+  import Check from "./ui/Check.svelte";
 
   const s = $derived(app.now);
 
@@ -28,95 +26,68 @@
   );
 </script>
 
-<Modal title={t("settings_title")} width={640} onclose={() => (app.modal = null)}>
-  <div class="settings">
-    <section>
-      <h3>{t("game")}</h3>
-      <div class="pick">
-        <select class="input" value={String(Math.max(0, s?.games.indexOf(s.game.directory) ?? 0))}
-          onchange={(event) => app.call("pick_game", { index: Number((event.currentTarget as HTMLSelectElement).value) })}>
-          {#each s?.games ?? [] as path, index (path)}<option value={String(index)}>{path}</option>{/each}
-          {#if !s?.games.length}<option value="0">—</option>{/if}
-        </select>
-        <button class="btn" onclick={() => browse("game")}><Icon name="folder" size={16} />{t("browse")}</button>
-      </div>
-      {#if s?.game.build}<p class="faint small">{s.game.status}</p>{/if}
-    </section>
-    <section>
-      <h3>{t("profile")}</h3>
-      <div class="pick">
-        <select class="input" value={String(Math.max(0, s?.profiles.indexOf(s.game.profile) ?? 0))}
-          onchange={(event) => app.call("pick_profile", { index: Number((event.currentTarget as HTMLSelectElement).value) })}>
-          {#each s?.profiles ?? [] as path, index (path)}<option value={String(index)}>{path}</option>{/each}
-          {#if !s?.profiles.length}<option value="0">—</option>{/if}
-        </select>
-        <button class="btn" onclick={() => browse("profile")}><Icon name="folder" size={16} />{t("browse")}</button>
-      </div>
-      {#if s?.game.problem}<div class="callout warn"><Icon name="warning" /><p>{s.game.problem}</p></div>{/if}
-    </section>
-    <div class="two">
-      <section>
-        <h3>{t("language")}</h3>
-        <select class="input" value={s?.preferences.language ?? ""}
-          onchange={(event) => app.setLanguage((event.currentTarget as HTMLSelectElement).value)}>
-          <option value="">{t("language.game", { language: gameLanguage })}</option>
-          {#each app.info?.languages ?? [] as item (item.key)}<option value={item.key}>{item.name}</option>{/each}
-        </select>
-      </section>
-      <section>
-        <h3>{t("settings.theme")}</h3>
-        <Segmented
-          label={t("settings.theme")}
-          value={theme.choice}
-          options={[
-            { value: "system", label: t("settings.theme.system") },
-            { value: "dark", label: t("settings.theme.dark") },
-            { value: "light", label: t("settings.theme.light") },
-          ]}
-          onchange={(value) => setTheme(value as ThemeChoice)}
-        />
-      </section>
+<Modal title={t("settings_title")} width={600} onclose={() => (app.modal = null)}>
+  <div class="form">
+    <label class="label" for="game">{t("game")}</label>
+    <div class="row">
+      <select id="game" class="input" value={String(Math.max(0, s?.games.indexOf(s.game.directory) ?? 0))}
+        onchange={(event) => app.call("pick_game", { index: Number((event.currentTarget as HTMLSelectElement).value) })}>
+        {#each s?.games ?? [] as path, index (path)}<option value={String(index)}>{path}</option>{/each}
+        {#if !s?.games.length}<option value="0">—</option>{/if}
+      </select>
+      <button class="btn" onclick={() => browse("game")}>{t("browse")}</button>
     </div>
-    <section>
-      <Toggle checked={!!s?.preferences.show_new_world} label={t("show_new_world")} hint={t("show_new_world_hint")}
+    {#if s?.game.build}<p class="span hint">{s.game.status}</p>{/if}
+
+    <label class="label" for="profile">{t("profile")}</label>
+    <div class="row">
+      <select id="profile" class="input" value={String(Math.max(0, s?.profiles.indexOf(s.game.profile) ?? 0))}
+        onchange={(event) => app.call("pick_profile", { index: Number((event.currentTarget as HTMLSelectElement).value) })}>
+        {#each s?.profiles ?? [] as path, index (path)}<option value={String(index)}>{path}</option>{/each}
+        {#if !s?.profiles.length}<option value="0">—</option>{/if}
+      </select>
+      <button class="btn" onclick={() => browse("profile")}>{t("browse")}</button>
+    </div>
+    {#if s?.game.problem}<div class="span msg warn"><p>{s.game.problem}</p></div>{/if}
+
+    <label class="label" for="language">{t("language")}</label>
+    <select id="language" class="input" value={s?.preferences.language ?? ""}
+      onchange={(event) => app.setLanguage((event.currentTarget as HTMLSelectElement).value)}>
+      <option value="">{t("language.game", { language: gameLanguage })}</option>
+      {#each app.info?.languages ?? [] as item (item.key)}<option value={item.key}>{item.name}</option>{/each}
+    </select>
+
+    <label class="label" for="theme">{t("settings.theme")}</label>
+    <select id="theme" class="input" value={theme.choice} onchange={(event) => setTheme((event.currentTarget as HTMLSelectElement).value as ThemeChoice)}>
+      <option value="system">{t("settings.theme.system")}</option>
+      <option value="dark">{t("settings.theme.dark")}</option>
+      <option value="light">{t("settings.theme.light")}</option>
+    </select>
+
+    <div class="span spaced">
+      <Check checked={!!s?.preferences.show_new_world} label={t("show_new_world")} hint={t("show_new_world_hint")}
         onchange={(value) => app.call("set_show_new_world", { value })} />
-    </section>
-    <p class="faint small">{t("about_generator")}</p>
+    </div>
+    <p class="full hint about">{t("about_generator")}</p>
   </div>
   {#snippet footer()}
-    <button class="btn ghost" title={t("diagnostics_tip")} onclick={diagnostics}><Icon name="download" size={16} />{t("diagnostics")}</button>
-    <button class="btn ghost" onclick={() => (app.modal = { kind: "about" })}><Icon name="info" size={16} />{t("about")}</button>
+    <button class="btn" title={t("diagnostics_tip")} onclick={diagnostics}>{t("diagnostics")}</button>
+    <button class="btn" onclick={() => (app.modal = { kind: "about" })}>{t("about")}</button>
     <span class="spacer"></span>
     <button class="btn primary" onclick={() => (app.modal = null)}>{t("close")}</button>
   {/snippet}
 </Modal>
 
 <style>
-  .settings {
-    display: grid;
-    gap: 22px;
+  .form {
+    grid-template-columns: minmax(90px, 140px) minmax(0, 1fr);
   }
-  section {
-    display: grid;
-    gap: 8px;
+  .spaced {
+    padding-top: 6px;
   }
-  .pick {
-    display: flex;
-    gap: 8px;
-  }
-  .pick select {
-    flex: 1;
-    min-width: 0;
-    text-overflow: ellipsis;
-  }
-  .two {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 18px;
-  }
-  .small {
-    font-size: 12.5px;
-    line-height: 1.5;
+  .about {
+    padding-top: 8px;
+    border-top: 1px solid var(--line);
   }
   .spacer {
     flex: 1;

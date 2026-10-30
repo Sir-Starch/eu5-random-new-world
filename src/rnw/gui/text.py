@@ -663,7 +663,6 @@ STRINGS: Final[dict[str, str]] = {
     "library.empty": "No worlds yet. Make one, or open a world file.",
     "library.no_match": "No world matches.",
     "library.clear": "Clear",
-    "library.tick": "Select for several",
     "library.no_game": "EU5 not found",
     "library.no_profile": "No EU5 profile",
     "copied": "Copied.",
@@ -683,7 +682,6 @@ STRINGS: Final[dict[str, str]] = {
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
     # -- the Tauri window: a new world --
-    "forge.eyebrow": "Forge",
     "forge.drawn": "Drawn this time: {type}. A new seed draws again.",
     "dock.budget": "Locations",
     "dock.forging": "Making the world…",
@@ -696,7 +694,6 @@ STRINGS: Final[dict[str, str]] = {
     "stat.religions": "religions",
     "stat.land": "land locations",
     "stat.locations": "{count} with seas and lakes",
-    "world.danger": "Danger zone",
     "world.terra_incognita": "Terra incognita",
     "world.versions_intro": (
         "A version keeps this continent and makes one part of it again. Versions stand under "

@@ -2,10 +2,12 @@
 
 ## Unreleased
 
-- Add a candidate Tauri window (ADR 0011) beside the Qt window: one look on every
-  system, a searchable library with multi-select, a generation dock with the
-  location budget, stage timeline and queue, and world pages with stats, versions,
-  sharing and notes. Language and appearance change without a restart.
+- Add a candidate Tauri window (ADR 0011) beside the Qt window: one compact look on
+  every system, sized to sit beside the game (default 1160×740, minimum 860×560),
+  a searchable, resizable library with multi-select, a settings form with a
+  generation bar for the location budget, progress, stages and queue, a status bar,
+  and world pages with details, versions, sharing and notes. Language and
+  appearance change without a restart.
 - Rebuild the map viewer: WebGL lenses with sharp borders at any zoom, place
   names, minimap, hover and pinned location cards, legend isolation and search
   that zoom to their match, area search, linked comparison and copying the view.

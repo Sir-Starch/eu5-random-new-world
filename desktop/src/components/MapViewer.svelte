@@ -30,18 +30,6 @@
     onCompare?: () => void;
   } = $props();
 
-  const LENS_ICONS: Record<string, string> = {
-    land: "mountain",
-    countries: "crown",
-    cultures: "people",
-    religions: "flame",
-    resources: "sparkles",
-    development: "layers",
-    population: "people",
-    climate: "sun",
-    terrain: "mountain",
-    areas: "grid",
-  };
   const STORE = "rnw.map";
 
   function remembered(): { overlays: Overlays & { labels: boolean } } {
@@ -162,7 +150,7 @@
         matchMedia("(prefers-color-scheme: light)").matches);
     theme = {
       ink: light ? [44, 32, 18] : [8, 10, 14],
-      accent: parse("--accent", [220, 174, 90]),
+      accent: parse("--map-accent", [255, 213, 74]),
     };
   }
 
@@ -215,7 +203,7 @@
       if (sx < -200 || sy < -40 || sx > view.width + 200 || sy > view.height + 40) continue;
       const upper = layer === "countries";
       const text = upper ? label.text.toLocaleUpperCase() : label.text;
-      context.font = `${upper ? 600 : 500} ${size.toFixed(1)}px "Fraunces Variable", Georgia, serif`;
+      context.font = `${upper ? 600 : 500} ${size.toFixed(1)}px "Noto Sans Variable", "Noto Sans", sans-serif`;
       if ("letterSpacing" in context) {
         (context as unknown as { letterSpacing: string }).letterSpacing = upper
           ? `${(size * 0.12).toFixed(1)}px`
@@ -552,7 +540,7 @@
     out.height = renderer.canvas.height;
     const context = out.getContext("2d");
     if (!context) return;
-    context.fillStyle = getComputedStyle(host).getPropertyValue("--map-bg") || "#0b1119";
+    context.fillStyle = getComputedStyle(host).getPropertyValue("--map-bg") || "#14171b";
     context.fillRect(0, 0, out.width, out.height);
     context.drawImage(renderer.canvas, 0, 0);
     context.drawImage(labelCanvas, 0, 0);
@@ -639,29 +627,28 @@
             title={`${t(`layer.${name}.tip`)} (${index === 9 ? 0 : index + 1})`}
             onclick={() => (layer = name)}
           >
-            <Icon name={LENS_ICONS[name] ?? "layers"} size={15} />
-            <span>{t(`layer.${name}`)}</span>
+            {t(`layer.${name}`)}
           </button>
         {/each}
       </div>
       <div class="tools">
         <button class="btn icon small ghost" class:active={overlays.political} title={t("map.political")} aria-pressed={overlays.political} onclick={() => (overlays.political = !overlays.political)}>
-          <Icon name="borders" size={16} />
+          <Icon name="borders" />
         </button>
         <button class="btn icon small ghost" class:active={overlays.labels} title={t("map.labels")} aria-pressed={overlays.labels} onclick={() => (overlays.labels = !overlays.labels)}>
-          <Icon name="labels" size={16} />
+          <Icon name="labels" />
         </button>
         <button class="btn icon small ghost" class:active={overlays.locations} title={t("map.locations")} aria-pressed={overlays.locations} onclick={() => (overlays.locations = !overlays.locations)}>
-          <Icon name="grid" size={16} />
+          <Icon name="grid" />
         </button>
         <span class="sep"></span>
-        <button class="btn icon small ghost" title={t("map.copy_view")} onclick={copyView}><Icon name="camera" size={16} /></button>
-        <button class="btn icon small ghost" title={t("save_picture_tip")} onclick={savePicture}><Icon name="download" size={16} /></button>
+        <button class="btn icon small ghost" title={t("map.copy_view")} onclick={copyView}><Icon name="image" /></button>
+        <button class="btn icon small ghost" title={t("save_picture_tip")} onclick={savePicture}><Icon name="download" /></button>
         {#if onCompare}
-          <button class="btn icon small ghost" title={t("compare_title")} onclick={onCompare}><Icon name="compare" size={16} /></button>
+          <button class="btn icon small ghost" title={t("compare_title")} onclick={onCompare}><Icon name="compare" /></button>
         {/if}
         <button class="btn icon small ghost" class:active={app.mapFocus} title={t("map.focus")} aria-pressed={app.mapFocus} onclick={() => (app.mapFocus = !app.mapFocus)}>
-          <Icon name={app.mapFocus ? "shrink" : "expand"} size={16} />
+          <Icon name={app.mapFocus ? "shrink" : "expand"} />
         </button>
       </div>
     </div>
@@ -687,13 +674,13 @@
     {#if loading}
       <div class="veil"><div class="spinner"></div><span>{t("map.loading")}</span></div>
     {:else if failed}
-      <div class="veil"><Icon name="map" size={28} /><span>{t("no_atlas")}</span></div>
+      <div class="veil"><span>{t("no_atlas")}</span></div>
     {/if}
 
     {#if !compact && atlas}
       <div class="search">
         <div class="search-box">
-          <Icon name="search" size={15} />
+          <Icon name="search" />
           <input
             class="search-input"
             placeholder={t("search_hint")}
@@ -705,7 +692,7 @@
           />
           {#if query}
             <button class="btn icon small ghost" aria-label={t("map.clear")} onclick={() => { query = ""; results = []; }}>
-              <Icon name="x" size={14} />
+              <Icon name="x" />
             </button>
           {/if}
         </div>
@@ -738,16 +725,16 @@
           <span>{t("map.showing", { name: match.label })}</span>
           <span class="faint num">{grouped(match.cells.size)}</span>
           <button class="btn icon small ghost" aria-label={t("map.clear")} onclick={() => (match = null)}>
-            <Icon name="x" size={14} />
+            <Icon name="x" />
           </button>
         </div>
       {/if}
 
-      <aside class="legend card" class:closed={!legendOpen}>
+      <aside class="legend panel" class:closed={!legendOpen}>
         <button class="legend-head" onclick={() => (legendOpen = !legendOpen)} aria-expanded={legendOpen}>
           <span class="eyebrow">{t("legend")}</span>
           <strong>{t(`layer.${layer}`)}</strong>
-          <Icon name={legendOpen ? "chevronDown" : "chevronRight"} size={15} />
+          <Icon name={legendOpen ? "chevronDown" : "chevronRight"} />
         </button>
         {#if legendOpen}
           {#if isRamp && lens}
@@ -786,14 +773,14 @@
       </aside>
 
       {#if pinned >= 0 && facts}
-        <section class="inspector card" aria-live="polite">
+        <section class="inspector panel" aria-live="polite">
           <header>
             <div>
               <span class="eyebrow">{t(`kind.${facts.kind}`)}</span>
               <h2>{facts.name}</h2>
               {#if facts.area}<p class="faint">{facts.area}{facts.region ? ` · ${facts.region}` : ""}</p>{/if}
             </div>
-            <button class="btn icon small ghost" aria-label={t("close")} onclick={() => (pinned = -1)}><Icon name="x" size={15} /></button>
+            <button class="btn icon small ghost" aria-label={t("close")} onclick={() => (pinned = -1)}><Icon name="x" /></button>
           </header>
           {#if facts.kind === "land"}
             <dl>
@@ -842,15 +829,15 @@
         </div>
       {/if}
 
-      <div class="minimap card">
+      <div class="minimap panel">
         <canvas bind:this={minimap} onpointerdown={miniPointer} onpointermove={miniPointer} aria-label={t("map.minimap")}></canvas>
       </div>
 
-      <div class="zoom card">
-        <button class="btn icon small ghost" title={t("map.zoom_in")} onclick={() => zoomBy(1.6)}><Icon name="zoomIn" size={16} /></button>
+      <div class="zoom panel">
+        <button class="btn icon small ghost" title={t("map.zoom_in")} onclick={() => zoomBy(1.6)}><Icon name="zoomIn" /></button>
         <span class="num faint zoom-value">{zoomPercent}%</span>
-        <button class="btn icon small ghost" title={t("map.zoom_out")} onclick={() => zoomBy(1 / 1.6)}><Icon name="zoomOut" size={16} /></button>
-        <button class="btn icon small ghost" title={t("map.fit")} onclick={fitAll}><Icon name="fit" size={16} /></button>
+        <button class="btn icon small ghost" title={t("map.zoom_out")} onclick={() => zoomBy(1 / 1.6)}><Icon name="zoomOut" /></button>
+        <button class="btn icon small ghost" title={t("map.fit")} onclick={fitAll}><Icon name="fit" /></button>
       </div>
     {/if}
   </div>
@@ -865,33 +852,29 @@
   }
   .toolbar {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 8px 12px;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 3px 6px;
     border-bottom: 1px solid var(--line);
     background: var(--panel);
   }
   .lenses {
     display: flex;
     flex-wrap: wrap;
-    gap: 2px;
+    gap: 1px;
     flex: 1;
     min-width: 0;
   }
   .lens {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    height: 30px;
-    padding: 0 10px;
-    border-radius: 999px;
+    flex: none;
+    height: 24px;
+    padding: 0 8px;
     border: 1px solid transparent;
+    border-radius: var(--radius);
     background: transparent;
     color: var(--text-2);
-    font: 550 13px var(--font);
-    cursor: pointer;
+    font: 400 12.5px var(--font);
     white-space: nowrap;
-    transition: all var(--speed) var(--ease);
   }
   .lens:hover {
     background: var(--hover);
@@ -899,32 +882,32 @@
   }
   .lens.on {
     background: var(--accent-soft);
-    border-color: var(--accent-line);
-    color: var(--accent);
+    border-color: var(--accent);
+    color: var(--text);
   }
   .tools {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: 1px;
+    flex: none;
+    height: 24px;
   }
   .tools .active {
-    color: var(--accent);
     background: var(--accent-soft);
+    color: var(--text);
   }
   .sep {
     width: 1px;
-    height: 20px;
+    height: 16px;
     background: var(--line-2);
-    margin: 0 6px;
+    margin: 0 4px;
   }
   .stage {
     position: relative;
     flex: 1;
     min-height: 0;
     overflow: hidden;
-    background:
-      radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--sea) 10%, transparent), transparent 70%),
-      var(--map-bg);
+    background: var(--map-bg);
   }
   .canvas-host {
     position: absolute;
@@ -950,42 +933,38 @@
     display: grid;
     place-content: center;
     justify-items: center;
-    gap: 12px;
+    gap: 8px;
     color: var(--text-2);
     text-align: center;
     padding: 24px;
   }
-  .spinner {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 2.5px solid var(--line-2);
-    border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite;
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   }
   .search {
     position: absolute;
-    top: 14px;
-    left: 14px;
-    width: min(380px, calc(100% - 28px));
+    top: 8px;
+    left: 8px;
+    width: min(320px, calc(100% - 16px));
     z-index: 3;
   }
   .search-box {
     display: flex;
     align-items: center;
-    gap: 8px;
-    height: 40px;
-    padding: 0 6px 0 13px;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--panel) 88%, transparent);
-    backdrop-filter: blur(14px);
+    gap: 6px;
+    height: 28px;
+    padding: 0 2px 0 8px;
+    border-radius: var(--radius);
+    background: var(--field);
     border: 1px solid var(--line-2);
-    box-shadow: var(--shadow-sm);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
     color: var(--text-3);
   }
   .search-box:focus-within {
-    border-color: var(--accent-line);
-    box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow-sm);
+    border-color: var(--accent);
   }
   .search-input {
     flex: 1;
@@ -993,78 +972,73 @@
     border: 0;
     background: transparent;
     color: var(--text);
-    font: 450 13.5px var(--font);
+    font: 400 12.5px var(--font);
     outline: none;
     user-select: text;
   }
   .results {
-    margin-top: 6px;
-    max-height: 340px;
-    padding: 4px;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--panel) 95%, transparent);
-    backdrop-filter: blur(14px);
+    margin-top: 2px;
+    max-height: 300px;
+    padding: 2px;
+    border-radius: var(--radius);
+    background: var(--panel);
     border: 1px solid var(--line-2);
     box-shadow: var(--shadow);
-    animation: rise 140ms var(--ease);
   }
   .result {
     display: grid;
-    grid-template-columns: 76px 1fr auto;
+    grid-template-columns: 72px 1fr auto;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    padding: 8px 10px;
+    height: 24px;
+    padding: 0 6px;
     border: 0;
-    border-radius: 8px;
+    border-radius: 2px;
     background: transparent;
     color: var(--text);
-    font: 500 13px var(--font);
+    font: 400 12.5px var(--font);
     text-align: left;
-    cursor: pointer;
   }
   .result.on {
     background: var(--accent-soft);
   }
   .result .kind {
-    font-size: 11px;
-    font-weight: 650;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     color: var(--text-3);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .result .label {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .result .count,
-  .entry .count {
+  .result .count {
+    color: var(--text-3);
+    font-size: 11.5px;
+  }
+  .results .empty {
+    padding: 6px 8px;
     color: var(--text-3);
     font-size: 12px;
   }
-  .empty {
-    padding: 10px;
-    color: var(--text-3);
-  }
   .chip {
     position: absolute;
-    top: 14px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 42px;
+    left: 8px;
     z-index: 2;
     display: flex;
     align-items: center;
-    gap: 9px;
-    height: 36px;
-    padding: 0 6px 0 12px;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--panel) 92%, transparent);
-    backdrop-filter: blur(14px);
-    border: 1px solid var(--accent-line);
-    box-shadow: var(--glow);
-    font-weight: 550;
-    animation: rise 160ms var(--ease);
+    gap: 6px;
+    height: 26px;
+    padding: 0 2px 0 8px;
+    border-radius: var(--radius);
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    font-size: 12.5px;
     max-width: 40%;
   }
   .chip > span:nth-child(2) {
@@ -1077,22 +1051,19 @@
   }
   .swatch {
     flex: none;
-    width: 12px;
-    height: 12px;
-    border-radius: 4px;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+    width: 10px;
+    height: 10px;
+    border-radius: 1px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
   }
   .legend {
     position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 272px;
-    max-height: calc(100% - 28px - 150px);
+    top: 8px;
+    right: 8px;
+    width: 236px;
+    max-height: calc(100% - 16px - 120px);
     display: flex;
     flex-direction: column;
-    background: color-mix(in srgb, var(--panel) 90%, transparent);
-    backdrop-filter: blur(14px);
-    box-shadow: var(--shadow-sm);
     z-index: 2;
     overflow: hidden;
   }
@@ -1102,41 +1073,46 @@
   .legend-head {
     display: grid;
     grid-template-columns: auto 1fr auto;
-    align-items: baseline;
-    gap: 10px;
-    padding: 12px 14px;
+    align-items: center;
+    gap: 8px;
+    height: 26px;
+    padding: 0 6px 0 8px;
     border: 0;
     background: transparent;
     color: var(--text);
-    cursor: pointer;
     text-align: left;
-    font: 600 14px var(--font);
+    font: 600 12px var(--font);
+  }
+  .legend-head .eyebrow {
+    color: var(--text-3);
+    font-weight: 400;
   }
   .legend-filter {
-    margin: 0 12px 8px;
+    margin: 0 6px 4px;
     width: auto;
-    min-height: 30px;
-    font-size: 12.5px;
+    height: 22px;
+    font-size: 12px;
   }
   .entries {
-    padding: 0 6px 6px;
+    padding: 0 2px 2px;
     min-height: 0;
+    border-top: 1px solid var(--line);
   }
   .entry {
     position: relative;
     display: grid;
-    grid-template-columns: 12px 1fr auto;
+    grid-template-columns: 10px 1fr auto;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     width: 100%;
-    padding: 6px 8px;
+    height: 22px;
+    padding: 0 6px;
     border: 0;
-    border-radius: 7px;
+    border-radius: 2px;
     background: transparent;
     color: var(--text);
-    font: 500 12.5px var(--font);
+    font: 400 12px var(--font);
     text-align: left;
-    cursor: pointer;
     overflow: hidden;
   }
   .entry:hover {
@@ -1144,70 +1120,72 @@
   }
   .entry.on {
     background: var(--accent-soft);
-    box-shadow: inset 0 0 0 1px var(--accent-line);
   }
   .entry .label {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .entry .count {
+    color: var(--text-3);
+    font-size: 11px;
+  }
   .entry .bar {
     position: absolute;
-    left: 8px;
-    bottom: 2px;
-    height: 2px;
-    border-radius: 2px;
-    opacity: 0.55;
-    max-width: calc(100% - 16px);
+    left: 6px;
+    bottom: 1px;
+    height: 1px;
+    opacity: 0.6;
+    max-width: calc(100% - 12px);
   }
   .legend-hint {
-    padding: 8px 14px 12px;
-    font-size: 11.5px;
+    padding: 4px 8px 6px;
+    font-size: 11px;
     border-top: 1px solid var(--line);
   }
   .ramp {
-    padding: 0 14px 10px;
+    padding: 2px 8px 6px;
   }
   .ramp-bar {
-    height: 10px;
-    border-radius: 6px;
+    height: 8px;
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
   }
   .ramp-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 11.5px;
-    margin-top: 4px;
+    font-size: 11px;
+    margin-top: 2px;
   }
   .inspector {
     position: absolute;
-    right: 14px;
-    bottom: 14px;
-    width: 300px;
-    padding: 14px 16px 16px;
-    background: color-mix(in srgb, var(--panel) 94%, transparent);
-    backdrop-filter: blur(14px);
-    box-shadow: var(--shadow);
-    border-color: var(--accent-line);
+    right: 8px;
+    bottom: 8px;
+    width: 280px;
+    padding: 8px 10px 10px;
     z-index: 3;
-    animation: rise 180ms var(--ease);
   }
   .inspector header {
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
   .inspector h2 {
-    font-size: 21px;
-    margin-top: 2px;
+    font-size: 13px;
+  }
+  .inspector header p {
+    font-size: 12px;
+  }
+  .inspector .eyebrow {
+    font-size: 11px;
+    color: var(--text-3);
   }
   dl {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 6px 14px;
+    gap: 3px 10px;
     margin: 0;
-    font-size: 13px;
+    font-size: 12px;
   }
   dt {
     color: var(--text-3);
@@ -1219,94 +1197,78 @@
   .link {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
     padding: 0;
     border: 0;
     background: transparent;
-    color: var(--text);
+    color: var(--accent-text);
     font: inherit;
-    cursor: pointer;
     text-align: left;
-    text-decoration: underline;
-    text-decoration-color: var(--line-3);
-    text-underline-offset: 3px;
   }
   .link:hover {
-    color: var(--accent);
-    text-decoration-color: var(--accent-line);
+    text-decoration: underline;
   }
   .tooltip {
     position: absolute;
     z-index: 4;
     pointer-events: none;
     display: grid;
-    gap: 3px;
-    max-width: 280px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: color-mix(in srgb, var(--panel) 96%, transparent);
+    gap: 2px;
+    max-width: 260px;
+    padding: 6px 8px;
+    border-radius: var(--radius);
+    background: var(--panel);
     border: 1px solid var(--line-2);
     box-shadow: var(--shadow);
-    font-size: 12.5px;
+    font-size: 12px;
   }
   .tooltip strong {
-    font-family: var(--display);
-    font-size: 15px;
+    font-size: 12.5px;
     font-weight: 600;
   }
   .tip-row {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 6px;
   }
   .minimap {
     position: absolute;
-    left: 14px;
-    bottom: 14px;
-    padding: 6px;
-    background: color-mix(in srgb, var(--panel) 88%, transparent);
-    backdrop-filter: blur(14px);
-    box-shadow: var(--shadow-sm);
+    left: 8px;
+    bottom: 8px;
+    padding: 2px;
     z-index: 2;
     line-height: 0;
   }
   .minimap canvas {
-    width: 196px;
-    border-radius: 8px;
-    cursor: pointer;
+    width: 144px;
   }
   .zoom {
     position: absolute;
-    left: 230px;
-    bottom: 14px;
+    left: 162px;
+    bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 2px;
-    padding: 4px;
-    background: color-mix(in srgb, var(--panel) 88%, transparent);
-    backdrop-filter: blur(14px);
-    box-shadow: var(--shadow-sm);
+    gap: 1px;
+    padding: 1px;
     z-index: 2;
   }
   .zoom-value {
-    min-width: 46px;
+    min-width: 40px;
     text-align: center;
-    font-size: 12px;
+    font-size: 11.5px;
   }
-  .compact .stage {
-    border-radius: 0;
-  }
-  @media (max-width: 1100px) {
+  @media (max-width: 1000px) {
     .legend {
-      width: 230px;
+      width: 200px;
+    }
+    .minimap {
+      display: none;
     }
     .zoom {
-      left: auto;
-      right: 14px;
-      bottom: 14px;
+      left: 8px;
     }
     .inspector {
-      bottom: 64px;
+      bottom: 44px;
     }
   }
 </style>

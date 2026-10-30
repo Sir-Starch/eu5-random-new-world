@@ -1939,10 +1939,6 @@ text = '''没有匹配的世界。'''
 source = "83b12c2216efb4fd"
 text = '''清除'''
 
-["library.tick"]
-source = "da9f0ca533b851cf"
-text = '''多选'''
-
 ["library.no_game"]
 source = "166fde6d55146ed4"
 text = '''未找到 EU5'''
@@ -2015,10 +2011,6 @@ text = '''深色'''
 source = "dbcd5e7bb7a0f538"
 text = '''浅色'''
 
-["forge.eyebrow"]
-source = "8899ecd1626db63d"
-text = '''锻造'''
-
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''本次抽到：{type}。新种子会重新抽取。'''
@@ -2062,10 +2054,6 @@ text = '''陆地地点'''
 ["stat.locations"]
 source = "2b72d3517e051498"
 text = '''含海洋和湖泊共 {count}'''
-
-["world.danger"]
-source = "fd8b8dae44216610"
-text = '''危险操作'''
 
 ["world.terra_incognita"]
 source = "c151b299877b72b0"

@@ -1939,10 +1939,6 @@ text = '''Aucun monde ne correspond.'''
 source = "83b12c2216efb4fd"
 text = '''Effacer'''
 
-["library.tick"]
-source = "da9f0ca533b851cf"
-text = '''Sélectionner plusieurs'''
-
 ["library.no_game"]
 source = "166fde6d55146ed4"
 text = '''EU5 introuvable'''
@@ -2015,10 +2011,6 @@ text = '''Sombre'''
 source = "dbcd5e7bb7a0f538"
 text = '''Clair'''
 
-["forge.eyebrow"]
-source = "8899ecd1626db63d"
-text = '''Forge'''
-
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''Tiré cette fois : {type}. Une nouvelle graine tire à nouveau.'''
@@ -2062,10 +2054,6 @@ text = '''lieux terrestres'''
 ["stat.locations"]
 source = "2b72d3517e051498"
 text = '''{count} avec mers et lacs'''
-
-["world.danger"]
-source = "fd8b8dae44216610"
-text = '''Zone de danger'''
 
 ["world.terra_incognita"]
 source = "c151b299877b72b0"

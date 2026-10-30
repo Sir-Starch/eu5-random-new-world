@@ -1939,10 +1939,6 @@ text = '''一致するワールドはありません。'''
 source = "83b12c2216efb4fd"
 text = '''解除'''
 
-["library.tick"]
-source = "da9f0ca533b851cf"
-text = '''複数選択'''
-
 ["library.no_game"]
 source = "166fde6d55146ed4"
 text = '''EU5が見つかりません'''
@@ -2015,10 +2011,6 @@ text = '''ダーク'''
 source = "dbcd5e7bb7a0f538"
 text = '''ライト'''
 
-["forge.eyebrow"]
-source = "8899ecd1626db63d"
-text = '''創造'''
-
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''今回の抽選: {type}。新しいシードで再抽選します。'''
@@ -2062,10 +2054,6 @@ text = '''陸上の地点'''
 ["stat.locations"]
 source = "2b72d3517e051498"
 text = '''海と湖を含めて {count}'''
-
-["world.danger"]
-source = "fd8b8dae44216610"
-text = '''危険な操作'''
 
 ["world.terra_incognita"]
 source = "c151b299877b72b0"

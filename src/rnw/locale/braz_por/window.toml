@@ -1939,10 +1939,6 @@ text = '''Nenhum mundo corresponde.'''
 source = "83b12c2216efb4fd"
 text = '''Limpar'''
 
-["library.tick"]
-source = "da9f0ca533b851cf"
-text = '''Selecionar vários'''
-
 ["library.no_game"]
 source = "166fde6d55146ed4"
 text = '''EU5 não encontrado'''
@@ -2015,10 +2011,6 @@ text = '''Escuro'''
 source = "dbcd5e7bb7a0f538"
 text = '''Claro'''
 
-["forge.eyebrow"]
-source = "8899ecd1626db63d"
-text = '''Forja'''
-
 ["forge.drawn"]
 source = "8e6fcbccb2f17d49"
 text = '''Sorteado desta vez: {type}. Uma nova semente sorteia de novo.'''
@@ -2062,10 +2054,6 @@ text = '''localidades em terra'''
 ["stat.locations"]
 source = "2b72d3517e051498"
 text = '''{count} com mares e lagos'''
-
-["world.danger"]
-source = "fd8b8dae44216610"
-text = '''Zona de perigo'''
 
 ["world.terra_incognita"]
 source = "c151b299877b72b0"
