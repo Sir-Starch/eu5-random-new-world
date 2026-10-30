@@ -34,6 +34,11 @@ An unobserved detail alone does not reopen acceptance or require another game se
   probabilities: increasing one leaves fewer locations for others and does not
   change production per location. See [economy](economy.md#resource-frequency-controls-110).
 
+- **Hydrology and continental variety (first pass):** coasts from a bent density field,
+  vanilla-calibrated lakes, inland seas and spit-bounded gulfs, isthmuses, and rivers that
+  cross lakes. See [terrain](terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)
+  for the stages, measurements and what is not modelled yet.
+
 ## Future work requested by the owner
 
 These are directions, not promises for 1.0.0 or automatic tasks for every agent.
@@ -42,10 +47,15 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
 
 - **Hydrology:** improve basins, drainage, tributaries and water bodies together
   with relief, climate, coastlines and navigation. Use measurable structural and
-  visual comparisons on diverse seeds.
+  visual comparisons on diverse seeds. Done in the pending 1.1.0: lakes with
+  outflows and the vanilla size distribution. Remaining: valley carving and relief
+  driven by drainage, deltas and river splits, climate-dependent (endorheic) lakes.
 - **Continental variety:** develop more realistic lakes, inland seas, narrow land
   connections and coastal formations, including the Gdańsk/Crimea-like examples
   requested by the owner. Design their representation with hydrology and sea routes.
+  Done in the pending 1.1.0 as generic constructions (spit-bounded gulfs and lagoons,
+  inland seas behind straits, isthmuses). Remaining: sea routes and names that treat
+  them as distinct waters, and shapes tied to climate and relief.
 - **The Wall preset:** implemented for the pending 1.1.0 cycle: a procedural straight
   north-south continent or island chain, optional natural gaps, a mountain spine,
   polar wasteland endpoints and side land, with shape controls in both windows. See [terrain](terrain-biomes.md#the-wall).

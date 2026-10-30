@@ -150,13 +150,14 @@ def test_seed_can_leave_a_broad_side_region_entirely_ocean() -> None:
     gap = half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
     regions = [(slice(top, top + 192), slice(60, centre - gap - 30)) for top in (64, 384)]
     counts: list[list[int]] = [[], []]
-    for seed in (0, 1, 5, 6):
+    for seed in (0, 1, 3, 5, 6):
         land, ocean, lakes, _ = land_stage(domain, seed, settings)
         assert np.array_equal(land | ocean | lakes, domain)
         for region, found in zip(regions, counts, strict=True):
             found.append(int(np.count_nonzero(land[region])))
     for region, found in zip(regions, counts, strict=True):
-        assert min(found) == 0
+        # Bent coasts can trail a cape or two into an otherwise empty region.
+        assert min(found) < domain[region].size // 100
         assert max(found) > domain[region].size // 4
 
 

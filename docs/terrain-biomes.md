@@ -89,7 +89,8 @@ game-independent reproduction and tracks a construction-time correction.
 This list records the original V1 scope and measurements. Later terrain changes
 are described below; future hydrology and relief work belongs in [roadmap](roadmap.md).
 
-- **V1b rivers:** accepted in game (C64). Lakes end rivers (no outflows yet); splits and deltas are not generated.
+- **V1b rivers:** accepted in game (C64). Lakes ended rivers (no outflows) until the pending 1.1.0 (see
+  [below](#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)); splits and deltas are not generated.
 - **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Accepted in game (C66).
 - Mountain mesh decals on generated ranges (vanilla covers about 57% of mountain interiors with them).
 - Erosion for more natural valleys.
@@ -136,6 +137,67 @@ bounds, local numeric/visual comparison and remaining engine uncertainty are in
 058. Neither biome grouping alone nor a height-source plot proves final game
 appearance. No engine files are patched and no derived game resources are shipped
 with the generator.
+
+## Coast shape, water bodies and drainage (pending 1.1.0 / epoch 60)
+
+The roadmap's hydrology and continental-variety directions are taken up together: coasts,
+lakes, inland seas, narrow land connections and drainage are all constructed in the land
+stage (`newworld._natural_land`) or the river stage, with no repair after generation. No new
+setting is added; the sizes follow the existing feature size, and `new_world.max_lake_px`
+(Largest lake) now defaults to 25,000 pixels with a control range up to 60,000. Its help text
+in all eleven languages now says what the code does: lakes are drawn up to about that size and
+larger *enclosed* water fills with land (water that reaches the open sea, with or without a
+strait, stays sea).
+
+**Vanilla calibration.** [V-LOCAL 2026-10-30, EU5 1.4.6 / 26300913, `Eu5Map` location sizes]
+The installed map has 918 lake locations (median 90 pixels, 99th percentile 6,131, largest
+22,692). Those of at least 80 pixels (the generator's `min_lake_px`) number 482: 11.2 per
+million land pixels (land, wasteland and non-ownable together, 43.1 million), 0.78 % of that
+land, with quartiles 127 / 214 / 503 and 1,096 at the 90th percentile; a Pareto tail with
+exponent about 0.88 describes them. The 1.0.0 generator drew 0.9 per million (0.09 % of land),
+none above 4,000 pixels, from accidental holes in the thresholded noise; larger enclosed water
+was filled with land, so no sea could lie inland.
+
+| Stage | Module | Construction |
+|---|---|---|
+| Bent coast field | `newworld._field`, `_warped_rows` | The land density is sampled at coordinates displaced by two smooth noises of 0.45 times the feature size and the same period, on a 2-pixel lattice interpolated bilinearly, so any strip height gives the same pixels. Plain thresholded noise gives rounded blobs; the bend gives capes, hooks and gulfs with narrow mouths. 0.8 drew thin marbled slivers, so it was refused. The land budget is unchanged (the threshold counts pixels). |
+| Isthmuses | `isthmuses.py` | Landmasses of at least 0.8 % of the squared scale length that a narrow strait separates (`straits.narrow_gaps`, up to 0.2 of the scale, at least the 36-pixel `pinch` reach) are joined, each pair with a chance of 0.45, by a land corridor: the pixels whose distances to the two landmasses sum to little more than the distance between them, held within three half-widths of the crossing, widening towards both ends. Refused if it touches a third landmass, the protected edge or the coast margin, would leave a new piece of water closed off, or does not join the two. |
+| Inland seas, gulfs and lagoons | `gulfs.py` | A basin with an outline as ragged as an ocean coast is cut into land that keeps a rim of at least 1 % of the scale length around it, and a strait is cut to the nearest ocean as the same distance-sum corridor (narrowest in the middle, flaring at both ends; half-width 0.3–1.1 % of the scale, never more than a quarter of the basin's short radius). A thin rim leaves a spit and a lagoon or gulf with one narrow entrance (the Gulf of Gdańsk behind the Hel spit, the Sea of Azov behind the Arabat spit); a thick one, an inland sea behind a Bosporus-like strait. Each sea is refused unless every basin pixel reaches the open sea after the cut, so none is cut off; corridor pixels the strait does not reach stay land. The scale length is the feature size bounded to 1,000–1,600 pixels, so island presets do not shrink the seas and a sea needs a landmass that can hold it. |
+| Lakes | `lakes.py` | Sites are drawn per 256-pixel square by land area; each has an area from the vanilla tail (quarter-octave steps, 859 permille passing each), an elongation up to 2.4 and one of sixteen orientations, and an outline of noisy ellipse. A site is kept only if its distance to the shore leaves the lake a rim of land (1.45 times its long radius plus 14 pixels), so it stays a lake and not a bay. Lakes are cut before islands are counted. |
+| Rivers through lakes | `rivers.generate_rivers(lakes=...)`, `streams` | Lake cells are land in the priority flood with the lowest height, so the lake fills to its lowest rim and every lake has one outflow; rain accumulates through it. A stream going upstream ends at the first lake cell, which is where the outflow river begins (its source is on the shore); each river that enters the lake starts a stream of its own and ends in the water as any river reaching water. The inflows of a lake are kept even when the river leaving it is too short to be drawn. Lake cells do not count towards the river density target. The raster rules and the outlet check are unchanged. |
+| Crossings over the seam | `eu5_seas.straddles_seam` | A strait that runs through the display seam has two points a map width apart in `adjacencies.csv`; the game's own 184 rows are all 1–9 pixels apart and none crosses an edge, so such a crossing is not written and not expected [V-LOCAL 2026-10-30]. A new pattern of straits exposed it on an island world. |
+
+**Measured** [V-EXEC 2026-10-30; `land_stage` on the installed expanded canvas, 8192 × 10075,
+eight seeds per preset: 42, 7, 1000, 1–5; mean per preset, before → after]:
+
+| Preset | Lakes ≥ 80 px per million land px | Lake area share | Largest lake | Coast length per √area | Narrow gulfs (closing 12 / 24 px, share of land) | Necks (erosion 6 px) |
+|---|---|---|---|---|---|---|
+| continents | 0.9 → 11.3 | 0.09 % → 0.93 % | 3,263 → 19,533 | 14.0 → 19.7 | 0.010 / 0.029 → 0.021 / 0.048 | 1.5 → 3.1 |
+| small continents | 2.7 → 11.3 | 0.18 % → 1.01 % | 3,440 → 18,842 | 21.1 → 25.9 | 0.021 / 0.053 → 0.032 / 0.073 | 2.5 → 2.6 |
+| supercontinent | 0.3 → 11.9 | 0.03 % → 0.82 % | 2,087 → 19,331 | 8.9 → 13.5 | 0.003 / 0.010 → 0.011 / 0.021 | 1.3 → 1.1 |
+| archipelago | 16.8 → 21.2 | 0.74 % → 1.8 % | 3,607 → 18,142 | 58.1 → 62.4 | 0.118 / 0.265 → 0.137 / 0.284 | 12 → 14 |
+| islands | 25.7 → 27.3 | 1.08 % → 1.81 % | 3,678 → 17,617 | 80.5 → 86.6 | 0.204 / 0.454 → 0.226 / 0.493 | 18 → 26 |
+
+Continent lakes now match the vanilla density, size quartiles (117 / 185 / 383 against 127 / 214 /
+503 in a rectangular test) and tail. Island presets already held many noise-hole lakes, so their
+count barely moves while larger lakes appear. Inland seas number 0–4 on continents (mean about
+2.4), 3–5 on small continents and 1–4 on a supercontinent; isthmuses 0–2 on continents, so some
+seeds have them and others do not. Rivers: continents seed 1000 keeps 16 drawn river pixels per
+1,000 land pixels (326,000 against 347,000 before, on 6 % less land) with 492 mouths against
+365 (the outflows and inflows of lakes) and 231 lakes against 28. An earlier build dropped every
+lake inflow whose outflow was too short and fell to 14; a regression test now covers a lake in a
+valley. Full exports on EU5 1.4.6 / 26300913 pass every invariant for continents (seed 1000),
+wall (9), archipelago (42), islands (7), small continents (42) and supercontinent (42): no split
+cell, unreachable sea zone, unported land cell or river-rule violation.
+
+[UNKNOWN] How the engine draws a generated lake of tens of thousands of pixels: vanilla lists
+mesh transforms for its own lakes and the exporter drops those in the canvas, so generated lakes
+(as in 1.0.0) are the water colour map under the sea plane; only small ones have been seen. The
+play value of inland sea zones, and the appearance of the new coasts under the engine, are also
+unobserved offline results; they do not reopen 1.0.0 acceptance. Not modelled yet: deltas and river
+splits, valley carving driven by drainage (relief is still generated first), lakes that follow
+depressions or climate (endorheic basins in arid land), and sea straits that the armies' crossing
+rows treat specially.
 
 ## The Wall
 

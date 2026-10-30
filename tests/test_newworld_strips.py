@@ -119,3 +119,41 @@ def test_the_seeded_field_origin_is_shared_by_all_strips(
     monkeypatch.setattr(newworld, "STRIP_ROWS", strip)
     actual = field()
     assert np.array_equal(actual, whole)
+
+
+@pytest.mark.parametrize("strip", [1, 7, 64])
+def test_the_bent_field_is_the_same_for_any_strip_height(
+    monkeypatch: pytest.MonkeyPatch, strip: int
+) -> None:
+    """Domain warping reads absolute coordinates, so a strip may start on any row."""
+    field = partial(
+        newworld._field,  # pyright: ignore[reportPrivateUsage]
+        42,
+        "new_world_elevation",
+        shape=(83, 131),
+        period=53,
+        octaves=4,
+        persistence_permille=470,
+        warp_permille=newworld.COAST_WARP_PERMILLE,
+    )
+    monkeypatch.setattr(newworld, "STRIP_ROWS", 1000)
+    whole = field()
+    monkeypatch.setattr(newworld, "STRIP_ROWS", strip)
+    assert np.array_equal(field(), whole)
+
+
+def test_bending_the_field_moves_coasts_but_keeps_its_range() -> None:
+    """The warp displaces the pattern; it does not rescale or flatten the density."""
+    field = partial(
+        newworld._field,  # pyright: ignore[reportPrivateUsage]
+        5,
+        "new_world_elevation",
+        shape=(200, 300),
+        period=60,
+        octaves=4,
+        persistence_permille=500,
+    )
+    plain = field()
+    bent = field(warp_permille=newworld.COAST_WARP_PERMILLE)
+    assert np.count_nonzero((plain > 0) != (bent > 0)) > plain.size // 8
+    assert 0.5 < bent.std() / plain.std() < 2

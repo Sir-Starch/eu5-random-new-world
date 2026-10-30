@@ -699,8 +699,8 @@ source = "3e9700a12bd157d6"
 text = '''Наибольшее озеро'''
 
 ["control.new_world.max_lake_px.about"]
-source = "da8233bcf7ff8411"
-text = '''Замкнутые воды крупнее этого остаются морем.'''
+source = "a702b9ca50bd24a6"
+text = '''Озёра рисуются примерно до этого размера; более крупные замкнутые воды заполняются сушей.'''
 
 ["control.new_world.wasteland_permille"]
 source = "4b415ab1819fb1f6"

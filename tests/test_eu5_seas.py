@@ -36,6 +36,7 @@ from rnw.eu5_seas import (
     read_ports,
     read_waters,
     shape_water,
+    straddles_seam,
     verify_crossings,
     verify_locators,
     verify_seas,
@@ -448,6 +449,19 @@ def test_lands_of_one_landmass_or_a_sea_wider_than_the_games_crossings_make_none
 
 def test_a_short_gap_across_two_sea_zones_cannot_name_one_as_its_crossing() -> None:
     assert _strait(["AAA12BBB", "AAA12BBB", "33333333"], block=2)[2] == []
+
+
+def test_a_crossing_over_the_display_seam_is_not_written_and_not_expected() -> None:
+    """Its two points would be a map width apart; vanilla has no such row, so it is skipped."""
+    world, plan, found = _strait()
+    height = world.labels.shape[0]
+    text = "From;To;Type;Through;start_x;start_y;stop_x;stop_y;Comment\n"
+    # Columns 11 and 16 of the crop: a seam at column 14 puts them on opposite map edges.
+    seam = cast("Canvas", cast("object", SimpleNamespace(col0=0, roll=14, shape=(height, 28))))
+    plain = cast("Canvas", cast("object", SimpleNamespace(col0=0, roll=0, shape=(height, 28))))
+    assert straddles_seam(seam, found[0])
+    assert not straddles_seam(plain, found[0])
+    assert verify_crossings(text, plan, world, seam, found) == {"crossings_checked": 0}
 
 
 def test_the_rows_that_say_what_the_world_has_pass_and_any_other_stops_the_export() -> None:

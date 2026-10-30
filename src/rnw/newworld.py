@@ -20,14 +20,17 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import _native, wall
-from rnw.fields import warped_noise
+from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
+from rnw.gulfs import carve_inland_seas
+from rnw.isthmuses import raise_isthmuses
+from rnw.lakes import carve_lakes
 from rnw.landmask import LandMaskError
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
 from rnw.relief import generate_relief
-from rnw.rng import SplitMix64, derive_seed
+from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import designed_corridors
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
@@ -58,6 +61,19 @@ EDGE_RAMP_MARGINS: Final[int] = 4
 EDGE_SHIFT_RAMPS: Final[int] = 2
 EDGE_SHIFT_PERIOD_PERMILLE: Final[int] = 2500
 MAX_STRAITS: Final[int] = 16
+# The land density bends its own coordinates by this share of its feature size, with a
+# warp as broad as the feature. Plain fractal noise thresholded gives rounded blobs; bent
+# coordinates turn them into peninsulas, hooked capes and gulfs with narrow mouths (compared
+# on four seeds with the unbent field: more narrow-mouthed water and more necks). A stronger
+# bend (0.8) draws thin marbled slivers, which no coast does.
+COAST_WARP_PERMILLE: Final[int] = 450
+# Inland seas keep the proportions of a continent-sized world: smaller feature sizes (islands)
+# do not shrink them, so a sea needs a landmass that holds it, and larger ones do not
+# swell them.
+SEA_SCALE_MIN_PX: Final[int] = 1000
+SEA_SCALE_MAX_PX: Final[int] = 1600
+WARP_STEP: Final[int] = 2
+WARP_OCTAVES: Final[int] = 3
 OUTSIDE: Final[int] = 2
 LAND_KINDS: Final[frozenset[CellClass]] = frozenset(
     {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
@@ -79,7 +95,7 @@ class NewWorld:
     edges: tuple[tuple[int, int], ...]
 
 
-def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octaves.
+def _field(  # noqa: PLR0913 - a field is defined by its stream, shape, octaves and warp.
     seed: int,
     stream: str,
     *,
@@ -87,6 +103,7 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
     period: int,
     octaves: int,
     persistence_permille: int,
+    warp_permille: int = 0,
 ) -> NDArray[np.int32]:
     """Fractal noise on a seed-positioned lattice, in memory-bounded row strips.
 
@@ -97,6 +114,10 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
     changing feature size does not keep sampling the same few nodes. The origin
     belongs to the whole field, including both sides of the map seam, not a strip
     or a connected part of the domain. Coordinates stay well inside integer limits.
+
+    With ``warp_permille`` the coordinates are first displaced by two smooth noises of
+    that share of ``period`` (see ``_warped_rows``); the field is then still a function
+    of the pixel alone, so any strip height gives the same values.
     """
     height, width = shape
     key = derive_seed(seed, stream)
@@ -105,6 +126,17 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
     out = np.empty(shape, dtype=np.int32)
     for row in range(0, height, STRIP_ROWS):
         rows = min(STRIP_ROWS, height - row)
+        if warp_permille:
+            out[row : row + rows] = _warped_rows(
+                key,
+                (x0, y0, row),
+                (rows, width),
+                period=period,
+                octaves=octaves,
+                persistence_permille=persistence_permille,
+                warp_permille=warp_permille,
+            )
+            continue
         out[row : row + rows] = fractal_noise(
             key,
             x0,
@@ -116,6 +148,47 @@ def _field(  # noqa: PLR0913 - a field is defined by its stream, shape and octav
             persistence_permille=persistence_permille,
         )
     return out
+
+
+def _warped_rows(  # noqa: PLR0913 - the strip, its field and the warp are all inputs.
+    key: int,
+    origin: tuple[int, int, int],
+    shape: tuple[int, int],
+    *,
+    period: int,
+    octaves: int,
+    persistence_permille: int,
+    warp_permille: int,
+) -> NDArray[np.int64]:
+    """Rows ``origin[2]`` onwards of a domain-warped rotated fractal field.
+
+    The field is sampled on a lattice every ``WARP_STEP`` pixels of the whole raster and
+    interpolated, so a strip may start on any row: it reads the lattice rows that surround
+    it and drops the pixels above its first row.
+    """
+    x0, y0, first = origin
+    rows, width = shape
+    lattice = first // WARP_STEP
+    skip = first - lattice * WARP_STEP
+    ys = (np.arange((skip + rows) // WARP_STEP + 2, dtype=np.int64) + lattice) * WARP_STEP + y0
+    xs = np.arange(width // WARP_STEP + 2, dtype=np.int64) * WARP_STEP + x0
+    ys, xs = np.broadcast_arrays((ys * SUBPIXEL)[:, np.newaxis], (xs * SUBPIXEL)[np.newaxis, :])
+    amplitude = period * warp_permille // PERMILLE * SUBPIXEL
+    dx = fractal_at(
+        mix64(key ^ 0x57A1), xs, ys, period=period, octaves=WARP_OCTAVES, persistence_permille=500
+    )
+    dy = fractal_at(
+        mix64(key ^ 0x57A2), xs, ys, period=period, octaves=WARP_OCTAVES, persistence_permille=500
+    )
+    coarse = fractal_at(
+        key,
+        xs + dx * amplitude // NOISE_SCALE,
+        ys + dy * amplitude // NOISE_SCALE,
+        period=period,
+        octaves=octaves,
+        persistence_permille=persistence_permille,
+    )
+    return upsample(coarse, WARP_STEP, (skip + rows, width))[skip:]
 
 
 def _edge_offset(
@@ -173,6 +246,7 @@ def land_stage(
         period=settings.feature_px,
         octaves=settings.octaves,
         persistence_permille=settings.persistence_permille,
+        warp_permille=COAST_WARP_PERMILLE,
     )
     return _natural_land(domain, seed, settings, relief)
 
@@ -215,6 +289,22 @@ def _natural_land(
             domain, guard, relief, offset, ramp=ramp, settings=settings
         )
     del relief, offset, guard, open_shore
+    # Isthmuses, inland seas and then lakes are made before islands are counted, so none
+    # leaves a speck behind.
+    ocean = _ocean(domain, land, shore)[1]
+    scale = max(SEA_SCALE_MIN_PX, min(settings.feature_px, SEA_SCALE_MAX_PX))
+    land |= raise_isthmuses(land, ocean, domain & ~shore, seed, scale_px=scale)
+    ocean = _ocean(domain, land, shore)[1]
+    land &= ~carve_inland_seas(
+        land,
+        ocean,
+        seed,
+        scale_px=max(SEA_SCALE_MIN_PX, min(settings.feature_px, SEA_SCALE_MAX_PX)),
+    )
+    del ocean
+    land &= ~carve_lakes(
+        land, seed, smallest=settings.min_lake_px, largest=settings.max_lake_px * 9 // 10
+    )
     land &= _large_parts(land, settings.min_island_px)
     return (*_classify(domain, land, shore, settings), elevation)
 
@@ -249,6 +339,7 @@ def _wall_land(
         period=settings.feature_px,
         octaves=settings.octaves,
         persistence_permille=settings.persistence_permille,
+        warp_permille=COAST_WARP_PERMILLE,
     )
     relief *= 2
     relief += detail
@@ -257,6 +348,19 @@ def _wall_land(
     land, _, _, elevation = _natural_land(sides, seed, settings, relief)
     land |= wall.coast(domain, seed, settings)
     return (*_classify(domain, land, _off_limits(domain, settings), settings), elevation)
+
+
+def _ocean(
+    domain: NDArray[np.bool_], land: NDArray[np.bool_], shore: NDArray[np.bool_]
+) -> tuple[NDArray[np.int32], NDArray[np.bool_]]:
+    """Labelled parts of the domain (land and water apart) and the water that reaches the shore."""
+    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32, copy=False)
+    parts = label_components(coded)
+    del coded
+    water = domain & ~land
+    ocean_part = np.zeros(int(parts.max()) + 1, dtype=bool)
+    ocean_part[np.unique(parts[water & shore])] = True
+    return parts, water & ocean_part[parts]
 
 
 def _classify(
@@ -270,14 +374,9 @@ def _classify(
     Returns land, ocean and lake masks. Water that reaches the shore is ocean; water enclosed
     by land is a lake unless it is smaller than ``min_lake_px`` or larger than ``max_lake_px``.
     """
-    coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32, copy=False)
-    parts = label_components(coded)
-    del coded
+    parts, ocean = _ocean(domain, land, shore)
     water = domain & ~land
     sizes = np.bincount(parts.ravel())
-    ocean_part = np.zeros(sizes.size, dtype=bool)
-    ocean_part[np.unique(parts[water & shore])] = True
-    ocean = water & ocean_part[parts]
     enclosed = water & ~ocean
     outside_range = (sizes < settings.min_lake_px) | (sizes > settings.max_lake_px)
     small = enclosed & outside_range[parts]

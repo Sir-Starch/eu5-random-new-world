@@ -109,7 +109,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("new_world.min_island_px", "land", 100, 8000, logarithmic=True, unit="px"),
     Control("new_world.persistence_permille", "land", 400, 650, factor=1000, decimals=2),
     Control("new_world.octaves", "land", 5, 8),
-    Control("new_world.max_lake_px", "land", 1000, 20_000, logarithmic=True, unit="px"),
+    Control("new_world.max_lake_px", "land", 1000, 60_000, logarithmic=True, unit="px"),
     Control("new_world.wasteland_permille", "land", 0, 200, factor=10, decimals=1, unit="percent"),
     Control("new_world.location_px", "map", 40, 90, unit="px"),
     Control("new_world.sea_zone_px", "map", 80, 240, unit="px"),

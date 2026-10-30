@@ -644,6 +644,21 @@ def crossings(world: NewWorld, landmass: Sequence[int]) -> list[Crossing]:
     return found
 
 
+def straddles_seam(canvas: Canvas, item: Crossing) -> bool:
+    """Whether the two points of a crossing lie on opposite edges of the map picture.
+
+    A strait that runs through the display seam is one place on the continuous canvas, but its
+    two points would be a map width apart in ``adjacencies.csv``. The game's own 184 rows are
+    all 1 to 9 pixels apart and none crosses an edge [V-LOCAL 2026-10-30], so such a crossing
+    is not written; the two lands stay apart by sea.
+    """
+    width = int(canvas.shape[1])
+    first, second = (
+        (column + canvas.col0 - canvas.roll) % width for column in (item.start[1], item.stop[1])
+    )
+    return abs(first - second) > CROSSING_PX + 1
+
+
 def verify_crossings(
     text: str, plan: Plan, world: NewWorld, canvas: Canvas, expected: Sequence[Crossing]
 ) -> dict[str, object]:
@@ -657,7 +672,11 @@ def verify_crossings(
     touching = _touching(world)
     height = int(world.labels.shape[0])
     width = int(canvas.shape[1])
-    wanted = {(item.first, item.second, item.through) for item in expected}
+    wanted = {
+        (item.first, item.second, item.through)
+        for item in expected
+        if not straddles_seam(canvas, item)
+    }
     seen: set[tuple[int, int, int]] = set()
     for line in text.splitlines()[1:]:
         fields = [field.strip() for field in line.split(";")]

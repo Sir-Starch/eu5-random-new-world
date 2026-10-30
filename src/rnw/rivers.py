@@ -41,6 +41,10 @@ STEP: Final[int] = 4
 STRIP_ROWS: Final[int] = 1024
 SUBPIXEL: Final[int] = 16
 NONE: Final[int] = -1
+# Parent of a stream that joins none (it reaches the sea) and of one that enters a lake
+# whose own outflow was too short to be drawn.
+NO_STREAM: Final[int] = -1
+LAKE_INFLOW: Final[int] = -2
 SOURCE: Final[int] = 0
 JOIN: Final[int] = 1
 BODY: Final[int] = 2
@@ -115,17 +119,23 @@ class Stream:
     parent: int
 
 
-def streams(tree: Drainage, threshold: int, min_cells: int) -> list[Stream]:
+def streams(
+    tree: Drainage, threshold: int, min_cells: int, lake: NDArray[np.bool_] | None = None
+) -> list[Stream]:
     """River streams, largest catchment first; tributaries name the stream they join.
 
     At each confluence the branch with the larger catchment continues the stream.
     Streams shorter than ``min_cells`` are dropped with everything upstream of them.
+    ``lake`` marks coarse cells that are water the flow passes through: a stream going
+    upstream ends at the first of them, which is where the lake's outflow begins, and the
+    rivers that flow into that lake each start a stream of their own.
     """
     river = (tree.flow >= threshold) & (tree.parent >= 0)
     children: dict[int, list[int]] = {}
     for cell in np.flatnonzero(river).tolist():
         children.setdefault(int(tree.parent[cell]), []).append(cell)
     flow = tree.flow.tolist()
+    still = lake.ravel().tolist() if lake is not None else [False] * len(flow)
     heap = [
         (-flow[cell], cell, int(tree.parent[cell]), -1)
         for cell in np.flatnonzero(river).tolist()
@@ -137,22 +147,47 @@ def streams(tree: Drainage, threshold: int, min_cells: int) -> list[Stream]:
         _, start, outlet, parent_stream = heapq.heappop(heap)
         path = [start]
         branches: list[int] = []
-        while path[-1] in children:
+        while path[-1] in children and not still[path[-1]]:
             options = sorted(children[path[-1]], key=lambda cell: (-flow[cell], cell))
             path.append(options[0])
             branches.extend(options[1:])
-        if len(path) < (min_cells if parent_stream >= 0 else max(min_cells, MIN_MAIN_CELLS)):
-            continue
-        number = len(out)
-        out.append(Stream(cells=tuple(path), outlet=outlet, parent=parent_stream))
-        for branch in branches:
+        wanted = min_cells if parent_stream != NO_STREAM else max(min_cells, MIN_MAIN_CELLS)
+        kept = len(path) >= wanted
+        number = len(out) if kept else LAKE_INFLOW
+        if kept:
+            out.append(Stream(cells=tuple(path), outlet=outlet, parent=parent_stream))
+        # A lake keeps the rivers that enter it even when the river that leaves it is too
+        # short to draw: it is water, and they end there like any river reaching water.
+        inflows = _inflows(path[-1], children, still) if still[path[-1]] else []
+        for branch in [*branches, *inflows] if kept else inflows:
             heapq.heappush(heap, (-flow[branch], branch, int(tree.parent[branch]), number))
     return out
 
 
-def river_threshold(tree: Drainage, land_pixels: int) -> int:
-    """Catchment above which a land cell carries a river, for the density target."""
-    flows = tree.flow[tree.parent >= 0]
+def _inflows(head: int, children: dict[int, list[int]], lake: list[bool]) -> list[int]:
+    """River cells that enter the lake whose first cell is ``head``, in cell order."""
+    found: list[int] = []
+    pending, seen = [head], {head}
+    while pending:
+        for cell in children.get(pending.pop(), ()):
+            if lake[cell]:
+                if cell not in seen:
+                    seen.add(cell)
+                    pending.append(cell)
+            else:
+                found.append(cell)
+    return sorted(found)
+
+
+def river_threshold(tree: Drainage, land_pixels: int, lake: NDArray[np.bool_] | None = None) -> int:
+    """Catchment above which a land cell carries a river, for the density target.
+
+    Lake cells carry flow but no river line, so they do not count towards the target.
+    """
+    counted = tree.parent >= 0
+    if lake is not None:
+        counted &= ~lake.ravel()
+    flows = tree.flow[counted]
     wanted = land_pixels * RIVER_PERMILLE * 100 // (1000 * CELL_PIXELS_X100)
     if flows.size == 0 or wanted <= 0:
         return 1 << 62
@@ -499,25 +534,46 @@ def _coarse_land_and_height(
     return share, weight
 
 
-def generate_rivers(
+def _coarse_share(mask: NDArray[np.bool_], strip: int) -> NDArray[np.int64]:
+    """Share (permille) of every STEP x STEP block of ``mask``, in strips of ``strip`` rows."""
+    rows, columns = (int(size) for size in mask.shape)
+    share = np.empty((-(-rows // STEP), -(-columns // STEP)), dtype=np.int64)
+    for first in range(0, rows, strip):
+        window = slice(first, min(rows, first + strip))
+        block = slice(first // STEP, -(-window.stop // STEP))
+        share[block] = block_mean(mask[window].astype(np.int64) * PERMILLE, STEP)
+    return share
+
+
+def generate_rivers(  # noqa: PLR0913 - the raster, its fields, the lakes and the output buffers.
     land: NDArray[np.bool_],
     height: NDArray[np.int32] | NDArray[np.int64],
     rain: NDArray[np.int64],
     *,
     seed: int,
     output: Rivers | None = None,
+    lakes: NDArray[np.bool_] | None = None,
 ) -> Rivers:
     """Rivers for a raster: ``land`` and ``height`` at full resolution, ``rain`` coarse.
 
     ``rain`` has one value per STEP x STEP block (blocks may be partial at the edges).
+    ``lakes`` marks lake pixels, which are not land: water the drainage crosses, so that a
+    lake receives its rivers and gives one outflow river from its lowest rim, instead of
+    ending every river it meets. Without it all water is a sink.
     """
     shape = (-(-land.shape[0] // STEP), -(-land.shape[1] // STEP))
     count, weight = _coarse_land_and_height(land, height, STRIP_ROWS)
     coarse_land = count >= PERMILLE // 2
-    if np.all(coarse_land):
+    coarse_lake = None
+    if lakes is not None:
+        coarse_lake = ~coarse_land & (_coarse_share(lakes, STRIP_ROWS) >= PERMILLE // 2)
+    flows_over = coarse_land if coarse_lake is None else coarse_land | coarse_lake
+    if np.all(flows_over):
         message = "River domain has no water outlet; its closed boundary is not a mouth"
         raise RiverGenerationError(message)
     coarse_height = weight * PERMILLE // np.maximum(1, count)
+    if coarse_lake is not None:
+        coarse_height = np.where(coarse_lake, 0, coarse_height)
     valleys = warped_noise(
         derive_seed(seed, "river_valleys"),
         shape,
@@ -527,11 +583,11 @@ def generate_rivers(
         warp_px=VALLEY_PERIOD // 3,
     )
     routing = coarse_height + valleys * VALLEY_HEIGHT // NOISE_SCALE
-    wet = np.maximum(np.where(coarse_land, rain, 0), 0) * RAIN_UNIT
+    wet = np.maximum(np.where(flows_over, rain, 0), 0) * RAIN_UNIT
     weight = np.floor(np.sqrt(wet.astype(np.float64))).astype(np.int64)
-    tree = drainage(coarse_land, routing, weight, derive_seed(seed, "drainage"))
-    threshold = river_threshold(tree, int(np.count_nonzero(land)))
-    found = streams(tree, threshold, MIN_STREAM_CELLS)
+    tree = drainage(flows_over, routing, weight, derive_seed(seed, "drainage"))
+    threshold = river_threshold(tree, int(np.count_nonzero(land)), coarse_lake)
+    found = streams(tree, threshold, MIN_STREAM_CELLS, coarse_lake)
     rivers = draw_rivers(land, tree, found, columns=shape[1], seed=seed, output=output)
     rivers.stats["threshold"] = threshold
     return rivers

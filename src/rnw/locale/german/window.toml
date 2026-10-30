@@ -699,8 +699,8 @@ source = "3e9700a12bd157d6"
 text = '''Größter See'''
 
 ["control.new_world.max_lake_px.about"]
-source = "da8233bcf7ff8411"
-text = '''Größere eingeschlossene Gewässer bleiben Meer.'''
+source = "a702b9ca50bd24a6"
+text = '''Seen entstehen bis etwa zu dieser Größe; größere eingeschlossene Gewässer füllen sich mit Land.'''
 
 ["control.new_world.wasteland_permille"]
 source = "4b415ab1819fb1f6"

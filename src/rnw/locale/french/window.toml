@@ -699,8 +699,8 @@ source = "3e9700a12bd157d6"
 text = '''Plus grand lac'''
 
 ["control.new_world.max_lake_px.about"]
-source = "da8233bcf7ff8411"
-text = '''Les eaux fermées plus grandes restent de la mer.'''
+source = "a702b9ca50bd24a6"
+text = '''Les lacs sont tracés jusqu’à cette taille environ ; une eau fermée plus grande est comblée par la terre.'''
 
 ["control.new_world.wasteland_permille"]
 source = "4b415ab1819fb1f6"

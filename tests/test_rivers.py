@@ -21,6 +21,7 @@ from rnw.rivers import (
     flow_classes,
     generate_rivers,
     network_problems,
+    outlet_problems,
     streams,
 )
 from tests.reference import rivers as reference_rivers
@@ -175,3 +176,29 @@ def test_network_checks_equal_the_whole_raster_ones() -> None:
     water = np.zeros(role.shape, dtype=bool)
     water[:, 45:] = True
     assert network_problems(role, water) == reference_rivers.network_problems(role, water)
+
+
+def test_a_lake_receives_rivers_and_gives_one_outflow() -> None:
+    """Water crosses a lake: rivers end in it and a larger river starts at its lowest rim."""
+    land, height, rain = _valley(420, 280)
+    r, c = np.indices(land.shape)
+    lake = np.asarray(((r - 250) ** 2 + (c - 140) ** 2) < 14**2, dtype=bool)
+    land &= ~lake
+    rivers = generate_rivers(land, height, rain, seed=11, lakes=lake)
+    assert not any(network_problems(rivers.role, ~land).values())
+    assert not any(outlet_problems(rivers.role, ~land).values())
+    assert np.count_nonzero((rivers.role != NONE) & lake) > 0
+    rim = np.pad(lake, 4)
+    near = np.zeros_like(lake)
+    for dr in range(9):
+        for dc in range(9):
+            near |= rim[dr : dr + lake.shape[0], dc : dc + lake.shape[1]]
+    outflow = np.argwhere((rivers.role == SOURCE) & near & ~lake)
+    assert len(outflow) == 1
+    row, column = (int(value) for value in outflow[0])
+    assert row < 250  # downstream is towards the sea along the top edge
+    inflow = int(rivers.flow[(rivers.role != NONE) & lake].max())
+    assert int(rivers.flow[row, column]) > inflow
+    # Without the lakes argument the same water is a sink and no river leaves it.
+    sealed = generate_rivers(land, height, rain, seed=11)
+    assert not np.any((sealed.role == SOURCE) & near & ~lake & (np.arange(420)[:, None] < 250))

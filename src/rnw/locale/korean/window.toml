@@ -699,8 +699,8 @@ source = "3e9700a12bd157d6"
 text = '''가장 큰 호수'''
 
 ["control.new_world.max_lake_px.about"]
-source = "da8233bcf7ff8411"
-text = '''이보다 큰 닫힌 물은 바다로 남습니다.'''
+source = "a702b9ca50bd24a6"
+text = '''호수는 대략 이 크기까지 만들어지며, 이보다 큰 닫힌 물은 땅으로 채워집니다.'''
 
 ["control.new_world.wasteland_permille"]
 source = "4b415ab1819fb1f6"

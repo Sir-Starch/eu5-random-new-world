@@ -14,14 +14,21 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from rnw.fields import warped_noise
+from rnw.gulfs import carve_inland_seas
+from rnw.isthmuses import raise_isthmuses
+from rnw.lakes import carve_lakes
 from rnw.newworld import (
+    COAST_WARP_PERMILLE,
     EDGE_RAMP_MARGINS,
     EDGE_SHIFT_PERIOD_PERMILLE,
     EDGE_SHIFT_RAMPS,
     MAX_STRAITS,
     OUTSIDE,
     PERMILLE,
+    SEA_SCALE_MAX_PX,
+    SEA_SCALE_MIN_PX,
     _field,  # pyright: ignore[reportPrivateUsage]
+    _ocean,  # pyright: ignore[reportPrivateUsage]
     open_sea,
     stray_strait,
 )
@@ -81,6 +88,7 @@ def land_model(
         period=settings.feature_px,
         octaves=settings.octaves,
         persistence_permille=settings.persistence_permille,
+        warp_permille=COAST_WARP_PERMILLE,
     )
     wobble = _field(
         seed,
@@ -114,6 +122,16 @@ def land_model(
         land, shore, elevation = _coasts(
             domain, guard, relief, offset, ramp=ramp, settings=settings
         )
+    # The isthmus, inland sea and lake stages work on windows of the whole raster, not on
+    # strips; this specification runs the same functions in the same order.
+    scale = max(SEA_SCALE_MIN_PX, min(settings.feature_px, SEA_SCALE_MAX_PX))
+    _, ocean_now = _ocean(domain, land, shore)
+    land |= raise_isthmuses(land, ocean_now, domain & ~shore, seed, scale_px=scale)
+    _, ocean_now = _ocean(domain, land, shore)
+    land &= ~carve_inland_seas(land, ocean_now, seed, scale_px=scale)
+    land &= ~carve_lakes(
+        land, seed, smallest=settings.min_lake_px, largest=settings.max_lake_px * 9 // 10
+    )
     parts = label_components(land.astype(np.int32))
     land &= np.bincount(parts.ravel())[parts] >= settings.min_island_px
     coded = np.where(domain, land.astype(np.int32), OUTSIDE).astype(np.int32)

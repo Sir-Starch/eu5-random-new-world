@@ -699,8 +699,8 @@ source = "3e9700a12bd157d6"
 text = '''Lago más grande'''
 
 ["control.new_world.max_lake_px.about"]
-source = "da8233bcf7ff8411"
-text = '''Las aguas cerradas mayores que esto siguen siendo mar.'''
+source = "a702b9ca50bd24a6"
+text = '''Se trazan lagos hasta aproximadamente este tamaño; el agua cerrada mayor se rellena de tierra.'''
 
 ["control.new_world.wasteland_permille"]
 source = "4b415ab1819fb1f6"

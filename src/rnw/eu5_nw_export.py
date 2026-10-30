@@ -210,6 +210,7 @@ from rnw.eu5_seas import (
     read_waters,
     settle_coast,
     shape_water,
+    straddles_seam,
     verify_crossings,
     verify_locators,
     verify_seas,
@@ -573,7 +574,7 @@ def _crossing_rows(plan: Plan, canvas: Canvas, water: Water) -> list[str]:
     rows: list[str] = []
     height = canvas.shape[0]
     for item in sorted(
-        water.crossings,
+        (item for item in water.crossings if not straddles_seam(canvas, item)),
         key=lambda crossing: (plan.cells[crossing.first].key, plan.cells[crossing.second].key),
     ):
         columns = _world_columns(
@@ -1579,14 +1580,19 @@ def _basin_rain(
     return climate.rain[grid_rows[:, np.newaxis], grid_columns[np.newaxis, :]]
 
 
-def _river_basins(
+def _river_basins(  # noqa: PLR0913 - the land, relief, canvas, climate, seed and lakes.
     land: NDArray[np.bool_],
     elevation: NDArray[np.int32],
     canvas: Canvas,
     climate: ClimateGrid,
     seed: int,
+    *,
+    lakes: NDArray[np.bool_] | None = None,
 ) -> Rivers:
-    """Plan separate sea-draining basins; the seam contributes no synthetic water."""
+    """Plan separate sea-draining basins; the seam contributes no synthetic water.
+
+    Lakes are water that rivers flow into and out of within their basin.
+    """
     seam = (canvas.roll - canvas.col0) % canvas.shape[1]
     spans = watershed_spans(land.shape[1], seam)
     rivers = Rivers(
@@ -1609,6 +1615,7 @@ def _river_basins(
                 _basin_rain(domain.shape, left, canvas, climate),
                 seed=derive_seed(seed, f"river_basin_{left}"),
                 output=target,
+                lakes=None if lakes is None else lakes[:, left:right],
             )
         except RiverGenerationError as exc:
             raise NewWorldExportError(str(exc)) from exc
@@ -1637,8 +1644,9 @@ def _rivers(
         [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
     )
     land = land_kind[world.labels]
+    lake_kind = np.array([kind is CellClass.LAKE for kind in world.classes] + [False])
     elevation = world.elevation
-    rivers = _river_basins(land, elevation, canvas, climate, seed)
+    rivers = _river_basins(land, elevation, canvas, climate, seed, lakes=lake_kind[world.labels])
     classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
     problems = network_problems(rivers.role, ~land)
     if any(problems.values()):

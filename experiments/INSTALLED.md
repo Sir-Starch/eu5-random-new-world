@@ -971,3 +971,32 @@ Hub candidate: `local_data/hub-updates/1.1.0-1793367165919223097/rnw_exp_hub`;
 wheel SHA-256 `8bac372109dbc3e6a4bdd7c4644b89978d086434a2b6216bc555513f3466512a`.
 This remains unpublished 1.1.0 / pending epoch 60; existing worlds are untouched.
 Evidence: ignored `local_data/wall-variety/`.
+
+2026-10-30, **1.1.0 development — coasts, water bodies and drainage** (C448).
+[V-EXEC] Bent coast density, vanilla-calibrated lakes, inland seas and spit-bounded gulfs,
+isthmuses, and rivers that enter and leave lakes (see the
+[terrain guide](../docs/terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)).
+Full checks pass (2,268 Python tests, 15 optional skips; 23 native Rust tests; strict types and
+lint clean). The pending epoch-60 reference world is refreshed to 867 files / `a2474322…879c`
+(the frozen epoch-59 reference is untouched), reproduced independently by the installed-game
+suite (14 tests, one opt-in skip) and the layer-reroll check. Full exports of six presets with a
+cleared land cache (continents 1000, wall 9, archipelago 42, islands 7, small continents 42,
+supercontinent 42) report no split cells, unreachable sea zones, unported land or river-rule
+violations; the land cache is keyed by epoch, not code, so earlier exports that reused it did not
+count. An island world exposed a strait through the display seam, which is no longer written as a
+crossing.
+
+Installed new candidate `rnw_exp_world_xgmv2hwu7n` (**Lakes and seas · 1000**, continents,
+seed 1000, code `RNW1-040G0-00000-0000Z-8040G-0000X-PG0`) in the same Windows/Proton
+profile, with records in both libraries. All 898 installed files match; 867 nonmetadata files have
+SHA-256 `d23f40c881ac81717e02227ca84b9c9363f2fc610308c978ce893c6c954c52a3`; it has 228 lakes
+(28 in the 1.0.0 generator's world of the same code), 492 river mouths (365) and 6,482 land
+locations (6,732). All ten existing mod directories and nine profile-root files are preserved.
+No playset, save or preference edit; no EU5 launch/control by the agent.
+
+The verified, self-tested hub is installed with the former hub retained at
+`.rnw-hub-backups/1.1.0-1793379603295333383`. Hub candidate:
+`local_data/hub-updates/1.1.0-1793379528074812039/rnw_exp_hub`; wheel SHA-256
+`91987ac5961139a663c9755fcac871489ace3db8080d246897a238ee1c943d97`. This remains unpublished
+1.1.0 / pending epoch 60; existing worlds are untouched. Evidence: ignored
+`local_data/hydrology-110/`.
