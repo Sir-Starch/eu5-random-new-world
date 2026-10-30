@@ -19,11 +19,23 @@ and whether its New World may be shown, and tells its owner when the player asks
 from __future__ import annotations
 
 import math
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 
 import numpy as np
-from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QObject,
+    QPoint,
+    QPointF,
+    QRect,
+    QRectF,
+    QSize,
+    Qt,
+    QTimer,
+    Signal,
+)
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -63,6 +75,7 @@ from PySide6.QtWidgets import (
 )
 
 from rnw import atlas as atlas_module
+from rnw.app import logs
 from rnw.gui import mapstyle
 from rnw.gui.preview import ZOOM_LIMIT, PreviewView
 from rnw.gui.text import grouped, text
@@ -71,7 +84,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Sequence
 
     from numpy.typing import NDArray
-    from PySide6.QtGui import QMouseEvent, QResizeEvent, QWheelEvent
+    from PySide6.QtGui import QMouseEvent, QResizeEvent, QShowEvent, QWheelEvent
 
     from rnw.atlas import Atlas
 
@@ -556,6 +569,75 @@ def find(atlas: Atlas, query: str, words: atlas_module.Words) -> list[atlas_modu
     return [*others, *areas_found, *places][:RESULTS]
 
 
+# -- drawing away from the window's thread --------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class Order:
+    """What the panel wants drawn, with what it already has of it."""
+
+    key: tuple[object, ...]
+    base_key: tuple[object, ...]
+    atlas: Atlas
+    words: atlas_module.Words
+    layer: str
+    tribes: bool
+    overlays: mapstyle.Overlays
+    isolated: tuple[int, ...] | None
+    lens: mapstyle.StyledLens | None
+    base: NDArray[np.uint8] | None
+    writing: Writing | None
+
+
+@dataclass(frozen=True, slots=True)
+class Drawn:
+    """An order carried out: the lens, its picture, what is shown of it, and its writing."""
+
+    order: Order
+    lens: mapstyle.StyledLens
+    base: NDArray[np.uint8]
+    shown: NDArray[np.uint8]
+    image: QImage
+    writing: Writing
+
+
+def carry_out(order: Order) -> Drawn:
+    """Style, draw and write a lens: the slow part, done on the panel's worker thread."""
+    atlas = order.atlas
+    lens = order.lens or mapstyle.style(
+        atlas, order.layer, order.words, tribes=order.tribes, tribes_label=text("map.tribes")
+    )
+    base = order.base
+    if base is None:
+        base = mapstyle.picture(atlas, lens, tribes=order.tribes, overlays=order.overlays)
+    shown = base if order.isolated is None else mapstyle.isolate(atlas, base, order.isolated)
+    writing = order.writing or write(atlas, lens, order.words, tribes=order.tribes)
+    return Drawn(order, lens, base, shown, to_image(shown), writing)
+
+
+@dataclass(frozen=True, slots=True)
+class Failed:
+    """An order that could not be carried out, and why."""
+
+    order: Order
+    reason: str
+
+
+class _Delivery(QObject):
+    """Brings a drawing finished on the worker thread back to the window's thread."""
+
+    done: Signal = Signal(object)
+
+    def carry_out(self, order: Order) -> None:
+        """Carry ``order`` out (on the worker thread) and send back what came of it."""
+        try:
+            drawn: Drawn | Failed = carry_out(order)
+        except Exception as error:  # noqa: BLE001 - shown in the window and logged, not lost in a thread
+            logs.get().exception("drawing the %s lens failed", order.layer)
+            drawn = Failed(order, str(error))
+        self.done.emit(drawn)
+
+
 # -- the panel ----------------------------------------------------------------------------------
 
 
@@ -578,7 +660,7 @@ class MapsPanel(QWidget):
         self._atlas: Atlas | None = None
         self._words: atlas_module.Words = atlas_module.ENGLISH
         self._layer: str = atlas_module.LAYERS[0]
-        self._identity: int = 0
+        self._identity: tuple[int, int] = (0, 0)
         self._tribes: bool = False
         self._political: bool = True
         self._names_shown: bool = True
@@ -603,6 +685,15 @@ class MapsPanel(QWidget):
         self._zoom_timer.setSingleShot(True)
         self._zoom_timer.setInterval(150)
         _ = self._zoom_timer.timeout.connect(self._draw)
+        # Lenses are drawn on a thread of their own, one at a time, so the window stays awake.
+        self._worker: ThreadPoolExecutor = ThreadPoolExecutor(1, thread_name_prefix="rnw-maps")
+        self._delivery: _Delivery = _Delivery()
+        _ = self._delivery.done.connect(self._delivered)
+        self._wanted: tuple[object, ...] | None = None
+        self._drawing: bool = False
+        self._pending: Order | None = None
+        worker = self._worker
+        _ = self.destroyed.connect(lambda: worker.shutdown(wait=False, cancel_futures=True))
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         self.pages: QStackedWidget = QStackedWidget()
@@ -659,6 +750,10 @@ class MapsPanel(QWidget):
         layout.addWidget(side)
         self._chip()
         self._card()
+        self.loading: QLabel = QLabel(text("map.loading"), self.map_view.viewport())
+        self.loading.setAutoFillBackground(True)
+        self.loading.setMargin(8)
+        self.loading.setVisible(False)
         _ = self.map_view.moved.connect(self.show_facts_at)
         _ = self.map_view.left.connect(self.clear_facts)
         _ = self.map_view.clicked.connect(self._clicked)
@@ -838,18 +933,27 @@ class MapsPanel(QWidget):
         one and kept (with its zoom) while only the lens or what is isolated changes.
         """
         if atlas is None:
+            self._wanted = None
+            self._pending = None
+            self.loading.hide()
             self.covered_notice.setText(text("no_atlas"))
             self.reveal_button.setVisible(False)
             self.pages.setCurrentIndex(0)
             return
         if not revealed:
+            self._wanted = None
+            self._pending = None
+            self.loading.hide()
             self.covered_notice.setText(text("covered_maps"))
             self.reveal_button.setVisible(True)
             self.pages.setCurrentIndex(0)
             return
-        self._identity = identity
+        self._identity = (identity, id(words))
+        words_changed = words is not self._words
         self._words = words
-        if atlas is not self._atlas:
+        if atlas is not self._atlas or words_changed:
+            self._wanted = None
+            self._pending = None
             self._atlas = atlas
             self._styled.clear()
             self._writing.clear()
@@ -867,33 +971,32 @@ class MapsPanel(QWidget):
         self.pages.setCurrentIndex(1)
         self._draw()
 
+    def _seen(self) -> bool:
+        """Whether the maps are on screen (or would be, were the window shown): a world's maps
+        are drawn only when looked at, not whenever the world is chosen."""
+        window = self.window()
+        return self.pages.currentIndex() == 1 and self.isVisibleTo(window) and window is not self
+
+    @override
+    def showEvent(self, event: QShowEvent) -> None:
+        super().showEvent(event)
+        self._draw()
+
+    def shown_now(self, _index: int = 0) -> None:
+        """A tab was chosen: when it is the maps', draw what waits to be drawn."""
+        self._draw()
+
+    def idle(self) -> bool:
+        """Whether nothing is being drawn: what was asked for is on screen."""
+        return self._wanted is None
+
     def _lens(self) -> mapstyle.StyledLens | None:
-        atlas = self._atlas
-        if atlas is None:
-            return None
-        key = (self._layer, self._tribes)
-        found = self._styled.get(key)
-        if found is None:
-            found = mapstyle.style(
-                atlas,
-                self._layer,
-                self._words,
-                tribes=self._tribes,
-                tribes_label=text("map.tribes"),
-            )
-            self._styled[key] = found
-        return found
+        """The lens shown, once it has been styled."""
+        return self._styled.get((self._layer, self._tribes))
 
     def _current_writing(self) -> Writing | None:
-        atlas, lens = self._atlas, self._lens()
-        if atlas is None or lens is None:
-            return None
-        key = (self._layer, self._tribes)
-        found = self._writing.get(key)
-        if found is None:
-            found = write(atlas, lens, self._words, tribes=self._tribes)
-            self._writing[key] = found
-        return found
+        """What the lens shown writes, once it has been worked out."""
+        return self._writing.get((self._layer, self._tribes))
 
     def _overlays(self) -> mapstyle.Overlays:
         zoom = self.map_view.zoom()
@@ -903,8 +1006,10 @@ class MapsPanel(QWidget):
         )
 
     def _draw(self) -> None:
-        atlas, lens = self._atlas, self._lens()
-        if atlas is None or lens is None:
+        """Show the lens as it is wanted, drawing it on the worker thread when it is not at
+        hand; the old picture stays, with a notice, until the new one comes."""
+        atlas = self._atlas
+        if atlas is None or not self._seen():
             return
         overlays = self._overlays()
         isolated = (
@@ -914,20 +1019,77 @@ class MapsPanel(QWidget):
         )
         key = (self._identity, self._layer, self._tribes, overlays, isolated)
         if key == self._drawn:
+            self._wanted = None
+            self._pending = None
+            self.loading.hide()
             return
-        base_key = (self._identity, self._layer, self._tribes, overlays)
-        base = self._pictures.get(base_key)
-        if base is None:
-            base = mapstyle.picture(atlas, lens, tribes=self._tribes, overlays=overlays)
+        if key == self._wanted:
+            return
+        base_key = key[:4]
+        order = Order(
+            key=key,
+            base_key=base_key,
+            atlas=atlas,
+            words=self._words,
+            layer=self._layer,
+            tribes=self._tribes,
+            overlays=overlays,
+            isolated=isolated,
+            lens=self._lens(),
+            base=self._pictures.get(base_key),
+            writing=self._current_writing(),
+        )
+        self._wanted = key
+        if order.base is None or order.lens is None or order.writing is None:
+            self.loading.adjustSize()
+            self.loading.move(
+                (self.map_view.viewport().width() - self.loading.width()) // 2,
+                (self.map_view.viewport().height() - self.loading.height()) // 2,
+            )
+            self.loading.setVisible(True)
+            self.loading.raise_()
+        # While a picture is being drawn, keep only the latest request. Rapid world/lens
+        # changes must not make the player wait for a queue of pictures no longer wanted.
+        if self._drawing:
+            self._pending = order
+        else:
+            self._submit(order)
+
+    def _submit(self, order: Order) -> None:
+        self._drawing = True
+        _ = self._worker.submit(self._delivery.carry_out, order)
+
+    def _delivered(self, drawn: Drawn | Failed) -> None:
+        """A drawing came back: keep what it made and show it if it is still wanted."""
+        order = drawn.order
+        self._drawing = False
+        pending, self._pending = self._pending, None
+        if pending is not None:
+            self._submit(pending)
+        if order.atlas is not self._atlas:
+            return
+        if isinstance(drawn, Failed):
+            if order.key == self._wanted:
+                self._wanted = None
+                self.loading.setVisible(False)
+                self.facts.setText(drawn.reason)
+            return
+        lens_key = (order.layer, order.tribes)
+        self._styled[lens_key] = drawn.lens
+        self._writing[lens_key] = drawn.writing
+        if order.base_key not in self._pictures:
             while len(self._pictures) >= KEPT_PICTURES:
                 del self._pictures[next(iter(self._pictures))]
-            self._pictures[base_key] = base
-        shown = base if isolated is None else mapstyle.isolate(atlas, base, isolated)
-        self._shown = shown
-        self.map_view.show_image(to_image(shown), f"{self._identity}")
-        if key[:3] != (self._drawn or ())[:3]:
-            self._legend(lens)
-        self._drawn = key
+            self._pictures[order.base_key] = drawn.base
+        if order.key != self._wanted:
+            return
+        self._wanted = None
+        self.loading.setVisible(False)
+        self._shown = drawn.shown
+        self.map_view.show_image(drawn.image, f"{self._identity}")
+        if order.key[:3] != (self._drawn or ())[:3]:
+            self._legend(drawn.lens)
+        self._drawn = order.key
         self.map_view.viewport().update()
 
     def _legend(self, lens: mapstyle.StyledLens) -> None:

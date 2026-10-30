@@ -80,6 +80,8 @@ SEED_MAX: Final[int] = (1 << 64) - 1
 ERROR_LOG: Final[str] = "last-error.log"
 NEW: Final[str] = "new"
 STRAY: Final[str] = "stray:"
+# Atlases whose map words are kept (the window asks at every refresh).
+WORDS_KEPT: Final[int] = 4
 # What the record alone says (ADR 0010, G): the algorithm; anything else is "not checked yet".
 REPRODUCTION: Final[dict[Verdict, str]] = {
     Verdict.OTHER_ALGORITHM: "repro.other_algorithm",
@@ -196,9 +198,11 @@ class Controller:
         logs.start(self.data)
         self._observers: list[Callable[[], None]] = []
         self._compatible: dict[tuple[str, str], bool | None] = {}
+        self._comparing: set[tuple[str, str]] = set()
         self.runs: int = 0
         self.land_mask: LandMask | None = None
         self.last_import: exchange.Imported | None = None
+        self._words: dict[int, tuple[Atlas, tuple[str, Path | None], atlas.Words]] = {}
         self.candidates: list[candidates.Candidate] = []
         self.candidate_code: WorldCode | None = None
         self.queue: list[service.Request] = []
@@ -1024,16 +1028,25 @@ class Controller:
     def words(self, found: Atlas) -> atlas.Words:
         """How the window writes an atlas: its own legend words, the game's names of the
         identifiers when the game is here (else the identifiers made readable), the world's
-        names in the window's language."""
+        names in the window's language. Kept for the atlas, the language and the game, since
+        the window asks at every refresh and the game's names take a while to read."""
         speaking = language()
+        game = self.game.directory if self.game is not None else None
+        known = self._words.get(id(found))
+        if known is not None and known[0] is found and known[1] == (speaking, game):
+            return known[2]
         names: dict[str, str] = {}
-        if self.game is not None:
-            names = gamenames.game_names(self.game.directory, speaking, mapstyle.identifiers(found))
-        return atlas.Words(
+        if game is not None:
+            names = gamenames.game_names(game, speaking, mapstyle.identifiers(found))
+        words = atlas.Words(
             label=lambda key: text(f"legend.{key}"),
             key=lambda key: names.get(key) or atlas.pretty(key),
             name=lambda name: render(name, speaking),
         )
+        while len(self._words) >= WORDS_KEPT:
+            del self._words[next(iter(self._words))]
+        self._words[id(found)] = (found, (speaking, game), words)
+        return words
 
     def revealed(self, world: World) -> bool:
         """Whether the world's New World may be shown here."""
@@ -1094,6 +1107,37 @@ class Controller:
         if key not in self._compatible:
             self._compatible[key] = service.compatible(world, game=game, data=self.data)
         return self._compatible[key]
+
+    def build_note(self, world: World) -> str:
+        """What a world page says of a world made for another game build: whether it works as
+        it is, or ``checking`` while its files are compared on a thread of their own (a second or
+        a few the first time), after which the window is told to look again."""
+        game = self.game
+        if game is None or not world.game_build or world.game_build == game.build_id:
+            return ""
+        key = (world.id, game.build_id)
+        if key not in self._compatible:
+            # Finish the current read before starting another. Its notification refreshes
+            # the selected page, which then checks the world the player still wants.
+            if not self._comparing:
+                self._comparing.add(key)
+
+                def compare() -> None:
+                    try:
+                        found = service.compatible(world, game=game, data=self.data, workers=1)
+                    except Exception:  # noqa: BLE001 - record failed background checks, leave no stuck notice
+                        logs.get().exception("comparing game inputs for %s failed", world.id)
+                        found = None
+                    with self._lock:
+                        self._compatible[key] = found
+                        self._comparing.discard(key)
+                    self._changed()
+
+                threading.Thread(target=compare, name="compare-inputs", daemon=True).start()
+            kind = "other_build_checking"
+        else:
+            kind = "other_build_same" if self._compatible[key] else "other_build"
+        return text(kind, made=world.game_build, current=game.build_id)
 
     def check_selected(self) -> str | None:
         """Make the selected world again and compare it with the first time; returns why it

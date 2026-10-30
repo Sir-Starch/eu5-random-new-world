@@ -2172,6 +2172,10 @@ text = '''使用经典窗口'''
 source = "ab220ff06d3f952f"
 text = '''下次启动时生效。新窗口无法打开时，也会自动打开经典窗口。'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''为游戏版本 {made} 制作；你的版本是 {current}。正在将制作它所用的文件与游戏文件进行比较…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "资源"

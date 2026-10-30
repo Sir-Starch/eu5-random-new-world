@@ -567,6 +567,10 @@ STRINGS: Final[dict[str, str]] = {
         "Made for game build {made}; you have {current}. Adding it makes it again for your "
         "build: the same code on another build is a world of its own."
     ),
+    "other_build_checking": (
+        "Made for game build {made}; you have {current}. Comparing the files it was made from "
+        "with the game's…"
+    ),
     "other_build_same": (
         "Made for game build {made}; you have {current}, and none of the files it was made "
         "from has changed, so it works as it is."

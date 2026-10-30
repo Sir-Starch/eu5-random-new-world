@@ -2172,6 +2172,10 @@ text = '''Używaj klasycznego okna'''
 source = "ab220ff06d3f952f"
 text = '''Od następnego uruchomienia. Klasyczne okno otwiera się też samo, gdy to nowe nie może.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''Utworzony dla wersji gry {made}; masz {current}. Porównuję pliki, z których powstał, z plikami gry…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "Surowce"

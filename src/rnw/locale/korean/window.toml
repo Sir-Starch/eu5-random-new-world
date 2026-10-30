@@ -2172,6 +2172,10 @@ text = '''클래식 창 사용'''
 source = "ab220ff06d3f952f"
 text = '''다음 실행부터 적용됩니다. 이 새 창을 열 수 없을 때도 클래식 창이 자동으로 열립니다.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''게임 빌드 {made}용으로 만들어졌습니다. 현재 빌드는 {current}입니다. 만들 때 사용한 파일을 게임 파일과 비교하는 중…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "자원"

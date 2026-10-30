@@ -2172,6 +2172,10 @@ text = '''Klassisches Fenster verwenden'''
 source = "ab220ff06d3f952f"
 text = '''Ab dem nächsten Start. Das klassische Fenster öffnet sich auch von selbst, wenn dieses neue es nicht kann.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''Für Spielversion {made} erstellt; du hast {current}. Die Dateien, aus denen sie erstellt wurde, werden mit denen des Spiels verglichen…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "Ressourcen"

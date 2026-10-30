@@ -370,6 +370,10 @@
     padding: 0 2px;
     font-size: 12px;
   }
+  .caption > span {
+    flex: none;
+    white-space: nowrap;
+  }
   .chosen {
     display: inline-flex;
     align-items: center;

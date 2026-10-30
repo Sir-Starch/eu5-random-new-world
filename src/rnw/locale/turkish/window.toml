@@ -2172,6 +2172,10 @@ text = '''Klasik pencereyi kullan'''
 source = "ab220ff06d3f952f"
 text = '''Bir sonraki açılıştan itibaren. Bu yeni pencere açılamadığında klasik pencere de kendiliğinden açılır.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''Oyun sürümü {made} için yapıldı; sizde {current} var. Yapıldığı dosyalar oyununkilerle karşılaştırılıyor…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "Kaynaklar"

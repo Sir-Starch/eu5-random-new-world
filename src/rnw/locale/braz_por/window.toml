@@ -2172,6 +2172,10 @@ text = '''Usar a janela clássica'''
 source = "ab220ff06d3f952f"
 text = '''A partir da próxima abertura. A janela clássica também abre sozinha quando esta nova não consegue abrir.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''Feito para a versão {made} do jogo; você tem a {current}. Comparando os arquivos de que foi feito com os do jogo…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "Recursos"

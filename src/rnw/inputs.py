@@ -120,13 +120,32 @@ def recording(game_dir: Path) -> Generator[InputRecorder]:
             _ACTIVE.remove(recorder)
 
 
+# Digests of files already read, by path, size and times: comparing several worlds with the
+# same game reads its files once. A file written again gets a new modification time.
+_DIGESTS: dict[tuple[str, int, int, int], str] = {}
+KEPT_DIGESTS: Final[int] = 100_000
+
+
 def file_hash(path: Path) -> str:
-    """SHA-256 of a file, read in blocks."""
+    """SHA-256 of a file, read in blocks; the same file unchanged is not read again."""
+    status = path.stat()
+    key = (str(path), status.st_size, status.st_mtime_ns, status.st_ctime_ns)
+    # CPython on Windows can report creation time as ctime. It cannot validate this
+    # cache after an in-place rewrite that restores mtime, so hash those files afresh.
+    cacheable = os.name != "nt"
+    known = _DIGESTS.get(key) if cacheable else None
+    if known is not None:
+        return known
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         while block := handle.read(HASH_BLOCK):
             digest.update(block)
-    return digest.hexdigest()
+    found = digest.hexdigest()
+    if cacheable:
+        if len(_DIGESTS) >= KEPT_DIGESTS:
+            _DIGESTS.clear()
+        _DIGESTS[key] = found
+    return found
 
 
 def directory_hash(path: Path) -> str:
@@ -138,8 +157,11 @@ def hash_files(game_dir: Path, relatives: Iterable[str], *, workers: int) -> Man
     """The manifest of ``relatives`` under ``game_dir``, hashed by ``workers`` threads."""
     names = sorted(relatives)
     paths = [game_dir / name for name in names]
-    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
-        hashes = list(pool.map(file_hash, paths))
+    if workers <= 1:
+        hashes = [file_hash(path) for path in paths]
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            hashes = list(pool.map(file_hash, paths))
     return Manifest(dict(zip(names, hashes, strict=True)))
 
 

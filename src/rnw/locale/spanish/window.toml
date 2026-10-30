@@ -2172,6 +2172,10 @@ text = '''Usar la ventana clásica'''
 source = "ab220ff06d3f952f"
 text = '''A partir del próximo inicio. La ventana clásica también se abre sola cuando esta nueva no puede.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''Hecho para la versión {made} del juego; tienes la {current}. Comparando los archivos con que se hizo con los del juego…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "Recursos"

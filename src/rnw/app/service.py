@@ -250,7 +250,9 @@ class Maker(Protocol):
     def __call__(self, request: Request, progress: Progress | None = None) -> Result: ...
 
 
-def compatible(world: World, *, game: GameInstall, data: Path) -> bool | None:
+def compatible(
+    world: World, *, game: GameInstall, data: Path, workers: int | None = None
+) -> bool | None:
     """Whether the world made for one game build is still valid for this one.
 
     True for the same build, and for another build when none of the game files the world's
@@ -259,7 +261,7 @@ def compatible(world: World, *, game: GameInstall, data: Path) -> bool | None:
     """
     if world.game_build == game.build_id:
         return True
-    changed = inputs_changed(world, game=game, data=data)
+    changed = inputs_changed(world, game=game, data=data, workers=workers)
     return None if changed is None else not changed
 
 
@@ -417,14 +419,16 @@ class Check:
     seconds: float
 
 
-def inputs_changed(world: World, *, game: GameInstall, data: Path) -> list[str] | None:
+def inputs_changed(
+    world: World, *, game: GameInstall, data: Path, workers: int | None = None
+) -> list[str] | None:
     """The game files the world's export read that are gone or different now; None when the
     bundle no longer has the list, so the files cannot be compared. Hashes about fourteen thousand
     files, a second or a few."""
     manifest = library.inputs_manifest(data, world)
     if manifest is None:
         return None
-    found = compare(game.directory, manifest, workers=cores())
+    found = compare(game.directory, manifest, workers=cores() if workers is None else workers)
     return [*found.missing, *found.changed]
 
 

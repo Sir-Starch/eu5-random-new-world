@@ -322,11 +322,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         return None
     placement = c.placement(world)
     changed = c.changed_count(world)
-    game_build = c.game.build_id if c.game is not None else ""
-    note = ""
-    if game_build and world.game_build and world.game_build != game_build:
-        kind = "other_build_same" if c.compatibility(world) else "other_build"
-        note = text(kind, made=world.game_build, current=game_build)
+    note = c.build_note(world)
     found = c.atlas(world)
     parent = c.parent_of(world)
     mod = c.profile.directory / "mod" / world.folder if c.profile is not None else None

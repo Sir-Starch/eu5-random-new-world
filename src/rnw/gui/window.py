@@ -1252,6 +1252,7 @@ class MainWindow(QMainWindow):
             self._tell(text("notes_saved"))
 
     def _connect_world_page(self) -> None:
+        _ = self.world_tabs.currentChanged.connect(self.maps.shown_now)
         _ = self.name_edit.editingFinished.connect(self._renamed)
         _ = self.copy_code_button.clicked.connect(self._copy_world_code)
         _ = self.add_button.clicked.connect(self._add)
@@ -1878,7 +1879,6 @@ class MainWindow(QMainWindow):
         placement = controller.placement(world)
         self._show_maps(world)
         self.maps.set_summary(controller.summary(world))
-        game_build = controller.game.build_id if controller.game is not None else ""
         changed = controller.changed_count(world)
         mod = None
         if controller.profile is not None:
@@ -1901,9 +1901,9 @@ class MainWindow(QMainWindow):
         for key, value in values.items():
             self.details[key].setText(value)
         notes: list[str] = []
-        if game_build and world.game_build and world.game_build != game_build:
-            kind = "other_build_same" if controller.compatibility(world) else "other_build"
-            notes.insert(0, text(kind, made=world.game_build, current=game_build))
+        note = controller.build_note(world)
+        if note:
+            notes.insert(0, note)
         self.note.setText("\n\n".join(notes))
         self.note.setVisible(bool(notes))
         advice = controller.next_step(world) if placement is Placement.IN_GAME else ""

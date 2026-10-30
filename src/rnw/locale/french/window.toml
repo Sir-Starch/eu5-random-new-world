@@ -2172,6 +2172,10 @@ text = '''Utiliser la fenêtre classique'''
 source = "ab220ff06d3f952f"
 text = '''À partir du prochain démarrage. La fenêtre classique s'ouvre aussi d'elle-même quand cette nouvelle fenêtre ne le peut pas.'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''Fait pour la version {made} du jeu ; vous avez la {current}. Comparaison des fichiers dont il a été fait avec ceux du jeu…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "Ressources"

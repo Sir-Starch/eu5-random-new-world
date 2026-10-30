@@ -109,7 +109,11 @@ export class WorldAtlas {
   private styled = new Map<string, StyledLens>();
   private labelCache = new Map<string, Label[]>();
 
-  constructor(data: AtlasBundle) {
+  constructor(data: AtlasBundle, regionLabels?: Label[]) {
+    if (regionLabels) {
+      this.labelCache.set("land|regions|true", regionLabels);
+      this.labelCache.set("land|regions|false", regionLabels);
+    }
     this.data = data;
     [this.height, this.width] = data.size;
     this.cells = data.cells;

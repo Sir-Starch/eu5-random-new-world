@@ -46,6 +46,44 @@ def _finish(controller: Controller) -> None:
     assert controller.phase is Phase.FINISHED, controller.message
 
 
+def test_build_notes_do_not_wait_for_or_repeat_a_background_comparison(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    assert controller.start() is None
+    _finish(controller)
+    [world] = controller.worlds
+    assert controller.game is not None
+    controller.game = replace(controller.game, build_id="new-build")
+    started, release, changed = threading.Event(), threading.Event(), threading.Event()
+    calls: list[int | None] = []
+
+    def compare(
+        _world: library.World, *, game: GameInstall, data: Path, workers: int | None = None
+    ) -> bool:
+        assert game is controller.game
+        assert data == controller.data
+        calls.append(workers)
+        started.set()
+        assert release.wait(10)
+        return True
+
+    monkeypatch.setattr(service, "compatible", compare)
+    controller.subscribe(changed.set)
+    try:
+        assert "Comparing" in controller.build_note(world)
+        assert started.wait(10)
+        assert "Comparing" in controller.build_note(replace(world, id="another-world"))
+        assert "Comparing" in controller.build_note(world)
+        assert calls == [1]
+    finally:
+        release.set()
+    assert changed.wait(10)
+    assert "works as it is" in controller.build_note(world)
+    assert calls == [1]
+
+
 def test_queued_worlds_keep_their_own_settings_and_run_in_order(
     tmp_path: Path,
     fake_export: Exporter,

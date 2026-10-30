@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import threading
 import time
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,7 @@ from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
 from rnw.eu5_seas import SeaError
+from rnw.gui import maps as maps_module
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.record import Verdict
@@ -747,16 +749,20 @@ def test_the_maps_tab_is_covered_until_revealed_and_then_draws_layers_and_answer
     assert maps.picture() is None
     maps.reveal_button.click()
     pump(lambda: maps.pages.currentIndex() == 1)
-    assert maps.picture() is not None
+    assert maps.picture() is None, "the maps are drawn only when their tab is chosen"
+    window.world_tabs.setCurrentWidget(maps)
+    pump(lambda: maps.picture() is not None and maps.idle())
     assert "countries" in maps.summary.text()
     for layer in ("countries", "cultures", "religions", "resources", "development", "land"):
         maps.select_layer(layer)
+        pump(maps.idle)
         assert maps.layer == layer
         assert maps.legend_list.count() > 0
     first = maps.picture()
     maps.search.setText("aland")
     pump(lambda: maps.results.count() > 0)
     maps.results.setCurrentRow(0)
+    pump(maps.idle)
     marked = maps.picture()
     assert first is not None
     assert marked is not None
@@ -767,6 +773,47 @@ def test_the_maps_tab_is_covered_until_revealed_and_then_draws_layers_and_answer
     assert maps.facts.text()
     maps.clear_facts()
     assert maps.facts.text() == text("facts_hint")
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_map_drawing_keeps_only_the_latest_request_and_leaves_the_event_loop_free(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    maps = window.maps
+    maps.reveal_button.click()
+    pump(lambda: maps.pages.currentIndex() == 1)
+    started, release = threading.Event(), threading.Event()
+    layers: list[str] = []
+    original = maps_module.carry_out
+
+    def draw(order: maps_module.Order) -> maps_module.Drawn:
+        layers.append(order.layer)
+        started.set()
+        assert release.wait(10)
+        return original(order)
+
+    monkeypatch.setattr(maps_module, "carry_out", draw)
+    try:
+        window.world_tabs.setCurrentWidget(maps)
+        assert started.wait(10)
+        maps.select_layer("countries")
+        maps.select_layer("cultures")
+        maps.select_layer("resources")
+        QApplication.processEvents()
+        assert not maps.idle()
+        assert maps.loading.isVisibleTo(maps)
+    finally:
+        release.set()
+    pump(maps.idle)
+    assert layers == ["land", "resources"]
+    assert maps.layer == "resources"
+    assert maps.picture() is not None
     _ = window.close()
 
 
@@ -784,7 +831,9 @@ def test_the_maps_isolate_pin_show_tribes_and_save_what_is_drawn(
     maps = window.maps
     maps.reveal_button.click()
     pump(lambda: maps.pages.currentIndex() == 1)
+    window.world_tabs.setCurrentWidget(maps)
     maps.select_layer("countries")
+    pump(lambda: maps.idle() and maps.legend_list.count() > 0)
     plain = maps.picture()
     entry = next(
         item
@@ -792,12 +841,14 @@ def test_the_maps_isolate_pin_show_tribes_and_save_what_is_drawn(
         if (item := maps.legend_list.item(row)).text().startswith("Aland")
     )
     maps.legend_list.itemClicked.emit(entry)
+    pump(maps.idle)
     alone = maps.picture()
     assert plain is not None
     assert alone is not None
     assert not (plain == alone).all()
     assert maps.chip.isVisibleTo(maps)
     maps.tribes_box.setChecked(True)
+    pump(maps.idle)
     assert maps.picture() is not None
     found = controller.atlas(controller.worlds[0])
     assert found is not None

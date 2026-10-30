@@ -883,3 +883,21 @@ under `local_data/hub-updates/1.1.0-1793357868762179148/`.
 Independent pending-epoch reference reproduction passes on build 26300913
 (`RNW_REPRODUCE=1`, 867 files, `23c04377…bd9c85`). The installed Windows generator
 also passes the specific 34-resource settings/code/weight/catalog parity check.
+
+
+2026-10-30, **1.1.0 development — responsive world selection and refreshed README** (C446).
+[V-EXEC] Full checks pass: **2,218 Python tests** (15 optional skips), **23 native Rust
+tests**, **14 Vitest tests**, **5 Rust shell tests**, format/lint/types and the production
+build. The installed-game read-only suite passes **13 tests** (two opt-in skips) on build
+**26300913**. Native and Windows/Wine window/native/code and shell/bridge self-tests pass;
+a Windows same-size rewrite with restored mtime also invalidates its file hash. See the
+[window guide](../docs/gui-design.md#9-the-tauri-window) for scoped responsiveness measurements.
+
+The current source/catalog/package audit and standard updater verified and installed all
+**3,460 files** of the generator-only hub into the same Windows/Proton profile's
+`mod/rnw_exp_hub`. The previous hub is retained at
+`.rnw-hub-backups/1.1.0-1793359698627626863`. This remains an unpublished development build.
+World bytes are unchanged by this interface work: the existing candidate
+`rnw_exp_world_5o4wtpm757` is reused. No EU5 launch/control or world/playset/save edit.
+Build, self-test, timing, screenshots and installation evidence remain under ignored
+`local_data/gui-finish/`.

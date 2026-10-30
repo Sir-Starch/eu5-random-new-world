@@ -13,7 +13,7 @@ Russian and Polish culture names are stems that the game's texts complete (``ÐÐ
 from __future__ import annotations
 
 import re
-from functools import cache
+from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
@@ -38,8 +38,9 @@ def _complete(language: str, key: str, name: str) -> str:
     return name
 
 
-@cache
-def _read(game_dir: Path, language: str, keys: frozenset[str]) -> dict[str, str]:
+@lru_cache(maxsize=2)
+def _read(game_dir: Path, language: str) -> dict[str, str]:
+    """Read one catalogue for all worlds, rather than rereading it for each set of keys."""
     found: dict[str, str] = {}
     folder = game_dir / LOCALIZATION / language
     for path in sorted(folder.rglob(f"*_l_{language}.yml")):
@@ -49,11 +50,12 @@ def _read(game_dir: Path, language: str, keys: frozenset[str]) -> dict[str, str]
             continue
         pairs: list[tuple[str, str]] = ENTRY.findall(text)
         for key, value in pairs:
-            if key in keys and key not in found and value and not SCRIPTED.search(value):
+            if key not in found and value and not SCRIPTED.search(value):
                 found[key] = _complete(language, key, value)
     return found
 
 
 def game_names(game_dir: Path, language: str, keys: frozenset[str]) -> dict[str, str]:
     """The game's names of ``keys`` in ``language``; keys it has no plain name for are left out."""
-    return dict(_read(game_dir, language, keys))
+    found = _read(game_dir, language)
+    return {key: found[key] for key in keys if key in found}

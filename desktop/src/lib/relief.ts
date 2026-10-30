@@ -157,6 +157,11 @@ function ridges(x: number, y: number): number {
 
 const cache = new WeakMap<WorldAtlas, Relief>();
 
+/** Install fields computed by the atlas worker; renderers keep using the same cache. */
+export function rememberRelief(atlas: WorldAtlas, field: Relief): void {
+  cache.set(atlas, field);
+}
+
 /** The physical fields of an atlas, worked out on first use. */
 export function relief(atlas: WorldAtlas): Relief {
   const known = cache.get(atlas);

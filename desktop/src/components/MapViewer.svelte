@@ -41,6 +41,7 @@
   } = $props();
 
   let failed = $state(false);
+  let generation = 0;
   let loading = $state(true);
   let host: HTMLDivElement;
   let canvas: HTMLCanvasElement;
@@ -67,6 +68,7 @@
 
   $effect(() => {
     const id = world;
+    const request = ++generation;
     untrack(() => {
       loading = true;
       failed = false;
@@ -76,7 +78,7 @@
       hover = -1;
     });
     void loadAtlas(id).then((found) => {
-      if (id !== world) return;
+      if (request !== generation) return;
       loading = false;
       if (!found) {
         failed = true;
@@ -84,7 +86,13 @@
       }
       session.atlas = found;
       setup(found);
+    }).catch((error: unknown) => {
+      if (request !== generation) return;
+      console.error("Loading the map failed", error);
+      loading = false;
+      failed = true;
     });
+    return () => { generation++; };
   });
 
   function setup(found: NonNullable<typeof atlas>): void {

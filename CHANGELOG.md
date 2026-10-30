@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep the window responsive while choosing worlds: compare game inputs in the background,
+  reuse file hashes and game names, calculate the Tauri map's relief and region names in a
+  worker, and draw classic-window maps on demand with only the latest request queued.
+
 - Target 1.1.0, with pending algorithm epoch 60. Add separate 0–3× frequency sliders
   for all 34 ordinary New World resources in both generator windows and all official
   languages. Keep the precious-resource control, vanilla default weights and habitat

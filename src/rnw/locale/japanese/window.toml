@@ -2172,6 +2172,10 @@ text = '''クラシックウィンドウを使う'''
 source = "ab220ff06d3f952f"
 text = '''次回の起動から適用されます。この新しいウィンドウが開けないときも、クラシックウィンドウが自動で開きます。'''
 
+["other_build_checking"]
+source = "d55536ad2a070ed9"
+text = '''ゲームビルド {made} 用に作成されました。現在のビルドは {current} です。作成に使ったファイルをゲームのファイルと比較しています…'''
+
 ["group.resources"]
 source = "e89b30aa1dc30a6a"
 text = "資源"

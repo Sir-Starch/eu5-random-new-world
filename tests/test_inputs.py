@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import threading
 from typing import TYPE_CHECKING
 
@@ -26,6 +27,16 @@ def _game(tmp_path: Path) -> Path:
         target.parent.mkdir(parents=True, exist_ok=True)
         _ = target.write_text(text, encoding="utf-8")
     return game
+
+
+def test_cached_hashes_notice_a_same_size_rewrite_even_with_the_old_mtime(tmp_path: Path) -> None:
+    path = tmp_path / "input.txt"
+    _ = path.write_bytes(b"before")
+    before = inputs.file_hash(path)
+    stamp = path.stat()
+    _ = path.write_bytes(b"after!")
+    os.utime(path, ns=(stamp.st_atime_ns, stamp.st_mtime_ns))
+    assert inputs.file_hash(path) != before
 
 
 def test_a_new_file_in_a_directory_the_export_scanned_changes_the_inputs(tmp_path: Path) -> None:

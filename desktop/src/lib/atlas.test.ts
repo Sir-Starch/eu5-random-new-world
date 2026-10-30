@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { WorldAtlas, unroll } from "./atlas";
 import type { AtlasBundle } from "./types";
+import { prepareAtlas } from "./atlasPreparation";
+import { relief, rememberRelief } from "./relief";
 
 function base64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64");
@@ -36,6 +38,17 @@ function bundle(): AtlasBundle {
 }
 
 describe("atlas", () => {
+  it("prepares identical physical fields and region names away from the renderer", () => {
+    const data = bundle();
+    const expected = new WorldAtlas(data);
+    const prepared = prepareAtlas(data);
+    expect(prepared.field).toEqual(relief(expected));
+    expect(prepared.labels).toEqual(expected.labelsFor("land", "regions"));
+    const restored = new WorldAtlas(data, prepared.labels);
+    rememberRelief(restored, prepared.field);
+    expect(relief(restored)).toBe(prepared.field);
+    expect(restored.labelsFor("land", "regions", false)).toBe(prepared.labels);
+  });
   it("unrolls runs into the box and refuses a short one", () => {
     expect([...unroll(runs([1, 2, 0, 2]), 2, 2)]).toEqual([0, 0, -1, -1]);
     expect(() => unroll(runs([1, 3]), 2, 2)).toThrow();

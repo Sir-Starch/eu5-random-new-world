@@ -77,6 +77,11 @@ and library-record changes every two seconds; unchanged polls do not reload or r
 Generation suspends polling. Metadata-first copies can gain their verified atlas/record
 when the rest arrives, preserving personal fields. Refreshing or renaming preserves
 selection and unsaved notes.
+Game-build comparisons run on one background worker with a visible checking note. Unchanged
+file hashes (where change timestamps are available) and the game's name catalogue are reused.
+Classic maps are drawn only when their tab is visible, on one drawing worker; while it works,
+only the latest requested picture waits.
+A loading notice stays over the map until that picture arrives; stale deliveries are ignored.
 The active world's Remove and Delete actions also apply to a multiple selection and show
 its count. Batch errors remain visible below the list, including after a row disappears.
 
@@ -144,6 +149,9 @@ location card whose values isolate their country, culture, religion, resource or
 minimap, zoom in the toolbar, map-only focus that keeps the view's centre, a PNG of the whole
 lens as it is drawn (names included, one pixel per atlas pixel) and copying the current view.
 Compare shows two worlds with linked cameras. The Qt window keeps its own flat pictures.
+The Tauri atlas cache prepares relief and region/sea labels in one Web Worker before handing
+the atlas to its renderer. The loading indicator remains live during that work; errors show
+the map's failure state and a later load can retry.
 
 **Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+B, Ctrl+I, Ctrl+V of a world code
 anywhere, arrows in the library, `?` for the list. Every control is a native button/input or a
@@ -154,3 +162,13 @@ shown by colour alone.
 covers the protocol, state, atlas transfer and that every interface string key exists in the
 window catalogues. Screens are reviewed in a browser through `npm run dev` with
 `RNW_DATA=<copy of a library>` and in the built window on WebKitGTK.
+
+[V-EXEC 2026-10-30, 1.1.0 development] A Chromium comparison on the same 6,594-location
+atlas measured a maximum 10 ms timer gap of 592 ms for synchronous relief/region names and
+68 ms with the worker (total preparation 542/587 ms respectively). In the offscreen Qt window,
+switching across four library worlds completed the last map in 3.98 s with a maximum timer
+gap of 268 ms. These are local responsiveness observations, not loading-time guarantees.
+Synthetic regressions cover deferred drawing, replacement of pending requests, nonblocking
+build notes, hash invalidation and equality of prepared atlas fields. Evidence stays under
+ignored `local_data/gui-finish/`; package verification and installation are in
+[INSTALLED](../experiments/INSTALLED.md).
