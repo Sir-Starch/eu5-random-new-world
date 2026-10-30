@@ -2131,10 +2131,19 @@ text = '''Nada encontrado.'''
 source = "2a5f7a682264ac8f"
 text = '''Mostrando {name}'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''Filtrar a legenda'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''Clique numa entrada para mostrar só ela, clique duas vezes para ir até lá. Clique numa localidade para manter o seu cartão.'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''Mostrar ou ocultar a biblioteca'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''Mostrar ou ocultar o painel lateral'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''Escolhido'''

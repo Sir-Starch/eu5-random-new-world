@@ -2131,10 +2131,19 @@ text = '''Ничего не найдено.'''
 source = "2a5f7a682264ac8f"
 text = '''Показано: {name}'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''Фильтр легенды'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''Щёлкните запись, чтобы показать только её, дважды — чтобы перейти к ней. Щёлкните локацию, чтобы закрепить её карточку.'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''Показать или скрыть библиотеку'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''Показать или скрыть боковую панель'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''Выбран'''

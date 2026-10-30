@@ -2131,10 +2131,19 @@ text = '''未找到。'''
 source = "2a5f7a682264ac8f"
 text = '''正在显示 {name}'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''筛选图例'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''单击条目只显示该项，双击前往该处。单击地点可固定其信息卡。'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''显示或隐藏库'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''显示或隐藏侧边栏'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''已选'''

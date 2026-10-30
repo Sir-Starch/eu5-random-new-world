@@ -1,6 +1,7 @@
 /* The window's look: one design on every system, drawn by the web view rather than the
-   platform's widgets. A compact tool window: neutral greys, one accent for selection and the
-   primary action, flat panels divided by hairlines, controls 26 pixels high. */
+   platform's widgets. A workbench: the library, a view in the middle and an inspector, each
+   under a 32-pixel header; neutral greys, one accent for selection and the primary action,
+   flat panels divided by hairlines, controls 26 pixels high. */
 
 @import "@fontsource-variable/noto-sans/index.css";
 @import "@fontsource/jetbrains-mono/400.css";
@@ -10,6 +11,8 @@
   --bg: #1d1e21;
   --panel: #242529;
   --field: #17181a;
+  --canvas: #18191c;
+  --fill: rgba(59, 123, 212, 0.32);
   --raised: #2d2f33;
   --raised-hover: #36383d;
   --hover: rgba(255, 255, 255, 0.05);
@@ -44,6 +47,8 @@
   --bg: #ebebec;
   --panel: #f4f4f5;
   --field: #ffffff;
+  --canvas: #dfe0e2;
+  --fill: rgba(43, 108, 196, 0.2);
   --raised: #fbfbfb;
   --raised-hover: #eeeeef;
   --hover: rgba(0, 0, 0, 0.045);
@@ -75,6 +80,8 @@
     --bg: #ebebec;
     --panel: #f4f4f5;
     --field: #ffffff;
+    --canvas: #dfe0e2;
+    --fill: rgba(43, 108, 196, 0.2);
     --raised: #fbfbfb;
     --raised-hover: #eeeeef;
     --hover: rgba(0, 0, 0, 0.045);
@@ -409,6 +416,141 @@ select.input option {
 .row > .input {
   flex: 1;
   min-width: 0;
+}
+
+/* -- the workbench: pane headers, tabs, inspector sections, properties ------------------------ */
+
+/* Every pane starts with one: the library's title, the view's title and tools, the inspector's
+   tabs. All are 32 pixels high, so they read as one band across the window. */
+.pane-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  min-width: 0;
+  padding: 0 6px 0 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+.pane-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+.pane-title + .pane-sub {
+  margin-left: 4px;
+}
+.pane-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.spacer {
+  flex: 1;
+  min-width: 0;
+}
+.tsep {
+  flex: none;
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--line-2);
+}
+
+.tabs {
+  display: flex;
+  align-self: stretch;
+  min-width: 0;
+  margin-left: -10px;
+}
+.tab {
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0 11px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-2);
+  font: 400 12.5px var(--font);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab:hover {
+  color: var(--text);
+}
+.tab.on {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 500;
+}
+.tab .count {
+  margin-left: 5px;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* A label over its control, for rows too wide for a label beside them. */
+.field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.field > .key {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+/* Properties: name | value rows. */
+.props {
+  display: grid;
+  grid-template-columns: minmax(84px, 46%) minmax(0, 1fr);
+  gap: 5px 10px;
+  align-items: center;
+  margin: 0;
+}
+.props > .key {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-2);
+  font-size: 12px;
+}
+.props > .key.top {
+  align-self: start;
+  padding-top: 1px;
+}
+.props > .val {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.props > .wide {
+  grid-column: 1 / -1;
+}
+
+/* Buttons that run a command, one under another, their explanation in the tooltip. */
+.commands {
+  display: grid;
+  gap: 4px;
+}
+.commands .btn {
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.commands.two {
+  grid-template-columns: 1fr 1fr;
 }
 
 /* A message line: what happened, a warning or an error, with its colour at the edge. */

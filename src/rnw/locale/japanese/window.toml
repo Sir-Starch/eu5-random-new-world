@@ -2131,10 +2131,19 @@ text = '''見つかりません。'''
 source = "2a5f7a682264ac8f"
 text = '''{name} を表示中'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''凡例を絞り込む'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''項目をクリックするとそれだけを表示し、ダブルクリックでその場所へ移動します。地点をクリックするとカードを固定します。'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''ライブラリの表示/非表示'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''サイドパネルの表示/非表示'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''選択中'''

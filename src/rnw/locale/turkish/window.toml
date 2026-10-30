@@ -2131,10 +2131,19 @@ text = '''Hiçbir şey bulunamadı.'''
 source = "2a5f7a682264ac8f"
 text = '''{name} gösteriliyor'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''Açıklamayı süz'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''Yalnızca onu göstermek için bir girdiye tıklayın, oraya gitmek için çift tıklayın. Kartını tutmak için bir yere tıklayın.'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''Kütüphaneyi göster veya gizle'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''Yan paneli göster veya gizle'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''Seçildi'''

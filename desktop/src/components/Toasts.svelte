@@ -18,7 +18,7 @@
 <style>
   .toasts {
     position: fixed;
-    right: 12px;
+    right: var(--toast-right, 12px);
     bottom: 34px;
     z-index: 60;
     display: grid;

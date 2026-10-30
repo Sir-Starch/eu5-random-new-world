@@ -83,39 +83,48 @@ offscreen Qt tests. Capture the desktop window in light and dark themes for layo
 
 ## 9. The Tauri window (candidate)
 
-**Look.** A compact tool window that sits beside the game, the same on every system (owner
-review 2026-10-30: the first candidate read as a website). Neutral greys with one blue accent
-for selection, focus and the primary action; light and dark (System/Dark/Light in Settings,
-kept per machine). Noto Sans 13 px for text and map names, JetBrains Mono for codes; both
-bundled. Controls are 26 px high with 3 px corners; panels are flat and divided by hairlines,
-without cards, gradients, glows or blur. Checkboxes and radio buttons, not switches; a list,
-not picture cards, for the world type. Icons are a small 16-unit, one-pixel set used only in
-toolbars and icon buttons; other buttons carry text. Tokens live in `desktop/src/app.css`;
-components use them rather than literal colours. The only motion is the busy spinner.
-Default window 1160×740, minimum 860×560.
+**Look.** A workbench that sits beside the game, the same on every system (owner reviews
+2026-10-30: the first candidate read as a website, the second as the old layout repainted).
+Neutral greys with one blue accent for selection, focus and the primary action; light and dark
+(System/Dark/Light in Settings, kept per machine). Noto Sans 13 px for text and map names,
+JetBrains Mono for codes; both bundled. Every pane starts with a 32 px header, so the library's
+title, the view's title and tools and the inspector's tabs read as one band. Controls are 24–26 px
+high with 3 px corners; panels are flat and divided by hairlines, without cards, gradients, glows
+or blur; the middle is a darker canvas. An exact value is a bar filled to its value with a tick at
+the world type's value: drag it, click to type, step with the arrow keys, Backspace resets.
+Icons are a small 16-unit, one-pixel set used only in toolbars and icon buttons; other buttons
+carry text. Tokens live in `desktop/src/app.css`; components use them rather than literal
+colours. The only motion is the busy spinner. Default window 1160×740, minimum 860×560.
 
-**Structure.** A resizable library (filter with All/In the game/Favourite, New world as its
-first row, thumbnails, versions drawn as branches under their world, Ctrl/Shift/Ctrl+A
-multi-select with Remove/Delete below) beside one page, and a status bar with the game and
-profile, the running task and the machine's resources. The new-world page is a form in titled
-groups (world, seed and code, land sources, Customize with slider rows, where to save) above a
-fixed bar: location budget meter, hint or problem, Add to queue and Generate; while working,
-progress with stage, ETA, stage details and Cancel; afterwards the outcome with retry, and the
-queue. A world page has a compact header (picture, inline rename, favourite, place, add/remove,
-folder) and tabs: World (details and check, visibility, delete), Maps, Create a version, Share
-and export, Notes; commands are listed as a button beside its explanation. Messages that the Qt
-window wrote under a page are toasts; questions are in-window dialogs.
+**Structure.** Three panes over a status bar: the library (filter with All/In the game/Favourite,
+New world as its first row, thumbnails, versions drawn as branches under their world,
+Ctrl/Shift/Ctrl+A multi-select with Remove/Delete below), a view in the middle and an inspector.
+Both side panes are resizable and hide (Ctrl+B, Ctrl+I, the buttons at the ends of the status
+bar); their widths are kept per machine. The status bar shows the game and profile, the running
+task and the machine's resources. For a world, the middle is its map, or its mod picture with
+Reveal while the map is covered; the inspector's tabs are World (name, favourite, place in the
+game with add/remove and folder, advice, then folding sections for details and check,
+visibility, Create a version, Share and export; delete last), Maps and Notes. For the new world,
+the middle shows its land: continent sketches to pick from (the chosen one is marked), the land
+image, or a blank sheet ruled like a map; while a world is made, its progress, stages, ETA and
+Cancel; afterwards the outcome with Open the world or a retry. The inspector's tabs are World
+(type and basics as lists, oceans, seed and code), Advanced (exact values by group) and Save and
+play (destination, install, visibility, queue); under every tab stay the location budget, Add to
+queue and Generate. Folded sections stay folded. Messages that the Qt window wrote under a page
+are toasts; questions are in-window dialogs.
 
-**Maps.** Ten lenses (keys 1–0), country borders, names and location borders as overlays,
-search over countries, cultures, religions, resources, areas and places, a legend that previews
-on hover, isolates on click and zooms on double-click, a hover card and a pinned location card
-whose values isolate their country, culture, religion, resource or area, a minimap, zoom
-controls, map-only focus, PNG export of the exact lens and copying the current view. Compare
-shows two worlds with linked cameras.
+**Maps.** Ten lenses (keys 1–0; chosen in the inspector, or in the toolbar while the inspector is
+hidden), country borders, names and location borders as overlays, one search field over
+countries, cultures, religions, resources, areas and places, a legend that previews on hover,
+isolates on click and zooms on double-click, a hover card and a pinned location card whose values
+isolate their country, culture, religion, resource or area, a minimap, zoom in the toolbar,
+map-only focus that keeps the view's centre, PNG export of the exact lens and copying the current
+view. Compare shows two worlds with linked cameras.
 
-**Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+V of a world code anywhere, arrows in
-the library, `?` for the list. Every control is a native button/input with a visible focus
-ring and a text label or `aria-label`; state is never shown by colour alone.
+**Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+B, Ctrl+I, Ctrl+V of a world code
+anywhere, arrows in the library, `?` for the list. Every control is a native button/input or a
+labelled slider role with a visible focus ring and a text label or `aria-label`; state is never
+shown by colour alone.
 
 **Verification.** `make desktop` (types, unit tests, build, Rust shell); `tests/test_bridge.py`
 covers the protocol, state, atlas transfer and that every interface string key exists in the

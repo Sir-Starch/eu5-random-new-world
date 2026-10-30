@@ -1,36 +1,35 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import About from "./components/About.svelte";
-  import Candidates from "./components/Candidates.svelte";
   import Compare from "./components/Compare.svelte";
   import Dialogs from "./components/Dialogs.svelte";
   import Icon from "./components/Icon.svelte";
-  import NewWorld from "./components/NewWorld.svelte";
+  import NewWorldPanel from "./components/NewWorldPanel.svelte";
+  import NewWorldView from "./components/NewWorldView.svelte";
   import Settings from "./components/Settings.svelte";
   import Sidebar from "./components/Sidebar.svelte";
-  import StrayPage from "./components/StrayPage.svelte";
+  import StrayView from "./components/StrayView.svelte";
   import Toasts from "./components/Toasts.svelte";
-  import WorldPage from "./components/WorldPage.svelte";
-  import { app, t } from "./lib/app.svelte";
+  import WorldPanel from "./components/WorldPanel.svelte";
+  import WorldView from "./components/WorldView.svelte";
+  import { app, LIMITS, t } from "./lib/app.svelte";
+  import { map } from "./lib/mapSession.svelte";
   import { onDrop, openFile } from "./lib/native";
 
   const s = $derived(app.now);
-  const page = $derived(
-    !s ? "loading" : s.world ? "world" : s.stray ? "stray" : "new",
-  );
+  const page = $derived(!s ? "loading" : s.world ? "world" : s.stray ? "stray" : "new");
   const generating = $derived(!!s?.busy && (s.task === "generate" || s.task === "queue"));
   const percent = $derived(Math.round((s?.fraction ?? 0) * 100));
-  let sketched = 0;
-  let lastSelection = "";
+  // The map alone, while a world's map is shown.
+  const focused = $derived(app.focus && page === "world" && !!s?.world?.atlas && !!s.world.revealed);
+  const library = $derived(app.layout.library && !focused);
+  const inspector = $derived(app.layout.inspector && !focused && page !== "stray");
   let lastResult = "";
+  let lastSelection = "";
 
-  // Sketches are shown once, when they are done.
+  // Work that has no page of its own reports its failure as a message.
   $effect(() => {
     const now = app.now;
-    if (now && now.task === "candidates" && now.phase === "finished" && now.runs !== sketched && now.candidates.length) {
-      sketched = now.runs;
-      app.modal = { kind: "candidates" };
-    }
     if (now && now.phase === "failed" && ["receive", "send", "copy", "template", "candidates"].includes(now.task ?? "")) {
       const key = `${now.runs}`;
       if (key !== lastResult) {
@@ -40,11 +39,10 @@
     }
   });
 
-  // A new world page opens on its overview; a world keeps its tab while it stays selected.
+  // The library's selection follows the world shown.
   $effect(() => {
     const selection = app.now?.selection ?? "";
     if (selection !== lastSelection) {
-      if (lastSelection && app.worldTab !== "map") app.worldTab = "overview";
       lastSelection = selection;
       if (!app.ticked.includes(selection) && selection !== "new") app.ticked = [selection];
     }
@@ -68,22 +66,24 @@
     return !!element && (element.tagName === "INPUT" || element.tagName === "TEXTAREA" || element.tagName === "SELECT" || element.isContentEditable);
   }
 
+  function newWorld(): void {
+    app.ticked = [];
+    void app.call("select", { id: "new" });
+  }
+
   function key(event: KeyboardEvent): void {
     const control = event.ctrlKey || event.metaKey;
+    const letter = event.key.toLowerCase();
     if (app.modal && event.key !== "Escape") return;
-    if (control && event.key.toLowerCase() === "n") {
-      app.ticked = [];
-      void app.call("select", { id: "new" });
-    } else if (control && event.key.toLowerCase() === "o") {
-      void openWorldFile();
-    } else if (control && event.key === ",") {
-      app.modal = { kind: "settings" };
-    } else if (control && event.key === "Enter" && page === "new") {
-      void app.act("start");
-    } else if ((event.key === "?" || event.key === "F1") && !editing(event.target)) {
-      app.modal = { kind: "shortcuts" };
-    } else if (event.key === "Escape" && app.mapFocus && !app.modal) {
-      app.mapFocus = false;
+    if (control && letter === "n") newWorld();
+    else if (control && letter === "o") void openWorldFile();
+    else if (control && event.key === ",") app.modal = { kind: "settings" };
+    else if (control && letter === "b" && !event.shiftKey) app.toggle("library");
+    else if (control && letter === "i" && !event.shiftKey) app.toggle("inspector");
+    else if (control && event.key === "Enter" && page === "new") void app.act("start");
+    else if ((event.key === "?" || event.key === "F1") && !editing(event.target)) app.modal = { kind: "shortcuts" };
+    else if (event.key === "Escape" && app.focus && !app.modal && map.pinned < 0 && !map.match) {
+      app.focus = false;
       return;
     } else return;
     event.preventDefault();
@@ -98,44 +98,33 @@
     }
   }
 
-  /** ``#world=ID&tab=map`` opens a world's tab at start (a link into the window). */
+  /** ``#world=ID&tab=maps`` opens a world on an inspector tab at start (a link into the window). */
   async function deepLink(): Promise<void> {
     const wanted = new URLSearchParams(location.hash.slice(1));
     const world = wanted.get("world");
     if (!world) return;
     await app.call("select", { id: world });
-    const tab = wanted.get("tab");
-    if (tab === "overview" || tab === "map" || tab === "versions" || tab === "share" || tab === "notes") {
-      app.worldTab = tab;
-    }
+    const tab = wanted.get("tab") ?? "";
+    if (tab === "maps" || tab === "map") app.worldTab = "maps";
+    else if (tab === "notes") app.worldTab = "notes";
+    else if (tab) app.worldTab = "world";
   }
 
-  // The library's width, dragged at its edge and kept per machine like the theme.
-  const WIDTH = "rnw.library";
-  let side = $state(storedWidth());
-  function storedWidth(): number {
-    try {
-      const value = Number(localStorage.getItem(WIDTH));
-      return value >= 180 && value <= 440 ? value : 240;
-    } catch {
-      return 240;
-    }
-  }
-  function resizing(event: PointerEvent): void {
+  /** Drag a pane's inner edge; the width is kept per machine. */
+  function resize(event: PointerEvent, pane: "side" | "aside"): void {
     const handle = event.currentTarget as HTMLElement;
     handle.setPointerCapture(event.pointerId);
-    const start = event.clientX - side;
+    const x = event.clientX;
+    const width = app.layout[pane];
+    const [low, high] = LIMITS[pane];
     const move = (next: PointerEvent): void => {
-      side = Math.max(180, Math.min(440, next.clientX - start));
+      const moved = pane === "side" ? next.clientX - x : x - next.clientX;
+      app.layout[pane] = Math.max(low, Math.min(high, width + moved));
     };
     const up = (): void => {
       handle.removeEventListener("pointermove", move);
       handle.removeEventListener("pointerup", up);
-      try {
-        localStorage.setItem(WIDTH, String(side));
-      } catch {
-        // Storage is a convenience.
-      }
+      app.saveLayout();
     };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
@@ -165,11 +154,17 @@
 {:else if !s}
   <div class="splash"><span class="spinner"></span><span class="faint">Random New World</span></div>
 {:else}
-  <div class="shell" class:focus={app.mapFocus && page === "world" && app.worldTab === "map"} style:--side={`${side}px`}>
-    <div class="side"><Sidebar onOpenFile={openWorldFile} /></div>
+  <div
+    class="shell"
+    class:no-library={!library}
+    class:no-inspector={!inspector}
+    style:--side={`${app.layout.side}px`}
+    style:--aside={`${app.layout.aside}px`}
+  >
+    <aside class="library" aria-label={t("worlds")}><Sidebar onOpenFile={openWorldFile} onNew={newWorld} /></aside>
     <!-- svelte-ignore a11y_no_static_element_interactions -->
-    <div class="splitter" onpointerdown={resizing}></div>
-    <main>
+    <div class="splitter left" onpointerdown={(event) => resize(event, "side")}></div>
+    <main class="center">
       {#if s.game.problem}
         <div class="msg warn banner">
           <Icon name="warning" />
@@ -177,17 +172,27 @@
           <button class="btn small" onclick={() => (app.modal = { kind: "settings" })}>{t("settings")}</button>
         </div>
       {/if}
-      <div class="page">
+      <div class="view">
         {#if page === "world"}
-          <WorldPage />
+          <WorldView />
         {:else if page === "stray"}
-          <StrayPage />
+          <StrayView />
         {:else}
-          <NewWorld />
+          <NewWorldView />
         {/if}
       </div>
     </main>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="splitter right" onpointerdown={(event) => resize(event, "aside")}></div>
+    <aside class="inspector">
+      {#if page === "world"}
+        <WorldPanel />
+      {:else if page === "new"}
+        <NewWorldPanel />
+      {/if}
+    </aside>
     <footer class="status">
+      <button class="btn icon small ghost" class:on={library} aria-pressed={library} title={`${t("panes.library")} (Ctrl+B)`} aria-label={t("panes.library")} onclick={() => app.toggle("library")}><Icon name="sidebarLeft" /></button>
       <button
         class="item game"
         title={s.game.problem || `${s.game.directory}\n${s.game.profile}`}
@@ -206,7 +211,9 @@
       <span class="item resources faint num">{s.resources}</span>
       <button class="btn icon small ghost" title={t("settings_title")} aria-label={t("settings_title")} onclick={() => (app.modal = { kind: "settings" })}><Icon name="settings" /></button>
       <button class="btn icon small ghost" title={t("about_title")} aria-label={t("about_title")} onclick={() => (app.modal = { kind: "about" })}><Icon name="info" /></button>
+      <button class="btn icon small ghost" class:on={inspector} aria-pressed={inspector} disabled={page === "stray"} title={`${t("panes.inspector")} (Ctrl+I)`} aria-label={t("panes.inspector")} onclick={() => app.toggle("inspector")}><Icon name="sidebarRight" /></button>
     </footer>
+    <Toasts />
   </div>
 {/if}
 
@@ -214,30 +221,54 @@
   <Settings />
 {:else if app.modal?.kind === "about"}
   <About />
-{:else if app.modal?.kind === "candidates"}
-  <Candidates />
 {:else if app.modal?.kind === "compare"}
   <Compare layer={app.modal.layer} />
 {:else}
   <Dialogs />
 {/if}
-<Toasts />
 
 <style>
   .shell {
+    --toast-right: calc(var(--aside) + 13px);
     display: grid;
-    grid-template-columns: var(--side) 1px minmax(0, 1fr);
+    grid-template-columns: var(--side) 1px minmax(0, 1fr) 1px var(--aside);
     grid-template-rows: minmax(0, 1fr) 24px;
     height: 100vh;
   }
-  .shell.focus {
-    grid-template-columns: 0 0 minmax(0, 1fr);
+  .shell.no-library {
+    grid-template-columns: 0 0 minmax(0, 1fr) 1px var(--aside);
   }
-  .side {
+  .shell.no-inspector {
+    --toast-right: 12px;
+    grid-template-columns: var(--side) 1px minmax(0, 1fr) 0 0;
+  }
+  .shell.no-library.no-inspector {
+    grid-template-columns: 0 0 minmax(0, 1fr) 0 0;
+  }
+  .library,
+  .inspector {
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
     min-width: 0;
+    min-height: 0;
     overflow: hidden;
+    background: var(--panel);
+  }
+  .library {
+    grid-column: 1;
+  }
+  .inspector {
+    grid-column: 5;
+  }
+  .no-library .library,
+  .no-library .left,
+  .no-inspector .inspector,
+  .no-inspector .right {
+    display: none;
   }
   .splitter {
+    grid-row: 1;
     position: relative;
     background: var(--line);
     cursor: col-resize;
@@ -248,16 +279,24 @@
     position: absolute;
     inset: 0 -3px;
   }
-  .focus .splitter {
-    display: none;
+  .splitter:hover {
+    background: var(--line-3);
   }
-  main {
+  .left {
+    grid-column: 2;
+  }
+  .right {
+    grid-column: 4;
+  }
+  .center {
+    grid-row: 1;
+    grid-column: 3;
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
   }
-  .page {
+  .view {
     flex: 1;
     min-height: 0;
   }
@@ -271,16 +310,21 @@
     flex: 1;
   }
   .status {
+    grid-row: 2;
     grid-column: 1 / -1;
     display: flex;
     align-items: center;
     gap: 2px;
     min-width: 0;
-    padding: 0 4px 0 2px;
+    padding: 0 2px;
     border-top: 1px solid var(--line);
     background: var(--panel);
     font-size: 12px;
     color: var(--text-2);
+  }
+  .status .btn.on {
+    background: transparent;
+    color: var(--accent-text);
   }
   .item {
     display: inline-flex;

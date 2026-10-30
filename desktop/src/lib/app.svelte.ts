@@ -1,5 +1,6 @@
-// The window's state: what the bridge last sent, what the window itself chose (the tab of a
-// world, the worlds ticked in the library, the open dialog) and the messages it shows.
+// The window's state: what the bridge last sent, what the window itself chose (the panes shown
+// and their widths, the inspector's tabs, the worlds ticked in the library, the open dialog) and
+// the messages it shows.
 
 import { connect, type Transport } from "./transport";
 import type { State, Static } from "./types";
@@ -14,7 +15,6 @@ export interface Toast {
 export type Modal =
   | { kind: "settings" }
   | { kind: "about" }
-  | { kind: "candidates" }
   | { kind: "compare"; layer: string }
   | { kind: "shortcuts" }
   | {
@@ -32,7 +32,36 @@ export type Modal =
       resolve: (answer: string | null) => void;
     };
 
-export type WorldTab = "overview" | "map" | "versions" | "share" | "notes";
+export type WorldTab = "world" | "maps" | "notes";
+export type NewTab = "world" | "advanced" | "output";
+
+/** Which side panes are shown and how wide they are; kept per machine like the theme. */
+export interface Layout {
+  library: boolean;
+  inspector: boolean;
+  side: number;
+  aside: number;
+}
+
+export const LIMITS = { side: [180, 420], aside: [280, 520] } as const;
+const LAYOUT = "rnw.layout";
+
+function storedLayout(): Layout {
+  const fallback: Layout = { library: true, inspector: true, side: 240, aside: 328 };
+  try {
+    const value = JSON.parse(localStorage.getItem(LAYOUT) ?? "{}") as Partial<Layout>;
+    const within = (n: unknown, [low, high]: readonly [number, number], d: number): number =>
+      typeof n === "number" && n >= low && n <= high ? n : d;
+    return {
+      library: value.library ?? fallback.library,
+      inspector: value.inspector ?? fallback.inspector,
+      side: within(value.side, LIMITS.side, fallback.side),
+      aside: within(value.aside, LIMITS.aside, fallback.aside),
+    };
+  } catch {
+    return fallback;
+  }
+}
 
 const LOCALES: Record<string, string> = {
   braz_por: "pt-BR",
@@ -54,10 +83,13 @@ class App {
   now = $state<State | null>(null);
   toasts = $state<Toast[]>([]);
   modal = $state<Modal | null>(null);
-  worldTab = $state<WorldTab>("overview");
+  worldTab = $state<WorldTab>("world");
+  newTab = $state<NewTab>("world");
+  layout = $state<Layout>(storedLayout());
+  /** The map alone: both side panes hidden until it is left, whatever the layout says. */
+  focus = $state(false);
   ticked = $state<string[]>([]);
   failed = $state("");
-  mapFocus = $state(false);
   private toastNumber = 0;
 
   async start(): Promise<void> {
@@ -140,6 +172,24 @@ class App {
       this.now = hello.state;
       document.documentElement.lang = LOCALES[hello.static.language] ?? "en";
     }
+  }
+
+  saveLayout(): void {
+    try {
+      localStorage.setItem(LAYOUT, JSON.stringify(this.layout));
+    } catch {
+      // Storage is a convenience.
+    }
+  }
+
+  toggle(pane: "library" | "inspector"): void {
+    if (this.focus) {
+      this.focus = false;
+      this.layout[pane] = true;
+    } else {
+      this.layout[pane] = !this.layout[pane];
+    }
+    this.saveLayout();
   }
 
   get locale(): string {

@@ -4,7 +4,7 @@
   import Icon from "./Icon.svelte";
   import Thumb from "./Thumb.svelte";
 
-  let { onOpenFile }: { onOpenFile: () => void } = $props();
+  let { onOpenFile, onNew }: { onOpenFile: () => void; onNew: () => void } = $props();
 
   let filter = $state("");
   let view = $state<"all" | "in_game" | "starred">("all");
@@ -47,10 +47,7 @@
     void app.call("select", { id: entry.id });
   }
 
-  function pickNew(): void {
-    app.ticked = [];
-    void app.call("select", { id: "new" });
-  }
+  const pickNew = (): void => onNew();
 
   function key(event: KeyboardEvent): void {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
@@ -88,11 +85,13 @@
   }
 </script>
 
-<aside class="sidebar">
-  <div class="head">
-    <h2>{t("worlds")}</h2>
-    <span class="faint num">{s?.library.filter((e) => e.kind === "world").length ?? 0}</span>
-    <button class="btn icon small ghost open" title={t("open_world_file_tip")} aria-label={t("open_world_file")} onclick={onOpenFile}><Icon name="open" /></button>
+<div class="sidebar">
+  <div class="pane-head">
+    <span class="pane-title">{t("worlds")}</span>
+    <span class="pane-sub num">{s?.library.filter((e) => e.kind === "world").length ?? 0}</span>
+    <span class="spacer"></span>
+    <button class="btn icon small ghost" title={`${t("new_world")} (Ctrl+N)`} aria-label={t("new_world")} onclick={pickNew}><Icon name="plus" /></button>
+    <button class="btn icon small ghost" title={`${t("open_world_file_tip")} (Ctrl+O)`} aria-label={t("open_world_file")} onclick={onOpenFile}><Icon name="open" /></button>
   </div>
   <div class="find">
     <label class="search">
@@ -177,7 +176,7 @@
     {/if}
     {#if s?.batch}<p class="batch selectable">{s.batch}</p>{/if}
   </div>
-</aside>
+</div>
 
 <style>
   .sidebar {
@@ -187,25 +186,10 @@
     min-height: 0;
     background: var(--panel);
   }
-  .head {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 32px;
-    padding: 0 4px 0 10px;
-    flex: none;
-  }
-  .head h2 {
-    font-size: 12px;
-    color: var(--text-2);
-  }
-  .open {
-    margin-left: auto;
-  }
   .find {
     display: flex;
     gap: 4px;
-    padding: 0 6px 6px;
+    padding: 6px;
     flex: none;
   }
   .search {
@@ -223,9 +207,8 @@
     padding-left: 26px;
   }
   .view {
-    flex: none;
-    width: auto;
-    max-width: 45%;
+    flex: 0 0 96px;
+    width: 96px;
   }
   .list {
     flex: 1;

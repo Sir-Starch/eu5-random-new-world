@@ -2131,10 +2131,19 @@ text = '''Nichts gefunden.'''
 source = "2a5f7a682264ac8f"
 text = '''Zeigt {name}'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''Legende filtern'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''Einen Eintrag anklicken, um nur ihn zu zeigen, doppelklicken, um hinzugehen. Einen Ort anklicken, um seine Karte zu behalten.'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''Bibliothek ein- oder ausblenden'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''Seitenleiste ein- oder ausblenden'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''Gewählt'''

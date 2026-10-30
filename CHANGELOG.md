@@ -2,12 +2,15 @@
 
 ## Unreleased
 
-- Add a candidate Tauri window (ADR 0011) beside the Qt window: one compact look on
-  every system, sized to sit beside the game (default 1160×740, minimum 860×560),
-  a searchable, resizable library with multi-select, a settings form with a
-  generation bar for the location budget, progress, stages and queue, a status bar,
-  and world pages with details, versions, sharing and notes. Language and
-  appearance change without a restart.
+- Add a candidate Tauri window (ADR 0011) beside the Qt window: one look on every
+  system, a workbench sized to sit beside the game (default 1160×740, minimum
+  860×560). A searchable library with multi-select, a view in the middle and an
+  inspector; both side panes resize and hide (Ctrl+B, Ctrl+I). A world opens on its
+  map, with its details, versions, files, lenses, legend, search and notes in the
+  inspector. The new world is set in the inspector, exact values as bars to drag,
+  above the location budget and Generate; the middle shows the continent sketches
+  to pick from, the land image, progress with its stages, and the outcome. Language
+  and appearance change without a restart.
 - Rebuild the map viewer: WebGL lenses with sharp borders at any zoom, place
   names, minimap, hover and pinned location cards, legend isolation and search
   that zoom to their match, area search, linked comparison and copying the view.

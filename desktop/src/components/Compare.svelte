@@ -2,6 +2,7 @@
   import { untrack } from "svelte";
   import { app, t } from "../lib/app.svelte";
   import type { Camera } from "../lib/camera";
+  import { MapSession } from "../lib/mapSession.svelte";
   import MapViewer from "./MapViewer.svelte";
   import Modal from "./ui/Modal.svelte";
 
@@ -15,6 +16,11 @@
   let linked = $state(true);
   let leftCamera = $state<Camera | null>(null);
   let rightCamera = $state<Camera | null>(null);
+  const sessions = [new MapSession(), new MapSession()];
+
+  $effect(() => {
+    for (const session of sessions) session.layer = layer;
+  });
 
   $effect(() => {
     void app.call<{ id: string; name: string }[]>("compare_list").then((found) => {
@@ -65,9 +71,9 @@
         </select>
         <div class="map">
           {#if side === 0 && left}
-            <MapViewer world={left} {layer} compact bind:camera={leftCamera} />
+            <MapViewer world={left} session={sessions[0]} compact bind:camera={leftCamera} />
           {:else if side === 1 && right}
-            <MapViewer world={right} {layer} compact bind:camera={rightCamera} />
+            <MapViewer world={right} session={sessions[1]} compact bind:camera={rightCamera} />
           {/if}
         </div>
       </div>

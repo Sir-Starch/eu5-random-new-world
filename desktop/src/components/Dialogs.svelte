@@ -26,6 +26,8 @@
     ["Ctrl+Enter", "shortcut.generate"],
     ["Ctrl+,", "shortcut.settings"],
     ["Ctrl+V", "shortcut.paste"],
+    ["Ctrl+B", "panes.library"],
+    ["Ctrl+I", "panes.inspector"],
     ["↑ ↓", "shortcut.library"],
     ["1 … 0", "shortcut.lenses"],
     ["+ − F", "shortcut.zoom"],

@@ -681,12 +681,15 @@ STRINGS: Final[dict[str, str]] = {
     "settings.theme.system": "System",
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
+    "panes.library": "Show or hide the library",
+    "panes.inspector": "Show or hide the side panel",
     # -- the Tauri window: a new world --
     "forge.drawn": "Drawn this time: {type}. A new seed draws again.",
     "dock.budget": "Locations",
     "dock.forging": "Making the world…",
     "dock.open_world": "Open the world",
     "candidates.use": "Use this continent",
+    "candidates.chosen": "Chosen",
     # -- the Tauri window: a world --
     "stat.countries": "countries",
     "stat.split": "{states} states · {tribes} tribes",
@@ -717,7 +720,6 @@ STRINGS: Final[dict[str, str]] = {
     "map.clear": "Clear",
     "map.no_results": "Nothing found.",
     "map.showing": "Showing {name}",
-    "map.legend_filter": "Filter the legend",
     "map.legend_hint": (
         "Click an entry to show only it, double-click to go there. Click a location to keep "
         "its card."

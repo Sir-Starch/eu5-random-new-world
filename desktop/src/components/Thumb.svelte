@@ -44,6 +44,6 @@
   .blank {
     background:
       repeating-linear-gradient(135deg, transparent 0 6px, var(--line) 6px 7px),
-      var(--panel-3);
+      var(--field);
   }
 </style>

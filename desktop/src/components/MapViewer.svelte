@@ -1,7 +1,10 @@
 <script lang="ts">
-  import { onDestroy, onMount, untrack } from "svelte";
+  // A world's map: the canvas, its toolbar (overlays, pictures, zoom), the hover card, the card of
+  // a location clicked, what is isolated and the minimap. The lens and the legend are chosen in
+  // the inspector through the shared session.
+  import { onDestroy, onMount, untrack, type Snippet } from "svelte";
   import { app, grouped, t } from "../lib/app.svelte";
-  import { WorldAtlas, type Facts, type Match } from "../lib/atlas";
+  import type { Facts } from "../lib/atlas";
   import { loadAtlas } from "../lib/atlasCache";
   import {
     between,
@@ -12,52 +15,32 @@
     zoomAt,
     type Camera,
   } from "../lib/camera";
-  import { createRenderer, type Overlays, type Renderer, type Theme } from "../lib/mapgl";
+  import { createRenderer, type Renderer, type Theme } from "../lib/mapgl";
+  import type { MapSession } from "../lib/mapSession.svelte";
   import { copyImage, saveFile } from "../lib/native";
   import Icon from "./Icon.svelte";
 
   let {
     world,
-    layer = $bindable("countries"),
+    session,
     camera = $bindable<Camera | null>(null),
     compact = false,
+    lensPicker = false,
+    head,
     onCompare,
   }: {
     world: string;
-    layer?: string;
+    session: MapSession;
     camera?: Camera | null;
     compact?: boolean;
+    /** A lens list in the toolbar, for when the inspector is hidden. */
+    lensPicker?: boolean;
+    head?: Snippet;
     onCompare?: () => void;
   } = $props();
 
-  const STORE = "rnw.map";
-
-  function remembered(): { overlays: Overlays & { labels: boolean } } {
-    try {
-      const value = JSON.parse(localStorage.getItem(STORE) ?? "{}") as Partial<{
-        overlays: Overlays & { labels: boolean };
-      }>;
-      return {
-        overlays: {
-          lensBorders: true,
-          political: true,
-          locations: false,
-          coast: true,
-          labels: true,
-          ...value.overlays,
-        },
-      };
-    } catch {
-      return {
-        overlays: { lensBorders: true, political: true, locations: false, coast: true, labels: true },
-      };
-    }
-  }
-
-  let atlas = $state<WorldAtlas | null>(null);
   let failed = $state(false);
   let loading = $state(true);
-  let overlays = $state(remembered().overlays);
   let host: HTMLDivElement;
   let canvas: HTMLCanvasElement;
   let labelCanvas: HTMLCanvasElement;
@@ -67,34 +50,16 @@
   let view = $state({ width: 1, height: 1 });
   let cam = $state<Camera>({ x: 0, y: 0, scale: 1 });
   let hover = $state(-1);
-  let pinned = $state(-1);
   let pointer = $state({ x: 0, y: 0 });
-  let match = $state<{ label: string; cells: Set<number>; colour?: string } | null>(null);
-  let preview = $state<Set<number> | null>(null);
-  let query = $state("");
-  let results = $state<Match[]>([]);
-  let searching = $state(false);
-  let resultIndex = $state(0);
-  let legendFilter = $state("");
-  let legendOpen = $state(true);
   let frame = 0;
   let animation = 0;
   let drag = $state<{ x: number; y: number; cam: Camera; moved: boolean } | null>(null);
   let observer: ResizeObserver | null = null;
   let theme: Theme = { ink: [10, 12, 16], accent: [220, 174, 90] };
 
-  const lens = $derived(atlas?.lens(layer) ?? null);
-  const facts = $derived<Facts | null>(atlas ? atlas.facts(pinned >= 0 ? pinned : hover) : null);
+  const atlas = $derived(session.atlas);
+  const facts = $derived<Facts | null>(atlas ? atlas.facts(session.pinned >= 0 ? session.pinned : hover) : null);
   const hoverFacts = $derived<Facts | null>(atlas && hover >= 0 ? atlas.facts(hover) : null);
-  const landCells = $derived(atlas?.data.totals.land ?? 1);
-  const legend = $derived.by(() => {
-    if (!lens) return [];
-    const needle = legendFilter.trim().toLocaleLowerCase();
-    return lens.legend
-      .map((entry, index) => ({ ...entry, index }))
-      .filter((entry) => !needle || entry.label.toLocaleLowerCase().includes(needle));
-  });
-  const isRamp = $derived(app.info?.ramps.includes(layer) ?? false);
   const zoomPercent = $derived(Math.round(cam.scale * 100));
 
   // -- loading -----------------------------------------------------------------------------------
@@ -104,9 +69,10 @@
     untrack(() => {
       loading = true;
       failed = false;
-      pinned = -1;
+      session.pinned = -1;
+      session.match = null;
+      session.atlas = null;
       hover = -1;
-      match = null;
     });
     void loadAtlas(id).then((found) => {
       if (id !== world) return;
@@ -115,18 +81,18 @@
         failed = true;
         return;
       }
-      atlas = found;
+      session.atlas = found;
       setup(found);
     });
   });
 
-  function setup(found: WorldAtlas): void {
+  function setup(found: NonNullable<typeof atlas>): void {
     renderer?.dispose();
     renderer = createRenderer(canvas, found);
     rendererKind = renderer.kind;
     canvas = renderer.canvas;
     renderer.setAtlas(found);
-    renderer.setLens(layer);
+    renderer.setLens(session.layer);
     renderer.setFlags(-1, -1, null);
     readTheme();
     resize();
@@ -163,7 +129,7 @@
   function draw(): void {
     frame = 0;
     if (!renderer || !atlas) return;
-    renderer.draw(cam, overlays, theme);
+    renderer.draw(cam, session.overlays, theme);
     drawLabels();
     drawMinimapView();
   }
@@ -172,11 +138,17 @@
     if (!host) return;
     const rect = host.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
+    const before = view;
     view = { width: Math.max(1, rect.width), height: Math.max(1, rect.height) };
     for (const target of [canvas, labelCanvas]) {
       if (!target) continue;
       target.width = Math.round(view.width * dpr);
       target.height = Math.round(view.height * dpr);
+    }
+    // A pane shown or hidden keeps what was in the middle of the view in the middle.
+    if (atlas && before.width > 1 && (before.width !== view.width || before.height !== view.height)) {
+      const [ax, ay] = toAtlas(cam, before.width / 2, before.height / 2);
+      setCamera({ scale: cam.scale, x: ax - view.width / 2 / cam.scale, y: ay - view.height / 2 / cam.scale });
     }
     request();
   }
@@ -187,7 +159,7 @@
     const dpr = window.devicePixelRatio || 1;
     context.setTransform(dpr, 0, 0, dpr, 0, 0);
     context.clearRect(0, 0, view.width, view.height);
-    if (!overlays.labels) return;
+    if (!session.overlays.labels) return;
     const placed: [number, number, number, number][] = [];
     const light = theme.ink[0] > 30;
     const fill = light ? "rgba(36, 26, 12, 0.92)" : "rgba(246, 240, 226, 0.95)";
@@ -195,6 +167,7 @@
     context.textAlign = "center";
     context.textBaseline = "middle";
     context.lineJoin = "round";
+    const layer = session.layer;
     const labels = atlas.labelsFor(layer);
     for (const label of labels) {
       const size = Math.min(26, Math.sqrt(label.weight) * cam.scale * 0.21);
@@ -255,7 +228,7 @@
   function paintMinimap(): void {
     if (!atlas) return;
     const found = atlas;
-    const current = found.lens(layer);
+    const current = found.lens(session.layer);
     const ratio = found.height / found.width;
     const w = MINI;
     const h = Math.max(1, Math.round(MINI * ratio));
@@ -347,7 +320,7 @@
     animation = requestAnimationFrame(step);
   }
 
-  export function fitAll(): void {
+  function fitAll(): void {
     if (atlas) animateTo(fit(view, atlas.width, atlas.height));
   }
 
@@ -418,7 +391,7 @@
       const [sx, sy] = local(event);
       const [ax, ay] = toAtlas(cam, sx, sy);
       const cell = atlas.cellAt(ax, ay);
-      pinned = cell === pinned ? -1 : cell;
+      session.pinned = cell === session.pinned ? -1 : cell;
     }
     drag = null;
   }
@@ -435,9 +408,9 @@
   // -- what is lit -------------------------------------------------------------------------------
 
   $effect(() => {
-    const shown = preview ?? match?.cells ?? null;
+    const shown = session.preview ?? session.match?.cells ?? null;
     const h = hover;
-    const p = pinned;
+    const p = session.pinned;
     if (renderer && atlas) {
       renderer.setFlags(h, p, shown);
       request();
@@ -445,7 +418,7 @@
   });
 
   $effect(() => {
-    const current = layer;
+    const current = session.layer;
     if (renderer && atlas) {
       untrack(() => {
         renderer?.setLens(current);
@@ -456,54 +429,13 @@
   });
 
   $effect(() => {
-    try {
-      localStorage.setItem(STORE, JSON.stringify({ overlays: $state.snapshot(overlays) }));
-    } catch {
-      // Storage is a convenience.
-    }
+    $state.snapshot(session.overlays);
+    untrack(() => session.remember());
     request();
   });
 
-  function isolate(label: string, cells: number[], colour?: string, zoom = false): void {
-    if (match && match.label === label) {
-      match = null;
-      return;
-    }
-    match = { label, cells: new Set(cells), colour };
-    if (zoom) zoomToCells(cells);
-  }
-
-  function legendCells(index: number): number[] {
-    return atlas ? atlas.classCells(layer, index) : [];
-  }
-
-  function searched(): void {
-    searching = true;
-    results = atlas ? atlas.find(query, 60) : [];
-    resultIndex = 0;
-  }
-
-  function choose(result: Match): void {
-    match = { label: result.label, cells: new Set(result.cells), colour: result.colour };
-    if (result.kind === "place" && result.cells.length === 1) pinned = result.cells[0];
-    zoomToCells(result.cells);
-    searching = false;
-  }
-
-  function searchKey(event: KeyboardEvent): void {
-    if (event.key === "ArrowDown") {
-      resultIndex = Math.min(results.length - 1, resultIndex + 1);
-      event.preventDefault();
-    } else if (event.key === "ArrowUp") {
-      resultIndex = Math.max(0, resultIndex - 1);
-      event.preventDefault();
-    } else if (event.key === "Enter" && results[resultIndex]) {
-      choose(results[resultIndex]);
-    } else if (event.key === "Escape") {
-      searching = false;
-      (event.target as HTMLElement).blur();
-    }
-  }
+  const isolate = (label: string, cells: number[], colour?: string, zoom = false): void =>
+    session.isolate(label, cells, colour, zoom);
 
   function highlightOf(kind: "country" | "culture" | "religion" | "material" | "area"): void {
     if (!atlas || !facts) return;
@@ -527,6 +459,7 @@
   // -- pictures ----------------------------------------------------------------------------------
 
   async function savePicture(): Promise<void> {
+    const layer = session.layer;
     const name = `${(atlas?.data.name ?? "world").replace(/\s+/g, "-")}-${layer}.png`;
     const path = await saveFile(t("save_picture"), name, [{ name: "PNG", extensions: ["png"] }]);
     if (path) await app.report("save_map", { id: world, layer, path }, t("picture_saved", { path }));
@@ -534,7 +467,7 @@
 
   async function copyView(): Promise<void> {
     if (!renderer) return;
-    renderer.draw(cam, overlays, theme);
+    renderer.draw(cam, session.overlays, theme);
     const out = document.createElement("canvas");
     out.width = renderer.canvas.width;
     out.height = renderer.canvas.height;
@@ -561,20 +494,21 @@
     const layers = app.info?.layers ?? [];
     if (/^[0-9]$/.test(event.key) && !event.ctrlKey && !event.metaKey) {
       const index = event.key === "0" ? 9 : Number(event.key) - 1;
-      if (layers[index]) layer = layers[index];
+      if (layers[index]) session.layer = layers[index];
     } else if (event.key === "+" || event.key === "=") zoomBy(1.6);
     else if (event.key === "-") zoomBy(1 / 1.6);
     else if (event.key.toLowerCase() === "f" && !event.ctrlKey) fitAll();
-    else if (event.key.toLowerCase() === "l" && !event.ctrlKey) overlays.labels = !overlays.labels;
-    else if (event.key.toLowerCase() === "b" && !event.ctrlKey) overlays.political = !overlays.political;
-    else if (event.key === "Escape") {
-      if (pinned >= 0) pinned = -1;
-      else match = null;
+    else if (event.key.toLowerCase() === "l" && !event.ctrlKey) session.overlays.labels = !session.overlays.labels;
+    else if (event.key.toLowerCase() === "b" && !event.ctrlKey && !event.metaKey) session.overlays.political = !session.overlays.political;
+    else if (event.key === "Escape" && (session.pinned >= 0 || session.match)) {
+      if (session.pinned >= 0) session.pinned = -1;
+      else session.match = null;
     } else return;
     event.preventDefault();
   }
 
   onMount(() => {
+    if (!compact) session.zoomTo = zoomToCells;
     observer = new ResizeObserver(() => resize());
     observer.observe(host);
     window.addEventListener("keydown", key);
@@ -593,6 +527,9 @@
   });
 
   onDestroy(() => {
+    if (!compact) session.zoomTo = () => {};
+    session.atlas = null;
+    session.preview = null;
     observer?.disconnect();
     window.removeEventListener("keydown", key);
     cancelAnimationFrame(frame);
@@ -608,49 +545,51 @@
     return `left:${x}px;top:${y}px;transform:translate(${flipX ? "-100%" : "0"},${flipY ? "-100%" : "0"})`;
   });
 
-  function share(count: number): string {
-    const value = (count * 100) / Math.max(1, landCells);
-    return value >= 10 ? value.toFixed(0) : value.toFixed(1);
-  }
 </script>
 
 <div class="viewer" class:compact data-renderer={rendererKind}>
   {#if !compact}
-    <div class="toolbar">
-      <div class="lenses" role="tablist" aria-label={t("legend")}>
-        {#each app.info?.layers ?? [] as name, index (name)}
-          <button
-            class="lens"
-            class:on={layer === name}
-            role="tab"
-            aria-selected={layer === name}
-            title={`${t(`layer.${name}.tip`)} (${index === 9 ? 0 : index + 1})`}
-            onclick={() => (layer = name)}
-          >
-            {t(`layer.${name}`)}
-          </button>
-        {/each}
-      </div>
-      <div class="tools">
-        <button class="btn icon small ghost" class:active={overlays.political} title={t("map.political")} aria-pressed={overlays.political} onclick={() => (overlays.political = !overlays.political)}>
+    <div class="pane-head toolbar">
+      {@render head?.()}
+      <span class="spacer"></span>
+      {#if lensPicker}
+        <select class="input lens" bind:value={session.layer} aria-label={t("shortcut.lenses")} title={t("shortcut.lenses")}>
+          {#each app.info?.layers ?? [] as name, index (name)}
+            <option value={name}>{index === 9 ? 0 : index + 1} · {t(`layer.${name}`)}</option>
+          {/each}
+        </select>
+        <span class="tsep"></span>
+      {/if}
+      <div class="group">
+        <button class="btn icon small ghost" class:active={session.overlays.political} title={`${t("map.political")} (B)`} aria-pressed={session.overlays.political} onclick={() => (session.overlays.political = !session.overlays.political)}>
           <Icon name="borders" />
         </button>
-        <button class="btn icon small ghost" class:active={overlays.labels} title={t("map.labels")} aria-pressed={overlays.labels} onclick={() => (overlays.labels = !overlays.labels)}>
+        <button class="btn icon small ghost" class:active={session.overlays.labels} title={`${t("map.labels")} (L)`} aria-pressed={session.overlays.labels} onclick={() => (session.overlays.labels = !session.overlays.labels)}>
           <Icon name="labels" />
         </button>
-        <button class="btn icon small ghost" class:active={overlays.locations} title={t("map.locations")} aria-pressed={overlays.locations} onclick={() => (overlays.locations = !overlays.locations)}>
+        <button class="btn icon small ghost" class:active={session.overlays.locations} title={t("map.locations")} aria-pressed={session.overlays.locations} onclick={() => (session.overlays.locations = !session.overlays.locations)}>
           <Icon name="grid" />
         </button>
-        <span class="sep"></span>
-        <button class="btn icon small ghost" title={t("map.copy_view")} onclick={copyView}><Icon name="image" /></button>
-        <button class="btn icon small ghost" title={t("save_picture_tip")} onclick={savePicture}><Icon name="download" /></button>
-        {#if onCompare}
-          <button class="btn icon small ghost" title={t("compare_title")} onclick={onCompare}><Icon name="compare" /></button>
-        {/if}
-        <button class="btn icon small ghost" class:active={app.mapFocus} title={t("map.focus")} aria-pressed={app.mapFocus} onclick={() => (app.mapFocus = !app.mapFocus)}>
-          <Icon name={app.mapFocus ? "shrink" : "expand"} />
-        </button>
       </div>
+      <span class="tsep"></span>
+      <div class="group export">
+        <button class="btn icon small ghost" title={t("map.copy_view")} aria-label={t("map.copy_view")} onclick={copyView}><Icon name="image" /></button>
+        <button class="btn icon small ghost" title={t("save_picture_tip")} aria-label={t("save_picture")} onclick={savePicture}><Icon name="download" /></button>
+        {#if onCompare}
+          <button class="btn icon small ghost" title={t("compare_title")} aria-label={t("compare_title")} onclick={onCompare}><Icon name="compare" /></button>
+        {/if}
+      </div>
+      <span class="tsep export"></span>
+      <div class="group zoom">
+        <button class="btn icon small ghost" title={`${t("map.zoom_out")} (−)`} aria-label={t("map.zoom_out")} onclick={() => zoomBy(1 / 1.6)}><Icon name="zoomOut" /></button>
+        <span class="num zoom-value" title={t("zoom_hint")}>{zoomPercent}%</span>
+        <button class="btn icon small ghost" title={`${t("map.zoom_in")} (+)`} aria-label={t("map.zoom_in")} onclick={() => zoomBy(1.6)}><Icon name="zoomIn" /></button>
+        <button class="btn icon small ghost" title={`${t("map.fit")} (F)`} aria-label={t("map.fit")} onclick={fitAll}><Icon name="fit" /></button>
+      </div>
+      <span class="tsep"></span>
+      <button class="btn icon small ghost" class:active={app.focus} title={t("map.focus")} aria-label={t("map.focus")} aria-pressed={app.focus} onclick={() => (app.focus = !app.focus)}>
+        <Icon name={app.focus ? "shrink" : "expand"} />
+      </button>
     </div>
   {/if}
 
@@ -678,109 +617,26 @@
     {/if}
 
     {#if !compact && atlas}
-      <div class="search">
-        <div class="search-box">
-          <Icon name="search" />
-          <input
-            class="search-input"
-            placeholder={t("search_hint")}
-            bind:value={query}
-            oninput={searched}
-            onkeydown={searchKey}
-            onfocus={() => (searching = !!query.trim())}
-            aria-label={t("search_hint")}
-          />
-          {#if query}
-            <button class="btn icon small ghost" aria-label={t("map.clear")} onclick={() => { query = ""; results = []; }}>
-              <Icon name="x" />
-            </button>
-          {/if}
-        </div>
-        {#if query.trim() && searching}
-          <div class="results scroll" role="listbox">
-            {#each results as result, index (index)}
-              <button
-                class="result"
-                class:on={index === resultIndex}
-                role="option"
-                aria-selected={index === resultIndex}
-                onmouseenter={() => { resultIndex = index; preview = new Set(result.cells); }}
-                onmouseleave={() => (preview = null)}
-                onclick={() => { preview = null; choose(result); }}
-              >
-                <span class="kind">{t(`found.${result.kind}`)}</span>
-                <span class="label">{result.label}</span>
-                <span class="count num">{grouped(result.cells.length)}</span>
-              </button>
-            {:else}
-              <div class="empty">{t("map.no_results")}</div>
-            {/each}
-          </div>
-        {/if}
-      </div>
-
-      {#if match}
-        <div class="chip" style:--swatch={match.colour ?? "var(--accent)"}>
+      {#if session.match}
+        <div class="chip" style:--swatch={session.match.colour ?? "var(--accent)"}>
           <span class="swatch"></span>
-          <span>{t("map.showing", { name: match.label })}</span>
-          <span class="faint num">{grouped(match.cells.size)}</span>
-          <button class="btn icon small ghost" aria-label={t("map.clear")} onclick={() => (match = null)}>
+          <span>{t("map.showing", { name: session.match.label })}</span>
+          <span class="faint num">{grouped(session.match.cells.size)}</span>
+          <button class="btn icon small ghost" aria-label={t("map.clear")} title={`${t("map.clear")} (Esc)`} onclick={() => (session.match = null)}>
             <Icon name="x" />
           </button>
         </div>
       {/if}
 
-      <aside class="legend panel" class:closed={!legendOpen}>
-        <button class="legend-head" onclick={() => (legendOpen = !legendOpen)} aria-expanded={legendOpen}>
-          <span class="eyebrow">{t("legend")}</span>
-          <strong>{t(`layer.${layer}`)}</strong>
-          <Icon name={legendOpen ? "chevronDown" : "chevronRight"} />
-        </button>
-        {#if legendOpen}
-          {#if isRamp && lens}
-            <div class="ramp">
-              <div class="ramp-bar" style:background={`linear-gradient(90deg, ${lens.ramp.join(",")})`}></div>
-              <div class="ramp-labels faint">
-                <span>{t("legend.lowest")}</span><span>{t("legend.highest")}</span>
-              </div>
-            </div>
-          {/if}
-          {#if (lens?.legend.length ?? 0) > 12}
-            <input class="input legend-filter" placeholder={t("map.legend_filter")} bind:value={legendFilter} />
-          {/if}
-          <div class="entries scroll">
-            {#each legend as entry (entry.index)}
-              {#if entry.count > 0}
-                <button
-                  class="entry"
-                  class:on={match?.label === entry.label}
-                  onmouseenter={() => (preview = new Set(legendCells(entry.index)))}
-                  onmouseleave={() => (preview = null)}
-                  onclick={() => { preview = null; isolate(entry.label, legendCells(entry.index), entry.colour); }}
-                  ondblclick={() => zoomToCells(legendCells(entry.index))}
-                  title={entry.label}
-                >
-                  <span class="swatch" style:background={entry.colour}></span>
-                  <span class="label">{entry.label}</span>
-                  <span class="count num">{grouped(entry.count)}</span>
-                  <span class="bar" style:width={`${Math.min(100, (entry.count * 100) / Math.max(1, lens?.legend[0]?.count ?? 1))}%`} style:background={entry.colour}></span>
-                </button>
-              {/if}
-            {/each}
-          </div>
-          <p class="legend-hint faint">{t("map.legend_hint")}</p>
-        {/if}
-      </aside>
-
-      {#if pinned >= 0 && facts}
-        <section class="inspector panel" aria-live="polite">
+      {#if session.pinned >= 0 && facts}
+        <section class="card" aria-live="polite">
           <header>
             <div>
               <span class="eyebrow">{t(`kind.${facts.kind}`)}</span>
               <h2>{facts.name}</h2>
               {#if facts.area}<p class="faint">{facts.area}{facts.region ? ` · ${facts.region}` : ""}</p>{/if}
             </div>
-            <button class="btn icon small ghost" aria-label={t("close")} onclick={() => (pinned = -1)}><Icon name="x" /></button>
+            <button class="btn icon small ghost" aria-label={t("close")} title={`${t("close")} (Esc)`} onclick={() => (session.pinned = -1)}><Icon name="x" /></button>
           </header>
           {#if facts.kind === "land"}
             <dl>
@@ -813,7 +669,7 @@
         </section>
       {/if}
 
-      {#if hoverFacts && hover !== pinned && !drag?.moved}
+      {#if hoverFacts && hover !== session.pinned && !drag?.moved}
         <div class="tooltip" style={tooltipStyle}>
           <strong>{hoverFacts.name}</strong>
           <span class="faint">{t(`kind.${hoverFacts.kind}`)}</span>
@@ -829,15 +685,8 @@
         </div>
       {/if}
 
-      <div class="minimap panel">
-        <canvas bind:this={minimap} onpointerdown={miniPointer} onpointermove={miniPointer} aria-label={t("map.minimap")}></canvas>
-      </div>
-
-      <div class="zoom panel">
-        <button class="btn icon small ghost" title={t("map.zoom_in")} onclick={() => zoomBy(1.6)}><Icon name="zoomIn" /></button>
-        <span class="num faint zoom-value">{zoomPercent}%</span>
-        <button class="btn icon small ghost" title={t("map.zoom_out")} onclick={() => zoomBy(1 / 1.6)}><Icon name="zoomOut" /></button>
-        <button class="btn icon small ghost" title={t("map.fit")} onclick={fitAll}><Icon name="fit" /></button>
+      <div class="minimap">
+        <canvas bind:this={minimap} onpointerdown={miniPointer} onpointermove={miniPointer} aria-label={t("map.minimap")} title={t("map.minimap")}></canvas>
       </div>
     {/if}
   </div>
@@ -851,56 +700,32 @@
     min-height: 0;
   }
   .toolbar {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 3px 6px;
-    border-bottom: 1px solid var(--line);
-    background: var(--panel);
+    gap: 2px;
+    overflow: hidden;
+    container-type: inline-size;
   }
-  .lenses {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1px;
-    flex: 1;
-    min-width: 0;
-  }
-  .lens {
+  .group {
     flex: none;
-    height: 24px;
-    padding: 0 8px;
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--text-2);
-    font: 400 12.5px var(--font);
-    white-space: nowrap;
-  }
-  .lens:hover {
-    background: var(--hover);
-    color: var(--text);
-  }
-  .lens.on {
-    background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--text);
-  }
-  .tools {
     display: flex;
     align-items: center;
     gap: 1px;
-    flex: none;
-    height: 24px;
   }
-  .tools .active {
+  .toolbar .active {
     background: var(--accent-soft);
     color: var(--text);
   }
-  .sep {
-    width: 1px;
-    height: 16px;
-    background: var(--line-2);
-    margin: 0 4px;
+  .lens {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
+    height: 22px;
+    font-size: 12px;
+  }
+  .zoom-value {
+    min-width: 38px;
+    text-align: center;
+    color: var(--text-2);
+    font-size: 11.5px;
   }
   .stage {
     position: relative;
@@ -908,6 +733,7 @@
     min-height: 0;
     overflow: hidden;
     background: var(--map-bg);
+    container-type: size;
   }
   .canvas-host {
     position: absolute;
@@ -938,108 +764,28 @@
     text-align: center;
     padding: 24px;
   }
-  .panel {
+  .chip,
+  .card,
+  .tooltip,
+  .minimap {
     background: var(--panel);
     border: 1px solid var(--line-2);
-    border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  }
-  .search {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    width: min(320px, calc(100% - 16px));
-    z-index: 3;
-  }
-  .search-box {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 28px;
-    padding: 0 2px 0 8px;
     border-radius: var(--radius);
-    background: var(--field);
-    border: 1px solid var(--line-2);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-    color: var(--text-3);
-  }
-  .search-box:focus-within {
-    border-color: var(--accent);
-  }
-  .search-input {
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    font: 400 12.5px var(--font);
-    outline: none;
-    user-select: text;
-  }
-  .results {
-    margin-top: 2px;
-    max-height: 300px;
-    padding: 2px;
-    border-radius: var(--radius);
-    background: var(--panel);
-    border: 1px solid var(--line-2);
-    box-shadow: var(--shadow);
-  }
-  .result {
-    display: grid;
-    grid-template-columns: 72px 1fr auto;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    height: 24px;
-    padding: 0 6px;
-    border: 0;
-    border-radius: 2px;
-    background: transparent;
-    color: var(--text);
-    font: 400 12.5px var(--font);
-    text-align: left;
-  }
-  .result.on {
-    background: var(--accent-soft);
-  }
-  .result .kind {
-    color: var(--text-3);
-    font-size: 11px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .result .label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .result .count {
-    color: var(--text-3);
-    font-size: 11.5px;
-  }
-  .results .empty {
-    padding: 6px 8px;
-    color: var(--text-3);
-    font-size: 12px;
   }
   .chip {
     position: absolute;
-    top: 42px;
+    top: 8px;
     left: 8px;
     z-index: 2;
     display: flex;
     align-items: center;
     gap: 6px;
     height: 26px;
+    max-width: calc(100% - 16px - 296px);
+    min-width: 0;
     padding: 0 2px 0 8px;
-    border-radius: var(--radius);
-    background: var(--panel);
-    border: 1px solid var(--line-2);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
     font-size: 12.5px;
-    max-width: 40%;
   }
   .chip > span:nth-child(2) {
     overflow: hidden;
@@ -1056,127 +802,27 @@
     border-radius: 1px;
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
   }
-  .legend {
+  .card {
     position: absolute;
     top: 8px;
     right: 8px;
-    width: 236px;
-    max-height: calc(100% - 16px - 120px);
-    display: flex;
-    flex-direction: column;
-    z-index: 2;
-    overflow: hidden;
-  }
-  .legend.closed {
-    max-height: none;
-  }
-  .legend-head {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 8px;
-    height: 26px;
-    padding: 0 6px 0 8px;
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    text-align: left;
-    font: 600 12px var(--font);
-  }
-  .legend-head .eyebrow {
-    color: var(--text-3);
-    font-weight: 400;
-  }
-  .legend-filter {
-    margin: 0 6px 4px;
-    width: auto;
-    height: 22px;
-    font-size: 12px;
-  }
-  .entries {
-    padding: 0 2px 2px;
-    min-height: 0;
-    border-top: 1px solid var(--line);
-  }
-  .entry {
-    position: relative;
-    display: grid;
-    grid-template-columns: 10px 1fr auto;
-    align-items: center;
-    gap: 6px;
-    width: 100%;
-    height: 22px;
-    padding: 0 6px;
-    border: 0;
-    border-radius: 2px;
-    background: transparent;
-    color: var(--text);
-    font: 400 12px var(--font);
-    text-align: left;
-    overflow: hidden;
-  }
-  .entry:hover {
-    background: var(--hover);
-  }
-  .entry.on {
-    background: var(--accent-soft);
-  }
-  .entry .label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .entry .count {
-    color: var(--text-3);
-    font-size: 11px;
-  }
-  .entry .bar {
-    position: absolute;
-    left: 6px;
-    bottom: 1px;
-    height: 1px;
-    opacity: 0.6;
-    max-width: calc(100% - 12px);
-  }
-  .legend-hint {
-    padding: 4px 8px 6px;
-    font-size: 11px;
-    border-top: 1px solid var(--line);
-  }
-  .ramp {
-    padding: 2px 8px 6px;
-  }
-  .ramp-bar {
-    height: 8px;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
-  }
-  .ramp-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    margin-top: 2px;
-  }
-  .inspector {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    width: 280px;
+    width: min(280px, calc(100% - 16px));
     padding: 8px 10px 10px;
     z-index: 3;
   }
-  .inspector header {
+  .card header {
     display: flex;
     justify-content: space-between;
     gap: 8px;
     margin-bottom: 6px;
   }
-  .inspector h2 {
+  .card h2 {
     font-size: 13px;
   }
-  .inspector header p {
+  .card header p {
     font-size: 12px;
   }
-  .inspector .eyebrow {
+  .eyebrow {
     font-size: 11px;
     color: var(--text-3);
   }
@@ -1216,9 +862,6 @@
     gap: 2px;
     max-width: 260px;
     padding: 6px 8px;
-    border-radius: var(--radius);
-    background: var(--panel);
-    border: 1px solid var(--line-2);
     box-shadow: var(--shadow);
     font-size: 12px;
   }
@@ -1242,33 +885,24 @@
   .minimap canvas {
     width: 144px;
   }
-  .zoom {
-    position: absolute;
-    left: 162px;
-    bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    padding: 1px;
-    z-index: 2;
-  }
-  .zoom-value {
-    min-width: 40px;
-    text-align: center;
-    font-size: 11.5px;
-  }
-  @media (max-width: 1000px) {
-    .legend {
-      width: 200px;
+  @container (max-width: 560px) {
+    .toolbar :global(.pane-title),
+    .toolbar :global(.pane-sub) {
+      display: none;
     }
+  }
+  @container (max-width: 400px) {
+    .export,
+    .zoom-value {
+      display: none;
+    }
+  }
+  @container (max-width: 560px) {
     .minimap {
       display: none;
     }
-    .zoom {
-      left: 8px;
-    }
-    .inspector {
-      bottom: 44px;
+    .chip {
+      max-width: calc(100% - 16px);
     }
   }
 </style>

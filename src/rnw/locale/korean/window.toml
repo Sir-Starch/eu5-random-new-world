@@ -2131,10 +2131,19 @@ text = '''찾지 못했습니다.'''
 source = "2a5f7a682264ac8f"
 text = '''{name} 표시 중'''
 
-["map.legend_filter"]
-source = "085abe7dabfb0721"
-text = '''범례 필터'''
 
 ["map.legend_hint"]
 source = "e7c0b115f7a8cf13"
 text = '''항목을 클릭하면 그것만 표시하고, 더블클릭하면 그곳으로 이동합니다. 지역을 클릭하면 카드를 고정합니다.'''
+
+["panes.library"]
+source = "f2850dc48434e9b5"
+text = '''라이브러리 표시/숨기기'''
+
+["panes.inspector"]
+source = "2fdf9228ab318654"
+text = '''사이드 패널 표시/숨기기'''
+
+["candidates.chosen"]
+source = "c6da331eadbee0e2"
+text = '''선택됨'''
