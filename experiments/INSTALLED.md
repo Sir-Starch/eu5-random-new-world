@@ -6,6 +6,30 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-30, **1.1.0 development — fine grain and lake cones** (C450). [V-EXEC] The terrain's detail
+noise follows the installed heightmaps' roughness from 64 down to 4 decal pixels (native kernel
+parameters, equal to its NumPy reference), and the relief counts lakes as land for its distance to the
+sea, so lakes no longer stand in cones of ground. Full checks pass (2,282 Python tests, 15 optional
+skips; 23 Rust tests; strict types, lint and formatting clean). The pending epoch-60 reference world
+is refreshed to 867 files / `0ac9e45b…a8`, reproduced by the installed-game suite and its layer-reroll
+check; full exports of six presets pass every invariant (fresh land cache).
+
+Installed new candidate `rnw_exp_world_oxwlg445jz` (**Grain and lakes · 1001**, continents, seed 1001
+with precious deposits at 99.8 % only to give it an identity of its own, code
+`RNW1-080G0-00000-0000Z-9040G-00811-ZK0FH-9A28`; coasts and lakes equal those of **Natural lakes ·
+1001**) in the same Windows/Proton profile, with records in both libraries. All 897 installed files
+match; 866 nonmetadata files have SHA-256
+`a037ae7ee65b78c046d97f3050f234fc39e14f16c25a23da9a16abfebcc10de9`. The earlier candidates are left in
+place. All fourteen existing mod directories and nine profile-root files are preserved. No playset,
+save or preference edit; no EU5 launch/control by the agent.
+
+The verified, self-tested hub is installed with the former hub retained at
+`.rnw-hub-backups/1.1.0-1793400314955403666` (isolated Wine self-test of the window, native kernels,
+world codes and window shell; 3468 files in `rnw_exp_hub`). Candidate:
+`local_data/hub-updates/1.1.0-1793400230982266893/rnw_exp_hub`; wheel SHA-256
+`3f32f0398809a12f80681ff44cce709466d06b508647d2655608ff086d67eed9`. Unpublished 1.1.0 / pending epoch 60;
+existing worlds are untouched. Evidence: ignored `local_data/grain-110/`.
+
 2026-10-30, **1.1.0 development — mountains and hills** (C449). [V-EXEC] Relief chains of one width
 with massifs of varied height, ridged crests and hill country; the installed mountain stamps turned
 along each range, sized and strengthened by height, with their material layers. Full checks pass

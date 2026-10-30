@@ -2131,4 +2131,3 @@ pixels; the terrain detail noise now has vanilla's roughness exponent. Each lake
 ground because the relief's distance to the sea counted it as water, which also lowered the interior
 where pyramids overlapped; lakes now count as land for that distance. Both changes alter every world
 within the pending epoch 60; the reference digest is refreshed. Numbers are in the terrain guide.
-
