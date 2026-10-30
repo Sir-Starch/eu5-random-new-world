@@ -6,6 +6,31 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-30, **1.1.0 development — mountains and hills** (C449). [V-EXEC] Relief chains of one width
+with massifs of varied height, ridged crests and hill country; the installed mountain stamps turned
+along each range, sized and strengthened by height, with their material layers. Full checks pass
+(2,279 Python tests, 15 optional skips; strict types and lint clean; Rust untouched). The pending
+epoch-60 reference world is refreshed to 867 files / `4cf2b8bd…2a`, reproduced by the installed-game
+suite and its layer-reroll check; full exports of six presets (continents 1001, wall 9, archipelago
+42, supercontinent 42, islands 7, small continents 42) pass every invariant.
+
+Installed new candidate `rnw_exp_world_wkjnw4er3y` (**Mountain ranges · 1001**, continents, seed
+1001 with precious deposits at 99.9 % only to give it an identity of its own, code
+`RNW1-080G0-00000-0000Z-9040G-00811-ZKGFM-NJAG`; coasts, lakes and relief inputs equal those of
+**Natural lakes · 1001**) in the same Windows/Proton profile, with records in both libraries. All
+896 installed files match; 865 nonmetadata files have SHA-256
+`67d305fd59834ea274833919aa6257b84eba2b9d8140dc8f68c3d1591eea2b07`. The earlier candidates are left in place. All
+thirteen existing mod directories and nine profile-root files are preserved. No playset, save or
+preference edit; no EU5 launch/control by the agent (the installer waited until the owner had closed
+the game).
+
+The verified, self-tested hub is installed with the former hub retained at
+`.rnw-hub-backups/1.1.0-1793396212639764219` (isolated Wine self-test of the window, native kernels,
+world codes and window shell; 3,468 files now in `rnw_exp_hub`). Candidate:
+`local_data/hub-updates/1.1.0-1793396134401021804/rnw_exp_hub`; wheel SHA-256
+`6945bd693952f2134a384d4a9f26f574e4526a1b9fa20a65c2271857d8510580`. Unpublished 1.1.0 /
+pending epoch 60; existing worlds are untouched. Evidence: ignored `local_data/mountains-110/`.
+
 2026-10-30, **generator hub 1.0.0, classic window drawing the new maps**: updated
 `mod/rnw_exp_hub` with `update_local_hub` from the working tree in which the classic Qt window
 (the Proton fallback) draws the maps as the Tauri window does. The updater verified current
