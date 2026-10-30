@@ -1000,3 +1000,32 @@ The verified, self-tested hub is installed with the former hub retained at
 `91987ac5961139a663c9755fcac871489ace3db8080d246897a238ee1c943d97`. This remains unpublished
 1.1.0 / pending epoch 60; existing worlds are untouched. Evidence: ignored
 `local_data/hydrology-110/`.
+
+2026-10-30, **1.1.0 development — lake shapes and lakes on the physical map** (C448 follow-up).
+[V-EXEC] The owner found the first lake build unrealistic: every lake a smooth oval, and on the
+generator's physical map each read as a crater. Lakes are now bent bowl-plus-noise fields of exact
+area (lobes, bays, arms, satellite ponds, islands; fingers), and both windows draw a lake as a
+level surface in the land instead of a pit (same synthetic test in both languages: mean shade
+deviation 0.69–0.70 before, about 0.25 after). Lake counts and sizes still match the installed
+game (11.5 per million land pixels, quartiles 112/184/436). Full checks pass (2,270 Python
+tests, 15 optional skips; 23 native Rust tests; 15 interface tests; strict types and lint clean).
+The pending epoch-60 reference world is refreshed again to 867 files / `d748a5c7…5762`
+(superseding `a2474322…879c`), reproduced by the installed-game suite (14 tests, one opt-in
+skip); the layer-reroll check was not repeated after this change (it passed on the preceding
+build). Full exports of six presets with a cleared land cache (continents 1000, wall 9,
+archipelago 42, islands 7, small continents 42, supercontinent 42) report no split cells,
+unreachable sea zones, unported land or river-rule violations.
+
+Installed new candidate `rnw_exp_world_facvbksoul` (**Natural lakes · 1001**, continents, seed
+1001, code `RNW1-040G0-00000-0000Z-9040G-007YM-A5G`) in the same Windows/Proton profile, with
+records in both libraries. All 895 installed files match; 864 nonmetadata files have SHA-256
+`9bac70f68e4dda41e1c8d056ec2e776fe95b02980e2dd0e0e8794edf644d849a`. The earlier candidate
+`rnw_exp_world_xgmv2hwu7n` (oval lakes) is left in place. All twelve existing mod directories and
+nine profile-root files are preserved. No playset, save or preference edit; no EU5 launch/control
+by the agent.
+
+The verified, self-tested hub is installed with the former hub retained at
+`.rnw-hub-backups/1.1.0-1793385173426752451`. Hub candidate:
+`local_data/hub-updates/1.1.0-1793385098281812890/rnw_exp_hub`; wheel SHA-256
+`0b4e59f79a5ebb92f58d9d8a6eafb40d8749645f3a4283a94f4a0b8dc121c4d3`. Unpublished 1.1.0 /
+pending epoch 60; existing worlds are untouched. Evidence: ignored `local_data/hydrology-110/`.

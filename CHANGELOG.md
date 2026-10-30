@@ -5,8 +5,10 @@
 - Rework coasts, water bodies and drainage together (pending epoch 60). Coasts are drawn from a
   bent density field, so continents have capes, hooked peninsulas and gulfs with narrow mouths
   instead of rounded blobs. Lakes now follow the installed game's own: about 11 per million
-  land pixels, from small ponds to lakes of 20,000 pixels (the 1.0.0 generator made one tenth
-  as many, none above 4,000). Inland seas, lagoons behind spits and gulfs with one narrow
+  land pixels, from small ponds to lakes of 17,000 pixels or more (the 1.0.0 generator made
+  one tenth as many, none above 4,000), with the lobes, bays, arms and islands of real lakes
+  rather than ovals. The physical map in both windows draws a lake as a level surface in the
+  land instead of a pit with walls, so lakes no longer read as craters. Inland seas, lagoons behind spits and gulfs with one narrow
   strait appear on most continents, and some seeds join landmasses by isthmuses. Rivers now
   flow into lakes and out of them: each lake gives one outflow river from its lowest rim.
   Largest lake defaults to 25,000 pixels (range up to 60,000) and its help text, which said

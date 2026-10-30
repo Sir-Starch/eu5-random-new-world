@@ -76,6 +76,40 @@ describe("relief", () => {
   });
 });
 
+// A mountainous land location (cell 1) with a lake location (cell 3) in the middle of a 24 x 24
+// box and no sea at all.
+function mountainsWithALake(): AtlasBundle {
+  const size = 24;
+  const labels: number[] = [];
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) labels.push(x >= 10 && x < 14 && y >= 10 && y < 14 ? 4 : 2);
+  const runs: number[] = [];
+  for (const value of labels) runs.push(value, 1);
+  return {
+    ...bundle(),
+    size: [size, size],
+    labels: base64(new Uint8Array(new Uint32Array(runs).buffer)),
+    kind: [0, 0, 0, 3],
+    centre: [0, 0, 0, 0, 0, 0, 12, 12],
+  };
+}
+
+describe("lakes on the physical map", () => {
+  it("are no craters: the shade around a lake is no stronger than far from it", () => {
+    const atlas = new WorldAtlas(mountainsWithALake());
+    const field = relief(atlas);
+    expect(field.width).toBe(12);
+    const shade = (x: number, y: number) => field.land[(y * field.width + x) * 4 + 3];
+    const deviation = (points: [number, number][]) =>
+      points.reduce((sum, [x, y]) => sum + Math.abs(shade(x, y) / 128 - 1), 0) / points.length;
+    const ring: [number, number][] = [];
+    for (let y = 3; y < 9; y++) for (let x = 3; x < 9; x++) if (x < 5 || x > 6 || y < 5 || y > 6) ring.push([x, y]);
+    const far: [number, number][] = [];
+    for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) far.push([x, y]);
+    for (const [x, y] of [[5, 5], [6, 6]]) expect(field.depth[y * field.width + x]).toBeGreaterThan(0);
+    expect(deviation(ring)).toBeLessThan(deviation(far) + 0.15);
+  });
+});
+
 describe("lenses", () => {
   it("has a look for every lens", () => {
     for (const layer of ["land", "countries", "cultures", "religions", "resources", "development", "population", "climate", "terrain", "areas"]) {

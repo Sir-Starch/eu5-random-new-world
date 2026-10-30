@@ -126,3 +126,29 @@ def test_game_identifiers_are_named_by_the_game() -> None:
     assert "chukchi_sea" in mapstyle.identifiers(
         replace(found, names=(*found.names[:-1], "$chukchi_sea$"))
     )
+
+
+def _mountains_with_a_lake() -> atlas_module.Atlas:
+    """One mountainous land location with a lake location in the middle, no sea at all."""
+    found = synthetic_atlas()
+    mountains = int(np.flatnonzero((found.kinds == mapstyle.LAND) & (found.topography == 1))[0])
+    lake = int(np.flatnonzero(found.kinds == mapstyle.LAKE)[0])
+    labels = np.full((48, 48), mountains + 1, dtype=np.int32)
+    labels[20:28, 20:28] = lake + 1
+    return replace(found, labels=labels)
+
+
+def test_a_lake_in_mountains_is_no_crater_on_the_physical_map() -> None:
+    """Around a lake the shade is no darker or brighter than in the mountains far from it: the
+    lake is not a shore whose walls the light would draw as a crater (0.70 against 0.17)."""
+    field = mapstyle.relief(_mountains_with_a_lake())
+    assert np.all(field.depth[10:14, 10:14] > 0)
+    shade = field.shade
+    ring = np.zeros(shade.shape, dtype=bool)
+    ring[7:17, 7:17] = True
+    ring[10:14, 10:14] = False
+    far = np.zeros(shade.shape, dtype=bool)
+    far[2:6, 2:6] = True
+    ring_deviation = float(np.abs(shade[ring] - 1).mean())
+    far_deviation = float(np.abs(shade[far] - 1).mean())
+    assert ring_deviation < far_deviation + 0.15

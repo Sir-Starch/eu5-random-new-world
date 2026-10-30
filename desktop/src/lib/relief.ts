@@ -189,6 +189,8 @@ export function relief(atlas: WorldAtlas): Relief {
   // Sample the box: land mask, colours, heights.
   const mask = new Float32Array(size);
   const water = new Uint8Array(size);
+  const lake = new Uint8Array(size);
+  const sampled = new Int32Array(size).fill(-1);
   const reds = new Float32Array(size);
   const greens = new Float32Array(size);
   const blues = new Float32Array(size);
@@ -203,6 +205,10 @@ export function relief(atlas: WorldAtlas): Relief {
       // Beyond the New World's own sea zones the viewer draws open ocean.
       if (c < 0 || kind[c] === SEA || kind[c] === LAKE) {
         water[i] = 1;
+        if (c >= 0 && kind[c] === LAKE) {
+          lake[i] = 1;
+          sampled[i] = c;
+        }
         continue;
       }
       mask[i] = 1;
@@ -214,6 +220,11 @@ export function relief(atlas: WorldAtlas): Relief {
     }
   }
 
+  // A lake lies in the land: its surface is as high as the land that meets it, not a pit whose
+  // walls the shade would draw as a crater, and only the sea is a shore.
+  const lakeHigh = lakeHeights(atlas, sampled, mask, lake, heights, width, height);
+  for (let i = 0; i < size; i++) if (lake[i]) heights[i] = lakeHigh[sampled[i]];
+
   // Soften colours within the land (normalised by the land's own share, so no sea bleeds in).
   const share = blur(mask, width, height, 2);
   const soft = [blur(reds, width, height, 2), blur(greens, width, height, 2), blur(blues, width, height, 2)];
@@ -221,10 +232,11 @@ export function relief(atlas: WorldAtlas): Relief {
   // Height: smoothed slopes, roughened into ridges where the land is rough, to the shore.
   const base = blur(heights, width, height, 6, 3);
   const grain = blur(roughness, width, height, 3);
-  const shore = distance(water, width, height);
+  const open = Uint8Array.from(water, (w, i) => (w && !lake[i] ? 1 : 0));
+  const shore = distance(open, width, height);
   const lift = new Float32Array(size);
   for (let i = 0; i < size; i++) {
-    if (!mask[i]) continue;
+    if (!mask[i] && !lake[i]) continue;
     const x = i % width;
     const y = (i - x) / width;
     const coast = Math.min(1, shore[i] / 6);
@@ -265,6 +277,37 @@ export function relief(atlas: WorldAtlas): Relief {
   const found = { width, height, land, depth };
   cache.set(atlas, found);
   return found;
+}
+
+/**
+ * The height of each lake location: the mean height of the land its pixels touch (up, down, left
+ * and right), or flatland's for a lake that touches none. ``sampled`` holds each pixel's location.
+ */
+function lakeHeights(
+  atlas: WorldAtlas,
+  sampled: Int32Array,
+  mask: Float32Array,
+  lake: Uint8Array,
+  heights: Float32Array,
+  width: number,
+  height: number,
+): Float32Array {
+  const total = new Float64Array(atlas.cells);
+  const count = new Float64Array(atlas.cells);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const i = y * width + x;
+      if (!lake[i]) continue;
+      const c = sampled[i];
+      if (x > 0 && mask[i - 1]) { total[c] += heights[i - 1]; count[c]++; }
+      if (x < width - 1 && mask[i + 1]) { total[c] += heights[i + 1]; count[c]++; }
+      if (y > 0 && mask[i - width]) { total[c] += heights[i - width]; count[c]++; }
+      if (y < height - 1 && mask[i + width]) { total[c] += heights[i + width]; count[c]++; }
+    }
+  }
+  const out = new Float32Array(atlas.cells);
+  for (let c = 0; c < atlas.cells; c++) out[c] = count[c] > 0 ? total[c] / count[c] : TOPOGRAPHY.flatland.height;
+  return out;
 }
 
 function clamp(value: number): number {

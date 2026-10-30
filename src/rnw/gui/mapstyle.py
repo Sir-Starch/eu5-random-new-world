@@ -241,6 +241,35 @@ def _ridges(x: NDArray[np.float32], y: NDArray[np.float32]) -> NDArray[np.float3
     return total / 0.875
 
 
+def _lake_heights(
+    sample: NDArray[np.int64],
+    solid: NDArray[np.bool_],
+    lake: NDArray[np.bool_],
+    high: NDArray[np.float32],
+) -> NDArray[np.float32]:
+    """The height of every lake pixel: the mean height of the land its location touches.
+
+    Each lake location takes the mean over its pixels' land neighbours (up, down, left and
+    right) of those neighbours' heights; one that touches no land takes flatland's.
+    """
+    cells = len(high)
+    total = np.zeros(cells, dtype=np.float64)
+    count = np.zeros(cells, dtype=np.float64)
+    for here, there in (
+        (np.s_[1:, :], np.s_[:-1, :]),
+        (np.s_[:-1, :], np.s_[1:, :]),
+        (np.s_[:, 1:], np.s_[:, :-1]),
+        (np.s_[:, :-1], np.s_[:, 1:]),
+    ):
+        meeting = lake[here] & solid[there]
+        owner = sample[here][meeting]
+        total += np.bincount(owner, weights=high[sample[there][meeting]], minlength=cells)
+        count += np.bincount(owner, minlength=cells)
+    flat = TOPOGRAPHY["flatland"]["height"]
+    mean = np.where(count > 0, total / np.maximum(count, 1), flat).astype(np.float32)
+    return mean[np.maximum(sample, 0)]
+
+
 _RELIEFS: dict[int, tuple[Atlas, Relief]] = {}
 
 
@@ -255,6 +284,7 @@ def relief(atlas: Atlas) -> Relief:
     kinds = atlas.kinds.astype(np.int64)
     kind = np.where(sample >= 0, kinds[np.maximum(sample, 0)], SEA)
     solid = (kind == LAND) | (kind == WASTELAND)
+    lake = kind == LAKE
     water = ~solid
     mask = solid.astype(np.float32)
     colours = physical_colours(atlas)
@@ -272,13 +302,17 @@ def relief(atlas: Atlas) -> Relief:
         blur(np.where(solid, colours[cell, channel], 0).astype(np.float32), 2)
         for channel in range(3)
     ]
-    base = blur(np.where(solid, high[cell], 0).astype(np.float32), 6, 3)
+    heights = np.where(solid, high[cell], 0).astype(np.float32)
+    # A lake lies in the land: its surface is as high as the land that meets it, not a pit
+    # whose walls the shade would draw as a crater, and only the sea is a shore.
+    heights = np.where(lake, _lake_heights(sample, solid, lake, high), heights)
+    base = blur(heights, 6, 3)
     grain = blur(np.where(solid, rough[cell], 0).astype(np.float32), 3)
-    shore = euclidean_distance(water, 8 * 64).astype(np.float32) / 8
+    shore = euclidean_distance(water & ~lake, 8 * 64).astype(np.float32) / 8
     coast = np.minimum(1, shore / 6)
     rows, columns = np.mgrid[0:height, 0:width].astype(np.float32)
     ridged = np.where(grain > ROUGH, grain * 0.2 * _ridges(columns, rows), 0)
-    lift = np.where(solid, (base + ridged) * coast, 0).astype(np.float32)
+    lift = np.where(solid | lake, (base + ridged) * coast, 0).astype(np.float32)
     left = np.concatenate([lift[:, :1], lift[:, :-1]], axis=1)
     right = np.concatenate([lift[:, 1:], lift[:, -1:]], axis=1)
     up = np.concatenate([lift[:1], lift[:-1]], axis=0)

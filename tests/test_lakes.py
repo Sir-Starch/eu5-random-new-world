@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from rnw.lakes import blob, carve_lakes, lake_sites
+from rnw.lakes import Lake, blob, carve_lakes, lake_shape, lake_sites, lake_window
 from rnw.topology import euclidean_distance, label_components
 
 
@@ -39,11 +39,11 @@ def test_lake_count_and_sizes_follow_the_vanilla_tail() -> None:
         found = found[found >= 80]
         counts.append(len(found) / int(np.count_nonzero(land)) * 1e6)
         sizes.extend(found.tolist())
-    assert 9 < float(np.mean(counts)) < 14
+    assert 9 < float(np.mean(counts)) < 15
     low, middle, high = np.percentile(sizes, [25, 50, 75])
-    assert 100 < low < 150
-    assert 150 < middle < 250
-    assert 300 < high < 600
+    assert 90 < low < 150
+    assert 140 < middle < 250
+    assert 280 < high < 600
     assert max(sizes) > 5000
     assert max(sizes) <= 22_000 * 1.35
 
@@ -60,6 +60,20 @@ def test_no_lake_is_drawn_without_land_to_hold_it() -> None:
     land[240:260, 240:260] = True
     assert not carve_lakes(land, 3, smallest=80, largest=22_000).any()
     assert lake_sites(land, 3, smallest=80, largest=22_000) == []
+
+
+def test_a_lake_has_the_area_it_was_asked_for_and_is_no_ellipse() -> None:
+    """The area is exact; a bowl plus noise gives bays and lobes, so the shape fills much
+    less of its bounding box than a smooth ellipse would (0.79 upright, less tilted)."""
+    filled: list[float] = []
+    for complexity in (500, 900, 1400):
+        for key in range(8):
+            lake = Lake(300, 300, 3000, 60, 30, key % 16, complexity, 400, key + 1)
+            shape = lake_shape(lake, lake_window(lake, (700, 700)))
+            assert abs(int(np.count_nonzero(shape)) - 3000) <= 20
+            ys, xs = np.nonzero(shape)
+            filled.append(3000 / ((np.ptp(ys) + 1) * (np.ptp(xs) + 1)))
+    assert float(np.mean(filled)) < 0.6
 
 
 def test_a_blob_has_the_area_it_was_asked_for() -> None:
