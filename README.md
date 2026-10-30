@@ -82,24 +82,24 @@ Click a screenshot to view it at full size.
 
 ### Generator
 
-The classic generator window (Qt), now the fallback of the Tauri window, displaying generated worlds in the library, featuring **Supercontinent QUXQ** (`v0.13.17`) in its world overview and revealed atlas mapmodes.
+The Tauri generator window, with its world library, map canvas and inspector. The examples include **Supercontinent 33XV**; the last image shows the classic Qt fallback.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/images/01-new-world.png" alt="New World setup page and world library"><br><sub>Select a landmass archetype and presets alongside your library of generated worlds.</sub></td>
-<td width="50%"><img src="docs/images/02-customize.png" alt="Advanced customization sliders and World Code"><br><sub>Fine-tune generation parameters, enter a seed, or share a reproducible World Code.</sub></td>
+<td width="50%"><img src="docs/images/01-new-world.png" alt="New world with continent sketches"><br><sub>Choose a world type and preview continent sketches before generating a world.</sub></td>
+<td width="50%"><img src="docs/images/02-customize.png" alt="Exact generation values in the Advanced inspector"><br><sub>Adjust individual values alongside the land preview, with the location budget always visible.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/03-world-overview.png" alt="Spoiler-free world overview"><br><sub>By default, the New World stays hidden behind Terra Incognita to preserve exploration.</sub></td>
-<td width="50%"><img src="docs/images/04-world-maps.png" alt="Revealed physical map in the built-in Atlas"><br><sub>Reveal the world to inspect physical geography and society summaries in the built-in Atlas.</sub></td>
+<td width="50%"><img src="docs/images/03-world-covered.png" alt="Covered world in the library"><br><sub>Keep the New World hidden for exploration in the game, or reveal it in the generator.</sub></td>
+<td width="50%"><img src="docs/images/04-world-physical.png" alt="Revealed physical map"><br><sub>Explore the physical map, with region names, relief, settlements and a minimap.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/05-world-countries.png" alt="Political mapmode in the Atlas"><br><sub>Browse generated native states, tribes, and search for specific cultures or locations.</sub></td>
-<td width="50%"><img src="docs/images/06-world-development.png" alt="Starting development mapmode"><br><sub>Inspect starting development, harbors, and economic layers alongside terrain.</sub></td>
+<td width="50%"><img src="docs/images/05-world-countries.png" alt="Political map with states and optional tribes"><br><sub>Inspect generated states; show tribes separately when you want them.</sub></td>
+<td width="50%"><img src="docs/images/06-world-resources.png" alt="Resource map at location scale"><br><sub>See each location’s resources up close and isolate a resource through the legend.</sub></td>
 </tr>
 <tr>
-<td width="50%"><img src="docs/images/07-world-covered.png" alt="Covered Atlas view"><br><sub>The Atlas tab remains locked behind a spoiler guard until revealed.</sub></td>
-<td width="50%"><img src="docs/images/08-world-religions.png" alt="Religions mapmode and legend"><br><sub>Generated religious families with dedicated map layers and interactive legends.</sub></td>
+<td width="50%"><img src="docs/images/07-world-location.png" alt="Culture map with a pinned location card"><br><sub>Inspect a location’s people, faith, resource and population from its map card.</sub></td>
+<td width="50%"><img src="docs/images/08-classic-window.png" alt="Classic Qt fallback window"><br><sub>The classic Qt window remains available, including under Proton without WebView2.</sub></td>
 </tr>
 </table>
 
