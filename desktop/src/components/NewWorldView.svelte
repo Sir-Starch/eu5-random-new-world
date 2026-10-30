@@ -62,7 +62,6 @@
         </div>
         <div class="progress"><span style:width={`${percent}%`}></span></div>
         <div class="run-meta">
-          <span class="current">{s?.running}</span>
           {#if s?.eta}<span class="num">{t("eta", { time: clock(s.eta) })}</span>{/if}
           {#if s?.task === "queue" && n?.queue.length}<span>{t("queue_count", { count: n.queue.length })}</span>{/if}
         </div>
@@ -275,9 +274,6 @@
     gap: 2px 14px;
     color: var(--text-2);
     font-size: 12px;
-  }
-  .current {
-    color: var(--text);
   }
   .stages {
     display: grid;

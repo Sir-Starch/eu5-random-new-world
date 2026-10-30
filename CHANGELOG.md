@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Simplify generation progress: show the current stages once in the stage list,
+  keeping the time estimate below the progress bar.
+
 - Add The Wall: a procedural straight north-south continent or island chain with a mountain spine,
   impassable polar end locations, procedural coasts and extra continents/islands on
   either side. Natural straits emerge from the density field, seed and geography

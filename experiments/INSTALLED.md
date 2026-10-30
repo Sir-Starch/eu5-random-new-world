@@ -929,3 +929,20 @@ This remains an unpublished development build. No EU5 launch/control or playset,
 save or setting edit. Source snapshot, exports, screenshots, build/check logs and
 installation receipt remain under ignored `local_data/the-wall/`; the hub candidate
 is `local_data/hub-updates/1.1.0-1793364661080448021/rnw_exp_hub`.
+
+
+2026-10-30, **1.1.0 development — compact progress and current source window**.
+[V-EXEC] Removed the repeated running-stage sentence below the Tauri progress bar;
+the ETA and stage table remain. Rebuilt the source checkout window as well as the
+native package window: they now match, so source launches show the existing Wall
+checkbox rather than the older numeric bar. Browser verification covers toggling
+that checkbox and the production progress view with synthetic state. Full checks
+pass (2,244 Python tests, 15 optional skips; 23 native Rust tests; 14 interface tests;
+five Rust shell tests), as do source/native and Windows/Wine self-tests.
+
+The standard updater verified and installed the current generator-only hub in the
+same profile, retaining the former hub at
+`.rnw-hub-backups/1.1.0-1793365531868830695`. The Wall candidate
+`rnw_exp_world_plqlumps6g` is reused: this is an interface change with no world-byte
+or epoch change. Evidence remains under ignored `local_data/wall-checkbox/`;
+hub candidate: `local_data/hub-updates/1.1.0-1793365445154648166/rnw_exp_hub`.

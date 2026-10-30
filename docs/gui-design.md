@@ -162,6 +162,10 @@ shown by colour alone.
 covers the protocol, state, atlas transfer and that every interface string key exists in the
 window catalogues. Screens are reviewed in a browser through `npm run dev` with
 `RNW_DATA=<copy of a library>` and in the built window on WebKitGTK.
+After interface edits, rebuild the source window with `cd desktop && npx tauri build --no-bundle`
+before `uv run rnw gui`. Package builds use separate output directories and do not refresh
+the source checkout's window executable. Generation progress lists stage names in its stage
+table; the line below the progress bar holds the time estimate and queue count.
 
 [V-EXEC 2026-10-30, 1.1.0 development] A Chromium comparison on the same 6,594-location
 atlas measured a maximum 10 ms timer gap of 592 ms for synchronous relief/region names and
