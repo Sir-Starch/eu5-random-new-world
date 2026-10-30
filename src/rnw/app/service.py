@@ -394,7 +394,7 @@ def land_template(
     canvas = select_canvas(
         game_map,
         settings.new_world.ocean_band_px,
-        expanded=bool(settings.new_world.expand_oceans),
+        expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
     )
     shrunk = canvas.mask[::TEMPLATE_STEP, ::TEMPLATE_STEP]
     grey = np.where(shrunk, TEMPLATE_AREA, TEMPLATE_OUTSIDE).astype(np.uint8)

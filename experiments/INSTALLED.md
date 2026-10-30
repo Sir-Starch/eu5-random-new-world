@@ -901,3 +901,31 @@ World bytes are unchanged by this interface work: the existing candidate
 `rnw_exp_world_5o4wtpm757` is reused. No EU5 launch/control or world/playset/save edit.
 Build, self-test, timing, screenshots and installation evidence remain under ignored
 `local_data/gui-finish/`.
+
+
+2026-10-30, **1.1.0 development — The Wall and polar-edge geography** (C447).
+[V-EXEC] Installed new world `rnw_exp_world_plqlumps6g` (**RNW: The Wall**, seed 9)
+into the existing Windows/Proton profile, recorded above, on EU5 1.4.6 / build
+26300913. Its 864 nonmetadata files have SHA-256
+`0cd08894e6806d0ba3ad296338924be0a1d888f21c3ec4857b6761fc579e8c7f`;
+all 895 installed files match the prepared candidate. Both native and Proton
+libraries have complete records/recovery assets. All 12 pre-existing mod directories
+and nine profile-root files are preserved.
+
+The preset uses one procedural density field for mainland, islands and natural
+straits. Its optional continuity constraint, width, position, coasts and ridge controls
+are available in both windows and all eleven official languages. Ordinary geography
+and land images also permit polar land. Full offline/package and independent
+reference checks are recorded in [terrain](../docs/terrain-biomes.md#the-wall).
+
+The standard updater verified and installed the **3,462-file** generator-only hub
+at `mod/rnw_exp_hub`, retaining the former hub at
+`.rnw-hub-backups/1.1.0-1793364755135727114`. The current Windows wheel SHA-256 is
+`f39bd1bd0a70575f5004da13fc803a13aafc9aef646fdd5adb6b0e727a9817a7`.
+Native and Windows/Wine window/native/code and shell/bridge self-tests pass.
+The default 867-file pending-epoch reference independently reproduces as
+`94fcf2d49ecf9a38685b149d71175f796e22aeb658f955ea4fc0dc5b777a4bcc`.
+This remains an unpublished development build. No EU5 launch/control or playset,
+save or setting edit. Source snapshot, exports, screenshots, build/check logs and
+installation receipt remain under ignored `local_data/the-wall/`; the hub candidate
+is `local_data/hub-updates/1.1.0-1793364661080448021/rnw_exp_hub`.

@@ -48,6 +48,7 @@ def _advanced_changes(preset: str, rng: random.Random) -> dict[str, int]:
         values = {
             control.key: control.value_at(rng.randint(0, controls.STEPS))
             for control in controls.ADVANCED
+            if control.group != "wall" or preset == "wall"
         }
         settings = build_settings(preset, controls.nested(values))
         if controls.estimated_locations(settings) <= controls.LOCATION_BUDGET:

@@ -184,11 +184,35 @@ STRINGS: Final[dict[str, str]] = {
     "type.small_continents.about": "Three or four separate continents of similar size.",
     "type.archipelago": "Archipelago",
     "type.archipelago.about": "Five to eleven large islands and many small ones: a world of ships.",
+    "control.new_world.wall_allow_gaps": ("Allow gaps in the wall"),
+    "control.new_world.wall_allow_gaps.about": (
+        "Let the density field form islands and sea passages. Disable to require a "
+        "continuous land core. Land amount, scale and coastal irregularity shape the "
+        "result."
+    ),
+    "type.wall": "The Wall",
+    "type.wall.about": (
+        "A straight north-south continent with a mountain spine and side land. Procedural "
+        "shores may form islands and narrow straits when gaps are allowed."
+    ),
+    "group.wall": "The Wall",
+    "control.new_world.wall_width_permille": "Wall width",
+    "control.new_world.wall_width_permille.about": "Maximum width as a share of the canvas.",
+    "control.new_world.wall_position_permille": "Wall position",
+    "control.new_world.wall_position_permille.about": (
+        "Position from west to east within the available polar corridor."
+    ),
+    "control.new_world.wall_coast_permille": "Coastal irregularity",
+    "control.new_world.wall_coast_permille.about": (
+        "Strength of bays, islands and coastal variation within the straight continental envelope."
+    ),
+    "control.new_world.wall_ridge_permille": "Mountain spine",
+    "control.new_world.wall_ridge_permille.about": "Height of the longitudinal mountain chain.",
     "type.islands": "Scattered islands",
     "type.islands.about": "A sea full of small islands, with no great landmass.",
     "type.random": "Random",
     "type.random.about": (
-        "One of the five world types, drawn at random when chosen and at each press of Random. "
+        "One of the world types, drawn at random when chosen and at each press of Random. "
         "The Advanced values are those of the type drawn."
     ),
     "type.chaos": "Total Chaos",

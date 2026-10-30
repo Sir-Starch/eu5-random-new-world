@@ -417,6 +417,12 @@ class _ControlRow:
     """One setting: its name, a slider, the value in its unit and a reset button."""
 
     def __init__(self, control: controls.Control, window: MainWindow) -> None:
+        self.check: QCheckBox | None = None
+        if control.low == 0 and control.high == 1:
+            self.check = QCheckBox()
+            self.check.setAccessibleName(text(f"control.{control.key}"))
+            self.check.setToolTip(text(f"control.{control.key}.about"))
+            _ = self.check.toggled.connect(self._toggled)
         self.control: controls.Control = control
         self.window: MainWindow = window
         about = text(f"control.{control.key}.about")
@@ -442,14 +448,24 @@ class _ControlRow:
     def place(self, grid: QGridLayout, row: int) -> None:
         """Put the row's widgets into ``grid``."""
         grid.addWidget(self.label, row, 0)
-        grid.addWidget(self.slider, row, 1)
-        grid.addWidget(self.number, row, 2)
+        if self.check is not None:
+            self.slider.hide()
+            self.number.hide()
+            grid.addWidget(self.check, row, 1, 1, 2)
+        else:
+            grid.addWidget(self.slider, row, 1)
+            grid.addWidget(self.number, row, 2)
         grid.addWidget(self.reset, row, 3)
 
     def refresh(self, value: int, *, changed: bool, enabled: bool) -> None:
         """Show ``value``; mark a value changed from the world type."""
         _ = self.slider.blockSignals(True)  # noqa: FBT003 - Qt's own call
         _ = self.number.blockSignals(True)  # noqa: FBT003 - Qt's own call
+        if self.check is not None:
+            _ = self.check.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+            self.check.setChecked(bool(value))
+            self.check.setEnabled(enabled)
+            _ = self.check.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.slider.setValue(self.control.position(value))
         self.number.setValue(self.control.shown(value))
         _ = self.slider.blockSignals(False)  # noqa: FBT003 - Qt's own call
@@ -463,6 +479,9 @@ class _ControlRow:
 
     def _slid(self, position: int) -> None:
         self.window.controller.set_value(self.control.key, self.control.value_at(position))
+
+    def _toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox signal
+        self._typed(float(checked))
 
     def _typed(self, shown: float) -> None:
         self.window.controller.set_value(self.control.key, self.control.stored(shown))
@@ -1096,6 +1115,7 @@ class MainWindow(QMainWindow):
         head.addWidget(self.customize_button)
         head.addWidget(self.customized, 1)
         layout.addLayout(head)
+        self.control_sections: dict[str, QGroupBox] = {}
         self.customize_box = QWidget()
         box = QVBoxLayout(self.customize_box)
         hint = QLabel(text("customize_hint"))
@@ -1104,6 +1124,7 @@ class MainWindow(QMainWindow):
         box.addWidget(hint)
         for group in controls.GROUPS:
             section = QGroupBox(text(f"group.{group}"))
+            self.control_sections[group] = section
             grid = QGridLayout(section)
             grid.setColumnStretch(1, 1)
             offset = 0
@@ -1714,6 +1735,7 @@ class MainWindow(QMainWindow):
             self.code_edit.setText(controller.code)
         self.notice.setText(controller.notice)
         self.notice.setVisible(bool(controller.notice))
+        self.control_sections["wall"].setVisible(controller.preset == "wall")
         for row in self.rows:
             key = row.control.key
             row.refresh(controller.value(key), changed=key in controller.changes, enabled=not busy)

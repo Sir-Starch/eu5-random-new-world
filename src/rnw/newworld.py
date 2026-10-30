@@ -1,7 +1,7 @@
 """Generate a complete New World inside an arbitrary domain mask (T3, game-independent).
 
-The domain is the set of pixels that may be replaced. A ring of ocean is kept along its
-border so generated seas meet the surrounding (protected) ocean. The map wrap is
+The domain is the set of pixels that may be replaced. Ocean margins protect the surrounding
+Old World and the longitudinal canvas borders; land may reach the polar map edges. The map wrap is
 inside this continuous crop and imposes no coast or land budget. Land carries a
 continuous relief field (``relief.py``); the highest cells become wastelands. Everything
 is integer arithmetic driven by named SplitMix64 streams, so equal inputs give equal
@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw import _native
+from rnw import _native, wall
 from rnw.fields import warped_noise
 from rnw.landmask import LandMaskError
 from rnw.model import CellClass
@@ -164,12 +164,13 @@ def land_stage(
     domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Return land, ocean, lake masks and the shaped elevation."""
+    if settings.landform:
+        return _wall_land(domain, seed, settings)
     margin = settings.coast_margin_px
     ramp = EDGE_RAMP_MARGINS * margin
     shift_px = EDGE_SHIFT_RAMPS * ramp
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
     guard = ~domain
-    guard[[0, -1], :] = True
     guard[:, [0, -1]] = True
     relief = _field(
         seed,
@@ -206,6 +207,19 @@ def land_stage(
     del relief, offset, guard, open_shore
     land &= _large_parts(land, settings.min_island_px)
     return (*_classify(domain, land, shore, settings), elevation)
+
+
+def _wall_land(
+    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
+    """Build the barrier before classification; ordinary geography supplies the side land."""
+    centre, half = wall.geometry(domain, settings)
+    sides = domain.copy()
+    gap = half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
+    sides[:, max(0, centre - gap) : centre + gap + 1] = False
+    land, _, _, elevation = land_stage(sides, seed, replace(settings, landform=0))
+    land |= wall.coast(domain, seed, settings)
+    return (*_classify(domain, land, _off_limits(domain, settings), settings), elevation)
 
 
 def _classify(
@@ -247,7 +261,6 @@ def _land_from_mask(
     """
     margin = settings.coast_margin_px
     guard = ~domain
-    guard[[0, -1], :] = True
     guard[:, [0, -1]] = True
     shore = distance_from(guard, margin, octagonal=True) < margin
     del guard
@@ -284,9 +297,8 @@ def _land_from_mask(
 
 def _off_limits(domain: NDArray[np.bool_], settings: NewWorldSettings) -> NDArray[np.bool_]:
     """Pixels where no land may be added after the coasts are drawn: a coast margin from what
-    lies outside the domain and from the border."""
+    lies outside the domain and from the longitudinal borders."""
     guard = ~domain
-    guard[[0, -1], :] = True
     guard[:, [0, -1]] = True
     return distance_from(guard, settings.coast_margin_px, octagonal=True) < settings.coast_margin_px
 
@@ -651,6 +663,9 @@ def generate_new_world(
     if drawn is None:
         land, ocean, lakes, _ = land_stage(domain, seed, settings)
     else:
+        if settings.landform:
+            message = "The Wall cannot be combined with a drawn land mask"
+            raise LandMaskError(message)
         land, ocean, lakes = _land_from_mask(domain, drawn, settings)
     land, ocean, _ = pinch(land, ocean, _off_limits(domain, settings))
     with Stages(stage_workers()) as stages:
@@ -679,6 +694,8 @@ def generate_new_world(
         relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed))
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
         land_cells, sea_cells, relief = land_job.result(), sea_job.result(), relief_job.result()
+    if settings.landform:
+        wall.add_relief(relief, land, domain, seed, settings)
     del ocean, lakes, land
     labels = np.full(domain.shape, -1, dtype=np.int32)
     kinds: list[CellClass] = []
@@ -702,6 +719,21 @@ def generate_new_world(
     ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
     for index in ranked[:wasteland]:
         kinds[index] = CellClass.WASTELAND
+    if settings.landform:
+        # Polar end locations are impassable, while the shelves remain playable.
+        polar = np.unique(labels[[0, -1], :])
+        for index in polar.tolist():
+            if index >= 0 and kinds[index] is CellClass.LAND:
+                kinds[index] = CellClass.WASTELAND
+        centre, _ = wall.geometry(domain, settings)
+        if (
+            not settings.wall_allow_gaps
+            and not np.isin(
+                labels[:, centre], [i for i, kind in enumerate(kinds) if kind in LAND_KINDS]
+            ).all()
+        ):
+            message = "The Wall lost its continuous land barrier during cell construction"
+            raise ValueError(message)
     return derive_world(labels, tuple(kinds), relief)
 
 

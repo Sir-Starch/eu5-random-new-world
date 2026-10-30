@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''Aléatoire'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''Un des cinq types de monde, tiré au sort lorsqu'on le choisit et à chaque pression sur le bouton Aléatoire. Les valeurs Avancé sont celles du type tiré.'''
+source = "ffef648f7e7c728b"
+text = "Un des types de monde, tiré au sort lorsqu'on le choisit et à chaque pression sur le bouton Aléatoire. Les valeurs Avancé sont celles du type tiré."
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "Laine"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "Poids relatif de placement par rapport au jeu de base. 0 retire cette ressource."
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "Le Mur"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "Un continent droit du nord au sud, avec une chaîne montagneuse et des terres sur les côtés. Les côtes procédurales peuvent former des îles et des détroits si les coupures sont autorisées."
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "Le Mur"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "Largeur du mur"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "Largeur maximale en proportion de la zone de génération."
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "Position du mur"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "Position d’ouest en est dans le corridor polaire disponible."
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "Découpage des côtes"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "Importance des baies, îles et variations côtières dans la bande rectiligne du continent."
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "Chaîne montagneuse"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "Hauteur de la chaîne montagneuse longitudinale."
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "Autoriser les coupures du mur"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "Le champ de densité peut former des îles et des passages maritimes. Désactivez pour imposer un cœur continu. La quantité de terre, l’échelle et les côtes façonnent le résultat."

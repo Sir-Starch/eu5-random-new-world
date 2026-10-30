@@ -46,9 +46,9 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
 - **Continental variety:** develop more realistic lakes, inland seas, narrow land
   connections and coastal formations, including the Gdańsk/Crimea-like examples
   requested by the owner. Design their representation with hydrology and sea routes.
-- **The Wall preset:** add a selectable landmass preset with a long, narrow
-  north–south continental barrier inspired by the EU4 RNW scenario
-  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtciacccl1h/)).
+- **The Wall preset:** implemented for the pending 1.1.0 cycle: a procedural straight
+  north-south continent or island chain, optional natural gaps, a mountain spine,
+  polar wasteland endpoints and side land, with shape controls in both windows. See [terrain](terrain-biomes.md#the-wall).
 - **Ready-made fantasy maps:** add land-shape presets such as a Kerbin-inspired
   map within the New World generation area, using the existing land-mask workflow.
   Verify that workflow alongside the presets

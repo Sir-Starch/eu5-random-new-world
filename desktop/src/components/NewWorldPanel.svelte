@@ -175,17 +175,25 @@
     {#each groups as group (group)}
       {@const members = controls.filter((c) => c.group === group && n?.values[c.key])}
       {@const changed = members.filter((c) => n?.values[c.key]?.changed).length}
+      {#if members.length}
       <Section id={`new.group.${group}`} title={t(`group.${group}`)}>
         {#snippet aside()}{#if changed}<span class="changed">{t("custom_some", { count: changed })}</span>{/if}{/snippet}
         {#if group === "resources"}<p class="hint">{t("group.resources.about")}</p>{/if}
         <div class="values">
           {#each members as control (control.key)}
             {#if n?.values[control.key]}
-              <ValueField {control} value={n.values[control.key]} disabled={busy} />
+              {#if control.toggle}
+                <Check checked={n.values[control.key].shown > 0} disabled={busy}
+                  label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
+                  onchange={(value) => app.call("set_value", { key: control.key, value: value ? 1 : 0 })} />
+              {:else}
+                <ValueField {control} value={n.values[control.key]} disabled={busy} />
+              {/if}
             {/if}
           {/each}
         </div>
       </Section>
+      {/if}
     {/each}
   {:else}
     <Section id="new.output" title={t("output")}>

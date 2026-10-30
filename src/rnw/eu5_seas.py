@@ -357,6 +357,7 @@ def shape_water(coast: Coast) -> Water:
     """Choose the lanes, fold the shut deep water into zones, and give the lanes their currents."""
     waters = analyse(coast.world, coast.shore)
     original_topography = waters.topography
+    original_scale = waters.scale
     chosen = plan_lanes(
         coast.world, waters, coast.courses, coast.samples, coast.docks, preferred=coast.designed
     )
@@ -379,7 +380,9 @@ def shape_water(coast: Coast) -> Water:
         Topography.OCEAN_WASTELAND if cell in zones else kinds[cell]
         for cell in range(len(world.classes))
     )
-    waters = replace(waters, topography=topography)
+    # Folding changes location areas, not physical route openings. Retain the scale
+    # used to construct the lanes so a valid opening cannot become too narrow.
+    waters = replace(waters, topography=topography, scale=original_scale)
     if any(waters.topography[cell] is not Topography.DEEP_OCEAN for cell in lanes):
         message = "A planned ocean lane is not deep water"
         raise SeaError(message)

@@ -72,7 +72,6 @@ def land_model(
     shift_px = EDGE_SHIFT_RAMPS * ramp
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
     sources = ~domain
-    sources[[0, -1], :] = True
     sources[:, [0, -1]] = True
     guard = sources.copy()
     relief = _field(

@@ -81,7 +81,9 @@ def sketch(game_dir: Path, settings: Settings, seeds: list[int]) -> list[Candida
     shape = settings.new_world
     canvas = run_stage(
         "select canvas",
-        lambda: select_canvas(game_map, shape.ocean_band_px, expanded=bool(shape.expand_oceans)),
+        lambda: select_canvas(
+            game_map, shape.ocean_band_px, expanded=bool(shape.expand_oceans or shape.landform)
+        ),
     )
     found: list[Candidate] = []
     with running("candidates"):

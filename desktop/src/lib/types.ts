@@ -1,6 +1,7 @@
 // The data the bridge sends (rnw/gui/view.py); the names are the bridge's.
 
 export interface ControlInfo {
+  toggle?: boolean;
   key: string;
   group: string;
   low: number;

@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''무작위'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''다섯 가지 세계 유형 중 하나를 고를 때와 무작위 버튼을 누를 때마다 무작위로 뽑습니다. 고급 값은 뽑힌 유형의 값입니다.'''
+source = "ffef648f7e7c728b"
+text = "여러 세계 유형 중 하나를 고를 때와 무작위 버튼을 누를 때마다 무작위로 뽑습니다. 고급 값은 뽑힌 유형의 값입니다."
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "양모"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "기본 게임 대비 상대적인 배치 가중치입니다. 0이면 이 자원이 배치되지 않습니다."
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "장벽"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "산맥과 양옆의 육지가 있는 곧은 남북 대륙입니다. 단절을 허용하면 절차적 해안에서 섬과 좁은 해협이 생길 수 있습니다."
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "장벽"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "장벽 너비"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "생성 영역 대비 최대 너비 비율입니다."
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "장벽 위치"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "사용 가능한 극지 회랑 안에서 서쪽에서 동쪽으로의 위치입니다."
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "해안 굴곡"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "곧은 대륙 띠 안에서 만, 섬, 해안 변화가 나타나는 정도입니다."
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "중앙 산맥"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "세로로 이어지는 산맥의 높이입니다."
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "장벽 단절 허용"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "밀도장이 섬과 바닷길을 만들도록 허용합니다. 끄면 육지 중심부가 이어집니다. 육지량, 규모, 해안 굴곡이 결과를 결정합니다."

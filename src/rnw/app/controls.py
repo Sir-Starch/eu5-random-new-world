@@ -91,6 +91,19 @@ class Control:
 
 
 CONTROLS: Final[tuple[Control, ...]] = (
+    Control("new_world.wall_allow_gaps", "wall", 0, 1),
+    Control(
+        "new_world.wall_width_permille", "wall", 40, 140, factor=10, decimals=1, unit="percent"
+    ),
+    Control(
+        "new_world.wall_position_permille", "wall", 0, 1000, factor=10, decimals=1, unit="percent"
+    ),
+    Control(
+        "new_world.wall_coast_permille", "wall", 0, 1000, factor=10, decimals=1, unit="percent"
+    ),
+    Control(
+        "new_world.wall_ridge_permille", "wall", 0, 1000, factor=10, decimals=1, unit="percent"
+    ),
     Control("new_world.land_permille", "land", 150, 600, factor=10, decimals=1, unit="percent"),
     Control("new_world.feature_px", "land", 250, 4000, logarithmic=True, unit="px"),
     Control("new_world.min_island_px", "land", 100, 8000, logarithmic=True, unit="px"),
@@ -129,7 +142,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     ),
 )
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
-GROUPS: Final[tuple[str, ...]] = ("land", "map", "peoples", "resources")
+GROUPS: Final[tuple[str, ...]] = ("wall", "land", "map", "peoples", "resources")
 # The Advanced tab's controls: all of them but the ocean checkbox, which the new-world page holds.
 ADVANCED: Final[tuple[Control, ...]] = tuple(
     control for control in CONTROLS if control.field != "expand_oceans"
@@ -139,10 +152,14 @@ ADVANCED: Final[tuple[Control, ...]] = tuple(
 def estimated_locations(settings: Settings) -> int:
     """Locations the world of ``settings`` will have, roughly (within about 600, C118)."""
     world = settings.new_world
-    land_area = 48_000 if world.expand_oceans else LAND_CELLS
-    sea_area = 50_000 if world.expand_oceans else SEA_ZONES
-    land = land_area * world.land_permille // (world.location_px * world.location_px)
-    water = 1000 - world.land_permille
+    land_area = 48_000 if world.expand_oceans or world.landform else LAND_CELLS
+    sea_area = 50_000 if world.expand_oceans or world.landform else SEA_ZONES
+    # Side land plus the widest possible Wall envelope: a conservative upper bound.
+    share = min(
+        800, world.land_permille + (world.wall_width_permille * 3 // 2 if world.landform else 0)
+    )
+    land = land_area * share // (world.location_px * world.location_px)
+    water = 1000 - share
     sea = sea_area * water // (world.sea_zone_px * world.sea_zone_px)
     return OUTSIDE_LOCATIONS + land + sea + LAKES
 

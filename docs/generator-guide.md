@@ -155,3 +155,20 @@ Those worlds are not bundled in the Workshop hub (C441).
 finds neither a matching installed mod nor a kept built-mod folder for it. Codes,
 notes and available pictures can remain usable. Add to the game regenerates when
 needed; retain the original game inputs/version when exact reproduction matters.
+
+### The Wall preset
+
+Choose **The Wall** (Стена) for a thin, straight north-south continent or island
+chain. A single procedural density field makes the coast, islands and possible narrow
+straits; their number emerges from the seed and settings. **Allow gaps in the wall**
+is enabled by default. Disable it to require a continuous land core that ships cannot
+cross or sail around. The polar ends reach the map edges and have impassable locations.
+Extra continents and islands can appear on either side.
+
+Advanced → The Wall controls width, position, coastal irregularity, mountain spine
+and whether gaps are permitted. Land amount, scale and noise settings shape the Wall
+as well as the extra land. This preset uses the expanded ocean canvas and cannot be
+combined with a land image.
+
+Ordinary presets and land images can also reach the polar map edges; they no longer
+have a mandatory ocean strip there.

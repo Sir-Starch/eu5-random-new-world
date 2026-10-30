@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''随机'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''从五种世界类型中随机抽取一种，选择时及每次点击“随机”时重新抽取。高级设置取抽中类型的值。'''
+source = "ffef648f7e7c728b"
+text = "从各种世界类型中随机抽取一种，选择时及每次点击“随机”时重新抽取。高级设置取抽中类型的值。"
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "羊毛"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "相对于原版的分布权重。设为0可移除此资源。"
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "高墙"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "笔直南北延伸的大陆，带有山脉和两侧陆地。允许断裂时，程序生成的海岸可能形成岛屿和狭窄海峡。"
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "高墙"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "高墙宽度"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "最大宽度占生成区域的比例。"
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "高墙位置"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "在可用极地走廊内从西到东的位置。"
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "海岸曲折度"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "笔直大陆带内海湾、岛屿和海岸变化的强度。"
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "纵向山脉"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "纵向山脉的高度。"
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "允许高墙断裂"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "允许密度场形成岛屿和海上通道。关闭后确保陆地核心连续。陆地量、尺度和海岸曲折度共同决定结果。"

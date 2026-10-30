@@ -85,6 +85,7 @@ def static(controller: Controller) -> dict[str, object]:
                 "steps": controls.STEPS,
                 "logarithmic": control.logarithmic,
                 "advanced": control in controls.ADVANCED,
+                "toggle": control.low == 0 and control.high == 1,
                 "default": control.shown(control.default(preset)),
             }
             for control in controls.CONTROLS
@@ -256,6 +257,8 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     busy = c.busy
     values: dict[str, object] = {}
     for control in controls.CONTROLS:
+        if control.group == "wall" and c.preset != "wall":
+            continue
         value = c.value(control.key)
         default = control.default(c.preset)
         values[control.key] = {

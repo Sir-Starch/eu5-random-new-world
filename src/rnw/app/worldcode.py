@@ -101,6 +101,12 @@ CHANGE_FIELDS: Final[tuple[str, ...]] = (
     "resources.tobacco",
     "resources.wild_game",
     "resources.wool",
+    "new_world.landform",
+    "new_world.wall_width_permille",
+    "new_world.wall_position_permille",
+    "new_world.wall_coast_permille",
+    "new_world.wall_ridge_permille",
+    "new_world.wall_allow_gaps",
 )
 FIELD_NUMBERS: Final[dict[str, int]] = {name: number for number, name in enumerate(CHANGE_FIELDS)}
 ALPHABET: Final[str] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
@@ -114,6 +120,7 @@ PRESET_IDS: Final[dict[str, int]] = {
     "supercontinent": 3,
     "small_continents": 4,
     "islands": 5,
+    "wall": 6,
 }
 HEAD: Final[struct.Struct] = struct.Struct(">BBQBBBB")
 SEPARATORS: Final[re.Pattern[str]] = re.compile(r"[\s\-_]+")

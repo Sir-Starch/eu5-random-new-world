@@ -94,6 +94,13 @@ class NewWorldSettings:
     precious_permille: int = 1000
     # 1: a fixed ocean sector; 0: the original distance band around vanilla America.
     expand_oceans: int = 1
+    # 0: ordinary geography; 1: a continuous north-south barrier (The Wall).
+    landform: int = 0
+    wall_width_permille: int = 70
+    wall_position_permille: int = 700
+    wall_coast_permille: int = 600
+    wall_ridge_permille: int = 800
+    wall_allow_gaps: int = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -222,6 +229,26 @@ class Settings:
         data = cast("dict[str, object]", asdict(self))
         coast = cast("dict[str, object]", data["coast"])
         coast["window"] = list(self.coast.window)
+        # Keep pre-Wall settings documents byte-identical, including old world codes.
+        world = cast("dict[str, object]", data["new_world"])
+        defaults = {
+            "landform": 0,
+            "wall_width_permille": 70,
+            "wall_position_permille": 700,
+            "wall_coast_permille": 600,
+            "wall_ridge_permille": 800,
+            "wall_allow_gaps": 1,
+        }
+        for key in (
+            "landform",
+            "wall_width_permille",
+            "wall_position_permille",
+            "wall_coast_permille",
+            "wall_ridge_permille",
+            "wall_allow_gaps",
+        ):
+            if world[key] == defaults[key]:
+                del world[key]
         if self.rolls == ROLLS:
             del data["rolls"]
         if self.mask == MASK:
@@ -262,6 +289,12 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "province_size": (1, 32),
     "ocean_band_px": (0, 8192),
     "expand_oceans": (0, 1),
+    "landform": (0, 1),
+    "wall_width_permille": (40, 140),
+    "wall_position_permille": (0, 1000),
+    "wall_coast_permille": (0, 1000),
+    "wall_ridge_permille": (0, 1000),
+    "wall_allow_gaps": (0, 1),
     "population_permille": (0, 5000),
     "hearths_per_10k": (0, 100),
     "hearth_reach_steps": (1, 100),
@@ -426,8 +459,20 @@ PRESETS["islands"] = replace(
     ),
     natives=replace(NATIVES, hearths_per_10k=10, religion_locations=50),
 )
+PRESETS["wall"] = replace(
+    PRESETS["continents"],
+    preset="wall",
+    new_world=replace(
+        PRESETS["continents"].new_world,
+        landform=1,
+        land_permille=250,
+        feature_px=1000,
+        location_px=53,
+    ),
+)
 # English names, for a mod's metadata and the window's default text.
 TITLES: Final[dict[str, str]] = {
+    "wall": "The Wall",
     "supercontinent": "Supercontinent",
     "continents": "Continents",
     "small_continents": "Small continents",
@@ -436,6 +481,7 @@ TITLES: Final[dict[str, str]] = {
 }
 # The order in which the generator's window offers them.
 WORLD_TYPES: Final[tuple[str, ...]] = (
+    "wall",
     "supercontinent",
     "continents",
     "small_continents",
@@ -517,7 +563,7 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
     if synthetic.old_world_columns * 2 > synthetic.width:
         message = "Setting old_world_columns must leave at least half of the canvas"
         raise SettingsError(message)
-    return Settings(
+    resolved = Settings(
         preset=name,
         synthetic=synthetic,
         geography=_merge(base.geography, "geography", data.get("geography", {})),
@@ -528,6 +574,11 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         mask=_merge(base.mask, "mask", data.get("mask", {})),
         resources=_merge(base.resources, "resources", data.get("resources", {})),
     )
+
+    if resolved.new_world.landform and resolved.mask.id:
+        message = "The Wall cannot be combined with a drawn land mask"
+        raise SettingsError(message)
+    return resolved
 
 
 def load_settings(preset: str, path: Path | None) -> Settings:

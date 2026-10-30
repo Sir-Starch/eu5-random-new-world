@@ -35,7 +35,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 
 | Stage | Module | Method |
 |---|---|---|
-| 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
+| 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (protected-domain or longitudinal canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
 | 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow noise zero lines (belts) whose width and edges vary, cut into segments by a presence noise, with ridged crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
 | 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation within the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
@@ -136,3 +136,63 @@ bounds, local numeric/visual comparison and remaining engine uncertainty are in
 058. Neither biome grouping alone nor a height-source plot proves final game
 appearance. No engine files are patched and no derived game resources are shipped
 with the generator.
+
+## The Wall
+
+The pending 1.1.0 / epoch 60 cycle adds `--preset wall` (The Wall; Russian: Стена).
+The owner requested a straight thin continent spanning every row on 2026-10-30,
+using their EU4 screenshots as visual references. Online player descriptions call
+this EU4 fantasy scenario [The Wall](https://www.reddit.com/r/eu4/comments/1ivh48m/),
+while [The Line](https://www.reddit.com/r/eu4/comments/x7z8ui/) also occurs. These are
+community names, not verified official localization identifiers [SOURCE, accessed
+2026-10-30]. No EU4 assets or tile data are included.
+
+`wall.py` finds a full-height corridor in the installed game's expanded canvas,
+keeping all protected pixels intact, and places a straight continental envelope there.
+One seeded, multi-octave land-density field defines the coast within that envelope.
+Land amount shifts its sea level, feature size and octaves set its scale, and coastal
+irregularity sets its strength. The same field can produce continuous land, coastal
+islands, an island chain or an intermediate shape. Density saddles may form narrow
+navigable straits. No scenario is selected and no count or probability of passages
+is prescribed. **Allow gaps in the wall** is enabled by default; disabling it imposes
+a continuous straight land core on the same field. The polar endpoints remain land.
+
+Ordinary geography supplies secondary land outside an ocean gap on either side.
+The regular relief, climate, rivers, locations, societies and content pipeline runs
+on the result; a longitudinal mountain spine adds the scenario's defining relief.
+Locations touching the polar endpoints become wasteland. Construction rejects a
+canvas too narrow for the requested envelope or a drawn-mask combination. With gaps
+disabled, it verifies that the final cell raster retains its continuous land column.
+
+Both windows expose the gap checkbox plus maximum width (4–14% of canvas width),
+west-to-east position within the available polar corridor, coastal irregularity and
+ridge height under Advanced → The Wall. Land share, feature scale and noise settings
+shape both the Wall and the side land. The preset requires the expanded canvas. Its
+world codes preserve every control.
+
+At the owner's request, ordinary and image-based generation also permit land to
+reach the north and south map edges. Those edges no longer impose an ocean guard;
+protected pixels and longitudinal margins still do. Polar water connects to ocean
+only through actual ocean outlets; isolated polar basins follow the same lake
+classification as other enclosed water. Ordinary worlds do not guarantee polar land.
+
+The full Wall export also exposed a route-scale defect: folding closed ocean zones
+changed the median cell size and could invalidate an already constructed narrow
+route opening. Water planning now retains the physical scale used to build routes;
+validators still reject closed or incomplete routes.
+
+[V-EXEC, 2026-10-30] On EU5 1.4.6 / build 26300913, the default Wall seed 9
+exports 864 nonmetadata files (`0cd08894…79e8c7f`). The full export reports zero
+split generated cells, unreachable sea zones, land cells without port access or
+lost Old World contacts. The density field naturally leaves a narrow cross-wall
+water opening in this seed. Synthetic checks cover continuous-core enforcement,
+polar endpoints, seed variation, strip equality, increased land density, emergent
+gaps and isolated polar basins. Both windows expose the translated controls;
+all eleven installed-game language catalogues are current. Full checks pass
+(2,244 Python tests, 15 optional skips; 23 native Rust tests), as do desktop checks
+(14 interface tests, five Rust shell tests), native/Windows package self-tests and
+the installed-game suite (14 tests, one opt-in skip), including independent reference
+reproduction. The pending epoch-60 reference now has 867 files / `94fcf2d4…77a4bcc`;
+the frozen epoch-59 reference is untouched. See [installation record](../experiments/INSTALLED.md)
+for the new world and backed-up hub. Evidence stays under ignored `local_data/the-wall/`.
+These are offline results; no EU5 launch or new engine observation is claimed.

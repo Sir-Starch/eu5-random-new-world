@@ -2566,7 +2566,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         lambda: select_canvas(
             game_map,
             settings.new_world.ocean_band_px,
-            expanded=bool(settings.new_world.expand_oceans),
+            expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
         ),
     )
     width = int(game_map.labels.shape[1])
@@ -2670,7 +2670,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 physical=physical,
                 biomes=weathering.result()[0],
             )
-            if settings.new_world.expand_oceans:
+            if settings.new_world.expand_oceans or settings.new_world.landform:
                 plan.oceans = plan_oceans(
                     game_map, canvas, world, plan, hierarchy, shapes.zones, loc_keys
                 )

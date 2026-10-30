@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''Случайный'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''Один из пяти типов мира, выбранный наугад при выборе и при каждом нажатии кнопки «Случайное». Значения вкладки «Подробно» — те, что у выбранного типа.'''
+source = "ffef648f7e7c728b"
+text = "Один из типов мира, выбранный наугад при выборе и при каждом нажатии кнопки «Случайное». Значения вкладки «Подробно» — те, что у выбранного типа."
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "Шерсть"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "Относительный вес размещения по сравнению с ванилью. 0 исключает этот ресурс."
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "Стена"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "Прямой материк с севера на юг, с горным хребтом и сушей по бокам. Процедурные берега могут образовывать острова и узкие проливы, если разрешены разрывы."
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "Стена"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "Ширина стены"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "Максимальная ширина в процентах от области генерации."
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "Положение стены"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "Положение с запада на восток внутри доступного полярного коридора."
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "Изрезанность берегов"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "Выраженность заливов, островов и разнообразия берегов в пределах прямой полосы материка."
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "Горный хребет"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "Высота продольной горной цепи."
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "Разрешить разрывы стены"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "Поле плотности суши может образовывать острова и морские проходы. Выключите для непрерывной основы материка. Результат зависит от количества суши, масштаба и изрезанности берегов."

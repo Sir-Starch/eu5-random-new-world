@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add The Wall: a procedural straight north-south continent or island chain with a mountain spine,
+  impassable polar end locations, procedural coasts and extra continents/islands on
+  either side. Natural straits emerge from the density field, seed and geography
+  settings; a checkbox can require continuous land. Both windows offer width, position,
+  coastal irregularity and ridge height controls; world codes preserve them. Remove mandatory polar ocean margins
+  from ordinary and image-based generation so land can naturally reach the map edges.
+
 - Keep the window responsive while choosing worlds: compare game inputs in the background,
   reuse file hashes and game names, calculate the Tauri map's relief and region names in a
   worker, and draw classic-window maps on demand with only the latest request queued.

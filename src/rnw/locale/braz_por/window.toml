@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''Aleatório'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''Um dos cinco tipos de mundo, sorteado ao ser escolhido e a cada pressão no botão Aleatória. Os valores Avançado são os do tipo sorteado.'''
+source = "ffef648f7e7c728b"
+text = "Um dos tipos de mundo, sorteado ao ser escolhido e a cada pressão no botão Aleatória. Os valores Avançado são os do tipo sorteado."
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "Lã"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "Peso relativo de distribuição em relação ao jogo base. 0 remove este recurso."
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "A Muralha"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "Um continente reto de norte a sul, com uma cordilheira e terras dos dois lados. As costas procedurais podem formar ilhas e estreitos se interrupções forem permitidas."
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "A Muralha"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "Largura da muralha"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "Largura máxima como proporção da área de geração."
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "Posição da muralha"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "Posição de oeste a leste dentro do corredor polar disponível."
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "Irregularidade costeira"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "Intensidade de baías, ilhas e variações costeiras dentro da faixa reta do continente."
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "Cordilheira central"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "Altura da cordilheira longitudinal."
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "Permitir interrupções na muralha"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "O campo de densidade pode formar ilhas e passagens marítimas. Desative para exigir um núcleo contínuo. A quantidade de terra, a escala e as costas definem o resultado."

@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''Rastgele'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''Beş dünya türünden biri; seçildiğinde ve her Rastgele basışında çekilir. Gelişmiş değerler çekilen türün değerleridir.'''
+source = "ffef648f7e7c728b"
+text = "Dünya türlerinden biri; seçildiğinde ve her Rastgele basışında çekilir. Gelişmiş değerler çekilen türün değerleridir."
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "Yün"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "Temel oyuna göre göreli yerleşim ağırlığı. 0 bu kaynağı kaldırır."
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "Duvar"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "Dağ sırası ve yanlarında karalar bulunan düz bir kuzey-güney kıtası. Boşluklara izin verilirse prosedürel kıyılar adalar ve dar boğazlar oluşturabilir."
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "Duvar"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "Duvar genişliği"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "Üretim alanının oranı olarak azami genişlik."
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "Duvar konumu"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "Kullanılabilir kutup koridoru içinde batıdan doğuya konum."
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "Kıyı girintileri"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "Düz kıta şeridi içindeki koyların, adaların ve kıyı çeşitliliğinin belirginliği."
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "Dağ sırası"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "Boyuna uzanan dağ zincirinin yüksekliği."
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "Duvarda boşluklara izin ver"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "Yoğunluk alanı adalar ve deniz geçitleri oluşturabilir. Kesintisiz kara çekirdeği için kapatın. Kara miktarı, ölçek ve kıyı girintileri sonucu belirler."

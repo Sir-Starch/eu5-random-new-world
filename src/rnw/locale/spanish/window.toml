@@ -399,8 +399,8 @@ source = "67bc484430fe87ba"
 text = '''Aleatorio'''
 
 ["type.random.about"]
-source = "a3b72a5d39f009d1"
-text = '''Uno de los cinco tipos de mundo, sorteado al elegirlo y en cada pulsación de Aleatoria. Los valores Avanzado son los del tipo sorteado.'''
+source = "ffef648f7e7c728b"
+text = "Uno de los tipos de mundo, sorteado al elegirlo y en cada pulsación de Aleatoria. Los valores Avanzado son los del tipo sorteado."
 
 ["type.chaos"]
 source = "2e113a659e47144a"
@@ -2455,3 +2455,55 @@ text = "Lana"
 ["control.resources.wool.about"]
 source = "315ae64b7c4b8091"
 text = "Peso relativo de distribución respecto al juego base. 0 elimina este recurso."
+
+["type.wall"]
+source = "e302f89b5d80c74c"
+text = "El Muro"
+
+["type.wall.about"]
+source = "ca86859f0c629220"
+text = "Un continente recto de norte a sur, con una cordillera y tierras a ambos lados. Las costas procedurales pueden formar islas y estrechos si se permiten interrupciones."
+
+["group.wall"]
+source = "e302f89b5d80c74c"
+text = "El Muro"
+
+["control.new_world.wall_width_permille"]
+source = "7587d042711fcdc6"
+text = "Anchura del muro"
+
+["control.new_world.wall_width_permille.about"]
+source = "b4e05557c2811aba"
+text = "Anchura máxima como proporción de la zona de generación."
+
+["control.new_world.wall_position_permille"]
+source = "0dd527cf2049760f"
+text = "Posición del muro"
+
+["control.new_world.wall_position_permille.about"]
+source = "d93e0e8f69420f5e"
+text = "Posición de oeste a este dentro del corredor polar disponible."
+
+["control.new_world.wall_coast_permille"]
+source = "8b5e30417714cb5b"
+text = "Irregularidad costera"
+
+["control.new_world.wall_coast_permille.about"]
+source = "baf46134e0eb032f"
+text = "Intensidad de bahías, islas y variación costera dentro de la franja recta del continente."
+
+["control.new_world.wall_ridge_permille"]
+source = "2b3a0d92299882f8"
+text = "Cordillera central"
+
+["control.new_world.wall_ridge_permille.about"]
+source = "9951cccbe63b5be5"
+text = "Altura de la cordillera longitudinal."
+
+["control.new_world.wall_allow_gaps"]
+source = "e0a2ff291ed6da8a"
+text = "Permitir interrupciones del muro"
+
+["control.new_world.wall_allow_gaps.about"]
+source = "0f6122a6366c9748"
+text = "El campo de densidad puede formar islas y pasos marítimos. Desactiva para exigir un núcleo continuo. La cantidad de tierra, la escala y las costas determinan el resultado."

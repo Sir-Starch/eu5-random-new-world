@@ -184,6 +184,7 @@ def test_ocean_folding_keeps_the_classification_used_to_plan_lanes(
         frozenset(),
         0,
     )
+    original_scale = analyse(world).scale
     calls = 0
 
     def changing_analysis(world: NewWorld, shore: Collection[int] = ()) -> Waters:
@@ -193,6 +194,7 @@ def test_ocean_folding_keeps_the_classification_used_to_plan_lanes(
         if calls == 2:
             result = replace(
                 result,
+                scale=result.scale * 3,
                 topography=tuple(
                     Topography.OCEAN if kind is Topography.DEEP_OCEAN else kind
                     for kind in result.topography
@@ -203,6 +205,7 @@ def test_ocean_folding_keeps_the_classification_used_to_plan_lanes(
     monkeypatch.setattr(eu5_seas, "analyse", changing_analysis)
     result = shape_water(coast)
     assert calls == 2
+    assert result.waters.scale == original_scale
     assert result.lanes
     assert result.zones
     assert all(result.waters.topography[n] is Topography.DEEP_OCEAN for n in result.lanes)

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
-from rnw.app import library, service
+from rnw.app import library, random_types, service
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
@@ -359,8 +359,8 @@ def test_the_new_world_page_shows_types_and_needs_a_game(
     """Every world type is offered; without a game, Generate is off and says why."""
     window = _window(tmp_path, fake_export, game=False)
     assert window.stack.currentWidget() is window.new_page
-    assert window.type_choice.count() == 7
-    window.type_choice.setCurrentIndex(5)
+    assert window.type_choice.count() == len(random_types.CHOICES)
+    window.type_choice.setCurrentIndex(random_types.CHOICES.index("archipelago"))
     assert window.controller.preset == "archipelago"
     assert window.controller.mode is None
     assert not window.generate_button.isEnabled()
@@ -1140,3 +1140,24 @@ def test_resource_sliders_save_independently_in_the_world_code_and_reset(
     window.reset_all.click()
     pump(lambda: not window.controller.changes)
     _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_wall_shape_controls_appear_when_the_wall_is_selected(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    window = _window(tmp_path, fake_export)
+    try:
+        assert window.control_sections["wall"].isHidden()
+        window.controller.set_preset("wall")
+        assert not window.control_sections["wall"].isHidden()
+        toggle = next(row for row in window.rows if row.control.field == "wall_allow_gaps")
+        assert toggle.check is not None
+        toggle.check.setChecked(False)
+        assert not decode(window.controller.code).settings().new_world.wall_allow_gaps
+        row = next(row for row in window.rows if row.control.field == "wall_width_permille")
+        row.number.setValue(11.0)
+        assert window.controller.value(row.control.key) == 110
+        assert decode(window.controller.code).settings().new_world.wall_width_permille == 110
+    finally:
+        _ = window.close()
