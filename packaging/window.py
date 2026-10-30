@@ -103,7 +103,12 @@ def crates(target: str | None = None) -> list[dict[str, object]]:
     if target is not None:
         command += ["--filter-platform", target]
     found = subprocess.run(  # noqa: S603 - fixed tool, our arguments
-        command, check=True, cwd=DESKTOP / "src-tauri", capture_output=True, text=True
+        command,
+        check=True,
+        cwd=DESKTOP / "src-tauri",
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
     )
     metadata = cast("dict[str, object]", json.loads(found.stdout))
     packages = {
