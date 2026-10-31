@@ -6,6 +6,30 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-31, **1.1.0 development — vegetation consistent with its climate** (C452, issue #4). [V-EXEC] The
+biome classifier now smooths joint (climate, vegetation) votes and picks a cell's vegetation among the pairs
+of its own climate, so no cell carries a pair outside the Old World calibration (3-14 per world before; no
+climate changes; 3-4 % of cells change vegetation, nearly all on climate borders). Full checks pass (2,302
+Python tests, 15 optional skips; 23 Rust tests; strict types, lint and formatting clean). The pending
+epoch-60 reference world is refreshed to 866 files / `3ac94a79…b1fb`, reproduced by the installed-game suite
+and its layer-reroll check; full exports of six presets (archipelago 42, islands 7, small continents 42,
+wall 9, the supercontinent reference and the continents candidate) pass every invariant.
+
+Installed new candidate `rnw_exp_world_5devvifcrz` (**Climate-consistent · 1001**, continents, seed 1001
+with precious deposits at 99.6 % only to give it an identity of its own, code
+`RNW1-080G0-00000-0000Z-9040G-00811-ZJ0E8-KF3C`; coasts, lakes and relief equal those of **Vanilla relief ·
+1001**) in the same Windows/Proton profile, with records in both libraries. All 897 installed files match;
+866 nonmetadata files have SHA-256 `29f9d448dfa5e037f43fd7343a2e55dd3f369d12605a7c650228e221ed9712c4`. The
+earlier candidates are left in place. All sixteen existing mod directories and nine profile-root files are
+preserved. No playset, save or preference edit by the agent, no EU5 launch/control.
+
+The verified, self-tested hub is installed with the former hub retained at
+`.rnw-hub-backups/1.1.0-1793455916109750848` (isolated Wine self-test of the window, native kernels, world
+codes and window shell; 3468 files in `rnw_exp_hub`). Candidate:
+`local_data/hub-updates/1.1.0-1793455853224152320/rnw_exp_hub`; wheel SHA-256
+`e3e1f4ba900744f3de3c8ee470f8cdb36478a04b9aa85323150266ab8e8f22bf`. Unpublished 1.1.0 / pending epoch 60;
+existing worlds are untouched. Evidence: ignored `local_data/biomes-110/`.
+
 2026-10-31, **1.1.0 development — mountains with vanilla's relief** (C451). [V-GAME + V-EXEC] The owner's
 in-game screenshots showed the generated mountains flat beside vanilla's; the loaded world's files
 confirmed that their relief was that of vanilla's hills, because the benchmark had left out vanilla's
