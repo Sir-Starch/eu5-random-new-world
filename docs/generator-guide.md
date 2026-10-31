@@ -165,7 +165,8 @@ is enabled by default. Disable it to require a continuous land core that ships c
 cross or sail around. The polar ends reach the map edges and have impassable locations.
 Extra continents and islands can appear on either side.
 
-Advanced → The Wall controls width, position, coastal irregularity, mountain spine
+Advanced → The Wall controls width, position (west to east across the canvas; the Wall goes
+around protected islands in its way), coastal irregularity, mountain spine
 and whether gaps are permitted. Scale and noise settings shape the Wall as well as the
 extra land. A larger land amount widens the Wall; a smaller one only shrinks the extra
 land, so the Wall keeps its place. With gaps off the guaranteed land route bends and

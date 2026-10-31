@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -12,9 +13,12 @@ from rnw import __version__, newworld, wall
 from rnw.app.worldcode import WorldCode, decode, encode
 from rnw.model import CellClass
 from rnw.newworld import LAND_KINDS, generate_new_world, land_stage
-from rnw.settings import build_settings
+from rnw.settings import NewWorldSettings, build_settings
 from rnw.topology import label_components
 from tests.test_newworld import SMALL
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
 
 
 @pytest.mark.parametrize("seed", [7, 42, 1000])
@@ -147,8 +151,9 @@ def test_seed_can_leave_a_broad_side_region_entirely_ocean() -> None:
     settings = replace(
         SMALL, landform=1, land_permille=187, wall_width_permille=140, feature_px=100
     )
-    centre, half = wall.geometry(domain, settings)
-    gap = half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
+    course = wall.route(domain, settings)
+    centre = int(course.centre[0])
+    gap = course.half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
     regions = [(slice(top, top + 192), slice(60, centre - gap - 30)) for top in (64, 384)]
     counts: list[list[int]] = [[], []]
     for seed in (0, 1, 3, 5, 6):
@@ -188,7 +193,8 @@ def test_forced_core_is_a_broad_bent_land_route_never_a_straight_strip(seed: int
         wall_allow_gaps=0,
     )
     land = wall.coast(domain, seed, settings)
-    centre, half = wall.geometry(domain, settings)
+    course = wall.route(domain, settings)
+    centre, half = int(course.centre[0]), course.half
     middle = wall.spine(domain, seed, settings)
     # One land component joins the first row to the last, so no ship crosses or rounds it.
     parts = label_components(land.astype(np.int32))
@@ -200,7 +206,7 @@ def test_forced_core_is_a_broad_bent_land_route_never_a_straight_strip(seed: int
     widths = land[:, centre - half : centre + half + 1].sum(axis=1)
     assert widths.min() >= half // 3
     # Its width swells and narrows too, so neither edge of the core is ruler-straight.
-    reach = wall.core(len(domain), seed, centre, half, settings)[1]
+    reach = wall.core(len(domain), seed, course.centre, half, settings)[1]
     assert reach.max() - reach.min() > half // 10
 
 
@@ -219,7 +225,106 @@ def test_no_wall_coast_is_cut_off_along_the_envelope_edge(seed: int) -> None:
     domain = np.ones((960, 640), dtype=bool)
     settings = replace(SMALL, landform=1, land_permille=700, wall_coast_permille=1000)
     land = wall.coast(domain, seed, settings)
-    centre, half = wall.geometry(domain, settings)
+    course = wall.route(domain, settings)
+    centre, half = int(course.centre[0]), course.half
     assert land.any()
     assert not land[:, centre - half].any()
     assert not land[:, centre + half].any()
+
+
+def _islands(*boxes: tuple[int, int, int, int]) -> NDArray[np.bool_]:
+    """A canvas of 2048 rows and 1400 columns with protected boxes (top, bottom, left, right)."""
+    domain = np.ones((2048, 1400), dtype=bool)
+    for top, bottom, left, right in boxes:
+        domain[top:bottom, left:right] = False
+    return domain
+
+
+def _wall_settings(position: int, width: int = 70) -> NewWorldSettings:
+    return replace(SMALL, landform=1, wall_position_permille=position, wall_width_permille=width)
+
+
+def _assert_clear(
+    course: wall.Route, domain: NDArray[np.bool_], settings: NewWorldSettings
+) -> None:
+    """The envelope and its coast margin hold no protected pixel in any row."""
+    pad = course.half + settings.coast_margin_px
+    for row, column in enumerate(course.centre.tolist()):
+        assert domain[row, column - pad : column + pad + 1].all()
+
+
+def test_wall_route_is_a_straight_line_on_an_open_canvas() -> None:
+    domain = np.ones((640, 960), dtype=bool)
+    for position in (0, 300, 700, 1000):
+        settings = _wall_settings(position)
+        course = wall.route(domain, settings)
+        pad = course.half + settings.coast_margin_px
+        assert np.unique(course.centre).tolist() == [pad + (960 - 2 * pad - 1) * position // 1000]
+
+
+@pytest.mark.parametrize("position", [300, 500, 700])
+def test_wall_goes_around_a_protected_island_in_its_way_and_returns(position: int) -> None:
+    domain = _islands((900, 1020, 600, 720))
+    settings = _wall_settings(position)
+    course = wall.route(domain, settings)
+    straight = wall.route(np.ones_like(domain), settings).centre[0]
+    _assert_clear(course, domain, settings)
+    if abs(int(straight) - 660) < 200:
+        # The island is in its way: it moves aside and is straight again far from the island.
+        assert int(np.abs(course.centre - straight).max()) > 100
+        assert course.centre[0] == straight
+        assert course.centre[-1] == straight
+    else:
+        assert np.array_equal(course.centre, np.full(len(domain), straight))
+    # Gentle: never steeper than one pixel a row.
+    assert int(np.abs(np.diff(course.centre)).max()) <= 1
+
+
+def test_wall_passes_a_group_of_islands_on_one_side() -> None:
+    """Two islands closer together than the envelope are one obstacle: no threading between."""
+    domain = _islands((900, 1000, 600, 700), (900, 1000, 760, 860))
+    settings = _wall_settings(500)
+    course = wall.route(domain, settings)
+    _assert_clear(course, domain, settings)
+    rows = slice(900, 1000)
+    assert not ((course.centre[rows] > 700) & (course.centre[rows] < 760)).any()
+    assert (course.centre[rows] < 600).all() or (course.centre[rows] > 860).all()
+
+
+def test_wall_position_spans_the_canvas_not_only_the_corridor_free_of_islands() -> None:
+    """An island once limited the position to the columns east of it."""
+    domain = _islands((900, 1020, 100, 220))
+    west = wall.route(domain, _wall_settings(0))
+    east = wall.route(domain, _wall_settings(1000))
+    pad = west.half + SMALL.coast_margin_px
+    assert west.centre[0] == pad
+    assert east.centre[0] == 1400 - pad - 1
+    _assert_clear(west, domain, _wall_settings(0))
+    assert west.centre.min() == pad
+
+
+def test_wall_without_a_way_through_is_rejected() -> None:
+    narrow = _islands((1000, 1001, 0, 700), (1000, 1001, 760, 1400))
+    with pytest.raises(ValueError, match="continuous north-south"):
+        _ = wall.route(narrow, _wall_settings(500))
+
+
+def test_wall_land_stays_off_protected_pixels_and_keeps_its_core_around_islands() -> None:
+    domain = _islands((900, 1020, 600, 720))
+    settings = replace(_wall_settings(500), wall_allow_gaps=0)
+    land = wall.coast(domain, 42, settings)
+    middle = wall.spine(domain, 42, settings)
+    assert not (land & ~domain).any()
+    assert land[np.arange(len(middle)), middle].all()
+    parts = label_components(land.astype(np.int32))
+    assert len({int(parts[0, middle[0]]), int(parts[-1, middle[-1]])}) == 1
+
+
+def test_wall_land_around_islands_does_not_depend_on_strip_height(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    domain = _islands((900, 1020, 600, 720))
+    settings = _wall_settings(500)
+    expected = wall.coast(domain, 7, settings)
+    monkeypatch.setattr(wall, "STRIP_ROWS", 32)
+    assert np.array_equal(wall.coast(domain, 7, settings), expected)

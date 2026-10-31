@@ -2481,8 +2481,8 @@ source = "0dd527cf2049760f"
 text = "Położenie muru"
 
 ["control.new_world.wall_position_permille.about"]
-source = "d93e0e8f69420f5e"
-text = "Położenie z zachodu na wschód w dostępnym korytarzu polarnym."
+source = "e24180840c880c30"
+text = "Położenie z zachodu na wschód. Mur omija chronione wyspy, które leżą na jego drodze."
 
 ["control.new_world.wall_coast_permille"]
 source = "8b5e30417714cb5b"

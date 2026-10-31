@@ -52,6 +52,17 @@
   share control now thins the side land only: it never takes land from the wall, which keeps the share
   it is sized for. Existing worlds remain untouched.
 
+- Let The Wall go around protected islands instead of needing a full-height corridor free of them
+  (pending epoch 60, unreleased preset). The wall had to sit in a column band with no protected pixel
+  from the north edge to the south edge, which on the installed expanded canvas is 17.6% of its
+  width, and the width and position controls shared what was left after the envelope's half-width
+  (2.6% of the canvas at the largest width, so the position control barely moved the wall). The
+  position control now spans the whole mostly open band of the canvas (3,500 pixels of 10,075 there). The
+  wall is a straight line at the chosen position wherever its envelope fits, and a smooth detour,
+  never steeper than one pixel a row, around the island or the whole group of islands in its way,
+  returning to its position beyond them. No route from edge to edge is still rejected. Existing worlds
+  remain untouched.
+
 - Give The Wall's secondary continents a broader procedural placement field, so
   seeds can leave whole side regions as ocean instead of repeatedly scattering
   land through the same canvas pockets. Existing worlds remain untouched.

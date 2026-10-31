@@ -200,7 +200,7 @@ STRINGS: Final[dict[str, str]] = {
     "control.new_world.wall_width_permille.about": "Maximum width as a share of the canvas.",
     "control.new_world.wall_position_permille": "Wall position",
     "control.new_world.wall_position_permille.about": (
-        "Position from west to east within the available polar corridor."
+        "Position from west to east. The Wall goes around protected islands in its way."
     ),
     "control.new_world.wall_coast_permille": "Coastal irregularity",
     "control.new_world.wall_coast_permille.about": (

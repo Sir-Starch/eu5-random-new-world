@@ -2481,8 +2481,8 @@ source = "0dd527cf2049760f"
 text = "Position der Mauer"
 
 ["control.new_world.wall_position_permille.about"]
-source = "d93e0e8f69420f5e"
-text = "Position von West nach Ost im verfügbaren Polarkorridor."
+source = "e24180840c880c30"
+text = "Position von West nach Ost. Die Mauer umgeht geschützte Inseln, die ihr im Weg liegen."
 
 ["control.new_world.wall_coast_permille"]
 source = "8b5e30417714cb5b"

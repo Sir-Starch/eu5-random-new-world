@@ -2481,8 +2481,8 @@ source = "0dd527cf2049760f"
 text = "장벽 위치"
 
 ["control.new_world.wall_position_permille.about"]
-source = "d93e0e8f69420f5e"
-text = "사용 가능한 극지 회랑 안에서 서쪽에서 동쪽으로의 위치입니다."
+source = "e24180840c880c30"
+text = "서쪽에서 동쪽으로의 위치입니다. 장벽은 길을 막는 보호 대상 섬을 돌아 지나갑니다."
 
 ["control.new_world.wall_coast_permille"]
 source = "8b5e30417714cb5b"

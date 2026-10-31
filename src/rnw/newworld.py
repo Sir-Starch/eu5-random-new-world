@@ -320,10 +320,11 @@ def _wall_land(
     continent; the original field supplies bays, peninsulas and islands. Both
     scales follow feature size, with one sea level for all the side land.
     """
-    centre, half = wall.geometry(domain, settings)
+    course = wall.route(domain, settings)
     sides = domain.copy()
-    gap = half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
-    sides[:, max(0, centre - gap) : centre + gap + 1] = False
+    wall.keep_clear(
+        sides, course, course.half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
+    )
     relief = _field(
         seed,
         "wall_continents",

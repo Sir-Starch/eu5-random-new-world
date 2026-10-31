@@ -370,8 +370,22 @@ while [The Line](https://www.reddit.com/r/eu4/comments/x7z8ui/) also occurs. The
 community names, not verified official localization identifiers [SOURCE, accessed
 2026-10-30]. No EU4 assets or tile data are included.
 
-`wall.py` finds a full-height corridor in the installed game's expanded canvas,
-keeping all protected pixels intact, and places a straight continental envelope there.
+`wall.py` plans the barrier's route in the installed game's expanded canvas, keeping all
+protected pixels intact, and places the continental envelope along it. The position control
+spans the longest band of columns in which at least 90% of the rows are open (columns 3,835–7,350
+of 10,075 on the 1.4.6 canvas), west to east. The route is a straight line at that position wherever the
+envelope with its coast margin fits. Where an island, a group of islands or their guard water
+is in the way it detours by the shortest smooth way: the backward pass of `wall._plan` finds the
+cells from which the south edge can still be reached, so the detour starts early and the route
+returns to its position beyond the obstacle; it moves at most half a pixel sideways per row
+(the grid is 16 × 32 pixels), and a moving average over 512 rows rounds it off while the planner
+keeps 80 pixels of extra water for that. Islands closer together than the envelope count as one
+obstacle, so the wall passes a group on one side and never threads between. The exact route is
+checked against the protected pixels row by row, and a canvas with no route is rejected. The
+secondary land keeps the same clear gap on both sides of the route. [V-EXEC, 2026-10-31] On the
+installed canvas the planning takes 0.15 s and the full export of the owner's world at position
+0 (width 140‰, gaps off) passes every check (no split cell, unreachable sea or lost Old World
+contact); the wall follows the west of the canvas and goes around the Polynesian protrusion and the isolated islet.
 One seeded, multi-octave land-density field defines the coast within that envelope.
 Land amount shifts its sea level, feature size and octaves set its scale, and coastal
 irregularity sets its strength. The same field can produce continuous land, coastal
@@ -408,7 +422,7 @@ canvas too narrow for the requested envelope or a drawn-mask combination. With g
 disabled, it verifies that the final cell raster retains its continuous land column.
 
 Both windows expose the gap checkbox plus maximum width (4–14% of canvas width),
-west-to-east position within the available polar corridor, coastal irregularity and
+west-to-east position across the canvas (the wall goes around protected islands), coastal irregularity and
 ridge height under Advanced → The Wall. Land share, feature scale and noise settings
 shape both the Wall and the side land. The preset requires the expanded canvas. Its
 world codes preserve every control.

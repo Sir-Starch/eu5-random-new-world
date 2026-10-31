@@ -2481,8 +2481,8 @@ source = "0dd527cf2049760f"
 text = "高墙位置"
 
 ["control.new_world.wall_position_permille.about"]
-source = "d93e0e8f69420f5e"
-text = "在可用极地走廊内从西到东的位置。"
+source = "e24180840c880c30"
+text = "从西到东的位置。高墙会绕开挡路的受保护岛屿。"
 
 ["control.new_world.wall_coast_permille"]
 source = "8b5e30417714cb5b"
