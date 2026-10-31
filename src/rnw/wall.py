@@ -1,4 +1,4 @@
-"""Procedural north-south barrier with an optional protected straight core and coastal relief.
+"""Procedural north-south barrier with a guaranteed bent land core and coastal relief.
 
 No EU4 map data is used. The full-height corridor is derived from the installed EU5
 canvas; protected Old World pixels are never annexed to make the barrier fit.
@@ -23,6 +23,9 @@ if TYPE_CHECKING:
 
 PERMILLE = 1000
 STRIP_ROWS = 256
+# The land share the Wall itself is sized for. A smaller share thins the side land only:
+# the barrier takes its land first and the continents beside it share what is left.
+BASE_LAND_PERMILLE = 250
 
 
 def geometry(domain: NDArray[np.bool_], settings: NewWorldSettings) -> tuple[int, int]:
@@ -41,6 +44,31 @@ def geometry(domain: NDArray[np.bool_], settings: NewWorldSettings) -> tuple[int
     return left + (right - left) * settings.wall_position_permille // PERMILLE, half
 
 
+def core(
+    height: int, seed: int, centre: int, half: int, settings: NewWorldSettings
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Per-row centre column and half-width of the land that the barrier must always keep.
+
+    The centre drifts and the width swells and narrows along the whole length, so a
+    forced core is a bent, broad ridge of land rather than a ruler-straight strip. Both
+    stay inside the envelope with room for the coastal jitter that `coast` adds; the width
+    never falls below three tenths of the envelope's half-width, so the rows overlap.
+    """
+    ys = np.arange(height, dtype=np.int64)
+    period = max(8, settings.feature_px)
+    drift = value_noise_at(derive_seed(seed, "wall_core_drift"), ys * 0, ys, period)
+    swell = value_noise_at(derive_seed(seed, "wall_core_swell"), ys * 0, ys, max(8, period // 2))
+    middle = centre + drift * (3 * half) // (10 * NOISE_SCALE)
+    reach = 3 * half // 10 + (swell + NOISE_SCALE) * half // (10 * NOISE_SCALE)
+    return middle, reach
+
+
+def spine(domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings) -> NDArray[np.int64]:
+    """The column of the guaranteed land core in every row."""
+    centre, half = geometry(domain, settings)
+    return core(domain.shape[0], seed, centre, half, settings)[0]
+
+
 def coast(domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings) -> NDArray[np.bool_]:
     """Threshold one continuous density field inside a straight continental envelope.
 
@@ -50,6 +78,7 @@ def coast(domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings) -> N
     """
     centre, half = geometry(domain, settings)
     height, _ = domain.shape
+    middle, reach = core(height, seed, centre, half, settings)
     left, right = centre - half, centre + half + 1
     xs = np.arange(left, right, dtype=np.int64)[None, :]
     result = np.zeros(domain.shape, dtype=bool)
@@ -76,15 +105,24 @@ def coast(domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings) -> N
             octaves=settings.octaves,
             persistence_permille=settings.persistence_permille,
         )
+        across = np.abs(xs - centre)
+        # Coastal noise fades over the envelope's outer quarter, so a coast eases toward its
+        # edge instead of being cut off along a straight vertical line there.
+        fade = np.clip((half - across) * 4 * PERMILLE // half, 0, PERMILLE)
         density = (
             1600
-            - np.abs(xs - centre) * 3000 // half
-            + (settings.land_permille - 250) * 3
-            + (noise * 3 + profile * 3) * settings.wall_coast_permille // NOISE_SCALE
+            - across * 3000 // half
+            + (max(settings.land_permille, BASE_LAND_PERMILLE) - BASE_LAND_PERMILLE) * 3
+            + (noise * 3 + profile * 3)
+            * settings.wall_coast_permille
+            * fade
+            // (NOISE_SCALE * PERMILLE)
         )
-        core = np.abs(xs - centre) <= max(1, half // 4)
+        # The core's edge is ragged like any coast, within an eighth of the envelope.
+        edge = np.clip(noise * half // (8 * NOISE_SCALE), -(half // 8), half // 8)
+        kept = np.abs(xs - middle[ys]) <= reach[ys] + edge
         polar = (ys < settings.coast_margin_px) | (ys >= height - settings.coast_margin_px)
-        solid = (density > 0) | (core & (polar | (settings.wall_allow_gaps == 0)))
+        solid = (density > 0) | (kept & (polar | (settings.wall_allow_gaps == 0)))
         result[first : first + len(ys), left:right] = solid
     return result
 
@@ -97,14 +135,15 @@ def add_relief(
     settings: NewWorldSettings,
 ) -> None:
     """Raise a meandering longitudinal spine while leaving habitable coastal shelves."""
-    centre, half = geometry(domain, settings)
+    half = geometry(domain, settings)[1]
+    middle = spine(domain, seed, settings)
     xs = np.arange(domain.shape[1], dtype=np.int64)[None, :]
     for first in range(0, len(domain), STRIP_ROWS):
         checkpoint()
         rows = slice(first, min(len(domain), first + STRIP_ROWS))
         ys = np.arange(rows.start, rows.stop, dtype=np.int64)[:, None]
         noise = value_noise_at(derive_seed(seed, "wall_spine"), ys * 0, ys, max(8, half))
-        spine = centre + noise * half // (6 * NOISE_SCALE)
-        strength = np.maximum(0, half // 2 - np.abs(xs - spine))
+        ridge = middle[rows][:, None] + noise * half // (8 * NOISE_SCALE)
+        strength = np.maximum(0, half // 2 - np.abs(xs - ridge))
         lift = strength * 18000 * settings.wall_ridge_permille // (max(1, half // 2) * PERMILLE)
         elevation[rows] += np.where(land[rows], lift, 0).astype(np.int32)

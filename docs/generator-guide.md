@@ -166,8 +166,10 @@ cross or sail around. The polar ends reach the map edges and have impassable loc
 Extra continents and islands can appear on either side.
 
 Advanced → The Wall controls width, position, coastal irregularity, mountain spine
-and whether gaps are permitted. Land amount, scale and noise settings shape the Wall
-as well as the extra land. This preset uses the expanded ocean canvas and cannot be
+and whether gaps are permitted. Scale and noise settings shape the Wall as well as the
+extra land. A larger land amount widens the Wall; a smaller one only shrinks the extra
+land, so the Wall keeps its place. With gaps off the guaranteed land route bends and
+changes width along its length. This preset uses the expanded ocean canvas and cannot be
 combined with a land image.
 
 Ordinary presets and land images can also reach the polar map edges; they no longer

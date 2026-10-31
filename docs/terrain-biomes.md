@@ -378,7 +378,21 @@ irregularity sets its strength. The same field can produce continuous land, coas
 islands, an island chain or an intermediate shape. Density saddles may form narrow
 navigable straits. No scenario is selected and no count or probability of passages
 is prescribed. **Allow gaps in the wall** is enabled by default; disabling it imposes
-a continuous straight land core on the same field. The polar endpoints remain land.
+a continuous land core on the same field. The polar endpoints remain land.
+
+The core (`wall.core`) is not a straight strip: its centre drifts by up to 0.3 of the
+envelope's half-width and its half-width swells between 0.3 and 0.5 of it, both along
+the whole length, and its edge takes the ragged shore of the coastal noise (up to an
+eighth of the half-width). Coastal noise fades over the outer quarter of the envelope, so
+no coast is cut off along the envelope's straight edge, and the land share lowers only the
+side land: the wall keeps the share it is sized for (250‰) and a larger share adds to it.
+[V-EXEC, 2026-10-31] Owner report: a world with land share 187, coastal irregularity 904,
+maximum width and gaps off (seed 12471306029767500627) was a thin, ruler-straight strip
+through much of its length beside large continents. The straight strip was the old forced
+core (a fixed quarter-width column in every row) exposed wherever the density field
+left the wall's own land empty; no location budget was involved (6,643 of 32,000 locations).
+The same land stage at one eighth scale now gives a bent core of varying width; the
+connectivity checks and a per-row centreline check at cell construction remain.
 
 Secondary land outside an ocean gap on either side uses a continuous density field
 with a broad continental component (four times the feature scale, two-thirds of

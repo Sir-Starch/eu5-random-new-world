@@ -42,6 +42,16 @@
   the map's display seam is no longer written as a crossing (the game has no such row);
   it stopped one island world from exporting. Existing worlds remain untouched.
 
+- Fix The Wall's thin, ruler-straight stretches (pending epoch 60, unreleased preset). With
+  "Allow gaps" off, a straight strip of land, a quarter of the envelope wide, was forced down the middle, and wherever the
+  coast field (little land, high irregularity) left the wall's own land empty, that bare strip was
+  all that remained, with straight vertical cuts where coasts reached the edge of the wall's envelope.
+  The forced core is now a broad ridge that drifts and swells along its length (never narrower than
+  0.6 of the envelope's half-width), its edge is ragged like any coast, coastal noise fades toward the
+  envelope's edge instead of being cut off there, and the mountain spine follows the core. The land
+  share control now thins the side land only: it never takes land from the wall, which keeps the share
+  it is sized for. Existing worlds remain untouched.
+
 - Give The Wall's secondary continents a broader procedural placement field, so
   seeds can leave whole side regions as ocean instead of repeatedly scattering
   land through the same canvas pockets. Existing worlds remain untouched.

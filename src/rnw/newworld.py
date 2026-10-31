@@ -861,11 +861,12 @@ def generate_new_world(
         for index in polar.tolist():
             if index >= 0 and kinds[index] is CellClass.LAND:
                 kinds[index] = CellClass.WASTELAND
-        centre, _ = wall.geometry(domain, settings)
+        middle = wall.spine(domain, seed, settings)
         if (
             not settings.wall_allow_gaps
             and not np.isin(
-                labels[:, centre], [i for i, kind in enumerate(kinds) if kind in LAND_KINDS]
+                labels[np.arange(len(middle)), middle],
+                [i for i, kind in enumerate(kinds) if kind in LAND_KINDS],
             ).all()
         ):
             message = "The Wall lost its continuous land barrier during cell construction"

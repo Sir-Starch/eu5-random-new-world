@@ -34,12 +34,13 @@ def test_wall_has_no_water_passage_and_keeps_polar_end_locations_impassable(
     )
     domain = np.ones((320, 480), dtype=bool)
     world = generate_new_world(domain, seed=seed, settings=settings)
-    centre, _ = wall.geometry(domain, settings)
+    middle = wall.spine(domain, seed, settings)
     land = np.array([kind in LAND_KINDS for kind in world.classes])[world.labels]
-    assert land[:, centre].all()
+    assert land[np.arange(len(middle)), middle].all()
     assert np.all(world.labels >= 0)
     assert all(
-        world.classes[i] is CellClass.WASTELAND for i in np.unique(world.labels[[0, -1], centre])
+        world.classes[i] is CellClass.WASTELAND
+        for i in np.unique(world.labels[[0, -1], middle[[0, -1]]])
     )
     parts = label_components((~land).astype(np.int32))
     west = set(parts[:, 0][~land[:, 0]].tolist())
@@ -135,8 +136,8 @@ def test_density_field_forms_islands_and_passages_with_no_prescribed_count() -> 
         more = wall.coast(domain, seed, replace(settings, land_permille=450))
         assert not (land & ~more).any()
         continuous = wall.coast(domain, seed, replace(settings, wall_allow_gaps=0))
-        centre, _ = wall.geometry(domain, settings)
-        assert continuous[:, centre].all()
+        middle = wall.spine(domain, seed, settings)
+        assert continuous[np.arange(len(middle)), middle].all()
         assert not (land & ~continuous).any()
 
 
@@ -172,3 +173,53 @@ def test_wall_secondary_land_does_not_depend_on_strip_height(
     actual = land_stage(domain, 42, settings)
     assert all(np.array_equal(a, b) for a, b in zip(expected, actual, strict=True))
     assert not actual[0][~domain].any()
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_forced_core_is_a_broad_bent_land_route_never_a_straight_strip(seed: int) -> None:
+    """The worst case for the core: little land and a very ragged coast (owner report)."""
+    domain = np.ones((960, 640), dtype=bool)
+    settings = replace(
+        SMALL,
+        landform=1,
+        land_permille=100,
+        wall_width_permille=140,
+        wall_coast_permille=1000,
+        wall_allow_gaps=0,
+    )
+    land = wall.coast(domain, seed, settings)
+    centre, half = wall.geometry(domain, settings)
+    middle = wall.spine(domain, seed, settings)
+    # One land component joins the first row to the last, so no ship crosses or rounds it.
+    parts = label_components(land.astype(np.int32))
+    assert len({int(parts[0, middle[0]]), int(parts[-1, middle[-1]])}) == 1
+    # It bends: the same column is not the core's column in every row.
+    assert len(np.unique(middle)) > half // 4
+    assert np.abs(middle - centre).max() <= 3 * half // 10 + 1
+    # It is broad everywhere, not a hairline.
+    widths = land[:, centre - half : centre + half + 1].sum(axis=1)
+    assert widths.min() >= half // 3
+    # Its width swells and narrows too, so neither edge of the core is ruler-straight.
+    reach = wall.core(len(domain), seed, centre, half, settings)[1]
+    assert reach.max() - reach.min() > half // 10
+
+
+def test_low_land_share_thins_the_side_land_and_never_the_wall() -> None:
+    domain = np.ones((640, 480), dtype=bool)
+    base = replace(SMALL, landform=1, land_permille=250, wall_coast_permille=1000)
+    for seed in range(4):
+        assert np.array_equal(
+            wall.coast(domain, seed, base),
+            wall.coast(domain, seed, replace(base, land_permille=120)),
+        )
+
+
+@pytest.mark.parametrize("seed", range(6))
+def test_no_wall_coast_is_cut_off_along_the_envelope_edge(seed: int) -> None:
+    domain = np.ones((960, 640), dtype=bool)
+    settings = replace(SMALL, landform=1, land_permille=700, wall_coast_permille=1000)
+    land = wall.coast(domain, seed, settings)
+    centre, half = wall.geometry(domain, settings)
+    assert land.any()
+    assert not land[:, centre - half].any()
+    assert not land[:, centre + half].any()
