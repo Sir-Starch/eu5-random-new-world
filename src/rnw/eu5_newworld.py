@@ -17,6 +17,7 @@ inside one another [V-GAME owner, 1.4.1].
 
 from __future__ import annotations
 
+import heapq
 import itertools
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
@@ -457,6 +458,58 @@ def _reserve(
     return reserved
 
 
+def _protect_ocean_boundary(
+    graph: ContactGraph,
+    ocean_sources: list[list[int]],
+    shore: set[int],
+    boundary: set[int],
+) -> set[int]:
+    """Pin connected ocean paths between passable Old World seas and open water."""
+    if not boundary:
+        return set()
+    frontier: list[tuple[int, int, int]] = []
+    routes: dict[int, tuple[int, int]] = {}
+    for number, sources in enumerate(ocean_sources):
+        for source in sources:
+            heapq.heappush(frontier, (0, number, source))
+    while frontier and not boundary.issubset(routes):
+        distance, number, cell = heapq.heappop(frontier)
+        if cell in routes:
+            continue
+        routes[cell] = (number, distance)
+        for other, length in graph.links[cell]:
+            if other not in routes:
+                heapq.heappush(
+                    frontier,
+                    (distance + length + (100_000 if other in shore else 0), number, other),
+                )
+    if not boundary.issubset(routes):
+        message = "Old World sea boundary cannot reach an open ocean area"
+        raise IdentityError(message)
+    protected: set[int] = set()
+
+    def order(other: int) -> tuple[int, int]:
+        return routes[other][1], other
+
+    for target in sorted(boundary):
+        number = routes[target][0]
+        protected.add(number)
+        current = target
+        while current not in ocean_sources[number]:
+            ocean_sources[number].append(current)
+            current = min(
+                (
+                    other
+                    for other, _ in graph.links[current]
+                    if other in routes
+                    and routes[other][0] == number
+                    and routes[other][1] < routes[current][1]
+                ),
+                key=order,
+            )
+    return protected
+
+
 def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and parents.
     graph: ContactGraph,
     cells: list[int],
@@ -466,6 +519,7 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     coasts: dict[str, list[int]],
     parents: dict[str, tuple[str, str, str]],
     keys: KeySpace,
+    boundary: set[int] | None = None,
 ) -> tuple[list[_Area], set[str]]:
     """Coastal water joins the region of its shore; the open ocean keeps the ocean areas.
 
@@ -490,7 +544,11 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     for cell in sorted(touching):
         anchors.setdefault(min(touching[cell]), []).append(cell)
     oceans = [
-        sea for sea in seas if not sea.coastal and (not sea.remaining or anchors.get(sea.name))
+        sea
+        for sea in seas
+        if not sea.coastal
+        and parents[sea.name][2] in OCEANS
+        and (not sea.remaining or anchors.get(sea.name))
     ]
     regions = sorted(coasts)
     shore = {zone for zones in coasts.values() for zone in zones}
@@ -517,6 +575,16 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     ocean_sources = [
         sorted(anchors[sea.name]) if sea.remaining else start[sea.name] for sea in oceans
     ]
+    original_sources = {cell for sources in ocean_sources for cell in sources}
+    protected_oceans = _protect_ocean_boundary(graph, ocean_sources, shore, boundary or set())
+    reserved_ocean = {cell for sources in ocean_sources for cell in sources} - original_sources
+    for region in regions:
+        coasts[region] = [cell for cell in coasts[region] if cell not in reserved_ocean]
+        if not coasts[region]:
+            message = f"American region {region} has no coastal sea outside the ocean boundary"
+            raise IdentityError(message)
+    shore = {zone for zones in coasts.values() for zone in zones}
+    length = max(1, len(shore))
     need = {region: own[region] * MIN_AREA_ZONES for region in regions}
     floor = {region: need[region] * TARGET_SCALE for region in regions}
     reserved = _reserve(
@@ -534,8 +602,13 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
             for region in regions
         ]
         + [sea.replaced * TARGET_SCALE for sea in oceans],
-        movable=[False] * len(regions) + [not sea.remaining for sea in oceans],
-        pinned=[True] * len(regions) + [not sea.remaining for sea in oceans],
+        movable=[False] * len(regions)
+        + [
+            not sea.remaining and number not in protected_oceans
+            for number, sea in enumerate(oceans)
+        ],
+        pinned=[True] * len(regions)
+        + [not sea.remaining or number in protected_oceans for number, sea in enumerate(oceans)],
     )
     parts = absorb_small_pieces(graph, parts, first=len(regions), minimum=MIN_SHORE_PIECE)
     areas: list[_Area] = []
@@ -655,17 +728,31 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     region_of = {
         cell: area.parents[0] for area in areas for cells in area.provinces for cell in cells
     }
-    coasts = _coasts(world, is_sea, region_of)
+    contacts = outside_contacts(game_map, canvas, world, count)
+    boundary = {
+        cell
+        for label, cell in contacts
+        if game_map.classes[label] is CellClass.SEA
+        and game_map.continents[label] not in OCEANS | {NEW_WORLD}
+    }
+    coasts = {
+        region: [cell for cell in cells if cell not in boundary]
+        for region, cells in _coasts(world, is_sea, region_of).items()
+    }
+    if any(not cells for cells in coasts.values()):
+        message = "An American land region has no coastal sea away from the Old World boundary"
+        raise IdentityError(message)
     parents = _area_parents(hierarchy)
     parents.update({area.parents[0]: area.parents for area in areas})
     sea_areas, anchored = _sea_areas(
         sea,
         [cell for cell, flag in enumerate(is_sea) if flag],
         _vanilla_seas(game_map, canvas, hierarchy, geometry),
-        outside_contacts(game_map, canvas, world, count),
+        contacts,
         coasts=coasts,
         parents=parents,
         keys=keys,
+        boundary=boundary,
     )
     physical_land = contact_graph(world.centroids, world.edges, is_land)
     _check_pieces(physical_land, areas, depth=len(LEVELS), exempt=set())

@@ -195,8 +195,9 @@ evidence only. Packaging and installation evidence is recorded in experiment 049
 
 The owner relayed a Workshop report that expanded continents make Western Europe
 border North America and prevent colonial nations. **The map defect is reproduced;
-the border can be between passable sea locations, without a land bridge.** This is
-an investigation, not an implemented fix or an owner-run gameplay test.
+the border can be between passable sea locations, without a land bridge.** The
+2026-10-31 audit preceded the 2026-11-01 correction recorded below. Neither is
+an owner-run gameplay test.
 
 [V-LOCAL] Installed EU5 1.4.6 / Steam build **26300913** retains the relevant vanilla
 rules. `game_concept_overseas_desc` defines overseas by a different continent whose
@@ -251,16 +252,26 @@ The historical expansion-off control shows that disabling expansion is not a
 general remedy; this is a maritime hierarchy defect, not solely a canvas-width
 problem. The commenter's exact seed and world were not supplied.
 
-The corrective work should construct an ocean-hierarchy separation at these
-boundaries, preserve connected sea areas and navigation, and validate final
-passable contacts between American subcontinents and Old World continents.
-Merely increasing a land margin cannot guarantee that invariant. Geography and
-hierarchy construction should satisfy the vanilla overseas rules; a global
-override of colonial-nation eligibility would also affect unrelated countries.
-No generator, world, package, version or epoch is changed by this audit. Raw
-pair lists, map/rule/executable hashes, audit script and bounded disassembly stay
+The issue #9 correction in the pending 1.1.0 cycle reserves connected ocean-area
+sources along passable Old World sea contacts before sea partitioning. Touched
+European sea areas are excluded as sources for generated ocean cells. The final
+map check rejects passable contacts between generated American locations and Old
+World continents, including horizontal wrap; impassable vanilla and generated
+water does not count. Synthetic regressions cover both American subcontinents,
+Greenland-like sea contacts, impassable controls and wrap. [V-EXEC, 2026-11-01]
+The pending epoch-60 supercontinent reference on installed build 26300913
+(fingerprint `592e8309…9a`) exported 871 nonmetadata files with digest
+`da3ca2c0…26acf3`; a readback of its full 16384 × 8192 location raster,
+hierarchy and passability lists found eight raw America–Old World contacts and
+zero passable contacts. A continents/1001 candidate with ocean expansion off
+also has eight raw and zero passable contacts; its 866 nonmetadata files have
+digest `34bb82e2…ba680d`, and all 866 match the installed manifest. Its world
+checks report zero split cells, unreachable sea zones, lost Old World contacts,
+cut-off seas or land cells without port access. This is an offline map/rules
+check, not an owner-run EU5 observation. Raw pair lists, map/rule/executable
+hashes, audit script and bounded disassembly stay
 in ignored `local_data/overseas-audit-20261031/`. [UNKNOWN] The commenter's exact
-in-game failure and any future correction's engine result were not observed.
+in-game failure and this correction's engine result were not observed.
 
 ## The Pacific side and the island groups (owner request, 2026-10-31; pending 1.1.0 / epoch 60)
 

@@ -6,6 +6,24 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **issue #9 colonial overseas border correction** (C455). [V-EXEC]
+Installed a new continents/1001 world with ocean expansion off, code
+`RNW1-080G0-00000-0000Z-9040G-00813-R03EY-AY`, at
+`mod/rnw_exp_world_3qinptckwg` in the normal Proton profile. The 866
+nonmetadata files have SHA-256 `34bb82e2…ba680d`; all 866 match the export
+manifest. The full installed 16384 × 8192 map has eight raw and zero passable
+America–Old World contacts. World checks report zero split cells, unreachable
+generated seas, lost Old World contacts or land cells without port access.
+Existing worlds, saves, settings and playsets were preserved; EU5 was not
+launched or controlled. The verified 1.1.0 hub (3,478 files) was rebuilt and
+self-tested under Wine, then updated in place; its previous copy is retained at
+`.rnw-hub-backups/1.1.0-1793491133243031038`. Wheel SHA-256
+`dbec4f0446d9531ee58e82de5272ad017bdba233fba1d3090a8ec2e0ca8890f6`.
+The pending epoch-60 reference on build 26300913 has 871 files and digest
+`da3ca2c0…26acf3`, with zero passable America–Old World contacts. Local
+candidate and reference reports are in `local_data/issue9-candidate/` and
+`local_data/issue9-reference/`.
+
 2026-10-31, **1.1.0 development — polar map edges** (C454). [V-EXEC] Installed a new
 continents world, seed 20261031, code `RNW1-040G0-00000-0KAA5-7040G-0053W-GG0`, at
 `mod/rnw_exp_world_wqouzjuybf` in the normal Proton profile. Its 870 nonmetadata

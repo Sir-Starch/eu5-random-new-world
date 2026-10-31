@@ -13,6 +13,7 @@ from rnw.eu5_newworld import (
     _Area,  # pyright: ignore[reportPrivateUsage]
     _check_pieces,  # pyright: ignore[reportPrivateUsage]
     _land_areas,  # pyright: ignore[reportPrivateUsage]
+    _protect_ocean_boundary,  # pyright: ignore[reportPrivateUsage]
     _reserve,  # pyright: ignore[reportPrivateUsage]
     _sea_areas,  # pyright: ignore[reportPrivateUsage]
     _SeaArea,  # pyright: ignore[reportPrivateUsage]
@@ -229,7 +230,10 @@ def test_ocean_with_only_a_vanilla_remainder_needs_no_empty_generated_area() -> 
         seas,
         {(99, 6), (99, 7)},
         coasts={"r": [0, 1, 2, 3]},
-        parents={"r": ("r", "s", "america"), "ocean": ("o", "os", "ocean")},
+        parents={
+            "r": ("r", "s", "america"),
+            "ocean": ("o", "os", "atlantic_ocean_continent"),
+        },
         keys=KeySpace(set()),
     )
     assert anchored == {"ocean"}
@@ -238,6 +242,51 @@ def test_ocean_with_only_a_vanilla_remainder_needs_no_empty_generated_area() -> 
         range(8)
     )
     _check_pieces(graph, areas, depth=2, exempt=anchored)
+
+
+def test_passable_old_world_sea_gets_connected_ocean_hierarchy() -> None:
+    graph = _grid(8, 2)
+    sources = [[4]]
+    protected = _protect_ocean_boundary(graph, sources, {0, 8}, {7, 15})
+    assert protected == {0}
+    assert {4, 7, 15} <= set(sources[0])
+    assert len(pieces(graph, sources[0])) == 1
+    crossing = [[4]]
+    assert _protect_ocean_boundary(graph, crossing, {5, 6, 7}, {7}) == {0}
+    assert 7 in crossing[0]
+
+
+def test_coastal_seas_cannot_take_the_old_world_boundary() -> None:
+    graph = _grid(8, 2)
+    seas = [
+        _SeaArea("coast", "r", coastal=True, replaced=100, centre=(0, 0), remaining=frozenset()),
+        _SeaArea("ocean", "o", coastal=False, replaced=1, centre=(0, 40), remaining=frozenset()),
+        _SeaArea(
+            "greenland",
+            "western_europe",
+            coastal=False,
+            replaced=0,
+            centre=(0, 70),
+            remaining=frozenset({99}),
+        ),
+    ]
+    areas, _ = _sea_areas(
+        graph,
+        list(range(16)),
+        seas,
+        {(99, 7)},
+        coasts={"r": [0, 8]},
+        parents={
+            "r": ("r", "north_america", "america"),
+            "ocean": ("o", "o", "atlantic_ocean_continent"),
+            "greenland": ("western_europe", "western_europe", "europe"),
+        },
+        keys=KeySpace(set()),
+        boundary={7, 15},
+    )
+    assigned = {cell: area.parents[2] for area in areas for part in area.provinces for cell in part}
+    assert assigned[7] == assigned[15] == "atlantic_ocean_continent"
+    assert "greenland" not in {area.name for area in areas}
 
 
 @pytest.mark.parametrize("provinces", [[], [[]], [[0], []]])

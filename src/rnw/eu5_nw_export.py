@@ -954,8 +954,46 @@ def _held(game_map: Eu5Map, canvas: Canvas) -> NDArray[np.bool_]:
     return held
 
 
-def _check_world(
-    game_map: Eu5Map, canvas: Canvas, world: NewWorld, final: NDArray[np.int32]
+def _check_overseas_contacts(
+    game_map: Eu5Map,
+    plan: Plan,
+    impassable: set[int] | frozenset[int],
+    contacts: set[tuple[int, int]],
+) -> None:
+    """Reject passable map contacts that destroy American overseas eligibility."""
+    passable = [kind is not CellClass.WASTELAND for kind in game_map.classes]
+    passable.extend(
+        cell.kind is not CellClass.WASTELAND and index not in impassable
+        for index, cell in enumerate(plan.cells)
+    )
+    memberships = list(game_map.continents) + [cell.continent for cell in plan.cells]
+    bad = [
+        (first, second)
+        for first, second in contacts
+        if passable[first]
+        and passable[second]
+        and (
+            (memberships[first] == NEW_WORLD and memberships[second] not in OCEANS | {NEW_WORLD})
+            or (memberships[second] == NEW_WORLD and memberships[first] not in OCEANS | {NEW_WORLD})
+        )
+    ]
+    if bad:
+        first, second = min(bad)
+        names = list(game_map.keys) + [cell.key for cell in plan.cells]
+        message = (
+            f"{len(bad)} passable American/Old World contacts, "
+            f"e.g. {names[first]} / {names[second]}"
+        )
+        raise NewWorldExportError(message)
+
+
+def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and hierarchy.
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    final: NDArray[np.int32],
+    plan: Plan,
+    impassable: set[int] | frozenset[int],
 ) -> tuple[dict[str, int], frozenset[int]]:
     """Connectivity, sea reachability and Old World contact preservation.
 
@@ -977,6 +1015,7 @@ def _check_world(
     vanilla_count = len(game_map.keys)
     before = set(unpack_pairs(adjacency_pairs(game_map.labels, wrap_x=True)))
     after = set(unpack_pairs(adjacency_pairs(final, wrap_x=True)))
+    _check_overseas_contacts(game_map, plan, impassable, after)
     continents = game_map.continents
     old_world = np.array(
         [name not in OCEANS and name != NEW_WORLD for name in continents], dtype=bool
@@ -2747,9 +2786,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             return stats
 
         water = stages.submit("water textures", build_water)
-        checks = stages.submit(
-            "world checks", lambda: _check_world(game_map, canvas, world, final_labels)
-        )
 
         def weather() -> tuple[
             CellBiomes,
@@ -2772,10 +2808,17 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
 
         weathering = stages.submit("biomes and rivers", weather)
         identities = stages.submit("identities", identify)
+        checks = stages.submit(
+            "world checks",
+            lambda: _check_world(
+                game_map, canvas, world, final_labels, identities.result()[1], shapes.zones
+            ),
+        )
         store, vanilla_attributes, new_world_keys, calibration = reads.result()
         geometry = geometries.result()
         vanilla_hashes = localization.result()
         loc_keys, plan = identities.result()
+        world_checks, neighbours = checks.result()
         if plan.oceans is not None:
             removed -= plan.oceans.retained
         _check_identity_budget(game_map, removed, plan)
@@ -3114,7 +3157,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         text_stats["monuments_dropped"] = rewrite.monuments
         text_stats["events_retired"] = {path: len(ids) for path, ids in rewrite.retired.items()}
         text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
-        world_checks, neighbours = checks.result()
         cover, cover_stats = run_stage(
             "selection cover",
             lambda: _cover_outputs(game_dir, game_map, world, final_labels, neighbours),

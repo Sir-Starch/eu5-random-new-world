@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Keep generated American coastal sea areas from bordering passable Old World seas
+  (issue #9, pending epoch 60). Ocean areas now form a connected boundary at
+  those contacts, preserving routes while colonial overseas eligibility remains
+  available for North and South America. Final-map validation rejects any
+  remaining passable American/Old World contact.
+
 - Narrow the places where ordinary continents meet the north and south map edges
   (pending epoch 60). Land locations near the poles grow larger, and all locations
   touching a polar edge are impassable. The Wall retains its continuous endpoints;
