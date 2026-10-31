@@ -261,3 +261,45 @@ No generator, world, package, version or epoch is changed by this audit. Raw
 pair lists, map/rule/executable hashes, audit script and bounded disassembly stay
 in ignored `local_data/overseas-audit-20261031/`. [UNKNOWN] The commenter's exact
 in-game failure and any future correction's engine result were not observed.
+
+## Pending: the western strip before the seam (owner request, 2026-10-31)
+
+The owner asked that the protected Polynesian islands west of the ocean sector stop limiting
+the canvas and the generated geography. **Rule:** an island group the generated land does not
+touch stays where it is; one it touches moves, whole, to free water in the New World ocean.
+Nothing may be generated near other continents, and only the islands *before the seam* are
+meant (the Pitcairn islet at x≈330 on a 2,000-wide rendering, and every other protected
+group, stay as they are).
+
+[V-EXEC 2026-10-31, installed 1.4.6 map, world columns 0–1,599 of 16,384]
+- The strip holds **113 island locations** (47 land, 66 wasteland; 9,667 pixels in all) and
+  **240 `oceania` sea zones** that touch it, 214 of them wholly inside (coast and high-sea zones,
+  1.82 million pixels). The strip is protected because the game tags those sea zones `oceania`,
+  not because of the 96-pixel guard: `eu5_canvas.select_canvas` admits only sea of the
+  Atlantic and Pacific ocean continents.
+- The sector cannot be widened by moving its start to a negative column: that wraps past the
+  seam into the waters of Kamchatka, Australia and New Zealand (the owner rejected the result
+  as reaching other continents). The western limit is the seam, column 0.
+- Scripts keep the islands by key: `main_menu/setup/1337` (pops, characters, countries, cities
+  and buildings, markets, dynasties), `on_action/location_pulses`, `earthquake_events`,
+  `volcano_events`. They keep the *coast* zones of islands by key too: `circumnavigation_expedition`
+  (`puka_puka_coast`, `caroline_coast`) and `pacific_crossing_events` (`aitutaki_coast`,
+  `tubuai_coast`, `haraiki_coast`, `puka_puka_coast`). The coast zone therefore moves with its island.
+
+[INFERRED] **Design.** Island locations and their coast zones become *pinned cells*: generated
+cells that keep the vanilla key, colour and hierarchy and take the vanilla footprint, translated
+as one group when generated land would touch it (the group's footprint with the 96-pixel guard
+must lie on open generated ocean, away from land, other groups and protected pixels; nearest free
+spot by a deterministic search; failure is an explicit error). Their definitions, named colours,
+class lists, setup and scripts stay as vanilla; their locators and ports are regenerated at the
+new position (the `relocated` path of `eu5_nw_export`), and `Canvas.removed` must not list them.
+The high-sea zones are replaced like other ocean zones. Pinned cells need exemptions from the
+minimum island and cell sizes (vanilla atolls are 3–13 pixels).
+
+[V-EXEC] Location budget: a canvas with a larger ocean area raises the final location count; five
+full exports on a widened canvas (seed 1001) gave 30,939 (continents), 31,420 (small continents),
+31,104 (supercontinent), 31,819 (land 450‰) and 37,224 (spacing 40/80, over the cap), against
+estimates of 30,993, 31,023, 30,637, 31,673 and 35,434. The estimate (`app.controls`) must be refitted
+on the final canvas, and `LOCATION_BUDGET` rechecked. A lane-planner failure was also seen beside a
+protected island's guard (`Ocean lane … ends in closed water`, one dangling deep cell with a single
+link); it may not survive once the islands are no longer holes.
