@@ -190,3 +190,74 @@ records the interfaces whose output now covers the expanded domain.
 [UNKNOWN] No EU5 launch or owner sitting accompanies this phase. Expanded geography,
 merged ocean identities and the newly rebound discovery trigger have offline
 evidence only. Packaging and installation evidence is recorded in experiment 049.
+
+## Colonial overseas eligibility audit (2026-10-31, C453)
+
+The owner relayed a Workshop report that expanded continents make Western Europe
+border North America and prevent colonial nations. **The map defect is reproduced;
+the border can be between passable sea locations, without a land bridge.** This is
+an investigation, not an implemented fix or an owner-run gameplay test.
+
+[V-LOCAL] Installed EU5 1.4.6 / Steam build **26300913** retains the relevant vanilla
+rules. `game_concept_overseas_desc` defines overseas by a different continent whose
+subcontinent does not border the capital's continent, including maritime borders.
+The charter goal `in_game/common/colonial_charter_goals/form_colonial_nation.txt`
+requires `would_be_overseas_for`; the subject's creation/release rules require
+`is_overseas_for_owner`. These are separate from colonial range and AI preference.
+
+[V-LOCAL executable / INFERRED semantics] Bounded read-only tracing confirms the
+connection beyond the tooltip. The province-definition neighbour builder skips
+impassable endpoints but includes passable sea-to-sea contacts. Area, region and
+subcontinent neighbours aggregate upward; the continent collects neighbouring
+subcontinents. `would_be_overseas_for` rejects a location if its subcontinent belongs
+to, or neighbours, the country's capital continent. `is_overseas_for_owner` has
+the same geographic gate, with additional owner-state checks. Thus one qualifying
+contact can disqualify the entire American subcontinent for European capitals.
+Executable/structure scope is recorded in
+[R-004](interoperability.md#follow-up-colonial-overseas-eligibility-2026-10-31-c453).
+
+[V-EXEC] Read-only full-resolution raster/hierarchy audit, with horizontal wrap,
+finds the following distinct **passable sea-to-sea location pairs** between
+`america` and `europe`. These are selected existing snapshots, not a random sample
+or an estimate of failure frequency. Development rows identify the archived
+hydrology snapshots, not a reproduction from the latest working tree.
+
+| Audited map | Ocean expansion | Pairs | American subcontinent touching Europe |
+|---|---|---:|---|
+| Installed vanilla build 26300913 | — | 0 | None |
+| RNW 1.0.0 / epoch 59, supercontinent seed 9781797494467218106 | On | 3 | `south_america` |
+| 1.1.0 baseline-land snapshot, continents seed 1000 (`base_c1000`) | On | 9 | `south_america` |
+| 1.1.0 hydrology snapshot, continents seed 1000 (`hydro_c1000b`) | On | 0 | None |
+| 1.1.0 hydrology snapshot, continents seed 1001 (`hydro_c1001`) | On | 13 | `north_america` |
+| Pre-release ocean experiment 0.11.7, continents seed 210 | Off | 7 | `north_america` |
+| Same experiment and seed, expanded canvas | On | 5 | `north_america` |
+
+Every listed cross-continent passable sea contact is by Greenland, which vanilla
+places in `western_europe` / `europe`. For example, the released world's
+`rnw_sea_00109` (`south_america`) touches `greenland_high_sea21`; the seed-1001
+snapshot's `rnw_sea_00126` (`north_america`) touches `greenland_high_sea8`.
+There are no direct America–Europe land contacts in these seven maps. Vanilla's
+seven raw hierarchy contacts there involve impassable `baffin_bay` or
+`labrador_sea`, so they do not establish the same neighbour relation. Treating all
+water as passable would incorrectly flag vanilla too.
+
+[INFERRED from code and audit] The existing canvas guard and coast margin protect
+Old World pixels and land separation, but do not constrain geographic membership
+of the generated water. `_sea_areas` in `eu5_newworld.py` gives coastal water the
+American region/subcontinent of its shore and can grow it up to retained European
+water. `_check_world` in `eu5_nw_export.py` checks lost Old World contacts and sea
+reachability, but does not reject these new continental neighbour relations.
+The historical expansion-off control shows that disabling expansion is not a
+general remedy; this is a maritime hierarchy defect, not solely a canvas-width
+problem. The commenter's exact seed and world were not supplied.
+
+The corrective work should construct an ocean-hierarchy separation at these
+boundaries, preserve connected sea areas and navigation, and validate final
+passable contacts between American subcontinents and Old World continents.
+Merely increasing a land margin cannot guarantee that invariant. Geography and
+hierarchy construction should satisfy the vanilla overseas rules; a global
+override of colonial-nation eligibility would also affect unrelated countries.
+No generator, world, package, version or epoch is changed by this audit. Raw
+pair lists, map/rule/executable hashes, audit script and bounded disassembly stay
+in ignored `local_data/overseas-audit-20261031/`. [UNKNOWN] The commenter's exact
+in-game failure and any future correction's engine result were not observed.

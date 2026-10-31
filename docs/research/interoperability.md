@@ -441,6 +441,30 @@ the log lack that information. No executable bytes are changed or distributed;
 disassembly and raw measurements stay ignored. This incomplete trace is not
 treated as a new engine movement contract. The engine outcome remains unknown.
 
+### Follow-up: colonial overseas eligibility (2026-10-31, C453)
+
+[V-LOCAL executable / INFERRED semantics] A Workshop defect report requires
+distinguishing a harmless impassable ocean boundary from a passable maritime
+border that blocks vanilla colonial nations. Installed concepts and subject/charter
+scripts name the overseas condition, but do not expose how geographic neighbours
+are assembled. Bounded read-only string, RTTI/vtable and instruction inspection of
+EU5 build 26300913 (`eu5.exe` SHA-256 `44d7f28a…f6460`) follows only that connection:
+`CWouldBeOverseasForTrigger`, `CIsOverSeasForOwnerTrigger`, geographic-neighbour
+aggregation and the passability predicate. The province neighbour builder at RVA
+`4a34760` skips impassable endpoints (the same template flag read by
+`CIsPassableTrigger`, evaluator `1db0d40`); aggregation reaches the continent's
+neighbouring-subcontinent list through `4a43ef0`. The overseas checks at
+`1dd84a0` and `313d9d0` consult that list. These addresses apply only to the
+hashed executable; no general binary ABI is adopted.
+
+The independently authored raster audit reads R-004's existing PNG/text interfaces;
+its findings and limits are in the
+[canvas investigation](canvas-expansion.md#colonial-overseas-eligibility-audit-2026-10-31-c453).
+No executable, save, installation or generated world is modified, and no game is
+launched. Raw instructions, fingerprints and derived map evidence remain in ignored
+`local_data/overseas-audit-20261031/`; only the structural findings are committed.
+No new dependency, public game asset or executable patch is introduced.
+
 ### Follow-up: complete ocean courses (2026-10-26, 0.13.2 / epoch 41)
 
 [V-EXEC C349–C352] 657Q reveals a passable lane interrupted by one internal
