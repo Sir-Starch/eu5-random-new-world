@@ -90,6 +90,20 @@ def land_model(
         persistence_permille=settings.persistence_permille,
         warp_permille=COAST_WARP_PERMILLE,
     )
+    opening = min(domain.shape[1], max(8 * settings.location_px, 4 * ramp + 1))
+    if opening < domain.shape[1]:
+        for edge, sample in (
+            (0, min(domain.shape[0] - 1, 2 * ramp)),
+            (domain.shape[0] - 1, max(0, domain.shape[0] - 1 - 2 * ramp)),
+        ):
+            valid = domain[edge] & domain[sample]
+            sources[edge] = True
+            if np.any(valid):
+                scores = np.where(valid, relief[sample], -10 * NOISE_SCALE).astype(np.int64)
+                totals = np.convolve(scores, np.ones(opening, dtype=np.int64), mode="valid")
+                start = int(np.argmax(totals))
+                sources[edge, start : start + opening] = ~domain[edge, start : start + opening]
+        guard = sources.copy()
     wobble = _field(
         seed,
         "new_world_edge",

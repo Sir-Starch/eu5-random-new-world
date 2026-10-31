@@ -39,20 +39,20 @@ An unobserved detail alone does not reopen acceptance or require another game se
   cross lakes. See [terrain](terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)
   for the stages, measurements and what is not modelled yet.
 
-- **Release blocker — continents at the polar map edges** (owner, 2026-10-31, [V-GAME]; open).
+- **Polar map-edge correction** (owner, 2026-10-31, [V-GAME]; corrected for pending 1.1.0, C454).
   Since land may reach the north and south map edges (`02bfe15`), some continents touch an
   edge along a very wide front, as if a huge continuation lay beyond it, which contradicts the
   planet's geography. The locations there also keep their ordinary small size, whereas toward
   the pole the Old World's locations grow (the northern Eurasian projection effect).
   Requirement: a continent has only a small contact with a polar edge, and the locations that
   do lie on an edge are larger (growing with the distance toward the edge) and impassable, for
-  example always a thin mountain range. 1.1.0 must not be released with this defect. Likely code:
-  the polar edges are unguarded in `newworld._natural_land`/`_coasts` (only the longitudinal
-  borders keep a guard), cell sizes come from one uniform `spacing` in `newworld._cells`/`synth.seed_sites`,
-  and the Wall already makes its polar endpoint cells wasteland (`newworld.py`, `wall.py`). The
-  expanded canvas reaches both edges, so the defect applies to every preset. Not started; the
-  owner chose to finish the canvas expansion first. Measure it as the share of each continent's
-  coast that lies on an edge, and cell area against latitude on generated and vanilla maps.
+  example always a thin mountain range. 1.1.0 must not be released with this defect. The
+  expanded canvas reaches both edges, so the defect applies to every preset. The current
+  implementation limits ordinary continents to one narrow approach at each edge, grows larger
+  polar locations and makes every edge-touching land location impassable. Synthetic checks,
+  the installed-game export and a separately installed candidate pass (C454). In the continents
+  candidate, new land touches 249 polar-edge pixels, 0.17 % of its 150,849 coast contacts; its
+  sole edge location has 60,190 pixels and is impassable. See [terrain](terrain-biomes.md).
 
 ## Future work requested by the owner
 

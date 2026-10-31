@@ -6,6 +6,26 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-31, **1.1.0 development — polar map edges** (C454). [V-EXEC] Installed a new
+continents world, seed 20261031, code `RNW1-040G0-00000-0KAA5-7040G-0053W-GG0`, at
+`mod/rnw_exp_world_wqouzjuybf` in the normal Proton profile. Its 870 nonmetadata
+output files have SHA-256 `6943b6ac…2d420c89`; the exporter reports zero split
+generated cells, unreachable generated seas, land cells without port access or
+lost Old World contacts. Of 872 manifest entries for the mod, 851 match installed
+bytes; the app's reveal setting omits 20 cover-only files and changes the metadata
+thumbnail. The installed candidate has one generated polar-edge land location,
+an impassable mountain of 60,190 pixels touching 249 edge pixels. Earlier worlds,
+playsets and saves were preserved; EU5 was not launched or controlled.
+
+The pending epoch-60 reference on the installed EU5 1.4.6 / build 26300913
+has 871 nonmetadata files / `03d0877d…194aa` and the recorded map fingerprint.
+The current hub passed its Windows/Wine generator and window-shell self-tests and
+was installed as `mod/rnw_exp_hub` (3,478 files); its previous copy is retained at
+`.rnw-hub-backups/1.1.0-1793486745699007681`. Wheel SHA-256
+`b8921da10101c10d017492839e86af394408dead7b4c966b72d94703d6d94498`.
+Full checks passed (2,360 Python tests, 15 optional skips; 23 Rust tests; strict
+types, lint and formatting). Local reports are in `local_data/polar-edge-20261031/`.
+
 2026-10-31, **1.1.0 development — generation status and ETA**. [V-EXEC] The inspector now
 shows the general generation/cancellation status and percentage; stage names remain in the main
 list. ETA uses the remaining parallel dependency path, a stable deadline, current reference

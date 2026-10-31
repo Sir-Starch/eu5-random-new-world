@@ -440,10 +440,27 @@ shape both the Wall and the side land. The preset requires the expanded canvas. 
 world codes preserve every control.
 
 At the owner's request, ordinary and image-based generation also permit land to
-reach the north and south map edges. Those edges no longer impose an ocean guard;
-protected pixels and longitudinal margins still do. Polar water connects to ocean
+reach the north and south map edges. Ordinary continents now have one narrow
+approach to each polar edge, selected from the strongest inland part of the coast
+field; the rest of each edge has the same ocean guard as a canvas boundary.
+Land locations near either edge use a coarser seed grid, and every location that
+touches an edge is impassable. Image-based land keeps its authored coast, but its
+edge locations use the same larger grid and impassability rule. The Wall keeps its
+continuous polar endpoints. Protected pixels and longitudinal margins remain
+guarded. Polar water connects to ocean
 only through actual ocean outlets; isolated polar basins follow the same lake
 classification as other enclosed water. Ordinary worlds do not guarantee polar land.
+
+[V-EXEC, 2026-10-31, C454] The installed EU5 1.4.6 / build 26300913 export of
+the pending epoch-60 reference passed the world validators (871 nonmetadata files,
+SHA-256 `03d0877d…194aa`). An independent continents candidate with seed 20261031
+has one generated land location on a polar edge: 249 edge pixels out of 150,849
+generated-land coast contacts (0.17 %). That location has 60,190 pixels and is
+listed as an impassable mountain. For scale, the installed vanilla map's six
+edge-touching land locations have median area 350,799 pixels; its polar and
+middle-latitude land locations have medians 2,502 and 709 pixels respectively.
+These are file measurements, not a new in-game visual observation. The local
+comparison is in `local_data/polar-edge-20261031/edge-metrics.json`.
 
 The full Wall export also exposed a route-scale defect: folding closed ocean zones
 changed the median cell size and could invalidate an already constructed narrow

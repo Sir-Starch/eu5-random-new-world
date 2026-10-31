@@ -281,6 +281,7 @@ def _natural_land(
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
     guard = ~domain
     guard[:, [0, -1]] = True
+    _guard_polar_edges(guard, domain, relief, settings)
     wobble = _field(
         seed,
         "new_world_edge",
@@ -324,6 +325,39 @@ def _natural_land(
     )
     land &= _large_parts(land, settings.min_island_px)
     return (*_classify(domain, land, shore, settings), elevation)
+
+
+def _guard_polar_edges(
+    guard: NDArray[np.bool_],
+    domain: NDArray[np.bool_],
+    relief: NDArray[np.int32],
+    settings: NewWorldSettings,
+) -> None:
+    """Leave one narrow, seed-dependent land approach at each polar edge.
+
+    The ordinary coast ramp then shapes the approach; the rest of the polar
+    boundary behaves like an ocean-facing canvas boundary. Choose the opening
+    where the density field is strongest just inland, so it can join a continent.
+    """
+    height, width = domain.shape
+    ramp = EDGE_RAMP_MARGINS * settings.coast_margin_px
+    opening = min(width, max(8 * settings.location_px, 4 * ramp + 1))
+    if opening >= width:
+        return
+    for edge, sample in (
+        (0, min(height - 1, 2 * ramp)),
+        (height - 1, max(0, height - 1 - 2 * ramp)),
+    ):
+        eligible = domain[edge] & domain[sample]
+        if not np.any(eligible):
+            guard[edge] = True
+            continue
+        score = np.where(eligible, relief[sample], -10 * NOISE_SCALE).astype(np.int64)
+        # A full-width window avoids selecting an isolated high pixel beside protected water.
+        sums = np.convolve(score, np.ones(opening, dtype=np.int64), mode="valid")
+        start = int(np.argmax(sums))
+        guard[edge] = True
+        guard[edge, start : start + opening] = ~domain[edge, start : start + opening]
 
 
 def _wall_land(
@@ -769,8 +803,20 @@ def wobble_borders(
 
 
 def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) -> NDArray[np.int32]:
-    """Cells of about ``spacing`` pixels grown inside ``mask``, none under ``smallest`` pixels."""
-    return merge_small(grow_regions(mask, seed_sites(key, mask, spacing)), smallest)
+    """Grow land cells, with larger seed spacing toward both polar edges."""
+    sites = seed_sites(key, mask, spacing)
+    height = mask.shape[0]
+    band = min(height // 4, 6 * spacing)
+    if band:
+        polar = np.zeros(mask.shape, dtype=np.bool_)
+        polar[:band] = mask[:band]
+        polar[-band:] = mask[-band:]
+        coarse = seed_sites(key, polar, 3 * spacing)
+        sites[polar] = coarse[polar]
+        # The two seed sets have independent numbering; make every seed unique.
+        positions = np.flatnonzero(sites >= 0)
+        sites.ravel()[positions] = np.arange(len(positions), dtype=np.int32)
+    return merge_small(grow_regions(mask, sites), smallest)
 
 
 def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement domain.
@@ -912,12 +958,13 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     ranked = sorted(land_ids, key=lambda index: (-int(mean_relief[index]), index))
     for index in ranked[:wasteland]:
         kinds[index] = CellClass.WASTELAND
+    # Every land location touching a polar map edge is impassable, including
+    # drawn worlds and the Wall. The shelves remain playable.
+    polar = np.unique(labels[[0, -1], :])
+    for index in polar.tolist():
+        if index >= 0 and kinds[index] is CellClass.LAND:
+            kinds[index] = CellClass.WASTELAND
     if settings.landform:
-        # Polar end locations are impassable, while the shelves remain playable.
-        polar = np.unique(labels[[0, -1], :])
-        for index in polar.tolist():
-            if index >= 0 and kinds[index] is CellClass.LAND:
-                kinds[index] = CellClass.WASTELAND
         middle = wall.spine(whole, seed, settings)
         if (
             not settings.wall_allow_gaps

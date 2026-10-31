@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Narrow the places where ordinary continents meet the north and south map edges
+  (pending epoch 60). Land locations near the poles grow larger, and all locations
+  touching a polar edge are impassable. The Wall retains its continuous endpoints;
+  existing generated worlds are unaffected.
+
 - Add a control that keeps the New World's land away from the Old World's shores (pending epoch 60).
   Advanced → Land → Distance from the Old World lifts the land density in the middle of the canvas, so
   continents move toward the middle of the ocean while the amount of land does not change; on the
