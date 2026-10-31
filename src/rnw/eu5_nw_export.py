@@ -81,7 +81,15 @@ from rnw.eu5_biomes import (
     template_attributes,
     vanilla_locations,
 )
-from rnw.eu5_canvas import NEW_WORLD, OCEANS, Canvas, remainder_boxes, select_canvas
+from rnw.eu5_canvas import (
+    NEW_WORLD,
+    OCEANS,
+    Canvas,
+    open_map,
+    remainder_boxes,
+    select_canvas,
+    settle_islands,
+)
 from rnw.eu5_content import ContentError, carry_out, culture_traits
 from rnw.eu5_content import places as content_places
 from rnw.eu5_development import (
@@ -930,6 +938,19 @@ def _final_labels(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[
     return final
 
 
+def _held(game_map: Eu5Map, canvas: Canvas) -> NDArray[np.bool_]:
+    """Vanilla locations and zones of the island groups.
+
+    A group stands in new water, so its old neighbours (replaced or trimmed waters) are no
+    contacts to keep; the sea reachability check covers its new ones.
+    """
+    held = np.zeros(len(game_map.keys), dtype=bool)
+    for group in canvas.groups:
+        held[list(group.locations)] = True
+        held[list(group.zones)] = True
+    return held
+
+
 def _check_world(
     game_map: Eu5Map, canvas: Canvas, world: NewWorld, final: NDArray[np.int32]
 ) -> tuple[dict[str, int], frozenset[int]]:
@@ -957,11 +978,14 @@ def _check_world(
     old_world = np.array(
         [name not in OCEANS and name != NEW_WORLD for name in continents], dtype=bool
     )
+    held = _held(game_map, canvas)
     lost = [
         pair
         for pair in before - after
         if not canvas.removed[pair[0]]
         and not canvas.removed[pair[1]]
+        and not held[pair[0]]
+        and not held[pair[1]]
         and (old_world[pair[0]] or old_world[pair[1]])
     ]
     if lost:
@@ -2571,12 +2595,16 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     game_map, hierarchy = run_stage("load map", load)
     canvas = run_stage(
         "select canvas",
-        lambda: select_canvas(
+        lambda: settle_islands(
             game_map,
-            settings.new_world.ocean_band_px,
-            expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
+            select_canvas(
+                game_map,
+                settings.new_world.ocean_band_px,
+                expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
+            ),
         ),
     )
+    game_map = open_map(game_map, canvas)
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}

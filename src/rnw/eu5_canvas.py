@@ -12,11 +12,12 @@ longer veto the entire ocean's inclusion.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.eu5_pacific import REFERENCE_WIDTH, IslandGroup, expansion
 from rnw.model import CellClass
 from rnw.topology import distance_from, label_components
 
@@ -27,9 +28,11 @@ if TYPE_CHECKING:
 
 NEW_WORLD: Final[str] = "america"
 OCEANS: Final[frozenset[str]] = frozenset({"atlantic_ocean_continent", "pacific_ocean_continent"})
+OPENED: Final[frozenset[str]] = frozenset(
+    {"oceania", "indian_ocean_continent", "antarctic_ocean_continent"}
+)
 GUARD_PX: Final[int] = 96
 MIN_REMAINDER_PX: Final[int] = 3000
-REFERENCE_WIDTH: Final[int] = 16384
 EXPANDED_BAND_PX: Final[int] = 1600
 OCEAN_SECTOR: Final[tuple[int, int]] = (1600, 6500)
 
@@ -70,6 +73,8 @@ class Canvas:
     removed: NDArray[np.bool_]
     trimmed: NDArray[np.bool_]
     ocean_parts: tuple[OceanRemainder, ...] = ()
+    groups: tuple[IslandGroup, ...] = ()
+    opened: NDArray[np.bool_] | None = None
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""
@@ -162,9 +167,81 @@ def remainder_boxes(
     }  # fmt: skip
 
 
+def settle_islands(game_map: Eu5Map, canvas: Canvas) -> Canvas:
+    """The canvas with every island group left in its place.
+
+    ``select_canvas`` covers the groups, so a continent may be generated over them. Here each
+    group (its locations and the sea zones of its ports) becomes a hole of the mask, so its
+    vanilla pixels survive; the replaced and trimmed locations are counted again.
+    """
+    if not canvas.groups:
+        return canvas
+    count = len(game_map.keys)
+    member = np.zeros(count, dtype=bool)
+    for group in canvas.groups:
+        member[list(group.locations)] = True
+        member[list(group.zones)] = True
+    crop = np.empty(canvas.mask.shape, dtype=np.int32)
+    for columns, world in canvas.spans():
+        crop[:, columns] = game_map.labels[:, world]
+    mask = canvas.mask & ~member[crop]
+    inside = np.bincount(crop[mask].ravel(), minlength=count)
+    total = np.bincount(game_map.labels.ravel(), minlength=count)
+    removed = (inside == total) & (total > 0)
+    trimmed = (inside > 0) & ~removed
+    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
+    tagged = np.array([name in OPENED for name in game_map.continents], dtype=bool)
+    return replace(
+        canvas,
+        mask=mask,
+        removed=removed,
+        trimmed=trimmed,
+        opened=(removed | trimmed) & sea & tagged,
+    )
+
+
+def open_map(game_map: Eu5Map, canvas: Canvas) -> Eu5Map:
+    """The map with the open waters the canvas took over counted as ocean, as the rest are.
+
+    The Pacific side covers sea zones that the installed game files give to oceania or to the
+    southern oceans; the generated world replaces or trims them as it does an ocean's.
+    """
+    if canvas.opened is None or not canvas.opened.any():
+        return game_map
+    continents = tuple(
+        "pacific_ocean_continent" if opened else name
+        for name, opened in zip(game_map.continents, canvas.opened.tolist(), strict=True)
+    )
+    return replace(game_map, continents=continents)
+
+
+def _sector(rolled: NDArray[np.int32], roll: int, water: NDArray[np.bool_]) -> NDArray[np.bool_]:
+    """A fixed longitudinal sector of ``water``, east of Hawaii and west of the African waters.
+
+    Coordinates are fractions of the installed map, not a shipped raster. The old band
+    supplies Alaska's northern extension; the sector supplies southern width independently of
+    America's coast. All protected waters keep their guard.
+    """
+    columns = (np.arange(rolled.shape[1], dtype=np.int64) - roll) % rolled.shape[1]
+    inside = (columns * REFERENCE_WIDTH >= OCEAN_SECTOR[0] * rolled.shape[1]) & (
+        columns * REFERENCE_WIDTH < OCEAN_SECTOR[1] * rolled.shape[1]
+    )
+    return water & inside[np.newaxis, :]
+
+
+def _expand(
+    game_map: Eu5Map, rolled: NDArray[np.int32], canvas: NDArray[np.bool_]
+) -> tuple[NDArray[np.bool_], tuple[IslandGroup, ...]]:
+    """The canvas with the Pacific side, and the island groups that it covers."""
+    new_world = np.array([name == NEW_WORLD for name in game_map.continents], dtype=bool)
+    added = expansion(game_map, rolled, canvas, new_world[rolled])
+    return added.canvas, added.groups
+
+
 def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> Canvas:
     """Return the canvas for ``band_px`` of ocean around the New World."""
     count = len(game_map.keys)
+    groups: tuple[IslandGroup, ...] = ()
     continents = np.array(game_map.continents, dtype=object)
     new_world = continents == NEW_WORLD
     ocean = np.isin(continents, list(OCEANS))
@@ -178,15 +255,8 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
     near_other = distance_from(other[rolled], GUARD_PX + 1) <= GUARD_PX
     canvas = inside_new | ((ocean & sea)[rolled] & near_new & ~near_other)
     if expanded:
-        # A fixed longitudinal sector, east of Hawaii and west of the African waters.
-        # Coordinates are fractions of the installed map, not a shipped raster. The
-        # old band supplies Alaska's northern extension; the sector supplies southern
-        # width independently of America's coast. All protected waters keep their guard.
-        columns = (np.arange(rolled.shape[1], dtype=np.int64) - roll) % rolled.shape[1]
-        sector = (columns * REFERENCE_WIDTH >= OCEAN_SECTOR[0] * rolled.shape[1]) & (
-            columns * REFERENCE_WIDTH < OCEAN_SECTOR[1] * rolled.shape[1]
-        )
-        canvas |= (ocean & sea)[rolled] & sector[np.newaxis, :] & ~near_other
+        water = (ocean & sea)[rolled] & ~near_other
+        canvas, groups = _expand(game_map, rolled, canvas | _sector(rolled, roll, water))
     zones = np.unique(rolled[canvas & ~inside_new])
     boxes = remainder_boxes(rolled, canvas, zones, count)
     ocean_parts: list[OceanRemainder] = []
@@ -243,4 +313,5 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
         removed=removed,
         trimmed=trimmed,
         ocean_parts=tuple(ocean_parts),
+        groups=groups,
     )

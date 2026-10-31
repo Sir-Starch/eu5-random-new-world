@@ -262,44 +262,56 @@ pair lists, map/rule/executable hashes, audit script and bounded disassembly sta
 in ignored `local_data/overseas-audit-20261031/`. [UNKNOWN] The commenter's exact
 in-game failure and any future correction's engine result were not observed.
 
-## Pending: the western strip before the seam (owner request, 2026-10-31)
+## The Pacific side and the island groups (owner request, 2026-10-31; pending 1.1.0 / epoch 60)
 
-The owner asked that the protected Polynesian islands west of the ocean sector stop limiting
-the canvas and the generated geography. **Rule:** an island group the generated land does not
+The owner asked that the protected Polynesian islands before the seam stop limiting the canvas and
+the generated geography, for every preset. **Rule:** an island group the generated land does not
 touch stays where it is; one it touches moves, whole, to free water in the New World ocean.
-Nothing may be generated near other continents, and only the islands *before the seam* are
-meant (the Pitcairn islet at x≈330 on a 2,000-wide rendering, and every other protected
-group, stay as they are).
+Nothing may be generated near other continents or between New Zealand and Australia, the mask must
+reach New Zealand's east side and both polar edges, and it must have no ruler-straight edges, because
+generated land inherits the shape of the edge it meets. The Atlantic side stays as it was.
 
-[V-EXEC 2026-10-31, installed 1.4.6 map, world columns 0–1,599 of 16,384]
-- The strip holds **113 island locations** (47 land, 66 wasteland; 9,667 pixels in all) and
-  **240 `oceania` sea zones** that touch it, 214 of them wholly inside (coast and high-sea zones,
-  1.82 million pixels). The strip is protected because the game tags those sea zones `oceania`,
-  not because of the 96-pixel guard: `eu5_canvas.select_canvas` admits only sea of the
-  Atlantic and Pacific ocean continents.
-- The sector cannot be widened by moving its start to a negative column: that wraps past the
-  seam into the waters of Kamchatka, Australia and New Zealand (the owner rejected the result
-  as reaching other continents). The western limit is the seam, column 0.
-- Scripts keep the islands by key: `main_menu/setup/1337` (pops, characters, countries, cities
-  and buildings, markets, dynasties), `on_action/location_pulses`, `earthquake_events`,
-  `volcano_events`. They keep the *coast* zones of islands by key too: `circumnavigation_expedition`
-  (`puka_puka_coast`, `caroline_coast`) and `pacific_crossing_events` (`aitutaki_coast`,
-  `tubuai_coast`, `haraiki_coast`, `puka_puka_coast`). The coast zone therefore moves with its island.
+**Shape** (`eu5_pacific.expansion`, added to the old canvas by `eu5_canvas.select_canvas`):
+water within 5,400 px (Euclidean) of the New World, minus 160 px around every Old World land
+location and around the waters tagged asia, europe and africa; pockets and channels narrower than
+600 px are dropped by a morphological opening, which removes the Tasman pocket and the bays of the
+Oceanian island chains; the addition stops at the first column at or after the New World's median
+column that the old canvas covers in every row, so it joins the Atlantic part without an edge.
+Only round contours bound it; no continent tag or column limit does. Ocean tags cannot define the
+shape: a tag-based eligibility leaves the central Pacific full of protected `oceania` zones, and the
+tag borders are the straight lines of the old mask (the 20°E line, the Biscay diagonal). Island groups
+that the shape encloses are covered instead of left as holes, because a hole in the generation
+domain makes the generator keep a margin round it and cut a strait through any land that encloses it.
 
-[INFERRED] **Design.** Island locations and their coast zones become *pinned cells*: generated
-cells that keep the vanilla key, colour and hierarchy and take the vanilla footprint, translated
-as one group when generated land would touch it (the group's footprint with the 96-pixel guard
-must lie on open generated ocean, away from land, other groups and protected pixels; nearest free
-spot by a deterministic search; failure is an explicit error). Their definitions, named colours,
-class lists, setup and scripts stay as vanilla; their locators and ports are regenerated at the
-new position (the `relocated` path of `eu5_nw_export`), and `Canvas.removed` must not list them.
-The high-sea zones are replaced like other ocean zones. Pinned cells need exemptions from the
-minimum island and cell sizes (vanilla atolls are 3–13 pixels).
+[V-EXEC 2026-10-31, installed 1.4.6 map, 16,384 × 8,192]
+- The canvas covers 62.5 million pixels against 53.2 (+17 %); its crop is 10,075 columns, as before.
+  Outside the Pacific columns it differs from the old canvas by 259 px (the five Atlantic islets).
+- The strip before the seam (world columns 0–1,599) holds **113 island locations** (47 land, 66
+  wasteland) and about 240 `oceania` sea zones. Eight more groups (15 locations) end up enclosed: the
+  northwestern Hawaiian atolls, Pitcairn with Henderson, Ducie and Oeno, Rapa Nui, Bermuda, St Helena,
+  Ascension, Tristan da Cunha and Gough. Clustering by 32 px gives 49 groups, the largest the Tuamotu
+  with 35 locations, 287 × 460 px.
+- **Coast zones.** Every sea zone that touches a strip island is small (1.6 k – 13 k px) and named
+  `*_coast*`, `*_bay`, `*_point` or `*_cape`; none is a high sea or an ocean zone. The rule is therefore
+  geometric: the sea zones up to 30 k px that touch an island of the group. Scripts keep these zones
+  by key (`circumnavigation_expedition`: `puka_puka_coast`, `caroline_coast`; `pacific_crossing_events`:
+  `aitutaki_coast`, `tubuai_coast`, `haraiki_coast`), so they stay with their islands. High seas are
+  replaced like other ocean.
+- Zones of oceania, the Indian and the southern oceans that the canvas takes over are counted as
+  ocean (`eu5_canvas.open_map`), as the old canvas counted the Atlantic and Pacific ones.
+- Pairs of an island group and its old neighbours are exempt from the Old World contact check
+  (`_held`): the group stands in new water, and the sea reachability check covers its new contacts.
+- Location budget. Seven full exports (seed 4242, continents unless stated) gave 31,832 locations
+  (defaults), 34,920 (spacing 45), 32,767 (zone 90), 28,504 (land 25 %), 28,363 (80/200/600 ‰), 30,549
+  (zone 250) and 26,093 (spacing 100). The estimate's outside count (21,975) holds; refitted to
+  `WIDE_LAND_CELLS = 58,800` and `WIDE_SEA_ZONES = 31,000` its largest error is 470. The presets' land
+  shares are lowered by 15 % (continents 400 → 340 ‰ and so on), so a world keeps the land and the
+  locations it had; the extra water is room for the continents.
 
-[V-EXEC] Location budget: a canvas with a larger ocean area raises the final location count; five
-full exports on a widened canvas (seed 1001) gave 30,939 (continents), 31,420 (small continents),
-31,104 (supercontinent), 31,819 (land 450‰) and 37,224 (spacing 40/80, over the cap), against
-estimates of 30,993, 31,023, 30,637, 31,673 and 35,434. The estimate (`app.controls`) must be refitted
-on the final canvas, and `LOCATION_BUDGET` rechecked. A lane-planner failure was also seen beside a
-protected island's guard (`Ocean lane … ends in closed water`, one dangling deep cell with a single
-link); it may not survive once the islands are no longer holes.
+**Phase 1 is implemented:** the groups stay where they are, as holes of the mask
+(`eu5_canvas.settle_islands`). **Phase 2 is open:** land is generated on the clean canvas, and a group the
+land touches moves, whole, with its coast zones to the nearest free water (its footprint and a guard on open
+generated ocean, away from land and other groups; a deterministic search; no spot is an explicit
+error). Moving needs the vanilla layers of the footprint translated to the new place: location colours
+and labels, rivers, heightmap and material decals, water textures, vegetation instances, locators and
+ports; `Canvas.removed` must not list the group, and the group takes the land cache key.

@@ -344,7 +344,7 @@ PRESETS: Final[dict[str, Settings]] = {
             border_px=2,
         ),
         new_world=NewWorldSettings(
-            land_permille=400,
+            land_permille=340,
             feature_px=1600,
             octaves=7,
             persistence_permille=520,
@@ -393,7 +393,7 @@ PRESETS: Final[dict[str, Settings]] = {
             border_px=2,
         ),
         new_world=NewWorldSettings(
-            land_permille=300,
+            land_permille=255,
             feature_px=520,
             octaves=7,
             persistence_permille=580,
@@ -412,6 +412,9 @@ PRESETS: Final[dict[str, Settings]] = {
         natives=replace(NATIVES, hearths_per_10k=8, religion_locations=60),
     ),
 }
+# The land shares are of the whole canvas. The Pacific side made the expanded canvas 17 % larger
+# (62.5 against 53.2 million pixels), so the shares are 15 % lower than before: a world keeps the
+# land and the locations it had, and the extra water is room for the continents to lie in.
 # More kinds of New World from the same model: its scale (``feature_px``), land share and
 # smallest island decide whether the land joins into one mass or falls apart. Measured on
 # seeds 42, 7 and 1000 (share of the land in masses of at least 3 %): continents 84-92 %
@@ -423,7 +426,7 @@ PRESETS["supercontinent"] = replace(
     preset="supercontinent",
     new_world=replace(
         PRESETS["continents"].new_world,
-        land_permille=540,
+        land_permille=460,
         feature_px=3600,
         persistence_permille=470,
         min_island_px=6000,
@@ -436,7 +439,7 @@ PRESETS["small_continents"] = replace(
     preset="small_continents",
     new_world=replace(
         PRESETS["continents"].new_world,
-        land_permille=300,
+        land_permille=255,
         location_px=47,
         feature_px=1000,
         min_island_px=1200,
@@ -444,14 +447,14 @@ PRESETS["small_continents"] = replace(
 )
 PRESETS["archipelago"] = replace(
     PRESETS["archipelago"],
-    new_world=replace(PRESETS["archipelago"].new_world, land_permille=200, feature_px=420),
+    new_world=replace(PRESETS["archipelago"].new_world, land_permille=170, feature_px=420),
 )
 PRESETS["islands"] = replace(
     PRESETS["archipelago"],
     preset="islands",
     new_world=replace(
         PRESETS["archipelago"].new_world,
-        land_permille=180,
+        land_permille=153,
         feature_px=300,
         octaves=6,
         persistence_permille=600,
@@ -465,7 +468,7 @@ PRESETS["wall"] = replace(
     new_world=replace(
         PRESETS["continents"].new_world,
         landform=1,
-        land_permille=250,
+        land_permille=212,
         feature_px=1000,
         location_px=53,
     ),

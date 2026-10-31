@@ -26,6 +26,10 @@ STEPS: Final[int] = 1000
 OUTSIDE_LOCATIONS: Final[int] = 21_975
 LAND_CELLS: Final[int] = 37_500
 SEA_ZONES: Final[int] = 41_000
+# The expanded canvas (seven exports of build 26300913, largest error 470): its land fills 59 % of
+# the pixels, and its sea zones are few, because most of its water lies in a few ocean zones.
+WIDE_LAND_CELLS: Final[int] = 58_800
+WIDE_SEA_ZONES: Final[int] = 31_000
 LAKES: Final[int] = 100
 LOCATION_BUDGET: Final[int] = 31_200
 
@@ -152,8 +156,9 @@ ADVANCED: Final[tuple[Control, ...]] = tuple(
 def estimated_locations(settings: Settings) -> int:
     """Locations the world of ``settings`` will have, roughly (within about 600, C118)."""
     world = settings.new_world
-    land_area = 48_000 if world.expand_oceans or world.landform else LAND_CELLS
-    sea_area = 50_000 if world.expand_oceans or world.landform else SEA_ZONES
+    wide = bool(world.expand_oceans or world.landform)
+    land_area = WIDE_LAND_CELLS if wide else LAND_CELLS
+    sea_area = WIDE_SEA_ZONES if wide else SEA_ZONES
     # Side land plus the widest possible Wall envelope: a conservative upper bound.
     share = min(
         800, world.land_permille + (world.wall_width_permille * 3 // 2 if world.landform else 0)

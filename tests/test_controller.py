@@ -175,7 +175,7 @@ def test_choices_are_validated_and_a_type_resets_its_values(
     code = controller.code
     controller.set_preset("islands")
     assert controller.changes == {}
-    assert controller.value("new_world.land_permille") == 180
+    assert controller.value("new_world.land_permille") == 153
     assert controller.use_code(code) is None
     assert controller.preset == "continents"
     assert controller.value("natives.state_spread_permille") == 300
