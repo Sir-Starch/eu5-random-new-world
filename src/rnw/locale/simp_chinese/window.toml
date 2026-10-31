@@ -662,6 +662,14 @@ text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲�
 source = "e0a693457850e1a8"
 text = '''新大陆中陆地所占的比例。'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''与旧世界的距离'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''数值越高，大陆越靠近海洋中部，离旧世界海岸越远。陆地总量不变。高墙预设会忽略此项。'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''陆块大小'''

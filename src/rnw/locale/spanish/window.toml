@@ -662,6 +662,14 @@ text = '''Recomendado: da más espacio al Nuevo Mundo para que sus continentes n
 source = "e0a693457850e1a8"
 text = '''Cuánto del Nuevo Mundo es tierra.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''Distancia al Viejo Mundo'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''Más alto: los continentes quedan más cerca del centro del océano, lejos de las costas del Viejo Mundo. La cantidad de tierra no cambia. El Muro lo ignora.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''Tamaño de las masas de tierra'''

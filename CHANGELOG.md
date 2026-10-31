@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add a control that keeps the New World's land away from the Old World's shores (pending epoch 60).
+  Advanced → Land → Distance from the Old World lifts the land density in the middle of the canvas, so
+  continents move toward the middle of the ocean while the amount of land does not change; on the
+  installed canvas the land's mean distance from the canvas edge goes from about 1,540–1,920 pixels to
+  about 2,340–2,390 across the range. It is 0 by default, which leaves every world as it was; The Wall and
+  land drawn from an image ignore it. It is in both windows, in all eleven languages and in world codes.
+
 - Widen the expanded ocean across the Pacific and move the islands that continents would cover
   (pending epoch 60). The expanded canvas now reaches the whole Pacific side of the New World: the
   Polynesian islands before the map's seam, the open ocean to both polar edges and the water east of New

@@ -662,6 +662,14 @@ text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’
 source = "e0a693457850e1a8"
 text = '''Yeni Dünya'nın ne kadarının kara olduğu.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''Eski Dünya’ya uzaklık'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''Yükseldikçe kıtalar okyanusun ortasına yaklaşır, Eski Dünya’nın kıyılarından uzaklaşır. Kara miktarı değişmez. Duvar bu ayarı yok sayar.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''Kara parçalarının büyüklüğü'''

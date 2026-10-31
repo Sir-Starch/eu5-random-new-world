@@ -662,6 +662,14 @@ text = '''推奨：新世界の生成範囲を広げ、大陸が南北アメリ�
 source = "e0a693457850e1a8"
 text = '''新世界のうち陸地が占める割合。'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''旧世界からの距離'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''高くするほど、大陸は海の中央寄りに、旧世界の海岸から遠くなります。陸地の量は変わりません。「壁」では無視されます。'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''陸塊の大きさ'''

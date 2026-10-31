@@ -32,6 +32,10 @@ queue; Generate stays below the tabs. The middle shows the continent sketches, t
 and the progress. The classic window keeps its own tabs ([GUI design](gui-design.md)).
 Settings holds application paths, the window's language and diagnostics. [V-EXEC C147] The window speaks the language Steam runs EU5 in, unless another is chosen there; a choice applies at the next start, and every official language of the game is available (C275).
 
+Advanced → Land has **Distance from the Old World**: higher values move the land toward
+the middle of the ocean, away from the Old World's shores, without changing how much land
+there is (The Wall ignores it).
+
 Choose a type and seed, or paste a code. The quick answers set the same values as
 Customize. Choose a continent sketches six seeds without building complete mods;
 selecting one restores its settings and seed. Sketches reveal land only, and the

@@ -662,6 +662,14 @@ text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie
 source = "e0a693457850e1a8"
 text = '''Jaka część Nowego Świata to ląd.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''Odległość od Starego Świata'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''Wyżej: kontynenty leżą bliżej środka oceanu, dalej od wybrzeży Starego Świata. Ilość lądu się nie zmienia. Mur to ignoruje.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''Wielkość lądów'''

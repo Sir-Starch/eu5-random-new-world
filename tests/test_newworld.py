@@ -270,3 +270,20 @@ def test_island_groups_stay_or_move_and_are_holes_of_the_cells() -> None:
     again = generate_new_world(domain, seed=3, settings=SMALL, groups=groups)
     assert np.array_equal(world.labels, again.labels)
     assert np.array_equal(world.moves, again.moves)
+
+
+def test_the_centre_control_moves_land_inward_and_keeps_its_share() -> None:
+    domain = np.zeros((200, 600), dtype=bool)
+    domain[20:180, 40:560] = True
+    settings = replace(SMALL, feature_px=240, land_permille=300)
+    depth = distance_from(~domain, 400, octagonal=True)
+    means: list[float] = []
+    shares: list[int] = []
+    for centre in (0, 500, 1000):
+        land, _ocean, _lakes, _ = land_stage(domain, 7, replace(settings, centre_permille=centre))
+        means.append(float(depth[land].mean()))
+        shares.append(int(np.count_nonzero(land)))
+    assert means[0] < means[1] < means[2]
+    assert max(shares) - min(shares) <= max(shares) // 20
+    plain = land_stage(domain, 7, settings)[0]
+    assert np.array_equal(plain, land_stage(domain, 7, replace(settings, centre_permille=0))[0])

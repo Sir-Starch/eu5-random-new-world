@@ -662,6 +662,14 @@ text = '''Recommandé : laisse plus de place au Nouveau Monde pour que ses conti
 source = "e0a693457850e1a8"
 text = '''Quelle part du Nouveau Monde est faite de terres.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''Distance à l’Ancien Monde'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''Plus haut : les continents se placent plus près du milieu de l’océan, loin des côtes de l’Ancien Monde. La quantité de terres ne change pas. Le Mur l’ignore.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''Taille des masses de terre'''

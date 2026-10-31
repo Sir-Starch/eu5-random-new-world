@@ -109,6 +109,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
         "new_world.wall_ridge_permille", "wall", 0, 1000, factor=10, decimals=1, unit="percent"
     ),
     Control("new_world.land_permille", "land", 150, 600, factor=10, decimals=1, unit="percent"),
+    Control("new_world.centre_permille", "land", 0, 1000, factor=10, decimals=1, unit="percent"),
     Control("new_world.feature_px", "land", 250, 4000, logarithmic=True, unit="px"),
     Control("new_world.min_island_px", "land", 100, 8000, logarithmic=True, unit="px"),
     Control("new_world.persistence_permille", "land", 400, 650, factor=1000, decimals=2),

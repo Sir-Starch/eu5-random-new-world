@@ -662,6 +662,14 @@ text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes 
 source = "e0a693457850e1a8"
 text = '''Quanto do Novo Mundo é terra.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''Distância do Velho Mundo'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''Mais alto: os continentes ficam mais perto do meio do oceano, longe das costas do Velho Mundo. A quantidade de terra não muda. A Muralha ignora este ajuste.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''Tamanho das massas de terra'''

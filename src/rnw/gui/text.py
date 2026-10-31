@@ -323,6 +323,11 @@ STRINGS: Final[dict[str, str]] = {
         "free water."
     ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
+    "control.new_world.centre_permille": "Distance from the Old World",
+    "control.new_world.centre_permille.about": (
+        "Higher: continents lie nearer the middle of the ocean, farther from the Old World's "
+        "shores. The amount of land does not change. The Wall ignores it."
+    ),
     "control.new_world.feature_px": "Size of landmasses",
     "control.new_world.feature_px.about": ("Large: a few great landmasses. Small: many islands."),
     "control.new_world.min_island_px": "Smallest island",

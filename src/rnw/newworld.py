@@ -35,7 +35,13 @@ from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import designed_corridors
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_small, renumber, seed_sites
-from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
+from rnw.topology import (
+    adjacency_pairs,
+    distance_from,
+    euclidean_distance,
+    label_components,
+    unpack_pairs,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -46,6 +52,12 @@ if TYPE_CHECKING:
     from rnw.settings import NewWorldSettings
 
 PERMILLE: Final[int] = 1000
+# The centre control lifts the land density by up to CENTRE_LIFT elevation units in the middle of
+# the canvas, rising over the distance from its edge (to the deepest interior, but at most
+# CENTRE_REACH_PX); the land share does not change, only where the land lies.
+CENTRE_REACH_PX: Final[int] = 2400
+CENTRE_LIFT: Final[int] = NOISE_SCALE
+CENTRE_STEP: Final[int] = 4
 WOBBLE_PX: Final[int] = 16
 WOBBLE_PERIOD: Final[int] = 48
 WOBBLE_PASSES: Final[int] = 64
@@ -455,6 +467,28 @@ def _large_parts(mask: NDArray[np.bool_], minimum: int) -> NDArray[np.bool_]:
     return (np.bincount(parts.ravel()) >= minimum)[parts]
 
 
+def _centre_lift(guard: NDArray[np.bool_], permille: int) -> NDArray[np.int32] | None:
+    """Elevation lift by the distance from the guard, on blocks of ``CENTRE_STEP`` pixels.
+
+    None for no lift. The distance is Euclidean and rises smoothly (a smoothstep), so no
+    contour of it shows in the coasts; the deepest interior gets the whole lift.
+    """
+    if permille <= 0:
+        return None
+    height, width = guard.shape
+    rows, columns = -(-height // CENTRE_STEP), -(-width // CENTRE_STEP)
+    padded = np.ones((rows * CENTRE_STEP, columns * CENTRE_STEP), dtype=bool)
+    padded[:height, :width] = guard
+    pooled = padded.reshape(rows, CENTRE_STEP, columns, CENTRE_STEP).any(axis=(1, 3))
+    del padded
+    limit = CENTRE_REACH_PX // CENTRE_STEP
+    distance = euclidean_distance(pooled, limit)
+    deepest = max(1, int(distance.max()))
+    unit = np.minimum(distance, deepest) * PERMILLE // deepest
+    smooth = unit * unit * (3 * PERMILLE - 2 * unit) // (PERMILLE * PERMILLE)
+    return (smooth * CENTRE_LIFT * permille // (PERMILLE * PERMILLE)).astype(np.int32)
+
+
 def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and the ramp.
     domain: NDArray[np.bool_],
     guard: NDArray[np.bool_],
@@ -476,12 +510,17 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
     shore = edge < settings.coast_margin_px
     height, width = (int(size) for size in edge.shape)
     elevation = np.empty((height, width), dtype=np.int32)
+    lift = _centre_lift(guard, settings.centre_permille)
     for first in range(0, height, STRIP_ROWS):
         rows = slice(first, min(height, first + STRIP_ROWS))
         reach = edge[rows].astype(np.int64) + offset[rows]
         penalty = (ramp - reach) * NOISE_SCALE * 3 // ramp
         penalty = np.where(opened[rows], penalty, 3 * NOISE_SCALE)
         elevation[rows] = (relief[rows] - np.maximum(0, penalty)).astype(np.int32)
+        if lift is not None:
+            blocks = lift[first // CENTRE_STEP : -(-rows.stop // CENTRE_STEP)]
+            spread = np.repeat(np.repeat(blocks, CENTRE_STEP, axis=0), CENTRE_STEP, axis=1)
+            elevation[rows] += spread[: rows.stop - first, :width]
     del edge, opened
     interior = domain & ~shore
     threshold = _threshold(elevation, interior, settings.land_permille)

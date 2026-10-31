@@ -107,6 +107,7 @@ CHANGE_FIELDS: Final[tuple[str, ...]] = (
     "new_world.wall_coast_permille",
     "new_world.wall_ridge_permille",
     "new_world.wall_allow_gaps",
+    "new_world.centre_permille",
 )
 FIELD_NUMBERS: Final[dict[str, int]] = {name: number for number, name in enumerate(CHANGE_FIELDS)}
 ALPHABET: Final[str] = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"

@@ -191,6 +191,18 @@ in all eleven languages now says what the code does: lakes are drawn up to about
 larger *enclosed* water fills with land (water that reaches the open sea, with or without a
 strait, stays sea).
 
+**Distance from the Old World (pending 1.1.0; `new_world.centre_permille`, 0 by default).** The
+land lies where the density field puts it, and on the wide expanded canvas that is often against
+the Old World's shores. The control adds to the land density a lift that rises smoothly (a
+smoothstep of the Euclidean distance from the edge of the domain, on blocks of four pixels, up to
+the deepest interior or 2,400 pixels) by at most one noise unit, so the land moves toward the middle
+of the canvas while the threshold, which counts pixels, keeps the land share. The mean distance of
+the land from the canvas edge, on the installed canvas (seeds 4242 and 7, continents and small
+continents): 1,540–1,920 px at 0, 1,840–2,100 at 250 ‰, 2,070–2,230 at 500 ‰, 2,260–2,360 at 750 ‰ and
+2,340–2,390 at 1,000 ‰, with the share unchanged to within 0.3 percentage points
+[V-EXEC 2026-10-31]. A doubled lift had saturated by 500 ‰. The Wall and drawn land ignore the control. The
+default leaves every world as it was; world codes carry the value as a changed field.
+
 **Vanilla calibration.** [V-LOCAL 2026-10-30, EU5 1.4.6 / 26300913, `Eu5Map` location sizes]
 The installed map has 918 lake locations (median 90 pixels, 99th percentile 6,131, largest
 22,692). Those of at least 80 pixels (the generator's `min_lake_px`) number 482: 11.2 per

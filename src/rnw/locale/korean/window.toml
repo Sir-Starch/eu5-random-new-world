@@ -662,6 +662,14 @@ text = '''권장: 신세계의 생성 공간을 넓혀 대륙이 아메리카의
 source = "e0a693457850e1a8"
 text = '''신대륙에서 육지가 차지하는 비율.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''구세계와의 거리'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''높일수록 대륙이 바다 한가운데에 가깝고 구세계 해안에서 멀어집니다. 육지의 양은 변하지 않습니다. 장벽에서는 무시됩니다.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''땅덩어리 크기'''

@@ -662,6 +662,14 @@ text = '''Empfohlen: Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht
 source = "e0a693457850e1a8"
 text = '''Wie viel der Neuen Welt Land ist.'''
 
+["control.new_world.centre_permille"]
+source = "ed9e12b95845dde8"
+text = '''Abstand zur Alten Welt'''
+
+["control.new_world.centre_permille.about"]
+source = "5b401b093696457b"
+text = '''Höher: Die Kontinente liegen näher an der Mitte des Ozeans, weiter von den Küsten der Alten Welt entfernt. Die Landmenge ändert sich nicht. Die Mauer ignoriert die Einstellung.'''
+
 ["control.new_world.feature_px"]
 source = "cd947acb27155143"
 text = '''Größe der Landmassen'''
