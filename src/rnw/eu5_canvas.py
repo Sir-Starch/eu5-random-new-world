@@ -18,10 +18,13 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw.eu5_pacific import REFERENCE_WIDTH, IslandGroup, expansion
+from rnw.islands import Footprint
 from rnw.model import CellClass
 from rnw.topology import distance_from, label_components
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from numpy.typing import NDArray
 
     from rnw.eu5_map import Eu5Map
@@ -74,7 +77,10 @@ class Canvas:
     trimmed: NDArray[np.bool_]
     ocean_parts: tuple[OceanRemainder, ...] = ()
     groups: tuple[IslandGroup, ...] = ()
+    footprints: tuple[Footprint, ...] = ()
+    moves: tuple[tuple[int, int], ...] = ()
     opened: NDArray[np.bool_] | None = None
+    expanded: bool = False
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""
@@ -104,6 +110,21 @@ class Canvas:
             keep = self.mask[:, crop]
             keep = keep.reshape(keep.shape + (1,) * (values.ndim - 2))
             np.copyto(target[:, world], values[:, crop], where=keep)
+
+
+def moved_pixels(canvas: Canvas) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Rows and map columns of the pixels where the moved island groups now stand."""
+    rows: list[NDArray[np.int64]] = []
+    columns: list[NDArray[np.int64]] = []
+    for footprint, (down, across) in zip(canvas.footprints, canvas.moves, strict=False):
+        if down or across:
+            rows.append(footprint.rows.astype(np.int64) + down)
+            columns.append(
+                np.asarray(canvas.world_column(footprint.columns.astype(np.int64) + across))
+            )
+    if not rows:
+        return np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64)
+    return np.concatenate(rows), np.concatenate(columns)
 
 
 def _roll_for(columns_used: NDArray[np.bool_]) -> int:
@@ -167,28 +188,84 @@ def remainder_boxes(
     }  # fmt: skip
 
 
-def settle_islands(game_map: Eu5Map, canvas: Canvas) -> Canvas:
-    """The canvas with every island group left in its place.
-
-    ``select_canvas`` covers the groups, so a continent may be generated over them. Here each
-    group (its locations and the sea zones of its ports) becomes a hole of the mask, so its
-    vanilla pixels survive; the replaced and trimmed locations are counted again.
-    """
-    if not canvas.groups:
-        return canvas
-    count = len(game_map.keys)
-    member = np.zeros(count, dtype=bool)
-    for group in canvas.groups:
-        member[list(group.locations)] = True
-        member[list(group.zones)] = True
+def _crop_labels(game_map: Eu5Map, canvas: Canvas) -> NDArray[np.int32]:
     crop = np.empty(canvas.mask.shape, dtype=np.int32)
     for columns, world in canvas.spans():
         crop[:, columns] = game_map.labels[:, world]
-    mask = canvas.mask & ~member[crop]
-    inside = np.bincount(crop[mask].ravel(), minlength=count)
-    total = np.bincount(game_map.labels.ravel(), minlength=count)
+    return crop
+
+
+def _account(
+    rolled: NDArray[np.int32], canvas: NDArray[np.bool_], count: int
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_]]:
+    """The locations the canvas replaces whole, and those it only trims."""
+    inside = np.bincount(rolled[canvas].ravel(), minlength=count)
+    total = np.bincount(rolled.ravel(), minlength=count)
     removed = (inside == total) & (total > 0)
-    trimmed = (inside > 0) & ~removed
+    return removed, (inside > 0) & ~removed
+
+
+def _footprints(
+    crop: NDArray[np.int32], mask: NDArray[np.bool_], groups: tuple[IslandGroup, ...], count: int
+) -> tuple[Footprint, ...]:
+    """The canvas pixels of each group: its locations and its coast zones, in crop coordinates."""
+    if not groups:
+        return ()
+    owner = np.full(count, -1, dtype=np.int32)
+    for number, group in enumerate(groups):
+        owner[list(group.zones)] = number
+    for number, group in enumerate(groups):
+        owner[list(group.locations)] = number
+    grid = owner[crop]
+    grid[~mask] = -1
+    rows, columns = np.nonzero(grid >= 0)
+    who = grid[rows, columns]
+    order = np.argsort(who, kind="stable")
+    rows, columns, who = rows[order], columns[order], who[order]
+    bounds = np.searchsorted(who, np.arange(len(groups) + 1))
+    return tuple(
+        Footprint(
+            rows[bounds[number] : bounds[number + 1]].astype(np.int32),
+            columns[bounds[number] : bounds[number + 1]].astype(np.int32),
+        )
+        for number in range(len(groups))
+    )
+
+
+def place_islands(
+    game_map: Eu5Map, canvas: Canvas, moves: Sequence[tuple[int, int]] | None = None
+) -> Canvas:
+    """The canvas with its island groups where they stand or have moved to.
+
+    ``select_canvas`` covers the groups, so a continent may be generated over them. Here each
+    group (its locations and its coast zones) becomes a hole of the mask at its final place, so
+    its vanilla pixels survive there; ``moves`` is the translation of each group (none: they
+    all stay). The old place of a group that moved stays in the mask, to be generated. The
+    replaced and trimmed locations are counted again on the map as it is then, a group's
+    pixels at their new place and nothing else of it.
+    """
+    if not canvas.groups and not canvas.expanded:
+        return canvas
+    shifts = tuple(moves) if moves is not None else ((0, 0),) * len(canvas.groups)
+    count = len(game_map.keys)
+    crop = _crop_labels(game_map, canvas)
+    mask = canvas.mask.copy()
+    member = np.zeros(count, dtype=bool)
+    lost = np.zeros(count, dtype=np.int64)
+    after = crop.copy()
+    for group, footprint, (rows, columns) in zip(
+        canvas.groups, canvas.footprints, shifts, strict=True
+    ):
+        member[list(group.locations)] = True
+        member[list(group.zones)] = True
+        target = (footprint.rows + rows, footprint.columns + columns)
+        lost += np.bincount(crop[target], minlength=count)
+        after[target] = crop[footprint.rows, footprint.columns]
+        mask[target] = False
+    inside = np.bincount(after[mask].ravel(), minlength=count)
+    total = np.bincount(game_map.labels.ravel(), minlength=count)
+    removed = (inside == total - np.where(member, 0, lost)) & (total > 0) & ~member
+    trimmed = (inside > 0) & ~removed & ~member
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     tagged = np.array([name in OPENED for name in game_map.continents], dtype=bool)
     return replace(
@@ -196,6 +273,7 @@ def settle_islands(game_map: Eu5Map, canvas: Canvas) -> Canvas:
         mask=mask,
         removed=removed,
         trimmed=trimmed,
+        moves=shifts,
         opened=(removed | trimmed) & sea & tagged,
     )
 
@@ -300,10 +378,7 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
     if used[0] == 0 or used[-1] == canvas.shape[1] - 1:
         message = "New World canvas crosses the map seam; reduce band_px"
         raise CanvasError(message)
-    inside = np.bincount(rolled[canvas].ravel(), minlength=count)
-    total = np.bincount(rolled.ravel(), minlength=count)
-    removed = (inside == total) & (total > 0)
-    trimmed = (inside > 0) & ~removed
+    removed, trimmed = _account(rolled, canvas, count)
     col0, col1 = int(used[0]), int(used[-1]) + 1
     return Canvas(
         roll=roll,
@@ -314,4 +389,6 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
         trimmed=trimmed,
         ocean_parts=tuple(ocean_parts),
         groups=groups,
+        footprints=_footprints(rolled[:, col0:col1], canvas[:, col0:col1], groups, count),
+        expanded=expanded,
     )

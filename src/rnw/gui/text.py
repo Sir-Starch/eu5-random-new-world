@@ -319,7 +319,8 @@ STRINGS: Final[dict[str, str]] = {
     "control.new_world.expand_oceans": "Expand generation into the oceans",
     "control.new_world.expand_oceans.about": (
         "Recommended: gives the New World more room, so its continents need not follow "
-        "the outline of the Americas. Keeps the Old World and protected islands."
+        "the outline of the Americas. Keeps the Old World; islands in the way stay or move to "
+        "free water."
     ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
     "control.new_world.feature_px": "Size of landmasses",

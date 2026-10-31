@@ -655,8 +655,8 @@ source = "eff9e124228b96ba"
 text = '''Expandir a geração para os oceanos'''
 
 ["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo e as ilhas protegidas.'''
+source = "bae71063529fd562"
+text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo; as ilhas no caminho ficam onde estão ou se movem para águas livres.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

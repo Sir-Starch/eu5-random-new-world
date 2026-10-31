@@ -10,6 +10,7 @@ import pytest
 from rnw.eu5_events import mentions, names_tag, retire_events, retire_modifiers
 from rnw.eu5_nw_export import DONOR_MODIFIER, retired_base_modifiers
 from rnw.eu5_remap import GeographicRemap, RemapError, remap_scripts, remap_text
+from rnw.eu5_rewrite import rewrite_csv, rewrite_locators
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -414,3 +415,28 @@ def test_city_data_that_names_a_removed_place_elsewhere_stops_the_export(tmp_pat
     _write(game, "in_game/gfx/map/city_data/00_x.txt", "other = {\n\tlocation = gone\n}\n")
     with pytest.raises(RemapError, match="outside the pictures and models"):
         _ = remap_scripts(tmp_path, REMAP, set())
+
+
+def test_a_csv_rewrite_shifts_the_coordinates_of_moved_locations() -> None:
+    text = "from;sea;x;y;note\nisle;lagoon;100;200;x\nother;lagoon;300;400;x\n"
+    shifted = rewrite_csv(text, set(), (0, 1), [], {"isle": (-8, 20)}, ((0, (2, 3)),), 1000)
+    assert shifted == "from;sea;x;y;note\nisle;lagoon;120;208;x\nother;lagoon;300;400;x\n"
+    wrapped = rewrite_csv(text, set(), (0, 1), [], {"isle": (0, 900)}, ((0, (2, 3)),), 1000)
+    assert "isle;lagoon;0;200;x" in wrapped
+
+
+def test_a_locator_rewrite_moves_the_instances_of_moved_locations() -> None:
+    text = (
+        "locators={\n\tinstances={\n"
+        "\t\t{\n\t\t\tid=isle\n\t\t\tposition={ 100.500000 0.000000 200.500000 }\n"
+        "\t\t\tscale=1\n\t\t}\n"
+        "\t\t{\n\t\t\tid=other\n\t\t\tposition={ 300.500000 0.000000 400.500000 }\n"
+        "\t\t\tscale=1\n\t\t}\n"
+        "\t}\n}\n"
+    )
+    moved = rewrite_locators(text, set(), [], {"isle": (-8, 20)}, 1000)
+    assert "position={ 120.500000 0.000000 208.500000 }" in moved
+    assert "position={ 100.500000 0.000000 200.500000 }" not in moved
+    assert "position={ 300.500000 0.000000 400.500000 }" in moved
+    assert moved.count("id=isle") == 1
+    assert rewrite_locators(text, set(), []) == text

@@ -308,10 +308,26 @@ domain makes the generator keep a margin round it and cut a strait through any l
   shares are lowered by 15 % (continents 400 → 340 ‰ and so on), so a world keeps the land and the
   locations it had; the extra water is room for the continents.
 
-**Phase 1 is implemented:** the groups stay where they are, as holes of the mask
-(`eu5_canvas.settle_islands`). **Phase 2 is open:** land is generated on the clean canvas, and a group the
-land touches moves, whole, with its coast zones to the nearest free water (its footprint and a guard on open
-generated ocean, away from land and other groups; a deterministic search; no spot is an explicit
-error). Moving needs the vanilla layers of the footprint translated to the new place: location colours
-and labels, rivers, heightmap and material decals, water textures, vegetation instances, locators and
-ports; `Canvas.removed` must not list the group, and the group takes the land cache key.
+**Island groups** (`islands.py`, game-independent; `eu5_canvas.place_islands`, `eu5_islands.relocate_map`):
+the land is made on the clean canvas (7 s on the installed map), then each group stays if the land leaves
+it a coast margin (`coast_margin_px`) on open ocean, or moves, whole, to the nearest free ocean: a
+deterministic search over translations on blocks of 8 px (an FFT cross-correlation of the footprint with
+the blocked ocean), where a step north or south counts twice a step sideways so a group keeps its
+latitude; the groups then keep a margin from each other and from the canvas edge. Finding no place is an
+explicit error. The groups are then holes of the generation domain and the cells are made round them
+(`generate_new_world(groups=...)`; `NewWorld.moves` is cached with the world, and the cache key covers
+the footprints). The land the candidates sketch is this same land.
+
+The exporter then reads the moved map: the colours, labels and rivers of a moved group are copied to its
+new place, and its locators, ports and adjacency coordinates shifted with it (`rewrite_locators`,
+`rewrite_csv`); the old place is generated over, and `removed` and `trimmed` are counted on the moved
+map without the groups. A moved group's ground is **built by the generator**, not copied: its pixels count
+as generated ground for the heights, materials, vegetation and water (`stamp_codes`, `moved_pixels`),
+classed by the vanilla attributes of its locations, so the terrain of a moved island is flat and low,
+with the beaches and shallows of any generated coast. [UNKNOWN] Moving the vanilla height and material
+layers and the mountain stamps of the island would keep a volcano's relief; it is not done.
+
+[V-EXEC 2026-10-31, seed 4242] Continents: 16 of 49 groups are touched by land (+48 px) and 17 move
+(shifts of 20 – 770 px; all pixels equal, none touches generated land); the export takes 154 s and
+holds 30,716 locations. The five presets give 27.7 k – 30.7 k locations (supercontinent 29,979, small
+continents 30,321, archipelago 29,529, the Wall 27,735), all under the window's budget of 31,200.

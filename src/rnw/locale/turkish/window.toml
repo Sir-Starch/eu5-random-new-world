@@ -655,8 +655,8 @@ source = "eff9e124228b96ba"
 text = '''Üretim alanını okyanuslara genişlet'''
 
 ["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya ve korunan adalar değişmez.'''
+source = "bae71063529fd562"
+text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

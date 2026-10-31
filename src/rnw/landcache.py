@@ -16,8 +16,11 @@ from rnw.newworld import NewWorld, generate_new_world, seal_pockets
 from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from numpy.typing import NDArray
 
+    from rnw.islands import Footprint
     from rnw.settings import NewWorldSettings
 
 STRIP: Final[int] = 256
@@ -30,6 +33,7 @@ ARRAYS: Final[tuple[str, ...]] = (
     "interior",
     "mean_elevation",
     "spread",
+    "moves",
     "edges",
 )
 
@@ -43,15 +47,26 @@ def _hash_file(path: Path) -> str:
         return hashlib.file_digest(handle, "sha256").hexdigest()
 
 
-def cache_key(
+def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geography input.
     domain: NDArray[np.bool_],
     seed: int,
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None,
     sea_bands: NDArray[np.bool_] | None = None,
+    groups: Sequence[Footprint] = (),
 ) -> str:
-    spec = (5, epoch.CURRENT, seed, replace(settings, precious_permille=0), domain.shape)
+    spec = (
+        6,
+        epoch.CURRENT,
+        seed,
+        replace(settings, precious_permille=0),
+        domain.shape,
+        len(groups),
+    )
     digest = hashlib.sha256(repr(spec).encode("ascii"))
+    for group in groups:
+        digest.update(group.rows.tobytes())
+        digest.update(group.columns.tobytes())
     for raster in (domain, drawn, sea_bands):
         digest.update(b"none" if raster is None else b"raster")
         if raster is not None:
@@ -69,8 +84,10 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None,
     sea_bands: NDArray[np.bool_] | None = None,
+    groups: Sequence[Footprint] = (),
 ) -> NewWorld:
-    target = None if cache is None else cache / cache_key(domain, seed, settings, drawn, sea_bands)
+    key = None if cache is None else cache_key(domain, seed, settings, drawn, sea_bands, groups)
+    target = None if cache is None or key is None else cache / key
     if target is not None and target.exists():
         return _read(target, domain.shape)
     world = seal_pockets(
@@ -80,6 +97,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             settings=settings,
             drawn=drawn,
             sea_bands=sea_bands,
+            groups=groups,
         )
     )
     if target is not None:
@@ -96,6 +114,7 @@ def _write(target: Path, world: NewWorld) -> None:
         "interior": world.interior,
         "mean_elevation": world.mean_elevation,
         "spread": world.spread,
+        "moves": world.moves,
     }
     with TemporaryDirectory(prefix=".land-", dir=target.parent) as temporary:
         stage = Path(temporary)
@@ -157,6 +176,7 @@ def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
             mean_elevation=_i64(target, "mean_elevation", (count,)),
             spread=_i64(target, "spread", (count,)),
             edges=edges,
+            moves=_i64(target, "moves", ((target / "moves").stat().st_size // 16, 2)),
         )
     except (OSError, ValueError, TypeError, KeyError, IndexError) as error:
         message = f"Land cache {target} is damaged; remove this entry and retry: {error}"

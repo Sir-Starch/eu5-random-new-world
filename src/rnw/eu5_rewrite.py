@@ -186,8 +186,38 @@ def rewrite_templates(text: str, removed: set[str], lines: list[str]) -> str:
     return body + "".join(f"{line}\n" for line in lines)
 
 
-def rewrite_csv(text: str, removed: set[str], key_columns: tuple[int, ...], rows: list[str]) -> str:
-    """Drop rows naming removed keys; append rows; keep the header and final-newline style."""
+def _shift_row(
+    fields: list[str],
+    shifts: dict[str, tuple[int, int]],
+    columns: tuple[tuple[int, tuple[int, int]], ...],
+    width: int,
+) -> list[str]:
+    """``fields`` with the coordinates of moved locations shifted: x wraps, y runs north."""
+    for key_column, (x_column, y_column) in columns:
+        if len(fields) <= max(key_column, x_column, y_column):
+            continue
+        moved = shifts.get(fields[key_column].strip())
+        x, y = fields[x_column].strip(), fields[y_column].strip()
+        if moved is not None and x.isdigit() and y.isdigit():
+            fields[x_column] = str((int(x) + moved[1]) % width)
+            fields[y_column] = str(int(y) - moved[0])
+    return fields
+
+
+def rewrite_csv(  # noqa: PLR0913, PLR0917 - a csv rewrite names its keys, rows and the shifts.
+    text: str,
+    removed: set[str],
+    key_columns: tuple[int, ...],
+    rows: list[str],
+    shifts: dict[str, tuple[int, int]] | None = None,
+    shift_columns: tuple[tuple[int, tuple[int, int]], ...] = (),
+    width: int = 0,
+) -> str:
+    """Drop rows naming removed keys; append rows; keep the header and final-newline style.
+
+    Rows of the moved locations in ``shifts`` (key to rows and columns moved) get the
+    coordinates in ``shift_columns`` (a key column and its x and y columns) shifted with them.
+    """
     lines = text.split("\n")
     trailing = text.endswith("\n")
     body = [line for line in lines if line] if trailing else list(lines)
@@ -201,12 +231,43 @@ def rewrite_csv(text: str, removed: set[str], key_columns: tuple[int, ...], rows
             for index in key_columns
         )
     ]
+    if shifts:
+        kept = [
+            ";".join(_shift_row(line.split(";"), shifts, shift_columns, width)) for line in kept
+        ]
     out = "\n".join([header, *kept, *rows])
     return out + "\n" if trailing else out
 
 
-def rewrite_locators(text: str, removed: set[str], instances: list[str]) -> str:
-    """Drop locator instances of removed locations and append generated ones."""
+POSITION_TEXT: Final[re.Pattern[str]] = re.compile(
+    r"(position\s*=\s*\{\s*)(-?\d+(?:\.\d+)?)(\s+-?\d+(?:\.\d+)?\s+)(-?\d+(?:\.\d+)?)"
+)
+
+
+def _shifted_text(text: str, moved: tuple[int, int], width: int) -> str:
+    """One locator instance with its position moved: x wraps round the map, z runs north."""
+    down, across = moved
+
+    def shift(match: re.Match[str]) -> str:
+        x = (float(match.group(2)) + across) % width
+        z = float(match.group(4)) - down
+        return f"{match.group(1)}{x:.6f}{match.group(3)}{z:.6f}"
+
+    return POSITION_TEXT.sub(shift, text, count=1)
+
+
+def rewrite_locators(
+    text: str,
+    removed: set[str],
+    instances: list[str],
+    shifts: dict[str, tuple[int, int]] | None = None,
+    width: int = 0,
+) -> str:
+    """Drop locator instances of removed locations and append generated ones.
+
+    Instances of the moved locations in ``shifts`` (key to rows and columns moved) are
+    replaced by copies at their new positions.
+    """
     root = parse(text)
     edits = Edits()
     for top in root.entries:
@@ -215,13 +276,23 @@ def rewrite_locators(text: str, removed: set[str], instances: list[str]) -> str:
         holder = top.value.first("instances")
         if holder is None or not isinstance(holder.value, Block):
             continue
+        copies: list[str] = []
         for item in holder.value.entries:
             if isinstance(item.value, Block):
                 ident = item.value.first("id")
                 if ident is not None and ident.value in removed:
                     _delete(edits, text, item)
-        if instances:
-            edits.insert(_line_start(text, holder.value.close), "".join(instances))
+                elif shifts and ident is not None and ident.value in shifts:
+                    _delete(edits, text, item)
+                    copies.append(
+                        "\t\t"
+                        + _shifted_text(
+                            text[item.start : item.end], shifts[str(ident.value)], width
+                        )
+                        + "\n"
+                    )
+        if instances or copies:
+            edits.insert(_line_start(text, holder.value.close), "".join([*copies, *instances]))
     return edits.apply(text)
 
 

@@ -9,10 +9,11 @@ from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
-from rnw.eu5_canvas import open_map, select_canvas, settle_islands
-from rnw.eu5_map import Eu5Map
-from rnw.eu5_pacific import within
+from rnw.eu5_canvas import moved_pixels, open_map, place_islands, select_canvas
+from rnw.eu5_islands import relocate_map, shifts, stamp_codes
+from rnw.eu5_map import Eu5Map, MapPoint
 from rnw.model import CellClass
+from rnw.topology import within
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -113,7 +114,7 @@ def test_the_pacific_side_covers_an_island_group_and_settling_leaves_it_in_place
     canvas.put(covered, np.ones(canvas.mask.shape, dtype=bool))
     assert covered[200:204, 20:26].all()
     assert canvas.removed[3]
-    settled = settle_islands(game, canvas)
+    settled = place_islands(game, canvas)
     kept = np.zeros(game.labels.shape, dtype=bool)
     settled.put(kept, np.ones(settled.mask.shape, dtype=bool))
     assert not kept[game.labels == 3].any()
@@ -139,9 +140,66 @@ def test_the_pacific_side_keeps_a_buffer_round_old_world_land_and_drops_narrow_b
 
 def test_open_map_counts_the_taken_oceanian_waters_as_ocean() -> None:
     game = _pacific()
-    canvas = settle_islands(game, select_canvas(game, 8, expanded=True))
+    canvas = place_islands(game, select_canvas(game, 8, expanded=True))
     assert canvas.removed[5]
     opened = open_map(game, canvas)
     assert opened.continents[5] == "pacific_ocean_continent"
     assert opened.continents[3:5] == ("oceania", "oceania")
     assert game.continents[5] == "oceania"
+
+
+def test_a_moved_group_stands_at_its_new_place_and_its_old_place_is_generated() -> None:
+    game = _pacific()
+    clean = select_canvas(game, 8, expanded=True)
+    canvas = place_islands(game, clean, [(-40, 16)])
+    assert canvas.moves == ((-40, 16),)
+    held = np.zeros(game.labels.shape, dtype=bool)
+    canvas.put(held, np.ones(canvas.mask.shape, dtype=bool))
+    assert held[200:204, 20:26].all()
+    assert not held[160:164, 36:42].any()
+    assert not canvas.removed[3]
+    assert not canvas.trimmed[3]
+    assert shifts(game, canvas) == {"isle": (-40, 16), "isle_coast": (-40, 16)}
+    rows, columns = moved_pixels(canvas)
+    assert (rows.min(), rows.max(), columns.min(), columns.max()) == (158, 165, 34, 43)
+
+
+def test_relocating_the_map_copies_pixels_and_shifts_the_points() -> None:
+    game = _pacific()
+    point = MapPoint("game/in_game/map_data/ports.csv", "isle", 22, 201)
+    game = Eu5Map(
+        keys=game.keys,
+        colors=game.colors,
+        classes=game.classes,
+        ambiguous=game.ambiguous,
+        continents=game.continents,
+        rgb=game.rgb,
+        labels=game.labels,
+        rivers=game.rivers,
+        locations_chunks=(),
+        rivers_chunks=(),
+        points=(point,),
+        inputs=(),
+    )
+    canvas = place_islands(game, select_canvas(game, 8, expanded=True), [(-40, 16)])
+    moved = relocate_map(game, canvas)
+    assert (moved.labels[160:164, 36:42] == 3).all()
+    assert (game.labels[160:164, 36:42] != 3).all()
+    assert (moved.labels[158:166, 34:44] == 3).sum() + (
+        moved.labels[158:166, 34:44] == 4
+    ).sum() == 80
+    assert moved.points[0].x == 38
+    assert moved.points[0].y == 161
+    codes = np.full(game.labels.shape, -1, dtype=np.int8)
+    stamp_codes(codes, moved, canvas, 0, 1)
+    assert (codes[160:164, 36:42] == 1).all()
+    assert codes[158, 34] == 0
+    assert (codes != -1).sum() == 80
+
+
+def test_groups_that_stay_are_left_as_they_are() -> None:
+    game = _pacific()
+    canvas = place_islands(game, select_canvas(game, 8, expanded=True))
+    assert canvas.moves == ((0, 0),)
+    assert relocate_map(game, canvas) is game
+    assert moved_pixels(canvas)[0].size == 0

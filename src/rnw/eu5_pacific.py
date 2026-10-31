@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw.model import CellClass
-from rnw.topology import adjacency_pairs, euclidean_distance, label_components, unpack_pairs
+from rnw.topology import adjacency_pairs, label_components, unpack_pairs, within
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -37,8 +37,6 @@ if TYPE_CHECKING:
     from rnw.eu5_map import Eu5Map
 
 REFERENCE_WIDTH: Final[int] = 16384
-STEP: Final[int] = 4
-EIGHTHS: Final[int] = 8
 REACH_PX: Final[int] = 5400
 GUARD_PX: Final[int] = 160
 OPEN_PX: Final[int] = 300
@@ -75,24 +73,6 @@ class Expansion:
 def scaled(pixels: int, width: int) -> int:
     """A distance of the installed 16,384-pixel map, on a map ``width`` pixels wide."""
     return max(1, pixels * width // REFERENCE_WIDTH)
-
-
-def within(sources: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
-    """Pixels at most ``radius`` pixels (Euclidean) from a source pixel.
-
-    Computed on blocks of ``STEP`` pixels, so a source counts for its whole block (up to
-    three pixels of extra reach) and the contour is exact to a block. Sources are pooled with
-    ``any``, so no island of a pixel or two is lost.
-    """
-    height, width = sources.shape
-    rows, columns = -(-height // STEP), -(-width // STEP)
-    padded = np.zeros((rows * STEP, columns * STEP), dtype=bool)
-    padded[:height, :width] = sources
-    pooled = padded.reshape(rows, STEP, columns, STEP).any(axis=(1, 3))
-    del padded
-    limit = radius // STEP
-    near = euclidean_distance(pooled, limit + 1) <= EIGHTHS * limit
-    return np.kron(near, np.ones((STEP, STEP), dtype=bool))[:height, :width]
 
 
 def strip_islands(game_map: Eu5Map, width: int) -> NDArray[np.bool_]:

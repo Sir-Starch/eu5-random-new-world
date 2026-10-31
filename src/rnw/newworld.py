@@ -13,7 +13,7 @@ outputs.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from functools import partial
 from typing import TYPE_CHECKING, Final
 
@@ -22,6 +22,7 @@ import numpy as np
 from rnw import _native, wall
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
+from rnw.islands import carve, place
 from rnw.isthmuses import raise_isthmuses
 from rnw.lakes import carve_lakes
 from rnw.landmask import LandMaskError
@@ -37,8 +38,11 @@ from rnw.synth import grow_regions, merge_small, renumber, seed_sites
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from numpy.typing import NDArray
 
+    from rnw.islands import Footprint
     from rnw.settings import NewWorldSettings
 
 PERMILLE: Final[int] = 1000
@@ -93,6 +97,7 @@ class NewWorld:
     mean_elevation: NDArray[np.int64]
     spread: NDArray[np.int64]
     edges: tuple[tuple[int, int], ...]
+    moves: NDArray[np.int64] = field(default_factory=lambda: np.zeros((0, 2), dtype=np.int64))
 
 
 def _field(  # noqa: PLR0913 - a field is defined by its stream, shape, octaves and warp.
@@ -778,18 +783,24 @@ def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement
     return result
 
 
-def generate_new_world(
+def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, seed, settings and the extras.
     domain: NDArray[np.bool_],
     *,
     seed: int,
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None = None,
     sea_bands: NDArray[np.bool_] | None = None,
+    groups: Sequence[Footprint] = (),
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
     With ``drawn`` (a land mask fitted to the domain, ``rnw.landmask``) the land is the
     drawing's and the generator makes the rest on it.
+
+    ``groups`` are island groups that the domain covers. The land is made on the whole domain; a
+    group that it leaves room stays, and one it touches moves to free ocean (``rnw.islands``).
+    The groups are then holes of the domain, and the cells are made on what is left.
+    ``NewWorld.moves`` has the translation of each group.
 
     Cells belong to this continuous canvas. Projecting it across the game's raster
     boundary must retain each cell's identity on both sides, just as vanilla does.
@@ -804,6 +815,12 @@ def generate_new_world(
             message = "The Wall cannot be combined with a drawn land mask"
             raise LandMaskError(message)
         land, ocean, lakes = _land_from_mask(domain, drawn, settings)
+    whole = domain
+    moves = place(whole, land, ocean, groups, margin=settings.coast_margin_px)
+    domain = carve(whole, groups, moves)
+    land &= domain
+    ocean &= domain
+    lakes &= domain
     land, ocean, _ = pinch(land, ocean, _off_limits(domain, settings))
     with Stages(stage_workers()) as stages:
         land_job = stages.submit(
@@ -832,7 +849,7 @@ def generate_new_world(
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
         land_cells, sea_cells, relief = land_job.result(), sea_job.result(), relief_job.result()
     if settings.landform:
-        wall.add_relief(relief, land, domain, seed, settings)
+        wall.add_relief(relief, land, whole, seed, settings)
     del ocean, lakes, land
     labels = np.full(domain.shape, -1, dtype=np.int32)
     kinds: list[CellClass] = []
@@ -862,7 +879,7 @@ def generate_new_world(
         for index in polar.tolist():
             if index >= 0 and kinds[index] is CellClass.LAND:
                 kinds[index] = CellClass.WASTELAND
-        middle = wall.spine(domain, seed, settings)
+        middle = wall.spine(whole, seed, settings)
         if (
             not settings.wall_allow_gaps
             and not np.isin(
@@ -872,7 +889,8 @@ def generate_new_world(
         ):
             message = "The Wall lost its continuous land barrier during cell construction"
             raise ValueError(message)
-    return derive_world(labels, tuple(kinds), relief)
+    world = derive_world(labels, tuple(kinds), relief)
+    return replace(world, moves=np.array(moves, dtype=np.int64).reshape(-1, 2))
 
 
 def _cell_sums(

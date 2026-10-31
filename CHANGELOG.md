@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Widen the expanded ocean across the Pacific and move the islands that continents would cover
+  (pending epoch 60). The expanded canvas now reaches the whole Pacific side of the New World: the
+  Polynesian islands before the map's seam, the open ocean to both polar edges and the water east of New
+  Zealand, bounded by round contours well clear of the Old World (nothing is generated between New
+  Zealand and Australia). The Atlantic side is unchanged. The Polynesian islands, and the few isolated
+  ones the new shape encloses (the northwestern Hawaiian atolls, Pitcairn, Rapa Nui, Bermuda, St Helena,
+  Ascension, Tristan da Cunha and Gough), are no longer holes that land must go round: the land is
+  generated first, then a group of islands with room around it stays where it is, and one the land would
+  cover moves, whole and with its coast zones, to the nearest free ocean, keeping its latitude where it
+  can. A moved island is built with the generator's flat ground. Because the canvas is 17 % larger, the
+  presets' land shares are 15 % lower, so a world keeps its land and about its locations (continents now
+  340 ‰, supercontinent 460 ‰, small continents 255 ‰); the location estimate is refitted on seven
+  full exports. Existing worlds remain untouched.
+
 - Keep a location's vegetation consistent with its climate (issue #4, pending epoch 60). The
   biome classifier smoothed vegetation votes across neighbours of other climates, so a cell could
   get a climate/vegetation pair that no Old World location has (for example desert in a

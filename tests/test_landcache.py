@@ -8,6 +8,7 @@ import pytest
 
 from rnw import landcache
 from rnw.eu5_canvas import Canvas
+from rnw.islands import Footprint
 from rnw.model import CellClass
 from rnw.newworld import generate_new_world, seal_pockets
 from rnw.topology import component_counts
@@ -99,3 +100,17 @@ def test_projecting_cached_cells_preserves_identity_across_the_raster_seam(tmp_p
         assert all(
             size > 1 for size in cast("list[int]", component_counts(projected)[crossing].tolist())
         )
+
+
+def test_the_cache_keeps_the_moves_of_island_groups_and_keys_on_the_groups(tmp_path: Path) -> None:
+    domain = np.ones((160, 192), dtype=np.bool_)
+    grid = np.zeros(domain.shape, dtype=bool)
+    grid[70:74, 90:100] = True
+    found = np.nonzero(grid)
+    groups = [Footprint(found[0].astype(np.int32), found[1].astype(np.int32))]
+    first = landcache.get_world(tmp_path, domain, seed=5, settings=SMALL, drawn=None, groups=groups)
+    again = landcache.get_world(tmp_path, domain, seed=5, settings=SMALL, drawn=None, groups=groups)
+    assert first.moves.shape == (1, 2)
+    assert np.array_equal(first.moves, again.moves)
+    plain = landcache.cache_key(domain, 5, SMALL, None)
+    assert landcache.cache_key(domain, 5, SMALL, None, None, groups) != plain

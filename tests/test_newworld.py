@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from rnw import newworld
+from rnw.islands import Footprint
 from rnw.model import CellClass
 from rnw.newworld import (
     LAND_KINDS,
@@ -241,3 +242,31 @@ def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:
     assert sealed.classes[1:3] == (CellClass.LAND, CellClass.LAND)
     assert unported_cells(sealed) == []
     assert seal_pockets(sealed) is sealed
+
+
+def _block(rows: slice, columns: slice, shape: tuple[int, int]) -> Footprint:
+    grid = np.zeros(shape, dtype=bool)
+    grid[rows, columns] = True
+    found = np.nonzero(grid)
+    return Footprint(found[0].astype(np.int32), found[1].astype(np.int32))
+
+
+def test_island_groups_stay_or_move_and_are_holes_of_the_cells() -> None:
+    """The land is made on the whole domain; each group then stands on ocean, not on land."""
+    domain = np.ones((160, 400), dtype=bool)
+    shape = (160, 400)
+    groups = [
+        _block(slice(60 + 30 * n, 64 + 30 * n), slice(40 + 90 * n, 52 + 90 * n), shape)
+        for n in range(3)
+    ]
+    world = generate_new_world(domain, seed=3, settings=SMALL, groups=groups)
+    assert world.moves.shape == (3, 2)
+    land, _ocean, _lakes, _ = land_stage(domain, 3, SMALL)
+    for group, (rows, columns) in zip(groups, world.moves.tolist(), strict=True):
+        target = (group.rows + rows, group.columns + columns)
+        assert (world.labels[target] == -1).all()
+        assert not land[target].any()
+    assert (world.labels == -1).sum() == sum(group.size for group in groups)
+    again = generate_new_world(domain, seed=3, settings=SMALL, groups=groups)
+    assert np.array_equal(world.labels, again.labels)
+    assert np.array_equal(world.moves, again.moves)

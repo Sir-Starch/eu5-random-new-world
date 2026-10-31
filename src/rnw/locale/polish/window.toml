@@ -655,8 +655,8 @@ source = "eff9e124228b96ba"
 text = '''Rozszerz obszar generowania na oceany'''
 
 ["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat i chronione wyspy.'''
+source = "bae71063529fd562"
+text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

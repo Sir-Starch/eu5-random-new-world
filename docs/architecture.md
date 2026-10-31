@@ -39,7 +39,7 @@ Paths below are relative to `src/rnw/` unless stated otherwise.
 |---|---|
 | Installation inspection and compatibility | `geography.py`, `contract.py`, `inputs.py`, `eu5_map.py`; fingerprint and record the installed inputs |
 | Settings, deterministic streams and abstract topology | `settings.py`, `rng.py`, `noise.py`, `model.py`, `topology.py`, `synth.py`, `coast.py`, `validate.py` |
-| Generated New World and fields | `newworld.py`, `wall.py`, `fields.py`, `relief.py`, `climate.py`, `rivers.py`, `hierarchy.py` |
+| Generated New World and fields | `newworld.py`, `islands.py`, `wall.py`, `fields.py`, `relief.py`, `climate.py`, `rivers.py`, `hierarchy.py` |
 | Terrain serialization | `eu5_biomes.py`, `eu5_slots.py`, `eu5_terrain.py`, `eu5_mountains.py`, `eu5_objects.py`, `eu5_water.py`; `terrain_tiles.py`, `lzav.py`, `dds.py`, `png.py` |
 | Seas, routes and currents | `ports.py`, `seas.py`, `seanames.py`, `lanes.py`, `sea_corridors.py`, `sea_policy.py`, `straits.py`, `currents.py`; `eu5_oceans.py`, `eu5_seas.py` |
 | Native societies and start state | `societies.py`, `eu5_natives.py`, `eu5_ai.py`, `eu5_development.py`, `eu5_technology.py`, `eu5_empires.py`, `archetypes.py`, `eu5_archetypes.py` |
@@ -47,7 +47,7 @@ Paths below are relative to `src/rnw/` unless stated otherwise.
 | Vanilla content inventory and disposition | `content_inventory.py`, `content_decisions.py`, `content_check.py`, `content_report.py`, `eu5_content.py`, `eu5_places.py` |
 | Stories, formations and colonial names | `content.py`, `storymodel.py`, `stories.py`, `stories_n4.py`, `stories_colonial.py`, `formations.py`, `colonial_names.py`, `eu5_story.py`, `eu5_formation.py` |
 | Language discovery, translated text and names | `languages.py`, `translations.py`, `game_texts.py`, `wording.py`, `translit.py`, `names.py`, `loc_keys.py`; catalogues in `locale/<language>/<domain>.toml` |
-| Export orchestration and script remapping | `eu5_nw_export.py`, `eu5_canvas.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_events.py`, `pdx.py`, `artifacts.py` |
+| Export orchestration and script remapping | `eu5_nw_export.py`, `eu5_canvas.py`, `eu5_pacific.py`, `eu5_islands.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_events.py`, `pdx.py`, `artifacts.py` |
 | Discovery, world library and recovery | `app/discovery.py`, `app/paths.py`, `app/library.py`, `app/recovery.py`, `app/worldcode.py`, `app/preferences.py` |
 | Generation and installation service | `app/service.py`, `app/controls.py`, `app/install.py`, `progress.py`, `app/session.py`; session inspection is read-only |
 | Atlas, previews and world naming | `pictures.py`, `tagfont.py`, `worldname.py`, `atlas.py`; the viewer reads library data, not map-generation inputs |

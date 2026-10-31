@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
@@ -15,6 +15,8 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 PAIR_SHIFT = np.int64(32)
+WITHIN_STEP: Final[int] = 4
+WITHIN_EIGHTHS: Final[int] = 8
 
 
 def _packed(a: NDArray[np.int32], b: NDArray[np.int32]) -> NDArray[np.int64]:
@@ -124,3 +126,21 @@ def distance_from(
     return _native.distance_from(
         np.ascontiguousarray(sources, dtype=np.bool_), int(limit), octagonal, wrap_x
     )
+
+
+def within(sources: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
+    """Pixels at most ``radius`` pixels (Euclidean) from a source pixel.
+
+    Computed on blocks of ``WITHIN_STEP`` pixels, so a source counts for its whole block (up to
+    three pixels of extra reach) and the contour is exact to a block. Sources are pooled with
+    ``any``, so no island of a pixel or two is lost.
+    """
+    height, width = sources.shape
+    rows, columns = -(-height // WITHIN_STEP), -(-width // WITHIN_STEP)
+    padded = np.zeros((rows * WITHIN_STEP, columns * WITHIN_STEP), dtype=bool)
+    padded[:height, :width] = sources
+    pooled = padded.reshape(rows, WITHIN_STEP, columns, WITHIN_STEP).any(axis=(1, 3))
+    del padded
+    limit = radius // WITHIN_STEP
+    near = euclidean_distance(pooled, limit + 1) <= WITHIN_EIGHTHS * limit
+    return np.kron(near, np.ones((WITHIN_STEP, WITHIN_STEP), dtype=bool))[:height, :width]

@@ -655,8 +655,8 @@ source = "eff9e124228b96ba"
 text = '''생성 영역을 대양으로 확장'''
 
 ["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''권장: 신세계의 생성 공간을 넓혀 대륙이 아메리카의 윤곽에 얽매이지 않게 합니다. 구세계와 보호 대상 섬은 보존됩니다.'''
+source = "bae71063529fd562"
+text = '''권장: 신세계의 생성 공간을 넓혀 대륙이 아메리카의 윤곽에 얽매이지 않게 합니다. 구세계는 보존되며, 길을 막는 섬은 그대로 있거나 빈 바다로 옮겨집니다.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

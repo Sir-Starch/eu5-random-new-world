@@ -655,8 +655,8 @@ source = "eff9e124228b96ba"
 text = '''将生成范围扩展至大洋'''
 
 ["control.new_world.expand_oceans.about"]
-source = "7a529727359a6f72"
-text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界及受保护的岛屿。'''
+source = "bae71063529fd562"
+text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

@@ -85,10 +85,11 @@ from rnw.eu5_canvas import (
     NEW_WORLD,
     OCEANS,
     Canvas,
+    moved_pixels,
     open_map,
+    place_islands,
     remainder_boxes,
     select_canvas,
-    settle_islands,
 )
 from rnw.eu5_content import ContentError, carry_out, culture_traits
 from rnw.eu5_content import places as content_places
@@ -119,6 +120,7 @@ from rnw.eu5_empires import (
     written_ranks,
 )
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
+from rnw.eu5_islands import relocate_map, shifts, stamp_codes
 from rnw.eu5_lobby import (
     CONTEXT_MENU,
     COVER_INCLUDE,
@@ -1333,14 +1335,26 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
             _template_lines(plan, donors, bodies, biomes, development.harbours, places, water),
         ),
     )
+    moved = shifts(game_map, canvas)
+    width = int(game_map.labels.shape[1])
     outputs[_mod_path(PORTS)] = _encode(
-        game_dir, PORTS, rewrite_csv(_read(game_dir, PORTS), removed, (0, 1), port_rows)
+        game_dir,
+        PORTS,
+        rewrite_csv(
+            _read(game_dir, PORTS), removed, (0, 1), port_rows, moved, ((0, (2, 3)),), width
+        ),
     )
     outputs[_mod_path(ADJACENCIES)] = _encode(
         game_dir,
         ADJACENCIES,
         rewrite_csv(
-            _read(game_dir, ADJACENCIES), removed, (0, 1, 3), _crossing_rows(plan, canvas, water)
+            _read(game_dir, ADJACENCIES),
+            removed,
+            (0, 1, 3),
+            _crossing_rows(plan, canvas, water),
+            moved,
+            ((0, (4, 5)), (1, (6, 7))),
+            width,
         ),
     )
     for relative in LOCATOR_FILES:
@@ -1352,7 +1366,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
             held = set(LOCATOR_ID.findall(text))
             fresh += [instance for key, instance in trimmed.items() if key in held]
         outputs[_mod_path(relative)] = _encode(
-            game_dir, relative, rewrite_locators(text, relocated, fresh)
+            game_dir, relative, rewrite_locators(text, relocated, fresh, moved, width)
         )
     override = _read(game_dir, LOCATOR_OVERRIDE)
     if (rewritten := rewrite_override_locators(override, removed)) != override:
@@ -2593,18 +2607,34 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         }
 
     game_map, hierarchy = run_stage("load map", load)
-    canvas = run_stage(
+    clean = run_stage(
         "select canvas",
-        lambda: settle_islands(
+        lambda: select_canvas(
             game_map,
-            select_canvas(
-                game_map,
-                settings.new_world.ocean_band_px,
-                expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
-            ),
+            settings.new_world.ocean_band_px,
+            expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
         ),
     )
-    game_map = open_map(game_map, canvas)
+    vanilla_waters = read_waters(_read(game_dir, TEMPLATES))
+    bands = current_bands(game_map, clean, vanilla_waters)
+    # The land is made on the whole canvas; the island groups it covers stay or move, and the
+    # rest is built round them (``rnw.islands``). Everything after this reads the moved map.
+    world = run_stage(
+        "generate world",
+        lambda: landcache.get_world(
+            cache_dir,
+            clean.mask,
+            seed=seed,
+            settings=settings.new_world,
+            drawn=None if land_mask is None else fit(land_mask, clean.mask.shape),
+            sea_bands=bands,
+            groups=clean.footprints,
+        ),
+    )
+    canvas = place_islands(
+        game_map, clean, [(int(rows), int(columns)) for rows, columns in world.moves.tolist()]
+    )
+    game_map = relocate_map(open_map(game_map, canvas), canvas)
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
@@ -2639,19 +2669,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             "vanilla natives",
             lambda: vanilla_natives(
                 game_dir, game_map, geometries.result(), reads.result()[1], hierarchy
-            ),
-        )
-        vanilla_waters = read_waters(_read(game_dir, TEMPLATES))
-        bands = current_bands(game_map, canvas, vanilla_waters)
-        world = run_stage(
-            "generate world",
-            lambda: landcache.get_world(
-                cache_dir,
-                canvas.mask,
-                seed=seed,
-                settings=settings.new_world,
-                drawn=None if land_mask is None else fit(land_mask, canvas.mask.shape),
-                sea_bands=bands,
             ),
         )
         # The corridor planner depends on the physical water mask, not on cell
@@ -2819,6 +2836,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             terrain_stats.update(water.result())
             canvas_world = np.zeros(game_map.labels.shape, dtype=bool)
             canvas.put(canvas_world, canvas.mask)
+            canvas_world[moved_pixels(canvas)] = True
             pixel_classes, class_count, coarse_count = _pixel_classes(
                 game_map, vanilla_attributes, biomes, final_labels, materials_world
             )
@@ -3161,6 +3179,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         del vanilla, decoded
         outside = changed.copy()
         canvas.put(outside, np.zeros(canvas.mask.shape, dtype=bool))
+        outside[moved_pixels(canvas)] = False
         if plan.oceans is not None:
             plan.oceans.paint(outside, canvas, clear=True)
         if np.any(outside):
@@ -3211,6 +3230,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 "pixels": int(np.count_nonzero(canvas.mask)),
                 "removed_vanilla_locations": len(removed),
                 "trimmed_ocean_zones": int(np.count_nonzero(canvas.trimmed)),
+                "island_groups": len(canvas.groups),
+                "island_groups_moved": sum(1 for move in canvas.moves if move != (0, 0)),
                 "changed_pixels_on_disk": int(np.count_nonzero(changed)),
             },
             "generated": {
@@ -3340,6 +3361,7 @@ def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8
         dtype=np.int8,
     )
     canvas.put(codes, table[world.labels])
+    stamp_codes(codes, game_map, canvas, WATER_CODE, LAND_CODE)
     return codes
 
 
