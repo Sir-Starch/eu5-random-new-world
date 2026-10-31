@@ -2139,4 +2139,3 @@ agreed: its mountains had the relief of vanilla's hills. The earlier benchmark h
 primary heightmaps, which lack the 3,706 stamps the game adds. The stamps are now placed and added the way
 vanilla's are and the relief is retuned against vanilla with its stamps, by height class. The reference
 digest is refreshed within the pending epoch 60. Engine rendering is still unobserved.
-

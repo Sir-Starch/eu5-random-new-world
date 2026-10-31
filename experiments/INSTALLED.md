@@ -6,6 +6,32 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-31, **1.1.0 development — mountains with vanilla's relief** (C451). [V-GAME + V-EXEC] The owner's
+in-game screenshots showed the generated mountains flat beside vanilla's; the loaded world's files
+confirmed that their relief was that of vanilla's hills, because the benchmark had left out vanilla's
+3,706 additive mountain stamps. The stamps are now placed at vanilla's density and sizes, added as the
+game adds them, and the relief is retuned against vanilla with its stamps by height class. Full checks
+pass (2,282 Python tests, 15 optional skips; 23 Rust tests; strict types, lint and formatting clean). The
+pending epoch-60 reference world is refreshed to 866 files / \`eb1c9a23…89\`, reproduced by the
+installed-game suite and its layer-reroll check; full exports of six presets pass every invariant (fresh
+land cache).
+
+Installed new candidate \`rnw_exp_world_lfizm3z72e\` (**Vanilla relief · 1001**, continents, seed 1001
+with precious deposits at 99.7 % only to give it an identity of its own, code
+\`RNW1-080G0-00000-0000Z-9040G-00811-ZJGEB-HP3G\`; coasts and lakes equal those of **Natural lakes · 1001**)
+in the same Windows/Proton profile, with records in both libraries. All 897 installed files match; 866
+nonmetadata files have SHA-256 \`f561a227cf020c18226b25733c47f8d5227ed5cb3932d7cae5cebf25873e4bec\`. The
+earlier candidates are left in place. All fifteen existing mod directories and nine profile-root files are
+preserved. The playset "RNW" still enables the earlier world \`rnw_exp_world_oxwlg445jz\`; no playset, save
+or preference edit by the agent, no EU5 launch/control.
+
+The verified, self-tested hub is installed with the former hub retained at
+\`.rnw-hub-backups/1.1.0-1793405945281628151\` (isolated Wine self-test of the window, native kernels, world
+codes and window shell; 3468 files in \`rnw_exp_hub\`). Candidate:
+\`local_data/hub-updates/1.1.0-1793405884220793675/rnw_exp_hub\`; wheel SHA-256
+\`8ef6938ba1abbac19b3bcaa04d23bdeb8509f35b068f1b51a7d127c823e2c5db\`. Unpublished 1.1.0 / pending epoch 60;
+existing worlds are untouched. Evidence: ignored \`local_data/relief-110/\`.
+
 2026-10-30, **1.1.0 development — fine grain and lake cones** (C450). [V-EXEC] The terrain's detail
 noise follows the installed heightmaps' roughness from 64 down to 4 decal pixels (native kernel
 parameters, equal to its NumPy reference), and the relief counts lakes as land for its distance to the
