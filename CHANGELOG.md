@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Keep a location's vegetation consistent with its climate (issue #4, pending epoch 60). The
+  biome classifier smoothed vegetation votes across neighbours of other climates, so a cell could
+  get a climate/vegetation pair that no Old World location has (for example desert in a
+  subtropical climate, or forest in an arid one). The votes are now smoothed as (climate,
+  vegetation) pairs and a cell's vegetation is chosen among the pairs of its own climate, with a
+  wider neighbourhood where the climate has no vote nearby. In four exports of the installed game,
+  3 to 14 cells per world carried such a pair and now none does; about 3 to 4 % of cells change
+  vegetation, almost all on climate borders, and no climate changes. Existing worlds remain
+  untouched.
+
 - Rework mountains and hills (pending epoch 60). Ranges are now continuous chains of one
   realistic width that fork and arc, with massifs of different heights, passes between them and
   lower secondary ranges, instead of broad one-height blobs cut into segments. Crests carry

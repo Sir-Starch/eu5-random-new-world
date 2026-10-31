@@ -2139,3 +2139,13 @@ agreed: its mountains had the relief of vanilla's hills. The earlier benchmark h
 primary heightmaps, which lack the 3,706 stamps the game adds. The stamps are now placed and added the way
 vanilla's are and the relief is retuned against vanilla with its stamps, by height class. The reference
 digest is refreshed within the pending epoch 60. Engine rendering is still unobserved.
+
+## 2026-10-31 — Vegetation that disagreed with its climate (C452)
+
+Issue #4 showed that the biome classifier could give a cell a climate/vegetation pair the Old World never
+has, by smoothing vegetation votes across neighbours of other climates. Four full exports of the
+installed map put the defect at 3–14 cells per world (at most 0.19 %), all desert in a subtropical or
+mediterranean climate. The classifier now smooths the joint (climate, vegetation) votes and picks a
+cell's vegetation among the pairs of its own climate; no pair outside the calibration remains, no climate
+changes and about 3–4 % of cells change vegetation, nearly all on climate borders. The reference digest is
+refreshed within the pending epoch 60. Numbers and the synthetic regressions are in the terrain guide.

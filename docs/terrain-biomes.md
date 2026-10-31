@@ -38,26 +38,68 @@ The interim patch transfer copied river and border bands from unrelated places a
 | 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (protected-domain or longitudinal canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
 | 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. See [Mountains and hills](#mountains-and-hills-pending-110--epoch-60). |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
-| 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation within the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
-| 4. Coherence | `eu5_biomes.py` | Class scores are smoothed over the location adjacency graph: 3 rounds for climate, 1 for vegetation. Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. Desert cells never become wetlands, because no biome covers that combination (C54). |
+| 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation among the pairs of the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
+| 4. Coherence | `eu5_biomes.py` | The joint (climate, vegetation) votes are smoothed over the location adjacency graph: 3 rounds choose the climate; 1 round, limited to that climate's own pairs and widened when it has no vote, chooses the vegetation (issue #4). Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. Desert cells never become wetlands, because no biome covers that combination (C54). |
 | 5. Material slots | `eu5_slots.py` | The vanilla rules above, applied to the generated labels and templates. Band edges, variation families and levels come from uniformised integer noise in absolute decal coordinates, so adjacent decals agree. Each label's biome is resolved through `biomes.txt` (most specific rule); a slot its material list lacks becomes the same variation level of the first family, else the highest listed level, else slot 0. On mountains the installed stamps' own slots are laid over the variations (below). |
 | 6. Gameplay consistency | `eu5_nw_export.py` | Each location template gets the model's climate, vegetation and topography. Raw materials are drawn from vanilla frequencies for the same climate, vegetation, topography and coastal flag. |
 | 7. Vegetation instances | `eu5_objects.py` | Vanilla instances inside the canvas are dropped. New instances are sampled per material pixel at the Old World density for the pixel's (vegetation, climate, topography, slot) class. Rotation and scale are copied from vanilla records of the same file. The engine caps the mesh map objects of a game at 2^24 (16,777,216) and drops those loaded last, so the new instances may not outnumber the removed ones (all densities scale down together by a recorded factor; 1% of the budget stays unused, `ObjectBudgetError` otherwise). Vanilla holds 15.9 million, the 0.9.8 world 19.5 million (C95). |
 | 7b. Rivers (V1b) | `rivers.py`, `eu5_nw_export.py` | On a 4-pixel grid, a priority flood from all water gives every land cell a downstream neighbour, so depressions are crossed; routing adds fractal valley noise so flow converges. The square root of rainfall accumulates downstream; the catchment threshold gives 16 river pixels per 1000 land pixels (vanilla 15.7). Streams split at confluences (larger branch continues); rivers to the sea need 12 cells. Each stream is drawn from its head down a smoothed, slightly meandering line until it reaches water (up to 3 px into it; the head becomes the source) or meets a river drawn before (a join pixel beside one river pixel). Widths 4/5/11/15 follow catchment in vanilla shares; valleys of 350–1,150 units are carved within 6 px; slot 6 runs along rivers. The export refuses any violation of the vanilla raster rules (C59). |
 | 8. Location shapes | `newworld.py` | Cell borders are bent by a smooth displacement field, then cut-off pieces are re-attached, so borders and the bands along them are organic rather than polygonal. A cell that would vanish or split keeps its original shape; before generator 0.9.1 such a cell undid the bending everywhere (C71). The map wrap does not constrain land: one continuous crop is generated before it is placed across the two map edges (0.12.2, C289–C290). Administrative cells that cross the display seam are split without changing the land mask. A strait is cut wherever generated land would enclose the sea around a protected Old World islet (C61). City points maximise `min(2 × distance to the cell border, distance to water)`, so coastal cities stand inland. |
 
-## Climate/vegetation consistency follow-up (2026-10-29)
+## Climate/vegetation consistency (issue #4; fixed in pending 1.1.0 / epoch 60)
 
-[V-EXEC C443] RNW 1.0.0's classifier initially conditions vegetation votes on the
-selected climate, but its empty-vote fallback and subsequent neighbour smoothing
-can discard that constraint. A synthetic 13-cell call to `assign_biomes` gives a
-zero-rainfall-index centre `arid` climate and `forest` vegetation, although the
-calibration fixture contains only arid/desert and tropical/forest pairs. Disabling
-only vegetation smoothing changes that centre to desert. This establishes a
-classifier consistency defect; its prevalence in generated worlds is unmeasured,
-and it does not establish a general ban on forests in dry or continental climates.
-[Issue #4](https://github.com/Sir-Starch/eu5-random-new-world/issues/4) contains the
-game-independent reproduction and tracks a construction-time correction.
+[V-EXEC C443] RNW 1.0.0 conditioned vegetation votes on the selected climate, but its
+empty-vote fallback restored the votes of every climate, and the one smoothing round then
+added neighbours' votes that were conditioned on the *neighbour's* climate. A synthetic
+13-cell call to `assign_biomes` gave a zero-rainfall-index centre `arid` climate and
+`forest` vegetation, although the calibration held only arid/desert and tropical/forest
+pairs ([issue #4](https://github.com/Sir-Starch/eu5-random-new-world/issues/4) has the
+game-independent reproduction). It is no ban on forests in dry or continental climates:
+the rule is that a cell's pair comes from votes its own climate holds.
+
+[V-EXEC C452] **Prevalence** in four full exports of the installed 1.4.6 map (continents
+1001, archipelago 7, small continents 21, the supercontinent reference world): 3 to 14 of
+4,973 to 7,798 land cells (at most 0.19 %) carried a pair absent from the Old World
+calibration, every one `desert` in a `subtropical` or `mediterranean` climate. The leak
+ran both ways, not only forest into dry climates, and the climate itself was never wrong.
+
+**Construction.** `eu5_biomes.regularize_votes` smooths the *joint* (climate, vegetation)
+votes instead of two marginals. The climate is the largest climate sum of the votes
+smoothed for `CLIMATE_ROUNDS` (unchanged: no climate differs in any of the four worlds).
+The vegetation comes from the same votes smoothed for `VEGETATION_ROUNDS` and limited to
+the climate the receiving cell took, so a neighbour's vote counts only as evidence for a
+pair that the calibration holds in that climate. When the selected climate has no vote
+in the cell's neighbourhood (its own nearest neighbours were all of another climate), the
+neighbourhood widens by one smoothing round at a time, up to the climate's own rounds, in
+which the climate was chosen and so is guaranteed a vote; the vegetation of another
+climate is never borrowed. A cell without any vote raises `ValueError` rather than getting
+an arbitrary pair. There is no repair pass and no rainfall threshold.
+
+**Effect** on the same four worlds, against 1.0.0's rule:
+
+| | Archipelago 7 | Continents 1001 | Small cont. 21 | Supercontinent |
+|---|---:|---:|---:|---:|
+| Pairs outside the calibration | 3 → 0 | 13 → 0 | 4 → 0 | 14 → 0 |
+| Cells whose vegetation changes | 224 (4.5 %) | 248 (3.3 %) | 261 (3.3 %) | 257 (3.4 %) |
+| …of those at a climate border | 220 | 242 | 257 | 249 |
+| Cells whose own climate-limited votes were empty | 14 | 13 | 12 | 36 |
+| Pair (climate, vegetation) edges alike, ‰ | 723 → 733 | 760 → 762 | 761 → 767 | 745 → 755 |
+| Pair singleton regions, ‰ | 420 → 388 | 362 → 254 | 332 → 272 | 358 → 288 |
+| Vegetation edges alike, ‰ | 787 → 768 | 811 → 793 | 814 → 799 | 797 → 787 |
+| Vegetation differing from the cell's own vote, ‰ | 165 → 154 | 139 → 125 | 152 → 138 | 146 → 136 |
+| Mean rainfall index under forest | 249 → 260 | 61 → 64 | 149 → 156 | 70 → 74 |
+
+Almost every change lies on a climate border, where 1.0.0 mixed the votes of two climates.
+The new rule follows the cell's own moisture evidence more closely (fewer overrides, forest
+slightly wetter) and makes the climate/vegetation pairs more contiguous, at the price of
+10–19‰ fewer alike *vegetation-only* edges, because the vegetation now changes with the
+climate where the calibration says it does. The widening never fired on these maps: every
+cell whose climate lacked an own vote found one among its neighbours within one round, so
+it is tested synthetically (`tests/test_biome_consistency.py`, which also covers the
+dry-centre graph, a wet cell in a dry climate, 12 random mixed maps that 1.0.0 fails on 7,
+a coast-to-interior gradient, a rain shadow behind a range and calibrated cold-climate
+forest at a rainfall index where another climate has desert). Engine rendering of the changed
+borders is unobserved; the owner has not been asked to look.
 
 ## Acceptance results (seed 42, continents) [V-EXEC C51–C53]
 

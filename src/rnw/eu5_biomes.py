@@ -5,8 +5,9 @@ and topography select in ``gfx/map/biome_definitions/biomes.txt`` [V-LOCAL C50],
 coherent look needs coherent templates. Each generated location gets physical features
 from the same model that is applied to the vanilla map: absolute latitude, mean height,
 distance to the sea and zonal-wind rainfall (``climate.py``). An integer
-k-nearest-neighbour vote over Old World locations calibrates climate and vegetation;
-scores are then smoothed over the location adjacency graph so zones are contiguous.
+k-nearest-neighbour vote over Old World locations calibrates climate and vegetation as joint
+(climate, vegetation) pairs; the votes are then smoothed over the location adjacency graph so
+zones are contiguous, and a cell's vegetation is chosen among the pairs of its own climate.
 Topography comes from relief ranks with vanilla shares; raw materials are drawn from
 vanilla frequencies. The New World starts empty, so farmland is learned as grassland.
 """
@@ -431,7 +432,44 @@ def _old_world(game_map: Eu5Map) -> NDArray[np.bool_]:
     )
 
 
-def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biome model.
+def regularize_votes(
+    scores: NDArray[np.int64],
+    joint_climate: NDArray[np.int64],
+    joint_vegetation: NDArray[np.int64],
+    edges: NDArray[np.int64],
+    climates: int,
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Climate and vegetation of every cell from its smoothed joint (climate, vegetation) votes.
+
+    The climate is the largest of the joint votes smoothed over ``CLIMATE_ROUNDS``, summed per
+    climate. The vegetation comes from the same votes smoothed over ``VEGETATION_ROUNDS`` and
+    limited to the climate the cell itself took, so a neighbour's vote counts only for a pair
+    that the calibration holds in that climate and never for another climate's vegetation. When
+    that climate has no vote left in the cell's neighbourhood, the neighbourhood widens by one
+    smoothing round at a time, up to the climate's own rounds, in which the climate was
+    chosen and so has a vote. A cell with no vote at all is refused, not guessed.
+    """
+    layers = [scores]
+    for _ in range(CLIMATE_ROUNDS):
+        layers.append(smooth_scores(layers[-1], edges, 1))
+    climate_scores = np.zeros((scores.shape[0], climates), dtype=np.int64)
+    np.add.at(climate_scores.T, joint_climate, layers[-1].T)
+    climate_choice = np.argmax(climate_scores, axis=1)
+    allowed = joint_climate[np.newaxis, :] == climate_choice[:, np.newaxis]
+    votes = np.zeros_like(scores)
+    waiting = np.ones(scores.shape[0], dtype=bool)
+    for layer in layers[VEGETATION_ROUNDS:]:
+        local = np.where(allowed, layer, 0)
+        found = waiting & local.any(axis=1)
+        votes[found] = local[found]
+        waiting &= ~found
+    if waiting.any():
+        message = f"{int(waiting.sum())} cells have no climate or vegetation vote to classify"
+        raise ValueError(message)
+    return climate_choice, joint_vegetation[np.argmax(votes, axis=1)]
+
+
+def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     *,
     game_map: Eu5Map,
     templates: dict[str, dict[str, str]],
@@ -489,20 +527,9 @@ def assign_biomes(  # noqa: PLR0913, PLR0915 - one pass over the calibrated biom
     position[land_cells] = np.arange(land_cells.size)
     edges = _edge_array(cells.edges, land)
     local_edges = position[edges] if edges.size else edges
-    climate_scores = np.zeros((land_cells.size, len(climate_names)), dtype=np.int64)
-    np.add.at(climate_scores.T, joint_climate, scores.T)
-    climate_scores = smooth_scores(climate_scores, local_edges, CLIMATE_ROUNDS)
-    climate_choice = np.argmax(climate_scores, axis=1)
-    allowed = joint_climate[np.newaxis, :] == climate_choice[:, np.newaxis]
-    vegetation_scores = np.zeros((land_cells.size, len(vegetation_names)), dtype=np.int64)
-    np.add.at(vegetation_scores.T, joint_vegetation, np.where(allowed, scores, 0).T)
-    empty = vegetation_scores.sum(axis=1) == 0
-    if np.any(empty):
-        fallback = np.zeros_like(vegetation_scores)
-        np.add.at(fallback.T, joint_vegetation, scores.T)
-        vegetation_scores[empty] = fallback[empty]
-    vegetation_scores = smooth_scores(vegetation_scores, local_edges, VEGETATION_ROUNDS)
-    vegetation_choice = np.argmax(vegetation_scores, axis=1)
+    climate_choice, vegetation_choice = regularize_votes(
+        scores, joint_climate, joint_vegetation, local_edges, len(climate_names)
+    )
     climate = [""] * count
     vegetation = [""] * count
     for slot, cell in enumerate(land_cells.tolist()):
