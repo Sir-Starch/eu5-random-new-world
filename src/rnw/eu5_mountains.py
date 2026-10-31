@@ -5,7 +5,8 @@ a bright crest line. Vanilla places each by hand along a range, at its own size,
 strength (scales 0.015--1.3, strengths 0.01--0.8). Here a stamp follows the continuous relief
 instead of location identities: it is turned so that its crest runs along the local axis of
 the range (the direction of least slope in the smoothed relief), and sized and strengthened
-by the height there, so the highest massifs carry the largest and strongest stamps. Baking
+by the height there, so the highest massifs carry the strongest stamps, at vanilla's density,
+size and strength. Baking
 their additive contribution into each source band also supplies the same mountains in the
 opposite edge's periodic padding, without outside-only instances. Each stamp has a material
 layer too, slots 10--12 in the pattern of its valleys, which vanilla blends into the terrain's
@@ -32,12 +33,14 @@ if TYPE_CHECKING:
     from rnw.terrain_tiles import LayerFormat
 
 NAMES: Final[tuple[str, ...]] = ("mountain_01", "mountain_02", "mountain_03")
-STEP: Final[int] = 30  # location pixels; stamps overlap along and across a range
-JITTER: Final[int] = 8
-PLACE: Final[int] = 10500  # smoothed relief from which a stamp may be placed
-LOW: Final[int] = 11000  # decal height at which the stamps begin to show
-FULL: Final[int] = 17000
-CAP: Final[int] = 52000  # no stamp raises a sample past this height
+STEP: Final[int] = (
+    48  # location pixels between candidate stamps; vanilla overlaps its mountains about once
+)
+JITTER: Final[int] = 12
+PLACE: Final[int] = 9000  # smoothed relief from which a stamp may be placed
+LOW: Final[int] = 9000  # decal height at which the stamps begin to show
+FULL: Final[int] = 14000
+CAP: Final[int] = 62000  # no stamp raises a sample past this height; the layer holds 65,535
 UNIT: Final[int] = 1024
 # Cosine and sine for 32 directions; integers keep Windows and Linux identical.
 ROTATIONS: Final[tuple[tuple[int, int], ...]] = (
@@ -60,18 +63,28 @@ TENSOR: Final[int] = 4
 # Below this share (permille) of slope energy along one direction the ground has no range
 # axis (a massif or a plateau), and the stamp is turned at random.
 COHERENCE: Final[int] = 250
-# Sizes in location pixels across the crest, strengths in permille of the source, and the
-# stretch along the crest in percent; each rises from its minimum to its maximum over this
-# many height units above ``PLACE`` and is drawn within 0.7--1.3 of that.
-REACH: Final[int] = 16000
-ACROSS_MIN: Final[int] = 44
-ACROSS_MAX: Final[int] = 106
-STRENGTH_MIN: Final[int] = 40
-STRENGTH_MAX: Final[int] = 150
-STRETCH_MIN: Final[int] = 100
-STRETCH_MAX: Final[int] = 170
-SPREAD_LOW: Final[int] = 700
-SPREAD_RANGE: Final[int] = 600
+# A candidate cell gets a stamp with a chance (permille) that rises with the square of the height
+# above ``PLACE`` from ``CHANCE_LOW`` to ``CHANCE_HIGH`` over ``REACH`` units: foothills seldom
+# carry one, the high ranges nearly always.
+REACH: Final[int] = 14000
+CHANCE_LOW: Final[int] = 200
+CHANCE_HIGH: Final[int] = 800
+# Vanilla's 3,706 stamps: scale 0.1 / 0.2 / 0.4 at the 10th, 50th and 90th percentile (26, 51
+# and 102 location pixels across), so a draw ``u`` in [0, 1] gives ``26 + 100 u u`` pixels. Their
+# strength is 0.15 / 0.23 / 0.35; ours is ``0.2 + 0.4 u u``, the strength at which the local
+# relief and slope of each height class, with the stamps summed, equal those of vanilla's primary
+# heightmaps with its stamps added [V-EXEC 2026-10-31]. The stamp's stretch along its crest is
+# drawn within ``STRETCH_MIN``--``STRETCH_MAX`` percent of its width.
+ACROSS_MIN: Final[int] = 26
+ACROSS_RANGE: Final[int] = 100
+STRENGTH_MIN: Final[int] = 200
+STRENGTH_RANGE: Final[int] = 400
+STRETCH_MIN: Final[int] = 70
+STRETCH_MAX: Final[int] = 150
+# Strength rises with the height there, from 0.85 to 1.15 of its draw.
+RISE_LOW: Final[int] = 850
+RISE_RANGE: Final[int] = 300
+DRAWS: Final[int] = 1000
 
 
 class HeightSources(Protocol):
@@ -172,10 +185,9 @@ class MountainRelief:
     ) -> tuple[NDArray[np.int64], NDArray[np.uint8]]:
         """Additive height and material slot of a decal window.
 
-        Overlapping stamps give the highest crest, not the sum, and their slot: where one
-        covers a pixel with a slot, the stamp that is highest there decides, the lower slot on
-        a tie. Vanilla lets the lowest slot win, but its stamps overlap far less, and here that
-        would turn every dense massif into the first variation. Slots are indices, so they are
+        Heights add, as the engine's ``add`` blend does, and the stamp that is highest at a
+        pixel decides its slot, the lower slot on a tie. Vanilla lets the lowest slot win, but
+        that turns every dense massif into the first variation. Slots are indices, so they are
         taken from the nearest source pixel; the pattern then follows the stamp's own valleys.
         """
         out = np.zeros(shape, dtype=np.int64)
@@ -206,7 +218,7 @@ class MountainRelief:
                 target = best[window]
                 _ = np.maximum(target, key, out=target)
             target = out[window]
-            _ = np.maximum(target, value, out=target)
+            target += value
         return out, np.where(best >= 0, 255 - best % 256, NO_MATERIAL).astype(np.uint8)
 
 
@@ -283,15 +295,20 @@ def mountain_relief(
                 continue
             rise = min(1000, (height - PLACE) * 1000 // REACH)
             picks = draw // (span * span)
+            chance = CHANCE_LOW + (CHANCE_HIGH - CHANCE_LOW) * rise * rise // 1_000_000
+            if int(picks % DRAWS) >= chance:
+                continue
+            picks //= DRAWS
             source = int(picks % len(sources))
             axis = int(axes[cell]) if int(coherence[cell]) >= COHERENCE else int(picks // 3 % AXES)
             turn = DIRECTIONS // 2 * int(picks // 3 // AXES % 2)
-            spread = SPREAD_LOW + int(picks // 96 % 1000) * SPREAD_RANGE // 1000
-            stretch = STRETCH_MIN + int(picks // 96000 % 1000) * (STRETCH_MAX - STRETCH_MIN) // 1000
-            across = (ACROSS_MIN + (ACROSS_MAX - ACROSS_MIN) * rise // 1000) * spread // 1000
+            picks //= 3 * AXES * 2
+            size, stretch_draw, force = (int(picks // DRAWS**n % DRAWS) for n in range(3))
+            stretch = STRETCH_MIN + stretch_draw * (STRETCH_MAX - STRETCH_MIN) // DRAWS
+            across = ACROSS_MIN + ACROSS_RANGE * size * size // DRAWS**2
             strength = (
-                (STRENGTH_MIN + (STRENGTH_MAX - STRENGTH_MIN) * rise // 1000)
-                * (SPREAD_LOW + int(picks // 96000000 % 1000) * SPREAD_RANGE // 1000)
+                (STRENGTH_MIN + STRENGTH_RANGE * force * force // DRAWS**2)
+                * (RISE_LOW + RISE_RANGE * rise // 1000)
                 // 1000
             )
             placements.append(

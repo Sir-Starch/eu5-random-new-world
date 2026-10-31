@@ -2131,3 +2131,12 @@ pixels; the terrain detail noise now has vanilla's roughness exponent. Each lake
 ground because the relief's distance to the sea counted it as water, which also lowered the interior
 where pyramids overlapped; lakes now count as land for that distance. Both changes alter every world
 within the pending epoch 60; the reference digest is refreshed. Numbers are in the terrain guide.
+
+## 2026-10-31 — Mountains had no relief in game (C451)
+
+The owner's screenshots showed the generated mountains flat beside vanilla's. The loaded world's own files
+agreed: its mountains had the relief of vanilla's hills. The earlier benchmark had compared with vanilla's
+primary heightmaps, which lack the 3,706 stamps the game adds. The stamps are now placed and added the way
+vanilla's are and the relief is retuned against vanilla with its stamps, by height class. The reference
+digest is refreshed within the pending epoch 60. Engine rendering is still unobserved.
+

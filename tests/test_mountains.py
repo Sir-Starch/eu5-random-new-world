@@ -11,10 +11,14 @@ import numpy as np
 import pytest
 
 from rnw.eu5_mountains import (
+    ACROSS_MIN,
+    ACROSS_RANGE,
     AXES,
     CELL,
     PLACE,
+    REACH,
     SMOOTH,
+    STEP,
     Mountain,
     MountainRelief,
     crest_axes,
@@ -95,17 +99,22 @@ def _mean(values: Iterable[int]) -> float:
     return sum(items) / len(items)
 
 
-def test_stamps_differ_in_size_and_strength_and_grow_with_height() -> None:
-    low = np.full((200, 300), PLACE + 1000, dtype=np.int32)
-    high = np.full((200, 300), PLACE + 14000, dtype=np.int32)
+def test_stamps_differ_in_size_stretch_and_strength_and_are_more_where_it_is_high() -> None:
+    low = np.full((400, 600), PLACE + 1500, dtype=np.int32)
+    high = np.full((400, 600), PLACE + REACH, dtype=np.int32)
     lower = mountain_relief(Sources(), low, seed=5, column0=0).placements
     higher = mountain_relief(Sources(), high, seed=5, column0=0).placements
-    assert len({m.strength for m in higher}) > 8
-    assert len({m.across for m in higher}) > 8
-    assert len({m.along * 100 // m.across for m in higher}) > 4
-    assert min(m.along for m in higher) >= min(m.across for m in higher)
-    assert _mean(m.strength for m in higher) > 1.5 * _mean(m.strength for m in lower)
-    assert _mean(m.across for m in higher) > 1.3 * _mean(m.across for m in lower)
+    assert len({m.strength for m in higher}) > 20
+    assert len({m.across for m in higher}) > 20
+    assert len({m.along * 100 // m.across for m in higher}) > 8
+    # Vanilla's percentiles: 26 pixels across at the least, about 50 at the median.
+    sizes = sorted(m.across // 2 for m in higher)
+    assert ACROSS_MIN <= sizes[0] < sizes[len(sizes) // 2] < sizes[-1] <= ACROSS_MIN + ACROSS_RANGE
+    assert 38 <= sizes[len(sizes) // 2] <= 65
+    # Strength rises a little with height; the number of stamps rises a great deal.
+    assert _mean(m.strength for m in higher) > _mean(m.strength for m in lower)
+    assert len(higher) > 3 * len(lower)
+    assert len(higher) > 0.7 * (400 // STEP) * (600 // STEP)
 
 
 @dataclass
@@ -121,9 +130,9 @@ class BarSources:
 
 def test_stamps_are_turned_to_run_along_the_range() -> None:
     """A ridge at 30 degrees: each stamp's horizontal crest is turned onto that axis."""
-    rows, columns = np.indices((420, 640))
-    across = (rows * 866 - columns * 500) // 1000 - 100
-    elevation = np.clip(24000 - np.abs(across) * 260, 0, None).astype(np.int32)
+    rows, columns = np.indices((900, 1300))
+    across = (rows * 866 - columns * 500) // 1000 - 300
+    elevation = np.clip(PLACE + REACH + 3000 - np.abs(across) * 110, 0, None).astype(np.int32)
     placed = mountain_relief(BarSources(), elevation, seed=11, column0=0)
     assert len(placed.placements) > 30
     assert crest_axes(placed.sources) == (0, 0, 0)

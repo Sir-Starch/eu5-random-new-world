@@ -5,20 +5,18 @@
 - Rework mountains and hills (pending epoch 60). Ranges are now continuous chains of one
   realistic width that fork and arc, with massifs of different heights, passes between them and
   lower secondary ranges, instead of broad one-height blobs cut into segments. Crests carry
-  erosion-like ridges that grow on high ground and leave valleys smooth, and the vanilla
-  mountain stamps are turned along each range's axis and sized and strengthened by the height
-  there, so ridges and valley networks run the way real ones do (they sat at random angles, all one
-  size and strength). The stamps' own material layers are laid over the mountains, giving the
-  eroded pattern of crests and valleys that vanilla's mountains have. The share of land above
-  14,000 units goes from 5.7 % to 17.3 % (vanilla outside the Tibetan plateau: 19 %), and the local
-  relief of crest zones from about 60 % of vanilla's to 98 %. The tallest peaks stay at vanilla's height
-  (they were already there; what was missing was the graded ground and ridge structure). The ground has
-  the fine grain of vanilla's: the terrain's detail noise now follows the installed heightmaps' roughness
-  from 64 down to 4 pixels (at 1, 4 and 16 pixels a plain's height differences were a fifth, a quarter and
-  two fifths of vanilla's, and are now two thirds, nine tenths and nine tenths). Lakes no longer stand in
-  cones of rising ground that lowered the interior wherever lakes overlapped, and hills rise from a
-  lake's shore instead of out of a flat bowl. Rivers, cell topography and biomes follow the new relief.
-  Existing worlds remain untouched.
+  erosion-like ridges that grow on high ground and leave valleys smooth. Vanilla's mountains owe
+  most of their relief to 3,706 mountain stamps that the game adds to its heightmaps; the generator
+  now places the same stamps at vanilla's density, sizes and strength (a quarter more), turns them along
+  each range's axis and adds them as the game does, so mountains have vanilla's local relief and slope
+  by height class instead of about two fifths of them (the first rebuild compared with the heightmaps
+  without the stamps and was too gentle: in game, mountains looked like hills). The stamps' material
+  layers are laid over the mountains, giving the eroded pattern of crests and valleys that vanilla's
+  mountains have. The ground has the fine grain of vanilla's: the terrain's detail noise follows the
+  installed heightmaps' roughness from 64 down to 4 pixels. Lakes no longer stand in cones of rising
+  ground that lowered the interior wherever lakes overlapped, and hills rise from a lake's shore instead
+  of out of a flat bowl. Rivers, cell topography and biomes follow the new relief. Existing worlds remain
+  untouched.
 
 - Rework coasts, water bodies and drainage together (pending epoch 60). Coasts are drawn from a
   bent density field, so continents have capes, hooked peninsulas and gulfs with narrow mouths

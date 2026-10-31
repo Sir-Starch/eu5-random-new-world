@@ -37,10 +37,10 @@ if TYPE_CHECKING:
 COAST_HEIGHT: Final[int] = 5700
 INLAND_LIMIT: Final[int] = 320
 DISTANCE_STEP: Final[int] = 4
-INLAND_SLOPE: Final[int] = 4
+INLAND_SLOPE: Final[int] = 2
 BROAD_HEIGHT: Final[int] = 1300
-MOUNTAIN_PEAK: Final[int] = 28000
-HILL_HEIGHT: Final[int] = 6800
+MOUNTAIN_PEAK: Final[int] = 38000
+HILL_HEIGHT: Final[int] = 5500
 PLATEAU_HEIGHT: Final[int] = 6500
 FOOTHILL_RADIUS: Final[int] = 48
 BROAD_RAMP: Final[int] = 120
@@ -51,8 +51,8 @@ WARP_PERMILLE: Final[int] = 400
 # chain, strength in permille) of each family of chains. A chain's own width wanders between
 # half and three halves of these.
 CHAINS: Final[tuple[tuple[str, int, int, int, int], ...]] = (
-    ("relief_belts", 1100, 100, 300, 1000),
-    ("relief_belts2", 700, 64, 200, 950),
+    ("relief_belts", 900, 130, 390, 1000),
+    ("relief_belts2", 600, 83, 260, 950),
 )
 AXIS_WANDER: Final[int] = 20  # a chain's axis is displaced by a finer noise a twentieth as strong
 AXIS_WARP: Final[int] = 200
