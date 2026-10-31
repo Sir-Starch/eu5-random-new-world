@@ -165,7 +165,33 @@ window catalogues. Screens are reviewed in a browser through `npm run dev` with
 After interface edits, rebuild the source window with `cd desktop && npx tauri build --no-bundle`
 before `uv run rnw gui`. Package builds use separate output directories and do not refresh
 the source checkout's window executable. Generation progress lists stage names in its stage
-table; the line below the progress bar holds the time estimate and queue count.
+table; the line below the progress bar holds the time estimate and queue count. The inspector's
+bottom status uses the general generation/cancellation label and percentage, leaving stage names
+in the main view.
+
+**Time estimate.** `eta.py` predicts the remaining dependency path through the export's parallel
+terrain and script branches, including the work between named stages and the optional installation.
+Its initial costs are calibrated against the successful 230.9-second epoch-60 Linux generation
+logged on 2026-10-31 (build 26300913), replacing the older fixed 120-second total. The shared
+`Progress` owns a completion deadline: polling counts down; stage events and ten-second reviews
+of overdue work can blend meaningful corrections into it with a noise threshold. A stalled job
+can still revise upward; the timer does not claim completion before the terminal stage finishes.
+The service stores the median of up to five successful stage costs in `generation-times.json` in
+the application's data folder (up to sixteen preset/build/epoch/platform/thread-limit contexts).
+Input waits are excluded, and cache hits, cancellation, failure and waits for the game do not
+train expensive work. Timing data never enters generated worlds or their reproducibility record.
+Both windows use this model, including the current world in a queue; cancellation and waiting
+for the game hide ETA.
+
+[V-EXEC 2026-10-31] Deterministic regressions cover overlapping inputs, slow machines, overruns,
+cache hits, resets and optional timing storage. An offline replay of the recorded 245.6-second
+The Wall export reduced mean absolute remaining-time error from 80.5 to 16.0 seconds and
+increasing one-second ticks from 69 to 9 before training. Its stage starts/ends came from the
+timing log; the final write interval was inferred from the terrain end and reported total.
+Replaying that same trace after learning gives 0.4 seconds mean error, demonstrating calibration,
+not cross-seed accuracy. No new world or EU5 session was needed. Local evidence:
+`local_data/eta-ui/replay.json`; full checks and package installation are recorded in
+[INSTALLED](../experiments/INSTALLED.md).
 
 [V-EXEC 2026-10-30, 1.1.0 development] A Chromium comparison on the same 6,594-location
 atlas measured a maximum 10 ms timer gap of 592 ms for synchronous relief/region names and

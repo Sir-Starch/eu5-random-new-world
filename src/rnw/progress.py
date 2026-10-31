@@ -18,10 +18,11 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from rnw.eta import Estimate
 from rnw.timing import timed
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Mapping
 
 
 class Cancelled(Exception):  # noqa: N818 - a cancel is not an error, and "Cancelled" reads best
@@ -85,10 +86,6 @@ STAGES: Final[dict[str, StageInfo]] = {
     ),
 }
 TOTAL_WEIGHT: Final[int] = sum(info.weight for info in STAGES.values())
-# A full reference generation was measured at 90-150 seconds (ADR 0010). Start from its
-# midpoint, then let this run's weighted progress calibrate the estimate to the player's machine.
-ETA_PRIOR_SECONDS: Final[float] = 120.0
-ETA_PRIOR_FRACTION: Final[float] = 0.2
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,7 +112,7 @@ class Progress:
         self._running: list[str] = []
         self._done: set[str] = set()
         self._stage_started: dict[str, float] = {}
-        self._started_at: float = time.monotonic()
+        self._estimate: Estimate = self._new_estimate()
         self._cancelled: threading.Event = threading.Event()
 
     @property
@@ -138,35 +135,27 @@ class Progress:
             self._running.clear()
             self._done.clear()
             self._stage_started.clear()
-            self._started_at = time.monotonic()
+            self._estimate = self._new_estimate()
+
+    @staticmethod
+    def _new_estimate() -> Estimate:
+        return Estimate(time.monotonic())
+
+    def configure_eta(self, learned: Mapping[str, float], *, install: bool) -> None:
+        """Use local measurements of comparable generations for this job."""
+        with self._lock:
+            self._estimate.configure(learned, install=install)
+
+    def stage_costs(self) -> dict[str, float]:
+        """Completed critical-path costs, for learning only after a successful job."""
+        with self._lock:
+            return dict(self._estimate.costs)
 
     def estimated_remaining(self, *, now: float | None = None) -> float:
-        """Estimate seconds left from the weighted stages and this run's observed pace.
-
-        A running weighted stage advances smoothly for the estimate only; the reported progress
-        fraction remains tied to completed stages. The prior damps noisy early estimates, then
-        the player's actual elapsed time takes over as more weighted work completes.
-        """
+        """Seconds to the predicted completion deadline; polling counts down smoothly."""
         current = time.monotonic() if now is None else now
         with self._lock:
-            elapsed = max(0.0, current - self._started_at)
-            completed = sum(STAGES[name].weight for name in self._done if name in STAGES)
-            partial = 0.0
-            for name in self._running:
-                info = STAGES.get(name)
-                started = self._stage_started.get(name)
-                if info is None or info.weight <= 0 or started is None:
-                    continue
-                expected = ETA_PRIOR_SECONDS * info.weight / TOTAL_WEIGHT
-                share = min(0.9, max(0.0, current - started) / max(expected, 0.1))
-                partial += info.weight * share
-        fraction = min(1.0, (completed + partial) / TOTAL_WEIGHT)
-        if fraction <= 0.0:
-            return max(0.0, ETA_PRIOR_SECONDS - elapsed)
-        observed_total = elapsed / fraction
-        confidence = fraction / (fraction + ETA_PRIOR_FRACTION)
-        total = ETA_PRIOR_SECONDS * (1.0 - confidence) + observed_total * confidence
-        return max(0.0, total - elapsed)
+            return self._estimate.remaining(current)
 
     def checkpoint(self) -> None:
         """Raise ``Cancelled`` if a cancel was asked for."""
@@ -195,9 +184,11 @@ class Progress:
                 _ = self._stage_started.pop(name, None)
                 if completed:
                     self._done.add(name)
+                self._estimate.finish(name, now, completed=completed)
             else:
                 self._running.append(name)
                 self._stage_started[name] = now
+                self._estimate.begin(name, now)
             update = Update(
                 stage=name,
                 label=STAGES[name].label if name in STAGES else name,

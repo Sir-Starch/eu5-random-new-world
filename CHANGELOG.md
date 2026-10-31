@@ -46,8 +46,13 @@
   seeds can leave whole side regions as ocean instead of repeatedly scattering
   land through the same canvas pockets. Existing worlds remain untouched.
 
-- Simplify generation progress: show the current stages once in the stage list,
-  keeping the time estimate below the progress bar.
+- Simplify generation progress: show the current stages once in the main stage list,
+  keeping the time estimate below the progress bar and a general generation status in the
+  inspector. Rework ETA around the remaining parallel stage dependencies and current reference
+  timings, with a stable completion deadline and bounded corrections for overdue work. Learn
+  stage costs from recent successful local runs of the same preset/build and execution limits;
+  exclude cached geography and waits for the game. Both windows show the estimate for the
+  current world in a queue too. World output is unchanged.
 
 - Add The Wall: a procedural straight north-south continent or island chain with a mountain spine,
   impassable polar end locations, procedural coasts and extra continents/islands on

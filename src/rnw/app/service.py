@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Final, Protocol, cast
 import numpy as np
 
 from rnw import __version__, worldname
-from rnw.app import exchange, install, library, logs, recovery
+from rnw.app import estimates, exchange, install, library, logs, recovery
 from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
 from rnw.eu5_canvas import select_canvas
@@ -165,6 +165,12 @@ def generate(
     run = export_new_world if exporter is None else exporter
     _require_profile(request)
     started = time.monotonic()
+    timing_key = estimates.key(request.game.build_id, request.code.preset)
+    if progress is not None:
+        progress.configure_eta(
+            estimates.load(request.data, timing_key),
+            install=request.install and request.profile is not None,
+        )
     text = encode(request.code)
     build = request.game.build_id
     logs.get().info(
@@ -241,6 +247,8 @@ def generate(
         time.monotonic() - started,
         installed is not None,
     )
+    if progress is not None:
+        estimates.save(request.data, timing_key, progress.stage_costs())
     return Result(world, output, installed, time.monotonic() - started, summary)
 
 

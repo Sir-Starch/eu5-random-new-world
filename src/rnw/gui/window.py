@@ -1787,7 +1787,10 @@ class MainWindow(QMainWindow):
 
     def _refresh_eta_state(self) -> None:
         """Show and start the ETA timer only for one live world generation."""
-        active = self.controller.task is Task.GENERATE and self.controller.phase is Phase.RUNNING
+        active = (
+            self.controller.task in {Task.GENERATE, Task.QUEUE}
+            and self.controller.phase is Phase.RUNNING
+        )
         self.eta.setVisible(active)
         if active:
             self._refresh_eta()

@@ -821,7 +821,7 @@ class Controller:
         with self._lock:
             if (
                 self.phase is not Phase.RUNNING
-                or self.task is not Task.GENERATE
+                or self.task not in {Task.GENERATE, Task.QUEUE}
                 or "waiting for the game" in self.running
             ):
                 return None

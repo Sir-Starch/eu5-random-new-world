@@ -6,6 +6,25 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-10-31, **1.1.0 development — generation status and ETA**. [V-EXEC] The inspector now
+shows the general generation/cancellation status and percentage; stage names remain in the main
+list. ETA uses the remaining parallel dependency path, a stable deadline, current reference
+costs and a bounded local history of successful comparable runs. The estimate is shared by both
+windows and covers the current world in a queue. Full checks pass (2,315 Python tests, 15 optional
+skips; 23 native Rust tests; strict types, lint and formatting), as do `make desktop` (15 frontend
+and 5 shell tests) and native/Wine offscreen self-tests. The source window is rebuilt. The recorded
+trace replay and its limits are in [window design](../docs/gui-design.md#9-the-tauri-window).
+
+Installed the verified hub from `local_data/eta-ui/rnw_exp_hub` with all **3,472 files** matching;
+the previous hub is retained at `.rnw-hub-backups/1.1.0-1793457561302695189` in the same
+Windows/Proton profile. Wheel SHA-256 `3303611bf5d5891cb346fc046fdca9f58b016e214a645f2ee0e067981bfa126e`;
+window SHA-256 `1bdd5b915b598bd548807f001ba9b5c2fb0864832b3ac33b8e02b00fa9183050`.
+No world bytes change: reuse **Climate-consistent · 1001**, `rnw_exp_world_5devvifcrz`.
+The updater's EU5 process check passed. No game launch, playset, save or preference edit.
+Unpublished 1.1.0 / pending epoch 60 unchanged. Evidence: ignored `local_data/eta-ui/installation.json`
+and self-test/build logs; full checks in `local_data/eta-check.log` and
+`local_data/eta-desktop-verified.log`.
+
 2026-10-31, **1.1.0 development — vegetation consistent with its climate** (C452, issue #4). [V-EXEC] The
 biome classifier now smooths joint (climate, vegetation) votes and picks a cell's vegetation among the pairs
 of its own climate, so no cell carries a pair outside the Old World calibration (3-14 per world before; no

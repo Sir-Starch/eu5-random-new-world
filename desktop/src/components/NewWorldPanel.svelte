@@ -254,7 +254,7 @@
     <span class="meter"><span style:width={`${share * 100}%`}></span><i style:left={`${(budget / 32000) * 100}%`}></i></span>
   </div>
   {#if running}
-    <p class="note"><span class="spinner"></span><span>{s?.running || t("dock.forging")}</span><span class="num">{percent} %</span></p>
+    <p class="note"><span class="spinner"></span><span>{s?.phase === "cancelling" ? t("cancelling") : t("dock.forging")}</span><span class="num">{percent} %</span></p>
   {:else if n?.problem}
     <p class="note problem" title={n.problem}><Icon name="warning" /><span>{n.problem}</span></p>
   {:else}
