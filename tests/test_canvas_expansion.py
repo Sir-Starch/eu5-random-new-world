@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 
 from rnw.eu5_canvas import moved_pixels, open_map, place_islands, select_canvas
-from rnw.eu5_islands import relocate_map, shifts, stamp_codes
+from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
 from rnw.eu5_map import Eu5Map, MapPoint
 from rnw.model import CellClass
 from rnw.topology import within
@@ -190,11 +190,12 @@ def test_relocating_the_map_copies_pixels_and_shifts_the_points() -> None:
     ).sum() == 80
     assert moved.points[0].x == 38
     assert moved.points[0].y == 161
-    codes = np.full(game.labels.shape, -1, dtype=np.int8)
-    stamp_codes(codes, moved, canvas, 0, 1)
-    assert (codes[160:164, 36:42] == 1).all()
-    assert codes[158, 34] == 0
-    assert (codes != -1).sum() == 80
+    moved_pixels = moved_pixels_of(canvas)
+    assert moved_pixels is not None
+    assert moved_pixels.index.size == 80
+    found, down, across = moved_pixels.find(np.array([200]), np.array([22]))
+    assert (bool(found[0]), int(down[0]), int(across[0])) == (True, -40, 16)
+    assert not moved_pixels.find(np.array([10]), np.array([10]))[0][0]
 
 
 def test_groups_that_stay_are_left_as_they_are() -> None:

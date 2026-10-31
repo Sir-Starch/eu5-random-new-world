@@ -120,7 +120,7 @@ from rnw.eu5_empires import (
     written_ranks,
 )
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
-from rnw.eu5_islands import relocate_map, shifts, stamp_codes
+from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
 from rnw.eu5_lobby import (
     CONTEXT_MENU,
     COVER_INCLUDE,
@@ -253,6 +253,7 @@ from rnw.eu5_terrain import (
     OUTSIDE,
     WATER_CODE,
     DecalStore,
+    ShiftedStore,
     TerrainInputs,
     level_shares,
     terrain_outputs,
@@ -2637,13 +2638,14 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     game_map = relocate_map(open_map(game_map, canvas), canvas)
     width = int(game_map.labels.shape[1])
     seam = (canvas.roll - canvas.col0) % width
+    moved_groups = moved_pixels_of(canvas)
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     with Stages(stage_workers()) as stages:
         # Everything that reads only the vanilla game runs beside the generation of the world.
         def read_vanilla() -> tuple[
             DecalStore, dict[str, dict[str, str]], set[str], DevelopmentCalibration
         ]:
-            store = DecalStore(game_dir, (int(game_map.labels.shape[0]), width))
+            store = ShiftedStore(game_dir, (int(game_map.labels.shape[0]), width), moved_groups)
             return (
                 store,
                 template_attributes(_read(game_dir, TEMPLATES)),
@@ -2738,7 +2740,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             )[game_map.labels]
             new_water = vanilla_water.copy()
             new_water[canvas_world] = codes[canvas_world] == WATER_CODE
-            files, stats = water_outputs(game_dir, vanilla_water, new_water, canvas_world, seed)
+            files, stats = water_outputs(
+                game_dir, vanilla_water, new_water, canvas_world, seed, moved_groups
+            )
             spool.update(files)
             return stats
 
@@ -2829,6 +2833,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     rivers=rivers < RIVER_CLASSES,
                     noise_roll=seam,
                     mountains=mountain_relief(store, carved, seed=seed, column0=0),
+                    moved=moved_groups,
                 )
                 return terrain_outputs(store, inputs, slot_tables, seed, spool)
 
@@ -2836,7 +2841,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             terrain_stats.update(water.result())
             canvas_world = np.zeros(game_map.labels.shape, dtype=bool)
             canvas.put(canvas_world, canvas.mask)
-            canvas_world[moved_pixels(canvas)] = True
             pixel_classes, class_count, coarse_count = _pixel_classes(
                 game_map, vanilla_attributes, biomes, final_labels, materials_world
             )
@@ -2850,6 +2854,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     coarse_count=coarse_count,
                     seed=seed,
                     sink=spool,
+                    moved=moved_groups,
                 ),
             )
             return terrain_stats
@@ -3361,7 +3366,6 @@ def _codes(game_map: Eu5Map, canvas: Canvas, world: NewWorld) -> NDArray[np.int8
         dtype=np.int8,
     )
     canvas.put(codes, table[world.labels])
-    stamp_codes(codes, game_map, canvas, WATER_CODE, LAND_CODE)
     return codes
 
 

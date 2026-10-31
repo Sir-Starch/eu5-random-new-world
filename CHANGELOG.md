@@ -18,7 +18,8 @@
   Ascension, Tristan da Cunha and Gough), are no longer holes that land must go round: the land is
   generated first, then a group of islands with room around it stays where it is, and one the land would
   cover moves, whole and with its coast zones, to the nearest free ocean, keeping its latitude where it
-  can. A moved island is built with the generator's flat ground. Because the canvas is 17 % larger, the
+  can, together with its heights, ground materials, mountains, vegetation, water colour and foam,
+  locators and ports. Because the canvas is 17 % larger, the
   presets' land shares are 15 % lower, so a world keeps its land and about its locations (continents now
   340 ‰, supercontinent 460 ‰, small continents 255 ‰); the location estimate is refitted on seven
   full exports. Existing worlds remain untouched.

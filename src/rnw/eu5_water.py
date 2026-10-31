@@ -31,6 +31,8 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_islands import Moved
+
 WATER_COLOR: Final[str] = "gfx/map/water/watercolor_rgb_waterspec_a.dds"
 FOAM: Final[str] = "gfx/map/water/foam_map.dds"
 LAKES: Final[str] = "gfx/map/map_objects/lakes.bin"
@@ -162,6 +164,26 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the tab
     return np.where(touched[first:last, :, None], blended, original).clip(0, 255).astype(np.uint8)
 
 
+def carry_pixels(
+    image: NDArray[np.uint8], moved: Moved | None, factor: int
+) -> NDArray[np.bool_] | None:
+    """Copy the texture pixels of the moved island groups to their new places, in ``image``.
+
+    A texture pixel is ``factor`` location pixels wide. Returns the pixels written, or None.
+    """
+    if moved is None:
+        return None
+    rows, columns = image.shape[:2]
+    old = (moved.rows // factor, moved.columns // factor)
+    new = (moved.new_rows // factor, moved.new_columns // factor)
+    ok = (new[0] < rows) & (new[1] < columns) & (old[0] < rows) & (old[1] < columns)
+    source = image[old[0][ok], old[1][ok]].copy()
+    image[new[0][ok], new[1][ok]] = source
+    placed = np.zeros((rows, columns), dtype=bool)
+    placed[new[0][ok], new[1][ok]] = True
+    return placed
+
+
 def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the seed.
     data: bytes,
     *,
@@ -170,9 +192,11 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
     masks: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]],
     seed: int,
     stream: str,
+    moved: Moved | None = None,
 ) -> tuple[bytes, int]:
     vanilla_water, new_water, canvas = masks
     image = _decode(data)
+    placed = carry_pixels(image, moved, factor)
     old_water = _downsample(vanilla_water, factor, any_true=False)
     fresh_water = _downsample(new_water, factor, any_true=False)
     touched = _downsample(canvas, factor, any_true=True)
@@ -216,6 +240,9 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
         changed[first:last] = touched[first:last] & np.any(
             result[first:last] != image[first:last], axis=2
         )
+    if placed is not None:
+        result[placed] = image[placed]
+        changed |= placed
     return rewrite(data, result, changed), int(np.count_nonzero(changed))
 
 
@@ -235,14 +262,18 @@ def _lakes(data: bytes, canvas: NDArray[np.bool_]) -> tuple[bytes, int]:
     return b"".join(kept), len(data) // LAKE_RECORD - len(kept)
 
 
-def water_outputs(
+def water_outputs(  # noqa: PLR0913, PLR0917 - the textures need the masks, the seed and the moved groups.
     game_dir: Path,
     vanilla_water: NDArray[np.bool_],
     new_water: NDArray[np.bool_],
     canvas: NDArray[np.bool_],
     seed: int,
+    moved: Moved | None = None,
 ) -> tuple[dict[str, bytes], dict[str, int]]:
-    """Mod copies of the water colour map, foam map and lake mesh list."""
+    """Mod copies of the water colour map, foam map and lake mesh list.
+
+    The colour and foam of a moved island group (``moved``) go with it.
+    """
     root = game_dir / "game/in_game"
     masks = (vanilla_water, new_water, canvas)
     color, color_px = _rebuild(
@@ -252,6 +283,7 @@ def water_outputs(
         masks=masks,
         seed=seed,
         stream="water_color",
+        moved=moved,
     )
     foam, foam_px = _rebuild(
         (root / FOAM).read_bytes(),
@@ -260,6 +292,7 @@ def water_outputs(
         masks=masks,
         seed=seed,
         stream="water_foam",
+        moved=moved,
     )
     lakes, dropped = _lakes((root / LAKES).read_bytes(), canvas)
     outputs = {f"in_game/{WATER_COLOR}": color, f"in_game/{FOAM}": foam, f"in_game/{LAKES}": lakes}

@@ -35,6 +35,8 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_islands import Moved
+
 MAP_OBJECTS: Final[str] = "game/in_game/gfx/map/map_objects"
 RECORD_FLOATS: Final[int] = 10
 SLOT_CLASSES: Final[int] = 18
@@ -103,6 +105,20 @@ def _inline_sets(game_dir: Path) -> list[InstanceSet]:
                 )
             )
     return sets
+
+
+def carry_records(
+    instance: InstanceSet, moved: Moved, rows: int, columns: int
+) -> InstanceSet | None:
+    """``instance`` with the records of a moved island group at their new places, or None."""
+    row, column = _pixels(instance.records, rows, columns)
+    found, down, across = moved.find(row // 2, column // 2)
+    if not found.any():
+        return None
+    records = instance.records.copy()
+    records[found, 0] = (records[found, 0] + across[found]) % moved.width
+    records[found, 2] = records[found, 2] - down[found]
+    return InstanceSet(instance.path, instance.name, records)
 
 
 def _pixels(
@@ -247,19 +263,24 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     coarse_count: int,
     seed: int,
     sink: MutableMapping[str, Buffer],
+    moved: Moved | None = None,
 ) -> dict[str, object]:
     """Rewrite the instance files that have instances in the canvas into ``sink``.
 
     ``canvas`` marks replaced location pixels; ``classes.calibrate`` marks the labels
-    whose pixels calibrate densities (Old World land). Returns statistics.
+    whose pixels calibrate densities (Old World land). The instances on a moved island group
+    (``moved``) move with it and stay. Returns statistics.
     """
     rows, columns = classes.labels.shape
     sets = _bin_sets(game_dir) + _inline_sets(game_dir)
     affected: list[tuple[InstanceSet, NDArray[np.bool_]]] = []
     for instance in sets:
+        carried = None if moved is None else carry_records(instance, moved, rows, columns)
+        if carried is not None:
+            instance = carried  # noqa: PLW2901 - the set with its moved instances at their new places
         row, column = _pixels(instance.records, rows, columns)
         inside = canvas[row // 2, column // 2]
-        if np.any(inside):
+        if np.any(inside) or carried is not None:
             affected.append((instance, inside))
     if not affected:
         return {"instance_files": 0}

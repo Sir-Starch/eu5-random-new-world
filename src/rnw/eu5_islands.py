@@ -2,9 +2,11 @@
 
 ``eu5_canvas.place_islands`` decides where each island group stands. This module moves the
 vanilla data that names a place: the location colours and labels, the rivers and the points
-(locators and ports) of the locations and coast zones of every group that moved. A group's
-pixels are copied to their new place and its points shifted with them; the old place is left
-as it was, because it lies inside the canvas and is generated over.
+(locators and ports) of the locations and coast zones of every group that moved, and describes
+the moved pixels (``Moved``) for the layers that are read elsewhere: decal heights and materials
+(``eu5_terrain``), mountain stamps, vegetation instances (``eu5_objects``) and water colour and
+foam (``eu5_water``). A group's pixels are copied to their new place and its points shifted with
+them; the old place is left as it was, because it lies inside the canvas and is generated over.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -12,15 +14,16 @@ as it was, because it lies inside the canvas and is generated over.
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 import numpy as np
 
-from rnw.eu5_canvas import moved_pixels
 from rnw.eu5_map import MapPoint
 
 if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
     from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
 
@@ -67,16 +70,63 @@ def relocate_map(game_map: Eu5Map, canvas: Canvas) -> Eu5Map:
     return replace(game_map, labels=labels, rgb=rgb, rivers=rivers, points=points)
 
 
-def stamp_codes(
-    codes: np.ndarray[tuple[int, ...], np.dtype[np.int8]],
-    game_map: Eu5Map,
-    canvas: Canvas,
-    water: int,
-    land: int,
-) -> None:
-    """Mark the pixels where moved groups stand as ground to build: water for coast zones."""
-    rows, columns = moved_pixels(canvas)
-    if rows.size == 0:
-        return
-    sea = np.array([kind.value in {"sea", "lake"} for kind in game_map.classes], dtype=bool)
-    codes[rows, columns] = np.where(sea[game_map.labels[rows, columns]], water, land)
+@dataclass(frozen=True, slots=True, eq=False)
+class Moved:
+    """The location pixels of the moved island groups: each old pixel and where it went.
+
+    The pixel at (``rows[i]``, ``columns[i]``) now stands at (``rows[i] + down[i]``,
+    ``(columns[i] + across[i]) % width``). ``order`` sorts the old pixels by their raster index.
+    """
+
+    rows: NDArray[np.int64]
+    columns: NDArray[np.int64]
+    down: NDArray[np.int64]
+    across: NDArray[np.int64]
+    width: int
+    index: NDArray[np.int64]
+
+    @property
+    def new_rows(self) -> NDArray[np.int64]:
+        """Rows of the pixels at their new places."""
+        return self.rows + self.down
+
+    @property
+    def new_columns(self) -> NDArray[np.int64]:
+        """Map columns of the pixels at their new places."""
+        return (self.columns + self.across) % self.width
+
+    def find(
+        self, rows: NDArray[np.int64], columns: NDArray[np.int64]
+    ) -> tuple[NDArray[np.bool_], NDArray[np.int64], NDArray[np.int64]]:
+        """Which of the pixels (rows, columns) were moved, and by how many rows and columns."""
+        wanted = rows * self.width + columns
+        place = np.minimum(np.searchsorted(self.index, wanted), self.index.size - 1)
+        found = self.index[place] == wanted
+        return found, np.where(found, self.down[place], 0), np.where(found, self.across[place], 0)
+
+
+def moved_pixels_of(canvas: Canvas) -> Moved | None:
+    """The pixels of the groups that moved, None when none did."""
+    rows: list[NDArray[np.int64]] = []
+    columns: list[NDArray[np.int64]] = []
+    down: list[NDArray[np.int64]] = []
+    across: list[NDArray[np.int64]] = []
+    for footprint, (step, side) in zip(canvas.footprints, canvas.moves, strict=False):
+        if step or side:
+            rows.append(footprint.rows.astype(np.int64))
+            columns.append(np.asarray(canvas.world_column(footprint.columns.astype(np.int64))))
+            down.append(np.full(footprint.size, step, dtype=np.int64))
+            across.append(np.full(footprint.size, side, dtype=np.int64))
+    if not rows:
+        return None
+    width = canvas.shape[1]
+    all_rows, all_columns = np.concatenate(rows), np.concatenate(columns)
+    order = np.argsort(all_rows * width + all_columns, kind="stable")
+    return Moved(
+        all_rows[order],
+        all_columns[order],
+        np.concatenate(down)[order],
+        np.concatenate(across)[order],
+        width,
+        (all_rows * width + all_columns)[order],
+    )

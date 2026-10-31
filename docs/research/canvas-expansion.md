@@ -318,14 +318,22 @@ explicit error. The groups are then holes of the generation domain and the cells
 (`generate_new_world(groups=...)`; `NewWorld.moves` is cached with the world, and the cache key covers
 the footprints). The land the candidates sketch is this same land.
 
-The exporter then reads the moved map: the colours, labels and rivers of a moved group are copied to its
-new place, and its locators, ports and adjacency coordinates shifted with it (`rewrite_locators`,
-`rewrite_csv`); the old place is generated over, and `removed` and `trimmed` are counted on the moved
-map without the groups. A moved group's ground is **built by the generator**, not copied: its pixels count
-as generated ground for the heights, materials, vegetation and water (`stamp_codes`, `moved_pixels`),
-classed by the vanilla attributes of its locations, so the terrain of a moved island is flat and low,
-with the beaches and shallows of any generated coast. [UNKNOWN] Moving the vanilla height and material
-layers and the mountain stamps of the island would keep a volcano's relief; it is not done.
+The exporter then reads the moved map, and the group goes with everything the game keeps for it: the
+colours, labels and rivers are copied to the new place; the locators, ports and adjacency coordinates are
+shifted (`rewrite_locators`, `rewrite_csv`); the height and material decal pixels are copied at two decal
+pixels per location pixel (`eu5_terrain.ShiftedStore`); the mountain stamps on the island take the new
+position, stay enabled and keep their cache entry (`disable_decals`); the vegetation and clutter instances
+are shifted (`eu5_objects.carry_records`); and the water colour and foam pixels are copied
+(`eu5_water.carry_pixels`). The old place is generated over, and `removed` and `trimmed` are counted on the
+moved map without the groups. The new place is a hole of the mask, so the exporter keeps those pixels
+vanilla (`codes` outside the canvas).
+
+[V-EXEC 2026-10-31, installed 1.4.6 map] Supercontinent seed 1 moves 28 of 49 groups, among them Hawaii
+with its two mountain stamps and the Tuamotu across the map seam. At their new places all 8,905 island
+location pixels carry the vanilla heights and materials of the old ones (decal samples equal), the two
+stamps are moved and enabled, all 1,399 binary and 183 inline instances are at their new places, and the
+water colour and foam differ from the old pixels only by block-compression noise (at most 12 of 255 on
+99.9 % of the pixels).
 
 [V-EXEC 2026-10-31, seed 4242] Continents: 16 of 49 groups are touched by land (+48 px) and 17 move
 (shifts of 20 – 770 px; all pixels equal, none touches generated land); the export takes 154 s and

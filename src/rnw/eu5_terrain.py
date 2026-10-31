@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from itertools import pairwise
-from typing import TYPE_CHECKING, Final, cast
+from typing import TYPE_CHECKING, Final, cast, override
 
 import numpy as np
 
@@ -54,6 +54,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_islands import Moved
     from rnw.eu5_mountains import MountainRelief
 
 TERRAIN: Final[str] = "game/in_game/gfx/terrain2"
@@ -224,6 +225,83 @@ class DecalStore:
         return out
 
 
+@dataclass(eq=False)
+class ShiftedStore(DecalStore):
+    """A decal store whose layers show the moved island groups where they now stand.
+
+    The height and material pixels of a moved group are copied to its new place, two decal
+    pixels to each location pixel; the old place keeps what it had, because it lies inside
+    the canvas and is generated over.
+    """
+
+    moved: Moved | None = None
+
+    @override
+    def layer(
+        self, decal: str, kind: str
+    ) -> tuple[LayerFormat, NDArray[np.uint16] | NDArray[np.uint8]]:
+        """Vanilla layer ``kind`` of a decal, with the moved groups' pixels at their new places."""
+        layer, image = super().layer(decal, kind)
+        if self.moved is None:
+            return layer, image
+        placed = next((item for item in self.decals if item.name == decal), None)
+        if placed is None:
+            return layer, image
+        moved = self.moved
+        rows, columns = moved.new_rows, moved.new_columns
+        here = (
+            (rows >= placed.row0)
+            & (rows < placed.row0 + placed.rows)
+            & (columns >= placed.column0)
+            & (columns < placed.column0 + placed.columns)
+        )
+        if not here.any():
+            return layer, image
+        sources: dict[str, NDArray[np.uint16] | NDArray[np.uint8]] = {}
+        for sub_row in range(2):
+            for sub_column in range(2):
+                self._copy(
+                    image,
+                    placed,
+                    kind,
+                    (rows[here], columns[here]),
+                    (moved.rows[here], moved.columns[here]),
+                    (sub_row, sub_column),
+                    sources,
+                )
+        return layer, image
+
+    def _copy(  # noqa: PLR0913, PLR0917 - a copy names the image, both places and the sub-pixel.
+        self,
+        image: NDArray[np.uint16] | NDArray[np.uint8],
+        placed: Decal,
+        kind: str,
+        target: tuple[NDArray[np.int64], NDArray[np.int64]],
+        source: tuple[NDArray[np.int64], NDArray[np.int64]],
+        sub: tuple[int, int],
+        cache: dict[str, NDArray[np.uint16] | NDArray[np.uint8]],
+    ) -> None:
+        for origin in self.decals:
+            inside = (
+                (source[0] >= origin.row0)
+                & (source[0] < origin.row0 + origin.rows)
+                & (source[1] >= origin.column0)
+                & (source[1] < origin.column0 + origin.columns)
+            )
+            if not inside.any():
+                continue
+            if origin.name not in cache:
+                cache[origin.name] = DecalStore.layer(self, origin.name, kind)[1]
+            values = cache[origin.name][
+                2 * (source[0][inside] - origin.row0) + sub[0],
+                2 * (source[1][inside] - origin.column0) + sub[1],
+            ]
+            image[
+                2 * (target[0][inside] - placed.row0) + sub[0],
+                2 * (target[1][inside] - placed.column0) + sub[1],
+            ] = values
+
+
 # Median vanilla shelf profile measured on decal heightmap_6_16 [V-EXEC]: height by step
 # distance (decal pixels) into water from the coastline; land starts at 5708.
 WATER_PROFILE: Final[tuple[tuple[int, int], ...]] = (
@@ -346,6 +424,7 @@ class TerrainInputs:
     rivers: NDArray[np.bool_]
     noise_roll: int = 0
     mountains: MountainRelief | None = None
+    moved: Moved | None = None
 
 
 class TerrainRangeError(ValueError):
@@ -583,7 +662,7 @@ def terrain_outputs(
             materials_world[
                 decal.row0 * 2 : (decal.row0 + decal.rows) * 2, left * 2 : right * 2
             ] = image[:, (left - decal.column0) * 2 : (right - decal.column0) * 2]
-    disabled, cache_out = _disable_decals(store, codes)
+    disabled, cache_out = disable_decals(store, codes, inputs.moved)
     sink.update(disabled)
     sink["in_game/gfx/terrain2/terrain_cache/ingame_decals.json"] = cache_out
     padded = sum(plan != original for plan, original in zip(plans, store.decals, strict=True))
@@ -678,14 +757,54 @@ def _wrapped_heightmaps(store: DecalStore) -> tuple[dict[str, dict[str, object]]
     return entries, files
 
 
-def _disable_decals(store: DecalStore, codes: NDArray[np.int8]) -> tuple[dict[str, bytes], bytes]:
-    """Extend primary heightmaps and disable obsolete mountains in instances and cache."""
+def _shift_stamp(raw: str, down: int, across: int, width: int) -> str:
+    """The text of a mountain stamp instance moved by ``down`` rows and ``across`` columns."""
+
+    def number(key: str, text: str, change: int, limit: int | None) -> str:
+        found = re.search(rf'("{re.escape(key)}":\s*)(-?[\d.]+)', text)
+        if found is None:
+            message = f"Mountain stamp instance without {key}"
+            raise TerrainRangeError(message)
+        value = float(found.group(2)) + change * LOCATION_UNITS
+        if limit is not None:
+            value %= limit * LOCATION_UNITS
+        shown = str(int(value)) if value == int(value) else repr(value)
+        return text[: found.start(2)] + shown + text[found.end(2) :]
+
+    return number("position.y", number("position.x", raw, across, width), -down, None)
+
+
+def disable_decals(
+    store: DecalStore, codes: NDArray[np.int8], moved: Moved | None = None
+) -> tuple[dict[str, bytes], bytes]:
+    """Extend primary heightmaps and disable obsolete mountains in instances and cache.
+
+    A mountain on a moved island group moves with it instead: its instance and its cache entry
+    take the new position, and it stays enabled.
+    """
     kept: list[dict[str, object]] = []
     wrapped, files = _wrapped_heightmaps(store)
+    rows, width = store.map_shape
+
+    def moved_by(x: float, y: float) -> tuple[int, int] | None:
+        if moved is None:
+            return None
+        found, down, across = moved.find(
+            np.array([rows - 1 - int(y) // LOCATION_UNITS]), np.array([int(x) // LOCATION_UNITS])
+        )
+        return (int(down[0]), int(across[0])) if bool(found[0]) else None
+
     for entry in store.cache:
         name = str(entry["decal_name"])
         position = cast("dict[str, dict[str, float]]", entry["decal_transform"])["position"]
-        if HEIGHTMAP.fullmatch(name) or not _inside(codes, position["x"], position["y"]):
+        step = None if HEIGHTMAP.fullmatch(name) else moved_by(position["x"], position["y"])
+        if step is not None:
+            shifted = deepcopy(entry)
+            place = cast("dict[str, dict[str, float]]", shifted["decal_transform"])["position"]
+            place["x"] = (place["x"] + step[1] * LOCATION_UNITS) % (width * LOCATION_UNITS)
+            place["y"] = place["y"] - step[0] * LOCATION_UNITS
+            kept.append(shifted)
+        elif HEIGHTMAP.fullmatch(name) or not _inside(codes, position["x"], position["y"]):
             kept.append(wrapped.get(name, entry))
     decals = store.game_dir / TERRAIN / "decals"
     for folder in sorted(path for path in decals.iterdir() if path.is_dir()):
@@ -696,10 +815,16 @@ def _disable_decals(store: DecalStore, codes: NDArray[np.int8]) -> tuple[dict[st
             data = cast("dict[str, object]", json.loads(raw.decode("utf-8-sig")))
             x = cast("float", data["position.x"])
             y = cast("float", data["position.y"])
-            if data.get("disabled") is False and _inside(codes, x, y):
-                text = raw.decode("utf-8-sig").replace('"disabled":\tfalse', '"disabled":\ttrue')
-                prefix = "﻿" if raw.startswith(b"\xef\xbb\xbf") else ""
-                relative = f"in_game/gfx/terrain2/decals/{folder.name}/instances/{instance.name}"
+            step = moved_by(x, y) if data.get("disabled") is False else None
+            relative = f"in_game/gfx/terrain2/decals/{folder.name}/instances/{instance.name}"
+            prefix = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
+            if step is not None:
+                text = _shift_stamp(raw.decode("utf-8-sig"), step[0], step[1], width)
                 files[relative] = (prefix + text).encode("utf-8")
-    cache_out = ("﻿" + json.dumps(kept, indent="\t", ensure_ascii=False) + "\n").encode("utf-8")
+            elif data.get("disabled") is False and _inside(codes, x, y):
+                text = raw.decode("utf-8-sig").replace('"disabled":\tfalse', '"disabled":\ttrue')
+                files[relative] = (prefix + text).encode("utf-8")
+    cache_out = ("\ufeff" + json.dumps(kept, indent="\t", ensure_ascii=False) + "\n").encode(
+        "utf-8"
+    )
     return files, cache_out
