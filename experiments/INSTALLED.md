@@ -6,6 +6,27 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **ocean currents as clear courses** (C456). [V-EXEC] Installed a new world,
+`mod/rnw_exp_world_7224ct35fl`, in the normal Proton profile: the land and seas of the owner's world
+QU3N (continents, seed 12037730821817090414) with the peoples rolled once, code
+`RNW1-080TE-3MWCX-G2VGB-E040G-00813-G0JRS-NC`, so that its id differs from the installed QU3N
+(`rnw_exp_world_qu3nhnzsl6`, left in place). Its 869 nonmetadata files have SHA-256 `1efbc6a5…529e1c`;
+all 871 manifest entries that the reveal setting does not withhold match the installed bytes (26 are
+selection-cover and library-only files). The export reports zero split cells, unreachable generated
+seas, lost Old World contacts or land cells without port access, 265 lanes (deep ocean) of which 138
+carry a current, in four courses of 16–53 cells; the same land in the owner's QU3N has 265 current
+cells in 18 pieces. Records are in the native library and the Proton `AppData/Local/RandomNewWorld`
+library. Existing worlds, saves, settings and playsets were preserved; EU5 was not launched or
+controlled.
+
+The verified 1.1.0 hub (3,478 files) was rebuilt, passed its Windows/Wine generator and window-shell
+self-tests and was installed as `mod/rnw_exp_hub`; its previous copy is retained at
+`.rnw-hub-backups/1.1.0-1793499309031807369`. Wheel SHA-256
+`fa0c94b43e7acbcd05d0861b51e4ba38555f356b856cf514879d0fa9c2765d33`. The pending epoch-60 reference on
+build 26300913 has 871 files and digest `ed998bac…37ea`, reproduced by the installed-game suite
+(13 passed, 2 skipped; the reference export passed). Full Python checks pass (2,363 tests, 15 optional
+skips; strict types, lint and formatting). Evidence: ignored `local_data/currents-20261101/`.
+
 2026-11-01, **issue #9 colonial overseas border correction** (C455). [V-EXEC]
 Installed a new continents/1001 world with ocean expansion off, code
 `RNW1-080G0-00000-0000Z-9040G-00813-R03EY-AY`, at
