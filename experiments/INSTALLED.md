@@ -6,6 +6,33 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **thin zone remainders, on the land of the owner's The Wall J4VJ** (C456). [V-EXEC] The owner
+asked whether the right thing had been fixed, because the screenshots were of J4VJ and the earlier candidates
+were of QU3N. The J4VJ files in the profile (`rnw_exp_world_j4vjupn3zo`, left in place) indicate that the narrow
+Pacific South location is `pacific_south_current2`, a zone of the game that the canvas trimmed to a needle (an
+inference from the owner's description; see [sea geography](../docs/sea-geography.md)); the canvas now takes
+such remainders. Installed
+**`mod/rnw_exp_world_jslqa5uqtx`**, the land and seas of J4VJ (wall, seed 14046991261471717063) with the peoples
+rolled once so that its id differs from the installed J4VJ; code
+`RNW1-083C5-W7G43-7GKDP-7040G-00850-2FG27-018A6-02GZ8-0X2EG-1YXV3-T0`. Its 866 nonmetadata files have SHA-256
+`06f1512a…1e2a`; 868 of the 894 manifest entries match the installed bytes (26 are selection-cover and
+library-only files). 349 deep lanes, 238 with a current; zero split cells, unreachable generated seas, lost Old
+World contacts, cut-off seas or land cells without port access. `pacific_south_current2` and
+`atlantic_equatorial_countercurrent18` are no longer defined. Records are in the native library and the Proton
+`AppData/Local/RandomNewWorld` library. Earlier candidates of the same day, including `7uwam7i5jh`, are
+superseded and kept. Existing worlds, saves, settings and playsets were preserved; EU5 was not launched or
+controlled.
+
+The 1.1.0 hub was rebuilt, passed its Windows/Wine generator and window-shell self-tests and was installed over
+its previous copy, retained at `.rnw-hub-backups/1.1.0-1793541873707636343` (wheel SHA-256
+`7ad7465105ce1c62b351e57f36679041f3bc3d7104c3f80f83237041b35cff22`). The pending epoch-60 reference world is now a
+new land of the same settings (`RNW1-081G0-00000-0KAA7-E040G-…-34JQ8-1`): the earlier land left its Caribbean
+region one coastal sea cell away from the Old World boundary and failed its identity check as soon as the sea
+cells changed. On build 26300913 the reference has 870 files and digest `45b91242…ea38`, reproduced by the
+installed-game suite (13 passed, 2 opt-in skips) and `RNW_REPRODUCE=1`; continents 1000, archipelago 42, The
+Wall 9 and islands 7 export with every sea invariant. Full Python checks pass (2,377 tests, 15 optional skips;
+strict types, lint and formatting). Evidence: ignored `local_data/currents-20261101/`.
+
 2026-11-01, **ocean currents as clear courses, and sliver sea locations** (C456). [V-EXEC] Installed three
 worlds in the normal Proton profile, each the land of the owner's world QU3N (continents, seed
 12037730821817090414) with the peoples rolled so that its id differs from the installed QU3N

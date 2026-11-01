@@ -49,7 +49,8 @@ thin tails of otherwise fat cells are not changed. [V-EXEC]
 
 **Thin remainders of trimmed zones, pending 1.1.0 / epoch 60 (same report):** the "tall narrow
 triangle touching six neighbours" in the owner's Pacific South was not one of those cells. In the
-owner's installed J4VJ files it is `pacific_south_current2`, a location of the game that the canvas
+owner's installed J4VJ files the only location that fits (tall, tail, six neighbours) is
+`pacific_south_current2` [INFERRED from the description], a location of the game that the canvas
 trimmed to 29 % of its area (3,963 of 13,889 pixels): a strip 219 × 47, 12.6 pixels thick, with a
 long tail, touching six neighbours. `merge_slivers` works on generated cells and never saw it. A
 remainder is now taken into the canvas, with the zone it belongs to, when it is smaller than 3,000

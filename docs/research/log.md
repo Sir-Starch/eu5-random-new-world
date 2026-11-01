@@ -2163,7 +2163,13 @@ own ocean without currents is nonsense"). The rule now has two kinds of course: 
 game's currents, and crossings of open water that take the direction of the game's gyres at their latitude
 where they are clear. A second report (The Wall J4VJ) found a prepared straight line without a current
 (a crossing split by shallow strips, eaten from its end by the short-branch rule), a cluster of arrows
-over a wide stretch of lane, and a long narrow sea location (a needle left by merging cell pieces only by
-area). All three are fixed; numbers and rules are in [sea geography](../sea-geography.md). The land cache
+over a wide stretch of lane, and a long narrow sea location. The first reading of the last (a needle left by
+merging cell pieces only by area) was a real defect but not that location: in the owner's J4VJ files the
+triangle touching six neighbours is `pacific_south_current2`, a zone of the game that the canvas had trimmed
+to a needle, so the canvas now takes remainders under 20 pixels thick. The owner's question "did you fix the
+right thing?" (the screenshots were of J4VJ, the candidates of QU3N) is what found it; the candidate is now
+the land of J4VJ. Numbers and rules are in [sea geography](../sea-geography.md). The land cache
 holds cells and is keyed by epoch, not code: its four entries were deleted because the sliver rule changes
-them. The reference digest is refreshed within the pending epoch 60. Engine drawing is unobserved.
+them. The earlier reference land failed its identity check when the sea cells changed again (one coastal sea
+cell of margin), so the reference is a new land of the same settings. The digest is refreshed within the
+pending epoch 60. Engine drawing is unobserved.
