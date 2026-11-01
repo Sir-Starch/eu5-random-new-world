@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "Largeur du mur"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Largeur maximale en proportion de la zone de génération."
+source = "ed46ede2804adb86"
+text = "Largeur maximale en proportion de la zone de génération. Le mur prend d'abord ses terres sur la quantité de Terres : plus il est large, moins il en reste aux continents voisins, jusqu'à quelques îles seulement."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

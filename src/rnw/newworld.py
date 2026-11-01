@@ -77,6 +77,9 @@ EDGE_RAMP_MARGINS: Final[int] = 4
 EDGE_SHIFT_RAMPS: Final[int] = 2
 EDGE_SHIFT_PERIOD_PERMILLE: Final[int] = 2500
 MAX_STRAITS: Final[int] = 16
+# The least land beside The Wall, as a share of the water beside it, when the barrier takes
+# nearly all of the world's land: a few headlands and islands still lie off its coasts.
+WALL_SIDE_MIN_PERMILLE: Final[int] = 10
 # The land density bends its own coordinates by this share of its feature size, with a
 # warp as broad as the feature. Plain fractal noise thresholded gives rounded blobs; bent
 # coordinates turn them into peninsulas, hooked capes and gulfs with narrow mouths (compared
@@ -273,8 +276,14 @@ def _natural_land(
     seed: int,
     settings: NewWorldSettings,
     relief: NDArray[np.int32],
+    *,
+    budget_px: int | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
-    """Construct natural coasts from a density field, preserving the requested land budget."""
+    """Construct natural coasts from a density field, preserving the requested land budget.
+
+    The budget is the land share of ``settings``, or ``budget_px`` pixels when a caller has
+    already spent part of it elsewhere (The Wall).
+    """
     margin = settings.coast_margin_px
     ramp = EDGE_RAMP_MARGINS * margin
     shift_px = EDGE_SHIFT_RAMPS * ramp
@@ -296,7 +305,9 @@ def _natural_land(
     # A sea cut off from open water (around a protected islet) gets a strait: its shortest
     # path to open water joins the guard and the coasts are drawn again, so the strait has
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
-    land, shore, elevation = _coasts(domain, guard, relief, offset, ramp=ramp, settings=settings)
+    land, shore, elevation = _coasts(
+        domain, guard, relief, offset, ramp=ramp, settings=settings, budget_px=budget_px
+    )
     for _ in range(MAX_STRAITS):
         checkpoint()
         path = stray_strait(domain, land, shore=shore, open_shore=open_shore)
@@ -304,7 +315,7 @@ def _natural_land(
             break
         guard |= path
         land, shore, elevation = _coasts(
-            domain, guard, relief, offset, ramp=ramp, settings=settings
+            domain, guard, relief, offset, ramp=ramp, settings=settings, budget_px=budget_px
         )
     del relief, offset, guard, open_shore
     # Isthmuses, inland seas and then lakes are made before islands are counted, so none
@@ -370,8 +381,16 @@ def _wall_land(
     on different seeds. A longer wavelength lets whole regions become ocean or
     continent; the original field supplies bays, peninsulas and islands. Both
     scales follow feature size, with one sea level for all the side land.
+
+    The barrier takes its land first out of the world's land share, so a wider Wall leaves
+    less for the continents beside it: when it needs all of the share, only the small
+    ``WALL_SIDE_MIN_PERMILLE`` remains there. A Wall wider than the share allows keeps its land.
     """
     course = wall.route(domain, settings)
+    barrier = wall.coast(domain, seed, settings)
+    off_limits = _off_limits(domain, settings)
+    budget = settings.land_permille * int(np.count_nonzero(domain & ~off_limits)) // PERMILLE
+    budget -= int(np.count_nonzero(barrier))
     sides = domain.copy()
     wall.keep_clear(
         sides, course, course.half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
@@ -397,9 +416,9 @@ def _wall_land(
     relief += detail
     relief //= 3
     del detail
-    land, _, _, elevation = _natural_land(sides, seed, settings, relief)
-    land |= wall.coast(domain, seed, settings)
-    return (*_classify(domain, land, _off_limits(domain, settings), settings), elevation)
+    land, _, _, elevation = _natural_land(sides, seed, settings, relief, budget_px=max(0, budget))
+    land |= barrier
+    return (*_classify(domain, land, off_limits, settings), elevation)
 
 
 def _ocean(
@@ -531,11 +550,14 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
     *,
     ramp: int,
     settings: NewWorldSettings,
+    budget_px: int | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Lower the relief over a ramp from the guard and keep the land budget.
 
     Returns land, shore (no land within a coast margin of the guard) and the elevation.
     The per-pixel arithmetic runs in strips; only the two distance fields are whole-raster.
+    With ``budget_px`` the land is that many pixels of the interior (at least
+    ``WALL_SIDE_MIN_PERMILLE`` of it) instead of the settings' land share.
     """
     # The cap must exceed every reach, or the wobble would dent the interior too.
     edge = distance_from(guard, ramp - int(offset.min()) + 2, octagonal=True)
@@ -557,7 +579,16 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
             elevation[rows] += spread[: rows.stop - first, :width]
     del edge, opened
     interior = domain & ~shore
-    threshold = _threshold(elevation, interior, settings.land_permille)
+    share = settings.land_permille
+    if budget_px is not None:
+        share = min(
+            PERMILLE,
+            max(
+                WALL_SIDE_MIN_PERMILLE,
+                budget_px * PERMILLE // max(1, int(np.count_nonzero(interior))),
+            ),
+        )
+    threshold = _threshold(elevation, interior, share)
     return interior & (elevation >= threshold), shore, elevation
 
 

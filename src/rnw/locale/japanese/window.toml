@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "壁の幅"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "生成領域に対する最大幅の割合。"
+source = "ed46ede2804adb86"
+text = "生成領域に対する最大幅の割合。壁は陸地の量から先に自分の分を取るため、幅が広いほど隣の大陸に残る陸地は減り、最後は少数の島だけになります。"
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

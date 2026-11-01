@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "장벽 너비"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "생성 영역 대비 최대 너비 비율입니다."
+source = "ed46ede2804adb86"
+text = "생성 영역 대비 최대 너비 비율입니다. 장벽이 육지 양에서 먼저 자기 몫을 가져가므로, 너비가 넓을수록 옆 대륙에 남는 땅이 줄어 마지막에는 섬 몇 개만 남습니다."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

@@ -6,6 +6,21 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **The Wall's width inside the land share**. [V-EXEC] Installed **RNW: The Wall NOVX** in new
+`mod/rnw_exp_world_novxisa5pj`, the owner's J4VJ land (wall, seed 14046991261471717063, land 159‰,
+position 100%, irregularity 100%) with the width raised from its 14% to 30%, code
+`RNW1-083C5-W7G43-7GKDP-7040G-00840-2FG2G-NC091-YG1T4-X03NC-V6J`. EU5 1.4.6 / build 26300913; 1.1.0
+development / pending epoch 60. 877 files in the mod folder, 18 existing world folders left in place.
+Of the 894 manifest entries 847 match the installed bytes; the other 47 are what the application's
+"show the New World" setting (on) withholds (selection cover, shaders, GUI), library-only files and the
+revealed thumbnail. 27,593 locations; no split generated cells, unreachable generated seas, unported
+land, cut-off seas or lost Old World contacts. A full export at the widest width, 44% (seed 1000), also
+passes every invariant with 29,257 locations. The Wall is counted inside the land share, so a wide one
+leaves few continents beside it ([terrain](../docs/terrain-biomes.md#the-wall)). Full Python checks
+pass (2,414 tests, 15 optional skips; strict types, lint and formatting of the project's paths);
+no native code changed. EU5 was running and was not launched or controlled; the hub was **not**
+updated, because its updater stops while the game is open. Evidence: ignored `local_data/wall-width/`.
+
 2026-11-01, **issue #7 native identity cores** (C459). [V-EXEC] Installed
 **Native identity cores · 7007** in new `mod/rnw_exp_world_54bascq2vu`, code
 `RNW1-081G0-00000-0006T-Z040G-00860-2AG63-YG1W8-8G3GH-149XR-08TX0-3G7VX-9`,

@@ -384,8 +384,8 @@ community names, not verified official localization identifiers [SOURCE, accesse
 
 `wall.py` plans the barrier's route in the installed game's expanded canvas, keeping all
 protected pixels intact, and places the continental envelope along it. The position control
-spans the longest band of columns in which at least 90% of the rows are open (columns 3,835–7,350
-of 10,075 on the 1.4.6 canvas), west to east. The route is a straight line at that position wherever the
+spans the longest band of columns in which at least 90% of the rows are open (columns 2,173–7,350
+of 10,075 on build 26300913 [V-EXEC 2026-11-01]), west to east. The route is a straight line at that position wherever the
 envelope with its coast margin fits. Where an island, a group of islands or their guard water
 is in the way it detours by the shortest smooth way: the backward pass of `wall._plan` finds the
 cells from which the south edge can still be reached, so the detour starts early and the route
@@ -410,8 +410,8 @@ The core (`wall.core`) is not a straight strip: its centre drifts by up to 0.3 o
 envelope's half-width and its half-width swells between 0.3 and 0.5 of it, both along
 the whole length, and its edge takes the ragged shore of the coastal noise (up to an
 eighth of the half-width). Coastal noise fades over the outer quarter of the envelope, so
-no coast is cut off along the envelope's straight edge, and the land share lowers only the
-side land: the wall keeps the share it is sized for (250‰) and a larger share adds to it.
+no coast is cut off along the envelope's straight edge, and the wall keeps the land it is
+sized for (a base of 250‰; a larger land share adds to it).
 [V-EXEC, 2026-10-31] Owner report: a world with land share 187, coastal irregularity 904,
 maximum width and gaps off (seed 12471306029767500627) was a thin, ruler-straight strip
 through much of its length beside large continents. The straight strip was the old forced
@@ -419,6 +419,25 @@ core (a fixed quarter-width column in every row) exposed wherever the density fi
 left the wall's own land empty; no location budget was involved (6,643 of 32,000 locations).
 The same land stage at one eighth scale now gives a bent core of varying width; the
 connectivity checks and a per-row centreline check at cell construction remain.
+
+The land share is one budget for the whole world. `newworld._wall_land` builds the barrier
+first and counts its pixels; the continents beside it get `land_permille` of the canvas's
+interior less those pixels (`_natural_land(budget_px=…)`), never less than
+`WALL_SIDE_MIN_PERMILLE` (1%) of the water beside the wall. So a wider wall leaves fewer
+continents, and a wall that needs the whole share takes nearly all the land. A wall wider than
+the share allows keeps its land and the world has more land than the share asked for;
+`controls.estimated_locations` counts that (`wall_share`). Before this the continents took the
+share of the canvas without the wall's band and the wall came on top, so the widest wall
+(14%) still sat beside huge continents. [V-EXEC 2026-11-01, real canvas of build 26300913,
+seed 1000, land share 212‰, 61.65 million interior pixels] The wall's land is 0.65–0.77 of the
+width in permille of the canvas's land area (54 settings: irregularity 0–1000, gaps allowed or
+not; the worst case of each land amount), rising to 1.15 at a land share of 600‰. Land stage:
+width 140‰ gives a wall of 100‰ beside 114‰ of continents (total 214‰); width 300‰ a wall of 207‰
+and 6.5‰ beside it; width 440‰ a wall of 312‰ (more than the share) and 10.4‰ beside it. The
+route search finds a way for widths up to 464‰ at every position (the longest open band is
+51% of the canvas), so the control stops at 440‰. The full export at 440‰ (seed 1000) has
+29,257 locations (the window estimates 30,800 and refuses above 31,200) and every sea invariant
+holds (no split cell, unreachable sea, lost Old World contact or land cell without port access).
 
 Secondary land outside an ocean gap on either side uses a continuous density field
 with a broad continental component (four times the feature scale, two-thirds of
@@ -433,7 +452,7 @@ Locations touching the polar endpoints become wasteland. Construction rejects a
 canvas too narrow for the requested envelope or a drawn-mask combination. With gaps
 disabled, it verifies that the final cell raster retains its continuous land column.
 
-Both windows expose the gap checkbox plus maximum width (4–14% of canvas width),
+Both windows expose the gap checkbox plus maximum width (4–44% of canvas width, 14% by default),
 west-to-east position across the canvas (the wall goes around protected islands), coastal irregularity and
 ridge height under Advanced → The Wall. Land share, feature scale and noise settings
 shape both the Wall and the side land. The preset requires the expanded canvas. Its

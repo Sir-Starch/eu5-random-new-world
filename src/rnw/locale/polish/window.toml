@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "Szerokość muru"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Maksymalna szerokość jako część obszaru generowania."
+source = "ed46ede2804adb86"
+text = "Maksymalna szerokość jako część obszaru generowania. Mur zabiera swój ląd najpierw z ilości lądu: im jest szerszy, tym mniej zostaje dla kontynentów obok, aż do kilku wysp."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

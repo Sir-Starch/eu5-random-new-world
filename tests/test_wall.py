@@ -23,7 +23,8 @@ if TYPE_CHECKING:
 
 @pytest.mark.parametrize("seed", [7, 42, 1000])
 @pytest.mark.parametrize(
-    ("position", "width", "coast"), [(0, 40, 0), (700, 70, 600), (1000, 140, 1000)]
+    ("position", "width", "coast"),
+    [(0, 40, 0), (700, 140, 600), (1000, 140, 1000), (500, 440, 300)],
 )
 def test_wall_has_no_water_passage_and_keeps_polar_end_locations_impassable(
     seed: int, position: int, width: int, coast: int
@@ -218,6 +219,38 @@ def test_low_land_share_thins_the_side_land_and_never_the_wall() -> None:
             wall.coast(domain, seed, base),
             wall.coast(domain, seed, replace(base, land_permille=120)),
         )
+
+
+def test_a_wider_wall_takes_its_land_out_of_the_land_share_and_leaves_the_rest_beside_it() -> None:
+    """The land share is one budget: the Wall is counted first and the continents get the rest."""
+    domain = np.ones((640, 960), dtype=bool)
+    settings = replace(SMALL, landform=1, land_permille=250)
+    interior = int(np.count_nonzero(domain & ~newworld._off_limits(domain, settings)))  # pyright: ignore[reportPrivateUsage]
+    budget = interior * settings.land_permille // 1000
+    sides: list[int] = []
+    for width in (40, 100, 200, 300):
+        wide = replace(settings, wall_width_permille=width)
+        land = land_stage(domain, 42, wide)[0]
+        barrier = wall.coast(domain, 42, wide)
+        assert (land & barrier).sum() == barrier.sum()
+        # While the Wall fits the share, the world keeps the land amount that was asked for.
+        assert abs(int(land.sum()) - budget) < budget // 20
+        sides.append(int((land & ~barrier).sum()))
+    assert sides == sorted(sides, reverse=True)
+    assert sides[0] > 2 * sides[-1]
+
+
+@pytest.mark.parametrize("width", [300, 440])
+def test_the_widest_wall_takes_nearly_all_the_land_and_is_never_thinned(width: int) -> None:
+    """A Wall that needs the whole share keeps its land; the continents keep only a sliver."""
+    domain = np.ones((640, 960), dtype=bool)
+    settings = replace(SMALL, landform=1, land_permille=150, wall_width_permille=width)
+    land = land_stage(domain, 42, settings)[0]
+    barrier = wall.coast(domain, 42, settings)
+    assert (land & barrier).sum() == barrier.sum()
+    beside = int((land & ~barrier).sum())
+    assert 0 < beside < int(land.sum()) // 20
+    assert not (land & ~domain).any()
 
 
 @pytest.mark.parametrize("seed", range(6))
