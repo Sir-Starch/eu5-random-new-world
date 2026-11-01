@@ -12,6 +12,7 @@ from statistics import median
 import numpy as np
 import pytest
 
+from rnw.eu5_natives import _pop_lines  # pyright: ignore[reportPrivateUsage]
 from rnw.settings import NATIVES
 from rnw.societies import (
     CITY,
@@ -116,6 +117,37 @@ def _societies(seed: int = 3) -> tuple[LandGraph, Societies]:
     return graph, generate_societies(graph, SETTINGS, seed=seed, target=4_000_000)
 
 
+def _written_country_shares(societies: Societies) -> list[tuple[int, int]]:
+    """Read the serialized pop types and return peasants / total for each landed country."""
+    keys = [f"loc_{node}" for node in range(len(societies.population))]
+    religions = ["test_religion"] * (int(societies.religion.max()) + 1)
+    cultures = ["test_culture"] * (int(societies.culture.max()) + 1)
+    written = _pop_lines(societies, keys, religions, cultures)
+    amounts: list[dict[str, int]] = [{} for _ in keys]
+    for node, key in enumerate(keys):
+        found: dict[str, int] = {}
+        for line in written.get(key, []):
+            parts = line.split()
+            kind = parts[parts.index("type") + 2]
+            whole, _, fraction = parts[parts.index("size") + 2].partition(".")
+            found[kind] = int(whole) * 1000 + int(fraction)
+        amounts[node] = found
+    shares: list[tuple[int, int]] = []
+    for polity in societies.polities:
+        if polity.kind != STATE:
+            continue
+        actual = sum(sum(amounts[node].values()) for node in polity.members)
+        expected = int(societies.population[list(polity.members)].sum())
+        assert actual == expected
+        shares.append(
+            (
+                sum(amounts[node].get("peasants", 0) for node in polity.members),
+                actual,
+            )
+        )
+    return shares
+
+
 def test_societies_are_deterministic_and_follow_the_seed() -> None:
     """The same seed repeats exactly; another seed changes the zones."""
     _, first = _societies(3)
@@ -145,6 +177,54 @@ def test_population_and_states_follow_the_calibration() -> None:
     tribal[state_nodes] = False
     density_states = societies.population[state_nodes].mean()
     assert density_states > 3 * societies.population[tribal].mean()
+
+
+@pytest.mark.parametrize("empire_chance", [0, 1000], ids=["ordinary", "extraordinary"])
+def test_peasant_mix_changes_written_country_shares_without_changing_population(
+    empire_chance: int,
+) -> None:
+    """The control changes serialized country pop shares, while support and totals still hold."""
+    graph = _grid()
+    floor = StateFloor(peasants=338, share=122)
+    by_peak: dict[int, Societies] = {}
+    actual_shares: dict[int, list[tuple[int, int]]] = {}
+    for peak in (300, 800):
+        settings = replace(
+            SETTINGS,
+            empire_permille=empire_chance,
+            peasant_peak_permille=peak,
+        )
+        societies = generate_societies(graph, settings, seed=4, target=4_000_000, state_floor=floor)
+        by_peak[peak] = societies
+        actual_shares[peak] = _written_country_shares(societies)
+        states = [polity for polity in societies.polities if polity.kind == STATE]
+        assert states
+        assert all(
+            floor.supports(
+                int(societies.population[list(polity.members)].sum()),
+                int(societies.peasants[list(polity.members)].sum()),
+            )
+            for polity in states
+        )
+        assert all(
+            peasants >= 338 and peasants * 1000 >= total * 122
+            for peasants, total in actual_shares[peak]
+        )
+    lower, higher = by_peak[300], by_peak[800]
+    assert np.array_equal(lower.population, higher.population)
+    assert np.array_equal(lower.complexity, higher.complexity)
+    assert int(lower.population.sum()) == int(higher.population.sum())
+    assert np.all(higher.peasants >= lower.peasants)
+    assert np.any(higher.peasants > lower.peasants)
+    for peak in (300, 800):
+        assert actual_shares[peak]
+    lower_peasants = sum(peasants for peasants, _ in actual_shares[300])
+    lower_population = sum(total for _, total in actual_shares[300])
+    higher_peasants = sum(peasants for peasants, _ in actual_shares[800])
+    higher_population = sum(total for _, total in actual_shares[800])
+    assert higher_peasants * lower_population > lower_peasants * higher_population
+    if empire_chance:
+        assert any(polity.great for polity in higher.polities)
 
 
 @pytest.mark.parametrize("shape", ["continents", "poor", "fragmented"])
@@ -343,7 +423,12 @@ def test_poor_islands_do_not_become_empty_states_and_population_is_not_granted()
     graph.potential[ROWS * COLUMNS :] = 0
     societies = generate_societies(
         graph,
-        replace(SETTINGS, state_spread_permille=600, organized_permille=1000),
+        replace(
+            SETTINGS,
+            state_spread_permille=600,
+            organized_permille=1000,
+            peasant_peak_permille=800,
+        ),
         seed=3,
         target=4_000_000,
         state_floor=StateFloor(peasants=338, share=122),

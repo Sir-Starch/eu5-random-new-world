@@ -758,6 +758,14 @@ text = '''Population'''
 source = "cdc165c3d5206790"
 text = '''Population autochtone, par rapport à celle du Nouveau Monde de base.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''Part des paysans'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''Part maximale de la population de chaque lieu affectée aux paysans, atteinte uniquement au niveau de complexité sociale maximal. S’applique à toutes les terres habitées, même hors des États. Les lieux moins complexes ou moins fertiles restent davantage tribaux. La population totale et le seuil agricole exigé pour les États ne changent pas.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''Terres des États'''

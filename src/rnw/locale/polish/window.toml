@@ -758,6 +758,14 @@ text = '''Ludność'''
 source = "cdc165c3d5206790"
 text = '''Ludność tubylcza w porównaniu z ludnością zwykłego Nowego Świata.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''Udział chłopów'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''Górny limit udziału chłopów w ludności każdej zamieszkanej lokacji, osiągany tylko przy pełnej złożoności społecznej. Dotyczy wszystkich zamieszkanych ziem, także poza państwami. Mniej złożone lub mniej żyzne miejsca pozostają bardziej plemienne. Całkowita liczba ludności i wymóg rolniczy dla państw pozostają bez zmian.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''Ziemie państw'''

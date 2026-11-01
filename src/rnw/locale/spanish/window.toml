@@ -758,6 +758,14 @@ text = '''Población'''
 source = "cdc165c3d5206790"
 text = '''Población nativa, comparada con la del Nuevo Mundo original.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''Proporción de campesinos'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''Límite máximo de la población de cada localización habitada que puede asignarse a campesinos, alcanzado solo con plena complejidad social. Se aplica a todas las tierras habitadas, también fuera de los Estados. Los lugares menos complejos o menos fértiles siguen siendo más tribales. La población total y el umbral agrario para los Estados no cambian.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''Tierra de estados'''

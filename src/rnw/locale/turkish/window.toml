@@ -758,6 +758,14 @@ text = '''Nüfus'''
 source = "cdc165c3d5206790"
 text = '''Yerli nüfus, oyunun özgün Yeni Dünya nüfusuna göre.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''Köylü oranı'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''Tam toplumsal gelişmişlik düzeyinde ulaşılan, her yerleşimdeki nüfusun köylü olarak ayrılabilecek üst sınırıdır. Devlet toprakları dışı dâhil, iskân edilmiş tüm topraklar için geçerlidir. Gelişmişliği veya tarıma elverişliliği düşük yerler daha aşiret düzeninde kalır. Toplam nüfus ve devletler için tarımsal destek eşiği değişmez.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''Devlet toprakları'''

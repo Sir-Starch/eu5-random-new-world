@@ -359,6 +359,13 @@ STRINGS: Final[dict[str, str]] = {
     "control.natives.population_permille.about": (
         "Native population, against the population of the vanilla New World."
     ),
+    "control.natives.peasant_peak_permille": "Peasant share",
+    "control.natives.peasant_peak_permille.about": (
+        "Upper limit for the peasant share of each inhabited location, reached only at full "
+        "social complexity. Applies to all inhabited land, including land outside states. "
+        "Less complex or poor-farming locations remain more tribal. Total population and the "
+        "vanilla farming threshold for landed states do not change."
+    ),
     "control.natives.state_share_permille": "Land in states",
     "control.natives.state_share_permille.about": (
         "Target share of inhabited land for native states (vanilla: 11 %). "

@@ -52,6 +52,16 @@ def test_state_share_control_boundaries_round_trip_in_world_codes(share: int) ->
     assert again.settings().natives.state_share_permille == share
 
 
+@pytest.mark.parametrize("share", [300, 800])
+def test_peasant_mix_boundaries_round_trip_in_world_codes(share: int) -> None:
+    """The minimum and maximum population-mix choices are carried by compact codes."""
+    code = new_code("archipelago", 7, {"natives": {"peasant_peak_permille": share}})
+    again = decode(encode(code))
+    assert again == code
+    assert again.settings().natives.peasant_peak_permille == share
+    assert worldcode.format_of(encode(code)) == worldcode.COMPACT
+
+
 def test_reading_forgives_case_spacing_and_look_alike_letters() -> None:
     """Lower case, spaces, line breaks and O/I/L for 0/1 read as the code was written."""
     code = new_code("continents", 0x1F0F0F0F0F0F0F01)

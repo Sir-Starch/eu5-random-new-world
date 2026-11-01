@@ -758,6 +758,14 @@ text = '''População'''
 source = "cdc165c3d5206790"
 text = '''População nativa, em comparação com a do Novo Mundo original.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''Parcela camponesa'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''Limite máximo da parcela da população de cada localidade atribuída aos camponeses, atingido apenas com complexidade social plena. Aplica-se a todas as terras habitadas, inclusive fora dos Estados. Lugares menos complexos ou menos férteis continuam mais tribais. A população total e o requisito agrário para os Estados não mudam.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''Terra dos Estados'''

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Let players adjust the upper peasant share from 30% to 80% at full social complexity
+  (default 60%). It applies to all inhabited land: less complex and less farmable places
+  remain more tribal. The total population budget and the vanilla farming threshold for
+  landed states stay the same. Available in both windows and world codes (pending epoch 60).
+
 - Let players target up to 60% of inhabited land in native states in both windows. The States
   quick choice's Many setting now targets 44% on the default presets. Explain that the planner
   can undershoot where farming and population cannot support more states; eligibility and the

@@ -6,6 +6,23 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **issue #6 peasant population mix**. [V-EXEC] Installed code
+`RNW1-080G0-00001-WC7Z4-T040G-00819-2G0D9-2XJC` (continents, seed 2026110106,
+peasant peak 80%) in new `mod/rnw_exp_world_tsliolqa56`, with the matching local library
+bundle under `~/.local/share/random-new-world/generated/`. The installed EU5 build is
+1.4.6 / 26300913; the audited 1.4.5 map inputs remain compatible. Full export produced
+867 files, SHA-256 `2c462ee02ad0b7aa1126f6083b72bc5c376107ce928be09f8037de0cab410264`.
+The report records 6,609 inhabited locations, 44,878,394 milli-pops, and 10,136,818
+milli-peasants. All 204 landed countries have peasants; the lowest serialized country
+share is 277‰ (required minimum 122‰), and its least peasant count is 515 milli
+(required minimum 338). EU5 was not launched; this is export evidence, not gameplay
+validation. The 1.1.0 hub was rebuilt from this checkout, passed its Windows/Wine
+generator and window-shell self-tests, and was installed as `mod/rnw_exp_hub` (3,478
+files). The updater's EU5 process check passed. Its previous copy is retained at
+`.rnw-hub-backups/1.1.0-1793544888926119831`; wheel SHA-256
+`de4bb11a98df63cc9434c5cf17404e594e8fc5bee4ab7cec4df05ffe8d5ee657`. Candidate:
+`local_data/hub-updates/1.1.0-1793544825184063225/rnw_exp_hub`.
+
 2026-11-01, **issue #5 state-land target UI** (C457). [V-EXEC] Rebuilt the 1.1.0 hub from
 this checkout, passed the Windows/Wine generator and window-shell self-tests, and installed
 it as `mod/rnw_exp_hub` in the normal Proton profile. The installed hub has 3,478 files;

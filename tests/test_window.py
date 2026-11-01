@@ -382,11 +382,11 @@ def test_a_slider_changes_the_world_and_its_code(tmp_path: Path, fake_export: Ex
     controller = window.controller
     before = controller.code
     window.customize_button.setChecked(True)
-    row = next(r for r in window.rows if r.control.key == "natives.state_spread_permille")
-    row.slider.setValue(row.control.position(400))
-    pump(lambda: "natives.state_spread_permille" in controller.changes)
-    assert controller.value("natives.state_spread_permille") == row.control.value_at(
-        row.control.position(400)
+    row = next(r for r in window.rows if r.control.key == "natives.peasant_peak_permille")
+    row.slider.setValue(row.control.position(700))
+    pump(lambda: "natives.peasant_peak_permille" in controller.changes)
+    assert controller.value("natives.peasant_peak_permille") == row.control.value_at(
+        row.control.position(700)
     )
     assert controller.code != before
     assert window.code_edit.text() == controller.code

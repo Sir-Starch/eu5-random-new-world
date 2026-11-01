@@ -126,6 +126,8 @@ class NativeSettings:
     # hearth's domain, raises a sea league, a highland confederation, a fractured realm or a
     # sacred centre (R7d). 0: none of them.
     empire_permille: int = 0
+    # Peasant share at full societal complexity; lower-complexity land remains more tribal.
+    peasant_peak_permille: int = 600
 
 
 @dataclass(frozen=True, slots=True)
@@ -260,6 +262,10 @@ class Settings:
             del data["mask"]
         if self.resources == RESOURCES:
             del data["resources"]
+        # Default worlds keep the settings document they had before this control existed.
+        natives = cast("dict[str, object]", data["natives"])
+        if natives["peasant_peak_permille"] == NATIVES.peasant_peak_permille:
+            del natives["peasant_peak_permille"]
         return {"schema": SCHEMA_VERSION, **data}
 
 
@@ -313,6 +319,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "precious_permille": (0, 5000),
     "state_spread_permille": (0, 1000),
     "empire_permille": (0, 1000),
+    "peasant_peak_permille": (300, 800),
     "resources": (0, 65_535),
     "peoples": (0, 65_535),
     "id": (0, (1 << 48) - 1),

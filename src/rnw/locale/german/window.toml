@@ -758,6 +758,14 @@ text = '''Bevölkerung'''
 source = "cdc165c3d5206790"
 text = '''Einheimische Bevölkerung, verglichen mit der Bevölkerung der normalen Neuen Welt.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''Bauernanteil'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''Obergrenze des Anteils der Bevölkerung eines Ortes, der bei voller gesellschaftlicher Komplexität Bauern sind. Gilt für alle bewohnten Gebiete, auch außerhalb von Staaten. Weniger komplexe oder weniger fruchtbare Orte bleiben stärker von Stammesangehörigen geprägt. Gesamtbevölkerung und landwirtschaftliche Mindestvoraussetzung für Staaten bleiben unverändert.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''Land der Staaten'''

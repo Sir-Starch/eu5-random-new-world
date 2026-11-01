@@ -36,7 +36,9 @@ STEP_COST: Final[int] = 1000
 # Vanilla American locations owned by states hold a median 10 (mean 34) times the
 # population a tribal density fit predicts [V-EXEC C67]; full complexity gives 12 times.
 COMPLEX_GAIN: Final[int] = 11_000
-# Peasants are a median 39% (quartiles 34-44%) of pops in vanilla state locations.
+# Default peasant share at full complexity: peasants are a median 39% (quartiles 34-44%) of
+# pops in vanilla state locations. State-land planning keeps this baseline so the mix control
+# changes pop types without moving land or changing the population distribution.
 PEASANT_PEAK: Final[int] = 600
 # Poor land damps complexity: gate = GATE_BASE + (1000 - GATE_BASE) * potential.
 GATE_BASE: Final[int] = 400
@@ -637,7 +639,7 @@ def generate_societies(
     population = _population(
         graph.capacity, complexity, target * settings.population_permille // PERMILLE, rng
     )
-    share = PEASANT_PEAK * complexity // PERMILLE
+    share = settings.peasant_peak_permille * complexity // PERMILLE
     peasants = population * share // PERMILLE
     everyone = np.ones(count, dtype=bool)
     religion, _ = _zones(moves, everyone, locations=settings.religion_locations, rng=rng)

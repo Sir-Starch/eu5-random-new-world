@@ -27,6 +27,11 @@ An unobserved detail alone does not reopen acceptance or require another game se
 
 ## In development — 1.1.0
 
+- **Peasant population mix (issue #6):** Advanced → Peoples controls the upper peasant share
+  at full social complexity from 30% to 80%, across all inhabited land. It keeps the existing
+  population and state-support rules and works in both windows and world codes. See
+  [native societies](natives.md#peasant-and-tribesmen-balance).
+
 - **Resource distribution sliders:** Advanced → Resources now offers individual
   0–3× placement weights for all 34 ordinary New World RGOs alongside the existing
   precious-resource control, in both windows and every official language. Defaults

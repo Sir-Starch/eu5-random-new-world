@@ -758,6 +758,14 @@ text = '''人口'''
 source = "cdc165c3d5206790"
 text = '''先住民の人口。元の新世界の人口との比較。'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''農民の割合'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''社会複雑性が最大のときに各居住地の人口に占める農民の上限です。国家の領土外を含むすべての居住地に適用されます。社会の複雑さや農地適性が低い場所ほど部族民が多くなります。総人口と国家の農業支援条件は変わりません。'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''国家の土地'''

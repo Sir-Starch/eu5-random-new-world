@@ -31,6 +31,14 @@ def test_state_land_control_offers_a_sixty_percent_target() -> None:
     assert control.stored(60) == control.high
 
 
+def test_peasant_mix_control_is_bounded_and_defaults_to_the_existing_output() -> None:
+    """The all-land population-mix control spans 30 to 80%, with the former 60% default."""
+    control = controls.BY_KEY["natives.peasant_peak_permille"]
+    assert (control.low, control.default("continents"), control.high) == (300, 600, 800)
+    assert (control.shown(control.low), control.shown(control.high)) == (30, 80)
+    assert control.group == "peoples"
+
+
 @pytest.mark.parametrize(
     "control", controls.CONTROLS, ids=[control.key for control in controls.CONTROLS]
 )

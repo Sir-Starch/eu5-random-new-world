@@ -758,6 +758,14 @@ text = '''人口'''
 source = "cdc165c3d5206790"
 text = '''原住民人口，相对原版新大陆的人口。'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''农民比例'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''社会复杂度达到最高时，每个有人居住地点中农民所占比例的上限。适用于所有有人居住的土地，包括国家领土以外。社会复杂度较低或不适宜耕作的地点仍以部族民为主。总人口和建立国家所需的农业支持门槛不变。'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''国家所占土地'''

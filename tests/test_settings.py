@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -39,6 +39,20 @@ def test_settings_document_round_trips_through_its_canonical_json(tmp_path: Path
     assert spec_digest(run_spec(5, loaded)) == spec_digest(run_spec(5, settings))
     assert spec_digest(run_spec(5, loaded)) != spec_digest(run_spec(6, loaded))
     assert run_spec(5, loaded)["algorithm"] == epoch.CURRENT
+
+
+def test_peasant_mix_setting_round_trips_without_changing_default_documents() -> None:
+    """The default remains implicit for old worlds; a changed cap is explicit and validated."""
+    default = PRESETS["continents"]
+    default_natives = cast("dict[str, object]", default.to_json_data()["natives"])
+    assert "peasant_peak_permille" not in default_natives
+    changed = build_settings("continents", {"natives": {"peasant_peak_permille": 800}})
+    changed_natives = cast("dict[str, object]", changed.to_json_data()["natives"])
+    assert changed_natives["peasant_peak_permille"] == 800
+    assert build_settings("continents", changed.to_json_data()) == changed
+    for value in (299, 801):
+        with pytest.raises(SettingsError):
+            _ = build_settings("continents", {"natives": {"peasant_peak_permille": value}})
 
 
 def test_canonical_json_is_sorted_compact_ascii() -> None:

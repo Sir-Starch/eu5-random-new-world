@@ -758,6 +758,14 @@ text = '''인구'''
 source = "cdc165c3d5206790"
 text = '''원래 신대륙의 인구와 비교한 원주민 인구.'''
 
+["control.natives.peasant_peak_permille"]
+source = "3c4a12b1562b26cc"
+text = '''농민 비율'''
+
+["control.natives.peasant_peak_permille.about"]
+source = "e1cd0bb7adbe7f1e"
+text = '''사회 복잡성이 최대일 때 각 거주지 인구에서 농민이 차지할 수 있는 상한입니다. 국가 영토 밖을 포함한 모든 거주지에 적용됩니다. 사회가 덜 복잡하거나 농경에 덜 적합한 곳일수록 부족민이 더 많습니다. 총인구와 국가의 농업 지원 기준은 바뀌지 않습니다.'''
+
 ["control.natives.state_share_permille"]
 source = "827b094c2b486457"
 text = '''국가의 땅'''

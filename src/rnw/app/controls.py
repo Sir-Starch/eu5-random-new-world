@@ -139,6 +139,9 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("natives.tribe_locations", "peoples", 4, 15),
     Control("natives.empire_permille", "peoples", 0, 1000, factor=10, decimals=1, unit="percent"),
     Control(
+        "natives.peasant_peak_permille", "peoples", 300, 800, factor=10, decimals=1, unit="percent"
+    ),
+    Control(
         "new_world.precious_permille", "resources", 0, 3000, factor=1000, decimals=2, unit="times"
     ),
     *(

@@ -66,6 +66,11 @@ def test_hello_gives_the_strings_choices_and_a_state_that_is_json(
     assert static["strings"] == text.sources()
     assert static["layers"] == list(atlas.LAYERS)
     assert static["budget"] == 31_200
+    controls = cast("list[dict[str, object]]", static["controls"])
+    mix = next(control for control in controls if control["key"] == "natives.peasant_peak_permille")
+    assert mix["low"] == 30
+    assert mix["high"] == 80
+    assert mix["advanced"] is True
     assert state["selection"] == NEW
     new = cast("dict[str, object]", state["new"])
     assert new["choice"] == "continents"
@@ -107,6 +112,15 @@ def test_the_window_changes_the_new_world_as_the_qt_window_did(
     assert controller.world_file == tmp_path / "w.rnworld"
     _ = bridge.call("set_choice", {"choice": "chaos"})
     assert controller.mode == "chaos"
+
+
+def test_the_tauri_bridge_sets_and_encodes_the_peasant_mix(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    assert bridge.call("set_value", {"key": "natives.peasant_peak_permille", "value": 80.0}) is None
+    assert bridge.controller.value("natives.peasant_peak_permille") == 800
+    assert decode(bridge.controller.code).settings().natives.peasant_peak_permille == 800
 
 
 def test_a_made_world_is_listed_shown_and_answered_about(
