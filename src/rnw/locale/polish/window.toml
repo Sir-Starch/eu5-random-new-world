@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''Ziemie państw'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''Część zamieszkanych ziem, którą trzymają państwa tubylcze (w zwykłej grze: 11 %).'''
+source = "d403f6c7489f62e8"
+text = '''Docelowy udział zamieszkanych ziem przeznaczony dla państw tubylczych (zwykła gra: 11 %). Rzeczywisty udział może być mniejszy, gdy rolnictwo i ludność nie wystarczają do utrzymania państw.'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

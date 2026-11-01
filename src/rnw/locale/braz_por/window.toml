@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''Terra dos Estados'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''Parte da terra habitada que pertence a Estados nativos (no jogo original: 11 %).'''
+source = "d403f6c7489f62e8"
+text = '''Parcela desejada das terras habitadas destinada aos Estados nativos (jogo original: 11 %). A cobertura real pode ser menor onde a agricultura e a população não sustentam Estados.'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

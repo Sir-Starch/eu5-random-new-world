@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''Terres des États'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''Part des terres habitées que tiennent les États autochtones (jeu de base : 11 %).'''
+source = "d403f6c7489f62e8"
+text = '''Part visée des terres habitées destinée aux États autochtones (jeu de base : 11 %). Elle peut être moindre là où l’agriculture et la population ne suffisent pas à soutenir des États.'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

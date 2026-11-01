@@ -43,6 +43,11 @@ final location boundaries can move the coast slightly. A supplied land image dis
 this choice; use Save land template and Load land image for externally drawn land.
 [V-EXEC C143, C144]
 
+The States quick choice's **Many** setting requests 44% of inhabited land for states on
+the default presets. Advanced → Peoples → **Land in states** sets a target from 3% to 60%.
+Actual coverage can be lower where farming and population cannot support states; the
+generator does not add population to meet the target.
+
 *Expand generation into the oceans* on the World tab is checked by default and
 recommended. It gives the New World a wider, fixed ocean sector so continents can
 grow beyond the original American silhouette. The Old World and protected islands

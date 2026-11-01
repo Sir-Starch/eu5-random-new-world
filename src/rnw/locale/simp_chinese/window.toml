@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''国家所占土地'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''有人居住的土地中由原住民国家掌握的比例（原版：11 %）。'''
+source = "d403f6c7489f62e8"
+text = '''原住民国家占有人居住地的目标比例（原版：11 %）。农业与人口不足以支撑国家的地区，实际比例可能更低。'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

@@ -6,6 +6,16 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **issue #5 state-land target UI** (C457). [V-EXEC] Rebuilt the 1.1.0 hub from
+this checkout, passed the Windows/Wine generator and window-shell self-tests, and installed
+it as `mod/rnw_exp_hub` in the normal Proton profile. The installed hub has 3,478 files;
+its previous 3,478-file copy is retained at
+`.rnw-hub-backups/1.1.0-1793543572584125661`. Wheel SHA-256
+`fc01a21b91ccd931e7a6bf3a969f64354021c96e3521a9abd82bf2a8cea528a6`. No EU5 process was
+running and the game was not launched or controlled. No world mod was installed: the society
+algorithm is unchanged for a resolved settings document, and the installed build 26300913
+differs from the task's 26211608 reference.
+
 2026-11-01, **thin zone remainders, on the land of the owner's The Wall J4VJ** (C456). [V-EXEC] The owner
 asked whether the right thing had been fixed, because the screenshots were of J4VJ and the earlier candidates
 were of QU3N. The J4VJ files in the profile (`rnw_exp_world_j4vjupn3zo`, left in place) indicate that the narrow

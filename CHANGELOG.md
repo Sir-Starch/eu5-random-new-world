@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Let players target up to 60% of inhabited land in native states in both windows. The States
+  quick choice's Many setting now targets 44% on the default presets. Explain that the planner
+  can undershoot where farming and population cannot support more states; eligibility and the
+  population budget are unchanged.
+
 - Make ocean currents clear courses, or none (owner's QU3N and J4VJ reports, pending epoch 60). Where the
   generated canvas met the Old World the currents could be unreadable: three-location stubs, arrows
   pointing across their own lane, clusters pointing different ways, neighbours driven head-on, a straight

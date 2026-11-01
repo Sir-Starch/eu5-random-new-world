@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import replace
+from statistics import median
 
 import numpy as np
 import pytest
@@ -68,6 +69,30 @@ def _grid() -> LandGraph:
     )
 
 
+def _fragmented_grid() -> LandGraph:
+    """The same land count in six separated blocks and a small detached island."""
+    graph = _grid()
+    edges = [
+        (int(first), int(second))
+        for first, second in graph.edges.tolist()
+        if first < ROWS * COLUMNS
+        and second < ROWS * COLUMNS
+        and (first // COLUMNS) // 10 == (second // COLUMNS) // 10
+        and (first % COLUMNS) // 15 == (second % COLUMNS) // 15
+    ]
+    base = ROWS * COLUMNS
+    edges.extend((base + index, base + index + 1) for index in range(ISLAND - 1))
+    potential = np.full(len(graph.capacity), 550, dtype=np.int64)
+    potential[base:] = 100
+    return LandGraph(
+        capacity=graph.capacity.copy(),
+        potential=potential,
+        cost=graph.cost.copy(),
+        edges=np.array(edges, dtype=np.int64),
+        links=np.zeros((0, 2), dtype=np.int64),
+    )
+
+
 def _connected(nodes: set[int], edges: np.ndarray) -> bool:
     if not nodes:
         return True
@@ -120,6 +145,84 @@ def test_population_and_states_follow_the_calibration() -> None:
     tribal[state_nodes] = False
     density_states = societies.population[state_nodes].mean()
     assert density_states > 3 * societies.population[tribal].mean()
+
+
+@pytest.mark.parametrize("shape", ["continents", "poor", "fragmented"])
+def test_higher_state_targets_measure_coverage_without_bypassing_support(shape: str) -> None:
+    """Coverage stress results stay reproducible while eligibility and population remain bounded."""
+    graph = _grid() if shape != "fragmented" else _fragmented_grid()
+    if shape == "poor":
+        graph.potential[:] = 260
+    floor = StateFloor(peasants=338, share=122)
+    expected = {
+        "continents": {
+            110: (11.0, 10.6, 11.0),
+            300: (20.9, 16.0, 22.4),
+            450: (20.9, 16.0, 22.4),
+            600: (20.9, 16.0, 22.4),
+        },
+        "poor": {
+            110: (11.0, 11.0, 11.0),
+            300: (22.2, 15.9, 23.5),
+            450: (22.2, 15.9, 23.9),
+            600: (22.2, 15.9, 23.9),
+        },
+        "fragmented": {
+            110: (11.0, 11.0, 11.0),
+            300: (25.6, 19.1, 27.1),
+            450: (27.6, 21.4, 29.3),
+            600: (28.5, 21.6, 29.8),
+        },
+    }
+    for share in (110, 300, 450, 600):
+        coverage: list[float] = []
+        for seed in (3, 4, 7, 42, 77, 1000):
+            settings = replace(
+                SETTINGS,
+                state_share_permille=share,
+                state_spread_permille=150,
+                empire_permille=0,
+            )
+            societies = generate_societies(
+                graph, settings, seed=seed, target=4_000_000, state_floor=floor
+            )
+            inhabited = int(np.count_nonzero(societies.population))
+            held = [
+                member
+                for polity in societies.polities
+                if polity.kind == STATE
+                for member in polity.members
+            ]
+            assert 0 < len(held) <= inhabited * share // 1000
+            coverage.append(100 * len(held) / inhabited)
+            assert 4_000_000 - len(graph.capacity) <= int(societies.population.sum()) <= 4_000_000
+            assert np.all(societies.peasants <= societies.population)
+            assert all(
+                floor.supports(
+                    int(societies.population[list(polity.members)].sum()),
+                    int(societies.peasants[list(polity.members)].sum()),
+                )
+                for polity in societies.polities
+                if polity.kind == STATE
+            )
+        assert (
+            round(median(coverage), 1),
+            round(min(coverage), 1),
+            round(max(coverage), 1),
+        ) == expected[shape][share]
+
+
+def test_state_share_control_boundaries_generate_deterministically() -> None:
+    """The lowest and highest window values keep seeded society output reproducible."""
+    graph = _grid()
+    floor = StateFloor(peasants=338, share=122)
+    for share in (30, 600):
+        settings = replace(SETTINGS, state_share_permille=share)
+        first = generate_societies(graph, settings, seed=42, target=4_000_000, state_floor=floor)
+        again = generate_societies(graph, settings, seed=42, target=4_000_000, state_floor=floor)
+        assert first.polities == again.polities
+        assert np.array_equal(first.population, again.population)
+        assert np.array_equal(first.peasants, again.peasants)
 
 
 def test_zones_and_polities_are_connected_and_disjoint() -> None:

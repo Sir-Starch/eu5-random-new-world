@@ -22,6 +22,15 @@ def test_every_control_is_a_setting_inside_what_the_validator_accepts() -> None:
     assert {control.group for control in controls.CONTROLS} == set(controls.GROUPS)
 
 
+def test_state_land_control_offers_a_sixty_percent_target() -> None:
+    """The shared window control reaches the higher, still-validated land target."""
+    control = controls.BY_KEY["natives.state_share_permille"]
+    assert control.low == 30
+    assert control.high == 600
+    assert control.shown(control.high) == 60
+    assert control.stored(60) == control.high
+
+
 @pytest.mark.parametrize(
     "control", controls.CONTROLS, ids=[control.key for control in controls.CONTROLS]
 )

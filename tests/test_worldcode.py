@@ -43,6 +43,15 @@ def test_changed_settings_travel_with_the_code() -> None:
     assert len(encode(code)) > len(encode(new_code("archipelago", 7)))
 
 
+@pytest.mark.parametrize("share", [30, 600])
+def test_state_share_control_boundaries_round_trip_in_world_codes(share: int) -> None:
+    """The minimum and new maximum target survive compact-code serialization."""
+    code = new_code("archipelago", 7, {"natives": {"state_share_permille": share}})
+    again = decode(encode(code))
+    assert again == code
+    assert again.settings().natives.state_share_permille == share
+
+
 def test_reading_forgives_case_spacing_and_look_alike_letters() -> None:
     """Lower case, spaces, line breaks and O/I/L for 0/1 read as the code was written."""
     code = new_code("continents", 0x1F0F0F0F0F0F0F01)

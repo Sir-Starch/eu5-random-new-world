@@ -361,7 +361,8 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "control.natives.state_share_permille": "Land in states",
     "control.natives.state_share_permille.about": (
-        "Share of the inhabited land that native states hold (vanilla: 11 %)."
+        "Target share of inhabited land for native states (vanilla: 11 %). "
+        "Actual coverage may be lower where farming and population do not support states."
     ),
     "control.natives.state_spread_permille": "Lone states",
     "control.natives.state_spread_permille.about": (

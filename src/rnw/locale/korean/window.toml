@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''국가의 땅'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''사람이 사는 땅 가운데 원주민 국가가 차지한 비율 (원래 게임: 11 %).'''
+source = "d403f6c7489f62e8"
+text = '''원주민 국가에 배정할 거주지의 목표 비율 (바닐라: 11 %). 농업과 인구가 국가를 뒷받침하지 못하는 곳에서는 실제 비율이 더 낮을 수 있습니다.'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

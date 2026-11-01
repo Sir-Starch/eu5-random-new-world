@@ -124,7 +124,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
         "natives.population_permille", "peoples", 250, 3000, factor=1000, decimals=2, unit="times"
     ),
     Control(
-        "natives.state_share_permille", "peoples", 30, 300, factor=10, decimals=1, unit="percent"
+        "natives.state_share_permille", "peoples", 30, 600, factor=10, decimals=1, unit="percent"
     ),
     Control(
         "natives.state_spread_permille", "peoples", 0, 600, factor=10, decimals=1, unit="percent"

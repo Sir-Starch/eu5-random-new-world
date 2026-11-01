@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''Land der Staaten'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''Anteil des bewohnten Landes, den einheimische Staaten halten (normal: 11 %).'''
+source = "d403f6c7489f62e8"
+text = '''Zielanteil des bewohnten Landes für einheimische Staaten (Vanilla: 11 %). Wo Landwirtschaft und Bevölkerung nicht ausreichen, kann der tatsächliche Anteil niedriger sein.'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

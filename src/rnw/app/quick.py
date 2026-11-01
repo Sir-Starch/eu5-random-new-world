@@ -110,7 +110,7 @@ QUICK: Final[tuple[Quick, ...]] = (
     ),
     Quick(
         "states",
-        _scaled("natives.state_share_permille", ("few", 500), ("normal", 1000), ("many", 2000)),
+        _scaled("natives.state_share_permille", ("few", 500), ("normal", 1000), ("many", 4000)),
     ),
     Quick(
         "empires",

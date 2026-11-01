@@ -763,8 +763,8 @@ source = "827b094c2b486457"
 text = '''国家の土地'''
 
 ["control.natives.state_share_permille.about"]
-source = "b923d647bb81644f"
-text = '''人の住む土地のうち、先住民の国家が治める割合（元のゲーム: 11 %）。'''
+source = "d403f6c7489f62e8"
+text = '''先住民国家に割り当てる居住地の目標割合（バニラ: 11 %）。農業と人口が国家を支えられない地域では、実際の割合は低くなることがあります。'''
 
 ["control.natives.state_spread_permille"]
 source = "8f96ec1c6d41080e"

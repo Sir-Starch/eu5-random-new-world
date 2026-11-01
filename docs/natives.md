@@ -53,7 +53,7 @@ Choices marked [INFERRED design]: the farming table, the topography density fact
 | `population_permille` | 1000 | 1000 | Total relative to the vanilla population per land location |
 | `hearths_per_10k` | 6 | 8 | Expected hearths per 10,000 land locations |
 | `hearth_reach_steps` | 16 | 16 | Reach of a hearth in ordinary steps |
-| `state_share_permille` | 110 | 110 | Share of inhabited land in states (vanilla 11%) |
+| `state_share_permille` | 110 | 110 | Target share of inhabited land for states (vanilla 11%; the window allows 3–60%) |
 | `state_locations` | 3 | 3 | Mean locations per state |
 | `culture_locations` | 10 | 10 | Mean locations per culture zone |
 | `religion_locations` | 80 | 60 | Mean locations per religion zone |
@@ -97,6 +97,36 @@ No new game run or campaign is claimed. `report.json` → `natives.state_economy
 the calibrated floors, actual minima, isolated countries and countries without peasants.
 Synthetic tests cover poor islands, scarce population, remote farming, connected ownership,
 market sharing, confederate eligibility and loud rejection of unsupported landed countries.
+
+### Higher state-land targets (issue #5)
+
+The target remains a placement budget: a selected
+location becomes state land only when its farming population and the resulting country meet
+the configured state floor. The 3–60% window range changes the requested budget, not those
+eligibility rules or the global population target. The quick **Many** choice requests 44% on
+the default presets.
+
+[V-EXEC, 2026-11-01, six seeds: 3, 4, 7, 42, 77 and 1000] A synthetic 1,212-location stress matrix
+compared requested and achieved state coverage with the same seed, population budget
+(4,000,000 milli-pops), farming floor (338 milli-peasants and 122‰), and 15% remote-pocket
+share. The synthetic planner settings use 20 hearths per 10,000 locations, 10-step reach,
+three locations per state and no great empires. The land shapes are a fertile mainland plus
+a small island, the same mainland at low farming potential, and six separated fertile blocks
+plus a poor island. Values are the
+median achieved share of inhabited locations, with the full seed range in parentheses.
+
+| Synthetic land shape | Target 11% | Target 30% | Target 45% | Target 60% |
+|---|---:|---:|---:|---:|
+| Fertile mainland | 11.0% (10.6–11.0) | 20.9% (16.0–22.4) | 20.9% (16.0–22.4) | 20.9% (16.0–22.4) |
+| Low-fertility mainland | 11.0% (11.0–11.0) | 22.2% (15.9–23.5) | 22.2% (15.9–23.9) | 22.2% (15.9–23.9) |
+| Separated blocks and poor island | 11.0% (11.0–11.0) | 25.6% (19.1–27.1) | 27.6% (21.4–29.3) | 28.5% (21.6–29.8) |
+
+The stress matrix reaches the higher targets only where supported land is available; it also
+shows that a contiguous or poor landscape can plateau well below the request. These are
+synthetic algorithm checks, not exports of the named game presets. Existing 1.0.0 reports
+cover the supported EU5 1.4.5 / build 26211608 at 11% and 22% targets, but no full preset
+export was run for this change: the installed game reports build 26300913. The higher range
+does not force unsupported states or grant population.
 
 **Great empires (0.9.15, C125).** EU4's random New World had a *Fantasy Random New World* setting (never, seldom, sometimes, often) for the chance of fantasy scenarios such as highly advanced native empires (C122). The generator's counterpart is `empire_permille`: each cultural hearth, in the order they were found, rises into a great empire with that chance (the window offers 0, 25, 50 and 80 %; Seldom is the default). A stream of its own draws the chance and the size for every hearth, so a chance of 0 leaves every byte of 0.9.14 and a higher chance raises the same hearths and more. The empire takes the nearest inhabited locations by travel cost around the most populous location near its hearth, 8-16 permille of the land locations (at least 12; vanilla's largest native state, the Aztec empire, holds 23 of 4,434), and never land another empire holds; the ordinary states and tribes are made on what is left. It has the largest population of its world and so a city for a capital and the first pick of vassals. Strength comes from land and population and, since 0.9.29, from the causes in the table below, never from a flat modifier; each has a weakness beside it. In game: untested.
 

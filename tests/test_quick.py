@@ -88,3 +88,12 @@ def test_more_land_makes_larger_locations_and_never_fewer_empires_than_asked() -
     chances = [level.values("continents")["natives.empire_permille"] for level in empires.levels]
     assert chances[0] == 0
     assert chances == sorted(chances)
+
+
+def test_many_states_requests_a_substantially_higher_land_share() -> None:
+    """The quick choice reaches 44% on the default presets, inside the new control range."""
+    states = quick.BY_NAME["states"]
+    for preset in WORLD_TYPES:
+        many = states.level("many").values(preset)["natives.state_share_permille"]
+        assert many == 440
+        assert controls.BY_KEY["natives.state_share_permille"].allows(many)
