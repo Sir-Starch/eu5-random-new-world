@@ -123,6 +123,10 @@ with another list of tests for the owner.
   Game-derived worlds, raw game files, map rasters, logs and saves stay local in
   `local_data/`, `generated/` or temporary folders. Use synthetic test fixtures.
   Owner-approved screenshots may be published; see [legal](docs/legal.md).
+  Screenshots and text may show the game's and generator's own UI, including
+  its thread and free-memory counters. Do not publish detailed hardware (CPU, GPU
+  or device models, serial numbers, OS details, machine or user names, local
+  paths); crop or redact such details before a picture enters the repository.
 - The existing distribution/rules review is accepted. Revisit it when a change
   actually introduces a new asset, dependency, distribution method or specific
   conflicting term. Do not demand a fresh clearance for the unchanged hub.

@@ -88,6 +88,8 @@ Click a screenshot to view it at full size.
 
 The Tauri generator window, with its world library, map canvas and inspector. The examples include **Supercontinent 33XV**; the last image shows the classic Qt fallback.
 
+<p align="center"><img src="docs/images/new-ui.png" alt="Generator window with the world library, the making queue and a comparison of two worlds" width="100%"></p>
+
 <table>
 <tr>
 <td width="50%"><img src="docs/images/01-new-world.png" alt="New world with continent sketches"><br><sub>Choose a world type and preview continent sketches before generating a world.</sub></td>
