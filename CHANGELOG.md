@@ -5,14 +5,17 @@
 - Make ocean currents clear courses, or none (owner's QU3N report, pending epoch 60). Where the
   generated canvas met the Old World the currents could be unreadable: three-location stubs, arrows
   pointing across their own lane, clusters pointing different ways and neighbours driven head-on. A
-  navigable deep cell now carries a current only when the cells form a directed path that continues a
-  current of the game: arrows follow the path round bends, water that enters a cell leaves it, a well
-  supported current is never split by a lone contrary zone, branches shorter than five cells and pieces
-  shorter than six (unless one joins two currents of the game) are dropped, and a lane that only an old
-  footprint ran over has no current. The other lane cells stay navigable deep ocean without an arrow, so
-  routes, ports and names do not change. In world QU3N 138 of 265 current cells remain in four courses
-  of 16–53 cells; no two neighbours point at each other (14 pairs did) and no arrow points against a zone
-  of the game that touches it. Existing worlds remain untouched.
+  navigable deep cell now carries a current only when the cells form a directed path: either a
+  continuation of a current of the game (arrows follow the path round bends, water that enters a cell
+  leaves it, a well supported current is never split by a lone contrary zone, branches shorter than
+  five cells and pieces shorter than six are dropped, a short piece is kept only if it joins two
+  currents of the game), or a straight crossing of open water through the generated oceans, which
+  takes the direction of the game's gyres at its latitude and place wherever they are clear and has
+  no current where they are not. The other lane cells stay navigable deep ocean without an arrow, so
+  routes, ports and names do not change. In world QU3N 174 of 265 current cells remain, in four
+  continuations of 16–53 cells and seven crossings; no two neighbours point at each other (14 pairs
+  did) and no arrow points against a zone of the game that touches it. Existing worlds remain
+  untouched.
 
 - Keep generated American coastal sea areas from bordering passable Old World seas
   (issue #9, pending epoch 60). Ocean areas now form a connected boundary at

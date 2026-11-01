@@ -2157,8 +2157,10 @@ sense: a three-location stub pointing sideways beside a coast, a one-cell piece,
 pointing different ways and a current in which two opposite directions met. Measured on the world,
 11 of 18 pieces of current had no zone of the game touching them and 14 pairs of neighbours pointed
 at each other, because every lane cell was interpolated from far sources through any navigable water.
-Currents are now directed courses that continue a current of the game along a path, or there is none; the
-rest of the navigable deep ocean stays deep without an arrow. Numbers and the rules are in
-[sea geography](../sea-geography.md). The reference digest is refreshed within the pending epoch 60.
-Engine drawing of the new currents is unobserved.
-
+Currents became directed courses that continue a current of the game along a path. That first version
+also removed every current that no zone of the game touched, which meant the straight currents through
+the generated oceans; the owner rejected it ("a huge own ocean without currents is nonsense"). The
+rule now has two kinds of course: continuations of the game's currents, and crossings of open water
+that take the direction of the game's gyres at their latitude where they are clear, and have none where
+they are not. Numbers and the rules are in [sea geography](../sea-geography.md). The reference digest
+is refreshed within the pending epoch 60. Engine drawing of the new currents is unobserved.

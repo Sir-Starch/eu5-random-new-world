@@ -13,6 +13,7 @@ from rnw.currents import (
     BRIDGE,
     MIN_BRANCH,
     MIN_COURSE,
+    MIN_OPEN,
     CurrentError,
     Flow,
     check_courses,
@@ -184,22 +185,67 @@ def test_two_neighbours_driven_into_each_other_are_refused() -> None:
     check_courses(world, {first: (-9000, 0), second: (9000, 0)})
 
 
-def test_a_lane_that_only_an_old_course_ran_over_has_no_current() -> None:
-    """The old footprint of a current directs a course; it cannot anchor one."""
-    world = block_world(OPEN_SEA)
-    lane = _row(5, 2, 17)
-    result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(9000, 0)]}, dict.fromkeys(lane, (9000, 0)))
-    assert not result.flows
-    assert result.dropped == frozenset(lane)
+def _over(
+    cells: list[int], vector: tuple[int, int], permille: int = 1000
+) -> dict[int, tuple[tuple[int, int], int]]:
+    return dict.fromkeys(cells, (vector, permille))
 
 
 def test_an_old_course_directs_the_course_that_a_dock_anchors() -> None:
     world = block_world(OPEN_SEA)
     lane = _row(5, 2, 17)
-    docks = {lane[0]: [(0, 9000)]}
-    result = flow(world, lane, docks, dict.fromkeys(lane, (-9000, 0)))
-    assert not result.flows  # the dock crosses the lane: nothing anchors it
-    docks = {lane[-1]: [(-9000, 0)]}
-    result = flow(world, lane, docks, dict.fromkeys(lane, (-9000, 0)))
+    result = flow(world, lane, {lane[0]: [(0, 9000)]}, _over(lane, (-9000, 0)))
+    assert set(result.flows) == set(lane)  # open water: the old lane's direction is the field
+    assert all(vector[0] < 0 for vector in result.flows.values())
+    result = flow(world, lane, {lane[-1]: [(-9000, 0)]}, _over(lane, (-9000, 0)))
     assert set(result.flows) == set(lane)
     assert all(vector[0] < 0 for vector in result.flows.values())
+
+
+def test_a_crossing_of_open_water_follows_the_direction_of_the_gyres() -> None:
+    """No zone of the game touches the lane: the old lane that ran over it gives its direction."""
+    world = block_world(OPEN_SEA)
+    lane = _row(5, 2, 17)
+    for east in (9000, -9000):
+        result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(east, 0)]}, _over(lane, (east, 0)))
+        assert set(result.flows) == set(lane)
+        assert all(vector[0] * east > 0 for vector in result.flows.values())
+        check_courses(world, result.flows)
+
+
+def test_a_crossing_that_lies_across_the_gyres_has_no_current() -> None:
+    world = block_world(OPEN_SEA)
+    lane = _row(5, 2, 17)
+    result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(0, 9000)]}, _over(lane, (0, 9000)))
+    assert not result.flows
+    assert result.dropped == frozenset(lane)
+
+
+def test_a_short_crossing_of_open_water_is_not_a_current() -> None:
+    world = block_world(OPEN_SEA)
+    lane = _row(5, 2, 2 + MIN_OPEN - 2)
+    result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(9000, 0)]}, _over(lane, (9000, 0)))
+    assert not result.flows
+    lane = _row(5, 2, 2 + MIN_OPEN - 1)
+    result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(9000, 0)]}, _over(lane, (9000, 0)))
+    assert set(result.flows) == set(lane)
+
+
+def test_open_water_far_from_every_source_takes_the_zonal_current_of_its_latitude() -> None:
+    layout = ["." * 60 for _ in range(10)]
+    world = block_world(layout)
+    lane = [cell(layout, 5, column) for column in range(40, 56)]
+    near = [cell(layout, 5, column) for column in range(3)]
+    sources = {c: [(9000, 0)] for c in near}
+    result = flow(world, lane, sources)
+    assert set(result.flows) == set(lane)
+    assert all(vector[0] > 0 for vector in result.flows.values())
+    other = [cell(layout, 9, column) for column in range(3)]
+    assert not flow(world, lane, {c: [(9000, 0)] for c in other}).flows
+
+
+def test_a_lane_that_an_old_course_barely_touched_gives_no_direction() -> None:
+    world = block_world(OPEN_SEA)
+    lane = _row(5, 2, 17)
+    result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(9000, 0)]}, _over(lane, (9000, 0), 100))
+    assert not result.flows

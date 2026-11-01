@@ -376,11 +376,7 @@ def shape_water(coast: Coast) -> Water:
     if any(kinds[cell] is not Topography.DEEP_OCEAN for cell in lanes):
         message = "A planned ocean lane is not deep water"
         raise SeaError(message)
-    over = {
-        cell: course.vector
-        for cell, course in final.courses.items()
-        if cell in lanes and course.permille >= COURSE_PERMILLE
-    }
+    over = {cell: (course.vector, course.permille) for cell, course in final.courses.items()}
     courses = flow(world, lanes, final.samples, over)
     check_courses(world, courses.flows)
     topography = tuple(

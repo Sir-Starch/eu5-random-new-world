@@ -13,16 +13,19 @@ away from each other. The old rule interpolated every lane cell from its four ne
 any navigable water* (inverse-square weights, bent away from land, smoothed, then aligned to a straight
 corridor's axis), so nothing required the arrows to form a path. [V-EXEC; engine drawing UNKNOWN]
 
-The rule is now the one the owner stated: **either a clear, logical current, or none.** The lane planner
-still decides which deep water is navigable (routes, crossings, completed ends); a navigable deep cell
-carries a current only when the cells form a *course* (`rnw.currents`, below). Every other lane cell
-stays navigable deep ocean without `movement_assistance`, as one of the game's 750 deep zones is
-[V-LOCAL 1.4.3 C234]; nothing about ships, ports, routes or names changes. In QU3N, 138 of the
-265 cells keep a current, in four courses of 16 to 53 cells (no piece is shorter than six cells; no
-two neighbours point at each other; no arrow points against a zone of the game that touches its
-cell). Exports of continents 1000, archipelago 42, The Wall 9 and islands 7 with the same code pass
-every sea invariant and show the same properties (145, 47, 102 and 96 current cells; pieces from six
-cells, or two to five where one joins two zones of the game). [V-EXEC]
+The rule is now the one the owner stated: **either a clear, logical current, or none** (a first
+version of this change also dropped the long straight currents through the generated oceans, which
+the owner wants; they are back, below). The lane planner still decides which deep water is
+navigable (routes, crossings, completed ends); a navigable deep cell carries a current only when
+the cells form a *course* (`rnw.currents`, below). Every other lane cell stays navigable deep
+ocean without `movement_assistance`, as one of the game's 750 deep zones is [V-LOCAL 1.4.3 C234];
+nothing about ships, ports, routes or names changes. There are two kinds of course: a
+*continuation* of a current of the game into the generated water, and a *crossing* of open water,
+whose direction is that of the game's gyres at its place. In QU3N, 174 of the 265 cells keep a
+current, in four continuations of 16 to 53 cells and seven crossings of four to six; no two
+neighbours point at each other and no arrow points against a zone of the game that touches its
+cell. Exports of continents 1000, archipelago 42, The Wall 9 and islands 7 with the same code
+pass every sea invariant and keep 171, 59, 133 and 96 current cells. [V-EXEC]
 
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent
@@ -234,33 +237,48 @@ land layer's seed and nothing else, so rerolling the peoples or the resources le
 
 ## Currents (`rnw.currents`)
 
-A current is a **course**: a directed path of lane cells that continues a current of the game. The
-planner (`flow`) works on the lane cells only and draws no random number; ties go to the lower cell.
+A current is a **course**: a directed path of lane cells. A *continuation* is a piece of lane that a
+zone of the game touches along its direction; a *crossing* is a piece that none touches (the long
+straight lanes through the generated oceans). The planner (`flow`) works on the lane cells only and
+draws no random number; ties go to the lower cell.
 
-1. **Evidence.** For every edge between neighbouring lane cells, the zones of the game that touch either
-   cell vote by the cosine between their vector and the edge's heading; a lane that ran over the cell
-   before the canvas replaced the sea (`courses`, at least half the cell) votes at half weight and can
-   direct a course but never anchor one. The direction of the nearest sources (four, inverse square
-   of the distance) adds a tie-break far smaller than any contact.
-2. **Spanning tree.** Each connected piece of lane cells becomes a minimum spanning tree by centroid
+1. **Evidence.** For every edge between neighbouring lane cells, the zones of the game that touch
+   either cell vote by the cosine between their vector and the edge's heading; a lane that ran over
+   the cell before the canvas replaced the sea (`courses`, at least half the cell) votes at half
+   weight and can direct a course but never anchor one.
+2. **Field of gyres.** At every lane cell, the interpolation of its four nearest sources (the touching
+   zones and the old lanes that covered at least a quarter of a cell; inverse square of the distance
+   in typical cells), fading over twelve typical cells into the zonal current at the cell's latitude
+   (the sources within a Gaussian of four typical cells of its row: westward in the trades, eastward
+   in the westerlies, as the game's own run). Its length is how much the sources agree. It votes on
+   each edge at a twentieth of a contact, so it directs open water and never outweighs a zone of the
+   game.
+3. **Spanning tree.** Each connected piece of lane cells becomes a minimum spanning tree by centroid
    distance, so a band two cells wide is one chain with short twigs.
-3. **Orientation.** Exact dynamic programming directs every edge to agree with the evidence as well as
-   any orientation can, with the structural rule that water that enters a cell also leaves it. A cell
-   where it cannot (a spring or a sink in the middle of a course) is *cut* out at a cost; a stretch that
-   one or two zones of the game support is reversed instead, so a lone zone never splits a course, while
-   a stretch that three or more support is a course of its own and the cut keeps both.
-4. **Heading.** Each cell's direction is the heading from two cells upstream to two cells downstream
+4. **Orientation.** Exact dynamic programming directs every edge to agree with the evidence as well
+   as any orientation can, with the structural rule that water that enters a cell also leaves it.
+   A cell where it cannot (a spring or a sink in the middle of a course) is *cut* out at a cost; a
+   stretch that one cell in the middle or two at an end support is reversed instead, so a lone zone
+   never splits a course, while a stretch that three or more support is a course of its own and the
+   cut keeps both.
+5. **Heading.** Each cell's direction is the heading from two cells upstream to two cells downstream
    along the longer way, so the arrow follows the path round bends and never points across its lane.
    The strength is the mean of the game's currents it continues.
-5. **Pruning**, repeated until nothing changes: a cell that the surrounding evidence opposes (the sum of
-   cosines within two cells along the course below −0.5); a side branch shorter than five cells that no
-   zone of the game anchors; neighbours whose arrows point at each other or more than 120° apart (the cell
-   that disagrees with most of its neighbours gives way); and a whole piece unless a zone of the game
-   *anchors* it (touches a cell of it with a summed cosine of 0.5) and it runs six or more cells, or it
-   joins two zones of the game (an anchored source and an anchored sink) at any length of two or more.
+6. **Pruning**, repeated until nothing changes: a cell that the zones touching it oppose (sum of
+   cosines below −0.5); a side branch shorter than five cells that no zone anchors; neighbours whose
+   arrows point at each other or more than 120° apart (the cell that disagrees with most of its
+   neighbours gives way); then each piece. A piece that a zone touches along a lane stays only if a
+   zone *anchors* it (a summed cosine of 0.5) and it runs six or more cells, or it joins two zones
+   of the game (an anchored source and an anchored sink) at any length of two or more. A piece that
+   no zone touches along a lane is a crossing: each straight run of it (until its heading has turned
+   60°) needs at least four cells, a field of mean length 0.3 and a mean cosine of 0.25 with it
+   (within about 75° of the gyre); a run that fails is dropped, so a crossing that runs across the
+   flow, or lies where the gyres disagree (the equatorial counter-current belt of the game), has no
+   current.
 
-The export refuses a world whose finished vectors have two neighbours driven head-on (`check_courses`)
-and one whose currents lie on a cell that is no lane. [V-EXEC; in-game appearance UNKNOWN]
+The export refuses a world whose finished vectors have two neighbours driven head-on
+(`check_courses`) and one whose currents lie on a cell that is no lane. [V-EXEC; in-game appearance
+UNKNOWN]
 
 ## Lanes and closed ocean (`rnw.lanes`, `rnw.sea_corridors`, `rnw.eu5_oceans`)
 
