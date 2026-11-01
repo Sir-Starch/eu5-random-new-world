@@ -32,32 +32,68 @@ An unobserved detail alone does not reopen acceptance or require another game se
   population and state-support rules and works in both windows and world codes. See
   [native societies](natives.md#peasant-and-tribesmen-balance).
 
-- **Resource distribution sliders:** Advanced → Resources now offers individual
+- **Resource distribution sliders:** Advanced → Resources offers individual
   0–3× placement weights for all 34 ordinary New World RGOs alongside the existing
   precious-resource control, in both windows and every official language. Defaults
   retain vanilla weights and climate/terrain matching. These are relative placement
   probabilities: increasing one leaves fewer locations for others and does not
   change production per location. See [economy](economy.md#resource-frequency-controls-110).
 
-- **Hydrology and continental variety (first pass):** coasts from a bent density field,
-  vanilla-calibrated lakes, inland seas and spit-bounded gulfs, isthmuses, and rivers that
-  cross lakes. See [terrain](terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)
-  for the stages, measurements and what is not modelled yet.
+- **Native polity growth and identity cores (issues #5, #7, #8):**
+  - **Corridor affinities (issue #8):** political growth adds seeded preferences for farming
+    corridors, similar-habitat belts or coasts alongside generalist expansion. See
+    [native societies](natives.md#territorial-variety-issue-8-pending-110--epoch-60).
+  - **Identity cores (issue #7):** identity-aware capital scoring and territorial growth give
+    native states stronger primary-culture and faith cores while preserving cultural minorities.
+    See [native societies](natives.md#primary-identity-cores-issue-7-pending-110--epoch-60).
+  - **State land targets (issue #5):** Advanced → Peoples → Land in states targets up to 60%
+    of inhabited land; States quick choice's Many setting targets 44%. See
+    [native societies](natives.md#higher-state-land-targets-issue-5).
 
-- **Polar map-edge correction** (owner, 2026-10-31, [V-GAME]; corrected for pending 1.1.0, C454).
-  Since land may reach the north and south map edges (`02bfe15`), some continents touch an
-  edge along a very wide front, as if a huge continuation lay beyond it, which contradicts the
-  planet's geography. The locations there also keep their ordinary small size, whereas toward
-  the pole the Old World's locations grow (the northern Eurasian projection effect).
-  Requirement: a continent has only a small contact with a polar edge, and the locations that
-  do lie on an edge are larger (growing with the distance toward the edge) and impassable, for
-  example always a thin mountain range. 1.1.0 must not be released with this defect. The
-  expanded canvas reaches both edges, so the defect applies to every preset. The current
-  implementation limits ordinary continents to one narrow approach at each edge, grows larger
-  polar locations and makes every edge-touching land location impassable. Synthetic checks,
-  the installed-game export and a separately installed candidate pass (C454). In the continents
-  candidate, new land touches 249 polar-edge pixels, 0.17 % of its 150,849 coast contacts; its
-  sole edge location has 60,190 pixels and is impassable. See [terrain](terrain-biomes.md).
+- **Hydrology and continental variety (first pass):** coasts from a bent density field,
+  vanilla-calibrated lakes (Pareto tail up to ~22,000 px, `lakes.py`), rivers that cross lakes
+  with outflows at their lowest rim (`rivers.py`), local river valley carving (`carve_valleys`),
+  inland seas, lagoons behind spits and gulfs behind straits (`gulfs.py`), isthmuses (`isthmuses.py`),
+  and army strait crossings (`straits.py`, `crossings`). See
+  [terrain](terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60).
+
+- **Ocean currents, slivers and sea-zone cleanup:**
+  - Clear, directed ocean current courses that continue vanilla currents or follow game gyres
+    across open water (`currents.py`).
+  - Merging thin sea location slivers (`synth.merge_slivers`) and absorbing needle remainders of
+    trimmed sea zones into the canvas. See [sea geography](sea-geography.md).
+
+- **Colonial overseas boundary protection (issue #9):** connected ocean-area boundaries
+  separate generated American coastal waters from passable Old World seas, preserving colonial
+  nation overseas status for North and South America. Checked by export validation.
+
+- **Pacific canvas expansion and island preservation:**
+  - Expanded canvas reaches the Pacific side, opening wide ocean while moving covered island
+    groups whole to the nearest free ocean with their vanilla height, material and mountain layers intact.
+  - Advanced → Land → Distance from the Old World (`new_world.centre_permille`) moves land toward
+    the ocean middle without changing total land area.
+
+- **Mountains and hills rework:** continuous chains with varied-height massifs, ridged crests,
+  additive mountain stamps from game sources rotated along range axes with material layers, fine
+  ground grain matching vanilla roughness, and removal of lake cones. See
+  [terrain](terrain-biomes.md#mountains-and-hills-pending-110--epoch-60).
+
+- **Polar map-edge correction:** ordinary continents are constrained to narrow polar contacts,
+  locations grow larger toward the poles, and all edge-touching land locations are impassable.
+  See [terrain](terrain-biomes.md).
+
+- **Climate and vegetation consistency (issue #4):** paired (climate, vegetation) smoothing
+  prevents incompatible biomes (e.g., desert in subtropical or forest in arid).
+
+- **The Wall preset:** procedural longitudinal continent or island chain with mountain spine,
+  island detour routing, width/position/gaps controls, and broader secondary continent placement.
+  See [terrain](terrain-biomes.md#the-wall).
+
+- **Generator workbench and performance:**
+  - Tauri window as primary 3-pane workbench (ADR 0011), classic Qt window as fallback.
+  - Stable generation ETA forecasts based on stage dependencies and local timing history.
+  - Responsive background world selection and worker-computed map relief.
+  - Workshop Gameplay/Utilities tags and updated descriptions.
 
 ## Future work requested by the owner
 
@@ -65,28 +101,13 @@ These are directions, not promises for 1.0.0 or automatic tasks for every agent.
 Choose a concrete scope when work is requested; use the next release target and
 pending epoch according to [ADR 0003](adr/0003-versioning.md).
 
-- **Hydrology:** improve basins, drainage, tributaries and water bodies together
-  with relief, climate, coastlines and navigation. Use measurable structural and
-  visual comparisons on diverse seeds. Done in the pending 1.1.0: lakes with
-  outflows and the vanilla size distribution, and ocean currents as clear courses (a current
-  continues a current of the game along a path, or there is none; see
-  [sea geography](sea-geography.md)). Remaining: valley carving and relief
-  driven by drainage, deltas and river splits, climate-dependent (endorheic) lakes.
-- **Continental variety:** develop more realistic lakes, inland seas, narrow land
-  connections and coastal formations, including the Gdańsk/Crimea-like examples
-  requested by the owner. Design their representation with hydrology and sea routes.
-  Done in the pending 1.1.0 as generic constructions (spit-bounded gulfs and lagoons,
-  inland seas behind straits, isthmuses). Remaining: sea routes and names that treat
-  them as distinct waters, and shapes tied to climate and relief.
-- **Mountains and hills:** done in the pending 1.1.0: continuous chains with massifs of varied
-  height, ridged crests, stamps of the installed mountain sources turned along the ranges and
-  their material layers ([terrain](terrain-biomes.md#mountains-and-hills-pending-110--epoch-60)).
-  Fine ground grain at vanilla's roughness and the lakes' conical rise are fixed the same day.
-  Remaining: erosion-shaped valleys and ranges that follow drainage, and the bank of a lake in a range
-  (the terrain's coastal cap makes it steep).
-- **The Wall preset:** implemented for the pending 1.1.0 cycle: a procedural straight
-  north-south continent or island chain, optional natural gaps, a mountain spine,
-  polar wasteland endpoints and side land, with shape controls in both windows. See [terrain](terrain-biomes.md#the-wall).
+- **Hydrology (future directions):** deltas and river splits in coastal plains; drainage-driven
+  macro-relief and valleys (where mountain ranges and valleys are sculpted by river drainage
+  rather than relief generated first); climate-dependent (endorheic) closed basins in arid regions;
+  and smoothing high-mountain lake bank slopes.
+- **Continental variety (future directions):** sea routes and distinct naming for inland seas,
+  gulfs and lagoons treating them as separate named waters; and coastline shapes tied directly
+  to regional climate and geology.
 - **Ready-made fantasy maps:** add land-shape presets such as a Kerbin-inspired
   map within the New World generation area, using the existing land-mask workflow.
   Verify that workflow alongside the presets
@@ -105,10 +126,8 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   generated states and use them to inform starting relationships and subsequent
   events, goals or mission-style content through the existing society/story systems
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)).
-- **Generator interface and settings:** the Tauri window and its rebuilt maps are the
-  generator's window ([ADR 0011](adr/0011-tauri-window.md)); the classic Qt window is its
-  fallback. Remaining: the window under Proton with a WebView2 runtime, and exposing more
-  generation settings.
+- **Generator interface and settings:** running the Tauri window under Proton with a WebView2 runtime,
+  and exposing additional generation settings in the interface.
 - **World-wrap research:** retain the accepted mechanical fixes and visual source
   extension. Use the [dedicated dossier](research/map-wrap-dossier.md) for new
   evidence relevant to a possible Paradox report. A historical rendering comparison

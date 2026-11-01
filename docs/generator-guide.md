@@ -46,7 +46,9 @@ this choice; use Save land template and Load land image for externally drawn lan
 The States quick choice's **Many** setting requests 44% of inhabited land for states on
 the default presets. Advanced → Peoples → **Land in states** sets a target from 3% to 60%.
 Actual coverage can be lower where farming and population cannot support states; the
-generator does not add population to meet the target.
+generator does not add population to meet the target. Advanced → Peoples → **Peasant share**
+controls the upper peasant share at full social complexity from 30% to 80% (default 60%)
+across all inhabited land; less farmable and less complex areas remain primarily tribal.
 
 *Expand generation into the oceans* on the World tab is checked by default and
 recommended. It gives the New World a wider, fixed ocean sector so continents can

@@ -61,6 +61,15 @@ pixels, 16.9 thick, five neighbours); the next thinnest remainders are 20.4 and 
 J4VJ then has 1,500 generated sea cells, 11 thinner than 20 pixels (jagged coastal cells, not
 needles; 33 before) and none of the old needles. [V-EXEC]
 
+**Colonial overseas boundaries, pending 1.1.0 / epoch 60 (issue #9):** in wide ocean canvases,
+coastal sea areas assigned to generated American land regions could directly touch passable Old World
+sea zones. The EU5 engine's colonial overseas rules check sea connectivity: coastal borders between
+American and Old World passable water can break colonial nation formation and overseas territory
+status for North and South America. Connected ocean-area boundaries now separate passable American
+coastal sea areas from Old World seas, preserving continuous naval routes while keeping American
+regions strictly overseas. Final-map export validation explicitly verifies that no passable American
+coastal area borders an Old World sea area. [V-EXEC C456]
+
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent
 of current had only six pixels of contact at one end, while its arrows pointed
