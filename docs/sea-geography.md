@@ -464,17 +464,36 @@ layer's seed and nothing else:
   added where the coast margin or the canvas border forbid it; otherwise the pinch is not made.
   The channel is narrow
   water (`narrows`) and is named for it, a strait or a sound.
-- **Crossings.** On the finished cells, every pair of land cells of different landmasses that a run
-  of at most 9 pixels (the game's widest) of one sea cell divides along a row or a column is a
-  crossing; its two points are on the narrowest run, one on each location, written as the game writes
-  them (`eu5_seas.crossings`, `eu5_nw_export._crossing_rows`). The reference world has six, the
-  presets 0 (a supercontinent) to 78 (the islands). Places of one landmass are not joined: there
-  is no row for a bay, as the generated world has no estuary a path does not go round.
+- **Crossings.** On the finished cells, every pair of passable land cells without a shared land
+  border that a run of at most 36 sea pixels divides along a row or a column is a crossing,
+  provided the named sea cell touches both. The 36-pixel reach is the existing nearby-shore
+  policy (`straits.NEAR_PX`); the two endpoints lie on the narrowest run, one on each location,
+  written as the game writes them (`eu5_seas.crossings`, `eu5_nw_export._crossing_rows`). Both
+  shores may belong to the same continent around an inland sea or a gulf. The pinch construction
+  retains its original 9-pixel cutoff, so this correction changes crossing rows alone, not coasts.
 
-The export reads `adjacencies.csv` back (`verify_crossings`): each row names two land cells of
-different landmasses and a sea cell that touches both, its points lie on its two cells, at most 9
-pixels apart, and the rows are exactly the world's crossings. Read back from the written files alone
-the same six pairs are found, and the game's 135 rows outside the replaced Americas stay (C246).
+**Inland-sea mouths, XNKG (C466).** [V-LOCAL, EU5 1.4.6 / build 26300913] The owner's
+Rezaurtsa Channel screenshot matches three successive throats in `rnw_exp_world_xnkgew4sje`:
+17 sea pixels between `rnw_loc_04853` and `rnw_loc_04867` (through `rnw_sea_00610`),
+1 between `rnw_loc_05265` and `rnw_loc_05290` (through `rnw_sea_00673`), and 8 between
+`rnw_loc_05860` and `rnw_loc_05926` (through `rnw_sea_00718`). None had a crossing row.
+The former 9-pixel sample maximum was treated as a limit, and all same-landmass pairs were
+excluded even though 84 vanilla rows join one landmass. Inland seas added since that rule
+exposed both exclusions. The corrected planner admits these natural narrows and skips pairs
+already sharing a land border. The width is a generator policy; engine rendering of the new
+rows is not established by offline export checks.
+
+[V-EXEC] Re-exporting XNKG with identical resolved settings and random streams gives all three
+rows and 61 generated crossings (formerly 5). A full file-hash comparison with the installed
+XNKG finds only `in_game/map_data/adjacencies.csv` changed outside `.metadata`; every former
+crossing remains. The corrected copy is `rnw_exp_world_a56qhjysy5`, titled
+**RNW: XNKG — strait crossings**. Local evidence: ignored `local_data/strait-crossings/`.
+
+The export reads `adjacencies.csv` back (`verify_crossings`): each row names two land cells
+and a sea cell that touches both, its points lie on its two cells with at most 36 water pixels
+between them, and the rows are exactly the world's crossings. The game's surviving rows outside
+the replaced Americas stay. C246's six reference crossings and 135 retained rows record the
+original 2026-10-24 world and build, not fixed counts for later geography.
 
 ## A fault this uncovered
 

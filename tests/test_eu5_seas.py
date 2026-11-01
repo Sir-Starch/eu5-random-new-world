@@ -418,8 +418,7 @@ def _plan_of(world: NewWorld) -> Plan:
 
 def _strait(layout: list[str] = STRAIT, block: int = 4) -> tuple[NewWorld, Plan, list[Crossing]]:
     world = block_world(layout, block=block)
-    waters = analyse(world)
-    return world, _plan_of(world), crossings(world, waters.landmass.tolist())
+    return world, _plan_of(world), crossings(world)
 
 
 def _row(plan: Plan, item: Crossing, height: int, *, swap: bool = False) -> str:
@@ -441,10 +440,36 @@ def test_two_lands_a_narrow_sea_cell_divides_are_a_crossing_through_it() -> None
     assert plan.cells[between].key.startswith("rnw_sea")
 
 
-def test_lands_of_one_landmass_or_a_sea_wider_than_the_games_crossings_make_none() -> None:
+@pytest.mark.parametrize("width", [1, 8, 17, 36])
+def test_an_inland_sea_mouth_has_a_crossing_despite_the_land_route_around_it(width: int) -> None:
     joined = ["AAA1BBB", "AAA1BBB", "AAACBBB", "2222222"]
-    assert _strait(joined)[2] == []
-    assert _strait(STRAIT, block=10)[2] == []
+    world, plan, found = _strait(joined, block=width)
+    assert [(item.first, item.second) for item in found] == [
+        (cell(joined, 0, 0), cell(joined, 0, 4))
+    ]
+    canvas = cast(
+        "Canvas", cast("object", SimpleNamespace(col0=0, roll=0, shape=world.labels.shape))
+    )
+    text = "From;To;Type;Through;start_x;start_y;stop_x;stop_y;Comment\n"
+    assert verify_crossings(
+        text + _row(plan, found[0], world.labels.shape[0]), plan, world, canvas, found
+    ) == {"crossings_checked": 1}
+
+
+def test_three_linked_seas_have_a_crossing_at_each_mouth() -> None:
+    layout = ["AAA1BBB", "CCC2DDD", "EEE3FFF", "EEEGFFF", "4444444"]
+    _, _, found = _strait(layout)
+    assert [(item.first, item.second, item.through) for item in found] == [
+        (cell(layout, row, 0), cell(layout, row, 4), cell(layout, row, 3)) for row in range(3)
+    ]
+
+
+def test_a_coastal_indentation_does_not_add_a_crossing_between_land_neighbours() -> None:
+    assert _strait(["AAA1BBB", "AAA1BBB", "AAAABBB", "2222222"])[2] == []
+
+
+def test_water_beyond_the_near_shore_limit_has_no_crossing() -> None:
+    assert _strait(STRAIT, block=37)[2] == []
 
 
 def test_a_short_gap_across_two_sea_zones_cannot_name_one_as_its_crossing() -> None:

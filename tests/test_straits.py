@@ -11,6 +11,7 @@ from rnw.straits import (
     CROSSING_PX,
     MIN_LAND_PX,
     NEAR_PX,
+    PINCH_SKIP_PX,
     STRAIT_PX,
     _closed_water,  # pyright: ignore[reportPrivateUsage]
     _safe,  # pyright: ignore[reportPrivateUsage]
@@ -110,8 +111,8 @@ def test_the_growth_tapers_off_so_the_shores_far_from_the_strait_keep_their_shap
     assert rows.max() < 60 + 160 // 2
 
 
-def test_land_that_is_already_a_crossing_apart_or_too_far_apart_is_left() -> None:
-    for gap in (CROSSING_PX, NEAR_PX + 1):
+def test_land_within_the_original_pinch_cutoff_or_too_far_apart_is_left() -> None:
+    for gap in (PINCH_SKIP_PX, NEAR_PX + 1):
         land, ocean = _blocks(gap)
         narrowed, water, made = pinch(land, ocean, np.zeros_like(land))
         assert made == 0

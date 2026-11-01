@@ -6,6 +6,32 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-02, **natural strait crossings on XNKG** (C466). [V-EXEC] Installed
+**RNW: XNKG — strait crossings**, `mod/rnw_exp_world_a56qhjysy5`, code
+`RNW1-080KN-HKXKK-XB4AA-9040G-00840-3SG42-1N3C0-MF0R2-DJ5QE`, with records in both the native
+and Proton libraries. Its resolved settings, seeds and rolls equal XNKG's; an explicitly encoded
+unchanged location spacing gives the candidate a separate identity. All 898 installed files match
+the candidate. A comparison of every nonmetadata file with installed XNKG finds only
+`in_game/map_data/adjacencies.csv` changed: all five former generated crossings remain, with 61
+now written, including all three screenshot throats (17, 1 and 8 sea pixels). The other 15 mod
+folders and nine profile-root files are unchanged. Output: 869 nonmetadata files, SHA-256
+`faf816295c6c88d1514ab49cd124ec306842637289759f42aa5919db2bf7a979`; no split cells, unreachable
+generated seas, cut-off seas, unported land or lost Old World contacts. EU5 1.4.6 / build 26300913;
+RNW 1.1.0 development / pending epoch 60. The pending reference is refreshed to 868 files,
+17 crossings, digest `7671b6f8…aaa58`, independently reproduced by the opt-in installed-game
+reference test (one pass); epoch 59 is untouched.
+
+Project format/lint (excluding other `.claude` checkouts), strict types, 2,437 Python tests
+(15 optional skips), 23 Rust tests and the 13 installed-game read-only checks (two opt-in skips)
+pass. The updated hub passed its Windows/Wine generator and window-shell self-tests. Its first
+installation correctly stopped while EU5 was open; after the owner closed it, the standard updater
+installed the prepared hub, retaining the previous copy at
+`.rnw-hub-backups/1.1.0-1793574736007089025`. Candidate:
+`local_data/hub-updates/1.1.0-1793574546523945747/rnw_exp_hub`; Windows wheel SHA-256
+`35e0632260b0059a77a2ea63561e659f264bc414ae985ef78826224c156e91f9`.
+Evidence: ignored `local_data/strait-crossings/`. No agent EU5 launch/control or observation of
+engine rendering of the new crossings.
+
 2026-11-01, **The Wall's width inside the land share**. [V-EXEC] Installed **RNW: The Wall NOVX** in new
 `mod/rnw_exp_world_novxisa5pj`, the owner's J4VJ land (wall, seed 14046991261471717063, land 159‰,
 position 100%, irregularity 100%) with the width raised from its 14% to 30%, code
