@@ -38,15 +38,27 @@ chain that continues the straight path through a junction is the course and not 
 with eight or more lane cells within 2.2 typical cells (a wide stretch) carries no arrow. [V-EXEC]
 
 **Sea-cell slivers, pending 1.1.0 / epoch 60 (same report):** some generated sea locations are long
-and narrow, like a needle or a crescent round a retained island's footprint, and one touches six
-neighbours. A coast, a crossing band or a footprint cuts a Voronoi cell into pieces that were merged
-only by area, so thin pieces survived. Measured on J4VJ, 42 of 1,547 sea cells were thinner than 20
-pixels (twice area over perimeter; a square cell of 118 pixels is 59), the longest needle 212 × 20.
-A cell thinner than a fifth of the sea-cell spacing whose perimeter is at least 40 % other sea cells
-now joins the neighbour it shares most with (`synth.merge_slivers`), unless the neighbour touches
-the edge of the generated world and it does not; a strait, bordered by land, stays. J4VJ keeps 1,494
-sea cells, none thinner than 20 pixels that other cells border. Long cells that are not thin (a
-strip 222 × 55) and the thin tails of otherwise fat cells are not changed. [V-EXEC]
+and narrow, like a needle or a crescent round a retained island's footprint. A coast, a crossing band
+or a footprint cuts a Voronoi cell into pieces that were merged only by area, so thin pieces survived.
+Measured on J4VJ, 42 of 1,547 sea cells were thinner than 20 pixels (twice area over perimeter; a
+square cell of 118 pixels is 59), the longest needle 212 × 20. A cell thinner than a fifth of the
+sea-cell spacing whose perimeter is at least 40 % other sea cells now joins the neighbour it shares
+most with (`synth.merge_slivers`), unless the neighbour touches the edge of the generated world and it
+does not; a strait, bordered by land, stays. Long cells that are not thin (a strip 222 × 55) and the
+thin tails of otherwise fat cells are not changed. [V-EXEC]
+
+**Thin remainders of trimmed zones, pending 1.1.0 / epoch 60 (same report):** the "tall narrow
+triangle touching six neighbours" in the owner's Pacific South was not one of those cells. In the
+owner's installed J4VJ files it is `pacific_south_current2`, a location of the game that the canvas
+trimmed to 29 % of its area (3,963 of 13,889 pixels): a strip 219 × 47, 12.6 pixels thick, with a
+long tail, touching six neighbours. `merge_slivers` works on generated cells and never saw it. A
+remainder is now taken into the canvas, with the zone it belongs to, when it is smaller than 3,000
+pixels (the old rule) or thinner than 20 pixels (`eu5_canvas.MIN_THICKNESS_PX`; the game's zones are
+50–80 pixels thick at their cores). The canvas does not depend on the preset, so every world loses the
+same two zones, `pacific_south_current2` and `atlantic_equatorial_countercurrent18` (3,723 of 19,542
+pixels, 16.9 thick, five neighbours); the next thinnest remainders are 20.4 and 22.2 thick and stay.
+J4VJ then has 1,500 generated sea cells, 11 thinner than 20 pixels (jagged coastal cells, not
+needles; 33 before) and none of the old needles. [V-EXEC]
 
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent

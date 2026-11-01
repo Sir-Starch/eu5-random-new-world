@@ -18,11 +18,17 @@
   touches it. Existing worlds remain untouched.
 
 - Merge sliver sea locations into their neighbours (pending epoch 60). Some generated sea locations were
-  long needles or crescents (one 212 × 20 pixels, touching six neighbours) because a coast, a crossing or
+  long needles or crescents (one 212 × 20 pixels) because a coast, a crossing or
   an island group's footprint cut a cell into pieces that were merged only by area. A sea cell thinner than
   a fifth of the cell spacing, bordered mostly by other sea cells, now joins the neighbour it shares most
   with; straits, bordered by land, stay. A sample world drops from 1,547 to 1,494 sea cells and has no thin
   cell left between others. Existing worlds remain untouched.
+
+- Take thin remainders of trimmed sea zones into the canvas (pending epoch 60). A location of the game that
+  the canvas cut along its length stayed as a needle among the generated waters (in a sample world
+  `pacific_south_current2`: 29 % of the zone left, 12.6 pixels thick, touching six neighbours). A remainder
+  thinner than 20 pixels now goes to the canvas, as one under 3,000 pixels already did; two zones of the game
+  are replaced in every world. Existing worlds remain untouched.
 
 - Keep generated American coastal sea areas from bordering passable Old World seas
   (issue #9, pending epoch 60). Ocean areas now form a connected boundary at

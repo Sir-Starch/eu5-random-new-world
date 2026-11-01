@@ -36,6 +36,10 @@ OPENED: Final[frozenset[str]] = frozenset(
 )
 GUARD_PX: Final[int] = 96
 MIN_REMAINDER_PX: Final[int] = 3000
+# A remainder thinner than this is a strip of a zone that the canvas cut along its length,
+# a long needle among the generated waters that touches many neighbours; the canvas takes it
+# whole. Vanilla's zones are 50-80 px thick at their cores.
+MIN_THICKNESS_PX: Final[int] = 20
 EXPANDED_BAND_PX: Final[int] = 1600
 OCEAN_SECTOR: Final[tuple[int, int]] = (1600, 6500)
 
@@ -186,6 +190,17 @@ def remainder_boxes(
         for zone in zones.tolist()
         if high[0, zone] >= 0
     }  # fmt: skip
+
+
+def _thickness(mask: NDArray[np.bool_]) -> float:
+    """Twice the area over the perimeter, in pixels: the width of a strip of ``mask``."""
+    padded = np.pad(mask, 1)
+    inner = padded[1:-1, 1:-1]
+    perimeter = sum(
+        int(np.count_nonzero(inner & ~view))
+        for view in (padded[:-2, 1:-1], padded[2:, 1:-1], padded[1:-1, :-2], padded[1:-1, 2:])
+    )
+    return 2.0 * int(np.count_nonzero(mask)) / max(perimeter, 1)
 
 
 def _crop_labels(game_map: Eu5Map, canvas: Canvas) -> NDArray[np.int32]:
@@ -367,7 +382,7 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
         sizes = np.bincount(components[part])
         keep = int(np.argmax(sizes))
         others = np.delete(sizes, keep)
-        if int(sizes[keep]) < MIN_REMAINDER_PX:
+        if int(sizes[keep]) < MIN_REMAINDER_PX or _thickness(components == keep) < MIN_THICKNESS_PX:
             canvas[window] |= part
         elif others.size and int(others.max()) >= MIN_REMAINDER_PX:
             canvas &= rolled != zone
