@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 from datetime import datetime
+from html import escape
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast, override
 
@@ -92,6 +93,15 @@ ICON_SIZE: Final[tuple[int, int]] = (96, 48)
 DATE: Final[str] = "%Y-%m-%d %H:%M"
 # Before the name of a version of a continent already listed above it.
 VERSION_MARK: Final[str] = "\u21b3 "
+# The width, in pixels, that a long explanation in a tooltip wraps at.
+TIP_WIDTH: Final[int] = 380
+
+
+def _wrapped_tip(message: str) -> str:
+    """A tooltip that wraps: Qt wraps only rich text, and a plain one is as wide as its line.
+    Paragraphs are separated by a blank line in ``message``."""
+    paragraphs = "".join(f"<p>{escape(part)}</p>" for part in message.split("\n\n"))
+    return f'<table width="{TIP_WIDTH}"><tr><td>{paragraphs}</td></tr></table>'
 
 
 def _progress_percent(fraction: float) -> int:
@@ -818,13 +828,25 @@ class MainWindow(QMainWindow):
         layout.addWidget(self._quick())
         self.expand_oceans: QCheckBox = QCheckBox(text("control.new_world.expand_oceans"))
         self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
-        self.expand_oceans.setToolTip(text("control.new_world.expand_oceans.about"))
+        ocean_tip = _wrapped_tip(text("control.new_world.expand_oceans.info"))
+        self.expand_oceans.setToolTip(ocean_tip)
         _ = self.expand_oceans.toggled.connect(self._ocean_toggled)
         layout.addWidget(self.expand_oceans)
+        # "Recommended" and an ⓘ mark; the explanation is the tooltip of the mark and the text.
         ocean_hint = QLabel(text("control.new_world.expand_oceans.about"))
-        ocean_hint.setWordWrap(True)
         ocean_hint.setStyleSheet(MUTED)
-        layout.addWidget(ocean_hint)
+        ocean_hint.setToolTip(ocean_tip)
+        self.ocean_help: QLabel = QLabel("ⓘ")
+        self.ocean_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.ocean_help.setStyleSheet(MUTED)
+        self.ocean_help.setToolTip(ocean_tip)
+        ocean_note = QHBoxLayout()
+        ocean_note.setContentsMargins(0, 0, 0, 0)
+        ocean_note.setSpacing(6)
+        ocean_note.addWidget(ocean_hint)
+        ocean_note.addWidget(self.ocean_help, 0, Qt.AlignmentFlag.AlignVCenter)
+        ocean_note.addStretch(1)
+        layout.addLayout(ocean_note)
         self.show_new_world: QCheckBox = QCheckBox(text("show_new_world"))
         self.show_new_world.setChecked(self.controller.preferences.show_new_world)
         visibility = QGroupBox(text("visibility"))
@@ -1716,14 +1738,15 @@ class MainWindow(QMainWindow):
 
     def _refresh_new(self) -> None:
         controller = self.controller
-        busy = controller.busy
+        # While a world is made the next one can be prepared, so only other work locks the choices.
+        busy = controller.busy and not controller.can_prepare
         drawn = controller.land_mask
         self.land_image_label.setText(
             text("land_image_chosen", id=format(drawn.id, "x")) if drawn is not None else ""
         )
         self.land_image_clear.setVisible(drawn is not None)
         self.land_image_button.setEnabled(not busy)
-        self.land_template_button.setEnabled(not busy and controller.game is not None)
+        self.land_template_button.setEnabled(not controller.busy and controller.game is not None)
         _ = self.type_choice.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         shown = controller.mode or controller.preset
         self.type_choice.setCurrentIndex(random_types.CHOICES.index(shown))
@@ -1754,7 +1777,7 @@ class MainWindow(QMainWindow):
         self._refresh_ocean_option(busy)
         generating = controller.task in {Task.GENERATE, Task.QUEUE, Task.CANDIDATES}
         self.cancel_button.setEnabled(controller.phase is Phase.RUNNING and generating)
-        self.cancel_button.setVisible(busy and generating)
+        self.cancel_button.setVisible(controller.busy and generating)
         self.progress_box.setVisible(generating and controller.phase is not Phase.IDLE)
         for widget in (
             self.seed_edit,
@@ -1808,7 +1831,8 @@ class MainWindow(QMainWindow):
         self.eta.setText(text("eta", time=_duration_clock(remaining)))
 
     def _refresh_destination(self, problem: str | None) -> None:
-        controller, busy = self.controller, self.controller.busy
+        controller = self.controller
+        busy = controller.busy and not controller.can_prepare
         self.install_box.setChecked(controller.install)
         self.new_tabs.setTabText(
             2,
@@ -1843,14 +1867,20 @@ class MainWindow(QMainWindow):
                 else "generation_keep"
             )
         )
-        self.generation_hint.setVisible(not busy)
-        self.enqueue_button.setEnabled(problem is None)
-        self.run_queue_button.setEnabled(not busy and bool(controller.queue))
-        self.clear_queue_button.setEnabled(not busy and bool(controller.queue))
+        self.generation_hint.setVisible(not controller.busy)
+        queue_problem = (
+            text("destination_missing")
+            if needs_destination
+            else (text("ready_busy") if busy else controller.setup_problem())
+        )
+        self.enqueue_button.setEnabled(queue_problem is None)
+        self.enqueue_button.setToolTip(queue_problem or text("queue_hint"))
+        self.run_queue_button.setEnabled(not controller.busy and bool(controller.queue))
+        self.clear_queue_button.setEnabled(bool(controller.queue))
         self.queue_label.setText(text("queue_count", count=len(controller.queue)))
         self.queue_label.setToolTip("\n".join(str(job.code.seed) for job in controller.queue))
         self.candidates_button.setEnabled(
-            not busy
+            not controller.busy
             and controller.game is not None
             and not controller.world_code().settings().mask.id
         )

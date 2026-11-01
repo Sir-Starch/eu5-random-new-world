@@ -41,8 +41,8 @@ STRINGS: Final[dict[str, str]] = {
     "candidates": "Choose a continent...",
     "candidates_hint": (
         "Preview six continent sketches before making a world. This reveals their land. "
-        "Pick one to use its seed and settings; its final coastline can shift slightly "
-        "as locations are formed."
+        "Pick one to use its seed and settings, or add the ones you like to the queue. "
+        "A final coastline can shift slightly as locations are formed."
     ),
     "candidate_item": "{number} · {land:g}% land\nSeed {seed}",
     "enqueue": "Add to queue",
@@ -50,6 +50,11 @@ STRINGS: Final[dict[str, str]] = {
     "clear_queue": "Clear queue",
     "queue_empty": "Add a world to the queue first.",
     "queue_count": "{count} pending",
+    "queue_added": "Added to the queue: seed {seed}.",
+    "queue_duplicate": "This world is already in the queue or being made.",
+    "queue_follows": "The queue starts by itself when the world being made is done.",
+    "queue_remove": "Remove from the queue",
+    "queue_making": "Being made now",
     # -- the game, the profile and the settings dialog --
     "game": "Game",
     "profile": "Profile",
@@ -74,7 +79,8 @@ STRINGS: Final[dict[str, str]] = {
     "queue_title": "Generate several worlds",
     "queue_hint": (
         "Add the current settings to the queue, then change the seed or options for the next "
-        "world. Run the queue when you have added everything."
+        "world. While a world is being made you can prepare and add the next ones: the queue "
+        "goes on by itself. Otherwise, run the queue when you have added everything."
     ),
     "progress_details": "Show stage details",
     "retry_new_seed": "Generate with a new seed",
@@ -197,7 +203,10 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "group.wall": "The Wall",
     "control.new_world.wall_width_permille": "Wall width",
-    "control.new_world.wall_width_permille.about": "Maximum width as a share of the canvas.",
+    "control.new_world.wall_width_permille.about": (
+        "Maximum width as a share of the canvas. The Wall takes its land out of the Land amount "
+        "first, so a wider Wall leaves less for the continents beside it, down to a few islands."
+    ),
     "control.new_world.wall_position_permille": "Wall position",
     "control.new_world.wall_position_permille.about": (
         "Position from west to east. The Wall goes around protected islands in its way."
@@ -317,10 +326,16 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "control.new_world.land_permille": "Land",
     "control.new_world.expand_oceans": "Expand generation into the oceans",
-    "control.new_world.expand_oceans.about": (
-        "Recommended: gives the New World more room, so its continents need not follow "
-        "the outline of the Americas. Keeps the Old World; islands in the way stay or move to "
-        "free water."
+    "control.new_world.expand_oceans.about": "Recommended",
+    "control.new_world.expand_oceans.info": (
+        "Gives the New World more room, so its continents need not follow the outline of "
+        "the Americas. The Old World is kept; islands in the way stay or move to free water."
+        "\n\n"
+        "If the land crowds the Old World's shores, do not uncheck this: raise “Distance from "
+        "the Old World” in Advanced (Land and sea) instead. It moves the land toward the "
+        "middle of the ocean without changing how much land there is, and the continents stay "
+        "free to take any shape. Unchecking confines the New World to the original band "
+        "around the Americas."
     ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
     "control.new_world.centre_permille": "Distance from the Old World",
@@ -746,6 +761,7 @@ STRINGS: Final[dict[str, str]] = {
     "dock.open_world": "Open the world",
     "candidates.use": "Use this continent",
     "candidates.chosen": "Chosen",
+    "candidates.queued": "In the queue",
     # -- the Tauri window: a world --
     "stat.countries": "countries",
     "stat.split": "{states} states · {tribes} tribes",

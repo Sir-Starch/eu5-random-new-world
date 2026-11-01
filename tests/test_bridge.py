@@ -17,11 +17,12 @@ import pytest
 
 from rnw import atlas
 from rnw.app import library, preferences, service
+from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode
 from rnw.gui import text, view
 from rnw.gui.bridge import Bridge, BridgeError, serve
-from rnw.gui.controller import NEW, Controller, Phase
+from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.png import COLOR_RGB, encode_png
 from rnw.settings import RESOURCE_FIELDS
 from tests.fakes import synthetic_atlas
@@ -112,6 +113,62 @@ def test_the_window_changes_the_new_world_as_the_qt_window_did(
     assert controller.world_file == tmp_path / "w.rnworld"
     _ = bridge.call("set_choice", {"choice": "chaos"})
     assert controller.mode == "chaos"
+
+
+def test_the_queue_is_kept_listed_and_managed_through_the_bridge(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    controller = bridge.controller
+    controller.install = False
+    assert bridge.call("set_seed", {"value": "7"}) is None
+    assert bridge.call("enqueue", {}) is None
+    assert bridge.call("enqueue", {}) == text.text("queue_duplicate")
+    assert bridge.call("set_seed", {"value": "8"}) is None
+    assert bridge.call("enqueue", {}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    queue = cast("list[dict[str, object]]", new["queue"])
+    assert [job["seed"] for job in queue] == ["7", "8"]
+    assert not any(job["running"] for job in queue)
+    assert new["preparable"] is True
+    assert new["queue_problem"] is None
+    _ = json.dumps(new)
+    assert bridge.call("dequeue", {"code": queue[0]["code"]}) is None
+    assert [job.code.seed for job in controller.queue] == [8]
+    assert bridge.call("clear_queue", {}) is None
+    assert controller.queue == []
+
+
+def test_a_destination_that_was_not_chosen_stops_the_queue_as_it_stops_generate(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    assert bridge.call("set_destination", {"kind": "mod"}) is None
+    problem = text.text("destination_missing")
+    assert bridge.call("enqueue", {}) == problem
+    assert bridge.call("start", {}) == problem
+    new = cast("dict[str, object]", bridge.state()["new"])
+    assert new["queue_problem"] == problem
+    assert bridge.controller.queue == []
+
+
+def test_sketched_continents_stay_on_the_page_and_are_queued_one_by_one(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    controller = bridge.controller
+    controller.install = False
+    picture = np.zeros((2, 2, 3), dtype=np.uint8)
+    controller.candidates = [Candidate(seed, picture, 250) for seed in (5, 6)]
+    controller.candidate_code = controller.world_code()
+    controller.task, controller.phase = Task.CANDIDATES, Phase.FINISHED
+    assert bridge.call("enqueue_candidate", {"index": 1}) is None
+    sketches = cast("list[dict[str, object]]", bridge.state()["candidates"])
+    assert [(item["seed"], item["queued"]) for item in sketches] == [("5", False), ("6", True)]
+    assert bridge.call("enqueue_candidate", {"index": 1}) == text.text("queue_duplicate")
+    # Another task after the sketching does not take the sketches away from the page.
+    controller.task = Task.QUEUE
+    assert len(cast("list[object]", bridge.state()["candidates"])) == 2
 
 
 def test_the_tauri_bridge_sets_and_encodes_the_peasant_mix(

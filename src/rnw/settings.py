@@ -96,7 +96,7 @@ class NewWorldSettings:
     expand_oceans: int = 1
     # 0: ordinary geography; 1: a continuous north-south barrier (The Wall).
     landform: int = 0
-    wall_width_permille: int = 70
+    wall_width_permille: int = 140
     wall_position_permille: int = 700
     wall_coast_permille: int = 600
     wall_ridge_permille: int = 800
@@ -238,7 +238,7 @@ class Settings:
         world = cast("dict[str, object]", data["new_world"])
         defaults = {
             "landform": 0,
-            "wall_width_permille": 70,
+            "wall_width_permille": 140,
             "wall_position_permille": 700,
             "wall_coast_permille": 600,
             "wall_ridge_permille": 800,
@@ -301,7 +301,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "ocean_band_px": (0, 8192),
     "expand_oceans": (0, 1),
     "landform": (0, 1),
-    "wall_width_permille": (40, 140),
+    "wall_width_permille": (40, 440),
     "wall_position_permille": (0, 1000),
     "wall_coast_permille": (0, 1000),
     "wall_ridge_permille": (0, 1000),

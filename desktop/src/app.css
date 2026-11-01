@@ -367,6 +367,12 @@ select.input option {
   line-height: 1.45;
   margin-top: 1px;
 }
+.check .info-mark {
+  display: inline-block;
+  margin-left: 5px;
+  vertical-align: -2px;
+  cursor: help;
+}
 
 /* -- forms: a titled group of label | control rows -------------------------------------------- */
 

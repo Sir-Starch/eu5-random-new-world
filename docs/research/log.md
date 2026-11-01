@@ -2173,3 +2173,31 @@ holds cells and is keyed by epoch, not code: its four entries were deleted becau
 them. The earlier reference land failed its identity check when the sea cells changed again (one coastal sea
 cell of margin), so the reference is a new land of the same settings. The digest is refreshed within the
 pending epoch 60. Engine drawing is unobserved.
+
+## 2026-11-01 — Preparing 1.1.0 (C462)
+
+The cycle's pending epoch 60 is frozen with the 1.1.0 target. The installed game is now EU5 1.4.6 (build
+26300913); the audit of 2026-10-30 had found its ten map-contract files unchanged, and the epoch-60 reference
+world reproduces byte for byte on it, so the golden stays as it was. A read of the owner's logs for errors
+between 1.0.0 and 1.1.0 found no crash and no RNW script error; the two lines that carry RNW names are the
+known seam locator diagnostic and the accepted `chk_no_more_plight_events` notice, both already present
+before 1.0.0. An earlier reading of the second as an unnoticed defect was wrong: the audit of N0–N4 had
+accepted it, and restoring the setter would bring back the vanilla Cahokia event. Documentation names the
+target and the epoch; the release candidate is built from the commit that carries them.
+
+## 2026-11-01 — New World countries can be chosen at selection (C463)
+
+The owner asked to take back the guard of experiments 037-038: a country of the covered New World was
+dimmed and unclickable in the lobby list, its panel hidden, its start and join buttons disabled and
+*Select* left out of its context menu. All of that is removed; the mod keeps only the shaders that
+paint the cover and the hiding of the city and raw-goods markers (`map_markers.gui`). The two game GUI
+files the guard overrode (`multiplayer_lobby.gui`, `context_menu.gui`) and the country scripted GUI are no
+longer written, which also leaves two fewer files of the game on the mod's drift list. The change is made
+before 1.1.0 is tagged, so the pending epoch 60's reference is refreshed (868 files, digest `9ca88eb7…`),
+not a frozen one; the release candidate of the earlier commit has to be rebuilt from the new SHA.
+Engine behaviour of choosing a New World country under the cover is unobserved.
+
+The covered picture of a world (window preview, mod-list thumbnail) is fixed in the same cycle: it was
+cut from the canvas after the island groups were placed, so each vanilla island group left an uncovered
+disc at a seed-dependent place; it now covers the whole canvas (pictures only, no epoch).
+

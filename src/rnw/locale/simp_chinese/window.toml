@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''选择大陆...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''创建世界前，可以先预览六幅大陆草图。这会揭开它们的陆地。选中一幅即可沿用它的种子和设置；地点形成时，最终的海岸线可能会略有移动。'''
+source = "3058778ded719ecd"
+text = '''创建世界前，可以先预览六幅大陆草图。这会揭开它们的陆地。选中一幅即可沿用它的种子和设置，也可以把喜欢的几幅加入队列。地点形成时，最终的海岸线可能会略有移动。'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''请先往队列中加入一个世界。'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''待处理：{count}'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''已加入队列：种子 {seed}'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''这个世界已在队列中，或正在生成。'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''正在生成的世界完成后，队列会自动开始。'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''从队列中移除'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''正在生成'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''生成多个世界'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''把当前设置加入队列，然后为下一个世界更换种子或选项。全部加入后再运行队列。'''
+source = "55c445d7af0996fb"
+text = '''把当前设置加入队列，然后为下一个世界更换种子或选项。世界生成期间，也可以准备并加入后面的世界，队列会自动接着运行。否则，全部加入后再运行队列。'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -655,8 +675,12 @@ source = "eff9e124228b96ba"
 text = '''将生成范围扩展至大洋'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。'''
+source = "d70604e843046137"
+text = '''推荐'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。\n\n如果陆地挤在旧世界的海岸边，请不要取消勾选此项，而是在“高级”（陆地与海洋）中调高“与旧世界的距离”。陆地会移向海洋中部，陆地总量不变，大陆仍可呈现任意形状。取消勾选则会把新世界限制在美洲周围原有的带状范围内。"
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -2168,6 +2192,10 @@ text = '''显示或隐藏侧边栏'''
 source = "c6da331eadbee0e2"
 text = '''已选'''
 
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''已在队列中'''
+
 ["map.tribes"]
 source = "5ba6198f78ffedef"
 text = '''部落'''
@@ -2489,8 +2517,8 @@ source = "7587d042711fcdc6"
 text = "高墙宽度"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "最大宽度占生成区域的比例。"
+source = "ed46ede2804adb86"
+text = "最大宽度占生成区域的比例。高墙先从陆地总量中分得自己的陆地：越宽，留给两侧大陆的就越少，最宽时只剩几座岛屿。"
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

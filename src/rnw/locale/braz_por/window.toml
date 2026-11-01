@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Escolher um continente...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Antes de criar um mundo, veja seis esboços de continentes. Isso revela as terras deles. Escolha um para usar a semente e as configurações dele; o litoral final pode mudar um pouco quando as localizações se formarem.'''
+source = "3058778ded719ecd"
+text = '''Antes de criar um mundo, veja seis esboços de continentes. Isso revela as terras deles. Escolha um para usar a semente e as configurações dele, ou adicione à fila os que você gostar. O litoral final pode mudar um pouco quando as localizações se formarem.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Adicione primeiro um mundo à fila.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''{count} pendentes'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Adicionado à fila: semente {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Este mundo já está na fila ou está sendo criado.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''A fila começa sozinha quando o mundo em criação terminar.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Remover da fila'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''Sendo criado agora'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Criar vários mundos'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Adicione as configurações atuais à fila e depois mude a semente ou as opções do próximo mundo. Execute a fila quando tiver adicionado tudo.'''
+source = "55c445d7af0996fb"
+text = '''Adicione as configurações atuais à fila e depois mude a semente ou as opções do próximo mundo. Enquanto um mundo é criado, você pode preparar e adicionar os próximos: a fila continua sozinha. Caso contrário, execute a fila quando tiver adicionado tudo.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -655,8 +675,12 @@ source = "eff9e124228b96ba"
 text = '''Expandir a geração para os oceanos'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo; as ilhas no caminho ficam onde estão ou se movem para águas livres.'''
+source = "d70604e843046137"
+text = '''Recomendado'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo; as ilhas no caminho ficam onde estão ou se movem para águas livres.\n\nSe a terra se aglomerar junto às costas do Velho Mundo, não desmarque esta opção: aumente ‘Distância do Velho Mundo’ em Avançado (Terra e mar). Isso desloca a terra para o meio do oceano sem alterar a quantidade de terra, e os continentes continuam livres para assumir qualquer forma. Desmarcar restringe o Novo Mundo à faixa original em torno das Américas."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -2168,6 +2192,10 @@ text = '''Mostrar ou ocultar o painel lateral'''
 source = "c6da331eadbee0e2"
 text = '''Escolhido'''
 
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''Na fila'''
+
 ["map.tribes"]
 source = "5ba6198f78ffedef"
 text = '''Tribos'''
@@ -2489,8 +2517,8 @@ source = "7587d042711fcdc6"
 text = "Largura da muralha"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Largura máxima como proporção da área de geração."
+source = "ed46ede2804adb86"
+text = "Largura máxima como proporção da área de geração. A muralha toma a sua terra primeiro da quantidade de Terra: quanto mais larga, menos sobra para os continentes ao lado, até restarem só algumas ilhas."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

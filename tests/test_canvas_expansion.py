@@ -12,11 +12,15 @@ import numpy as np
 from rnw.eu5_canvas import moved_pixels, open_map, place_islands, select_canvas
 from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
 from rnw.eu5_map import Eu5Map, MapPoint
+from rnw.eu5_nw_export import _previews  # pyright: ignore[reportPrivateUsage]
 from rnw.model import CellClass
+from rnw.pictures import TERRA_INCOGNITA
 from rnw.topology import within
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+
+    from rnw.newworld import NewWorld
 
 
 def _map(*, shift: int = 0) -> Eu5Map:
@@ -104,6 +108,40 @@ def _pacific() -> Eu5Map:
         points=(),
         inputs=(),
     )
+
+
+def test_the_covered_picture_hides_the_island_groups_the_drawn_one_keeps() -> None:
+    """The covered preview shows no hole where a vanilla island group stands in the canvas.
+
+    The groups' places depend on the seed, so a hole there would also tell where they went.
+    """
+    game = _pacific()
+    game.labels[190:218, 8:40] = 4  # a coast zone that holds a sample of the preview's grid
+    game.labels[198:210, 16:32] = 3  # round an island of the same size
+    canvas = select_canvas(game, 8, expanded=True)
+    assert len(canvas.groups) == 1
+    settled = place_islands(game, canvas)
+    hole = canvas.footprints[0]
+    assert canvas.mask[hole.rows, hole.columns].all()
+    assert not settled.mask[hole.rows, hole.columns].any()
+    world = cast(
+        "NewWorld",
+        cast(
+            "object",
+            SimpleNamespace(
+                classes=[CellClass.LAND], labels=np.zeros(settled.mask.shape, dtype=np.int32)
+            ),
+        ),
+    )
+    shown, hidden = _previews(game, settled, world, canvas.mask)
+    _, holed = _previews(game, settled, world, settled.mask)
+    ti = np.array(TERRA_INCOGNITA, dtype=np.uint8)
+    covered = int(np.all(hidden == ti, axis=2).sum())
+    assert covered == int(np.count_nonzero(canvas.mask[::8, ::8]))
+    assert covered > int(np.all(holed == ti, axis=2).sum())  # the holed mask left a hole
+    assert int(np.all(shown == ti, axis=2).sum()) == 0  # the drawn picture is never covered
+    hole_cells = (hole.rows % 8 == 0) & (hole.columns % 8 == 0)
+    assert hole_cells.any()
 
 
 def test_the_pacific_side_covers_an_island_group_and_settling_leaves_it_in_place() -> None:

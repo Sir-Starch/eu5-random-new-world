@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 import traceback
 from dataclasses import replace
 from enum import Enum
@@ -152,6 +153,15 @@ def _check(
 class Controller:
     """The window's state and the actions the buttons call."""
 
+    # The queued world the thread is making now.
+    _queue_current: service.Request | None = None
+    # Set by a world added while the thread is making another: the queue goes on by itself when
+    # that one is finished. A failure, a cancellation or an empty queue clears it.
+    queue_follows: bool = False
+    # The code the new-world page held when the thread started, so that a finished world does not
+    # take the player away from the next one they are preparing.
+    _launched_with: str = ""
+
     def __init__(
         self,
         data: Path | None = None,
@@ -205,6 +215,8 @@ class Controller:
         self._words: dict[int, tuple[Atlas, tuple[str, Path | None], atlas.Words]] = {}
         self.candidates: list[candidates.Candidate] = []
         self.candidate_code: WorldCode | None = None
+        # The worlds waiting for the thread, the first of them the one it is making now during a
+        # queue run. Both the window's thread and the worker change it, always under the lock.
         self.queue: list[service.Request] = []
         self.queue_done: int = 0
         self._lock: threading.Lock = threading.Lock()
@@ -724,20 +736,32 @@ class Controller:
         """Whether the thread is at work."""
         return self.phase in {Phase.RUNNING, Phase.CANCELLING}
 
+    @property
+    def can_prepare(self) -> bool:
+        """Whether the next world can be chosen and queued now: unless the thread is at other
+        work, also while it makes a world, which has its own copy of the choices."""
+        return not self.busy or self.task in {Task.GENERATE, Task.QUEUE}
+
     def problem(self) -> str | None:
         """Why Generate cannot start now, or None when it can."""
         if self.busy:
             return text("ready_busy")
+        return self.setup_problem()
+
+    def setup_problem(self, code: WorldCode | None = None) -> str | None:
+        """Why the world of ``code`` (the one chosen now) could not be made, whatever the
+        thread is doing: the game, the profile, the locations or a missing land image."""
         if self.game is None:
             return text("ready_no_game")
         if self.install and self.profile is None:
             return text("ready_no_profile")
-        return self._choices_problem()
+        return self._choices_problem(code)
 
-    def _choices_problem(self) -> str | None:
+    def _choices_problem(self, code: WorldCode | None = None) -> str | None:
         """What is wrong with the choices: too many locations, or a land image that is missing."""
+        code = code or self.world_code()
         try:
-            estimate = self.estimated_locations()
+            estimate = controls.estimated_locations(code.settings())
         except SettingsError as error:
             return explain(error)
         if estimate > controls.LOCATION_BUDGET:
@@ -746,7 +770,7 @@ class Controller:
                 count=grouped(estimate),
                 budget=grouped(controls.LOCATION_BUDGET),
             )
-        wanted = self.world_code().settings().mask.id
+        wanted = code.settings().mask.id
         if wanted and (self.land_mask is None or self.land_mask.id != wanted):
             return text("needs_land_image")
         return None
@@ -858,54 +882,114 @@ class Controller:
         self._changed()
 
     def enqueue(self) -> str | None:
-        reason = self.problem()
+        """Keep the world chosen now, with its destination, to be made after the ones before it;
+        returns why not, or None. Works while the thread makes another world."""
+        return self._enqueue(self.world_code())
+
+    def enqueue_candidate(self, index: int) -> str | None:
+        """Queue the continent sketched as number ``index`` with the settings it was sketched
+        with, without choosing it; returns why not, or None."""
+        if self.candidate_code is None or not 0 <= index < len(self.candidates):
+            return None
+        return self._enqueue(with_new_seed(self.candidate_code, self.candidates[index].seed))
+
+    def _enqueue(self, code: WorldCode) -> str | None:
+        reason = text("ready_busy") if not self.can_prepare else self.setup_problem(code)
         if reason is not None or self.game is None:
             return reason
-        self.queue.append(self._request())
+        name = encode(code)
+        with self._lock:
+            making = self.busy and self.task is Task.GENERATE and name == self._launched_with
+            if making or any(encode(job.code) == name for job in self.queue):
+                return text("queue_duplicate")
+            self.queue.append(self._request(code))
+            # The world goes on the queue of a thread already at work: no second button to press.
+            self.queue_follows = self.queue_follows or (
+                self.busy and self.task in {Task.GENERATE, Task.QUEUE}
+            )
         self._changed()
         return None
 
+    def queued_candidates(self) -> set[int]:
+        """The numbers (from 0) of the sketched continents whose worlds wait in the queue."""
+        code = self.candidate_code
+        if code is None:
+            return set()
+        with self._lock:
+            waiting = {encode(job.code) for job in self.queue}
+        return {
+            index
+            for index, found in enumerate(self.candidates)
+            if encode(with_new_seed(code, found.seed)) in waiting
+        }
+
+    def dequeue(self, code: str) -> None:
+        """Take the waiting world with this code out of the queue; the one being made stays."""
+        with self._lock:
+            self.queue = [
+                job for job in self.queue if job is self._queue_current or encode(job.code) != code
+            ]
+            self.queue_follows = self.queue_follows and bool(self.queue)
+        self._changed()
+
     def clear_queue(self) -> None:
-        if not self.busy:
-            self.queue.clear()
-            self._changed()
+        """Forget the waiting worlds; the one being made stays until it is done."""
+        with self._lock:
+            self.queue = [job for job in self.queue if job is self._queue_current]
+            self.queue_follows = False
+        self._changed()
 
     def start_queue(self) -> str | None:
-        """Generate snapshots in order; a cancellation or failure leaves the rest pending."""
+        """Make the queued worlds in order, those added meanwhile too; a cancellation or a
+        failure leaves the rest, and the failed one, waiting."""
         if self.busy:
             return text("ready_busy")
         if not self.queue:
             return text("queue_empty")
         self.queue_done = 0
+        self.queue_follows = False
+        self._launched_with = self.code
+        return self._run(Task.QUEUE, NEW, self._queue_work())
+
+    def _queue_work(self) -> Callable[[Progress], service.Result | None]:
         generator = self.generator
 
         def work(progress: Progress) -> service.Result | None:
             result = None
-            while self.queue:
-                progress.checkpoint()
-                progress.reset_stages()
-                result = generator(self.queue[0], progress)
+            while True:
                 with self._lock:
-                    _ = self.queue.pop(0)
-                    self.queue_done += 1
-                    self.finished, self.fraction = frozenset(), 0.0
+                    job = self.queue[0] if self.queue else None
+                    self._queue_current = job
+                if job is None:
+                    break
+                try:
+                    progress.checkpoint()
+                    progress.reset_stages()
+                    result = generator(job, progress)
+                    with self._lock:
+                        self.queue = [item for item in self.queue if item is not job]
+                        self.queue_done += 1
+                        self.finished, self.fraction = frozenset(), 0.0
+                finally:
+                    with self._lock:
+                        self._queue_current = None
                 self._changed()
             return result
 
-        return self._run(Task.QUEUE, NEW, work)
+        return work
 
-    def _request(self) -> service.Request:
+    def _request(self, code: WorldCode | None = None) -> service.Request:
         if self.game is None:
             message = "Choose the game before generating"
             raise SettingsError(message)
         return service.Request(
             game=self.game,
-            code=self.world_code(),
+            code=code or self.world_code(),
             data=self.data,
             profile=self.profile,
             install=self.install,
             show_new_world=self.preferences.show_new_world,
-            land_mask=self.land_mask,
+            land_mask=self.land_mask if code is None else None,
             output_folder=self.output_folder,
             world_file=self.world_file,
         )
@@ -917,6 +1001,7 @@ class Controller:
             return reason
         request = self._request()
         self._generation_seed = request.code.seed
+        self._launched_with = self.code
         generator = self.generator
 
         def work(progress: Progress) -> service.Result:
@@ -1275,10 +1360,13 @@ class Controller:
         self._changed()
 
     def wait(self, timeout: float | None = None) -> None:
-        """Block until the work ends (for tests and for closing the window)."""
-        thread = self._thread
-        if thread is not None:
-            thread.join(timeout)
+        """Block until the work ends (for tests and for closing the window), the queue's
+        following worlds included."""
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while (thread := self._thread) is not None:
+            thread.join(None if deadline is None else max(0.0, deadline - time.monotonic()))
+            if self._thread is thread or (deadline is not None and time.monotonic() >= deadline):
+                return
 
     def _on_update(self, update: Update) -> None:
         with self._lock:
@@ -1309,13 +1397,33 @@ class Controller:
         # window may react to FINISHED before the worker returns from this method.
         self.refresh_library()
         with self._lock:
-            self.phase, self.result, self.message = outcome, result, message
-            self.running = ()
-            if outcome is Phase.FINISHED:
-                self.fraction = 1.0
-            if result is not None:
-                self.selection = result.world.id
-        self._changed()
+            follow = (
+                outcome is Phase.FINISHED
+                and self.queue_follows
+                and bool(self.queue)
+                and self.task in {Task.GENERATE, Task.QUEUE}
+            )
+            if outcome is not Phase.FINISHED or not self.queue:
+                self.queue_follows = False
+            if not follow:
+                self.phase, self.result, self.message = outcome, result, message
+                self.running = ()
+                if outcome is Phase.FINISHED:
+                    self.fraction = 1.0
+                if result is not None and not self._prepared_another():
+                    self.selection = result.world.id
+        if follow:
+            # Worlds were added while this one was made: go on with them, with no stop between.
+            self.queue_done = 0
+            self.queue_follows = False
+            _ = self._run(Task.QUEUE, NEW, self._queue_work())
+        else:
+            self._changed()
+
+    def _prepared_another(self) -> bool:
+        """Whether the player is on the new-world page with choices other than the ones the
+        work started from: a finished world must not take them away from it."""
+        return self.selection == NEW and self.code != self._launched_with
 
     def _explain(self, error: Exception) -> str:
         """The error for the player; the traceback goes to the log and to a file for a report."""

@@ -32,6 +32,16 @@ WIDE_LAND_CELLS: Final[int] = 58_800
 WIDE_SEA_ZONES: Final[int] = 31_000
 LAKES: Final[int] = 100
 LOCATION_BUDGET: Final[int] = 31_200
+# The land of The Wall, as a share of the canvas's land area, per permille of width (54 settings
+# of build 26300913: coastal irregularity 0-1000, gaps allowed or not, land 212-600; the worst case
+# of each land amount): 0.77 up to the Wall's own base land share of 250, rising 1.125 per
+# permille of land beyond it (1.16 at 600, where the Wall fills its whole envelope).
+WALL_BASE_LAND: Final[int] = 250
+WALL_SHARE_BASE: Final[int] = 770
+WALL_SHARE_SLOPE: Final[int] = 1125
+# What is left for the continents beside The Wall when it takes all the land share, in permille
+# of the canvas's land area (the least share of the water beside it, 10, times that water's part).
+WALL_SIDE_SHARE: Final[int] = 10
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,7 +107,7 @@ class Control:
 CONTROLS: Final[tuple[Control, ...]] = (
     Control("new_world.wall_allow_gaps", "wall", 0, 1),
     Control(
-        "new_world.wall_width_permille", "wall", 40, 140, factor=10, decimals=1, unit="percent"
+        "new_world.wall_width_permille", "wall", 40, 440, factor=10, decimals=1, unit="percent"
     ),
     Control(
         "new_world.wall_position_permille", "wall", 0, 1000, factor=10, decimals=1, unit="percent"
@@ -157,16 +167,24 @@ ADVANCED: Final[tuple[Control, ...]] = tuple(
 )
 
 
+def wall_share(width_permille: int, land_permille: int) -> int:
+    """The land of The Wall, in permille of the canvas's land area (an upper bound, C118)."""
+    per_width = WALL_SHARE_BASE + max(0, land_permille - WALL_BASE_LAND) * WALL_SHARE_SLOPE // 1000
+    return width_permille * per_width // 1000
+
+
 def estimated_locations(settings: Settings) -> int:
     """Locations the world of ``settings`` will have, roughly (within about 600, C118)."""
     world = settings.new_world
     wide = bool(world.expand_oceans or world.landform)
     land_area = WIDE_LAND_CELLS if wide else LAND_CELLS
     sea_area = WIDE_SEA_ZONES if wide else SEA_ZONES
-    # Side land plus the widest possible Wall envelope: a conservative upper bound.
-    share = min(
-        800, world.land_permille + (world.wall_width_permille * 3 // 2 if world.landform else 0)
-    )
+    share = world.land_permille
+    if world.landform:
+        # The Wall takes its land out of the land share; the continents beside it get what is
+        # left, never less than a sliver. A Wall that needs more than the share keeps its land.
+        share = max(share, wall_share(world.wall_width_permille, share) + WALL_SIDE_SHARE)
+    share = min(800, share)
     land = land_area * share // (world.location_px * world.location_px)
     water = 1000 - share
     sea = sea_area * water // (world.sea_zone_px * world.sea_zone_px)

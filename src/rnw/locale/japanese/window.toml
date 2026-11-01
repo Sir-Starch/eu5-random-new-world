@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''大陸を選ぶ...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''ワールドを作る前に、大陸のスケッチを6つ見比べられます。スケッチを見ると陸地が明らかになります。1つ選ぶと、そのシードと設定を使います。ロケーションが形作られるときに、最終的な海岸線は少しずれることがあります。'''
+source = "3058778ded719ecd"
+text = '''ワールドを作る前に、大陸のスケッチを6つ見比べられます。スケッチを見ると陸地が明らかになります。1つ選ぶと、そのシードと設定を使います。気に入ったものをキューに追加することもできます。ロケーションが形作られるときに、最終的な海岸線は少しずれることがあります。'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''先にワールドをキューに追加してください。'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''待機中: {count}'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''キューに追加しました: シード {seed}'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''このワールドはすでにキューにあるか、作成中です。'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''作成中のワールドが完了すると、キューは自動的に始まります。'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''キューから外す'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''作成中'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''複数のワールドを作る'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''今の設定をキューに追加してから、次のワールドのシードやオプションを変えてください。すべて追加したらキューを実行します。'''
+source = "55c445d7af0996fb"
+text = '''今の設定をキューに追加してから、次のワールドのシードやオプションを変えてください。ワールドの作成中でも、次のワールドを用意して追加できます。キューは自動で続きます。作成中でなければ、すべて追加したらキューを実行します。'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -655,8 +675,12 @@ source = "eff9e124228b96ba"
 text = '''生成範囲を海洋に拡張'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''推奨：新世界の生成範囲を広げ、大陸が南北アメリカの輪郭に制約されないようにします。旧世界は維持され、進路上の島々はそのまま残るか、空いた海へ移動します。'''
+source = "d70604e843046137"
+text = '''推奨'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "新世界の生成範囲を広げ、大陸が南北アメリカの輪郭に制約されないようにします。旧世界は維持され、進路上の島々はそのまま残るか、空いた海へ移動します。\n\n陸地が旧世界の海岸に寄りすぎる場合は、このオプションをオフにせず、「詳細」の「陸と海」にある「旧世界からの距離」を上げてください。陸地の量を変えずに陸地が海の中央寄りになり、大陸はどんな形にもなれます。オフにすると、新世界は南北アメリカ周辺の元の帯状の範囲に限定されます。"
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -2168,6 +2192,10 @@ text = '''サイドパネルの表示/非表示'''
 source = "c6da331eadbee0e2"
 text = '''選択中'''
 
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''キューに追加済み'''
+
 ["map.tribes"]
 source = "5ba6198f78ffedef"
 text = '''部族'''
@@ -2489,8 +2517,8 @@ source = "7587d042711fcdc6"
 text = "壁の幅"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "生成領域に対する最大幅の割合。"
+source = "ed46ede2804adb86"
+text = "生成領域に対する最大幅の割合。壁は陸地の量から先に自分の分を取るため、幅が広いほど隣の大陸に残る陸地は減り、最後は少数の島だけになります。"
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

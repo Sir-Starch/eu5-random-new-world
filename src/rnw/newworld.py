@@ -32,7 +32,12 @@ from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
 from rnw.relief import generate_relief
 from rnw.rng import SplitMix64, derive_seed, mix64
-from rnw.sea_corridors import designed_corridors
+from rnw.sea_corridors import (
+    CLEAR_PERMILLE,
+    clear_of_corridors,
+    corridor_paths,
+    corridor_sites,
+)
 from rnw.straits import pinch
 from rnw.synth import grow_regions, merge_slivers, merge_small, renumber, seed_sites
 from rnw.topology import (
@@ -74,9 +79,18 @@ SHORE_LIMIT: Final[int] = 64
 # a wide ramp leaves only the canvas core for the land budget, and every seed then fills
 # the same outline [V-EXEC C64].
 EDGE_RAMP_MARGINS: Final[int] = 4
+# Along the canvas's boundary with the game's own map (the Old World and the waters kept whole)
+# no land lies within this share of the canvas's width: a band of open water wide enough, about
+# two and a half sea cells on the installed canvas, for ordinary cells and a lane between the
+# land and the waters of the game, instead of a thin row of cells squeezed against the join.
+# The land share is kept; the land moves inland.
+EDGE_WATER_PERMILLE: Final[int] = 30
 EDGE_SHIFT_RAMPS: Final[int] = 2
 EDGE_SHIFT_PERIOD_PERMILLE: Final[int] = 2500
 MAX_STRAITS: Final[int] = 16
+# The least land beside The Wall, as a share of the water beside it, when the barrier takes
+# nearly all of the world's land: a few headlands and islands still lie off its coasts.
+WALL_SIDE_MIN_PERMILLE: Final[int] = 10
 # The land density bends its own coordinates by this share of its feature size, with a
 # warp as broad as the feature. Plain fractal noise thresholded gives rounded blobs; bent
 # coordinates turn them into peninsulas, hooked capes and gulfs with narrow mouths (compared
@@ -268,19 +282,31 @@ def land_stage(
     return _natural_land(domain, seed, settings, relief)
 
 
-def _natural_land(
+def _natural_land(  # noqa: PLR0913 - the density field, the land budget and the canvas's boundary.
     domain: NDArray[np.bool_],
     seed: int,
     settings: NewWorldSettings,
     relief: NDArray[np.int32],
+    *,
+    budget_px: int | None = None,
+    outside: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
-    """Construct natural coasts from a density field, preserving the requested land budget."""
+    """Construct natural coasts from a density field, preserving the requested land budget.
+
+    The budget is the land share of ``settings``, or ``budget_px`` pixels when a caller has
+    already spent part of it elsewhere (The Wall). ``outside`` is what lies beyond the canvas's
+    boundary with the game's map (what is not ``domain`` by default; The Wall clears its own
+    course from the domain and says what the canvas's boundary is).
+    """
     margin = settings.coast_margin_px
     ramp = EDGE_RAMP_MARGINS * margin
     shift_px = EDGE_SHIFT_RAMPS * ramp
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
     guard = ~domain
     guard[:, [0, -1]] = True
+    share = _widen_boundary(guard, domain, ~domain if outside is None else outside, settings)
+    if budget_px is None and share != settings.land_permille:
+        settings = replace(settings, land_permille=share)
     _guard_polar_edges(guard, domain, relief, settings)
     wobble = _field(
         seed,
@@ -296,7 +322,9 @@ def _natural_land(
     # A sea cut off from open water (around a protected islet) gets a strait: its shortest
     # path to open water joins the guard and the coasts are drawn again, so the strait has
     # the same ragged shores as every other coast instead of a straight canal [V-EXEC C64].
-    land, shore, elevation = _coasts(domain, guard, relief, offset, ramp=ramp, settings=settings)
+    land, shore, elevation = _coasts(
+        domain, guard, relief, offset, ramp=ramp, settings=settings, budget_px=budget_px
+    )
     for _ in range(MAX_STRAITS):
         checkpoint()
         path = stray_strait(domain, land, shore=shore, open_shore=open_shore)
@@ -304,7 +332,7 @@ def _natural_land(
             break
         guard |= path
         land, shore, elevation = _coasts(
-            domain, guard, relief, offset, ramp=ramp, settings=settings
+            domain, guard, relief, offset, ramp=ramp, settings=settings, budget_px=budget_px
         )
     del relief, offset, guard, open_shore
     # Isthmuses, inland seas and then lakes are made before islands are counted, so none
@@ -325,6 +353,33 @@ def _natural_land(
     )
     land &= _large_parts(land, settings.min_island_px)
     return (*_classify(domain, land, shore, settings), elevation)
+
+
+def _widen_boundary(
+    guard: NDArray[np.bool_],
+    domain: NDArray[np.bool_],
+    outside: NDArray[np.bool_],
+    settings: NewWorldSettings,
+) -> int:
+    """Keep the land ``EDGE_WATER_PERMILLE`` of the canvas's width from its boundary.
+
+    The band along the boundary joins ``guard``, so the coast ramp starts at its inner edge. The
+    polar edges are not a join with the game's map and get no band. Returns the land share (permille
+    of the interior that is left) that holds as much land as the settings' share holds without the
+    band.
+    """
+    width = max(0, int(domain.shape[1]) * EDGE_WATER_PERMILLE // PERMILLE)
+    margin = settings.coast_margin_px
+    if width <= margin:
+        return settings.land_permille
+    source = outside.copy()
+    source[:, [0, -1]] = True
+    before = int(
+        np.count_nonzero(domain & (distance_from(guard, margin, octagonal=True) >= margin))
+    )
+    guard |= distance_from(source, width, octagonal=True) < width
+    after = int(np.count_nonzero(domain & (distance_from(guard, margin, octagonal=True) >= margin)))
+    return min(PERMILLE, -(-settings.land_permille * before // max(1, after)))
 
 
 def _guard_polar_edges(
@@ -370,8 +425,16 @@ def _wall_land(
     on different seeds. A longer wavelength lets whole regions become ocean or
     continent; the original field supplies bays, peninsulas and islands. Both
     scales follow feature size, with one sea level for all the side land.
+
+    The barrier takes its land first out of the world's land share, so a wider Wall leaves
+    less for the continents beside it: when it needs all of the share, only the small
+    ``WALL_SIDE_MIN_PERMILLE`` remains there. A Wall wider than the share allows keeps its land.
     """
     course = wall.route(domain, settings)
+    barrier = wall.coast(domain, seed, settings)
+    off_limits = _off_limits(domain, settings)
+    budget = settings.land_permille * int(np.count_nonzero(domain & ~off_limits)) // PERMILLE
+    budget -= int(np.count_nonzero(barrier))
     sides = domain.copy()
     wall.keep_clear(
         sides, course, course.half + max(2 * settings.coast_margin_px, settings.sea_zone_px)
@@ -397,9 +460,11 @@ def _wall_land(
     relief += detail
     relief //= 3
     del detail
-    land, _, _, elevation = _natural_land(sides, seed, settings, relief)
-    land |= wall.coast(domain, seed, settings)
-    return (*_classify(domain, land, _off_limits(domain, settings), settings), elevation)
+    land, _, _, elevation = _natural_land(
+        sides, seed, settings, relief, budget_px=max(0, budget), outside=~domain
+    )
+    land |= barrier
+    return (*_classify(domain, land, off_limits, settings), elevation)
 
 
 def _ocean(
@@ -531,11 +596,14 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
     *,
     ramp: int,
     settings: NewWorldSettings,
+    budget_px: int | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
     """Lower the relief over a ramp from the guard and keep the land budget.
 
     Returns land, shore (no land within a coast margin of the guard) and the elevation.
     The per-pixel arithmetic runs in strips; only the two distance fields are whole-raster.
+    With ``budget_px`` the land is that many pixels of the interior (at least
+    ``WALL_SIDE_MIN_PERMILLE`` of it) instead of the settings' land share.
     """
     # The cap must exceed every reach, or the wobble would dent the interior too.
     edge = distance_from(guard, ramp - int(offset.min()) + 2, octagonal=True)
@@ -557,7 +625,16 @@ def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and
             elevation[rows] += spread[: rows.stop - first, :width]
     del edge, opened
     interior = domain & ~shore
-    threshold = _threshold(elevation, interior, settings.land_permille)
+    share = settings.land_permille
+    if budget_px is not None:
+        share = min(
+            PERMILLE,
+            max(
+                WALL_SIDE_MIN_PERMILLE,
+                budget_px * PERMILLE // max(1, int(np.count_nonzero(interior))),
+            ),
+        )
+    threshold = _threshold(elevation, interior, share)
     return interior & (elevation >= threshold), shore, elevation
 
 
@@ -852,30 +929,31 @@ def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement
     if bands.shape != ocean.shape:
         message = "Current bands do not fit the world"
         raise ValueError(message)
-    result = np.full(ocean.shape, -1, dtype=np.int32)
-    corridors = designed_corridors(ocean, bands, spacing, domain=domain)
-    offset = 0
-    for category in ("crossing", "open"):
-        mask = np.empty(ocean.shape, dtype=np.bool_)
-        present = False
-        for start in range(0, len(ocean), STRIP_ROWS):
-            rows = slice(start, min(len(ocean), start + STRIP_ROWS))
-            if category == "crossing":
-                mask[rows] = corridors[rows]
-            else:
-                mask[rows] = ocean[rows] & ~corridors[rows]
-            present = present or bool(np.any(mask[rows]))
-        if not present:
-            continue
-        part = renumber(sea_part(mask))
-        maximum = -1
-        for start in range(0, len(ocean), STRIP_ROWS):
-            rows = slice(start, min(len(ocean), start + STRIP_ROWS))
-            result[rows][mask[rows]] = part[rows][mask[rows]] + offset
-            maximum = max(maximum, int(part[rows].max()))
-        offset += maximum + 1
+    # A crossing is a chain of ordinary cells: the water is partitioned once, the sites of the
+    # ordinary cells keep clear of each crossing's centre line, and the crossing's own sites lie
+    # along it. Its cells then have the same irregular borders as any other cell, not the ruled
+    # edges of a band that was cut out of the water and partitioned alone.
+    paths = corridor_paths(ocean, bands, spacing, domain=domain)
+    sites = seed_sites(key, ocean, spacing)
+    rows, columns = np.nonzero(sites >= 0)
+    clear = clear_of_corridors(
+        rows.astype(np.int64),
+        columns.astype(np.int64),
+        paths,
+        spacing * CLEAR_PERMILLE / PERMILLE,
+    )
+    chain_rows, chain_columns = corridor_sites(paths, ocean, spacing, key)
+    after = int(sites.max()) + 1
+    sites[rows[~clear], columns[~clear]] = -1
+    sites[chain_rows, chain_columns] = np.arange(after, after + chain_rows.size, dtype=np.int32)
+    del rows, columns, clear
+    nearest = _native.sea_voronoi(np.ascontiguousarray(ocean), sites)
+    del sites
+    parts = label_components(nearest)
+    del nearest
+    cells = merge_small(np.where(ocean, parts, -1).astype(np.int32), smallest)
     return merge_slivers(
-        result, spacing / SLIVER_DIVISOR, SLIVER_PERMILLE, _world_edge(ocean, domain)
+        cells, spacing / SLIVER_DIVISOR, SLIVER_PERMILLE, _world_edge(ocean, domain)
     )
 
 

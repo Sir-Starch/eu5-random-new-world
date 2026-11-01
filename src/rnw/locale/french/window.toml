@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Choisir un continent...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Avant de créer un monde, prévisualisez six esquisses de continents. Cela dévoile leurs terres. Choisissez-en une pour reprendre sa graine et ses réglages ; son littoral définitif peut se décaler un peu quand les lieux se forment.'''
+source = "3058778ded719ecd"
+text = '''Avant de créer un monde, prévisualisez six esquisses de continents. Cela dévoile leurs terres. Choisissez-en une pour reprendre sa graine et ses réglages, ou ajoutez à la file celles qui vous plaisent. Le littoral définitif peut se décaler un peu quand les lieux se forment.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Ajoutez d'abord un monde à la file.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''{count} en attente'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Ajouté à la file : graine {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Ce monde est déjà dans la file ou en cours de création.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''La file démarre toute seule quand le monde en cours de création est terminé.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Retirer de la file'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''En cours de création'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Créer plusieurs mondes'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Ajoutez les réglages actuels à la file, puis changez la graine ou les options pour le monde suivant. Lancez la file quand tout est ajouté.'''
+source = "55c445d7af0996fb"
+text = '''Ajoutez les réglages actuels à la file, puis changez la graine ou les options pour le monde suivant. Pendant qu'un monde se crée, vous pouvez préparer et ajouter les suivants : la file continue toute seule. Sinon, lancez la file quand tout est ajouté.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -655,8 +675,12 @@ source = "eff9e124228b96ba"
 text = '''Étendre la génération aux océans'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Recommandé : laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.'''
+source = "d70604e843046137"
+text = '''Recommandé'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.\n\nSi les terres se pressent contre les côtes de l’Ancien Monde, ne décochez pas cette option : augmentez plutôt « Distance à l’Ancien Monde » dans Avancé (Terre et mer). Les terres se rapprochent du milieu de l’océan sans que leur quantité change, et les continents restent libres de prendre n’importe quelle forme. Décocher l’option cantonne le Nouveau Monde à la bande d’origine autour des Amériques."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
@@ -2168,6 +2192,10 @@ text = '''Afficher ou masquer le panneau latéral'''
 source = "c6da331eadbee0e2"
 text = '''Choisi'''
 
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''Dans la file'''
+
 ["map.tribes"]
 source = "5ba6198f78ffedef"
 text = '''Tribus'''
@@ -2489,8 +2517,8 @@ source = "7587d042711fcdc6"
 text = "Largeur du mur"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Largeur maximale en proportion de la zone de génération."
+source = "ed46ede2804adb86"
+text = "Largeur maximale en proportion de la zone de génération. Le mur prend d'abord ses terres sur la quantité de Terres : plus il est large, moins il en reste aux continents voisins, jusqu'à quelques îles seulement."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

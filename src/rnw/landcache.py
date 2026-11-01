@@ -55,8 +55,11 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
 ) -> str:
+    # The first number is the layout of the construction: raise it when the land or the sea cells
+    # change inside an epoch, so an entry made by the earlier code is not read (7: the water band
+    # along the canvas's boundary and the crossings as chains of cells).
     spec = (
-        6,
+        7,
         epoch.CURRENT,
         seed,
         replace(settings, precious_permille=0),

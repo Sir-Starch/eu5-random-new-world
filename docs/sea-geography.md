@@ -2,6 +2,48 @@
 
 Sea geography, optional ocean expansion and the route/current refinements below ship in the accepted 1.0.0 scope (C437). Dated observations describe their particular revisions; an UNKNOWN engine detail does not automatically require a new owner sitting. See [known limitations](known-limitations.md) for current player scope.
 
+**Crossings as chains of cells, thin remainders and the water at the join, pending 1.1.0 / epoch 60
+(owner's report on world `aszzsukifw`, 2026-11-01):** four screenshots of the owner's world showed sea
+locations with no reason to be shaped as they were. [V-GAME owner; matched to files V-LOCAL] Measured in
+the owner's installed files: (1) a perfectly rectangular strip one sea-cell wide (120 px), 1,000 px long,
+in open ocean, with cells ruled by its straight sides (`rnw_sea_00271` and its neighbours); (2) a
+diagonal strip of the same kind, with arrows; (3, 4) remainders of the game's current zones that the
+canvas's boundary cut along their length (`atlantic_north_equatorial_current10`: 6,400 px, 23.9 px
+thick, a bent bolt with a long tail). The causes are three rules that no longer hold:
+
+- `designed_corridors` drew each crossing as a band of one sea-cell width and the sea cells were
+  partitioned inside the bands and outside them separately, so a crossing's borders were the band's
+  ruled edges and the cells beside it were cut against them. The crossing's planning is unchanged
+  (`sea_corridors.corridor_paths`: the coarse water graph, the detour test, line-of-sight straightening)
+  but its cells are now made like every other: `newworld._sea_cells` partitions all the water once, the
+  jittered-grid sites that lie within 0.75 sea-cell widths of a crossing's centre line are dropped, and
+  one site every sea-cell width along the line (moved by at most 17 % along it and 12 % across it) takes
+  their place (`corridor_sites`, `clear_of_corridors`). The cells of the chain are Voronoi cells whose
+  sides are the bisectors with their neighbours, as in the game's own lanes. A cell belongs to a crossing
+  (and so is a lane when a current can reach it) when the one-pixel centre line runs at least 24 px inside
+  it (`eu5_seas.DESIGNED_MIN_PX`), no longer when half of its area lies in a band.
+- `eu5_canvas.MIN_THICKNESS_PX` is 30 (it was 20): a remainder thinner than that, less than two thirds of
+  the thinnest core of a zone of the game (50-80 px), goes to the canvas whole. Twelve zones of the
+  installed map are replaced instead of trimmed (`atlantic_north_equatorial_current10`, `11`, `12`,
+  `atlantic_south_sainthelenacurrent9`, `atlantic_southcurrent42`, `pacific_north_current84`,
+  `pacific_polynesia_current28`, `north_pacific_high_sea42`, `clarence_gulf`, `shishmarev_inlet`,
+  `sevuokuk_point`, `kongkok_bay`); the canvas grows by 68,000 px (0.1 %). A morphological opening that
+  would have taken only the tails of the remainders was tried first and gained 1,376 px: the bolts are
+  strips as wide as 40-50 px, not tails.
+- The land stage keeps the land `newworld.EDGE_WATER_PERMILLE` (30 ‰, 302 px on the installed canvas, about
+  two and a half sea cells) away from the canvas's boundary with the game's map, the Old World and the
+  waters kept whole (the polar edges of the map are not such a join and get none). The band joins the
+  coast ramp's guard, so the coast ramp starts at its inner edge; the land share is kept by raising the
+  share of the narrower interior. The Wall passes the real boundary, not its own cleared course.
+
+Measured on the owner's world code (`continents`, seed 11119257615139082485, the epoch-60 build): land
+33.0 % of the canvas before and 33.1 % after; the land's least distance from the boundary 150 → 476 px
+and its first percentile 267 → 632 px; sea cells longer than three times their width 34 → 15 and thinner
+than 25 px 34 → 35 (the rest are narrows and the great closed zones, whose long coasts make them
+thin by the perimeter measure); thin remainders (under 30 px) of the game's zones 12 → 0; deep-ocean
+cells 241 → 337, lane cells with a current 174 → 200 (more open water far from land). The export
+passes every sea invariant. [V-EXEC; in-game appearance UNKNOWN]
+
 **Currents as clear courses, pending 1.1.0 / epoch 60 (owner's QU3N report, 2026-11-01):** the
 owner's screenshots of world QU3N showed currents where the generated canvas meets the Old World that
 no one could read: a current of three locations that pointed sideways beside a coast, a stub of one
@@ -54,7 +96,7 @@ owner's installed J4VJ files the only location that fits (tall, tail, six neighb
 trimmed to 29 % of its area (3,963 of 13,889 pixels): a strip 219 × 47, 12.6 pixels thick, with a
 long tail, touching six neighbours. `merge_slivers` works on generated cells and never saw it. A
 remainder is now taken into the canvas, with the zone it belongs to, when it is smaller than 3,000
-pixels (the old rule) or thinner than 20 pixels (`eu5_canvas.MIN_THICKNESS_PX`; the game's zones are
+pixels (the old rule) or thinner than 20 pixels (`eu5_canvas.MIN_THICKNESS_PX`, 30 since the report above; the game's zones are
 50–80 pixels thick at their cores). The canvas does not depend on the preset, so every world loses the
 same two zones, `pacific_south_current2` and `atlantic_equatorial_countercurrent18` (3,723 of 19,542
 pixels, 16.9 thick, five neighbours); the next thinnest remainders are 20.4 and 22.2 thick and stay.
@@ -103,6 +145,8 @@ inherited-current network requires a substantial detour. A crossing's centreline
 is straightened only across water at full raster resolution, widened to a typical
 sea-cell width and clipped to water. Sea cells are partitioned inside the designed
 bands separately; only bands reachable from a real current source become currents.
+(Superseded in pending 1.1.0: a crossing is a chain of ordinary cells along its centre line,
+see above.)
 The final graph still checks local connections and course ends. A small, detached
 retained-ocean remainder joins an edge-adjacent navigable sea if the principal
 vanilla identity remains; a fragment surrounded by protected land stays intact.
@@ -334,7 +378,9 @@ UNKNOWN]
 replaced deep-ocean currents. The world generator partitions ocean inside and outside these bands
 separately; sea-cell borders do not wobble across the band edges. Thus the old current's outline,
 clipped by the new land, is built into the sea locations instead of approximated by whichever random
-locations it happens to overlap. The band raster is part of the land cache key. Coastal settlement,
+locations it happens to overlap. (Since pending 1.1.0 the bands only give the planner its offshore
+terminals and the sea cells are one partition; see "Crossings as chains of cells" at the top of this
+page. Sea-cell borders still do not wobble.) The band raster is part of the land cache key. Coastal settlement,
 connections and completed ends may still alter or extend the outline. This is not a simulation of
 new ocean gyres. Course completion also looks for cyclic deep-water ends attached to the navigable
 network at only one junction: a wide tip can have no degree-one cell and still lead nowhere. The

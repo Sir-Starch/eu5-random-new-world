@@ -122,7 +122,6 @@ from rnw.eu5_empires import (
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
 from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
 from rnw.eu5_lobby import (
-    CONTEXT_MENU,
     COVER_INCLUDE,
     DRAWINGS_INCLUDE,
     GRAPHICS_DEFINES,
@@ -138,16 +137,14 @@ from rnw.eu5_lobby import (
     cover_shader,
     covered_locations,
     drawings_include,
-    hide_select_entry,
     land_colour,
     sampler_include,
     samplers_bound,
-    scripted_gui_text,
     shader_indexes,
     shader_samplers,
     unknown_colour,
 )
-from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
+from rnw.eu5_lobby_gui import GUI_FILES, patch_gui, scripted_gui_text
 from rnw.eu5_localization import LocalizationError, map_name_files
 from rnw.eu5_map import (
     ADJACENCIES,
@@ -295,7 +292,7 @@ from rnw.rivers import (
 )
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.rng import derive_seed
-from rnw.sea_corridors import designed_corridors
+from rnw.sea_corridors import corridor_paths, draw_corridors
 from rnw.seas import Shape
 from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
 from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
@@ -880,17 +877,14 @@ def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its lab
         for edit in SHADERS
     }
     gui_patched = {path: patch_gui(path, _read(game_dir, path)) for path in GUI_FILES}
-    menu = hide_select_entry(_read(game_dir, CONTEXT_MENU))
     land = land_colour(_read(game_dir, GRAPHICS_DEFINES))
     shaders = {path: text for path, text in patched.items() if text is not None}
     broken = sorted(path for path in patched if path not in shaders)
     guis = {path: text for path, text in gui_patched.items() if text is not None}
     broken.extend(path for path in gui_patched if path not in guis)
-    if menu is None:
-        broken.append(CONTEXT_MENU)
     if land is None:
         broken.append(GRAPHICS_DEFINES)
-    if broken or menu is None or land is None:
+    if broken or land is None:
         message = (
             "The game's files are not laid out as the cover of the New World expects "
             f"({', '.join(broken)}); check the build before making a world"
@@ -919,7 +913,6 @@ def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its lab
         raise NewWorldExportError(message)
     outputs = {
         **{f"{SHADER_DIR}/{name}": text.encode("utf-8") for name, text in mod_includes.items()},
-        _mod_path(CONTEXT_MENU): _encode(game_dir, CONTEXT_MENU, menu),
         **{_mod_path(path): _encode(game_dir, path, text) for path, text in guis.items()},
         SCRIPTED_GUI_FILE: scripted_gui_text().encode("utf-8-sig"),
     }
@@ -2721,8 +2714,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         # The corridor planner depends on the physical water mask, not on cell
         # identities. Recompute it on cached worlds as well as freshly made ones.
         ocean = _ocean_pixels(world)
-        designed = designed_corridors(
-            ocean, bands, settings.new_world.sea_zone_px, domain=canvas.mask
+        designed = draw_corridors(
+            corridor_paths(ocean, bands, settings.new_world.sea_zone_px, domain=canvas.mask),
+            ocean,
+            1,
         )
         del ocean
         vanilla_ports = read_ports(_read(game_dir, PORTS))
@@ -3210,7 +3205,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 mod_metadata(name, named.title, world_code),
             )
         )
-        revealed, hidden = _previews(game_map, canvas, world)
+        revealed, hidden = _previews(game_map, canvas, world, clean.mask)
         files.append(
             write_bytes(
                 stage,
@@ -3669,9 +3664,15 @@ def _pixel_classes(
 
 
 def _previews(
-    game_map: Eu5Map, canvas: Canvas, world: NewWorld
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld, whole: NDArray[np.bool_]
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
-    """The map at an eighth of its size with the New World drawn in, and with it covered."""
+    """The map at an eighth of its size with the New World drawn in, and with it covered.
+
+    ``whole`` is the canvas before its island groups were placed. The covered picture hides all
+    of it: the groups' holes in ``canvas.mask`` are where the vanilla islands stay or have moved
+    to, which depends on the seed and would show as small uncovered discs of sea and islands.
+    The drawn picture keeps the holes, where the vanilla map stands.
+    """
     step = 8
     water = np.array(
         [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
@@ -3689,6 +3690,11 @@ def _previews(
     table = np.array([palette[kind] for kind in world.classes], dtype=np.uint8)
     rows, columns = np.nonzero(canvas.mask[::step, ::step])
     world_columns = _world_columns(canvas, columns.astype(np.int64) * step) // step
-    hidden = cover(image, rows, world_columns)
+    covered_rows, covered_columns = np.nonzero(whole[::step, ::step])
+    hidden = cover(
+        image,
+        covered_rows,
+        _world_columns(canvas, covered_columns.astype(np.int64) * step) // step,
+    )
     image[rows, world_columns] = table[world.labels[rows * step, columns * step]]
     return image, hidden

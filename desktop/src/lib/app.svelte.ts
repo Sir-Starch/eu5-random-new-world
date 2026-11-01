@@ -135,6 +135,14 @@ class App {
     return true;
   }
 
+  /** Put the world chosen now, or the sketched continent `index`, on the queue; say how it went. */
+  async enqueue(index?: number): Promise<boolean> {
+    const seed = index === undefined ? this.now?.new.seed : this.now?.candidates[index]?.seed;
+    const ok = await this.act(index === undefined ? "enqueue" : "enqueue_candidate", index === undefined ? {} : { index });
+    if (ok) this.toast("success", t("queue_added", { seed: seed ?? "" }), 3);
+    return ok;
+  }
+
   /** Call an action that returns a message to show either way (saved, or why not). */
   async report(method: string, params: Record<string, unknown>, success: string): Promise<void> {
     const message = await this.call<string | null>(method, params);

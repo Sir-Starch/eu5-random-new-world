@@ -10,12 +10,14 @@ import subprocess
 import sys
 import threading
 import time
+from html import escape
 from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 
 from rnw.app import library, random_types, service
+from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
@@ -40,6 +42,7 @@ try:  # the window needs PySide6 and the system's graphics libraries
         QWidget,
     )
 
+    from rnw.gui.candidates import CandidatesDialog
     from rnw.gui.maps import CompareDialog
     from rnw.gui.preview import PreviewView
     from rnw.gui.text import TITLE
@@ -130,6 +133,73 @@ def test_the_queue_buttons_generate_the_snapshots_the_player_added(
     pump(lambda: window.controller.phase is Phase.FINISHED)
     assert {world.seed for world in window.controller.worlds} == {11, 22}
     assert not window.controller.queue
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_next_world_can_be_prepared_and_queued_while_one_is_made(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.install_box.setChecked(False)
+    started, release = threading.Event(), threading.Event()
+    original = controller.generator
+
+    def held(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.code.seed == 11:
+            started.set()
+            assert release.wait(10)
+        return original(request, progress)
+
+    controller.generator = held
+    _ = controller.set_seed("11")
+    window.generate_button.click()
+    assert started.wait(10)
+    try:
+        # The window has seen the work start (Generate is taken away) and kept the choices free.
+        pump(lambda: not window.generate_button.isEnabled())
+        assert window.seed_edit.isEnabled()
+        assert window.type_choice.isEnabled()
+        assert not window.candidates_button.isEnabled()
+        _ = controller.set_seed("22")
+        pump(window.enqueue_button.isEnabled)
+        window.enqueue_button.click()
+        assert [job.code.seed for job in controller.queue] == [22]
+        pump(window.clear_queue_button.isEnabled)
+        assert not window.run_queue_button.isEnabled()
+    finally:
+        release.set()
+    controller.wait(10)
+    pump(lambda: not controller.busy)
+    assert {world.seed for world in controller.worlds} == {11, 22}
+    assert not controller.queue
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_sketched_continents_are_taken_to_the_queue_from_the_dialog(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.install_box.setChecked(False)
+    picture = np.zeros((4, 8, 3), dtype=np.uint8)
+    controller.candidates = [Candidate(seed, picture, 300) for seed in (31, 32, 33)]
+    controller.candidate_code = controller.world_code()
+    dialog = CandidatesDialog(window, controller)
+    dialog.choices.item(0).setSelected(True)
+    dialog.choices.item(2).setSelected(True)
+    dialog.queue_button.click()
+    assert [job.code.seed for job in controller.queue] == [31, 33]
+    assert text("candidates.queued") in dialog.choices.item(0).text()
+    assert text("candidates.queued") not in dialog.choices.item(1).text()
+    assert dialog.note.text() == text("queue_count", count=2)
+    dialog.queue_button.click()
+    assert dialog.note.text() == text("queue_duplicate")
+    assert [job.code.seed for job in controller.queue] == [31, 33]
     _ = window.close()
 
 
@@ -999,6 +1069,27 @@ def test_world_files_are_written_opened_and_dropped_on_the_window(
     assert not plain.isAccepted()
     for window in (first, second, third):
         _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_ocean_option_says_recommended_and_explains_in_a_tooltip(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    short = text("control.new_world.expand_oceans.about")
+    info = text("control.new_world.expand_oceans.info")
+    assert short == "Recommended"
+    # The advice points at the control that replaces unticking the option.
+    assert text("control.new_world.centre_permille") in info
+    assert window.ocean_help.text() == "ⓘ"
+    for widget in (window.expand_oceans, window.ocean_help):
+        tip = widget.toolTip()
+        assert escape(info.split("\n\n")[0]) in tip
+        assert escape(info.split("\n\n")[1]) in tip
+    # The explanation wraps instead of running as one line.
+    assert "<table" in window.ocean_help.toolTip()
+    _ = window.close()
 
 
 @pytest.mark.usefixtures("application")

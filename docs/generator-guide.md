@@ -1,6 +1,6 @@
 # Using the generator
 
-RNW 1.0.0 targets EU5 1.4.5 / Steam build 26211608.
+RNW 1.1.0 targets EU5 1.4.6 / Steam build 26300913.
 
 Run from source with `uv sync --locked --group dev` and `uv run rnw gui` (build the window
 first with `npx tauri build --no-bundle` in `desktop/`). The Linux folder package runs with
@@ -53,7 +53,10 @@ across all inhabited land; less farmable and less complex areas remain primarily
 *Expand generation into the oceans* on the World tab is checked by default and
 recommended. It gives the New World a wider, fixed ocean sector so continents can
 grow beyond the original American silhouette. The Old World and protected islands
-stay. Uncheck it to use the original distance band around vanilla America. The
+stay. Uncheck it to use the original distance band around vanilla America; if the
+real aim is to keep the land off the Old World's shores, raise *Distance from the Old
+World* instead, which keeps the wide canvas. The checkbox shows only *Recommended*
+and an ⓘ mark; hovering the mark or the checkbox shows this explanation. The
 choice is part of the world code and applies to sketches, land templates and layer
 rerolls. Codes from before 0.12.0 choose the original canvas; their usual warning
 about a different algorithm epoch still applies. [V-EXEC C282–C284]
@@ -95,9 +98,13 @@ selected recorded worlds, their notes, kept files and installed mods. Both butto
 how many entries they affect. Errors stop the batch and appear below the list; any changes
 already made are reflected there. Selection survives list updates. [V-EXEC C266]
 
-Add to queue captures the current settings, seed and destination. Change the seed or
-settings and add another job. Run queue works sequentially; Cancel or a failure stops
-before the next job and leaves unfinished jobs pending. [V-EXEC C143]
+Add to queue captures the current settings, seed and destination, from the buttons under
+the tabs or, for a sketched continent, from its own button (the same world is not queued
+twice). Change the seed or settings and add another job. Run queue works sequentially; Cancel
+or a failure stops before the next job and leaves unfinished jobs pending. While a world is
+made its choices stay editable, and a world added meanwhile is made by itself when the one
+before it is done, with no second Run queue. Each queued world can be taken out; the one
+being made stays until it is done. [V-EXEC C143]
 
 ## Files and command line
 
@@ -135,7 +142,7 @@ data in `data/` beside it, for both the window and CLI. [V-EXEC C143]
 
 ## Reproduction, cache and releases
 
-Released 1.0.0 uses algorithm epoch 59. Exact reproduction needs the recorded
+Released 1.1.0 uses algorithm epoch 60 (1.0.0 used epoch 59). Exact reproduction needs the recorded
 algorithm, resolved settings/rolls and game inputs; the version alone is not
 sufficient for development builds. The local cache keys include the algorithm
 and relevant inputs and are checked before use. Follow the [version policy](adr/0003-versioning.md)
@@ -179,8 +186,11 @@ Extra continents and islands can appear on either side.
 Advanced → The Wall controls width, position (west to east across the canvas; the Wall goes
 around protected islands in its way), coastal irregularity, mountain spine
 and whether gaps are permitted. Scale and noise settings shape the Wall as well as the
-extra land. A larger land amount widens the Wall; a smaller one only shrinks the extra
-land, so the Wall keeps its place. With gaps off the guaranteed land route bends and
+extra land. The Wall's width runs from 4% to 44% of the canvas (14% by default). The land
+amount is one budget: the Wall takes its land first and the continents beside it get what is
+left, so a wider Wall means fewer and smaller continents, and the widest ones leave only a few
+islands. A Wall wider than the land amount allows keeps its land, and the world then has more
+land than the amount asked for. A larger land amount also widens the Wall itself. With gaps off the guaranteed land route bends and
 changes width along its length. This preset uses the expanded ocean canvas and cannot be
 combined with a land image.
 

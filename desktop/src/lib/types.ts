@@ -66,8 +66,14 @@ export interface NewState {
   land_mask_text: string;
   candidates_enabled: boolean;
   template_enabled: boolean;
-  queue: { seed: string; type: string }[];
+  /** The new world can be changed and queued now, also while a world is being made. */
+  preparable: boolean;
+  /** Why the world chosen now cannot be queued, or null. */
+  queue_problem: string | null;
+  queue: { code: string; seed: string; type: string; running: boolean }[];
   queue_done: number;
+  /** A world was added during a run: the queue goes on by itself when it is done. */
+  queue_follows: boolean;
   retry: boolean;
   retry_enabled: boolean;
 }
@@ -189,7 +195,7 @@ export interface State {
   new: NewState;
   world: WorldState | null;
   stray: StrayState | null;
-  candidates: { seed: string; land: number }[];
+  candidates: { seed: string; land: number; queued: boolean }[];
 }
 
 export interface LayerBundle {

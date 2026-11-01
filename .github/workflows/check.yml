@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: rustup update stable
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: The window's system libraries
@@ -54,7 +54,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: rustup update stable
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Qt system libraries (the self-test opens the window offscreen) and WebKitGTK

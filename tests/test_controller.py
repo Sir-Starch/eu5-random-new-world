@@ -6,16 +6,20 @@ import json
 import shutil
 import threading
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, final
+
+import numpy as np
 
 from rnw import epoch, worldname
 from rnw.app import controls, install, library, preferences, service
+from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.library import Placement
 from rnw.app.worldcode import WorldCode, decode, encode, new_code
 from rnw.eu5_lobby import SCRIPTED_GUI_FILE
 from rnw.eu5_nw_export import LocationLimitError
 from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
+from rnw.gui.text import text
 from rnw.record import Verdict
 from rnw.settings import WORLD_TYPES
 
@@ -132,6 +136,189 @@ def test_a_failed_queue_keeps_the_failed_job_and_the_following_jobs(
     assert controller.start_queue() is None
     _finish(controller)
     assert {world.seed for world in controller.worlds} == {10, 20, 30}
+
+
+@final
+class _Gate:
+    """A generator that holds the world of one seed until the test lets it go."""
+
+    def __init__(self, controller: Controller, seed: int) -> None:
+        self.original = controller.generator
+        self.seed = seed
+        self.started = threading.Event()
+        self.release = threading.Event()
+        controller.generator = self
+
+    def __call__(
+        self, request: service.Request, progress: Progress | None = None
+    ) -> service.Result:
+        if request.code.seed == self.seed:
+            self.started.set()
+            assert self.release.wait(10)
+        return self.original(request, progress)
+
+
+def test_the_next_world_can_be_prepared_and_queued_while_one_is_made(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    gate = _Gate(controller, 10)
+    _ = controller.set_seed("10")
+    assert controller.start() is None
+    assert gate.started.wait(10)
+    try:
+        assert controller.busy
+        assert controller.can_prepare
+        assert controller.problem() == text("ready_busy")
+        _ = controller.set_seed("20")
+        controller.set_value("natives.empire_permille", 800)
+        assert controller.enqueue() is None
+        assert controller.queue_follows
+        # The same world twice, and the one being made, are refused rather than made again.
+        assert controller.enqueue() == text("queue_duplicate")
+        controller.reset_values()
+        _ = controller.set_seed("10")
+        assert controller.enqueue() == text("queue_duplicate")
+        _ = controller.set_seed("30")
+        assert controller.enqueue() is None
+    finally:
+        gate.release.set()
+    controller.wait(10)
+    assert controller.phase is Phase.FINISHED, controller.message
+    assert controller.task is Task.QUEUE
+    assert controller.queue == []
+    assert {world.seed for world in controller.worlds} == {10, 20, 30}
+    second = next(world for world in controller.worlds if world.seed == 20)
+    assert decode(second.code).settings().natives.empire_permille == 800
+    # The player was preparing another world: the page does not jump to a finished one.
+    assert controller.selection == NEW
+
+
+def test_a_finished_world_opens_when_the_player_did_not_prepare_another(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    assert controller.start() is None
+    _finish(controller)
+    [world] = controller.worlds
+    assert controller.selection == world.id
+
+
+def test_worlds_added_to_a_running_queue_are_made_in_the_same_run(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    gate = _Gate(controller, 10)
+    _ = controller.set_seed("10")
+    assert controller.enqueue() is None
+    assert controller.start_queue() is None
+    assert gate.started.wait(10)
+    try:
+        _ = controller.set_seed("20")
+        assert controller.enqueue() is None
+        _ = controller.set_seed("30")
+        assert controller.enqueue() is None
+        controller.dequeue(encode(new_code(controller.preset, 30)))
+        assert [job.code.seed for job in controller.queue] == [10, 20]
+    finally:
+        gate.release.set()
+    _finish(controller)
+    assert controller.queue_done == 2
+    assert {world.seed for world in controller.worlds} == {10, 20}
+
+
+def test_clearing_a_running_queue_keeps_the_world_being_made(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    gate = _Gate(controller, 10)
+    for seed in (10, 20, 30):
+        _ = controller.set_seed(str(seed))
+        assert controller.enqueue() is None
+    assert controller.start_queue() is None
+    assert gate.started.wait(10)
+    try:
+        controller.clear_queue()
+        assert [job.code.seed for job in controller.queue] == [10]
+        # The one being made cannot be taken out either.
+        controller.dequeue(encode(new_code(controller.preset, 10)))
+        assert [job.code.seed for job in controller.queue] == [10]
+    finally:
+        gate.release.set()
+    _finish(controller)
+    assert controller.queue == []
+    assert {world.seed for world in controller.worlds} == {10}
+
+
+def test_a_failure_stops_the_queue_that_followed_a_world(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    original = controller.generator
+
+    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.code.seed == 20:
+            message = "second world failed"
+            raise OSError(message)
+        return original(request, progress)
+
+    gate = _Gate(controller, 10)
+    gate.original = generate
+    _ = controller.set_seed("10")
+    assert controller.start() is None
+    assert gate.started.wait(10)
+    for seed in (20, 30):
+        _ = controller.set_seed(str(seed))
+        assert controller.enqueue() is None
+    gate.release.set()
+    controller.wait(10)
+    assert controller.phase is Phase.FAILED
+    assert not controller.queue_follows
+    assert [job.code.seed for job in controller.queue] == [20, 30]
+    assert {world.seed for world in controller.worlds} == {10}
+
+
+def test_a_world_cannot_be_queued_while_the_thread_does_other_work(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.phase, controller.task = Phase.RUNNING, Task.REROLL
+    assert not controller.can_prepare
+    assert controller.enqueue() == text("ready_busy")
+    assert controller.queue == []
+
+
+def test_sketched_continents_are_queued_with_the_settings_they_were_sketched_with(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    controller.set_value("natives.empire_permille", 800)
+    picture = np.zeros((2, 2, 3), dtype=np.uint8)
+    controller.candidates = [Candidate(seed, picture, 300) for seed in (5, 6, 7)]
+    controller.candidate_code = controller.world_code()
+    controller.set_value("natives.empire_permille", 100)
+    assert controller.enqueue_candidate(0) is None
+    assert controller.enqueue_candidate(2) is None
+    assert controller.enqueue_candidate(0) == text("queue_duplicate")
+    assert controller.enqueue_candidate(9) is None
+    assert [job.code.seed for job in controller.queue] == [5, 7]
+    assert all(job.code.settings().natives.empire_permille == 800 for job in controller.queue)
+    assert controller.start_queue() is None
+    _finish(controller)
+    assert {world.seed for world in controller.worlds} == {5, 7}
 
 
 def test_undo_restores_the_previous_roll_in_the_game_without_forgetting_either_world(

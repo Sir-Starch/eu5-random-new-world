@@ -9,6 +9,7 @@ by strip (docs/adr/0005-native-core.md).
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING, cast
 
 import numpy as np
@@ -22,6 +23,7 @@ from rnw.newworld import (
     EDGE_RAMP_MARGINS,
     EDGE_SHIFT_PERIOD_PERMILLE,
     EDGE_SHIFT_RAMPS,
+    EDGE_WATER_PERMILLE,
     MAX_STRAITS,
     OUTSIDE,
     PERMILLE,
@@ -70,6 +72,25 @@ def cell_sums(
     )
 
 
+def _with_water_band(
+    domain: NDArray[np.bool_], sources: NDArray[np.bool_], settings: NewWorldSettings
+) -> tuple[NDArray[np.bool_], NewWorldSettings]:
+    """No land within EDGE_WATER_PERMILLE of the canvas's width of its boundary with the game's map.
+
+    Returns the sources with the band, and the settings whose land share the narrower interior
+    holds as much land as the settings asked for.
+    """
+    margin = settings.coast_margin_px
+    band_px = domain.shape[1] * EDGE_WATER_PERMILLE // PERMILLE
+    if band_px <= margin:
+        return sources, settings
+    before = np.count_nonzero(domain & (distance_from(sources, margin, octagonal=True) >= margin))
+    banded = sources | (distance_from(sources, band_px, octagonal=True) < band_px)
+    after = np.count_nonzero(domain & (distance_from(banded, margin, octagonal=True) >= margin))
+    share = min(PERMILLE, -(-settings.land_permille * int(before) // max(1, int(after))))
+    return banded, replace(settings, land_permille=share)
+
+
 def land_model(
     domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
@@ -80,6 +101,8 @@ def land_model(
     shift_period = max(8, ramp * EDGE_SHIFT_PERIOD_PERMILLE // PERMILLE)
     sources = ~domain
     sources[:, [0, -1]] = True
+    guard = sources.copy()
+    sources, settings = _with_water_band(domain, sources, settings)
     guard = sources.copy()
     relief = _field(
         seed,

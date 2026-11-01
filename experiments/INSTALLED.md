@@ -6,6 +6,21 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **The Wall's width inside the land share**. [V-EXEC] Installed **RNW: The Wall NOVX** in new
+`mod/rnw_exp_world_novxisa5pj`, the owner's J4VJ land (wall, seed 14046991261471717063, land 159‰,
+position 100%, irregularity 100%) with the width raised from its 14% to 30%, code
+`RNW1-083C5-W7G43-7GKDP-7040G-00840-2FG2G-NC091-YG1T4-X03NC-V6J`. EU5 1.4.6 / build 26300913; 1.1.0
+development / pending epoch 60. 877 files in the mod folder, 18 existing world folders left in place.
+Of the 894 manifest entries 847 match the installed bytes; the other 47 are what the application's
+"show the New World" setting (on) withholds (selection cover, shaders, GUI), library-only files and the
+revealed thumbnail. 27,593 locations; no split generated cells, unreachable generated seas, unported
+land, cut-off seas or lost Old World contacts. A full export at the widest width, 44% (seed 1000), also
+passes every invariant with 29,257 locations. The Wall is counted inside the land share, so a wide one
+leaves few continents beside it ([terrain](../docs/terrain-biomes.md#the-wall)). Full Python checks
+pass (2,414 tests, 15 optional skips; strict types, lint and formatting of the project's paths);
+no native code changed. EU5 was running and was not launched or controlled; the hub was **not**
+updated, because its updater stops while the game is open. Evidence: ignored `local_data/wall-width/`.
+
 2026-11-01, **issue #7 native identity cores** (C459). [V-EXEC] Installed
 **Native identity cores · 7007** in new `mod/rnw_exp_world_54bascq2vu`, code
 `RNW1-081G0-00000-0006T-Z040G-00860-2AG63-YG1W8-8G3GH-149XR-08TX0-3G7VX-9`,
@@ -1340,3 +1355,34 @@ updater installed the **3,478-file** generator-only hub, retaining the former hu
 `local_data/hub-updates/1.1.0-1793553542958151419/rnw_exp_hub` of the `water-island-halo` worktree;
 Windows wheel SHA-256 `b0413c8da582ef8bdc0b8839886a5b1c18c63fc686bd0244efb1e5e7c45d6d24`. Unpublished
 1.1.0 / pending epoch 60; game loading/rendering was not observed.
+
+2026-11-01, **1.1.0 development / pending epoch 60 — sea cells as chains, bolt remainders, water band**
+(owner's screenshots of ruled strips and bent remainders in world `aszzsukifw`; branch
+`sea-cell-voronoi`, commit a2c835a, not merged). [V-EXEC] The change and its measurements are in
+[sea geography](../docs/sea-geography.md). Full Python checks pass (2,411 tests, 15 optional skips;
+format, lint, strict types; Rust untouched). The 13 ordinary installed-game checks pass on EU5 1.4.6 /
+build 26300913; the five presets (archipelago 42, islands 7, small continents 42, The Wall 9, the
+reference supercontinent) and the owner's code export with every sea invariant, and the refreshed
+pending epoch-60 reference digest `192e1f549d90b2063dc8a54eced7bbb3036e1dae306c9ec2aee547155e55570b`
+(870 nonmetadata files) is reproduced by `RNW_REPRODUCE=1`; `tests/golden_world.json` carries it.
+
+Installed **Continents (sea cells)**, `mod/rnw_exp_world_ibyicz5wy2`, in the existing Windows/Proton
+profile. Code: `RNW1-080SM-KW9WD-Y6R47-N040G-00823-AG0C6-R1XRM-3T`: the land seed and settings of the
+owner's `rnw_exp_world_aszzsukifw` with the resources rerolled, on the new generator (the land moves a
+little inland from the join, so it is not the same continent outline). All 901 files match the
+candidate; every file of the 22 other mod folders and the nine profile-root files were hash-preserved,
+and both libraries hold the record. No playset, save or preference edit; no EU5 launch/control by the
+agent. The hub was not updated: the code is on an unmerged branch.
+
+Correction to the water-halo record above: a first install of this same land with the peoples
+rerolled (`RNW1-080SM-KW9WD-Y6R47-N040G-00823-AG0C7-0165Z-4E`) has the world id of that record's
+`rnw_exp_world_plbwy7zcgo` and replaced its folder in the profile for about ten minutes (the id is the
+code's, and the install command does not refuse an existing folder). The folder was then rebuilt from
+the water-halo commit and checked: its 870 non-metadata files match the record's manifest, its
+`.metadata/rnw-library` is the record itself and its `locations.png` is again byte-identical to
+`aszzsukifw`'s. The replaced copy is kept in ignored `local_data/sea-cells/profile-backup/`.
+
+After merging `main` (The Wall's land budget) and the water-halo branch into `sea-cell-voronoi`, the
+pending epoch-60 reference digest is `c59495b5b0a1fb096d8cb5c99f6233638b5a6a3d8227abf73946a7e1c3a9ddb1`
+(870 nonmetadata files; the digest above is the sea-cell change alone, the water-halo one is
+`7ad8a385…`); `tests/golden_world.json` carries the merged one.

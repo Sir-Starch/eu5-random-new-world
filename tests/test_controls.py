@@ -71,3 +71,24 @@ def test_every_world_type_fits_the_location_budget_and_small_locations_do_not() 
         "supercontinent", {"new_world": {"land_permille": 600, "location_px": 40}}
     )
     assert controls.estimated_locations(crowded) > controls.LOCATION_BUDGET
+
+
+def test_wall_width_reaches_a_wall_that_takes_nearly_all_the_land() -> None:
+    """Widths run from 4% to 44% of the canvas, and the default is the former maximum, 14%."""
+    control = controls.BY_KEY["new_world.wall_width_permille"]
+    assert (control.low, control.default("wall"), control.high) == (40, 140, 440)
+    assert (control.shown(control.low), control.shown(control.high)) == (4, 44)
+    assert RANGES["wall_width_permille"] == (40, 440)
+    assert control.group == "wall"
+
+
+def test_the_widest_wall_still_fits_the_location_budget() -> None:
+    """The Wall's land counts inside the land share: the widest one at the default land fits."""
+    widest = build_settings("wall", {"new_world": {"wall_width_permille": 440}})
+    assert controls.estimated_locations(widest) < controls.LOCATION_BUDGET
+    narrow = build_settings("wall", {"new_world": {"wall_width_permille": 40}})
+    # More Wall than the land share asks for adds land; a narrow one adds none.
+    assert controls.estimated_locations(widest) > controls.estimated_locations(narrow)
+    assert controls.estimated_locations(narrow) == controls.estimated_locations(
+        build_settings("wall", {"new_world": {"wall_width_permille": 100}})
+    )

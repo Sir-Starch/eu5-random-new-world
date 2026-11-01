@@ -4,6 +4,7 @@
   import { app, clock, t } from "../lib/app.svelte";
   import { copyText, openFile, saveFile } from "../lib/native";
   import Icon from "./Icon.svelte";
+  import QueueList from "./QueueList.svelte";
 
   const IMAGES = [{ name: "PNG, JPEG, BMP, TIFF", extensions: ["png", "jpg", "jpeg", "bmp", "tif", "tiff"] }];
 
@@ -14,6 +15,9 @@
   const sketching = $derived(busy && s?.task === "candidates");
   const percent = $derived(Math.round((s?.fraction ?? 0) * 100));
   const ours = $derived(s?.task === "generate" || s?.task === "queue");
+  // While a world is made the next one can be prepared: the controls stay free for it.
+  const locked = $derived(busy && !n?.preparable);
+  const sketched = $derived(!!s?.candidates.length && !sketching && !n?.land_mask);
   const outcome = $derived(
     !busy && ours && (s?.phase === "finished" || s?.phase === "failed" || s?.phase === "cancelled") ? s.phase : null,
   );
@@ -47,7 +51,7 @@
     <span class="spacer"></span>
     <div class="land-tools">
       <button class="btn small" disabled={!n?.candidates_enabled} title={t("candidates_hint")} onclick={() => app.act("sketch_candidates")}>{t("candidates")}</button>
-      <button class="btn small" disabled={busy} title={t("land_image_tip")} onclick={landImage}>{t("land_image")}</button>
+      <button class="btn small" disabled={locked} title={t("land_image_tip")} onclick={landImage}>{t("land_image")}</button>
       <button class="btn small" disabled={!n?.template_enabled} title={t("land_template_tip")} onclick={template}>{t("land_template")}</button>
     </div>
   </div>
@@ -75,38 +79,41 @@
         </ol>
         <div><button class="btn" disabled={s?.phase !== "running"} onclick={() => app.call("cancel")}>{t("cancel")}</button></div>
       </div>
-    {:else}
-      {#if outcome && dismissed !== s?.runs}
-        <div class="outcome msg {outcome === 'finished' ? 'ok' : outcome === 'failed' ? 'error' : 'info'}">
-          <Icon name={outcome === "finished" ? "check" : outcome === "failed" ? "alert" : "info"} />
-          <div class="said">
-            <p class:failure={outcome === "failed"} class:selectable={outcome === "failed"}>{s?.status}</p>
-            {#if outcome === "finished" && s?.result}
-              <div class="buttons">
-                <button class="btn small primary" onclick={() => app.call("select", { id: s.result?.world })}>{t("dock.open_world")}</button>
-              </div>
-            {:else if outcome === "failed"}
-              <div class="buttons">
-                {#if n?.retry}
-                  <button class="btn small" disabled={!n.retry_enabled} onclick={() => app.act("retry_new_seed")}>{t("retry_new_seed")}</button>
-                {/if}
-                <button class="btn small" onclick={() => copyText(s?.status ?? "")}>{t("copy")}</button>
-              </div>
-            {/if}
-          </div>
-          <button class="btn icon small ghost" aria-label={t("close")} title={t("close")} onclick={() => (dismissed = s?.runs ?? -1)}><Icon name="x" /></button>
+    {:else if outcome && dismissed !== s?.runs}
+      <div class="outcome msg {outcome === 'finished' ? 'ok' : outcome === 'failed' ? 'error' : 'info'}">
+        <Icon name={outcome === "finished" ? "check" : outcome === "failed" ? "alert" : "info"} />
+        <div class="said">
+          <p class:failure={outcome === "failed"} class:selectable={outcome === "failed"}>{s?.status}</p>
+          {#if outcome === "finished" && s?.result}
+            <div class="buttons">
+              <button class="btn small primary" onclick={() => app.call("select", { id: s.result?.world })}>{t("dock.open_world")}</button>
+            </div>
+          {:else if outcome === "failed"}
+            <div class="buttons">
+              {#if n?.retry}
+                <button class="btn small" disabled={!n.retry_enabled} onclick={() => app.act("retry_new_seed")}>{t("retry_new_seed")}</button>
+              {/if}
+              <button class="btn small" onclick={() => copyText(s?.status ?? "")}>{t("copy")}</button>
+            </div>
+          {/if}
         </div>
-      {/if}
+        <button class="btn icon small ghost" aria-label={t("close")} title={t("close")} onclick={() => (dismissed = s?.runs ?? -1)}><Icon name="x" /></button>
+      </div>
+    {/if}
 
-      {#if s?.candidates.length && !sketching && !n?.land_mask}
-        <div class="sketches">
-          <p class="hint">{t("candidates_hint")}</p>
-          <div class="grid" role="listbox" aria-label={t("candidates")}>
-            {#each s.candidates as candidate, index (candidate.seed)}
-              {@const chosen = candidate.seed === n?.seed}
+    <!-- Under the progress while a world is made; at rest below the sketches, which must not
+         move down with every world added. -->
+    {#if running}<QueueList />{/if}
+
+    {#if sketched}
+      <div class="sketches">
+        <p class="hint">{t("candidates_hint")}</p>
+        <div class="grid" role="listbox" aria-label={t("candidates")}>
+          {#each s?.candidates ?? [] as candidate, index (candidate.seed)}
+            {@const chosen = candidate.seed === n?.seed}
+            <div class="card" class:on={chosen}>
               <button
                 class="sketch"
-                class:on={chosen}
                 role="option"
                 aria-selected={chosen}
                 disabled={busy}
@@ -121,30 +128,42 @@
                   <code class="faint seed">{candidate.seed}</code>
                 </span>
               </button>
-            {/each}
-          </div>
+              <button
+                class="btn small add"
+                class:queued={candidate.queued}
+                disabled={candidate.queued || !n?.preparable}
+                title={t("queue_hint")}
+                onclick={() => app.enqueue(index)}
+              >
+                <Icon name={candidate.queued ? "check" : "plus"} />
+                <span>{candidate.queued ? t("candidates.queued") : t("enqueue")}</span>
+              </button>
+            </div>
+          {/each}
         </div>
-      {:else}
-        <!-- The New World before it has land: a blank sheet ruled like a map. -->
-        <div class="land">
-          <div class="sheet">
-            {#if sketching}
-              <span class="spinner"></span>
-              <p class="dim">{s?.running || t("stage.candidates")}</p>
-            {:else if n?.land_mask}
-              <Icon name="image" />
-              <p>{n.land_mask_text}</p>
-              <code class="faint selectable">{n.land_mask}</code>
-              <button class="btn small" disabled={busy} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
-            {:else}
-              <h2>{t("land_tools")}</h2>
-              <p class="dim">{t("candidates_hint")}</p>
-              <p class="faint">{t("land_image_tip")}</p>
-            {/if}
-          </div>
+      </div>
+    {:else if !running}
+      <!-- The New World before it has land: a blank sheet ruled like a map. -->
+      <div class="land">
+        <div class="sheet">
+          {#if sketching}
+            <span class="spinner"></span>
+            <p class="dim">{s?.running || t("stage.candidates")}</p>
+          {:else if n?.land_mask}
+            <Icon name="image" />
+            <p>{n.land_mask_text}</p>
+            <code class="faint selectable">{n.land_mask}</code>
+            <button class="btn small" disabled={locked} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
+          {:else}
+            <h2>{t("land_tools")}</h2>
+            <p class="dim">{t("candidates_hint")}</p>
+            <p class="faint">{t("land_image_tip")}</p>
+          {/if}
         </div>
-      {/if}
+      </div>
     {/if}
+
+    {#if !running}<QueueList />{/if}
   </div>
 </div>
 
@@ -253,8 +272,11 @@
     display: grid;
     gap: 10px;
     width: min(100%, 620px);
-    margin: auto;
+    margin: 0 auto;
     padding: 32px 24px;
+  }
+  .stage > .run:only-child {
+    margin: auto;
   }
   .run-top {
     display: flex;
@@ -326,23 +348,46 @@
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 8px;
   }
-  .sketch {
+  .card {
     display: grid;
     gap: 4px;
+    align-content: start;
     padding: 4px;
     border: 1px solid var(--line-2);
     border-radius: var(--radius);
     background: var(--panel);
+  }
+  .card:hover:not(:has(.sketch:disabled)) {
+    border-color: var(--line-3);
+  }
+  .card.on {
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+  .sketch {
+    display: grid;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     color: var(--text);
     font: inherit;
     text-align: left;
   }
-  .sketch:hover:not(:disabled) {
-    border-color: var(--line-3);
+  .add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 0;
   }
-  .sketch.on {
-    border-color: var(--accent);
-    box-shadow: inset 0 0 0 1px var(--accent);
+  .add span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .add.queued {
+    color: var(--accent-text);
   }
   .picture {
     display: block;

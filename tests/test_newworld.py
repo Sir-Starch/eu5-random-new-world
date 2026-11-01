@@ -26,13 +26,11 @@ from rnw.newworld import (
     unported_cells,
     wobble_borders,
 )
-from rnw.sea_corridors import designed_corridors
+from rnw.sea_corridors import corridor_paths, draw_corridors
 from rnw.settings import NewWorldSettings
-from rnw.synth import renumber
 from rnw.topology import distance_from, label_components
 
 if TYPE_CHECKING:
-    import pytest
     from numpy.typing import NDArray
 
 SMALL = NewWorldSettings(
@@ -69,7 +67,9 @@ def test_land_outline_changes_with_the_seed() -> None:
         _land_mask(generate_new_world(domain, seed=seed, settings=settings)) for seed in range(1, 5)
     ]
     overlap = [np.count_nonzero(a & b) / np.count_nonzero(a | b) for a, b in combinations(masks, 2)]
-    assert np.mean(overlap) < 0.55  # a ramp of feature_px / 3 gave one outline (0.83)
+    # A ramp of feature_px / 3 gave one outline (0.83); the water band along the canvas's boundary
+    # leaves this small canvas less room (0.55 without it).
+    assert np.mean(overlap) < 0.65
     assert not any(np.any(mask[:, 440:]) for mask in masks)
 
 
@@ -208,39 +208,74 @@ def test_sea_cells_follow_actual_routes_without_moving_the_coast() -> None:
     assert np.array_equal(world.elevation, plain.elevation)
     assert np.array_equal(world.labels[_land_mask(world)], plain.labels[_land_mask(plain)])
     ocean = np.array([k is CellClass.SEA for k in world.classes])[world.labels]
-    routes = designed_corridors(ocean, bands, SMALL.sea_zone_px, domain=domain)
     for number, kind in enumerate(world.classes):
         if kind is CellClass.SEA:
             mask = world.labels == number
-            assert np.all(routes[mask]) or not np.any(routes[mask])
             assert np.unique(label_components(mask.astype(np.int32))[mask]).size == 1
+    assert np.any(ocean)
 
 
-def test_banded_sea_strips_equal_whole_mask_partition(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_crossing_is_a_chain_of_ordinary_cells_not_a_band_cut_out_of_the_water() -> None:
+    ocean = np.zeros((300, 500), dtype=np.bool_)
+    ocean[10:-10, 10:-10] = True
+    bands = np.zeros(ocean.shape, dtype=np.bool_)
+    spacing = 20
+    paths = corridor_paths(ocean, bands, spacing)
+    assert paths
+    labels = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+        ocean, key=5, spacing=spacing, smallest=40, bands=bands
+    )
+    assert np.array_equal(labels >= 0, ocean)
+    line = draw_corridors(paths, ocean, 1)
+    band = draw_corridors(paths, ocean, spacing)
+    chain = np.unique(labels[line])
+    assert chain.size >= 5  # about one cell per sea-cell width of the line
+    for cell in chain.tolist():
+        mask = labels == cell
+        assert np.unique(label_components(mask.astype(np.int32))[mask]).size == 1
+    # No border of the band's ruled edge: the cells of the chain reach beyond it, and no cell
+    # outside the chain lies wholly within it.
+    reaching = [cell for cell in chain.tolist() if np.any((labels == cell) & ~band)]
+    assert len(reaching) >= chain.size - 2
+    inside = [
+        cell
+        for cell in np.unique(labels[band]).tolist()
+        if cell not in chain and not np.any((labels == cell) & ~band)
+    ]
+    assert not inside
+
+
+def test_without_a_crossing_the_banded_partition_is_the_plain_one() -> None:
     ocean = np.ones((32, 45), dtype=np.bool_)
     ocean[12:20, 12:18] = False
     bands = np.zeros(ocean.shape, dtype=np.bool_)
-    bands[4:10] = True
-    bands[24:28, 5:40] = True
-    key, spacing, smallest = 11, 8, 4
-    expected = np.full(ocean.shape, -1, dtype=np.int32)
-    offset = 0
-    crossings = designed_corridors(ocean, bands, spacing)
-    for mask in (crossings, ocean & ~crossings):
-        if not np.any(mask):
-            continue
-        part = renumber(
-            newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
-                mask, key=key, spacing=spacing, smallest=smallest, bands=None
-            )
-        )
-        expected[mask] = part[mask] + offset
-        offset += int(part.max()) + 1
-    monkeypatch.setattr(newworld, "STRIP_ROWS", 7)
-    actual = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
-        ocean, key=key, spacing=spacing, smallest=smallest, bands=bands
+    assert not corridor_paths(ocean, bands, 8)
+    banded = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+        ocean, key=11, spacing=8, smallest=4, bands=bands
     )
-    assert np.array_equal(actual, expected)
+    plain = newworld._sea_cells(  # pyright: ignore[reportPrivateUsage]
+        ocean, key=11, spacing=8, smallest=4, bands=None
+    )
+    assert np.array_equal(banded, plain)
+
+
+def test_land_keeps_a_band_of_water_from_the_canvas_boundary() -> None:
+    """No land within a share of the canvas's width of the join with the game's map."""
+    domain = np.ones((300, 800), dtype=bool)
+    domain[:, :100] = False
+    domain[:60, 100:300] = False
+    settings = replace(SMALL, feature_px=200, land_permille=350, coast_margin_px=4)
+    pad = domain.shape[1] * newworld.EDGE_WATER_PERMILLE // 1000
+    assert pad > settings.coast_margin_px
+    outside = ~domain
+    outside[:, [0, -1]] = True
+    for seed in range(1, 4):
+        land, _, _, _ = land_stage(domain, seed, settings)
+        assert int(distance_from(outside, 4 * pad, octagonal=True)[land].min()) >= pad
+        # the share of land of the canvas does not fall because of the band
+        assert np.count_nonzero(land) * 1000 >= 0.85 * settings.land_permille * np.count_nonzero(
+            domain
+        )
 
 
 def test_land_without_a_way_to_a_port_becomes_wasteland() -> None:
