@@ -1386,3 +1386,30 @@ After merging `main` (The Wall's land budget) and the water-halo branch into `se
 pending epoch-60 reference digest is `c59495b5b0a1fb096d8cb5c99f6233638b5a6a3d8227abf73946a7e1c3a9ddb1`
 (870 nonmetadata files; the digest above is the sea-cell change alone, the water-halo one is
 `7ad8a385…`); `tests/golden_world.json` carries the merged one.
+
+2026-11-01, **1.1.0 development / pending epoch 60 — island groups under the selection cover**
+(owner's in-game screenshot; [claim C464](../docs/research/claims-ledger.md)). [V-EXEC] The cover's
+grid now also takes every pixel of the canvas before its island groups were placed
+(`cover_grid(..., within)`), so the vanilla Polynesian groups that stay or move inside the canvas
+and the water between them are covered at country selection, as the preview already showed. On a
+test world the old rule left 42 open patches (662 cells) inside the covered ocean; the new grid has
+two of five cells, both Old World coast at the northern edge. Full Python checks pass (2,431 tests,
+15 optional skips; format, lint, strict types). With the mask disabled the installed-game reference
+export reproduces the former digest `9ca88eb7…`, so the cover alone gives the new pending epoch-60
+digest `4d92a80da65eccb764379430c541b8da367338fec10a88a1849d5bf0165206b3` (868 nonmetadata
+files), which reproduces; `tests/golden_world.json` carries it.
+
+Installed **`mod/rnw_exp_world_xnkgew4sje`** in the existing Windows/Proton profile. Code:
+`RNW1-080KN-HKXKK-XB4AA-9040G-00830-3SG46-R18Y1-G5VR1-BG`: continents, the land of the newest world
+of that day (`lwz7sshdjh`) with its resources rerolled, covered at selection. The staged installer
+refused any existing target; 898 files match the prepared mod, both libraries hold the record, and
+all 11 other mod folders and 9 profile-root files are unchanged. No playset, save or preference
+edit (the active playset still names a mod folder, `gieoozmbka`, that was already absent before this
+installation); no EU5 launch/control by the agent.
+
+The source/native and Windows/Wine window/native/code and shell/bridge self-tests pass. The standard
+updater installed the **3,478-file** generator-only hub, retaining the former hub at
+`.rnw-hub-backups/1.1.0-1793569845117687009`. Candidate: ignored
+`local_data/hub-updates/1.1.0-1793569763743820520/rnw_exp_hub` of the `water-island-halo` worktree;
+Windows wheel SHA-256 `99ef30440a709ad6c07793fc0b573df652c04366a03e10b412c16cdf065028b6`. Unpublished
+1.1.0 / pending epoch 60; engine drawing of the cover over the groups was not observed.
