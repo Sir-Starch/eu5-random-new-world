@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Bir kıta seç...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Dünya oluşturmadan önce altı kıta taslağına göz atın. Bu, taslakların karalarını açığa çıkarır. Tohumunu ve ayarlarını kullanmak için birini seçin; konumlar oluştukça son kıyı çizgisi biraz kayabilir.'''
+source = "3058778ded719ecd"
+text = '''Dünya oluşturmadan önce altı kıta taslağına göz atın. Bu, taslakların karalarını açığa çıkarır. Tohumunu ve ayarlarını kullanmak için birini seçin ya da beğendiklerinizi sıraya ekleyin. Konumlar oluştukça son kıyı çizgisi biraz kayabilir.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Önce sıraya bir dünya ekleyin.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''{count} bekliyor'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Sıraya eklendi: tohum {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Bu dünya zaten sırada ya da şu anda oluşturuluyor.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''Oluşturulan dünya bitince sıra kendiliğinden başlar.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Sıradan çıkar'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''Şimdi oluşturuluyor'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Birkaç dünya oluştur'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Geçerli ayarları sıraya ekleyin, ardından bir sonraki dünya için tohumu ya da seçenekleri değiştirin. Hepsini eklediğinizde sırayı çalıştırın.'''
+source = "55c445d7af0996fb"
+text = '''Geçerli ayarları sıraya ekleyin, ardından bir sonraki dünya için tohumu ya da seçenekleri değiştirin. Bir dünya oluşturulurken sonrakileri hazırlayıp ekleyebilirsiniz: sıra kendiliğinden devam eder. Aksi halde hepsini eklediğinizde sırayı çalıştırın.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -2171,6 +2191,10 @@ text = '''Yan paneli göster veya gizle'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Seçildi'''
+
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''Sırada'''
 
 ["map.tribes"]
 source = "5ba6198f78ffedef"

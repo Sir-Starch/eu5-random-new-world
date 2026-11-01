@@ -139,7 +139,9 @@ class Bridge:
             "sketch_candidates": lambda _p: c.sketch_candidates(),
             "candidate_pictures": self.candidate_pictures,
             "choose_candidate": lambda p: c.choose_candidate(_int(p, "index")),
-            "enqueue": lambda _p: c.enqueue(),
+            "enqueue": lambda _p: self.enqueue(None),
+            "enqueue_candidate": lambda p: self.enqueue(_int(p, "index")),
+            "dequeue": lambda p: c.dequeue(_str(p, "code")),
             "clear_queue": lambda _p: c.clear_queue(),
             "start_queue": lambda _p: c.start_queue(),
             "start": self.start,
@@ -254,13 +256,27 @@ class Bridge:
     def candidate_pictures(self, _params: Params) -> list[str]:
         return [view.array_picture(found.picture) for found in self.controller.candidates]
 
+    def _destination_problem(self) -> str | None:
+        """A destination other than the library needs its folder or file chosen first."""
+        c = self.controller
+        unchosen = c.output_folder is None and c.world_file is None
+        if self.choices.destination != "library" and unchosen:
+            return window.text("destination_missing")
+        return None
+
     def start(self, _params: Params) -> str | None:
         c = self.controller
-        problem = c.problem()
-        unchosen = c.output_folder is None and c.world_file is None
-        if problem is None and self.choices.destination != "library" and unchosen:
-            problem = window.text("destination_missing")
-        return problem or c.start()
+        return c.problem() or self._destination_problem() or c.start()
+
+    def enqueue(self, index: int | None) -> str | None:
+        """Keep the world chosen now, or the sketched continent ``index``, for the queue."""
+        c = self.controller
+        if not c.can_prepare:
+            return window.text("ready_busy")
+        problem = self._destination_problem()
+        if problem is not None:
+            return problem
+        return c.enqueue() if index is None else c.enqueue_candidate(index)
 
     # -- the library ---------------------------------------------------------------------------
 

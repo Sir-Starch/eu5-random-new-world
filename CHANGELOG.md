@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- **Add to queue works.** While a world is being made the next one can be prepared and queued: the
+  type, seed, options and destination stay editable, *Add to queue* stays available, and a world
+  added during a run is made by itself when the one before it is done (a failure or a cancellation
+  stops the queue and leaves the rest waiting). The queue is listed in the middle of the Tauri
+  window, under the progress while a world is made, with a button to take each world out; every
+  addition says so, and the same world is not queued twice. Each continent sketched by *Choose a
+  continent...* has its own *Add to queue* button (and the classic window's dialog takes several
+  selected sketches to the queue), and the sketches stay on the page while worlds are made. A
+  finished world no longer pulls the window away from a next world being prepared. Sketching
+  continents still waits for the running world. Only the windows change: no file of a world's mod,
+  so no new epoch. The queue text is in all eleven languages.
 - *Expand generation into the oceans* shows only "Recommended" and an ⓘ mark in both windows;
   hovering the mark or the checkbox explains the option, and why raising *Distance from the Old
   World* is better than unchecking it when the land crowds the Old World's shores. The text is in

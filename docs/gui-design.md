@@ -63,7 +63,9 @@ by purpose: Play, Versions, Share and Files; deletion is separated from ordinary
 ## 6. Interaction
 
 Long work runs through Controller's cancellable worker and reports completion or an
-error. A failed or cancelled queue stops before the next item. Candidate previews are
+error. A failed or cancelled queue stops before the next item. While a world is made the
+new world's choices and Add to queue stay available (`Controller.can_prepare`); worlds added
+meanwhile follow by themselves (`queue_follows`). Candidate previews are
 shown only after the player explicitly requests them. World maps start covered.
 Keyboard focus and activation use Qt's native controls; no custom animation is added.
 The library uses native extended selection (Ctrl-click, Shift-click, Ctrl+A) and a visible
@@ -119,9 +121,11 @@ task and the machine's resources. For a world, the middle is its map, or its mod
 Reveal while the map is covered; the inspector's tabs are World (name, favourite, place in the
 game with add/remove and folder, advice, then folding sections for details and check,
 visibility, Create a version, Share and export; delete last), Maps and Notes. For the new world,
-the middle shows its land: continent sketches to pick from (the chosen one is marked), the land
-image, or a blank sheet ruled like a map; while a world is made, its progress, stages, ETA and
-Cancel; afterwards the outcome with Open the world or a retry. The inspector's tabs are World
+the middle shows its land: continent sketches to pick from (the chosen one is marked, each has
+Add to queue), the land image, or a blank sheet ruled like a map; while a world is made, its
+progress, stages, ETA and Cancel, with the queue under them; afterwards the outcome with Open
+the world or a retry. The queue (its worlds, Run queue, Clear queue, a remove button for each)
+sits below the sketches at rest, so that the grid does not move with each world added. The inspector's tabs are World
 (type and basics as lists, oceans, seed and code), Advanced (exact values by group) and Save and
 play (destination, install, visibility, queue); under every tab stay the location budget, Add to
 queue and Generate. Folded sections stay folded. Messages that the Qt window wrote under a page

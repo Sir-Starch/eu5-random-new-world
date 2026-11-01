@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Elegir un continente...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Antes de crear un mundo, mira seis bocetos de continentes. Esto revela sus tierras. Elige uno para usar su semilla y sus ajustes; su costa definitiva puede moverse un poco cuando se formen las localizaciones.'''
+source = "3058778ded719ecd"
+text = '''Antes de crear un mundo, mira seis bocetos de continentes. Esto revela sus tierras. Elige uno para usar su semilla y sus ajustes, o añade a la cola los que te gusten. La costa definitiva puede moverse un poco cuando se formen las localizaciones.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Añade primero un mundo a la cola.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''{count} pendientes'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Añadido a la cola: semilla {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Este mundo ya está en la cola o se está creando.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''La cola empieza sola cuando termine el mundo que se está creando.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Quitar de la cola'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''Creándose ahora'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Crear varios mundos'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Añade los ajustes actuales a la cola y luego cambia la semilla o las opciones para el siguiente mundo. Ejecuta la cola cuando lo hayas añadido todo.'''
+source = "55c445d7af0996fb"
+text = '''Añade los ajustes actuales a la cola y luego cambia la semilla o las opciones para el siguiente mundo. Mientras se crea un mundo, puedes preparar y añadir los siguientes: la cola sigue sola. Si no, ejecuta la cola cuando lo hayas añadido todo.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -2171,6 +2191,10 @@ text = '''Mostrar u ocultar el panel lateral'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Elegido'''
+
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''En la cola'''
 
 ["map.tribes"]
 source = "5ba6198f78ffedef"

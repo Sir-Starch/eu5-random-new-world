@@ -41,8 +41,8 @@ STRINGS: Final[dict[str, str]] = {
     "candidates": "Choose a continent...",
     "candidates_hint": (
         "Preview six continent sketches before making a world. This reveals their land. "
-        "Pick one to use its seed and settings; its final coastline can shift slightly "
-        "as locations are formed."
+        "Pick one to use its seed and settings, or add the ones you like to the queue. "
+        "A final coastline can shift slightly as locations are formed."
     ),
     "candidate_item": "{number} · {land:g}% land\nSeed {seed}",
     "enqueue": "Add to queue",
@@ -50,6 +50,11 @@ STRINGS: Final[dict[str, str]] = {
     "clear_queue": "Clear queue",
     "queue_empty": "Add a world to the queue first.",
     "queue_count": "{count} pending",
+    "queue_added": "Added to the queue: seed {seed}.",
+    "queue_duplicate": "This world is already in the queue or being made.",
+    "queue_follows": "The queue starts by itself when the world being made is done.",
+    "queue_remove": "Remove from the queue",
+    "queue_making": "Being made now",
     # -- the game, the profile and the settings dialog --
     "game": "Game",
     "profile": "Profile",
@@ -74,7 +79,8 @@ STRINGS: Final[dict[str, str]] = {
     "queue_title": "Generate several worlds",
     "queue_hint": (
         "Add the current settings to the queue, then change the seed or options for the next "
-        "world. Run the queue when you have added everything."
+        "world. While a world is being made you can prepare and add the next ones: the queue "
+        "goes on by itself. Otherwise, run the queue when you have added everything."
     ),
     "progress_details": "Show stage details",
     "retry_new_seed": "Generate with a new seed",
@@ -755,6 +761,7 @@ STRINGS: Final[dict[str, str]] = {
     "dock.open_world": "Open the world",
     "candidates.use": "Use this continent",
     "candidates.chosen": "Chosen",
+    "candidates.queued": "In the queue",
     # -- the Tauri window: a world --
     "stat.countries": "countries",
     "stat.split": "{states} states · {tribes} tribes",

@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Wybierz kontynent...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Zanim utworzysz świat, obejrzyj sześć szkiców kontynentów. To odsłania ich lądy. Wybierz jeden, aby przejąć jego ziarno i ustawienia; ostateczna linia brzegowa może się nieco przesunąć, gdy powstaną lokacje.'''
+source = "3058778ded719ecd"
+text = '''Zanim utworzysz świat, obejrzyj sześć szkiców kontynentów. To odsłania ich lądy. Wybierz jeden, aby przejąć jego ziarno i ustawienia, albo dodaj do kolejki te, które ci się podobają. Ostateczna linia brzegowa może się nieco przesunąć, gdy powstaną lokacje.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Najpierw dodaj świat do kolejki.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''Oczekuje: {count}'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Dodano do kolejki: ziarno {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Ten świat już jest w kolejce albo właśnie powstaje.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''Kolejka ruszy sama, gdy powstający świat będzie gotowy.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Usuń z kolejki'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''Powstaje teraz'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Utwórz kilka światów'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Dodaj bieżące ustawienia do kolejki, a potem zmień ziarno lub opcje następnego świata. Gdy wszystko dodasz, uruchom kolejkę.'''
+source = "55c445d7af0996fb"
+text = '''Dodaj bieżące ustawienia do kolejki, a potem zmień ziarno lub opcje następnego świata. Gdy świat powstaje, możesz przygotować i dodać kolejne: kolejka pójdzie dalej sama. W przeciwnym razie uruchom kolejkę, gdy wszystko dodasz.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -2171,6 +2191,10 @@ text = '''Pokaż lub ukryj panel boczny'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Wybrany'''
+
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''W kolejce'''
 
 ["map.tribes"]
 source = "5ba6198f78ffedef"

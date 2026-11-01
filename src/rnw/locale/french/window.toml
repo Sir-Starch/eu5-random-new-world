@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Choisir un continent...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Avant de créer un monde, prévisualisez six esquisses de continents. Cela dévoile leurs terres. Choisissez-en une pour reprendre sa graine et ses réglages ; son littoral définitif peut se décaler un peu quand les lieux se forment.'''
+source = "3058778ded719ecd"
+text = '''Avant de créer un monde, prévisualisez six esquisses de continents. Cela dévoile leurs terres. Choisissez-en une pour reprendre sa graine et ses réglages, ou ajoutez à la file celles qui vous plaisent. Le littoral définitif peut se décaler un peu quand les lieux se forment.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Ajoutez d'abord un monde à la file.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''{count} en attente'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Ajouté à la file : graine {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Ce monde est déjà dans la file ou en cours de création.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''La file démarre toute seule quand le monde en cours de création est terminé.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Retirer de la file'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''En cours de création'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Créer plusieurs mondes'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Ajoutez les réglages actuels à la file, puis changez la graine ou les options pour le monde suivant. Lancez la file quand tout est ajouté.'''
+source = "55c445d7af0996fb"
+text = '''Ajoutez les réglages actuels à la file, puis changez la graine ou les options pour le monde suivant. Pendant qu'un monde se crée, vous pouvez préparer et ajouter les suivants : la file continue toute seule. Sinon, lancez la file quand tout est ajouté.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -2171,6 +2191,10 @@ text = '''Afficher ou masquer le panneau latéral'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Choisi'''
+
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''Dans la file'''
 
 ["map.tribes"]
 source = "5ba6198f78ffedef"

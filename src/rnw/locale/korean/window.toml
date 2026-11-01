@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''대륙 고르기...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''월드를 만들기 전에 대륙 스케치 여섯 개를 미리 볼 수 있습니다. 스케치를 보면 그 땅이 드러납니다. 하나를 고르면 그 시드와 설정을 씁니다. 지역이 만들어지면서 최종 해안선이 조금 달라질 수 있습니다.'''
+source = "3058778ded719ecd"
+text = '''월드를 만들기 전에 대륙 스케치 여섯 개를 미리 볼 수 있습니다. 스케치를 보면 그 땅이 드러납니다. 하나를 고르면 그 시드와 설정을 쓰고, 마음에 드는 것들은 대기열에 추가할 수 있습니다. 지역이 만들어지면서 최종 해안선이 조금 달라질 수 있습니다.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''먼저 대기열에 월드를 추가하세요.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''대기 중: {count}'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''대기열에 추가했습니다: 시드 {seed}'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''이 월드는 이미 대기열에 있거나 만드는 중입니다.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''만드는 중인 월드가 끝나면 대기열이 자동으로 시작됩니다.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''대기열에서 빼기'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''지금 만드는 중'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''월드 여러 개 만들기'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''지금 설정을 대기열에 넣은 다음, 다음 월드의 시드나 옵션을 바꾸세요. 다 넣었으면 대기열을 실행하세요.'''
+source = "55c445d7af0996fb"
+text = '''지금 설정을 대기열에 넣은 다음, 다음 월드의 시드나 옵션을 바꾸세요. 월드를 만드는 중에도 다음 월드를 준비해 넣을 수 있으며, 대기열은 자동으로 이어집니다. 그렇지 않으면 다 넣은 뒤에 대기열을 실행하세요.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -2171,6 +2191,10 @@ text = '''사이드 패널 표시/숨기기'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''선택됨'''
+
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''대기열에 있음'''
 
 ["map.tribes"]
 source = "5ba6198f78ffedef"

@@ -12,6 +12,8 @@
   const s = $derived(app.now);
   const n = $derived(s?.new);
   const busy = $derived(!!s?.busy);
+  // While a world is made the next one can be prepared, so only other work locks the controls.
+  const locked = $derived(busy && !n?.preparable);
   let seedText = $state<string | null>(null);
   let codeText = $state<string | null>(null);
 
@@ -90,7 +92,7 @@
           id="world-type"
           class="input val"
           value={n?.choice}
-          disabled={busy}
+          disabled={locked}
           onchange={(event) => app.call("set_choice", { choice: event.currentTarget.value })}
         >
           {#each app.info?.choices ?? [] as choice (choice)}
@@ -110,7 +112,7 @@
             class:custom={n?.quick[item.name] === null}
             title={t(`quick.${item.name}.about`)}
             value={n?.quick[item.name] ?? ""}
-            disabled={busy}
+            disabled={locked}
             onchange={(event) => app.call("set_quick", { name: item.name, level: event.currentTarget.value })}
           >
             {#if n?.quick[item.name] === null}<option value="" disabled>{t("quick.custom")}</option>{/if}
@@ -123,7 +125,7 @@
         <div class="wide oceans">
           <Check
             checked={(n?.values["new_world.expand_oceans"]?.shown ?? 0) > 0}
-            disabled={busy}
+            disabled={locked}
             label={t("control.new_world.expand_oceans")}
             hint={t("control.new_world.expand_oceans.about")}
             info={t("control.new_world.expand_oceans.info")}
@@ -140,13 +142,13 @@
           <input
             class="input mono"
             value={seedText ?? n?.seed ?? ""}
-            disabled={busy}
+            disabled={locked}
             inputmode="numeric"
             oninput={(event) => (seedText = event.currentTarget.value)}
             onblur={seedDone}
             onkeydown={blurOnEnter}
           />
-          <button class="btn" disabled={busy} onclick={() => app.call("randomize")}>{t("random")}</button>
+          <button class="btn" disabled={locked} onclick={() => app.call("randomize")}>{t("random")}</button>
         </span>
       </label>
       <label class="field">
@@ -157,13 +159,13 @@
             value={codeText ?? n?.code ?? ""}
             placeholder={t("code_hint")}
             title={t("code_hint")}
-            disabled={busy}
+            disabled={locked}
             oninput={(event) => (codeText = event.currentTarget.value)}
             onblur={codeDone}
             onkeydown={blurOnEnter}
           />
           <button class="btn icon" onclick={copyCode} title={t("copy")} aria-label={t("copy")}><Icon name="copy" /></button>
-          <button class="btn icon" disabled={busy} onclick={paste} title={t("paste")} aria-label={t("paste")}><Icon name="paste" /></button>
+          <button class="btn icon" disabled={locked} onclick={paste} title={t("paste")} aria-label={t("paste")}><Icon name="paste" /></button>
         </span>
       </label>
       <p class="hint">{t("code_hint")}</p>
@@ -171,7 +173,7 @@
   {:else if app.newTab === "advanced"}
     <div class="advanced-head">
       <p class="hint">{t("customize_hint")}</p>
-      <button class="btn small" disabled={!n?.changed || busy} onclick={() => app.call("reset_values")}>{t("reset_all")}</button>
+      <button class="btn small" disabled={!n?.changed || locked} onclick={() => app.call("reset_values")}>{t("reset_all")}</button>
     </div>
     {#each groups as group (group)}
       {@const members = controls.filter((c) => c.group === group && n?.values[c.key])}
@@ -184,11 +186,11 @@
           {#each members as control (control.key)}
             {#if n?.values[control.key]}
               {#if control.toggle}
-                <Check checked={n.values[control.key].shown > 0} disabled={busy}
+                <Check checked={n.values[control.key].shown > 0} disabled={locked}
                   label={t(`control.${control.key}`)} hint={t(`control.${control.key}.about`)}
                   onchange={(value) => app.call("set_value", { key: control.key, value: value ? 1 : 0 })} />
               {:else}
-                <ValueField {control} value={n.values[control.key]} disabled={busy} />
+                <ValueField {control} value={n.values[control.key]} disabled={locked} />
               {/if}
             {/if}
           {/each}
@@ -200,8 +202,8 @@
     <Section id="new.output" title={t("output")}>
       <div class="choices" role="radiogroup" aria-label={t("output")}>
         {#each app.info?.destinations ?? [] as key (key)}
-          <label class="check" class:disabled={busy}>
-            <input type="radio" name="destination" checked={(n?.destination ?? "library") === key} disabled={busy} onchange={() => destination(key)} />
+          <label class="check" class:disabled={locked}>
+            <input type="radio" name="destination" checked={(n?.destination ?? "library") === key} disabled={locked} onchange={() => destination(key)} />
             <span>{t(`destination.${key}`)}</span>
           </label>
         {/each}
@@ -209,12 +211,12 @@
       {#if n && n.destination !== "library"}
         <div class="row">
           <input class="input mono" readonly value={n.target} placeholder={t("destination_missing")} title={n.target} />
-          <button class="btn" disabled={busy} onclick={() => chooseTarget()}>{t("destination_choose")}</button>
+          <button class="btn" disabled={locked} onclick={() => chooseTarget()}>{t("destination_choose")}</button>
         </div>
       {:else}
         <Check
           checked={!!n?.install}
-          disabled={busy}
+          disabled={locked}
           label={t("install")}
           hint={n?.install ? t("generation_install") : t("generation_keep")}
           onchange={(value) => app.call("set_install", { value })}
@@ -222,7 +224,7 @@
       {/if}
       <Check
         checked={!!s?.preferences.show_new_world}
-        disabled={busy}
+        disabled={locked}
         label={t("show_new_world")}
         hint={t("show_new_world_hint")}
         onchange={(value) => app.call("set_show_new_world", { value })}
@@ -234,14 +236,9 @@
       {#snippet aside()}{#if n?.queue.length}<span class="num">{t("queue_count", { count: n.queue.length })}</span>{/if}{/snippet}
       <p class="hint">{t("queue_hint")}</p>
       {#if n?.queue.length}
-        <ol class="queue">
-          {#each n.queue as job, index (index)}
-            <li><span class="num faint">{index + 1}</span><span class="ellipsis">{job.type}</span><code class="faint">{job.seed}</code></li>
-          {/each}
-        </ol>
         <div class="row">
           <button class="btn" disabled={busy} onclick={() => app.act("start_queue")}>{t("run_queue")}</button>
-          <button class="btn ghost" disabled={busy} onclick={() => app.call("clear_queue")}>{t("clear_queue")}</button>
+          <button class="btn ghost" onclick={() => app.call("clear_queue")}>{t("clear_queue")}</button>
         </div>
       {/if}
     </Section>
@@ -262,7 +259,9 @@
     <p class="note" title={n?.hint}><span>{n?.hint}</span></p>
   {/if}
   <div class="actions">
-    <button class="btn" disabled={!!n?.problem || busy} title={t("queue_hint")} onclick={() => app.act("enqueue")}>{t("enqueue")}</button>
+    <button class="btn" disabled={!!n?.queue_problem} title={n?.queue_problem ?? t("queue_hint")} onclick={() => app.enqueue()}>
+      {t("enqueue")}{#if n?.queue.length}<span class="count num">{n.queue.length}</span>{/if}
+    </button>
     {#if running}
       <button class="btn grow" disabled={s?.phase !== "running"} onclick={() => app.call("cancel")}>{t("cancel")}</button>
     {:else}
@@ -322,33 +321,6 @@
   .choices {
     display: grid;
     gap: 4px;
-  }
-  .queue {
-    display: grid;
-    gap: 1px;
-    margin: 0;
-    padding: 4px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--field);
-    list-style: none;
-    font-size: 12px;
-  }
-  .queue li {
-    display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) auto;
-    gap: 6px;
-    align-items: center;
-    height: 20px;
-    padding: 0 4px;
-  }
-  .queue code {
-    font-size: 11px;
-  }
-  .ellipsis {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
   .generate {
     flex: none;
@@ -430,5 +402,13 @@
   }
   .grow {
     flex: 1;
+  }
+  .count {
+    margin-left: 6px;
+    padding: 0 5px;
+    border-radius: 8px;
+    background: var(--field);
+    color: var(--text-2);
+    font-size: 11px;
   }
 </style>

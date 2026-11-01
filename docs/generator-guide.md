@@ -98,9 +98,13 @@ selected recorded worlds, their notes, kept files and installed mods. Both butto
 how many entries they affect. Errors stop the batch and appear below the list; any changes
 already made are reflected there. Selection survives list updates. [V-EXEC C266]
 
-Add to queue captures the current settings, seed and destination. Change the seed or
-settings and add another job. Run queue works sequentially; Cancel or a failure stops
-before the next job and leaves unfinished jobs pending. [V-EXEC C143]
+Add to queue captures the current settings, seed and destination, from the buttons under
+the tabs or, for a sketched continent, from its own button (the same world is not queued
+twice). Change the seed or settings and add another job. Run queue works sequentially; Cancel
+or a failure stops before the next job and leaves unfinished jobs pending. While a world is
+made its choices stay editable, and a world added meanwhile is made by itself when the one
+before it is done, with no second Run queue. Each queued world can be taken out; the one
+being made stays until it is done. [V-EXEC C143]
 
 ## Files and command line
 

@@ -63,8 +63,8 @@ source = "0e7b026bc70eba63"
 text = '''Kontinent wählen...'''
 
 ["candidates_hint"]
-source = "2292c2759a5d2df3"
-text = '''Sehen Sie sich vor dem Erstellen einer Welt sechs Kontinentskizzen an. Das deckt deren Land auf. Wählen Sie eine, um ihren Startwert und ihre Einstellungen zu übernehmen; die endgültige Küstenlinie kann sich leicht verschieben, wenn die Orte entstehen.'''
+source = "3058778ded719ecd"
+text = '''Sehen Sie sich vor dem Erstellen einer Welt sechs Kontinentskizzen an. Das deckt deren Land auf. Wählen Sie eine, um ihren Startwert und ihre Einstellungen zu übernehmen, oder legen Sie die gelungenen in die Warteschlange. Die endgültige Küstenlinie kann sich leicht verschieben, wenn die Orte entstehen.'''
 
 ["candidate_item"]
 source = "82a3979eef3cad60"
@@ -89,6 +89,26 @@ text = '''Fügen Sie zuerst eine Welt zur Warteschlange hinzu.'''
 ["queue_count"]
 source = "bc608dfbf45c2100"
 text = '''{count} ausstehend'''
+
+["queue_added"]
+source = "062d1d74e6832c40"
+text = '''Zur Warteschlange hinzugefügt: Startwert {seed}.'''
+
+["queue_duplicate"]
+source = "cc963cb486f50f9f"
+text = '''Diese Welt steht schon in der Warteschlange oder wird gerade erstellt.'''
+
+["queue_follows"]
+source = "31f0553787b04419"
+text = '''Die Warteschlange startet von selbst, sobald die Welt in Arbeit fertig ist.'''
+
+["queue_remove"]
+source = "b7ff8baa60675423"
+text = '''Aus der Warteschlange entfernen'''
+
+["queue_making"]
+source = "c5b71ca57f800d0a"
+text = '''Wird gerade erstellt'''
 
 ["game"]
 source = "5c412a262086b970"
@@ -163,8 +183,8 @@ source = "a27578fd3a7a3f5e"
 text = '''Mehrere Welten erstellen'''
 
 ["queue_hint"]
-source = "af8bed5b076227c5"
-text = '''Fügen Sie die aktuellen Einstellungen zur Warteschlange hinzu und ändern Sie dann Startwert oder Optionen für die nächste Welt. Starten Sie die Warteschlange, wenn alles hinzugefügt ist.'''
+source = "55c445d7af0996fb"
+text = '''Fügen Sie die aktuellen Einstellungen zur Warteschlange hinzu und ändern Sie dann Startwert oder Optionen für die nächste Welt. Während eine Welt erstellt wird, können Sie die nächsten vorbereiten und hinzufügen: Die Warteschlange läuft von selbst weiter. Andernfalls starten Sie die Warteschlange, wenn alles hinzugefügt ist.'''
 
 ["progress_details"]
 source = "a7d418eaf220511e"
@@ -2171,6 +2191,10 @@ text = '''Seitenleiste ein- oder ausblenden'''
 ["candidates.chosen"]
 source = "c6da331eadbee0e2"
 text = '''Gewählt'''
+
+["candidates.queued"]
+source = "bf8188fd11de8976"
+text = '''In der Warteschlange'''
 
 ["map.tribes"]
 source = "5ba6198f78ffedef"

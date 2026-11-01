@@ -26,6 +26,7 @@ from rnw import __version__, parallel, worldname
 from rnw import atlas as atlas_module
 from rnw.app import controls, quick, random_types
 from rnw.app.library import Placement
+from rnw.app.worldcode import encode
 from rnw.gui import mapstyle
 from rnw.gui.controller import NEW, STRAY, Controller, Phase, Task
 from rnw.gui.text import GROUPING, LANGUAGE_NAMES, TITLE, grouped, language, table, text
@@ -141,12 +142,17 @@ def state(controller: Controller, choices: Choices) -> dict[str, object]:
         "new": _new(c, choices),
         "world": _world(c, choices),
         "stray": _stray(c),
-        "candidates": [
-            {"seed": str(found.seed), "land": found.land_permille / 10} for found in c.candidates
-        ]
-        if c.task is Task.CANDIDATES and c.phase is Phase.FINISHED
-        else [],
+        "candidates": _candidates(c),
     }
+
+
+def _candidates(c: Controller) -> list[dict[str, object]]:
+    """The sketched continents; ``queued`` when the world of that seed waits in the queue."""
+    waiting = c.queued_candidates()
+    return [
+        {"seed": str(found.seed), "land": found.land_permille / 10, "queued": index in waiting}
+        for index, found in enumerate(c.candidates)
+    ]
 
 
 def _status(c: Controller) -> str:
@@ -273,9 +279,11 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     except ValueError:
         estimate = None
     problem = c.problem()
+    queue_problem = text("ready_busy") if not c.can_prepare else c.setup_problem()
     target = c.output_folder or c.world_file
-    if choices.destination != "library" and target is None and problem is None:
-        problem = text("destination_missing")
+    if choices.destination != "library" and target is None:
+        problem = problem or text("destination_missing")
+        queue_problem = queue_problem or text("destination_missing")
     hint = (
         "generation_install"
         if c.install and choices.destination == "library"
@@ -310,13 +318,28 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         and c.game is not None
         and not c.world_code().settings().mask.id,
         "template_enabled": not busy and c.game is not None,
-        "queue": [
-            {"seed": str(job.code.seed), "type": text(f"type.{job.code.preset}")} for job in c.queue
-        ],
+        "preparable": c.can_prepare,
+        "queue_problem": queue_problem,
+        "queue": _queue(c),
         "queue_done": c.queue_done,
+        "queue_follows": c.queue_follows,
         "retry": c.phase is Phase.FAILED and c.task is Task.GENERATE,
         "retry_enabled": c.problem() is None,
     }
+
+
+def _queue(c: Controller) -> list[dict[str, object]]:
+    """The worlds waiting for the thread; the one it makes now first, marked."""
+    making = c.busy and c.task is Task.QUEUE
+    return [
+        {
+            "code": encode(job.code),
+            "seed": str(job.code.seed),
+            "type": text(f"type.{job.code.preset}"),
+            "running": making and index == 0,
+        }
+        for index, job in enumerate(list(c.queue))
+    ]
 
 
 def _world(c: Controller, choices: Choices) -> dict[str, object] | None:

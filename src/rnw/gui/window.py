@@ -1738,14 +1738,15 @@ class MainWindow(QMainWindow):
 
     def _refresh_new(self) -> None:
         controller = self.controller
-        busy = controller.busy
+        # While a world is made the next one can be prepared, so only other work locks the choices.
+        busy = controller.busy and not controller.can_prepare
         drawn = controller.land_mask
         self.land_image_label.setText(
             text("land_image_chosen", id=format(drawn.id, "x")) if drawn is not None else ""
         )
         self.land_image_clear.setVisible(drawn is not None)
         self.land_image_button.setEnabled(not busy)
-        self.land_template_button.setEnabled(not busy and controller.game is not None)
+        self.land_template_button.setEnabled(not controller.busy and controller.game is not None)
         _ = self.type_choice.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         shown = controller.mode or controller.preset
         self.type_choice.setCurrentIndex(random_types.CHOICES.index(shown))
@@ -1776,7 +1777,7 @@ class MainWindow(QMainWindow):
         self._refresh_ocean_option(busy)
         generating = controller.task in {Task.GENERATE, Task.QUEUE, Task.CANDIDATES}
         self.cancel_button.setEnabled(controller.phase is Phase.RUNNING and generating)
-        self.cancel_button.setVisible(busy and generating)
+        self.cancel_button.setVisible(controller.busy and generating)
         self.progress_box.setVisible(generating and controller.phase is not Phase.IDLE)
         for widget in (
             self.seed_edit,
@@ -1830,7 +1831,8 @@ class MainWindow(QMainWindow):
         self.eta.setText(text("eta", time=_duration_clock(remaining)))
 
     def _refresh_destination(self, problem: str | None) -> None:
-        controller, busy = self.controller, self.controller.busy
+        controller = self.controller
+        busy = controller.busy and not controller.can_prepare
         self.install_box.setChecked(controller.install)
         self.new_tabs.setTabText(
             2,
@@ -1865,14 +1867,20 @@ class MainWindow(QMainWindow):
                 else "generation_keep"
             )
         )
-        self.generation_hint.setVisible(not busy)
-        self.enqueue_button.setEnabled(problem is None)
-        self.run_queue_button.setEnabled(not busy and bool(controller.queue))
-        self.clear_queue_button.setEnabled(not busy and bool(controller.queue))
+        self.generation_hint.setVisible(not controller.busy)
+        queue_problem = (
+            text("destination_missing")
+            if needs_destination
+            else (text("ready_busy") if busy else controller.setup_problem())
+        )
+        self.enqueue_button.setEnabled(queue_problem is None)
+        self.enqueue_button.setToolTip(queue_problem or text("queue_hint"))
+        self.run_queue_button.setEnabled(not controller.busy and bool(controller.queue))
+        self.clear_queue_button.setEnabled(bool(controller.queue))
         self.queue_label.setText(text("queue_count", count=len(controller.queue)))
         self.queue_label.setToolTip("\n".join(str(job.code.seed) for job in controller.queue))
         self.candidates_button.setEnabled(
-            not busy
+            not controller.busy
             and controller.game is not None
             and not controller.world_code().settings().mask.id
         )
