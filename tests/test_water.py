@@ -146,3 +146,74 @@ def test_removed_island_rebuilds_its_offshore_water_without_repainting_retained_
     result = captured[0]
     assert np.any(result[40:70, 27:30, :3] != rgba[40:70, 27:30, :3])
     assert np.array_equal(result[:, 100:], rgba[:, 100:])
+
+
+def _local_sea_rebuild(monkeypatch: pytest.MonkeyPatch) -> np.ndarray:
+    """Rebuild a light sea and a dark sea, each with an old island and a new one."""
+    rows, columns, factor, reach = 128, 640, 2, 20
+    rgba = np.full((rows, columns, 4), 255, dtype=np.uint8)
+    rgba[:, : columns // 2, :3] = 200
+    rgba[:, columns // 2 :, :3] = 60
+    captured: list[np.ndarray] = []
+
+    def capture(_data: bytes, result: np.ndarray, _changed: np.ndarray) -> bytes:
+        captured.append(result)
+        return b"synthetic"
+
+    def decode(_data: bytes) -> np.ndarray:
+        return rgba
+
+    monkeypatch.setattr(eu5_water, "_decode", decode)
+    monkeypatch.setattr(eu5_water, "rewrite", capture)
+    vanilla = np.ones((rows * factor, columns * factor), dtype=bool)
+    fresh = vanilla.copy()
+    for column in (110, 530):
+        vanilla[rows - 8 : rows + 8, column * 2 - 8 : column * 2 + 8] = False
+        fresh[rows - 8 : rows + 8, column * 2 - 8 : column * 2 + 8] = False
+    for column in (160, 480):
+        fresh[rows - 8 : rows + 8, column * 2 - 8 : column * 2 + 8] = False
+    _ = eu5_water._rebuild(  # pyright: ignore[reportPrivateUsage]
+        b"synthetic",
+        factor=factor,
+        reach=reach,
+        masks=(vanilla, fresh, np.ones_like(vanilla)),
+        seed=3,
+        stream="local_sea",
+    )
+    around = np.zeros((rows, columns), dtype=bool)
+    for column in (160, 480):
+        around[rows // 2 - 40 : rows // 2 + 40, column - 40 : column + 40] = True
+    return np.abs(captured[0].astype(np.int64)[..., :3] - rgba[..., :3].astype(np.int64))[around]
+
+
+def test_new_islands_sit_in_the_local_sea_not_in_the_average_of_all_seas(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A light sea and a dark sea each keep their colour round a new island.
+
+    The shelf is an offset from the open water around it. A table of absolute colours would
+    paint both new islands with the mean of the two seas: a disc with an edge in each.
+    """
+    assert _local_sea_rebuild(monkeypatch).max() <= 12
+
+
+def test_the_background_of_a_flat_sea_is_that_sea_everywhere() -> None:
+    """One cell of open water fills every other cell; bilinear weights keep a flat sea flat."""
+    sums = np.zeros((5, 9, 4), dtype=np.int64)
+    counts = np.zeros((5, 9), dtype=np.int64)
+    counts[2, 7] = eu5_water.GRID * eu5_water.GRID
+    sums[2, 7] = counts[2, 7] * np.array([17, 91, 133, 255])
+    grid = eu5_water._background_grid(sums, counts)  # pyright: ignore[reportPrivateUsage]
+    assert np.all(grid == np.array([17, 91, 133, 255]))
+    columns = 9 * eu5_water.GRID
+    rows = 5 * eu5_water.GRID
+    painted = eu5_water._background(grid, 0, rows, columns)  # pyright: ignore[reportPrivateUsage]
+    assert np.all(painted == np.array([17, 91, 133, 255]))
+
+
+def test_a_texture_without_open_water_is_refused() -> None:
+    """With no pixel far enough from land there is no sea to take the colour from."""
+    sums = np.zeros((3, 3, 4), dtype=np.int64)
+    counts = np.full((3, 3), eu5_water.GRID_MIN - 1, dtype=np.int64)
+    with pytest.raises(ValueError, match="no open water"):
+        _ = eu5_water._background_grid(sums, counts)  # pyright: ignore[reportPrivateUsage]

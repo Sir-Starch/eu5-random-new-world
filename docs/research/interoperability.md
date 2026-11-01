@@ -191,7 +191,10 @@ that no official editor exists.
 - `gfx/map/water/watercolor_rgb_waterspec_a.dds` and `foam_map.dds` retain their DDS
   framing and use the existing reader/writer for changed water/coast pixels and
   compression blocks. Original shallow water and foam cannot remain where the new
-  land/sea boundary moved; the new values derive from the local game's calibration.
+  land/sea boundary moved; the new values derive from the local game's calibration:
+  the colour of the open water around each pixel (vanilla pixels far from old land,
+  smoothed and filled across the old continents) plus the mean offset of vanilla
+  pixels from that background by latitude band and distance to land (C461).
 - `spline_network.splnet` is rebuilt for the new location indexes and land contacts
   through the same R-001 reader/writer. No spline-format change is introduced;
   spline verification still checks carried Old World polylines and every generated

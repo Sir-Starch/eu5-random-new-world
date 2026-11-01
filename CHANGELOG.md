@@ -27,6 +27,15 @@
   Wall inside the land amount, and the width hint explains it in every language. A full export at
   the widest setting passes every sea invariant. Existing worlds remain untouched.
 
+- Remove the dark and light discs round small islands (owner's screenshots, pending epoch 60).
+  The water colour of new coasts was the mean of all vanilla coasts at a latitude, so every island
+  sat in a disc of that average whose edge showed wherever the local sea was lighter or darker, and
+  its halo was about twice as strong and noticeably wider than the game's. A new coast is now the
+  colour of the open water around it plus the shelf the game paints at that distance, so the disc
+  edge is gone (on the owner's world the difference between the new water and the original sea at
+  the edge of the old disc fell from 27 to 8 luminance units, R+G+B). Foam is built the same way.
+  Existing worlds remain untouched.
+
 - Vary native polity outlines through farming corridors, similar-terrain belts and coastal
   growth alongside generalist expansion (issue #8, pending epoch 60). Small tribal groups use
   gentler preferences. Connected territories, capital membership and farming requirements

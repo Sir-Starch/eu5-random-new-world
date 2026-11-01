@@ -1330,6 +1330,32 @@ the former hub at `.rnw-hub-backups/1.1.0-1793548847675452430`. Candidate:
 This remains unpublished 1.1.0 / pending epoch 60. Evidence and installation receipts remain
 under ignored `local_data/polity-outlines/`; game loading/rendering was not observed.
 
+2026-11-01, **1.1.0 development / pending epoch 60 — water round new islands** (owner's screenshots of
+discs round small islands; [claim C461](../docs/research/claims-ledger.md)). [V-EXEC] The water colour and
+foam rebuild now paint the open water round each pixel plus the game's own shelf instead of the mean
+of all coasts; see the [register entry](../docs/research/interoperability.md). Full Python checks pass
+(2,409 tests, 15 optional skips; format, lint, strict types; Rust untouched). The installed-game
+reference export passes every export invariant on EU5 1.4.6 / build 26300913 and reproduces the
+new pending epoch-60 digest `7ad8a385a41d1731baeb5bcd01da598e997446e8a706f3ccd32fc235dedd144d`
+(870 nonmetadata files); `tests/golden_world.json` carries it, epoch 59 is untouched.
+
+Installed **Continents PLBW**, `mod/rnw_exp_world_plbwy7zcgo`, in the existing Windows/Proton profile.
+Code: `RNW1-080SM-KW9WD-Y6R47-N040G-00823-AG0C7-0165Z-4E`: the owner's installed world
+`rnw_exp_world_aszzsukifw` with its peoples rerolled. Its `locations.png` and `rivers.png` are
+byte-identical to that world's, so the two differ only in water textures and identities. Of 898
+manifest files, 872 are installed and match their hashes and 26 are library-only. Both libraries hold
+the record (the native one was written by the running generator; the Proton copy is identical and
+passes bundle verification). On this pair of real textures the mean difference from the original sea,
+on vanilla open ocean 40–48 / 48–56 pixels from a new island, falls from 33.8 / 22.8 to 10.0 / 7.3
+luminance units. No playset, save or preference edit; no EU5 launch/control by the agent.
+
+The source/native and Windows/Wine window/native/code and shell/bridge self-tests pass. The standard
+updater installed the **3,478-file** generator-only hub, retaining the former hub at
+`.rnw-hub-backups/1.1.0-1793553634103161116`. Candidate: ignored
+`local_data/hub-updates/1.1.0-1793553542958151419/rnw_exp_hub` of the `water-island-halo` worktree;
+Windows wheel SHA-256 `b0413c8da582ef8bdc0b8839886a5b1c18c63fc686bd0244efb1e5e7c45d6d24`. Unpublished
+1.1.0 / pending epoch 60; game loading/rendering was not observed.
+
 2026-11-01, **1.1.0 development / pending epoch 60 — sea cells as chains, bolt remainders, water band**
 (owner's screenshots of ruled strips and bent remainders in world `aszzsukifw`; branch
 `sea-cell-voronoi`, commit a2c835a, not merged). [V-EXEC] The change and its measurements are in
@@ -1355,3 +1381,8 @@ code's, and the install command does not refuse an existing folder). The folder 
 the water-halo commit and checked: its 870 non-metadata files match the record's manifest, its
 `.metadata/rnw-library` is the record itself and its `locations.png` is again byte-identical to
 `aszzsukifw`'s. The replaced copy is kept in ignored `local_data/sea-cells/profile-backup/`.
+
+After merging `main` (The Wall's land budget) and the water-halo branch into `sea-cell-voronoi`, the
+pending epoch-60 reference digest is `c59495b5b0a1fb096d8cb5c99f6233638b5a6a3d8227abf73946a7e1c3a9ddb1`
+(870 nonmetadata files; the digest above is the sea-cell change alone, the water-halo one is
+`7ad8a385…`); `tests/golden_world.json` carries the merged one.
