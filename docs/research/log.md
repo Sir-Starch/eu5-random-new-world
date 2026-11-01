@@ -2150,17 +2150,20 @@ cell's vegetation among the pairs of its own climate; no pair outside the calibr
 changes and about 3–4 % of cells change vegetation, nearly all on climate borders. The reference digest is
 refreshed within the pending epoch 60. Numbers and the synthetic regressions are in the terrain guide.
 
-## 2026-11-01 — Currents nobody could read (C456)
+## 2026-11-01 — Currents nobody could read, and sliver locations (C456)
 
 The owner's screenshots of world QU3N showed currents at the seam with the Old World that made no
 sense: a three-location stub pointing sideways beside a coast, a one-cell piece, a cluster of arrows
 pointing different ways and a current in which two opposite directions met. Measured on the world,
 11 of 18 pieces of current had no zone of the game touching them and 14 pairs of neighbours pointed
 at each other, because every lane cell was interpolated from far sources through any navigable water.
-Currents became directed courses that continue a current of the game along a path. That first version
-also removed every current that no zone of the game touched, which meant the straight currents through
-the generated oceans; the owner rejected it ("a huge own ocean without currents is nonsense"). The
-rule now has two kinds of course: continuations of the game's currents, and crossings of open water
-that take the direction of the game's gyres at their latitude where they are clear, and have none where
-they are not. Numbers and the rules are in [sea geography](../sea-geography.md). The reference digest
-is refreshed within the pending epoch 60. Engine drawing of the new currents is unobserved.
+Currents became directed courses. The first version also removed every current that no zone of the game
+touched, which meant the straight currents through the generated oceans; the owner rejected it ("a huge
+own ocean without currents is nonsense"). The rule now has two kinds of course: continuations of the
+game's currents, and crossings of open water that take the direction of the game's gyres at their latitude
+where they are clear. A second report (The Wall J4VJ) found a prepared straight line without a current
+(a crossing split by shallow strips, eaten from its end by the short-branch rule), a cluster of arrows
+over a wide stretch of lane, and a long narrow sea location (a needle left by merging cell pieces only by
+area). All three are fixed; numbers and rules are in [sea geography](../sea-geography.md). The land cache
+holds cells and is keyed by epoch, not code: its four entries were deleted because the sliver rule changes
+them. The reference digest is refreshed within the pending epoch 60. Engine drawing is unobserved.

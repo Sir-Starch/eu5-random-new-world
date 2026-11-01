@@ -249,3 +249,36 @@ def test_a_lane_that_an_old_course_barely_touched_gives_no_direction() -> None:
     lane = _row(5, 2, 17)
     result = flow(world, lane, {cell(OPEN_SEA, 0, 0): [(9000, 0)]}, _over(lane, (9000, 0), 100))
     assert not result.flows
+
+
+def test_a_crossing_runs_through_the_shallow_strips_between_its_deep_ones() -> None:
+    """The line is prepared along its whole length; only the deep cells can carry the arrow."""
+    world = block_world(OPEN_SEA)
+    full = _row(5, 2, 10)
+    shallow = {full[3], full[4], full[5]}
+    lane = [c for c in full if c not in shallow]
+    docks = {cell(OPEN_SEA, 0, 0): [(9000, 0)]}
+    courses = _over(full, (9000, 0))
+    assert not flow(world, lane, docks, courses).flows  # two pieces of three cells
+    result = flow(world, lane, docks, courses, connectors=shallow)
+    assert set(result.flows) == set(lane)
+    assert not shallow & set(result.flows)
+    assert all(_east(vector) for vector in result.flows.values())
+
+
+def test_a_wide_stretch_of_lane_carries_no_arrows() -> None:
+    layout = ["." * 14 for _ in range(14)]
+    world = block_world(layout)
+    sea = [cell(layout, row, column) for row in range(14) for column in range(14)]
+    docks = {cell(layout, 7, 0): [(9000, 0)]}
+    assert not flow(world, sea, docks, _over(sea, (9000, 0))).flows
+
+
+def test_the_straight_end_of_a_course_beyond_a_small_twig_keeps_its_current() -> None:
+    """A twig at a junction near the end must not eat the end of the course as a short branch."""
+    world = block_world(OPEN_SEA)
+    lane = _row(5, 2, 17)
+    twig = [cell(OPEN_SEA, 4, 15)]
+    result = flow(world, [*lane, *twig], {lane[0]: [(9000, 0)]})
+    assert set(lane[-3:]) <= set(result.flows)
+    assert not set(twig) & set(result.flows)

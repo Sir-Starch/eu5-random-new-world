@@ -2,20 +2,27 @@
 
 ## Unreleased
 
-- Make ocean currents clear courses, or none (owner's QU3N report, pending epoch 60). Where the
+- Make ocean currents clear courses, or none (owner's QU3N and J4VJ reports, pending epoch 60). Where the
   generated canvas met the Old World the currents could be unreadable: three-location stubs, arrows
-  pointing across their own lane, clusters pointing different ways and neighbours driven head-on. A
-  navigable deep cell now carries a current only when the cells form a directed path: either a
-  continuation of a current of the game (arrows follow the path round bends, water that enters a cell
-  leaves it, a well supported current is never split by a lone contrary zone, branches shorter than
-  five cells and pieces shorter than six are dropped, a short piece is kept only if it joins two
-  currents of the game), or a straight crossing of open water through the generated oceans, which
-  takes the direction of the game's gyres at its latitude and place wherever they are clear and has
-  no current where they are not. The other lane cells stay navigable deep ocean without an arrow, so
-  routes, ports and names do not change. In world QU3N 174 of 265 current cells remain, in four
-  continuations of 16–53 cells and seven crossings; no two neighbours point at each other (14 pairs
-  did) and no arrow points against a zone of the game that touches it. Existing worlds remain
-  untouched.
+  pointing across their own lane, clusters pointing different ways, neighbours driven head-on, a straight
+  prepared line with no current beside a cluster of arrows. A navigable deep cell now carries a current
+  only when the cells form a directed path: either a continuation of a current of the game (arrows follow
+  the path round bends, water that enters a cell leaves it, a well supported current is never split by a
+  lone contrary zone, short branches and pieces are dropped, a short piece is kept only if it joins two
+  currents of the game), or a straight crossing of open water through the generated oceans, which takes
+  the direction of the game's gyres at its latitude and place wherever they are clear (and has no
+  current where they are not) and runs through its shallow strips; a wide cluster of deep cells, a sea
+  and not a lane, carries no arrows. The other lane cells stay navigable deep ocean without an arrow, so
+  routes, ports and names do not change. In world QU3N 182 of 248 lane cells carry a current; no two
+  neighbours point at each other (14 pairs did) and no arrow points against a zone of the game that
+  touches it. Existing worlds remain untouched.
+
+- Merge sliver sea locations into their neighbours (pending epoch 60). Some generated sea locations were
+  long needles or crescents (one 212 × 20 pixels, touching six neighbours) because a coast, a crossing or
+  an island group's footprint cut a cell into pieces that were merged only by area. A sea cell thinner than
+  a fifth of the cell spacing, bordered mostly by other sea cells, now joins the neighbour it shares most
+  with; straits, bordered by land, stay. A sample world drops from 1,547 to 1,494 sea cells and has no thin
+  cell left between others. Existing worlds remain untouched.
 
 - Keep generated American coastal sea areas from bordering passable Old World seas
   (issue #9, pending epoch 60). Ocean areas now form a connected boundary at

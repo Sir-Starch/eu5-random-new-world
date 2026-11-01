@@ -51,12 +51,14 @@ from __future__ import annotations
 import math
 from collections import Counter
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import TYPE_CHECKING, Final, final
+
+import numpy as np
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable, Mapping, Sequence
 
-    import numpy as np
     from numpy.typing import NDArray
 
     from rnw.newworld import NewWorld
@@ -64,10 +66,12 @@ if TYPE_CHECKING:
 # A current: hundredths of the game's unit, east then north.
 Vector = tuple[int, int]
 HUNDREDTHS: Final[int] = 100
-# A directed path shorter than this many cells is a stub, not a current, unless it joins two
-# currents of the game (an anchored source and an anchored sink).
+# Lengths are measured along the path in typical cells (the width of the median lane cell), not in
+# cells: the cells of a straight crossing are long strips. A directed path shorter than MIN_COURSE
+# is a stub, not a current, unless it joins two currents of the game (an anchored source and sink).
 MIN_COURSE: Final[int] = 6
-# A side branch shorter than this many cells is dropped unless a current of the game flows along it.
+# A side branch shorter than this many typical cells is dropped unless a current of the game
+# flows along it.
 MIN_BRANCH: Final[int] = 5
 # A piece that joins two currents of the game (a source and a sink that the game's currents
 # follow) is a bridge whatever its length, from this many cells.
@@ -104,6 +108,11 @@ ZONAL_SIGMA: Final[float] = 4.0
 ZONAL_REACH: Final[float] = 3.0
 # At least this much weight of sources must lie near the row for the zonal current to exist.
 ZONAL_MASS: Final[float] = 2.0
+# A wide stretch of lane is a sea of deep cells, not a lane, and carries no arrow: a cell with at
+# least THICK lane cells within THICK_REACH typical cells of its centre is in one (a thin lane,
+# even two cells wide or at a junction, has up to about seven).
+THICK: Final[int] = 8
+THICK_REACH: Final[float] = 2.2
 # The field votes on an edge with this weight, against a full contact's 1: it directs open water
 # but never outweighs two contacts of the game, and it is too weak to cut a course on its own.
 FIELD_WEIGHT: Final[float] = 0.05
@@ -151,6 +160,8 @@ def flow(
     lanes: Iterable[int],
     docks: Mapping[int, Sequence[Vector]],
     courses: Mapping[int, tuple[Vector, int]] | None = None,
+    *,
+    connectors: Iterable[int] = (),
 ) -> Flow:
     """The courses on ``lanes``: the current of each lane cell that carries one.
 
@@ -158,8 +169,12 @@ def flow(
     anchor a course. ``courses`` maps a cell to the current of the lanes that ran over it before
     the canvas replaced the sea, with the share of the cell (permille) they covered: they direct
     courses and, with the docks, give open water the direction of the game's gyres.
+    ``connectors`` are navigable cells of a straight crossing that are not deep, so cannot carry a
+    current: the course runs through them (a crossing is one straight path, deep or not), and only
+    the lane cells get an arrow.
     """
     members = sorted(set(lanes))
+    path = _thin({*members, *connectors}, world)
     over = courses or {}
     vectors = [vector for each in docks.values() for vector in each]
     vectors.extend(vector for vector, permille in over.values() if permille >= EVIDENCE_PERMILLE)
@@ -168,11 +183,29 @@ def flow(
         return Flow({}, frozenset(members))
     strength = math.fsum(magnitudes) / len(magnitudes)
     plan = _Plan(world, docks, over)
-    kept = plan.settle(members)
+    kept = plan.settle(path)
+    carried = {cell: heading for cell, heading in kept.items() if cell in set(members)}
     return Flow(
-        {cell: _scaled(heading, strength) for cell, heading in sorted(kept.items())},
-        frozenset(members) - frozenset(kept),
+        {cell: _scaled(heading, strength) for cell, heading in sorted(carried.items())},
+        frozenset(members) - frozenset(carried),
     )
+
+
+def _thin(cells: set[int], world: NewWorld) -> list[int]:
+    """The cells of a thin path: a wide stretch of lane (a sea of deep cells, not a lane) goes.
+
+    A cell with ``THICK`` or more lane cells within ``THICK_REACH`` typical cells lies in such a
+    stretch and carries no arrow: an arrow in each cell of a sea points every which way.
+    """
+    members = sorted(cells)
+    if len(members) <= THICK:
+        return members
+    centres = world.centroids[members].astype(np.float64)
+    areas = sorted(int(world.pixels[cell]) for cell in members)
+    scale = math.sqrt(areas[len(areas) // 2])
+    offsets = centres[:, None, :] - centres[None, :, :]
+    near = (np.hypot(offsets[..., 0], offsets[..., 1]) <= THICK_REACH * scale).sum(axis=1) - 1
+    return [cell for cell, count in zip(members, near.tolist(), strict=True) if count < THICK]
 
 
 def check_courses(world: NewWorld, flows: Mapping[int, Vector]) -> None:
@@ -247,6 +280,7 @@ class _Plan:
                 norm = math.hypot(*vector)
                 self.sources[cell] = (vector[0] / norm, vector[1] / norm, permille / 1000)
         self.members: list[int] = []
+        self.scale = 1.0
         self.docked: set[int] = set()
         self.field: dict[int, tuple[float, float]] = {}
 
@@ -259,8 +293,7 @@ class _Plan:
         much they agree. It fades out with the distance to the nearest into the zonal current of
         the game at the cell's latitude, which is what open water far from any source follows.
         """
-        areas = sorted(int(self.pixels[cell]) for cell in self.members)
-        scale = math.sqrt(areas[len(areas) // 2]) if areas else 1.0
+        scale = self.scale
         sources = sorted(self.sources)
         field: dict[int, tuple[float, float]] = {}
         for cell in self.members:
@@ -321,6 +354,12 @@ class _Plan:
         x, y = self.field[cell]
         return 0.0 if norm < MIN_NORM else (x * direction[0] + y * direction[1]) / norm
 
+    def span(self, first: int, second: int) -> float:
+        """The distance between two cell centres, in typical cells."""
+        row = int(self.centres[second][0]) - int(self.centres[first][0])
+        column = int(self.centres[second][1]) - int(self.centres[first][1])
+        return math.hypot(row, column) / self.scale
+
     def heading(self, first: int, second: int) -> tuple[float, float]:
         """East and north from the centre of ``first`` to that of ``second``."""
         row = int(self.centres[second][0]) - int(self.centres[first][0])
@@ -369,6 +408,8 @@ class _Plan:
         """Prune until every remaining cell is on a clear course; return each one's heading."""
         alive = set(members)
         self.members = sorted(members)
+        areas = sorted(int(self.pixels[cell]) for cell in self.members)
+        self.scale = math.sqrt(areas[len(areas) // 2]) if areas else 1.0
         self.field = self._field()
         # A piece of lane that a zone of the game touches along a lane (not across it) is a
         # continuation of that current; one that none touches is a crossing of open water.
@@ -486,9 +527,11 @@ class _Tree:
     outgoing: dict[int, list[int]]
     incoming: dict[int, list[int]]
     cuts: frozenset[int]
+    plan: _Plan
 
-    def _reach(self) -> tuple[dict[int, int], dict[int, int]]:
-        """The cells on the longest directed path starting at, and ending at, each cell."""
+    def _reach(self) -> tuple[dict[int, float], dict[int, float]]:
+        """The length, in typical cells, of the longest directed path starting at, and ending
+        at, each cell (a lone cell is one)."""
         waiting = {cell: len(self.incoming[cell]) for cell in self.adjacency}
         order = sorted(cell for cell, count in waiting.items() if count == 0)
         for cell in order:
@@ -496,16 +539,21 @@ class _Tree:
                 waiting[other] -= 1
                 if waiting[other] == 0:
                     order.append(other)
-        down: dict[int, int] = {}
+        span = self.plan.span
+        down: dict[int, float] = {}
         for cell in reversed(order):
-            down[cell] = 1 + max((down[other] for other in self.outgoing[cell]), default=0)
-        up: dict[int, int] = {}
+            down[cell] = max(
+                (span(cell, other) + down[other] for other in self.outgoing[cell]), default=1.0
+            )
+        up: dict[int, float] = {}
         for cell in order:
-            up[cell] = 1 + max((up[other] for other in self.incoming[cell]), default=0)
+            up[cell] = max(
+                (span(other, cell) + up[other] for other in self.incoming[cell]), default=1.0
+            )
         return down, up
 
     def _window(
-        self, cell: int, down: Mapping[int, int], up: Mapping[int, int]
+        self, cell: int, down: Mapping[int, float], up: Mapping[int, float]
     ) -> tuple[list[int], list[int]]:
         """The cells within ``WINDOW`` steps downstream and upstream, along the longer course."""
         found: list[list[int]] = []
@@ -556,28 +604,49 @@ class _Tree:
                 if len(self.adjacency[step]) != 2:  # noqa: PLR2004 - a junction or another end.
                     break
                 chain.append(step)
+            reach = math.fsum(
+                self.plan.span(cell, chain[i + 1] if i + 1 < len(chain) else step)
+                for i, cell in enumerate(chain)
+            )
             if (
                 len(self.adjacency[step]) >= 3  # noqa: PLR2004 - a junction.
-                and len(chain) < MIN_BRANCH
+                and reach < MIN_BRANCH
                 and support[leaf] < ANCHOR
+                and chain[-1] not in self._main_axis(step)
             ):
                 found.update(chain)
         return found
+
+    def _main_axis(self, junction: int) -> tuple[int, int]:
+        """The two neighbours of a junction that lie on its straightest path through it.
+
+        A short chain that continues the straight path (the end of a crossing beyond a small side
+        twig) is the course itself, not a side branch.
+        """
+        links = self.adjacency[junction]
+        best = (2.0, links[0], links[1])
+        for index, first in enumerate(links):
+            toward = self.plan.heading(junction, first)
+            for second in links[index + 1 :]:
+                away = self.plan.heading(junction, second)
+                cosine = _cosine(toward, away, math.hypot(*away))
+                best = min(best, (cosine, first, second))
+        return best[1], best[2]
 
     def _stub(
         self,
         plan: _Plan,
         headings: Mapping[int, tuple[float, float]],
         anchor: Mapping[int, float],
-        down: Mapping[int, int],
+        down: Mapping[int, float],
     ) -> set[int]:
         """The whole tree, when it is a stub or follows neither a current nor the gyres of the game.
 
         A tree that a zone of the game touches along its direction is a course from ``MIN_COURSE``
-        cells, or a bridge between two such zones from ``BRIDGE``. A tree that none touches (a
-        crossing of open water) is a course from ``MIN_OPEN`` cells where the field of gyres
-        agrees with each stretch of it: the mean field cosine of the stretch's cells is at least
-        ``FIELD_COHERENCE``; a stretch that does not agree is dropped.
+        cells, or a bridge between two such zones from ``BRIDGE``. A tree that none touches is a
+        crossing of open water, or the tail that a cut left of a continuation: a course from
+        ``MIN_OPEN`` cells (``MIN_COURSE`` for a tail) where the field of gyres agrees with each
+        stretch of it, a stretch that does not agree being dropped.
         """
         sources = [cell for cell in self.adjacency if not self.incoming[cell]]
         sinks = [cell for cell in self.adjacency if not self.outgoing[cell]]
@@ -586,26 +655,30 @@ class _Tree:
         bridge = any(anchor[cell] >= ANCHOR for cell in sources) and any(
             anchor[cell] >= ANCHOR for cell in sinks
         )
-        if any(cell in plan.docked for cell in self.adjacency):
-            if (anchored and length >= MIN_COURSE) or (bridge and length >= BRIDGE):
-                return set()
+        if (anchored and length >= MIN_COURSE) or (bridge and length >= BRIDGE):
+            return set()
+        if anchored:
             return set(self.adjacency)
-        # No zone of the game touches this piece of lane: open water. Each stretch between junctions
-        # keeps only the cells where the gyres of the game agree with its direction.
+        # No zone of the game touches this piece of lane along its direction: a crossing of open
+        # water, or the tail that a cut left of a continuation (it then needs the cells of a
+        # continuation). Each stretch between junctions keeps only the cells where the gyres of
+        # the game agree with its direction.
+        shortest = MIN_COURSE if any(cell in plan.docked for cell in self.adjacency) else MIN_OPEN
         disagree: set[int] = set()
         for chain in self._chains():
             for run in self._runs(chain, headings):
                 surety = math.fsum(math.hypot(*plan.field[cell]) for cell in run)
                 agreement = math.fsum(plan.field_support(cell, headings[cell]) for cell in run)
+                extent = 1.0 + math.fsum(plan.span(a, b) for a, b in pairwise(run))
                 if (
-                    len(run) < MIN_OPEN
+                    extent < MIN_OPEN
                     or surety < FIELD_CONFIDENCE * len(run)
                     or agreement < FIELD_COHERENCE * surety
                 ):
                     disagree.update(run)
         if disagree:
             return disagree
-        return set() if length >= MIN_OPEN else set(self.adjacency)
+        return set() if length >= shortest else set(self.adjacency)
 
     def _runs(
         self, chain: Sequence[int], headings: Mapping[int, tuple[float, float]]
@@ -720,4 +793,4 @@ def _orient(tree: dict[int, list[int]], plan: _Plan) -> _Tree:
         source, target = (parent[cell], cell) if way[cell] == 0 else (cell, parent[cell])
         outgoing[source].append(target)
         incoming[target].append(source)
-    return _Tree(tree, outgoing, incoming, frozenset(cuts))
+    return _Tree(tree, outgoing, incoming, frozenset(cuts), plan)

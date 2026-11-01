@@ -34,7 +34,7 @@ from rnw.relief import generate_relief
 from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import designed_corridors
 from rnw.straits import pinch
-from rnw.synth import grow_regions, merge_small, renumber, seed_sites
+from rnw.synth import grow_regions, merge_slivers, merge_small, renumber, seed_sites
 from rnw.topology import (
     adjacency_pairs,
     distance_from,
@@ -819,6 +819,13 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
     return merge_small(grow_regions(mask, sites), smallest)
 
 
+# A sea cell thinner than a fifth of the sea-cell spacing (twice its area over its perimeter), whose
+# perimeter is at least 40 % other sea cells, is a needle or a crescent between cells and joins the
+# neighbour it shares most with. A strait, bordered by land, stays.
+SLIVER_DIVISOR: Final[int] = 5
+SLIVER_PERMILLE: Final[int] = 400
+
+
 def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement domain.
     ocean: NDArray[np.bool_],
     *,
@@ -839,7 +846,9 @@ def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement
         return merge_small(np.where(mask, parts, -1).astype(np.int32), smallest)
 
     if bands is None:
-        return sea_part(ocean)
+        return merge_slivers(
+            sea_part(ocean), spacing / SLIVER_DIVISOR, SLIVER_PERMILLE, _world_edge(ocean, domain)
+        )
     if bands.shape != ocean.shape:
         message = "Current bands do not fit the world"
         raise ValueError(message)
@@ -865,7 +874,23 @@ def _sea_cells(  # noqa: PLR0913 - partition inputs and the physical replacement
             result[rows][mask[rows]] = part[rows][mask[rows]] + offset
             maximum = max(maximum, int(part[rows].max()))
         offset += maximum + 1
-    return result
+    return merge_slivers(
+        result, spacing / SLIVER_DIVISOR, SLIVER_PERMILLE, _world_edge(ocean, domain)
+    )
+
+
+def _world_edge(
+    ocean: NDArray[np.bool_], domain: NDArray[np.bool_] | None
+) -> NDArray[np.bool_] | None:
+    """The ocean pixels that touch the outside of the generated domain (None without one)."""
+    if domain is None:
+        return None
+    inner = domain.copy()
+    inner[1:] &= domain[:-1]
+    inner[:-1] &= domain[1:]
+    inner[:, 1:] &= domain[:, :-1]
+    inner[:, :-1] &= domain[:, 1:]
+    return ocean & ~inner
 
 
 def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, seed, settings and the extras.

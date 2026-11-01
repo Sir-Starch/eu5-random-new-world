@@ -21,11 +21,32 @@ the cells form a *course* (`rnw.currents`, below). Every other lane cell stays n
 ocean without `movement_assistance`, as one of the game's 750 deep zones is [V-LOCAL 1.4.3 C234];
 nothing about ships, ports, routes or names changes. There are two kinds of course: a
 *continuation* of a current of the game into the generated water, and a *crossing* of open water,
-whose direction is that of the game's gyres at its place. In QU3N, 174 of the 265 cells keep a
-current, in four continuations of 16 to 53 cells and seven crossings of four to six; no two
-neighbours point at each other and no arrow points against a zone of the game that touches its
-cell. Exports of continents 1000, archipelago 42, The Wall 9 and islands 7 with the same code
-pass every sea invariant and keep 171, 59, 133 and 96 current cells. [V-EXEC]
+whose direction is that of the game's gyres at its place. In QU3N (the owner's world, rebuilt with
+a peoples roll) 182 of the 248 lane cells keep a current; no two neighbours point at each other and
+no arrow points against a zone of the game that touches its cell. Exports of continents 1000,
+archipelago 42, The Wall 9 and islands 7 with the same code pass every sea invariant and keep 164, 89,
+135 and 80 current cells. [V-EXEC]
+
+A second report of the same day (the owner's The Wall J4VJ, 2026-11-01) found a long straight line
+of prepared lane with no current beside a cluster of arrows, and a wide cluster of arrows pointing
+every which way round retained islands. The first was a straight crossing whose deep cells are split
+by shallow strips: each deep piece was too short to be a course, and a small side twig at a junction
+then ate the end of the crossing as a "short branch". The second is a stretch of lane several cells
+wide, a sea of deep cells and not a lane. Courses now run through the shallow strips of a crossing
+(only its deep cells get the arrow), lengths are measured along the path in typical cells, a short
+chain that continues the straight path through a junction is the course and not a branch, and a cell
+with eight or more lane cells within 2.2 typical cells (a wide stretch) carries no arrow. [V-EXEC]
+
+**Sea-cell slivers, pending 1.1.0 / epoch 60 (same report):** some generated sea locations are long
+and narrow, like a needle or a crescent round a retained island's footprint, and one touches six
+neighbours. A coast, a crossing band or a footprint cuts a Voronoi cell into pieces that were merged
+only by area, so thin pieces survived. Measured on J4VJ, 42 of 1,547 sea cells were thinner than 20
+pixels (twice area over perimeter; a square cell of 118 pixels is 59), the longest needle 212 × 20.
+A cell thinner than a fifth of the sea-cell spacing whose perimeter is at least 40 % other sea cells
+now joins the neighbour it shares most with (`synth.merge_slivers`), unless the neighbour touches
+the edge of the generated world and it does not; a strait, bordered by land, stays. J4VJ keeps 1,494
+sea cells, none thinner than 20 pixels that other cells border. Long cells that are not thin (a
+strip 222 × 55) and the thin tails of otherwise fat cells are not changed. [V-EXEC]
 
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent
@@ -264,8 +285,13 @@ draws no random number; ties go to the lower cell.
 5. **Heading.** Each cell's direction is the heading from two cells upstream to two cells downstream
    along the longer way, so the arrow follows the path round bends and never points across its lane.
    The strength is the mean of the game's currents it continues.
-6. **Pruning**, repeated until nothing changes: a cell that the zones touching it oppose (sum of
-   cosines below −0.5); a side branch shorter than five cells that no zone anchors; neighbours whose
+6. **Shape.** Lengths below are in typical cells along the path (a crossing's cells are long strips).
+   The navigable cells of a straight crossing that are not deep (*connectors*, the designed cells that
+   are not lanes) are nodes of the course but carry no arrow. A cell with eight or more lane cells
+   within 2.2 typical cells (a sea of deep cells, not a lane) is not on any course.
+7. **Pruning**, repeated until nothing changes: a cell that the zones touching it oppose (sum of
+   cosines below −0.5); a side branch shorter than five typical cells that no zone anchors and that is
+   not the straight continuation of the path through its junction; neighbours whose
    arrows point at each other or more than 120° apart (the cell that disagrees with most of its
    neighbours gives way); then each piece. A piece that a zone touches along a lane stays only if a
    zone *anchors* it (a summed cosine of 0.5) and it runs six or more cells, or it joins two zones

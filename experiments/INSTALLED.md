@@ -6,29 +6,26 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
-2026-11-01, **ocean currents as clear courses** (C456). [V-EXEC] Installed two new worlds in the normal
-Proton profile, each the land and seas of the owner's world QU3N (continents, seed
+2026-11-01, **ocean currents as clear courses, and sliver sea locations** (C456). [V-EXEC] Installed three
+worlds in the normal Proton profile, each the land of the owner's world QU3N (continents, seed
 12037730821817090414) with the peoples rolled so that its id differs from the installed QU3N
-(`rnw_exp_world_qu3nhnzsl6`, left in place). **`mod/rnw_exp_world_lademjafjb`** (peoples roll 2, code
-`RNW1-080TE-3MWCX-G2VGB-E040G-00813-G1AG9-9D`) is the current one: its 870 nonmetadata files have
-SHA-256 `02367ccd…ab975f1`; all 872 manifest entries that the reveal setting does not withhold match the
-installed bytes (26 are selection-cover and library-only files). It has 265 lanes (deep ocean), 174 of
-which carry a current: four continuations of the game's currents (16–53 cells) and seven crossings of
-open water (4–6 cells). The same land in the owner's QU3N has 265 current cells in 18 pieces.
-`mod/rnw_exp_world_7224ct35fl` (roll 1) is the first version of this change, which dropped every
-current that no zone of the game touched (138 current cells); it is kept for comparison and is superseded.
-Both exports report zero split cells, unreachable generated seas, lost Old World contacts or land cells
-without port access. Records are in the native library and the Proton `AppData/Local/RandomNewWorld`
-library. Existing worlds, saves, settings and playsets were preserved; EU5 was not launched or
-controlled.
+(`rnw_exp_world_qu3nhnzsl6`, left in place). **`mod/rnw_exp_world_7uwam7i5jh`** (peoples roll 3, code
+`RNW1-080TE-3MWCX-G2VGB-E040G-00813-G1ZGY-PF`) is the current one: 869 nonmetadata files,
+SHA-256 `d966ed39…346ad2`; all 871 manifest entries that the reveal setting does not withhold match the
+installed bytes (26 are selection-cover and library-only files). It has 248 lanes (deep ocean), 182 of
+which carry a current. The earlier two, `rnw_exp_world_7224ct35fl` (roll 1: only continuations of the
+game's currents) and `rnw_exp_world_lademjafjb` (roll 2: before the shallow-strip, wide-stretch and sliver
+changes), are superseded and kept for comparison. The export reports zero split cells, unreachable generated
+seas, lost Old World contacts or land cells without port access. Records are in the native library and the
+Proton `AppData/Local/RandomNewWorld` library. Existing worlds, saves, settings and playsets were preserved;
+EU5 was not launched or controlled. The owner's land cache (four entries) was cleared because it holds cells.
 
-The verified 1.1.0 hub (3,478 files) was rebuilt with the final planner, passed its Windows/Wine
-generator and window-shell self-tests and was installed as `mod/rnw_exp_hub`; its previous copy is
-retained at `.rnw-hub-backups/1.1.0-1793502673849706053`. Wheel SHA-256
-`5233752da68a940cd002f4c65cca54ad0621fd015eeced69292062f15cc03df0`. The pending epoch-60 reference on
-build 26300913 has 871 files and digest `6550250b…c052`, reproduced by the installed-game suite
-(13 passed, 2 skipped; the reference export reproduced on this code). Full
-Python checks pass (2,367 tests, 15 optional skips; strict types, lint and formatting). Evidence:
+The verified 1.1.0 hub (3,478 files) was rebuilt with the final code, passed its Windows/Wine generator and
+window-shell self-tests and was installed as `mod/rnw_exp_hub`; its previous copy is retained at
+`.rnw-hub-backups/1.1.0-1793508902672489194`. Wheel SHA-256
+`a069243e53757eb92d019b539b59ea57ef1f6bb1c8cf759287bf069f817de14c`. The pending epoch-60 reference on build
+26300913 has 871 files and digest `c1a8abf0…6516f`, reproduced by the installed-game suite (14 passed, 1 opt-in
+skip). Full Python checks pass (2,375 tests, 15 optional skips; strict types, lint and formatting). Evidence:
 ignored `local_data/currents-20261101/`.
 
 2026-11-01, **issue #9 colonial overseas border correction** (C455). [V-EXEC]

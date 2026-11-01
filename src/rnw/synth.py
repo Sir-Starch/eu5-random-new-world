@@ -207,6 +207,81 @@ def merge_small(labels: NDArray[np.int32], minimum: int) -> NDArray[np.int32]:
     return np.where(labels >= 0, mapping[np.maximum(labels, 0)], -1).astype(np.int32)
 
 
+SLIVER_STRIP: Final[int] = 1024
+
+
+def merge_slivers(
+    labels: NDArray[np.int32],
+    thinnest: float,
+    share_permille: int,
+    outer: NDArray[np.bool_] | None = None,
+) -> NDArray[np.int32]:
+    """Merge cells that are mere slivers into their longest-border neighbour.
+
+    A cell is a sliver when its thickness, twice its area over its perimeter (the width of a
+    strip, half the side of a square), is under ``thinnest`` and at least ``share_permille`` of
+    its perimeter touches other cells: a cell cut thin by a coast or a footprint is bordered by
+    land (a strait stays), one cut thin by another cell is a needle between cells. Cell numbers
+    are kept; a sliver takes the number of the neighbour that it joins. ``outer`` marks pixels that
+    touch the edge of the generated world: a sliver that does not touch it never joins a
+    neighbour that does, for that would give the neighbour a contact with the game's own map.
+    """
+    count = int(labels.max()) + 1
+    height = labels.shape[0]
+    area = np.zeros(count, dtype=np.int64)
+    perimeter = np.zeros(count, dtype=np.int64)
+    shared: dict[int, dict[int, int]] = {}
+    for first in range(0, height, SLIVER_STRIP):
+        block = labels[first : min(height, first + SLIVER_STRIP)]
+        area += np.bincount(block[block >= 0], minlength=count)
+        below = labels[first : min(height, first + SLIVER_STRIP + 1)]
+        for one, two in ((block[:, :-1], block[:, 1:]), (below[:-1], below[1:])):
+            differ = one != two
+            for here, there in ((one[differ], two[differ]), (two[differ], one[differ])):
+                inside = here >= 0
+                perimeter += np.bincount(here[inside], minlength=count)
+                both = inside & (there >= 0)
+                packed = here[both].astype(np.int64) * count + there[both]
+                values, lengths = np.unique(packed, return_counts=True)
+                for value, length in zip(values.tolist(), lengths.tolist(), strict=True):
+                    cell, other = divmod(value, count)
+                    row = shared.setdefault(cell, {})
+                    row[other] = row.get(other, 0) + length
+    reaches = np.zeros(count, dtype=bool)
+    if outer is not None:
+        reaches = np.bincount(labels[outer & (labels >= 0)], minlength=count) > 0
+    target = list(range(count))
+
+    def resolve(item: int) -> int:
+        while target[item] != item:
+            item = target[item]
+        return item
+
+    thin = [
+        cell
+        for cell in range(count)
+        if perimeter[cell] and 2 * area[cell] < thinnest * perimeter[cell]
+    ]
+    for cell in sorted(thin, key=lambda item: (2 * area[item] / perimeter[item], item)):
+        neighbours = shared.get(cell, {})
+        if sum(neighbours.values()) * PERMILLE < share_permille * int(perimeter[cell]):
+            continue
+        allowed = {
+            other: length
+            for other, length in neighbours.items()
+            if reaches[cell] or not reaches[resolve(other)]
+        }
+        if not allowed:
+            continue
+        best = min(allowed.items(), key=lambda item: (-item[1], item[0]))[0]
+        root = resolve(best)
+        if root != cell:
+            target[cell] = root
+            reaches[root] |= reaches[cell]
+    mapping = np.array([resolve(item) for item in range(count)], dtype=np.int32)
+    return np.where(labels >= 0, mapping[np.maximum(labels, 0)], -1).astype(np.int32)
+
+
 def _land_mask(seed: int, geo: GeographySettings, width: int, height: int) -> NDArray[np.bool_]:
     elevation = fractal_noise(
         derive_seed(seed, "elevation"),
