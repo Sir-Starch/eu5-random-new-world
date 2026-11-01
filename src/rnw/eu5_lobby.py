@@ -24,9 +24,9 @@ and start buttons were gated). Runtime confirmation is open.
 
 Where the cover lies is a grid of ``CELL``-pixel squares held in the include as a constant
 array, a bit each, first row north: the generated locations, the game's ocean wastelands
-(impassable sea zones) that border them and the island groups of the Pacific strip that the New
-World's ocean holds, with their coast zones (``covered_locations``). A country in a game does not
-know any of these either, and left open at selection they would outline the New World. The
+(impassable sea zones) that border them and every pixel of the canvas, which includes the island
+groups of the Pacific strip that stay or move inside it. A country in a game does not know
+any of these either, and left open at selection they would outline the New World. The
 shader smooths the grid's steps bilinearly. A file texture cannot carry it: the game declares a
 ``TextureSampler`` only with a ``Ref`` (an engine slot) or an ``Index``, and drops one with a
 ``File`` alone, so the shader that reads it does not compile and the game crashes when the map is
@@ -55,7 +55,7 @@ import numpy as np
 from rnw.eu5_lobby_gui import GUI_FILES
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Mapping, Sequence
+    from collections.abc import Callable, Mapping, Sequence
 
     from numpy.typing import NDArray
 
@@ -499,30 +499,17 @@ def cover_files() -> tuple[str, ...]:
     )
 
 
-def covered_locations(
-    vanilla: int, generated: int, wastelands: Iterable[int], groups: Iterable[Iterable[int]]
+def cover_grid(
+    labels: NDArray[np.int32],
+    covered: NDArray[np.bool_],
+    within: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.bool_]:
-    """Whether the cover takes each label: the game's ``vanilla`` locations, then the ``generated``.
-
-    The cover takes every generated location, the ocean ``wastelands`` of the game that border
-    them and the locations and coast zones of each island group of ``groups``: a group of the
-    Pacific strip that the New World's ocean now holds, where it stood or where it was moved,
-    which a country in a game does not know either. Left open, the islands and the water
-    between them would float in the covered ocean and outline it.
-    """
-    covered = np.ones(vanilla + generated, dtype=bool)
-    covered[:vanilla] = False
-    covered[sorted(wastelands)] = True
-    for group in groups:
-        covered[sorted(group)] = True
-    return covered
-
-
-def cover_grid(labels: NDArray[np.int32], covered: NDArray[np.bool_]) -> NDArray[np.bool_]:
     """The cells of ``CELL`` pixels that covered locations fill at least half of, north first.
 
     ``labels`` is the finished map's location raster, first row north; ``covered`` says for
-    every label whether the cover takes it. The map is read in bands of ``CELL`` rows.
+    every label whether the cover takes it. ``within`` marks pixels the cover takes whatever
+    their label: the canvas of the New World, holes included, where the vanilla islands of
+    the Pacific strip stand, kept or moved. The map is read in bands of ``CELL`` rows.
     """
     rows, columns = labels.shape
     if rows % CELL or columns % CELL:
@@ -531,7 +518,10 @@ def cover_grid(labels: NDArray[np.int32], covered: NDArray[np.bool_]) -> NDArray
     width = columns // CELL
     grid = np.zeros((rows // CELL, width), dtype=bool)
     for band in range(rows // CELL):
-        inside = covered[labels[band * CELL : (band + 1) * CELL]]
+        rows_of_band = slice(band * CELL, (band + 1) * CELL)
+        inside = covered[labels[rows_of_band]]
+        if within is not None:
+            inside = inside | within[rows_of_band]
         counts = inside.reshape(CELL, width, CELL).sum(axis=(0, 2))
         grid[band] = counts * 2 >= CELL * CELL
     return grid

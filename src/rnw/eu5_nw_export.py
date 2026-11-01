@@ -135,7 +135,6 @@ from rnw.eu5_lobby import (
     cover_grid,
     cover_include,
     cover_shader,
-    covered_locations,
     drawings_include,
     land_colour,
     sampler_include,
@@ -307,7 +306,6 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from rnw.eu5_pacific import IslandGroup
     from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.settings import Settings
@@ -438,6 +436,13 @@ class LocationLimitError(NewWorldExportError):
         self.count: int = count
         self.limit: int = limit
         super().__init__(f"{count} locations exceed the {limit} safety cap")
+
+
+def _canvas_pixels(canvas: Canvas, final: NDArray[np.int32]) -> NDArray[np.bool_]:
+    """Where the canvas lies on the map (``final``'s shape), as the map holds it, seam wrapped."""
+    pixels = np.zeros(final.shape, dtype=bool)
+    canvas.put(pixels, np.ones(canvas.mask.shape, dtype=bool))
+    return pixels
 
 
 def _world_columns(canvas: Canvas, columns: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -856,21 +861,22 @@ def binding_problems(
     return broken
 
 
-def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its labels and the groups.
+def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its labels and the canvas.
     game_dir: Path,
     game_map: Eu5Map,
     world: NewWorld,
     final: NDArray[np.int32],
     neighbours: frozenset[int],
-    groups: Sequence[IslandGroup] = (),
+    within: NDArray[np.bool_] | None = None,
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     """The files that cover the New World at country selection, and what the cover holds.
 
     The cover takes the generated locations, the ocean wastelands among their vanilla
-    ``neighbours`` and the island ``groups`` that stand in the New World's ocean, kept or moved,
-    with their coast zones (``rnw.eu5_lobby``). The game's own files are changed where it decides
-    what to draw and offer; a game whose files read otherwise, or whose shaders would not bind
-    the cover's samplers, stops the export instead of leaving the cover half made.
+    ``neighbours`` and every pixel ``within`` the canvas as it was before its island groups were
+    placed: the groups stay or have moved inside it and, as vanilla locations, would otherwise
+    stand open in the covered ocean (``rnw.eu5_lobby``). The game's own files are changed where
+    it decides what to draw and offer; a game whose files read otherwise, or whose shaders would
+    not bind the cover's samplers, stops the export instead of leaving the cover half made.
     """
     patched = {
         edit.path: cover_shader(edit, _read(game_dir, edit.source_path or edit.path))
@@ -894,10 +900,10 @@ def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its lab
     wastes = set(lists["sea_zones"]) & set(lists["impassable_mountains"])
     seas = sorted(i for i in neighbours if game_map.keys[i] in wastes)
     vanilla = len(game_map.keys)
-    members = [(*group.locations, *group.zones) for group in groups]
-    covered = covered_locations(vanilla, len(world.classes), seas, members)
-    held = sorted({i for member in members for i in member})
-    grid = cover_grid(final, covered)
+    covered = np.ones(vanilla + len(world.classes), dtype=bool)
+    covered[:vanilla] = False
+    covered[seas] = True
+    grid = cover_grid(final, covered, within)
     rows, columns = final.shape
     mod_includes = {
         COVER_INCLUDE: cover_include((rows, columns), grid, unknown_colour(land)),
@@ -927,7 +933,6 @@ def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its lab
         "grid": [int(grid.shape[1]), int(grid.shape[0])],
         "grid_cells": int(np.count_nonzero(grid)),
         "ocean_wastelands": [game_map.keys[i] for i in seas],
-        "island_group_locations": len(held),
         "shaders": [_mod_path(path) for path in shaders],
     }
     return outputs, stats
@@ -3161,7 +3166,12 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         cover, cover_stats = run_stage(
             "selection cover",
             lambda: _cover_outputs(
-                game_dir, game_map, world, final_labels, neighbours, canvas.groups
+                game_dir,
+                game_map,
+                world,
+                final_labels,
+                neighbours,
+                _canvas_pixels(clean, final_labels),
             ),
         )
         texts.update(cover)
