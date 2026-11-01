@@ -1413,3 +1413,30 @@ updater installed the **3,478-file** generator-only hub, retaining the former hu
 `local_data/hub-updates/1.1.0-1793569763743820520/rnw_exp_hub` of the `water-island-halo` worktree;
 Windows wheel SHA-256 `99ef30440a709ad6c07793fc0b573df652c04366a03e10b412c16cdf065028b6`. Unpublished
 1.1.0 / pending epoch 60; engine drawing of the cover over the groups was not observed.
+
+2026-11-02, **1.1.0 development / pending epoch 60 — water round islands, second correction**
+(owner's in-game screenshot of pale discs round every island in `xnkgew4sje`; claim C465).
+[V-EXEC] The first background-relative water rebuild left a shelf tail and small biases that the
+game showed as pale discs (on that world's real textures +7 / +2 / -2 / -3 luminance units at
+32-40 / 40-48 / 48-56 / 56-64 pixels from a new island). Now a shelf ends in the far sea, cells
+with open water keep their mean, divisions round, and where the old map was open sea the pixel is
+the original plus the halo, so the original stands from about 48 pixels out with its own detail. On
+the real textures of the new candidate the same distances give +2.9 / -1.1 / -0.7 / -0.2. Full
+Python checks pass (2,432 tests, 15 optional skips; format, lint, strict types). The installed-game
+reference export reproduces the new pending epoch-60 digest
+`dbc4dc987a95ad872b31b653570ca70e2f32a0f0fb1b20bb95d5015cfafc1c76` (868 nonmetadata files);
+`tests/golden_world.json` carries it.
+
+Installed **`mod/rnw_exp_world_wiuqek6boj`** in the existing Windows/Proton profile. Code:
+`RNW1-080KN-HKXKK-XB4AA-9040G-00830-3SG46-R28Y1-G48S2-3W`: the land and seas of `xnkgew4sje` with its
+resources rerolled, covered at selection. The staged installer refused any existing target; 898
+files match the prepared mod, both libraries hold the record, and all 15 other mod folders (the
+played `xnkgew4sje` among them) and 9 profile-root files are unchanged. No playset, save or
+preference edit (the active playset still names `xnkgew4sje`); no EU5 launch/control by the agent.
+
+The source/native and Windows/Wine window/native/code and shell/bridge self-tests pass. The standard
+updater installed the **3,478-file** generator-only hub, retaining the former hub at
+`.rnw-hub-backups/1.1.0-1793576623890075294`. Candidate: ignored
+`local_data/hub-updates/1.1.0-1793576556798271660/rnw_exp_hub` of the `water-island-halo` worktree;
+Windows wheel SHA-256 `70e08d7bcb99d7efdb8081071ef67c08661585d4fbdc2b0080d3b6c511c4bf0f`. Unpublished
+1.1.0 / pending epoch 60; engine drawing of the water was not observed.
