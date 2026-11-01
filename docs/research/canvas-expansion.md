@@ -273,6 +273,22 @@ hashes, audit script and bounded disassembly stay
 in ignored `local_data/overseas-audit-20261031/`. [UNKNOWN] The commenter's exact
 in-game failure and this correction's engine result were not observed.
 
+**Independent re-audit, 2026-11-01 (C455).** [V-EXEC] A separate banded RGB
+border scan, without the production adjacency or validation functions, reread
+five full 16384 × 8192 maps, including horizontal wrap. Vanilla has zero
+passable America–Old World contacts; the released 1.0.0 control has three;
+the corrected reference, installed continents/1001 candidate and latest installed
+peasant-mix world `tsliolqa56` each have zero. Their explicit `adjacencies.csv`
+crossings also introduce no connection leaving America. Feeding these observed
+contact pairs to the production guard rejects the released control and accepts
+the corrected maps. All 22 hierarchy/overseas regression tests pass. The installed
+hub's two correction modules match the current source byte for byte, and the
+executable/concept/charter/subject hashes still match the original audit's build
+26300913 inputs. Scripts and file hashes are retained in ignored
+`local_data/issue9-reaudit-20261101/`. This confirms removal of this map condition
+for newly generated worlds; existing world mods and saves are not retroactively
+changed. No EU5 gameplay result is claimed.
+
 ## The Pacific side and the island groups (owner request, 2026-10-31; pending 1.1.0 / epoch 60)
 
 The owner asked that the protected Polynesian islands before the seam stop limiting the canvas and
