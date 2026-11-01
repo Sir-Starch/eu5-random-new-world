@@ -95,7 +95,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 13, 20),
     (0, 13, 21),
     (0, 13, 22),
-    (1, 1, 0),  # Pending: ordinary resource placement controls.
+    (1, 1, 0),  # Pending: resources, geography, populations and identity-aware state cores.
 )
 
 

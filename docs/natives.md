@@ -37,7 +37,7 @@ Read-only survey of `main_menu/setup/1337`, `in_game/setup/countries` and `main_
 | 4. Population (after state-site planning) | `societies._population` | Capacity × (1 + 11 × complexity) × seeded noise of 0.6–1.5, scaled to the vanilla population per land location times the generated location count. The peasant share is `peasant_peak_permille` × complexity; default peak 60%. |
 | 5. Zones | `societies._zones` | Religion zones (about 80 locations) grow from spaced seeds by weighted travel cost over the whole graph, so every island gets one. Culture zones (about 10 locations) grow inside each religion zone; complex seeds grow larger. Every zone is connected. |
 | 6. Identity | `eu5_natives.match_homelands` | Each zone has a homeland vector: pop-weighted climate (counted twice), vegetation and topography shares, share in states, latitude, coast and, since 0.9.28, the shares of the three regional families (Mesoamerica, South America, North America; counted twice like climate). Vanilla cultures and religions have the same vector from their 1337 homelands. Zones pick in order of population. Each takes the best unused religion, or a culture of its religion, unless reusing the best one fits better by more than a slack; a small seeded noise varies the choice. |
-| 7. Polities | `societies._state_land`, `_states`, `_tribes` | State sites are planned before population: complex core land and farmable remote pockets, within the configured land budget. Only capitals meeting the vanilla agrarian baseline form landed states. Their capitals, the most populous spaced locations, take territories by weighted growth (larger capitals reach farther). In 45% of culture zones the tribal land splits into pop-type tribes of about 6 locations; the rest stays unorganised. |
+| 7. Polities | `societies._state_land`, `_states`, `_tribes` | State sites are planned before population: complex core land and farmable remote pockets, within the configured land budget. Only capitals meeting the vanilla agrarian baseline form landed states. Their spaced capitals balance population with local identity coherence; connected growth favours their culture and faith, with larger capitals reaching farther. In 45% of culture zones the tribal land splits into pop-type tribes of about 6 locations; the rest stays unorganised. |
 | 8. Ranks and markets | `societies._ranks`, `regional_markets` | The most populous 4% of states have a city capital and the next 11% a town capital. Every city, and the largest state near each hearth, is a market centre. Every disconnected landed group without one gets a local market in its most populous capital; all market centres have at least town rank. |
 | 8b. Vassals | `eu5_natives._vassals` | The most populous 5% of states take up to three bordering states of their religion with under a third of their population as vassals (`12_diplomacy.txt`, `subject_type = vassal`). Vanilla has 4 American vassals (C70); generated worlds get 8–19. Overlords come only from states whose template sets a starting technology level of at least the lowest of vanilla's lords (2), and (since 0.9.28) whose written level is at least that too: all 18 pairs of tech-0 lords (`amerindian_monarchy`, tribes) were logged as invalid at the start in two worlds, none of the 23 pairs of tech-2 lords (C99). |
 | 8c. Names | `names.MarkovNames`, `eu5_natives.PlaceNamer` | A character Markov chain (order 3) per corpus of vanilla American place names, chosen by the culture's language, else its family, else its religion, else all Americas (at least 40 names). Land locations take their culture's language; wastelands that of their land neighbours (with "Highlands"); provinces and areas that of most of their locations; states their capital's name and tribes a name of their culture. Names copy no vanilla name (accents ignored) and never repeat. Seas and lakes keep syllable names. |
@@ -116,6 +116,46 @@ No new game run or campaign is claimed. `report.json` → `natives.state_economy
 the calibrated floors, actual minima, isolated countries and countries without peasants.
 Synthetic tests cover poor islands, scarce population, remote farming, connected ownership,
 market sharing, confederate eligibility and loud rejection of unsupported landed countries.
+
+### Primary identity cores (issue #7, pending 1.1.0 / epoch 60)
+
+States select eligible capitals using population, seeded jitter and the population-weighted
+share of matching culture and faith in the capital and its immediate travel neighbours.
+A fully matching neighbourhood scores twice the raw population. Growth remains connected:
+ordinary states pay travel cost ×4 in another culture, ×3 in another faith, or ×6 when both
+change. These costs apply relative to the capital throughout the journey, so passing through
+foreign territory does not reset the cost. Empires use the same capital preference but
+milder ×2/×2/×3 costs, retaining diverse borderlands. Foreign land remains traversable.
+The existing capital population weights, eligibility, country farming floors, ownership
+exclusion and empire size draws remain in force. Populations, peasant counts, identity zones
+and the global population budget are constructed before this choice and are unchanged.
+
+[V-EXEC, 2026-11-01] Before/after synthetic measurements use source `f04dc91` as baseline,
+six seeds (3, 4, 7, 42, 77, 1000), the 1,212-location fertile-mainland/island and six-block/poor-island
+graphs in `tests/test_societies.py`, state sizes 3 and 10, and 100% empire chance. Other settings
+are `SETTINGS` from that test, with target 4,000,000 milli-pops and floor 338 milli-peasants /
+122‰. Shares weight population within each country; the table gives the median country share,
+not a pooled population share. Ordinary small states have ≤5 locations; large states have >5.
+
+| Faith-zone target | Country size | Countries before → after | Primary culture / combined before → after | State faith before → after |
+|---|---|---:|---:|---:|
+| 150 locations | Ordinary small | 507 → 453 | 100% → 100% | 100% → 100% |
+| 150 locations | Ordinary large | 120 → 121 | 67.6% → 71.9% | 100% → 100% |
+| 150 locations | Empire | 64 → 64 | 58.4% → 81.9% | 100% → 100% |
+| 30 locations | Ordinary small | 518 → 473 | 100% → 100% | 100% → 100% |
+| 30 locations | Ordinary large | 109 → 120 | 55.4% → 71.9% | 83.5% → 95.4% |
+| 30 locations | Empire | 64 → 64 | 51.7% → 72.6% | 65.3% → 94.9% |
+
+With 30-location faith zones, ordinary large states below 25% primary culture fall from
+14 to 5; 91/120 larger ordinary states and 62/64 empires still contain cultural minorities.
+With 150-location faith zones, the corresponding tiny-core count falls from 8 to 6;
+93/121 larger ordinary states and 52/64 empires retain minorities. No minimum majority is
+promised. These are conservative identity-zone measurements: matching installed-game cultures
+may reuse the same culture in several zones. Culture zones nest within faith zones, so the
+combined zone share equals the cultural share. They establish algorithm behaviour on synthetic
+graphs, not prevalence in player worlds or observed gameplay. The regression matrix covers
+connected/disjoint ownership and country farming support; separate tests cover boundary
+capitals, foreign passages, sea links and deterministic output.
 
 ### Higher state-land targets (issue #5)
 

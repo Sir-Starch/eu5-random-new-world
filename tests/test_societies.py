@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 from rnw.eu5_natives import _pop_lines  # pyright: ignore[reportPrivateUsage]
+from rnw.rng import SplitMix64
 from rnw.settings import NATIVES
 from rnw.societies import (
     CITY,
@@ -25,6 +26,9 @@ from rnw.societies import (
     Polity,
     Societies,
     StateFloor,
+    _Graph,  # pyright: ignore[reportPrivateUsage]
+    _Identity,  # pyright: ignore[reportPrivateUsage]
+    _states,  # pyright: ignore[reportPrivateUsage]
     generate_societies,
     hearth_domains,
     land_routes,
@@ -465,11 +469,11 @@ def _digest(societies: Societies) -> str:
     return digest.hexdigest()
 
 
-# Pinned agrarian state placement (0.13.17): no-empires worlds remain deterministic.
+# Pending epoch 60: identity-aware capitals and growth, without empires.
 NO_EMPIRES: dict[int, str] = {
-    3: "b2a7b4a79af091d6f95c15abbb9418703ae6a8114426101cd8074d19be9fe6b4",
-    4: "8d64ce781d9676daaed9b3dbba71d03c34194c21b655726feb8e50841c588313",
-    77: "7a565459ddd5f9be22c3dd461b92c0030f5147e9a28b61e955cc1c910b797772",
+    3: "d53bd9ce1fddef7a9f5186c016a7620fd0a8a99d01c358468475850e8e9c6b32",
+    4: "d72c399ec79a79ecbc7bed2f94ee776939d23b363d88659355246fd666cc304a",
+    77: "d7a67943850c98d235dba1faaddc3cfeb73b1b15c5cd0170c053285a9973c97b",
 }
 
 
@@ -518,6 +522,89 @@ def test_a_higher_chance_raises_more_empires() -> None:
     assert counts == sorted(counts)
     assert counts[0] == 0
     assert counts[-1] > counts[1] > 0
+
+
+def test_identity_growth_keeps_foreign_passages_and_accumulated_cost() -> None:
+    """Foreign land is traversable; crossing it never disconnects a matching enclave."""
+    graph = _roads(4, [(0, 1), (1, 2)], links=[(2, 3)])
+    identity = _Identity([0, 1, 0, 0], [0, 1, 0, 0])
+    cost, owner = _Graph(graph).grow([0], identity=identity)
+    assert cost.tolist() == [0, 6000, 7000, 12000]
+    assert owner.tolist() == [0, 0, 0, 0]
+
+
+def test_capital_selection_prefers_a_supported_identity_interior() -> None:
+    """A slightly larger boundary town loses to the substantial neighbouring core."""
+    graph = _Graph(_roads(7, [(n, n + 1) for n in range(6)]))
+    population = np.array([50, 50, 110, 100, 100, 100, 100], dtype=np.int64)
+    identity = _Identity([0, 0, 1, 1, 1, 1, 1], [0, 0, 1, 1, 1, 1, 1])
+    eligible = np.ones(7, dtype=bool)
+    eligible[:3] = False
+    eligible[2] = True
+    states = _states(
+        graph,
+        np.ones(7, dtype=bool),
+        population,
+        locations=7,
+        rng=SplitMix64(3),
+        eligible=eligible,
+        identity=identity,
+    )
+    assert len(states) == 1
+    capital, members = states[0]
+    assert capital >= 3
+    assert members == list(range(7))
+
+
+def test_identity_cores_across_seeds_keep_minorities_and_agrarian_support() -> None:
+    """Compare the pre-issue baseline matrix; shares weight residents, not locations.
+
+    Six seeds, two disconnected-land shapes, state sizes 3/10 and 30-location faith
+    zones stress identity boundaries. The measured baseline ordinary-large medians
+    were .554 culture / .835 faith; empires .517 / .653 (docs/natives.md).
+    """
+    shares: dict[str, list[tuple[float, float]]] = {"large": [], "empire": []}
+    tiny = 0
+    floor = StateFloor(338, 122)
+    for graph in (_grid(), _fragmented_grid()):
+        for size in (3, 10):
+            for seed in (3, 4, 7, 42, 77, 1000):
+                settings = replace(
+                    SETTINGS, state_locations=size, religion_locations=30, empire_permille=1000
+                )
+                societies = generate_societies(
+                    graph, settings, seed=seed, target=4_000_000, state_floor=floor
+                )
+                for polity in societies.polities:
+                    assert _connected(set(polity.members), graph.edges)
+                    if polity.kind != STATE:
+                        continue
+                    members = list(polity.members)
+                    population = societies.population[members]
+                    total = int(population.sum())
+                    assert floor.supports(total, int(societies.peasants[members].sum()))
+                    culture = (
+                        float(population[societies.culture[members] == polity.culture].sum())
+                        / total
+                    )
+                    faith = (
+                        float(
+                            population[
+                                societies.religion[members] == societies.religion[polity.capital]
+                            ].sum()
+                        )
+                        / total
+                    )
+                    if polity.great:
+                        shares["empire"].append((culture, faith))
+                    elif len(members) > 5:
+                        shares["large"].append((culture, faith))
+                        tiny += culture < 0.25
+    assert tiny < 14  # Baseline countries below 25% primary culture.
+    for group in shares.values():
+        assert median(c for c, _ in group) > 0.65
+        assert median(r for _, r in group) > 0.90
+        assert sum(c < 1 for c, _ in group) > len(group) // 2
 
 
 def _roads(

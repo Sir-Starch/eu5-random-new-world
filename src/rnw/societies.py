@@ -153,6 +153,7 @@ class _Graph:
         weights: list[int] | None = None,
         allowed: NDArray[np.bool_] | None = None,
         limit: int | None = None,
+        identity: _Identity | None = None,
     ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
         """Weighted multi-source travel cost: (raw cost, owning seed index) per node.
 
@@ -179,11 +180,49 @@ class _Graph:
                 target = self.targets[slot]
                 if owners[target] >= 0 or (permitted is not None and not permitted[target]):
                     continue
-                total = raw + self.costs[slot]
+                penalty = 1 if identity is None else identity.penalty(seeds[index], target)
+                total = raw + self.costs[slot] * penalty
                 if limit is not None and total > limit:
                     continue
                 heapq.heappush(heap, (total * PERMILLE // weight, index, target, total))
         return np.array(costs, dtype=np.int64), np.array(owners, dtype=np.int64)
+
+
+@dataclass(frozen=True, slots=True)
+class _Identity:
+    """Soft growth costs relative to a capital; identities and populations stay fixed."""
+
+    culture: list[int]
+    religion: list[int]
+    cultural_cost: int = 3
+    religious_cost: int = 2
+
+    def penalty(self, capital: int, target: int) -> int:
+        """Charge throughout foreign territory, including travel back through it."""
+        return (
+            1
+            + self.cultural_cost * (self.culture[capital] != self.culture[target])
+            + self.religious_cost * (self.religion[capital] != self.religion[target])
+        )
+
+    def capitals(self, graph: _Graph, population: NDArray[np.int64]) -> NDArray[np.int64]:
+        """Population scores favouring capitals surrounded by their own identity.
+
+        The self and immediate travel neighbours give a bounded local measure. A
+        coherent centre scores up to twice as much as a boundary of equal population.
+        Sea links count as neighbours, as they do for territorial growth.
+        """
+        scores = population.copy()
+        for node in range(len(population)):
+            neighbours = [node, *graph.targets[graph.starts[node] : graph.starts[node + 1]]]
+            total = sum(int(population[n]) for n in neighbours)
+            core = sum(
+                int(population[n])
+                for n in neighbours
+                if self.culture[n] == self.culture[node] and self.religion[n] == self.religion[node]
+            )
+            scores[node] = int(population[node]) * (PERMILLE + PERMILLE * core // max(1, total))
+        return scores
 
 
 def _food(graph: _Graph, potential: NDArray[np.int64], radius: int) -> NDArray[np.int64]:
@@ -378,6 +417,7 @@ def _states(  # noqa: PLR0913 - capitals need population, eligibility and target
     locations: int,
     rng: SplitMix64,
     eligible: NDArray[np.bool_],
+    identity: _Identity,
 ) -> list[tuple[int, list[int]]]:
     """Capitals and members of states covering ``land``; big capitals grow farther."""
     nodes = np.flatnonzero(land).tolist()
@@ -386,7 +426,7 @@ def _states(  # noqa: PLR0913 - capitals need population, eligibility and target
     jitter = np.array([PERMILLE + rng.below(HEARTH_JITTER) for _ in range(len(population))])
     order = [
         int(node)
-        for node in np.argsort(-(population * jitter), kind="stable")
+        for node in np.argsort(-(identity.capitals(graph, population) * jitter), kind="stable")
         if land[node] and eligible[node]
     ]
     wanted = max(1, (len(nodes) + locations // 2) // locations)
@@ -396,7 +436,7 @@ def _states(  # noqa: PLR0913 - capitals need population, eligibility and target
         weights = [
             PERMILLE // 2 + 3 * PERMILLE * int(population[c]) // (2 * peak) for c in capitals
         ]
-        _, owner = graph.grow(capitals, weights=weights, allowed=land)
+        _, owner = graph.grow(capitals, weights=weights, allowed=land, identity=identity)
         missing = [node for node in order if owner[node] < 0]
         if not missing:
             break
@@ -416,13 +456,14 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
     chance: int,
     seed: int,
     eligible: NDArray[np.bool_],
+    identity: _Identity,
     peasants: NDArray[np.int64],
     floor: StateFloor,
 ) -> list[tuple[int, list[int]]]:
     """Capitals and members of the great empires: each hearth raises one with ``chance`` permille.
 
-    The empire's capital is the most populous inhabited location near its hearth, and it
-    takes the nearest inhabited locations by travel cost, so it is connected; it never takes
+    The empire's capital balances population and local identity coherence near its hearth.
+    Growth mildly favours its culture and faith by travel cost, so it is connected; it never takes
     land another empire holds. A stream of its own draws the chance and the size for every
     hearth whether or not an empire rises, so a higher chance raises empires at the same
     hearths and more, and ``chance`` 0 changes nothing else.
@@ -430,6 +471,7 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
     rng = SplitMix64(derive_seed(seed, "empires"))
     taken = np.zeros(len(inhabited), dtype=bool)
     empires: list[tuple[int, list[int]]] = []
+    scores = identity.capitals(graph, population)
     for hearth in hearths:
         draw, share = rng.below(PERMILLE), _uniform(rng, EMPIRE_SHARE)
         if draw >= chance or taken[hearth]:
@@ -439,8 +481,8 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
         candidates = np.flatnonzero((near >= 0) & inhabited & eligible)
         if not candidates.size:
             continue
-        capital = int(candidates[int(np.argmax(population[candidates]))])
-        reach, _ = graph.grow([capital], allowed=free)
+        capital = int(candidates[int(np.argmax(scores[candidates]))])
+        reach, _ = graph.grow([capital], allowed=free, identity=identity)
         reached = np.flatnonzero(reach >= 0)
         size = max(EMPIRE_FLOOR, len(inhabited) * share // PERMILLE)
         members = reached[np.argsort(reach[reached], kind="stable")][:size]
@@ -665,6 +707,7 @@ def generate_societies(
         eligible=eligible,
         peasants=peasants,
         floor=state_floor,
+        identity=_Identity(culture.tolist(), religion.tolist(), cultural_cost=1, religious_cost=1),
     )
     empire_land = np.zeros(count, dtype=bool)
     for _, members in empires:
@@ -682,6 +725,7 @@ def generate_societies(
             locations=settings.state_locations,
             rng=rng,
             eligible=eligible,
+            identity=_Identity(culture.tolist(), religion.tolist()),
         )
     ]
     # State-land share is a placement budget: a component without a supported capital

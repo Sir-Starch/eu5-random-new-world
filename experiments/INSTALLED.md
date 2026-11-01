@@ -6,6 +6,31 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-01, **issue #7 native identity cores** (C459). [V-EXEC] Installed
+**Native identity cores · 7007** in new `mod/rnw_exp_world_54bascq2vu`, code
+`RNW1-081G0-00000-0006T-Z040G-00860-2AG63-YG1W8-8G3GH-149XR-08TX0-3G7VX-9`,
+with records in both the native and Proton libraries. EU5 1.4.6 / build 26300913;
+1.1.0 development / pending epoch 60. All 879 installed files match the prepared candidate;
+868 nonmetadata files have SHA-256
+`c6e0482fba56c79c482acaac00e8fe4f8810c868c40bf23fe132c3961eff163e`.
+All 312 landed countries meet the existing 122‰/338-milli peasant floors (observed minima
+129‰/1,391 milli), including five great empires of 70–88 locations. No split generated cells,
+unreachable generated seas, unported land or lost Old World contacts. All 18 existing mod
+directories and nine profile-root files were verified unchanged by the world installer.
+
+The 1.1.0 hub passed its packaged Windows/Wine generator and window-shell self-tests and
+was installed after the owner closed EU5. The first install attempt correctly stopped while
+the game was open. The former hub is retained at
+`.rnw-hub-backups/1.1.0-1793546784562452780`; candidate
+`local_data/hub-updates/1.1.0-1793546393236476626/rnw_exp_hub`, wheel SHA-256
+`6a4d976928736d4400edb2d1ee940788dd45dd67c73d43dc4e34d11a9303f0d8`.
+Full checks pass (2,396 Python tests, 15 optional skips; 23 native Rust tests), as does the
+read-only installed-game suite (13 tests, two opt-in skips). The refreshed pending epoch-60
+reference has 870 files, digest `38aead72…9d02`, independently reproduced by the opt-in
+installed-game reference test (one pass). The frozen epoch-59 reference is untouched.
+Evidence: ignored `local_data/identity-core/`. No agent launch/control of EU5 or gameplay
+validation; existing saves, settings and playsets are preserved.
+
 2026-11-01, **issue #6 peasant population mix**. [V-EXEC] Installed code
 `RNW1-080G0-00001-WC7Z4-T040G-00819-2G0D9-2XJC` (continents, seed 2026110106,
 peasant peak 80%) in new `mod/rnw_exp_world_tsliolqa56`, with the matching local library

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Give native states stronger primary-culture and faith cores through identity-aware capital
+  selection and territorial growth (issue #7, pending epoch 60). Borders can retain minorities;
+  great empires use milder growth preferences to preserve diversity. Population and identity
+  maps, farming requirements and the population budget are unchanged.
+
 - Let players adjust the upper peasant share from 30% to 80% at full social complexity
   (default 60%). It applies to all inhabited land: less complex and less farmable places
   remain more tribal. The total population budget and the vanilla farming threshold for
