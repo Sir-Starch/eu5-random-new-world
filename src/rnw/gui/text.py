@@ -197,7 +197,10 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "group.wall": "The Wall",
     "control.new_world.wall_width_permille": "Wall width",
-    "control.new_world.wall_width_permille.about": "Maximum width as a share of the canvas.",
+    "control.new_world.wall_width_permille.about": (
+        "Maximum width as a share of the canvas. The Wall takes its land out of the Land amount "
+        "first, so a wider Wall leaves less for the continents beside it, down to a few islands."
+    ),
     "control.new_world.wall_position_permille": "Wall position",
     "control.new_world.wall_position_permille.about": (
         "Position from west to east. The Wall goes around protected islands in its way."

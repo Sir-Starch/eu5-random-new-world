@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "Largura da muralha"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Largura máxima como proporção da área de geração."
+source = "ed46ede2804adb86"
+text = "Largura máxima como proporção da área de geração. A muralha toma a sua terra primeiro da quantidade de Terra: quanto mais larga, menos sobra para os continentes ao lado, até restarem só algumas ilhas."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

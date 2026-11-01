@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "Anchura del muro"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Anchura máxima como proporción de la zona de generación."
+source = "ed46ede2804adb86"
+text = "Anchura máxima como proporción de la zona de generación. El muro toma primero su tierra de la cantidad de Tierra: cuanto más ancho, menos queda para los continentes a su lado, hasta dejar solo unas pocas islas."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

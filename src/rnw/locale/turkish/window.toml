@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "Duvar genişliği"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "Üretim alanının oranı olarak azami genişlik."
+source = "ed46ede2804adb86"
+text = "Üretim alanının oranı olarak azami genişlik. Duvar toprağını önce Kara miktarından alır: ne kadar genişse yanındaki kıtalara o kadar az kalır, en sonunda yalnızca birkaç ada kalır."
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"

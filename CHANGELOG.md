@@ -18,6 +18,15 @@
   sample world cells longer than three times their width fall from 34 to 15 and the thin remainders of
   zones of the game from 12 to none. Existing worlds remain untouched.
 
+- Let The Wall be far wider, at the expense of the continents beside it (owner report: the widest
+  Wall, 14%, still had huge continents next to it; pending epoch 60, unreleased preset). The Wall's
+  width now runs from 4% to 44% of the canvas and is 14% by default. The land amount is one budget:
+  the Wall takes its land first and the continents beside it get what is left (never less than 1%
+  of the water beside them), so the widest Walls take nearly all the land and leave a few islands.
+  A Wall wider than the amount allows keeps its land. The window's estimate of locations counts the
+  Wall inside the land amount, and the width hint explains it in every language. A full export at
+  the widest setting passes every sea invariant. Existing worlds remain untouched.
+
 - Vary native polity outlines through farming corridors, similar-terrain belts and coastal
   growth alongside generalist expansion (issue #8, pending epoch 60). Small tribal groups use
   gentler preferences. Connected territories, capital membership and farming requirements

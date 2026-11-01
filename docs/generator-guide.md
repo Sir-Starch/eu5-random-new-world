@@ -179,8 +179,11 @@ Extra continents and islands can appear on either side.
 Advanced → The Wall controls width, position (west to east across the canvas; the Wall goes
 around protected islands in its way), coastal irregularity, mountain spine
 and whether gaps are permitted. Scale and noise settings shape the Wall as well as the
-extra land. A larger land amount widens the Wall; a smaller one only shrinks the extra
-land, so the Wall keeps its place. With gaps off the guaranteed land route bends and
+extra land. The Wall's width runs from 4% to 44% of the canvas (14% by default). The land
+amount is one budget: the Wall takes its land first and the continents beside it get what is
+left, so a wider Wall means fewer and smaller continents, and the widest ones leave only a few
+islands. A Wall wider than the land amount allows keeps its land, and the world then has more
+land than the amount asked for. A larger land amount also widens the Wall itself. With gaps off the guaranteed land route bends and
 changes width along its length. This preset uses the expanded ocean canvas and cannot be
 combined with a land image.
 

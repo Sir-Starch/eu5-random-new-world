@@ -2489,8 +2489,8 @@ source = "7587d042711fcdc6"
 text = "高墙宽度"
 
 ["control.new_world.wall_width_permille.about"]
-source = "b4e05557c2811aba"
-text = "最大宽度占生成区域的比例。"
+source = "ed46ede2804adb86"
+text = "最大宽度占生成区域的比例。高墙先从陆地总量中分得自己的陆地：越宽，留给两侧大陆的就越少，最宽时只剩几座岛屿。"
 
 ["control.new_world.wall_position_permille"]
 source = "0dd527cf2049760f"
