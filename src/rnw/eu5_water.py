@@ -2,8 +2,15 @@
 
 Vanilla textures paint shallow water and foam along the old coastlines and lake meshes
 sit at the old lakes [V-GAME C45]. Inside the canvas the colour and foam are rebuilt
-from vanilla statistics by latitude and distance to the new coast (keeping vanilla
-pixels where both maps are open ocean), and lake meshes over the canvas are dropped.
+from vanilla statistics (keeping vanilla pixels where both maps are open ocean), and lake
+meshes over the canvas are dropped.
+
+A pixel is the colour of the open water around it plus the shelf of the nearest coast.
+The open water is the vanilla colour of pixels far from any old land, smoothed and filled
+across the old continents. The shelf is the mean difference between vanilla pixels and
+that background by latitude band and distance to land. A table of absolute colours
+would paint every new island with the average of all coasts, a disc whose edge shows
+wherever the local sea is lighter or darker than the average [V-GAME/V-LOCAL C461].
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -45,9 +52,15 @@ BLEND: Final[int] = 16
 BLUR: Final[int] = 2
 # Rows per strip: the memory of one texture row (RGBA in eight-byte integers, a dozen
 # arrays alive) bounds the strip by the free memory [V-EXEC C102].
-STRIP_ROW_BYTES: Final[int] = 400
+STRIP_ROW_BYTES: Final[int] = 480
 STRIP_FLOOR: Final[int] = 16
 STRIP_CEILING: Final[int] = 512
+# The open-water background is a grid of cells GRID pixels wide, each the mean of its pixels at
+# least ``reach`` from old land. A cell with fewer than GRID_MIN such pixels takes the mean
+# of the larger block it belongs to; the grid is then smoothed SMOOTH times.
+GRID: Final[int] = 32
+GRID_MIN: Final[int] = GRID * GRID // 8
+SMOOTH: Final[int] = 3
 
 
 def _downsample(mask: NDArray[np.bool_], factor: int, *, any_true: bool) -> NDArray[np.bool_]:
@@ -68,15 +81,111 @@ def _decode(data: bytes) -> NDArray[np.uint8]:
         Image.MAX_IMAGE_PIXELS = previous
 
 
-def _profile_table(
+def _open_water_cells(
     image: NDArray[np.uint8], distance: NDArray[np.uint8], reach: int, strip: int
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Colour sums and pixel counts per ``GRID`` cell of the pixels ``reach`` or more from land.
+
+    Cells past the image edge hold only the pixels inside it. The sums are exact integers,
+    so adding them block row by block row gives the same cells as adding them at once.
+    """
+    rows, columns = distance.shape
+    cells = (-(-rows // GRID), -(-columns // GRID))
+    sums = np.zeros((*cells, 4), dtype=np.int64)
+    counts = np.zeros(cells, dtype=np.int64)
+    step = max(1, strip // GRID) * GRID
+    for first in range(0, rows, step):
+        last = min(rows, first + step)
+        block_rows = -(-(last - first) // GRID)
+        shape = (block_rows * GRID, cells[1] * GRID)
+        far = np.zeros(shape, dtype=bool)
+        far[: last - first, :columns] = distance[first:last] >= reach
+        top = first // GRID
+        counts[top : top + block_rows] = far.reshape(block_rows, GRID, cells[1], GRID).sum(
+            axis=(1, 3), dtype=np.int64
+        )
+        for channel in range(4):
+            values = np.zeros(shape, dtype=np.int64)
+            values[: last - first, :columns] = image[first:last, :, channel]
+            values[~far] = 0
+            sums[top : top + block_rows, :, channel] = values.reshape(
+                block_rows, GRID, cells[1], GRID
+            ).sum(axis=(1, 3), dtype=np.int64)
+    return sums, counts
+
+
+def _background_grid(sums: NDArray[np.int64], counts: NDArray[np.int64]) -> NDArray[np.int64]:
+    """Open-water colour per cell: the cell's own mean, else that of the nearest larger block.
+
+    A cell with fewer than ``GRID_MIN`` pixels is empty (land, coast or shelf). Blocks of
+    2x2 cells, then 4x4 and so on pool their sums, and an empty cell takes the mean of the
+    smallest block that has any; the result is smoothed ``SMOOTH`` times (a 1-2-1 filter,
+    wrapping across the seam) so cell edges do not show. Integer throughout.
+    """
+    own = counts >= GRID_MIN
+    levels = [(np.where(own[..., None], sums, 0), np.where(own, counts, 0))]
+    while levels[-1][1].shape != (1, 1):
+        total, count = levels[-1]
+        rows, columns = count.shape
+        total = np.pad(total, ((0, rows % 2), (0, columns % 2), (0, 0)))
+        count = np.pad(count, ((0, rows % 2), (0, columns % 2)))
+        half = (count.shape[0] // 2, count.shape[1] // 2)
+        levels.append(
+            (
+                total.reshape(half[0], 2, half[1], 2, 4).sum(axis=(1, 3)),
+                count.reshape(half[0], 2, half[1], 2).sum(axis=(1, 3)),
+            )
+        )
+    total, count = levels[-1]
+    if not count[0, 0]:
+        message = "The water texture has no open water far enough from land to take its colour"
+        raise ValueError(message)
+    grid = total // count[..., None]
+    for total, count in reversed(levels[:-1]):
+        parent = np.repeat(np.repeat(grid, 2, axis=0), 2, axis=1)[
+            : count.shape[0], : count.shape[1]
+        ]
+        grid = np.where((count > 0)[..., None], total // np.maximum(count, 1)[..., None], parent)
+    for _ in range(SMOOTH):
+        grid = (np.roll(grid, 1, axis=1) + 2 * grid + np.roll(grid, -1, axis=1)) // 4
+        above = np.concatenate([grid[:1], grid[:-1]])
+        below = np.concatenate([grid[1:], grid[-1:]])
+        grid = (above + 2 * grid + below) // 4
+    return grid
+
+
+def _background(grid: NDArray[np.int64], first: int, last: int, columns: int) -> NDArray[np.int64]:
+    """Bilinear open-water colour of rows ``first`` to ``last``; columns wrap at the seam.
+
+    Cell centres sit half a cell in; weights are in 1/(2 GRID), so every step is exact.
+    """
+    height, width = grid.shape[:2]
+    span = 2 * GRID
+    y = 2 * np.arange(first, last, dtype=np.int64) + 1 - GRID
+    row, fy = y // span, (y % span)[:, None, None]
+    x = 2 * np.arange(columns, dtype=np.int64) + 1 - GRID
+    column, fx = x // span, (x % span)[None, :, None]
+    vertical = (
+        grid[np.clip(row, 0, height - 1)] * (span - fy) + grid[np.clip(row + 1, 0, height - 1)] * fy
+    )
+    return (vertical[:, column % width] * (span - fx) + vertical[:, (column + 1) % width] * fx) // (
+        span * span
+    )
+
+
+def _profile_table(
+    image: NDArray[np.uint8],
+    distance: NDArray[np.uint8],
+    grid: NDArray[np.int64],
+    reach: int,
+    strip: int,
 ) -> NDArray[np.int64]:
-    """Mean RGBA per (latitude band, distance to land) from vanilla pixels.
+    """Mean RGBA offset from the open-water background per (latitude band, distance to land).
 
     The sums are exact integers in float64 (below 2**53), so adding them strip by strip
     gives the same table as adding them at once.
     """
-    rows = image.shape[0]
+    rows, columns = distance.shape
     bands = rows // BAND_ROWS
     size = bands * (reach + 1)
     counts = np.zeros(size, dtype=np.int64)
@@ -89,9 +198,10 @@ def _profile_table(
             + np.minimum(distance[first:last], reach).astype(np.int64)
         ).ravel()
         counts += np.bincount(key, minlength=size)
+        offset = image[first:last].astype(np.int64) - _background(grid, first, last, columns)
         for channel in range(4):
             sums[:, channel] += np.bincount(
-                key, weights=image[first:last, :, channel].ravel(), minlength=size
+                key, weights=offset[..., channel].ravel(), minlength=size
             )
     counts = np.maximum(1, counts)
     return (sums.astype(np.int64) // counts[:, None]).reshape(bands, reach + 1, 4)
@@ -118,11 +228,11 @@ def _synthesize(
     return (first * (1000 - weight) + second * weight) // 1000
 
 
-def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the table and the noise.
+def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the shelf, the sea and the noise.
     image: NDArray[np.uint8],
     distances: tuple[NDArray[np.uint8], NDArray[np.uint8]],
     touched: NDArray[np.bool_],
-    table: NDArray[np.int64],
+    colors: tuple[NDArray[np.int64], NDArray[np.int64]],
     *,
     first: int,
     last: int,
@@ -133,7 +243,10 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the tab
     rows, columns = touched.shape
     start, stop = max(0, first - BLUR), min(rows, last + BLUR)
     old_distance, new_distance = (d[start:stop].astype(np.int64) for d in distances)
-    synthetic = _synthesize(table, new_distance, reach, start)
+    table, grid = colors
+    synthetic = _synthesize(table, new_distance, reach, start) + _background(
+        grid, start, stop, columns
+    )
     for channel in range(4):
         padded = np.pad(synthetic[..., channel], ((0, 0), (BLUR, BLUR)), mode="wrap")
         synthetic[..., channel] = box_blur(padded, BLUR)[:, BLUR:-BLUR]
@@ -196,7 +309,6 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
 ) -> tuple[bytes, int]:
     vanilla_water, new_water, canvas = masks
     image = _decode(data)
-    placed = carry_pixels(image, moved, factor)
     old_water = _downsample(vanilla_water, factor, any_true=False)
     fresh_water = _downsample(new_water, factor, any_true=False)
     touched = _downsample(canvas, factor, any_true=True)
@@ -220,7 +332,11 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
     strip = band_rows(
         columns * STRIP_ROW_BYTES, workers=1, floor=STRIP_FLOOR, ceiling=STRIP_CEILING
     )
-    table = _profile_table(image, old_distance, reach, strip)
+    # The sea and the shelf are read from the vanilla pixels, before a moved island's
+    # texture is copied over open water.
+    grid = _background_grid(*_open_water_cells(image, old_distance, reach, strip))
+    table = _profile_table(image, old_distance, grid, reach, strip)
+    placed = carry_pixels(image, moved, factor)
     key = derive_seed(seed, stream)
     result = np.empty_like(image)
     changed = np.zeros(touched.shape, dtype=bool)
@@ -231,7 +347,7 @@ def _rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and th
             image,
             (old_distance, new_distance),
             touched,
-            table,
+            (table, grid),
             first=first,
             last=last,
             reach=reach,
