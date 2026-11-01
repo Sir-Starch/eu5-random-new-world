@@ -2,9 +2,10 @@
 
 ## Unreleased
 
-- Narrow mouths of inland seas and connected basins now receive army strait crossings even
-  when both shores belong to one continent. Natural gaps up to 36 map pixels are eligible;
-  locations already sharing a land border need no extra crossing. Coastlines are unchanged.
+- Army strait crossings use the shortest water-only section of opposing physical shores,
+  including diagonal directions. Wider or same-continent links require a real throat opening
+  into wider water on both sides; short coastal land walks and parallel duplicates are excluded.
+  This replaces the rejected broad 36-pixel rule that produced misplaced crossings.
 
 - **Hide the island groups at country selection.** The cover drawn over the New World in the game
   took only the generated locations and the ocean wastelands beside them, so the vanilla island

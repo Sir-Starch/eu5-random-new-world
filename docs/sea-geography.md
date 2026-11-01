@@ -464,34 +464,49 @@ layer's seed and nothing else:
   added where the coast margin or the canvas border forbid it; otherwise the pinch is not made.
   The channel is narrow
   water (`narrows`) and is named for it, a strait or a sound.
-- **Crossings.** On the finished cells, every pair of passable land cells without a shared land
-  border that a run of at most 36 sea pixels divides along a row or a column is a crossing,
-  provided the named sea cell touches both. The 36-pixel reach is the existing nearby-shore
-  policy (`straits.NEAR_PX`); the two endpoints lie on the narrowest run, one on each location,
-  written as the game writes them (`eu5_seas.crossings`, `eu5_nw_export._crossing_rows`). Both
-  shores may belong to the same continent around an inland sea or a gulf. The pinch construction
-  retains its original 9-pixel cutoff, so this correction changes crossing rows alone, not coasts.
+- **Crossings.** `crossings.sections` finds opposite physical shores inside bounded windows,
+  independently of location borders, and chooses their shortest water-only segment, including
+  diagonals. Its complete raster supercover must contain one sea cell between two distinct,
+  passable land locations. A land walk shorter than eight location edges excludes the link;
+  eight is the generator's utility policy, informed by the installed game's
+  `AI_CIRCULAR_STRAIT_DISTANCE_THRESHOLD`, not a file-format restriction. Vanilla-width links
+  between different landmasses remain eligible. Wider or same-landmass links must be real
+  throats: cutting the water segment in a local window separates two substantial waters, each
+  reaching clearance at least the throat width from land. A uniform channel or a coastal nick
+  fails this test. Nearby candidates connecting the same physical landmasses collapse to the
+  shortest section (centres within 72 pixels). The maximum section length is 37 pixels between
+  land pixel centres. A vanilla-width link without a physical throat is kept only once per
+  landmass pair, with a real throat preferred, so a long uniform narrow channel cannot get
+  another link at each location border. The pinch construction retains its original 9-pixel
+  cutoff: coasts are unchanged.
 
-**Inland-sea mouths, XNKG (C466).** [V-LOCAL, EU5 1.4.6 / build 26300913] The owner's
-Rezaurtsa Channel screenshot matches three successive throats in `rnw_exp_world_xnkgew4sje`:
-17 sea pixels between `rnw_loc_04853` and `rnw_loc_04867` (through `rnw_sea_00610`),
-1 between `rnw_loc_05265` and `rnw_loc_05290` (through `rnw_sea_00673`), and 8 between
-`rnw_loc_05860` and `rnw_loc_05926` (through `rnw_sea_00718`). None had a crossing row.
-The former 9-pixel sample maximum was treated as a limit, and all same-landmass pairs were
-excluded even though 84 vanilla rows join one landmass. Inland seas added since that rule
-exposed both exclusions. The corrected planner admits these natural narrows and skips pairs
-already sharing a land border. The width is a generator policy; engine rendering of the new
-rows is not established by offline export checks.
+**XNKG corrections (C466 → C467), EU5 1.4.6 / build 26300913.** [V-LOCAL] The original
+missing mouths have axis-aligned runs of 17 sea pixels (`rnw_loc_04853`–`rnw_loc_04867`,
+through `rnw_sea_00610`) and 1 (`rnw_loc_05265`–`rnw_loc_05290`, through `rnw_sea_00673`).
+The 8-pixel run previously called a third mouth (`rnw_loc_05860`–`rnw_loc_05926`) is a nearby
+coastal indentation with a short land walk; that attribution is corrected here. C466's broad
+36-pixel rule wrote 61 crossings instead of 5 and changed only `adjacencies.csv`, but its
+offline validity did not establish sensible placement. [V-GAME owner, 2026-11-02] The owner
+rejected it after seeing lines along shores, parallel duplicates and same-shore shortcuts.
 
-[V-EXEC] Re-exporting XNKG with identical resolved settings and random streams gives all three
-rows and 61 generated crossings (formerly 5). A full file-hash comparison with the installed
-XNKG finds only `in_game/map_data/adjacencies.csv` changed outside `.metadata`; every former
-crossing remains. The corrected copy is `rnw_exp_world_a56qhjysy5`, titled
-**RNW: XNKG — strait crossings**. Local evidence: ignored `local_data/strait-crossings/`.
+[V-EXEC C467] Applying the physical-throat rule to XNKG's written raster gives 11 crossings.
+The two parallel Moana/Wahilaki lines (`rnw_loc_00375` to `00397` and `00404`) disappear,
+as does the false 8-pixel coastal shortcut. The Locsamsol line (`00379`–`00401`) moves from
+a 37-pixel horizontal run along the shore to the diagonal `(1300,3198)`–`(1303,3191)` in
+raster row/column coordinates, length √58 ≈ 7.6 pixels, entirely in `rnw_sea_00120`.
+The missing 17-pixel mouth similarly becomes a √29-pixel diagonal section; the 1-pixel
+mouth stays. The geometry is computed from the physical shores, with no change to their
+shape and no shader or define override. Local evidence: ignored `local_data/strait-crossings-v2/`.
+New engine rendering is not claimed by these raster checks.
+
+[V-EXEC] A full fresh XNKG export agrees exactly with the independently reconstructed raster
+sections. Compared with original XNKG, only `adjacencies.csv` changes outside `.metadata`.
+The installed candidate is **RNW: XNKG — narrow straits**, `rnw_exp_world_akhvvjfa6f`.
 
 The export reads `adjacencies.csv` back (`verify_crossings`): each row names two land cells
-and a sea cell that touches both, its points lie on its two cells with at most 36 water pixels
-between them, and the rows are exactly the world's crossings. The game's surviving rows outside
+and a sea cell that touches both, its points lie on their respective cells, the Euclidean length
+is bounded, the entire segment stays in its named sea, and its coordinates exactly match the
+planned section. The rows are exactly the world's crossings. The game's surviving rows outside
 the replaced Americas stay. C246's six reference crossings and 135 retained rows record the
 original 2026-10-24 world and build, not fixed counts for later geography.
 

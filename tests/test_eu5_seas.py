@@ -46,6 +46,7 @@ from rnw.model import CellClass
 from rnw.ports import ForeignCoast
 from rnw.seas import Topography, analyse
 from tests.block_worlds import block_world, cell
+from tests.crossing_worlds import hourglass
 
 if TYPE_CHECKING:
     from collections.abc import Collection
@@ -442,11 +443,9 @@ def test_two_lands_a_narrow_sea_cell_divides_are_a_crossing_through_it() -> None
 
 @pytest.mark.parametrize("width", [1, 8, 17, 36])
 def test_an_inland_sea_mouth_has_a_crossing_despite_the_land_route_around_it(width: int) -> None:
-    joined = ["AAA1BBB", "AAA1BBB", "AAACBBB", "2222222"]
-    world, plan, found = _strait(joined, block=width)
-    assert [(item.first, item.second) for item in found] == [
-        (cell(joined, 0, 0), cell(joined, 0, 4))
-    ]
+    world = hourglass(width)
+    plan, found = _plan_of(world), crossings(world)
+    assert len(found) == 1
     canvas = cast(
         "Canvas", cast("object", SimpleNamespace(col0=0, roll=0, shape=world.labels.shape))
     )
@@ -457,11 +456,7 @@ def test_an_inland_sea_mouth_has_a_crossing_despite_the_land_route_around_it(wid
 
 
 def test_three_linked_seas_have_a_crossing_at_each_mouth() -> None:
-    layout = ["AAA1BBB", "CCC2DDD", "EEE3FFF", "EEEGFFF", "4444444"]
-    _, _, found = _strait(layout)
-    assert [(item.first, item.second, item.through) for item in found] == [
-        (cell(layout, row, 0), cell(layout, row, 4), cell(layout, row, 3)) for row in range(3)
-    ]
+    assert len(crossings(hourglass(8, (200, 400, 600), height=800))) == 3
 
 
 def test_a_coastal_indentation_does_not_add_a_crossing_between_land_neighbours() -> None:
@@ -506,11 +501,14 @@ def test_the_rows_that_say_what_the_world_has_pass_and_any_other_stops_the_expor
         _ = verify_crossings(
             text + _row(plan, found[0], height, swap=True) + "\n", plan, world, canvas, found
         )
+    shifted = replace(found[0], start=(1, 11), stop=(1, 16))
+    with pytest.raises(SeaError, match="planned section"):
+        _ = verify_crossings(text + _row(plan, shifted, height), plan, world, canvas, found)
     stranger = rows.replace(";sea;", ";land;")
     with pytest.raises(SeaError, match="not a sea crossing"):
         _ = verify_crossings(text + stranger + "\n", plan, world, canvas, found)
     other = rows.replace(plan.cells[found[0].through].key, plan.cells[cell(STRAIT, 3, 0)].key)
-    with pytest.raises(SeaError, match="not the world's"):
+    with pytest.raises(SeaError, match="leaves its through-zone"):
         _ = verify_crossings(text + other + "\n", plan, world, canvas, found)
 
 

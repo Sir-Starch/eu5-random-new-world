@@ -13,9 +13,9 @@ nearby-shore reach. There are two things to do:
   other, the growth tapering to nothing over twice the gap, as a headland that a sea has not yet
   cut through. Nothing is merged, no third landmass is touched, and no water is cut off,
   or the pinch is not made.
-* **Crossings.** Every pair of land locations without a shared land border that a gap of at most
-  ``CROSSING_PX`` pixels divides, through a sea cell, is a crossing. The shores can belong to
-  one landmass around a gulf or inland sea; its two points are where the gap is narrowest.
+* **Crossings.** ``rnw.crossings`` refines candidate gaps into their shortest water-only
+  sections. Wider or same-landmass links must be real water throats, with a substantial
+  opening on each side; short land walks and parallel duplicates are excluded.
 
 Everything is integer arithmetic (the distances are exact, in eighths of a pixel) and a square
 root of an exact integer, so the result is the same on every platform; nothing is random, and

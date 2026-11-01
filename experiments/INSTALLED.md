@@ -6,7 +6,34 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
-2026-11-02, **natural strait crossings on XNKG** (C466). [V-EXEC] Installed
+2026-11-02, **physical strait throats and shortest trajectories on XNKG** (C467). [V-EXEC]
+Installed **RNW: XNKG — narrow straits**, `mod/rnw_exp_world_akhvvjfa6f`, code
+`RNW1-080KN-HKXKK-XB4AA-9040G-00850-3SG42-1N15W-1P0A7-GC160-FGW`, in the game and both libraries.
+All 898 files match the candidate; 17 existing mod folders and nine profile-root files are preserved.
+Its resolved settings and rolls equal original XNKG's, with unchanged defaults explicitly encoded
+for a separate identity. Comparing all nonmetadata files with original XNKG finds only
+`adjacencies.csv` changed. Its 11 sections exactly match an independent reconstruction from the
+written location raster; the rejected candidate had 61. The Locsamsol line is a short diagonal,
+the Moana/Wahilaki parallel pair and same-shore 8-pixel shortcut are absent. The full export reports
+zero split cells, unreachable or cut-off generated seas, unported land and lost Old World contacts.
+869 nonmetadata files, digest `4b19f0bc28d86119509153398212544689eade4e46c6896303e0694586138cb9`.
+
+`uv sync --locked --group dev && make check` passes (2,449 Python tests, 15 optional skips;
+strict types, format/lint and 23 Rust tests). The pending epoch-60 reference has two crossings,
+868 files and digest `7171c89a5b179fac1fd75adae917961cbd85fa9479533031aa9a6b2bb9bf0181`,
+predicted from the previous reference's written map and independently reproduced by a full fresh
+installed-game export (one pass). The final long-channel duplicate regression leaves both verified
+worlds' crossing bytes identical. Frozen epoch 59 is untouched. EU5 1.4.6 / build 26300913;
+RNW 1.1.0 development. The final generator wheel is rebuilt with unchanged GUI/runtime binaries,
+passes the Windows/Wine window/native/code and shell/bridge self-tests, and is installed by the
+standard updater. Backup: `.rnw-hub-backups/1.1.0-1793577386521788430`; candidate
+`local_data/strait-crossings-v2/hub-final/rnw_exp_hub`, wheel SHA-256
+`438995a5545f0e61d67a2d4ff59b526fbe7e359f30b3e7b9ce74c5fd5960ee3a`.
+Evidence: ignored `local_data/strait-crossings-v2/`. No agent EU5 launch/control or new engine
+rendering observation; the owner's screenshots establish the preceding candidate's defects.
+
+2026-11-02, **natural strait crossings on XNKG** (C466; placement rejected, superseded by C467).
+[V-EXEC] Installed
 **RNW: XNKG — strait crossings**, `mod/rnw_exp_world_a56qhjysy5`, code
 `RNW1-080KN-HKXKK-XB4AA-9040G-00840-3SG42-1N3C0-MF0R2-DJ5QE`, with records in both the native
 and Proton libraries. Its resolved settings, seeds and rolls equal XNKG's; an explicitly encoded
