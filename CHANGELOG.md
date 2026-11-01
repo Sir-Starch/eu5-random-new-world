@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Cut the sea locations of a crossing like every other sea location, take the bolts of cut
+  zones into the canvas and keep the land back from the canvas's boundary (owner's report on world
+  `aszzsukifw`, pending epoch 60). A crossing of open water was a straight band one sea-cell wide,
+  cut out of the water and divided on its own, so its cells had ruled edges and thin needles stood
+  along it. A crossing is now a chain of ordinary Voronoi cells: one partition of all the water, the
+  ordinary sites keep clear of the crossing's centre line, and the crossing's own sites lie along it,
+  so the course is as straight as before and its cells are as irregular as any other. A remainder of
+  a zone of the game that the canvas cut along its length and that is thinner than 30 pixels (it was
+  20) now goes to the canvas too; twelve zones of the installed map, 0.1 % of the canvas, among them
+  the bent `atlantic_north_equatorial_current10`. No land lies within 3 % of the canvas's width of
+  its boundary with the game's own map (the Old World and the waters kept whole): about two and a
+  half sea cells of open water for ordinary cells and a lane at the join. The land share is kept; the
+  land moves inland (minimum distance from the boundary in a sample world 150 → 476 pixels). In a
+  sample world cells longer than three times their width fall from 34 to 15 and the thin remainders of
+  zones of the game from 12 to none. Existing worlds remain untouched.
+
 - Vary native polity outlines through farming corridors, similar-terrain belts and coastal
   growth alongside generalist expansion (issue #8, pending epoch 60). Small tribal groups use
   gentler preferences. Connected territories, capital membership and farming requirements

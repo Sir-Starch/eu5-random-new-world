@@ -162,8 +162,9 @@ def test_seed_can_leave_a_broad_side_region_entirely_ocean() -> None:
         for region, found in zip(regions, counts, strict=True):
             found.append(int(np.count_nonzero(land[region])))
     for region, found in zip(regions, counts, strict=True):
-        # Bent coasts can trail a cape or two into an otherwise empty region.
-        assert min(found) < domain[region].size // 100
+        # Bent coasts can trail a cape or two into an otherwise empty region (under 1 % before the
+        # water band along the canvas's boundary raised the land share of the narrower interior).
+        assert min(found) < domain[region].size // 25
         assert max(found) > domain[region].size // 4
 
 

@@ -203,6 +203,16 @@ continents): 1,540–1,920 px at 0, 1,840–2,100 at 250 ‰, 2,070–2,230 at 5
 [V-EXEC 2026-10-31]. A doubled lift had saturated by 500 ‰. The Wall and drawn land ignore the control. The
 default leaves every world as it was; world codes carry the value as a changed field.
 
+**Water at the join with the game's map (pending 1.1.0; no setting).** No land lies within
+`newworld.EDGE_WATER_PERMILLE` (30 ‰ of the canvas's width, 302 px, about two and a half sea cells) of the
+canvas's boundary with the game's own map: the Old World, the waters of the game kept whole and the
+left and right edges of the crop. The band is added to the guard of the coast ramp, so the ramp, the
+inland shift and the optional distance control above all start at its inner edge; the polar map edges
+get none, and The Wall passes the real boundary rather than its own cleared course. The land share is
+kept by raising the land share of the narrower interior (`_widen_boundary`). On the owner's world
+`aszzsukifw` the land's least distance from the boundary rose from 150 to 476 px with 33.0 % and 33.1 %
+land [V-EXEC 2026-11-01]; [sea geography](sea-geography.md) says why the water is wanted there.
+
 **Vanilla calibration.** [V-LOCAL 2026-10-30, EU5 1.4.6 / 26300913, `Eu5Map` location sizes]
 The installed map has 918 lake locations (median 90 pixels, 99th percentile 6,131, largest
 22,692). Those of at least 80 pixels (the generator's `min_lake_px`) number 482: 11.2 per

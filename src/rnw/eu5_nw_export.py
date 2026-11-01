@@ -294,7 +294,7 @@ from rnw.rivers import (
 )
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.rng import derive_seed
-from rnw.sea_corridors import designed_corridors
+from rnw.sea_corridors import corridor_paths, draw_corridors
 from rnw.seas import Shape
 from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
 from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
@@ -2716,8 +2716,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         # The corridor planner depends on the physical water mask, not on cell
         # identities. Recompute it on cached worlds as well as freshly made ones.
         ocean = _ocean_pixels(world)
-        designed = designed_corridors(
-            ocean, bands, settings.new_world.sea_zone_px, domain=canvas.mask
+        designed = draw_corridors(
+            corridor_paths(ocean, bands, settings.new_world.sea_zone_px, domain=canvas.mask),
+            ocean,
+            1,
         )
         del ocean
         vanilla_ports = read_ports(_read(game_dir, PORTS))

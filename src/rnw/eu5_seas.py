@@ -37,7 +37,7 @@ from rnw.currents import HUNDREDTHS, Vector, check_courses, flow
 from rnw.eu5_map import class_lists
 from rnw.eu5_newworld import outside_contacts
 from rnw.eu5_oceans import emitted_cells
-from rnw.lanes import COURSE_PERMILLE, Course, plan_lanes
+from rnw.lanes import Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
 from rnw.sea_routes import cyclic_end, navigation_links
@@ -68,6 +68,10 @@ LOCATOR_ID: Final[re.Pattern[str]] = re.compile(r"\bid=(\w+)")
 PORT_COLUMNS: Final[int] = 4
 ADJACENCY_COLUMNS: Final[int] = 8
 STRIP_ROWS: Final[int] = 1024
+# A crossing's centre line, one pixel wide, makes a sea cell part of the crossing when it runs at
+# least this far inside it: the chain's cells hold the line for most of a sea-cell width, a
+# neighbour that the line only grazes does not.
+DESIGNED_MIN_PX: Final[int] = 24
 LAND_LIKE: Final[frozenset[CellClass]] = frozenset(
     {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
 )
@@ -231,8 +235,7 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         designed_cells = {
             cell
             for cell, size in enumerate(coverage.tolist())
-            if settled.world.classes[cell] is CellClass.SEA
-            and size * PERMILLE >= COURSE_PERMILLE * int(settled.world.pixels[cell])
+            if settled.world.classes[cell] is CellClass.SEA and size >= DESIGNED_MIN_PX
         }
     return Coast(
         settled.world,

@@ -37,9 +37,11 @@ OPENED: Final[frozenset[str]] = frozenset(
 GUARD_PX: Final[int] = 96
 MIN_REMAINDER_PX: Final[int] = 3000
 # A remainder thinner than this is a strip of a zone that the canvas cut along its length,
-# a long needle among the generated waters that touches many neighbours; the canvas takes it
-# whole. Vanilla's zones are 50-80 px thick at their cores.
-MIN_THICKNESS_PX: Final[int] = 20
+# a long needle or a bent bolt among the generated waters that touches many neighbours; the
+# canvas takes it whole. Vanilla's zones are 50-80 px thick at their cores, so a remainder this
+# thin is less than two thirds of the thinnest core. (The 20 px of the first rule left the bolts
+# of 22-25 px: twelve zones of the installed map, 0.1 % of the canvas's area.)
+MIN_THICKNESS_PX: Final[int] = 30
 EXPANDED_BAND_PX: Final[int] = 1600
 OCEAN_SECTOR: Final[tuple[int, int]] = (1600, 6500)
 

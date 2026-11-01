@@ -53,9 +53,17 @@ def test_a_needle_left_of_a_zone_is_taken_whole() -> None:
     assert not canvas.trimmed[2]
 
 
+def test_a_strip_thinner_than_a_core_of_vanillas_zones_is_taken_whole() -> None:
+    game = _map(BAND + 26)  # 26 columns remain: 7,800 px, about 24 px thick (20 px passed once)
+    assert MIN_THICKNESS_PX > 24
+    canvas = select_canvas(game, BAND)
+    assert canvas.removed[2]
+    assert not canvas.trimmed[2]
+
+
 def test_a_thick_remainder_stays_a_trimmed_zone_of_its_own() -> None:
     game = _map(BAND + 60)  # 60 columns remain: 18,000 px, about 55 px thick
-    assert 2 * MIN_THICKNESS_PX < 60
+    assert MIN_THICKNESS_PX < 55
     canvas = select_canvas(game, BAND)
     assert canvas.trimmed[2]
     assert not canvas.removed[2]
