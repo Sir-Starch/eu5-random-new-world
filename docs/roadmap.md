@@ -63,7 +63,9 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
 - **Hydrology:** improve basins, drainage, tributaries and water bodies together
   with relief, climate, coastlines and navigation. Use measurable structural and
   visual comparisons on diverse seeds. Done in the pending 1.1.0: lakes with
-  outflows and the vanilla size distribution. Remaining: valley carving and relief
+  outflows and the vanilla size distribution, and ocean currents as clear courses (a current
+  continues a current of the game along a path, or there is none; see
+  [sea geography](sea-geography.md)). Remaining: valley carving and relief
   driven by drainage, deltas and river splits, climate-dependent (endorheic) lakes.
 - **Continental variety:** develop more realistic lakes, inland seas, narrow land
   connections and coastal formations, including the Gdańsk/Crimea-like examples

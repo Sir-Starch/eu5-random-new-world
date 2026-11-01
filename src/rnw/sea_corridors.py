@@ -11,14 +11,12 @@ never changes the land mask.
 from __future__ import annotations
 
 import heapq
-import math
 from typing import TYPE_CHECKING
 
 import numpy as np
 from PIL import Image, ImageDraw
 
 from rnw.sea_policy import MAX_DETOUR
-from rnw.topology import label_components
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -26,77 +24,6 @@ if TYPE_CHECKING:
 AXIS = 1000
 DIAGONAL = 1414
 STRIP_ROWS = 1024
-AXIS_RATIO = 4
-
-# Connected band number, east, north. The vector is an integer principal axis.
-CorridorAxis = tuple[int, int, int]
-
-
-def corridor_axes(
-    mask: NDArray[np.bool_],
-    labels: NDArray[np.int32],
-    cells: set[int],
-    scale: int,
-    count: int,
-) -> dict[int, CorridorAxis]:
-    """Associate each designed cell with an unambiguous straight band's axis.
-
-    Work on a scale-dependent sample. Integer second moments and an integer square
-    root make the axis reproducible. Broad junctions and loops have no unique axis
-    and retain the ordinary interpolated current.
-    """
-    if not cells:
-        return {}
-    step = max(1, scale // 16)
-    sample = np.ascontiguousarray(mask[::step, ::step])
-    if not np.any(sample):
-        return {}
-    components = label_components(sample.astype(np.int32))
-    rows, columns = np.nonzero(sample)
-    parts = components[rows, columns]
-    east = columns.astype(np.int64)
-    north = -rows.astype(np.int64)
-    counts = np.bincount(parts)
-    sums = [
-        np.bincount(parts, weights=values, minlength=len(counts)).astype(np.int64)
-        for values in (east, north, east * east, north * north, east * north)
-    ]
-    axes: dict[int, CorridorAxis] = {}
-    for part in np.unique(parts).tolist():
-        n = int(counts[part])
-        x, y, xx, yy, xy = (int(values[part]) for values in sums)
-        a, c, b = n * xx - x * x, n * yy - y * y, n * xy - x * y
-        trace = a + c
-        disc = math.isqrt((a - c) ** 2 + 4 * b * b)
-        if trace <= 0 or trace + disc < AXIS_RATIO * (trace - disc):
-            continue
-        dx, dy = a - c + disc, 2 * b
-        if dx == 0 and dy == 0:
-            dx, dy = 2 * b, c - a + disc
-        if not dx and not dy:
-            continue
-        # An elongated T-junction can have a strong principal axis too. A
-        # genuinely straight band stays within one cell width of its centreline.
-        major = max(abs(dx), abs(dy))
-        dx, dy = dx * 1024 // major, dy * 1024 // major
-        members = parts == part
-        across = np.abs((east[members] * n - x) * dy - (north[members] * n - y) * dx)
-        if int(across.max()) > n * max(1, scale // step) * max(abs(dx), abs(dy)):
-            continue
-        axes[part] = (part, dx, dy)
-    if not axes:
-        return {}
-    owners = labels[::step, ::step][rows, columns]
-    valid = (owners >= 0) & np.isin(owners, list(cells))
-    packed, weights = np.unique(
-        parts[valid].astype(np.int64) * count + owners[valid], return_counts=True
-    )
-    assigned: dict[int, tuple[int, CorridorAxis]] = {}
-    for key, weight in zip(packed.tolist(), weights.tolist(), strict=True):
-        part, cell = divmod(key, count)
-        if part in axes and (cell not in assigned or weight > assigned[cell][0]):
-            assigned[cell] = (weight, axes[part])
-    return {cell: value[1] for cell, value in assigned.items()}
 
 
 def _graph(water: NDArray[np.bool_]) -> dict[int, list[tuple[int, int]]]:

@@ -28,19 +28,18 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.currents import HUNDREDTHS, Vector, flow
+from rnw.currents import HUNDREDTHS, Vector, check_courses, flow
 from rnw.eu5_map import class_lists
 from rnw.eu5_newworld import outside_contacts
 from rnw.eu5_oceans import emitted_cells
 from rnw.lanes import COURSE_PERMILLE, Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
-from rnw.sea_corridors import CorridorAxis, corridor_axes
 from rnw.sea_routes import cyclic_end, navigation_links
 from rnw.seas import Topography, Waters, analyse
 from rnw.straits import CROSSING_PX, narrow_gaps
@@ -171,7 +170,6 @@ class Coast:
     shore: frozenset[int]
     merged: int
     designed: frozenset[int] = frozenset()
-    designed_axes: dict[int, CorridorAxis] = field(default_factory=dict)
 
     def renumbered(self, world: NewWorld, cell_of: Sequence[int], keep: Collection[int]) -> Coast:
         """This coast in ``world``, whose cells are the old ones folded as ``cell_of`` says.
@@ -187,7 +185,6 @@ class Coast:
             frozenset(cell_of[cell] for cell in self.shore if cell in keep),
             self.merged,
             frozenset(cell_of[cell] for cell in self.designed if cell in keep),
-            {cell_of[cell]: axis for cell, axis in self.designed_axes.items() if cell in keep},
         )
 
 
@@ -221,7 +218,6 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         if water.topography == Topography.DEEP_OCEAN and water.current is not None:
             samples.setdefault(settled.cell_of[cell], []).append(water.current)
     designed_cells: set[int] = set()
-    axes: dict[int, CorridorAxis] = {}
     if designed is not None:
         if designed.shape != settled.world.labels.shape:
             message = "Designed ocean corridors do not fit the generated world"
@@ -238,11 +234,6 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
             if settled.world.classes[cell] is CellClass.SEA
             and size * PERMILLE >= COURSE_PERMILLE * int(settled.world.pixels[cell])
         }
-        sizes = [int(settled.world.pixels[cell]) for cell in designed_cells]
-        scale = math.isqrt(int(np.median(sizes))) if sizes else 1
-        axes = corridor_axes(
-            designed, settled.world.labels, designed_cells, scale, len(settled.world.classes)
-        )
     return Coast(
         settled.world,
         settled.foreign,
@@ -252,7 +243,6 @@ def settle_coast(  # noqa: PLR0913 - the coast reads the map, canvas, world, por
         frozenset(shore),
         settled.merged,
         frozenset(designed_cells),
-        axes,
     )
 
 
@@ -337,7 +327,8 @@ class Water:
     ``flows`` the current of each lane cell, ``linked`` how many deep cells were made lanes to
     join water to the game's, ``sealed`` how many stretches of water no lane could join,
     ``crossings`` the pairs of lands that a strait divides narrowly enough to cross.
-    ``completed`` counts deep cells opened to finish ocean-lane ends.
+    ``completed`` counts deep cells opened to finish ocean-lane ends, ``uncurrented`` the
+    lane cells that lie on no clear course and so have no current.
     """
 
     coast: Coast
@@ -351,10 +342,16 @@ class Water:
     local_pairs: int = 0
     shortcuts: int = 0
     completed: int = 0
+    uncurrented: int = 0
 
 
 def shape_water(coast: Coast) -> Water:
-    """Choose the lanes, fold the shut deep water into zones, and give the lanes their currents."""
+    """Choose the lanes, fold the shut deep water into zones, and give the lanes their currents.
+
+    The lanes are the navigable deep water. A lane cell carries a current only where the cells
+    form a clear course that continues a current of the game (``rnw.currents``); every other lane
+    cell stays navigable deep ocean without an arrow, as one of the game's 750 deep zones is.
+    """
     waters = analyse(coast.world, coast.shore)
     original_topography = waters.topography
     original_scale = waters.scale
@@ -376,6 +373,16 @@ def shape_water(coast: Coast) -> Water:
     kept = (cell for cell in range(len(coast.world.classes)) if cell not in fold)
     kinds = {cell_of[cell]: original_topography[cell] for cell in kept}
     kinds.update({cell_of[cell]: Topography.OCEAN for cell in chosen.ordinary})
+    if any(kinds[cell] is not Topography.DEEP_OCEAN for cell in lanes):
+        message = "A planned ocean lane is not deep water"
+        raise SeaError(message)
+    over = {
+        cell: course.vector
+        for cell, course in final.courses.items()
+        if cell in lanes and course.permille >= COURSE_PERMILLE
+    }
+    courses = flow(world, lanes, final.samples, over)
+    check_courses(world, courses.flows)
     topography = tuple(
         Topography.OCEAN_WASTELAND if cell in zones else kinds[cell]
         for cell in range(len(world.classes))
@@ -383,34 +390,25 @@ def shape_water(coast: Coast) -> Water:
     # Folding changes location areas, not physical route openings. Retain the scale
     # used to construct the lanes so a valid opening cannot become too narrow.
     waters = replace(waters, topography=topography, scale=original_scale)
-    if any(waters.topography[cell] is not Topography.DEEP_OCEAN for cell in lanes):
-        message = "A planned ocean lane is not deep water"
-        raise SeaError(message)
     if any(
         kind is Topography.DEEP_OCEAN and cell not in lanes for cell, kind in enumerate(topography)
     ):
         message = "Deep ocean water is missing a lane"
         raise SeaError(message)
-    sources: dict[int, list[Vector]] = {
-        cell: list(vectors) for cell, vectors in final.samples.items()
-    }
-    for cell, course in final.courses.items():
-        if cell in lanes and course.permille >= COURSE_PERMILLE:
-            sources.setdefault(cell, []).append(course.vector)
-    flows = flow(world, waters, sources, sorted(lanes), axes=final.designed_axes)
     strait_rows = tuple(crossings(world, waters.landmass.tolist()))
     result = Water(
         final,
         waters,
         lanes,
         zones,
-        flows,
+        courses.flows,
         chosen.linked,
         chosen.sealed,
         strait_rows,
         chosen.local_pairs,
         chosen.shortcuts,
         chosen.completed,
+        len(courses.dropped),
     )
     # Check the finished water graph before building expensive textures and scripts.
     _ = _verify_reach(world, final, result)
@@ -556,6 +554,9 @@ def _verify_lists(map_text: str, plan: Plan, water: Water) -> dict[str, object]:
         if water.waters.topography[number] is not Topography.DEEP_OCEAN:
             message = f"Lane {plan.cells[number].key} is not deep ocean"
             raise SeaError(message)
+    if not set(water.flows) <= water.lanes:
+        message = "A current lies on a cell that is no lane"
+        raise SeaError(message)
     deep = [
         number
         for number, kind in enumerate(water.waters.topography)

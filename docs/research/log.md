@@ -2149,3 +2149,16 @@ mediterranean climate. The classifier now smooths the joint (climate, vegetation
 cell's vegetation among the pairs of its own climate; no pair outside the calibration remains, no climate
 changes and about 3–4 % of cells change vegetation, nearly all on climate borders. The reference digest is
 refreshed within the pending epoch 60. Numbers and the synthetic regressions are in the terrain guide.
+
+## 2026-11-01 — Currents nobody could read (C456)
+
+The owner's screenshots of world QU3N showed currents at the seam with the Old World that made no
+sense: a three-location stub pointing sideways beside a coast, a one-cell piece, a cluster of arrows
+pointing different ways and a current in which two opposite directions met. Measured on the world,
+11 of 18 pieces of current had no zone of the game touching them and 14 pairs of neighbours pointed
+at each other, because every lane cell was interpolated from far sources through any navigable water.
+Currents are now directed courses that continue a current of the game along a path, or there is none; the
+rest of the navigable deep ocean stays deep without an arrow. Numbers and the rules are in
+[sea geography](../sea-geography.md). The reference digest is refreshed within the pending epoch 60.
+Engine drawing of the new currents is unobserved.
+

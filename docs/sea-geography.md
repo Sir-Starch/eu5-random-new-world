@@ -2,6 +2,28 @@
 
 Sea geography, optional ocean expansion and the route/current refinements below ship in the accepted 1.0.0 scope (C437). Dated observations describe their particular revisions; an UNKNOWN engine detail does not automatically require a new owner sitting. See [known limitations](known-limitations.md) for current player scope.
 
+**Currents as clear courses, pending 1.1.0 / epoch 60 (owner's QU3N report, 2026-11-01):** the
+owner's screenshots of world QU3N showed currents where the generated canvas meets the Old World that
+no one could read: a current of three locations that pointed sideways beside a coast, a stub of one
+cell next to a lane, a cluster of arrows pointing different ways, and one current in which two opposite
+directions met. The cause is measurable on the world (`continents`, seed 12037730821817090414, the
+epoch-60 build): of 265 current cells in 18 connected pieces, 11 pieces (including a 48-cell one) had no
+zone of the game touching them at all, 14 pairs of neighbouring cells pointed at each other and 8 pointed
+away from each other. The old rule interpolated every lane cell from its four nearest sources *through
+any navigable water* (inverse-square weights, bent away from land, smoothed, then aligned to a straight
+corridor's axis), so nothing required the arrows to form a path. [V-EXEC; engine drawing UNKNOWN]
+
+The rule is now the one the owner stated: **either a clear, logical current, or none.** The lane planner
+still decides which deep water is navigable (routes, crossings, completed ends); a navigable deep cell
+carries a current only when the cells form a *course* (`rnw.currents`, below). Every other lane cell
+stays navigable deep ocean without `movement_assistance`, as one of the game's 750 deep zones is
+[V-LOCAL 1.4.3 C234]; nothing about ships, ports, routes or names changes. In QU3N, 138 of the
+265 cells keep a current, in four courses of 16 to 53 cells (no piece is shorter than six cells; no
+two neighbours point at each other; no arrow points against a zone of the game that touches its
+cell). Exports of continents 1000, archipelago 42, The Wall 9 and islands 7 with the same code pass
+every sea invariant and show the same properties (145, 47, 102 and 96 current cells; pieces from six
+cells, or two to five where one joins two zones of the game). [V-EXEC]
+
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent
 of current had only six pixels of contact at one end, while its arrows pointed
@@ -20,7 +42,8 @@ current direction of a clear two-sided passage follows its actual exits,
 including exits into ordinary sea. These choices precede final zoning and are
 checked again on the folded water graph. [V-EXEC; engine result UNKNOWN]
 
-**Crossing direction, 0.13.14 / epoch 51:** connected designed bands with a
+**Crossing direction, 0.13.14 / epoch 51** (superseded in pending 1.1.0: arrows follow the course
+above, and the band-axis computation was removed): connected designed bands with a
 clear principal axis carry currents along that axis. Their shared direction follows
 the aggregate projection of the inherited currents; an exact tie uses a deterministic
 axis direction. Broad junctions keep their interpolated flow. The axis is computed
@@ -209,16 +232,35 @@ languages by `wording` since 0.11.5 (*Northern Gulf of Akaira*, *Северна�
 *アカイラ湾北部*; [localization](localization.md) §3.3). Names are drawn from the
 land layer's seed and nothing else, so rerolling the peoples or the resources leaves them.
 
-## Currents (`rnw.currents`, `rnw.sea_corridors`)
+## Currents (`rnw.currents`)
 
-A lane continues the game's currents. Each lane cell blends its four nearest sources through
-navigable water, weighted by inverse-square distance, bends away from nearby land, and is smoothed
-twice over lane neighbours. On a two-sided, approximately straight stretch or designed crossing
-corridor (`_follow_designed`), it follows the band's principal axis when supported by source-derived
-projections along it; junctions, ends and near-perpendicular sources retain their interpolated
-direction. It takes the mean strength of the sources. A lane without a source reachable through
-navigable water, or a cancelled direction, stops export (`CurrentError`); neither closed water
-nor land supplies a shortcut. Arithmetic is performed in a fixed order. [V-EXEC; in-game appearance UNKNOWN]
+A current is a **course**: a directed path of lane cells that continues a current of the game. The
+planner (`flow`) works on the lane cells only and draws no random number; ties go to the lower cell.
+
+1. **Evidence.** For every edge between neighbouring lane cells, the zones of the game that touch either
+   cell vote by the cosine between their vector and the edge's heading; a lane that ran over the cell
+   before the canvas replaced the sea (`courses`, at least half the cell) votes at half weight and can
+   direct a course but never anchor one. The direction of the nearest sources (four, inverse square
+   of the distance) adds a tie-break far smaller than any contact.
+2. **Spanning tree.** Each connected piece of lane cells becomes a minimum spanning tree by centroid
+   distance, so a band two cells wide is one chain with short twigs.
+3. **Orientation.** Exact dynamic programming directs every edge to agree with the evidence as well as
+   any orientation can, with the structural rule that water that enters a cell also leaves it. A cell
+   where it cannot (a spring or a sink in the middle of a course) is *cut* out at a cost; a stretch that
+   one or two zones of the game support is reversed instead, so a lone zone never splits a course, while
+   a stretch that three or more support is a course of its own and the cut keeps both.
+4. **Heading.** Each cell's direction is the heading from two cells upstream to two cells downstream
+   along the longer way, so the arrow follows the path round bends and never points across its lane.
+   The strength is the mean of the game's currents it continues.
+5. **Pruning**, repeated until nothing changes: a cell that the surrounding evidence opposes (the sum of
+   cosines within two cells along the course below −0.5); a side branch shorter than five cells that no
+   zone of the game anchors; neighbours whose arrows point at each other or more than 120° apart (the cell
+   that disagrees with most of its neighbours gives way); and a whole piece unless a zone of the game
+   *anchors* it (touches a cell of it with a summed cosine of 0.5) and it runs six or more cells, or it
+   joins two zones of the game (an anchored source and an anchored sink) at any length of two or more.
+
+The export refuses a world whose finished vectors have two neighbours driven head-on (`check_courses`)
+and one whose currents lie on a cell that is no lane. [V-EXEC; in-game appearance UNKNOWN]
 
 ## Lanes and closed ocean (`rnw.lanes`, `rnw.sea_corridors`, `rnw.eu5_oceans`)
 
@@ -277,9 +319,8 @@ the deep cells are told apart as the game's are:
   in TR46 and is removed (C317–C318). In the older S1 reference, 1,193 deep cells became 420
   lanes and 36 closed zones of 746,000 pixels at most; across the five presets 262 to 352 lanes and
   29 to 36 zones.
-- **Currents.** A lane cell's current is the blend of the nearest courses and anchors through the
-  water, bent away from the land it flows towards (`currents`). Arrows are on lanes only; the
-  current rules above explain when the flow can be aligned with a lane's axis.
+- **Currents.** Arrows are on the cells of a clear course only (`currents`, above); the rest of the
+  lanes are navigable deep ocean without one.
 - **Land of the game's.** A sea cell that touches land of the game's own (Bermuda, Saint Helena,
   the land at the canvas's edge) is on a coast, whatever the generated land does: it is coastal
   water, never a closed zone. (The first run of 0.10.13 closed the zone that holds Saint Helena's port.)

@@ -1484,6 +1484,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
                 )
             ),
             "lanes": len(water.lanes),
+            "lanes_without_current": water.uncurrented,
             "lanes_added_to_link": water.linked,
             "local_route_pairs": water.local_pairs,
             "lanes_added_for_local_routes": water.shortcuts,
