@@ -8,9 +8,12 @@
   original sea: a pale disc with an edge in the game. A shelf now ends in the far sea at three quarters
   of its reach; the background of the open sea no longer takes in the darker filled cells beside it,
   and every division rounds to the nearest instead of taking half a unit off each channel at each
-  step. On the owner's masks the mean difference from the original sea 32 to 64 pixels from a new
-  island is +6 / +1 / -0.5 / 0 luminance units (was +14 / +9 / +4 / 0). A change of the water
-  textures, so the pending epoch-60 reference digest is refreshed.
+  step. Where the old map was open sea the pixel is now the original with the new coast's halo
+  added, which ends smoothly about 40 pixels out: nothing else of the original sea changes (it kept
+  its own fine detail, which the synthetic sea lacked). On the owner's masks the mean difference from
+  the original sea 32 to 64 pixels from a new island is +6.8 / +1.4 / 0 / 0 luminance units (was
+  +14 / +9 / +4 / 0). A change of the water textures, so the pending epoch-60 reference digest is
+  refreshed.
 
 - **Hide the island groups at country selection.** The cover drawn over the New World in the game
   took only the generated locations and the ocean wastelands beside them, so the vanilla island

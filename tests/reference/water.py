@@ -119,12 +119,13 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
     table = _profile_table(image, old_distance, grid, reach)
     affected = distance_from(old_distance != new_distance, 3, octagonal=True, wrap_x=True) <= 2
     touched |= old_water & fresh_water & affected
-    synthetic = _synthesize(table, new_distance, reach) + _background(
-        grid, 0, image.shape[0], image.shape[1]
-    )
+    shelf = _synthesize(table, new_distance, reach)
     for channel in range(4):
-        padded = np.pad(synthetic[..., channel], ((0, 0), (2, 2)), mode="wrap")
-        synthetic[..., channel] = box_blur(padded, 2)[:, 2:-2]
+        padded = np.pad(shelf[..., channel], ((0, 0), (2, 2)), mode="wrap")
+        shelf[..., channel] = box_blur(padded, 2)[:, 2:-2]
+    far = _synthesize(table, np.full_like(new_distance, reach), reach)
+    synthetic = shelf + _background(grid, 0, image.shape[0], image.shape[1])
+    halo = shelf - far
     rows, columns = touched.shape
     noise = fractal_noise(
         derive_seed(seed, stream),
@@ -152,7 +153,10 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
     synthetic[..., :3] += ((noise * 6 + NOISE_SCALE // 2) // NOISE_SCALE)[..., None]
     calm = np.minimum(old_distance, new_distance)
     keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
-    blended = (image * keep + synthetic * (BLEND - keep) + BLEND // 2) // BLEND
+    # Where the old map was open sea the pixel is the original with the new coast's halo added.
+    open_sea = np.clip(old_distance - (reach - BLEND), 0, BLEND)[..., None]
+    target = ((image + halo) * open_sea + synthetic * (BLEND - open_sea) + BLEND // 2) // BLEND
+    blended = (image * keep + target * (BLEND - keep) + BLEND // 2) // BLEND
     result = np.where(touched[..., None], blended, image).clip(0, 255).astype(np.uint8)
     changed = touched & np.any(result != image, axis=2)
     return rewrite(data, result, changed), int(np.count_nonzero(changed))

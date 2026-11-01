@@ -8,9 +8,12 @@ meshes over the canvas are dropped.
 A pixel is the colour of the open water around it plus the shelf of the nearest coast.
 The open water is the vanilla colour of pixels far from any old land, smoothed and filled
 across the old continents. The shelf is the mean difference between vanilla pixels and
-that background by latitude band and distance to land. A table of absolute colours
-would paint every new island with the average of all coasts, a disc whose edge shows
-wherever the local sea is lighter or darker than the average [V-GAME/V-LOCAL C461].
+that background by latitude band and distance to land, ending in the far sea. A table of
+absolute colours would paint every new island with the average of all coasts, a disc whose
+edge shows wherever the local sea is lighter or darker than the average [V-GAME/V-LOCAL
+C461]. Where the old map was itself open sea the pixel is the original with the new coast's
+halo added: the halo ends in the far sea, so nothing else of the original changes and no
+edge shows [C465].
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -272,13 +275,14 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the she
     start, stop = max(0, first - BLUR), min(rows, last + BLUR)
     old_distance, new_distance = (d[start:stop].astype(np.int64) for d in distances)
     table, grid = colors
-    synthetic = _synthesize(table, new_distance, reach, start) + _background(
-        grid, start, stop, columns
-    )
+    shelf = _synthesize(table, new_distance, reach, start)
     for channel in range(4):
-        padded = np.pad(synthetic[..., channel], ((0, 0), (BLUR, BLUR)), mode="wrap")
-        synthetic[..., channel] = box_blur(padded, BLUR)[:, BLUR:-BLUR]
-    synthetic = synthetic[first - start : last - start]
+        padded = np.pad(shelf[..., channel], ((0, 0), (BLUR, BLUR)), mode="wrap")
+        shelf[..., channel] = box_blur(padded, BLUR)[:, BLUR:-BLUR]
+    # What the shelf adds to the far sea, and the sea and shelf of a coast made from nothing.
+    far = _synthesize(table, np.full_like(new_distance, reach), reach, start)
+    synthetic = (shelf + _background(grid, start, stop, columns))[first - start : last - start]
+    halo = (shelf - far)[first - start : last - start]
     noise = fractal_noise(
         key, 0, first, columns, last - first, period=96, octaves=3, persistence_permille=500
     )
@@ -301,7 +305,13 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the she
     calm = np.minimum(old_distance, new_distance)[first - start : last - start]
     keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
     original = image[first:last].astype(np.int64)
-    blended = (original * keep + synthetic * (BLEND - keep) + BLEND // 2) // BLEND
+    # Where the old map was open sea (``reach`` or more from land) the pixel is the original sea
+    # with the halo of the new coast added: nothing but the halo changes, so no disc edge shows
+    # and the original's own detail stays. Nearer old land the sea is the synthetic one.
+    open_sea = np.clip(old_distance[first - start : last - start] - (reach - BLEND), 0, BLEND)
+    open_sea = open_sea[..., None]
+    target = ((original + halo) * open_sea + synthetic * (BLEND - open_sea) + BLEND // 2) // BLEND
+    blended = (original * keep + target * (BLEND - keep) + BLEND // 2) // BLEND
     return np.where(touched[first:last, :, None], blended, original).clip(0, 255).astype(np.uint8)
 
 

@@ -194,7 +194,8 @@ that no official editor exists.
   land/sea boundary moved; the new values derive from the local game's calibration:
   the colour of the open water around each pixel (vanilla pixels far from old land,
   smoothed and filled across the old continents) plus the mean offset of vanilla
-  pixels from that background by latitude band and distance to land (C461).
+  pixels from that background by latitude band and distance to land, ending in the far sea;
+  where the old map was open sea the pixel is the original plus that halo (C461, C465).
 - `spline_network.splnet` is rebuilt for the new location indexes and land contacts
   through the same R-001 reader/writer. No spline-format change is introduced;
   spline verification still checks carried Old World polylines and every generated
