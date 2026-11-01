@@ -1314,3 +1314,29 @@ the former hub at `.rnw-hub-backups/1.1.0-1793548847675452430`. Candidate:
 `c6ee84c55c67a0975cd5b6afa2c3057d4bc376a73f121afa01686910f7f4ab4f`.
 This remains unpublished 1.1.0 / pending epoch 60. Evidence and installation receipts remain
 under ignored `local_data/polity-outlines/`; game loading/rendering was not observed.
+
+2026-11-01, **1.1.0 development / pending epoch 60 — sea cells as chains, bolt remainders, water band**
+(owner's screenshots of ruled strips and bent remainders in world `aszzsukifw`; branch
+`sea-cell-voronoi`, commit a2c835a, not merged). [V-EXEC] The change and its measurements are in
+[sea geography](../docs/sea-geography.md). Full Python checks pass (2,411 tests, 15 optional skips;
+format, lint, strict types; Rust untouched). The 13 ordinary installed-game checks pass on EU5 1.4.6 /
+build 26300913; the five presets (archipelago 42, islands 7, small continents 42, The Wall 9, the
+reference supercontinent) and the owner's code export with every sea invariant, and the refreshed
+pending epoch-60 reference digest `192e1f549d90b2063dc8a54eced7bbb3036e1dae306c9ec2aee547155e55570b`
+(870 nonmetadata files) is reproduced by `RNW_REPRODUCE=1`; `tests/golden_world.json` carries it.
+
+Installed **Continents (sea cells)**, `mod/rnw_exp_world_ibyicz5wy2`, in the existing Windows/Proton
+profile. Code: `RNW1-080SM-KW9WD-Y6R47-N040G-00823-AG0C6-R1XRM-3T`: the land seed and settings of the
+owner's `rnw_exp_world_aszzsukifw` with the resources rerolled, on the new generator (the land moves a
+little inland from the join, so it is not the same continent outline). All 901 files match the
+candidate; every file of the 22 other mod folders and the nine profile-root files were hash-preserved,
+and both libraries hold the record. No playset, save or preference edit; no EU5 launch/control by the
+agent. The hub was not updated: the code is on an unmerged branch.
+
+Correction to the water-halo record above: a first install of this same land with the peoples
+rerolled (`RNW1-080SM-KW9WD-Y6R47-N040G-00823-AG0C7-0165Z-4E`) has the world id of that record's
+`rnw_exp_world_plbwy7zcgo` and replaced its folder in the profile for about ten minutes (the id is the
+code's, and the install command does not refuse an existing folder). The folder was then rebuilt from
+the water-halo commit and checked: its 870 non-metadata files match the record's manifest, its
+`.metadata/rnw-library` is the record itself and its `locations.png` is again byte-identical to
+`aszzsukifw`'s. The replaced copy is kept in ignored `local_data/sea-cells/profile-backup/`.
