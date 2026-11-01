@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- **No pale disc round islands in the water texture.** The first rebuild of a new coast's water
+  (see the entry below) left the excess brightness that vanilla seas have 40 to 64 pixels from land
+  (coasts with such neighbours lie on shallow seas) round every island and let it blend back into the
+  original sea: a pale disc with an edge in the game. A shelf now ends in the far sea at three quarters
+  of its reach; the background of the open sea no longer takes in the darker filled cells beside it,
+  and every division rounds to the nearest instead of taking half a unit off each channel at each
+  step. On the owner's masks the mean difference from the original sea 32 to 64 pixels from a new
+  island is +6 / +1 / -0.5 / 0 luminance units (was +14 / +9 / +4 / 0). A change of the water
+  textures, so the pending epoch-60 reference digest is refreshed.
+
 - **Hide the island groups at country selection.** The cover drawn over the New World in the game
   took only the generated locations and the ocean wastelands beside them, so the vanilla island
   groups that stay or move inside the canvas (the Polynesian strip) stood open in the covered

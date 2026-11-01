@@ -217,3 +217,22 @@ def test_a_texture_without_open_water_is_refused() -> None:
     counts = np.full((3, 3), eu5_water.GRID_MIN - 1, dtype=np.int64)
     with pytest.raises(ValueError, match="no open water"):
         _ = eu5_water._background_grid(sums, counts)  # pyright: ignore[reportPrivateUsage]
+
+
+def test_a_shelf_ends_in_the_far_sea_at_three_quarters_of_the_reach() -> None:
+    """A new island in deep water has no shallow sea round it: its shelf is zero at the tail.
+
+    Vanilla pixels 40 to 64 pixels from land are brighter than the far sea; painting that excess
+    round a new island made a pale disc whose edge showed (owner's screenshot, 2026-11-02).
+    """
+    reach = 8
+    table = np.zeros((2, reach + 1, 4), dtype=np.int64)
+    table[0, :, 0] = [90, 60, 40, 30, 22, 18, 15, 13, 5]  # distance 0..8; the far sea is 5
+    table[1, :, 1] = [70, 50, 35, 25, 20, 16, 12, 9, 0]
+    shelf = eu5_water._isolated_shelf(table)  # pyright: ignore[reportPrivateUsage]
+    tail = reach * 3 // 4  # 6
+    assert shelf[0, tail:, 0].tolist() == [5, 5, 5]
+    assert shelf[1, tail:, 1].tolist() == [0, 0, 0]
+    # Nearer the coast the shelf keeps its shape, lowered by the excess at the tail (10 and 12).
+    assert shelf[0, :tail, 0].tolist() == [80, 50, 30, 20, 12, 8]
+    assert shelf[1, :tail, 1].tolist() == [58, 38, 23, 13, 8, 4]

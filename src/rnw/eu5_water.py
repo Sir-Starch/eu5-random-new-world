@@ -61,6 +61,10 @@ STRIP_CEILING: Final[int] = 512
 GRID: Final[int] = 32
 GRID_MIN: Final[int] = GRID * GRID // 8
 SMOOTH: Final[int] = 3
+# A shelf ends TAIL/TAIL_OF of the way to the reach (48 of 64 pixels): the blend back into the
+# original sea starts there, so the shelf must have reached the far sea by then.
+TAIL: Final[int] = 3
+TAIL_OF: Final[int] = 4
 
 
 def _downsample(mask: NDArray[np.bool_], factor: int, *, any_true: bool) -> NDArray[np.bool_]:
@@ -119,7 +123,7 @@ def _background_grid(sums: NDArray[np.int64], counts: NDArray[np.int64]) -> NDAr
 
     A cell with fewer than ``GRID_MIN`` pixels is empty (land, coast or shelf). Blocks of
     2x2 cells, then 4x4 and so on pool their sums, and an empty cell takes the mean of the
-    smallest block that has any; the result is smoothed ``SMOOTH`` times (a 1-2-1 filter,
+    smallest block that has any; the filled cells are smoothed ``SMOOTH`` times (a 1-2-1 filter,
     wrapping across the seam) so cell edges do not show. Integer throughout.
     """
     own = counts >= GRID_MIN
@@ -140,17 +144,22 @@ def _background_grid(sums: NDArray[np.int64], counts: NDArray[np.int64]) -> NDAr
     if not count[0, 0]:
         message = "The water texture has no open water far enough from land to take its colour"
         raise ValueError(message)
-    grid = total // count[..., None]
+    grid = (total + count[..., None] // 2) // count[..., None]
     for total, count in reversed(levels[:-1]):
         parent = np.repeat(np.repeat(grid, 2, axis=0), 2, axis=1)[
             : count.shape[0], : count.shape[1]
         ]
-        grid = np.where((count > 0)[..., None], total // np.maximum(count, 1)[..., None], parent)
+        own_mean = (total + (count // 2)[..., None]) // np.maximum(count, 1)[..., None]
+        grid = np.where((count > 0)[..., None], own_mean, parent)
+    sea = grid
     for _ in range(SMOOTH):
-        grid = (np.roll(grid, 1, axis=1) + 2 * grid + np.roll(grid, -1, axis=1)) // 4
+        grid = (np.roll(grid, 1, axis=1) + 2 * grid + np.roll(grid, -1, axis=1) + 2) // 4
         above = np.concatenate([grid[:1], grid[:-1]])
         below = np.concatenate([grid[1:], grid[-1:]])
-        grid = (above + 2 * grid + below) // 4
+        grid = (above + 2 * grid + below + 2) // 4
+        # A cell that has open water of its own keeps its mean: the filled cells beside it
+        # (coast, shelf) are coarser and darker, and smoothing them in would lower the sea.
+        grid = np.where(own[..., None], sea, grid)
     return grid
 
 
@@ -168,9 +177,8 @@ def _background(grid: NDArray[np.int64], first: int, last: int, columns: int) ->
     vertical = (
         grid[np.clip(row, 0, height - 1)] * (span - fy) + grid[np.clip(row + 1, 0, height - 1)] * fy
     )
-    return (vertical[:, column % width] * (span - fx) + vertical[:, (column + 1) % width] * fx) // (
-        span * span
-    )
+    across = vertical[:, column % width] * (span - fx) + vertical[:, (column + 1) % width] * fx
+    return (across + span * span // 2) // (span * span)
 
 
 def _profile_table(
@@ -183,7 +191,8 @@ def _profile_table(
     """Mean RGBA offset from the open-water background per (latitude band, distance to land).
 
     The sums are exact integers in float64 (below 2**53), so adding them strip by strip
-    gives the same table as adding them at once.
+    gives the same table as adding them at once. Every division rounds to the nearest: a floor
+    takes half a unit off each channel at each step, and the steps add up to a dark disc.
     """
     rows, columns = distance.shape
     bands = rows // BAND_ROWS
@@ -204,7 +213,26 @@ def _profile_table(
                 key, weights=offset[..., channel].ravel(), minlength=size
             )
     counts = np.maximum(1, counts)
-    return (sums.astype(np.int64) // counts[:, None]).reshape(bands, reach + 1, 4)
+    means = (sums.astype(np.int64) + counts[:, None] // 2) // counts[:, None]
+    return _isolated_shelf(means.reshape(bands, reach + 1, 4))
+
+
+def _isolated_shelf(table: NDArray[np.int64]) -> NDArray[np.int64]:
+    """The shelf of a coast in open water: it ends at ``TAIL`` of the reach, in the far sea.
+
+    Vanilla pixels at 40 to 64 pixels from land are brighter than the open water: the coasts
+    that have such neighbours lie on shallow seas. A new island in deep water has no shelf there,
+    and painting that excess round it makes a pale disc whose edge shows where it blends back
+    into the original sea [V-GAME/V-LOCAL C465]. The excess at the tail's start over the far
+    sea (the last distance) is taken off the whole shelf, and the table stays at the far sea
+    beyond it.
+    """
+    reach = table.shape[1] - 1
+    tail = reach * TAIL // TAIL_OF
+    excess = table[:, tail : tail + 1] - table[:, reach : reach + 1]
+    result = table - excess
+    result[:, tail:] = table[:, reach : reach + 1]
+    return result
 
 
 def _synthesize(
@@ -225,7 +253,7 @@ def _synthesize(
     d = np.minimum(distance, reach)
     first = table[lower[:, None], d]
     second = table[upper[:, None], d]
-    return (first * (1000 - weight) + second * weight) // 1000
+    return (first * (1000 - weight) + second * weight + 500) // 1000
 
 
 def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the shelf, the sea and the noise.
@@ -269,11 +297,11 @@ def _render(  # noqa: PLR0913 - a strip reads the image, both distances, the she
     # At either map edge the same section of noise is sampled. Smooth endpoint
     # weights also preserve its slope, rather than resetting the texture at x=0.
     noise = (other * (1000 - weight) + noise * weight) // 1000
-    synthetic[..., :3] += (noise * 6 // NOISE_SCALE)[..., None]
+    synthetic[..., :3] += ((noise * 6 + NOISE_SCALE // 2) // NOISE_SCALE)[..., None]
     calm = np.minimum(old_distance, new_distance)[first - start : last - start]
     keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
     original = image[first:last].astype(np.int64)
-    blended = (original * keep + synthetic * (BLEND - keep)) // BLEND
+    blended = (original * keep + synthetic * (BLEND - keep) + BLEND // 2) // BLEND
     return np.where(touched[first:last, :, None], blended, original).clip(0, 255).astype(np.uint8)
 
 

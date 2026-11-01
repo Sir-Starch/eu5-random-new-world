@@ -68,8 +68,15 @@ def _profile_table(
     table = np.zeros((size, 4), dtype=np.int64)
     for channel in range(4):
         sums = np.bincount(key, weights=offset[..., channel].ravel(), minlength=size)
-        table[:, channel] = sums.astype(np.int64) // counts
-    return table.reshape(bands, reach + 1, 4)
+        table[:, channel] = (sums.astype(np.int64) + counts // 2) // counts
+    table = table.reshape(bands, reach + 1, 4)
+    # The shelf ends at three quarters of the reach, in the far sea (see eu5_water._isolated_shelf).
+    tail = reach * 3 // 4
+    far = table[:, reach].copy()
+    excess = table[:, tail] - far
+    shelf = table - excess[:, None, :]
+    shelf[:, tail:] = far[:, None, :]
+    return shelf
 
 
 def _synthesize(
@@ -85,7 +92,7 @@ def _synthesize(
     d = np.minimum(distance, reach)
     first = table[lower[:, None], d]
     second = table[upper[:, None], d]
-    return (first * (1000 - weight) + second * weight) // 1000
+    return (first * (1000 - weight) + second * weight + 500) // 1000
 
 
 def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the seed.
@@ -142,10 +149,10 @@ def rebuild(  # noqa: PLR0913 - one texture needs masks at its own scale and the
     position = np.arange(columns, dtype=np.int64) * 1000 // columns
     weight = position * position * (3000 - 2 * position) // 1_000_000
     noise = (other * (1000 - weight) + noise * weight) // 1000
-    synthetic[..., :3] += (noise * 6 // NOISE_SCALE)[..., None]
+    synthetic[..., :3] += ((noise * 6 + NOISE_SCALE // 2) // NOISE_SCALE)[..., None]
     calm = np.minimum(old_distance, new_distance)
     keep = np.clip(calm - (reach - BLEND), 0, BLEND)[..., None]
-    blended = (image * keep + synthetic * (BLEND - keep)) // BLEND
+    blended = (image * keep + synthetic * (BLEND - keep) + BLEND // 2) // BLEND
     result = np.where(touched[..., None], blended, image).clip(0, 255).astype(np.uint8)
     changed = touched & np.any(result != image, axis=2)
     return rewrite(data, result, changed), int(np.count_nonzero(changed))
