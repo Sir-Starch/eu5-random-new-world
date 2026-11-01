@@ -1286,3 +1286,31 @@ The verified, self-tested hub is installed with the former hub retained at
 `local_data/hub-updates/1.1.0-1793385098281812890/rnw_exp_hub`; wheel SHA-256
 `0b4e59f79a5ebb92f58d9d8a6eafb40d8749645f3a4283a94f4a0b8dc121c4d3`. Unpublished 1.1.0 /
 pending epoch 60; existing worlds are untouched. Evidence: ignored `local_data/hydrology-110/`.
+
+2026-11-01, **1.1.0 development / pending epoch 60 — native territorial variety** (issue #8).
+[V-EXEC] Added geography-based polity growth; the controlled six-preset comparison and its
+scope are in [native societies](../docs/natives.md#territorial-variety-issue-8-pending-110--epoch-60).
+Full checks pass: 2,406 Python tests (15 optional skips), 23 Rust tests, format/lint/strict
+Python types. The 13 ordinary read-only installed-game checks and independent reference
+reproduction pass on EU5 1.4.6 / build 26300913. The refreshed reference has 870 nonmetadata
+files, SHA-256 `2397404c6627798ff5840b2c195aada7bfd07f3bb3397919347f01ee55855dde`.
+All 36 game-derived graph cases preserve population/identity fields, state farming support
+and connected, disjoint political ownership; Linux and the packaged Windows generator agree exactly.
+
+Installed **Native territorial variety · 8008**, `mod/rnw_exp_world_2owqyzokrv`, in the existing
+Windows/Proton profile. Code:
+`RNW1-081G0-00000-0007T-8040G-00860-2AG63-YG1W8-8G3GH-149XR-08TX0-3VM27-4`.
+All **880 files** match the candidate; its 869 nonmetadata files have SHA-256
+`e35d3c80d0a9861d6296b4588a631d45c64c2600e954ce9d383d91a65db62044`.
+Both generator libraries contain complete records/recovery assets. Export checks find no
+split cells, unreachable seas, unported land, lost Old World contacts or unsupported landed
+countries. All 19 prior mod folders and nine profile-root files were hash-preserved by the
+world installation; no playset, save or preference edit, and no EU5 launch/control.
+
+The source/native and Windows/Wine window/native/code and shell/bridge self-tests pass.
+The standard updater verified and installed the **3,478-file** generator-only hub, retaining
+the former hub at `.rnw-hub-backups/1.1.0-1793548847675452430`. Candidate:
+`local_data/polity-outlines/rnw_exp_hub`; Windows wheel SHA-256
+`c6ee84c55c67a0975cd5b6afa2c3057d4bc376a73f121afa01686910f7f4ab4f`.
+This remains unpublished 1.1.0 / pending epoch 60. Evidence and installation receipts remain
+under ignored `local_data/polity-outlines/`; game loading/rendering was not observed.

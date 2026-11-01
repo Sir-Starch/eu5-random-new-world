@@ -313,6 +313,8 @@ def test_land_graph_links_shores_and_scores_farming() -> None:
     assert graph.edges.tolist() == [[0, 1]]
     assert graph.links.tolist() == [[1, 2]]
     assert cells.coastal == [False, False, True]
+    assert graph.coastal is not None
+    assert graph.coastal.tolist() == cells.coastal
     assert cells.seas == [[], [], [4]]
     assert graph.potential[0] == 900  # tropical grassland plain
     assert graph.potential[2] == 0  # far beyond 65 degrees

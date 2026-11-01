@@ -37,7 +37,7 @@ Read-only survey of `main_menu/setup/1337`, `in_game/setup/countries` and `main_
 | 4. Population (after state-site planning) | `societies._population` | Capacity × (1 + 11 × complexity) × seeded noise of 0.6–1.5, scaled to the vanilla population per land location times the generated location count. The peasant share is `peasant_peak_permille` × complexity; default peak 60%. |
 | 5. Zones | `societies._zones` | Religion zones (about 80 locations) grow from spaced seeds by weighted travel cost over the whole graph, so every island gets one. Culture zones (about 10 locations) grow inside each religion zone; complex seeds grow larger. Every zone is connected. |
 | 6. Identity | `eu5_natives.match_homelands` | Each zone has a homeland vector: pop-weighted climate (counted twice), vegetation and topography shares, share in states, latitude, coast and, since 0.9.28, the shares of the three regional families (Mesoamerica, South America, North America; counted twice like climate). Vanilla cultures and religions have the same vector from their 1337 homelands. Zones pick in order of population. Each takes the best unused religion, or a culture of its religion, unless reusing the best one fits better by more than a slack; a small seeded noise varies the choice. |
-| 7. Polities | `societies._state_land`, `_states`, `_tribes` | State sites are planned before population: complex core land and farmable remote pockets, within the configured land budget. Only capitals meeting the vanilla agrarian baseline form landed states. Their spaced capitals balance population with local identity coherence; connected growth favours their culture and faith, with larger capitals reaching farther. In 45% of culture zones the tribal land splits into pop-type tribes of about 6 locations; the rest stays unorganised. |
+| 7. Polities | `societies._state_land`, `_states`, `_tribes` | State sites are planned before population: complex core land and farmable remote pockets, within the configured land budget. Only capitals meeting the vanilla agrarian baseline form landed states. Their spaced capitals balance population with local identity coherence; connected growth favours their culture and faith, with larger capitals reaching farther. Geographic affinities vary states, empires and tribal partitions (below). In 45% of culture zones the tribal land splits into pop-type tribes of about 6 locations; the rest stays unorganised. |
 | 8. Ranks and markets | `societies._ranks`, `regional_markets` | The most populous 4% of states have a city capital and the next 11% a town capital. Every city, and the largest state near each hearth, is a market centre. Every disconnected landed group without one gets a local market in its most populous capital; all market centres have at least town rank. |
 | 8b. Vassals | `eu5_natives._vassals` | The most populous 5% of states take up to three bordering states of their religion with under a third of their population as vassals (`12_diplomacy.txt`, `subject_type = vassal`). Vanilla has 4 American vassals (C70); generated worlds get 8–19. Overlords come only from states whose template sets a starting technology level of at least the lowest of vanilla's lords (2), and (since 0.9.28) whose written level is at least that too: all 18 pairs of tech-0 lords (`amerindian_monarchy`, tribes) were logged as invalid at the start in two worlds, none of the 23 pairs of tech-2 lords (C99). |
 | 8c. Names | `names.MarkovNames`, `eu5_natives.PlaceNamer` | A character Markov chain (order 3) per corpus of vanilla American place names, chosen by the culture's language, else its family, else its religion, else all Americas (at least 40 names). Land locations take their culture's language; wastelands that of their land neighbours (with "Highlands"); provinces and areas that of most of their locations; states their capital's name and tribes a name of their culture. Names copy no vanilla name (accents ignored) and never repeat. Seas and lakes keep syllable names. |
@@ -122,15 +122,16 @@ market sharing, confederate eligibility and loud rejection of unsupported landed
 States select eligible capitals using population, seeded jitter and the population-weighted
 share of matching culture and faith in the capital and its immediate travel neighbours.
 A fully matching neighbourhood scores twice the raw population. Growth remains connected:
-ordinary states pay travel cost ×4 in another culture, ×3 in another faith, or ×6 when both
-change. These costs apply relative to the capital throughout the journey, so passing through
-foreign territory does not reset the cost. Empires use the same capital preference but
-milder ×2/×2/×3 costs, retaining diverse borderlands. Foreign land remains traversable.
+the identity component charges ordinary states ×4 in another culture, ×3 in another faith,
+or ×6 when both change. These costs apply relative to the capital throughout the journey,
+so passing through foreign territory does not reset the cost. Empires use the same capital
+preference but milder ×2/×2/×3 costs, retaining diverse borderlands. Foreign land remains traversable.
 The existing capital population weights, eligibility, country farming floors, ownership
 exclusion and empire size draws remain in force. Populations, peasant counts, identity zones
 and the global population budget are constructed before this choice and are unchanged.
 
-[V-EXEC, 2026-11-01] Before/after synthetic measurements use source `f04dc91` as baseline,
+[V-EXEC, 2026-11-01] Before/after synthetic measurements use source `f04dc91` as baseline
+and `1a4ecb6` for the after column, before issue #8's affinities below:
 six seeds (3, 4, 7, 42, 77, 1000), the 1,212-location fertile-mainland/island and six-block/poor-island
 graphs in `tests/test_societies.py`, state sizes 3 and 10, and 100% empire chance. Other settings
 are `SETTINGS` from that test, with target 4,000,000 milli-pops and floor 338 milli-peasants /
@@ -156,6 +157,66 @@ combined zone share equals the cultural share. They establish algorithm behaviou
 graphs, not prevalence in player worlds or observed gameplay. The regression matrix covers
 connected/disjoint ownership and country farming support; separate tests cover boundary
 capitals, foreign passages, sea links and deterministic output.
+
+### Territorial variety (issue #8, pending 1.1.0 / epoch 60)
+
+Political growth adds one seeded affinity per founding location: generalist travel, farming
+corridors, similar-terrain belts, or the coast. A coastal affinity is available only within
+two travel steps of the sea. The adapter passes actual sea-coast membership; a lake shore
+alone is not a sea coast. Distance inland follows the land/shared-water graph, so wrap contacts
+have the same meaning as other contacts. Terrain similarity uses the existing combined
+topography/vegetation travel cost, rather than an invented compass direction.
+
+Ordinary states and empires multiply existing travel/identity costs by 1–3 according to that
+affinity: farming growth prefers high farming potential (including existing river/coast
+lifts), habitat growth prefers costs like the founding location's, and coastal growth resists
+inland travel. Small tribal partitions use half-strength preferences (1–2) to limit squeezed
+neighbours. Affinities use an independent named random stream. They change construction,
+not finished borders: every frontier advances through its own members, costs stay positive,
+and empire size selection takes the first reached locations. There is no added border noise,
+directional stretch or fragment-merging pass. Capital eligibility, farming floors, identity
+preferences and ownership exclusion still apply. Populations, complexity, culture and religion
+zones are constructed before affinities and keep their existing algorithm.
+
+Focused synthetic regressions cover a three-location-wide bent fertile valley, broad upland
+and coastal belts, sea links, a wrap contact, coastless components, deterministic output,
+disjoint connected ownership, capital membership and country/capital farming support.
+
+[V-EXEC, 2026-11-01] Comparison against `1a4ecb6` uses six game-derived land graphs on
+EU5 1.4.6 / build 26300913: Continents 1000, The Wall 9, Archipelago 42, Scattered islands 7,
+Small continents 42 and Supercontinent 42. Each keeps its preset's native settings, installed
+population calibration and farming floor, with society seeds 3/42/1000 and empire chances
+0/1000: 36 cases per implementation. These are controlled society reruns on fixed geography,
+not 36 full game exports. All population, peasant, complexity, culture, religion and hearth
+snapshots match the baseline exactly; all political territories are connected/disjoint and
+include their capital, and states retain country/capital farming support. Both the reference and the
+separate candidate also pass full export invariants, including extraordinary archetype setup.
+
+The table measures territories with at least six locations. Elongation is the square root of
+the location-centroid covariance eigenvalue ratio, unwrapped around the polity's capital
+(minor variance floored at one pixel²). Compactness is `4π × area / perimeter²` on an
+eight-pixel sample of the country raster, including shore and border edges. Lower compactness
+and higher elongation describe less compact outlines; neither alone establishes plausibility.
+Figures are median / 75th percentile for elongation, and median for compactness.
+
+| Model layer | Territories before → after | Elongation before → after | Compactness before → after |
+|---|---:|---:|---:|
+| Ordinary states | 756 → 735 | 1.613 / 2.030 → 1.636 / 2.099 | .261 → .251 |
+| Great empires | 63 → 63 | 1.359 / 1.491 → 1.388 / 1.624 | .193 → .172 |
+| Tribes | 6,781 → 6,696 | 1.885 / 2.471 → 1.871 / 2.457 | .235 → .232 |
+| Culture zones | 14,616 → 14,616 | 1.806 / 2.341 → unchanged | .222 → unchanged |
+| Religion zones | 2,934 → 2,934 | 1.769 / 2.317 → unchanged | .128 → unchanged |
+
+The gain is modest for ordinary states and clearer for empires; tribes already had more
+irregular outlines and change less. One-location shares across all sizes are 25.48→25.49%
+for ordinary states and 8.39→9.46% for tribes. Among territories of at least six locations,
+elongation above 4 falls from .79→.68% for ordinary states and 4.59→4.50% for tribes;
+no empire exceeds 4. This is a thin-outline proxy, not a prohibition on narrow real geography.
+Small default states can still be compact. The maps do not establish that the player's
+unidentified screenshot was a geometric defect or that every seed becomes more elongated.
+Local baseline/after maps for all five layers and measurements remain under ignored
+`local_data/polity-outlines/`. All 36 complete society digests also match the packaged Windows
+generator under Wine. The pending epoch-60 golden is refreshed; frozen epoch 59 is unchanged.
 
 ### Higher state-land targets (issue #5)
 

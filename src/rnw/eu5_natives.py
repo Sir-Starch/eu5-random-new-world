@@ -1047,6 +1047,7 @@ def land_graph(
         cost=np.array(cost, dtype=np.int64),
         edges=edges.reshape(-1, 2),
         links=np.array(links, dtype=np.int64).reshape(-1, 2),
+        coastal=is_coastal,
     )
     cells = _Cells(
         cells=land,

@@ -57,7 +57,7 @@ CITY: Final[str] = "city"
 TOWN: Final[str] = "town"
 STATE: Final[str] = "state"
 TRIBE: Final[str] = "tribe"
-# A great empire takes the nearest inhabited land around its capital, this many permille of
+# A great empire takes connected inhabited land around its capital, this many permille of
 # all land locations, but at least EMPIRE_FLOOR [INFERRED design]. Vanilla 1337's largest
 # native state, the Aztec empire, holds 23 of 4,434 land locations (5 permille) [V-EXEC C117].
 EMPIRE_SHARE: Final[tuple[int, int]] = (8, 16)
@@ -74,6 +74,7 @@ class LandGraph:
     edges: NDArray[np.int64]
     links: NDArray[np.int64]
     link_cost: int = 4 * STEP_COST
+    coastal: NDArray[np.bool_] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,7 +147,7 @@ class _Graph:
         self.costs: list[int] = (graph.cost[targets] + extra)[order].tolist()
         self.starts: list[int] = np.searchsorted(sources[order], np.arange(count + 1)).tolist()
 
-    def grow(
+    def grow(  # noqa: PLR0913 - travel, identity and habitat costs share one connected frontier.
         self,
         seeds: list[int],
         *,
@@ -154,6 +155,7 @@ class _Graph:
         allowed: NDArray[np.bool_] | None = None,
         limit: int | None = None,
         identity: _Identity | None = None,
+        territory: _Territory | None = None,
     ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
         """Weighted multi-source travel cost: (raw cost, owning seed index) per node.
 
@@ -181,11 +183,55 @@ class _Graph:
                 if owners[target] >= 0 or (permitted is not None and not permitted[target]):
                     continue
                 penalty = 1 if identity is None else identity.penalty(seeds[index], target)
-                total = raw + self.costs[slot] * penalty
+                habitat = PERMILLE if territory is None else territory.penalty(seeds[index], target)
+                total = raw + self.costs[slot] * penalty * habitat // PERMILLE
                 if limit is not None and total > limit:
                     continue
                 heapq.heappush(heap, (total * PERMILLE // weight, index, target, total))
         return np.array(costs, dtype=np.int64), np.array(owners, dtype=np.int64)
+
+
+@dataclass(frozen=True, slots=True)
+class _Territory:
+    """Founding-centre affinities: generalist, farming corridor, habitat or coast.
+
+    Preferences add at most twice the normal move cost. Every move stays positive,
+    so frontiers remain connected and barriers are traversable. There is no direction
+    or coordinate assumption: coastal distance follows the graph, including wrap.
+    Only polities use these costs; population and identity zones keep their own model.
+    """
+
+    styles: list[int]
+    potential: list[int]
+    terrain: list[int]
+    inland: list[int]
+    strength: int = PERMILLE
+
+    @classmethod
+    def of(cls, graph: LandGraph, moves: _Graph, seed: int) -> _Territory:
+        coast = [] if graph.coastal is None else np.flatnonzero(graph.coastal).tolist()
+        distance, _ = moves.grow(coast)
+        inland = np.where(distance < 0, 4 * STEP_COST, distance).tolist()
+        rng = SplitMix64(derive_seed(seed, "territory-affinities"))
+        # Coastal growth is an option only for centres within two travel steps of
+        # the sea. Inland and coastless societies still have three viable styles.
+        styles = [rng.below(4 if near <= 2 * STEP_COST else 3) for near in inland]
+        return cls(styles, graph.potential.tolist(), graph.cost.tolist(), inland)
+
+    def penalty(self, capital: int, target: int) -> int:
+        """A bounded permille move multiplier relative to the founding centre."""
+        match self.styles[capital]:
+            case 1:
+                # Fertile valleys and river-fed plains can extend beyond the centre.
+                extra = 3 * (PERMILLE - self.potential[target])
+            case 2:
+                # Similar terrain permits upland belts as well as lowland basins.
+                extra = 2 * abs(self.terrain[capital] - self.terrain[target])
+            case 3:
+                extra = self.inland[target] * PERMILLE // (2 * STEP_COST)
+            case _:
+                extra = 0
+        return PERMILLE + min(2 * PERMILLE, extra) * self.strength // PERMILLE
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,13 +327,14 @@ def _shuffled(nodes: list[int], rng: SplitMix64) -> list[int]:
     return out
 
 
-def _zones(
+def _zones(  # noqa: PLR0913 - identity zones and tribal territories share the partitioner.
     graph: _Graph,
     members: NDArray[np.bool_],
     *,
     locations: int,
     rng: SplitMix64,
     bias: NDArray[np.int64] | None = None,
+    territory: _Territory | None = None,
 ) -> tuple[NDArray[np.int64], int]:
     """Split ``members`` into connected zones of about ``locations``; -1 elsewhere."""
     nodes = np.flatnonzero(members).tolist()
@@ -304,7 +351,7 @@ def _zones(
             _uniform(rng, ZONE_WEIGHT) + (0 if bias is None else int(bias[node]))
             for node in seeds[len(weights) :]
         ]
-        _, owner = graph.grow(seeds, weights=weights, allowed=members)
+        _, owner = graph.grow(seeds, weights=weights, allowed=members, territory=territory)
         missing = [node for node in nodes if owner[node] < 0]
         if not missing:
             break
@@ -418,6 +465,7 @@ def _states(  # noqa: PLR0913 - capitals need population, eligibility and target
     rng: SplitMix64,
     eligible: NDArray[np.bool_],
     identity: _Identity,
+    territory: _Territory | None = None,
 ) -> list[tuple[int, list[int]]]:
     """Capitals and members of states covering ``land``; big capitals grow farther."""
     nodes = np.flatnonzero(land).tolist()
@@ -436,7 +484,9 @@ def _states(  # noqa: PLR0913 - capitals need population, eligibility and target
         weights = [
             PERMILLE // 2 + 3 * PERMILLE * int(population[c]) // (2 * peak) for c in capitals
         ]
-        _, owner = graph.grow(capitals, weights=weights, allowed=land, identity=identity)
+        _, owner = graph.grow(
+            capitals, weights=weights, allowed=land, identity=identity, territory=territory
+        )
         missing = [node for node in order if owner[node] < 0]
         if not missing:
             break
@@ -459,6 +509,7 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
     identity: _Identity,
     peasants: NDArray[np.int64],
     floor: StateFloor,
+    territory: _Territory,
 ) -> list[tuple[int, list[int]]]:
     """Capitals and members of the great empires: each hearth raises one with ``chance`` permille.
 
@@ -482,7 +533,7 @@ def _empires(  # noqa: PLR0913 - the hearths, the people and the chance decide
         if not candidates.size:
             continue
         capital = int(candidates[int(np.argmax(scores[candidates]))])
-        reach, _ = graph.grow([capital], allowed=free, identity=identity)
+        reach, _ = graph.grow([capital], allowed=free, identity=identity, territory=territory)
         reached = np.flatnonzero(reach >= 0)
         size = max(EMPIRE_FLOOR, len(inhabited) * share // PERMILLE)
         members = reached[np.argsort(reach[reached], kind="stable")][:size]
@@ -500,13 +551,19 @@ def _tribes(  # noqa: PLR0913, PLR0917 - tribes read zones, population and the s
     population: NDArray[np.int64],
     settings: NativeSettings,
     rng: SplitMix64,
+    territory: _Territory,
 ) -> list[Polity]:
     polities: list[Polity] = []
+    # Typical tribes hold only six locations. Gentler preferences leave room for
+    # neighbours instead of squeezing them into tiny remnants during competition.
+    territory = replace(territory, strength=PERMILLE // 2)
     for zone in range(int(culture.max()) + 1 if len(culture) else 0):
         members = land & (culture == zone)
         if not np.any(members) or rng.below(PERMILLE) >= settings.organized_permille:
             continue
-        parts, count = _zones(graph, members, locations=settings.tribe_locations, rng=rng)
+        parts, count = _zones(
+            graph, members, locations=settings.tribe_locations, rng=rng, territory=territory
+        )
         for part in range(count):
             nodes = np.flatnonzero(parts == part)
             if not nodes.size:
@@ -695,6 +752,7 @@ def generate_societies(
         culture[members] = inner[members] + zones
         zones += made
     inhabited = population > 0
+    territory = _Territory.of(graph, moves, seed)
     agrarian = peasants * PERMILLE >= population * state_floor.share
     eligible = (peasants >= state_floor.peasants) & agrarian
     empires = _empires(
@@ -708,6 +766,7 @@ def generate_societies(
         peasants=peasants,
         floor=state_floor,
         identity=_Identity(culture.tolist(), religion.tolist(), cultural_cost=1, religious_cost=1),
+        territory=territory,
     )
     empire_land = np.zeros(count, dtype=bool)
     for _, members in empires:
@@ -726,6 +785,7 @@ def generate_societies(
             rng=rng,
             eligible=eligible,
             identity=_Identity(culture.tolist(), religion.tolist()),
+            territory=territory,
         )
     ]
     # State-land share is a placement budget: a component without a supported capital
@@ -734,7 +794,7 @@ def generate_societies(
     for polity in polities:
         state_land[list(polity.members)] = True
     polities += _tribes(
-        moves, culture, inhabited & ~state_land & ~empire_land, population, settings, rng
+        moves, culture, inhabited & ~state_land & ~empire_land, population, settings, rng, territory
     )
     ranks, markets = _ranks(polities, population, hearths, moves, reach)
     societies = Societies(

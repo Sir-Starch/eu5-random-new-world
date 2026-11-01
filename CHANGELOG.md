@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Vary native polity outlines through farming corridors, similar-terrain belts and coastal
+  growth alongside generalist expansion (issue #8, pending epoch 60). Small tribal groups use
+  gentler preferences. Connected territories, capital membership and farming requirements
+  remain enforced; population, culture and religion zones keep their existing generation.
+
 - Give native states stronger primary-culture and faith cores through identity-aware capital
   selection and territorial growth (issue #7, pending epoch 60). Borders can retain minorities;
   great empires use milder growth preferences to preserve diversity. Population and identity
