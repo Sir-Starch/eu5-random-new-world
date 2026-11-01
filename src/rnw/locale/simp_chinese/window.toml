@@ -655,8 +655,12 @@ source = "eff9e124228b96ba"
 text = '''将生成范围扩展至大洋'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''推荐：为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。'''
+source = "d70604e843046137"
+text = '''推荐'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。\n\n如果陆地挤在旧世界的海岸边，请不要取消勾选此项，而是在“高级”（陆地与海洋）中调高“与旧世界的距离”。陆地会移向海洋中部，陆地总量不变，大陆仍可呈现任意形状。取消勾选则会把新世界限制在美洲周围原有的带状范围内。"
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

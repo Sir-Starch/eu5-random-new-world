@@ -655,8 +655,12 @@ source = "eff9e124228b96ba"
 text = '''Rozszerz obszar generowania na oceany'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Zalecane: daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.'''
+source = "d70604e843046137"
+text = '''Zalecane'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.\n\nJeśli ląd tłoczy się przy wybrzeżach Starego Świata, nie wyłączaj tej opcji, tylko zwiększ „Odległość od Starego Świata” na karcie „Zaawansowane” (Ląd i morze). Ląd przesuwa się wtedy ku środkowi oceanu, a jego ilość się nie zmienia; kontynenty nadal mogą mieć dowolny kształt. Wyłączenie ogranicza Nowy Świat do pierwotnego pasa wokół Ameryk."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

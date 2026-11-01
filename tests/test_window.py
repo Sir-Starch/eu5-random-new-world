@@ -10,6 +10,7 @@ import subprocess
 import sys
 import threading
 import time
+from html import escape
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -999,6 +1000,27 @@ def test_world_files_are_written_opened_and_dropped_on_the_window(
     assert not plain.isAccepted()
     for window in (first, second, third):
         _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_ocean_option_says_recommended_and_explains_in_a_tooltip(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    short = text("control.new_world.expand_oceans.about")
+    info = text("control.new_world.expand_oceans.info")
+    assert short == "Recommended"
+    # The advice points at the control that replaces unticking the option.
+    assert text("control.new_world.centre_permille") in info
+    assert window.ocean_help.text() == "ⓘ"
+    for widget in (window.expand_oceans, window.ocean_help):
+        tip = widget.toolTip()
+        assert escape(info.split("\n\n")[0]) in tip
+        assert escape(info.split("\n\n")[1]) in tip
+    # The explanation wraps instead of running as one line.
+    assert "<table" in window.ocean_help.toolTip()
+    _ = window.close()
 
 
 @pytest.mark.usefixtures("application")

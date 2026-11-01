@@ -320,10 +320,16 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "control.new_world.land_permille": "Land",
     "control.new_world.expand_oceans": "Expand generation into the oceans",
-    "control.new_world.expand_oceans.about": (
-        "Recommended: gives the New World more room, so its continents need not follow "
-        "the outline of the Americas. Keeps the Old World; islands in the way stay or move to "
-        "free water."
+    "control.new_world.expand_oceans.about": "Recommended",
+    "control.new_world.expand_oceans.info": (
+        "Gives the New World more room, so its continents need not follow the outline of "
+        "the Americas. The Old World is kept; islands in the way stay or move to free water."
+        "\n\n"
+        "If the land crowds the Old World's shores, do not uncheck this: raise “Distance from "
+        "the Old World” in Advanced (Land and sea) instead. It moves the land toward the "
+        "middle of the ocean without changing how much land there is, and the continents stay "
+        "free to take any shape. Unchecking confines the New World to the original band "
+        "around the Americas."
     ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
     "control.new_world.centre_permille": "Distance from the Old World",

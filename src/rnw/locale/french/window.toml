@@ -655,8 +655,12 @@ source = "eff9e124228b96ba"
 text = '''Étendre la génération aux océans'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Recommandé : laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.'''
+source = "d70604e843046137"
+text = '''Recommandé'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.\n\nSi les terres se pressent contre les côtes de l’Ancien Monde, ne décochez pas cette option : augmentez plutôt « Distance à l’Ancien Monde » dans Avancé (Terre et mer). Les terres se rapprochent du milieu de l’océan sans que leur quantité change, et les continents restent libres de prendre n’importe quelle forme. Décocher l’option cantonne le Nouveau Monde à la bande d’origine autour des Amériques."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

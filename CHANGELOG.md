@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- *Expand generation into the oceans* shows only "Recommended" and an ⓘ mark in both windows;
+  hovering the mark or the checkbox explains the option, and why raising *Distance from the Old
+  World* is better than unchecking it when the land crowds the Old World's shores. The text is in
+  all eleven languages. Only the window changes: no file of a world's mod, so no new epoch.
+- In the Tauri window's world pane, the *Remove from the game* / *Add* button and the folder button
+  drop to their own line when the pane is too narrow, instead of running under the scrollbar.
+
 - A country of the New World can be chosen in the country list while the New World is covered as
   terra incognita (owner's request). Its card is no longer dimmed or unclickable, its panel is
   shown, the start and join buttons work, the context menu offers *Select* and the random

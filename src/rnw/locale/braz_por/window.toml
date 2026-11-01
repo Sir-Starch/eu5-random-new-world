@@ -655,8 +655,12 @@ source = "eff9e124228b96ba"
 text = '''Expandir a geração para os oceanos'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Recomendado: dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo; as ilhas no caminho ficam onde estão ou se movem para águas livres.'''
+source = "d70604e843046137"
+text = '''Recomendado'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Dá mais espaço ao Novo Mundo para que seus continentes não precisem seguir o contorno das Américas. Preserva o Velho Mundo; as ilhas no caminho ficam onde estão ou se movem para águas livres.\n\nSe a terra se aglomerar junto às costas do Velho Mundo, não desmarque esta opção: aumente ‘Distância do Velho Mundo’ em Avançado (Terra e mar). Isso desloca a terra para o meio do oceano sem alterar a quantidade de terra, e os continentes continuam livres para assumir qualquer forma. Desmarcar restringe o Novo Mundo à faixa original em torno das Américas."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

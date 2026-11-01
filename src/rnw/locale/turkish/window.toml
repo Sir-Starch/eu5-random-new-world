@@ -655,8 +655,12 @@ source = "eff9e124228b96ba"
 text = '''Üretim alanını okyanuslara genişlet'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Önerilir: Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.'''
+source = "d70604e843046137"
+text = '''Önerilir'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.\n\nKara Eski Dünya’nın kıyılarına yığılıyorsa bu seçeneği kapatmayın; bunun yerine Gelişmiş sekmesinde (Kara ve deniz) “Eski Dünya’ya uzaklık” değerini artırın. Kara, miktarı değişmeden okyanusun ortasına doğru kayar ve kıtalar her biçimi almakta serbest kalır. Seçeneği kapatmak, Yeni Dünya’yı Amerika çevresindeki özgün şeritle sınırlar."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

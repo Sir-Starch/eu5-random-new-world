@@ -655,8 +655,12 @@ source = "eff9e124228b96ba"
 text = '''Erzeugungsgebiet auf die Ozeane erweitern'''
 
 ["control.new_world.expand_oceans.about"]
-source = "bae71063529fd562"
-text = '''Empfohlen: Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht dem Umriss Amerikas folgen müssen. Die Alte Welt bleibt erhalten; Inseln im Weg bleiben stehen oder ziehen in freies Wasser um.'''
+source = "d70604e843046137"
+text = '''Empfohlen'''
+
+["control.new_world.expand_oceans.info"]
+source = "a791d35d238b78f0"
+text = "Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht dem Umriss Amerikas folgen müssen. Die Alte Welt bleibt erhalten; Inseln im Weg bleiben stehen oder ziehen in freies Wasser um.\n\nDrängt sich das Land an die Küsten der Alten Welt, deaktivieren Sie diese Option nicht, sondern erhöhen Sie stattdessen „Abstand zur Alten Welt“ unter „Erweitert“ (Land und Meer). Das Land rückt dann zur Mitte des Ozeans, ohne dass sich die Landmenge ändert, und die Kontinente können weiterhin jede Form annehmen. Wer das Häkchen entfernt, beschränkt die Neue Welt auf das ursprüngliche Band um Amerika."
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

@@ -126,6 +126,7 @@
             disabled={busy}
             label={t("control.new_world.expand_oceans")}
             hint={t("control.new_world.expand_oceans.about")}
+            info={t("control.new_world.expand_oceans.info")}
             onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
           />
         </div>

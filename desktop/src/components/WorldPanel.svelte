@@ -165,13 +165,14 @@
         </div>
         <div class="placement">
           <span class="state"><span class="dot" class:ok={w.placement === "in_game"}></span><span class="cap">{place}</span></span>
-          <span class="spacer"></span>
-          {#if w.placement === "in_game"}
-            <button class="btn small" disabled={!!w.remove_problem} title={w.remove_problem ?? t("remove_tip")} onclick={() => app.act("remove_entries", { ids: [w.id] })}>{t("remove")}</button>
-          {:else}
-            <button class="btn small primary" disabled={!!w.add_problem} title={w.add_problem ?? ""} onclick={() => app.act("add")}>{t("add")}</button>
-          {/if}
-          <button class="btn icon small" title={t("open_folder")} aria-label={t("open_folder")} onclick={openFolder}><Icon name="folder" /></button>
+          <span class="acts">
+            {#if w.placement === "in_game"}
+              <button class="btn small" disabled={!!w.remove_problem} title={w.remove_problem ?? t("remove_tip")} onclick={() => app.act("remove_entries", { ids: [w.id] })}>{t("remove")}</button>
+            {:else}
+              <button class="btn small primary" disabled={!!w.add_problem} title={w.add_problem ?? ""} onclick={() => app.act("add")}>{t("add")}</button>
+            {/if}
+            <button class="btn icon small" title={t("open_folder")} aria-label={t("open_folder")} onclick={openFolder}><Icon name="folder" /></button>
+          </span>
         </div>
         {#if w.task && (w.task.running || w.task.line)}
           <div class="task" class:failed={w.task.failed}>
@@ -302,6 +303,7 @@
   }
   .identity {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: 6px;
     padding: 10px 12px 12px;
     border-bottom: 1px solid var(--line);
@@ -353,11 +355,19 @@
   }
   .placement {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 4px;
     min-height: 24px;
     margin-top: 2px;
     font-size: 12.5px;
+  }
+  /* The buttons stay together and drop to their own line when the pane is too narrow for the
+     state and both of them, instead of running under the scrollbar. */
+  .acts {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: auto;
   }
   .state {
     display: inline-flex;

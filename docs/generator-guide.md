@@ -53,7 +53,10 @@ across all inhabited land; less farmable and less complex areas remain primarily
 *Expand generation into the oceans* on the World tab is checked by default and
 recommended. It gives the New World a wider, fixed ocean sector so continents can
 grow beyond the original American silhouette. The Old World and protected islands
-stay. Uncheck it to use the original distance band around vanilla America. The
+stay. Uncheck it to use the original distance band around vanilla America; if the
+real aim is to keep the land off the Old World's shores, raise *Distance from the Old
+World* instead, which keeps the wide canvas. The checkbox shows only *Recommended*
+and an ⓘ mark; hovering the mark or the checkbox shows this explanation. The
 choice is part of the world code and applies to sketches, land templates and layer
 rerolls. Codes from before 0.12.0 choose the original canvas; their usual warning
 about a different algorithm epoch still applies. [V-EXEC C282–C284]
