@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- The picture of a world with its New World covered as terra incognita (the window's preview and
+  the mod list's thumbnail) hides the whole canvas. It had left small uncovered discs of sea and
+  island, one for each vanilla island group that stays or moves inside the canvas (Bermuda, the
+  Polynesian strip and the like), which also showed where the groups went. Only pictures change:
+  no file of the world's mod, so no new epoch.
+
 ## 1.1.0 — 2026-11-01
 
 - A new generator window (Tauri, with the classic Qt window kept as the fallback), a rebuilt map

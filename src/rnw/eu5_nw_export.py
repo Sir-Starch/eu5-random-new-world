@@ -3205,7 +3205,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 mod_metadata(name, named.title, world_code),
             )
         )
-        revealed, hidden = _previews(game_map, canvas, world)
+        revealed, hidden = _previews(game_map, canvas, world, clean.mask)
         files.append(
             write_bytes(
                 stage,
@@ -3664,9 +3664,15 @@ def _pixel_classes(
 
 
 def _previews(
-    game_map: Eu5Map, canvas: Canvas, world: NewWorld
+    game_map: Eu5Map, canvas: Canvas, world: NewWorld, whole: NDArray[np.bool_]
 ) -> tuple[NDArray[np.uint8], NDArray[np.uint8]]:
-    """The map at an eighth of its size with the New World drawn in, and with it covered."""
+    """The map at an eighth of its size with the New World drawn in, and with it covered.
+
+    ``whole`` is the canvas before its island groups were placed. The covered picture hides all
+    of it: the groups' holes in ``canvas.mask`` are where the vanilla islands stay or have moved
+    to, which depends on the seed and would show as small uncovered discs of sea and islands.
+    The drawn picture keeps the holes, where the vanilla map stands.
+    """
     step = 8
     water = np.array(
         [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
@@ -3684,6 +3690,11 @@ def _previews(
     table = np.array([palette[kind] for kind in world.classes], dtype=np.uint8)
     rows, columns = np.nonzero(canvas.mask[::step, ::step])
     world_columns = _world_columns(canvas, columns.astype(np.int64) * step) // step
-    hidden = cover(image, rows, world_columns)
+    covered_rows, covered_columns = np.nonzero(whole[::step, ::step])
+    hidden = cover(
+        image,
+        covered_rows,
+        _world_columns(canvas, covered_columns.astype(np.int64) * step) // step,
+    )
     image[rows, world_columns] = table[world.labels[rows * step, columns * step]]
     return image, hidden
