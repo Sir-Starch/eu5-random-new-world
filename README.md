@@ -52,7 +52,7 @@ Planned work includes deeper hydrology, more varied continental geography and so
 ### In game
 
 <details>
-<summary>Nine in-game screenshots — geography, native societies, oceans and dynamic content</summary>
+<summary>Eleven in-game screenshots — geography, native societies, oceans and dynamic content</summary>
 
 Click a screenshot to view it at full size.
 
@@ -62,7 +62,7 @@ Click a screenshot to view it at full size.
 </tr>
 <tr>
 <td width="50%"><a href="docs/images/showcase/02-lobby-terra-incognita.png"><img src="docs/images/showcase/02-lobby-terra-incognita.png" alt="True Terra Incognita in the lobby (optional)"></a></td>
-<td width="50%"><a href="docs/images/showcase/03-ocean-navigation.png"><img src="docs/images/showcase/03-ocean-navigation.png" alt="40% Expanded Canvas: Dynamic Sea Lanes, Currents &amp; Reshaped Ocean Wastelands"></a></td>
+<td width="50%"><a href="docs/images/showcase/03-ocean-navigation.png"><img src="docs/images/showcase/03-ocean-navigation.png" alt="65% Expanded Canvas: Dynamic Sea Lanes, Currents &amp; Reshaped Ocean Wastelands"></a></td>
 </tr>
 <tr>
 <td width="50%"><a href="docs/images/showcase/04-playable-native-societies.png"><img src="docs/images/showcase/04-playable-native-societies.png" alt="Playable Native Societies — With Full Ironman &amp; Achievement Support!"></a></td>
@@ -75,6 +75,10 @@ Click a screenshot to view it at full size.
 <tr>
 <td width="50%"><a href="docs/images/showcase/08-east-colonization.png"><img src="docs/images/showcase/08-east-colonization.png" alt="East Meets West: Turn off the European-only colonization rule and watch Asian powers settle the New World from across the Pacific"></a></td>
 <td width="50%"><a href="docs/images/showcase/09-dynamic-content.png"><img src="docs/images/showcase/09-dynamic-content.png" alt="Dynamic Content: Procedural colonial names, custom formable nations, and adapted historical &amp; regional events"></a></td>
+</tr>
+<tr>
+<td width="50%"><a href="docs/images/showcase/10-the-wall-returns.png"><img src="docs/images/showcase/10-the-wall-returns.png" alt="The Wall Returns: a continent-wide barrier across the New World"></a></td>
+<td width="50%"><a href="docs/images/showcase/11-improved-gen.png"><img src="docs/images/showcase/11-improved-gen.png" alt="RNW 1.1.0: More realistic mountains, water bodies, and coastlines"></a></td>
 </tr>
 </table>
 
