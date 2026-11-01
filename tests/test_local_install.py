@@ -24,7 +24,6 @@ from rnw.eu5_biomes import PRECIOUS, template_attributes
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_formation import FORMABLES_FILE
 from rnw.eu5_lobby import (
-    CONTEXT_MENU,
     COVER_INCLUDE,
     DRAWINGS_FILE,
     DRAWINGS_INCLUDE,
@@ -35,7 +34,6 @@ from rnw.eu5_lobby import (
     cover_include,
     cover_shader,
     drawings_include,
-    hide_select_entry,
     land_colour,
     sampler_include,
 )
@@ -384,7 +382,6 @@ def test_local_game_files_take_the_selection_cover() -> None:
         assert patched, edit.path
         shaders[edit.path] = patched
     assert not binding_problems(root, shaders, mod)
-    assert hide_select_entry((root / CONTEXT_MENU).read_text(encoding="utf-8-sig"))
     for path in GUI_FILES:
         assert patch_gui(path, (root / path).read_text(encoding="utf-8-sig")), path
     assert land_colour((root / GRAPHICS_DEFINES).read_text(encoding="utf-8-sig"))

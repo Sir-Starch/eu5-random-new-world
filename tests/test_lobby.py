@@ -15,7 +15,6 @@ import pytest
 
 from rnw.eu5_lobby import (
     CELL,
-    CONTEXT_MENU,
     COVER_INCLUDE,
     DRAWINGS_FILE,
     DRAWINGS_INCLUDE,
@@ -24,7 +23,6 @@ from rnw.eu5_lobby import (
     INDIRECTION_INCLUDE,
     INDIRECTION_REF,
     OWN_SAMPLERS,
-    SCRIPTED_GUI,
     SCRIPTED_GUI_FILE,
     SHADERS,
     TI_REF,
@@ -37,17 +35,14 @@ from rnw.eu5_lobby import (
     cover_shader,
     cover_words,
     drawings_include,
-    hide_select_entry,
     land_colour,
     mod_path,
     sampler_include,
     samplers_bound,
-    scripted_gui_text,
     shader_indexes,
     shader_samplers,
     unknown_colour,
 )
-from rnw.pdx import parse
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -278,59 +273,14 @@ def test_the_cover_files_are_the_mods_own_and_the_changed_game_files() -> None:
     assert len(set(files)) == len(files)
     assert not any(path.startswith("game/") for path in files)
     assert {mod_path(edit.path) for edit in SHADERS} <= set(files)
-    assert {mod_path(CONTEXT_MENU), SCRIPTED_GUI_FILE} <= set(files)
+    assert SCRIPTED_GUI_FILE in files
     for name in (COVER_INCLUDE, DRAWINGS_INCLUDE, *OWN_SAMPLERS):
         assert f"main_menu/gfx/FX/{name}" in files
     assert not any(path.endswith(".dds") for path in files)
-    assert "in_game/gui/multiplayer_lobby.gui" in files
     assert "in_game/gui/map_markers.gui" in files
-
-
-def test_the_context_menu_loses_select_for_a_country_of_the_new_world() -> None:
-    """The one expected entry asks the mod's scripted GUI, which reads the capital's continent."""
-    entry = 'visible = "[And(IsLobbyOpen, IsCountryPlayable(Country.Self))]"'
-    patched = hide_select_entry(f"entry = {{\n\t{entry}\n}}\n")
-    assert patched is not None
-    assert entry not in patched
-    assert "And3(IsLobbyOpen, IsCountryPlayable(Country.Self), Not(" in patched
-    assert (
-        f"GetScriptedGui('{SCRIPTED_GUI}').IsShown("
-        "GuiScope.AddScope('rnw_country', Country.MakeScope).End)"
-    ) in patched
-    assert "GetContinent" not in patched
-    assert "GameRule" not in patched
-    assert hide_select_entry("nothing here") is None
-    assert hide_select_entry(entry + entry) is None
-    assert CONTEXT_MENU.endswith("context_menu.gui")
-
-
-def test_the_scripted_gui_reads_the_capitals_continent() -> None:
-    """The country's saved scope is optional; only an American capital makes it shown."""
-    gui = parse(scripted_gui_text()).block(SCRIPTED_GUI)
-    assert gui is not None
-    assert gui.first("scope") is None
-    scopes = gui.block("saved_scopes")
-    assert scopes is not None
-    assert [entry.value for entry in scopes.words()] == ["rnw_country"]
-    assert gui.block("is_shown") is not None
-    assert "continent = continent:america" in scripted_gui_text()
-    assert "has_game_rule" not in scripted_gui_text()
-
-
-def test_the_scripted_gui_asks_a_country_that_is_none_nothing() -> None:
-    """The lobby asks it of a country that is none while nothing is selected (C249)."""
-    shown = parse(scripted_gui_text()).block(SCRIPTED_GUI)
-    assert shown is not None
-    block = shown.block("is_shown")
-    assert block is not None
-    assert next((entry.key, entry.value) for entry in block.entries) == (
-        "exists",
-        "scope:rnw_country.capital",
-    )
-    capital = block.first("scope:rnw_country.capital")
-    assert capital is not None
-    assert capital.op == "?="
-    assert "country_exists" not in scripted_gui_text()
+    # The country list, its panel and buttons, and the context menu are the game's own, so a
+    # country of the New World can be chosen under the cover (owner, 2026-11-01).
+    assert not any(path.endswith(("multiplayer_lobby.gui", "context_menu.gui")) for path in files)
 
 
 # Stand-ins for the game's sampler macros: a sampler is a texture read through one sampler state.

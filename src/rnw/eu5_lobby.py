@@ -14,13 +14,13 @@ files of the mod that replace the game's own, made from the installed game and n
   (dragons, compasses) read from the game's own texture through a sampler of the mod's
   (``DRAWINGS_SAMPLER``, an ``Index`` and the path in ``file``, as that shader declares it);
 * borders and map names fade out there;
-* the context menu of a country on the map leaves out *Select* for a country of the New World,
-  which a scripted GUI of the mod recognises by its capital's continent;
-* the lobby's country cards use a vertical list that excludes invisible children from layout.
+* the markers of cities and raw goods are hidden for its locations while the lobby is open.
 
-The close-zoom failure of C150 adds detail, mesh and tree-shadow passes and lobby/marker GUI
-guards (C151). Native map picking is not intercepted; the lobby guard hides a selected New
-World country's information and disables its UI start controls. Runtime confirmation is open.
+The close-zoom failure of C150 adds detail, mesh and tree-shadow passes and the marker guard
+(C151). The country list, the selected country's panel, the buttons that start or join and the
+context menu of a country are the game's own: a country of the New World can be chosen under
+the cover as any other (owner, 2026-11-01; until then its card was dimmed and its click, panel
+and start buttons were gated). Runtime confirmation is open.
 
 Where the cover lies is a grid of ``CELL``-pixel squares held in the include as a constant
 array, a bit each, first row north: the generated locations and the game's ocean wastelands
@@ -52,15 +52,13 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.eu5_lobby_gui import COUNTRY_SCOPE, GUI_FILES, new_world_country
-from rnw.eu5_lobby_gui import scripted_gui_text as location_scripted_gui_text
+from rnw.eu5_lobby_gui import GUI_FILES
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from numpy.typing import NDArray
 
-CONTEXT_MENU: Final[str] = "game/in_game/gui/context_menu.gui"
 GRAPHICS_DEFINES: Final[str] = "game/loading_screen/common/defines/graphic/00_graphics.txt"
 SCRIPTED_GUI_FILE: Final[str] = "in_game/common/scripted_guis/rnw_new_world.txt"
 COVER_INCLUDE: Final[str] = "rnw_new_world_cover.fxh"
@@ -89,9 +87,6 @@ INCLUDE_DIRS: Final[tuple[str, ...]] = (
     "clausewitz/loading_screen/gfx/FX",
 )
 SHADER_DIR: Final[str] = "main_menu/gfx/FX"
-# The folder of a world's bundle that keeps the cover's files while its mod is without them.
-SCRIPTED_GUI: Final[str] = "rnw_new_world_country"
-CONTINENT: Final[str] = "america"
 # Map pixels per side of a cell of the cover's grid; a cell is covered from half its area.
 CELL: Final[int] = 32
 WORDS_PER_LINE: Final[int] = 4
@@ -107,8 +102,6 @@ SAMPLER: Final[re.Pattern[str]] = re.compile(r"TextureSampler\s+(\w+)\s*\{(.*?)\
 REF: Final[re.Pattern[str]] = re.compile(r"\bRef\s*=\s*(\w+)")
 INDEX: Final[re.Pattern[str]] = re.compile(r"\bIndex\s*=\s*(\d+)")
 INCLUDE_NAMES: Final[re.Pattern[str]] = re.compile(r"Includes\s*=\s*\{(.*?)\}", re.DOTALL)
-SELECT: Final[str] = 'visible = "[And(IsLobbyOpen, IsCountryPlayable(Country.Self))]"'
-NEW_WORLD_COUNTRY: Final[str] = new_world_country("Country")
 NOTE: Final[str] = "// Random New World: the New World is covered where nothing is known (C136)."
 
 
@@ -501,7 +494,6 @@ def cover_files() -> tuple[str, ...]:
         f"{SHADER_DIR}/{DRAWINGS_INCLUDE}",
         *(f"{SHADER_DIR}/{name}" for name in OWN_SAMPLERS),
         *(mod_path(edit.path) for edit in SHADERS),
-        mod_path(CONTEXT_MENU),
         *(mod_path(path) for path in GUI_FILES),
         SCRIPTED_GUI_FILE,
     )
@@ -841,29 +833,3 @@ def cover_shader(edit: ShaderEdit, text: str) -> str | None:
     for old, new in edit.edits:
         patched = patched.replace(old, new)
     return patched
-
-
-def hide_select_entry(text: str) -> str | None:
-    """The country context menu without *Select* for a country of the New World."""
-    if text.count(SELECT) != 1:
-        return None
-    replacement = (
-        'visible = "[And3(IsLobbyOpen, IsCountryPlayable(Country.Self), '
-        f'Not({NEW_WORLD_COUNTRY}))]"'
-    )
-    return text.replace(SELECT, replacement)
-
-
-def scripted_gui_text() -> str:
-    """The scripted GUI that tells the context menu whether a country is of the New World.
-
-    The lobby can ask with no country selected. A saved optional scope, rather than a typed
-    country root, lets ``exists`` reject it without evaluating a country trigger on none.
-    """
-    return (
-        "# Random New World: is the country's capital in the generated New World?\n"
-        f"{SCRIPTED_GUI} = {{\n\tsaved_scopes = {{ {COUNTRY_SCOPE} }}\n\tis_shown = {{\n"
-        f"\t\texists = scope:{COUNTRY_SCOPE}.capital\n"
-        f"\t\tscope:{COUNTRY_SCOPE}.capital ?= {{\n"
-        f"\t\t\tcontinent = continent:{CONTINENT}\n\t\t}}\n\t}}\n}}\n"
-    ) + location_scripted_gui_text()

@@ -2184,3 +2184,20 @@ known seam locator diagnostic and the accepted `chk_no_more_plight_events` notic
 before 1.0.0. An earlier reading of the second as an unnoticed defect was wrong: the audit of N0–N4 had
 accepted it, and restoring the setter would bring back the vanilla Cahokia event. Documentation names the
 target and the epoch; the release candidate is built from the commit that carries them.
+
+## 2026-11-01 — New World countries can be chosen at selection (C463)
+
+The owner asked to take back the guard of experiments 037-038: a country of the covered New World was
+dimmed and unclickable in the lobby list, its panel hidden, its start and join buttons disabled and
+*Select* left out of its context menu. All of that is removed; the mod keeps only the shaders that
+paint the cover and the hiding of the city and raw-goods markers (`map_markers.gui`). The two game GUI
+files the guard overrode (`multiplayer_lobby.gui`, `context_menu.gui`) and the country scripted GUI are no
+longer written, which also leaves two fewer files of the game on the mod's drift list. The change is made
+before 1.1.0 is tagged, so the pending epoch 60's reference is refreshed (868 files, digest `9ca88eb7…`),
+not a frozen one; the release candidate of the earlier commit has to be rebuilt from the new SHA.
+Engine behaviour of choosing a New World country under the cover is unobserved.
+
+The covered picture of a world (window preview, mod-list thumbnail) is fixed in the same cycle: it was
+cut from the canvas after the island groups were placed, so each vanilla island group left an uncovered
+disc at a seed-dependent place; it now covers the whole canvas (pictures only, no epoch).
+

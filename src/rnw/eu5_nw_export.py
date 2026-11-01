@@ -122,7 +122,6 @@ from rnw.eu5_empires import (
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
 from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
 from rnw.eu5_lobby import (
-    CONTEXT_MENU,
     COVER_INCLUDE,
     DRAWINGS_INCLUDE,
     GRAPHICS_DEFINES,
@@ -137,16 +136,14 @@ from rnw.eu5_lobby import (
     cover_include,
     cover_shader,
     drawings_include,
-    hide_select_entry,
     land_colour,
     sampler_include,
     samplers_bound,
-    scripted_gui_text,
     shader_indexes,
     shader_samplers,
     unknown_colour,
 )
-from rnw.eu5_lobby_gui import GUI_FILES, patch_gui
+from rnw.eu5_lobby_gui import GUI_FILES, patch_gui, scripted_gui_text
 from rnw.eu5_localization import LocalizationError, map_name_files
 from rnw.eu5_map import (
     ADJACENCIES,
@@ -876,17 +873,14 @@ def _cover_outputs(
         for edit in SHADERS
     }
     gui_patched = {path: patch_gui(path, _read(game_dir, path)) for path in GUI_FILES}
-    menu = hide_select_entry(_read(game_dir, CONTEXT_MENU))
     land = land_colour(_read(game_dir, GRAPHICS_DEFINES))
     shaders = {path: text for path, text in patched.items() if text is not None}
     broken = sorted(path for path in patched if path not in shaders)
     guis = {path: text for path, text in gui_patched.items() if text is not None}
     broken.extend(path for path in gui_patched if path not in guis)
-    if menu is None:
-        broken.append(CONTEXT_MENU)
     if land is None:
         broken.append(GRAPHICS_DEFINES)
-    if broken or menu is None or land is None:
+    if broken or land is None:
         message = (
             "The game's files are not laid out as the cover of the New World expects "
             f"({', '.join(broken)}); check the build before making a world"
@@ -915,7 +909,6 @@ def _cover_outputs(
         raise NewWorldExportError(message)
     outputs = {
         **{f"{SHADER_DIR}/{name}": text.encode("utf-8") for name, text in mod_includes.items()},
-        _mod_path(CONTEXT_MENU): _encode(game_dir, CONTEXT_MENU, menu),
         **{_mod_path(path): _encode(game_dir, path, text) for path, text in guis.items()},
         SCRIPTED_GUI_FILE: scripted_gui_text().encode("utf-8-sig"),
     }

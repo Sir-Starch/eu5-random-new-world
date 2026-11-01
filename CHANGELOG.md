@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- A country of the New World can be chosen in the country list while the New World is covered as
+  terra incognita (owner's request). Its card is no longer dimmed or unclickable, its panel is
+  shown, the start and join buttons work, the context menu offers *Select* and the random
+  choice is back: the cover now changes the map alone (terrain, water, borders, names and
+  markers) and the mod no longer overrides the game's `multiplayer_lobby.gui` or
+  `context_menu.gui`. World files change (two fewer, 868 for the reference world), so the pending
+  epoch-60 reference is refreshed; runtime behaviour at selection is not observed in the game.
 - The picture of a world with its New World covered as terra incognita (the window's preview and
   the mod list's thumbnail) hides the whole canvas. It had left small uncovered discs of sea and
   island, one for each vanilla island group that stays or moves inside the canvas (Bermuda, the
