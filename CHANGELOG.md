@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- **Hide the island groups at country selection.** The cover drawn over the New World in the game
+  took only the generated locations and the ocean wastelands beside them, so the vanilla island
+  groups that stay or move inside the canvas (the Polynesian strip) stood open in the covered
+  ocean: the islands and the water between them showed. The covered preview already hid them. The
+  cover now takes every pixel of the canvas before its groups were placed, as the preview does;
+  on a test world 42 open patches (662 cells of 32 px) inside the covered ocean are gone and two
+  of five cells remain, both Old World coast at the northern edge. A change of a mod file, so
+  the pending epoch-60 reference digest is refreshed.
+
 - **Add to queue works.** While a world is being made the next one can be prepared and queued: the
   type, seed, options and destination stay editable, *Add to queue* stays available, and a world
   added during a run is made by itself when the one before it is done (a failure or a cancellation
