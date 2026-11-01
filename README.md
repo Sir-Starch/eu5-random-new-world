@@ -10,9 +10,9 @@
 [![License: MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](LICENSE)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)
 ![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
-![EU5 1.4.5](https://img.shields.io/badge/EU5-1.4.5-8B6F47.svg)
+![EU5 1.4.6](https://img.shields.io/badge/EU5-1.4.6-8B6F47.svg)
 ![Ironman & Achievements](https://img.shields.io/badge/Ironman%20%26%20Achievements-supported-success.svg)
-![Version: 1.0.0](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue.svg)
 
 </div>
 
@@ -27,7 +27,7 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 ![Random New World procedural generation showcase](docs/images/showcase/rnw_showcase_full.gif)
 
 > [!IMPORTANT]
-> **Compatibility:** RNW 1.0.0 targets EU5 **1.4.5, Steam build 26211608**. Start a new campaign and keep its generated world mod. Exact regeneration needs the original algorithm and game inputs; updating the generator does not migrate saves.
+> **Compatibility:** RNW 1.1.0 targets EU5 **1.4.6, Steam build 26300913**. Start a new campaign and keep its generated world mod. Exact regeneration needs the original algorithm and game inputs; updating the generator does not migrate saves.
 
 Read [Known limitations](docs/known-limitations.md) before playing: supported game
 build, save and mod compatibility, and what remains unverified in the current version.
@@ -36,7 +36,7 @@ build, save and mod compatibility, and what remains unverified in the current ve
 
 | Layer | Capabilities |
 |---|---|
-| **Landmasses & Canvas** | Five archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*), plus **Random** and **Total Chaos** modes, coastline sketch previews, and custom hand-drawn outlines. Optional **+40% ocean expansion** (`53.2M px` canvas) claims surrounding ocean space beyond the vanilla Americas footprint. |
+| **Landmasses & Canvas** | Six archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), plus **Random** and **Total Chaos** modes, coastline sketch previews, and custom hand-drawn outlines. Optional **+40% ocean expansion** (`53.2M px` canvas) claims surrounding ocean space beyond the vanilla Americas footprint. |
 | **Physical Geography** | Unified elevation, climate, biome, terrain material, and vegetation simulation; drainage-driven river networks; vanilla-calibrated continental shelves and coastlines. |
 | **Seas & Navigation** | Guaranteed natural harbors for coastal sea zones; shape-aware water naming (gulfs, straits, bays, capes); dynamic reshaping of vanilla oceans and impassable `ocean_wasteland` basins; continuous ocean currents, shipping lanes, and army strait crossings (`adjacencies.csv`). |
 | **Political & Region Keys** | Compact, connected locations, provinces, areas, and regions. Vanilla American region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
@@ -149,7 +149,7 @@ No Python or Rust installation is required for the [released packages](https://g
 
 #### Requirements
 
-* **Europa Universalis V (`1.4.5`, verified Steam build 26211608)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
+* **Europa Universalis V (`1.4.6`, verified Steam build 26300913)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
 * **~7.5 GB of free RAM** during world compilation.

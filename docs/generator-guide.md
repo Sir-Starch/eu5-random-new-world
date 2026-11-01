@@ -1,6 +1,6 @@
 # Using the generator
 
-RNW 1.0.0 targets EU5 1.4.5 / Steam build 26211608.
+RNW 1.1.0 targets EU5 1.4.6 / Steam build 26300913.
 
 Run from source with `uv sync --locked --group dev` and `uv run rnw gui` (build the window
 first with `npx tauri build --no-bundle` in `desktop/`). The Linux folder package runs with
@@ -135,7 +135,7 @@ data in `data/` beside it, for both the window and CLI. [V-EXEC C143]
 
 ## Reproduction, cache and releases
 
-Released 1.0.0 uses algorithm epoch 59. Exact reproduction needs the recorded
+Released 1.1.0 uses algorithm epoch 60 (1.0.0 used epoch 59). Exact reproduction needs the recorded
 algorithm, resolved settings/rolls and game inputs; the version alone is not
 sufficient for development builds. The local cache keys include the algorithm
 and relevant inputs and are checked before use. Follow the [version policy](adr/0003-versioning.md)

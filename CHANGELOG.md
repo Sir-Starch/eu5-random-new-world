@@ -2,9 +2,29 @@
 
 ## Unreleased
 
+## 1.1.0 — 2026-11-01
+
+- A new generator window (Tauri, with the classic Qt window kept as the fallback), a rebuilt map
+  viewer with population, climate, terrain and area lenses, and a window that stays responsive
+  while the game inputs are compared.
+- A sixth landmass archetype, **The Wall**: a straight north-south continent or island chain with a
+  mountain spine, 4% to 44% of the canvas wide.
+- New settings: resource frequency sliders, the upper peasant share, a target of up to 60% of
+  inhabited land in native states, and a control that keeps the New World's land away from the Old
+  World's shores.
+- Reworked geography: coasts, water bodies and drainage, mountains and hills, vegetation by
+  climate, sea locations and their crossings, ocean currents, polar edges, and the water round new
+  islands. Native states gain stronger identity cores and more varied outlines.
+- Targets EU5 1.4.6 / Steam build 26300913. Algorithm epoch 60: the world bytes changed, so a world
+  code made by 1.0.0 (epoch 59) can give another world. Worlds already built and their saves are
+  not rewritten or migrated.
+- The Workshop upload adds the Gameplay and Utilities categories beside Map.
+
+The entries below describe each change in detail.
+
 - Cut the sea locations of a crossing like every other sea location, take the bolts of cut
   zones into the canvas and keep the land back from the canvas's boundary (owner's report on world
-  `aszzsukifw`, pending epoch 60). A crossing of open water was a straight band one sea-cell wide,
+  `aszzsukifw`). A crossing of open water was a straight band one sea-cell wide,
   cut out of the water and divided on its own, so its cells had ruled edges and thin needles stood
   along it. A crossing is now a chain of ordinary Voronoi cells: one partition of all the water, the
   ordinary sites keep clear of the crossing's centre line, and the crossing's own sites lie along it,
@@ -19,7 +39,7 @@
   zones of the game from 12 to none. Existing worlds remain untouched.
 
 - Let The Wall be far wider, at the expense of the continents beside it (owner report: the widest
-  Wall, 14%, still had huge continents next to it; pending epoch 60, unreleased preset). The Wall's
+  Wall, 14%, still had huge continents next to it). The Wall's
   width now runs from 4% to 44% of the canvas and is 14% by default. The land amount is one budget:
   the Wall takes its land first and the continents beside it get what is left (never less than 1%
   of the water beside them), so the widest Walls take nearly all the land and leave a few islands.
@@ -27,7 +47,7 @@
   Wall inside the land amount, and the width hint explains it in every language. A full export at
   the widest setting passes every sea invariant. Existing worlds remain untouched.
 
-- Remove the dark and light discs round small islands (owner's screenshots, pending epoch 60).
+- Remove the dark and light discs round small islands (owner's screenshots).
   The water colour of new coasts was the mean of all vanilla coasts at a latitude, so every island
   sat in a disc of that average whose edge showed wherever the local sea was lighter or darker, and
   its halo was about twice as strong and noticeably wider than the game's. A new coast is now the
@@ -37,26 +57,26 @@
   Existing worlds remain untouched.
 
 - Vary native polity outlines through farming corridors, similar-terrain belts and coastal
-  growth alongside generalist expansion (issue #8, pending epoch 60). Small tribal groups use
+  growth alongside generalist expansion (issue #8). Small tribal groups use
   gentler preferences. Connected territories, capital membership and farming requirements
   remain enforced; population, culture and religion zones keep their existing generation.
 
 - Give native states stronger primary-culture and faith cores through identity-aware capital
-  selection and territorial growth (issue #7, pending epoch 60). Borders can retain minorities;
+  selection and territorial growth (issue #7). Borders can retain minorities;
   great empires use milder growth preferences to preserve diversity. Population and identity
   maps, farming requirements and the population budget are unchanged.
 
 - Let players adjust the upper peasant share from 30% to 80% at full social complexity
   (default 60%). It applies to all inhabited land: less complex and less farmable places
   remain more tribal. The total population budget and the vanilla farming threshold for
-  landed states stay the same. Available in both windows and world codes (pending epoch 60).
+  landed states stay the same. Available in both windows and world codes.
 
 - Let players target up to 60% of inhabited land in native states in both windows. The States
   quick choice's Many setting now targets 44% on the default presets. Explain that the planner
   can undershoot where farming and population cannot support more states; eligibility and the
   population budget are unchanged.
 
-- Make ocean currents clear courses, or none (owner's QU3N and J4VJ reports, pending epoch 60). Where the
+- Make ocean currents clear courses, or none (owner's QU3N and J4VJ reports). Where the
   generated canvas met the Old World the currents could be unreadable: three-location stubs, arrows
   pointing across their own lane, clusters pointing different ways, neighbours driven head-on, a straight
   prepared line with no current beside a cluster of arrows. A navigable deep cell now carries a current
@@ -71,39 +91,37 @@
   neighbours point at each other (14 pairs did) and no arrow points against a zone of the game that
   touches it. Existing worlds remain untouched.
 
-- Merge sliver sea locations into their neighbours (pending epoch 60). Some generated sea locations were
+- Merge sliver sea locations into their neighbours. Some generated sea locations were
   long needles or crescents (one 212 × 20 pixels) because a coast, a crossing or
   an island group's footprint cut a cell into pieces that were merged only by area. A sea cell thinner than
   a fifth of the cell spacing, bordered mostly by other sea cells, now joins the neighbour it shares most
   with; straits, bordered by land, stay. A sample world drops from 1,547 to 1,494 sea cells and has no thin
   cell left between others. Existing worlds remain untouched.
 
-- Take thin remainders of trimmed sea zones into the canvas (pending epoch 60). A location of the game that
+- Take thin remainders of trimmed sea zones into the canvas. A location of the game that
   the canvas cut along its length stayed as a needle among the generated waters (in a sample world
   `pacific_south_current2`: 29 % of the zone left, 12.6 pixels thick, touching six neighbours). A remainder
   thinner than 20 pixels now goes to the canvas, as one under 3,000 pixels already did; two zones of the game
   are replaced in every world. Existing worlds remain untouched.
 
 - Keep generated American coastal sea areas from bordering passable Old World seas
-  (issue #9, pending epoch 60). Ocean areas now form a connected boundary at
+  (issue #9). Ocean areas now form a connected boundary at
   those contacts, preserving routes while colonial overseas eligibility remains
   available for North and South America. Final-map validation rejects any
   remaining passable American/Old World contact.
 
-- Narrow the places where ordinary continents meet the north and south map edges
-  (pending epoch 60). Land locations near the poles grow larger, and all locations
+- Narrow the places where ordinary continents meet the north and south map edges. Land locations near the poles grow larger, and all locations
   touching a polar edge are impassable. The Wall retains its continuous endpoints;
   existing generated worlds are unaffected.
 
-- Add a control that keeps the New World's land away from the Old World's shores (pending epoch 60).
+- Add a control that keeps the New World's land away from the Old World's shores.
   Advanced → Land → Distance from the Old World lifts the land density in the middle of the canvas, so
   continents move toward the middle of the ocean while the amount of land does not change; on the
   installed canvas the land's mean distance from the canvas edge goes from about 1,540–1,920 pixels to
   about 2,340–2,390 across the range. It is 0 by default, which leaves every world as it was; The Wall and
   land drawn from an image ignore it. It is in both windows, in all eleven languages and in world codes.
 
-- Widen the expanded ocean across the Pacific and move the islands that continents would cover
-  (pending epoch 60). The expanded canvas now reaches the whole Pacific side of the New World: the
+- Widen the expanded ocean across the Pacific and move the islands that continents would cover. The expanded canvas now reaches the whole Pacific side of the New World: the
   Polynesian islands before the map's seam, the open ocean to both polar edges and the water east of New
   Zealand, bounded by round contours well clear of the Old World (nothing is generated between New
   Zealand and Australia). The Atlantic side is unchanged. The Polynesian islands, and the few isolated
@@ -117,7 +135,7 @@
   340 ‰, supercontinent 460 ‰, small continents 255 ‰); the location estimate is refitted on seven
   full exports. Existing worlds remain untouched.
 
-- Keep a location's vegetation consistent with its climate (issue #4, pending epoch 60). The
+- Keep a location's vegetation consistent with its climate (issue #4). The
   biome classifier smoothed vegetation votes across neighbours of other climates, so a cell could
   get a climate/vegetation pair that no Old World location has (for example desert in a
   subtropical climate, or forest in an arid one). The votes are now smoothed as (climate,
@@ -127,7 +145,7 @@
   vegetation, almost all on climate borders, and no climate changes. Existing worlds remain
   untouched.
 
-- Rework mountains and hills (pending epoch 60). Ranges are now continuous chains of one
+- Rework mountains and hills. Ranges are now continuous chains of one
   realistic width that fork and arc, with massifs of different heights, passes between them and
   lower secondary ranges, instead of broad one-height blobs cut into segments. Crests carry
   erosion-like ridges that grow on high ground and leave valleys smooth. Vanilla's mountains owe
@@ -143,7 +161,7 @@
   of out of a flat bowl. Rivers, cell topography and biomes follow the new relief. Existing worlds remain
   untouched.
 
-- Rework coasts, water bodies and drainage together (pending epoch 60). Coasts are drawn from a
+- Rework coasts, water bodies and drainage together. Coasts are drawn from a
   bent density field, so continents have capes, hooked peninsulas and gulfs with narrow mouths
   instead of rounded blobs. Lakes now follow the installed game's own: about 11 per million
   land pixels, from small ponds to lakes of 17,000 pixels or more (the 1.0.0 generator made
@@ -157,7 +175,7 @@
   the map's display seam is no longer written as a crossing (the game has no such row);
   it stopped one island world from exporting. Existing worlds remain untouched.
 
-- Fix The Wall's thin, ruler-straight stretches (pending epoch 60, unreleased preset). With
+- Fix The Wall's thin, ruler-straight stretches. With
   "Allow gaps" off, a straight strip of land, a quarter of the envelope wide, was forced down the middle, and wherever the
   coast field (little land, high irregularity) left the wall's own land empty, that bare strip was
   all that remained, with straight vertical cuts where coasts reached the edge of the wall's envelope.
@@ -167,8 +185,7 @@
   share control now thins the side land only: it never takes land from the wall, which keeps the share
   it is sized for. Existing worlds remain untouched.
 
-- Let The Wall go around protected islands instead of needing a full-height corridor free of them
-  (pending epoch 60, unreleased preset). The wall had to sit in a column band with no protected pixel
+- Let The Wall go around protected islands instead of needing a full-height corridor free of them. The wall had to sit in a column band with no protected pixel
   from the north edge to the south edge, which on the installed expanded canvas is 17.6% of its
   width, and the width and position controls shared what was left after the envelope's half-width
   (2.6% of the canvas at the largest width, so the position control barely moved the wall). The
@@ -201,13 +218,13 @@
   reuse file hashes and game names, calculate the Tauri map's relief and region names in a
   worker, and draw classic-window maps on demand with only the latest request queued.
 
-- Target 1.1.0, with pending algorithm epoch 60. Add separate 0–3× frequency sliders
+- Target 1.1.0, with algorithm epoch 60. Add separate 0–3× frequency sliders
   for all 34 ordinary New World resources in both generator windows and all official
   languages. Keep the precious-resource control, vanilla default weights and habitat
   matching. World codes preserve each weight. Explain relative placement probabilities
   and unchanged production per location; fail explicitly when no enabled resource fits.
 
-- Add the Gameplay and Utilities categories alongside Map to the next Workshop upload.
+- Add the Gameplay and Utilities categories alongside Map to the Workshop upload.
 - The generator's window is now a Tauri window (ADR 0011), in the Workshop hub and
   the Linux package; the Qt window stays as the classic window. The classic window
   opens by itself where there is no web view (no WebView2, as in Proton; no

@@ -2173,3 +2173,14 @@ holds cells and is keyed by epoch, not code: its four entries were deleted becau
 them. The earlier reference land failed its identity check when the sea cells changed again (one coastal sea
 cell of margin), so the reference is a new land of the same settings. The digest is refreshed within the
 pending epoch 60. Engine drawing is unobserved.
+
+## 2026-11-01 — Preparing 1.1.0 (C462)
+
+The cycle's pending epoch 60 is frozen with the 1.1.0 target. The installed game is now EU5 1.4.6 (build
+26300913); the audit of 2026-10-30 had found its ten map-contract files unchanged, and the epoch-60 reference
+world reproduces byte for byte on it, so the golden stays as it was. A read of the owner's logs for errors
+between 1.0.0 and 1.1.0 found no crash and no RNW script error; the two lines that carry RNW names are the
+known seam locator diagnostic and the accepted `chk_no_more_plight_events` notice, both already present
+before 1.0.0. An earlier reading of the second as an unnoticed defect was wrong: the audit of N0–N4 had
+accepted it, and restoring the setter would bring back the vanilla Cahokia event. Documentation names the
+target and the epoch; the release candidate is built from the commit that carries them.

@@ -1,5 +1,5 @@
 {
-  "comment": "Pending epoch 60 reference for the 1.1.0 cycle. Epoch 59 is preserved in golden_world_epoch59.json. Verify with RNW_REPRODUCE=1 on the recorded game inputs. The land is a new continent of the same settings: the earlier one left its Caribbean region a single coastal sea cell away from the Old World's boundary, so a change to the sea cells alone made it fail.",
+  "comment": "Epoch 60 reference, frozen with the 1.1.0 release. Epoch 59 is preserved in golden_world_epoch59.json. Verify with RNW_REPRODUCE=1 on the recorded game inputs. The land is a new continent of the same settings: the earlier one left its Caribbean region a single coastal sea cell away from the Old World's boundary, so a change to the sea cells alone made it fail.",
   "epoch": 60,
   "code": "RNW1-081G0-00000-0KAA7-E040G-00860-2AG63-YG1W8-8G3GH-149XR-08TM0-34JQ8-1",
   "game_fingerprint_sha256": "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a",

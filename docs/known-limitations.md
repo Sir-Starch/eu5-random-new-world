@@ -1,15 +1,19 @@
 # Known limitations
 
-Current release: **RNW 1.0.0 / epoch 59**, targeting **EU5 1.4.5 / Steam build
-26211608** (2026-10-29). These are the accepted scope and operational limits;
+Current release: **RNW 1.1.0 / epoch 60**, targeting **EU5 1.4.6 / Steam build
+26300913** (2026-11-01). These are the accepted scope and operational limits;
 they are not an uncompleted release checklist. See [release process](release-process.md)
 for the published artifacts and [roadmap](roadmap.md) for future work.
 
 - **Specific game build.** Other patches need their own input-contract and
   compatibility checks. The metadata's `1.4.*` match does not prove future patch
   compatibility. Worlds made before 0.13.22 lack the 1.4.5 DLC adaptations; use
-  a newly generated world for a new 1.4.5 campaign. Existing saves are not migrated.
-  [V-LOCAL / V-EXEC C425–C427]
+  a newly generated world for a new campaign. Existing saves are not migrated.
+  The 1.1.0 reference world reproduces byte for byte on build 26300913, and
+  sessions on that build loaded 1.1.0 worlds without a crash or an RNW script
+  error; a dedicated campaign on 1.4.6 was not run. A world code made by 1.0.0
+  (epoch 59) can give another world in 1.1.0 (epoch 60); the application says so.
+  [V-LOCAL / V-EXEC C425–C427, C462]
 - **New campaign and one world at a time.** Start in 1337 with one RNW world
   enabled. Keep that exact world mod for its saves. Restart EU5 before switching
   maps or replacing a loaded world's files: earlier in-process reloads mixed map
