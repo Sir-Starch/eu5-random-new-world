@@ -27,7 +27,7 @@ generator and window-shell self-tests and was installed as `mod/rnw_exp_hub`; it
 retained at `.rnw-hub-backups/1.1.0-1793502673849706053`. Wheel SHA-256
 `5233752da68a940cd002f4c65cca54ad0621fd015eeced69292062f15cc03df0`. The pending epoch-60 reference on
 build 26300913 has 871 files and digest `6550250b…c052`, reproduced by the installed-game suite
-(13 passed, 2 skipped earlier on this code's parent; the reference export passed on this code). Full
+(13 passed, 2 skipped; the reference export reproduced on this code). Full
 Python checks pass (2,367 tests, 15 optional skips; strict types, lint and formatting). Evidence:
 ignored `local_data/currents-20261101/`.
 
