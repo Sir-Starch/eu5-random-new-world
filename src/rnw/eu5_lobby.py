@@ -23,21 +23,21 @@ guards (C151). Native map picking is not intercepted; the lobby guard hides a se
 World country's information and disables its UI start controls. Runtime confirmation is open.
 
 Where the cover lies is a grid of ``CELL``-pixel squares held in the include as a constant
-array, a bit each, first row north: the generated locations and the game's ocean wastelands
-(impassable sea zones) that border them, which a country in a game does not know either and
-which, left open at selection, would outline the New World. The shader smooths the grid's
-steps bilinearly. A file texture cannot carry it: the game declares a ``TextureSampler`` only
-with a ``Ref`` (an engine slot) or an ``Index``, and drops one with a ``File`` alone, so the
-shader that reads it does not compile and the game crashes when the map is first drawn
-[V-GAME C137]. Nor may a shader name one engine slot twice: the shaders that already read
-the province indirection or TI and got a second sampler for it were never compiled, and the
+array, a bit each, first row north: the generated locations, the game's ocean wastelands
+(impassable sea zones) that border them and the island groups of the Pacific strip that the New
+World's ocean holds, with their coast zones (``covered_locations``). A country in a game does not
+know any of these either, and left open at selection they would outline the New World. The
+shader smooths the grid's steps bilinearly. A file texture cannot carry it: the game declares a
+``TextureSampler`` only with a ``Ref`` (an engine slot) or an ``Index``, and drops one with a
+``File`` alone, so the shader that reads it does not compile and the game crashes when the map is
+first drawn [V-GAME C137]. Nor may a shader name one engine slot twice: the shaders that already
+read the province indirection or TI and got a second sampler for it were never compiled, and the
 game crashed (C138). So the cover's code takes the samplers it reads as arguments, and a sampler
 of the mod's (``OWN_SAMPLERS``) is added only to a shader without one for that slot, which the
 export checks against the installed game's includes (``binding_problem``). World z grows
-northwards while image rows run
-southwards (C135). The generator's setting whether the New World is shown before it is played
-decides whether a world's mod carries these files (``rnw.app.preferences``); the export also
-keeps a copy beside the mod (``COVER_COPY``).
+northwards while image rows run southwards (C135). The generator's setting whether the New World
+is shown before it is played decides whether a world's mod carries these files
+(``rnw.app.preferences``); the export also keeps a copy beside the mod (``COVER_COPY``).
 """
 
 # NumPy stubs type array arithmetic and indexing as Any.
@@ -56,7 +56,7 @@ from rnw.eu5_lobby_gui import COUNTRY_SCOPE, GUI_FILES, new_world_country
 from rnw.eu5_lobby_gui import scripted_gui_text as location_scripted_gui_text
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Iterable, Mapping, Sequence
 
     from numpy.typing import NDArray
 
@@ -505,6 +505,25 @@ def cover_files() -> tuple[str, ...]:
         *(mod_path(path) for path in GUI_FILES),
         SCRIPTED_GUI_FILE,
     )
+
+
+def covered_locations(
+    vanilla: int, generated: int, wastelands: Iterable[int], groups: Iterable[Iterable[int]]
+) -> NDArray[np.bool_]:
+    """Whether the cover takes each label: the game's ``vanilla`` locations, then the ``generated``.
+
+    The cover takes every generated location, the ocean ``wastelands`` of the game that border
+    them and the locations and coast zones of each island group of ``groups``: a group of the
+    Pacific strip that the New World's ocean now holds, where it stood or where it was moved,
+    which a country in a game does not know either. Left open, the islands and the water
+    between them would float in the covered ocean and outline it.
+    """
+    covered = np.ones(vanilla + generated, dtype=bool)
+    covered[:vanilla] = False
+    covered[sorted(wastelands)] = True
+    for group in groups:
+        covered[sorted(group)] = True
+    return covered
 
 
 def cover_grid(labels: NDArray[np.int32], covered: NDArray[np.bool_]) -> NDArray[np.bool_]:

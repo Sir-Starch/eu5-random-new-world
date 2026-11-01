@@ -36,6 +36,7 @@ from rnw.eu5_lobby import (
     cover_include,
     cover_shader,
     cover_words,
+    covered_locations,
     drawings_include,
     hide_select_entry,
     land_colour,
@@ -69,6 +70,22 @@ def test_the_grid_marks_cells_the_covered_locations_fill_at_least_half_of() -> N
     assert grid[2, -1]
     assert not grid[3, 0]
     assert np.count_nonzero(grid) == 3
+
+
+def test_the_cover_takes_generated_locations_wastelands_and_island_groups() -> None:
+    """Island groups (islands and coast zones) are covered with the New World that holds them.
+
+    A group of the Pacific strip stands in the New World's ocean, kept or moved: left open it
+    would float in the covered sea and outline it (owner's screenshot, 2026-11-01).
+    """
+    vanilla, generated = 10, 3
+    covered = covered_locations(vanilla, generated, wastelands=[4], groups=[(1, 2, 7), (8,)])
+    assert covered.tolist() == [
+        False, True, True, False, True, False, False, True, True, False,  # the game's locations
+        True, True, True,  # generated
+    ]  # fmt: skip
+    # No group, no wasteland: only what the generator made.
+    assert np.count_nonzero(covered_locations(vanilla, generated, [], [])) == generated
 
 
 def test_the_grid_refuses_a_map_that_cells_do_not_tile() -> None:

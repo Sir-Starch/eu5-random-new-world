@@ -136,6 +136,7 @@ from rnw.eu5_lobby import (
     cover_grid,
     cover_include,
     cover_shader,
+    covered_locations,
     drawings_include,
     hide_select_entry,
     land_colour,
@@ -309,6 +310,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_pacific import IslandGroup
     from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.settings import Settings
@@ -857,19 +859,21 @@ def binding_problems(
     return broken
 
 
-def _cover_outputs(
+def _cover_outputs(  # noqa: PLR0913, PLR0917 - the cover reads the map, its labels and the groups.
     game_dir: Path,
     game_map: Eu5Map,
     world: NewWorld,
     final: NDArray[np.int32],
     neighbours: frozenset[int],
+    groups: Sequence[IslandGroup] = (),
 ) -> tuple[dict[str, bytes], dict[str, object]]:
     """The files that cover the New World at country selection, and what the cover holds.
 
-    The cover takes the generated locations and the ocean wastelands among their vanilla
-    ``neighbours`` (``rnw.eu5_lobby``). The game's own files are changed where it decides what
-    to draw and offer; a game whose files read otherwise, or whose shaders would not bind the
-    cover's samplers, stops the export instead of leaving the cover half made.
+    The cover takes the generated locations, the ocean wastelands among their vanilla
+    ``neighbours`` and the island ``groups`` that stand in the New World's ocean, kept or moved,
+    with their coast zones (``rnw.eu5_lobby``). The game's own files are changed where it decides
+    what to draw and offer; a game whose files read otherwise, or whose shaders would not bind
+    the cover's samplers, stops the export instead of leaving the cover half made.
     """
     patched = {
         edit.path: cover_shader(edit, _read(game_dir, edit.source_path or edit.path))
@@ -896,9 +900,9 @@ def _cover_outputs(
     wastes = set(lists["sea_zones"]) & set(lists["impassable_mountains"])
     seas = sorted(i for i in neighbours if game_map.keys[i] in wastes)
     vanilla = len(game_map.keys)
-    covered = np.ones(vanilla + len(world.classes), dtype=bool)
-    covered[:vanilla] = False
-    covered[seas] = True
+    members = [(*group.locations, *group.zones) for group in groups]
+    covered = covered_locations(vanilla, len(world.classes), seas, members)
+    held = sorted({i for member in members for i in member})
     grid = cover_grid(final, covered)
     rows, columns = final.shape
     mod_includes = {
@@ -930,6 +934,7 @@ def _cover_outputs(
         "grid": [int(grid.shape[1]), int(grid.shape[0])],
         "grid_cells": int(np.count_nonzero(grid)),
         "ocean_wastelands": [game_map.keys[i] for i in seas],
+        "island_group_locations": len(held),
         "shaders": [_mod_path(path) for path in shaders],
     }
     return outputs, stats
@@ -3160,7 +3165,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         text_stats["event_modifiers_retired"] = list(rewrite.modifiers)
         cover, cover_stats = run_stage(
             "selection cover",
-            lambda: _cover_outputs(game_dir, game_map, world, final_labels, neighbours),
+            lambda: _cover_outputs(
+                game_dir, game_map, world, final_labels, neighbours, canvas.groups
+            ),
         )
         texts.update(cover)
         text_stats["selection_cover"] = cover_stats
