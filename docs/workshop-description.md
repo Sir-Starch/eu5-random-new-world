@@ -16,6 +16,10 @@ The texts compare the finished 1.1.0 with the published `v1.0.0`, using Git hist
 
 The same day, the owner requested a discreet link to `https://ko-fi.com/sirstarch` near the bottom. It was added to all eleven descriptions and published with the same exact-text and page-metadata checks; the only public text change was the footer link. That update's snapshots and verification manifest remain local in `local_data/workshop-kofi-2026-11-02/`. [V-EXEC]
 
+## Uploaded world descriptions
+
+[The Wall CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151) has an [English description](workshop-worlds/3832180151.bbcode) based on its World Code and matching local generation record/report, world `cwysy3xn2r` (RNW 1.1.0, epoch 60, Steam build 26300913). Published at the owner's request on 2026-11-02; an uncached Steam query matched the text exactly, with title, preview URL and visibility unchanged. Snapshots and verification remain local in `local_data/workshop-world-3832180151-description/`. [V-EXEC]
+
 ## Description rules
 
 Rules for the text:
