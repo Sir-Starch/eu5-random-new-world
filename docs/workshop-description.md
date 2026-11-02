@@ -1,6 +1,6 @@
 # Workshop description
 
-The Steam Workshop text for release 1.1.0 ([ADR 0009](adr/0009-hub-mod-with-generator.md)) is kept in Steam's own markup, ready to paste: [`workshop/english.bbcode`](workshop/english.bbcode) and one file per official language in [`workshop/`](workshop/). It covers what players get, four steps to create and enable a world, DLC support, requirements and campaign compatibility. The Linux / Proton guide image is embedded in every language. Guides, downloads, known issues, bug reports and technical details are linked on GitHub. The licence and unofficial-project notice occupy one short footer.
+The Steam Workshop text for release 1.1.0 ([ADR 0009](adr/0009-hub-mod-with-generator.md)) is kept in Steam's own markup, ready to paste: [`workshop/english.bbcode`](workshop/english.bbcode) and one file per official language in [`workshop/`](workshop/). It covers what players get, four steps to create and enable a world, DLC support, requirements and campaign compatibility. The Linux / Proton guide image is embedded in every language. Guides, downloads, known issues, bug reports and technical details are linked on GitHub. A small italic Ko-fi link sits above the short licence and unofficial-project footer.
 
 ## 1.1.0 publication texts
 
@@ -13,6 +13,8 @@ For translated Workshop descriptions, omit the internal `source:` line and its f
 The texts compare the finished 1.1.0 with the published `v1.0.0`, using Git history and current code as well as the guides. They lead with realistic coastlines, mountain ranges, lakes and drainage. Describe new features in their finished form; omit bugs introduced and fixed within the unreleased 1.1.0 cycle. Only defects present in 1.0.0 belong among fixes. Preparing these files is separate from publishing the release or changing the Steam page.
 
 **Published 2026-11-02 [V-EXEC]:** At the owner's request, all eleven descriptions from text commit `e5b440b` were published to the [existing Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331) through a command-line Steamworks API client, with translation headers removed. Steam returned success for every submission; uncached queries then matched every published description byte for byte. Titles, visibility and the primary preview URL matched their pre-update values. The previous texts, outgoing texts and verification manifest remain local in `local_data/workshop-descriptions-2026-11-02/`.
+
+The same day, the owner requested a discreet link to `https://ko-fi.com/sirstarch` near the bottom. It was added to all eleven descriptions and published with the same exact-text and page-metadata checks; the only public text change was the footer link. That update's snapshots and verification manifest remain local in `local_data/workshop-kofi-2026-11-02/`. [V-EXEC]
 
 ## Description rules
 
