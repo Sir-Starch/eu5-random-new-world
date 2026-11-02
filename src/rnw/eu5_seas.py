@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.crossings import pixels as crossing_pixels
+from rnw.crossings import sections as crossing_sections
 from rnw.currents import HUNDREDTHS, Vector, check_courses, flow
 from rnw.eu5_map import class_lists
 from rnw.eu5_newworld import outside_contacts
@@ -42,7 +44,7 @@ from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
 from rnw.sea_routes import cyclic_end, navigation_links
 from rnw.seas import Topography, Waters, analyse
-from rnw.straits import CROSSING_PX, narrow_gaps
+from rnw.straits import CROSSING_PX
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
@@ -395,7 +397,7 @@ def shape_water(coast: Coast) -> Water:
     ):
         message = "Deep ocean water is missing a lane"
         raise SeaError(message)
-    strait_rows = tuple(crossings(world, waters.landmass.tolist()))
+    strait_rows = tuple(crossings(world))
     result = Water(
         final,
         waters,
@@ -602,7 +604,7 @@ def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, obje
 
 @dataclass(frozen=True, slots=True)
 class Crossing:
-    """Two land cells of different landmasses that a strait of ``CROSSING_PX`` pixels divides.
+    """Two land cells without a shared border, separated by at most ``CROSSING_PX`` sea pixels.
 
     ``start`` and ``stop`` are (row, column) in the world's picture: a pixel of ``first`` and a
     pixel of ``second`` where the strait is narrowest; ``through`` is the sea cell between them.
@@ -615,34 +617,16 @@ class Crossing:
     stop: tuple[int, int]
 
 
-def crossings(world: NewWorld, landmass: Sequence[int]) -> list[Crossing]:
+def crossings(world: NewWorld) -> list[Crossing]:
     """The crossings of ``world``, by the numbers of their cells.
 
-    The game's own are 184 pairs of locations 1 to 9 pixels apart, each point on its own location,
-    with the sea zone between them touching both (C245): here every pair of land cells of different
-    landmasses (``landmass`` numbers the land cells) that a run of at most ``CROSSING_PX`` pixels of
-    sea cell divides along a row or a column, at the narrowest run.
+    Useful water throats and vanilla-width island links, with the shortest water-only segment
+    between shores. Nearby parallel candidates collapse to one section of the physical narrows.
     """
-    land = np.array([kind is CellClass.LAND for kind in world.classes], dtype=bool)
-    sea = np.array([kind is CellClass.SEA for kind in world.classes] + [False], dtype=bool)
-    water = sea[world.labels]
-    found: list[Crossing] = []
-    touching = _touching(world)
-    gaps = narrow_gaps(world.labels, water, land, CROSSING_PX)
-    for gap in sorted(gaps.values(), key=lambda item: (item.first, item.second)):
-        if landmass[gap.first] == landmass[gap.second] or not sea[gap.through]:
-            continue
-        # A short raster gap may cross two different sea zones. The game requires
-        # the named through-zone to touch both ends of a single crossing.
-        if gap.through not in touching[gap.first] or gap.through not in touching[gap.second]:
-            continue
-        start, stop = (
-            ((gap.line, gap.start), (gap.line, gap.stop))
-            if gap.axis == 0
-            else ((gap.start, gap.line), (gap.stop, gap.line))
-        )
-        found.append(Crossing(gap.first, gap.second, gap.through, start, stop))
-    return found
+    return [
+        Crossing(item.first, item.second, item.through, item.start, item.stop)
+        for item in crossing_sections(world)
+    ]
 
 
 def straddles_seam(canvas: Canvas, item: Crossing) -> bool:
@@ -657,7 +641,7 @@ def straddles_seam(canvas: Canvas, item: Crossing) -> bool:
     first, second = (
         (column + canvas.col0 - canvas.roll) % width for column in (item.start[1], item.stop[1])
     )
-    return abs(first - second) > CROSSING_PX + 1
+    return first - second != item.start[1] - item.stop[1]
 
 
 def verify_crossings(
@@ -665,9 +649,9 @@ def verify_crossings(
 ) -> dict[str, object]:
     """Read ``adjacencies.csv`` as written; every generated crossing is as the world has it.
 
-    A row names two land cells of different landmasses and a sea cell, with a point on each of
-    the two land cells, at most ``CROSSING_PX`` pixels apart, and the sea cell touches both; the
-    rows are exactly the crossings of the world; no pair is twice.
+    A row names two land cells without a shared border and a sea cell, with a point on each of
+    the two land cells, at most ``CROSSING_PX`` water pixels between them, and the sea cell
+    touches both; the rows are exactly the crossings of the world; no pair is twice.
     """
     index = {cell.key: number for number, cell in enumerate(plan.cells)}
     touching = _touching(world)
@@ -675,6 +659,11 @@ def verify_crossings(
     width = int(canvas.shape[1])
     wanted = {
         (item.first, item.second, item.through)
+        for item in expected
+        if not straddles_seam(canvas, item)
+    }
+    sections = {
+        (item.first, item.second, item.through): (item.start, item.stop)
         for item in expected
         if not straddles_seam(canvas, item)
     }
@@ -698,16 +687,28 @@ def verify_crossings(
             raise SeaError(message)
         x1, y1, x2, y2 = (int(value) for value in fields[4:8])
         points: list[int] = []
+        positions: list[tuple[int, int]] = []
         for x, y in ((x1, y1), (x2, y2)):
             column = (x - canvas.col0 + canvas.roll) % width
             row = height - 1 - y
             inside = 0 <= row < height and 0 <= column < world.labels.shape[1]
             points.append(int(world.labels[row, column]) if inside else -1)
+            positions.append((row, column))
         if points != [first, second]:
             message = f"Crossing {fields[0]} to {fields[1]} has a point off its location"
             raise SeaError(message)
-        if abs(x1 - x2) + abs(y1 - y2) > CROSSING_PX + 1:
+        if (x1 - x2) ** 2 + (y1 - y2) ** 2 > (CROSSING_PX + 1) ** 2:
             message = f"Crossing {fields[0]} to {fields[1]} is wider than {CROSSING_PX} pixels"
+            raise SeaError(message)
+        if any(
+            int(world.labels[point]) != through
+            for point in crossing_pixels(positions[0], positions[1])[1:-1]
+        ):
+            message = f"Crossing {fields[0]} to {fields[1]} leaves its through-zone"
+            raise SeaError(message)
+        planned = sections.get((first, second, through))
+        if planned is not None and tuple(positions) != planned:
+            message = f"Crossing {fields[0]} to {fields[1]} does not match its planned section"
             raise SeaError(message)
     if seen != wanted:
         message = (

@@ -15,6 +15,11 @@
   +14 / +9 / +4 / 0). A change of the water textures, so the pending epoch-60 reference digest is
   refreshed.
 
+- Army strait crossings use the shortest water-only section of opposing physical shores,
+  including diagonal directions. Wider or same-continent links require a real throat opening
+  into wider water on both sides; short coastal land walks and parallel duplicates are excluded.
+  This replaces the rejected broad 36-pixel rule that produced misplaced crossings.
+
 - **Hide the island groups at country selection.** The cover drawn over the New World in the game
   took only the generated locations and the ocean wastelands beside them, so the vanilla island
   groups that stay or move inside the canvas (the Polynesian strip) stood open in the covered

@@ -4,18 +4,18 @@ Game-independent. The game links two land locations that a narrow sea zone separ
 enough to each other so armies can cross it without the need of a navy" (``adjacencies.csv``, type
 ``sea``), and blockades the crossing with the sea zone [SOURCE wiki; V-LOCAL C245]. What close is,
 the game's own 184 rows say: the two points of a crossing lie 1 to 9 pixels apart (median 3), each
-on its own location, and the sea zone between touches both. The generated land has no such gaps: its
-landmasses are a sea cell or more apart (two pairs of locations in the reference world within 12
-pixels). So there are two things to do:
+on its own location, and the sea zone between touches both. Those distances describe the vanilla
+sample; they do not establish a format limit. Generated coasts and inland-sea mouths use the same
+nearby-shore reach. There are two things to do:
 
 * **Pinch.** Two landmasses that come within ``NEAR_PX`` of each other are brought together at
   their nearest points to a channel of ``STRAIT_PX``: each grows by the same distance towards the
   other, the growth tapering to nothing over twice the gap, as a headland that a sea has not yet
   cut through. Nothing is merged, no third landmass is touched, and no water is cut off,
   or the pinch is not made.
-* **Crossings.** Every pair of land locations of different landmasses that a gap of at most
-  ``CROSSING_PX`` pixels (the game's widest crossing) divides, through a sea cell, is a crossing:
-  its two points are where the gap is narrowest.
+* **Crossings.** ``rnw.crossings`` refines candidate gaps into their shortest water-only
+  sections. Wider or same-landmass links must be real water throats, with a substantial
+  opening on each side; short land walks and parallel duplicates are excluded.
 
 Everything is integer arithmetic (the distances are exact, in eighths of a pixel) and a square
 root of an exact integer, so the result is the same on every platform; nothing is random, and
@@ -41,8 +41,11 @@ if TYPE_CHECKING:
 # Landmasses closer than this (pixels of water between them) are pinched, to this width.
 NEAR_PX: Final[int] = 36
 STRAIT_PX: Final[int] = 5
-# The widest crossing of the game's own map, in pixels [V-LOCAL C245].
-CROSSING_PX: Final[int] = 9
+# Nearby shores can be crossed without changing their natural coast. Vanilla's observed
+# maximum of 9 pixels is a sample; inland-sea mouths can be wider.
+CROSSING_PX: Final[int] = NEAR_PX
+# Preserve the physical pinch construction and its existing coastline bytes.
+PINCH_SKIP_PX: Final[int] = 9
 # Land smaller than this is no landmass for a strait.
 MIN_LAND_PX: Final[int] = 2000
 EIGHTHS: Final[int] = 8
@@ -161,7 +164,7 @@ def pinch(
     land, ocean = land.copy(), ocean.copy()
     made = 0
     for gap in sorted(gaps.values(), key=lambda item: (item.length, item.first, item.second)):
-        if gap.length <= CROSSING_PX:
+        if gap.length <= PINCH_SKIP_PX:
             continue
         checkpoint()
         made += _carve(gap, labels, land, ocean, off_limits)

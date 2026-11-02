@@ -6,6 +6,59 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-02, **physical strait throats and shortest trajectories on XNKG** (C467). [V-EXEC]
+Installed **RNW: XNKG — narrow straits**, `mod/rnw_exp_world_akhvvjfa6f`, code
+`RNW1-080KN-HKXKK-XB4AA-9040G-00850-3SG42-1N15W-1P0A7-GC160-FGW`, in the game and both libraries.
+All 898 files match the candidate; 17 existing mod folders and nine profile-root files are preserved.
+Its resolved settings and rolls equal original XNKG's, with unchanged defaults explicitly encoded
+for a separate identity. Comparing all nonmetadata files with original XNKG finds only
+`adjacencies.csv` changed. Its 11 sections exactly match an independent reconstruction from the
+written location raster; the rejected candidate had 61. The Locsamsol line is a short diagonal,
+the Moana/Wahilaki parallel pair and same-shore 8-pixel shortcut are absent. The full export reports
+zero split cells, unreachable or cut-off generated seas, unported land and lost Old World contacts.
+869 nonmetadata files, digest `4b19f0bc28d86119509153398212544689eade4e46c6896303e0694586138cb9`.
+
+`uv sync --locked --group dev && make check` passes (2,449 Python tests, 15 optional skips;
+strict types, format/lint and 23 Rust tests). The pending epoch-60 reference has two crossings,
+868 files and digest `7171c89a5b179fac1fd75adae917961cbd85fa9479533031aa9a6b2bb9bf0181`,
+predicted from the previous reference's written map and independently reproduced by a full fresh
+installed-game export (one pass). The final long-channel duplicate regression leaves both verified
+worlds' crossing bytes identical. Frozen epoch 59 is untouched. EU5 1.4.6 / build 26300913;
+RNW 1.1.0 development. The final generator wheel is rebuilt with unchanged GUI/runtime binaries,
+passes the Windows/Wine window/native/code and shell/bridge self-tests, and is installed by the
+standard updater. Backup: `.rnw-hub-backups/1.1.0-1793577386521788430`; candidate
+`local_data/strait-crossings-v2/hub-final/rnw_exp_hub`, wheel SHA-256
+`438995a5545f0e61d67a2d4ff59b526fbe7e359f30b3e7b9ce74c5fd5960ee3a`.
+Evidence: ignored `local_data/strait-crossings-v2/`. No agent EU5 launch/control or new engine
+rendering observation; the owner's screenshots establish the preceding candidate's defects.
+
+2026-11-02, **natural strait crossings on XNKG** (C466; placement rejected, superseded by C467).
+[V-EXEC] Installed
+**RNW: XNKG — strait crossings**, `mod/rnw_exp_world_a56qhjysy5`, code
+`RNW1-080KN-HKXKK-XB4AA-9040G-00840-3SG42-1N3C0-MF0R2-DJ5QE`, with records in both the native
+and Proton libraries. Its resolved settings, seeds and rolls equal XNKG's; an explicitly encoded
+unchanged location spacing gives the candidate a separate identity. All 898 installed files match
+the candidate. A comparison of every nonmetadata file with installed XNKG finds only
+`in_game/map_data/adjacencies.csv` changed: all five former generated crossings remain, with 61
+now written, including all three screenshot throats (17, 1 and 8 sea pixels). The other 15 mod
+folders and nine profile-root files are unchanged. Output: 869 nonmetadata files, SHA-256
+`faf816295c6c88d1514ab49cd124ec306842637289759f42aa5919db2bf7a979`; no split cells, unreachable
+generated seas, cut-off seas, unported land or lost Old World contacts. EU5 1.4.6 / build 26300913;
+RNW 1.1.0 development / pending epoch 60. The pending reference is refreshed to 868 files,
+17 crossings, digest `7671b6f8…aaa58`, independently reproduced by the opt-in installed-game
+reference test (one pass); epoch 59 is untouched.
+
+Project format/lint (excluding other `.claude` checkouts), strict types, 2,437 Python tests
+(15 optional skips), 23 Rust tests and the 13 installed-game read-only checks (two opt-in skips)
+pass. The updated hub passed its Windows/Wine generator and window-shell self-tests. Its first
+installation correctly stopped while EU5 was open; after the owner closed it, the standard updater
+installed the prepared hub, retaining the previous copy at
+`.rnw-hub-backups/1.1.0-1793574736007089025`. Candidate:
+`local_data/hub-updates/1.1.0-1793574546523945747/rnw_exp_hub`; Windows wheel SHA-256
+`35e0632260b0059a77a2ea63561e659f264bc414ae985ef78826224c156e91f9`.
+Evidence: ignored `local_data/strait-crossings/`. No agent EU5 launch/control or observation of
+engine rendering of the new crossings.
+
 2026-11-01, **The Wall's width inside the land share**. [V-EXEC] Installed **RNW: The Wall NOVX** in new
 `mod/rnw_exp_world_novxisa5pj`, the owner's J4VJ land (wall, seed 14046991261471717063, land 159‰,
 position 100%, irregularity 100%) with the width raised from its 14% to 30%, code
