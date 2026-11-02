@@ -4,11 +4,14 @@ Flat vector: the lobby cover's fog brown, the caption parchment and rhumb lines 
 compass node. Writes one PNG per picture into ``w/`` at the repository root, rendered through
 ``rsvg-convert``. The Workshop text pays for every byte of an image URL, so the path is as short
 as it can be: ``https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/en1.png``,
-a flat folder, two-letter language code plus a one-character picture id.
+a flat folder, two-letter language code plus a one-character picture id. Steam shows pictures
+at their own size and only shrinks those wider than its 630 px column, so section banners and the
+plaque are drawn at 2x and the buttons at the size they are shown, ``BUTTON_PX``.
 
     ids  0 divider | 1 new world | 2 peoples | 3 make it yours | 4 getting started
          5 before you play | 6 compatibility | 7 guides and downloads
-         a guide | b known issues | c downloads | d bug reports | e GitHub | k Ko-fi plaque
+         a guide | b known issues | c downloads | d bug reports | e GitHub | f changelog
+         k Ko-fi plaque
     code en ru pt fr de es pl tr ja ko zh
 
     python docs/images/workshop/make_banners.py            # PNG into w/
@@ -247,6 +250,15 @@ def icon_link(c):
     )
 
 
+def icon_list(c):
+    return (
+        f'<g fill="none" stroke="{c}" stroke-width="2.6" stroke-linecap="round">'
+        '<path d="M -4 -10 H 16 M -4 0 H 16 M -4 10 H 16"/></g>'
+        f'<g fill="{c}"><circle cx="-14" cy="-10" r="2.2"/><circle cx="-14" cy="0" r="2.2"/>'
+        '<circle cx="-14" cy="10" r="2.2"/></g>'
+    )
+
+
 ICONS = {
     "globe": icon_globe,
     "compass": icon_compass,
@@ -262,6 +274,7 @@ ICONS = {
     "sun": icon_sun,
     "sliders": icon_sliders,
     "link": icon_link,
+    "list": icon_list,
 }
 
 
@@ -427,7 +440,7 @@ def divider(w: int = 1260, h: int = 36) -> str:
 
 SECTION_ICONS = ["globe", "sun", "sliders", "compass", "anchor", "link", "chart"]
 SECTION_NAMES = ["world", "peoples", "custom", "start", "before", "compat", "links"]
-BUTTON_ICONS = ["chart", "warn", "download", "flag", "github"]
+BUTTON_ICONS = ["chart", "warn", "download", "flag", "github", "list"]
 BUTTON_NAMES = ["guide", "issues", "downloads", "bugs", "github"]
 # Per language: seven section titles, five button labels, Ko-fi (question, ask, thank-you).
 # Section 1, 4, 5 and 7 follow the headings of docs/workshop/<language>.bbcode. Latin and Cyrillic
@@ -443,7 +456,7 @@ TEXT = {
             "Compatibility",
             "Guides & downloads",
         ],
-        "buttons": ["Guide", "Known issues", "Downloads", "Bug reports", "GITHUB"],
+        "buttons": ["Guide", "Known issues", "Downloads", "Bug reports", "GITHUB", "Changelog"],
         "kofi": (
             "Enjoying RNW?",
             "Buy the author a coffee",
@@ -460,7 +473,7 @@ TEXT = {
             "Совместимость",
             "Руководства и загрузки",
         ],
-        "buttons": ["Руководство", "Проблемы", "Загрузки", "Об ошибке", "GITHUB"],
+        "buttons": ["Руководство", "Проблемы", "Загрузки", "Об ошибке", "GITHUB", "Изменения"],
         "kofi": (
             "Нравится RNW?",
             "Угостите автора кофе",
@@ -477,7 +490,7 @@ TEXT = {
             "Compatibilidade",
             "Guias e downloads",
         ],
-        "buttons": ["Guia", "Problemas", "Downloads", "Relatar erro", "GITHUB"],
+        "buttons": ["Guia", "Problemas", "Downloads", "Relatar erro", "GITHUB", "Novidades"],
         "kofi": (
             "Gostando do RNW?",
             "Um café para o autor",
@@ -494,7 +507,7 @@ TEXT = {
             "Compatibilité",
             "Guides et téléchargements",
         ],
-        "buttons": ["Guide", "Problèmes", "Télécharger", "Signaler", "GITHUB"],
+        "buttons": ["Guide", "Problèmes", "Télécharger", "Signaler", "GITHUB", "Nouveautés"],
         "kofi": (
             "Vous aimez RNW ?",
             "Un café pour l’auteur",
@@ -511,7 +524,7 @@ TEXT = {
             "Kompatibilität",
             "Anleitungen und Downloads",
         ],
-        "buttons": ["Anleitung", "Probleme", "Downloads", "Fehler melden", "GITHUB"],
+        "buttons": ["Anleitung", "Probleme", "Downloads", "Fehler melden", "GITHUB", "Änderungen"],
         "kofi": (
             "Gefällt euch RNW?",
             "Ein Kaffee für den Autor",
@@ -528,7 +541,7 @@ TEXT = {
             "Compatibilidad",
             "Guías y descargas",
         ],
-        "buttons": ["Guía", "Problemas", "Descargas", "Reportar", "GITHUB"],
+        "buttons": ["Guía", "Problemas", "Descargas", "Reportar", "GITHUB", "Novedades"],
         "kofi": (
             "¿Te gusta RNW?",
             "Un café para el autor",
@@ -545,7 +558,7 @@ TEXT = {
             "Zgodność",
             "Poradniki i pliki",
         ],
-        "buttons": ["Poradnik", "Problemy", "Pobieranie", "Zgłoś błąd", "GITHUB"],
+        "buttons": ["Poradnik", "Problemy", "Pobieranie", "Zgłoś błąd", "GITHUB", "Zmiany"],
         "kofi": (
             "Podoba ci się RNW?",
             "Postaw autorowi kawę",
@@ -562,7 +575,7 @@ TEXT = {
             "Uyumluluk",
             "Rehberler ve indirmeler",
         ],
-        "buttons": ["Rehber", "Sorunlar", "İndirmeler", "Hata bildir", "GITHUB"],
+        "buttons": ["Rehber", "Sorunlar", "İndirmeler", "Hata bildir", "GITHUB", "Yenilikler"],
         "kofi": (
             "RNW’yi beğendiniz mi?",
             "Yazara bir kahve ısmarlayın",
@@ -579,7 +592,7 @@ TEXT = {
             "互換性",
             "ガイドとダウンロード",
         ],
-        "buttons": ["ガイド", "既知の問題", "ダウンロード", "不具合報告", "GITHUB"],
+        "buttons": ["ガイド", "既知の問題", "ダウンロード", "不具合報告", "GITHUB", "更新履歴"],
         "kofi": (
             "RNWを楽しんでいますか？",
             "作者にコーヒーを一杯",
@@ -596,7 +609,7 @@ TEXT = {
             "호환성",
             "가이드 및 다운로드",
         ],
-        "buttons": ["가이드", "알려진 문제", "다운로드", "버그 제보", "GITHUB"],
+        "buttons": ["가이드", "알려진 문제", "다운로드", "버그 제보", "GITHUB", "변경 내역"],
         "kofi": (
             "RNW가 마음에 드시나요?",
             "제작자에게 커피 한 잔을",
@@ -613,7 +626,7 @@ TEXT = {
             "兼容性",
             "指南与下载",
         ],
-        "buttons": ["指南", "已知问题", "下载", "报告问题", "GITHUB"],
+        "buttons": ["指南", "已知问题", "下载", "报告问题", "GITHUB", "更新日志"],
         "kofi": ("喜欢 RNW 吗？", "请作者喝杯咖啡", "RNW 将继续免费。你的支持让它不断成长，谢谢！"),
     },
 }
@@ -639,7 +652,8 @@ CODES = {
     "simp_chinese": "zh",
 }  # fmt: skip
 SECTION_IDS = "1234567"
-BUTTON_IDS = "abcde"
+BUTTON_IDS = "abcdef"
+BUTTON_PX = 290  # buttons are shown at their own size, so two of them fit Steam's column
 
 
 def main(out: Path, svg_dir: Path | None) -> None:
@@ -649,9 +663,14 @@ def main(out: Path, svg_dir: Path | None) -> None:
     if svg_dir:
         svg_dir.mkdir(parents=True, exist_ok=True)
 
-    def save(code: str, pid: str, svg: str) -> None:
+    def save(code: str, pid: str, svg: str, width: int | None = None) -> None:
         subprocess.run(
-            ["rsvg-convert", "-o", str(out / f"{code}{pid}.png")],
+            [
+                "rsvg-convert",
+                *(["-w", str(width)] if width else []),
+                "-o",
+                str(out / f"{code}{pid}.png"),
+            ],
             input=svg.encode(),
             check=True,
         )
@@ -664,7 +683,7 @@ def main(out: Path, svg_dir: Path | None) -> None:
             save(code, pid, banner(escape(caps(lang, text)), icon, spec))
         for pid, text, icon in zip(BUTTON_IDS, deck["buttons"], BUTTON_ICONS, strict=True):
             face = FONTS["english"] if text.isascii() else spec  # GITHUB stays Latin everywhere
-            save(code, pid, button(escape(caps(lang, text)), icon, face))
+            save(code, pid, button(escape(caps(lang, text)), icon, face), BUTTON_PX)
         eyebrow, big, note = deck["kofi"]
         save(
             code,
