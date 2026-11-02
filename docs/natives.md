@@ -373,8 +373,8 @@ new implementation scope through the [roadmap](roadmap.md) when requested.
 **1.2.0 focus, owner direction 2026-11-02:** deepen societies' unique identities,
 structures and diversity, and simulate their pre-1337 history to shape complex
 starting relationships between countries. This develops the existing R6/R7
-model and R7d relationships; the detailed design is pending owner review. See
-the [1.2.0 roadmap](roadmap.md#next-major-update--120-history-and-geopolitics).
+model and R7d relationships; the accepted [1.2.0 plan](history-plan.md) holds
+the design. See the [1.2.0 roadmap](roadmap.md#next-major-update--120-history-and-geopolitics).
 
 - Mixed-culture border locations and additional society configurations are
   candidates for that design. Pop-type tribes own no land and are invisible on

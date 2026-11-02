@@ -8,7 +8,8 @@ guidance from the historical record; an old unchecked box is not a current task.
 The next major update is **1.2.0**, focused on simulated prehistory, starting
 geopolitics and the depth, identity and diversity of societies. The
 [roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) records the
-owner's direction; its detailed implementation plan still needs owner approval.
+owner's direction; the accepted [1.2.0 plan](history-plan.md) holds its design,
+phases and acceptance criteria.
 
 ## Current guides
 
@@ -20,6 +21,7 @@ owner's direction; its detailed implementation plan still needs owner approval.
 | [Architecture](architecture.md) | Current pipeline, module map and invariants |
 | [Capability overview](feasibility.md) | Implemented T3 route and boundaries of the product |
 | [Roadmap](roadmap.md) | Released scope and owner-requested future directions |
+| [1.2.0 plan](history-plan.md) | Accepted design, decisions, phases and acceptance criteria for history and geopolitics |
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
 | [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |

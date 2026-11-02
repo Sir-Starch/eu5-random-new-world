@@ -45,7 +45,7 @@ build, save and mod compatibility, and what remains unverified in the current ve
 | **Dynamic Content & L10n** | [Procedural regional stories, formable nations, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
 | **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
 
-The next major update, **1.2.0**, will focus on history and geopolitics: a pre-1337 history simulation will shape starting relationships between countries, alongside deeper, more distinctive and diverse societies. See the [roadmap](docs/roadmap.md) for the agreed direction and other future work; the detailed implementation plan is pending owner review.
+The next major update, **1.2.0**, will focus on history and geopolitics: a pre-1337 history simulation will shape starting relationships between countries, alongside deeper, more distinctive and diverse societies. See the [roadmap](docs/roadmap.md) for the agreed direction and other future work, and the [1.2.0 plan](docs/history-plan.md) for its design.
 
 ## Screenshots
 

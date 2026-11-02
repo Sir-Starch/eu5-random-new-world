@@ -47,7 +47,7 @@ structures and diversity of generated societies. The political world at campaign
 start should have understandable historical causes in its geography and societies.
 This is planned scope, not a shipping capability. The
 [roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) owns its status;
-the detailed design and implementation plan require owner review before commit.
+the accepted [1.2.0 plan](history-plan.md) holds the design and implementation phases.
 
 ## Engineering requirements
 

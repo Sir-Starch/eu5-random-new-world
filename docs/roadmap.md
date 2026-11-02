@@ -123,10 +123,11 @@ of the general future list and into the 1.2.0 focus. The earlier
 remains background. See [native societies](natives.md) for the implemented model
 and the [content plan](content-plan.md) for the story/content boundary.
 
-The direction is agreed; the detailed simulation model, feature list, controls,
-implementation phases and acceptance criteria are **pending owner review**.
-Prepare the detailed proposal separately and do not commit it until approved.
-This documentation decision does not bump the package version or algorithm epoch.
+The direction is agreed, and the owner accepted the detailed
+[1.2.0 plan](history-plan.md) on 2026-11-02: simulation model, decisions, EU5
+projection with fallbacks, controls, phases H0–H7, cut order and acceptance
+criteria. Implementation needs a separate instruction. This documentation
+decision does not bump the package version or algorithm epoch.
 Implementation follows [ADR 0003](adr/0003-versioning.md): 1.2.0 is a compatible
 MINOR target, and changed world output will need a pending epoch relative to the
 last frozen release. Preserve the Old World, existing worlds and saves, both

@@ -48,10 +48,10 @@ content meaning as part of generation, not a repair layer over already-written o
 The next update will add simulated pre-1337 history that shapes starting
 interstate relationships, alongside deeper and more varied societies. The
 existing story/formable system is an integration point for this historical
-context. Narrative should reflect what the simulation actually establishes;
-the particular story families and mechanics remain to be designed. The
-[roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) records the
-agreed direction and the requirement for owner review of the detailed plan.
+context. Narrative reflects only what the simulation establishes. The accepted
+[1.2.0 plan](history-plan.md) keeps the existing story families, binds their
+eligibility to historical facts and adds no new family in 1.2.0; it also adds a
+voluntary in-game chronicle decision and named historical opinions.
 The implemented N0–N5 inventory above remains the shipping baseline.
 
 ## Changes and verification
