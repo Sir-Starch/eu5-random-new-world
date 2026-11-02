@@ -6,11 +6,12 @@ compass node. Writes one PNG per picture into ``w/`` at the repository root, ren
 as it can be: ``https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/en1.png``,
 a flat folder, two-letter language code plus a one-character picture id. Steam shows pictures
 at their own size and only shrinks those wider than its 630 px column, so section banners and the
-plaque are drawn at 2x and the buttons at the size they are shown, ``BUTTON_PX``.
+plaque are drawn at 2x and the buttons at the size they are shown, ``BUTTON_PX``. Steam also caches every picture by its URL, so a redrawn picture needs a new id or it
+keeps showing the old one (the button ids were a-f, now g-j; take the next unused character).
 
     ids  0 divider | 1 new world | 2 peoples | 3 make it yours | 4 getting started
          5 before you play | 6 compatibility | 7 guides and downloads
-         a guide | b downloads | c bugs | d GitHub | k Ko-fi plaque
+         g guide | h downloads | i bugs | j GitHub | k Ko-fi plaque
     code en ru pt fr de es pl tr ja ko zh
 
     python docs/images/workshop/make_banners.py            # PNG into w/
@@ -642,7 +643,7 @@ CODES = {
     "simp_chinese": "zh",
 }  # fmt: skip
 SECTION_IDS = "1234567"
-BUTTON_IDS = "abcd"
+BUTTON_IDS = "ghij"
 BUTTON_PX = 140  # shown at their own size: four in a row fit Steam's column
 
 
