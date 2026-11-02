@@ -7,11 +7,11 @@ as it can be: ``https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-worl
 a flat folder, two-letter language code plus a one-character picture id. Steam shows pictures
 at their own size and only shrinks those wider than its 630 px column, so section banners and the
 plaque are drawn at 2x and the buttons at the size they are shown, ``BUTTON_PX``. Steam also caches every picture by its URL, so a redrawn picture needs a new id or it
-keeps showing the old one (the button ids were a-f, now g-j; take the next unused character).
+keeps showing the old one (the button ids were a-f, g-j, now m-p; take the next unused character).
 
     ids  0 divider | 1 new world | 2 peoples | 3 make it yours | 4 getting started
          5 before you play | 6 compatibility | 7 guides and downloads
-         g guide | h downloads | i bugs | j GitHub | k Ko-fi plaque
+         m guide | n get | o bugs | p GitHub | k Ko-fi plaque
     code en ru pt fr de es pl tr ja ko zh
 
     python docs/images/workshop/make_banners.py            # PNG into w/
@@ -311,23 +311,29 @@ def banner(
 """
 
 
-def button(
-    label: str, icon: str, font_spec: dict, w: int = 296, h: int = 72, size: int = 26
-) -> str:
-    """Small link button; all measures scale with the height, so any size keeps the same look."""
-    u = h / 104
-    tracking = font_spec["track"] - 4
-    ch, m = round(12 * u, 1), round(7 * u, 1)
+BTN_W, BTN_H = 296, 88  # drawn at 2x, shown at BUTTON_PX x BUTTON_PX * BTN_H / BTN_W
+BTN_SIZE = 34  # largest lettering, shrunk until the longest label of a language fits
+BTN_LEFT, BTN_RIGHT = 100, BTN_W - 24  # text area: right of the divider, inside the frame
+
+
+def button_size(label: str, font_spec: dict) -> int:
+    return fit(label, BTN_SIZE, font_spec["track"] - 4, BTN_RIGHT - BTN_LEFT, font_spec, floor=14)[
+        0
+    ]
+
+
+def button(label: str, icon: str, font_spec: dict, size: int) -> str:
+    """Small link button. ``size`` is shared by all buttons of a language, so they look alike."""
+    w, h = BTN_W, BTN_H
+    tracking = max(2.0, font_spec["track"] - 4 - 0.15 * (BTN_SIZE - size))
+    ch, m = 10, 6
     outer = f"M {ch},0 H {w - ch} L {w},{ch} V {h - ch} L {w - ch},{h} H {ch} L 0,{h - ch} V {ch} Z"
     inner = (
         f"M {ch + m},{m} H {w - ch - m} L {w - m},{ch + m} V {h - ch - m} "
         f"L {w - ch - m},{h - m} H {ch + m} L {m},{h - ch - m} V {ch + m} Z"
     )
-    cx, cy = round(64 * u, 1), h / 2
-    div = round(106 * u, 1)
-    free_l, free_r = div + 26 * u, w - 26 * u
-    size, tracking = fit(label, size, tracking, free_r - free_l, font_spec, floor=14)
-    tx = free_l
+    cy = h / 2
+    tx = BTN_LEFT + (BTN_RIGHT - BTN_LEFT - text_width(label, size, tracking, font_spec)) / 2
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <title>{label}</title>
 <defs>
@@ -336,8 +342,8 @@ def button(
 <path d="{outer}" fill="url(#p)"/>
 <path d="{outer}" fill="none" stroke="{FOG_DEEP}" stroke-width="3"/>
 <path d="{inner}" fill="none" stroke="{INK}" stroke-width="1.6" opacity="0.55"/>
-<g transform="translate({cx} {cy}) scale({1.15 * u:.3f})">{ICONS[icon](INK)}</g>
-<path d="M {div},{cy - 24 * u:.1f} V {cy + 24 * u:.1f}" stroke="{INK}" stroke-width="1.6" opacity="0.45"/>
+<g transform="translate(50 {cy}) scale(1.25)">{ICONS[icon](INK)}</g>
+<path d="M 86,{cy - 26} V {cy + 26}" stroke="{INK}" stroke-width="1.6" opacity="0.45"/>
 <g font-family="{font_spec["css"]}" font-weight="700" font-size="{size}" letter-spacing="{tracking:.1f}" fill="{INK}">
  <text x="{tx:.1f}" y="{cy + size * 0.36:.1f}">{label}</text>
 </g>
@@ -447,7 +453,7 @@ TEXT = {
             "Compatibility",
             "Guides & downloads",
         ],
-        "buttons": ["Guide", "Downloads", "Bugs", "GITHUB"],
+        "buttons": ["Guide", "Get", "Bugs", "GITHUB"],
         "kofi": (
             "Enjoying RNW?",
             "Buy the author a coffee",
@@ -464,7 +470,7 @@ TEXT = {
             "Совместимость",
             "Руководства и загрузки",
         ],
-        "buttons": ["Гайд", "Загрузки", "Ошибки", "GITHUB"],
+        "buttons": ["Гайд", "Скачать", "Ошибки", "GITHUB"],
         "kofi": (
             "Нравится RNW?",
             "Угостите автора кофе",
@@ -481,7 +487,7 @@ TEXT = {
             "Compatibilidade",
             "Guias e downloads",
         ],
-        "buttons": ["Guia", "Downloads", "Erros", "GITHUB"],
+        "buttons": ["Guia", "Baixar", "Erros", "GITHUB"],
         "kofi": (
             "Gostando do RNW?",
             "Um café para o autor",
@@ -498,7 +504,7 @@ TEXT = {
             "Compatibilité",
             "Guides et téléchargements",
         ],
-        "buttons": ["Guide", "Télécharger", "Bugs", "GITHUB"],
+        "buttons": ["Guide", "Obtenir", "Bugs", "GITHUB"],
         "kofi": (
             "Vous aimez RNW ?",
             "Un café pour l’auteur",
@@ -515,7 +521,7 @@ TEXT = {
             "Kompatibilität",
             "Anleitungen und Downloads",
         ],
-        "buttons": ["Anleitung", "Downloads", "Fehler", "GITHUB"],
+        "buttons": ["Guide", "Laden", "Fehler", "GITHUB"],
         "kofi": (
             "Gefällt euch RNW?",
             "Ein Kaffee für den Autor",
@@ -532,7 +538,7 @@ TEXT = {
             "Compatibilidad",
             "Guías y descargas",
         ],
-        "buttons": ["Guía", "Descargas", "Errores", "GITHUB"],
+        "buttons": ["Guía", "Obtener", "Errores", "GITHUB"],
         "kofi": (
             "¿Te gusta RNW?",
             "Un café para el autor",
@@ -549,7 +555,7 @@ TEXT = {
             "Zgodność",
             "Poradniki i pliki",
         ],
-        "buttons": ["Poradnik", "Pobierz", "Błędy", "GITHUB"],
+        "buttons": ["Pomoc", "Pobierz", "Błędy", "GITHUB"],
         "kofi": (
             "Podoba ci się RNW?",
             "Postaw autorowi kawę",
@@ -643,8 +649,8 @@ CODES = {
     "simp_chinese": "zh",
 }  # fmt: skip
 SECTION_IDS = "1234567"
-BUTTON_IDS = "ghij"
-BUTTON_PX = 140  # shown at their own size: four in a row fit Steam's column
+BUTTON_IDS = "mnop"
+BUTTON_PX = 148  # shown at their own size: four in a row fit Steam's column
 
 
 def main(out: Path, svg_dir: Path | None) -> None:
@@ -674,9 +680,13 @@ def main(out: Path, svg_dir: Path | None) -> None:
         code, spec = CODES[lang], FONTS[lang]
         for pid, text, icon in zip(SECTION_IDS, deck["sections"], SECTION_ICONS, strict=True):
             save(code, pid, banner(escape(caps(lang, text)), icon, spec))
-        for pid, text, icon in zip(BUTTON_IDS, deck["buttons"], BUTTON_ICONS, strict=True):
-            face = FONTS["english"] if text.isascii() else spec  # GITHUB stays Latin everywhere
-            save(code, pid, button(escape(caps(lang, text)), icon, face), BUTTON_PX)
+        labels = [escape(caps(lang, t)) for t in deck["buttons"]]
+        faces = [
+            FONTS["english"] if t.isascii() else spec for t in deck["buttons"]
+        ]  # GITHUB stays Latin
+        size = min(button_size(t, face) for t, face in zip(labels, faces, strict=True))
+        for pid, label, face, icon in zip(BUTTON_IDS, labels, faces, BUTTON_ICONS, strict=True):
+            save(code, pid, button(label, icon, face, size), BUTTON_PX)
         eyebrow, big, note = deck["kofi"]
         save(
             code,
