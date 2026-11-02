@@ -1,65 +1,83 @@
-source: a331d209090ac0b6
+source: bf21a84136b25172
 
 [h1]Random New World (RNW)[/h1]
 
-다음 EU5 캠페인에서는 아메리카를 새로운 세계로 바꿔 보세요. 낯선 해안을 탐험하거나 원주민 국가를 이끌 수 있습니다. 구대륙은 그대로 유지됩니다.
+EU5의 아메리카를 새 세계로 바꿔 보세요. 서쪽 미지의 바다를 탐험하거나 원주민 국가를 이끌 수 있습니다. 구세계는 기본 게임 그대로입니다.
 
-[quote][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3816832717]Refined Colonization[/url]과 호환됩니다.
-[b]로드 순서: (1) Refined Colonization → (2) 생성된 RNW 세계 모드.[/b][/quote]
+[table]
+[tr]
+[td][url=https://github.com/Sir-Starch/eu5-random-new-world/blob/main/docs/generator-guide.md][img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/kom.png[/img][/url][/td]
+[td][url=https://github.com/Sir-Starch/eu5-random-new-world/releases][img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/kon.png[/img][/url][/td]
+[td][url=https://github.com/Sir-Starch/eu5-random-new-world/issues][img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/koo.png[/img][/url][/td]
+[td][url=https://github.com/Sir-Starch/eu5-random-new-world][img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/kop.png[/img][/url][/td]
+[/tr]
+[/table]
 
 [img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/docs/images/showcase/rnw_showcase_full.gif[/img]
 
-[h2]🌎 탐험할 새로운 세계[/h2]
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko1.png[/img]
 [list]
-[*][b]여섯 가지 세계 유형:[/b] 초대륙, 대륙, 작은 대륙, 군도, 흩어진 섬과 장벽을 선택할 수 있습니다. 장벽은 산맥을 따라 남북으로 뻗는 육지나 섬의 사슬이며, 해협의 유무도 정할 수 있습니다.
-[*][b]자연스러운 지형:[/b] 갈라지는 산맥에 산괴, 고개, 산기슭이 이어집니다. 곶, 굽은 반도, 입구가 좁은 만, 내해, 석호가 해안을 다채롭게 만듭니다. 호수에는 만과 긴 물길, 섬이 있으며, 강은 호수에 들어간 뒤 하류로 이어집니다.
-[*][b]넓어진 탐험 무대:[/b] 권장하는 해양 확장 옵션은 태평양을 더 넓게 포함합니다. 섬 무리는 공간이 있으면 남고, 새 대륙과 겹치면 함께 이동합니다. 항로, 해류, 도하 지점도 지형을 따릅니다.
-[*][b]원주민 사회:[/b] 정착 국가와 분권화된 부족은 각자의 문화, 종교, 종속 관계를 지닙니다. 국가는 해안과 지형, 농업 지대를 따라 성장하며 주된 문화와 신앙의 중심부가 더 뚜렷해집니다.
-[*][b]특별한 민족:[/b] 대제국, 해상 동맹, 고지 연맹, 분열된 왕국, 신성한 중심지를 선택적으로 추가할 수 있습니다.
-[*][b]캠페인 콘텐츠:[/b] 지역 이야기, 형성 가능한 국가, 식민지 이름이 새로운 세계에 개성을 더합니다.
-[*][b]발견의 즐거움:[/b] 기본적으로 국가 선택 화면의 지도와 모드 썸네일은 숨겨집니다. 지도를 공개하지 않고도 목록에서 원주민 국가를 고를 수 있으며, 원한다면 지도를 공개해 살펴볼 수 있습니다.
-[*][b]나만의 세계:[/b] 개별 자원 빈도, 국가의 땅, 농민 비율, 구세계와의 거리를 조정하세요. 지형을 유지하면서 민족이나 자원만 다시 생성할 수 있고, 월드 코드는 시드와 설정을 보관합니다.
-[*][b]아틀라스와 대기열:[/b] 열 가지 지도 보기, 장소 검색, 세계 비교를 제공합니다. 대륙 스케치를 고르거나 생성 도중에도 여러 세계를 대기열에 추가하세요. 생성기와 세계 텍스트는 EU5의 공식 11개 언어를 지원합니다.
-[*][b]Across the Pillars DLC:[/b] 호환 및 조정 완료: 신대륙 탐험과 보물선단이 생성된 지도를 사용합니다. DLC는 필수가 아닙니다.
+[*][b]여섯 유형:[/b] 초대륙, 대륙, 작은 대륙, 군도, 흩어진 섬, 장벽. 장벽은 산맥을 품은 육지나 섬들이 남북으로 이어지며, 해협을 둘 수도 있습니다.
+[*][b]지형:[/b] 고개와 산기슭이 있는 산맥, 굽은 반도, 만과 내해. 호수에는 만과 섬이 있고 강이 흘러들어 하류로 이어집니다.
+[*][b]탐험:[/b] 더 넓은 태평양, 새 대륙과 겹치지 않는 섬 무리. 항로와 해류도 지형을 따릅니다.
+[*][b]스포일러 방지:[/b] 국가 선택 지도와 모드 썸네일은 기본적으로 숨겨집니다. 목록에서 원주민 국가를 고르거나 지도를 공개해 볼 수 있습니다.
 [/list]
 
-[b]바로 플레이할 수 있는 예시:[/b] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151]RNW: The Wall CWYS[/url]. 이 세계를 구독하면 생성기를 실행하지 않고 플레이할 수 있습니다.
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko2.png[/img]
+[list]
+[*][b]원주민 사회:[/b] 정착 국가와 분권화된 부족마다 문화, 종교, 종속 관계가 있습니다. 국가는 해안, 지형, 농경지를 따라 성장합니다.
+[*][b]특별한 민족:[/b] 대제국, 해상 동맹, 고지 연맹, 분열된 왕국, 신성한 중심지를 선택적으로 추가합니다.
+[*][b]캠페인:[/b] 지역 이야기, 형성 가능한 국가, 식민지 이름이 생깁니다.
+[/list]
 
-[h2]▶ 시작 방법[/h2]
-[quote][b]플레이세트에는 생성된 세계를 활성화하세요.[/b] 이 창작마당 아이템은 생성기를 제공하며, 각 세계는 별도의 로컬 모드로 표시됩니다.[/quote]
-[quote][b]RAM 주의:[/b] 생성 중에는 약 7.5GB의 여유 RAM이 필요합니다. RAM이 16GB라면 생성기가 열린 뒤 EU5를 종료하세요. 게임은 메인 메뉴에서도 사용 가능한 메모리를 거의 모두 차지할 수 있습니다. EU5를 전혀 실행하지 않고 모드 폴더에서 생성기를 바로 시작해도 됩니다.[/quote]
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko3.png[/img]
+[list]
+[*][b]설정:[/b] 자원 빈도, 국가의 땅, 농민 비율, 구세계와의 거리를 조정합니다. 같은 대륙에서 민족이나 자원만 다시 만들 수도 있습니다. 월드 코드는 시드와 설정을 보관합니다.
+[*][b]아틀라스와 대기열:[/b] 지도 보기 10종, 장소 검색, 세계 비교. 생성 중에도 여러 세계를 대기열에 넣을 수 있습니다.
+[*][b]언어:[/b] 생성기와 세계 텍스트는 EU5 공식 11개 언어를 지원합니다.
+[/list]
+
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko0.png[/img]
+
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko4.png[/img]
+[b]바로 즐기려면?[/b] 완성된 세계 [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151]RNW: The Wall CWYS[/url]를 구독하세요. 생성기가 필요 없습니다.
+
+직접 만들려면:
 [olist]
-[*]EU5의 [b]모드[/b] 메뉴에서 Random New World를 찾아 [b]폴더에서 열기[/b]를 누르고 [b]Random New World Generator[/b]를 실행하세요.
-[*]세계 유형과 설정을 선택하거나 [b]월드 코드[/b]를 붙여 넣으세요.
+[*]EU5의 [b]모드[/b] 메뉴에서 Random New World를 찾아 [b]폴더 열기[/b]를 누르고 [b]Random New World Generator[/b]를 실행하세요.
+[*]세계 유형과 설정을 고르거나 [b]월드 코드[/b]를 붙여 넣으세요.
 [*][b]만들기[/b]를 누르고 몇 분 기다리세요.
-[*][i]RNW: Small continents 7K3Q[/i] 같은 새 세계 모드를 활성화하고 1337년 새 캠페인을 시작하세요.
+[*]새 세계 모드(예: [i]RNW: Small continents 7K3Q[/i])를 켜고 1337년 새 캠페인을 시작하세요.
 [/olist]
 
-EU5 엔진의 제한으로 세계 생성 기능을 게임에 직접 통합할 수 없어 별도 애플리케이션으로 실행해야 합니다. 생성기는 게임 설치를 변경하지 않으며, 생성된 세계는 생성기 없이도 작동합니다.
+[quote][b]RAM 주의:[/b] 생성에는 약 7.5GB의 여유 RAM이 필요합니다. RAM이 16GB라면 생성기가 열리자마자 EU5를 종료하세요. 주 메뉴에서도 게임이 메모리를 거의 다 쓸 수 있습니다. EU5를 열지 않고 모드 폴더에서 생성기를 바로 실행해도 됩니다.[/quote]
+
+EU5는 게임 안에서 세계를 생성할 수 없어 별도 앱을 씁니다. 게임 설치 파일은 바꾸지 않으며 완성된 세계는 생성기 없이 작동합니다.
 
 [img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/docs/images/proton.png[/img]
 
-새 창은 Windows에서 WebView2, 네이티브 Linux에서 WebKitGTK 4.1을 사용합니다. 사용할 수 없으면 클래식 창이 열리며, EU5의 일반적인 Proton 환경도 여기에 해당합니다. 설정에서 클래식 창을 직접 선택할 수도 있습니다.
+생성기 창에는 Windows의 WebView2 또는 네이티브 Linux의 WebKitGTK 4.1이 필요합니다. 없으면 EU5의 일반적인 Proton 환경처럼 클래식 창이 열립니다. 설정에서도 선택할 수 있습니다.
 
-[h2]ℹ 플레이 전 안내[/h2]
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko5.png[/img]
 [list]
-[*][b]요구 사항:[/b] EU5 1.4.6와 생성 중 약 7.5GB의 여유 RAM이 필요합니다. 다른 게임 패치에서는 생성기 업데이트가 필요할 수 있습니다.
-[*]Windows: 생성기에 디지털 서명이 없어 Smart App Control이 실행을 차단할 수 있습니다.
-[*][b]저장 파일:[/b] 새 캠페인 전용입니다. 각 저장 파일의 원래 세계 모드를 보관하세요. 게임이나 생성기 버전이 바뀌면 같은 코드로도 다른 세계가 만들어질 수 있습니다.
-[*][b]세계 전환:[/b] RNW 세계는 한 번에 하나만 사용하세요. 지도를 바꿀 때 EU5를 다시 시작하세요.
-[*][b]다른 모드 및 멀티플레이:[/b] 지도 전체를 바꾸거나 아메리카를 교체하는 모드는 RNW와 충돌합니다. 다른 모드 조합과 멀티플레이는 아직 검증되지 않았습니다.
-[*][b]Ironman 및 도전 과제:[/b] 표준 게임 규칙에서 지원됩니다.
+[*][b]요구 사항:[/b] EU5 1.4.6. 다른 게임 패치에서는 생성기 업데이트가 필요할 수 있습니다.
+[*][b]Windows:[/b] 디지털 서명이 없습니다. 테스트에서는 문제없었지만 Smart App Control이나 백신이 경고하면 알려 주세요.
+[*][b]저장 파일:[/b] 새 캠페인 전용입니다. 각 저장 파일의 원래 세계 모드를 보관하세요. 게임이나 생성기가 업데이트되면 같은 코드로 다른 세계가 나올 수 있습니다.
+[*][b]세계 전환:[/b] RNW 세계는 한 번에 하나만 켜세요. 지도를 바꿀 때 EU5를 다시 시작하세요.
 [/list]
 
-[h2]🔗 가이드, 다운로드 및 지원[/h2]
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko6.png[/img]
 [list]
-[*][url=https://github.com/Sir-Starch/eu5-random-new-world/blob/main/docs/generator-guide.md]생성기 가이드 및 Linux/Proton 설정[/url]
-[*][url=https://github.com/Sir-Starch/eu5-random-new-world/blob/main/docs/known-limitations.md]호환성 및 알려진 문제[/url]
-[*][url=https://github.com/Sir-Starch/eu5-random-new-world/releases]다운로드[/url]
-[*][url=https://github.com/Sir-Starch/eu5-random-new-world/issues]버그 제보 — 월드 코드와 저장한 진단 정보를 첨부하세요[/url]
-[*][url=https://github.com/Sir-Starch/eu5-random-new-world]소스 코드 및 기술 정보[/url]
+[*][b][url=https://steamcommunity.com/sharedfiles/filedetails/?id=3816832717]Refined Colonization[/url]:[/b] 호환됩니다. [b]로드 순서: (1) Refined Colonization → (2) 생성된 RNW 세계 모드.[/b]
+[*][b]Across the Pillars:[/b] 지원합니다. 신대륙 탐험과 보물선단이 생성된 지도를 씁니다. DLC는 필수가 아닙니다.
+[*][b]멀티플레이:[/b] 지원하며 커뮤니티 테스트를 거쳤습니다.
+[*][b]다른 모드:[/b] 지도 전면 개편이나 아메리카를 교체하는 모드는 충돌합니다. 다른 조합은 미검증입니다.
+[*][b]철인 및 도전 과제:[/b] 표준 게임 규칙에서 작동합니다.
 [/list]
+자세한 내용은 [url=https://github.com/Sir-Starch/eu5-random-new-world/blob/main/docs/known-limitations.md]알려진 문제[/url]를 참고하세요. 버그 제보 시 월드 코드와 저장한 진단 자료를 첨부하세요.
 
-[i][url=https://ko-fi.com/sirstarch]Ko-fi[/url][/i]
+[img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/ko0.png[/img]
 
-[i]무료 오픈 소스 프로젝트입니다(MPL-2.0). Paradox Interactive와 관련 없는 비공식 프로젝트입니다.[/i]
+[url=https://ko-fi.com/rnw][img]https://raw.githubusercontent.com/Sir-Starch/eu5-random-new-world/main/w/kok.png[/img][/url]
+
+[i]무료 오픈 소스(MPL-2.0). Paradox Interactive와 무관한 비공식 프로젝트입니다.[/i]
