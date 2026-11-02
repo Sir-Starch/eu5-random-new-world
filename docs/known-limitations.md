@@ -29,6 +29,13 @@ for the published artifacts and [roadmap](roadmap.md) for future work.
   continuous identities and route/hang fixes, with independent river watersheds
   and real outlets. Remaining engine/rendering questions are tracked in the
   [wrap dossier](research/map-wrap-dossier.md). [V-GAME / V-EXEC C412–C419]
+- **Faint pale patches round small islands in the water.** The game's water draws a soft
+  patch of lighter colour round small islands. The owner accepted it on 2026-11-02 as a game
+  limitation after observing the same in the game's own islands (the owner's observation, not a
+  separate measurement here). RNW paints a new coast's water from the game's own colours, the
+  open sea round it plus the shelf at that distance, and leaves the original sea unchanged from
+  about 48 pixels out; what remains is the halo the game itself draws. It is not a reason to
+  reopen the water rebuild. [V-GAME / V-LOCAL C461, C465, C468]
 - **Balance and unusual worlds.** Campaign and regression evidence is scoped to
   the worlds/builds tested, not every seed or every mechanic. Known diagnostic
   uncertainties and inherited engine warnings need attribution before being called
