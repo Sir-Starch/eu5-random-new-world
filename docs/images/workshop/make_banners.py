@@ -10,8 +10,7 @@ plaque are drawn at 2x and the buttons at the size they are shown, ``BUTTON_PX``
 
     ids  0 divider | 1 new world | 2 peoples | 3 make it yours | 4 getting started
          5 before you play | 6 compatibility | 7 guides and downloads
-         a guide | b known issues | c downloads | d bug reports | e GitHub | f changelog
-         k Ko-fi plaque
+         a guide | b downloads | c bugs | d GitHub | k Ko-fi plaque
     code en ru pt fr de es pl tr ja ko zh
 
     python docs/images/workshop/make_banners.py            # PNG into w/
@@ -250,15 +249,6 @@ def icon_link(c):
     )
 
 
-def icon_list(c):
-    return (
-        f'<g fill="none" stroke="{c}" stroke-width="2.6" stroke-linecap="round">'
-        '<path d="M -4 -10 H 16 M -4 0 H 16 M -4 10 H 16"/></g>'
-        f'<g fill="{c}"><circle cx="-14" cy="-10" r="2.2"/><circle cx="-14" cy="0" r="2.2"/>'
-        '<circle cx="-14" cy="10" r="2.2"/></g>'
-    )
-
-
 ICONS = {
     "globe": icon_globe,
     "compass": icon_compass,
@@ -274,7 +264,6 @@ ICONS = {
     "sun": icon_sun,
     "sliders": icon_sliders,
     "link": icon_link,
-    "list": icon_list,
 }
 
 
@@ -322,20 +311,21 @@ def banner(
 
 
 def button(
-    label: str, icon: str, font_spec: dict, w: int = 440, h: int = 104, size: int = 30
+    label: str, icon: str, font_spec: dict, w: int = 296, h: int = 72, size: int = 26
 ) -> str:
-    tracking = font_spec["track"] - 3
-    ch = 12
+    """Small link button; all measures scale with the height, so any size keeps the same look."""
+    u = h / 104
+    tracking = font_spec["track"] - 4
+    ch, m = round(12 * u, 1), round(7 * u, 1)
     outer = f"M {ch},0 H {w - ch} L {w},{ch} V {h - ch} L {w - ch},{h} H {ch} L 0,{h - ch} V {ch} Z"
-    m = 7
     inner = (
         f"M {ch + m},{m} H {w - ch - m} L {w - m},{ch + m} V {h - ch - m} "
         f"L {w - ch - m},{h - m} H {ch + m} L {m},{h - ch - m} V {ch + m} Z"
     )
-    cx, cy = 64, h / 2
-    div = 106
-    free_l, free_r = div + 26, w - 26
-    size, tracking = fit(label, size, tracking, free_r - free_l, font_spec, floor=16)
+    cx, cy = round(64 * u, 1), h / 2
+    div = round(106 * u, 1)
+    free_l, free_r = div + 26 * u, w - 26 * u
+    size, tracking = fit(label, size, tracking, free_r - free_l, font_spec, floor=14)
     tx = free_l
     return f"""<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">
 <title>{label}</title>
@@ -345,8 +335,8 @@ def button(
 <path d="{outer}" fill="url(#p)"/>
 <path d="{outer}" fill="none" stroke="{FOG_DEEP}" stroke-width="3"/>
 <path d="{inner}" fill="none" stroke="{INK}" stroke-width="1.6" opacity="0.55"/>
-<g transform="translate({cx} {cy}) scale(1.0)">{ICONS[icon](INK)}</g>
-<path d="M {div},{cy - 24} V {cy + 24}" stroke="{INK}" stroke-width="1.6" opacity="0.45"/>
+<g transform="translate({cx} {cy}) scale({1.15 * u:.3f})">{ICONS[icon](INK)}</g>
+<path d="M {div},{cy - 24 * u:.1f} V {cy + 24 * u:.1f}" stroke="{INK}" stroke-width="1.6" opacity="0.45"/>
 <g font-family="{font_spec["css"]}" font-weight="700" font-size="{size}" letter-spacing="{tracking:.1f}" fill="{INK}">
  <text x="{tx:.1f}" y="{cy + size * 0.36:.1f}">{label}</text>
 </g>
@@ -440,7 +430,7 @@ def divider(w: int = 1260, h: int = 36) -> str:
 
 SECTION_ICONS = ["globe", "sun", "sliders", "compass", "anchor", "link", "chart"]
 SECTION_NAMES = ["world", "peoples", "custom", "start", "before", "compat", "links"]
-BUTTON_ICONS = ["chart", "warn", "download", "flag", "github", "list"]
+BUTTON_ICONS = ["chart", "download", "flag", "github"]
 BUTTON_NAMES = ["guide", "issues", "downloads", "bugs", "github"]
 # Per language: seven section titles, five button labels, Ko-fi (question, ask, thank-you).
 # Section 1, 4, 5 and 7 follow the headings of docs/workshop/<language>.bbcode. Latin and Cyrillic
@@ -456,7 +446,7 @@ TEXT = {
             "Compatibility",
             "Guides & downloads",
         ],
-        "buttons": ["Guide", "Known issues", "Downloads", "Bug reports", "GITHUB", "Changelog"],
+        "buttons": ["Guide", "Downloads", "Bugs", "GITHUB"],
         "kofi": (
             "Enjoying RNW?",
             "Buy the author a coffee",
@@ -473,7 +463,7 @@ TEXT = {
             "Совместимость",
             "Руководства и загрузки",
         ],
-        "buttons": ["Руководство", "Проблемы", "Загрузки", "Об ошибке", "GITHUB", "Изменения"],
+        "buttons": ["Гайд", "Загрузки", "Ошибки", "GITHUB"],
         "kofi": (
             "Нравится RNW?",
             "Угостите автора кофе",
@@ -490,7 +480,7 @@ TEXT = {
             "Compatibilidade",
             "Guias e downloads",
         ],
-        "buttons": ["Guia", "Problemas", "Downloads", "Relatar erro", "GITHUB", "Novidades"],
+        "buttons": ["Guia", "Downloads", "Erros", "GITHUB"],
         "kofi": (
             "Gostando do RNW?",
             "Um café para o autor",
@@ -507,7 +497,7 @@ TEXT = {
             "Compatibilité",
             "Guides et téléchargements",
         ],
-        "buttons": ["Guide", "Problèmes", "Télécharger", "Signaler", "GITHUB", "Nouveautés"],
+        "buttons": ["Guide", "Télécharger", "Bugs", "GITHUB"],
         "kofi": (
             "Vous aimez RNW ?",
             "Un café pour l’auteur",
@@ -524,7 +514,7 @@ TEXT = {
             "Kompatibilität",
             "Anleitungen und Downloads",
         ],
-        "buttons": ["Anleitung", "Probleme", "Downloads", "Fehler melden", "GITHUB", "Änderungen"],
+        "buttons": ["Anleitung", "Downloads", "Fehler", "GITHUB"],
         "kofi": (
             "Gefällt euch RNW?",
             "Ein Kaffee für den Autor",
@@ -541,7 +531,7 @@ TEXT = {
             "Compatibilidad",
             "Guías y descargas",
         ],
-        "buttons": ["Guía", "Problemas", "Descargas", "Reportar", "GITHUB", "Novedades"],
+        "buttons": ["Guía", "Descargas", "Errores", "GITHUB"],
         "kofi": (
             "¿Te gusta RNW?",
             "Un café para el autor",
@@ -558,7 +548,7 @@ TEXT = {
             "Zgodność",
             "Poradniki i pliki",
         ],
-        "buttons": ["Poradnik", "Problemy", "Pobieranie", "Zgłoś błąd", "GITHUB", "Zmiany"],
+        "buttons": ["Poradnik", "Pobierz", "Błędy", "GITHUB"],
         "kofi": (
             "Podoba ci się RNW?",
             "Postaw autorowi kawę",
@@ -575,7 +565,7 @@ TEXT = {
             "Uyumluluk",
             "Rehberler ve indirmeler",
         ],
-        "buttons": ["Rehber", "Sorunlar", "İndirmeler", "Hata bildir", "GITHUB", "Yenilikler"],
+        "buttons": ["Rehber", "İndir", "Hatalar", "GITHUB"],
         "kofi": (
             "RNW’yi beğendiniz mi?",
             "Yazara bir kahve ısmarlayın",
@@ -592,7 +582,7 @@ TEXT = {
             "互換性",
             "ガイドとダウンロード",
         ],
-        "buttons": ["ガイド", "既知の問題", "ダウンロード", "不具合報告", "GITHUB", "更新履歴"],
+        "buttons": ["ガイド", "ダウンロード", "不具合", "GITHUB"],
         "kofi": (
             "RNWを楽しんでいますか？",
             "作者にコーヒーを一杯",
@@ -609,7 +599,7 @@ TEXT = {
             "호환성",
             "가이드 및 다운로드",
         ],
-        "buttons": ["가이드", "알려진 문제", "다운로드", "버그 제보", "GITHUB", "변경 내역"],
+        "buttons": ["가이드", "다운로드", "버그", "GITHUB"],
         "kofi": (
             "RNW가 마음에 드시나요?",
             "제작자에게 커피 한 잔을",
@@ -626,7 +616,7 @@ TEXT = {
             "兼容性",
             "指南与下载",
         ],
-        "buttons": ["指南", "已知问题", "下载", "报告问题", "GITHUB", "更新日志"],
+        "buttons": ["指南", "下载", "问题反馈", "GITHUB"],
         "kofi": ("喜欢 RNW 吗？", "请作者喝杯咖啡", "RNW 将继续免费。你的支持让它不断成长，谢谢！"),
     },
 }
@@ -652,14 +642,16 @@ CODES = {
     "simp_chinese": "zh",
 }  # fmt: skip
 SECTION_IDS = "1234567"
-BUTTON_IDS = "abcdef"
-BUTTON_PX = 290  # buttons are shown at their own size, so two of them fit Steam's column
+BUTTON_IDS = "abcd"
+BUTTON_PX = 140  # shown at their own size: four in a row fit Steam's column
 
 
 def main(out: Path, svg_dir: Path | None) -> None:
     from xml.sax.saxutils import escape
 
     out.mkdir(parents=True, exist_ok=True)
+    for stale in out.glob("??[0-9a-z].png"):
+        stale.unlink()
     if svg_dir:
         svg_dir.mkdir(parents=True, exist_ok=True)
 
