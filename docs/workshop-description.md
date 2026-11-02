@@ -12,6 +12,8 @@ For translated Workshop descriptions, omit the internal `source:` line and its f
 
 The texts compare the finished 1.1.0 with the published `v1.0.0`, using Git history and current code as well as the guides. They lead with realistic coastlines, mountain ranges, lakes and drainage. Describe new features in their finished form; omit bugs introduced and fixed within the unreleased 1.1.0 cycle. Only defects present in 1.0.0 belong among fixes. Preparing these files is separate from publishing the release or changing the Steam page.
 
+**Published 2026-11-02 [V-EXEC]:** At the owner's request, all eleven descriptions from text commit `e5b440b` were published to the [existing Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331) through a command-line Steamworks API client, with translation headers removed. Steam returned success for every submission; uncached queries then matched every published description byte for byte. Titles, visibility and the primary preview URL matched their pre-update values. The previous texts, outgoing texts and verification manifest remain local in `local_data/workshop-descriptions-2026-11-02/`.
+
 ## Description rules
 
 Rules for the text:
