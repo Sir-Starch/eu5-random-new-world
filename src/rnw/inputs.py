@@ -21,6 +21,7 @@ import hashlib
 import os
 import sys
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -124,15 +125,19 @@ def recording(game_dir: Path) -> Generator[InputRecorder]:
 # same game reads its files once. A file written again gets a new modification time.
 _DIGESTS: dict[tuple[str, int, int, int], str] = {}
 KEPT_DIGESTS: Final[int] = 100_000
+# A file changed this recently may share its timestamps with a later write: some file systems
+# keep times to a clock tick. Such a digest is not kept (as git does with "racy" index entries).
+RACY_WINDOW_NS: Final[int] = 2_000_000_000
 
 
 def file_hash(path: Path) -> str:
     """SHA-256 of a file, read in blocks; the same file unchanged is not read again."""
     status = path.stat()
     key = (str(path), status.st_size, status.st_mtime_ns, status.st_ctime_ns)
+    recent = time.time_ns() - max(status.st_mtime_ns, status.st_ctime_ns) < RACY_WINDOW_NS
     # CPython on Windows can report creation time as ctime. It cannot validate this
     # cache after an in-place rewrite that restores mtime, so hash those files afresh.
-    cacheable = os.name != "nt"
+    cacheable = os.name != "nt" and not recent
     known = _DIGESTS.get(key) if cacheable else None
     if known is not None:
         return known
