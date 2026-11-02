@@ -1,7 +1,7 @@
 # Documentation
 
-RNW 1.0.0 is released and accepted for EU5 1.4.5 / Steam build 26211608
-(epoch 59). Start with [AGENTS.md](../AGENTS.md) for working instructions and
+RNW 1.1.0 is released and accepted for EU5 1.4.6 / Steam build 26300913
+(epoch 60). Start with [AGENTS.md](../AGENTS.md) for working instructions and
 [architecture](architecture.md) for current code. This index distinguishes current
 guidance from the historical record; an old unchecked box is not a current task.
 
@@ -18,7 +18,7 @@ guidance from the historical record; an old unchecked box is not a current task.
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
 | [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |
-| [Changelog](../CHANGELOG.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
+| [Changelog](../CHANGELOG.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
 
 ## Subsystem references
 

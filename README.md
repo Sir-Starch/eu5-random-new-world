@@ -36,12 +36,12 @@ build, save and mod compatibility, and what remains unverified in the current ve
 
 | Layer | Capabilities |
 |---|---|
-| **Landmasses & Canvas** | Six archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), plus **Random** and **Total Chaos** modes, coastline sketch previews, and custom hand-drawn outlines. Optional **+40% ocean expansion** (`53.2M px` canvas) claims surrounding ocean space beyond the vanilla Americas footprint. |
-| **Physical Geography** | Unified elevation, climate, biome, terrain material, and vegetation simulation; drainage-driven river networks; vanilla-calibrated continental shelves and coastlines. |
-| **Seas & Navigation** | Guaranteed natural harbors for coastal sea zones; shape-aware water naming (gulfs, straits, bays, capes); dynamic reshaping of vanilla oceans and impassable `ocean_wasteland` basins; continuous ocean currents, shipping lanes, and army strait crossings (`adjacencies.csv`). |
+| **Landmasses & Canvas** | Six archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), plus **Random** and **Total Chaos** modes, coastline sketch previews, and custom hand-drawn outlines. Optional **+65% ocean expansion** (`62.5M px` canvas) claims surrounding ocean space across the Pacific and Atlantic beyond the vanilla Americas footprint, while preserving or relocating enclosed island groups (Polynesia, Hawaii, Atlantic islets). |
+| **Physical Geography** | Unified elevation, climate, biome, terrain material, and vegetation simulation; drainage-driven river networks, hydrologically integrated lakes, and branching mountain ranges with realistic relief and passes; vanilla-calibrated continental shelves and coastlines. |
+| **Seas & Navigation** | Guaranteed natural harbors for coastal sea zones; shape-aware water naming (gulfs, straits, bays, capes); dynamic reshaping of vanilla oceans and impassable `ocean_wasteland` basins; continuous ocean currents, shipping lanes, and physical-shore army strait crossings (`adjacencies.csv`). |
 | **Political & Region Keys** | Compact, connected locations, provinces, areas, and regions. Vanilla American region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
-| **Native Societies** | Procedural native cultures, religions, homelands, settled states, decentralized tribes, and subject networks. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) with balanced structural tradeoffs. |
-| **Economy & Institutions** | Starting development, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. |
+| **Native Societies** | Procedural native cultures, religions, homelands, settled states, decentralized tribes, and subject networks. Seeded corridor affinities, primary identity cores, and fine-grained controls for state land targets and peasant/tribesman balance. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) with balanced structural tradeoffs. |
+| **Economy & Institutions** | Starting development, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. Individual 0–3× placement weights for all 34 ordinary New World RGOs alongside precious resources. |
 | **Dynamic Content & L10n** | [Procedural regional stories, formable nations, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
 | **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
 
@@ -86,7 +86,7 @@ Click a screenshot to view it at full size.
 
 ### Generator
 
-The Tauri generator window, with its world library, map canvas and inspector. The examples include **Supercontinent 33XV**; the last image shows the classic Qt fallback.
+The Tauri generator window, with its world library, map canvas, generation queue and inspector. The examples include **Supercontinent 33XV**; the last image shows the classic Qt fallback.
 
 <p align="center"><img src="docs/images/new-ui.png" alt="Generator window with the world library, the making queue and a comparison of two worlds" width="100%"></p>
 
@@ -131,7 +131,7 @@ flowchart LR
 * **Fail-Fast Invariants:** Unverified game builds, unhandled vanilla script references, or broken map invariants halt compilation immediately — never emitting silently corrupted mods.
 * **Native Rust Core:** Compute-heavy kernels (simplex/domain-warped noise, distance fields, drainage routing, terrain slot assignment, LZAV compression) are written in Rust and verified bit-identical against Python reference implementations in [`tests/reference/`](tests/reference/).
 
-For deep dives into the engineering, see [Architecture](docs/architecture.md), [ADR 0009 (Hub Mod Delivery)](docs/adr/0009-hub-mod-with-generator.md), and [ADR 0010 (Layered Reproducible Worlds)](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md).
+For deep dives into the engineering, see [Architecture](docs/architecture.md), [ADR 0009 (Hub Mod Delivery)](docs/adr/0009-hub-mod-with-generator.md), [ADR 0010 (Layered Reproducible Worlds)](docs/adr/0010-layered-worlds-and-a-generator-of-its-own.md), and [ADR 0011 (Tauri Window)](docs/adr/0011-tauri-window.md).
 
 ## Getting Started
 
@@ -143,6 +143,9 @@ No Python or Rust installation is required for the [released packages](https://g
 2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works on Windows and on Linux/Steam Deck via Proton).
 3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (usually a few minutes; allow about 7.5 GB of free RAM).
 4. Enable the newly created world mod (e.g., *RNW: Small continents 7K3Q*) in your playset — **only one RNW world mod at a time** — and start a new 1337 campaign. *(Do not enable the generator hub item itself in your playset).*
+
+> [!TIP]
+> **Ready-to-play worlds:** If you prefer to jump straight into a game without generating a world, pre-compiled standalone worlds like [The Wall — CWYS](https://steamcommunity.com/sharedfiles/filedetails/?id=3832180151) are available directly on the Steam Workshop. Subscribe, enable the world mod in your playset, and start playing immediately.
 
 > [!NOTE]
 > **Windows:** the generator is unsigned. Smart App Control may block it. No administrator access is required. See [known limitations](docs/known-limitations.md) for platform testing and trust limits.
@@ -158,6 +161,7 @@ No Python or Rust installation is required for the [released packages](https://g
 * **Europa Universalis V (`1.4.6`, verified Steam build 26300913)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
+* **Node.js 20+** (only needed when building the Tauri desktop window from source).
 * **~7.5 GB of free RAM** during world compilation.
 
 #### Launch the GUI
@@ -170,7 +174,7 @@ uv run rnw gui                   # opens the window (--classic: the Qt window)
 
 ```
 
-The application detects your EU5 installation and user profile automatically (custom paths can be configured in *Settings*).
+The application detects your EU5 installation and user profile automatically (custom paths can be configured in *Settings*). To build the Tauri desktop window from source, run `make desktop` (requires Node.js and system WebKitGTK / WebView2 development packages). Without a local desktop build, `uv run rnw gui` opens the classic Qt window as a fallback.
 
 #### Command-Line Interface (CLI)
 
@@ -213,6 +217,7 @@ EU5_GAME_DIR=/path/to/eu5 uv run pytest -q tests/test_local_install.py
 | --- | --- |
 | [`src/rnw/`](src/rnw/) | Core generator pipeline: world model, physical geography, seas, societies, content, EU5 exporters, validators, CLI |
 | [`src/rnw/app/`](src/rnw/app/), [`src/rnw/gui/`](src/rnw/gui/) | Headless application controller, window choice, Tauri bridge and the classic Qt window |
+| [`desktop/`](desktop/) | Tauri window shell and TypeScript/Svelte interface ([ADR 0011](docs/adr/0011-tauri-window.md)) |
 | [`native/`](native/) | Rust crate powering `rnw._native` hot kernels |
 | [`packaging/`](packaging/) | Standalone binary builders, Workshop staging, release automation, third-party notices |
 | [`tests/`](tests/) | Automated test suite, Python reference kernels, and golden world digests |
