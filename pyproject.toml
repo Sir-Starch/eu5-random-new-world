@@ -87,6 +87,11 @@ max-complexity = 12
 # Letters of other scripts that look like Latin ones are what these modules write.
 "src/rnw/{translit,wording,messages}.py" = ["RUF001"]
 "src/rnw/gui/text.py" = ["RUF001"]
+# A design script, not product code: long SVG path strings, copy in every script of the game's
+# languages, and one call to the external renderer.
+"docs/images/workshop/make_banners.py" = [
+  "E501", "ANN", "RUF001", "PLR0913", "PLR0917", "S603", "S607", "PLC0415", "INP001",
+]
 
 [tool.basedpyright]
 pythonVersion = "3.12"
