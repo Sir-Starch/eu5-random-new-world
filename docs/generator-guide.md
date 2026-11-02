@@ -1,120 +1,363 @@
 # Using the generator
 
-RNW 1.1.0 targets EU5 1.4.6 / Steam build 26300913.
+**Random New World creates a new map for your next Europa Universalis V campaign.**
+It replaces the Americas with new continents, islands, resources and native societies,
+while keeping the Old World intact. Each world becomes its own mod that you enable in EU5.
 
-Run from source with `uv sync --locked --group dev` and `uv run rnw gui` (build the window
-first with `npx tauri build --no-bundle` in `desktop/`). The Linux folder package runs with
-`./RandomNewWorld`; its command line is `./RandomNewWorld --cli --help`. The Windows folder
-has the launcher and `rnw.cmd`. The Workshop layout uses the same Windows runtime, also usable
-through Proton. The generator needs no Workshop installation. [V-EXEC C143, C145]
+If you came here from Steam, start with the steps below. The default settings are enough
+for your first world; you can explore the other options whenever you want.
 
-The generator opens its window, which needs the system's web view: WebView2 on Windows
-(Windows 11 and current Windows 10 have it) or WebKitGTK 4.1 on Linux. Where there is none,
-as in a Proton prefix, the classic window opens instead, by itself. *Use the classic window*
-in Settings opens the classic one from the next start; so do `--classic` on the command line
-(`rnw gui --classic` from source) and `RNW_WINDOW=classic`. Use them when the window opens
-but does not draw properly on a machine. [V-EXEC C444]
+**Current compatibility:** RNW 1.1.0 is made for **EU5 1.4.6** (Steam build 26300913).
+See [known limitations](known-limitations.md) for game updates, saves and mod compatibility.
 
-The window discovers EU5 and its profile. Choose missing folders in Settings; the
-choices are remembered. Without EU5, open compact world files and view their maps.
-Generating, rerolling, checking reproduction and importing a built world need EU5.
-Generation can keep the mod in the library, copy it to a chosen folder, or retain
-only a compact world file. Installing into the game's profile is a separate checkbox.
-No profile is needed for the other destinations. [V-EXEC C143]
+## Quick start: from Steam to your first campaign
+
+1. **Open the generator.** Subscribe to [Random New World on the Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331).
+   In EU5's **Mods** menu, find **Random New World**, choose **Open in folder**, and launch
+   **Random New World Generator**. On Linux or Steam Deck, the Workshop version runs
+   through Proton. You can also download a standalone package from
+   [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases).
+   The packaged generator needs no Python or Rust installation.
+2. **Check that EU5 was found.** The generator normally finds your game and profile
+   automatically. If it asks for a folder, open **Settings** and choose it there.
+   The game folder contains EU5 itself; the profile folder contains your EU5 user data
+   and local mods. Your choices are remembered.
+3. **Choose a world.** Select **New world**, then choose a **World type** on the **World**
+   tab. **Continents** is a straightforward first choice. Keep the other settings as they
+   are, or paste a friend's **World code** (under **Advanced** in the classic window).
+   Leave **Expand generation into the oceans** checked to give your continents more room.
+4. **Generate it.** On **Save and play**, choose **Keep the mod in the library** and tick
+   **Add to the game when it is done**. Click **Generate** and wait for it to finish.
+   Generation usually takes a few minutes; allow about 7.5 GB of free RAM.
+   Maps stay hidden by default so you can discover the New World during your campaign.
+5. **Enable your world in EU5.** In the game's Mods menu, enable the newly created world
+   mod, for example **RNW: Small continents 7K3Q**, and start a **new 1337 campaign**.
+   Enable **one RNW world at a time**. The Workshop generator item itself stays disabled
+   in your playset; your generated world contains everything needed to play.
+
+**Keep the generated mod for that campaign's saves.** A world code is useful for making
+the world again, but a newer generator or game update can change the result.
+
+**Restart EU5 before switching worlds or replacing a map you have already loaded.**
+This includes switching after playing a campaign in the same session. For a visibility
+change alone, see [keeping maps hidden](#keep-maps-hidden-or-take-a-look).
+
+## Find your way around
+
+The main window has three parts:
+
+- **Left: your library.** Select a saved world or **New world**. Hide or show this panel
+  with **Ctrl+B**.
+- **Middle: the map and previews.** This is where continent sketches, maps and generation
+  progress appear.
+- **Right: settings and world details.** For a new world, **World** holds the main choices,
+  **Advanced** holds exact values, and **Save and play** controls saving, installation and
+  visibility. **Generate** stays below the tabs. Hide or show this panel with **Ctrl+I**.
+
+After generation, select your world to find its **World**, **Maps** and **Notes** tabs.
+The World tab includes adding it to the game, creating versions, sharing and exporting.
+
+**Settings** holds game and application paths, language and diagnostics. The generator
+normally uses the language Steam runs EU5 in. You can choose any official game language
+there; restart the generator to apply a language change. Button names in this guide are
+the English ones.
+
+If your window has a different layout, it may be the **classic window**, which opens
+automatically on systems that need it, including the usual Proton setup. Its **Advanced**
+tab holds the seed, world code, land previews and **Customize** controls. New-world
+visibility is on **World**; saving and installation are on **Save and play**. The same
+generation and library features are available. See
+[window troubleshooting](#the-window-is-blank-or-does-not-draw-properly) if you need to switch.
 
 ## Continent, resources and peoples
 
-The library is on the left, the selected world or the new world in the middle and its
-inspector on the right; both side panels hide (Ctrl+B, Ctrl+I). For a new world the
-inspector's World tab holds the type, broad balance, seed and world code; Advanced holds the
-exact values; Save and play holds the destination, installation choice, visibility and
-queue; Generate stays below the tabs. The middle shows the continent sketches, the land image
-and the progress. The classic window keeps its own tabs ([GUI design](gui-design.md)).
-Settings holds application paths, the window's language and diagnostics. [V-EXEC C147] The window speaks the language Steam runs EU5 in, unless another is chosen there; a choice applies at the next start, and every official language of the game is available (C275).
+### Choose a world type
 
-Advanced → Land has **Distance from the Old World**: higher values move the land toward
-the middle of the ocean, away from the Old World's shores, without changing how much land
-there is (The Wall ignores it).
+A world type gives you a starting set of settings. Choose the shape you like, then
+adjust the broad choices on the World tab or individual values in Advanced.
 
-Choose a type and seed, or paste a code. The quick answers set the same values as
-Customize. Choose a continent sketches six seeds without building complete mods;
-selecting one restores its settings and seed. Sketches reveal land only, and the
-final location boundaries can move the coast slightly. A supplied land image disables
-this choice; use Save land template and Load land image for externally drawn land.
-[V-EXEC C143, C144]
+| World type | What to expect |
+|---|---|
+| **Supercontinent** | One great landmass with a few islands. |
+| **Continents** | Large continents, sometimes joined by narrow land bridges, plus islands. |
+| **Small continents** | Three or four separate continents of similar size. |
+| **Archipelago** | Several large islands and many smaller ones. |
+| **Scattered islands** | A sea of small islands with no great landmass. |
+| **The Wall** | A long north-south barrier, with optional sea passages. [More below](#the-wall-preset). |
+| **Random** | Picks one of the world types for you. |
+| **Total Chaos** | Picks a world type and randomizes its detailed settings within the allowed ranges. |
 
-The States quick choice's **Many** setting requests 44% of inhabited land for states on
-the default presets. Advanced → Peoples → **Land in states** sets a target from 3% to 60%.
-Actual coverage can be lower where farming and population cannot support states; the
-generator does not add population to meet the target. Advanced → Peoples → **Peasant share**
-controls the upper peasant share at full social complexity from 30% to 80% (default 60%)
-across all inhabited land; less farmable and less complex areas remain primarily tribal.
+The quick choices for land, native peoples, native states, extraordinary peoples and
+precious resources adjust the same settings you can change individually in **Advanced**
+(**Customize** in the classic window).
 
-*Expand generation into the oceans* on the World tab is checked by default and
-recommended. It gives the New World a wider, fixed ocean sector so continents can
-grow beyond the original American silhouette. The Old World and protected islands
-stay. Uncheck it to use the original distance band around vanilla America; if the
-real aim is to keep the land off the Old World's shores, raise *Distance from the Old
-World* instead, which keeps the wide canvas. The checkbox shows only *Recommended*
-and an ⓘ mark; hovering the mark or the checkbox shows this explanation. The
-choice is part of the world code and applies to sketches, land templates and layer
-rerolls. Codes from before 0.12.0 choose the original canvas; their usual warning
-about a different algorithm epoch still applies. [V-EXEC C282–C284]
+### Seeds and world codes
 
-On a finished world, New peoples and New resources keep the continent and roll only
-the selected part. The previous version remains in the library. Versions replace
-the installed mod by default; Keep both retains both installed mods. Undo roll
-restores the previous version in the game. Previous version opens its library page.
-[V-EXEC C142, C143]
+The **seed** is the number used to make a world. Change it, or press **Random**, to try
+another world with your chosen settings.
 
-Advanced → Resources (Customize in the classic window) has a separate frequency
-slider for each ordinary New World resource and the existing precious-resource slider.
-1× uses vanilla weights; 0 excludes a resource. Climate and terrain still guide placement.
-These are relative probabilities: more of one resource leaves fewer locations for others,
-without changing production per location. Reset restores a slider to 1×; Reset all restores
-the world type's settings. The world code keeps the values. Generation stops with an
-explanation if no enabled resource suits a location.
+A **world code** includes the seed and generation settings. Copy it to keep or share a
+world's recipe; paste one into **World code** to use it. For the same result, use the
+same generator release and game files. If a code comes from a different generation
+algorithm, the application warns you that the result may change.
 
-Maps start covered. Reveal this world exposes the atlas's ten lenses without exposing
-its thumbnail in EU5. Show the New World belongs to each world: choose it before
-generation or change it on the finished world's World tab. It updates that world's
-picture and existing mod's selection cover without generating geography again. From
-EU5's main menu, close and reopen the Mods manager to read that visibility update
-(owner observation on 1.4.5, C429). Restart the game before switching actual worlds
-or replacing a loaded map. The new-world choice remembers a default for future generations.
-Old records inherit the previously saved global choice once, so changing the default
-leaves existing worlds alone. Missing cover sources produce an explicit error. [V-EXEC C147]
+For a world with custom-drawn land, share a **`.rnworld`** file to include the land image.
 
-Hover and search inspect locations; Compare draws two revealed worlds. Save picture
-and Copy picture follow the world's visibility; layer export requires a revealed atlas.
-Notes holds personal notes, a favourite and a tag. Versions and files groups rerolls,
-sharing, world details, reproduction checks and deletion. [V-EXEC C143, C147]
+### Preview continents or draw your own
 
-Select several entries with Ctrl-click or Shift-click, or use Select all above the library.
-Remove from game below the list takes out only selected installed mods, keeping their
-codes and pictures. It also handles earlier mods without library records, and needs only
-the profile, not the game installation. Delete from library asks once before deleting the
-selected recorded worlds, their notes, kept files and installed mods. Both buttons show
-how many entries they affect. Errors stop the batch and appear below the list; any changes
-already made are reflected there. Selection survives list updates. [V-EXEC C266]
+**Choose a continent** shows six land sketches before you build a complete world mod.
+Pick one to use its seed and settings. These previews reveal the land shape only;
+the final coastline can shift slightly when the game's locations are created.
 
-Add to queue captures the current settings, seed and destination, from the buttons under
-the tabs or, for a sketched continent, from its own button (the same world is not queued
-twice). Change the seed or settings and add another job. Run queue works sequentially; Cancel
-or a failure stops before the next job and leaves unfinished jobs pending. While a world is
-made its choices stay editable, and a world added meanwhile is made by itself when the one
-before it is done, with no second Run queue. Each queued world can be taken out; the one
-being made stays until it is done. [V-EXEC C143]
+To draw your own land, use **Save template** to get an image of the available area.
+Paint land white and sea black in an image editor, then load it with **Land from an image**.
+The rest of the world is generated on that outline. Loading a land image disables
+the six-sketch choice. The Wall cannot use a land image.
+
+### Give your continents more room
+
+**Expand generation into the oceans** is on by default and recommended. It gives the
+New World a wider area, so continents can grow beyond the original outline of the
+Americas. The Old World is preserved; protected islands are kept, with islands in the
+way kept in place or moved to free water as needed.
+
+If you want land farther from the Old World's shores, raise **Advanced → Land and sea →
+Distance from the Old World**. Higher values move land toward the middle of the ocean
+without reducing the amount of land. The Wall ignores this setting.
+
+Turning ocean expansion off confines generation to the original band around the
+Americas. Hover over the option's information mark for a reminder of the difference.
+The choice is saved in world codes and used by sketches, land templates and later
+versions of a world. Codes from before 0.12.0 use the original area; the usual warning
+about an older algorithm still applies.
+
+### Adjust native societies
+
+Use **Native states** on the World tab for a broad choice, or **Advanced → Peoples**
+for more control:
+
+- **Land in states** sets the target share of inhabited land held by states, from
+  **3% to 60%**. The quick choice **Many** requests **44%** on the default presets.
+  Actual coverage can be lower where farming and population cannot support states.
+  The generator does not add population just to meet the target.
+- **Peasant share** sets the upper share of peasants in an inhabited location at full
+  social complexity, from **30% to 80%**, with **60%** as the default. It applies across
+  inhabited land, including outside states. Areas with poorer farmland or less complex
+  societies remain more tribal.
+
+### Adjust resources
+
+**Advanced → Resources** has a frequency slider for each ordinary New World resource,
+alongside the precious-resource slider. These control how often resources appear:
+
+- **1×** uses the base game's weights.
+- **0** excludes that resource.
+- Raising one resource's weight leaves fewer locations for others.
+
+Climate and terrain still guide placement. These settings change resource distribution;
+production per location stays the same. If none of the enabled resources suits a
+location, generation stops and explains the problem.
+
+**Reset** restores one slider to 1×. **Reset all to the world type** restores the chosen
+world type's settings. Resource settings are included in the world code.
+
+### The Wall preset
+
+**The Wall** creates a long, narrow north-south continent or island chain. Depending on
+the seed and settings, its coast can include islands and narrow sea passages.
+
+**Allow gaps in the wall** is on by default. Turn it off for a continuous land barrier
+that ships cannot cross or sail around. Its polar ends reach the map edges and contain
+impassable locations. The continuous land route can bend and change width along the way.
+Extra continents and islands can appear on either side.
+
+In **Advanced → The Wall**, you can adjust:
+
+- **Width:** from **4% to 44%** of the generation area's width; **14%** by default.
+- **Position:** move the Wall west or east. It bends around protected islands in its way.
+- **Coastal irregularity** and **Mountain spine:** change its shoreline and central mountains.
+- **Allow gaps in the wall:** choose whether sea passages are permitted.
+
+The Wall and the land beside it share one land budget. A wider Wall uses more of that
+budget, leaving smaller continents or just a few islands beside it. If the Wall is wider
+than the land budget allows, it keeps its land and the world exceeds the requested land
+amount. Raising the land amount also widens the Wall itself. Landmass scale and coast
+detail settings affect both the Wall and the extra land.
+
+This preset always uses the expanded ocean area. Other presets and custom land images
+can also reach the polar map edges; they have no mandatory ocean strip there.
+
+## Keep maps hidden or take a look
+
+Worlds start covered so you can discover them while playing. There are two separate
+ways to reveal a world:
+
+| Option | What it reveals |
+|---|---|
+| **Reveal this world** | The maps inside the generator. The mod picture and EU5 country-selection map keep their own visibility setting. |
+| **Show the New World before you play it** | That world's preview picture, mod thumbnail and EU5 country-selection map. Choose it in **Save and play** (**World** in the classic window), or change it later on the finished world's **World** tab. |
+
+Changing the second option updates the existing mod's picture and selection-map cover
+without generating the geography again. From EU5's main menu, close and reopen the
+**Mods** manager to refresh the change. This refresh was observed on EU5 1.4.5; changing
+the actual world still requires a game restart.
+
+The new-world visibility choice becomes the default for future worlds. Each existing
+world keeps its own setting. Older library records inherit the previously saved global
+choice once. If files needed to update the cover are missing, the application shows an error.
+
+Once revealed, the atlas offers **ten map views**, including physical geography,
+countries, cultures, religions and resources. Hover over locations or use search to
+inspect them. **Compare** displays two revealed worlds side by side.
+
+**Save picture** and **Copy picture** respect the world's visibility. Exporting an atlas
+map layer requires revealing the atlas first.
+
+## Manage worlds and versions
+
+### Try new peoples or resources on the same land
+
+Select a finished world and open **Create a version** on its **World** tab
+(**Versions and files** in the classic window):
+
+- **New peoples** generates new countries, cultures, religions and names on the same land.
+- **New resources** changes resources while keeping the land and peoples.
+
+The previous version stays in your library. A new version normally replaces the installed
+one. Tick **Keep this one in the game too** to retain both installed mods, and enable only
+one in your EU5 playset. **Previous version** opens the earlier library entry; **Undo roll**
+restores it in the game. Keep the version used by an existing campaign's saves.
+
+### Notes and favourites
+
+Use **Notes** for personal notes and a tag. Mark a world as a **Favourite** to find it
+again easily. World details, reproduction checks and file actions are on the World tab;
+the classic window groups these under **Versions and files**.
+
+### Remove or delete worlds
+
+Select several library entries with **Ctrl-click** or **Shift-click**, or use **Select all**.
+The buttons below the library show how many entries they will affect:
+
+- **Remove** removes the selected installed mods while keeping their library
+  records, codes and pictures. It can also remove earlier RNW mods that have no library
+  record. This needs the EU5 profile folder, but not the game installation.
+- **Delete** asks for confirmation, then deletes the selected recorded
+  worlds, their notes, kept files and installed mods.
+
+If an error occurs, the batch stops and shows the error below the list. Changes already
+made appear in the library, and your selection survives list updates.
+
+## Generate several worlds in a queue
+
+1. Choose the settings, seed and destination for your first world, then click **Add to queue**.
+   You can also queue a continent directly from its sketch.
+2. Change the seed or settings and add another world. The same world cannot be queued twice.
+3. Click **Run queue**. Worlds are generated one at a time.
+
+You can keep adjusting settings and adding worlds while generation runs. New jobs follow
+automatically when the current one finishes, without another click on Run queue.
+
+Each job remembers the settings, seed and destination it had when you added it.
+You can remove pending jobs individually; the running job stays in the list until it
+finishes. **Cancel** or a generation failure stops the queue before the next world,
+leaving unfinished jobs pending.
+
+## Save and share worlds
+
+To share a world, copy its **world code** or use **Save world file** under **Share and
+export**. You can open world files by dragging them onto the window or choosing
+**Open world file**.
+
+| File | What it contains | When to use it |
+|---|---|---|
+| **`.rnworld`** | The world code, generation record, atlas, notes and any custom land image. It contains no built mod or game assets. | Share a world, keep its maps, or view it without EU5 installed. Making its playable mod still needs EU5. |
+| **`.rnworld-mod`** | The complete built mod. | Move a world between your own machines using **Transfer built world**. It contains game-derived data and is for personal transfer. The receiving machine's game map fingerprint and input manifest must match. |
+
+In **Save and play**, you can keep the built mod in your library, copy it to a chosen
+folder, or save only a compact world file. Adding a library mod to the game is a separate
+checkbox. You can save to the other destinations without an EU5 profile.
+
+EU5 must be installed to generate worlds, make new peoples or resources, check exact
+reproduction, or import a built world. You can open compact `.rnworld` files and view
+their maps without the game.
+
+## Library shared by installed copies
+
+Your library lives outside the generator and mod folders. This lets different installed
+copies of the generator use the same saved worlds. The default locations are:
+
+- **Windows:** `%LOCALAPPDATA%\RandomNewWorld`.
+- **Linux:** `~/.local/share/random-new-world`.
+- **Proton:** the Windows location inside EU5's Proton prefix.
+
+Seeing worlds from an earlier local copy after installing the Workshop generator is
+normal. Those worlds come from your local library. The generator also detects existing
+local RNW world mods and can rebuild their library entries from recovery information
+stored in the mods.
+
+**Code only** means the library still has a record, but the generator cannot find a
+matching installed mod or a kept built-mod folder. Your code, notes and available
+pictures can still be used. **Add to the game** regenerates the mod when needed.
+Keep the original mod and game inputs if an exact copy matters for a campaign.
+
+For a portable setup, place a file named **`portable.txt`** beside the packaged launcher.
+The generator will keep its data in a **`data/`** folder beside it, for both the window
+and command line. You can also choose another data directory with `RNW_DATA` or the
+command-line option `--data-dir`.
+
+## Troubleshooting
+
+### EU5 or its profile was not found
+
+Open **Settings** and choose the missing folder. If you have never started EU5, launch
+it once so it creates a profile, then reopen the generator. A profile is needed to add
+mods to the game; the game installation is needed to generate them.
+
+### The window is blank or does not draw properly
+
+Open **Settings**, select **Use the classic window**, and restart the generator.
+If you cannot use the window, start the packaged launcher with **`--classic`** instead.
+From source, use `uv run rnw gui --classic`. The environment variable
+`RNW_WINDOW=classic` also selects it.
+
+The main window uses **WebView2** on Windows and **WebKitGTK 4.1** on Linux. WebView2 is
+normally available on Windows 11 and current Windows 10 installations. When the required
+web view is missing, the generator opens the classic window automatically. This is
+expected when running the Workshop version through a Proton prefix without WebView2.
+
+### Generation stopped with an error
+
+Read the message first: it explains whether the problem concerns game files, a destination,
+settings or the generated map. Some seed and settings combinations cannot produce a
+valid world; use **Generate with a new seed** to try another one. See
+[known limitations](known-limitations.md) for compatibility and platform issues, including
+unsigned Windows binaries that Smart App Control may block.
 
 ## Files and command line
 
-A `.rnworld` carries the code, record, atlas, notes and optional drawn land. It carries
-no built mod or game assets. A `.rnworld-mod` carries the built mod for transfer between
-the player's own machines; its map fingerprint and input manifest must match the game.
-Drag either onto the window or use Open world file. [V-EXEC C143]
+The remaining sections are for players who want to use commands, run from source or
+understand exact reproduction.
 
-Examples; commands use the normal platform data directory unless `--data-dir` or
-`RNW_DATA` chooses another one:
+### Launch from a package or source
+
+- **Linux package:** launch `./RandomNewWorld`; use `./RandomNewWorld --cli --help`
+  for commands.
+- **Windows package:** use the included launcher for the window and `rnw.cmd` for commands.
+  The Workshop package uses the same Windows runtime and can run through Proton.
+- **Source checkout:** run `uv sync --locked --group dev`, then build the window with
+  `npx tauri build --no-bundle` inside `desktop/`. Return to the repository root and run
+  `uv run rnw gui`. See the [source setup instructions](../README.md#build--run-from-source)
+  for requirements.
+
+Standalone packages work without a Workshop installation.
+
+### Command examples
+
+These examples run from a source checkout. With a packaged version, replace
+`uv run rnw` with `./RandomNewWorld --cli` on Linux or `rnw.cmd` on Windows.
+`CODE` and `WORLD_ID` are placeholders for your world code and library world ID;
+replace the example paths with your own.
 
 ```sh
 uv run rnw world-code --preset small_continents --seed 42
@@ -135,64 +378,31 @@ uv run rnw generate-queue codes.txt
 uv run rnw verify-world WORLD_ID
 ```
 
-`codes.txt` contains one code per line; the command keeps mods in the library and
-stops on the first failure. `rnw --help` lists the generation, exchange, installation
-and diagnostics commands. A `portable.txt` beside the packaged launcher keeps its
-data in `data/` beside it, for both the window and CLI. [V-EXEC C143]
+For `generate-queue`, put one world code per line in `codes.txt`. The command keeps
+the mods in the library and stops on the first failure. Run `uv run rnw --help`
+(or your package's equivalent) for generation, world-file, installation and diagnostics
+commands. Commands use the normal application data directory unless you set
+`--data-dir`, `RNW_DATA` or portable mode as described above.
 
 ## Reproduction, cache and releases
 
-Released 1.1.0 uses algorithm epoch 60 (1.0.0 used epoch 59). Exact reproduction needs the recorded
-algorithm, resolved settings/rolls and game inputs; the version alone is not
-sufficient for development builds. The local cache keys include the algorithm
-and relevant inputs and are checked before use. Follow the [version policy](adr/0003-versioning.md)
-when making new releases; older output is not silently migrated.
+**For an ongoing campaign, keep its built world mod.** A code or compact world file
+stores the recipe; making exactly the same world again also needs the original
+generation algorithm, resolved settings and rolls, and game inputs.
 
-New input manifests also record directory listings, so a patch adding scripts is
-detected as well as changed or removed files. Old manifests remain readable; those
-without directory listings retain C141's limitation, and a full reproduction check
-is the stronger test. [V-EXEC C143]
+RNW 1.1.0 uses **algorithm epoch 60**; 1.0.0 used **epoch 59**. An epoch identifies a
+generation algorithm, so the same code can produce different worlds after an epoch
+change. For development builds, a version number alone is not enough to identify the
+algorithm. Older output is not silently migrated. The [version policy](adr/0003-versioning.md)
+explains the technical rules.
 
-Release packages are available on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases)
-and through the [Workshop hub](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331).
-Tagged Linux/Windows CI, Windows package self-tests, owner Windows 11 smoke and
-Linux/Proton use are recorded (C428, C438–C439, C441). Windows binaries are unsigned;
-see [known limitations](known-limitations.md) for platform and campaign limits.
+The local cache checks the algorithm and relevant game inputs before reusing work.
+Newer input records also track directory listings, so they detect game patches that
+add scripts as well as changes to existing files. Older records still open, but records
+without directory listings may miss added files; a full reproduction check is stronger.
 
-## Library shared by installed copies
-
-The generator stores its library outside the application/mod folder: by default
-`%LOCALAPPDATA%\RandomNewWorld` on Windows (inside EU5's prefix for Proton),
-`~/.local/share/random-new-world` on Linux, or the platform equivalent. `RNW_DATA`
-or `portable.txt` can choose a different location. The Workshop application can
-therefore show records from an earlier local copy. It also recognises existing
-local RNW world mods and can restore their library data from recovery metadata.
-Those worlds are not bundled in the Workshop hub (C441).
-
-**Code only** means that a library record remains, but the application currently
-finds neither a matching installed mod nor a kept built-mod folder for it. Codes,
-notes and available pictures can remain usable. Add to the game regenerates when
-needed; retain the original game inputs/version when exact reproduction matters.
-
-### The Wall preset
-
-Choose **The Wall** (Стена) for a thin, straight north-south continent or island
-chain. A single procedural density field makes the coast, islands and possible narrow
-straits; their number emerges from the seed and settings. **Allow gaps in the wall**
-is enabled by default. Disable it to require a continuous land core that ships cannot
-cross or sail around. The polar ends reach the map edges and have impassable locations.
-Extra continents and islands can appear on either side.
-
-Advanced → The Wall controls width, position (west to east across the canvas; the Wall goes
-around protected islands in its way), coastal irregularity, mountain spine
-and whether gaps are permitted. Scale and noise settings shape the Wall as well as the
-extra land. The Wall's width runs from 4% to 44% of the canvas (14% by default). The land
-amount is one budget: the Wall takes its land first and the continents beside it get what is
-left, so a wider Wall means fewer and smaller continents, and the widest ones leave only a few
-islands. A Wall wider than the land amount allows keeps its land, and the world then has more
-land than the amount asked for. A larger land amount also widens the Wall itself. With gaps off the guaranteed land route bends and
-changes width along its length. This preset uses the expanded ocean canvas and cannot be
-combined with a land image.
-
-Ordinary presets and land images can also reach the polar map edges; they no longer
-have a mandatory ocean strip there.
+Get released packages from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases)
+or the [Steam Workshop hub](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331).
+For platform and campaign limits, see [known limitations](known-limitations.md).
+Implementation details and dated verification evidence are kept in the
+[GUI design](gui-design.md) and [claims ledger](research/claims-ledger.md).
