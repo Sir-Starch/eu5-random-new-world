@@ -176,20 +176,20 @@ From the game's own events (economy and others):
 ### 2.9 The game's own words for its interface [V-LOCAL]
 
 Where the generator names a part of the game's interface, it uses the game's word in that
-language (`MODS_GUI_TAB_MODS`, `MOD_OPEN_IN_FOLDER`, `SETTINGS_CATEGORY_PLAYSETS` and others):
+language (`MODS_GUI_TAB_MODS`, `MODS_GUI_OPEN_IN_FOLDER`, `SETTINGS_CATEGORY_PLAYSETS` and others):
 
-| | Playset | Mods | Open in Folder |
+| | Playset | Mods | Open folder |
 |---|---|---|---|
-| Russian | набор (модов) | Модификации | Открыть в папке |
+| Russian | набор (модов) | Модификации | Открыть папку |
 | German | Gruppe | Mods | Ordner öffnen |
-| French | playset | Mods | Ouvrir dans le dossier |
-| Spanish | colección | Mods | Abrir en carpeta |
-| Portuguese (Brazil) | Condição de Jogo | Mods | Abrir na pasta |
-| Polish | zestaw modów | Mody | Otwórz w folderze |
-| Turkish | oynanış seti | Modlar | Klasörde Aç |
-| Japanese | プレイセット | MOD | フォルダで開く |
-| Korean | 플레이세트 | 모드 | 폴더에서 열기 |
-| Chinese | 播放集 | 模组 | 在文件夹中打开 |
+| French | playset | Mods | Ouvrir le dossier |
+| Spanish | colección | Mods | Abrir carpeta |
+| Portuguese (Brazil) | Condição de Jogo | Mods | Abrir pasta |
+| Polish | zestaw modów | Mody | Otwórz folder |
+| Turkish | oynanış seti | Modlar | Klasörü aç |
+| Japanese | プレイセット | MOD | フォルダを開く |
+| Korean | 플레이세트 | 모드 | 폴더 열기 |
+| Chinese | 播放集 | 模组 | 打开文件夹 |
 
 ## 3. Rules for writing
 

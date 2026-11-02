@@ -41,9 +41,10 @@ for the published artifacts and [roadmap](roadmap.md) for future work.
   uncertainties and inherited engine warnings need attribution before being called
   RNW defects. AI expansion and society balance remain areas for refinement.
   [C391, C397, C410–C411, C419, C425]
-- **Other mods and multiplayer.** Map overhauls or mods changing the Americas can
-  conflict. Other combinations and multiplayer sessions have no general validation
-  claim. Matching world codes do not establish multiplayer compatibility.
+- **Other mods.** Map overhauls or mods changing the Americas can conflict. Other
+  combinations have no general validation claim.
+- **Multiplayer** is supported and has been tested by the community (owner report,
+  2026-11-03). Matching world codes alone do not establish compatibility.
 - **Generation may refuse an invalid result.** Sea routes, river drawings,
   location limits and content checks reject failed invariants explicitly.
   The application offers another-seed retry; every settings/seed combination is
