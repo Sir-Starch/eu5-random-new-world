@@ -58,6 +58,14 @@ for the published artifacts and [roadmap](roadmap.md) for future work.
   needs no administrator access. Scanner reports cover specific files and are
   not a signature or universal acceptance by antivirus software. The limitation
   is disclosed and accepted for 1.0.0. [ADR 0009; C437–C439]
+- **One heuristic detection on the Windows window.** The window is built with the MSVC
+  toolchain. On VirusTotal, Trapmine reports `suspicious.low.ml.score` (a low-confidence
+  machine-learning heuristic) for one of 71 engines; Microsoft and every other engine report
+  nothing. The owner accepted this detection in writing on 2026-11-02 as a false positive.
+  Reports apply to the exact file hashes named in the release notes. [V-EXEC 2026-11-02]
+- **Launcher version.** `Random New World Generator.exe` is the program of release 1.0.0,
+  unchanged in source since then; its version resource still names 1.0.0. It has no
+  detections on VirusTotal. [V-EXEC 2026-11-02]
 - **Platform scope.** Windows and Linux/Proton are the offered routes; native Linux
   and Windows package/CLI self-tests pass in CI. The owner has run the generator
   on Windows 11 and through Workshop/Proton. macOS has a CI build but no offered

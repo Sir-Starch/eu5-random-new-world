@@ -1,7 +1,8 @@
 """Build the hub mod: the data mod, the launcher and the Windows generator (ADR 0009).
 
-Run ``uv run python packaging/hub.py [--replace]`` on Linux with MinGW, ``uv`` and the Rust
-target ``x86_64-pc-windows-gnu`` installed. It writes ``dist/rnw_exp_hub`` (ignored by git):
+Run ``uv run python packaging/hub.py [--replace]`` on Linux with MinGW, ``uv``, the Rust
+targets ``x86_64-pc-windows-gnu`` and ``x86_64-pc-windows-msvc``, and ``cargo-xwin`` with clang
+installed. It writes ``dist/rnw_exp_hub`` (ignored by git):
 
 - ``.metadata/metadata.json``, ``.metadata/thumbnail.png`` (the avatar in ``assets/``, made
   512 pixels square) and ``LICENSE``;
@@ -54,8 +55,11 @@ MOD_FOLDER: Final[str] = "rnw_exp_hub"
 LEGACY_MOD_ID: Final[str] = "rnw_exp_hub"
 LAUNCHER: Final[str] = "Random New World Generator.exe"
 PYTHON_VERSION: Final[tuple[int, int]] = (3, 12)
-RUST_TARGET: Final[str] = "x86_64-pc-windows-gnu"
-MINGW: Final[str] = "x86_64-w64-mingw32"
+# The native module keeps its MinGW build, which scans clean; the window is built for MSVC.
+NATIVE_TARGET: Final[str] = "x86_64-pc-windows-gnu"
+WINDOW_TARGET: Final[str] = "x86_64-pc-windows-msvc"
+LAUNCHER_MEMBER: Final[str] = f"RandomNewWorld-Windows/{LAUNCHER}"
+LAUNCHER_SHA256: Final[str] = "49674400462cacc88be19be07bd7d27e09c35c4a0d8d5cbaa8ab85d540966932"
 AVATAR: Final[Path] = ROOT / "packaging" / "assets" / "rnw-avatar.png"
 THUMBNAIL_SIZE: Final[int] = 512
 
@@ -78,9 +82,16 @@ EMBEDDED_PYTHON: Final[Download] = Download(
     "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip",
     "4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3",
 )
+# The launcher is the program of release 1.0.0, verified by its digest: its source is unchanged
+# since then, and the MSVC rebuild of 1.1.0 drew detections while this file has none. Its version
+# resource still names 1.0.0.
+LAUNCHER_RELEASE: Final[Download] = Download(
+    "https://github.com/Sir-Starch/eu5-random-new-world/releases/download/v1.0.0/RandomNewWorld-1.0.0-Windows.zip",
+    "0c0cb8437b15f82a2b49faa8f3091ce5187c0ced12faadbf0cc921af53525fbd",
+)
 PATH_FILE: Final[str] = "python312._pth"
 PATH_LINES: Final[tuple[str, ...]] = ("python312.zip", ".", "../site", "import site")
-WINDOW: Final[str] = f"generator/window/{window.program(RUST_TARGET)}"
+WINDOW: Final[str] = f"generator/window/{window.program(WINDOW_TARGET)}"
 PROGRAMS: Final[tuple[str, ...]] = (
     LAUNCHER,
     WINDOW,
@@ -237,7 +248,7 @@ def build_wheel() -> Path:
     shutil.rmtree(folder, ignore_errors=True)
     env = dict(os.environ)
     env |= {
-        "MATURIN_PEP517_ARGS": f"--target {RUST_TARGET} --locked",
+        "MATURIN_PEP517_ARGS": f"--target {NATIVE_TARGET} --locked",
         "CARGO_TARGET_DIR": str(WORK / "cargo"),
         "RUSTFLAGS": "-C link-arg=-Wl,--no-insert-timestamp",
     }
@@ -301,30 +312,16 @@ def compile_modules(*folders: Path) -> None:
         ])  # fmt: skip
 
 
-def build_launcher(target: Path, version: str) -> None:
-    """The launcher with its manifest (``asInvoker``) and version information."""
-    numbers = version_fields(version)
-    source = ROOT / "packaging" / "launcher"
-    work = WORK / "launcher"
-    shutil.rmtree(work, ignore_errors=True)
-    work.mkdir(parents=True)
-    replacements = {
-        "@VERSION_COMMAS@": ",".join(map(str, numbers)),
-        "@VERSION_DOTS@": ".".join(map(str, numbers)),
-        "@VERSION@": version,
-    }
-    for name in ("launcher.rc", "launcher.manifest"):
-        text = (source / name).read_text(encoding="utf-8")
-        for key, value in replacements.items():
-            text = text.replace(key, value)
-        _ = (work / name).write_text(text, encoding="utf-8")
-    _run([f"{MINGW}-windres", "launcher.rc", "-O", "coff", "-o", "launcher.res"], cwd=work)
-    _run([
-        f"{MINGW}-gcc", "-std=c11", "-Wall", "-Wextra", "-Wpedantic", "-Wconversion", "-Werror",
-        "-O2", "-s", "-municode", "-mwindows", "-Wl,--no-insert-timestamp",
-        "-o", str(target / LAUNCHER), str(source / "launcher.c"), str(work / "launcher.res"),
-        "-lshell32", "-lole32", "-luuid",
-    ])  # fmt: skip
+def build_launcher(target: Path) -> None:
+    """The launcher: the verified program of release 1.0.0 (see LAUNCHER_RELEASE)."""
+    archive = fetch(LAUNCHER_RELEASE, WORK / "cache")
+    with zipfile.ZipFile(archive) as bundle:
+        data = bundle.read(LAUNCHER_MEMBER)
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != LAUNCHER_SHA256:
+        message = f"{LAUNCHER_MEMBER} has SHA-256 {digest}, expected {LAUNCHER_SHA256}"
+        raise BuildError(message)
+    _ = (target / LAUNCHER).write_bytes(data)
 
 
 def size(folder: Path) -> int:
@@ -355,11 +352,11 @@ def build(output: Path, *, replace: bool) -> Path:
     install_own_wheel(wheel, site)
     remove_scripts(site)
     compile_modules(site)
-    build_launcher(stage, __version__)
-    _ = window.build(stage / "generator" / "window", WORK / "window", target=RUST_TARGET)
+    build_launcher(stage)
+    _ = window.build(stage / "generator" / "window", WORK / "window", target=WINDOW_TARGET)
     check_programs(stage)
     write_notices(stage)
-    window.write_notices(stage, RUST_TARGET)
+    window.write_notices(stage, WINDOW_TARGET)
     check_no_game_files(stage)
     if output.exists():
         shutil.rmtree(output)

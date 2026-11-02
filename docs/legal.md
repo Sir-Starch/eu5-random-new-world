@@ -70,6 +70,16 @@ unchanged package. A newly identified specific conflict should be investigated
 on its facts. Account agreement acceptance and upload are performed through the
 owner's explicitly authorized account actions; this document does not perform them.
 
+## Build toolchain: Microsoft SDK and CRT (1.1.0)
+
+The Windows window is built for `x86_64-pc-windows-msvc` with `cargo-xwin`, which fetches the
+Microsoft Windows SDK and MSVC runtime libraries when the build runs, on the build machine only.
+The packages contain only the compiled window program: no SDK, CRT or other Microsoft file is
+redistributed, and the program imports only system DLLs (no Visual C++ redistributable is needed).
+The fetched libraries are used under Microsoft's own licence terms, which this review has not
+examined in their text. [UNKNOWN: whether those terms cover the compiled output; the owner decides
+whether a written review is needed before publication.]
+
 ## Research records
 
 The [interoperability register](research/interoperability.md) records each touched

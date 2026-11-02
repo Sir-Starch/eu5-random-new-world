@@ -71,13 +71,21 @@ def build(destination: Path, work: Path, *, target: str | None = None) -> Path:
     """Build the window into ``destination`` (a package's ``window`` folder); its program."""
     env = dict(os.environ)
     env["CARGO_TARGET_DIR"] = str(work)
-    if target is not None:
+    if target is not None and target.endswith("windows-gnu"):
         env["RUSTFLAGS"] = "-C link-arg=-Wl,--no-insert-timestamp"
     _run(["npm", "ci", "--prefer-offline", "--no-audit", "--no-fund"], cwd=DESKTOP)
-    command = ["npx", "tauri", "build", "--no-bundle", "--ci"]
-    if target is not None:
-        command += ["--target", target]
-    _run(command, cwd=DESKTOP, env=env)
+    if target is not None and target.endswith("windows-msvc"):
+        # cargo-xwin links against the MSVC SDK and CRT it fetches. The release window embeds
+        # its frontend (custom-protocol), which ``tauri build`` would add; cargo does not.
+        _run(["npm", "run", "build"], cwd=DESKTOP)
+        command = ["cargo", "xwin", "build", "--release", "--target", target]
+        command += ["--features", "tauri/custom-protocol"]
+        _run(command, cwd=DESKTOP / "src-tauri", env=env)
+    else:
+        command = ["npx", "tauri", "build", "--no-bundle", "--ci"]
+        if target is not None:
+            command += ["--target", target]
+        _run(command, cwd=DESKTOP, env=env)
     built = work / target / "release" if target is not None else work / "release"
     destination.mkdir(parents=True, exist_ok=True)
     names = [program(target)] + ([LOADER] if loader_beside(target) else [])

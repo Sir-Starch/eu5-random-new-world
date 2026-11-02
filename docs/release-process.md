@@ -66,9 +66,11 @@ remain with the owner. Agents do not launch/control EU5 to publish or test.
 4. Audit downloaded archives and embedded checksums. Include the full project
    source snapshot, application archives, `BUILD-INFO.json`, release notes and
    `SHA256SUMS`. The build manifest ties actual artifacts to the source/run.
-5. Check the two project Windows binaries (launcher and `_native.pyd`) with
-   VirusTotal for their **exact hashes**; reuse an existing report for unchanged
-   bytes. Record engine failures/timeouts as unknown results. A whole-archive or
+5. Check every project Windows binary with VirusTotal for its **exact hash**:
+   the launcher `Random New World Generator.exe`, the native `rnw/_native.pyd` and
+   the Tauri window `window/random-new-world.exe` (built from `desktop/`). Reuse an
+   existing report for unchanged bytes. A detection on any of them blocks publication
+   until it is resolved or the owner accepts it in writing. Record engine failures/timeouts as unknown results. A whole-archive or
    every-file scan, API key, code signing or universal antivirus acceptance is not
    a publication prerequisite. Source/dependency audits and self-tests remain
    separate checks. Windows unsigned status is disclosed.
