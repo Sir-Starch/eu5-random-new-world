@@ -2,7 +2,7 @@
 
 Sea geography, optional ocean expansion and the route/current refinements below ship in the accepted 1.0.0 scope (C437). Dated observations describe their particular revisions; an UNKNOWN engine detail does not automatically require a new owner sitting. See [known limitations](known-limitations.md) for current player scope.
 
-**Crossings as chains of cells, thin remainders and the water at the join, pending 1.1.0 / epoch 60
+**Crossings as chains of cells, thin remainders and the water at the join, 1.1.0 / epoch 60
 (owner's report on world `aszzsukifw`, 2026-11-01):** four screenshots of the owner's world showed sea
 locations with no reason to be shaped as they were. [V-GAME owner; matched to files V-LOCAL] Measured in
 the owner's installed files: (1) a perfectly rectangular strip one sea-cell wide (120 px), 1,000 px long,
@@ -44,7 +44,7 @@ thin by the perimeter measure); thin remainders (under 30 px) of the game's zone
 cells 241 → 337, lane cells with a current 174 → 200 (more open water far from land). The export
 passes every sea invariant. [V-EXEC; in-game appearance UNKNOWN]
 
-**Currents as clear courses, pending 1.1.0 / epoch 60 (owner's QU3N report, 2026-11-01):** the
+**Currents as clear courses, 1.1.0 / epoch 60 (owner's QU3N report, 2026-11-01):** the
 owner's screenshots of world QU3N showed currents where the generated canvas meets the Old World that
 no one could read: a current of three locations that pointed sideways beside a coast, a stub of one
 cell next to a lane, a cluster of arrows pointing different ways, and one current in which two opposite
@@ -79,7 +79,7 @@ wide, a sea of deep cells and not a lane. Courses now run through the shallow st
 chain that continues the straight path through a junction is the course and not a branch, and a cell
 with eight or more lane cells within 2.2 typical cells (a wide stretch) carries no arrow. [V-EXEC]
 
-**Sea-cell slivers, pending 1.1.0 / epoch 60 (same report):** some generated sea locations are long
+**Sea-cell slivers, 1.1.0 / epoch 60 (same report):** some generated sea locations are long
 and narrow, like a needle or a crescent round a retained island's footprint. A coast, a crossing band
 or a footprint cuts a Voronoi cell into pieces that were merged only by area, so thin pieces survived.
 Measured on J4VJ, 42 of 1,547 sea cells were thinner than 20 pixels (twice area over perimeter; a
@@ -89,7 +89,7 @@ most with (`synth.merge_slivers`), unless the neighbour touches the edge of the 
 does not; a strait, bordered by land, stays. Long cells that are not thin (a strip 222 × 55) and the
 thin tails of otherwise fat cells are not changed. [V-EXEC]
 
-**Thin remainders of trimmed zones, pending 1.1.0 / epoch 60 (same report):** the "tall narrow
+**Thin remainders of trimmed zones, 1.1.0 / epoch 60 (same report):** the "tall narrow
 triangle touching six neighbours" in the owner's Pacific South was not one of those cells. In the
 owner's installed J4VJ files the only location that fits (tall, tail, six neighbours) is
 `pacific_south_current2` [INFERRED from the description], a location of the game that the canvas
@@ -103,7 +103,7 @@ pixels, 16.9 thick, five neighbours); the next thinnest remainders are 20.4 and 
 J4VJ then has 1,500 generated sea cells, 11 thinner than 20 pixels (jagged coastal cells, not
 needles; 33 before) and none of the old needles. [V-EXEC]
 
-**Colonial overseas boundaries, pending 1.1.0 / epoch 60 (issue #9):** in wide ocean canvases,
+**Colonial overseas boundaries, 1.1.0 / epoch 60 (issue #9):** in wide ocean canvases,
 coastal sea areas assigned to generated American land regions could directly touch passable Old World
 sea zones. The EU5 engine's colonial overseas rules check sea connectivity: coastal borders between
 American and Old World passable water can break colonial nation formation and overseas territory
@@ -130,7 +130,7 @@ current direction of a clear two-sided passage follows its actual exits,
 including exits into ordinary sea. These choices precede final zoning and are
 checked again on the folded water graph. [V-EXEC; engine result UNKNOWN]
 
-**Crossing direction, 0.13.14 / epoch 51** (superseded in pending 1.1.0: arrows follow the course
+**Crossing direction, 0.13.14 / epoch 51** (superseded in 1.1.0: arrows follow the course
 above, and the band-axis computation was removed): connected designed bands with a
 clear principal axis carry currents along that axis. Their shared direction follows
 the aggregate projection of the inherited currents; an exact tie uses a deterministic
@@ -145,7 +145,7 @@ inherited-current network requires a substantial detour. A crossing's centreline
 is straightened only across water at full raster resolution, widened to a typical
 sea-cell width and clipped to water. Sea cells are partitioned inside the designed
 bands separately; only bands reachable from a real current source become currents.
-(Superseded in pending 1.1.0: a crossing is a chain of ordinary cells along its centre line,
+(Superseded in 1.1.0: a crossing is a chain of ordinary cells along its centre line,
 see above.)
 The final graph still checks local connections and course ends. A small, detached
 retained-ocean remainder joins an edge-adjacent navigable sea if the principal
@@ -378,7 +378,7 @@ UNKNOWN]
 replaced deep-ocean currents. The world generator partitions ocean inside and outside these bands
 separately; sea-cell borders do not wobble across the band edges. Thus the old current's outline,
 clipped by the new land, is built into the sea locations instead of approximated by whichever random
-locations it happens to overlap. (Since pending 1.1.0 the bands only give the planner its offshore
+locations it happens to overlap. (Since 1.1.0 the bands only give the planner its offshore
 terminals and the sea cells are one partition; see "Crossings as chains of cells" at the top of this
 page. Sea-cell borders still do not wobble.) The band raster is part of the land cache key. Coastal settlement,
 connections and completed ends may still alter or extend the outline. This is not a simulation of

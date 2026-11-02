@@ -12,13 +12,15 @@
   added, which ends smoothly about 40 pixels out: nothing else of the original sea changes (it kept
   its own fine detail, which the synthetic sea lacked). On the owner's masks the mean difference from
   the original sea 32 to 64 pixels from a new island is +6.8 / +1.4 / 0 / 0 luminance units (was
-  +14 / +9 / +4 / 0). A change of the water textures, so the pending epoch-60 reference digest is
+  +14 / +9 / +4 / 0). A change of the water textures, so the epoch-60 reference digest is
   refreshed.
 
 - Army strait crossings use the shortest water-only section of opposing physical shores,
   including diagonal directions. Wider or same-continent links require a real throat opening
   into wider water on both sides; short coastal land walks and parallel duplicates are excluded.
   This replaces the rejected broad 36-pixel rule that produced misplaced crossings.
+
+## 1.1.0 — 2026-11-01
 
 - **Hide the island groups at country selection.** The cover drawn over the New World in the game
   took only the generated locations and the ocean wastelands beside them, so the vanilla island
@@ -27,7 +29,7 @@
   cover now takes every pixel of the canvas before its groups were placed, as the preview does;
   on a test world 42 open patches (662 cells of 32 px) inside the covered ocean are gone and two
   of five cells remain, both Old World coast at the northern edge. A change of a mod file, so
-  the pending epoch-60 reference digest is refreshed.
+  the epoch-60 reference digest is refreshed.
 
 - **Add to queue works.** While a world is being made the next one can be prepared and queued: the
   type, seed, options and destination stay editable, *Add to queue* stays available, and a world
@@ -52,15 +54,13 @@
   shown, the start and join buttons work, the context menu offers *Select* and the random
   choice is back: the cover now changes the map alone (terrain, water, borders, names and
   markers) and the mod no longer overrides the game's `multiplayer_lobby.gui` or
-  `context_menu.gui`. World files change (two fewer, 868 for the reference world), so the pending
-  epoch-60 reference is refreshed; runtime behaviour at selection is not observed in the game.
+  `context_menu.gui`. World files change (two fewer, 868 for the reference world), so the epoch-60
+  reference is refreshed; runtime behaviour at selection is not observed in the game.
 - The picture of a world with its New World covered as terra incognita (the window's preview and
   the mod list's thumbnail) hides the whole canvas. It had left small uncovered discs of sea and
   island, one for each vanilla island group that stays or moves inside the canvas (Bermuda, the
   Polynesian strip and the like), which also showed where the groups went. Only pictures change:
   no file of the world's mod, so no new epoch.
-
-## 1.1.0 — 2026-11-01
 
 - A new generator window (Tauri, with the classic Qt window kept as the fallback), a rebuilt map
   viewer with population, climate, terrain and area lenses, and a window that stays responsive

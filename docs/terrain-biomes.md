@@ -36,7 +36,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 | Stage | Module | Method |
 |---|---|---|
 | 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (protected-domain or longitudinal canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
-| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. See [Mountains and hills](#mountains-and-hills-pending-110--epoch-60). |
+| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. See [Mountains and hills](#mountains-and-hills-110--epoch-60). |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
 | 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation among the pairs of the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
 | 4. Coherence | `eu5_biomes.py` | The joint (climate, vegetation) votes are smoothed over the location adjacency graph: 3 rounds choose the climate; 1 round, limited to that climate's own pairs and widened when it has no vote, chooses the vegetation (issue #4). Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. Desert cells never become wetlands, because no biome covers that combination (C54). |
@@ -46,7 +46,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 | 7b. Rivers (V1b) | `rivers.py`, `eu5_nw_export.py` | On a 4-pixel grid, a priority flood from all water gives every land cell a downstream neighbour, so depressions are crossed; routing adds fractal valley noise so flow converges. The square root of rainfall accumulates downstream; the catchment threshold gives 16 river pixels per 1000 land pixels (vanilla 15.7). Streams split at confluences (larger branch continues); rivers to the sea need 12 cells. Each stream is drawn from its head down a smoothed, slightly meandering line until it reaches water (up to 3 px into it; the head becomes the source) or meets a river drawn before (a join pixel beside one river pixel). Widths 4/5/11/15 follow catchment in vanilla shares; valleys of 350–1,150 units are carved within 6 px; slot 6 runs along rivers. The export refuses any violation of the vanilla raster rules (C59). |
 | 8. Location shapes | `newworld.py` | Cell borders are bent by a smooth displacement field, then cut-off pieces are re-attached, so borders and the bands along them are organic rather than polygonal. A cell that would vanish or split keeps its original shape; before generator 0.9.1 such a cell undid the bending everywhere (C71). The map wrap does not constrain land: one continuous crop is generated before it is placed across the two map edges (0.12.2, C289–C290). Administrative cells that cross the display seam are split without changing the land mask. A strait is cut wherever generated land would enclose the sea around a protected Old World islet (C61). City points maximise `min(2 × distance to the cell border, distance to water)`, so coastal cities stand inland. |
 
-## Climate/vegetation consistency (issue #4; fixed in pending 1.1.0 / epoch 60)
+## Climate/vegetation consistency (issue #4; fixed in 1.1.0 / epoch 60)
 
 [V-EXEC C443] RNW 1.0.0 conditioned vegetation votes on the selected climate, but its
 empty-vote fallback restored the votes of every climate, and the one smoothing round then
@@ -131,10 +131,10 @@ borders is unobserved; the owner has not been asked to look.
 This list records the original V1 scope and measurements. Later terrain changes
 are described below; future hydrology and relief work belongs in [roadmap](roadmap.md).
 
-- **V1b rivers:** accepted in game (C64). Lakes ended rivers (no outflows) until the pending 1.1.0 (see
-  [below](#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)); splits and deltas are not generated.
+- **V1b rivers:** accepted in game (C64). Lakes ended rivers (no outflows) until the 1.1.0 (see
+  [below](#coast-shape-water-bodies-and-drainage-110--epoch-60)); splits and deltas are not generated.
 - **V1b.1 coastline outline (C64–C65):** the owner saw the same north-west on a new seed. The edge ramp had grown with `feature_px` to 533 px and left only the canvas core for the land budget, so every seed filled the same outline (land overlap between seeds IoU 0.53–0.67). Now 0.31–0.45; seam coasts and straits use the same ragged coast model. Accepted in game (C66).
-- Mountain stamps on generated ranges (vanilla covers about 57% of mountain interiors with them): placed along the ranges since pending 1.1.0, with their materials ([below](#mountains-and-hills-pending-110--epoch-60)).
+- Mountain stamps on generated ranges (vanilla covers about 57% of mountain interiors with them): placed along the ranges since 1.1.0, with their materials ([below](#mountains-and-hills-110--epoch-60)).
 - Erosion for more natural valleys.
 - The V1 measurement was about 1.3 GB per built world, because instance files are whole-file overrides; this is not the size of the generator hub.
 
@@ -180,7 +180,7 @@ bounds, local numeric/visual comparison and remaining engine uncertainty are in
 appearance. No engine files are patched and no derived game resources are shipped
 with the generator.
 
-## Coast shape, water bodies and drainage (pending 1.1.0 / epoch 60)
+## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 
 The roadmap's hydrology and continental-variety directions are taken up together: coasts,
 lakes, inland seas, narrow land connections and drainage are all constructed in the land
@@ -191,7 +191,7 @@ in all eleven languages now says what the code does: lakes are drawn up to about
 larger *enclosed* water fills with land (water that reaches the open sea, with or without a
 strait, stays sea).
 
-**Distance from the Old World (pending 1.1.0; `new_world.centre_permille`, 0 by default).** The
+**Distance from the Old World (1.1.0; `new_world.centre_permille`, 0 by default).** The
 land lies where the density field puts it, and on the wide expanded canvas that is often against
 the Old World's shores. The control adds to the land density a lift that rises smoothly (a
 smoothstep of the Euclidean distance from the edge of the domain, on blocks of four pixels, up to
@@ -203,7 +203,7 @@ continents): 1,540–1,920 px at 0, 1,840–2,100 at 250 ‰, 2,070–2,230 at 5
 [V-EXEC 2026-10-31]. A doubled lift had saturated by 500 ‰. The Wall and drawn land ignore the control. The
 default leaves every world as it was; world codes carry the value as a changed field.
 
-**Water at the join with the game's map (pending 1.1.0; no setting).** No land lies within
+**Water at the join with the game's map (1.1.0; no setting).** No land lies within
 `newworld.EDGE_WATER_PERMILLE` (30 ‰ of the canvas's width, 302 px, about two and a half sea cells) of the
 canvas's boundary with the game's own map: the Old World, the waters of the game kept whole and the
 left and right edges of the crop. The band is added to the guard of the coast ramp, so the ramp, the
@@ -274,7 +274,7 @@ splits, valley carving driven by drainage (relief is still generated first), lak
 depressions or climate (endorheic basins in arid land), and sea straits that the armies' crossing
 rows treat specially.
 
-## Mountains and hills (pending 1.1.0 / epoch 60)
+## Mountains and hills (1.1.0 / epoch 60)
 
 The owner reported on 2026-10-30 [V-GAME owner observation] that generated mountains and hills
 were still unrealistic and monotonous beside vanilla's: from far away the ranges looked like
@@ -384,7 +384,7 @@ in a range has a steep bank.
 
 ## The Wall
 
-The pending 1.1.0 / epoch 60 cycle adds `--preset wall` (The Wall; Russian: Стена).
+The 1.1.0 / epoch 60 cycle adds `--preset wall` (The Wall; Russian: Стена).
 The owner requested a straight thin continent spanning every row on 2026-10-30,
 using their EU4 screenshots as visual references. Online player descriptions call
 this EU4 fantasy scenario [The Wall](https://www.reddit.com/r/eu4/comments/1ivh48m/),
@@ -481,7 +481,7 @@ only through actual ocean outlets; isolated polar basins follow the same lake
 classification as other enclosed water. Ordinary worlds do not guarantee polar land.
 
 [V-EXEC, 2026-10-31, C454] The installed EU5 1.4.6 / build 26300913 export of
-the pending epoch-60 reference passed the world validators (871 nonmetadata files,
+the epoch-60 reference passed the world validators (871 nonmetadata files,
 SHA-256 `03d0877d…194aa`). An independent continents candidate with seed 20261031
 has one generated land location on a polar edge: 249 edge pixels out of 150,849
 generated-land coast contacts (0.17 %). That location has 60,190 pixels and is
@@ -507,7 +507,7 @@ all eleven installed-game language catalogues are current. Full checks pass
 (2,244 Python tests, 15 optional skips; 23 native Rust tests), as do desktop checks
 (14 interface tests, five Rust shell tests), native/Windows package self-tests and
 the installed-game suite (14 tests, one opt-in skip), including independent reference
-reproduction. The pending epoch-60 reference now has 867 files / `94fcf2d4…77a4bcc`;
+reproduction. The epoch-60 reference now has 867 files / `94fcf2d4…77a4bcc`;
 the frozen epoch-59 reference is untouched. See [installation record](../experiments/INSTALLED.md)
 for the new world and backed-up hub. Evidence stays under ignored `local_data/the-wall/`.
 These are offline results; no EU5 launch or new engine observation is claimed.
@@ -534,4 +534,4 @@ regional land counts in Linux and the packaged Windows generator under Wine.
 The installed-game suite passes 14 tests (one opt-in skip), including independent
 reproduction of the unchanged 867-file ordinary reference (`94fcf2d4…77a4bcc`).
 The corrected geometry invalidates the development land cache; the release
-target remains 1.1.0 / pending epoch 60. Existing worlds are preserved.
+target remains 1.1.0 / epoch 60. Existing worlds are preserved.

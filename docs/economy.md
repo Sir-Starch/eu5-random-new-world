@@ -111,7 +111,7 @@ and coal to 0 changes their location counts **501→983**, **76→140**, **350�
 and **13→0**, respectively. All other template attributes, geography files and
 Old World resource assignments remain equal. The default-weight reference retains
 epoch 59's output digest `23c04377…bd9c85`; the frozen reference is preserved and
-the 1.1.0 cycle has pending epoch 60. The weighted candidate and generator hub are
+the 1.1.0 cycle has epoch 60. The weighted candidate and generator hub are
 installed as recorded in [INSTALLED](../experiments/INSTALLED.md). These are offline
 construction/output checks, with no EU5 launch or gameplay observation.
 

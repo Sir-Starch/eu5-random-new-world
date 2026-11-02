@@ -42,10 +42,10 @@ An unobserved detail alone does not reopen acceptance or require another game se
 - **Native polity growth and identity cores (issues #5, #7, #8):**
   - **Corridor affinities (issue #8):** political growth adds seeded preferences for farming
     corridors, similar-habitat belts or coasts alongside generalist expansion. See
-    [native societies](natives.md#territorial-variety-issue-8-pending-110--epoch-60).
+    [native societies](natives.md#territorial-variety-issue-8-110--epoch-60).
   - **Identity cores (issue #7):** identity-aware capital scoring and territorial growth give
     native states stronger primary-culture and faith cores while preserving cultural minorities.
-    See [native societies](natives.md#primary-identity-cores-issue-7-pending-110--epoch-60).
+    See [native societies](natives.md#primary-identity-cores-issue-7-110--epoch-60).
   - **State land targets (issue #5):** Advanced → Peoples → Land in states targets up to 60%
     of inhabited land; States quick choice's Many setting targets 44%. See
     [native societies](natives.md#higher-state-land-targets-issue-5).
@@ -55,7 +55,7 @@ An unobserved detail alone does not reopen acceptance or require another game se
   with outflows at their lowest rim (`rivers.py`), local river valley carving (`carve_valleys`),
   inland seas, lagoons behind spits and gulfs behind straits (`gulfs.py`), isthmuses (`isthmuses.py`),
   and army strait crossings (`straits.py`, `crossings`). See
-  [terrain](terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60).
+  [terrain](terrain-biomes.md#coast-shape-water-bodies-and-drainage-110--epoch-60).
 
 - **Ocean currents, slivers and sea-zone cleanup:**
   - Clear, directed ocean current courses that continue vanilla currents or follow game gyres
@@ -76,7 +76,7 @@ An unobserved detail alone does not reopen acceptance or require another game se
 - **Mountains and hills rework:** continuous chains with varied-height massifs, ridged crests,
   additive mountain stamps from game sources rotated along range axes with material layers, fine
   ground grain matching vanilla roughness, and removal of lake cones. See
-  [terrain](terrain-biomes.md#mountains-and-hills-pending-110--epoch-60).
+  [terrain](terrain-biomes.md#mountains-and-hills-110--epoch-60).
 
 - **Polar map-edge correction:** ordinary continents are constrained to narrow polar contacts,
   locations grow larger toward the poles, and all edge-touching land locations are impassable.

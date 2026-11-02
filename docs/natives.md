@@ -65,7 +65,7 @@ Choices marked [INFERRED design]: the farming table, the topography density fact
 
 ### Peasant and tribesmen balance
 
-**Issue #6, pending 1.1.0 / epoch 60.** The advanced **Peasant share** control sets the
+**Issue #6, 1.1.0 / epoch 60.** The advanced **Peasant share** control sets the
 upper peasant share at full social complexity, from
 30% to 80% (default 60%). Each inhabited location gets `peak × complexity`; poor or less
 complex land therefore remains more tribal. This applies across all inhabited land,
@@ -117,7 +117,7 @@ the calibrated floors, actual minima, isolated countries and countries without p
 Synthetic tests cover poor islands, scarce population, remote farming, connected ownership,
 market sharing, confederate eligibility and loud rejection of unsupported landed countries.
 
-### Primary identity cores (issue #7, pending 1.1.0 / epoch 60)
+### Primary identity cores (issue #7, 1.1.0 / epoch 60)
 
 States select eligible capitals using population, seeded jitter and the population-weighted
 share of matching culture and faith in the capital and its immediate travel neighbours.
@@ -158,7 +158,7 @@ graphs, not prevalence in player worlds or observed gameplay. The regression mat
 connected/disjoint ownership and country farming support; separate tests cover boundary
 capitals, foreign passages, sea links and deterministic output.
 
-### Territorial variety (issue #8, pending 1.1.0 / epoch 60)
+### Territorial variety (issue #8, 1.1.0 / epoch 60)
 
 Political growth adds one seeded affinity per founding location: generalist travel, farming
 corridors, similar-terrain belts, or the coast. A coastal affinity is available only within
@@ -216,7 +216,7 @@ Small default states can still be compact. The maps do not establish that the pl
 unidentified screenshot was a geometric defect or that every seed becomes more elongated.
 Local baseline/after maps for all five layers and measurements remain under ignored
 `local_data/polity-outlines/`. All 36 complete society digests also match the packaged Windows
-generator under Wine. The pending epoch-60 golden is refreshed; frozen epoch 59 is unchanged.
+generator under Wine. The epoch-60 golden is refreshed; frozen epoch 59 is unchanged.
 
 ### Higher state-land targets (issue #5)
 

@@ -469,7 +469,7 @@ def _digest(societies: Societies) -> str:
     return digest.hexdigest()
 
 
-# Pending epoch 60: identity-aware capitals and habitat growth, without empires.
+# Epoch 60: identity-aware capitals and habitat growth, without empires.
 NO_EMPIRES: dict[int, str] = {
     3: "b4965a25422110339daa33cd8152117704f837b8be1c0668ae5b6ae643a53366",
     4: "af399e538f5f3093c707dae837e83ffa8a1b203f2ea2f4e29383af6c3e6b86be",
