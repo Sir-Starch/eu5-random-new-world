@@ -63,9 +63,10 @@ remain with the owner. Agents do not launch/control EU5 to publish or test.
    verify the tagged workflow. It builds native archives, the Windows standalone
    and Workshop/Proton layouts, and a Python source distribution; it does not
    publish automatically. A failed frozen release is fixed under another version.
-4. Audit downloaded archives and embedded checksums. Include the full project
-   source snapshot, application archives, `BUILD-INFO.json`, release notes and
-   `SHA256SUMS`. The build manifest ties actual artifacts to the source/run.
+4. Audit the downloaded archives against one `SHA256SUMS` file. The assets are the
+   project source snapshot, the application archives and `SHA256SUMS`. The release
+   notes give the candidate commit, the release workflow run and the SHA-256 of each
+   archive and Windows binary, with its scan report.
 5. Check every project Windows binary with VirusTotal for its **exact hash**:
    the launcher `Random New World Generator.exe`, the native `rnw/_native.pyd` and
    the Tauri window `window/random-new-world.exe` (built from `desktop/`). Reuse an
@@ -87,8 +88,8 @@ Upload the generator hub only. Use tags **Map**, **Gameplay** and **Utilities**,
 the hub's `.metadata` preview and the reviewed descriptions in
 `docs/workshop/<language>.bbcode`. Translation
 `source:` headers are internal and omitted when pasting; the English file has none.
-The release's Workshop-text bundle already strips those headers and has a README
-for the publisher. The hub does not require a separate README to be usable: its
+Release archives do not carry a separate Workshop-text bundle; the texts are pasted
+from `docs/workshop/` with those headers left out. The hub does not require a separate README to be usable: its
 metadata gives the launch instruction, and the page carries the full guide.
 
 For a preview-only update, prepare the 512×512 image with `packaging/hub.py`'s
