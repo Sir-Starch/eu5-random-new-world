@@ -50,7 +50,9 @@ Rewriting those rules in Rust or TypeScript would duplicate tested behaviour.
   window's Settings, kept in `preferences.json`) or when the window cannot open: it is
   missing, cannot start (no WebKitGTK 4.1), exits with code 3 because there is no web view
   (it checks for WebView2 before making any window, so Tauri's own error box never shows) or
-  stops with an error within 20 seconds. `--self-test` checks both windows; a package without
+  stops with an error within 20 seconds. In a frozen Linux package, the Tauri subprocess receives
+  the pre-PyInstaller `LD_LIBRARY_PATH` (or no variable if none was set), so system WebKitGTK and
+  ICU load against the system C++ runtime. `--self-test` checks both windows; a package without
   the Tauri window fails it.
 
 ## Consequences
@@ -64,7 +66,10 @@ window opens with no error box, and the hub's self-test passes both windows [V-E
 Whether the window works in a Proton prefix with WebView2 installed is [UNKNOWN]; native Linux
 players get it from the Linux package. The real window was checked on WebKitGTK 2.54 in a
 headless KWin, from source and from the native package [V-EXEC C444]; Windows itself and
-macOS are checked by CI's self-tests (bridge, no window).
+macOS are checked by CI's self-tests (bridge, no window). The frozen Linux launcher restores the
+system library path for its Tauri child to avoid loading an older bundled `libstdc++` ahead of
+the runtime required by current WebKitGTK (issue
+[#12](https://github.com/Sir-Starch/eu5-random-new-world/issues/12)).
 
 The dev server (`npm run dev`) relays the same protocol over a local WebSocket for browser
 testing; the packaged window opens no port.

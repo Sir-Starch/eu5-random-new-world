@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- **Native Linux window startup.** A packaged Tauri window now gets the system library search path,
+  not PyInstaller's bundled library directory. This lets current system WebKitGTK/ICU load its
+  matching `libstdc++` on Arch and other rolling distributions.
+
 - **No pale disc round islands in the water texture.** The first rebuild of a new coast's water
   (see the entry below) left the excess brightness that vanilla seas have 40 to 64 pixels from land
   (coasts with such neighbours lie on shallow seas) round every island and let it blend back into the

@@ -85,6 +85,35 @@ def test_the_window_gets_the_arguments_and_the_environment(tmp_path: Path) -> No
     assert record.read_text(encoding="utf-8").strip() == "--x here"
 
 
+@pytest.mark.skipif(
+    not sys.platform.startswith("linux"), reason="PyInstaller library path is Linux-only"
+)
+@pytest.mark.parametrize(
+    ("original", "expected"),
+    [("/usr/lib:/usr/local/lib", "/usr/lib:/usr/local/lib"), (None, "unset")],
+)
+def test_a_frozen_linux_bundle_restores_its_library_path_for_the_window(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    original: str | None,
+    expected: str,
+) -> None:
+    record = tmp_path / "library-path.txt"
+    window = _window(
+        tmp_path / "app",
+        f'printf \'%s\' "${{LD_LIBRARY_PATH-unset}}" > "{record}"',
+    )
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    variables = {"LD_LIBRARY_PATH": "/bundle/_internal"}
+    if original is not None:
+        variables["LD_LIBRARY_PATH_ORIG"] = original
+
+    outcome = start.run_window(window, variables=variables)
+
+    assert outcome.opened
+    assert record.read_text(encoding="utf-8") == expected
+
+
 def test_the_window_self_test_runs_on_a_data_folder_of_its_own(tmp_path: Path) -> None:
     window = _window(tmp_path / "app", f'echo "$1 $RNW_DATA {start.SELF_TEST_LINE}"')
     code, output = start.self_test(window, tmp_path / "scratch")

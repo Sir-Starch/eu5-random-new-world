@@ -110,8 +110,20 @@ def choose(
 
 
 def window_environment(window: Path, variables: Mapping[str, str] | None = None) -> dict[str, str]:
-    """The window's environment: a checkout's build runs the bridge on this interpreter."""
+    """The window's environment: a checkout's build runs the bridge on this interpreter.
+
+    PyInstaller prepends its bundled libraries to ``LD_LIBRARY_PATH``. The Tauri window uses
+    system WebKitGTK, so a frozen Linux application must restore the original path before
+    starting it, or let the system use its default when the original path was unset.
+    """
     environment = dict(os.environ if variables is None else variables)
+    if sys.platform.startswith("linux") and getattr(sys, "frozen", False):
+        library_path = "LD_LIBRARY_PATH"
+        original = environment.get(f"{library_path}_ORIG")
+        if original is None:
+            _ = environment.pop(library_path, None)
+        else:
+            environment[library_path] = original
     if window == checkout_build() and not environment.get("RNW_PYTHON"):
         environment["RNW_PYTHON"] = sys.executable
     return environment
