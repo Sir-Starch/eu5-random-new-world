@@ -2,6 +2,18 @@
 
 The Steam Workshop text for release 1.1.0 ([ADR 0009](adr/0009-hub-mod-with-generator.md)) is kept in Steam's own markup, ready to paste: [`workshop/english.bbcode`](workshop/english.bbcode) and one file per official language in [`workshop/`](workshop/). It covers what players get, four steps to create and enable a world, DLC support, requirements and campaign compatibility. The Linux / Proton guide image is embedded in every language. Guides, downloads, known issues, bug reports and technical details are linked on GitHub. The licence and unofficial-project notice occupy one short footer.
 
+## 1.1.0 publication texts
+
+- **GitHub release body:** [detailed release notes](releases/1.1.0.md), in English Markdown. Use the document as the release body; the links are absolute so they also work on GitHub's release page.
+- **Workshop change notes:** [English BBCode](releases/1.1.0-workshop.bbcode), ready to paste. The patch notes are English only and list concrete additions, fixes and updating instructions. They belong in the update's change notes, separately from the permanent description. Their release link is for the forthcoming `v1.1.0` page.
+- **Workshop descriptions:** the eleven files in [`workshop/`](workshop/), updated for six world types, the wider Pacific, new controls, ten atlas lenses, the queue and hidden-map country selection. The requirements name the checked game version, 1.4.6; they do not promise compatibility with every 1.4 patch.
+
+For translated Workshop descriptions, omit the internal `source:` line and its following blank line when pasting. English has no header. Each description translation records the fingerprint of the English description. The single English patch note has no translation header. Preserve the game launch steps, Refined Colonization load order, DLC note and save guidance when editing the descriptions. All descriptions, including their terminating NUL, must fit the limit below.
+
+The texts compare the finished 1.1.0 with the published `v1.0.0`, using Git history and current code as well as the guides. They lead with realistic coastlines, mountain ranges, lakes and drainage. Describe new features in their finished form; omit bugs introduced and fixed within the unreleased 1.1.0 cycle. Only defects present in 1.0.0 belong among fixes. Preparing these files is separate from publishing the release or changing the Steam page.
+
+## Description rules
+
 Rules for the text:
 
 - **Every statement holds for the published build.** Verify the supported game version and features against the candidate before upload ([release process](release-process.md)). Keep internal acceptance notes in the repository, outside the player-facing text. Across the Pillars wording follows the [compatibility audit](research/compatibility-1-4-5.md); save, other-mod and multiplayer wording follows [known limitations](known-limitations.md).
