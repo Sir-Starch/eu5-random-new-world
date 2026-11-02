@@ -77,8 +77,8 @@ Microsoft Windows SDK and MSVC runtime libraries when the build runs, on the bui
 The packages contain only the compiled window program: no SDK, CRT or other Microsoft file is
 redistributed, and the program imports only system DLLs (no Visual C++ redistributable is needed).
 The fetched libraries are used under Microsoft's own licence terms, which this review has not
-examined in their text. [UNKNOWN: whether those terms cover the compiled output; the owner decides
-whether a written review is needed before publication.]
+examined in their text. The owner confirmed on 2026-11-02 that no further written review is required
+before publication, since no SDK or CRT file is redistributed.
 
 ## Research records
 
