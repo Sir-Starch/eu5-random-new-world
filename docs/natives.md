@@ -370,9 +370,15 @@ This is the original research scope, not a current list of untested product feat
 These are research/refinement topics, not unfinished release acceptance. Choose
 new implementation scope through the [roadmap](roadmap.md) when requested.
 
-- Broader diplomacy beyond the existing R7d alliances and rivalries, mixed-culture
-  border locations and additional society configurations. Pop-type tribes own no
-  land and are invisible on the political ownership map, as in vanilla.
+**1.2.0 focus, owner direction 2026-11-02:** deepen societies' unique identities,
+structures and diversity, and simulate their pre-1337 history to shape complex
+starting relationships between countries. This develops the existing R6/R7
+model and R7d relationships; the detailed design is pending owner review. See
+the [1.2.0 roadmap](roadmap.md#next-major-update--120-history-and-geopolitics).
+
+- Mixed-culture border locations and additional society configurations are
+  candidates for that design. Pop-type tribes own no land and are invisible on
+  the political ownership map, as in vanilla.
 - Further religion-specific content. The original R6 remapping was positional;
   the implemented N0–N5 system now supplies explicit content decisions and geographic
   matching ([content plan](content-plan.md)). Assess a particular mechanic there

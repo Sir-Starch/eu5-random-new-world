@@ -2,6 +2,11 @@
 
 ## Released baseline
 
+**RNW 1.1.0 / epoch 60** is the current released and accepted baseline, targeting
+**EU5 1.4.6 / Steam build 26300913**. See the [release notes](releases/1.1.0.md)
+and [known limitations](known-limitations.md). The 1.0.0 record below preserves
+the first release's acceptance and distribution history.
+
 **RNW 1.0.0 / epoch 59**, released on 2026-10-29, targets **EU5 1.4.5 /
 Steam build 26211608**, including optional Across the Pillars adaptation.
 The owner accepted the tested product and completed the rules review (C437).
@@ -25,7 +30,7 @@ list of unfinished prerequisites. Detailed observations keep their original game
 build and scope. Known limitations are in [one current page](known-limitations.md).
 An unobserved detail alone does not reopen acceptance or require another game session.
 
-## In development — 1.1.0
+## Released in 1.1.0
 
 - **Peasant population mix (issue #6):** Advanced → Peoples controls the upper peasant share
   at full social complexity from 30% to 80%, across all inhabited land. It keeps the existing
@@ -95,7 +100,39 @@ An unobserved detail alone does not reopen acceptance or require another game se
   - Responsive background world selection and worker-computed map relief.
   - Workshop Gameplay/Utilities tags and updated descriptions.
 
-## Future work requested by the owner
+## Next major update — 1.2.0: history and geopolitics
+
+**Owner direction, 2026-11-02.** The next major update will focus on history and
+geopolitics, with three connected goals:
+
+- **Simulated prehistory:** simulate a history before the 1337 campaign start so
+  the starting world has a past that explains its political situation. Histories
+  should arise from the generated world and shape its start state.
+- **Complex starting relationships:** use that prehistory to form a web of
+  relationships between countries, rather than choosing each relationship in
+  isolation. Existing alliances, rivalries, subjects and extraordinary societies
+  provide a starting point; the exact mechanics remain a design decision.
+- **Deeper and more diverse societies:** develop societies' distinct identities,
+  structures and experiences so their differences matter to their history,
+  relationships and play, building on geography, population, economy, culture
+  and religion.
+
+This brings generated national histories and broader society/diplomacy work out
+of the general future list and into the 1.2.0 focus. The earlier
+[community history suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)
+remains background. See [native societies](natives.md) for the implemented model
+and the [content plan](content-plan.md) for the story/content boundary.
+
+The direction is agreed; the detailed simulation model, feature list, controls,
+implementation phases and acceptance criteria are **pending owner review**.
+Prepare the detailed proposal separately and do not commit it until approved.
+This documentation decision does not bump the package version or algorithm epoch.
+Implementation follows [ADR 0003](adr/0003-versioning.md): 1.2.0 is a compatible
+MINOR target, and changed world output will need a pending epoch relative to the
+last frozen release. Preserve the Old World, existing worlds and saves, both
+generator windows and the one-enabled-world-mod rule.
+
+## Other future work requested by the owner
 
 These are directions, not promises for 1.0.0 or automatic tasks for every agent.
 Choose a concrete scope when work is requested; use the next release target and
@@ -112,8 +149,6 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   map within the New World generation area, using the existing land-mask workflow.
   Verify that workflow alongside the presets
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtj2ndbo2gz/)).
-- **Societies and dynamic content:** broaden state structures, relationships and
-  context-sensitive stories through the existing R6/R7 and N0–N5 systems.
 - **Optional Easter egg countries:** add country scenarios inspired by EU4 RNW
   Easter eggs, including Vinland, Secret Denmark and Atlantis
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtdzylmh2mb/)).
@@ -122,10 +157,6 @@ pending epoch according to [ADR 0003](adr/0003-versioning.md).
   settlements, integrated into the generated societies
   ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtcqs3rwjgi/),
   first added 2026-10-29).
-- **Generated national histories:** generate coherent pre-1337 histories for
-  generated states and use them to inform starting relationships and subsequent
-  events, goals or mission-style content through the existing society/story systems
-  ([community suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)).
 - **Generator interface and settings:** running the Tauri window under Proton with a WebView2 runtime,
   and exposing additional generation settings in the interface.
 - **World-wrap research:** retain the accepted mechanical fixes and visual source

@@ -39,6 +39,16 @@ Actual control ranges and presets live in `settings.py` and `app/controls.py`;
 this document does not invent a second list of presets or odds. Content definitions
 are indexed by the [catalogue](content-catalog.md).
 
+## Next update: history and geopolitics (1.2.0)
+
+The owner set the 1.2.0 direction on 2026-11-02: simulate pre-1337 history to
+shape complex starting relationships between countries, and deepen the identity,
+structures and diversity of generated societies. The political world at campaign
+start should have understandable historical causes in its geography and societies.
+This is planned scope, not a shipping capability. The
+[roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) owns its status;
+the detailed design and implementation plan require owner review before commit.
+
 ## Engineering requirements
 
 Generate valid content at construction; reject failed invariants explicitly.

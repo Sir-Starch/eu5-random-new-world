@@ -5,6 +5,11 @@ RNW 1.1.0 is released and accepted for EU5 1.4.6 / Steam build 26300913
 [architecture](architecture.md) for current code. This index distinguishes current
 guidance from the historical record; an old unchecked box is not a current task.
 
+The next major update is **1.2.0**, focused on simulated prehistory, starting
+geopolitics and the depth, identity and diversity of societies. The
+[roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) records the
+owner's direction; its detailed implementation plan still needs owner approval.
+
 ## Current guides
 
 | Document | Purpose |
