@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from rnw.history_model import Action, Factor, History
     from rnw.wording import Name
 
 
@@ -37,6 +38,9 @@ class Country:
     archetype: str = ""
     laws: tuple[tuple[str, str], ...] = ()
     parliament: str = ""
+    history_actor: str = ""
+    memberships: tuple[str, ...] = ()
+    archetypes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +51,34 @@ class PopCohort:
     amount: int
     culture: str
     religion: str
+
+
+@dataclass(frozen=True, slots=True)
+class HistoricalOpinion:
+    """A bounded directed bias with its actual historical cause, before localization."""
+
+    key: str
+    first: str
+    second: str
+    factor: Factor
+    value: int
+    yearly_decay: int
+    cause: str
+    year: int
+    action: Action
+    place: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class HistoricalGroup:
+    """An actual structure, with explicit membership and backward causal references."""
+
+    key: str
+    kind: str
+    members: tuple[str, ...]
+    causes: tuple[str, ...]
+    hearths: tuple[str, ...] = ()
+    actors: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -78,3 +110,9 @@ class FinalStartPlan:
     confederations: tuple[tuple[str, ...], ...] = ()
     confederation_date: str = ""
     archetypes: dict[str, object] = field(default_factory=dict)
+    protections: tuple[tuple[str, str], ...] = ()
+    exchanges: tuple[tuple[str, str], ...] = ()
+    historical_opinions: tuple[HistoricalOpinion, ...] = ()
+    historical_groups: tuple[HistoricalGroup, ...] = ()
+    history: History | None = None
+    history_tags: dict[str, str] = field(default_factory=dict)

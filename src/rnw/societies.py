@@ -622,6 +622,18 @@ def regional_markets(graph: LandGraph, societies: Societies) -> Societies:
     return replace(societies, ranks=ranks, markets=tuple(markets))
 
 
+def settlement_centres(graph: LandGraph, societies: Societies, *, reach: int) -> Societies:
+    """Recompute calibrated centres from the surviving countries and current population."""
+    ranks, markets = _ranks(
+        list(societies.polities),
+        societies.population,
+        list(societies.hearths),
+        _Graph(graph),
+        reach,
+    )
+    return regional_markets(graph, replace(societies, ranks=ranks, markets=markets))
+
+
 def land_routes(
     graph: LandGraph, allowed: Collection[int], source: int
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:

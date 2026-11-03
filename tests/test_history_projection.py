@@ -19,6 +19,7 @@ from rnw.eu5_history import (
     canonical_population,
     identity_cohorts,
 )
+from rnw.eu5_history_plan import project_start
 from rnw.eu5_natives import _pop_cohorts  # pyright: ignore[reportPrivateUsage]
 from rnw.eu5_start import PopCohort
 from rnw.history_engine import create, digest, simulate, validate_history
@@ -41,6 +42,7 @@ from rnw.settings import NATIVES
 from rnw.societies import LandGraph, Polity, Societies, StateFloor, bootstrap_societies
 
 from .history_fixtures import valley, valley_policy
+from .test_history_plan import inputs_for
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -584,3 +586,10 @@ def test_constructed_societies_run_through_history_and_typed_projection() -> Non
     places = {place.key: place.tenure for place in history.geography.districts}
     actors = {actor.key: actor for actor in history.state.actors}
     assert all(places[h.district] == actors[h.actor].tenure for h in history.state.holdings)
+    projected = project_start(
+        replace(inputs_for(history), bootstrap=root, societies=societies, graph=graph, keys=keys)
+    )
+    assert projected.pops == final
+    assert projected.stats["calibrated_population_milli"] == root.calibrated_population
+    assert projected.stats["diaspora_population_milli"] == 50
+    assert all(c.history_actor in projected.history_tags for c in projected.countries)

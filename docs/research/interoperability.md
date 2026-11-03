@@ -876,6 +876,17 @@ loading of generated biases, the decision and guarantees remains for H7, with
 F1–F3 already decided in the plan. This entry does not claim that loading passed
 or reopen the accepted distribution review.
 
+H4's offline final-plan adapter now supplies typed causal opinion records and
+protection pairs, ahead of the localized writer/exporter switch. [V-LOCAL,
+2026-11-03, EU5 1.4.7 / build 26377361] The installed tribal-confederation join
+trigger permits one organization of that type per country; the guarantee relation
+breaks on subjecthood and expires for a lower-ranked provider. The 453 pop-type
+country records have no startup opinions involving them in `18_opinions.txt`.
+[INFERRED design] Engine projection therefore uses landed scopes with an explicit
+capital, consolidates overlapping confederate pact networks and keeps unsupported
+pop/community bargains in history. This adds no new format or asset; H4's new
+localized bias/chronicle writers and the H7 observation remain outstanding.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

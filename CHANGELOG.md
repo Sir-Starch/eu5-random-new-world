@@ -8,6 +8,9 @@
   Synthetic scenarios include the divided valley and realized historical networks.
   The H4 foundation adds ordinary 1037 polities, bounded physical sea passages,
   post-diaspora population roots and exact typed-cohort projection after migration.
+  It now constructs a checked final start plan from surviving historical outcomes,
+  including overlapping memberships, calibrated governments and positions, causal
+  diplomacy/opinion records, settlement centres, roads and the AI context.
   It is not connected to world generation yet; world bytes and epoch are unchanged.
 
 - Begin the 1.2.0 history implementation: record the installed contracts and

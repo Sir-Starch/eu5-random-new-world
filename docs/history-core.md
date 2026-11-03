@@ -1,9 +1,9 @@
 # History core, societies and bootstrap
 
-[V-EXEC, 2026-11-03] This implements the offline H2–H3 phases and the first
-bootstrap/population part of H4 in the accepted
+[V-EXEC, 2026-11-03] This implements the offline H2–H3 phases and H4's
+bootstrap, population and final-plan construction in the accepted
 [history plan](history-plan.md#17-phases-and-scope-control). It is not called by
-the world exporter yet. The rest of H4 supplies the final-plan and EU5 projection. Existing world bytes,
+the world exporter yet. The rest of H4 supplies the new localized writers and exporter switch. Existing world bytes,
 goldens, world codes, product version and epoch are unchanged.
 
 ## Ownership and entry points
@@ -20,6 +20,10 @@ goldens, world codes, product version and epoch are unchanged.
 | `history_routes.py` | Bounded physical routes from actual generated cell contacts and water paths, including seam edges |
 | `eu5_history.py` | Post-diaspora population roots, installed prerequisites and the fixed landed/tribal/community partition |
 | `history_population.py` | Conservative projection of historical migration into the original typed EU5 cohorts |
+| `eu5_history_plan.py` | Surviving countries, governments, explicit group memberships, settlement centres, discovery, roads and the single `FinalStartPlan` |
+| `eu5_history_values.py` | Installed ungated American axis ranges and bounded profile positions |
+| `history_diplomacy.py` | Actual bargains, eligible engine relations and bounded directed opinion bundles |
+| `history_plan_checks.py` | Independent agreement checks against the surviving history, including causal opinions and overlapping memberships |
 
 `create(geography, foundings, seed=..., empire_permille=250, checkpoint=...)`
 validates the caller's complete inhabited partition and records each founding and
@@ -86,11 +90,62 @@ global totals for each `(pop type, culture, religion)`. Conquest, unions and
 division never retype, assimilate or recreate the inhabitants. Missing capacity
 or cohorts fail in construction, rather than a later repair.
 
-This is a source-only H4 implementation part. Ownership/government projection,
-historical relations and localization, the decision/event, final-plan consumers
-and output verification remain the next H4 part. No new EU5 text format is written
-yet; pending epoch 61 starts when that integration first changes world bytes.
-Candidate/hub delivery remains H7.
+This bootstrap feeds the final-plan construction below. The new localization,
+decision/event writers, exporter switch and written-output checks remain the next
+H4 part. No new EU5 text format is written yet; pending epoch 61 starts when that
+integration first changes world bytes. Candidate/hub delivery remains H7.
+
+## Final start projection (H4, second part)
+
+`project_start(ProjectionInputs(...))` replays the supplied history, projects the
+exact typed population, and constructs one `FinalStartPlan`. Only living landed
+actors and pop-type tribes receive fresh country tags. Extinct predecessors and
+unorganized communities retain their facts in history. Country holdings, seats,
+capital identities and inherited technology come from that history; a realized
+empire alone receives the calibrated empire level and rank. Every result passes
+the independent `validate_projection` checks before being returned.
+
+Profiles map to positions read from the installed ungated American template
+ranges. Missing definitions or malformed ranges fail. Unobserved axes remain
+internal. Authority selects among usable calibrated governments: councils use the
+republic when they meet its technology floor; a sacred state uses the compatible
+theocracy when it can use its institutions. A sacred overlord retains a template
+that meets C99's proven overlord prerequisite. Lower-technology councils and
+customary landed authority retain the ordinary template; their exact society
+profile remains available to H5's summary. Donor style cannot impose a republic
+on a ruler, or provide an institutional advantage.
+
+`HistoricalGroup` retains full actor membership, exported country membership,
+hearths and actual causes separately. Countries can participate in several
+structures. A sacred centre's visitors do not acquire the host's government or
+host role. Identical groups supported by more than one hearth combine their
+causes. Overlapping highland groups project their actual connected pact network
+to one organization, preserving the installed rule that a country can join only
+one tribal confederation. Confederates keep the aggregate agrarian prerequisite.
+
+Engine treaties and startup opinions use living landed countries with an
+explicitly written capital. Pop-type and community bargains remain in history;
+recognizing a qualifying highland confederation enables its landed projection.
+Named opinions retain their actual memory factor, cause, year and recorded place.
+Their value is the surviving memory divided by 20, rounded up, capped at 50 with
+its original sign; decay is 1–3. Selection admits at most four per direction and
+2,000 per world. An allied direction selects trust and only grievances its budget
+can carry. World limiting keeps each selected direction together, so it cannot
+remove trust while leaving its grievance. No cause, sign or value is rewritten.
+
+Alliances follow actual pacts; rivalries require surviving recorded hostility.
+Protection projects only where the guarantee's subjecthood/rank prerequisites
+allow it. Exchange creates centres and physical land roads within the participants'
+territories; a water route never becomes a road. Markets, calibrated settlement
+ranks, population totals and discoveries are recomputed from surviving outcomes.
+The AI adapter reads full historical threat/competition facts and actual group
+roles independently of which opinions fit the display limit; guarantees also
+enter its context.
+
+This is an offline final-plan implementation. The exporter still calls H1's static
+entry point. H4's remaining localized bias/chronicle writers and written-output
+integration will enable it together and establish pending epoch 61 and new goldens.
+No full-world calibration or game loading is inferred from this construction.
 
 ## One round
 
@@ -293,6 +348,18 @@ tampered population effects. Input permutations and hash seeds 1/927 agree.
 Full checks pass: 2,578 Python tests, 15 optional skips, strict types, format/lint
 and 23 Rust tests; 13 read-only installed-game checks pass on build 26377361.
 This does not establish final EU5 projection, engine loading or H7 calibration.
+
+H4's second part adds 35 final-plan cases and two AI cases. They cover actual
+conquest and rank, a star of sea pacts, landed confederates, overlapping sacred and
+fractured roles, community participants, usable governments, protected vassal
+technology, memory limits, untouched signs and rejection of changed final facts.
+The 256-location constructed flow now reaches the complete final plan. Full checks
+pass: 2,615 Python tests, 16 optional skips, strict types, format/lint and 23 Rust
+tests. All 14 read-only installed-game checks pass on EU5 1.4.7 / build 26377361,
+including the seven current American projection ranges. New localized game text,
+export activation and the H7 engine observation remain outstanding.
+Full semantic plans for the sea league and two-hearth confederation also agree
+under interpreter hash seeds 1/927.
 
 [V-EXEC, 2026-11-03] All 77 history cases pass as part of locked sync and
 `make check`: 2,532 Python tests, 15 optional skips; strict types, format/lint and

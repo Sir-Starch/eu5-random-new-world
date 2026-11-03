@@ -51,6 +51,10 @@ class CountryContext:
     subjects: tuple[str, ...] = ()
     overlord: str = ""
     confederated: bool = False
+    archetypes: tuple[str, ...] = ()
+    guarantors: tuple[str, ...] = ()
+    guarantees: tuple[str, ...] = ()
+    historical: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,14 +127,18 @@ def _power_of(powers: Mapping[str, int], tag: str) -> int:
 
 
 def _threat_choice(context: CountryContext) -> tuple[str, str] | None:
-    protected = set(context.allies) | set(context.subjects)
+    protected = {*context.allies, *context.subjects, *context.guarantors}
     if context.overlord:
         protected.add(context.overlord)
     threats = set(context.threatened_by) - protected
     if len(threats) >= MULTIPLE_THREATS:
         return "ai_cautious", "several countries explicitly target this state"
     if threats:
-        return "ai_defensive", "a great empire explicitly targets this neighboring state"
+        return "ai_defensive", (
+            "a surviving historical memory of threat"
+            if context.historical
+            else "a great empire explicitly targets this neighboring state"
+        )
     return None
 
 
@@ -160,26 +168,29 @@ def _rival_choice(context: CountryContext, powers: Mapping[str, int]) -> tuple[s
 
 
 def _archetype_choice(context: CountryContext) -> tuple[str, str] | None:
-    if context.archetype == "sea_league":
+    kinds = {*context.archetypes, context.archetype}
+    if "sea_league" in kinds:
         return "ai_opportunistic", "sea league with maritime or market interests"
-    if context.archetype == "highland_confederation":
+    if "highland_confederation" in kinds:
         return (
             ("ai_friendly", "highland confederation with internal bonds")
             if context.confederated
             else ("ai_defensive", "highland confederation built around defensible terrain")
         )
-    if context.archetype == "sacred_centre":
+    if "sacred_centre" in kinds:
         return (
             ("ai_friendly", "sacred centre supported by diplomatic ties")
             if context.allies or context.confederated
             else ("ai_defensive", "sacred centre prioritizing stability and cohesion")
         )
-    return {
-        "fractured_realm": (
+    return (
+        (
             "ai_defensive",
             "fractured realm without a stronger rival to challenge",
         )
-    }.get(context.archetype)
+        if "fractured_realm" in kinds
+        else None
+    )
 
 
 def _general_choice(
@@ -202,7 +213,7 @@ def _general_choice(
 
 def _choose(context: CountryContext, powers: Mapping[str, int]) -> tuple[str, str]:
     """Use Balanced as the baseline; override it only for a clear strategic signal."""
-    linked = set(context.allies)
+    linked = {*context.allies, *context.guarantors, *context.guarantees}
     independent = set(context.neighbors) - linked - set(context.subjects)
     if context.overlord:
         independent.discard(context.overlord)
@@ -240,6 +251,8 @@ def decide(contexts: Sequence[CountryContext], profiles: Sequence[str]) -> tuple
             *context.threatened_by,
             *context.prey_targets,
             *context.subjects,
+            *context.guarantors,
+            *context.guarantees,
             *((context.overlord,) if context.overlord else ()),
         )
         for tag in related:

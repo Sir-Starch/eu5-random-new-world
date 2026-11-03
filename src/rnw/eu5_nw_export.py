@@ -259,6 +259,7 @@ from rnw.eu5_treaty import coordinates as treaty_coordinates
 from rnw.eu5_water import water_outputs
 from rnw.game_texts import Text, localize, untranslated
 from rnw.geography import parse_locations, read_locations, read_named_colors
+from rnw.history_model import Factor, Military
 from rnw.landmask import LandMask, fit
 from rnw.languages import official_languages
 from rnw.layers import PEOPLES, RESOURCES, layer_seed
@@ -1219,6 +1220,18 @@ def _ai_diplomacy(natives: FinalStartPlan, tags: set[str]) -> _AiDiplomacy:
             alliances[tag].update(members - {tag})
     rivals = _ai_mutual_links(natives.rivals, tags)
     threatened_by, prey_targets = _ai_opinion_links(natives.opinions, tags)
+    if natives.history is not None:
+        actors = {actor.key: actor for actor in natives.history.state.actors}
+        for memory in natives.history.state.memories:
+            first = natives.history_tags.get(memory.first, "")
+            second = natives.history_tags.get(memory.second, "")
+            if first in tags and second in tags and memory.at(natives.history.state.year):
+                if memory.factor is Factor.FEAR:
+                    threatened_by[first].add(second)
+                elif memory.factor is Factor.COMPETITION and (
+                    actors[memory.first].society.military is Military.OFFENSIVE
+                ):
+                    prey_targets[first].add(second)
     subjects: dict[str, set[str]] = {tag: set() for tag in tags}
     overlords: dict[str, str] = {}
     for lord, subject in natives.vassals:
@@ -1246,6 +1259,12 @@ def _ai_country_contexts(
     neighbors, coastal = _ai_geography(world, plan, owner, tags)
     diplomacy = _ai_diplomacy(natives, tags)
     market_locations = set(natives.markets)
+    guarantors: dict[str, set[str]] = {tag: set() for tag in tags}
+    guarantees: dict[str, set[str]] = {tag: set() for tag in tags}
+    for giver, receiver in natives.protections:
+        if giver in tags and receiver in tags:
+            guarantors[receiver].add(giver)
+            guarantees[giver].add(receiver)
     result: list[CountryContext] = []
     for tag, country in active.items():
         population = sum(natives.population.get(key, 0) for key in country.members)
@@ -1270,6 +1289,10 @@ def _ai_country_contexts(
                 subjects=tuple(sorted(diplomacy.subjects[tag])),
                 overlord=diplomacy.overlords.get(tag, ""),
                 confederated=bool(diplomacy.confederated[tag]),
+                archetypes=country.archetypes,
+                guarantors=tuple(sorted(guarantors[tag])),
+                guarantees=tuple(sorted(guarantees[tag])),
+                historical=natives.history is not None,
             )
         )
     return tuple(result)

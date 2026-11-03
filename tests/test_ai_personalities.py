@@ -170,3 +170,39 @@ def test_rendered_assignments_survive_the_merged_setup() -> None:
 
     with pytest.raises(AiPersonalityError, match="setup mismatch"):
         verify(merged.replace("ai_friendly", "ai_aggressive"), records)
+
+
+def test_ai_reads_overlapping_history_roles_and_oneway_protection() -> None:
+    decisions = {
+        d.tag: d
+        for d in decide(
+            (
+                _context("SEA", archetypes=("fractured_realm", "sea_league")),
+                _context(
+                    "GIV",
+                    500,
+                    great=True,
+                    neighbors=("REC",),
+                    prey_targets=("REC",),
+                    guarantees=("REC",),
+                ),
+                _context(
+                    "REC", 50, neighbors=("GIV",), threatened_by=("GIV",), guarantors=("GIV",)
+                ),
+            ),
+            PROFILES,
+        )
+    }
+    assert decisions["SEA"].profile == "ai_opportunistic"
+    assert decisions["GIV"].profile != "ai_expansionist"
+    assert decisions["REC"].profile != "ai_defensive"
+    with pytest.raises(AiPersonalityError, match="unknown generated country"):
+        _ = decide((_context("AAA", guarantors=("missing",)),), PROFILES)
+
+
+def test_historical_threat_reason_does_not_invent_an_empire() -> None:
+    decisions = decide(
+        (_context("AAA", threatened_by=("BBB",), historical=True), _context("BBB", 500)), PROFILES
+    )
+    assert decisions[0].profile == "ai_defensive"
+    assert "historical memory" in decisions[0].reason

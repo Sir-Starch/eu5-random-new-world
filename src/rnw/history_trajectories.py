@@ -59,6 +59,16 @@ def _population(context: Context, actor: str) -> int:
     return sum(context.index.population(key) for key in context.index.members[actor])
 
 
+def _agrarian(context: Context, actor: str) -> bool:
+    """Landed confederates keep the installed aggregate farming prerequisite."""
+    people = _population(context, actor)
+    farmers = sum(context.index.peasants(key) for key in context.index.members[actor])
+    rules = context.history.geography.rules
+    return farmers >= rules.minimum_peasants and (
+        farmers * PERMILLE >= people * rules.minimum_share
+    )
+
+
 def _connected(nodes: Iterable[str], adjacent: Callable[[str], set[str]]) -> list[tuple[str, ...]]:
     left = set(nodes)
     groups: list[tuple[str, ...]] = []
@@ -148,6 +158,7 @@ def _options(context: Context, hearth: Hearth) -> tuple[Trajectory, ...]:
         key
         for key in actors
         if context.index.actors[key].tenure is Tenure.TRIBE
+        and _agrarian(context, key)
         and sum(context.index.places[place].highland for place in context.index.members[key])
         * PERMILLE
         >= len(context.index.members[key]) * 600

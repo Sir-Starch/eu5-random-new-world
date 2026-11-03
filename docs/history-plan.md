@@ -545,10 +545,16 @@ H2 schema.
   installed agrarian/technology prerequisites. Migration projects back to exact
   typed cohorts, conserving every pop-type/culture/faith budget through political
   changes. The size factor is provisionally 1, with no H7 calibration claim.
-  This part remains offline; the exporter still uses H1. **Next in H4:** living
-  outcomes into `FinalStartPlan`, government/positions and relations, named
-  opinions, the voluntary decision/event and all output checks. Pending epoch 61,
-  new output goldens and the final-plan integration belong to that world-byte change.
+  This part supplies the inputs for final-plan construction; the exporter still uses H1.
+- **H4, second part completed 2026-11-03:** the [final-plan projection](history-core.md#final-start-projection-h4-second-part)
+  constructs surviving ownership, governments, bounded positions, actual relations
+  and causal named-opinion records in one `FinalStartPlan`, with independent
+  checks. It preserves overlapping historical memberships, recomputes centres,
+  roads/discovery and supplies the AI context. The constructed 256-location flow
+  reaches this plan. **Next in H4:** localized opinion/chronicle writers, the
+  voluntary decision/event, exporter activation and written-output checks. Pending
+  epoch 61 and new output goldens belong to that first world-byte change; H7 keeps
+  calibration and candidate/hub delivery.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

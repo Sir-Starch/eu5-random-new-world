@@ -1329,6 +1329,10 @@ class PlaceNamer:
         pairs = (("language", language), ("family", family), ("religion", religion))
         return [f"{kind}:{value}" for kind, value in pairs if value]
 
+    def reserve(self, words: Collection[str]) -> None:
+        """Keep already composed location names free of later country-name collisions."""
+        self._used.update(name_key(word) for word in words)
+
     def name(self, culture: str) -> str:
         """A new place name for ``culture``, unique among all names drawn."""
         key = next(

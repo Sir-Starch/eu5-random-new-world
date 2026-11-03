@@ -20,10 +20,12 @@ from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
 from rnw.content import FAMILIES
 from rnw.contract import CONTRACT_FILES, fingerprint
+from rnw.eu5_archetypes import american_includes
 from rnw.eu5_biomes import PRECIOUS, template_attributes
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_formation import FORMABLES_FILE
 from rnw.eu5_history import installed_rules
+from rnw.eu5_history_values import position_ranges
 from rnw.eu5_lobby import (
     COVER_INCLUDE,
     DRAWINGS_FILE,
@@ -64,6 +66,32 @@ from rnw.storymodel import render_events, render_hook
 from rnw.translations import GAME, problems
 
 GOLDEN_WORLD = Path(__file__).with_name("golden_world.json")
+
+
+def test_local_history_positions_use_observed_ungated_american_ranges() -> None:
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    root = Path(root_value)
+    american = {loc.key for loc in read_locations(root / DEFINITIONS) if loc.continent == "america"}
+    setup = (root / "game/main_menu/setup/1337/10_countries.txt").read_text("utf-8-sig")
+    templates = {
+        path.stem: path.read_text("utf-8-sig")
+        for path in (root / "game/main_menu/setup/templates").glob("*.txt")
+    }
+    definitions = [
+        path.read_text("utf-8-sig")
+        for path in sorted((root / "game/in_game/common/societal_values").glob("*.txt"))
+    ]
+    assert position_ranges(templates, american_includes(setup, american), definitions) == {
+        "centralization_vs_decentralization": (60, 100),
+        "traditionalist_vs_innovative": (-90, -70),
+        "spiritualist_vs_humanist": (-90, -60),
+        "offensive_vs_defensive": (-50, 50),
+        "belligerent_vs_conciliatory": (30, 100),
+        "quality_vs_quantity": (-75, 10),
+        "land_vs_naval": (-90, 60),
+    }
 
 
 def test_local_installation_has_consistent_parsed_hierarchy() -> None:
