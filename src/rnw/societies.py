@@ -62,6 +62,7 @@ TRIBE: Final[str] = "tribe"
 # native state, the Aztec empire, holds 23 of 4,434 land locations (5 permille) [V-EXEC C117].
 EMPIRE_SHARE: Final[tuple[int, int]] = (8, 16)
 EMPIRE_FLOOR: Final[int] = 12
+BOOTSTRAP_MIN: Final[int] = 400
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -714,6 +715,56 @@ def generate_societies(
     state_floor: StateFloor = MINIMUM_STATE_SUPPORT,
 ) -> Societies:
     """Native societies for one land graph; ``target`` is the total in milli-pops."""
+    return _generate_societies(
+        graph,
+        settings,
+        seed=seed,
+        target=target,
+        state_floor=state_floor,
+        state_locations=settings.state_locations,
+        empire_chance=settings.empire_permille,
+    )
+
+
+def bootstrap_societies(  # noqa: PLR0913 - calibrated inputs plus the history partition factor.
+    graph: LandGraph,
+    settings: NativeSettings,
+    *,
+    seed: int,
+    target: int,
+    state_floor: StateFloor,
+    size_permille: int = PERMILLE,
+) -> Societies:
+    """1037's ordinary polities, without any extraordinary outcome assigned in advance.
+
+    The provisional factor is 1 until H7 calibration. Scaling the partition size does
+    not scale the state-land budget, its pocket size, population or identity zones.
+    Trajectory chance belongs to history, never this geographical bootstrap.
+    """
+    if not BOOTSTRAP_MIN <= size_permille <= PERMILLE:
+        message = "History bootstrap size must be between 400 and 1000 permille"
+        raise ValueError(message)
+    return _generate_societies(
+        graph,
+        settings,
+        seed=seed,
+        target=target,
+        state_floor=state_floor,
+        state_locations=max(1, settings.state_locations * size_permille // PERMILLE),
+        empire_chance=0,
+    )
+
+
+def _generate_societies(  # noqa: PLR0913 - shared calibration, with independent partition/chance.
+    graph: LandGraph,
+    settings: NativeSettings,
+    *,
+    seed: int,
+    target: int,
+    state_floor: StateFloor,
+    state_locations: int,
+    empire_chance: int,
+) -> Societies:
     count = len(graph.capacity)
     moves = _Graph(graph)
     rng = SplitMix64(derive_seed(seed, "natives"))
@@ -760,7 +811,7 @@ def generate_societies(
         hearths,
         population,
         inhabited,
-        chance=settings.empire_permille,
+        chance=empire_chance,
         seed=seed,
         eligible=eligible,
         peasants=peasants,
@@ -781,7 +832,7 @@ def generate_societies(
             moves,
             state_land & inhabited & agrarian & ~empire_land,
             population,
-            locations=settings.state_locations,
+            locations=state_locations,
             rng=rng,
             eligible=eligible,
             identity=_Identity(culture.tolist(), religion.tolist()),

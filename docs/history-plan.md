@@ -539,7 +539,16 @@ H2 schema.
   23 Rust tests); permuted inputs and hash seeds 1/927 agree. The internal history
   digest now includes profiles and settlements; released world goldens, bytes,
   version and epoch remain unchanged. Source-only delivery still belongs to H7.
-  **Next: H4**, bootstrap/projection from history into the final start plan and EU5.
+- **H4, first part completed 2026-11-03:** the [bootstrap boundary](history-core.md#eu5-bootstrap-boundary-h4-first-part)
+  constructs 1037's ordinary polities, uses bounded physical water paths,
+  includes post-diaspora cohorts and unorganized communities, and supplies the
+  installed agrarian/technology prerequisites. Migration projects back to exact
+  typed cohorts, conserving every pop-type/culture/faith budget through political
+  changes. The size factor is provisionally 1, with no H7 calibration claim.
+  This part remains offline; the exporter still uses H1. **Next in H4:** living
+  outcomes into `FinalStartPlan`, government/positions and relations, named
+  opinions, the voluntary decision/event and all output checks. Pending epoch 61,
+  new output goldens and the final-plan integration belong to that world-byte change.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

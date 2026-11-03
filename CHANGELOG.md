@@ -6,6 +6,8 @@
   directed memory and causal replay, eight society dimensions, costly reforms,
   extraordinary trajectories and migration that conserves population and identities.
   Synthetic scenarios include the divided valley and realized historical networks.
+  The H4 foundation adds ordinary 1037 polities, bounded physical sea passages,
+  post-diaspora population roots and exact typed-cohort projection after migration.
   It is not connected to world generation yet; world bytes and epoch are unchanged.
 
 - Begin the 1.2.0 history implementation: record the installed contracts and

@@ -29,6 +29,7 @@ from rnw.societies import (
     _Graph,  # pyright: ignore[reportPrivateUsage]
     _Identity,  # pyright: ignore[reportPrivateUsage]
     _states,  # pyright: ignore[reportPrivateUsage]
+    bootstrap_societies,
     generate_societies,
     hearth_domains,
     land_routes,
@@ -726,3 +727,71 @@ def test_remote_state_groups_have_trading_towns_and_share_existing_markets(*, li
         before, polities=(*before.polities[:2], replace(before.polities[2], landed=True))
     )
     assert 4 in regional_markets(graph, landed).markets
+
+
+def test_history_bootstrap_assigns_no_empire_and_preserves_the_ordinary_baseline() -> None:
+    graph = _grid()
+    floor = StateFloor(peasants=338, share=122)
+    expected = generate_societies(graph, SETTINGS, seed=42, target=4_000_000, state_floor=floor)
+    for chance in (0, 250, 1000):
+        actual = bootstrap_societies(
+            graph,
+            replace(SETTINGS, empire_permille=chance),
+            seed=42,
+            target=4_000_000,
+            state_floor=floor,
+        )
+        assert _digest(actual) == _digest(expected)
+        assert not any(polity.great or polity.landed for polity in actual.polities)
+
+
+def test_bootstrap_size_changes_partition_without_changing_food_identity_or_state_envelope() -> (
+    None
+):
+    graph = _grid()
+    floor = StateFloor(peasants=338, share=122)
+    results = [
+        bootstrap_societies(
+            graph,
+            SETTINGS,
+            seed=42,
+            target=4_000_000,
+            state_floor=floor,
+            size_permille=scale,
+        )
+        for scale in (400, 700, 1000)
+    ]
+    first = results[0]
+    expected_land = {
+        node for polity in first.polities if polity.kind == STATE for node in polity.members
+    }
+    counts: list[int] = []
+    for result in results:
+        for name in ("complexity", "population", "peasants", "culture", "religion"):
+            np.testing.assert_array_equal(getattr(first, name), getattr(result, name))
+        assert result.hearths == first.hearths
+        states = [polity for polity in result.polities if polity.kind == STATE]
+        counts.append(len(states))
+        assert {node for polity in states for node in polity.members} == expected_land
+        for state in states:
+            nodes = list(state.members)
+            assert floor.supports(
+                int(result.population[nodes].sum()), int(result.peasants[nodes].sum())
+            )
+            assert floor.supports(
+                int(result.population[state.capital]), int(result.peasants[state.capital])
+            )
+    assert counts[0] > counts[-1]
+
+
+@pytest.mark.parametrize("scale", [0, 399, 1001])
+def test_bootstrap_size_outside_the_accepted_calibration_interval_is_rejected(scale: int) -> None:
+    with pytest.raises(ValueError, match="bootstrap size"):
+        _ = bootstrap_societies(
+            _grid(),
+            SETTINGS,
+            seed=42,
+            target=4_000_000,
+            state_floor=StateFloor(),
+            size_permille=scale,
+        )

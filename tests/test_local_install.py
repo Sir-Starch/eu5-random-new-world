@@ -23,6 +23,7 @@ from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_biomes import PRECIOUS, template_attributes
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_formation import FORMABLES_FILE
+from rnw.eu5_history import installed_rules
 from rnw.eu5_lobby import (
     COVER_INCLUDE,
     DRAWINGS_FILE,
@@ -52,6 +53,7 @@ from rnw.eu5_towns import plan_towns
 from rnw.formations import SPECS as FORMATION_SPECS
 from rnw.game_texts import sources, untranslated
 from rnw.geography import color_summary, read_locations, summary
+from rnw.history_model import Rules
 from rnw.languages import official_languages
 from rnw.model import WATER_CLASSES, CellClass
 from rnw.pdx import parse
@@ -240,6 +242,13 @@ def test_local_native_calibration_reads_the_vanilla_americas() -> None:
         "traditionalist_vs_innovative": -90,
     }
     assert (archetypes.alliances, archetypes.rivals, archetypes.confederations) == (22, 45, 1)
+    assert installed_rules(vanilla) == Rules(
+        minimum_peasants=338,
+        minimum_share=122,
+        minimum_overlord_technology=vanilla.overlord_level,
+        league_technology=archetypes.republic_level,
+        confederation_density=archetypes.confederate_density,
+    )
 
 
 def test_local_spline_network_is_read_and_written_back_exactly() -> None:

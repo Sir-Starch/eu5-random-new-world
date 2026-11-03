@@ -1,8 +1,9 @@
-# History core and societies (H2–H3)
+# History core, societies and bootstrap
 
-[V-EXEC, 2026-11-03] This implements the offline H2–H3 phases of the accepted
+[V-EXEC, 2026-11-03] This implements the offline H2–H3 phases and the first
+bootstrap/population part of H4 in the accepted
 [history plan](history-plan.md#17-phases-and-scope-control). It is not called by
-the world exporter yet. H4 supplies the bootstrap/projection adapter. Existing world bytes,
+the world exporter yet. The rest of H4 supplies the final-plan and EU5 projection. Existing world bytes,
 goldens, world codes, product version and epoch are unchanged.
 
 ## Ownership and entry points
@@ -16,6 +17,9 @@ goldens, world codes, product version and epoch are unchanged.
 | `history_societies.py` | Eight-dimensional profiles, repeated-problem reforms, conservative migration and local inheritance |
 | `history_trajectories.py` | Eligible per-hearth ambitions, recognition of actual structures and seeded/realized counts |
 | `history_engine.py` | Canonical bootstrap, local proposal policy, arbitration, atomic rounds, simulation through 1337, causal replay and semantic digest |
+| `history_routes.py` | Bounded physical routes from actual generated cell contacts and water paths, including seam edges |
+| `eu5_history.py` | Post-diaspora population roots, installed prerequisites and the fixed landed/tribal/community partition |
+| `history_population.py` | Conservative projection of historical migration into the original typed EU5 cohorts |
 
 `create(geography, foundings, seed=..., empire_permille=250, checkpoint=...)`
 validates the caller's complete inhabited partition and records each founding and
@@ -35,6 +39,58 @@ missing/future/cyclic causes, changed outcomes, unexplained holdings, profiles,
 population, ambitions, memories or agreements, and inconsistent lifecycle data. `digest(history)` hashes canonical
 semantic data; no text, timing or process hash order enters it. The dataclasses are
 an internal interface, not the portable history format planned for H5.
+
+## EU5 bootstrap boundary (H4, first part)
+
+`societies.bootstrap_societies` reuses the existing population, identity-zone,
+agrarian-seat and territorial construction. It gives no polity an extraordinary
+outcome. The extraordinary control goes to the history engine's per-hearth
+ambitions instead. Its provisional size factor is 1; the accepted 0.4–1 interval
+changes ordinary partition size while leaving the state-land budget/pocket size,
+food, population, identity zones and hearths unchanged. It is not fitted on the
+held-out seeds. The existing exporter still calls the unchanged static entry point.
+
+`physical_routes(PhysicalMap(...))` reads actual world edges. Land contacts include
+explicit wrap edges. A maritime path travels only through SEA cells and stops
+after at most four water cells, counted from the departure coast. Lake cells,
+shared sea-zone names and routes that walk through an intervening land cell
+cannot manufacture a maritime connection. Duplicate alternatives choose the
+shortest passage; a direct land contact takes precedence. `routed_graph` supplies
+these same passages to society construction before any polity is made. History
+uses the individual passage costs; the existing society partitioner retains its
+conservative common sea-link cost.
+
+`bootstrap_history(BootstrapInputs(...), seed=..., empire_permille=...)` receives
+the typed population **after diaspora**. Its immutable roots include every
+culture/faith and every peasant or elite, retain the calibrated/diaspora totals
+separately, and fail explicitly on missing population, technology or geography.
+Every inhabited location belongs to a state, pop-type tribe or unorganized
+community. Communities are connected components of the same dominant identity,
+with no exported country tags. Founding authority has its own random stream,
+independent of donor identities and government templates. Existing seeded empires
+or already-landed confederates are rejected at this boundary.
+
+`installed_rules` supplies the actual installed agrarian floor, minimum overlord
+technology, republic level and confederate density. [V-LOCAL, 2026-11-03] The
+installed Steam manifest is build 26377361 (EU5 1.4.7); the read-only native
+calibration check exercises this adapter. No game is launched. Food headroom is
+provisionally `post-diaspora population * farming potential / 4000`, or 0–25%.
+This permits conservative movement without reading an RGO or inventing a
+demographic growth estimate; its calibration belongs to H7.
+
+`project_population(bootstrap, history)` follows accepted migration effects from
+those exact roots. Farmers move in the recorded amount; non-farmer types move
+proportionally with deterministic largest-remainder rounding. It checks every
+consumed population change, agreement with the final settlements, and exact
+global totals for each `(pop type, culture, religion)`. Conquest, unions and
+division never retype, assimilate or recreate the inhabitants. Missing capacity
+or cohorts fail in construction, rather than a later repair.
+
+This is a source-only H4 implementation part. Ownership/government projection,
+historical relations and localization, the decision/event, final-plan consumers
+and output verification remain the next H4 part. No new EU5 text format is written
+yet; pending epoch 61 starts when that integration first changes world bytes.
+Candidate/hub delivery remains H7.
 
 ## One round
 
@@ -227,6 +283,16 @@ competing moves/conquest, identity conservation, profile/ambition tampering and
 permuted autonomous histories. Each seedable extraordinary type starts as an ambition;
 recognition follows actual expansion, access bargains or a connected pact network.
 No full-world trajectory survival rate or game behavior is claimed.
+
+H4's first part adds 41 boundary cases and five bootstrap-size cases. The
+256-location synthetic flow constructs societies, adds diaspora, runs all 60
+rounds, replays history and projects the typed population with exact budgets.
+Other cases exercise physical maritime bounds, lake exclusion, seam contacts,
+invalid inputs, conservative elite rounding, changed political ownership and
+tampered population effects. Input permutations and hash seeds 1/927 agree.
+Full checks pass: 2,578 Python tests, 15 optional skips, strict types, format/lint
+and 23 Rust tests; 13 read-only installed-game checks pass on build 26377361.
+This does not establish final EU5 projection, engine loading or H7 calibration.
 
 [V-EXEC, 2026-11-03] All 77 history cases pass as part of locked sync and
 `make check`: 2,532 Python tests, 15 optional skips; strict types, format/lint and

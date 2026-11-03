@@ -41,7 +41,7 @@ formats and constants. Historical per-feature unknowns are not new release gates
 | [Terrain and biomes](terrain-biomes.md) | Relief, climate, materials, vegetation and rivers |
 | [Sea geography](sea-geography.md) | Ports, depth, lanes, currents and crossings |
 | [Native societies](natives.md) | Peoples, identity zones, states, technology and extraordinary societies |
-| [Offline history core](history-core.md) | H2–H3 rounds, causal society profiles, trajectories and conservative migration; export integration follows in H4 |
+| [Offline history core](history-core.md) | H2–H3 rounds, causal society profiles, trajectories and migration; H4 bootstrap and typed population, with final-plan export integration next |
 | [Economy](economy.md) | Starting development, harbours, markets and agrarian support |
 | [Content plan](content-plan.md) | Current content inventory/disposition and story/formable architecture |
 | [Content catalogue](content-catalog.md) | Player stories, choices, formables and exceptional places |
