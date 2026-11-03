@@ -2,9 +2,10 @@
 
 **Status: accepted plan (owner instruction, 2026-11-02).** The owner asked for the
 plan to be completed without open questions and committed. It is the design
-reference for 1.2.0 work. Implementation, the version bump, the pending epoch,
-candidate installation and publication each need their own instruction under
-[AGENTS](../AGENTS.md). A later decision recorded in this file replaces the
+reference for 1.2.0 work. **Implementation was authorized by the owner on
+2026-11-03.** Version/epoch changes follow the phase requirements below;
+publication still requires explicit authorization under [AGENTS](../AGENTS.md).
+A later decision recorded in this file replaces the
 earlier one. Values marked *calibrated* are tuned within their stated bounds
 without a new decision; thresholds in [§18](#18-acceptance-criteria) change only
 through a recorded decision.
@@ -496,6 +497,14 @@ halfway through history is not needed.
 
 Order: H0 → H1 → H2 → H3 → H4 → H5/H6 → H7. Viewer work in H5 can start from the
 H2 schema.
+
+### Implementation progress
+
+- **H0, 2026-11-03:** [contracts and baseline](research/history-contracts.md)
+  record the installed axes and text interfaces, control contracts, published and
+  held-out seed sets, and 24 bootstrap-only baseline measurements. Full-world
+  statistical acceptance remains H7 work; held-out seeds have not been used.
+
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

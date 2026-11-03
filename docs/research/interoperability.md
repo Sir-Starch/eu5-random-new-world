@@ -851,6 +851,31 @@ the source defect is verified offline and post-fix game movement remains a
 separate unknown. R-006's private binary observations remain diagnostic evidence
 of the old failing task, not a prerequisite for distributing an engine patch.
 
+## R-007 — Historical opinions, decisions and protection (H0)
+
+[V-LOCAL, 2026-11-03, EU5 1.4.6 / Steam build 26300913]
+The accepted [history plan](../history-plan.md#11-eu5-projection) needs to expose
+the causes of generated relationships and a voluntary country chronicle. Existing
+generic start opinions cannot name a simulated event, and the atlas alone cannot
+offer the chronicle inside the game.
+
+The interfaces are the installed game's ordinary mod text directories: setup
+opinions and `scripted_oneway` diplomacy, `common/biases`, `common/decisions`,
+country events and localization. The [H0 inventory](history-contracts.md#text-interfaces)
+records paths, fingerprints, fields and vanilla precedents. These are declarative
+modding interfaces; no executable, save, compiled binary or access control is
+studied or altered. No additional public API is needed to write these records.
+
+The intended writer supplies original event/opinion keys, generated tags, typed
+history facts and original translated text. It reads the player's installed
+definitions to validate keys and ranges. Raw vanilla files and derived worlds
+remain local, and the installation is never patched. The public package contains
+the generator and synthetic tests, with no copied historical prose or new game
+asset. H0 only inventories the interface; it writes no new game record. Engine
+loading of generated biases, the decision and guarantees remains for H7, with
+F1–F3 already decided in the plan. This entry does not claim that loading passed
+or reopen the accepted distribution review.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains
