@@ -76,6 +76,7 @@ current instructions or turn uncertainty into a publication prohibition.
 | Record | Scope |
 |---|---|
 | [Interoperability register](research/interoperability.md) | Closed formats and written binaries, with source/compatibility rationale |
+| [1.4.7 compatibility check](research/compatibility-1-4-7.md) | Installed build, full input delta, map contract and offline checks |
 | [1.4.6 compatibility check](research/compatibility-1-4-6.md) | Installed build, input delta and offline checks |
 | [More Locations compatibility](research/more-locations-compatibility.md) | Potential map conflicts, load-order limits and generation-time integration; third-party payload and combined engine behavior unverified |
 | [1.4.5 compatibility audit](research/compatibility-1-4-5.md) | Target-build fingerprints and DLC dispositions |
