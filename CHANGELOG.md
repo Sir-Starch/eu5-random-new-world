@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add the offline history core (H2): deterministic rounds, political transitions,
+  directed memory and causal replay, with the divided-valley regression fixture.
+  It is not connected to world generation yet; world bytes and epoch are unchanged.
+
 - Begin the 1.2.0 history implementation: record the installed contracts and
   bootstrap baseline, and extract a shared final start plan with typed population
   cohorts. This foundation keeps the existing static generation and world bytes;

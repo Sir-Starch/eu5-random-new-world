@@ -516,8 +516,20 @@ H2 schema.
   reference export reproduces all 868 nonmetadata files, digest
   `e4914d9bbfce5c7fedb76573fc228b4c195b4453130456500f30ea3e9d73f6aa`;
   frozen goldens, version 1.1.0 and epoch 60 are unchanged. Source-only foundation;
-  candidate/hub delivery remains H7. **Next: H2**, the game-independent history
-  model, synchronous rounds, causal validation and divided-valley fixture.
+  candidate/hub delivery remains H7.
+- **H2, completed 2026-11-03:** the [offline history core](history-core.md)
+  supplies immutable actors/cohorts, sparse ownership and lifecycle changes,
+  simultaneous proposals/arbitration, local contacts, unions, conflicts,
+  dependencies, protection/pacts, division, sacred access and directed decaying
+  memory. Causal validation replays the complete record. The 60-round divided
+  valley and autonomous synthetic cases pass; the exporter still uses H1's static
+  plan. [V-EXEC] All 38 history cases pass, including causal replay, joint unions,
+  resource reservations, permuted inputs and cancellation. Locked sync and
+  `make check` pass (2,493 Python tests, 15 optional skips; strict types,
+  format/lint, 23 Rust tests). Source-only core: no world-byte or epoch change,
+  new game-format writer, candidate or hub installation. Performance calibration
+  and the public history record remain later phases, as scoped in the core guide.
+  **Next: H3**, society dimensions, trajectories and conservative migration.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
