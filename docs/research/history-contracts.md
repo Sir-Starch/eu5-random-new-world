@@ -122,3 +122,22 @@ Every run's counts, conserved bootstrap total and elapsed time are in local
 timings, peak memory and output equality with its reference export.
 H7 needs paired full exports on the same machine and cache conditions for S8/S9;
 a bootstrap timing cannot be substituted for end-to-end generation time.
+
+
+## H1 reference workload
+
+[V-EXEC, 2026-11-03] The final-source export uses the unchanged code and settings
+from `tests/golden_world.json`, the installed build above and the existing local
+land cache. Its 868 nonmetadata file hashes reproduce the frozen epoch-60
+reference exactly; the shared game-contract fingerprint is
+`592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a`.
+
+The reference has 5,903 land locations, 335 states holding 1,239 locations,
+387 tribes holding 2,024, four great empires of 94/53/47/59 locations and 35 vassals.
+Elapsed time is 193.404 s; native start construction 3.284 s;
+atlas construction 0.335 s; process peak resident memory
+8.981 GiB. Raw stage timings and metrics are in local
+`reference.json`, output and all verifiers in
+`generated/rnw_exp_history_h1_final/report.json`. These measurements describe
+one cached reference export, not an S8/S9 paired performance result or the
+older 5,098-location local world measured when the plan was written.

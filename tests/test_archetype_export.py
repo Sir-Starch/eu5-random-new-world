@@ -14,10 +14,11 @@ from rnw.eu5_archetypes import (
     confederation_lines,
     rival_lines,
 )
-from rnw.eu5_natives import Country, NativeWorld, VanillaNatives, country_records
+from rnw.eu5_natives import VanillaNatives, country_records
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_nw_export import COUNTRIES_FILE, SETUP_DIR, NewWorldExportError, verify_archetypes
 from rnw.eu5_rewrite import insert_into_block
+from rnw.eu5_start import Country, FinalStartPlan
 from rnw.model import CellClass
 
 COHESION = (("gold", 100), ("stability", 33), ("tribal_cohesion", 90))
@@ -119,12 +120,12 @@ def _countries() -> tuple[Country, ...]:
     return tuple(countries)
 
 
-def _natives(countries: tuple[Country, ...] | None = None, **changes: object) -> NativeWorld:
+def _natives(countries: tuple[Country, ...] | None = None, **changes: object) -> FinalStartPlan:
     groups = [
         {"kind": SEA_LEAGUE, "tags": ["LGA", "LGB", "LGC"]},
         {"kind": HIGHLAND_CONFEDERATION, "tags": ["CNA", "CNB", "CNC"]},
     ]
-    natives = NativeWorld(
+    natives = FinalStartPlan(
         pops={},
         countries=countries or _countries(),
         ranks={},
@@ -156,7 +157,7 @@ def _vanilla(calibration: ArchetypeCalibration | None = CALIBRATION) -> VanillaN
     )
 
 
-def _outputs(natives: NativeWorld, *, skip: tuple[str, ...] = ()) -> dict[str, bytes]:
+def _outputs(natives: FinalStartPlan, *, skip: tuple[str, ...] = ()) -> dict[str, bytes]:
     countries = "countries = {\n\tcountries = {\n" + country_records(natives.countries) + "\t}\n}\n"
     files = {
         COUNTRIES_FILE: countries,
@@ -179,7 +180,9 @@ def _outputs(natives: NativeWorld, *, skip: tuple[str, ...] = ()) -> dict[str, b
     }
 
 
-def _verify(outputs: dict[str, bytes], natives: NativeWorld, vanilla: VanillaNatives | None = None):  # noqa: ANN202
+def _verify(
+    outputs: dict[str, bytes], natives: FinalStartPlan, vanilla: VanillaNatives | None = None
+) -> dict[str, object]:
     return verify_archetypes(
         outputs, natives, _plan(), vanilla or _vanilla(), ORIGINALS | {COUNTRIES_FILE: ""}, set()
     )

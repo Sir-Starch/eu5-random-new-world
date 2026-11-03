@@ -37,8 +37,6 @@ from rnw.eu5_empires import (
     written_ranks,
 )
 from rnw.eu5_natives import (
-    Country,
-    NativeWorld,
     VanillaNatives,
     country_records,
     discover_opinion_partners,
@@ -51,6 +49,7 @@ from rnw.eu5_nw_export import (
     verify_empires,
 )
 from rnw.eu5_rewrite import insert_into_block
+from rnw.eu5_start import Country, FinalStartPlan
 from rnw.model import CellClass
 from rnw.newworld import NewWorld
 from rnw.pdx import Block, parse
@@ -414,8 +413,8 @@ def _natives(
     countries: tuple[Country, ...] | None = None,
     roads: tuple[tuple[str, str], ...] = PLANNED_ROADS,
     opinions: tuple[tuple[str, str, str], ...] = PLANNED_OPINIONS,
-) -> NativeWorld:
-    return NativeWorld(
+) -> FinalStartPlan:
+    return FinalStartPlan(
         pops={},
         countries=countries or _countries(),
         ranks={},
@@ -447,7 +446,7 @@ def _vanilla() -> VanillaNatives:
 
 
 def _outputs(
-    natives: NativeWorld, *, extra_roads: str = "", extra_opinions: str = ""
+    natives: FinalStartPlan, *, extra_roads: str = "", extra_opinions: str = ""
 ) -> dict[str, bytes]:
     countries = "countries = {\n\tcountries = {\n" + country_records(natives.countries) + "\t}\n}\n"
     roads = insert_into_block(ORIGINAL_ROADS, ("road_network",), road_lines(natives.roads))
@@ -466,7 +465,7 @@ def _outputs(
 
 
 def _verify(
-    outputs: dict[str, bytes], natives: NativeWorld, *, area_per_location: bool = False
+    outputs: dict[str, bytes], natives: FinalStartPlan, *, area_per_location: bool = False
 ) -> dict[str, object]:
     return verify_empires(
         outputs,

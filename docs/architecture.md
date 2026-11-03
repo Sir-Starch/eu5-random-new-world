@@ -42,7 +42,7 @@ Paths below are relative to `src/rnw/` unless stated otherwise.
 | Generated New World and fields | `newworld.py`, `islands.py`, `wall.py`, `fields.py`, `relief.py`, `climate.py`, `rivers.py`, `lakes.py`, `gulfs.py`, `isthmuses.py`, `hierarchy.py` |
 | Terrain serialization | `eu5_biomes.py`, `eu5_slots.py`, `eu5_terrain.py`, `eu5_mountains.py`, `eu5_objects.py`, `eu5_water.py`; `terrain_tiles.py`, `lzav.py`, `dds.py`, `png.py` |
 | Seas, routes and currents | `ports.py`, `seas.py`, `seanames.py`, `lanes.py`, `sea_corridors.py`, `sea_policy.py`, `straits.py`, `crossings.py`, `currents.py`; `eu5_oceans.py`, `eu5_seas.py` |
-| Native societies and start state | `societies.py`, `eu5_natives.py`, `eu5_ai.py`, `eu5_development.py`, `eu5_technology.py`, `eu5_empires.py`, `archetypes.py`, `eu5_archetypes.py` |
+| Native societies and start state | `societies.py`, `eu5_natives.py` (construction/writers), `eu5_start.py` (`FinalStartPlan`, countries and typed pop cohorts shared by writers, verifiers, AI, content and atlas), `eu5_ai.py`, `eu5_development.py`, `eu5_technology.py`, `eu5_empires.py`, `archetypes.py`, `eu5_archetypes.py` |
 | Roads and spline network | `splnet.py`, `eu5_splines.py` |
 | Vanilla content inventory and disposition | `content_inventory.py`, `content_decisions.py`, `content_check.py`, `content_report.py`, `eu5_content.py`, `eu5_places.py` |
 | Stories, formations and colonial names | `content.py`, `storymodel.py`, `stories.py`, `stories_n4.py`, `stories_colonial.py`, `formations.py`, `colonial_names.py`, `eu5_story.py`, `eu5_formation.py` |

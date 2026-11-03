@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-    from rnw.eu5_natives import NativeWorld
+    from rnw.eu5_start import FinalStartPlan
     from rnw.geography import Location
 
 PERMILLE: Final[int] = 1000
@@ -520,7 +520,7 @@ def _histogram(values: Iterable[int]) -> dict[str, int]:
 def build_development(
     *,
     calibration: DevelopmentCalibration,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     cells: Sequence[Cell],
     scores: Mapping[str, int],
 ) -> Development:
@@ -564,7 +564,7 @@ def build_development(
 
 
 def generated_sites(
-    natives: NativeWorld, cells: Sequence[Cell], harbours: Mapping[str, int]
+    natives: FinalStartPlan, cells: Sequence[Cell], harbours: Mapping[str, int]
 ) -> list[Site]:
     """Development inputs of the generated land locations, without keyed entries."""
     kinds = _generated_kinds(natives)
@@ -585,7 +585,7 @@ def generated_sites(
 
 def _stats(
     calibration: DevelopmentCalibration,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     cells: Sequence[Cell],
     parts: Development,
     state_count: int,
@@ -636,7 +636,7 @@ def _mean(values: Sequence[int]) -> int:
     return _mean_milli(sum(values), len(values))
 
 
-def _generated_kinds(natives: NativeWorld) -> dict[str, str]:
+def _generated_kinds(natives: FinalStartPlan) -> dict[str, str]:
     kinds: dict[str, str] = {}
     for country in natives.countries:
         if country.kind == "state":

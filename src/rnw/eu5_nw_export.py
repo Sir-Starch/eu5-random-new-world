@@ -91,8 +91,7 @@ from rnw.eu5_canvas import (
     remainder_boxes,
     select_canvas,
 )
-from rnw.eu5_content import ContentError, carry_out, culture_traits
-from rnw.eu5_content import places as content_places
+from rnw.eu5_content import ContentError, carry_out, cohort_places, culture_traits
 from rnw.eu5_development import (
     VILLAGE,
     Development,
@@ -168,10 +167,8 @@ from rnw.eu5_mountains import mountain_relief
 from rnw.eu5_natives import (
     COUNTRY_DIR,
     DEFINITION_FILE,
-    Country,
-    NativeWorld,
     VanillaNatives,
-    build_natives,
+    build_start_plan,
     city_lines,
     country_definitions,
     country_names,
@@ -179,6 +176,7 @@ from rnw.eu5_natives import (
     holy_site_outputs,
     market_lines,
     new_tags,
+    pop_lines,
     vanilla_natives,
     vassal_lines,
 )
@@ -306,6 +304,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_start import Country, FinalStartPlan
     from rnw.game_texts import Entry
     from rnw.geography import Location
     from rnw.settings import Settings
@@ -1123,7 +1122,7 @@ def _mod_path(relative: str) -> str:
 
 
 def _ai_assignment_records(
-    game_dir: Path, natives: NativeWorld, world: NewWorld, plan: Plan
+    game_dir: Path, natives: FinalStartPlan, world: NewWorld, plan: Plan
 ) -> tuple[AiDecision, ...]:
     try:
         return decide_ai_personalities(
@@ -1144,7 +1143,7 @@ class _AiDiplomacy:
     confederated: dict[str, set[str]]
 
 
-def _ai_active_countries(natives: NativeWorld) -> dict[str, Country]:
+def _ai_active_countries(natives: FinalStartPlan) -> dict[str, Country]:
     active = {
         country.tag: country
         for country in natives.countries
@@ -1210,7 +1209,7 @@ def _ai_opinion_links(
     return threatened_by, prey_targets
 
 
-def _ai_diplomacy(natives: NativeWorld, tags: set[str]) -> _AiDiplomacy:
+def _ai_diplomacy(natives: FinalStartPlan, tags: set[str]) -> _AiDiplomacy:
     alliances = _ai_mutual_links(natives.alliances, tags)
     confederated_members: dict[str, set[str]] = {tag: set() for tag in tags}
     for group in natives.confederations:
@@ -1238,7 +1237,7 @@ def _ai_diplomacy(natives: NativeWorld, tags: set[str]) -> _AiDiplomacy:
 
 
 def _ai_country_contexts(
-    natives: NativeWorld, world: NewWorld, plan: Plan
+    natives: FinalStartPlan, world: NewWorld, plan: Plan
 ) -> tuple[CountryContext, ...]:
     """Summarize generated power, geography and diplomacy for the contextual classifier."""
     active = _ai_active_countries(natives)
@@ -1304,7 +1303,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     removed: set[str],
     geometry: VanillaGeometry,
     biomes: CellBiomes,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     development: Development,
     ports: tuple[list[str], dict[int, tuple[int, int]]],
     coast: Coast,
@@ -1414,13 +1413,14 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     override = _read(game_dir, LOCATOR_OVERRIDE)
     if (rewritten := rewrite_override_locators(override, removed)) != override:
         outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
+    written_pops = pop_lines(natives.pops)
     setup = prune_setup(
         {
             name: remap_text(text, area_replacements)[0]
             for name, text in _setup_texts(game_dir).items()
         },
         gone,
-        {c.key: natives.pops.get(c.key, []) for c in plan.cells},
+        {c.key: written_pops.get(c.key, []) for c in plan.cells},
     )
     ai_decisions = _ai_assignment_records(game_dir, natives, world, plan)
     ai_records = ai_assignments(ai_decisions)
@@ -1553,7 +1553,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
     *,
     plan: Plan,
     world: NewWorld,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     river_pixels: NDArray[np.int64],
     topography: Sequence[str],
     vanilla: VanillaNatives,
@@ -1563,7 +1563,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
     """The stories and formables of this world, as files and statistics (content plan, N3, N4)."""
     keys = [cell.key for cell in plan.cells]
     land = [index for index, cell in enumerate(plan.cells) if cell.kind is CellClass.LAND]
-    inhabited = content_places(natives.pops)
+    inhabited = cohort_places(natives.pops)
     dominant = {place.key: place.religion for place in inhabited}
     traits = culture_traits(game_dir)
     cultures = {place.key: place.culture for place in inhabited}
@@ -1895,7 +1895,7 @@ def verify_country_tags(game_dir: Path, outputs: dict[str, bytes]) -> dict[str, 
     return {"country_tags_defined": len(tags), "country_tags_without_setup": sorted(unused)}
 
 
-def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
+def _verify_natives(natives: FinalStartPlan, plan: Plan) -> dict[str, object]:
     """Countries own or hold generated land only, once each, under fresh tags."""
     land = {cell.key for cell in plan.cells if cell.kind is CellClass.LAND}
     tags = [country.tag for country in natives.countries]
@@ -1923,7 +1923,9 @@ def _verify_natives(natives: NativeWorld, plan: Plan) -> dict[str, object]:
 
 
 def _technology_problems(
-    records: dict[str, tuple[list[str], list[str]]], natives: NativeWorld, vanilla: VanillaNatives
+    records: dict[str, tuple[list[str], list[str]]],
+    natives: FinalStartPlan,
+    vanilla: VanillaNatives,
 ) -> list[str]:
     problems: list[str] = []
     allowed = set(vanilla.state_levels)
@@ -1970,7 +1972,7 @@ def _technology_problems(
 
 
 def verify_technology(
-    outputs: dict[str, bytes], natives: NativeWorld, vanilla: VanillaNatives
+    outputs: dict[str, bytes], natives: FinalStartPlan, vanilla: VanillaNatives
 ) -> dict[str, object]:
     """Every state writes a level of the vanilla set and a fitting template, a tribe none.
 
@@ -2029,7 +2031,7 @@ class _Relations:
     near: dict[str, set[str]]
 
 
-def _relations(natives: NativeWorld, plan: Plan, world: NewWorld) -> _Relations:
+def _relations(natives: FinalStartPlan, plan: Plan, world: NewWorld) -> _Relations:
     countries = {country.tag: country for country in natives.countries}
     empires = {tag: country.capital for tag, country in countries.items() if country.great}
     land = {cell.key for cell in plan.cells if cell.kind is CellClass.LAND}
@@ -2058,7 +2060,7 @@ def _relations(natives: NativeWorld, plan: Plan, world: NewWorld) -> _Relations:
 
 
 def _rank_problems(
-    countries_text: str, natives: NativeWorld, calibration: EmpireCalibration
+    countries_text: str, natives: FinalStartPlan, calibration: EmpireCalibration
 ) -> list[str]:
     tags = {country.tag for country in natives.countries}
     ranks = written_ranks(countries_text, tags)
@@ -2159,7 +2161,7 @@ def _opinion_problems(
     return problems
 
 
-def _knowledge_problems(countries_text: str, natives: NativeWorld, plan: Plan) -> list[str]:
+def _knowledge_problems(countries_text: str, natives: FinalStartPlan, plan: Plan) -> list[str]:
     """Every holder of a generated opinion has discovered the area of its partner's capital.
 
     Read from the written country records, so that the game's warning about a scripted bias
@@ -2177,7 +2179,7 @@ def _knowledge_problems(countries_text: str, natives: NativeWorld, plan: Plan) -
 
 def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is checked on the final texts.
     outputs: dict[str, bytes],
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     plan: Plan,
     world: NewWorld,
     vanilla: VanillaNatives,
@@ -2233,7 +2235,7 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
 
 def verify_archetypes(  # noqa: PLR0913, PLR0917 - every record of the plan is checked on the final texts.
     outputs: dict[str, bytes],
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     plan: Plan,
     vanilla: VanillaNatives,
     originals: dict[str, str],
@@ -2316,7 +2318,7 @@ def _spline_outputs(  # noqa: PLR0913 - the roads' strips read the map, the plan
     final: NDArray[np.int32],
     hierarchy: dict[str, Location],
     texts: dict[str, bytes],
-    natives: NativeWorld,
+    natives: FinalStartPlan,
 ) -> tuple[bytes, dict[str, object]]:
     """The mod's spline network, made from the game's, and its statistics (R7d).
 
@@ -2427,7 +2429,7 @@ def _plan_development(  # noqa: PLR0913 - development reads the calibration, wor
     world: NewWorld,
     plan: Plan,
     biomes: CellBiomes,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     labels: NDArray[np.int32],
     docks: dict[int, tuple[int, int]],
     river_codes: NDArray[np.uint8],
@@ -2479,7 +2481,7 @@ def _verify_terms(
 
 
 def _verify_villages(
-    manager: Block | None, natives: NativeWorld, development: Development
+    manager: Block | None, natives: FinalStartPlan, development: Development
 ) -> list[tuple[str, str]]:
     states = {c.tag: c.capital for c in natives.countries if c.kind == "state"}
     villages: list[tuple[str, str]] = []
@@ -2502,7 +2504,7 @@ def _verify_villages(
 def verify_development(  # noqa: PLR0913, PLR0917 - every generated development record is checked.
     outputs: dict[str, bytes],
     plan: Plan,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     development: Development,
     calibration: DevelopmentCalibration,
     new_world_keys: set[str],
@@ -2914,7 +2916,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )[: len(world.classes)]
         natives = run_stage(
             "natives",
-            lambda: build_natives(
+            lambda: build_start_plan(
                 world=world,
                 plan=plan,
                 biomes=biomes,
@@ -3123,7 +3125,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 game_dir,
                 scripts,
                 checked,
-                natives.pops,
+                cohort_places(natives.pops),
                 hierarchy,
                 remap,
                 sea_areas=sorted(

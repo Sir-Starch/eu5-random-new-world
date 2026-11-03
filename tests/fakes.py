@@ -17,8 +17,8 @@ from rnw.atlas import JSON_FILE, LABELS_FILE
 from rnw.atlas import to_files as atlas_files
 from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import CellBiomes
-from rnw.eu5_natives import Country, NativeWorld
 from rnw.eu5_newworld import Plan, PlannedCell
+from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.inputs import hash_files
 from rnw.model import CellClass
 from rnw.newworld import NewWorld
@@ -87,12 +87,11 @@ CLASSES = (
 )
 
 
-def _pop(culture: str, religion: str, size: str = "1.000") -> list[str]:
-    head = "\tdefine_pop = {\ttype = peasants\t"
-    return [f"{head}size = {size}\tculture = {culture}\treligion = {religion} }}"]
+def _pop(culture: str, religion: str) -> tuple[PopCohort, ...]:
+    return (PopCohort("peasants", 1000, culture, religion),)
 
 
-def synthetic_world() -> tuple[NewWorld, Plan, CellBiomes, NativeWorld, np.ndarray]:
+def synthetic_world() -> tuple[NewWorld, Plan, CellBiomes, FinalStartPlan, np.ndarray]:
     """Six cells in vertical stripes of a 24 x 72 crop; the far sea has no land near it."""
     labels = np.zeros((24, 72), dtype=np.int32)
     for cell in range(6):
@@ -138,7 +137,7 @@ def synthetic_world() -> tuple[NewWorld, Plan, CellBiomes, NativeWorld, np.ndarr
             color2=(0, 0, 0),
         ),
     )
-    natives = NativeWorld(
+    natives = FinalStartPlan(
         pops={"rnw_loc_1": _pop("a_culture", "a_faith"), "rnw_loc_2": _pop("b_culture", "b_faith")},
         countries=countries,
         ranks={"rnw_loc_1": ("city", "")},

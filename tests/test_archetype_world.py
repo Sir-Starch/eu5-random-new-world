@@ -21,7 +21,6 @@ from rnw.archetypes import (
 )
 from rnw.eu5_archetypes import ArchetypeCalibration, TheocracyInstitutions
 from rnw.eu5_natives import (
-    Country,
     NativesError,
     VanillaNatives,
     _archetypes,  # pyright: ignore[reportPrivateUsage]
@@ -33,6 +32,7 @@ from rnw.eu5_natives import (
     discover_areas,
     state_economy,
 )
+from rnw.eu5_start import Country
 from rnw.pdx import parse
 from rnw.societies import (
     CITY,

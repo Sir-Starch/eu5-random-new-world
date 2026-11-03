@@ -1,7 +1,7 @@
 """Make the atlas of a world from what the export holds when its peoples are founded.
 
 The export knows, for every generated location, its identity (``Plan``), its climate, vegetation,
-topography and raw material (``CellBiomes``) and what its peoples are (``NativeWorld``: owner,
+topography and raw material (``CellBiomes``) and what its peoples are (``FinalStartPlan``: owner,
 culture, religion, population, society complexity, settlement). This gathers them into the
 ``rnw.atlas.Atlas`` the viewer draws, with the New World's box of the map at a fraction of its size
 (NOT GAME VALIDATED; ADR 0010, B).
@@ -12,7 +12,6 @@ culture, religion, population, society complexity, settlement). This gathers the
 
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -23,15 +22,14 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from rnw.eu5_biomes import CellBiomes
-    from rnw.eu5_natives import NativeWorld
     from rnw.eu5_newworld import Plan
+    from rnw.eu5_start import FinalStartPlan, PopCohort
     from rnw.newworld import NewWorld
 
 STEP: Final[int] = 4
 # Sea farther than this many pixels of the atlas from any land is left out of the picture: the
 # box shows the world and its coasts, not the outline of the canvas it was cut from.
 SEA_MARGIN: Final[int] = 40
-POP: Final[re.Pattern[str]] = re.compile(r"size = ([0-9.]+)\s+culture = (\S+)\s+religion = (\S+)")
 
 
 def _vocabulary(values: list[str]) -> tuple[tuple[str, ...], dict[str, int]]:
@@ -39,14 +37,10 @@ def _vocabulary(values: list[str]) -> tuple[tuple[str, ...], dict[str, int]]:
     return words, {word: index for index, word in enumerate(words)}
 
 
-def _main_pop(rows: list[str]) -> tuple[str, str]:
-    """The culture and religion of the largest pop of a location ('' where it has none)."""
-    best, culture, religion = -1.0, "", ""
-    for row in rows:
-        match = POP.search(row)
-        if match is not None and float(match.group(1)) > best:
-            best, culture, religion = float(match.group(1)), match.group(2), match.group(3)
-    return culture, religion
+def _main_pop(rows: tuple[PopCohort, ...]) -> tuple[str, str]:
+    """The largest single cohort's identities, preserving first-in-plan ties."""
+    best = max(rows, key=lambda pop: pop.amount, default=None)
+    return (best.culture, best.religion) if best is not None else ("", "")
 
 
 def grown_mask(mask: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
@@ -89,7 +83,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     world: NewWorld,
     plan: Plan,
     biomes: CellBiomes,
-    natives: NativeWorld,
+    natives: FinalStartPlan,
     mask: NDArray[np.bool_],
     step: int = STEP,
     margin: int = SEA_MARGIN,
@@ -116,7 +110,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     areas = tuple(natives.names.get(cell.area, cell.area) for cell in plan.cells)
     regions = tuple(natives.names.get(cell.region, cell.region) for cell in plan.cells)
     index_of = {key: number for number, key in enumerate(keys)}
-    pops = [_main_pop(natives.pops.get(key, [])) for key in keys]
+    pops = [_main_pop(natives.pops.get(key, ())) for key in keys]
     cultures, culture_of = _vocabulary([culture for culture, _ in pops])
     religions, religion_of = _vocabulary([religion for _, religion in pops])
     materials, material_of = _vocabulary(list(biomes.raw_material))

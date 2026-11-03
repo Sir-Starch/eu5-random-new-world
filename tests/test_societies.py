@@ -12,7 +12,7 @@ from statistics import median
 import numpy as np
 import pytest
 
-from rnw.eu5_natives import _pop_lines  # pyright: ignore[reportPrivateUsage]
+from rnw.eu5_natives import _pop_cohorts, pop_lines  # pyright: ignore[reportPrivateUsage]
 from rnw.rng import SplitMix64
 from rnw.settings import NATIVES
 from rnw.societies import (
@@ -126,7 +126,7 @@ def _written_country_shares(societies: Societies) -> list[tuple[int, int]]:
     keys = [f"loc_{node}" for node in range(len(societies.population))]
     religions = ["test_religion"] * (int(societies.religion.max()) + 1)
     cultures = ["test_culture"] * (int(societies.culture.max()) + 1)
-    written = _pop_lines(societies, keys, religions, cultures)
+    written = pop_lines(_pop_cohorts(societies, keys, religions, cultures))
     amounts: list[dict[str, int]] = [{} for _ in keys]
     for node, key in enumerate(keys):
         found: dict[str, int] = {}

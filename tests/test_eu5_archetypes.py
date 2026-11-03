@@ -40,8 +40,9 @@ from rnw.eu5_archetypes import (
     written_countries,
     written_pairs,
 )
-from rnw.eu5_natives import Country, country_records, discover_areas
+from rnw.eu5_natives import country_records, discover_areas
 from rnw.eu5_rewrite import insert_into_block
+from rnw.eu5_start import Country
 from rnw.pdx import parse
 
 if TYPE_CHECKING:

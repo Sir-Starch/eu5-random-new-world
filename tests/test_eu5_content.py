@@ -305,7 +305,7 @@ def test_decisions_are_carried_out_on_the_scripts_of_a_world(tmp_path: Path) -> 
         "g5": [_pop("1.000", "rare", "folk")],
     }
     scripts: dict[str, bytes] = {}
-    stats = carry_out(root, scripts, checked, pops, hierarchy, {"tenochtitlan": "v1"})
+    stats = carry_out(root, scripts, checked, places(pops), hierarchy, {"tenochtitlan": "v1"})
     assert stats["formables_too_thin"] == ["YYY_f"]
     assert stats["game_start_bound"] is True
     formables = scripts["in_game/common/formable_countries/00.txt"].decode()

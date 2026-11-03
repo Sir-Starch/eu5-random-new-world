@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from rnw.content_check import Checked
     from rnw.content_decisions import Verdict
     from rnw.content_inventory import Consumer
+    from rnw.eu5_start import PopCohort
     from rnw.geography import Location
 
 # The block through which vanilla gates each kind of object.
@@ -245,6 +246,20 @@ def places(pops: Mapping[str, Sequence[str]]) -> list[Place]:
     return found
 
 
+def cohort_places(pops: Mapping[str, Sequence[PopCohort]]) -> list[Place]:
+    """Inhabited places from the final plan; aggregate cohorts before choosing identity."""
+    found: list[Place] = []
+    for key in sorted(pops):
+        size_of: dict[tuple[str, str], int] = {}
+        for pop in pops[key]:
+            pair = (pop.culture, pop.religion)
+            size_of[pair] = size_of.get(pair, 0) + pop.amount
+        if size_of:
+            (culture, religion), _ = max(size_of.items(), key=lambda item: (item[1], item[0]))
+            found.append(Place(key, culture, religion, sum(size_of.values())))
+    return found
+
+
 def culture_traits(game_dir: Path) -> dict[str, tuple[str, frozenset[str]]]:
     """Language and culture groups of every vanilla culture, from ``common/cultures``."""
     traits: dict[str, tuple[str, frozenset[str]]] = {}
@@ -446,7 +461,7 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     game_dir: Path,
     scripts: dict[str, bytes],
     checked: Checked,
-    pops: Mapping[str, Sequence[str]],
+    candidates: Sequence[Place],
     hierarchy: Mapping[str, Location],
     remap: Mapping[str, str],
     *,
@@ -454,11 +469,11 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
 ) -> dict[str, object]:
     """Write every decision of the table that edits scripts into ``scripts``; return the counts.
 
-    Neutralizations close their gates; the rebinds read the world's pop lines. The result
-    names what each rebound formable was bound to, so the report shows it.
+    Neutralizations close their gates; rebinds read the final plan's population facts.
+    The result names what each rebound formable was bound to, so the report shows it.
     """
     store = Scripts(script_files(game_dir), scripts)
-    basis = Basis(places(pops), culture_traits(game_dir), hierarchy)
+    basis = Basis(candidates, culture_traits(game_dir), hierarchy)
     rebound: dict[str, list[str]] = {}
     seat_file = ""
     for key, consumer in checked.consumers.items():

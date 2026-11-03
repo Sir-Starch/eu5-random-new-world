@@ -63,6 +63,7 @@ from rnw.eu5_empires import (
     unlinked,
 )
 from rnw.eu5_remap import GeographicRemap, remap_text
+from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.eu5_technology import (
     TRIGGER_FILE,
     Families,
@@ -279,57 +280,6 @@ class VanillaNatives:
     empire: EmpireCalibration | None = None
     archetypes: ArchetypeCalibration | None = None
     state_floor: StateFloor = MINIMUM_STATE_SUPPORT
-
-
-@dataclass(frozen=True, slots=True)
-class Country:
-    """One generated native country."""
-
-    tag: str
-    name: str
-    kind: str
-    members: tuple[str, ...]
-    capital: str
-    culture: str
-    religion: str
-    include: str
-    areas: tuple[str, ...]
-    color: tuple[int, int, int]
-    color2: tuple[int, int, int]
-    government: tuple[tuple[str, str], ...] = ()
-    level: int | None = None
-    great: bool = False
-    rank: str = ""
-    landed: bool = False
-    currency: tuple[tuple[str, int], ...] = ()
-    archetype: str = ""
-    laws: tuple[tuple[str, str], ...] = ()
-    parliament: str = ""
-
-
-@dataclass(frozen=True, slots=True, eq=False)
-class NativeWorld:
-    """Native start state for generated locations, ready to serialize."""
-
-    pops: dict[str, list[str]]
-    countries: tuple[Country, ...]
-    ranks: dict[str, tuple[str, str]]
-    markets: tuple[str, ...]
-    holy_sites: dict[str, str]
-    names: dict[str, Name]
-    vassals: tuple[tuple[str, str], ...]
-    complexity: dict[str, int]
-    population: dict[str, int]
-    stats: dict[str, object]
-    technology: dict[str, object] = field(default_factory=dict)
-    roads: tuple[tuple[str, str], ...] = ()
-    opinions: tuple[tuple[str, str, str], ...] = ()
-    extraordinary: dict[str, object] = field(default_factory=dict)
-    alliances: tuple[tuple[str, str], ...] = ()
-    rivals: tuple[tuple[str, str], ...] = ()
-    confederations: tuple[tuple[str, ...], ...] = ()
-    confederation_date: str = ""
-    archetypes: dict[str, object] = field(default_factory=dict)
 
 
 def _milli(value: str) -> int:
@@ -1277,7 +1227,7 @@ def diaspora(  # noqa: PLR0913 - a diaspora needs the zones, identities and vani
     cultures: list[str],
     vanilla: VanillaNatives,
     seed: int,
-) -> dict[str, list[str]]:
+) -> dict[str, list[PopCohort]]:
     """Small pops of the vanilla cultures and religions no zone took, by best homeland fit."""
     inhabited = np.flatnonzero(societies.population > 0).tolist()
     by_zone: dict[int, list[int]] = {}
@@ -1301,13 +1251,11 @@ def diaspora(  # noqa: PLR0913 - a diaspora needs the zones, identities and vani
         members = by_zone[zone]
         return members[SplitMix64(stream).below(len(members))], zone
 
-    pops: dict[str, list[str]] = {}
+    pops: dict[str, list[PopCohort]] = {}
 
     def add(node: int, culture: str, religion: str) -> None:
         kind = "peasants" if state[node] else "tribesmen"
-        size = _size(DIASPORA_MILLI)
-        row = f"\tdefine_pop = {{\ttype = {kind}\tsize = {size}\tculture = {culture}\t"
-        pops.setdefault(keys[node], []).append(row + f"religion = {religion} }}")
+        pops.setdefault(keys[node], []).append(PopCohort(kind, DIASPORA_MILLI, culture, religion))
 
     for name in sorted(set(vanilla.cultures) - used_cultures):
         info = vanilla.cultures[name]
@@ -1320,11 +1268,11 @@ def diaspora(  # noqa: PLR0913 - a diaspora needs the zones, identities and vani
     return pops
 
 
-def _pop_lines(
+def _pop_cohorts(
     societies: Societies, keys: list[str], religions: list[str], cultures: list[str]
-) -> dict[str, list[str]]:
-    """``define_pop`` lines per inhabited location: elites, peasants, tribesmen."""
-    pops: dict[str, list[str]] = {}
+) -> dict[str, list[PopCohort]]:
+    """Typed cohorts per inhabited location: elites, peasants, tribesmen."""
+    pops: dict[str, list[PopCohort]] = {}
     elite = {polity.capital for polity in societies.polities if polity.kind == STATE}
     for node, key in enumerate(keys):
         total = int(societies.population[node])
@@ -1340,14 +1288,23 @@ def _pop_lines(
         rows.append(("peasants", int(societies.peasants[node])))
         rows.append(("tribesmen", total - sum(amount for _, amount in rows)))
         pops[key] = [
-            (
-                f"\tdefine_pop = {{\ttype = {kind}\tsize = {_size(amount)}\t"
-                f"culture = {culture}\treligion = {religion} }}"
-            )
-            for kind, amount in rows
-            if amount > 0
+            PopCohort(kind, amount, culture, religion) for kind, amount in rows if amount > 0
         ]
     return pops
+
+
+def pop_lines(pops: Mapping[str, Sequence[PopCohort]]) -> dict[str, list[str]]:
+    """Serialize the plan's cohorts once at the script-output boundary, in original order."""
+    return {
+        key: [
+            (
+                f"\tdefine_pop = {{\ttype = {pop.kind}\tsize = {_size(pop.amount)}\t"
+                f"culture = {pop.culture}\treligion = {pop.religion} }}"
+            )
+            for pop in rows
+        ]
+        for key, rows in pops.items()
+    }
 
 
 class PlaceNamer:
@@ -1575,7 +1532,7 @@ def _rank_setups(
     return ranks
 
 
-def build_natives(  # noqa: PLR0913 - the start state reads the whole generated world.
+def build_start_plan(  # noqa: PLR0913 - the start state reads the whole generated world.
     *,
     world: NewWorld,
     plan: Plan,
@@ -1585,7 +1542,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
     settings: NativeSettings,
     seed: int,
     loc_keys: KeySpace,
-) -> NativeWorld:
+) -> FinalStartPlan:
     """Societies, their cultures and religions, countries and their names."""
     graph, cells = land_graph(world, biomes, river_pixels, vanilla)
     cells = replace(
@@ -1670,7 +1627,7 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         )
     )
     discovered = sum(len(country.areas) for country in countries) - before
-    pops = _pop_lines(societies, keys, religions, cultures)
+    pops = _pop_cohorts(societies, keys, religions, cultures)
     for where, rows in diaspora(
         societies,
         keys,
@@ -1713,8 +1670,8 @@ def build_natives(  # noqa: PLR0913 - the start state reads the whole generated 
         "areas_discovered_for_opinions": discovered,
         "state_economy": state_economy(societies, near, vanilla.state_floor),
     }
-    return NativeWorld(
-        pops=pops,
+    return FinalStartPlan(
+        pops={key: tuple(rows) for key, rows in pops.items()},
         countries=tuple(countries),
         ranks=ranks,
         markets=tuple(keys[node] for node in societies.markets),

@@ -12,7 +12,6 @@ from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_natives import (
     COUNTRY_NAME,
     OPERATORS,
-    Country,
     Culture,
     NativesError,
     PlaceNamer,
@@ -29,6 +28,7 @@ from rnw.eu5_natives import (
     match_homelands,
     new_tags,
     overlord_level,
+    pop_lines,
     state_population_floor,
     template_governments,
     template_levels,
@@ -38,6 +38,7 @@ from rnw.eu5_natives import (
 )
 from rnw.eu5_nw_export import referenced_words
 from rnw.eu5_rewrite import insert_into_block, prune_setup
+from rnw.eu5_start import Country
 from rnw.eu5_technology import FAMILIES, MESOAMERICA, NORTH_AMERICA, plain
 from rnw.loc_keys import KeySpace, key_hashes
 from rnw.model import CellClass
@@ -439,7 +440,7 @@ def test_diaspora_gives_every_unused_culture_and_religion_a_small_pop() -> None:
         reserved_tags=frozenset(),
         holy_sites=(),
     )
-    rows = diaspora(
+    cohorts = diaspora(
         societies,
         ["k0", "k1", "k2"],
         zones=[(west, 1000), (east, 2000)],
@@ -449,6 +450,7 @@ def test_diaspora_gives_every_unused_culture_and_religion_a_small_pop() -> None:
         vanilla=vanilla,
         seed=1,
     )
+    rows = pop_lines(cohorts)
     assert sorted(rows) == ["k0", "k1"]
     assert rows["k0"] == [
         "\tdefine_pop = {\ttype = tribesmen\tsize = 0.050\tculture = cy\treligion = r0 }",

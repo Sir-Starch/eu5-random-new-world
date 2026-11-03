@@ -504,7 +504,20 @@ H2 schema.
   record the installed axes and text interfaces, control contracts, published and
   held-out seed sets, and 24 bootstrap-only baseline measurements. Full-world
   statistical acceptance remains H7 work; held-out seeds have not been used.
-
+- **H1, completed 2026-11-03:** `eu5_start.FinalStartPlan` holds countries, typed
+  population cohorts and all existing setup facts. `build_start_plan` supplies it
+  through the existing static construction. EU5 writers, output verifiers,
+  development, content, AI and the atlas read that boundary. Population script
+  is serialized only at output; current largest-cohort atlas and aggregated
+  content identity rules remain distinct. No history simulation is enabled yet.
+  [V-EXEC] Locked sync and `make check` pass (2,455 Python tests, 15 optional
+  skips; strict types, format/lint, 23 Rust tests), as do the 13 read-only
+  installed-game checks and generated content-reference check. The final-source
+  reference export reproduces all 868 nonmetadata files, digest
+  `e4914d9bbfce5c7fedb76573fc228b4c195b4453130456500f30ea3e9d73f6aa`;
+  frozen goldens, version 1.1.0 and epoch 60 are unchanged. Source-only foundation;
+  candidate/hub delivery remains H7. **Next: H2**, the game-independent history
+  model, synchronous rounds, causal validation and divided-valley fixture.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

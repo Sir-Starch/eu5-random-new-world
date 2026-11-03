@@ -35,7 +35,6 @@ from rnw.eu5_development import (
     to_hundredths,
     to_milli,
 )
-from rnw.eu5_natives import Country, NativeWorld
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_nw_export import (
     BUILDINGS_FILE,
@@ -47,6 +46,7 @@ from rnw.eu5_nw_export import (
     verify_development,
 )
 from rnw.eu5_rewrite import drop_block_entries, insert_into_block
+from rnw.eu5_start import Country, FinalStartPlan
 from rnw.geography import Location
 from rnw.model import CellClass
 from rnw.pdx import parse
@@ -445,8 +445,8 @@ def _country(tag: str, kind: str, members: tuple[str, ...], capital: str) -> Cou
     )
 
 
-def _natives() -> NativeWorld:
-    return NativeWorld(
+def _natives() -> FinalStartPlan:
+    return FinalStartPlan(
         pops={},
         countries=(
             _country("QQA", "state", ("g1", "g2"), "g1"),

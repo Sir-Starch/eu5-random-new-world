@@ -12,10 +12,8 @@ import pytest
 
 from rnw.eu5_empires import OPINION_TYPES, EmpireCalibration
 from rnw.eu5_natives import (
-    Country,
     Culture,
     NativesError,
-    NativeWorld,
     VanillaNatives,
     _Cells,  # pyright: ignore[reportPrivateUsage]
     _include,  # pyright: ignore[reportPrivateUsage]
@@ -25,6 +23,7 @@ from rnw.eu5_natives import (
     homeland,
 )
 from rnw.eu5_nw_export import COUNTRIES_FILE, SETUP_DIR, NewWorldExportError, verify_technology
+from rnw.eu5_start import Country, FinalStartPlan
 from rnw.eu5_technology import (
     FAMILIES,
     FAMILY_WEIGHT,
@@ -394,8 +393,8 @@ PATH = f"{SETUP_DIR}/{COUNTRIES_FILE}".removeprefix("game/")
 
 def _world(
     countries: tuple[Country, ...], vassals: tuple[tuple[str, str], ...] = ()
-) -> NativeWorld:
-    return NativeWorld(
+) -> FinalStartPlan:
+    return FinalStartPlan(
         pops={},
         countries=countries,
         ranks={},

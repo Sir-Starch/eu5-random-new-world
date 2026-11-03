@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Begin the 1.2.0 history implementation: record the installed contracts and
+  bootstrap baseline, and extract a shared final start plan with typed population
+  cohorts. This foundation keeps the existing static generation and world bytes;
+  historical simulation and its reading surfaces are not enabled yet.
+
 - Add **Alternative History** to the hub metadata and publish all four Workshop
   categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.
 
