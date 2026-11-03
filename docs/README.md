@@ -16,7 +16,7 @@ phases and acceptance criteria.
 | Document | Purpose |
 |---|---|
 | [Generator guide](generator-guide.md) | Installation, window/CLI workflow, library, world files and recovery |
-| [Known limitations](known-limitations.md) | Accepted compatibility, save, platform and gameplay limits |
+| [Known limitations](known-limitations.md) | Game/save compatibility, generation requirements and known visual issues |
 | [Product specification](product-spec.md) | Shipping player journey and engineering requirements |
 | [Architecture](architecture.md) | Current pipeline, module map and invariants |
 | [Capability overview](feasibility.md) | Implemented T3 route and boundaries of the product |

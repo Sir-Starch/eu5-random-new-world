@@ -30,7 +30,7 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 > **Compatibility:** RNW 1.1.0 targets EU5 **1.4.6, Steam build 26300913**. Start a new campaign and keep its generated world mod. Exact regeneration needs the original algorithm and game inputs; updating the generator does not migrate saves.
 
 Read [Known limitations](docs/known-limitations.md) before playing: supported game
-build, save and mod compatibility, and what remains unverified in the current version.
+build, save and mod compatibility, generation requirements and known visual issues.
 
 ## Features
 

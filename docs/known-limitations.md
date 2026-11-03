@@ -1,82 +1,51 @@
 # Known limitations
 
-Current release: **RNW 1.1.0 / epoch 60**, targeting **EU5 1.4.6 / Steam build
-26300913** (2026-11-01). These are the accepted scope and operational limits;
-they are not an uncompleted release checklist. See [release process](release-process.md)
-for the published artifacts and [roadmap](roadmap.md) for future work.
+These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
+[generator guide](generator-guide.md).
 
-- **Specific game build.** Other patches need their own input-contract and
-  compatibility checks. The metadata's `1.4.*` match does not prove future patch
-  compatibility. Worlds made before 0.13.22 lack the 1.4.5 DLC adaptations; use
-  a newly generated world for a new campaign. Existing saves are not migrated.
-  The 1.1.0 reference world reproduces byte for byte on build 26300913, and
-  sessions on that build loaded 1.1.0 worlds without a crash or an RNW script
-  error; a dedicated campaign on 1.4.6 was not run. A world code made by 1.0.0
-  (epoch 59) can give another world in 1.1.0 (epoch 60); the application says so.
-  [V-LOCAL / V-EXEC C425–C427, C462]
-- **New campaign and one world at a time.** Start in 1337 with one RNW world
-  enabled. Keep that exact world mod for its saves. Restart EU5 before switching
-  maps or replacing a loaded world's files: earlier in-process reloads mixed map
-  data and crashed. Closing/reopening the main-menu Mods manager can refresh
-  metadata/visibility (C429); that is not evidence for safely swapping a loaded map.
-  [V-GAME C85, C429]
-- **A code alone is not a complete old-world backup.** Exact regeneration needs
-  the original algorithm, settings/rolls and game inputs. A newer game or generator
-  can produce another result from the code. Preserve a built world used by saves.
-  [V-EXEC C141; ADR 0003]
-- **World-edge rendering.** The owner reproduced a close-zoom terrain fissure in
-  vanilla. RNW retains the accepted periodic source extension for visual concealment,
-  continuous identities and route/hang fixes, with independent river watersheds
-  and real outlets. Remaining engine/rendering questions are tracked in the
-  [wrap dossier](research/map-wrap-dossier.md). [V-GAME / V-EXEC C412–C419]
-- **Faint pale patches round small islands in the water.** The game's water draws a soft
-  patch of lighter colour round small islands. The owner accepted it on 2026-11-02 as a game
-  limitation after observing the same in the game's own islands (the owner's observation, not a
-  separate measurement here). RNW paints a new coast's water from the game's own colours, the
-  open sea round it plus the shelf at that distance, and leaves the original sea unchanged from
-  about 48 pixels out; what remains is the halo the game itself draws. It is not a reason to
-  reopen the water rebuild. [V-GAME / V-LOCAL C461, C465, C468]
-- **Balance and unusual worlds.** Campaign and regression evidence is scoped to
-  the worlds/builds tested, not every seed or every mechanic. Known diagnostic
-  uncertainties and inherited engine warnings need attribution before being called
-  RNW defects. AI expansion and society balance remain areas for refinement.
-  [C391, C397, C410–C411, C419, C425]
-- **Other mods.** Map overhauls or mods changing the Americas can conflict. Other
-  combinations have no general validation claim.
-- **Multiplayer** is supported and has been tested by the community (owner report,
-  2026-11-03). Matching world codes alone do not establish compatibility.
-- **Generation may refuse an invalid result.** Sea routes, river drawings,
-  location limits and content checks reject failed invariants explicitly.
-  The application offers another-seed retry; every settings/seed combination is
-  not promised to succeed. [V-EXEC C406]
-- **The window needs a system web view.** The generator's window draws with WebView2 on
-  Windows and WebKitGTK 4.1 on Linux. EU5's Proton prefix has no WebView2, so the hub run
-  through Proton opens the classic window instead; whether the new window works in a prefix
-  with WebView2 installed is untested. Native Linux players get it from the Linux package.
-  A window that opens but draws badly can be replaced by the classic one in Settings or with
-  `--classic`. [V-LOCAL / V-EXEC C444]
-- **Unsigned Windows binaries.** Smart App Control may block them. The generator
-  needs no administrator access. Scanner reports cover specific files and are
-  not a signature or universal acceptance by antivirus software. The limitation
-  is disclosed and accepted for 1.0.0. [ADR 0009; C437–C439]
-- **One heuristic detection on the Windows window.** The window is built with the MSVC
-  toolchain. On VirusTotal, Trapmine reports `suspicious.low.ml.score` (a low-confidence
-  machine-learning heuristic) for one of 71 engines; Microsoft and every other engine report
-  nothing. The owner accepted this detection in writing on 2026-11-02 as a false positive.
-  Reports apply to the exact file hashes named in the release notes. [V-EXEC 2026-11-02]
-- **Launcher version.** `Random New World Generator.exe` is the program of release 1.0.0,
-  unchanged in source since then; its version resource still names 1.0.0. It has no
-  detections on VirusTotal. [V-EXEC 2026-11-02]
-- **Platform scope.** Windows and Linux/Proton are the offered routes; native Linux
-  and Windows package/CLI self-tests pass in CI. The owner has run the generator
-  on Windows 11 and through Workshop/Proton. macOS has a CI build but no offered
-  game/platform support claim. Measurements from one machine are not performance
-  guarantees for another. [C428, C438–C439, C441]
-- **Mod-list text.** EU5 metadata has one title and short description, so mod-list
-  titles remain English. The generator and world text use all official languages
-  discovered from the game; catalogue coverage is checked before shipping. [C276, C431]
+## Game compatibility and saves
 
-Existing local **code only** library records after installing from Workshop are
-expected application data, not worlds bundled in the download. The
-[generator guide](generator-guide.md#library-shared-by-installed-copies) explains
-storage, recovery and what the label means (C441).
+- **EU5 1.4.6, Steam build 26300913.** Compatibility with later patches is not
+  guaranteed. Check RNW's compatibility notes before updating the game for an
+  ongoing campaign.
+- **New 1337 campaigns only.** A generated map cannot be added to an existing
+  campaign. Keep the exact generated world mod used by each save; updating the
+  generator does not migrate saves or update their maps. A world code or compact
+  `.rnworld` file stores the recipe, not a complete backup: a different generator
+  algorithm or game files can produce a different world.
+- **One world at a time; restart when switching.** Enable only the generated
+  world you intend to play, with the Workshop generator item disabled. Fully
+  restart EU5 before switching maps or replacing a loaded world's files;
+  switching within the same game session can mix map data and cause crashes.
+- **Other mods can conflict.** Map overhauls and mods replacing American
+  geography or content are the main risk; compatibility with arbitrary mod
+  combinations is not guaranteed. Refined Colonization is supported with this
+  load order: **Refined Colonization → generated RNW world mod**.
+- **Multiplayer needs matching files.** Multiplayer is supported and has been
+  tested by the community. All players need the same game version, generated
+  world mod and other mods. Sharing a world code alone is not enough if players
+  regenerate it with different generator versions or game files.
+
+## Generation and startup
+
+- **Allow about 7.5 GB of free RAM for generation.** On a 16 GB system, close
+  EU5 after opening the generator, or launch the generator directly from its
+  folder.
+- **Some seeds and settings cannot produce a valid world.** Generation stops
+  with an error in that case. Use **Generate with a new seed** to retry.
+- **Windows startup warnings.** The binaries are unsigned, so Smart App Control
+  may block them. The 1.1.0 window also received one heuristic antivirus detection;
+  the [release notes](releases/1.1.0.md#checksums-and-windows-binary-scans) list
+  the exact files and scan results. The generator requires no administrator access.
+- **The main window needs WebView2 on Windows or WebKitGTK 4.1 on Linux.**
+  Without it, the classic window opens automatically, including in the usual
+  Workshop/Proton setup. If the window is blank or draws incorrectly, select
+  **Use the classic window** in Settings or launch with `--classic`.
+  See [window troubleshooting](generator-guide.md#the-window-is-blank-or-does-not-draw-properly).
+  Supported play routes are Windows and Linux/Proton; macOS is not supported.
+
+## Visible map issues
+
+- **A terrain fissure can be visible at the world-wrap seam when zoomed in.**
+  This has also been observed in vanilla EU5.
+- **Small islands can have a faint pale halo in the surrounding water.**
