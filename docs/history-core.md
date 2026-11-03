@@ -1,9 +1,8 @@
-# History core (H2)
+# History core and societies (H2–H3)
 
-[V-EXEC, 2026-11-03] This implements the offline H2 phase of the accepted
+[V-EXEC, 2026-11-03] This implements the offline H2–H3 phases of the accepted
 [history plan](history-plan.md#17-phases-and-scope-control). It is not called by
-the world exporter yet. H3 supplies the remaining society dimensions, trajectories
-and migration; H4 supplies the bootstrap/projection adapter. Existing world bytes,
+the world exporter yet. H4 supplies the bootstrap/projection adapter. Existing world bytes,
 goldens, world codes, product version and epoch are unchanged.
 
 ## Ownership and entry points
@@ -12,11 +11,15 @@ goldens, world codes, product version and epoch are unchanged.
 |---|---|
 | `history_model.py` | Frozen integer records: geography, cohorts, founding actors, lifecycle/lineage, holdings, agreements, directed memories, proposals, sparse effects and events |
 | `history_checks.py` | Physical-route, partition, seat, agrarian support, lifetime and dependency invariants; sparse graph index |
-| `history_actions.py` | Prior-snapshot prerequisites, strength/travel/defence, commitments, directed memory and joint inheritance |
+| `history_context.py` | Immutable round lookup, physical contacts, travel, coordination and integration burden |
+| `history_actions.py` | Prior-snapshot prerequisites, conflict resolution, commitments, directed memory and joint inheritance |
+| `history_societies.py` | Eight-dimensional profiles, repeated-problem reforms, conservative migration and local inheritance |
+| `history_trajectories.py` | Eligible per-hearth ambitions, recognition of actual structures and seeded/realized counts |
 | `history_engine.py` | Canonical bootstrap, local proposal policy, arbitration, atomic rounds, simulation through 1337, causal replay and semantic digest |
 
-`create(geography, foundings, seed=...)` validates the caller's complete inhabited
-partition and records each founding. It does not fill missing holdings, create
+`create(geography, foundings, seed=..., empire_permille=250, checkpoint=...)`
+validates the caller's complete inhabited partition and records each founding and
+eligible extraordinary ambition. It does not fill missing holdings, create
 countries or invent population. The adapter must supply only generated New World
 actors; the core has no game tags, installed inputs, resource roll or localization.
 
@@ -28,8 +31,8 @@ normal policy ranks at most three eligible local choices per living actor.
 
 `validate_history(history)` reconstructs the bootstrap and replays every recorded
 proposal through those rules, then compares every event and final fact. It rejects
-missing/future/cyclic causes, changed outcomes, unexplained holdings, memories or
-agreements, and inconsistent lifecycle data. `digest(history)` hashes canonical
+missing/future/cyclic causes, changed outcomes, unexplained holdings, profiles,
+population, ambitions, memories or agreements, and inconsistent lifecycle data. `digest(history)` hashes canonical
 semantic data; no text, timing or process hash order enters it. The dataclasses are
 an internal interface, not the portable history format planned for H5.
 
@@ -42,12 +45,18 @@ physical intermediary; an indirect agreement cannot fabricate another route.
 
 Arbitration orders action priority, proposal rank and a seed-derived tie draw.
 Each actor has 1,000 commitment units. Contacts cost 50, exchange/access 100,
-protection 300, defence pacts/submission 400, and a conflict 600 from each principal;
+protection 300, defence pacts/submission 400, migration 200, and a conflict or
+pressure episode 600 plus up to 200 integration units from each principal;
 unions and divisions reserve the participants' full budget. An allied or subject
 contribution uses up to 300 of its remaining units. Conflicting obligations never
 let one ally contribute to both sides. The journal records the actual allocations.
 A subject gets one overlord; a new submission cannot also create an independent
 pact in the same round. The next round starts with fresh commitments.
+Reform costs 300 plus half the current tradition and one tenth of the combined
+centralization/integration scores (at most 1,000). Only one reform and one movement
+per participant can commit in a round. A movement cannot share a participant with
+a territorial conflict: both evaluate the old agrarian support, so combining them
+could otherwise spend that support twice.
 
 The constructor accumulates all accepted effects and builds the round's fact
 tables once. Two independent unions can occur together: inherited knowledge and
@@ -60,7 +69,8 @@ Invalid inputs raise `HistoryError`. Ordinary refusals and failed conflicts are
 recorded with typed outcomes/reasons. A refused action changes no facts and spends
 no commitments; a repelled attacker spends its commitment and leaves a different
 directed memory. Every committed round checks the fixed tenure partition,
-connected territory, viable seats, agrarian support and acyclic dependencies.
+connected territory, viable seats, agrarian support, acyclic dependencies and
+exact population/peasant conservation for every culture–faith pair.
 No finished-territory repair or silent fallback follows the transition.
 
 The callback can be `Progress.checkpoint`; it is called within graph construction,
@@ -80,9 +90,18 @@ The core writes no files or existing worlds.
 - **Conflict:** a known, reachable landed neighbour, a grievance or a real power
   opportunity, and a valid proposed transfer. Strength combines population,
   farming support, technology, seat-to-frontier travel, defensive approaches,
-  actual allied/subject contributions and bounded integer uncertainty. Partial
+  coordination, posture, actual allied/subject contributions and bounded integer uncertainty. Partial
   conquest cannot remove the surviving opponent's seat or farming support;
-  complete annexation retires the defeated actor. Culture and faith stay put.
+  complete annexation retires the defeated actor. A multi-district annexation
+  resolves at an actual reachable frontier, rather than the first sorted interior
+  place. New, heterogeneous and distant holdings consume integration capacity;
+  a proposed conquest beyond that capacity is refused. Conquest changes no cohort.
+- **Pressure/resistance:** an offensive landed actor can confront a known,
+  physically bordering tribe/community when its power is at least twice theirs.
+  It uses the same bounded contest, defensive approaches and allied commitments,
+  but can never transfer tribal/unorganized territory. Its recorded threat or
+  repelled attempt supplies a reason for common defence; a large neighbour alone
+  still grants no fear or pact.
 - **Submission/protection/pacts:** submission needs a power imbalance, a capable
   lord and an acyclic graph. Independent pacts require free participants and a
   reachable third party they have actually feared or fought; mere different
@@ -97,10 +116,90 @@ The core writes no files or existing worlds.
   the host, and hostility does not rule out a bargain. The agreement records its
   place and cause; it is not yet a written EU5 opinion.
 
-These numeric propensities and the initial authority choices are H2 primitives.
-They are not fitted S1–S11 results. H3 must add coordination, institutional costs,
-integration and conservative migration; H7 must calibrate the automatic policy,
-event density and end-to-end performance on the prescribed seed sets.
+## Society profiles and reform
+
+Each actor holds one immutable `Society`, with a cause pointing to its last
+profile transition. Foundings can supply a profile; otherwise named peoples-seed
+streams and the existing farming/coastal opportunity supply it. Donor culture and
+faith names grant no profile score. Numeric dimensions are integer permille;
+categorical dimensions are typed values. No EU5 position is written in this phase.
+
+| Dimension | Current consequence |
+|---|---|
+| Centralization | Mobilization/coordination and travel efficiency, with continuing administrative overhead and reform cost |
+| Authority | Union inclination, eligible institutional responses, sacred-centre and council-network recognition |
+| Livelihood | Food-supported mobilization and the propensity to move; it never converts a tenure class or creates peasants |
+| Exchange orientation | Contact/exchange inclination; overland/coastal reform requires the corresponding physical opportunity |
+| Religious authority | Sacred-access inclination and credibility, caused sacred reforms and centre recognition |
+| Military posture | Offensive/defensive contest tradeoff, conflict/common-defence inclination; pressure requires offensive intent |
+| Integration | Cost of distant, heterogeneous and recent conquests, admission of new minorities, and reform overhead |
+| Institutional tradition | Credibility of kept bargains, reform cost and resistance, and the propensity to retain institutions |
+
+A reform changes exactly one dimension: a numeric step of 100 or an eligible
+categorical response. It needs experience in at least two distinct prior rounds
+within 75 years, after the current profile was established, and a 15-year interval
+since the last reform attempt. Cooperation can support councils, exchange and
+institutional continuity; repeated confrontation/displacement can support defence,
+coordination or changed institutions; incorporation can support integration;
+actual repeated sacred access can support religious authority. Each reform cites
+the recorded experience. Deterministic resistance can fail the reform while
+spending its commitment; ordinary ineligibility spends nothing. A quiet actor
+does not reform to fill a quota.
+
+Unions inherit population-weighted numeric experience and the seat's livelihood,
+exchange and posture, with council authority as their explicit bargain. A division
+combines the common experience with each local predecessor's last recorded
+profile and the partition's authority; local pre-union reforms are retained in that
+inheritance. Neither transition alters culture, faith or the fixed tenure partition.
+
+## Conservative migration
+
+`Geography` retains the bootstrap cohorts; `Snapshot.settlements` holds the current
+cohorts and the last movement cause. Capacity is the original population plus the
+district's explicit nonnegative `headroom`. Its default zero grants no spare space.
+The H4 adapter must derive any headroom from physical/food opportunity, not RGOs.
+
+A move needs two known, nonhostile holders and a direct verified physical route
+between inhabited locations. No settlement expansion or uninhabited destination
+is introduced. The origin must be at least 90% full, recently conquered or under
+a recorded threat/grievance. A destination needs space; a new culture–faith
+minority also needs integration of at least 500. At most 10% of one existing
+cohort moves, with its proportional integer peasant count. Both countries and
+seats must remain agrarian-viable. Population, farmers and every identity total
+are conserved, including through conquest, union and division. Commitments and
+participant reservations prevent simultaneous movements from overfilling a place
+or spending the same population twice. There is no assimilation, mortality,
+demographic growth or hidden redistribution.
+
+## Extraordinary trajectories
+
+The caller supplies actual hearths/domains and the installed technology and
+density floors. One independent chance/choice stream per hearth seeds at most one
+eligible ambition. Great-empire opportunity needs a connected landed domain of
+the calibrated minimum size and a complex centre; sea leagues need three to five
+eligible coastal states, a real bounded sea connection and land separation;
+highland confederations need three to six touching, sufficiently populous tribes
+of one faith with at least 60% highland locations; sacred centres use the most
+populous place of their faith, an upper-quartile host and neighbouring peers.
+
+The ambition records institutional inclinations only: central/ruler ambition,
+coastal council cooperation, highland common defence or sacred authority. It grants
+no ownership, population, technology, rank, pact or automatic rival. At chance zero
+none is seeded and ordinary history still runs. Domains may overlap through
+explicit memberships; a common sea name supplies no physical reach.
+
+`realizations(context)` recognizes the current supported empire, connected actual
+pact/exchange network, or negotiated sacred access. The centre must still be held
+by a seeded actor or its recorded successor. Failed ambitions remain recorded;
+`report(context)` counts seeded and realized structures separately. A fractured
+realm is never seeded: it requires a real division of a recorded union, three or
+four living, connected, complex, same-faith successors of comparable populations
+and sufficient combined territory. A later conquest or dominance can end that
+recognition. These facts will feed the calibrated EU5 adapters in H4.
+
+The coefficients and action propensities remain provisional, not fitted S1–S11
+results. H7 calibrates the automatic policy, event density and full-generator
+performance on the prescribed seed sets.
 
 ## Verification evidence
 
@@ -112,8 +211,8 @@ settlements, one directed grievance of 165 internal units, and a sacred-centre
 agreement. All original cohorts are unchanged. The fixture's choices are scripted;
 the dates/outcomes are not claimed to emerge from the automatic policy.
 
-Its pinned semantic digest is
-`087c98c431878ebcb82146211056fb9ec3978fe9c418cd7d21be40ca6f56219c`.
+Its H3 pinned semantic digest, including the new profiles and settlement facts, is
+`3537b74d8cff778fe32c799647c50ab5e418aac829aba1c1cd32a23fc4cad103`.
 Reversed input/proposal order and interpreter hash seeds 1/927 reproduce it.
 The regression matrix also runs autonomous 60-round histories for five synthetic
 seeds at turbulence 0/500/1000 and replays each result. Dedicated cases cover
@@ -122,7 +221,23 @@ failed attacks, shared allied budgets, subject support, empty/tribal islands,
 cancellation and corrupted causal records. This is offline model evidence;
 in-game names, opinions and chronicles remain H4/H5 work.
 
-A local 1,000-district/200-actor mixed landed/tribal grid produces 13,807 events
+H3's additional synthetic scenarios exercise all eight caused reform dimensions,
+costly resistance, finite experience, minority movement and refusal conditions,
+competing moves/conquest, identity conservation, profile/ambition tampering and
+permuted autonomous histories. Each seedable extraordinary type starts as an ambition;
+recognition follows actual expansion, access bargains or a connected pact network.
+No full-world trajectory survival rate or game behavior is claimed.
+
+[V-EXEC, 2026-11-03] All 77 history cases pass as part of locked sync and
+`make check`: 2,532 Python tests, 15 optional skips; strict types, format/lint and
+23 Rust tests. The generated content reference and changed-document links pass.
+Hash seeds 1/927 also reproduce the autonomous migration/pressure fixture's digest
+`67c0c7cf650f502eeb91517121129b25a1024b99a5e652ef0d20a9267fc72873`.
+No world export was rerun for these unconnected modules; the H1 reference result
+retains its recorded scope. Candidate and hub delivery remain H7 work.
+
+The **H2 implementation** (before society behavior was added) measured a local
+1,000-district/200-actor mixed landed/tribal grid producing 13,807 events
 over 60 rounds (seed 42). Changing event-by-event fact copying to one round
 construction preserves digest
 `28ea4ae97425dbbd456767523c7b2323d4f4958d9550381e5cb17538dec58954`.

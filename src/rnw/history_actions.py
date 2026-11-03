@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import heapq
 import json
 from collections import defaultdict
-from dataclasses import replace
-from typing import TYPE_CHECKING, Final, final
+from dataclasses import astuple, replace
+from typing import TYPE_CHECKING, Final
 
-from rnw.history_checks import Index
+from rnw.history_context import MUTUAL, Context
 from rnw.history_model import (
     MIN_PARTITIONS,
     PERMILLE,
@@ -19,9 +18,9 @@ from rnw.history_model import (
     Effects,
     Event,
     Factor,
-    History,
     Knowledge,
     Memory,
+    Military,
     Outcome,
     Partition,
     Proposal,
@@ -29,10 +28,19 @@ from rnw.history_model import (
     Tenure,
     Transfer,
 )
+from rnw.history_societies import (
+    merged,
+    migration_allowed,
+    migration_effects,
+    reform_allowed,
+    reform_cost,
+    reform_event,
+    successor,
+)
 from rnw.rng import SplitMix64, derive_seed
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping
+    from collections.abc import Mapping
 
 COST: Final[dict[Action, int]] = {
     Action.CONTACT: 50,
@@ -44,6 +52,9 @@ COST: Final[dict[Action, int]] = {
     Action.PACT: 400,
     Action.SEPARATION: 1000,
     Action.ACCESS: 100,
+    Action.REFORM: 700,
+    Action.MIGRATION: 200,
+    Action.PRESSURE: 600,
 }
 PRIORITY: Final[dict[Action, int]] = {
     Action.SEPARATION: 0,
@@ -55,12 +66,11 @@ PRIORITY: Final[dict[Action, int]] = {
     Action.ACCESS: 5,
     Action.EXCHANGE: 5,
     Action.CONTACT: 6,
+    Action.REFORM: 2,
+    Action.MIGRATION: 3,
+    Action.PRESSURE: 2,
 }
 UNION_SETTLE_YEARS: Final[int] = 25
-
-MUTUAL: Final[frozenset[Action]] = frozenset(
-    {Action.CONTACT, Action.EXCHANGE, Action.UNION, Action.PACT}
-)
 
 
 def proposal_key(proposal: Proposal) -> str:
@@ -76,126 +86,23 @@ def proposal_key(proposal: Proposal) -> str:
             ),
             proposal.threat,
             proposal.rank,
+            astuple(proposal.reform) if proposal.reform else (),
+            (
+                (
+                    proposal.movement.source,
+                    proposal.movement.destination,
+                    proposal.movement.cohort.culture,
+                    proposal.movement.cohort.religion,
+                    proposal.movement.cohort.population,
+                    proposal.movement.cohort.peasants,
+                )
+                if proposal.movement
+                else None
+            ),
         ),
         ensure_ascii=True,
         separators=(",", ":"),
     )
-
-
-@final
-class Context:
-    def __init__(self, history: History, checkpoint: Callable[[], None]) -> None:
-        self.history = history
-        self.state = history.state
-        self.index = Index(history.geography, history.state, checkpoint)
-        self.checkpoint = checkpoint
-        self.known = {(each.first, each.second) for each in self.state.knowledge}
-        self.memories: dict[tuple[str, str, Factor], list[Memory]] = defaultdict(list)
-        self.causes_by_actor: dict[str, set[str]] = defaultdict(set)
-        self.event_years = {event.key: event.year for event in history.events}
-        for holding in self.state.holdings:
-            self.causes_by_actor[holding.actor].add(holding.cause)
-        for memory in self.state.memories:
-            self.memories[memory.first, memory.second, memory.factor].append(memory)
-            if memory.at(self.state.year):
-                self.causes_by_actor[memory.first].add(memory.cause)
-                self.causes_by_actor[memory.second].add(memory.cause)
-        for known in self.state.knowledge:
-            self.causes_by_actor[known.first].add(known.cause)
-            self.causes_by_actor[known.second].add(known.cause)
-        for bond in self.state.bonds:
-            self.causes_by_actor[bond.first].add(bond.cause)
-            self.causes_by_actor[bond.second].add(bond.cause)
-        self.scores: dict[tuple[str, str, Factor], int] = {}
-        self.powers: dict[str, int] = {}
-        self.bond_pairs = {(bond.kind, bond.first, bond.second) for bond in self.state.bonds}
-        self._contacts()
-        self.bound = {
-            key
-            for bond in self.state.bonds
-            if bond.kind is Action.DEPENDENCY
-            for key in (bond.first, bond.second)
-        }
-        self.subjects = {bond.first for bond in self.state.bonds if bond.kind is Action.DEPENDENCY}
-
-    def _contacts(self) -> None:
-        self.near: dict[str, dict[str, int]] = defaultdict(dict)
-        for number, route in enumerate(self.history.geography.routes):
-            if number % 128 == 0:
-                self.checkpoint()
-            first, second = self.index.owner.get(route.first), self.index.owner.get(route.second)
-            if (
-                first
-                and second
-                and first != second
-                and route.sea_steps <= (self.history.geography.rules.max_sea_steps)
-            ):
-                for one, other in ((first, second), (second, first)):
-                    self.near[one][other] = min(route.cost, self.near[one].get(other, route.cost))
-        self.reach = {key: dict(near) for key, near in self.near.items()}
-        # Exchange supplies one intermediary, over verified physical contacts, not sea labels.
-        for bond in self.state.bonds:
-            if bond.kind is Action.EXCHANGE:
-                for one, hub in ((bond.first, bond.second), (bond.second, bond.first)):
-                    if hub not in self.near.get(one, {}):
-                        continue
-                    for other, cost in self.near.get(hub, {}).items():
-                        if other != one:
-                            distance = cost + self.near[one][hub]
-                            current = self.reach.setdefault(one, {}).get(other, distance)
-                            self.reach[one][other] = min(current, distance)
-                            reverse = self.reach.setdefault(other, {}).get(one, distance)
-                            self.reach[other][one] = min(reverse, distance)
-
-    def score(self, first: str, second: str, factor: Factor) -> int:
-        key = first, second, factor
-        if key not in self.scores:
-            self.scores[key] = min(
-                PERMILLE, sum(memory.at(self.state.year) for memory in self.memories[key])
-            )
-        return self.scores[key]
-
-    def has(self, kind: Action, first: str, second: str) -> bool:
-        if kind in MUTUAL:
-            first, second = sorted((first, second))
-        return (kind, first, second) in self.bond_pairs
-
-    def power(self, key: str) -> int:
-        if key not in self.powers:
-            members = self.index.members[key]
-            population = sum(self.index.places[place].population for place in members)
-            peasants = sum(self.index.places[place].peasants for place in members)
-            technology = self.index.actors[key].technology
-            self.powers[key] = (population + peasants) * (technology + 1)
-        return self.powers[key]
-
-    def distance(self, key: str, target: str) -> int:
-        """Travel through the actor's own territory to the attacking/defending frontier."""
-        actor = self.index.actors[key]
-        members = self.index.members[key]
-        costs = {actor.seat: 0}
-        pending = [(0, actor.seat)]
-        while pending:
-            self.checkpoint()
-            cost, place = heapq.heappop(pending)
-            if cost != costs[place]:
-                continue
-            if place == target:
-                return cost
-            for other, step in self.index.adjacency[place].items():
-                if (other in members or other == target) and cost + step < costs.get(
-                    other, 1 << 60
-                ):
-                    costs[other] = cost + step
-                    heapq.heappush(pending, (cost + step, other))
-        return 1 << 60
-
-    def causes(self, proposal: Proposal) -> tuple[str, ...]:
-        actors = {key for key in (proposal.actor, proposal.target, proposal.threat) if key}
-        causes = {self.index.actors[key].origin for key in actors}
-        for key in actors:
-            causes.update(self.causes_by_actor[key])
-        return tuple(sorted(causes))
 
 
 def event_key(context: Context, proposal: Proposal) -> str:
@@ -262,7 +169,33 @@ def _conflict_allowed(context: Context, proposal: Proposal) -> Reason | None:
         context.power(second) * 3 // 2
     ):
         return Reason.OPPORTUNITY
+    if context.burden(first, proposal.districts) > PERMILLE:
+        return Reason.CAPACITY
     return None
+
+
+def _pressure_allowed(context: Context, proposal: Proposal) -> Reason | None:
+    first, second = proposal.actor, proposal.target
+    attacker, defender = context.index.actors[first], context.index.actors[second]
+    if (
+        attacker.tenure is not Tenure.LAND
+        or defender.tenure is Tenure.LAND
+        or first in context.subjects
+        or context.has(Action.PACT, first, second)
+        or attacker.society.military is not Military.OFFENSIVE
+        or context.power(first) < 2 * context.power(second)
+        or len(proposal.districts) != 1
+        or not set(proposal.districts) <= context.index.members[second]
+    ):
+        return Reason.INELIGIBLE
+    return (
+        None
+        if any(
+            context.index.adjacency[key].keys() & context.index.members[first]
+            for key in proposal.districts
+        )
+        else Reason.UNREACHABLE
+    )
 
 
 def _separation_allowed(context: Context, proposal: Proposal) -> Reason | None:
@@ -339,6 +272,8 @@ def _threat_allowed(context: Context, proposal: Proposal) -> Reason | None:
 
 
 def eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C901, PLR0911, PLR0912
+    if proposal.kind is Action.REFORM:
+        return reform_allowed(context, proposal)
     if proposal.kind is Action.SEPARATION:
         return _separation_allowed(context, proposal)
     first, second = proposal.actor, proposal.target
@@ -348,10 +283,22 @@ def eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C9
         return Reason.DUPLICATE if (first, second) in context.known else None
     if (first, second) not in context.known or (second, first) not in context.known:
         return Reason.UNKNOWN
+    if proposal.kind is Action.MIGRATION:
+        if (
+            max(
+                context.score(first, second, Factor.GRIEVANCE),
+                context.score(second, first, Factor.GRIEVANCE),
+            )
+            >= context.history.geography.rules.union_trust
+        ):
+            return Reason.HOSTILE
+        return migration_allowed(context, proposal)
     if proposal.kind is Action.UNION:
         return _union_allowed(context, proposal)
     if proposal.kind is Action.CONFLICT:
         return _conflict_allowed(context, proposal)
+    if proposal.kind is Action.PRESSURE:
+        return _pressure_allowed(context, proposal)
     if proposal.kind is Action.DEPENDENCY:
         return _dependency_allowed(context, proposal)
     if proposal.kind in {Action.PACT, Action.PROTECTION}:
@@ -462,7 +409,7 @@ def _structural(context: Context, event: Event, proposal: Proposal) -> Effects:
         # A union keeps a viable existing seat; this is an explicit bargain, not a repair.
         seat = max(
             (index.actors[key].seat for key in retired),
-            key=lambda key: (index.places[key].population, key),
+            key=lambda key: (index.population(key), key),
         )
         parts = (Partition(tuple(sorted(members)), seat, Authority.COUNCIL),)
     else:
@@ -473,12 +420,17 @@ def _structural(context: Context, event: Event, proposal: Proposal) -> Effects:
             f"{event.key}_{number}",
             actor.tenure,
             part.seat,
-            part.authority,
+            (
+                merged(context, retired, part.seat, part.authority)
+                if proposal.kind is Action.UNION
+                else successor(context, actor, part.seat, part.authority)
+            ),
             max(index.actors[key].technology for key in retired),
             event.year,
             event.key,
             tuple(sorted(part.districts)),
             retired,
+            society_cause=event.key,
         )
         for number, part in enumerate(parts)
     )
@@ -522,14 +474,25 @@ def _battle(
 ) -> Event:
     index = context.index
     first, second = proposal.actor, proposal.target
-    place = min(proposal.districts)
+    frontier = {
+        place
+        for place in proposal.districts
+        if index.adjacency[place].keys() & index.members[first]
+    }
+    place = min(frontier, key=lambda key: (context.distance(first, key), key))
     stream = SplitMix64(derive_seed(context.history.seed, "history", "battle", event.key))
     powers: dict[str, int] = {}
     for side in (first, second):
         power = context.power(side) * COST[Action.CONFLICT]
         power += sum(context.power(ally) * amount for ally, amount in support[side].items())
         distance = context.distance(side, place)
-        powers[side] = power * (800 + stream.below(401)) // (PERMILLE + distance // 4)
+        profile = index.actors[side].society
+        travel = distance * (1500 - profile.centralization) // PERMILLE
+        powers[side] = power * (800 + stream.below(401)) // (PERMILLE + travel // 4)
+        posture = 1000
+        if profile.military is not Military.BALANCED:
+            posture = 1150 if (profile.military is Military.OFFENSIVE) == (side == first) else 850
+        powers[side] = powers[side] * posture // PERMILLE
     attack = powers[first]
     defence = powers[second] * index.places[place].defence // PERMILLE
     if attack <= defence:
@@ -548,8 +511,12 @@ def _battle(
     return replace(
         event,
         effects=Effects(
-            retired=() if remaining else (second,),
-            transfers=tuple(Transfer(key, second, first) for key in sorted(proposal.districts)),
+            retired=() if remaining or proposal.kind is Action.PRESSURE else (second,),
+            transfers=(
+                tuple(Transfer(key, second, first) for key in sorted(proposal.districts))
+                if proposal.kind is Action.CONFLICT
+                else ()
+            ),
             memories=(
                 _memory(event, second, first, Factor.GRIEVANCE, 220),
                 _memory(event, second, first, Factor.FEAR, 120),
@@ -561,6 +528,8 @@ def _battle(
 
 def _peaceful(context: Context, event: Event, proposal: Proposal) -> Effects:
     first, second = proposal.actor, proposal.target
+    if proposal.kind is Action.MIGRATION:
+        return migration_effects(context, event, proposal)
     if proposal.kind is Action.CONTACT:
         return Effects(
             knowledge=(Knowledge(first, second, event.key), Knowledge(second, first, event.key)),
@@ -576,9 +545,12 @@ def _peaceful(context: Context, event: Event, proposal: Proposal) -> Effects:
         event.key,
         proposal.districts[0] if proposal.kind is Action.ACCESS else "",
     )
-    memories = [_memory(event, first, second, Factor.TRUST, 80)]
+    trust = 60 + min(context.index.actors[key].society.tradition for key in (first, second)) // 25
+    if proposal.kind is Action.ACCESS:
+        trust += context.index.actors[second].society.religious_authority // 50
+    memories = [_memory(event, first, second, Factor.TRUST, trust)]
     if proposal.kind in {Action.EXCHANGE, Action.PACT}:
-        memories.append(_memory(event, second, first, Factor.TRUST, 80))
+        memories.append(_memory(event, second, first, Factor.TRUST, trust))
     if proposal.kind in {Action.DEPENDENCY, Action.PROTECTION}:
         memories.append(_memory(event, first, second, Factor.DEPENDENCE, 100))
     return Effects(bonds=(bond,), memories=tuple(memories))
@@ -599,6 +571,9 @@ def adjudicate(
         Action.CONFLICT: Reason.GRIEVANCE
         if context.score(proposal.actor, proposal.target, Factor.GRIEVANCE)
         else Reason.OPPORTUNITY,
+        Action.REFORM: Reason.REPEATED_PROBLEM,
+        Action.MIGRATION: Reason.PRESSURE,
+        Action.PRESSURE: Reason.PRESSURE,
     }
     event = Event(
         event_key(context, proposal),
@@ -611,6 +586,10 @@ def adjudicate(
     )
     reason = eligible(context, proposal)
     cost = COST[proposal.kind]
+    if proposal.kind is Action.REFORM:
+        cost = reform_cost(context, proposal)
+    elif proposal.kind in {Action.CONFLICT, Action.PRESSURE}:
+        cost += min(200, context.burden(proposal.actor) // 5)
     costs = {proposal.actor: cost}
     if proposal.target:
         costs[proposal.target] = cost
@@ -618,7 +597,9 @@ def adjudicate(
         reason = Reason.COMMITTED
     if reason is not None:
         return replace(event, outcome=Outcome.REFUSED, reason=reason), {}
-    if proposal.kind is Action.CONFLICT:
+    if proposal.kind is Action.REFORM:
+        return reform_event(context, event, proposal), costs
+    if proposal.kind in {Action.CONFLICT, Action.PRESSURE}:
         support = _battle_support(context, proposal, remaining)
         costs.update(
             {key: value for allocations in support.values() for key, value in allocations.items()}

@@ -12,9 +12,7 @@ from dataclasses import asdict, replace
 from typing import TYPE_CHECKING
 
 from rnw.history_actions import (
-    MUTUAL,
     PRIORITY,
-    Context,
     adjudicate,
     eligible,
     inherit_round,
@@ -28,6 +26,7 @@ from rnw.history_checks import (
     validate_geography,
     validate_snapshot,
 )
+from rnw.history_context import MUTUAL, Context
 from rnw.history_model import (
     END,
     MAX_PROPOSALS,
@@ -46,9 +45,12 @@ from rnw.history_model import (
     Partition,
     Proposal,
     Reason,
+    Settlement,
     Snapshot,
     Transfer,
 )
+from rnw.history_societies import bootstrap, choices, cohorts, propensity
+from rnw.history_trajectories import seed_events
 from rnw.rng import check_seed, derive_seed
 
 if TYPE_CHECKING:
@@ -77,6 +79,8 @@ def _apply(state: Snapshot, events: Sequence[Event]) -> Snapshot:
     bonds = {(bond.kind, bond.first, bond.second, bond.place): bond for bond in state.bonds}
     knowledge = {(known.first, known.second): known for known in state.knowledge}
     memories = list(state.memories)
+    settlements = {place.district: place for place in state.settlements}
+    trajectories = list(state.trajectories)
     for event in events:
         effects = event.effects
         for actor in effects.created:
@@ -93,6 +97,16 @@ def _apply(state: Snapshot, events: Sequence[Event]) -> Snapshot:
             )
             require(transfer.after in actors, "Transfer has no receiving actor")
             holdings[transfer.district] = Holding(transfer.district, transfer.after, event.key)
+        for reform in effects.reforms:
+            require(
+                actors[reform.actor].society == reform.before, "Profile was changed more than once"
+            )
+            actors[reform.actor] = replace(
+                actors[reform.actor], society=reform.after, society_cause=event.key
+            )
+        for settlement in effects.settlements:
+            settlements[settlement.district] = settlement
+        trajectories.extend(effects.trajectories)
         if effects.retired:
             retired = set(effects.retired)
             bonds = {
@@ -117,13 +131,23 @@ def _apply(state: Snapshot, events: Sequence[Event]) -> Snapshot:
         tuple(bonds[key] for key in sorted(bonds)),
         tuple(knowledge[key] for key in sorted(knowledge)),
         tuple(memories),
+        tuple(settlements[key] for key in sorted(settlements)),
+        tuple(trajectories),
     )
 
 
-def create(geography: Geography, foundings: Sequence[Founding], *, seed: int) -> History:
+def create(
+    geography: Geography,
+    foundings: Sequence[Founding],
+    *,
+    seed: int,
+    empire_permille: int = 250,
+    checkpoint: Callable[[], None] = _checkpoint,
+) -> History:
     """Create causal roots for every supplied actor; no country or population is invented."""
     validate_geography(geography)
     _ = check_seed(seed)
+    require(0 <= empire_permille <= PERMILLE, "Invalid extraordinary trajectory chance")
     unique((founding.key for founding in foundings), "founding")
     geography = replace(
         geography,
@@ -132,17 +156,7 @@ def create(geography: Geography, foundings: Sequence[Founding], *, seed: int) ->
                 (
                     replace(
                         place,
-                        cohorts=tuple(
-                            sorted(
-                                place.cohorts,
-                                key=lambda pop: (
-                                    pop.culture,
-                                    pop.religion,
-                                    pop.population,
-                                    pop.peasants,
-                                ),
-                            )
-                        ),
+                        cohorts=cohorts(place.cohorts),
                     )
                     for place in geography.districts
                 ),
@@ -162,6 +176,10 @@ def create(geography: Geography, foundings: Sequence[Founding], *, seed: int) ->
                 key=lambda route: (route.first, route.second),
             )
         ),
+        hearths=tuple(
+            replace(hearth, domain=tuple(sorted(hearth.domain)))
+            for hearth in sorted(geography.hearths, key=lambda hearth: hearth.key)
+        ),
     )
     canonical = tuple(
         replace(founding, districts=tuple(sorted(founding.districts)))
@@ -169,18 +187,26 @@ def create(geography: Geography, foundings: Sequence[Founding], *, seed: int) ->
     )
     state = Snapshot(START)
     events: list[Event] = []
+    places = {place.key: place for place in geography.districts}
     for founding in canonical:
+        checkpoint()
         unique(founding.districts, "founding district")
+        require(set(founding.districts) <= places.keys(), "Unknown founding district")
+        require(
+            founding.society is None or founding.society.authority is founding.authority,
+            "Founding authority differs from its society profile",
+        )
         key = f"origin_{derive_seed(seed, 'history', 'origin', founding.key):016x}"
         actor = Actor(
             founding.key,
             founding.tenure,
             founding.seat,
-            founding.authority,
+            bootstrap(founding, places, seed),
             founding.technology,
             START,
             key,
             founding.districts,
+            society_cause=key,
         )
         event = Event(
             key,
@@ -193,17 +219,27 @@ def create(geography: Geography, foundings: Sequence[Founding], *, seed: int) ->
             Effects(
                 created=(actor,),
                 transfers=tuple(Transfer(place, "", founding.key) for place in founding.districts),
+                settlements=tuple(
+                    Settlement(place, places[place].cohorts, key) for place in founding.districts
+                ),
             ),
         )
         events.append(event)
     state = _apply(state, events)
-    validate_snapshot(Index(geography, state, _checkpoint), state)
-    return History(geography, seed, canonical, state, tuple(events))
+    validate_snapshot(Index(geography, state, checkpoint), state)
+    history = History(
+        geography, seed, canonical, state, tuple(events), empire_permille=empire_permille
+    )
+    ambitions = seed_events(Context(history, checkpoint), empire_permille)
+    state = _apply(state, ambitions)
+    validate_snapshot(Index(geography, state, checkpoint), state)
+    return replace(history, state=state, events=(*events, *ambitions))
 
 
 def _validate_proposals(context: Context, proposals: Sequence[Proposal]) -> tuple[Proposal, ...]:
     require(
-        all(proposal.kind is not Action.FOUNDATION for proposal in proposals), "No late founding"
+        all(proposal.kind not in {Action.FOUNDATION, Action.TRAJECTORY} for proposal in proposals),
+        "No late founding/trajectory",
     )
     require(
         all(
@@ -225,8 +261,8 @@ def _validate_proposals(context: Context, proposals: Sequence[Proposal]) -> tupl
             "Proposal names an absent/extinct actor or invalid rank",
         )
         require(
-            (proposal.kind is Action.SEPARATION) == (not proposal.target),
-            "Only separation has no partner",
+            (proposal.kind in {Action.SEPARATION, Action.REFORM}) == (not proposal.target),
+            "Only separation/reform has no partner",
         )
         require(
             set(proposal.districts) <= context.index.places.keys()
@@ -238,6 +274,17 @@ def _validate_proposals(context: Context, proposals: Sequence[Proposal]) -> tupl
         require(
             len(set(proposal.districts)) == len(proposal.districts), "Duplicate proposed territory"
         )
+        require(
+            (proposal.kind is Action.REFORM) == (proposal.reform is not None)
+            and (proposal.kind is Action.MIGRATION) == (proposal.movement is not None),
+            "Action payload differs from its family",
+        )
+        if proposal.movement is not None:
+            require(
+                {proposal.movement.source, proposal.movement.destination}
+                <= context.index.owner.keys(),
+                "Migration names an uninhabited/unknown district",
+            )
     return tuple(sorted(canonical, key=proposal_key))
 
 
@@ -263,6 +310,9 @@ def advance(
     events: list[Event] = []
     retired: set[str] = set()
     subjects = set(context.subjects)
+    moved: set[str] = set()
+    ownership: set[str] = set()
+    reformed: set[str] = set()
     for proposal in sorted(proposals, key=order):
         checkpoint()
         event, costs = adjudicate(context, proposal, remaining)
@@ -270,11 +320,18 @@ def advance(
         if proposal.kind in MUTUAL:
             first, second = sorted((first, second))
         reservation = (proposal.kind, first, second, proposal.districts)
+        participants = {proposal.actor, proposal.target} - {""}
+        incompatible = (
+            (proposal.kind is Action.REFORM and proposal.actor in reformed)
+            or (proposal.kind is Action.MIGRATION and bool(participants & (moved | ownership)))
+            or (proposal.kind is Action.CONFLICT and bool(participants & moved))
+        )
         if (
             reservation in reserved
             or {proposal.actor, proposal.target} & retired
             or (proposal.kind is Action.DEPENDENCY and proposal.actor in subjects)
             or (proposal.kind is Action.PACT and {proposal.actor, proposal.target} & subjects)
+            or incompatible
         ):
             event = replace(
                 event, outcome=Outcome.REFUSED, reason=Reason.COMMITTED, effects=Effects()
@@ -285,6 +342,12 @@ def advance(
             retired.update(event.effects.retired)
             if proposal.kind is Action.DEPENDENCY:
                 subjects.add(proposal.actor)
+            if proposal.kind is Action.MIGRATION:
+                moved.update(participants)
+            if proposal.kind is Action.CONFLICT:
+                ownership.update(participants)
+            if proposal.kind is Action.REFORM:
+                reformed.add(proposal.actor)
             for key, amount in costs.items():
                 remaining[key] -= amount
         events.append(replace(event, commitments=tuple(sorted(costs.items()))))
@@ -313,17 +376,17 @@ def _roots(context: Context, actor: Actor) -> tuple[Actor, ...]:
 
 
 def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
-    choices: list[Proposal] = []
+    local: list[Proposal] = choices(context, actor)
     if actor.parents:
         roots = _roots(context, actor)
         parts = tuple(Partition(root.homeland, root.seat, root.authority) for root in roots)
-        choices.append(Proposal(Action.SEPARATION, actor.key, partitions=parts))
+        local.append(Proposal(Action.SEPARATION, actor.key, partitions=parts))
     for other in sorted(context.reach.get(actor.key, {})):
         context.checkpoint()
         if (actor.key, other) not in context.known:
-            choices.append(Proposal(Action.CONTACT, actor.key, other))
+            local.append(Proposal(Action.CONTACT, actor.key, other))
             continue
-        choices.extend(
+        local.extend(
             (
                 Proposal(Action.EXCHANGE, actor.key, other),
                 Proposal(Action.UNION, actor.key, other),
@@ -337,23 +400,26 @@ def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
             for key in context.index.adjacency[member]
             if context.index.owner.get(key) == other
         }
-        choices.extend(
+        local.extend(
+            Proposal(Action.PRESSURE, actor.key, other, (key,)) for key in sorted(frontier)
+        )
+        local.extend(
             Proposal(Action.CONFLICT, actor.key, other, (key,))
             for key in sorted(frontier)
             if key != target.seat or len(context.index.members[other]) == 1
         )
         shared = context.reach.get(actor.key, {}).keys() & context.reach.get(other, {}).keys()
-        choices.extend(
+        local.extend(
             Proposal(kind, actor.key, other, threat=threat)
             for threat in sorted(shared - {actor.key, other})
             for kind in (Action.PACT, Action.PROTECTION)
         )
-        choices.extend(
+        local.extend(
             Proposal(Action.ACCESS, actor.key, other, (key,))
             for key in sorted(context.index.members[other])
             if context.index.places[key].sacred
         )
-    return [choice for choice in choices if eligible(context, choice) is None]
+    return [choice for choice in local if eligible(context, choice) is None]
 
 
 def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
@@ -370,12 +436,12 @@ def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
             draw = derive_seed(
                 context.history.seed, "history", "choice", str(context.state.year), key
             )
-            propensity = (
+            base = (
                 (50 + turbulence // 2)
-                if choice.kind in {Action.CONFLICT, Action.SEPARATION}
+                if choice.kind in {Action.CONFLICT, Action.PRESSURE, Action.SEPARATION}
                 else 180
             )
-            if draw % PERMILLE < propensity:
+            if draw % PERMILLE < propensity(actor.society, choice.kind, base):
                 ranked.append((draw, key, choice))
         proposals.extend(
             replace(choice, rank=rank)
@@ -404,7 +470,13 @@ def simulate(
 
 def validate_history(history: History, *, checkpoint: Callable[[], None] = _checkpoint) -> None:
     """Replay prerequisites, arbitration and effects; reject invented or superseded final facts."""
-    replay = create(history.geography, history.foundings, seed=history.seed)
+    replay = create(
+        history.geography,
+        history.foundings,
+        seed=history.seed,
+        empire_permille=history.empire_permille,
+        checkpoint=checkpoint,
+    )
     seen: dict[str, Event] = {}
     actors = {actor.key: actor for actor in history.state.actors}
     for event in history.events:

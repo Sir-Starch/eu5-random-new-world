@@ -529,7 +529,17 @@ H2 schema.
   format/lint, 23 Rust tests). Source-only core: no world-byte or epoch change,
   new game-format writer, candidate or hub installation. Performance calibration
   and the public history record remain later phases, as scoped in the core guide.
-  **Next: H3**, society dimensions, trajectories and conservative migration.
+- **H3, completed 2026-11-03:** [society profiles and transitions](history-core.md)
+  add all eight dimensions, experience-based reform with costs/resistance,
+  integration burden, eligible per-hearth extraordinary ambitions and recognition
+  of actual outcomes. Conservative cohort movement preserves every identity and
+  peasant budget, including through conquest. Tribes can establish common defence
+  after actual pressure without becoming landed. [V-EXEC] All 77 history cases and
+  full checks pass (2,532 Python tests, 15 optional skips; strict types, format/lint,
+  23 Rust tests); permuted inputs and hash seeds 1/927 agree. The internal history
+  digest now includes profiles and settlements; released world goldens, bytes,
+  version and epoch remain unchanged. Source-only delivery still belongs to H7.
+  **Next: H4**, bootstrap/projection from history into the final start plan and EU5.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

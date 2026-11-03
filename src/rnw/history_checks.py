@@ -12,10 +12,13 @@ from rnw.history_model import (
     YEARS,
     Action,
     Actor,
+    Cohort,
     Geography,
     HistoryError,
     Snapshot,
+    Society,
     Tenure,
+    TrajectoryKind,
 )
 
 if TYPE_CHECKING:
@@ -46,6 +49,10 @@ class Index:
     ) -> None:
         self.geography = geography
         self.places = {place.key: place for place in geography.districts}
+        self.settlements = {place.district: place for place in state.settlements}
+        self.capacities = {
+            place.key: place.population + place.headroom for place in geography.districts
+        }
         self.actors = {actor.key: actor for actor in state.actors}
         self.owner = {holding.district: holding.actor for holding in state.holdings}
         self.members: dict[str, set[str]] = {actor.key: set() for actor in state.actors}
@@ -59,6 +66,15 @@ class Index:
             if route.sea_steps <= geography.rules.max_sea_steps:
                 self.adjacency[route.first][route.second] = route.cost
                 self.adjacency[route.second][route.first] = route.cost
+
+    def cohorts(self, key: str) -> tuple[Cohort, ...]:
+        return self.settlements[key].cohorts
+
+    def population(self, key: str) -> int:
+        return sum(pop.population for pop in self.cohorts(key))
+
+    def peasants(self, key: str) -> int:
+        return sum(pop.peasants for pop in self.cohorts(key))
 
     def connected(self, members: set[str], seat: str) -> bool:
         if seat not in members:
@@ -80,8 +96,8 @@ class Index:
         rules = self.geography.rules
 
         def viable(keys: set[str]) -> bool:
-            people = sum(self.places[key].population for key in keys)
-            farmers = sum(self.places[key].peasants for key in keys)
+            people = sum(self.population(key) for key in keys)
+            farmers = sum(self.peasants(key) for key in keys)
             return farmers >= rules.minimum_peasants and farmers * PERMILLE >= (
                 people * rules.minimum_share
             )
@@ -101,9 +117,21 @@ def validate_geography(geography: Geography) -> None:
         and rules.minimum_overlord_technology >= 0,
         "Invalid history rules",
     )
+    require(
+        rules.empire_locations > 0
+        and rules.league_technology >= 0
+        and rules.confederation_density > 0,
+        "Invalid extraordinary society rules",
+    )
     pairs: set[tuple[str, str]] = set()
     for place in geography.districts:
-        require(bool(place.region) and place.defence > 0, "Invalid district conditions")
+        require(
+            bool(place.region)
+            and place.defence > 0
+            and place.headroom >= 0
+            and 0 <= place.complexity <= PERMILLE,
+            "Invalid district conditions",
+        )
         for cohort in place.cohorts:
             require(
                 bool(cohort.culture)
@@ -128,6 +156,66 @@ def validate_geography(geography: Geography) -> None:
             not route.sea_steps or (places[route.first].coastal and places[route.second].coastal),
             "A sea route needs two physical coasts",
         )
+    unique((hearth.key for hearth in geography.hearths), "hearth")
+    for hearth in geography.hearths:
+        require(
+            hearth.centre in hearth.domain
+            and set(hearth.domain) <= places.keys()
+            and len(set(hearth.domain)) == len(hearth.domain),
+            "Invalid hearth domain",
+        )
+
+
+def validate_society(society: Society) -> None:
+    require(
+        all(
+            0 <= value <= PERMILLE
+            for value in (
+                society.centralization,
+                society.religious_authority,
+                society.integration,
+                society.tradition,
+            )
+        ),
+        "Invalid society dimension",
+    )
+
+
+def _population_totals(
+    cohorts: Iterable[Cohort],
+) -> tuple[Counter[tuple[str, str]], Counter[tuple[str, str]]]:
+    people: Counter[tuple[str, str]] = Counter()
+    peasants: Counter[tuple[str, str]] = Counter()
+    for cohort in cohorts:
+        people[cohort.culture, cohort.religion] += cohort.population
+        peasants[cohort.culture, cohort.religion] += cohort.peasants
+    return people, peasants
+
+
+def _validate_population(index: Index, state: Snapshot) -> None:
+    unique((place.district for place in state.settlements), "settlement")
+    require(
+        set(index.settlements) == set(index.owner), "Settlements differ from inhabited holdings"
+    )
+    for place in state.settlements:
+        require(bool(place.cause) and bool(place.cohorts), "Unexplained/empty settlement")
+        unique((f"{pop.culture}\0{pop.religion}" for pop in place.cohorts), "cohort identity")
+        require(
+            all(
+                pop.culture
+                and pop.religion
+                and 0 <= pop.peasants <= pop.population
+                and pop.population > 0
+                for pop in place.cohorts
+            )
+            and index.population(place.district) <= index.capacities[place.district],
+            "Invalid population/capacity",
+        )
+    require(
+        _population_totals(pop for place in state.settlements for pop in place.cohorts)
+        == _population_totals(pop for place in index.geography.districts for pop in place.cohorts),
+        "Population or identity budget changed",
+    )
 
 
 def validate_snapshot(index: Index, state: Snapshot) -> None:
@@ -136,10 +224,13 @@ def validate_snapshot(index: Index, state: Snapshot) -> None:
     unique((holding.district for holding in state.holdings), "holding")
     inhabited = {key for key, place in index.places.items() if place.population > 0}
     require(set(index.owner) == inhabited, "Every inhabited district needs exactly one holder")
+    _validate_population(index, state)
     for actor in state.actors:
+        validate_society(actor.society)
         require(
             START <= actor.born <= state.year
             and bool(actor.origin)
+            and bool(actor.society_cause)
             and actor.technology >= 0
             and bool(actor.homeland)
             and set(actor.homeland) <= index.places.keys(),
@@ -223,4 +314,18 @@ def validate_snapshot(index: Index, state: Snapshot) -> None:
             and memory.decay >= 0
             and bool(memory.cause),
             "Invalid directed memory",
+        )
+    unique((item.hearth for item in state.trajectories), "trajectory hearth")
+    hearths = {hearth.key: hearth for hearth in index.geography.hearths}
+    for item in state.trajectories:
+        require(
+            item.kind is not TrajectoryKind.FRACTURED_REALM
+            and item.hearth in hearths
+            and item.anchor in hearths[item.hearth].domain
+            and item.anchor in index.owner
+            and bool(item.members)
+            and set(item.members) <= index.actors.keys()
+            and len(set(item.members)) == len(item.members)
+            and bool(item.cause),
+            "Invalid trajectory",
         )

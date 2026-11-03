@@ -20,7 +20,7 @@ from rnw.history_model import (
 )
 
 if TYPE_CHECKING:
-    from rnw.history_actions import Context
+    from rnw.history_context import Context
 
 
 def valley() -> History:
