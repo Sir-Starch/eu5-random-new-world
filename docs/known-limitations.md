@@ -5,11 +5,13 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
 
 ## Game compatibility and saves
 
-- **EU5 1.4.6, Steam build 26300913.** Compatibility with later patches is not
-  guaranteed. Check RNW's compatibility notes before updating the game for an
-  ongoing campaign.
+- **EU5 1.4.*.** New patches in this branch are usually compatible without a
+  generator update. The latest fully verified version is **EU5 1.4.7, Steam
+  build 26377361**. This branch guidance does not migrate an existing map to a
+  different game version.
 - **New 1337 campaigns only.** A generated map cannot be added to an existing
-  campaign. Keep the exact generated world mod used by each save; updating the
+  campaign. Keep the exact generated world mod used by each save and continue
+  that campaign on the exact EU5 version used to generate its map. Updating the
   generator does not migrate saves or update their maps. A world code or compact
   `.rnworld` file stores the recipe, not a complete backup: a different generator
   algorithm or game files can produce a different world.

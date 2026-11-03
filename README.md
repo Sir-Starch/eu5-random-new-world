@@ -10,7 +10,7 @@
 [![License: MPL-2.0](https://img.shields.io/badge/license-MPL--2.0-brightgreen.svg)](LICENSE)
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB.svg)
 ![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
-![EU5 1.4.6](https://img.shields.io/badge/EU5-1.4.6-8B6F47.svg)
+![EU5 1.4.*](https://img.shields.io/badge/EU5-1.4.%2A-8B6F47.svg)
 ![Ironman & Achievements](https://img.shields.io/badge/Ironman%20%26%20Achievements-supported-success.svg)
 ![Version: 1.1.0](https://img.shields.io/badge/version-1.1.0-blue.svg)
 
@@ -27,7 +27,7 @@ Installed RNW mods with a valid world code are detected automatically in the gen
 ![Random New World procedural generation showcase](docs/images/showcase/rnw_showcase_full.gif)
 
 > [!IMPORTANT]
-> **Compatibility:** RNW 1.1.0 targets EU5 **1.4.6, Steam build 26300913**. Start a new campaign and keep its generated world mod. Exact regeneration needs the original algorithm and game inputs; updating the generator does not migrate saves.
+> **Compatibility:** RNW supports EU5 **1.4.***. New patches in the 1.4 branch are usually compatible without a generator update; the latest fully verified version is **1.4.7, Steam build 26377361**. Keep each generated map and its campaign on the exact EU5 version used to generate it, and keep its world mod. Updating the generator does not migrate saves.
 
 Read [Known limitations](docs/known-limitations.md) before playing: supported game
 build, save and mod compatibility, generation requirements and known visual issues.
@@ -158,7 +158,7 @@ No Python or Rust installation is required for the [released packages](https://g
 
 #### Requirements
 
-* **Europa Universalis V (`1.4.6`, verified Steam build 26300913)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
+* **Europa Universalis V (`1.4.*`, latest fully verified: 1.4.7 / Steam build 26377361)** installed via Steam (Windows or Linux/Proton). Across the Pillars is optional.
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
 * **Node.js 20+** (only needed when building the Tauri desktop window from source).

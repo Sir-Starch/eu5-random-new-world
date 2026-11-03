@@ -7,7 +7,7 @@ while keeping the Old World intact. Each world becomes its own mod that you enab
 If you came here from Steam, start with the steps below. The default settings are enough
 for your first world; you can explore the other options whenever you want.
 
-**Current compatibility:** RNW 1.1.0 is made for **EU5 1.4.6** (Steam build 26300913).
+**Current compatibility:** RNW supports **EU5 1.4.***. New patches in the 1.4 branch are usually compatible without a generator update; the latest fully verified version is **1.4.7** (Steam build 26377361). Continue each generated map's campaign on the exact EU5 version used to create it.
 See [known limitations](known-limitations.md) for game updates, saves and mod compatibility.
 
 ## Quick start: from Steam to your first campaign
@@ -35,8 +35,7 @@ See [known limitations](known-limitations.md) for game updates, saves and mod co
    Enable **one RNW world at a time**. The Workshop generator item itself stays disabled
    in your playset; your generated world contains everything needed to play.
 
-**Keep the generated mod for that campaign's saves.** A world code is useful for making
-the world again, but a newer generator or game update can change the result.
+**Keep the generated mod for that campaign's saves and stay on the exact EU5 version used to generate the map.** A world code is useful for making the world again, but a newer generator or game update can change the result.
 
 **Restart EU5 before switching worlds or replacing a map you have already loaded.**
 This includes switching after playing a campaign in the same session. For a visibility
