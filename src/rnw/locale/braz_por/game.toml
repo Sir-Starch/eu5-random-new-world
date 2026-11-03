@@ -1008,4 +1008,240 @@ text = '''Águas tão cheias de peixes que alimentam todas as costas vizinhas.''
 
 ["rnw_treaty_meridian"]
 source = "91430246d65837db"
-text = "Meridiano do tratado"
+text = '''Meridiano do tratado'''
+
+["rnw_our_history"]
+source = "59ab2712ca1d5b62"
+text = '''Nossa história'''
+
+["rnw_our_history_desc"]
+source = "342ac1d5ca933aa8"
+text = '''Leia a crônica de nossa sociedade e de suas antecessoras.'''
+
+["rnw_our_history.a"]
+source = "9e39c69810d1b732"
+text = '''Abra a crônica.'''
+
+["rnw_chronicle.1.title"]
+source = "59ab2712ca1d5b62"
+text = '''Nossa história'''
+
+["rnw_chronicle.1.a"]
+source = "7366c18ed575936d"
+text = '''Feche a crônica.'''
+
+["rnw_history_place"]
+source = "dd4cd67bad6b43cb"
+text = '''{text} Local mencionado: {place}.'''
+
+["rnw_history_opinion_place"]
+source = "3726cac549dd314a"
+text = '''{text} — local {place}'''
+
+["rnw_history_opinion_trust"]
+source = "dd69982a0910055b"
+text = '''Confiança: {cause} ({year})'''
+
+["rnw_history_opinion_grievance"]
+source = "234d42d09f7346a4"
+text = '''Rancor: {cause} ({year})'''
+
+["rnw_history_opinion_fear"]
+source = "b265d7b94dc67d6f"
+text = '''Temor: {cause} ({year})'''
+
+["rnw_history_opinion_dependence"]
+source = "8ab01e2bf604a322"
+text = '''Dependência: {cause} ({year})'''
+
+["rnw_history_opinion_competition"]
+source = "a80a2092d70e0dab"
+text = '''Rivalidade: {cause} ({year})'''
+
+["rnw_history_opinion_affinity"]
+source = "33d90631b0ba91dd"
+text = '''Afinidade: {cause} ({year})'''
+
+["rnw_history_cause_foundation"]
+source = "9f1b3f50aa6f3fef"
+text = '''início do registro'''
+
+["rnw_history_cause_contact"]
+source = "093e7d5fdbaacfa9"
+text = '''contato'''
+
+["rnw_history_cause_exchange"]
+source = "c6714454d03ef97e"
+text = '''acordo de troca'''
+
+["rnw_history_cause_union"]
+source = "ef3ff703d7565ab5"
+text = '''união'''
+
+["rnw_history_cause_conflict"]
+source = "fa9e1d22205ad852"
+text = '''conflito'''
+
+["rnw_history_cause_dependency"]
+source = "293f1d2ee206a7cb"
+text = '''submissão'''
+
+["rnw_history_cause_protection"]
+source = "9eb6b00badb67203"
+text = '''acordo de proteção'''
+
+["rnw_history_cause_pact"]
+source = "5eb591692a1cfa4b"
+text = '''pacto de defesa'''
+
+["rnw_history_cause_separation"]
+source = "990b23e81455c981"
+text = '''divisão'''
+
+["rnw_history_cause_access"]
+source = "d5c3e042b3030d26"
+text = '''acordo de acesso a um local sagrado'''
+
+["rnw_history_cause_reform"]
+source = "d164ad30cd61bbb2"
+text = '''reforma'''
+
+["rnw_history_cause_migration"]
+source = "8a6cead4385ed439"
+text = '''migração'''
+
+["rnw_history_cause_trajectory"]
+source = "aa5a7e790ac4507c"
+text = '''mudança institucional'''
+
+["rnw_history_cause_pressure"]
+source = "640abca7fe5f5b23"
+text = '''pressão armada'''
+
+["rnw_history_cause_repelled"]
+source = "97670549b60b40ce"
+text = '''ataque repelido'''
+
+["rnw_history_cause_resisted"]
+source = "202ad671ebb6c73b"
+text = '''resistência a uma reforma'''
+
+["rnw_history_foundation_0"]
+source = "13d911105422277e"
+text = '''{year}: A sociedade {first} já existe no início do registro.'''
+
+["rnw_history_foundation_1"]
+source = "c0efb7d9752d12ce"
+text = '''{year}: O registro começa com a sociedade {first} já estabelecida.'''
+
+["rnw_history_contact_0"]
+source = "12ee788a309cecb3"
+text = '''{year}: As sociedades {first} e {second} entraram em contato.'''
+
+["rnw_history_contact_1"]
+source = "36bfb06181f2c5f6"
+text = '''{year}: Foi estabelecido contato entre as sociedades {first} e {second}.'''
+
+["rnw_history_exchange_0"]
+source = "29ca29db975a2981"
+text = '''{year}: As sociedades {first} e {second} concordaram em trocar bens.'''
+
+["rnw_history_exchange_1"]
+source = "f9558e971c91cd05"
+text = '''{year}: Um acordo de troca uniu as sociedades {first} e {second}.'''
+
+["rnw_history_union_0"]
+source = "db8fd54f0fb194a7"
+text = '''{year}: A sociedade {first} surgiu da união das sociedades {second} e {third}.'''
+
+["rnw_history_union_1"]
+source = "d314cef3946e4dd1"
+text = '''{year}: As sociedades {second} e {third} se uniram para formar a sociedade {first}.'''
+
+["rnw_history_conflict_0"]
+source = "a3415becef922224"
+text = '''{year}: As sociedades {first} e {second} participaram de um conflito.'''
+
+["rnw_history_conflict_1"]
+source = "5456fdbe40f06049"
+text = '''{year}: Um conflito envolveu as sociedades {first} e {second}.'''
+
+["rnw_history_dependency_0"]
+source = "1cccc5fb0844884b"
+text = '''{year}: A sociedade {first} se submeteu à sociedade {second}.'''
+
+["rnw_history_dependency_1"]
+source = "339603465c20f84f"
+text = '''{year}: A sociedade {first} aceitou a suserania da sociedade {second}.'''
+
+["rnw_history_protection_0"]
+source = "e4a870ffccd3ae0c"
+text = '''{year}: A sociedade {second} concordou em proteger a sociedade {first}.'''
+
+["rnw_history_protection_1"]
+source = "6c58f84b3a8a5dba"
+text = '''{year}: A sociedade {first} obteve uma promessa de proteção da sociedade {second}.'''
+
+["rnw_history_pact_0"]
+source = "e4ebfb79bcfb3124"
+text = '''{year}: As sociedades {first} e {second} firmaram um pacto de defesa.'''
+
+["rnw_history_pact_1"]
+source = "10b8436fcd3d520a"
+text = '''{year}: Um acordo de defesa comum uniu as sociedades {first} e {second}.'''
+
+["rnw_history_separation_0"]
+source = "26106a594cef25e3"
+text = '''{year}: A sociedade {first} se dividiu em sociedades sucessoras.'''
+
+["rnw_history_separation_1"]
+source = "c3cea81ca5bb08c7"
+text = '''{year}: Da divisão da sociedade {first} surgiram sociedades sucessoras.'''
+
+["rnw_history_access_0"]
+source = "c66c249e33058918"
+text = '''{year}: A sociedade {first} obteve acesso a um local sagrado sob o domínio da sociedade {second}.'''
+
+["rnw_history_access_1"]
+source = "7daa7280fb0a8de8"
+text = '''{year}: A sociedade {second} concedeu à sociedade {first} acesso a um local sagrado.'''
+
+["rnw_history_reform_0"]
+source = "cb441e6f8fb32cc8"
+text = '''{year}: A sociedade {first} alterou suas instituições.'''
+
+["rnw_history_reform_1"]
+source = "40157e43b8720a98"
+text = '''{year}: Uma reforma institucional entrou em vigor na sociedade {first}.'''
+
+["rnw_history_migration_0"]
+source = "74dc0fca33159a3f"
+text = '''{year}: Pessoas se mudaram do povoado {first} para o povoado {second}.'''
+
+["rnw_history_migration_1"]
+source = "89adb05f0ee6e6cf"
+text = '''{year}: O povoado {second} recebeu pessoas do povoado {first}.'''
+
+["rnw_history_pressure_0"]
+source = "84eb6156e2e645c4"
+text = '''{year}: As sociedades {first} e {second} participaram de um confronto armado.'''
+
+["rnw_history_pressure_1"]
+source = "b46ba00d666165cb"
+text = '''{year}: A pressão armada envolveu as sociedades {first} e {second}.'''
+
+["rnw_history_repelled_0"]
+source = "7de8ecc79cb16fcb"
+text = '''{year}: Um ataque envolvendo as sociedades {first} e {second} foi repelido.'''
+
+["rnw_history_repelled_1"]
+source = "fc6cd535bb74cdc9"
+text = '''{year}: As sociedades {first} e {second} participaram de um conflito; o ataque fracassou.'''
+
+["rnw_history_resisted_0"]
+source = "fa34477bf3749df6"
+text = '''{year}: Uma tentativa de reforma na sociedade {first} encontrou resistência e fracassou.'''
+
+["rnw_history_resisted_1"]
+source = "cdbf8e2b05983ecb"
+text = '''{year}: A resistência impediu uma mudança institucional proposta na sociedade {first}.'''

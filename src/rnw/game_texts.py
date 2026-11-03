@@ -5,7 +5,8 @@ The static texts are the stories (events, options, modifiers, privileges), the f
 places: the sources of the ``game`` catalogs (``translations``). A world's localization is a set
 of *entries*: a static text by its key (``Text``), a static text with a name filled in
 (``Described``), or a name the world composed (``wording.Name``); ``localize`` writes them in one
-language.
+language. Historical sentences and bounded chronicles keep their names, years
+and source templates structured until this same localization boundary.
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING
 
-from rnw import eu5_places, translations, wording
+from rnw import eu5_places, history_text, translations, wording
 from rnw.formations import SPECS
 from rnw.stories import STORIES
 from rnw.storymodel import event_keys
@@ -40,7 +41,7 @@ class Described:
     name: wording.Name
 
 
-type Entry = Text | Described | wording.Name
+type Entry = Text | Described | wording.Name | history_text.Sentence | history_text.Chronicle
 
 
 def formation_description(family: str) -> str:
@@ -59,6 +60,7 @@ def sources() -> dict[str, str]:
         found[f"STATIC_MODIFIER_NAME_{spec.modifier.name}"] = spec.modifier.title
         found[f"STATIC_MODIFIER_DESC_{spec.modifier.name}"] = spec.modifier.text
     found.update(eu5_places.texts(eu5_places.SPECS))
+    found.update(history_text.sources())
     return found
 
 
@@ -80,6 +82,12 @@ def localize(entries: Mapping[str, Entry], language: str) -> dict[str, str]:
         for entry in entries.values()
         if isinstance(entry, Text | Described)
     }
+    needed.update(
+        (key, english[key])
+        for entry in entries.values()
+        if isinstance(entry, history_text.Sentence | history_text.Chronicle)
+        for key in history_text.source_keys(entry)
+    )
     texts = (
         translations.translate(translations.GAME, language, needed)
         if translations.has_catalog(translations.GAME, language)
@@ -93,6 +101,8 @@ def localize(entries: Mapping[str, Entry], language: str) -> dict[str, str]:
             written[key] = texts[entry.source].replace(
                 "{name}", wording.render(entry.name, language)
             )
+        elif isinstance(entry, history_text.Sentence | history_text.Chronicle):
+            written[key] = history_text.render(entry, language, texts)
         else:
             written[key] = wording.render(entry, language)
     return written

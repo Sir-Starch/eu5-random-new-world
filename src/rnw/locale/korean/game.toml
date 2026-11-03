@@ -1008,4 +1008,240 @@ text = '''물고기가 하도 많아 주변의 모든 해안을 먹여 살리는
 
 ["rnw_treaty_meridian"]
 source = "91430246d65837db"
-text = "조약 자오선"
+text = '''조약 자오선'''
+
+["rnw_our_history"]
+source = "59ab2712ca1d5b62"
+text = '''우리의 역사'''
+
+["rnw_our_history_desc"]
+source = "342ac1d5ca933aa8"
+text = '''우리 사회와 그 전신의 연대기를 읽습니다.'''
+
+["rnw_our_history.a"]
+source = "9e39c69810d1b732"
+text = '''연대기를 열어라.'''
+
+["rnw_chronicle.1.title"]
+source = "59ab2712ca1d5b62"
+text = '''우리의 역사'''
+
+["rnw_chronicle.1.a"]
+source = "7366c18ed575936d"
+text = '''연대기를 닫아라.'''
+
+["rnw_history_place"]
+source = "dd4cd67bad6b43cb"
+text = '''{text} 기록된 장소: {place}.'''
+
+["rnw_history_opinion_place"]
+source = "3726cac549dd314a"
+text = '''{text} — 장소: {place}'''
+
+["rnw_history_opinion_trust"]
+source = "dd69982a0910055b"
+text = '''신뢰: {cause} ({year}년)'''
+
+["rnw_history_opinion_grievance"]
+source = "234d42d09f7346a4"
+text = '''원한: {cause} ({year}년)'''
+
+["rnw_history_opinion_fear"]
+source = "b265d7b94dc67d6f"
+text = '''두려움: {cause} ({year}년)'''
+
+["rnw_history_opinion_dependence"]
+source = "8ab01e2bf604a322"
+text = '''의존: {cause} ({year}년)'''
+
+["rnw_history_opinion_competition"]
+source = "a80a2092d70e0dab"
+text = '''경쟁: {cause} ({year}년)'''
+
+["rnw_history_opinion_affinity"]
+source = "33d90631b0ba91dd"
+text = '''친밀감: {cause} ({year}년)'''
+
+["rnw_history_cause_foundation"]
+source = "9f1b3f50aa6f3fef"
+text = '''기록의 시작'''
+
+["rnw_history_cause_contact"]
+source = "093e7d5fdbaacfa9"
+text = '''접촉'''
+
+["rnw_history_cause_exchange"]
+source = "c6714454d03ef97e"
+text = '''물자 교환 협정'''
+
+["rnw_history_cause_union"]
+source = "ef3ff703d7565ab5"
+text = '''통합'''
+
+["rnw_history_cause_conflict"]
+source = "fa9e1d22205ad852"
+text = '''분쟁'''
+
+["rnw_history_cause_dependency"]
+source = "293f1d2ee206a7cb"
+text = '''복속'''
+
+["rnw_history_cause_protection"]
+source = "9eb6b00badb67203"
+text = '''보호 협정'''
+
+["rnw_history_cause_pact"]
+source = "5eb591692a1cfa4b"
+text = '''방위 조약'''
+
+["rnw_history_cause_separation"]
+source = "990b23e81455c981"
+text = '''분열'''
+
+["rnw_history_cause_access"]
+source = "d5c3e042b3030d26"
+text = '''성지 출입 협정'''
+
+["rnw_history_cause_reform"]
+source = "d164ad30cd61bbb2"
+text = '''개혁'''
+
+["rnw_history_cause_migration"]
+source = "8a6cead4385ed439"
+text = '''이주'''
+
+["rnw_history_cause_trajectory"]
+source = "aa5a7e790ac4507c"
+text = '''제도의 변화'''
+
+["rnw_history_cause_pressure"]
+source = "640abca7fe5f5b23"
+text = '''무력 압박'''
+
+["rnw_history_cause_repelled"]
+source = "97670549b60b40ce"
+text = '''격퇴된 공격'''
+
+["rnw_history_cause_resisted"]
+source = "202ad671ebb6c73b"
+text = '''개혁에 대한 저항'''
+
+["rnw_history_foundation_0"]
+source = "13d911105422277e"
+text = '''{year}년: 기록이 시작될 때 {first} 공동체는 이미 존재했습니다.'''
+
+["rnw_history_foundation_1"]
+source = "c0efb7d9752d12ce"
+text = '''{year}년: {first} 공동체가 이미 성립한 상태에서 기록이 시작됩니다.'''
+
+["rnw_history_contact_0"]
+source = "12ee788a309cecb3"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 접촉했습니다.'''
+
+["rnw_history_contact_1"]
+source = "36bfb06181f2c5f6"
+text = '''{year}년: {first} 공동체와 {second} 공동체 사이에 접촉이 이루어졌습니다.'''
+
+["rnw_history_exchange_0"]
+source = "29ca29db975a2981"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 물자 교환에 합의했습니다.'''
+
+["rnw_history_exchange_1"]
+source = "f9558e971c91cd05"
+text = '''{year}년: 교환 협정이 {first} 공동체와 {second} 공동체를 연결했습니다.'''
+
+["rnw_history_union_0"]
+source = "db8fd54f0fb194a7"
+text = '''{year}년: {second} 공동체와 {third} 공동체의 통합으로 {first} 공동체가 성립했습니다.'''
+
+["rnw_history_union_1"]
+source = "d314cef3946e4dd1"
+text = '''{year}년: {second} 공동체와 {third} 공동체가 통합하여 {first} 공동체가 되었습니다.'''
+
+["rnw_history_conflict_0"]
+source = "a3415becef922224"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 분쟁에 참여했습니다.'''
+
+["rnw_history_conflict_1"]
+source = "5456fdbe40f06049"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 관여한 분쟁이 벌어졌습니다.'''
+
+["rnw_history_dependency_0"]
+source = "1cccc5fb0844884b"
+text = '''{year}년: {first} 공동체가 {second} 공동체에 복속했습니다.'''
+
+["rnw_history_dependency_1"]
+source = "339603465c20f84f"
+text = '''{year}년: {first} 공동체가 {second} 공동체의 종주권을 받아들였습니다.'''
+
+["rnw_history_protection_0"]
+source = "e4a870ffccd3ae0c"
+text = '''{year}년: {second} 공동체가 {first} 공동체를 보호하기로 합의했습니다.'''
+
+["rnw_history_protection_1"]
+source = "6c58f84b3a8a5dba"
+text = '''{year}년: {first} 공동체가 {second} 공동체로부터 보호 약속을 받았습니다.'''
+
+["rnw_history_pact_0"]
+source = "e4ebfb79bcfb3124"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 방위 조약을 맺었습니다.'''
+
+["rnw_history_pact_1"]
+source = "10b8436fcd3d520a"
+text = '''{year}년: 공동 방위 협정이 {first} 공동체와 {second} 공동체를 연결했습니다.'''
+
+["rnw_history_separation_0"]
+source = "26106a594cef25e3"
+text = '''{year}년: {first} 공동체가 후계 공동체들로 분열했습니다.'''
+
+["rnw_history_separation_1"]
+source = "c3cea81ca5bb08c7"
+text = '''{year}년: {first} 공동체의 분열에서 후계 공동체들이 생겨났습니다.'''
+
+["rnw_history_access_0"]
+source = "c66c249e33058918"
+text = '''{year}년: {first} 공동체가 {second} 공동체가 보유한 성지에 출입할 권리를 얻었습니다.'''
+
+["rnw_history_access_1"]
+source = "7daa7280fb0a8de8"
+text = '''{year}년: {second} 공동체가 {first} 공동체에 성지 출입을 허용했습니다.'''
+
+["rnw_history_reform_0"]
+source = "cb441e6f8fb32cc8"
+text = '''{year}년: {first} 공동체가 제도를 바꾸었습니다.'''
+
+["rnw_history_reform_1"]
+source = "40157e43b8720a98"
+text = '''{year}년: {first} 공동체에서 제도 개혁이 시행되었습니다.'''
+
+["rnw_history_migration_0"]
+source = "74dc0fca33159a3f"
+text = '''{year}년: 사람들이 {first} 정착지에서 {second} 정착지로 이주했습니다.'''
+
+["rnw_history_migration_1"]
+source = "89adb05f0ee6e6cf"
+text = '''{year}년: {second} 정착지가 {first} 정착지에서 온 이주민을 받아들였습니다.'''
+
+["rnw_history_pressure_0"]
+source = "84eb6156e2e645c4"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 무력 대치에 관여했습니다.'''
+
+["rnw_history_pressure_1"]
+source = "b46ba00d666165cb"
+text = '''{year}년: 무력 압박에 {first} 공동체와 {second} 공동체가 관여했습니다.'''
+
+["rnw_history_repelled_0"]
+source = "7de8ecc79cb16fcb"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 관여한 싸움에서 공격이 격퇴되었습니다.'''
+
+["rnw_history_repelled_1"]
+source = "fc6cd535bb74cdc9"
+text = '''{year}년: {first} 공동체와 {second} 공동체가 분쟁에 참여했으나 공격은 실패했습니다.'''
+
+["rnw_history_resisted_0"]
+source = "fa34477bf3749df6"
+text = '''{year}년: {first} 공동체에서 시도된 개혁은 저항에 부딪혀 실패했습니다.'''
+
+["rnw_history_resisted_1"]
+source = "cdbf8e2b05983ecb"
+text = '''{year}년: 저항으로 인해 {first} 공동체의 제도 변경안이 실현되지 못했습니다.'''

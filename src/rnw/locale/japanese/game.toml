@@ -1008,4 +1008,240 @@ text = '''魚があまりに豊富で、近隣のあらゆる沿岸を養う海�
 
 ["rnw_treaty_meridian"]
 source = "91430246d65837db"
-text = "条約の子午線"
+text = '''条約の子午線'''
+
+["rnw_our_history"]
+source = "59ab2712ca1d5b62"
+text = '''我らの歴史'''
+
+["rnw_our_history_desc"]
+source = "342ac1d5ca933aa8"
+text = '''我らの社会とその前身の年代記を読む。'''
+
+["rnw_our_history.a"]
+source = "9e39c69810d1b732"
+text = '''年代記を開く。'''
+
+["rnw_chronicle.1.title"]
+source = "59ab2712ca1d5b62"
+text = '''我らの歴史'''
+
+["rnw_chronicle.1.a"]
+source = "7366c18ed575936d"
+text = '''年代記を閉じる。'''
+
+["rnw_history_place"]
+source = "dd4cd67bad6b43cb"
+text = '''{text} 記録された場所：{place}。'''
+
+["rnw_history_opinion_place"]
+source = "3726cac549dd314a"
+text = '''{text} ― 場所：{place}'''
+
+["rnw_history_opinion_trust"]
+source = "dd69982a0910055b"
+text = '''信頼：{cause}（{year}年）'''
+
+["rnw_history_opinion_grievance"]
+source = "234d42d09f7346a4"
+text = '''遺恨：{cause}（{year}年）'''
+
+["rnw_history_opinion_fear"]
+source = "b265d7b94dc67d6f"
+text = '''恐怖：{cause}（{year}年）'''
+
+["rnw_history_opinion_dependence"]
+source = "8ab01e2bf604a322"
+text = '''依存：{cause}（{year}年）'''
+
+["rnw_history_opinion_competition"]
+source = "a80a2092d70e0dab"
+text = '''競争：{cause}（{year}年）'''
+
+["rnw_history_opinion_affinity"]
+source = "33d90631b0ba91dd"
+text = '''親近感：{cause}（{year}年）'''
+
+["rnw_history_cause_foundation"]
+source = "9f1b3f50aa6f3fef"
+text = '''記録の始まり'''
+
+["rnw_history_cause_contact"]
+source = "093e7d5fdbaacfa9"
+text = '''接触'''
+
+["rnw_history_cause_exchange"]
+source = "c6714454d03ef97e"
+text = '''物資交換の協定'''
+
+["rnw_history_cause_union"]
+source = "ef3ff703d7565ab5"
+text = '''統合'''
+
+["rnw_history_cause_conflict"]
+source = "fa9e1d22205ad852"
+text = '''紛争'''
+
+["rnw_history_cause_dependency"]
+source = "293f1d2ee206a7cb"
+text = '''服属'''
+
+["rnw_history_cause_protection"]
+source = "9eb6b00badb67203"
+text = '''保護協定'''
+
+["rnw_history_cause_pact"]
+source = "5eb591692a1cfa4b"
+text = '''防衛協定'''
+
+["rnw_history_cause_separation"]
+source = "990b23e81455c981"
+text = '''分裂'''
+
+["rnw_history_cause_access"]
+source = "d5c3e042b3030d26"
+text = '''聖地への立ち入り協定'''
+
+["rnw_history_cause_reform"]
+source = "d164ad30cd61bbb2"
+text = '''改革'''
+
+["rnw_history_cause_migration"]
+source = "8a6cead4385ed439"
+text = '''移住'''
+
+["rnw_history_cause_trajectory"]
+source = "aa5a7e790ac4507c"
+text = '''制度の変化'''
+
+["rnw_history_cause_pressure"]
+source = "640abca7fe5f5b23"
+text = '''武力による圧力'''
+
+["rnw_history_cause_repelled"]
+source = "97670549b60b40ce"
+text = '''撃退された攻撃'''
+
+["rnw_history_cause_resisted"]
+source = "202ad671ebb6c73b"
+text = '''改革への抵抗'''
+
+["rnw_history_foundation_0"]
+source = "13d911105422277e"
+text = '''{year}年：記録が始まった時点で、共同体{first}はすでに存在していた。'''
+
+["rnw_history_foundation_1"]
+source = "c0efb7d9752d12ce"
+text = '''{year}年：共同体{first}がすでに成立した状態から記録が始まる。'''
+
+["rnw_history_contact_0"]
+source = "12ee788a309cecb3"
+text = '''{year}年：共同体{first}と共同体{second}が接触した。'''
+
+["rnw_history_contact_1"]
+source = "36bfb06181f2c5f6"
+text = '''{year}年：共同体{first}と共同体{second}の間に接触が生まれた。'''
+
+["rnw_history_exchange_0"]
+source = "29ca29db975a2981"
+text = '''{year}年：共同体{first}と共同体{second}が物資の交換に合意した。'''
+
+["rnw_history_exchange_1"]
+source = "f9558e971c91cd05"
+text = '''{year}年：交換協定が共同体{first}と共同体{second}を結んだ。'''
+
+["rnw_history_union_0"]
+source = "db8fd54f0fb194a7"
+text = '''{year}年：共同体{second}と共同体{third}の統合によって共同体{first}が成立した。'''
+
+["rnw_history_union_1"]
+source = "d314cef3946e4dd1"
+text = '''{year}年：共同体{second}と共同体{third}が統合し、共同体{first}となった。'''
+
+["rnw_history_conflict_0"]
+source = "a3415becef922224"
+text = '''{year}年：共同体{first}と共同体{second}が紛争に参加した。'''
+
+["rnw_history_conflict_1"]
+source = "5456fdbe40f06049"
+text = '''{year}年：共同体{first}と共同体{second}が関わる紛争が起きた。'''
+
+["rnw_history_dependency_0"]
+source = "1cccc5fb0844884b"
+text = '''{year}年：共同体{first}が共同体{second}に服属した。'''
+
+["rnw_history_dependency_1"]
+source = "339603465c20f84f"
+text = '''{year}年：共同体{first}が共同体{second}の宗主権を認めた。'''
+
+["rnw_history_protection_0"]
+source = "e4a870ffccd3ae0c"
+text = '''{year}年：共同体{second}が共同体{first}の保護に合意した。'''
+
+["rnw_history_protection_1"]
+source = "6c58f84b3a8a5dba"
+text = '''{year}年：共同体{first}が共同体{second}から保護の約束を得た。'''
+
+["rnw_history_pact_0"]
+source = "e4ebfb79bcfb3124"
+text = '''{year}年：共同体{first}と共同体{second}が防衛協定を結んだ。'''
+
+["rnw_history_pact_1"]
+source = "10b8436fcd3d520a"
+text = '''{year}年：共同防衛の合意が共同体{first}と共同体{second}を結んだ。'''
+
+["rnw_history_separation_0"]
+source = "26106a594cef25e3"
+text = '''{year}年：共同体{first}が後継の共同体に分裂した。'''
+
+["rnw_history_separation_1"]
+source = "c3cea81ca5bb08c7"
+text = '''{year}年：共同体{first}の分裂から後継の共同体が生まれた。'''
+
+["rnw_history_access_0"]
+source = "c66c249e33058918"
+text = '''{year}年：共同体{first}が、共同体{second}の保有する聖地への立ち入りを認められた。'''
+
+["rnw_history_access_1"]
+source = "7daa7280fb0a8de8"
+text = '''{year}年：共同体{second}が共同体{first}に聖地への立ち入りを認めた。'''
+
+["rnw_history_reform_0"]
+source = "cb441e6f8fb32cc8"
+text = '''{year}年：共同体{first}が制度を改めた。'''
+
+["rnw_history_reform_1"]
+source = "40157e43b8720a98"
+text = '''{year}年：共同体{first}で制度改革が実施された。'''
+
+["rnw_history_migration_0"]
+source = "74dc0fca33159a3f"
+text = '''{year}年：人々が集落{first}から集落{second}へ移住した。'''
+
+["rnw_history_migration_1"]
+source = "89adb05f0ee6e6cf"
+text = '''{year}年：集落{second}が集落{first}からの移住者を受け入れた。'''
+
+["rnw_history_pressure_0"]
+source = "84eb6156e2e645c4"
+text = '''{year}年：共同体{first}と共同体{second}が武力による対立に関わった。'''
+
+["rnw_history_pressure_1"]
+source = "b46ba00d666165cb"
+text = '''{year}年：武力による圧力に共同体{first}と共同体{second}が関わった。'''
+
+["rnw_history_repelled_0"]
+source = "7de8ecc79cb16fcb"
+text = '''{year}年：共同体{first}と共同体{second}が関わる戦いで、攻撃が撃退された。'''
+
+["rnw_history_repelled_1"]
+source = "fc6cd535bb74cdc9"
+text = '''{year}年：共同体{first}と共同体{second}が紛争に参加したが、攻撃は失敗に終わった。'''
+
+["rnw_history_resisted_0"]
+source = "fa34477bf3749df6"
+text = '''{year}年：共同体{first}で試みられた改革は抵抗を受け、失敗した。'''
+
+["rnw_history_resisted_1"]
+source = "cdbf8e2b05983ecb"
+text = '''{year}年：共同体{first}の制度変更案は抵抗に阻まれた。'''

@@ -551,10 +551,17 @@ H2 schema.
   and causal named-opinion records in one `FinalStartPlan`, with independent
   checks. It preserves overlapping historical memberships, recomputes centres,
   roads/discovery and supplies the AI context. The constructed 256-location flow
-  reaches this plan. **Next in H4:** localized opinion/chronicle writers, the
-  voluntary decision/event, exporter activation and written-output checks. Pending
-  epoch 61 and new output goldens belong to that first world-byte change; H7 keeps
-  calibration and candidate/hub delivery.
+  reaches this plan. The third part supplies its localized text artifacts below.
+- **H4, third part completed 2026-11-03:** [localized history artifacts](history-core.md#localized-history-artifacts-h4-third-part)
+  supply bounded causal chronicles, original named opinions, the voluntary decision
+  and conditional chronicle event, plus directed guarantee records. All 59 new
+  sources are translated through the existing eleven-language pipeline. Parsed
+  artifact checks reject changed effects/scopes and missing localization bindings.
+  Full checks pass (2,653 Python tests, 17 optional skips; strict types, format/lint,
+  23 Rust tests), as do 15 installed-game read-only checks. Complete text artifacts
+  agree under hash seeds 1/927. **Next in H4:** exporter activation and integration
+  with existing setup/archetype checks. Pending epoch 61 and new output goldens
+  belong to that first world-byte change; H7 keeps calibration and candidate/hub delivery.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

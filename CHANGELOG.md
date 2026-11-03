@@ -11,6 +11,9 @@
   It now constructs a checked final start plan from surviving historical outcomes,
   including overlapping memberships, calibrated governments and positions, causal
   diplomacy/opinion records, settlement centres, roads and the AI context.
+  Localized adapters now supply causal chronicles, historical bias names and a
+  voluntary Our History decision/event in all eleven languages, with parsed
+  artifact checks for their values, live scopes, effects and text bindings.
   It is not connected to world generation yet; world bytes and epoch are unchanged.
 
 - Begin the 1.2.0 history implementation: record the installed contracts and

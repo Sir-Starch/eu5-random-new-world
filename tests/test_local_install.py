@@ -58,7 +58,7 @@ from rnw.geography import color_summary, read_locations, summary
 from rnw.history_model import Rules
 from rnw.languages import official_languages
 from rnw.model import WATER_CLASSES, CellClass
-from rnw.pdx import parse
+from rnw.pdx import Block, parse
 from rnw.record import Record
 from rnw.settings import RESOURCE_FIELDS
 from rnw.stories import STORIES
@@ -92,6 +92,47 @@ def test_local_history_positions_use_observed_ungated_american_ranges() -> None:
         "quality_vs_quantity": (-75, 10),
         "land_vs_naval": (-90, 60),
     }
+
+
+def test_local_history_text_interfaces_keep_the_required_precedents() -> None:
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None:
+        pytest.skip("EU5_GAME_DIR is not set")
+    root = Path(root_value) / "game"
+    biases = parse(
+        (root / "in_game/common/biases/03_opinion_from_events.txt").read_text("utf-8-sig")
+    )
+    bias = biases.block("opinion_ruler_culture")
+    assert bias is not None
+    assert bias.first("value") is not None
+    assert bias.first("yearly_decay") is not None
+    decisions = parse((root / "in_game/common/decisions/canal_passage.txt").read_text("utf-8-sig"))
+    assert any(
+        (value := block.first("value")) is not None and value.value == "0"
+        for entry in decisions.entries
+        if entry.key is not None
+        if (block := decisions.block(entry.key, "ai_will_do")) is not None
+    )
+    events = parse((root / "in_game/events/thalassocracy_events.txt").read_text("utf-8-sig"))
+    assert (
+        events.block("thalassocracy_events.1", "desc", "first_valid", "triggered_desc", "trigger")
+        is not None
+    )
+    descriptions = events.block("thalassocracy_events.1", "desc", "first_valid")
+    assert descriptions is not None
+    assert len(list(descriptions.find("triggered_desc"))) == 2
+    setup = parse((root / "main_menu/setup/1337/12_diplomacy.txt").read_text("utf-8-sig"))
+    holder = setup.block("diplomacy_manager")
+    assert holder is not None
+    assert (
+        sum(
+            relation.value == "guarantee"
+            for entry in holder.find("scripted_oneway")
+            if isinstance(entry.value, Block)
+            if (relation := entry.value.first("type")) is not None
+        )
+        == 5
+    )
 
 
 def test_local_installation_has_consistent_parsed_hierarchy() -> None:

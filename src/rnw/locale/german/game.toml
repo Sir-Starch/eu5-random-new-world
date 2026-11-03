@@ -1008,4 +1008,240 @@ text = '''Gewässer so voller Fisch, dass sie jede Küste ringsum ernähren.'''
 
 ["rnw_treaty_meridian"]
 source = "91430246d65837db"
-text = "Vertragsmeridian"
+text = '''Vertragsmeridian'''
+
+["rnw_our_history"]
+source = "59ab2712ca1d5b62"
+text = '''Unsere Geschichte'''
+
+["rnw_our_history_desc"]
+source = "342ac1d5ca933aa8"
+text = '''Die Chronik unserer Gemeinschaft und ihrer Vorgänger lesen.'''
+
+["rnw_our_history.a"]
+source = "9e39c69810d1b732"
+text = '''Die Chronik öffnen.'''
+
+["rnw_chronicle.1.title"]
+source = "59ab2712ca1d5b62"
+text = '''Unsere Geschichte'''
+
+["rnw_chronicle.1.a"]
+source = "7366c18ed575936d"
+text = '''Die Chronik schließen.'''
+
+["rnw_history_place"]
+source = "dd4cd67bad6b43cb"
+text = '''{text} Verzeichneter Ort: {place}.'''
+
+["rnw_history_opinion_place"]
+source = "3726cac549dd314a"
+text = '''{text} — Ort {place}'''
+
+["rnw_history_opinion_trust"]
+source = "dd69982a0910055b"
+text = '''Vertrauen: {cause} ({year})'''
+
+["rnw_history_opinion_grievance"]
+source = "234d42d09f7346a4"
+text = '''Groll: {cause} ({year})'''
+
+["rnw_history_opinion_fear"]
+source = "b265d7b94dc67d6f"
+text = '''Furcht: {cause} ({year})'''
+
+["rnw_history_opinion_dependence"]
+source = "8ab01e2bf604a322"
+text = '''Abhängigkeit: {cause} ({year})'''
+
+["rnw_history_opinion_competition"]
+source = "a80a2092d70e0dab"
+text = '''Rivalität: {cause} ({year})'''
+
+["rnw_history_opinion_affinity"]
+source = "33d90631b0ba91dd"
+text = '''Verbundenheit: {cause} ({year})'''
+
+["rnw_history_cause_foundation"]
+source = "9f1b3f50aa6f3fef"
+text = '''Beginn der Aufzeichnungen'''
+
+["rnw_history_cause_contact"]
+source = "093e7d5fdbaacfa9"
+text = '''Kontaktaufnahme'''
+
+["rnw_history_cause_exchange"]
+source = "c6714454d03ef97e"
+text = '''Austauschabkommen'''
+
+["rnw_history_cause_union"]
+source = "ef3ff703d7565ab5"
+text = '''Vereinigung'''
+
+["rnw_history_cause_conflict"]
+source = "fa9e1d22205ad852"
+text = '''Konflikt'''
+
+["rnw_history_cause_dependency"]
+source = "293f1d2ee206a7cb"
+text = '''Unterwerfung'''
+
+["rnw_history_cause_protection"]
+source = "9eb6b00badb67203"
+text = '''Schutzabkommen'''
+
+["rnw_history_cause_pact"]
+source = "5eb591692a1cfa4b"
+text = '''Verteidigungspakt'''
+
+["rnw_history_cause_separation"]
+source = "990b23e81455c981"
+text = '''Teilung'''
+
+["rnw_history_cause_access"]
+source = "d5c3e042b3030d26"
+text = '''Abkommen über den Zugang zu einer heiligen Stätte'''
+
+["rnw_history_cause_reform"]
+source = "d164ad30cd61bbb2"
+text = '''Reform'''
+
+["rnw_history_cause_migration"]
+source = "8a6cead4385ed439"
+text = '''Wanderung'''
+
+["rnw_history_cause_trajectory"]
+source = "aa5a7e790ac4507c"
+text = '''Wandel der Ordnung'''
+
+["rnw_history_cause_pressure"]
+source = "640abca7fe5f5b23"
+text = '''bewaffneter Druck'''
+
+["rnw_history_cause_repelled"]
+source = "97670549b60b40ce"
+text = '''abgewehrter Angriff'''
+
+["rnw_history_cause_resisted"]
+source = "202ad671ebb6c73b"
+text = '''Widerstand gegen eine Reform'''
+
+["rnw_history_foundation_0"]
+source = "13d911105422277e"
+text = '''{year}: Die Gemeinschaft {first} besteht bereits zu Beginn der Aufzeichnungen.'''
+
+["rnw_history_foundation_1"]
+source = "c0efb7d9752d12ce"
+text = '''{year}: Die Aufzeichnungen beginnen mit der bereits bestehenden Gemeinschaft {first}.'''
+
+["rnw_history_contact_0"]
+source = "12ee788a309cecb3"
+text = '''{year}: Die Gemeinschaften {first} und {second} nahmen Kontakt auf.'''
+
+["rnw_history_contact_1"]
+source = "36bfb06181f2c5f6"
+text = '''{year}: Zwischen den Gemeinschaften {first} und {second} entstand Kontakt.'''
+
+["rnw_history_exchange_0"]
+source = "29ca29db975a2981"
+text = '''{year}: Die Gemeinschaften {first} und {second} vereinbarten einen Güteraustausch.'''
+
+["rnw_history_exchange_1"]
+source = "f9558e971c91cd05"
+text = '''{year}: Ein Austauschabkommen verband die Gemeinschaften {first} und {second}.'''
+
+["rnw_history_union_0"]
+source = "db8fd54f0fb194a7"
+text = '''{year}: Aus der Vereinigung der Gemeinschaften {second} und {third} entstand die Gemeinschaft {first}.'''
+
+["rnw_history_union_1"]
+source = "d314cef3946e4dd1"
+text = '''{year}: Die Gemeinschaften {second} und {third} vereinigten sich zur Gemeinschaft {first}.'''
+
+["rnw_history_conflict_0"]
+source = "a3415becef922224"
+text = '''{year}: Die Gemeinschaften {first} und {second} beteiligten sich an einem Konflikt.'''
+
+["rnw_history_conflict_1"]
+source = "5456fdbe40f06049"
+text = '''{year}: Ein Konflikt erfasste die Gemeinschaften {first} und {second}.'''
+
+["rnw_history_dependency_0"]
+source = "1cccc5fb0844884b"
+text = '''{year}: Die Gemeinschaft {first} unterwarf sich der Gemeinschaft {second}.'''
+
+["rnw_history_dependency_1"]
+source = "339603465c20f84f"
+text = '''{year}: Die Gemeinschaft {first} erkannte die Oberhoheit der Gemeinschaft {second} an.'''
+
+["rnw_history_protection_0"]
+source = "e4a870ffccd3ae0c"
+text = '''{year}: Die Gemeinschaft {second} versprach, die Gemeinschaft {first} zu schützen.'''
+
+["rnw_history_protection_1"]
+source = "6c58f84b3a8a5dba"
+text = '''{year}: Die Gemeinschaft {first} erhielt ein Schutzversprechen der Gemeinschaft {second}.'''
+
+["rnw_history_pact_0"]
+source = "e4ebfb79bcfb3124"
+text = '''{year}: Die Gemeinschaften {first} und {second} schlossen einen Verteidigungspakt.'''
+
+["rnw_history_pact_1"]
+source = "10b8436fcd3d520a"
+text = '''{year}: Ein Abkommen zur gemeinsamen Verteidigung verband die Gemeinschaften {first} und {second}.'''
+
+["rnw_history_separation_0"]
+source = "26106a594cef25e3"
+text = '''{year}: Die Gemeinschaft {first} zerfiel in Nachfolgegemeinschaften.'''
+
+["rnw_history_separation_1"]
+source = "c3cea81ca5bb08c7"
+text = '''{year}: Aus der Teilung der Gemeinschaft {first} gingen Nachfolgegemeinschaften hervor.'''
+
+["rnw_history_access_0"]
+source = "c66c249e33058918"
+text = '''{year}: Die Gemeinschaft {first} erhielt Zugang zu einer heiligen Stätte der Gemeinschaft {second}.'''
+
+["rnw_history_access_1"]
+source = "7daa7280fb0a8de8"
+text = '''{year}: Die Gemeinschaft {second} gewährte der Gemeinschaft {first} Zugang zu einer heiligen Stätte.'''
+
+["rnw_history_reform_0"]
+source = "cb441e6f8fb32cc8"
+text = '''{year}: Die Gemeinschaft {first} änderte ihre Ordnung.'''
+
+["rnw_history_reform_1"]
+source = "40157e43b8720a98"
+text = '''{year}: In der Gemeinschaft {first} trat eine Reform der Ordnung in Kraft.'''
+
+["rnw_history_migration_0"]
+source = "74dc0fca33159a3f"
+text = '''{year}: Menschen zogen aus der Siedlung {first} in die Siedlung {second}.'''
+
+["rnw_history_migration_1"]
+source = "89adb05f0ee6e6cf"
+text = '''{year}: Die Siedlung {second} nahm Menschen aus der Siedlung {first} auf.'''
+
+["rnw_history_pressure_0"]
+source = "84eb6156e2e645c4"
+text = '''{year}: Die Gemeinschaften {first} und {second} waren an einer bewaffneten Auseinandersetzung beteiligt.'''
+
+["rnw_history_pressure_1"]
+source = "b46ba00d666165cb"
+text = '''{year}: Bewaffneter Druck erfasste die Gemeinschaften {first} und {second}.'''
+
+["rnw_history_repelled_0"]
+source = "7de8ecc79cb16fcb"
+text = '''{year}: Ein Angriff unter Beteiligung der Gemeinschaften {first} und {second} wurde abgewehrt.'''
+
+["rnw_history_repelled_1"]
+source = "fc6cd535bb74cdc9"
+text = '''{year}: Die Gemeinschaften {first} und {second} beteiligten sich an einem Konflikt; der Angriff scheiterte.'''
+
+["rnw_history_resisted_0"]
+source = "fa34477bf3749df6"
+text = '''{year}: Ein Reformversuch in der Gemeinschaft {first} scheiterte am Widerstand.'''
+
+["rnw_history_resisted_1"]
+source = "cdbf8e2b05983ecb"
+text = '''{year}: Widerstand verhinderte eine vorgeschlagene Änderung der Ordnung in der Gemeinschaft {first}.'''

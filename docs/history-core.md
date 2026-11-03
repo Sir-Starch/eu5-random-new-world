@@ -1,9 +1,9 @@
 # History core, societies and bootstrap
 
 [V-EXEC, 2026-11-03] This implements the offline H2–H3 phases and H4's
-bootstrap, population and final-plan construction in the accepted
+bootstrap, population, final-plan construction and localized text writers in the accepted
 [history plan](history-plan.md#17-phases-and-scope-control). It is not called by
-the world exporter yet. The rest of H4 supplies the new localized writers and exporter switch. Existing world bytes,
+the world exporter yet. The rest of H4 connects these adapters and the written-output checks to generation. Existing world bytes,
 goldens, world codes, product version and epoch are unchanged.
 
 ## Ownership and entry points
@@ -24,6 +24,9 @@ goldens, world codes, product version and epoch are unchanged.
 | `eu5_history_values.py` | Installed ungated American axis ranges and bounded profile positions |
 | `history_diplomacy.py` | Actual bargains, eligible engine relations and bounded directed opinion bundles |
 | `history_plan_checks.py` | Independent agreement checks against the surviving history, including causal opinions and overlapping memberships |
+| `history_text.py` | Typed chronicle rows, bounded event selection and original opinion/chronicle templates |
+| `eu5_history_text.py` | Historical bias definitions, live-country trigger, voluntary decision/event and directed guarantee records |
+| `history_output_checks.py` | Parsed artifact checks for bias values, live scopes, decision/event effects and localization bindings |
 
 `create(geography, foundings, seed=..., empire_permille=250, checkpoint=...)`
 validates the caller's complete inhabited partition and records each founding and
@@ -146,6 +149,42 @@ This is an offline final-plan implementation. The exporter still calls H1's stat
 entry point. H4's remaining localized bias/chronicle writers and written-output
 integration will enable it together and establish pending epoch 61 and new goldens.
 No full-world calibration or game loading is inferred from this construction.
+
+## Localized history artifacts (H4, third part)
+
+`history_text.chronicles(plan)` selects at most eight distinct recorded events
+per living country and orders them by year and canonical key. Its own origin and
+surviving relationship causes take priority; recorded predecessors supply context.
+Refused proposals and seeded ambitions are omitted. A quiet founding gets one
+entry marking the **beginning of the record**, not an invented foundation date.
+Failed attacks and resisted reforms have their own factual templates. Directional
+bargains and migration read roles from typed effects, while conflict prose stays
+neutral about the participants' sides. No battle names, casualties or personalities
+are invented. Rows retain event/year/family, one to three actors and an optional
+recorded place. Two original templates per displayed family vary independently
+of simulation draws, using the existing names renderer and translation catalogues.
+
+`eu5_history_text.build(plan, keys)` writes each causal `rnw_hist_*` bias with its
+bounded value and decay; its name gives the memory family, actual cause, year and
+optional place. It also writes a live-generated-tag trigger, one repeatable
+**Our History** decision with `ai_will_do = { value = 0 }`, and one country event.
+The decision's only effect opens that event. Conditional descriptions choose the
+country's chronicle. The closing option has no effect; no startup hook or cost is
+written. Pop-type tribes have chronicles too. Extinct predecessors occur in prose,
+never as live script scopes. An empty country set writes no trigger/decision/event.
+Dynamic chronicle keys use the shared collision-aware `KeySpace`; a collision of
+the fixed interface keys fails explicitly. `guarantee_lines` writes the already
+projected provider → client pairs for setup diplomacy.
+
+`game_texts.localize` renders nested typed sentences and chronicles through the
+existing catalogue checks. All 59 new English source texts have current translations
+and fingerprints in the other ten official languages. `history_output_checks.verify_text`
+reads the written files back and checks exact bias values/decay, live country scopes,
+decision/event activation and effects, unique description bindings and localization
+coverage. It rejects added effects, startup hooks and changed AI access. The
+exporter switch and integration with existing setup/archetype checks remain next
+in H4; these independently callable adapters do not change current world bytes.
+Game loading and F1–F3 retain their H7 scope.
 
 ## One round
 
@@ -360,6 +399,18 @@ including the seven current American projection ranges. New localized game text,
 export activation and the H7 engine observation remain outstanding.
 Full semantic plans for the sea league and two-hearth confederation also agree
 under interpreter hash seeds 1/927.
+
+H4's third part adds 38 synthetic text/artifact cases, including eleven-language
+rendering, two templates per displayed family, predecessor context, quiet history,
+failed actions, migration direction, collision handling and rejection of changed
+script effects/scopes. Full checks pass: 2,653 Python tests, 17 optional skips,
+strict types, format/lint and 23 Rust tests. All 15 read-only installed-game checks
+pass on EU5 1.4.7 / build 26377361, including the bias/decision/conditional-description
+and guarantee precedents. Complete script/text/binding digests in all eleven
+languages agree under hash seeds 1/927 for the divided valley, sea league and
+two-hearth confederation. Logs and semantic hashes stay in ignored
+`local_data/history-120/h4-text/`. This is offline writer evidence, not an engine
+loading claim; no world reference, candidate or hub rebuild is needed before activation.
 
 [V-EXEC, 2026-11-03] All 77 history cases pass as part of locked sync and
 `make check`: 2,532 Python tests, 15 optional skips; strict types, format/lint and

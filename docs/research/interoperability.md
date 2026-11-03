@@ -884,8 +884,18 @@ breaks on subjecthood and expires for a lower-ranked provider. The 453 pop-type
 country records have no startup opinions involving them in `18_opinions.txt`.
 [INFERRED design] Engine projection therefore uses landed scopes with an explicit
 capital, consolidates overlapping confederate pact networks and keeps unsupported
-pop/community bargains in history. This adds no new format or asset; H4's new
-localized bias/chronicle writers and the H7 observation remain outstanding.
+pop/community bargains in history. This adds no new format or asset.
+
+[V-EXEC/V-LOCAL, 2026-11-03, same build] H4's independently callable text adapter
+now writes original causal bias definitions, a repeatable decision restricted to
+living generated tags with zero AI weight, and one conditional country event;
+it has no startup hook or gameplay effect. The existing localization pipeline
+renders its 59 source texts in all eleven official languages. The guarantee
+serializer preserves provider → client direction. Parsed-output checks and
+synthetic mutation cases reject changed values, scopes, AI access, extra effects
+and missing text bindings. Read-only tests retain the installed syntax precedents.
+No vanilla prose or additional asset/dependency is distributed. Exporter activation
+and the H7 engine observation remain outstanding; F1–F3 are unchanged.
 
 ## Earlier cases still outside this phase
 

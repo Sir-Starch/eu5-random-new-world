@@ -1008,4 +1008,240 @@ text = '''Wody tak pełne ryb, że wykarmiają całe okoliczne wybrzeże.'''
 
 ["rnw_treaty_meridian"]
 source = "91430246d65837db"
-text = "Południk traktatu"
+text = '''Południk traktatu'''
+
+["rnw_our_history"]
+source = "59ab2712ca1d5b62"
+text = '''Nasza historia'''
+
+["rnw_our_history_desc"]
+source = "342ac1d5ca933aa8"
+text = '''Przeczytaj kronikę naszej społeczności i jej poprzedników.'''
+
+["rnw_our_history.a"]
+source = "9e39c69810d1b732"
+text = '''Otwórz kronikę.'''
+
+["rnw_chronicle.1.title"]
+source = "59ab2712ca1d5b62"
+text = '''Nasza historia'''
+
+["rnw_chronicle.1.a"]
+source = "7366c18ed575936d"
+text = '''Zamknij kronikę.'''
+
+["rnw_history_place"]
+source = "dd4cd67bad6b43cb"
+text = '''{text} Wspomniana osada: {place}.'''
+
+["rnw_history_opinion_place"]
+source = "3726cac549dd314a"
+text = '''{text} — osada {place}'''
+
+["rnw_history_opinion_trust"]
+source = "dd69982a0910055b"
+text = '''Zaufanie: {cause} ({year})'''
+
+["rnw_history_opinion_grievance"]
+source = "234d42d09f7346a4"
+text = '''Uraza: {cause} ({year})'''
+
+["rnw_history_opinion_fear"]
+source = "b265d7b94dc67d6f"
+text = '''Strach: {cause} ({year})'''
+
+["rnw_history_opinion_dependence"]
+source = "8ab01e2bf604a322"
+text = '''Zależność: {cause} ({year})'''
+
+["rnw_history_opinion_competition"]
+source = "a80a2092d70e0dab"
+text = '''Rywalizacja: {cause} ({year})'''
+
+["rnw_history_opinion_affinity"]
+source = "33d90631b0ba91dd"
+text = '''Bliskość: {cause} ({year})'''
+
+["rnw_history_cause_foundation"]
+source = "9f1b3f50aa6f3fef"
+text = '''początek kroniki'''
+
+["rnw_history_cause_contact"]
+source = "093e7d5fdbaacfa9"
+text = '''nawiązanie kontaktu'''
+
+["rnw_history_cause_exchange"]
+source = "c6714454d03ef97e"
+text = '''umowa o wymianie'''
+
+["rnw_history_cause_union"]
+source = "ef3ff703d7565ab5"
+text = '''zjednoczenie'''
+
+["rnw_history_cause_conflict"]
+source = "fa9e1d22205ad852"
+text = '''konflikt'''
+
+["rnw_history_cause_dependency"]
+source = "293f1d2ee206a7cb"
+text = '''podporządkowanie'''
+
+["rnw_history_cause_protection"]
+source = "9eb6b00badb67203"
+text = '''umowa o ochronie'''
+
+["rnw_history_cause_pact"]
+source = "5eb591692a1cfa4b"
+text = '''pakt obronny'''
+
+["rnw_history_cause_separation"]
+source = "990b23e81455c981"
+text = '''podział'''
+
+["rnw_history_cause_access"]
+source = "d5c3e042b3030d26"
+text = '''umowa o dostępie do świętego miejsca'''
+
+["rnw_history_cause_reform"]
+source = "d164ad30cd61bbb2"
+text = '''reforma'''
+
+["rnw_history_cause_migration"]
+source = "8a6cead4385ed439"
+text = '''migracja'''
+
+["rnw_history_cause_trajectory"]
+source = "aa5a7e790ac4507c"
+text = '''zmiana ustroju'''
+
+["rnw_history_cause_pressure"]
+source = "640abca7fe5f5b23"
+text = '''presja zbrojna'''
+
+["rnw_history_cause_repelled"]
+source = "97670549b60b40ce"
+text = '''odparte natarcie'''
+
+["rnw_history_cause_resisted"]
+source = "202ad671ebb6c73b"
+text = '''opór wobec reformy'''
+
+["rnw_history_foundation_0"]
+source = "13d911105422277e"
+text = '''{year}: Społeczność {first} istnieje już na początku kroniki.'''
+
+["rnw_history_foundation_1"]
+source = "c0efb7d9752d12ce"
+text = '''{year}: Kronika rozpoczyna się, gdy społeczność {first} jest już ukształtowana.'''
+
+["rnw_history_contact_0"]
+source = "12ee788a309cecb3"
+text = '''{year}: Społeczności {first} i {second} nawiązały kontakt.'''
+
+["rnw_history_contact_1"]
+source = "36bfb06181f2c5f6"
+text = '''{year}: Nawiązano kontakt między społecznościami {first} i {second}.'''
+
+["rnw_history_exchange_0"]
+source = "29ca29db975a2981"
+text = '''{year}: Społeczności {first} i {second} uzgodniły wymianę dóbr.'''
+
+["rnw_history_exchange_1"]
+source = "f9558e971c91cd05"
+text = '''{year}: Umowa o wymianie połączyła społeczności {first} i {second}.'''
+
+["rnw_history_union_0"]
+source = "db8fd54f0fb194a7"
+text = '''{year}: Społeczność {first} powstała ze zjednoczenia społeczności {second} i {third}.'''
+
+["rnw_history_union_1"]
+source = "d314cef3946e4dd1"
+text = '''{year}: Społeczności {second} i {third} zjednoczyły się jako społeczność {first}.'''
+
+["rnw_history_conflict_0"]
+source = "a3415becef922224"
+text = '''{year}: Społeczności {first} i {second} uczestniczyły w konflikcie.'''
+
+["rnw_history_conflict_1"]
+source = "5456fdbe40f06049"
+text = '''{year}: Konflikt objął społeczności {first} i {second}.'''
+
+["rnw_history_dependency_0"]
+source = "1cccc5fb0844884b"
+text = '''{year}: Społeczność {first} podporządkowała się społeczności {second}.'''
+
+["rnw_history_dependency_1"]
+source = "339603465c20f84f"
+text = '''{year}: Społeczność {first} uznała zwierzchnictwo społeczności {second}.'''
+
+["rnw_history_protection_0"]
+source = "e4a870ffccd3ae0c"
+text = '''{year}: Społeczność {second} zgodziła się chronić społeczność {first}.'''
+
+["rnw_history_protection_1"]
+source = "6c58f84b3a8a5dba"
+text = '''{year}: Społeczność {first} uzyskała obietnicę ochrony od społeczności {second}.'''
+
+["rnw_history_pact_0"]
+source = "e4ebfb79bcfb3124"
+text = '''{year}: Społeczności {first} i {second} zawarły pakt obronny.'''
+
+["rnw_history_pact_1"]
+source = "10b8436fcd3d520a"
+text = '''{year}: Porozumienie o wspólnej obronie połączyło społeczności {first} i {second}.'''
+
+["rnw_history_separation_0"]
+source = "26106a594cef25e3"
+text = '''{year}: Społeczność {first} podzieliła się na społeczności następcze.'''
+
+["rnw_history_separation_1"]
+source = "c3cea81ca5bb08c7"
+text = '''{year}: Z podziału społeczności {first} wyłoniły się społeczności następcze.'''
+
+["rnw_history_access_0"]
+source = "c66c249e33058918"
+text = '''{year}: Społeczność {first} uzyskała dostęp do świętego miejsca należącego do społeczności {second}.'''
+
+["rnw_history_access_1"]
+source = "7daa7280fb0a8de8"
+text = '''{year}: Społeczność {second} udostępniła święte miejsce społeczności {first}.'''
+
+["rnw_history_reform_0"]
+source = "cb441e6f8fb32cc8"
+text = '''{year}: Społeczność {first} zmieniła swój ustrój.'''
+
+["rnw_history_reform_1"]
+source = "40157e43b8720a98"
+text = '''{year}: W społeczności {first} przeprowadzono reformę ustrojową.'''
+
+["rnw_history_migration_0"]
+source = "74dc0fca33159a3f"
+text = '''{year}: Ludzie przenieśli się z osady {first} do osady {second}.'''
+
+["rnw_history_migration_1"]
+source = "89adb05f0ee6e6cf"
+text = '''{year}: Osada {second} przyjęła przybyszów z osady {first}.'''
+
+["rnw_history_pressure_0"]
+source = "84eb6156e2e645c4"
+text = '''{year}: Społeczności {first} i {second} uczestniczyły w zbrojnej konfrontacji.'''
+
+["rnw_history_pressure_1"]
+source = "b46ba00d666165cb"
+text = '''{year}: Presja zbrojna objęła społeczności {first} i {second}.'''
+
+["rnw_history_repelled_0"]
+source = "7de8ecc79cb16fcb"
+text = '''{year}: Odparto atak w konflikcie z udziałem społeczności {first} i {second}.'''
+
+["rnw_history_repelled_1"]
+source = "fc6cd535bb74cdc9"
+text = '''{year}: Społeczności {first} i {second} uczestniczyły w konflikcie; atak się nie powiódł.'''
+
+["rnw_history_resisted_0"]
+source = "fa34477bf3749df6"
+text = '''{year}: Próba reformy w społeczności {first} napotkała opór i nie powiodła się.'''
+
+["rnw_history_resisted_1"]
+source = "cdbf8e2b05983ecb"
+text = '''{year}: Opór udaremnił proponowaną zmianę ustroju społeczności {first}.'''
