@@ -1,7 +1,10 @@
 # Documentation
 
-RNW 1.1.0 is released and accepted for EU5 1.4.6 / Steam build 26300913
-(epoch 60). Start with [AGENTS.md](../AGENTS.md) for working instructions and
+RNW 1.1.0 shipped for EU5 1.4.6; its latest fully verified compatibility is
+EU5 1.4.7 / Steam build 26377361 (epoch 60). The generator supports EU5 1.4.*;
+new patches in this branch are usually compatible without a generator update.
+Continue each generated map's campaign on the exact EU5 version used to create it.
+Start with [AGENTS.md](../AGENTS.md) for working instructions and
 [architecture](architecture.md) for current code. This index distinguishes current
 guidance from the historical record; an old unchecked box is not a current task.
 
