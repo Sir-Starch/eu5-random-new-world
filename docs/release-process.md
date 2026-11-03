@@ -84,13 +84,27 @@ released binaries, moving the tag, changing the version or rescanning them.
 
 ## Workshop page and updates
 
-Upload the generator hub only. Use tags **Map**, **Gameplay** and **Utilities**,
-the hub's `.metadata` preview and the reviewed descriptions in
+Upload the generator hub only. Use tags **Map**, **Gameplay**, **Utilities** and
+**Alternative History**, the hub's `.metadata` preview and the reviewed descriptions in
 `docs/workshop/<language>.bbcode`. Translation
 `source:` headers are internal and omitted when pasting; the English file has none.
 Release archives do not carry a separate Workshop-text bundle; the texts are pasted
 from `docs/workshop/` with those headers left out. The hub does not require a separate README to be usable: its
 metadata gives the launch instruction, and the page carries the full guide.
+
+The hub's `.metadata/metadata.json` tags and the Workshop publication's tags are
+separate. Uploading the hub files does not establish that the publication's
+categories changed. Submit the complete tag list with
+[`ISteamUGC::SetItemTags`](https://partner.steamgames.com/doc/api/ISteamUGC#SetItemTags)
+and `SubmitItemUpdate`, then query the item without a cached response and check
+its public page. A tags-only update needs no content upload or binary rebuild.
+
+[V-EXEC] On 2026-11-03, the owner-authorized tags-only update of item `3829217331`
+returned Steam `EResult=1`. An uncached UGC query and the public page both showed
+**Map**, **Gameplay**, **Utilities** and **Alternative History** (previously only
+**Map**). All eleven descriptions, titles, preview URLs and visibility values
+matched their pre-update snapshots. Local evidence: ignored
+`local_data/workshop-tags-2026-11-03/`.
 
 For a preview-only update, prepare the 512×512 image with `packaging/hub.py`'s
 `write_thumbnail` from `packaging/assets/rnw-avatar.png`. The owner can submit a

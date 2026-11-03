@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add **Alternative History** to the hub metadata and publish all four Workshop
+  categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.
+
 - **Native Linux window startup.** A packaged Tauri window now gets the system library search path,
   not PyInstaller's bundled library directory. This lets current system WebKitGTK/ICU load its
   matching `libstdc++` on Arch and other rolling distributions.
@@ -80,7 +83,8 @@
 - Targets EU5 1.4.6 / Steam build 26300913. Algorithm epoch 60: the world bytes changed, so a world
   code made by 1.0.0 (epoch 59) can give another world. Worlds already built and their saves are
   not rewritten or migrated.
-- The Workshop upload adds the Gameplay and Utilities categories beside Map.
+- The hub metadata adds the Gameplay and Utilities categories beside Map;
+  Workshop publication tags require a separate update.
 
 The entries below describe each change in detail.
 
@@ -286,7 +290,7 @@ The entries below describe each change in detail.
   matching. World codes preserve each weight. Explain relative placement probabilities
   and unchanged production per location; fail explicitly when no enabled resource fits.
 
-- Add the Gameplay and Utilities categories alongside Map to the Workshop upload.
+- Add the Gameplay and Utilities categories alongside Map to the hub metadata.
 - The generator's window is now a Tauri window (ADR 0011), in the Workshop hub and
   the Linux package; the Qt window stays as the classic window. The classic window
   opens by itself where there is no web view (no WebView2, as in Proton; no

@@ -154,7 +154,7 @@ def metadata(version: str) -> bytes:
             "Procedural New World map generator. Do not enable this mod in a playset: "
             "click Open in folder and run Random New World Generator."
         ),
-        "tags": ["Map", "Gameplay", "Utilities"],
+        "tags": ["Map", "Gameplay", "Utilities", "Alternative History"],
         "picture": "thumbnail.png",
         "relationships": [],
         "game_custom_data": {},
