@@ -366,3 +366,34 @@ water colour and foam differ from the old pixels only by block-compression noise
 (shifts of 20 – 770 px; all pixels equal, none touches generated land); the export takes 154 s and
 holds 30,716 locations. The five presets give 27.7 k – 30.7 k locations (supercontinent 29,979, small
 continents 30,321, archipelago 29,529, the Wall 27,735), all under the window's budget of 31,200.
+
+### Polynesia split around generated land (report audit, 2026-11-03; C479)
+
+[V-EXEC] Placement preserves each proximity-based island group, not the complete
+`polynesia_region`: independent groups may end up on opposite sides of a continent.
+They keep their vanilla geographic parents. This follows the rule above; neither
+placement nor the retained-region hierarchy requires a sea route confined to Polynesia.
+
+[V-LOCAL / V-EXEC] With EU5 1.4.7 / Steam build 26377361 installed, two existing
+RNW 1.1.0 / epoch-60 worlds retain all 157 Polynesian dry locations (59 ordinary,
+98 wasteland), with no new keys or changed parents in that region. They retain
+195 of vanilla's 349 regional sea locations. A banded scan of their written
+location rasters, including horizontal wrap and excluding impassable water,
+puts every Polynesian shore with passable water in one sea component in each
+world; every ordinary island location has such a shore. Restricting paths to
+Polynesian water alone gives 42 and 40 components, versus four in vanilla.
+Thus region fragmentation is real, but it does not establish loss of a global
+sea route. Evidence and raster/definition hashes: ignored
+`local_data/polynesia-audit-20261103/{audit.py,summary.json,vanilla.json}`.
+
+[V-LOCAL] In the installed `common/colonial_charter_goals/expand_subject.txt`,
+a colonial subject's capital sharing the target's region is one alternative
+eligibility condition; forming a colony targets a province, not the whole region
+(`form_colonial_nation.txt`). [INFERRED] One colony can consequently receive
+territories on different sides of a generated continent; a common regional colour
+does not assign the intervening generated mainland to Polynesia or force one colony
+to receive every island. This is a retained-region geography limitation, not a
+demonstrated loading or navigation defect. [UNKNOWN] The reported world's files/code
+were not supplied; its exact routes, voyage costs and eventual colonial borders
+are unverified. No EU5 launch or engine observation was performed. Thirty relevant
+island-placement, canvas and region-key tests pass; generator/world bytes are unchanged.
