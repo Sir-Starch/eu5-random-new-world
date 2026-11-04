@@ -564,7 +564,7 @@ def project_start(
             "end": END,
             "rounds": len(inputs.history.rounds),
             "events": len(inputs.history.events),
-            "digest": digest(inputs.history),
+            "digest": digest(inputs.history, checkpoint=checkpoint),
             "trajectories": report(projection.context),
             "memory_candidates": diplomacy.memory_candidates,
             "named_opinions": len(diplomacy.opinions),

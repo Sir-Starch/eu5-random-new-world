@@ -13,6 +13,7 @@ from rnw.history_context import Context
 from rnw.history_engine import advance, digest, propose, simulate, validate_history
 from rnw.history_model import END, Action, Outcome, Proposal, TrajectoryKind
 from rnw.history_societies import _reforms, reforms  # pyright: ignore[reportPrivateUsage]
+from rnw.progress import Cancelled, Progress, active
 
 from .history_fixtures import divided_valley, valley
 from .test_history_plan import realized_network
@@ -106,3 +107,11 @@ def test_reform_cache_matches_uncached_candidates_and_checks_actor_identity() ->
     changed = replace(actor, society=replace(actor.society, centralization=0))
     assert reforms(context, changed) == _reforms(context, changed)
     assert reforms(context, actor) == _reforms(context, actor)
+
+
+def test_digest_honours_cancellation_during_semantic_encoding() -> None:
+    history = divided_valley()
+    progress = Progress()
+    progress.cancel()
+    with active(progress), pytest.raises(Cancelled):
+        _ = digest(history, checkpoint=progress.checkpoint)

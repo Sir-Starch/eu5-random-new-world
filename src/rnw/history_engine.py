@@ -41,12 +41,14 @@ from rnw.history_model import (
     Geography,
     History,
     Holding,
+    Military,
     Outcome,
     Partition,
     Proposal,
     Reason,
     Settlement,
     Snapshot,
+    Tenure,
     Transfer,
 )
 from rnw.history_societies import bootstrap, choices, cohorts, propensity
@@ -389,8 +391,10 @@ def _roots(context: Context, actor: Actor) -> tuple[Actor, ...]:
 
 
 def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
+    # Necessary prior-snapshot conditions only; full eligibility still decides
+    # every retained proposal. Avoid allocating impossible roles and duplicates.
     local: list[Proposal] = choices(context, actor)
-    if actor.parents:
+    if actor.parents and actor.tenure is Tenure.LAND and actor.key not in context.bound:
         roots = _roots(context, actor)
         parts = tuple(Partition(root.homeland, root.seat, root.authority) for root in roots)
         local.append(Proposal(Action.SEPARATION, actor.key, partitions=parts))
@@ -399,28 +403,51 @@ def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
         if (actor.key, other) not in context.known:
             local.append(Proposal(Action.CONTACT, actor.key, other))
             continue
-        local.extend(
-            (
-                Proposal(Action.EXCHANGE, actor.key, other),
-                Proposal(Action.UNION, actor.key, other),
-                Proposal(Action.DEPENDENCY, actor.key, other),
-            )
-        )
+        if (other, actor.key) not in context.known:
+            continue
         target = context.index.actors[other]
-        frontier = {
-            key
-            for member in context.index.members[actor.key]
-            for key in context.index.adjacency[member]
-            if context.index.owner.get(key) == other
-        }
-        local.extend(
-            Proposal(Action.PRESSURE, actor.key, other, (key,)) for key in sorted(frontier)
+        if tuple(sorted((actor.key, other))) not in context.recent_exchanges:
+            local.append(Proposal(Action.EXCHANGE, actor.key, other))
+        landed = actor.tenure is Tenure.LAND and target.tenure is Tenure.LAND
+        if landed:
+            if (
+                actor.key not in context.bound
+                and other not in context.bound
+                and other in context.near.get(actor.key, {})
+            ):
+                local.append(Proposal(Action.UNION, actor.key, other))
+            if (
+                actor.key not in context.subjects
+                and actor.key not in context.pact_participants
+                and target.technology >= context.history.geography.rules.minimum_overlord_technology
+            ):
+                local.append(Proposal(Action.DEPENDENCY, actor.key, other))
+        pact = context.has(Action.PACT, actor.key, other)
+        conflict = (
+            landed
+            and actor.key not in context.subjects
+            and other not in context.subjects
+            and not pact
         )
-        local.extend(
-            Proposal(Action.CONFLICT, actor.key, other, (key,))
-            for key in sorted(frontier)
-            if key != target.seat or len(context.index.members[other]) == 1
+        pressure = (
+            actor.tenure is Tenure.LAND
+            and target.tenure is not Tenure.LAND
+            and actor.key not in context.subjects
+            and not pact
+            and actor.society.military is Military.OFFENSIVE
         )
+        if conflict or pressure:
+            frontier = {
+                key
+                for member in context.index.members[actor.key]
+                for key in context.index.adjacency[member]
+                if context.index.owner.get(key) == other
+            }
+            local.extend(
+                Proposal(Action.PRESSURE if pressure else Action.CONFLICT, actor.key, other, (key,))
+                for key in sorted(frontier)
+                if pressure or key != target.seat or len(context.index.members[other]) == 1
+            )
         shared = (
             context.reach.get(actor.key, {}).keys()
             & context.reach.get(other, {}).keys()
@@ -431,12 +458,14 @@ def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
             Proposal(kind, actor.key, other, threat=threat)
             for threat in sorted(shared - {actor.key, other})
             for kind in (Action.PACT, Action.PROTECTION)
+            if kind is not Action.PACT or not {actor.key, other} & context.subjects
         )
-        local.extend(
-            Proposal(Action.ACCESS, actor.key, other, (key,))
-            for key in sorted(context.index.members[other])
-            if context.index.places[key].sacred
-        )
+        if not context.has(Action.ACCESS, actor.key, other):
+            local.extend(
+                Proposal(Action.ACCESS, actor.key, other, (key,))
+                for key in sorted(context.index.members[other])
+                if context.index.places[key].sacred
+            )
     return [choice for choice in local if eligible(context, choice) is None]
 
 
@@ -522,9 +551,14 @@ def _json_record(value: object) -> dict[str, object]:
     raise TypeError(message)
 
 
-def digest(history: History) -> str:
+def digest(history: History, *, checkpoint: Callable[[], None] = _checkpoint) -> str:
     """Canonical semantic digest; contains no wording, resource roll, diagnostics or clock."""
+
+    def record(value: object) -> dict[str, object]:
+        checkpoint()
+        return _json_record(value)
+
     payload = json.dumps(
-        history, default=_json_record, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+        history, default=record, ensure_ascii=True, sort_keys=True, separators=(",", ":")
     )
     return hashlib.sha256(payload.encode("ascii")).hexdigest()

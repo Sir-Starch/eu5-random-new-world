@@ -602,3 +602,38 @@ nonredundant direct references. Its canonical wrapper is **2,050,865 bytes** (1.
 and round-trips exactly; expanded columns are 10,932,253 bytes. This establishes the
 reference payload size on that plan, not a completed H7 seed-set/performance result.
 No game-facing candidate or package was installed during this reading phase.
+
+## H7 measurement foundation
+
+Necessary-condition pruning avoids constructing impossible local actions; the
+remaining candidates still pass the complete eligibility rules. An independent
+unpruned enumerator gives equal eligible multisets and complete simulations on
+eight fixtures at five turbulence levels. On the real reference inputs, every
+`FinalStartPlan` field, round and event remains equal to H5. The normal native
+stage takes 90.856 s in this run; this is not a paired S8 result.
+
+Canonical digest encoding now calls the supplied cancellation checkpoint for
+each record. A cancellation requested after 50 ms on the real reference is
+observed after 0.000311 s; previously that operation returned without observing
+it after 2.151 s. Digest bytes are unchanged. The existing archive construction
+also observes cancellation (0.289 s); it needs no speculative replacement.
+
+`history_metrics.py` supplies read-only raw counters. The fixed LAND polity
+envelope defines S1's denominator and S5's qualifying twenty bootstrap states;
+tribal/community founders and all projected landed holdings are reported
+separately. Physical components include wasteland and wrap edges, never maritime
+routes. S1 excludes refused actions, includes failed conflicts, counts only
+actual transfers and accepted separations, and uses the current polity/union's
+birth for continuity. S2 counts written treaties and named opinions, not an
+internal exchange alone. S6 resolves inherited government defaults and installed
+ungated positions. S7 counts model realizations before projected group deduplication.
+S11 counts the entire canonical JSON wrapper. Synthetic tests exercise these
+definitions independently of the calibration policy.
+
+[V-EXEC, 2026-11-04] Full checks pass: 2,734 Python tests, 17 optional skips,
+strict types/format/lint and 23 Rust tests. The first full normal published pilot
+(continents/3, defaults) passes both versions' output checks but takes 307.494 s
+against 1.1.0's 204.024 s, including separately recorded capture overhead. This
+identifies an S8 performance problem; no seed-set acceptance is claimed. Action
+frequency calibration remains provisional and uses only published seeds. Held-out
+seeds remain untouched. Private measurements are in `local_data/history-120/h7/`.

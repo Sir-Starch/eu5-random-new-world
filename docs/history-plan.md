@@ -603,6 +603,12 @@ H2 schema.
   pass after exact-input reuse of its independently validated native stage; the
   pending epoch-61 golden is refreshed. Normal reproduction and delivery remain H7.
 
+- **H7 foundation, 2026-11-04:** [measurement definitions and equal-output pruning](history-core.md#h7-measurement-foundation)
+  pass full checks (2,734 Python tests, 17 optional skips; strict types and 23 Rust
+  tests). Digest cancellation is now observed immediately on the real reference.
+  The first paired full-world pilot exposes excessive generation time; calibration,
+  both acceptance matrices and delivery remain open. Held-out seeds remain untouched.
+
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
 them into three successors in 1227 without any change of culture. In 1282 the
