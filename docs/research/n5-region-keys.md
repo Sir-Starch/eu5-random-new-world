@@ -25,6 +25,33 @@ The matcher only permits a region where all its original land areas fit. There i
 no post-export repair, dropped land key, arbitrary substitute or retry seed.
 An impossible assignment fails with `RegionKeyError`.
 
+### Child-capacity construction correction, 2026-11-04
+
+[V-EXEC, RNW 1.2.0 development / pending epoch 61; EU5 1.4.7 / 26377361]
+The H7 published islands/1000 case exposed a remaining construction defect. A
+North American region shrank to one cell during Lloyd movement, while every
+eligible vanilla region needs at least three child areas. The exact pinned 1.1.0
+constructor rejects the same captured inputs. This finding does not change the
+scope or acceptance of that release.
+
+Region construction now supplies the multiset of original child counts to the
+bounded partition optimizer. Capacity deficit precedes size error when choosing
+handicaps; the optimizer selects its latest feasible Lloyd layout before keys or
+physical profiles are assigned. If the search constructs no feasible layout it
+fails explicitly. This adds no post-export repair, omitted key or seed retry;
+the physical matcher retains its independent capacity check and parent tree.
+Unconstrained partition calls retain their previous result.
+
+Five synthetic regressions cover a 32-node irregular graph, complete child-key
+assignment, coverage, connected parts, input permutation and impossible minima.
+On the real failing input, all 184 areas cover the 4,761 land units and pass
+contiguity checks. A fresh normal pipeline passes physical world checks and
+reaches the native stage on the corrected islands/1000 case. Every captured
+reference native input, including the complete hierarchy/name plan and key space,
+remains equal to H4's reference. This comparison uses compact input captures, not
+a new complete output reproduction or performance claim. Local evidence is in
+`local_data/history-120/h7/hierarchy-islands-1000/` and `hierarchy-reference/`.
+
 ### Profiles and assignment
 
 [INFERRED design; V-EXEC implementation] A profile is the distribution of template

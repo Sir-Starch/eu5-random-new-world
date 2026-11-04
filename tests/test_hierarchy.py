@@ -72,6 +72,94 @@ def test_split_gives_connected_parts_of_about_equal_size() -> None:
     assert parts == split(graph, members, 12)
 
 
+def _irregular_grid() -> ContactGraph:
+    """Synthetic contact geometry whose unconstrained Lloyd search shrinks one part to two."""
+    points = (
+        (7, 8),
+        (51, 1),
+        (78, 199),
+        (55, 117),
+        (130, 68),
+        (88, 69),
+        (134, 113),
+        (118, 135),
+        (2, 199),
+        (41, 3),
+        (118, 81),
+        (98, 161),
+        (115, 159),
+        (164, 14),
+        (106, 119),
+        (13, 106),
+        (0, 26),
+        (141, 90),
+        (48, 67),
+        (59, 114),
+        (63, 85),
+        (159, 46),
+        (10, 136),
+        (43, 146),
+        (176, 31),
+        (33, 178),
+        (55, 86),
+        (166, 193),
+        (165, 85),
+        (34, 3),
+        (58, 136),
+        (102, 5),
+    )
+    grid = _grid(8, 4)
+    edges = [
+        (first, second)
+        for first, links in enumerate(grid.links)
+        for second, _ in links
+        if first < second
+    ]
+    return contact_graph(np.array(points, dtype=np.int64), edges, [True] * len(points))
+
+
+def test_child_capacity_is_reserved_during_partition_search_before_matching() -> None:
+    graph = _irregular_grid()
+    members = list(range(32))
+    needs = (3, 4, 5, 6)
+    assert min(map(len, split(graph, members, 4))) == 2
+    parts = split(graph, members, 4, minimum=needs)
+    assert all(size >= need for size, need in zip(sorted(map(len, parts)), needs, strict=True))
+    assert sorted(cell for part in parts for cell in part) == members
+    assert split_landmasses(graph, parts) == []
+    assert parts == split(graph, list(reversed(members)), 4, minimum=tuple(reversed(needs)))
+
+
+def test_irregular_regions_keep_every_child_key_without_repairing_matched_boundaries() -> None:
+    graph = _irregular_grid()
+    tally = _Tally(0)
+    trait = Trait("tropical", "hills", 100, coastal=False)
+    templates: dict[str, list[Trait]] = {}
+    for region, count in enumerate((3, 4, 5, 6)):
+        for child in range(count):
+            region_key, area = f"region_{region}", f"area_{region}_{child}"
+            tally.add(("america", "sub", region_key, area), region * 40, child * 20, 100)
+            for name in (region_key, area):
+                templates.setdefault(name, []).append(trait)
+    physical = KeyMatcher(
+        {key: profile(rows) for key, rows in templates.items()}, dict.fromkeys(range(32), trait)
+    )
+    areas = _land_areas(graph, list(range(32)), tally, 6, KeySpace(set()), physical=physical)
+    assert {area.name for area in areas if not area.new} == {
+        key for name in tally.children["sub"] for key in tally.children[name]
+    }
+    _check_pieces(graph, areas, depth=4, exempt=set())
+    assert sorted(cell for area in areas for part in area.provinces for cell in part) == list(
+        range(32)
+    )
+
+
+@pytest.mark.parametrize("needs", [(1, 1), (0, 1, 1, 1), (10, 10, 10, 10)])
+def test_impossible_child_capacity_fails_explicitly(needs: tuple[int, ...]) -> None:
+    with pytest.raises(PartitionError, match="child-key minima"):
+        _ = split(_irregular_grid(), list(range(32)), 4, minimum=needs)
+
+
 def test_islands_without_a_source_join_the_nearest_part_whole() -> None:
     graph = _grid(30, 10, gap_column=27)
     members = _land(graph)

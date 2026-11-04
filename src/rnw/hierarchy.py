@@ -267,22 +267,23 @@ def _balance(  # noqa: PLR0913 - balancing reads the layout, sources, targets an
     *,
     handicap: list[int],
     pinned: Sequence[bool],
+    minimum: Sequence[int] = (),
 ) -> list[int]:
     """Handicaps that bring part sizes towards their goals with the sources held still.
 
     With fixed sources a part shrinks as its handicap grows, so this is a subgradient
     ascent; a part's step halves whenever its size error changes sign. Returns the
-    handicaps with the smallest total size error seen.
+    handicaps with the smallest child-capacity deficit, then total size error seen.
     """
     handicap = list(handicap)
-    best: tuple[int, list[int]] | None = None
+    best: tuple[tuple[int, int], list[int]] | None = None
     step: list[int] = []
     sign = [0] * len(sources)
     for _ in range(BALANCE_ROUNDS):
         checkpoint()
         sizes = [len(group) for group in _groups(graph, layout, sources, handicap, pinned)]
         goals = _goals(layout, sources, targets, sizes)
-        error = sum(abs(size - goal) for size, goal in zip(sizes, goals, strict=True))
+        error = _partition_error(sizes, goals, minimum)
         if best is None or error < best[0]:
             best = (error, handicap)
         if not step:
@@ -298,8 +299,20 @@ def _balance(  # noqa: PLR0913 - balancing reads the layout, sources, targets an
         handicap = [value - lowest for value in handicap]
     sizes = [len(group) for group in _groups(graph, layout, sources, handicap, pinned)]
     goals = _goals(layout, sources, targets, sizes)
-    error = sum(abs(size - goal) for size, goal in zip(sizes, goals, strict=True))
+    error = _partition_error(sizes, goals, minimum)
     return handicap if best is None or error < best[0] else best[1]
+
+
+def _partition_error(
+    sizes: Sequence[int], goals: Sequence[int], minimum: Sequence[int]
+) -> tuple[int, int]:
+    """Reserve room for child keys before optimizing size, without assigning identities."""
+    deficit = (
+        sum(max(0, need - size) for size, need in zip(sorted(sizes), sorted(minimum), strict=True))
+        if minimum
+        else 0
+    )
+    return deficit, sum(abs(size - goal) for size, goal in zip(sizes, goals, strict=True))
 
 
 def balanced_parts(  # noqa: PLR0913 - the sources, their targets and how each may move or be taken.
@@ -310,6 +323,7 @@ def balanced_parts(  # noqa: PLR0913 - the sources, their targets and how each m
     *,
     movable: Sequence[bool],
     pinned: Sequence[bool] | None = None,
+    minimum: Sequence[int] = (),
 ) -> tuple[list[list[int]], list[list[int]]]:
     """Grow one part per source list over ``members``; return the parts and final sources.
 
@@ -318,16 +332,29 @@ def balanced_parts(  # noqa: PLR0913 - the sources, their targets and how each m
     nearest its part's centre on its own landmass, and again. The sources of a pinned part
     (by default a movable one, which has a single source) always keep their part; the sources
     of other parts (anchors) can be taken by a neighbour. ``targets`` are relative part sizes,
-    compared within each landmass and the islands that join it.
+    compared within each landmass and the islands that join it. ``minimum`` is a
+    multiset of required child-key counts, before part identities are known. The
+    constrained search selects its latest feasible Lloyd iterate; an infeasible
+    search fails before any keys or physical profiles are assigned.
     """
     current = [list(nodes) for nodes in sources]
+    if minimum and (
+        len(minimum) != len(current) or min(minimum) < 1 or sum(minimum) > len(members)
+    ):
+        message = "The partition cannot hold its child-key minima"
+        raise PartitionError(message)
     layout = _layout(graph, members, current)
     handicap = [0] * len(current)
     held = movable if pinned is None else pinned
+    candidates: list[tuple[list[list[int]], list[list[int]]]] = []
     for _ in range(LLOYD_ROUNDS):
         checkpoint()
-        handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=held)
+        handicap = _balance(
+            graph, layout, current, targets, handicap=handicap, pinned=held, minimum=minimum
+        )
         groups = _groups(graph, layout, current, handicap, held)
+        if minimum:
+            candidates.append((groups, [list(nodes) for nodes in current]))
         for part, group in enumerate(groups):
             if movable[part]:
                 home = layout.piece_of[current[part][0]]
@@ -335,14 +362,35 @@ def balanced_parts(  # noqa: PLR0913 - the sources, their targets and how each m
                 middle = np.array(centre_of(graph, mainland), dtype=np.int64)
                 gap = ((graph.centres[mainland] - middle) ** 2).sum(axis=1)
                 current[part] = [mainland[int(np.argmin(gap))]]
-    handicap = _balance(graph, layout, current, targets, handicap=handicap, pinned=held)
-    return _groups(graph, layout, current, handicap, held), current
+    handicap = _balance(
+        graph, layout, current, targets, handicap=handicap, pinned=held, minimum=minimum
+    )
+    groups = _groups(graph, layout, current, handicap, held)
+    if minimum:
+        candidates.append((groups, current))
+        # Lloyd movement is a bounded search over layouts, not a hard constraint.
+        # Choose its latest feasible iterate before any identities are assigned.
+        _, (groups, current) = min(
+            enumerate(candidates),
+            key=lambda item: (
+                _partition_error([len(group) for group in item[1][0]], targets, minimum)[0],
+                -item[0],
+            ),
+        )
+    if _partition_error([len(group) for group in groups], targets, minimum)[0]:
+        message = "No constructed partition meets its child-key minima"
+        raise PartitionError(message)
+    return groups, current
 
 
-def split(graph: ContactGraph, members: Sequence[int], count: int) -> list[list[int]]:
-    """``count`` compact connected parts of about equal size."""
+def split(
+    graph: ContactGraph, members: Sequence[int], count: int, *, minimum: Sequence[int] = ()
+) -> list[list[int]]:
+    """``count`` compact connected parts, reserving the supplied child-key capacities."""
     sources = [[node] for node in spread_sources(graph, members, count)]
-    parts, _ = balanced_parts(graph, members, sources, [1] * count, movable=[True] * count)
+    parts, _ = balanced_parts(
+        graph, members, sources, [1] * count, movable=[True] * count, minimum=minimum
+    )
     return parts
 
 

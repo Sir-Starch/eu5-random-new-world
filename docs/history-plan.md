@@ -608,6 +608,9 @@ H2 schema.
   tests). Digest cancellation is now observed immediately on the real reference.
   The first paired full-world pilot exposes excessive generation time; calibration,
   both acceptance matrices and delivery remain open. Held-out seeds remain untouched.
+  The published islands/1000 case also exposed and now passes a
+  [pre-existing region-capacity construction defect](research/n5-region-keys.md#child-capacity-construction-correction-2026-11-04);
+  the reference hierarchy inputs remain equal. This is not completed H7 acceptance.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

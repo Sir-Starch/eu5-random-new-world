@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reserve space for every original area's key while constructing regions. This
+  fixes an island seed whose region shrank below its required child count.
+
 - Generate the 1337 native start from causal prehistory: deterministic rounds, political transitions,
   directed memory and causal replay, eight society dimensions, costly reforms,
   extraordinary trajectories and migration that conserves population and identities.

@@ -307,7 +307,12 @@ def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and ph
         subcontinents, _keyed(graph, cells, tally, subcontinents), strict=True
     ):
         regions = sorted(tally.children[subcontinent])
-        region_parts = split(graph, sub_cells, len(regions))
+        region_parts = split(
+            graph,
+            sub_cells,
+            len(regions),
+            minimum=[len(tally.children[region]) for region in regions],
+        )
         positional = match(
             [centre_of(graph, part) for part in region_parts],
             [tally.centre(key) for key in regions],
