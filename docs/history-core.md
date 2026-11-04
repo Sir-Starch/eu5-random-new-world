@@ -269,6 +269,37 @@ continuity and delivery remain the next phases; EU5 was never launched.
 
 ## One round
 
+### Compact causal state (H5 foundation)
+
+The current snapshot retains only memories whose value is still positive at its
+year. Original memory effects remain in the immutable event journal. A participant's
+causes use a temporal frontier: a current fact from an event that already cited
+that participant's prior facts covers older facts through the same ancestor chain.
+Same-round facts remain explicit. Combat events are not such witnesses because
+their participant list may include supporting allies. Reform experience and
+restored founding institutions retain their explicit references.
+
+The proposal and arbitration steps reuse the same immutable context, and reform
+candidates are cached against the complete actor value. Canonical JSON visits
+dataclasses directly instead of first making a recursive copy. Independent tests
+compare full ancestor closure and all outcomes against the previous all-facts
+reference, fresh contexts and uncached reform candidates; the digest matches the
+recursive JSON reference. The current divided-valley digest is
+`5847d16874fbf80e11198f913fda5d57d09bf247d54a0eda320f4801470061c0`;
+the earlier H3 digest below retains its dated scope.
+
+[V-EXEC, 2026-11-04] The real 5,903-location case preserves every H4 country,
+cohort, projected relation, rank/market/road, proposal and event outcome. Direct
+causal edges fall from 19,441,390 to 1,821,134; 50,203 active memories remain in
+the final snapshot. Its private pickle falls from 134 to 49 MiB. A standalone,
+unprofiled native-stage run takes 97.944 s and peaks at 906.5 MiB (inputs captured
+from the real export); this is not a paired end-to-end S8/S9 result, and H7's
+limits remain outstanding. Full checks pass: 2,683 Python tests, 17 optional
+skips, strict types, format/lint and 23 Rust tests. Evidence and exact H4 parity
+assertions are in ignored `local_data/history-120/h4-export/native-compact.*`.
+
+### Round execution
+
 All proposals read the same immutable snapshot. Physical contacts come from actual
 land links or explicit coast-to-coast routes with a bounded number of sea steps.
 A shared region or sea name grants no access. A direct exchange can open one

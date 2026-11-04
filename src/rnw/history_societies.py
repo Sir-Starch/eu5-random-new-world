@@ -151,7 +151,17 @@ def _experience(context: Context, actor: Actor, kinds: set[Action]) -> bool:
     return len(years) >= REPEATED_ROUNDS
 
 
-def reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C901 - eight independently caused dimensions
+def reforms(context: Context, actor: Actor) -> tuple[Society, ...]:
+    """Cache immutable snapshot candidates, including for repeated eligibility checks."""
+    known = context.reform_choices.get(actor.key)
+    if known is not None and (known[0] is actor or known[0] == actor):
+        return known[1]
+    choices = _reforms(context, actor)
+    context.reform_choices[actor.key] = actor, choices
+    return choices
+
+
+def _reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C901 - eight independently caused dimensions
     """Only responses to a repeated recorded problem are candidates for reform."""
     if context.state.year - context.event_years[actor.society_cause] < REFORM_INTERVAL or any(
         event.kind is Action.REFORM and event.year > context.state.year - REFORM_INTERVAL

@@ -571,6 +571,12 @@ H2 schema.
   reference recorded. This establishes model/writer agreement, **not** an uncached
   timing, H7 performance thresholds or engine loading. Next: H5/H6; H7 retains
   calibration, final normal reproduction and candidate/hub delivery.
+- **H5 foundation, 2026-11-04:** [compact causal state](history-core.md#compact-causal-state-h5-foundation)
+  removes expired snapshot memory and redundant direct links while preserving
+  all causal ancestors and real H4 outcomes. Context/reform caching and direct
+  canonical JSON reduce repeated work. Full checks pass (2,683 Python, 17 optional
+  skips, 23 Rust; strict types and lint). Portable history, both reading surfaces
+  and controls remain H5 work; no H7 time/memory threshold is claimed.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

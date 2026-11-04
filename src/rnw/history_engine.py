@@ -1,6 +1,6 @@
 """Synchronous deterministic history rounds, sparse effects and exact causal replay.
 
-H2 is an offline core. No exporter calls it until the H4 projection adapter exists.
+The normal H4 exporter projects this private model; presentation never supplies facts.
 """
 
 from __future__ import annotations
@@ -8,8 +8,8 @@ from __future__ import annotations
 import hashlib
 import json
 from collections import Counter
-from dataclasses import asdict, replace
-from typing import TYPE_CHECKING
+from dataclasses import fields, is_dataclass, replace
+from typing import TYPE_CHECKING, cast
 
 from rnw.history_actions import (
     PRIORITY,
@@ -295,9 +295,13 @@ def advance(
     checkpoint: Callable[[], None] = _checkpoint,
 ) -> History:
     """Evaluate on the same prior state, reserve commitments, then commit one whole round."""
+    return _advance(Context(history, checkpoint), proposals)
+
+
+def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
+    history, checkpoint = context.history, context.checkpoint
     require(history.state.year < END, "History already reached 1337")
     checkpoint()
-    context = Context(history, checkpoint)
     proposals = _validate_proposals(context, proposals)
 
     def order(proposal: Proposal) -> tuple[int, int, int, str]:
@@ -353,7 +357,10 @@ def advance(
         events.append(replace(event, commitments=tuple(sorted(costs.items()))))
     events = inherit_round(context, events)
     state = _apply(history.state, events)
-    state = replace(state, year=state.year + YEARS)
+    year = state.year + YEARS
+    state = replace(
+        state, year=year, memories=tuple(memory for memory in state.memories if memory.at(year))
+    )
     validate_snapshot(Index(history.geography, state, checkpoint), state)
     return replace(
         history,
@@ -475,7 +482,7 @@ def simulate(
         proposals = (
             policy(context) if policy is not None else propose(context, turbulence=turbulence)
         )
-        history = advance(history, proposals, checkpoint=checkpoint)
+        history = _advance(context, proposals)
     return history
 
 
@@ -508,7 +515,16 @@ def validate_history(history: History, *, checkpoint: Callable[[], None] = _chec
     require(replay.state == history.state, "Final facts differ from causal replay")
 
 
+def _json_record(value: object) -> dict[str, object]:
+    if is_dataclass(value) and not isinstance(value, type):
+        return {field.name: cast("object", getattr(value, field.name)) for field in fields(value)}
+    message = f"Unsupported history record: {type(value).__name__}"
+    raise TypeError(message)
+
+
 def digest(history: History) -> str:
     """Canonical semantic digest; contains no wording, resource roll, diagnostics or clock."""
-    payload = json.dumps(asdict(history), ensure_ascii=True, sort_keys=True, separators=(",", ":"))
+    payload = json.dumps(
+        history, default=_json_record, ensure_ascii=True, sort_keys=True, separators=(",", ":")
+    )
     return hashlib.sha256(payload.encode("ascii")).hexdigest()

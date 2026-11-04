@@ -21,7 +21,7 @@ from rnw.history_model import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from rnw.history_model import Proposal
+    from rnw.history_model import Actor, Proposal, Society
 
 MUTUAL = frozenset({Action.CONTACT, Action.EXCHANGE, Action.UNION, Action.PACT})
 INTEGRATION_YEARS: Final[int] = 25
@@ -41,6 +41,9 @@ class Context:
         self.causes_by_actor: dict[str, set[str]] = defaultdict(set)
         self.event_years = {event.key: event.year for event in history.events}
         self.event_kinds = {event.key: event.kind for event in history.events}
+        self.events = {event.key: event for event in history.events}
+        self.frontiers: dict[str, tuple[str, ...]] = {}
+        self.reform_choices: dict[str, tuple[Actor, tuple[Society, ...]]] = {}
         self.holdings = {holding.district: holding for holding in self.state.holdings}
         self.experiences: dict[str, list[Event]] = defaultdict(list)
         for event in history.events:
@@ -187,7 +190,7 @@ class Context:
         actors = {key for key in (proposal.actor, proposal.target, proposal.threat) if key}
         causes = {self.index.actors[key].origin for key in actors}
         for key in actors:
-            causes.update(self.causes_by_actor[key])
+            causes.update(self.actor_causes(key))
         if proposal.kind is Action.REFORM:
             causes.update(
                 event.key
@@ -202,6 +205,33 @@ class Context:
                 if seats & set(root.districts)
             )
         return tuple(sorted(causes))
+
+    def actor_causes(self, key: str) -> tuple[str, ...]:
+        """A temporal frontier with exactly the same ancestral closure as all facts.
+
+        An event involving this actor already cites its prior snapshot's facts.
+        A current fact caused by such an event therefore covers older facts;
+        facts from the same round remain explicit because proposals are parallel.
+        Created actors are covered by their origin's complete parent context.
+        """
+        if key not in self.frontiers:
+            facts = self.causes_by_actor[key]
+            year = max(
+                (
+                    self.event_years[cause]
+                    for cause in facts
+                    if (
+                        key in self.events[cause].actors
+                        and self.events[cause].kind not in {Action.CONFLICT, Action.PRESSURE}
+                    )
+                    or any(actor.key == key for actor in self.events[cause].effects.created)
+                ),
+                default=-1,
+            )
+            self.frontiers[key] = tuple(
+                sorted(cause for cause in facts if self.event_years[cause] >= year)
+            )
+        return self.frontiers[key]
 
 
 def _burden(context: Context, actor: str, gained: tuple[str, ...] = ()) -> int:
