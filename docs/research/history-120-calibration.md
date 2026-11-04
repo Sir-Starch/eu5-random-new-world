@@ -13,7 +13,8 @@ and seeds 3/42/77/1000. Native starts use actual physical inputs captured from t
 normal generator after its physical-world checks, not the fixed-geography
 bootstrap reruns of H0. All 24 cases run Calm 200, Varied 500 and Turbulent 800.
 The baseline native constructor is the exact source at tag `v1.1.0`
-(`cb1e3d777e0829d98ba929b4e1db88bbf247a87c`). Its countries/vassals on the
+(`b9d2b81040b1bdf5cf5924c95eec9e99d76d16d4`, annotated tag object
+`cb1e3d777e0829d98ba929b4e1db88bbf247a87c`). Its countries/vassals on the
 continents/3 capture equal that version's complete normal export, and the full
 captured physical inputs agree across epochs on that case.
 
@@ -119,6 +120,33 @@ Private raw data and scripts are under `local_data/history-120/h7/`: `family-v3/
 `sweeps-v3/`, `artifact-checks-published.json` and `artifact-checks-sweeps.json`.
 Earlier rejected trials retain their original outcomes and scopes.
 
+## Equal-output performance follow-up
+
+The first three quiet complete published pairs on the C486 source add
+**17.29%, 17.49% and 17.14%** (continents seeds 3/42/77). They remain recorded in
+`timed-published/`; a fourth current export completes before the queue is stopped.
+This preliminary sample motivates further equal-output work, without claiming a
+completed S8 failure or changing the chosen historical parameters.
+
+A profile of the real continents/3 history and its independent replay attributes
+**12.54 of 47.26 profiled seconds** to round-context construction, including 6.58 s
+in contact calculations; rebuilding sparse indices accounts for another 3.54 s.
+Round indices now reuse only the immutable physical graph and capacities, with
+fresh ownership, cohorts and population caches for every snapshot. Mutual contact
+minima update both directions together. Enumeration avoids already impossible
+migrations and defence proposals before constructing them; full eligibility still
+checks every retained action. No simulation round, validator or cause is removed.
+
+Independent original indices, contact calculations and unpruned society choices
+check the optimized path across eight synthetic histories and five turbulence
+values. On actual continents/3 Varied, Wall/3 Calm and supercontinent/77 Turbulent,
+**all 25 final-plan fields** equal their frozen C486 plans, including every event,
+round, cohort, cause and projection; all measured counters and digests agree.
+Locked full checks pass: **2,769 Python tests**, 17 optional skips, strict
+types/format/lint and **23 Rust core tests**. These native-stage checks are not
+full-world S8 timings. Private evidence:
+`rounds-before-profile.txt` and `sparse-cache-final/equality.json`.
+
 ## Reference, portability and cancellation
 
 [V-EXEC] The **normal producer**, without a cached native stage, and all normal
@@ -136,10 +164,24 @@ complete normal exporter, including sibling stages and spool cleanup, in
 native-entry, simulation, digest and archive measurements also remain below two
 seconds. This establishes S10 on those observed paths, not an engine observation.
 
-The reference generation ran alongside calibration with a different worker count
-from H0; its elapsed time and peak are not a paired S8/S9 result. Independent
-normal reproduction, controlled full-generation comparisons, held-out acceptance,
-package self-tests, installation and the one owner sitting remain open.
+The initial reference generation ran alongside calibration with a different
+worker count from H0; its elapsed time and peak are not paired S8/S9 evidence.
+A subsequent quiet sequential reference pair on the **C486 source** uses fresh processes, identical
+worker/memory settings and separate initially empty land caches, with the OS cache
+left untouched. Both run the normal native producer, all writers and output
+checks. Evidence is serialized only after generation time and peak are recorded.
+The exact 1.1.0 source takes **225.312 s**, versus **241.996 s** for the frozen
+history source: **+7.40%**. Peak memory increases by **19.00 MiB**, meeting S9 on
+that revision; the optimized source still needs its final paired reference.
+This single pair does not establish S8's seed-set distribution. The current output
+equals the pending golden; the original source on the newer 1.4.7 scripts writes
+868 files with digest `428d5282…2f26b5`, distinct from its immutable 1.4.6 golden.
+That patch-dependent difference does not replace or amend the published golden.
+Private evidence: `timed-reference/comparison.json` and both source manifests.
+
+Independent normal reproduction, complete controlled seed-set comparisons,
+held-out acceptance, package self-tests, installation and the one owner sitting
+remain open.
 
 [V-EXEC] Locked full checks pass: **2,761 Python tests**, 17 optional skips,
 strict types/format/lint and **23 Rust core tests**. Desktop checks/build pass

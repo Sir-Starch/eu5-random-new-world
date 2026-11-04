@@ -1,16 +1,51 @@
 """Unpruned candidate enumeration before H7 optimization, using the unchanged prerequisites."""
 
+from dataclasses import replace
+
 from rnw.history_actions import eligible
 from rnw.history_context import Context
 from rnw.history_engine import _roots  # pyright: ignore[reportPrivateUsage]
-from rnw.history_model import Action, Actor, Partition, Proposal
-from rnw.history_societies import choices
+from rnw.history_model import Action, Actor, Movement, Partition, Proposal
+from rnw.history_societies import reforms
+
+
+def unpruned_society_choices(
+    context: Context, actor: Actor, kinds: frozenset[Action] | None = None
+) -> list[Proposal]:
+    result = (
+        [Proposal(Action.REFORM, actor.key, reform=value) for value in reforms(context, actor)]
+        if kinds is None or Action.REFORM in kinds
+        else []
+    )
+    if kinds is not None and Action.MIGRATION not in kinds:
+        return result
+    for source in sorted(context.index.members[actor.key]):
+        context.checkpoint()
+        for destination in sorted(context.index.adjacency[source]):
+            target = context.index.owner.get(destination, "")
+            if not target or target == actor.key or (actor.key, target) not in context.known:
+                continue
+            space = context.index.capacities[destination] - context.index.population(destination)
+            if space <= 0:
+                continue
+            for pop in context.index.cohorts(source):
+                amount = min(pop.population // 10, space)
+                if amount:
+                    move = Movement(
+                        source,
+                        destination,
+                        replace(
+                            pop, population=amount, peasants=pop.peasants * amount // pop.population
+                        ),
+                    )
+                    result.append(Proposal(Action.MIGRATION, actor.key, target, movement=move))
+    return result
 
 
 def unpruned_choices(
     context: Context, actor: Actor, kinds: frozenset[Action] | None = None
 ) -> list[Proposal]:
-    local: list[Proposal] = choices(context, actor)
+    local: list[Proposal] = unpruned_society_choices(context, actor)
     if actor.parents:
         roots = _roots(context, actor)
         parts = tuple(Partition(root.homeland, root.seat, root.authority) for root in roots)

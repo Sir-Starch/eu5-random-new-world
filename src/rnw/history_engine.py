@@ -377,7 +377,7 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
     state = replace(
         state, year=year, memories=tuple(memory for memory in state.memories if memory.at(year))
     )
-    validate_snapshot(Index(history.geography, state, checkpoint), state)
+    validate_snapshot(Index(history.geography, state, checkpoint, physical=context.index), state)
     return replace(
         history,
         state=state,
@@ -402,6 +402,29 @@ def _roots(context: Context, actor: Actor) -> tuple[Actor, ...]:
         else:
             roots[parent.key] = parent
     return tuple(roots[key] for key in sorted(roots))
+
+
+def _defence_choices(
+    context: Context, first: str, second: str, allowed: frozenset[Action]
+) -> list[Proposal]:
+    if not (
+        (Action.PACT in allowed or Action.PROTECTION in allowed)
+        and context.threats.get(first)
+        and context.threats.get(second)
+    ):
+        return []
+    shared = (
+        context.reach.get(first, {}).keys()
+        & context.reach.get(second, {}).keys()
+        & context.threats[first]
+        & context.threats[second]
+    )
+    return [
+        Proposal(kind, first, second, threat=threat)
+        for threat in sorted(shared - {first, second})
+        for kind in (Action.PACT, Action.PROTECTION)
+        if kind in allowed and (kind is not Action.PACT or not {first, second} & context.subjects)
+    ]
 
 
 def _local_choices(
@@ -450,7 +473,11 @@ def _local_choices(
                 and target.technology >= context.history.geography.rules.minimum_overlord_technology
             ):
                 local.append(Proposal(Action.DEPENDENCY, actor.key, other))
-        pact = context.has(Action.PACT, actor.key, other)
+        pact = (
+            context.has(Action.PACT, actor.key, other)
+            if Action.CONFLICT in allowed or Action.PRESSURE in allowed
+            else False
+        )
         conflict = (
             Action.CONFLICT in allowed
             and landed
@@ -478,19 +505,7 @@ def _local_choices(
                 for key in sorted(frontier)
                 if pressure or key != target.seat or len(context.index.members[other]) == 1
             )
-        shared = (
-            context.reach.get(actor.key, {}).keys()
-            & context.reach.get(other, {}).keys()
-            & context.threats.get(actor.key, set())
-            & context.threats.get(other, set())
-        )
-        local.extend(
-            Proposal(kind, actor.key, other, threat=threat)
-            for threat in sorted(shared - {actor.key, other})
-            for kind in (Action.PACT, Action.PROTECTION)
-            if kind in allowed
-            and (kind is not Action.PACT or not {actor.key, other} & context.subjects)
-        )
+        local.extend(_defence_choices(context, actor.key, other, allowed))
         if Action.ACCESS in allowed and not context.has(Action.ACCESS, actor.key, other):
             local.extend(
                 Proposal(Action.ACCESS, actor.key, other, (key,))
@@ -552,8 +567,10 @@ def simulate(
 ) -> History:
     """Run every remaining five-year round, including quiet rounds, through 1337."""
     require(0 <= turbulence <= PERMILLE, "Invalid historical turbulence")
+    physical: Index | None = None
     while history.state.year < END:
-        context = Context(history, checkpoint)
+        context = Context(history, checkpoint, physical=physical)
+        physical = context.index
         proposals = (
             policy(context) if policy is not None else propose(context, turbulence=turbulence)
         )
@@ -584,8 +601,11 @@ def validate_history(history: History, *, checkpoint: Callable[[], None] = _chec
             "Event touches an actor outside its lifetime",
         )
         seen[event.key] = event
+    physical: Index | None = None
     for proposals in history.rounds:
-        replay = advance(replay, proposals, checkpoint=checkpoint)
+        context = Context(replay, checkpoint, physical=physical)
+        physical = context.index
+        replay = _advance(context, proposals)
     require(replay.events == history.events, "Causal event replay differs")
     require(replay.state == history.state, "Final facts differ from causal replay")
 

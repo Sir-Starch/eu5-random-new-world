@@ -45,36 +45,56 @@ class Index:
     """Sparse physical graph and per-actor holdings of one immutable round snapshot."""
 
     def __init__(
-        self, geography: Geography, state: Snapshot, checkpoint: Callable[[], None]
+        self,
+        geography: Geography,
+        state: Snapshot,
+        checkpoint: Callable[[], None],
+        *,
+        physical: Index | None = None,
     ) -> None:
         self.geography = geography
-        self.places = {place.key: place for place in geography.districts}
+        checkpoint()
+        require(physical is None or physical.geography is geography, "Different indexed geography")
+        self.places = (
+            physical.places if physical is not None else {p.key: p for p in geography.districts}
+        )
         self.settlements = {place.district: place for place in state.settlements}
-        self.capacities = {
-            place.key: place.population + place.headroom for place in geography.districts
-        }
+        self.capacities = (
+            physical.capacities
+            if physical is not None
+            else {place.key: place.population + place.headroom for place in geography.districts}
+        )
+        self.populations: dict[str, int] = {}
+        self.farmers: dict[str, int] = {}
         self.actors = {actor.key: actor for actor in state.actors}
         self.owner = {holding.district: holding.actor for holding in state.holdings}
         self.members: dict[str, set[str]] = {actor.key: set() for actor in state.actors}
         for holding in state.holdings:
             require(holding.actor in self.members, "Holding refers to an unknown actor")
             self.members[holding.actor].add(holding.district)
-        self.adjacency: dict[str, dict[str, int]] = {key: {} for key in self.places}
-        for number, route in enumerate(geography.routes):
-            if number % 128 == 0:
-                checkpoint()
-            if route.sea_steps <= geography.rules.max_sea_steps:
-                self.adjacency[route.first][route.second] = route.cost
-                self.adjacency[route.second][route.first] = route.cost
+        self.adjacency: dict[str, dict[str, int]] = (
+            physical.adjacency if physical is not None else {key: {} for key in self.places}
+        )
+        if physical is None:
+            for number, route in enumerate(geography.routes):
+                if number % 128 == 0:
+                    checkpoint()
+                if route.sea_steps <= geography.rules.max_sea_steps:
+                    self.adjacency[route.first][route.second] = route.cost
+                    self.adjacency[route.second][route.first] = route.cost
 
     def cohorts(self, key: str) -> tuple[Cohort, ...]:
         return self.settlements[key].cohorts
 
     def population(self, key: str) -> int:
-        return sum(pop.population for pop in self.cohorts(key))
+        if key not in self.populations:
+            self.populations[key] = sum(pop.population for pop in self.cohorts(key))
+        return self.populations[key]
 
     def peasants(self, key: str) -> int:
-        return sum(pop.peasants for pop in self.cohorts(key))
+        if key not in self.farmers:
+            self.farmers[key] = sum(pop.peasants for pop in self.cohorts(key))
+        return self.farmers[key]
 
     def connected(self, members: set[str], seat: str) -> bool:
         if seat not in members:

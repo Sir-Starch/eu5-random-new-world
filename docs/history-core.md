@@ -641,6 +641,15 @@ not been used to choose these parameters.
 
 ## H7 measurement foundation
 
+Round indices reuse immutable physical adjacency and capacities, while ownership,
+settlements and population totals stay local to each new snapshot. Both simulation
+and independent replay use that boundary. Mutual contact minima are updated once
+in each direction; their single-intermediary exchange rule is unchanged. Migration
+and defence enumeration skip only candidates that cannot pass existing pressure
+or threat prerequisites. Independent uncached/contact/enumeration references check
+whole histories; real full-plan equality and performance scopes are in the
+[calibration report](research/history-120-calibration.md#equal-output-performance-follow-up).
+
 Necessary-condition pruning avoids constructing impossible local actions; the
 remaining candidates still pass the complete eligibility rules. An independent
 unpruned enumerator gives equal eligible multisets and complete simulations on

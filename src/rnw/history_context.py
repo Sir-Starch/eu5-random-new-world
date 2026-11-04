@@ -29,10 +29,16 @@ INTEGRATION_YEARS: Final[int] = 25
 
 @final
 class Context:
-    def __init__(self, history: History, checkpoint: Callable[[], None]) -> None:
+    def __init__(
+        self,
+        history: History,
+        checkpoint: Callable[[], None],
+        *,
+        physical: Index | None = None,
+    ) -> None:
         self.history = history
         self.state = history.state
-        self.index = Index(history.geography, history.state, checkpoint)
+        self.index = Index(history.geography, history.state, checkpoint, physical=physical)
         self.checkpoint = checkpoint
         self.known = {(each.first, each.second) for each in self.state.knowledge}
         self.memories: dict[tuple[str, str, Factor], list[Memory]] = defaultdict(list)
@@ -116,23 +122,31 @@ class Context:
                 and first != second
                 and route.sea_steps <= (self.history.geography.rules.max_sea_steps)
             ):
-                for one, other in ((first, second), (second, first)):
-                    self.near[one][other] = min(route.cost, self.near[one].get(other, route.cost))
-                    (self.sea_near if route.sea_steps else self.land_near)[one].add(other)
+                previous = self.near[first].get(second)
+                if previous is None or route.cost < previous:
+                    self.near[first][second] = route.cost
+                    self.near[second][first] = route.cost
+                contacts = self.sea_near if route.sea_steps else self.land_near
+                contacts[first].add(second)
+                contacts[second].add(first)
         self.reach = {key: dict(near) for key, near in self.near.items()}
         # Exchange supplies one intermediary, over verified physical contacts, not sea labels.
         for bond in self.state.bonds:
             if bond.kind is Action.EXCHANGE:
                 for one, hub in ((bond.first, bond.second), (bond.second, bond.first)):
-                    if hub not in self.near.get(one, {}):
+                    direct = self.near.get(one, {})
+                    if hub not in direct:
                         continue
-                    for other, cost in self.near.get(hub, {}).items():
+                    reached, step = self.reach[one], direct[hub]
+                    for other, cost in self.near[hub].items():
                         if other != one:
-                            distance = cost + self.near[one][hub]
-                            current = self.reach.setdefault(one, {}).get(other, distance)
-                            self.reach[one][other] = min(current, distance)
-                            reverse = self.reach.setdefault(other, {}).get(one, distance)
-                            self.reach[other][one] = min(reverse, distance)
+                            distance = cost + step
+                            previous = reached.get(other)
+                            # Physical contacts and each admitted two-hop contact are mutual.
+                            # Both directions already have the same minimum; update them once.
+                            if previous is None or distance < previous:
+                                reached[other] = distance
+                                self.reach[other][one] = distance
 
     def score(self, first: str, second: str, factor: Factor) -> int:
         key = first, second, factor

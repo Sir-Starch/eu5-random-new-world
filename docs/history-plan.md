@@ -619,6 +619,14 @@ H2 schema.
   reference export passes and refreshes pending epoch 61. Full paired performance,
   independent reproduction, held-out acceptance and delivery remain open; the
   held-out matrix is still untouched.
+- **H7 equal-output performance work, 2026-11-04:** round indices reuse immutable
+  geometry, with independent state facts; contact minima and necessary action
+  filtering avoid repeated work. Original reference implementations retain whole
+  histories, and three real starts retain all 25 final-plan fields. Full checks
+  pass (2,769 Python, 17 optional skips, 23 Rust). The
+  [report](research/history-120-calibration.md#equal-output-performance-follow-up)
+  preserves the preliminary timings and their scope. Complete S8 distributions,
+  final-reference pairing and held-out/delivery gates remain open.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

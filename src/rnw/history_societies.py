@@ -391,6 +391,16 @@ def choices(
         return result
     for source in sorted(context.index.members[actor.key]):
         context.checkpoint()
+        holding = context.holdings[source]
+        if not (
+            actor.key in context.afraid
+            or (
+                context.event_kinds[holding.cause] is Action.CONFLICT
+                and context.state.year - context.event_years[holding.cause] <= REFUGE_YEARS
+            )
+            or context.index.population(source) * PERMILLE >= context.index.capacities[source] * 900
+        ):
+            continue
         for destination in sorted(context.index.adjacency[source]):
             target = context.index.owner.get(destination, "")
             if not target or target == actor.key or (actor.key, target) not in context.known:
