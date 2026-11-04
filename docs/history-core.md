@@ -603,6 +603,42 @@ and round-trips exactly; expanded columns are 10,932,253 bytes. This establishes
 reference payload size on that plan, not a completed H7 seed-set/performance result.
 No game-facing candidate or package was installed during this reading phase.
 
+## Calibrated action policy and client capacity (H7)
+
+The [published calibration report](research/history-120-calibration.md) records
+all 24 prescribed native starts at three turbulence levels and all 32 slider
+cases at those levels. Their 168 complete model/projection results also pass the
+affected writers, eleven-language bindings, population round trips and portable
+decoder checks. The bootstrap factor is 1; no world is corrected to a target.
+
+Each actor first draws admission by action family, independently of its contact
+degree, then ranks one eligible alternative per admitted family, up to three in
+all. Early family filtering equals filtering the complete eligible set. Normal
+base propensity is 180 per mille; conflict/pressure use 50 + turbulence/2 and
+separation uses turbulence³/1,000², followed by society-orientation adjustments.
+Separation still requires the existing real-union and support predicates.
+
+Great ambitions prefer the eligible centre with the greatest existing model
+strength and incline centralization/integration to at least 900. They grant no
+land, population, technology, rank or relationship. Realization keeps its actual
+twelve-owned-location, authority, burden and lineage requirements.
+
+New dependency admissions account for the incoming actor's whole client realm
+at every ancestor ruler. Client population is bounded by own population ×
+centralization × integration × 4 / 1,000². Administrative lines can commit to
+one admission in a round; a competing refusal cites the earlier event. The
+capacity's population/profile/bond facts are included in the causal context.
+Existing treaties are not removed by a repair pass. No landmass share enters
+this rule. It addresses the observed oversized Wall client networks.
+
+The full normal reference producer and writers pass for 872 files, with pending
+epoch-61 digest `435074c7…68577fb`. Its 505,104-byte history survives real compact
+import and receipt recovery, covered by default. Complete-export cancellation
+during reference simulation, including sibling work and cleanup, takes 0.207 s
+after the request. Controlled paired performance, independent reproduction,
+held-out validation and delivery remain separate H7 work; held-out seeds have
+not been used to choose these parameters.
+
 ## H7 measurement foundation
 
 Necessary-condition pruning avoids constructing impossible local actions; the

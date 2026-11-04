@@ -5,27 +5,19 @@
 - Reserve space for every original area's key while constructing regions. This
   fixes an island seed whose region shrank below its required child count.
 
-- Generate the 1337 native start from causal prehistory: deterministic rounds, political transitions,
-  directed memory and causal replay, eight society dimensions, costly reforms,
-  extraordinary trajectories and migration that conserves population and identities.
-  Synthetic scenarios include the divided valley and realized historical networks.
-  The H4 foundation adds ordinary 1037 polities, bounded physical sea passages,
-  post-diaspora population roots and exact typed-cohort projection after migration.
-  It now constructs a checked final start plan from surviving historical outcomes,
-  including overlapping memberships, calibrated governments and positions, causal
-  diplomacy/opinion records, settlement centres, roads and the AI context.
-  Localized adapters now supply causal chronicles, historical bias names and a
-  voluntary Our History decision/event in all eleven languages, with parsed
-  artifact checks for their values, live scopes, effects and text bindings.
-  Normal generation now uses this history path, with actual guarantees and setup
-  checks that preserve the Old World. Target 1.2.0 uses pending epoch 61;
-  released epoch-60 reference data is preserved. Both windows can now read portable
-  histories, profiles and relationships with place links after revealing a world.
-  Historical turbulence has quick choices and an advanced control. Older atlases
-  remain readable with no invented history. Existing stories now use surviving
-  historical relations and current landed bearers, including confederates, and stop
-  the periphery chain when its subject binding ends. Calibration and packaged
-  delivery remain work for H7.
+- Generate the 1337 native start from 300 years of causal prehistory: political
+  transitions, eight society dimensions, reforms, relationships and migration
+  that conserves population and identities. Governments, starting diplomacy,
+  settlements, roads and existing stories follow the surviving historical facts.
+  Read profiles, relationships, chronicles and regional history in either window
+  after revealing a world, with links to places and portable import/recovery.
+  Choose historical turbulence; extraordinary peoples now seeds an ambition
+  that can succeed or fail. New client obligations require real administrative
+  capacity. Our History and historical opinion names are localized in all eleven
+  languages. Older atlases remain readable without invented history, and the Old
+  World is preserved. Target 1.2.0 uses pending epoch 61; frozen epoch 60 is retained.
+  Published calibration passes; final performance, held-out validation and packaged
+  delivery remain H7 work.
 
 - Add **Alternative History** to the hub metadata and publish all four Workshop
   categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.

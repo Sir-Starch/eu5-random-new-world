@@ -379,8 +379,16 @@ def migration_effects(context: Context, event: Event, proposal: Proposal) -> Eff
     )
 
 
-def choices(context: Context, actor: Actor) -> list[Proposal]:
-    result = [Proposal(Action.REFORM, actor.key, reform=value) for value in reforms(context, actor)]
+def choices(
+    context: Context, actor: Actor, kinds: frozenset[Action] | None = None
+) -> list[Proposal]:
+    result = (
+        [Proposal(Action.REFORM, actor.key, reform=value) for value in reforms(context, actor)]
+        if kinds is None or Action.REFORM in kinds
+        else []
+    )
+    if kinds is not None and Action.MIGRATION not in kinds:
+        return result
     for source in sorted(context.index.members[actor.key]):
         context.checkpoint()
         for destination in sorted(context.index.adjacency[source]):

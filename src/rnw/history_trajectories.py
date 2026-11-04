@@ -231,7 +231,8 @@ def _inclined(profile: Society, kind: TrajectoryKind) -> Society:
     if kind is TrajectoryKind.GREAT_EMPIRE:
         return replace(
             profile,
-            centralization=max(700, profile.centralization),
+            centralization=max(900, profile.centralization),
+            integration=max(900, profile.integration),
             authority=Authority.RULER,
             military=Military.OFFENSIVE,
         )
@@ -267,7 +268,11 @@ def seed_events(context: Context, chance: int) -> list[Event]:
             continue
         kind = kinds[derive_seed(draw, "kind") % len(kinds)]
         pool = [option for option in options if option.kind is kind]
-        chosen = pool[derive_seed(draw, "option") % len(pool)]
+        chosen = (
+            min(pool, key=lambda option: (-context.power(option.members[0]), option.anchor))
+            if kind is TrajectoryKind.GREAT_EMPIRE
+            else pool[derive_seed(draw, "option") % len(pool)]
+        )
         key = f"ambition_{derive_seed(draw, str(kind), chosen.anchor):016x}"
         reforms: list[Reform] = []
         causes = {context.index.actors[member].origin for member in chosen.members}

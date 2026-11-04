@@ -71,6 +71,7 @@ PRIORITY: Final[dict[Action, int]] = {
     Action.PRESSURE: 2,
 }
 UNION_SETTLE_YEARS: Final[int] = 25
+CLIENT_CAPACITY_MULTIPLIER: Final[int] = 4
 
 
 def proposal_key(proposal: Proposal) -> str:
@@ -245,7 +246,22 @@ def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None:
         if current == first:
             return Reason.INELIGIBLE
         current = lords[current]
-    return Reason.INELIGIBLE if current == first else None
+    if current == first:
+        return Reason.INELIGIBLE
+    incoming = context.realm(first)
+    for ruler in context.administrators(second):
+        profile = context.index.actors[ruler].society
+        clients = (context.realm(ruler) - {ruler}) | incoming
+        load = sum(context.population(key) for key in clients)
+        capacity = (
+            context.population(ruler)
+            * profile.centralization
+            * profile.integration
+            * CLIENT_CAPACITY_MULTIPLIER
+        )
+        if load * PERMILLE**2 > capacity:
+            return Reason.CAPACITY
+    return None
 
 
 def _threat_allowed(context: Context, proposal: Proposal) -> Reason | None:

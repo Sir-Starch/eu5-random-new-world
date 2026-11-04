@@ -6,7 +6,7 @@ import heapq
 from collections import defaultdict
 from typing import TYPE_CHECKING, Final, final
 
-from rnw.history_checks import Index
+from rnw.history_checks import Index, require
 from rnw.history_model import (
     PERMILLE,
     Action,
@@ -77,6 +77,11 @@ class Context:
         self.lords = {
             bond.first: bond.second for bond in self.state.bonds if bond.kind is Action.DEPENDENCY
         }
+        self.clients: dict[str, set[str]] = defaultdict(set)
+        for subject, lord in self.lords.items():
+            self.clients[lord].add(subject)
+        self.realms: dict[str, frozenset[str]] = {}
+        self.people: dict[str, int] = {}
         self.pact_participants = {
             key
             for bond in self.state.bonds
@@ -142,6 +147,35 @@ class Context:
             first, second = sorted((first, second))
         return (kind, first, second) in self.bond_pairs
 
+    def population(self, key: str) -> int:
+        if key not in self.people:
+            self.people[key] = sum(
+                self.index.population(place) for place in self.index.members[key]
+            )
+        return self.people[key]
+
+    def realm(self, key: str) -> frozenset[str]:
+        """The actor and its actual recursive clients in this immutable prior snapshot."""
+        if key not in self.realms:
+            found, pending = {key}, [key]
+            while pending:
+                self.checkpoint()
+                for subject in self.clients.get(pending.pop(), set()):
+                    require(subject not in found, "Dependency cycle in realm")
+                    found.add(subject)
+                    pending.append(subject)
+            self.realms[key] = frozenset(found)
+        return self.realms[key]
+
+    def administrators(self, key: str) -> tuple[str, ...]:
+        """Each ruler whose administrative capacity an admission would consume."""
+        found: list[str] = []
+        while key:
+            require(key not in found, "Dependency cycle in administration")
+            found.append(key)
+            key = self.lords.get(key, "")
+        return tuple(found)
+
     def power(self, key: str) -> int:
         if key not in self.powers:
             members = self.index.members[key]
@@ -188,6 +222,10 @@ class Context:
 
     def causes(self, proposal: Proposal) -> tuple[str, ...]:
         actors = {key for key in (proposal.actor, proposal.target, proposal.threat) if key}
+        if proposal.kind is Action.DEPENDENCY:
+            actors.update(self.realm(proposal.actor))
+            for lord in self.administrators(proposal.target):
+                actors.update(self.realm(lord))
         causes = {self.index.actors[key].origin for key in actors}
         for key in actors:
             causes.update(self.actor_causes(key))

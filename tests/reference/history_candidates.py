@@ -7,7 +7,9 @@ from rnw.history_model import Action, Actor, Partition, Proposal
 from rnw.history_societies import choices
 
 
-def unpruned_choices(context: Context, actor: Actor) -> list[Proposal]:
+def unpruned_choices(
+    context: Context, actor: Actor, kinds: frozenset[Action] | None = None
+) -> list[Proposal]:
     local: list[Proposal] = choices(context, actor)
     if actor.parents:
         roots = _roots(context, actor)
@@ -56,4 +58,8 @@ def unpruned_choices(context: Context, actor: Actor) -> list[Proposal]:
             for key in sorted(context.index.members[other])
             if context.index.places[key].sacred
         )
-    return [choice for choice in local if eligible(context, choice) is None]
+    return [
+        choice
+        for choice in local
+        if (kinds is None or choice.kind in kinds) and eligible(context, choice) is None
+    ]

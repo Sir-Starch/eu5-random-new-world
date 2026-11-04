@@ -426,6 +426,29 @@ def test_trajectories_are_seeded_only_per_eligible_hearth_and_grant_no_outcomes(
     validate_history(history)
 
 
+def test_great_ambition_uses_existing_capacity_without_granting_territory_or_power() -> None:
+    original = _trajectory_world(TrajectoryKind.GREAT_EMPIRE, chance=0)
+    geography = replace(
+        original.geography,
+        districts=tuple(
+            replace(p, cohorts=(Cohort("c", "r", 6000, 3000),)) if int(p.key) >= 8 else p
+            for p in original.geography.districts
+        ),
+    )
+    plain = create(geography, original.foundings, seed=42, empire_permille=0)
+    ambitious = create(geography, original.foundings, seed=42, empire_permille=1000)
+    (trajectory,) = ambitious.state.trajectories
+    assert trajectory.members == ("centre_2",)
+    assert ambitious.state.holdings == plain.state.holdings
+    assert ambitious.state.settlements == plain.state.settlements
+    assert not ambitious.state.bonds
+    assert [a.technology for a in ambitious.state.actors] == [
+        a.technology for a in plain.state.actors
+    ]
+    assert report(_context(ambitious))[TrajectoryKind.GREAT_EMPIRE]["realized"] == 0
+    validate_history(ambitious)
+
+
 def test_great_empire_ambition_needs_actual_supported_expansion() -> None:
     original = _trajectory_world(TrajectoryKind.GREAT_EMPIRE)
     anchor = original.state.trajectories[0].anchor

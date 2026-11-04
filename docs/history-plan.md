@@ -611,6 +611,14 @@ H2 schema.
   The published islands/1000 case also exposed and now passes a
   [pre-existing region-capacity construction defect](research/n5-region-keys.md#child-capacity-construction-correction-2026-11-04);
   the reference hierarchy inputs remain equal. This is not completed H7 acceptance.
+- **H7 published calibration, 2026-11-04:** the
+  [complete native-stage matrix and sweep report](research/history-120-calibration.md)
+  meets S1–S7 and the observed S10/S11 paths. Action families no longer saturate
+  dense contacts; client admission uses actual administrative capacity. All 168
+  model/projection and affected-writer/portable checks pass. A normal 872-file
+  reference export passes and refreshes pending epoch 61. Full paired performance,
+  independent reproduction, held-out acceptance and delivery remain open; the
+  held-out matrix is still untouched.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

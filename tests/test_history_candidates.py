@@ -11,7 +11,7 @@ import pytest
 from rnw import history_engine as engine
 from rnw.history_context import Context
 from rnw.history_engine import create, digest, simulate
-from rnw.history_model import History, Tenure, TrajectoryKind
+from rnw.history_model import Action, Actor, History, Proposal, Tenure, TrajectoryKind
 
 from .history_fixtures import divided_valley, valley
 from .reference.history_candidates import unpruned_choices
@@ -52,6 +52,45 @@ def test_every_eligible_candidate_is_retained_with_the_same_multiplicity() -> No
                 assert Counter(engine._local_choices(current, actor)) == Counter(
                     unpruned_choices(reference, actor)
                 )
+
+
+@pytest.mark.parametrize("kind", list(Action))
+def test_early_family_filter_equals_filtering_the_complete_eligible_candidates(
+    kind: Action,
+) -> None:
+    for history in histories():
+        context = Context(history, lambda: None)
+        for actor in history.state.actors:
+            if actor.living:
+                expected = [c for c in unpruned_choices(context, actor) if c.kind is kind]
+                assert Counter(engine._local_choices(context, actor, frozenset({kind}))) == Counter(
+                    expected
+                )
+
+
+def test_one_family_never_fills_all_three_ranked_slots() -> None:
+    for history in histories():
+        for turbulence in (0, 200, 500, 800, 1000):
+            proposals = engine.propose(Context(history, lambda: None), turbulence=turbulence)
+            assert all(n == 1 for n in Counter((p.actor, p.kind) for p in proposals).values())
+            assert all(n <= 3 for n in Counter(p.actor for p in proposals).values())
+
+
+def test_candidate_iteration_order_changes_no_family_choice_or_final_history(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    original = engine._local_choices
+
+    def reversed_choices(
+        context: Context, actor: Actor, kinds: frozenset[Action] | None = None
+    ) -> list[Proposal]:
+        return list(reversed(original(context, actor, kinds)))
+
+    for history in histories():
+        expected = simulate(history)
+        with monkeypatch.context() as patch:
+            patch.setattr(engine, "_local_choices", reversed_choices)
+            assert simulate(history) == expected
 
 
 @pytest.mark.parametrize("turbulence", [0, 200, 500, 800, 1000])

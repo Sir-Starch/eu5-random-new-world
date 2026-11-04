@@ -319,6 +319,7 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
     moved: set[str] = set()
     ownership: set[str] = set()
     reformed: set[str] = set()
+    administrations: dict[str, str] = {}
     for proposal in sorted(proposals, key=order):
         checkpoint()
         event, costs = adjudicate(context, proposal, remaining)
@@ -332,15 +333,27 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
             or (proposal.kind is Action.MIGRATION and bool(participants & (moved | ownership)))
             or (proposal.kind is Action.CONFLICT and bool(participants & moved))
         )
+        administrators: set[str] = (
+            set(context.administrators(proposal.actor))
+            | set(context.administrators(proposal.target))
+            if proposal.kind is Action.DEPENDENCY
+            else set()
+        )
+        committed = administrators & administrations.keys()
         if (
             reservation in reserved
             or {proposal.actor, proposal.target} & retired
             or (proposal.kind is Action.DEPENDENCY and proposal.actor in subjects)
             or (proposal.kind is Action.PACT and {proposal.actor, proposal.target} & subjects)
             or incompatible
+            or committed
         ):
             event = replace(
-                event, outcome=Outcome.REFUSED, reason=Reason.COMMITTED, effects=Effects()
+                event,
+                outcome=Outcome.REFUSED,
+                reason=Reason.COMMITTED,
+                effects=Effects(),
+                causes=tuple(sorted({*event.causes, *(administrations[key] for key in committed)})),
             )
             costs = {}
         if costs:
@@ -348,6 +361,7 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
             retired.update(event.effects.retired)
             if proposal.kind is Action.DEPENDENCY:
                 subjects.add(proposal.actor)
+                administrations.update(dict.fromkeys(administrators, event.key))
             if proposal.kind is Action.MIGRATION:
                 moved.update(participants)
             if proposal.kind is Action.CONFLICT:
@@ -390,47 +404,63 @@ def _roots(context: Context, actor: Actor) -> tuple[Actor, ...]:
     return tuple(roots[key] for key in sorted(roots))
 
 
-def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
+def _local_choices(
+    context: Context, actor: Actor, kinds: frozenset[Action] | None = None
+) -> list[Proposal]:
     # Necessary prior-snapshot conditions only; full eligibility still decides
     # every retained proposal. Avoid allocating impossible roles and duplicates.
-    local: list[Proposal] = choices(context, actor)
-    if actor.parents and actor.tenure is Tenure.LAND and actor.key not in context.bound:
+    allowed = frozenset(Action) if kinds is None else kinds
+    local: list[Proposal] = choices(context, actor, kinds)
+    if (
+        Action.SEPARATION in allowed
+        and actor.parents
+        and actor.tenure is Tenure.LAND
+        and actor.key not in context.bound
+    ):
         roots = _roots(context, actor)
         parts = tuple(Partition(root.homeland, root.seat, root.authority) for root in roots)
         local.append(Proposal(Action.SEPARATION, actor.key, partitions=parts))
     for other in sorted(context.reach.get(actor.key, {})):
         context.checkpoint()
         if (actor.key, other) not in context.known:
-            local.append(Proposal(Action.CONTACT, actor.key, other))
+            if Action.CONTACT in allowed:
+                local.append(Proposal(Action.CONTACT, actor.key, other))
             continue
         if (other, actor.key) not in context.known:
             continue
         target = context.index.actors[other]
-        if tuple(sorted((actor.key, other))) not in context.recent_exchanges:
+        if (
+            Action.EXCHANGE in allowed
+            and tuple(sorted((actor.key, other))) not in context.recent_exchanges
+        ):
             local.append(Proposal(Action.EXCHANGE, actor.key, other))
         landed = actor.tenure is Tenure.LAND and target.tenure is Tenure.LAND
         if landed:
             if (
-                actor.key not in context.bound
+                Action.UNION in allowed
+                and actor.key not in context.bound
                 and other not in context.bound
                 and other in context.near.get(actor.key, {})
             ):
                 local.append(Proposal(Action.UNION, actor.key, other))
             if (
-                actor.key not in context.subjects
+                Action.DEPENDENCY in allowed
+                and actor.key not in context.subjects
                 and actor.key not in context.pact_participants
                 and target.technology >= context.history.geography.rules.minimum_overlord_technology
             ):
                 local.append(Proposal(Action.DEPENDENCY, actor.key, other))
         pact = context.has(Action.PACT, actor.key, other)
         conflict = (
-            landed
+            Action.CONFLICT in allowed
+            and landed
             and actor.key not in context.subjects
             and other not in context.subjects
             and not pact
         )
         pressure = (
-            actor.tenure is Tenure.LAND
+            Action.PRESSURE in allowed
+            and actor.tenure is Tenure.LAND
             and target.tenure is not Tenure.LAND
             and actor.key not in context.subjects
             and not pact
@@ -458,9 +488,10 @@ def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
             Proposal(kind, actor.key, other, threat=threat)
             for threat in sorted(shared - {actor.key, other})
             for kind in (Action.PACT, Action.PROTECTION)
-            if kind is not Action.PACT or not {actor.key, other} & context.subjects
+            if kind in allowed
+            and (kind is not Action.PACT or not {actor.key, other} & context.subjects)
         )
-        if not context.has(Action.ACCESS, actor.key, other):
+        if Action.ACCESS in allowed and not context.has(Action.ACCESS, actor.key, other):
             local.extend(
                 Proposal(Action.ACCESS, actor.key, other, (key,))
                 for key in sorted(context.index.members[other])
@@ -470,29 +501,44 @@ def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
 
 
 def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
-    """Bounded local choice policy. Its propensities are provisional until H7 calibration."""
+    """Admit action families independently of degree, then rank their eligible choices."""
     require(0 <= turbulence <= PERMILLE, "Invalid historical turbulence")
     proposals: list[Proposal] = []
     for actor in context.state.actors:
         context.checkpoint()
         if not actor.living:
             continue
-        ranked: list[tuple[int, str, Proposal]] = []
-        for choice in _local_choices(context, actor):
+        admitted: set[Action] = set()
+        for kind in Action:
+            base = (
+                turbulence**3 // PERMILLE**2
+                if kind is Action.SEPARATION
+                else (50 + turbulence // 2)
+                if kind in {Action.CONFLICT, Action.PRESSURE}
+                else 180
+            )
+            activity = derive_seed(
+                context.history.seed,
+                "history",
+                "activity",
+                str(context.state.year),
+                actor.key,
+                kind.value,
+            )
+            if activity % PERMILLE < propensity(actor.society, kind, base):
+                admitted.add(kind)
+        best: dict[Action, tuple[int, str, Proposal]] = {}
+        for choice in _local_choices(context, actor, frozenset(admitted)):
             key = proposal_key(choice)
             draw = derive_seed(
                 context.history.seed, "history", "choice", str(context.state.year), key
             )
-            base = (
-                (50 + turbulence // 2)
-                if choice.kind in {Action.CONFLICT, Action.PRESSURE, Action.SEPARATION}
-                else 180
-            )
-            if draw % PERMILLE < propensity(actor.society, choice.kind, base):
-                ranked.append((draw, key, choice))
+            ranked = (draw, key, choice)
+            if choice.kind not in best or ranked[:2] < best[choice.kind][:2]:
+                best[choice.kind] = ranked
         proposals.extend(
             replace(choice, rank=rank)
-            for rank, (_, _, choice) in enumerate(sorted(ranked)[:MAX_PROPOSALS])
+            for rank, (_, _, choice) in enumerate(sorted(best.values())[:MAX_PROPOSALS])
         )
     return tuple(proposals)
 
