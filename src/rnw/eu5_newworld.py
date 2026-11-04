@@ -404,6 +404,15 @@ def _coasts(
     return coasts
 
 
+def _independent_coasts(coasts: dict[str, list[int]], boundary: set[int]) -> dict[str, list[int]]:
+    """Keep only shores that can start a regional sea without touching the Old World."""
+    return {
+        region: inland
+        for region, cells in coasts.items()
+        if (inland := [cell for cell in cells if cell not in boundary])
+    }
+
+
 def outside_contacts(
     game_map: Eu5Map, canvas: Canvas, world: NewWorld, offset: int
 ) -> set[tuple[int, int]]:
@@ -526,7 +535,7 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     keys: KeySpace,
     boundary: set[int] | None = None,
 ) -> tuple[list[_Area], set[str]]:
-    """Coastal water joins the region of its shore; the open ocean keeps the ocean areas.
+    """Independent coastal water joins its land region; the open ocean keeps its areas.
 
     Every land region grows its water from the zones on its shore, so each piece of a
     region's sea touches that region's land. The coastal share of all water is the
@@ -537,7 +546,9 @@ def _sea_areas(  # noqa: PLR0913 - sea areas read the vanilla seas, coasts and p
     remainder (the first by name if a zone touches several), so it stays joined to it;
     every other ocean area starts at the open zone nearest its replaced zones. Returns
     the areas and the names of the cut ocean areas, which may have one piece per
-    stretch of remainder.
+    stretch of remainder. A region whose only generated shore is at the Old World
+    boundary has no independent coastal sea; those zones stay in the protected ocean
+    hierarchy instead.
     """
     owner = {label: sea.name for sea in reversed(seas) for label in sea.remaining}
     water = set(cells)
@@ -740,13 +751,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         if game_map.classes[label] is CellClass.SEA
         and game_map.continents[label] not in OCEANS | {NEW_WORLD}
     }
-    coasts = {
-        region: [cell for cell in cells if cell not in boundary]
-        for region, cells in _coasts(world, is_sea, region_of).items()
-    }
-    if any(not cells for cells in coasts.values()):
-        message = "An American land region has no coastal sea away from the Old World boundary"
-        raise IdentityError(message)
+    coasts = _independent_coasts(_coasts(world, is_sea, region_of), boundary)
     parents = _area_parents(hierarchy)
     parents.update({area.parents[0]: area.parents for area in areas})
     sea_areas, anchored = _sea_areas(

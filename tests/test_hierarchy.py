@@ -12,6 +12,7 @@ from rnw.eu5_newworld import (
     IdentityError,
     _Area,  # pyright: ignore[reportPrivateUsage]
     _check_pieces,  # pyright: ignore[reportPrivateUsage]
+    _independent_coasts,  # pyright: ignore[reportPrivateUsage]
     _land_areas,  # pyright: ignore[reportPrivateUsage]
     _protect_ocean_boundary,  # pyright: ignore[reportPrivateUsage]
     _reserve,  # pyright: ignore[reportPrivateUsage]
@@ -374,6 +375,45 @@ def test_coastal_seas_cannot_take_the_old_world_boundary() -> None:
     )
     assigned = {cell: area.parents[2] for area in areas for part in area.provinces for cell in part}
     assert assigned[7] == assigned[15] == "atlantic_ocean_continent"
+    assert "greenland" not in {area.name for area in areas}
+
+
+def test_boundary_only_region_has_no_independent_coast() -> None:
+    coasts = _independent_coasts({"boundary_only": [7, 15], "independent": [2, 7]}, {7, 15})
+    assert coasts == {"independent": [2]}
+
+
+def test_boundary_only_shore_stays_in_the_protected_ocean_hierarchy() -> None:
+    graph = _grid(8, 2)
+    seas = [
+        _SeaArea("coast", "r", coastal=True, replaced=100, centre=(0, 0), remaining=frozenset()),
+        _SeaArea("ocean", "o", coastal=False, replaced=1, centre=(0, 40), remaining=frozenset()),
+        _SeaArea(
+            "greenland",
+            "western_europe",
+            coastal=False,
+            replaced=0,
+            centre=(0, 70),
+            remaining=frozenset({99}),
+        ),
+    ]
+    areas, _ = _sea_areas(
+        graph,
+        list(range(16)),
+        seas,
+        {(99, 7), (99, 15)},
+        coasts={},
+        parents={
+            "r": ("r", "north_america", "america"),
+            "ocean": ("o", "o", "atlantic_ocean_continent"),
+            "greenland": ("western_europe", "western_europe", "europe"),
+        },
+        keys=KeySpace(set()),
+        boundary={7, 15},
+    )
+    assigned = {cell: area.parents[2] for area in areas for part in area.provinces for cell in part}
+    assert assigned[7] == assigned[15] == "atlantic_ocean_continent"
+    assert sorted(assigned) == list(range(16))
     assert "greenland" not in {area.name for area in areas}
 
 

@@ -2,9 +2,10 @@
 
 2026-11-04, RNW **1.2.0 development / pending epoch 61**, EU5 **1.4.7 / Steam
 build 26377361**. This is H7 evidence for the [accepted plan](../history-plan.md),
-not a release or engine-acceptance claim. Held-out seeds remain untouched at this
-checkpoint. Full normal paired performance, held-out validation and delivery are
-still required.
+not a release or engine-acceptance claim. Published full-normal S8 timing is now
+complete. Held-out timing later exposed a separate boundary-only coastal identity
+failure; its construction fix and the timing evidence are recorded below. Final
+held-out native checks, packages and owner engine observation remain open.
 
 ## Method and scope
 
@@ -179,7 +180,50 @@ equals the pending golden; the original source on the newer 1.4.7 scripts writes
 That patch-dependent difference does not replace or amend the published golden.
 Private evidence: `timed-reference/comparison.json` and both source manifests.
 
-Independent normal reproduction, complete controlled seed-set comparisons,
+## Full normal S8 timings and boundary-only coast correction
+
+[V-EXEC, 2026-11-04] The quiet complete published matrix ran all 24 worlds through
+full generation, all normal producers and writers, and output checks with 31
+workers and a 16 GiB budget. The original 1.1.0 baseline completed 23 cases;
+`islands/1000` retained its known hierarchy-capacity failure and was compared to
+the explicitly labelled matched-static sensitivity. The original-cohort median
+added time is **13.27%** and inclusive linear p95 is **16.60%**. Including the
+sensitivity, the median is **13.14%** and p95 **16.57%**. Both cohorts pass S8's
+15% median and 25% p95 limits. The OS cache was left untouched; every run used a
+fresh process and separate initially empty land cache. Full rows and digests are
+in `local_data/history-120/h7/timed-published-final/summary.json`.
+
+The first 20 held-out pairs also completed on the C487 source. The `eu5_newworld`
+source change described below returns exactly the former coast mapping for every
+successful C487 world: those runs passed the old explicit nonempty-coast guard,
+so every retained regional coast remains nonempty. The published S8 outputs are
+likewise unchanged by this correction. A final full-normal reference pair on the
+corrected source is still required for S9 and to measure corrected reference time
+and peak; it does not replace the published seed-set S8 distribution.
+
+[V-EXEC, 2026-11-04] Held-out `wall/1001` exposed a construction error in both the
+pinned 1.1.0 baseline and the current generator: all four generated coastal sea
+zones for `mesoamerica_region` touched the Old World boundary, leaving no
+independent American coast. The generator failed explicitly before history
+projection. The correction omits only regions with no nonboundary coastal zones
+from regional-sea assignment; those boundary cells remain in the protected ocean
+hierarchy. It adds no strait, inland mouth, or post-generation repair. The full
+current `wall/1001` export then passes normal output checks for **870 files**,
+SHA-256 `57851ca328cec5ba8fd8a97a2056be76f488aaf8c325e406279934a5cd3a596b`.
+With fresh caches, matched-static takes **203.295 s** and current history takes
+**215.841 s** (**+6.17%**), a labelled sensitivity because the original baseline
+cannot construct this case. Focused hierarchy regressions pass; locked full
+checks pass with **2,788 Python tests**, 17 optional skips, strict types/format/
+lint and 23 Rust tests. Private evidence is in
+`local_data/history-120/h7/timed-heldout/wall-1001-*/`.
+
+The held-out source was frozen before the first held-out run, then the actual
+failure required this narrow construction correction. The history policy and
+thresholds were not tuned. The already completed held-out timings remain
+regression evidence; the remaining held-out normal rows must use the corrected
+source before H7 acceptance.
+
+Independent normal reproduction, final paired-reference timing, remaining
 held-out acceptance, package self-tests, installation and the one owner sitting
 remain open.
 

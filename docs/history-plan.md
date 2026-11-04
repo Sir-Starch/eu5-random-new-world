@@ -618,7 +618,7 @@ H2 schema.
   model/projection and affected-writer/portable checks pass. A normal 872-file
   reference export passes and refreshes pending epoch 61. Full paired performance,
   independent reproduction, held-out acceptance and delivery remain open; the
-  held-out matrix is still untouched.
+  held-out matrix was still untouched at this checkpoint.
 - **H7 equal-output performance work, 2026-11-04:** round indices reuse immutable
   geometry, with independent state facts; contact minima and necessary action
   filtering avoid repeated work. Original reference implementations retain whole
@@ -627,6 +627,16 @@ H2 schema.
   [report](research/history-120-calibration.md#equal-output-performance-follow-up)
   preserves the preliminary timings and their scope. Complete S8 distributions,
   final-reference pairing and held-out/delivery gates remain open.
+- **H7 full-normal and held-out follow-up, 2026-11-04:** the 24-world published
+  S8 matrix passes both original-baseline and explicit-sensitivity cohorts. During
+  held-out timing, Wall/1001 exposed a coastless Old World boundary case in both
+  pinned 1.1.0 and current construction. The corrected hierarchy keeps boundary
+  water in the protected ocean allocation; the full current export passes all
+  normal writers/checks. This is a construction fix, with no history parameter
+  change. The original source freeze no longer covers remaining held-out rows;
+  final reference/S9, corrected held-out continuation, native sweeps, reproduction,
+  packaging, installation and the owner sitting remain open. Evidence and scopes
+  are in the [calibration report](research/history-120-calibration.md#full-normal-s8-timings-and-boundary-only-coast-correction).
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

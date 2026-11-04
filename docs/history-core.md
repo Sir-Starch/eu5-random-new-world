@@ -5,7 +5,8 @@ bootstrap, population, final-plan construction and localized text writers in the
 [history plan](history-plan.md#17-phases-and-scope-control). H4 now connects them to
 normal generation for the **1.2.0 development target / pending epoch 61**. The
 frozen 1.1.0/epoch-60 reference is preserved. H5 portable reading/controls and [H6 story continuity](content-plan.md#history-continuity-h6-120-development)
-are implemented. H7 calibration/delivery and engine observations remain later work.
+are implemented. H7's published S8 matrix now passes; final held-out validation,
+packaging, installation and owner engine observation remain in progress.
 
 ## Ownership and entry points
 
@@ -675,10 +676,32 @@ ungated positions. S7 counts model realizations before projected group deduplica
 S11 counts the entire canonical JSON wrapper. Synthetic tests exercise these
 definitions independently of the calibration policy.
 
-[V-EXEC, 2026-11-04] Full checks pass: 2,734 Python tests, 17 optional skips,
-strict types/format/lint and 23 Rust tests. The first full normal published pilot
+[V-EXEC, 2026-11-04; initial H7 checkpoint] Full checks pass: 2,734 Python tests,
+17 optional skips, strict types/format/lint and 23 Rust tests. The first full normal pilot
 (continents/3, defaults) passes both versions' output checks but takes 307.494 s
 against 1.1.0's 204.024 s, including separately recorded capture overhead. This
 identifies an S8 performance problem; no seed-set acceptance is claimed. Action
 frequency calibration remains provisional and uses only published seeds. Held-out
-seeds remain untouched. Private measurements are in `local_data/history-120/h7/`.
+seeds were untouched at this checkpoint. Private measurements are in
+`local_data/history-120/h7/`.
+
+## Boundary-only coast construction correction (H7, 2026-11-04)
+
+[V-EXEC] The complete published full-normal matrix passes S8: on 23 successful
+original-baseline pairs the median added time is 13.27% and p95 16.60%; including
+the explicit islands/1000 matched-static sensitivity gives 13.14% and 16.57%.
+See the [calibration report](research/history-120-calibration.md#full-normal-s8-timings-and-boundary-only-coast-correction)
+for scope and held-out details.
+
+The held-out Wall/1001 input exposed a coast that only touched the Old World sea
+boundary. Neither the pinned 1.1.0 generator nor the pre-correction candidate
+could build its `mesoamerica_region` hierarchy. The corrected builder omits only
+regions without an independent nonboundary shore from regional-sea allocation;
+their generated water remains in the protected, connected ocean hierarchy. It
+does not create a strait, inland mouth, or repair after export. The complete
+Wall/1001 export passes all normal writers and checks (870 files,
+`57851ca328cec5ba8fd8a97a2056be76f488aaf8c325e406279934a5cd3a596b`). Synthetic
+hierarchy tests cover this boundary and ocean assignment, and locked full checks
+pass (2,788 Python tests, 17 optional skips, strict format/lint/types and 23 Rust
+tests). The initial held-out source freeze is superseded for the remaining rows;
+no historical policy parameter was changed.
