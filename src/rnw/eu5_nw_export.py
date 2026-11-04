@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
-from rnw import __version__, epoch, inputs, landcache, worldname
+from rnw import __version__, epoch, eu5_history_text, inputs, landcache, worldname
 from rnw.artifacts import (
     Spool,
     check_new_output,
@@ -119,6 +119,7 @@ from rnw.eu5_empires import (
     written_ranks,
 )
 from rnw.eu5_export import MOD_NAME, STATUS, resolve_build
+from rnw.eu5_history_build import build_history_start as build_start_plan
 from rnw.eu5_islands import moved_pixels_of, relocate_map, shifts
 from rnw.eu5_lobby import (
     COVER_INCLUDE,
@@ -168,7 +169,6 @@ from rnw.eu5_natives import (
     COUNTRY_DIR,
     DEFINITION_FILE,
     VanillaNatives,
-    build_start_plan,
     city_lines,
     country_definitions,
     country_names,
@@ -260,6 +260,9 @@ from rnw.eu5_water import water_outputs
 from rnw.game_texts import Text, localize, untranslated
 from rnw.geography import parse_locations, read_locations, read_named_colors
 from rnw.history_model import Factor, Military
+from rnw.history_output_checks import verify_diplomacy
+from rnw.history_output_checks import verify_text as verify_history_text
+from rnw.history_plan_checks import validate_projection
 from rnw.landmask import LandMask, fit
 from rnw.languages import official_languages
 from rnw.layers import PEOPLES, RESOURCES, layer_seed
@@ -1327,6 +1330,7 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     geometry: VanillaGeometry,
     biomes: CellBiomes,
     natives: FinalStartPlan,
+    loc_keys: KeySpace,
     development: Development,
     ports: tuple[list[str], dict[int, tuple[int, int]]],
     coast: Coast,
@@ -1436,6 +1440,12 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     override = _read(game_dir, LOCATOR_OVERRIDE)
     if (rewritten := rewrite_override_locators(override, removed)) != override:
         outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
+    history_text = (
+        eu5_history_text.build(natives, loc_keys) if natives.history is not None else None
+    )
+    if history_text is not None:
+        verify_history_text(natives, history_text)
+        outputs.update(history_text.files)
     written_pops = pop_lines(natives.pops)
     setup = prune_setup(
         {
@@ -1453,7 +1463,10 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         BUILDINGS_FILE: (city_lines(towns.ranks), building_lines(development.villages)),
         "03_markets.txt": (market_lines(natives.markets),),
         "09_roads.txt": (road_lines(natives.roads),),
-        "12_diplomacy.txt": (vassal_lines(natives.vassals), alliance_lines(natives.alliances)),
+        "12_diplomacy.txt": (
+            vassal_lines(natives.vassals) + eu5_history_text.guarantee_lines(natives.protections),
+            alliance_lines(natives.alliances),
+        ),
         "15_international_organizations.txt": (
             confederation_lines(natives.confederation_date, natives.confederations),
         ),
@@ -1467,6 +1480,10 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         if name == DEVELOPMENT_FILE:
             setup_text = drop_block_entries(setup_text, ("development",), new_world_keys)
         setup_text = _insert_setup_additions(name, setup_text, additions, ai_records)
+        if name == "12_diplomacy.txt" and natives.history is not None:
+            verify_diplomacy(
+                natives, setup_text, _read(game_dir, relative), gone | setup.removed_ids
+            )
         if setup_text != _read(game_dir, relative):
             outputs[_mod_path(relative)] = _encode(game_dir, relative, setup_text)
     outputs.update(country_definition_outputs(game_dir, setup.removed_ids))
@@ -1484,7 +1501,11 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
         _localization(
             game_dir,
             plan,
-            {**country_names(natives.countries), **{key: Text(key) for key in place_texts(used)}},
+            {
+                **country_names(natives.countries),
+                **{key: Text(key) for key in place_texts(used)},
+                **(history_text.texts if history_text is not None else {}),
+            },
             natives.names,
             languages,
         )
@@ -1982,8 +2003,14 @@ def _technology_problems(
     problems += [
         f"{after[2]} has a lower level than {before[2]}, which is less complex"
         for before, after in pairwise(ordinary)
-        if levels[after[2]] < levels[before[2]]
+        if natives.history is None and levels[after[2]] < levels[before[2]]
     ]
+    if natives.history is not None:
+        problems += [
+            f"{country.tag} writes a technology level different from its lineage"
+            for country in natives.countries
+            if country.kind == "state" and levels.get(country.tag) != country.level
+        ]
     template_of = {c.tag: vanilla.levels.get(c.include, 0) for c in natives.countries}
     problems += [
         f"{lord} leads {vassal} without the level or the template to lead"
@@ -2058,7 +2085,12 @@ def _relations(natives: FinalStartPlan, plan: Plan, world: NewWorld) -> _Relatio
     countries = {country.tag: country for country in natives.countries}
     empires = {tag: country.capital for tag, country in countries.items() if country.great}
     land = {cell.key for cell in plan.cells if cell.kind is CellClass.LAND}
-    owner = {key: tag for tag, c in countries.items() if c.kind == "state" for key in c.members}
+    owner = {
+        key: tag
+        for tag, c in countries.items()
+        if c.kind == "state" or c.landed
+        for key in c.members
+    }
     contact: set[tuple[str, str]] = set()
     near: dict[str, set[str]] = {}
     for first, second in world.edges:
@@ -2100,14 +2132,20 @@ def _rank_problems(
     return problems
 
 
-def _road_problems(
+def _road_problems(  # noqa: PLR0913 - written, original, planned and physical context.
     text: str,
     original: str,
     relations: _Relations,
     planned: tuple[tuple[str, str], ...],
     gone: set[str],
+    *,
+    historical: bool = False,
 ) -> list[str]:
-    """Old World roads are vanilla's; new ones are planned, once, in contact, inside one empire."""
+    """Preserve vanilla roads and match planned physical contacts.
+
+    Historical road permissions are checked against causal exchange/empire facts
+    by validate_projection; the legacy path additionally enforces one empire.
+    """
     problems: list[str] = []
     roads = _pairs_of(text, "road_network")
     old = [pair for pair in roads if not set(pair) & relations.generated]
@@ -2126,11 +2164,10 @@ def _road_problems(
             first not in relations.land
             or second not in relations.land
             or (first, second) not in relations.contact
-            or len(heads) != 1
-            or not heads <= set(relations.empires)
+            or (not historical and (len(heads) != 1 or not heads <= set(relations.empires)))
         ):
             problems.append(f"Road {first} = {second} is not a contact inside one empire")
-        else:
+        elif not historical:
             joined.setdefault(next(iter(heads)), set()).add((first, second))
     for tag, pairs in joined.items():
         reached = {relations.empires[tag]}
@@ -2159,14 +2196,16 @@ def _related(kind: str, first: str, second: str, relations: _Relations) -> bool:
     return kind == IRRITATED and relations.lord.get(second) == first
 
 
-def _opinion_problems(
+def _opinion_problems(  # noqa: PLR0913 - written, original, planned and causal context.
     text: str,
     original: str,
     relations: _Relations,
     planned: tuple[tuple[str, str, str], ...],
     gone: set[str],
+    *,
+    historical: bool = False,
 ) -> list[str]:
-    """Old World opinions are vanilla's; new ones are planned, once and between related states."""
+    """Preserve vanilla opinions and match the plan, whose history verifies each new cause."""
     problems: list[str] = []
     found = _opinions_of(text)
     old = [line for line in found if not {line[0], line[1]} & relations.tags]
@@ -2179,7 +2218,8 @@ def _opinion_problems(
     problems += [
         f"Opinion {first} {second} {kind} joins unrelated states"
         for first, second, kind in added
-        if kind not in OPINION_TYPES or not _related(kind, first, second, relations)
+        if not historical
+        and (kind not in OPINION_TYPES or not _related(kind, first, second, relations))
     ]
     return problems
 
@@ -2211,14 +2251,10 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
 ) -> dict[str, object]:
     """Great empires write their level and rank, their roads and their opinions as planned.
 
-    Only empires have a rank. Every road pair joins two generated land locations in contact
-    that an empire or its vassals hold, once, and the roads of each empire reach its capital.
-    Every opinion line joins an empire to a state in contact or to its vassal, once, and its
-    holder has discovered the area of its partner's capital. Nothing
-    names a vanilla tag or location, and the Old World entries of ``09_roads.txt`` and
-    ``18_opinions.txt`` are vanilla's (``gone``: what the export removed). ``originals`` holds
-    the two vanilla texts by file name; a world without empires leaves ``09_roads.txt`` unchanged
-    and so out of ``outputs``.
+    History revalidates rank, road permissions and each opinion's cause before
+    comparing the written records; the legacy diagnostics retain static empire
+    rules. Both paths require discovered capitals and preserve Old World roads
+    and opinions. Unchanged setup files are read from ``originals``.
     """
 
     def text(name: str) -> str:
@@ -2227,6 +2263,13 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
         return outputs[path].decode("utf-8-sig") if path in outputs else originals[name]
 
     calibration = vanilla.empire
+    if natives.history is not None:
+        validate_projection(
+            natives,
+            vanilla=vanilla,
+            positions=vanilla.history_positions,
+            areas={cell.key: cell.area for cell in plan.cells if cell.kind is CellClass.LAND},
+        )
     relations = _relations(natives, plan, world)
     if calibration is None:
         problems = ["No empire calibration"] if relations.empires else []
@@ -2234,7 +2277,12 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
         problems = [
             *_rank_problems(text(COUNTRIES_FILE), natives, calibration),
             *_road_problems(
-                text("09_roads.txt"), originals["09_roads.txt"], relations, natives.roads, gone
+                text("09_roads.txt"),
+                originals["09_roads.txt"],
+                relations,
+                natives.roads,
+                gone,
+                historical=natives.history is not None,
             ),
             *_opinion_problems(
                 text("18_opinions.txt"),
@@ -2242,6 +2290,7 @@ def verify_empires(  # noqa: PLR0913, PLR0917 - every cause and weakness is chec
                 relations,
                 natives.opinions,
                 gone,
+                historical=natives.history is not None,
             ),
             *_knowledge_problems(text(COUNTRIES_FILE), natives, plan),
         ]
@@ -2266,12 +2315,11 @@ def verify_archetypes(  # noqa: PLR0913, PLR0917 - every record of the plan is c
 ) -> dict[str, object]:
     """The extraordinary societies write what the plan says, and only that (R7d).
 
-    Every generated country writes the template, government, currency and holding it was planned
-    with; every group is disjoint, of free countries and of one kind, with the relations that
-    kind has; the alliances, rivalries and confederations of the setup files are the plan's, once
-    each, beside the vanilla entries of the Old World; and the holder of a relation has discovered
-    the area of its partner's capital. ``originals`` holds the vanilla texts by file name; a file
-    the export left unchanged is not among the outputs and is vanilla's.
+    Every country writes its planned institutions and holdings. Setup relations
+    agree with the plan beside the retained vanilla entries, and their holders
+    discover partner capitals. Historical memberships and causal relations have
+    already passed validate_projection; only legacy diagnostics require disjoint
+    groups, alliance rings and paired rivalries. Unchanged files use ``originals``.
     """
 
     def text(name: str) -> str:
@@ -2318,6 +2366,7 @@ def verify_archetypes(  # noqa: PLR0913, PLR0917 - every record of the plan is c
             calibration=calibration,
             capital_areas={country.tag: area_of[country.capital] for country in natives.countries},
             gone=gone,
+            historical=natives.history is not None,
         )
     if problems:
         extra = f" (and {len(problems) - 1} more)" if len(problems) > 1 else ""
@@ -3010,6 +3059,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 geometry=geometry,
                 biomes=biomes,
                 natives=natives,
+                loc_keys=loc_keys,
                 development=development,
                 ports=ports,
                 coast=coast,

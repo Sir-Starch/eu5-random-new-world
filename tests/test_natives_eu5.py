@@ -21,6 +21,7 @@ from rnw.eu5_natives import (
     country_names,
     country_records,
     diaspora,
+    effective_governments,
     homeland,
     hsv_rgb,
     land_graph,
@@ -204,6 +205,22 @@ def test_template_governments_follow_their_vanilla_users() -> None:
         "open": (("type", "republic"), ("heir_selection", "oligarchic_elective")),
         "monarch": (("type", "monarchy"), ("heir_selection", "cognatic_primogeniture")),
     }
+
+
+def test_effective_governments_resolve_includes_before_country_overrides() -> None:
+    overrides = template_governments(TEMPLATES, OPEN_USERS)
+    effective = effective_governments(TEMPLATES, overrides)
+    assert dict(effective["typed"])["type"] == "monarchy"
+    assert dict(effective["nested"])["type"] == "monarchy"
+    assert dict(effective["open"])["type"] == "republic"
+    assert dict(effective["monarch"])["heir_selection"] == "cognatic_primogeniture"
+
+
+def test_effective_government_rejects_cycles_and_missing_types() -> None:
+    with pytest.raises(NativesError, match="Cyclic"):
+        _ = effective_governments({"a": "include = b", "b": "include = a"}, {"a": ()})
+    with pytest.raises(NativesError, match="No effective"):
+        _ = effective_governments({"a": "government = {}"}, {"a": ()})
 
 
 def test_country_records_add_the_template_government() -> None:

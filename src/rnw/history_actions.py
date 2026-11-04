@@ -229,24 +229,17 @@ def _separation_allowed(context: Context, proposal: Proposal) -> Reason | None:
 def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None:
     first, second = proposal.actor, proposal.target
     subject, lord = context.index.actors[first], context.index.actors[second]
-    if any(
-        bond.kind is Action.PACT and first in (bond.first, bond.second)
-        for bond in context.state.bonds
-    ):
+    if first in context.pact_participants:
         return Reason.INELIGIBLE
     if (
         subject.tenure is not Tenure.LAND
         or lord.tenure is not Tenure.LAND
         or lord.technology < context.history.geography.rules.minimum_overlord_technology
-        or any(
-            bond.kind is Action.DEPENDENCY and bond.first == first for bond in context.state.bonds
-        )
+        or first in context.subjects
         or context.power(second) < 2 * context.power(first)
     ):
         return Reason.IMBALANCE
-    lords = {
-        bond.first: bond.second for bond in context.state.bonds if bond.kind is Action.DEPENDENCY
-    }
+    lords = context.lords
     current = second
     while current in lords:
         if current == first:
@@ -320,11 +313,9 @@ def eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C9
         return Reason.HOSTILE
     if context.has(proposal.kind, first, second) and proposal.kind is not Action.EXCHANGE:
         return Reason.DUPLICATE
-    if proposal.kind is Action.EXCHANGE and any(
-        bond.kind is Action.EXCHANGE
-        and {bond.first, bond.second} == {first, second}
-        and context.event_years[bond.cause] > context.state.year - 15
-        for bond in context.state.bonds
+    if (
+        proposal.kind is Action.EXCHANGE
+        and tuple(sorted((first, second))) in context.recent_exchanges
     ):
         return Reason.DUPLICATE
     return None

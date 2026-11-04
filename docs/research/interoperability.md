@@ -894,8 +894,11 @@ renders its 59 source texts in all eleven official languages. The guarantee
 serializer preserves provider → client direction. Parsed-output checks and
 synthetic mutation cases reject changed values, scopes, AI access, extra effects
 and missing text bindings. Read-only tests retain the installed syntax precedents.
-No vanilla prose or additional asset/dependency is distributed. Exporter activation
-and the H7 engine observation remain outstanding; F1–F3 are unchanged.
+No vanilla prose or additional asset/dependency is distributed. H4's normal
+exporter now includes these records and checks the written guarantees against
+the historical plan, retaining the Old World's directed relations. This activates
+the already documented text interfaces, with no additional format. The H7 engine
+observation remains outstanding; F1–F3 are unchanged.
 
 ## Earlier cases still outside this phase
 

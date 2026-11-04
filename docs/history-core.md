@@ -2,9 +2,10 @@
 
 [V-EXEC, 2026-11-03] This implements the offline H2–H3 phases and H4's
 bootstrap, population, final-plan construction and localized text writers in the accepted
-[history plan](history-plan.md#17-phases-and-scope-control). It is not called by
-the world exporter yet. The rest of H4 connects these adapters and the written-output checks to generation. Existing world bytes,
-goldens, world codes, product version and epoch are unchanged.
+[history plan](history-plan.md#17-phases-and-scope-control). H4 now connects them to
+normal generation for the **1.2.0 development target / pending epoch 61**. The
+frozen 1.1.0/epoch-60 reference is preserved. H5/H6 reading and story continuity,
+H7 calibration and delivery, and engine observations remain later work.
 
 ## Ownership and entry points
 
@@ -19,6 +20,7 @@ goldens, world codes, product version and epoch are unchanged.
 | `history_engine.py` | Canonical bootstrap, local proposal policy, arbitration, atomic rounds, simulation through 1337, causal replay and semantic digest |
 | `history_routes.py` | Bounded physical routes from actual generated cell contacts and water paths, including seam edges |
 | `eu5_history.py` | Post-diaspora population roots, installed prerequisites and the fixed landed/tribal/community partition |
+| `eu5_history_build.py` | Normal construction bridge: physical routes, ordinary roots, installed technology, simulation and final projection |
 | `history_population.py` | Conservative projection of historical migration into the original typed EU5 cohorts |
 | `eu5_history_plan.py` | Surviving countries, governments, explicit group memberships, settlement centres, discovery, roads and the single `FinalStartPlan` |
 | `eu5_history_values.py` | Installed ungated American axis ranges and bounded profile positions |
@@ -55,7 +57,8 @@ outcome. The extraordinary control goes to the history engine's per-hearth
 ambitions instead. Its provisional size factor is 1; the accepted 0.4–1 interval
 changes ordinary partition size while leaving the state-land budget/pocket size,
 food, population, identity zones and hearths unchanged. It is not fitted on the
-held-out seeds. The existing exporter still calls the unchanged static entry point.
+held-out seeds. The exporter calls this bootstrap through `eu5_history_build`;
+the old static constructor is retained explicitly as a diagnostic helper.
 
 `physical_routes(PhysicalMap(...))` reads actual world edges. Land contacts include
 explicit wrap edges. A maritime path travels only through SEA cells and stops
@@ -145,9 +148,8 @@ The AI adapter reads full historical threat/competition facts and actual group
 roles independently of which opinions fit the display limit; guarantees also
 enter its context.
 
-This is an offline final-plan implementation. The exporter still calls H1's static
-entry point. H4's remaining localized bias/chronicle writers and written-output
-integration will enable it together and establish pending epoch 61 and new goldens.
+The exporter now reads this plan through the H4 bridge. No static empire,
+archetype, ring-alliance or vassal selector adds relations after simulation.
 No full-world calibration or game loading is inferred from this construction.
 
 ## Localized history artifacts (H4, third part)
@@ -182,9 +184,88 @@ and fingerprints in the other ten official languages. `history_output_checks.ver
 reads the written files back and checks exact bias values/decay, live country scopes,
 decision/event activation and effects, unique description bindings and localization
 coverage. It rejects added effects, startup hooks and changed AI access. The
-exporter switch and integration with existing setup/archetype checks remain next
-in H4; these independently callable adapters do not change current world bytes.
-Game loading and F1–F3 retain their H7 scope.
+normal export includes these artifacts and renders their entries into each official
+language. `verify_diplomacy` checks the written provider/client direction and
+counts while preserving the Old World's directed relations. Game loading and
+F1–F3 retain their H7 scope.
+
+## Export integration (H4, fourth part)
+
+`eu5_history_build.build_history_start` replaces the static constructor in normal
+generation. It supplies bounded physical contacts before ordinary society
+construction, adds identity-completeness diaspora, reads founding technology from
+the installed templates/quantiles, places holy sites, simulates all 60 rounds and
+projects the survivors. A tribal template with no technology declaration counts
+as zero, using the existing calibrated template rule; no explicit tribal level
+is written. Profiles use ranges read from the installed ungated American templates.
+All history calls receive the generator's cancellation callback. The resource
+roll does not enter this bridge; the new synthetic 64-location flow verifies that
+changing RGOs leaves history, countries and population identical, both with states
+and at zero state share.
+
+The output boundary revalidates historical facts and then reads back technology,
+governments, institutions, ownership, ranks, roads, opinions, alliances, rivals and
+confederations. The proven installed prerequisites remain: usable templates,
+eligible lord technology, proper confederate institutions and discovered partner
+capitals. Legacy diagnostics alone retain monotone final-capital technology,
+disjoint archetypes, ring alliances and reciprocal static rivals. New roads may
+follow actual exchange agreements as well as realized empires. Additional
+written-setup cases exercise the divided valley, a star-shaped sea alliance,
+overlapping confederate hearths, rejected fabricated roads/changed capitals and
+wrong, missing or repeated guarantees, including Old World preservation.
+
+The product target and lockfile are 1.2.0, with a pending epoch-61 entry and new
+synthetic bundle/preset pins. `golden_world_epoch60.json` preserves the prior
+reference byte for byte; no published golden or release is overwritten. H7 still
+owns calibration, held-out seeds, package/candidate/hub delivery and its one
+bounded engine observation. The reference measurement below records the actual
+scope of this development export, without claiming H7's statistical thresholds.
+
+The first large reference exposed two repeated traversals. Migration eligibility
+now reads the round's indexed set of actors with active fear/grievance, rather
+than rescanning all memories for each possible move. Ancestry-root lookup visits
+each actor once when division/reunion paths reconverge. Independent full-scan and
+recursive references verify equal results, including expired memories and a
+16-generation shared ancestry DAG. Existing semantic/text digests remain equal.
+This removes redundant work without changing proposals or outcomes; it is not
+an H7 performance acceptance result.
+
+The same indexes retain current subjects, pact participants and recent exchanges.
+Candidate pacts/protection are enumerated only for a threat both parties actually
+remember; an exhaustive reachable-triple reference verifies that the eligible set
+is unchanged. Installed government handling distinguishes country overrides from
+the effective type/heir inherited through templates. The historical projection
+uses the latter; the legacy serializer's minimal override table stays unchanged.
+
+### H4 integration evidence
+
+[V-EXEC/V-LOCAL, 2026-11-04, EU5 1.4.7 / build 26377361] Locked sync and
+`make check` pass: 2,674 Python tests, 17 optional skips, strict types, format/lint
+and 23 Rust tests. All 15 installed-game read-only checks pass. Two complete
+synthetic physical-bootstrap cases (64 locations, including zero state share)
+preserve history under resource changes. Written setup tests cover historical
+groups, changed country records, unsupported roads and direction/count/Old World
+checks for guarantees and vassals. Existing synthetic semantic/text digests agree.
+
+The real 5,903-location native stage completes all 60 rounds, full causal replay
+and independent final-plan checks: 324 states, 412 tribes, 255 subject pairs and
+2,000 bounded named opinions; exact population is 72,176,637 milli-pops, including
+22,500 diaspora. A full output run reuses that independently constructed stage
+**after exact relevant-input comparison**, claims its generated keys in the same
+key space, and passes all output verifiers. Its 872 nonmetadata files have digest
+`5b2d5940693639f50ce551f8ca21a9a5951abfd311cd5108ea4af7a04abdf526`.
+This is model/writer agreement, not an uncached end-to-end timing or an engine
+loading claim. `tests/golden_world.json` records the pending reference; the exact
+tagged 1.1.0 file is preserved in `golden_world_epoch60.json`.
+
+Profiling the standalone native stage observes about 1.08 billion calls and
+149,550 events; its 134 MiB private pickle and 2.31 GiB profiled process peak show
+that H7's time/memory limits are **not yet established**. Early instrumented runs
+were interrupted or failed before output; one diagnostic traceback run exited
+139. They are not passed references. The completed model and plain cached-stage
+output checks are recorded separately in ignored `local_data/history-120/h4-export/`.
+Normal final-source reproduction, performance calibration, reading, content
+continuity and delivery remain the next phases; EU5 was never launched.
 
 ## One round
 

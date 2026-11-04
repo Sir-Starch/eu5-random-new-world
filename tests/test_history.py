@@ -4,12 +4,22 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import replace
+from typing import override
 
 import pytest
 
-from rnw.history_engine import advance, create, digest, simulate, validate_history
+from rnw.history_context import Context
+from rnw.history_engine import (
+    _roots,  # pyright: ignore[reportPrivateUsage]
+    advance,
+    create,
+    digest,
+    simulate,
+    validate_history,
+)
 from rnw.history_model import (
     Action,
+    Actor,
     Authority,
     Cohort,
     District,
@@ -28,6 +38,83 @@ from rnw.history_model import (
 from rnw.progress import Cancelled
 
 from .history_fixtures import divided_valley, valley, valley_policy
+
+
+def test_reconverging_ancestry_matches_recursive_reference_with_bounded_reads() -> None:
+    """Repeated division/reunion must not enumerate exponentially many ancestry paths."""
+    history = valley()
+    context = Context(history, lambda: None)
+    first, second, *_ = history.state.actors
+    actors = {actor.key: actor for actor in (first, second)}
+    parents = (first.key, second.key)
+    for generation in range(16):
+        pair = tuple(
+            replace(first, key=f"g{generation}_{side}", parents=parents) for side in (0, 1)
+        )
+        actors.update((actor.key, actor) for actor in pair)
+        parents = tuple(actor.key for actor in pair)
+    last = actors[parents[0]]
+
+    def reference(actor: Actor) -> set[str]:
+        return (
+            {actor.key}
+            if not actor.parents
+            else {root for key in actor.parents for root in reference(actors[key])}
+        )
+
+    expected = reference(last)
+
+    class Counted(dict[str, Actor]):
+        reads: int = 0
+
+        @override
+        def __getitem__(self, key: str) -> Actor:
+            self.reads += 1
+            return super().__getitem__(key)
+
+    counted = Counted(actors)
+    context.index.actors = counted
+    roots = _roots(context, last)
+    assert {actor.key for actor in roots} == expected
+    assert tuple(actor.key for actor in roots) == tuple(sorted(expected))
+    assert counted.reads <= len(actors)
+
+
+@pytest.mark.parametrize("year", [1037, 1337, 2037])
+def test_indexed_fear_matches_the_full_memory_scan_including_expiry(year: int) -> None:
+    history = divided_valley()
+    history = replace(history, state=replace(history.state, year=year))
+    context = Context(history, lambda: None)
+    expected = {
+        memory.first
+        for memory in history.state.memories
+        if memory.factor in {Factor.FEAR, Factor.GRIEVANCE} and memory.at(year)
+    }
+    assert context.afraid == expected
+    assert dict(context.threats) == {
+        first: {
+            memory.second
+            for memory in history.state.memories
+            if memory.first == first
+            and memory.factor in {Factor.FEAR, Factor.GRIEVANCE}
+            and memory.at(year)
+        }
+        for first in expected
+    }
+    assert context.lords == {
+        bond.first: bond.second for bond in history.state.bonds if bond.kind is Action.DEPENDENCY
+    }
+    assert context.pact_participants == {
+        key
+        for bond in history.state.bonds
+        if bond.kind is Action.PACT
+        for key in (bond.first, bond.second)
+    }
+    assert context.recent_exchanges == {
+        tuple(sorted((bond.first, bond.second)))
+        for bond in history.state.bonds
+        if bond.kind is Action.EXCHANGE and context.event_years[bond.cause] > year - 15
+    }
 
 
 def _line(*, count: int = 3, seed: int = 42) -> History:
@@ -211,6 +298,7 @@ def test_dependency_needs_knowledge_imbalance_and_a_capable_lord() -> None:
     history = advance(history, (Proposal(Action.DEPENDENCY, "a0", "a1"),))
     assert history.state.bonds[0].kind is Action.DEPENDENCY
     assert history.state.bonds[0].first == "a0"
+    assert Context(history, lambda: None).lords == {"a0": "a1"}
     history = advance(history, (Proposal(Action.DEPENDENCY, "a1", "a0"),))
     assert history.events[-1].outcome is Outcome.REFUSED
     validate_history(history)

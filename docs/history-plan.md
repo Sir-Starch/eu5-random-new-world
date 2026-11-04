@@ -559,9 +559,18 @@ H2 schema.
   artifact checks reject changed effects/scopes and missing localization bindings.
   Full checks pass (2,653 Python tests, 17 optional skips; strict types, format/lint,
   23 Rust tests), as do 15 installed-game read-only checks. Complete text artifacts
-  agree under hash seeds 1/927. **Next in H4:** exporter activation and integration
-  with existing setup/archetype checks. Pending epoch 61 and new output goldens
-  belong to that first world-byte change; H7 keeps calibration and candidate/hub delivery.
+  agree under hash seeds 1/927. The fourth part connects them to generation.
+- **H4, integration completed 2026-11-04:** the [normal export bridge](history-core.md#export-integration-h4-fourth-part)
+  supplies all starts from physical bootstrap and history, including the installed
+  effective governments. Historical setup/output checks preserve engine prerequisites
+  while replacing static placement rules. Target 1.2.0 and pending epoch 61 are set;
+  epoch 60's tagged reference is preserved unchanged. Full checks pass (2,674 Python,
+  17 optional skips; strict types, format/lint, 23 Rust), with 15 read-only installed
+  checks. The real native stage passes simulation/replay/projection; exact-input
+  stage reuse then passes all output verifiers for 872 files, with the pending
+  reference recorded. This establishes model/writer agreement, **not** an uncached
+  timing, H7 performance thresholds or engine loading. Next: H5/H6; H7 retains
+  calibration, final normal reproduction and candidate/hub delivery.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

@@ -40,6 +40,7 @@ from rnw.archetypes import (
 )
 from rnw.eu5_archetypes import (
     ArchetypeCalibration,
+    american_includes,
     archetype_calibration,
     archetype_report,
     currency_lines,
@@ -62,6 +63,7 @@ from rnw.eu5_empires import (
     travel_steps,
     unlinked,
 )
+from rnw.eu5_history_values import position_ranges
 from rnw.eu5_remap import GeographicRemap, remap_text
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.eu5_technology import (
@@ -280,6 +282,8 @@ class VanillaNatives:
     empire: EmpireCalibration | None = None
     archetypes: ArchetypeCalibration | None = None
     state_floor: StateFloor = MINIMUM_STATE_SUPPORT
+    history_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
+    history_governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
 
 
 def _milli(value: str) -> int:
@@ -476,7 +480,45 @@ def _most_common(values: list[str]) -> str:
     return min(counts, key=lambda value: (-counts[value], value))
 
 
-def vanilla_natives(
+def effective_governments(
+    templates: dict[str, str], overrides: dict[str, tuple[tuple[str, str], ...]]
+) -> dict[str, tuple[tuple[str, str], ...]]:
+    """Resolve template identity fields before applying calibrated country overrides.
+
+    ``template_governments`` deliberately returns only the fields a country must
+    write. Historical institutional choices also need the inherited type.
+    """
+    roots = {name: parse(text) for name, text in templates.items()}
+
+    def fields(name: str, seen: frozenset[str]) -> dict[str, str]:
+        if name in seen:
+            message = f"Cyclic government template {name}"
+            raise NativesError(message)
+        root = roots.get(name)
+        if root is None:
+            return {}
+        found: dict[str, str] = {}
+        for include in root.find("include"):
+            if isinstance(include.value, str):
+                found.update(fields(include.value.strip('"'), seen | {name}))
+        government = root.block("government")
+        for key in GOVERNMENT_FIELDS:
+            own = government.first(key) if government is not None else None
+            if own is not None and isinstance(own.value, str):
+                found[key] = own.value
+        return found
+
+    result: dict[str, tuple[tuple[str, str], ...]] = {}
+    for name, written in overrides.items():
+        full = {**fields(name, frozenset()), **dict(written)}
+        if not full.get("type"):
+            message = f"No effective government type in template {name}"
+            raise NativesError(message)
+        result[name] = tuple(sorted(full.items()))
+    return result
+
+
+def vanilla_natives(  # noqa: PLR0915 - independent installed calibration tables.
     game_dir: Path,
     game_map: Eu5Map,
     geometry: VanillaGeometry,
@@ -588,6 +630,7 @@ def vanilla_natives(
         for key in american
         if key in place_names and pops.get(key)
     )
+    governments = template_governments(template_texts, setup_text)
     return VanillaNatives(
         density=density,
         population_per_location=total // len(american),
@@ -601,7 +644,8 @@ def vanilla_natives(
         reserved_names=frozenset(
             name_key(name) for name in (*place_names.values(), *country_words)
         ),
-        governments=template_governments(template_texts, setup_text),
+        governments=governments,
+        history_governments=effective_governments(template_texts, governments),
         colors=vanilla_colors(game_dir),
         levels=levels,
         overlord_level=overlord_level(
@@ -627,6 +671,14 @@ def vanilla_natives(
             pops=pops,
         ),
         state_floor=state_population_floor(set(american), pops, countries),
+        history_positions=position_ranges(
+            template_texts,
+            american_includes(setup_text, set(american)),
+            [
+                path.read_text(encoding="utf-8-sig")
+                for path in sorted((game_dir / SOCIETAL_VALUE_DIR).glob("*.txt"))
+            ],
+        ),
     )
 
 
@@ -1536,7 +1588,7 @@ def _rank_setups(
     return ranks
 
 
-def build_start_plan(  # noqa: PLR0913 - the start state reads the whole generated world.
+def build_static_start_plan(  # noqa: PLR0913 - the start state reads the whole generated world.
     *,
     world: NewWorld,
     plan: Plan,

@@ -921,6 +921,7 @@ def archetype_problems(  # noqa: PLR0913 - every record of the plan is checked o
     calibration: ArchetypeCalibration,
     capital_areas: Mapping[str, str],
     gone: Collection[str],
+    historical: bool = False,
 ) -> list[str]:
     """What is wrong in the written setup of the extraordinary societies, if anything.
 
@@ -930,8 +931,8 @@ def archetype_problems(  # noqa: PLR0913 - every record of the plan is checked o
     """
     return [
         *_record_problems(texts["10_countries.txt"], countries),
-        *_group_problems(bonds, countries, calibration),
-        *_relation_problems(bonds),
+        *([] if historical else _group_problems(bonds, countries, calibration)),
+        *([] if historical else _relation_problems(bonds)),
         *_file_problems(
             texts,
             originals,

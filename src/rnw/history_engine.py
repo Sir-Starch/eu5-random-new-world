@@ -366,8 +366,14 @@ def advance(
 def _roots(context: Context, actor: Actor) -> tuple[Actor, ...]:
     pending = list(actor.parents)
     roots: dict[str, Actor] = {}
+    seen: set[str] = set()
     while pending:
-        parent = context.index.actors[pending.pop()]
+        context.checkpoint()
+        key = pending.pop()
+        if key in seen:
+            continue
+        seen.add(key)
+        parent = context.index.actors[key]
         if parent.parents:
             pending.extend(parent.parents)
         else:
@@ -408,7 +414,12 @@ def _local_choices(context: Context, actor: Actor) -> list[Proposal]:
             for key in sorted(frontier)
             if key != target.seat or len(context.index.members[other]) == 1
         )
-        shared = context.reach.get(actor.key, {}).keys() & context.reach.get(other, {}).keys()
+        shared = (
+            context.reach.get(actor.key, {}).keys()
+            & context.reach.get(other, {}).keys()
+            & context.threats.get(actor.key, set())
+            & context.threats.get(other, set())
+        )
         local.extend(
             Proposal(kind, actor.key, other, threat=threat)
             for threat in sorted(shared - {actor.key, other})

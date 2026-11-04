@@ -1,7 +1,7 @@
 """One final EU5 start plan from the surviving historical facts.
 
-This H4 adapter is exercised offline before the exporter switch and new text
-writers are enabled together. Static selectors never add a second set of relations.
+The normal exporter uses this H4 adapter after simulation. Static selectors never
+add a second set of relations.
 """
 
 # NumPy stubs type scalar/list conversion as Any.
@@ -201,7 +201,8 @@ class _Projection:
             include in vanilla.templates and include in vanilla.governments,
             f"Missing usable history template {include}",
         )
-        fields = vanilla.governments[include]
+        governments = vanilla.history_governments or vanilla.governments
+        fields = governments[include]
         laws: tuple[tuple[str, str], ...] = ()
         parliament = ""
         if actor.tenure is Tenure.LAND:
@@ -225,7 +226,7 @@ class _Projection:
                 # not an advantage or an instruction to change a ruler's authority.
                 include = country_template(vanilla, "", level=level, coastal=coast, empire=lord)
                 require(include in vanilla.governments, "Missing history monarchy template")
-                fields = vanilla.governments[include]
+                fields = governments[include]
             if lord:
                 require(
                     level is not None

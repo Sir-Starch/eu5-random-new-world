@@ -301,12 +301,7 @@ def migration_allowed(context: Context, proposal: Proposal) -> Reason | None:  #
         context.event_kinds[holding.cause] is Action.CONFLICT
         and context.state.year - context.event_years[holding.cause] <= REFUGE_YEARS
     )
-    afraid = any(
-        memory.first == proposal.actor
-        and memory.factor in {Factor.FEAR, Factor.GRIEVANCE}
-        and memory.at(context.state.year)
-        for memory in context.state.memories
-    )
+    afraid = proposal.actor in context.afraid
     if not (
         displaced
         or afraid

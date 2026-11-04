@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Add the offline history core (H2–H3): deterministic rounds, political transitions,
+- Generate the 1337 native start from causal prehistory: deterministic rounds, political transitions,
   directed memory and causal replay, eight society dimensions, costly reforms,
   extraordinary trajectories and migration that conserves population and identities.
   Synthetic scenarios include the divided valley and realized historical networks.
@@ -14,12 +14,10 @@
   Localized adapters now supply causal chronicles, historical bias names and a
   voluntary Our History decision/event in all eleven languages, with parsed
   artifact checks for their values, live scopes, effects and text bindings.
-  It is not connected to world generation yet; world bytes and epoch are unchanged.
-
-- Begin the 1.2.0 history implementation: record the installed contracts and
-  bootstrap baseline, and extract a shared final start plan with typed population
-  cohorts. This foundation keeps the existing static generation and world bytes;
-  historical simulation and its reading surfaces are not enabled yet.
+  Normal generation now uses this history path, with actual guarantees and setup
+  checks that preserve the Old World. Target 1.2.0 uses pending epoch 61;
+  released epoch-60 reference data is preserved. Calibration, atlas reading,
+  story eligibility and packaged delivery remain work for the later plan phases.
 
 - Add **Alternative History** to the hub metadata and publish all four Workshop
   categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.

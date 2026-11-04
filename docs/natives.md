@@ -7,6 +7,11 @@ vanilla surveys, algorithms and per-experiment observations; their old pending
 states are not current assignments. Current code is mapped in [architecture](architecture.md),
 and campaign limits are in [known limitations](known-limitations.md).
 
+The 1.2.0 development path now uses [causal history and final projection](history-core.md)
+instead of the static political placement described in the older sections below.
+It keeps their installed population, identity and engine prerequisites; its pending
+epoch 61, remaining calibration and reading surfaces are tracked in the accepted plan.
+
 ## Goal of the first slice
 
 Each seed should give a plausible native New World: dense farming civilisations in a few fertile regions, chiefdoms and tribes around them, thinly peopled or unorganised land elsewhere. Strength must come from population and land, not from flat modifiers ([product spec](product-spec.md)). R6a reuses the vanilla American cultures, religions, country templates and town setups, which are read from the local installation. Names, graphics, units and religious mechanics therefore already exist. Countries get new tags.

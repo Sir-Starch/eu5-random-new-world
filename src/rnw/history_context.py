@@ -36,6 +36,8 @@ class Context:
         self.checkpoint = checkpoint
         self.known = {(each.first, each.second) for each in self.state.knowledge}
         self.memories: dict[tuple[str, str, Factor], list[Memory]] = defaultdict(list)
+        self.afraid: set[str] = set()
+        self.threats: dict[str, set[str]] = defaultdict(set)
         self.causes_by_actor: dict[str, set[str]] = defaultdict(set)
         self.event_years = {event.key: event.year for event in history.events}
         self.event_kinds = {event.key: event.kind for event in history.events}
@@ -53,6 +55,9 @@ class Context:
         for memory in self.state.memories:
             self.memories[memory.first, memory.second, memory.factor].append(memory)
             if memory.at(self.state.year):
+                if memory.factor in {Factor.FEAR, Factor.GRIEVANCE}:
+                    self.afraid.add(memory.first)
+                    self.threats[memory.first].add(memory.second)
                 self.causes_by_actor[memory.first].add(memory.cause)
                 self.causes_by_actor[memory.second].add(memory.cause)
         for known in self.state.knowledge:
@@ -66,6 +71,20 @@ class Context:
         self.burdens: dict[tuple[str, tuple[str, ...]], int] = {}
         self.distances: dict[tuple[str, str, tuple[str, ...]], int] = {}
         self.bond_pairs = {(bond.kind, bond.first, bond.second) for bond in self.state.bonds}
+        self.lords = {
+            bond.first: bond.second for bond in self.state.bonds if bond.kind is Action.DEPENDENCY
+        }
+        self.pact_participants = {
+            key
+            for bond in self.state.bonds
+            if bond.kind is Action.PACT
+            for key in (bond.first, bond.second)
+        }
+        self.recent_exchanges = {
+            tuple(sorted((bond.first, bond.second)))
+            for bond in self.state.bonds
+            if bond.kind is Action.EXCHANGE and self.event_years[bond.cause] > self.state.year - 15
+        }
         self._contacts()
         self.bound = {
             key
@@ -73,7 +92,7 @@ class Context:
             if bond.kind is Action.DEPENDENCY
             for key in (bond.first, bond.second)
         }
-        self.subjects = {bond.first for bond in self.state.bonds if bond.kind is Action.DEPENDENCY}
+        self.subjects = set(self.lords)
 
     def _contacts(self) -> None:
         self.near: dict[str, dict[str, int]] = defaultdict(dict)

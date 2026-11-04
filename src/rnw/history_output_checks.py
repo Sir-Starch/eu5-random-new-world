@@ -6,6 +6,7 @@ They complement the final plan's causal check; engine loading remains H7.
 
 from __future__ import annotations
 
+from collections import Counter
 from typing import TYPE_CHECKING
 
 from rnw import eu5_history_text as writer
@@ -166,3 +167,37 @@ def _event(written: writer.WrittenHistory, tags: set[str]) -> None:
         len(branches.entries) == len(tags) and selected == written.chronicles,
         "Chronicle descriptions differ from living country bindings",
     )
+
+
+def verify_diplomacy(plan: FinalStartPlan, text: str, original: str, gone: set[str]) -> None:
+    """Planned guarantees and subjecthood, with vanilla relations preserved."""
+    tags = {country.tag for country in plan.countries}
+
+    def records(source: str, key: str, kind_field: str) -> list[tuple[str, str, str]]:
+        manager = parse(source).block("diplomacy_manager")
+        require(manager is not None, "Diplomacy has no manager")
+        found: list[tuple[str, str, str]] = []
+        for entry in manager.find(key) if manager is not None else ():
+            require(isinstance(entry.value, Block), "Invalid directed diplomacy record")
+            if isinstance(entry.value, Block):
+                fields = {
+                    row.key: row.value for row in entry.value.entries if isinstance(row.value, str)
+                }
+                found.append(
+                    (fields.get("first", ""), fields.get("second", ""), fields.get(kind_field, ""))
+                )
+        return found
+
+    for key, kind_field, kind, planned in (
+        ("scripted_oneway", "type", "guarantee", plan.protections),
+        ("dependency", "subject_type", "vassal", plan.vassals),
+    ):
+        actual = records(text, key, kind_field)
+        expected = [(first, second, kind) for first, second in planned]
+        generated = [row for row in actual if {row[0], row[1]} & tags]
+        require(Counter(generated) == Counter(expected), "Written diplomacy differs from history")
+        require(
+            [row for row in actual if not {row[0], row[1]} & tags]
+            == [row for row in records(original, key, kind_field) if not {row[0], row[1]} & gone],
+            "Old World directed diplomacy differs from vanilla",
+        )

@@ -83,12 +83,11 @@ class HistoricalGroup:
 
 @dataclass(frozen=True, slots=True, eq=False)
 class FinalStartPlan:
-    """The complete projected start state; static construction supplies it in H1.
+    """The complete historical start state shared by all output consumers.
 
-    H4 will replace that construction with history's surviving outcomes. Writers and
-    verifiers consume this same boundary, including tribes and unorganized population.
-    ``population`` retains the calibrated society budget; ``pops`` also contains the
-    existing additive diaspora cohorts. H1 deliberately preserves that distinction.
+    The normal H4 path conserves the post-diaspora population and stores its exact
+    current totals in ``population``. Legacy static diagnostics retain H1's
+    calibrated-only population totals; their ``pops`` also include diaspora.
     """
 
     pops: dict[str, tuple[PopCohort, ...]]
