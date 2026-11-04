@@ -67,6 +67,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QStackedWidget,
     QToolButton,
@@ -87,6 +88,7 @@ if TYPE_CHECKING:
     from PySide6.QtGui import QMouseEvent, QResizeEvent, QShowEvent, QWheelEvent
 
     from rnw.atlas import Atlas
+    from rnw.history_presenter import Reader
 
 MUTED: Final[str] = ""
 SWATCH: Final[int] = 12
@@ -883,6 +885,7 @@ class MapsPanel(QWidget):
 
     def _card(self) -> None:
         """The card of the location clicked, over the top right of the map."""
+        self._history: Reader | None = None
         self.card: QFrame = QFrame(self.map_view.viewport())
         self.card.setFrameShape(QFrame.Shape.StyledPanel)
         self.card.setAutoFillBackground(True)
@@ -924,6 +927,7 @@ class MapsPanel(QWidget):
         atlas: Atlas | None,
         *,
         revealed: bool,
+        history: Reader | None = None,
         identity: int = 0,
         words: atlas_module.Words = atlas_module.ENGLISH,
     ) -> None:
@@ -932,20 +936,21 @@ class MapsPanel(QWidget):
         ``identity`` tells one world from another so that the picture is drawn afresh for a new
         one and kept (with its zoom) while only the lens or what is isolated changes.
         """
-        if atlas is None:
-            self._wanted = None
-            self._pending = None
-            self.loading.hide()
-            self.covered_notice.setText(text("no_atlas"))
-            self.reveal_button.setVisible(False)
-            self.pages.setCurrentIndex(0)
-            return
+        self._history = history if revealed else None
         if not revealed:
             self._wanted = None
             self._pending = None
             self.loading.hide()
             self.covered_notice.setText(text("covered_maps"))
             self.reveal_button.setVisible(True)
+            self.pages.setCurrentIndex(0)
+            return
+        if atlas is None:
+            self._wanted = None
+            self._pending = None
+            self.loading.hide()
+            self.covered_notice.setText(text("no_atlas"))
+            self.reveal_button.setVisible(False)
             self.pages.setCurrentIndex(0)
             return
         self._identity = (identity, id(words))
@@ -1286,10 +1291,56 @@ class MapsPanel(QWidget):
         )
         if facts.kind == "land":
             layout.addWidget(self._card_rows(facts))
+            if self._history is not None:
+                button = QPushButton(text("history.title"))
+                _ = button.clicked.connect(self._show_history)
+                layout.addWidget(button)
         self.card.adjustSize()
         self.card.move(self.map_view.viewport().width() - self.card.width() - 8, 8)
         self.card.setVisible(True)
         self.card.raise_()
+
+    def _show_history(self) -> None:
+        atlas, reader = self._atlas, self._history
+        if atlas is None or reader is None or self._pinned < 0:
+            return
+        facts = atlas_module.describe(atlas, self._pinned)
+        if facts is None:
+            return
+        sections = reader.country(facts.country.tag) if facts.country else ()
+        sections += reader.region(reader.name(facts.region))
+        dialog = QDialog(self)
+        dialog.setWindowTitle(text("history.title"))
+        dialog.resize(680, 640)
+        outer = QVBoxLayout(dialog)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        body = QWidget()
+        rows = QVBoxLayout(body)
+        for section in sections:
+            title = QLabel(section.title)
+            title.setStyleSheet("font-weight: bold")
+            rows.addWidget(title)
+            for line in section.lines:
+                label = QLabel(line.text)
+                label.setTextFormat(Qt.TextFormat.PlainText)
+                label.setWordWrap(True)
+                rows.addWidget(label)
+                if line.place >= 0:
+                    place = line.place
+                    button = QPushButton(reader.name(atlas.names[place]))
+                    _ = button.clicked.connect(
+                        lambda _checked=False, place=place: (
+                            dialog.accept(),
+                            self._pin(place),
+                            self._zoom_to((place,)),
+                        )
+                    )
+                    rows.addWidget(button)
+        rows.addStretch()
+        scroll.setWidget(body)
+        outer.addWidget(scroll)
+        _ = dialog.exec()
 
     def _card_rows(self, facts: atlas_module.Facts) -> QWidget:
         """A land location's country, culture, religion, resource and area, each a link that

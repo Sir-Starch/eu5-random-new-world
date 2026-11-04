@@ -912,6 +912,9 @@ def identifiers(atlas: Atlas) -> frozenset[str]:
     """The game's identifiers among the atlas's names, regions and areas: what ``written``
     asks the game to name."""
     found = {word for words in atlas.vocabulary.values() for word in words}
+    if atlas.history is not None:
+        found.update(country.government for country in atlas.history.countries)
+        found.update(country.rank for country in atlas.history.countries if country.rank)
     for value in (*atlas.regions, *atlas.areas, *atlas.names):
         if isinstance(value, str) and value:
             key = value.strip("$")

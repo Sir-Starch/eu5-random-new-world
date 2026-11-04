@@ -16,25 +16,32 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from rnw import atlas
 from rnw.app import library, random_types, service
 from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
+from rnw.eu5_history_plan import project_start
 from rnw.eu5_seas import SeaError
 from rnw.gui import maps as maps_module
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
+from rnw.history_presenter import Reader
 from rnw.record import Verdict
 from rnw.settings import RESOURCE_FIELDS
+from tests.history_fixtures import divided_valley
+from tests.test_history_archive import history_atlas
+from tests.test_history_plan import inputs_for
 from tests.test_recovery import _mod  # pyright: ignore[reportPrivateUsage]
 
 try:  # the window needs PySide6 and the system's graphics libraries
-    from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QUrl
+    from PySide6.QtCore import QMimeData, QPoint, QPointF, Qt, QTimer, QUrl
     from PySide6.QtGui import QDragEnterEvent, QDropEvent, QFont, QImage, QMouseEvent, QWheelEvent
     from PySide6.QtTest import QTest
     from PySide6.QtWidgets import (
         QApplication,
+        QDialog,
         QFileDialog,
         QLabel,
         QMessageBox,
@@ -474,7 +481,7 @@ def test_quick_buttons_set_the_controls_and_follow_the_sliders(
     window = _window(tmp_path, fake_export)
     controller = window.controller
     rows = {row.quick.name: row for row in window.quick_rows}
-    assert set(rows) == {"land", "peoples", "states", "empires", "wealth"}
+    assert set(rows) == {"land", "peoples", "states", "empires", "turbulence", "wealth"}
     assert rows["empires"].buttons["seldom"].isChecked()
     assert not rows["empires"].custom.isVisibleTo(window)
     rows["empires"].buttons["often"].click()
@@ -1252,3 +1259,59 @@ def test_wall_shape_controls_appear_when_the_wall_is_selected(
         assert decode(window.controller.code).settings().new_world.wall_width_permille == 110
     finally:
         _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_classic_history_uses_common_facts_and_place_links() -> None:
+    built = history_atlas(project_start(inputs_for(divided_valley())))
+    reader = Reader(built, "english", atlas.pretty)
+    panel = maps_module.MapsPanel()
+    panel.show_world(built, revealed=False, history=reader)
+    assert panel.pages.currentIndex() == 0
+    assert not panel.card.isVisible()
+    panel.show_world(built, revealed=True, history=reader)
+    panel.map_view.clicked.emit(0, 0)
+    button = next(
+        button
+        for button in panel.card.findChildren(QPushButton)
+        if button.text() == text("history.title")
+    )
+    seen: list[str] = []
+
+    def inspect() -> None:
+        dialog = QApplication.activeModalWidget()
+        if not isinstance(dialog, QDialog):
+            return
+        seen.extend(label.text() for label in dialog.findChildren(QLabel))
+        links = [
+            button
+            for button in dialog.findChildren(QPushButton)
+            if button.text() == reader.name(built.names[1])
+        ]
+        if links:
+            links[0].click()
+        else:
+            dialog.reject()
+
+    QTimer.singleShot(0, inspect)
+    button.click()
+    assert "Organization in 1337" in seen
+    assert "Chronicle" in seen
+    assert "Regional history" in seen
+    assert all(
+        any(line.startswith(label + ":") for line in seen)
+        for label in (
+            "Centralization",
+            "Authority",
+            "Livelihood",
+            "Exchange",
+            "Religious authority",
+            "Military orientation",
+            "Integration",
+            "Tradition",
+        )
+    )
+    assert any(
+        reader.name(built.names[1]) in label.text() for label in panel.card.findChildren(QLabel)
+    )
+    _ = panel.close()

@@ -37,5 +37,6 @@ def write_notices(folder: Path) -> None:
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     _ = shutil.copyfile(source, destination)
     _ = (target / "packages.txt").write_text("\n".join(lines), encoding="utf-8")
+    _ = shutil.copyfile(ROOT / "packaging/licenses/liblzma.txt", target / "liblzma.txt")
     for source in (ROOT / "LICENSE", ROOT / "packaging/THIRD_PARTY_NOTICES.md"):
         _ = shutil.copyfile(source, folder / source.name)

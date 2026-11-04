@@ -13,7 +13,7 @@ import locale
 from functools import cache
 from typing import Final
 
-from rnw import translations
+from rnw import history_presenter, translations
 from rnw.languages import SOURCE
 from rnw.messages import MESSAGES, Said
 from rnw.progress import STAGES
@@ -23,6 +23,16 @@ from rnw.worldfile import WorldFileError
 TITLE: Final[str] = "Random New World"
 GAME: Final[str] = "Europa Universalis V"
 STRINGS: Final[dict[str, str]] = {
+    "control.natives.turbulence_permille": "Historical turbulence",
+    "control.natives.turbulence_permille.about": (
+        "How often conflict and political change occur during "
+        "the three centuries before the campaign."
+    ),
+    "quick.turbulence": "Historical turbulence",
+    "quick.turbulence.about": "Conflict and political change before 1337.",
+    "quick.turbulence.calm": "Calm",
+    "quick.turbulence.varied": "Varied",
+    "quick.turbulence.turbulent": "Turbulent",
     "undo_roll": "Undo roll",
     "task.undo": "Restoring the previous version",
     "copy_tag": "Copy tag",
@@ -256,13 +266,9 @@ STRINGS: Final[dict[str, str]] = {
     "quick.states.many": "Many",
     "quick.empires": "Extraordinary peoples",
     "quick.empires.about": (
-        "How likely an extraordinary native society is to rise around each centre of culture. "
-        "A great empire, as the fantasy setting of EU4's random New World: one state many times "
-        "the size of the others, with an advanced government, the Old World's technology, a "
-        "higher rank and royal roads, feared by its neighbours and resented by its vassals. "
-        "Or a league of sea-trading republics, allied but divided by water; a confederation of "
-        "highland tribes; a fractured realm whose centres are each other's rivals; or a "
-        "sacred centre, a theocracy among rivals of its own faith."
+        "Chance of an extraordinary trajectory around each cultural hearth. History determines "
+        "whether a great empire, sea league, highland confederation, divided realm or sacred "
+        "centre takes shape and survives until 1337."
     ),
     "quick.empires.never": "Never",
     "quick.empires.seldom": "Seldom",
@@ -405,12 +411,9 @@ STRINGS: Final[dict[str, str]] = {
     "control.natives.tribe_locations.about": "Locations of a tribe, on average.",
     "control.natives.empire_permille": "Extraordinary peoples",
     "control.natives.empire_permille.about": (
-        "Chance, for each cultural hearth, that an extraordinary society rises around it: a "
-        "great empire (one state many times the size of the others, with an advanced "
-        "government, the Old World's technology, a higher rank and royal roads, feared by its "
-        "neighbours and resented by its vassals), a league of sea-trading republics, a "
-        "confederation of highland tribes, a fractured realm of rival centres or a sacred "
-        "centre with rivals of its faith."
+        "Chance of an extraordinary trajectory around each cultural hearth. History determines "
+        "whether a great empire, sea league, highland confederation, divided realm or sacred "
+        "centre takes shape and survives until 1337."
     ),
     "control.natives.state_locations": "State size",
     "control.natives.state_locations.about": "Locations of a native state, on average.",
@@ -893,6 +896,7 @@ def sources() -> dict[str, str]:
     """Every English string of the window, by key: the sources of the ``window`` catalogs."""
     return {
         **STRINGS,
+        **history_presenter.SOURCES,
         **{STAGE + name: info.label for name, info in STAGES.items()},
         **{ERROR + key: english for key, english in MESSAGES.items()},
     }

@@ -217,7 +217,13 @@ export interface CountryInfo {
   locations: number;
 }
 
+export interface HistorySection {
+  title: string;
+  lines: {text: string; place: number}[];
+}
+
 export interface AtlasBundle {
+  history?: {countries: Record<string, HistorySection[]>; regions: Record<string, HistorySection[]>} | null;
   id: string;
   name: string;
   size: [number, number];

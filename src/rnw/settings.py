@@ -128,6 +128,7 @@ class NativeSettings:
     empire_permille: int = 0
     # Peasant share at full societal complexity; lower-complexity land remains more tribal.
     peasant_peak_permille: int = 600
+    turbulence_permille: int = 500
 
 
 @dataclass(frozen=True, slots=True)
@@ -320,6 +321,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "state_spread_permille": (0, 1000),
     "empire_permille": (0, 1000),
     "peasant_peak_permille": (300, 800),
+    "turbulence_permille": (0, 1000),
     "resources": (0, 65_535),
     "peoples": (0, 65_535),
     "id": (0, (1 << 48) - 1),

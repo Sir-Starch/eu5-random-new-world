@@ -1904,10 +1904,11 @@ class MainWindow(QMainWindow):
 
     def _show_maps(self, world: World) -> None:
         controller = self.controller
-        found = controller.atlas(world)
+        found = controller.atlas(world) if controller.revealed(world) else None
         self.maps.show_world(
             found,
             revealed=controller.revealed(world),
+            history=controller.history_reader(world),
             identity=sum(world.id.encode()),
             words=controller.words(found) if found is not None else atlas_module.ENGLISH,
         )

@@ -124,7 +124,7 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
         empire_permille=settings.empire_permille,
         checkpoint=checkpoint,
     )
-    history = simulate(root.history, checkpoint=checkpoint)
+    history = simulate(root.history, turbulence=settings.turbulence_permille, checkpoint=checkpoint)
     return project_start(
         ProjectionInputs(
             root,

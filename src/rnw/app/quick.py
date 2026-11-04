@@ -125,6 +125,13 @@ QUICK: Final[tuple[Quick, ...]] = (
         ),
     ),
     Quick(
+        "turbulence",
+        tuple(
+            Level(name, (Part("natives.turbulence_permille", fixed=number),))
+            for name, number in (("calm", 200), ("varied", 500), ("turbulent", 800))
+        ),
+    ),
+    Quick(
         "wealth",
         _scaled("new_world.precious_permille", ("scarce", 350), ("normal", 1000), ("rich", 2000)),
     ),

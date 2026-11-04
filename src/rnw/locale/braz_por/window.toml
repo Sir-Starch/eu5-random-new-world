@@ -507,8 +507,8 @@ source = "492aaf62e6d759a9"
 text = '''Povos extraordinários'''
 
 ["quick.empires.about"]
-source = "7d5f92b53bffae0b"
-text = '''A chance de surgir uma sociedade nativa extraordinária em torno de cada centro de cultura. Um grande império, como no modo de fantasia do Novo Mundo aleatório do EU4: um Estado muitas vezes maior que os outros, com governo avançado, a tecnologia do Velho Mundo, uma posição mais alta e estradas reais, temido pelos vizinhos e odiado pelos vassalos. Ou uma liga de repúblicas mercantes do mar, aliadas mas separadas pela água; uma confederação de tribos das montanhas; um reino fragmentado cujos centros são rivais entre si; ou um centro sagrado, uma teocracia cercada de rivais da mesma fé.'''
+source = "da5a02b9e0acab8d"
+text = '''Chance de uma trajetória extraordinária em torno de cada núcleo cultural. A história determina se um grande império, uma liga marítima, uma confederação das terras altas, um reino dividido ou um centro sagrado se forma e sobrevive até 1337.'''
 
 ["quick.empires.never"]
 source = "6300ef800bb88429"
@@ -851,8 +851,8 @@ source = "492aaf62e6d759a9"
 text = '''Povos extraordinários'''
 
 ["control.natives.empire_permille.about"]
-source = "3a67bce42d61dc85"
-text = '''Chance, para cada foco cultural, de surgir em volta dele uma sociedade extraordinária: um grande império (um Estado muitas vezes maior que os outros, com governo avançado, a tecnologia do Velho Mundo, uma posição mais alta e estradas reais, temido pelos vizinhos e odiado pelos vassalos), uma liga de repúblicas mercantes do mar, uma confederação de tribos das montanhas, um reino fragmentado de centros rivais ou um centro sagrado cercado de rivais da sua fé.'''
+source = "da5a02b9e0acab8d"
+text = '''Chance de uma trajetória extraordinária em torno de cada núcleo cultural. A história determina se um grande império, uma liga marítima, uma confederação das terras altas, um reino dividido ou um centro sagrado se forma e sobrevive até 1337.'''
 
 ["control.natives.state_locations"]
 source = "f02a5b0258f32933"
@@ -2551,3 +2551,223 @@ text = "Permitir interrupções na muralha"
 ["control.new_world.wall_allow_gaps.about"]
 source = "0f6122a6366c9748"
 text = "O campo de densidade pode formar ilhas e passagens marítimas. Desative para exigir um núcleo contínuo. A quantidade de terra, a escala e as costas definem o resultado."
+
+["history.title"]
+source = "a257e343055a304d"
+text = '''Sociedade e história'''
+
+["history.region"]
+source = "a66d54e4d6455f3d"
+text = '''História regional'''
+
+["history.none"]
+source = "a8f79216631a7146"
+text = '''Sem história registrada'''
+
+["history.profile"]
+source = "6733eee01a50fdaa"
+text = '''Organização em 1337'''
+
+["history.chronicle"]
+source = "619aad1b467af62e"
+text = '''Crônica'''
+
+["history.relations"]
+source = "18265b0039496fc7"
+text = '''Relações e seus motivos'''
+
+["history.inheritance"]
+source = "b849349447d50508"
+text = '''Heranças compartilhadas'''
+
+["history.projected"]
+source = "ce66466ccde1a893"
+text = '''EU5: {relations}'''
+
+["history.memory"]
+source = "d111a3f697797053"
+text = '''Memória: {reason}'''
+
+["history.position"]
+source = "262564cc218aaf61"
+text = '''Governo: {government} · Categoria: {rank} · Tecnologia: {level}'''
+
+["history.axis"]
+source = "12851adbf1ec80f5"
+text = '''{axis}: {value} — {cause} ({year})'''
+
+["history.shared"]
+source = "90a4d2b24076176a"
+text = '''{kind}: {members}'''
+
+["history.changes"]
+source = "184fcdd4812c8b05"
+text = '''{year} · Localidades que mudaram de proprietário histórico: {count}'''
+
+["history.centralization"]
+source = "88dfca338c6dd49b"
+text = '''Centralização'''
+
+["history.authority"]
+source = "b80e403d2645d45e"
+text = '''Autoridade'''
+
+["history.livelihood"]
+source = "4a8dc26c1d721698"
+text = '''Subsistência'''
+
+["history.exchange"]
+source = "d60a318dd8a0cdc8"
+text = '''Trocas'''
+
+["history.religious_authority"]
+source = "c5251a17fd402d90"
+text = '''Autoridade religiosa'''
+
+["history.military"]
+source = "d668385d05402a6f"
+text = '''Orientação militar'''
+
+["history.integration"]
+source = "9a42d40a3f319da5"
+text = '''Integração'''
+
+["history.tradition"]
+source = "6cc5a78d010999ff"
+text = '''Tradição'''
+
+["history.council"]
+source = "15b42c09c8a6f64f"
+text = '''Conselho'''
+
+["history.ruler"]
+source = "6be47329eb50565e"
+text = '''Governo pessoal'''
+
+["history.sacred"]
+source = "8ae6336f2ed50266"
+text = '''Autoridade sagrada'''
+
+["history.customary"]
+source = "d0a2add9efd96b87"
+text = '''Autoridade costumeira'''
+
+["history.farming"]
+source = "a61abd5d17a01f86"
+text = '''Agricultura'''
+
+["history.mixed"]
+source = "993381e2aa224a41"
+text = '''Subsistência mista'''
+
+["history.mobile"]
+source = "260237d153f61bdd"
+text = '''Subsistência móvel'''
+
+["history.inward"]
+source = "44b81cb202900597"
+text = '''Trocas locais'''
+
+["history.overland"]
+source = "6aa7910663a4bdc0"
+text = '''Trocas terrestres'''
+
+["history.coastal"]
+source = "26ee55f2facebb41"
+text = '''Trocas costeiras'''
+
+["history.balanced"]
+source = "5386ea5db81c8579"
+text = '''Equilibrada'''
+
+["history.offensive"]
+source = "6076629b56d9c3f0"
+text = '''Ofensiva'''
+
+["history.defensive"]
+source = "892ad8f258bcb335"
+text = '''Defensiva'''
+
+["history.vassal"]
+source = "713b56e7693500c8"
+text = '''Relação de dependência'''
+
+["history.alliance"]
+source = "afe3c1947d3b3a6e"
+text = '''Aliança'''
+
+["history.rival"]
+source = "43a08bd8d30e31a1"
+text = '''Rivalidade'''
+
+["history.guarantee"]
+source = "788b8a0ad50ab000"
+text = '''Garantia'''
+
+["history.trade"]
+source = "60db3cf06e888a68"
+text = '''Acordo de trocas'''
+
+["history.great_empire"]
+source = "48c7f845e7693232"
+text = '''Grande império'''
+
+["history.sea_league"]
+source = "2aa2e540589bee48"
+text = '''Liga marítima'''
+
+["history.highland_confederation"]
+source = "23a35a129773a686"
+text = '''Confederação das terras altas'''
+
+["history.sacred_centre"]
+source = "69636b2ec46d83eb"
+text = '''Centro sagrado'''
+
+["history.fractured_realm"]
+source = "5d47364eeea86569"
+text = '''Reino dividido'''
+
+["control.natives.turbulence_permille"]
+source = "c767486ed60a9a9f"
+text = '''Turbulência histórica'''
+
+["control.natives.turbulence_permille.about"]
+source = "d0afc69ea72a3585"
+text = '''Frequência de conflitos e mudanças políticas nos três séculos anteriores à campanha.'''
+
+["quick.turbulence"]
+source = "c767486ed60a9a9f"
+text = '''Turbulência histórica'''
+
+["quick.turbulence.about"]
+source = "b046a1ac8e49ed3e"
+text = '''Conflitos e mudanças políticas antes de 1337.'''
+
+["quick.turbulence.calm"]
+source = "38f6b83e2dc175c7"
+text = '''Calma'''
+
+["quick.turbulence.varied"]
+source = "bceec6185b968230"
+text = '''Variada'''
+
+["quick.turbulence.turbulent"]
+source = "434f9e629dbfd65a"
+text = '''Turbulenta'''
+
+["history.monarchy"]
+source = "da9a0538c238f4fe"
+text = '''Monarquia'''
+
+["history.republic"]
+source = "78fc35976626ef3b"
+text = '''República'''
+
+["history.theocracy"]
+source = "9b57550fefbd7eb6"
+text = '''Teocracia'''
+
+["history.tribe"]
+source = "6c49567d58669cda"
+text = '''Tribo'''

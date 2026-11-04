@@ -185,10 +185,11 @@ def render(entry: Sentence | Chronicle, language: str, texts: Mapping[str, str])
     return texts[entry.source].format_map(values)
 
 
-def _family(event: Event) -> str:
-    if event.outcome is Outcome.FAILED:
-        return "resisted" if event.kind is Action.REFORM else "repelled"
-    return event.kind.value
+def event_family(kind: Action, outcome: Outcome) -> str:
+    """The shared factual template family for a recorded outcome."""
+    if outcome is Outcome.FAILED:
+        return "resisted" if kind is Action.REFORM else "repelled"
+    return kind.value
 
 
 def opinion_text(opinion: HistoricalOpinion, names: Mapping[str, Name], event: Event) -> Sentence:
@@ -198,7 +199,10 @@ def opinion_text(opinion: HistoricalOpinion, names: Mapping[str, Name], event: E
     )
     text = Sentence(
         f"rnw_history_opinion_{opinion.factor}",
-        (("cause", Sentence(f"rnw_history_cause_{_family(event)}")), ("year", event.year)),
+        (
+            ("cause", Sentence(f"rnw_history_cause_{event_family(event.kind, event.outcome)}")),
+            ("year", event.year),
+        ),
     )
     return (
         Sentence("rnw_history_opinion_place", (("text", text), ("place", names[opinion.place])))
@@ -245,7 +249,7 @@ def _row(
     labels = [plan.names[actors[key].seat] for key in participants]
     if event.kind is Action.MIGRATION:
         labels = [plan.names[settlement.district] for settlement in event.effects.settlements]
-    family = _family(event)
+    family = event_family(event.kind, event.outcome)
     variant = derive_seed(history.seed, "history", "wording", event.key) % 2
     text = Sentence(
         f"rnw_history_{family}_{variant}",

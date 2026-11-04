@@ -507,8 +507,8 @@ source = "492aaf62e6d759a9"
 text = '''Olağanüstü halklar'''
 
 ["quick.empires.about"]
-source = "7d5f92b53bffae0b"
-text = '''Her kültür merkezinin çevresinde olağanüstü bir yerli toplumun doğma olasılığı. EU4'ün rastgele Yeni Dünya'sının fantastik modundaki gibi büyük bir imparatorluk: diğerlerinden kat kat büyük, gelişmiş bir yönetimi, Eski Dünya teknolojisi, daha yüksek rütbesi ve kraliyet yolları olan, komşularının korktuğu ve vasallarının nefret ettiği bir devlet. Ya da müttefik ama sularla ayrılmış deniz ticareti cumhuriyetlerinden bir birlik; dağ kabilelerinden bir konfederasyon; merkezleri birbirinin rakibi olan parçalanmış bir krallık; veya aynı inançtan rakipler arasında bir teokrasi olan kutsal bir merkez.'''
+source = "da5a02b9e0acab8d"
+text = '''Her kültür odağı çevresinde sıra dışı bir gelişim yolunun başlama ihtimali. Büyük bir imparatorluğun, deniz birliğinin, yayla konfederasyonunun, bölünmüş bir ülkenin veya kutsal merkezin oluşup 1337’ye kadar sürüp sürmeyeceğini tarih belirler.'''
 
 ["quick.empires.never"]
 source = "6300ef800bb88429"
@@ -851,8 +851,8 @@ source = "492aaf62e6d759a9"
 text = '''Olağanüstü halklar'''
 
 ["control.natives.empire_permille.about"]
-source = "3a67bce42d61dc85"
-text = '''Her kültür ocağının çevresinde olağanüstü bir toplumun doğma olasılığı: büyük bir imparatorluk (diğerlerinden kat kat büyük, gelişmiş bir yönetimi, Eski Dünya teknolojisi, daha yüksek rütbesi ve kraliyet yolları olan, komşularının korktuğu ve vasallarının nefret ettiği bir devlet), deniz ticareti cumhuriyetlerinden bir birlik, dağ kabilelerinden bir konfederasyon, birbirine rakip merkezlerden oluşan parçalanmış bir krallık ya da aynı inançtan rakiplerle çevrili kutsal bir merkez.'''
+source = "da5a02b9e0acab8d"
+text = '''Her kültür odağı çevresinde sıra dışı bir gelişim yolunun başlama ihtimali. Büyük bir imparatorluğun, deniz birliğinin, yayla konfederasyonunun, bölünmüş bir ülkenin veya kutsal merkezin oluşup 1337’ye kadar sürüp sürmeyeceğini tarih belirler.'''
 
 ["control.natives.state_locations"]
 source = "f02a5b0258f32933"
@@ -2551,3 +2551,223 @@ text = "Duvarda boşluklara izin ver"
 ["control.new_world.wall_allow_gaps.about"]
 source = "0f6122a6366c9748"
 text = "Yoğunluk alanı adalar ve deniz geçitleri oluşturabilir. Kesintisiz kara çekirdeği için kapatın. Kara miktarı, ölçek ve kıyı girintileri sonucu belirler."
+
+["history.title"]
+source = "a257e343055a304d"
+text = '''Toplum ve tarih'''
+
+["history.region"]
+source = "a66d54e4d6455f3d"
+text = '''Bölge tarihi'''
+
+["history.none"]
+source = "a8f79216631a7146"
+text = '''Kayıtlı tarih yok'''
+
+["history.profile"]
+source = "6733eee01a50fdaa"
+text = '''1337’deki yapı'''
+
+["history.chronicle"]
+source = "619aad1b467af62e"
+text = '''Kronik'''
+
+["history.relations"]
+source = "18265b0039496fc7"
+text = '''İlişkiler ve nedenleri'''
+
+["history.inheritance"]
+source = "b849349447d50508"
+text = '''Ortak miras'''
+
+["history.projected"]
+source = "ce66466ccde1a893"
+text = '''EU5: {relations}'''
+
+["history.memory"]
+source = "d111a3f697797053"
+text = '''Hafıza: {reason}'''
+
+["history.position"]
+source = "262564cc218aaf61"
+text = '''Yönetim: {government} · Derece: {rank} · Teknoloji: {level}'''
+
+["history.axis"]
+source = "12851adbf1ec80f5"
+text = '''{axis}: {value} — {cause} ({year})'''
+
+["history.shared"]
+source = "90a4d2b24076176a"
+text = '''{kind}: {members}'''
+
+["history.changes"]
+source = "184fcdd4812c8b05"
+text = '''{year} · Tarihî sahibi değişen yerleşimler: {count}'''
+
+["history.centralization"]
+source = "88dfca338c6dd49b"
+text = '''Merkezîleşme'''
+
+["history.authority"]
+source = "b80e403d2645d45e"
+text = '''Otorite'''
+
+["history.livelihood"]
+source = "4a8dc26c1d721698"
+text = '''Geçim'''
+
+["history.exchange"]
+source = "d60a318dd8a0cdc8"
+text = '''Mübadele'''
+
+["history.religious_authority"]
+source = "c5251a17fd402d90"
+text = '''Dinî otorite'''
+
+["history.military"]
+source = "d668385d05402a6f"
+text = '''Askerî yönelim'''
+
+["history.integration"]
+source = "9a42d40a3f319da5"
+text = '''Bütünleşme'''
+
+["history.tradition"]
+source = "6cc5a78d010999ff"
+text = '''Gelenek'''
+
+["history.council"]
+source = "15b42c09c8a6f64f"
+text = '''Meclis'''
+
+["history.ruler"]
+source = "6be47329eb50565e"
+text = '''Kişisel yönetim'''
+
+["history.sacred"]
+source = "8ae6336f2ed50266"
+text = '''Kutsal otorite'''
+
+["history.customary"]
+source = "d0a2add9efd96b87"
+text = '''Geleneksel otorite'''
+
+["history.farming"]
+source = "a61abd5d17a01f86"
+text = '''Tarım'''
+
+["history.mixed"]
+source = "993381e2aa224a41"
+text = '''Karma geçim'''
+
+["history.mobile"]
+source = "260237d153f61bdd"
+text = '''Göçebe geçim'''
+
+["history.inward"]
+source = "44b81cb202900597"
+text = '''Yerel mübadele'''
+
+["history.overland"]
+source = "6aa7910663a4bdc0"
+text = '''Kara mübadelesi'''
+
+["history.coastal"]
+source = "26ee55f2facebb41"
+text = '''Kıyı mübadelesi'''
+
+["history.balanced"]
+source = "5386ea5db81c8579"
+text = '''Dengeli'''
+
+["history.offensive"]
+source = "6076629b56d9c3f0"
+text = '''Saldırgan'''
+
+["history.defensive"]
+source = "892ad8f258bcb335"
+text = '''Savunmacı'''
+
+["history.vassal"]
+source = "713b56e7693500c8"
+text = '''Tabiiyet ilişkisi'''
+
+["history.alliance"]
+source = "afe3c1947d3b3a6e"
+text = '''İttifak'''
+
+["history.rival"]
+source = "43a08bd8d30e31a1"
+text = '''Rekabet'''
+
+["history.guarantee"]
+source = "788b8a0ad50ab000"
+text = '''Garanti'''
+
+["history.trade"]
+source = "60db3cf06e888a68"
+text = '''Mübadele anlaşması'''
+
+["history.great_empire"]
+source = "48c7f845e7693232"
+text = '''Büyük imparatorluk'''
+
+["history.sea_league"]
+source = "2aa2e540589bee48"
+text = '''Deniz birliği'''
+
+["history.highland_confederation"]
+source = "23a35a129773a686"
+text = '''Yayla konfederasyonu'''
+
+["history.sacred_centre"]
+source = "69636b2ec46d83eb"
+text = '''Kutsal merkez'''
+
+["history.fractured_realm"]
+source = "5d47364eeea86569"
+text = '''Bölünmüş ülke'''
+
+["control.natives.turbulence_permille"]
+source = "c767486ed60a9a9f"
+text = '''Tarihî çalkantı'''
+
+["control.natives.turbulence_permille.about"]
+source = "d0afc69ea72a3585"
+text = '''Seferden önceki üç yüzyılda çatışma ve siyasi değişimlerin sıklığı.'''
+
+["quick.turbulence"]
+source = "c767486ed60a9a9f"
+text = '''Tarihî çalkantı'''
+
+["quick.turbulence.about"]
+source = "b046a1ac8e49ed3e"
+text = '''1337’den önceki çatışmalar ve siyasi değişimler.'''
+
+["quick.turbulence.calm"]
+source = "38f6b83e2dc175c7"
+text = '''Sakin'''
+
+["quick.turbulence.varied"]
+source = "bceec6185b968230"
+text = '''Çeşitli'''
+
+["quick.turbulence.turbulent"]
+source = "434f9e629dbfd65a"
+text = '''Çalkantılı'''
+
+["history.monarchy"]
+source = "da9a0538c238f4fe"
+text = '''Monarşi'''
+
+["history.republic"]
+source = "78fc35976626ef3b"
+text = '''Cumhuriyet'''
+
+["history.theocracy"]
+source = "9b57550fefbd7eb6"
+text = '''Teokrasi'''
+
+["history.tribe"]
+source = "6c49567d58669cda"
+text = '''Kabile'''

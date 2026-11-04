@@ -52,7 +52,7 @@ Paths below are relative to `src/rnw/` unless stated otherwise.
 | Export orchestration and script remapping | `eu5_nw_export.py`, `eu5_canvas.py`, `eu5_pacific.py`, `eu5_islands.py`, `eu5_newworld.py`, `eu5_rewrite.py`, `eu5_remap.py`, `eu5_events.py`, `pdx.py`, `artifacts.py` |
 | Discovery, world library and recovery | `app/discovery.py`, `app/paths.py`, `app/library.py`, `app/recovery.py`, `app/worldcode.py`, `app/preferences.py` |
 | Generation and installation service | `app/service.py`, `app/controls.py`, `app/install.py`, `progress.py`, `app/session.py`; session inspection is read-only |
-| Atlas, previews and world naming | `pictures.py`, `tagfont.py`, `worldname.py`, `atlas.py`; the viewer reads library data, not map-generation inputs |
+| Atlas, previews and world naming | `history_archive.py`, `history_archive_checks.py`, `history_presenter.py` (bounded portable history and shared reading); `pictures.py`, `tagfont.py`, `worldname.py`, `atlas.py`; the viewer reads library data, not map-generation inputs |
 | UI and text | `gui/controller.py`, `gui/window.py`, `gui/maps.py`, `gui/text.py`, `messages.py`, `app/gamenames.py`; `gui/start.py` chooses the window; the Tauri window is `gui/bridge.py` + `gui/view.py` (JSON-lines protocol and state) and repository `desktop/` (Svelte interface, Rust shell); the classic window is `gui/classic.py` + `gui/window.py`, drawing the maps through `gui/mapstyle.py` with the look both windows read from `gui/lenses.json` |
 | Version and reproducibility | `epoch.py`, `record.py`, `inputs.py`; product version comes from `pyproject.toml` |
 | CLI | `cli.py`; run `uv run rnw --help` for current commands |

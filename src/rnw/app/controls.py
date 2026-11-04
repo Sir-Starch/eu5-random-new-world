@@ -147,6 +147,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("natives.culture_locations", "peoples", 5, 40),
     Control("natives.religion_locations", "peoples", 20, 200, logarithmic=True),
     Control("natives.tribe_locations", "peoples", 4, 15),
+    Control("natives.turbulence_permille", "peoples", 0, 1000),
     Control("natives.empire_permille", "peoples", 0, 1000, factor=10, decimals=1, unit="percent"),
     Control(
         "natives.peasant_peak_permille", "peoples", 300, 800, factor=10, decimals=1, unit="percent"

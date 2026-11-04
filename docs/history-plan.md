@@ -56,7 +56,7 @@ chronicle, the reasons behind each relationship, and a regional overview.
 | [`content.py`](../src/rnw/content.py), [`storymodel.py`](../src/rnw/storymodel.py), [`eu5_story.py`](../src/rnw/eu5_story.py) | Story eligibility, event graphs, translated static text, hidden binding events | Eligibility reads plan facts; event/localization pattern for the chronicle |
 | [`eu5_ai.py`](../src/rnw/eu5_ai.py) | AI context from neighbours, allies, rivals, threats, subjects | Reads the final plan |
 | [`layers.py`](../src/rnw/layers.py), [ADR 0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) | Separate land, resources and peoples | History belongs to peoples |
-| [`atlas.py`](../src/rnw/atlas.py), [`worldfile.py`](../src/rnw/worldfile.py) | Atlas (`format` 1), `atlas.json` member limit 32 MiB, world total 100 MiB | Atlas `format` 2 with a bounded history section |
+| [`atlas.py`](../src/rnw/atlas.py), [`worldfile.py`](../src/rnw/worldfile.py) | Atlas (`format` 2), `atlas.json` member limit 32 MiB, world total 100 MiB | Atlas `format` 3 with a bounded history section |
 | [`wording.py`](../src/rnw/wording.py), [localization](localization.md) | Gender/genitive agreement for generated names; generic noun before a generated name in inflected languages | Chronicle and opinion templates |
 | [`rng.py`](../src/rnw/rng.py), [`app/worldcode.py`](../src/rnw/app/worldcode.py) | Named integer streams; append-only `CHANGE_FIELDS` | Simulation draws; the new turbulence field |
 
@@ -116,7 +116,7 @@ on these observations.
 | D12 | Existing systems | Refactored first into a final start plan with byte-equal output (H1), then fed by history |
 | D13 | Reading surface | Generator atlas in both windows; in-game opinions and chronicle; structured chronicle text, not free prose |
 | D14 | Player control | History always on; one new control, **Historical turbulence** (Calm/Varied/Turbulent), field `natives.turbulence_permille` |
-| D15 | Atlas | `format` 2 with a `history` section inside `atlas.json`; format 1 stays readable and shows no history |
+| D15 | Atlas | `format` 3 with a `history` section inside `atlas.json`; formats 1/2 stay readable and show no history (implementation correction below) |
 | D16 | Stories | Existing families read plan facts; no new story family in 1.2.0 |
 | D17 | Technology | Unchanged derivation: templates by complexity, the calibrated level for realized great empires |
 | D18 | Engine check | One batched owner sitting at H7; fallbacks decided in advance |
@@ -419,7 +419,7 @@ no personalities, named battles, doctrines or death tolls.
 
 ## 14. Atlas, portability and spoilers
 
-- Atlas `format` 2 adds a `history` key inside `atlas.json`, with no new archive
+- Atlas `format` 3 adds a `history` key inside `atlas.json`, with no new archive
   member. It holds living actors and the extinct actors needed to explain them,
   lineage, chronicle events, the causal closure of every projected fact, and
   sparse ownership changes. It never holds per-round rasters.
@@ -427,12 +427,19 @@ no personalities, named battles, doctrines or death tolls.
   (`atlas.json` limit 32 MiB; current reference 804 KiB). There are explicit caps
   on actor, event and string counts, nesting and reference depth. Import checks
   chronology, references and the absence of causal cycles.
-- A `format` 1 world shows "no recorded history" and nothing is invented for it.
-  An older application rejects `format` 2 explicitly.
+- A `format` 1/2 world shows "no recorded history" and nothing is invented for it.
+  An older application rejects `format` 3 explicitly.
 - Covered worlds reveal no names, counts, neighbours, chronicle titles or political
   structure through summaries, hover text, search or file metadata. History is
   revealed with the world's existing reveal action.
 - Ownership replay, network and lineage views are after 1.2.0.
+
+**Implementation correction, 2026-11-04:** the existing source already uses atlas
+format 2 for structured names (L1), and its reader ignores unknown object fields.
+Reusing that number would let an older application silently discard history.
+Format 3 preserves the intended rejection boundary while retaining readers for
+both earlier formats. This changes the internal format number, not the promised
+reading capabilities or the public backward-compatibility contract.
 
 ## 15. Player control and world codes
 
@@ -491,7 +498,7 @@ halfway through history is not needed.
 | H2 History core | Model, rounds, arbitration, contact/union/conflict/dependency/separation, directed memory, causal validator | Synthetic fixtures pass; the *divided valley* fixture reproduces |
 | H3 Societies | Eight dimensions, reform, trajectories, conservative migration | Profiles diverge with history; identity survives conquest |
 | H4 Projection | Plan from history; all core consequences ([§11](#11-eu5-projection)); named opinions; decision; economy, roads, discovery, AI | Model and written output agree; pending epoch 61 and goldens |
-| H5 Reading | Atlas `format` 2, both windows, structured text in every language, spoilers | Covered/revealed, import and recovery flows; 1.1.0 worlds read |
+| H5 Reading | Atlas `format` 3, both windows, structured text in every language, spoilers | Covered/revealed, import and recovery flows; 1.1.0 worlds read |
 | H6 Continuity | Existing story eligibility from plan facts; clean end of obsolete bindings | Content tests; no new family |
 | H7 Calibration and delivery | Thresholds on both seed sets, performance, reference world, package self-test, candidate install, hub update, one owner sitting, fallbacks if needed | [§18](#18-acceptance-criteria) met; release notes |
 
@@ -578,6 +585,14 @@ H2 schema.
   skips, 23 Rust; strict types and lint). Portable history, both reading surfaces
   and controls remain H5 work; no H7 time/memory threshold is claimed.
 
+- **H5, reading completed 2026-11-04:** [portable facts and shared reading](history-core.md#portable-reading-and-controls-h5)
+  add atlas format 3, bounded import and ownership replay, localized society/profile,
+  chronicle, relationship and regional panels in both windows, reveal protection and
+  the turbulence control. Full checks pass (2,716 Python, 17 optional skips, 23 Rust),
+  as do Tauri checks/build and 15 tests, browser flow, synthetic import/recovery and
+  the classic dialog/place-link case. The reference native plan's portable record
+  is 1.956 MiB and round-trips; H7 seed-set and performance acceptance remain separate.
+
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
 them into three successors in 1227 without any change of culture. In 1282 the
@@ -599,6 +614,7 @@ generator reading surface, every language, and H7.
 6. internal-only dimensions (summary lines removed).
 
 A cut is recorded here and in the release notes.
+
 
 ## 18. Acceptance criteria
 

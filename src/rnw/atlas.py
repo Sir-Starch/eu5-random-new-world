@@ -31,6 +31,8 @@ from typing import TYPE_CHECKING, Final, cast
 import numpy as np
 from PIL import Image
 
+from rnw import history_archive
+from rnw.history_archive_checks import validate as validate_history
 from rnw.png import COLOR_RGB, encode_png
 from rnw.wording import Name, Phrase, english
 
@@ -39,10 +41,10 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
-# Format 2 keeps names as phrases (``wording``), written in the viewer's language; format 1 kept
-# them as English text and is still read.
-FORMAT: Final[int] = 2
-READS: Final[frozenset[int]] = frozenset({1, 2})
+# Format 3 adds bounded causal history; format 2 keeps structured names.
+# Format 1 kept English names. Both earlier formats remain readable.
+FORMAT: Final[int] = 3
+READS: Final[frozenset[int]] = frozenset({1, 2, 3})
 JSON_FILE: Final[str] = "atlas.json"
 LABELS_FILE: Final[str] = "atlas_labels.png"
 LAYERS: Final[tuple[str, ...]] = (
@@ -209,6 +211,7 @@ class Atlas:
     centre: NDArray[np.int32]
     countries: tuple[Country, ...]
     vocabulary: dict[str, tuple[str, ...]]
+    history: history_archive.Archive | None = None
 
     @property
     def size(self) -> tuple[int, int]:
@@ -634,6 +637,7 @@ def to_files(atlas: Atlas) -> tuple[bytes, bytes]:
     png = encode_png(raster, color_type=COLOR_RGB, compression="zlib")
     document: dict[str, object] = {
         "format": FORMAT,
+        "history": history_archive.pack(atlas.history) if atlas.history is not None else None,
         "scale": atlas.scale,
         "size": list(atlas.size),
         "vocabulary": {name: list(words) for name, words in atlas.vocabulary.items()},
@@ -679,13 +683,20 @@ def from_files(document: bytes, labels_png: bytes) -> Atlas:
         return _parse(document, labels_png)
     except AtlasError:
         raise
-    except (KeyError, TypeError, ValueError, OSError, UnicodeDecodeError) as error:
+    except (KeyError, TypeError, ValueError, OSError, UnicodeDecodeError, RecursionError) as error:
         message = f"The atlas is damaged: {error!r}"
         raise AtlasError(message) from error
 
 
 def _parse(document: bytes, labels_png: bytes) -> Atlas:
-    data = cast("dict[str, object]", json.loads(document.decode("utf-8")))
+    if len(document) > 32 * 1024 * 1024:
+        message = "The atlas document is too large"
+        raise AtlasError(message)
+    parsed = cast("object", json.loads(document.decode("utf-8")))
+    if not isinstance(parsed, dict):
+        message = "The atlas document is not an object"
+        raise AtlasError(message)
+    data = cast("dict[str, object]", parsed)
     if data.get("format") not in READS:
         message = f"The atlas has format {data.get('format')!r}; this generator reads {FORMAT}"
         raise AtlasError(message)
@@ -708,7 +719,7 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         name: tuple(str(word) for word in words)
         for name, words in cast("dict[str, list[object]]", data["vocabulary"]).items()
     }
-    return Atlas(
+    found = Atlas(
         scale=_int(data["scale"]),
         labels=labels,
         keys=tuple(str(v) for v in columns["key"]),
@@ -729,6 +740,22 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         centre=np.array(columns["centre"], dtype=np.int32).reshape(count, 2),
         countries=countries,
         vocabulary=vocabulary,
+        history=history_archive.unpack(data["history"])
+        if data["format"] == FORMAT and data.get("history") is not None
+        else None,
+    )
+    if found.history is not None:
+        validate_history(found.history, history_links(found))
+    return found
+
+
+def history_links(atlas: Atlas) -> history_archive.AtlasLinks:
+    """The atlas facts a portable history must reproduce."""
+    return history_archive.AtlasLinks(
+        atlas.keys,
+        tuple(int(v) for v in atlas.owner),
+        tuple((c.tag, c.capital) for c in atlas.countries),
+        frozenset(int(i) for i in np.flatnonzero(atlas.kinds == 0)),
     )
 
 

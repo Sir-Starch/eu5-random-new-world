@@ -6,6 +6,7 @@ The runtime libraries remain separate and replaceable files.
 
 | Component | Licence | Source |
 | --- | --- | --- |
+| liblzma (Python lzma and Pillow runtime) | 0BSD and bundled notices | https://tukaani.org/xz/ |
 | CPython | PSF-2.0 and bundled notices | https://www.python.org/downloads/source/ |
 | Qt for Python: PySide6 Essentials, Shiboken6 | LGPL-3.0, with the GPL alternatives identified in each wheel | https://code.qt.io/cgit/pyside/pyside-setup.git/ |
 | Qt libraries | LGPL-3.0 and the notices of the shipped Qt modules | https://download.qt.io/official_releases/qt/ |

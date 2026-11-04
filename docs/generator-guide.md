@@ -144,6 +144,11 @@ for more control:
   inhabited land, including outside states. Areas with poorer farmland or less complex
   societies remain more tribal.
 
+**Historical turbulence** sets the frequency of conflict and political change in the
+three centuries before 1337: **Calm**, **Varied** (default) or **Turbulent**. Advanced
+allows values from 0 to 1000. History remains active at every value. Extraordinary
+peoples seeds possible paths; their survival follows from the simulated history.
+
 ### Adjust resources
 
 **Advanced → Resources** has a frequency slider for each ordinary New World resource,
@@ -213,6 +218,14 @@ inspect them. **Compare** displays two revealed worlds side by side.
 map layer requires revealing the atlas first.
 
 ## Manage worlds and versions
+
+For worlds made with 1.2.0, click a land location to read its society and history.
+Expand **Organization in 1337**, **Relationships and reasons**, **Chronicle** or the
+regional sections. The classic window opens these through **Society and history**.
+Place links move the map to the recorded place. Memories are shown separately from
+the treaties and opinion effects that appear in EU5. History travels in compact
+world files and works without the game installed. Earlier worlds show **No recorded
+history**; they are not assigned an invented past. Covered worlds keep history hidden.
 
 ### Try new peoples or resources on the same land
 

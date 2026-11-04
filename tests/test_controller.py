@@ -1010,10 +1010,13 @@ def test_a_world_is_covered_until_it_is_revealed_and_its_maps_can_be_saved(
     assert not controller.revealed(world)
     assert controller.maps_to_compare() == []
     assert "covered" in (controller.save_map(world, "land", tmp_path / "x.png") or "")
-    assert "countries" in controller.summary(world)
+    assert controller.summary(world) == ""
+    assert controller.history_reader(world) is None
     controller.reveal_world(world)
     [shown] = controller.worlds
     assert controller.revealed(shown)
+    assert "countries" in controller.summary(shown)
+    assert controller.history_reader(shown) is not None
     assert [found.id for found, _atlas in controller.maps_to_compare()] == [shown.id]
     output = tmp_path / "maps" / "land.png"
     output.parent.mkdir()

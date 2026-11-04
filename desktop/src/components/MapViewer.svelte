@@ -814,6 +814,17 @@
                 <dt>{t("fact.area")}</dt><dd><button class="link" onclick={() => highlightOf("area")}>{facts.area}</button></dd>
               {/if}
             </dl>
+            {#each [...(facts.country ? atlas?.data.history?.countries[facts.country.tag] ?? [] : []), ...(atlas?.data.history?.regions[facts.region] ?? [])] as section}
+              <details class="history-section">
+                <summary>{section.title}</summary>
+                {#each section.lines as line}
+                  <p>{line.text}</p>
+                  {#if line.place >= 0 && atlas}
+                    <button class="link" onclick={() => { session.pinned = line.place; zoomToCells([line.place]); }}>{atlas.data.names[line.place]}</button>
+                  {/if}
+                {/each}
+              </details>
+            {/each}
           {/if}
         </section>
       {/if}
@@ -955,10 +966,15 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    width: min(280px, calc(100% - 16px));
+    width: min(320px, calc(100% - 16px));
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
     padding: 8px 10px 10px;
     z-index: 3;
   }
+  .history-section { margin-top: 10px; }
+  .history-section summary { cursor: pointer; font-weight: 600; }
+  .history-section p { margin: 8px 0 4px; white-space: pre-line; }
   .card header {
     display: flex;
     justify-content: space-between;

@@ -16,7 +16,9 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw.atlas import KINDS, Atlas, Country
+from rnw.atlas import KINDS, Atlas, Country, history_links
+from rnw.history_archive import build as build_history
+from rnw.history_archive_checks import validate as validate_history
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -147,7 +149,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
         )
     population = np.array([natives.population.get(key, 0) for key in keys], dtype=np.int64)
     complexity = np.array([natives.complexity.get(key, 0) for key in keys], dtype=np.int64)
-    return Atlas(
+    found = Atlas(
         scale=step,
         labels=labels,
         keys=keys,
@@ -167,6 +169,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
         complexity=complexity,
         centre=_centres(labels, count),
         countries=tuple(countries),
+        history=build_history(natives, keys) if natives.history is not None else None,
         vocabulary={
             "culture": cultures,
             "religion": religions,
@@ -177,3 +180,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
             "settlement": settlements,
         },
     )
+
+    if found.history is not None:
+        validate_history(found.history, history_links(found))
+    return found

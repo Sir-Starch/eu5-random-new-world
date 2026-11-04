@@ -16,8 +16,11 @@
   artifact checks for their values, live scopes, effects and text bindings.
   Normal generation now uses this history path, with actual guarantees and setup
   checks that preserve the Old World. Target 1.2.0 uses pending epoch 61;
-  released epoch-60 reference data is preserved. Calibration, atlas reading,
-  story eligibility and packaged delivery remain work for the later plan phases.
+  released epoch-60 reference data is preserved. Both windows can now read portable
+  histories, profiles and relationships with place links after revealing a world.
+  Historical turbulence has quick choices and an advanced control. Older atlases
+  remain readable with no invented history. Calibration, story eligibility and
+  packaged delivery remain work for the later plan phases.
 
 - Add **Alternative History** to the hub metadata and publish all four Workshop
   categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.

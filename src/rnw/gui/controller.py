@@ -19,7 +19,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
-from rnw import __version__, atlas, landmask, worldfile, worldname
+from rnw import __version__, atlas, history_presenter, landmask, worldfile, worldname
 from rnw.app import (
     candidates,
     controls,
@@ -212,6 +212,7 @@ class Controller:
         self.runs: int = 0
         self.land_mask: LandMask | None = None
         self.last_import: exchange.Imported | None = None
+        self._history_readers: dict[int, history_presenter.Reader] = {}
         self._words: dict[int, tuple[Atlas, tuple[str, Path | None], atlas.Words]] = {}
         self.candidates: list[candidates.Candidate] = []
         self.candidate_code: WorldCode | None = None
@@ -1110,6 +1111,21 @@ class Controller:
         """The world's atlas, or None when it has none."""
         return library.atlas(self.data, world)
 
+    def history_reader(self, world: World) -> history_presenter.Reader | None:
+        """Facts for either window, available only after the existing reveal action."""
+        if not self.revealed(world):
+            return None
+        found = self.atlas(world)
+        if found is None:
+            return None
+        known = self._history_readers.get(id(found))
+        if known is None or known.language != language():
+            known = history_presenter.Reader(found, language(), self.words(found).key)
+            while len(self._history_readers) >= WORDS_KEPT:
+                del self._history_readers[next(iter(self._history_readers))]
+            self._history_readers[id(found)] = known
+        return known
+
     def words(self, found: Atlas) -> atlas.Words:
         """How the window writes an atlas: its own legend words, the game's names of the
         identifiers when the game is here (else the identifiers made readable), the world's
@@ -1144,6 +1160,8 @@ class Controller:
 
     def summary(self, world: World) -> str:
         """One line on what the world holds, from its atlas ('' without one)."""
+        if not self.revealed(world):
+            return ""
         found = self.atlas(world)
         if found is None:
             return ""

@@ -4,7 +4,7 @@
 bootstrap, population, final-plan construction and localized text writers in the accepted
 [history plan](history-plan.md#17-phases-and-scope-control). H4 now connects them to
 normal generation for the **1.2.0 development target / pending epoch 61**. The
-frozen 1.1.0/epoch-60 reference is preserved. H5/H6 reading and story continuity,
+frozen 1.1.0/epoch-60 reference is preserved. H5 portable reading and controls are implemented. H6 story continuity,
 H7 calibration and delivery, and engine observations remain later work.
 
 ## Ownership and entry points
@@ -28,6 +28,8 @@ H7 calibration and delivery, and engine observations remain later work.
 | `history_plan_checks.py` | Independent agreement checks against the surviving history, including causal opinions and overlapping memberships |
 | `history_text.py` | Typed chronicle rows, bounded event selection and original opinion/chronicle templates |
 | `eu5_history_text.py` | Historical bias definitions, live-country trigger, voluntary decision/event and directed guarantee records |
+| `history_archive.py`, `history_archive_checks.py` | Bounded portable facts, compact ancestor references and independent atlas/lifetime/ownership checks |
+| `history_presenter.py` | Shared localized society, chronicle, relationship and regional reading for both windows |
 | `history_output_checks.py` | Parsed artifact checks for bias values, live scopes, decision/event effects and localization bindings |
 
 `create(geography, foundings, seed=..., empire_permille=250, checkpoint=...)`
@@ -542,3 +544,60 @@ from 82.2 to 83.3 MiB. These single local measurements are not load-controlled o
 paired full-generator S8/S9 results; they identify event density and round work
 for further measurement. Scripts and raw data stay in ignored
 `local_data/history-120/h2/`.
+
+## Portable reading and controls (H5)
+
+Atlas **format 3** adds a history schema 1 inside `atlas.json`; formats 1/2 remain
+readable and explicitly have no recorded history. Format 2 was already used for
+structured names, so reusing it would have let old readers silently discard history.
+There is no new world-file member and no game dependency for reading a chronicle.
+
+The portable record keeps living and predecessor actors, final eight-axis profiles
+with individual causes, projected country/diplomacy facts, current living memories
+and bonds, up to eight chronicle rows per country, actual memberships and sparse
+ownership changes. It keeps the complete ancestor closure of these facts. A direct
+reference already reachable through another direct cause can be omitted without
+losing any ancestor; game outcomes and the model digest are unchanged.
+
+Integer-indexed columns are canonical ASCII JSON compressed with standard-library
+XZ and encoded with base85. Imports cap the wrapper at 8 MiB, expansion at 24 MiB,
+decoder memory at 64 MiB, actors at 25,000, events at 250,000, other table rows at
+500,000, strings at 128 characters, JSON depth at 24 and causal depth at 256.
+Before presentation, validation checks chronological/backward references, lineage
+and lifetimes, society causes, country capitals and tenure, relationships and
+chronicles, then replays sparse ownership against the outer atlas. Hostile expansion,
+trailing streams, invalid columns and broken references fail explicitly.
+The existing 32 MiB atlas / 100 MiB compact-world limits remain.
+
+Both windows obtain the same `history_presenter.Reader` through the controller.
+Country cards expose origin, government/technology and all eight axes with causes,
+relationships that separate memory from actual EU5 treaties/opinions, and the
+chronicle. Regional summaries show major transfers and shared predecessor periods
+or surviving groups. Place links select and center the named location. The Tauri
+card uses disclosures; the classic card opens a scrollable dialog. Templates and
+labels are translated in all eleven official languages. Covered worlds yield no
+history reader/bundle, totals or political summary; the existing reveal action
+opens history with the maps. An older world displays “No recorded history”.
+
+`natives.turbulence_permille` defaults to 500, spans 0–1000 and is passed to the
+normal simulation. Quick choices are Calm 200 / Varied 500 / Turbulent 800; the
+advanced control and Total Chaos use the same native field. Its compact world-code
+field number is appended; older recipes resolve the new field to 500. Extraordinary
+peoples now describes an ambition whose realization and survival depend on history.
+Only pending epoch-61 preset/synthetic pins change; released epoch-60 pins stay intact.
+
+[V-EXEC, 2026-11-04] Full checks pass: 2,716 Python tests, 17 optional skips,
+strict types/format/lint and 23 Rust tests. The Tauri interface passes strict checks,
+15 tests and production build. Synthetic import and installed-world recovery retain
+history; legacy readers, hostile records and the classic dialog/place link are
+covered. The actual browser flow passes covered → reveal → profile/chronicle →
+relationship/regional summaries → place selection, with no console errors. The
+classic dialog was also inspected offscreen in Russian. Evidence is local in
+`local_data/history-120/h5-ui/` and the `h5-reader-check-final-3.log`.
+
+[V-EXEC] With the independently simulated H4 reference native plan and its actual
+atlas key order, the portable record has 1,055 actors, 111,813 events and 813,239
+nonredundant direct references. Its canonical wrapper is **2,050,865 bytes** (1.956 MiB)
+and round-trips exactly; expanded columns are 10,932,253 bytes. This establishes the
+reference payload size on that plan, not a completed H7 seed-set/performance result.
+No game-facing candidate or package was installed during this reading phase.

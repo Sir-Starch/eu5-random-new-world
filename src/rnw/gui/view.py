@@ -22,9 +22,9 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 from PIL import Image
 
-from rnw import __version__, parallel, worldname
+from rnw import __version__, history_presenter, parallel, worldname
 from rnw import atlas as atlas_module
-from rnw.app import controls, quick, random_types
+from rnw.app import controls, library, quick, random_types
 from rnw.app.library import Placement
 from rnw.app.worldcode import encode
 from rnw.gui import mapstyle
@@ -349,7 +349,16 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
     placement = c.placement(world)
     changed = c.changed_count(world)
     note = c.build_note(world)
-    found = c.atlas(world)
+    found = c.atlas(world) if c.revealed(world) else None
+    bundle_path = library.folder(c.data, world)
+    has_atlas = (
+        found is not None
+        if c.revealed(world)
+        else all(
+            (bundle_path / name).is_file()
+            for name in (atlas_module.JSON_FILE, atlas_module.LABELS_FILE)
+        )
+    )
     parent = c.parent_of(world)
     mod = c.profile.directory / "mod" / world.folder if c.profile is not None else None
     mine = c.task_target == world.id and c.task in WORLD_TASKS
@@ -375,7 +384,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "placement": placement.value,
         "shown": c.shown(world),
         "revealed": c.revealed(world),
-        "atlas": found is not None,
+        "atlas": has_atlas,
         "summary": c.summary(world),
         "totals": atlas_module.totals(found) if found is not None and c.revealed(world) else None,
         "notes": world.notes,
@@ -491,8 +500,10 @@ def words_for(controller: Controller, found: Atlas) -> atlas_module.Words:
 def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | None:
     """A revealed world's atlas as the map viewer paints and asks it; None when it has none or
     its New World is covered."""
+    if not controller.revealed(world):
+        return None
     found = controller.atlas(world)
-    if found is None or not controller.revealed(world):
+    if found is None:
         return None
     started = time.perf_counter()
     words = words_for(controller, found)
@@ -557,6 +568,21 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
         "totals": atlas_module.totals(found),
         "layers": layers,
     }
+    reader = controller.history_reader(world)
+    bundle["history"] = (
+        {
+            "countries": {
+                country.tag: history_presenter.data(reader.country(country.tag))
+                for country in found.countries
+            },
+            "regions": {
+                region: history_presenter.data(reader.region(region))
+                for region in sorted({words.name(value) for value in found.regions})
+            },
+        }
+        if reader is not None
+        else None
+    )
     bundle["seconds"] = round(time.perf_counter() - started, 3)
     return bundle
 
