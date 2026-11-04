@@ -1,0 +1,12 @@
+{
+  "name": "rnw-website",
+  "private": true,
+  "description": "Publishes website/public to rnw.sirstarch.com as Cloudflare Workers static assets.",
+  "scripts": {
+    "check": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.3"
+  }
+}

@@ -1,0 +1,15 @@
+// The player's guide at https://rnw.sirstarch.com: website/public served as Workers static
+// assets, with no Worker code. The custom domain creates its own DNS record and certificate.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rnw-guide",
+  "compatibility_date": "2026-11-04",
+  "assets": {
+    "directory": "./public",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "routes": [{ "pattern": "rnw.sirstarch.com", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false
+}

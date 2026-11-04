@@ -68,12 +68,26 @@ rebuild and review the changed terms.
 
 ## Hosting
 
-`public/` is a plain static folder with no build step on the host. Its `_headers` file sets
-security headers and caching on Cloudflare Pages; other hosts ignore it. `sirstarch.com` is on
-Cloudflare DNS, so Cloudflare Pages serving `website/public` with the custom domain
-`rnw.sirstarch.com` is the shortest route; GitHub Pages from the same folder works as well.
-Connecting the domain, the first deployment and pointing the Workshop's Guide button at the new
-address are owner-authorized account actions.
+`public/` is served as Cloudflare Workers static assets with no Worker code (`wrangler.jsonc`,
+Worker `rnw-guide`). The custom domain `rnw.sirstarch.com` owns its DNS record and certificate.
+`public/_headers` sets the security headers and caching; unknown paths get `404.html`. Wrangler
+is pinned in `package.json`.
+
+```sh
+cd website
+npm ci
+npx wrangler login       # once, in the owner's browser
+npm run check            # dry run: reads public/, uploads nothing
+npm run deploy           # publish public/ as it is committed
+```
+
+Deploy only a committed, checked `public/`. Publishing is an owner-authorized account action.
+
+[V-EXEC] 2026-11-04: first deployment with Wrangler 4.151.3. Every language page, the root,
+the stylesheet, fonts and pictures returned 200 over HTTPS; an unknown path returned the 404
+page; `/en` redirected to `/en/`; the `_headers` security headers and the immutable font caching
+were present. In a browser the root opened `/ru/`, `/ja/` and `/en/` for those locales, with all
+fonts loaded and no console or request errors.
 
 ## Licences
 
