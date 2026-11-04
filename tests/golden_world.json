@@ -1,11 +1,11 @@
 {
-  "comment": "Pending epoch 61 for 1.2.0 on EU5 1.4.7/build 26377361; frozen epoch 60 preserved separately. H4 compares all writers/output checks using a real simulated and replay-validated native stage after exact relevant-input comparison. Final uncached reproduction and H7 calibration follow.",
+  "comment": "Pending epoch61 for1.2.0, EU5 1.4.7/build26377361; exact frozen epoch60 preserved separately. H6 output comparison reuses the independently simulated and validated native stage after input comparison; final normal reproduction and H7 calibration follow.",
   "epoch": 61,
   "code": "RNW1-081G0-00000-0KAA7-E0410-00860-2AG63-YG1W8-8G3GH-149XR-08TM0-3AY3A-3",
   "game_fingerprint_sha256": "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a",
   "game_label": "EU5 1.4.7 / Steam build 26377361",
   "output": {
-    "sha256": "5b2d5940693639f50ce551f8ca21a9a5951abfd311cd5108ea4af7a04abdf526",
+    "sha256": "4fed89a3b0edca6e8974b539670826bbc45c831a1d453fadc4db4c2436f5b9f5",
     "count": 872
   }
 }

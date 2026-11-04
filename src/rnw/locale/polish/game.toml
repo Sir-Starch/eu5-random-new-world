@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''Posłowie z sąsiedniej doliny'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''Do miasta [target_location.GetNameWithNoTooltip] przybyli posłowie państwa [target_country.GetName]. Nasze dwory łączą wspólni bogowie albo wspólny język, a także ci sami wrogowie na tych samych granicach, a jednak od pokoleń słały sobie wyłącznie skargi. Posłowie proponują radę, w której nasi władcy mówiliby jak równy z równym. Nasi doradcy woleliby, żeby posłowie zostali w domu.'''
+source = "c6da35a686fd5db7"
+text = '''Do [target_location.GetNameWithNoTooltip] przybyli posłowie z państwa [target_country.GetName]. Nasze dwa dwory łączą bogowie lub język. Posłowie proponują radę, na której nasi władcy rozmawialiby jak równi i rozstrzygali spory na wspólnej granicy. Nasi doradcy nie są zgodni co do tego, jaką władzę powinna mieć taka rada.'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

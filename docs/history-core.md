@@ -4,8 +4,8 @@
 bootstrap, population, final-plan construction and localized text writers in the accepted
 [history plan](history-plan.md#17-phases-and-scope-control). H4 now connects them to
 normal generation for the **1.2.0 development target / pending epoch 61**. The
-frozen 1.1.0/epoch-60 reference is preserved. H5 portable reading and controls are implemented. H6 story continuity,
-H7 calibration and delivery, and engine observations remain later work.
+frozen 1.1.0/epoch-60 reference is preserved. H5 portable reading/controls and [H6 story continuity](content-plan.md#history-continuity-h6-120-development)
+are implemented. H7 calibration/delivery and engine observations remain later work.
 
 ## Ownership and entry points
 
@@ -29,6 +29,7 @@ H7 calibration and delivery, and engine observations remain later work.
 | `history_text.py` | Typed chronicle rows, bounded event selection and original opinion/chronicle templates |
 | `eu5_history_text.py` | Historical bias definitions, live-country trigger, voluntary decision/event and directed guarantee records |
 | `history_archive.py`, `history_archive_checks.py` | Bounded portable facts, compact ancestor references and independent atlas/lifetime/ownership checks |
+| `history_content.py` | Surviving historical cooperation and dependencies for existing stories, including landed confederates |
 | `history_presenter.py` | Shared localized society, chronicle, relationship and regional reading for both windows |
 | `history_output_checks.py` | Parsed artifact checks for bias values, live scopes, decision/event effects and localization bindings |
 

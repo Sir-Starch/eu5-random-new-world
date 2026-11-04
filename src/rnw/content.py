@@ -23,7 +23,7 @@ Rules the plan keeps:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Final
 
 from rnw.rng import derive_seed
@@ -175,11 +175,21 @@ class Place:
 
 @dataclass(frozen=True, slots=True)
 class State:
-    """A generated country that owns locations (a tribe holds none and is no bearer)."""
+    """A location-based country, including landed confederates; pop countries are not bearers."""
 
     tag: str
     capital: str
     religion: str
+
+
+@dataclass(frozen=True, slots=True)
+class HistoricalFacts:
+    """Surviving, causal links; None on Facts retains legacy diagnostic eligibility."""
+
+    cooperation: Mapping[tuple[str, str], tuple[str, ...]]
+    hostile: frozenset[tuple[str, str]]
+    dependencies: Mapping[tuple[str, str], str]
+    contacts: frozenset[tuple[str, str]]
 
 
 @dataclass(frozen=True, slots=True)
@@ -196,6 +206,7 @@ class Facts:
     links: frozenset[tuple[str, str]]
     groups: Mapping[str, frozenset[str]] = field(default_factory=dict[str, frozenset[str]])
     subjects: frozenset[tuple[str, str]] = frozenset()
+    history: HistoricalFacts | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +227,7 @@ class Opportunity:
     centre: str
     start: Start
     other: str = ""
+    history_causes: tuple[str, ...] = ()
 
     @property
     def ident(self) -> str:
@@ -463,6 +475,11 @@ def alliances(facts: Facts, seed: int) -> dict[str, str]:
                 or (neighbour, tag) in facts.subjects
             ):
                 continue
+            pair = (min(tag, neighbour), max(tag, neighbour))
+            if facts.history is not None and (
+                pair in facts.history.hostile or pair not in facts.history.cooperation
+            ):
+                continue
             same_faith = facts.states[tag].religion == facts.states[neighbour].religion
             same_people = bool(mine.culture) and mine.culture == theirs.culture
             if same_faith or same_people:
@@ -481,6 +498,11 @@ def alliances(facts: Facts, seed: int) -> dict[str, str]:
 def peripheries(facts: Facts) -> dict[str, str]:
     """For the capital of a state with subjects, the capital of its most distant subject."""
     near = _contacts(facts)
+    if facts.history is not None:
+        for first, second in sorted(facts.history.contacts):
+            if first in facts.places and second in facts.places:
+                near.setdefault(first, []).append(second)
+                near.setdefault(second, []).append(first)
     found: dict[str, str] = {}
     for tag, state in sorted(facts.states.items()):
         subjects = [
@@ -493,6 +515,7 @@ def peripheries(facts: Facts) -> dict[str, str]:
             (steps.get(facts.states[subject].capital, -1), facts.states[subject].capital)
             for subject in subjects
             if facts.states[subject].capital in facts.places
+            and (facts.history is None or facts.states[subject].capital in steps)
         ]
         if far:
             found[state.capital] = max(far, key=lambda item: (item[0], item[1]))[1]
@@ -670,6 +693,18 @@ def plan_content(facts: Facts, seed: int) -> ContentPlan:
     stories: list[Opportunity] = []
 
     def take(family: str, found: list[Opportunity], reason: str) -> None:
+        if facts.history is not None and family in {GREAT_ALLIANCE, EMPIRE_PERIPHERY}:
+            explained: list[Opportunity] = []
+            for opportunity in found:
+                first = opportunity.bearer
+                second = facts.places[opportunity.other].owner
+                causes = (
+                    facts.history.cooperation[min(first, second), max(first, second)]
+                    if family == GREAT_ALLIANCE
+                    else (facts.history.dependencies[first, second],)
+                )
+                explained.append(replace(opportunity, history_causes=causes))
+            found = explained
         stories.extend(found)
         if not found:
             absences.append(Absence(family, reason))
@@ -714,7 +749,9 @@ def plan_content(facts: Facts, seed: int) -> ContentPlan:
             others=paired,
             claim=False,
         ),
-        "no two neighbouring states share a faith or a people",
+        "no historically cooperative neighbours share a faith or a people"
+        if facts.history is not None
+        else "no two neighbouring states share a faith or a people",
     )
     far = peripheries(facts)
     take(

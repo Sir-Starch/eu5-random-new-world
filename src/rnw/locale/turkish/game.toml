@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''Komşu Vadiden Elçiler'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''[target_country.GetName] devletinin elçileri [target_location.GetNameWithNoTooltip] şehrine geldi. İki sarayın tanrıları ya da dili ortak, aynı sınırlarda aynı düşmanları var; yine de nesillerdir birbirlerine şikâyetten başka bir şey göndermediler. Elçiler, hükümdarlarımızın eşit olarak konuşacağı bir meclis öneriyor. Bizim danışmanlarımız ise elçilerin evlerinde oturmasını tercih ederdi.'''
+source = "c6da35a686fd5db7"
+text = '''[target_country.GetName] elçileri [target_location.GetNameWithNoTooltip] yerleşimine geldi. İki sarayımızın tanrıları ya da dili ortak. Elçiler, hükümdarlarımızın eşitler olarak konuşup ortak sınırdaki anlaşmazlıkları çözebileceği bir meclis öneriyor. Kendi danışmanlarımız böyle bir meclise ne kadar yetki verilmesi gerektiği konusunda anlaşamıyor.'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

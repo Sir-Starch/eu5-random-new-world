@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''Des envoyés de la vallée voisine'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''Des envoyés de [target_country.GetName] sont arrivés à [target_location.GetNameWithNoTooltip]. Nos deux cours partagent leurs dieux ou leur langue, et les mêmes ennemis aux mêmes frontières, et pourtant elles n'échangent depuis des générations que des récriminations. Les envoyés proposent un conseil où nos souverains parleraient d'égal à égal. Nos propres conseillers auraient préféré qu'ils restent chez eux.'''
+source = "c6da35a686fd5db7"
+text = '''Des envoyés de [target_country.GetName] sont arrivés à [target_location.GetNameWithNoTooltip]. Nos deux cours partagent leurs dieux ou leur langue. Les envoyés proposent un conseil où nos dirigeants parleraient d’égal à égal et régleraient les différends le long de la frontière commune. Nos propres conseillers ne s’accordent pas sur l’autorité à donner à un tel conseil.'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

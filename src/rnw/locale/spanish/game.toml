@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''Enviados del valle vecino'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''Han llegado a [target_location.GetNameWithNoTooltip] enviados de [target_country.GetName]. Nuestras dos cortes comparten sus dioses o su lengua, y los mismos enemigos en las mismas fronteras, y sin embargo durante generaciones solo se han enviado quejas. Los enviados proponen un consejo en el que nuestros soberanos hablen de igual a igual. Nuestros propios consejeros habrían preferido que se quedaran en casa.'''
+source = "c6da35a686fd5db7"
+text = '''Han llegado emisarios de [target_country.GetName] a [target_location.GetNameWithNoTooltip]. Nuestras dos cortes comparten sus dioses o su lengua. Los emisarios proponen un consejo donde nuestros gobernantes hablen como iguales y resuelvan disputas en la frontera común. Nuestros propios consejeros discrepan sobre cuánta autoridad debería tener ese consejo.'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

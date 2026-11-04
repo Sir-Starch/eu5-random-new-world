@@ -757,7 +757,7 @@ var:rnw_alliance_seat ?= { owner ?= { save_scope_as = target_country } }
 <details>
 <summary>Event text</summary>
 
-Envoys of [target_country.GetName] have arrived in [target_location.GetNameWithNoTooltip]. Our two courts share their gods or their tongue, and their enemies on the same borders, yet for generations they have exchanged nothing but complaints. The envoys propose a council where our rulers would speak as equals. Our own counsellors would rather the envoys had stayed at home.
+Envoys of [target_country.GetName] have arrived in [target_location.GetNameWithNoTooltip]. Our two courts share their gods or their tongue. The envoys propose a council where our rulers would speak as equals and settle disputes along the common border. Our own counsellors disagree over how much authority such a council should have.
 
 </details>
 
@@ -935,7 +935,7 @@ Hidden cleanup: `rnw_empire.9`, scheduled after 180 months. Every visible event 
 Additional shared conditions and scope setup:
 
 ```text
-var:rnw_empire_far ?= { owner ?= { NOT = { this = root } } }
+var:rnw_empire_far ?= { owner ?= { is_subject_of = root } }
 var:rnw_empire_far ?= { save_scope_as = other_location }
 ```
 

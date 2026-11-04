@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''Gesandte aus dem Nachbartal'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''Gesandte des Reiches [target_country.GetName] sind in der Stadt [target_location.GetNameWithNoTooltip] eingetroffen. Unsere beiden Höfe teilen ihre Götter oder ihre Sprache und haben dieselben Feinde an denselben Grenzen, und doch haben sie einander seit Generationen nichts als Beschwerden geschickt. Die Gesandten schlagen einen Rat vor, in dem unsere Herrscher als Gleiche sprechen. Unseren eigenen Räten wäre es lieber, die Gesandten wären zu Hause geblieben.'''
+source = "c6da35a686fd5db7"
+text = '''Gesandte von [target_country.GetName] sind in [target_location.GetNameWithNoTooltip] eingetroffen. Unsere beiden Höfe teilen ihre Götter oder ihre Sprache. Die Gesandten schlagen einen Rat vor, in dem unsere Herrscher als Gleiche sprechen und Streitigkeiten an der gemeinsamen Grenze beilegen würden. Unsere eigenen Ratgeber sind uneins, wie viel Befugnis ein solcher Rat haben sollte.'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

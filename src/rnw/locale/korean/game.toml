@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''이웃 골짜기에서 온 사절'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''[target_country.GetName] 측의 사절단이 [target_location.GetNameWithNoTooltip]에 도착했습니다. 우리 두 궁정은 같은 신을 섬기거나 같은 말을 쓰며, 같은 국경에서 같은 적을 마주하고 있습니다. 그런데도 여러 세대 동안 서로에게 보낸 것이라고는 불평뿐이었습니다. 사절들은 두 나라의 군주가 대등하게 이야기를 나눌 평의회를 제안합니다. 우리 쪽 조언가들은 사절들이 차라리 고향에 머물러 있었기를 바랍니다.'''
+source = "c6da35a686fd5db7"
+text = '''[target_country.GetName]의 사절이 [target_location.GetNameWithNoTooltip]에 도착했습니다. 두 궁정은 신앙이나 언어를 공유합니다. 사절들은 두 통치자가 동등하게 대화하며 공동 국경의 분쟁을 해결할 평의회를 제안했습니다. 우리 조언자들은 그런 평의회에 어느 정도 권한을 주어야 할지 의견이 갈리고 있습니다.'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

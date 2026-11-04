@@ -593,6 +593,16 @@ H2 schema.
   the classic dialog/place-link case. The reference native plan's portable record
   is 1.956 MiB and round-trips; H7 seed-set and performance acceptance remain separate.
 
+- **H6, completed 2026-11-04:** [reviewed story bindings](content-plan.md#history-continuity-h6-120-development)
+  use current landed countries, surviving cooperative relations and dependencies;
+  landed confederates are eligible, pop countries are not. Existing geography and
+  story limits remain, with causal report bindings and a runtime subject guard.
+  No new family is added. Revised council prose and every translation avoid an
+  invented past. Full checks pass (2,723 Python, 17 optional skips, 23 Rust) and
+  15 read-only installed checks pass. The real reference's writers/output checks
+  pass after exact-input reuse of its independently validated native stage; the
+  pending epoch-61 golden is refreshed. Normal reproduction and delivery remain H7.
+
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
 them into three successors in 1227 without any change of culture. In 1282 the

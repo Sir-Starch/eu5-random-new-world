@@ -46,7 +46,7 @@ from rnw.eu5_story import (
 )
 from rnw.pdx import Block, parse
 from rnw.stories import STORIES
-from rnw.storymodel import LOCATION, PULSE_FILE, STATIC, Modifier, Source
+from rnw.storymodel import LOCATION, PULSE_FILE, STATIC, Modifier, Source, render_events
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -441,3 +441,18 @@ def test_every_hidden_event_is_written_as_the_games_own_hidden_events_are(tmp_pa
                 assert found is not None, f"{entry.key} has no {key}"
                 assert found.value == wanted, entry.key
     assert hidden >= 6 + len(STORIES) * 1  # the starts, the cleanups and the pulse starts
+
+
+def test_periphery_stops_after_the_subject_binding_ends_but_cleanup_still_runs() -> None:
+    story = next(story for story in STORIES if story.family == EMPIRE_PERIPHERY)
+    written = parse(render_events(story))
+    for node in story.nodes:
+        block = written.block(story.event(node.number), "trigger", f"var:{story.other}", "owner")
+        assert block is not None
+        entry = block.first("is_subject_of")
+        assert entry is not None
+        assert entry.value == "root"
+    cleanup = written.block(story.event(9), "trigger")
+    assert cleanup is not None
+    assert cleanup.first("has_variable") is not None
+    assert cleanup.first(f"var:{story.other}") is None

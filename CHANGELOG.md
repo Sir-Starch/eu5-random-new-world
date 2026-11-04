@@ -19,8 +19,10 @@
   released epoch-60 reference data is preserved. Both windows can now read portable
   histories, profiles and relationships with place links after revealing a world.
   Historical turbulence has quick choices and an advanced control. Older atlases
-  remain readable with no invented history. Calibration, story eligibility and
-  packaged delivery remain work for the later plan phases.
+  remain readable with no invented history. Existing stories now use surviving
+  historical relations and current landed bearers, including confederates, and stop
+  the periphery chain when its subject binding ends. Calibration and packaged
+  delivery remain work for H7.
 
 - Add **Alternative History** to the hub metadata and publish all four Workshop
   categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.

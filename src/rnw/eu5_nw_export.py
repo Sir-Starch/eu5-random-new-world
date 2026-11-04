@@ -259,6 +259,8 @@ from rnw.eu5_treaty import coordinates as treaty_coordinates
 from rnw.eu5_water import water_outputs
 from rnw.game_texts import Text, localize, untranslated
 from rnw.geography import parse_locations, read_locations, read_named_colors
+from rnw.history_content import country_starts
+from rnw.history_content import facts as historical_content_facts
 from rnw.history_model import Factor, Military
 from rnw.history_output_checks import verify_diplomacy
 from rnw.history_output_checks import verify_text as verify_history_text
@@ -1611,11 +1613,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
     dominant = {place.key: place.religion for place in inhabited}
     traits = culture_traits(game_dir)
     cultures = {place.key: place.culture for place in inhabited}
-    states = [
-        (country.tag, country.members, country.capital, country.religion)
-        for country in natives.countries
-        if country.kind == STATE
-    ]
+    states = country_starts(natives)
     facts = facts_of(
         keys=[keys[index] for index in land],
         population=natives.population,
@@ -1635,6 +1633,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         seas=_sea_zones(plan, world),
         groups={name: traits[name][1] for name in set(cultures.values()) if name in traits},
         subjects=natives.vassals,
+        history=historical_content_facts(natives),
     )
     content = plan_content(facts, seed)
     reserved = vanilla.reserved_tags | {country.tag for country in natives.countries}

@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''邻谷来使'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''[target_country.GetName]的使节抵达了[target_location.GetNameWithNoTooltip]。我们两国宫廷供奉同样的神祇，或说着同样的语言，在同样的边境上面对同样的敌人，可世世代代以来，彼此往来的只有抱怨。使节们提议设立一个议事会，让两国君主平起平坐地对话。我们自己的谋臣们却宁愿这些使节待在家里别来。'''
+source = "c6da35a686fd5db7"
+text = '''[target_country.GetName]的使节抵达了[target_location.GetNameWithNoTooltip]。两国宫廷拥有共同的信仰或语言。使节提议设立议事会，让双方统治者平等交谈，解决共同边界上的争端。我们自己的顾问对这个议事会应有多大权力意见不一。'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

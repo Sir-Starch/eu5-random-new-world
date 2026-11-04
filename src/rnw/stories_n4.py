@@ -484,10 +484,9 @@ def alliance() -> Story:
     end = tuple(f"remove_variable = {name}" for name in (centre, other, path))
     first = prose("""
         Envoys of [target_country.GetName] have arrived in [target_location.GetNameWithNoTooltip].
-        Our two courts share their gods or their tongue, and their enemies on the same borders, yet
-        for generations they have exchanged nothing but complaints. The envoys propose a council
-        where our rulers would speak as equals. Our own counsellors would rather the envoys had
-        stayed at home.
+        Our two courts share their gods or their tongue. The envoys propose a council
+        where our rulers would speak as equals and settle disputes along the common border.
+        Our own counsellors disagree over how much authority such a council should have.
     """)
     met = prose("""
         Our ruler and the ruler of [target_country.GetName] have met three times, and each time they
@@ -869,5 +868,5 @@ def empire() -> Story:
         modifiers,
         other=other,
         immediate=(f"var:{other} ?= {{ save_scope_as = other_location }}",),
-        gate=(f"var:{other} ?= {{ owner ?= {{ NOT = {{ this = root }} }} }}",),
+        gate=(f"var:{other} ?= {{ owner ?= {{ is_subject_of = root }} }}",),
     )

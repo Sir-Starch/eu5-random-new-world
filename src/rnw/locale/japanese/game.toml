@@ -467,8 +467,8 @@ source = "0a9723a4376aee4a"
 text = '''隣の谷からの使節'''
 
 ["rnw_alliance.1.desc"]
-source = "bd5bab3bfb9c7e73"
-text = '''[target_country.GetName]の使節が[target_location.GetNameWithNoTooltip]に到着した。われらと彼らの宮廷は同じ神々を祀るか同じ言葉を話し、同じ国境に同じ敵を抱えている。それでいて、何世代にもわたって互いに送り合ってきたのは苦情ばかりだった。使節たちは、両国の君主が対等に語り合う評議会を提案している。わが方の顧問たちは、使節が国許にとどまっていてくれればよかったと思っている。'''
+source = "c6da35a686fd5db7"
+text = '''[target_country.GetName]の使節が[target_location.GetNameWithNoTooltip]に到着した。両国の宮廷は信仰か言葉を共有している。使節は、両国の統治者が対等に話し合い、共通の国境で起きる争いを解決するための評議会を提案している。我々の助言者たちは、その評議会にどこまで権限を認めるべきかで意見が割れている。'''
 
 ["rnw_alliance.1.a"]
 source = "15a2cfcd922dca1b"

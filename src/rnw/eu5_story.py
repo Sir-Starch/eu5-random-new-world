@@ -24,6 +24,7 @@ from rnw import colonial_names, eu5_formation
 from rnw.content import (
     ContentPlan,
     Facts,
+    HistoricalFacts,
     Opportunity,
     Place,
     State,
@@ -288,6 +289,11 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     stats: dict[str, object] = {
         "opportunities": plan.count(),
         "starts": ids,
+        "historical_bindings": {
+            opportunity.ident: list(opportunity.history_causes)
+            for opportunity in plan.opportunities
+            if opportunity.history_causes
+        },
         "pulses": [story.family for story in stories if story.pulse is not None],
         "colonial_names": len(regions or {}) * len(colonial_names.TRADITIONS),
         "absences": {absence.family: absence.reason for absence in plan.absences},
@@ -320,6 +326,7 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     seas: Mapping[str, Collection[str]] | None = None,
     groups: Mapping[str, Collection[str]] | None = None,
     subjects: Collection[tuple[str, str]] = (),
+    history: HistoricalFacts | None = None,
 ) -> Facts:
     """The facts of a world from its parts: ``states`` are (tag, members, capital, religion)."""
     owner: dict[str, str] = {}
@@ -353,4 +360,5 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
         frozenset((a, b) for a, b in links if a in present and b in present),
         {name: frozenset(found) for name, found in (groups or {}).items()},
         frozenset(subjects),
+        history,
     )
