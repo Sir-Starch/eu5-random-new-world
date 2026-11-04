@@ -1,0 +1,8 @@
+Fonts on this site are subsets of fonts under the SIL Open Font License 1.1
+(https://openfontlicense.org).
+
+Cinzel[wght].ttf (Version 2.000): Copyright 2020 The Cinzel Project Authors (https://github.com/NDISCOVER/Cinzel)
+NotoSans-Regular.ttf (Version 2.015; ttfautohint (v1.8.4.7-5d5b)): Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+NotoSans-SemiBold.ttf (Version 2.015; ttfautohint (v1.8.4.7-5d5b)): Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+NotoSerif-SemiBold.ttf (Version 2.015; ttfautohint (v1.8.4.7-5d5b)): Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)
+NotoSerifCJK-Bold.ttc (Version 2.003;hotconv 1.1.1;makeotfexe 2.6.0): © 2017-2024 Adobe (http://www.adobe.com/).

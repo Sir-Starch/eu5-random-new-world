@@ -40,7 +40,9 @@ published version. Frozen tags and downloads are immutable.
   installed-game contract when game inputs or serializers change. Do not ask for
   another game sitting solely because a historical detail is unobserved.
 - Update changelog, player guidance and affected official-language catalogues.
-  The README describes the product; release notes describe that release.
+  The README describes the product; release notes describe that release. Point
+  `RELEASE` in `website/sitegen.py` at the new tag and rebuild the
+  [player's guide](../website/README.md) once that tag exists.
 - Audit the actual package contents, licence notices and sources. Revisit terms
   only for a specific change affecting the accepted distribution boundary
   ([legal notes](legal.md)). Generated worlds and game assets remain local.

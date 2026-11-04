@@ -80,6 +80,16 @@ The fetched libraries are used under Microsoft's own licence terms, which this r
 examined in their text. The owner confirmed on 2026-11-02 that no further written review is required
 before publication, since no SDK or CRT file is redistributed.
 
+## Player's guide website
+
+`website/public` (`rnw.sirstarch.com`) carries original guide text and drawings (CC BY 4.0),
+crops of the owner-approved screenshots in `docs/images/showcase`, and subsets of Cinzel,
+Noto Sans, Noto Serif and Noto Serif CJK under the SIL OFL 1.1. Each subset keeps the font's
+name records and `fonts/OFL.txt` lists the copyright notices; no font is sold or renamed. EU5's
+interface is named by single words from the game's localisation, as the Workshop text does.
+The site carries no game files, rasters or worlds, loads nothing from other hosts and sets no
+cookies. fontTools (MIT) builds the subsets; it is a development tool and is not distributed.
+
 ## Research records
 
 The [interoperability register](research/interoperability.md) records each touched

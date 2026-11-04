@@ -44,6 +44,7 @@ rnw-gui = "rnw.gui.__main__:main"
 [dependency-groups]
 dev = [
     "basedpyright>=1.31,<2",
+    "fonttools[woff]>=4.60,<5",
     "pytest>=8,<10",
     "ruff>=0.13,<1",
     { include-group = "gui" },
@@ -92,6 +93,12 @@ max-complexity = 12
 "docs/images/workshop/make_banners.py" = [
   "E501", "ANN", "RUF001", "PLR0913", "PLR0917", "S603", "S607", "PLC0415", "INP001",
 ]
+# The website generator, run by path: procedural chart drawing with literal geometry and seeded
+# (not secret) randomness, copy in every script of the game's languages, and git/fc-match calls.
+"website/sitegen.py" = [
+  "E501", "RUF001", "RUF003", "PLR2004", "C901", "S311", "S603", "S607", "PLC0415", "INP001",
+]
+"website/fontsubset.py" = ["INP001"]
 
 [tool.basedpyright]
 pythonVersion = "3.12"
@@ -100,10 +107,10 @@ venv = ".venv"
 typeCheckingMode = "all"
 # Windows-only and POSIX-only code is checked on every platform, so CI agrees on both.
 pythonPlatform = "All"
-include = ["src", "tests", "packaging"]
-# The packaging scripts are run by path; their tests import them from there.
-extraPaths = ["src", "packaging"]
+include = ["src", "tests", "packaging", "website"]
+# The packaging and website scripts are run by path; their tests import them from there.
+extraPaths = ["src", "packaging", "website"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["packaging"]
+pythonpath = ["packaging", "website"]

@@ -19,6 +19,7 @@ phases and acceptance criteria.
 | Document | Purpose |
 |---|---|
 | [Generator guide](generator-guide.md) | Installation, window/CLI workflow, library, world files and recovery |
+| [Player's guide website](../website/README.md) | `rnw.sirstarch.com` in every official language: sources, terms, build and hosting |
 | [Known limitations](known-limitations.md) | Game/save compatibility, generation requirements and known visual issues |
 | [Product specification](product-spec.md) | Shipping player journey and engineering requirements |
 | [Architecture](architecture.md) | Current pipeline, module map and invariants |

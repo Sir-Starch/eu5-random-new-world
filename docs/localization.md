@@ -35,6 +35,7 @@ rewritten.
 | Atlas: names shown in the window's maps | `eu5_atlas.py` (`atlas.json` keeps rendered English strings) | English |
 | A world's title in the launcher's mod list | `worldname.py`, `.metadata` | English; whether the list can show another language is [UNKNOWN] |
 | Steam Workshop text | `docs/workshop/<language>.bbcode` ([rules](workshop-description.md)) | Every language; `tests/test_workshop.py` |
+| Player's guide website | `website/content/<language>.toml` ([rules](../website/README.md#words-on-the-page)) | Every language; controls from the release's window catalogues; `tests/test_website.py` |
 
 Organizations and governments of the extraordinary societies use vanilla types and their vanilla
 names, so they need nothing. Technical error details from deep in the export stay English (they
