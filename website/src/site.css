@@ -678,7 +678,7 @@ h3 {
 .leg {
   position: relative;
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) minmax(0, 330px);
+  grid-template-columns: 52px minmax(0, 1fr) minmax(0, 400px);
   gap: 0 26px;
   padding: 18px 0 34px;
 }
@@ -744,330 +744,32 @@ h3 {
   text-transform: var(--display-case);
 }
 
-/* The plates: what the screen looks like where the player clicks. */
-.plate {
+/* The screens: where the player clicks, as the player will see it. */
+.step-shot {
   align-self: start;
-  margin-top: 6px;
-  font: 400 12.5px/1.35 var(--font-sans);
-  border-radius: 4px;
-  overflow: hidden;
+  margin: 6px 0 0;
+  padding: 4px;
+  background: var(--fog-950);
+  border: 1px solid var(--line-strong);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
 }
 
-.ring {
-  outline: 2px solid var(--mark);
-  outline-offset: 2px;
+.step-shot {
+  position: relative;
+  z-index: 1;
+  width: 100%;
 }
 
-.ring-soft {
-  outline: 1px dashed rgba(224, 122, 85, 0.85);
-  outline-offset: 3px;
-  border-radius: 2px;
+/* The window's frames are at their own size; EU5's run larger, as the game draws them. */
+.step-shot.window {
+  width: 338px;
+  max-width: 100%;
 }
 
-.p-game {
-  padding: 10px;
-  color: #ebdfc3;
-  background: linear-gradient(#2c231d, #1f1914);
-  border: 1px solid #6e5837;
-}
-
-.pg-tabs {
-  display: flex;
-  border-bottom: 1px solid rgba(201, 169, 97, 0.3);
-}
-
-.pg-tabs span {
-  padding: 3px 12px 6px;
-  color: #9d9077;
-  font-family: Georgia, "Noto Serif", serif;
-}
-
-.pg-tabs .on {
-  color: #f3e5bf;
-  box-shadow: inset 0 -2px 0 #c9a961;
-}
-
-.pg-row {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) 18px;
-  gap: 10px;
-  align-items: center;
-  margin-top: 8px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(201, 169, 97, 0.22);
-}
-
-.pg-row.dim {
-  opacity: 0.62;
-}
-
-.thumb {
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(0, 0, 0, 0.6);
-}
-
-.t-hub {
-  background: radial-gradient(circle at 35% 40%, #9a8a55 0 18%, transparent 19%),
-    radial-gradient(circle at 62% 64%, #6f8a4a 0 22%, transparent 23%), linear-gradient(#3d5d7a, #2d4860);
-}
-
-.t-world {
-  background: radial-gradient(ellipse at 40% 45%, #7f9a55 0 30%, transparent 31%),
-    radial-gradient(ellipse at 68% 70%, #a08c5c 0 18%, transparent 19%), linear-gradient(#41637f, #2f4b63);
-}
-
-.pg-name b {
+.step-shot img {
   display: block;
-  color: #f4e8c9;
-  font: 400 14px/1.25 Georgia, "Noto Serif", serif;
-  overflow-wrap: anywhere;
-}
-
-.pg-btn {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 3px 10px;
-  color: #f0e6cc;
-  background: linear-gradient(#2a4673, #1b3053);
-  border: 1px solid #b89b5e;
-  border-radius: 2px;
-  font-size: 11.5px;
-}
-
-.box {
-  width: 17px;
-  height: 17px;
-  border: 1.5px solid #c9a961;
-  background: #191410;
-  position: relative;
-}
-
-.box.on {
-  background: #c9a961;
-}
-
-.box.on::after,
-.check.on::after {
-  content: "";
-  position: absolute;
-  left: 4.5px;
-  top: 1.5px;
-  width: 4px;
-  height: 8px;
-  border: solid #1a1410;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.pg-file {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 7px 9px;
-  color: #1f1f1f;
-  background: #ecebe6;
-  border: 1px solid #9c9a92;
-  font-size: 12px;
-}
-
-.pg-file .ring {
-  padding: 0 3px;
-  border-radius: 2px;
-  outline-offset: 1px;
-}
-
-.file-ic {
-  width: 14px;
-  height: 16px;
-  flex: none;
-  background: linear-gradient(135deg, transparent 0 28%, #c8c5bb 28% 31%, #fff 31%);
-  border: 1px solid #7d7b74;
-}
-
-.pg-apply {
-  margin-top: 8px;
-  text-align: right;
-}
-
-.p-gen {
-  color: #d7dae0;
-  background: #1c1e23;
-  border: 1px solid #0d0e11;
-}
-
-.pw {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-  min-height: 176px;
-}
-
-.pw-lib {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 10px 9px;
-  background: #18191d;
-  border-right: 1px solid #2b2e35;
-}
-
-.pw-h {
-  color: #eef0f4;
-  font-weight: 600;
-}
-
-.pw-new {
-  padding: 4px 6px;
-  border: 1px dashed #4a4f5a;
-  border-radius: 3px;
-  color: #eef0f4;
-}
-
-.pw-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pw-item i {
-  width: 24px;
-  height: 15px;
-  flex: none;
-  background: radial-gradient(ellipse at 45% 50%, #6f9a4d 0 32%, transparent 33%), #2f5577;
-}
-
-.pw-item em {
-  height: 6px;
-  flex: 1;
-  border-radius: 3px;
-  background: #343841;
-}
-
-.pw-side {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 9px 11px 11px;
-}
-
-.pw-side.solo {
-  min-height: 176px;
-}
-
-.pw-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
-  margin-bottom: 4px;
-  border-bottom: 1px solid #2b2e35;
-}
-
-.pw-tabs span {
-  padding: 1px 0 6px;
-  color: #8e95a1;
-}
-
-.pw-tabs .on {
-  color: #ffffff;
-  box-shadow: inset 0 -2px 0 #3d7cf0;
-}
-
-.pw-label {
-  color: #8e95a1;
-  font-size: 11.5px;
-}
-
-.pw-select {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 8px;
-  background: #262930;
-  border: 1px solid #383c47;
-  border-radius: 3px;
-}
-
-.pw-select i {
-  width: 0;
-  height: 0;
-  border: 4px solid transparent;
-  border-top-color: #a3a9b4;
-  margin-top: 4px;
-}
-
-.pw-code {
-  padding: 3px 8px;
-  color: #858c99;
-  background: #22252b;
-  border-radius: 3px;
-  font: 11.5px/1.4 var(--font-mono);
-}
-
-.pw-opt {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 2px 0;
-}
-
-.pw-opt i {
-  position: relative;
-  width: 13px;
-  height: 13px;
-  flex: none;
-  margin-top: 2px;
-  border: 1.5px solid #7b8291;
-}
-
-.pw-opt .radio {
-  border-radius: 50%;
-}
-
-.pw-opt .radio.on {
-  border-color: #3d7cf0;
-  background: radial-gradient(circle, #3d7cf0 0 35%, transparent 40%);
-}
-
-.pw-opt .check {
-  border-radius: 2px;
-}
-
-.pw-opt .check.on {
-  border-color: #3d7cf0;
-  background: #3d7cf0;
-}
-
-.pw-opt .check.on::after {
-  left: 2.6px;
-  top: -0.5px;
-  width: 3.5px;
-  height: 7px;
-  border-color: #ffffff;
-}
-
-.pw-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 8px;
-}
-
-.pw-btn {
-  padding: 4px 12px;
-  background: #2a2d34;
-  border: 1px solid #3b3f4a;
-  border-radius: 3px;
-}
-
-.pw-btn.primary {
-  color: #ffffff;
-  background: #2f6fde;
-  border-color: #2f6fde;
+  width: 100%;
+  height: auto;
 }
 
 /* ---- II. the rules, on parchment ---------------------------------------------------------- */
@@ -1498,7 +1200,7 @@ h3 {
     grid-template-columns: 52px minmax(0, 1fr);
   }
 
-  .plate {
+  .step-shot {
     grid-column: 2;
     margin-top: 18px;
     max-width: 380px;
@@ -1583,9 +1285,9 @@ h3 {
     top: 64px;
   }
 
-  .plate {
+  .step-shot {
     grid-column: 1 / -1;
-    max-width: none;
+    max-width: 420px;
   }
 
   .btn-plaque {

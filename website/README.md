@@ -19,6 +19,7 @@ footer links.
 | `src/` | Hand-written CSS and JS, the favicon and the hosting headers |
 | `sitegen.py` | The generator: pages, pictures, chart art and font subsets |
 | `fontsubset.py` | The fontTools call that subsets one face |
+| `capture_window.mjs` | Captures the release's generator window for the first steps, in every language |
 | `public/` | The built site, committed; this folder is what gets hosted |
 
 ## Look
@@ -30,8 +31,24 @@ The text is Noto Sans, the generator's own face. The world-type vignettes, the f
 map and the rhumb backgrounds are drawn by `sitegen.py`. The pictures are crops of the
 owner-approved screenshots in `docs/images/showcase`.
 
-The four plates in the first section show where to click. They are drawn in HTML, so each
-language's plate carries the words that player will see on screen.
+The four steps show the real screens with the controls marked. Steps 2 and 3 are the released
+generator window in the page's own language, captured by `capture_window.mjs`: for each language
+the release tag's window runs in a browser through its development bridge with an empty data
+folder, so no library, path or setting of the capturing machine appears. Steps 1 and 4 are crops of
+an owner-approved EU5 screenshot of **Mods & DLCs**, in English; the step text names each
+language's own words. The sources are in `docs/images/website/`; `sitegen.py` draws the EU5 marks
+and joins the two Save and play crops.
+
+Recapture the window after a release that changes those screens:
+
+```sh
+git worktree add --detach /tmp/rnw-release vX.Y.Z
+(cd /tmp/rnw-release && uv sync --locked)
+ln -s "$PWD/desktop/node_modules" /tmp/rnw-release/desktop/node_modules
+(cd website && npm ci && npx playwright install chromium)
+node website/capture_window.mjs /tmp/rnw-release
+uv run python website/sitegen.py
+```
 
 ## Words on the page
 

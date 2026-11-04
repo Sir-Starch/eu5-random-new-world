@@ -83,7 +83,9 @@ before publication, since no SDK or CRT file is redistributed.
 ## Player's guide website
 
 `website/public` (`rnw.sirstarch.com`) carries original guide text and drawings (CC BY 4.0),
-crops of the owner-approved screenshots in `docs/images/showcase`, and subsets of Cinzel,
+crops of the owner-approved screenshots in `docs/images/showcase`, frames of the generator's own
+window, two crops of the owner's EU5 **Mods & DLCs** screenshot taken for the guide on 2026-11-04
+(without the account name or other parts of the screen), and subsets of Cinzel,
 Noto Sans, Noto Serif and Noto Serif CJK under the SIL OFL 1.1. Each subset keeps the font's
 name records and `fonts/OFL.txt` lists the copyright notices; no font is sold or renamed. EU5's
 interface is named by single words from the game's localisation, as the Workshop text does.

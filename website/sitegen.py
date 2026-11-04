@@ -87,76 +87,61 @@ SOURCE: Final = "english"
 GAME_TERMS: Final[dict[str, dict[str, str]]] = {
     "english": {
         "mods_dlcs": "Mods & DLCs",
-        "mods": "Mods",
         "open_folder": "Open folder",
         "apply": "Apply",
     },
     "german": {
         "mods_dlcs": "Mods & DLC",
-        "mods": "Mods",
         "open_folder": "Ordner öffnen",
         "apply": "Anwenden",
     },
     "spanish": {
         "mods_dlcs": "Mods y DLC",
-        "mods": "Mods",
         "open_folder": "Abrir carpeta",
         "apply": "Aplicar",
     },
     "french": {
         "mods_dlcs": "Mods et DLC",
-        "mods": "Mods",
         "open_folder": "Ouvrir le dossier",
         "apply": "Appliquer",
     },
     "polish": {
         "mods_dlcs": "Mody i DLC",
-        "mods": "Mody",
         "open_folder": "Otwórz folder",
         "apply": "Zastosuj",
     },
     "braz_por": {
         "mods_dlcs": "Mods e DLCs",
-        "mods": "Mods",
         "open_folder": "Abrir pasta",
         "apply": "Aplicar",
     },
     "turkish": {
         "mods_dlcs": "Modlar ve DLC'ler",
-        "mods": "Modlar",
         "open_folder": "Klasörü aç",
         "apply": "Uygula",
     },
     "russian": {
         "mods_dlcs": "Модификации и дополнения",
-        "mods": "Модификации",
         "open_folder": "Открыть папку",
         "apply": "Применить",
     },
     "japanese": {
         "mods_dlcs": "MODとDLC",
-        "mods": "MOD",
         "open_folder": "フォルダを開く",
         "apply": "適用",
     },
     "korean": {
         "mods_dlcs": "모드 및 DLC",
-        "mods": "모드",
         "open_folder": "폴더 열기",
         "apply": "적용",
     },
     "simp_chinese": {
         "mods_dlcs": "模组和DLC",
-        "mods": "模组",
         "open_folder": "打开文件夹",
         "apply": "应用",
     },
 }
 
-# The generator's names, file names and examples stay as they appear (mod titles are English, C276).
-MOD_HUB: Final = "Random New World (RNW)"
-MOD_WORLD: Final = "RNW: Small continents 7K3Q"
-LAUNCHER: Final = "Random New World Generator.exe"
 
 SECTIONS: Final[tuple[str, ...]] = (
     "start",
@@ -942,70 +927,81 @@ def section_head(page: Page, sid: str, key: str, lead: str | None = None) -> str
     return out
 
 
-# The quick-start plates: the two places the player clicks, drawn in the words they will see.
+# The four steps show the screens the player meets: the release's own generator window, captured
+# in each language by website/capture_window.mjs, and EU5's Mods & DLCs menu from an
+# owner-approved screenshot (English only; the step text gives each language's words).
+SCREENS: Final = ROOT / "docs" / "images" / "website"
+EU5_MARKS: Final[dict[str, tuple[tuple[int, int, int, int], ...]]] = {
+    "eu5-open-folder.png": ((131, 39, 288, 75),),  # Open folder of Random New World (RNW)
+    "eu5-apply.png": ((5, 169, 215, 213), (579, 414, 614, 449)),  # Apply, the world's tick
+}
+CUT: Final = 28  # the dashed cut between the two parts of the Save and play frame, in pixels
+WINDOW_BG: Final = (28, 30, 35)
 
 
-def plate_game_open(page: Page) -> str:
+def png_size(path: Path) -> tuple[int, int]:
+    """Width and height from a PNG's header, so the pages need no image library."""
+    header = path.read_bytes()[16:24]
+    return int.from_bytes(header[:4], "big"), int.from_bytes(header[4:], "big")
+
+
+def step_screen(step: int, slug: str) -> tuple[str, tuple[int, int]]:
+    """The asset path and pixel size of a step's screen."""
+    if step == 1:
+        return "/assets/step1.webp", png_size(SCREENS / "eu5-open-folder.png")
+    if step == 4:
+        return "/assets/step4.webp", png_size(SCREENS / "eu5-apply.png")
+    if step == 2:
+        return f"/assets/step2-{slug}.webp", png_size(SCREENS / f"window-{slug}-world.png")
+    top = png_size(SCREENS / f"window-{slug}-save.png")
+    bottom = png_size(SCREENS / f"window-{slug}-generate.png")
+    return f"/assets/step3-{slug}.webp", (top[0], top[1] + CUT + bottom[1])
+
+
+def make_screens() -> None:
+    from PIL import Image, ImageDraw
+
+    out = PUBLIC / "assets"
+    mark = (224, 122, 85)
+    for name, boxes in EU5_MARKS.items():
+        with Image.open(SCREENS / name) as im:
+            frame = im.convert("RGB")
+        draw = ImageDraw.Draw(frame)
+        for box in boxes:
+            draw.rounded_rectangle(box, radius=6, outline=mark, width=4)
+        step = 1 if name == "eu5-open-folder.png" else 4
+        frame.save(out / f"step{step}.webp", "WEBP", quality=84, method=6)
+    for language in LANGUAGES:
+        slug = language.slug
+        with Image.open(SCREENS / f"window-{slug}-world.png") as im:
+            im.convert("RGB").save(out / f"step2-{slug}.webp", "WEBP", quality=88, method=6)
+        with (
+            Image.open(SCREENS / f"window-{slug}-save.png") as top,
+            Image.open(SCREENS / f"window-{slug}-generate.png") as bottom,
+        ):
+            frame = Image.new("RGB", (top.width, top.height + CUT + bottom.height), WINDOW_BG)
+            frame.paste(top.convert("RGB"), (0, 0))
+            frame.paste(bottom.convert("RGB"), (0, top.height + CUT))
+            y = top.height + CUT // 2
+        draw = ImageDraw.Draw(frame)
+        for x in range(0, frame.width, 16):
+            draw.line((x, y, x + 8, y), fill=(110, 116, 128), width=2)
+        frame.save(out / f"step3-{slug}.webp", "WEBP", quality=88, method=6)
+
+
+def step_figure(page: Page, step: int) -> str:
+    src, (width, height) = step_screen(step, page.language.slug)
+    cls = "step-shot game" if step in {1, 4} else "step-shot window"
     return (
-        '<div class="plate p-game" aria-hidden="true">'
-        f'<div class="pg-tabs"><span class="on">{esc(page.game("mods"))}</span><span>DLC</span></div>'
-        '<div class="pg-row"><i class="thumb t-hub"></i><div class="pg-name">'
-        f'<b>{esc(MOD_HUB)}</b><span class="pg-btn ring">{esc(page.game("open_folder"))}</span></div>'
-        '<i class="box"></i></div>'
-        '<div class="pg-file"><span class="file-ic"></span>'
-        f'<span class="ring">{esc(LAUNCHER)}</span></div>'
-        "</div>"
+        f'<figure class="{cls}" aria-hidden="true">'
+        f'<img src="{src}" width="{width // 2}" height="{height // 2}" alt="" loading="lazy" decoding="async">'
+        "</figure>"
     )
-
-
-def plate_new_world(page: Page) -> str:
-    return (
-        '<div class="plate p-gen" aria-hidden="true"><div class="pw">'
-        f'<div class="pw-lib"><span class="pw-h">{esc(page.ui("worlds"))}</span>'
-        f'<span class="pw-new ring">+ {esc(page.ui("new_world"))}</span>'
-        '<span class="pw-item"><i></i><em></em></span><span class="pw-item"><i></i><em></em></span></div>'
-        '<div class="pw-side"><div class="pw-tabs">'
-        f'<span class="on">{esc(page.ui("new_tab.world"))}</span><span>{esc(page.ui("new_tab.advanced"))}</span>'
-        f"<span>{esc(page.ui('new_tab.output'))}</span></div>"
-        f'<span class="pw-label">{esc(page.ui("type"))}</span>'
-        f'<span class="pw-select ring">{esc(page.ui("type.continents"))}<i></i></span>'
-        f'<span class="pw-label">{esc(page.ui("code"))}</span><span class="pw-code">RNW1-…</span>'
-        "</div></div></div>"
-    )
-
-
-def plate_generate(page: Page) -> str:
-    return (
-        '<div class="plate p-gen" aria-hidden="true"><div class="pw-side solo"><div class="pw-tabs">'
-        f"<span>{esc(page.ui('new_tab.world'))}</span><span>{esc(page.ui('new_tab.advanced'))}</span>"
-        f'<span class="on">{esc(page.ui("new_tab.output"))}</span></div>'
-        f'<span class="pw-opt"><i class="radio on"></i>{esc(page.ui("destination.library"))}</span>'
-        f'<span class="pw-opt ring-soft"><i class="check on"></i>{esc(page.ui("install"))}</span>'
-        '<span class="pw-actions">'
-        f'<span class="pw-btn">{esc(page.ui("enqueue"))}</span><span class="pw-btn primary ring">{esc(page.ui("generate"))}</span>'
-        "</span></div></div>"
-    )
-
-
-def plate_game_enable(page: Page) -> str:
-    return (
-        '<div class="plate p-game" aria-hidden="true">'
-        f'<div class="pg-tabs"><span class="on">{esc(page.game("mods"))}</span><span>DLC</span></div>'
-        f'<div class="pg-row"><i class="thumb t-world"></i><div class="pg-name"><b>{esc(MOD_WORLD)}</b></div>'
-        '<i class="box on ring"></i></div>'
-        f'<div class="pg-row dim"><i class="thumb t-hub"></i><div class="pg-name"><b>{esc(MOD_HUB)}</b></div>'
-        '<i class="box"></i></div>'
-        f'<div class="pg-apply"><span class="pg-btn ring">{esc(page.game("apply"))}</span></div>'
-        "</div>"
-    )
-
-
-PLATES: Final = (plate_game_open, plate_new_world, plate_generate, plate_game_enable)
 
 
 def section_start(page: Page) -> str:
     legs: list[str] = []
-    for i, plate in enumerate(PLATES, start=1):
+    for i in range(1, 5):
         note_key = f"start.{i}_note"
         note = ""
         if note_key in page.texts:
@@ -1015,7 +1011,7 @@ def section_start(page: Page) -> str:
             '<li class="leg">'
             f'<span class="mark" aria-hidden="true"><span>{i}</span></span>'
             f'<div class="leg-body"><h3>{page.h(f"start.{i}_title")}</h3><p>{page.t(f"start.{i}_text")}</p>{note}</div>'
-            f"{plate(page)}</li>"
+            f"{step_figure(page, i)}</li>"
         )
         legs.append(leg)
     ready = (
@@ -1539,6 +1535,7 @@ def main(argv: list[str] | None = None) -> int:
             manifest = read_manifest()
         else:
             make_pictures()
+            make_screens()
             manifest = build_fonts(only)
         write(render(manifest, only))
     except BuildError as error:
