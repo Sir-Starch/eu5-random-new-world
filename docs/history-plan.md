@@ -3,8 +3,12 @@
 **Status: accepted plan (owner instruction, 2026-11-02).** The owner asked for the
 plan to be completed without open questions and committed. It is the design
 reference for 1.2.0 work. **Implementation was authorized by the owner on
-2026-11-03.** Version/epoch changes follow the phase requirements below;
-publication still requires explicit authorization under [AGENTS](../AGENTS.md).
+2026-11-03.** **Revised by the owner-authorized audit of 2026-11-05**
+([§21](#21-independent-audit-and-redesign-2026-11-05)). Its decisions D21–D28
+rewrite the policy targets, the acceptance criteria ([§18](#18-acceptance-criteria))
+and the remaining phases (R1–R6). Version/epoch changes follow the phase
+requirements below; publication still requires explicit authorization under
+[AGENTS](../AGENTS.md).
 A later decision recorded in this file replaces the
 earlier one. Values marked *calibrated* are tuned within their stated bounds
 without a new decision; thresholds in [§18](#18-acceptance-criteria) change only
@@ -25,6 +29,14 @@ history just as an empire does. A quiet region is a valid result.
 **Thesis:** generate a causal political past, project its surviving consequences
 into EU5, and let the player read those causes in the game and in the generator.
 The same model drives all three. Prose is an output of the model, never its record.
+
+**History serves the start (D21).** This is the backstory of EU5 countries within
+the generation parameters, not a world simulation. The controls set a world's
+political character: how organized, how large its states are, how extraordinary
+and how turbulent it is. History picks the concrete actors and paths and explains
+them. Within a world, regions differ: a patchwork of small states, rival powers, a
+paramount with clients, a league, a confederation, the successors of a fallen
+realm. An ambition can fail, and a world without any large empire is a valid result.
 
 ### What the player gets in 1.2.0
 
@@ -108,20 +120,28 @@ on these observations.
 | D4 | Layer | History is part of peoples; it never reads the resource roll |
 | D5 | Population | Start budget conserved through history; movement only, no births or deaths |
 | D6 | Organized land | The bootstrap's landed/tribal/unorganized partition is fixed; ownership changes only among landed actors |
-| D7 | State size | Emergent; calibrated to the 1.1.0 outcome of the same settings ([§7](#7-bootstrap-and-calibration)) |
-| D8 | Extraordinary peoples | `empire_permille` seeds trajectories; history decides whether they last ([§12](#12-existing-static-systems)) |
+| D7 | State size | Emergent; ordinary sizes calibrated to the 1.1.0 outcome of the same settings ([§7](#7-bootstrap-and-calibration)); regional powers and realms may exceed them |
+| D8 | Extraordinary peoples | `empire_permille` seeds extraordinary aims per hearth domain, with strategies; history decides whether they succeed (D23, [§12](#12-existing-static-systems)) |
 | D9 | Social depth | Eight dimensions, each with a cause in history and a projection or a summary line ([§6](#6-societies)) |
 | D10 | In-game visibility | Pair-specific named historical opinions plus the voluntary **Our History** decision; vanilla-key fallback |
 | D11 | Relations in EU5 | Vassals, alliances, rivals, confederations, opinions, discovery: core. `guarantee`: core with fallback. Claims, cores, truces, starting wars, tributaries, dynasties, formables, ruins: not in 1.2.0 |
 | D12 | Existing systems | Refactored first into a final start plan with byte-equal output (H1), then fed by history |
 | D13 | Reading surface | Generator atlas in both windows; in-game opinions and chronicle; structured chronicle text, not free prose |
-| D14 | Player control | History always on; one new control, **Historical turbulence** (Calm/Varied/Turbulent), field `natives.turbulence_permille` |
+| D14 | Player control | History always on; one new control, **Historical turbulence** (Calm/Varied/Turbulent), field `natives.turbulence_permille`; it moves conflict propensity, setting weights and strategy mix (D22–D23) |
 | D15 | Atlas | `format` 3 with a `history` section inside `atlas.json`; formats 1/2 stay readable and show no history (implementation correction below) |
 | D16 | Stories | Existing families read plan facts; no new story family in 1.2.0 |
 | D17 | Technology | Unchanged derivation: templates by complexity, the calibrated level for realized great empires |
-| D18 | Engine check | One batched owner sitting at H7; fallbacks decided in advance |
+| D18 | Engine check | One batched owner sitting at R6 (formerly H7); fallbacks decided in advance |
 | D19 | Scope cuts | Fixed order in [§17](#17-phases-and-scope-control) |
 | D20 | Release | MINOR 1.2.0; pending epoch 61 from the first world-byte change (H4) |
+| D21 | Purpose | History serves the start: controls set the character, history the path and causes ([§21](#21-independent-audit-and-redesign-2026-11-05)) |
+| D22 | Ordinary structure | Regional settings (patchwork, rival powers, paramount) seeded per political region; aims only |
+| D23 | Extraordinary structure | Great realm, sea league, highland confederation, sacred centre as aims; prudent or overreaching strategies; balancing neighbours |
+| D24 | Administration | Capacity scales with population, technology and institutions; indirect rule is cheaper; recognition is relative |
+| D25 | Dependencies | Submission needs a defeat or threat and an overlord of real scale; independence ends it |
+| D26 | Institutions | Founding authority follows regional tradition |
+| D27 | Chronicles | Ranked by significance; no renewed-exchange filler; a quiet past is short |
+| D28 | Acceptance | §18 measures the start; development seeds 3/42/77/1000–1004; held-out 1005–1008, once |
 
 ## 4. Scope and abstractions
 
@@ -160,12 +180,14 @@ reroll in 1.2.0.
 | Mean state size (`state_locations`) | Bootstrap scale and calibration target ([§7](#7-bootstrap-and-calibration)); conquest may produce larger states |
 | Culture/religion zone size | Unchanged identity geography; migration adds minorities; political and faith borders may differ |
 | Tribe size, organized tribes (`tribe_locations`, `organized_permille`) | Unchanged partition into pop-type tribes, landed actors and unorganized land |
-| Extraordinary peoples (`empire_permille`) | Per-hearth chance of an extraordinary trajectory; 0 seeds none and leaves ordinary history on |
+| Extraordinary peoples (`empire_permille`) | Per-hearth-domain chance of an extraordinary aim (great realm, sea league, highland confederation, sacred centre), as in 1.1.0; 0 seeds none and leaves ordinary history and regional settings on (D23) |
 | Peasant share (`peasant_peak_permille`) | Unchanged maximum at full complexity; history never changes it |
-| **Historical turbulence** (`natives.turbulence_permille`, new) | Propensity for pressure, conflict and shocks within viability rules ([§15](#15-player-control-and-world-codes)) |
+| **Historical turbulence** (`natives.turbulence_permille`, new) | Propensity for pressure, conflict and shocks within viability rules; Calm favours paramounts and prudent realms, Turbulent favours patchworks, rival powers and overreach (D22–D23, [§15](#15-player-control-and-world-codes)) |
 
 The help text of **Extraordinary peoples** changes from "rises" to "starts a
-trajectory that history may sustain or end", in every language.
+trajectory that history may sustain or end", in every language. H5 implemented
+this as "Chance of an extraordinary trajectory around each cultural hearth. History
+determines whether…"; D23 keeps that meaning, and the text stays unchanged.
 
 ## 6. Societies
 
@@ -199,6 +221,14 @@ act through movement, exchange, resistance and common defence; they are never
 turned into landed countries to colour the map. Federations, trading networks and
 stable small states are end states in their own right, not steps toward empire.
 
+**Regional tradition (D26).** Founding authority is not drawn independently for
+each polity. Each generated region draws a tradition, a weighting of ruler,
+council, sacred and customary authority, and its foundings draw from it. Neighbours
+therefore tend to share institutions, and history changes them through unions,
+reforms and leagues. Council traditions are likelier on coasts with sea routes, and
+sacred traditions near real sacred places. Geography still does not dictate a
+government.
+
 ## 7. Bootstrap and calibration
 
 1. Physical opportunity and cost: land contacts, islands, passes, coastal access,
@@ -215,11 +245,13 @@ stable small states are end states in their own right, not steps toward empire.
 7. History; then one final start plan; then every output.
 
 **Inverse calibration.** The final distribution must match what the sliders mean
-without any repair after history. `b` and the action propensities are fitted on
-the published seed set ([§18](#18-acceptance-criteria)), with the 1.1.0 outcome of
-the same seeds and settings as the reference. They are then validated once on
-the held-out set. Each world's deviation is reported, never corrected. The targets
-are statistical over seed sets, not per world.
+without any repair after history. The development seed set (D28) is used to fit
+`b`, the action propensities and the capacity coefficients (D24). The reference is
+the 1.1.0 outcome of the same seeds and settings. The fitted values are then
+validated once on the held-out set. Each world's deviation is reported, never
+corrected. The targets are statistical over seed sets, not per world. The setting
+and strategy tables of D22–D23 are design values: they state intent, and Q1–Q4
+check that the engine realizes it. They are not fitted to make a threshold pass.
 
 **Population.** History moves cohorts along feasible routes into available
 capacity. The total equals the start budget at every round. The 1037 population is
@@ -255,8 +287,9 @@ vulnerability; it does not pick a winner.
 | Exchange agreement | Reachable complementary centres, repeated contact | Trust, shared route interest |
 | Defence pact | A demonstrated threat and the ability to cooperate | Alliance, obligations, fear of a third party |
 | Conflict | Reachable target, grievance or opportunity, capacity | Transfer, settlement, grievance, dependence |
-| Submission or protection | Power imbalance and negotiated survival | Vassal or protection ([§11](#11-eu5-projection)) |
-| Failed integration | Distant rule, weak legitimacy, local organization | Autonomy, separation, successor lineage |
+| Submission or protection | A recorded defeat or threat, and a lord of real scale (D25) | Vassal or protection ([§11](#11-eu5-projection)) |
+| Independence | A lord weaker than at submission, over capacity or committed elsewhere (D25) | Ended dependency, lasting memory |
+| Failed integration | Distant rule, weak legitimacy, local organization, rule beyond capacity (D24) | Autonomy, separation, successor lineage |
 | Succession crisis | A succession rule and existing tensions | Continuity, redistribution or division |
 | Religious mediation or dispute | A real centre and competing authority | Cross-border contact, settlement or rivalry |
 | Migration or refuge | Pressure at origin, capacity at destination | Moved cohorts, minorities, shared memory |
@@ -282,6 +315,9 @@ not simulate EU5 armies or predict campaign battles.
 - Occupation, annexation, submission and influence are distinct. Annexation is
   not always the best outcome.
 - Distant, heterogeneous or recently gained districts cost more to integrate.
+  Capacity grows with population, technology, centralization and tradition, and
+  subjects cost less than direct rule (D24). Overreach beyond capacity is possible
+  only for an overreaching aim, and it feeds failed integration.
 - Collective defence needs reachable members and an actual commitment; it is not
   a world-wide brake on a large state.
 - A partition creates connected successors with viable seats at construction.
@@ -382,11 +418,21 @@ game-evidenced behavior (C160, C251, `alliance_can_exist`). They are not discard
    - **sacred centre:** strong religious authority at the zone's most populous centre.
 
    A **fractured realm** cannot be seeded. It exists only as the successors of a
-   recorded union.
+   recorded union or of an overreaching realm.
+
+   *Revised by D23–D24.* These trajectories are *aims*: they shape the holders'
+   proposals (targets, persistence, bargaining partners) and carry a prudent or
+   overreaching strategy. They grant no outcome. Regional settings (D22) add
+   ordinary aims, *regional power* and *paramount*, independently of this control.
+   A league can form on recorded trust and a shared route interest. The audit found
+   that requiring a feared third party left every league and confederation
+   unrealized (A2).
 3. **Outcomes are recognized, then projected.** At 1337 the structure predicates
-   recognize realized outcomes. The existing adapters write their templates,
-   positions, confederations, levels and rank. Rank stays reserved for realized
-   great empires, following the vanilla Americas.
+   recognize realized outcomes. Size thresholds are relative to the region or
+   hearth domain (D24); no fixed 12-location count or fixed burden limit applies.
+   The existing adapters write their templates, positions, confederations, levels
+   and rank. Rank stays reserved for realized great realms, following the vanilla
+   Americas.
 4. **Relations come from memory.** Fear and resentment opinions replace the
    blanket "every neighbour fears the empire" rule. Leagues' alliances follow
    actual pacts rather than a ring. Groups may overlap through explicit memberships.
@@ -400,7 +446,8 @@ The report counts seeded and realized trajectories per kind.
 
 **Generator.** The country summary covers origin, organization, present position
 and two or three relationships with reasons. The chronicle lists up to eight
-events (fewer for a quiet past) with periods, partners and place links. The
+events, fewer for a quiet past, with periods, partners and place links. Events are
+ranked by significance (D27), and a renewed exchange never fills a slot. The
 relationship view separates the model's memory from the projected EU5 relation.
 The regional overview shows major changes and shared inheritances. The Tauri
 window and the classic window show the same facts through the common controller;
@@ -450,7 +497,9 @@ reading capabilities or the public backward-compatibility contract.
   Turbulent = 200 / 500 / 800 permille, and the same setting as a slider from
   0 to 1000 in **Advanced → Peoples** (**Customize** in the classic window).
   Default Varied (500). **Total Chaos** draws it within the range. It changes the
-  propensity for pressure, conflict and shocks within viability rules. It never
+  propensity for pressure, conflict and shocks within viability rules, the weights
+  of regional settings and the share of overreaching strategies (D22–D23). The
+  difference must be visible on the map (Q3). It never
   changes the strength of the country the player will choose, and it does not
   promise a number of wars.
 - `natives.turbulence_permille` is appended to `CHANGE_FIELDS`. A code without it
@@ -500,7 +549,7 @@ halfway through history is not needed.
 | H4 Projection | Plan from history; all core consequences ([§11](#11-eu5-projection)); named opinions; decision; economy, roads, discovery, AI | Model and written output agree; pending epoch 61 and goldens |
 | H5 Reading | Atlas `format` 3, both windows, structured text in every language, spoilers | Covered/revealed, import and recovery flows; 1.1.0 worlds read |
 | H6 Continuity | Existing story eligibility from plan facts; clean end of obsolete bindings | Content tests; no new family |
-| H7 Calibration and delivery | Thresholds on both seed sets, performance, reference world, package self-test, candidate install, hub update, one owner sitting, fallbacks if needed | [§18](#18-acceptance-criteria) met; release notes |
+| H7 Calibration and delivery | Thresholds on both seed sets, performance, reference world, package self-test, candidate install, hub update, one owner sitting, fallbacks if needed | Technical evidence retained; acceptance and delivery superseded by R1–R6 (D28) |
 
 Order: H0 → H1 → H2 → H3 → H4 → H5/H6 → H7. Viewer work in H5 can start from the
 H2 schema.
@@ -646,6 +695,12 @@ H2 schema.
   below 30%). The held-out results are validation evidence and were not used for
   fitting. H7 is therefore **not accepted**; no candidate or hub was installed
   and no owner game sitting was requested. See the [final report](research/history-120-calibration.md#final-held-out-acceptance-and-local-delivery).
+- **Audit, 2026-11-05:** an independent structural audit of all 144 saved starts
+  ([§21](#21-independent-audit-and-redesign-2026-11-05)) found a uniform small-state
+  map, a fixed administrative ceiling, subject flooding, aimless proposals, random
+  governments and filler chronicles. Its criteria passed on the published set
+  regardless. D21–D28 rewrite the policy targets and §18, and redesign phases
+  R1–R6 replace H7's acceptance and delivery. No code, world bytes or epoch changed.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
@@ -655,27 +710,81 @@ the third negotiates access to the shared sacred centre. In 1337: three related
 polities with different institutions, a real former union, a grievance between two
 of them (a named opinion) and a mediator.
 
-**Irreducible core**, without which 1.2.0 does not ship: H0, H1, H2, H3's
-dimensions that project, H4 core projection with named opinions (or F1), the
-generator reading surface, every language, and H7.
+### Redesign phases after the audit (D21–D28)
+
+H7's technical evidence remains valid for its source and scope. Its acceptance and
+delivery move to R6. Each phase commits only with full checks. Phases R2–R5 change
+world bytes, refresh the pending epoch-61 goldens and keep the reference
+reproducible.
+
+| Phase | Deliverable | Exit evidence |
+|---|---|---|
+| R1 Measurement first | Region classifier and the Q1–Q13 counters in `history_metrics`; three-level sweep harness; frozen held-out record (seeds 1005–1008, source commit, thresholds) | Synthetic tests of every definition. Current code measured on the development set as the *before* record (it is expected to fail). No world bytes |
+| R2 Dependencies | D25: caused submission, overlord scale, independence family with text, named opinion and translations | Synthetic fixtures; Q9 trend on the development set; causal replay |
+| R3 Administration | D24: scaled direct capacity, cheaper indirect rule, overreach pressure, relative recognition | A prudent great realm on reference inputs reaches the 1.1.0 empire scale; ordinary sizes hold Q7 |
+| R4 Aims | D22–D23: regional settings, extraordinary aims with strategies, balancing, league and confederation formation | Q1–Q6 and Q8 on the development set; all aims replay causally |
+| R5 Institutions and chronicles | D26 regional traditions; D27 significance ranking | Q11–Q12 on the development set; every language updated |
+| R6 Validation and delivery | Design tables frozen; held-out run once; S8–S11; reference; packages; candidate install; hub update; contact sheet; one owner sitting | §18 met; release notes |
+
+Order: R1 → R2 → R3 → R4 → R5 → R6. R2 and R3 may be developed together, since
+indirect rule connects them. In R4–R5, the design tables of D22–D23 may be
+adjusted on development seeds within the spirit of their stated intent. Every
+change is recorded with its development evidence.
+
+**Irreducible core**, without which 1.2.0 does not ship:
+
+- H0 and H1;
+- H2, and H3's dimensions that project;
+- H4 core projection with named opinions (or F1);
+- the generator reading surface and every language;
+- R1–R4, D26–D27 and R6.
 
 **Cut order** when time or evidence runs short, first cut first:
 1. Our History decision (as F2);
 2. the regional overview;
 3. `guarantee` (as F3);
-4. migration beyond existing mixed-pop support (identities then stay where bootstrapped);
-5. H6 (stories then bind as in 1.1.0, reading the plan);
-6. internal-only dimensions (summary lines removed).
+4. the sacred-centre aim (sacred access stays ordinary history; Q4 then omits it);
+5. migration beyond existing mixed-pop support (identities then stay where bootstrapped);
+6. H6 (stories then bind as in 1.1.0, reading the plan);
+7. internal-only dimensions (summary lines removed).
 
 A cut is recorded here and in the release notes.
 
 
 ## 18. Acceptance criteria
 
-**Seed sets** (recorded in H0): published = 6 presets (continents, supercontinent,
-small continents, archipelago, islands, The Wall) × 4 seeds; held-out = the next 4
-seeds of each preset, used only in H7. Slider sweeps cover low and high state
-share, state size, population and extraordinary chance on two presets × two seeds.
+*Rewritten by D28 (2026-11-05, [§21](#21-independent-audit-and-redesign-2026-11-05)).*
+The criteria measure the 1337 start that the player sees. The journal is not
+measured for its own sake. Each threshold is a design target fixed before any new
+run, grounded in the 1.1.0 product and the vanilla 1337 Americas. Development runs
+may show that a criterion is mis-specified. It is then revised by a recorded
+decision before the held-out run, never after it.
+
+**Seed sets.**
+
+- **Development:** the six presets (continents, supercontinent, small continents,
+  archipelago, islands, The Wall) × seeds 3, 42, 77, 1000, 1001, 1002, 1003 and 1004,
+  for 48 worlds. All building and tuning use these.
+- **Held-out:** the same six presets × seeds 1005–1008, for 24 worlds. Seeds and
+  source commit are frozen in R1's record, and the set runs once, in R6.
+- **Sweeps:** continents and archipelago × two seeds (3/42 for development,
+  1005/1006 for held-out). Each control runs at a low, the default and a high value,
+  and at all three turbulence levels.
+
+A *political region* and a *bloc* (a polity with its subjects, counted in state
+locations) are defined in D22–D24. A fixed classifier in `history_metrics` labels
+each political region at 1337. It applies these rules in order:
+
+1. **great realm:** a recognized great realm holds at least 50% of the region's
+   state locations;
+2. **paramount:** the largest bloc holds at least 40% and at least 2.5 × the
+   second;
+3. **league/confederation:** a recognized league or confederation holds at least
+   30% of the region's organized land;
+4. **rival powers:** at least two blocs each hold at least 15%;
+5. **fractured:** the living successors of one recorded union or realm hold at
+   least 30%;
+6. **patchwork:** any other region.
 
 **Hard, every world and every turbulence level:**
 
@@ -695,43 +804,73 @@ share, state size, population and extraordinary chance on two presets × two see
 - Spoiler tests pass in both windows. 1.1.0 worlds and library data read.
 - Empty inputs (no population, no eligible landed actor, isolated components) give
   valid results without forced countries or diplomacy.
+- Every setting, aim and strategy is a seeded record with a cause. None of them
+  grants ownership, population, technology, rank or a relation. A failed aim keeps
+  its record and its cause. At `empire_permille` 0, no extraordinary aim is seeded.
+- Every dependency has a recorded submission cause, and every independence event
+  cites the change that allowed it.
 
-**Statistical, both seed sets, Varied unless stated:**
+**Statistical, both seed sets, Varied and default controls unless stated.** Each
+value is computed on the pooled political regions or worlds of one seed set.
 
 | ID | Measure | Threshold |
 |---|---|---|
-| S1 | Conflict, transfer and separation events per 100 bootstrap polities; continuity of 1337 landed countries whose polity, or a union it formed, is at least 100 years old | Event medians strictly rise Calm < Varied < Turbulent; continuity median ≥ 40% at Varied |
-| S2 | Landed generated countries with at least one history-caused projected relation | Median ≥ 50% |
-| S3 | Chronicle entries per landed country | Median ≥ 3; maximum 8 |
-| S4 | Median ordinary state size against 1.1.0 on the same seed and settings | Within ±25% (±40% at Calm and Turbulent); rank correlation with the slider ≥ 0.9 in the sweep |
-| S5 | Largest polity with its subjects on a landmass of ≥ 20 bootstrap polities | ≤ 50% of the landmass's state locations at Calm and Varied; reported at Turbulent |
-| S6 | Distinct projected government/position combinations per world | Median ≥ 1.5 × the 1.1.0 median |
-| S7 | Realized / seeded great-empire trajectories at `empire_permille` 250 | 30–90%; none seeded at 0 |
+| Q1 | Regional variety: classes of political regions | Patchwork, rival powers and paramount each ≥ 10%; fractured ≥ 3%; no class > 50% |
+| Q2 | Variety within a world: distinct region classes, in worlds with ≥ 4 political regions | Median ≥ 3 |
+| Q3 | Turbulence is visible: share of state land whose owner changed since 1037; class shares; continuity of 1337 landed countries at least 100 years old (polity or a union it formed) | Changed-land share Turbulent/Calm ≥ 1.5 pooled, and it rises Calm < Turbulent in ≥ 75% of worlds. Fractured + patchwork share is higher at Turbulent than at Calm; paramount share is higher at Calm than at Turbulent. Continuity median ≥ 40% at Varied |
+| Q4 | Aims work: outcome of each seeded aim (seed set at 250 and sweeps at 1000) | Prudent expansion aims reach their D24 recognition ≥ 70%. Overreaching aims leave successor states, or lose ≥ 25% of their peak holdings, ≥ 50%. League, confederation and sacred-centre aims each realize ≥ 50% where seeded |
+| Q5 | Controls keep their meaning (sweeps) | In all four preset/seed pairs, the declared statistic is non-decreasing from low to default to high and strictly higher at high than at low. `state_locations` → ordinary median state size. `empire_permille` → realized extraordinary societies, in worlds with an eligible domain. `state_share_permille` → state locations. Turbulence → changed-land share |
+| Q6 | Scale of great realms | Realized great-realm blocs have a median of 0.5–1.5 × the 1.1.0 empire of the same hearth on the same input and controls. At 1000, at least three of the four sweep worlds realize an extraordinary society |
+| Q7 | Ordinary state size against 1.1.0 on the same seed and controls | Median paired ratio of ordinary medians within ±25% (±40% at Calm and Turbulent) |
+| Q8 | No continental unification | Landmass with ≥ 60 bootstrap landed polities: no bloc > 50% of its state locations at any turbulence. Landmass with 20–59: a bloc > 50% on ≤ 20% of such landmasses per turbulence, and never > 85% |
+| Q9 | Subjects | Median subject pairs per world 8–40. In ≥ 90% of pairs the overlord holds ≥ 2 × the subject's locations |
+| Q10 | Alliances | Median 4–30 per world, each from a recorded pact |
+| Q11 | Institutions | Per-world republic share: median ≤ 25%, with an interquartile range across worlds ≥ 5 points. Every world with ≥ 20 states has ≥ 2 government types. Authority assortativity over bordering same-culture state pairs ≥ 0.2 |
+| Q12 | Chronicles | No family > 35% of displayed entries, and exchange + contact ≤ 20%. Chronicles with ≥ 5 entries have a median of ≥ 3 distinct families. ≥ 10% of living countries have ≤ 3 entries. Maximum 8 |
+| Q13 | History visible in game | Landed countries with a named historical opinion or a written treaty: median ≥ 50% |
 | S8 | Added generation time against 1.1.0, same machine and inputs | Median ≤ 15%, p95 ≤ 25% |
 | S9 | Added peak memory, reference workload | ≤ 256 MiB |
 | S10 | Cancellation latency | ≤ 2 s |
 | S11 | History in `atlas.json` | ≤ 2 MiB reference, ≤ 8 MiB any seed-set world |
 
 Distributions and outliers are reported, never a chosen best seed. Native code
-is added only for a measured bounded kernel with an equal-output reference.
+is added only for a measured bounded kernel with an equal-output reference. The
+S1–S7 definitions of H7 remain in the
+[calibration report](research/history-120-calibration.md) as historical evidence.
+They are not current gates.
+
+**Visual review (agent-run):** R6 renders the generator's own `countries` atlas
+layer for every held-out world into a local contact sheet. Like other game-derived
+pictures, it stays in `local_data/` ([legal](legal.md)). The agent reviews the sheet
+against Q1–Q2 before asking for the sitting. It is a check on the measurements, not
+a new owner test.
 
 **Game-facing:** `uv sync --locked --group dev && make check`, desktop checks,
 goldens, installed-game read-only checks and reference reproduction as in
-[testing](testing.md). One owner sitting of about fifteen minutes on the H7
-candidate covers: the world loads without errors naming the new keys; a named
-historical opinion appears in the diplomacy view; Our History opens the chronicle;
-a generated `guarantee` appears. A failure applies F1–F3, with no further sitting.
+[testing](testing.md). One owner sitting of about fifteen minutes on the R6
+candidate covers four checks:
+
+- the world loads without errors naming the new keys;
+- a named historical opinion appears in the diplomacy view;
+- Our History opens the chronicle;
+- a generated `guarantee` appears.
+
+A failure applies F1–F3, with no further sitting.
 
 ## 19. Risks
 
 | Risk | Response |
 |---|---|
-| One state absorbs a continent | Reach, commitments, integration cost, coalitions; S5 |
-| Constant fragmentation | Continuity has benefits; S1 continuity |
-| All societies converge | Independent dimensions with costs; S6 |
-| Sliders lose meaning | Fixed envelope, conserved population, S4 |
-| History invisible in game | Named opinions and the decision with decided fallbacks; S2 |
-| Rich but false text | Typed events, causal validator, template text |
+| One state absorbs a continent | Scaled capacity with overreach pressure, balancing neighbours, coalitions; Q8 |
+| Every world looks the same (observed in H7, A1–A6) | Regional settings, aims and strategies (D22–D23); Q1–Q3 |
+| Constant fragmentation | Continuity has benefits; Q3 continuity |
+| A map frozen by subjects (observed, A4) | Caused submission, overlord scale, independence (D25); Q9 |
+| Aims become scripts | Aims shape proposals only; contests, capacity and refusals still decide; Q4 counts failures |
+| All societies converge, or differ only at random | Independent dimensions with costs; regional traditions (D26); Q11 |
+| Sliders lose meaning | Fixed envelope, conserved population, three-level sweeps; Q5–Q7 |
+| Criteria pass while the map regresses (observed, A9) | Criteria measure the start; agent contact-sheet review; criteria are frozen before the held-out run |
+| History invisible in game | Named opinions and the decision with decided fallbacks; Q13 |
+| Rich but false text, or filler | Typed events, causal validator, template text, significance ranking (D27); Q12 |
 | Refactor regressions | H1 byte-equal extraction before any behavior change |
 | Engine rejects a new record | F1–F3 |
 | Spoiler leaks | Covered-flow tests in both windows |
@@ -756,3 +895,202 @@ Each item needs its own decision with its cost and evidence:
 
 Hydrology, fantasy land shapes, wrap research and interface work stay in the
 [roadmap](roadmap.md#other-future-work-requested-by-the-owner).
+
+## 21. Independent audit and redesign (2026-11-05)
+
+**Status: owner-authorized audit decision, 2026-11-05.** The owner asked for an
+independent audit of this plan against the existing evidence, with authority to
+change the plan. The owner's stated goal is a varied, interesting political map at
+the campaign start. Generation controls must keep their meaning, and a world may
+end without any large empire. History is the backstory of EU5 countries within the
+generation parameters, not a world simulation. D21–D28 replace conflicting earlier
+text. The sections they touch are revised in place; this section records why.
+
+### 21.1 Verdict
+
+The H0–H6 machinery is sound and stays:
+
+- the deterministic integer model, causal record and full replay;
+- conserved population and the single final start plan;
+- projection under proven engine prerequisites;
+- named opinions, Our History and atlas format 3;
+- both windows and eleven languages;
+- cancellation, cross-platform parity and S8–S11 performance.
+
+The political **policy** and the **acceptance criteria** do not stay. The held-out
+S4/S5/S7 failures are symptoms of something larger. The criteria passed on the
+published set while the 1337 map regressed. In every world and at every turbulence,
+the map is a uniform patchwork of small states. It is flooded with small subject
+pairs and has almost no alliances, leagues or confederations. Republics are drawn
+at random, and chronicles are filled with renewed exchanges. The published pass
+therefore does not show that the promise of §1 is met, and H7 is not accepted on
+either seed set.
+
+### 21.2 Findings
+
+[V-EXEC, 2026-11-05] This is a read-only analysis of the saved C487/C488 native
+starts: 24 published and 24 held-out worlds, each at Calm, Varied and Turbulent with
+default controls. Each start is compared with the pinned 1.1.0 constructor on the
+same captured physical input. The scripts and tables are in the ignored
+`local_data/history-120/audit-2026-11-05/` folder.
+
+| # | Finding | Evidence |
+|---|---|---|
+| A1 | The map lost its large-scale structure | The largest state per world has a median of 12–13.5 locations and reaches at most 23 locations in all 144 starts. Realized great empires hold 12–14 locations. On the same inputs, 1.1.0 placed great empires of 42–93 locations in 21 of 48 worlds (15/24 published, 6/24 held-out). Median largest bloc (a state with its subjects): published 65 in 1.1.0 against 27.5–29 now; held-out 22 against 28.5–31. Every current world has the same small-state shape, so no world has a large power |
+| A2 | Extraordinary peoples lost its meaning | At `empire_permille` 1000, the sweeps seed 18 great ambitions and realize 2 (published 2/8, held-out 0/10). Across all 144 starts, no sea league (0/10), highland confederation (0/10) or sacred centre (0/2) realizes |
+| A3 | A fixed administrative ceiling | Conquest and recognition both require an integration burden of at most 1,000, whatever the population, technology or subjects. Overhead alone (centralization × locations / 40) caps a realm with centralization 900 at 44 locations. With the distance terms, the 13 held-out great ambitions end at 7–14 locations with burdens of 781–951. Two unions reached burdens of 1,743 and 2,075 and lost recognition |
+| A4 | Submission without cause or exit | A landed actor submits whenever a known neighbour has twice its power. It needs no threat or defeat, and no action ends a dependency. Each world has 55–119 subject pairs (medians 85 published, 82 held-out). 1.1.0 had about 14, and the vanilla 1337 Americas have 4 (C70, 1.4.1). In 34–36% of pairs the overlord holds at most twice the subject's locations; in 27–29% the overlord holds four or fewer. Subjects can neither attack nor be attacked, so the map freezes |
+| A5 | Turbulence changes the record, not the map | From Calm to Varied to Turbulent (published): land whose owner changed since 1037 is 16/18/20%, 1337 states number 165/160/154 and the largest state holds 12/12/13 locations. Continuity is 100% at every level |
+| A6 | The policy has no aims | Each actor admits action families through independent draws and then picks a random eligible target. Nothing persists toward a goal, and success does not compound. Pacts need a feared third party, and one rarely appears: worlds have 1–3 alliances and no confederation |
+| A7 | Governments are random, not historical | Founding authority is drawn uniformly from four types. Every world has 33–49% republics and 5–14% theocracies (1.1.0: 3% and 0.3%). Neighbours of the same culture differ at random |
+| A8 | Chronicles are filler | Exchange agreements make up 76% of displayed entries and beginnings 12%. 99.9% of countries have exactly eight entries, so a quiet past never looks quiet |
+| A9 | The criteria measure the record, not the map | S1 counts journal events. S2 counts named opinions, which every country receives. S3 passes on filler. S6 counts distinct fine-grained positions (157 for about 160 countries). S7 mixes a design intent with engine effectiveness. S5 forbids a hegemon even on a small island. With only two slider levels, S4's sweep cannot pass even for a perfect response unless values tie: the Spearman ceiling is 0.873. No criterion measures structural variety or what a slider visibly does |
+| A10 | Calibration overfit | Fitting emergent aggregate rates on 24 worlds gave a great-empire realization of 7/12 on the published set and 2/13 on the held-out set (Fisher exact p ≈ 0.03). Because the policy sits on A3's ceiling, small geographic differences decide the result |
+
+The held-out S4 data show a perfect slider response: in every pair, the high
+endpoint (5.5–7) exceeds every low endpoint (2–3). Its 0.8889 fails only because of
+A9's ceiling. The S5 case is one 79-location landmass with 22 founding states,
+where an ordinary state with its clients holds 48 locations. Under D22 this is a
+legitimate paramount, so the revised dominance guard (Q8) covers continents
+instead.
+
+### 21.3 Decisions
+
+**D21 History serves the start.** The product is the 1337 start and its
+explanation. Generation controls set a world's political character. History picks
+the concrete actors and paths, supplies every cause and may fail. Each behaviour is
+judged by its visible effect on the start, the generator view or the chronicle. A
+mechanism with none of these is not added, and simulation fidelity beyond that is
+out of scope.
+
+**D22 Regional settings.** A *political region* is a generated EU5 region with at
+least eight bootstrap landed polities. The 48 audited worlds have 4–11 such regions
+(median 7). Before the first round, each political region draws one ordinary
+setting from its own named stream. The setting is a typed seeded record, like a
+trajectory. It assigns aims to actors chosen from existing facts (model strength,
+separation between centres) and grants nothing else. Smaller regions use the
+ordinary policy only.
+
+| Setting | Aims | Picture it tends toward (not guaranteed) |
+|---|---|---|
+| Patchwork | None | Many small states, local grievances, small pacts |
+| Rival powers | *Regional power* for the two or three strongest centres at least three land steps apart | Two or three blocs with clients, opposing pacts and a contested border |
+| Paramount | *Paramount* for the strongest centre, preferring submission over annexation | One dominant realm with clients and wary neighbours |
+
+The weights are design values, not fitted. Turbulence interpolates linearly between
+the three columns.
+
+| Setting | Calm | Varied | Turbulent |
+|---|---:|---:|---:|
+| Patchwork | 30% | 40% | 50% |
+| Rival powers | 30% | 35% | 35% |
+| Paramount | 40% | 25% | 15% |
+
+Ordinary powers stay at the scale of vanilla 1337 American powers, whose largest
+states hold 10–23 locations ([native societies](natives.md), C160).
+
+**D23 Extraordinary peoples seed aims, not outcomes.** `empire_permille` keeps its
+1.1.0 meaning: a chance per hearth domain of an extraordinary society, of the kinds
+the domain allows. These kinds are great realm, sea league, highland confederation
+and sacred centre. A seed gives the chosen actors that aim, and it overrides the
+D22 setting of the regions it covers. At 0, nothing is seeded and ordinary history
+still runs.
+
+- Every expansion aim (regional power, paramount, great realm) draws a *strategy*.
+  A **prudent** actor expands within its capacity and consolidates. An
+  **overreaching** actor keeps expanding past its capacity, up to D24's bound. The
+  prudent share is 80% at Calm, 60% at Varied and 40% at Turbulent.
+- Overreach carries its recorded burden into failed integration and division
+  (§9). The result is successor states of a real former realm, not a scripted
+  collapse.
+- Neighbours that actually come to fear an expansion aim gain a balancing
+  inclination toward pacts and protection.
+- League members can bargain on recorded trust and a shared route interest, not
+  only under threat. Common defence among tribes still needs recorded pressure.
+- Nothing guarantees success. A world can end without any great realm, and a
+  failed aim stays in the chronicle and the regional overview with its cause.
+
+**D24 Administration scales.** Direct capacity grows with the realm's population,
+technology, centralization and institutional tradition. Indirect rule over subjects
+costs a fraction of direct rule. The fixed ceiling of 1,000 is removed from both
+conquest and recognition.
+
+- **Calibration anchor:** with installed empire technology and full inclinations,
+  a prudent great realm can hold 1.1.0's empire scale (40–90 locations, C160). An
+  ordinary state's capacity reproduces the 1.1.0 ordinary size distribution (S4,
+  now Q7).
+- **Prudent actors** never conquer beyond capacity.
+- **Overreaching actors** may reach twice their capacity. Every district beyond
+  capacity adds failed-integration and division pressure.
+- **Recognition** is relative:
+  - a *regional power* holds a bloc of at least 15% of its region's state
+    locations and at least 2.5 × the region's median state;
+  - a *paramount* holds at least 40% and at least 2.5 × the next bloc;
+  - a *great realm* holds at least 50% of its hearth domain's state locations,
+    directly or through subjects, with direct holdings of at least 4 ×
+    `state_locations`.
+- Rank stays reserved for great realms.
+
+**D25 Dependencies need a cause and can end.** Submission needs a recorded defeat
+by the lord, or a recorded threat that the lord protects against. The lord must
+hold at least twice the subject's locations and have three times its power.
+Voluntary submission to a merely larger neighbour is removed.
+
+- A new *independence* family ends a dependency when the lord has become weaker
+  than at submission, is over capacity or is committed elsewhere. The dependency's
+  memory remains.
+- Indirect rule (D24) makes subjects the natural form of a paramount's power.
+- The new family has templates, a named-opinion family and translations in every
+  official language.
+
+**D26 Authority follows regional tradition.** Each generated region draws a
+tradition, a weighting of the four founding authorities, from its own stream.
+Foundings draw from their region's tradition, so neighbours tend to share
+institutions while regions differ. Council traditions are likelier on coasts with
+sea routes, and sacred traditions near real sacred places. Unions, reforms and
+leagues still change authority through history. Q11 sets target ranges; these are
+measures, not quotas.
+
+**D27 Chronicles rank significance.** Entries are ranked in this order:
+
+1. origin;
+2. union, division or independence;
+3. conquest gained or lost;
+4. submission;
+5. pact;
+6. a failed or realized aim;
+7. reform;
+8. migration;
+9. the first exchange or contact with a partner.
+
+A renewed exchange never enters. A chronicle holds at most one exchange entry and
+one contact entry. A quiet country gets one to three entries, and the cap stays at
+eight.
+
+**D28 Acceptance measures the start.** §18 is rewritten. The 1001–1004 held-out
+record stays failed under the old criteria. Those seeds join 3/42/77/1000 in the
+development set. New held-out seeds 1005–1008 are frozen in R1 and used once, in R6.
+
+- Criteria may be revised during development only by a recorded decision made
+  before the held-out run, never after it.
+- If the new held-out run fails, those seeds also move to development and a further
+  recorded decision is needed.
+- No world is ever rerolled or excluded.
+
+### 21.4 Unchanged commitments
+
+Every principle in §4–§11 stays in force unless a decision above revises it:
+
+- no repair after history and no early stop;
+- no reroll for a preferred outcome;
+- population is conserved;
+- the fixed tenure partition;
+- the Old World stays fixed context;
+- no flat bonus;
+- the projection uses only proven engine prerequisites;
+- spoiler protection and layered rerolls.
+
+Aims, settings and strategies are seeded records with causes, so they are subject
+to the causal validator and the digest like every other fact. Each phase commits
+only with full checks. The atlas history schema may change because format 3 is
+unreleased, but its import checks extend to the new records.

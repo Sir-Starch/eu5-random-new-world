@@ -10,6 +10,15 @@ fail their frozen thresholds. The calibration report retains the evidence and
 limits. No parameters were fitted to held-out outcomes; no profile install, hub
 update or owner game sitting was performed.
 
+**Superseded as a gate (2026-11-05).** The independent
+[audit](../history-plan.md#21-independent-audit-and-redesign-2026-11-05) measured
+the 1337 maps of these same saved starts. It found that S1–S7 could pass on a
+uniform small-state map that had lost 1.1.0's large-scale structure (findings
+A1–A10). The S4 sweep's two-level Spearman criterion cannot reach 0.9 for a
+perfect untied response (ceiling 0.873). The numbers below remain valid evidence
+for their source and scope. The current gates are the plan's rewritten
+[§18](../history-plan.md#18-acceptance-criteria).
+
 ## Method and scope
 
 The [H0 matrix](history-contracts.md#seed-matrix-and-baseline) supplies six presets

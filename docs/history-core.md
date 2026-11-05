@@ -8,6 +8,11 @@ frozen 1.1.0/epoch-60 reference is preserved. H5 portable reading/controls and [
 are implemented. H7's technical checks and local package audits are complete,
 but held-out S4 sweep, S5 and S7 thresholds fail; the candidate is not accepted.
 See the [final calibration report](research/history-120-calibration.md#final-held-out-acceptance-and-local-delivery).
+The 2026-11-05 [audit](history-plan.md#21-independent-audit-and-redesign-2026-11-05)
+keeps this model, replay and projection. It replaces parts of the current policy,
+described below: the fixed integration ceiling, causeless submission, aimless
+proposals, uniform founding authority and chronicle selection. Phases R1–R6
+replace them.
 
 ## Ownership and entry points
 

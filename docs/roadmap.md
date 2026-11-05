@@ -117,6 +117,12 @@ geopolitics, with three connected goals:
   relationships and play, building on geography, population, economy, culture
   and religion.
 
+**Owner clarification, 2026-11-05.** The goal is a varied, interesting political
+map at the campaign start, with generation controls keeping their meaning. A
+world may have no large empire at all. History is the backstory of EU5 countries
+within the generation parameters, not a world simulation. The plan's
+[audit](history-plan.md#21-independent-audit-and-redesign-2026-11-05) applies this.
+
 This brings generated national histories and broader society/diplomacy work out
 of the general future list and into the 1.2.0 focus. The earlier
 [community history suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)
