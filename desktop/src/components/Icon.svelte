@@ -33,6 +33,20 @@
     trash: "M2.5 4.5h11M6.5 4.5v-2h3v2M4 4.5l.7 9h6.6l.7-9",
     sidebarLeft: "M2.5 3.5h11v9h-11ZM6.5 3.5v9",
     sidebarRight: "M2.5 3.5h11v9h-11ZM9.5 3.5v9",
+    // Events of a chronicle, drawn by what happened, not by whom it helped.
+    flag: "M4 14V2.5M4 3h8l-2 3 2 3H4",
+    merge: "M3 2.5l5 5.5v5.5M13 2.5 8 8",
+    split: "M8 13.5V8M8 8 3 2.5M8 8l5-5.5",
+    bolt: "M9 1.5 4.5 9H8l-1 5.5L11.5 7H8Z",
+    shield: "M8 2 13 4v4c0 3-2.2 5-5 6-2.8-1-5-3-5-6V4Z",
+    link: "M6.5 10a2.5 2.5 0 0 1 0-4H8M9.5 6a2.5 2.5 0 0 1 0 4H8M6.5 8h3",
+    swap: "M3 5.5h9L9.5 3M13 10.5H4l2.5 2.5",
+    down: "M8 2.5v10M4.5 9 8 12.5 11.5 9",
+    up: "M8 13.5v-10M4.5 7 8 3.5 11.5 7",
+    lines: "M3 4.5h10M3 8h10M3 11.5h6",
+    forward: "M2 8h10M8.5 4.5 12 8l-3.5 3.5",
+    pin: "M8 14s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0C3.5 10 8 14 8 14ZM8 5.2a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8Z",
+    circle: "M8 3.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z",
   };
 
   export const ICONS = Object.keys(PATHS);

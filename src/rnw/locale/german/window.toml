@@ -2795,3 +2795,95 @@ text = '''erfüllt'''
 ["history.unfulfilled"]
 source = "d2fcc2e287ae5745"
 text = '''nicht erfüllt'''
+
+["history.tab_place"]
+source = "e9463dccf0541a97"
+text = '''Ort'''
+
+["history.tab_society"]
+source = "d5acfd8330f5caae"
+text = '''Gemeinschaft'''
+
+["history.tab_relations"]
+source = "ba39aabe5da59950"
+text = '''Beziehungen'''
+
+["history.origin"]
+source = "d3e1c5f8a6e240fc"
+text = '''Ursprung'''
+
+["history.technology"]
+source = "11189d4799c00d63"
+text = '''Technologie {level}'''
+
+["history.society_note"]
+source = "fedb0586b6b76e12"
+text = '''Wie diese Gemeinschaft 1337 organisiert war und welches Ereignis jedes Merkmal zuletzt geprägt hat.'''
+
+["history.chronicle_note"]
+source = "17ea9dc671533b54"
+text = '''Die bedeutendsten verzeichneten Ereignisse, das älteste zuerst.'''
+
+["history.relations_note"]
+source = "38278ebfa5d2b8f9"
+text = '''Die stärksten erinnerten Bindungen samt ihren Gründen und die geltenden Abkommen.'''
+
+["history.remembered"]
+source = "40d4b7fdeb791310"
+text = '''Erinnerte Bindungen'''
+
+["history.agreements"]
+source = "be06d720e615eaa1"
+text = '''Weitere Abkommen'''
+
+["history.lord"]
+source = "1e56767c5f9119ca"
+text = '''Suzerän'''
+
+["history.subject"]
+source = "68971283841aecdf"
+text = '''Klientelland'''
+
+["history.guarantor"]
+source = "833a5c4e444c1d70"
+text = '''Garant'''
+
+["history.protected"]
+source = "d3ab7a7b023e7741"
+text = '''Garantiert'''
+
+["history.trust"]
+source = "ade9248e0132b411"
+text = '''Vertrauen'''
+
+["history.grievance"]
+source = "b86338668207bca0"
+text = '''Groll'''
+
+["history.fear"]
+source = "140262b32b0c98df"
+text = '''Furcht'''
+
+["history.dependence"]
+source = "f7a263bc0e46b50e"
+text = '''Abhängigkeit'''
+
+["history.competition"]
+source = "43a08bd8d30e31a1"
+text = '''Rivalität'''
+
+["history.affinity"]
+source = "5a2e54bbcb99c026"
+text = '''Verbundenheit'''
+
+["history.effect"]
+source = "227731e305f215f3"
+text = '''Meinung in EU5'''
+
+["history.no_relations"]
+source = "1400236acabefe1d"
+text = '''Keine verzeichneten Beziehungen'''
+
+["history.owner_changes"]
+source = "773a7e5592ff2b8d"
+text = '''Orte mit einem Wechsel des historischen Besitzers'''

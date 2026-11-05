@@ -2795,3 +2795,95 @@ text = '''accomplie'''
 ["history.unfulfilled"]
 source = "d2fcc2e287ae5745"
 text = '''inaccomplie'''
+
+["history.tab_place"]
+source = "e9463dccf0541a97"
+text = '''Lieu'''
+
+["history.tab_society"]
+source = "d5acfd8330f5caae"
+text = '''Société'''
+
+["history.tab_relations"]
+source = "ba39aabe5da59950"
+text = '''Relations'''
+
+["history.origin"]
+source = "d3e1c5f8a6e240fc"
+text = '''Origine'''
+
+["history.technology"]
+source = "11189d4799c00d63"
+text = '''Technologie {level}'''
+
+["history.society_note"]
+source = "fedb0586b6b76e12"
+text = '''L’organisation de cette société en 1337 et l’événement qui a façonné en dernier chaque trait.'''
+
+["history.chronicle_note"]
+source = "17ea9dc671533b54"
+text = '''Les événements consignés les plus importants, du plus ancien au plus récent.'''
+
+["history.relations_note"]
+source = "38278ebfa5d2b8f9"
+text = '''Les liens les plus marquants, avec leurs causes, et les accords en vigueur.'''
+
+["history.remembered"]
+source = "40d4b7fdeb791310"
+text = '''Liens mémorisés'''
+
+["history.agreements"]
+source = "be06d720e615eaa1"
+text = '''Autres accords'''
+
+["history.lord"]
+source = "1e56767c5f9119ca"
+text = '''Suzerain'''
+
+["history.subject"]
+source = "68971283841aecdf"
+text = '''Vassal'''
+
+["history.guarantor"]
+source = "833a5c4e444c1d70"
+text = '''Garant'''
+
+["history.protected"]
+source = "d3ab7a7b023e7741"
+text = '''Garanti'''
+
+["history.trust"]
+source = "ade9248e0132b411"
+text = '''Confiance'''
+
+["history.grievance"]
+source = "b86338668207bca0"
+text = '''Rancune'''
+
+["history.fear"]
+source = "140262b32b0c98df"
+text = '''Crainte'''
+
+["history.dependence"]
+source = "f7a263bc0e46b50e"
+text = '''Dépendance'''
+
+["history.competition"]
+source = "43a08bd8d30e31a1"
+text = '''Rivalité'''
+
+["history.affinity"]
+source = "5a2e54bbcb99c026"
+text = '''Affinité'''
+
+["history.effect"]
+source = "227731e305f215f3"
+text = '''Opinion dans EU5'''
+
+["history.no_relations"]
+source = "1400236acabefe1d"
+text = '''Aucune relation consignée'''
+
+["history.owner_changes"]
+source = "773a7e5592ff2b8d"
+text = '''Lieux ayant changé de propriétaire historique'''

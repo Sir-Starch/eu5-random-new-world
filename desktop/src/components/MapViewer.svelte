@@ -19,7 +19,13 @@
   import { createRenderer, OCEAN_CSS, paintBox, type Renderer, type Theme } from "../lib/mapgl";
   import type { MapSession } from "../lib/mapSession.svelte";
   import { copyImage, saveFile } from "../lib/native";
+  import Chronicle from "./history/Chronicle.svelte";
+  import Region from "./history/Region.svelte";
+  import Relations from "./history/Relations.svelte";
+  import Society from "./history/Society.svelte";
+  import "./history/history.css";
   import Icon from "./Icon.svelte";
+  import Tabs from "./ui/Tabs.svelte";
 
   let {
     world,
@@ -62,6 +68,35 @@
   const atlas = $derived(session.atlas);
   const facts = $derived<Facts | null>(atlas ? atlas.facts(session.pinned >= 0 ? session.pinned : hover) : null);
   const hoverFacts = $derived<Facts | null>(atlas && hover >= 0 ? atlas.facts(hover) : null);
+
+  // The card of a pinned location: its facts, and for a revealed world the society behind its
+  // country (traits, chronicle, relations) and the history of its region.
+  type CardTab = "place" | "society" | "chronicle" | "relations";
+  let cardTab = $state<CardTab>("place");
+  const dossier = $derived(facts?.country ? (atlas?.data.history?.countries[facts.country.tag] ?? null) : null);
+  const regional = $derived(facts ? (atlas?.data.history?.regions[facts.region] ?? null) : null);
+  const hasRegional = $derived(
+    !!regional && regional.ambitions.length + regional.heritage.length + regional.changes.length > 0,
+  );
+  const cardTabs = $derived<{ value: CardTab; label: string; count?: number }[]>(
+    dossier
+      ? [
+          { value: "place", label: t("history.tab_place") },
+          { value: "society", label: t("history.tab_society") },
+          { value: "chronicle", label: t("history.chronicle"), count: dossier.chronicle.length },
+          { value: "relations", label: t("history.tab_relations"), count: dossier.partners.length + dossier.more },
+        ]
+      : [{ value: "place", label: t("history.tab_place") }],
+  );
+  // A country without a society (or a place with none) shows the place, whichever tab was last chosen.
+  const shownTab = $derived<CardTab>(cardTabs.some((tab) => tab.value === cardTab) ? cardTab : "place");
+  const swatches = $derived(new Map((atlas?.data.countries ?? []).map((country) => [country.tag, country.color])));
+
+  /** Pin a location a record names and bring it into view. */
+  function goTo(cell: number): void {
+    session.pinned = cell;
+    zoomToCells([cell]);
+  }
   const zoomPercent = $derived(Math.round(cam.scale * 100));
 
   // -- loading -----------------------------------------------------------------------------------
@@ -778,54 +813,64 @@
       {/if}
 
       {#if session.pinned >= 0 && facts}
-        <section class="card" aria-live="polite">
+        <section class="card" class:wide={cardTabs.length > 1}>
           <header>
-            <div>
+            <div aria-live="polite">
               <span class="eyebrow">{t(`kind.${facts.kind}`)}</span>
               <h2>{facts.name}</h2>
               {#if facts.area}<p class="faint">{facts.area}{facts.region ? ` · ${facts.region}` : ""}</p>{/if}
             </div>
             <button class="btn icon small ghost" aria-label={t("close")} title={`${t("close")} (Esc)`} onclick={() => (session.pinned = -1)}><Icon name="x" /></button>
           </header>
-          {#if facts.kind === "land"}
-            <dl>
-              <dt>{t("fact.country")}</dt>
-              <dd>
-                {#if facts.country}
-                  <button class="link" onclick={() => highlightOf("country")}>
-                    <span class="swatch" style:background={facts.country.color}></span>{facts.country.name}
-                    <span class="faint mono">{facts.country.tag}</span>
-                  </button>
-                {:else}<span class="faint">{t("no_country")}</span>{/if}
-              </dd>
-              {#if facts.culture}
-                <dt>{t("fact.culture")}</dt><dd><button class="link" onclick={() => highlightOf("culture")}>{facts.culture}</button></dd>
-                <dt>{t("fact.religion")}</dt><dd><button class="link" onclick={() => highlightOf("religion")}>{facts.religion}</button></dd>
-              {/if}
-              <dt>{t("fact.material")}</dt>
-              <dd><button class="link" onclick={() => highlightOf("material")}>{facts.material}{facts.precious ? " ✦" : ""}</button></dd>
-              <dt>{t("fact.terrain")}</dt>
-              <dd>{[facts.topography, facts.vegetation, facts.climate].filter(Boolean).join(" · ")}</dd>
-              {#if facts.population}
-                <dt>{t("fact.population")}</dt><dd class="num">{grouped(facts.population)}</dd>
-                <dt>{t("fact.complexity")}</dt><dd class="num">{facts.complexity}</dd>
-              {/if}
-              {#if facts.area}
-                <dt>{t("fact.area")}</dt><dd><button class="link" onclick={() => highlightOf("area")}>{facts.area}</button></dd>
-              {/if}
-            </dl>
-            {#each [...(facts.country ? atlas?.data.history?.countries[facts.country.tag] ?? [] : []), ...(atlas?.data.history?.regions[facts.region] ?? [])] as section}
-              <details class="history-section">
-                <summary>{section.title}</summary>
-                {#each section.lines as line}
-                  <p>{line.text}</p>
-                  {#if line.place >= 0 && atlas}
-                    <button class="link" onclick={() => { session.pinned = line.place; zoomToCells([line.place]); }}>{atlas.data.names[line.place]}</button>
-                  {/if}
-                {/each}
-              </details>
-            {/each}
+          {#if cardTabs.length > 1}
+            <div class="card-tabs">
+              <Tabs options={cardTabs} value={shownTab} label={t("history.title")} onchange={(value) => (cardTab = value)} />
+            </div>
           {/if}
+          <div class="card-body" class:tabbed={cardTabs.length > 1} role={cardTabs.length > 1 ? "tabpanel" : undefined}>
+            {#if shownTab === "place"}
+              {#if facts.kind === "land"}
+                <dl>
+                  <dt>{t("fact.country")}</dt>
+                  <dd>
+                    {#if facts.country}
+                      <button class="link" onclick={() => highlightOf("country")}>
+                        <span class="swatch" style:background={facts.country.color}></span>{facts.country.name}
+                        <span class="faint mono">{facts.country.tag}</span>
+                      </button>
+                    {:else}<span class="faint">{t("no_country")}</span>{/if}
+                  </dd>
+                  {#if facts.culture}
+                    <dt>{t("fact.culture")}</dt><dd><button class="link" onclick={() => highlightOf("culture")}>{facts.culture}</button></dd>
+                    <dt>{t("fact.religion")}</dt><dd><button class="link" onclick={() => highlightOf("religion")}>{facts.religion}</button></dd>
+                  {/if}
+                  <dt>{t("fact.material")}</dt>
+                  <dd><button class="link" onclick={() => highlightOf("material")}>{facts.material}{facts.precious ? " ✦" : ""}</button></dd>
+                  <dt>{t("fact.terrain")}</dt>
+                  <dd>{[facts.topography, facts.vegetation, facts.climate].filter(Boolean).join(" · ")}</dd>
+                  {#if facts.population}
+                    <dt>{t("fact.population")}</dt><dd class="num">{grouped(facts.population)}</dd>
+                    <dt>{t("fact.complexity")}</dt><dd class="num">{facts.complexity}</dd>
+                  {/if}
+                  {#if facts.area}
+                    <dt>{t("fact.area")}</dt><dd><button class="link" onclick={() => highlightOf("area")}>{facts.area}</button></dd>
+                  {/if}
+                </dl>
+                {#if regional && hasRegional}
+                  <div class="region">
+                    <h3 class="hx-h">{t("history.region")}</h3>
+                    <Region region={regional} names={atlas.data.names} onplace={goTo} />
+                  </div>
+                {/if}
+              {/if}
+            {:else if shownTab === "society" && dossier && facts.country}
+              <Society {dossier} country={facts.country} names={atlas.data.names} onplace={goTo} />
+            {:else if shownTab === "chronicle" && dossier}
+              <Chronicle entries={dossier.chronicle} names={atlas.data.names} onplace={goTo} />
+            {:else if shownTab === "relations" && dossier}
+              <Relations {dossier} names={atlas.data.names} swatch={(tag) => swatches.get(tag)} onplace={goTo} />
+            {/if}
+          </div>
         </section>
       {/if}
 
@@ -942,7 +987,7 @@
     align-items: center;
     gap: 6px;
     height: 26px;
-    max-width: calc(100% - 16px - 296px);
+    max-width: calc(100% - 16px - 400px);
     min-width: 0;
     padding: 0 2px 0 8px;
     font-size: 12.5px;
@@ -963,23 +1008,49 @@
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
   }
   .card {
+    --card-width: 320px;
     position: absolute;
     top: 8px;
     right: 8px;
-    width: min(320px, calc(100% - 16px));
+    display: flex;
+    flex-direction: column;
+    width: min(var(--card-width), calc(100% - 16px));
     max-height: calc(100% - 16px);
-    overflow-y: auto;
-    padding: 8px 10px 10px;
+    overflow: hidden;
     z-index: 3;
   }
-  .history-section { margin-top: 10px; }
-  .history-section summary { cursor: pointer; font-weight: 600; }
-  .history-section p { margin: 8px 0 4px; white-space: pre-line; }
+  .card.wide {
+    --card-width: 384px;
+  }
+  .card-tabs {
+    flex: none;
+    display: flex;
+    height: 30px;
+    padding-left: 10px;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .card-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 10px 10px;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  .card-body.tabbed {
+    padding-top: 12px;
+  }
+  .region {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
   .card header {
+    flex: none;
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 6px;
+    padding: 8px 10px 6px;
   }
   .card h2 {
     font-size: 13px;

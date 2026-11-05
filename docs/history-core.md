@@ -579,11 +579,18 @@ trailing streams, invalid columns and broken references fail explicitly.
 The existing 32 MiB atlas / 100 MiB compact-world limits remain.
 
 Both windows obtain the same `history_presenter.Reader` through the controller.
-Country cards expose origin, government/technology and all eight axes with causes,
+A country exposes origin, government/technology and all eight axes with causes,
 relationships that separate memory from actual EU5 treaties/opinions, and the
-chronicle. Regional summaries show major transfers and shared predecessor periods
-or surviving groups. Place links select and center the named location. The Tauri
-card uses disclosures; the classic card opens a scrollable dialog. Templates and
+chronicle. Regional summaries show major transfers, seeded aims and the shared
+predecessor periods or surviving groups. Place links select and center the named
+location. The classic window renders `Reader.country`/`Reader.region` as text sections
+in a scrollable dialog. The Tauri window has no country card: the pinned *location*
+card has tabs (Place, Society, Chronicle, Relations) drawn from the structured
+`Reader.dossier`/`Reader.place` (`desktop/src/components/history/`). The year of each
+chronicle row is drawn apart from its sentence, so every translation of a chronicle
+template must open with its year (`tests/test_history_dossier.py`); a relationship is
+named by the partner's role toward the viewed country (`vassal` pairs are
+overlord-first, `guarantee` pairs guarantor-first). Templates and
 labels are translated in all eleven official languages. Covered worlds yield no
 history reader/bundle, totals or political summary; the existing reveal action
 opens history with the maps. An older world displays “No recorded history”.

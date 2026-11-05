@@ -35,6 +35,7 @@ from rnw.png import COLOR_RGB, encode_png
 from rnw.settings import WORLD_TYPES
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
     from numpy.typing import NDArray
@@ -497,6 +498,29 @@ def words_for(controller: Controller, found: Atlas) -> atlas_module.Words:
     return controller.words(found)
 
 
+def history_data(
+    reader: history_presenter.Reader, found: Atlas, shown: Callable[[object], str]
+) -> dict[str, object]:
+    """Each country's society and each region's history, keyed as the window asks for them.
+
+    Countries are keyed by tag; a region by the name the window shows for it (``Facts.region``,
+    the ``shown`` of its name), while the reader looks it up by the name it renders itself.
+    """
+    regions = {shown(value): value for value in found.regions}
+    return {
+        "countries": {
+            country.tag: history_presenter.encode(dossier)
+            for country in found.countries
+            if (dossier := reader.dossier(country.tag)) is not None
+        },
+        "regions": {
+            name: history_presenter.encode(summary)
+            for name, value in sorted(regions.items())
+            if (summary := reader.place(reader.name(value))) is not None
+        },
+    }
+
+
 def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | None:
     """A revealed world's atlas as the map viewer paints and asks it; None when it has none or
     its New World is covered."""
@@ -570,17 +594,8 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
     }
     reader = controller.history_reader(world)
     bundle["history"] = (
-        {
-            "countries": {
-                country.tag: history_presenter.data(reader.country(country.tag))
-                for country in found.countries
-            },
-            "regions": {
-                region: history_presenter.data(reader.region(region))
-                for region in sorted({words.name(value) for value in found.regions})
-            },
-        }
-        if reader is not None
+        history_data(reader, found, name)
+        if reader is not None and found.history is not None
         else None
     )
     bundle["seconds"] = round(time.perf_counter() - started, 3)

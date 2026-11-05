@@ -217,13 +217,65 @@ export interface CountryInfo {
   locations: number;
 }
 
-export interface HistorySection {
-  title: string;
-  lines: {text: string; place: number}[];
+/** One recorded event as a timeline row; `place` is a cell index, -1 when none is named. */
+export interface HistoryEntry {
+  year: number;
+  kind: string;
+  label: string;
+  text: string;
+  place: number;
+}
+
+/** A society's trait: a 0-1000 scale (`number`), or a named value (`number` is -1). */
+export interface HistoryAxis {
+  key: string;
+  label: string;
+  number: number;
+  word: string;
+  kind: string;
+  cause: string;
+  year: number;
+  place: number;
+}
+
+export interface HistoryReason {
+  factor: string;
+  label: string;
+  cause: string;
+  year: number;
+  place: number;
+  effect: number;
+}
+
+export interface HistoryPartner {
+  name: string;
+  place: number;
+  tag: string;
+  standing: {kind: string; label: string}[];
+  reasons: HistoryReason[];
+}
+
+/** A country's society, chronicle and relationships (`history_presenter.Dossier`). */
+export interface HistoryDossier {
+  government: string;
+  rank: string;
+  technology: string;
+  origin: HistoryEntry;
+  axes: HistoryAxis[];
+  chronicle: HistoryEntry[];
+  partners: HistoryPartner[];
+  more: number;
+}
+
+/** A region's ownership changes, shared inheritances and aims (`history_presenter.RegionHistory`). */
+export interface HistoryRegion {
+  changes: {year: number; count: number; place: number}[];
+  heritage: {labels: string[]; members: {name: string; place: number}[]}[];
+  ambitions: {kind: string; label: string; name: string; place: number; realized: boolean}[];
 }
 
 export interface AtlasBundle {
-  history?: {countries: Record<string, HistorySection[]>; regions: Record<string, HistorySection[]>} | null;
+  history?: {countries: Record<string, HistoryDossier>; regions: Record<string, HistoryRegion>} | null;
   id: string;
   name: string;
   size: [number, number];

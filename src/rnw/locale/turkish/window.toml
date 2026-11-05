@@ -2795,3 +2795,95 @@ text = '''gerçekleşti'''
 ["history.unfulfilled"]
 source = "d2fcc2e287ae5745"
 text = '''gerçekleşmedi'''
+
+["history.tab_place"]
+source = "e9463dccf0541a97"
+text = '''Yer'''
+
+["history.tab_society"]
+source = "d5acfd8330f5caae"
+text = '''Toplum'''
+
+["history.tab_relations"]
+source = "ba39aabe5da59950"
+text = '''İlişkiler'''
+
+["history.origin"]
+source = "d3e1c5f8a6e240fc"
+text = '''Köken'''
+
+["history.technology"]
+source = "11189d4799c00d63"
+text = '''Teknoloji {level}'''
+
+["history.society_note"]
+source = "fedb0586b6b76e12"
+text = '''Bu toplumun 1337’de nasıl örgütlendiği ve her özelliği en son şekillendiren olay.'''
+
+["history.chronicle_note"]
+source = "17ea9dc671533b54"
+text = '''Kayda geçen en önemli olaylar, en eskiden başlayarak.'''
+
+["history.relations_note"]
+source = "38278ebfa5d2b8f9"
+text = '''En güçlü hatırlanan bağlar, nedenleriyle birlikte, ve geçerli anlaşmalar.'''
+
+["history.remembered"]
+source = "40d4b7fdeb791310"
+text = '''Hatırlanan bağlar'''
+
+["history.agreements"]
+source = "be06d720e615eaa1"
+text = '''Diğer anlaşmalar'''
+
+["history.lord"]
+source = "1e56767c5f9119ca"
+text = '''Metbu Devlet'''
+
+["history.subject"]
+source = "68971283841aecdf"
+text = '''Tabi Devlet'''
+
+["history.guarantor"]
+source = "833a5c4e444c1d70"
+text = '''Güvence Veren'''
+
+["history.protected"]
+source = "d3ab7a7b023e7741"
+text = '''Güvence Verilmiş'''
+
+["history.trust"]
+source = "ade9248e0132b411"
+text = '''Güven'''
+
+["history.grievance"]
+source = "b86338668207bca0"
+text = '''Kin'''
+
+["history.fear"]
+source = "140262b32b0c98df"
+text = '''Korku'''
+
+["history.dependence"]
+source = "f7a263bc0e46b50e"
+text = '''Bağımlılık'''
+
+["history.competition"]
+source = "43a08bd8d30e31a1"
+text = '''Rekabet'''
+
+["history.affinity"]
+source = "5a2e54bbcb99c026"
+text = '''Yakınlık'''
+
+["history.effect"]
+source = "227731e305f215f3"
+text = '''EU5’te görüş'''
+
+["history.no_relations"]
+source = "1400236acabefe1d"
+text = '''Kayıtlı ilişki yok'''
+
+["history.owner_changes"]
+source = "773a7e5592ff2b8d"
+text = '''Tarihî sahibi değişen yerleşimler'''

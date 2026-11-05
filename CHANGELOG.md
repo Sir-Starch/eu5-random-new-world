@@ -10,7 +10,10 @@
   that conserves population and identities. Governments, starting diplomacy,
   settlements, roads and existing stories follow the surviving historical facts.
   Read profiles, relationships, chronicles and regional history in either window
-  after revealing a world, with links to places and portable import/recovery.
+  after revealing a world, with links to places and portable import/recovery. In the
+  new window a location's card has Place, Society, Chronicle and Relations tabs: traits
+  as scales with the event that shaped each, a timeline, and a country's overlord,
+  subjects and agreements next to the reasons it remembers.
   Choose historical turbulence; extraordinary peoples now seeds an ambition
   that can succeed or fail. New client obligations require real administrative
   capacity. Our History and historical opinion names are localized in all eleven

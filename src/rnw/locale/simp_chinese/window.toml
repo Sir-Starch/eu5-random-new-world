@@ -2795,3 +2795,95 @@ text = '''已实现'''
 ["history.unfulfilled"]
 source = "d2fcc2e287ae5745"
 text = '''未实现'''
+
+["history.tab_place"]
+source = "e9463dccf0541a97"
+text = '''地点'''
+
+["history.tab_society"]
+source = "d5acfd8330f5caae"
+text = '''社群'''
+
+["history.tab_relations"]
+source = "ba39aabe5da59950"
+text = '''关系'''
+
+["history.origin"]
+source = "d3e1c5f8a6e240fc"
+text = '''起源'''
+
+["history.technology"]
+source = "11189d4799c00d63"
+text = '''科技 {level}'''
+
+["history.society_note"]
+source = "fedb0586b6b76e12"
+text = '''该社群在1337年的组织方式，以及最后塑造每项特征的事件。'''
+
+["history.chronicle_note"]
+source = "17ea9dc671533b54"
+text = '''已记载的最重要事件，由早到晚排列。'''
+
+["history.relations_note"]
+source = "38278ebfa5d2b8f9"
+text = '''记忆最深的联系及其缘由，以及当前的协议。'''
+
+["history.remembered"]
+source = "40d4b7fdeb791310"
+text = '''记忆中的联系'''
+
+["history.agreements"]
+source = "be06d720e615eaa1"
+text = '''其他协议'''
+
+["history.lord"]
+source = "1e56767c5f9119ca"
+text = '''宗主国'''
+
+["history.subject"]
+source = "68971283841aecdf"
+text = '''附属国'''
+
+["history.guarantor"]
+source = "833a5c4e444c1d70"
+text = '''保障方'''
+
+["history.protected"]
+source = "d3ab7a7b023e7741"
+text = '''保障独立'''
+
+["history.trust"]
+source = "ade9248e0132b411"
+text = '''信任'''
+
+["history.grievance"]
+source = "b86338668207bca0"
+text = '''怨恨'''
+
+["history.fear"]
+source = "140262b32b0c98df"
+text = '''恐惧'''
+
+["history.dependence"]
+source = "f7a263bc0e46b50e"
+text = '''依赖'''
+
+["history.competition"]
+source = "43a08bd8d30e31a1"
+text = '''竞争'''
+
+["history.affinity"]
+source = "5a2e54bbcb99c026"
+text = '''亲近'''
+
+["history.effect"]
+source = "227731e305f215f3"
+text = '''EU5中的好感度'''
+
+["history.no_relations"]
+source = "1400236acabefe1d"
+text = '''没有已记载的关系'''
+
+["history.owner_changes"]
+source = "773a7e5592ff2b8d"
+text = '''历史所有者发生变化的地点'''

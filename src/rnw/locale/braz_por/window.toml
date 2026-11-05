@@ -2795,3 +2795,95 @@ text = '''realizada'''
 ["history.unfulfilled"]
 source = "d2fcc2e287ae5745"
 text = '''não realizada'''
+
+["history.tab_place"]
+source = "e9463dccf0541a97"
+text = '''Local'''
+
+["history.tab_society"]
+source = "d5acfd8330f5caae"
+text = '''Sociedade'''
+
+["history.tab_relations"]
+source = "ba39aabe5da59950"
+text = '''Relações'''
+
+["history.origin"]
+source = "d3e1c5f8a6e240fc"
+text = '''Origem'''
+
+["history.technology"]
+source = "11189d4799c00d63"
+text = '''Tecnologia {level}'''
+
+["history.society_note"]
+source = "fedb0586b6b76e12"
+text = '''Como esta sociedade estava organizada em 1337 e o evento que moldou cada traço pela última vez.'''
+
+["history.chronicle_note"]
+source = "17ea9dc671533b54"
+text = '''Os eventos registrados mais importantes, do mais antigo ao mais recente.'''
+
+["history.relations_note"]
+source = "38278ebfa5d2b8f9"
+text = '''Os laços mais lembrados, com seus motivos, e os acordos atuais.'''
+
+["history.remembered"]
+source = "40d4b7fdeb791310"
+text = '''Laços lembrados'''
+
+["history.agreements"]
+source = "be06d720e615eaa1"
+text = '''Outros acordos'''
+
+["history.lord"]
+source = "1e56767c5f9119ca"
+text = '''Suserano'''
+
+["history.subject"]
+source = "68971283841aecdf"
+text = '''Súdito'''
+
+["history.guarantor"]
+source = "833a5c4e444c1d70"
+text = '''Garantidor'''
+
+["history.protected"]
+source = "d3ab7a7b023e7741"
+text = '''Garantido'''
+
+["history.trust"]
+source = "ade9248e0132b411"
+text = '''Confiança'''
+
+["history.grievance"]
+source = "b86338668207bca0"
+text = '''Rancor'''
+
+["history.fear"]
+source = "140262b32b0c98df"
+text = '''Temor'''
+
+["history.dependence"]
+source = "f7a263bc0e46b50e"
+text = '''Dependência'''
+
+["history.competition"]
+source = "43a08bd8d30e31a1"
+text = '''Rivalidade'''
+
+["history.affinity"]
+source = "5a2e54bbcb99c026"
+text = '''Afinidade'''
+
+["history.effect"]
+source = "227731e305f215f3"
+text = '''Opinião no EU5'''
+
+["history.no_relations"]
+source = "1400236acabefe1d"
+text = '''Nenhuma relação registrada'''
+
+["history.owner_changes"]
+source = "773a7e5592ff2b8d"
+text = '''Localidades que mudaram de proprietário histórico'''

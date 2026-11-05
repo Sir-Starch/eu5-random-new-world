@@ -1,0 +1,429 @@
+/* The society panel of a location card: Place, Society, Chronicle and Relations. Classes carry the
+   hx- prefix because this file is global; colours come from the window's own tokens. */
+
+.hx-note {
+  margin: 0 0 10px;
+  color: var(--text-3);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.hx-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 14px 0 6px;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.hx-h:first-child {
+  margin-top: 0;
+}
+.hx-h small {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.hx-list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hx-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 1px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+/* Chips: a standing, a feeling, a fact about a country. */
+.hx-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.hx-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  background: var(--raised);
+  color: var(--text-2);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.hx-chip.rank {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.hx-chip.good {
+  border-color: transparent;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+.hx-chip.bad {
+  border-color: transparent;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+/* A place a record names; pressing it pins that location on the map. */
+.hx-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  height: 18px;
+  padding: 0 6px 0 4px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 11.5px;
+  text-align: left;
+}
+.hx-place:hover {
+  background: var(--accent-soft);
+}
+.hx-place > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Society: the country, then its eight traits. */
+.hx-identity {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.hx-identity .name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.hx-origin {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: baseline;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.hx-origin .year,
+.hx-year {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+.hx-origin .place {
+  grid-column: 2;
+}
+.hx-traits {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hx-trait {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 7px 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.hx-trait .label {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.hx-trait .label .num {
+  color: var(--text);
+  font-weight: 600;
+}
+.hx-trait .value {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.hx-meter {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+.hx-meter > i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+.hx-since {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  text-align: left;
+}
+button.hx-since {
+  color: var(--accent-text);
+}
+button.hx-since:hover {
+  text-decoration: underline;
+}
+
+/* Chronicle: a rail of dots, a year to the left and the sentence to the right. */
+.hx-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hx-event {
+  --tone: var(--text-3);
+  display: grid;
+  grid-template-columns: 38px 22px minmax(0, 1fr);
+  column-gap: 6px;
+  padding-bottom: 12px;
+}
+.hx-event:last-child {
+  padding-bottom: 0;
+}
+.hx-event[data-tone="origin"] {
+  --tone: var(--accent-text);
+}
+.hx-event[data-tone="tie"] {
+  --tone: var(--ok);
+}
+.hx-event[data-tone="split"] {
+  --tone: var(--danger);
+}
+.hx-event[data-tone="clash"] {
+  --tone: var(--warn);
+}
+.hx-event .hx-year {
+  padding-top: 3px;
+}
+.hx-rail {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.hx-rail::after {
+  position: absolute;
+  top: 24px;
+  bottom: -12px;
+  width: 1px;
+  background: var(--line-2);
+  content: "";
+}
+.hx-event:last-child .hx-rail::after {
+  display: none;
+}
+.hx-dot {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--tone);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--tone);
+}
+.hx-what {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+  min-width: 0;
+  padding-top: 1px;
+}
+.hx-kind {
+  color: var(--tone);
+  font-size: 11px;
+}
+.hx-text {
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+/* Relations: a card for each remembered partner, rows for the other agreements. */
+.hx-partner {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+.hx-partner + .hx-partner {
+  margin-top: 6px;
+}
+.hx-partner > header,
+.hx-agree {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.hx-partner > header {
+  padding: 6px 8px;
+}
+.hx-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+}
+.hx-who:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+.hx-who > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hx-reasons {
+  margin: 0;
+  padding: 2px 8px 6px;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+.hx-reason {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.hx-reason + .hx-reason {
+  border-top: 1px solid var(--line);
+}
+.hx-reason .what {
+  flex: 1 1 8em;
+  min-width: 0;
+}
+.hx-reason .effect {
+  margin-left: auto;
+  font-weight: 600;
+}
+.hx-reason .effect.bad {
+  color: var(--danger);
+}
+.hx-reason .effect.good {
+  color: var(--ok);
+}
+.hx-agree {
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+.hx-agree:last-child {
+  border-bottom: 0;
+}
+.hx-more {
+  padding-top: 6px;
+  color: var(--text-3);
+  font-size: 11.5px;
+}
+
+/* Region: aims, shared inheritances and the years land changed hands. */
+.hx-aim {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.hx-aim .state {
+  color: var(--text-3);
+}
+.hx-aim.done .state {
+  color: var(--ok);
+}
+.hx-aim .status {
+  color: var(--text-3);
+  font-size: 11px;
+}
+.hx-heritage {
+  display: grid;
+  gap: 2px;
+  padding: 4px 0 6px;
+  font-size: 12px;
+}
+.hx-heritage + .hx-heritage {
+  border-top: 1px solid var(--line);
+  padding-top: 6px;
+}
+.hx-heritage .label {
+  color: var(--text-2);
+}
+.hx-heritage .label:first-child {
+  color: var(--text);
+  font-weight: 600;
+}
+.hx-heritage .members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
+  margin-left: -4px;
+}
+.hx-change {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+.hx-change:hover .hx-meter > i {
+  background: var(--accent-hover);
+}
+.hx-change .num:first-child {
+  color: var(--text-2);
+  text-align: right;
+}
+.hx-change .num:last-child {
+  text-align: right;
+  font-weight: 600;
+}

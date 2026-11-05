@@ -2795,3 +2795,95 @@ text = '''осуществлено'''
 ["history.unfulfilled"]
 source = "d2fcc2e287ae5745"
 text = '''не осуществлено'''
+
+["history.tab_place"]
+source = "e9463dccf0541a97"
+text = '''Место'''
+
+["history.tab_society"]
+source = "d5acfd8330f5caae"
+text = '''Общество'''
+
+["history.tab_relations"]
+source = "ba39aabe5da59950"
+text = '''Отношения'''
+
+["history.origin"]
+source = "d3e1c5f8a6e240fc"
+text = '''Происхождение'''
+
+["history.technology"]
+source = "11189d4799c00d63"
+text = '''Технологии {level}'''
+
+["history.society_note"]
+source = "fedb0586b6b76e12"
+text = '''Как было устроено это общество в 1337 году и какое событие в последний раз сформировало каждую черту.'''
+
+["history.chronicle_note"]
+source = "17ea9dc671533b54"
+text = '''Самые значимые записанные события, от старых к новым.'''
+
+["history.relations_note"]
+source = "38278ebfa5d2b8f9"
+text = '''Самые сильные запомнившиеся связи с их причинами и действующие соглашения.'''
+
+["history.remembered"]
+source = "40d4b7fdeb791310"
+text = '''Памятные связи'''
+
+["history.agreements"]
+source = "be06d720e615eaa1"
+text = '''Прочие соглашения'''
+
+["history.lord"]
+source = "1e56767c5f9119ca"
+text = '''Сюзерен'''
+
+["history.subject"]
+source = "68971283841aecdf"
+text = '''Ленник'''
+
+["history.guarantor"]
+source = "833a5c4e444c1d70"
+text = '''Гарант'''
+
+["history.protected"]
+source = "d3ab7a7b023e7741"
+text = '''Гарантировано'''
+
+["history.trust"]
+source = "ade9248e0132b411"
+text = '''Доверие'''
+
+["history.grievance"]
+source = "b86338668207bca0"
+text = '''Обида'''
+
+["history.fear"]
+source = "140262b32b0c98df"
+text = '''Страх'''
+
+["history.dependence"]
+source = "f7a263bc0e46b50e"
+text = '''Зависимость'''
+
+["history.competition"]
+source = "43a08bd8d30e31a1"
+text = '''Соперничество'''
+
+["history.affinity"]
+source = "5a2e54bbcb99c026"
+text = '''Близость'''
+
+["history.effect"]
+source = "227731e305f215f3"
+text = '''Отношение в EU5'''
+
+["history.no_relations"]
+source = "1400236acabefe1d"
+text = '''Записанных отношений нет'''
+
+["history.owner_changes"]
+source = "773a7e5592ff2b8d"
+text = '''Местности, сменившие исторического владельца'''

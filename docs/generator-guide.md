@@ -219,11 +219,17 @@ map layer requires revealing the atlas first.
 
 ## Manage worlds and versions
 
-For worlds made with 1.2.0, click a land location to read its society and history.
-Expand **Organization in 1337**, **Relationships and reasons**, **Chronicle** or the
-regional sections. The classic window opens these through **Society and history**.
-Place links move the map to the recorded place. Memories are shown separately from
-the treaties and opinion effects that appear in EU5. History travels in compact
+For worlds made with 1.2.0, click a land location to read its society and history. The
+location's card has four tabs. **Place** holds the location's facts and the history of
+its region: seeded ambitions and whether they succeeded, the inheritances its societies
+share, and the years its land changed historical owner. **Society** shows the country's
+government, technology and origin, and its eight traits as scales or named values, each
+with the event that last shaped it. **Chronicle** is a timeline of the country's most
+significant recorded events, oldest first. **Relations** lists the strongest remembered
+ties with their reasons and the opinion change EU5 receives for each, then the country's
+other agreements (overlord, subjects, alliances, rivalries, guarantees and exchange). The
+classic window opens the same facts through **Society and history**.
+Place links move the map to the recorded place. History travels in compact
 world files and works without the game installed. Earlier worlds show **No recorded
 history**; they are not assigned an invented past. Covered worlds keep history hidden.
 
