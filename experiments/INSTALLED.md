@@ -1318,7 +1318,7 @@ Evidence: ignored `local_data/wall-variety/`.
 2026-10-30, **1.1.0 development — coasts, water bodies and drainage** (C448).
 [V-EXEC] Bent coast density, vanilla-calibrated lakes, inland seas and spit-bounded gulfs,
 isthmuses, and rivers that enter and leave lakes (see the
-[terrain guide](../docs/terrain-biomes.md#coast-shape-water-bodies-and-drainage-pending-110--epoch-60)).
+[terrain guide](../docs/terrain-biomes.md#coast-shape-water-bodies-and-drainage-110--epoch-60)).
 Full checks pass (2,268 Python tests, 15 optional skips; 23 native Rust tests; strict types and
 lint clean). The pending epoch-60 reference world is refreshed to 867 files / `a2474322…879c`
 (the frozen epoch-59 reference is untouched), reproduced independently by the installed-game
@@ -1375,7 +1375,7 @@ pending epoch 60; existing worlds are untouched. Evidence: ignored `local_data/h
 
 2026-11-01, **1.1.0 development / pending epoch 60 — native territorial variety** (issue #8).
 [V-EXEC] Added geography-based polity growth; the controlled six-preset comparison and its
-scope are in [native societies](../docs/natives.md#territorial-variety-issue-8-pending-110--epoch-60).
+scope are in [native societies](../docs/natives.md#territorial-variety-issue-8-110--epoch-60).
 Full checks pass: 2,406 Python tests (15 optional skips), 23 Rust tests, format/lint/strict
 Python types. The 13 ordinary read-only installed-game checks and independent reference
 reproduction pass on EU5 1.4.6 / build 26300913. The refreshed reference has 870 nonmetadata
