@@ -22,6 +22,7 @@ from rnw.history_model import (
     Realization,
     Reason,
     Reform,
+    Strategy,
     Tenure,
     Trajectory,
     TrajectoryKind,
@@ -42,6 +43,30 @@ REALM_MAX: Final[int] = 4
 REALM_RATIO: Final[int] = 3
 COMPLEX_CENTRE: Final[int] = 500
 REALIZED_AUTHORITY: Final[int] = 650
+# D22: a political region holds at least this many 1037 landed polities.
+POLITICAL_REGION: Final[int] = 8
+# Design weights (permille) of the ordinary regional settings at Calm, Varied and
+# Turbulent; turbulence interpolates linearly between them. Not fitted values.
+SETTINGS: Final[dict[str, tuple[int, int, int]]] = {
+    "patchwork": (300, 400, 500),
+    "rival_powers": (300, 350, 350),
+    "paramount": (400, 250, 150),
+}
+# D23: the share of prudent expansion aims at Calm, Varied and Turbulent.
+PRUDENT: Final[tuple[int, int, int]] = (800, 600, 400)
+RIVAL_SPACING: Final[int] = 3
+FRONTIER: Final[int] = 2
+LARGE_REGION: Final[int] = 16
+# D24 recognition: a region's share of state locations; a regional power's multiple
+# of the region's median state (in halves: 5 = 2.5x); a paramount's multiple of the
+# next bloc; a great realm's bloc holds at least
+# GREAT_SHARE permille of all land locations, the share of the largest vanilla
+# 1337 American state (C117).
+REGIONAL_SHARE: Final[int] = 150
+PARAMOUNT_SHARE: Final[int] = 400
+LEAD_HALVES: Final[int] = 5
+PARAMOUNT_LEAD: Final[int] = 2
+GREAT_SHARE: Final[int] = 5
 
 
 def _place_faith(context: Context, place: str) -> str:
@@ -228,6 +253,21 @@ def _sacred_options(context: Context, hearth: Hearth, landed: set[str]) -> list[
 
 
 def _inclined(profile: Society, kind: TrajectoryKind) -> Society:
+    if kind is TrajectoryKind.REGIONAL_POWER:
+        return replace(
+            profile,
+            centralization=max(750, profile.centralization),
+            integration=max(700, profile.integration),
+            military=Military.OFFENSIVE,
+        )
+    if kind is TrajectoryKind.PARAMOUNT:
+        return replace(
+            profile,
+            centralization=max(800, profile.centralization),
+            integration=max(800, profile.integration),
+            authority=Authority.RULER,
+            military=Military.OFFENSIVE,
+        )
     if kind is TrajectoryKind.GREAT_EMPIRE:
         return replace(
             profile,
@@ -252,7 +292,24 @@ def _inclined(profile: Society, kind: TrajectoryKind) -> Society:
     )
 
 
-def seed_events(context: Context, chance: int) -> list[Event]:
+def interpolate(values: tuple[int, int, int], turbulence: int) -> int:
+    """A design value at Calm (200), Varied (500) and Turbulent (800), linear between."""
+    calm, varied, turbulent = values
+    if turbulence <= 200:  # noqa: PLR2004 - the Calm quick choice
+        return calm
+    if turbulence <= 500:  # noqa: PLR2004 - the Varied quick choice
+        return calm + (varied - calm) * (turbulence - 200) // 300
+    if turbulence <= 800:  # noqa: PLR2004 - the Turbulent quick choice
+        return varied + (turbulent - varied) * (turbulence - 500) // 300
+    return turbulent
+
+
+def _strategy(draw: int, anchor: str, turbulence: int) -> Strategy:
+    prudent = derive_seed(draw, "strategy", anchor) % PERMILLE < interpolate(PRUDENT, turbulence)
+    return Strategy.PRUDENT if prudent else Strategy.OVERREACHING
+
+
+def seed_events(context: Context, chance: int, turbulence: int = 500) -> list[Event]:
     events: list[Event] = []
     # One named stream per hearth keeps chance monotone even when another domain is ineligible.
     profiles = {actor.key: actor.society for actor in context.state.actors}
@@ -274,6 +331,8 @@ def seed_events(context: Context, chance: int) -> list[Event]:
             else pool[derive_seed(draw, "option") % len(pool)]
         )
         key = f"ambition_{derive_seed(draw, str(kind), chosen.anchor):016x}"
+        if kind is TrajectoryKind.GREAT_EMPIRE:
+            chosen = replace(chosen, strategy=_strategy(draw, chosen.anchor, turbulence))
         reforms: list[Reform] = []
         causes = {context.index.actors[member].origin for member in chosen.members}
         for member in chosen.members:
@@ -301,6 +360,168 @@ def seed_events(context: Context, chance: int) -> list[Event]:
                 Effects(reforms=tuple(reforms), trajectories=(replace(chosen, cause=key),)),
             )
         )
+    events.extend(_regional_events(context, events, profiles, prior_changes, turbulence))
+    return events
+
+
+def political_regions(context: Context) -> dict[str, tuple[str, ...]]:
+    """Generated regions holding at least eight 1037 landed polities, with those polities."""
+    found: dict[str, list[str]] = {}
+    for founding in context.history.foundings:
+        if founding.tenure is Tenure.LAND:
+            region = context.index.places[founding.seat].region
+            found.setdefault(region, []).append(founding.key)
+    return {
+        region: tuple(sorted(keys))
+        for region, keys in sorted(found.items())
+        if len(keys) >= POLITICAL_REGION
+    }
+
+
+def _land(context: Context) -> dict[str, set[str]]:
+    land: dict[str, set[str]] = {}
+    for route in context.history.geography.routes:
+        if not route.sea_steps:
+            land.setdefault(route.first, set()).add(route.second)
+            land.setdefault(route.second, set()).add(route.first)
+    return land
+
+
+def _land_steps(land: dict[str, set[str]], seats: set[str], limit: int) -> set[str]:
+    """Districts fewer than ``limit`` land steps from any of ``seats``."""
+    near, frontier = set(seats), set(seats)
+    for _ in range(limit - 1):
+        frontier = {other for key in frontier for other in land.get(key, set())} - near
+        near |= frontier
+    return near
+
+
+def _component(land: dict[str, set[str]], envelope: frozenset[str], seat: str) -> int:
+    """State locations connected to ``seat`` by land inside the region's envelope."""
+    seen, pending = {seat}, [seat]
+    while pending:
+        for other in land.get(pending.pop(), set()) & envelope:
+            if other not in seen:
+                seen.add(other)
+                pending.append(other)
+    return len(seen)
+
+
+def _regional_events(
+    context: Context,
+    extraordinary: list[Event],
+    profiles: dict[str, Society],
+    prior_changes: dict[str, str],
+    turbulence: int,
+) -> list[Event]:
+    """D22: one feasible ordinary setting per political region without an extraordinary aim."""
+    covered = {
+        context.index.places[context.index.actors[member].seat].region
+        for event in extraordinary
+        for item in event.effects.trajectories
+        for member in item.members
+    }
+    taken = {
+        member
+        for event in extraordinary
+        for item in event.effects.trajectories
+        for member in item.members
+    }
+    land = _land(context)
+    events: list[Event] = []
+    for region, polities in political_regions(context).items():
+        context.checkpoint()
+        if region in covered:
+            continue
+        # An aim needs room to act: a land border with at least two landed polities.
+        candidates = sorted(
+            (
+                key
+                for key in polities
+                if key not in taken
+                and sum(
+                    context.index.actors[other].tenure is Tenure.LAND
+                    for other in context.land_near.get(key, set())
+                )
+                >= FRONTIER
+            ),
+            key=lambda key: (-context.power(key), key),
+        )
+        envelope = region_districts(context, region)
+        # A paramount needs connected state land for 40% of the region (D6 keeps
+        # tribal and unorganized land outside every state).
+        paramounts = [
+            key
+            for key in candidates
+            if _component(land, envelope, context.index.actors[key].seat) * PERMILLE
+            >= len(envelope) * PARAMOUNT_SHARE
+        ]
+        rivals: list[str] = []
+        blocked: set[str] = set()
+        count = 3 if len(polities) >= LARGE_REGION else 2
+        for key in candidates:
+            seat = context.index.actors[key].seat
+            if seat in blocked:
+                continue
+            rivals.append(key)
+            if len(rivals) == count:
+                break
+            blocked = _land_steps(
+                land, {context.index.actors[k].seat for k in rivals}, RIVAL_SPACING
+            )
+        feasible = {
+            "patchwork": True,
+            "rival_powers": len(rivals) >= 2,  # noqa: PLR2004 - rivals come in pairs or more
+            "paramount": bool(paramounts),
+        }
+        weights = {
+            name: interpolate(values, turbulence) if feasible[name] else 0
+            for name, values in SETTINGS.items()
+        }
+        draw = derive_seed(context.history.seed, "history", "setting", region)
+        point = draw % sum(weights.values())
+        setting = "patchwork"
+        for name, weight in weights.items():
+            if point < weight:
+                setting = name
+                break
+            point -= weight
+        if setting == "patchwork":
+            continue
+        kind = TrajectoryKind.PARAMOUNT if setting == "paramount" else TrajectoryKind.REGIONAL_POWER
+        chosen = paramounts[:1] if setting == "paramount" else rivals
+        for member in chosen:
+            anchor = context.index.actors[member].seat
+            key = f"aim_{derive_seed(draw, str(kind), anchor):016x}"
+            before = profiles[member]
+            after = _inclined(before, kind)
+            causes = {context.index.actors[member].origin}
+            if member in prior_changes:
+                causes.add(prior_changes[member])
+            profiles[member] = after
+            prior_changes[member] = key
+            taken.add(member)
+            item = Trajectory(
+                kind,
+                "",
+                anchor,
+                (member,),
+                key,
+                _strategy(draw, anchor, turbulence),
+                region,
+            )
+            events.append(
+                Event(
+                    key,
+                    context.state.year,
+                    Action.TRAJECTORY,
+                    (member,),
+                    tuple(sorted(causes)),
+                    Outcome.ACCEPTED,
+                    Reason.AMBITION,
+                    Effects(reforms=(Reform(member, before, after),), trajectories=(item,)),
+                )
+            )
     return events
 
 
@@ -363,18 +584,67 @@ def _realized_group(
     return (), []
 
 
-def _realized(context: Context, trajectory: Trajectory) -> tuple[tuple[str, ...], list[Bond]]:
+def blocs(context: Context) -> dict[str, frozenset[str]]:
+    """Each independent landed actor's realm: its own and its subjects' state locations."""
+    return {
+        actor.key: frozenset(
+            place for member in context.realm(actor.key) for place in context.index.members[member]
+        )
+        for actor in context.state.actors
+        if actor.living and actor.tenure is Tenure.LAND and actor.key not in context.subjects
+    }
+
+
+def region_districts(context: Context, region: str) -> frozenset[str]:
+    """The fixed state-location envelope of one generated region."""
+    return frozenset(
+        place.key
+        for place in context.history.geography.districts
+        if place.region == region and place.tenure is Tenure.LAND
+    )
+
+
+def _regional(context: Context, trajectory: Trajectory, owner: str) -> bool:
+    if owner in context.subjects:
+        return False
+    envelope = region_districts(context, trajectory.region)
+    shares = {key: len(held & envelope) for key, held in blocs(context).items()}
+    own = shares.get(owner, 0)
+    if trajectory.kind is TrajectoryKind.PARAMOUNT:
+        others = max((value for key, value in shares.items() if key != owner), default=0)
+        return own * PERMILLE >= len(envelope) * PARAMOUNT_SHARE and own >= PARAMOUNT_LEAD * others
+    sizes = sorted(
+        len(context.index.members[actor.key])
+        for actor in context.state.actors
+        if actor.living
+        and actor.tenure is Tenure.LAND
+        and context.index.places[actor.seat].region == trajectory.region
+    )
+    median = sizes[(len(sizes) - 1) // 2] if sizes else 0
+    return own * PERMILLE >= len(envelope) * REGIONAL_SHARE and 2 * own >= LEAD_HALVES * median
+
+
+def _realized(  # noqa: PLR0911 - one recognition rule per kind
+    context: Context, trajectory: Trajectory
+) -> tuple[tuple[str, ...], list[Bond]]:
     owner = context.index.owner[trajectory.anchor]
     if not _descends(context, owner, set(trajectory.members)):
         return (), []
     actor = context.index.actors[owner]
+    if trajectory.kind in {TrajectoryKind.REGIONAL_POWER, TrajectoryKind.PARAMOUNT}:
+        return (
+            ((owner,), [])
+            if actor.tenure is Tenure.LAND and _regional(context, trajectory, owner)
+            else ((), [])
+        )
     if trajectory.kind is TrajectoryKind.GREAT_EMPIRE:
+        held = blocs(context).get(owner, frozenset())
         if (
             actor.tenure is Tenure.LAND
             and actor.society.centralization >= REALIZED_AUTHORITY
             and len(context.index.members[owner])
             >= context.history.geography.rules.empire_locations
-            and context.burden(owner) <= PERMILLE
+            and len(held) * PERMILLE >= len(context.history.geography.districts) * GREAT_SHARE
         ):
             return (owner,), []
     elif trajectory.kind in {TrajectoryKind.SEA_LEAGUE, TrajectoryKind.HIGHLAND_CONFEDERATION}:

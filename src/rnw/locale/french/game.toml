@@ -1245,3 +1245,27 @@ text = '''{year} : Une tentative de réforme dans la société {first} se heurta
 ["rnw_history_resisted_1"]
 source = "cdbf8e2b05983ecb"
 text = '''{year} : Une résistance empêcha la modification proposée des institutions de la société {first}.'''
+
+["rnw_history_cause_independence"]
+source = "fbb6337a2ba75d08"
+text = '''indépendance'''
+
+["rnw_history_cause_secession"]
+source = "fa1e8304aac09e63"
+text = '''sécession'''
+
+["rnw_history_independence_0"]
+source = "54e3eaad1883e43b"
+text = '''{year} : La société {first} mit fin à sa soumission à la société {second}.'''
+
+["rnw_history_independence_1"]
+source = "3750639d89d139d1"
+text = '''{year} : La société {first} quitta la suzeraineté de la société {second}.'''
+
+["rnw_history_secession_0"]
+source = "74c4a851632a3fb1"
+text = '''{year} : La société {second} fit sécession de la société {first}.'''
+
+["rnw_history_secession_1"]
+source = "df8a7404ae20ed09"
+text = '''{year} : La société {first} ne put plus retenir la société {second}, qui fit sécession.'''

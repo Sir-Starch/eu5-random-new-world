@@ -1245,3 +1245,27 @@ text = '''{year}: {first} toplumundaki reform girişimi direnişle karşılaşt�
 ["rnw_history_resisted_1"]
 source = "cdbf8e2b05983ecb"
 text = '''{year}: Direniş, {first} toplumunda önerilen kurumsal değişimi engelledi.'''
+
+["rnw_history_cause_independence"]
+source = "fbb6337a2ba75d08"
+text = '''bağımsızlık'''
+
+["rnw_history_cause_secession"]
+source = "fa1e8304aac09e63"
+text = '''kopuş'''
+
+["rnw_history_independence_0"]
+source = "54e3eaad1883e43b"
+text = '''{year}: {first} toplumu, {second} toplumuna boyun eğmeye son verdi.'''
+
+["rnw_history_independence_1"]
+source = "3750639d89d139d1"
+text = '''{year}: {first} toplumu, {second} toplumunun üst egemenliğinden çıktı.'''
+
+["rnw_history_secession_0"]
+source = "74c4a851632a3fb1"
+text = '''{year}: {second} toplumu, {first} toplumundan koptu.'''
+
+["rnw_history_secession_1"]
+source = "df8a7404ae20ed09"
+text = '''{year}: {first} toplumu, {second} toplumunu artık elinde tutamadı ve bu toplum koptu.'''

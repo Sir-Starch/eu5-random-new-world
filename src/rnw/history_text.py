@@ -6,7 +6,7 @@ from the sorted actor list: roles come from typed effects, or remain neutral.
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
@@ -78,6 +78,8 @@ CAUSES: Final[dict[str, str]] = {
     "pressure": "armed pressure",
     "repelled": "repelled attack",
     "resisted": "resisted reform",
+    "independence": "independence",
+    "secession": "breakaway",
 }
 
 # Two factual formulations per displayed family. Bootstrap dates mark the start
@@ -143,6 +145,43 @@ TEMPLATES: Final[dict[str, tuple[str, str]]] = {
         "{year}: An attempted reform in society {first} met resistance and failed.",
         "{year}: Resistance prevented a proposed institutional change in society {first}.",
     ),
+    "independence": (
+        "{year}: Society {first} ended its submission to society {second}.",
+        "{year}: Society {first} left the overlordship of society {second}.",
+    ),
+    "secession": (
+        "{year}: Society {second} broke away from society {first}.",
+        "{year}: Society {first} could no longer hold society {second}, which broke away.",
+    ),
+}
+
+# D27: lower is more significant. A conquest gained or lost outranks a contest
+# that moved no land; a renewed exchange never enters a chronicle.
+SIGNIFICANCE: Final[dict[Action, int]] = {
+    Action.FOUNDATION: 0,
+    Action.UNION: 1,
+    Action.SEPARATION: 1,
+    Action.INDEPENDENCE: 1,
+    Action.SECESSION: 1,
+    Action.CONFLICT: 2,
+    Action.PRESSURE: 3,
+    Action.DEPENDENCY: 3,
+    Action.PROTECTION: 3,
+    Action.PACT: 4,
+    Action.ACCESS: 4,
+    Action.REFORM: 6,
+    Action.MIGRATION: 7,
+    Action.EXCHANGE: 8,
+    Action.CONTACT: 9,
+}
+ROUTINE: Final[frozenset[Action]] = frozenset({Action.EXCHANGE, Action.CONTACT})
+# At most this many entries of a family that recurs in ordinary lives. A first
+# contact stays in the record; the first exchange agreement is its visible sign.
+REPEATED: Final[dict[Action, int]] = {
+    Action.EXCHANGE: 1,
+    Action.CONTACT: 0,
+    Action.MIGRATION: 1,
+    Action.REFORM: 2,
 }
 
 
@@ -241,8 +280,10 @@ def _row(
         participants = (created.key, *created.parents)
     elif event.kind is Action.SEPARATION:
         participants = event.effects.retired
-    elif event.effects.bonds:
-        bond = event.effects.bonds[0]
+    elif event.kind is Action.SECESSION:
+        participants = (event.actors[0], event.effects.created[0].key)
+    elif event.effects.bonds or event.effects.ended:
+        bond = (event.effects.bonds or event.effects.ended)[0]
         participants = (bond.first, bond.second)
     elif event.kind is Action.REFORM:
         participants = event.actors[:1]
@@ -268,40 +309,80 @@ def _history(plan: FinalStartPlan) -> History:
     return plan.history
 
 
-def chronicles(plan: FinalStartPlan) -> dict[str, Chronicle]:
-    """At most eight real events per living country, with predecessor context.
+def _significance(event: Event) -> int:
+    if event.kind is Action.CONFLICT and not event.effects.transfers:
+        return SIGNIFICANCE[Action.PRESSURE]
+    return SIGNIFICANCE[event.kind]
 
-    The actor's origin and surviving relation causes take priority over ordinary
-    encounters. Refused proposals and seeded ambitions are not chronicle facts.
+
+def _eligible(history: History) -> tuple[dict[str, list[Event]], set[str]]:
+    """Chronicle-worthy events by actor, and the first exchange/contact of each pair."""
+    by_actor: dict[str, list[Event]] = defaultdict(list)
+    first: set[str] = set()
+    pairs: set[tuple[Action, tuple[str, ...]]] = set()
+    for event in history.events:
+        if event.outcome is Outcome.REFUSED or event.kind is Action.TRAJECTORY:
+            continue
+        if event.kind in ROUTINE:
+            pair = (event.kind, tuple(sorted(event.actors)))
+            if pair in pairs:
+                continue
+            pairs.add(pair)
+            first.add(event.key)
+        # Only a reform that changed authority, and so the government, is chronicle
+        # material; internal dimensions and resisted attempts stay in the record.
+        if event.kind is Action.REFORM and not any(
+            reform.before.authority is not reform.after.authority
+            for reform in event.effects.reforms
+        ):
+            continue
+        for key in event.actors:
+            by_actor[key].append(event)
+    return by_actor, first
+
+
+def chronicles(plan: FinalStartPlan) -> dict[str, Chronicle]:
+    """At most eight real events per living country, ranked by significance (D27).
+
+    The origin comes first, then divisions, conquests, submissions and agreements.
+    Only the first exchange or contact with a partner counts, recurring families
+    have small caps, and a quiet past stays short. Refused proposals and seeded
+    ambitions are not chronicle facts.
     """
     history = _history(plan)
     actors = {actor.key: actor for actor in history.state.actors}
     events = {event.key: event for event in history.events}
-    by_actor: dict[str, list[Event]] = defaultdict(list)
-    for event in history.events:
-        if event.outcome is not Outcome.REFUSED and event.kind is not Action.TRAJECTORY:
-            for key in event.actors:
-                by_actor[key].append(event)
+    by_actor, first = _eligible(history)
     lasting = {bond.cause for bond in history.state.bonds}
     lasting.update(opinion.cause for opinion in plan.historical_opinions)
     result: dict[str, Chronicle] = {}
-    important = {Action.UNION, Action.SEPARATION, Action.CONFLICT, Action.DEPENDENCY}
     for actor, tag in sorted(plan.history_tags.items()):
         lineage = _ancestors(actors, actor)
         candidates = {event.key: event for key in lineage for event in by_actor[key]}
         origin = actors[actor].origin
         candidates[origin] = events[origin]
-        selected = sorted(
+        ranked = sorted(
             candidates.values(),
             key=lambda event: (
-                event.key != actors[actor].origin,
+                event.key != origin,
+                _significance(event),
                 event.key not in lasting,
-                event.kind not in important,
-                event.kind is Action.FOUNDATION,
                 -event.year,
                 event.key,
             ),
-        )[:LIMIT]
+        )
+        selected: list[Event] = []
+        repeated: Counter[Action] = Counter()
+        for event in ranked:
+            if event.kind in ROUTINE and event.key not in first:
+                continue
+            if event.kind in REPEATED:
+                if repeated[event.kind] >= REPEATED[event.kind]:
+                    continue
+                repeated[event.kind] += 1
+            selected.append(event)
+            if len(selected) == LIMIT:
+                break
         result[tag] = Chronicle(
             tuple(
                 _row(plan, event, actors, lineage)

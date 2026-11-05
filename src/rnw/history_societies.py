@@ -114,12 +114,14 @@ def merged(context: Context, parents: tuple[str, ...], seat: str, authority: Aut
         )
 
     base = context.index.actors[context.index.owner[seat]].society
+    # D23: a partner holding an expansion aim keeps its administration in the bargain.
+    aimed = [context.index.actors[key].society for key in parents if key in context.aims]
     return replace(
         base,
         authority=authority,
-        centralization=average("centralization"),
+        centralization=max([average("centralization"), *(each.centralization for each in aimed)]),
         religious_authority=average("religious_authority"),
-        integration=average("integration"),
+        integration=max([average("integration"), *(each.integration for each in aimed)]),
         tradition=average("tradition"),
     )
 
@@ -161,7 +163,7 @@ def reforms(context: Context, actor: Actor) -> tuple[Society, ...]:
     return choices
 
 
-def _reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C901 - eight independently caused dimensions
+def _reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C901, PLR0912 - eight independently caused dimensions
     """Only responses to a repeated recorded problem are candidates for reform."""
     if context.state.year - context.event_years[actor.society_cause] < REFORM_INTERVAL or any(
         event.kind is Action.REFORM and event.year > context.state.year - REFORM_INTERVAL
@@ -170,6 +172,9 @@ def _reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C9
         return ()
     profile = actor.society
     cooperation = _experience(context, actor, {Action.EXCHANGE, Action.PACT})
+    # Council rule answers collective bargains (pacts, unions, protection), not the
+    # routine exchange that every neighbourhood records (D26).
+    collective = _experience(context, actor, {Action.PACT, Action.UNION, Action.PROTECTION})
     pressure = _experience(context, actor, {Action.CONFLICT, Action.PRESSURE, Action.MIGRATION})
     sacred = _experience(context, actor, {Action.ACCESS})
     incorporation = _experience(
@@ -204,11 +209,12 @@ def _reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C9
         shift("tradition", 100)
         candidates.extend(
             (
-                replace(profile, authority=Authority.COUNCIL),
                 replace(profile, military=Military.BALANCED),
                 replace(profile, livelihood=Livelihood.MIXED),
             )
         )
+        if collective:
+            candidates.append(replace(profile, authority=Authority.COUNCIL))
         if any(context.index.places[key].coastal for key in context.index.members[actor.key]):
             candidates.append(replace(profile, exchange=Exchange.COASTAL))
         if context.land_near.get(actor.key):
@@ -228,7 +234,28 @@ def _reforms(context: Context, actor: Actor) -> tuple[Society, ...]:  # noqa: C9
         shift("integration", -100)
     if _experience(context, actor, {Action.MIGRATION, Action.SEPARATION}):
         candidates.append(replace(profile, authority=Authority.CUSTOMARY))
-    return tuple(dict.fromkeys(value for value in candidates if value != profile))
+    return tuple(
+        dict.fromkeys(
+            value
+            for value in candidates
+            if value != profile
+            and (value.authority is profile.authority or emulated(context, actor, value.authority))
+        )
+    )
+
+
+def emulated(context: Context, actor: Actor, authority: Authority) -> tuple[str, ...]:
+    """D26: a society adopts the authority that at least half its land neighbours hold.
+
+    Returns those neighbours (the reform's institutional cause), or nothing.
+    """
+    neighbours = [
+        context.index.actors[other]
+        for other in sorted(context.land_near.get(actor.key, set()))
+        if context.index.actors[other].living
+    ]
+    holders = tuple(other.key for other in neighbours if other.authority is authority)
+    return holders if holders and 2 * len(holders) >= len(neighbours) else ()
 
 
 def reform_allowed(context: Context, proposal: Proposal) -> Reason | None:

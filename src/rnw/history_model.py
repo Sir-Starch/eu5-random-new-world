@@ -55,6 +55,21 @@ class TrajectoryKind(StrEnum):
     HIGHLAND_CONFEDERATION = "highland_confederation"
     SACRED_CENTRE = "sacred_centre"
     FRACTURED_REALM = "fractured_realm"
+    # Ordinary regional aims (plan D22); appended so portable indexes stay stable.
+    REGIONAL_POWER = "regional_power"
+    PARAMOUNT = "paramount"
+
+
+EXPANSION: Final[frozenset[TrajectoryKind]] = frozenset(
+    {TrajectoryKind.GREAT_EMPIRE, TrajectoryKind.REGIONAL_POWER, TrajectoryKind.PARAMOUNT}
+)
+
+
+class Strategy(StrEnum):
+    """How an expansion aim treats its administrative capacity (plan D23)."""
+
+    PRUDENT = "prudent"
+    OVERREACHING = "overreaching"
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,6 +99,9 @@ class Action(StrEnum):
     MIGRATION = "migration"
     TRAJECTORY = "trajectory"
     PRESSURE = "pressure"
+    # Appended families (plan D24-D25); portable indexes of earlier families stay stable.
+    INDEPENDENCE = "independence"
+    SECESSION = "secession"
 
 
 class Outcome(StrEnum):
@@ -116,6 +134,7 @@ class Reason(StrEnum):
     RESISTANCE = "resistance"
     CAPACITY = "capacity"
     AMBITION = "ambition"
+    AUTONOMY = "autonomy"
 
 
 class Factor(StrEnum):
@@ -318,11 +337,23 @@ class Reform:
 
 @dataclass(frozen=True, slots=True)
 class Trajectory:
+    """A seeded aim: it shapes its holders' proposals and grants no outcome.
+
+    Extraordinary aims name their hearth; ordinary regional aims (D22) name the
+    political region instead and leave ``hearth`` empty.
+    """
+
     kind: TrajectoryKind
     hearth: str
     anchor: str
     members: tuple[str, ...]
     cause: str
+    strategy: Strategy = Strategy.PRUDENT
+    region: str = ""
+
+    @property
+    def expansion(self) -> bool:
+        return self.kind in EXPANSION
 
 
 @dataclass(frozen=True, slots=True)
@@ -339,6 +370,8 @@ class Effects:
     retired: tuple[str, ...] = ()
     transfers: tuple[Transfer, ...] = ()
     bonds: tuple[Bond, ...] = ()
+    # Bonds this event ends, such as a dependency left through independence.
+    ended: tuple[Bond, ...] = ()
     knowledge: tuple[Knowledge, ...] = ()
     memories: tuple[Memory, ...] = ()
     reforms: tuple[Reform, ...] = ()
@@ -380,3 +413,4 @@ class History:
     events: tuple[Event, ...]
     rounds: tuple[tuple[Proposal, ...], ...] = ()
     empire_permille: int = 250
+    turbulence: int = 500

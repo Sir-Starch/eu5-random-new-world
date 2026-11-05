@@ -2771,3 +2771,27 @@ text = '''Теократия'''
 ["history.tribe"]
 source = "6c49567d58669cda"
 text = '''Племя'''
+
+["history.regional_power"]
+source = "503fa383d71d826f"
+text = '''Региональная держава'''
+
+["history.paramount"]
+source = "ff1cbcccd3d96ac0"
+text = '''Держава-гегемон'''
+
+["history.ambitions"]
+source = "f4578665c404f597"
+text = '''Устремления'''
+
+["history.ambition"]
+source = "f195b96c0634604c"
+text = '''{kind} — {name}: {status}'''
+
+["history.fulfilled"]
+source = "6030ced8c6f5f7a3"
+text = '''осуществлено'''
+
+["history.unfulfilled"]
+source = "d2fcc2e287ae5745"
+text = '''не осуществлено'''

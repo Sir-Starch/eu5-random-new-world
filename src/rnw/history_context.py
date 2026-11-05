@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final, final
 from rnw.history_checks import Index, require
 from rnw.history_model import (
     PERMILLE,
+    YEARS,
     Action,
     Event,
     Factor,
@@ -16,6 +17,8 @@ from rnw.history_model import (
     Livelihood,
     Memory,
     Outcome,
+    Strategy,
+    Trajectory,
 )
 
 if TYPE_CHECKING:
@@ -25,6 +28,14 @@ if TYPE_CHECKING:
 
 MUTUAL = frozenset({Action.CONTACT, Action.EXCHANGE, Action.UNION, Action.PACT})
 INTEGRATION_YEARS: Final[int] = 25
+# Administrative capacity (plan D24). Centralization and integration above this
+# combined score double the surplus capacity every CAPACITY_DOUBLING points;
+# technology above level 1 multiplies the surplus by half a level each. A society
+# at or below the threshold keeps the 1.1.0-calibrated ordinary limit of 1,000.
+CAPACITY_THRESHOLD: Final[int] = 1200
+CAPACITY_DOUBLING: Final[int] = 200
+OVERREACH_FACTOR: Final[int] = 2
+UNREST_SLOPE: Final[int] = 600
 
 
 @final
@@ -107,6 +118,10 @@ class Context:
             for key in (bond.first, bond.second)
         }
         self.subjects = set(self.lords)
+        self._aims: dict[str, Trajectory] | None = None
+        self._groups: dict[str, tuple[Trajectory, ...]] | None = None
+        self._founders: dict[str, str] | None = None
+        self.ancestries: dict[str, frozenset[str]] = {}
 
     def _contacts(self) -> None:
         self.near: dict[str, dict[str, int]] = defaultdict(dict)
@@ -207,6 +222,92 @@ class Context:
             self.burdens[cache] = _burden(self, key, gained)
         return self.burdens[cache]
 
+    def capacity(self, key: str) -> int:
+        """Administrative capacity from centralization, integration and technology (D24)."""
+        actor = self.index.actors[key]
+        surplus = actor.society.centralization + actor.society.integration - CAPACITY_THRESHOLD
+        if surplus <= 0:
+            return PERMILLE
+        doublings, rest = divmod(surplus, CAPACITY_DOUBLING)
+        # Piecewise-linear 2**(surplus / doubling), continuous at every doubling.
+        factor = (1 << doublings) * (PERMILLE + rest * PERMILLE // CAPACITY_DOUBLING)
+        technology = max(PERMILLE, (actor.technology + 1) * PERMILLE // 2)
+        return PERMILLE + (factor - PERMILLE) * technology // PERMILLE
+
+    def unrest(self, key: str) -> int:
+        """The burden above which conquered provinces may break away.
+
+        Historical turbulence lowers it: unrest and contested successions make
+        holdings harder to keep (88% of capacity at Calm, 70% at Varied, 52% at
+        Turbulent), while conquest itself remains bounded by capacity.
+        """
+        tolerance = PERMILLE - UNREST_SLOPE * self.history.turbulence // PERMILLE
+        return self.capacity(key) * tolerance // PERMILLE
+
+    def limit(self, key: str) -> int:
+        """The burden a conquest may reach: twice capacity only for an overreaching aim."""
+        aim = self.aims.get(key)
+        factor = (
+            OVERREACH_FACTOR if aim is not None and aim.strategy is Strategy.OVERREACHING else 1
+        )
+        return self.capacity(key) * factor
+
+    def ancestry(self, key: str) -> frozenset[str]:
+        """The actor and every recorded predecessor."""
+        if key not in self.ancestries:
+            pending, seen = [key], set[str]()
+            while pending:
+                current = pending.pop()
+                if current not in seen:
+                    seen.add(current)
+                    pending.extend(self.index.actors[current].parents)
+            self.ancestries[key] = frozenset(seen)
+        return self.ancestries[key]
+
+    @property
+    def aims(self) -> dict[str, Trajectory]:
+        """Living holders of an expansion aim: the anchor's owner, descended from its members."""
+        if self._aims is None:
+            found: dict[str, Trajectory] = {}
+            for item in self.state.trajectories:
+                owner = self.index.owner.get(item.anchor, "")
+                if (
+                    item.expansion
+                    and owner
+                    and self.index.actors[owner].living
+                    and self.ancestry(owner) & set(item.members)
+                ):
+                    _ = found.setdefault(owner, item)
+            self._aims = found
+        return self._aims
+
+    @property
+    def groups(self) -> dict[str, tuple[Trajectory, ...]]:
+        """League, confederation and sacred aims of each living descendant of a member."""
+        if self._groups is None:
+            found: dict[str, list[Trajectory]] = defaultdict(list)
+            seeded = [item for item in self.state.trajectories if not item.expansion]
+            if seeded:
+                for actor in self.state.actors:
+                    if actor.living:
+                        lineage = self.ancestry(actor.key)
+                        found[actor.key].extend(
+                            item for item in seeded if lineage & set(item.members)
+                        )
+            self._groups = {key: tuple(items) for key, items in found.items() if items}
+        return self._groups
+
+    @property
+    def founders(self) -> dict[str, str]:
+        """The 1037 founding actor of every organized district."""
+        if self._founders is None:
+            self._founders = {
+                place: founding.key
+                for founding in self.history.foundings
+                for place in founding.districts
+            }
+        return self._founders
+
     def distance(self, key: str, target: str, through: tuple[str, ...] = ()) -> int:
         """Travel through the actor's own territory to the attacking/defending frontier."""
         pair = key, target, through
@@ -234,6 +335,35 @@ class Context:
                     heapq.heappush(pending, (cost + step, other))
         return 1 << 60
 
+    def setbacks(self, lord: str, subject: str) -> tuple[str, ...]:
+        """The lord's defeats of the previous round against anyone but the subject.
+
+        A defeat is a repelled attack by the lord or land the lord lost. The
+        contest's directed memories name its principal sides; supporting allies,
+        including the subject itself, are not sides.
+        """
+        found: list[str] = []
+        for event in self.experiences[lord]:
+            if (
+                event.year != self.state.year - YEARS
+                or event.kind not in {Action.CONFLICT, Action.PRESSURE}
+                or event.outcome is Outcome.REFUSED
+            ):
+                continue
+            sides = {
+                key for memory in event.effects.memories for key in (memory.first, memory.second)
+            }
+            if lord not in sides or subject in sides:
+                continue
+            repelled = event.outcome is Outcome.FAILED and any(
+                memory.first == lord and memory.factor is Factor.FEAR
+                for memory in event.effects.memories
+            )
+            lost = any(transfer.before == lord for transfer in event.effects.transfers)
+            if repelled or lost:
+                found.append(event.key)
+        return tuple(sorted(found))
+
     def causes(self, proposal: Proposal) -> tuple[str, ...]:
         actors = {key for key in (proposal.actor, proposal.target, proposal.threat) if key}
         if proposal.kind is Action.DEPENDENCY:
@@ -243,12 +373,39 @@ class Context:
         causes = {self.index.actors[key].origin for key in actors}
         for key in actors:
             causes.update(self.actor_causes(key))
+        if proposal.kind is Action.INDEPENDENCE and proposal.target:
+            causes.update(self.setbacks(proposal.target, proposal.actor))
+        if proposal.kind is Action.PACT and not proposal.threat and proposal.target:
+            shared = set(self.groups.get(proposal.actor, ())) & set(
+                self.groups.get(proposal.target, ())
+            )
+            causes.update(item.cause for item in shared)
+        if proposal.kind is Action.SECESSION:
+            founders = {
+                self.founders[key]
+                for part in proposal.partitions
+                for key in part.districts
+                if key in self.founders
+            }
+            causes.update(self.index.actors[key].origin for key in founders)
         if proposal.kind is Action.REFORM:
             causes.update(
                 event.key
                 for event in self.experiences[proposal.actor]
                 if event.year >= self.state.year - 75 and event.outcome is not Outcome.REFUSED
             )
+            authority = proposal.reform.authority if proposal.reform else None
+            if (
+                authority is not None
+                and authority is not self.index.actors[proposal.actor].authority
+            ):
+                # The neighbours whose institutions the reform adopts (D26).
+                causes.update(
+                    self.index.actors[other].society_cause
+                    for other in self.land_near.get(proposal.actor, set())
+                    if self.index.actors[other].living
+                    and self.index.actors[other].authority is authority
+                )
         if proposal.kind is Action.SEPARATION:
             seats = {part.seat for part in proposal.partitions}
             causes.update(

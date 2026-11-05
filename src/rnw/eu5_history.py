@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from rnw.eu5_start import PopCohort
 from rnw.history_checks import require, unique
@@ -39,6 +39,18 @@ if TYPE_CHECKING:
     from rnw.eu5_natives import VanillaNatives
 
 Population = tuple[tuple[str, tuple[PopCohort, ...]], ...]
+
+# D26 design weights of founding authority in a regional tradition, before each
+# region's own variation (0.5-1.5x per authority), its coasts and its sacred places.
+TRADITION: Final[dict[Authority, int]] = {
+    Authority.COUNCIL: 100,
+    Authority.RULER: 450,
+    Authority.SACRED: 100,
+    Authority.CUSTOMARY: 300,
+}
+COASTAL_COUNCIL: Final[int] = 200
+SACRED_TRADITION: Final[int] = 100
+DOMINANT_TRADITION: Final[int] = 3
 
 
 def _checkpoint() -> None:
@@ -220,6 +232,39 @@ def _conditions(inputs: BootstrapInputs, pops: Population) -> None:
         )
 
 
+def traditions(districts: Sequence[District], seed: int) -> dict[str, tuple[int, ...]]:
+    """Each region's weighting of founding authority, in ``Authority`` order (D26).
+
+    Neighbours of a region tend to share institutions while regions differ; coasts
+    favour councils and actual sacred places sacred authority. Neither a donor
+    identity nor a template grants an institution.
+    """
+    places: dict[str, list[District]] = defaultdict(list)
+    for place in districts:
+        places[place.region].append(place)
+    found: dict[str, tuple[int, ...]] = {}
+    for region, members in sorted(places.items()):
+        coastal = sum(place.coastal for place in members) * PERMILLE // len(members)
+        weights: list[int] = []
+        for authority in Authority:
+            variation = derive_seed(seed, "history", "tradition", region, authority.value) % 1001
+            weight = TRADITION[authority] * (500 + variation) // PERMILLE
+            if authority is Authority.COUNCIL:
+                weight += COASTAL_COUNCIL * coastal // PERMILLE
+            if authority is Authority.SACRED and any(place.sacred for place in members):
+                weight += SACRED_TRADITION
+            weights.append(max(1, weight))
+        # Each region has one dominant tradition, so regions differ visibly.
+        point = derive_seed(seed, "history", "tradition", region, "dominant") % sum(weights)
+        for number, weight in enumerate(weights):
+            if point < weight:
+                weights[number] = weight * DOMINANT_TRADITION
+                break
+            point -= weight
+        found[region] = tuple(weights)
+    return found
+
+
 def _foundings(
     inputs: BootstrapInputs,
     districts: Sequence[District],
@@ -230,6 +275,7 @@ def _foundings(
     keys = inputs.keys
     held: set[str] = set()
     found: list[Founding] = []
+    regional = traditions(districts, seed)
     for polity in inputs.societies.polities:
         checkpoint()
         require(
@@ -244,11 +290,16 @@ def _foundings(
         seat = keys[polity.capital]
         key = f"polity:{seat}"
         tenure = Tenure.LAND if polity.kind == STATE else Tenure.TRIBE
-        # Founding authority has its own stream: neither a donor identity nor the
-        # template that happened to carry it gives an institutional advantage.
-        authority = tuple(Authority)[
-            SplitMix64(derive_seed(seed, "history", "authority", key)).below(len(Authority))
-        ]
+        # Founding authority has its own stream, weighted by the region's tradition:
+        # neither a donor identity nor its template gives an institutional advantage.
+        weights = regional[inputs.regions[seat]]
+        point = SplitMix64(derive_seed(seed, "history", "authority", key)).below(sum(weights))
+        authority = Authority.CUSTOMARY
+        for candidate, weight in zip(Authority, weights, strict=True):
+            if point < weight:
+                authority = candidate
+                break
+            point -= weight
         found.append(
             Founding(
                 key,
@@ -304,6 +355,7 @@ def bootstrap_history(
     *,
     seed: int,
     empire_permille: int,
+    turbulence: int = 500,
     checkpoint: Callable[[], None] = _checkpoint,
 ) -> HistoryBootstrap:
     """Construct causal roots for every inhabitant, with no 1337 outcome preassigned.
@@ -358,6 +410,7 @@ def bootstrap_history(
         _foundings(inputs, districts, seed=seed, checkpoint=checkpoint),
         seed=seed,
         empire_permille=empire_permille,
+        turbulence=turbulence,
         checkpoint=checkpoint,
     )
     calibrated = int(societies.population.sum())

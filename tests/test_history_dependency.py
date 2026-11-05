@@ -2,73 +2,29 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from rnw.history_context import Context
-from rnw.history_engine import advance, create, validate_history
-from rnw.history_model import (
-    Action,
-    Authority,
-    Cohort,
-    District,
-    Founding,
-    Geography,
-    History,
-    Outcome,
-    Proposal,
-    Reason,
-    Route,
-    Rules,
-    Society,
-    Tenure,
-)
+from rnw.history_engine import advance, validate_history
+from rnw.history_model import Action, Authority, Outcome, Proposal, Reason, Society
 
+from .history_fixtures import court, defeat
 
-def _world(populations: dict[str, tuple[int, int]], profiles: dict[str, Society]) -> History:
-    keys = sorted(populations)
-    geography = Geography(
-        tuple(
-            District(key, "plain", Tenure.LAND, (Cohort("culture", "faith", *populations[key]),))
-            for key in keys
-        ),
-        tuple(Route(first, second) for i, first in enumerate(keys) for second in keys[i + 1 :]),
-        rules=Rules(minimum_peasants=338, minimum_share=122),
-    )
-    history = create(
-        geography,
-        tuple(
-            Founding(
-                key,
-                Tenure.LAND,
-                (key,),
-                key,
-                technology=2,
-                authority=profiles[key].authority,
-                society=profiles[key],
-            )
-            for key in keys
-        ),
-        seed=42,
-        empire_permille=0,
-    )
-    contacts = tuple(
-        Proposal(Action.CONTACT, first, second)
-        for i, first in enumerate(keys)
-        for second in keys[i + 1 :]
-    )
-    for start in range(0, len(contacts), 3):
-        history = advance(history, contacts[start : start + 3])
-    return history
+if TYPE_CHECKING:
+    from rnw.history_model import History
 
 
 def test_joint_admissions_cannot_spend_the_same_administrative_capacity_twice() -> None:
     ordinary = Society(authority=Authority.RULER)
-    history = _world(
-        {"a": (1000, 500), "b": (1000, 500), "lord": (10_000, 5000)},
+    history = court(
+        {"a": (1000, 500, 0, True), "b": (1000, 500, 0, True), "lord": (10_000, 5000, 2, False)},
         {
             "a": ordinary,
             "b": ordinary,
             "lord": Society(centralization=200, integration=200, authority=Authority.RULER),
         },
     )
+    history = defeat(defeat(history, "lord", "a"), "lord", "b")
     proposals = (Proposal(Action.DEPENDENCY, "a", "lord"), Proposal(Action.DEPENDENCY, "b", "lord"))
     result = advance(history, proposals)
     events = result.events[-2:]
@@ -85,17 +41,23 @@ def test_joint_admissions_cannot_spend_the_same_administrative_capacity_twice() 
 
 
 def _nested(*, capable_root: bool = False) -> History:
+    """Root, middle and leaf, each lord having already defeated its future subject."""
     ordinary = Society(authority=Authority.RULER)
-    return _world(
-        {"leaf": (500, 338), "middle": (1200, 900), "root": (40_000, 20_000)},
+    history = court(
+        {
+            "leaf": (500, 338, 0, True),
+            "middle": (1800, 1100, 1, True),
+            "root": (40_000, 20_000, 5, False),
+        },
         {
             "leaf": ordinary,
             "middle": ordinary,
             "root": ordinary
             if capable_root
-            else Society(centralization=100, integration=100, authority=Authority.RULER),
+            else Society(centralization=120, integration=125, authority=Authority.RULER),
         },
     )
+    return defeat(defeat(history, "root", "middle"), "middle", "leaf")
 
 
 def test_a_new_subclient_must_fit_the_ultimate_rulers_existing_obligations() -> None:
@@ -134,19 +96,21 @@ def test_a_capable_ruler_can_accept_a_real_nested_realm_without_changing_ownersh
 
 def test_two_branches_cannot_simultaneously_exhaust_the_same_ancestor() -> None:
     ordinary = Society(authority=Authority.RULER)
-    history = _world(
+    history = court(
         {
-            "b": (3000, 2000),
-            "c": (3000, 2000),
-            "d": (1000, 500),
-            "e": (1000, 500),
-            "root": (70_000, 35_000),
+            "b": (3000, 2000, 1, True),
+            "c": (3000, 2000, 1, True),
+            "d": (1000, 500, 0, True),
+            "e": (1000, 500, 0, True),
+            "root": (70_000, 35_000, 5, False),
         },
         {
             **dict.fromkeys(("b", "c", "d", "e"), ordinary),
-            "root": Society(centralization=100, integration=250, authority=Authority.RULER),
+            "root": Society(centralization=100, integration=280, authority=Authority.RULER),
         },
     )
+    for lord, subject in (("root", "b"), ("root", "c"), ("b", "d"), ("c", "e")):
+        history = defeat(history, lord, subject)
     for key in ("b", "c"):
         history = advance(history, (Proposal(Action.DEPENDENCY, key, "root"),))
         assert history.events[-1].outcome is Outcome.ACCEPTED
@@ -159,3 +123,57 @@ def test_two_branches_cannot_simultaneously_exhaust_the_same_ancestor() -> None:
     assert accepted.key in refused.causes
     assert len(history.state.bonds) == 3
     validate_history(history)
+
+
+def test_submission_needs_a_recorded_defeat_or_threat_and_a_lord_of_real_scale() -> None:
+    ordinary = Society(authority=Authority.RULER)
+    history = court(
+        {
+            "small": (1000, 500, 0, True),
+            "peer": (1100, 600, 0, False),
+            "lord": (10_000, 5000, 4, False),
+        },
+        dict.fromkeys(("small", "peer", "lord"), ordinary),
+    )
+    refused = advance(history, (Proposal(Action.DEPENDENCY, "small", "lord"),))
+    assert refused.events[-1].reason is Reason.THREAT
+    peer = advance(history, (Proposal(Action.DEPENDENCY, "small", "peer"),))
+    assert peer.events[-1].reason is Reason.IMBALANCE
+    history = defeat(history, "lord", "small")
+    accepted = advance(history, (Proposal(Action.DEPENDENCY, "small", "lord"),))
+    event = accepted.events[-1]
+    assert event.outcome is Outcome.ACCEPTED
+    conquest = next(e for e in accepted.events if e.kind is Action.CONFLICT)
+    assert conquest.key in Context(history, lambda: None).actor_causes("small") or any(
+        cause == conquest.key for cause in event.causes
+    )
+    validate_history(accepted)
+
+
+def test_independence_follows_the_lords_defeat_elsewhere() -> None:
+    ordinary = Society(authority=Authority.RULER)
+    history = court(
+        {
+            "small": (1000, 500, 0, True),
+            "rival": (40_000, 20_000, 3, False),
+            "lord": (10_000, 5000, 2, False),
+        },
+        dict.fromkeys(("small", "rival", "lord"), ordinary),
+    )
+    history = defeat(history, "lord", "small")
+    history = advance(history, (Proposal(Action.DEPENDENCY, "small", "lord"),))
+    assert Context(history, lambda: None).lords == {"small": "lord"}
+    loyal = advance(history, (Proposal(Action.INDEPENDENCE, "small", "lord"),))
+    assert loyal.events[-1].reason is Reason.OBLIGATIONS
+    # The rival takes one of the lord's own districts: a recorded setback.
+    beaten = advance(history, (Proposal(Action.CONFLICT, "rival", "lord", ("lord_1",)),))
+    setback = beaten.events[-1]
+    assert setback.outcome is Outcome.ACCEPTED
+    free = advance(beaten, (Proposal(Action.INDEPENDENCE, "small", "lord"),))
+    event = free.events[-1]
+    assert event.outcome is Outcome.ACCEPTED
+    assert event.reason is Reason.AUTONOMY
+    assert setback.key in event.causes
+    assert not Context(free, lambda: None).lords
+    assert event.effects.ended[0].first == "small"
+    validate_history(free)

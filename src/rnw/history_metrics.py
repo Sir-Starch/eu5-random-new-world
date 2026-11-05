@@ -1,8 +1,10 @@
-"""Predeclared, read-only H7 measurements; never influence construction or repair output.
+"""Predeclared, read-only acceptance measurements; never influence construction or output.
 
 Conflict and ownership statistics use the fixed LAND polity envelope. Tribal and
 community founding counts are reported separately. Physical landmasses include
 wasteland and seam edges, never a maritime route between separate landmasses.
+The structural counters (plan §18, D28) describe the 1337 start the player sees:
+region classes, aims and their outcomes, subjects, institutions and chronicles.
 """
 
 from __future__ import annotations
@@ -10,13 +12,27 @@ from __future__ import annotations
 import json
 from collections import Counter, defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from rnw.history_archive import build, pack
 from rnw.history_context import Context
-from rnw.history_model import END, Action, HistoryError, Outcome, Tenure, TrajectoryKind
+from rnw.history_model import (
+    END,
+    EXPANSION,
+    PERMILLE,
+    Action,
+    HistoryError,
+    Outcome,
+    Tenure,
+    TrajectoryKind,
+)
 from rnw.history_text import chronicles
-from rnw.history_trajectories import realizations
+from rnw.history_trajectories import (
+    blocs,
+    political_regions,
+    realizations,
+    region_districts,
+)
 from rnw.model import CellClass
 
 if TYPE_CHECKING:
@@ -35,6 +51,61 @@ class Dominance:
     largest_bloc: int
     projected_locations: int
     largest_projected_bloc: int
+
+
+# Region classes in classifier precedence order (plan §18).
+GREAT: Final[str] = "great_realm"
+PARAMOUNT: Final[str] = "paramount"
+LEAGUE: Final[str] = "league"
+RIVALS: Final[str] = "rival_powers"
+FRACTURED: Final[str] = "fractured"
+PATCHWORK: Final[str] = "patchwork"
+CLASSES: Final[tuple[str, ...]] = (GREAT, PARAMOUNT, LEAGUE, RIVALS, FRACTURED, PATCHWORK)
+RECENT_YEARS: Final[int] = 100
+TURMOIL: Final[frozenset[Action]] = frozenset(
+    {Action.CONFLICT, Action.SECESSION, Action.SEPARATION}
+)
+
+
+@dataclass(frozen=True, slots=True)
+class RegionClass:
+    region: str
+    polities: int
+    kind: str
+    largest: int
+    second: int
+    state_locations: int
+
+
+@dataclass(frozen=True, slots=True)
+class AimOutcome:
+    kind: TrajectoryKind
+    strategy: str
+    realized: bool
+    peak: int
+    final: int
+    successors: bool
+
+
+@dataclass(frozen=True, slots=True)
+class Structure:
+    """What the 1337 map looks like, independently of the record's event counts."""
+
+    regions: tuple[RegionClass, ...]
+    state_locations: int
+    changed_locations: int
+    recent_locations: int
+    aims: tuple[AimOutcome, ...]
+    subjects: int
+    scaled_subjects: int
+    alliances: int
+    states: int
+    republics: int
+    government_types: int
+    assortativity: int
+    chronicle_families: tuple[tuple[str, int], ...]
+    chronicle_distinct: tuple[int, ...]
+    great_blocs: tuple[int, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,6 +129,7 @@ class Observation:
     domination: tuple[Dominance, ...]
     archive_bytes: int
     digest: str
+    structure: Structure | None = None
 
 
 def landmasses(world: NewWorld, keys: Sequence[str]) -> dict[str, int]:
@@ -215,4 +287,246 @@ def measure(
         _dominance(start, masses),
         size,
         archive.digest,
+        structure(start, inherited=inherited),
+    )
+
+
+def _classify(  # noqa: PLR0913 - one region against the shared 1337 facts
+    context: Context,
+    region: str,
+    polities: int,
+    *,
+    held: dict[str, frozenset[str]],
+    great: list[frozenset[str]],
+    groups: list[frozenset[str]],
+    successors: list[tuple[frozenset[str], ...]],
+) -> RegionClass:
+    envelope = region_districts(context, region)
+    organized = frozenset(
+        place.key
+        for place in context.history.geography.districts
+        if place.region == region and place.tenure is not Tenure.COMMUNITY
+    )
+    shares = sorted((len(realm & envelope) for realm in held.values()), reverse=True)
+    largest, second = [*shares, 0, 0][:2]
+    total = len(envelope)
+
+    def at_least(count: int, permille: int, of: int) -> bool:
+        return of > 0 and count * PERMILLE >= of * permille
+
+    kind = PATCHWORK
+    if any(at_least(len(realm & envelope), 500, total) for realm in great):
+        kind = GREAT
+    elif at_least(largest, 400, total) and largest >= 2 * second:
+        kind = PARAMOUNT
+    elif any(at_least(len(group & organized), 300, len(organized)) for group in groups):
+        kind = LEAGUE
+    elif sum(at_least(value, 150, total) for value in shares) >= 2:  # noqa: PLR2004
+        kind = RIVALS
+    elif any(
+        len(lineage) >= 2 and at_least(len(frozenset[str]().union(*lineage) & envelope), 300, total)  # noqa: PLR2004
+        for lineage in successors
+    ):
+        kind = FRACTURED
+    return RegionClass(region, polities, kind, largest, second, total)
+
+
+def _aim_outcomes(
+    context: Context, found: set[tuple[TrajectoryKind, str]]
+) -> tuple[AimOutcome, ...]:
+    """Peak and final holdings of each seeded aim's holder, replayed from transfers."""
+    history = context.history
+    owner = {key: founding.key for founding in history.foundings for key in founding.districts}
+    counts: Counter[str] = Counter(owner.values())
+    aims = list(history.state.trajectories)
+    peaks = dict.fromkeys(range(len(aims)), 0)
+    broken = dict.fromkeys(range(len(aims)), False)
+
+    def holder(number: int) -> str:
+        key = owner.get(aims[number].anchor, "")
+        return key if key and context.ancestry(key) & set(aims[number].members) else ""
+
+    def measure_round() -> None:
+        for number in range(len(aims)):
+            key = holder(number)
+            if key:
+                peaks[number] = max(peaks[number], counts[key])
+
+    divisions = [
+        event
+        for event in history.events
+        if event.outcome is Outcome.ACCEPTED and event.kind in {Action.SEPARATION, Action.SECESSION}
+    ]
+    for number, item in enumerate(aims):
+        broken[number] = any(
+            context.ancestry(key) & set(item.members) for event in divisions for key in event.actors
+        )
+    year = -1
+    for event in history.events:
+        if event.year != year:
+            measure_round()
+            year = event.year
+        if event.kind is Action.FOUNDATION:
+            continue
+        for transfer in event.effects.transfers:
+            counts[owner[transfer.district]] -= 1
+            owner[transfer.district] = transfer.after
+            counts[transfer.after] += 1
+    measure_round()
+    result: list[AimOutcome] = []
+    for number, item in enumerate(aims):
+        key = holder(number)
+        realized = (item.kind, key if item.expansion else item.hearth) in found
+        result.append(
+            AimOutcome(
+                item.kind,
+                item.strategy.value,
+                realized,
+                peaks[number],
+                counts[key] if key else 0,
+                broken[number],
+            )
+        )
+    return tuple(result)
+
+
+def _assortativity(context: Context, states: Mapping[str, str]) -> int:
+    """Newman's categorical assortativity of authority over land-bordering states.
+
+    ``states`` maps each living landed actor to its group; only pairs within one
+    group count (one constant group counts every bordering pair).
+    """
+    authority = {key: context.index.actors[key].authority for key in states}
+    pairs: Counter[tuple[str, str]] = Counter()
+    for route in context.history.geography.routes:
+        if route.sea_steps:
+            continue
+        first = context.index.owner.get(route.first, "")
+        second = context.index.owner.get(route.second, "")
+        if (
+            first in states
+            and second in states
+            and first != second
+            and states[first] == states[second]
+        ):
+            pairs[authority[first].value, authority[second].value] += 1
+            pairs[authority[second].value, authority[first].value] += 1
+    total = sum(pairs.values())
+    if not total:
+        return 0
+    kinds = {kind for pair in pairs for kind in pair}
+    diagonal = sum(pairs[kind, kind] for kind in kinds) / total
+    margins = {kind: sum(pairs[kind, other] for other in kinds) / total for kind in kinds}
+    expected = sum(value * value for value in margins.values())
+    return 0 if expected >= 1 else round(PERMILLE * (diagonal - expected) / (1 - expected))
+
+
+def structure(
+    start: FinalStartPlan, *, inherited: Mapping[str, tuple[tuple[str, str], ...]]
+) -> Structure:
+    """The map-level counters of plan §18 for one completed start."""
+    history = start.history
+    if history is None or history.state.year != END:
+        message = "Structure requires a completed real history"
+        raise HistoryError(message)
+    context = Context(history, lambda: None)
+    held = blocs(context)
+    found = realizations(context)
+    great = [
+        held.get(item.members[0], frozenset())
+        for item in found
+        if item.kind is TrajectoryKind.GREAT_EMPIRE
+    ]
+    groups = [
+        frozenset(place for key in item.members for place in context.index.members[key])
+        for item in found
+        if item.kind in {TrajectoryKind.SEA_LEAGUE, TrajectoryKind.HIGHLAND_CONFEDERATION}
+    ]
+    living = {actor.key for actor in history.state.actors if actor.living}
+    successors: list[tuple[frozenset[str], ...]] = []
+    for event in history.events:
+        if event.outcome is not Outcome.ACCEPTED or event.kind not in {
+            Action.SEPARATION,
+            Action.SECESSION,
+        }:
+            continue
+        roots = {actor.key for actor in event.effects.created}
+        if event.kind is Action.SECESSION:
+            roots.update(event.actors)
+        lineage = tuple(
+            frozenset(context.index.members[key])
+            for key in sorted(living)
+            if context.index.actors[key].tenure is Tenure.LAND and context.ancestry(key) & roots
+        )
+        successors.append(lineage)
+    regions = tuple(
+        _classify(
+            context,
+            region,
+            len(polities),
+            held=held,
+            great=great,
+            groups=groups,
+            successors=successors,
+        )
+        for region, polities in political_regions(context).items()
+    )
+    land = {place.key for place in history.geography.districts if place.tenure is Tenure.LAND}
+    # Land that left its founder's lineage: conquest or breakaway, not a union's
+    # or division's inheritance.
+    changed = sum(
+        context.founders[key] not in context.ancestry(context.index.owner[key])
+        for key in sorted(land)
+    )
+    # Recent turmoil: land whose holder took it by conquest, breakaway or division
+    # in the last RECENT_YEARS of the record.
+    recent = sum(
+        context.event_years[context.holdings[key].cause] >= END - RECENT_YEARS
+        and context.event_kinds[context.holdings[key].cause] in TURMOIL
+        for key in sorted(land)
+    )
+    outcomes = _aim_outcomes(
+        context,
+        {(item.kind, item.members[0] if item.kind in EXPANSION else item.hearth) for item in found},
+    )
+    size = {country.tag: len(country.members) for country in start.countries}
+    kinds = {country.tag: country.kind for country in start.countries}
+    scaled = sum(
+        size.get(lord, 0) >= 2 * size.get(subject, 0)
+        for lord, subject in start.vassals
+        if kinds.get(subject) == "state"
+    )
+    states = [country for country in start.countries if country.kind == "state"]
+    types: Counter[str] = Counter()
+    for country in states:
+        fields = dict(inherited.get(country.include, ()))
+        fields.update(country.government)
+        types[fields.get("type", "")] += 1
+    rows = chronicles(start)
+    families: Counter[str] = Counter(
+        row.family.value for chronicle in rows.values() for row in chronicle.rows
+    )
+    return Structure(
+        regions,
+        len(land),
+        changed,
+        recent,
+        outcomes,
+        len(start.vassals),
+        scaled,
+        len(start.alliances),
+        len(states),
+        types.get("republic", 0),
+        len(types),
+        _assortativity(
+            context,
+            {country.history_actor: "" for country in states if country.history_actor in living},
+        ),
+        tuple(sorted(families.items())),
+        tuple(
+            len({row.family for row in chronicle.rows})
+            for chronicle in rows.values()
+            if len(chronicle.rows) >= 5  # noqa: PLR2004 - Q12's long chronicle
+        ),
+        tuple(sorted(len(realm) for realm in great)),
     )

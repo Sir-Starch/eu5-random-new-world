@@ -1245,3 +1245,27 @@ text = '''{year}: Próba reformy w społeczności {first} napotkała opór i nie
 ["rnw_history_resisted_1"]
 source = "cdbf8e2b05983ecb"
 text = '''{year}: Opór udaremnił proponowaną zmianę ustroju społeczności {first}.'''
+
+["rnw_history_cause_independence"]
+source = "fbb6337a2ba75d08"
+text = '''niezależność'''
+
+["rnw_history_cause_secession"]
+source = "fa1e8304aac09e63"
+text = '''oderwanie'''
+
+["rnw_history_independence_0"]
+source = "54e3eaad1883e43b"
+text = '''{year}: Społeczność {first} zakończyła podporządkowanie społeczności {second}.'''
+
+["rnw_history_independence_1"]
+source = "3750639d89d139d1"
+text = '''{year}: Społeczność {first} wyzwoliła się spod zwierzchnictwa społeczności {second}.'''
+
+["rnw_history_secession_0"]
+source = "74c4a851632a3fb1"
+text = '''{year}: Społeczność {second} oderwała się od społeczności {first}.'''
+
+["rnw_history_secession_1"]
+source = "df8a7404ae20ed09"
+text = '''{year}: Społeczność {first} nie zdołała dłużej utrzymać społeczności {second}, która się oderwała.'''

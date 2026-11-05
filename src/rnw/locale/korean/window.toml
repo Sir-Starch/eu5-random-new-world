@@ -2771,3 +2771,27 @@ text = '''신정'''
 ["history.tribe"]
 source = "6c49567d58669cda"
 text = '''부족'''
+
+["history.regional_power"]
+source = "503fa383d71d826f"
+text = '''지역 강국'''
+
+["history.paramount"]
+source = "ff1cbcccd3d96ac0"
+text = '''패권국'''
+
+["history.ambitions"]
+source = "f4578665c404f597"
+text = '''야망'''
+
+["history.ambition"]
+source = "f195b96c0634604c"
+text = '''{kind} — {name}: {status}'''
+
+["history.fulfilled"]
+source = "6030ced8c6f5f7a3"
+text = '''성취됨'''
+
+["history.unfulfilled"]
+source = "d2fcc2e287ae5745"
+text = '''이루지 못함'''

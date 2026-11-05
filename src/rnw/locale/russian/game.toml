@@ -1245,3 +1245,27 @@ text = '''{year}: Попытка преобразований в обществ�
 ["rnw_history_resisted_1"]
 source = "cdbf8e2b05983ecb"
 text = '''{year}: Сопротивление помешало изменить устройство общества {first}.'''
+
+["rnw_history_cause_independence"]
+source = "fbb6337a2ba75d08"
+text = '''независимость'''
+
+["rnw_history_cause_secession"]
+source = "fa1e8304aac09e63"
+text = '''отделение'''
+
+["rnw_history_independence_0"]
+source = "54e3eaad1883e43b"
+text = '''{year}: Общество {first} вышло из подчинения обществу {second}.'''
+
+["rnw_history_independence_1"]
+source = "3750639d89d139d1"
+text = '''{year}: Общество {first} освободилось от верховной власти общества {second}.'''
+
+["rnw_history_secession_0"]
+source = "74c4a851632a3fb1"
+text = '''{year}: Общество {second} отделилось от общества {first}.'''
+
+["rnw_history_secession_1"]
+source = "df8a7404ae20ed09"
+text = '''{year}: Общество {first} больше не могло удерживать общество {second}, и то отделилось.'''

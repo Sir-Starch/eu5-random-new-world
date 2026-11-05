@@ -9,11 +9,12 @@ import hashlib
 import json
 from collections import Counter
 from dataclasses import fields, is_dataclass, replace
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from rnw.history_actions import (
     PRIORITY,
     adjudicate,
+    breakaway_seat,
     eligible,
     inherit_round,
     proposal_key,
@@ -35,8 +36,10 @@ from rnw.history_model import (
     YEARS,
     Action,
     Actor,
+    Authority,
     Effects,
     Event,
+    Factor,
     Founding,
     Geography,
     History,
@@ -48,7 +51,10 @@ from rnw.history_model import (
     Reason,
     Settlement,
     Snapshot,
+    Society,
     Tenure,
+    Trajectory,
+    TrajectoryKind,
     Transfer,
 )
 from rnw.history_societies import bootstrap, choices, cohorts, propensity
@@ -57,6 +63,17 @@ from rnw.rng import check_seed, derive_seed
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
+
+# Policy biases of seeded aims (D22-D23). They change which eligible proposals an
+# actor makes and how persistently, never eligibility, arbitration or outcomes.
+CONTESTS: Final[frozenset[Action]] = frozenset({Action.CONFLICT, Action.PRESSURE})
+# A regional power's contest propensity: 450 at Calm, 600 at Varied, 750 at Turbulent.
+AIM_CONFLICT: Final[int] = 350
+HEGEMONY_CONFLICT: Final[int] = 700
+FEAR_RESPONSE: Final[int] = 450
+GROUP_BOND: Final[int] = 500
+GROUP_EXCHANGE: Final[int] = 400
+SACRED_VISIT: Final[int] = 600
 
 
 def _checkpoint() -> None:
@@ -121,6 +138,10 @@ def _apply(state: Snapshot, events: Sequence[Event]) -> Snapshot:
                 for key, known in knowledge.items()
                 if known.first not in retired and known.second not in retired
             }
+        for bond in effects.ended:
+            key = (bond.kind, bond.first, bond.second, bond.place)
+            require(bonds.get(key) == bond, "Cannot end an absent bond")
+            del bonds[key]
         for bond in effects.bonds:
             bonds[bond.kind, bond.first, bond.second, bond.place] = bond
         for known in effects.knowledge:
@@ -138,18 +159,20 @@ def _apply(state: Snapshot, events: Sequence[Event]) -> Snapshot:
     )
 
 
-def create(
+def create(  # noqa: PLR0913 - the causal roots and both seeded controls
     geography: Geography,
     foundings: Sequence[Founding],
     *,
     seed: int,
     empire_permille: int = 250,
+    turbulence: int = 500,
     checkpoint: Callable[[], None] = _checkpoint,
 ) -> History:
     """Create causal roots for every supplied actor; no country or population is invented."""
     validate_geography(geography)
     _ = check_seed(seed)
     require(0 <= empire_permille <= PERMILLE, "Invalid extraordinary trajectory chance")
+    require(0 <= turbulence <= PERMILLE, "Invalid historical turbulence")
     unique((founding.key for founding in foundings), "founding")
     geography = replace(
         geography,
@@ -230,9 +253,15 @@ def create(
     state = _apply(state, events)
     validate_snapshot(Index(geography, state, checkpoint), state)
     history = History(
-        geography, seed, canonical, state, tuple(events), empire_permille=empire_permille
+        geography,
+        seed,
+        canonical,
+        state,
+        tuple(events),
+        empire_permille=empire_permille,
+        turbulence=turbulence,
     )
-    ambitions = seed_events(Context(history, checkpoint), empire_permille)
+    ambitions = seed_events(Context(history, checkpoint), empire_permille, turbulence)
     state = _apply(state, ambitions)
     validate_snapshot(Index(geography, state, checkpoint), state)
     return replace(history, state=state, events=(*events, *ambitions))
@@ -263,8 +292,9 @@ def _validate_proposals(context: Context, proposals: Sequence[Proposal]) -> tupl
             "Proposal names an absent/extinct actor or invalid rank",
         )
         require(
-            (proposal.kind in {Action.SEPARATION, Action.REFORM}) == (not proposal.target),
-            "Only separation/reform has no partner",
+            (proposal.kind in {Action.SEPARATION, Action.SECESSION, Action.REFORM})
+            == (not proposal.target),
+            "Only separation/secession/reform has no partner",
         )
         require(
             set(proposal.districts) <= context.index.places.keys()
@@ -300,7 +330,7 @@ def advance(
     return _advance(Context(history, checkpoint), proposals)
 
 
-def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
+def _advance(context: Context, proposals: Sequence[Proposal]) -> History:  # noqa: C901, PLR0915 - one atomic arbitration
     history, checkpoint = context.history, context.checkpoint
     require(history.state.year < END, "History already reached 1337")
     checkpoint()
@@ -318,6 +348,8 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
     subjects = set(context.subjects)
     moved: set[str] = set()
     ownership: set[str] = set()
+    contested: set[str] = set()
+    restructured: set[str] = set()
     reformed: set[str] = set()
     administrations: dict[str, str] = {}
     for proposal in sorted(proposals, key=order):
@@ -332,6 +364,8 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
             (proposal.kind is Action.REFORM and proposal.actor in reformed)
             or (proposal.kind is Action.MIGRATION and bool(participants & (moved | ownership)))
             or (proposal.kind is Action.CONFLICT and bool(participants & moved))
+            or (proposal.kind in CONTESTS and bool(participants & (contested | restructured)))
+            or (proposal.kind is Action.SECESSION and bool(participants & contested))
         )
         administrators: set[str] = (
             set(context.administrators(proposal.actor))
@@ -366,6 +400,11 @@ def _advance(context: Context, proposals: Sequence[Proposal]) -> History:
                 moved.update(participants)
             if proposal.kind is Action.CONFLICT:
                 ownership.update(participants)
+            if proposal.kind in CONTESTS:
+                contested.update(participants)
+            if proposal.kind is Action.SECESSION:
+                # A realm losing a province this round cannot also fight over its land.
+                restructured.update(participants)
             if proposal.kind is Action.REFORM:
                 reformed.add(proposal.actor)
             for key, amount in costs.items():
@@ -427,7 +466,54 @@ def _defence_choices(
     ]
 
 
-def _local_choices(
+def _secession_choices(context: Context, actor: Actor) -> list[Proposal]:
+    """Each conquered founder's province of a realm above its unrest threshold."""
+    if actor.tenure is not Tenure.LAND or context.burden(actor.key) <= context.unrest(actor.key):
+        return []
+    lineage = context.ancestry(actor.key)
+    provinces: dict[str, list[str]] = {}
+    for key in sorted(context.index.members[actor.key]):
+        founder = context.founders.get(key, "")
+        if founder and founder not in lineage:
+            provinces.setdefault(founder, []).append(key)
+    result: list[Proposal] = []
+    for founder, districts in sorted(provinces.items()):
+        away = tuple(districts)
+        core = tuple(sorted(context.index.members[actor.key] - set(away)))
+        if not core:
+            continue
+        result.append(
+            Proposal(
+                Action.SECESSION,
+                actor.key,
+                partitions=(
+                    Partition(core, actor.seat, actor.authority),
+                    Partition(
+                        away,
+                        breakaway_seat(context, away, founder),
+                        context.index.actors[founder].authority,
+                    ),
+                ),
+            )
+        )
+    return result
+
+
+def _dependency_choices(context: Context, actor: Actor, other: str) -> list[Proposal]:
+    """D25: submit to a lord one fears, or to one that can face a recorded threat."""
+    result: list[Proposal] = []
+    if (actor.key, other, Factor.FEAR) in context.memories:
+        result.append(Proposal(Action.DEPENDENCY, actor.key, other))
+    reach = context.reach.get(other, {})
+    result.extend(
+        Proposal(Action.DEPENDENCY, actor.key, other, threat=threat)
+        for threat in sorted(context.threats.get(actor.key, set()) - {other, actor.key})
+        if threat in reach
+    )
+    return result
+
+
+def _local_choices(  # noqa: C901, PLR0912 - every family's necessary local conditions
     context: Context, actor: Actor, kinds: frozenset[Action] | None = None
 ) -> list[Proposal]:
     # Necessary prior-snapshot conditions only; full eligibility still decides
@@ -443,6 +529,12 @@ def _local_choices(
         roots = _roots(context, actor)
         parts = tuple(Partition(root.homeland, root.seat, root.authority) for root in roots)
         local.append(Proposal(Action.SEPARATION, actor.key, partitions=parts))
+    if Action.SECESSION in allowed:
+        local.extend(_secession_choices(context, actor))
+    lord = context.lords.get(actor.key, "")
+    if Action.INDEPENDENCE in allowed and lord:
+        local.append(Proposal(Action.INDEPENDENCE, actor.key, lord))
+    groups = set(context.groups.get(actor.key, ()))
     for other in sorted(context.reach.get(actor.key, {})):
         context.checkpoint()
         if (actor.key, other) not in context.known:
@@ -472,10 +564,10 @@ def _local_choices(
                 and actor.key not in context.pact_participants
                 and target.technology >= context.history.geography.rules.minimum_overlord_technology
             ):
-                local.append(Proposal(Action.DEPENDENCY, actor.key, other))
+                local.extend(_dependency_choices(context, actor, other))
         pact = (
             context.has(Action.PACT, actor.key, other)
-            if Action.CONFLICT in allowed or Action.PRESSURE in allowed
+            if Action.CONFLICT in allowed or Action.PRESSURE in allowed or Action.PACT in allowed
             else False
         )
         conflict = (
@@ -505,7 +597,15 @@ def _local_choices(
                 for key in sorted(frontier)
                 if pressure or key != target.seat or len(context.index.members[other]) == 1
             )
+            # D23: an expansion aim may seek a whole neighbour at once; the same
+            # contest, support and capacity rules decide it.
+            if conflict and frontier and actor.key in context.aims:
+                held = tuple(sorted(context.index.members[other]))
+                if len(held) > 1:
+                    local.append(Proposal(Action.CONFLICT, actor.key, other, held))
         local.extend(_defence_choices(context, actor.key, other, allowed))
+        if Action.PACT in allowed and not pact and groups & set(context.groups.get(other, ())):
+            local.append(Proposal(Action.PACT, actor.key, other))
         if Action.ACCESS in allowed and not context.has(Action.ACCESS, actor.key, other):
             local.extend(
                 Proposal(Action.ACCESS, actor.key, other, (key,))
@@ -513,6 +613,96 @@ def _local_choices(
                 if context.index.places[key].sacred
             )
     return [choice for choice in local if eligible(context, choice) is None]
+
+
+def _bases(context: Context, actor: Actor, turbulence: int) -> dict[Action, int]:
+    """Per-family admission propensity before the society's own orientation."""
+    base = dict.fromkeys(Action, 180)
+    base[Action.SEPARATION] = turbulence**3 // PERMILLE**2
+    base[Action.CONFLICT] = base[Action.PRESSURE] = 50 + turbulence // 2
+    base[Action.SECESSION] = 100 + turbulence // 2
+    aim = context.aims.get(actor.key)
+    if aim is not None:
+        # A hegemonic or extraordinary ambition persists whatever the turbulence,
+        # which instead decides how much of it holds; rival powers follow the times.
+        persistent = (
+            HEGEMONY_CONFLICT
+            if aim.kind is not TrajectoryKind.REGIONAL_POWER
+            else AIM_CONFLICT + turbulence // 2
+        )
+        base[Action.CONFLICT] = base[Action.PRESSURE] = max(base[Action.CONFLICT], persistent)
+    if context.threats.get(actor.key, set()) & context.aims.keys():
+        for kind in (Action.PACT, Action.PROTECTION, Action.DEPENDENCY):
+            base[kind] = max(base[kind], FEAR_RESPONSE)
+    kinds = {item.kind for item in context.groups.get(actor.key, ())}
+    if kinds & {TrajectoryKind.SEA_LEAGUE, TrajectoryKind.HIGHLAND_CONFEDERATION}:
+        base[Action.PACT] = max(base[Action.PACT], GROUP_BOND)
+        base[Action.EXCHANGE] = max(base[Action.EXCHANGE], GROUP_EXCHANGE)
+    if TrajectoryKind.SACRED_CENTRE in kinds:
+        base[Action.ACCESS] = max(base[Action.ACCESS], SACRED_VISIT)
+    return base
+
+
+def _keeps_aim(context: Context, actor: Actor, after: Society) -> bool:
+    """An aim's holder does not reform away from the inclination its aim recorded."""
+    before = actor.society
+    aim = context.aims.get(actor.key)
+    if aim is not None and (
+        after.centralization < before.centralization
+        or after.integration < before.integration
+        or (before.military is Military.OFFENSIVE and after.military is not Military.OFFENSIVE)
+        or (before.authority is Authority.RULER and after.authority is not Authority.RULER)
+    ):
+        return False
+    for item in context.groups.get(actor.key, ()):
+        if (
+            item.kind is TrajectoryKind.SACRED_CENTRE
+            and context.index.owner.get(item.anchor) == actor.key
+        ):
+            if after.authority is not before.authority or (
+                after.religious_authority < before.religious_authority
+            ):
+                return False
+        elif item.kind is TrajectoryKind.SEA_LEAGUE and (
+            before.authority is Authority.COUNCIL and after.authority is not Authority.COUNCIL
+        ):
+            return False
+    return True
+
+
+def _domain(context: Context, aim: Trajectory, place: str) -> bool:
+    if aim.region:
+        return context.index.places[place].region == aim.region
+    hearth = next(each for each in context.history.geography.hearths if each.key == aim.hearth)
+    return place in hearth.domain
+
+
+def _preference(context: Context, actor: Actor, choice: Proposal) -> tuple[int, int]:
+    """Lower is preferred: (rank across families, order within the family).
+
+    Ordinary choices share rank 1, so without an aim or actual fear the families
+    keep their seeded order. An aim's contest in its domain comes first.
+    """
+    aim = context.aims.get(actor.key)
+    if choice.kind in {Action.CONFLICT, Action.PRESSURE} and aim is not None:
+        inside = all(_domain(context, aim, place) for place in choice.districts)
+        # A paramount prefers to leave a defeated neighbour standing, fearful and
+        # free to submit, before it annexes one.
+        whole = len(choice.districts) == len(context.index.members[choice.target])
+        rank = (0 if inside else 2) + (1 if aim.kind is TrajectoryKind.PARAMOUNT and whole else 0)
+        return rank, context.power(choice.target)
+    if choice.kind is Action.DEPENDENCY:
+        return (0 if choice.target in context.aims else 1), 0
+    if choice.kind in {Action.PACT, Action.PROTECTION}:
+        return (0 if choice.threat in context.aims else 1), 0
+    if choice.kind is Action.ACCESS:
+        hosts = {
+            context.index.owner.get(item.anchor)
+            for item in context.groups.get(actor.key, ())
+            if item.kind is TrajectoryKind.SACRED_CENTRE
+        }
+        return (0 if choice.target in hosts else 1), 0
+    return 1, 0
 
 
 def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
@@ -524,14 +714,8 @@ def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
         if not actor.living:
             continue
         admitted: set[Action] = set()
+        bases = _bases(context, actor, turbulence)
         for kind in Action:
-            base = (
-                turbulence**3 // PERMILLE**2
-                if kind is Action.SEPARATION
-                else (50 + turbulence // 2)
-                if kind in {Action.CONFLICT, Action.PRESSURE}
-                else 180
-            )
             activity = derive_seed(
                 context.history.seed,
                 "history",
@@ -540,20 +724,27 @@ def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
                 actor.key,
                 kind.value,
             )
-            if activity % PERMILLE < propensity(actor.society, kind, base):
+            if activity % PERMILLE < propensity(actor.society, kind, bases[kind]):
                 admitted.add(kind)
-        best: dict[Action, tuple[int, str, Proposal]] = {}
+        best: dict[Action, tuple[tuple[int, int], int, str, Proposal]] = {}
         for choice in _local_choices(context, actor, frozenset(admitted)):
+            if choice.kind is Action.REFORM and (
+                choice.reform is None or not _keeps_aim(context, actor, choice.reform)
+            ):
+                continue
             key = proposal_key(choice)
             draw = derive_seed(
                 context.history.seed, "history", "choice", str(context.state.year), key
             )
-            ranked = (draw, key, choice)
-            if choice.kind not in best or ranked[:2] < best[choice.kind][:2]:
+            ranked = (_preference(context, actor, choice), draw, key, choice)
+            if choice.kind not in best or ranked[:3] < best[choice.kind][:3]:
                 best[choice.kind] = ranked
+        # Families compete by rank and their seeded draw, not by a target's strength.
         proposals.extend(
             replace(choice, rank=rank)
-            for rank, (_, _, choice) in enumerate(sorted(best.values())[:MAX_PROPOSALS])
+            for rank, (_, _, _, choice) in enumerate(
+                sorted(best.values(), key=lambda r: (r[0][0], r[1], r[2]))[:MAX_PROPOSALS]
+            )
         )
     return tuple(proposals)
 
@@ -561,11 +752,15 @@ def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
 def simulate(
     history: History,
     *,
-    turbulence: int = 500,
+    turbulence: int | None = None,
     policy: Callable[[Context], Sequence[Proposal]] | None = None,
     checkpoint: Callable[[], None] = _checkpoint,
 ) -> History:
-    """Run every remaining five-year round, including quiet rounds, through 1337."""
+    """Run every remaining five-year round, including quiet rounds, through 1337.
+
+    The history's own turbulence, which also seeded its settings, is the default.
+    """
+    turbulence = history.turbulence if turbulence is None else turbulence
     require(0 <= turbulence <= PERMILLE, "Invalid historical turbulence")
     physical: Index | None = None
     while history.state.year < END:
@@ -585,6 +780,7 @@ def validate_history(history: History, *, checkpoint: Callable[[], None] = _chec
         history.foundings,
         seed=history.seed,
         empire_permille=history.empire_permille,
+        turbulence=history.turbulence,
         checkpoint=checkpoint,
     )
     seen: dict[str, Event] = {}

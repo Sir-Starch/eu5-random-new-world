@@ -14,8 +14,10 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, cast
 
+from rnw.history_context import Context
 from rnw.history_model import (
     END,
+    EXPANSION,
     START,
     Action,
     Authority,
@@ -25,10 +27,12 @@ from rnw.history_model import (
     Military,
     Outcome,
     Society,
+    Strategy,
     Tenure,
     TrajectoryKind,
 )
 from rnw.history_text import chronicles
+from rnw.history_trajectories import realizations
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
 
@@ -68,6 +72,7 @@ AUTHORITIES: Final[tuple[Authority, ...]] = tuple(Authority)
 LIVELIHOODS: Final[tuple[Livelihood, ...]] = tuple(Livelihood)
 EXCHANGES: Final[tuple[Exchange, ...]] = tuple(Exchange)
 MILITARIES: Final[tuple[Military, ...]] = tuple(Military)
+STRATEGIES: Final[tuple[Strategy, ...]] = tuple(Strategy)
 
 
 class HistoryArchiveError(ValueError):
@@ -156,6 +161,18 @@ class GroupFact:
 
 
 @dataclass(frozen=True, slots=True)
+class AimFact:
+    """A seeded aim (D22-D23) and whether its holder realized it by 1337."""
+
+    kind: TrajectoryKind
+    anchor: int
+    members: tuple[int, ...]
+    cause: int
+    strategy: Strategy
+    realized: bool
+
+
+@dataclass(frozen=True, slots=True)
 class AtlasLinks:
     keys: tuple[str, ...]
     owners: tuple[int, ...]
@@ -177,6 +194,7 @@ class Archive:
     relations: tuple[tuple[str, int, int], ...]
     groups: tuple[GroupFact, ...]
     chronicles: tuple[tuple[int, tuple[int, ...]], ...]
+    aims: tuple[AimFact, ...] = ()
 
     def lineage(self, actor: int) -> frozenset[int]:
         pending, seen = [actor], set[int]()
@@ -248,6 +266,7 @@ def build(plan: FinalStartPlan, keys: Sequence[str]) -> Archive:
     seeds.update(cause for group in plan.historical_groups for cause in group.causes)
     seeds.update(row.event for chronicle in selected.values() for row in chronicle.rows)
     seeds.update(event.key for event in history.events if event.effects.transfers)
+    seeds.update(item.cause for item in history.state.trajectories)
     order = _event_order(history, seeds)
     ei = {key: number for number, key in enumerate(order)}
     by_event = {event.key: event for event in history.events}
@@ -269,7 +288,9 @@ def build(plan: FinalStartPlan, keys: Sequence[str]) -> Archive:
                 )
             )
         )
-        bond = event.effects.bonds[0] if event.effects.bonds else None
+        # An ended bond (independence) names its roles as a created bond does.
+        bonds = event.effects.bonds or event.effects.ended
+        bond = bonds[0] if bonds else None
         event_facts.append(
             EventFact(
                 event.year,
@@ -402,7 +423,39 @@ def build(plan: FinalStartPlan, keys: Sequence[str]) -> Archive:
             (tag_actor[tag], tuple(ei[row.event] for row in chronicle.rows))
             for tag, chronicle in sorted(selected.items())
         ),
+        _aims(history, ai, ei, locations),
     )
+
+
+def _aims(
+    history: History,
+    ai: dict[str, int],
+    ei: dict[str, int],
+    locations: dict[str, int],
+) -> tuple[AimFact, ...]:
+    context = Context(history, checkpoint)
+    found = {
+        (item.kind, item.members[0] if item.kind in EXPANSION else item.hearth)
+        for item in realizations(context)
+    }
+    result: list[AimFact] = []
+    for item in history.state.trajectories:
+        owner = context.index.owner.get(item.anchor, "")
+        held = bool(owner) and bool(context.ancestry(owner) & set(item.members))
+        realized = (item.kind, owner if item.expansion else item.hearth) in found and (
+            held or not item.expansion
+        )
+        result.append(
+            AimFact(
+                item.kind,
+                locations[item.anchor],
+                tuple(ai[member] for member in item.members),
+                ei[item.cause],
+                item.strategy,
+                realized,
+            )
+        )
+    return tuple(result)
 
 
 def _profile(society: Society) -> list[int]:
@@ -474,6 +527,17 @@ def to_data(archive: Archive) -> dict[str, object]:
             for g in archive.groups
         ],
         "h": [[actor, list(events)] for actor, events in archive.chronicles],
+        "t": [
+            [
+                GROUPS.index(t.kind),
+                t.anchor,
+                list(t.members),
+                t.cause,
+                STRATEGIES.index(t.strategy),
+                int(t.realized),
+            ]
+            for t in archive.aims
+        ],
     }
 
 
@@ -492,6 +556,7 @@ COLUMNS: Final[dict[str, int]] = {
     "r": 3,
     "g": 4,
     "h": 2,
+    "t": 6,
 }
 
 
@@ -641,7 +706,7 @@ def from_data(value: object) -> Archive:
     _require(isinstance(value, dict), "History data is not an object")
     data = cast("dict[str, object]", value)
     _require(
-        set(data) == {"v", "digest", "a", "e", "c", "i", "o", "m", "p", "b", "r", "g", "h"}
+        set(data) == {"v", "digest", "a", "e", "c", "i", "o", "m", "p", "b", "r", "g", "h", "t"}
         and type(data["v"]) is int
         and data["v"] == FORMAT,
         "History has an unknown schema",
@@ -743,4 +808,15 @@ def from_data(value: object) -> Archive:
             for r in _rows(data["g"], 4, MAX_ACTORS)
         ),
         tuple((_integer(r[0]), _ints(r[1], 8)) for r in _rows(data["h"], 2, MAX_ACTORS)),
+        tuple(
+            AimFact(
+                GROUPS[_integer(r[0], 0, len(GROUPS) - 1)],
+                _integer(r[1]),
+                _ints(r[2], MAX_ACTORS),
+                _integer(r[3]),
+                STRATEGIES[_integer(r[4], 0, len(STRATEGIES) - 1)],
+                bool(_integer(r[5], 0, 1)),
+            )
+            for r in _rows(data["t"], 6, MAX_ACTORS)
+        ),
     )

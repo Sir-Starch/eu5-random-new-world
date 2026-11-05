@@ -14,6 +14,7 @@ from rnw.history_model import (
     Action,
     Authority,
     Cohort,
+    Exchange,
     HistoryError,
     Movement,
     Outcome,
@@ -295,15 +296,31 @@ def test_resisted_reform_is_not_described_as_a_change() -> None:
     profile = history.state.actors[0].society
     history = advance(
         history,
-        (Proposal(Action.REFORM, "a", reform=replace(profile, authority=Authority.COUNCIL)),),
+        (Proposal(Action.REFORM, "a", reform=replace(profile, exchange=Exchange.COASTAL)),),
     )
     event = history.events[-1]
     assert event.outcome is Outcome.FAILED
     plan = project_start(inputs_for(quiet(history)))
     rows = [row for chronicle in history_text.chronicles(plan).values() for row in chronicle.rows]
-    failed = [row for row in rows if row.event == event.key]
-    assert failed
-    assert all(row.text.source.startswith("rnw_history_resisted_") for row in failed)
+    # D27: an attempt that changed nothing stays in the record, not in the chronicle.
+    assert not [row for row in rows if row.event == event.key]
+    assert all(not row.text.source.startswith("rnw_history_reform_") for row in rows)
+
+
+def test_only_a_change_of_authority_enters_the_chronicle() -> None:
+    history = _prepared(seed=0, pressure=True)
+    profile = history.state.actors[0].society
+    changed = advance(
+        history,
+        (Proposal(Action.REFORM, "a", reform=replace(profile, authority=Authority.RULER)),),
+    )
+    event = changed.events[-1]
+    assert event.outcome is Outcome.ACCEPTED
+    plan = project_start(inputs_for(quiet(changed)))
+    rows = [row for chronicle in history_text.chronicles(plan).values() for row in chronicle.rows]
+    assert any(
+        row.event == event.key and row.text.source.startswith("rnw_history_reform_") for row in rows
+    )
 
 
 def test_refused_proposal_has_no_chronicle_entry() -> None:

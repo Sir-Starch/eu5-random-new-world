@@ -9,10 +9,11 @@ are implemented. H7's technical checks and local package audits are complete,
 but held-out S4 sweep, S5 and S7 thresholds fail; the candidate is not accepted.
 See the [final calibration report](research/history-120-calibration.md#final-held-out-acceptance-and-local-delivery).
 The 2026-11-05 [audit](history-plan.md#21-independent-audit-and-redesign-2026-11-05)
-keeps this model, replay and projection. It replaces parts of the current policy,
-described below: the fixed integration ceiling, causeless submission, aimless
-proposals, uniform founding authority and chronicle selection. Phases R1–R6
-replace them.
+keeps this model, replay and projection. [R1–R5](#audit-redesign-r1r5-2026-11-05)
+have replaced the fixed integration ceiling, causeless submission, aimless
+proposals, uniform founding authority and chronicle selection. Sections below
+describe earlier phases in their own dated scope, where the redesign section
+overrides them. R6 calibration, held-out validation and delivery remain open.
 
 ## Ownership and entry points
 
@@ -723,3 +724,91 @@ the 1.2.0 candidate does not pass H7. No profile install, hub replacement,
 playset change or EU5 session occurred. The held-out results remain validation
 data; further policy fitting requires a newly defined calibration/validation
 cycle or an owner decision that changes the acceptance thresholds.
+
+## Audit redesign (R1–R5, 2026-11-05)
+
+[V-EXEC, 2026-11-05] This section implements the plan's
+[audit decisions](history-plan.md#21-independent-audit-and-redesign-2026-11-05) D21–D28,
+with the [§21.5 refinements](history-plan.md#215-implementation-refinements-2026-11-05-before-any-held-out-run).
+The model, causal replay, projection and portable format stay. These pieces change:
+
+| Piece | Where | Rule |
+|---|---|---|
+| Seeded aims | `history_trajectories.seed_events`, `Trajectory.strategy/region`, `TrajectoryKind.REGIONAL_POWER/PARAMOUNT` | Extraordinary aims per hearth as before; then one feasible setting per political region (≥ 8 landed foundings) from `SETTINGS`, interpolated by turbulence. Aims go to centres bordering two landed polities; prudent share `PRUDENT` |
+| Policy | `history_engine._bases`, `_preference`, `_keeps_aim` | An aim's holder contests persistently, in its domain first, and may seek a whole neighbour. Fearful neighbours favour pacts, protection and submission to it. League and confederation members favour pacts; sacred peers favour access. Holders do not reform away from their inclination |
+| Administration | `Context.capacity`, `limit`, `unrest` | 1,000 at or below centralization + integration 1,200; the surplus doubles every 200 and grows with technology above level 1. Overreaching aims conquer up to twice capacity. Provinces may break away above the turbulence-dependent unrest threshold |
+| Breakaway | `Action.SECESSION`, `history_actions._secession_allowed` | One conquered founder's province becomes a new parentless state at its founder's or largest seat, with mutual grievance. The realm keeps its seat and lineage. The core and the province must each remain connected and supported |
+| Dependencies | `_submission_cause`, `Action.INDEPENDENCE`, `Effects.ended` | Submission needs fear of the lord, or a recorded threat the lord can face, plus a lord with 2× the locations and 3× the strength. Independence needs a setback for the lord, a lord below 2× the subject's strength, or a lord over capacity. Its causes cite the setback |
+| Contests | `history_actions.adjudicate`, `history_engine._advance` | A defender pays what it has left; one contest per participant per round; a seceding realm's land cannot change hands twice. Ordinary societies need 1.5× strength or a grievance; aim holders accept parity |
+| Institutions | `eu5_history.traditions`, `history_societies.emulated` | Regional weights with a dominant authority; councils from collective bargains; a new authority only where at least half of the land neighbours hold it |
+| Chronicles | `history_text.chronicles` | Ranked by `SIGNIFICANCE`; `REPEATED` caps exchange 1, contact 0, migration 1, reform 2 (authority changes only) |
+| Reading | `history_archive.AimFact`, `history_presenter.region` | Every seeded aim with its outcome appears under the region's **Ambitions** |
+| Measurement | `history_metrics.structure`, `history_acceptance.evaluate` | Region classes, recent turmoil, aim outcomes, subjects, institutions and chronicles; §18's thresholds as frozen constants |
+
+**Calibration knobs**, adjustable on development seeds only (plan §17):
+
+- `SETTINGS`, `PRUDENT`, `POLITICAL_REGION`, `FRONTIER` and the recognition shares;
+- `AIM_CONFLICT`, `HEGEMONY_CONFLICT`, `FEAR_RESPONSE`, `GROUP_BOND`, `SACRED_VISIT`;
+- `CAPACITY_THRESHOLD`, `CAPACITY_DOUBLING`, `OVERREACH_FACTOR`, `UNREST_SLOPE`;
+- `LORD_LOCATIONS`, `LORD_POWER`, `LEAVE_POWER`;
+- `TRADITION`, `COASTAL_COUNCIL`, `DOMINANT_TRADITION`.
+
+The acceptance thresholds in `history_acceptance` are not knobs.
+
+**Evidence.** These changes were checked on one world only, the captured physical
+input of development world continents/3 (native stage, defaults):
+
+| Measure | Calm | Varied | Turbulent | Before the audit (Varied) |
+|---|---:|---:|---:|---:|
+| 1337 states | 148 | 174 | 217 | 175 |
+| Ordinary median / 1.1.0 | 3 / 3 | 3 / 3 | 2 / 3 | 3 / 3 |
+| Largest bloc (state with subjects) | 66 | 55 | 50 | 55 (largest state 14) |
+| Recent turmoil (100 years) | 11.4% | 14.5% | 17.5% | — |
+| Polities ≥ 100 years | 86.5% | 82.2% | 74.7% | 100% |
+| Subject pairs | 36 | 49 | 68 | 91 |
+| Alliances | 12 | 16 | 3 | 3 |
+| Republics | 16.9% | 16.1% | 10.1% | 46% |
+
+The 1.1.0 empire on this world holds 78 locations. Exchange agreements fell from
+76% to under 23% of chronicle entries, and about a fifth of countries have at most
+three entries. The native stage takes 25–28 s, against 91 s before. A partial
+evaluation (two worlds, the twelve continents/3 sweeps) passes Q5–Q8, Q10, Q12, Q13
+and S11. Q1–Q4, Q9 and Q11 are open calibration targets. That partial run is
+development evidence, not acceptance.
+
+[V-EXEC] Locked checks pass (see the commit). The pending epoch-61 reference
+export passes every writer and output check: 872 files, SHA-256
+`fc29c0e24b4360a617e8a0a2abb7e62deaa4ce2584e3eff612e931c15dfc7da5`, with a
+565,034-byte history wrapper. `tests/golden_world.json` is refreshed; the frozen
+epoch-60 reference is unchanged. The divided-valley digest is now
+`99a0ee7ce9f0e0097d44a6753d6cf38934372b25e7839a4cf0166498769e6bd0`: the
+schema gained fields, and the story is unchanged.
+
+### R6 runbook
+
+R6 is long batch work, meant for a separate agent. The scripts are in the ignored
+`local_data/history-120/r6/`. Run from the repository root, in the foreground, with
+bounded workers (ADR 0006). Check the installed build first; nothing launches EU5.
+
+1. **Development calibration.** `uv run python local_data/history-120/r6/matrix.py dev --workers N`
+   runs the 48 development worlds × Calm/Varied/Turbulent and the 48 continents and
+   archipelago × 3/42 sweeps. It resumes and keeps complete outputs. Then
+   `uv run python local_data/history-120/r6/evaluate.py dev` writes `dev/acceptance.json`.
+   Adjust only the knobs above, delete the outputs that the change affects, rerun,
+   and record each adjustment with its evidence in the calibration report.
+2. **Freeze.** Commit the source and write a held-out freeze record (source commit,
+   source SHA-256 as `observe.py` computes it, knob values, seeds 1005–1008)
+   before any held-out run.
+3. **Held-out inputs.** For each preset and seed 1005–1008, run
+   `uv run python local_data/history-120/h7/capture_world.py --preset P --seed S --output local_data/history-120/r6/captures/P-S`.
+   Pinned 1.1.0 baselines come from `h7/run_baseline_native.py` (sweeps:
+   `--changes`). They go to `r6/baselines/P-S-baseline-500.json` and
+   `r6/sweep-baselines/P-S-control-value/baseline-500.json`.
+4. **Held-out run, once.** Run `matrix.py heldout`, then `evaluate.py heldout`.
+   If it fails, record the result and stop; plan D28 requires a further decision.
+5. **S8–S10 and delivery.** Pair full normal timings as in H7
+   (`h7/timed_heldout_c488.py`, adapted to the frozen source). Then: the reference
+   reproduction (`RNW_REPRODUCE=1`), `make check` and `make desktop`, packages and
+   self-tests. Render the `countries` atlas layer of every held-out world into a
+   local contact sheet and review it against Q1–Q2. Install the candidate and
+   update the hub as AGENTS describes, and prepare the owner's fifteen-minute sitting.

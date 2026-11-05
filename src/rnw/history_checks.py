@@ -335,13 +335,27 @@ def validate_snapshot(index: Index, state: Snapshot) -> None:
             and bool(memory.cause),
             "Invalid directed memory",
         )
-    unique((item.hearth for item in state.trajectories), "trajectory hearth")
+    unique((item.hearth for item in state.trajectories if item.hearth), "trajectory hearth")
+    # Hearth domains may overlap; regional aims hold one anchor each.
+    unique((item.anchor for item in state.trajectories if not item.hearth), "regional aim anchor")
     hearths = {hearth.key: hearth for hearth in index.geography.hearths}
+    regional = {TrajectoryKind.REGIONAL_POWER, TrajectoryKind.PARAMOUNT}
     for item in state.trajectories:
-        require(
-            item.kind is not TrajectoryKind.FRACTURED_REALM
+        placed = (
+            item.kind not in regional
+            and not item.region
             and item.hearth in hearths
             and item.anchor in hearths[item.hearth].domain
+        ) or (
+            item.kind in regional
+            and not item.hearth
+            and bool(item.region)
+            and item.anchor in index.places
+            and index.places[item.anchor].region == item.region
+        )
+        require(
+            item.kind is not TrajectoryKind.FRACTURED_REALM
+            and placed
             and item.anchor in index.owner
             and bool(item.members)
             and set(item.members) <= index.actors.keys()

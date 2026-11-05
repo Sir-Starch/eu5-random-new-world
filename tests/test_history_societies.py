@@ -66,10 +66,28 @@ def _neighbours(*, pressure: bool = False, seed: int = 42, tradition: int = 0) -
         )
         for key in ("a", "b", "c")
     )
+    # D26: "b" already holds the council institutions that "a" may adopt from it.
+    # Under pressure, the tribe "b" holds ruler authority instead.
+    societies = {
+        place.key: replace(
+            profile,
+            authority=Authority.COUNCIL if place.tenure is Tenure.LAND else Authority.RULER,
+        )
+        if place.key == "b"
+        else profile
+        for place in places
+    }
     return create(
         Geography(places, (Route("a", "b"), Route("a", "c"), Route("b", "c"))),
         tuple(
-            Founding(place.key, place.tenure, (place.key,), place.key, society=profile)
+            Founding(
+                place.key,
+                place.tenure,
+                (place.key,),
+                place.key,
+                societies[place.key].authority,
+                society=societies[place.key],
+            )
             for place in places
         ),
         seed=seed,
@@ -90,7 +108,7 @@ def _prepared(*, pressure: bool = False, seed: int = 42, tradition: int = 0) -> 
     ("axis", "value", "pressure"),
     [
         ("centralization", 400, False),
-        ("authority", Authority.COUNCIL, False),
+        ("authority", Authority.RULER, True),
         ("livelihood", Livelihood.MIXED, False),
         ("exchange", Exchange.COASTAL, False),
         ("religious_authority", 400, True),
@@ -140,7 +158,7 @@ def test_reform_needs_two_prior_rounds_and_cannot_chain_in_the_same_round() -> N
     history = _prepared()
     original = next(actor for actor in history.state.actors if actor.key == "a").society
     proposals = (
-        Proposal(Action.REFORM, "a", reform=replace(original, authority=Authority.COUNCIL)),
+        Proposal(Action.REFORM, "a", reform=replace(original, tradition=original.tradition + 100)),
         Proposal(Action.REFORM, "a", reform=replace(original, exchange=Exchange.COASTAL), rank=1),
     )
     result = advance(history, proposals)
@@ -172,7 +190,7 @@ def test_tradition_can_resist_reform_but_still_spends_the_commitment() -> None:
         profile = history.state.actors[0].society
         result = advance(
             history,
-            (Proposal(Action.REFORM, "a", reform=replace(profile, authority=Authority.COUNCIL)),),
+            (Proposal(Action.REFORM, "a", reform=replace(profile, exchange=Exchange.COASTAL)),),
         )
         event = result.events[-1]
         outcomes.add(event.outcome)
@@ -723,3 +741,31 @@ def test_trajectory_streams_and_profiles_are_independent_of_hearth_and_cohort_or
     assert len(history.state.trajectories) == 2
     assert digest(history) == digest(permuted)
     validate_history(history)
+
+
+def test_council_rule_needs_collective_bargains_not_routine_exchange() -> None:
+    history = _prepared()
+    profile = history.state.actors[0].society
+    result = advance(
+        history,
+        (Proposal(Action.REFORM, "a", reform=replace(profile, authority=Authority.COUNCIL)),),
+    )
+    assert result.events[-1].reason is Reason.REPEATED_PROBLEM
+
+
+def test_a_new_authority_is_adopted_from_a_neighbour_that_holds_it() -> None:
+    history = _prepared(pressure=True)
+    profile = history.state.actors[0].society
+    accepted = advance(
+        history,
+        (Proposal(Action.REFORM, "a", reform=replace(profile, authority=Authority.RULER)),),
+    )
+    event = accepted.events[-1]
+    assert event.outcome is Outcome.ACCEPTED
+    neighbour = next(actor for actor in history.state.actors if actor.key == "b")
+    assert neighbour.society_cause in event.causes
+    refused = advance(
+        history,
+        (Proposal(Action.REFORM, "a", reform=replace(profile, authority=Authority.SACRED)),),
+    )
+    assert refused.events[-1].reason is Reason.REPEATED_PROBLEM

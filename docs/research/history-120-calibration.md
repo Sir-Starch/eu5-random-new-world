@@ -18,6 +18,11 @@ A1–A10). The S4 sweep's two-level Spearman criterion cannot reach 0.9 for a
 perfect untied response (ceiling 0.873). The numbers below remain valid evidence
 for their source and scope. The current gates are the plan's rewritten
 [§18](../history-plan.md#18-acceptance-criteria).
+R1–R5 are implemented ([history core](../history-core.md#audit-redesign-r1r5-2026-11-05)).
+They have been checked on one development world only, with no seed-set results.
+Calibration, the held-out run and delivery follow the
+[R6 runbook](../history-core.md#r6-runbook), and their results belong in a new section of
+this report.
 
 ## Method and scope
 

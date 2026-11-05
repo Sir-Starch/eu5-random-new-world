@@ -110,6 +110,17 @@ def validate(record: Archive, links: AtlasLinks) -> None:
             "Group has a missing cause",
         )
         _require(all(place in links.land for place in group.hearths), "Group has a missing hearth")
+    for aim in record.aims:
+        _require(
+            aim.anchor in links.land
+            and bool(aim.members)
+            and len(set(aim.members)) == len(aim.members)
+            and all(0 <= member < len(actors) for member in aim.members)
+            and 0 <= aim.cause < len(events)
+            and events[aim.cause].kind is Action.TRAJECTORY
+            and set(aim.members) <= set(events[aim.cause].actors),
+            "Invalid seeded aim",
+        )
 
 
 def _ownership(record: Archive, links: AtlasLinks) -> None:
@@ -129,7 +140,7 @@ def _ownership(record: Archive, links: AtlasLinks) -> None:
         event = record.events[cause]
         _require(
             event.outcome is Outcome.ACCEPTED
-            and event.kind in {Action.CONFLICT, Action.UNION, Action.SEPARATION},
+            and event.kind in {Action.CONFLICT, Action.UNION, Action.SEPARATION, Action.SECESSION},
             "Ownership change has an invalid cause",
         )
         _require(
@@ -286,6 +297,7 @@ def _chronicles(record: Archive) -> None:
             _require(
                 event.outcome is not Outcome.REFUSED
                 and event.kind is not Action.TRAJECTORY
-                and bool(lineage.intersection(event.actors)),
+                # A breakaway's origin creates it without naming it as a party.
+                and bool(lineage.intersection(event.actors + event.created)),
                 "Chronicle invents an event",
             )

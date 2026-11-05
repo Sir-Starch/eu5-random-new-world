@@ -1245,3 +1245,27 @@ text = '''{year}年：共同体{first}で試みられた改革は抵抗を受け
 ["rnw_history_resisted_1"]
 source = "cdbf8e2b05983ecb"
 text = '''{year}年：共同体{first}の制度変更案は抵抗に阻まれた。'''
+
+["rnw_history_cause_independence"]
+source = "fbb6337a2ba75d08"
+text = '''独立'''
+
+["rnw_history_cause_secession"]
+source = "fa1e8304aac09e63"
+text = '''離反'''
+
+["rnw_history_independence_0"]
+source = "54e3eaad1883e43b"
+text = '''{year}年：共同体{first}が共同体{second}への服属を終えた。'''
+
+["rnw_history_independence_1"]
+source = "3750639d89d139d1"
+text = '''{year}年：共同体{first}が共同体{second}の宗主権から離れた。'''
+
+["rnw_history_secession_0"]
+source = "74c4a851632a3fb1"
+text = '''{year}年：共同体{second}が共同体{first}から離反した。'''
+
+["rnw_history_secession_1"]
+source = "df8a7404ae20ed09"
+text = '''{year}年：共同体{first}はもはや共同体{second}を保持できず、その離反を許した。'''

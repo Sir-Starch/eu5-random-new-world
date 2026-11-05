@@ -81,6 +81,8 @@ def test_domination_counts_a_subjects_land_without_transferring_it() -> None:
         original.geography, tuple(replace(f, technology=2) for f in original.foundings), seed=42
     )
     history = advance(history, (Proposal(Action.CONTACT, "upstream", "downstream"),))
+    # D25: the submission answers a recorded defeat, which moved one district.
+    history = advance(history, (Proposal(Action.CONFLICT, "downstream", "upstream", ("u1",)),))
     history = advance(history, (Proposal(Action.DEPENDENCY, "upstream", "downstream"),))
     inputs = inputs_for(quiet(history))
     start = project_start(inputs)
@@ -92,8 +94,12 @@ def test_domination_counts_a_subjects_land_without_transferring_it() -> None:
         inherited=inputs.vanilla.history_governments,
         positions=tuple(inputs.positions),
     )
-    assert found.ordinary_sizes == (2, 2, 2)
+    assert found.ordinary_sizes == (1, 2, 3)
     assert found.domination[0].largest_bloc == 4
     assert found.domination[0].state_locations == 6
-    assert found.ownership_events == 0
+    assert found.ownership_events == 1
     assert found.projected_relationship_countries == 2
+    structure = found.structure
+    assert structure is not None
+    assert (structure.subjects, structure.scaled_subjects) == (1, 1)
+    assert structure.changed_locations == 1

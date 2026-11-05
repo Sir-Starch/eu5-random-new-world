@@ -33,11 +33,12 @@ from rnw.history_model import (
     Reason,
     Route,
     Rules,
+    Society,
     Tenure,
 )
 from rnw.progress import Cancelled
 
-from .history_fixtures import divided_valley, valley, valley_policy
+from .history_fixtures import court, defeat, divided_valley, valley, valley_policy
 
 
 def test_reconverging_ancestry_matches_recursive_reference_with_bounded_reads() -> None:
@@ -182,7 +183,7 @@ def test_divided_valley_reproduces_the_accepted_causal_story() -> None:
     assert next(event.year for event in history.events if event.key == access.cause) == 1317
     assert history.geography.districts == valley().geography.districts
     validate_history(history)
-    assert digest(history) == "5847d16874fbf80e11198f913fda5d57d09bf247d54a0eda320f4801470061c0"
+    assert digest(history) == "99a0ee7ce9f0e0097d44a6753d6cf38934372b25e7839a4cf0166498769e6bd0"
 
 
 def test_every_round_uses_the_prior_snapshot_and_is_atomic() -> None:
@@ -293,8 +294,12 @@ def test_failed_attack_records_a_different_memory_without_transfer() -> None:
 
 
 def test_dependency_needs_knowledge_imbalance_and_a_capable_lord() -> None:
-    history = _line(count=2)
-    history = advance(history, (Proposal(Action.CONTACT, "a0", "a1"),))
+    ordinary = Society(authority=Authority.RULER)
+    history = court(
+        {"a0": (1000, 500, 0, True), "a1": (10_000, 5000, 3, False)},
+        dict.fromkeys(("a0", "a1"), ordinary),
+    )
+    history = defeat(history, "a1", "a0")
     history = advance(history, (Proposal(Action.DEPENDENCY, "a0", "a1"),))
     assert history.state.bonds[0].kind is Action.DEPENDENCY
     assert history.state.bonds[0].first == "a0"
@@ -302,20 +307,24 @@ def test_dependency_needs_knowledge_imbalance_and_a_capable_lord() -> None:
     history = advance(history, (Proposal(Action.DEPENDENCY, "a1", "a0"),))
     assert history.events[-1].outcome is Outcome.REFUSED
     validate_history(history)
+    stranger = _line(count=2)
+    stranger = advance(stranger, (Proposal(Action.DEPENDENCY, "a0", "a1"),))
+    assert stranger.events[-1].reason is Reason.UNKNOWN
 
 
 def test_overlord_can_fight_with_reachable_subject_support() -> None:
-    history = _line()
-    places = tuple(
-        replace(place, cohorts=(Cohort("c", "r", 4000 if place.key == "1" else 1000, 500),))
-        for place in history.geography.districts
+    ordinary = Society(authority=Authority.RULER)
+    history = court(
+        {
+            "a0": (1000, 500, 0, True),
+            "a1": (4000, 2000, 3, False),
+            "a2": (1000, 500, 1, True),
+        },
+        dict.fromkeys(("a0", "a1", "a2"), ordinary),
     )
-    history = create(replace(history.geography, districts=places), history.foundings, seed=42)
-    history = advance(
-        history, (Proposal(Action.CONTACT, "a0", "a1"), Proposal(Action.CONTACT, "a1", "a2"))
-    )
+    history = defeat(history, "a1", "a0")
     history = advance(history, (Proposal(Action.DEPENDENCY, "a0", "a1"),))
-    history = advance(history, (Proposal(Action.CONFLICT, "a1", "a2", ("2",)),))
+    history = advance(history, (Proposal(Action.CONFLICT, "a1", "a2", ("a2_edge",)),))
     battle = history.events[-1]
     assert battle.outcome is Outcome.ACCEPTED
     assert dict(battle.commitments)["a0"] == 300
@@ -468,15 +477,18 @@ def test_joint_unions_inherit_both_ends_of_memory_and_knowledge() -> None:
 
 
 def test_two_offers_of_submission_choose_one_overlord() -> None:
-    history = _line()
-    places = tuple(
-        replace(place, cohorts=(Cohort("c", "r", 100 if place.key == "1" else 10_000, 50),))
-        for place in history.geography.districts
+    ordinary = Society(authority=Authority.RULER)
+    history = court(
+        {
+            "a0": (10_000, 5000, 2, False),
+            "a1": (1000, 500, 1, True),
+            "a2": (10_000, 5000, 2, False),
+        },
+        dict.fromkeys(("a0", "a1", "a2"), ordinary),
     )
-    history = create(replace(history.geography, districts=places), history.foundings, seed=42)
-    history = advance(
-        history, (Proposal(Action.CONTACT, "a1", "a0"), Proposal(Action.CONTACT, "a1", "a2"))
-    )
+    history = defeat(history, "a0", "a1")
+    history = advance(history, (Proposal(Action.CONFLICT, "a2", "a1", ("a1_1",)),))
+    assert history.events[-1].outcome is Outcome.ACCEPTED
     history = advance(
         history, (Proposal(Action.DEPENDENCY, "a1", "a0"), Proposal(Action.DEPENDENCY, "a1", "a2"))
     )

@@ -26,6 +26,7 @@ from rnw.history_model import (
     Proposal,
     Reason,
     Tenure,
+    TrajectoryKind,
     Transfer,
 )
 from rnw.history_societies import (
@@ -55,6 +56,8 @@ COST: Final[dict[Action, int]] = {
     Action.REFORM: 700,
     Action.MIGRATION: 200,
     Action.PRESSURE: 600,
+    Action.INDEPENDENCE: 400,
+    Action.SECESSION: 1000,
 }
 PRIORITY: Final[dict[Action, int]] = {
     Action.SEPARATION: 0,
@@ -69,9 +72,16 @@ PRIORITY: Final[dict[Action, int]] = {
     Action.REFORM: 2,
     Action.MIGRATION: 3,
     Action.PRESSURE: 2,
+    Action.INDEPENDENCE: 3,
+    Action.SECESSION: 0,
 }
 UNION_SETTLE_YEARS: Final[int] = 25
 CLIENT_CAPACITY_MULTIPLIER: Final[int] = 4
+# D25: a lord holds at least twice the subject's locations and three times its power;
+# a subject may leave once the lord has fallen below twice its power.
+LORD_LOCATIONS: Final[int] = 2
+LORD_POWER: Final[int] = 3
+LEAVE_POWER: Final[int] = 2
 
 
 def proposal_key(proposal: Proposal) -> str:
@@ -166,11 +176,14 @@ def _conflict_allowed(context: Context, proposal: Proposal) -> Reason | None:
         remaining and not index.supported(defender, remaining)
     ):
         return Reason.SUPPORT
-    if context.score(first, second, Factor.GRIEVANCE) == 0 and context.power(first) < (
-        context.power(second) * 3 // 2
+    # Without a grievance a society fights only with a clear advantage; the holder of
+    # an expansion aim accepts a contest at equal strength (D23: its choice of risk).
+    margin = 2 if first in context.aims else 3
+    if context.score(first, second, Factor.GRIEVANCE) == 0 and 2 * context.power(first) < (
+        context.power(second) * margin
     ):
         return Reason.OPPORTUNITY
-    if context.burden(first, proposal.districts) > PERMILLE:
+    if context.burden(first, proposal.districts) > context.limit(first):
         return Reason.CAPACITY
     return None
 
@@ -227,7 +240,27 @@ def _separation_allowed(context: Context, proposal: Proposal) -> Reason | None:
     return None
 
 
-def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None:
+def _submission_cause(context: Context, proposal: Proposal) -> Reason | None:
+    """D25: a recorded defeat by the lord, or a recorded threat the lord can face.
+
+    A merely larger neighbour is no cause for submission.
+    """
+    first, second, threat = proposal.actor, proposal.target, proposal.threat
+    if not threat:
+        return Reason.THREAT if context.score(first, second, Factor.FEAR) == 0 else None
+    if threat in (first, second):
+        return Reason.THREAT
+    if threat not in context.reach.get(first, {}) or threat not in context.reach.get(second, {}):
+        return Reason.UNREACHABLE
+    if not (
+        context.score(first, threat, Factor.FEAR) > 0
+        or context.score(first, threat, Factor.GRIEVANCE) > 0
+    ):
+        return Reason.THREAT
+    return Reason.IMBALANCE if context.power(second) < context.power(threat) else None
+
+
+def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None:  # noqa: PLR0911
     first, second = proposal.actor, proposal.target
     subject, lord = context.index.actors[first], context.index.actors[second]
     if first in context.pact_participants:
@@ -237,9 +270,13 @@ def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None:
         or lord.tenure is not Tenure.LAND
         or lord.technology < context.history.geography.rules.minimum_overlord_technology
         or first in context.subjects
-        or context.power(second) < 2 * context.power(first)
+        or len(context.index.members[second]) < LORD_LOCATIONS * len(context.index.members[first])
+        or context.power(second) < LORD_POWER * context.power(first)
     ):
         return Reason.IMBALANCE
+    reason = _submission_cause(context, proposal)
+    if reason is not None:
+        return reason
     lords = context.lords
     current = second
     while current in lords:
@@ -264,6 +301,87 @@ def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None:
     return None
 
 
+def _independence_allowed(context: Context, proposal: Proposal) -> Reason | None:
+    first, second = proposal.actor, proposal.target
+    if context.lords.get(first) != second:
+        return Reason.INELIGIBLE
+    weakened = context.power(second) < LEAVE_POWER * context.power(first)
+    overreached = context.burden(second) > context.capacity(second)
+    if not (weakened or overreached or context.setbacks(second, first)):
+        return Reason.OBLIGATIONS
+    return None
+
+
+def breakaway_seat(context: Context, districts: tuple[str, ...], founder: str) -> str:
+    """The founder's own seat when it is part of the province, else its largest place."""
+    seat = context.index.actors[founder].seat
+    if seat in districts:
+        return seat
+    return min(districts, key=lambda key: (-context.index.population(key), key))
+
+
+def _secession_allowed(context: Context, proposal: Proposal) -> Reason | None:
+    """D24: a realm beyond its unrest threshold can lose one conquered founder's province."""
+    actor = context.index.actors[proposal.actor]
+    parts = sorted(proposal.partitions, key=lambda part: part.seat != actor.seat)
+    if actor.tenure is not Tenure.LAND or len(parts) != MIN_PARTITIONS:
+        return Reason.INELIGIBLE
+    core, away = parts
+    districts = [*core.districts, *away.districts]
+    if (
+        core.seat != actor.seat
+        or len(set(districts)) != len(districts)
+        or set(districts) != context.index.members[actor.key]
+        or core.authority is not actor.authority
+    ):
+        return Reason.INELIGIBLE
+    founders = {context.founders.get(key, "") for key in away.districts}
+    founder = next(iter(founders)) if len(founders) == 1 else ""
+    if (
+        not founder
+        or founder in context.ancestry(actor.key)
+        or context.index.actors[founder].tenure is not Tenure.LAND
+        or away.seat != breakaway_seat(context, away.districts, founder)
+        or away.authority is not context.index.actors[founder].authority
+    ):
+        return Reason.INELIGIBLE
+    if context.burden(actor.key) <= context.unrest(actor.key):
+        return Reason.CAPACITY
+    if not context.index.supported(actor, set(core.districts)) or not context.index.supported(
+        replace(actor, seat=away.seat), set(away.districts)
+    ):
+        return Reason.SUPPORT
+    return None
+
+
+def _league_allowed(context: Context, proposal: Proposal) -> Reason | None:
+    """D23: members of one seeded league or confederation bargain without a third party."""
+    first, second = proposal.actor, proposal.target
+    shared = [
+        item for item in context.groups.get(first, ()) if item in context.groups.get(second, ())
+    ]
+    one, other = context.index.actors[first], context.index.actors[second]
+    for item in shared:
+        if item.kind is TrajectoryKind.SEA_LEAGUE:
+            if (
+                one.tenure is Tenure.LAND
+                and other.tenure is Tenure.LAND
+                and context.has(Action.EXCHANGE, first, second)
+                and context.score(first, second, Factor.TRUST) > 0
+                and context.score(second, first, Factor.TRUST) > 0
+            ):
+                return None
+        elif (
+            item.kind is TrajectoryKind.HIGHLAND_CONFEDERATION
+            and one.tenure is Tenure.TRIBE
+            and other.tenure is Tenure.TRIBE
+            and second in context.land_near.get(first, set())
+            and bool({first, second} & context.afraid)
+        ):
+            return None
+    return Reason.THREAT
+
+
 def _threat_allowed(context: Context, proposal: Proposal) -> Reason | None:
     threat = proposal.threat
     partners = (proposal.actor, proposal.target)
@@ -285,6 +403,10 @@ def eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C9
         return reform_allowed(context, proposal)
     if proposal.kind is Action.SEPARATION:
         return _separation_allowed(context, proposal)
+    if proposal.kind is Action.SECESSION:
+        return _secession_allowed(context, proposal)
+    if proposal.kind is Action.INDEPENDENCE:
+        return _independence_allowed(context, proposal)
     first, second = proposal.actor, proposal.target
     if second not in context.reach.get(first, {}):
         return Reason.UNREACHABLE
@@ -313,7 +435,11 @@ def eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C9
     if proposal.kind in {Action.PACT, Action.PROTECTION}:
         if proposal.kind is Action.PACT and {first, second} & context.subjects:
             return Reason.INELIGIBLE
-        reason = _threat_allowed(context, proposal)
+        reason = (
+            _league_allowed(context, proposal)
+            if proposal.kind is Action.PACT and not proposal.threat
+            else _threat_allowed(context, proposal)
+        )
         if reason is not None:
             return reason
     if proposal.kind is Action.ACCESS:
@@ -533,10 +659,59 @@ def _battle(
     )
 
 
+def _independence(context: Context, event: Event, proposal: Proposal) -> Effects:
+    subject, lord = proposal.actor, proposal.target
+    bond = next(
+        bond
+        for bond in context.state.bonds
+        if bond.kind is Action.DEPENDENCY and bond.first == subject and bond.second == lord
+    )
+    return Effects(
+        ended=(bond,),
+        memories=(
+            _memory(event, lord, subject, Factor.GRIEVANCE, 100),
+            _memory(event, subject, lord, Factor.COMPETITION, 60),
+        ),
+    )
+
+
+def _secession(context: Context, event: Event, proposal: Proposal) -> Effects:
+    realm = context.index.actors[proposal.actor]
+    away = next(part for part in proposal.partitions if part.seat != realm.seat)
+    founder = context.index.actors[context.founders[away.districts[0]]]
+    created = Actor(
+        f"{event.key}_0",
+        Tenure.LAND,
+        away.seat,
+        successor(context, realm, away.seat, away.authority),
+        founder.technology,
+        event.year,
+        event.key,
+        tuple(sorted(away.districts)),
+        society_cause=event.key,
+    )
+    return Effects(
+        created=(created,),
+        transfers=tuple(Transfer(key, realm.key, created.key) for key in sorted(away.districts)),
+        knowledge=(
+            Knowledge(realm.key, created.key, event.key),
+            Knowledge(created.key, realm.key, event.key),
+        ),
+        memories=(
+            _memory(event, created.key, realm.key, Factor.GRIEVANCE, 150),
+            _memory(event, realm.key, created.key, Factor.GRIEVANCE, 100),
+        ),
+    )
+
+
 def _peaceful(context: Context, event: Event, proposal: Proposal) -> Effects:
     first, second = proposal.actor, proposal.target
     if proposal.kind is Action.MIGRATION:
         return migration_effects(context, event, proposal)
+    if proposal.kind is Action.INDEPENDENCE:
+        return _independence(context, event, proposal)
+    if proposal.kind is Action.SECESSION:
+        return _secession(context, event, proposal)
     if proposal.kind is Action.CONTACT:
         return Effects(
             knowledge=(Knowledge(first, second, event.key), Knowledge(second, first, event.key)),
@@ -581,6 +756,8 @@ def adjudicate(
         Action.REFORM: Reason.REPEATED_PROBLEM,
         Action.MIGRATION: Reason.PRESSURE,
         Action.PRESSURE: Reason.PRESSURE,
+        Action.INDEPENDENCE: Reason.AUTONOMY,
+        Action.SECESSION: Reason.CAPACITY,
     }
     event = Event(
         event_key(context, proposal),
@@ -598,8 +775,14 @@ def adjudicate(
     elif proposal.kind in {Action.CONFLICT, Action.PRESSURE}:
         cost += min(200, context.burden(proposal.actor) // 5)
     costs = {proposal.actor: cost}
-    if proposal.target:
+    # Submitting to or leaving a lord spends the subject's effort; the lord's load is
+    # bounded by its administrative capacity, not by its round's other commitments.
+    if proposal.target and proposal.kind not in {Action.INDEPENDENCE, Action.DEPENDENCY}:
         costs[proposal.target] = cost
+    if proposal.kind in {Action.CONFLICT, Action.PRESSURE}:
+        # A defender spends what it has left: being busy is no shield. Arbitration
+        # still allows one contest per participant and round.
+        costs[proposal.target] = min(cost, remaining.get(proposal.target, 0))
     if reason is None and any(remaining.get(key, 0) < value for key, value in costs.items()):
         reason = Reason.COMMITTED
     if reason is not None:

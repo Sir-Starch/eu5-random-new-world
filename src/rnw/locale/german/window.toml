@@ -2771,3 +2771,27 @@ text = '''Theokratie'''
 ["history.tribe"]
 source = "6c49567d58669cda"
 text = '''Stamm'''
+
+["history.regional_power"]
+source = "503fa383d71d826f"
+text = '''Regionalmacht'''
+
+["history.paramount"]
+source = "ff1cbcccd3d96ac0"
+text = '''Vormacht'''
+
+["history.ambitions"]
+source = "f4578665c404f597"
+text = '''Ambitionen'''
+
+["history.ambition"]
+source = "f195b96c0634604c"
+text = '''{kind} — {name}: {status}'''
+
+["history.fulfilled"]
+source = "6030ced8c6f5f7a3"
+text = '''erfüllt'''
+
+["history.unfulfilled"]
+source = "d2fcc2e287ae5745"
+text = '''nicht erfüllt'''

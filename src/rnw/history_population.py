@@ -126,7 +126,8 @@ def project_population(
         history.geography == root.geography
         and history.foundings == root.foundings
         and history.seed == root.seed
-        and history.empire_permille == root.empire_permille,
+        and history.empire_permille == root.empire_permille
+        and history.turbulence == root.turbulence,
         "Population projection belongs to a different bootstrap",
     )
     current = dict(bootstrap.pops)

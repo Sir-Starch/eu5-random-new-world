@@ -701,6 +701,22 @@ H2 schema.
   governments and filler chronicles. Its criteria passed on the published set
   regardless. D21–D28 rewrite the policy targets and §18, and redesign phases
   R1–R6 replace H7's acceptance and delivery. No code, world bytes or epoch changed.
+- **R1–R5 code, 2026-11-05:** [the redesign](history-core.md#audit-redesign-r1r5-2026-11-05)
+  implements:
+  - the §18 counters and the `history_acceptance` evaluator;
+  - caused dependencies and independence;
+  - scaled capacity, unrest and breakaways;
+  - regional settings, extraordinary aims with strategies, balancing and league
+    pacts;
+  - regional traditions with emulation and ranked chronicles;
+  - aims in the portable record and the regional overview, with new texts in all
+    eleven languages.
+
+  The refinements of §21.5 were made on the development world continents/3 only.
+  The pending epoch-61 reference export passes every writer and output check with
+  872 files, and its golden is refreshed. Calibration over the 48 development
+  worlds, the held-out run, S8 timing and delivery (R6) are not done; the
+  [runbook](history-core.md#r6-runbook) lists them.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
@@ -777,7 +793,7 @@ each political region at 1337. It applies these rules in order:
 
 1. **great realm:** a recognized great realm holds at least 50% of the region's
    state locations;
-2. **paramount:** the largest bloc holds at least 40% and at least 2.5 × the
+2. **paramount:** the largest bloc holds at least 40% and at least twice the
    second;
 3. **league/confederation:** a recognized league or confederation holds at least
    30% of the region's organized land;
@@ -817,15 +833,15 @@ value is computed on the pooled political regions or worlds of one seed set.
 |---|---|---|
 | Q1 | Regional variety: classes of political regions | Patchwork, rival powers and paramount each ≥ 10%; fractured ≥ 3%; no class > 50% |
 | Q2 | Variety within a world: distinct region classes, in worlds with ≥ 4 political regions | Median ≥ 3 |
-| Q3 | Turbulence is visible: share of state land whose owner changed since 1037; class shares; continuity of 1337 landed countries at least 100 years old (polity or a union it formed) | Changed-land share Turbulent/Calm ≥ 1.5 pooled, and it rises Calm < Turbulent in ≥ 75% of worlds. Fractured + patchwork share is higher at Turbulent than at Calm; paramount share is higher at Calm than at Turbulent. Continuity median ≥ 40% at Varied |
+| Q3 | Turbulence is visible: recent turmoil (state land taken by conquest, breakaway or division in the last 100 years); class shares; continuity of 1337 landed countries at least 100 years old (polity or a union it formed) | Recent-turmoil share Turbulent/Calm ≥ 1.5 pooled, and it rises Calm < Turbulent in ≥ 75% of worlds. Fractured + patchwork share is higher at Turbulent than at Calm; paramount share is higher at Calm than at Turbulent. Continuity median ≥ 40% at Varied |
 | Q4 | Aims work: outcome of each seeded aim (seed set at 250 and sweeps at 1000) | Prudent expansion aims reach their D24 recognition ≥ 70%. Overreaching aims leave successor states, or lose ≥ 25% of their peak holdings, ≥ 50%. League, confederation and sacred-centre aims each realize ≥ 50% where seeded |
-| Q5 | Controls keep their meaning (sweeps) | In all four preset/seed pairs, the declared statistic is non-decreasing from low to default to high and strictly higher at high than at low. `state_locations` → ordinary median state size. `empire_permille` → realized extraordinary societies, in worlds with an eligible domain. `state_share_permille` → state locations. Turbulence → changed-land share |
-| Q6 | Scale of great realms | Realized great-realm blocs have a median of 0.5–1.5 × the 1.1.0 empire of the same hearth on the same input and controls. At 1000, at least three of the four sweep worlds realize an extraordinary society |
+| Q5 | Controls keep their meaning (sweeps) | In all four preset/seed pairs, the declared statistic is non-decreasing from low to default to high and strictly higher at high than at low. `state_locations` → ordinary median state size. `empire_permille` → realized extraordinary societies, in worlds with an eligible domain. `state_share_permille` → state locations. Turbulence → recent-turmoil share |
+| Q6 | Scale of great realms | The median realized great-realm bloc is 0.5–1.5 × the median 1.1.0 empire of the same worlds, inputs and controls (seed set at Varied and sweeps at 1000). At 1000, at least three of the four sweep worlds realize an extraordinary society |
 | Q7 | Ordinary state size against 1.1.0 on the same seed and controls | Median paired ratio of ordinary medians within ±25% (±40% at Calm and Turbulent) |
 | Q8 | No continental unification | Landmass with ≥ 60 bootstrap landed polities: no bloc > 50% of its state locations at any turbulence. Landmass with 20–59: a bloc > 50% on ≤ 20% of such landmasses per turbulence, and never > 85% |
 | Q9 | Subjects | Median subject pairs per world 8–40. In ≥ 90% of pairs the overlord holds ≥ 2 × the subject's locations |
 | Q10 | Alliances | Median 4–30 per world, each from a recorded pact |
-| Q11 | Institutions | Per-world republic share: median ≤ 25%, with an interquartile range across worlds ≥ 5 points. Every world with ≥ 20 states has ≥ 2 government types. Authority assortativity over bordering same-culture state pairs ≥ 0.2 |
+| Q11 | Institutions | Per-world republic share: median ≤ 25%, with an interquartile range across worlds ≥ 5 points. Every world with ≥ 20 states has ≥ 2 government types. Median authority assortativity over land-bordering state pairs ≥ 0.2 |
 | Q12 | Chronicles | No family > 35% of displayed entries, and exchange + contact ≤ 20%. Chronicles with ≥ 5 entries have a median of ≥ 3 distinct families. ≥ 10% of living countries have ≤ 3 entries. Maximum 8 |
 | Q13 | History visible in game | Landed countries with a named historical opinion or a written treaty: median ≥ 50% |
 | S8 | Added generation time against 1.1.0, same machine and inputs | Median ≤ 15%, p95 ≤ 25% |
@@ -1025,10 +1041,10 @@ conquest and recognition.
 - **Recognition** is relative:
   - a *regional power* holds a bloc of at least 15% of its region's state
     locations and at least 2.5 × the region's median state;
-  - a *paramount* holds at least 40% and at least 2.5 × the next bloc;
-  - a *great realm* holds at least 50% of its hearth domain's state locations,
-    directly or through subjects, with direct holdings of at least 4 ×
-    `state_locations`.
+  - a *paramount* holds at least 40% and at least twice the next bloc;
+  - a *great realm* holds at least 5‰ of all land locations, directly or through
+    subjects, with direct holdings of at least max(12, 4 × `state_locations`)
+    (refined in §21.5).
 - Rank stays reserved for great realms.
 
 **D25 Dependencies need a cause and can end.** Submission needs a recorded defeat
@@ -1076,6 +1092,70 @@ development set. New held-out seeds 1005–1008 are frozen in R1 and used once, 
 - If the new held-out run fails, those seeds also move to development and a further
   recorded decision is needed.
 - No world is ever rerolled or excluded.
+
+### 21.5 Implementation refinements (2026-11-05, before any held-out run)
+
+Implementing D21–D28 against the single development world continents/3 exposed
+these defects. Each is fixed in the mechanism, not in a world. This recorded
+decision changes the affected details above and in §18; the held-out set remains
+untouched.
+
+- **A busy defender was immune.** A conflict was refused when its *defender* had
+  already spent its round's commitments, for example on a reform. That shield
+  refused about 280 of 770 attacks on one world. Now a defender spends what it
+  has left. Arbitration allows one contest per participant per round, and a realm
+  that loses a province in a round cannot also fight over that land.
+- **Lords paid for submissions.** An overlord at war could not accept a client.
+  Submission and independence now cost only the subject; the lord's
+  administrative capacity still bounds its clients.
+- **Turbulence must change holding, not growth.** Scaling capacity by turbulence
+  reduced expansion, and so reduced visible change. Instead, turbulence lowers the
+  *unrest threshold* above which a conquered founder's province may break away:
+  88% of capacity at Calm, 70% at Varied, 52% at Turbulent. A breakaway restores
+  that founder's land as a new state, with its own grievance; the realm survives.
+  Q3 and Q5 therefore measure **recent turmoil**: state land taken by conquest,
+  breakaway or division in the last 100 years. The cumulative changed-land share
+  also counts peaceful unions, so it is still reported but is not the gate.
+- **Aims need room and the will to act.**
+  - Regional aims go only to centres that border at least two landed polities.
+  - A paramount is seeded only where connected state land can reach 40% of the
+    region; settings that are not feasible pass their weight to the others.
+  - An expansion aim's holder accepts a contest at equal strength (ordinary
+    societies need 1.5 times the defender's strength, or a grievance), and may
+    seek a whole neighbour at once.
+  - Paramount and great-realm aims persist at 700‰ whatever the turbulence;
+    regional powers range from 450‰ to 750‰.
+  - A union with an aim's holder keeps its administration.
+  - A paramount is recognized with at least 40% of its region and twice the next
+    bloc. In small regions, 2.5 times proved a size artefact.
+- **Subjects left every warlord.** Any war elsewhere let a subject leave, so an
+  active paramount kept none. Independence now needs a real setback for the lord
+  (a repelled attack or lost land), a lord that has fallen below twice the
+  subject's strength, or a lord over capacity.
+- **Traditions washed out.** Founding authority assortativity of 0.24 fell to about
+  0.04 after 300 years of reforms. Now:
+  - each region's tradition has one dominant authority (×3);
+  - a new authority is adopted only where at least half of the society's land
+    neighbours hold it, and those neighbours are the reform's causes;
+  - council rule needs collective bargains (pacts, unions, protection), not
+    routine exchange, which had made 35 of 37 republics.
+
+  Q11 measures assortativity over all land-bordering state pairs; same-culture
+  pairs were too few to be stable.
+- **Chronicles stay short.** A first contact is not chronicled. Only the first
+  exchange with a partner counts, and at most one appears. Reforms appear only when
+  they change authority, at most two. Migration appears at most once. Seeded aims
+  are listed with their outcome in the regional overview rather than in a
+  country's chronicle.
+- **A realized great realm** needs at least 5‰ of all land locations in its bloc
+  (the share of vanilla's largest 1337 American state, C117), at least
+  max(12, 4 × `state_locations`) locations held directly, and centralization of at
+  least 650. Q6 compares the pooled medians of realized great-realm blocs and 1.1.0
+  empires on the same worlds and controls.
+
+The design tables of D22–D26 remain adjustable on development seeds within their
+stated intent (§17). Every adjustment and the frozen values must be recorded
+before R6's held-out run.
 
 ### 21.4 Unchanged commitments
 

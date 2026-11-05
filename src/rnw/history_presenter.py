@@ -61,6 +61,12 @@ SOURCES: Final[dict[str, str]] = {
     "history.highland_confederation": "Highland confederation",
     "history.sacred_centre": "Sacred centre",
     "history.fractured_realm": "Divided realm",
+    "history.regional_power": "Regional power",
+    "history.paramount": "Paramount realm",
+    "history.ambitions": "Ambitions",
+    "history.ambition": "{kind} — {name}: {status}",
+    "history.fulfilled": "fulfilled",
+    "history.unfulfilled": "not fulfilled",
     "history.monarchy": "Monarchy",
     "history.republic": "Republic",
     "history.theocracy": "Theocracy",
@@ -126,6 +132,8 @@ class Reader:
             participants = (created, *record.actors[created].parents)
         elif event.kind is Action.SEPARATION:
             participants = event.retired
+        elif event.kind is Action.SECESSION:
+            participants = (event.actors[0], event.created[0])
         elif event.partners:
             participants = event.partners
         elif event.kind is Action.REFORM:
@@ -333,7 +341,22 @@ class Reader:
                         record.actors[parent].seat,
                     )
                 )
-        return (
+        # D23: a seeded aim stays readable whether or not history fulfilled it.
+        ambitions = tuple(
+            Line(
+                self.say(
+                    "ambition",
+                    kind=self.say(aim.kind),
+                    name=self.name(self.atlas.names[record.actors[aim.members[0]].seat]),
+                    status=self.say("fulfilled" if aim.realized else "unfulfilled"),
+                ),
+                aim.anchor,
+            )
+            for aim in record.aims
+            if self.name(self.atlas.regions[aim.anchor]) == region
+        )
+        sections = (
             Section(self.say("region"), rows),
             Section(self.say("inheritance"), tuple(inheritances[:8])),
         )
+        return (*sections, Section(self.say("ambitions"), ambitions[:8])) if ambitions else sections

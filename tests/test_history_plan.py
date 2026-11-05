@@ -94,6 +94,7 @@ def inputs_for(history: History) -> ProjectionInputs:
         history.foundings,
         seed=history.seed,
         empire_permille=history.empire_permille,
+        turbulence=history.turbulence,
     )
     places = tuple(sorted(root.geography.districts, key=lambda place: place.key))
     keys = tuple(place.key for place in places)
@@ -270,20 +271,24 @@ def test_vassal_lord_retains_the_proven_template_prerequisite() -> None:
     geography = Geography(
         (
             District("a", "r", Tenure.LAND, (Cohort("c", "r", 1000, 500),)),
+            District("a2", "r", Tenure.LAND, (Cohort("c", "r", 120, 60),)),
             District("b", "r", Tenure.LAND, (Cohort("c", "r", 10_000, 5000),)),
+            District("c", "r", Tenure.LAND, (Cohort("c", "r", 400, 340),)),
         ),
-        (Route("a", "b"),),
+        (Route("a", "b"), Route("a", "a2"), Route("a2", "b"), Route("b", "c")),
     )
     history = create(
         geography,
         (
-            Founding("client", Tenure.LAND, ("a",), "a", technology=1),
-            Founding("lord", Tenure.LAND, ("b",), "b", Authority.SACRED, 2),
+            Founding("client", Tenure.LAND, ("a", "a2"), "a", technology=1),
+            Founding("lord", Tenure.LAND, ("b", "c"), "b", Authority.SACRED, 2),
         ),
         seed=42,
         empire_permille=0,
     )
     history = advance(history, (Proposal(Action.CONTACT, "client", "lord"),))
+    # D25: the client submits after a recorded defeat by a lord of real scale.
+    history = advance(history, (Proposal(Action.CONFLICT, "lord", "client", ("a2",)),))
     history = advance(history, (Proposal(Action.DEPENDENCY, "client", "lord"),))
     inputs = inputs_for(quiet(history))
     plan = project_start(inputs)

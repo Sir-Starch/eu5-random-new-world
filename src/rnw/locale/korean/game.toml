@@ -1245,3 +1245,27 @@ text = '''{year}년: {first} 공동체에서 시도된 개혁은 저항에 부�
 ["rnw_history_resisted_1"]
 source = "cdbf8e2b05983ecb"
 text = '''{year}년: 저항으로 인해 {first} 공동체의 제도 변경안이 실현되지 못했습니다.'''
+
+["rnw_history_cause_independence"]
+source = "fbb6337a2ba75d08"
+text = '''독립'''
+
+["rnw_history_cause_secession"]
+source = "fa1e8304aac09e63"
+text = '''이탈'''
+
+["rnw_history_independence_0"]
+source = "54e3eaad1883e43b"
+text = '''{year}년: {first} 공동체가 {second} 공동체에 대한 복속을 끝냈습니다.'''
+
+["rnw_history_independence_1"]
+source = "3750639d89d139d1"
+text = '''{year}년: {first} 공동체가 {second} 공동체의 종주권에서 벗어났습니다.'''
+
+["rnw_history_secession_0"]
+source = "74c4a851632a3fb1"
+text = '''{year}년: {second} 공동체가 {first} 공동체에서 이탈했습니다.'''
+
+["rnw_history_secession_1"]
+source = "df8a7404ae20ed09"
+text = '''{year}년: {first} 공동체는 더 이상 {second} 공동체를 붙잡아 둘 수 없었고, 그 공동체는 이탈했습니다.'''

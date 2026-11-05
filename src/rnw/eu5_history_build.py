@@ -53,7 +53,12 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
         ],
     )
     keys = tuple(plan.cells[cell].key for cell in cells.cells)
+    # D24: a great realm holds at least four mean states directly, never fewer than
+    # the installed empire floor.
     rules = installed_rules(vanilla)
+    rules = replace(
+        rules, empire_locations=max(rules.empire_locations, 4 * settings.state_locations)
+    )
     routes = physical_routes(
         PhysicalMap(
             keys,
@@ -122,9 +127,10 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
         ),
         seed=seed,
         empire_permille=settings.empire_permille,
+        turbulence=settings.turbulence_permille,
         checkpoint=checkpoint,
     )
-    history = simulate(root.history, turbulence=settings.turbulence_permille, checkpoint=checkpoint)
+    history = simulate(root.history, checkpoint=checkpoint)
     return project_start(
         ProjectionInputs(
             root,
