@@ -354,6 +354,23 @@ valid world; use **Generate with a new seed** to try another one. See
 [known limitations](known-limitations.md) for compatibility and platform issues, including
 unsigned Windows binaries that Smart App Control may block.
 
+To report a failure, include the message's technical detail and the file from
+**Settings → Save diagnostics**.
+
+### The New World is all Clay or its map modes are empty
+
+If every generated location has Clay and the climate, vegetation and topography map
+modes show nothing there, the game has not read the world's location data. Check that:
+
+- only one generated world is enabled in the playset;
+- no mod after the world replaces `in_game/map_data/location_templates.txt` or other map
+  files, such as a resource or map mod;
+- the world's mod folder is complete: remove the world from the game in the library,
+  then add it again.
+
+Restart EU5 after changing the playset. If the problem remains, report the world code
+with EU5's `error.log` and the diagnostics file.
+
 ## Files and command line
 
 The remaining sections are for players who want to use commands, run from source or

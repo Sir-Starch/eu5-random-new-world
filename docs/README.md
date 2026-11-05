@@ -12,7 +12,8 @@ The next major update is **1.2.0**, focused on simulated prehistory, starting
 geopolitics and the depth, identity and diversity of societies. The
 [roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) records the
 owner's direction; the accepted [1.2.0 plan](history-plan.md) holds its design,
-phases and acceptance criteria.
+phases and acceptance criteria. The roadmap also lists the
+[Workshop-feedback fixes](roadmap.md#workshop-feedback-in-120) that ship with 1.2.0.
 
 ## Current guides
 

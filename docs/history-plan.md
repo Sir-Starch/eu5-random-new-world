@@ -774,6 +774,11 @@ change is recorded with its development evidence.
 
 A cut is recorded here and in the release notes.
 
+**Release scope outside the history model (2026-11-05).** The 1.2.0 release also
+carries the Workshop-feedback items W1–W6 of the
+[roadmap](roadmap.md#workshop-feedback-in-120). They are independent of R1–R5. The W2
+version matrix runs in R6 beside the reroll digests of §18. W1–W4 are irreducible;
+W6 and then W5 are cut before item 1 above.
 
 ## 18. Acceptance criteria
 
@@ -872,14 +877,15 @@ a new owner test.
 **Game-facing:** `uv sync --locked --group dev && make check`, desktop checks,
 goldens, installed-game read-only checks and reference reproduction as in
 [testing](testing.md). One owner sitting of about fifteen minutes on the R6
-candidate covers four checks:
+candidate covers four checks, and a fifth while W6 ships (the candidate then enables it):
 
 - the world loads without errors naming the new keys;
 - a named historical opinion appears in the diplomacy view;
 - Our History opens the chronicle;
-- a generated `guarantee` appears.
+- a generated `guarantee` appears;
+- with W6, the generated New World is discovered at the start.
 
-A failure applies F1–F3, with no further sitting.
+A failure applies F1–F3, or cuts W6, with no further sitting.
 
 ## 19. Risks
 

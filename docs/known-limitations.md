@@ -22,7 +22,17 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
 - **Other mods can conflict.** Map overhauls and mods replacing American
   geography or content are the main risk; compatibility with arbitrary mod
   combinations is not guaranteed. Refined Colonization is supported with this
-  load order: **Refined Colonization → generated RNW world mod**.
+  load order: **Refined Colonization → generated RNW world mod**. If the New World
+  shows Clay everywhere and its climate, vegetation and topography map modes are empty,
+  the game has not read the world's location data; see
+  [troubleshooting](generator-guide.md#the-new-world-is-all-clay-or-its-map-modes-are-empty).
+- **Worlds made by 1.0.0 can block colonial nations.** Their generated seas can touch
+  European seas near Greenland, so the Americas no longer count as overseas for European
+  countries (fixed in 1.1.0, issue #9). The fix does not change an existing world; make a
+  new world with 1.1.0 or later.
+- **Institutions follow vanilla rules.** Feudalism and Legalism can appear only in
+  Europe and reach the New World by spreading. The extraordinary-peoples setting gives
+  technology and governments, not institutions.
 - **Multiplayer needs matching files.** Multiplayer is supported and has been
   tested by the community. All players need the same game version, generated
   world mod and other mods. Sharing a world code alone is not enough if players
@@ -35,6 +45,9 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
   folder.
 - **Some seeds and settings cannot produce a valid world.** Generation stops
   with an error in that case. Use **Generate with a new seed** to retry.
+- **New versions of older worlds can get different land.** **Create a version** makes
+  the land with the current generator's algorithm. For a world made by an earlier
+  algorithm (for example, a 1.0.0 world in 1.1.0), the land can therefore differ.
 - **Windows startup warnings.** The binaries are unsigned, so Smart App Control
   may block them. The 1.1.0 window also received one heuristic antivirus detection;
   the [release notes](releases/1.1.0.md#checksums-and-windows-binary-scans) list
