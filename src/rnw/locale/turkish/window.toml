@@ -2895,3 +2895,7 @@ text = '''Toplumsal Değerler'''
 ["history.trade_note"]
 source = "2f748fedba8b7954"
 text = '''Oyunda antlaşma olarak değil, yollar ve pazar bağlantıları olarak görünür.'''
+
+["history.no_values"]
+source = "07535fe0c5f92f75"
+text = '''Bu dünya, toplumsal değerler kaydedilmeden önce oluşturuldu. Onları görmek için yeni bir dünya oluşturun.'''

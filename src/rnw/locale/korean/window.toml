@@ -2895,3 +2895,7 @@ text = '''사회 가치관'''
 ["history.trade_note"]
 source = "2f748fedba8b7954"
 text = '''게임에서는 조약이 아니라 도로와 시장 연결로 나타납니다.'''
+
+["history.no_values"]
+source = "07535fe0c5f92f75"
+text = '''이 세계는 사회 가치관이 기록되기 전에 만들어졌습니다. 새 세계를 만들면 볼 수 있습니다.'''

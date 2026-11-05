@@ -6,6 +6,19 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-05, **1.2.0 development / pending epoch 61 — history candidate B** (naming and societal values).
+[V-EXEC] Installed **`mod/rnw_exp_world_27gtz46qpq`** ("History 1.2 candidate B") in the existing
+Windows/Proton profile: code `RNW1-080NJ-Q174Z-YVDXZ-C040G-00830-3SG46-R18Y1-G5YG2-B4`, the settings of
+`frnstcvz2w` with a new seed (a world's id is a hash of its code and the build, so the same world
+could not take a new folder). It is the first world whose archive keeps each country's societal values and
+whose chronicle names a society that is a country by its map name. The staged installer refused any
+existing target; 900 files match the prepared mod, both libraries hold the record, and all 6 other mod
+folders and 9 profile-root files are unchanged. No playset, save or preference edit; no EU5 launch or
+control by the agent. Checked against its written files for all 740 countries: government types,
+technology levels, 59 vassal, 19 guarantee, 14 alliance and 24 rival pairs, 1,116 opinions, country
+names and the seven written societal values per country all equal the archive. NOT GAME VALIDATED.
+The hub (1.2.0, installed above) predates the window and presenter changes of this day.
+
 2026-11-05, **1.2.0 development / pending epoch 61 — the audited history redesign** (R1–R6 step 1,
 claim C492). [V-EXEC] Installed **`mod/rnw_exp_world_frnstcvz2w`** in the existing Windows/Proton
 profile: code `RNW1-080KN-HKXKK-XB4AA-9040G-00830-3SG46-R18Y1-G5VR1-BG`, the land and peoples of the

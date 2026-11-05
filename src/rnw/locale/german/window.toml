@@ -2895,3 +2895,7 @@ text = '''Gesellschaftswerte'''
 ["history.trade_note"]
 source = "2f748fedba8b7954"
 text = '''Im Spiel als Straßen und Marktverbindungen sichtbar, nicht als Vertrag.'''
+
+["history.no_values"]
+source = "07535fe0c5f92f75"
+text = '''Diese Welt entstand, bevor die Gesellschaftswerte festgehalten wurden. Erstelle eine neue Welt, um sie zu sehen.'''

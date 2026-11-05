@@ -104,6 +104,10 @@ SOURCES: Final[dict[str, str]] = {
     "history.no_relations": "No recorded relationships",
     "history.owner_changes": "Locations changing historical owner",
     "history.values": "Societal values",
+    "history.no_values": (
+        "This world was made before its societal values were recorded. "
+        "Make a new world to see them."
+    ),
     "history.trade_note": "Shown in the game as roads and market links, not as a treaty.",
 }
 

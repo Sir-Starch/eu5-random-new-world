@@ -2895,3 +2895,7 @@ text = '''社会价值观'''
 ["history.trade_note"]
 source = "2f748fedba8b7954"
 text = '''在游戏中表现为道路和市场联系，而不是条约。'''
+
+["history.no_values"]
+source = "07535fe0c5f92f75"
+text = '''这个世界创建于记录社会价值观之前。创建新世界即可查看。'''

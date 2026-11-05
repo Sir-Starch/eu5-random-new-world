@@ -82,6 +82,11 @@
   </ul>
 {/if}
 
+{#if dossier.values.length === 0}
+  <h3 class="hx-h">{t("history.values")}</h3>
+  <p class="hx-note">{t("history.no_values")}</p>
+{/if}
+
 {#if dossier.axes.length}
 <h3 class="hx-h">{t("history.profile")}</h3>
 <ul class="hx-traits">

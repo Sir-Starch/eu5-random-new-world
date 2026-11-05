@@ -2895,3 +2895,7 @@ text = '''Valores sociales'''
 ["history.trade_note"]
 source = "2f748fedba8b7954"
 text = '''En el juego se muestra como caminos y vínculos de mercado, no como un tratado.'''
+
+["history.no_values"]
+source = "07535fe0c5f92f75"
+text = '''Este mundo se creó antes de que se registraran los valores sociales. Crea un mundo nuevo para verlos.'''
