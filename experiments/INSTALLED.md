@@ -6,6 +6,24 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-05, **1.2.0 development / pending epoch 61 — the audited history redesign** (R1–R6 step 1,
+claim C492). [V-EXEC] Installed **`mod/rnw_exp_world_frnstcvz2w`** in the existing Windows/Proton
+profile: code `RNW1-080KN-HKXKK-XB4AA-9040G-00830-3SG46-R18Y1-G5VR1-BG`, the land and peoples of the
+latest installed world, now with the 1.2.0 history. The staged installer refused any existing target;
+902 files (873 outside `.metadata`) match the prepared mod, both libraries hold the record, and all
+5 other mod folders and 9 profile-root files are unchanged. No playset, save or preference edit; no
+EU5 launch or control by the agent. Its history (60 rounds, 31,310 events): the great empire seeded
+and realized (30 locations), regional powers 7 of 8, paramount 1 of 4, no league, confederation or
+sacred centre was seeded. The generator marks it NOT GAME VALIDATED; the engine's load of the 1.2.0
+history content has not been observed, and the held-out set (1005–1008) has not been run.
+
+The source/native and Windows/Wine window/native/code and shell/bridge self-tests pass. The standard
+updater installed the **3,530-file** generator-only hub 1.2.0, retaining the former hub at
+`.rnw-hub-backups/1.1.0-1793910579640108258`. Candidate: ignored
+`local_data/hub-updates/1.2.0-1793910528679676286/rnw_exp_hub`; Windows wheel SHA-256
+`237ac7049194da4f27c1182131b11f8cc97aed33f274cefe0f4d728087862d46`. Unpublished 1.2.0 / pending
+epoch 61.
+
 2026-11-02, **physical strait throats and shortest trajectories on XNKG** (C467). [V-EXEC]
 Installed **RNW: XNKG — narrow straits**, `mod/rnw_exp_world_akhvvjfa6f`, code
 `RNW1-080KN-HKXKK-XB4AA-9040G-00850-3SG42-1N15W-1P0A7-GC160-FGW`, in the game and both libraries.
