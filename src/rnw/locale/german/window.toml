@@ -2887,3 +2887,11 @@ text = '''Keine verzeichneten Beziehungen'''
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
 text = '''Orte mit einem Wechsel des historischen Besitzers'''
+
+["history.values"]
+source = "e3ba2b95c8ba182b"
+text = '''Gesellschaftswerte'''
+
+["history.trade_note"]
+source = "2f748fedba8b7954"
+text = '''Im Spiel als Straßen und Marktverbindungen sichtbar, nicht als Vertrag.'''

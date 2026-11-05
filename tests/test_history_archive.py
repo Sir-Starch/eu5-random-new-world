@@ -231,3 +231,54 @@ def test_extraordinary_membership_preserves_tribal_tenure(kind: TrajectoryKind) 
     built = history_atlas(plan)
     assert built.history is not None
     validate(built.history, atlas.history_links(built))
+
+
+def test_the_archive_keeps_the_societal_values_written_to_the_game(plan: FinalStartPlan) -> None:
+    from rnw.history_values import AXES as VALUE_AXES  # noqa: PLC0415 - one test's need
+
+    record = history_atlas(plan).history
+    assert record is not None
+    written = {country.tag: dict(country.government) for country in plan.countries}
+    for fact in record.countries:
+        assert len(fact.values) == len(VALUE_AXES)
+        for axis, value in zip(VALUE_AXES, fact.values, strict=True):
+            expected = written[fact.tag].get(axis)
+            assert value == (int(expected) if expected is not None else archive.UNWRITTEN)
+    assert archive.unpack(archive.pack(record)) == record
+
+
+def test_an_archive_without_values_still_loads_and_bad_values_are_refused(
+    plan: FinalStartPlan,
+) -> None:
+    built = history_atlas(plan)
+    record = built.history
+    assert record is not None
+    data = archive.to_data(record)
+    del data["u"]
+    older = archive.from_data(data)
+    assert all(country.values == () for country in older.countries)
+    validate(older, atlas.history_links(built))
+    broken = replace(
+        record,
+        countries=(replace(record.countries[0], values=(101,) * 8), *record.countries[1:]),
+    )
+    with pytest.raises(archive.HistoryArchiveError, match="societal values"):
+        validate(broken, atlas.history_links(built))
+
+
+def test_a_country_is_named_as_the_map_names_it_in_both_chronicles(plan: FinalStartPlan) -> None:
+    """A society that is a country is named by its country, in the game's text and the window's."""
+    renamed = replace(
+        plan, countries=tuple(replace(c, name=f"Realm {c.tag}") for c in plan.countries)
+    )
+    reader = Reader(history_atlas(renamed), "english", atlas.pretty)
+    game = history_text.chronicles(renamed)
+    assert game
+    for tag, chronicle in game.items():
+        window = reader.country(tag)[2]
+        assert [row.text for row in window.lines] == [
+            history_text.render(row.text, "english", reader.game) for row in chronicle.rows
+        ]
+        # The country shows in its own rows by its map name; a predecessor keeps its seat's name.
+        assert any(f"Realm {tag}" in line.text for line in window.lines)
+        assert any("Seat" in line.text for line in window.lines)

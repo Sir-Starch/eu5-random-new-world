@@ -2,7 +2,7 @@
   // A country's society in 1337: who it is, how it began, and its eight traits, each with the
   // event that last shaped it.
   import { t } from "../../lib/app.svelte";
-  import { percent } from "../../lib/history";
+  import { leaning, percent, spread } from "../../lib/history";
   import type { HistoryDossier } from "../../lib/types";
   import PlaceLink from "./PlaceLink.svelte";
 
@@ -27,7 +27,7 @@
   </div>
   <div class="hx-chips">
     <span class="hx-chip rank">{dossier.government}</span>
-    <span class="hx-chip">{dossier.technology}</span>
+    {#if dossier.technology}<span class="hx-chip">{dossier.technology}</span>{/if}
     {#if dossier.rank}<span class="hx-chip">{dossier.rank}</span>{/if}
   </div>
 </div>
@@ -43,6 +43,46 @@
   {/if}
 </div>
 
+{#if dossier.values.length}
+  <h3 class="hx-h">{t("history.values")}</h3>
+  <ul class="hx-values">
+    {#each dossier.values as value (value.key)}
+      {@const lean = leaning(value)}
+      {@const bar = spread(value.position)}
+      <li class="hx-value">
+        <div class="head">
+          <span class="title">{value.label}</span>
+          <span class="lean"><span>{lean.name}</span> <b class="num">{lean.strength}</b></span>
+        </div>
+        <div
+          class="hx-bipolar"
+          role="meter"
+          aria-label={value.label}
+          aria-valuemin="-100"
+          aria-valuemax="100"
+          aria-valuenow={value.position}
+          aria-valuetext={lean.name ? `${lean.name} ${lean.strength}` : "0"}
+        >
+          <i style:left="{bar.left}%" style:width="{bar.width}%"></i>
+          <span class="mid"></span>
+        </div>
+        <div class="poles">
+          <span class="pole">{value.left}</span>
+          {#if value.kind === "foundation"}
+            <span></span>
+          {:else if value.place >= 0}
+            <button class="hx-since" title={names[value.place]} onclick={() => onplace(value.place)}>{value.cause} · {value.year}</button>
+          {:else}
+            <span class="hx-since">{value.cause} · {value.year}</span>
+          {/if}
+          <span class="pole right">{value.right}</span>
+        </div>
+      </li>
+    {/each}
+  </ul>
+{/if}
+
+{#if dossier.axes.length}
 <h3 class="hx-h">{t("history.profile")}</h3>
 <ul class="hx-traits">
   {#each dossier.axes as axis (axis.key)}
@@ -68,3 +108,4 @@
     </li>
   {/each}
 </ul>
+{/if}

@@ -2887,3 +2887,11 @@ text = '''Brak zapisanych relacji'''
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
 text = '''Miejsca, które zmieniły historycznego właściciela'''
+
+["history.values"]
+source = "e3ba2b95c8ba182b"
+text = '''Wartości społeczne'''
+
+["history.trade_note"]
+source = "2f748fedba8b7954"
+text = '''W grze widoczne jako drogi i powiązania rynkowe, a nie jako traktat.'''

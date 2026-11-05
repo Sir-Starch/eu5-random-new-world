@@ -562,7 +562,8 @@ structured names, so reusing it would have let old readers silently discard hist
 There is no new world-file member and no game dependency for reading a chronicle.
 
 The portable record keeps living and predecessor actors, final eight-axis profiles
-with individual causes, projected country/diplomacy facts, current living memories
+with individual causes, projected country/diplomacy facts (including each country's societal values as written to
+the government block, an optional section that archives made before it lack), current living memories
 and bonds, up to eight chronicle rows per country, actual memberships and sparse
 ownership changes. It keeps the complete ancestor closure of these facts. A direct
 reference already reachable through another direct cause can be omitted without
@@ -590,8 +591,17 @@ card has tabs (Place, Society, Chronicle, Relations) drawn from the structured
 chronicle row is drawn apart from its sentence, so every translation of a chronicle
 template must open with its year (`tests/test_history_dossier.py`); a relationship is
 named by the partner's role toward the viewed country (`vassal` pairs are
-overlord-first, `guarantee` pairs guarantor-first). Templates and
-labels are translated in all eleven official languages. Covered worlds yield no
+overlord-first, `guarantee` pairs guarantor-first). A society that is a country on the map is
+named by its country's name in the chronicle, in the game's text and the window's alike
+(`history_text.chronicles`, `Reader.society`); a predecessor, which is no country, keeps the
+name of its seat. The Society tab shows the societal values EU5 shows, as the game names them
+and as written to the government block (`-100`..`100`, with the generator's own trait as their
+cause); five of the generator's traits project onto eight values, of which seven are written:
+`mysticism_vs_jurisprudence` has no ungated American range in the game and is never written. The values a country has are the *position within the American range* the
+generator found in the game, not the generator's internal 0–1000 scale, so a highly centralized
+society still reads as decentralized in absolute terms (the American range of centralization
+is 60..100). `Exchange agreement` is realized as roads, market links and known areas, not as a
+treaty. Templates and labels are translated in all eleven official languages. Covered worlds yield no
 history reader/bundle, totals or political summary; the existing reveal action
 opens history with the maps. An older world displays “No recorded history”.
 
@@ -794,7 +804,10 @@ export passed every writer and output check: 872 files, SHA-256
 `fc29c0e24b4360a617e8a0a2abb7e62deaa4ce2584e3eff612e931c15dfc7da5`, with a
 565,034-byte history wrapper. The R6 calibration changed the world; its digest is
 `40596d56ad63929bb14830a99d2d19a19c9edd9f14007a7e1d4003ebff6127d9`. `tests/golden_world.json` is refreshed; the frozen
-epoch-60 reference is unchanged. The divided-valley digest is now
+epoch-60 reference is unchanged. Naming a society that is a country by its country's name
+(chronicle sentences, below) changed only the eleven localization files; the reference
+digest is now `1dc426fd416fcdea90074fe464b2f5cac68684b181583837452384668d239f8c`
+(872 files). The divided-valley digest is now
 `99a0ee7ce9f0e0097d44a6753d6cf38934372b25e7839a4cf0166498769e6bd0`: the
 schema gained fields, and the story is unchanged.
 

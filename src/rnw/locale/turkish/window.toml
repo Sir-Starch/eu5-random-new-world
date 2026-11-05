@@ -2887,3 +2887,11 @@ text = '''Kayıtlı ilişki yok'''
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
 text = '''Tarihî sahibi değişen yerleşimler'''
+
+["history.values"]
+source = "e3ba2b95c8ba182b"
+text = '''Toplumsal Değerler'''
+
+["history.trade_note"]
+source = "2f748fedba8b7954"
+text = '''Oyunda antlaşma olarak değil, yollar ve pazar bağlantıları olarak görünür.'''

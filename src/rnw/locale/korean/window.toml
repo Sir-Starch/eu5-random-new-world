@@ -2887,3 +2887,11 @@ text = '''기록된 관계가 없습니다'''
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
 text = '''역사적 소유자가 바뀐 지점'''
+
+["history.values"]
+source = "e3ba2b95c8ba182b"
+text = '''사회 가치관'''
+
+["history.trade_note"]
+source = "2f748fedba8b7954"
+text = '''게임에서는 조약이 아니라 도로와 시장 연결로 나타납니다.'''

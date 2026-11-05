@@ -6,9 +6,11 @@ import re
 from collections import Counter, defaultdict
 from typing import TYPE_CHECKING, cast
 
-from rnw.history_archive import AXES, MAX_DEPTH, HistoryArchiveError
+from rnw.history_archive import AXES, MAX_DEPTH, UNWRITTEN, HistoryArchiveError
 from rnw.history_model import END, START, Action, Outcome, Tenure, TrajectoryKind
 from rnw.history_text import LIMIT
+from rnw.history_values import AXES as VALUE_AXES
+from rnw.history_values import BOUND
 
 OPINIONS_PER_PAIR = 4
 
@@ -207,6 +209,14 @@ def _ownership(record: Archive, links: AtlasLinks) -> None:
             bool(re.fullmatch(r"[a-z][a-z0-9_]*", country.government))
             and (not country.rank or bool(re.fullmatch(r"[a-z][a-z0-9_]*", country.rank))),
             "Invalid projected government or rank",
+        )
+        _require(
+            not country.values
+            or (
+                len(country.values) == len(VALUE_AXES)
+                and all(UNWRITTEN <= value <= BOUND for value in country.values)
+            ),
+            "Invalid projected societal values",
         )
         country_actors[country.actor] = number
     _require(

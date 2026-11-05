@@ -7,6 +7,18 @@ from typing import TYPE_CHECKING, Final
 
 from rnw.history_checks import require
 from rnw.history_model import PERMILLE, Exchange, Military
+from rnw.history_values import (
+    AXES,
+    BELLIGERENCE,
+    BOUND,
+    CENTRAL,
+    EXCHANGE,
+    MYSTICISM,
+    POSTURE,
+    QUALITY,
+    SPIRITUAL,
+    TRADITION,
+)
 from rnw.pdx import Block, parse
 
 if TYPE_CHECKING:
@@ -14,25 +26,6 @@ if TYPE_CHECKING:
 
     from rnw.history_model import Society
 
-CENTRAL: Final[str] = "centralization_vs_decentralization"
-TRADITION: Final[str] = "traditionalist_vs_innovative"
-SPIRITUAL: Final[str] = "spiritualist_vs_humanist"
-MYSTICISM: Final[str] = "mysticism_vs_jurisprudence"
-POSTURE: Final[str] = "offensive_vs_defensive"
-BELLIGERENCE: Final[str] = "belligerent_vs_conciliatory"
-QUALITY: Final[str] = "quality_vs_quantity"
-EXCHANGE: Final[str] = "land_vs_naval"
-AXES: Final[tuple[str, ...]] = (
-    CENTRAL,
-    TRADITION,
-    SPIRITUAL,
-    MYSTICISM,
-    POSTURE,
-    BELLIGERENCE,
-    QUALITY,
-    EXCHANGE,
-)
-BOUND: Final[int] = 100
 INTEGER: Final[re.Pattern[str]] = re.compile(r"-?\d+")
 
 

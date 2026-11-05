@@ -34,7 +34,7 @@
   {#if partner.standing.length}
     <span class="hx-chips">
       {#each partner.standing as kind (kind.kind)}
-        <span class="hx-chip {standing(kind.kind)}">{kind.label}</span>
+        <span class="hx-chip {standing(kind.kind)}" title={kind.kind === "trade" ? t("history.trade_note") : undefined}>{kind.label}</span>
       {/each}
     </span>
   {/if}

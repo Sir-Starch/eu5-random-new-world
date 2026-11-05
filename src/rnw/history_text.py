@@ -263,7 +263,11 @@ def _ancestors(actors: Mapping[str, Actor], actor: str) -> set[str]:
 
 
 def _row(
-    plan: FinalStartPlan, event: Event, actors: Mapping[str, Actor], lineage: set[str]
+    plan: FinalStartPlan,
+    event: Event,
+    actors: Mapping[str, Actor],
+    lineage: set[str],
+    called: Mapping[str, Name],
 ) -> ChronicleRow:
     history = _history(plan)
     participants = event.actors[:2]
@@ -289,7 +293,7 @@ def _row(
         participants = (bond.first, bond.second)
     elif event.kind is Action.REFORM:
         participants = event.actors[:1]
-    labels = [plan.names[actors[key].seat] for key in participants]
+    labels = [called.get(key) or plan.names[actors[key].seat] for key in participants]
     if event.kind is Action.MIGRATION:
         labels = [plan.names[settlement.district] for settlement in event.effects.settlements]
     family = event_family(event.kind, event.outcome)
@@ -357,6 +361,11 @@ def chronicles(plan: FinalStartPlan) -> dict[str, Chronicle]:
     by_actor, first = _eligible(history)
     lasting = {bond.cause for bond in history.state.bonds}
     lasting.update(opinion.cause for opinion in plan.historical_opinions)
+    # A society that is a country on the map is named as the map names it; one that is not (a
+    # predecessor) keeps the name of its seat, which is all the record has of it.
+    called: dict[str, Name] = {
+        country.history_actor: country.name for country in plan.countries if country.history_actor
+    }
     result: dict[str, Chronicle] = {}
     for actor, tag in sorted(plan.history_tags.items()):
         lineage = _ancestors(actors, actor)
@@ -387,7 +396,7 @@ def chronicles(plan: FinalStartPlan) -> dict[str, Chronicle]:
                 break
         result[tag] = Chronicle(
             tuple(
-                _row(plan, event, actors, lineage)
+                _row(plan, event, actors, lineage, called)
                 for event in sorted(selected, key=lambda e: (e.year, e.key))
             )
         )

@@ -11,8 +11,12 @@ import pytest
 
 from rnw import atlas, history_text, translations
 from rnw.eu5_history_plan import project_start
+from rnw.eu5_history_values import profile_positions
 from rnw.gui.view import history_data
+from rnw.history_model import Authority, Exchange, Livelihood, Military, Society
 from rnw.history_presenter import STANDING_ORDER, YEAR_PREFIX, Reader, encode
+from rnw.history_values import AXES as VALUE_AXES
+from rnw.history_values import SOURCE
 
 from .history_fixtures import divided_valley
 from .test_history_archive import history_atlas
@@ -62,8 +66,13 @@ def test_a_chronicle_row_keeps_its_year_and_place_apart_from_the_sentence(
 
 
 def test_the_traits_are_four_scales_and_four_names(built: atlas.Atlas) -> None:
-    reader = Reader(built, "english", atlas.pretty)
-    dossier = reader.dossier(record(built).countries[0].tag)
+    """Without the game's values (an older archive) all eight traits are shown."""
+    history = record(built)
+    older = replace(
+        built,
+        history=replace(history, countries=tuple(replace(c, values=()) for c in history.countries)),
+    )
+    dossier = Reader(older, "english", atlas.pretty).dossier(history.countries[0].tag)
     assert dossier is not None
     assert [axis.key for axis in dossier.axes][:2] == ["centralization", "authority"]
     scales = [axis for axis in dossier.axes if axis.number >= 0]
@@ -84,6 +93,7 @@ def test_a_dossier_is_plain_json_and_the_text_sections_are_unchanged(built: atla
         "rank",
         "technology",
         "origin",
+        "values",
         "axes",
         "chronicle",
         "partners",
@@ -152,3 +162,70 @@ def test_the_window_finds_a_region_by_the_name_it_shows(built: atlas.Atlas) -> N
     assert any(summary["changes"] for summary in regions.values())
     countries = cast("dict[str, object]", data["countries"])
     assert set(countries) == {country.tag for country in built.countries}
+
+
+def test_each_value_is_projected_from_the_trait_the_window_names() -> None:
+    """``SOURCE`` says which trait shaped a value; changing only that trait must move the value."""
+    ranges = dict.fromkeys(VALUE_AXES, (-100, 100))
+    base = Society()
+    variants = {
+        "centralization": replace(base, centralization=900),
+        "authority": replace(base, authority=Authority.RULER),
+        "livelihood": replace(base, livelihood=Livelihood.FARMING),
+        "exchange": replace(base, exchange=Exchange.COASTAL),
+        "religious_authority": replace(base, religious_authority=900),
+        "military": replace(base, military=Military.OFFENSIVE),
+        "integration": replace(base, integration=900),
+        "tradition": replace(base, tradition=900),
+    }
+    start = dict(profile_positions(base, ranges))
+    for trait, society in variants.items():
+        moved = {axis for axis, place in profile_positions(society, ranges) if place != start[axis]}
+        assert moved == {axis for axis, source in SOURCE.items() if source == trait}, trait
+
+
+def test_the_dossier_shows_the_values_the_game_is_given(built: atlas.Atlas) -> None:
+    reader = Reader(built, "english", atlas.pretty)
+    history = record(built)
+    for country in history.countries:
+        dossier = reader.dossier(country.tag)
+        assert dossier is not None
+        written = {
+            axis: value
+            for axis, value in zip(VALUE_AXES, country.values, strict=True)
+            if value != -101
+        }
+        assert {value.key: value.position for value in dossier.values} == written
+        assert all(value.left and value.right and value.cause for value in dossier.values)
+        # Traits a value already shows are not drawn again; the rest stay.
+        assert [axis.key for axis in dossier.axes] == ["authority", "livelihood", "integration"]
+
+
+def test_an_archive_without_values_shows_every_trait_and_no_value(built: atlas.Atlas) -> None:
+    history = record(built)
+    older = replace(
+        built,
+        history=replace(history, countries=tuple(replace(c, values=()) for c in history.countries)),
+    )
+    dossier = Reader(older, "english", atlas.pretty).dossier(history.countries[0].tag)
+    assert dossier is not None
+    assert dossier.values == ()
+    assert len(dossier.axes) == 8
+
+
+def test_a_tribe_has_no_technology_to_show(built: atlas.Atlas) -> None:
+    history = record(built)
+    tribal = replace(
+        built,
+        history=replace(
+            history,
+            countries=(replace(history.countries[0], government="tribe"), *history.countries[1:]),
+        ),
+    )
+    reader = Reader(tribal, "english", atlas.pretty)
+    first, second = (country.tag for country in history.countries[:2])
+    tribe, state = reader.dossier(first), reader.dossier(second)
+    assert tribe is not None
+    assert state is not None
+    assert tribe.technology == ""
+    assert state.technology

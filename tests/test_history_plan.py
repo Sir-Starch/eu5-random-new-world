@@ -14,18 +14,7 @@ import pytest
 from rnw.eu5_empires import EmpireCalibration
 from rnw.eu5_history import HistoryBootstrap, canonical_population
 from rnw.eu5_history_plan import ProjectionInputs, project_start
-from rnw.eu5_history_values import (
-    AXES,
-    CENTRAL,
-    EXCHANGE,
-    MYSTICISM,
-    POSTURE,
-    QUALITY,
-    SPIRITUAL,
-    TRADITION,
-    position_ranges,
-    profile_positions,
-)
+from rnw.eu5_history_values import position_ranges, profile_positions
 from rnw.eu5_natives import (
     ADVANCED_STATE,
     DEFAULT_CITY,
@@ -61,6 +50,16 @@ from rnw.history_model import (
     TrajectoryKind,
 )
 from rnw.history_plan_checks import validate_projection
+from rnw.history_values import (
+    AXES,
+    CENTRAL,
+    EXCHANGE,
+    MYSTICISM,
+    POSTURE,
+    QUALITY,
+    SPIRITUAL,
+    TRADITION,
+)
 from rnw.loc_keys import KeySpace
 from rnw.pdx import parse
 from rnw.societies import LandGraph, Polity, Societies, StateFloor

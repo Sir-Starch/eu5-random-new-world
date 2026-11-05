@@ -255,12 +255,26 @@ export interface HistoryPartner {
   reasons: HistoryReason[];
 }
 
+/** A societal value as EU5 shows it: a position from -100 (left pole) to 100 (right pole). */
+export interface HistoryValue {
+  key: string;
+  label: string;
+  left: string;
+  right: string;
+  position: number;
+  kind: string;
+  cause: string;
+  year: number;
+  place: number;
+}
+
 /** A country's society, chronicle and relationships (`history_presenter.Dossier`). */
 export interface HistoryDossier {
   government: string;
   rank: string;
   technology: string;
   origin: HistoryEntry;
+  values: HistoryValue[];
   axes: HistoryAxis[];
   chronicle: HistoryEntry[];
   partners: HistoryPartner[];

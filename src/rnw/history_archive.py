@@ -33,16 +33,21 @@ from rnw.history_model import (
 )
 from rnw.history_text import chronicles
 from rnw.history_trajectories import realizations
+from rnw.history_values import AXES as VALUE_AXES
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from rnw.eu5_start import FinalStartPlan
+    from rnw.eu5_start import Country, FinalStartPlan
     from rnw.history_model import History
 
 FORMAT: Final[int] = 1
+# Where a country stands on each societal value EU5 shows, in ``history_values.AXES`` order,
+# as written to the game (-100..100); an axis the game's American range does not allow is not
+# written. Archives made before the values were kept have none.
+UNWRITTEN: Final[int] = -101
 MAX_BYTES: Final[int] = 8 * 1024 * 1024
 MAX_RAW: Final[int] = 24 * 1024 * 1024
 MAX_ACTORS: Final[int] = 25_000
@@ -121,6 +126,7 @@ class CountryFact:
     rank: str
     great: bool
     landed: bool
+    values: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -356,6 +362,7 @@ def build(plan: FinalStartPlan, keys: Sequence[str]) -> Archive:
                 country.rank,
                 country.great,
                 country.kind == "state" or country.landed,
+                _values(country),
             )
             for country in sorted(plan.countries, key=lambda country: country.tag)
         ),
@@ -458,6 +465,12 @@ def _aims(
     return tuple(result)
 
 
+def _values(country: Country) -> tuple[int, ...]:
+    """The societal values the country's government block writes, by axis."""
+    written = {key: int(value) for key, value in country.government if key in VALUE_AXES}
+    return tuple(written.get(axis, UNWRITTEN) for axis in VALUE_AXES)
+
+
 def _profile(society: Society) -> list[int]:
     return [
         society.centralization,
@@ -538,6 +551,11 @@ def to_data(archive: Archive) -> dict[str, object]:
             ]
             for t in archive.aims
         ],
+        **(
+            {"u": [list(c.values) for c in archive.countries]}
+            if any(c.values for c in archive.countries)
+            else {}
+        ),
     }
 
 
@@ -557,12 +575,17 @@ COLUMNS: Final[dict[str, int]] = {
     "g": 4,
     "h": 2,
     "t": 6,
+    "u": len(VALUE_AXES),
 }
+# Present only in archives that kept the societal values.
+OPTIONAL: Final[frozenset[str]] = frozenset({"u"})
 
 
 def pack(archive: Archive) -> dict[str, object]:
     data = to_data(archive)
     for key in COLUMNS:
+        if key in OPTIONAL and key not in data:
+            continue
         rows = cast("list[list[object]]", data[key])
         data[key] = [list(column) for column in zip(*rows, strict=True)] if rows else []
     raw = json.dumps(data, ensure_ascii=True, separators=(",", ":"), sort_keys=True).encode("ascii")
@@ -641,6 +664,8 @@ def unpack(value: object) -> Archive:
         _require(isinstance(parsed, dict), "History data is not an object")
         columns = cast("dict[str, object]", parsed)
         for key, width in COLUMNS.items():
+            if key in OPTIONAL and key not in columns:
+                continue
             values = [_list(column) for column in _list(columns[key], width)]
             _require(not values or len(values) == width, "Invalid history columns")
             _require(
@@ -702,11 +727,22 @@ def _society(value: object) -> Society:
     )
 
 
+def _country_values(data: dict[str, object]) -> list[tuple[int, ...]]:
+    """Each country's societal values, or none for an archive that did not keep them."""
+    countries = len(_list(data["c"], MAX_ACTORS))
+    if "u" not in data:
+        return [() for _ in range(countries)]
+    rows = _rows(data["u"], len(VALUE_AXES), MAX_ACTORS)
+    _require(len(rows) == countries, "History values differ from its countries")
+    return [tuple(_integer(item, UNWRITTEN, 100) for item in row) for row in rows]
+
+
 def from_data(value: object) -> Archive:
     _require(isinstance(value, dict), "History data is not an object")
     data = cast("dict[str, object]", value)
     _require(
-        set(data) == {"v", "digest", "a", "e", "c", "i", "o", "m", "p", "b", "r", "g", "h", "t"}
+        set(data) - OPTIONAL
+        == {"v", "digest", "a", "e", "c", "i", "o", "m", "p", "b", "r", "g", "h", "t"}
         and type(data["v"]) is int
         and data["v"] == FORMAT,
         "History has an unknown schema",
@@ -754,8 +790,11 @@ def from_data(value: object) -> Archive:
                 _word(r[4], 64),
                 bool(_integer(r[5], 0, 1)),
                 bool(_integer(r[6], 0, 1)),
+                values,
             )
-            for r in _rows(data["c"], 7, MAX_ACTORS)
+            for r, values in zip(
+                _rows(data["c"], 7, MAX_ACTORS), _country_values(data), strict=True
+            )
         ),
         tuple((_integer(r[0]), _integer(r[1])) for r in _rows(data["i"], 2)),
         tuple(

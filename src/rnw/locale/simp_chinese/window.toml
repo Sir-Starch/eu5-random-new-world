@@ -2887,3 +2887,11 @@ text = '''没有已记载的关系'''
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
 text = '''历史所有者发生变化的地点'''
+
+["history.values"]
+source = "e3ba2b95c8ba182b"
+text = '''社会价值观'''
+
+["history.trade_note"]
+source = "2f748fedba8b7954"
+text = '''在游戏中表现为道路和市场联系，而不是条约。'''

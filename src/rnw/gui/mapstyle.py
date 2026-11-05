@@ -29,6 +29,8 @@ import numpy as np
 
 from rnw import atlas as atlas_module
 from rnw.gui.text import grouped
+from rnw.history_values import AXES as VALUE_AXES
+from rnw.history_values import poles as value_poles
 from rnw.topology import euclidean_distance
 
 if TYPE_CHECKING:
@@ -915,6 +917,10 @@ def identifiers(atlas: Atlas) -> frozenset[str]:
     if atlas.history is not None:
         found.update(country.government for country in atlas.history.countries)
         found.update(country.rank for country in atlas.history.countries if country.rank)
+        if any(country.values for country in atlas.history.countries):
+            found.update(VALUE_AXES)
+            found.update(pole for axis in VALUE_AXES for pole in value_poles(axis))
+            found.add("game_concept_societal_values")
     for value in (*atlas.regions, *atlas.areas, *atlas.names):
         if isinstance(value, str) and value:
             key = value.strip("$")

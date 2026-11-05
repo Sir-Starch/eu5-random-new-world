@@ -8,14 +8,16 @@ from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Final, final
 
 from rnw import history_text, translations, wording
-from rnw.history_archive import AXES
+from rnw.history_archive import AXES, UNWRITTEN
 from rnw.history_model import Action
+from rnw.history_values import AXES as VALUE_AXES
+from rnw.history_values import SOURCE, poles
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from rnw.atlas import Atlas
-    from rnw.history_archive import Archive
+    from rnw.history_archive import Archive, CountryFact
     from rnw.history_model import Society
 
 SOURCES: Final[dict[str, str]] = {
@@ -101,6 +103,8 @@ SOURCES: Final[dict[str, str]] = {
     "history.effect": "Opinion in EU5",
     "history.no_relations": "No recorded relationships",
     "history.owner_changes": "Locations changing historical owner",
+    "history.values": "Societal values",
+    "history.trade_note": "Shown in the game as roads and market links, not as a treaty.",
 }
 
 # The year opens every chronicle sentence in every language, followed by a colon (fullwidth in
@@ -170,6 +174,21 @@ class Axis:
 
 
 @dataclass(frozen=True, slots=True)
+class Value:
+    """A societal value as EU5 shows it: a position between two poles, and what shaped it."""
+
+    key: str
+    label: str
+    left: str
+    right: str
+    position: int
+    kind: str
+    cause: str
+    year: int
+    place: int
+
+
+@dataclass(frozen=True, slots=True)
 class Standing:
     kind: str
     label: str
@@ -202,6 +221,7 @@ class Dossier:
     rank: str
     technology: str
     origin: Entry
+    values: tuple[Value, ...]
     axes: tuple[Axis, ...]
     chronicle: tuple[Entry, ...]
     partners: tuple[Partner, ...]
@@ -295,6 +315,12 @@ class Reader:
         self.game = translations.translate(translations.GAME, language, history_text.sources())
         self.countries = {c.tag: c for c in atlas.history.countries} if atlas.history else {}
         self.tags = {c.actor: c.tag for c in self.countries.values()}
+        # A society that is a country on the map is named as the map names it (as the game's
+        # chronicle does); a predecessor keeps the name of its seat.
+        named = {c.tag: c.name or c.tag for c in atlas.countries}
+        self.called: dict[int, wording.Name] = {
+            actor: named.get(tag, tag) for actor, tag in self.tags.items()
+        }
         self.memories: dict[int, list[int]] = defaultdict(list)
         self.regional: dict[str, Counter[int]] = defaultdict(Counter)
         if atlas.history:
@@ -305,6 +331,10 @@ class Reader:
 
     def name(self, value: wording.Name) -> str:
         return wording.render(value, self.language)
+
+    def society(self, record: Archive, actor: int) -> wording.Name:
+        """What the actor is called: its country's name on the map, else the name of its seat."""
+        return self.called.get(actor) or self.atlas.names[record.actors[actor].seat]
 
     def say(self, key: str, **fields: str | int) -> str:
         return self.texts[f"history.{key}"].format_map(fields)
@@ -348,7 +378,7 @@ class Reader:
             participants = event.partners
         elif event.kind is Action.REFORM:
             participants = event.actors[:1]
-        labels = [self.atlas.names[record.actors[key].seat] for key in participants]
+        labels = [self.society(record, key) for key in participants]
         if event.kind is Action.MIGRATION:
             labels = [self.atlas.names[place] for place in event.places]
         family = history_text.event_family(event.kind, event.outcome)
@@ -414,7 +444,7 @@ class Reader:
         for partner, _ in sorted(partners.items(), key=lambda pair: (-pair[1], pair[0]))[:3]:
             rows.append(
                 Line(
-                    self.name(self.atlas.names[record.actors[partner].seat]),
+                    self.name(self.society(record, partner)),
                     record.actors[partner].seat,
                 )
             )
@@ -423,8 +453,8 @@ class Reader:
                 if {first, second} == {actor, partner}:
                     arrow = "↔" if kind in {"alliance", "rival", "exchange"} else "→"
                     names = (
-                        f"{self.name(self.atlas.names[record.actors[first].seat])} {arrow} "
-                        f"{self.name(self.atlas.names[record.actors[second].seat])}"
+                        f"{self.name(self.society(record, first))} {arrow} "
+                        f"{self.name(self.society(record, second))}"
                     )
                     projected.append(
                         f"{self.say('trade' if kind == 'exchange' else kind)} · {names}"
@@ -574,15 +604,22 @@ class Reader:
                     event.places[0] if event.places else -1,
                 )
             )
+        values = self._values(country, axes)
+        shown = {value.key for value in values}
+        # A trait that a written value already shows (with the same cause) is not shown twice.
+        represented = {SOURCE[key] for key in shown}
         partners, more = self._partners(record, country.actor)
         return Dossier(
             government=self.texts.get(
                 f"history.{country.government}", self.key(country.government)
             ),
             rank=self.key(country.rank) if country.rank else "",
-            technology=self.say("technology", level=country.level),
+            technology=""
+            if country.government == "tribe"
+            else self.say("technology", level=country.level),
             origin=self.entry(record, actor.origin, country.actor),
-            axes=tuple(axes),
+            values=values,
+            axes=tuple(axis for axis in axes if axis.key not in represented),
             chronicle=tuple(
                 self.entry(record, row, country.actor)
                 for row in dict(record.chronicles)[country.actor]
@@ -590,6 +627,30 @@ class Reader:
             partners=partners,
             more=more,
         )
+
+    def _values(self, country: CountryFact, axes: list[Axis]) -> tuple[Value, ...]:
+        """The societal values written for the country, named as the game names them."""
+        by_trait = {axis.key: axis for axis in axes}
+        found: list[Value] = []
+        for key, position in zip(VALUE_AXES, country.values, strict=False):
+            if position == UNWRITTEN:
+                continue
+            left, right = poles(key)
+            cause = by_trait[SOURCE[key]]
+            found.append(
+                Value(
+                    key,
+                    self.key(key),
+                    self.key(left),
+                    self.key(right),
+                    position,
+                    cause.kind,
+                    cause.cause,
+                    cause.year,
+                    cause.place,
+                )
+            )
+        return tuple(found)
 
     def _partners(self, record: Archive, actor: int) -> tuple[tuple[Partner, ...], int]:
         """Remembered partners with their reasons, then the other agreements, and how many more."""
@@ -629,7 +690,7 @@ class Reader:
     ) -> Partner:
         fact = record.actors[partner]
         return Partner(
-            name=self.name(self.atlas.names[fact.seat]),
+            name=self.name(self.society(record, partner)),
             place=fact.seat,
             tag=self.tags.get(partner, ""),
             standing=tuple(

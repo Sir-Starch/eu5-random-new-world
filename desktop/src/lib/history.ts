@@ -69,3 +69,18 @@ export function percent(value: number): number {
 export function signed(value: number): string {
   return value > 0 ? `+${value}` : value < 0 ? `−${-value}` : "0";
 }
+
+/** Which pole a societal value leans to, and how far (0-100), as the game words its sliders. */
+export function leaning(value: { position: number; left: string; right: string }): {
+  name: string;
+  strength: number;
+} {
+  const strength = Math.abs(value.position);
+  return { name: value.position < 0 ? value.left : value.position > 0 ? value.right : "", strength };
+}
+
+/** The filled part of a two-pole bar, in percent of its width: from the middle toward a pole. */
+export function spread(position: number): { left: number; width: number } {
+  const clamped = Math.min(Math.max(position, -100), 100);
+  return { left: clamped < 0 ? 50 + clamped / 2 : 50, width: Math.abs(clamped) / 2 };
+}

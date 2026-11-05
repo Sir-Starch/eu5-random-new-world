@@ -223,8 +223,9 @@ For worlds made with 1.2.0, click a land location to read its society and histor
 location's card has four tabs. **Place** holds the location's facts and the history of
 its region: seeded ambitions and whether they succeeded, the inheritances its societies
 share, and the years its land changed historical owner. **Society** shows the country's
-government, technology and origin, and its eight traits as scales or named values, each
-with the event that last shaped it. **Chronicle** is a timeline of the country's most
+government, technology and origin, the societal values EU5 shows for it (as the game names
+them, with the event that last shaped each), and the traits of the generator's model that
+the game does not show. **Chronicle** is a timeline of the country's most
 significant recorded events, oldest first. **Relations** lists the strongest remembered
 ties with their reasons and the opinion change EU5 receives for each, then the country's
 other agreements (overlord, subjects, alliances, rivalries, guarantees and exchange). The

@@ -12,8 +12,10 @@
   Read profiles, relationships, chronicles and regional history in either window
   after revealing a world, with links to places and portable import/recovery. In the
   new window a location's card has Place, Society, Chronicle and Relations tabs: traits
-  as scales with the event that shaped each, a timeline, and a country's overlord,
-  subjects and agreements next to the reasons it remembers.
+  as the societal values the game shows for the country with the event that shaped each,
+  a timeline, and a country's overlord, subjects and agreements next to the reasons it
+  remembers. A chronicle names a society that is a country by its map name, in the game
+  and in the window.
   Choose historical turbulence; extraordinary peoples now seeds an ambition
   that can succeed or fail. New client obligations require real administrative
   capacity. Our History and historical opinion names are localized in all eleven

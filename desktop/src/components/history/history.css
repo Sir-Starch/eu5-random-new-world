@@ -427,3 +427,72 @@ button.hx-since:hover {
   text-align: right;
   font-weight: 600;
 }
+
+/* Societal values: a position between two poles, as the game's sliders. */
+.hx-values {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.hx-value {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.hx-value .head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+.hx-value .title {
+  min-width: 0;
+  color: var(--text-2);
+}
+.hx-value .lean {
+  flex: none;
+  color: var(--text);
+}
+.hx-value .lean b {
+  font-weight: 600;
+}
+.hx-bipolar {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--line);
+}
+.hx-bipolar > i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.hx-bipolar .mid {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 50%;
+  width: 1px;
+  background: var(--line-3);
+}
+.hx-value .poles {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+.hx-value .pole {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hx-value .pole.right {
+  text-align: right;
+}
