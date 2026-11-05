@@ -1,11 +1,14 @@
 # History calibration for 1.2.0
 
-2026-11-04, RNW **1.2.0 development / pending epoch 61**, EU5 **1.4.7 / Steam
+2026-11-05, RNW **1.2.0 development / pending epoch 61**, EU5 **1.4.7 / Steam
 build 26377361**. This is H7 evidence for the [accepted plan](../history-plan.md),
-not a release or engine-acceptance claim. Published full-normal S8 timing is now
-complete. Held-out timing later exposed a separate boundary-only coastal identity
-failure; its construction fix and the timing evidence are recorded below. Final
-held-out native checks, packages and owner engine observation remain open.
+not a release or engine-acceptance claim. Corrected held-out timing, native and
+sweep artifacts, reference reproduction, S9, cancellation, cross-platform native
+parity and local package audits are complete. Held-out acceptance is **not met**:
+S4 sweep correlation, S5 landmass dominance and S7 great-trajectory realization
+fail their frozen thresholds. The calibration report retains the evidence and
+limits. No parameters were fitted to held-out outcomes; no profile install, hub
+update or owner game sitting was performed.
 
 ## Method and scope
 
@@ -197,9 +200,9 @@ The first 20 held-out pairs also completed on the C487 source. The `eu5_newworld
 source change described below returns exactly the former coast mapping for every
 successful C487 world: those runs passed the old explicit nonempty-coast guard,
 so every retained regional coast remains nonempty. The published S8 outputs are
-likewise unchanged by this correction. A final full-normal reference pair on the
-corrected source is still required for S9 and to measure corrected reference time
-and peak; it does not replace the published seed-set S8 distribution.
+likewise unchanged by this correction. Corrected-source reference and held-out
+results are recorded in the final section; they do not replace the published
+seed-set S8 distribution.
 
 [V-EXEC, 2026-11-04] Held-out `wall/1001` exposed a construction error in both the
 pinned 1.1.0 baseline and the current generator: all four generated coastal sea
@@ -219,14 +222,68 @@ lint and 23 Rust tests. Private evidence is in
 
 The held-out source was frozen before the first held-out run, then the actual
 failure required this narrow construction correction. The history policy and
-thresholds were not tuned. The already completed held-out timings remain
-regression evidence; the remaining held-out normal rows must use the corrected
-source before H7 acceptance.
-
-Independent normal reproduction, final paired-reference timing, remaining
-held-out acceptance, package self-tests, installation and the one owner sitting
-remain open.
+thresholds were not tuned. Twenty prior successful timings are reused only where
+the C488 coast filter is an identity; Wall/1001 uses the labelled matched-static
+sensitivity and Wall/1002–1004 were measured on C488. All 24 rows are retained in
+`timed-heldout-c488/summary.json`.
 
 [V-EXEC] Locked full checks pass: **2,761 Python tests**, 17 optional skips,
 strict types/format/lint and **23 Rust core tests**. Desktop checks/build pass
 with no Svelte warnings, **15 interface tests** and **5 Rust shell tests**.
+
+## Final held-out acceptance and local delivery
+
+[V-EXEC, 2026-11-05; source commit `eb053fd`] The corrected held-out full-normal
+timing cohort passes S8. Across 23 pairs with a successful original 1.1.0
+baseline, added time has a **13.05% median** and **15.57% p95**. Including the
+explicit Wall/1001 matched-static sensitivity, these are **12.75%** and **15.53%**.
+The first 20 successful C487 measurements are reused only where C488's boundary
+coast filter is proven to be an identity; four later cases were measured with
+C488. These timings are regression evidence, not a fresh independent 24-pair
+rerun.
+
+On the corrected C488 reference pair, the original full producer and writers
+take **202.547 s**, and history takes **229.793 s** (**+13.45%**). Peak memory
+increases by **2,608 KiB = 2.547 MiB**, below S9's 256 MiB ceiling. The current
+normal output passes all checks for 872 nonmetadata files and exactly matches
+the pending epoch-61 golden, SHA-256
+`435074c7582a41ea94e4872637db3deaeb0082a1b60c6bee659659d6668577fb`. The pinned
+1.1.0 source on current EU5 1.4.7 inputs writes 868 files; its patch-dependent
+digest is not substituted for the immutable epoch-60 golden. The standalone
+reference reproduction and three-world layers check also pass on C488.
+
+The C488 all-world native matrix completes for the corrected physical inputs;
+the C488 sweep matrix contains 96 metric rows over 32 controls. Artifact
+verification passes every native output. S1–S4 size, S6, S7 zero-seed and S11
+pass. Three frozen acceptance checks fail:
+
+- **S4 sweep:** Spearman midrank correlation across the eight raw state-size
+  endpoints is **0.8889**, below **0.9**.
+- **S5:** `small_continents/1002` reaches **51.90% at Calm** and **60.76% at
+  Varied** for its largest polity with subjects on a qualifying landmass; the
+  limit is 50% at both levels. Turbulent is reported separately and has no
+  threshold.
+- **S7:** Varied realizes **2 of 13** seeded great-empire trajectories (**15.38%**),
+  below the required 30%. The two realized cases are
+  `small_continents/1003` and `supercontinent/1001`.
+
+The held-out acceptance record therefore has `all_pass: false`. S8 passes both
+seed sets; the reference wrapper is **505,104 bytes**, the largest sweep wrapper
+is **568,069 bytes**, and all are within S11. Real-export cancellation is
+observed in **0.207 s**, with no completed output or spool left. A Windows
+portable Python run under Wine and Linux runs (1 thread/hash seed 1 and 31
+threads/hash seed 927) produce the same canonical full-plan SHA-256
+`c10cc61de7e208e14e34bdc4bed77031077a5922d3374b3ad083bb8be02c2cf0`, exactly
+53,948,865 canonical bytes, and history digest
+`130c11aeabc5486860174fb5b587b0b1a1b2b0e2936333607afdbd72aa2e775f`.
+
+The Linux standalone and packaged Windows hub pass their offscreen self-tests;
+the latter and cross-platform native run were exercised under Wine. Local Linux,
+Windows and Workshop/Proton archives pass the packaging allowlist audit and
+SHA256SUMS verification. Their hashes are recorded in the ignored local
+`dist/history-120-c488-{native,windows}/` folders. Nothing was published,
+installed to a game profile, or enabled in a playset; EU5 was not launched.
+Because the held-out thresholds fail, H7 candidate installation, hub replacement
+and the owner sitting remain pending an explicit next calibration/acceptance
+decision. The held-out results remain validation evidence and must not be used
+to tune the current policy.

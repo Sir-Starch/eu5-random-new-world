@@ -637,6 +637,15 @@ H2 schema.
   final reference/S9, corrected held-out continuation, native sweeps, reproduction,
   packaging, installation and the owner sitting remain open. Evidence and scopes
   are in the [calibration report](research/history-120-calibration.md#full-normal-s8-timings-and-boundary-only-coast-correction).
+- **H7 final verification, 2026-11-05:** the corrected C488 reference and held-out
+  normal timings, current native/sweep artifact checks, reference reproduction,
+  S9, S10/S11, Linux/Windows portable self-tests, cross-platform full-plan parity
+  and local archive audits are complete. S8 passes both seed sets. The held-out
+  acceptance record fails S4 sweep (0.8889 < 0.9), S5 (`small_continents/1002`
+  reaches 51.90% at Calm and 60.76% at Varied) and S7 (Varied: 2/13 = 15.38%,
+  below 30%). The held-out results are validation evidence and were not used for
+  fitting. H7 is therefore **not accepted**; no candidate or hub was installed
+  and no owner game sitting was requested. See the [final report](research/history-120-calibration.md#final-held-out-acceptance-and-local-delivery).
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides

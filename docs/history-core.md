@@ -5,8 +5,9 @@ bootstrap, population, final-plan construction and localized text writers in the
 [history plan](history-plan.md#17-phases-and-scope-control). H4 now connects them to
 normal generation for the **1.2.0 development target / pending epoch 61**. The
 frozen 1.1.0/epoch-60 reference is preserved. H5 portable reading/controls and [H6 story continuity](content-plan.md#history-continuity-h6-120-development)
-are implemented. H7's published S8 matrix now passes; final held-out validation,
-packaging, installation and owner engine observation remain in progress.
+are implemented. H7's technical checks and local package audits are complete,
+but held-out S4 sweep, S5 and S7 thresholds fail; the candidate is not accepted.
+See the [final calibration report](research/history-120-calibration.md#final-held-out-acceptance-and-local-delivery).
 
 ## Ownership and entry points
 
@@ -636,9 +637,9 @@ The full normal reference producer and writers pass for 872 files, with pending
 epoch-61 digest `435074c7…68577fb`. Its 505,104-byte history survives real compact
 import and receipt recovery, covered by default. Complete-export cancellation
 during reference simulation, including sibling work and cleanup, takes 0.207 s
-after the request. Controlled paired performance, independent reproduction,
-held-out validation and delivery remain separate H7 work; held-out seeds have
-not been used to choose these parameters.
+after the request. C488 passes reference reproduction, S8–S11 and Linux/Windows
+portable parity. Held-out S4 sweep, S5 and S7 fail; the complete observations and
+source provenance are in the [calibration report](research/history-120-calibration.md#final-held-out-acceptance-and-local-delivery).
 
 ## H7 measurement foundation
 
@@ -703,5 +704,17 @@ Wall/1001 export passes all normal writers and checks (870 files,
 `57851ca328cec5ba8fd8a97a2056be76f488aaf8c325e406279934a5cd3a596b`). Synthetic
 hierarchy tests cover this boundary and ocean assignment, and locked full checks
 pass (2,788 Python tests, 17 optional skips, strict format/lint/types and 23 Rust
-tests). The initial held-out source freeze is superseded for the remaining rows;
-no historical policy parameter was changed.
+tests). The initial held-out source freeze was superseded before the remaining
+rows; no historical policy parameter was changed.
+
+## H7 final validation (2026-11-05)
+
+[V-EXEC] C488 completes corrected full-normal S8 timing, the held-out model and
+sweep artifact checks, the reference reproduction, paired reference S9, export
+cancellation, wrapper limits, Linux/Windows full-plan equality and local Linux
+and Windows package audits. The pending epoch-61 reference matches all 872
+nonmetadata files. The held-out acceptance record fails S4 sweep, S5 and S7, so
+the 1.2.0 candidate does not pass H7. No profile install, hub replacement,
+playset change or EU5 session occurred. The held-out results remain validation
+data; further policy fitting requires a newly defined calibration/validation
+cycle or an owner decision that changes the acceptance thresholds.
