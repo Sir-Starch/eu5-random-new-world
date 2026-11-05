@@ -6,6 +6,10 @@ text = '''Neuwurf rückgängig'''
 source = "3ca5c54e7c549b10"
 text = '''Stelle die vorige Fassung wieder her'''
 
+["task.reroll"]
+source = "51224f1a5edee274"
+text = '''Erstelle neue Fassung…'''
+
 ["copy_tag"]
 source = "6d38d2a846422e7f"
 text = '''Kennung kopieren'''

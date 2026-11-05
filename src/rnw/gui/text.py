@@ -35,6 +35,7 @@ STRINGS: Final[dict[str, str]] = {
     "quick.turbulence.turbulent": "Turbulent",
     "undo_roll": "Undo roll",
     "task.undo": "Restoring the previous version",
+    "task.reroll": "Making a new version…",
     "copy_tag": "Copy tag",
     "copy_picture": "Copy picture",
     "destination.library": "Keep the mod in the library",

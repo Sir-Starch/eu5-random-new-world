@@ -844,3 +844,14 @@ bounded workers (ADR 0006). Check the installed build first; nothing launches EU
    self-tests. Render the `countries` atlas layer of every held-out world into a
    local contact sheet and review it against Q1–Q2. Install the candidate and
    update the hub as AGENTS describes, and prepare the owner's fifteen-minute sitting.
+6. **W2 version matrix** ([roadmap W2](roadmap.md#workshop-feedback-in-120)), run with the
+   candidate's source, in the foreground and one cell at a time (about 25 minutes a cell):
+   `uv run python local_data/w2/matrix.py local_data/w2/out --mask` drives the real bridge
+   process, as the Tauri window does, over a temporary data folder and profile. A cell is one
+   new world, then new peoples and new resources twice each with the world in the game
+   (one of them with *Keep this one in the game too*), then the world taken out of the game
+   and a version of it made from the library. Presets × seeds 3 and 42, and one cell on a
+   painted land image (`--mask`). A cell that stops is read from its transcript
+   (`out/<cell>.out`), `bridge.stderr` and `generator.log`; fix the cause, add a test for it,
+   delete the cell's `.done` and rerun. The classic window shares the controller and is
+   covered by `tests/test_window.py`; no live Qt matrix is run.

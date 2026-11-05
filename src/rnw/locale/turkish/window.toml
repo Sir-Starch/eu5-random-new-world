@@ -6,6 +6,10 @@ text = '''Yeniden çekimi geri al'''
 source = "3ca5c54e7c549b10"
 text = '''Önceki sürüm geri getiriliyor'''
 
+["task.reroll"]
+source = "51224f1a5edee274"
+text = '''Yeni sürüm oluşturuluyor…'''
+
 ["copy_tag"]
 source = "6d38d2a846422e7f"
 text = '''Etiketi kopyala'''

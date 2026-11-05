@@ -6,6 +6,10 @@ text = '''引き直しを取り消す'''
 source = "3ca5c54e7c549b10"
 text = '''前のバージョンに戻しています'''
 
+["task.reroll"]
+source = "51224f1a5edee274"
+text = '''新しいバージョンを作成しています…'''
+
 ["copy_tag"]
 source = "6d38d2a846422e7f"
 text = '''タグをコピー'''

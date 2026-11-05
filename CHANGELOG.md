@@ -24,6 +24,13 @@
   Published calibration passes; final performance, held-out validation and packaged
   delivery remain H7 work.
 
+- Fix *Create a version* (new peoples or new resources) stopping with "The generator
+  stopped" in the new window (also in 1.1.0). The line under the world had no words for a
+  version being made; drawing it raised an error that ended the generator, and the version
+  with it. The classic window raised the same error. A failure of the window's state is now
+  recorded in the log and the last-error file and tried again instead of ending the generator,
+  and a version that fails says so in the generator's words, as a new world does.
+
 - Warn on a world's page, in both windows and in the diagnostics file, when a mod after
   the world in the playset has files at the same paths as the world's, or when another RNW
   world is ticked. Either can leave the New World all Clay with empty map modes. The check

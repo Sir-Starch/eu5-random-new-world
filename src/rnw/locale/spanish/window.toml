@@ -6,6 +6,10 @@ text = '''Deshacer la nueva tirada'''
 source = "3ca5c54e7c549b10"
 text = '''Restaurando la versión anterior'''
 
+["task.reroll"]
+source = "51224f1a5edee274"
+text = '''Creando una nueva versión…'''
+
 ["copy_tag"]
 source = "6d38d2a846422e7f"
 text = '''Copiar etiqueta'''

@@ -6,6 +6,10 @@ text = '''撤销重掷'''
 source = "3ca5c54e7c549b10"
 text = '''正在恢复上一个版本'''
 
+["task.reroll"]
+source = "51224f1a5edee274"
+text = '''正在创建新版本…'''
+
 ["copy_tag"]
 source = "6d38d2a846422e7f"
 text = '''复制标签'''

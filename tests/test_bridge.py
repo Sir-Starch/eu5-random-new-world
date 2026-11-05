@@ -8,9 +8,12 @@ from __future__ import annotations
 import base64
 import io
 import json
+import queue
 import re
+import threading
+import time
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, final
 
 import numpy as np
 import pytest
@@ -28,6 +31,9 @@ from rnw.settings import RESOURCE_FIELDS
 from tests.fakes import synthetic_atlas
 
 if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+    from typing import IO
+
     from rnw.app.service import Exporter
     from rnw.progress import Progress
 
@@ -323,3 +329,193 @@ def test_resource_controls_reach_the_tauri_window_and_survive_its_actions(
     _ = bridge.call("reset_value", {"key": "resources.maize"})
     assert bridge.controller.value("resources.maize") == 1000
     assert bridge.controller.value("resources.iron") == 3000
+
+
+# -- W2: the version path through the bridge ---------------------------------------------------
+
+
+def test_the_state_can_be_drawn_whatever_the_thread_does_to_the_selected_world(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Every kind of work, in every phase, on the selected world or the new-world page: a
+    string missing for one task (``task.reroll`` was) is a ``KeyError`` that stops the bridge."""
+    bridge = _bridge(tmp_path, fake_export)
+    world = _made(bridge)
+    controller = bridge.controller
+    controller.select(world)
+    failures: list[str] = []
+    for task in Task:
+        for phase in Phase:
+            for target in (world, NEW):
+                controller.task, controller.phase, controller.task_target = task, phase, target
+                controller.message = "Technical detail"
+                try:
+                    _ = json.dumps(bridge.state())
+                except Exception as error:  # noqa: BLE001 - every failure is listed together
+                    failures.append(f"{task.value}/{phase.value}/{target}: {error!r}")
+    assert failures == []
+
+
+def test_every_kind_of_work_that_shows_a_line_for_a_world_has_its_words() -> None:
+    """The line under a world names the work; the classic window shows the same words."""
+    named = {task for task in Task if f"task.{task.value}" in text.sources()}
+    shown_for_a_world = {
+        Task.ADD,
+        Task.REMOVE,
+        Task.DELETE,
+        Task.CHECK,
+        Task.REROLL,
+        Task.SEND,
+        Task.COPY,
+        Task.UNDO,
+    }
+    assert shown_for_a_world <= named
+
+
+class _Lines:
+    """Standard input as the bridge reads it: lines that arrive while it serves, then its end."""
+
+    def __init__(self) -> None:
+        self._lines: queue.Queue[str | None] = queue.Queue()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._lines.get, None)
+
+    def send(self, method: str, **params: object) -> None:
+        number = next(_NUMBERS)
+        self._lines.put(json.dumps({"id": number, "method": method, "params": params}) + "\n")
+
+    def close(self) -> None:
+        self._lines.put(None)
+
+
+_NUMBERS = iter(range(1, 10_000))
+
+
+@final
+class _Outgoing:
+    """What the bridge writes; ``states`` are the states it sent, as the window would read them."""
+
+    def __init__(self) -> None:
+        self._text: list[str] = []
+        self._guard = threading.Lock()
+
+    def write(self, chunk: str, /) -> int:
+        with self._guard:
+            self._text.append(chunk)
+        return len(chunk)
+
+    def flush(self) -> None:
+        pass
+
+    def states(self) -> list[dict[str, object]]:
+        with self._guard:
+            lines = "".join(self._text).splitlines()
+        messages = [json.loads(line) for line in lines]
+        return [message["data"] for message in messages if message.get("event") == "state"]
+
+
+def _until(condition: Callable[[], bool], what: str, seconds: float = 20.0) -> None:
+    deadline = time.monotonic() + seconds
+    while not condition():
+        assert time.monotonic() < deadline, f"timed out: {what}"
+        time.sleep(0.02)
+
+
+def _served(bridge: Bridge) -> tuple[_Lines, _Outgoing, threading.Thread, list[BaseException]]:
+    lines, outgoing = _Lines(), _Outgoing()
+    ended: list[BaseException] = []
+
+    def run() -> None:
+        try:
+            serve(
+                bridge,
+                cast("IO[str]", cast("object", lines)),
+                cast("IO[str]", cast("object", outgoing)),
+            )
+        except BaseException as error:  # noqa: BLE001 - what ended the bridge is the test's result
+            ended.append(error)
+
+    thread = threading.Thread(target=run, name="served-bridge", daemon=True)
+    thread.start()
+    return lines, outgoing, thread, ended
+
+
+@pytest.mark.parametrize("keep_both", [False, True])
+def test_a_version_is_made_while_the_bridge_goes_on_serving_and_sending_states(
+    tmp_path: Path,
+    fake_export: Exporter,
+    keep_both: bool,  # noqa: FBT001 - the parameter
+) -> None:
+    """W2: *Create a version* stopped "the generator" because the state drawn while it ran
+    raised, which ended the bridge's loop and with it the process."""
+    release = threading.Event()
+    working = threading.Event()
+
+    def generator(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.part:
+            working.set()
+            assert release.wait(30)
+        return service.generate(request, progress, fake_export)
+
+    bridge = _bridge(tmp_path, fake_export)
+    bridge.controller.generator = generator
+    world = _made(bridge, shown=True)
+    lines, outgoing, thread, ended = _served(bridge)
+    lines.send("select", id=world)
+    lines.send("reroll", part="peoples", keep_both=keep_both)
+    _until(working.is_set, "the version started")
+
+    def line_of_the_version() -> str:
+        for state in outgoing.states():
+            task = cast(
+                "dict[str, object] | None", cast("dict[str, object]", state["world"])["task"]
+            )
+            if task is not None and task["running"]:
+                return cast("str", task["line"])
+        return ""
+
+    _until(lambda: bool(line_of_the_version()), "a state that shows the version being made")
+    assert text.text("task.reroll") in line_of_the_version()
+    assert thread.is_alive()
+    assert ended == []
+    release.set()
+    _until(lambda: bridge.controller.phase is Phase.FINISHED, "the version finished")
+    _until(lambda: len(bridge.controller.worlds) == 2, "the version is in the library")
+    lines.close()
+    thread.join(30)
+    assert not thread.is_alive()
+    assert ended == []
+
+
+def test_a_state_that_cannot_be_drawn_is_logged_and_the_next_one_is_sent(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A failure of the drawing must not end the process that is making a world: it goes to the
+    log and to the last-error file for a report, and the bridge tries again."""
+    bridge = _bridge(tmp_path, fake_export)
+    real = view.state
+    broken = {"calls": 0}
+
+    def state(controller: Controller, choices: view.Choices) -> dict[str, object]:
+        broken["calls"] += 1
+        if broken["calls"] <= 3:
+            message = "the state could not be drawn"
+            raise KeyError(message)
+        return real(controller, choices)
+
+    monkeypatch.setattr(view, "state", state)
+    lines, outgoing, thread, ended = _served(bridge)
+    _until(lambda: bool(outgoing.states()), "a state after the failures")
+    assert thread.is_alive()
+    assert ended == []
+    lines.close()
+    thread.join(30)
+    assert not thread.is_alive()
+    log = (tmp_path / "data" / "generator.log").read_text(encoding="utf-8")
+    assert "the state could not be drawn" in log
+    assert "Traceback" in log
+    assert log.count("the window's state could not be drawn") == 1, "one entry per distinct error"
+    assert "the state could not be drawn" in (tmp_path / "data" / "last-error.log").read_text(
+        encoding="utf-8"
+    )

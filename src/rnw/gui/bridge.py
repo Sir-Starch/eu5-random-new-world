@@ -195,6 +195,11 @@ class Bridge:
         """What the window draws now."""
         return view.state(self.controller, self.choices)
 
+    def drawn(self) -> tuple[dict[str, object], str]:
+        """The state and its text as it is sent (sorted, so that an unchanged one is noticed)."""
+        data = self.state()
+        return data, json.dumps(data, ensure_ascii=False, sort_keys=True)
+
     # -- the new world -------------------------------------------------------------------------
 
     def set_choice(self, params: Params) -> None:
@@ -445,9 +450,15 @@ class _Pace:
         self.sent: float = 0.0
         self.tick: float = 0.0
         self.poll: float = time.monotonic()
+        self.faults: set[str] = set()
 
     def keep_up(self, bridge: Bridge, send: Callable[[dict[str, object]], None]) -> None:
-        """Tick a running generation's countdown, poll an idle library, send a changed state."""
+        """Tick a running generation's countdown, poll an idle library, send a changed state.
+
+        A failure of the polling or of the drawing must not end the loop: the work thread is a
+        daemon, so the process would stop with the world half made and say nothing of why. It is
+        recorded once for each distinct error and tried again at the next tick.
+        """
         controller = bridge.controller
         now = time.monotonic()
         live = controller.phase is Phase.RUNNING and controller.task is Task.GENERATE
@@ -456,15 +467,29 @@ class _Pace:
             bridge.dirty.set()
         if not controller.busy and now - self.poll >= POLL:
             self.poll = now
-            controller.poll_library()
+            _ = self._guarded(controller, "the library could not be read", controller.poll_library)
         if bridge.dirty.is_set() and now - self.sent >= STATE_INTERVAL:
             bridge.dirty.clear()
             self.sent = now
-            data = bridge.state()
-            encoded = json.dumps(data, ensure_ascii=False, sort_keys=True)
+            drawn = self._guarded(controller, "the window's state could not be drawn", bridge.drawn)
+            if drawn is None:
+                bridge.dirty.set()
+                return
+            data, encoded = drawn
             if encoded != self.state:
                 self.state = encoded
                 send({"event": "state", "data": data})
+
+    def _guarded[T](self, controller: Controller, what: str, work: Callable[[], T]) -> T | None:
+        """The result of ``work``; None when it failed, after recording the failure once."""
+        try:
+            return work()
+        except Exception as error:  # noqa: BLE001 - the loop goes on; the report has the trace
+            signature = f"{what}: {type(error).__name__}: {error}"
+            if signature not in self.faults:
+                self.faults.add(signature)
+                controller.record_fault(error, what)
+            return None
 
 
 def serve(bridge: Bridge, incoming: IO[str], outgoing: IO[str]) -> None:
@@ -548,6 +573,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         controller.select(NEW)
     try:
         serve(bridge, incoming, outgoing)
+    except BaseException as error:
+        controller.record_fault(error, "the bridge stopped")
+        raise
     finally:
         logs.stop()
     return 0

@@ -80,5 +80,9 @@ They do not define the capabilities or output set of `eu5_nw_export.py`.
 The Tauri window ([ADR 0011](adr/0011-tauri-window.md)) is the UI: it drives the same
 `Controller` through `rnw.gui.bridge`. The classic Qt window opens when chosen or when
 the Tauri window cannot open (no WebView2 in a Proton prefix, no WebKitGTK).
+The controller's work thread is a daemon, so the bridge's loop is the generator's life:
+a failure of polling or of drawing the state is recorded (`Controller.record_fault`) and
+retried, never allowed to end the process; every `Task` that can be shown for a world has
+a `task.<name>` text (tests guard both).
 The original architecture alternatives are preserved in
 [the archive](archive/architecture-options.md).

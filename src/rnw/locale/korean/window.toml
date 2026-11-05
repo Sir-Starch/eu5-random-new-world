@@ -6,6 +6,10 @@ text = '''다시 굴리기 취소'''
 source = "3ca5c54e7c549b10"
 text = '''이전 버전으로 되돌리는 중'''
 
+["task.reroll"]
+source = "51224f1a5edee274"
+text = '''새 버전을 만드는 중…'''
+
 ["copy_tag"]
 source = "6d38d2a846422e7f"
 text = '''태그 복사'''

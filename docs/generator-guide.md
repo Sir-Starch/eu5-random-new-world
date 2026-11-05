@@ -357,6 +357,15 @@ unsigned Windows binaries that Smart App Control may block.
 To report a failure, include the message's technical detail and the file from
 **Settings → Save diagnostics**.
 
+### "The generator stopped"
+
+The Tauri window shows this when the generator's own process has ended, so no explanation of
+a failed world can come with it. In 1.1.0 it happened whenever **New peoples** or **New
+resources** began to make a version, because the line under the world had no words for that
+work; update to a release that has the fix. If it happens again, the cause is in
+`generator.log` and `last-error.log` of the generator's data folder, which
+**Settings → Save diagnostics** puts in its file: send that file with the world code.
+
 ### The New World is all Clay or its map modes are empty
 
 If every generated location has Clay and the climate, vegetation and topography map

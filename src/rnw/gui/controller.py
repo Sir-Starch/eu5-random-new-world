@@ -122,6 +122,10 @@ class Task(Enum):
     UNDO = "undo"
 
 
+# The work that makes a world, whose failures are told in the generator's own words.
+MAKING: Final[frozenset[Task]] = frozenset({Task.GENERATE, Task.QUEUE, Task.REROLL})
+
+
 class Generator(Protocol):
     """``service.generate``, so tests can stand in for it."""
 
@@ -1450,11 +1454,7 @@ class Controller:
     def _explain(self, error: Exception) -> str:
         """The error for the player; the traceback goes to the log and to a file for a report."""
         logs.get().exception("task failed: %s", error)
-        try:
-            self.data.mkdir(parents=True, exist_ok=True)
-            _ = (self.data / ERROR_LOG).write_text(traceback.format_exc(), encoding="utf-8")
-        except OSError:
-            pass
+        self._write_error_log(error)
         from rnw.currents import CurrentError  # noqa: PLC0415 - load generation code only on failure
         from rnw.eu5_nw_export import LocationLimitError  # noqa: PLC0415
         from rnw.eu5_rivers import RiverRasterError  # noqa: PLC0415
@@ -1462,31 +1462,44 @@ class Controller:
         from rnw.ports import PortError  # noqa: PLC0415
         from rnw.sea_routes import LaneError  # noqa: PLC0415
 
+        making = self.task in MAKING
         cause: BaseException | None = error
         while cause is not None:
-            if self.task is Task.GENERATE and isinstance(cause, LocationLimitError):
+            if making and isinstance(cause, LocationLimitError):
                 return text(
                     "generation_location_limit",
                     count=grouped(cause.count),
                     limit=grouped(cause.limit),
                 )
-            if self.task is Task.GENERATE and isinstance(
-                cause, (CurrentError, LaneError, PortError, SeaError)
-            ):
+            if making and isinstance(cause, (CurrentError, LaneError, PortError, SeaError)):
                 return text("generation_sea_error", detail=str(cause))
-            if self.task is Task.GENERATE and isinstance(cause, RiverRasterError):
+            if making and isinstance(cause, RiverRasterError):
                 return text("generation_river_error", detail=str(cause))
-            if self.task is Task.GENERATE and isinstance(cause, OSError):
+            if making and isinstance(cause, OSError):
                 return text("generation_file_error", detail=str(cause))
             cause = cause.__cause__
         detail = explain(error)
         if (
-            self.task is Task.GENERATE
+            making
             and not isinstance(error, (SettingsError, worldfile.WorldFileError))
             and not (error.args and isinstance(error.args[0], Said))
         ):
             return text("generation_unexpected_error", detail=detail)
         return detail
+
+    def record_fault(self, error: BaseException, what: str) -> None:
+        """Keep a failure that is no task's result, so the player is not told of it: the traceback
+        goes to the log and to the last-error file, which a diagnostics report carries."""
+        logs.get().error("%s: %s", what, error, exc_info=error)
+        self._write_error_log(error)
+
+    def _write_error_log(self, error: BaseException) -> None:
+        try:
+            self.data.mkdir(parents=True, exist_ok=True)
+            trace = "".join(traceback.format_exception(error))
+            _ = (self.data / ERROR_LOG).write_text(trace, encoding="utf-8")
+        except OSError:
+            pass
 
     # -- bug reports ---------------------------------------------------------------------------
 

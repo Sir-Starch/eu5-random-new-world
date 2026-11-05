@@ -637,6 +637,58 @@ def test_generation_explains_the_location_limit(tmp_path: Path, fake_export: Exp
     assert "Advanced" in controller.message
 
 
+def test_a_version_that_fails_is_told_in_the_generators_words_and_keeps_its_trace(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """W2: the explanations of a failed world were given to *Generate* alone; a version showed
+    the bare message, without the lead, and a file error without its advice."""
+    controller = _made(tmp_path, fake_export)
+
+    def unexpected(request: service.Request, progress: Progress | None = None) -> service.Result:
+        del request, progress
+        message = "the peoples broke"
+        raise RuntimeError(message)
+
+    def too_many(request: service.Request, progress: Progress | None = None) -> service.Result:
+        del request, progress
+        raise LocationLimitError(32264, 32000)
+
+    def unwritable(request: service.Request, progress: Progress | None = None) -> service.Result:
+        del request, progress
+        message = "No space left on device"
+        raise OSError(message)
+
+    for part, broken, expected in (
+        ("peoples", unexpected, text("generation_unexpected_error", detail="the peoples broke")),
+        ("resources", too_many, text("generation_location_limit", count="32,264", limit="32,000")),
+        ("peoples", unwritable, text("generation_file_error", detail="No space left on device")),
+    ):
+        controller.generator = broken
+        assert controller.reroll_selected(part) is None
+        controller.wait(10)
+        assert controller.task is Task.REROLL
+        assert controller.phase is Phase.FAILED
+        assert controller.message == expected
+        assert "Traceback" in (controller.data / "last-error.log").read_text(encoding="utf-8")
+    assert len(controller.worlds) == 1, "a failed version leaves the world as it was"
+    assert len(install.installed_mods(tmp_path / "profile")) == 1
+
+
+def test_a_fault_outside_any_task_is_kept_for_the_report(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    nothing: dict[str, int] = {}
+    try:
+        _ = nothing["no way to draw it"]
+    except KeyError as error:
+        controller.record_fault(error, "the window's state could not be drawn")
+    log = (tmp_path / "data" / "generator.log").read_text(encoding="utf-8")
+    assert "the window's state could not be drawn: 'no way to draw it'" in log
+    assert "Traceback" in log
+    assert "KeyError" in (tmp_path / "data" / "last-error.log").read_text(encoding="utf-8")
+
+
 def test_retry_avoids_both_the_failed_and_the_current_seed(
     tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
 ) -> None:

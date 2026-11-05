@@ -811,6 +811,33 @@ def test_the_buttons_make_a_version_of_the_world_and_the_list_shows_it_below(
 
 
 @pytest.mark.usefixtures("application")
+def test_the_window_names_the_version_it_is_making_and_goes_on_when_it_is_done(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """W2: the line under the world needs words for every kind of work; ``task.reroll`` had none."""
+    release, working = threading.Event(), threading.Event()
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+
+    def generator(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.part:
+            working.set()
+            assert release.wait(30)
+        return service.generate(request, progress, fake_export)
+
+    controller.generator = generator
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    window.peoples_button.click()
+    pump(working.is_set)
+    pump(lambda: text("task.reroll") in window.task_line.text())
+    release.set()
+    pump(lambda: controller.phase is Phase.FINISHED and len(controller.worlds) == 2)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_the_maps_tab_is_covered_until_revealed_and_then_draws_layers_and_answers(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
