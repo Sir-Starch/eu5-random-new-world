@@ -50,7 +50,7 @@ TRADITION: Final[dict[Authority, int]] = {
 }
 COASTAL_COUNCIL: Final[int] = 200
 SACRED_TRADITION: Final[int] = 100
-DOMINANT_TRADITION: Final[int] = 3
+DOMINANT_TRADITION: Final[int] = 8
 
 
 def _checkpoint() -> None:

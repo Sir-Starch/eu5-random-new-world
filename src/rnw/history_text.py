@@ -175,6 +175,8 @@ SIGNIFICANCE: Final[dict[Action, int]] = {
     Action.CONTACT: 9,
 }
 ROUTINE: Final[frozenset[Action]] = frozenset({Action.EXCHANGE, Action.CONTACT})
+# A routine entry only fills a chronicle that has fewer significant entries than this.
+ROUTINE_FILL: Final[int] = 3
 # At most this many entries of a family that recurs in ordinary lives. A first
 # contact stays in the record; the first exchange agreement is its visible sign.
 REPEATED: Final[dict[Action, int]] = {
@@ -374,7 +376,7 @@ def chronicles(plan: FinalStartPlan) -> dict[str, Chronicle]:
         selected: list[Event] = []
         repeated: Counter[Action] = Counter()
         for event in ranked:
-            if event.kind in ROUTINE and event.key not in first:
+            if event.kind in ROUTINE and (event.key not in first or len(selected) >= ROUTINE_FILL):
                 continue
             if event.kind in REPEATED:
                 if repeated[event.kind] >= REPEATED[event.kind]:

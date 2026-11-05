@@ -70,6 +70,9 @@ CONTESTS: Final[frozenset[Action]] = frozenset({Action.CONFLICT, Action.PRESSURE
 # A regional power's contest propensity: 450 at Calm, 600 at Varied, 750 at Turbulent.
 AIM_CONFLICT: Final[int] = 350
 HEGEMONY_CONFLICT: Final[int] = 700
+# Beyond Varied, each further point of turbulence adds this many thousandths to the
+# ordinary contest propensity (the turbulence control's visible upper range).
+ESCALATION: Final[int] = 1200
 FEAR_RESPONSE: Final[int] = 450
 GROUP_BOND: Final[int] = 500
 GROUP_EXCHANGE: Final[int] = 400
@@ -619,7 +622,9 @@ def _bases(context: Context, actor: Actor, turbulence: int) -> dict[Action, int]
     """Per-family admission propensity before the society's own orientation."""
     base = dict.fromkeys(Action, 180)
     base[Action.SEPARATION] = turbulence**3 // PERMILLE**2
-    base[Action.CONFLICT] = base[Action.PRESSURE] = 50 + turbulence // 2
+    base[Action.CONFLICT] = base[Action.PRESSURE] = (
+        50 + turbulence // 2 + ESCALATION * max(0, turbulence - 500) // PERMILLE
+    )
     base[Action.SECESSION] = 100 + turbulence // 2
     aim = context.aims.get(actor.key)
     if aim is not None:
@@ -690,9 +695,23 @@ def _preference(context: Context, actor: Actor, choice: Proposal) -> tuple[int, 
         # free to submit, before it annexes one.
         whole = len(choice.districts) == len(context.index.members[choice.target])
         rank = (0 if inside else 2) + (1 if aim.kind is TrajectoryKind.PARAMOUNT and whole else 0)
+        # Pressure takes no land; an aim's holder presses a tribe only when no state
+        # of its domain can be contested first (one contest fits a round's budget).
+        rank += choice.kind is Action.PRESSURE
         return rank, context.power(choice.target)
     if choice.kind is Action.DEPENDENCY:
         return (0 if choice.target in context.aims else 1), 0
+    # Partners of one seeded league or confederation first bargain with each other.
+    if (
+        choice.kind in {Action.PACT, Action.EXCHANGE}
+        and not choice.threat
+        and any(
+            item.kind in {TrajectoryKind.SEA_LEAGUE, TrajectoryKind.HIGHLAND_CONFEDERATION}
+            for item in context.groups.get(actor.key, ())
+            if item in context.groups.get(choice.target, ())
+        )
+    ):
+        return 0, 0
     if choice.kind in {Action.PACT, Action.PROTECTION}:
         return (0 if choice.threat in context.aims else 1), 0
     if choice.kind is Action.ACCESS:

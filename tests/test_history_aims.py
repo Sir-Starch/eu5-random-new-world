@@ -11,6 +11,7 @@ from rnw import eu5_history
 from rnw.eu5_history import traditions
 from rnw.eu5_history_plan import project_start
 from rnw.history_acceptance import Sweep, World, evaluate
+from rnw.history_actions import OPPORTUNITY, eligible
 from rnw.history_context import Context
 from rnw.history_engine import advance, create, validate_history
 from rnw.history_metrics import AimOutcome, Observation, RegionClass, Structure
@@ -95,9 +96,9 @@ def test_capacity_keeps_the_ordinary_limit_and_scales_with_administration() -> N
     )
     context = Context(history, lambda: None)
     assert context.capacity("plain") == 1000
-    # Two doublings above the threshold at level-2 technology: 1000 + 7000 * 1.5.
-    assert context.capacity("realm") == 11_500
-    assert context.unrest("realm") == 11_500 * 700 // 1000
+    # Three and a half doublings above the threshold at level-2 technology: 1000 + 11000 * 1.5.
+    assert context.capacity("realm") == 17_500
+    assert context.unrest("realm") == 17_500 * 825 // 1000
     assert context.limit("realm") == context.capacity("realm")
 
 
@@ -176,7 +177,7 @@ def _province_world() -> History:
         Route("r0", "w0"),
         Route("w0", "v1"),
     )
-    realm = Society(centralization=500, integration=600, authority=Authority.RULER)
+    realm = Society(centralization=500, integration=300, authority=Authority.RULER)
     history = create(
         Geography(places, routes, Rules(minimum_peasants=300, minimum_share=100)),
         (
@@ -294,6 +295,7 @@ def test_regional_traditions_are_deterministic_and_have_a_dominant_authority(
     districts = geography.districts
     first = traditions(districts, seed=7)
     assert first == traditions(tuple(reversed(districts)), seed=7)
+    dominant = eu5_history.DOMINANT_TRADITION
     monkeypatch.setattr(eu5_history, "DOMINANT_TRADITION", 1)
     plain = traditions(districts, seed=7)
     changed = [
@@ -302,7 +304,7 @@ def test_regional_traditions_are_deterministic_and_have_a_dominant_authority(
         if dominant != ordinary
     ]
     assert len(changed) == 1
-    assert changed[0][0] == 3 * changed[0][1]
+    assert changed[0][0] == dominant * changed[0][1]
 
 
 def _observation(  # noqa: PLR0913 - one synthetic start
@@ -459,3 +461,55 @@ def test_a_breakaway_and_its_aim_survive_the_portable_record() -> None:
     validate(aimed.history, atlas.history_links(aimed))
     sections = Reader(aimed, "english", lambda key: key).region("region")
     assert any(section.title == "Ambitions" for section in sections)
+
+
+def test_partners_of_one_seeded_league_never_unite() -> None:
+    league = advance(
+        _trajectory_world(TrajectoryKind.SEA_LEAGUE),
+        (Proposal(Action.CONTACT, "0", "1"),),
+    )
+    ordinary = advance(
+        _trajectory_world(TrajectoryKind.SEA_LEAGUE, chance=0),
+        (Proposal(Action.CONTACT, "0", "1"),),
+    )
+    union = Proposal(Action.UNION, "0", "1")
+    assert eligible(Context(league, lambda: None), union) is Reason.INELIGIBLE
+    assert eligible(Context(ordinary, lambda: None), union) is not Reason.INELIGIBLE
+
+
+def _confederacy() -> History:
+    history = _trajectory_world(TrajectoryKind.HIGHLAND_CONFEDERATION)
+    for proposals in (
+        (Proposal(Action.CONTACT, "0", "1"), Proposal(Action.CONTACT, "0", "2")),
+        (Proposal(Action.EXCHANGE, "0", "1"), Proposal(Action.EXCHANGE, "0", "2")),
+    ):
+        history = advance(history, proposals)
+    return history
+
+
+def test_confederates_bargain_on_trust_and_a_pact_network_is_recognized() -> None:
+    history = _confederacy()
+    context = Context(history, lambda: None)
+    assert not context.afraid
+    pacts = tuple(Proposal(Action.PACT, "0", key) for key in ("1", "2"))
+    assert all(eligible(context, pact) is None for pact in pacts)
+    assert not [
+        item for item in realizations(context) if item.kind is TrajectoryKind.HIGHLAND_CONFEDERATION
+    ]
+    history = advance(history, pacts)
+    (found,) = [
+        item
+        for item in realizations(Context(history, lambda: None))
+        if item.kind is TrajectoryKind.HIGHLAND_CONFEDERATION
+    ]
+    assert set(found.members) == {"0", "1", "2"}
+    # A stranger without trust and without fear gets no common defence.
+    plain = advance(
+        _trajectory_world(TrajectoryKind.HIGHLAND_CONFEDERATION, chance=0),
+        (Proposal(Action.CONTACT, "0", "1"),),
+    )
+    assert eligible(Context(plain, lambda: None), Proposal(Action.PACT, "0", "1")) is not None
+
+
+def test_the_contest_margin_widens_in_calm_and_closes_in_turbulence() -> None:
+    assert [interpolate(OPPORTUNITY, level) for level in (200, 500, 800)] == [5, 3, 2]

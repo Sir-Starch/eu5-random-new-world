@@ -301,3 +301,80 @@ Because the held-out thresholds fail, H7 candidate installation, hub replacement
 and the owner sitting remain pending an explicit next calibration/acceptance
 decision. The held-out results remain validation evidence and must not be used
 to tune the current policy.
+
+## R6 development calibration of the audited redesign (2026-11-05)
+
+[V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)
+on the **development** set only: six presets × seeds 3/42/77/1000–1004 at Calm,
+Varied and Turbulent (144 native starts), plus the 48 control sweeps
+(continents/archipelago × seeds 3/42). No held-out world (1005–1008) was captured or
+run. EU5 was not launched. The harness is the ignored `local_data/history-120/r6/`
+(`matrix.py`, `evaluate.py`; `iterate.py` runs the Varied starts alone in about two
+minutes for single-knob experiments). The acceptance thresholds in
+`history_acceptance` were not touched.
+
+**Defects found while calibrating.** Four were mechanisms, not knobs:
+
+1. **Groups never realized (0 of 22 seeded).** League partners merged by union and so
+   ended the league; confederation pacts needed a feared third party that tribes never
+   had; recognition recomputed the 1037 eligibility predicates on the 1337 snapshot, so
+   any change to a seeded member (or a sacred host's rank) unrecognized it. Now partners
+   of one seeded league cannot unite, confederates also bargain on mutual trust after an
+   exchange (plan D23's "common defence still needs recorded pressure" is revised), the
+   partners of a group rank their pacts and exchanges first, and recognition reads the
+   living descendants of the seeded members (largest pact network of at least three that
+   holds the anchor; leagues need council authority and an exchange network).
+2. **Relaxed recognition exposed an export failure.** A recognized confederate without
+   farmland made `state_economy` refuse a landed country ("lacks farming support",
+   islands/1000 at Calm and Turbulent). The old agrarian and density prerequisites are
+   restored for confederates, so the failure cannot recur.
+3. **Rival aims destroyed each other.** In 15 of 23 lost regional anchors the winner was
+   the other aim of the same region, and half of an aim holder's contests were wasted
+   because its pressure on a tribe took the round's single contest slot. Aim holders now
+   contest states before pressing tribes, and rivals that both hold an aim keep the
+   ordinary strength margin instead of parity.
+4. **Lowering the capacity threshold let a great realm take 88.6% of a small landmass**
+   (Q8, small_continents/1002 at Calm). Great-realm inclinations are 850/850 again,
+   which keeps their former capacity.
+
+**Adjustments.** Each was measured on the Varied starts first (48 worlds, about 230
+prudent aims; a single run moves the prudent-aim rate by about ±3 points, so no change
+of less than that was kept on one run alone).
+
+| Knob | Before | After | Reason and evidence |
+|---|---|---|---|
+| `CAPACITY_THRESHOLD` | 1200 | 1100 | Prudent holders sat at about 0.7 capacity; paramount class 8.7 → 11–15% |
+| `UNREST_SLOPE` | 600 | 350 | Conquer-and-secede churn left 172 secessions per world and 74% of subjects were one-location states; median ordinary state 2 → 3, subjects 53 → 39 |
+| `REGIONAL_SHARE`, `LEAD_HALVES` | 150‰, 5 | 80‰, 4 | Recognition of a regional power: 8% of the region and twice its median state; prudent regional aims 41 → 65% together with the rival rule |
+| `PARAMOUNT_SHARE` | 400‰ | 300‰ | Aim recognition only; many holders reached 33–41% at twice the next bloc. The Q1 classifier stays at 40% |
+| `PRUDENT` | 80/60/40% | 80/45/30% | More overreaching aims leave more realm-and-breakaway lineages (fractured 1.4 → 3.8% on that run) |
+| `DOMINANT_TRADITION` | 3 | 8 | Assortativity follows the founding tradition: 0.15 → 0.25 (a ×10 run gave 0.29) |
+| `OPPORTUNITY` (new) | 3 halves for all | 5 / 3 / 2 | Strength an ordinary society needs without a grievance, at Calm / Varied / Turbulent |
+| `ESCALATION` (new) | 0 | 1200 | Contest propensity beyond Varied; with the line above the turbulence sweep rises 500 → 800 in all four pairs |
+| `ORDINARY_LORD_POWER` (new) | 3 | 4 | Lords without an aim need 4× the subject's strength; aim holders keep 3×. Subjects 39 → 33.5 without shrinking paramount blocs |
+| `ROUTINE_FILL` (new) | 8 | 3 | A routine chronicle entry only fills a life with fewer than three significant ones; routine share 20.3 → 18.2% |
+| great-realm inclination | 900/900 | 850/850 | Defect 4 above |
+
+**Result on the development set** (144 starts, 48 sweeps; all fourteen checks pass):
+
+| Check | Value (threshold) |
+|---|---|
+| Q1 class shares | patchwork 41.2%, rival powers 40.9%, paramount 11.6% (≥10), fractured 4.1% (≥3), great realm 2.3%; largest ≤ 50 |
+| Q2 / Q3 | median 3 classes per world; recent-turmoil ratio Turbulent/Calm 2.19 (≥1.5), rising in 97.9% of worlds, continuity 87% |
+| Q4 | prudent aims realized 74.2% of 178 (≥70); overreaching aims ended 56.4% of 202 (≥50); league 80%, confederation 80%, sacred centre 67% |
+| Q5 / Q6 | all sixteen sweep rows monotone; great realms 0.79× 1.1.0's median, four of four high sweeps realize one |
+| Q7 / Q8 | ordinary-size ratio 1.00 / 1.00 / 0.67 at Calm / Varied / Turbulent; no dominated continent or landmass |
+| Q9 / Q10 | 33.5 subject pairs (8–40), 99.4% scaled; 12 alliances (4–30) |
+| Q11 | republics 13.5%, interquartile spread 8.8 points, assortativity 0.254 (≥0.20) |
+| Q12 / Q13 / S11 | largest family 25.8%, routine 18.2%, 3 distinct families in long chronicles, 23.6% short; 91% of countries visible; largest wrapper 580,654 bytes |
+
+**Limits.** Several margins are thin: the prudent rate (±3 points of noise on this
+set, more on 24 held-out worlds), `distinct` families (exactly 3), the Turbulent size
+ratio (a median of two against three), and the paramount and fractured shares. The
+turbulence sweep is a noisy single world per row; a lumpy union or separation of a
+single realm (up to 46 locations) can reverse one row. Aim recognition is now looser
+than the Q1 classifier on purpose (an aim can be recognized at 30% while its region
+is classified by the 40% rule). S8–S10, the reference's timing, the held-out freeze
+and run are not done. The reference export for the changed code passes every writer
+and output check: SHA-256 `40596d56ad63929bb14830a99d2d19a19c9edd9f14007a7e1d4003ebff6127d9`,
+872 files. The development outputs are calibration evidence; they are not acceptance.

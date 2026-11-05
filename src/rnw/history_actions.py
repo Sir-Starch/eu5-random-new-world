@@ -38,6 +38,7 @@ from rnw.history_societies import (
     reform_event,
     successor,
 )
+from rnw.history_trajectories import interpolate
 from rnw.rng import SplitMix64, derive_seed
 
 if TYPE_CHECKING:
@@ -76,12 +77,17 @@ PRIORITY: Final[dict[Action, int]] = {
     Action.SECESSION: 0,
 }
 UNION_SETTLE_YEARS: Final[int] = 25
+# Strength an ordinary society needs over its target without a grievance, in halves
+# (5 = two and a half times, 3 = one and a half times, 2 = parity) at Calm, Varied and Turbulent.
+OPPORTUNITY: Final[tuple[int, int, int]] = (5, 3, 2)
 CLIENT_CAPACITY_MULTIPLIER: Final[int] = 4
 # D25: a lord holds at least twice the subject's locations and three times its power;
 # a subject may leave once the lord has fallen below twice its power.
 LORD_LOCATIONS: Final[int] = 2
 LORD_POWER: Final[int] = 3
 LEAVE_POWER: Final[int] = 2
+# An ordinary lord, one without an expansion aim, needs a still wider margin.
+ORDINARY_LORD_POWER: Final[int] = 4
 
 
 def proposal_key(proposal: Proposal) -> str:
@@ -138,6 +144,13 @@ def _union_allowed(context: Context, proposal: Proposal) -> Reason | None:
         or second not in context.near.get(first, {})
     ):
         return Reason.INELIGIBLE
+    # Partners of one seeded league bargain as separate cities; a union would end it.
+    if any(
+        item.kind is TrajectoryKind.SEA_LEAGUE
+        for item in context.groups.get(first, ())
+        if item in context.groups.get(second, ())
+    ):
+        return Reason.INELIGIBLE
     threshold = context.history.geography.rules.union_trust
     if (
         max(
@@ -177,8 +190,13 @@ def _conflict_allowed(context: Context, proposal: Proposal) -> Reason | None:
     ):
         return Reason.SUPPORT
     # Without a grievance a society fights only with a clear advantage; the holder of
-    # an expansion aim accepts a contest at equal strength (D23: its choice of risk).
-    margin = 2 if first in context.aims else 3
+    # an expansion aim accepts a contest at equal strength (D23: its choice of risk),
+    # but rivals of one another, each holding an aim, keep to the ordinary margin.
+    margin = (
+        2
+        if first in context.aims and second not in context.aims
+        else interpolate(OPPORTUNITY, context.history.turbulence)
+    )
     if context.score(first, second, Factor.GRIEVANCE) == 0 and 2 * context.power(first) < (
         context.power(second) * margin
     ):
@@ -271,7 +289,8 @@ def _dependency_allowed(context: Context, proposal: Proposal) -> Reason | None: 
         or lord.technology < context.history.geography.rules.minimum_overlord_technology
         or first in context.subjects
         or len(context.index.members[second]) < LORD_LOCATIONS * len(context.index.members[first])
-        or context.power(second) < LORD_POWER * context.power(first)
+        or context.power(second)
+        < (LORD_POWER if second in context.aims else ORDINARY_LORD_POWER) * context.power(first)
     ):
         return Reason.IMBALANCE
     reason = _submission_cause(context, proposal)
@@ -376,7 +395,14 @@ def _league_allowed(context: Context, proposal: Proposal) -> Reason | None:
             and one.tenure is Tenure.TRIBE
             and other.tenure is Tenure.TRIBE
             and second in context.land_near.get(first, set())
-            and bool({first, second} & context.afraid)
+            and (
+                bool({first, second} & context.afraid)
+                or (
+                    context.has(Action.EXCHANGE, first, second)
+                    and context.score(first, second, Factor.TRUST) > 0
+                    and context.score(second, first, Factor.TRUST) > 0
+                )
+            )
         ):
             return None
     return Reason.THREAT

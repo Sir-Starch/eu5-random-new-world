@@ -100,8 +100,8 @@ def test_two_branches_cannot_simultaneously_exhaust_the_same_ancestor() -> None:
         {
             "b": (3000, 2000, 1, True),
             "c": (3000, 2000, 1, True),
-            "d": (1000, 500, 0, True),
-            "e": (1000, 500, 0, True),
+            "d": (700, 400, 0, True),
+            "e": (700, 400, 0, True),
             "root": (70_000, 35_000, 5, False),
         },
         {

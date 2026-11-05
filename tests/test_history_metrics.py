@@ -35,7 +35,7 @@ def test_divided_valley_counts_actual_transfers_and_independent_continuity() -> 
     assert found.projected_relationship_countries == 3
     assert found.treaty_countries == 2
     assert found.ordinary_sizes == (1, 2, 3)
-    assert found.chronicle_lengths == (8, 8, 8)
+    assert found.chronicle_lengths == (8, 7, 7)
     assert found.domination[0].largest_bloc == 3
     assert found.domination[0].state_locations == 6
     assert found.archive_bytes > 0

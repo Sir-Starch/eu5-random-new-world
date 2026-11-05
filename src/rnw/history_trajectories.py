@@ -53,18 +53,20 @@ SETTINGS: Final[dict[str, tuple[int, int, int]]] = {
     "paramount": (400, 250, 150),
 }
 # D23: the share of prudent expansion aims at Calm, Varied and Turbulent.
-PRUDENT: Final[tuple[int, int, int]] = (800, 600, 400)
+PRUDENT: Final[tuple[int, int, int]] = (800, 450, 300)
 RIVAL_SPACING: Final[int] = 3
 FRONTIER: Final[int] = 2
 LARGE_REGION: Final[int] = 16
+# Rival regional powers seeded in a region below and at or above LARGE_REGION polities.
+RIVAL_COUNT: Final[tuple[int, int]] = (2, 3)
 # D24 recognition: a region's share of state locations; a regional power's multiple
-# of the region's median state (in halves: 5 = 2.5x); a paramount's multiple of the
+# of the region's median state (in halves: 4 = 2x); a paramount's multiple of the
 # next bloc; a great realm's bloc holds at least
 # GREAT_SHARE permille of all land locations, the share of the largest vanilla
 # 1337 American state (C117).
-REGIONAL_SHARE: Final[int] = 150
-PARAMOUNT_SHARE: Final[int] = 400
-LEAD_HALVES: Final[int] = 5
+REGIONAL_SHARE: Final[int] = 80
+PARAMOUNT_SHARE: Final[int] = 300
+LEAD_HALVES: Final[int] = 4
 PARAMOUNT_LEAD: Final[int] = 2
 GREAT_SHARE: Final[int] = 5
 
@@ -271,8 +273,8 @@ def _inclined(profile: Society, kind: TrajectoryKind) -> Society:
     if kind is TrajectoryKind.GREAT_EMPIRE:
         return replace(
             profile,
-            centralization=max(900, profile.centralization),
-            integration=max(900, profile.integration),
+            centralization=max(850, profile.centralization),
+            integration=max(850, profile.integration),
             authority=Authority.RULER,
             military=Military.OFFENSIVE,
         )
@@ -458,7 +460,7 @@ def _regional_events(
         ]
         rivals: list[str] = []
         blocked: set[str] = set()
-        count = 3 if len(polities) >= LARGE_REGION else 2
+        count = RIVAL_COUNT[len(polities) >= LARGE_REGION]
         for key in candidates:
             seat = context.index.actors[key].seat
             if seat in blocked:
@@ -556,31 +558,64 @@ def _network(nodes: set[str], bonds: list[Bond]) -> bool:
 def _realized_group(
     context: Context, trajectory: Trajectory, owner: str
 ) -> tuple[tuple[str, ...], list[Bond]]:
-    hearth = next(
-        each for each in context.history.geography.hearths if each.key == trajectory.hearth
-    )
-    for option in _options(context, hearth):
-        if option.kind is not trajectory.kind or owner not in option.members:
+    """The largest pact network of a seeded group's living descendants that holds its anchor.
+
+    Recognition reads the recorded facts about the seeded members' successors; the
+    eligibility predicates that chose the members at 1037 do not apply again.
+    """
+    league = trajectory.kind is TrajectoryKind.SEA_LEAGUE
+    tenure = Tenure.LAND if league else Tenure.TRIBE
+    nodes = {
+        key
+        for key, items in context.groups.items()
+        if trajectory in items
+        and key not in context.subjects
+        and context.index.actors[key].tenure is tenure
+        and (
+            context.index.actors[key].authority is Authority.COUNCIL
+            if league
+            else _agrarian(context, key)
+        )
+    }
+    if owner not in nodes:
+        return (), []
+    pacts = [
+        bond
+        for bond in context.state.bonds
+        if bond.kind is Action.PACT and {bond.first, bond.second} <= nodes
+    ]
+    exchanges = [
+        bond
+        for bond in context.state.bonds
+        if bond.kind is Action.EXCHANGE and {bond.first, bond.second} <= nodes
+    ]
+    for component in sorted(
+        _connected(
+            nodes,
+            lambda key: {
+                bond.second if bond.first == key else bond.first
+                for bond in pacts
+                if key in (bond.first, bond.second)
+            },
+        ),
+        key=lambda found: (-len(found), found),
+    ):
+        members = set(component)
+        if owner not in members or len(members) < GROUP_MIN:
             continue
-        nodes = set(option.members)
-        pacts = [
-            bond
-            for bond in context.state.bonds
-            if bond.kind is Action.PACT and {bond.first, bond.second} <= nodes
-        ]
-        if not _network(nodes, pacts):
-            continue
-        exchanges = [
-            bond
-            for bond in context.state.bonds
-            if bond.kind is Action.EXCHANGE and {bond.first, bond.second} <= nodes
-        ]
-        if trajectory.kind is TrajectoryKind.SEA_LEAGUE and (
-            any(context.index.actors[key].authority is not Authority.COUNCIL for key in nodes)
-            or not _network(nodes, exchanges)
+        if league and not _network(
+            members, [bond for bond in exchanges if {bond.first, bond.second} <= members]
         ):
             continue
-        return option.members, [*pacts, *exchanges]
+        # Landed confederates keep the installed density prerequisite of 1037's selection.
+        if not league and sum(_population(context, key) for key in members) < (
+            context.history.geography.rules.confederation_density
+            * sum(len(context.index.members[key]) for key in members)
+        ):
+            continue
+        return _ranked(context, members), [
+            bond for bond in (*pacts, *exchanges) if {bond.first, bond.second} <= members
+        ]
     return (), []
 
 
@@ -650,15 +685,7 @@ def _realized(  # noqa: PLR0911 - one recognition rule per kind
     elif trajectory.kind in {TrajectoryKind.SEA_LEAGUE, TrajectoryKind.HIGHLAND_CONFEDERATION}:
         return _realized_group(context, trajectory, owner)
     elif trajectory.kind is TrajectoryKind.SACRED_CENTRE:
-        hearth = next(
-            each for each in context.history.geography.hearths if each.key == trajectory.hearth
-        )
-        if not any(
-            option.kind is TrajectoryKind.SACRED_CENTRE
-            and option.anchor == trajectory.anchor
-            and owner in option.members
-            for option in _options(context, hearth)
-        ):
+        if actor.tenure is not Tenure.LAND or not context.index.places[trajectory.anchor].sacred:
             return (), []
         accesses = [
             bond

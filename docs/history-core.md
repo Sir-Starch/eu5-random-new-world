@@ -736,22 +736,27 @@ The model, causal replay, projection and portable format stay. These pieces chan
 |---|---|---|
 | Seeded aims | `history_trajectories.seed_events`, `Trajectory.strategy/region`, `TrajectoryKind.REGIONAL_POWER/PARAMOUNT` | Extraordinary aims per hearth as before; then one feasible setting per political region (≥ 8 landed foundings) from `SETTINGS`, interpolated by turbulence. Aims go to centres bordering two landed polities; prudent share `PRUDENT` |
 | Policy | `history_engine._bases`, `_preference`, `_keeps_aim` | An aim's holder contests persistently, in its domain first, and may seek a whole neighbour. Fearful neighbours favour pacts, protection and submission to it. League and confederation members favour pacts; sacred peers favour access. Holders do not reform away from their inclination |
-| Administration | `Context.capacity`, `limit`, `unrest` | 1,000 at or below centralization + integration 1,200; the surplus doubles every 200 and grows with technology above level 1. Overreaching aims conquer up to twice capacity. Provinces may break away above the turbulence-dependent unrest threshold |
+| Administration | `Context.capacity`, `limit`, `unrest` | 1,000 at or below centralization + integration 1,100; the surplus doubles every 200 and grows with technology above level 1. Overreaching aims conquer up to twice capacity. Provinces may break away above the unrest threshold: 93%, 82% or 72% of capacity at Calm, Varied and Turbulent |
 | Breakaway | `Action.SECESSION`, `history_actions._secession_allowed` | One conquered founder's province becomes a new parentless state at its founder's or largest seat, with mutual grievance. The realm keeps its seat and lineage. The core and the province must each remain connected and supported |
-| Dependencies | `_submission_cause`, `Action.INDEPENDENCE`, `Effects.ended` | Submission needs fear of the lord, or a recorded threat the lord can face, plus a lord with 2× the locations and 3× the strength. Independence needs a setback for the lord, a lord below 2× the subject's strength, or a lord over capacity. Its causes cite the setback |
-| Contests | `history_actions.adjudicate`, `history_engine._advance` | A defender pays what it has left; one contest per participant per round; a seceding realm's land cannot change hands twice. Ordinary societies need 1.5× strength or a grievance; aim holders accept parity |
+| Dependencies | `_submission_cause`, `Action.INDEPENDENCE`, `Effects.ended` | Submission needs fear of the lord, or a recorded threat the lord can face, plus a lord with 2× the locations and 3× the strength (4× for a lord without an aim). Independence needs a setback for the lord, a lord below 2× the subject's strength, or a lord over capacity. Its causes cite the setback |
+| Contests | `history_actions.adjudicate`, `history_engine._advance` | A defender pays what it has left; one contest per participant per round; a seceding realm's land cannot change hands twice. Without a grievance an ordinary society needs 2.5×, 1.5× or parity of strength at Calm, Varied and Turbulent (`OPPORTUNITY`); an aim holder accepts parity against ordinary targets and keeps the ordinary margin against another aim; contest propensity rises faster beyond Varied (`ESCALATION`) |
 | Institutions | `eu5_history.traditions`, `history_societies.emulated` | Regional weights with a dominant authority; councils from collective bargains; a new authority only where at least half of the land neighbours hold it |
-| Chronicles | `history_text.chronicles` | Ranked by `SIGNIFICANCE`; `REPEATED` caps exchange 1, contact 0, migration 1, reform 2 (authority changes only) |
+| Chronicles | `history_text.chronicles` | Ranked by `SIGNIFICANCE`; `REPEATED` caps exchange 1, contact 0, migration 1, reform 2 (authority changes only); a routine entry only fills a life with fewer than `ROUTINE_FILL` (3) significant ones |
+| Groups | `history_trajectories._realized_group`, `history_actions._union_allowed`, `_league_allowed`, `history_engine._preference` | Partners of one seeded league never unite; confederates bargain on mutual trust after an exchange, or under fear; partners' pacts and exchanges rank first. Recognition reads the living descendants of the seeded members: the largest pact network of at least three that holds the anchor (leagues: council authority and an exchange network; confederates: agrarian, with the density prerequisite). A sacred centre needs its landed holder, a sacred anchor, sacred authority and two access partners |
 | Reading | `history_archive.AimFact`, `history_presenter.region` | Every seeded aim with its outcome appears under the region's **Ambitions** |
 | Measurement | `history_metrics.structure`, `history_acceptance.evaluate` | Region classes, recent turmoil, aim outcomes, subjects, institutions and chronicles; §18's thresholds as frozen constants |
 
 **Calibration knobs**, adjustable on development seeds only (plan §17):
 
-- `SETTINGS`, `PRUDENT`, `POLITICAL_REGION`, `FRONTIER` and the recognition shares;
-- `AIM_CONFLICT`, `HEGEMONY_CONFLICT`, `FEAR_RESPONSE`, `GROUP_BOND`, `SACRED_VISIT`;
+- `SETTINGS`, `PRUDENT`, `POLITICAL_REGION`, `FRONTIER`, `RIVAL_COUNT` and the recognition shares (`REGIONAL_SHARE`, `LEAD_HALVES`, `PARAMOUNT_SHARE`);
+- `AIM_CONFLICT`, `HEGEMONY_CONFLICT`, `FEAR_RESPONSE`, `GROUP_BOND`, `SACRED_VISIT`, `ESCALATION`, `OPPORTUNITY`;
 - `CAPACITY_THRESHOLD`, `CAPACITY_DOUBLING`, `OVERREACH_FACTOR`, `UNREST_SLOPE`;
-- `LORD_LOCATIONS`, `LORD_POWER`, `LEAVE_POWER`;
-- `TRADITION`, `COASTAL_COUNCIL`, `DOMINANT_TRADITION`.
+- `LORD_LOCATIONS`, `LORD_POWER`, `ORDINARY_LORD_POWER`, `LEAVE_POWER`;
+- `TRADITION`, `COASTAL_COUNCIL`, `DOMINANT_TRADITION`;
+- `ROUTINE_FILL`.
+
+The values after the development calibration are in the
+[calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
 
 The acceptance thresholds in `history_acceptance` are not knobs.
 
@@ -771,10 +776,11 @@ input of development world continents/3 (native stage, defaults):
 
 The 1.1.0 empire on this world holds 78 locations. Exchange agreements fell from
 76% to under 23% of chronicle entries, and about a fifth of countries have at most
-three entries. The native stage takes 25–28 s, against 91 s before. A partial
-evaluation (two worlds, the twelve continents/3 sweeps) passes Q5–Q8, Q10, Q12, Q13
-and S11. Q1–Q4, Q9 and Q11 are open calibration targets. That partial run is
-development evidence, not acceptance.
+three entries. The native stage takes 25–28 s, against 91 s before. That
+single-world table is the R5 state. The full development calibration (144 starts,
+48 sweeps) that followed is in the
+[calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05);
+its table values supersede this one. It is development evidence, not acceptance.
 
 [V-EXEC] Locked checks pass (see the commit). The pending epoch-61 reference
 export passes every writer and output check: 872 files, SHA-256
@@ -785,6 +791,11 @@ epoch-60 reference is unchanged. The divided-valley digest is now
 schema gained fields, and the story is unchanged.
 
 ### R6 runbook
+
+**Status, 2026-11-05:** step 1 is done. All fourteen statistical checks pass on the
+development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
+[calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
+Steps 2–5 are not started: the held-out run is single-use and waits for an owner's go-ahead.
 
 R6 is long batch work, meant for a separate agent. The scripts are in the ignored
 `local_data/history-120/r6/`. Run from the repository root, in the foreground, with

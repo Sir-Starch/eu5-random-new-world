@@ -32,10 +32,10 @@ INTEGRATION_YEARS: Final[int] = 25
 # combined score double the surplus capacity every CAPACITY_DOUBLING points;
 # technology above level 1 multiplies the surplus by half a level each. A society
 # at or below the threshold keeps the 1.1.0-calibrated ordinary limit of 1,000.
-CAPACITY_THRESHOLD: Final[int] = 1200
+CAPACITY_THRESHOLD: Final[int] = 1100
 CAPACITY_DOUBLING: Final[int] = 200
 OVERREACH_FACTOR: Final[int] = 2
-UNREST_SLOPE: Final[int] = 600
+UNREST_SLOPE: Final[int] = 350
 
 
 @final
@@ -238,7 +238,7 @@ class Context:
         """The burden above which conquered provinces may break away.
 
         Historical turbulence lowers it: unrest and contested successions make
-        holdings harder to keep (88% of capacity at Calm, 70% at Varied, 52% at
+        holdings harder to keep (93% of capacity at Calm, 82% at Varied, 72% at
         Turbulent), while conquest itself remains bounded by capacity.
         """
         tolerance = PERMILLE - UNREST_SLOPE * self.history.turbulence // PERMILLE

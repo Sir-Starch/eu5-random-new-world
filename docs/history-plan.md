@@ -714,9 +714,17 @@ H2 schema.
 
   The refinements of §21.5 were made on the development world continents/3 only.
   The pending epoch-61 reference export passes every writer and output check with
-  872 files, and its golden is refreshed. Calibration over the 48 development
-  worlds, the held-out run, S8 timing and delivery (R6) are not done; the
-  [runbook](history-core.md#r6-runbook) lists them.
+  872 files, and its golden is refreshed.
+- **R6 development calibration, 2026-11-05:** all fourteen statistical checks pass on
+  the 48 development worlds × three turbulence levels and the 48 sweeps. Four
+  mechanisms were repaired on the way (groups that never realized, an export failure
+  from a relaxed recognition, rival aims that destroyed each other, and a great
+  realm dominating a small landmass) and eleven values were calibrated. The
+  adjustments with their evidence, and the thin margins, are in the
+  [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
+  The freeze, the single held-out run, S8 timing and delivery are not started: the
+  [runbook](history-core.md#r6-runbook) lists them, and the owner decides when the
+  held-out set is spent.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
@@ -1015,14 +1023,17 @@ still runs.
 - Every expansion aim (regional power, paramount, great realm) draws a *strategy*.
   A **prudent** actor expands within its capacity and consolidates. An
   **overreaching** actor keeps expanding past its capacity, up to D24's bound. The
-  prudent share is 80% at Calm, 60% at Varied and 40% at Turbulent.
+  prudent share is 80% at Calm, 45% at Varied and 30% at Turbulent (R6; first 80,
+  60 and 40%).
 - Overreach carries its recorded burden into failed integration and division
   (§9). The result is successor states of a real former realm, not a scripted
   collapse.
 - Neighbours that actually come to fear an expansion aim gain a balancing
   inclination toward pacts and protection.
 - League members can bargain on recorded trust and a shared route interest, not
-  only under threat. Common defence among tribes still needs recorded pressure.
+  only under threat. *Revised at R6:* confederates bargain the same way (an exchange
+  and mutual trust), or under fear. Requiring recorded pressure left every
+  confederation without a pact. Partners of one league never unite.
 - Nothing guarantees success. A world can end without any great realm, and a
   failed aim stays in the chronicle and the regional overview with its cause.
 
@@ -1039,9 +1050,11 @@ conquest and recognition.
 - **Overreaching actors** may reach twice their capacity. Every district beyond
   capacity adds failed-integration and division pressure.
 - **Recognition** is relative:
-  - a *regional power* holds a bloc of at least 15% of its region's state
-    locations and at least 2.5 × the region's median state;
-  - a *paramount* holds at least 40% and at least twice the next bloc;
+  - a *regional power* holds a bloc of at least 8% of its region's state
+    locations and at least 2 × the region's median state (R6; first 15% and
+    2.5 ×, which no prudent holder could reach in a region of 80 locations or more);
+  - a *paramount* holds at least 30% and at least twice the next bloc (R6; the
+    region class of §18 still needs 40%);
   - a *great realm* holds at least 5‰ of all land locations, directly or through
     subjects, with direct holdings of at least max(12, 4 × `state_locations`)
     (refined in §21.5).
@@ -1118,16 +1131,19 @@ untouched.
   also counts peaceful unions, so it is still reported but is not the gate.
 - **Aims need room and the will to act.**
   - Regional aims go only to centres that border at least two landed polities.
-  - A paramount is seeded only where connected state land can reach 40% of the
-    region; settings that are not feasible pass their weight to the others.
-  - An expansion aim's holder accepts a contest at equal strength (ordinary
-    societies need 1.5 times the defender's strength, or a grievance), and may
-    seek a whole neighbour at once.
+  - A paramount is seeded only where connected state land can reach 30% of the
+    region (R6; first 40%); settings that are not feasible pass their weight to the
+    others.
+  - An expansion aim's holder accepts a contest at equal strength against ordinary
+    targets and may seek a whole neighbour at once. Ordinary societies need a
+    margin that follows the turbulence (2.5, 1.5 and 1 times the defender's
+    strength at Calm, Varied and Turbulent), or a grievance; rival aims keep that
+    ordinary margin against each other (R6).
   - Paramount and great-realm aims persist at 700‰ whatever the turbulence;
     regional powers range from 450‰ to 750‰.
   - A union with an aim's holder keeps its administration.
-  - A paramount is recognized with at least 40% of its region and twice the next
-    bloc. In small regions, 2.5 times proved a size artefact.
+  - A paramount is recognized with at least 30% of its region (R6; first 40%) and
+    twice the next bloc. In small regions, 2.5 times proved a size artefact.
 - **Subjects left every warlord.** Any war elsewhere let a subject leave, so an
   active paramount kept none. Independence now needs a real setback for the lord
   (a repelled attack or lost land), a lord that has fallen below twice the
