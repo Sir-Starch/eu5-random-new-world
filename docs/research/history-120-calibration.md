@@ -368,13 +368,41 @@ of less than that was kept on one run alone).
 | Q11 | republics 13.5%, interquartile spread 8.8 points, assortativity 0.254 (≥0.20) |
 | Q12 / Q13 / S11 | largest family 25.8%, routine 18.2%, 3 distinct families in long chronicles, 23.6% short; 91% of countries visible; largest wrapper 580,654 bytes |
 
+**Measurement caveat: Q4 depends on the recognition shares (checked 2026-11-05).**
+The 48 Varied starts were rerun on the committed code and are bit-identical to the
+matrix above. For each prudent regional-power and paramount aim, recognition by the
+D24 rule used here was compared with Q1's own scale (a regional power holds at least
+15% of its region; a paramount at least 40% and twice the next bloc):
+
+| Prudent aims (48 Varied starts) | Recognized (R6 shares) | At Q1's scale |
+|---|---|---|
+| Regional power | 102 of 133 (77%) | 74 of 133 (56%) |
+| Paramount | 11 of 25 (44%) | 8 of 25 (32%) |
+| Both | 113 of 158 (72%) | 82 of 158 (52%) |
+
+With the great-empire aims (10 of 10) the Q4 rate is 123 of 168 (73%) here, and
+would be 92 of 168 (55%) at Q1's scale. Q4's pass therefore rests on the lowered
+recognition shares (8% and twice the median state; 30%), which D24 explains but
+which is a weaker picture than Q1's: a regional power of 7 locations in a region of 80
+is twice an ordinary state, not yet a rival power. The map itself is measured by
+Q1, whose classifier did not change. How seeding shapes it, from the same starts:
+
+| Region seeded with | patchwork | rival powers | paramount |
+|---|---:|---:|---:|
+| nothing (patchwork) | 55% | 32% | 5% |
+| regional powers | 22% | 62% | 10% |
+| a paramount | 35% | 30% | 33% |
+
+A seeded setting moves its region toward its picture, a paramount weakly. Whether
+Q4 should gate on the recognized or the Q1-scale rate is an owner decision before
+the held-out run (plan D28); this report changes neither.
+
 **Limits.** Several margins are thin: the prudent rate (±3 points of noise on this
 set, more on 24 held-out worlds), `distinct` families (exactly 3), the Turbulent size
 ratio (a median of two against three), and the paramount and fractured shares. The
 turbulence sweep is a noisy single world per row; a lumpy union or separation of a
 single realm (up to 46 locations) can reverse one row. Aim recognition is now looser
-than the Q1 classifier on purpose (an aim can be recognized at 30% while its region
-is classified by the 40% rule). S8–S10, the reference's timing, the held-out freeze
+than the Q1 classifier on purpose (see the caveat above for its size). S8–S10, the reference's timing, the held-out freeze
 and run are not done. The reference export for the changed code passes every writer
 and output check: SHA-256 `40596d56ad63929bb14830a99d2d19a19c9edd9f14007a7e1d4003ebff6127d9`,
 872 files. The development outputs are calibration evidence; they are not acceptance.

@@ -118,6 +118,7 @@ construction/output checks, with no EU5 launch or gameplay observation.
 ## Research limits and possible refinements
 
 - Additional authored buildings and more detailed economy behavior are possible future scope. Existing technology, empires and royal roads are implemented; vanilla institutions spread through the normal game mechanisms.
+- **Institutions in the New World (Workshop feedback, 2026-11-05).** A player reported that Feudalism and Legalism never appear in a generated New World whatever the extraordinary-peoples setting. [V-LOCAL, build 26377361] `common/institution/age_1_traditions_institutions.txt` lets both spawn only where `continent = continent:europe`; they reach the New World only by spreading (coast borders, trade imports and exports, market membership, an owner embracing them). The generator writes no institution state and the extraordinary-peoples control sets a society's `starting_technology_level` and government, not institutions. Whether a world mod can seed an institution at the start is [UNKNOWN]: the installed `in_game/setup` files hold no institution entries. This is outside the 1.2.0 history work and would need its own research.
 - The engine's river size (experiment 012) and the effect of `development` on pops after the start.
 - Technology and empire implementation evidence is in [natives](natives.md),
   C159–C160 and [experiment 028](../experiments/028-technology-and-empires/README.md).

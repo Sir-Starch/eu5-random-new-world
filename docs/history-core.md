@@ -782,10 +782,11 @@ single-world table is the R5 state. The full development calibration (144 starts
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05);
 its table values supersede this one. It is development evidence, not acceptance.
 
-[V-EXEC] Locked checks pass (see the commit). The pending epoch-61 reference
-export passes every writer and output check: 872 files, SHA-256
+[V-EXEC] Locked checks pass (see the commit). At R5 the pending epoch-61 reference
+export passed every writer and output check: 872 files, SHA-256
 `fc29c0e24b4360a617e8a0a2abb7e62deaa4ce2584e3eff612e931c15dfc7da5`, with a
-565,034-byte history wrapper. `tests/golden_world.json` is refreshed; the frozen
+565,034-byte history wrapper. The R6 calibration changed the world; its digest is
+`40596d56ad63929bb14830a99d2d19a19c9edd9f14007a7e1d4003ebff6127d9`. `tests/golden_world.json` is refreshed; the frozen
 epoch-60 reference is unchanged. The divided-valley digest is now
 `99a0ee7ce9f0e0097d44a6753d6cf38934372b25e7839a4cf0166498769e6bd0`: the
 schema gained fields, and the story is unchanged.

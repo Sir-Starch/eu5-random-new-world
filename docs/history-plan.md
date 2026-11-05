@@ -1124,7 +1124,7 @@ untouched.
 - **Turbulence must change holding, not growth.** Scaling capacity by turbulence
   reduced expansion, and so reduced visible change. Instead, turbulence lowers the
   *unrest threshold* above which a conquered founder's province may break away:
-  88% of capacity at Calm, 70% at Varied, 52% at Turbulent. A breakaway restores
+  93%, 82% and 72% of capacity at Calm, Varied and Turbulent (R6; first 88, 70 and 52%). A breakaway restores
   that founder's land as a new state, with its own grievance; the realm survives.
   Q3 and Q5 therefore measure **recent turmoil**: state land taken by conquest,
   breakaway or division in the last 100 years. The cumulative changed-land share
@@ -1150,7 +1150,7 @@ untouched.
   subject's strength, or a lord over capacity.
 - **Traditions washed out.** Founding authority assortativity of 0.24 fell to about
   0.04 after 300 years of reforms. Now:
-  - each region's tradition has one dominant authority (×3);
+  - each region's tradition has one dominant authority (×8; first ×3, R6);
   - a new authority is adopted only where at least half of the society's land
     neighbours hold it, and those neighbours are the reform's causes;
   - council rule needs collective bargains (pacts, unions, protection), not
