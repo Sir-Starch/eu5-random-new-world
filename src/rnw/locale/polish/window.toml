@@ -1582,6 +1582,14 @@ text = '''Zaznacz „{name}” w swoim zestawie modów.'''
 source = "bc66f4a33e6675ab"
 text = '''Odznacz pozostałe światy RNW w swoim zestawie modów.'''
 
+["playset_replaced"]
+source = "3697cb68566ee9ba"
+text = '''„{mod}” znajduje się w twoim zestawie modów po tym świecie i ma pliki w tych samych ścieżkach co świat, na przykład {files}. EU5 czyta wtedy pliki tego modu zamiast plików świata, a Nowy Świat może wyjść z gliną wszędzie i pustymi trybami mapy. Przesuń „{mod}” przed ten świat w kolejności ładowania albo go odznacz.'''
+
+["playset_worlds"]
+source = "66b2a640b6014023"
+text = '''W twoim zestawie modów zaznaczono więcej niż jeden świat RNW (także {names}). Ich pliki nadpisują się nawzajem, więc Nowy Świat może wyjść błędnie, na przykład z gliną wszędzie i pustymi trybami mapy.'''
+
 ["next_fresh"]
 source = "26a83c991aa99660"
 text = '''W EU5: {tick} To przeładuje mody. Potem rozpocznij nową grę w 1337 r.'''

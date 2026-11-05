@@ -141,6 +141,7 @@ export interface WorldState {
   part: string;
   note: string;
   advice: string;
+  playset: string[];
   parent: string;
   parent_name: string;
   picture: string;

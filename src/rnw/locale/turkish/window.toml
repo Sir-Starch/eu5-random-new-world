@@ -1582,6 +1582,14 @@ text = '''Oynatma setinizde “{name}” işaretleyin.'''
 source = "bc66f4a33e6675ab"
 text = '''Oynatma setinizdeki diğer RNW dünyalarının işaretini kaldırın.'''
 
+["playset_replaced"]
+source = "3697cb68566ee9ba"
+text = '''“{mod}”, oynatma setinizde bu dünyanın ardından geliyor ve dünyayla aynı yollarda dosyalar içeriyor, örneğin {files}. EU5 bu durumda dünyanın dosyaları yerine o modun dosyalarını okur; Yeni Dünya'da her yer kil olabilir, harita modları boş kalabilir. “{mod}” modunu yükleme sırasında bu dünyanın önüne alın ya da işaretini kaldırın.'''
+
+["playset_worlds"]
+source = "66b2a640b6014023"
+text = '''Oynatma setinizde birden fazla RNW dünyası işaretli (ayrıca {names}). Dosyaları birbirinin üzerine yazılır; bu yüzden Yeni Dünya hatalı çıkabilir, örneğin her yer kil olabilir ve harita modları boş kalabilir.'''
+
 ["next_fresh"]
 source = "26a83c991aa99660"
 text = '''EU5'te: {tick} Bu, modları yeniden yükler. Ardından 1337'de yeni bir oyun başlatın.'''

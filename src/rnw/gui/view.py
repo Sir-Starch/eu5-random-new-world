@@ -394,6 +394,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "part": text(f"part.{world.part}") if world.part else "",
         "note": note,
         "advice": c.next_step(world) if placement is Placement.IN_GAME else "",
+        "playset": c.playset_warnings(world) if placement is Placement.IN_GAME else [],
         "parent": parent.id if parent is not None else "",
         "parent_name": c.name(parent) if parent is not None else "",
         "picture": picture_key(c.picture(world)),

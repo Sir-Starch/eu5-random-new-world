@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
 from rnw import __version__, epoch, parallel
-from rnw.app import install, library, logs, session
+from rnw.app import install, library, logs, playset, session
 from rnw.record import verdict
 
 if TYPE_CHECKING:
@@ -161,6 +161,39 @@ def _worlds_text(snapshot: Snapshot) -> list[str]:
     return lines or ["  none"]
 
 
+FILES_LISTED: Final[int] = 40
+
+
+def _playset_text(snapshot: Snapshot, directory: Path, enabled: list[str]) -> list[str]:
+    """For each ticked world: the mods after it that hold files at its paths, other ticked
+    worlds, and the mods whose folders could not be read (report W1)."""
+    lines: list[str] = []
+    workshop = playset.workshop_root(snapshot.game)
+    for mod in install.installed_mods(directory):
+        if mod.name not in enabled:
+            continue
+        found = playset.check(directory, mod.name, workshop=workshop)
+        if found is None:
+            continue
+        lines.append(
+            f"  {mod.name}: ticked, position {enabled.index(mod.name) + 1} of {len(enabled)}"
+        )
+        if found.clear and not found.unread:
+            lines.append("    no later mod has files at its paths; no other world is ticked")
+        if found.other_worlds:
+            lines.append(f"    other worlds ticked: {', '.join(found.other_worlds)}")
+        for item in found.replacements:
+            shown = ", ".join(item.files[:FILES_LISTED])
+            more = len(item.files) - FILES_LISTED
+            tail = f", and {more} more" if more > 0 else ""
+            who = f"{item.folder} ({item.title})"
+            count = len(item.files)
+            lines.append(f"    {who} comes later and has {count} files at its paths: {shown}{tail}")
+        if found.unread:
+            lines.append(f"    later mods whose folders were not found: {', '.join(found.unread)}")
+    return lines or ["  no world of this project is ticked"]
+
+
 def _mods_text(snapshot: Snapshot) -> list[str]:
     if snapshot.profile is None:
         return ["  no profile"]
@@ -171,8 +204,14 @@ def _mods_text(snapshot: Snapshot) -> list[str]:
     return [
         f"  game session: {state.value}",
         f"  mods of this project in the profile: {', '.join(mods) or 'none'}",
-        "  mods ticked in the active playset: "
-        + ("unknown" if enabled is None else ", ".join(sorted(enabled)) or "none"),
+        "  mods ticked in the active playset, in load order (later ones override earlier): "
+        + ("unknown" if enabled is None else ", ".join(enabled) or "none"),
+        "  playset check:",
+        *(
+            ["  unknown, the playset could not be read"]
+            if enabled is None
+            else _playset_text(snapshot, directory, enabled)
+        ),
     ]
 
 

@@ -26,6 +26,8 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
   shows Clay everywhere and its climate, vegetation and topography map modes are empty,
   the game has not read the world's location data; see
   [troubleshooting](generator-guide.md#the-new-world-is-all-clay-or-its-map-modes-are-empty).
+  The world's page warns when a mod after the world holds files at the same paths, or when
+  another RNW world is ticked.
 - **Worlds made by 1.0.0 can block colonial nations.** Their generated seas can touch
   European seas near Greenland, so the Americas no longer count as overseas for European
   countries (fixed in 1.1.0, issue #9). The fix does not change an existing world; make a

@@ -368,6 +368,11 @@ modes show nothing there, the game has not read the world's location data. Check
 - the world's mod folder is complete: remove the world from the game in the library,
   then add it again.
 
+The world's page warns about the first two causes while the world is in the game and ticked:
+it names a mod after the world that has files at the same paths as the world's, and any
+other ticked RNW world. Put that mod before the world in the load order, or untick it.
+The diagnostics file lists the load order and the same check.
+
 Restart EU5 after changing the playset. If the problem remains, report the world code
 with EU5's `error.log` and the diagnostics file.
 

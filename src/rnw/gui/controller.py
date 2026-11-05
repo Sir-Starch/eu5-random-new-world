@@ -31,6 +31,7 @@ from rnw.app import (
     library,
     logs,
     paths,
+    playset,
     preferences,
     quick,
     random_types,
@@ -83,6 +84,8 @@ NEW: Final[str] = "new"
 STRAY: Final[str] = "stray:"
 # Atlases whose map words are kept (the window asks at every refresh).
 WORDS_KEPT: Final[int] = 4
+# How long the check of the playset is kept; it reads other mods' folders.
+PLAYSET_SECONDS: Final[float] = 5.0
 # What the record alone says (ADR 0010, G): the algorithm; anything else is "not checked yet".
 REPRODUCTION: Final[dict[Verdict, str]] = {
     Verdict.OTHER_ALGORITHM: "repro.other_algorithm",
@@ -162,7 +165,7 @@ class Controller:
     # take the player away from the next one they are preparing.
     _launched_with: str = ""
 
-    def __init__(
+    def __init__(  # noqa: PLR0915 - one attribute for each piece of window state.
         self,
         data: Path | None = None,
         environment: discovery.Environment | None = None,
@@ -209,6 +212,7 @@ class Controller:
         self._observers: list[Callable[[], None]] = []
         self._compatible: dict[tuple[str, str], bool | None] = {}
         self._comparing: set[tuple[str, str]] = set()
+        self._playset: dict[tuple[str, str], tuple[float, playset.Check | None]] = {}
         self.runs: int = 0
         self.land_mask: LandMask | None = None
         self.last_import: exchange.Imported | None = None
@@ -1521,6 +1525,42 @@ class Controller:
             return mod.name
         name = row.get("name")
         return name if isinstance(name, str) else mod.name
+
+    def playset_check(self, world: World) -> playset.Check | None:
+        """What in the active playset can hide the installed ``world``'s files, or None when
+        the world is not ticked or the playset cannot be read.
+
+        Reading the other mods' folders takes a moment, and the window asks at every redraw,
+        so an answer is kept for a few seconds.
+        """
+        directory = self._profile_dir()
+        if directory is None:
+            return None
+        key = (str(directory), world.folder)
+        kept = self._playset.get(key)
+        if kept is not None and time.monotonic() - kept[0] < PLAYSET_SECONDS:
+            return kept[1]
+        found = playset.check(directory, world.folder, workshop=playset.workshop_root(self.game))
+        self._playset[key] = (time.monotonic(), found)
+        return found
+
+    def playset_warnings(self, world: World) -> list[str]:
+        """What a world page tells of mods that hide the world's files, one text each: a mod
+        after the world that has files at the same paths, and other ticked RNW worlds."""
+        found = self.playset_check(world)
+        if found is None:
+            return []
+        warnings = [
+            text(
+                "playset_replaced",
+                mod=item.title,
+                files=", ".join(item.files[: playset.SAMPLE]),
+            )
+            for item in found.replacements
+        ]
+        if found.other_worlds:
+            warnings.append(text("playset_worlds", names=", ".join(found.other_worlds)))
+        return warnings
 
     def next_step(self, world: World) -> str:
         """What to do in EU5 to play ``world``, from the game's log and playsets.

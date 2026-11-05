@@ -62,34 +62,50 @@ def _items(value: object) -> list[object]:
     return cast("list[object]", value) if isinstance(value, list) else []
 
 
-def enabled_mods(profile: Path) -> list[str] | None:
-    """Folder names of the mods the active playset enables, in its order; None when unknown."""
+def _active_playset(profile: Path) -> object | None:
+    """The one active playset of ``playsets.json``; None when unreadable or not exactly one."""
     try:
         data = cast("object", json.loads((profile / PLAYSETS).read_text(encoding="utf-8-sig")))
     except (OSError, ValueError):
         return None
     active = [item for item in _items(_field(data, "playsets")) if _field(item, "isActive") is True]
-    if len(active) != 1:
+    return active[0] if len(active) == 1 else None
+
+
+def folder_of(path: str) -> str:
+    """The last part of a mod path as the playset writes it (Windows or Unix separators)."""
+    return path.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+
+
+def enabled_paths(profile: Path) -> list[str] | None:
+    """Paths, as written, of the mods the active playset enables, in load order; None when unknown.
+
+    Later mods override earlier ones, so the order is the playset's own.
+    """
+    active = _active_playset(profile)
+    if active is None:
         return None
-    names: list[str] = []
-    for mod in _items(_field(active[0], "orderedListMods")):
+    found: list[str] = []
+    for mod in _items(_field(active, "orderedListMods")):
         path = _field(mod, "path")
         if isinstance(path, str) and _field(mod, "isEnabled") is True:
-            names.append(path.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1])
-    return names
+            found.append(path)
+    return found
+
+
+def enabled_mods(profile: Path) -> list[str] | None:
+    """Folder names of the mods the active playset enables, in its order; None when unknown."""
+    paths = enabled_paths(profile)
+    return None if paths is None else [folder_of(path) for path in paths]
 
 
 def world_enabled(profile: Path, folder: str) -> bool | None:
     """Whether the active playset enables the mod in ``mod/<folder>``; None when unknown."""
-    try:
-        data = cast("object", json.loads((profile / PLAYSETS).read_text(encoding="utf-8-sig")))
-    except (OSError, ValueError):
+    active = _active_playset(profile)
+    if active is None:
         return None
-    active = [item for item in _items(_field(data, "playsets")) if _field(item, "isActive") is True]
-    if len(active) != 1:
-        return None
-    for mod in _items(_field(active[0], "orderedListMods")):
+    for mod in _items(_field(active, "orderedListMods")):
         path = _field(mod, "path")
-        if isinstance(path, str) and path.replace("\\", "/").rstrip("/").endswith(f"/{folder}"):
+        if isinstance(path, str) and folder_of(path) == folder:
             return _field(mod, "isEnabled") is True
     return False

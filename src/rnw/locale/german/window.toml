@@ -1582,6 +1582,14 @@ text = '''Aktivieren Sie „{name}“ in Ihrer Gruppe.'''
 source = "bc66f4a33e6675ab"
 text = '''Deaktivieren Sie die anderen RNW-Welten in Ihrer Gruppe.'''
 
+["playset_replaced"]
+source = "3697cb68566ee9ba"
+text = '''„{mod}“ steht in Ihrer Gruppe hinter dieser Welt und enthält Dateien mit denselben Pfaden wie die Welt, zum Beispiel {files}. EU5 liest dann die Dateien dieser Mod statt der Dateien der Welt, und die Neue Welt kann überall Lehm und leere Kartenmodi haben. Setzen Sie „{mod}“ in der Ladereihenfolge vor diese Welt oder deaktivieren Sie die Mod.'''
+
+["playset_worlds"]
+source = "66b2a640b6014023"
+text = '''In Ihrer Gruppe ist mehr als eine RNW-Welt aktiviert (auch {names}). Ihre Dateien überschreiben sich gegenseitig, daher kann die Neue Welt falsch aussehen, zum Beispiel mit Lehm überall und leeren Kartenmodi.'''
+
 ["next_fresh"]
 source = "26a83c991aa99660"
 text = '''In EU5: {tick} Das lädt die Mods neu. Starten Sie dann ein neues Spiel 1337.'''

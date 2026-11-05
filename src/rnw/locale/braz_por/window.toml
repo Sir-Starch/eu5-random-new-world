@@ -1582,6 +1582,14 @@ text = '''Marque ‘{name}’ na sua Condição de Jogo.'''
 source = "bc66f4a33e6675ab"
 text = '''Desmarque os outros mundos RNW da sua Condição de Jogo.'''
 
+["playset_replaced"]
+source = "3697cb68566ee9ba"
+text = '''‘{mod}’ vem depois deste mundo na sua Condição de Jogo e tem arquivos nos mesmos caminhos que o mundo, por exemplo {files}. O EU5 então lê os arquivos desse mod em vez dos do mundo, e o Novo Mundo pode sair com argila por toda parte e modos de mapa vazios. Coloque ‘{mod}’ antes deste mundo na ordem de carregamento ou desmarque-o.'''
+
+["playset_worlds"]
+source = "66b2a640b6014023"
+text = '''Há mais de um mundo RNW marcado na sua Condição de Jogo (também {names}). Os arquivos deles se sobrescrevem, então o Novo Mundo pode sair errado, por exemplo com argila por toda parte e modos de mapa vazios.'''
+
 ["next_fresh"]
 source = "26a83c991aa99660"
 text = '''No EU5: {tick} Isso recarrega os mods. Depois comece um novo jogo em 1337.'''

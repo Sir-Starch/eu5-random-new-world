@@ -1582,6 +1582,14 @@ text = '''Marca «{name}» en tu colección.'''
 source = "bc66f4a33e6675ab"
 text = '''Desmarca los demás mundos RNW de tu colección.'''
 
+["playset_replaced"]
+source = "3697cb68566ee9ba"
+text = '''«{mod}» está después de este mundo en tu colección y tiene archivos en las mismas rutas que el mundo, por ejemplo {files}. EU5 lee entonces los archivos de ese mod en lugar de los del mundo, y el Nuevo Mundo puede salir con arcilla por todas partes y modos del mapa vacíos. Pon «{mod}» antes de este mundo en el orden de carga, o desmárcalo.'''
+
+["playset_worlds"]
+source = "66b2a640b6014023"
+text = '''Hay más de un mundo RNW marcado en tu colección (también {names}). Sus archivos se sobrescriben entre sí, así que el Nuevo Mundo puede salir mal, por ejemplo con arcilla por todas partes y modos del mapa vacíos.'''
+
 ["next_fresh"]
 source = "26a83c991aa99660"
 text = '''En EU5: {tick} Eso recarga los mods. Después empieza una partida nueva en 1337.'''

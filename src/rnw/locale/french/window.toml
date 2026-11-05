@@ -1582,6 +1582,14 @@ text = '''Cochez « {name} » dans votre playset.'''
 source = "bc66f4a33e6675ab"
 text = '''Décochez les autres mondes RNW de votre playset.'''
 
+["playset_replaced"]
+source = "3697cb68566ee9ba"
+text = '''« {mod} » se trouve après ce monde dans votre playset et contient des fichiers aux mêmes chemins que le monde, par exemple {files}. EU5 lit alors les fichiers de ce mod à la place de ceux du monde, et le Nouveau Monde peut se retrouver avec de l'argile partout et des modes de carte vides. Placez « {mod} » avant ce monde dans l'ordre de chargement, ou décochez-le.'''
+
+["playset_worlds"]
+source = "66b2a640b6014023"
+text = '''Plusieurs mondes RNW sont cochés dans votre playset (aussi {names}). Leurs fichiers s'écrasent les uns les autres : le Nouveau Monde peut donc être faux, par exemple avec de l'argile partout et des modes de carte vides.'''
+
 ["next_fresh"]
 source = "26a83c991aa99660"
 text = '''Dans EU5 : {tick} Cela recharge les mods. Commencez ensuite une nouvelle partie en 1337.'''

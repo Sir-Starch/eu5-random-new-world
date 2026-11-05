@@ -183,6 +183,7 @@
         {/if}
         {#if w.advice}<div class="msg info"><Icon name="info" /><p>{w.advice}</p></div>{/if}
         {#if w.note}<div class="msg warn"><Icon name="warning" /><p>{w.note}</p></div>{/if}
+        {#each w.playset as line}<div class="msg warn"><Icon name="warning" /><p>{line}</p></div>{/each}
       </div>
 
       <Section id="world.details" title={t("world_details")}>

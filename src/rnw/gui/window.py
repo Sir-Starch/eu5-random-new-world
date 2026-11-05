@@ -1956,13 +1956,18 @@ class MainWindow(QMainWindow):
         }
         for key, value in values.items():
             self.details[key].setText(value)
-        notes: list[str] = []
-        note = controller.build_note(world)
-        if note:
-            notes.insert(0, note)
+        in_game = placement is Placement.IN_GAME
+        notes = [
+            note
+            for note in (
+                controller.build_note(world),
+                *(controller.playset_warnings(world) if in_game else ()),
+            )
+            if note
+        ]
         self.note.setText("\n\n".join(notes))
         self.note.setVisible(bool(notes))
-        advice = controller.next_step(world) if placement is Placement.IN_GAME else ""
+        advice = controller.next_step(world) if in_game else ""
         self.advice.setText(advice)
         self.advice.setVisible(bool(advice))
         problem = controller.world_problem()

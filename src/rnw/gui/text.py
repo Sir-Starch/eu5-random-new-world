@@ -696,6 +696,17 @@ STRINGS: Final[dict[str, str]] = {
     "tick_self_untick": "Tick “{name}” and untick the other RNW worlds in your playset.",
     "tick_self": "Tick “{name}” in your playset.",
     "untick_others": "Untick the other RNW worlds in your playset.",
+    "playset_replaced": (
+        "“{mod}” comes after this world in your playset and has files at the same paths as "
+        "the world's, such as {files}. EU5 then reads that mod's files instead of the "
+        "world's, and the New World can come out with Clay everywhere and empty map modes. "
+        "Put “{mod}” before this world in the load order, or untick it."
+    ),
+    "playset_worlds": (
+        "More than one RNW world is ticked in your playset (also {names}). Their files "
+        "overwrite one another, so the New World can come out wrong, for example with Clay "
+        "everywhere and empty map modes."
+    ),
     "next_fresh": "In EU5: {tick} That reloads the mods. Then start a new 1337 game.",
     "next_fresh_switch": (
         "In EU5, switch to another playset and back to yours, which reloads the mods, then "

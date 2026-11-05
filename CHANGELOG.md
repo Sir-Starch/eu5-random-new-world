@@ -24,6 +24,11 @@
   Published calibration passes; final performance, held-out validation and packaged
   delivery remain H7 work.
 
+- Warn on a world's page, in both windows and in the diagnostics file, when a mod after
+  the world in the playset has files at the same paths as the world's, or when another RNW
+  world is ticked. Either can leave the New World all Clay with empty map modes. The check
+  only reads the playset and the mod folders.
+
 - Add **Alternative History** to the hub metadata and publish all four Workshop
   categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.
 
