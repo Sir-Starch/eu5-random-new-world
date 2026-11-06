@@ -2609,8 +2609,8 @@ source = "a8f79216631a7146"
 text = '''Sin historia registrada'''
 
 ["history.profile"]
-source = "6733eee01a50fdaa"
-text = '''Organización en 1337'''
+source = "2a7607c61f61ac9a"
+text = '''Sociedad en 1337'''
 
 ["history.chronicle"]
 source = "619aad1b467af62e"
@@ -2637,8 +2637,8 @@ source = "b849349447d50508"
 text = '''Herencias compartidas'''
 
 ["history.position"]
-source = "262564cc218aaf61"
-text = '''Gobierno: {government} · Rango: {rank} · Tecnología: {level}'''
+source = "6e84a2549a8d07f3"
+text = '''Gobierno: {government} · Rango nacional: {rank}'''
 
 ["history.axis"]
 source = "12851adbf1ec80f5"
@@ -2651,90 +2651,6 @@ text = '''{kind}: {members}'''
 ["history.changes"]
 source = "184fcdd4812c8b05"
 text = '''{year} · Ubicaciones que cambiaron de propietario histórico: {count}'''
-
-["history.centralization"]
-source = "88dfca338c6dd49b"
-text = '''Centralización'''
-
-["history.authority"]
-source = "b80e403d2645d45e"
-text = '''Autoridad'''
-
-["history.livelihood"]
-source = "4a8dc26c1d721698"
-text = '''Subsistencia'''
-
-["history.exchange"]
-source = "d60a318dd8a0cdc8"
-text = '''Intercambio'''
-
-["history.religious_authority"]
-source = "c5251a17fd402d90"
-text = '''Autoridad religiosa'''
-
-["history.military"]
-source = "d668385d05402a6f"
-text = '''Orientación militar'''
-
-["history.integration"]
-source = "9a42d40a3f319da5"
-text = '''Integración'''
-
-["history.tradition"]
-source = "6cc5a78d010999ff"
-text = '''Tradición'''
-
-["history.council"]
-source = "15b42c09c8a6f64f"
-text = '''Consejo'''
-
-["history.ruler"]
-source = "6be47329eb50565e"
-text = '''Gobierno personal'''
-
-["history.sacred"]
-source = "8ae6336f2ed50266"
-text = '''Autoridad sagrada'''
-
-["history.customary"]
-source = "d0a2add9efd96b87"
-text = '''Autoridad consuetudinaria'''
-
-["history.farming"]
-source = "a61abd5d17a01f86"
-text = '''Agricultura'''
-
-["history.mixed"]
-source = "993381e2aa224a41"
-text = '''Subsistencia mixta'''
-
-["history.mobile"]
-source = "260237d153f61bdd"
-text = '''Subsistencia móvil'''
-
-["history.inward"]
-source = "44b81cb202900597"
-text = '''Intercambio local'''
-
-["history.overland"]
-source = "6aa7910663a4bdc0"
-text = '''Intercambio terrestre'''
-
-["history.coastal"]
-source = "26ee55f2facebb41"
-text = '''Intercambio costero'''
-
-["history.balanced"]
-source = "5386ea5db81c8579"
-text = '''Equilibrada'''
-
-["history.offensive"]
-source = "6076629b56d9c3f0"
-text = '''Ofensiva'''
-
-["history.defensive"]
-source = "892ad8f258bcb335"
-text = '''Defensiva'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2784,45 +2700,21 @@ text = '''Variada'''
 source = "434f9e629dbfd65a"
 text = '''Turbulenta'''
 
-["history.monarchy"]
-source = "da9a0538c238f4fe"
-text = '''Monarquía'''
-
-["history.republic"]
-source = "78fc35976626ef3b"
-text = '''República'''
-
-["history.theocracy"]
-source = "9b57550fefbd7eb6"
-text = '''Teocracia'''
-
-["history.tribe"]
-source = "6c49567d58669cda"
-text = '''Tribu'''
-
-["history.regional_power"]
-source = "503fa383d71d826f"
-text = '''Potencia regional'''
-
-["history.paramount"]
-source = "ff1cbcccd3d96ac0"
-text = '''Reino hegemónico'''
-
 ["history.ambitions"]
-source = "f4578665c404f597"
-text = '''Ambiciones'''
+source = "492aaf62e6d759a9"
+text = '''Pueblos extraordinarios'''
 
 ["history.ambition"]
 source = "f195b96c0634604c"
 text = '''{kind} — {name}: {status}'''
 
 ["history.fulfilled"]
-source = "6030ced8c6f5f7a3"
-text = '''cumplida'''
+source = "8b645141dcc543ea"
+text = '''se formó y perduró hasta 1337'''
 
 ["history.unfulfilled"]
-source = "d2fcc2e287ae5745"
-text = '''no cumplida'''
+source = "c543015c03639056"
+text = '''no perduró hasta 1337'''
 
 ["history.tab_place"]
 source = "e9463dccf0541a97"
@@ -2840,13 +2732,9 @@ text = '''Relaciones'''
 source = "d3e1c5f8a6e240fc"
 text = '''Origen'''
 
-["history.technology"]
-source = "11189d4799c00d63"
-text = '''Tecnología {level}'''
-
 ["history.society_note"]
-source = "fedb0586b6b76e12"
-text = '''Cómo estaba organizada esta sociedad en 1337 y el suceso que dio forma por última vez a cada rasgo.'''
+source = "0f75fb9aa278d855"
+text = '''El gobierno, el rango y los valores sociales de este país en 1337 tal como los muestra el juego, y el suceso que moldeó por última vez cada valor.'''
 
 ["history.chronicle_note"]
 source = "17ea9dc671533b54"

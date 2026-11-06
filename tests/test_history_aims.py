@@ -460,7 +460,8 @@ def test_a_breakaway_and_its_aim_survive_the_portable_record() -> None:
     assert aimed.history.aims
     validate(aimed.history, atlas.history_links(aimed))
     sections = Reader(aimed, "english", lambda key: key).region("region")
-    assert any(section.title == "Ambitions" for section in sections)
+    # An ordinary regional aim is the model's own; only the extraordinary peoples are shown.
+    assert not any(section.title == "Extraordinary peoples" for section in sections)
 
 
 def test_partners_of_one_seeded_league_never_unite() -> None:

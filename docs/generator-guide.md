@@ -240,13 +240,13 @@ map layer requires revealing the atlas first.
 ## Manage worlds and versions
 
 For worlds made with 1.2.0, click a land location to read its society and history. The
-location's card has four tabs. **Place** holds the location's facts and the history of
-its region: seeded ambitions and whether they succeeded, the inheritances its societies
+location's card has four tabs. **Place** holds the location's facts, its start development as
+the game computes it among them, and the history of its region: whether the extraordinary
+peoples set for the world took shape and survived to 1337, the inheritances its societies
 share, and the years its land changed historical owner. **Society** shows the country's
-government, technology and origin, the societal values EU5 shows for it (as the game names
-them, with the event that last shaped each), and the traits of the generator's model that
-the game does not show. A world made before the values were recorded says so on the Society tab
-and shows the generator's own traits instead; make a new world to see the values. **Chronicle** is a timeline of the country's most
+government and country rank, its origin and the societal values EU5 shows for it, all as the
+game names them, with the event that last shaped each value. A world made before the values
+were recorded says so; make a new world to see them. **Chronicle** is a timeline of the country's most
 significant recorded events, oldest first. **Relations** shows the country's opinion of
 other countries on the first day, line by line as the game lists it: the opinions its
 treaties give (*Allied*, *Rival*, *Our Liege*, *Our Vassal* and the guarantees, under the

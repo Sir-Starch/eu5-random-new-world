@@ -233,17 +233,6 @@ export interface HistoryEntry {
 }
 
 /** A society's trait: a 0-1000 scale (`number`), or a named value (`number` is -1). */
-export interface HistoryAxis {
-  key: string;
-  label: string;
-  number: number;
-  word: string;
-  kind: string;
-  cause: string;
-  year: number;
-  place: number;
-}
-
 /** One line of a country's opinion of another as the game lists it (`history_presenter.Opinion`). */
 export interface HistoryOpinion {
   label: string;
@@ -278,10 +267,8 @@ export interface HistoryValue {
 export interface HistoryDossier {
   government: string;
   rank: string;
-  technology: string;
   origin: HistoryEntry;
   values: HistoryValue[];
-  axes: HistoryAxis[];
   chronicle: HistoryEntry[];
   partners: HistoryPartner[];
   more: number;

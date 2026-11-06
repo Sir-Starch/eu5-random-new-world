@@ -1413,21 +1413,12 @@ def test_classic_history_uses_common_facts_and_place_links() -> None:
 
     QTimer.singleShot(0, inspect)
     button.click()
-    assert "Organization in 1337" in seen
+    assert "Society in 1337" in seen
     assert "Chronicle" in seen
     assert "Regional history" in seen
-    assert all(
-        any(line.startswith(label + ":") for line in seen)
-        for label in (
-            "Centralization",
-            "Authority",
-            "Livelihood",
-            "Exchange",
-            "Religious authority",
-            "Military orientation",
-            "Integration",
-            "Tradition",
-        )
+    assert any(line.startswith("Government: ") and "Technology" not in line for line in seen)
+    assert not any(
+        line.startswith(("Centralization:", "Authority:", "Livelihood:")) for line in seen
     )
     assert any(
         reader.name(built.names[1]) in label.text() for label in panel.card.findChildren(QLabel)

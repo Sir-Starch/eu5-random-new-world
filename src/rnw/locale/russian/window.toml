@@ -2609,8 +2609,8 @@ source = "a8f79216631a7146"
 text = '''История не записана'''
 
 ["history.profile"]
-source = "6733eee01a50fdaa"
-text = '''Устройство в 1337 году'''
+source = "2a7607c61f61ac9a"
+text = '''Общество в 1337 году'''
 
 ["history.chronicle"]
 source = "619aad1b467af62e"
@@ -2637,8 +2637,8 @@ source = "b849349447d50508"
 text = '''Общее наследие'''
 
 ["history.position"]
-source = "262564cc218aaf61"
-text = '''Правление: {government} · Ранг: {rank} · Технологии: {level}'''
+source = "6e84a2549a8d07f3"
+text = '''Правительство: {government} · Ранг державы: {rank}'''
 
 ["history.axis"]
 source = "12851adbf1ec80f5"
@@ -2651,90 +2651,6 @@ text = '''{kind}: {members}'''
 ["history.changes"]
 source = "184fcdd4812c8b05"
 text = '''{year} · Местности, сменившие исторического владельца: {count}'''
-
-["history.centralization"]
-source = "88dfca338c6dd49b"
-text = '''Централизация'''
-
-["history.authority"]
-source = "b80e403d2645d45e"
-text = '''Власть'''
-
-["history.livelihood"]
-source = "4a8dc26c1d721698"
-text = '''Хозяйство'''
-
-["history.exchange"]
-source = "d60a318dd8a0cdc8"
-text = '''Обмен'''
-
-["history.religious_authority"]
-source = "c5251a17fd402d90"
-text = '''Религиозная власть'''
-
-["history.military"]
-source = "d668385d05402a6f"
-text = '''Военная направленность'''
-
-["history.integration"]
-source = "9a42d40a3f319da5"
-text = '''Интеграция'''
-
-["history.tradition"]
-source = "6cc5a78d010999ff"
-text = '''Традиция'''
-
-["history.council"]
-source = "15b42c09c8a6f64f"
-text = '''Совет'''
-
-["history.ruler"]
-source = "6be47329eb50565e"
-text = '''Личная власть'''
-
-["history.sacred"]
-source = "8ae6336f2ed50266"
-text = '''Сакральная власть'''
-
-["history.customary"]
-source = "d0a2add9efd96b87"
-text = '''Власть обычая'''
-
-["history.farming"]
-source = "a61abd5d17a01f86"
-text = '''Земледелие'''
-
-["history.mixed"]
-source = "993381e2aa224a41"
-text = '''Смешанное хозяйство'''
-
-["history.mobile"]
-source = "260237d153f61bdd"
-text = '''Подвижное хозяйство'''
-
-["history.inward"]
-source = "44b81cb202900597"
-text = '''Местный обмен'''
-
-["history.overland"]
-source = "6aa7910663a4bdc0"
-text = '''Сухопутный обмен'''
-
-["history.coastal"]
-source = "26ee55f2facebb41"
-text = '''Прибрежный обмен'''
-
-["history.balanced"]
-source = "5386ea5db81c8579"
-text = '''Сбалансированная'''
-
-["history.offensive"]
-source = "6076629b56d9c3f0"
-text = '''Наступательная'''
-
-["history.defensive"]
-source = "892ad8f258bcb335"
-text = '''Оборонительная'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2784,45 +2700,21 @@ text = '''Разнообразная'''
 source = "434f9e629dbfd65a"
 text = '''Бурная'''
 
-["history.monarchy"]
-source = "da9a0538c238f4fe"
-text = '''Монархия'''
-
-["history.republic"]
-source = "78fc35976626ef3b"
-text = '''Республика'''
-
-["history.theocracy"]
-source = "9b57550fefbd7eb6"
-text = '''Теократия'''
-
-["history.tribe"]
-source = "6c49567d58669cda"
-text = '''Племя'''
-
-["history.regional_power"]
-source = "503fa383d71d826f"
-text = '''Региональная держава'''
-
-["history.paramount"]
-source = "ff1cbcccd3d96ac0"
-text = '''Держава-гегемон'''
-
 ["history.ambitions"]
-source = "f4578665c404f597"
-text = '''Устремления'''
+source = "492aaf62e6d759a9"
+text = '''Необычные народы'''
 
 ["history.ambition"]
 source = "f195b96c0634604c"
 text = '''{kind} — {name}: {status}'''
 
 ["history.fulfilled"]
-source = "6030ced8c6f5f7a3"
-text = '''осуществлено'''
+source = "8b645141dcc543ea"
+text = '''существует в 1337 году'''
 
 ["history.unfulfilled"]
-source = "d2fcc2e287ae5745"
-text = '''не осуществлено'''
+source = "c543015c03639056"
+text = '''не существует в 1337 году'''
 
 ["history.tab_place"]
 source = "e9463dccf0541a97"
@@ -2840,13 +2732,9 @@ text = '''Отношения'''
 source = "d3e1c5f8a6e240fc"
 text = '''Происхождение'''
 
-["history.technology"]
-source = "11189d4799c00d63"
-text = '''Технологии {level}'''
-
 ["history.society_note"]
-source = "fedb0586b6b76e12"
-text = '''Как было устроено это общество в 1337 году и какое событие в последний раз сформировало каждую черту.'''
+source = "0f75fb9aa278d855"
+text = '''Правительство, ранг и общественные ценности этой страны в 1337 году, как их показывает игра, и событие, последним повлиявшее на каждую ценность.'''
 
 ["history.chronicle_note"]
 source = "17ea9dc671533b54"

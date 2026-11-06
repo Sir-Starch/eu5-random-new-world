@@ -19,6 +19,12 @@
   development of river land by 0.5 to 1. A world made before this says its development is not
   recorded.
 
+- Keep the generator's own scales out of the country card. The Society tab shows the government
+  and country rank under the game's names and the societal values, without the technology level
+  and the model's eight trait meters, which the game does not show. The Place tab shows whether
+  the *Extraordinary peoples* set for the world took shape, not the generator's ordinary
+  regional aims.
+
 - Give the formable countries real goals. Any country that holds enough of a territory, its
   capital inside, may form a union, confederation, league or realm, not only the states of
   1337; a commonwealth also opens to its people's culture group. The realm becomes the realm

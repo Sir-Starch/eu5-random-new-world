@@ -13,7 +13,16 @@ from rnw import atlas, eu5_history_text, game_texts, history_text, translations
 from rnw.eu5_history_plan import project_start
 from rnw.eu5_history_values import profile_positions
 from rnw.gui.view import history_data
-from rnw.history_model import Authority, Exchange, Livelihood, Military, Society
+from rnw.history_archive import AimFact
+from rnw.history_model import (
+    Authority,
+    Exchange,
+    Livelihood,
+    Military,
+    Society,
+    Strategy,
+    TrajectoryKind,
+)
 from rnw.history_presenter import YEAR_PREFIX, Reader, encode
 from rnw.history_values import AXES as VALUE_AXES
 from rnw.history_values import SOURCE
@@ -66,21 +75,21 @@ def test_a_chronicle_row_keeps_its_year_and_place_apart_from_the_sentence(
         assert dossier.origin.text
 
 
-def test_the_traits_are_four_scales_and_four_names(built: atlas.Atlas) -> None:
-    """Without the game's values (an older archive) all eight traits are shown."""
+def test_the_society_shows_the_game_and_none_of_the_models_traits(built: atlas.Atlas) -> None:
+    """Government and rank under the game's names; no technology level or trait meter, which
+    the game does not show (plan D31)."""
     history = record(built)
-    older = replace(
-        built,
-        history=replace(history, countries=tuple(replace(c, values=()) for c in history.countries)),
-    )
-    dossier = Reader(older, "english", atlas.pretty).dossier(history.countries[0].tag)
-    assert dossier is not None
-    assert [axis.key for axis in dossier.axes][:2] == ["centralization", "authority"]
-    scales = [axis for axis in dossier.axes if axis.number >= 0]
-    names = [axis for axis in dossier.axes if axis.number < 0]
-    assert (len(scales), len(names)) == (4, 4)
-    assert all(0 <= axis.number <= 1000 and not axis.word for axis in scales)
-    assert all(axis.word and axis.cause for axis in names)
+    names = {"monarchy": "Monarchy", "republic": "Republic", "tribe": "Tribe", "theocracy": "T"}
+    reader = Reader(built, "english", lambda key: names.get(key, key))
+    for country in history.countries:
+        dossier = reader.dossier(country.tag)
+        assert dossier is not None
+        assert dossier.government == names.get(country.government, country.government)
+        assert not hasattr(dossier, "axes")
+        assert not hasattr(dossier, "technology")
+    lines = [line.text for line in reader.country(history.countries[0].tag)[0].lines]
+    assert "Technology" not in lines[1]
+    assert all(not line.startswith(("Centralization", "Authority", "Livelihood")) for line in lines)
 
 
 def test_a_dossier_is_plain_json_and_the_text_sections_are_unchanged(built: atlas.Atlas) -> None:
@@ -92,17 +101,15 @@ def test_a_dossier_is_plain_json_and_the_text_sections_are_unchanged(built: atla
     assert set(sent) == {
         "government",
         "rank",
-        "technology",
         "origin",
         "values",
-        "axes",
         "chronicle",
         "partners",
         "more",
     }
     assert isinstance(sent["chronicle"], list)
     titles = [section.title for section in reader.country(tag)]
-    assert titles == ["Organization in 1337", "Opinions on the first day", "Chronicle"]
+    assert titles == ["Society in 1337", "Opinions on the first day", "Chronicle"]
 
 
 def test_each_side_of_a_treaty_has_the_engines_opinion_of_the_other(built: atlas.Atlas) -> None:
@@ -231,35 +238,41 @@ def test_the_dossier_shows_the_values_the_game_is_given(built: atlas.Atlas) -> N
         }
         assert {value.key: value.position for value in dossier.values} == written
         assert all(value.left and value.right and value.cause for value in dossier.values)
-        # Traits a value already shows are not drawn again; the rest stay.
-        assert [axis.key for axis in dossier.axes] == ["authority", "livelihood", "integration"]
 
 
-def test_an_archive_without_values_shows_every_trait_and_no_value(built: atlas.Atlas) -> None:
+def test_an_archive_without_values_says_so_instead_of_showing_the_models_traits(
+    built: atlas.Atlas,
+) -> None:
     history = record(built)
     older = replace(
         built,
         history=replace(history, countries=tuple(replace(c, values=()) for c in history.countries)),
     )
-    dossier = Reader(older, "english", atlas.pretty).dossier(history.countries[0].tag)
+    reader = Reader(older, "english", atlas.pretty)
+    dossier = reader.dossier(history.countries[0].tag)
     assert dossier is not None
     assert dossier.values == ()
-    assert len(dossier.axes) == 8
+    lines = [line.text for line in reader.country(history.countries[0].tag)[0].lines]
+    assert lines[-1].startswith("This world was made before its societal values were recorded")
 
 
-def test_a_tribe_has_no_technology_to_show(built: atlas.Atlas) -> None:
+def test_a_region_shows_only_the_extraordinary_peoples_the_player_can_set(
+    built: atlas.Atlas,
+) -> None:
+    """The ordinary regional aims are the model's own; the extraordinary ones are a setting."""
     history = record(built)
-    tribal = replace(
-        built,
-        history=replace(
-            history,
-            countries=(replace(history.countries[0], government="tribe"), *history.countries[1:]),
+    anchor = history.countries[0].actor
+    seat = history.actors[anchor].seat
+    cause = history.actors[anchor].origin
+    aims = (
+        AimFact(
+            TrajectoryKind.REGIONAL_POWER, seat, (anchor,), cause, Strategy.PRUDENT, realized=True
+        ),
+        AimFact(
+            TrajectoryKind.GREAT_EMPIRE, seat, (anchor,), cause, Strategy.PRUDENT, realized=False
         ),
     )
-    reader = Reader(tribal, "english", atlas.pretty)
-    first, second = (country.tag for country in history.countries[:2])
-    tribe, state = reader.dossier(first), reader.dossier(second)
-    assert tribe is not None
-    assert state is not None
-    assert tribe.technology == ""
-    assert state.technology
+    reader = Reader(replace(built, history=replace(history, aims=aims)), "english", atlas.pretty)
+    region = reader.place("region")
+    assert region is not None
+    assert [(aim.kind, aim.realized) for aim in region.ambitions] == [("great_empire", False)]

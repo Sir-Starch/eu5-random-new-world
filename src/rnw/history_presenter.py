@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Final, final
 
 from rnw import history_text, translations, wording
 from rnw.history_archive import AXES, UNWRITTEN
-from rnw.history_model import Action
+from rnw.history_model import Action, TrajectoryKind
 from rnw.history_values import AXES as VALUE_AXES
 from rnw.history_values import SOURCE, poles
 from rnw.opinions import treaty_opinions
@@ -25,61 +25,34 @@ SOURCES: Final[dict[str, str]] = {
     "history.title": "Society and history",
     "history.region": "Regional history",
     "history.none": "No recorded history",
-    "history.profile": "Organization in 1337",
+    "history.profile": "Society in 1337",
     "history.chronicle": "Chronicle",
     "history.relations": "Opinions on the first day",
     "history.inheritance": "Shared inheritances",
     "history.opinion_of": "{name}: {total}",
     "history.opinion_line": "{label}: {value}",
     "history.opinion_fading": "{label}: {value}, {fade} a year",
-    "history.position": "Government: {government} · Rank: {rank} · Technology: {level}",
+    "history.position": "Government: {government} · Country Rank: {rank}",
     "history.axis": "{axis}: {value} — {cause} ({year})",
     "history.shared": "{kind}: {members}",
     "history.changes": "{year} · Locations changing historical owner: {count}",
-    "history.centralization": "Centralization",
-    "history.authority": "Authority",
-    "history.livelihood": "Livelihood",
-    "history.exchange": "Exchange",
-    "history.religious_authority": "Religious authority",
-    "history.military": "Military orientation",
-    "history.integration": "Integration",
-    "history.tradition": "Tradition",
-    "history.council": "Council",
-    "history.ruler": "Personal rule",
-    "history.sacred": "Sacred authority",
-    "history.customary": "Customary authority",
-    "history.farming": "Farming",
-    "history.mixed": "Mixed subsistence",
-    "history.mobile": "Mobile subsistence",
-    "history.inward": "Local exchange",
-    "history.overland": "Overland exchange",
-    "history.coastal": "Coastal exchange",
-    "history.balanced": "Balanced",
-    "history.offensive": "Offensive",
-    "history.defensive": "Defensive",
     "history.great_empire": "Great empire",
     "history.sea_league": "Sea league",
     "history.highland_confederation": "Highland confederation",
     "history.sacred_centre": "Sacred centre",
     "history.fractured_realm": "Divided realm",
-    "history.regional_power": "Regional power",
-    "history.paramount": "Paramount realm",
-    "history.ambitions": "Ambitions",
+    "history.ambitions": "Extraordinary peoples",
     "history.ambition": "{kind} — {name}: {status}",
-    "history.fulfilled": "fulfilled",
-    "history.unfulfilled": "not fulfilled",
-    "history.monarchy": "Monarchy",
-    "history.republic": "Republic",
-    "history.theocracy": "Theocracy",
-    "history.tribe": "Tribe",
+    "history.fulfilled": "took shape and survived to 1337",
+    "history.unfulfilled": "did not survive to 1337",
     # The Tauri window's society panel (structured data, `dossier` and `place`).
     "history.tab_place": "Place",
     "history.tab_society": "Society",
     "history.tab_relations": "Relations",
     "history.origin": "Origin",
-    "history.technology": "Technology {level}",
     "history.society_note": (
-        "How this society was organized in 1337, and the event that last shaped each trait."
+        "Its government, rank and societal values in 1337 as the game shows them, and the event "
+        "that last shaped each value."
     ),
     "history.chronicle_note": "The most significant recorded events, oldest first.",
     "history.relations_note": (
@@ -103,6 +76,17 @@ SOURCES: Final[dict[str, str]] = {
 # year in its own column. ``tests/test_history_dossier.py`` checks that every translation keeps
 # the shape, so a drifting translation fails there, not in a window.
 YEAR_PREFIX: Final[str] = r"^{year}\s*[年년]?\s*[:\uff1a]\s*"
+# The trajectories of the *Extraordinary peoples* setting: a region shows whether they took
+# shape. The ordinary regional aims (D22) are the model's own and are not shown (plan D31).
+EXTRAORDINARY: Final[frozenset[TrajectoryKind]] = frozenset(
+    {
+        TrajectoryKind.GREAT_EMPIRE,
+        TrajectoryKind.SEA_LEAGUE,
+        TrajectoryKind.HIGHLAND_CONFEDERATION,
+        TrajectoryKind.SACRED_CENTRE,
+        TrajectoryKind.FRACTURED_REALM,
+    }
+)
 # The countries a dossier lists, those of the largest opinion first; the rest are counted.
 PARTNERS: Final[int] = 24
 
@@ -194,14 +178,13 @@ class Partner:
 
 @dataclass(frozen=True, slots=True)
 class Dossier:
-    """A country's society, chronicle and relationships, ready to draw."""
+    """A country's government, rank and societal values, chronicle and opinions, as the game
+    names them, ready to draw."""
 
     government: str
     rank: str
-    technology: str
     origin: Entry
     values: tuple[Value, ...]
-    axes: tuple[Axis, ...]
     chronicle: tuple[Entry, ...]
     partners: tuple[Partner, ...]
     more: int
@@ -367,32 +350,25 @@ class Reader:
             Line(
                 self.say(
                     "position",
-                    government=self.texts.get(
-                        f"history.{country.government}", self.key(country.government)
-                    ),
-                    rank=self.key(country.rank) or "—",
-                    level=country.level,
+                    government=self.key(country.government),
+                    rank=self.key(country.rank) or "\N{EM DASH}",
                 )
             ),
         ]
-        traits = _traits(actor.society)
-        for axis, cause in zip(AXES, actor.axis_causes, strict=True):
-            value = traits[axis]
-            written = str(value) if isinstance(value, int) else self.say(str(value))
-            event = record.events[cause]
-            family = history_text.event_family(event.kind, event.outcome)
+        values = self._values(country, self._axes(record, country.actor))
+        for value in values:
+            lean = value.left if value.position < 0 else value.right if value.position else ""
+            shown = f"{lean} {abs(value.position)}" if lean else "0"
             profile.append(
                 Line(
                     self.say(
-                        "axis",
-                        axis=self.say(axis),
-                        value=written,
-                        cause=self.game[f"rnw_history_cause_{family}"],
-                        year=event.year,
+                        "axis", axis=value.label, value=shown, cause=value.cause, year=value.year
                     ),
-                    event.places[0] if event.places else -1,
+                    value.place,
                 )
             )
+        if not values:
+            profile.append(Line(self.say("no_values")))
         rows = dict(record.chronicles)[country.actor]
         return (
             Section(self.say("profile"), tuple(profile)),
@@ -469,7 +445,7 @@ class Reader:
                 aim.anchor,
             )
             for aim in record.aims
-            if self.name(self.atlas.regions[aim.anchor]) == region
+            if aim.kind in EXTRAORDINARY and self.name(self.atlas.regions[aim.anchor]) == region
         )
         sections = (
             Section(self.say("region"), rows),
@@ -481,6 +457,8 @@ class Reader:
         """(label, member actors, place) of each inheritance shared by the region's societies."""
         found: list[tuple[str, list[int], int]] = []
         for group in record.groups:
+            if group.kind not in EXTRAORDINARY:
+                continue
             members = [
                 member
                 for member in group.members
@@ -512,40 +490,12 @@ class Reader:
             return None
         country = self.countries[tag]
         actor = record.actors[country.actor]
-        traits = _traits(actor.society)
-        axes: list[Axis] = []
-        for axis, cause in zip(AXES, actor.axis_causes, strict=True):
-            value = traits[axis]
-            event = record.events[cause]
-            family = history_text.event_family(event.kind, event.outcome)
-            axes.append(
-                Axis(
-                    axis,
-                    self.say(axis),
-                    value if isinstance(value, int) else -1,
-                    "" if isinstance(value, int) else self.say(value),
-                    family,
-                    self.game[f"rnw_history_cause_{family}"],
-                    event.year,
-                    event.places[0] if event.places else -1,
-                )
-            )
-        values = self._values(country, axes)
-        shown = {value.key for value in values}
-        # A trait that a written value already shows (with the same cause) is not shown twice.
-        represented = {SOURCE[key] for key in shown}
         partners, more = self._partners(record, country.actor)
         return Dossier(
-            government=self.texts.get(
-                f"history.{country.government}", self.key(country.government)
-            ),
+            government=self.key(country.government),
             rank=self.key(country.rank) if country.rank else "",
-            technology=""
-            if country.government == "tribe"
-            else self.say("technology", level=country.level),
             origin=self.entry(record, actor.origin, country.actor),
-            values=values,
-            axes=tuple(axis for axis in axes if axis.key not in represented),
+            values=self._values(country, self._axes(record, country.actor)),
             chronicle=tuple(
                 self.entry(record, row, country.actor)
                 for row in dict(record.chronicles)[country.actor]
@@ -553,6 +503,29 @@ class Reader:
             partners=partners,
             more=more,
         )
+
+    def _axes(self, record: Archive, actor: int) -> list[Axis]:
+        """The society model's traits of ``actor``, each with the event that last shaped it: the
+        causes of the societal values written from them (``history_values.SOURCE``)."""
+        traits = _traits(record.actors[actor].society)
+        axes: list[Axis] = []
+        for axis, cause in zip(AXES, record.actors[actor].axis_causes, strict=True):
+            value = traits[axis]
+            event = record.events[cause]
+            family = history_text.event_family(event.kind, event.outcome)
+            axes.append(
+                Axis(
+                    axis,
+                    axis,
+                    value if isinstance(value, int) else -1,
+                    "" if isinstance(value, int) else str(value),
+                    family,
+                    self.game[f"rnw_history_cause_{family}"],
+                    event.year,
+                    event.places[0] if event.places else -1,
+                )
+            )
+        return axes
 
     def _values(self, country: CountryFact, axes: list[Axis]) -> tuple[Value, ...]:
         """The societal values written for the country, named as the game names them."""
@@ -678,6 +651,6 @@ class Reader:
                     aim.realized,
                 )
                 for aim in record.aims
-                if self.name(self.atlas.regions[aim.anchor]) == region
+                if aim.kind in EXTRAORDINARY and self.name(self.atlas.regions[aim.anchor]) == region
             )[:8],
         )

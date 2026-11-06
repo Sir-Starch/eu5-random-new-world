@@ -1,8 +1,8 @@
 <script lang="ts">
-  // A country's society in 1337: who it is, how it began, and its eight traits, each with the
-  // event that last shaped it.
+  // A country in 1337 as the game shows it: its government, rank and societal values, how it
+  // began, and the event that last shaped each value.
   import { t } from "../../lib/app.svelte";
-  import { leaning, percent, spread } from "../../lib/history";
+  import { leaning, spread } from "../../lib/history";
   import type { HistoryDossier } from "../../lib/types";
   import PlaceLink from "./PlaceLink.svelte";
 
@@ -27,7 +27,6 @@
   </div>
   <div class="hx-chips">
     <span class="hx-chip rank">{dossier.government}</span>
-    {#if dossier.technology}<span class="hx-chip">{dossier.technology}</span>{/if}
     {#if dossier.rank}<span class="hx-chip">{dossier.rank}</span>{/if}
   </div>
 </div>
@@ -85,32 +84,4 @@
 {#if dossier.values.length === 0}
   <h3 class="hx-h">{t("history.values")}</h3>
   <p class="hx-note">{t("history.no_values")}</p>
-{/if}
-
-{#if dossier.axes.length}
-<h3 class="hx-h">{t("history.profile")}</h3>
-<ul class="hx-traits">
-  {#each dossier.axes as axis (axis.key)}
-    <li class="hx-trait">
-      <div class="label">
-        <span>{axis.label}</span>
-        {#if axis.number >= 0}<span class="num">{percent(axis.number)}</span>{/if}
-      </div>
-      {#if axis.number >= 0}
-        <div class="hx-meter" role="meter" aria-label={axis.label} aria-valuemin="0" aria-valuemax="100" aria-valuenow={percent(axis.number)}>
-          <i style:width="{percent(axis.number)}%"></i>
-        </div>
-      {:else}
-        <div class="value">{axis.word}</div>
-      {/if}
-      {#if axis.kind === "foundation"}
-        <!-- Unchanged since the record began: no event shaped it, so none is named. -->
-      {:else if axis.place >= 0}
-        <button class="hx-since" title={names[axis.place]} onclick={() => onplace(axis.place)}>{axis.cause} · {axis.year}</button>
-      {:else}
-        <span class="hx-since">{axis.cause} · {axis.year}</span>
-      {/if}
-    </li>
-  {/each}
-</ul>
 {/if}

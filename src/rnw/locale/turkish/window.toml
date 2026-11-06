@@ -2609,8 +2609,8 @@ source = "a8f79216631a7146"
 text = '''Kayıtlı tarih yok'''
 
 ["history.profile"]
-source = "6733eee01a50fdaa"
-text = '''1337’deki yapı'''
+source = "2a7607c61f61ac9a"
+text = '''1337'de toplum'''
 
 ["history.chronicle"]
 source = "619aad1b467af62e"
@@ -2637,8 +2637,8 @@ source = "b849349447d50508"
 text = '''Ortak miras'''
 
 ["history.position"]
-source = "262564cc218aaf61"
-text = '''Yönetim: {government} · Derece: {rank} · Teknoloji: {level}'''
+source = "6e84a2549a8d07f3"
+text = '''Hükûmet: {government} · Ülke Derecesi: {rank}'''
 
 ["history.axis"]
 source = "12851adbf1ec80f5"
@@ -2651,90 +2651,6 @@ text = '''{kind}: {members}'''
 ["history.changes"]
 source = "184fcdd4812c8b05"
 text = '''{year} · Tarihî sahibi değişen yerleşimler: {count}'''
-
-["history.centralization"]
-source = "88dfca338c6dd49b"
-text = '''Merkezîleşme'''
-
-["history.authority"]
-source = "b80e403d2645d45e"
-text = '''Otorite'''
-
-["history.livelihood"]
-source = "4a8dc26c1d721698"
-text = '''Geçim'''
-
-["history.exchange"]
-source = "d60a318dd8a0cdc8"
-text = '''Mübadele'''
-
-["history.religious_authority"]
-source = "c5251a17fd402d90"
-text = '''Dinî otorite'''
-
-["history.military"]
-source = "d668385d05402a6f"
-text = '''Askerî yönelim'''
-
-["history.integration"]
-source = "9a42d40a3f319da5"
-text = '''Bütünleşme'''
-
-["history.tradition"]
-source = "6cc5a78d010999ff"
-text = '''Gelenek'''
-
-["history.council"]
-source = "15b42c09c8a6f64f"
-text = '''Meclis'''
-
-["history.ruler"]
-source = "6be47329eb50565e"
-text = '''Kişisel yönetim'''
-
-["history.sacred"]
-source = "8ae6336f2ed50266"
-text = '''Kutsal otorite'''
-
-["history.customary"]
-source = "d0a2add9efd96b87"
-text = '''Geleneksel otorite'''
-
-["history.farming"]
-source = "a61abd5d17a01f86"
-text = '''Tarım'''
-
-["history.mixed"]
-source = "993381e2aa224a41"
-text = '''Karma geçim'''
-
-["history.mobile"]
-source = "260237d153f61bdd"
-text = '''Göçebe geçim'''
-
-["history.inward"]
-source = "44b81cb202900597"
-text = '''Yerel mübadele'''
-
-["history.overland"]
-source = "6aa7910663a4bdc0"
-text = '''Kara mübadelesi'''
-
-["history.coastal"]
-source = "26ee55f2facebb41"
-text = '''Kıyı mübadelesi'''
-
-["history.balanced"]
-source = "5386ea5db81c8579"
-text = '''Dengeli'''
-
-["history.offensive"]
-source = "6076629b56d9c3f0"
-text = '''Saldırgan'''
-
-["history.defensive"]
-source = "892ad8f258bcb335"
-text = '''Savunmacı'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2784,45 +2700,21 @@ text = '''Çeşitli'''
 source = "434f9e629dbfd65a"
 text = '''Çalkantılı'''
 
-["history.monarchy"]
-source = "da9a0538c238f4fe"
-text = '''Monarşi'''
-
-["history.republic"]
-source = "78fc35976626ef3b"
-text = '''Cumhuriyet'''
-
-["history.theocracy"]
-source = "9b57550fefbd7eb6"
-text = '''Teokrasi'''
-
-["history.tribe"]
-source = "6c49567d58669cda"
-text = '''Kabile'''
-
-["history.regional_power"]
-source = "503fa383d71d826f"
-text = '''Bölgesel güç'''
-
-["history.paramount"]
-source = "ff1cbcccd3d96ac0"
-text = '''Hâkim devlet'''
-
 ["history.ambitions"]
-source = "f4578665c404f597"
-text = '''Hedefler'''
+source = "492aaf62e6d759a9"
+text = '''Olağanüstü halklar'''
 
 ["history.ambition"]
 source = "f195b96c0634604c"
 text = '''{kind} — {name}: {status}'''
 
 ["history.fulfilled"]
-source = "6030ced8c6f5f7a3"
-text = '''gerçekleşti'''
+source = "8b645141dcc543ea"
+text = '''oluştu ve 1337'ye dek sürdü'''
 
 ["history.unfulfilled"]
-source = "d2fcc2e287ae5745"
-text = '''gerçekleşmedi'''
+source = "c543015c03639056"
+text = '''1337'ye dek sürmedi'''
 
 ["history.tab_place"]
 source = "e9463dccf0541a97"
@@ -2840,13 +2732,9 @@ text = '''İlişkiler'''
 source = "d3e1c5f8a6e240fc"
 text = '''Köken'''
 
-["history.technology"]
-source = "11189d4799c00d63"
-text = '''Teknoloji {level}'''
-
 ["history.society_note"]
-source = "fedb0586b6b76e12"
-text = '''Bu toplumun 1337’de nasıl örgütlendiği ve her özelliği en son şekillendiren olay.'''
+source = "0f75fb9aa278d855"
+text = '''Bu ülkenin 1337'deki hükûmeti, derecesi ve toplumsal değerleri, oyunun gösterdiği gibi; ve her değeri en son biçimlendiren olay.'''
 
 ["history.chronicle_note"]
 source = "17ea9dc671533b54"

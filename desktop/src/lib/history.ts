@@ -29,11 +29,6 @@ export function eventStyle(kind: string): { glyph: string; tone: Tone } {
   return EVENTS[kind] ?? { glyph: "circle", tone: "turn" };
 }
 
-/** A 0-1000 trait on the 0-100 scale the meter draws. */
-export function percent(value: number): number {
-  return Math.round(Math.min(Math.max(value, 0), 1000) / 10);
-}
-
 /** An opinion change with a real minus sign, and a plus where it is positive. */
 export function signed(value: number): string {
   return value > 0 ? `+${value}` : value < 0 ? `−${-value}` : "0";

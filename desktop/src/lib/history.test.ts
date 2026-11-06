@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ICONS } from "../components/Icon.svelte";
-import { EVENTS, eventStyle, leaning, percent, signed, spread } from "./history";
+import { EVENTS, eventStyle, leaning, signed, spread } from "./history";
 
 // The template families of `history_text.TEMPLATES`, which name every kind a chronicle can hold.
 const FAMILIES = [
@@ -22,13 +22,6 @@ describe("the chronicle's glyphs", () => {
 });
 
 describe("numbers", () => {
-  it("scales a trait to 0-100 and clamps it", () => {
-    expect(percent(800)).toBe(80);
-    expect(percent(397)).toBe(40);
-    expect(percent(1200)).toBe(100);
-    expect(percent(-5)).toBe(0);
-  });
-
   it("writes opinion with a minus sign", () => {
     expect(signed(-4)).toBe("−4");
     expect(signed(3)).toBe("+3");

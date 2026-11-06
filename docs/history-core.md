@@ -603,8 +603,10 @@ cause); five of the generator's traits project onto eight values, of which seven
 `mysticism_vs_jurisprudence` has no ungated American range in the game and is never written. The values a country has are the *position within the American range* the
 generator found in the game, not the generator's internal 0–1000 scale, so a highly centralized
 society still reads as decentralized in absolute terms (the American range of centralization
-is 60..100). `Exchange agreement` is realized as roads, market links and known areas, not as a
-treaty. Templates and labels are translated in all eleven official languages. Covered worlds yield no
+is 60..100). Under plan D31 the card shows only what the game shows: government and rank under
+the game's names, no technology level and none of the model's traits, the opinions of the
+Relations tab, start development, and on the Place tab only the trajectories of the
+*Extraordinary peoples* setting (`history_presenter.EXTRAORDINARY`). Templates and labels are translated in all eleven official languages. Covered worlds yield no
 history reader/bundle, totals or political summary; the existing reveal action
 opens history with the maps. An older world displays “No recorded history”.
 

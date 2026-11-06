@@ -2609,8 +2609,8 @@ source = "a8f79216631a7146"
 text = '''Keine Geschichte aufgezeichnet'''
 
 ["history.profile"]
-source = "6733eee01a50fdaa"
-text = '''Organisation im Jahr 1337'''
+source = "2a7607c61f61ac9a"
+text = '''Gesellschaft im Jahr 1337'''
 
 ["history.chronicle"]
 source = "619aad1b467af62e"
@@ -2637,8 +2637,8 @@ source = "b849349447d50508"
 text = '''Gemeinsames Erbe'''
 
 ["history.position"]
-source = "262564cc218aaf61"
-text = '''Regierung: {government} · Rang: {rank} · Technologie: {level}'''
+source = "6e84a2549a8d07f3"
+text = '''Regierung: {government} · Landesrang: {rank}'''
 
 ["history.axis"]
 source = "12851adbf1ec80f5"
@@ -2651,90 +2651,6 @@ text = '''{kind}: {members}'''
 ["history.changes"]
 source = "184fcdd4812c8b05"
 text = '''{year} · Orte mit einem Wechsel des historischen Besitzers: {count}'''
-
-["history.centralization"]
-source = "88dfca338c6dd49b"
-text = '''Zentralisierung'''
-
-["history.authority"]
-source = "b80e403d2645d45e"
-text = '''Autorität'''
-
-["history.livelihood"]
-source = "4a8dc26c1d721698"
-text = '''Lebensunterhalt'''
-
-["history.exchange"]
-source = "d60a318dd8a0cdc8"
-text = '''Austausch'''
-
-["history.religious_authority"]
-source = "c5251a17fd402d90"
-text = '''Religiöse Autorität'''
-
-["history.military"]
-source = "d668385d05402a6f"
-text = '''Militärische Ausrichtung'''
-
-["history.integration"]
-source = "9a42d40a3f319da5"
-text = '''Integration'''
-
-["history.tradition"]
-source = "6cc5a78d010999ff"
-text = '''Tradition'''
-
-["history.council"]
-source = "15b42c09c8a6f64f"
-text = '''Rat'''
-
-["history.ruler"]
-source = "6be47329eb50565e"
-text = '''Persönliche Herrschaft'''
-
-["history.sacred"]
-source = "8ae6336f2ed50266"
-text = '''Sakrale Autorität'''
-
-["history.customary"]
-source = "d0a2add9efd96b87"
-text = '''Gewohnheitsrechtliche Autorität'''
-
-["history.farming"]
-source = "a61abd5d17a01f86"
-text = '''Ackerbau'''
-
-["history.mixed"]
-source = "993381e2aa224a41"
-text = '''Gemischte Subsistenz'''
-
-["history.mobile"]
-source = "260237d153f61bdd"
-text = '''Mobile Subsistenz'''
-
-["history.inward"]
-source = "44b81cb202900597"
-text = '''Lokaler Austausch'''
-
-["history.overland"]
-source = "6aa7910663a4bdc0"
-text = '''Austausch über Land'''
-
-["history.coastal"]
-source = "26ee55f2facebb41"
-text = '''Küstenaustausch'''
-
-["history.balanced"]
-source = "5386ea5db81c8579"
-text = '''Ausgewogen'''
-
-["history.offensive"]
-source = "6076629b56d9c3f0"
-text = '''Offensiv'''
-
-["history.defensive"]
-source = "892ad8f258bcb335"
-text = '''Defensiv'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2784,45 +2700,21 @@ text = '''Abwechslungsreich'''
 source = "434f9e629dbfd65a"
 text = '''Unruhig'''
 
-["history.monarchy"]
-source = "da9a0538c238f4fe"
-text = '''Monarchie'''
-
-["history.republic"]
-source = "78fc35976626ef3b"
-text = '''Republik'''
-
-["history.theocracy"]
-source = "9b57550fefbd7eb6"
-text = '''Theokratie'''
-
-["history.tribe"]
-source = "6c49567d58669cda"
-text = '''Stamm'''
-
-["history.regional_power"]
-source = "503fa383d71d826f"
-text = '''Regionalmacht'''
-
-["history.paramount"]
-source = "ff1cbcccd3d96ac0"
-text = '''Vormacht'''
-
 ["history.ambitions"]
-source = "f4578665c404f597"
-text = '''Ambitionen'''
+source = "492aaf62e6d759a9"
+text = '''Außergewöhnliche Völker'''
 
 ["history.ambition"]
 source = "f195b96c0634604c"
 text = '''{kind} — {name}: {status}'''
 
 ["history.fulfilled"]
-source = "6030ced8c6f5f7a3"
-text = '''erfüllt'''
+source = "8b645141dcc543ea"
+text = '''entstanden und bis 1337 erhalten'''
 
 ["history.unfulfilled"]
-source = "d2fcc2e287ae5745"
-text = '''nicht erfüllt'''
+source = "c543015c03639056"
+text = '''bis 1337 nicht erhalten'''
 
 ["history.tab_place"]
 source = "e9463dccf0541a97"
@@ -2840,13 +2732,9 @@ text = '''Beziehungen'''
 source = "d3e1c5f8a6e240fc"
 text = '''Ursprung'''
 
-["history.technology"]
-source = "11189d4799c00d63"
-text = '''Technologie {level}'''
-
 ["history.society_note"]
-source = "fedb0586b6b76e12"
-text = '''Wie diese Gemeinschaft 1337 organisiert war und welches Ereignis jedes Merkmal zuletzt geprägt hat.'''
+source = "0f75fb9aa278d855"
+text = '''Regierung, Rang und Gesellschaftswerte dieses Landes im Jahr 1337, wie das Spiel sie zeigt, und das Ereignis, das jeden Wert zuletzt geprägt hat.'''
 
 ["history.chronicle_note"]
 source = "17ea9dc671533b54"

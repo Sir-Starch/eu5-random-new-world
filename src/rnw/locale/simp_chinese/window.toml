@@ -2609,8 +2609,8 @@ source = "a8f79216631a7146"
 text = '''没有历史记录'''
 
 ["history.profile"]
-source = "6733eee01a50fdaa"
-text = '''1337年的组织'''
+source = "2a7607c61f61ac9a"
+text = '''1337年的社会'''
 
 ["history.chronicle"]
 source = "619aad1b467af62e"
@@ -2637,8 +2637,8 @@ source = "b849349447d50508"
 text = '''共同传承'''
 
 ["history.position"]
-source = "262564cc218aaf61"
-text = '''政体：{government} · 等级：{rank} · 科技：{level}'''
+source = "6e84a2549a8d07f3"
+text = '''政府：{government} · 国家等级：{rank}'''
 
 ["history.axis"]
 source = "12851adbf1ec80f5"
@@ -2651,90 +2651,6 @@ text = '''{kind}：{members}'''
 ["history.changes"]
 source = "184fcdd4812c8b05"
 text = '''{year}年 · 历史所有者发生变化的地点：{count}'''
-
-["history.centralization"]
-source = "88dfca338c6dd49b"
-text = '''中央集权'''
-
-["history.authority"]
-source = "b80e403d2645d45e"
-text = '''权威'''
-
-["history.livelihood"]
-source = "4a8dc26c1d721698"
-text = '''生计'''
-
-["history.exchange"]
-source = "d60a318dd8a0cdc8"
-text = '''交换'''
-
-["history.religious_authority"]
-source = "c5251a17fd402d90"
-text = '''宗教权威'''
-
-["history.military"]
-source = "d668385d05402a6f"
-text = '''军事取向'''
-
-["history.integration"]
-source = "9a42d40a3f319da5"
-text = '''整合'''
-
-["history.tradition"]
-source = "6cc5a78d010999ff"
-text = '''传统'''
-
-["history.council"]
-source = "15b42c09c8a6f64f"
-text = '''议事会'''
-
-["history.ruler"]
-source = "6be47329eb50565e"
-text = '''个人统治'''
-
-["history.sacred"]
-source = "8ae6336f2ed50266"
-text = '''神圣权威'''
-
-["history.customary"]
-source = "d0a2add9efd96b87"
-text = '''习惯权威'''
-
-["history.farming"]
-source = "a61abd5d17a01f86"
-text = '''农耕'''
-
-["history.mixed"]
-source = "993381e2aa224a41"
-text = '''混合生计'''
-
-["history.mobile"]
-source = "260237d153f61bdd"
-text = '''流动生计'''
-
-["history.inward"]
-source = "44b81cb202900597"
-text = '''本地交换'''
-
-["history.overland"]
-source = "6aa7910663a4bdc0"
-text = '''陆上交换'''
-
-["history.coastal"]
-source = "26ee55f2facebb41"
-text = '''沿海交换'''
-
-["history.balanced"]
-source = "5386ea5db81c8579"
-text = '''均衡'''
-
-["history.offensive"]
-source = "6076629b56d9c3f0"
-text = '''进攻'''
-
-["history.defensive"]
-source = "892ad8f258bcb335"
-text = '''防御'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2784,45 +2700,21 @@ text = '''多变'''
 source = "434f9e629dbfd65a"
 text = '''动荡'''
 
-["history.monarchy"]
-source = "da9a0538c238f4fe"
-text = '''君主制'''
-
-["history.republic"]
-source = "78fc35976626ef3b"
-text = '''共和制'''
-
-["history.theocracy"]
-source = "9b57550fefbd7eb6"
-text = '''神权制'''
-
-["history.tribe"]
-source = "6c49567d58669cda"
-text = '''部落'''
-
-["history.regional_power"]
-source = "503fa383d71d826f"
-text = '''地区强国'''
-
-["history.paramount"]
-source = "ff1cbcccd3d96ac0"
-text = '''霸主之国'''
-
 ["history.ambitions"]
-source = "f4578665c404f597"
-text = '''抱负'''
+source = "492aaf62e6d759a9"
+text = '''非凡民族'''
 
 ["history.ambition"]
 source = "f195b96c0634604c"
 text = '''{kind} — {name}：{status}'''
 
 ["history.fulfilled"]
-source = "6030ced8c6f5f7a3"
-text = '''已实现'''
+source = "8b645141dcc543ea"
+text = '''已形成并延续至1337年'''
 
 ["history.unfulfilled"]
-source = "d2fcc2e287ae5745"
-text = '''未实现'''
+source = "c543015c03639056"
+text = '''未延续至1337年'''
 
 ["history.tab_place"]
 source = "e9463dccf0541a97"
@@ -2840,13 +2732,9 @@ text = '''关系'''
 source = "d3e1c5f8a6e240fc"
 text = '''起源'''
 
-["history.technology"]
-source = "11189d4799c00d63"
-text = '''科技 {level}'''
-
 ["history.society_note"]
-source = "fedb0586b6b76e12"
-text = '''该社群在1337年的组织方式，以及最后塑造每项特征的事件。'''
+source = "0f75fb9aa278d855"
+text = '''此国在1337年的政府、国家等级与社会价值观，按游戏所示显示，并附上最后塑造每项价值的事件。'''
 
 ["history.chronicle_note"]
 source = "17ea9dc671533b54"
