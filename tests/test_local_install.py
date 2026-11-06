@@ -18,7 +18,7 @@ import pytest
 from rnw import colonial_names, content_report, epoch, splnet
 from rnw.app.discovery import find_games
 from rnw.app.worldcode import decode, encode, rolled
-from rnw.content import FAMILIES
+from rnw.content import CONFEDERATION_COUNCIL, FAMILIES, GREAT_LAW, NATION_FOUNDING
 from rnw.contract import CONTRACT_FILES, fingerprint
 from rnw.eu5_archetypes import american_includes
 from rnw.eu5_biomes import PRECIOUS, template_attributes
@@ -587,7 +587,15 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     assert set(places) <= {spec.modifier for spec in SPECS}
     stories = cast("dict[str, dict[str, object]]", report["text_stats"])["stories"]
     offered = cast("dict[str, int]", stories["opportunities"])
-    assert all(offered[family] >= 1 for family in FAMILIES)  # the reference world offers each
+    # The reference world offers each family, but the founding of a nation, which starts in play,
+    # and the two that a projected confederation carries, which this world has none of: those
+    # record their reason.
+    confederate = {CONFEDERATION_COUNCIL, GREAT_LAW}
+    assert all(
+        offered[family] >= 1 for family in FAMILIES if family not in {NATION_FOUNDING, *confederate}
+    )
+    absences = cast("dict[str, str]", stories["absences"])
+    assert all(family in absences for family in confederate if not offered[family])
     if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
         pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
     output = cast("dict[str, object]", golden["output"])
