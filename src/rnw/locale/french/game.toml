@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''Une langue et une coutume communes soudent la communauté et rehaussent son prestige.'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''Toute une région est partagée entre de nombreux souverains, chacun ne tenant que quelques-unes de ses villes. Une puissance qui en tient la plus grande partie peut l'unir en un seul royaume : {name}.'''
+source = "2a5c101805e7153e"
+text = '''Toute une région est partagée entre de nombreux souverains, chacun ne tenant que quelques-unes de ses villes. Une puissance qui en tient une grande partie et sa plus grande ville peut l'unir en un seul royaume, {name}, et revendiquer le reste de la région comme sien.'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''Une nation est née'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''Une jeune nation de colons grandit vite et a peu de patience envers les rebelles.'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''Jamais aucun souverain n'a tenu ce continent d'un rivage à l'autre. Un empire qui domine le monde, en tient la moitié et y a établi sa cour peut se proclamer l'empire de tous ses peuples : {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''Une couronne sur le continent'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''Des envoyés de tous les coins du continent se rendent à la nouvelle cour et lui font honneur.'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''Chaque [location|e] du territoire tenu par un autre pays devient l'une de nos [core|e]s, et nous pouvons faire la guerre à son détenteur pour le reprendre.'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''Américain'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

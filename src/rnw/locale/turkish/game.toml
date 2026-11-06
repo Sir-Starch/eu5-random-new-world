@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''Tek dil ve tek töre topluluğu bir arada tutuyor ve itibarını yükseltiyor.'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''Koca bir bölge, her biri yalnızca birkaç şehrine sahip pek çok hükümdar arasında bölünmüş. Bölgenin çoğuna sahip olan bir güç onu tek bir devlette birleştirebilir: {name}.'''
+source = "2a5c101805e7153e"
+text = '''Koca bir bölge, her biri yalnızca birkaç şehrine sahip pek çok hükümdar arasında bölünmüş. Bölgenin büyük bir kısmına ve en büyük şehrine sahip olan bir güç onu tek bir devlette birleştirebilir: {name}. Bölgenin geri kalanı da artık onun hakkı sayılır.'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''Bir Millet Doğdu'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''Genç bir yerleşimci milleti hızla büyüyor ve isyancılara karşı sabırsız.'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''Hiçbir hükümdar bu kıtaya kıyıdan kıyıya hiç sahip olmadı. Dünyaya önderlik eden, kıtanın yarısına sahip olan ve sarayı onun topraklarında bulunan bir imparatorluk, kendini tüm halklarının imparatorluğu ilan edebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''Kıtanın Tacı'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''Kıtanın dört bir yanından elçiler yeni saraya gelir ve ona saygılarını sunar.'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''Bu toprakların başka bir ülkenin elindeki her [location|e], [core|e] olarak bizim olur; sahibiyle onun için savaşabiliriz.'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''Amerikan'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

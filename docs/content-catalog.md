@@ -1,7 +1,7 @@
 # Dynamic content catalogue
 
 What RNW adds to a campaign: **8 story families (32 visible events and 72 choices),
-6 families of formable countries, colonial naming traditions and 5 kinds of
+7 families of formable countries, colonial naming traditions and 5 kinds of
 exceptional resource places**. This catalogue describes implemented content, with
 spoilers. The [complete reference](content-reference.md) lists every event title,
 choice, effect, delay, AI weight, modifier and identifier. [V-EXEC C409]
@@ -91,40 +91,63 @@ payloads and every duration. [V-EXEC C409]
 
 ## Formable countries
 
-These are generated political goals with names based on their seat, their own
-tags, colours and arms. They are offered through EU5's normal formable-country
-mechanism. The six families are listed below; they are not six fixed historical
-countries. [V-EXEC C212, C218, C409]
+These are generated political goals with names based on their seat, region or
+continent, their own tags, colours and arms. They are offered through EU5's normal
+formable-country mechanism. The seven families below form a ladder: a country can
+only form a formable of a higher level than its own rank, so a duchy-level league
+can grow into a kingdom-level union, a kingdom into the realm of its region, and an
+empire into the empire of the continent. They are not seven fixed historical
+countries. [V-EXEC C212, C218, C409; 1.2.0 development, history plan §22]
 
 | Family | Territory chosen during generation | Ownership required | Level / rank | Founding modifier |
 |---|---|---|---|---|
-| **River-basin union** | 12–30 connected river locations; at least 3 centres and 2 states with capitals inside; up to 2 unions | 60% | 3 / Kingdom | **Markets of One River**, 10 years |
+| **River-basin union** | 12–60 connected river locations; at least 3 centres and 2 states with capitals inside; up to 2 unions | 60% | 3 / Kingdom | **Markets of One River**, 10 years |
 | **Highland confederation** | 10–24 connected hill, mountain or plateau locations; at least 34% mountains/plateau, 3 centres and 2 states with capitals inside; up to 2 | 60% | 2 / Duchy | **Compact of the Valleys**, 20 years |
 | **Maritime league** | 8–18 coastal locations; connections may cross between ports sharing a sea zone; at least 3 centres and 2 states with capitals inside; up to 2 | 60%, plus **at least 3 ports** | 2 / Duchy | **Charter of the League**, 20 years |
-| **Cultural commonwealth** | 12–30 connected locations of one culture group, using each location's main culture; at least 3 centres and 2 states with capitals inside; up to 2 | 50% | 3 / Kingdom | **One People**, 20 years |
-| **Regional realm** | 24–48 connected locations, without a river/coast/culture restriction; at least 4 centres and 3 states with capitals inside; up to 1 | 50% | 4 / Empire | **Administration of the Realm**, 15 years |
+| **Cultural commonwealth** | 12–60 connected locations of one culture group, using each location's main culture; at least 3 centres and 2 states with capitals inside; up to 2 | 50% | 3 / Kingdom | **One People**, 20 years |
+| **Realm of a region** | A whole generated region; one for each region holding the capitals of at least 3 states and 4 centres, and for each region holding the seat of a lower formable | 40%, plus the region's **throne** | 4 / Empire | **Administration of the Realm**, 15 years |
 | **Postcolonial federation** | 20–40 connected coastal locations, including sea-zone links; no minimum starting states or centres; up to 2 | 35% | 3 / Kingdom | **A Nation Founded**, 10 years |
+| **Empire of the continent** (fantasy) | The whole continent of the realms, once it holds the realms of at least 2 regions; one per world | 50%, plus **hegemony** and **empire rank** | 5 / Empire | **A Crown Over the Continent**, 20 years |
 
-For the first five families, eligibility is assigned to **up to 8 starting tags**
-whose capitals are inside the target, ranked by their holdings there. Conquering
-the territory as an unrelated tag does not add that tag to the authored list.
-The cultural commonwealth chooses the narrowest available vanilla culture group
-with enough main-culture locations; a scattered minority does not establish a
-territory. The first five families start growing their territory from a qualifying
-centre; the federation can start from any qualifying coastal location.
-[V-EXEC C409]
-
-The federation uses a runtime cultural condition instead of starting tags:
+**Who may form them.** Any country whose capital lies in the territory and who
+holds enough of it may form a union, confederation, league or realm: the conqueror
+of a river basin can form its union. The game's own `capital_required` and
+`potential_requires_own` rules keep the list to holders of the territory. The
+cultural commonwealth is offered to its claimants, up to 8 starting states with
+capitals inside, and to any country of the people's culture group
+(`culture ?= { has_culture_group = culture_group:<basis> }`). The cultural
+commonwealth chooses the narrowest available vanilla culture group with enough
+main-culture locations; a scattered minority does not establish a territory. The
+federation uses a runtime cultural condition instead of starting tags:
 `culture ?= { is_culture_native_american = no }`. Its name describes its intended
 role, but the authored condition does **not** require previous colonial status,
-independence or completion of the Colony story. Every family writes
-`capital_required = yes`, the target locations, the ownership fraction and
-`rule = plausible`; the game also applies its own formation rules. The founding
-effect raises country rank only if it is below the family's rank. Territory size
-and starting-state counts above are generation rules, not additional conquests
-the player must perform. [V-EXEC C409]
+independence or completion of the Colony story. The empire is offered to a country
+whose capital is on its continent. [V-EXEC]
 
-“Centre” usually means a city/town or a place at or above the 75th population
+**The throne.** A realm's throne is the most populous centre that a state holds
+in its region at the start; the founder must own it, as vanilla's `AZT_f` requires
+Tenochtitlan. The realm is named after its region's generated name, the empire
+after the continent's own text in the game's language ("America"), as vanilla's
+`EUR_f` is "Europa". [V-EXEC]
+
+**Cores.** Founding any family but the empire gives the founder a core on every
+location of its territory that another country holds, under one tooltip line. The
+game's own `cb_conquer_province` ("Claims on Province", `casus_belli/conquest.txt`)
+is created against a country holding a location that is the attacker's core, so
+the rest of the territory becomes a goal of war. The game's concept text says that
+cores gained through effects disappear after 100 years
+(`SCRIPTED_CORE_DURATION_YEARS`) on land without the right culture. [V-LOCAL EU5
+1.4.7 / 26377361; the engine behaviour after a formation is not yet observed]
+
+Every family writes `capital_required = yes`, the territory (`locations`, or
+`regions` for a realm and `continents` for the empire), the ownership fraction and
+its game rule. The empire is `rule = fantasy`: it appears only when the player
+allows fantasy formables in the game rules; the others are `rule = plausible`,
+which the game allows by default. The founding effect raises country rank only if
+it is below the family's rank. Territory size and starting-state counts above are
+generation rules, not additional conquests the player must perform. [V-EXEC]
+
+"Centre" usually means a city/town or a place at or above the 75th population
 percentile among state-owned places. The highland and maritime families use the
 50th percentile to allow opportunities in less urban terrain. Targets of the
 same family do not overlap; different families can overlap. Families need not

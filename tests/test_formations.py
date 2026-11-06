@@ -10,11 +10,16 @@ import pytest
 from rnw import wording
 from rnw.content import (
     CULTURAL_UNION,
+    EMPIRE_REALMS,
     FORMABLE_FAMILIES,
     HIGHLAND_CONFEDERATION,
     HIGHLAND_RELIEF,
+    LOWER_FAMILIES,
     MARITIME_LEAGUE,
+    NEW_WORLD_EMPIRE,
     POSTCOLONIAL_FEDERATION,
+    REALM_CENTRES,
+    REALM_STATES,
     REGIONAL_REALM,
     RIVER_UNION,
     RULES,
@@ -36,8 +41,8 @@ from rnw.eu5_formation import (
     key_of,
     texts,
 )
-from rnw.formations import BY_FAMILY, SPECS
-from rnw.game_texts import localize
+from rnw.formations import BY_FAMILY, CORES_TOOLTIP, EMPIRE_ADJECTIVE, SPECS, TOP_RANK_LEVEL
+from rnw.game_texts import Text, localize
 from rnw.pdx import parse
 from rnw.wording import Phrase, render
 
@@ -59,8 +64,10 @@ def _chain(  # noqa: PLR0913 - a synthetic world is these few knobs
     river: int = 0,
     breaks: tuple[int, ...] = (),
     groups: dict[str, frozenset[str]] | None = None,
+    region: Callable[[int], str] = lambda _: "",
 ) -> Facts:
-    """Places along a line, split among states, with the knobs a family reads."""
+    """Places along a line, split among states, with the knobs a family reads; ``region`` puts
+    each place in a generated region of the continent ``america``."""
     per_state = count // states
     places: dict[str, Place] = {}
     for index in range(count):
@@ -75,6 +82,8 @@ def _chain(  # noqa: PLR0913 - a synthetic world is these few knobs
             relief(index),
             culture(index),
             frozenset(seas(index)),
+            region(index),
+            "america" if region(index) else "",
         )
     table = {f"S{n}": State(f"S{n}", f"p{n * per_state:03d}", "faith") for n in range(states)}
     links = frozenset((f"p{i:03d}", f"p{i + 1:03d}") for i in range(count - 1) if i not in breaks)
@@ -107,8 +116,10 @@ def test_every_formable_family_has_exactly_one_spec_and_one_rule() -> None:
 
 
 def test_the_specs_do_not_share_names_pictures_or_modifiers() -> None:
-    """Each family is its own tag stem (which names it in every language), emblem and modifier."""
-    assert {spec.stem for spec in SPECS} == set(wording.FORMATIONS)
+    """Each family is its own tag stem (which names it in every language), emblem and modifier;
+    the empire takes the continent's own name, so its stem names only its key."""
+    named = {spec.stem for spec in SPECS if spec.family != NEW_WORLD_EMPIRE}
+    assert named == set(wording.FORMATIONS)
     for field in ("stem", "emblem"):
         values = [getattr(spec, field) for spec in SPECS]
         assert len(values) == len(set(values)), field
@@ -120,13 +131,17 @@ def test_the_specs_do_not_share_names_pictures_or_modifiers() -> None:
 
 
 def test_levels_run_up_with_the_families_so_no_chain_can_circle() -> None:
-    """A level is a rank level, and the realm stands above the kingdoms above the duchies."""
+    """A level is a rank level, and the realm stands above the kingdoms above the duchies; the
+    empire of the New World stands above every rank, as vanilla's EUR_f, and keeps the empire's."""
     levels = {spec.family: spec.level for spec in SPECS}
-    assert all(1 <= level <= 4 for level in levels.values())
+    assert all(1 <= level <= TOP_RANK_LEVEL + 1 for level in levels.values())
     assert levels[HIGHLAND_CONFEDERATION] == levels[MARITIME_LEAGUE] < levels[RIVER_UNION]
     assert levels[RIVER_UNION] == levels[CULTURAL_UNION] < levels[REGIONAL_REALM]
+    assert levels[REGIONAL_REALM] < levels[NEW_WORLD_EMPIRE] == TOP_RANK_LEVEL + 1
     ranks = {"rank_county": 1, "rank_duchy": 2, "rank_kingdom": 3, "rank_empire": 4}
-    assert all(ranks[spec.rank] == spec.level for spec in SPECS)
+    assert all(ranks[spec.rank] == min(spec.level, TOP_RANK_LEVEL) for spec in SPECS)
+    assert {spec.rule for spec in SPECS} == {"plausible", "fantasy"}
+    assert [spec.family for spec in SPECS if spec.rule == "fantasy"] == [NEW_WORLD_EMPIRE]
 
 
 def test_a_range_of_hills_with_high_ground_is_a_confederation() -> None:
@@ -229,33 +244,87 @@ def test_a_scattering_of_another_people_gives_no_eligibility() -> None:
         assert all(facts.places[key].culture == "a" for key in formation.places)
 
 
-def test_a_realm_needs_a_large_region_with_several_centres_and_states() -> None:
-    """Big, connected, under three states or more; too few places or too few states give none."""
-    facts = _chain(count=60, states=5)
+def _halves(index: int) -> str:
+    return "east_region" if index < 60 else "west_region"
+
+
+def test_a_realm_is_a_whole_region_under_several_states_with_its_greatest_centre_as_throne() -> (
+    None
+):
+    """Every place of the region; the throne is its most populous centre; claimants are seated."""
+    facts = _chain(count=120, states=10, region=_halves)
     found, _ = formations(facts, SEED, REGIONAL_REALM)
-    assert len(found) == 1
-    realm = found[0]
-    assert RULES[REGIONAL_REALM].places <= len(realm.places) <= RULES[REGIONAL_REALM].territory
-    assert len(realm.states) >= RULES[REGIONAL_REALM].states
-    assert _connected(facts, realm)
-    small, reason = formations(_chain(count=20, states=4), SEED, REGIONAL_REALM)
-    assert not small
-    assert "region" in reason
-    two, why = formations(_chain(count=60, states=2), SEED, REGIONAL_REALM)
+    assert [realm.region for realm in found] == ["east_region", "west_region"]
+    for realm in found:
+        members = {key for key, place in facts.places.items() if place.region == realm.region}
+        assert set(realm.places) == members
+        assert realm.throne == realm.seat
+        assert realm.throne in realm.centres
+        throne = facts.places[realm.throne]
+        assert throne.owner in facts.states
+        assert throne.population == max(facts.places[key].population for key in realm.centres)
+        assert len(realm.states) >= REALM_STATES
+        assert all(facts.states[tag].capital in members for tag in realm.states)
+    assert len(found[0].centres) >= REALM_CENTRES
+
+
+def test_a_region_without_several_seated_states_or_regions_unknown_give_no_realm() -> None:
+    """Two states make no realm on their own; a world without regions has none to offer."""
+    two, why = formations(_chain(count=60, states=2, region=_halves), SEED, REGIONAL_REALM)
     assert not two
-    assert "3 states" in why
+    assert f"{REALM_STATES} states" in why
+    bare, reason = formations(_chain(count=60, states=5), SEED, REGIONAL_REALM)
+    assert not bare
+    assert "region" in reason
+
+
+def test_every_lower_goal_has_a_realm_above_it() -> None:
+    """N-C1: the seat of every union, confederation, league and commonwealth lies in a realm,
+    even where its region alone would hold too few states (history plan §22.3)."""
+    facts = _chain(
+        count=120,
+        states=12,
+        river=1,
+        relief=_hills,
+        seas=lambda _: ("sea",),
+        region=lambda index: f"r{index // 20}",
+    )
+    plan = plan_content(facts, SEED)
+    above = {realm.region for realm in plan.formations if realm.family == REGIONAL_REALM}
+    lower = [formation for formation in plan.formations if formation.family in LOWER_FAMILIES]
+    assert lower
+    for formation in lower:
+        assert facts.places[formation.seat].region in above, formation.ident
+
+
+def test_the_empire_stands_over_the_realms_of_one_continent() -> None:
+    """The whole continent of the realms, once it holds the realms of enough regions."""
+    facts = _chain(count=120, states=10, region=_halves)
+    found, _ = formations(facts, SEED, NEW_WORLD_EMPIRE)
+    assert len(found) == 1
+    empire = found[0]
+    assert empire.continent == "america"
+    assert set(empire.places) == set(facts.places)
+    assert empire.states == ()
+    one, why = formations(
+        _chain(count=60, states=5, region=lambda _: "only_region"), SEED, NEW_WORLD_EMPIRE
+    )
+    assert not one
+    assert f"{EMPIRE_REALMS} regions" in why
 
 
 def test_the_territories_of_one_family_do_not_overlap_but_other_families_may() -> None:
     """Within a family each place is in one territory; across families the land is shared."""
-    facts = _chain(count=120, states=12, river=1, relief=_hills, seas=lambda _: ("sea",))
+    facts = _chain(
+        count=120, states=12, river=1, relief=_hills, seas=lambda _: ("sea",), region=_halves
+    )
     plan = plan_content(facts, SEED)
     by_family: dict[str, list[set[str]]] = {}
     for formation in plan.formations:
         by_family.setdefault(formation.family, []).append(set(formation.places))
     assert set(by_family) == set(FORMABLE_FAMILIES) - {CULTURAL_UNION}
     for family, territories in by_family.items():
-        assert len(territories) <= RULES[family].limit
+        assert family == REGIONAL_REALM or len(territories) <= RULES[family].limit
         for number, first in enumerate(territories):
             for second in territories[number + 1 :]:
                 assert not first & second
@@ -325,7 +394,8 @@ def _formation(family: str, index: int = 0) -> Formation:
 
 
 def test_every_family_writes_a_formable_of_its_own_level_rank_and_modifier() -> None:
-    """The entry carries the family's level, fraction, allow, rank change and founding modifier."""
+    """The entry carries the family's level, fraction, rule, allow, rank change, founding modifier
+    and, but for the empire, the cores on the rest of its territory (N-C3)."""
     for spec in SPECS:
         formation = _formation(spec.family)
         identity = Identity(
@@ -343,25 +413,86 @@ def test_every_family_writes_a_formable_of_its_own_level_rank_and_modifier() -> 
         assert first is not None
         assert first.value == str(spec.level)
         assert f"required_locations_fraction = {spec.fraction}" in text
-        assert f"country_rank_level < {spec.level}" in text
+        assert f"rule = {spec.rule}" in text
+        assert f"country_rank_level < {spec.rank_level}" in text
         assert f"country_rank:{spec.rank}" in text
         assert f"modifier = {spec.modifier.name}" in text
         assert f"years = {spec.years}" in text
         for line in spec.allow:
             assert line in text
+        effect = entry.block("form_effect")
+        assert effect is not None
+        cores = effect.block("hidden_effect")
+        assert (cores is not None) == spec.cores
+        if cores is not None:
+            assert f"custom_tooltip = {CORES_TOOLTIP}" in text
+            for key in formation.places:
+                scope = cores.block(f"location:{key}", "if")
+                assert scope is not None
+                assert "add_core = root" in text
 
 
-def test_the_league_asks_for_ports_and_nobody_else_asks_for_anything_more() -> None:
-    """Only the league names a capability in its allow block; the others keep it empty."""
+def test_the_league_asks_for_ports_the_empire_for_hegemony_and_a_realm_for_its_throne() -> None:
+    """Only the league and the empire name a capability; a realm asks for its own throne."""
     asks = {spec.family: spec.allow for spec in SPECS}
     assert asks[MARITIME_LEAGUE] == ("num_of_ports >= 3",)
-    assert all(not allow for family, allow in asks.items() if family != MARITIME_LEAGUE)
+    assert asks[NEW_WORLD_EMPIRE] == ("is_hegemon = yes", "country_rank = country_rank:rank_empire")
+    others = set(asks) - {MARITIME_LEAGUE, NEW_WORLD_EMPIRE}
+    assert all(not asks[family] for family in others)
+    realm = Formation(
+        REGIONAL_REALM, 0, ("a", "b"), ("a",), ("ABC",), "a", region="east_region", throne="a"
+    )
+    text = block(realm, _identity(REGIONAL_REALM))
+    entry = parse(text).block(key_of(realm))
+    assert entry is not None
+    allow = entry.block("allow")
+    assert allow is not None
+    owns = allow.first("owns")
+    assert owns is not None
+    assert owns.value == "location:a"
+    regions = entry.block("regions")
+    assert regions is not None
+    assert [word.value for word in regions.words()] == ["east_region"]
+    assert entry.block("locations") is None
+    assert "region:east_region = {" in text
+    assert "every_location_in_region" in text
+
+
+def _identity(family: str) -> Identity:
+    return Identity(
+        "XYZ",
+        Phrase(wording.FORMATION + BY_FAMILY[family].stem, "Alto"),
+        wording.adjective("Alto"),
+        (1, 2, 3),
+        ("red", "blue"),
+    )
+
+
+def test_who_may_form_it_is_decided_in_play() -> None:
+    """N-C2: a holder of the land may form it; a commonwealth also opens to its people's culture
+    group and the empire to a court on its continent; no family is closed to a list of tags."""
+    river = Formation(RIVER_UNION, 0, ("a", "b"), ("a",), ("ABC", "DEF"), "a")
+    entry = parse(block(river, _identity(RIVER_UNION))).block(key_of(river))
+    assert entry is not None
+    potential = entry.block("potential")
+    assert potential is not None
+    assert not potential.entries
+    people = Formation(CULTURAL_UNION, 0, ("a", "b"), ("a",), ("ABC",), "a", basis="tupi_group")
+    text = block(people, _identity(CULTURAL_UNION))
+    assert "tag = ABC" in text
+    assert "culture ?= { has_culture_group = culture_group:tupi_group }" in text
+    empire = Formation(NEW_WORLD_EMPIRE, 0, ("a", "b"), (), (), "a", continent="america")
+    text = block(empire, _identity(NEW_WORLD_EMPIRE))
+    assert "capital.continent = continent:america" in text
+    assert "continents = {\n\t\tamerica\n\t}" in text
+    assert "rule = fantasy" in text
+    assert "hidden_effect" not in text
 
 
 def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
     """One flag, arms, colour and four keys per formation; the arms use the family's emblem."""
     made = [_formation(spec.family, 0) for spec in SPECS]
-    seats = ("Kaira", "Tolan", "Ingari", "Mekapisk", "Huande", "Saumqeir")
+    seats = ("Kaira", "Tolan", "Ingari", "Mekapisk", "Huande", "Saumqeir", "Toqa")
     who = [
         Identity(
             f"X{n}Z",
@@ -371,7 +502,13 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
             ("green", "white"),
         )
         for n, spec in enumerate(SPECS)
+        if spec.family != NEW_WORLD_EMPIRE
     ]
+    who.append(
+        Identity(
+            "X6Z", wording.reference("america"), Text(EMPIRE_ADJECTIVE), (6, 6, 6), ("red", "blue")
+        )
+    )
     written = files(made, who)
     arms = written["main_menu/common/coat_of_arms/coat_of_arms/rnw_formations.txt"]
     for spec in SPECS:
@@ -382,6 +519,9 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
         written_keys = localize(keys, language)
         for formation, identity in zip(made, who, strict=True):
             assert written_keys[identity.tag] == render(identity.name, language)
+            if isinstance(identity.adjective, Text):
+                assert written_keys[f"{identity.tag}_ADJ"]
+                continue
             assert written_keys[f"{identity.tag}_ADJ"] == render(identity.adjective, language)
             assert written_keys[key_of(formation)] == f"${identity.tag}$"
             description = written_keys[f"{key_of(formation)}_desc"]
@@ -389,6 +529,9 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
             assert render(identity.name, language) in description
     assert localize(keys, "russian")[who[0].tag] == "Кайрский союз"
     assert localize(keys, "german")[who[0].tag] == "Kairanische Union"
+    assert localize(keys, "russian")["X6Z"] == "$america$"
+    assert localize(keys, "russian")["X6Z_ADJ"] == "Американск"
+    assert CORES_TOOLTIP in keys
 
 
 def test_a_colonial_shore_needs_a_coast_not_a_state() -> None:

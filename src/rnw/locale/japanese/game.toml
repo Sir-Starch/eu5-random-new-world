@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''一つの言葉と一つの慣習が共同体を結束させ、その威信を高めている。'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''一つの地方全体が多くの支配者に分割され、それぞれがわずかな町を領しているにすぎない。その大半を押さえた勢力は、地方を一つの国に統一することができる。すなわち{name}である。'''
+source = "2a5c101805e7153e"
+text = '''一つの地方全体が多くの支配者に分割され、それぞれがわずかな町を領しているにすぎない。その多くと最大の都市を押さえた勢力は、地方を一つの国に統一し、残りの地をも自らのものと主張できる。すなわち{name}である。'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''国民の誕生'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''入植者の若い国は急速に成長しており、反乱者には容赦がない。'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''この大陸を岸から岸まで治めた支配者は、いまだかつていない。世界を率い、大陸の半分を領し、その地に宮廷を置く帝国は、そのすべての民の帝国を名乗ることができる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''大陸を戴く冠'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''大陸の隅々から使節が新たな宮廷を訪れ、その威光を称える。'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''他国が保有する領域内のすべての[location|e]が我々の[core|e]となり、その保有国と戦ってそれを奪うことができる。'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''アメリカ'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

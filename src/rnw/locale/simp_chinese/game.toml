@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''同一种语言和同一种习俗凝聚着共同体，并提升了它的威望。'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''整个地区被众多统治者瓜分，每人只占有其中寥寥几座城镇。掌握该地区大部分地方的势力，可以将其统一为一国：{name}。'''
+source = "2a5c101805e7153e"
+text = '''整个地区被众多统治者瓜分，每人只占有其中寥寥几座城镇。掌握该地区大片土地及其最大城市的势力，可以将其统一为一国，并宣称该地区其余土地归己所有：{name}。'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''一个民族的诞生'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''年轻的移民国家迅速成长，对叛乱者毫不容情。'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''从未有哪位统治者将这片大陆从此岸一直统治到彼岸。一个领导世界、占有半个大陆并将宫廷设于其土地上的帝国，可以宣布自己为大陆万民之帝国：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''君临大陆之冠'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''来自大陆各个角落的使节齐聚新宫廷，为其增光添彩。'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''该领土中由他国占有的所有[location|e]都成为我们的[core|e]，我们可以为此向其占有者开战。'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''美洲'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

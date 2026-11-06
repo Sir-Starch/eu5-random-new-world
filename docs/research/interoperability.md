@@ -900,6 +900,30 @@ the historical plan, retaining the Old World's directed relations. This activate
 the already documented text interfaces, with no additional format. The H7 engine
 observation remains outstanding; F1–F3 are unchanged.
 
+## R-008 — Formable goals and their consequences (D29, N6–N9)
+
+[V-LOCAL, 2026-11-06, EU5 1.4.7 / Steam build 26377361]
+The [history plan's §22](../history-plan.md#22-goals-and-consequences-in-play-2026-11-06)
+needs generated formables to set reachable goals: rights decided in play, regional
+and continental territories, and a route from a goal to a war. The interfaces are
+the installed game's declarative mod text: `common/formable_countries` (its
+`readme.txt` lists `regions`, `continents`, `potential`, `allow`, `rule` and
+`form_effect`), the location effect `add_core` inside `hidden_effect` with a
+`custom_tooltip`, and the `region:<key>` scope with `every_location_in_region`.
+Vanilla precedents: `EUR_f` (continent, `is_hegemon`), `AZT_f` (a required
+location), `GER_f` (culture group in `potential`), `qa_debug.txt` and
+`rise_of_timur.txt` (cores over a region), and `cb_conquer_province`, which reads
+`is_core_of = root`. The game rule `ahistorical_formable_countries` defaults to
+plausible and allows fantasy on request.
+
+N6 writes original formable keys, generated tags, region and continent keys from
+the world's own `definitions.txt`, and original translated texts; the empire's name
+is a reference to the game's own continent key. No executable, save, binary or
+access control is studied, no vanilla prose or asset is copied, and the
+installation is not patched. Parsed-output tests check the written blocks. Engine
+loading and the resulting casus belli are not yet observed; the R6 sitting covers
+them. Later phases (N7–N9) extend this entry when they write new interfaces.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

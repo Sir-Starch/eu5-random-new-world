@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''Jeden język i jeden obyczaj spajają wspólnotę i podnoszą jej prestiż.'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''Cały region jest podzielony między wielu władców, z których każdy trzyma tylko kilka jego miast. Potęga, która trzyma większą jego część, może zjednoczyć go w jedno królestwo: {name}.'''
+source = "2a5c101805e7153e"
+text = '''Cały region jest podzielony między wielu władców, z których każdy trzyma tylko kilka jego miast. Potęga, która trzyma znaczną jego część i jego największe miasto, może zjednoczyć go w jedno królestwo, {name}, i uznać resztę regionu za swoją.'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''Narodziny narodu'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''Młody naród osadników szybko rośnie i nie ma cierpliwości do buntowników.'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''Żaden władca nie panował jeszcze nad tym kontynentem od brzegu do brzegu. Cesarstwo, które przewodzi światu, trzyma połowę kontynentu i ma na jego ziemi swój dwór, może ogłosić się cesarstwem wszystkich jego ludów: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''Korona nad kontynentem'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''Posłowie ze wszystkich zakątków kontynentu przybywają na nowy dwór i oddają mu cześć.'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''Każda [location|e] terytorium należąca do innego kraju staje się naszą [core|e], a o każdą z nich można walczyć z jej posiadaczem.'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''Amerykańs'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

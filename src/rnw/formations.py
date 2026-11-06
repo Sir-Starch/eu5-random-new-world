@@ -13,7 +13,12 @@ it.
 
 The levels order the families (a country can only form a formable of a higher level than its
 own), so no chain of formations can run in a circle: the county-level states form the duchies,
-those the kingdoms, and a kingdom the one empire.
+those the kingdoms, a kingdom the realm of its region, and an empire the one empire of the New
+World (level 5, above every rank, as vanilla's ``EUR_f``). Each level is a goal of its own:
+whoever holds enough of a territory may form it, not only the states of 1337 (history plan §22,
+N6); a cultural commonwealth asks for the people's culture group from anyone else; and a
+formation gives cores on the rest of its territory, so that vanilla's ``cb_conquer_province``
+opens against every remaining holder.
 """
 
 from __future__ import annotations
@@ -25,16 +30,35 @@ from rnw.content import (
     CULTURAL_UNION,
     HIGHLAND_CONFEDERATION,
     MARITIME_LEAGUE,
+    NEW_WORLD_EMPIRE,
     POSTCOLONIAL_FEDERATION,
     REGIONAL_REALM,
     RIVER_UNION,
 )
 from rnw.storymodel import COUNTRY, STATIC, Modifier, Source
 
+# The highest level a country rank has; a formable above it is formed by an empire and keeps it.
+TOP_RANK_LEVEL: Final[int] = 4
+# The key of the formation's tooltip for the cores it gives (``hidden_effect`` does the work).
+CORES_TOOLTIP: Final[str] = "rnw_formation_cores_tt"
+# The adjective of the empire of the New World, whose name is the continent's own text.
+EMPIRE_ADJECTIVE: Final[str] = "rnw_formation_new_world_empire_adj"
+EXTRA_TEXTS: Final[dict[str, str]] = {
+    CORES_TOOLTIP: (
+        "Every [location|e] of the territory that another country holds becomes our [core|e], "
+        "and its holder can be fought for it."
+    ),
+    EMPIRE_ADJECTIVE: "American",
+}
+
 
 @dataclass(frozen=True, slots=True)
 class Spec:
-    """One family of formables: its name, level, founding modifier, arms and words."""
+    """One family of formables: its name, level, founding modifier, arms and words.
+
+    ``rule`` is the game rule that shows it (``plausible`` or ``fantasy``); ``cores`` says whether
+    founding it gives cores over its territory.
+    """
 
     family: str
     stem: str
@@ -47,6 +71,13 @@ class Spec:
     years: int
     allow: tuple[str, ...] = ()
     potential: tuple[str, ...] = ()
+    rule: str = "plausible"
+    cores: bool = True
+
+    @property
+    def rank_level(self) -> int:
+        """The level of the rank the formation raises its founder to."""
+        return min(self.level, TOP_RANK_LEVEL)
 
 
 SPECS: Final[tuple[Spec, ...]] = (
@@ -139,11 +170,12 @@ SPECS: Final[tuple[Spec, ...]] = (
         stem="realm",
         level=4,
         rank="rank_empire",
-        fraction="0.5",
+        fraction="0.4",
         emblem="ce_star_08.dds",
         description=(
             "A whole region lies divided among many rulers, each holding a few of its towns. "
-            "A power that holds most of it may unite it into one realm: the {name}."
+            "A power that holds much of it and its greatest city may unite it into one realm, "
+            "the {name}, and claim the rest of the region as its own."
         ),
         modifier=Modifier(
             "rnw_realm_administration",
@@ -175,6 +207,30 @@ SPECS: Final[tuple[Spec, ...]] = (
         ),
         years=10,
         potential=("culture ?= { is_culture_native_american = no }",),
+    ),
+    Spec(
+        family=NEW_WORLD_EMPIRE,
+        stem="empire",
+        level=5,
+        rank="rank_empire",
+        fraction="0.5",
+        emblem="ce_arapaho_sun_shield.dds",
+        description=(
+            "No ruler has ever held this continent from shore to shore. An empire that leads the "
+            "world and holds half of it, with its court on its soil, may proclaim itself "
+            "the empire of all its peoples: {name}."
+        ),
+        modifier=Modifier(
+            "rnw_empire_coronation",
+            COUNTRY,
+            Source(STATIC, "fc_imperial_coronation"),
+            "A Crown Over the Continent",
+            "Envoys from every corner of the continent attend the new court and bring it honour.",
+        ),
+        years=20,
+        allow=("is_hegemon = yes", "country_rank = country_rank:rank_empire"),
+        rule="fantasy",
+        cores=False,
     ),
 )
 

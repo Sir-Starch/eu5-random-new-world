@@ -253,7 +253,13 @@ def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path)
     assert "tag = XYZ" in formable
     assert "adjective = XYZ_ADJ" in formable
     assert "color = map_XYZ" in formable
-    assert "tag = ABC" in formable
+    potential = block.block("potential")
+    assert potential is not None
+    assert not potential.entries, "whoever holds the river may form it, not only ABC"
+    effect = block.block("form_effect")
+    assert effect is not None
+    assert "custom_tooltip = rnw_formation_cores_tt" in formable
+    assert "location:loc_c = {" in formable
     locations = block.block("locations")
     assert locations is not None
     assert [w.value for w in locations.words()] == ["loc_a", "loc_c"]

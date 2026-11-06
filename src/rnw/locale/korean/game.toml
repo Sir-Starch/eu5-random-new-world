@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''하나의 말과 하나의 관습이 공동체를 결속시키고 그 위신을 높입니다.'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''한 지역 전체가 여러 군주에게 나뉘어 있고, 저마다 도시 몇 곳만을 쥐고 있습니다. 그 대부분을 손에 넣은 세력은 지역을 하나의 나라로 통일할 수 있습니다. 바로 {name}입니다.'''
+source = "2a5c101805e7153e"
+text = '''한 지역 전체가 여러 군주에게 나뉘어 있고, 저마다 도시 몇 곳만을 쥐고 있습니다. 그 상당 부분과 가장 큰 도시를 손에 넣은 세력은 지역을 하나의 나라로 통일하고 나머지 땅까지 제 것으로 주장할 수 있습니다. 바로 {name}입니다.'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''국민의 탄생'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''젊은 정착민의 나라가 빠르게 자라나고 있으며, 반역자에게는 인내심이 없습니다.'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''이 대륙을 해안에서 해안까지 다스린 군주는 아직 아무도 없습니다. 세계를 이끌고 대륙의 절반을 차지하며 그 땅에 궁정을 둔 제국은 모든 민족의 제국을 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''대륙 위의 왕관'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''대륙 곳곳에서 사절들이 새 궁정을 찾아와 경의를 표합니다.'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''다른 나라가 보유한 영역 내 모든 [location|e]이 우리 국가의 [core|e]이 되며, 그 보유국과 싸워 이를 되찾을 수 있습니다.'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''아메리카'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

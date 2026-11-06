@@ -9,7 +9,15 @@ import argparse
 import re
 from pathlib import Path
 
-from rnw.content import RULES
+from rnw.content import (
+    CULTURAL_UNION,
+    EMPIRE_REALMS,
+    NEW_WORLD_EMPIRE,
+    REALM_CENTRES,
+    REALM_STATES,
+    REGIONAL_REALM,
+    RULES,
+)
 from rnw.eu5_places import SPECS as PLACES
 from rnw.formations import SPECS
 from rnw.stories import STORIES
@@ -245,7 +253,6 @@ def render() -> str:
         "",
     ]
     for spec in SPECS:
-        rule = RULES[spec.family]
         out += [
             f"### {spec.family}",
             "",
@@ -254,17 +261,17 @@ def render() -> str:
             f"- Key: `rnw_{spec.stem}_<index>_f` (index starts at 1).",
             (
                 f"- Level **{spec.level}**; rank `{spec.rank}`; "
-                f"ownership fraction **{spec.fraction}**."
+                f"ownership fraction **{spec.fraction}**; game rule `{spec.rule}`."
             ),
+            f"- Generation: {generation(spec.family)}",
+            f"- Additional formation conditions: {allowed(spec.family, spec.allow)}.",
+            f"- Potential: {potential(spec.family, spec.potential)}.",
             (
-                f"- Generation: at most **{rule.limit}**; "
-                f"**{rule.places}–{rule.territory}** locations; "
-                f"at least **{rule.centres}** centres and **{rule.states}** states "
-                "with capitals inside; "
-                f"at most **{rule.bearers}** eligible starting tags."
+                "- Cores: every location of the territory that another country holds "
+                "(`rnw_formation_cores_tt`)."
+                if spec.cores
+                else "- Cores: none."
             ),
-            f"- Additional formation conditions: {'; '.join(spec.allow) or 'none authored'}.",
-            f"- Potential: {'; '.join(spec.potential) or 'world-specific starting tags'}.",
             (
                 f"- Founding modifier: **{spec.modifier.title}** (`{spec.modifier.name}`), "
                 f"**{spec.years} years**. {spec.modifier.text}"
@@ -292,6 +299,51 @@ def render() -> str:
             )
         ]
     return "\n".join(out) + "\n"
+
+
+def generation(family: str) -> str:
+    """How generation finds a family's territories, in one sentence."""
+    if family == REGIONAL_REALM:
+        return (
+            "one for each generated region holding the capitals of at least "
+            f"**{REALM_STATES}** states and **{REALM_CENTRES}** centres, or the seat of a lower "
+            "formable; the territory is the whole region (`regions`), the throne its most "
+            "populous centre held by a state; the claimants are at most "
+            f"**{RULES[family].bearers}** states with capitals inside."
+        )
+    if family == NEW_WORLD_EMPIRE:
+        return (
+            "one, the continent (`continents`) whose regions hold at least "
+            f"**{EMPIRE_REALMS}** realms."
+        )
+    rule = RULES[family]
+    return (
+        f"at most **{rule.limit}**; **{rule.places}–{rule.territory}** locations; "
+        f"at least **{rule.centres}** centres and **{rule.states}** states with capitals inside; "
+        f"at most **{rule.bearers}** claimant starting tags."
+    )
+
+
+def allowed(family: str, allow: tuple[str, ...]) -> str:
+    """The family's allow block, with the realm's throne."""
+    lines = [f"`{line}`" for line in allow]
+    if family == REGIONAL_REALM:
+        lines.append("`owns = location:<throne>`")
+    return "; ".join(lines) or "none authored"
+
+
+def potential(family: str, lines: tuple[str, ...]) -> str:
+    """Who sees the formable besides the holders of its territory."""
+    if lines:
+        return "; ".join(f"`{line}`" for line in lines)
+    if family == CULTURAL_UNION:
+        return (
+            "the claimant starting tags or "
+            "`culture ?= { has_culture_group = culture_group:<basis> }`"
+        )
+    if family == NEW_WORLD_EMPIRE:
+        return "`capital.continent = continent:<continent>`"
+    return "any holder of the territory (empty; `capital_required = yes`)"
 
 
 class Arguments(argparse.Namespace):

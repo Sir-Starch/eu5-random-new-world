@@ -271,7 +271,9 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         files[PULSE_FILE] = render_hook(stories).encode("utf-8-sig")
     identities: list[eu5_formation.Identity] = []
     if plan.formations:
-        identities = eu5_formation.identities(plan.formations, names, tags, seed, taken)
+        identities = eu5_formation.identities(
+            plan.formations, names, tags, seed, taken, regions=regions
+        )
         modifiers += _formations(game_dir, plan, identities, files, texts)
     if regions:
         colonial_names.check_installation(game_dir)
@@ -304,6 +306,9 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
                 "places": len(formation.places),
                 "states": list(formation.states),
                 **({"basis": formation.basis} if formation.basis else {}),
+                **({"region": formation.region} if formation.region else {}),
+                **({"continent": formation.continent} if formation.continent else {}),
+                **({"throne": formation.throne} if formation.throne else {}),
             }
             for formation, identity in zip(plan.formations, identities, strict=True)
         },
@@ -327,8 +332,11 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     groups: Mapping[str, Collection[str]] | None = None,
     subjects: Collection[tuple[str, str]] = (),
     history: HistoricalFacts | None = None,
+    regions: Mapping[str, str] | None = None,
+    continents: Mapping[str, str] | None = None,
 ) -> Facts:
-    """The facts of a world from its parts: ``states`` are (tag, members, capital, religion)."""
+    """The facts of a world from its parts: ``states`` are (tag, members, capital, religion);
+    ``regions`` and ``continents`` give each place's generated region and continent keys."""
     owner: dict[str, str] = {}
     table: dict[str, State] = {}
     for tag, members, capital, faith in states:
@@ -337,6 +345,8 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     relief = relief or {}
     culture = culture or {}
     seas = seas or {}
+    regions = regions or {}
+    continents = continents or {}
     places = {
         key: Place(
             key,
@@ -348,6 +358,8 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
             relief.get(key, ""),
             culture.get(key, ""),
             frozenset(seas.get(key, ())),
+            regions.get(key, ""),
+            continents.get(key, ""),
         )
         for key in keys
         if population.get(key, 0) > 0

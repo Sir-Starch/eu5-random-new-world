@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''Uma língua e um costume mantêm a comunidade unida e elevam seu prestígio.'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''Uma região inteira está dividida entre muitos senhores, cada um com algumas de suas cidades. Uma potência que domine a maior parte dela pode uni-la em um só reino: {name}.'''
+source = "2a5c101805e7153e"
+text = '''Uma região inteira está dividida entre muitos senhores, cada um com algumas de suas cidades. Uma potência que domine boa parte dela e sua maior cidade pode uni-la em um só reino, {name}, e reivindicar o resto da região como seu.'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''Nasce uma Nação'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''Uma jovem nação de colonos cresce depressa e tem pouca paciência com rebeldes.'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''Nenhum soberano jamais dominou este continente de costa a costa. Um império que lidere o mundo, possua metade dele e tenha nele a sua corte pode proclamar-se o império de todos os seus povos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''Uma coroa sobre o continente'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''Enviados de todos os cantos do continente comparecem à nova corte e a honram.'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''Cada [location|e] do território sob controle de outro país se torna nosso [core|e], e podemos guerrear contra seu detentor por ela.'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''americano'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

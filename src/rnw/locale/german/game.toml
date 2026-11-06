@@ -943,8 +943,8 @@ source = "5ae17460ed132f2e"
 text = '''Eine Sprache und ein Brauch halten das Gemeinwesen zusammen und mehren sein Ansehen.'''
 
 ["rnw_formation_regional_realm_desc"]
-source = "c52eb5c1af067a93"
-text = '''Eine ganze Region ist unter vielen Herrschern aufgeteilt, von denen jeder nur ein paar ihrer Städte hält. Eine Macht, die den größten Teil davon hält, kann sie zu einem Reich vereinen: {name}.'''
+source = "2a5c101805e7153e"
+text = '''Eine ganze Region ist unter vielen Herrschern aufgeteilt, von denen jeder nur ein paar ihrer Städte hält. Eine Macht, die einen großen Teil davon und ihre größte Stadt hält, kann sie zu einem Reich vereinen und den Rest der Region für sich beanspruchen: {name}.'''
 
 ["STATIC_MODIFIER_NAME_rnw_realm_administration"]
 source = "cabaec1d33271337"
@@ -965,6 +965,26 @@ text = '''Eine Nation gegründet'''
 ["STATIC_MODIFIER_DESC_rnw_federation_founded"]
 source = "8d9be49878681ff7"
 text = '''Eine junge Siedlernation wächst schnell und hat wenig Geduld mit Rebellen.'''
+
+["rnw_formation_new_world_empire_desc"]
+source = "54a42eb797becf15"
+text = '''Noch nie hat ein Herrscher diesen Kontinent von Küste zu Küste gehalten. Ein Kaiserreich, das die Welt anführt, die Hälfte davon hält und seinen Hof auf seinem Boden hat, kann sich zum Reich all seiner Völker ausrufen: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_empire_coronation"]
+source = "5de9410802e6f67a"
+text = '''Eine Krone über dem Kontinent'''
+
+["STATIC_MODIFIER_DESC_rnw_empire_coronation"]
+source = "f90d4301c0cae62e"
+text = '''Gesandte aus allen Winkeln des Kontinents erscheinen am neuen Hof und erweisen ihm Ehre.'''
+
+["rnw_formation_cores_tt"]
+source = "0093fc02da9b55a4"
+text = '''Jeder [location|e] des Gebiets, den ein anderes Land hält, wird zu unserem [core|e]; um ihn kann gegen seinen Besitzer Krieg geführt werden.'''
+
+["rnw_formation_new_world_empire_adj"]
+source = "0baaf6f25d1c5da8"
+text = '''Amerikanisch'''
 
 ["STATIC_MODIFIER_NAME_rnw_great_silver_lode"]
 source = "61c095abd8a44d84"

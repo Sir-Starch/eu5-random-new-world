@@ -16,7 +16,7 @@ from functools import cache
 from typing import TYPE_CHECKING
 
 from rnw import eu5_places, history_text, translations, wording
-from rnw.formations import SPECS
+from rnw.formations import EXTRA_TEXTS, SPECS
 from rnw.stories import STORIES
 from rnw.storymodel import event_keys
 
@@ -59,6 +59,7 @@ def sources() -> dict[str, str]:
         found[formation_description(spec.family)] = spec.description
         found[f"STATIC_MODIFIER_NAME_{spec.modifier.name}"] = spec.modifier.title
         found[f"STATIC_MODIFIER_DESC_{spec.modifier.name}"] = spec.modifier.text
+    found.update(EXTRA_TEXTS)
     found.update(eu5_places.texts(eu5_places.SPECS))
     found.update(history_text.sources())
     return found

@@ -43,6 +43,7 @@ MARITIME_LEAGUE: Final[str] = "maritime_league"
 CULTURAL_UNION: Final[str] = "cultural_union"
 REGIONAL_REALM: Final[str] = "regional_realm"
 POSTCOLONIAL_FEDERATION: Final[str] = "postcolonial_federation"
+NEW_WORLD_EMPIRE: Final[str] = "new_world_empire"
 STORY_FAMILIES: Final[tuple[str, ...]] = (
     RIVER_CENTRE,
     SACRED_CENTRE,
@@ -58,8 +59,17 @@ FORMABLE_FAMILIES: Final[tuple[str, ...]] = (
     CULTURAL_UNION,
     REGIONAL_REALM,
     POSTCOLONIAL_FEDERATION,
+    NEW_WORLD_EMPIRE,
 )
 FAMILIES: Final[tuple[str, ...]] = (*STORY_FAMILIES, *FORMABLE_FAMILIES)
+# The families below the realm whose seats, centres held by the states of 1337, each get a realm
+# above them (the colonial federation is settled where no state is, and has no seat of its own).
+LOWER_FAMILIES: Final[tuple[str, ...]] = (
+    RIVER_UNION,
+    HIGHLAND_CONFEDERATION,
+    MARITIME_LEAGUE,
+    CULTURAL_UNION,
+)
 STATE: Final[str] = "state"
 CENTRE_RANKS: Final[frozenset[str]] = frozenset({"city", "town"})
 # Above this percentile of the population of the states' places a place is a centre, unless a
@@ -85,8 +95,15 @@ MAX_CHAINS: Final[int] = 2
 MIN_UNION_PLACES: Final[int] = 12
 MIN_UNION_CENTRES: Final[int] = 3
 MIN_UNION_STATES: Final[int] = 2
-UNION_TERRITORY: Final[int] = 30
+# A kingdom-level union is a goal of several wars, not of one (history plan §22, N6).
+UNION_TERRITORY: Final[int] = 60
 MAX_UNION_STATES: Final[int] = 8
+# A realm is one generated region that holds the capitals of this many states and this many
+# centres at the start; its throne is the most populous centre a state holds there.
+REALM_STATES: Final[int] = 3
+REALM_CENTRES: Final[int] = 4
+# The empire of the New World stands over the realms of at least this many regions.
+EMPIRE_REALMS: Final[int] = 2
 # The relief of a highland place, and the share of a confederation's places that must stand on
 # high ground (mountains or a plateau), so that a range of low hills is no confederation.
 HIGHLAND_RELIEF: Final[frozenset[str]] = frozenset({"mountains", "hills", "plateau"})
@@ -137,8 +154,17 @@ RULES: Final[Mapping[str, Rule]] = {
         ),
         Rule(HIGHLAND_CONFEDERATION, "range of highlands", 2, 24, 10, 3, 2, MAX_UNION_STATES, 50),
         Rule(MARITIME_LEAGUE, "stretch of coast", 2, 18, 8, 3, 2, MAX_UNION_STATES, 50),
-        Rule(CULTURAL_UNION, "related people", 2, 30, 12, 3, 2, MAX_UNION_STATES),
-        Rule(REGIONAL_REALM, "region", 1, 48, 24, 4, 3, MAX_UNION_STATES),
+        Rule(CULTURAL_UNION, "related people", 2, UNION_TERRITORY, 12, 3, 2, MAX_UNION_STATES),
+        Rule(
+            REGIONAL_REALM,
+            "region",
+            0,
+            0,
+            REALM_CENTRES,
+            REALM_CENTRES,
+            REALM_STATES,
+            MAX_UNION_STATES,
+        ),
         Rule(
             POSTCOLONIAL_FEDERATION,
             "colonial shore",
@@ -150,6 +176,7 @@ RULES: Final[Mapping[str, Rule]] = {
             0,
             anywhere=True,
         ),
+        Rule(NEW_WORLD_EMPIRE, "continent", 1, 0, 0, 0, 0, 0),
     )
 }
 
@@ -159,7 +186,8 @@ class Place:
     """One inhabited generated location and what the plan reads of it.
 
     ``seas`` are the sea zones the place touches (a coast; empty inland), ``culture`` the culture
-    of its main population and ``relief`` its topography.
+    of its main population, ``relief`` its topography, and ``region`` and ``continent`` the keys
+    of the generated region and continent it lies in.
     """
 
     key: str
@@ -171,6 +199,8 @@ class Place:
     relief: str = ""
     culture: str = ""
     seas: frozenset[str] = frozenset()
+    region: str = ""
+    continent: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,7 +270,9 @@ class Formation:
     """One formable offered to the states whose capitals lie in its territory.
 
     ``basis`` is what the territory is built on beyond the land itself: the culture group of a
-    cultural union, empty for the other families.
+    cultural union, empty for the other families. A realm's territory is a whole generated
+    ``region`` and the empire's a whole ``continent`` (``places`` are then their inhabited
+    places, the formable names the key); a realm also asks for its ``throne``.
     """
 
     family: str
@@ -250,6 +282,9 @@ class Formation:
     states: tuple[str, ...]
     seat: str
     basis: str = ""
+    region: str = ""
+    continent: str = ""
+    throne: str = ""
 
     @property
     def ident(self) -> str:
@@ -623,13 +658,102 @@ def _obstacle(
     return "", owners
 
 
+def realms(facts: Facts, below: Iterable[str] = ()) -> tuple[list[Formation], str]:
+    """One realm for each generated region with a political life of its own (history plan §22).
+
+    A region qualifies when it holds the capitals of ``REALM_STATES`` states and ``REALM_CENTRES``
+    centres, or when it holds ``below``, a seat of a lower formable, so that every such goal has a
+    realm above it. Its territory is the whole region; its throne, the seat, is the most populous
+    centre a state holds there. The claimants are the states with their capitals in the region,
+    those holding most of it first.
+    """
+    seats = frozenset(below)
+    lower = {facts.places[key].region for key in seats}
+    rule = RULES[REGIONAL_REALM]
+    centres = _centres(facts, rule.cutoff) | seats
+    by_region: dict[str, list[Place]] = {}
+    for place in facts.places.values():
+        if place.region:
+            by_region.setdefault(place.region, []).append(place)
+    if not by_region:
+        return [], f"no {rule.thing} is known"
+    reason = f"no {rule.thing} holds enough centres"
+    chosen: list[Formation] = []
+    for region in sorted(by_region):
+        places = by_region[region]
+        inside = sorted(place.key for place in places if place.key in centres)
+        if not inside or (len(inside) < rule.centres and region not in lower):
+            continue
+        owners: dict[str, int] = {}
+        for place in places:
+            if place.owner in facts.states:
+                owners[place.owner] = owners.get(place.owner, 0) + 1
+        keys = {place.key for place in places}
+        seated = [tag for tag in owners if facts.states[tag].capital in keys]
+        if len(seated) < rule.states and region not in lower:
+            reason = f"no {rule.thing} holds the capitals of {_states_text(rule.states)}"
+            continue
+        held = [place for place in places if place.key in centres]
+        throne = max(held, key=lambda place: (place.population, place.key)).key
+        ranked = sorted(seated, key=lambda tag: (-owners[tag], tag))[: rule.bearers]
+        chosen.append(
+            Formation(
+                REGIONAL_REALM,
+                len(chosen),
+                tuple(sorted(keys)),
+                tuple(inside),
+                tuple(sorted(ranked)),
+                throne,
+                region=region,
+                throne=throne,
+            )
+        )
+    return chosen, reason
+
+
+def empires(facts: Facts, realms_of: Sequence[Formation]) -> tuple[list[Formation], str]:
+    """The empire of the New World: one continent over the realms of ``EMPIRE_REALMS`` regions.
+
+    Its territory is the continent of the realms' thrones (the most common one, should regions of
+    several continents hold realms); its seat is the most populous throne, which only names the
+    record: the empire is offered to whoever rules most of the continent.
+    """
+    rule = RULES[NEW_WORLD_EMPIRE]
+    by_continent: dict[str, list[Formation]] = {}
+    for realm in realms_of:
+        continent = facts.places[realm.throne].continent
+        if continent:
+            by_continent.setdefault(continent, []).append(realm)
+    fitting = [
+        (len(found), continent)
+        for continent, found in by_continent.items()
+        if len(found) >= EMPIRE_REALMS
+    ]
+    if not fitting:
+        return [], f"no {rule.thing} holds the realms of {EMPIRE_REALMS} regions"
+    continent = max(fitting)[1]
+    thrones = [facts.places[realm.throne] for realm in by_continent[continent]]
+    seat = max(thrones, key=lambda place: (place.population, place.key)).key
+    keys = tuple(sorted(key for key, place in facts.places.items() if place.continent == continent))
+    return [Formation(NEW_WORLD_EMPIRE, 0, keys, (), (), seat, continent=continent)], ""
+
+
 def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], str]:
     """The formables of ``family`` with room for them, and why there is none when there is none.
 
     A territory grows from a centre along the places the family serves, so it is connected and its
     states are neighbours. The seat is drawn from a stream of the family's own; a seat that cannot
     hold the family's minimums is passed over, and the last obstacle met is the reason given.
+    A realm is a whole region and the empire a whole continent (``realms``, ``empires``).
     """
+    if family in {REGIONAL_REALM, NEW_WORLD_EMPIRE}:
+        seats = [
+            formation.seat
+            for lower in LOWER_FAMILIES
+            for formation in formations(facts, seed, lower)[0]
+        ]
+        found = realms(facts, seats)
+        return found if family == REGIONAL_REALM else empires(facts, found[0])
     rule = RULES[family]
     centres = _centres(facts, rule.cutoff)
     population = {key: place.population for key, place in facts.places.items()}
