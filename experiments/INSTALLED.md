@@ -6,6 +6,21 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-06, **1.2.0 development / pending epoch 61 — candidate F, frontier everywhere** (W7, C501:
+`settle_the_frontier_advance` rebound to the whole New World). [V-EXEC] Installed
+**`mod/rnw_exp_world_7frcq3x5oe`** ("History 1.2 candidate F (frontier everywhere)") in the existing
+Windows/Proton profile: code `RNW1-080J3-M4P7S-R656Y-R040G-00830-3SG46-R18Y1-G4YZT-ZW`, the settings of
+candidate E with a new seed, generated at `b1328b4`. Its written gate names `continent:america`, so all
+193 of its American land countries qualify (72 would not under the vanilla regions). Candidate E's own
+code regenerated at `b1328b4` (scratch, not installed: same id) differs from the installed E only by
+`in_game/common/advances/3_cabinet_actions_unlocks.txt` outside `.metadata`. The staged installer
+refused any existing target; 912 files match the prepared mod, both libraries hold the record, and all
+10 other mod folders and 9 profile-root files are unchanged. The standard updater installed hub 1.2.0
+with the generator of `b1328b4` after its Wine window, native, code, shell and bridge self-tests,
+retaining the former hub at `.rnw-hub-backups/1.2.0-1793991294438766010`; Windows wheel SHA-256
+`216cc0f7948814bba6c9c6f18449bd3d27aab3bf086a3ce1d968f3bf23e9ec26`. Candidates C, D and E stay
+installed. No playset, save or preference edit; no EU5 launch or control by the agent. NOT GAME VALIDATED.
+
 2026-11-06, **1.2.0 development / pending epoch 61 — candidate E, the game's measure** (plan D31:
 historical opinions on the scale of their vanilla analogues, the game's river sizes in development, and
 a window that shows what the game shows). [V-EXEC] Installed **`mod/rnw_exp_world_isank4awvu`**
