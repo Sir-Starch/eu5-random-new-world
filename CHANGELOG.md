@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Check the colonial-nation condition on the map as it is written. Besides the map the
+  generator holds, the export now reads the written `locations.png`, `definitions.txt` and
+  `default.map` and refuses a world in which a passable American location touches a passable
+  Old World one. The closed-ocean remainders that are recoloured only in the file were the
+  one input the first check could not see; no world's files change. A Workshop report of
+  Castile unable to form a colonial nation came from a world made by 1.0.0.
+
 - Reserve space for every original area's key while constructing regions. This
   fixes an island seed whose region shrank below its required child count.
 

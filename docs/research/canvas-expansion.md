@@ -289,6 +289,8 @@ executable/concept/charter/subject hashes still match the original audit's build
 for newly generated worlds; existing world mods and saves are not retroactively
 changed. No EU5 gameplay result is claimed.
 
+**W4 audit, 2026-11-06 (C497).** [SOURCE] The reporter later wrote that the map with the problem was made by 1.0 and that a map regenerated from their own land image releases colonial nations normally. [V-EXEC] The same banded audit, run on four installed 1.1.0 and 1.2.0 worlds with the expanded canvas (24–34 of 49 island groups moved; one at distance 0), finds no passable America–Old World contact and no `adjacencies.csv` row leaving America. The written map differed from the labels the export checks in one place: the 33 closed-ocean remainders that `OceanPlan.patches` recolours, five of them into a neighbouring passable sea (two or three into vanilla oceania `rawaki_high_sea_*` in the three worlds traced), exist only in the file. The export now also reads the written `locations.png`, `definitions.txt` and `default.map` (`eu5_overseas.py`) and rejects such a contact; the 1.0.0 control still gives its three pairs. The unchanged reference digest shows that world bytes did not change.
+
 ## The Pacific side and the island groups (owner request, 2026-10-31; pending 1.1.0 / epoch 60)
 
 The owner asked that the protected Polynesian islands before the seam stop limiting the canvas and

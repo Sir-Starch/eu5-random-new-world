@@ -183,6 +183,7 @@ from rnw.eu5_natives import (
 from rnw.eu5_newworld import Plan, VanillaGeometry, plan_identities, vanilla_geometry
 from rnw.eu5_objects import PixelClasses, object_outputs
 from rnw.eu5_oceans import emitted_cells, plan_oceans
+from rnw.eu5_overseas import overseas_flags, passable_contacts
 from rnw.eu5_places import OUTPUT as OUTPUT_PLACES
 from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
@@ -991,6 +992,34 @@ def _check_overseas_contacts(
         message = (
             f"{len(bad)} passable American/Old World contacts, "
             f"e.g. {names[first]} / {names[second]}"
+        )
+        raise NewWorldExportError(message)
+
+
+def _check_written_contacts(
+    map_dir: Path, written: NDArray[np.int32], game_map: Eu5Map, canvas: Canvas
+) -> None:
+    """Reject passable American/Old World contacts in the files as the game reads them.
+
+    ``_check_overseas_contacts`` judges the labels held in memory; this reads the written
+    ``locations.png`` (as labels of its named colours), ``definitions.txt`` and ``default.map``,
+    so recoloured ocean remainders and every other difference between the held map and the
+    file count too (W4). The waters the canvas took over keep the ocean status that
+    ``open_map`` gave them.
+    """
+    named = read_named_colors(map_dir / "named_locations/00_default.txt")
+    keys = [key for key, _ in named]
+    hierarchy = {location.key: location for location in read_locations(map_dir / "definitions.txt")}
+    impassable = set(read_class_lists(map_dir / "default.map")["impassable_mountains"])
+    opened: set[str] = set()
+    if canvas.opened is not None:
+        opened.update(game_map.keys[index] for index in np.flatnonzero(canvas.opened).tolist())
+    bad = passable_contacts(written, overseas_flags(keys, hierarchy, impassable, opened))
+    if bad:
+        first, second = bad[0]
+        message = (
+            f"{len(bad)} passable American/Old World contacts in the written map, "
+            f"e.g. {keys[first]} / {keys[second]}"
         )
         raise NewWorldExportError(message)
 
@@ -3307,7 +3336,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             ],
             dtype=np.int64,
         )
-        _ = labels_from_rgb(decoded, colors)
+        written = labels_from_rgb(decoded, colors)
+        _check_written_contacts(stage / name / "in_game/map_data", written, game_map, canvas)
+        del written
         vanilla = open_png(game_dir / LOCATIONS, "RGB")
         changed = np.any(decoded != vanilla, axis=2)
         del vanilla, decoded

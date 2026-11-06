@@ -110,7 +110,7 @@ American and Old World passable water can break colonial nation formation and ov
 status for North and South America. Connected ocean-area boundaries now separate passable American
 coastal sea areas from Old World seas, preserving continuous naval routes while keeping American
 regions strictly overseas. Final-map export validation explicitly verifies that no passable American
-coastal area borders an Old World sea area. [V-EXEC C456]
+coastal area borders an Old World sea area. [V-EXEC C456] A second check reads the written `locations.png`, `definitions.txt` and `default.map`, so the closed-ocean remainders that are recoloured only in the file count as well. [V-EXEC C497]
 
 **Routes on the actual geography, 0.13.16 / epoch 53:** the owner's 4TXC
 example exposed a defect in the preceding acceptance criteria. A copied crescent
