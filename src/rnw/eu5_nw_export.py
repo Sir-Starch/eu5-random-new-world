@@ -20,7 +20,16 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
-from rnw import __version__, epoch, eu5_history_text, eu5_memories, inputs, landcache, worldname
+from rnw import (
+    __version__,
+    epoch,
+    eu5_history_text,
+    eu5_memories,
+    game_texts,
+    inputs,
+    landcache,
+    worldname,
+)
 from rnw.artifacts import (
     Spool,
     check_new_output,
@@ -1722,6 +1731,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         taken=taken,
         regions=regions,
         memories=eu5_memories.select(natives, content, fallen, seed),
+        keys=loc_keys,
     )
 
 
@@ -1930,6 +1940,18 @@ def vanilla_localization_keys(game_dir: Path) -> set[str]:
                 checkpoint()
                 keys |= set(LOC_KEY.findall(path.read_text(encoding="utf-8-sig", errors="replace")))
     return keys
+
+
+def static_hashes() -> set[int]:
+    """The hashes of the mod's static localization keys, which no generated key may take.
+
+    Raises if two static keys share a hash with each other.
+    """
+    found = key_hashes(game_texts.sources())
+    if len(found) != len(game_texts.sources()):
+        message = "Two static localization keys share the engine's key hash"
+        raise NewWorldExportError(message)
+    return found
 
 
 def verify_localization(
@@ -2898,7 +2920,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         final_labels = _final_labels(game_map, canvas, world)
 
         def identify() -> tuple[KeySpace, Plan]:
-            loc_keys = KeySpace(localization.result())
+            loc_keys = KeySpace(localization.result() | static_hashes())
             geometry = geometries.result()
             physical = physical_keys(
                 game_map,

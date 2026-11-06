@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from rnw.game_texts import Entry
+    from rnw.loc_keys import KeySpace
     from rnw.wording import Name
 
 NAMESPACE: Final[str] = "rnw_story"
@@ -245,6 +246,7 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
     texts: dict[str, Entry],
     *,
     names: tuple[Mapping[str, Name], Mapping[str, Name]],
+    keys: KeySpace | None,
 ) -> list[str]:
     """Add the formables' files and texts; return their families' founding modifiers.
 
@@ -254,7 +256,9 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
     specs = [spec for spec in SPECS if spec.family in families]
     eu5_formation.check_installation(game_dir, specs)
     choices = eu5_naming.namings(
-        [(f, i.tag, i.name) for f, i in zip(plan.formations, identities, strict=True)], *names
+        [(f, i.tag, i.name) for f, i in zip(plan.formations, identities, strict=True)],
+        *names,
+        keys,
     )
     if choices:
         files[eu5_naming.EVENT_FILE] = eu5_naming.events(list(choices.values())).encode("utf-8-sig")
@@ -267,7 +271,7 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
     goals = eu5_goals.files(plan.formations)
     if goals:
         eu5_goals.check_installation(game_dir)
-    roads = eu5_missions.roads(plan.formations, identities)
+    roads = eu5_missions.roads(plan.formations, identities, keys)
     if roads:
         eu5_missions.check_installation(game_dir)
         goals[eu5_missions.MISSIONS_FILE] = eu5_missions.missions(roads)
@@ -305,11 +309,13 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     taken: frozenset[tuple[int, int, int]],
     regions: Mapping[str, Name] | None = None,
     memories: Sequence[eu5_memories.Memory] = (),
+    keys: KeySpace | None = None,
 ) -> Written:
     """Every file of the stories, formables, colonial names and memory events of one world.
 
     ``regions`` are the regions of the generated land with their names; each gets colonial names.
-    ``memories`` are the events of the recorded past (N9).
+    ``memories`` are the events of the recorded past (N9). ``keys`` is the world's key space,
+    which hands out the formables' own localization keys (``loc_keys``).
     """
     files: dict[str, bytes] = {}
     texts: dict[str, Entry] = {}
@@ -333,10 +339,10 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     identities: list[eu5_formation.Identity] = []
     if plan.formations:
         identities = eu5_formation.identities(
-            plan.formations, names, tags, seed, taken, regions=regions
+            plan.formations, names, tags, seed, taken, regions=regions, keys=keys
         )
         modifiers += _formations(
-            game_dir, plan, identities, files, texts, names=(names, regions or {})
+            game_dir, plan, identities, files, texts, names=(names, regions or {}), keys=keys
         )
     if memories:
         eu5_memories.check_installation(game_dir)

@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
     from rnw.content import Formation
     from rnw.game_texts import Entry
+    from rnw.loc_keys import KeySpace
     from rnw.wording import Name
 
 EVENT_FILE: Final[str] = f"in_game/events/{NAMESPACE}.txt"
@@ -39,12 +40,14 @@ EVENT_FILE: Final[str] = f"in_game/events/{NAMESPACE}.txt"
 
 @dataclass(frozen=True, slots=True)
 class Naming:
-    """A formation's founder may take ``other`` instead of its name, in event ``number``."""
+    """A formation's founder may take ``other`` instead of its name, in event ``event``;
+    ``key`` is the localization key of the second name (``_ADJ`` its adjective)."""
 
     tag: str
     name: Phrase
     other: Phrase
-    number: int
+    event: str
+    key: str
 
 
 def alternative(
@@ -64,22 +67,33 @@ def namings(
     pairs: Sequence[tuple[Formation, str, Phrase]],
     names: Mapping[str, Name],
     regions: Mapping[str, Name],
+    keys: KeySpace | None = None,
 ) -> dict[str, Naming]:
-    """Each formation's choice, by tag: ``pairs`` are (formation, tag, name)."""
+    """Each formation's choice, by tag: ``pairs`` are (formation, tag, name).
+
+    ``keys`` hands out the events' option keys and the second names' keys, so that none shares
+    the engine's hash with another; without it they are numbered in order.
+    """
     found: dict[str, Naming] = {}
     for formation, tag, name in pairs:
         other = alternative(formation, name, names, regions)
-        if other is not None:
-            found[tag] = Naming(tag, name, other, len(found) + 1)
+        if other is None:
+            continue
+        if keys is None:
+            event, key = f"{NAMESPACE}.{len(found) + 1}", other_key(tag)
+        else:
+            event = keys.group(f"{NAMESPACE}.", (".a", ".b"))
+            key = keys.group(f"{tag}_other", ("", "_ADJ"))
+        found[tag] = Naming(tag, name, other, event, key)
     return found
 
 
 def event_id(naming: Naming) -> str:
-    return f"{NAMESPACE}.{naming.number}"
+    return naming.event
 
 
 def other_key(tag: str) -> str:
-    """The key of the second name (``change_country_name``) and, with ``_ADJ``, its adjective."""
+    """The unclaimed key of the second name (``change_country_name``); ``_ADJ`` its adjective."""
     return f"{tag}_other"
 
 
@@ -92,7 +106,7 @@ def events(choices: Sequence[Naming]) -> str:
     """The script of the naming events: keep the name, or take the other one."""
     out = [f"namespace = {NAMESPACE}\n"]
     for naming in choices:
-        event, key = event_id(naming), other_key(naming.tag)
+        event, key = event_id(naming), naming.key
         lines = [
             f"{event} = {{",
             "\ttype = country_event",
@@ -124,7 +138,7 @@ def texts(choices: Sequence[Naming]) -> dict[str, Entry]:
         found[TITLE] = Text(TITLE)
         found[DESC] = Text(DESC)
     for naming in choices:
-        key = other_key(naming.tag)
+        key = naming.key
         found[key] = naming.other
         found[f"{key}_ADJ"] = wording.adjective(naming.other.word)
         found[f"{event_id(naming)}.a"] = Described(KEEP, naming.name)

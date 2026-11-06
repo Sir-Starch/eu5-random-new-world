@@ -146,7 +146,9 @@ seat (a second federation in the same region keeps its seat's name). On founding
 a country of Spanish, Portuguese, English, French or Dutch tradition, tested as the
 colonial names test an overlord, renames itself with `change_country_name`:
 *United Provinces*, *United Captaincies*, *United Colonies*, *Free State* or
-*Generality of X*, written in every official language. [V-EXEC; that the engine
+*Generality of X*, written in every official language. Like the formables' own keys, the
+missions and the second names, these keys are handed out by the world's key space, which
+knows every hash the engine and the mod's static texts already take. [V-EXEC; that the engine
 accepts a generated key in `change_country_name`, as it accepts vanilla tags, is
 [INFERRED] and not yet observed]
 

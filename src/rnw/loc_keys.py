@@ -65,6 +65,21 @@ class KeySpace:
         self._hashes.update(values)
         return True
 
+    def holds(self, keys: Sequence[str]) -> bool:
+        """Whether the hashes of all of ``keys`` are already taken (reserved static keys)."""
+        return all(key_hash(key) in self._hashes for key in keys)
+
+    def group(self, prefix: str, suffixes: Sequence[str]) -> str:
+        """The next ``prefix`` + number whose keys with every one of ``suffixes`` are all free,
+        claimed together: a formable's key and its description, a mission and its tasks."""
+        serial = self._serials.get(prefix, 0)
+        while True:
+            serial += 1
+            base = f"{prefix}{serial}"
+            if self.claim(tuple(base + suffix for suffix in suffixes)):
+                self._serials[prefix] = serial
+                return base
+
     def next(self, prefix: str, width: int) -> str:
         """The next serial key ``prefix`` + zero-padded number whose hash is free."""
         serial = self._serials.get(prefix, 0)

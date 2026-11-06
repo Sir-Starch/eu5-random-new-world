@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 
     from rnw.content import Formation
     from rnw.game_texts import Entry
+    from rnw.loc_keys import KeySpace
     from rnw.wording import Name
 
 FORMABLES_FILE: Final[str] = "in_game/common/formable_countries/rnw_formations.txt"
@@ -81,6 +82,8 @@ class Identity:
 
     The name is the family's term with the seat's word, written by each language its own way
     (``wording``: *Kaira Union*, *Кайрский союз*, *Unia Kairańska*), and so is the adjective.
+    ``key`` and ``nations`` are the formable's localization keys that a world's ``KeySpace``
+    handed out, so that no key shares the engine's hash with another (``loc_keys``).
     """
 
     tag: str
@@ -88,6 +91,16 @@ class Identity:
     adjective: Phrase | Text
     colour: tuple[int, int, int]
     colours: tuple[str, str]
+    key: str = ""
+    nations: tuple[tuple[str, str], ...] = ()
+
+    def formable(self, formation: Formation) -> str:
+        """The formable's key, which is also its localization key (``key_of`` when unclaimed)."""
+        return self.key or key_of(formation)
+
+    def nation(self, tradition: str) -> str:
+        """The key of the name a founder of ``tradition`` takes."""
+        return dict(self.nations).get(tradition) or nation_key(self.tag, tradition)
 
 
 def key_of(formation: Formation) -> str:
@@ -224,14 +237,14 @@ def nation_key(tag: str, tradition: str) -> str:
     return f"{tag}_{tradition}"
 
 
-def _renaming(tag: str) -> str:
+def _renaming(identity: Identity) -> str:
     """The founder takes the name of its tradition, the first one its culture meets."""
     return "".join(
         _indented(
             [
                 f"{'if' if number == 0 else 'else_if'} = {{",
                 f"\tlimit = {{ {tradition.founder} }}",
-                f"\tchange_country_name = {nation_key(tag, tradition.name)}",
+                f"\tchange_country_name = {identity.nation(tradition.name)}",
                 "}",
             ],
             2,
@@ -344,7 +357,7 @@ def block(formation: Formation, identity: Identity, asks: str = "") -> str:
     ]
     allow = "".join(f"\t\t{line}\n" for line in needs)
     return (
-        f"{key_of(formation)} = {{\n"
+        f"{identity.formable(formation)} = {{\n"
         f"\tlevel = {spec.level}\n"
         f"\trequired_locations_fraction = {spec.fraction}\n"
         f"\trule = {spec.rule}\n"
@@ -366,7 +379,7 @@ def block(formation: Formation, identity: Identity, asks: str = "") -> str:
         "\t\t\tmode = add\n\t\t}\n"
         f"{_unlock(spec)}"
         f"{_cores(formation) if spec.cores else ''}"
-        f"{_renaming(identity.tag) if spec.renamed else ''}"
+        f"{_renaming(identity) if spec.renamed else ''}"
         f"{_summons(formation) if spec.heirs else ''}"
         f"{_founding() if spec.founds else ''}"
         f"{chr(9) * 2 + asks + chr(10) if asks else ''}"
@@ -453,10 +466,12 @@ def identities(  # noqa: PLR0913 - the formations, the world's names and its col
     taken: frozenset[tuple[int, int, int]],
     *,
     regions: Mapping[str, Name] | None = None,
+    keys: KeySpace | None = None,
 ) -> list[Identity]:
     """A tag, a name, a map colour and two heraldic colours for each formation.
 
-    ``regions`` name the generated regions, which name the realms.
+    ``regions`` name the generated regions, which name the realms; ``keys`` hands out the
+    formable's localization keys and its nation names (without it they follow ``key_of``).
     """
     found: list[Identity] = []
     used = set(taken)
@@ -473,8 +488,25 @@ def identities(  # noqa: PLR0913 - the formations, the world's names and its col
         count = len(ARMS_COLOURS)
         first = (draw >> 8) % count
         second = (first + 1 + (draw >> 16) % (count - 1)) % count
+        spec = BY_FAMILY[formation.family]
+        key, nations = "", ()
+        if keys is not None:
+            key = keys.group(f"rnw_{spec.stem}_", ("_f", "_f_desc")) + "_f"
+            if spec.renamed:
+                nations = tuple(
+                    (tradition.name, keys.group(f"{tag}_{tradition.name}_", ("",)))
+                    for tradition in TRADITIONS
+                )
         found.append(
-            Identity(tag, name, adjective, colour, (ARMS_COLOURS[first], ARMS_COLOURS[second]))
+            Identity(
+                tag,
+                name,
+                adjective,
+                colour,
+                (ARMS_COLOURS[first], ARMS_COLOURS[second]),
+                key,
+                nations,
+            )
         )
     return found
 
@@ -483,7 +515,7 @@ def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) ->
     """The localization of the formations: names, adjectives, formable keys and descriptions."""
     found: dict[str, Entry] = {}
     for formation, identity in zip(formations, identities_of, strict=True):
-        key = key_of(formation)
+        key = identity.formable(formation)
         found[identity.tag] = identity.name
         found[f"{identity.tag}_ADJ"] = identity.adjective
         # The formables list asks for the formable's own key (vanilla: ``SWI_f: "$SWI$"``);
@@ -501,7 +533,7 @@ def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) ->
                 found[text] = Text(text)
         if spec.renamed:
             for tradition in TRADITIONS:
-                found[nation_key(identity.tag, tradition.name)] = Phrase(
+                found[identity.nation(tradition.name)] = Phrase(
                     wording.NATION + tradition.name, identity.name.word
                 )
     return found

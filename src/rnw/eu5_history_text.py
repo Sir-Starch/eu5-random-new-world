@@ -62,7 +62,11 @@ def build(plan: FinalStartPlan, keys: KeySpace) -> WrittenHistory:
     if not tags:
         return WrittenHistory(files, texts, {})
     static = (DECISION, f"{DECISION}_desc", f"{DECISION}.a", f"{EVENT}.title", f"{EVENT}.a")
-    require(keys.claim(static), "The fixed historical interface keys collide with localization")
+    # The world's key space reserves the mod's static keys at its start; a bare one claims them.
+    require(
+        keys.holds(static) or keys.claim(static),
+        "The fixed historical interface keys collide with localization",
+    )
     chronicle_keys = {tag: keys.next("rnw_chronicle_", 0) for tag in tags}
     trigger = (
         f"{TRIGGER} = {{\n\tOR = {{\n" + "".join(f"\t\ttag = {tag}\n" for tag in tags) + "\t}\n}\n"

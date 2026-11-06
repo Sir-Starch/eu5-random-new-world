@@ -7,8 +7,16 @@ from typing import TYPE_CHECKING
 import pytest
 
 from rnw import wording
-from rnw.content import NEW_WORLD_EMPIRE, REGIONAL_REALM, RIVER_UNION, Formation
-from rnw.eu5_formation import Identity, geography
+from rnw.colonial_names import TRADITIONS
+from rnw.content import (
+    NEW_WORLD_EMPIRE,
+    POSTCOLONIAL_FEDERATION,
+    REGIONAL_REALM,
+    RIVER_UNION,
+    Formation,
+)
+from rnw.eu5_formation import Identity, block, geography, identities
+from rnw.eu5_formation import texts as formation_texts
 from rnw.eu5_missions import (
     ICONS,
     ICONS_DIR,
@@ -21,7 +29,9 @@ from rnw.eu5_missions import (
     roads,
     texts,
 )
+from rnw.eu5_naming import namings
 from rnw.game_texts import localize
+from rnw.loc_keys import KeySpace, key_hash
 from rnw.pdx import parse
 from rnw.wording import Phrase
 
@@ -105,3 +115,39 @@ def test_a_picture_the_game_lacks_stops_the_export(tmp_path: Path) -> None:
     pictures[-1].unlink()
     with pytest.raises(MissionError, match=pictures[-1].name):
         check_installation(tmp_path)
+
+
+def test_a_world_hands_out_every_formable_key_through_its_key_space() -> None:
+    """A mission, a second name, a nation name and a formable key whose hash is taken are passed
+    over for the next free one, all keys of a group together (``loc_keys``)."""
+    taken = {
+        key_hash(key)
+        for key in ("rnw_road_1_land", "rnw_naming.1.b", "UNI_other1", "rnw_union_1_f_desc")
+    }
+    keys = KeySpace(taken)
+    found = roads([UNION], [_identity("UNI", "union", "Kaira")], keys)
+    assert key(found[0]) == "rnw_road_2"
+    home = Formation(RIVER_UNION, 0, ("q0",), ("q0",), ("ABC",), "q0", home="east_region")
+    chosen = namings(
+        [(home, "UNI", Phrase(wording.FORMATION + "union", "Kaira"))],
+        {"q0": "Kaira"},
+        {"east_region": "Laltsu"},
+        keys,
+    )
+    assert chosen["UNI"].event == "rnw_naming.2"
+    assert chosen["UNI"].key == "UNI_other2"
+    nation = Formation(POSTCOLONIAL_FEDERATION, 0, ("q0",), (), (), "q0", named_by="east_region")
+    union, federation = identities(
+        [home, nation],
+        {"q0": "Kaira"},
+        ["UNI", "NAT"],
+        5,
+        frozenset(),
+        regions={"east_region": "Laltsu"},
+        keys=keys,
+    )
+    assert union.key == "rnw_union_2_f"
+    assert block(home, union).startswith("rnw_union_2_f = {")
+    assert "rnw_union_2_f_desc" in formation_texts([home], [union])
+    assert dict(federation.nations) == {t.name: f"NAT_{t.name}_1" for t in TRADITIONS}
+    assert "change_country_name = NAT_spanish_1" in block(nation, federation)

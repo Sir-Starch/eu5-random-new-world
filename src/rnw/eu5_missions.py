@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from rnw.content import Formation
     from rnw.eu5_formation import Identity
     from rnw.game_texts import Entry
+    from rnw.loc_keys import KeySpace
     from rnw.wording import Phrase
 
 MISSIONS_FILE: Final[str] = "in_game/common/missions/rnw_roads.txt"
@@ -65,7 +66,7 @@ class Road:
     """The mission of one formation: its number, the formable's tag and name, its seat and the
     places a founder must hold to be half way."""
 
-    number: int
+    base: str
     formation: Formation
     tag: str
     name: Phrase
@@ -77,23 +78,36 @@ def offered(formation: Formation) -> bool:
     return not formation.continent
 
 
-def roads(formations: Sequence[Formation], identities: Sequence[Identity]) -> list[Road]:
-    """The missions of a world, in the order of its formations."""
+# The keys of a mission besides its own: its description and its tasks with theirs.
+SUFFIXES: Final[tuple[str, ...]] = tuple(
+    f"{part}{end}" for part in ("", "_seat", "_land", "_proclaim") for end in ("", "_desc")
+)
+
+
+def roads(
+    formations: Sequence[Formation],
+    identities: Sequence[Identity],
+    keys: KeySpace | None = None,
+) -> list[Road]:
+    """The missions of a world, in the order of its formations.
+
+    ``keys`` hands out each mission's keys together, so that none shares the engine's hash
+    with another; without it they are numbered in order.
+    """
     found: list[Road] = []
     for formation, identity in zip(formations, identities, strict=True):
         if not offered(formation):
             continue
+        base = f"{ROAD}_{len(found) + 1}" if keys is None else keys.group(f"{ROAD}_", SUFFIXES)
         need = float(BY_FAMILY[formation.family].fraction) * len(formation.places)
         found.append(
-            Road(
-                len(found) + 1, formation, identity.tag, identity.name, max(1, math.ceil(need / 2))
-            )
+            Road(base, formation, identity.tag, identity.name, max(1, math.ceil(need / 2)))
         )
     return found
 
 
 def key(road: Road) -> str:
-    return f"{ROAD}_{road.number}"
+    return road.base
 
 
 def _lines(lines: Sequence[str], depth: int) -> str:
