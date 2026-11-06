@@ -746,9 +746,11 @@ of them (a named opinion) and a mediator.
   recorded past (N9, `02b8230`); the family reforms (N6). On candidate B's code the
   export writes 11 realms, the empire, 4 restorations and 122 memory events, all files
   parsed, every text in every language. [V-EXEC] The pending epoch-61 golden is
-  refreshed and reproduced; the layer check passes. Missions, the fantasy layer beyond
-  the empire, the adapted vanilla chains and the naming choice events (§22.4, items
-  1–4) are not yet implemented.
+  refreshed and reproduced; the layer check passes. Then the adapted vanilla chains
+  (`70a8090`) and the naming choice. [V-EXEC] Refinement: RNW raises ranks only at
+  formation, so the naming choice at formation is the choice at a new rank; a rank
+  reached otherwise keeps the game's titles (`on_country_rank_change` is not hooked,
+  which would need a second name for every country of the world).
 
 ### Redesign phases after the audit (D21–D28)
 

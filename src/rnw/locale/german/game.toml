@@ -1713,3 +1713,19 @@ text = '''Straßen ins Grenzland'''
 ["STATIC_MODIFIER_DESC_rnw_nation_roads"]
 source = "671d8ac3385e6289"
 text = '''Landmesser und Straßenbauer führen die Straßen der Nation über die besiedelte Küste hinaus.'''
+
+["rnw_naming.title"]
+source = "82708204008b5b60"
+text = '''Ein Name für den neuen Staat'''
+
+["rnw_naming.desc"]
+source = "360aafa7c1166035"
+text = '''Der neue Staat braucht einen Namen, unter dem ihn seine Nachbarn kennen werden. Manche am Hof ziehen den Namen vor, unter dem er ausgerufen wurde; andere würden ihn nach dem Land benennen, das er nun beherrscht.'''
+
+["rnw_naming.keep"]
+source = "83549dc6c7c223ec"
+text = '''Den Namen behalten: {name}.'''
+
+["rnw_naming.take"]
+source = "0eff740f9b97f82f"
+text = '''Den Namen annehmen: {name}.'''

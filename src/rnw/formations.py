@@ -48,7 +48,20 @@ EMPIRE_ADJECTIVE: Final[str] = "rnw_formation_new_world_empire_adj"
 # tooltip of the formation that sends it. ``restorer`` is the restored country.
 RESTORATION_EVENT: Final[str] = "rnw_restoration"
 HEIRS_TOOLTIP: Final[str] = "rnw_restoration_heirs_tt"
+# The founder's choice between two names (``eu5_naming``).
+NAMING_EVENT: Final[str] = "rnw_naming"
+NAMING_TITLE: Final[str] = f"{NAMING_EVENT}.title"
+NAMING_DESC: Final[str] = f"{NAMING_EVENT}.desc"
+NAMING_KEEP: Final[str] = f"{NAMING_EVENT}.keep"
+NAMING_TAKE: Final[str] = f"{NAMING_EVENT}.take"
 EXTRA_TEXTS: Final[dict[str, str]] = {
+    NAMING_TITLE: "A Name for the New State",
+    NAMING_DESC: (
+        "The new state needs a name by which its neighbours will know it. Some at court prefer "
+        "the name it was proclaimed under; others would call it after the land it now rules."
+    ),
+    NAMING_KEEP: "Keep the name: {name}.",
+    NAMING_TAKE: "Take the name: {name}.",
     HEIRS_TOOLTIP: (
         "Every other heir of the old realm must recognize the restoration or contest it."
     ),

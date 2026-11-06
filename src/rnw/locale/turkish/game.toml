@@ -1713,3 +1713,19 @@ text = '''Sınır Bölgesine Yollar'''
 ["STATIC_MODIFIER_DESC_rnw_nation_roads"]
 source = "671d8ac3385e6289"
 text = '''Arazi ölçerler ve yol yapımcıları ulusun yollarını yerleşik kıyının ötesine uzatıyor.'''
+
+["rnw_naming.title"]
+source = "82708204008b5b60"
+text = '''Yeni Devlete Bir Ad'''
+
+["rnw_naming.desc"]
+source = "360aafa7c1166035"
+text = '''Yeni devletin, komşularının onu tanıyacağı bir ada ihtiyacı var. Saraydaki bazıları ilan edildiği adı tercih ediyor; diğerleri ise ona şimdi yönettiği toprağın adını vermek istiyor.'''
+
+["rnw_naming.keep"]
+source = "83549dc6c7c223ec"
+text = '''Adı koruyun: {name}.'''
+
+["rnw_naming.take"]
+source = "0eff740f9b97f82f"
+text = '''Bu adı alın: {name}.'''

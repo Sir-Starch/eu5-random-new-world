@@ -325,7 +325,8 @@ class Formation:
     are then their inhabited places, the formable names the key); a realm also asks for its
     ``throne``. ``named_by`` is
     the region whose generated name names a colonial federation (the region of its seat, unless
-    another federation took it).
+    another federation took it); ``home`` the region of its seat, which offers its founder a
+    second name (``eu5_naming``).
     """
 
     family: str
@@ -339,6 +340,7 @@ class Formation:
     continent: str = ""
     throne: str = ""
     named_by: str = ""
+    home: str = ""
 
     @property
     def ident(self) -> str:
@@ -908,6 +910,7 @@ def restorations(facts: Facts) -> tuple[list[Formation], list[tuple[str, str]]]:
                 tuple(heirs),
                 seat,
                 realm.key,
+                home=facts.places[seat].region,
             )
         )
     return chosen, passed
@@ -982,6 +985,7 @@ def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], s
                 seat,
                 group,
                 named_by="" if region in {f.named_by for f in chosen} else region,
+                home=facts.places[seat].region,
             )
         )
     return chosen, reason

@@ -314,11 +314,14 @@ def _unlock(spec: Spec) -> str:
     return f"\t\tunlock_government_reform_effect = {{ type = {spec.reform.name} }}\n"
 
 
-def block(formation: Formation, identity: Identity) -> str:
-    """The formable of one formation: a tag the game does not define, as ``ADU`` is."""
+def block(formation: Formation, identity: Identity, asks: str = "") -> str:
+    """The formable of one formation: a tag the game does not define, as ``ADU`` is.
+
+    ``asks`` is an effect line that asks the founder a question (``eu5_naming``).
+    """
     spec = BY_FAMILY[formation.family]
-    asks = [*spec.allow, *([f"owns = location:{formation.throne}"] if formation.throne else [])]
-    allow = "".join(f"\t\t{line}\n" for line in asks)
+    needs = [*spec.allow, *([f"owns = location:{formation.throne}"] if formation.throne else [])]
+    allow = "".join(f"\t\t{line}\n" for line in needs)
     return (
         f"{key_of(formation)} = {{\n"
         f"\tlevel = {spec.level}\n"
@@ -345,15 +348,26 @@ def block(formation: Formation, identity: Identity) -> str:
         f"{_renaming(identity.tag) if spec.renamed else ''}"
         f"{_summons(formation) if spec.heirs else ''}"
         f"{_founding() if spec.founds else ''}"
+        f"{chr(9) * 2 + asks + chr(10) if asks else ''}"
         "\t}\n"
         "}\n"
     )
 
 
-def files(formations: Sequence[Formation], identities: Sequence[Identity]) -> dict[str, str]:
-    """The script files of the formations: formables, flags, coats of arms and colours."""
+def files(
+    formations: Sequence[Formation],
+    identities: Sequence[Identity],
+    asks: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """The script files of the formations: formables, flags, coats of arms and colours.
+
+    ``asks`` gives, by tag, the effect line that asks a founder a question.
+    """
     pairs = list(zip(formations, identities, strict=True))
-    formables = "\n".join(block(formation, identity) for formation, identity in pairs)
+    formables = "\n".join(
+        block(formation, identity, (asks or {}).get(identity.tag, ""))
+        for formation, identity in pairs
+    )
     flags = "\n".join(
         f"{i.tag} = {{\n\tflag_definition = {{\n\t\tcoa = {i.tag}\n\t\tpriority = 1\n\t}}\n}}\n"
         for _, i in pairs

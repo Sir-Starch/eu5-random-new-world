@@ -170,6 +170,15 @@ holding land of the territory as a target, scored as half of vanilla's
 pursued from the second age (1342), realms from the age of discovery (1437). How
 far the AI pursues them over a campaign is not observed. [V-EXEC; UNKNOWN in play]
 
+**A name for the new state.** When a union, confederation, league, commonwealth,
+realm or restoration is founded, its founder chooses once (**A Name for the New
+State**, `rnw_naming.<n>`) between its name and the other one the world offers: a
+seat-named formable the name of its seat's region, a realm the name of its throne.
+The second name is set with `change_country_name` and `change_country_adjective`.
+RNW raises ranks at formation, so this is also the choice at a new rank; a rank
+reached otherwise keeps the game's own titles. [V-EXEC; that the engine accepts a
+generated key there is INFERRED]
+
 **The throne.** A realm's throne is the most populous centre that a state holds
 in its region at the start; the founder must own it, as vanilla's `AZT_f` requires
 Tenochtitlan. The realm is named after its region's generated name, the empire

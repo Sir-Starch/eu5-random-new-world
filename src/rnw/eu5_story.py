@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw import colonial_names, eu5_formation, eu5_goals, eu5_memories
+from rnw import colonial_names, eu5_formation, eu5_goals, eu5_memories, eu5_naming
 from rnw.content import (
     NATION_FOUNDING,
     ContentPlan,
@@ -237,18 +237,33 @@ def _yaml(language: str, entries: Mapping[str, str]) -> bytes:
     return ("\n".join(lines) + "\n").encode("utf-8-sig")
 
 
-def _formations(
+def _formations(  # noqa: PLR0913 - the formables read the plan, the names and the game.
     game_dir: Path,
     plan: ContentPlan,
     identities: Sequence[eu5_formation.Identity],
     files: dict[str, bytes],
     texts: dict[str, Entry],
+    *,
+    names: tuple[Mapping[str, Name], Mapping[str, Name]],
 ) -> list[str]:
-    """Add the formables' files and texts; return their families' founding modifiers."""
+    """Add the formables' files and texts; return their families' founding modifiers.
+
+    ``names`` are the world's place names and region names, which offer founders a second name.
+    """
     families = {formation.family for formation in plan.formations}
     specs = [spec for spec in SPECS if spec.family in families]
     eu5_formation.check_installation(game_dir, specs)
-    written = eu5_formation.files(plan.formations, identities)
+    choices = eu5_naming.namings(
+        [(f, i.tag, i.name) for f, i in zip(plan.formations, identities, strict=True)], *names
+    )
+    if choices:
+        files[eu5_naming.EVENT_FILE] = eu5_naming.events(list(choices.values())).encode("utf-8-sig")
+        texts.update(eu5_naming.texts(list(choices.values())))
+    written = eu5_formation.files(
+        plan.formations,
+        identities,
+        {tag: eu5_naming.fires(naming) for tag, naming in choices.items()},
+    )
     goals = eu5_goals.files(plan.formations)
     if goals:
         eu5_goals.check_installation(game_dir)
@@ -315,7 +330,9 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         identities = eu5_formation.identities(
             plan.formations, names, tags, seed, taken, regions=regions
         )
-        modifiers += _formations(game_dir, plan, identities, files, texts)
+        modifiers += _formations(
+            game_dir, plan, identities, files, texts, names=(names, regions or {})
+        )
     if memories:
         eu5_memories.check_installation(game_dir)
         restored = eu5_memories.restorations(plan.formations, [i.tag for i in identities])

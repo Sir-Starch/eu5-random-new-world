@@ -1713,3 +1713,19 @@ text = '''Drogi na pogranicze'''
 ["STATIC_MODIFIER_DESC_rnw_nation_roads"]
 source = "671d8ac3385e6289"
 text = '''Mierniczowie i budowniczowie dróg prowadzą drogi narodu poza zasiedlone wybrzeże.'''
+
+["rnw_naming.title"]
+source = "82708204008b5b60"
+text = '''Imię dla nowego państwa'''
+
+["rnw_naming.desc"]
+source = "360aafa7c1166035"
+text = '''Nowe państwo potrzebuje imienia, pod którym poznają je sąsiedzi. Jedni na dworze wolą imię, pod którym je ogłoszono; inni nazwaliby je od ziemi, którą teraz rządzi.'''
+
+["rnw_naming.keep"]
+source = "83549dc6c7c223ec"
+text = '''Zachować imię: {name}.'''
+
+["rnw_naming.take"]
+source = "0eff740f9b97f82f"
+text = '''Przyjąć imię: {name}.'''

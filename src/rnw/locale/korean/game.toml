@@ -1713,3 +1713,19 @@ text = '''변경으로 가는 길'''
 ["STATIC_MODIFIER_DESC_rnw_nation_roads"]
 source = "671d8ac3385e6289"
 text = '''측량사와 도로 건설자들이 나라의 길을 정착된 해안 너머로 넓혀 갑니다.'''
+
+["rnw_naming.title"]
+source = "82708204008b5b60"
+text = '''새 국가의 이름'''
+
+["rnw_naming.desc"]
+source = "360aafa7c1166035"
+text = '''새 국가에는 이웃들이 부를 이름이 필요합니다. 궁정의 일부는 선포 때의 이름을 선호하고, 다른 이들은 지금 다스리는 땅의 이름을 따르고자 합니다.'''
+
+["rnw_naming.keep"]
+source = "83549dc6c7c223ec"
+text = '''이름을 유지합니다: {name}.'''
+
+["rnw_naming.take"]
+source = "0eff740f9b97f82f"
+text = '''이름을 바꿉니다: {name}.'''

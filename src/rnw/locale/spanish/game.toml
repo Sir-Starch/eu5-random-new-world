@@ -1713,3 +1713,19 @@ text = '''Caminos hacia la frontera'''
 ["STATIC_MODIFIER_DESC_rnw_nation_roads"]
 source = "671d8ac3385e6289"
 text = '''Agrimensores y constructores de caminos llevan los caminos de la nación más allá de la costa poblada.'''
+
+["rnw_naming.title"]
+source = "82708204008b5b60"
+text = '''Un nombre para el nuevo Estado'''
+
+["rnw_naming.desc"]
+source = "360aafa7c1166035"
+text = '''El nuevo Estado necesita un nombre por el que lo conozcan sus vecinos. Algunos en la corte prefieren el nombre con que fue proclamado; otros lo llamarían por la tierra que ahora gobierna.'''
+
+["rnw_naming.keep"]
+source = "83549dc6c7c223ec"
+text = '''Conservar el nombre: {name}.'''
+
+["rnw_naming.take"]
+source = "0eff740f9b97f82f"
+text = '''Tomar el nombre: {name}.'''

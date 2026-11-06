@@ -1713,3 +1713,19 @@ text = '''辺境への道'''
 ["STATIC_MODIFIER_DESC_rnw_nation_roads"]
 source = "671d8ac3385e6289"
 text = '''測量士と道路の建設者が、国の道を入植の進んだ海岸の先へと延ばしていく。'''
+
+["rnw_naming.title"]
+source = "82708204008b5b60"
+text = '''新国家の名'''
+
+["rnw_naming.desc"]
+source = "360aafa7c1166035"
+text = '''新たな国家には、隣国に知られるための名が要る。宮廷の一部は建国の際に掲げた名を好み、ほかの者は今治める土地にちなんで名づけたいと考えている。'''
+
+["rnw_naming.keep"]
+source = "83549dc6c7c223ec"
+text = '''名を保つ：{name}。'''
+
+["rnw_naming.take"]
+source = "0eff740f9b97f82f"
+text = '''名を改める：{name}。'''

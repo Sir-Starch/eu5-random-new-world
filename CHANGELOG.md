@@ -16,6 +16,9 @@
   founding in its founders' tradition (*United Provinces*, *United Captaincies*, *United
   Colonies*, *Free State* or *Generality of X*).
 
+- Let the founder of a formable choose its name: the one it was proclaimed under, or the
+  name of the land it rules (its seat's region, or a realm's greatest city).
+
 - Restore the realms the history divided. A realm or union that broke apart before 1337 and
   has two living heirs becomes a formable restoration of its old land, named as the
   chronicle names it (*Restored X*), offered to its heirs only; when one restores it, each
