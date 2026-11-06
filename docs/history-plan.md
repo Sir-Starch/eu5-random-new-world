@@ -911,7 +911,8 @@ goldens, installed-game read-only checks and reference reproduction as in
 candidate covers six checks, and a seventh while W6 ships (the candidate then enables it):
 
 - the world loads without errors naming the new keys;
-- a named historical opinion appears in the diplomacy view;
+- a named historical opinion appears in the diplomacy view, with the value and the treaty lines
+  (*Allied*, *Rival*, *Our Vassal*) the window's Relations tab shows for that country (D31);
 - Our History opens the chronicle;
 - a generated `guarantee` appears;
 - the formables list of one country shows its ladder ([§22](#22-goals-and-consequences-in-play-2026-11-06));
