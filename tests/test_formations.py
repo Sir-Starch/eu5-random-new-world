@@ -53,6 +53,7 @@ from rnw.eu5_formation import (
     identities,
     key_of,
     nation_key,
+    side_geography,
     texts,
 )
 from rnw.formations import (
@@ -758,9 +759,18 @@ def test_the_fantasy_layer_is_one_of_each_over_the_continent() -> None:
     one, why = formations(replace(coasts, oceans={"east_sea": atlantic}), SEED, TWO_OCEANS)
     assert not one
     assert "two oceans" in why
-    text = block(found[0], _identity(TWO_SHORES))
-    assert f"sea_zone ?= {{ continent = continent:{pacific} }}" in text
+    empire = found[0]
+    assert empire.sides == (
+        tuple(f"p{n:03d}" for n in range(10)),
+        tuple(f"p{n:03d}" for n in range(111, 120)),
+    )
+    text = block(empire, _identity(TWO_OCEANS))
+    side = side_geography(empire, pacific)
+    assert f"is_in_scripted_geography = scripted_geography:{side}" in text
     assert "rule = fantasy" in text
+    coast = parse(geographies([empire])).block(side, "location")
+    assert coast is not None
+    assert [word.value for word in coast.words()] == list(empire.sides[1])
 
 
 def test_a_confederation_of_three_states_may_become_a_state_of_its_great_law() -> None:

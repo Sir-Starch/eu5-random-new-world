@@ -20,6 +20,7 @@ from rnw.content import (
     RESTORATION_HEIRS,
     RESTORATION_PLACES,
     RULES,
+    TWO_OCEANS,
 )
 from rnw.eu5_places import SPECS as PLACES
 from rnw.formations import SPECS
@@ -360,6 +361,11 @@ def allowed(family: str, allow: tuple[str, ...]) -> str:
     lines = [f"`{line}`" for line in allow]
     if family == REGIONAL_REALM:
         lines.append("`owns = location:<throne>`")
+    if family == TWO_OCEANS:
+        lines.append(
+            "a port in each ocean's coast (`is_in_scripted_geography = "
+            "scripted_geography:<formable>_geography_<ocean>`)"
+        )
     return "; ".join(lines) or "none authored"
 
 

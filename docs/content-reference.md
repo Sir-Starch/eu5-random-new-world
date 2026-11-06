@@ -2162,7 +2162,7 @@ This continent lies between two oceans, and no power has ever sailed both. One t
 - Key: `rnw_two_oceans_<index>_f` (index starts at 1).
 - Level **5**; rank `rank_empire`; ownership fraction **0.15**; game rule `fantasy`.
 - Generation: at most **1**; **0–0** locations; at least **0** centres and **0** states with capitals inside; at most **0** claimant starting tags.
-- Additional formation conditions: `any_owned_location = { is_port = yes sea_zone ?= { continent = continent:atlantic_ocean_continent } }`; `any_owned_location = { is_port = yes sea_zone ?= { continent = continent:pacific_ocean_continent } }`.
+- Additional formation conditions: a port in each ocean's coast (`is_in_scripted_geography = scripted_geography:<formable>_geography_<ocean>`).
 - Potential: any holder of the territory (empty; `capital_required = yes`).
 - Cores: none.
 - Founding modifier: **Mistress of Two Oceans** (`rnw_two_oceans_sea_power`), **30 years**. Our fleets keep the sea lanes of both oceans.

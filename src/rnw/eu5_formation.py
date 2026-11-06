@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Final
 
 from rnw import wording
 from rnw.colonial_names import TRADITIONS
+from rnw.content import OCEANS
 from rnw.eu5_empires import rank_levels
 from rnw.eu5_natives import hsv_rgb
 from rnw.formations import (
@@ -190,7 +191,15 @@ def geographies(formations: Sequence[Formation]) -> str:
             kind, keys = "location", list(formation.places)
         lines = [f"{geography(formation)} = {{", f"\t{kind} = {{", *(f"\t\t{k}" for k in keys)]
         out.append(_indented([*lines, "\t}", "}"], 0))
+        for ocean, coast in zip(OCEANS, formation.sides, strict=False):
+            side = [f"{side_geography(formation, ocean)} = {{", "\tlocation = {"]
+            out.append(_indented([*side, *(f"\t\t{k}" for k in coast), "\t}", "}"], 0))
     return "\n".join(out)
+
+
+def side_geography(formation: Formation, ocean: str) -> str:
+    """The coast of one ocean of the empire of two oceans, as a scripted geography."""
+    return f"{geography(formation)}_{ocean}"
 
 
 def _cores(formation: Formation) -> str:
@@ -322,7 +331,17 @@ def block(formation: Formation, identity: Identity, asks: str = "") -> str:
     ``asks`` is an effect line that asks the founder a question (``eu5_naming``).
     """
     spec = BY_FAMILY[formation.family]
-    needs = [*spec.allow, *([f"owns = location:{formation.throne}"] if formation.throne else [])]
+    needs = [
+        *spec.allow,
+        *([f"owns = location:{formation.throne}"] if formation.throne else []),
+        *(
+            (
+                "any_owned_location = { is_port = yes is_in_scripted_geography = "
+                f"scripted_geography:{side_geography(formation, ocean)} }}"
+            )
+            for ocean, _ in zip(OCEANS, formation.sides, strict=False)
+        ),
+    ]
     allow = "".join(f"\t\t{line}\n" for line in needs)
     return (
         f"{key_of(formation)} = {{\n"

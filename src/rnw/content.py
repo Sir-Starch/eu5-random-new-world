@@ -295,7 +295,8 @@ class Facts:
     """What the plan reads: the places, the states, the holy places, the adjacency, the groups.
 
     ``groups`` maps a culture to the culture groups the game puts it in; ``subjects`` are the
-    (overlord, subject) pairs of the start; ``oceans`` the continent key of each sea zone.
+    (overlord, subject) pairs of the start; ``oceans`` the open ocean (``OCEANS``) that each sea
+    zone opens onto, nearest by water.
     """
 
     places: Mapping[str, Place]
@@ -342,7 +343,8 @@ class Formation:
     cultural union, the fallen realm of a restoration, empty for the other families. A realm's
     territory is a whole generated ``region`` and the empire's a whole ``continent`` (``places``
     are then their inhabited places, the formable names the key); a realm also asks for its
-    ``throne``. ``named_by`` is
+    ``throne``; the empire of two oceans keeps the coasts of each ocean in ``sides``.
+    ``named_by`` is
     the region whose generated name names a colonial federation (the region of its seat, unless
     another federation took it); ``home`` the region of its seat, which offers its founder a
     second name (``eu5_naming``).
@@ -360,6 +362,7 @@ class Formation:
     throne: str = ""
     named_by: str = ""
     home: str = ""
+    sides: tuple[tuple[str, ...], ...] = ()
 
     @property
     def ident(self) -> str:
@@ -950,12 +953,20 @@ def continental(facts: Facts, family: str) -> tuple[list[Formation], str]:
     if not continent:
         return [], "no continent is known"
     keys = tuple(sorted(k for k, place in facts.places.items() if place.continent == continent))
+    sides: tuple[tuple[str, ...], ...] = ()
     if family == TWO_OCEANS:
-        touched = {facts.oceans.get(sea, "") for key in keys for sea in facts.places[key].seas}
-        if not set(OCEANS) <= touched:
+        sides = tuple(
+            tuple(
+                key
+                for key in keys
+                if any(facts.oceans.get(sea) == ocean for sea in facts.places[key].seas)
+            )
+            for ocean in OCEANS
+        )
+        if not all(sides):
             return [], "the continent has no coast on two oceans"
     seat = max(keys, key=lambda key: (facts.places[key].population, key))
-    return [Formation(family, 0, keys, (), (), seat, continent=continent)], ""
+    return [Formation(family, 0, keys, (), (), seat, continent=continent, sides=sides)], ""
 
 
 def great_laws(facts: Facts) -> tuple[list[Formation], str]:

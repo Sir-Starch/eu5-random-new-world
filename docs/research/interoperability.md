@@ -953,8 +953,8 @@ as `colonial_federation_events.txt`) and `every_international_organization_membe
 and the nation's assembly uses `change_government_type`, as `INC_f` does.
 
 The goals beyond the ladder add only formable triggers with vanilla precedents:
-`any_owned_location` with `continent`, `is_port` and the location's `sea_zone`
-(`pacific_crossing_events.txt`, `culture_greek.txt`), `any_primary_or_accepted_culture`
+`any_owned_location` with `continent`, `is_port` and `is_in_scripted_geography`
+(`pacific_crossing_events.txt`), `any_primary_or_accepted_culture`
 and `is_leader_of_international_organization_of_type`.
 
 The missions use `common/missions` in the fields its `____Info.txt` documents (`icon`,

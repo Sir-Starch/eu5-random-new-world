@@ -32,7 +32,6 @@ from rnw.content import (
     HIGHLAND_CONFEDERATION,
     MARITIME_LEAGUE,
     NEW_WORLD_EMPIRE,
-    OCEANS,
     POSTCOLONIAL_FEDERATION,
     REGIONAL_REALM,
     RESTORATION,
@@ -498,13 +497,6 @@ SPECS: Final[tuple[Spec, ...]] = (
             "Our fleets keep the sea lanes of both oceans.",
         ),
         years=30,
-        allow=tuple(
-            (
-                "any_owned_location = { is_port = yes "
-                f"sea_zone ?= {{ continent = continent:{ocean} }} }}"
-            )
-            for ocean in OCEANS
-        ),
         rule="fantasy",
         cores=False,
         named=name_key(TWO_OCEANS),

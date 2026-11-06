@@ -33,6 +33,7 @@ from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import to_files as atlas_files
 from rnw.bundle import COVER_COPY
+from rnw.content import OCEANS as OPEN_OCEANS
 from rnw.content import plan_content
 from rnw.content_check import check_decisions, check_outcomes
 from rnw.eu5_ai import (
@@ -1626,6 +1627,34 @@ def _sea_zones(plan: Plan, world: NewWorld) -> dict[str, set[str]]:
     return touching
 
 
+def _ocean_sides(plan: Plan, world: NewWorld) -> dict[str, str]:
+    """The open ocean each generated sea zone opens onto, nearest over sea contacts.
+
+    The coastal waters of the Americas belong to the American continent in the hierarchy, so the
+    ocean of a coast is found by water: a multi-source search from the sea zones of the open
+    oceans (``content.OCEANS``), the first ocean in their order winning a tie.
+    """
+    near: dict[int, list[int]] = {}
+    for first, second in world.edges:
+        if plan.cells[first].kind is CellClass.SEA and plan.cells[second].kind is CellClass.SEA:
+            near.setdefault(first, []).append(second)
+            near.setdefault(second, []).append(first)
+    side: dict[int, str] = {}
+    queue: deque[int] = deque()
+    for ocean in OPEN_OCEANS:
+        for index, cell in enumerate(plan.cells):
+            if cell.kind is CellClass.SEA and cell.continent == ocean and index not in side:
+                side[index] = ocean
+                queue.append(index)
+    while queue:
+        here = queue.popleft()
+        for there in sorted(near.get(here, ())):
+            if there not in side:
+                side[there] = side[here]
+                queue.append(there)
+    return {plan.cells[index].key: ocean for index, ocean in side.items()}
+
+
 def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples and the installation.
     game_dir: Path,
     *,
@@ -1668,7 +1697,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         history=historical_content_facts(natives),
         regions={keys[index]: plan.cells[index].region for index in land},
         continents={keys[index]: plan.cells[index].continent for index in land},
-        oceans={cell.key: cell.continent for cell in plan.cells if cell.kind is CellClass.SEA},
+        oceans=_ocean_sides(plan, world),
     )
     content = plan_content(facts, seed)
     reserved = vanilla.reserved_tags | {country.tag for country in natives.countries}
