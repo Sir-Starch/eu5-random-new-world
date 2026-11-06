@@ -1289,3 +1289,35 @@ text = '''{year}: Społeczność {second} oderwała się od społeczności {firs
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}: Społeczność {first} nie zdołała dłużej utrzymać społeczności {second}, która się oderwała.'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''Niegdyś te ziemie trzymało królestwo, aż rozpadło się między swoich spadkobierców, którzy wciąż je pamiętają. Spadkobierca, który trzyma dość jego dawnych ziem i ma na nich stolicę, może je odrodzić i uznać resztę za swoją: {name}. Pozostali spadkobiercy muszą uznać odrodzenie albo je zakwestionować.'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''Spadkobiercy dawnego królestwa'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''Odrodzona korona gromadzi dawne urzędy i przywraca utracone prowincje pod jedną władzę.'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''Każdy inny spadkobierca dawnego królestwa musi uznać odrodzenie albo je zakwestionować.'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''Dawne królestwo odrodzone'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''Posłowie [restorer.GetNameWithNoTooltip] przybyli z proklamacją: królestwo, które dzielili nasi przodkowie, zostało odrodzone, a jego nowa korona uznaje za swoje wszystkie ziemie, które niegdyś trzymało, również nasze. Nasza rada musi zdecydować, czy pokłonić się dawnemu imieniu, czy je odrzucić.'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''Uznajemy odrodzoną koronę.'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''Dawna korona nie należy do nich bardziej niż do nas.'''

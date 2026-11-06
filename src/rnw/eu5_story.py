@@ -299,6 +299,7 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         "pulses": [story.family for story in stories if story.pulse is not None],
         "colonial_names": len(regions or {}) * len(colonial_names.TRADITIONS),
         "absences": {absence.family: absence.reason for absence in plan.absences},
+        "restorations_passed": dict(plan.passed),
         "formations": {
             identity.tag: {
                 "family": formation.family,

@@ -108,6 +108,7 @@ countries. [V-EXEC C212, C218, C409; 1.2.0 development, history plan §22]
 | **Realm of a region** | A whole generated region; one for each region holding the capitals of at least 3 states and 4 centres, and for each region holding the seat of a lower formable | 40%, plus the region's **throne** | 4 / Empire | **Administration of the Realm**, 15 years |
 | **Postcolonial federation** | 20–40 connected coastal locations, including sea-zone links; no minimum starting states or centres; up to 2 | 35%, plus **independence** or the lead of a colonial federation | 3 / Kingdom | **A Nation Founded**, 10 years |
 | **Empire of the continent** (fantasy) | The whole continent of the realms, once it holds the realms of at least 2 regions; one per world | 50%, plus **hegemony** and **empire rank** | 5 / Empire | **A Crown Over the Continent**, 20 years |
+| **Restoration** | The places a realm or union held at its height, when the history divided it and at least 2 of its heirs live on the map, over at least 6 inhabited places; the largest first, without overlap | 50% | 3 / Kingdom | **Heirs of the Old Realm**, 20 years |
 
 **Who may form them.** Any country whose capital lies in the territory and who
 holds enough of it may form a union, confederation, league or realm: the conqueror
@@ -134,6 +135,20 @@ colonial names test an overlord, renames itself with `change_country_name`:
 *Generality of X*, written in every official language. [V-EXEC; that the engine
 accepts a generated key in `change_country_name`, as it accepts vanilla tags, is
 [INFERRED] and not yet observed]
+
+**Restorations.** A restoration is offered only to the heirs of the fallen realm,
+the living countries on the map descended from it, also through later unions, by
+any tag they had (`has_or_had_tag`). It takes the predecessor's name as the
+chronicle writes it, its seat's (*Restored Tlacoyan*, *Возрождённое Тлакоянское
+царство*). The realm's height is replayed from the history's recorded transfers,
+which must lead to the holdings of 1337. When one heir restores it, every other heir
+receives **The Old Realm Restored** (`rnw_restoration.<n>`): recognize the restored
+crown (a small loss of prestige, good relations both ways) or deny it (a small gain
+of prestige, a rivalry and a refused claim both ways). A fallen realm with one heir
+left, an heir of a kingdom's rank or above, too little inhabited land or land a larger
+restoration already holds gets none; the export report lists each with its reason.
+[V-EXEC; the event's effects are vanilla effects whose result in play is not yet
+observed]
 
 **The throne.** A realm's throne is the most populous centre that a state holds
 in its region at the start; the founder must own it, as vanilla's `AZT_f` requires

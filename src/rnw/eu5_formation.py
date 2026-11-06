@@ -27,7 +27,15 @@ from rnw import wording
 from rnw.colonial_names import TRADITIONS
 from rnw.eu5_empires import rank_levels
 from rnw.eu5_natives import hsv_rgb
-from rnw.formations import BY_FAMILY, CORES_TOOLTIP, EMPIRE_ADJECTIVE, Spec
+from rnw.formations import (
+    BY_FAMILY,
+    CORES_TOOLTIP,
+    EMPIRE_ADJECTIVE,
+    EXTRA_TEXTS,
+    HEIRS_TOOLTIP,
+    RESTORATION_EVENT,
+    Spec,
+)
 from rnw.game_texts import Described, Text, formation_description
 from rnw.rng import derive_seed
 from rnw.wording import Phrase
@@ -41,6 +49,13 @@ if TYPE_CHECKING:
     from rnw.wording import Name
 
 FORMABLES_FILE: Final[str] = "in_game/common/formable_countries/rnw_formations.txt"
+RESTORATION_FILE: Final[str] = f"in_game/events/{RESTORATION_EVENT}.txt"
+# What the other heirs gain or give by their answer: vanilla opinions and prestige values.
+RECOGNIZED: Final[str] = "opinion_good_relations"
+CONTESTED: Final[str] = "opinion_refused_claim"
+BIASES_DIR: Final[str] = "game/in_game/common/biases"
+VALUES_DIR: Final[str] = "game/main_menu/common/script_values"
+PRESTIGE: Final[tuple[str, str]] = ("prestige_weak_penalty", "prestige_weak_bonus")
 FLAGS_FILE: Final[str] = "main_menu/common/flag_definitions/rnw_formations.txt"
 ARMS_FILE: Final[str] = "main_menu/common/coat_of_arms/coat_of_arms/rnw_formations.txt"
 COLORS_FILE: Final[str] = "main_menu/common/named_colors/rnw_formations.txt"
@@ -84,6 +99,18 @@ def check_installation(game_dir: Path, specs: Sequence[Spec]) -> None:
             for path in sorted((game_dir / RANKS_DIR).glob("*.txt"))
         ]
     )
+    if any(spec.heirs for spec in specs):
+        defined = {
+            line.split("=")[0].strip()
+            for directory in (BIASES_DIR, VALUES_DIR)
+            for path in sorted((game_dir / directory).glob("*.txt"))
+            for line in path.read_text(encoding="utf-8-sig").splitlines()
+            if "=" in line
+        }
+        for needed in (RECOGNIZED, CONTESTED, *PRESTIGE):
+            if needed not in defined:
+                message = f"The {needed} that the restorations lean on is gone from the game"
+                raise FormationError(message)
     for spec in specs:
         if levels.get(spec.rank) != spec.rank_level:
             message = (
@@ -100,6 +127,9 @@ def _potential(formation: Formation, spec: Spec) -> str:
     """Who sees the formable besides the holders of its territory, decided in play."""
     if spec.potential:
         return "".join(f"\t\t{line}\n" for line in spec.potential)
+    if spec.heirs:
+        owners = "".join(f"\t\t\thas_or_had_tag = {tag}\n" for tag in formation.states)
+        return f"\t\tOR = {{\n{owners}\t\t}}\n"
     if formation.basis:
         owners = "".join(f"\t\t\ttag = {tag}\n" for tag in formation.states)
         people = f"culture ?= {{ has_culture_group = culture_group:{formation.basis} }}"
@@ -166,6 +196,79 @@ def _renaming(tag: str) -> str:
     )
 
 
+def restoration_event(formation: Formation) -> str:
+    """The identifier of the event the other heirs of a restoration receive."""
+    return f"{RESTORATION_EVENT}.{formation.index + 1}"
+
+
+def _summons(formation: Formation) -> str:
+    """The other heirs are asked to recognize or contest the restoration."""
+    heirs = [f"\t\thas_or_had_tag = {tag}" for tag in formation.states]
+    return _indented(
+        [
+            f"custom_tooltip = {HEIRS_TOOLTIP}",
+            "hidden_effect = {",
+            "\tevery_country = {",
+            "\t\tlimit = {",
+            "\t\t\tOR = {",
+            *(f"\t\t{line}" for line in heirs),
+            "\t\t\t}",
+            "\t\t\tNOT = { this = root }",
+            "\t\t}",
+            f"\t\ttrigger_event_non_silently = {{ id = {restoration_event(formation)} }}",
+            "\t}",
+            "}",
+        ],
+        2,
+    )
+
+
+def _answer(name: str, prestige: str, opinion: str, *, rival: bool, ai: int) -> list[str]:
+    return [
+        "option = {",
+        f"\tname = {RESTORATION_EVENT}.{name}",
+        f"\tadd_prestige = {prestige}",
+        *(["\tadd_rival = scope:restorer"] if rival else []),
+        f"\tadd_opinion = {{ target = scope:restorer modifier = {opinion} }}",
+        f"\tscope:restorer = {{ add_opinion = {{ target = root modifier = {opinion} }} }}",
+        f"\tai_chance = {{ base = {ai} }}",
+        "}",
+    ]
+
+
+def restoration_events(pairs: Sequence[tuple[Formation, Identity]]) -> str:
+    """The events of the other heirs: recognize the restored crown, or deny it as its rival."""
+    out = [f"namespace = {RESTORATION_EVENT}\n"]
+    lose, gain = PRESTIGE
+    for formation, identity in pairs:
+        if not BY_FAMILY[formation.family].heirs:
+            continue
+        tag = identity.tag
+        lines = [
+            f"{restoration_event(formation)} = {{",
+            "\ttype = country_event",
+            f"\ttitle = {RESTORATION_EVENT}.title",
+            f"\tdesc = {RESTORATION_EVENT}.desc",
+            "\toutcome = neutral",
+            "",
+            "\ttrigger = {",
+            f"\t\tcountry_exists = c:{tag}",
+            f"\t\tNOT = {{ tag = {tag} }}",
+            "\t}",
+            "",
+            "\timmediate = {",
+            f"\t\tc:{tag} = {{ save_scope_as = restorer }}",
+            "\t}",
+            "",
+            *(f"\t{line}" for line in _answer("a", lose, RECOGNIZED, rival=False, ai=40)),
+            "",
+            *(f"\t{line}" for line in _answer("b", gain, CONTESTED, rival=True, ai=60)),
+            "}",
+        ]
+        out.append("\n" + _indented(lines, 0))
+    return "".join(out)
+
+
 def block(formation: Formation, identity: Identity) -> str:
     """The formable of one formation: a tag the game does not define, as ``ADU`` is."""
     spec = BY_FAMILY[formation.family]
@@ -194,6 +297,7 @@ def block(formation: Formation, identity: Identity) -> str:
         "\t\t\tmode = add\n\t\t}\n"
         f"{_cores(formation) if spec.cores else ''}"
         f"{_renaming(identity.tag) if spec.renamed else ''}"
+        f"{_summons(formation) if spec.heirs else ''}"
         "\t}\n"
         "}\n"
     )
@@ -227,7 +331,10 @@ def files(formations: Sequence[Formation], identities: Sequence[Identity]) -> di
         )
         + "}\n"
     )
-    return {FORMABLES_FILE: formables, FLAGS_FILE: flags, ARMS_FILE: arms, COLORS_FILE: colours}
+    found = {FORMABLES_FILE: formables, FLAGS_FILE: flags, ARMS_FILE: arms, COLORS_FILE: colours}
+    if any(BY_FAMILY[formation.family].heirs for formation in formations):
+        found[RESTORATION_FILE] = restoration_events(pairs)
+    return found
 
 
 def _naming(
@@ -295,6 +402,12 @@ def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) ->
         spec = BY_FAMILY[formation.family]
         if spec.cores:
             found[CORES_TOOLTIP] = Text(CORES_TOOLTIP)
+        if spec.heirs:
+            for text in (
+                HEIRS_TOOLTIP,
+                *(k for k in EXTRA_TEXTS if k.startswith(RESTORATION_EVENT)),
+            ):
+                found[text] = Text(text)
         if spec.renamed:
             for tradition in TRADITIONS:
                 found[nation_key(identity.tag, tradition.name)] = Phrase(

@@ -33,6 +33,7 @@ from rnw.content import (
     NEW_WORLD_EMPIRE,
     POSTCOLONIAL_FEDERATION,
     REGIONAL_REALM,
+    RESTORATION,
     RIVER_UNION,
 )
 from rnw.storymodel import COUNTRY, STATIC, Modifier, Source
@@ -43,7 +44,23 @@ TOP_RANK_LEVEL: Final[int] = 4
 CORES_TOOLTIP: Final[str] = "rnw_formation_cores_tt"
 # The adjective of the empire of the New World, whose name is the continent's own text.
 EMPIRE_ADJECTIVE: Final[str] = "rnw_formation_new_world_empire_adj"
+# The event the other heirs receive when one restores the fallen realm (N7), its texts and the
+# tooltip of the formation that sends it. ``restorer`` is the restored country.
+RESTORATION_EVENT: Final[str] = "rnw_restoration"
+HEIRS_TOOLTIP: Final[str] = "rnw_restoration_heirs_tt"
 EXTRA_TEXTS: Final[dict[str, str]] = {
+    HEIRS_TOOLTIP: (
+        "Every other heir of the old realm must recognize the restoration or contest it."
+    ),
+    f"{RESTORATION_EVENT}.title": "The Old Realm Restored",
+    f"{RESTORATION_EVENT}.desc": (
+        "Envoys of [restorer.GetNameWithNoTooltip] have come with a proclamation: the realm "
+        "that our ancestors shared is restored, and its new crown calls every land it once held "
+        "its own, ours among them. Our council must decide whether to bow to the old name or to "
+        "deny it."
+    ),
+    f"{RESTORATION_EVENT}.a": "We recognize the restored crown.",
+    f"{RESTORATION_EVENT}.b": "The old crown is no more theirs than ours.",
     CORES_TOOLTIP: (
         "Every [location|e] of the territory that another country holds becomes our [core|e], "
         "and its holder can be fought for it."
@@ -58,7 +75,8 @@ class Spec:
 
     ``rule`` is the game rule that shows it (``plausible`` or ``fantasy``); ``cores`` says whether
     founding it gives cores over its territory; ``renamed`` that its founder takes the name of its
-    own naming tradition (``colonial_names.TRADITIONS``), if it has one.
+    own naming tradition (``colonial_names.TRADITIONS``), if it has one; ``heirs`` that it is
+    offered to the heirs of a fallen realm, the others of whom must accept or contest it.
     """
 
     family: str
@@ -75,6 +93,7 @@ class Spec:
     rule: str = "plausible"
     cores: bool = True
     renamed: bool = False
+    heirs: bool = False
 
     @property
     def rank_level(self) -> int:
@@ -247,6 +266,32 @@ SPECS: Final[tuple[Spec, ...]] = (
         allow=("is_hegemon = yes", "country_rank = country_rank:rank_empire"),
         rule="fantasy",
         cores=False,
+    ),
+    Spec(
+        family=RESTORATION,
+        stem="restoration",
+        level=3,
+        rank="rank_kingdom",
+        fraction="0.5",
+        emblem="ce_crown_head.dds",
+        description=(
+            "A realm once held these lands, until it broke apart among its heirs, who remember it "
+            "still. An heir that holds enough of its old land, with its capital there, may raise "
+            "it again and claim the rest of it as its own: {name}. The other heirs must accept "
+            "the restoration or contest it."
+        ),
+        modifier=Modifier(
+            "rnw_restoration_heirs",
+            COUNTRY,
+            Source(STATIC, "dlh_restored_authority_modifier"),
+            "Heirs of the Old Realm",
+            (
+                "The restored crown gathers the old offices and brings its lost provinces back "
+                "under one rule."
+            ),
+        ),
+        years=20,
+        heirs=True,
     ),
 )
 

@@ -16,6 +16,9 @@ from rnw.content import (
     REALM_CENTRES,
     REALM_STATES,
     REGIONAL_REALM,
+    RESTORATION,
+    RESTORATION_HEIRS,
+    RESTORATION_PLACES,
     RULES,
 )
 from rnw.eu5_places import SPECS as PLACES
@@ -316,6 +319,14 @@ def generation(family: str) -> str:
             "one, the continent (`continents`) whose regions hold at least "
             f"**{EMPIRE_REALMS}** realms."
         )
+    if family == RESTORATION:
+        return (
+            "one for each realm or union the history divided that has at least "
+            f"**{RESTORATION_HEIRS}** living heirs on the map and **{RESTORATION_PLACES}** "
+            "inhabited places of its height, largest first and without overlap; the claimants "
+            "are its heirs. A fallen realm without a restoration is listed with its reason in "
+            "the report's `restorations_passed`."
+        )
     rule = RULES[family]
     return (
         f"at most **{rule.limit}**; **{rule.places}–{rule.territory}** locations; "
@@ -343,6 +354,8 @@ def potential(family: str, lines: tuple[str, ...]) -> str:
         )
     if family == NEW_WORLD_EMPIRE:
         return "`capital.continent = continent:<continent>`"
+    if family == RESTORATION:
+        return "`has_or_had_tag` of each heir"
     return "any holder of the territory (empty; `capital_required = yes`)"
 
 

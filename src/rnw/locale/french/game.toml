@@ -1289,3 +1289,35 @@ text = '''{year} : La société {second} fit sécession de la société {first}.
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year} : La société {first} ne put plus retenir la société {second}, qui fit sécession.'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''Un royaume tenait jadis ces terres, avant de se briser entre ses héritiers, qui s'en souviennent encore. Un héritier qui tient assez de son ancien territoire, et y a sa capitale, peut le relever et revendiquer le reste comme sien : {name}. Les autres héritiers doivent accepter la restauration ou la contester.'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''Héritiers de l'ancien royaume'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''La couronne restaurée rassemble les anciennes charges et ramène ses provinces perdues sous une seule autorité.'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''Chaque autre héritier de l'ancien royaume doit reconnaître la restauration ou la contester.'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''L'ancien royaume restauré'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''Des envoyés de [restorer.GetNameWithNoTooltip] sont venus avec une proclamation : le royaume que partageaient nos ancêtres est restauré, et sa nouvelle couronne déclare siennes toutes les terres qu'il tenait jadis, les nôtres comprises. Notre conseil doit décider s'il s'incline devant l'ancien nom ou le rejette.'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''Nous reconnaissons la couronne restaurée.'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''L'ancienne couronne n'est pas plus à eux qu'à nous.'''

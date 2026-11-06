@@ -1289,3 +1289,35 @@ text = '''{year}年：共同体{second}が共同体{first}から離反した。'
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}年：共同体{first}はもはや共同体{second}を保持できず、その離反を許した。'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''かつてこの地を治めた王国があったが、やがてその後継者たちの間で分裂した。彼らは今もその王国を覚えている。旧領の十分な部分を押さえ、そこに首都を置く後継者は、王国を再興し、残りの地をも自らのものと主張できる。すなわち{name}である。ほかの後継者たちは、この再興を認めるか、異を唱えねばならない。'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''旧王国の後継者'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''再興された王冠は旧来の官職を取りまとめ、失われた州を再び一つの支配の下に戻す。'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''旧王国のほかのすべての後継者は、この再興を認めるか、異を唱えねばならない。'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''旧王国の再興'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''[restorer.GetNameWithNoTooltip]の使節が布告を携えてやって来た。我らの祖先が共にしていた王国は再興され、その新たな王冠はかつて王国が領したすべての地を、我らの地も含めて自らのものと称している。我らの評議会は、旧き名にひれ伏すか、それを拒むかを決めねばならない。'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''再興された王冠を認める。'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''旧き王冠は我らのものでもあり、彼らだけのものではない。'''

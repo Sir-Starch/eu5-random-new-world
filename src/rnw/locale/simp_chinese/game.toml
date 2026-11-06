@@ -1289,3 +1289,35 @@ text = '''{year}年：社群{second}脱离了社群{first}。'''
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}年：社群{first}再也无法维系社群{second}，后者就此脱离。'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''这片土地曾为一个王国所有，后来王国在其继承者之间分崩离析，而他们至今仍记得它。一个掌握足够多旧日领土、且首都位于其中的继承者，可以重建这个王国，并宣称其余土地归己所有：{name}。其他继承者必须承认这次复兴，或对其提出异议。'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''旧王国的继承者'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''复兴的王冠重聚旧日官职，将失去的省份重新纳入统一的统治之下。'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''旧王国的其他每一位继承者都必须承认这次复兴，或对其提出异议。'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''旧王国复兴'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''[restorer.GetNameWithNoTooltip]的使节带着一份宣告而来：我们祖先共享的王国已经复兴，它的新王冠宣称它昔日拥有的一切土地都归其所有，我们的土地也不例外。我们的议会必须决定，是向这个古老的名号低头，还是拒绝它。'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''我们承认复兴的王冠。'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''这顶古老的王冠，属于他们并不比属于我们更多。'''

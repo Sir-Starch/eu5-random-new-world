@@ -1289,3 +1289,35 @@ text = '''{year}: Die Gemeinschaft {second} spaltete sich von der Gemeinschaft {
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}: Die Gemeinschaft {first} konnte die Gemeinschaft {second} nicht länger halten, die sich abspaltete.'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''Einst hielt ein Reich diese Lande, bis es unter seinen Erben zerfiel, die sich noch immer an es erinnern. Ein Erbe, der genug von seinem alten Land hält und dort seine Hauptstadt hat, kann es wiedererrichten und den Rest als sein Eigen beanspruchen: {name}. Die übrigen Erben müssen die Wiederherstellung anerkennen oder anfechten.'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''Erben des alten Reiches'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''Die wiedererstandene Krone sammelt die alten Ämter und bringt ihre verlorenen Provinzen wieder unter eine Herrschaft.'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''Jeder andere Erbe des alten Reiches muss die Wiederherstellung anerkennen oder anfechten.'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''Das alte Reich ist wiedererstanden'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''Gesandte von [restorer.GetNameWithNoTooltip] sind mit einer Verkündung gekommen: Das Reich, das unsere Vorfahren teilten, ist wiedererstanden, und seine neue Krone nennt jedes Land, das es einst hielt, ihr Eigen, auch das unsere. Unser Rat muss entscheiden, ob wir uns vor dem alten Namen beugen oder ihn verwerfen.'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''Wir erkennen die wiedererstandene Krone an.'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''Die alte Krone gehört ihnen nicht mehr als uns.'''

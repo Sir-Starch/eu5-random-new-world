@@ -22,6 +22,7 @@ from rnw.content import (
     REALM_CENTRES,
     REALM_STATES,
     REGIONAL_REALM,
+    RESTORATION,
     RIVER_UNION,
     RULES,
     Facts,
@@ -325,7 +326,7 @@ def test_the_territories_of_one_family_do_not_overlap_but_other_families_may() -
     by_family: dict[str, list[set[str]]] = {}
     for formation in plan.formations:
         by_family.setdefault(formation.family, []).append(set(formation.places))
-    assert set(by_family) == set(FORMABLE_FAMILIES) - {CULTURAL_UNION}
+    assert set(by_family) == set(FORMABLE_FAMILIES) - {CULTURAL_UNION, RESTORATION}
     for family, territories in by_family.items():
         assert family == REGIONAL_REALM or len(territories) <= RULES[family].limit
         for number, first in enumerate(territories):
@@ -370,7 +371,18 @@ def _installation(root: Path, *, ranks: str, drop: str = "") -> Path:
     path = root / "game/in_game/common/country_ranks/00_default.txt"
     path.parent.mkdir(parents=True, exist_ok=True)
     _ = path.write_text(ranks, encoding="utf-8")
+    for relative, source in (
+        ("game/in_game/common/biases/00_opinions.txt", OPINIONS),
+        ("game/main_menu/common/script_values/00_values.txt", VALUES),
+    ):
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        _ = target.write_text(source.replace(drop, "something_else") if drop else source)
     return root
+
+
+OPINIONS = "opinion_good_relations = { value = 50 }\nopinion_refused_claim = { value = -30 }\n"
+VALUES = "prestige_weak_penalty = -5\nprestige_weak_bonus = 5\n"
 
 
 RANKS = (
@@ -390,6 +402,14 @@ def test_a_rank_or_a_picture_the_game_lacks_stops_the_export(tmp_path: Path) -> 
             _installation(tmp_path / "pic", ranks=RANKS, drop=BY_FAMILY[MARITIME_LEAGUE].emblem),
             SPECS,
         )
+    with pytest.raises(FormationError, match="opinion_refused_claim"):
+        check_installation(
+            _installation(tmp_path / "opinion", ranks=RANKS, drop="opinion_refused_claim"), SPECS
+        )
+    without = [spec for spec in SPECS if not spec.heirs]
+    check_installation(
+        _installation(tmp_path / "none", ranks=RANKS, drop="opinion_refused_claim"), without
+    )
 
 
 def _formation(family: str, index: int = 0) -> Formation:
@@ -496,9 +516,17 @@ def test_who_may_form_it_is_decided_in_play() -> None:
 def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
     """One flag, arms, colour and four keys per formation; the arms use the family's emblem."""
     made = [_formation(spec.family, 0) for spec in SPECS]
-    seats = ("Kaira", "Tolan", "Ingari", "Mekapisk", "Huande", "Saumqeir", "Toqa")
+    seats = ("Kaira", "Tolan", "Ingari", "Mekapisk", "Huande", "Saumqeir", "Toqa", "Pucara")
     who = [
         Identity(
+            f"X{n}Z",
+            wording.reference("america"),
+            Text(EMPIRE_ADJECTIVE),
+            (n, n, n),
+            ("red", "blue"),
+        )
+        if spec.family == NEW_WORLD_EMPIRE
+        else Identity(
             f"X{n}Z",
             Phrase(wording.FORMATION + spec.stem, seats[n]),
             wording.adjective(seats[n]),
@@ -506,13 +534,7 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
             ("green", "white"),
         )
         for n, spec in enumerate(SPECS)
-        if spec.family != NEW_WORLD_EMPIRE
     ]
-    who.append(
-        Identity(
-            "X6Z", wording.reference("america"), Text(EMPIRE_ADJECTIVE), (6, 6, 6), ("red", "blue")
-        )
-    )
     written = files(made, who)
     arms = written["main_menu/common/coat_of_arms/coat_of_arms/rnw_formations.txt"]
     for spec in SPECS:

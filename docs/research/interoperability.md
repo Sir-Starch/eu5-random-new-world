@@ -924,6 +924,14 @@ installation is not patched. Parsed-output tests check the written blocks. Engin
 loading and the resulting casus belli are not yet observed; the R6 sitting covers
 them. Later phases (N7–N9) extend this entry when they write new interfaces.
 
+N7 adds a country event file (`in_game/events/rnw_restoration.txt`) with vanilla
+effects only: `add_opinion` with the vanilla biases `opinion_good_relations` and
+`opinion_refused_claim`, `add_prestige` with vanilla script values, `add_rival`
+(as `hundred_years_war.txt`), `country_exists = c:<tag>` and `save_scope_as`; the
+formation sends it through `every_country` and `trigger_event_non_silently`, as
+`flavor_por.txt` does. The export checks that the biases and values exist. The
+history replay that measures a realm's height reads the generator's own records.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

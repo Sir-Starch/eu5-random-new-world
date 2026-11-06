@@ -44,6 +44,7 @@ CULTURAL_UNION: Final[str] = "cultural_union"
 REGIONAL_REALM: Final[str] = "regional_realm"
 POSTCOLONIAL_FEDERATION: Final[str] = "postcolonial_federation"
 NEW_WORLD_EMPIRE: Final[str] = "new_world_empire"
+RESTORATION: Final[str] = "restoration"
 STORY_FAMILIES: Final[tuple[str, ...]] = (
     RIVER_CENTRE,
     SACRED_CENTRE,
@@ -60,6 +61,7 @@ FORMABLE_FAMILIES: Final[tuple[str, ...]] = (
     REGIONAL_REALM,
     POSTCOLONIAL_FEDERATION,
     NEW_WORLD_EMPIRE,
+    RESTORATION,
 )
 FAMILIES: Final[tuple[str, ...]] = (*STORY_FAMILIES, *FORMABLE_FAMILIES)
 # The families below the realm whose seats, centres held by the states of 1337, each get a realm
@@ -104,6 +106,17 @@ REALM_STATES: Final[int] = 3
 REALM_CENTRES: Final[int] = 4
 # The empire of the New World stands over the realms of at least this many regions.
 EMPIRE_REALMS: Final[int] = 2
+# A fallen realm is restored by one of at least this many living heirs, over at least this many
+# of the places it held at its height; an heir of a kingdom's rank has outgrown a restoration.
+RESTORATION_HEIRS: Final[int] = 2
+RESTORATION_PLACES: Final[int] = 6
+RESTORATION_LEVEL: Final[int] = 3
+RANK_LEVELS: Final[Mapping[str, int]] = {
+    "rank_county": 1,
+    "rank_duchy": 2,
+    "rank_kingdom": 3,
+    "rank_empire": 4,
+}
 # The relief of a highland place, and the share of a confederation's places that must stand on
 # high ground (mountains or a plateau), so that a range of low hills is no confederation.
 HIGHLAND_RELIEF: Final[frozenset[str]] = frozenset({"mountains", "hills", "plateau"})
@@ -177,6 +190,7 @@ RULES: Final[Mapping[str, Rule]] = {
             anywhere=True,
         ),
         Rule(NEW_WORLD_EMPIRE, "continent", 1, 0, 0, 0, 0, 0),
+        Rule(RESTORATION, "fallen realm", 0, 0, RESTORATION_PLACES, 0, RESTORATION_HEIRS, 0),
     )
 }
 
@@ -213,6 +227,23 @@ class State:
 
 
 @dataclass(frozen=True, slots=True)
+class Fallen:
+    """A realm or union the history records as divided, with its living heirs (N7).
+
+    ``places`` are the places it held at its height, ``heirs`` the living countries descended
+    from it, ``rank`` the highest rank level among them, ``cause`` the dividing event.
+    """
+
+    key: str
+    seat: str
+    places: tuple[str, ...]
+    heirs: tuple[str, ...]
+    rank: int
+    year: int
+    cause: str
+
+
+@dataclass(frozen=True, slots=True)
 class HistoricalFacts:
     """Surviving, causal links; None on Facts retains legacy diagnostic eligibility."""
 
@@ -220,6 +251,7 @@ class HistoricalFacts:
     hostile: frozenset[tuple[str, str]]
     dependencies: Mapping[tuple[str, str], str]
     contacts: frozenset[tuple[str, str]]
+    fallen: tuple[Fallen, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -270,9 +302,10 @@ class Formation:
     """One formable offered to the states whose capitals lie in its territory.
 
     ``basis`` is what the territory is built on beyond the land itself: the culture group of a
-    cultural union, empty for the other families. A realm's territory is a whole generated
-    ``region`` and the empire's a whole ``continent`` (``places`` are then their inhabited
-    places, the formable names the key); a realm also asks for its ``throne``. ``named_by`` is
+    cultural union, the fallen realm of a restoration, empty for the other families. A realm's
+    territory is a whole generated ``region`` and the empire's a whole ``continent`` (``places``
+    are then their inhabited places, the formable names the key); a realm also asks for its
+    ``throne``. ``named_by`` is
     the region whose generated name names a colonial federation (the region of its seat, unless
     another federation took it).
     """
@@ -305,11 +338,16 @@ class Absence:
 
 @dataclass(frozen=True, slots=True)
 class ContentPlan:
-    """The opportunities of a world and the families that had none."""
+    """The opportunities of a world and the families that had none.
+
+    ``passed`` are the fallen realms that the history records and that have no restoration,
+    each with the reason (N-C5).
+    """
 
     opportunities: tuple[Opportunity, ...]
     formations: tuple[Formation, ...]
     absences: tuple[Absence, ...]
+    passed: tuple[tuple[str, str], ...] = ()
 
     def count(self) -> dict[str, int]:
         """How many opportunities each family holds."""
@@ -741,6 +779,52 @@ def empires(facts: Facts, realms_of: Sequence[Formation]) -> tuple[list[Formatio
     return [Formation(NEW_WORLD_EMPIRE, 0, keys, (), (), seat, continent=continent)], ""
 
 
+def restorations(facts: Facts) -> tuple[list[Formation], list[tuple[str, str]]]:
+    """A restoration for each fallen realm with living heirs, and why the others have none.
+
+    The largest realms come first; a later one that overlaps a restoration already chosen is
+    passed over, as the territories of one family never overlap. The seat is the fallen realm's
+    own when it is still inhabited, else its most populous place.
+    """
+    rule = RULES[RESTORATION]
+    fallen = facts.history.fallen if facts.history is not None else ()
+    centres = _centres(facts)
+    taken: set[str] = set()
+    chosen: list[Formation] = []
+    passed: list[tuple[str, str]] = []
+    for realm in sorted(fallen, key=lambda item: (-len(item.places), item.year, item.key)):
+        places = sorted(key for key in realm.places if key in facts.places)
+        heirs = sorted(tag for tag in realm.heirs if tag in facts.states)
+        if len(heirs) < rule.states:
+            passed.append((realm.key, "fewer than two of its heirs are states"))
+            continue
+        if realm.rank >= RESTORATION_LEVEL:
+            passed.append((realm.key, "an heir already holds a kingdom's rank or above"))
+            continue
+        if len(places) < rule.places:
+            passed.append((realm.key, "too few of its places are inhabited"))
+            continue
+        if taken.intersection(places):
+            passed.append((realm.key, "a larger restoration already holds its land"))
+            continue
+        seat = realm.seat
+        if seat not in places:
+            seat = max(places, key=lambda key: (facts.places[key].population, key))
+        taken.update(places)
+        chosen.append(
+            Formation(
+                RESTORATION,
+                len(chosen),
+                tuple(places),
+                tuple(key for key in places if key in centres),
+                tuple(heirs),
+                seat,
+                realm.key,
+            )
+        )
+    return chosen, passed
+
+
 def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], str]:
     """The formables of ``family`` with room for them, and why there is none when there is none.
 
@@ -749,6 +833,10 @@ def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], s
     hold the family's minimums is passed over, and the last obstacle met is the reason given.
     A realm is a whole region and the empire a whole continent (``realms``, ``empires``).
     """
+    if family == RESTORATION:
+        found, passed = restorations(facts)
+        reason = passed[0][1] if passed else f"no {RULES[family].thing} is recorded"
+        return found, reason
     if family in {REGIONAL_REALM, NEW_WORLD_EMPIRE}:
         seats = [
             formation.seat
@@ -902,4 +990,5 @@ def plan_content(facts: Facts, seed: int) -> ContentPlan:
         formable.extend(found)
         if not found:
             absences.append(Absence(family, reason))
-    return ContentPlan(tuple(stories), tuple(formable), tuple(absences))
+    passed = tuple(restorations(facts)[1])
+    return ContentPlan(tuple(stories), tuple(formable), tuple(absences), passed)

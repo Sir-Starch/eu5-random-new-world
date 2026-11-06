@@ -1289,3 +1289,35 @@ text = '''{year}: {second} toplumu, {first} toplumundan koptu.'''
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}: {first} toplumu, {second} toplumunu artık elinde tutamadı ve bu toplum koptu.'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''Bu topraklar bir zamanlar bir devletin elindeydi; sonra devlet, onu hâlâ hatırlayan mirasçıları arasında parçalandı. Eski topraklarının yeterli kısmına sahip olan ve başkenti orada bulunan bir mirasçı onu yeniden kurabilir ve geri kalanını da kendi toprağı sayabilir: {name}. Diğer mirasçılar bu yeniden kuruluşu ya tanımalı ya da ona itiraz etmelidir.'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''Eski Devletin Mirasçıları'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''Yeniden kurulan taç eski makamları bir araya getirir ve kaybettiği eyaletleri yeniden tek bir yönetim altında toplar.'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''Eski devletin diğer her mirasçısı bu yeniden kuruluşu ya tanımalı ya da ona itiraz etmelidir.'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''Eski Devlet Yeniden Kuruldu'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''[restorer.GetNameWithNoTooltip] elçileri bir bildiriyle geldi: atalarımızın paylaştığı devlet yeniden kuruldu ve onun yeni tacı, bir zamanlar elinde tuttuğu bütün toprakları, bizimkiler de dâhil, kendisinin sayıyor. Meclisimiz eski adın önünde eğilmeye mi yoksa onu reddetmeye mi karar vermeli.'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''Yeniden kurulan tacı tanıyoruz.'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''Eski taç onların olduğu kadar bizim de.'''

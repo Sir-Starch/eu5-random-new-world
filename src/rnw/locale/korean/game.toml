@@ -1289,3 +1289,35 @@ text = '''{year}년: {second} 공동체가 {first} 공동체에서 이탈했습�
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}년: {first} 공동체는 더 이상 {second} 공동체를 붙잡아 둘 수 없었고, 그 공동체는 이탈했습니다.'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''한때 이 땅을 다스린 왕국이 있었으나, 그 왕국은 지금도 그것을 기억하는 계승자들 사이에서 분열되었습니다. 옛 영토의 상당 부분을 차지하고 그곳에 수도를 둔 계승자는 왕국을 다시 일으키고 나머지 땅까지 제 것으로 주장할 수 있습니다. 바로 {name}입니다. 다른 계승자들은 이 부흥을 인정하거나 이의를 제기해야 합니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''옛 왕국의 계승자'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''되살아난 왕관이 옛 관직들을 모으고 잃어버린 지방들을 다시 하나의 통치 아래로 되돌립니다.'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''옛 왕국의 다른 모든 계승자는 이 부흥을 인정하거나 이의를 제기해야 합니다.'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''옛 왕국의 부흥'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''[restorer.GetNameWithNoTooltip]의 사절들이 포고문을 들고 왔습니다. 우리 조상들이 함께 나누었던 왕국이 부흥했으며, 그 새 왕관은 한때 왕국이 다스린 모든 땅을, 우리 땅까지 포함해 제 것이라 선언합니다. 우리 회의는 옛 이름 앞에 고개를 숙일지, 그것을 거부할지 결정해야 합니다.'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''되살아난 왕관을 인정합니다.'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''옛 왕관은 우리보다 그들의 것이 결코 아닙니다.'''

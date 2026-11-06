@@ -68,6 +68,7 @@ FORMATIONS: Final[tuple[str, ...]] = (
     "commonwealth",
     "realm",
     "federation",
+    "restoration",
 )
 TRADITIONS: Final[tuple[str, ...]] = ("spanish", "portuguese", "english", "french", "dutch")
 
@@ -172,6 +173,7 @@ EN_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "{n} Commonwealth",
     "realm": "{n} Realm",
     "federation": "{n} Federation",
+    "restoration": "Restored {n}",
 }
 # English keeps the founder's own word for *new* (content plan, N4c).
 EN_COLONIES: Final[dict[str, str]] = {
@@ -225,7 +227,10 @@ RU_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "ое содружество",
     "realm": "ое царство",
     "federation": "ая федерация",
+    "restoration": "ое царство",
 }
+# A restored realm is the old one *reborn*, before its adjective: *Возрождённое Кайрское царство*.
+RU_PREFIXES: Final[dict[str, str]] = {"restoration": "Возрождённое "}
 
 
 def _ru_sectors(term: Term, _base: str, word: str, sectors: tuple[str, ...]) -> str:
@@ -292,7 +297,9 @@ DE_FORMATIONS: Final[dict[str, tuple[str, str]]] = {
     "commonwealth": ("Gemeinwesen", "n"),
     "realm": ("Reich", "n"),
     "federation": ("Föderation", "f"),
+    "restoration": ("Reich", "n"),
 }
+DE_PREFIXES: Final[dict[str, str]] = {"restoration": "Wiedererstandenes "}
 
 
 def _de_compound(pattern: str, word: str) -> str:
@@ -320,7 +327,7 @@ def _de_adjective(word: str) -> str:
 
 def _de_formation(family: str, word: str) -> str:
     noun, gender = DE_FORMATIONS[family]
-    return f"{_de_adjective(word)}{DE_ENDINGS[gender]} {noun}"
+    return f"{DE_PREFIXES.get(family, '')}{_de_adjective(word)}{DE_ENDINGS[gender]} {noun}"
 
 
 # French ----------------------------------------------------------------------------------------
@@ -359,6 +366,7 @@ FR_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "Communauté de {n}",
     "realm": "Royaume de {n}",
     "federation": "Fédération de {n}",
+    "restoration": "Royaume restauré de {n}",
 }
 # Not before an *h*: the names are foreign, and French does not elide before a foreign h.
 FR_ELISION: Final[re.Pattern[str]] = re.compile(r"\bde ([AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü])")
@@ -419,6 +427,7 @@ ES_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "Mancomunidad de {n}",
     "realm": "Reino de {n}",
     "federation": "Federación de {n}",
+    "restoration": "Reino restaurado de {n}",
 }
 PT_TERMS: Final[dict[str, Term]] = {
     "sea": Term("Mar de {n}"),
@@ -455,6 +464,7 @@ PT_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "Comunidade de {n}",
     "realm": "Reino de {n}",
     "federation": "Federação de {n}",
+    "restoration": "Reino Restaurado de {n}",
 }
 
 
@@ -524,6 +534,7 @@ PL_FORMATIONS: Final[dict[str, tuple[str, str]]] = {
     "commonwealth": ("Wspólnota", "ka"),
     "realm": ("Królestwo", "kie"),
     "federation": ("Federacja", "ka"),
+    "restoration": ("Odrodzone Królestwo", "kie"),
 }
 
 
@@ -596,6 +607,7 @@ TR_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "{n} Topluluğu",
     "realm": "{n} Devleti",
     "federation": "{n} Federasyonu",
+    "restoration": "Yeniden Doğan {n} Devleti",
 }
 
 
@@ -643,6 +655,7 @@ JA_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "{n}共同体",
     "realm": "{n}王国",
     "federation": "{n}連邦",
+    "restoration": "復興{n}王国",
 }
 # Japanese and Korean keep the founder's word for *new*, in their script (``ヌエバ・エスパーニャ``).
 JA_COLONIES: Final[dict[str, str]] = {
@@ -687,6 +700,7 @@ KO_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "{n} 공동체",
     "realm": "{n} 왕국",
     "federation": "{n} 연방",
+    "restoration": "부흥 {n} 왕국",
 }
 KO_COLONIES: Final[dict[str, str]] = {
     "spanish": "누에바 {n}",
@@ -730,6 +744,7 @@ ZH_FORMATIONS: Final[dict[str, str]] = {
     "commonwealth": "{n}共同体",
     "realm": "{n}王国",
     "federation": "{n}联邦",
+    "restoration": "复兴{n}王国",
 }
 
 
@@ -765,7 +780,9 @@ LANGUAGES: Final[dict[str, Grammar]] = {
         RU_TERMS,
         _ru_sectors,
         _ru_adjective,
-        lambda family, word: _ru_adjective(word) + RU_FORMATIONS[family],
+        lambda family, word: (
+            RU_PREFIXES.get(family, "") + _ru_adjective(word) + RU_FORMATIONS[family]
+        ),
         _ru_colony,
     ),
     "german": Grammar(

@@ -1289,3 +1289,35 @@ text = '''{year}: A sociedade {second} se separou da sociedade {first}.'''
 ["rnw_history_secession_1"]
 source = "df8a7404ae20ed09"
 text = '''{year}: A sociedade {first} já não conseguia manter a sociedade {second}, que se separou.'''
+
+["rnw_formation_restoration_desc"]
+source = "744415b1555053f9"
+text = '''Um reino dominou outrora estas terras, até se partir entre seus herdeiros, que ainda se lembram dele. Um herdeiro que domine o bastante de seu antigo território, com sua capital nele, pode erguê-lo de novo e reivindicar o resto como seu: {name}. Os demais herdeiros devem aceitar a restauração ou contestá-la.'''
+
+["STATIC_MODIFIER_NAME_rnw_restoration_heirs"]
+source = "02fcf0134a6e1a2c"
+text = '''Herdeiros do Antigo Reino'''
+
+["STATIC_MODIFIER_DESC_rnw_restoration_heirs"]
+source = "3841570bacb1bb5a"
+text = '''A coroa restaurada reúne os antigos cargos e traz suas províncias perdidas de volta a um só governo.'''
+
+["rnw_restoration_heirs_tt"]
+source = "14637a30b3e66320"
+text = '''Cada um dos demais herdeiros do antigo reino deve reconhecer a restauração ou contestá-la.'''
+
+["rnw_restoration.title"]
+source = "4e9f16af60fc9717"
+text = '''O Antigo Reino Restaurado'''
+
+["rnw_restoration.desc"]
+source = "3862bfaf3cd1696c"
+text = '''Enviados de [restorer.GetNameWithNoTooltip] chegaram com uma proclamação: o reino que nossos antepassados partilhavam foi restaurado, e sua nova coroa reivindica como suas todas as terras que um dia teve, inclusive as nossas. Nosso conselho deve decidir se se curva ao antigo nome ou o nega.'''
+
+["rnw_restoration.a"]
+source = "8de73f015f26ce75"
+text = '''Reconhecemos a coroa restaurada.'''
+
+["rnw_restoration.b"]
+source = "5b9a238653e7fbf8"
+text = '''A antiga coroa não é mais deles do que nossa.'''
