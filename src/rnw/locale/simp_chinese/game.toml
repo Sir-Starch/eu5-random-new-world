@@ -1401,3 +1401,59 @@ text = '''我们将重建旧王国。'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''旧王国已逝，让它安息吧。'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''河畔市场特许状'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''沿河城镇依同一份特许状通商，其商人往来于整条河流。'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''山谷议会'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''各个山谷的酋长同坐一个议会，未经所有人同意，任何事都不能决定。'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''港口议会'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''各港口的商家共同治理同盟，其船只将他们的货物运往每一处海岸。'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''同一民族之法'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''一部法律将共同体的各族人民联结在一起，并维护其众多城镇之间的和平。'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''王国诸省'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''王国被划分为由总督治理的诸省，其城镇在他们的照管下发展壮大。'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''国家条款'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''成文的条款将国家各州与代表它们发声的议会联结在一起。'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''复兴王冠之法'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''复兴的王冠收回其先代的旧日权利，再次从同一座王座上进行统治。'''

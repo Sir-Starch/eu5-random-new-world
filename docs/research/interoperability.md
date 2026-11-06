@@ -942,6 +942,11 @@ with `owns_or_has_subject_in` (as `D008_restore_roman_borders.txt`),
 `current_age_or_later` and `ai_personality`. The export checks the ages and the
 personality. How the AI weighs the entries in play is not observed.
 
+N6's family reforms use `common/government_reforms` in the form of vanilla's
+unlock-only reforms (`potential` with `has_unlocked_government_reform_trigger`,
+`country_modifier`, `years`), opened by `unlock_government_reform_effect`; the
+modifier lines are copied from the installed vanilla reform at generation time.
+
 N9 adds `in_game/events/rnw_memory.txt`: country events started by vanilla's
 `dynamic_historical_event` (as the stories already are), with `add_core`,
 `add_opinion`, `add_prestige` and `add_stability` and vanilla values; the export

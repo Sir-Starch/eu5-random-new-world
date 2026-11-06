@@ -168,6 +168,17 @@ Tenochtitlan. The realm is named after its region's generated name, the empire
 after the continent's own text in the game's language ("America"), as vanilla's
 `EUR_f` is "Europa". [V-EXEC]
 
+**Reforms.** Founding any family but the empire opens a government reform of its
+own (`unlock_government_reform_effect`), the `country_modifier` of a vanilla reform
+copied under RNW's name and text: *Charter of the River Markets*
+(`son_trans_saharan_trade`), *Council of the Valleys* (`iro_council_of_the_fifty`),
+*Council of the Ports* (`signoria_of_venice`), *Law of One People*
+(`iro_reforged_law_of_peace`), *Provinces of the Realm* (`subah_organization_reform`),
+*Articles of the Nation* (`constitutional_state`) and *Law of the Restored Crown*
+(`dan_the_kings_law`). The two Haudenosaunee reforms are otherwise unreachable in a
+generated world. The founder still adopts the reform in its government. [V-EXEC;
+adoption in play not observed]
+
 **Cores.** Founding any family but the empire gives the founder a core on every
 location of its territory that another country holds, under one tooltip line. The
 game's own `cb_conquer_province` ("Claims on Province", `casus_belli/conquest.txt`)

@@ -280,6 +280,12 @@ def render() -> str:
                 f"**{spec.years} years**. {spec.modifier.text}"
             ),
             f"- Payload: {source(spec.modifier.source)}.",
+            (
+                f"- Reform opened: **{spec.reform.title}** (`{spec.reform.name}`), the "
+                f"`country_modifier` of `{spec.reform.source.name}`. {spec.reform.text}"
+                if spec.reform is not None
+                else "- Reform opened: none."
+            ),
             "",
         ]
     out += [

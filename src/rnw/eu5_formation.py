@@ -301,6 +301,13 @@ def restoration_events(pairs: Sequence[tuple[Formation, Identity]]) -> str:
     return "".join(out)
 
 
+def _unlock(spec: Spec) -> str:
+    """The family's reform opens to the founder (vanilla's ``unlock_government_reform_effect``)."""
+    if spec.reform is None:
+        return ""
+    return f"\t\tunlock_government_reform_effect = {{ type = {spec.reform.name} }}\n"
+
+
 def block(formation: Formation, identity: Identity) -> str:
     """The formable of one formation: a tag the game does not define, as ``ADU`` is."""
     spec = BY_FAMILY[formation.family]
@@ -327,6 +334,7 @@ def block(formation: Formation, identity: Identity) -> str:
         f"\t\t\tmodifier = {spec.modifier.name}\n"
         f"\t\t\tyears = {spec.years}\n"
         "\t\t\tmode = add\n\t\t}\n"
+        f"{_unlock(spec)}"
         f"{_cores(formation) if spec.cores else ''}"
         f"{_renaming(identity.tag) if spec.renamed else ''}"
         f"{_summons(formation) if spec.heirs else ''}"

@@ -10,7 +10,8 @@
   commonwealths grow to 60 places. A fantasy empire of the continent (level 5, shown when the
   game rules allow fantasy formables) asks for half of it, hegemony and the empire rank. A
   formation gives cores on the rest of its territory, so the game's own *Claims on Province*
-  opens against every holder. The colonial federation becomes a nation of independent
+  opens against every holder, and opens a government reform of its family (*Council of the
+  Valleys*, *Law of One People*, *Provinces of the Realm* and others). The colonial federation becomes a nation of independent
   settlers or of the leader of a colonial federation, named after its region and renamed on
   founding in its founders' tradition (*United Provinces*, *United Captaincies*, *United
   Colonies*, *Free State* or *Generality of X*).

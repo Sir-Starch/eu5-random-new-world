@@ -1401,3 +1401,59 @@ text = '''Ergueremos de novo o antigo reino.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''O antigo reino não existe mais; deixem-no descansar.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Carta dos Mercados do Rio'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''As cidades do rio comerciam sob uma só carta, e seus mercadores percorrem todo o seu curso.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Conselho dos Vales'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Os chefes de cada vale sentam-se num só conselho, e nada se decide até que todos concordem.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Conselho dos Portos'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''As casas mercantis de cada porto governam juntas a liga, e seus navios levam suas mercadorias a todas as costas.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Lei do Povo Único'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Uma só lei une os povos da comunidade e mantém a paz entre suas muitas cidades.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Províncias do Reino'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''O reino está dividido em províncias sob seus governadores, e suas cidades crescem sob seus cuidados.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Artigos da Nação'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Artigos escritos unem os estados da nação e a assembleia que fala por eles.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Lei da Coroa Restaurada'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''A coroa restaurada retoma os antigos direitos de seus predecessores e governa de novo a partir de uma só sede.'''

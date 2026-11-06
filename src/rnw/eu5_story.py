@@ -29,7 +29,7 @@ from rnw.content import (
     Place,
     State,
 )
-from rnw.formations import SPECS
+from rnw.formations import SPECS, Reform
 from rnw.game_texts import Text, localize
 from rnw.memory_texts import EVENT_FILE as MEMORY_FILE
 from rnw.pdx import Block, parse
@@ -41,6 +41,7 @@ from rnw.storymodel import (
     HIDDEN,
     PRIVILEGE,
     PULSE_FILE,
+    REFORM,
     STATIC,
     Modifier,
     Privilege,
@@ -64,6 +65,8 @@ FIRST_START: Final[int] = 1001
 STATIC_DIR: Final[str] = "game/main_menu/common/static_modifiers"
 BUILDING_DIR: Final[str] = "game/in_game/common/building_types"
 PRIVILEGE_DIR: Final[str] = "game/in_game/common/estate_privileges"
+REFORM_DIR: Final[str] = "game/in_game/common/government_reforms"
+REFORMS_FILE: Final[str] = "in_game/common/government_reforms/rnw_formations.txt"
 MODIFIERS_FILE: Final[str] = "main_menu/common/static_modifiers/rnw_story_modifiers.txt"
 PRIVILEGES_FILE: Final[str] = "in_game/common/estate_privileges/rnw_story.txt"
 EVENTS_DIR: Final[str] = "in_game/events"
@@ -111,7 +114,12 @@ def _lines(text: str, block: Block, skip: frozenset[str]) -> tuple[str, ...]:
 
 def payload(game_dir: Path, source: Source) -> Payload:
     """The effect lines of ``source`` in the installation; raises if it is gone or empty."""
-    directory = {STATIC: STATIC_DIR, BUILDING: BUILDING_DIR, PRIVILEGE: PRIVILEGE_DIR}[source.kind]
+    directory = {
+        STATIC: STATIC_DIR,
+        BUILDING: BUILDING_DIR,
+        PRIVILEGE: PRIVILEGE_DIR,
+        REFORM: REFORM_DIR,
+    }[source.kind]
     found = _entries(game_dir / directory).get(source.name)
     if found is None:
         message = f"The {source.kind} {source.name} is gone from the installation"
@@ -159,6 +167,21 @@ def privilege_block(privilege: Privilege, copied: Payload) -> str:
         f"\testate = {privilege.estate}\n\n"
         f"\tpotential = {{\n\t\thas_variable = {privilege.opened_by}\n\t}}\n\n"
         f"\tcountry_modifier = {{\n{inner}\n\t}}\n"
+        "}\n"
+    )
+
+
+def reform_block(reform: Reform, copied: Payload) -> str:
+    """A government reform of the mod, opened by its formation, with the copied country modifier."""
+    inner = "\n".join(f"\t\t{line}" for line in copied.lines)
+    return (
+        f"{reform.name} = {{\n"
+        "\tunique = yes\n"
+        "\tpotential = {\n"
+        f"\t\thas_unlocked_government_reform_trigger = {{ type = {reform.name} }}\n"
+        "\t}\n"
+        f"\tcountry_modifier = {{\n{inner}\n\t}}\n"
+        "\tyears = 2\n"
         "}\n"
     )
 
@@ -237,6 +260,14 @@ def _formations(
             f"STATIC_MODIFIER_DESC_{spec.modifier.name}",
         ):
             texts[key] = Text(key)
+    reforms = [spec.reform for spec in specs if spec.reform is not None]
+    if reforms:
+        files[REFORMS_FILE] = "\n".join(
+            reform_block(reform, payload(game_dir, reform.source)) for reform in reforms
+        ).encode("utf-8-sig")
+        for reform in reforms:
+            texts[reform.name] = Text(reform.name)
+            texts[f"{reform.name}_desc"] = Text(f"{reform.name}_desc")
     return [
         modifier_block(spec.modifier, payload(game_dir, spec.modifier.source)) for spec in specs
     ]

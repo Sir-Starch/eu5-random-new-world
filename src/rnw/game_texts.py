@@ -59,6 +59,9 @@ def sources() -> dict[str, str]:
         found[formation_description(spec.family)] = spec.description
         found[f"STATIC_MODIFIER_NAME_{spec.modifier.name}"] = spec.modifier.title
         found[f"STATIC_MODIFIER_DESC_{spec.modifier.name}"] = spec.modifier.text
+        if spec.reform is not None:
+            found[spec.reform.name] = spec.reform.title
+            found[f"{spec.reform.name}_desc"] = spec.reform.text
     found.update(EXTRA_TEXTS)
     found.update(memory_texts.TEXTS)
     found.update(eu5_places.texts(eu5_places.SPECS))

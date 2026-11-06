@@ -1401,3 +1401,59 @@ text = '''우리는 옛 왕국을 다시 일으킬 것입니다.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''옛 왕국은 사라졌습니다. 편히 잠들게 둡시다.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''강변 시장 헌장'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''강변의 도시들은 하나의 헌장 아래 교역하며, 그 상인들은 강의 전 유역을 오갑니다.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''골짜기 회의'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''모든 골짜기의 족장들이 한 회의에 앉으며, 모두가 동의하기 전에는 아무것도 결정되지 않습니다.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''항구 회의'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''모든 항구의 상가들이 함께 동맹을 다스리며, 그 배들은 그들의 물건을 모든 해안으로 실어 나릅니다.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''한 민족의 법'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''하나의 법이 공동체의 민족들을 묶고 수많은 도시 사이의 평화를 지킵니다.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''왕국의 지방들'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''왕국은 총독들이 다스리는 지방들로 나뉘며, 그 도시들은 그들의 보살핌 아래 성장합니다.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''국가의 조항'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''성문화된 조항들이 국가의 주들과 그들을 대변하는 의회를 하나로 묶습니다.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''되살아난 왕관의 법'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''되살아난 왕관은 선대의 옛 권리를 되찾고 다시 하나의 자리에서 다스립니다.'''

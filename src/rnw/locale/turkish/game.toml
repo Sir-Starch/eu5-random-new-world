@@ -1401,3 +1401,59 @@ text = '''Eski devleti yeniden kuracağız.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''Eski devlet artık yok; bırakın huzur içinde kalsın.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Nehir Pazarları Beratı'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''Nehir kıyısındaki şehirler tek bir beratla ticaret yapar ve tüccarları nehrin bütün boyunca dolaşır.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Vadiler Meclisi'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Her vadinin şefleri tek bir mecliste toplanır ve hepsi razı olmadan hiçbir karar alınmaz.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Limanlar Meclisi'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''Her limanın tüccar haneleri birliği birlikte yönetir ve gemileri mallarını her kıyıya taşır.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Tek Halkın Yasası'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Tek bir yasa topluluğun halklarını birbirine bağlar ve pek çok şehri arasında barışı korur.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Devletin Eyaletleri'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''Devlet, valilerinin yönetimindeki eyaletlere bölünmüştür ve şehirleri onların gözetiminde büyür.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Ulusun Maddeleri'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Yazılı maddeler ulusun eyaletlerini ve onlar adına konuşan meclisi birbirine bağlar.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Yeniden Kurulan Tacın Yasası'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''Yeniden kurulan taç, öncüllerinin eski haklarını geri alır ve yeniden tek bir merkezden yönetir.'''

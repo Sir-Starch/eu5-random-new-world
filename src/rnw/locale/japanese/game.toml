@@ -1401,3 +1401,59 @@ text = '''我らは旧王国を再興する。'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''旧王国はもうない。安らかに眠らせよう。'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''河川市場の特許状'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''川沿いの町々は一つの特許状のもとで交易し、その商人たちは川の全流域を行き来する。'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''谷々の評議会'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''あらゆる谷の首長が一つの評議会に席を連ね、全員が同意するまで何事も決まらない。'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''港湾評議会'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''あらゆる港の商家が共に同盟を治め、その船は彼らの品をあらゆる岸辺へ運ぶ。'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''一つの民の法'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''一つの法が共同体の諸民を結び、その多くの町の間に平和を保つ。'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''王国の諸州'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''王国は総督の治める諸州に分けられ、その町々は彼らの庇護のもとで成長する。'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''国家の条項'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''成文の条項が国家の諸邦と、それらを代表して語る議会とを結びつける。'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''再興された王冠の法'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''再興された王冠は先代の旧き権利を取り戻し、再び一つの座から統治する。'''

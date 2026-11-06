@@ -1401,3 +1401,59 @@ text = '''Alzaremos de nuevo el antiguo reino.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''El antiguo reino ya no existe; dejadlo descansar.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Carta de los mercados del río'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''Las ciudades del río comercian bajo una misma carta, y sus mercaderes recorren todo su curso.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Consejo de los valles'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Los jefes de cada valle se sientan en un mismo consejo, y nada se decide hasta que todos estén de acuerdo.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Consejo de los puertos'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''Las casas mercantiles de cada puerto gobiernan juntas la liga, y sus barcos llevan sus mercancías a todas las costas.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Ley del pueblo único'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Una sola ley une a los pueblos de la mancomunidad y mantiene la paz entre sus muchas ciudades.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Provincias del reino'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''El reino está dividido en provincias bajo sus gobernadores, y sus ciudades crecen bajo su cuidado.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Artículos de la nación'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Unos artículos escritos unen a los estados de la nación y a la asamblea que habla por ellos.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Ley de la corona restaurada'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''La corona restaurada recupera los antiguos derechos de sus predecesores y gobierna de nuevo desde una sola sede.'''

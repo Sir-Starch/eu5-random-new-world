@@ -1401,3 +1401,59 @@ text = '''Odrodzimy dawne królestwo.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''Dawnego królestwa już nie ma; niech spoczywa.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Karta rzecznych targów'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''Miasta nad rzeką handlują według jednej karty, a ich kupcy przemierzają cały jej bieg.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Rada dolin'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Wodzowie wszystkich dolin zasiadają w jednej radzie i nic nie zostaje postanowione, dopóki wszyscy się nie zgodzą.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Rada portów'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''Domy kupieckie wszystkich portów wspólnie rządzą ligą, a jej statki wiozą ich towary do każdego brzegu.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Prawo jednego ludu'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Jedno prawo wiąże ludy wspólnoty i strzeże pokoju między jej licznymi miastami.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Prowincje królestwa'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''Królestwo jest podzielone na prowincje pod władzą namiestników, a jego miasta rosną pod ich opieką.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Artykuły narodu'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Spisane artykuły wiążą stany narodu i zgromadzenie, które przemawia w ich imieniu.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Prawo odrodzonej korony'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''Odrodzona korona odzyskuje dawne prawa swoich poprzedników i znów rządzi z jednej stolicy.'''

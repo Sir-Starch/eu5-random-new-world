@@ -29,6 +29,7 @@ LOCATION: Final[str] = "location"
 STATIC: Final[str] = "static"
 BUILDING: Final[str] = "building"
 PRIVILEGE: Final[str] = "privilege"
+REFORM: Final[str] = "reform"
 CLERGY: Final[str] = "clergy_estate"
 # An option that costs gold is offered only to a state that has some.
 AFFORD: Final[str] = "gold > 100"

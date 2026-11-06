@@ -1512,6 +1512,7 @@ The towns on one river have traded, built and answered to each other for generat
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **Markets of One River** (`rnw_union_markets`), **10 years**. The river towns sell their goods as one market.
 - Payload: `static:consolidated_trade_modifier`.
+- Reform opened: **Charter of the River Markets** (`rnw_reform_river_markets`), the `country_modifier` of `son_trans_saharan_trade`. The towns of the river trade under one charter, and their merchants travel the whole of its course.
 
 ### highland_confederation
 
@@ -1525,6 +1526,7 @@ The valleys of one range live apart behind their passes and agree on little but 
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **Compact of the Valleys** (`rnw_confederation_compact`), **20 years**. The valleys keep their own councils and stand together against any outside power.
 - Payload: `static:iro_strong_tribal_unity`.
+- Reform opened: **Council of the Valleys** (`rnw_reform_valley_council`), the `country_modifier` of `iro_council_of_the_fifty`. The chiefs of every valley sit in one council, and nothing is decided until all of them agree.
 
 ### maritime_league
 
@@ -1538,6 +1540,7 @@ The ports of one coast sail the same waters and fear the same storms. A power th
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **Charter of the League** (`rnw_league_charter`), **20 years**. One charter binds the merchants and the councils of every port.
 - Payload: `static:seal_of_hansa_modifier`.
+- Reform opened: **Council of the Ports** (`rnw_reform_port_council`), the `country_modifier` of `signoria_of_venice`. The merchant houses of every port govern the league together, and its ships carry their goods to every shore.
 
 ### cultural_union
 
@@ -1551,6 +1554,7 @@ The towns of one people speak one tongue and keep one custom under many rulers. 
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **One People** (`rnw_commonwealth_unity`), **20 years**. One tongue and one custom hold the commonwealth together and raise its standing.
 - Payload: `static:pue_unification_of_the_ancestral_puebloans`.
+- Reform opened: **Law of One People** (`rnw_reform_one_people`), the `country_modifier` of `iro_reforged_law_of_peace`. One law binds the peoples of the commonwealth and keeps the peace among its many towns.
 
 ### regional_realm
 
@@ -1564,6 +1568,7 @@ A whole region lies divided among many rulers, each holding a few of its towns. 
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **Administration of the Realm** (`rnw_realm_administration`), **15 years**. A new administration reaches across the region, and its provinces come to heel.
 - Payload: `static:lat_a_distinct_latin_bureaucracy`.
+- Reform opened: **Provinces of the Realm** (`rnw_reform_realm_provinces`), the `country_modifier` of `subah_organization_reform`. The realm is divided into provinces under its governors, and its towns grow under their care.
 
 ### postcolonial_federation
 
@@ -1577,6 +1582,7 @@ Colonies on one shore, settled from one old country or from several, have come t
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **A Nation Founded** (`rnw_federation_founded`), **10 years**. A young nation of settlers grows fast and has little patience for rebels.
 - Payload: `static:new_colonial_nation_founded`.
+- Reform opened: **Articles of the Nation** (`rnw_reform_national_articles`), the `country_modifier` of `constitutional_state`. Written articles bind the states of the nation and the assembly that speaks for them.
 
 ### new_world_empire
 
@@ -1590,6 +1596,7 @@ No ruler has ever held this continent from shore to shore. An empire that leads 
 - Cores: none.
 - Founding modifier: **A Crown Over the Continent** (`rnw_empire_coronation`), **20 years**. Envoys from every corner of the continent attend the new court and bring it honour.
 - Payload: `static:fc_imperial_coronation`.
+- Reform opened: none.
 
 ### restoration
 
@@ -1603,6 +1610,7 @@ A realm once held these lands, until it broke apart among its heirs, who remembe
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **Heirs of the Old Realm** (`rnw_restoration_heirs`), **20 years**. The restored crown gathers the old offices and brings its lost provinces back under one rule.
 - Payload: `static:dlh_restored_authority_modifier`.
+- Reform opened: **Law of the Restored Crown** (`rnw_reform_restored_crown`), the `country_modifier` of `dan_the_kings_law`. The restored crown takes back the old rights of its predecessors and rules from one seat again.
 
 ## Exceptional places
 

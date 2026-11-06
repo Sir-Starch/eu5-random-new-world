@@ -1401,3 +1401,59 @@ text = '''Мы возродим прежнее царство.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''Прежнего царства нет — пусть покоится с миром.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Хартия речных рынков'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''Города реки торгуют по одной хартии, и их купцы ходят по всему её течению.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Совет долин'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Вожди всех долин заседают в одном совете, и ничего не решается, пока все они не согласятся.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Совет портов'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''Купеческие дома всех портов вместе правят лигой, и её корабли везут их товары к любому берегу.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Закон единого народа'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Один закон связывает народы содружества и хранит мир между его многочисленными городами.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Провинции царства'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''Царство разделено на провинции под властью наместников, и его города растут под их присмотром.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Статьи нации'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Писаные статьи связывают земли нации и собрание, которое говорит от их имени.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Закон возрождённой короны'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''Возрождённая корона возвращает себе прежние права предшественников и снова правит из одного престола.'''

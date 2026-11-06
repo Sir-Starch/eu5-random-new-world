@@ -1401,3 +1401,59 @@ text = '''Wir werden das alte Reich wiedererrichten.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''Das alte Reich ist vergangen; lasst es ruhen.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Charta der Flussmärkte'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''Die Städte am Fluss handeln nach einer Charta, und ihre Kaufleute bereisen seinen ganzen Lauf.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Rat der Täler'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Die Häuptlinge aller Täler sitzen in einem Rat, und nichts wird entschieden, bevor alle zustimmen.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Rat der Häfen'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''Die Handelshäuser aller Häfen regieren den Bund gemeinsam, und seine Schiffe bringen ihre Waren an jede Küste.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Gesetz des einen Volkes'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Ein Gesetz bindet die Völker des Gemeinwesens und wahrt den Frieden zwischen seinen vielen Städten.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Provinzen des Reiches'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''Das Reich ist in Provinzen unter seinen Statthaltern geteilt, und seine Städte wachsen unter ihrer Obhut.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Artikel der Nation'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Geschriebene Artikel binden die Staaten der Nation und die Versammlung, die für sie spricht.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Gesetz der wiedererstandenen Krone'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''Die wiedererstandene Krone nimmt die alten Rechte ihrer Vorgänger zurück und herrscht wieder von einem Sitz aus.'''

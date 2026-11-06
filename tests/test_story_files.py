@@ -44,6 +44,7 @@ from rnw.eu5_story import (
     modifier_block,
     payload,
 )
+from rnw.formations import SPECS as FORMATION_SPECS
 from rnw.pdx import Block, parse
 from rnw.stories import STORIES
 from rnw.storymodel import LOCATION, PULSE_FILE, STATIC, Modifier, Source, render_events
@@ -134,6 +135,11 @@ def _install(root: Path, *, drop: str = "", ranks: str = RANKS) -> Path:
         "main_menu/common/static_modifiers/country.txt": statics,
         "in_game/common/building_types/event_only_buildings.txt": BUILDING,
         "in_game/common/estate_privileges/clergy_estate.txt": PRIVILEGE,
+        "in_game/common/government_reforms/country_specific.txt": "".join(
+            f"{spec.reform.source.name} = {{\n\tcountry_modifier = {{\n\t\tx = 1\n\t}}\n}}\n"
+            for spec in FORMATION_SPECS
+            if spec.reform is not None
+        ),
         "in_game/common/country_ranks/00_default.txt": ranks,
         "in_game/common/age/00_default.txt": "age_2_renaissance = {\n}\nage_3_discovery = {\n}\n",
         "in_game/common/ai_personalities/00_default.txt": "ai_isolationist = {\n}\n",
@@ -466,3 +472,22 @@ def test_periphery_stops_after_the_subject_binding_ends_but_cleanup_still_runs()
     assert cleanup is not None
     assert cleanup.first("has_variable") is not None
     assert cleanup.first(f"var:{story.other}") is None
+
+
+def test_a_formation_opens_its_familys_reform_with_a_copied_payload(tmp_path: Path) -> None:
+    """The reform of the union is the mod's, opened only by its unlock, with the vanilla lines."""
+    files = _build(_install(tmp_path))
+    reforms = files["in_game/common/government_reforms/rnw_formations.txt"].decode("utf-8-sig")
+    reform = parse(reforms).block("rnw_reform_river_markets")
+    assert reform is not None
+    unlock = reform.block("potential", "has_unlocked_government_reform_trigger")
+    assert unlock is not None
+    kind = unlock.first("type")
+    assert kind is not None
+    assert kind.value == "rnw_reform_river_markets"
+    modifier = reform.block("country_modifier")
+    assert modifier is not None
+    assert modifier.first("x") is not None
+    english = files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"].decode("utf-8-sig")
+    assert ' rnw_reform_river_markets: "Charter of the River Markets"' in english
+    assert " rnw_reform_river_markets_desc: " in english

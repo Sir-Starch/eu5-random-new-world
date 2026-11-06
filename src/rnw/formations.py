@@ -36,7 +36,7 @@ from rnw.content import (
     RESTORATION,
     RIVER_UNION,
 )
-from rnw.storymodel import COUNTRY, STATIC, Modifier, Source
+from rnw.storymodel import COUNTRY, REFORM, STATIC, Modifier, Source
 
 # The highest level a country rank has; a formable above it is formed by an empire and keeps it.
 TOP_RANK_LEVEL: Final[int] = 4
@@ -70,6 +70,21 @@ EXTRA_TEXTS: Final[dict[str, str]] = {
 
 
 @dataclass(frozen=True, slots=True)
+class Reform:
+    """A government reform of the mod that a formation opens, with a vanilla reform's
+    ``country_modifier`` copied under its own name (as the stories copy modifiers)."""
+
+    name: str
+    source: Source
+    title: str
+    text: str
+
+
+def _reform(name: str, vanilla: str, title: str, text: str) -> Reform:
+    return Reform(name, Source(REFORM, vanilla, "country_modifier"), title, text)
+
+
+@dataclass(frozen=True, slots=True)
 class Spec:
     """One family of formables: its name, level, founding modifier, arms and words.
 
@@ -94,6 +109,7 @@ class Spec:
     cores: bool = True
     renamed: bool = False
     heirs: bool = False
+    reform: Reform | None = None
 
     @property
     def rank_level(self) -> int:
@@ -122,6 +138,15 @@ SPECS: Final[tuple[Spec, ...]] = (
             "The river towns sell their goods as one market.",
         ),
         years=10,
+        reform=_reform(
+            "rnw_reform_river_markets",
+            "son_trans_saharan_trade",
+            "Charter of the River Markets",
+            (
+                "The towns of the river trade under one charter, and their merchants "
+                "travel the whole of its course."
+            ),
+        ),
     ),
     Spec(
         family=HIGHLAND_CONFEDERATION,
@@ -143,6 +168,15 @@ SPECS: Final[tuple[Spec, ...]] = (
             "The valleys keep their own councils and stand together against any outside power.",
         ),
         years=20,
+        reform=_reform(
+            "rnw_reform_valley_council",
+            "iro_council_of_the_fifty",
+            "Council of the Valleys",
+            (
+                "The chiefs of every valley sit in one council, and nothing is decided "
+                "until all of them agree."
+            ),
+        ),
     ),
     Spec(
         family=MARITIME_LEAGUE,
@@ -164,6 +198,15 @@ SPECS: Final[tuple[Spec, ...]] = (
             "One charter binds the merchants and the councils of every port.",
         ),
         years=20,
+        reform=_reform(
+            "rnw_reform_port_council",
+            "signoria_of_venice",
+            "Council of the Ports",
+            (
+                "The merchant houses of every port govern the league together, and its "
+                "ships carry their goods to every shore."
+            ),
+        ),
         allow=("num_of_ports >= 3",),
     ),
     Spec(
@@ -185,6 +228,15 @@ SPECS: Final[tuple[Spec, ...]] = (
             "One tongue and one custom hold the commonwealth together and raise its standing.",
         ),
         years=20,
+        reform=_reform(
+            "rnw_reform_one_people",
+            "iro_reforged_law_of_peace",
+            "Law of One People",
+            (
+                "One law binds the peoples of the commonwealth and keeps the peace among "
+                "its many towns."
+            ),
+        ),
     ),
     Spec(
         family=REGIONAL_REALM,
@@ -206,6 +258,15 @@ SPECS: Final[tuple[Spec, ...]] = (
             "A new administration reaches across the region, and its provinces come to heel.",
         ),
         years=15,
+        reform=_reform(
+            "rnw_reform_realm_provinces",
+            "subah_organization_reform",
+            "Provinces of the Realm",
+            (
+                "The realm is divided into provinces under its governors, and its towns "
+                "grow under their care."
+            ),
+        ),
     ),
     Spec(
         family=POSTCOLONIAL_FEDERATION,
@@ -229,6 +290,12 @@ SPECS: Final[tuple[Spec, ...]] = (
             "A young nation of settlers grows fast and has little patience for rebels.",
         ),
         years=10,
+        reform=_reform(
+            "rnw_reform_national_articles",
+            "constitutional_state",
+            "Articles of the Nation",
+            "Written articles bind the states of the nation and the assembly that speaks for them.",
+        ),
         allow=(
             (
                 "OR = { is_subject = no is_leader_of_international_organization_of_type = "
@@ -291,6 +358,15 @@ SPECS: Final[tuple[Spec, ...]] = (
             ),
         ),
         years=20,
+        reform=_reform(
+            "rnw_reform_restored_crown",
+            "dan_the_kings_law",
+            "Law of the Restored Crown",
+            (
+                "The restored crown takes back the old rights of its predecessors and "
+                "rules from one seat again."
+            ),
+        ),
         heirs=True,
     ),
 )

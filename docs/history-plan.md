@@ -743,11 +743,12 @@ of them (a named opinion) and a mediator.
   colonial shore named in its founders' tradition (N6, `ac67a29`, `9a5bdce`);
   restorations of the realms the history divided, with the other heirs' answer (N7,
   `f3cd91f`); scripted geographies and AI goals (N8, `2ee7595`); events of the
-  recorded past (N9). On candidate B's code the export writes 11 realms, the empire,
-  4 restorations and 122 memory events, all files parsed, every text in every
-  language. [V-EXEC] The reference golden and the R6 delivery follow. The family
-  reforms, missions and the fantasy layer beyond the empire (§22.4, items 1, 2 and 5)
-  are not yet implemented.
+  recorded past (N9, `02b8230`); the family reforms (N6). On candidate B's code the
+  export writes 11 realms, the empire, 4 restorations and 122 memory events, all files
+  parsed, every text in every language. [V-EXEC] The pending epoch-61 golden is
+  refreshed and reproduced; the layer check passes. Missions, the fantasy layer beyond
+  the empire, the adapted vanilla chains and the naming choice events (§22.4, items
+  1–4) are not yet implemented.
 
 ### Redesign phases after the audit (D21–D28)
 

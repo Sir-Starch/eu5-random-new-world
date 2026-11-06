@@ -1401,3 +1401,59 @@ text = '''Nous relèverons l'ancien royaume.'''
 ["rnw_memory.heir.b"]
 source = "981a1c5531732d0e"
 text = '''L'ancien royaume n'est plus ; qu'il repose en paix.'''
+
+["rnw_reform_river_markets"]
+source = "c98e0101001dfd1a"
+text = '''Charte des marchés du fleuve'''
+
+["rnw_reform_river_markets_desc"]
+source = "07319bc21fe9bfb3"
+text = '''Les villes du fleuve commercent sous une même charte, et leurs marchands en parcourent tout le cours.'''
+
+["rnw_reform_valley_council"]
+source = "7fe79434140a15d2"
+text = '''Conseil des vallées'''
+
+["rnw_reform_valley_council_desc"]
+source = "ebe81586e732414b"
+text = '''Les chefs de chaque vallée siègent dans un même conseil, et rien n'est décidé tant que tous ne sont pas d'accord.'''
+
+["rnw_reform_port_council"]
+source = "229cf1f8d7a5629c"
+text = '''Conseil des ports'''
+
+["rnw_reform_port_council_desc"]
+source = "b1b09e8b01fe91dc"
+text = '''Les maisons marchandes de chaque port gouvernent ensemble la ligue, et ses navires portent leurs marchandises sur tous les rivages.'''
+
+["rnw_reform_one_people"]
+source = "fd6c4d4b18166d99"
+text = '''Loi du peuple uni'''
+
+["rnw_reform_one_people_desc"]
+source = "82e5c34f269f9d61"
+text = '''Une seule loi lie les peuples de la communauté et maintient la paix entre ses nombreuses villes.'''
+
+["rnw_reform_realm_provinces"]
+source = "041fbf884f30138c"
+text = '''Provinces du royaume'''
+
+["rnw_reform_realm_provinces_desc"]
+source = "6d2906868d241c91"
+text = '''Le royaume est divisé en provinces sous ses gouverneurs, et ses villes grandissent sous leur garde.'''
+
+["rnw_reform_national_articles"]
+source = "03468bdf1a6efa04"
+text = '''Articles de la nation'''
+
+["rnw_reform_national_articles_desc"]
+source = "67501e96229f51f7"
+text = '''Des articles écrits lient les États de la nation et l'assemblée qui parle en leur nom.'''
+
+["rnw_reform_restored_crown"]
+source = "c8fe56425fcf3bb3"
+text = '''Loi de la couronne restaurée'''
+
+["rnw_reform_restored_crown_desc"]
+source = "4d83a205137e54bb"
+text = '''La couronne restaurée reprend les anciens droits de ses prédécesseurs et gouverne de nouveau depuis un seul siège.'''

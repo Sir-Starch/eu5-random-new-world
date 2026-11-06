@@ -667,3 +667,19 @@ def test_two_federations_of_one_region_are_not_both_named_after_it() -> None:
     found, _ = formations(facts, SEED, POSTCOLONIAL_FEDERATION)
     assert len(found) == 2
     assert [formation.named_by for formation in found] == ["one_region", ""]
+
+
+def test_every_family_but_the_empire_opens_a_reform_of_its_own() -> None:
+    """A formation unlocks its family's reform, a vanilla payload under the mod's own name."""
+    reforms = [spec.reform for spec in SPECS if spec.reform is not None]
+    assert [spec.family for spec in SPECS if spec.reform is None] == [NEW_WORLD_EMPIRE]
+    names = [reform.name for reform in reforms]
+    assert len(names) == len(set(names))
+    assert all(name.startswith("rnw_reform_") for name in names)
+    assert len({reform.source.name for reform in reforms}) == len(reforms)
+    for spec in SPECS:
+        text = block(_formation(spec.family), _identity(spec.family))
+        if spec.reform is None:
+            assert "unlock_government_reform_effect" not in text
+        else:
+            assert f"unlock_government_reform_effect = {{ type = {spec.reform.name} }}" in text
