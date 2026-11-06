@@ -868,7 +868,7 @@
             {:else if shownTab === "chronicle" && dossier}
               <Chronicle entries={dossier.chronicle} names={atlas.data.names} onplace={goTo} />
             {:else if shownTab === "relations" && dossier}
-              <Relations {dossier} names={atlas.data.names} swatch={(tag) => swatches.get(tag)} onplace={goTo} />
+              <Relations {dossier} swatch={(tag) => swatches.get(tag)} onplace={goTo} />
             {/if}
           </div>
         </section>

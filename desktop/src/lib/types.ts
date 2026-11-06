@@ -244,21 +244,21 @@ export interface HistoryAxis {
   place: number;
 }
 
-export interface HistoryReason {
-  factor: string;
+/** One line of a country's opinion of another as the game lists it (`history_presenter.Opinion`). */
+export interface HistoryOpinion {
   label: string;
-  cause: string;
-  year: number;
+  value: number;
+  decay: number;
   place: number;
-  effect: number;
 }
 
+/** Another country and the viewed country's opinion of it: its lines and their sum. */
 export interface HistoryPartner {
   name: string;
   place: number;
   tag: string;
-  standing: {kind: string; label: string}[];
-  reasons: HistoryReason[];
+  total: number;
+  opinions: HistoryOpinion[];
 }
 
 /** A societal value as EU5 shows it: a position from -100 (left pole) to 100 (right pole). */

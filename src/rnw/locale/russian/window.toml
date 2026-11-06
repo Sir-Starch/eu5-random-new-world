@@ -2617,20 +2617,24 @@ source = "619aad1b467af62e"
 text = '''Хроника'''
 
 ["history.relations"]
-source = "18265b0039496fc7"
-text = '''Отношения и их причины'''
+source = "73afc5e500f85168"
+text = '''Мнения в первый день'''
+
+["history.opinion_of"]
+source = "e25fa64eb57a9783"
+text = '''{name}: {total}'''
+
+["history.opinion_line"]
+source = "228959acecadf2e1"
+text = '''{label}: {value}'''
+
+["history.opinion_fading"]
+source = "3236a8e2d23dd88d"
+text = '''{label}: {value}, {fade} в год'''
 
 ["history.inheritance"]
 source = "b849349447d50508"
 text = '''Общее наследие'''
-
-["history.projected"]
-source = "ce66466ccde1a893"
-text = '''EU5: {relations}'''
-
-["history.memory"]
-source = "d111a3f697797053"
-text = '''Память: {reason}'''
 
 ["history.position"]
 source = "262564cc218aaf61"
@@ -2731,26 +2735,6 @@ text = '''Наступательная'''
 ["history.defensive"]
 source = "892ad8f258bcb335"
 text = '''Оборонительная'''
-
-["history.vassal"]
-source = "713b56e7693500c8"
-text = '''Зависимость'''
-
-["history.alliance"]
-source = "afe3c1947d3b3a6e"
-text = '''Союз'''
-
-["history.rival"]
-source = "43a08bd8d30e31a1"
-text = '''Соперничество'''
-
-["history.guarantee"]
-source = "788b8a0ad50ab000"
-text = '''Гарантия'''
-
-["history.trade"]
-source = "60db3cf06e888a68"
-text = '''Соглашение об обмене'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2869,64 +2853,20 @@ source = "17ea9dc671533b54"
 text = '''Самые значимые записанные события, от старых к новым.'''
 
 ["history.relations_note"]
-source = "38278ebfa5d2b8f9"
-text = '''Самые сильные запомнившиеся связи с их причинами и действующие соглашения.'''
+source = "76c4fb4081f48673"
+text = '''Мнение этой страны о других в первый день, строка за строкой, как их перечисляет игра: мнения от её договоров и от её записанного прошлого. Своё игра добавит сама: за культуру, религию, язык, границы и прочее.'''
 
-["history.remembered"]
-source = "40d4b7fdeb791310"
-text = '''Памятные связи'''
+["history.total"]
+source = "f54034f796df436e"
+text = '''Сумма этих строк'''
 
-["history.agreements"]
-source = "be06d720e615eaa1"
-text = '''Прочие соглашения'''
-
-["history.lord"]
-source = "1e56767c5f9119ca"
-text = '''Сюзерен'''
-
-["history.subject"]
-source = "68971283841aecdf"
-text = '''Ленник'''
-
-["history.guarantor"]
-source = "833a5c4e444c1d70"
-text = '''Гарант'''
-
-["history.protected"]
-source = "d3ab7a7b023e7741"
-text = '''Гарантировано'''
-
-["history.trust"]
-source = "ade9248e0132b411"
-text = '''Доверие'''
-
-["history.grievance"]
-source = "b86338668207bca0"
-text = '''Обида'''
-
-["history.fear"]
-source = "140262b32b0c98df"
-text = '''Страх'''
-
-["history.dependence"]
-source = "f7a263bc0e46b50e"
-text = '''Зависимость'''
-
-["history.competition"]
-source = "43a08bd8d30e31a1"
-text = '''Соперничество'''
-
-["history.affinity"]
-source = "5a2e54bbcb99c026"
-text = '''Близость'''
-
-["history.effect"]
-source = "227731e305f215f3"
-text = '''Отношение в EU5'''
+["history.yearly"]
+source = "c2cfadc6d1ca33f4"
+text = '''{value} в год'''
 
 ["history.no_relations"]
-source = "1400236acabefe1d"
-text = '''Записанных отношений нет'''
+source = "4d17010a44cc790c"
+text = '''В начале игры у этой страны нет заданных мнений о других'''
 
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
@@ -2935,10 +2875,6 @@ text = '''Местности, сменившие исторического вл
 ["history.values"]
 source = "e3ba2b95c8ba182b"
 text = '''Общественные ценности'''
-
-["history.trade_note"]
-source = "2f748fedba8b7954"
-text = '''В игре выражается дорогами и торговыми связями, а не договором.'''
 
 ["history.no_values"]
 source = "07535fe0c5f92f75"

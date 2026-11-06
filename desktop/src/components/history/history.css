@@ -272,7 +272,7 @@ button.hx-since:hover {
   line-height: 1.45;
 }
 
-/* Relations: a card for each remembered partner, rows for the other agreements. */
+/* Relations: a card for each country the viewed one has an opinion of, a row for each line. */
 .hx-partner {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -281,8 +281,7 @@ button.hx-since:hover {
 .hx-partner + .hx-partner {
   margin-top: 6px;
 }
-.hx-partner > header,
-.hx-agree {
+.hx-partner > header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -336,23 +335,30 @@ button.hx-since:hover {
   flex: 1 1 8em;
   min-width: 0;
 }
-.hx-reason .effect {
+button.hx-line {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+button.hx-line:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+.hx-reason .effect,
+.hx-partner > header .effect {
   margin-left: auto;
   font-weight: 600;
 }
-.hx-reason .effect.bad {
+.hx-reason .effect.bad,
+.hx-partner > header .effect.bad {
   color: var(--danger);
 }
-.hx-reason .effect.good {
+.hx-reason .effect.good,
+.hx-partner > header .effect.good {
   color: var(--ok);
-}
-.hx-agree {
-  justify-content: space-between;
-  padding: 5px 0;
-  border-bottom: 1px solid var(--line);
-}
-.hx-agree:last-child {
-  border-bottom: 0;
 }
 .hx-more {
   padding-top: 6px;

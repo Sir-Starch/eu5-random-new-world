@@ -590,9 +590,11 @@ in a scrollable dialog. The Tauri window has no country card: the pinned *locati
 card has tabs (Place, Society, Chronicle, Relations) drawn from the structured
 `Reader.dossier`/`Reader.place` (`desktop/src/components/history/`). The year of each
 chronicle row is drawn apart from its sentence, so every translation of a chronicle
-template must open with its year (`tests/test_history_dossier.py`); a relationship is
-named by the partner's role toward the viewed country (`vassal` pairs are
-overlord-first, `guarantee` pairs guarantor-first). A society that is a country on the map is
+template must open with its year (`tests/test_history_dossier.py`). Relations lists the
+viewed country's opinion of others as the game lists it: the engine's treaty opinions
+(`rnw.opinions.TREATIES`; `vassal` pairs are overlord-first, `guarantee` guarantor-first,
+`rival` rivalling-first) and the written historical opinions under their game names, which
+the same tests compare with the written localization. A society that is a country on the map is
 named by its country's name in the chronicle, in the game's text and the window's alike
 (`history_text.chronicles`, `Reader.society`); a predecessor, which is no country, keeps the
 name of its seat. The Society tab shows the societal values EU5 shows, as the game names them

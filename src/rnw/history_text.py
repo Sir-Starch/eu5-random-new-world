@@ -53,11 +53,11 @@ TEXTS: Final[dict[str, str]] = {
     "rnw_chronicle.1.a": "Close the chronicle.",
     "rnw_history_place": "{text} Recorded place: {place}.",
     "rnw_history_opinion_place": "{text} — place {place}",
-    "rnw_history_opinion_trust": "Trust: {cause} ({year})",
+    "rnw_history_opinion_trust": "Goodwill: {cause} ({year})",
     "rnw_history_opinion_grievance": "Grievance: {cause} ({year})",
     "rnw_history_opinion_fear": "Fear: {cause} ({year})",
     "rnw_history_opinion_dependence": "Dependence: {cause} ({year})",
-    "rnw_history_opinion_competition": "Rivalry: {cause} ({year})",
+    "rnw_history_opinion_competition": "Contention: {cause} ({year})",
     "rnw_history_opinion_affinity": "Affinity: {cause} ({year})",
 }
 

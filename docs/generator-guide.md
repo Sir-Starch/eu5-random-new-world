@@ -247,10 +247,13 @@ government, technology and origin, the societal values EU5 shows for it (as the 
 them, with the event that last shaped each), and the traits of the generator's model that
 the game does not show. A world made before the values were recorded says so on the Society tab
 and shows the generator's own traits instead; make a new world to see the values. **Chronicle** is a timeline of the country's most
-significant recorded events, oldest first. **Relations** lists the strongest remembered
-ties with their reasons and the opinion change EU5 receives for each, then the country's
-other agreements (overlord, subjects, alliances, rivalries, guarantees and exchange). The
-classic window opens the same facts through **Society and history**.
+significant recorded events, oldest first. **Relations** shows the country's opinion of
+other countries on the first day, line by line as the game lists it: the opinions its
+treaties give (*Allied*, *Rival*, *Our Liege*, *Our Vassal* and the guarantees, under the
+game's names) and the historical opinions the world writes, under their names in the game,
+each with its value, its yearly fade and their sum. The game adds its own opinions for
+culture, religion, language, borders and more. The classic window opens the same facts
+through **Society and history**.
 Place links move the map to the recorded place. History travels in compact
 world files and works without the game installed. Earlier worlds show **No recorded
 history**; they are not assigned an invented past. Covered worlds keep history hidden.

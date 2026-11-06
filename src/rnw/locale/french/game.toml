@@ -1059,8 +1059,8 @@ source = "3726cac549dd314a"
 text = '''{text} — lieu : {place}'''
 
 ["rnw_history_opinion_trust"]
-source = "dd69982a0910055b"
-text = '''Confiance : {cause} ({year})'''
+source = "e033512c26f5502c"
+text = '''Bienveillance : {cause} ({year})'''
 
 ["rnw_history_opinion_grievance"]
 source = "234d42d09f7346a4"
@@ -1075,8 +1075,8 @@ source = "8ab01e2bf604a322"
 text = '''Dépendance : {cause} ({year})'''
 
 ["rnw_history_opinion_competition"]
-source = "a80a2092d70e0dab"
-text = '''Rivalité : {cause} ({year})'''
+source = "341a8c964ddcb41b"
+text = '''Discorde : {cause} ({year})'''
 
 ["rnw_history_opinion_affinity"]
 source = "33d90631b0ba91dd"

@@ -1,4 +1,4 @@
-"""The society panel's data: a timeline, traits, standings and a region, apart from the prose."""
+"""The society panel's data: a timeline, traits, opinions and a region, apart from the prose."""
 
 from __future__ import annotations
 
@@ -9,14 +9,15 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from rnw import atlas, history_text, translations
+from rnw import atlas, eu5_history_text, game_texts, history_text, translations
 from rnw.eu5_history_plan import project_start
 from rnw.eu5_history_values import profile_positions
 from rnw.gui.view import history_data
 from rnw.history_model import Authority, Exchange, Livelihood, Military, Society
-from rnw.history_presenter import STANDING_ORDER, YEAR_PREFIX, Reader, encode
+from rnw.history_presenter import YEAR_PREFIX, Reader, encode
 from rnw.history_values import AXES as VALUE_AXES
 from rnw.history_values import SOURCE
+from rnw.loc_keys import KeySpace, key_hashes
 
 from .history_fixtures import divided_valley
 from .test_history_archive import history_atlas
@@ -101,11 +102,12 @@ def test_a_dossier_is_plain_json_and_the_text_sections_are_unchanged(built: atla
     }
     assert isinstance(sent["chronicle"], list)
     titles = [section.title for section in reader.country(tag)]
-    assert titles == ["Organization in 1337", "Relationships and reasons", "Chronicle"]
+    assert titles == ["Organization in 1337", "Opinions on the first day", "Chronicle"]
 
 
-def test_a_partner_is_named_by_its_role_toward_the_viewed_country(built: atlas.Atlas) -> None:
-    """``vassal`` is (overlord, subject) and ``guarantee`` (guarantor, protected)."""
+def test_each_side_of_a_treaty_has_the_engines_opinion_of_the_other(built: atlas.Atlas) -> None:
+    """``vassal`` is (overlord, subject), ``guarantee`` (guarantor, protected), ``rival`` (the
+    country that rivals, its rival); an exchange of goods gives the engine no opinion."""
     history = record(built)
     first, second, third = (country.actor for country in history.countries)
     tags = {country.actor: country.tag for country in history.countries}
@@ -114,22 +116,54 @@ def test_a_partner_is_named_by_its_role_toward_the_viewed_country(built: atlas.A
         ("guarantee", second, third),
         ("alliance", first, third),
         ("exchange", first, third),
+        ("rival", third, second),
     )
     reader = Reader(
-        replace(built, history=replace(history, relations=relations)), "english", atlas.pretty
+        replace(built, history=replace(history, relations=relations, biases=())),
+        "english",
+        lambda key: key,
     )
 
-    def standing(viewer: int, partner: int) -> list[str]:
+    def lines(viewer: int, partner: int) -> list[tuple[str, int]]:
         dossier = reader.dossier(tags[viewer])
         assert dossier is not None
-        return [s.kind for p in dossier.partners if p.tag == tags[partner] for s in p.standing]
+        return [
+            (line.label, line.value)
+            for found in dossier.partners
+            if found.tag == tags[partner]
+            for line in found.opinions
+        ]
 
-    assert standing(first, second) == ["subject"]
-    assert standing(second, first) == ["lord"]
-    assert standing(second, third) == ["protected"]
-    assert standing(third, second) == ["guarantor"]
-    assert standing(first, third) == ["alliance", "trade"]
-    assert set(STANDING_ORDER) >= {"lord", "subject", "guarantor", "protected", "alliance", "trade"}
+    assert lines(first, second) == [("vassal_overlord_opinion", 100)]
+    assert lines(second, first) == [("vassal_subject_opinion", 50)]
+    assert lines(second, third) == [("opinion_giving_guarantee", 5)]
+    assert lines(third, second) == [("opinion_receiving_guarantee", 10), ("opinion_rival", -100)]
+    assert lines(first, third) == [("opinion_alliance", 50)]
+    assert lines(third, first) == [("opinion_alliance", 50)]
+    dossier = reader.dossier(tags[third])
+    assert dossier is not None
+    assert [partner.total for partner in dossier.partners] == [-90, 50]
+
+
+def test_a_historical_line_is_named_as_the_game_names_its_opinion(built: atlas.Atlas) -> None:
+    """The window's line is the opinion's localized name in the written world, value and decay."""
+    plan = project_start(inputs_for(divided_valley()))
+    written = eu5_history_text.build(plan, KeySpace(key_hashes(plan.names)))
+    game = game_texts.localize(written.texts, "english")
+    named = {
+        (o.first, o.second, o.value, o.yearly_decay): game[o.key] for o in plan.historical_opinions
+    }
+    assert named
+    reader = Reader(built, "english", atlas.pretty)
+    shown: dict[tuple[str, str, int, int], str] = {}
+    for country in record(built).countries:
+        dossier = reader.dossier(country.tag)
+        assert dossier is not None
+        for partner in dossier.partners:
+            for line in partner.opinions:
+                if line.decay:
+                    shown[country.tag, partner.tag, line.value, line.decay] = line.label
+    assert shown == named
 
 
 def test_a_region_lists_changes_inheritances_and_aims_with_places(built: atlas.Atlas) -> None:

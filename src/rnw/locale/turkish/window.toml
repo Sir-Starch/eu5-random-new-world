@@ -2617,20 +2617,24 @@ source = "619aad1b467af62e"
 text = '''Kronik'''
 
 ["history.relations"]
-source = "18265b0039496fc7"
-text = '''İlişkiler ve nedenleri'''
+source = "73afc5e500f85168"
+text = '''İlk gündeki görüşler'''
+
+["history.opinion_of"]
+source = "e25fa64eb57a9783"
+text = '''{name}: {total}'''
+
+["history.opinion_line"]
+source = "228959acecadf2e1"
+text = '''{label}: {value}'''
+
+["history.opinion_fading"]
+source = "3236a8e2d23dd88d"
+text = '''{label}: {value}, yılda {fade}'''
 
 ["history.inheritance"]
 source = "b849349447d50508"
 text = '''Ortak miras'''
-
-["history.projected"]
-source = "ce66466ccde1a893"
-text = '''EU5: {relations}'''
-
-["history.memory"]
-source = "d111a3f697797053"
-text = '''Hafıza: {reason}'''
 
 ["history.position"]
 source = "262564cc218aaf61"
@@ -2731,26 +2735,6 @@ text = '''Saldırgan'''
 ["history.defensive"]
 source = "892ad8f258bcb335"
 text = '''Savunmacı'''
-
-["history.vassal"]
-source = "713b56e7693500c8"
-text = '''Tabiiyet ilişkisi'''
-
-["history.alliance"]
-source = "afe3c1947d3b3a6e"
-text = '''İttifak'''
-
-["history.rival"]
-source = "43a08bd8d30e31a1"
-text = '''Rekabet'''
-
-["history.guarantee"]
-source = "788b8a0ad50ab000"
-text = '''Garanti'''
-
-["history.trade"]
-source = "60db3cf06e888a68"
-text = '''Mübadele anlaşması'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2869,64 +2853,20 @@ source = "17ea9dc671533b54"
 text = '''Kayda geçen en önemli olaylar, en eskiden başlayarak.'''
 
 ["history.relations_note"]
-source = "38278ebfa5d2b8f9"
-text = '''En güçlü hatırlanan bağlar, nedenleriyle birlikte, ve geçerli anlaşmalar.'''
+source = "76c4fb4081f48673"
+text = '''Bu ülkenin ilk gün diğerleri hakkındaki görüşü, oyunun listelediği gibi satır satır: antlaşmalarının verdiği görüşler ve kayıtlı geçmişinden gelenler. Kültür, din, dil, sınırlar ve daha fazlası için kendi görüşlerini oyun kendisi ekler.'''
 
-["history.remembered"]
-source = "40d4b7fdeb791310"
-text = '''Hatırlanan bağlar'''
+["history.total"]
+source = "f54034f796df436e"
+text = '''Bu satırların toplamı'''
 
-["history.agreements"]
-source = "be06d720e615eaa1"
-text = '''Diğer anlaşmalar'''
-
-["history.lord"]
-source = "1e56767c5f9119ca"
-text = '''Metbu Devlet'''
-
-["history.subject"]
-source = "68971283841aecdf"
-text = '''Tabi Devlet'''
-
-["history.guarantor"]
-source = "833a5c4e444c1d70"
-text = '''Güvence Veren'''
-
-["history.protected"]
-source = "d3ab7a7b023e7741"
-text = '''Güvence Verilmiş'''
-
-["history.trust"]
-source = "ade9248e0132b411"
-text = '''Güven'''
-
-["history.grievance"]
-source = "b86338668207bca0"
-text = '''Kin'''
-
-["history.fear"]
-source = "140262b32b0c98df"
-text = '''Korku'''
-
-["history.dependence"]
-source = "f7a263bc0e46b50e"
-text = '''Bağımlılık'''
-
-["history.competition"]
-source = "43a08bd8d30e31a1"
-text = '''Rekabet'''
-
-["history.affinity"]
-source = "5a2e54bbcb99c026"
-text = '''Yakınlık'''
-
-["history.effect"]
-source = "227731e305f215f3"
-text = '''EU5’te görüş'''
+["history.yearly"]
+source = "c2cfadc6d1ca33f4"
+text = '''yılda {value}'''
 
 ["history.no_relations"]
-source = "1400236acabefe1d"
-text = '''Kayıtlı ilişki yok'''
+source = "4d17010a44cc790c"
+text = '''Başlangıçta başka bir ülke hakkında belirlenmiş görüş yok'''
 
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
@@ -2935,10 +2875,6 @@ text = '''Tarihî sahibi değişen yerleşimler'''
 ["history.values"]
 source = "e3ba2b95c8ba182b"
 text = '''Toplumsal Değerler'''
-
-["history.trade_note"]
-source = "2f748fedba8b7954"
-text = '''Oyunda antlaşma olarak değil, yollar ve pazar bağlantıları olarak görünür.'''
 
 ["history.no_values"]
 source = "07535fe0c5f92f75"

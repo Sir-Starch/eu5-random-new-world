@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ICONS } from "../components/Icon.svelte";
-import { EVENTS, eventStyle, leaning, mood, percent, signed, spread, standing } from "./history";
+import { EVENTS, eventStyle, leaning, percent, signed, spread } from "./history";
 
 // The template families of `history_text.TEMPLATES`, which name every kind a chronicle can hold.
 const FAMILIES = [
@@ -18,17 +18,6 @@ describe("the chronicle's glyphs", () => {
   it("draws a kind it does not know as a plain turn", () => {
     expect(eventStyle("something_new")).toEqual({ glyph: "circle", tone: "turn" });
     expect(ICONS).toContain("circle");
-  });
-});
-
-describe("feelings and standings", () => {
-  it("reads good, bad and flat from the factor", () => {
-    expect(mood("trust")).toBe("good");
-    expect(mood("grievance")).toBe("bad");
-    expect(mood("dependence")).toBe("flat");
-    expect(standing("lord")).toBe("rank");
-    expect(standing("rival")).toBe("bad");
-    expect(standing("trade")).toBe("flat");
   });
 });
 

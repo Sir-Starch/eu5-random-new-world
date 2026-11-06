@@ -2617,20 +2617,24 @@ source = "619aad1b467af62e"
 text = '''Crónica'''
 
 ["history.relations"]
-source = "18265b0039496fc7"
-text = '''Relaciones y sus motivos'''
+source = "73afc5e500f85168"
+text = '''Opiniones el primer día'''
+
+["history.opinion_of"]
+source = "e25fa64eb57a9783"
+text = '''{name}: {total}'''
+
+["history.opinion_line"]
+source = "228959acecadf2e1"
+text = '''{label}: {value}'''
+
+["history.opinion_fading"]
+source = "3236a8e2d23dd88d"
+text = '''{label}: {value}, {fade} al año'''
 
 ["history.inheritance"]
 source = "b849349447d50508"
 text = '''Herencias compartidas'''
-
-["history.projected"]
-source = "ce66466ccde1a893"
-text = '''EU5: {relations}'''
-
-["history.memory"]
-source = "d111a3f697797053"
-text = '''Memoria: {reason}'''
 
 ["history.position"]
 source = "262564cc218aaf61"
@@ -2731,26 +2735,6 @@ text = '''Ofensiva'''
 ["history.defensive"]
 source = "892ad8f258bcb335"
 text = '''Defensiva'''
-
-["history.vassal"]
-source = "713b56e7693500c8"
-text = '''Relación de dependencia'''
-
-["history.alliance"]
-source = "afe3c1947d3b3a6e"
-text = '''Alianza'''
-
-["history.rival"]
-source = "43a08bd8d30e31a1"
-text = '''Rivalidad'''
-
-["history.guarantee"]
-source = "788b8a0ad50ab000"
-text = '''Garantía'''
-
-["history.trade"]
-source = "60db3cf06e888a68"
-text = '''Acuerdo de intercambio'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2869,64 +2853,20 @@ source = "17ea9dc671533b54"
 text = '''Los sucesos registrados más importantes, del más antiguo al más reciente.'''
 
 ["history.relations_note"]
-source = "38278ebfa5d2b8f9"
-text = '''Los vínculos más recordados, con sus motivos, y los acuerdos vigentes.'''
+source = "76c4fb4081f48673"
+text = '''La opinión de este país sobre otros el primer día, línea a línea como las enumera el juego: las que dan sus tratados y las de su pasado registrado. El juego añade las suyas por cultura, religión, idioma, fronteras y más.'''
 
-["history.remembered"]
-source = "40d4b7fdeb791310"
-text = '''Vínculos recordados'''
+["history.total"]
+source = "f54034f796df436e"
+text = '''La suma de estas líneas'''
 
-["history.agreements"]
-source = "be06d720e615eaa1"
-text = '''Otros acuerdos'''
-
-["history.lord"]
-source = "1e56767c5f9119ca"
-text = '''Soberano'''
-
-["history.subject"]
-source = "68971283841aecdf"
-text = '''Súbdito'''
-
-["history.guarantor"]
-source = "833a5c4e444c1d70"
-text = '''Garante'''
-
-["history.protected"]
-source = "d3ab7a7b023e7741"
-text = '''Garantizado'''
-
-["history.trust"]
-source = "ade9248e0132b411"
-text = '''Confianza'''
-
-["history.grievance"]
-source = "b86338668207bca0"
-text = '''Rencor'''
-
-["history.fear"]
-source = "140262b32b0c98df"
-text = '''Temor'''
-
-["history.dependence"]
-source = "f7a263bc0e46b50e"
-text = '''Dependencia'''
-
-["history.competition"]
-source = "43a08bd8d30e31a1"
-text = '''Rivalidad'''
-
-["history.affinity"]
-source = "5a2e54bbcb99c026"
-text = '''Afinidad'''
-
-["history.effect"]
-source = "227731e305f215f3"
-text = '''Opinión en EU5'''
+["history.yearly"]
+source = "c2cfadc6d1ca33f4"
+text = '''{value} al año'''
 
 ["history.no_relations"]
-source = "1400236acabefe1d"
-text = '''Sin relaciones registradas'''
+source = "4d17010a44cc790c"
+text = '''No hay ninguna opinión sobre otro país fijada al inicio'''
 
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
@@ -2935,10 +2875,6 @@ text = '''Ubicaciones que cambiaron de propietario histórico'''
 ["history.values"]
 source = "e3ba2b95c8ba182b"
 text = '''Valores sociales'''
-
-["history.trade_note"]
-source = "2f748fedba8b7954"
-text = '''En el juego se muestra como caminos y vínculos de mercado, no como un tratado.'''
 
 ["history.no_values"]
 source = "07535fe0c5f92f75"

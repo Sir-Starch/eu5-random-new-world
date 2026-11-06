@@ -7,6 +7,12 @@
   Lost* −40, *Border Aggression* −25 and others) in proportion to how much of the memory
   survives to 1337. They were a few points before, and faded within a few years.
 
+- Show on the generator's Relations tab what the game shows: each country's opinion of others on
+  the first day, line by line under the game's names, the opinions of its alliances, rivalries,
+  subjects and guarantees included, with each line's value, its yearly fade and their sum. The
+  historical opinions are now called *Goodwill* and *Contention* where they were *Trust* and
+  *Rivalry*, which the game uses for its own trust and rivals.
+
 - Give the formable countries real goals. Any country that holds enough of a territory, its
   capital inside, may form a union, confederation, league or realm, not only the states of
   1337; a commonwealth also opens to its people's culture group. The realm becomes the realm

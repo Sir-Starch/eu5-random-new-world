@@ -2617,20 +2617,24 @@ source = "619aad1b467af62e"
 text = '''연대기'''
 
 ["history.relations"]
-source = "18265b0039496fc7"
-text = '''관계와 그 이유'''
+source = "73afc5e500f85168"
+text = '''첫날의 우호도'''
+
+["history.opinion_of"]
+source = "e25fa64eb57a9783"
+text = '''{name}: {total}'''
+
+["history.opinion_line"]
+source = "228959acecadf2e1"
+text = '''{label}: {value}'''
+
+["history.opinion_fading"]
+source = "3236a8e2d23dd88d"
+text = '''{label}: {value}, 매년 {fade}'''
 
 ["history.inheritance"]
 source = "b849349447d50508"
 text = '''공유하는 유산'''
-
-["history.projected"]
-source = "ce66466ccde1a893"
-text = '''EU5: {relations}'''
-
-["history.memory"]
-source = "d111a3f697797053"
-text = '''기억: {reason}'''
 
 ["history.position"]
 source = "262564cc218aaf61"
@@ -2731,26 +2735,6 @@ text = '''공격'''
 ["history.defensive"]
 source = "892ad8f258bcb335"
 text = '''방어'''
-
-["history.vassal"]
-source = "713b56e7693500c8"
-text = '''종속 관계'''
-
-["history.alliance"]
-source = "afe3c1947d3b3a6e"
-text = '''동맹'''
-
-["history.rival"]
-source = "43a08bd8d30e31a1"
-text = '''경쟁'''
-
-["history.guarantee"]
-source = "788b8a0ad50ab000"
-text = '''독립 보장'''
-
-["history.trade"]
-source = "60db3cf06e888a68"
-text = '''교역 협정'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2869,64 +2853,20 @@ source = "17ea9dc671533b54"
 text = '''기록된 가장 중요한 사건을 오래된 순으로 나열합니다.'''
 
 ["history.relations_note"]
-source = "38278ebfa5d2b8f9"
-text = '''가장 강하게 기억되는 관계와 그 이유, 그리고 현재의 협정.'''
+source = "76c4fb4081f48673"
+text = '''첫날 이 나라가 다른 나라에 대해 갖는 우호도를 게임이 나열하는 대로 한 줄씩 보여 줍니다. 조약에서 오는 우호도와 기록된 과거에서 오는 우호도입니다. 문화, 종교, 언어, 국경 등에 따른 우호도는 게임이 직접 더합니다.'''
 
-["history.remembered"]
-source = "40d4b7fdeb791310"
-text = '''기억되는 관계'''
+["history.total"]
+source = "f54034f796df436e"
+text = '''이 줄들의 합계'''
 
-["history.agreements"]
-source = "be06d720e615eaa1"
-text = '''기타 협정'''
-
-["history.lord"]
-source = "1e56767c5f9119ca"
-text = '''종주국'''
-
-["history.subject"]
-source = "68971283841aecdf"
-text = '''종속국'''
-
-["history.guarantor"]
-source = "833a5c4e444c1d70"
-text = '''보장국'''
-
-["history.protected"]
-source = "d3ab7a7b023e7741"
-text = '''보장'''
-
-["history.trust"]
-source = "ade9248e0132b411"
-text = '''신뢰'''
-
-["history.grievance"]
-source = "b86338668207bca0"
-text = '''원한'''
-
-["history.fear"]
-source = "140262b32b0c98df"
-text = '''두려움'''
-
-["history.dependence"]
-source = "f7a263bc0e46b50e"
-text = '''의존'''
-
-["history.competition"]
-source = "43a08bd8d30e31a1"
-text = '''경쟁'''
-
-["history.affinity"]
-source = "5a2e54bbcb99c026"
-text = '''친밀감'''
-
-["history.effect"]
-source = "227731e305f215f3"
-text = '''EU5에서의 호감도'''
+["history.yearly"]
+source = "c2cfadc6d1ca33f4"
+text = '''매년 {value}'''
 
 ["history.no_relations"]
-source = "1400236acabefe1d"
-text = '''기록된 관계가 없습니다'''
+source = "4d17010a44cc790c"
+text = '''시작할 때 다른 나라에 대한 우호도가 정해져 있지 않습니다'''
 
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
@@ -2935,10 +2875,6 @@ text = '''역사적 소유자가 바뀐 지점'''
 ["history.values"]
 source = "e3ba2b95c8ba182b"
 text = '''사회 가치관'''
-
-["history.trade_note"]
-source = "2f748fedba8b7954"
-text = '''게임에서는 조약이 아니라 도로와 시장 연결로 나타납니다.'''
 
 ["history.no_values"]
 source = "07535fe0c5f92f75"

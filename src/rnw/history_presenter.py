@@ -12,12 +12,13 @@ from rnw.history_archive import AXES, UNWRITTEN
 from rnw.history_model import Action
 from rnw.history_values import AXES as VALUE_AXES
 from rnw.history_values import SOURCE, poles
+from rnw.opinions import treaty_opinions
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from rnw.atlas import Atlas
-    from rnw.history_archive import Archive, CountryFact
+    from rnw.history_archive import Archive, BiasFact, CountryFact
     from rnw.history_model import Society
 
 SOURCES: Final[dict[str, str]] = {
@@ -26,10 +27,11 @@ SOURCES: Final[dict[str, str]] = {
     "history.none": "No recorded history",
     "history.profile": "Organization in 1337",
     "history.chronicle": "Chronicle",
-    "history.relations": "Relationships and reasons",
+    "history.relations": "Opinions on the first day",
     "history.inheritance": "Shared inheritances",
-    "history.projected": "EU5: {relations}",
-    "history.memory": "Memory: {reason}",
+    "history.opinion_of": "{name}: {total}",
+    "history.opinion_line": "{label}: {value}",
+    "history.opinion_fading": "{label}: {value}, {fade} a year",
     "history.position": "Government: {government} · Rank: {rank} · Technology: {level}",
     "history.axis": "{axis}: {value} — {cause} ({year})",
     "history.shared": "{kind}: {members}",
@@ -55,11 +57,6 @@ SOURCES: Final[dict[str, str]] = {
     "history.balanced": "Balanced",
     "history.offensive": "Offensive",
     "history.defensive": "Defensive",
-    "history.vassal": "Subject relationship",
-    "history.alliance": "Alliance",
-    "history.rival": "Rivalry",
-    "history.guarantee": "Guarantee",
-    "history.trade": "Exchange agreement",
     "history.great_empire": "Great empire",
     "history.sea_league": "Sea league",
     "history.highland_confederation": "Highland confederation",
@@ -86,29 +83,19 @@ SOURCES: Final[dict[str, str]] = {
     ),
     "history.chronicle_note": "The most significant recorded events, oldest first.",
     "history.relations_note": (
-        "The strongest remembered ties, with their reasons, and the current agreements."
+        "Its opinion of other countries on the first day, line by line as the game lists it: "
+        "the opinions its treaties give and those of its recorded past. The game adds its own "
+        "for culture, religion, language, borders and more."
     ),
-    "history.remembered": "Remembered ties",
-    "history.agreements": "Other agreements",
-    "history.lord": "Overlord",
-    "history.subject": "Subject",
-    "history.guarantor": "Guarantor",
-    "history.protected": "Guaranteed",
-    "history.trust": "Trust",
-    "history.grievance": "Grievance",
-    "history.fear": "Fear",
-    "history.dependence": "Dependence",
-    "history.competition": "Rivalry",
-    "history.affinity": "Affinity",
-    "history.effect": "Opinion in EU5",
-    "history.no_relations": "No recorded relationships",
+    "history.total": "The sum of these lines",
+    "history.yearly": "{value} a year",
+    "history.no_relations": "No opinion of another country is set at the start",
     "history.owner_changes": "Locations changing historical owner",
     "history.values": "Societal values",
     "history.no_values": (
         "This world was made before its societal values were recorded. "
         "Make a new world to see them."
     ),
-    "history.trade_note": "Shown in the game as roads and market links, not as a treaty.",
 }
 
 # The year opens every chronicle sentence in every language, followed by a colon (fullwidth in
@@ -116,18 +103,8 @@ SOURCES: Final[dict[str, str]] = {
 # year in its own column. ``tests/test_history_dossier.py`` checks that every translation keeps
 # the shape, so a drifting translation fails there, not in a window.
 YEAR_PREFIX: Final[str] = r"^{year}\s*[年년]?\s*[:\uff1a]\s*"
-# A partner's standing is read from the viewed country's side: the partner's role toward it.
-STANDING_ORDER: Final[tuple[str, ...]] = (
-    "lord",
-    "subject",
-    "alliance",
-    "rival",
-    "guarantor",
-    "protected",
-    "trade",
-)
-PARTNERS: Final[int] = 3
-AGREEMENTS: Final[int] = 24
+# The countries a dossier lists, those of the largest opinion first; the rest are counted.
+PARTNERS: Final[int] = 24
 
 
 @dataclass(frozen=True, slots=True)
@@ -193,28 +170,26 @@ class Value:
 
 
 @dataclass(frozen=True, slots=True)
-class Standing:
-    kind: str
-    label: str
+class Opinion:
+    """One line of a country's opinion of another as the game lists it: its name in the game,
+    its value on the first day, how much of it fades a year (0 while its treaty lasts) and the
+    place its cause names."""
 
-
-@dataclass(frozen=True, slots=True)
-class Reason:
-    factor: str
     label: str
-    cause: str
-    year: int
+    value: int
+    decay: int
     place: int
-    effect: int
 
 
 @dataclass(frozen=True, slots=True)
 class Partner:
+    """Another country, and the viewed country's opinion of it: the lines and their sum."""
+
     name: str
     place: int
     tag: str
-    standing: tuple[Standing, ...]
-    reasons: tuple[Reason, ...]
+    total: int
+    opinions: tuple[Opinion, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -294,17 +269,9 @@ def _traits(society: Society) -> dict[str, int | str]:
     )
 
 
-def _standing(kind: str, *, first: bool) -> str:
-    """The partner's role toward the viewed country in one projected agreement.
-
-    ``vassal`` pairs are (overlord, subject) and ``guarantee`` pairs (guarantor, protected);
-    ``first`` says the viewed country stands in the pair's first place.
-    """
-    if kind == "vassal":
-        return "subject" if first else "lord"
-    if kind == "guarantee":
-        return "protected" if first else "guarantor"
-    return "trade" if kind == "exchange" else kind
+def signed(value: int) -> str:
+    """A whole number with a real minus sign, and a plus where it is positive."""
+    return f"+{value}" if value > 0 else f"\N{MINUS SIGN}{-value}" if value < 0 else "0"
 
 
 @final
@@ -325,11 +292,8 @@ class Reader:
         self.called: dict[int, wording.Name] = {
             actor: named.get(tag, tag) for actor, tag in self.tags.items()
         }
-        self.memories: dict[int, list[int]] = defaultdict(list)
         self.regional: dict[str, Counter[int]] = defaultdict(Counter)
         if atlas.history:
-            for i, memory in enumerate(atlas.history.memories):
-                self.memories[memory.first].append(i)
             for event, place, _, _ in atlas.history.changes:
                 self.regional[self.name(atlas.regions[place])][event] += 1
 
@@ -440,71 +404,29 @@ class Reader:
         )
 
     def _relationships(self, record: Archive, actor: int) -> tuple[Line, ...]:
-        partners: Counter[int] = Counter()
-        for index in self.memories.get(actor, ()):
-            memory = record.memories[index]
-            partners[memory.second] += memory.amount
+        """The dossier's opinions as text: each country and its sum, then its lines."""
+        partners, more = self._partners(record, actor)
         rows: list[Line] = []
-        for partner, _ in sorted(partners.items(), key=lambda pair: (-pair[1], pair[0]))[:3]:
+        for partner in partners:
             rows.append(
                 Line(
-                    self.name(self.society(record, partner)),
-                    record.actors[partner].seat,
+                    self.say("opinion_of", name=partner.name, total=signed(partner.total)),
+                    partner.place,
                 )
             )
-            projected: list[str] = []
-            for kind, first, second in record.relations:
-                if {first, second} == {actor, partner}:
-                    arrow = "↔" if kind in {"alliance", "rival", "exchange"} else "→"
-                    names = (
-                        f"{self.name(self.society(record, first))} {arrow} "
-                        f"{self.name(self.society(record, second))}"
+            for line in partner.opinions:
+                if line.decay:
+                    text = self.say(
+                        "opinion_fading",
+                        label=line.label,
+                        value=signed(line.value),
+                        fade=signed(-line.decay),
                     )
-                    projected.append(
-                        f"{self.say('trade' if kind == 'exchange' else kind)} · {names}"
-                    )
-            if projected:
-                rows.append(Line(self.say("projected", relations=", ".join(sorted(projected)))))
-            reasons = sorted(
-                (
-                    record.memories[i]
-                    for i in self.memories[actor]
-                    if record.memories[i].second == partner
-                ),
-                key=lambda memory: (-memory.amount, memory.factor, memory.cause),
-            )[:3]
-            for memory in reasons:
-                event = record.events[memory.cause]
-                family = history_text.event_family(event.kind, event.outcome)
-                reason = history_text.Sentence(
-                    f"rnw_history_opinion_{memory.factor}",
-                    (
-                        (
-                            "cause",
-                            history_text.Sentence(f"rnw_history_cause_{family}"),
-                        ),
-                        ("year", event.year),
-                    ),
-                )
-                rows.append(
-                    Line(
-                        self.say(
-                            "memory", reason=history_text.render(reason, self.language, self.game)
-                        ),
-                        event.places[0] if event.places else -1,
-                    )
-                )
-                for bias in record.biases:
-                    if (bias.first, bias.second, bias.factor, bias.cause) == (
-                        actor,
-                        partner,
-                        memory.factor,
-                        memory.cause,
-                    ):
-                        shown = history_text.render(reason, self.language, self.game)
-                        rows.append(
-                            Line(self.say("projected", relations=f"{shown} ({bias.value:+d})"))
-                        )
+                else:
+                    text = self.say("opinion_line", label=line.label, value=signed(line.value))
+                rows.append(Line(text, line.place))
+        if more:
+            rows.append(Line(f"+{more}"))
         return tuple(rows)
 
     def region(self, region: str) -> tuple[Section, ...]:
@@ -657,86 +579,61 @@ class Reader:
         return tuple(found)
 
     def _partners(self, record: Archive, actor: int) -> tuple[tuple[Partner, ...], int]:
-        """Remembered partners with their reasons, then the other agreements, and how many more."""
-        amounts: Counter[int] = Counter()
-        for index in self.memories.get(actor, ()):
-            memory = record.memories[index]
-            amounts[memory.second] += memory.amount
-        remembered = [
-            partner
-            for partner, _ in sorted(amounts.items(), key=lambda pair: (-pair[1], pair[0]))[
-                :PARTNERS
-            ]
-        ]
-        agreements: dict[int, set[str]] = defaultdict(set)
+        """The viewed country's opinion of each other country on the first day, as the game
+        lists it, the largest sums first; and how many more countries it has an opinion of.
+
+        A treaty's lines are the engine's opinions of the side the country holds (``vassal``
+        pairs are (overlord, subject), ``guarantee`` (guarantor, protected), ``rival`` (the
+        country that rivals, its rival)); the historical lines are the opinions the world
+        writes, under their names in the game.
+        """
+        lines: dict[int, list[Opinion]] = defaultdict(list)
         for kind, first, second in record.relations:
-            if actor in {first, second}:
-                other = second if first == actor else first
-                agreements[other].add(_standing(kind, first=first == actor))
-        others = sorted(
-            (partner for partner in agreements if partner not in remembered),
-            key=lambda partner: (
-                min(STANDING_ORDER.index(k) for k in agreements[partner]),
-                partner,
-            ),
+            if actor not in {first, second}:
+                continue
+            other = second if first == actor else first
+            lines[other].extend(
+                Opinion(self.key(treaty.key), treaty.value, 0, -1)
+                for treaty in treaty_opinions(kind, first=first == actor)
+            )
+        biases = sorted(
+            (bias for bias in record.biases if bias.first == actor),
+            key=lambda bias: (-abs(bias.value), bias.cause, bias.factor),
         )
-        shown = [
-            self._partner(record, actor, partner, agreements.get(partner, set()), reasons=True)
-            for partner in remembered
-        ] + [
-            self._partner(record, actor, partner, agreements[partner], reasons=False)
-            for partner in others[:AGREEMENTS]
-        ]
-        return tuple(shown), max(len(others) - AGREEMENTS, 0)
-
-    def _partner(
-        self, record: Archive, actor: int, partner: int, kinds: set[str], *, reasons: bool
-    ) -> Partner:
-        fact = record.actors[partner]
-        return Partner(
-            name=self.name(self.society(record, partner)),
-            place=fact.seat,
-            tag=self.tags.get(partner, ""),
-            standing=tuple(
-                Standing(kind, self.say(kind)) for kind in sorted(kinds, key=STANDING_ORDER.index)
-            ),
-            reasons=self._reasons(record, actor, partner) if reasons else (),
-        )
-
-    def _reasons(self, record: Archive, actor: int, partner: int) -> tuple[Reason, ...]:
-        """The strongest remembered causes between two actors, with what EU5 receives for each."""
-        memories = sorted(
+        for bias in biases:
+            lines[bias.second].append(
+                Opinion(self._bias_name(record, bias), bias.value, bias.decay, bias.place)
+            )
+        partners = sorted(
             (
-                record.memories[i]
-                for i in self.memories.get(actor, ())
-                if record.memories[i].second == partner
-            ),
-            key=lambda memory: (-memory.amount, memory.factor, memory.cause),
-        )[:3]
-        found: list[Reason] = []
-        for memory in memories:
-            event = record.events[memory.cause]
-            family = history_text.event_family(event.kind, event.outcome)
-            effect = next(
-                (
-                    bias.value
-                    for bias in record.biases
-                    if (bias.first, bias.second, bias.factor, bias.cause)
-                    == (actor, partner, memory.factor, memory.cause)
-                ),
-                0,
-            )
-            found.append(
-                Reason(
-                    str(memory.factor),
-                    self.say(memory.factor),
-                    self.game[f"rnw_history_cause_{family}"],
-                    event.year,
-                    event.places[0] if event.places else -1,
-                    effect,
+                Partner(
+                    name=self.name(self.society(record, other)),
+                    place=record.actors[other].seat,
+                    tag=self.tags.get(other, ""),
+                    total=sum(line.value for line in found),
+                    opinions=tuple(found),
                 )
+                for other, found in lines.items()
+                if found
+            ),
+            key=lambda partner: (-abs(partner.total), partner.name, partner.tag),
+        )
+        return tuple(partners[:PARTNERS]), max(len(partners) - PARTNERS, 0)
+
+    def _bias_name(self, record: Archive, bias: BiasFact) -> str:
+        """A historical opinion's name as the game shows it (``history_text.opinion_text``)."""
+        event = record.events[bias.cause]
+        family = history_text.event_family(event.kind, event.outcome)
+        text = history_text.Sentence(
+            f"rnw_history_opinion_{bias.factor}",
+            (("cause", history_text.Sentence(f"rnw_history_cause_{family}")), ("year", event.year)),
+        )
+        if bias.place >= 0:
+            text = history_text.Sentence(
+                "rnw_history_opinion_place",
+                (("text", text), ("place", self.atlas.names[bias.place])),
             )
-        return tuple(found)
+        return history_text.render(text, self.language, self.game)
 
     def _shared(self, record: Archive, region: str) -> tuple[Heritage, ...]:
         """Inheritances grouped by the societies that hold them, in the order first met."""

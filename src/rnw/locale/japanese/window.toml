@@ -2617,20 +2617,24 @@ source = "619aad1b467af62e"
 text = '''年代記'''
 
 ["history.relations"]
-source = "18265b0039496fc7"
-text = '''関係とその理由'''
+source = "73afc5e500f85168"
+text = '''初日の評価'''
+
+["history.opinion_of"]
+source = "e25fa64eb57a9783"
+text = '''{name}：{total}'''
+
+["history.opinion_line"]
+source = "228959acecadf2e1"
+text = '''{label}：{value}'''
+
+["history.opinion_fading"]
+source = "3236a8e2d23dd88d"
+text = '''{label}：{value}、毎年{fade}'''
 
 ["history.inheritance"]
 source = "b849349447d50508"
 text = '''共有する継承'''
-
-["history.projected"]
-source = "ce66466ccde1a893"
-text = '''EU5：{relations}'''
-
-["history.memory"]
-source = "d111a3f697797053"
-text = '''記憶：{reason}'''
 
 ["history.position"]
 source = "262564cc218aaf61"
@@ -2731,26 +2735,6 @@ text = '''攻勢'''
 ["history.defensive"]
 source = "892ad8f258bcb335"
 text = '''守勢'''
-
-["history.vassal"]
-source = "713b56e7693500c8"
-text = '''従属関係'''
-
-["history.alliance"]
-source = "afe3c1947d3b3a6e"
-text = '''同盟'''
-
-["history.rival"]
-source = "43a08bd8d30e31a1"
-text = '''宿敵関係'''
-
-["history.guarantee"]
-source = "788b8a0ad50ab000"
-text = '''独立保障'''
-
-["history.trade"]
-source = "60db3cf06e888a68"
-text = '''交易協定'''
 
 ["history.great_empire"]
 source = "48c7f845e7693232"
@@ -2869,64 +2853,20 @@ source = "17ea9dc671533b54"
 text = '''記録された主要な出来事を古い順に表示します。'''
 
 ["history.relations_note"]
-source = "38278ebfa5d2b8f9"
-text = '''記憶に残る最も強い結びつきとその理由、および現在の協定。'''
+source = "76c4fb4081f48673"
+text = '''初日にこの国が他国に抱く評価を、ゲームが並べる通りに一行ずつ示します。条約による評価と、記録された過去による評価です。文化・宗教・言語・国境などによる評価はゲーム自身が加えます。'''
 
-["history.remembered"]
-source = "40d4b7fdeb791310"
-text = '''記憶に残る結びつき'''
+["history.total"]
+source = "f54034f796df436e"
+text = '''これらの行の合計'''
 
-["history.agreements"]
-source = "be06d720e615eaa1"
-text = '''その他の協定'''
-
-["history.lord"]
-source = "1e56767c5f9119ca"
-text = '''宗主国'''
-
-["history.subject"]
-source = "68971283841aecdf"
-text = '''従属国'''
-
-["history.guarantor"]
-source = "833a5c4e444c1d70"
-text = '''保障国'''
-
-["history.protected"]
-source = "d3ab7a7b023e7741"
-text = '''独立保障'''
-
-["history.trust"]
-source = "ade9248e0132b411"
-text = '''信頼'''
-
-["history.grievance"]
-source = "b86338668207bca0"
-text = '''遺恨'''
-
-["history.fear"]
-source = "140262b32b0c98df"
-text = '''恐怖'''
-
-["history.dependence"]
-source = "f7a263bc0e46b50e"
-text = '''依存'''
-
-["history.competition"]
-source = "43a08bd8d30e31a1"
-text = '''競争'''
-
-["history.affinity"]
-source = "5a2e54bbcb99c026"
-text = '''親近感'''
-
-["history.effect"]
-source = "227731e305f215f3"
-text = '''EU5での好感度'''
+["history.yearly"]
+source = "c2cfadc6d1ca33f4"
+text = '''毎年{value}'''
 
 ["history.no_relations"]
-source = "1400236acabefe1d"
-text = '''記録された関係はありません'''
+source = "4d17010a44cc790c"
+text = '''開始時に他国への評価は設定されていません'''
 
 ["history.owner_changes"]
 source = "773a7e5592ff2b8d"
@@ -2935,10 +2875,6 @@ text = '''歴史上の所有者が変わったロケーション'''
 ["history.values"]
 source = "e3ba2b95c8ba182b"
 text = '''社会的価値'''
-
-["history.trade_note"]
-source = "2f748fedba8b7954"
-text = '''ゲーム内では条約ではなく、道路と市場の結びつきとして表れます。'''
 
 ["history.no_values"]
 source = "07535fe0c5f92f75"

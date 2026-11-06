@@ -1,5 +1,5 @@
 // How the society panel draws what the generator recorded: a glyph and a tone for each kind of
-// event, a tone for each remembered feeling and standing, and the numbers' written forms. Kinds
+// event, and the numbers' written forms. Kinds
 // are the template families of `history_text` (the generator names them, this only dresses them).
 
 export type Tone = "origin" | "tie" | "split" | "clash" | "turn";
@@ -27,37 +27,6 @@ export const EVENTS: Record<string, { glyph: string; tone: Tone }> = {
 
 export function eventStyle(kind: string): { glyph: string; tone: Tone } {
   return EVENTS[kind] ?? { glyph: "circle", tone: "turn" };
-}
-
-export type Mood = "good" | "bad" | "flat";
-
-/** The feeling a remembered cause left, by its factor. */
-export const FACTORS: Record<string, Mood> = {
-  trust: "good",
-  affinity: "good",
-  grievance: "bad",
-  fear: "bad",
-  competition: "bad",
-  dependence: "flat",
-};
-
-/** A partner's standing: rank (overlord, subject), friendly, hostile, or an ordinary agreement. */
-export const STANDINGS: Record<string, "rank" | Mood> = {
-  lord: "rank",
-  subject: "rank",
-  alliance: "good",
-  rival: "bad",
-  guarantor: "flat",
-  protected: "flat",
-  trade: "flat",
-};
-
-export function mood(factor: string): Mood {
-  return FACTORS[factor] ?? "flat";
-}
-
-export function standing(kind: string): "rank" | Mood {
-  return STANDINGS[kind] ?? "flat";
 }
 
 /** A 0-1000 trait on the 0-100 scale the meter draws. */
