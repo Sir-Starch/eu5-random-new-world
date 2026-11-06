@@ -1,7 +1,7 @@
 # Dynamic content catalogue
 
 What RNW adds to a campaign: **12 story families (44 visible events and 96 choices),
-7 families of formable countries, colonial naming traditions and 5 kinds of
+13 families of formable countries, colonial naming traditions and 5 kinds of
 exceptional resource places**. This catalogue describes implemented content, with
 spoilers. The [complete reference](content-reference.md) lists every event title,
 choice, effect, delay, AI weight, modifier and identifier. [V-EXEC C409]
@@ -102,7 +102,7 @@ payloads and every duration. [V-EXEC C409]
 
 These are generated political goals with names based on their seat, region or
 continent, their own tags, colours and arms. They are offered through EU5's normal
-formable-country mechanism. The seven families below form a ladder: a country can
+formable-country mechanism. The families below form a ladder: a country can
 only form a formable of a higher level than its own rank, so a duchy-level league
 can grow into a kingdom-level union, a kingdom into the realm of its region, and an
 empire into the empire of the continent. They are not seven fixed historical
@@ -118,6 +118,11 @@ countries. [V-EXEC C212, C218, C409; 1.2.0 development, history plan §22]
 | **Postcolonial federation** | 20–40 connected coastal locations, including sea-zone links; no minimum starting states or centres; up to 2 | 35%, plus **independence** or the lead of a colonial federation | 3 / Kingdom | **A Nation Founded**, 10 years |
 | **Empire of the continent** (fantasy) | The whole continent of the realms, once it holds the realms of at least 2 regions; one per world | 50%, plus **hegemony** and **empire rank** | 5 / Empire | **A Crown Over the Continent**, 20 years |
 | **Restoration** | The places a realm or union held at its height, when the history divided it and at least 2 of its heirs live on the map, over at least 6 inhabited places; the largest first, without overlap | 50% | 3 / Kingdom | **Heirs of the Old Realm**, 20 years |
+| **Empire of the Two Shores** (fantasy) | The whole continent; one per world | 10%, plus land in Europe, Asia or Africa | 5 / Empire | **Voyagers to the Far Shore**, 20 years |
+| **Crown of Two Worlds** | The whole continent; one per world | 10%, plus independence and land in Europe | 5 / Empire | **One Crown, Two Worlds**, 30 years |
+| **Empire of the Two Oceans** (fantasy) | The whole continent, when its coasts touch the Atlantic and the Pacific; one per world | 15%, plus a port on each ocean | 5 / Empire | **Mistress of Two Oceans**, 30 years |
+| **Great League** | The land of a confederation of at least 3 states at the start; one per such confederation | 60% | 3 / Kingdom | **Peoples of the Great Law**, 20 years |
+| **Realm of Two Peoples** | The whole continent; one per world | 15% | 4 / Empire | **Two Peoples, One Realm**, 30 years |
 
 **Who may form them.** Any country whose capital lies in the territory and who
 holds enough of it may form a union, confederation, league or realm: the conqueror
@@ -144,6 +149,21 @@ colonial names test an overlord, renames itself with `change_country_name`:
 *Generality of X*, written in every official language. [V-EXEC; that the engine
 accepts a generated key in `change_country_name`, as it accepts vanilla tags, is
 [INFERRED] and not yet observed]
+
+**Beyond the ladder.** Five goals stand outside it (1.2.0). The *Empire of the Two
+Shores* is offered to a native American country with its capital on the continent
+that also holds land in Europe, Asia or Africa; the *Crown of Two Worlds* to a
+country of settlers whose court has moved to the continent while it still holds land
+in Europe, as Portugal's court moved to Rio in 1808; the *Empire of the Two Oceans*
+to a holder of ports on both oceans (`sea_zone ?= { continent = ... }`); the *Great
+League* to the leader of a confederation, over its members' land, as vanilla's
+`IRO_f` is the Haudenosaunee's; the *Realm of Two Peoples* to a Christian native
+country or a country of settlers that accepts a native culture, as vanilla's `MEX_f`
+admits both. The two shores and the two oceans are `rule = fantasy`; the others are
+plausible. They are named by static texts in every official language; the great
+league after its leader's seat. They give no cores and open no reform, and the AI
+does not pursue the four that cover the whole continent. [V-EXEC; outcomes in play not
+observed]
 
 **Restorations.** A restoration is offered only to the heirs of the fallen realm,
 the living countries on the map descended from it, also through later unions, by

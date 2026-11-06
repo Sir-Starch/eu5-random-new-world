@@ -1729,3 +1729,95 @@ text = '''Manter o nome: {name}.'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''Adotar o nome: {name}.'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''Império das Duas Margens'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''transoceânico'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''Coroa dos Dois Mundos'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''transatlântico'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''Império dos Dois Oceanos'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''bioceânico'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''Reino dos Dois Povos'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''dos dois povos'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''Nenhum povo deste continente jamais governou além do grande oceano. Uma potência de seus próprios povos que possua terras na margem distante e boa parte de seu continente natal pode proclamar um império das duas margens: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''Navegantes rumo à Margem Distante'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''Nossos navios cruzam o grande oceano rumo a terras que nenhum ancestral conheceu.'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''A corte de um velho país cruzou o oceano e se estabeleceu neste continente, enquanto sua antiga pátria ainda lhe obedece. Uma coroa que reine dos dois lados do oceano, com sua capital aqui, pode proclamar uma só coroa sobre os dois mundos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''Uma Coroa, Dois Mundos'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''A antiga pátria e a nova corte obedecem à mesma coroa.'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''Este continente se estende entre dois oceanos, e nenhuma potência jamais navegou por ambos. Uma que possua portos nos dois e boa parte da terra entre eles pode proclamar um império dos dois oceanos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''Senhora de Dois Oceanos'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''Nossas frotas guardam as rotas marítimas dos dois oceanos.'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''Os povos de uma confederação vivem há gerações sob uma só grande lei, cada um com seu próprio conselho. O chefe que os lidera e domina o bastante de suas terras pode uni-los num só Estado sob essa lei: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''Povos da Grande Lei'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''Os povos da antiga confederação lutam e comerciam como um só.'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''Os colonos e os povos deste continente se casaram, comerciaram e rezaram juntos até que ninguém sabe onde um termina. Um Estado que tenha os dois povos como seus e boa parte do continente pode proclamar um reino dos dois povos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''Dois Povos, Um Reino'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''O reino toma os dois povos como seus e acolhe seus costumes.'''

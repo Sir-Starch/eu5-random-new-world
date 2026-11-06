@@ -52,6 +52,15 @@ REGIONAL_REALM: Final[str] = "regional_realm"
 POSTCOLONIAL_FEDERATION: Final[str] = "postcolonial_federation"
 NEW_WORLD_EMPIRE: Final[str] = "new_world_empire"
 RESTORATION: Final[str] = "restoration"
+# The fantasy layer (history plan §22.4): goals beyond the ladder, one of each per world.
+TWO_SHORES: Final[str] = "two_shores"
+TWO_WORLDS: Final[str] = "two_worlds"
+TWO_OCEANS: Final[str] = "two_oceans"
+GREAT_LAW: Final[str] = "great_law"
+TWO_PEOPLES: Final[str] = "two_peoples"
+CONTINENTAL: Final[frozenset[str]] = frozenset({TWO_SHORES, TWO_WORLDS, TWO_OCEANS, TWO_PEOPLES})
+# The oceans that the empire of two oceans holds ports on, by their continent keys.
+OCEANS: Final[tuple[str, str]] = ("atlantic_ocean_continent", "pacific_ocean_continent")
 STORY_FAMILIES: Final[tuple[str, ...]] = (
     RIVER_CENTRE,
     SACRED_CENTRE,
@@ -73,6 +82,11 @@ FORMABLE_FAMILIES: Final[tuple[str, ...]] = (
     POSTCOLONIAL_FEDERATION,
     NEW_WORLD_EMPIRE,
     RESTORATION,
+    TWO_SHORES,
+    TWO_WORLDS,
+    TWO_OCEANS,
+    GREAT_LAW,
+    TWO_PEOPLES,
 )
 FAMILIES: Final[tuple[str, ...]] = (*STORY_FAMILIES, *FORMABLE_FAMILIES)
 # The families below the realm whose seats, centres held by the states of 1337, each get a realm
@@ -127,6 +141,8 @@ EMPIRE_REALMS: Final[int] = 2
 RESTORATION_HEIRS: Final[int] = 2
 RESTORATION_PLACES: Final[int] = 6
 RESTORATION_LEVEL: Final[int] = 3
+# A confederation of at least this many states may become the state of a great law.
+GREAT_LAW_MEMBERS: Final[int] = 3
 RANK_LEVELS: Final[Mapping[str, int]] = {
     "rank_county": 1,
     "rank_duchy": 2,
@@ -207,6 +223,8 @@ RULES: Final[Mapping[str, Rule]] = {
         ),
         Rule(NEW_WORLD_EMPIRE, "continent", 1, 0, 0, 0, 0, 0),
         Rule(RESTORATION, "fallen realm", 0, 0, RESTORATION_PLACES, 0, RESTORATION_HEIRS, 0),
+        *(Rule(family, "continent", 1, 0, 0, 0, 0, 0) for family in sorted(CONTINENTAL)),
+        Rule(GREAT_LAW, "confederation", 0, 0, 0, 0, GREAT_LAW_MEMBERS, MAX_UNION_STATES),
     )
 }
 
@@ -277,7 +295,7 @@ class Facts:
     """What the plan reads: the places, the states, the holy places, the adjacency, the groups.
 
     ``groups`` maps a culture to the culture groups the game puts it in; ``subjects`` are the
-    (overlord, subject) pairs of the start.
+    (overlord, subject) pairs of the start; ``oceans`` the continent key of each sea zone.
     """
 
     places: Mapping[str, Place]
@@ -287,6 +305,7 @@ class Facts:
     groups: Mapping[str, frozenset[str]] = field(default_factory=dict[str, frozenset[str]])
     subjects: frozenset[tuple[str, str]] = frozenset()
     history: HistoricalFacts | None = None
+    oceans: Mapping[str, str] = field(default_factory=dict[str, str])
 
 
 @dataclass(frozen=True, slots=True)
@@ -916,6 +935,59 @@ def restorations(facts: Facts) -> tuple[list[Formation], list[tuple[str, str]]]:
     return chosen, passed
 
 
+def _continent(facts: Facts) -> str:
+    """The continent of most inhabited places, the New World's."""
+    counts: dict[str, int] = {}
+    for place in facts.places.values():
+        if place.continent:
+            counts[place.continent] = counts.get(place.continent, 0) + 1
+    return max(counts, key=lambda key: (counts[key], key)) if counts else ""
+
+
+def continental(facts: Facts, family: str) -> tuple[list[Formation], str]:
+    """A fantasy goal over the whole continent; two oceans need coasts on both."""
+    continent = _continent(facts)
+    if not continent:
+        return [], "no continent is known"
+    keys = tuple(sorted(k for k, place in facts.places.items() if place.continent == continent))
+    if family == TWO_OCEANS:
+        touched = {facts.oceans.get(sea, "") for key in keys for sea in facts.places[key].seas}
+        if not set(OCEANS) <= touched:
+            return [], "the continent has no coast on two oceans"
+    seat = max(keys, key=lambda key: (facts.places[key].population, key))
+    return [Formation(family, 0, keys, (), (), seat, continent=continent)], ""
+
+
+def great_laws(facts: Facts) -> tuple[list[Formation], str]:
+    """The state of a great law over each confederation of ``GREAT_LAW_MEMBERS`` states: the
+    members' land, its seat the capital of the largest, as ``IRO_f`` is the Haudenosaunee's."""
+    if facts.history is None:
+        return [], "no confederation is recorded"
+    held = _size(facts)
+    chosen: list[Formation] = []
+    for members in facts.history.confederations:
+        states = sorted(tag for tag in members if tag in facts.states)
+        if len(states) < GREAT_LAW_MEMBERS:
+            continue
+        leader = max(states, key=lambda tag: (held.get(tag, 0), tag))
+        keys = tuple(sorted(k for k, place in facts.places.items() if place.owner in states))
+        seat = facts.states[leader].capital
+        if seat not in keys:
+            continue
+        chosen.append(
+            Formation(
+                GREAT_LAW,
+                len(chosen),
+                keys,
+                (),
+                tuple(states[:MAX_UNION_STATES]),
+                seat,
+                home=facts.places[seat].region,
+            )
+        )
+    return chosen, f"no confederation joins {GREAT_LAW_MEMBERS} states"
+
+
 def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], str]:
     """The formables of ``family`` with room for them, and why there is none when there is none.
 
@@ -924,6 +996,10 @@ def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], s
     hold the family's minimums is passed over, and the last obstacle met is the reason given.
     A realm is a whole region and the empire a whole continent (``realms``, ``empires``).
     """
+    if family in CONTINENTAL:
+        return continental(facts, family)
+    if family == GREAT_LAW:
+        return great_laws(facts)
     if family == RESTORATION:
         found, passed = restorations(facts)
         reason = passed[0][1] if passed else f"no {RULES[family].thing} is recorded"

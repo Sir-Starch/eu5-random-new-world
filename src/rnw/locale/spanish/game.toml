@@ -1729,3 +1729,95 @@ text = '''Conservar el nombre: {name}.'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''Tomar el nombre: {name}.'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''Imperio de las Dos Orillas'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''de las Dos Orillas'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''Corona de los Dos Mundos'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''de los Dos Mundos'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''Imperio de los Dos Océanos'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''de los Dos Océanos'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''Reino de los Dos Pueblos'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''de los Dos Pueblos'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''Ningún pueblo de este continente ha gobernado jamás al otro lado del gran océano. Una potencia de sus propios pueblos que posea tierras en la orilla lejana y buena parte de su continente natal puede proclamar un imperio de ambas orillas: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''Navegantes a la orilla lejana'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''Nuestros barcos cruzan el gran océano hacia tierras que ningún antepasado conoció.'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''La corte de un viejo país ha cruzado el océano y se ha establecido en este continente, mientras su antigua patria aún le obedece. Una corona que reine a ambos lados del océano, con su capital aquí, puede proclamar una sola corona sobre ambos mundos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''Una corona, dos mundos'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''La antigua patria y la nueva corte obedecen a la misma corona.'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''Este continente se extiende entre dos océanos, y ninguna potencia ha navegado jamás por ambos. Una que posea puertos en los dos y buena parte de la tierra entre ellos puede proclamar un imperio de los dos océanos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''Señora de dos océanos'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''Nuestras flotas dominan las rutas marítimas de ambos océanos.'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''Los pueblos de una confederación viven desde hace generaciones bajo una sola gran ley, cada uno con su propio consejo. El jefe que los guía y domina lo bastante de sus tierras puede unirlos en un solo Estado bajo esa ley: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''Pueblos de la gran ley'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''Los pueblos de la antigua confederación luchan y comercian como uno solo.'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''Los colonos y los pueblos de este continente se han casado, comerciado y rezado juntos hasta que nadie sabe dónde acaba uno. Un Estado que tenga a ambos pueblos por suyos y buena parte del continente puede proclamar un reino de los dos pueblos: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''Dos pueblos, un reino'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''El reino toma a ambos pueblos como suyos y acoge sus costumbres.'''

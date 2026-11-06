@@ -1729,3 +1729,95 @@ text = '''Сохранить имя: {name}.'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''Принять имя: {name}.'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''Империя двух берегов'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''Заокеанск'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''Корона двух миров'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''Трансатлантическ'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''Империя двух океанов'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''Двухокеанск'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''Держава двух народов'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''Двуплеменск'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''Ни один народ этого материка никогда не правил за великим океаном. Держава его собственных народов, которой принадлежат земли на дальнем берегу и большая часть родного материка, может провозгласить империю обоих берегов — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''Мореходы к дальнему берегу'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''Наши корабли пересекают великий океан к землям, которых не знал ни один предок.'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''Двор старой страны пересёк океан и обосновался на этом материке, а его прежняя родина всё ещё подчиняется ему. Корона, что правит по обе стороны океана и держит столицу здесь, может провозгласить единую корону над обоими мирами — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''Одна корона, два мира'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''Прежняя родина и новый двор подчиняются одной короне.'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''Этот материк лежит между двумя океанами, и ни одна держава ещё не ходила по обоим. Та, что держит порты на обоих и большую часть земли между ними, может провозгласить империю двух океанов — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''Владычица двух океанов'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''Наши флоты охраняют морские пути обоих океанов.'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''Народы конфедерации поколениями живут под одним великим законом, и у каждого свой совет. Вождь, что ведёт их и держит достаточно их земель, может связать их в одно государство под этим законом — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''Народы великого закона'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''Народы прежней конфедерации воюют и торгуют как один.'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''Поселенцы и народы этого материка так долго роднились, торговали и молились вместе, что уже не сказать, где кончается одно и начинается другое. Государство, что считает своими оба народа и держит большую часть материка, может провозгласить державу двух народов — {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''Два народа, одна держава'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''Держава считает своими оба народа и привечает их обычаи.'''

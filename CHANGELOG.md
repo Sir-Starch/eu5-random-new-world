@@ -16,6 +16,12 @@
   founding in its founders' tradition (*United Provinces*, *United Captaincies*, *United
   Colonies*, *Free State* or *Generality of X*).
 
+- Add goals beyond the ladder: an Empire of the Two Shores for a native power that reaches
+  the Old World, a Crown of Two Worlds for a European court that moves to the New World, an
+  Empire of the Two Oceans for a holder of ports on both oceans (the two shores and two oceans
+  shown with fantasy formables), a Great League for the leader of a confederation and a
+  Realm of Two Peoples for a state of settlers and natives together.
+
 - Let the founder of a formable choose its name: the one it was proclaimed under, or the
   name of the land it rules (its seat's region, or a realm's greatest city).
 

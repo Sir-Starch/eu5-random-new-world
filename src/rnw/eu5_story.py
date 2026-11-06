@@ -400,9 +400,11 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
     history: HistoricalFacts | None = None,
     regions: Mapping[str, str] | None = None,
     continents: Mapping[str, str] | None = None,
+    oceans: Mapping[str, str] | None = None,
 ) -> Facts:
     """The facts of a world from its parts: ``states`` are (tag, members, capital, religion);
-    ``regions`` and ``continents`` give each place's generated region and continent keys."""
+    ``regions`` and ``continents`` give each place's generated region and continent keys,
+    ``oceans`` each sea zone's continent key."""
     owner: dict[str, str] = {}
     table: dict[str, State] = {}
     for tag, members, capital, faith in states:
@@ -439,4 +441,5 @@ def facts_of(  # noqa: PLR0913 - the plan reads the countries, the cells, the ri
         {name: frozenset(found) for name, found in (groups or {}).items()},
         frozenset(subjects),
         history,
+        dict(oceans or {}),
     )

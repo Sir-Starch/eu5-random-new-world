@@ -1729,3 +1729,95 @@ text = '''Adı koruyun: {name}.'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''Bu adı alın: {name}.'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''İki Kıyı İmparatorluğu'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''Okyanus Ötesi'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''İki Dünyanın Tacı'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''Atlantik Ötesi'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''İki Okyanus İmparatorluğu'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''İki Okyanuslu'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''İki Halkın Devleti'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''İki Halklı'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''Bu kıtanın hiçbir halkı büyük okyanusun ötesinde hüküm sürmedi. Kıtanın kendi halklarından olup uzak kıyıda toprağa ve ana kıtasının büyük kısmına sahip olan bir güç, iki kıyının imparatorluğunu ilan edebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''Uzak Kıyıya Denizciler'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''Gemilerimiz büyük okyanusu aşarak hiçbir atanın bilmediği topraklara ulaşıyor.'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''Eski bir ülkenin sarayı okyanusu aşıp bu kıtaya yerleşti, eski yurdu ise hâlâ ona bağlı. Okyanusun iki yakasında da hüküm süren ve başkenti burada olan bir taç, iki dünya üzerinde tek bir taç ilan edebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''Tek Taç, İki Dünya'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''Eski yurt ve yeni saray aynı taca bağlı.'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''Bu kıta iki okyanusun arasında uzanır ve hiçbir güç ikisinde birden yelken açmadı. İkisinde de limanlara ve aradaki toprağın büyük kısmına sahip olan bir güç, iki okyanusun imparatorluğunu ilan edebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''İki Okyanusun Hâkimi'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''Donanmalarımız iki okyanusun deniz yollarını tutuyor.'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''Bir konfederasyonun halkları nesillerdir, her biri kendi meclisini koruyarak tek bir büyük yasa altında yaşıyor. Onlara önderlik eden ve topraklarının yeterli kısmına sahip olan şef, onları bu yasa altında tek bir devlette birleştirebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''Büyük Yasanın Halkları'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''Eski konfederasyonun halkları tek bir halk gibi savaşıp ticaret yapıyor.'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''Yerleşimciler ve bu kıtanın halkları o kadar uzun süre birlikte evlenip ticaret yapıp dua ettiler ki artık birinin nerede bittiğini kimse söyleyemiyor. İki halkı da kendisinin sayan ve kıtanın büyük kısmına sahip olan bir devlet, iki halkın devletini ilan edebilir: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''İki Halk, Tek Devlet'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''Devlet iki halkı da kendi halkı sayar ve geleneklerini hoş karşılar.'''

@@ -3,10 +3,11 @@
 Vanilla weighs the wars its AI considers through ``ai_scripted_expansion_target`` (which adds the
 countries a script lists to the candidates) and ``ai_scripted_expansion_score`` (which multiplies
 the score of a target a trigger picks); ``attack_neighbors`` and ``castile_spares_christian_iberia``
-are its precedents. For every formable of level 3 and above that the game shows by default (not the
-fantasy empire), a country that could form it, its capital in the territory, at peace for five years
-and no isolationist, considers every neighbour holding land of the territory, scored as half of
-``attack_neighbors``, and weighs such a neighbour half again as high as it would. A realm waits for
+are its precedents. For every formable of level 3 and above that the game shows by default and
+that is smaller than the continent, a country that could form it, its capital in the territory,
+at peace for five years and no isolationist, considers every neighbour holding land of the
+territory, scored as half of ``attack_neighbors``, and weighs such a neighbour half again as high
+as it would. A realm waits for
 the age of discovery, the others for the second age. The territory is the formation's own
 ``scripted_geography`` (``eu5_formation.geography``).
 
@@ -63,9 +64,10 @@ def check_installation(game_dir: Path) -> None:
 
 
 def pursued(formation: Formation) -> bool:
-    """Whether the AI pursues a formation: level 3 and above, shown by the default game rule."""
+    """Whether the AI pursues a formation: level 3 and above, shown by the default game rule, and
+    smaller than a continent (a goal over the whole continent would weigh every neighbour)."""
     spec = BY_FAMILY[formation.family]
-    return spec.level >= LOWEST_LEVEL and spec.rule == "plausible"
+    return spec.level >= LOWEST_LEVEL and spec.rule == "plausible" and not formation.continent
 
 
 def goal(formation: Formation) -> str:

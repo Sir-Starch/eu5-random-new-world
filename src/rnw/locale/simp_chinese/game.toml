@@ -1729,3 +1729,95 @@ text = '''保留名号：{name}。'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''改用名号：{name}。'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''两岸帝国'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''两岸'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''两个世界的王冠'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''两世界'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''两洋帝国'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''两洋'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''双民王国'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''双民'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''这片大陆上从未有哪个民族统治过大洋彼岸。一个由本大陆民族建立、在遥远彼岸拥有土地并占有大半故土的势力，可以宣布建立横跨两岸的帝国：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''驶向彼岸的航海者'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''我们的船只横渡大洋，驶向祖先从未知晓的土地。'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''一个古老国家的宫廷横渡大洋，定居在这片大陆上，而它的故土仍听命于它。一顶统治大洋两岸、并以此地为都的王冠，可以宣布以一顶王冠统领两个世界：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''一顶王冠，两个世界'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''故土与新宫廷效忠于同一顶王冠。'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''这片大陆坐落于两大洋之间，从未有哪个势力同时航行于两洋。一个在两洋都拥有港口、并占有其间大片土地的势力，可以宣布建立两洋帝国：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''两洋霸主'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''我们的舰队守护着两大洋的航路。'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''一个邦联的各民族世世代代生活在同一部大法之下，各自保有自己的议会。领导他们并占有足够土地的酋长，可以依此大法将他们结为一个国家：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''大法之民'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''旧邦联的各民族如同一体般作战与通商。'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''移民与这片大陆上的民族长久以来通婚、通商、共同祈祷，如今已无人能分清彼此的界限。一个视两族人民皆为己民、并占有大半大陆的国家，可以宣布建立双民王国：{name}。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''两族一国'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''王国视两族皆为己民，并欢迎他们的习俗。'''

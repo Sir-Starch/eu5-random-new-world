@@ -133,8 +133,12 @@ def potential(formation: Formation) -> list[str]:
 
 def _potential(formation: Formation, spec: Spec) -> str:
     """Who sees the formable besides the holders of its territory, decided in play."""
-    if spec.potential:
-        return "".join(f"\t\t{line}\n" for line in spec.potential)
+    lines = [
+        *spec.potential,
+        *([f"capital.continent = continent:{formation.continent}"] if formation.continent else []),
+    ]
+    if lines:
+        return "".join(f"\t\t{line}\n" for line in lines)
     if spec.heirs:
         owners = "".join(f"\t\t\thas_or_had_tag = {tag}\n" for tag in formation.states)
         return f"\t\tOR = {{\n{owners}\t\t}}\n"
@@ -142,8 +146,6 @@ def _potential(formation: Formation, spec: Spec) -> str:
         owners = "".join(f"\t\t\ttag = {tag}\n" for tag in formation.states)
         people = f"culture ?= {{ has_culture_group = culture_group:{formation.basis} }}"
         return f"\t\tOR = {{\n{owners}\t\t\t{people}\n\t\t}}\n"
-    if formation.continent:
-        return f"\t\tcapital.continent = continent:{formation.continent}\n"
     return ""
 
 
@@ -409,6 +411,9 @@ def _naming(
 ) -> tuple[Phrase, Phrase | Text]:
     """A formation's name and adjective: the continent's own text for the empire, the region's
     word for a realm, the seat's for the others."""
+    named = BY_FAMILY[formation.family].named
+    if named:
+        return wording.reference(named), Text(f"{named}_adj")
     if formation.continent:
         return wording.reference(formation.continent), Text(EMPIRE_ADJECTIVE)
     region = formation.region or formation.named_by

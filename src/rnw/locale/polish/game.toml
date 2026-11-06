@@ -1729,3 +1729,95 @@ text = '''Zachować imię: {name}.'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''Przyjąć imię: {name}.'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''Cesarstwo Dwóch Brzegów'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''Zaoceańs'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''Korona Dwóch Światów'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''Transatlantyc'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''Cesarstwo Dwóch Oceanów'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''Dwuoceańs'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''Królestwo Dwóch Ludów'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''Dwuludows'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''Żaden lud tego kontynentu nigdy nie panował za wielkim oceanem. Potęga jego własnych ludów, która trzyma ziemie na dalekim brzegu i znaczną część rodzinnego kontynentu, może ogłosić cesarstwo obu brzegów: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''Żeglarze ku dalekiemu brzegowi'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''Nasze statki przemierzają wielki ocean ku ziemiom, których nie znał żaden przodek.'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''Dwór starego kraju przepłynął ocean i osiadł na tym kontynencie, a jego dawna ojczyzna wciąż mu podlega. Korona, która panuje po obu stronach oceanu i ma tu stolicę, może ogłosić jedną koronę nad obydwoma światami: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''Jedna korona, dwa światy'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''Dawna ojczyzna i nowy dwór podlegają tej samej koronie.'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''Ten kontynent leży między dwoma oceanami i żadna potęga nie żeglowała jeszcze po obu. Ta, która trzyma porty nad oboma i znaczną część ziemi pomiędzy, może ogłosić cesarstwo dwóch oceanów: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''Władczyni dwóch oceanów'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''Nasze floty strzegą szlaków morskich obu oceanów.'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''Ludy konfederacji od pokoleń żyją pod jednym wielkim prawem, każdy z własną radą. Wódz, który im przewodzi i trzyma dość ich ziem, może związać je w jedno państwo pod tym prawem: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''Ludy wielkiego prawa'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''Ludy dawnej konfederacji walczą i handlują jak jeden.'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''Osadnicy i ludy tego kontynentu tak długo żenili się, handlowali i modlili razem, że nikt już nie wie, gdzie kończy się jedno. Państwo, które uważa oba ludy za swoje i trzyma znaczną część kontynentu, może ogłosić królestwo dwóch ludów: {name}.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''Dwa ludy, jedno królestwo'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''Królestwo uznaje oba ludy za swoje i przyjmuje ich obyczaje.'''

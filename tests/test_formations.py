@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from itertools import chain
 from typing import TYPE_CHECKING
 
@@ -13,11 +14,13 @@ from rnw.content import (
     CULTURAL_UNION,
     EMPIRE_REALMS,
     FORMABLE_FAMILIES,
+    GREAT_LAW,
     HIGHLAND_CONFEDERATION,
     HIGHLAND_RELIEF,
     LOWER_FAMILIES,
     MARITIME_LEAGUE,
     NEW_WORLD_EMPIRE,
+    OCEANS,
     POSTCOLONIAL_FEDERATION,
     REALM_CENTRES,
     REALM_STATES,
@@ -25,8 +28,13 @@ from rnw.content import (
     RESTORATION,
     RIVER_UNION,
     RULES,
+    TWO_OCEANS,
+    TWO_PEOPLES,
+    TWO_SHORES,
+    TWO_WORLDS,
     Facts,
     Formation,
+    HistoricalFacts,
     Place,
     State,
     formations,
@@ -47,7 +55,14 @@ from rnw.eu5_formation import (
     nation_key,
     texts,
 )
-from rnw.formations import BY_FAMILY, CORES_TOOLTIP, EMPIRE_ADJECTIVE, SPECS, TOP_RANK_LEVEL
+from rnw.formations import (
+    BY_FAMILY,
+    CORES_TOOLTIP,
+    EMPIRE_ADJECTIVE,
+    SPECS,
+    TOP_RANK_LEVEL,
+    name_key,
+)
 from rnw.game_texts import Text, localize
 from rnw.pdx import Block, parse
 from rnw.wording import Phrase, render
@@ -124,8 +139,9 @@ def test_every_formable_family_has_exactly_one_spec_and_one_rule() -> None:
 def test_the_specs_do_not_share_names_pictures_or_modifiers() -> None:
     """Each family is its own tag stem (which names it in every language), emblem and modifier;
     the empire takes the continent's own name, so its stem names only its key."""
-    named = {spec.stem for spec in SPECS if spec.family != NEW_WORLD_EMPIRE}
+    named = {spec.stem for spec in SPECS if spec.family != NEW_WORLD_EMPIRE and not spec.named}
     assert named == set(wording.FORMATIONS)
+    assert all(spec.named == name_key(spec.family) for spec in SPECS if spec.named)
     for field in ("stem", "emblem"):
         values = [getattr(spec, field) for spec in SPECS]
         assert len(values) == len(set(values)), field
@@ -147,7 +163,11 @@ def test_levels_run_up_with_the_families_so_no_chain_can_circle() -> None:
     ranks = {"rank_county": 1, "rank_duchy": 2, "rank_kingdom": 3, "rank_empire": 4}
     assert all(ranks[spec.rank] == min(spec.level, TOP_RANK_LEVEL) for spec in SPECS)
     assert {spec.rule for spec in SPECS} == {"plausible", "fantasy"}
-    assert [spec.family for spec in SPECS if spec.rule == "fantasy"] == [NEW_WORLD_EMPIRE]
+    assert [spec.family for spec in SPECS if spec.rule == "fantasy"] == [
+        NEW_WORLD_EMPIRE,
+        TWO_SHORES,
+        TWO_OCEANS,
+    ]
 
 
 def test_a_range_of_hills_with_high_ground_is_a_confederation() -> None:
@@ -328,7 +348,12 @@ def test_the_territories_of_one_family_do_not_overlap_but_other_families_may() -
     by_family: dict[str, list[set[str]]] = {}
     for formation in plan.formations:
         by_family.setdefault(formation.family, []).append(set(formation.places))
-    assert set(by_family) == set(FORMABLE_FAMILIES) - {CULTURAL_UNION, RESTORATION}
+    assert set(by_family) == set(FORMABLE_FAMILIES) - {
+        CULTURAL_UNION,
+        RESTORATION,
+        GREAT_LAW,
+        TWO_OCEANS,
+    }
     for family, territories in by_family.items():
         assert family == REGIONAL_REALM or len(territories) <= RULES[family].limit
         for number, first in enumerate(territories):
@@ -466,7 +491,14 @@ def test_the_league_asks_for_ports_the_empire_for_hegemony_and_a_realm_for_its_t
     assert asks[MARITIME_LEAGUE] == ("num_of_ports >= 3",)
     assert asks[NEW_WORLD_EMPIRE] == ("is_hegemon = yes", "country_rank = country_rank:rank_empire")
     assert "is_subject = no" in asks[POSTCOLONIAL_FEDERATION][0]
-    others = set(asks) - {MARITIME_LEAGUE, NEW_WORLD_EMPIRE, POSTCOLONIAL_FEDERATION}
+    others = set(asks) - {
+        MARITIME_LEAGUE,
+        NEW_WORLD_EMPIRE,
+        POSTCOLONIAL_FEDERATION,
+        TWO_SHORES,
+        TWO_WORLDS,
+        TWO_OCEANS,
+    }
     assert all(not asks[family] for family in others)
     realm = Formation(
         REGIONAL_REALM, 0, ("a", "b"), ("a",), ("ABC",), "a", region="east_region", throne="a"
@@ -524,6 +556,7 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
     """One flag, arms, colour and four keys per formation; the arms use the family's emblem."""
     made = [_formation(spec.family, 0) for spec in SPECS]
     seats = ("Kaira", "Tolan", "Ingari", "Mekapisk", "Huande", "Saumqeir", "Toqa", "Pucara")
+    seats += ("Alto", "Brava", "Cura", "Dena", "Esto")
     who = [
         Identity(
             f"X{n}Z",
@@ -533,6 +566,14 @@ def test_files_and_texts_cover_every_formation_with_its_family_emblem() -> None:
             ("red", "blue"),
         )
         if spec.family == NEW_WORLD_EMPIRE
+        else Identity(
+            f"X{n}Z",
+            wording.reference(spec.named),
+            Text(f"{spec.named}_adj"),
+            (n, n, n),
+            ("red", "blue"),
+        )
+        if spec.named
         else Identity(
             f"X{n}Z",
             Phrase(wording.FORMATION + spec.stem, seats[n]),
@@ -616,7 +657,10 @@ def test_the_federation_is_a_nation_of_settlers_independent_or_leading_their_fed
     assert "tag = " not in text.replace("\ttag = XYZ", "")
     assert "capital_required = yes" in text
     assert spec.level == 3
-    assert float(spec.fraction) < min(float(other.fraction) for other in SPECS if other is not spec)
+    ladder = [other for other in SPECS if other.level <= TOP_RANK_LEVEL and not other.named]
+    assert float(spec.fraction) < min(
+        float(other.fraction) for other in ladder if other is not spec
+    )
 
 
 def test_the_federation_takes_the_name_of_its_founders_tradition() -> None:
@@ -672,7 +716,14 @@ def test_two_federations_of_one_region_are_not_both_named_after_it() -> None:
 def test_every_family_but_the_empire_opens_a_reform_of_its_own() -> None:
     """A formation unlocks its family's reform, a vanilla payload under the mod's own name."""
     reforms = [spec.reform for spec in SPECS if spec.reform is not None]
-    assert [spec.family for spec in SPECS if spec.reform is None] == [NEW_WORLD_EMPIRE]
+    assert [spec.family for spec in SPECS if spec.reform is None] == [
+        NEW_WORLD_EMPIRE,
+        TWO_SHORES,
+        TWO_WORLDS,
+        TWO_OCEANS,
+        GREAT_LAW,
+        TWO_PEOPLES,
+    ]
     names = [reform.name for reform in reforms]
     assert len(names) == len(set(names))
     assert all(name.startswith("rnw_reform_") for name in names)
@@ -683,3 +734,50 @@ def test_every_family_but_the_empire_opens_a_reform_of_its_own() -> None:
             assert "unlock_government_reform_effect" not in text
         else:
             assert f"unlock_government_reform_effect = {{ type = {spec.reform.name} }}" in text
+
+
+def test_the_fantasy_layer_is_one_of_each_over_the_continent() -> None:
+    """Two shores, two worlds and two peoples over the continent; two oceans only with coasts on
+    both; a great law over each confederation of three states (history plan §22.4)."""
+    plain = plan_content(_chain(count=120, states=10, region=_halves), SEED)
+    families = [formation.family for formation in plain.formations]
+    for family in (TWO_SHORES, TWO_WORLDS, TWO_PEOPLES):
+        assert families.count(family) == 1
+    assert TWO_OCEANS not in families
+    atlantic, pacific = OCEANS
+    coasts = _chain(
+        count=120,
+        states=10,
+        region=_halves,
+        seas=lambda index: ("east_sea",) if index < 10 else ("west_sea",) if index > 110 else (),
+    )
+    oceans = replace(coasts, oceans={"east_sea": atlantic, "west_sea": pacific})
+    found, _ = formations(oceans, SEED, TWO_OCEANS)
+    assert len(found) == 1
+    assert found[0].continent == "america"
+    one, why = formations(replace(coasts, oceans={"east_sea": atlantic}), SEED, TWO_OCEANS)
+    assert not one
+    assert "two oceans" in why
+    text = block(found[0], _identity(TWO_SHORES))
+    assert f"sea_zone ?= {{ continent = continent:{pacific} }}" in text
+    assert "rule = fantasy" in text
+
+
+def test_a_confederation_of_three_states_may_become_a_state_of_its_great_law() -> None:
+    """Its leader by size holds the seat; the potential asks for the lead of a confederation."""
+    base = _chain(count=60, states=5)
+    history = HistoricalFacts(
+        {}, frozenset(), {}, frozenset(), (), (("S0", "S1", "S2"), ("S3", "S4")), frozenset()
+    )
+    found, _ = formations(replace(base, history=history), SEED, GREAT_LAW)
+    assert len(found) == 1
+    law = found[0]
+    assert law.states == ("S0", "S1", "S2")
+    assert set(law.places) == {k for k, p in base.places.items() if p.owner in law.states}
+    text = block(law, _identity(GREAT_LAW))
+    assert (
+        "is_leader_of_international_organization_of_type = { type = tribal_confederation }" in text
+    )
+    assert render(Phrase(wording.FORMATION + "great_law", "Kaira"), "russian") == (
+        "Великая Кайрская лига"
+    )

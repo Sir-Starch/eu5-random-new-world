@@ -1729,3 +1729,95 @@ text = '''이름을 유지합니다: {name}.'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''이름을 바꿉니다: {name}.'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''양안 제국'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''양안'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''두 세계의 왕관'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''두 세계'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''양양 제국'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''양양'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''두 민족의 왕국'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''두 민족'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''이 대륙의 어떤 민족도 큰 바다 너머를 다스린 적이 없습니다. 이 대륙 민족의 세력으로서 먼 해안에 땅을 가지고 고향 대륙의 상당 부분을 차지한 자는 양안의 제국을 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''먼 해안으로 가는 항해자들'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''우리 배들은 큰 바다를 건너 어떤 조상도 알지 못한 땅으로 향합니다.'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''옛 나라의 궁정이 바다를 건너 이 대륙에 자리 잡았지만, 옛 고국은 여전히 그에 복종합니다. 바다 양편을 다스리며 이곳에 수도를 둔 왕관은 두 세계 위의 하나의 왕관을 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''하나의 왕관, 두 세계'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''옛 고국과 새 궁정이 같은 왕관을 따릅니다.'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''이 대륙은 두 대양 사이에 놓여 있으며, 어떤 세력도 두 대양을 모두 항해한 적이 없습니다. 두 대양 모두에 항구를 두고 그 사이 땅의 상당 부분을 차지한 자는 두 대양의 제국을 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''두 대양의 지배자'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''우리 함대가 두 대양의 항로를 지킵니다.'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''연맹의 민족들은 여러 세대 동안 저마다의 회의를 지키며 하나의 큰 법 아래 살아왔습니다. 그들을 이끌고 그들 땅의 상당 부분을 차지한 족장은 그 법 아래 그들을 하나의 국가로 묶을 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''큰 법의 민족들'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''옛 연맹의 민족들이 하나처럼 싸우고 교역합니다.'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''정착민과 이 대륙의 민족들은 오랫동안 혼인하고 교역하고 함께 기도해 와서, 이제는 어디까지가 한쪽인지 아무도 말할 수 없습니다. 두 민족을 모두 자국민으로 여기고 대륙의 상당 부분을 차지한 국가는 두 민족의 왕국을 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''두 민족, 하나의 왕국'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''왕국은 두 민족을 모두 자국민으로 여기고 그 관습을 받아들입니다.'''

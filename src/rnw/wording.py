@@ -69,6 +69,7 @@ FORMATIONS: Final[tuple[str, ...]] = (
     "realm",
     "federation",
     "restoration",
+    "great_law",
 )
 TRADITIONS: Final[tuple[str, ...]] = ("spanish", "portuguese", "english", "french", "dutch")
 
@@ -174,6 +175,7 @@ EN_FORMATIONS: Final[dict[str, str]] = {
     "realm": "{n} Realm",
     "federation": "{n} Federation",
     "restoration": "Restored {n}",
+    "great_law": "Great League of {n}",
 }
 # English keeps the founder's own word for *new* (content plan, N4c).
 EN_COLONIES: Final[dict[str, str]] = {
@@ -228,9 +230,10 @@ RU_FORMATIONS: Final[dict[str, str]] = {
     "realm": "ое царство",
     "federation": "ая федерация",
     "restoration": "ое царство",
+    "great_law": "ая лига",
 }
 # A restored realm is the old one *reborn*, before its adjective: *Возрождённое Кайрское царство*.
-RU_PREFIXES: Final[dict[str, str]] = {"restoration": "Возрождённое "}
+RU_PREFIXES: Final[dict[str, str]] = {"restoration": "Возрождённое ", "great_law": "Великая "}
 
 
 def _ru_sectors(term: Term, _base: str, word: str, sectors: tuple[str, ...]) -> str:
@@ -298,8 +301,9 @@ DE_FORMATIONS: Final[dict[str, tuple[str, str]]] = {
     "realm": ("Reich", "n"),
     "federation": ("Föderation", "f"),
     "restoration": ("Reich", "n"),
+    "great_law": ("Bund", "m"),
 }
-DE_PREFIXES: Final[dict[str, str]] = {"restoration": "Wiedererstandenes "}
+DE_PREFIXES: Final[dict[str, str]] = {"restoration": "Wiedererstandenes ", "great_law": "Großer "}
 
 
 def _de_compound(pattern: str, word: str) -> str:
@@ -367,6 +371,7 @@ FR_FORMATIONS: Final[dict[str, str]] = {
     "realm": "Royaume de {n}",
     "federation": "Fédération de {n}",
     "restoration": "Royaume restauré de {n}",
+    "great_law": "Grande Ligue de {n}",
 }
 # Not before an *h*: the names are foreign, and French does not elide before a foreign h.
 FR_ELISION: Final[re.Pattern[str]] = re.compile(r"\bde ([AEIOUYÀÂÉÈÊËÎÏÔÛÜaeiouyàâéèêëîïôûü])")
@@ -428,6 +433,7 @@ ES_FORMATIONS: Final[dict[str, str]] = {
     "realm": "Reino de {n}",
     "federation": "Federación de {n}",
     "restoration": "Reino restaurado de {n}",
+    "great_law": "Gran Liga de {n}",
 }
 PT_TERMS: Final[dict[str, Term]] = {
     "sea": Term("Mar de {n}"),
@@ -465,6 +471,7 @@ PT_FORMATIONS: Final[dict[str, str]] = {
     "realm": "Reino de {n}",
     "federation": "Federação de {n}",
     "restoration": "Reino Restaurado de {n}",
+    "great_law": "Grande Liga de {n}",
 }
 
 
@@ -535,6 +542,7 @@ PL_FORMATIONS: Final[dict[str, tuple[str, str]]] = {
     "realm": ("Królestwo", "kie"),
     "federation": ("Federacja", "ka"),
     "restoration": ("Odrodzone Królestwo", "kie"),
+    "great_law": ("Wielka Liga", "ka"),
 }
 
 
@@ -608,6 +616,7 @@ TR_FORMATIONS: Final[dict[str, str]] = {
     "realm": "{n} Devleti",
     "federation": "{n} Federasyonu",
     "restoration": "Yeniden Doğan {n} Devleti",
+    "great_law": "Büyük {n} Ligi",
 }
 
 
@@ -656,6 +665,7 @@ JA_FORMATIONS: Final[dict[str, str]] = {
     "realm": "{n}王国",
     "federation": "{n}連邦",
     "restoration": "復興{n}王国",
+    "great_law": "{n}大同盟",
 }
 # Japanese and Korean keep the founder's word for *new*, in their script (``ヌエバ・エスパーニャ``).
 JA_COLONIES: Final[dict[str, str]] = {
@@ -701,6 +711,7 @@ KO_FORMATIONS: Final[dict[str, str]] = {
     "realm": "{n} 왕국",
     "federation": "{n} 연방",
     "restoration": "부흥 {n} 왕국",
+    "great_law": "{n} 대동맹",
 }
 KO_COLONIES: Final[dict[str, str]] = {
     "spanish": "누에바 {n}",
@@ -745,6 +756,7 @@ ZH_FORMATIONS: Final[dict[str, str]] = {
     "realm": "{n}王国",
     "federation": "{n}联邦",
     "restoration": "复兴{n}王国",
+    "great_law": "{n}大同盟",
 }
 
 

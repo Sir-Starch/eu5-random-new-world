@@ -8,11 +8,13 @@ import pytest
 
 from rnw.content import (
     CULTURAL_UNION,
+    GREAT_LAW,
     HIGHLAND_CONFEDERATION,
     NEW_WORLD_EMPIRE,
     REGIONAL_REALM,
     RESTORATION,
     RIVER_UNION,
+    TWO_WORLDS,
     Formation,
 )
 from rnw.eu5_formation import geographies, geography
@@ -37,16 +39,20 @@ FORMATIONS = (
     Formation(REGIONAL_REALM, 0, ("a", "b"), ("a",), ("ABC",), "a", region="r", throne="a"),
     Formation(NEW_WORLD_EMPIRE, 0, ("a", "b"), (), (), "a", continent="america"),
     Formation(RESTORATION, 0, ("a", "b"), ("a",), ("ABC", "DEF"), "a", "old"),
+    Formation(TWO_WORLDS, 0, ("a", "b"), (), (), "a", continent="america"),
+    Formation(GREAT_LAW, 0, ("a", "b"), (), ("ABC", "DEF", "GHI"), "a"),
 )
 
 
 def test_the_ai_pursues_the_goals_of_level_three_shown_by_default() -> None:
-    """Not a duchy-level league or confederation, nor the fantasy empire."""
+    """Not a duchy-level league or confederation, nor the fantasy empire, nor a goal over the
+    whole continent such as the crown of two worlds."""
     assert [f.family for f in FORMATIONS if pursued(f)] == [
         RIVER_UNION,
         CULTURAL_UNION,
         REGIONAL_REALM,
         RESTORATION,
+        GREAT_LAW,
     ]
     assert files(FORMATIONS[:1]) == {}
 

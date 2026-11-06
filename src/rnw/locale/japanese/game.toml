@@ -1729,3 +1729,95 @@ text = '''名を保つ：{name}。'''
 ["rnw_naming.take"]
 source = "0eff740f9b97f82f"
 text = '''名を改める：{name}。'''
+
+["rnw_formation_two_shores_name"]
+source = "3bc268bf8490e630"
+text = '''両岸帝国'''
+
+["rnw_formation_two_shores_name_adj"]
+source = "400671422a0de267"
+text = '''両岸'''
+
+["rnw_formation_two_worlds_name"]
+source = "2f85382541be3bad"
+text = '''両世界王冠国'''
+
+["rnw_formation_two_worlds_name_adj"]
+source = "1349ccd918705484"
+text = '''両世界'''
+
+["rnw_formation_two_oceans_name"]
+source = "13126384cc6effe8"
+text = '''両洋帝国'''
+
+["rnw_formation_two_oceans_name_adj"]
+source = "00f9e76a2534af31"
+text = '''両洋'''
+
+["rnw_formation_two_peoples_name"]
+source = "be9e07854a4e2e6b"
+text = '''二民族王国'''
+
+["rnw_formation_two_peoples_name_adj"]
+source = "aab153dd88cc8043"
+text = '''二民族'''
+
+["rnw_formation_two_shores_desc"]
+source = "473b50435cb358d9"
+text = '''この大陸の民で、大洋の彼方を治めた者はいまだかつていない。大陸の民による勢力で、遠い岸辺に領地を持ち、故郷の大陸の多くを押さえる者は、両岸の帝国を宣言できる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_shores_voyagers"]
+source = "dec7efd625ab7d44"
+text = '''遠き岸への航海者'''
+
+["STATIC_MODIFIER_DESC_rnw_two_shores_voyagers"]
+source = "b17650f2a8d54598"
+text = '''我らの船は大洋を渡り、いかなる祖先も知らなかった地へ向かう。'''
+
+["rnw_formation_two_worlds_desc"]
+source = "8933a92bcf6a6335"
+text = '''古い国の宮廷が大洋を渡ってこの大陸に居を移したが、かつての故国は今もそれに従っている。大洋の両側を治め、ここに首都を置く王冠は、両世界を一つの王冠のもとに宣言できる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_worlds_union"]
+source = "9bb6203ca44ee2f1"
+text = '''一つの王冠、二つの世界'''
+
+["STATIC_MODIFIER_DESC_rnw_two_worlds_union"]
+source = "ec15c579d765b459"
+text = '''旧き故国と新たな宮廷は同じ王冠に従う。'''
+
+["rnw_formation_two_oceans_desc"]
+source = "287d1ce2e64d72e3"
+text = '''この大陸は二つの大洋の間に横たわり、両方を航海した勢力はいまだない。両方に港を持ち、その間の土地の多くを押さえる者は、両洋の帝国を宣言できる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_oceans_sea_power"]
+source = "5240aa554bdc6edf"
+text = '''両洋の覇者'''
+
+["STATIC_MODIFIER_DESC_rnw_two_oceans_sea_power"]
+source = "5997155c1a0aa978"
+text = '''我らの艦隊が両洋の航路を守る。'''
+
+["rnw_formation_great_law_desc"]
+source = "984cd3a2649f2fa6"
+text = '''連合の諸民は何世代にもわたり、それぞれの評議会を保ちながら一つの大いなる法のもとに暮らしてきた。彼らを導き、その地の十分な部分を押さえる首長は、その法のもとに彼らを一つの国家へと結びつけることができる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_great_law_league"]
+source = "06e46ef8dffbd992"
+text = '''大いなる法の民'''
+
+["STATIC_MODIFIER_DESC_rnw_great_law_league"]
+source = "ae42b7744b3395cf"
+text = '''旧き連合の諸民は、一つの民として戦い、交易する。'''
+
+["rnw_formation_two_peoples_desc"]
+source = "7a91ebd282c9e756"
+text = '''入植者とこの大陸の民は長く婚姻を結び、交易し、共に祈ってきた。もはやどこからどこまでがどちらとも言えない。両方の民を自らの民とし、大陸の多くを押さえる国家は、二つの民の王国を宣言できる。すなわち{name}である。'''
+
+["STATIC_MODIFIER_NAME_rnw_two_peoples_integration"]
+source = "0fd80ff5371517ee"
+text = '''二つの民、一つの王国'''
+
+["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
+source = "77bf4dd8870d78b3"
+text = '''王国は両方の民を自らの民とし、その慣習を受け入れる。'''
