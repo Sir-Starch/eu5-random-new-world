@@ -6,6 +6,23 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-06, **1.2.0 development / pending epoch 61 — candidate G, regions as the Americas lie**
+(W8, C502: north-to-south subcontinent bands, regions by place first). [V-EXEC] Installed
+**`mod/rnw_exp_world_lhlehi4i3d`** ("History 1.2 candidate G (regions as the Americas lie)") in the
+existing Windows/Proton profile: code `RNW1-080J3-M4P7S-R656Y-R0410-00830-3SG46-R28Y1-G56S2-30`, made
+from candidate F's code with the resources rolled again, so it has F's land and a new world id. It was
+generated at `74b936b`. Its atlas puts Alaska in the north-west, Canada in the north-east, the West
+Coast in the west and the East Coast in the east, with Meso- and Central America at the south of
+North America, Colombia at the north of South America, La Plata at its south and Brazil on the
+eastern island. In F, Central America lay beside Alaska and Colombia on that island. The staged
+installer refused any existing target. All 912 files match the prepared mod, both libraries hold the
+record, and the 11 other mod folders and 9 profile-root files are unchanged. The standard updater
+installed hub 1.2.0 with the generator of `74b936b` after its Wine window, native, code, shell and
+bridge self-tests, and kept the former hub at `.rnw-hub-backups/1.2.0-1793996994885394956`. Windows
+wheel SHA-256: `3b5b87000e1bc73a2a611a89a9c3294d79b671f30e43bdd48807ea2b2550b972`. Candidates C–F stay
+installed. No playset, save or preference was edited; the agent did not launch or control EU5. NOT
+GAME VALIDATED.
+
 2026-11-06, **1.2.0 development / pending epoch 61 — candidate F, frontier everywhere** (W7, C501:
 `settle_the_frontier_advance` rebound to the whole New World). [V-EXEC] Installed
 **`mod/rnw_exp_world_7frcq3x5oe`** ("History 1.2 candidate F (frontier everywhere)") in the existing
