@@ -942,6 +942,11 @@ with `owns_or_has_subject_in` (as `D008_restore_roman_borders.txt`),
 `current_age_or_later` and `ai_personality`. The export checks the ages and the
 personality. How the AI weighs the entries in play is not observed.
 
+N9 adds `in_game/events/rnw_memory.txt`: country events started by vanilla's
+`dynamic_historical_event` (as the stories already are), with `add_core`,
+`add_opinion`, `add_prestige` and `add_stability` and vanilla values; the export
+checks the biases and values.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

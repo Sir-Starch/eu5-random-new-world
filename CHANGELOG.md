@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+- Give the formable countries real goals. Any country that holds enough of a territory, its
+  capital inside, may form a union, confederation, league or realm, not only the states of
+  1337; a commonwealth also opens to its people's culture group. The realm becomes the realm
+  of a whole generated region: 40% of it and its greatest city, one for every region with
+  several states and for every region holding a lower formable's seat. Unions and
+  commonwealths grow to 60 places. A fantasy empire of the continent (level 5, shown when the
+  game rules allow fantasy formables) asks for half of it, hegemony and the empire rank. A
+  formation gives cores on the rest of its territory, so the game's own *Claims on Province*
+  opens against every holder. The colonial federation becomes a nation of independent
+  settlers or of the leader of a colonial federation, named after its region and renamed on
+  founding in its founders' tradition (*United Provinces*, *United Captaincies*, *United
+  Colonies*, *Free State* or *Generality of X*).
+
+- Restore the realms the history divided. A realm or union that broke apart before 1337 and
+  has two living heirs becomes a formable restoration of its old land, named as the
+  chronicle names it (*Restored X*), offered to its heirs only; when one restores it, each
+  other heir must recognize the restored crown or deny it and become its rival.
+
+- Let the AI pursue the formables. A country that could form a union, commonwealth,
+  realm, nation or restoration weighs wars on the holders of its territory higher (from the
+  second age; realms from the age of discovery).
+
+- Bring the recorded past back as events: a country may remember the land it lost, an old
+  pact, kin who settled across the border, a shrine it visits under another's peace, or, as
+  an heir, the realm its people once shared, and choose what to do about it (a core on the
+  lost land or the shrine, renewed friendship, or letting it rest). Each event names its cause
+  in the history.
+
 - Add the world setting **Reveal the New World at the start**, for multiplayer, off by
   default and saved in world codes. Switched on, the world writes one on_action file that
   has every country discover every area of the generated New World, land and sea, through

@@ -1321,3 +1321,83 @@ text = '''Reconocemos la corona restaurada.'''
 ["rnw_restoration.b"]
 source = "5b9a238653e7fbf8"
 text = '''La antigua corona no es más suya que nuestra.'''
+
+["rnw_memory.lost_land.title"]
+source = "6d03784bc71649e4"
+text = '''La pérdida de [target_location.GetNameWithNoTooltip]'''
+
+["rnw_memory.lost_land.desc"]
+source = "313947eafa71e8c2"
+text = '''Nuestros ancianos aún llaman nuestros a los campos de [target_location.GetNameWithNoTooltip], aunque [partner.GetNameWithNoTooltip] se los arrebató a nuestros abuelos. Los jóvenes preguntan si esa pérdida ha de durar para siempre.'''
+
+["rnw_memory.lost_land.a"]
+source = "515594395bbab00e"
+text = '''Lo que fue nuestro volverá a serlo.'''
+
+["rnw_memory.lost_land.b"]
+source = "6211a94e051ab224"
+text = '''Que la vieja herida se cierre.'''
+
+["rnw_memory.old_pact.title"]
+source = "11c48fbce58796de"
+text = '''El antiguo pacto'''
+
+["rnw_memory.old_pact.desc"]
+source = "27565aab96e7c826"
+text = '''Nuestro pueblo y [partner.GetNameWithNoTooltip] juraron antaño mantenerse unidos, y cumplieron su palabra. Sus enviados han venido a preguntar si la antigua promesa aún nos obliga.'''
+
+["rnw_memory.old_pact.a"]
+source = "b94ae141c5a67bf2"
+text = '''La antigua promesa aún nos obliga.'''
+
+["rnw_memory.old_pact.b"]
+source = "deae4afc797b2fb4"
+text = '''Esa promesa fue de nuestros abuelos, no nuestra.'''
+
+["rnw_memory.kin.title"]
+source = "6c53f1166e3b144c"
+text = '''Parientes al otro lado de la frontera'''
+
+["rnw_memory.kin.desc"]
+source = "7025ad0a09571fe0"
+text = '''Hace mucho tiempo, familias de nuestro pueblo se trasladaron entre nuestra tierra y [partner.GetNameWithNoTooltip], y se asentaron en [target_location.GetNameWithNoTooltip]. Sus hijos aún se recuerdan unos a otros y piden que el camino entre ellos siga abierto.'''
+
+["rnw_memory.kin.a"]
+source = "e63fcfb7dc836c71"
+text = '''Nuestras puertas están abiertas a nuestros parientes.'''
+
+["rnw_memory.kin.b"]
+source = "bd82b91057f1971b"
+text = '''Eligieron otra tierra; que se queden con ella.'''
+
+["rnw_memory.shrine.title"]
+source = "af02fa220fb67956"
+text = '''Peregrinos a [target_location.GetNameWithNoTooltip]'''
+
+["rnw_memory.shrine.desc"]
+source = "8079fdc623e79727"
+text = '''Durante generaciones, nuestros peregrinos han caminado hasta el santuario de [target_location.GetNameWithNoTooltip], bajo la paz que les concede [partner.GetNameWithNoTooltip]. Algunos de nuestros sacerdotes dicen ahora que un lugar sagrado no debería pertenecer a extraños.'''
+
+["rnw_memory.shrine.a"]
+source = "501fa6cb9698be73"
+text = '''Honrar la paz del santuario.'''
+
+["rnw_memory.shrine.b"]
+source = "20bde48b4bda8b21"
+text = '''El santuario debería ser nuestro.'''
+
+["rnw_memory.heir.title"]
+source = "42df00d9ae3f528e"
+text = '''El recuerdo del antiguo reino'''
+
+["rnw_memory.heir.desc"]
+source = "1b8d09cdc1575552"
+text = '''Nuestros cronistas recuerdan los días en que nuestra tierra era una con sus vecinas bajo una sola corona, con sede en [target_location.GetNameWithNoTooltip]. Ese reino ya no existe, pero no ha sido olvidado, y quien reúna lo bastante de su antiguo territorio podrá alzarlo de nuevo.'''
+
+["rnw_memory.heir.a"]
+source = "6dfe52d00f4856ad"
+text = '''Alzaremos de nuevo el antiguo reino.'''
+
+["rnw_memory.heir.b"]
+source = "981a1c5531732d0e"
+text = '''El antiguo reino ya no existe; dejadlo descansar.'''

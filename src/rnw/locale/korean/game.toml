@@ -1321,3 +1321,83 @@ text = '''되살아난 왕관을 인정합니다.'''
 ["rnw_restoration.b"]
 source = "5b9a238653e7fbf8"
 text = '''옛 왕관은 우리보다 그들의 것이 결코 아닙니다.'''
+
+["rnw_memory.lost_land.title"]
+source = "6d03784bc71649e4"
+text = '''[target_location.GetNameWithNoTooltip]의 상실'''
+
+["rnw_memory.lost_land.desc"]
+source = "313947eafa71e8c2"
+text = '''[partner.GetNameWithNoTooltip]이(가) 우리 할아버지들에게서 빼앗아 갔지만, 우리 원로들은 지금도 [target_location.GetNameWithNoTooltip]의 들판을 우리 것이라 부릅니다. 젊은이들은 그 상실이 영원히 이어져야 하느냐고 묻습니다.'''
+
+["rnw_memory.lost_land.a"]
+source = "515594395bbab00e"
+text = '''우리 것이었던 땅은 다시 우리 것이 될 것입니다.'''
+
+["rnw_memory.lost_land.b"]
+source = "6211a94e051ab224"
+text = '''오래된 상처는 아물게 둡시다.'''
+
+["rnw_memory.old_pact.title"]
+source = "11c48fbce58796de"
+text = '''옛 맹약'''
+
+["rnw_memory.old_pact.desc"]
+source = "27565aab96e7c826"
+text = '''한때 우리 백성과 [partner.GetNameWithNoTooltip]은(는) 함께하기로 맹세했고 그 약속을 지켰습니다. 그들의 사절이 옛 약속이 아직도 우리를 묶고 있는지 물으러 왔습니다.'''
+
+["rnw_memory.old_pact.a"]
+source = "b94ae141c5a67bf2"
+text = '''옛 약속은 여전히 우리를 묶고 있습니다.'''
+
+["rnw_memory.old_pact.b"]
+source = "deae4afc797b2fb4"
+text = '''그 약속은 우리 할아버지들의 것이지 우리의 것이 아닙니다.'''
+
+["rnw_memory.kin.title"]
+source = "6c53f1166e3b144c"
+text = '''국경 너머의 동족'''
+
+["rnw_memory.kin.desc"]
+source = "7025ad0a09571fe0"
+text = '''오래전 우리 백성의 가족들이 우리 땅과 [partner.GetNameWithNoTooltip] 사이를 오가다 [target_location.GetNameWithNoTooltip]에 정착했습니다. 그 자손들은 지금도 서로를 기억하며, 둘 사이의 길이 열려 있기를 바랍니다.'''
+
+["rnw_memory.kin.a"]
+source = "e63fcfb7dc836c71"
+text = '''우리의 문은 동족에게 열려 있습니다.'''
+
+["rnw_memory.kin.b"]
+source = "bd82b91057f1971b"
+text = '''그들은 다른 땅을 택했습니다. 그 땅에 머물게 둡시다.'''
+
+["rnw_memory.shrine.title"]
+source = "af02fa220fb67956"
+text = '''[target_location.GetNameWithNoTooltip]로 가는 순례자들'''
+
+["rnw_memory.shrine.desc"]
+source = "8079fdc623e79727"
+text = '''여러 세대에 걸쳐 우리 순례자들은 [partner.GetNameWithNoTooltip]이(가) 베푸는 평화 아래 [target_location.GetNameWithNoTooltip]의 성소로 걸어갔습니다. 이제 우리 사제들 중 일부는 성지가 이방인의 것이어서는 안 된다고 말합니다.'''
+
+["rnw_memory.shrine.a"]
+source = "501fa6cb9698be73"
+text = '''성소의 평화를 존중합니다.'''
+
+["rnw_memory.shrine.b"]
+source = "20bde48b4bda8b21"
+text = '''성소는 우리 것이어야 합니다.'''
+
+["rnw_memory.heir.title"]
+source = "42df00d9ae3f528e"
+text = '''옛 왕국의 기억'''
+
+["rnw_memory.heir.desc"]
+source = "1b8d09cdc1575552"
+text = '''우리 연대기 작가들은 우리 땅이 이웃들과 함께 [target_location.GetNameWithNoTooltip]에 자리한 하나의 왕관 아래 있었던 시절을 기억합니다. 그 왕국은 사라졌지만 잊히지 않았으며, 옛 영토를 충분히 모으는 자는 그것을 다시 일으킬 수 있습니다.'''
+
+["rnw_memory.heir.a"]
+source = "6dfe52d00f4856ad"
+text = '''우리는 옛 왕국을 다시 일으킬 것입니다.'''
+
+["rnw_memory.heir.b"]
+source = "981a1c5531732d0e"
+text = '''옛 왕국은 사라졌습니다. 편히 잠들게 둡시다.'''

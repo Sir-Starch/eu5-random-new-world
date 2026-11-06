@@ -1321,3 +1321,83 @@ text = '''再興された王冠を認める。'''
 ["rnw_restoration.b"]
 source = "5b9a238653e7fbf8"
 text = '''旧き王冠は我らのものでもあり、彼らだけのものではない。'''
+
+["rnw_memory.lost_land.title"]
+source = "6d03784bc71649e4"
+text = '''[target_location.GetNameWithNoTooltip]の喪失'''
+
+["rnw_memory.lost_land.desc"]
+source = "313947eafa71e8c2"
+text = '''[partner.GetNameWithNoTooltip]が祖父たちの代に奪ったにもかかわらず、長老たちは今も[target_location.GetNameWithNoTooltip]の畑を我らのものと呼ぶ。若者たちは、その喪失が永遠に続かねばならないのかと問う。'''
+
+["rnw_memory.lost_land.a"]
+source = "515594395bbab00e"
+text = '''我らのものだった地は、再び我らのものとなる。'''
+
+["rnw_memory.lost_land.b"]
+source = "6211a94e051ab224"
+text = '''古い傷は癒えるに任せよう。'''
+
+["rnw_memory.old_pact.title"]
+source = "11c48fbce58796de"
+text = '''古き盟約'''
+
+["rnw_memory.old_pact.desc"]
+source = "27565aab96e7c826"
+text = '''かつて我らの民と[partner.GetNameWithNoTooltip]は互いに支え合うことを誓い、その誓いを守った。その使節が、古い約束がいまだ我らを縛るのかを問いにやって来た。'''
+
+["rnw_memory.old_pact.a"]
+source = "b94ae141c5a67bf2"
+text = '''古い約束は今も我らを縛っている。'''
+
+["rnw_memory.old_pact.b"]
+source = "deae4afc797b2fb4"
+text = '''あの約束は祖父たちのもので、我らのものではない。'''
+
+["rnw_memory.kin.title"]
+source = "6c53f1166e3b144c"
+text = '''国境の向こうの同胞'''
+
+["rnw_memory.kin.desc"]
+source = "7025ad0a09571fe0"
+text = '''遠い昔、我らの民の家族は我らの地と[partner.GetNameWithNoTooltip]の間を移り住み、[target_location.GetNameWithNoTooltip]に根を下ろした。その子孫たちは今も互いを覚えており、両者を結ぶ道を開いたままにしてほしいと願っている。'''
+
+["rnw_memory.kin.a"]
+source = "e63fcfb7dc836c71"
+text = '''我らの門は同胞に開かれている。'''
+
+["rnw_memory.kin.b"]
+source = "bd82b91057f1971b"
+text = '''彼らは別の地を選んだのだ。そこに留まらせよう。'''
+
+["rnw_memory.shrine.title"]
+source = "af02fa220fb67956"
+text = '''[target_location.GetNameWithNoTooltip]への巡礼者'''
+
+["rnw_memory.shrine.desc"]
+source = "8079fdc623e79727"
+text = '''幾世代にもわたり、我らの巡礼者は[partner.GetNameWithNoTooltip]が与える平和のもとで[target_location.GetNameWithNoTooltip]の聖所へと歩んできた。今、我らの祭司の一部は、聖地がよそ者のものであってはならないと言う。'''
+
+["rnw_memory.shrine.a"]
+source = "501fa6cb9698be73"
+text = '''聖所の平和を尊重する。'''
+
+["rnw_memory.shrine.b"]
+source = "20bde48b4bda8b21"
+text = '''聖所は我らのものであるべきだ。'''
+
+["rnw_memory.heir.title"]
+source = "42df00d9ae3f528e"
+text = '''旧王国の記憶'''
+
+["rnw_memory.heir.desc"]
+source = "1b8d09cdc1575552"
+text = '''我らの年代記作者は、我らの地が隣国とともに、[target_location.GetNameWithNoTooltip]に座す一つの王冠のもとにあった日々を語り継ぐ。その王国はもはやないが、忘れられてはいない。旧領を十分に集めた者は、それを再興できる。'''
+
+["rnw_memory.heir.a"]
+source = "6dfe52d00f4856ad"
+text = '''我らは旧王国を再興する。'''
+
+["rnw_memory.heir.b"]
+source = "981a1c5531732d0e"
+text = '''旧王国はもうない。安らかに眠らせよう。'''

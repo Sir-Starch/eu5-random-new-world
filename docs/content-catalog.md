@@ -23,6 +23,7 @@ boundaries. [V-GAME C199–C211; UNKNOWN C214, C217, C220]
 - [When stories start](#when-stories-start)
 - [Stories and their choices](#stories-and-their-choices)
 - [Formable countries](#formable-countries)
+- [Events of the recorded past](#events-of-the-recorded-past)
 - [Colonial names](#colonial-names)
 - [Exceptional places and starting societies](#exceptional-places-and-starting-societies)
 - [Vanilla content](#vanilla-content)
@@ -191,6 +192,28 @@ same family do not overlap; different families can overlap. Families need not
 reach their maximum counts. See the [reference](content-reference.md#formable-countries)
 for keys and founding-modifier sources. [V-EXEC C409]
 
+## Events of the recorded past
+
+The history's memories reach the game as named opinions, which fade within decades.
+Each country may also recall its strongest memory once, in a window of its own
+(1338–1417, 2–4% a month, vanilla's `dynamic_historical_event`), and each heir of a
+restoration recalls the realm its people shared. Each event names its cause, a
+recorded history event, in the export report's `text_stats.stories.memories`.
+[V-EXEC; history plan §22, N9]
+
+| Event | Memory | Condition when it fires | Choices |
+|---|---|---|---|
+| **The Loss of X** | A grievance with a place, from a conflict or a breakaway | The other country exists and still holds the place | A core on the place, so the game's *Claims on Province* opens; or a small gain of stability |
+| **The Old Pact** | Trust from a defence pact or a protection agreement | The other country exists | Good relations both ways; or a small gain of prestige |
+| **Kin Across the Border** | Trust or affinity from a migration, with its place | The other country exists | Good relations both ways; or a small gain of stability |
+| **Pilgrims to X** | Trust or affinity from an agreement of sacred access, at its shrine | The other country exists and still holds the shrine | Good relations both ways; or a core on the shrine with a refused claim both ways |
+| **The Memory of the Old Realm** | An heir of a fallen realm with a restoration | The restoration does not exist yet | A small gain of prestige; or a small gain of stability |
+
+The effects are vanilla effects and values (`add_core`, `add_opinion` with
+`opinion_good_relations` and `opinion_refused_claim`, `add_prestige`, `add_stability`).
+Candidate B's world has 122 such events: 61 lost lands, 25 kin, 18 old pacts, 11 heirs
+and 7 shrines. [V-EXEC; outcomes in play not observed]
+
 ## Colonial names
 
 RNW writes one naming entry per generated land region and tradition:
@@ -252,6 +275,7 @@ except for the export report. [V-EXEC C409]
 | Actual target locations, potential and extra formation conditions | `in_game/common/formable_countries/rnw_formations.txt`; territories in `in_game/common/scripted_geography/rnw_formations.txt` |
 | The AI's goals | `in_game/common/ai_scripted_expansion_target/rnw_formations.txt`, `in_game/common/ai_scripted_expansion_score/rnw_formations.txt` |
 | The other heirs' answer to a restoration | `in_game/events/rnw_restoration.txt` |
+| Events of the recorded past and their causes | `in_game/events/rnw_memory.txt`; export bundle `report.json` → `text_stats.stories.memories` |
 | Visible story events, hidden cleanup and pulse starts | `in_game/events/rnw_river.txt`, `rnw_sacred.txt`, `rnw_harvest.txt`, `rnw_route.txt`, `rnw_alliance.txt`, `rnw_empire.txt`, `rnw_contact.txt`, `rnw_colony.txt`; bearer-bound families without opportunities are omitted |
 | Numeric story/founding bonuses and clergy privilege | `main_menu/common/static_modifiers/rnw_story_modifiers.txt`; `in_game/common/estate_privileges/rnw_story.txt` when present |
 | Colonial naming rules | `in_game/common/scripted_country_names/rnw_colonial_names.txt` |

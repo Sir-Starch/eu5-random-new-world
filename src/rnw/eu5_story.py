@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw import colonial_names, eu5_formation, eu5_goals
+from rnw import colonial_names, eu5_formation, eu5_goals, eu5_memories
 from rnw.content import (
     ContentPlan,
     Facts,
@@ -31,6 +31,7 @@ from rnw.content import (
 )
 from rnw.formations import SPECS
 from rnw.game_texts import Text, localize
+from rnw.memory_texts import EVENT_FILE as MEMORY_FILE
 from rnw.pdx import Block, parse
 from rnw.stories import STORIES
 from rnw.storymodel import (
@@ -251,10 +252,12 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     seed: int,
     taken: frozenset[tuple[int, int, int]],
     regions: Mapping[str, Name] | None = None,
+    memories: Sequence[eu5_memories.Memory] = (),
 ) -> Written:
-    """Every file of the stories, formables and colonial names of one world.
+    """Every file of the stories, formables, colonial names and memory events of one world.
 
     ``regions`` are the regions of the generated land with their names; each gets colonial names.
+    ``memories`` are the events of the recorded past (N9).
     """
     files: dict[str, bytes] = {}
     texts: dict[str, Entry] = {}
@@ -279,6 +282,12 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
             plan.formations, names, tags, seed, taken, regions=regions
         )
         modifiers += _formations(game_dir, plan, identities, files, texts)
+    if memories:
+        eu5_memories.check_installation(game_dir)
+        restored = eu5_memories.restorations(plan.formations, [i.tag for i in identities])
+        script = eu5_memories.events(memories, restored)
+        files[MEMORY_FILE] = script.encode("utf-8-sig")
+        texts.update(eu5_memories.texts(memories))
     if regions:
         colonial_names.check_installation(game_dir)
         files[colonial_names.NAMES_FILE] = colonial_names.script(list(regions)).encode("utf-8-sig")
@@ -304,6 +313,7 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         "colonial_names": len(regions or {}) * len(colonial_names.TRADITIONS),
         "absences": {absence.family: absence.reason for absence in plan.absences},
         "restorations_passed": dict(plan.passed),
+        "memories": eu5_memories.stats(memories),
         "formations": {
             identity.tag: {
                 "family": formation.family,

@@ -738,6 +738,17 @@ the third negotiates access to the shared sacred centre. In 1337: three related
 polities with different institutions, a real former union, a grievance between two
 of them (a named opinion) and a mediator.
 
+- **N6–N9 code, 2026-11-06 (D29):** formable goals decided in play, region realms,
+  the fantasy empire of the continent, cores over each territory, the nation of a
+  colonial shore named in its founders' tradition (N6, `ac67a29`, `9a5bdce`);
+  restorations of the realms the history divided, with the other heirs' answer (N7,
+  `f3cd91f`); scripted geographies and AI goals (N8, `2ee7595`); events of the
+  recorded past (N9). On candidate B's code the export writes 11 realms, the empire,
+  4 restorations and 122 memory events, all files parsed, every text in every
+  language. [V-EXEC] The reference golden and the R6 delivery follow. The family
+  reforms, missions and the fantasy layer beyond the empire (§22.4, items 1, 2 and 5)
+  are not yet implemented.
+
 ### Redesign phases after the audit (D21–D28)
 
 H7's technical evidence remains valid for its source and scope. Its acceptance and

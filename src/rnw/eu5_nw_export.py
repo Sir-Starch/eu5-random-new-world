@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
-from rnw import __version__, epoch, eu5_history_text, inputs, landcache, worldname
+from rnw import __version__, epoch, eu5_history_text, eu5_memories, inputs, landcache, worldname
 from rnw.artifacts import (
     Spool,
     check_new_output,
@@ -1681,6 +1681,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         region: natives.names.get(region) or plan.display_overrides.get(region, region)
         for region in sorted({cell.region for cell in plan.cells if cell.kind is CellClass.LAND})
     }
+    fallen = facts.history.fallen if facts.history is not None else ()
     return build_stories(
         game_dir,
         content,
@@ -1690,6 +1691,7 @@ def _story_outputs(  # noqa: PLR0913 - the stories read the world, the peoples a
         seed=seed,
         taken=taken,
         regions=regions,
+        memories=eu5_memories.select(natives, content, fallen, seed),
     )
 
 

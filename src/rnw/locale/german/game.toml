@@ -1321,3 +1321,83 @@ text = '''Wir erkennen die wiedererstandene Krone an.'''
 ["rnw_restoration.b"]
 source = "5b9a238653e7fbf8"
 text = '''Die alte Krone gehört ihnen nicht mehr als uns.'''
+
+["rnw_memory.lost_land.title"]
+source = "6d03784bc71649e4"
+text = '''Der Verlust von [target_location.GetNameWithNoTooltip]'''
+
+["rnw_memory.lost_land.desc"]
+source = "313947eafa71e8c2"
+text = '''Unsere Ältesten nennen die Felder von [target_location.GetNameWithNoTooltip] noch immer die unseren, obwohl [partner.GetNameWithNoTooltip] sie unseren Großvätern genommen hat. Die Jungen fragen, ob dieser Verlust für immer bestehen muss.'''
+
+["rnw_memory.lost_land.a"]
+source = "515594395bbab00e"
+text = '''Was unser war, wird wieder unser sein.'''
+
+["rnw_memory.lost_land.b"]
+source = "6211a94e051ab224"
+text = '''Die alte Wunde soll sich schließen.'''
+
+["rnw_memory.old_pact.title"]
+source = "11c48fbce58796de"
+text = '''Der alte Pakt'''
+
+["rnw_memory.old_pact.desc"]
+source = "27565aab96e7c826"
+text = '''Unser Volk und [partner.GetNameWithNoTooltip] schworen einst, zusammenzustehen, und hielten ihr Wort. Ihre Gesandten fragen nun, ob das alte Versprechen uns noch bindet.'''
+
+["rnw_memory.old_pact.a"]
+source = "b94ae141c5a67bf2"
+text = '''Das alte Versprechen bindet uns noch.'''
+
+["rnw_memory.old_pact.b"]
+source = "deae4afc797b2fb4"
+text = '''Dieses Versprechen gaben unsere Großväter, nicht wir.'''
+
+["rnw_memory.kin.title"]
+source = "6c53f1166e3b144c"
+text = '''Verwandte jenseits der Grenze'''
+
+["rnw_memory.kin.desc"]
+source = "7025ad0a09571fe0"
+text = '''Vor langer Zeit zogen Familien unseres Volkes zwischen unserem Land und [partner.GetNameWithNoTooltip] hin und her und ließen sich in [target_location.GetNameWithNoTooltip] nieder. Ihre Kinder erinnern sich noch aneinander und bitten darum, dass der Weg zwischen ihnen offen bleibt.'''
+
+["rnw_memory.kin.a"]
+source = "e63fcfb7dc836c71"
+text = '''Unsere Tore stehen unseren Verwandten offen.'''
+
+["rnw_memory.kin.b"]
+source = "bd82b91057f1971b"
+text = '''Sie haben ein anderes Land gewählt; sollen sie es behalten.'''
+
+["rnw_memory.shrine.title"]
+source = "af02fa220fb67956"
+text = '''Pilger nach [target_location.GetNameWithNoTooltip]'''
+
+["rnw_memory.shrine.desc"]
+source = "8079fdc623e79727"
+text = '''Seit Generationen ziehen unsere Pilger zum Heiligtum von [target_location.GetNameWithNoTooltip], unter dem Frieden, den [partner.GetNameWithNoTooltip] ihnen gewährt. Manche unserer Priester sagen nun, ein heiliger Ort dürfe nicht Fremden gehören.'''
+
+["rnw_memory.shrine.a"]
+source = "501fa6cb9698be73"
+text = '''Den Frieden des Heiligtums ehren.'''
+
+["rnw_memory.shrine.b"]
+source = "20bde48b4bda8b21"
+text = '''Das Heiligtum sollte uns gehören.'''
+
+["rnw_memory.heir.title"]
+source = "42df00d9ae3f528e"
+text = '''Die Erinnerung an das alte Reich'''
+
+["rnw_memory.heir.desc"]
+source = "1b8d09cdc1575552"
+text = '''Unsere Chronisten erinnern an die Tage, als unser Land mit seinen Nachbarn unter einer einzigen Krone mit Sitz in [target_location.GetNameWithNoTooltip] vereint war. Dieses Reich ist vergangen, aber nicht vergessen, und wer genug von seinem alten Land sammelt, kann es wiedererrichten.'''
+
+["rnw_memory.heir.a"]
+source = "6dfe52d00f4856ad"
+text = '''Wir werden das alte Reich wiedererrichten.'''
+
+["rnw_memory.heir.b"]
+source = "981a1c5531732d0e"
+text = '''Das alte Reich ist vergangen; lasst es ruhen.'''

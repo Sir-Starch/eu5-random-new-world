@@ -1321,3 +1321,83 @@ text = '''Yeniden kurulan tacı tanıyoruz.'''
 ["rnw_restoration.b"]
 source = "5b9a238653e7fbf8"
 text = '''Eski taç onların olduğu kadar bizim de.'''
+
+["rnw_memory.lost_land.title"]
+source = "6d03784bc71649e4"
+text = '''[target_location.GetNameWithNoTooltip] Kaybı'''
+
+["rnw_memory.lost_land.desc"]
+source = "313947eafa71e8c2"
+text = '''[partner.GetNameWithNoTooltip] onları dedelerimizden almış olsa da, büyüklerimiz [target_location.GetNameWithNoTooltip] tarlalarına hâlâ bizim der. Gençler bu kaybın sonsuza dek sürüp sürmeyeceğini soruyor.'''
+
+["rnw_memory.lost_land.a"]
+source = "515594395bbab00e"
+text = '''Bizim olan yeniden bizim olacak.'''
+
+["rnw_memory.lost_land.b"]
+source = "6211a94e051ab224"
+text = '''Eski yara kapansın.'''
+
+["rnw_memory.old_pact.title"]
+source = "11c48fbce58796de"
+text = '''Eski Antlaşma'''
+
+["rnw_memory.old_pact.desc"]
+source = "27565aab96e7c826"
+text = '''Halkımız ve [partner.GetNameWithNoTooltip] bir zamanlar birlikte durmaya yemin etmiş ve sözlerini tutmuştu. Elçileri, eski sözün bizi hâlâ bağlayıp bağlamadığını sormaya geldi.'''
+
+["rnw_memory.old_pact.a"]
+source = "b94ae141c5a67bf2"
+text = '''Eski söz bizi hâlâ bağlıyor.'''
+
+["rnw_memory.old_pact.b"]
+source = "deae4afc797b2fb4"
+text = '''O söz dedelerimizindi, bizim değil.'''
+
+["rnw_memory.kin.title"]
+source = "6c53f1166e3b144c"
+text = '''Sınırın Ötesindeki Akrabalar'''
+
+["rnw_memory.kin.desc"]
+source = "7025ad0a09571fe0"
+text = '''Uzun zaman önce halkımızdan aileler topraklarımızla [partner.GetNameWithNoTooltip] arasında göç etmiş ve [target_location.GetNameWithNoTooltip] bölgesine yerleşmişti. Çocukları birbirlerini hâlâ hatırlıyor ve aralarındaki yolun açık kalmasını istiyor.'''
+
+["rnw_memory.kin.a"]
+source = "e63fcfb7dc836c71"
+text = '''Kapılarımız akrabalarımıza açık.'''
+
+["rnw_memory.kin.b"]
+source = "bd82b91057f1971b"
+text = '''Başka bir toprağı seçtiler; orası onların olsun.'''
+
+["rnw_memory.shrine.title"]
+source = "af02fa220fb67956"
+text = '''[target_location.GetNameWithNoTooltip] Hacıları'''
+
+["rnw_memory.shrine.desc"]
+source = "8079fdc623e79727"
+text = '''Nesillerdir hacılarımız, [partner.GetNameWithNoTooltip] onlara güven sağladığı için [target_location.GetNameWithNoTooltip] tapınağına yürüyor. Şimdi bazı rahiplerimiz kutsal bir yerin yabancılara ait olmaması gerektiğini söylüyor.'''
+
+["rnw_memory.shrine.a"]
+source = "501fa6cb9698be73"
+text = '''Tapınağın barışına saygı gösterin.'''
+
+["rnw_memory.shrine.b"]
+source = "20bde48b4bda8b21"
+text = '''Tapınak bizim olmalı.'''
+
+["rnw_memory.heir.title"]
+source = "42df00d9ae3f528e"
+text = '''Eski Devletin Hatırası'''
+
+["rnw_memory.heir.desc"]
+source = "1b8d09cdc1575552"
+text = '''Tarihçilerimiz, topraklarımızın komşularıyla birlikte merkezi [target_location.GetNameWithNoTooltip] olan tek bir tacın altında bir olduğu günleri anar. O devlet artık yok, ama unutulmadı; eski topraklarının yeterince büyük bir kısmını toplayan onu yeniden kurabilir.'''
+
+["rnw_memory.heir.a"]
+source = "6dfe52d00f4856ad"
+text = '''Eski devleti yeniden kuracağız.'''
+
+["rnw_memory.heir.b"]
+source = "981a1c5531732d0e"
+text = '''Eski devlet artık yok; bırakın huzur içinde kalsın.'''

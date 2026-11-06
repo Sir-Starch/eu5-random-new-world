@@ -1321,3 +1321,83 @@ text = '''我们承认复兴的王冠。'''
 ["rnw_restoration.b"]
 source = "5b9a238653e7fbf8"
 text = '''这顶古老的王冠，属于他们并不比属于我们更多。'''
+
+["rnw_memory.lost_land.title"]
+source = "6d03784bc71649e4"
+text = '''失去[target_location.GetNameWithNoTooltip]'''
+
+["rnw_memory.lost_land.desc"]
+source = "313947eafa71e8c2"
+text = '''尽管[partner.GetNameWithNoTooltip]从我们祖辈手中夺走了[target_location.GetNameWithNoTooltip]的田地，我们的长老至今仍称那里是我们的。年轻人问道，这份失去难道要永远持续下去吗？'''
+
+["rnw_memory.lost_land.a"]
+source = "515594395bbab00e"
+text = '''曾属于我们的，终将重归我们。'''
+
+["rnw_memory.lost_land.b"]
+source = "6211a94e051ab224"
+text = '''让旧伤愈合吧。'''
+
+["rnw_memory.old_pact.title"]
+source = "11c48fbce58796de"
+text = '''旧日盟约'''
+
+["rnw_memory.old_pact.desc"]
+source = "27565aab96e7c826"
+text = '''我们的人民与[partner.GetNameWithNoTooltip]曾立誓同进同退，并且信守了诺言。他们的使节前来询问，旧日的誓约是否仍然约束着我们。'''
+
+["rnw_memory.old_pact.a"]
+source = "b94ae141c5a67bf2"
+text = '''旧日的誓约依然约束着我们。'''
+
+["rnw_memory.old_pact.b"]
+source = "deae4afc797b2fb4"
+text = '''那是我们祖辈的誓约，不是我们的。'''
+
+["rnw_memory.kin.title"]
+source = "6c53f1166e3b144c"
+text = '''边境那头的亲族'''
+
+["rnw_memory.kin.desc"]
+source = "7025ad0a09571fe0"
+text = '''很久以前，我们人民的家族往来迁徙于我们的土地与[partner.GetNameWithNoTooltip]之间，并定居在[target_location.GetNameWithNoTooltip]。他们的子孙至今仍彼此惦念，请求让两地之间的道路保持畅通。'''
+
+["rnw_memory.kin.a"]
+source = "e63fcfb7dc836c71"
+text = '''我们的大门向亲族敞开。'''
+
+["rnw_memory.kin.b"]
+source = "bd82b91057f1971b"
+text = '''他们选择了另一片土地，就让他们留在那里吧。'''
+
+["rnw_memory.shrine.title"]
+source = "af02fa220fb67956"
+text = '''前往[target_location.GetNameWithNoTooltip]的朝圣者'''
+
+["rnw_memory.shrine.desc"]
+source = "8079fdc623e79727"
+text = '''世世代代，我们的朝圣者在[partner.GetNameWithNoTooltip]给予的和平之下前往[target_location.GetNameWithNoTooltip]的圣所。如今，我们的一些祭司说，圣地不应归外人所有。'''
+
+["rnw_memory.shrine.a"]
+source = "501fa6cb9698be73"
+text = '''尊重圣所的和平。'''
+
+["rnw_memory.shrine.b"]
+source = "20bde48b4bda8b21"
+text = '''圣所应当属于我们。'''
+
+["rnw_memory.heir.title"]
+source = "42df00d9ae3f528e"
+text = '''旧王国的记忆'''
+
+["rnw_memory.heir.desc"]
+source = "1b8d09cdc1575552"
+text = '''我们的编年史家追忆往昔：那时我们的土地与邻邦同在一顶王冠之下，王座设于[target_location.GetNameWithNoTooltip]。那个王国已不复存在，却未被遗忘；谁能收复足够多的旧日领土，谁就能将其重建。'''
+
+["rnw_memory.heir.a"]
+source = "6dfe52d00f4856ad"
+text = '''我们将重建旧王国。'''
+
+["rnw_memory.heir.b"]
+source = "981a1c5531732d0e"
+text = '''旧王国已逝，让它安息吧。'''
