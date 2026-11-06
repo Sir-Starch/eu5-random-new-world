@@ -6,6 +6,20 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-06, **1.2.0 development / pending epoch 61 — candidate E, the game's measure** (plan D31:
+historical opinions on the scale of their vanilla analogues, the game's river sizes in development, and
+a window that shows what the game shows). [V-EXEC] Installed **`mod/rnw_exp_world_isank4awvu`**
+("History 1.2 candidate E (the game's measure)") in the existing Windows/Proton profile: code
+`RNW1-080KK-CJE30-JD57E-3040G-00830-3SG46-R18Y1-G5KER-2M`, the settings of candidate D with a new seed,
+generated at `760c965` (the later commits change no world byte). The staged installer refused any
+existing target; 913 files match the prepared mod, both libraries hold the record, and all 9 other mod
+folders and 9 profile-root files are unchanged. The standard updater installed hub 1.2.0 with the
+generator of `e60b77e` after its Wine window, native, code, shell and bridge self-tests, retaining the
+former hub at `.rnw-hub-backups/1.2.0-1793954729662799455`; Windows wheel SHA-256
+`03b93af98275afb93c3066356734255e4b053fe9decf73891cb28700f75a7005`. The source-run Tauri window was
+rebuilt (`npx tauri build --no-bundle --ci`). Candidates C and D stay installed. No playset, save or
+preference edit; no EU5 launch or control by the agent. NOT GAME VALIDATED.
+
 2026-11-06, **1.2.0 development / pending epoch 61 — goals candidate D** (all of D29: N6–N9 and every
 item of the plan's §22.4: adapted vanilla chains, naming choices, the fantasy layer, missions; keys
 handed out by the key space). [V-EXEC] Installed **`mod/rnw_exp_world_3ccciukst2`** ("History 1.2

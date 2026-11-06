@@ -824,12 +824,15 @@ development set (144 starts, 48 sweeps); the evidence and every adjustment are i
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
 D29 (N6–N9) feeds no history input ([plan §22.4](history-plan.md#224-scope-and-cut-order)),
 so that calibration stands. Q4 gates as written (plan D30). Step 2: the source of
-commit `b36915f` is frozen, source SHA-256 `6b98e55d…e56f010`, in the ignored
+commit `e60b77e` is frozen, source SHA-256 `96706763…1b4587`, in the ignored
 `local_data/history-120/r6/heldout-freeze.json` (written by `freeze.py` beside it,
-which refuses a second freeze). `matrix.py heldout` and `evaluate.py heldout`
-refuse any other source. Later commits that touch only documentation keep the hash.
-The hub 1.2.0 installed on 2026-11-06 was built from this source; reinstall it only
-if the source changes.
+which refuses a second freeze). It supersedes the freeze of `b36915f`, kept beside it,
+because D31 changed the opinions before any held-out run: the whole development matrix
+was rerun on the new opinions (`R6_OUT=dev-d31`, all fourteen checks pass), and the 48
+Varied starts of the final source equal that rerun. `matrix.py heldout` and
+`evaluate.py heldout` refuse any other source. Later commits that touch only
+documentation keep the hash. The hub installed on 2026-11-06 after D31 was built from
+this source; reinstall it only if the source changes.
 
 R6 is long batch work, meant for a separate agent. The scripts are in the ignored
 `local_data/history-120/r6/`. Run from the repository root, in the foreground, with
