@@ -9,13 +9,17 @@ import pytest
 
 from rnw.colonial_names import GROUPS_DIR, LANGUAGES_DIR, NAMES_FILE, TRADITIONS
 from rnw.content import (
+    CONFEDERATION_COUNCIL,
+    DECLINING_CENTRE,
     EMPIRE_PERIPHERY,
     GREAT_ALLIANCE,
     HARVEST,
+    POSTCOLONIAL_FEDERATION,
     RIVER_CENTRE,
     RIVER_UNION,
     ROUTE_MARKET,
     SACRED_CENTRE,
+    SENIOR_PARTNER,
     Absence,
     ContentPlan,
     Facts,
@@ -74,13 +78,7 @@ RANKS = (
     "rank_county = { level = 1 }\nrank_duchy = { level = 2 }\n"
     "rank_kingdom = { level = 3 }\nrank_empire = { level = 4 }\n"
 )
-PICTURES = (
-    "ce_checky_15_points.dds",
-    "ce_mountain.dds",
-    "ce_anchor_shield.dds",
-    "ce_rosette_06.dds",
-    "ce_star_08.dds",
-)
+PICTURES = tuple(spec.emblem for spec in FORMATION_SPECS)
 BUILDING = """great_temple_of_tenochtitlan = {
 \tmax_levels = 7
 \tmodifier = {
@@ -112,6 +110,8 @@ def _static(name: str, category: str, decaying: bool, effect: str) -> str:  # no
 def _sources() -> dict[str, tuple[str, bool, str]]:
     """A synthetic vanilla source for every static modifier any story or formable copies."""
     found = dict(SOURCES)
+    for spec in FORMATION_SPECS:
+        _ = found.setdefault(spec.modifier.source.name, (spec.modifier.category, False, "x = 1"))
     for story in STORIES:
         for modifier in story.modifiers:
             if modifier.source.kind == STATIC:
@@ -304,7 +304,7 @@ def test_the_texts_are_written_in_every_language_from_its_catalog(tmp_path: Path
     assert turkish["XYZ"] == "Alto Birliği"
     assert turkish["rnw_union_1_f"] == "$XYZ$"
     assert "Alto Birliği" in turkish["rnw_union_1_f_desc"]
-    assert len(STORIES) == len({story.family for story in STORIES}) == 8
+    assert len(STORIES) == len({story.family for story in STORIES}) == 12
 
 
 def test_facts_come_from_the_parts_of_a_world() -> None:
@@ -338,13 +338,17 @@ def _everything() -> ContentPlan:
         (ROUTE_MARKET, "DDD", "loc_d", "loc_e"),
         (GREAT_ALLIANCE, "EEE", "loc_f", "loc_g"),
         (EMPIRE_PERIPHERY, "FFF", "loc_h", "loc_i"),
+        (DECLINING_CENTRE, "GGG", "loc_j", ""),
+        (CONFEDERATION_COUNCIL, "HHH", "loc_k", ""),
+        (SENIOR_PARTNER, "III", "loc_l", "loc_m"),
     )
+    nation = Formation(POSTCOLONIAL_FEDERATION, 0, ("loc_a", "loc_b"), (), (), "loc_a")
     return ContentPlan(
         tuple(
             Opportunity(family, tag, centre, Start(1350 + number, 1395 + number, 3), other)
             for number, (family, tag, centre, other) in enumerate(spec)
         ),
-        (),
+        (nation,),
         (),
     )
 
@@ -367,7 +371,10 @@ def test_every_story_family_is_written_with_its_own_start(tmp_path: Path) -> Non
     for story in STORIES:  # the planned families and the ones that find their bearers in play
         assert f"in_game/events/{story.namespace}.txt" in files, story.family
     starts = _starts_by_tag(files[START_FILE].decode("utf-8-sig"))
-    assert set(starts) == {"AAA", "BBB", "CCC", "DDD", "EEE", "FFF"}
+    assert set(starts) == {"AAA", "BBB", "CCC", "DDD", "EEE", "FFF", "GGG", "HHH", "III"}
+    nation = files[FORMABLES_FILE].decode("utf-8-sig")
+    assert "set_variable = { name = rnw_nation_centre value = scope:home_place }" in nation
+    assert "trigger_event_non_silently = { id = rnw_nation.1 }" in nation
     route = starts["DDD"]
     assert "name = rnw_route_from value = location:loc_d" in route
     assert "name = rnw_route_to value = location:loc_e" in route
@@ -389,7 +396,10 @@ def test_every_modifier_of_every_story_is_written_once_in_the_modifiers_file(
     modifiers = parse(files[MODIFIERS_FILE].decode("utf-8-sig"))
     written = [entry.key for entry in modifiers.entries if entry.key]
     wanted = [modifier.name for story in STORIES for modifier in story.modifiers]
-    assert sorted(written) == sorted(wanted)
+    founded = [
+        spec.modifier.name for spec in FORMATION_SPECS if spec.family == POSTCOLONIAL_FEDERATION
+    ]
+    assert sorted(written) == sorted([*wanted, *founded])
     assert len(written) == len(set(written))
     english = files[f"{LOCALIZATION}/english/rnw_story_l_english.yml"].decode("utf-8-sig")
     for name in wanted:

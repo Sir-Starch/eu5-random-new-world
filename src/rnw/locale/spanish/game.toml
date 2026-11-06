@@ -1457,3 +1457,259 @@ text = '''Ley de la corona restaurada'''
 ["rnw_reform_restored_crown_desc"]
 source = "4d83a205137e54bb"
 text = '''La corona restaurada recupera los antiguos derechos de sus predecesores y gobierna de nuevo desde una sola sede.'''
+
+["rnw_decline.1.title"]
+source = "3dd1b7659844a1e4"
+text = '''El ocaso de [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.1.desc"]
+source = "c5fae87ab12e8259"
+text = '''[target_location.GetNameWithNoTooltip] fue antaño la sede de un reino que gobernaba todos los valles de alrededor. El reino se rompió hace mucho. Sus grandes patios están medio vacíos, los barrios exteriores vuelven a ser bosque y las familias que los habitaban se marchan a ciudades más jóvenes.\n\nLos ancianos de la ciudad preguntan si volverá a ser grande, o solo segura.'''
+
+["rnw_decline.1.a"]
+source = "ebec51f47bb012d8"
+text = '''Reconstruir los viejos patios y llamar a las familias de vuelta.'''
+
+["rnw_decline.1.b"]
+source = "2822afffd76cf9be"
+text = '''Amurallar el corazón de la ciudad y dejar ir el resto.'''
+
+["rnw_decline.2.title"]
+source = "f07c4c037a05e3eb"
+text = '''Una nueva edad dorada'''
+
+["rnw_decline.2.desc"]
+source = "fe3cb50f1780e463"
+text = '''Los patios de [target_location.GetNameWithNoTooltip] vuelven a estar llenos. Los artesanos trabajan en las viejas terrazas y los peregrinos acuden a ver lo que construyeron los antepasados. Algunos en la corte dicen que la ciudad debería ahora guiar la tierra como antaño.'''
+
+["rnw_decline.2.a"]
+source = "52923b04d9eac118"
+text = '''Que la ciudad vuelva a guiar.'''
+
+["rnw_decline.2.b"]
+source = "e221439368027a4b"
+text = '''Conformarse con la ciudad restaurada.'''
+
+["rnw_decline.3.title"]
+source = "c2c80a4020d94373"
+text = '''La sombra sobre [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.3.desc"]
+source = "9088c57e95aede13"
+text = '''Tras sus nuevas murallas, [target_location.GetNameWithNoTooltip] está a salvo, y es más pequeña cada año. Los barrios vacíos de fuera se han vuelto campos y matorrales, y los viajeros hablan de la ciudad como de una ruina con guarnición.'''
+
+["rnw_decline.3.a"]
+source = "6e51bbc634b77e3d"
+text = '''Las murallas valieron la pena.'''
+
+["rnw_decline.3.b"]
+source = "a49ba0633c7d61c0"
+text = '''Invitar a colonos a los barrios vacíos.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_rebuilding"]
+source = "ed85686f202140d9"
+text = '''Reconstrucción de los viejos patios'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_rebuilding"]
+source = "e9c2af8b2b9fc5fc"
+text = '''Canteros y familias regresan a los patios de la antigua sede.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_fortified"]
+source = "78040151a1a67f82"
+text = '''El corazón amurallado'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_fortified"]
+source = "57cf3f4fa3374287"
+text = '''El corazón de la antigua sede está amurallado y guarnecido.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_golden_age"]
+source = "145441a99b625ab8"
+text = '''La antigua sede vuelve a guiar'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_golden_age"]
+source = "cf3b7ff492ed1a96"
+text = '''La ciudad restaurada atrae artesanos, eruditos y tributos de toda la tierra.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_shadow"]
+source = "296709711159011b"
+text = '''Una ruina con guarnición'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_shadow"]
+source = "11a730ce7bb2fe79"
+text = '''Los viajeros hablan de la antigua sede como de una sombra de lo que fue.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_resettled"]
+source = "8274df482f4588de"
+text = '''Colonos en los barrios vacíos'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_resettled"]
+source = "5ea7a09878b27a82"
+text = '''Nuevas familias llenan los barrios vacíos de la antigua sede.'''
+
+["rnw_council.1.title"]
+source = "b4e7094533513141"
+text = '''El Gran Consejo'''
+
+["rnw_council.1.desc"]
+source = "e8fa63c6638665fc"
+text = '''Los jefes de todos los pueblos de nuestra confederación se han reunido en [target_location.GetNameWithNoTooltip] para el Gran Consejo. Según la vieja ley, nada se decide hasta que todos estén de acuerdo, y este año tienen mucho en que ponerse de acuerdo.\n\nNuestro propio jefe puede dejar que el consejo hable con una sola voz pausada, o hablar el primero y más alto.'''
+
+["rnw_council.1.a"]
+source = "0503a3f754419f6f"
+text = '''Que el consejo decida en común.'''
+
+["rnw_council.1.b"]
+source = "3d0cadb02d62b4d3"
+text = '''Nuestra voz guiará el consejo.'''
+
+["rnw_council.2.title"]
+source = "bdd492090bb9debb"
+text = '''Una nueva delegación'''
+
+["rnw_council.2.desc"]
+source = "c98b72faac08d982"
+text = '''Un pueblo de más allá de nuestras fronteras ha enviado una delegación al consejo de [target_location.GetNameWithNoTooltip]. Sus enviados piden sentarse entre los jefes y guardar la ley de la confederación como propia.'''
+
+["rnw_council.2.a"]
+source = "567fa5f1e3a6044d"
+text = '''Dadles un sitio junto al fuego.'''
+
+["rnw_council.2.b"]
+source = "9471fe0792fa23db"
+text = '''El consejo está completo.'''
+
+["rnw_council.3.title"]
+source = "874b725a727a0a9b"
+text = '''Los jefes están enojados'''
+
+["rnw_council.3.desc"]
+source = "5c3955cce944b26b"
+text = '''Los jefes a quienes se cortó la palabra en el consejo han vuelto de [target_location.GetNameWithNoTooltip] llenos de ira. Algunos hablan de abandonar la confederación.'''
+
+["rnw_council.3.a"]
+source = "c44abb77c015f05c"
+text = '''Enviar regalos a cada jefe.'''
+
+["rnw_council.3.b"]
+source = "514be8b6eec366bf"
+text = '''Su enojo pasará.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_peace"]
+source = "4315d2c7eee55c49"
+text = '''Una sola voz del consejo'''
+
+["STATIC_MODIFIER_DESC_rnw_council_peace"]
+source = "2d412c8f4e3f1d44"
+text = '''Los jefes deciden juntos, despacio, y sus pueblos cumplen lo que deciden.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_assertive"]
+source = "44e0dd172a716cae"
+text = '''Un consejo desoído'''
+
+["STATIC_MODIFIER_DESC_rnw_council_assertive"]
+source = "c126f271e8ab388a"
+text = '''Nuestro jefe habla por el consejo, y los demás jefes se lo reprochan.'''
+
+["rnw_senior.1.title"]
+source = "8a0392279a2c60ed"
+text = '''El equilibrio de la alianza'''
+
+["rnw_senior.1.desc"]
+source = "c60827cfe5e974c4"
+text = '''Durante una generación nuestra corte y sus aliados se han mantenido unidos, y ningún vecino se ha atrevido a ponerlos a prueba. Ahora nuestra corte es la más fuerte de todas, y nuestros nobles preguntan por qué el botín de cada guerra debe repartirse a partes iguales con [target_country.GetName].'''
+
+["rnw_senior.1.a"]
+source = "a42b01208b4b1ada"
+text = '''Ocuparemos el primer lugar entre nuestros aliados.'''
+
+["rnw_senior.1.b"]
+source = "5300de972d911391"
+text = '''Estuvimos juntos como iguales, y así seguiremos.'''
+
+["rnw_senior.2.title"]
+source = "aada9ff26807d3c0"
+text = '''El socio menor protesta'''
+
+["rnw_senior.2.desc"]
+source = "56f863fcfc28ea25"
+text = '''Enviados de [target_country.GetName] recuerdan a nuestra corte que sus guerreros sangraron junto a los nuestros. Piden una parte igual del tributo, o reconsiderarán la alianza.'''
+
+["rnw_senior.2.a"]
+source = "57b81bcae2e47aef"
+text = '''Dadles su parte del tributo.'''
+
+["rnw_senior.2.b"]
+source = "2e41afb4ddc50636"
+text = '''Nos necesitan más que nosotros a ellos.'''
+
+["rnw_senior.3.title"]
+source = "f33618a6e39b1ac4"
+text = '''Regalos entre iguales'''
+
+["rnw_senior.3.desc"]
+source = "31a432876c7d6948"
+text = '''La corte de [target_country.GetName] ha enviado regalos para honrar la vieja alianza, y espera a ver qué enviará la nuestra a cambio.'''
+
+["rnw_senior.3.a"]
+source = "eebec55c40a0fd41"
+text = '''Devolver regalos aún más ricos.'''
+
+["rnw_senior.3.b"]
+source = "8c56d76df18a23e8"
+text = '''Bastará con nuestro agradecimiento.'''
+
+["rnw_nation.1.title"]
+source = "be38d247de5f8725"
+text = '''La asamblea de los delegados'''
+
+["rnw_nation.1.desc"]
+source = "454f7eca77815ade"
+text = '''Los delegados de todas las ciudades de la nueva nación se han reunido en [target_location.GetNameWithNoTooltip] para decidir cómo se gobernará. Unos quieren una república de ciudades libres; otros dicen que una nación joven necesita una corona que la mantenga unida.'''
+
+["rnw_nation.1.a"]
+source = "dac2a7edd2cc8b83"
+text = '''Una república de ciudades libres.'''
+
+["rnw_nation.1.b"]
+source = "7ab2b89252812153"
+text = '''Una corona que mantenga unida a la nación.'''
+
+["rnw_nation.2.title"]
+source = "16ff1ee78d2287cd"
+text = '''La ordenanza de la frontera'''
+
+["rnw_nation.2.desc"]
+source = "837b55fe72b75d71"
+text = '''La asamblea de [target_location.GetNameWithNoTooltip] debe decidir qué será de la tierra más allá de la costa poblada. Los agrimensores quieren medirla, venderla y unirla con caminos; otros dicen que pertenece a los pueblos que viven allí.'''
+
+["rnw_nation.2.a"]
+source = "a66b4892ba0f52a4"
+text = '''Medir la frontera y abrir caminos en ella.'''
+
+["rnw_nation.2.b"]
+source = "d89dfe8abb0da82d"
+text = '''Dejar la frontera a sus pueblos.'''
+
+["rnw_nation.3.title"]
+source = "e0d3ebbd474754be"
+text = '''Una corona para la nación'''
+
+["rnw_nation.3.desc"]
+source = "b44240c9bf06e2fa"
+text = '''Los delegados han elegido una corona, y la nueva corte de [target_location.GetNameWithNoTooltip] debe decidir a quién recompensa: a los fundadores de las ciudades o a las viejas familias que llegaron del otro lado del mar.'''
+
+["rnw_nation.3.a"]
+source = "a8122d8c264b7555"
+text = '''Recompensar a los fundadores de las ciudades.'''
+
+["rnw_nation.3.b"]
+source = "08d05dbcb8725972"
+text = '''Honrar a las viejas familias.'''
+
+["STATIC_MODIFIER_NAME_rnw_nation_roads"]
+source = "69bccd5fa130c0bd"
+text = '''Caminos hacia la frontera'''
+
+["STATIC_MODIFIER_DESC_rnw_nation_roads"]
+source = "671d8ac3385e6289"
+text = '''Agrimensores y constructores de caminos llevan los caminos de la nación más allá de la costa poblada.'''

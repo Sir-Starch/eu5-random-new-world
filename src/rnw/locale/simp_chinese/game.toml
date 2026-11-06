@@ -1457,3 +1457,259 @@ text = '''复兴王冠之法'''
 ["rnw_reform_restored_crown_desc"]
 source = "4d83a205137e54bb"
 text = '''复兴的王冠收回其先代的旧日权利，再次从同一座王座上进行统治。'''
+
+["rnw_decline.1.title"]
+source = "3dd1b7659844a1e4"
+text = '''[target_location.GetNameWithNoTooltip]的黄昏'''
+
+["rnw_decline.1.desc"]
+source = "c5fae87ab12e8259"
+text = '''[target_location.GetNameWithNoTooltip]曾是一个统治周围所有山谷的王国的都城。那个王国早已分崩离析。它宏伟的宫院半已空置，外城街区重归森林，守着那里的家族纷纷迁往更年轻的城镇。\n\n城中的长老们问道：这座城市是要再度伟大，还是只求安全？'''
+
+["rnw_decline.1.a"]
+source = "ebec51f47bb012d8"
+text = '''重建旧日宫院，召唤各家族归来。'''
+
+["rnw_decline.1.b"]
+source = "2822afffd76cf9be"
+text = '''为城市中心筑起城墙，其余之地任其荒废。'''
+
+["rnw_decline.2.title"]
+source = "f07c4c037a05e3eb"
+text = '''新的黄金时代'''
+
+["rnw_decline.2.desc"]
+source = "fe3cb50f1780e463"
+text = '''[target_location.GetNameWithNoTooltip]的宫院再度人头攒动。工匠们在古老的台地上劳作，朝圣者前来瞻仰先祖的营造。宫中有人说，这座城市如今应当像从前那样引领这片土地。'''
+
+["rnw_decline.2.a"]
+source = "52923b04d9eac118"
+text = '''让这座城市再度引领。'''
+
+["rnw_decline.2.b"]
+source = "e221439368027a4b"
+text = '''城市得以重建，便已足够。'''
+
+["rnw_decline.3.title"]
+source = "c2c80a4020d94373"
+text = '''笼罩[target_location.GetNameWithNoTooltip]的阴影'''
+
+["rnw_decline.3.desc"]
+source = "9088c57e95aede13"
+text = '''在新城墙之后，[target_location.GetNameWithNoTooltip]安全无虞，却一年比一年小。墙外空荡的街区变成了田地与灌丛，旅人们说起这座城，只道是一座有驻军的废墟。'''
+
+["rnw_decline.3.a"]
+source = "6e51bbc634b77e3d"
+text = '''这些城墙值得。'''
+
+["rnw_decline.3.b"]
+source = "a49ba0633c7d61c0"
+text = '''招揽移民入住空置的街区。'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_rebuilding"]
+source = "ed85686f202140d9"
+text = '''重建旧日宫院'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_rebuilding"]
+source = "e9c2af8b2b9fc5fc"
+text = '''石匠与家族纷纷回到旧都的宫院。'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_fortified"]
+source = "78040151a1a67f82"
+text = '''城墙环绕的中心'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_fortified"]
+source = "57cf3f4fa3374287"
+text = '''旧都的中心已筑起城墙，并有驻军把守。'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_golden_age"]
+source = "145441a99b625ab8"
+text = '''旧都再度领航'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_golden_age"]
+source = "cf3b7ff492ed1a96"
+text = '''重生的城市从整片土地上吸引来工匠、学者与贡赋。'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_shadow"]
+source = "296709711159011b"
+text = '''有驻军的废墟'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_shadow"]
+source = "11a730ce7bb2fe79"
+text = '''旅人们说起旧都，只道它是昔日辉煌的一抹残影。'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_resettled"]
+source = "8274df482f4588de"
+text = '''空置街区的移民'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_resettled"]
+source = "5ea7a09878b27a82"
+text = '''新的家族住满了旧都空置的街区。'''
+
+["rnw_council.1.title"]
+source = "b4e7094533513141"
+text = '''大议会'''
+
+["rnw_council.1.desc"]
+source = "e8fa63c6638665fc"
+text = '''我们邦联中各民族的酋长齐聚[target_location.GetNameWithNoTooltip]，召开大议会。依照古老的法度，未经所有人同意，任何事都不能决定；而今年，他们有许多事需要达成一致。\n\n我们的酋长可以让议会以一个缓慢的声音说话，也可以抢先发言，且声音最响。'''
+
+["rnw_council.1.a"]
+source = "0503a3f754419f6f"
+text = '''让议会共同决定。'''
+
+["rnw_council.1.b"]
+source = "3d0cadb02d62b4d3"
+text = '''我们的声音将主导议会。'''
+
+["rnw_council.2.title"]
+source = "bdd492090bb9debb"
+text = '''新的代表团'''
+
+["rnw_council.2.desc"]
+source = "c98b72faac08d982"
+text = '''我们边境之外的一个民族向[target_location.GetNameWithNoTooltip]的议会派来了代表团。他们的使节请求在酋长之间获得一席之地，并将邦联的法度奉为己法。'''
+
+["rnw_council.2.a"]
+source = "567fa5f1e3a6044d"
+text = '''在火堆旁给他们留个座位。'''
+
+["rnw_council.2.b"]
+source = "9471fe0792fa23db"
+text = '''议会已无空位。'''
+
+["rnw_council.3.title"]
+source = "874b725a727a0a9b"
+text = '''酋长们被激怒了'''
+
+["rnw_council.3.desc"]
+source = "5c3955cce944b26b"
+text = '''在议会上被打断发言的酋长们怒气冲冲地离开了[target_location.GetNameWithNoTooltip]。其中一些人扬言要退出邦联。'''
+
+["rnw_council.3.a"]
+source = "c44abb77c015f05c"
+text = '''给每位酋长送去礼物。'''
+
+["rnw_council.3.b"]
+source = "514be8b6eec366bf"
+text = '''他们的怒气会过去的。'''
+
+["STATIC_MODIFIER_NAME_rnw_council_peace"]
+source = "4315d2c7eee55c49"
+text = '''议会的同一个声音'''
+
+["STATIC_MODIFIER_DESC_rnw_council_peace"]
+source = "2d412c8f4e3f1d44"
+text = '''酋长们共同而缓慢地做出决定，他们的人民则恪守所决之事。'''
+
+["STATIC_MODIFIER_NAME_rnw_council_assertive"]
+source = "44e0dd172a716cae"
+text = '''被凌驾的议会'''
+
+["STATIC_MODIFIER_DESC_rnw_council_assertive"]
+source = "c126f271e8ab388a"
+text = '''我们的酋长代议会发言，其他酋长对此心怀不满。'''
+
+["rnw_senior.1.title"]
+source = "8a0392279a2c60ed"
+text = '''同盟的均势'''
+
+["rnw_senior.1.desc"]
+source = "c60827cfe5e974c4"
+text = '''一代人以来，我们的宫廷与盟友并肩而立，没有哪个邻国敢于试探。如今我们的宫廷是其中最强的，贵族们问道：为何每场战争的战利品都要与[target_country.GetName]平分？'''
+
+["rnw_senior.1.a"]
+source = "a42b01208b4b1ada"
+text = '''我们将居于盟友之首。'''
+
+["rnw_senior.1.b"]
+source = "5300de972d911391"
+text = '''我们曾以平等之身并肩而立，今后亦将如此。'''
+
+["rnw_senior.2.title"]
+source = "aada9ff26807d3c0"
+text = '''小盟友的抗议'''
+
+["rnw_senior.2.desc"]
+source = "56f863fcfc28ea25"
+text = '''[target_country.GetName]的使节提醒我们的宫廷，他们的战士曾与我们的战士并肩流血。他们要求平分贡赋，否则就要重新考虑这份同盟。'''
+
+["rnw_senior.2.a"]
+source = "57b81bcae2e47aef"
+text = '''把他们那份贡赋给他们。'''
+
+["rnw_senior.2.b"]
+source = "2e41afb4ddc50636"
+text = '''他们需要我们，胜过我们需要他们。'''
+
+["rnw_senior.3.title"]
+source = "f33618a6e39b1ac4"
+text = '''平等者之间的礼物'''
+
+["rnw_senior.3.desc"]
+source = "31a432876c7d6948"
+text = '''[target_country.GetName]的宫廷送来礼物，以表对旧日同盟的敬意，并等着看我们回赠什么。'''
+
+["rnw_senior.3.a"]
+source = "eebec55c40a0fd41"
+text = '''回赠更丰厚的礼物。'''
+
+["rnw_senior.3.b"]
+source = "8c56d76df18a23e8"
+text = '''我们的谢意就够了。'''
+
+["rnw_nation.1.title"]
+source = "be38d247de5f8725"
+text = '''代表大会'''
+
+["rnw_nation.1.desc"]
+source = "454f7eca77815ade"
+text = '''新国家各个城镇的代表齐聚[target_location.GetNameWithNoTooltip]，商议如何治理国家。有人希望建立一个由自由城镇组成的共和国；也有人说，一个年轻的国家需要一顶王冠来凝聚人心。'''
+
+["rnw_nation.1.a"]
+source = "dac2a7edd2cc8b83"
+text = '''一个由自由城镇组成的共和国。'''
+
+["rnw_nation.1.b"]
+source = "7ab2b89252812153"
+text = '''一顶凝聚国家的王冠。'''
+
+["rnw_nation.2.title"]
+source = "16ff1ee78d2287cd"
+text = '''边疆法令'''
+
+["rnw_nation.2.desc"]
+source = "837b55fe72b75d71"
+text = '''[target_location.GetNameWithNoTooltip]的议会必须决定，已开拓海岸之外的土地将何去何从。测量员想要丈量、出售这些土地，并用道路将其连通；也有人说，这些土地属于生活在那里的民族。'''
+
+["rnw_nation.2.a"]
+source = "a66b4892ba0f52a4"
+text = '''丈量边疆，修路深入其中。'''
+
+["rnw_nation.2.b"]
+source = "d89dfe8abb0da82d"
+text = '''把边疆留给那里的民族。'''
+
+["rnw_nation.3.title"]
+source = "e0d3ebbd474754be"
+text = '''为国家加冕'''
+
+["rnw_nation.3.desc"]
+source = "b44240c9bf06e2fa"
+text = '''代表们选择了王冠，[target_location.GetNameWithNoTooltip]的新宫廷必须决定要奖赏谁：是城镇的创建者，还是从海那边来的旧家族。'''
+
+["rnw_nation.3.a"]
+source = "a8122d8c264b7555"
+text = '''奖赏城镇的创建者。'''
+
+["rnw_nation.3.b"]
+source = "08d05dbcb8725972"
+text = '''礼遇旧家族。'''
+
+["STATIC_MODIFIER_NAME_rnw_nation_roads"]
+source = "69bccd5fa130c0bd"
+text = '''通往边疆的道路'''
+
+["STATIC_MODIFIER_DESC_rnw_nation_roads"]
+source = "671d8ac3385e6289"
+text = '''测量员与筑路工人把国家的道路延伸到已开拓的海岸之外。'''

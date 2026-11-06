@@ -947,6 +947,11 @@ unlock-only reforms (`potential` with `has_unlocked_government_reform_trigger`,
 `country_modifier`, `years`), opened by `unlock_government_reform_effect`; the
 modifier lines are copied from the installed vanilla reform at generation time.
 
+The adapted chains use the story writer's existing interfaces; the council iterates its
+confederation's members with `random_international_organization` (`leader_country`,
+as `colonial_federation_events.txt`) and `every_international_organization_member`,
+and the nation's assembly uses `change_government_type`, as `INC_f` does.
+
 N9 adds `in_game/events/rnw_memory.txt`: country events started by vanilla's
 `dynamic_historical_event` (as the stories already are), with `add_core`,
 `add_opinion`, `add_prestige` and `add_stability` and vanilla values; the export

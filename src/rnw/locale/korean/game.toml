@@ -1457,3 +1457,259 @@ text = '''되살아난 왕관의 법'''
 ["rnw_reform_restored_crown_desc"]
 source = "4d83a205137e54bb"
 text = '''되살아난 왕관은 선대의 옛 권리를 되찾고 다시 하나의 자리에서 다스립니다.'''
+
+["rnw_decline.1.title"]
+source = "3dd1b7659844a1e4"
+text = '''[target_location.GetNameWithNoTooltip]의 황혼'''
+
+["rnw_decline.1.desc"]
+source = "c5fae87ab12e8259"
+text = '''[target_location.GetNameWithNoTooltip]은(는) 한때 주변의 모든 골짜기를 다스린 왕국의 도읍이었습니다. 그 왕국은 오래전에 갈라졌습니다. 웅장한 궁정은 반쯤 비었고, 바깥 구역은 숲으로 돌아가며, 그곳을 지키던 가문들은 더 젊은 도시로 떠나고 있습니다.\n\n도시의 원로들은 이곳이 다시 위대해질 것인지, 아니면 그저 안전하기만 하면 되는지 묻습니다.'''
+
+["rnw_decline.1.a"]
+source = "ebec51f47bb012d8"
+text = '''옛 궁정을 재건하고 가문들을 다시 불러들입니다.'''
+
+["rnw_decline.1.b"]
+source = "2822afffd76cf9be"
+text = '''도시의 중심부에 성벽을 두르고 나머지는 버립니다.'''
+
+["rnw_decline.2.title"]
+source = "f07c4c037a05e3eb"
+text = '''새로운 황금기'''
+
+["rnw_decline.2.desc"]
+source = "fe3cb50f1780e463"
+text = '''[target_location.GetNameWithNoTooltip]의 궁정이 다시 가득 찼습니다. 장인들은 옛 계단식 터에서 일하고, 순례자들은 조상들이 세운 것을 보러 찾아옵니다. 궁정의 일부는 이제 이 도시가 예전처럼 땅을 이끌어야 한다고 말합니다.'''
+
+["rnw_decline.2.a"]
+source = "52923b04d9eac118"
+text = '''도시가 다시 이끌게 합시다.'''
+
+["rnw_decline.2.b"]
+source = "e221439368027a4b"
+text = '''도시가 되살아난 것으로 만족합시다.'''
+
+["rnw_decline.3.title"]
+source = "c2c80a4020d94373"
+text = '''[target_location.GetNameWithNoTooltip]에 드리운 그림자'''
+
+["rnw_decline.3.desc"]
+source = "9088c57e95aede13"
+text = '''새 성벽 안에서 [target_location.GetNameWithNoTooltip]은(는) 안전하지만 해마다 작아집니다. 바깥의 빈 구역은 밭과 덤불이 되었고, 나그네들은 이 도시를 수비대가 있는 폐허라고 부릅니다.'''
+
+["rnw_decline.3.a"]
+source = "6e51bbc634b77e3d"
+text = '''성벽은 그만한 가치가 있었습니다.'''
+
+["rnw_decline.3.b"]
+source = "a49ba0633c7d61c0"
+text = '''빈 구역에 정착민을 불러들입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_rebuilding"]
+source = "ed85686f202140d9"
+text = '''옛 궁정의 재건'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_rebuilding"]
+source = "e9c2af8b2b9fc5fc"
+text = '''석공과 가문들이 옛 도읍의 궁정으로 돌아옵니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_fortified"]
+source = "78040151a1a67f82"
+text = '''성벽에 둘러싸인 심장부'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_fortified"]
+source = "57cf3f4fa3374287"
+text = '''옛 도읍의 심장부에 성벽이 둘러지고 수비대가 주둔합니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_golden_age"]
+source = "145441a99b625ab8"
+text = '''옛 도읍이 다시 이끌다'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_golden_age"]
+source = "cf3b7ff492ed1a96"
+text = '''되살아난 도시가 온 땅에서 장인과 학자와 공물을 끌어모읍니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_shadow"]
+source = "296709711159011b"
+text = '''수비대가 있는 폐허'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_shadow"]
+source = "11a730ce7bb2fe79"
+text = '''나그네들은 옛 도읍을 지난날의 그림자라 부릅니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_resettled"]
+source = "8274df482f4588de"
+text = '''빈 구역의 정착민'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_resettled"]
+source = "5ea7a09878b27a82"
+text = '''새 가문들이 옛 도읍의 빈 구역을 채웁니다.'''
+
+["rnw_council.1.title"]
+source = "b4e7094533513141"
+text = '''대회의'''
+
+["rnw_council.1.desc"]
+source = "e8fa63c6638665fc"
+text = '''우리 연맹에 속한 모든 민족의 족장들이 대회의를 위해 [target_location.GetNameWithNoTooltip]에 모였습니다. 옛 법에 따르면 모두가 동의하기 전에는 아무것도 결정되지 않으며, 올해는 합의할 일이 많습니다.\n\n우리 족장은 회의가 하나의 느린 목소리로 말하게 둘 수도, 스스로 가장 먼저 가장 크게 말할 수도 있습니다.'''
+
+["rnw_council.1.a"]
+source = "0503a3f754419f6f"
+text = '''회의가 함께 결정하게 합시다.'''
+
+["rnw_council.1.b"]
+source = "3d0cadb02d62b4d3"
+text = '''우리의 목소리가 회의를 이끌 것입니다.'''
+
+["rnw_council.2.title"]
+source = "bdd492090bb9debb"
+text = '''새로운 사절단'''
+
+["rnw_council.2.desc"]
+source = "c98b72faac08d982"
+text = '''우리 국경 너머의 한 민족이 [target_location.GetNameWithNoTooltip]의 회의에 사절단을 보냈습니다. 그 사절들은 족장들 사이에 자리를 얻고 연맹의 법을 자신들의 법으로 지키게 해 달라고 청합니다.'''
+
+["rnw_council.2.a"]
+source = "567fa5f1e3a6044d"
+text = '''그들에게 불가의 자리를 내어 줍시다.'''
+
+["rnw_council.2.b"]
+source = "9471fe0792fa23db"
+text = '''회의에는 더 이상 자리가 없습니다.'''
+
+["rnw_council.3.title"]
+source = "874b725a727a0a9b"
+text = '''분노한 족장들'''
+
+["rnw_council.3.desc"]
+source = "5c3955cce944b26b"
+text = '''회의에서 말을 끊긴 족장들이 분노하며 [target_location.GetNameWithNoTooltip]을(를) 떠나 돌아갔습니다. 그중 몇몇은 연맹을 떠나겠다고 말합니다.'''
+
+["rnw_council.3.a"]
+source = "c44abb77c015f05c"
+text = '''모든 족장에게 선물을 보냅니다.'''
+
+["rnw_council.3.b"]
+source = "514be8b6eec366bf"
+text = '''그들의 분노는 지나갈 것입니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_peace"]
+source = "4315d2c7eee55c49"
+text = '''회의의 한 목소리'''
+
+["STATIC_MODIFIER_DESC_rnw_council_peace"]
+source = "2d412c8f4e3f1d44"
+text = '''족장들은 함께, 천천히 결정하고, 그 백성은 결정된 바를 지킵니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_assertive"]
+source = "44e0dd172a716cae"
+text = '''무시당한 회의'''
+
+["STATIC_MODIFIER_DESC_rnw_council_assertive"]
+source = "c126f271e8ab388a"
+text = '''우리 족장이 회의를 대변하고, 다른 족장들은 그것을 못마땅해합니다.'''
+
+["rnw_senior.1.title"]
+source = "8a0392279a2c60ed"
+text = '''동맹의 균형'''
+
+["rnw_senior.1.desc"]
+source = "c60827cfe5e974c4"
+text = '''한 세대 동안 우리 궁정과 그 동맹들은 함께 섰고, 어떤 이웃도 감히 그들을 시험하지 못했습니다. 이제 우리 궁정이 그 누구보다 강하며, 우리 귀족들은 어째서 모든 전쟁의 전리품을 [target_country.GetName]와(과) 똑같이 나눠야 하느냐고 묻습니다.'''
+
+["rnw_senior.1.a"]
+source = "a42b01208b4b1ada"
+text = '''우리가 동맹들 가운데 으뜸 자리를 차지할 것입니다.'''
+
+["rnw_senior.1.b"]
+source = "5300de972d911391"
+text = '''우리는 대등하게 함께 섰고, 앞으로도 그러할 것입니다.'''
+
+["rnw_senior.2.title"]
+source = "aada9ff26807d3c0"
+text = '''하위 동맹의 항의'''
+
+["rnw_senior.2.desc"]
+source = "56f863fcfc28ea25"
+text = '''[target_country.GetName]의 사절들은 그들의 전사들이 우리 전사들 곁에서 피를 흘렸음을 우리 궁정에 상기시킵니다. 그들은 공물의 동등한 몫을 요구하며, 그렇지 않으면 동맹을 다시 생각하겠다고 합니다.'''
+
+["rnw_senior.2.a"]
+source = "57b81bcae2e47aef"
+text = '''그들에게 공물의 몫을 줍시다.'''
+
+["rnw_senior.2.b"]
+source = "2e41afb4ddc50636"
+text = '''그들이 우리를 필요로 하는 것이 우리가 그들을 필요로 하는 것보다 큽니다.'''
+
+["rnw_senior.3.title"]
+source = "f33618a6e39b1ac4"
+text = '''대등한 이들 사이의 선물'''
+
+["rnw_senior.3.desc"]
+source = "31a432876c7d6948"
+text = '''[target_country.GetName]의 궁정이 옛 동맹을 기리며 선물을 보내왔고, 우리 궁정이 무엇을 답례로 보낼지 기다리고 있습니다.'''
+
+["rnw_senior.3.a"]
+source = "eebec55c40a0fd41"
+text = '''더 풍성한 선물로 답례합니다.'''
+
+["rnw_senior.3.b"]
+source = "8c56d76df18a23e8"
+text = '''감사의 말로 충분합니다.'''
+
+["rnw_nation.1.title"]
+source = "be38d247de5f8725"
+text = '''대표자 회의'''
+
+["rnw_nation.1.desc"]
+source = "454f7eca77815ade"
+text = '''새 국가의 모든 도시에서 온 대표자들이 나라를 어떻게 다스릴지 정하기 위해 [target_location.GetNameWithNoTooltip]에 모였습니다. 어떤 이들은 자유 도시들의 공화국을 원하고, 다른 이들은 젊은 나라를 하나로 묶으려면 왕관이 필요하다고 말합니다.'''
+
+["rnw_nation.1.a"]
+source = "dac2a7edd2cc8b83"
+text = '''자유 도시들의 공화국입니다.'''
+
+["rnw_nation.1.b"]
+source = "7ab2b89252812153"
+text = '''나라를 하나로 묶을 왕관입니다.'''
+
+["rnw_nation.2.title"]
+source = "16ff1ee78d2287cd"
+text = '''변경 조례'''
+
+["rnw_nation.2.desc"]
+source = "837b55fe72b75d71"
+text = '''[target_location.GetNameWithNoTooltip]의 의회는 정착된 해안 너머의 땅을 어떻게 할지 정해야 합니다. 측량사들은 그 땅을 측량해 팔고 길로 잇고자 하지만, 다른 이들은 그 땅이 그곳에 사는 민족들의 것이라고 말합니다.'''
+
+["rnw_nation.2.a"]
+source = "a66b4892ba0f52a4"
+text = '''변경을 측량하고 그곳으로 길을 냅니다.'''
+
+["rnw_nation.2.b"]
+source = "d89dfe8abb0da82d"
+text = '''변경은 그곳의 민족들에게 맡깁니다.'''
+
+["rnw_nation.3.title"]
+source = "e0d3ebbd474754be"
+text = '''나라를 위한 왕관'''
+
+["rnw_nation.3.desc"]
+source = "b44240c9bf06e2fa"
+text = '''대표자들이 왕관을 택했고, [target_location.GetNameWithNoTooltip]의 새 궁정은 누구에게 보상할지 정해야 합니다. 도시들을 세운 이들입니까, 아니면 바다 건너에서 온 옛 가문들입니까?'''
+
+["rnw_nation.3.a"]
+source = "a8122d8c264b7555"
+text = '''도시들을 세운 이들에게 보상합니다.'''
+
+["rnw_nation.3.b"]
+source = "08d05dbcb8725972"
+text = '''옛 가문들을 예우합니다.'''
+
+["STATIC_MODIFIER_NAME_rnw_nation_roads"]
+source = "69bccd5fa130c0bd"
+text = '''변경으로 가는 길'''
+
+["STATIC_MODIFIER_DESC_rnw_nation_roads"]
+source = "671d8ac3385e6289"
+text = '''측량사와 도로 건설자들이 나라의 길을 정착된 해안 너머로 넓혀 갑니다.'''

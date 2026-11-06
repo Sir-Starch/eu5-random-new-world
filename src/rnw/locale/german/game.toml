@@ -1457,3 +1457,259 @@ text = '''Gesetz der wiedererstandenen Krone'''
 ["rnw_reform_restored_crown_desc"]
 source = "4d83a205137e54bb"
 text = '''Die wiedererstandene Krone nimmt die alten Rechte ihrer Vorgänger zurück und herrscht wieder von einem Sitz aus.'''
+
+["rnw_decline.1.title"]
+source = "3dd1b7659844a1e4"
+text = '''Der Niedergang von [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.1.desc"]
+source = "c5fae87ab12e8259"
+text = '''[target_location.GetNameWithNoTooltip] war einst der Sitz eines Reiches, das jedes Tal ringsum beherrschte. Das Reich zerfiel vor langer Zeit. Seine großen Höfe stehen halb leer, die äußeren Viertel werden wieder zu Wald, und die Familien, die sie bewohnten, ziehen in jüngere Städte.\n\nDie Ältesten der Stadt fragen, ob sie wieder groß werden soll oder nur sicher.'''
+
+["rnw_decline.1.a"]
+source = "ebec51f47bb012d8"
+text = '''Die alten Höfe wieder aufbauen und die Familien heimrufen.'''
+
+["rnw_decline.1.b"]
+source = "2822afffd76cf9be"
+text = '''Das Herz der Stadt ummauern und den Rest aufgeben.'''
+
+["rnw_decline.2.title"]
+source = "f07c4c037a05e3eb"
+text = '''Ein neues Goldenes Zeitalter'''
+
+["rnw_decline.2.desc"]
+source = "fe3cb50f1780e463"
+text = '''Die Höfe von [target_location.GetNameWithNoTooltip] sind wieder voll. Handwerker arbeiten auf den alten Terrassen, und Pilger kommen, um zu sehen, was die Ahnen erbaut haben. Manche am Hof sagen, die Stadt solle das Land nun wieder führen wie einst.'''
+
+["rnw_decline.2.a"]
+source = "52923b04d9eac118"
+text = '''Die Stadt soll wieder führen.'''
+
+["rnw_decline.2.b"]
+source = "e221439368027a4b"
+text = '''Es genügt, dass die Stadt wiederhergestellt ist.'''
+
+["rnw_decline.3.title"]
+source = "c2c80a4020d94373"
+text = '''Der Schatten über [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.3.desc"]
+source = "9088c57e95aede13"
+text = '''Hinter seinen neuen Mauern ist [target_location.GetNameWithNoTooltip] sicher und jedes Jahr kleiner. Die leeren Viertel draußen sind zu Feldern und Dickicht geworden, und Reisende sprechen von der Stadt wie von einer Ruine mit Besatzung.'''
+
+["rnw_decline.3.a"]
+source = "6e51bbc634b77e3d"
+text = '''Die Mauern waren es wert.'''
+
+["rnw_decline.3.b"]
+source = "a49ba0633c7d61c0"
+text = '''Siedler in die leeren Viertel einladen.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_rebuilding"]
+source = "ed85686f202140d9"
+text = '''Wiederaufbau der alten Höfe'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_rebuilding"]
+source = "e9c2af8b2b9fc5fc"
+text = '''Steinmetze und Familien kehren in die Höfe des alten Sitzes zurück.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_fortified"]
+source = "78040151a1a67f82"
+text = '''Das ummauerte Herz'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_fortified"]
+source = "57cf3f4fa3374287"
+text = '''Das Herz des alten Sitzes ist ummauert und besetzt.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_golden_age"]
+source = "145441a99b625ab8"
+text = '''Der alte Sitz führt wieder'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_golden_age"]
+source = "cf3b7ff492ed1a96"
+text = '''Die wiederhergestellte Stadt zieht Handwerker, Gelehrte und Tribut aus dem ganzen Land an.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_shadow"]
+source = "296709711159011b"
+text = '''Eine Ruine mit Besatzung'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_shadow"]
+source = "11a730ce7bb2fe79"
+text = '''Reisende sprechen vom alten Sitz als einem Schatten dessen, was er war.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_resettled"]
+source = "8274df482f4588de"
+text = '''Siedler in den leeren Vierteln'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_resettled"]
+source = "5ea7a09878b27a82"
+text = '''Neue Familien füllen die leeren Viertel des alten Sitzes.'''
+
+["rnw_council.1.title"]
+source = "b4e7094533513141"
+text = '''Der Große Rat'''
+
+["rnw_council.1.desc"]
+source = "e8fa63c6638665fc"
+text = '''Die Häuptlinge aller Völker unserer Konföderation haben sich in [target_location.GetNameWithNoTooltip] zum Großen Rat versammelt. Nach dem alten Gesetz wird nichts entschieden, bevor alle zustimmen, und in diesem Jahr gibt es viel, worüber sie sich einigen müssen.\n\nUnser eigener Häuptling kann den Rat mit einer langsamen Stimme sprechen lassen oder selbst zuerst und am lautesten sprechen.'''
+
+["rnw_council.1.a"]
+source = "0503a3f754419f6f"
+text = '''Der Rat soll gemeinsam entscheiden.'''
+
+["rnw_council.1.b"]
+source = "3d0cadb02d62b4d3"
+text = '''Unsere Stimme wird den Rat führen.'''
+
+["rnw_council.2.title"]
+source = "bdd492090bb9debb"
+text = '''Eine neue Abordnung'''
+
+["rnw_council.2.desc"]
+source = "c98b72faac08d982"
+text = '''Ein Volk jenseits unserer Grenzen hat eine Abordnung zum Rat in [target_location.GetNameWithNoTooltip] geschickt. Seine Gesandten bitten um einen Platz unter den Häuptlingen und darum, das Gesetz der Konföderation als ihr eigenes zu halten.'''
+
+["rnw_council.2.a"]
+source = "567fa5f1e3a6044d"
+text = '''Gebt ihnen einen Platz am Feuer.'''
+
+["rnw_council.2.b"]
+source = "9471fe0792fa23db"
+text = '''Der Rat ist voll.'''
+
+["rnw_council.3.title"]
+source = "874b725a727a0a9b"
+text = '''Die Häuptlinge sind erzürnt'''
+
+["rnw_council.3.desc"]
+source = "5c3955cce944b26b"
+text = '''Die Häuptlinge, denen im Rat das Wort abgeschnitten wurde, sind im Zorn aus [target_location.GetNameWithNoTooltip] heimgekehrt. Einige von ihnen sprechen davon, die Konföderation zu verlassen.'''
+
+["rnw_council.3.a"]
+source = "c44abb77c015f05c"
+text = '''Jedem Häuptling Geschenke senden.'''
+
+["rnw_council.3.b"]
+source = "514be8b6eec366bf"
+text = '''Ihr Zorn wird vergehen.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_peace"]
+source = "4315d2c7eee55c49"
+text = '''Eine Stimme des Rates'''
+
+["STATIC_MODIFIER_DESC_rnw_council_peace"]
+source = "2d412c8f4e3f1d44"
+text = '''Die Häuptlinge entscheiden gemeinsam und langsam, und ihre Völker halten, was sie beschließen.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_assertive"]
+source = "44e0dd172a716cae"
+text = '''Ein übergangener Rat'''
+
+["STATIC_MODIFIER_DESC_rnw_council_assertive"]
+source = "c126f271e8ab388a"
+text = '''Unser Häuptling spricht für den Rat, und die anderen Häuptlinge nehmen es übel.'''
+
+["rnw_senior.1.title"]
+source = "8a0392279a2c60ed"
+text = '''Das Gleichgewicht des Bündnisses'''
+
+["rnw_senior.1.desc"]
+source = "c60827cfe5e974c4"
+text = '''Eine Generation lang standen unser Hof und seine Verbündeten zusammen, und kein Nachbar wagte, sie zu prüfen. Nun ist unser Hof der stärkste von allen, und unser Adel fragt, warum die Beute jedes Krieges zu gleichen Teilen mit [target_country.GetName] geteilt werden soll.'''
+
+["rnw_senior.1.a"]
+source = "a42b01208b4b1ada"
+text = '''Wir nehmen den ersten Platz unter unseren Verbündeten ein.'''
+
+["rnw_senior.1.b"]
+source = "5300de972d911391"
+text = '''Wir standen als Gleiche zusammen, und so bleibt es.'''
+
+["rnw_senior.2.title"]
+source = "aada9ff26807d3c0"
+text = '''Der jüngere Partner protestiert'''
+
+["rnw_senior.2.desc"]
+source = "56f863fcfc28ea25"
+text = '''Gesandte von [target_country.GetName] erinnern unseren Hof daran, dass ihre Krieger an der Seite der unseren geblutet haben. Sie verlangen einen gleichen Anteil am Tribut, sonst werden sie das Bündnis überdenken.'''
+
+["rnw_senior.2.a"]
+source = "57b81bcae2e47aef"
+text = '''Gebt ihnen ihren Anteil am Tribut.'''
+
+["rnw_senior.2.b"]
+source = "2e41afb4ddc50636"
+text = '''Sie brauchen uns mehr als wir sie.'''
+
+["rnw_senior.3.title"]
+source = "f33618a6e39b1ac4"
+text = '''Geschenke unter Gleichen'''
+
+["rnw_senior.3.desc"]
+source = "31a432876c7d6948"
+text = '''Der Hof von [target_country.GetName] hat Geschenke zu Ehren des alten Bündnisses gesandt und wartet, was der unsere zurückschickt.'''
+
+["rnw_senior.3.a"]
+source = "eebec55c40a0fd41"
+text = '''Reichere Geschenke zurücksenden.'''
+
+["rnw_senior.3.b"]
+source = "8c56d76df18a23e8"
+text = '''Unser Dank genügt.'''
+
+["rnw_nation.1.title"]
+source = "be38d247de5f8725"
+text = '''Versammlung der Delegierten'''
+
+["rnw_nation.1.desc"]
+source = "454f7eca77815ade"
+text = '''Delegierte aller Städte der neuen Nation haben sich in [target_location.GetNameWithNoTooltip] versammelt, um zu entscheiden, wie sie regiert werden soll. Manche wollen eine Republik freier Städte; andere sagen, eine junge Nation brauche eine Krone, die sie zusammenhält.'''
+
+["rnw_nation.1.a"]
+source = "dac2a7edd2cc8b83"
+text = '''Eine Republik freier Städte.'''
+
+["rnw_nation.1.b"]
+source = "7ab2b89252812153"
+text = '''Eine Krone, die die Nation zusammenhält.'''
+
+["rnw_nation.2.title"]
+source = "16ff1ee78d2287cd"
+text = '''Die Grenzlandverordnung'''
+
+["rnw_nation.2.desc"]
+source = "837b55fe72b75d71"
+text = '''Die Versammlung in [target_location.GetNameWithNoTooltip] muss entscheiden, was aus dem Land jenseits der besiedelten Küste wird. Landmesser wollen es vermessen, verkaufen und mit Straßen verbinden; andere sagen, es gehöre den Völkern, die dort leben.'''
+
+["rnw_nation.2.a"]
+source = "a66b4892ba0f52a4"
+text = '''Das Grenzland vermessen und Straßen hineinbauen.'''
+
+["rnw_nation.2.b"]
+source = "d89dfe8abb0da82d"
+text = '''Das Grenzland seinen Völkern lassen.'''
+
+["rnw_nation.3.title"]
+source = "e0d3ebbd474754be"
+text = '''Eine Krone für die Nation'''
+
+["rnw_nation.3.desc"]
+source = "b44240c9bf06e2fa"
+text = '''Die Delegierten haben sich für eine Krone entschieden, und der neue Hof in [target_location.GetNameWithNoTooltip] muss entscheiden, wen er belohnt: die Gründer der Städte oder die alten Familien, die übers Meer kamen.'''
+
+["rnw_nation.3.a"]
+source = "a8122d8c264b7555"
+text = '''Die Gründer der Städte belohnen.'''
+
+["rnw_nation.3.b"]
+source = "08d05dbcb8725972"
+text = '''Die alten Familien ehren.'''
+
+["STATIC_MODIFIER_NAME_rnw_nation_roads"]
+source = "69bccd5fa130c0bd"
+text = '''Straßen ins Grenzland'''
+
+["STATIC_MODIFIER_DESC_rnw_nation_roads"]
+source = "671d8ac3385e6289"
+text = '''Landmesser und Straßenbauer führen die Straßen der Nation über die besiedelte Küste hinaus.'''

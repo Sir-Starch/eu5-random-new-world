@@ -69,6 +69,20 @@ def direct_effect(line: str, story: Story) -> str:  # noqa: PLR0911 - one per sc
         line,
     ):
         return f"mutual opinion with partner: `{match[1]}` (vanilla modifier)"
+    if match := re.fullmatch(
+        r"random_international_organization = \{ limit = \{ international_organization_type = "
+        r"international_organization_type:tribal_confederation leader_country = root \} "
+        r"every_international_organization_member = \{ limit = \{ NOT = \{ this = root \} \} "
+        r"add_opinion = \{ target = root modifier = (\w+) \} \} \}",
+        line,
+    ):
+        return f"every other member of the confederation: opinion `{match[1]}` of us"
+    if match := re.fullmatch(
+        r"if = \{ limit = \{ NOT = \{ government_type = government_type:(\w+) \} \} "
+        r"change_government_type = government_type:\1 \}",
+        line,
+    ):
+        return f"become a {match[1]} (vanilla `change_government_type`), unless already one"
     if line == "set_variable = { name = rnw_sacred_privilege_open value = 1 }":
         return "unlock the High Priesthood of the Shrine estate privilege"
     if line == "remove_variable = rnw_sacred_privilege_open":

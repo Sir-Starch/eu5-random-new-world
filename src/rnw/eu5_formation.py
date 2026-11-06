@@ -39,6 +39,7 @@ from rnw.formations import (
 )
 from rnw.game_texts import Described, Text, formation_description
 from rnw.rng import derive_seed
+from rnw.stories_heritage import founding, nation
 from rnw.wording import Phrase
 
 if TYPE_CHECKING:
@@ -301,6 +302,11 @@ def restoration_events(pairs: Sequence[tuple[Formation, Identity]]) -> str:
     return "".join(out)
 
 
+def _founding() -> str:
+    """The founder of a nation begins its founding story (``stories_heritage.nation``)."""
+    return _indented(founding(nation()), 2)
+
+
 def _unlock(spec: Spec) -> str:
     """The family's reform opens to the founder (vanilla's ``unlock_government_reform_effect``)."""
     if spec.reform is None:
@@ -338,6 +344,7 @@ def block(formation: Formation, identity: Identity) -> str:
         f"{_cores(formation) if spec.cores else ''}"
         f"{_renaming(identity.tag) if spec.renamed else ''}"
         f"{_summons(formation) if spec.heirs else ''}"
+        f"{_founding() if spec.founds else ''}"
         "\t}\n"
         "}\n"
     )

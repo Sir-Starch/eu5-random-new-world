@@ -1,6 +1,6 @@
 # Dynamic content catalogue
 
-What RNW adds to a campaign: **8 story families (32 visible events and 72 choices),
+What RNW adds to a campaign: **12 story families (44 visible events and 96 choices),
 7 families of formable countries, colonial naming traditions and 5 kinds of
 exceptional resource places**. This catalogue describes implemented content, with
 spoilers. The [complete reference](content-reference.md) lists every event title,
@@ -46,6 +46,10 @@ The country must still own the centre when the start event fires; the road story
 also requires both endpoints. The exact window, country and location are in that
 world's hidden start event. [V-EXEC C409]
 
+The declining centre, confederation council and senior partner (1.2.0) are assigned
+the same way, from the recorded history; the founding of a nation starts when a
+nation of a colonial shore is formed, at its capital. [V-EXEC]
+
 **Contact** and **Colony** instead find participants during play through the yearly
 country pulse. Contact has a **4% yearly start chance** and **60-year cooldown**;
 Colony has **6%** and **40 years**. Their conditions below must be met. These are
@@ -82,6 +86,10 @@ new ones after conquests. [V-EXEC C409]
 | [Empire and periphery](content-reference.md#empire_periphery) — **The Far Provinces** | A state with subjects, paired with its most distant subject capital; at most 2 | Send governors, then rotate or retain them; grant a local charter, then extend or revoke the precedent; settle heartland families, then include old families or favour settlers. These choices apply modifiers and political effects; they do not move populations or directly annex subjects. |
 | [Contact across the ocean](content-reference.md#contact) — **Strangers on the Shore** | During play: capital in America, native American culture, at least one port, a known country with an Old World capital, and not a colonial-nation subject | Welcome envoys and later grant a trading house or restrict inland trade; allow one port, then keep or ease restrictions; raise coastal levies, then demobilize or keep the watch. Port restrictions and trading houses are modifiers, not changes to port count or actual access rights. This is an encounter story, not a unique first-discovery detector. |
 | [Colony becomes a country](content-reference.md#colony) — **A Colonial Assembly** | During play: a `colonial_nation` subject with its capital in America | Petition for council seats, then buy or reject them; assert a local identity, then favour colonial or old-country law; demand self-government, then prepare militia or negotiate autonomy. These are opinion, legitimacy, stability and modifier effects: the story does not automatically start a war, grant independence, change culture or form a federation. |
+| [Declining centre](content-reference.md#declining_centre) — **The Sunset of X** (adapted from vanilla's Cahokia chain) | The seat of a realm the history divided, held by a state; at most 3 | Rebuild the old courts, then let the city lead again (*The Old Seat Leads Again*, the payload of `chk_new_golden_age`) or be content; or wall in its heart, then accept a ruin with a garrison or invite settlers into the empty quarters. |
+| [Confederation council](content-reference.md#confederation_council) — **The Grand Council** (adapted from vanilla's Haudenosaunee chain) | The largest member of a confederation at the start, while it leads one; at most 2 | Let the council decide together, then seat a new delegation or not; or lead the council (the other members think worse of us), then send gifts to the angered chiefs or wait. |
+| [Senior partner](content-reference.md#senior_partner) — **The Balance of the Alliance** (adapted from vanilla's Triple Alliance chain) | The strongest member of an alliance of three or more states, with its strongest ally as the junior partner; at most 2 | Take the first place among the allies, then share the tribute or refuse; or remain equals, then answer gifts with richer ones or with thanks. Effects are prestige, gold and mutual opinions. |
+| [Founding of a nation](content-reference.md#nation_founding) — **Assembly of the Delegates** (adapted from vanilla's United States chain) | Started by the formation of a nation of a colonial shore, at its capital | Choose a republic or a crown (vanilla's `change_government_type`, unless it already is one); a republic then surveys the frontier with roads (`usa_postal_roads_expansion`) or leaves it to its peoples; a crown rewards the founders or the old families. |
 
 The sacred story's **Great Temple** is a location modifier, not a new buildable
 temple. **High Priesthood of the Shrine** is an available clergy privilege,

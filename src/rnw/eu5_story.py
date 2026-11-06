@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Final
 
 from rnw import colonial_names, eu5_formation, eu5_goals, eu5_memories
 from rnw.content import (
+    NATION_FOUNDING,
     ContentPlan,
     Facts,
     HistoricalFacts,
@@ -29,7 +30,7 @@ from rnw.content import (
     Place,
     State,
 )
-from rnw.formations import SPECS, Reform
+from rnw.formations import BY_FAMILY, SPECS, Reform
 from rnw.game_texts import Text, localize
 from rnw.memory_texts import EVENT_FILE as MEMORY_FILE
 from rnw.pdx import Block, parse
@@ -293,6 +294,8 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     files: dict[str, bytes] = {}
     texts: dict[str, Entry] = {}
     present = {opportunity.family for opportunity in plan.opportunities}
+    if any(BY_FAMILY[formation.family].founds for formation in plan.formations):
+        present.add(NATION_FOUNDING)
     stories = [story for story in STORIES if story.pulse is not None or story.family in present]
     modifiers: list[str] = []
     privileges: list[str] = []

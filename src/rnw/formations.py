@@ -109,6 +109,7 @@ class Spec:
     cores: bool = True
     renamed: bool = False
     heirs: bool = False
+    founds: bool = False
     reform: Reform | None = None
 
     @property
@@ -309,6 +310,7 @@ SPECS: Final[tuple[Spec, ...]] = (
             ),
         ),
         renamed=True,
+        founds=True,
     ),
     Spec(
         family=NEW_WORLD_EMPIRE,

@@ -37,6 +37,13 @@ HARVEST: Final[str] = "harvest"
 ROUTE_MARKET: Final[str] = "route_market"
 GREAT_ALLIANCE: Final[str] = "great_alliance"
 EMPIRE_PERIPHERY: Final[str] = "empire_periphery"
+# Vanilla American chains adapted to generated facts (history plan §22, N9): the declining
+# centre (Cahokia), the council of a confederation (the Haudenosaunee Grand Council), the senior
+# partner of an alliance (the Triple Alliance), the founding of a nation (the United States).
+DECLINING_CENTRE: Final[str] = "declining_centre"
+CONFEDERATION_COUNCIL: Final[str] = "confederation_council"
+SENIOR_PARTNER: Final[str] = "senior_partner"
+NATION_FOUNDING: Final[str] = "nation_founding"
 RIVER_UNION: Final[str] = "river_union"
 HIGHLAND_CONFEDERATION: Final[str] = "highland_confederation"
 MARITIME_LEAGUE: Final[str] = "maritime_league"
@@ -52,6 +59,10 @@ STORY_FAMILIES: Final[tuple[str, ...]] = (
     ROUTE_MARKET,
     GREAT_ALLIANCE,
     EMPIRE_PERIPHERY,
+    DECLINING_CENTRE,
+    CONFEDERATION_COUNCIL,
+    SENIOR_PARTNER,
+    NATION_FOUNDING,
 )
 FORMABLE_FAMILIES: Final[tuple[str, ...]] = (
     RIVER_UNION,
@@ -85,6 +96,11 @@ MAX_HARVESTS: Final[int] = 3
 MAX_ROUTES: Final[int] = 3
 MAX_ALLIANCES: Final[int] = 3
 MAX_EMPIRES: Final[int] = 2
+MAX_DECLINES: Final[int] = 3
+MAX_COUNCILS: Final[int] = 2
+MAX_SENIORS: Final[int] = 2
+# A senior partner leads an alliance group of at least this many countries (the Triple Alliance).
+ALLIANCE_GROUP: Final[int] = 3
 # A harvest story is about a centre among the most populous (this percentile of the states'
 # places) or on high ground, where the land around cannot easily feed it.
 HUNGRY_CUTOFF: Final[int] = 90
@@ -252,6 +268,8 @@ class HistoricalFacts:
     dependencies: Mapping[tuple[str, str], str]
     contacts: frozenset[tuple[str, str]]
     fallen: tuple[Fallen, ...] = ()
+    confederations: tuple[tuple[str, ...], ...] = ()
+    alliances: frozenset[tuple[str, str]] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -569,6 +587,76 @@ def alliances(facts: Facts, seed: int) -> dict[str, str]:
         for mine, theirs in found.items()
         if not (found.get(theirs) == mine and seated[mine] > seated[theirs])
     }
+
+
+def declining_centres(facts: Facts) -> dict[str, str]:
+    """The seats of the fallen realms that a state holds, each with the cause of the fall."""
+    if facts.history is None:
+        return {}
+    return {
+        realm.seat: realm.cause
+        for realm in facts.history.fallen
+        if realm.seat in facts.places and facts.places[realm.seat].owner in facts.states
+    }
+
+
+def _size(facts: Facts) -> dict[str, int]:
+    held: dict[str, int] = {}
+    for place in facts.places.values():
+        held[place.owner] = held.get(place.owner, 0) + 1
+    return held
+
+
+def councils(facts: Facts) -> list[Place]:
+    """The capital of the largest member of each confederation, which the game makes its leader
+    by size (the story asks for the lead in play)."""
+    if facts.history is None:
+        return []
+    held = _size(facts)
+    found: list[Place] = []
+    for members in facts.history.confederations:
+        states = [tag for tag in members if tag in facts.states]
+        if not states:
+            continue
+        leader = max(states, key=lambda tag: (held.get(tag, 0), tag))
+        capital = facts.places.get(facts.states[leader].capital)
+        if capital is not None and capital.owner == leader:
+            found.append(capital)
+    return found
+
+
+def seniors(facts: Facts) -> dict[str, str]:
+    """For the capital of the strongest member of an alliance group of ``ALLIANCE_GROUP`` states
+    or more, the capital of its strongest ally (the junior partner of the story)."""
+    if facts.history is None:
+        return {}
+    allies: dict[str, set[str]] = {}
+    for first, second in facts.history.alliances:
+        if first in facts.states and second in facts.states:
+            allies.setdefault(first, set()).add(second)
+            allies.setdefault(second, set()).add(first)
+    held = _size(facts)
+    seen: set[str] = set()
+    found: dict[str, str] = {}
+    for start in sorted(allies):
+        if start in seen:
+            continue
+        group, frontier = {start}, [start]
+        while frontier:
+            for other in allies[frontier.pop()]:
+                if other not in group:
+                    group.add(other)
+                    frontier.append(other)
+        seen |= group
+        if len(group) < ALLIANCE_GROUP:
+            continue
+        senior = max(group, key=lambda tag: (held.get(tag, 0), tag))
+        junior = max(allies[senior], key=lambda tag: (held.get(tag, 0), tag))
+        mine = facts.places.get(facts.states[senior].capital)
+        theirs = facts.places.get(facts.states[junior].capital)
+        if mine is not None and theirs is not None and mine.owner == senior:
+            found[mine.key] = theirs.key
+    return found
 
 
 def peripheries(facts: Facts) -> dict[str, str]:
@@ -983,6 +1071,32 @@ def plan_content(facts: Facts, seed: int) -> ContentPlan:
             claim=False,
         ),
         "no state holds subjects",
+    )
+    fallen = declining_centres(facts)
+    declines = _chosen(
+        seed, DECLINING_CENTRE, [facts.places[key] for key in fallen], MAX_DECLINES, tally
+    )
+    stories.extend(replace(item, history_causes=(fallen[item.centre],)) for item in declines)
+    if not declines:
+        absences.append(Absence(DECLINING_CENTRE, "no state holds the seat of a fallen realm"))
+    take(
+        CONFEDERATION_COUNCIL,
+        _chosen(seed, CONFEDERATION_COUNCIL, councils(facts), MAX_COUNCILS, tally, claim=False),
+        "no confederation of states was formed",
+    )
+    partners = seniors(facts)
+    take(
+        SENIOR_PARTNER,
+        _chosen(
+            seed,
+            SENIOR_PARTNER,
+            [facts.places[key] for key in partners],
+            MAX_SENIORS,
+            tally,
+            others=partners,
+            claim=False,
+        ),
+        f"no alliance joins {ALLIANCE_GROUP} states",
     )
     formable: list[Formation] = []
     for family in FORMABLE_FAMILIES:

@@ -25,6 +25,12 @@
   realm, nation or restoration weighs wars on the holders of its territory higher (from the
   second age; realms from the age of discovery).
 
+- Adapt four of the game's American chains to generated worlds: the decline of a fallen
+  realm's old seat (from Cahokia), the Grand Council of a confederation (from the
+  Haudenosaunee), the balance of an alliance of three (from the Triple Alliance) and the
+  assembly that decides how a new nation is governed (from the United States), with the
+  original chains' modifiers copied under the new stories' names.
+
 - Bring the recorded past back as events: a country may remember the land it lost, an old
   pact, kin who settled across the border, a shrine it visits under another's peace, or, as
   an heir, the realm its people once shared, and choose what to do about it (a core on the

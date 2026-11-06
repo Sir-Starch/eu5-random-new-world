@@ -74,6 +74,8 @@ def facts(plan: FinalStartPlan) -> HistoricalFacts | None:
         dependencies,
         frozenset((route.first, route.second) for route in history.geography.routes),
         fallen(plan, tags),
+        plan.confederations,
+        frozenset((min(a, b), max(a, b)) for a, b in plan.alliances),
     )
 
 

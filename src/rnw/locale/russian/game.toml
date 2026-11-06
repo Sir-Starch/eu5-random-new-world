@@ -1457,3 +1457,259 @@ text = '''Закон возрождённой короны'''
 ["rnw_reform_restored_crown_desc"]
 source = "4d83a205137e54bb"
 text = '''Возрождённая корона возвращает себе прежние права предшественников и снова правит из одного престола.'''
+
+["rnw_decline.1.title"]
+source = "3dd1b7659844a1e4"
+text = '''Закат города [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.1.desc"]
+source = "c5fae87ab12e8259"
+text = '''Некогда город [target_location.GetNameWithNoTooltip] был престолом державы, правившей всеми окрестными долинами. Та держава давно распалась. Её великие дворы наполовину пусты, внешние кварталы зарастают лесом, а семьи, что держали их, уходят в молодые города.\n\nСтарейшины города спрашивают, станет ли он снова великим или только безопасным.'''
+
+["rnw_decline.1.a"]
+source = "ebec51f47bb012d8"
+text = '''Отстроить старые дворы и призвать семьи домой.'''
+
+["rnw_decline.1.b"]
+source = "2822afffd76cf9be"
+text = '''Обнести стенами сердце города, а остальное оставить.'''
+
+["rnw_decline.2.title"]
+source = "f07c4c037a05e3eb"
+text = '''Новый золотой век'''
+
+["rnw_decline.2.desc"]
+source = "fe3cb50f1780e463"
+text = '''Дворы города [target_location.GetNameWithNoTooltip] снова полны. Ремесленники трудятся на старых террасах, а паломники приходят посмотреть, что построили предки. Некоторые при дворе говорят, что город теперь должен вести землю, как прежде.'''
+
+["rnw_decline.2.a"]
+source = "52923b04d9eac118"
+text = '''Пусть город снова ведёт за собой.'''
+
+["rnw_decline.2.b"]
+source = "e221439368027a4b"
+text = '''Довольно и того, что город восстановлен.'''
+
+["rnw_decline.3.title"]
+source = "c2c80a4020d94373"
+text = '''Тень над городом [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.3.desc"]
+source = "9088c57e95aede13"
+text = '''За новыми стенами город [target_location.GetNameWithNoTooltip] в безопасности и с каждым годом всё меньше. Пустые кварталы снаружи стали полями и зарослями, а путники говорят о городе как о развалинах с гарнизоном.'''
+
+["rnw_decline.3.a"]
+source = "6e51bbc634b77e3d"
+text = '''Стены того стоили.'''
+
+["rnw_decline.3.b"]
+source = "a49ba0633c7d61c0"
+text = '''Пригласить поселенцев в пустые кварталы.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_rebuilding"]
+source = "ed85686f202140d9"
+text = '''Восстановление старых дворов'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_rebuilding"]
+source = "e9c2af8b2b9fc5fc"
+text = '''Каменщики и семьи возвращаются во дворы прежнего престола.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_fortified"]
+source = "78040151a1a67f82"
+text = '''Сердце за стенами'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_fortified"]
+source = "57cf3f4fa3374287"
+text = '''Сердце прежнего престола обнесено стенами и охраняется гарнизоном.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_golden_age"]
+source = "145441a99b625ab8"
+text = '''Прежний престол снова ведёт'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_golden_age"]
+source = "cf3b7ff492ed1a96"
+text = '''Возрождённый город притягивает ремесленников, учёных и дань со всей земли.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_shadow"]
+source = "296709711159011b"
+text = '''Развалины с гарнизоном'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_shadow"]
+source = "11a730ce7bb2fe79"
+text = '''Путники говорят о прежнем престоле как о тени того, чем он был.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_resettled"]
+source = "8274df482f4588de"
+text = '''Поселенцы в пустых кварталах'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_resettled"]
+source = "5ea7a09878b27a82"
+text = '''Новые семьи заполняют пустые кварталы прежнего престола.'''
+
+["rnw_council.1.title"]
+source = "b4e7094533513141"
+text = '''Великий совет'''
+
+["rnw_council.1.desc"]
+source = "e8fa63c6638665fc"
+text = '''Вожди всех народов нашей конфедерации собрались в городе [target_location.GetNameWithNoTooltip] на Великий совет. По старому закону ничего не решается, пока все они не согласятся, а в этом году им есть о чём договариваться.\n\nНаш вождь может позволить совету говорить одним неторопливым голосом — или заговорить первым и громче всех.'''
+
+["rnw_council.1.a"]
+source = "0503a3f754419f6f"
+text = '''Пусть совет решает сообща.'''
+
+["rnw_council.1.b"]
+source = "3d0cadb02d62b4d3"
+text = '''Наш голос будет вести совет.'''
+
+["rnw_council.2.title"]
+source = "bdd492090bb9debb"
+text = '''Новая делегация'''
+
+["rnw_council.2.desc"]
+source = "c98b72faac08d982"
+text = '''Народ из-за наших границ прислал делегацию на совет в городе [target_location.GetNameWithNoTooltip]. Его посланники просят места среди вождей и права жить по закону конфедерации как по своему.'''
+
+["rnw_council.2.a"]
+source = "567fa5f1e3a6044d"
+text = '''Дать им место у огня.'''
+
+["rnw_council.2.b"]
+source = "9471fe0792fa23db"
+text = '''В совете нет больше мест.'''
+
+["rnw_council.3.title"]
+source = "874b725a727a0a9b"
+text = '''Вожди разгневаны'''
+
+["rnw_council.3.desc"]
+source = "5c3955cce944b26b"
+text = '''Вожди, которых оборвали на совете, в гневе разъехались из города [target_location.GetNameWithNoTooltip]. Некоторые из них поговаривают о том, чтобы покинуть конфедерацию.'''
+
+["rnw_council.3.a"]
+source = "c44abb77c015f05c"
+text = '''Послать дары каждому вождю.'''
+
+["rnw_council.3.b"]
+source = "514be8b6eec366bf"
+text = '''Их гнев пройдёт.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_peace"]
+source = "4315d2c7eee55c49"
+text = '''Единый голос совета'''
+
+["STATIC_MODIFIER_DESC_rnw_council_peace"]
+source = "2d412c8f4e3f1d44"
+text = '''Вожди решают сообща и неспешно, а их народы держатся решённого.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_assertive"]
+source = "44e0dd172a716cae"
+text = '''Совет, которым пренебрегли'''
+
+["STATIC_MODIFIER_DESC_rnw_council_assertive"]
+source = "c126f271e8ab388a"
+text = '''Наш вождь говорит за весь совет, и другие вожди возмущены этим.'''
+
+["rnw_senior.1.title"]
+source = "8a0392279a2c60ed"
+text = '''Равновесие союза'''
+
+["rnw_senior.1.desc"]
+source = "c60827cfe5e974c4"
+text = '''Целое поколение наш двор и его союзники стояли вместе, и ни один сосед не осмеливался испытать их. Теперь наш двор сильнее всех, и наша знать спрашивает, почему добычу каждой войны надо делить поровну с державой [target_country.GetName].'''
+
+["rnw_senior.1.a"]
+source = "a42b01208b4b1ada"
+text = '''Мы займём первое место среди союзников.'''
+
+["rnw_senior.1.b"]
+source = "5300de972d911391"
+text = '''Мы стояли вместе как равные — так и останется.'''
+
+["rnw_senior.2.title"]
+source = "aada9ff26807d3c0"
+text = '''Младший союзник протестует'''
+
+["rnw_senior.2.desc"]
+source = "56f863fcfc28ea25"
+text = '''Посланники державы [target_country.GetName] напоминают нашему двору, что их воины проливали кровь рядом с нашими. Они просят равной доли дани — иначе подумают о союзе заново.'''
+
+["rnw_senior.2.a"]
+source = "57b81bcae2e47aef"
+text = '''Отдать им их долю дани.'''
+
+["rnw_senior.2.b"]
+source = "2e41afb4ddc50636"
+text = '''Мы нужны им больше, чем они нам.'''
+
+["rnw_senior.3.title"]
+source = "f33618a6e39b1ac4"
+text = '''Дары между равными'''
+
+["rnw_senior.3.desc"]
+source = "31a432876c7d6948"
+text = '''Двор державы [target_country.GetName] прислал дары в честь старого союза и ждёт, что наш пошлёт в ответ.'''
+
+["rnw_senior.3.a"]
+source = "eebec55c40a0fd41"
+text = '''Ответить ещё более богатыми дарами.'''
+
+["rnw_senior.3.b"]
+source = "8c56d76df18a23e8"
+text = '''Хватит и нашей благодарности.'''
+
+["rnw_nation.1.title"]
+source = "be38d247de5f8725"
+text = '''Собрание делегатов'''
+
+["rnw_nation.1.desc"]
+source = "454f7eca77815ade"
+text = '''Делегаты всех городов новой нации собрались в городе [target_location.GetNameWithNoTooltip], чтобы решить, как ею править. Одни хотят республику вольных городов, другие говорят, что молодой нации нужна корона, чтобы держать её вместе.'''
+
+["rnw_nation.1.a"]
+source = "dac2a7edd2cc8b83"
+text = '''Республика вольных городов.'''
+
+["rnw_nation.1.b"]
+source = "7ab2b89252812153"
+text = '''Корона, что удержит нацию вместе.'''
+
+["rnw_nation.2.title"]
+source = "16ff1ee78d2287cd"
+text = '''Указ о фронтире'''
+
+["rnw_nation.2.desc"]
+source = "837b55fe72b75d71"
+text = '''Собрание в городе [target_location.GetNameWithNoTooltip] должно решить, что станет с землями за обжитым побережьем. Землемеры хотят обмерить их, распродать и связать дорогами; другие говорят, что они принадлежат народам, которые там живут.'''
+
+["rnw_nation.2.a"]
+source = "a66b4892ba0f52a4"
+text = '''Обмерить фронтир и проложить туда дороги.'''
+
+["rnw_nation.2.b"]
+source = "d89dfe8abb0da82d"
+text = '''Оставить фронтир его народам.'''
+
+["rnw_nation.3.title"]
+source = "e0d3ebbd474754be"
+text = '''Корона для нации'''
+
+["rnw_nation.3.desc"]
+source = "b44240c9bf06e2fa"
+text = '''Делегаты избрали корону, и новый двор в городе [target_location.GetNameWithNoTooltip] должен решить, кого он наградит: основателей городов или старые семьи, прибывшие из-за моря.'''
+
+["rnw_nation.3.a"]
+source = "a8122d8c264b7555"
+text = '''Наградить основателей городов.'''
+
+["rnw_nation.3.b"]
+source = "08d05dbcb8725972"
+text = '''Почтить старые семьи.'''
+
+["STATIC_MODIFIER_NAME_rnw_nation_roads"]
+source = "69bccd5fa130c0bd"
+text = '''Дороги на фронтир'''
+
+["STATIC_MODIFIER_DESC_rnw_nation_roads"]
+source = "671d8ac3385e6289"
+text = '''Землемеры и строители дорог ведут дороги нации за обжитое побережье.'''

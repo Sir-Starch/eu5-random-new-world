@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Final
 
 from rnw.stories_colonial import colony, contact
+from rnw.stories_heritage import council, decline, nation, senior
 from rnw.stories_n4 import alliance, empire, harvest, route
 from rnw.storymodel import (
     AFFORD,
@@ -411,4 +412,8 @@ STORIES: Final[tuple[Story, ...]] = (
     empire(),
     contact(),
     colony(),
+    decline(),
+    council(),
+    senior(),
+    nation(),
 )

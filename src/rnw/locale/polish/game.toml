@@ -1457,3 +1457,259 @@ text = '''Prawo odrodzonej korony'''
 ["rnw_reform_restored_crown_desc"]
 source = "4d83a205137e54bb"
 text = '''Odrodzona korona odzyskuje dawne prawa swoich poprzedników i znów rządzi z jednej stolicy.'''
+
+["rnw_decline.1.title"]
+source = "3dd1b7659844a1e4"
+text = '''Zmierzch miasta [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.1.desc"]
+source = "c5fae87ab12e8259"
+text = '''Miasto [target_location.GetNameWithNoTooltip] było niegdyś siedzibą królestwa, które rządziło wszystkimi okolicznymi dolinami. To królestwo dawno się rozpadło. Jego wielkie dwory stoją w połowie puste, zewnętrzne dzielnice zarasta las, a rodziny, które je zamieszkiwały, odchodzą do młodszych miast.\n\nStarszyzna miasta pyta, czy ma ono znów stać się wielkie, czy tylko bezpieczne.'''
+
+["rnw_decline.1.a"]
+source = "ebec51f47bb012d8"
+text = '''Odbudować dawne dwory i wezwać rodziny z powrotem.'''
+
+["rnw_decline.1.b"]
+source = "2822afffd76cf9be"
+text = '''Otoczyć murem serce miasta, a resztę porzucić.'''
+
+["rnw_decline.2.title"]
+source = "f07c4c037a05e3eb"
+text = '''Nowy złoty wiek'''
+
+["rnw_decline.2.desc"]
+source = "fe3cb50f1780e463"
+text = '''Dwory miasta [target_location.GetNameWithNoTooltip] znów są pełne. Rzemieślnicy pracują na dawnych tarasach, a pielgrzymi przychodzą zobaczyć, co zbudowali przodkowie. Niektórzy na dworze mówią, że miasto powinno teraz przewodzić krainie jak niegdyś.'''
+
+["rnw_decline.2.a"]
+source = "52923b04d9eac118"
+text = '''Niech miasto znów przewodzi.'''
+
+["rnw_decline.2.b"]
+source = "e221439368027a4b"
+text = '''Wystarczy, że miasto odbudowano.'''
+
+["rnw_decline.3.title"]
+source = "c2c80a4020d94373"
+text = '''Cień nad miastem [target_location.GetNameWithNoTooltip]'''
+
+["rnw_decline.3.desc"]
+source = "9088c57e95aede13"
+text = '''Za nowymi murami miasto [target_location.GetNameWithNoTooltip] jest bezpieczne i z każdym rokiem mniejsze. Puste dzielnice na zewnątrz stały się polami i zaroślami, a podróżni mówią o mieście jak o ruinie z załogą.'''
+
+["rnw_decline.3.a"]
+source = "6e51bbc634b77e3d"
+text = '''Mury były tego warte.'''
+
+["rnw_decline.3.b"]
+source = "a49ba0633c7d61c0"
+text = '''Zaprosić osadników do pustych dzielnic.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_rebuilding"]
+source = "ed85686f202140d9"
+text = '''Odbudowa dawnych dworów'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_rebuilding"]
+source = "e9c2af8b2b9fc5fc"
+text = '''Kamieniarze i rodziny wracają na dwory dawnej siedziby.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_fortified"]
+source = "78040151a1a67f82"
+text = '''Serce za murami'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_fortified"]
+source = "57cf3f4fa3374287"
+text = '''Serce dawnej siedziby otoczono murem i obsadzono załogą.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_golden_age"]
+source = "145441a99b625ab8"
+text = '''Dawna siedziba znów przewodzi'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_golden_age"]
+source = "cf3b7ff492ed1a96"
+text = '''Odbudowane miasto przyciąga rzemieślników, uczonych i daninę z całej krainy.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_shadow"]
+source = "296709711159011b"
+text = '''Ruina z załogą'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_shadow"]
+source = "11a730ce7bb2fe79"
+text = '''Podróżni mówią o dawnej siedzibie jak o cieniu tego, czym była.'''
+
+["STATIC_MODIFIER_NAME_rnw_decline_resettled"]
+source = "8274df482f4588de"
+text = '''Osadnicy w pustych dzielnicach'''
+
+["STATIC_MODIFIER_DESC_rnw_decline_resettled"]
+source = "5ea7a09878b27a82"
+text = '''Nowe rodziny wypełniają puste dzielnice dawnej siedziby.'''
+
+["rnw_council.1.title"]
+source = "b4e7094533513141"
+text = '''Wielka Rada'''
+
+["rnw_council.1.desc"]
+source = "e8fa63c6638665fc"
+text = '''Wodzowie wszystkich ludów naszej konfederacji zebrali się w miejscowości [target_location.GetNameWithNoTooltip] na Wielką Radę. Według dawnego prawa nic nie zostaje postanowione, dopóki wszyscy się nie zgodzą, a w tym roku mają wiele do uzgodnienia.\n\nNasz wódz może pozwolić radzie mówić jednym, powolnym głosem albo zabrać głos pierwszy i najgłośniej.'''
+
+["rnw_council.1.a"]
+source = "0503a3f754419f6f"
+text = '''Niech rada decyduje wspólnie.'''
+
+["rnw_council.1.b"]
+source = "3d0cadb02d62b4d3"
+text = '''Nasz głos poprowadzi radę.'''
+
+["rnw_council.2.title"]
+source = "bdd492090bb9debb"
+text = '''Nowa delegacja'''
+
+["rnw_council.2.desc"]
+source = "c98b72faac08d982"
+text = '''Lud zza naszych granic przysłał delegację na radę w miejscowości [target_location.GetNameWithNoTooltip]. Jego posłowie proszą o miejsce wśród wodzów i o prawo przestrzegania prawa konfederacji jak własnego.'''
+
+["rnw_council.2.a"]
+source = "567fa5f1e3a6044d"
+text = '''Dajcie im miejsce przy ogniu.'''
+
+["rnw_council.2.b"]
+source = "9471fe0792fa23db"
+text = '''W radzie nie ma już miejsc.'''
+
+["rnw_council.3.title"]
+source = "874b725a727a0a9b"
+text = '''Wodzowie są rozgniewani'''
+
+["rnw_council.3.desc"]
+source = "5c3955cce944b26b"
+text = '''Wodzowie, którym na radzie odebrano głos, rozjechali się w gniewie z miejscowości [target_location.GetNameWithNoTooltip]. Niektórzy mówią o opuszczeniu konfederacji.'''
+
+["rnw_council.3.a"]
+source = "c44abb77c015f05c"
+text = '''Wysłać dary każdemu wodzowi.'''
+
+["rnw_council.3.b"]
+source = "514be8b6eec366bf"
+text = '''Ich gniew minie.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_peace"]
+source = "4315d2c7eee55c49"
+text = '''Jeden głos rady'''
+
+["STATIC_MODIFIER_DESC_rnw_council_peace"]
+source = "2d412c8f4e3f1d44"
+text = '''Wodzowie decydują wspólnie i powoli, a ich ludy dotrzymują postanowień.'''
+
+["STATIC_MODIFIER_NAME_rnw_council_assertive"]
+source = "44e0dd172a716cae"
+text = '''Pominięta rada'''
+
+["STATIC_MODIFIER_DESC_rnw_council_assertive"]
+source = "c126f271e8ab388a"
+text = '''Nasz wódz mówi w imieniu rady, a inni wodzowie mają mu to za złe.'''
+
+["rnw_senior.1.title"]
+source = "8a0392279a2c60ed"
+text = '''Równowaga sojuszu'''
+
+["rnw_senior.1.desc"]
+source = "c60827cfe5e974c4"
+text = '''Przez całe pokolenie nasz dwór i jego sojusznicy stali razem i żaden sąsiad nie ośmielił się ich wypróbować. Teraz nasz dwór jest najsilniejszy ze wszystkich, a nasza szlachta pyta, czemu łupy każdej wojny mamy dzielić po równo z państwem [target_country.GetName].'''
+
+["rnw_senior.1.a"]
+source = "a42b01208b4b1ada"
+text = '''Zajmiemy pierwsze miejsce wśród sojuszników.'''
+
+["rnw_senior.1.b"]
+source = "5300de972d911391"
+text = '''Staliśmy razem jak równi i tak pozostanie.'''
+
+["rnw_senior.2.title"]
+source = "aada9ff26807d3c0"
+text = '''Młodszy sojusznik protestuje'''
+
+["rnw_senior.2.desc"]
+source = "56f863fcfc28ea25"
+text = '''Posłowie państwa [target_country.GetName] przypominają naszemu dworowi, że ich wojownicy przelewali krew u boku naszych. Proszą o równą część daniny, w przeciwnym razie przemyślą sojusz.'''
+
+["rnw_senior.2.a"]
+source = "57b81bcae2e47aef"
+text = '''Dajcie im ich część daniny.'''
+
+["rnw_senior.2.b"]
+source = "2e41afb4ddc50636"
+text = '''Potrzebują nas bardziej niż my ich.'''
+
+["rnw_senior.3.title"]
+source = "f33618a6e39b1ac4"
+text = '''Dary między równymi'''
+
+["rnw_senior.3.desc"]
+source = "31a432876c7d6948"
+text = '''Dwór państwa [target_country.GetName] przysłał dary na cześć dawnego sojuszu i czeka, co nasz dwór przyśle w zamian.'''
+
+["rnw_senior.3.a"]
+source = "eebec55c40a0fd41"
+text = '''Odwzajemnić się jeszcze bogatszymi darami.'''
+
+["rnw_senior.3.b"]
+source = "8c56d76df18a23e8"
+text = '''Wystarczy nasze podziękowanie.'''
+
+["rnw_nation.1.title"]
+source = "be38d247de5f8725"
+text = '''Zgromadzenie delegatów'''
+
+["rnw_nation.1.desc"]
+source = "454f7eca77815ade"
+text = '''Delegaci wszystkich miast nowego narodu zebrali się w miejscowości [target_location.GetNameWithNoTooltip], by zdecydować, jak ma być rządzony. Jedni chcą republiki wolnych miast; inni mówią, że młody naród potrzebuje korony, która utrzyma go razem.'''
+
+["rnw_nation.1.a"]
+source = "dac2a7edd2cc8b83"
+text = '''Republika wolnych miast.'''
+
+["rnw_nation.1.b"]
+source = "7ab2b89252812153"
+text = '''Korona, która utrzyma naród razem.'''
+
+["rnw_nation.2.title"]
+source = "16ff1ee78d2287cd"
+text = '''Rozporządzenie o pograniczu'''
+
+["rnw_nation.2.desc"]
+source = "837b55fe72b75d71"
+text = '''Zgromadzenie w miejscowości [target_location.GetNameWithNoTooltip] musi zdecydować, co stanie się z ziemią za zasiedlonym wybrzeżem. Mierniczowie chcą ją wymierzyć, sprzedać i połączyć drogami; inni mówią, że należy do ludów, które tam żyją.'''
+
+["rnw_nation.2.a"]
+source = "a66b4892ba0f52a4"
+text = '''Wymierzyć pogranicze i poprowadzić w nie drogi.'''
+
+["rnw_nation.2.b"]
+source = "d89dfe8abb0da82d"
+text = '''Zostawić pogranicze jego ludom.'''
+
+["rnw_nation.3.title"]
+source = "e0d3ebbd474754be"
+text = '''Korona dla narodu'''
+
+["rnw_nation.3.desc"]
+source = "b44240c9bf06e2fa"
+text = '''Delegaci wybrali koronę, a nowy dwór w miejscowości [target_location.GetNameWithNoTooltip] musi zdecydować, kogo nagrodzi: założycieli miast czy stare rody, które przybyły zza morza.'''
+
+["rnw_nation.3.a"]
+source = "a8122d8c264b7555"
+text = '''Nagrodzić założycieli miast.'''
+
+["rnw_nation.3.b"]
+source = "08d05dbcb8725972"
+text = '''Uczcić stare rody.'''
+
+["STATIC_MODIFIER_NAME_rnw_nation_roads"]
+source = "69bccd5fa130c0bd"
+text = '''Drogi na pogranicze'''
+
+["STATIC_MODIFIER_DESC_rnw_nation_roads"]
+source = "671d8ac3385e6289"
+text = '''Mierniczowie i budowniczowie dróg prowadzą drogi narodu poza zasiedlone wybrzeże.'''
