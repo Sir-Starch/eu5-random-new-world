@@ -104,6 +104,9 @@ class NewWorldSettings:
     # 0: land lies where the density field puts it; more lifts the land density in the middle of
     # the canvas, away from the Old World's shores (same land share).
     centre_permille: int = 0
+    # 1: at the start of a campaign every country discovers every area of the generated New World
+    # (for multiplayer, W6). 0: the New World stays to be discovered, as in the game.
+    reveal_at_start: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,6 +248,7 @@ class Settings:
             "wall_ridge_permille": 800,
             "wall_allow_gaps": 1,
             "centre_permille": 0,
+            "reveal_at_start": 0,
         }
         for key in (
             "landform",
@@ -254,6 +258,7 @@ class Settings:
             "wall_ridge_permille",
             "wall_allow_gaps",
             "centre_permille",
+            "reveal_at_start",
         ):
             if world[key] == defaults[key]:
                 del world[key]
@@ -308,6 +313,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "wall_ridge_permille": (0, 1000),
     "wall_allow_gaps": (0, 1),
     "centre_permille": (0, 1000),
+    "reveal_at_start": (0, 1),
     "population_permille": (0, 5000),
     "hearths_per_10k": (0, 100),
     "hearth_reach_steps": (1, 100),

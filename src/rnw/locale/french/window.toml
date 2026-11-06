@@ -702,6 +702,18 @@ text = '''Recommandé'''
 source = "a791d35d238b78f0"
 text = "Laisse plus de place au Nouveau Monde pour que ses continents ne suivent pas les contours des Amériques. Préserve l’Ancien Monde ; les îles gênantes restent en place ou se déplacent vers l’eau libre.\n\nSi les terres se pressent contre les côtes de l’Ancien Monde, ne décochez pas cette option : augmentez plutôt « Distance à l’Ancien Monde » dans Avancé (Terre et mer). Les terres se rapprochent du milieu de l’océan sans que leur quantité change, et les continents restent libres de prendre n’importe quelle forme. Décocher l’option cantonne le Nouveau Monde à la bande d’origine autour des Amériques."
 
+["control.new_world.reveal_at_start"]
+source = "6dfd6b1cd0dbf532"
+text = '''Révéler le Nouveau Monde au début'''
+
+["control.new_world.reveal_at_start.about"]
+source = "ed8a19dd636b4dba"
+text = '''Pour le multijoueur'''
+
+["control.new_world.reveal_at_start.info"]
+source = "5d0aa8b5c868b498"
+text = '''Au début d'une campagne, chaque pays découvre chaque zone de ce Nouveau Monde, terres et mers, de sorte que tous les joueurs le voient dès le premier jour. Désactivé par défaut : le Nouveau Monde attend alors d'être découvert, comme dans le jeu. L'événement du jeu qui annonce la découverte du Nouveau Monde ne se déclenche pas, car la découverte est déjà faite.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Quelle part du Nouveau Monde est faite de terres.'''

@@ -130,6 +130,26 @@ The choice is saved in world codes and used by sketches, land templates and late
 versions of a world. Codes from before 0.12.0 use the original area; the usual warning
 about an older algorithm still applies.
 
+### Reveal the New World at the start (multiplayer)
+
+**Reveal the New World at the start** is off by default. Switched on, every country
+discovers every area of the generated New World, land and sea, when a campaign begins, so
+that every player sees it from the first day. It is a world setting like the oceans option:
+it is saved in world codes and kept by later versions of the world, and a world made with it
+off has none of its files. The world writes one file, `in_game/common/on_action/rnw_reveal.txt`,
+which runs the game's own `discover_area` effect for each area at the game's start; no
+country record of the game is changed. On the classic window the option is at the foot of the
+**World** page, a scroll below *Before you play*.
+
+The game's own announcement that the New World was discovered (an exploration event that
+rewards the first Old World country to explore, and tells every human player in range) is not
+shown, because the discovery is already made; the world sets the flag that event sets. The
+expedition *Western Ocean Voyage* is not offered, since it needs an undiscovered New World.
+Other content that reads the discovery (the Pacific crossing, the circumnavigation, a few
+events of Castile and the merchant republics) follows its own conditions as it would after a
+discovery. How the AI behaves with the New World known from 1337, and whether countries that
+appear later (colonial nations, formed states) know it too, has not been observed in the game.
+
 ### Adjust native societies
 
 Use **Native states** on the World tab for a broad choice, or **Advanced → Peoples**

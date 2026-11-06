@@ -702,6 +702,18 @@ text = '''Önerilir'''
 source = "a791d35d238b78f0"
 text = "Yeni Dünya’ya daha fazla alan açar; kıtalar Amerika’nın hatlarıyla sınırlı kalmaz. Eski Dünya değişmez; yolda kalan adalar yerinde kalır ya da boş suya taşınır.\n\nKara Eski Dünya’nın kıyılarına yığılıyorsa bu seçeneği kapatmayın; bunun yerine Gelişmiş sekmesinde (Kara ve deniz) “Eski Dünya’ya uzaklık” değerini artırın. Kara, miktarı değişmeden okyanusun ortasına doğru kayar ve kıtalar her biçimi almakta serbest kalır. Seçeneği kapatmak, Yeni Dünya’yı Amerika çevresindeki özgün şeritle sınırlar."
 
+["control.new_world.reveal_at_start"]
+source = "6dfd6b1cd0dbf532"
+text = '''Yeni Dünya'yı başlangıçta açığa çıkar'''
+
+["control.new_world.reveal_at_start.about"]
+source = "ed8a19dd636b4dba"
+text = '''Çok oyunculu için'''
+
+["control.new_world.reveal_at_start.info"]
+source = "5d0aa8b5c868b498"
+text = '''Bir kampanyanın başında her ülke bu Yeni Dünya'nın karasal ve denizsel tüm bölgelerini keşfeder; böylece tüm oyuncular onu ilk günden görür. Varsayılan olarak kapalıdır: bu durumda Yeni Dünya, oyundaki gibi keşfedilmeyi bekler. Oyunun Yeni Dünya'nın keşfini duyuran kendi olayı tetiklenmez, çünkü keşif zaten yapılmıştır.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Yeni Dünya'nın ne kadarının kara olduğu.'''

@@ -702,6 +702,18 @@ text = '''Empfohlen'''
 source = "a791d35d238b78f0"
 text = "Gibt der Neuen Welt mehr Platz, damit ihre Kontinente nicht dem Umriss Amerikas folgen müssen. Die Alte Welt bleibt erhalten; Inseln im Weg bleiben stehen oder ziehen in freies Wasser um.\n\nDrängt sich das Land an die Küsten der Alten Welt, deaktivieren Sie diese Option nicht, sondern erhöhen Sie stattdessen „Abstand zur Alten Welt“ unter „Erweitert“ (Land und Meer). Das Land rückt dann zur Mitte des Ozeans, ohne dass sich die Landmenge ändert, und die Kontinente können weiterhin jede Form annehmen. Wer das Häkchen entfernt, beschränkt die Neue Welt auf das ursprüngliche Band um Amerika."
 
+["control.new_world.reveal_at_start"]
+source = "6dfd6b1cd0dbf532"
+text = '''Neue Welt zu Beginn aufdecken'''
+
+["control.new_world.reveal_at_start.about"]
+source = "ed8a19dd636b4dba"
+text = '''Für Mehrspieler'''
+
+["control.new_world.reveal_at_start.info"]
+source = "5d0aa8b5c868b498"
+text = '''Zu Beginn einer Kampagne entdeckt jedes Land jedes Gebiet dieser Neuen Welt, Land und Meer, sodass alle Spieler sie vom ersten Tag an sehen. Standardmäßig aus: Die Neue Welt wartet dann darauf, entdeckt zu werden, wie im Spiel. Das Ereignis des Spiels, das die Entdeckung der Neuen Welt verkündet, wird nicht ausgelöst, weil die Entdeckung bereits gemacht ist.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Wie viel der Neuen Welt Land ist.'''

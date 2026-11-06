@@ -189,6 +189,9 @@ from rnw.eu5_places import SPECS, Cells, Spec, choose, modifiers_file, payloads
 from rnw.eu5_places import texts as place_texts
 from rnw.eu5_regionkeys import physical_keys
 from rnw.eu5_remap import RemapAccess, build_remap, remap_scripts, remap_text
+from rnw.eu5_reveal import RevealError
+from rnw.eu5_reveal import files as reveal_files
+from rnw.eu5_reveal import verify as verify_reveal
 from rnw.eu5_rewrite import (
     HierarchyAdditions,
     drop_block_entries,
@@ -1845,6 +1848,19 @@ def referenced_words(path: str, text: str) -> set[str]:
     return set(WORD.findall(text))
 
 
+def _add_reveal(texts: dict[str, bytes], *, enabled: bool) -> dict[str, object]:
+    """With the world setting on, write the reveal of the New World and check it against the
+    written ``definitions.txt``; the statistics to keep, none when the setting is off."""
+    if not enabled:
+        return {}
+    definitions = texts[_mod_path(DEFINITIONS)].decode("utf-8-sig")
+    try:
+        texts.update(reveal_files(definitions))
+        return {"reveal": verify_reveal(texts, definitions)}
+    except RevealError as error:
+        raise NewWorldExportError(str(error)) from error
+
+
 def _verify_texts(outputs: dict[str, bytes], plan: Plan, removed: set[str]) -> dict[str, object]:
     """Cross-file consistency of the written text files."""
     definitions = outputs[_mod_path(DEFINITIONS)].decode("utf-8-sig")
@@ -3115,6 +3131,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )
         texts.update(written.files)
         text_stats["stories"] = written.stats
+        text_stats.update(_add_reveal(texts, enabled=bool(settings.new_world.reveal_at_start)))
         checkpoint()
         text_checks = _verify_texts(texts, plan, removed)
         try:

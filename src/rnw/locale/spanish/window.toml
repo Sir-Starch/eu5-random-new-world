@@ -702,6 +702,18 @@ text = '''Recomendado'''
 source = "a791d35d238b78f0"
 text = "Da más espacio al Nuevo Mundo para que sus continentes no tengan que seguir el contorno de América. Conserva el Viejo Mundo; las islas que estorben se quedan donde están o se mudan a aguas libres.\n\nSi la tierra se apiña junto a las costas del Viejo Mundo, no desmarques esta casilla: sube «Distancia al Viejo Mundo» en Avanzado (Tierra y mar). La tierra se desplaza hacia el centro del océano sin cambiar su cantidad, y los continentes siguen libres de adoptar cualquier forma. Desmarcarla confina el Nuevo Mundo a la franja original en torno a América."
 
+["control.new_world.reveal_at_start"]
+source = "6dfd6b1cd0dbf532"
+text = '''Revelar el Nuevo Mundo al inicio'''
+
+["control.new_world.reveal_at_start.about"]
+source = "ed8a19dd636b4dba"
+text = '''Para multijugador'''
+
+["control.new_world.reveal_at_start.info"]
+source = "5d0aa8b5c868b498"
+text = '''Al comienzo de una campaña, todos los países descubren todas las áreas de este Nuevo Mundo, tierra y mar, de modo que todos los jugadores lo ven desde el primer día. Desactivado por defecto: el Nuevo Mundo espera entonces a ser descubierto, como en el juego. El evento del propio juego que anuncia el descubrimiento del Nuevo Mundo no se activa, porque el descubrimiento ya está hecho.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Cuánto del Nuevo Mundo es tierra.'''

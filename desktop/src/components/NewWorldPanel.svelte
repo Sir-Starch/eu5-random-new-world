@@ -132,6 +132,16 @@
             onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
           />
         </div>
+        <div class="wide oceans">
+          <Check
+            checked={(n?.values["new_world.reveal_at_start"]?.shown ?? 0) > 0}
+            disabled={locked}
+            label={t("control.new_world.reveal_at_start")}
+            hint={t("control.new_world.reveal_at_start.about")}
+            info={t("control.new_world.reveal_at_start.info")}
+            onchange={(value) => app.call("set_value", { key: "new_world.reveal_at_start", value: value ? 1 : 0 })}
+          />
+        </div>
       </div>
     </Section>
 

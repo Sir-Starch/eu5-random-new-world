@@ -702,6 +702,18 @@ text = '''推荐'''
 source = "a791d35d238b78f0"
 text = "为新世界提供更多空间，使其大陆不再受美洲轮廓限制。保留旧世界；挡路的岛屿会留在原处，或移到空闲水域。\n\n如果陆地挤在旧世界的海岸边，请不要取消勾选此项，而是在“高级”（陆地与海洋）中调高“与旧世界的距离”。陆地会移向海洋中部，陆地总量不变，大陆仍可呈现任意形状。取消勾选则会把新世界限制在美洲周围原有的带状范围内。"
 
+["control.new_world.reveal_at_start"]
+source = "6dfd6b1cd0dbf532"
+text = '''开局时揭示新大陆'''
+
+["control.new_world.reveal_at_start.about"]
+source = "ed8a19dd636b4dba"
+text = '''适用于多人游戏'''
+
+["control.new_world.reveal_at_start.info"]
+source = "5d0aa8b5c868b498"
+text = '''战役开始时，每个国家都会发现这片新大陆的所有区域（陆地和海洋），让所有玩家从第一天起就能看到它。默认关闭：此时新大陆像在游戏中一样等待被发现。游戏自带的、宣告发现新大陆的事件不会触发，因为发现已经完成。'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''新大陆中陆地所占的比例。'''

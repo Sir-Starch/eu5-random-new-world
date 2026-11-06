@@ -857,6 +857,9 @@ class MainWindow(QMainWindow):
         hint.setWordWrap(True)
         visibility_layout.addWidget(hint)
         layout.addWidget(visibility)
+        # Below the group, so that at the smallest window the page's other options stay in view
+        # and this one is a scroll away.
+        layout.addLayout(self._reveal_row())
         layout.addStretch(1)
         return world
 
@@ -1710,8 +1713,34 @@ class MainWindow(QMainWindow):
             )
         return item
 
+    def _reveal_row(self) -> QHBoxLayout:
+        """The checkbox that reveals the New World at the campaign start, its hint and an ⓘ mark."""
+        self.reveal_at_start: QCheckBox = QCheckBox(text("control.new_world.reveal_at_start"))
+        self.reveal_at_start.setChecked(bool(self.controller.value("new_world.reveal_at_start")))
+        reveal_tip = _wrapped_tip(text("control.new_world.reveal_at_start.info"))
+        self.reveal_at_start.setToolTip(reveal_tip)
+        _ = self.reveal_at_start.toggled.connect(self._reveal_toggled)
+        reveal_hint = QLabel(text("control.new_world.reveal_at_start.about"))
+        reveal_hint.setStyleSheet(MUTED)
+        reveal_hint.setToolTip(reveal_tip)
+        self.reveal_help: QLabel = QLabel("ⓘ")
+        self.reveal_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.reveal_help.setStyleSheet(MUTED)
+        self.reveal_help.setToolTip(reveal_tip)
+        reveal_row = QHBoxLayout()
+        reveal_row.setContentsMargins(0, 0, 0, 0)
+        reveal_row.setSpacing(6)
+        reveal_row.addWidget(self.reveal_at_start)
+        reveal_row.addWidget(reveal_hint)
+        reveal_row.addWidget(self.reveal_help, 0, Qt.AlignmentFlag.AlignVCenter)
+        reveal_row.addStretch(1)
+        return reveal_row
+
     def _ocean_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
         self.controller.set_value("new_world.expand_oceans", int(checked))
+
+    def _reveal_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
+        self.controller.set_value("new_world.reveal_at_start", int(checked))
 
     def _refresh_estimate(self, controller: Controller) -> None:
         try:
@@ -1747,6 +1776,10 @@ class MainWindow(QMainWindow):
         self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
         _ = self.expand_oceans.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.expand_oceans.setEnabled(not busy)
+        _ = self.reveal_at_start.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.reveal_at_start.setChecked(bool(self.controller.value("new_world.reveal_at_start")))
+        _ = self.reveal_at_start.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.reveal_at_start.setEnabled(not busy)
 
     def _refresh_new(self) -> None:
         controller = self.controller

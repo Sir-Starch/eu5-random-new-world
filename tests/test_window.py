@@ -1210,6 +1210,30 @@ def test_ocean_checkbox_is_in_the_world_code_and_follows_pasted_codes(
 
 
 @pytest.mark.usefixtures("application")
+def test_the_reveal_checkbox_is_off_by_default_travels_in_the_code_and_explains_itself(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    assert not window.reveal_at_start.isChecked()
+    assert text("control.new_world.reveal_at_start.about") == "For multiplayer"
+    info = text("control.new_world.reveal_at_start.info")
+    for widget in (window.reveal_at_start, window.reveal_help):
+        assert escape(info) in widget.toolTip()
+    window.reveal_at_start.click()
+    assert decode(window.controller.code).settings().new_world.reveal_at_start == 1
+    # A pasted code with the setting off, and one with it on, both set the box.
+    assert window.controller.use_code(encode(new_code("continents", 123))) is None
+    assert not window.reveal_at_start.isChecked()
+    on = new_code("continents", 123, {"new_world": {"reveal_at_start": 1}})
+    assert window.controller.use_code(encode(on)) is None
+    assert window.reveal_at_start.isChecked()
+    # It is not an Advanced slider as well.
+    assert not any(row.control.field == "reveal_at_start" for row in window.rows)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_about_dialog_and_header_button(tmp_path: Path, fake_export: Exporter) -> None:
     window = _window(tmp_path, fake_export)
     assert window.about_button.text() == text("about")

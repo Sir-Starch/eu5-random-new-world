@@ -223,6 +223,25 @@ def test_the_tauri_bridge_sets_and_encodes_the_peasant_mix(
     assert decode(bridge.controller.code).settings().natives.peasant_peak_permille == 800
 
 
+def test_the_tauri_bridge_turns_the_reveal_on_and_it_is_not_an_advanced_control(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    new = cast("dict[str, object]", bridge.state()["new"])
+    values = cast("dict[str, dict[str, object]]", new["values"])
+    assert values["new_world.reveal_at_start"]["shown"] == 0
+    assert values["new_world.reveal_at_start"]["changed"] is False
+    assert bridge.call("set_value", {"key": "new_world.reveal_at_start", "value": 1}) is None
+    assert decode(bridge.controller.code).settings().new_world.reveal_at_start == 1
+    new = cast("dict[str, object]", bridge.state()["new"])
+    values = cast("dict[str, dict[str, object]]", new["values"])
+    assert values["new_world.reveal_at_start"]["shown"] == 1
+    assert values["new_world.reveal_at_start"]["changed"] is True
+    rows = cast("list[dict[str, object]]", view.static(bridge.controller)["controls"])
+    row = next(item for item in rows if item["key"] == "new_world.reveal_at_start")
+    assert row["advanced"] is False
+
+
 def test_a_made_world_is_listed_shown_and_answered_about(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

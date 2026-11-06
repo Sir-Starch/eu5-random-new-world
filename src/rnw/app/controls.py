@@ -130,6 +130,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("new_world.sea_zone_px", "map", 80, 240, unit="px"),
     Control("new_world.province_size", "map", 3, 10),
     Control("new_world.expand_oceans", "map", 0, 1),
+    Control("new_world.reveal_at_start", "map", 0, 1),
     Control(
         "natives.population_permille", "peoples", 250, 3000, factor=1000, decimals=2, unit="times"
     ),
@@ -162,9 +163,12 @@ CONTROLS: Final[tuple[Control, ...]] = (
 )
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
 GROUPS: Final[tuple[str, ...]] = ("wall", "land", "map", "peoples", "resources")
-# The Advanced tab's controls: all of them but the ocean checkbox, which the new-world page holds.
+# The checkboxes the new-world page holds itself: the oceans and the reveal of the New World.
+PAGE_OPTIONS: Final[frozenset[str]] = frozenset({"expand_oceans", "reveal_at_start"})
+# The Advanced tab's controls: all of them but the page's checkboxes. A random draw (Total Chaos)
+# takes from this list too, so it never turns the reveal on.
 ADVANCED: Final[tuple[Control, ...]] = tuple(
-    control for control in CONTROLS if control.field != "expand_oceans"
+    control for control in CONTROLS if control.field not in PAGE_OPTIONS
 )
 
 

@@ -702,6 +702,18 @@ text = '''Zalecane'''
 source = "a791d35d238b78f0"
 text = "Daje Nowemu Światu więcej miejsca, aby jego kontynenty nie musiały powtarzać zarysu Ameryk. Zachowuje Stary Świat; wyspy stojące na drodze zostają na miejscu albo przenoszą się na wolną wodę.\n\nJeśli ląd tłoczy się przy wybrzeżach Starego Świata, nie wyłączaj tej opcji, tylko zwiększ „Odległość od Starego Świata” na karcie „Zaawansowane” (Ląd i morze). Ląd przesuwa się wtedy ku środkowi oceanu, a jego ilość się nie zmienia; kontynenty nadal mogą mieć dowolny kształt. Wyłączenie ogranicza Nowy Świat do pierwotnego pasa wokół Ameryk."
 
+["control.new_world.reveal_at_start"]
+source = "6dfd6b1cd0dbf532"
+text = '''Odkryj Nowy Świat na starcie'''
+
+["control.new_world.reveal_at_start.about"]
+source = "ed8a19dd636b4dba"
+text = '''Dla trybu wieloosobowego'''
+
+["control.new_world.reveal_at_start.info"]
+source = "5d0aa8b5c868b498"
+text = '''Na początku kampanii każdy kraj odkrywa każdy obszar tego Nowego Świata, ląd i morze, dzięki czemu wszyscy gracze widzą go od pierwszego dnia. Domyślnie wyłączone: Nowy Świat czeka wtedy na odkrycie, jak w grze. Wydarzenie gry zapowiadające odkrycie Nowego Świata nie następuje, ponieważ odkrycie już się dokonało.'''
+
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"
 text = '''Jaka część Nowego Świata to ląd.'''

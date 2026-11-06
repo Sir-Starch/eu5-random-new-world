@@ -855,3 +855,13 @@ bounded workers (ADR 0006). Check the installed build first; nothing launches EU
    (`out/<cell>.out`), `bridge.stderr` and `generator.log`; fix the cause, add a test for it,
    delete the cell's `.done` and rerun. The classic window shares the controller and is
    covered by `tests/test_window.py`; no live Qt matrix is run.
+7. **W6 reveal** ([roadmap W6](roadmap.md#workshop-feedback-in-120)). The candidate that step 5
+   installs for the owner's sitting is made with the setting on: the same settings with
+   `new_world.reveal_at_start` = 1 (for example `rnw world-code --preset P --seed S --settings F`
+   with `F` holding `{"schema":1,"new_world":{"reveal_at_start":1}}`; the world's id follows its
+   code, so it is a folder of its own). Before the sitting, check the written
+   `in_game/common/on_action/rnw_reveal.txt` against the candidate's `definitions.txt` (the export
+   already refuses a difference) and that no other mod of the profile defines `on_game_start` with
+   an `effect`. The fifth check of the sitting is that the whole New World, sea included, is
+   visible from the first day without fog for the country played; read `debug.log` for any line
+   naming `rnw_reveal.txt`. A failure cuts W6 and turns the setting off, with no further sitting.
