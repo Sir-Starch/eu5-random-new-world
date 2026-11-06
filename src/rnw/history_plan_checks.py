@@ -9,17 +9,10 @@ from rnw.eu5_history import identity_cohorts
 from rnw.eu5_history_values import profile_positions
 from rnw.history_checks import Index, require, unique
 from rnw.history_context import Context
-from rnw.history_diplomacy import (
-    DECAY,
-    MEMORY_SCALE,
-    PAIR_LIMIT,
-    POSITIVE,
-    RIVAL_MEMORY,
-    VALUE_LIMIT,
-    WORLD_LIMIT,
-)
+from rnw.history_diplomacy import PAIR_LIMIT, RIVAL_MEMORY, WORLD_LIMIT
 from rnw.history_model import END, Action, Authority, Factor, Tenure, TrajectoryKind
 from rnw.history_trajectories import GROUP_MIN, realizations
+from rnw.opinions import ANALOGUES, POSITIVE, opinion_value
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
@@ -143,12 +136,13 @@ def _opinions(plan: FinalStartPlan, history: History, index: Index) -> None:
             "Historical opinion names a place outside its cause",
         )
         amount = amounts[first.history_actor, second.history_actor, opinion.factor, opinion.cause]
+        analogue = ANALOGUES[opinion.factor]
         require(
-            0 < abs(opinion.value) <= VALUE_LIMIT
-            and abs(opinion.value) == min(VALUE_LIMIT, (amount + MEMORY_SCALE - 1) // MEMORY_SCALE)
-            and opinion.yearly_decay == DECAY[opinion.factor]
+            0 < abs(opinion.value) <= abs(analogue.value)
+            and opinion.value == opinion_value(opinion.factor, amount)
+            and opinion.yearly_decay == analogue.yearly_decay
             and (opinion.value > 0) == (opinion.factor in POSITIVE),
-            "Historical opinion violates its value/decay band",
+            "Historical opinion differs from its vanilla analogue's scale",
         )
         require(amount > 0, "Historical opinion has no surviving directed memory")
     require(

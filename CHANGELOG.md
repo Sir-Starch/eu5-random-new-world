@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Put historical opinions on the game's scale. Each remembered cause now takes the value and
+  yearly decay of the game's own opinion of its kind (*Good relations* +50, *Recent Conflict
+  Lost* −40, *Border Aggression* −25 and others) in proportion to how much of the memory
+  survives to 1337. They were a few points before, and faded within a few years.
+
 - Give the formable countries real goals. Any country that holds enough of a territory, its
   capital inside, may form a union, confederation, league or realm, not only the states of
   1337; a commonwealth also opens to its people's culture group. The realm becomes the realm

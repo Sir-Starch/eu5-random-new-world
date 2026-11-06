@@ -144,8 +144,9 @@ Engine treaties and startup opinions use living landed countries with an
 explicitly written capital. Pop-type and community bargains remain in history;
 recognizing a qualifying highland confederation enables its landed projection.
 Named opinions retain their actual memory factor, cause, year and recorded place.
-Their value is the surviving memory divided by 20, rounded up, capped at 50 with
-its original sign; decay is 1–3. Selection admits at most four per direction and
+Each factor copies a vanilla event opinion (`rnw.opinions.ANALOGUES`, plan D31):
+the analogue's decay, and its value times the surviving share of the factor's full
+weight (`FULL`), rounded away from zero. Selection admits at most four per direction and
 2,000 per world. An allied direction selects trust and only grievances its budget
 can carry. World limiting keeps each selected direction together, so it cannot
 remove trust while leaving its grievance. No cause, sign or value is rewritten.

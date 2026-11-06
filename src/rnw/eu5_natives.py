@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Final, cast
 
 import numpy as np
 
-from rnw import wording
+from rnw import opinions, wording
 from rnw.archetypes import (
     FRACTURED_REALM,
     HIGHLAND_CONFEDERATION,
@@ -745,13 +745,16 @@ def _empire_calibration(  # noqa: PLR0913 - the calibration reads the setup, tem
             for path in sorted((game_dir / directory).glob("*.txt"))
         ]
 
+    biases = texts(BIAS_DIR)
+    # The historical and treaty opinions copy vanilla values; a patch that changes them stops here.
+    opinions.check(biases)
     return empire_calibration(
         levels=levels,
         state_levels=state_levels,
         setup_text=setup_text,
         rank_texts=texts(RANK_DIR),
         roads_text=_text(game_dir, ROADS_FILE),
-        bias_texts=texts(BIAS_DIR),
+        bias_texts=biases,
         american=american,
         pops=pops,
         cultures=tag_cultures,

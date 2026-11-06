@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Final
 from rnw.eu5_start import HistoricalOpinion
 from rnw.history_checks import require
 from rnw.history_model import Action, Factor
+from rnw.opinions import ANALOGUES, opinion_value
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -19,18 +20,7 @@ if TYPE_CHECKING:
 
 PAIR_LIMIT: Final[int] = 4
 WORLD_LIMIT: Final[int] = 2000
-VALUE_LIMIT: Final[int] = 50
-MEMORY_SCALE: Final[int] = 20
 RIVAL_MEMORY: Final[int] = 150
-POSITIVE: Final[frozenset[Factor]] = frozenset({Factor.TRUST, Factor.AFFINITY})
-DECAY: Final[dict[Factor, int]] = {
-    Factor.TRUST: 1,
-    Factor.AFFINITY: 1,
-    Factor.GRIEVANCE: 3,
-    Factor.FEAR: 2,
-    Factor.DEPENDENCE: 1,
-    Factor.COMPETITION: 2,
-}
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,15 +59,14 @@ def _candidates(
                 *(settlement.district for settlement in event.effects.settlements),
             }
         )
-        magnitude = min(VALUE_LIMIT, (amount + MEMORY_SCALE - 1) // MEMORY_SCALE)
         candidates.append(
             HistoricalOpinion(
                 "",
                 countries[first].tag,
                 countries[second].tag,
                 factor,
-                magnitude if factor in POSITIVE else -magnitude,
-                DECAY[factor],
+                opinion_value(factor, amount),
+                ANALOGUES[factor].yearly_decay,
                 cause,
                 event.year,
                 event.kind,

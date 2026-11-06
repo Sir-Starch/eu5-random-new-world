@@ -397,6 +397,11 @@ A seeded setting moves its region toward its picture, a paramount weakly. Before
 the held-out run the owner kept Q4 on the recognized rate (plan D30, 2026-11-06);
 the held-out report gives the Q1-scale rate beside it.
 
+**Recheck after D31 (2026-11-06).** [V-EXEC] Historical opinions now take vanilla
+analogues (plan D31); a different opinion set changes which events the chronicles keep.
+The whole development matrix was rerun (`R6_OUT=dev-d31`): all fourteen checks pass,
+Q1–Q13 with the same values, S11 584,589 bytes (was 580,654).
+
 **Limits.** Several margins are thin: the prudent rate (±3 points of noise on this
 set, more on 24 held-out worlds), `distinct` families (exactly 3), the Turbulent size
 ratio (a median of two against three), and the paramount and fractured shares. The

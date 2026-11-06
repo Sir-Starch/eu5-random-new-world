@@ -146,6 +146,7 @@ on these observations.
 | D28 | Acceptance | §18 measures the start; development seeds 3/42/77/1000–1004; held-out 1005–1008, once |
 | D29 | Consequences in play | Formable goals, political inheritance, AI goals, and events and names from the recorded past (N6–N9, [§22](#22-goals-and-consequences-in-play-2026-11-06)) |
 | D30 | Q4 recognition | Q4 gates on the D24 recognition shares as written; the Q1-scale rate is reported beside it (owner, 2026-11-06, before the held-out run) |
+| D31 | The game's measure | Written values take the game's scale and the window shows what the game shows, in its names; no internal scale is shown as game state (owner, 2026-11-06) |
 
 ## 4. Scope and abstractions
 
@@ -381,9 +382,13 @@ model, and nothing adds a second set of relations later.
 
 **Named historical opinions.** Each projected memory between two living generated
 countries becomes one bias definition, as vanilla's pair-specific friendships are.
-Its key is `rnw_hist_<n>`. Its family sets its value and `yearly_decay` within the
-vanilla start-up band (|value| ≤ 50, `yearly_decay` 1–3), so it fades in the
-campaign like vanilla start-up opinions. Its localized name gives the cause and the
+Its key is `rnw_hist_<n>`. Its factor takes a vanilla event opinion of its kind
+(`rnw.opinions`, D31): trust `opinion_good_relations` (+50, decay 1), affinity
+`opinion_pleased` (+20, 1), grievance `recent_conflict_lost` (−40, 3), fear and
+competition `border_aggression` (−25, 1), dependence `outrageous_demands` (−25, 1).
+It takes the analogue's decay, and its value in proportion to the surviving share of
+the factor's full weight, so a fresh memory has the analogue's full value. An export
+refuses an installation that defines an analogue differently. Its localized name gives the cause and the
 year: *Loss of Tlacoyan (1282)*. Limits: at most four per directed pair and 2,000
 per world. The named opinions of an allied pair sum to 0 or more in each direction,
 checked at construction, so an alliance can carry an old suspicion without
@@ -1145,6 +1150,24 @@ calibration showed that Q4's pass rests on the lowered D24 shares: 73% recognize
 55% at Q1's scale ([caveat](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05)).
 Before the held-out run the owner kept Q4 as written. The held-out report states
 both rates; only the D24 rate gates.
+
+**D31 The game's measure (owner, 2026-11-06).** RNW makes a world for one game, so
+the player must find in the window what the game will show. The owner found
+every historical opinion between −11 and +4 in a candidate's 1,207: the memory had
+been divided by 20, while vanilla counts opinion in tens and hundreds (an alliance
++50, a rival −100). An audit of the window against the game found the same fault
+elsewhere. Rules:
+
+- A written value takes the scale of its vanilla analogue, read from the
+  installation and refused if the game changes it (opinions, §13).
+- The window shows a game quantity as the game computes it and under the game's
+  name: each country's opinions as the game lists them, the engine's treaty
+  opinions included, and start development by the game's development rules.
+- An internal scale of the generator (complexity, the society traits, memory
+  factors, seeded aims) is not shown as game state. A generator setting the player
+  chose is named as the generator's own.
+- Checking the window against the written files is not enough: the written value
+  is also checked against the game's definition before it ships.
 
 ### 21.5 Implementation refinements (2026-11-05, before any held-out run)
 
