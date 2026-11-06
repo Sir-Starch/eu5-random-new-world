@@ -7,8 +7,9 @@ shortest-path tree and therefore connected. A landmass without a source of its o
 island) joins the part of the nearest cell as a whole, so no part ever has two pieces on
 one landmass. Every part starts with an additive handicap that grows while it is larger
 than its target, so part sizes approach their targets, and movable sources follow their
-part's centre (Lloyd relaxation). Integer arithmetic and fixed tie-breaks make every
-result a pure function of the inputs.
+part's centre (Lloyd relaxation). The top level can instead be cut into bands of rows
+(``banded_parts``), each band keeping one piece per landmass. Integer arithmetic and fixed
+tie-breaks make every result a pure function of the inputs.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -394,25 +395,47 @@ def split(
     return parts
 
 
-def keyed_parts(
-    graph: ContactGraph,
-    members: Sequence[int],
-    centres: Sequence[tuple[int, int]],
-    weights: Sequence[int],
+def banded_parts(
+    graph: ContactGraph, members: Sequence[int], weights: Sequence[int]
 ) -> list[list[int]]:
-    """One part per key, the key's part nearest its centre and sized by its weight.
+    """Parts in bands from the first row to the last, each its ``weights`` share of members.
 
-    Equal parts come first; keys then take the parts closest to them, and the parts
-    are rebalanced to the key weights from where the equal parts left their sources.
+    Members are ranked by row, then column and index. A band can cross a landmass more
+    than once; then the part keeps its largest piece on that landmass and every other piece
+    joins the part it has most contacts with (lowest index on ties). Parts are settled in
+    order, and a settled part has one piece on each landmass, so a piece it receives
+    touches that piece: no part ends with two pieces on one landmass.
     """
-    count = len(weights)
-    sources = [[node] for node in spread_sources(graph, members, count)]
-    parts, moved = balanced_parts(graph, members, sources, [1] * count, movable=[True] * count)
-    pairing = match([centre_of(graph, part) for part in parts], centres)
-    keyed: list[list[int]] = [[] for _ in range(count)]
-    for part, key in enumerate(pairing):
-        keyed[key] = moved[part]
-    parts, _ = balanced_parts(graph, members, keyed, weights, movable=[True] * count)
+    if not weights or min(weights) < 1 or len(members) < len(weights):
+        message = f"Cannot band {len(members)} cells by the weights {list(weights)}"
+        raise PartitionError(message)
+    ranked = sorted(members, key=lambda node: (*graph.centres[node].tolist(), node))
+    owner: dict[int, int] = {}
+    total, start, held = sum(weights), 0, 0
+    for part, weight in enumerate(weights):
+        held += weight
+        end = held * len(ranked) // total
+        owner.update(dict.fromkeys(ranked[start:end], part))
+        start = end
+    landmasses = pieces(graph, members)
+    for part in range(len(weights)):
+        for landmass in landmasses:
+            found = pieces(graph, [node for node in landmass if owner[node] == part])
+            for piece in sorted(found, key=lambda cells: (-len(cells), cells[0]))[1:]:
+                inside = set(piece)
+                counts: dict[int, int] = {}
+                for node in piece:
+                    for neighbour, _ in graph.links[node]:
+                        if neighbour in owner and neighbour not in inside:
+                            counts[owner[neighbour]] = counts.get(owner[neighbour], 0) + 1
+                target = min(counts, key=lambda other: (-counts[other], other))
+                owner.update(dict.fromkeys(piece, target))
+    parts: list[list[int]] = [[] for _ in weights]
+    for node in sorted(owner):
+        parts[owner[node]].append(node)
+    if not all(parts):
+        message = "A band lost all its cells"
+        raise PartitionError(message)
     return parts
 
 

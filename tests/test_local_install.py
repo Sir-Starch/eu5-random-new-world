@@ -560,9 +560,12 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     expected = {name for place in land for name in (place.region, place.area)}
     assert {row["key"] for row in physical} == expected
     assert len(physical) == len(expected)  # every original land key exactly once, N5
-    assert sum(cast("int", row["cost"]) for row in physical) <= sum(
-        cast("int", row["positional_cost"]) for row in physical
-    )
+    for row in physical:
+        weight = cast("int", row["place_weight"])
+        assert row["cost"] == cast("int", row["physical_cost"]) + weight * cast(
+            "int", row["place_permille"]
+        )
+        assert weight == (8 if cast("str", row["key"]).endswith("_region") else 0)
     stats = cast("dict[str, dict[str, dict[str, int]]]", report["text_stats"])
     guarded = stats["content"]["guarded"]
     # On 1.4.5: 83 events (including the DLC diaspora), the canal chain's advance and decisions,

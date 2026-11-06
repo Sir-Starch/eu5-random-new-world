@@ -40,9 +40,11 @@ validate references, localization and graph consistency at construction.
 
 ## Geography keys chosen for content (N5)
 
-Generated regions and land areas reuse the needed vanilla identities through
-physical matching within their original hierarchy, rather than taking arbitrary
-positional identity. The [N5 audit](research/n5-region-keys.md) records the
+Generated regions and land areas reuse the needed vanilla identities within their
+original hierarchy. Subcontinents are north-to-south bands. A region key goes to the
+part that lies where the key lies in its vanilla subcontinent, and physical similarity
+chooses among comparable places. An area key goes to the physically closest part, and
+place breaks ties. The [N5 audit](research/n5-region-keys.md) records the
 matching policy and all positional consumers. `hierarchy.py` and the New World
 exporter construct and verify the hierarchy. Preserve the Old World and treat
 content meaning as part of generation, not a repair layer over already-written output.

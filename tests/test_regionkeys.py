@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from itertools import permutations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pytest
@@ -12,13 +12,19 @@ import pytest
 from rnw.eu5_biomes import CellBiomes
 from rnw.eu5_map import DEFINITIONS, load_map
 from rnw.eu5_regionkeys import (
+    AREA_PLACE_WEIGHT,
+    REGION_PLACE_WEIGHT,
     KeyMatcher,
     RegionKeyError,
     Trait,
     distance,
+    frame,
     minimum_assignment,
     physical_keys,
+    place_distance,
     profile,
+    standard,
+    unstandard,
 )
 from rnw.geography import read_locations
 from rnw.model import CellClass
@@ -31,29 +37,110 @@ if TYPE_CHECKING:
 
 COLD = Trait("arctic", "mountains", 100, coastal=False)
 WARM = Trait("tropical", "flatland", 100, coastal=True)
+SAME = [(0, 0), (0, 0)]  # parts or keys in one place: only physical similarity can decide
+W = REGION_PLACE_WEIGHT
 
 
-def test_physical_matching_moves_keys_to_comparable_land() -> None:
+def test_physical_matching_moves_keys_to_comparable_land_in_one_place() -> None:
     matcher = KeyMatcher({"cold": profile([COLD]), "warm": profile([WARM])}, {0: WARM, 1: COLD})
     parts = [[0], [1]]
-    assert matcher.pair(parts, ["cold", "warm"], [0, 1]) == [1, 0]
+    assert matcher.pair(parts, ["cold", "warm"], centres=SAME, places=SAME, place_weight=W) == [
+        1,
+        0,
+    ]
     assert parts == [[0], [1]]  # assignment cannot change connected boundaries
-    assert all(row["cost"] == 0 and row["moved"] for row in matcher.assignments)
-    assert all(row["positional_cost"] == 9000 for row in matcher.assignments)
+    assert all(row["cost"] == row["physical_cost"] == 0 for row in matcher.assignments)
+    assert all(row["place_permille"] == 0 for row in matcher.assignments)
+
+
+def test_place_outweighs_physical_similarity() -> None:
+    """The west key keeps the west part although the east part's land is like it (C502)."""
+    matcher = KeyMatcher({"east": profile([WARM]), "west": profile([COLD])}, {0: WARM, 1: COLD})
+    pairing = matcher.pair(
+        [[0], [1]],
+        ["east", "west"],
+        centres=[(10, 3), (10, 70)],
+        places=[(500, 900), (500, 100)],
+        place_weight=W,
+    )
+    assert pairing == [1, 0]
+    rows = {row["key"]: row for row in matcher.assignments}
+    assert rows["west"]["physical_cost"] == rows["east"]["physical_cost"] == 9000
+    assert rows["west"]["place_permille"] == 0
+    assert rows["west"]["cost"] == 9000
+
+
+def test_physical_similarity_decides_between_parts_in_comparable_places() -> None:
+    """Two keys lie close together and far from a third; their parts lie the same way, with
+    the land swapped. The swap costs a few permille of place and saves two mismatches."""
+    templates = {"cold": profile([COLD]), "far": profile([COLD]), "warm": profile([WARM])}
+    matcher = KeyMatcher(templates, {0: WARM, 1: COLD, 2: COLD})
+    layout = [(0, 0), (0, 10), (0, 1000)]
+    assert matcher.pair(
+        [[0], [1], [2]],
+        ["cold", "far", "warm"],
+        centres=layout,
+        places=[layout[0], layout[2], layout[1]],
+        place_weight=W,
+    ) == [2, 0, 1]
+    for row in matcher.assignments:
+        place = cast("int", row["place_permille"])
+        assert row["cost"] == cast("int", row["physical_cost"]) + W * place
+    assert sum(cast("int", row["place_permille"]) for row in matcher.assignments) > 0
+
+
+def test_area_keys_follow_their_land_and_place_only_breaks_ties() -> None:
+    """At the area weight the land decides against place; equal land goes by place."""
+    centres, places = [(10, 3), (10, 70)], [(500, 900), (500, 100)]
+    matcher = KeyMatcher({"east": profile([WARM]), "west": profile([COLD])}, {0: WARM, 1: COLD})
+    assert matcher.pair(
+        [[0], [1]], ["east", "west"], centres=centres, places=places, place_weight=AREA_PLACE_WEIGHT
+    ) == [0, 1]
+    same = KeyMatcher({"east": profile([COLD]), "west": profile([COLD])}, {0: COLD, 1: COLD})
+    assert same.pair(
+        [[0], [1]], ["east", "west"], centres=centres, places=places, place_weight=AREA_PLACE_WEIGHT
+    ) == [1, 0]
+    assert all(row["place_weight"] == AREA_PLACE_WEIGHT for row in same.assignments)
 
 
 def test_extra_areas_take_no_vanilla_key_and_all_keys_are_used_once() -> None:
     matcher = KeyMatcher({"cold": profile([COLD])}, {0: WARM, 1: COLD, 2: WARM})
-    assert matcher.pair([[0], [1], [2]], ["cold"], [0, -1, -1]) == [-1, 0, -1]
+    assert matcher.pair(
+        [[0], [1], [2]],
+        ["cold"],
+        centres=[(0, 0), (0, 10), (0, 20)],
+        places=[(7, 7)],
+        place_weight=W,
+    ) == [-1, 0, -1]
     assert len(matcher.assignments) == 1
 
 
-def test_physical_ties_keep_positional_keys_and_are_repeatable() -> None:
+def test_equal_costs_are_repeatable() -> None:
     for _ in range(3):
         matcher = KeyMatcher(
             {"a": profile([COLD]), "b": profile([COLD])}, dict.fromkeys(range(3), COLD)
         )
-        assert matcher.pair([[0], [1], [2]], ["a", "b"], [1, -1, 0]) == [1, -1, 0]
+        assert matcher.pair(
+            [[0], [1], [2]],
+            ["a", "b"],
+            centres=[(0, 10), (0, 5), (0, 0)],
+            places=[(0, 0), (0, 10)],
+            place_weight=W,
+        ) == [1, -1, 0]
+
+
+def test_places_are_compared_free_of_offset_and_scale() -> None:
+    points = [(100, 3000), (300, 3000), (200, 3600)]
+    moved = [(7 + 5 * row, -40 + 2 * column) for row, column in points]
+    for first, second in zip(standard(points), standard(moved), strict=True):
+        assert place_distance(first, second) <= 15  # integer rounding of the spreads only
+    assert standard([(4, 4), (4, 8)]) == [(0, -1000), (0, 1000)]  # no spread across rows
+    assert frame([(4, 4), (4, 8)]) == ((4, 6), (1, 2))
+    assert unstandard((0, 1000), [(0, 0), (0, 10)]) == (0, 10)
+    assert place_distance((0, 0), (300, 400)) == 500
+    assert standard([]) == []
+    with pytest.raises(RegionKeyError, match="empty point cloud"):
+        _ = frame([])
 
 
 def test_profiles_are_pixel_weighted_and_normalize_relief() -> None:
@@ -80,7 +167,7 @@ def test_each_dimension_can_decide_an_assignment(dimension: str) -> None:
         "size": (COLD, Trait("arctic", "mountains", 900, coastal=False)),
     }[dimension]
     matcher = KeyMatcher({"a": profile([first]), "b": profile([second])}, {0: second, 1: first})
-    assert matcher.pair([[0], [1]], ["a", "b"], [0, 1]) == [1, 0]
+    assert matcher.pair([[0], [1]], ["a", "b"], centres=SAME, places=SAME, place_weight=W) == [1, 0]
 
 
 def test_region_assignment_reserves_room_for_child_areas() -> None:
@@ -88,11 +175,21 @@ def test_region_assignment_reserves_room_for_child_areas() -> None:
         {"large": profile([COLD]), "small": profile([WARM])}, {0: COLD, 1: WARM, 2: WARM}
     )
     assert matcher.pair(
-        [[0], [1, 2]], ["large", "small"], [0, 1], minimum={"large": 2, "small": 1}
+        [[0], [1, 2]],
+        ["large", "small"],
+        centres=[(0, 0), (0, 1)],
+        places=[(0, 0), (0, 1)],
+        place_weight=W,
+        minimum={"large": 2, "small": 1},
     ) == [1, 0]
     with pytest.raises(RegionKeyError, match="child areas"):
         _ = matcher.pair(
-            [[0], [1, 2]], ["large", "small"], [0, 1], minimum={"large": 2, "small": 2}
+            [[0], [1, 2]],
+            ["large", "small"],
+            centres=SAME,
+            places=SAME,
+            place_weight=W,
+            minimum={"large": 2, "small": 2},
         )
 
 
@@ -136,11 +233,13 @@ def test_missing_data_and_incomplete_comparisons_fail_loudly() -> None:
         _ = Trait("", "hills", 100, coastal=False)
     matcher = KeyMatcher({"a": profile([COLD])}, {0: WARM, 1: COLD})
     with pytest.raises(RegionKeyError, match="No physical template"):
-        _ = matcher.pair([[0], [1]], ["missing"], [0, -1])
-    with pytest.raises(RegionKeyError, match="exactly once"):
-        _ = matcher.pair([[0], [1]], ["a"], [0, 0])
+        _ = matcher.pair([[0], [1]], ["missing"], centres=SAME, places=[(0, 0)], place_weight=W)
+    with pytest.raises(RegionKeyError, match="a centre"):
+        _ = matcher.pair([[0], [1]], ["a"], centres=[(0, 0)], places=[(0, 0)], place_weight=W)
+    with pytest.raises(RegionKeyError, match="a place"):
+        _ = matcher.pair([[0], [1]], ["a"], centres=SAME, places=SAME, place_weight=W)
     with pytest.raises(RegionKeyError, match="unique"):
-        _ = matcher.pair([[0], [1]], ["a", "a"], [0, 1])
+        _ = matcher.pair([[0], [1]], ["a", "a"], centres=SAME, places=SAME, place_weight=W)
 
 
 def test_adapter_uses_physics_only_and_excludes_old_world(tmp_path: Path) -> None:

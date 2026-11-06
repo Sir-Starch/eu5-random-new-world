@@ -8,7 +8,9 @@ on 1.4.3 data. No game launch belongs to this work.
 ## Design
 
 [INFERRED design] Geography owns the assignment, before societies, technology,
-development and stories. Subcontinents keep the established positional partition.
+development and stories. (Superseded for subcontinents and regions on 2026-11-06:
+[place first](#place-first-for-regions-2026-11-06-c502).) Subcontinents keep the
+established positional partition.
 Within each subcontinent, compact connected regions are built without identities;
 their keys are then chosen together by physical similarity. Within each resulting
 region, the same matching gives its original area keys to compact areas. Extra
@@ -51,6 +53,75 @@ reference native input, including the complete hierarchy/name plan and key space
 remains equal to H4's reference. This comparison uses compact input captures, not
 a new complete output reproduction or performance claim. Local evidence is in
 `local_data/history-120/h7/hierarchy-islands-1000/` and `hierarchy-reference/`.
+
+### Place first for regions, 2026-11-06 (C502)
+
+[V-EXEC, RNW 1.2.0 development / pending epoch 61; EU5 1.4.7 / 26377361] The owner
+found the window's region names absurd on candidate F: Central America beside Alaska,
+West Coast on the east shore, East Coast inland, Colombia on an eastern island. The
+assignment below let place break ties only, so no displacement could outweigh a
+physical improvement, and the optimum of the whole parent group could send a key across
+the continent: F's `central_america_region` had a climate difference of 935‰. The
+subcontinent split had a second defect, seen on archipelago 73: two sources, on the two
+largest islands, with every other island joined to the nearest of them, put the Andes
+and Colombia north of Canada. This **replaces** the "position breaks physical ties
+only" rule for regions and the positional subcontinent partition. Areas keep it.
+
+- **Subcontinents** are bands of rows from north to south, in their vanilla order (by the
+  row of their vanilla centre) and with their vanilla shares of locations
+  (`hierarchy.banded_parts`). On each landmass a band keeps its largest piece; every
+  other piece joins the band it has the most contacts with. Bands settle in order, and a
+  settled band has one piece per landmass, so the result never has two pieces of a
+  subcontinent on one landmass. Latitude alone decides: on a tall continent, both axes
+  weighted equally gave South America the east side and left Mesoamerica in the
+  south-west.
+- **Places** are standardized point clouds (`eu5_regionkeys.standard`): each vanilla key
+  and each generated part is one point, measured from its cloud's mean in its cloud's
+  standard deviation on each axis, in integers. Location-weighted frames failed: Canada
+  and the East Coast hold most vanilla locations, which pushed the southern keys to +2.7σ
+  against +1.4σ for the southernmost of equal generated parts.
+- **Regions** are equal compact parts with room for every child area, as before, grown
+  from sources laid out as the vanilla regions lie in the subcontinent (`_placed`):
+  `spread_sources` fixes how many sources each landmass gets, an exact assignment gives
+  each region a source, and the source moves on its own landmass to the cell nearest the
+  region's place. A region's cost is its physical difference plus **8** × the distance
+  of the standardized points in permille. One σ of displacement then costs twice a
+  complete climate mismatch, so physical similarity chooses only among parts in
+  comparable places. On four captured worlds, every region key was the same at weights
+  8–16; at 2 and 4, one subcontinent of one world differed.
+- **Areas** keep `split` and physical-first matching, with place breaking ties (weight 0).
+  Their layout inside a region is invisible (the world names them), while scripts read
+  their land. Weight 8 at this level raised the reference's area physical difference by
+  a third, 437,859 → 587,829; weight 0 gives 459,564.
+
+Every report row now records `cost`, `physical_cost`, `place_permille` and
+`place_weight` (`cost = physical_cost + place_weight × place_permille`). The
+`positional_cost` and `moved` fields are gone.
+
+[V-EXEC] Seven captured `_land_areas` inputs were tested: candidates F and B, the reference
+(supercontinent), archipelago 73, islands 73, The Wall CWYS and small continents 7. All
+cover every land unit and pass `_check_pieces`, in 0.8–2.2 s each, with identical results
+under hash seeds 1, 7 and 12345. In every world Alaska lies north-west, Canada
+north/north-east, West Coast west, East Coast east, Meso- and Central America at the
+south of North America, Colombia at the north of South America and La Plata at its south.
+The Caribbean takes the south-east of North America and can reach the north shore of the
+southern landmass. A synthetic regression mirrors the climates of four vanilla quadrants:
+every key stays in its quadrant, while the previous code put all four in the wrong one
+(`tests/test_hierarchy.py`). Pictures and scripts: `local_data/region-layout/`.
+
+| Reference (supercontinent 20261102) | Previous (epoch 61, efb4c82d) | Place first (8ceb035e) |
+| --- | ---: | ---: |
+| Physical difference, 14 regions | 42,238 | 45,768 (+8 %) |
+| Physical difference, 135 areas | 437,859 | 459,564 (+5 %) |
+| Worst region climate | 936‰ `central_america_region` | 906‰ `caribbean_region` |
+| `central_america_region` / `colombia_region` climate | 936 / — | 79 / 86 |
+
+The reference's northern landmass has no tropics. Whichever region takes its south-east
+still lacks a tropical counterpart, which is the limit stated below, not a wrong place. Two
+independent exports give `8ceb035e…` (884 files). Against `HEAD` (reproduced as
+`efb4c82d`), 93 of 912 files differ, because location keys follow hierarchy order. The
+pixel partition of `locations.png` is identical (29,371 colours, a bijection): only 28
+closed-ocean remainders changed colour. No file or contact count changed.
 
 ### Profiles and assignment
 

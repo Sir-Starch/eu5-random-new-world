@@ -1,13 +1,21 @@
-"""N5: choose American land keys by physical similarity, before writing identities.
+"""N5: choose American land keys by place and physical similarity, before writing identities.
 
-Only compact per-location tables and the biome model's existing contact pairs are read.
-No peoples, resources, random stream or extra raster pass enters the matching. Regions
-compete within their subcontinent; areas within their original region, preserving the
-installed parent tree. Sea areas retain the shore and remainder rules of eu5_newworld.
+A region key goes to the generated part that lies where the key lies in its vanilla
+subcontinent, and among parts in comparable places to the one most like the key's installed
+land. An area key goes to the part most like its land, and place breaks ties. Places are
+compared as standardized point clouds: every vanilla key and every generated part is one
+point, measured from its cloud's mean in its cloud's standard deviations on each axis, so a
+tall generated continent still has its west coast in the west and its Alaska in the
+north-west, whatever the sizes of the parts. Only compact per-location tables and the biome
+model's existing contact pairs are read. No peoples, resources, random stream or extra
+raster pass enters the matching. Regions compete within their subcontinent; areas within
+their original region, preserving the installed parent tree. Sea areas retain the shore
+and remainder rules of eu5_newworld.
 """
 
 from __future__ import annotations
 
+import math
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, cast
@@ -27,6 +35,15 @@ if TYPE_CHECKING:
 PERMILLE: Final[int] = 1000
 LAND: Final[frozenset[CellClass]] = frozenset({CellClass.LAND, CellClass.WASTELAND, CellClass.LAKE})
 WEIGHTS: Final[tuple[int, ...]] = (4, 3, 2, 1)
+# Regions: one standard deviation of displacement (1000 permille) costs 8000, twice a complete
+# climate mismatch (4 x 1000), so place decides and physical similarity chooses among parts in
+# comparable places. On four captured worlds every region key was the same for weights 8 to
+# 16; 2 and 4 changed one subcontinent of one world. Areas: their layout inside a region is
+# seen nowhere (the world names them) while scripts read their land, so physical similarity
+# decides and place only breaks ties; weight 8 there cost a third more physical difference
+# (2026-11-06, docs/research/n5-region-keys.md).
+REGION_PLACE_WEIGHT: Final[int] = 8
+AREA_PLACE_WEIGHT: Final[int] = 0
 TOPOGRAPHY: Final[dict[str, str]] = {
     "mountain_wasteland": "mountains",
     "mesa_wasteland": "plateau",
@@ -96,6 +113,51 @@ def profile(traits: Iterable[Trait]) -> Profile:
 
 def _difference(first: dict[str, int], second: dict[str, int]) -> int:
     return sum(abs(first.get(key, 0) - second.get(key, 0)) for key in first.keys() | second) // 2
+
+
+def frame(points: Sequence[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+    """The (row, column) mean of a nonempty point cloud and its standard deviation on each
+    axis, in integers (at least 1), so the result is the same on every machine."""
+    if not points:
+        message = "An empty point cloud has no frame"
+        raise RegionKeyError(message)
+
+    def axis(values: list[int]) -> tuple[int, int]:
+        mean = sum(values) // len(values)
+        return mean, max(1, math.isqrt(sum((v - mean) ** 2 for v in values) // len(values)))
+
+    (mean_row, spread_row) = axis([row for row, _ in points])
+    (mean_column, spread_column) = axis([column for _, column in points])
+    return (mean_row, mean_column), (spread_row, spread_column)
+
+
+def standard(points: Sequence[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Each (row, column) point in permille of its cloud's standard deviation from its mean;
+    an axis without spread puts every point at zero on it."""
+    if not points:
+        return []
+    (mean_row, mean_column), (spread_row, spread_column) = frame(points)
+    return [
+        (
+            (row - mean_row) * PERMILLE // spread_row,
+            (column - mean_column) * PERMILLE // spread_column,
+        )
+        for row, column in points
+    ]
+
+
+def unstandard(point: tuple[int, int], points: Sequence[tuple[int, int]]) -> tuple[int, int]:
+    """The standardized ``point`` placed in the frame of the cloud ``points``."""
+    (mean_row, mean_column), (spread_row, spread_column) = frame(points)
+    return (
+        mean_row + point[0] * spread_row // PERMILLE,
+        mean_column + point[1] * spread_column // PERMILLE,
+    )
+
+
+def place_distance(first: tuple[int, int], second: tuple[int, int]) -> int:
+    """The distance of two standardized points, in permille of a standard deviation."""
+    return math.isqrt((first[0] - second[0]) ** 2 + (first[1] - second[1]) ** 2)
 
 
 def distance(first: Profile, second: Profile, totals: tuple[int, int]) -> tuple[int, ...]:
@@ -180,21 +242,29 @@ class KeyMatcher:
     generated: dict[int, Trait]
     assignments: list[dict[str, object]] = field(default_factory=list)
 
-    def pair(
+    def pair(  # noqa: PLR0913 - the parts, their keys, where each lies and how much that counts.
         self,
         parts: list[list[int]],
         keys: list[str],
-        positional: list[int],
         *,
+        centres: Sequence[tuple[int, int]],
+        places: Sequence[tuple[int, int]],
+        place_weight: int,
         minimum: dict[str, int] | None = None,
     ) -> list[int]:
-        """Return a key index per part (-1 for extra areas), minimizing total difference.
+        """Return a key index per part (-1 for extra areas), minimizing the total cost.
 
-        Original positional matches break equal-cost assignments only. Part boundaries
+        ``centres`` are the parts' centres and ``places`` the vanilla keys' centres; each
+        cloud is standardized on its own (``standard``). A cost is the physical difference
+        plus ``place_weight`` times the distance of the two standardized points; between
+        assignments of equal total cost the smaller total distance wins. Part boundaries
         are final before matching: no later balancing can invalidate the scored profile.
         """
         if not keys or keys != sorted(set(keys)):
             message = "Physical matching requires nonempty, sorted, unique vanilla keys"
+            raise RegionKeyError(message)
+        if len(centres) != len(parts) or len(places) != len(keys):
+            message = "Every part needs a centre and every vanilla key a place"
             raise RegionKeyError(message)
         missing = set(keys) - self.vanilla.keys()
         if missing:
@@ -204,27 +274,34 @@ class KeyMatcher:
         found = [profile(self.generated[cell] for cell in part) for part in parts]
         totals = (sum(part.pixels for part in found), sum(part.pixels for part in targets))
         differences = [[distance(part, target, totals) for part in found] for target in targets]
-        costs = [
+        physical = [
             [sum(a * b for a, b in zip(delta, WEIGHTS, strict=True)) for delta in row]
             for row in differences
         ]
-        if len(positional) != len(parts) or sorted(p for p in positional if p >= 0) != list(
-            range(len(keys))
-        ):
-            message = "Positional comparison does not assign every vanilla key exactly once"
-            raise RegionKeyError(message)
+        here, there = standard(centres), standard(places)
+        apart = [[place_distance(spot, point) for point in here] for spot in there]
+        costs = [
+            [cost + place_weight * gap for cost, gap in zip(row, gaps, strict=True)]
+            for row, gaps in zip(physical, apart, strict=True)
+        ]
+        # The distance breaks ties: scaled past any total of distances, it cannot outweigh
+        # a unit of cost.
+        scale = 1 + len(keys) * max(max(row) for row in apart)
+        ranked = [
+            [cost * scale + gap for cost, gap in zip(row, gaps, strict=True)]
+            for row, gaps in zip(costs, apart, strict=True)
+        ]
         needs = minimum or dict.fromkeys(keys, 1)
         # A region must have room for every original child area. Forbid an impossible
         # placement in the same assignment, rather than repair a hierarchy afterwards.
-        forbidden = 1 + sum(max(row) for row in costs)
+        forbidden = 1 + sum(max(row) for row in ranked)
         chosen = minimum_assignment(
             [
                 [
-                    (cost if len(parts[p]) >= needs[keys[k]] else forbidden) * (len(keys) + 1)
-                    + (positional[p] != k)
+                    cost if len(parts[p]) >= needs[keys[k]] else forbidden
                     for p, cost in enumerate(row)
                 ]
-                for k, row in enumerate(costs)
+                for k, row in enumerate(ranked)
             ]
         )
         if any(len(parts[p]) < needs[keys[k]] for k, p in enumerate(chosen)):
@@ -233,14 +310,14 @@ class KeyMatcher:
         pairing = [-1] * len(parts)
         for key, part in enumerate(chosen):
             pairing[part] = key
-            old = positional.index(key)
             self.assignments.append(
                 {
                     "key": keys[key],
                     "cost": costs[key][part],
-                    "positional_cost": costs[key][old],
+                    "physical_cost": physical[key][part],
+                    "place_permille": apart[key][part],
+                    "place_weight": place_weight,
                     "difference": list(differences[key][part]),
-                    "moved": part != old,
                     "vanilla": targets[key].summary(),
                     "generated": found[part].summary(),
                 }

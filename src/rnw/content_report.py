@@ -96,7 +96,7 @@ def build(game_dir: Path) -> Inventory:
 
 
 def _positional(inventory: Inventory) -> dict[str, object]:
-    """Consumers retained on American keys; N5 assigns the land keys by physical similarity."""
+    """Consumers retained on American keys; N5 assigns the land keys by place and land."""
     chosen = [
         consumer
         for key, consumer in inventory.consumers.items()

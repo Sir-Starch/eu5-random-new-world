@@ -3,11 +3,13 @@
 The hierarchy is built from the generated cells, top-down, as compact connected parts
 (``hierarchy.py``): the land is split into the vanilla American subcontinents and
 regions, each region into areas and each area into provinces; the sea into the vanilla
-sea areas the canvas touches, then into provinces. Vanilla keys go to the generated part
-by physical similarity within their original parent (N5), so script references keep
-resolving on comparable land; subcontinents keep their positions. Areas a
-region needs beyond its vanilla ones get new keys. Water near a shore belongs to the
-region of that shore, as in vanilla. Provinces and locations are new.
+sea areas the canvas touches, then into provinces. Subcontinents are bands from north to
+south in their vanilla order and shares. Within its original parent a vanilla key goes to
+the part that lies where the key lies in vanilla, and among comparable places to the most
+similar land (N5), so the map reads as the Americas do and script references keep
+resolving on comparable land. Areas a region needs beyond its vanilla ones get new keys.
+Water near a shore belongs to the region of that shore, as in vanilla. Provinces and
+locations are new.
 Stamping vanilla areas onto cells by position instead left areas and regions in pieces
 inside one another [V-GAME owner, 1.4.1].
 """
@@ -26,17 +28,26 @@ import numpy as np
 
 from rnw import wording
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
+from rnw.eu5_regionkeys import (
+    AREA_PLACE_WEIGHT,
+    REGION_PLACE_WEIGHT,
+    minimum_assignment,
+    place_distance,
+    standard,
+    unstandard,
+)
 from rnw.hierarchy import (
     absorb_small_pieces,
     balanced_parts,
+    banded_parts,
     centre_of,
     contact_graph,
-    keyed_parts,
     match,
     piece_counts,
     pieces,
     split,
     split_landmasses,
+    spread_sources,
 )
 from rnw.model import CellClass
 from rnw.names import NameGenerator
@@ -273,15 +284,60 @@ def _vanilla_land(
     return tally
 
 
-def _keyed(
+def _bands(
     graph: ContactGraph, cells: list[int], tally: _Tally, keys: list[str]
 ) -> list[list[int]]:
+    """The subcontinents as bands from north to south, in their vanilla order and shares."""
     if len(keys) > len(cells):
         message = f"{len(cells)} generated cells cannot hold the {len(keys)} keys {keys}"
         raise IdentityError(message)
-    return keyed_parts(
-        graph, cells, [tally.centre(key) for key in keys], [tally.count[key] for key in keys]
+    order = sorted(range(len(keys)), key=lambda key: (tally.centre(keys[key])[0], keys[key]))
+    found = banded_parts(graph, cells, [tally.count[keys[key]] for key in order])
+    parts: list[list[int]] = [[] for _ in keys]
+    for key, part in zip(order, found, strict=True):
+        parts[key] = part
+    return parts
+
+
+def _placed(
+    graph: ContactGraph,
+    members: list[int],
+    count: int,
+    places: list[tuple[int, int]],
+    *,
+    minimum: Sequence[int] = (),
+) -> list[list[int]]:
+    """``count`` compact parts, grown from sources laid out as the vanilla ``places`` lie.
+
+    The sources start well spread, landmasses taking them by size (``spread_sources``).
+    The places, standardized as one cloud, go to the sources, standardized as another, in
+    one exact assignment; each matched source then moves, on its own landmass, to the cell
+    nearest its place in the sources' frame. Sources without a place stay. The parts then
+    balance and relax as ``split``'s do.
+    """
+    sources = spread_sources(graph, members, count)
+    spots = [(int(row), int(column)) for row, column in graph.centres[sources].tolist()]
+    here, there = standard(spots), standard(places)
+    chosen = minimum_assignment([[place_distance(point, spot) for spot in here] for point in there])
+    landmass = {cell: piece for piece in pieces(graph, members) for cell in piece}
+    matched = set(chosen)
+    taken = {source for number, source in enumerate(sources) if number not in matched}
+    for point, number in zip(there, chosen, strict=True):
+        # A landmass holds at least as many cells as sources, so one is always free; the
+        # lowest cell wins a tie (pieces are sorted).
+        free = np.array([cell for cell in landmass[sources[number]] if cell not in taken])
+        gap = ((graph.centres[free] - np.array(unstandard(point, spots))) ** 2).sum(axis=1)
+        sources[number] = int(free[int(np.argmin(gap))])
+        taken.add(sources[number])
+    parts, _ = balanced_parts(
+        graph,
+        members,
+        [[source] for source in sources],
+        [1] * count,
+        movable=[True] * count,
+        minimum=minimum,
     )
+    return parts
 
 
 def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and physical matching.
@@ -295,43 +351,43 @@ def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and ph
 ) -> list[_Area]:
     """Top-down: subcontinents and regions keep their vanilla keys, areas reuse theirs.
 
-    Subcontinents retain their positions and relative sizes. Regions start as equal
-    compact parts without identities: the old positional rebalance could shrink a
-    region below its count of child areas (three cells for Chaco's four in the reference).
-    Final region and area boundaries receive keys by physical similarity before
-    provinces are made; size is scored, never rebalanced after scoring.
+    Subcontinents are bands from north to south in their vanilla order and relative sizes.
+    A subcontinent's regions are equal compact parts grown from sources laid out as the
+    vanilla regions lie in it (``_placed``), with room for every original child area; they
+    take their keys by place first, physical similarity second. A region's areas are equal
+    compact parts that take their keys by physical similarity, place breaking ties
+    (``KeyMatcher.pair``). Keys are chosen before provinces are made; size is scored, never
+    rebalanced after scoring.
     """
     areas: list[_Area] = []
     subcontinents = sorted(tally.children[NEW_WORLD])
     for subcontinent, sub_cells in zip(
-        subcontinents, _keyed(graph, cells, tally, subcontinents), strict=True
+        subcontinents, _bands(graph, cells, tally, subcontinents), strict=True
     ):
         regions = sorted(tally.children[subcontinent])
-        region_parts = split(
-            graph,
-            sub_cells,
-            len(regions),
-            minimum=[len(tally.children[region]) for region in regions],
-        )
-        positional = match(
-            [centre_of(graph, part) for part in region_parts],
-            [tally.centre(key) for key in regions],
-        )
+        needs = [len(tally.children[region]) for region in regions]
+        places = [tally.centre(region) for region in regions]
+        region_parts = _placed(graph, sub_cells, len(regions), places, minimum=needs)
         regional_keys = physical.pair(
             region_parts,
             regions,
-            positional,
-            minimum={region: len(tally.children[region]) for region in regions},
+            centres=[centre_of(graph, part) for part in region_parts],
+            places=places,
+            place_weight=REGION_PLACE_WEIGHT,
+            minimum=dict(zip(regions, needs, strict=True)),
         )
         for region_cells, region_key in zip(region_parts, regional_keys, strict=True):
             region = regions[region_key]
             vanilla = sorted(tally.children[region])
             wanted = _rounded(len(region_cells), province_size * AREA_PROVINCES)
             parts = split(graph, region_cells, min(len(region_cells), max(len(vanilla), wanted)))
-            pairing = match(
-                [centre_of(graph, part) for part in parts], [tally.centre(key) for key in vanilla]
+            pairing = physical.pair(
+                parts,
+                vanilla,
+                centres=[centre_of(graph, part) for part in parts],
+                places=[tally.centre(key) for key in vanilla],
+                place_weight=AREA_PLACE_WEIGHT,
             )
-            pairing = physical.pair(parts, vanilla, pairing)
             for part, key in zip(parts, pairing, strict=True):
                 name = vanilla[key] if key >= 0 else keys.next("rnw_area_", 4)
                 provinces = split(graph, part, max(1, _rounded(len(part), province_size)))

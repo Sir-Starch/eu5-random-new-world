@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Lay out the New World's regions as the Americas lie. North and South America are now
+  bands from north to south, so an archipelago no longer puts the Andes and Colombia north of
+  Canada. Each region takes the place its namesake has in its continent: Alaska in the
+  north-west, the West Coast in the west, Central America in the south. Where the land
+  allows, the land decides between neighbouring places. A region used to go wherever its
+  land was most alike, even across the continent: Central America beside Alaska, the West
+  Coast on the east shore, Colombia on an island in the east. The regions' land also matches
+  better: Central America's climate on the reference world was almost entirely unlike
+  vanilla's and is now close to it.
+
 - Let every land country of the New World settle the frontier. The game grants the *Settle
   the Frontier* action only to countries whose original capital lies in some American
   regions, and a generated world kept that list, so about half of its countries could not

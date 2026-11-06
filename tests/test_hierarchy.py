@@ -26,9 +26,9 @@ from rnw.hierarchy import (
     PartitionError,
     absorb_small_pieces,
     balanced_parts,
+    banded_parts,
     centre_of,
     contact_graph,
-    keyed_parts,
     match,
     piece_counts,
     pieces,
@@ -173,14 +173,80 @@ def test_islands_without_a_source_join_the_nearest_part_whole() -> None:
     assert split_landmasses(graph, parts) == []
 
 
-def test_keyed_parts_follow_key_positions_and_weights() -> None:
-    graph = _grid(40, 10)
+def test_bands_follow_rows_and_weights() -> None:
+    graph = _grid(10, 40)
     members = _land(graph)
-    east, west = (50, 350), (50, 50)
-    parts = keyed_parts(graph, members, [east, west], [3, 1])
-    assert centre_of(graph, parts[0])[1] > centre_of(graph, parts[1])[1]
-    assert abs(len(parts[0]) - 3 * len(parts[1])) <= len(members) // 20
-    assert all(len(pieces(graph, part)) == 1 for part in parts)
+    north, south = banded_parts(graph, members, [3, 1])
+    assert (len(north), len(south)) == (300, 100)
+    assert max(int(graph.centres[cell][0]) for cell in north) < min(
+        int(graph.centres[cell][0]) for cell in south
+    )
+    assert all(len(pieces(graph, part)) == 1 for part in (north, south))
+    assert banded_parts(graph, list(reversed(members)), [3, 1]) == [north, south]
+
+
+def test_a_band_crossing_a_landmass_twice_keeps_one_piece_there() -> None:
+    """A U open to the north: the northern band holds both arms, so it keeps the larger one
+    and the other arm joins the southern band, which it touches."""
+    width, height = 10, 10
+    graph = _grid(width, height)
+    hollow = {row * width + column for row in range(6) for column in range(3, 7)}
+    keep = [cell not in hollow for cell in range(width * height)]
+    edges = [(first, second) for first, links in enumerate(graph.links) for second, _ in links]
+    graph = contact_graph(graph.centres, edges, keep)
+    members = _land(graph)
+    north, south = banded_parts(graph, members, [1, 1])
+    assert split_landmasses(graph, [north, south]) == []
+    assert len(pieces(graph, north)) == 1
+    assert sorted(north + south) == members
+    with pytest.raises(PartitionError, match="Cannot band"):
+        _ = banded_parts(graph, members, [1, 0])
+
+
+def test_region_keys_keep_their_vanilla_layout_against_physical_pull() -> None:
+    """Four regions lie in the vanilla quadrants; the generated land's climate is the mirror
+    image of vanilla's. Place decides: each key keeps its quadrant (C502)."""
+    graph = _grid(40, 40)
+    tally = _Tally(0)
+    corners = {
+        "north_west": (0, 0),
+        "north_east": (0, 1),
+        "south_west": (1, 0),
+        "south_east": (1, 1),
+    }
+    climate = {
+        "north_west": "arctic",
+        "north_east": "temperate",
+        "south_west": "arid",
+        "south_east": "tropical",
+    }
+    templates: dict[str, list[Trait]] = {}
+    for region, (row, column) in corners.items():
+        for child in range(4):
+            area = f"{region}_{child}"
+            tally.add(("america", "sub", region, area), row * 200 + child * 10, column * 200, 100)
+            for name in (region, area):
+                templates.setdefault(name, []).append(
+                    Trait(climate[region], "hills", 100, coastal=False)
+                )
+    mirror = {(0, 0): "tropical", (0, 1): "arid", (1, 0): "temperate", (1, 1): "arctic"}
+    traits = {
+        cell: Trait(mirror[cell // 40 // 20, cell % 40 // 20], "hills", 100, coastal=False)
+        for cell in range(1600)
+    }
+    physical = KeyMatcher({key: profile(rows) for key, rows in templates.items()}, traits)
+    areas = _land_areas(graph, list(range(1600)), tally, 6, KeySpace(set()), physical=physical)
+    _check_pieces(graph, areas, depth=4, exempt=set())
+    for region, (row, column) in corners.items():
+        cells = [
+            cell
+            for area in areas
+            if area.parents[0] == region
+            for part in area.provinces
+            for cell in part
+        ]
+        middle = centre_of(graph, cells)
+        assert (middle[0] >= 200, middle[1] >= 200) == (row == 1, column == 1), region
 
 
 def test_physical_keys_keep_original_parents_and_connected_parts() -> None:
