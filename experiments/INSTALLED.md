@@ -6,6 +6,24 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-06, **1.2.0 development / pending epoch 61 — goals candidate D** (all of D29: N6–N9 and every
+item of the plan's §22.4: adapted vanilla chains, naming choices, the fantasy layer, missions; keys
+handed out by the key space). [V-EXEC] Installed **`mod/rnw_exp_world_3ccciukst2`** ("History 1.2
+candidate D (goals, complete)") in the existing Windows/Proton profile: code
+`RNW1-080GY-H0SM8-KPN19-P040G-00830-3SG46-R18Y1-G5YHM-DM`, the settings of candidate B with a new seed,
+generated at `332c182`. It is the first candidate in which every content family is present, with no
+recorded absence: 10 region realms, 4 restorations, a great league, the empire and all four
+continental goals (two oceans among them), every story family including the declining centre, the
+confederation council and the senior partner, and 108 memory events. All its RNW event, mission,
+formable and geography scripts parse. The staged installer refused any existing target; 911 files
+match the prepared mod, both libraries hold the record, and all 8 other mod folders and 9
+profile-root files are unchanged. No playset, save or preference edit; no EU5 launch or control by the
+agent. The standard updater installed hub 1.2.0 with this generator after its Wine window, native,
+code, shell and bridge self-tests, retaining the former hub at
+`.rnw-hub-backups/1.2.0-1793946916723989738`; Windows wheel SHA-256
+`18080ff7ebdcac4df1fcb3a392c685a7368160c33b9df0adb9d37a779c39515c`. Candidate C (`anrfpxbsw3`) stays
+installed. NOT GAME VALIDATED.
+
 2026-11-06, **1.2.0 development / pending epoch 61 — goals candidate C** (D29, N6–N9: formable goals,
 restorations, AI goals, events of the recorded past, family reforms). [V-EXEC] Installed
 **`mod/rnw_exp_world_anrfpxbsw3`** ("History 1.2 candidate C (goals)") in the existing Windows/Proton
