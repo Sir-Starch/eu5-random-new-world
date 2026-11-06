@@ -59,6 +59,8 @@ CENTRAL: Final[str] = "central"
 FAR: Final[str] = "far"
 FORMATION: Final[str] = "formation."
 COLONY: Final[str] = "colony."
+# The name an independent nation of settlers takes in its founders' tradition (history plan §22).
+NATION: Final[str] = "nation."
 FORMATIONS: Final[tuple[str, ...]] = (
     "union",
     "confederation",
@@ -836,9 +838,100 @@ LANGUAGES: Final[dict[str, Grammar]] = {
 }
 
 
+# A nation's name by its founders' tradition, translated as the game translates national names.
+NATIONS: Final[dict[str, dict[str, str]]] = {
+    ENGLISH: {
+        "spanish": "United Provinces of {n}",
+        "portuguese": "United Captaincies of {n}",
+        "english": "United Colonies of {n}",
+        "french": "Free State of {n}",
+        "dutch": "Generality of {n}",
+    },
+    "russian": {
+        "spanish": "Соединённые провинции {n}",
+        "portuguese": "Соединённые капитанства {n}",
+        "english": "Соединённые колонии {n}",
+        "french": "Свободное государство {n}",
+        "dutch": "Генералитет {n}",
+    },
+    "german": {
+        "spanish": "Vereinigte Provinzen von {n}",
+        "portuguese": "Vereinigte Kapitanate von {n}",
+        "english": "Vereinigte Kolonien von {n}",
+        "french": "Freistaat {n}",
+        "dutch": "Generalität von {n}",
+    },
+    "french": {
+        "spanish": "Provinces-Unies de {n}",
+        "portuguese": "Capitaineries-Unies de {n}",
+        "english": "Colonies-Unies de {n}",
+        "french": "État libre de {n}",
+        "dutch": "Généralité de {n}",
+    },
+    "spanish": {
+        "spanish": "Provincias Unidas de {n}",
+        "portuguese": "Capitanías Unidas de {n}",
+        "english": "Colonias Unidas de {n}",
+        "french": "Estado Libre de {n}",
+        "dutch": "Generalidad de {n}",
+    },
+    "braz_por": {
+        "spanish": "Províncias Unidas de {n}",
+        "portuguese": "Capitanias Unidas de {n}",
+        "english": "Colônias Unidas de {n}",
+        "french": "Estado Livre de {n}",
+        "dutch": "Generalidade de {n}",
+    },
+    "polish": {
+        "spanish": "Zjednoczone Prowincje {n}",
+        "portuguese": "Zjednoczone Kapitanaty {n}",
+        "english": "Zjednoczone Kolonie {n}",
+        "french": "Wolne Państwo {n}",
+        "dutch": "Generalitet {n}",
+    },
+    "turkish": {
+        "spanish": "{n} Birleşik Eyaletleri",
+        "portuguese": "{n} Birleşik Kaptanlıkları",
+        "english": "{n} Birleşik Kolonileri",
+        "french": "{n} Özgür Devleti",
+        "dutch": "{n} Generalite Toprakları",
+    },
+    "japanese": {
+        "spanish": "{n}連合州",
+        "portuguese": "{n}連合カピタニア",
+        "english": "{n}連合植民地",
+        "french": "{n}自由国",
+        "dutch": "{n}直轄領",
+    },
+    "korean": {
+        "spanish": "{n} 연합주",
+        "portuguese": "{n} 연합 카피타니아",
+        "english": "{n} 연합 식민지",
+        "french": "{n} 자유국",
+        "dutch": "{n} 직할령",
+    },
+    "simp_chinese": {
+        "spanish": "{n}联合省",
+        "portuguese": "{n}联合总督辖区",
+        "english": "{n}联合殖民地",
+        "french": "{n}自由邦",
+        "dutch": "{n}直辖领",
+    },
+}
+
+
 def grammar(language: str) -> Grammar:
     """The grammar of ``language``; English for a language the module does not know."""
     return LANGUAGES.get(language, LANGUAGES[ENGLISH])
+
+
+def _founders(name: Phrase, language: str) -> str:
+    """A colony's or a nation's name in its founders' tradition."""
+    rules = grammar(language)
+    if name.term.startswith(COLONY):
+        return rules.colony(name.term.removeprefix(COLONY), name.word)
+    patterns = NATIONS.get(language, NATIONS[ENGLISH])
+    return rules.fill(patterns[name.term.removeprefix(NATION)], rules.proper(name.word))
 
 
 def render(name: Name, language: str) -> str:
@@ -852,8 +945,8 @@ def render(name: Name, language: str) -> str:
         return rules.adjective(name.word)
     if name.term.startswith(FORMATION):
         return rules.formation(name.term.removeprefix(FORMATION), name.word)
-    if name.term.startswith(COLONY):
-        return rules.colony(name.term.removeprefix(COLONY), name.word)
+    if name.term.startswith((COLONY, NATION)):
+        return _founders(name, language)
     term = rules.terms.get(name.term)
     if term is None:
         message = f"No language writes the term {name.term!r}"

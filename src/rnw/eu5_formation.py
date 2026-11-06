@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from rnw import wording
+from rnw.colonial_names import TRADITIONS
 from rnw.eu5_empires import rank_levels
 from rnw.eu5_natives import hsv_rgb
 from rnw.formations import BY_FAMILY, CORES_TOOLTIP, EMPIRE_ADJECTIVE, Spec
@@ -144,6 +145,27 @@ def _cores(formation: Formation) -> str:
     return f"\t\tcustom_tooltip = {CORES_TOOLTIP}\n\t\thidden_effect = {{\n{work}\t\t}}\n"
 
 
+def nation_key(tag: str, tradition: str) -> str:
+    """The key of the name a founder of ``tradition`` takes (``change_country_name``)."""
+    return f"{tag}_{tradition}"
+
+
+def _renaming(tag: str) -> str:
+    """The founder takes the name of its tradition, the first one its culture meets."""
+    return "".join(
+        _indented(
+            [
+                f"{'if' if number == 0 else 'else_if'} = {{",
+                f"\tlimit = {{ {tradition.founder} }}",
+                f"\tchange_country_name = {nation_key(tag, tradition.name)}",
+                "}",
+            ],
+            2,
+        )
+        for number, tradition in enumerate(TRADITIONS)
+    )
+
+
 def block(formation: Formation, identity: Identity) -> str:
     """The formable of one formation: a tag the game does not define, as ``ADU`` is."""
     spec = BY_FAMILY[formation.family]
@@ -171,6 +193,7 @@ def block(formation: Formation, identity: Identity) -> str:
         f"\t\t\tyears = {spec.years}\n"
         "\t\t\tmode = add\n\t\t}\n"
         f"{_cores(formation) if spec.cores else ''}"
+        f"{_renaming(identity.tag) if spec.renamed else ''}"
         "\t}\n"
         "}\n"
     )
@@ -214,7 +237,8 @@ def _naming(
     word for a realm, the seat's for the others."""
     if formation.continent:
         return wording.reference(formation.continent), Text(EMPIRE_ADJECTIVE)
-    key, table = (formation.region, regions) if formation.region else (formation.seat, names)
+    region = formation.region or formation.named_by
+    key, table = (region, regions) if region else (formation.seat, names)
     word = table.get(key, key)
     if not isinstance(word, str):
         message = f"The place {key} of a formation has the composed name {word}"
@@ -268,6 +292,12 @@ def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) ->
         # without it the game shows the key and logs it as a missing localization.
         found[key] = wording.reference(identity.tag)
         found[f"{key}_desc"] = Described(formation_description(formation.family), identity.name)
-        if BY_FAMILY[formation.family].cores:
+        spec = BY_FAMILY[formation.family]
+        if spec.cores:
             found[CORES_TOOLTIP] = Text(CORES_TOOLTIP)
+        if spec.renamed:
+            for tradition in TRADITIONS:
+                found[nation_key(identity.tag, tradition.name)] = Phrase(
+                    wording.NATION + tradition.name, identity.name.word
+                )
     return found

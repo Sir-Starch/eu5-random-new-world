@@ -955,8 +955,8 @@ source = "55a8e093ca32dc59"
 text = '''Yeni bir idare bütün bölgeye uzanıyor ve vilayetleri boyun eğiyor.'''
 
 ["rnw_formation_postcolonial_federation_desc"]
-source = "d73fc53c1ceb15cf"
-text = '''Aynı kıyıdaki koloniler, tek bir eski ülkeden ya da birkaçından gelenlerce kurulmuş olsalar da artık aynı şikâyeti ve aynı geleceği paylaşıyor. Bu kıyının yeterli kısmına sahip olan ve başkenti bu kolonilerin arasında bulunan bir yerleşimci devlet kendini federasyon ilan edebilir: {name}.'''
+source = "6044bfbdfe648af8"
+text = '''Aynı kıyıdaki koloniler, tek bir eski ülkeden ya da birkaçından gelenlerce kurulmuş olsalar da artık aynı şikâyeti ve aynı geleceği paylaşıyor. Bu kıyının yeterli kısmına sahip olan ve başkenti orada bulunan bağımsız bir yerleşimci devlet ya da onların sömürge federasyonunun lideri, kendi ulusunu ilan edebilir: {name}. İspanyolca, Portekizce, İngilizce, Fransızca ya da Felemenkçe konuşan kurucular ona kendi geleneklerine göre bir ad verir.'''
 
 ["STATIC_MODIFIER_NAME_rnw_federation_founded"]
 source = "25d53c2568486691"

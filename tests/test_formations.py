@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from rnw import wording
+from rnw.colonial_names import TRADITIONS
 from rnw.content import (
     CULTURAL_UNION,
     EMPIRE_REALMS,
@@ -38,12 +39,14 @@ from rnw.eu5_formation import (
     block,
     check_installation,
     files,
+    identities,
     key_of,
+    nation_key,
     texts,
 )
 from rnw.formations import BY_FAMILY, CORES_TOOLTIP, EMPIRE_ADJECTIVE, SPECS, TOP_RANK_LEVEL
 from rnw.game_texts import Text, localize
-from rnw.pdx import parse
+from rnw.pdx import Block, parse
 from rnw.wording import Phrase, render
 
 if TYPE_CHECKING:
@@ -433,11 +436,12 @@ def test_every_family_writes_a_formable_of_its_own_level_rank_and_modifier() -> 
 
 
 def test_the_league_asks_for_ports_the_empire_for_hegemony_and_a_realm_for_its_throne() -> None:
-    """Only the league and the empire name a capability; a realm asks for its own throne."""
+    """The league, the empire and the federation name a capability; a realm asks for its throne."""
     asks = {spec.family: spec.allow for spec in SPECS}
     assert asks[MARITIME_LEAGUE] == ("num_of_ports >= 3",)
     assert asks[NEW_WORLD_EMPIRE] == ("is_hegemon = yes", "country_rank = country_rank:rank_empire")
-    others = set(asks) - {MARITIME_LEAGUE, NEW_WORLD_EMPIRE}
+    assert "is_subject = no" in asks[POSTCOLONIAL_FEDERATION][0]
+    others = set(asks) - {MARITIME_LEAGUE, NEW_WORLD_EMPIRE, POSTCOLONIAL_FEDERATION}
     assert all(not asks[family] for family in others)
     realm = Formation(
         REGIONAL_REALM, 0, ("a", "b"), ("a",), ("ABC",), "a", region="east_region", throne="a"
@@ -549,11 +553,19 @@ def test_a_colonial_shore_needs_a_coast_not_a_state() -> None:
     assert "colonial shore" in reason
 
 
-def test_the_federation_is_visible_to_countries_of_settlers_and_not_named_by_tag() -> None:
-    """Its potential names a culture, not the states of the world; a native culture is excluded."""
+def test_the_federation_is_a_nation_of_settlers_independent_or_leading_their_federation() -> None:
+    """Its potential names settlers or a Christian people, never tags (as MEX_f admits a Christian
+    native people); it asks for independence or the lead of a colonial federation."""
     spec = BY_FAMILY[POSTCOLONIAL_FEDERATION]
-    assert spec.potential == ("culture ?= { is_culture_native_american = no }",)
-    formation = Formation(POSTCOLONIAL_FEDERATION, 0, ("loc_a", "loc_b"), (), (), "loc_a")
+    assert spec.potential == (
+        (
+            "OR = { culture ?= { is_culture_native_american = no } "
+            "religion.group = religion_group:christian }"
+        ),
+    )
+    formation = Formation(
+        POSTCOLONIAL_FEDERATION, 0, ("loc_a", "loc_b"), (), (), "loc_a", named_by="east_region"
+    )
     alto = Identity(
         "XYZ",
         Phrase(wording.FORMATION + "federation", "Alto"),
@@ -562,9 +574,67 @@ def test_the_federation_is_visible_to_countries_of_settlers_and_not_named_by_tag
         ("red", "blue"),
     )
     text = block(formation, alto)
-    assert "is_culture_native_american = no" in text
-    assert "OR = {" not in text
+    entry = parse(text).block(key_of(formation))
+    assert entry is not None
+    allow = entry.block("allow", "OR")
+    assert allow is not None
+    assert allow.first("is_subject") is not None
+    leads = allow.block("is_leader_of_international_organization_of_type")
+    assert leads is not None
+    kind = leads.first("type")
+    assert kind is not None
+    assert kind.value == "colonial_federation"
     assert "tag = " not in text.replace("\ttag = XYZ", "")
     assert "capital_required = yes" in text
     assert spec.level == 3
     assert float(spec.fraction) < min(float(other.fraction) for other in SPECS if other is not spec)
+
+
+def test_the_federation_takes_the_name_of_its_founders_tradition() -> None:
+    """The region names it; a founder of each tradition takes that tradition's name for it."""
+    formation = Formation(
+        POSTCOLONIAL_FEDERATION, 0, ("loc_a",), (), (), "loc_a", named_by="east_region"
+    )
+    [identity] = identities(
+        [formation],
+        {"loc_a": "Seatname"},
+        ["XYZ"],
+        SEED,
+        frozenset(),
+        regions={"east_region": "Laltsu"},
+    )
+    assert identity.name == Phrase(wording.FORMATION + "federation", "Laltsu")
+    text = block(formation, identity)
+    effect = parse(text).block(key_of(formation), "form_effect")
+    assert effect is not None
+    renames = [
+        branch.value.first("change_country_name")
+        for branch in effect.entries
+        if branch.key in {"if", "else_if"} and isinstance(branch.value, Block)
+    ]
+    keys = [entry.value for entry in renames if entry is not None]
+    assert keys == [nation_key("XYZ", tradition.name) for tradition in TRADITIONS]
+    assert "culture.language = language:spanish_language" in text
+    written = localize(texts([formation], [identity]), "english")
+    assert written["XYZ"] == "Laltsu Federation"
+    assert written["XYZ_spanish"] == "United Provinces of Laltsu"
+    assert written["XYZ_dutch"] == "Generality of Laltsu"
+    russian = localize(texts([formation], [identity]), "russian")
+    assert russian["XYZ_english"] == "Соединённые колонии Лалцу"
+    assert (
+        localize(texts([formation], [identity]), "french")["XYZ_french"] == "État libre de Laltsu"
+    )
+
+
+def test_two_federations_of_one_region_are_not_both_named_after_it() -> None:
+    """The second federation of a region keeps its seat's name."""
+    facts = _chain(
+        count=120,
+        states=2,
+        seas=lambda index: ("bay",) if index % 60 < 50 else (),
+        breaks=(59,),
+        region=lambda _: "one_region",
+    )
+    found, _ = formations(facts, SEED, POSTCOLONIAL_FEDERATION)
+    assert len(found) == 2
+    assert [formation.named_by for formation in found] == ["one_region", ""]

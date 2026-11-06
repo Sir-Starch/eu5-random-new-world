@@ -57,7 +57,8 @@ class Spec:
     """One family of formables: its name, level, founding modifier, arms and words.
 
     ``rule`` is the game rule that shows it (``plausible`` or ``fantasy``); ``cores`` says whether
-    founding it gives cores over its territory.
+    founding it gives cores over its territory; ``renamed`` that its founder takes the name of its
+    own naming tradition (``colonial_names.TRADITIONS``), if it has one.
     """
 
     family: str
@@ -73,6 +74,7 @@ class Spec:
     potential: tuple[str, ...] = ()
     rule: str = "plausible"
     cores: bool = True
+    renamed: bool = False
 
     @property
     def rank_level(self) -> int:
@@ -195,8 +197,10 @@ SPECS: Final[tuple[Spec, ...]] = (
         emblem="ce_star_05.dds",
         description=(
             "Colonies on one shore, settled from one old country or from several, have come "
-            "to share one grievance and one future. A settler state that holds enough of the "
-            "shore, with its capital among them, may proclaim itself a federation: the {name}."
+            "to share one grievance and one future. An independent state of settlers, or the "
+            "leader of their colonial federation, that holds enough of the shore with its capital "
+            "there may proclaim a nation of its own: the {name}. Founders of Spanish, Portuguese, "
+            "English, French or Dutch tongue give it a name in their own tradition."
         ),
         modifier=Modifier(
             "rnw_federation_founded",
@@ -206,7 +210,19 @@ SPECS: Final[tuple[Spec, ...]] = (
             "A young nation of settlers grows fast and has little patience for rebels.",
         ),
         years=10,
-        potential=("culture ?= { is_culture_native_american = no }",),
+        allow=(
+            (
+                "OR = { is_subject = no is_leader_of_international_organization_of_type = "
+                "{ type = colonial_federation } }"
+            ),
+        ),
+        potential=(
+            (
+                "OR = { culture ?= { is_culture_native_american = no } "
+                "religion.group = religion_group:christian }"
+            ),
+        ),
+        renamed=True,
     ),
     Spec(
         family=NEW_WORLD_EMPIRE,

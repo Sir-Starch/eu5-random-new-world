@@ -106,7 +106,7 @@ countries. [V-EXEC C212, C218, C409; 1.2.0 development, history plan §22]
 | **Maritime league** | 8–18 coastal locations; connections may cross between ports sharing a sea zone; at least 3 centres and 2 states with capitals inside; up to 2 | 60%, plus **at least 3 ports** | 2 / Duchy | **Charter of the League**, 20 years |
 | **Cultural commonwealth** | 12–60 connected locations of one culture group, using each location's main culture; at least 3 centres and 2 states with capitals inside; up to 2 | 50% | 3 / Kingdom | **One People**, 20 years |
 | **Realm of a region** | A whole generated region; one for each region holding the capitals of at least 3 states and 4 centres, and for each region holding the seat of a lower formable | 40%, plus the region's **throne** | 4 / Empire | **Administration of the Realm**, 15 years |
-| **Postcolonial federation** | 20–40 connected coastal locations, including sea-zone links; no minimum starting states or centres; up to 2 | 35% | 3 / Kingdom | **A Nation Founded**, 10 years |
+| **Postcolonial federation** | 20–40 connected coastal locations, including sea-zone links; no minimum starting states or centres; up to 2 | 35%, plus **independence** or the lead of a colonial federation | 3 / Kingdom | **A Nation Founded**, 10 years |
 | **Empire of the continent** (fantasy) | The whole continent of the realms, once it holds the realms of at least 2 regions; one per world | 50%, plus **hegemony** and **empire rank** | 5 / Empire | **A Crown Over the Continent**, 20 years |
 
 **Who may form them.** Any country whose capital lies in the territory and who
@@ -118,11 +118,22 @@ capitals inside, and to any country of the people's culture group
 (`culture ?= { has_culture_group = culture_group:<basis> }`). The cultural
 commonwealth chooses the narrowest available vanilla culture group with enough
 main-culture locations; a scattered minority does not establish a territory. The
-federation uses a runtime cultural condition instead of starting tags:
-`culture ?= { is_culture_native_american = no }`. Its name describes its intended
-role, but the authored condition does **not** require previous colonial status,
-independence or completion of the Colony story. The empire is offered to a country
-whose capital is on its continent. [V-EXEC]
+federation is the nation of a colonial shore. It is offered to settlers or to a
+Christian people (`OR = { culture ?= { is_culture_native_american = no }
+religion.group = religion_group:christian }`, as vanilla's `MEX_f` admits a
+Christian native people), and asks for independence or the lead of a vanilla
+`colonial_federation` (the organization colonies found during the colonial
+revolution). It does not require completion of the Colony story. The empire is
+offered to a country whose capital is on its continent. [V-EXEC]
+
+**A nation's name.** The federation is named after the generated region of its
+seat (a second federation in the same region keeps its seat's name). On founding,
+a country of Spanish, Portuguese, English, French or Dutch tradition, tested as the
+colonial names test an overlord, renames itself with `change_country_name`:
+*United Provinces*, *United Captaincies*, *United Colonies*, *Free State* or
+*Generality of X*, written in every official language. [V-EXEC; that the engine
+accepts a generated key in `change_country_name`, as it accepts vanilla tags, is
+[INFERRED] and not yet observed]
 
 **The throne.** A realm's throne is the most populous centre that a state holds
 in its region at the start; the founder must own it, as vanilla's `AZT_f` requires

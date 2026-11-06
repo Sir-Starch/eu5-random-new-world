@@ -272,7 +272,9 @@ class Formation:
     ``basis`` is what the territory is built on beyond the land itself: the culture group of a
     cultural union, empty for the other families. A realm's territory is a whole generated
     ``region`` and the empire's a whole ``continent`` (``places`` are then their inhabited
-    places, the formable names the key); a realm also asks for its ``throne``.
+    places, the formable names the key); a realm also asks for its ``throne``. ``named_by`` is
+    the region whose generated name names a colonial federation (the region of its seat, unless
+    another federation took it).
     """
 
     family: str
@@ -285,6 +287,7 @@ class Formation:
     region: str = ""
     continent: str = ""
     throne: str = ""
+    named_by: str = ""
 
     @property
     def ident(self) -> str:
@@ -792,6 +795,7 @@ def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], s
         ranked = sorted(seated, key=lambda tag: (-owners[tag], tag))[: rule.bearers]
         taken.update(territory)
         inside = tuple(key for key in territory if key in centres)
+        region = facts.places[seat].region if family == POSTCOLONIAL_FEDERATION else ""
         chosen.append(
             Formation(
                 family,
@@ -801,6 +805,7 @@ def formations(facts: Facts, seed: int, family: str) -> tuple[list[Formation], s
                 tuple(sorted(ranked)),
                 seat,
                 group,
+                named_by="" if region in {f.named_by for f in chosen} else region,
             )
         )
     return chosen, reason

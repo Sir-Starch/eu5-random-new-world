@@ -955,8 +955,8 @@ source = "55a8e093ca32dc59"
 text = '''Eine neue Verwaltung erstreckt sich über die ganze Region, und ihre Provinzen fügen sich.'''
 
 ["rnw_formation_postcolonial_federation_desc"]
-source = "d73fc53c1ceb15cf"
-text = '''Kolonien an einer Küste, besiedelt aus einem alten Land oder aus mehreren, teilen inzwischen einen Groll und eine Zukunft. Ein Siedlerstaat, der genug von dieser Küste hält und dessen Hauptstadt unter ihnen liegt, kann sich zu einer Föderation erklären: {name}.'''
+source = "6044bfbdfe648af8"
+text = '''Kolonien an einer Küste, besiedelt aus einem alten Land oder aus mehreren, teilen inzwischen einen Groll und eine Zukunft. Ein unabhängiger Siedlerstaat oder das Haupt ihrer Kolonialföderation, das genug von dieser Küste hält und dort seine Hauptstadt hat, kann eine eigene Nation ausrufen: {name}. Gründer spanischer, portugiesischer, englischer, französischer oder niederländischer Zunge geben ihr einen Namen nach eigener Tradition.'''
 
 ["STATIC_MODIFIER_NAME_rnw_federation_founded"]
 source = "25d53c2568486691"

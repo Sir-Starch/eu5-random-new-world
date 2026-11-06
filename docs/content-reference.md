@@ -1567,13 +1567,13 @@ A whole region lies divided among many rulers, each holding a few of its towns. 
 
 ### postcolonial_federation
 
-Colonies on one shore, settled from one old country or from several, have come to share one grievance and one future. A settler state that holds enough of the shore, with its capital among them, may proclaim itself a federation: the *generated name*.
+Colonies on one shore, settled from one old country or from several, have come to share one grievance and one future. An independent state of settlers, or the leader of their colonial federation, that holds enough of the shore with its capital there may proclaim a nation of its own: the *generated name*. Founders of Spanish, Portuguese, English, French or Dutch tongue give it a name in their own tradition.
 
 - Key: `rnw_federation_<index>_f` (index starts at 1).
 - Level **3**; rank `rank_kingdom`; ownership fraction **0.35**; game rule `plausible`.
 - Generation: at most **2**; **20–40** locations; at least **0** centres and **0** states with capitals inside; at most **0** claimant starting tags.
-- Additional formation conditions: none authored.
-- Potential: `culture ?= { is_culture_native_american = no }`.
+- Additional formation conditions: `OR = { is_subject = no is_leader_of_international_organization_of_type = { type = colonial_federation } }`.
+- Potential: `OR = { culture ?= { is_culture_native_american = no } religion.group = religion_group:christian }`.
 - Cores: every location of the territory that another country holds (`rnw_formation_cores_tt`).
 - Founding modifier: **A Nation Founded** (`rnw_federation_founded`), **10 years**. A young nation of settlers grows fast and has little patience for rebels.
 - Payload: `static:new_colonial_nation_founded`.
