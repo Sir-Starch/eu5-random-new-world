@@ -746,7 +746,7 @@ of them (a named opinion) and a mediator.
   events of the recorded past (N9, `02b8230`). Then every item of §22.4: the adapted
   vanilla chains (`70a8090`), the naming choice (`54347a2`), the fantasy layer
   (`51a7229`, `ed0135f`) and the missions *Road to X* (`04c9a8f`). The pending epoch-61
-  golden carries all of it (`dfe767c`: 883 files, reproduced by two independent exports).
+  golden carries all of it (883 files, reproduced by two independent exports; keys handed out by the key space, `ee5b0c0`).
   [V-EXEC] Refinements: the fantasy layer's continental goals are one each per world,
   give no cores and are not pursued by the AI; the mixed realm is the *Realm of Two
   Peoples*; a coast's ocean is the open ocean its waters reach first, since the coastal
