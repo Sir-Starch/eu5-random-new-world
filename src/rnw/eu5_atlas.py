@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from rnw.eu5_newworld import Plan
     from rnw.eu5_start import FinalStartPlan, PopCohort
     from rnw.newworld import NewWorld
+    from rnw.wording import Name
 
 STEP: Final[int] = 4
 # Sea farther than this many pixels of the atlas from any land is left out of the picture: the
@@ -113,8 +114,15 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
         natives.names.get(cell.key) or plan.display_overrides.get(cell.key) or cell.name
         for cell in plan.cells
     )
-    areas = tuple(natives.names.get(cell.area, cell.area) for cell in plan.cells)
-    regions = tuple(natives.names.get(cell.region, cell.region) for cell in plan.cells)
+
+    def written(key: str) -> Name:
+        """What the world's localization calls ``key`` (``_localization``): its peoples' name,
+        else the generator's, else the game's own (the identifier, which the window asks the
+        game to name)."""
+        return natives.names.get(key) or plan.display_overrides.get(key) or key
+
+    areas = tuple(written(cell.area) for cell in plan.cells)
+    regions = tuple(written(cell.region) for cell in plan.cells)
     index_of = {key: number for number, key in enumerate(keys)}
     pops = [_main_pop(natives.pops.get(key, ())) for key in keys]
     cultures, culture_of = _vocabulary([culture for culture, _ in pops])
@@ -177,6 +185,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
         population=population,
         complexity=complexity,
         development=started,
+        region_keys=tuple(cell.region for cell in plan.cells),
         centre=_centres(labels, count),
         countries=tuple(countries),
         history=build_history(natives, keys) if natives.history is not None else None,

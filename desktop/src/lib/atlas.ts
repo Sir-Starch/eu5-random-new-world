@@ -33,6 +33,8 @@ export interface Facts {
   kind: string;
   area: string;
   region: string;
+  /** The base game's region whose rules apply here, when the world names it otherwise. */
+  rule: string;
   country: CountryInfo | null;
   culture: string;
   religion: string;
@@ -231,6 +233,7 @@ export class WorldAtlas {
       kind: d.kinds[d.kind[cell]] ?? "land",
       area: d.area[cell],
       region: d.region[cell],
+      rule: d.rule?.[cell] ?? "",
       country: owner >= 0 ? d.countries[owner] : null,
       culture: this.word("culture", d.culture[cell]),
       religion: this.word("religion", d.religion[cell]),

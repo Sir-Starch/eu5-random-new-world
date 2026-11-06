@@ -1386,6 +1386,14 @@ text = '''황무지'''
 source = "140bedbf9c3f6d56"
 text = '''없음'''
 
+["card.rule"]
+source = "6c2a8c8c3d12f4a1"
+text = '''게임 규칙상 ‘{region}’ 지역으로 취급됩니다'''
+
+["card.rule_tip"]
+source = "625919ff2c92a3da"
+text = '''기본 게임의 ‘{region}’ 지역 이벤트, 발전, AI 목표가 여기에 적용됩니다. 이 세계는 이 지역에 고유한 이름을 붙입니다.'''
+
 ["fact.country"]
 source = "701d021d08c54579"
 text = '''국가'''

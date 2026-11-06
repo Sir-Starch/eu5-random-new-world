@@ -1386,6 +1386,14 @@ text = '''terres désolées'''
 source = "140bedbf9c3f6d56"
 text = '''aucun'''
 
+["card.rule"]
+source = "6c2a8c8c3d12f4a1"
+text = '''Compte comme « {region} » selon les règles du jeu'''
+
+["card.rule_tip"]
+source = "625919ff2c92a3da"
+text = '''Les événements, avancées et objectifs de l'IA du jeu de base pour « {region} » s'appliquent ici. Le monde donne à la région un nom qui lui est propre.'''
+
 ["fact.country"]
 source = "701d021d08c54579"
 text = '''Pays'''

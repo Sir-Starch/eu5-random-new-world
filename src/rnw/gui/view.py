@@ -562,6 +562,7 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
         "kind": found.kinds.tolist(),
         "area": [name(value) for value in found.areas],
         "region": [name(value) for value in found.regions],
+        "rule": mapstyle.rules(found, words),
         "owner": found.owner.tolist(),
         "culture": found.culture.tolist(),
         "religion": found.religion.tolist(),

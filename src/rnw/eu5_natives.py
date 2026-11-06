@@ -1413,7 +1413,8 @@ def _place_names(
     culture_of: list[str],
     namer: PlaceNamer,
 ) -> dict[str, Name]:
-    """Names of land and wasteland locations, provinces and areas in local languages."""
+    """Names of land and wasteland locations, provinces, areas and regions in local languages:
+    a province, an area or a region after the culture most of its land speaks."""
     culture: dict[int, str] = dict(zip(cells.cells, culture_of, strict=True))
     names: dict[str, Name] = {
         plan.cells[cell].key: namer.name(culture[cell]) for cell in cells.cells
@@ -1427,12 +1428,17 @@ def _place_names(
         culture[waste] = _majority(near[waste])
         names[plan.cells[waste].key] = Phrase(wording.HIGHLANDS, namer.name(culture[waste]))
     members: dict[str, list[str]] = {}
+    regions: dict[str, list[str]] = {}
     for cell, value in sorted(culture.items()):
         members.setdefault(plan.cells[cell].province, []).append(value)
         members.setdefault(plan.cells[cell].area, []).append(value)
+        regions.setdefault(plan.cells[cell].region, []).append(value)
     for key in sorted(set(plan.province_names) | set(plan.display_overrides)):
         if members.get(key):
             names[key] = namer.name(_majority(members[key]))
+    # Regions last, so the names drawn before them stay as they were.
+    for key in sorted(regions.keys() & plan.display_overrides.keys()):
+        names[key] = namer.name(_majority(regions[key]))
     return names
 
 

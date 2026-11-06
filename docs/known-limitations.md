@@ -37,6 +37,18 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
   these worlds kept the game's list of regions, so about half of their New World
   countries cannot settle the unowned land beside them. Fixed in 1.2.0; the fix does
   not change an existing world.
+- **The game's own texts keep the real Americas' names.** The world names regions,
+  areas and places after the peoples who live there. The game, though, writes *America*,
+  *North America* and *South America* itself: in religion groups, pop diets and the timeline.
+  Some of its texts also name real places, for example AI goals such as *Settle Alaska*,
+  the history notes of the voyages, and religions such as *Caribbean Folk Religions*. These
+  are the game's words for the real Americas, not for the generated land. The generator's
+  map card names the base game's region whose rules apply to a place, for example *Counts as
+  Alaska in the game's rules*.
+- **Worlds made by 1.1.0 or earlier have regions with random names.** Their names come
+  from no culture, and the generator's map labels those regions by the base game's names
+  (Alaska, Canada) although the game shows the world's own. Fixed in 1.2.0; the fix does not
+  change an existing world.
 - **Institutions follow vanilla rules.** Feudalism and Legalism can appear only in
   Europe and reach the New World by spreading. The extraordinary-peoples setting gives
   technology and governments, not institutions.

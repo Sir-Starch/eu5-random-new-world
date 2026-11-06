@@ -177,6 +177,9 @@ class Facts:
     population: int
     complexity: int
     development: int | None = None
+    # The game's identifier of the region (``alaska_region``), whose rules apply here; empty in
+    # a world made before it was recorded, whose ``region`` is that identifier.
+    region_key: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +219,10 @@ class Atlas:
     # Each location's start development as the game sums ``14_development.txt``, in thousandths
     # (``eu5_development.site_value``); None in a world made before it was recorded.
     development: NDArray[np.int64] | None = None
+    # Each location's region by the game's identifier; ``regions`` holds the name the world
+    # writes for it. None in a world made before it was recorded, where ``regions`` holds the
+    # identifiers themselves.
+    region_keys: tuple[str, ...] | None = None
 
     @property
     def size(self) -> tuple[int, int]:
@@ -622,6 +629,7 @@ def describe(atlas: Atlas, cell: int) -> Facts | None:
         population=int(atlas.population[cell]),
         complexity=int(atlas.complexity[cell]),
         development=None if atlas.development is None else int(atlas.development[cell]),
+        region_key="" if atlas.region_keys is None else atlas.region_keys[cell],
     )
 
 
@@ -687,6 +695,7 @@ def to_files(atlas: Atlas) -> tuple[bytes, bytes]:
             "kind": atlas.kinds.tolist(),
             "area": [_write_name(name) for name in atlas.areas],
             "region": [_write_name(name) for name in atlas.regions],
+            **({"region_key": list(atlas.region_keys)} if atlas.region_keys is not None else {}),
             "owner": atlas.owner.tolist(),
             "culture": atlas.culture.tolist(),
             "religion": atlas.religion.tolist(),
@@ -774,6 +783,9 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         if data["format"] == FORMAT and data.get("history") is not None
         else None,
         development=_int64(columns["development"]) if "development" in columns else None,
+        region_keys=tuple(str(v) for v in columns["region_key"])
+        if "region_key" in columns
+        else None,
     )
     if found.history is not None:
         validate_history(found.history, history_links(found))

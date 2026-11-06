@@ -819,6 +819,7 @@
               <span class="eyebrow">{t(`kind.${facts.kind}`)}</span>
               <h2>{facts.name}</h2>
               {#if facts.area}<p class="faint">{facts.area}{facts.region ? ` · ${facts.region}` : ""}</p>{/if}
+              {#if facts.rule}<p class="faint" title={t("card.rule_tip", { region: facts.rule })}>{t("card.rule", { region: facts.rule })}</p>{/if}
             </div>
             <button class="btn icon small ghost" aria-label={t("close")} title={`${t("close")} (Esc)`} onclick={() => (session.pinned = -1)}><Icon name="x" /></button>
           </header>

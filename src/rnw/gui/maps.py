@@ -1289,6 +1289,12 @@ class MapsPanel(QWidget):
         layout.addWidget(
             QLabel(" · ".join(part for part in (text(f"kind.{facts.kind}"), area) if part))
         )
+        if rule := mapstyle.rules(atlas, words)[self._pinned]:
+            ruled = QLabel(text("card.rule", region=rule))
+            ruled.setTextFormat(Qt.TextFormat.PlainText)
+            ruled.setWordWrap(True)
+            ruled.setToolTip(text("card.rule_tip", region=rule))
+            layout.addWidget(ruled)
         if facts.kind == "land":
             layout.addWidget(self._card_rows(facts))
             if self._history is not None:

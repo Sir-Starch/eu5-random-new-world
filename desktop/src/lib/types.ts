@@ -295,6 +295,9 @@ export interface AtlasBundle {
   kind: number[];
   area: string[];
   region: string[];
+  /** Each location's region by the base game's name, whose rules apply there, when the world
+   *  names it otherwise; empty strings in a world made before region keys were recorded. */
+  rule?: string[];
   owner: number[];
   culture: number[];
   religion: number[];

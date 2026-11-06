@@ -64,6 +64,9 @@ describe("atlas", () => {
     expect(facts?.country?.tag).toBe("AAA");
     expect(facts?.precious).toBe(true);
     expect(atlas.facts(1)?.precious).toBe(false);
+    expect(facts?.rule).toBe("");
+    const ruled = new WorldAtlas({ ...bundle(), region: ["Ziageilra", "Ziageilra", ""], rule: ["Alaska", "Alaska", ""] });
+    expect(ruled.facts(1)).toMatchObject({ region: "Ziageilra", rule: "Alaska" });
   });
 
   it("finds countries, cultures, resources, areas and places by name", () => {

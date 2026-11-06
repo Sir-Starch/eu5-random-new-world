@@ -936,7 +936,25 @@ def identifiers(atlas: Atlas) -> frozenset[str]:
             key = value.strip("$")
             if key != value or ("_" in key and " " not in key):
                 found.add(key)
+    found.update(atlas.region_keys or ())
     return frozenset(found)
+
+
+def rules(atlas: Atlas, words: Words) -> list[str]:
+    """For each location, the base game's name of the region whose rules apply there (the
+    game's events, advances and AI goals for it), when the world names that region otherwise;
+    else empty, as in a world made before region keys were recorded."""
+    if atlas.region_keys is None:
+        return [""] * atlas.cells
+    seen: dict[tuple[str, object], str] = {}
+    found: list[str] = []
+    for key, value in zip(atlas.region_keys, atlas.regions, strict=True):
+        pair = (key, value)
+        if pair not in seen:
+            game = words.key(key) if key else ""
+            seen[pair] = "" if game == written(value, words) else game
+        found.append(seen[pair])
+    return found
 
 
 def centres(atlas: Atlas) -> NDArray[np.float64]:

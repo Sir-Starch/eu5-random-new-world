@@ -619,6 +619,11 @@ STRINGS: Final[dict[str, str]] = {
     "kind.lake": "lake",
     "kind.wasteland": "wasteland",
     "no_country": "none",
+    "card.rule": "Counts as {region} in the game's rules",
+    "card.rule_tip": (
+        "The base game's events, advances and AI goals for {region} apply here. The world gives "
+        "the region a name of its own."
+    ),
     "fact.country": "Country",
     "fact.culture": "Culture",
     "fact.religion": "Religion",

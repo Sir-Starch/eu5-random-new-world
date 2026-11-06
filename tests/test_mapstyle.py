@@ -173,3 +173,34 @@ def test_a_lake_in_mountains_is_no_crater_on_the_physical_map() -> None:
     ring_deviation = float(np.abs(shade[ring] - 1).mean())
     far_deviation = float(np.abs(shade[far] - 1).mean())
     assert ring_deviation < far_deviation + 0.15
+
+
+def test_the_rules_line_names_the_game_region_only_where_the_world_names_it_otherwise() -> None:
+    """A region the world renames shows the base game's name of its rules; a region the game
+    names itself (an ocean) and a world made before region keys were recorded show none (W8)."""
+    found = synthetic_atlas()
+    game = {"alaska_region": "Alaska", "north_pacific_ocean_region": "North Pacific"}
+
+    def named(key: str) -> str:
+        return game.get(key, key)
+
+    words = replace(atlas_module.ENGLISH, key=named)
+    keys = tuple(
+        "north_pacific_ocean_region" if kind == mapstyle.SEA else "alaska_region"
+        for kind in found.kinds.tolist()
+    )
+    shown: tuple[Name, ...] = tuple(
+        key if key.endswith("ocean_region") else "Ziageilra" for key in keys
+    )
+    renamed = replace(found, regions=shown, region_keys=keys)
+    rules = mapstyle.rules(renamed, words)
+    assert {
+        rule for rule, kind in zip(rules, found.kinds.tolist(), strict=True) if kind == mapstyle.SEA
+    } == {""}
+    assert {
+        rule
+        for rule, kind in zip(rules, found.kinds.tolist(), strict=True)
+        if kind == mapstyle.LAND
+    } == {"Alaska"}
+    assert {"alaska_region", "north_pacific_ocean_region"} <= mapstyle.identifiers(renamed)
+    assert mapstyle.rules(replace(found, region_keys=None), words) == [""] * found.cells

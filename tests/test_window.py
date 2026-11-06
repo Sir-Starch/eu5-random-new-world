@@ -25,6 +25,7 @@ from rnw.bundle import COVER_COPY
 from rnw.eu5_history_plan import project_start
 from rnw.eu5_seas import SeaError
 from rnw.gui import maps as maps_module
+from rnw.gui import mapstyle
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.history_presenter import Reader
@@ -1027,6 +1028,10 @@ def test_the_maps_isolate_pin_show_tribes_and_save_what_is_drawn(
     pinned = maps.card.isVisibleTo(maps)
     maps.map_view.clicked.emit(int(rows[0]), int(columns[0]))
     assert maps.card.isVisibleTo(maps) is not pinned
+    # The rules line names the base game's region when the world names the region otherwise.
+    rule = mapstyle.rules(found, maps._words)[int(found.countries[0].capital)]  # pyright: ignore[reportPrivateUsage]
+    tips = {label.toolTip() for label in maps.card.findChildren(QLabel)}
+    assert (text("card.rule_tip", region=rule) in tips) is bool(rule)
     maps.map_view.clicked.emit(int(rows[0]), int(columns[0]))
     assert maps.card.isVisibleTo(maps) is pinned
     drawn = maps.drawn_image()

@@ -1386,6 +1386,14 @@ text = '''terra erma'''
 source = "140bedbf9c3f6d56"
 text = '''nenhum'''
 
+["card.rule"]
+source = "6c2a8c8c3d12f4a1"
+text = '''Conta como “{region}” nas regras do jogo'''
+
+["card.rule_tip"]
+source = "625919ff2c92a3da"
+text = '''Aqui valem os eventos, avanços e objetivos da IA do jogo base para “{region}”. O mundo dá à região um nome próprio.'''
+
 ["fact.country"]
 source = "701d021d08c54579"
 text = '''País'''

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Name the New World's regions after their peoples, and show the game's names in the
+  generator. A region takes its name in the language most of its land speaks, as areas and
+  provinces already did, and the colonies and realms named after it follow. The generator's
+  map labelled regions and empty areas by the base game's names (Alaska, Canada), which the
+  game never showed. It now writes what the game writes, and a place's card adds which base
+  game region's events, advances and AI goals apply there (*Counts as Alaska in the game's
+  rules*).
+
 - Lay out the New World's regions as the Americas lie. North and South America are now
   bands from north to south, so an archipelago no longer puts the Andes and Colombia north of
   Canada. Each region takes the place its namesake has in its continent: Alaska in the

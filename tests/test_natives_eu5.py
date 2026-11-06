@@ -16,7 +16,9 @@ from rnw.eu5_natives import (
     NativesError,
     PlaceNamer,
     VanillaNatives,
+    _Cells,  # pyright: ignore[reportPrivateUsage]
     _include,  # pyright: ignore[reportPrivateUsage]
+    _place_names,  # pyright: ignore[reportPrivateUsage]
     country_definitions,
     country_names,
     country_records,
@@ -48,6 +50,7 @@ from rnw.newworld import NewWorld
 from rnw.pdx import parse
 from rnw.societies import STATE, TRIBE, Polity, Societies
 from rnw.wording import adjective, render
+from tests.fakes import synthetic_world
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -595,3 +598,46 @@ def test_an_absent_or_zero_agrarian_baseline_stops_the_calibration(
 ) -> None:
     with pytest.raises(NativesError, match="agrarian baseline"):
         _ = state_population_floor({"one"}, pops, {"AAA": ("land", ["one"], [])})
+
+
+def test_a_region_is_named_in_the_language_most_of_its_land_speaks() -> None:
+    """As an area is: the culture of most of its land names the region, so a colony's name and a
+    realm's (``colonial_names``, ``eu5_formation``) come from the people who live there (W8)."""
+    world, plan, _biomes, _natives, _mask = synthetic_world()
+    plan.display_overrides.update({"region": "Ziageilra"})
+    land = [cell for cell, kind in enumerate(world.classes) if kind is CellClass.LAND]
+    cells = _Cells(
+        land,
+        [""] * len(land),
+        [""] * len(land),
+        [""] * len(land),
+        [0] * len(land),
+        [False] * len(land),
+        [[] for _ in land],
+    )
+    culture = ["b_culture"] * len(land)
+    places = tuple((f"Ka{i:02d}lan", "a_culture") for i in range(40))
+    places += tuple((f"Zo{i:02d}tep", "b_culture") for i in range(40))
+    faith = Culture("faith", (), 1, "", "", "", "")
+    vanilla = VanillaNatives(
+        density={},
+        population_per_location=0,
+        cultures={"a_culture": faith, "b_culture": faith},
+        religions={},
+        templates=frozenset(),
+        reserved_tags=frozenset(),
+        holy_sites=(),
+        places=places,
+        languages={"a_culture": ("a_language", ""), "b_culture": ("b_language", "")},
+        reserved_names=frozenset(),
+    )
+    names = _place_names(world, plan, cells, culture, PlaceNamer(vanilla, seed=3))
+    region = names["region"]
+    assert isinstance(region, str)
+    assert region != "Ziageilra"
+    again = _place_names(world, plan, cells, culture, PlaceNamer(vanilla, seed=3))
+    assert again["region"] == region
+    other = _place_names(world, plan, cells, ["a_culture"] * len(land), PlaceNamer(vanilla, seed=3))
+    assert other["region"] != region
+    plan.display_overrides.clear()
+    assert "region" not in _place_names(world, plan, cells, culture, PlaceNamer(vanilla, seed=3))

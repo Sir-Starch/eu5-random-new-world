@@ -244,3 +244,26 @@ def test_a_lens_names_each_locations_legend_entry_and_keeps_the_legacy_pictures(
     assert all(population.classes[cell] == -1 for cell in inhabited)
     areas = atlas.lens(built, "areas")
     assert len({int(areas.values[cell]) for cell in land}) == len({built.areas[c] for c in land})
+
+
+def test_regions_and_areas_carry_the_names_the_world_writes_beside_the_game_keys() -> None:
+    """The atlas names a region and an area as the world's localization does (its peoples' name,
+    else the generator's) and keeps the region's identifier for the game's rules (W8)."""
+    world, plan, biomes, natives, mask = synthetic_world()
+    plan.display_overrides.update({"region": "Ziageilra", "area1": "Unused", "area2": "Lone"})
+    built = build_atlas(world=world, plan=plan, biomes=biomes, natives=natives, mask=mask)
+    first = atlas.describe(built, built.keys.index("rnw_loc_1"))
+    second = atlas.describe(built, built.keys.index("rnw_loc_2"))
+    assert first is not None
+    assert second is not None
+    assert (first.area, first.region, first.region_key) == ("Great Area", "Ziageilra", "region")
+    assert second.area == "Lone"
+    document, picture = atlas.to_files(built)
+    assert atlas.from_files(document, picture).region_keys == built.region_keys
+    older = json.loads(document)
+    del older["locations"]["region_key"]
+    before = atlas.from_files(json.dumps(older).encode(), picture)
+    assert before.region_keys is None
+    made = atlas.describe(before, 1)
+    assert made is not None
+    assert made.region_key == ""
