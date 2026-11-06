@@ -84,6 +84,11 @@ REASONS: Final[Mapping[str, str]] = {
     "canal": (
         "The Panama canal chain needs the vanilla isthmus; removed together, never positionally."
     ),
+    "frontier": (
+        "Settling the unowned land beside a country: vanilla names the regions whose land "
+        "countries border it, and every generated American region can hold one, so the "
+        "American part of the gate becomes the whole New World."
+    ),
     "illustration": (
         "Holds pictures of vanilla places, some of them American: the export drops each picture "
         "of a removed place (a picture shows its place, so it is not moved) and keeps the rest."
@@ -126,7 +131,7 @@ def _common(table: _Table) -> None:
         bison_hunters canoe_travels council_of_elders experienced_fur_hunters
         federal_constitution fishing_habits maple_syrup medicinal_infusions
         moundbuilding_advance north_american_warrior_societies seasonal_economy
-        settle_the_frontier_advance shared_brotherhood shared_knowledge slash_and_burn
+        shared_brotherhood shared_knowledge slash_and_burn
         stickball_game three_sisters wampum whale_hunters
         """,
     )
@@ -143,6 +148,7 @@ def _common(table: _Table) -> None:
         """,
     )
     add("common/advances", NEUTRALIZE, "canal", "panama_canal_advance")
+    add("common/advances", REBIND, "frontier", "settle_the_frontier_advance", "W7")
     add(
         "common/area_preferences",
         KEEP,

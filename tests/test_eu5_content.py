@@ -13,18 +13,20 @@ from rnw.eu5_content import (
     ContentError,
     Place,
     Scripts,
+    american_keys,
     carry_out,
     guard_targets,
     guard_text,
     matches,
     places,
     rebind_discovery,
+    rebind_frontier,
     rebind_game_start,
     selector_of,
 )
 from rnw.eu5_remap import script_files
 from rnw.geography import Location
-from rnw.pdx import parse
+from rnw.pdx import Block, parse
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -75,6 +77,76 @@ def test_discovery_rebinding_requires_its_installed_anchor_and_nonempty_water() 
         )
     with pytest.raises(ContentError, match="expected OR"):
         _ = rebind_discovery("discovered_any_in_americas_trigger = { OR = {} }", [])
+
+
+FRONTIER = """other_advance = { potential = { original_capital ?= { region = region:r_one } } }
+settle_the_frontier_advance = {
+	potential = {
+		OR = { country_type = location country_type = army }
+		OR = {
+			has_or_had_tag = KAM
+			original_capital ?= {
+				OR = {
+					sub_continent = sub_continent:south_america
+					region = region:r_eu
+					# American natives
+					region = region:r_one
+					area = area:a_one
+					continent = continent:oceania
+				}
+			}
+		}
+		NOT = { is_subject_type = colonial_nation }
+	}
+	unlock_cabinet_action = settle_the_frontier
+}
+"""
+FRONTIER_HIERARCHY = {
+    "v1": Location("v1", "america", "north_america", "r_one", "a_one", "p_one"),
+    "v2": Location("v2", "america", "south_america", "r_two", "a_two", "p_two"),
+    "loc_eu": Location("loc_eu", "europe", "western_europe", "r_eu", "a_eu", "p_eu"),
+}
+
+
+def test_the_frontier_takes_the_new_world_and_keeps_the_old() -> None:
+    """Every American capital becomes the New World's continent; the rest is unchanged."""
+    text, replaced = rebind_frontier(FRONTIER, american_keys(FRONTIER_HIERARCHY))
+    assert replaced == 3
+    assert text.startswith(FRONTIER.partition("settle_the_frontier_advance")[0])  # other_advance
+    capitals = parse(text).block("settle_the_frontier_advance", "potential")
+    assert capitals is not None
+    gate = [entry for entry in capitals.entries if entry.key == "OR"][1].value
+    assert isinstance(gate, Block)
+    places = gate.block("original_capital", "OR")
+    assert places is not None
+    assert [(entry.key, entry.value) for entry in places.entries] == [
+        ("continent", "continent:america"),
+        ("region", "region:r_eu"),
+        ("continent", "continent:oceania"),
+    ]
+    assert "\t\t\t\t\tcontinent = continent:america\n\t\t\t\t\tregion = region:r_eu\n" in text
+    assert "has_or_had_tag = KAM" in text
+    assert "is_subject_type = colonial_nation" in text
+
+
+def _frontier_gate(capitals: str) -> str:
+    return f"settle_the_frontier_advance = {{ potential = {{ original_capital ?= {capitals} }} }}"
+
+
+def test_the_frontier_rebinding_requires_its_installed_shape() -> None:
+    american = american_keys(FRONTIER_HIERARCHY)
+    with pytest.raises(ContentError, match="has no potential"):
+        _ = rebind_frontier("other_advance = { potential = { } }", american)
+    with pytest.raises(ContentError, match="expected one original_capital list, found 0"):
+        _ = rebind_frontier("settle_the_frontier_advance = { potential = { } }", american)
+    with pytest.raises(ContentError, match="not one OR of places"):
+        _ = rebind_frontier(_frontier_gate("{ region = region:r_one }"), american)
+    with pytest.raises(ContentError, match="shape of its capitals changed"):
+        _ = rebind_frontier(
+            _frontier_gate("{ OR = { region = region:r_one has_or_had_tag = KAM } }"), american
+        )
+    with pytest.raises(ContentError, match="no longer names an American capital"):
+        _ = rebind_frontier(_frontier_gate("{ OR = { region = region:r_eu } }"), american)
 
 
 def test_a_gate_is_closed_in_the_block_vanilla_gives_it() -> None:
@@ -273,6 +345,7 @@ def _install(root: Path) -> Path:
         "in_game/common/cultures/c.txt": CULTURES,
         "in_game/common/on_action/_hardcoded.txt": START,
         "in_game/events/known.txt": KNOWN,
+        "in_game/common/advances/3_cabinet_actions_unlocks.txt": FRONTIER.split("\n", 1)[1],
     }.items():
         path = game / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -308,6 +381,10 @@ def test_decisions_are_carried_out_on_the_scripts_of_a_world(tmp_path: Path) -> 
     stats = carry_out(root, scripts, checked, places(pops), hierarchy, {"tenochtitlan": "v1"})
     assert stats["formables_too_thin"] == ["YYY_f"]
     assert stats["game_start_bound"] is True
+    assert stats["frontier_capitals_replaced"] == 2  # r_one and a_one; r_eu is not American
+    advances = scripts["in_game/common/advances/3_cabinet_actions_unlocks.txt"].decode()
+    assert "continent = continent:america" in advances
+    assert "region:r_one" not in advances
     formables = scripts["in_game/common/formable_countries/00.txt"].decode()
     assert "locations = {\n\t\tg1 g2 g3 g4\n\t}" in formables  # four of the six, the most populous
     assert "owns = location:g1" in formables  # the seat of the culture
@@ -331,6 +408,7 @@ def test_every_edit_the_table_asks_for_has_a_way_to_be_made() -> None:
             assert category in GATES or category in UNGATED, key
         if verdict.decision is Decision.REBIND:
             assert category == "common/formable_countries" or key in {
+                "common/advances:settle_the_frontier_advance",
                 "common/on_action:on_game_start",
                 "common/scripted_triggers:discovered_any_in_americas_trigger",
             }

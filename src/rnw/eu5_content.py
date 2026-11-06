@@ -12,7 +12,10 @@ Americas; this module writes it into the world's mod:
   (``AZT_f``, ``INC_f``, ``IRO_f``, ``MAY_f``, ``PUE_f``) keeps its gating and takes as its
   territory the places where that culture lives, as many as the vanilla territory had; its
   start-effect twin in ``on_game_start`` finds the seat of the same religion. A culture too
-  thin to carry the formable neutralizes it instead.
+  thin to carry the formable neutralizes it instead. ``settle_the_frontier_advance`` keeps its
+  Old World and Oceanian capitals and takes the whole New World in place of the American
+  regions vanilla names, since a generated land country can border unowned land in any of
+  them (W7).
 
 Only the lines of the objects named are touched; every other byte of a file stays.
 """
@@ -24,6 +27,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 from rnw.content_decisions import Decision
+from rnw.eu5_canvas import NEW_WORLD
 from rnw.eu5_remap import script_files
 from rnw.pdx import Block, Edits, Entry, PdxSyntaxError, line_span, parse
 
@@ -55,6 +59,17 @@ ALWAYS_NO: Final[str] = "always = no"
 FORMABLES: Final[str] = "common/formable_countries"
 GAME_START: Final[str] = "common/on_action:on_game_start"
 DISCOVERY: Final[str] = "common/scripted_triggers:discovered_any_in_americas_trigger"
+FRONTIER: Final[str] = "common/advances:settle_the_frontier_advance"
+FRONTIER_ADVANCE: Final[str] = "settle_the_frontier_advance"
+# The geographic comparisons of a capital, and the level of the hierarchy each one reads.
+GEOGRAPHY: Final[Mapping[str, str]] = {
+    "continent": "continent",
+    "sub_continent": "subcontinent",
+    "region": "region",
+    "area": "area",
+    "province": "province",
+    "location": "key",
+}
 NAHUATL: Final[str] = "nahuatl"
 TENOCHTITLAN: Final[str] = "tenochtitlan"
 TERRITORY_KEYS: Final[frozenset[str]] = frozenset({"regions", "areas", "provinces", "locations"})
@@ -457,6 +472,74 @@ def rebind_discovery(text: str, areas: Sequence[str]) -> str:
     return text[: block.open + 1] + body + text[block.close :]
 
 
+def american_keys(hierarchy: Mapping[str, Location]) -> dict[str, frozenset[str]]:
+    """The vanilla New World's keys at each geographic level a script can compare."""
+    return {
+        level: frozenset(
+            getattr(location, field)
+            for location in hierarchy.values()
+            if location.continent == NEW_WORLD
+        )
+        for level, field in GEOGRAPHY.items()
+    }
+
+
+def _capital_places(block: Block) -> Iterable[Block]:
+    """The ``OR`` lists of every ``original_capital`` comparison inside ``block``."""
+    for entry in block.entries:
+        if not isinstance(entry.value, Block):
+            continue
+        if entry.key == "original_capital":
+            places_ = entry.value.block("OR")
+            if places_ is None or len(entry.value.entries) != 1:
+                message = f"{FRONTIER_ADVANCE}: original_capital is not one OR of places"
+                raise ContentError(message)
+            yield places_
+        else:
+            yield from _capital_places(entry.value)
+
+
+def rebind_frontier(text: str, american: Mapping[str, frozenset[str]]) -> tuple[str, int]:
+    """``text`` with the advance's American capitals replaced by the New World's continent.
+
+    Vanilla grants settling the frontier to land countries whose original capital lies in
+    some named regions; the African and Oceanian ones stay. Returns the text and how many
+    American comparisons it replaced. Any other shape of the installed gate stops.
+    """
+    entry = parse(text).first(FRONTIER_ADVANCE)
+    potential = (
+        entry.value.block("potential")
+        if entry is not None and isinstance(entry.value, Block)
+        else None
+    )
+    if potential is None:
+        message = f"{FRONTIER_ADVANCE} has no potential"
+        raise ContentError(message)
+    lists = list(_capital_places(potential))
+    if len(lists) != 1:
+        message = f"{FRONTIER_ADVANCE}: expected one original_capital list, found {len(lists)}"
+        raise ContentError(message)
+    edits = Edits()
+    replaced: list[Entry] = []
+    for place in lists[0].entries:
+        kind, _, key = place.value.partition(":") if isinstance(place.value, str) else ("", "", "")
+        if place.key not in GEOGRAPHY or place.op != "=" or kind != place.key:
+            message = f"{FRONTIER_ADVANCE}: the installed shape of its capitals changed"
+            raise ContentError(message)
+        if key in american[place.key]:
+            replaced.append(place)
+            edits.deletions.append(line_span(text, place.start, place.end))
+    if not replaced:
+        message = f"{FRONTIER_ADVANCE} no longer names an American capital"
+        raise ContentError(message)
+    first = replaced[0]
+    start = line_span(text, first.start, first.end)[0]
+    indent = text[start : first.start] if start < first.start else ""
+    ending = "\n" if start < first.start else " "
+    edits.insert(start, f"{indent}continent = continent:{NEW_WORLD}{ending}")
+    return edits.apply(text), len(replaced)
+
+
 def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the world and the remap.
     game_dir: Path,
     scripts: dict[str, bytes],
@@ -476,6 +559,7 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
     basis = Basis(candidates, culture_traits(game_dir), hierarchy)
     rebound: dict[str, list[str]] = {}
     seat_file = ""
+    frontier = 0
     for key, consumer in checked.consumers.items():
         if checked.verdicts[key].decision is not Decision.REBIND:
             continue
@@ -486,6 +570,10 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
         elif key == DISCOVERY:
             file = consumer.files[0]
             store.write(file, rebind_discovery(store.read(file), sea_areas))
+        elif key == FRONTIER:
+            file = consumer.files[0]
+            text, frontier = rebind_frontier(store.read(file), american_keys(hierarchy))
+            store.write(file, text)
         else:
             message = f"{key} is to be rebound, and nothing here knows how"
             raise ContentError(message)
@@ -522,5 +610,6 @@ def carry_out(  # noqa: PLR0913, PLR0917 - the decisions need the scripts, the w
             for tag, found in sorted(done.items())
         },
         "formables_too_thin": sorted(target.ident for target in thin),
+        "frontier_capitals_replaced": frontier,
         "game_start_bound": start_bound,
     }

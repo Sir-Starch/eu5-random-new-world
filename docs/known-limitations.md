@@ -32,6 +32,11 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
   European seas near Greenland, so the Americas no longer count as overseas for European
   countries (fixed in 1.1.0, issue #9). The fix does not change an existing world; make a
   new world with 1.1.0 or later.
+- **Worlds made by 1.1.0 or earlier give *Settle the Frontier* to only part of the
+  New World.** The game grants it by the region of a country's original capital, and
+  these worlds kept the game's list of regions, so about half of their New World
+  countries cannot settle the unowned land beside them. Fixed in 1.2.0; the fix does
+  not change an existing world.
 - **Institutions follow vanilla rules.** Feudalism and Legalism can appear only in
   Europe and reach the New World by spreading. The extraordinary-peoples setting gives
   technology and governments, not institutions.

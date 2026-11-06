@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Let every land country of the New World settle the frontier. The game grants the *Settle
+  the Frontier* action only to countries whose original capital lies in some American
+  regions, and a generated world kept that list, so about half of its countries could not
+  expand into the empty land beside them. The world now grants it across the whole New World;
+  the Old World and Oceania keep the game's own rule.
+
 - Put historical opinions on the game's scale. Each remembered cause now takes the value and
   yearly decay of the game's own opinion of its kind (*Good relations* +50, *Recent Conflict
   Lost* −40, *Border Aggression* −25 and others) in proportion to how much of the memory

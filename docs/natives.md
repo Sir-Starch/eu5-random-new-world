@@ -409,3 +409,9 @@ one run. See [the complete findings](research/tr46-native-expansion.md) and
 [experiment 059](../experiments/059-native-expansion/README.md) for every actual
 extraordinary society's land/subjects, ordinary/pop cohorts, successor handling,
 conditional league-capacity warning and the limits of saved histories.
+
+[V-EXEC C501] Up to 1.1.0 the world kept the frontier advance's vanilla regions, so
+about half of the generated land countries could not research it. Since 1.2.0 (W7)
+the world rebinds the gate's American part to the whole New World: every land country
+whose original capital lies there, and is not a colonial nation, can settle the
+unowned land beside it.

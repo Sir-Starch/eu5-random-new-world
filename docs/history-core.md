@@ -886,3 +886,10 @@ bounded workers (ADR 0006). Check the installed build first; nothing launches EU
    an `effect`. The last check of the sitting is that the whole New World, sea included, is
    visible from the first day without fog for the country played; read `debug.log` for any line
    naming `rnw_reveal.txt`. A failure cuts W6 and turns the setting off, with no further sitting.
+8. **W7 frontier** ([roadmap W7](roadmap.md#workshop-feedback-in-120)). Before the sitting,
+   pick from the candidate's `10_countries.txt` a land country whose capital lies in a region
+   the vanilla gate leaves out (Canada, the Caribbean, Mesoamerica or the West Coast) and has
+   unowned land beside it. In the sitting, played as that country, its advances list
+   *Settle the Frontier* and, once it is researched, the cabinet offers the action with a
+   bordering province to pick; read `error.log` for lines naming
+   `3_cabinet_actions_unlocks.txt`.
