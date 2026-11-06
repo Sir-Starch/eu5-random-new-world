@@ -13,6 +13,12 @@
   historical opinions are now called *Goodwill* and *Contention* where they were *Trust* and
   *Rivalry*, which the game uses for its own trust and rivals.
 
+- Show each location's start development as the game computes it, on the Development lens and
+  the location's card, instead of the generator's own society complexity. Rivers now count into
+  development by the game's river sizes (checked against a saved game), which raises the start
+  development of river land by 0.5 to 1. A world made before this says its development is not
+  recorded.
+
 - Give the formable countries real goals. Any country that holds enough of a territory, its
   capital inside, may form a union, confederation, league or realm, not only the states of
   1337; a commonwealth also opens to its people's culture group. The realm becomes the realm

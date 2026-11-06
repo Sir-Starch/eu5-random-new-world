@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WorldAtlas, unroll } from "./atlas";
+import { WorldAtlas, developmentText, unroll } from "./atlas";
 import type { AtlasBundle } from "./types";
 import { prepareAtlas } from "./atlasPreparation";
 import { relief, rememberRelief } from "./relief";
@@ -28,7 +28,7 @@ function bundle(): AtlasBundle {
     names: ["Alpha", "Beta", ""], kind: [0, 0, 2], area: ["North", "North", ""], region: ["", "", ""],
     owner: [0, -1, -1], culture: [0, 0, -1], religion: [0, 0, -1], material: [0, 1, -1],
     climate: [0, 0, -1], vegetation: [0, 0, -1], topography: [0, 0, -1], settlement: [-1, -1, -1],
-    population: [100, 0, 0], complexity: [5, 0, 0], centre: [0, 0, 0, 2, 1, 1],
+    population: [100, 0, 0], development: [12500, 0, 0], centre: [0, 0, 0, 2, 1, 1],
     vocabulary: { culture: ["Alpine"], religion: ["Faith"], material: ["Gold", "Salt"], climate: ["Cold"], vegetation: ["Woods"], topography: ["Hills"], settlement: [] },
     raw: { material: ["goods_gold", "salt"] }, precious: ["goods_gold"],
     countries: [{ tag: "AAA", name: "Aland", kind: "state", color: "#c80000", capital: 0, culture: 0, religion: 0, locations: 1 }],
@@ -81,5 +81,14 @@ describe("atlas", () => {
     expect(lens.legend[1].label).toBe("Aland");
     expect(atlas.classCells("countries", 1)).toEqual([0]);
     expect(atlas.labelsFor("countries", "countries")[0].text).toBe("Aland");
+  });
+});
+
+describe("development", () => {
+  it("is written as the decimal the game shows", () => {
+    expect(developmentText(12500)).toBe("12.5");
+    expect(developmentText(7250)).toBe("7.25");
+    expect(developmentText(3000)).toBe("3");
+    expect(developmentText(0)).toBe("0");
   });
 });

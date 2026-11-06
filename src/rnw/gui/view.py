@@ -571,7 +571,7 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
         "topography": found.topography.tolist(),
         "settlement": found.settlement.tolist(),
         "population": found.population.tolist(),
-        "complexity": found.complexity.tolist(),
+        "development": None if found.development is None else found.development.tolist(),
         "centre": found.centre.reshape(-1).tolist(),
         "vocabulary": {
             key: [words.key(word) for word in values] for key, values in found.vocabulary.items()

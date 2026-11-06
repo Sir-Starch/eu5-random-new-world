@@ -36,7 +36,7 @@ function bundle(): AtlasBundle {
     area: ["North", "North", "North", ""], region: ["Plains", "Plains", "Plains", ""],
     owner: [0, 1, -1, -1], culture: [0, 0, 0, -1], religion: [0, 0, 0, -1], material: [0, 1, 1, -1],
     climate: [0, 0, 0, -1], vegetation: [0, 0, 0, -1], topography: [0, 1, 0, -1], settlement: [0, -1, -1, -1],
-    population: [100, 10, 0, 0], complexity: [5, 1, 0, 0], centre: [0, 1, 0, 3, 0, 4, 0, 5],
+    population: [100, 10, 0, 0], development: [5000, 1500, 0, 0], centre: [0, 1, 0, 3, 0, 4, 0, 5],
     vocabulary: { culture: ["Alpine"], religion: ["Faith"], material: ["Gold", "Fish"], climate: ["Tropical"], vegetation: ["Woods"], topography: ["Flatland", "Mountains"], settlement: ["City"] },
     raw: { material: ["goods_gold", "fish"], climate: ["tropical"], vegetation: ["woods"], topography: ["flatland", "mountains"], settlement: ["city"] },
     precious: ["goods_gold"],

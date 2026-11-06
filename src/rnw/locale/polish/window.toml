@@ -1330,6 +1330,10 @@ text = '''Brak'''
 source = "abfd7adb689e5c89"
 text = '''Niezamieszkane'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''Nie zapisano w tym świecie'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''Najniższy'''
@@ -1401,10 +1405,6 @@ text = '''Zasób'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''Ludność'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''Społeczeństwo'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''Wartości społeczne'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''Ten świat powstał, zanim zapisywano wartości społeczne. Stwórz nowy świat, aby je zobaczyć.'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''Rozwój'''

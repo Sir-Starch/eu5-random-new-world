@@ -745,6 +745,12 @@ and parsed script rewrites, introducing no new closed binary format or engine pa
 The exact runtime allocation and missing text context remain explicitly unknown;
 neither uncertainty justifies a worldwide vanilla patch or warning suppression.
 
+**2026-11-06, start development (C500).** A second private read concerns a plain-text
+autosave the owner already had (EU5 1.4.4): the location keys in id order (`locations={...}`
+near its start) and each location block's `development` value, read as text to check that the
+generator's rule sum is the game's own start development. Nothing is written, decompressed or
+shipped; no binary save is decoded for it.
+
 ## R-006 — Live EVXP hang and unit-graphics path refinement
 
 **2026-10-26; EU5 1.4.4 executable, Steam 26142040, SHA-256

@@ -52,7 +52,7 @@ def test_every_location_has_what_the_export_knew_of_it() -> None:
         "jungle",
         "mountains",
     )
-    assert (facts.settlement, facts.population, facts.complexity) == ("city", 5000, 900)
+    assert (facts.settlement, facts.population, facts.development) == ("city", 5000, 12500)
     other = atlas.describe(built, built.keys.index("rnw_loc_2"))
     assert other is not None
     assert other.country is None
@@ -74,6 +74,9 @@ def test_the_atlas_survives_its_two_files_and_refuses_damaged_ones() -> None:
     assert again.countries == built.countries
     assert again.vocabulary == built.vocabulary
     assert np.array_equal(again.population, built.population)
+    assert again.development is not None
+    assert built.development is not None
+    assert np.array_equal(again.development, built.development)
     assert np.array_equal(atlas.render(again, "countries"), atlas.render(built, "countries"))
     assert atlas.to_files(again) == (document, picture)
     with pytest.raises(AtlasError, match="damaged"):
@@ -114,6 +117,26 @@ def test_every_layer_is_a_picture_of_the_box_with_a_legend() -> None:
     assert any(label == "Gold" for label, _colour, _count in atlas.legend(built, "resources"))
     with pytest.raises(AtlasError, match="Unknown layer"):
         _ = atlas.render(built, "weather")
+
+
+def test_development_is_the_games_start_development_or_said_to_be_unrecorded() -> None:
+    """The lens ramps the start development, not the generator's complexity; a world made before
+    it was recorded says so rather than showing another scale (plan D31)."""
+    built = synthetic_atlas()
+    labels = [label for label, _colour, _count in atlas.legend(built, "development")]
+    assert {"Lowest", "Middle", "Highest"} <= set(labels)
+    assert "Uninhabited" not in labels
+    older = replace(built, development=None)
+    document, picture = atlas.to_files(older)
+    assert "development" not in json.loads(document)["locations"]
+    again = atlas.from_files(document, picture)
+    assert again.development is None
+    legend = atlas.legend(again, "development")
+    assert any(label == "Not recorded in this world" and count > 0 for label, _c, count in legend)
+    facts = atlas.describe(again, again.keys.index("rnw_loc_1"))
+    assert facts is not None
+    assert facts.development is None
+    assert [atlas.development_text(v) for v in (12500, 7250, 3000, 0)] == ["12.5", "7.25", "3", "0"]
 
 
 def test_a_search_finds_countries_cultures_materials_and_places_and_outlines_them() -> None:

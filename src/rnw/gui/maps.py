@@ -1380,7 +1380,9 @@ class MapsPanel(QWidget):
         rows.append(("fact.terrain", " · ".join(words.key(item) for item in land if item), None))
         if facts.population:
             rows.append(("fact.population", grouped(facts.population), None))
-            rows.append(("fact.complexity", str(facts.complexity), None))
+        if facts.development is not None:
+            shown = atlas_module.development_text(facts.development)
+            rows.append(("fact.development", shown, None))
         if facts.area:
             area = mapstyle.written(facts.area, words)
             rows.append(("fact.area", area, lambda: self._isolate_area(cell, area)))
@@ -1683,6 +1685,8 @@ def describe_text(
         )
         lines.append(f"{text('fact.material')}: {material} · {land}")
         if facts.population:
-            population = f"{text('fact.population')}: {grouped(facts.population)}"
-            lines.append(f"{population} · {text('fact.complexity')}: {facts.complexity}")
+            lines.append(f"{text('fact.population')}: {grouped(facts.population)}")
+        if facts.development is not None:
+            shown = atlas_module.development_text(facts.development)
+            lines.append(f"{text('fact.development')}: {shown}")
     return "\n".join(lines)

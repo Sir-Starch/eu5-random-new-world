@@ -192,8 +192,9 @@ def site_value(rules: Mapping[str, int], site: Site) -> int:
     """Start development of one location in thousandths, clamped at zero.
 
     Sums ``base``, ``coastal`` times harbour suitability, ``river`` times river size, the
-    rank, the vegetation, climate and topography values and the keyed entries. The river
-    size is the rank of the widest river pixel (``river_sizes``) [INFERRED].
+    rank, the vegetation, climate and topography values and the keyed entries; the river size
+    is that of ``river_sizes``. The game adds no ``road`` term at the start: an owner's 1.4.4
+    save matches this sum for 97.5% of Old World land within 0.25 [V-LOCAL C500].
     """
     total = rules.get("base", 0)
     total += rules.get("coastal", 0) * site.harbour // HUNDREDTHS
@@ -398,24 +399,22 @@ def river_sizes(
     codes: NDArray[np.uint8],
     count: int,
     *,
-    widths: Sequence[int],
-    limit: int,
+    sizes: Mapping[int, int],
 ) -> NDArray[np.int64]:
-    """River size per label: the rank of its widest river pixel, 0 without a river.
+    """River size per label as the game sums it into development: the size of the widest width
+    code among its river pixels, 0 without one.
 
-    ``codes`` is a ``rivers.png`` raster; values below ``limit`` are river pixels and
-    ``widths`` lists the width codes from narrow to wide (ranks 1, 2, ...). A label with
-    only marker pixels (sources, joins, splits) gets size 1. That EU5 sizes rivers this
-    way is inferred from the map legend (small river to great river) [INFERRED].
+    ``codes`` is a ``rivers.png`` raster and ``sizes`` maps each width code to its size; marker
+    pixels alone (sources, joins, splits) give 0. With the sizes of ``RIVER_SIZES`` the rule sum
+    reproduces the start development the game computed for 97.5% of Old World land [V-LOCAL C500].
     """
     table = np.zeros(256, dtype=np.int64)
-    table[:limit] = 1
-    for rank, code in enumerate(widths, start=1):
-        table[code] = rank
-    river = codes < limit
-    sizes = np.zeros(count, dtype=np.int64)
-    np.maximum.at(sizes, labels[river].astype(np.int64), table[codes[river]])
-    return sizes
+    for code, size in sizes.items():
+        table[code] = size
+    river = np.isin(codes, np.array(list(sizes), dtype=codes.dtype))
+    found = np.zeros(count, dtype=np.int64)
+    np.maximum.at(found, labels[river].astype(np.int64), table[codes[river]])
+    return found
 
 
 def shelter(

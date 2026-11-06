@@ -1252,7 +1252,7 @@ text = '''資源'''
 
 ["layer.development"]
 source = "21b6a798321a49f7"
-text = '''発展度'''
+text = '''開発度'''
 
 ["layer.land.tip"]
 source = "a03117b5186e8673"
@@ -1330,6 +1330,10 @@ text = '''なし'''
 source = "abfd7adb689e5c89"
 text = '''無人'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''この世界には記録されていません'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''最低'''
@@ -1401,10 +1405,6 @@ text = '''資源'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''人口'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''社会'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''社会的価値'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''この世界は社会的価値が記録される前に作られました。新しい世界を作ると表示されます。'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''開発度'''

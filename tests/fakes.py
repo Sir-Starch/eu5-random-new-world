@@ -155,7 +155,14 @@ def synthetic_world() -> tuple[NewWorld, Plan, CellBiomes, FinalStartPlan, np.nd
 def synthetic_atlas(step: int = 1, margin: int = 10) -> Atlas:
     world, plan, biomes, natives, mask = synthetic_world()
     return build_atlas(
-        world=world, plan=plan, biomes=biomes, natives=natives, mask=mask, step=step, margin=margin
+        world=world,
+        plan=plan,
+        biomes=biomes,
+        natives=natives,
+        mask=mask,
+        development={"rnw_loc_1": 12500, "rnw_loc_2": 3250},
+        step=step,
+        margin=margin,
     )
 
 

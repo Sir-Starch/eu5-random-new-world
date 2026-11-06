@@ -534,7 +534,10 @@ def _paletted(draft: _Draft, field: str, palette: dict[str, RGB]) -> None:
 def _ramp(draft: _Draft, layer: str) -> None:
     """A ramp fades into the physical map at its low end."""
     atlas, land = draft.atlas, draft.land
-    source = (atlas.complexity if layer == "development" else atlas.population).astype(np.float64)
+    if layer == "development" and atlas.development is None:
+        return
+    found = atlas.development if layer == "development" else atlas.population
+    source = cast("NDArray[np.int64]", found).astype(np.float64)
     top = max(1.0, float(source[land].max()) if land.any() else 1.0)
     inhabited = land & (source > 0)
     share = source / top if layer == "development" else np.sqrt(source / top)
@@ -987,8 +990,8 @@ def spot(atlas: Atlas, layer: str, cell: int, words: Words) -> str:
     if look.spots == "resource":
         material = atlas.word("material", int(atlas.material[cell]))
         return words.key(material) if material else ""
-    if int(atlas.population[cell]) <= 0:
-        return ""
     if look.spots == "population":
-        return grouped(int(atlas.population[cell]))
-    return str(int(atlas.complexity[cell]))
+        return grouped(int(atlas.population[cell])) if int(atlas.population[cell]) > 0 else ""
+    if atlas.development is None:
+        return ""
+    return atlas_module.development_text(int(atlas.development[cell]))

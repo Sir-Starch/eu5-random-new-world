@@ -1330,6 +1330,10 @@ text = '''Нет'''
 source = "abfd7adb689e5c89"
 text = '''Необитаемо'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''В этом мире не записано'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''Наименьшее'''
@@ -1401,10 +1405,6 @@ text = '''Ресурс'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''Население'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''Общество'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''Общественные ценности'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''Этот мир создан до того, как записывались общественные ценности. Создайте новый мир, чтобы увидеть их.'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''Развитие'''

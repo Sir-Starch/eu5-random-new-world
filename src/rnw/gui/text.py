@@ -605,6 +605,7 @@ STRINGS: Final[dict[str, str]] = {
     "legend.no_country": "No country",
     "legend.none": "None",
     "legend.uninhabited": "Uninhabited",
+    "legend.not_recorded": "Not recorded in this world",
     "legend.lowest": "Lowest",
     "legend.middle": "Middle",
     "legend.highest": "Highest",
@@ -623,7 +624,7 @@ STRINGS: Final[dict[str, str]] = {
     "fact.religion": "Religion",
     "fact.material": "Resource",
     "fact.population": "Population",
-    "fact.complexity": "Society",
+    "fact.development": "Development",
     "summary": (
         "{countries} countries ({states} states, {tribes} tribes) · {cultures} cultures · "
         "{religions} religions · {locations} locations ({land} land)"

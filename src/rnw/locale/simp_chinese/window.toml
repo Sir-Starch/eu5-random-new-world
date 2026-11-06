@@ -1330,6 +1330,10 @@ text = '''无'''
 source = "abfd7adb689e5c89"
 text = '''无人居住'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''此世界未记录'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''最低'''
@@ -1401,10 +1405,6 @@ text = '''资源'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''人口'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''社会'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''社会价值观'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''这个世界创建于记录社会价值观之前。创建新世界即可查看。'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''发展度'''

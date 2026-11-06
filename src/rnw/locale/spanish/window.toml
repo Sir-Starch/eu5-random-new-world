@@ -1330,6 +1330,10 @@ text = '''Ninguno'''
 source = "abfd7adb689e5c89"
 text = '''Deshabitado'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''No registrado en este mundo'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''Más bajo'''
@@ -1401,10 +1405,6 @@ text = '''Recurso'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''Población'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''Sociedad'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''Valores sociales'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''Este mundo se creó antes de que se registraran los valores sociales. Crea un mundo nuevo para verlos.'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''Desarrollo'''

@@ -205,12 +205,12 @@ def test_society_term_follows_complexity() -> None:
     assert society_term(500, 12, 500) == 12
 
 
-def test_river_sizes_rank_the_widest_river_pixel() -> None:
-    """Width codes rank from narrow to wide; markers alone count 1; dry labels 0."""
+def test_river_sizes_take_the_widest_width_codes_size() -> None:
+    """Each width code has the game's size; markers alone and dry labels count 0."""
     labels = np.array([[0, 0, 1, 2], [3, 3, 2, 2]], dtype=np.int32)
     codes = np.array([[4, 11, 0, 255], [15, 5, 254, 255]], dtype=np.uint8)
-    sizes = river_sizes(labels, codes, 5, widths=(4, 5, 11, 15), limit=16)
-    assert sizes.tolist() == [3, 1, 0, 4, 0]
+    sizes = river_sizes(labels, codes, 5, sizes={4: 2, 5: 2, 11: 4, 15: 6})
+    assert sizes.tolist() == [4, 0, 0, 6, 0]
 
 
 def _site(kind: str) -> Site:

@@ -43,7 +43,9 @@ export interface Facts {
   topography: string;
   settlement: string;
   population: number;
-  complexity: number;
+  /** Start development as the game sums its development rules, in thousandths; null in a world
+   *  made before it was recorded. */
+  development: number | null;
 }
 
 export interface Label {
@@ -239,7 +241,7 @@ export class WorldAtlas {
       topography: this.word("topography", d.topography[cell]),
       settlement: this.word("settlement", d.settlement[cell]),
       population: d.population[cell],
-      complexity: d.complexity[cell],
+      development: d.development ? d.development[cell] : null,
     };
   }
 
@@ -398,4 +400,12 @@ export class WorldAtlas {
 export function hexColour(hex: string): [number, number, number] {
   const value = Number.parseInt(hex.slice(1), 16);
   return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
+}
+
+/** Development in thousandths as the decimal the game shows: 12500 is "12.5" (`atlas.development_text`). */
+export function developmentText(milli: number): string {
+  const whole = Math.trunc(Math.abs(milli) / 1000);
+  const rest = Math.abs(milli) % 1000;
+  const sign = milli < 0 ? "-" : "";
+  return sign + String(whole) + (rest ? ("." + String(rest).padStart(3, "0")).replace(/0+$/, "") : "");
 }

@@ -1252,7 +1252,7 @@ text = '''Kaynaklar'''
 
 ["layer.development"]
 source = "21b6a798321a49f7"
-text = '''Gelişmişlik'''
+text = '''Gelişim'''
 
 ["layer.land.tip"]
 source = "a03117b5186e8673"
@@ -1330,6 +1330,10 @@ text = '''Yok'''
 source = "abfd7adb689e5c89"
 text = '''Issız'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''Bu dünyada kaydedilmemiş'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''En düşük'''
@@ -1401,10 +1405,6 @@ text = '''Kaynak'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''Nüfus'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''Toplum'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''Toplumsal Değerler'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''Bu dünya, toplumsal değerler kaydedilmeden önce oluşturuldu. Onları görmek için yeni bir dünya oluşturun.'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''Gelişim'''

@@ -317,7 +317,7 @@ export interface AtlasBundle {
   topography: number[];
   settlement: number[];
   population: number[];
-  complexity: number[];
+  development: number[] | null;
   centre: number[];
   vocabulary: Record<string, string[]>;
   raw: Record<string, string[]>;

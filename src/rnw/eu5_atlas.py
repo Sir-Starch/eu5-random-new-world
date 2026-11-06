@@ -21,6 +21,8 @@ from rnw.history_archive import build as build_history
 from rnw.history_archive_checks import validate as validate_history
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from numpy.typing import NDArray
 
     from rnw.eu5_biomes import CellBiomes
@@ -87,13 +89,15 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
     biomes: CellBiomes,
     natives: FinalStartPlan,
     mask: NDArray[np.bool_],
+    development: Mapping[str, int] | None = None,
     step: int = STEP,
     margin: int = SEA_MARGIN,
 ) -> Atlas:
     """The atlas of the generated New World.
 
     ``mask`` is the canvas in the crop's coordinates; ``world.labels`` is in the same. The box is
-    the canvas at ``1/step`` of the map's size, trimmed to where it has pixels.
+    the canvas at ``1/step`` of the map's size, trimmed to where it has pixels. ``development``
+    is each land location's start development in thousandths (``Development.initial``).
     """
     count = len(world.classes)
     if world.labels.shape != mask.shape:
@@ -149,6 +153,11 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
         )
     population = np.array([natives.population.get(key, 0) for key in keys], dtype=np.int64)
     complexity = np.array([natives.complexity.get(key, 0) for key in keys], dtype=np.int64)
+    started = (
+        None
+        if development is None
+        else np.array([development.get(key, 0) for key in keys], dtype=np.int64)
+    )
     found = Atlas(
         scale=step,
         labels=labels,
@@ -167,6 +176,7 @@ def build_atlas(  # noqa: PLR0913 - the atlas gathers what the export holds
         settlement=column([ranks.get(key, "") for key in keys], settlement_of),
         population=population,
         complexity=complexity,
+        development=started,
         centre=_centres(labels, count),
         countries=tuple(countries),
         history=build_history(natives, keys) if natives.history is not None else None,

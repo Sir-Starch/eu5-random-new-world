@@ -4,7 +4,7 @@
   // the inspector through the shared session.
   import { onDestroy, onMount, untrack, type Snippet } from "svelte";
   import { app, grouped, t } from "../lib/app.svelte";
-  import { LAND, type Facts } from "../lib/atlas";
+  import { LAND, developmentText, type Facts } from "../lib/atlas";
   import { loadAtlas } from "../lib/atlasCache";
   import {
     between,
@@ -369,7 +369,7 @@
             ? atlas.word("material", d.material[c])
             : look.spots === "population"
               ? d.population[c] > 0 ? grouped(d.population[c]) : ""
-              : d.population[c] > 0 ? String(d.complexity[c]) : "";
+              : d.development ? developmentText(d.development[c]) : "";
         if (!text) continue;
         const width = context.measureText(text).width;
         const top = PRECIOUS_MARKS[d.raw.material?.[d.material[c]] ?? ""] && look.spots === "resource" ? 12 : 0;
@@ -850,7 +850,9 @@
                   <dd>{[facts.topography, facts.vegetation, facts.climate].filter(Boolean).join(" · ")}</dd>
                   {#if facts.population}
                     <dt>{t("fact.population")}</dt><dd class="num">{grouped(facts.population)}</dd>
-                    <dt>{t("fact.complexity")}</dt><dd class="num">{facts.complexity}</dd>
+                  {/if}
+                  {#if facts.development !== null}
+                    <dt>{t("fact.development")}</dt><dd class="num">{developmentText(facts.development)}</dd>
                   {/if}
                   {#if facts.area}
                     <dt>{t("fact.area")}</dt><dd><button class="link" onclick={() => highlightOf("area")}>{facts.area}</button></dd>

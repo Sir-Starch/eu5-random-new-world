@@ -1252,7 +1252,7 @@ text = '''자원'''
 
 ["layer.development"]
 source = "21b6a798321a49f7"
-text = '''발전도'''
+text = '''개발'''
 
 ["layer.land.tip"]
 source = "a03117b5186e8673"
@@ -1330,6 +1330,10 @@ text = '''없음'''
 source = "abfd7adb689e5c89"
 text = '''무인지'''
 
+["legend.not_recorded"]
+source = "47e87a4b7529b680"
+text = '''이 세계에는 기록되지 않음'''
+
 ["legend.lowest"]
 source = "5c590931c7cc2ade"
 text = '''가장 낮음'''
@@ -1401,10 +1405,6 @@ text = '''자원'''
 ["fact.population"]
 source = "5b828861aec15d60"
 text = '''인구'''
-
-["fact.complexity"]
-source = "d5acfd8330f5caae"
-text = '''사회'''
 
 ["summary"]
 source = "1a599cbd890423a0"
@@ -2879,3 +2879,7 @@ text = '''사회 가치관'''
 ["history.no_values"]
 source = "07535fe0c5f92f75"
 text = '''이 세계는 사회 가치관이 기록되기 전에 만들어졌습니다. 새 세계를 만들면 볼 수 있습니다.'''
+
+["fact.development"]
+source = "21b6a798321a49f7"
+text = '''개발'''

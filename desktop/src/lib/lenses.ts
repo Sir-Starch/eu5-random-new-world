@@ -204,7 +204,7 @@ export function style(atlas: WorldAtlas, lens: Lens, tribes: boolean, tribesLabe
     for (let c = 0; c < cells; c++) if (kind[c] === LAND && column[c] >= 0) opacity[c] = look.opacity;
   } else if (layer === "development" || layer === "population") {
     // A ramp fades into the physical map at its low end.
-    const source = layer === "development" ? d.complexity : d.population;
+    const source = (layer === "development" ? d.development : d.population) ?? [];
     let top = 1;
     for (let c = 0; c < cells; c++) if (kind[c] === LAND) top = Math.max(top, source[c]);
     for (let c = 0; c < cells; c++) {

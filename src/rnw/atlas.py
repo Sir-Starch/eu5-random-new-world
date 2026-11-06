@@ -90,7 +90,7 @@ CLIMATE_TINTS: Final[dict[str, tuple[tuple[int, int, int], int]]] = {
     "tropical": ((255, 220, 120), 12),
 }
 HIGHLIGHT: Final[tuple[int, int, int]] = (255, 235, 59)
-# Development: the ramp from the lowest to the highest complexity, dark to bright.
+# Development: the ramp from the lowest to the highest start development, dark to bright.
 RAMP: Final[tuple[tuple[int, int, int], ...]] = (
     (40, 28, 60),
     (100, 40, 110),
@@ -176,6 +176,7 @@ class Facts:
     settlement: str
     population: int
     complexity: int
+    development: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,6 +213,9 @@ class Atlas:
     countries: tuple[Country, ...]
     vocabulary: dict[str, tuple[str, ...]]
     history: history_archive.Archive | None = None
+    # Each location's start development as the game sums ``14_development.txt``, in thousandths
+    # (``eu5_development.site_value``); None in a world made before it was recorded.
+    development: NDArray[np.int64] | None = None
 
     @property
     def size(self) -> tuple[int, int]:
@@ -229,6 +233,13 @@ class Atlas:
         return self.vocabulary[field][index] if index >= 0 else ""
 
 
+def development_text(milli: int) -> str:
+    """Development in thousandths as the decimal the game shows: ``12500`` is ``12.5``."""
+    whole, rest = divmod(abs(milli), 1000)
+    sign = "-" if milli < 0 else ""
+    return f"{sign}{whole}" + (f".{rest:03d}".rstrip("0") if rest else "")
+
+
 def pretty(key: str) -> str:
     """A readable name for an identifier: underscores to spaces, capitals to words; a region or
     an area without the word that says so."""
@@ -244,6 +255,7 @@ LABELS: Final[dict[str, str]] = {
     "no_country": "No country",
     "none": "None",
     "uninhabited": "Uninhabited",
+    "not_recorded": "Not recorded in this world",
     "lowest": "Lowest",
     "middle": "Middle",
     "highest": "Highest",
@@ -335,6 +347,29 @@ class Lens:
     ramp: tuple[tuple[int, int, int], ...]
 
 
+def _ramp_colours(
+    atlas: Atlas, layer: str, colours: NDArray[np.uint8], land: NDArray[np.bool_]
+) -> tuple[tuple[int, int, int], ...]:
+    """Colour the land on the ramp of ``layer`` (start development, or population by its square
+    root, inhabited land only) and return the ramp."""
+    if layer == "development" and atlas.development is not None:
+        source, ramp_colours, cells = atlas.development, RAMP, land
+    else:
+        source, ramp_colours = atlas.population, POPULATION_RAMP
+        cells = land & (source > 0)
+    top = int(source[cells].max()) if cells.any() else 1
+    root = math.isqrt(max(1, top))
+    for cell in np.flatnonzero(cells):
+        value = int(source[cell])
+        share = (
+            value * 1000 // max(1, top)
+            if ramp_colours is RAMP
+            else math.isqrt(value) * 1000 // root
+        )
+        colours[cell] = ramp(share, ramp_colours)
+    return ramp_colours
+
+
 def _paint(
     atlas: Atlas, layer: str, words: Words
 ) -> tuple[NDArray[np.uint8], NDArray[np.int32], list[tuple[str, tuple[int, int, int], int]]]:
@@ -380,24 +415,15 @@ def _paint(
         if layer == "land":
             _tint(colours, atlas, land)
             _shade(colours, atlas, land)
+    elif layer == "development" and atlas.development is None:
+        paint(land, UNCLAIMED, words.label("not_recorded"))
     else:
-        source, ramp_colours = (
-            (atlas.complexity, RAMP)
-            if layer == "development"
-            else (atlas.population, POPULATION_RAMP)
+        ramp_colours = _ramp_colours(atlas, layer, colours, land)
+        paint(
+            land & (atlas.population <= 0) & (layer == "population"),
+            UNCLAIMED,
+            words.label("uninhabited"),
         )
-        inhabited = land & (source > 0) if layer == "population" else land
-        top = int(source[inhabited].max()) if inhabited.any() else 1
-        root = math.isqrt(max(1, top))
-        for cell in np.flatnonzero(inhabited):
-            value = int(source[cell])
-            share = (
-                value * 1000 // max(1, top)
-                if layer == "development"
-                else math.isqrt(value) * 1000 // root
-            )
-            colours[cell] = ramp(share, ramp_colours)
-        paint(land & (source <= 0), UNCLAIMED, words.label("uninhabited"))
         for step, label in STEPS:
             _ = legend.setdefault(words.label(label), (len(legend), ramp(step, ramp_colours), 0))
     entries = sorted(legend.items(), key=lambda item: item[1][0])
@@ -595,6 +621,7 @@ def describe(atlas: Atlas, cell: int) -> Facts | None:
         settlement=atlas.word("settlement", int(atlas.settlement[cell])),
         population=int(atlas.population[cell]),
         complexity=int(atlas.complexity[cell]),
+        development=None if atlas.development is None else int(atlas.development[cell]),
     )
 
 
@@ -670,6 +697,9 @@ def to_files(atlas: Atlas) -> tuple[bytes, bytes]:
             "settlement": atlas.settlement.tolist(),
             "population": atlas.population.tolist(),
             "complexity": atlas.complexity.tolist(),
+            **(
+                {"development": atlas.development.tolist()} if atlas.development is not None else {}
+            ),
             "centre": atlas.centre.tolist(),
         },
     }
@@ -743,6 +773,7 @@ def _parse(document: bytes, labels_png: bytes) -> Atlas:
         history=history_archive.unpack(data["history"])
         if data["format"] == FORMAT and data.get("history") is not None
         else None,
+        development=_int64(columns["development"]) if "development" in columns else None,
     )
     if found.history is not None:
         validate_history(found.history, history_links(found))

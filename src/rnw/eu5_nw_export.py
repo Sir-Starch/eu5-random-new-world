@@ -338,6 +338,9 @@ RIVER_CLASSES: Final[int] = 16
 # pixels [V-EXEC C59]; valleys are cut in proportion (vanilla rivers lie a median 318
 # and a quarter of them over 950 height units below the 17-pixel local mean).
 RIVER_WIDTH_CODES: Final[tuple[int, ...]] = (4, 5, 11, 15)
+# The river size the game's development rule (`river = 0.5`) multiplies, by width code: the start
+# development of an owner's 1.4.4 save gives 2, 2, 4 and 6 for 4, 5, 11 and 15 [V-LOCAL C500].
+RIVER_SIZES: Final[dict[int, int]] = {4: 2, 5: 2, 11: 4, 15: 6}
 RIVER_WIDTH_SHARES: Final[tuple[int, ...]] = (615, 239, 84, 62)
 RIVER_VALLEY_DEPTHS: Final[tuple[int, ...]] = (350, 550, 850, 1150)
 RIVER_VALLEY_PX: Final[int] = 6
@@ -2580,8 +2583,7 @@ def calibrate_development(
         game_map.labels,
         game_map.rivers,
         len(game_map.keys),
-        widths=RIVER_WIDTH_CODES,
-        limit=RIVER_CLASSES,
+        sizes=RIVER_SIZES,
     )
     index = {key: number for number, key in enumerate(game_map.keys)}
     return calibrate(
@@ -2614,8 +2616,7 @@ def _plan_development(  # noqa: PLR0913 - development reads the calibration, wor
         world.labels,
         river_codes,
         len(world.classes) + 1,
-        widths=RIVER_WIDTH_CODES,
-        limit=RIVER_CLASSES,
+        sizes=RIVER_SIZES,
     )
     cell_fields = [
         (cell.key, biomes.vegetation[i], biomes.climate[i], biomes.topography[i], int(sizes[i]))
@@ -3099,14 +3100,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 loc_keys=loc_keys,
             ),
         )
-        atlas_json, atlas_png = run_stage(
-            "atlas",
-            lambda: atlas_files(
-                build_atlas(
-                    world=world, plan=plan, biomes=biomes, natives=natives, mask=canvas.mask
-                )
-            ),
-        )
         checkpoint()
         ports = _ports(plan, world, canvas, coast.foreign, vanilla_ports)
         remap = build_remap(
@@ -3145,6 +3138,19 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             labels=final_labels,
             docks=ports[1],
             river_codes=river_codes,
+        )
+        atlas_json, atlas_png = run_stage(
+            "atlas",
+            lambda: atlas_files(
+                build_atlas(
+                    world=world,
+                    plan=plan,
+                    biomes=biomes,
+                    natives=natives,
+                    mask=canvas.mask,
+                    development=development.initial,
+                )
+            ),
         )
         texts, text_stats = run_stage(
             "texts",
