@@ -740,20 +740,20 @@ of them (a named opinion) and a mediator.
 
 - **N6–N9 code, 2026-11-06 (D29):** formable goals decided in play, region realms,
   the fantasy empire of the continent, cores over each territory, the nation of a
-  colonial shore named in its founders' tradition (N6, `ac67a29`, `9a5bdce`);
-  restorations of the realms the history divided, with the other heirs' answer (N7,
-  `f3cd91f`); scripted geographies and AI goals (N8, `2ee7595`); events of the
-  recorded past (N9, `02b8230`); the family reforms (N6). On candidate B's code the
-  export writes 11 realms, the empire, 4 restorations and 122 memory events, all files
-  parsed, every text in every language. [V-EXEC] The pending epoch-61 golden is
-  refreshed and reproduced; the layer check passes. Then the adapted vanilla chains
-  (`70a8090`), the naming choice (`54347a2`), the fantasy layer (`51a7229`) and the missions *Road to
-  X*: every item of §22.4 is implemented. [V-EXEC] Refinements:
-  the fantasy layer's continental goals are one each per world, give no cores and are not
-  pursued by the AI; the mixed realm is the *Realm of Two Peoples*. Further: RNW raises ranks only at
-  formation, so the naming choice at formation is the choice at a new rank; a rank
-  reached otherwise keeps the game's titles (`on_country_rank_change` is not hooked,
-  which would need a second name for every country of the world).
+  colonial shore named in its founders' tradition and the family reforms (N6, `ac67a29`,
+  `9a5bdce`, `d598f53`); restorations of the realms the history divided, with the other
+  heirs' answer (N7, `f3cd91f`); scripted geographies and AI goals (N8, `2ee7595`);
+  events of the recorded past (N9, `02b8230`). Then every item of §22.4: the adapted
+  vanilla chains (`70a8090`), the naming choice (`54347a2`), the fantasy layer
+  (`51a7229`, `ed0135f`) and the missions *Road to X* (`04c9a8f`). The pending epoch-61
+  golden carries all of it (`dfe767c`: 883 files, reproduced by two independent exports).
+  [V-EXEC] Refinements: the fantasy layer's continental goals are one each per world,
+  give no cores and are not pursued by the AI; the mixed realm is the *Realm of Two
+  Peoples*; a coast's ocean is the open ocean its waters reach first, since the coastal
+  seas of the Americas belong to the American continent; RNW raises ranks only at
+  formation, so the naming choice at formation is the choice at a new rank
+  (`on_country_rank_change` is not hooked, which would need a second name for every
+  country of the world).
 
 ### Redesign phases after the audit (D21–D28)
 
