@@ -393,9 +393,9 @@ Q1, whose classifier did not change. How seeding shapes it, from the same starts
 | regional powers | 22% | 62% | 10% |
 | a paramount | 35% | 30% | 33% |
 
-A seeded setting moves its region toward its picture, a paramount weakly. Whether
-Q4 should gate on the recognized or the Q1-scale rate is an owner decision before
-the held-out run (plan D28); this report changes neither.
+A seeded setting moves its region toward its picture, a paramount weakly. Before
+the held-out run the owner kept Q4 on the recognized rate (plan D30, 2026-11-06);
+the held-out report gives the Q1-scale rate beside it.
 
 **Limits.** Several margins are thin: the prudent rate (±3 points of noise on this
 set, more on 24 held-out worlds), `distinct` families (exactly 3), the Turbulent size

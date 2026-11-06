@@ -813,10 +813,18 @@ schema gained fields, and the story is unchanged.
 
 ### R6 runbook
 
-**Status, 2026-11-05:** step 1 is done. All fourteen statistical checks pass on the
+**Status, 2026-11-06:** steps 1–2 are done; the owner authorized steps 3–7 for a
+separate agent. Step 1 (2026-11-05): all fourteen statistical checks pass on the
 development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
-Steps 2–5 are not started: the held-out run is single-use and waits for an owner's go-ahead.
+D29 (N6–N9) feeds no history input ([plan §22.4](history-plan.md#224-scope-and-cut-order)),
+so that calibration stands. Q4 gates as written (plan D30). Step 2: the source of
+commit `b36915f` is frozen, source SHA-256 `6b98e55d…e56f010`, in the ignored
+`local_data/history-120/r6/heldout-freeze.json` (written by `freeze.py` beside it,
+which refuses a second freeze). `matrix.py heldout` and `evaluate.py heldout`
+refuse any other source. Later commits that touch only documentation keep the hash.
+The hub 1.2.0 installed on 2026-11-06 was built from this source; reinstall it only
+if the source changes.
 
 R6 is long batch work, meant for a separate agent. The scripts are in the ignored
 `local_data/history-120/r6/`. Run from the repository root, in the foreground, with
@@ -836,14 +844,19 @@ bounded workers (ADR 0006). Check the installed build first; nothing launches EU
    Pinned 1.1.0 baselines come from `h7/run_baseline_native.py` (sweeps:
    `--changes`). They go to `r6/baselines/P-S-baseline-500.json` and
    `r6/sweep-baselines/P-S-control-value/baseline-500.json`.
-4. **Held-out run, once.** Run `matrix.py heldout`, then `evaluate.py heldout`.
+4. **Held-out run, once.** Run `R6_SAVE_START=1 uv run python local_data/history-120/r6/matrix.py heldout`,
+   then `evaluate.py heldout`. Report Q4 at both recognition scales (D30) with
+   `q4_scales.py local_data/history-120/r6/heldout/worlds`; on the development starts
+   (`r6/final/worlds`) it reproduces the caveat's 102/133 and 11/25.
    If it fails, record the result and stop; plan D28 requires a further decision.
 5. **S8–S10 and delivery.** Pair full normal timings as in H7
    (`h7/timed_heldout_c488.py`, adapted to the frozen source). Then: the reference
    reproduction (`RNW_REPRODUCE=1`), `make check` and `make desktop`, packages and
    self-tests. Render the `countries` atlas layer of every held-out world into a
-   local contact sheet and review it against Q1–Q2. Install the candidate and
-   update the hub as AGENTS describes, and prepare the owner's fifteen-minute sitting.
+   local contact sheet and review it against Q1–Q2. Install the candidate as AGENTS
+   describes and prepare the owner's fifteen-minute sitting: the checks of
+   [plan §18](history-plan.md#18-acceptance-criteria), each with its console line
+   (the formable's tag for the formation, a country of its ladder to look from).
 6. **W2 version matrix** ([roadmap W2](roadmap.md#workshop-feedback-in-120)), run with the
    candidate's source, in the foreground and one cell at a time (about 25 minutes a cell):
    `uv run python local_data/w2/matrix.py local_data/w2/out --mask` drives the real bridge
@@ -862,6 +875,6 @@ bounded workers (ADR 0006). Check the installed build first; nothing launches EU
    code, so it is a folder of its own). Before the sitting, check the written
    `in_game/common/on_action/rnw_reveal.txt` against the candidate's `definitions.txt` (the export
    already refuses a difference) and that no other mod of the profile defines `on_game_start` with
-   an `effect`. The fifth check of the sitting is that the whole New World, sea included, is
+   an `effect`. The last check of the sitting is that the whole New World, sea included, is
    visible from the first day without fog for the country played; read `debug.log` for any line
    naming `rnw_reveal.txt`. A failure cuts W6 and turns the setting off, with no further sitting.

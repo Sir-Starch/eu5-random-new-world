@@ -145,6 +145,7 @@ on these observations.
 | D27 | Chronicles | Ranked by significance; no renewed-exchange filler; a quiet past is short |
 | D28 | Acceptance | §18 measures the start; development seeds 3/42/77/1000–1004; held-out 1005–1008, once |
 | D29 | Consequences in play | Formable goals, political inheritance, AI goals, and events and names from the recorded past (N6–N9, [§22](#22-goals-and-consequences-in-play-2026-11-06)) |
+| D30 | Q4 recognition | Q4 gates on the D24 recognition shares as written; the Q1-scale rate is reported beside it (owner, 2026-11-06, before the held-out run) |
 
 ## 4. Scope and abstractions
 
@@ -726,9 +727,9 @@ H2 schema.
   realm dominating a small landmass) and eleven values were calibrated. The
   adjustments with their evidence, and the thin margins, are in the
   [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
-  The freeze, the single held-out run, S8 timing and delivery are not started: the
-  [runbook](history-core.md#r6-runbook) lists them, and the owner decides when the
-  held-out set is spent.
+  On 2026-11-06, after D29 and D30, the source was frozen (runbook step 2). The owner
+  authorized the single held-out run, S8 timing and delivery for a separate agent; the
+  [runbook](history-core.md#r6-runbook) lists them.
 
 **The divided valley fixture (H2).** Three farming districts with viable seats in
 1037 unite by 1112 through repeated cooperation. A dispute over obligations divides
@@ -902,12 +903,14 @@ a new owner test.
 **Game-facing:** `uv sync --locked --group dev && make check`, desktop checks,
 goldens, installed-game read-only checks and reference reproduction as in
 [testing](testing.md). One owner sitting of about fifteen minutes on the R6
-candidate covers four checks, and a fifth while W6 ships (the candidate then enables it):
+candidate covers six checks, and a seventh while W6 ships (the candidate then enables it):
 
 - the world loads without errors naming the new keys;
 - a named historical opinion appears in the diplomacy view;
 - Our History opens the chronicle;
 - a generated `guarantee` appears;
+- the formables list of one country shows its ladder ([§22](#22-goals-and-consequences-in-play-2026-11-06));
+- a console formation grants the cores, so that the conquest casus belli appears;
 - with W6, the generated New World is discovered at the start.
 
 A failure applies F1–F3, or cuts W6, with no further sitting.
@@ -1137,6 +1140,12 @@ development set. New held-out seeds 1005–1008 are frozen in R1 and used once, 
   recorded decision is needed.
 - No world is ever rerolled or excluded.
 
+**D30 Q4 keeps the D24 recognition (owner, 2026-11-06).** The development
+calibration showed that Q4's pass rests on the lowered D24 shares: 73% recognized,
+55% at Q1's scale ([caveat](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05)).
+Before the held-out run the owner kept Q4 as written. The held-out report states
+both rates; only the D24 rate gates.
+
 ### 21.5 Implementation refinements (2026-11-05, before any held-out run)
 
 Implementing D21–D28 against the single development world continents/3 exposed
@@ -1330,9 +1339,8 @@ set and in the held-out run:
 | N-C5 | Every recorded fallen realm or union with two living successors has a restoration formable or a recorded reason |
 | N-C6 | Every memory event names a projected memory and its cause; every new text exists in every official language |
 
-The R6 sitting adds, within its fifteen minutes: the formables list of one country
-shows its ladder, and a console formation grants the cores so that the conquest
-casus belli appears.
+Two checks of the R6 sitting ([§18](#18-acceptance-criteria)) observe the ladder and
+the cores in play.
 
 ### 22.4 Scope and cut order
 
