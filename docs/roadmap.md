@@ -123,6 +123,14 @@ world may have no large empire at all. History is the backstory of EU5 countries
 within the generation parameters, not a world simulation. The plan's
 [audit](history-plan.md#21-independent-audit-and-redesign-2026-11-05) applies this.
 
+**Owner decision, 2026-11-06.** 1.2.0 also gives the history its consequences in
+play, rather than leaving them for a later release: formables that set real goals
+(rights decided in play, a ladder up to a realm of each region and a fantasy empire of
+the New World, cores that open vanilla's conquest casus belli, a national formable for
+independent colonies), formables restoring the realms the history records as fallen,
+AI goals toward them, and events driven by the recorded past. Phases N6–N9 and their
+criteria are in the [plan's §22](history-plan.md#22-goals-and-consequences-in-play-2026-11-06).
+
 This brings generated national histories and broader society/diplomacy work out
 of the general future list and into the 1.2.0 focus. The earlier
 [community history suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)

@@ -6,7 +6,9 @@ reference for 1.2.0 work. **Implementation was authorized by the owner on
 2026-11-03.** **Revised by the owner-authorized audit of 2026-11-05**
 ([§21](#21-independent-audit-and-redesign-2026-11-05)). Its decisions D21–D28
 rewrite the policy targets, the acceptance criteria ([§18](#18-acceptance-criteria))
-and the remaining phases (R1–R6). Version/epoch changes follow the phase
+and the remaining phases (R1–R6). **Extended by the owner on 2026-11-06**
+([§22](#22-goals-and-consequences-in-play-2026-11-06), D29): 1.2.0 also gives the
+history its consequences in play (phases N6–N9). Version/epoch changes follow the phase
 requirements below; publication still requires explicit authorization under
 [AGENTS](../AGENTS.md).
 A later decision recorded in this file replaces the
@@ -124,12 +126,12 @@ on these observations.
 | D8 | Extraordinary peoples | `empire_permille` seeds extraordinary aims per hearth domain, with strategies; history decides whether they succeed (D23, [§12](#12-existing-static-systems)) |
 | D9 | Social depth | Eight dimensions, each with a cause in history and a projection or a summary line ([§6](#6-societies)) |
 | D10 | In-game visibility | Pair-specific named historical opinions plus the voluntary **Our History** decision; vanilla-key fallback |
-| D11 | Relations in EU5 | Vassals, alliances, rivals, confederations, opinions, discovery: core. `guarantee`: core with fallback. Claims, cores, truces, starting wars, tributaries, dynasties, formables, ruins: not in 1.2.0 |
+| D11 | Relations in EU5 | Vassals, alliances, rivals, confederations, opinions, discovery: core. `guarantee`: core with fallback. Claims, starting cores, truces, starting wars, tributaries, dynasties, ruins: not in 1.2.0. *Revised by D29:* cores granted by a formation and formables of political inheritance are in 1.2.0 |
 | D12 | Existing systems | Refactored first into a final start plan with byte-equal output (H1), then fed by history |
 | D13 | Reading surface | Generator atlas in both windows; in-game opinions and chronicle; structured chronicle text, not free prose |
 | D14 | Player control | History always on; one new control, **Historical turbulence** (Calm/Varied/Turbulent), field `natives.turbulence_permille`; it moves conflict propensity, setting weights and strategy mix (D22–D23) |
 | D15 | Atlas | `format` 3 with a `history` section inside `atlas.json`; formats 1/2 stay readable and show no history (implementation correction below) |
-| D16 | Stories | Existing families read plan facts; no new story family in 1.2.0 |
+| D16 | Stories | Existing families read plan facts. *Revised by D29:* new event families driven by projected memories are in 1.2.0 |
 | D17 | Technology | Unchanged derivation: templates by complexity, the calibrated level for realized great empires |
 | D18 | Engine check | One batched owner sitting at R6 (formerly H7); fallbacks decided in advance |
 | D19 | Scope cuts | Fixed order in [§17](#17-phases-and-scope-control) |
@@ -142,6 +144,7 @@ on these observations.
 | D26 | Institutions | Founding authority follows regional tradition |
 | D27 | Chronicles | Ranked by significance; no renewed-exchange filler; a quiet past is short |
 | D28 | Acceptance | §18 measures the start; development seeds 3/42/77/1000–1004; held-out 1005–1008, once |
+| D29 | Consequences in play | Formable goals, political inheritance, AI goals, and events and names from the recorded past (N6–N9, [§22](#22-goals-and-consequences-in-play-2026-11-06)) |
 
 ## 4. Scope and abstractions
 
@@ -371,7 +374,8 @@ model, and nothing adds a second set of relations later.
 | Protection without subjecthood | `scripted_oneway` `guarantee` (5 vanilla precedents) | Core, with fallback F3 |
 | Exchange agreement | Named opinion, markets and roads | Core; `trade_access` not used |
 | Tributary dependence | Blocked: `tributary` needs a tribal or horde overlord (C158) | Memory and named opinion only |
-| Claims, cores, truces, starting wars, dynasties, rulers, inheritance formables, ruins | — | Not in 1.2.0 ([§20](#20-beyond-120)) |
+| Claims, starting cores, truces, starting wars, dynasties, rulers, ruins | — | Not in 1.2.0 ([§20](#20-beyond-120)) |
+| Formable goals, cores granted by a formation, inheritance formables, AI goals, memory events | N6–N9 ([§22](#22-goals-and-consequences-in-play-2026-11-06)) | Core (D29) |
 | Extinct predecessors | History and text only; no dead tag in a live scope | Core as context |
 
 **Named historical opinions.** Each projected memory between two living generated
@@ -750,8 +754,9 @@ reproducible.
 | R5 Institutions and chronicles | D26 regional traditions; D27 significance ranking | Q11–Q12 on the development set; every language updated |
 | R6 Validation and delivery | Design tables frozen; held-out run once; S8–S11; reference; packages; candidate install; hub update; contact sheet; one owner sitting | §18 met; release notes |
 
-Order: R1 → R2 → R3 → R4 → R5 → R6. R2 and R3 may be developed together, since
-indirect rule connects them. In R4–R5, the design tables of D22–D23 may be
+Order: R1 → R2 → R3 → R4 → R5 → N6 → N7 → N8 → N9 → R6. R2 and R3 may be developed
+together, since indirect rule connects them. N6–N9 ([§22](#22-goals-and-consequences-in-play-2026-11-06))
+are written from the final start plan and never feed it back. In R4–R5, the design tables of D22–D23 may be
 adjusted on development seeds within the spirit of their stated intent. Every
 change is recorded with its development evidence.
 
@@ -761,7 +766,8 @@ change is recorded with its development evidence.
 - H2, and H3's dimensions that project;
 - H4 core projection with named opinions (or F1);
 - the generator reading surface and every language;
-- R1–R4, D26–D27 and R6.
+- R1–R4, D26–D27 and R6;
+- N6 without its family reforms, N7, N8 and N9's memory events (D29).
 
 **Cut order** when time or evidence runs short, first cut first:
 1. Our History decision (as F2);
@@ -778,11 +784,13 @@ A cut is recorded here and in the release notes.
 carries the Workshop-feedback items W1–W6 of the
 [roadmap](roadmap.md#workshop-feedback-in-120). They are independent of R1–R5. The W2
 version matrix runs in R6 beside the reroll digests of §18. W1–W4 are irreducible;
-W6 and then W5 are cut before item 1 above.
+W6 and then W5 are cut before item 1 above. Before W6, D29's optional parts are cut
+in the order of [§22.4](#224-scope-and-cut-order).
 
 ## 18. Acceptance criteria
 
 *Rewritten by D28 (2026-11-05, [§21](#21-independent-audit-and-redesign-2026-11-05)).*
+D29 adds the content criteria N-C1–N-C6 ([§22.3](#223-acceptance)).
 The criteria measure the 1337 start that the player sees. The journal is not
 measured for its own sake. Each threshold is a design target fixed before any new
 run, grounded in the 1.1.0 product and the vanilla 1337 Americas. Development runs
@@ -912,17 +920,17 @@ A failure applies F1–F3, or cuts W6, with no further sitting.
 Each item needs its own decision with its cost and evidence:
 
 - claims, foreign cores and truces (generated-tag syntax and initialization);
-- formables of political inheritance (tag lifecycle, no collision with existing formations);
 - named rulers, dynasties and marriages (character entities before any prose);
 - starting wars, recorded ruins and new assets;
 - ownership replay, diplomatic network and lineage views;
 - independent history rerolls and alternate pasts;
-- new story families built on historical facts;
 - endogenous population growth, settlement expansion and resource-driven politics
   (which revise the slider and layer contracts);
 - millennia of settlement, language and religion divergence;
 - hand-authored scenarios and fantasy histories.
 
+Formables of political inheritance and event families built on historical facts
+moved into 1.2.0 (D29, [§22](#22-goals-and-consequences-in-play-2026-11-06)).
 Hydrology, fantasy land shapes, wrap research and interface work stay in the
 [roadmap](roadmap.md#other-future-work-requested-by-the-owner).
 
@@ -1196,3 +1204,139 @@ Aims, settings and strategies are seeded records with causes, so they are subjec
 to the causal validator and the digest like every other fact. Each phase commits
 only with full checks. The atlas history schema may change because format 3 is
 unreleased, but its import checks extend to the new records.
+
+## 22. Goals and consequences in play (2026-11-06)
+
+**Owner decision, 2026-11-06 (D29).** 1.2.0 also gives the recorded past its
+consequences in play. Without them the history reaches the game only as named
+opinions that fade within 17–50 years ([§11](#11-eu5-projection)) and the voluntary
+chronicle, while the formables keep every defect of 1.1.0. The owner rejected
+deferring this work to a later release and accepted the scope below. D29 revises
+D11 and D16; everything else in §4–§21 stands.
+
+### 22.1 Survey [V-LOCAL, EU5 1.4.7 / 26377361, 2026-11-06]
+
+- **Vanilla formables.** 163 (162 base, one of D009): three of level 5 (`ROM_f` and
+  `EUR_f` fantasy, `ROM_BYZ_f` historical), 19 of level 4. The Americas have eight:
+  `USA_f` (4); `CAN_f`, `MEX_f`, `AZT_f`, `INC_f`, `IRO_f` (3); `MAY_f`, `PUE_f` (2). None
+  is fantasy or level 5. `USA_f` needs 35% of `east_coast_region` (about 260
+  locations), `AZT_f` 75% of `mesoamerica_region` (about 340). Founding effects use
+  rank, `unlock_government_reform_effect`, `unlock_casus_belli_effect`, `add_core`,
+  `set_court_language` and capital moves; `MEX_f` admits a Christian native culture,
+  `INC_f` gates on `culture.language`.
+- **From a goal to a war.** `cb_conquer_province` (`casus_belli/conquest.txt`) is
+  created against a country holding a location that `is_core_of = root`; 241 vanilla
+  countries start with `our_cores_conquered_by_others`.
+- **AI.** `ai_scripted_expansion_target` adds war targets and `ai_scripted_expansion_score`
+  weights or forbids them (`attack_neighbors`, `castile_spares_christian_iberia`).
+- **Names.** Events rename a country with `change_country_name`, `_adjective`,
+  `_flag` and `_color` (`fall_of_delhi`, `decline_of_majapahit`, `rebels.txt`).
+  `scripted_country_names` apply to any country (`wessex`), but were not seen applied
+  to created countries (C207, C210).
+- **Reforms.** A reform whose `potential` is only `has_unlocked_government_reform_trigger`
+  (`autonomous_swiss_cantons_reform`, `lifan_yuan`) is opened by an unlock effect.
+- **RNW 1.1.0.** The largest target is the regional realm, 24–48 places at 50%; the
+  first five families are offered to a fixed list of up to eight starting tags; the
+  reward is rank and one timed modifier; names are `{seat} {suffix}`; the settlers'
+  federation takes a native seat's name; nothing weights the AI. The vanilla American
+  flavour (AZT 17, IRO 30, CHK 23, USA 24 events) is closed or tag-bound. In the 1.2.0
+  candidate `27gtz46qpq`, 186 states hold 801 of 7,289 land locations (largest 34),
+  and a generated region holds 442–690 locations.
+
+### 22.2 Phases
+
+**N6 Formable goals.**
+
+- *Right in play.* A family's `potential` is its claimants (the starting states with
+  a capital inside, as in 1.1.0) **or** an identity rule the game evaluates: any
+  country for the river union, highland confederation, maritime league and realm;
+  `culture ?= { has_culture_group = culture_group:<basis> }` for the commonwealth
+  (as `GER_f`); the national rule below. `capital_required` and vanilla's
+  `potential_requires_own` keep each list to the holders.
+- *Ladder.* Level 2 confederation and league as in 1.1.0; level 3 river union and
+  commonwealth up to 60 places. Level 4 is the **realm of a region**: one for each
+  generated region where at least three starting states have their capitals and at
+  least four centres lie; its territory is the region (`regions = { <key> }`) at a
+  *calibrated* 40%, and it requires the region's **throne**, the most populous centre a
+  state holds at the start (as `AZT_f` requires Tenochtitlan). Level 5 is the
+  **empire of the New World**, `rule = fantasy`: 50% of the New World continent,
+  empire rank and hegemony (as `EUR_f`), one per world.
+- *Rewards.* Rank and the founding modifier as in 1.1.0; a core on every territory
+  location the founder lacks, so vanilla's `cb_conquer_province` opens against each
+  remaining holder; a reform of RNW's own name with a copied vanilla payload, unlocked
+  by the formation (as the stories copy modifiers).
+- *National formable* (replaces the postcolonial federation). Territory: a colonial
+  shore as in 1.1.0. Potential: a culture that is not native American, or a native
+  culture with a Christian religion (as `MEX_f`). Allow: independent, or leader of a
+  `colonial_federation`. Name: the generated region's, not a native seat's; the
+  formation renames the country in its founders' tradition (Spanish, Portuguese,
+  English, French, Dutch, as the colonial names) with `change_country_name`.
+- *Names.* A realm and the empire take the region's and the New World's generated
+  names; the other families keep their seat's.
+
+**N7 Political inheritance.** A realm or union that the history records as divided,
+failed or dissolved, with at least two living successors at 1337, gives a
+**restoration** formable: level one above its successors' highest (at most 4); its
+territory the predecessor's places at its height; claimants its successors
+(`has_or_had_tag`); its name the predecessor's, as the chronicle writes it; cores over
+the old land. When one claimant forms it, each other living claimant receives an event
+to accept the restoration or contest it (opinion, rivalry). No dead tag enters a live
+scope (§11).
+
+**N8 AI goals.** For every formable of level 3 and above, one
+`ai_scripted_expansion_target` for the countries that can form it, listing the owners
+of its territory, scored from their tax base and distance as `attack_neighbors` does;
+one `ai_scripted_expansion_score` multiplier for those targets, and `never_attack`
+toward partners of a recorded pact while their alliance lasts. Weights are
+conservative and gated by age; how far the AI pursues them over a campaign stays
+[UNKNOWN] and is not a request for a campaign.
+
+**N9 Events and names from the recorded past.** Event families bound to projected
+memories, each with its cause: a lost place still held by the victor (claim it with a
+core or let it go), an old pact (renewal), an heir of a fallen realm, returning
+refugees, a sacred centre between rivals. Adapted from vanilla, binding to generated
+facts: the declining centre (CHK), the confederation council (IRO), the senior partner
+of a union (AZT), the founding of a nation (USA) for the national formable. A naming
+choice at formation and at a new rank between generated names (`change_country_name`).
+
+### 22.3 Acceptance
+
+Added to [§18](#18-acceptance-criteria); checked at construction on the development
+set and in the held-out run:
+
+| ID | Criterion |
+|---|---|
+| N-C1 | Every seat of a level-2 or level-3 formable lies under a formable of a higher level (a realm or the empire) |
+| N-C2 | Every family but restoration has an identity rule in its `potential` |
+| N-C3 | Every formation grants cores over its territory, and its reform where the family has one (written-file check) |
+| N-C4 | Every formable of level 3 and above has AI entries that name only written tags, locations and regions |
+| N-C5 | Every recorded fallen realm or union with two living successors has a restoration formable or a recorded reason |
+| N-C6 | Every memory event names a projected memory and its cause; every new text exists in every official language |
+
+The R6 sitting adds, within its fifteen minutes: the formables list of one country
+shows its ladder, and a console formation grants the cores so that the conquest
+casus belli appears.
+
+### 22.4 Scope and cut order
+
+N6–N9 are written after `FinalStartPlan` and never feed it. Q1–Q13 read none of them
+(`history_metrics` takes no formation or story input), so the development calibration
+of 35d9e7d stands and the held-out run in R6 uses the final source. They change world
+bytes: the pending epoch-61 goldens are refreshed, with no new epoch. New formats enter
+the [interoperability register](research/interoperability.md) before shipping.
+
+Irreducible: N6 without its family reforms, N7, N8 and N9's memory events. Cut
+first, before W6:
+
+1. missions "Road to {X}" (vanilla mission format);
+2. the fantasy layer (the level-5 empire; two shores, a court moved to the New World,
+   two oceans, the confederation of a great law, a mixed realm);
+3. the adapted vanilla chains of N9;
+4. the naming choice events;
+5. the family reforms of N6.
+
+Outside 1.2.0: situations and disasters on the patterns of `sengoku`,
+`rise_of_the_ottomans` and `decline_of_majapahit`; events of geography alone (horses,
+drift from the currents, a silver rush); colonial names from bays, islands and rivers,
+with the colonizers' place names of the [roadmap](roadmap.md#player-requests-after-120);
+Easter-egg countries.

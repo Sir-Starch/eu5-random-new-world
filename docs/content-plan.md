@@ -29,6 +29,10 @@ defines scripts, graphs and pulse checks. `stories.py`, `stories_n4.py` and
 `colonial_names.py` define formables and names. `eu5_story.py`, `eu5_formation.py`
 and `eu5_places.py` write their game records.
 
+For 1.2.0, phases N6–N9 of the [history plan](history-plan.md#22-goals-and-consequences-in-play-2026-11-06)
+rework the formable goals and add political inheritance, AI goals and events driven
+by the recorded past (D29).
+
 Keep vanilla mechanisms where they express the feature. All scripts and hooks
 belong to the generated world, never an enabled companion/probe mod. Conditions
 and outcomes must resolve against the actual generated geography and societies;
