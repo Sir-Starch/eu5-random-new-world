@@ -6,6 +6,22 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-06, **1.2.0 development / pending epoch 61 — goals candidate C** (D29, N6–N9: formable goals,
+restorations, AI goals, events of the recorded past, family reforms). [V-EXEC] Installed
+**`mod/rnw_exp_world_anrfpxbsw3`** ("History 1.2 candidate C (goals)") in the existing Windows/Proton
+profile: code `RNW1-080QY-J4QP6-8R9H9-1040G-00830-3SG46-R18Y1-G5RZH-JR`, the settings of candidate B
+(`27gtz46qpq`) with a new seed, generated at `d598f53`. It writes 9 region realms, the fantasy empire
+of the continent, 3 restorations (5 fallen realms passed with their reasons), 2 nations of colonial
+shores, unions, leagues, confederations and commonwealths, AI goals for every pursued formable and 110
+memory events (61 lost lands, 24 kin, 19 old pacts, 6 heirs). The staged installer refused any existing
+target; 907 files match the prepared mod, both libraries hold the record, and all 7 other mod folders and
+9 profile-root files are unchanged. No playset, save or preference edit; no EU5 launch or control by the
+agent. The standard updater installed hub 1.2.0 with the D29 generator after its Wine window, native,
+code, shell and bridge self-tests, retaining the former hub at `.rnw-hub-backups/1.2.0-1793936328845191954`;
+Windows wheel SHA-256 `c3bfdf26d330b83003461d97d37df4278a8f8f7b33b8ced09f186139fecba192`. NOT GAME
+VALIDATED: the engine loading of the formables, the cores' casus belli, the reforms, the AI entries and
+the events is for the R6 sitting.
+
 2026-11-05, **1.2.0 development / pending epoch 61 — history candidate B** (naming and societal values).
 [V-EXEC] Installed **`mod/rnw_exp_world_27gtz46qpq`** ("History 1.2 candidate B") in the existing
 Windows/Proton profile: code `RNW1-080NJ-Q174Z-YVDXZ-C040G-00830-3SG46-R18Y1-G5YG2-B4`, the settings of
