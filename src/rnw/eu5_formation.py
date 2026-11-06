@@ -20,6 +20,7 @@ instead of being replaced.
 
 from __future__ import annotations
 
+import textwrap
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
@@ -50,6 +51,7 @@ if TYPE_CHECKING:
 
 FORMABLES_FILE: Final[str] = "in_game/common/formable_countries/rnw_formations.txt"
 RESTORATION_FILE: Final[str] = f"in_game/events/{RESTORATION_EVENT}.txt"
+GEOGRAPHY_FILE: Final[str] = "in_game/common/scripted_geography/rnw_formations.txt"
 # What the other heirs gain or give by their answer: vanilla opinions and prestige values.
 RECOGNIZED: Final[str] = "opinion_good_relations"
 CONTESTED: Final[str] = "opinion_refused_claim"
@@ -123,6 +125,11 @@ def check_installation(game_dir: Path, specs: Sequence[Spec]) -> None:
                 raise FormationError(message)
 
 
+def potential(formation: Formation) -> list[str]:
+    """The lines of a formation's ``potential`` (the AI's goals ask the same), unindented."""
+    return textwrap.dedent(_potential(formation, BY_FAMILY[formation.family])).splitlines()
+
+
 def _potential(formation: Formation, spec: Spec) -> str:
     """Who sees the formable besides the holders of its territory, decided in play."""
     if spec.potential:
@@ -160,17 +167,42 @@ def _indented(lines: Sequence[str], depth: int) -> str:
     return "".join("\t" * depth + line + "\n" for line in lines)
 
 
+def geography(formation: Formation) -> str:
+    """The key of a formation's territory as a ``scripted_geography`` (its cores, the AI's goal)."""
+    return f"{key_of(formation)}_geography"
+
+
+def geographies(formations: Sequence[Formation]) -> str:
+    """The territory of every formation as a scripted geography: its region, continent or places.
+
+    Vanilla's ``scripted_geography.info`` allows any level of the hierarchy in one geography.
+    """
+    out: list[str] = []
+    for formation in formations:
+        if formation.region:
+            kind, keys = "region", [formation.region]
+        elif formation.continent:
+            kind, keys = "continent", [formation.continent]
+        else:
+            kind, keys = "location", list(formation.places)
+        lines = [f"{geography(formation)} = {{", f"\t{kind} = {{", *(f"\t\t{k}" for k in keys)]
+        out.append(_indented([*lines, "\t}", "}"], 0))
+    return "\n".join(out)
+
+
 def _cores(formation: Formation) -> str:
     """The founder's cores on the rest of the territory, under one line of tooltip."""
-    if formation.region:
-        scopes = [(f"region:{formation.region}", "every_location_in_region")]
-    else:
-        scopes = [(f"location:{key}", "if") for key in formation.places]
-    work = "".join(
-        _indented([f"{scope} = {{", f"\t{inner} = {{", "\t\tlimit = {"], 3)
+    work = (
+        _indented(
+            [
+                f"scripted_geography:{geography(formation)} = {{",
+                "\tevery_location_in_scripted_geography = {",
+                "\t\tlimit = {",
+            ],
+            3,
+        )
         + _indented(FOREIGN, 6)
         + _indented(["\t\t}", "\t\tadd_core = root", "\t}", "}"], 3)
-        for scope, inner in scopes
     )
     return f"\t\tcustom_tooltip = {CORES_TOOLTIP}\n\t\thidden_effect = {{\n{work}\t\t}}\n"
 
@@ -331,7 +363,13 @@ def files(formations: Sequence[Formation], identities: Sequence[Identity]) -> di
         )
         + "}\n"
     )
-    found = {FORMABLES_FILE: formables, FLAGS_FILE: flags, ARMS_FILE: arms, COLORS_FILE: colours}
+    found = {
+        FORMABLES_FILE: formables,
+        FLAGS_FILE: flags,
+        ARMS_FILE: arms,
+        COLORS_FILE: colours,
+        GEOGRAPHY_FILE: geographies(formations),
+    }
     if any(BY_FAMILY[formation.family].heirs for formation in formations):
         found[RESTORATION_FILE] = restoration_events(pairs)
     return found

@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw import colonial_names, eu5_formation
+from rnw import colonial_names, eu5_formation, eu5_goals
 from rnw.content import (
     ContentPlan,
     Facts,
@@ -223,7 +223,11 @@ def _formations(
     families = {formation.family for formation in plan.formations}
     specs = [spec for spec in SPECS if spec.family in families]
     eu5_formation.check_installation(game_dir, specs)
-    for path, text in eu5_formation.files(plan.formations, identities).items():
+    written = eu5_formation.files(plan.formations, identities)
+    goals = eu5_goals.files(plan.formations)
+    if goals:
+        eu5_goals.check_installation(game_dir)
+    for path, text in {**written, **goals}.items():
         files[path] = text.encode("utf-8-sig")
     texts.update(eu5_formation.texts(plan.formations, identities))
     for spec in specs:

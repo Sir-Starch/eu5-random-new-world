@@ -135,6 +135,8 @@ def _install(root: Path, *, drop: str = "", ranks: str = RANKS) -> Path:
         "in_game/common/building_types/event_only_buildings.txt": BUILDING,
         "in_game/common/estate_privileges/clergy_estate.txt": PRIVILEGE,
         "in_game/common/country_ranks/00_default.txt": ranks,
+        "in_game/common/age/00_default.txt": "age_2_renaissance = {\n}\nage_3_discovery = {\n}\n",
+        "in_game/common/ai_personalities/00_default.txt": "ai_isolationist = {\n}\n",
     }.items():
         path = game / relative
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -259,7 +261,9 @@ def test_a_union_is_a_formable_of_a_tag_the_game_does_not_define(tmp_path: Path)
     effect = block.block("form_effect")
     assert effect is not None
     assert "custom_tooltip = rnw_formation_cores_tt" in formable
-    assert "location:loc_c = {" in formable
+    assert "scripted_geography:rnw_union_1_f_geography" in formable
+    territory = files["in_game/common/scripted_geography/rnw_formations.txt"].decode("utf-8-sig")
+    assert "rnw_union_1_f_geography = {\n\tlocation = {\n\t\tloc_a\n\t\tloc_c\n" in territory
     locations = block.block("locations")
     assert locations is not None
     assert [w.value for w in locations.words()] == ["loc_a", "loc_c"]

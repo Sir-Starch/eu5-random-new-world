@@ -932,6 +932,16 @@ formation sends it through `every_country` and `trigger_event_non_silently`, as
 `flavor_por.txt` does. The export checks that the biases and values exist. The
 history replay that measures a realm's height reads the generator's own records.
 
+N8 writes each formation's territory as a `common/scripted_geography` entry (its
+`scripted_geography.info` documents `location`, `region` and `continent` lists,
+`every_location_in_scripted_geography` and `is_in_scripted_geography`); the cores of
+N6 now iterate it. The AI's goals use `common/ai_scripted_expansion_target` and
+`common/ai_scripted_expansion_score` in the fields their `readme.txt` lists
+(`attacker_potential`, `candidate_list`, `score`, `target_trigger`, `multiplier`),
+with `owns_or_has_subject_in` (as `D008_restore_roman_borders.txt`),
+`current_age_or_later` and `ai_personality`. The export checks the ages and the
+personality. How the AI weighs the entries in play is not observed.
+
 ## Earlier cases still outside this phase
 
 Beyond the limited header observation recorded above, `nodes.dat` remains

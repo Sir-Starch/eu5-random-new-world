@@ -40,6 +40,8 @@ from rnw.eu5_formation import (
     block,
     check_installation,
     files,
+    geographies,
+    geography,
     identities,
     key_of,
     nation_key,
@@ -449,10 +451,13 @@ def test_every_family_writes_a_formable_of_its_own_level_rank_and_modifier() -> 
         assert (cores is not None) == spec.cores
         if cores is not None:
             assert f"custom_tooltip = {CORES_TOOLTIP}" in text
-            for key in formation.places:
-                scope = cores.block(f"location:{key}", "if")
-                assert scope is not None
-                assert "add_core = root" in text
+            over = cores.block(f"scripted_geography:{geography(formation)}")
+            assert over is not None
+            assert over.block("every_location_in_scripted_geography") is not None
+            assert "add_core = root" in text
+            territory = parse(geographies([formation])).block(geography(formation), "location")
+            assert territory is not None
+            assert [word.value for word in territory.words()] == list(formation.places)
 
 
 def test_the_league_asks_for_ports_the_empire_for_hegemony_and_a_realm_for_its_throne() -> None:
@@ -478,8 +483,10 @@ def test_the_league_asks_for_ports_the_empire_for_hegemony_and_a_realm_for_its_t
     assert regions is not None
     assert [word.value for word in regions.words()] == ["east_region"]
     assert entry.block("locations") is None
-    assert "region:east_region = {" in text
-    assert "every_location_in_region" in text
+    territory = parse(geographies([realm])).block(geography(realm), "region")
+    assert territory is not None
+    assert [word.value for word in territory.words()] == ["east_region"]
+    assert f"scripted_geography:{geography(realm)}" in text
 
 
 def _identity(family: str) -> Identity:

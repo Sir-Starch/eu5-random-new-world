@@ -150,6 +150,17 @@ restoration already holds gets none; the export report lists each with its reaso
 [V-EXEC; the event's effects are vanilla effects whose result in play is not yet
 observed]
 
+**The AI's goals.** Each formable of level 3 and above that the default game rule
+shows (every family but the duchy-level league and confederation and the fantasy
+empire) is also a goal of the AI. A country that could form it, its capital in the
+territory, five years at peace and not isolationist, considers every neighbour
+holding land of the territory as a target, scored as half of vanilla's
+`attack_neighbors`, and weighs every holder of that land half again as high
+(`ai_scripted_expansion_target` and `ai_scripted_expansion_score`,
+`rnw_goal_<formable>`). Unions, commonwealths, federations and restorations are
+pursued from the second age (1342), realms from the age of discovery (1437). How
+far the AI pursues them over a campaign is not observed. [V-EXEC; UNKNOWN in play]
+
 **The throne.** A realm's throne is the most populous centre that a state holds
 in its region at the start; the founder must own it, as vanilla's `AZT_f` requires
 Tenochtitlan. The realm is named after its region's generated name, the empire
@@ -238,7 +249,9 @@ except for the export report. [V-EXEC C409]
 | Names, tags, family, target size and eligible tags of the generated formables | Export bundle `report.json` → `text_stats.stories.formations` |
 | Family counts, missing-family reasons, pulse families and opportunity-to-start-event mapping | Export bundle `report.json` → `text_stats.stories`: `opportunities`, `absences`, `pulses`, `starts` |
 | A start's country, centre, optional partner, year window and monthly chance | `in_game/events/rnw_story.txt`; start IDs are assigned per world, so do not assume `rnw_story.1001` always means the same family |
-| Actual target locations, potential and extra formation conditions | `in_game/common/formable_countries/rnw_formations.txt` |
+| Actual target locations, potential and extra formation conditions | `in_game/common/formable_countries/rnw_formations.txt`; territories in `in_game/common/scripted_geography/rnw_formations.txt` |
+| The AI's goals | `in_game/common/ai_scripted_expansion_target/rnw_formations.txt`, `in_game/common/ai_scripted_expansion_score/rnw_formations.txt` |
+| The other heirs' answer to a restoration | `in_game/events/rnw_restoration.txt` |
 | Visible story events, hidden cleanup and pulse starts | `in_game/events/rnw_river.txt`, `rnw_sacred.txt`, `rnw_harvest.txt`, `rnw_route.txt`, `rnw_alliance.txt`, `rnw_empire.txt`, `rnw_contact.txt`, `rnw_colony.txt`; bearer-bound families without opportunities are omitted |
 | Numeric story/founding bonuses and clergy privilege | `main_menu/common/static_modifiers/rnw_story_modifiers.txt`; `in_game/common/estate_privileges/rnw_story.txt` when present |
 | Colonial naming rules | `in_game/common/scripted_country_names/rnw_colonial_names.txt` |
