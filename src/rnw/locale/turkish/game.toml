@@ -1821,3 +1821,35 @@ text = '''İki Halk, Tek Devlet'''
 ["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
 source = "77bf4dd8870d78b3"
 text = '''Devlet iki halkı da kendi halkı sayar ve geleneklerini hoş karşılar.'''
+
+["rnw_road.name"]
+source = "2a2a11954c349bc8"
+text = '''{name} Yolunda'''
+
+["rnw_road.desc"]
+source = "e6619312e0e3825f"
+text = '''Toprakları egemenliğimiz altında toplayıp yeni devleti ilan edin: {name}.'''
+
+["rnw_road.seat"]
+source = "c50808a05e63c6f2"
+text = '''Merkezi Ele Geçirin'''
+
+["rnw_road.seat_desc"]
+source = "d248d862f432b46c"
+text = '''Yeni devletin merkezi, toprakları onu izlemeden önce bizim olmalı.'''
+
+["rnw_road.land"]
+source = "9df238c90f736f30"
+text = '''Toprakları Toplayın'''
+
+["rnw_road.land_desc"]
+source = "0f35b903317a3f42"
+text = '''Yeni devleti ilan edebilmek için topraklarının büyük kısmına sahip olmalıyız.'''
+
+["rnw_road.proclaim"]
+source = "a3422fb1ef9d8d24"
+text = '''Yeni Devleti İlan Edin'''
+
+["rnw_road.proclaim_desc"]
+source = "faed96e7a4804d75"
+text = '''Topraklar elimizdeyken ilan edebiliriz: {name}.'''

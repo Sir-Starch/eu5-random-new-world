@@ -1821,3 +1821,35 @@ text = '''二つの民、一つの王国'''
 ["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
 source = "77bf4dd8870d78b3"
 text = '''王国は両方の民を自らの民とし、その慣習を受け入れる。'''
+
+["rnw_road.name"]
+source = "2a2a11954c349bc8"
+text = '''{name}への道'''
+
+["rnw_road.desc"]
+source = "e6619312e0e3825f"
+text = '''その地を我らの支配のもとに集め、新たな国家を宣言する。すなわち{name}。'''
+
+["rnw_road.seat"]
+source = "c50808a05e63c6f2"
+text = '''都を押さえる'''
+
+["rnw_road.seat_desc"]
+source = "d248d862f432b46c"
+text = '''その地が従う前に、新たな国家の都は我らのものでなければならない。'''
+
+["rnw_road.land"]
+source = "9df238c90f736f30"
+text = '''土地を集める'''
+
+["rnw_road.land_desc"]
+source = "0f35b903317a3f42"
+text = '''新たな国家を宣言する前に、その地の多くを押さえねばならない。'''
+
+["rnw_road.proclaim"]
+source = "a3422fb1ef9d8d24"
+text = '''新たな国家を宣言する'''
+
+["rnw_road.proclaim_desc"]
+source = "faed96e7a4804d75"
+text = '''土地を手にした今、我らは宣言できる。すなわち{name}。'''

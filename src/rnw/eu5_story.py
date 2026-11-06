@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw import colonial_names, eu5_formation, eu5_goals, eu5_memories, eu5_naming
+from rnw import colonial_names, eu5_formation, eu5_goals, eu5_memories, eu5_missions, eu5_naming
 from rnw.content import (
     NATION_FOUNDING,
     ContentPlan,
@@ -267,6 +267,11 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
     goals = eu5_goals.files(plan.formations)
     if goals:
         eu5_goals.check_installation(game_dir)
+    roads = eu5_missions.roads(plan.formations, identities)
+    if roads:
+        eu5_missions.check_installation(game_dir)
+        goals[eu5_missions.MISSIONS_FILE] = eu5_missions.missions(roads)
+        texts.update(eu5_missions.texts(roads))
     for path, text in {**written, **goals}.items():
         files[path] = text.encode("utf-8-sig")
     texts.update(eu5_formation.texts(plan.formations, identities))

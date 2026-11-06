@@ -1821,3 +1821,35 @@ text = '''两族一国'''
 ["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
 source = "77bf4dd8870d78b3"
 text = '''王国视两族皆为己民，并欢迎他们的习俗。'''
+
+["rnw_road.name"]
+source = "2a2a11954c349bc8"
+text = '''通往{name}之路'''
+
+["rnw_road.desc"]
+source = "e6619312e0e3825f"
+text = '''将这片土地收归我们治下，并宣告新国家的建立：{name}。'''
+
+["rnw_road.seat"]
+source = "c50808a05e63c6f2"
+text = '''掌握都城'''
+
+["rnw_road.seat_desc"]
+source = "d248d862f432b46c"
+text = '''在其土地归附之前，新国家的都城必须先归我们所有。'''
+
+["rnw_road.land"]
+source = "9df238c90f736f30"
+text = '''收拢土地'''
+
+["rnw_road.land_desc"]
+source = "0f35b903317a3f42"
+text = '''在宣告新国家之前，我们必须占有其大片土地。'''
+
+["rnw_road.proclaim"]
+source = "a3422fb1ef9d8d24"
+text = '''宣告新国家'''
+
+["rnw_road.proclaim_desc"]
+source = "faed96e7a4804d75"
+text = '''土地已在我们手中，我们可以宣告：{name}。'''

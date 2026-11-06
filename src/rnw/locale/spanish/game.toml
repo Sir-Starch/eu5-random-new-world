@@ -1821,3 +1821,35 @@ text = '''Dos pueblos, un reino'''
 ["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
 source = "77bf4dd8870d78b3"
 text = '''El reino toma a ambos pueblos como suyos y acoge sus costumbres.'''
+
+["rnw_road.name"]
+source = "2a2a11954c349bc8"
+text = '''El camino hacia {name}'''
+
+["rnw_road.desc"]
+source = "e6619312e0e3825f"
+text = '''Reunir las tierras bajo nuestro dominio y proclamar el nuevo Estado: {name}.'''
+
+["rnw_road.seat"]
+source = "c50808a05e63c6f2"
+text = '''Tomar la sede'''
+
+["rnw_road.seat_desc"]
+source = "d248d862f432b46c"
+text = '''La sede del nuevo Estado debe ser nuestra antes de que sus tierras la sigan.'''
+
+["rnw_road.land"]
+source = "9df238c90f736f30"
+text = '''Reunir las tierras'''
+
+["rnw_road.land_desc"]
+source = "0f35b903317a3f42"
+text = '''Debemos dominar buena parte de sus tierras antes de poder proclamar el nuevo Estado.'''
+
+["rnw_road.proclaim"]
+source = "a3422fb1ef9d8d24"
+text = '''Proclamar el nuevo Estado'''
+
+["rnw_road.proclaim_desc"]
+source = "faed96e7a4804d75"
+text = '''Con las tierras en nuestras manos, podemos proclamar {name}.'''

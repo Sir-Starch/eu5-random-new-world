@@ -74,7 +74,20 @@ def name_key(family: str) -> str:
     return f"rnw_formation_{family}_name"
 
 
+# The missions on the road to a formable (``eu5_missions``).
+ROAD: Final[str] = "rnw_road"
+ROAD_TEXTS: Final[dict[str, str]] = {
+    f"{ROAD}.name": "Road to {name}",
+    f"{ROAD}.desc": "Gather the land of {name} under our rule and proclaim it.",
+    f"{ROAD}.seat": "Hold the Seat",
+    f"{ROAD}.seat_desc": "The seat of the new state must be ours before its land will follow.",
+    f"{ROAD}.land": "Gather the Land",
+    f"{ROAD}.land_desc": "We must hold much of its land before we can proclaim the new state.",
+    f"{ROAD}.proclaim": "Proclaim the New State",
+    f"{ROAD}.proclaim_desc": "With the land in our hands, we may proclaim {name}.",
+}
 EXTRA_TEXTS: Final[dict[str, str]] = {
+    **ROAD_TEXTS,
     **{name_key(family): name for family, (name, _) in FANTASY_NAMES.items()},
     **{f"{name_key(family)}_adj": adjective for family, (_, adjective) in FANTASY_NAMES.items()},
     NAMING_TITLE: "A Name for the New State",

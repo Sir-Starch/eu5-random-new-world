@@ -37,6 +37,10 @@ from rnw.eu5_formation import (
     FORMABLES_FILE,
     PATTERN_DIR,
 )
+from rnw.eu5_missions import ICONS as MISSION_ICONS
+from rnw.eu5_missions import ICONS_DIR as MISSION_ICONS_DIR
+from rnw.eu5_missions import ILLUSTRATION as MISSION_ILLUSTRATION
+from rnw.eu5_missions import ILLUSTRATIONS_DIR as MISSION_ILLUSTRATIONS
 from rnw.eu5_story import (
     LOCALIZATION,
     MODIFIERS_FILE,
@@ -121,7 +125,15 @@ def _sources() -> dict[str, tuple[str, bool, str]]:
 
 def _install(root: Path, *, drop: str = "", ranks: str = RANKS) -> Path:
     game = root / "game"
-    for directory, names in ((EMBLEM_DIR, PICTURES), (PATTERN_DIR, ("pattern_solid.dds",))):
+    missions = (
+        (MISSION_ILLUSTRATIONS, (f"{MISSION_ILLUSTRATION}.dds",)),
+        (MISSION_ICONS_DIR, tuple(f"{icon}.dds" for icon in MISSION_ICONS.values())),
+    )
+    for directory, names in (
+        (EMBLEM_DIR, PICTURES),
+        (PATTERN_DIR, ("pattern_solid.dds",)),
+        *missions,
+    ):
         for name in names:
             picture = root / directory / name
             picture.parent.mkdir(parents=True, exist_ok=True)

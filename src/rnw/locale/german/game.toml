@@ -1821,3 +1821,35 @@ text = '''Zwei Völker, ein Reich'''
 ["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
 source = "77bf4dd8870d78b3"
 text = '''Das Reich nimmt beide Völker als die seinen an und heißt ihre Bräuche willkommen.'''
+
+["rnw_road.name"]
+source = "2a2a11954c349bc8"
+text = '''Der Weg zu {name}'''
+
+["rnw_road.desc"]
+source = "e6619312e0e3825f"
+text = '''Das Land unter unserer Herrschaft sammeln und den neuen Staat ausrufen: {name}.'''
+
+["rnw_road.seat"]
+source = "c50808a05e63c6f2"
+text = '''Den Sitz halten'''
+
+["rnw_road.seat_desc"]
+source = "d248d862f432b46c"
+text = '''Der Sitz des neuen Staates muss unser sein, bevor sein Land folgt.'''
+
+["rnw_road.land"]
+source = "9df238c90f736f30"
+text = '''Das Land sammeln'''
+
+["rnw_road.land_desc"]
+source = "0f35b903317a3f42"
+text = '''Wir müssen viel von seinem Land halten, bevor wir den neuen Staat ausrufen können.'''
+
+["rnw_road.proclaim"]
+source = "a3422fb1ef9d8d24"
+text = '''Den neuen Staat ausrufen'''
+
+["rnw_road.proclaim_desc"]
+source = "faed96e7a4804d75"
+text = '''Mit dem Land in unserer Hand können wir ausrufen: {name}.'''

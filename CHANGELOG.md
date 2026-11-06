@@ -16,6 +16,9 @@
   founding in its founders' tradition (*United Provinces*, *United Captaincies*, *United
   Colonies*, *Free State* or *Generality of X*).
 
+- Offer each formable as a mission, *Road to X*: hold its seat, gather half the land it asks
+  for, then proclaim it.
+
 - Add goals beyond the ladder: an Empire of the Two Shores for a native power that reaches
   the Old World, a Crown of Two Worlds for a European court that moves to the New World, an
   Empire of the Two Oceans for a holder of ports on both oceans (the two shores and two oceans

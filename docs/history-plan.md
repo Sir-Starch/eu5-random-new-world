@@ -747,7 +747,8 @@ of them (a named opinion) and a mediator.
   export writes 11 realms, the empire, 4 restorations and 122 memory events, all files
   parsed, every text in every language. [V-EXEC] The pending epoch-61 golden is
   refreshed and reproduced; the layer check passes. Then the adapted vanilla chains
-  (`70a8090`), the naming choice (`54347a2`) and the fantasy layer. [V-EXEC] Refinements:
+  (`70a8090`), the naming choice (`54347a2`), the fantasy layer (`51a7229`) and the missions *Road to
+  X*: every item of §22.4 is implemented. [V-EXEC] Refinements:
   the fantasy layer's continental goals are one each per world, give no cores and are not
   pursued by the AI; the mixed realm is the *Realm of Two Peoples*. Further: RNW raises ranks only at
   formation, so the naming choice at formation is the choice at a new rank; a rank

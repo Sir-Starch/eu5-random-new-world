@@ -1821,3 +1821,35 @@ text = '''Deux peuples, un royaume'''
 ["STATIC_MODIFIER_DESC_rnw_two_peoples_integration"]
 source = "77bf4dd8870d78b3"
 text = '''Le royaume tient les deux peuples pour siens et accueille leurs coutumes.'''
+
+["rnw_road.name"]
+source = "2a2a11954c349bc8"
+text = '''La route vers {name}'''
+
+["rnw_road.desc"]
+source = "e6619312e0e3825f"
+text = '''Rassembler les terres sous notre autorité et proclamer le nouvel État : {name}.'''
+
+["rnw_road.seat"]
+source = "c50808a05e63c6f2"
+text = '''Tenir le siège'''
+
+["rnw_road.seat_desc"]
+source = "d248d862f432b46c"
+text = '''Le siège du nouvel État doit être à nous avant que ses terres ne suivent.'''
+
+["rnw_road.land"]
+source = "9df238c90f736f30"
+text = '''Rassembler les terres'''
+
+["rnw_road.land_desc"]
+source = "0f35b903317a3f42"
+text = '''Nous devons tenir une bonne part de ses terres avant de pouvoir proclamer le nouvel État.'''
+
+["rnw_road.proclaim"]
+source = "a3422fb1ef9d8d24"
+text = '''Proclamer le nouvel État'''
+
+["rnw_road.proclaim_desc"]
+source = "faed96e7a4804d75"
+text = '''Avec les terres entre nos mains, nous pouvons proclamer {name}.'''

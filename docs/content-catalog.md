@@ -190,6 +190,13 @@ holding land of the territory as a target, scored as half of vanilla's
 pursued from the second age (1342), realms from the age of discovery (1437). How
 far the AI pursues them over a campaign is not observed. [V-EXEC; UNKNOWN in play]
 
+**Road to X.** Each formable smaller than the continent is also a mission (vanilla's
+`common/missions`, modelled on `generic_conquer_province`), visible to a country that
+could form it with its capital in the territory: hold the seat (a realm's throne),
+then half of the places the formation asks for, then proclaim it. Someone else
+proclaiming it aborts the mission. The rewards are a little prestige and stability.
+How often the game draws it among its own missions is not observed. [V-EXEC]
+
 **A name for the new state.** When a union, confederation, league, commonwealth,
 realm or restoration is founded, its founder chooses once (**A Name for the New
 State**, `rnw_naming.<n>`) between its name and the other one the world offers: a
@@ -321,6 +328,7 @@ except for the export report. [V-EXEC C409]
 | Family counts, missing-family reasons, pulse families and opportunity-to-start-event mapping | Export bundle `report.json` → `text_stats.stories`: `opportunities`, `absences`, `pulses`, `starts` |
 | A start's country, centre, optional partner, year window and monthly chance | `in_game/events/rnw_story.txt`; start IDs are assigned per world, so do not assume `rnw_story.1001` always means the same family |
 | Actual target locations, potential and extra formation conditions | `in_game/common/formable_countries/rnw_formations.txt`; territories in `in_game/common/scripted_geography/rnw_formations.txt` |
+| The missions on the road to each formable | `in_game/common/missions/rnw_roads.txt` |
 | The AI's goals | `in_game/common/ai_scripted_expansion_target/rnw_formations.txt`, `in_game/common/ai_scripted_expansion_score/rnw_formations.txt` |
 | The other heirs' answer to a restoration | `in_game/events/rnw_restoration.txt` |
 | Events of the recorded past and their causes | `in_game/events/rnw_memory.txt`; export bundle `report.json` → `text_stats.stories.memories` |

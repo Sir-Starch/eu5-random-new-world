@@ -957,6 +957,12 @@ The goals beyond the ladder add only formable triggers with vanilla precedents:
 (`pacific_crossing_events.txt`, `culture_greek.txt`), `any_primary_or_accepted_culture`
 and `is_leader_of_international_organization_of_type`.
 
+The missions use `common/missions` in the fields its `____Info.txt` documents (`icon`,
+`repeatable`, `player_playstyle`, `visible`, `enabled`, `abort`, `chance`, and tasks with
+`requires`, `final`, `duration` and `on_completion`), with the vanilla illustration
+`generic_conquer_province` and advance icons, which the export checks, and
+`any_location_in_scripted_geography` with `count` (as `culture_greek.txt`).
+
 N9 adds `in_game/events/rnw_memory.txt`: country events started by vanilla's
 `dynamic_historical_event` (as the stories already are), with `add_core`,
 `add_opinion`, `add_prestige` and `add_stability` and vanilla values; the export
