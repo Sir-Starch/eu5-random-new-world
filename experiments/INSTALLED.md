@@ -6,6 +6,25 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-06, **1.2.0 development / pending epoch 61 — candidate H, regions named by their peoples**
+(W8 follow-up, C503). [V-EXEC] Installed **`mod/rnw_exp_world_3bzsntlyjn`** ("History 1.2 candidate H
+(regions named by their peoples)") in the existing Windows/Proton profile: code
+`RNW1-080J3-M4P7S-R656Y-R0410-00830-3SG46-R38Y1-G5NRC-XR`, candidate G's code with the resources rolled
+again (so candidate F's land, with a new world id), generated at `e46d7a2`. Its written Russian
+`region_names` calls `alaska_region` *Кехттигене* and `canada_region` *Синкачуа*. The Tauri window
+was served by vite on a scratch copy of the candidate's library and driven in Russian in headless
+Chromium. It labelled the regions with those names, and its card for location *Паца* reads
+*Якконхна · Кехттигене* / *По правилам игры — регион «Аляска»*, as in the written files. The scratch
+library was deleted. The staged installer refused any existing target. All 912 files match the
+prepared mod, both libraries hold the record, and the 12 other mod folders and 9 profile-root files
+are unchanged. The standard updater installed hub 1.2.0 with the generator of `e46d7a2` after its
+Wine window, native, code, shell and bridge self-tests, and kept the former hub at
+`.rnw-hub-backups/1.2.0-1794000273352878466`. Windows wheel SHA-256:
+`bc2799e6310da9056b30d18f55b3c48104f118670c5818e92ad1ea66187e68bb`. The source-run Tauri window
+(`desktop/src-tauri/target/release/random-new-world`) was rebuilt with `npx tauri build --no-bundle
+--ci`. Candidates C–G stay installed. No playset, save or preference was edited; the agent did not
+launch or control EU5. NOT GAME VALIDATED.
+
 2026-11-06, **1.2.0 development / pending epoch 61 — candidate G, regions as the Americas lie**
 (W8, C502: north-to-south subcontinent bands, regions by place first). [V-EXEC] Installed
 **`mod/rnw_exp_world_lhlehi4i3d`** ("History 1.2 candidate G (regions as the Americas lie)") in the
