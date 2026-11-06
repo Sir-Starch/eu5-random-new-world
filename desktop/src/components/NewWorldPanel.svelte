@@ -233,7 +233,7 @@
     </Section>
 
     <Section id="new.queue" title={t("queue_title")}>
-      {#snippet aside()}{#if n?.queue.length}<span class="num">{t("queue_count", { count: n.queue.length })}</span>{/if}{/snippet}
+      {#snippet aside()}{#if n?.queue.length}<span class="num">{t("queue_count", { count: n.queue.length - n.queue_failed })}</span>{#if n.queue_failed}<span class="num"> · {t("queue_failed_count", { count: n.queue_failed })}</span>{/if}{/if}{/snippet}
       <p class="hint">{t("queue_hint")}</p>
       {#if n?.queue.length}
         <div class="row">

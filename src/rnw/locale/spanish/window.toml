@@ -114,6 +114,22 @@ text = '''Quitar de la cola'''
 source = "c5b71ca57f800d0a"
 text = '''Creándose ahora'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''No creados: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''Un mundo que no se pudo crear permanece en la cola con su error, y empieza el siguiente. Ejecuta la cola para intentarlo de nuevo o quita ese mundo.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''No se pudo crear ninguno de los {count} mundos. Último error: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''Hecho en {seconds} s. No creados: {count}; se quedan en la cola con sus errores.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''Juego'''

@@ -127,6 +127,11 @@ class Task(Enum):
 MAKING: Final[frozenset[Task]] = frozenset({Task.GENERATE, Task.QUEUE, Task.REROLL})
 
 
+class _QueueFailed(Exception):  # noqa: N818 - the end of a run in which no world could be made
+    """Every world of a queue run failed. Each was explained and logged when it failed; this
+    carries the words the run ends with."""
+
+
 class Generator(Protocol):
     """``service.generate``, so tests can stand in for it."""
 
@@ -229,6 +234,9 @@ class Controller:
         # queue run. Both the window's thread and the worker change it, always under the lock.
         self.queue: list[service.Request] = []
         self.queue_done: int = 0
+        # Why a queued world could not be made, by its code. A failed world stays in ``queue``
+        # beside this note; a run skips it, and *Run queue* tries it again.
+        self.queue_errors: dict[str, str] = {}
         self._lock: threading.Lock = threading.Lock()
         self._progress: Progress | None = None
         self._thread: threading.Thread | None = None
@@ -877,6 +885,15 @@ class Controller:
         """The stages that run now, in the window's language."""
         return ", ".join(stage_text(name) for name in self.running)
 
+    def finished_line(self) -> str:
+        """The status line of finished work; after a queue run it counts the worlds that stay in
+        the queue because they could not be made."""
+        seconds = round(self.result.seconds) if self.result else 0
+        failed = self.queue_failed if self.task is Task.QUEUE else 0
+        if failed:
+            return text("finished_queue_failed", seconds=seconds, count=failed)
+        return text("finished", seconds=seconds)
+
     def estimated_remaining(self) -> float | None:
         """Estimated seconds left in the active weighted generation."""
         with self._lock:
@@ -961,30 +978,56 @@ class Controller:
         }
 
     def dequeue(self, code: str) -> None:
-        """Take the waiting world with this code out of the queue; the one being made stays."""
+        """Take the waiting world with this code out of the queue, a failed one too; the one
+        being made stays."""
         with self._lock:
             self.queue = [
                 job for job in self.queue if job is self._queue_current or encode(job.code) != code
             ]
-            self.queue_follows = self.queue_follows and bool(self.queue)
+            _ = self.queue_errors.pop(code, None)
+            self.queue_follows = self.queue_follows and self._next_job() is not None
         self._changed()
 
     def clear_queue(self) -> None:
-        """Forget the waiting worlds; the one being made stays until it is done."""
+        """Forget the waiting worlds and the failed ones; the one being made stays until it is
+        done."""
         with self._lock:
             self.queue = [job for job in self.queue if job is self._queue_current]
+            self.queue_errors.clear()
             self.queue_follows = False
         self._changed()
 
+    def _next_job(self) -> service.Request | None:
+        """The first queued world that has not failed (call with the lock held)."""
+        return next((job for job in self.queue if encode(job.code) not in self.queue_errors), None)
+
+    def queue_entries(self) -> list[tuple[service.Request, bool, str]]:
+        """The queue in order: each world, whether the thread makes it now, and why it could not
+        be made (empty when it did not fail)."""
+        with self._lock:
+            return [
+                (job, job is self._queue_current, self.queue_errors.get(encode(job.code), ""))
+                for job in self.queue
+            ]
+
+    @property
+    def queue_failed(self) -> int:
+        """How many worlds of the queue could not be made."""
+        with self._lock:
+            return len(self.queue_errors)
+
     def start_queue(self) -> str | None:
-        """Make the queued worlds in order, those added meanwhile too; a cancellation or a
-        failure leaves the rest, and the failed one, waiting."""
+        """Make the queued worlds in order, those added meanwhile too, and those that failed
+        before. A world that cannot be made stays in the queue with its error and the next one
+        starts; a cancellation stops the queue and leaves the rest waiting."""
         if self.busy:
             return text("ready_busy")
         if not self.queue:
             return text("queue_empty")
         self.queue_done = 0
         self.queue_follows = False
+        with self._lock:
+            self.queue_errors.clear()
         self._launched_with = self.code
         return self._run(Task.QUEUE, NEW, self._queue_work())
 
@@ -993,16 +1036,28 @@ class Controller:
 
         def work(progress: Progress) -> service.Result | None:
             result = None
+            failed: str | None = None
+            failures = 0
             while True:
                 with self._lock:
-                    job = self.queue[0] if self.queue else None
+                    job = self._next_job()
                     self._queue_current = job
                 if job is None:
                     break
                 try:
                     progress.checkpoint()
                     progress.reset_stages()
-                    result = generator(job, progress)
+                    made = generator(job, progress)
+                except Cancelled:
+                    raise
+                except Exception as error:  # noqa: BLE001 - this world failed, the queue goes on
+                    failed = self._explain(error)
+                    failures += 1
+                    with self._lock:
+                        self.queue_errors[encode(job.code)] = failed
+                        self.finished, self.fraction, self.running = frozenset(), 0.0, ()
+                else:
+                    result = made
                     with self._lock:
                         self.queue = [item for item in self.queue if item is not job]
                         self.queue_done += 1
@@ -1011,6 +1066,13 @@ class Controller:
                     with self._lock:
                         self._queue_current = None
                 self._changed()
+            if failed is not None and result is None:
+                message = (
+                    failed
+                    if failures == 1
+                    else text("queue_all_failed", count=failures, message=failed)
+                )
+                raise _QueueFailed(message)
             return result
 
         return work
@@ -1442,6 +1504,9 @@ class Controller:
                 result = work(progress)
         except Cancelled:
             outcome = Phase.CANCELLED
+        except _QueueFailed as stop:
+            # Each world was explained and logged as it failed; the run ends with their words.
+            outcome, message = Phase.FAILED, str(stop)
         except Exception as error:  # noqa: BLE001 - whatever failed is shown to the player
             outcome, message = Phase.FAILED, self._explain(error)
         logs.get().info(
@@ -1454,10 +1519,10 @@ class Controller:
             follow = (
                 outcome is Phase.FINISHED
                 and self.queue_follows
-                and bool(self.queue)
+                and self._next_job() is not None
                 and self.task in {Task.GENERATE, Task.QUEUE}
             )
-            if outcome is not Phase.FINISHED or not self.queue:
+            if outcome is not Phase.FINISHED or self._next_job() is None:
                 self.queue_follows = False
             if not follow:
                 self.phase, self.result, self.message = outcome, result, message

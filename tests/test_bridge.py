@@ -145,6 +145,43 @@ def test_the_queue_is_kept_listed_and_managed_through_the_bridge(
     assert controller.queue == []
 
 
+def test_a_failed_queue_world_is_listed_with_its_error_and_the_next_one_is_made(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    controller = bridge.controller
+    controller.install = False
+    original = controller.generator
+
+    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.code.seed == 7:
+            message = "the first world failed"
+            raise OSError(message)
+        return original(request, progress)
+
+    controller.generator = generate
+    for seed in ("7", "8"):
+        assert bridge.call("set_seed", {"value": seed}) is None
+        assert bridge.call("enqueue", {}) is None
+    assert bridge.call("start_queue", {}) is None
+    controller.wait(10)
+    state = bridge.state()
+    new = cast("dict[str, object]", state["new"])
+    queue = cast("list[dict[str, object]]", new["queue"])
+    assert [job["seed"] for job in queue] == ["7"]
+    assert "the first world failed" in cast("str", queue[0]["error"])
+    assert queue[0]["running"] is False
+    assert new["queue_failed"] == 1
+    # The run ended well: a world was made, and the status counts the one that stays queued.
+    assert state["phase"] == "finished"
+    assert "1 could not be made" in cast("str", state["status"])
+    _ = json.dumps(state)
+    assert bridge.call("dequeue", {"code": queue[0]["code"]}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    assert new["queue"] == []
+    assert new["queue_failed"] == 0
+
+
 def test_a_destination_that_was_not_chosen_stops_the_queue_as_it_stops_generate(
     tmp_path: Path, fake_export: Exporter
 ) -> None:

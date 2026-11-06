@@ -114,6 +114,22 @@ text = '''Retirer de la file'''
 source = "c5b71ca57f800d0a"
 text = '''En cours de création'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''Non créés : {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''Un monde qui n'a pas pu être créé reste dans la file avec son erreur, et le suivant démarre. Lancez la file pour réessayer, ou retirez ce monde.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''Aucun des {count} mondes n'a pu être créé. Dernière erreur : {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''Terminé en {seconds} s. Non créés : {count} ; ils restent dans la file avec leurs erreurs.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''Jeu'''

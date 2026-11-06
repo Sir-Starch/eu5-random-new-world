@@ -114,6 +114,22 @@ text = '''从队列中移除'''
 source = "c5b71ca57f800d0a"
 text = '''正在生成'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''未能生成：{count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''未能生成的世界会连同错误信息留在队列中，队列继续生成下一个世界。要重试，请运行队列，或将其从队列中移除。'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''{count}个世界全部未能生成。最后一个错误：{message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''用时{seconds}秒完成。未能生成：{count}；它们连同错误信息留在队列中。'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''游戏'''

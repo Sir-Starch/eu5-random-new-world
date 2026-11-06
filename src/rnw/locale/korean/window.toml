@@ -114,6 +114,22 @@ text = '''대기열에서 빼기'''
 source = "c5b71ca57f800d0a"
 text = '''지금 만드는 중'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''만들지 못함: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''만들지 못한 월드는 오류와 함께 대기열에 남고, 다음 월드가 시작됩니다. 다시 시도하려면 대기열을 실행하거나, 해당 월드를 대기열에서 빼세요.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''월드 {count}개 중 하나도 만들지 못했습니다. 마지막 오류: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''{seconds}초 만에 끝났습니다. 만들지 못함: {count}. 오류와 함께 대기열에 남아 있습니다.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''게임'''

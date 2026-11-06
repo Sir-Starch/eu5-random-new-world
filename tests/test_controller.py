@@ -109,34 +109,127 @@ def test_queued_worlds_keep_their_own_settings_and_run_in_order(
     assert decode(second.code).settings().natives.empire_permille == 800
 
 
-def test_a_failed_queue_keeps_the_failed_job_and_the_following_jobs(
+def _failing(controller: Controller, *seeds: int) -> None:
+    """Make the generator fail for the worlds of these seeds."""
+    original = controller.generator
+
+    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.code.seed in seeds:
+            message = f"world {request.code.seed} failed"
+            raise OSError(message)
+        return original(request, progress)
+
+    controller.generator = generate
+
+
+def test_a_failed_world_stays_in_the_queue_with_its_error_and_the_next_one_starts(
     tmp_path: Path,
     fake_export: Exporter,
 ) -> None:
     controller = _controller(tmp_path, fake_export)
     original = controller.generator
-
-    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
-        if request.code.seed == 20:
-            message = "second job failed"
-            raise OSError(message)
-        return original(request, progress)
-
-    controller.generator = generate
+    _failing(controller, 20)
     controller.install = False
     for seed in (10, 20, 30):
         _ = controller.set_seed(str(seed))
         assert controller.enqueue() is None
     assert controller.start_queue() is None
-    controller.wait(10)
-    assert controller.phase is Phase.FAILED
-    assert controller.queue_done == 1
-    assert [job.code.seed for job in controller.queue] == [20, 30]
-    assert {world.seed for world in controller.worlds} == {10}
+    _finish(controller)
+    # The world after the failure was made; the failed one is the only one left, with its error.
+    assert controller.queue_done == 2
+    assert {world.seed for world in controller.worlds} == {10, 30}
+    [(job, running, error)] = controller.queue_entries()
+    assert (job.code.seed, running) == (20, False)
+    assert "world 20 failed" in error
+    assert controller.queue_failed == 1
+    assert "1 could not be made" in controller.finished_line()
+    # Run queue tries the failed world again, and the error goes when it is made.
     controller.generator = original
     assert controller.start_queue() is None
     _finish(controller)
     assert {world.seed for world in controller.worlds} == {10, 20, 30}
+    assert controller.queue == []
+    assert controller.queue_errors == {}
+    assert controller.result is not None
+    assert controller.finished_line() == text("finished", seconds=round(controller.result.seconds))
+
+
+def test_a_queue_in_which_no_world_could_be_made_fails_with_the_last_error(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    _failing(controller, 10, 20)
+    controller.install = False
+    for seed in (10, 20):
+        _ = controller.set_seed(str(seed))
+        assert controller.enqueue() is None
+    assert controller.start_queue() is None
+    controller.wait(10)
+    assert controller.phase is Phase.FAILED
+    assert controller.message.startswith(text("queue_all_failed", count=2, message="").strip())
+    assert "world 20 failed" in controller.message
+    assert controller.worlds == []
+    assert [job.code.seed for job in controller.queue] == [10, 20]
+    assert controller.queue_failed == 2
+    # A single failed world says its own words, not a count.
+    controller.dequeue(encode(new_code(controller.preset, 10)))
+    assert controller.start_queue() is None
+    controller.wait(10)
+    assert controller.phase is Phase.FAILED
+    assert "world 20 failed" in controller.message
+    assert "None of" not in controller.message
+
+
+def test_cancelling_after_a_failed_world_still_stops_the_queue(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    _failing(controller, 10)
+    gate = _Gate(controller, 20)
+    for seed in (10, 20, 30):
+        _ = controller.set_seed(str(seed))
+        assert controller.enqueue() is None
+    assert controller.start_queue() is None
+    assert gate.started.wait(10)
+    try:
+        controller.cancel()
+    finally:
+        gate.release.set()
+    controller.wait(10)
+    assert controller.phase is Phase.CANCELLED
+    # The failed world keeps its error; the cancelled one and the one after it simply wait.
+    assert [job.code.seed for job in controller.queue] == [10, 20, 30]
+    assert controller.queue_failed == 1
+    assert list(controller.queue_errors) == [encode(new_code(controller.preset, 10))]
+    assert 30 not in {world.seed for world in controller.worlds}
+
+
+def test_a_failed_world_can_be_removed_and_clearing_the_queue_forgets_the_failures(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    _failing(controller, 10, 20)
+    for seed in (10, 20, 30):
+        _ = controller.set_seed(str(seed))
+        assert controller.enqueue() is None
+    assert controller.start_queue() is None
+    _finish(controller)
+    assert [job.code.seed for job in controller.queue] == [10, 20]
+    assert controller.queue_failed == 2
+    # The failed world is in the queue still, so it is not queued twice.
+    _ = controller.set_seed("10")
+    assert controller.enqueue() == text("queue_duplicate")
+    controller.dequeue(encode(new_code(controller.preset, 10)))
+    assert [job.code.seed for job in controller.queue] == [20]
+    assert controller.queue_failed == 1
+    controller.clear_queue()
+    assert controller.queue == []
+    assert controller.queue_errors == {}
 
 
 @final
@@ -259,22 +352,14 @@ def test_clearing_a_running_queue_keeps_the_world_being_made(
     assert {world.seed for world in controller.worlds} == {10}
 
 
-def test_a_failure_stops_the_queue_that_followed_a_world(
+def test_a_failed_world_does_not_stop_the_queue_that_followed_a_world(
     tmp_path: Path,
     fake_export: Exporter,
 ) -> None:
     controller = _controller(tmp_path, fake_export)
     controller.install = False
-    original = controller.generator
-
-    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
-        if request.code.seed == 20:
-            message = "second world failed"
-            raise OSError(message)
-        return original(request, progress)
-
+    _failing(controller, 20)
     gate = _Gate(controller, 10)
-    gate.original = generate
     _ = controller.set_seed("10")
     assert controller.start() is None
     assert gate.started.wait(10)
@@ -283,10 +368,38 @@ def test_a_failure_stops_the_queue_that_followed_a_world(
         assert controller.enqueue() is None
     gate.release.set()
     controller.wait(10)
-    assert controller.phase is Phase.FAILED
+    assert controller.phase is Phase.FINISHED, controller.message
+    assert controller.task is Task.QUEUE
     assert not controller.queue_follows
-    assert [job.code.seed for job in controller.queue] == [20, 30]
-    assert {world.seed for world in controller.worlds} == {10}
+    assert {world.seed for world in controller.worlds} == {10, 30}
+    assert [job.code.seed for job in controller.queue] == [20]
+    assert controller.queue_failed == 1
+
+
+def test_a_failed_first_world_leaves_the_queue_behind_it_waiting(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    controller.install = False
+    _failing(controller, 10)
+    gate = _Gate(controller, 10)
+    _ = controller.set_seed("10")
+    assert controller.start() is None
+    assert gate.started.wait(10)
+    _ = controller.set_seed("20")
+    assert controller.enqueue() is None
+    gate.release.set()
+    controller.wait(10)
+    # A world made with Generate is not in the queue: it shows its own failure with Retry, and
+    # what was queued behind it waits for Run queue.
+    assert controller.phase is Phase.FAILED
+    assert controller.task is Task.GENERATE
+    assert "world 10 failed" in controller.message
+    assert not controller.queue_follows
+    assert [job.code.seed for job in controller.queue] == [20]
+    assert controller.queue_failed == 0
+    assert controller.worlds == []
 
 
 def test_a_world_cannot_be_queued_while_the_thread_does_other_work(

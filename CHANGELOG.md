@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Keep the queue going when a world cannot be made. In both windows the failed world stays
+  in the queue, marked with its error, and the next world starts. When the run ends, the
+  status line counts the worlds that stay; *Run queue* tries them again, and removing a
+  world or *Clear queue* forgets them. A run in which every world fails ends with the last
+  error. *Cancel* still stops the queue. `rnw generate-queue` keeps stopping on the first
+  failure.
+
 - Check the colonial-nation condition on the map as it is written. Besides the map the
   generator holds, the export now reads the written `locations.png`, `definitions.txt` and
   `default.map` and refuses a world in which a passable American location touches a passable

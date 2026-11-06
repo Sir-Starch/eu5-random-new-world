@@ -114,6 +114,22 @@ text = '''キューから外す'''
 source = "c5b71ca57f800d0a"
 text = '''作成中'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''作成できなかったもの: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''作成できなかったワールドはエラーとともにキューに残り、次のワールドが始まります。もう一度試すにはキューを実行するか、キューから外してください。'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''{count}個のワールドはどれも作成できませんでした。最後のエラー: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''{seconds}秒で完了しました。作成できなかったもの: {count}。エラーとともにキューに残っています。'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''ゲーム'''

@@ -114,6 +114,22 @@ text = '''Remover da fila'''
 source = "c5b71ca57f800d0a"
 text = '''Sendo criado agora'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''Não criados: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''Um mundo que não pôde ser criado permanece na fila com o seu erro, e o próximo começa. Execute a fila para tentar de novo ou remova o mundo.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''Nenhum dos {count} mundos pôde ser criado. Último erro: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''Feito em {seconds} s. Não criados: {count}; eles ficam na fila com os erros.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''Jogo'''

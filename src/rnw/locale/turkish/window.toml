@@ -114,6 +114,22 @@ text = '''Sıradan çıkar'''
 source = "c5b71ca57f800d0a"
 text = '''Şimdi oluşturuluyor'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''Oluşturulamayan: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''Oluşturulamayan bir dünya hatasıyla birlikte sırada kalır ve sıradaki dünya başlar. Yeniden denemek için sırayı çalıştırın ya da dünyayı kaldırın.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''{count} dünyanın hiçbiri oluşturulamadı. Son hata: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''{seconds} saniyede bitti. Oluşturulamayan: {count}; hatalarıyla birlikte sırada kalıyorlar.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''Oyun'''

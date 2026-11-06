@@ -10,22 +10,25 @@
   const n = $derived(s?.new);
   const busy = $derived(!!s?.busy);
   const jobs = $derived(n?.queue ?? []);
+  const failed = $derived(n?.queue_failed ?? 0);
 </script>
 
 {#if jobs.length}
   <section class="queue" aria-label={t("queue_title")}>
     <header>
       <h3>{t("queue_title")}</h3>
-      <span class="num faint">{t("queue_count", { count: jobs.length })}</span>
+      <span class="num faint">{t("queue_count", { count: jobs.length - failed })}</span>
+      {#if failed}<span class="num bad">{t("queue_failed_count", { count: failed })}</span>{/if}
       <span class="spacer"></span>
       <button class="btn small" disabled={busy} onclick={() => app.act("start_queue")}>{t("run_queue")}</button>
       <button class="btn small ghost" onclick={() => app.call("clear_queue")}>{t("clear_queue")}</button>
     </header>
     {#if busy && n?.queue_follows}<p class="hint">{t("queue_follows")}</p>{/if}
+    {#if failed}<p class="hint">{t("queue_failed_hint")}</p>{/if}
     <ol>
       {#each jobs as job (job.code)}
-        <li class:running={job.running}>
-          {#if job.running}<span class="spinner" title={t("queue_making")}></span>{:else}<span class="blank"></span>{/if}
+        <li class:running={job.running} class:failed={!!job.error}>
+          {#if job.running}<span class="spinner" title={t("queue_making")}></span>{:else if job.error}<span class="mark bad" title={job.error}><Icon name="warning" /></span>{:else}<span class="blank"></span>{/if}
           <span class="ellipsis">{job.type}</span>
           <code class="faint selectable">{job.seed}</code>
           <button
@@ -35,6 +38,7 @@
             aria-label={t("queue_remove")}
             onclick={() => app.call("dequeue", { code: job.code })}
           ><Icon name="x" /></button>
+          {#if job.error}<p class="error selectable" title={job.error}>{job.error}</p>{/if}
         </li>
       {/each}
     </ol>
@@ -83,6 +87,26 @@
   li.running {
     color: var(--text);
     font-weight: 500;
+  }
+  .mark {
+    display: block;
+    width: 16px;
+  }
+  .bad {
+    color: var(--danger);
+  }
+  .error {
+    grid-column: 2 / -1;
+    margin: 0 0 4px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--danger);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
   }
   li code {
     font-size: 11px;

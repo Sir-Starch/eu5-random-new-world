@@ -290,8 +290,14 @@ automatically when the current one finishes, without another click on Run queue.
 
 Each job remembers the settings, seed and destination it had when you added it.
 You can remove pending jobs individually; the running job stays in the list until it
-finishes. **Cancel** or a generation failure stops the queue before the next world,
-leaving unfinished jobs pending.
+finishes. A world that cannot be made does not stop the queue: it stays in the list,
+marked with its error, and the next world starts. When the run ends, the status line counts
+the worlds that stay, and **Run queue** tries them again (the ones that failed too);
+remove a failed world from the list, or **Clear queue**, to forget it. If every world of a
+run fails, the run ends with the last error. **Cancel** still stops the queue before the next
+world, leaving unfinished jobs pending. A world you started with **Generate** is not in the
+queue: if it fails, it shows its error with **Retry**, and the worlds queued behind it wait
+for **Run queue**.
 
 ## Save and share worlds
 

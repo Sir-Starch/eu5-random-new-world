@@ -165,8 +165,7 @@ def _status(c: Controller) -> str:
         case Phase.CANCELLING:
             return text("cancelling")
         case Phase.FINISHED:
-            seconds = round(c.result.seconds) if c.result else 0
-            return text("finished", seconds=seconds)
+            return c.finished_line()
         case Phase.FAILED:
             return text("failed", message=c.message, report_hint=text("report_hint"))
         case Phase.CANCELLED:
@@ -323,6 +322,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "queue_problem": queue_problem,
         "queue": _queue(c),
         "queue_done": c.queue_done,
+        "queue_failed": c.queue_failed,
         "queue_follows": c.queue_follows,
         "retry": c.phase is Phase.FAILED and c.task is Task.GENERATE,
         "retry_enabled": c.problem() is None,
@@ -330,16 +330,16 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
 
 
 def _queue(c: Controller) -> list[dict[str, object]]:
-    """The worlds waiting for the thread; the one it makes now first, marked."""
-    making = c.busy and c.task is Task.QUEUE
+    """The worlds in the queue: the one the thread makes now marked, a failed one with its error."""
     return [
         {
             "code": encode(job.code),
             "seed": str(job.code.seed),
             "type": text(f"type.{job.code.preset}"),
-            "running": making and index == 0,
+            "running": running,
+            "error": error,
         }
-        for index, job in enumerate(list(c.queue))
+        for job, running, error in c.queue_entries()
     ]
 
 

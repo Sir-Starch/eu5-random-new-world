@@ -892,6 +892,11 @@ class MainWindow(QMainWindow):
         queue_hint.setWordWrap(True)
         queue_layout.addWidget(queue_hint)
         queue_layout.addLayout(self._queue_row())
+        self.queue_failures: QLabel = QLabel()
+        self.queue_failures.setWordWrap(True)
+        self.queue_failures.setStyleSheet(MUTED)
+        self.queue_failures.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        queue_layout.addWidget(self.queue_failures)
         delivery_layout.addWidget(queue)
         delivery_layout.addStretch(1)
         return delivery
@@ -1884,13 +1889,36 @@ class MainWindow(QMainWindow):
         self.enqueue_button.setToolTip(queue_problem or text("queue_hint"))
         self.run_queue_button.setEnabled(not controller.busy and bool(controller.queue))
         self.clear_queue_button.setEnabled(bool(controller.queue))
-        self.queue_label.setText(text("queue_count", count=len(controller.queue)))
-        self.queue_label.setToolTip("\n".join(str(job.code.seed) for job in controller.queue))
+        self.queue_label.setText(self._queue_text())
+        self.queue_failures.setText(self._queue_failures_text())
+        self.queue_failures.setVisible(bool(controller.queue_failed))
+        self.queue_label.setToolTip(
+            "\n".join(
+                f"{job.code.seed}: {error}" if error else str(job.code.seed)
+                for job, _running, error in controller.queue_entries()
+            )
+        )
         self.candidates_button.setEnabled(
             not controller.busy
             and controller.game is not None
             and not controller.world_code().settings().mask.id
         )
+
+    def _queue_text(self) -> str:
+        """How many worlds wait in the queue and how many of them could not be made."""
+        failed = self.controller.queue_failed
+        waiting = len(self.controller.queue) - failed
+        line = text("queue_count", count=waiting)
+        return f"{line} · {text('queue_failed_count', count=failed)}" if failed else line
+
+    def _queue_failures_text(self) -> str:
+        """The worlds that stay in the queue because they could not be made, each with its error."""
+        failed = [
+            f"{job.code.seed}: {error}"
+            for job, _running, error in self.controller.queue_entries()
+            if error
+        ]
+        return "\n".join([text("queue_failed_hint"), *failed]) if failed else ""
 
     def _status_line(self) -> str:
         controller = self.controller
@@ -1902,8 +1930,7 @@ class MainWindow(QMainWindow):
             case Phase.CANCELLING:
                 return text("cancelling")
             case Phase.FINISHED:
-                seconds = round(controller.result.seconds) if controller.result else 0
-                return text("finished", seconds=seconds)
+                return controller.finished_line()
             case Phase.FAILED:
                 return text("failed", message=controller.message, report_hint=text("report_hint"))
             case Phase.CANCELLED:

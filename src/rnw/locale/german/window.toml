@@ -114,6 +114,22 @@ text = '''Aus der Warteschlange entfernen'''
 source = "c5b71ca57f800d0a"
 text = '''Wird gerade erstellt'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''Nicht erstellt: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''Eine Welt, die nicht erstellt werden konnte, bleibt mit ihrem Fehler in der Warteschlange, und die nächste beginnt. Starten Sie die Warteschlange, um es erneut zu versuchen, oder entfernen Sie die Welt.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''Keine der {count} Welten konnte erstellt werden. Letzter Fehler: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''Fertig in {seconds} s. Nicht erstellt: {count}; sie bleiben mit ihren Fehlern in der Warteschlange.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''Spiel'''

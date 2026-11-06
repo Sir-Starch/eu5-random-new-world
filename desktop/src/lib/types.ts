@@ -70,8 +70,11 @@ export interface NewState {
   preparable: boolean;
   /** Why the world chosen now cannot be queued, or null. */
   queue_problem: string | null;
-  queue: { code: string; seed: string; type: string; running: boolean }[];
+  /** The worlds in the queue; `error` says why a world could not be made, "" when it did not fail. */
+  queue: { code: string; seed: string; type: string; running: boolean; error: string }[];
   queue_done: number;
+  /** How many worlds of the queue could not be made; they stay listed with their errors. */
+  queue_failed: number;
   /** A world was added during a run: the queue goes on by itself when it is done. */
   queue_follows: boolean;
   retry: boolean;

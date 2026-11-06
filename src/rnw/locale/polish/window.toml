@@ -114,6 +114,22 @@ text = '''Usuń z kolejki'''
 source = "c5b71ca57f800d0a"
 text = '''Powstaje teraz'''
 
+["queue_failed_count"]
+source = "83f4e4bf337d63cb"
+text = '''Nie udało się: {count}'''
+
+["queue_failed_hint"]
+source = "cc0fb58bc56dc804"
+text = '''Świat, którego nie udało się utworzyć, zostaje w kolejce razem z błędem, a rusza następny. Uruchom kolejkę, aby spróbować ponownie, albo usuń ten świat.'''
+
+["queue_all_failed"]
+source = "48e071ce6cca7cbf"
+text = '''Nie udało się utworzyć żadnego z {count} światów. Ostatni błąd: {message}'''
+
+["finished_queue_failed"]
+source = "00c97fcbb87461c4"
+text = '''Gotowe w {seconds} s. Nie udało się: {count}; zostają w kolejce razem z błędami.'''
+
 ["game"]
 source = "5c412a262086b970"
 text = '''Gra'''

@@ -66,6 +66,15 @@ STRINGS: Final[dict[str, str]] = {
     "queue_follows": "The queue starts by itself when the world being made is done.",
     "queue_remove": "Remove from the queue",
     "queue_making": "Being made now",
+    "queue_failed_count": "{count} could not be made",
+    "queue_failed_hint": (
+        "A world that could not be made stays in the queue with its error, and the next one "
+        "starts. Run the queue to try it again, or remove it."
+    ),
+    "queue_all_failed": "None of the {count} worlds could be made. The last error: {message}",
+    "finished_queue_failed": (
+        "Done in {seconds} s. {count} could not be made; they stay in the queue with their errors."
+    ),
     # -- the game, the profile and the settings dialog --
     "game": "Game",
     "profile": "Profile",

@@ -145,6 +145,40 @@ def test_the_queue_buttons_generate_the_snapshots_the_player_added(
 
 
 @pytest.mark.usefixtures("application")
+def test_a_queue_world_that_failed_is_marked_in_the_queue_box_and_the_next_is_made(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.install_box.setChecked(False)
+    original = controller.generator
+
+    def generate(request: service.Request, progress: Progress | None = None) -> service.Result:
+        if request.code.seed == 11:
+            message = "the first world failed"
+            raise OSError(message)
+        return original(request, progress)
+
+    controller.generator = generate
+    for seed in ("11", "22"):
+        _ = controller.set_seed(seed)
+        window.enqueue_button.click()
+    window.run_queue_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED)
+    assert {world.seed for world in controller.worlds} == {22}
+    assert [job.code.seed for job in controller.queue] == [11]
+    pump(lambda: window.queue_label.text() == window._queue_text())  # pyright: ignore[reportPrivateUsage]
+    assert text("queue_failed_count", count=1) in window.queue_label.text()
+    assert text("queue_failed_hint") in window.queue_failures.text()
+    assert "the first world failed" in window.queue_failures.text()
+    assert "the first world failed" in window.queue_label.toolTip()
+    assert window.run_queue_button.isEnabled()
+    assert "1 could not be made" in window.status.text()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_the_next_world_can_be_prepared_and_queued_while_one_is_made(
     tmp_path: Path,
     fake_export: Exporter,

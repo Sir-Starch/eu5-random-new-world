@@ -67,7 +67,7 @@
         <div class="progress"><span style:width={`${percent}%`}></span></div>
         <div class="run-meta">
           {#if s?.eta}<span class="num">{t("eta", { time: clock(s.eta) })}</span>{/if}
-          {#if s?.task === "queue" && n?.queue.length}<span>{t("queue_count", { count: n.queue.length })}</span>{/if}
+          {#if s?.task === "queue" && n?.queue.length}<span>{t("queue_count", { count: n.queue.length - n.queue_failed })}</span>{/if}
         </div>
         <ol class="stages">
           {#each s?.stages ?? [] as stage, index (index)}
