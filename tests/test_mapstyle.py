@@ -13,9 +13,14 @@ import numpy as np
 
 from rnw import atlas as atlas_module
 from rnw.atlas import Country
+from rnw.eu5_history_plan import project_start
 from rnw.gui import mapstyle
-from rnw.wording import english
+from rnw.opinions import TREATIES
+from rnw.wording import Name, english, render
 from tests.fakes import synthetic_atlas
+from tests.history_fixtures import divided_valley
+from tests.test_history_archive import history_atlas
+from tests.test_history_plan import inputs_for
 
 STYLE = Path(__file__).resolve().parent.parent / "src" / "rnw" / "gui" / "lenses.json"
 DESKTOP = Path(__file__).resolve().parent.parent / "desktop" / "src" / "lib" / "style.ts"
@@ -121,11 +126,27 @@ def test_game_identifiers_are_named_by_the_game() -> None:
     assert mapstyle.written("$chukchi_sea$", words) == "<chukchi_sea>"
     assert mapstyle.written("great_plains_region", words) == "<great_plains_region>"
     assert mapstyle.written("Great Area", words) == "Great Area"
+
+    # A plain generated name is written as the world's localization writes it in that language.
+    def in_russian(name: Name) -> str:
+        return render(name, "russian")
+
+    russian = replace(atlas_module.ENGLISH, name=in_russian)
+    assert mapstyle.written("Xicochimanga", russian) == render("Xicochimanga", "russian")
+    assert mapstyle.written("Xicochimanga", russian) != "Xicochimanga"
     found = synthetic_atlas()
     assert mapstyle.written(found.names[1], words) == english(found.names[1])
     assert "chukchi_sea" in mapstyle.identifiers(
         replace(found, names=(*found.names[:-1], "$chukchi_sea$"))
     )
+
+
+def test_a_world_with_history_asks_the_game_for_its_treaty_opinions() -> None:
+    """The Relations tab names the engine's treaty opinions as the game does (*Allied*, *Rival*),
+    so their keys are among the identifiers the game is asked to name."""
+    found = history_atlas(project_start(inputs_for(divided_valley())))
+    assert {treaty.key for treaty in TREATIES} <= mapstyle.identifiers(found)
+    assert not {treaty.key for treaty in TREATIES} & mapstyle.identifiers(synthetic_atlas())
 
 
 def _mountains_with_a_lake() -> atlas_module.Atlas:

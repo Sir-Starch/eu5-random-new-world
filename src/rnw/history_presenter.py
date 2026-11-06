@@ -76,6 +76,9 @@ SOURCES: Final[dict[str, str]] = {
 # year in its own column. ``tests/test_history_dossier.py`` checks that every translation keeps
 # the shape, so a drifting translation fails there, not in a window.
 YEAR_PREFIX: Final[str] = r"^{year}\s*[年년]?\s*[:\uff1a]\s*"
+# The rank the game gives a country whose setup names none: an owner's saved game holds every
+# such country as a county [V-LOCAL C500].
+DEFAULT_RANK: Final[str] = "rank_county"
 # The trajectories of the *Extraordinary peoples* setting: a region shows whether they took
 # shape. The ordinary regional aims (D22) are the model's own and are not shown (plan D31).
 EXTRAORDINARY: Final[frozenset[TrajectoryKind]] = frozenset(
@@ -351,7 +354,7 @@ class Reader:
                 self.say(
                     "position",
                     government=self.key(country.government),
-                    rank=self.key(country.rank) or "\N{EM DASH}",
+                    rank=self.key(country.rank or DEFAULT_RANK),
                 )
             ),
         ]
@@ -493,7 +496,7 @@ class Reader:
         partners, more = self._partners(record, country.actor)
         return Dossier(
             government=self.key(country.government),
-            rank=self.key(country.rank) if country.rank else "",
+            rank=self.key(country.rank or DEFAULT_RANK),
             origin=self.entry(record, actor.origin, country.actor),
             values=self._values(country, self._axes(record, country.actor)),
             chronicle=tuple(

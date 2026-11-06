@@ -29,8 +29,10 @@ import numpy as np
 
 from rnw import atlas as atlas_module
 from rnw.gui.text import grouped
+from rnw.history_presenter import DEFAULT_RANK
 from rnw.history_values import AXES as VALUE_AXES
 from rnw.history_values import poles as value_poles
+from rnw.opinions import TREATIES
 from rnw.topology import euclidean_distance
 
 if TYPE_CHECKING:
@@ -905,11 +907,14 @@ def names(atlas: Atlas, lens: StyledLens, words: Words, *, tribes: bool) -> list
 
 
 def written(value: object, words: Words) -> str:
-    """A name of the atlas as the window writes it: a generated name in its language, an
+    """A name of the atlas as the window writes it: a generated name in its language, as the
+    world's localization writes it (a plain name too is transliterated, ``wording.render``), an
     identifier of the game (a region, an area, a ``$key$`` sea) by the game's name for it."""
     if isinstance(value, str):
         key = value.strip("$")
-        return words.key(key) if key != value or ("_" in key and " " not in key) else value
+        if key != value or ("_" in key and " " not in key):
+            return words.key(key)
+        return words.name(value) if value else ""
     return words.name(value) if value else ""  # pyright: ignore[reportArgumentType]
 
 
@@ -919,7 +924,9 @@ def identifiers(atlas: Atlas) -> frozenset[str]:
     found = {word for words in atlas.vocabulary.values() for word in words}
     if atlas.history is not None:
         found.update(country.government for country in atlas.history.countries)
-        found.update(country.rank for country in atlas.history.countries if country.rank)
+        found.update(country.rank or DEFAULT_RANK for country in atlas.history.countries)
+        # The engine's opinions of the treaties, which the Relations tab names as the game does.
+        found.update(treaty.key for treaty in TREATIES)
         if any(country.values for country in atlas.history.countries):
             found.update(VALUE_AXES)
             found.update(pole for axis in VALUE_AXES for pole in value_poles(axis))

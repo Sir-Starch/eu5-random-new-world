@@ -85,6 +85,8 @@ def test_the_society_shows_the_game_and_none_of_the_models_traits(built: atlas.A
         dossier = reader.dossier(country.tag)
         assert dossier is not None
         assert dossier.government == names.get(country.government, country.government)
+        # A setup that names no rank leaves the game's default, the county (C500).
+        assert dossier.rank == (country.rank or "rank_county")
         assert not hasattr(dossier, "axes")
         assert not hasattr(dossier, "technology")
     lines = [line.text for line in reader.country(history.countries[0].tag)[0].lines]

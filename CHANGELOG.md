@@ -25,6 +25,10 @@
   the *Extraordinary peoples* set for the world took shape, not the generator's ordinary
   regional aims.
 
+- Name places in the window as the game does in the chosen language: a generated location's or
+  area's name is transliterated as the world's own texts write it (*Куштакечери*, not
+  *Cuxtaquecheri*), and a country without a written rank shows the game's *County*.
+
 - Give the formable countries real goals. Any country that holds enough of a territory, its
   capital inside, may form a union, confederation, league or realm, not only the states of
   1337; a commonwealth also opens to its people's culture group. The realm becomes the realm
