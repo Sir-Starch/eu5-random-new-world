@@ -148,6 +148,8 @@ export interface WorldState {
   add_problem: string | null;
   remove_problem: string | null;
   can_change: boolean;
+  /** Why no version of this world can be made (another algorithm epoch), or null. */
+  version_problem: string | null;
   task: WorldTask | null;
   told: string;
   compare: boolean;

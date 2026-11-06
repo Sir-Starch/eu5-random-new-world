@@ -12,7 +12,7 @@ import numpy as np
 from rnw import epoch
 from rnw.app import library
 from rnw.app.discovery import GameInstall
-from rnw.app.worldcode import encode, new_code
+from rnw.app.worldcode import decode, encode, new_code
 from rnw.atlas import JSON_FILE, LABELS_FILE
 from rnw.atlas import to_files as atlas_files
 from rnw.eu5_atlas import build_atlas
@@ -165,6 +165,25 @@ def build_game(root: Path) -> GameInstall:
         target.parent.mkdir(parents=True, exist_ok=True)
         _ = target.write_text(relative, encoding="utf-8")
     return GameInstall(root, None, "26043558")
+
+
+def made_by_older_generator(
+    data: Path, world: library.World, release: str = "1.1.0"
+) -> library.World:
+    """``world`` as the library holds a world another release made: its code and its record name
+    that release, whose algorithm epoch is not this generator's, and the library has it on disk."""
+    made_in = epoch.epoch_of(release)
+    assert made_in != epoch.CURRENT
+    older = replace(
+        world,
+        code=encode(replace(decode(world.code), generator=release)),
+        generator=release,
+        record=None
+        if world.record is None
+        else replace(world.record, release=release, algorithm=made_in),
+    )
+    library.save(data, older)
+    return older
 
 
 def build_world(data: Path, game: GameInstall, *, name: str = "") -> library.World:

@@ -30,6 +30,7 @@ from rnw.gui.text import LANGUAGE_NAMES, set_language, text
 from rnw.history_presenter import Reader
 from rnw.record import Verdict
 from rnw.settings import RESOURCE_FIELDS
+from tests.fakes import made_by_older_generator
 from tests.history_fixtures import divided_valley
 from tests.test_history_archive import history_atlas
 from tests.test_history_plan import inputs_for
@@ -807,6 +808,38 @@ def test_the_buttons_make_a_version_of_the_world_and_the_list_shows_it_below(
     pump(lambda: not getattr(controller.selected_world(), "parent", "x"))
     window.edit_button.click()
     pump(lambda: controller.selection == NEW)
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
+def test_the_version_buttons_of_a_world_of_another_epoch_are_off_and_the_page_says_why(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """W3: new peoples, new resources and *Same land* are off for a world another epoch made, with
+    the reason under *Versions* and on each button; *New world with these settings* stays on."""
+    window = _window(tmp_path, fake_export)
+    controller = window.controller
+    window.generate_button.click()
+    pump(lambda: controller.phase is Phase.FINISHED and bool(controller.worlds))
+    pump(lambda: window.stack.currentWidget() is window.world_page)
+    pump(window.peoples_button.isEnabled)
+    assert window.versions_note.isHidden()
+    assert window.edit_button.toolTip() == text("edit_same_land_tip")
+    older = made_by_older_generator(controller.data, controller.worlds[0])
+    controller.refresh_library()
+    problem = controller.version_problem(older)
+    assert problem is not None
+    pump(lambda: not window.peoples_button.isEnabled())
+    assert not window.resources_button.isEnabled()
+    assert not window.edit_button.isEnabled()
+    assert window.like_button.isEnabled()
+    assert not window.versions_note.isHidden()
+    assert window.versions_note.text() == problem
+    for button in (window.peoples_button, window.resources_button, window.edit_button):
+        assert button.toolTip() == problem
+    window._edit()  # pyright: ignore[reportPrivateUsage]
+    assert window.world_notice.text() == problem
+    assert controller.selection == older.id
     _ = window.close()
 
 

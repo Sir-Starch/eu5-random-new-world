@@ -1826,6 +1826,10 @@ text = "Este mundo não tem registro de reprodução, portanto não é possível
 source = "c2284a0becacbcfe"
 text = '''Os arquivos do mundo na biblioteca não são mais aqueles com que ele foi criado.'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''O gerador {release} criou este mundo com um algoritmo diferente do deste gerador, então uma versão dele não ficaria na mesma terra. Em vez disso, crie um novo mundo com as mesmas configurações ou use o gerador {release}, que cria o original.'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''O jogo está usando {mod}. Desmarque-o na Condição de Jogo e aplique-a, ou feche o jogo.'''

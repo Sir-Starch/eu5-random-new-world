@@ -243,10 +243,20 @@ Select a finished world and open **Create a version** on its **World** tab
 - **New peoples** generates new countries, cultures, religions and names on the same land.
 - **New resources** changes resources while keeping the land and peoples.
 
+- **Same land, change settings** opens the world's seed and settings on the new-world page.
+
 The previous version stays in your library. A new version normally replaces the installed
 one. Tick **Keep this one in the game too** to retain both installed mods, and enable only
 one in your EU5 playset. **Previous version** opens the earlier library entry; **Undo roll**
 restores it in the game. Keep the version used by an existing campaign's saves.
+
+A world that an earlier generator algorithm made (see [epochs](#reproduction-cache-and-releases)) has these
+three buttons off, and the page says why: the same seed would give other land here, so a
+version would not be on the same land. Make **New world with these settings** for a new land
+with the same settings, or use the generator release that made the world. The page goes by
+the world's record, which says what made its files. In the command line, which has only the
+code and so only the release stamped in it, `rnw reroll CODE --part peoples` or
+`--part resources` stops with the same words; `--part land` makes a code for a new seed.
 
 ### Notes and favourites
 

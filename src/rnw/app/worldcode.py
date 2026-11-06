@@ -186,10 +186,27 @@ def new_code(
     return WorldCode(preset, chosen, __version__, dict(changes) if changes else None)
 
 
+def require_same_land(code: WorldCode) -> None:
+    """Raise unless this generator makes the land of the world of ``code``, as far as the code
+    says: the release stamped in it is of this generator's algorithm epoch (``reproduces``).
+
+    A version is the world with one part made again on the very same land, written with the
+    generator running now, so it is made only when the same seed gives the same land. The stamp
+    is all a bare code (the command line) tells of what made the world; a world the library holds
+    has a record whose epoch says it better, and the window asks that first
+    (``Controller.version_problem``).
+    """
+    if not reproduces(code):
+        message = say("version.other_algorithm", release=code.generator)
+        raise WorldCodeError(message)
+
+
 def rolled(code: WorldCode, part: str) -> WorldCode:
     """The code of the same world with ``part`` (``rnw.layers``) made again: its roll one higher.
 
     The land, and every other part, stay as they are; the generator is the one running now.
+    It does not ask whether this generator makes that land: the caller does, with the epoch it
+    knows the world by (``require_same_land``, ``Controller.version_problem``).
     """
     if part not in PARTS:
         message = f"Unknown part {part!r}; choose one of {', '.join(PARTS)}"

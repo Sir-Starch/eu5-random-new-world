@@ -309,16 +309,17 @@ def reroll(
 ) -> None:
     """Print the code of a world with one part made again; make it with ``rnw world``.
 
-    Peoples and resources are drawn again on the very same land; land is a new continent with
-    the same settings.
+    Peoples and resources are drawn again on the very same land, so a code made by another
+    algorithm epoch gets none: the same seed gives other land here. Land is a new continent with
+    the same settings, and works for every code.
     """
     try:
         decoded = worldcode.decode(code)
-        changed = (
-            worldcode.with_new_seed(decoded, seed)
-            if part == "land"
-            else worldcode.rolled(decoded, part)
-        )
+        if part == "land":
+            changed = worldcode.with_new_seed(decoded, seed)
+        else:
+            worldcode.require_same_land(decoded)
+            changed = worldcode.rolled(decoded, part)
     except (worldcode.WorldCodeError, SettingsError) as error:
         typer.echo(f"Error: {error}", err=True)
         raise typer.Exit(code=2) from error

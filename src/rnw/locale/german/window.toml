@@ -1826,6 +1826,10 @@ text = "Für diese Welt fehlt der Reproduzierbarkeitsnachweis. Ihr ursprünglich
 source = "c2284a0becacbcfe"
 text = '''Die Dateien der Welt in der Bibliothek sind nicht mehr die, aus denen sie erstellt wurde.'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''Generator {release} hat diese Welt mit einem anderen Algorithmus als dieser Generator erstellt; eine Version davon läge daher nicht auf demselben Land. Erstellen Sie stattdessen eine neue Welt mit denselben Einstellungen oder verwenden Sie Generator {release}, der das Original erstellt.'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''Das Spiel verwendet {mod}. Deaktivieren Sie ihn in der Gruppe und wenden Sie die Gruppe an, oder schließen Sie das Spiel.'''

@@ -590,6 +590,7 @@ class MainWindow(QMainWindow):
     copy_code_button: QPushButton
     note: QLabel
     advice: QLabel
+    versions_note: QLabel
     add_button: QPushButton
     remove_button: QPushButton
     open_button: QPushButton
@@ -1245,6 +1246,12 @@ class MainWindow(QMainWindow):
         page, layout = self._scroll_page()
         versions = QGroupBox(text("world_versions"))
         versions_layout = QVBoxLayout(versions)
+        self.versions_note = QLabel()
+        self.versions_note.setWordWrap(True)
+        self.versions_note.setFrameShape(QFrame.Shape.StyledPanel)
+        self.versions_note.setMargin(8)
+        self.versions_note.setVisible(False)
+        versions_layout.addWidget(self.versions_note)
         versions_layout.addLayout(self._version_buttons())
         layout.addWidget(versions)
         files = QGroupBox(text("world_share"))
@@ -1379,7 +1386,7 @@ class MainWindow(QMainWindow):
             row.addWidget(widget, line, column)
         _ = self.peoples_button.clicked.connect(lambda: self._reroll("peoples"))
         _ = self.resources_button.clicked.connect(lambda: self._reroll("resources"))
-        _ = self.edit_button.clicked.connect(self.controller.edit_selected)
+        _ = self.edit_button.clicked.connect(self._edit)
         _ = self.parent_button.clicked.connect(self._previous_version)
         _ = self.undo_button.clicked.connect(self._undo)
         return row
@@ -1983,9 +1990,16 @@ class MainWindow(QMainWindow):
         self.like_button.setEnabled(not controller.busy)
         self.check_button.setEnabled(not controller.busy and controller.game is not None)
         can_change = not controller.busy and controller.game is not None
-        for button in (self.peoples_button, self.resources_button):
-            button.setEnabled(can_change)
-        self.edit_button.setEnabled(not controller.busy)
+        refused = controller.version_problem(world)
+        for button, tip, ready in (
+            (self.peoples_button, "part.peoples.tip", can_change),
+            (self.resources_button, "part.resources.tip", can_change),
+            (self.edit_button, "edit_same_land_tip", not controller.busy),
+        ):
+            button.setEnabled(ready and refused is None)
+            button.setToolTip(refused or text(tip))
+        self.versions_note.setText(refused or "")
+        self.versions_note.setVisible(refused is not None)
         self.keep_both.setVisible(placement is Placement.IN_GAME)
         self.parent_button.setVisible(controller.parent_of(world) is not None)
         self.undo_button.setVisible(controller.parent_of(world) is not None)
@@ -2278,6 +2292,9 @@ class MainWindow(QMainWindow):
 
     def _reroll(self, part: str) -> None:
         self._tell(self.controller.reroll_selected(part, keep_both=self.keep_both.isChecked()))
+
+    def _edit(self) -> None:
+        self._tell(self.controller.edit_selected())
 
     def _previous_version(self) -> None:
         world = self.controller.selected_world()

@@ -47,9 +47,12 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
   folder.
 - **Some seeds and settings cannot produce a valid world.** Generation stops
   with an error in that case. Use **Generate with a new seed** to retry.
-- **New versions of older worlds can get different land.** **Create a version** makes
-  the land with the current generator's algorithm. For a world made by an earlier
-  algorithm (for example, a 1.0.0 world in 1.1.0), the land can therefore differ.
+- **A world made by an earlier algorithm gets no versions.** A version keeps the
+  world's land, and the same seed gives other land under another algorithm. Since 1.2.0
+  **New peoples**, **New resources** and **Same land, change settings** are off for such a
+  world (a 1.1.0 world in 1.2.0), with the reason shown; before 1.2.0 these buttons
+  made such a version without saying that its land came from the current algorithm. Use
+  **New world with these settings** for a new land, or the release that made the world.
 - **Windows startup warnings.** The binaries are unsigned, so Smart App Control
   may block them. The 1.1.0 window also received one heuristic antivirus detection;
   the [release notes](releases/1.1.0.md#checksums-and-windows-binary-scans) list

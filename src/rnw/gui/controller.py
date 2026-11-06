@@ -50,6 +50,7 @@ from rnw.app.worldcode import (
     encode,
     random_seed,
     reproduces,
+    require_same_land,
     rolled,
     with_new_seed,
 )
@@ -64,7 +65,7 @@ from rnw.gui.text import (
     text,
 )
 from rnw.layers import PARTS, rolls_of
-from rnw.messages import Said
+from rnw.messages import Said, say
 from rnw.png import COLOR_RGB, encode_png
 from rnw.progress import STAGES, Cancelled, Progress, Update, active
 from rnw.record import Verdict, verdict
@@ -601,16 +602,39 @@ class Controller:
         self.selection = NEW
         self._changed()
 
-    def edit_selected(self) -> None:
-        """Load the selected world's type, seed and settings into the new-world page, to change
-        the settings of its peoples or resources on the same land (a version of it)."""
-        world = self.selected_world()
-        if world is None:
-            return
+    def version_problem(self, world: World) -> str | None:
+        """Why no version of ``world`` can be made here, or None.
+
+        A version keeps the world's land, which this generator makes only for a world of its own
+        algorithm epoch. The world's record says which epoch made its files, and the record
+        decides: the release stamped in a code is only what the code was copied from (a world
+        made here from an old code has the old stamp). Without a record the code's stamp has to
+        do (``require_same_land``). A world of another epoch is refused in words, and a code
+        that cannot be read with its own message.
+        """
         try:
             code = decode(world.code)
-        except WorldCodeError:
-            return
+            record = world.record
+            if record is None:
+                require_same_land(code)
+            elif verdict(record) is not Verdict.SAME_ALGORITHM:
+                message = say("version.other_algorithm", release=record.release)
+                raise WorldCodeError(message)  # noqa: TRY301 - one place makes the refusal's words
+        except WorldCodeError as error:
+            return explain(error)
+        return None
+
+    def edit_selected(self) -> str | None:
+        """Load the selected world's type, seed and settings into the new-world page, to change
+        the settings of its peoples or resources on the same land (a version of it); returns why
+        not, or None."""
+        world = self.selected_world()
+        if world is None:
+            return None
+        problem = self.version_problem(world)
+        if problem is not None:
+            return problem
+        code = decode(world.code)
         shown, other = controls.flat(code.resolved_changes())
         self.mode, self.preset, self.seed = None, code.preset, code.seed
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
@@ -619,6 +643,7 @@ class Controller:
         self.notice = ""
         self.selection = NEW
         self._changed()
+        return None
 
     # -- versions of a world -------------------------------------------------------------------
 
@@ -680,6 +705,9 @@ class Controller:
             return text("ready_no_game")
         if world is None or part not in PARTS:
             return None
+        problem = self.version_problem(world)
+        if problem is not None:
+            return problem
         try:
             code = rolled(decode(world.code), part)
             drawn = service.required_land_mask(self.data, world)

@@ -1826,6 +1826,10 @@ text = "此世界没有复现记录，因此无法验证模组的原始内容。
 source = "c2284a0becacbcfe"
 text = '''库中这个世界的文件已不是生成它时的那些文件。'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''生成器{release}使用了与本生成器不同的算法来生成这个世界，因此它的版本不会落在同样的陆地上。请改为用相同的设置新建世界，或使用能生成原版世界的生成器{release}。'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''游戏正在使用{mod}。请在播放集中取消勾选并应用，或关闭游戏。'''

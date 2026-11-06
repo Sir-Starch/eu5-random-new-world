@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, final
 
 import numpy as np
 
-from rnw import epoch, worldname
+from rnw import __version__, epoch, worldname
 from rnw.app import controls, install, library, preferences, service
 from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
@@ -22,6 +22,7 @@ from rnw.gui.controller import NEW, SEED_MAX, STRAY, Controller, Phase, Task
 from rnw.gui.text import text
 from rnw.record import Verdict
 from rnw.settings import WORLD_TYPES
+from tests.fakes import made_by_older_generator
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -1025,6 +1026,79 @@ def test_a_reroll_is_refused_without_a_game_or_while_busy_or_for_a_bad_part(
     assert controller.task is Task.GENERATE
 
 
+def test_no_version_is_made_of_a_world_of_another_algorithm_epoch_and_the_refusal_says_why(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """W3: new peoples, new resources and *Same land, change settings* keep the world's land,
+    which this generator makes only for its own epoch. Each is refused in words and starts
+    nothing; a new world with the same settings stays possible."""
+    controller = _made(tmp_path, fake_export)
+    [made] = controller.worlds
+    assert controller.version_problem(made) is None
+    older = made_by_older_generator(controller.data, made)
+    controller.refresh_library()
+    assert controller.selected_world() == older
+    problem = controller.version_problem(older)
+    assert problem is not None
+    assert "1.1.0" in problem
+    assert "would not be on the same land" in problem
+    task = controller.task
+    assert controller.reroll_selected("peoples") == problem
+    assert controller.reroll_selected("resources", keep_both=True) == problem
+    assert controller.edit_selected() == problem
+    assert (controller.task, controller.phase, controller.selection) == (
+        task,
+        Phase.FINISHED,
+        older.id,
+    )
+    assert controller.worlds == [older]
+    controller.like(older)
+    assert controller.selection == NEW
+    assert decode(controller.code).generator == __version__
+
+
+def test_the_record_and_not_the_stamp_of_the_code_tells_what_made_the_world(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """W3: a world made here from an old code (``rnw world`` with a 1.1.0 code) keeps that stamp
+    in its code, yet its record says this generator made it, so it has its versions; a record of
+    another epoch refuses whatever the stamp, naming the record's release. Without a record the
+    stamp decides."""
+    controller = _made(tmp_path, fake_export)
+    [world] = controller.worlds
+    assert world.record is not None
+    old_stamp = replace(world, code=encode(replace(decode(world.code), generator="1.1.0")))
+    assert controller.version_problem(old_stamp) is None
+    old_record = replace(
+        world,
+        record=replace(world.record, release="1.1.0", algorithm=epoch.epoch_of("1.1.0")),
+    )
+    problem = controller.version_problem(old_record)
+    assert problem is not None
+    assert "Generator 1.1.0 made this world" in problem
+    assert controller.version_problem(replace(world, record=None)) is None
+    assert controller.version_problem(replace(old_stamp, record=None)) is not None
+    library.save(controller.data, old_stamp)
+    controller.refresh_library()
+    assert controller.reroll_selected("peoples") is None
+    _finish(controller)
+    version = next(item for item in controller.worlds if item.id != world.id)
+    assert (version.parent, version.part, version.seed) == (world.id, "peoples", world.seed)
+    assert decode(version.code).generator == __version__
+
+
+def test_a_world_of_this_epoch_still_gets_its_versions_and_a_code_that_cannot_be_read_is_refused(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The refusal is only for another epoch; a damaged code is refused with its own message."""
+    controller = _made(tmp_path, fake_export)
+    [world] = controller.worlds
+    assert controller.edit_selected() is None
+    assert controller.selection == NEW
+    damaged = replace(world, code="RNW1-ABCDE")
+    assert controller.version_problem(damaged) == text("error.code.short")
+
+
 def test_the_settings_of_a_world_open_on_the_new_world_page_with_its_seed_and_rolls(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
@@ -1034,7 +1108,7 @@ def test_the_settings_of_a_world_open_on_the_new_world_page_with_its_seed_and_ro
     _finish(controller)
     version = controller.selected_world()
     assert version is not None
-    controller.edit_selected()
+    assert controller.edit_selected() is None
     assert controller.selection == NEW
     assert controller.seed == version.seed
     assert decode(controller.code).settings().rolls.peoples == 1

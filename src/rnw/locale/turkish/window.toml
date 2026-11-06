@@ -1826,6 +1826,10 @@ text = "Bu dünyanın yeniden üretim kaydı olmadığından modun özgün içer
 source = "c2284a0becacbcfe"
 text = '''Kütüphanedeki dünya dosyaları artık onun yapıldığı dosyalar değil.'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''Oluşturucu {release} bu dünyayı bu oluşturucudan farklı bir algoritmayla yaptı; bu yüzden bir sürümü aynı karada olmaz. Bunun yerine aynı ayarlarla yeni bir dünya oluşturun ya da özgün dünyayı üreten oluşturucu {release} kullanın.'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''Oyun {mod} modunu kullanıyor. Onu oynanış setinde işaretten çıkarıp seti uygulayın ya da oyunu kapatın.'''

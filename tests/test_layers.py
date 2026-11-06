@@ -9,6 +9,7 @@ from typing import cast
 import pytest
 from typer.testing import CliRunner
 
+from rnw import __version__
 from rnw.app.worldcode import (
     WorldCode,
     WorldCodeError,
@@ -16,6 +17,7 @@ from rnw.app.worldcode import (
     encode,
     format_of,
     new_code,
+    require_same_land,
     rolled,
     with_new_seed,
 )
@@ -138,3 +140,31 @@ def test_the_reroll_command_prints_the_code_of_a_version() -> None:
     assert document["rolls"] == {"resources": 0, "peoples": 0}
     bad = runner.invoke(app, ["reroll", code, "--part", "weather"])
     assert bad.exit_code == 2
+
+
+def test_a_code_of_another_algorithm_epoch_does_not_stand_for_the_same_land() -> None:
+    """W3: the same seed gives other land under another algorithm, so a version needs the code's
+    own release to be of this epoch; a new seed (a new world) is allowed for any code."""
+    for release in ("1.1.0", "0.9.22", "0.9.1"):
+        older = WorldCode("continents", 77, release)
+        with pytest.raises(WorldCodeError, match="would not be on the same land") as refused:
+            require_same_land(older)
+        assert release in str(refused.value)
+        assert with_new_seed(older, 5).generator == __version__
+    require_same_land(new_code("continents", 77))
+    assert rolled(new_code("continents", 77), "peoples").generator == __version__
+
+
+def test_the_reroll_command_refuses_a_world_of_another_epoch_but_makes_a_new_land() -> None:
+    """The command prints no code for a version of an older world; ``--part land`` does."""
+    runner = CliRunner()
+    code = encode(WorldCode("continents", 77, "1.1.0"))
+    for part in PARTS:
+        refused = runner.invoke(app, ["reroll", code, "--part", part])
+        assert refused.exit_code == 2, refused.output
+        assert "1.1.0" in refused.output
+        assert "would not be on the same land" in refused.output
+        assert "RNW1-" not in refused.output
+    land = runner.invoke(app, ["reroll", code, "--part", "land", "--seed", "5"])
+    assert land.exit_code == 0, land.output
+    assert cast("dict[str, object]", json.loads(land.output))["generator"] == __version__

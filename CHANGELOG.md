@@ -31,6 +31,16 @@
   recorded in the log and the last-error file and tried again instead of ending the generator,
   and a version that fails says so in the generator's words, as a new world does.
 
+- Refuse a version of a world that an earlier algorithm made, with the reason, in both
+  windows and in `rnw reroll`. A version keeps the world's land, but the generator wrote it
+  with the running algorithm, so for a 1.1.0 world the new peoples, new resources and
+  *Same land, change settings* could silently get other land. Their buttons are now off for
+  such a world, with the reason under *Versions*, and the same words come back if an action
+  is asked anyway. What made a world is read from its record, not from the release stamped
+  in its code, so a world this generator made from an older code keeps its versions.
+  *New world with these settings* and `rnw reroll --part land` still make a new land.
+  The reason is in every official language.
+
 - Warn on a world's page, in both windows and in the diagnostics file, when a mod after
   the world in the playset has files at the same paths as the world's, or when another RNW
   world is ticked. Either can leave the New World all Clay with empty map modes. The check

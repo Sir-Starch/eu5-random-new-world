@@ -401,6 +401,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "add_problem": c.world_problem(),
         "remove_problem": c.removal_problem(),
         "can_change": not c.busy and c.game is not None,
+        "version_problem": c.version_problem(world),
         "task": _world_task(c) if mine else None,
         "told": choices.told.get(world.id, ""),
         "compare": len(c.maps_to_compare()) >= 2,  # noqa: PLR2004 - two worlds are compared

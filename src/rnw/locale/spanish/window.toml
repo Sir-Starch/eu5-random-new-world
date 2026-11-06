@@ -1826,6 +1826,10 @@ text = "Este mundo no tiene un registro de reproducibilidad, por lo que no se pu
 source = "c2284a0becacbcfe"
 text = '''Los archivos del mundo en la biblioteca ya no son los mismos con los que se creó.'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''El generador {release} creó este mundo con un algoritmo distinto del de este generador, así que una versión suya no quedaría en la misma tierra. En su lugar, crea un mundo nuevo con los mismos ajustes o usa el generador {release}, que crea el original.'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''El juego está usando {mod}. Desmárcalo en la colección y aplica la colección, o cierra el juego.'''

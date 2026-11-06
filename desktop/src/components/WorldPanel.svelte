@@ -228,15 +228,16 @@
 
       <Section id="world.versions" title={t("world_versions")} closed>
         <p class="hint">{t("world.versions_intro")}</p>
+        {#if w.version_problem}<div class="msg warn"><Icon name="warning" /><p>{w.version_problem}</p></div>{/if}
         <div class="commands two">
-          <button class="btn" disabled={!w.can_change} title={t("part.peoples.tip")} onclick={() => app.act("reroll", { part: "peoples", keep_both: keepBoth })}>{t("part.peoples.button")}</button>
-          <button class="btn" disabled={!w.can_change} title={t("part.resources.tip")} onclick={() => app.act("reroll", { part: "resources", keep_both: keepBoth })}>{t("part.resources.button")}</button>
+          <button class="btn" disabled={!w.can_change || !!w.version_problem} title={w.version_problem ?? t("part.peoples.tip")} onclick={() => app.act("reroll", { part: "peoples", keep_both: keepBoth })}>{t("part.peoples.button")}</button>
+          <button class="btn" disabled={!w.can_change || !!w.version_problem} title={w.version_problem ?? t("part.resources.tip")} onclick={() => app.act("reroll", { part: "resources", keep_both: keepBoth })}>{t("part.resources.button")}</button>
         </div>
         {#if w.placement === "in_game"}
           <Check checked={keepBoth} label={t("keep_both")} hint={t("keep_both_tip")} onchange={(value) => (keepBoth = value)} />
         {/if}
         <div class="commands">
-          <button class="btn" disabled={busy} title={t("edit_same_land_tip")} onclick={() => app.call("edit")}>{t("edit_same_land")}</button>
+          <button class="btn" disabled={busy || !!w.version_problem} title={w.version_problem ?? t("edit_same_land_tip")} onclick={() => app.act("edit")}>{t("edit_same_land")}</button>
           <button class="btn" disabled={busy} title={t("world.like_tip")} onclick={() => app.call("like", { id: w.id })}>{t("like_this")}</button>
           {#if w.parent}
             <button class="btn" title={w.parent_name} onclick={() => app.call("select", { id: w.parent })}>{t("previous_version")}<span class="faint ellipsis">· {w.parent_name}</span></button>

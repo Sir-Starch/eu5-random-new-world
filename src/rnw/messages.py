@@ -34,6 +34,12 @@ MESSAGES: Final[dict[str, str]] = {
         "This world has no reproducibility record, so its original output cannot be checked."
     ),
     "check.bundle": "The world's files in the library are no longer the ones it was made from.",
+    # a version of a world: its land has to be the world's
+    "version.other_algorithm": (
+        "Generator {release} made this world with an algorithm that differs from this "
+        "generator's, so a version of it would not be on the same land. Make a new world with "
+        "the same settings instead, or use generator {release}, which makes the original."
+    ),
     # the game and the profile
     "install.in_use": (
         "The game is using {mod}. Untick it in the game's playset and apply the playset, or close "

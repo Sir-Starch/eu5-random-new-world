@@ -28,7 +28,7 @@ from rnw.gui.bridge import Bridge, BridgeError, serve
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.png import COLOR_RGB, encode_png
 from rnw.settings import RESOURCE_FIELDS
-from tests.fakes import synthetic_atlas
+from tests.fakes import made_by_older_generator, synthetic_atlas
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -207,6 +207,30 @@ def test_a_made_world_is_listed_shown_and_answered_about(
     )
     assert message == text.text("notes_saved")
     assert bridge.controller.worlds[0].starred
+
+
+def test_the_viewer_is_told_why_a_world_of_another_epoch_has_no_versions(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """W3: the state carries the refusal, so the version buttons are off with its words, and the
+    actions a call could still make refuse with the same words and change nothing."""
+    bridge = _bridge(tmp_path, fake_export)
+    world_id = _made(bridge)
+    assert cast("dict[str, object]", bridge.state()["world"])["version_problem"] is None
+    older = made_by_older_generator(bridge.controller.data, bridge.controller.worlds[0])
+    bridge.controller.refresh_library()
+    state = cast("dict[str, object]", bridge.state()["world"])
+    problem = state["version_problem"]
+    assert isinstance(problem, str)
+    assert "1.1.0" in problem
+    assert "would not be on the same land" in problem
+    assert json.dumps(state)
+    for part in ("peoples", "resources"):
+        assert bridge.call("reroll", {"part": part, "keep_both": False}) == problem
+    assert bridge.call("edit", {}) == problem
+    assert bridge.controller.selection == older.id == world_id
+    assert bridge.controller.worlds == [older]
+    assert bridge.controller.phase is Phase.FINISHED
 
 
 def test_the_atlas_reaches_the_viewer_whole(tmp_path: Path, fake_export: Exporter) -> None:

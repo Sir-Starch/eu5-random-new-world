@@ -1826,6 +1826,10 @@ text = "Ce monde ne possède aucun relevé de reproductibilité ; son contenu in
 source = "c2284a0becacbcfe"
 text = '''Les fichiers du monde dans la bibliothèque ne sont plus ceux dont il est issu.'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''Le générateur {release} a créé ce monde avec un algorithme différent de celui de ce générateur ; une version de ce monde ne serait donc pas sur les mêmes terres. Créez plutôt un nouveau monde avec les mêmes réglages, ou utilisez le générateur {release}, qui crée l'original.'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''Le jeu utilise {mod}. Décochez-le dans le playset et appliquez le playset, ou fermez le jeu.'''

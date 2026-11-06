@@ -1826,6 +1826,10 @@ text = "Ten świat nie ma zapisu odtwarzalności, więc nie można sprawdzić je
 source = "c2284a0becacbcfe"
 text = '''Pliki świata w bibliotece nie są już tymi, z których powstał.'''
 
+["error.version.other_algorithm"]
+source = "ebc31764ab568e88"
+text = '''Generator {release} utworzył ten świat innym algorytmem niż ten generator, więc jego wersja nie powstałaby na tym samym lądzie. Utwórz zamiast tego nowy świat z tymi samymi ustawieniami albo użyj generatora {release}, który tworzy oryginał.'''
+
 ["error.install.in_use"]
 source = "8f4e29768c251b73"
 text = '''Gra używa {mod}. Odznacz go w zestawie modów i zastosuj zestaw albo zamknij grę.'''
