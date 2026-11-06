@@ -59,9 +59,13 @@
   }
   header {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 6px;
+    gap: 4px 6px;
     min-width: 0;
+  }
+  header .num {
+    white-space: nowrap;
   }
   h3 {
     margin: 0;
