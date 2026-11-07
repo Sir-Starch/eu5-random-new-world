@@ -666,6 +666,62 @@ of 1009–1012 was captured. Thresholds and classifier are unchanged.
 Evidence is in the ignored `local_data/history-120/r6/dev72/` (inputs), `it72-*`, `dev72-ord6/`
 and `turb-*` folders.
 
+### D33: classifier order, turbulence control and lord margin (2026-11-07)
+
+[V-EXEC] Decision [D33](../history-plan.md#213-decisions), made by the agent under the owner's
+delegation before any capture of seeds 1009–1012. Source: the working tree that the D33 commit
+records, source SHA-256 `b0ff59fd…6959e`, EU5 1.4.7 / 26377361. Three changes: fractured is tested
+before rival powers; Q5's turbulence order is read pooled over the seed set (each sweep pair must
+still be higher at high than at low); `ORDINARY_LORD_POWER` 6 with `UNREST_SLOPE` 450.
+
+*Why Q5 changed.* On the 72 worlds with `ORDINARY_LORD_POWER` 6, recent turmoil pools to 0.103 /
+0.173 / 0.230 at Calm / Varied / Turbulent. The per-world Turbulent − Varied step averages +0.055
+with a standard deviation of 0.045 (7 of 72 worlds negative), so a test of four single pairs, each
+non-decreasing, passes with probability near 0.6 for any rule. The event counts show why a
+mechanism cannot widen the step cheaply: from Varied to Turbulent, conflicts triple, but most are
+failed attacks (continents/3 at margin 6 and slope 350: 333 → 602 accepted conquests in the whole record, 306 → 1,384
+failed; recent secessions 66 → 125), and the share of land last taken by turmoil moves 0.25 →
+0.22–0.26. Changed land is bounded by capacity and rebound by breakaway. The pooled order has a
+standard error near 0.01 on 24 worlds.
+
+*Lord margin and unrest.* Single-knob trials on the 72 Varied starts (median subjects /
+authority assortativity, Q11 floor 0.2): base 41 / 0.251; `LORD_LOCATIONS` 4 35.5 / 0.2625;
+`ORDINARY_LORD_POWER` 6 32.0 / 0.2375; with `UNREST_SLOPE` 280 31.5 / 0.2375; with 450 35.0 /
+0.2765. The lord margin cost 0.014 of Q11's margin (on the 24 failed held-out worlds it gave
+0.1965), against the D32 rule that no other check loses margin. A steeper unrest slope more than
+returned it. Drawing 400 held-out-like sets (four of the twelve development seeds per preset,
+24 worlds each, the 96 sweep rows fixed) and applying every check: margin 6 alone failed some
+check in 7.2% of draws (Q11 6.8%, Q4 0.5%); margin 6 with slope 450 in 2.8% (Q9 1.5%, Q11 1.0%,
+Q8 0.3%). The draws overlap in the same 72 worlds, so the figures compare candidates and do not
+predict the held-out probability.
+
+The full matrix of the committed source (`dev72-d33f/`, 216 starts and 96 sweep rows; equal to
+the same values set through `R6_KNOBS`, `dev72-d33-u450/`) passes all fourteen checks:
+
+| Check | Development value (72 worlds) |
+|---|---|
+| Q1 | Patchwork 34.8%, rival powers 27.0%, paramount 18.3%, fractured 17.7%, great realm 2.2% |
+| Q2 | Median 4 classes (70 worlds with at least four regions) |
+| Q3 | Turbulent/Calm turmoil 2.235; rises in 100% of worlds; fractured + patchwork 36.6% → 65.4%; paramount 25.8% → 12.5%; continuity 81.7% |
+| Q4 | Prudent recognition 78.4%; overreach ended 77.5%; league 88.9%, confederation 92.9%, sacred centre 71.4% |
+| Q5 | Pooled recent turmoil 0.109 / 0.186 / 0.243; every pair of all four controls higher at high than at low |
+| Q6 | Great-realm ratio 0.769; 42 realized; eight high-sweep worlds |
+| Q7 | Ordinary-size ratios 1.000 / 1.000 / 0.667 at Calm / Varied / Turbulent |
+| Q8 | No landmass-dominance failures |
+| Q9 | Median 35 subject pairs; 99.6% scaled (development target ≤ 35 met; gate 40) |
+| Q10 | Median 10 alliances |
+| Q11 | Republic median 15.9%; IQR 10.8 points; assortativity 0.2765 |
+| Q12 | Largest family 25.2%; routine 18.1%; 3 distinct families; 25.4% short chronicles |
+| Q13 | Median 91.2% of landed countries visible |
+| S11 | Largest archive 577,419 bytes |
+
+The earlier W8 trial that rejected `UNREST_SLOPE` 450 (above) ran at lord margin 4, under the
+per-pair Q5 and the old classifier. The thinnest margins now are Q9 (35 against 40), Q7 at
+Turbulent (0.667 against 0.6, a median of ratios of whole-location sizes), and Q4's prudent
+recognition (78.4% against 70%). Fractured at 17.7% (target 4%) no longer depends on a leftover
+count. The development evidence is in the ignored `local_data/history-120/r6/dev72-d33f/`,
+`dev72-d33-u450/` and `it72-*`.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)

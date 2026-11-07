@@ -99,7 +99,7 @@ def test_capacity_keeps_the_ordinary_limit_and_scales_with_administration() -> N
     assert context.capacity("plain") == 1000
     # Three and a half doublings above the threshold at level-2 technology: 1000 + 11000 * 1.5.
     assert context.capacity("realm") == 17_500
-    assert context.unrest("realm") == 17_500 * 825 // 1000
+    assert context.unrest("realm") == 17_500 * 775 // 1000  # 77.5% of capacity at Varied (D33)
     assert context.limit("realm") == context.capacity("realm")
 
 
@@ -500,7 +500,8 @@ def test_acceptance_applies_the_frozen_thresholds_mechanically(broken: str | Non
     calm = ("paramount", "paramount", "rival_powers", "patchwork", "great_realm")
     turbulent = ("patchwork", "fractured", "patchwork", "rival_powers", "fractured")
     varied = ("patchwork",) * 5 if broken == "Q1" else VARIED_REGIONS
-    recent = {200: 10, 500: 15, 800: 10 if broken == "Q3" else 20}
+    # Q3 needs Turbulent at 1.5 x Calm; the broken case keeps the three levels ordered for Q5.
+    recent = {200: 10, 500: 12 if broken == "Q3" else 15, 800: 14 if broken == "Q3" else 20}
     worlds = [
         World(
             f"case{n}",
@@ -529,6 +530,57 @@ def test_acceptance_applies_the_frozen_thresholds_mechanically(broken: str | Non
     # Regions of a single class also leave no variety within any world (Q2).
     expected = {"Q1": {"Q1", "Q2"}}.get(broken or "", {broken} if broken else set())
     assert failed == expected
+
+
+def _worlds(recent: dict[int, int]) -> list[World]:
+    return [
+        World(
+            f"case{n}",
+            level,
+            _observation(VARIED_REGIONS, recent=recent[level], republics=5 + 5 * n),
+            baseline_ordinary=3,
+            baseline_empires=(70,),
+        )
+        for n in range(4)
+        for level in (200, 500, 800)
+    ]
+
+
+def _turbulence_sweeps(row: dict[tuple[int, int], int]) -> list[Sweep]:
+    """Four pairs of a turbulence sweep; ``row`` overrides the recent turmoil of (pair, level)."""
+    sweeps = [
+        _sweep(f"pair{n}", control, level)
+        for n in range(4)
+        for control in ("state_locations", "state_share_permille", "empire_permille")
+        for level in (0, 1, 2)
+    ]
+    sweeps.extend(
+        Sweep(
+            f"pair{n}",
+            "turbulence",
+            level,
+            _observation(VARIED_REGIONS, recent=row.get((n, level), 10 + 5 * level)),
+            baseline_empires=(70,),
+        )
+        for n in range(4)
+        for level in (0, 1, 2)
+    )
+    return sweeps
+
+
+def test_one_inverted_turbulence_pair_is_noise_but_a_pooled_inversion_is_not() -> None:
+    # D33: Varied above Turbulent in a single world's sweep, with Turbulent still above
+    # Calm there and the pooled order intact, keeps the control's meaning.
+    ordered = _worlds({200: 10, 500: 15, 800: 20})
+    noisy = evaluate(ordered, _turbulence_sweeps({(1, 1): 24, (1, 2): 20}))
+    assert noisy["Q5"].passed, noisy["Q5"].values
+    # Turbulent no higher than Calm in one pair is a lost control even with pooled order.
+    flat = evaluate(ordered, _turbulence_sweeps({(2, 2): 10}))
+    assert not flat["Q5"].passed
+    # Varied above Turbulent across the whole seed set is a pooled inversion.
+    inverted = evaluate(_worlds({200: 10, 500: 20, 800: 15}), _turbulence_sweeps({}))
+    assert not inverted["Q5"].passed
+    assert inverted["Q5"].values["pooled"] == (0.1, 0.2, 0.15)
 
 
 def test_a_breakaway_and_its_aim_survive_the_portable_record() -> None:

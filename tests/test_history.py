@@ -8,6 +8,7 @@ from typing import override
 
 import pytest
 
+from rnw import history_actions
 from rnw.history_context import Context
 from rnw.history_engine import (
     _roots,  # pyright: ignore[reportPrivateUsage]
@@ -312,7 +313,10 @@ def test_dependency_needs_knowledge_imbalance_and_a_capable_lord() -> None:
     assert stranger.events[-1].reason is Reason.UNKNOWN
 
 
-def test_overlord_can_fight_with_reachable_subject_support() -> None:
+def test_overlord_can_fight_with_reachable_subject_support(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(history_actions, "ORDINARY_LORD_POWER", 4)  # the margin before D32
     ordinary = Society(authority=Authority.RULER)
     history = court(
         {

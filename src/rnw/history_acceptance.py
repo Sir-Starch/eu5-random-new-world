@@ -145,6 +145,14 @@ def _changed(observation: Observation) -> float:
     return _share(found.recent_locations, found.state_locations)
 
 
+def _pooled_changed(worlds: Iterable[World]) -> float:
+    """Recent turmoil of several worlds together: their summed turmoil over their summed land."""
+    found = [_structure(world.observation) for world in worlds]
+    return _share(
+        sum(item.recent_locations for item in found), sum(item.state_locations for item in found)
+    )
+
+
 def _extraordinary(observation: Observation) -> float:
     return sum(
         aim.realized
@@ -205,15 +213,7 @@ def _q3(by_level: Mapping[int, Sequence[World]]) -> Check:
     calm = {world.case: world for world in by_level[CALM]}
     turbulent = {world.case: world for world in by_level[TURBULENT]}
     paired = sorted(calm.keys() & turbulent.keys())
-
-    def pooled(worlds: Iterable[World]) -> float:
-        found = [_structure(world.observation) for world in worlds]
-        return _share(
-            sum(item.recent_locations for item in found),
-            sum(item.state_locations for item in found),
-        )
-
-    ratio = _share(pooled(turbulent.values()), pooled(calm.values()))
+    ratio = _share(_pooled_changed(turbulent.values()), _pooled_changed(calm.values()))
     rising = _share(
         sum(
             _changed(turbulent[key].observation) > _changed(calm[key].observation) for key in paired
@@ -285,7 +285,7 @@ def _q4(aims: Sequence[AimOutcome]) -> Check:
     )
 
 
-def _q5(sweeps: Sequence[Sweep]) -> Check:
+def _q5(sweeps: Sequence[Sweep], by_level: Mapping[int, Sequence[World]]) -> Check:
     rows: dict[tuple[str, str], dict[int, Observation]] = defaultdict(dict)
     for sweep in sweeps:
         rows[sweep.control, sweep.pair][sweep.level] = sweep.observation
@@ -303,9 +303,17 @@ def _q5(sweeps: Sequence[Sweep]) -> Check:
             if control == "empire_permille" and not _extraordinary_seeded(levels[HIGH]):
                 continue  # no eligible domain in this world
             low, default, high = (statistic(levels[level]) for level in (LOW, DEFAULT, HIGH))
-            if not (low <= default <= high and high > low):
+            # D33: a single world's recent turmoil moves by about 0.045 from run to run, the
+            # step from Varied to Turbulent by 0.055, so one pair can invert without the
+            # control losing its meaning. Each pair must still be higher at high than at
+            # low; the order of all three levels is tested pooled over the seed set below.
+            ordered = control == "turbulence" or low <= default <= high
+            if not (ordered and high > low):
                 failures.append(f"{control}/{pair}: {low} {default} {high}")
-    return Check(not failures, {"failures": failures})
+    calm, varied, turbulent = (_pooled_changed(by_level[level]) for level in LEVELS)
+    if not (calm <= varied <= turbulent and turbulent > calm):
+        failures.append(f"turbulence pooled: {calm} {varied} {turbulent}")
+    return Check(not failures, {"failures": failures, "pooled": (calm, varied, turbulent)})
 
 
 def _q6(varied: Sequence[World], sweeps: Sequence[Sweep]) -> Check:
@@ -444,7 +452,7 @@ def evaluate(worlds: Sequence[World], sweeps: Sequence[Sweep]) -> dict[str, Chec
         "Q2": _q2(varied),
         "Q3": _q3(by_level),
         "Q4": _q4(aims),
-        "Q5": _q5(sweeps),
+        "Q5": _q5(sweeps, by_level),
         "Q6": _q6(varied, sweeps),
         "Q7": _q7(by_level),
         "Q8": _q8(worlds),

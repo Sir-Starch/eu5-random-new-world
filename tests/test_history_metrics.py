@@ -8,7 +8,16 @@ from dataclasses import replace
 from rnw.eu5_history_plan import project_start
 from rnw.history_context import Context
 from rnw.history_engine import advance, create, validate_history
-from rnw.history_metrics import _successor_groups, government_combinations, landmasses, measure
+from rnw.history_metrics import (
+    FRACTURED,
+    PARAMOUNT,
+    RIVALS,
+    _classify,
+    _successor_groups,
+    government_combinations,
+    landmasses,
+    measure,
+)
 from rnw.history_model import Action, Outcome, Partition, Proposal, Society
 from rnw.model import CellClass
 from tests.fakes import synthetic_world
@@ -58,6 +67,26 @@ def test_successive_parentless_breakaways_belong_to_the_same_divided_realm() -> 
     expected = {frozenset(context.index.members[key]) for key in ("realm", *children)}
     assert all(set(group) == expected for group in _successor_groups(context))
     validate_history(history)
+
+
+def test_the_remains_of_one_realm_make_a_fractured_region_before_rival_powers() -> None:
+    # D33: valley has six land places. Two blocs of three are rivals, and when they are the
+    # living halves of one recorded realm the region is fractured; a bloc of five of six
+    # still makes the region paramount, which is tested first.
+    context = Context(valley(), lambda: None)
+    half = (frozenset({"u0", "u1", "m0"}), frozenset({"m1", "d0", "d1"}))
+    held: dict[str, frozenset[str]] = {"a": half[0], "b": half[1]}
+
+    def kind(held: dict[str, frozenset[str]], successors: list[tuple[frozenset[str], ...]]) -> str:
+        found = _classify(
+            context, "valley", len(held), held=held, great=[], groups=[], successors=successors
+        )
+        return found.kind
+
+    assert kind(held, []) == RIVALS
+    assert kind(held, [half]) == FRACTURED
+    big = {"a": frozenset({"u0", "u1", "m0", "m1", "d1"}), "b": frozenset({"d0"})}
+    assert kind(big, [half]) == PARAMOUNT
 
 
 def test_divided_valley_counts_actual_transfers_and_independent_continuity() -> None:

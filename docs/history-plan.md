@@ -148,6 +148,7 @@ on these observations.
 | D30 | Q4 recognition | Q4 gates on the D24 recognition shares as written; the Q1-scale rate is reported beside it (owner, 2026-11-06, before the held-out run) |
 | D31 | The game's measure | Written values take the game's scale and the window shows what the game shows, in its names; no internal scale is shown as game state (owner, 2026-11-06) |
 | D32 | Second acceptance round | After the failed held-out run (C509) the owner chose another D28 round: seeds 1005–1008 become development, mechanisms are fixed with margin, new held-out seeds 1009–1012 are frozen and run once (owner, 2026-11-07) |
+| D33 | Classifier order and the turbulence control | Fractured is tested before rival powers; Q5's turbulence order is read pooled over the seed set, each sweep pair still higher at high than at low; `ORDINARY_LORD_POWER` 6 and `UNREST_SLOPE` 450 (agent, under the owner's delegation, 2026-11-07, before any capture of 1009–1012) |
 
 ## 4. Scope and abstractions
 
@@ -886,7 +887,7 @@ value is computed on the pooled political regions or worlds of one seed set.
 | Q2 | Variety within a world: distinct region classes, in worlds with ≥ 4 political regions | Median ≥ 3 |
 | Q3 | Turbulence is visible: recent turmoil (state land taken by conquest, breakaway or division in the last 100 years); class shares; continuity of 1337 landed countries at least 100 years old (polity or a union it formed) | Recent-turmoil share Turbulent/Calm ≥ 1.5 pooled, and it rises Calm < Turbulent in ≥ 75% of worlds. Fractured + patchwork share is higher at Turbulent than at Calm; paramount share is higher at Calm than at Turbulent. Continuity median ≥ 40% at Varied |
 | Q4 | Aims work: outcome of each seeded aim (seed set at 250 and sweeps at 1000) | Prudent expansion aims reach their D24 recognition ≥ 70%. Overreaching aims leave successor states, or lose ≥ 25% of their peak holdings, ≥ 50%. League, confederation and sacred-centre aims each realize ≥ 50% where seeded |
-| Q5 | Controls keep their meaning (sweeps) | In all four preset/seed pairs, the declared statistic is non-decreasing from low to default to high and strictly higher at high than at low. `state_locations` → ordinary median state size. `empire_permille` → realized extraordinary societies, in worlds with an eligible domain. `state_share_permille` → state locations. Turbulence → recent-turmoil share |
+| Q5 | Controls keep their meaning (sweeps) | In all four preset/seed pairs, the declared statistic is non-decreasing from low to default to high and strictly higher at high than at low. `state_locations` → ordinary median state size. `empire_permille` → realized extraordinary societies, in worlds with an eligible domain. `state_share_permille` → state locations. Turbulence → recent-turmoil share; *since D33* each pair must be strictly higher at high than at low, and the order Calm ≤ Varied ≤ Turbulent, with Turbulent above Calm, is tested on the share pooled over the seed set's worlds |
 | Q6 | Scale of great realms | The median realized great-realm bloc is 0.5–1.5 × the median 1.1.0 empire of the same worlds, inputs and controls (seed set at Varied and sweeps at 1000). At 1000, at least three of the four sweep worlds realize an extraordinary society |
 | Q7 | Ordinary state size against 1.1.0 on the same seed and controls | Median paired ratio of ordinary medians within ±25% (±40% at Calm and Turbulent) |
 | Q8 | No continental unification | Landmass with ≥ 60 bootstrap landed polities: no bloc > 50% of its state locations at any turbulence. Landmass with 20–59: a bloc > 50% on ≤ 20% of such landmasses per turbulence, and never > 85% |
@@ -1212,8 +1213,46 @@ another round, not a waiver. Rules:
 fractured rule (living successors of one recorded realm hold at least 30% of the region)
 is also true for 47 of 172 and 80 of 331 regions, but the classifier tests great realm,
 paramount, league and rival powers first, so 3 and 14 are labelled fractured. Fractured is
-therefore a leftover class by construction. The classifier is unchanged; whether
-its precedence measures the intended variety is open for the owner.
+therefore a leftover class by construction. The classifier was unchanged by D32; D33
+decides its precedence.
+
+**D33 Classifier order, the turbulence control and the lord margin (agent, under the owner's
+delegation of 2026-11-07, before any capture of seeds 1009–1012).** The D32 development round
+(72 worlds, [C510](research/claims-ledger.md)) found two defects of measurement that a
+mechanism could not repair, and one mechanism to take. The owner left the choice to the agent.
+
+- **Region classifier.** The order is great realm, paramount, league, **fractured**, rival
+  powers, patchwork. The fractured rule held for a quarter of all regions but labelled 3.4%,
+  because two blocs of one dissolved realm always satisfy rival powers: the class was a leftover
+  by construction, and no knob moved it beyond noise (2.8–4.0%). A true share of 4% falls
+  under 3% with probability 0.31 in a held-out of about 170 regions. The §18 threshold (3%) is
+  unchanged. Paramount stays above fractured, so a dominant bloc is still paramount.
+- **Q5, turbulence.** One world's recent-turmoil share varies by about 0.045 from run to run
+  (sd of the per-world Turbulent − Varied step on 72 worlds), while the step itself averages
+  0.055 (pooled 0.103 / 0.173 / 0.230 at Calm / Varied / Turbulent). The old test, four single
+  pairs each non-decreasing, therefore passes with probability near 0.6 whatever the rule: the
+  held-out run of C509 passed it by that chance, and the lord margin below flipped one pair.
+  The control keeps its meaning, which the pooled order over 24 or 72 worlds measures with
+  a standard error near 0.01. Each sweep pair must still be strictly higher at high than at low.
+  The three other controls are unchanged.
+- **Mechanism.** `ORDINARY_LORD_POWER` 6: a lord without an expansion aim needs six times its
+  subject's strength (an aim holder keeps four). Median subject pairs fall from 41 to 32 on the
+  72 worlds, below the development target of 35, but the median authority assortativity (Q11,
+  floor 0.2) falls from 0.251 to 0.2375, and it was 0.2075 on the failed held-out set.
+  `UNREST_SLOPE` 450 (unrest threshold 91%, 77.5% and 64% of capacity at Calm, Varied and
+  Turbulent, formerly 93%, 82% and 72%) restores it: subjects 35.0, assortativity 0.2765. Q4,
+  Q7 and the other checks hold. The W8 trial that rejected 450 ran at lord margin 4 under the
+  per-pair Q5 and the old classifier; it does not bear on this pair. Candidates were compared by
+  drawing 400 held-out-like sets (four of the twelve development seeds per preset) from the 72
+  worlds: `ORDINARY_LORD_POWER` 6 alone failed some check in 7.2% of draws (Q11), with
+  `UNREST_SLOPE` 450 in 2.8% (Q9 1.5%, Q11 1.0%, Q8 0.3%). Evidence in the
+  [calibration report](research/history-120-calibration.md#d33-classifier-order-turbulence-control-and-lord-margin-2026-11-07).
+
+Disclosure. The classifier and Q5 changes follow the failed run (C509) and were chosen knowing
+that they let Q1 and the turbulence sweep pass. They rest on the definitions and the measured
+noise above, not on the result, and D32's rule applies: they are made before the new held-out
+set is captured. Seeds 1005–1008 are development and remain so. The held-out set 1009–1012 is
+frozen after this commit and run once; its outcome is reported as it falls.
 
 ### 21.5 Implementation refinements (2026-11-05, before any held-out run)
 
@@ -1233,7 +1272,7 @@ untouched.
 - **Turbulence must change holding, not growth.** Scaling capacity by turbulence
   reduced expansion, and so reduced visible change. Instead, turbulence lowers the
   *unrest threshold* above which a conquered founder's province may break away:
-  93%, 82% and 72% of capacity at Calm, Varied and Turbulent (R6; first 88, 70 and 52%). A breakaway restores
+  93%, 82% and 72% of capacity at Calm, Varied and Turbulent (R6; first 88, 70 and 52%; since D33 91%, 77.5% and 64%). A breakaway restores
   that founder's land as a new state, with its own grievance; the realm survives.
   Q3 and Q5 therefore measure **recent turmoil**: state land taken by conquest,
   breakaway or division in the last 100 years. The cumulative changed-land share

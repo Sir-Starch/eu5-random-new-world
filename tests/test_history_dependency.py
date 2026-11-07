@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
+
+from rnw import history_actions
 from rnw.history_context import Context
 from rnw.history_engine import advance, validate_history
 from rnw.history_model import Action, Authority, Outcome, Proposal, Reason, Society
@@ -12,6 +15,38 @@ from .history_fixtures import court, defeat
 
 if TYPE_CHECKING:
     from rnw.history_model import History
+
+
+@pytest.fixture
+def former_margin(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Capacity fixtures here sit at four times the subject's power, the margin before D32."""
+    monkeypatch.setattr(history_actions, "ORDINARY_LORD_POWER", 4)
+
+
+def _lord_and_subject(lord_population: int) -> History:
+    ordinary = Society(authority=Authority.RULER)
+    history = court(
+        {
+            "s": (1000, 500, 0, True),
+            "lord": (lord_population, lord_population // 2, 2, False),
+        },
+        {"s": ordinary, "lord": ordinary},
+    )
+    return defeat(history, "lord", "s")
+
+
+def test_an_ordinary_lord_needs_six_times_the_subjects_power() -> None:
+    narrow = _lord_and_subject(5200)
+    context = Context(narrow, lambda: None)
+    assert 4 * context.power("s") < context.power("lord") < 6 * context.power("s")
+    refused = advance(narrow, (Proposal(Action.DEPENDENCY, "s", "lord"),)).events[-1]
+    assert refused.outcome is Outcome.REFUSED
+    assert refused.reason is Reason.IMBALANCE
+    wide = _lord_and_subject(6000)
+    context = Context(wide, lambda: None)
+    assert context.power("lord") >= 6 * context.power("s")
+    accepted = advance(wide, (Proposal(Action.DEPENDENCY, "s", "lord"),)).events[-1]
+    assert accepted.outcome is Outcome.ACCEPTED
 
 
 def test_joint_admissions_cannot_spend_the_same_administrative_capacity_twice() -> None:
@@ -60,6 +95,7 @@ def _nested(*, capable_root: bool = False) -> History:
     return defeat(defeat(history, "root", "middle"), "middle", "leaf")
 
 
+@pytest.mark.usefixtures("former_margin")
 def test_a_new_subclient_must_fit_the_ultimate_rulers_existing_obligations() -> None:
     history = advance(_nested(), (Proposal(Action.DEPENDENCY, "middle", "root"),))
     assert history.events[-1].outcome is Outcome.ACCEPTED
@@ -69,6 +105,7 @@ def test_a_new_subclient_must_fit_the_ultimate_rulers_existing_obligations() -> 
     validate_history(result)
 
 
+@pytest.mark.usefixtures("former_margin")
 def test_an_incoming_lords_whole_client_realm_counts_toward_capacity() -> None:
     history = advance(_nested(), (Proposal(Action.DEPENDENCY, "leaf", "middle"),))
     assert history.events[-1].outcome is Outcome.ACCEPTED
@@ -78,6 +115,7 @@ def test_an_incoming_lords_whole_client_realm_counts_toward_capacity() -> None:
     validate_history(result)
 
 
+@pytest.mark.usefixtures("former_margin")
 def test_a_capable_ruler_can_accept_a_real_nested_realm_without_changing_ownership() -> None:
     history = _nested(capable_root=True)
     before = history.state
@@ -94,6 +132,7 @@ def test_a_capable_ruler_can_accept_a_real_nested_realm_without_changing_ownersh
     validate_history(history)
 
 
+@pytest.mark.usefixtures("former_margin")
 def test_two_branches_cannot_simultaneously_exhaust_the_same_ancestor() -> None:
     ordinary = Society(authority=Authority.RULER)
     history = court(

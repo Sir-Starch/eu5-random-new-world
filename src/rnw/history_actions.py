@@ -87,7 +87,7 @@ LORD_LOCATIONS: Final[int] = 2
 LORD_POWER: Final[int] = 4
 LEAVE_POWER: Final[int] = 2
 # An ordinary lord, one without an expansion aim, needs a still wider margin.
-ORDINARY_LORD_POWER: Final[int] = 4
+ORDINARY_LORD_POWER: Final[int] = 6
 
 
 # One encoder for every key: equal to json.dumps with these options, without

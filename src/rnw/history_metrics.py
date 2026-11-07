@@ -321,13 +321,15 @@ def _classify(  # noqa: PLR0913 - one region against the shared 1337 facts
         kind = PARAMOUNT
     elif any(at_least(len(group & organized), 300, len(organized)) for group in groups):
         kind = LEAGUE
-    elif sum(at_least(value, 150, total) for value in shares) >= 2:  # noqa: PLR2004
-        kind = RIVALS
+    # D33: the remains of one shattered realm are the more specific fact, so fractured is
+    # tested before rival powers (two blocs of the remains are rivals by construction).
     elif any(
         len(lineage) >= 2 and at_least(len(frozenset[str]().union(*lineage) & envelope), 300, total)  # noqa: PLR2004
         for lineage in successors
     ):
         kind = FRACTURED
+    elif sum(at_least(value, 150, total) for value in shares) >= 2:  # noqa: PLR2004
+        kind = RIVALS
     return RegionClass(region, polities, kind, largest, second, total)
 
 

@@ -35,7 +35,7 @@ INTEGRATION_YEARS: Final[int] = 25
 CAPACITY_THRESHOLD: Final[int] = 1100
 CAPACITY_DOUBLING: Final[int] = 200
 OVERREACH_FACTOR: Final[int] = 2
-UNREST_SLOPE: Final[int] = 350
+UNREST_SLOPE: Final[int] = 450
 
 
 @final
@@ -269,7 +269,7 @@ class Context:
         """The burden above which conquered provinces may break away.
 
         Historical turbulence lowers it: unrest and contested successions make
-        holdings harder to keep (93% of capacity at Calm, 82% at Varied, 72% at
+        holdings harder to keep (91% of capacity at Calm, 77.5% at Varied, 64% at
         Turbulent), while conquest itself remains bounded by capacity.
         """
         tolerance = PERMILLE - UNREST_SLOPE * self.history.turbulence // PERMILLE
