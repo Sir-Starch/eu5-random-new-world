@@ -275,6 +275,10 @@ class Context:
         tolerance = PERMILLE - UNREST_SLOPE * self.history.turbulence // PERMILLE
         return self.capacity(key) * tolerance // PERMILLE
 
+    def strain(self, key: str) -> int:
+        """Administrative load as a fraction of this realm's capacity, in thousandths."""
+        return self.burden(key) * PERMILLE // self.capacity(key)
+
     def limit(self, key: str) -> int:
         """The burden a conquest may reach: twice capacity only for an overreaching aim."""
         aim = self.aims.get(key)
@@ -565,4 +569,4 @@ def _coordination(context: Context, actor: str) -> int:
         Livelihood.MIXED: 75,
         Livelihood.MOBILE: 25,
     }[profile.livelihood]
-    return max(300, 700 + profile.centralization // 4 + livelihood - context.burden(actor) // 3)
+    return max(300, 700 + profile.centralization // 4 + livelihood - context.strain(actor) // 3)

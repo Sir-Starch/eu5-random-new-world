@@ -12,8 +12,8 @@ from rnw.eu5_history import traditions
 from rnw.eu5_history_plan import project_start
 from rnw.history_acceptance import Sweep, World, evaluate
 from rnw.history_actions import OPPORTUNITY, eligible
-from rnw.history_context import Context
-from rnw.history_engine import advance, create, validate_history
+from rnw.history_context import Context, _coordination
+from rnw.history_engine import _bases, _preference, advance, create, validate_history
 from rnw.history_metrics import AimOutcome, Observation, RegionClass, Structure
 from rnw.history_model import (
     Action,
@@ -33,6 +33,7 @@ from rnw.history_model import (
     Society,
     Strategy,
     Tenure,
+    Trajectory,
     TrajectoryKind,
 )
 from rnw.history_text import chronicles, source_keys
@@ -142,6 +143,100 @@ def test_a_paramount_is_seeded_only_where_connected_state_land_allows_it() -> No
     found = realizations(Context(final, lambda: None))
     # The paramount holds 10 of 25 state locations, five times any other bloc.
     assert any(item.kind is TrajectoryKind.PARAMOUNT and item.members == ("big",) for item in found)
+
+
+@pytest.mark.parametrize("kind", [TrajectoryKind.REGIONAL_POWER, TrajectoryKind.PARAMOUNT])
+def test_expansion_targets_gain_land_while_paramounts_leave_a_neighbour(
+    kind: TrajectoryKind,
+) -> None:
+    history = court(
+        {"power": (10000, 6000, 1, False), "neighbour": (1000, 600, 1, True)},
+        {
+            "power": Society(centralization=850, integration=850),
+            "neighbour": Society(),
+        },
+    )
+    aim = Trajectory(kind, "", "power", ("power",), "aim", region="plain")
+    context = Context(
+        replace(history, state=replace(history.state, trajectories=(aim,))), lambda: None
+    )
+    actor = context.index.actors["power"]
+    part = Proposal(Action.CONFLICT, "power", "neighbour", ("neighbour_edge",))
+    whole = replace(part, districts=tuple(sorted(context.index.members["neighbour"])))
+    assert eligible(context, part) is None
+    assert eligible(context, whole) is None
+    preferred, other = (part, whole) if kind is TrajectoryKind.PARAMOUNT else (whole, part)
+    assert _preference(context, actor, preferred) < _preference(context, actor, other)
+
+
+def test_actual_administrative_overload_adds_division_pressure() -> None:
+    profile = Society(centralization=500, integration=300)
+    histories = [
+        court({"realm": (1000, 600, extra, False)}, {"realm": profile}) for extra in (0, 20)
+    ]
+    contexts = [Context(history, lambda: None) for history in histories]
+    calm, overloaded = contexts
+    assert calm.burden("realm") < calm.capacity("realm")
+    assert overloaded.burden("realm") > overloaded.capacity("realm")
+    bases = [_bases(c, c.index.actors["realm"], 500)[Action.SECESSION] for c in contexts]
+    assert bases[0] == 350
+    assert bases[1] > bases[0]
+
+
+def test_coordination_uses_scaled_capacity_instead_of_an_absolute_burden_ceiling() -> None:
+    history = court(
+        {"realm": (1000, 600, 40, False)},
+        {"realm": Society(centralization=750, integration=700)},
+    )
+    context = Context(history, lambda: None)
+    assert 1000 < context.burden("realm") < context.capacity("realm")
+    assert context.strain("realm") < 1000
+    assert _coordination(context, "realm") >= 700
+    ordinary = court({"plain": (1000, 600, 3, False)}, {"plain": Society()})
+    plain = Context(ordinary, lambda: None)
+    assert plain.capacity("plain") == 1000
+    assert plain.strain("plain") == plain.burden("plain")
+
+
+@pytest.mark.parametrize(
+    ("sizes", "kind"),
+    [
+        (((3,) * 8, (1, 1, 1)), TrajectoryKind.REGIONAL_POWER),
+        (((12, 1, 1, 1, 1, 1, 1, 1), (3, 3, 3)), TrajectoryKind.PARAMOUNT),
+    ],
+)
+def test_regional_aims_skip_a_strong_isolated_centre_without_room(
+    sizes: tuple[tuple[int, ...], ...], kind: TrajectoryKind
+) -> None:
+    places: list[District] = []
+    foundings: list[Founding] = []
+    routes: list[Route] = []
+    for island, polities in enumerate(sizes):
+        ring: list[str] = []
+        for number, size in enumerate(polities):
+            key = f"i{island}p{number}"
+            own = tuple(f"{key}d{n}" for n in range(size))
+            population = 20000 if island == 1 and number == 0 else 1000
+            places.extend(
+                District(p, "plain", Tenure.LAND, (Cohort("c", "r", population, population // 2),))
+                for p in own
+            )
+            foundings.append(Founding(key, Tenure.LAND, own, own[0], technology=2))
+            ring.extend(own)
+        routes.extend(Route(a, b) for a, b in zip(ring, [*ring[1:], ring[0]], strict=True))
+    geography = Geography(tuple(places), tuple(routes), Rules())
+    aims = [
+        item
+        for seed in range(32)
+        for item in create(
+            geography, tuple(foundings), seed=seed, empire_permille=0
+        ).state.trajectories
+        if item.kind is kind
+    ]
+    assert aims
+    # The tiny island's strongest actor lacks either regional scale or room to
+    # outnumber the inaccessible large neighbour. The mainland still seeds aims.
+    assert all(item.members[0].startswith("i0") for item in aims)
 
 
 def test_overreach_doubles_the_conquest_limit_only_for_its_holder() -> None:

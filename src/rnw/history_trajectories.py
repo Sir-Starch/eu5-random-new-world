@@ -398,15 +398,48 @@ def _land_steps(land: dict[str, set[str]], seats: set[str], limit: int) -> set[s
     return near
 
 
-def _component(land: dict[str, set[str]], envelope: frozenset[str], seat: str) -> int:
-    """State locations connected to ``seat`` by land inside the region's envelope."""
-    seen, pending = {seat}, [seat]
-    while pending:
-        for other in land.get(pending.pop(), set()) & envelope:
-            if other not in seen:
-                seen.add(other)
-                pending.append(other)
-    return len(seen)
+def _centres(
+    context: Context,
+    land: dict[str, set[str]],
+    envelope: frozenset[str],
+    polities: tuple[str, ...],
+    candidates: list[str],
+) -> tuple[set[str], list[str]]:
+    """Centres with physically reachable room for a regional or paramount aim."""
+    parts = [
+        frozenset(group)
+        for group in _connected(envelope, lambda key: land.get(key, set()) & envelope)
+    ]
+    components = {place: group for group in parts for place in group}
+    sizes = sorted(len(context.index.members[key]) for key in polities)
+    median = sizes[(len(sizes) - 1) // 2]
+    # An isolated centre cannot act on the rest of a region. Give each aim
+    # enough reachable state land for its recognition share and scale; this
+    # grants neither the land nor a successful contest (D6, D22-D24).
+    regional = {
+        key
+        for key in candidates
+        if len(components[context.index.actors[key].seat]) * PERMILLE
+        >= len(envelope) * REGIONAL_SHARE
+        and 2 * len(components[context.index.actors[key].seat]) >= LEAD_HALVES * median
+    }
+    paramounts = [
+        key
+        for key in candidates
+        if len(components[context.index.actors[key].seat]) * PERMILLE
+        >= len(envelope) * PARAMOUNT_SHARE
+        and len(components[context.index.actors[key].seat])
+        >= PARAMOUNT_LEAD
+        * max(
+            (
+                len(held & (envelope - components[context.index.actors[key].seat]))
+                for other, held in context.index.members.items()
+                if other != key and context.index.actors[other].tenure is Tenure.LAND
+            ),
+            default=0,
+        )
+    ]
+    return regional, paramounts
 
 
 def _regional_events(
@@ -450,18 +483,13 @@ def _regional_events(
             key=lambda key: (-context.power(key), key),
         )
         envelope = region_districts(context, region)
-        # A paramount needs connected state land for 40% of the region (D6 keeps
-        # tribal and unorganized land outside every state).
-        paramounts = [
-            key
-            for key in candidates
-            if _component(land, envelope, context.index.actors[key].seat) * PERMILLE
-            >= len(envelope) * PARAMOUNT_SHARE
-        ]
+        regional, paramounts = _centres(context, land, envelope, polities, candidates)
         rivals: list[str] = []
         blocked: set[str] = set()
         count = RIVAL_COUNT[len(polities) >= LARGE_REGION]
         for key in candidates:
+            if key not in regional:
+                continue
             seat = context.index.actors[key].seat
             if seat in blocked:
                 continue

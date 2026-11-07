@@ -421,6 +421,51 @@ def _assortativity(context: Context, states: Mapping[str, str]) -> int:
     return 0 if expected >= 1 else round(PERMILLE * (diagonal - expected) / (1 - expected))
 
 
+def _successor_groups(context: Context) -> list[tuple[frozenset[str], ...]]:
+    """Living branches of a divided realm, including successive provincial breakaways.
+
+    Secession creates a parentless actor so it does not inherit the realm's aim.
+    For the fractured-region measurement it is nevertheless a political successor;
+    follow its recorded secession, without changing the model's actor ancestry.
+    """
+    divisions = [
+        event
+        for event in context.history.events
+        if event.outcome is Outcome.ACCEPTED and event.kind in {Action.SEPARATION, Action.SECESSION}
+    ]
+    branches = {
+        actor.key: event.actors
+        for event in divisions
+        if event.kind is Action.SECESSION
+        for actor in event.effects.created
+    }
+    descendants: dict[str, set[str]] = {}
+    for actor in context.state.actors:
+        if not actor.living or actor.tenure is not Tenure.LAND:
+            continue
+        seen = set(context.ancestry(actor.key))
+        pending = list(seen)
+        while pending:
+            for parent in branches.get(pending.pop(), ()):
+                added = context.ancestry(parent) - seen
+                seen.update(added)
+                pending.extend(added)
+        descendants[actor.key] = seen
+    result: list[tuple[frozenset[str], ...]] = []
+    for event in divisions:
+        roots = {actor.key for actor in event.effects.created}
+        if event.kind is Action.SECESSION:
+            roots.update(event.actors)
+        result.append(
+            tuple(
+                frozenset(context.index.members[key])
+                for key, ancestors in sorted(descendants.items())
+                if ancestors & roots
+            )
+        )
+    return result
+
+
 def structure(
     start: FinalStartPlan, *, inherited: Mapping[str, tuple[tuple[str, str], ...]]
 ) -> Structure:
@@ -443,22 +488,7 @@ def structure(
         if item.kind in {TrajectoryKind.SEA_LEAGUE, TrajectoryKind.HIGHLAND_CONFEDERATION}
     ]
     living = {actor.key for actor in history.state.actors if actor.living}
-    successors: list[tuple[frozenset[str], ...]] = []
-    for event in history.events:
-        if event.outcome is not Outcome.ACCEPTED or event.kind not in {
-            Action.SEPARATION,
-            Action.SECESSION,
-        }:
-            continue
-        roots = {actor.key for actor in event.effects.created}
-        if event.kind is Action.SECESSION:
-            roots.update(event.actors)
-        lineage = tuple(
-            frozenset(context.index.members[key])
-            for key in sorted(living)
-            if context.index.actors[key].tenure is Tenure.LAND and context.ancestry(key) & roots
-        )
-        successors.append(lineage)
+    successors = _successor_groups(context)
     regions = tuple(
         _classify(
             context,

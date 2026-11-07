@@ -81,10 +81,10 @@ UNION_SETTLE_YEARS: Final[int] = 25
 # (5 = two and a half times, 3 = one and a half times, 2 = parity) at Calm, Varied and Turbulent.
 OPPORTUNITY: Final[tuple[int, int, int]] = (5, 3, 2)
 CLIENT_CAPACITY_MULTIPLIER: Final[int] = 4
-# D25: a lord holds at least twice the subject's locations and three times its power;
+# D25: a lord holds at least twice the subject's locations and four times its power;
 # a subject may leave once the lord has fallen below twice its power.
 LORD_LOCATIONS: Final[int] = 2
-LORD_POWER: Final[int] = 3
+LORD_POWER: Final[int] = 4
 LEAVE_POWER: Final[int] = 2
 # An ordinary lord, one without an expansion aim, needs a still wider margin.
 ORDINARY_LORD_POWER: Final[int] = 4
@@ -282,7 +282,27 @@ def _submission_cause(context: Context, proposal: Proposal) -> Reason | None:
     """
     first, second, threat = proposal.actor, proposal.target, proposal.threat
     if not threat:
-        return Reason.THREAT if context.score(first, second, Factor.FEAR) == 0 else None
+        if context.score(first, second, Factor.FEAR) == 0:
+            return Reason.THREAT
+        departed = max(
+            (
+                event.year
+                for event in context.experiences[first]
+                if event.kind is Action.INDEPENDENCE
+                and any(
+                    bond.first == first and bond.second == second for bond in event.effects.ended
+                )
+            ),
+            default=-1,
+        )
+        # An ended dependency needs a new cause. Fear inherited from the defeat
+        # before independence cannot immediately put the same country back under
+        # its former lord; a later defeat or a current third-party threat can.
+        renewed = any(
+            memory.at(context.state.year) > 0 and context.event_years[memory.cause] > departed
+            for memory in context.memories.get((first, second, Factor.FEAR), ())
+        )
+        return None if renewed else Reason.THREAT
     if threat in (first, second):
         return Reason.THREAT
     if threat not in context.reach.get(first, {}) or threat not in context.reach.get(second, {}):
@@ -821,7 +841,7 @@ def adjudicate(
     if proposal.kind is Action.REFORM:
         cost = reform_cost(context, proposal)
     elif proposal.kind in {Action.CONFLICT, Action.PRESSURE}:
-        cost += min(200, context.burden(proposal.actor) // 5)
+        cost += min(200, context.strain(proposal.actor) // 5)
     costs = {proposal.actor: cost}
     # Submitting to or leaving a lord spends the subject's effort; the lord's load is
     # bounded by its administrative capacity, not by its round's other commitments.

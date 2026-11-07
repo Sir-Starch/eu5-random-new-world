@@ -183,7 +183,7 @@ def test_divided_valley_reproduces_the_accepted_causal_story() -> None:
     assert next(event.year for event in history.events if event.key == access.cause) == 1317
     assert history.geography.districts == valley().geography.districts
     validate_history(history)
-    assert digest(history) == "99a0ee7ce9f0e0097d44a6753d6cf38934372b25e7839a4cf0166498769e6bd0"
+    assert digest(history) == "1908cd2743320dd3ec75e88b5deb0df948eb5c538c2cd13a32cc11d8ee3e85ea"
 
 
 def test_every_round_uses_the_prior_snapshot_and_is_atomic() -> None:

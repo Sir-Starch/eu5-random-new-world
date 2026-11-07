@@ -177,3 +177,11 @@ def test_independence_follows_the_lords_defeat_elsewhere() -> None:
     assert not Context(free, lambda: None).lords
     assert event.effects.ended[0].first == "small"
     validate_history(free)
+    resubmission = advance(free, (Proposal(Action.DEPENDENCY, "small", "lord"),))
+    assert resubmission.events[-1].reason is Reason.THREAT
+    # A fresh failed attack is a new defeat, so it can cause a later submission.
+    defeated = advance(resubmission, (Proposal(Action.CONFLICT, "small", "lord", ("lord_2",)),))
+    assert defeated.events[-1].outcome is Outcome.FAILED
+    submitted = advance(defeated, (Proposal(Action.DEPENDENCY, "small", "lord"),))
+    assert submitted.events[-1].outcome is Outcome.ACCEPTED
+    validate_history(submitted)

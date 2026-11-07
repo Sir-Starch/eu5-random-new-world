@@ -632,6 +632,10 @@ def _bases(context: Context, actor: Actor, turbulence: int) -> dict[Action, int]
         50 + turbulence // 2 + ESCALATION * max(0, turbulence - 500) // PERMILLE
     )
     base[Action.SECESSION] = 100 + turbulence // 2
+    # D24: actual overload increases division pressure, rather than merely
+    # enabling a breakaway at the same rate as a realm within its capacity.
+    if actor.tenure is Tenure.LAND:
+        base[Action.SECESSION] += max(0, context.strain(actor.key) - PERMILLE)
     aim = context.aims.get(actor.key)
     if aim is not None:
         # A hegemonic or extraordinary ambition persists whatever the turbulence,
@@ -688,15 +692,15 @@ def _domain(context: Context, aim: Trajectory, place: str) -> bool:
     return place in hearth.domain
 
 
-def _preference(context: Context, actor: Actor, choice: Proposal) -> tuple[int, int]:
-    """Lower is preferred: (rank across families, order within the family).
+def _preference(context: Context, actor: Actor, choice: Proposal) -> tuple[int, int, int]:
+    """Lower is preferred: family rank, target strength, then territorial gain.
 
     Ordinary choices share rank 1, so without an aim or actual fear the families
     keep their seeded order. An aim's contest in its domain comes first.
     """
     aim = context.aims.get(actor.key)
     if choice.kind in {Action.CONFLICT, Action.PRESSURE} and aim is not None:
-        inside = all(_domain(context, aim, place) for place in choice.districts)
+        inside = any(_domain(context, aim, place) for place in choice.districts)
         # A paramount prefers to leave a defeated neighbour standing, fearful and
         # free to submit, before it annexes one.
         whole = len(choice.districts) == len(context.index.members[choice.target])
@@ -704,9 +708,13 @@ def _preference(context: Context, actor: Actor, choice: Proposal) -> tuple[int, 
         # Pressure takes no land; an aim's holder presses a tribe only when no state
         # of its domain can be contested first (one contest fits a round's budget).
         rank += choice.kind is Action.PRESSURE
-        return rank, context.power(choice.target)
+        # Against the same opponent, an expansion aim takes the largest eligible
+        # gain rather than drawing a single border district over a whole conquest.
+        # A paramount's preference for leaving a defeated neighbour standing above
+        # still takes precedence. Eligibility continues to enforce capacity/support.
+        return rank, context.power(choice.target), -len(choice.districts)
     if choice.kind is Action.DEPENDENCY:
-        return (0 if choice.target in context.aims else 1), 0
+        return (0 if choice.target in context.aims else 1), 0, 0
     # Partners of one seeded league or confederation first bargain with each other.
     if (
         choice.kind in {Action.PACT, Action.EXCHANGE}
@@ -717,17 +725,17 @@ def _preference(context: Context, actor: Actor, choice: Proposal) -> tuple[int, 
             if item in context.groups.get(choice.target, ())
         )
     ):
-        return 0, 0
+        return 0, 0, 0
     if choice.kind in {Action.PACT, Action.PROTECTION}:
-        return (0 if choice.threat in context.aims else 1), 0
+        return (0 if choice.threat in context.aims else 1), 0, 0
     if choice.kind is Action.ACCESS:
         hosts = {
             context.index.owner.get(item.anchor)
             for item in context.groups.get(actor.key, ())
             if item.kind is TrajectoryKind.SACRED_CENTRE
         }
-        return (0 if choice.target in hosts else 1), 0
-    return 1, 0
+        return (0 if choice.target in hosts else 1), 0, 0
+    return 1, 0, 0
 
 
 def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
@@ -748,7 +756,7 @@ def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
         for kind, activity in zip(_ACTIONS, activities, strict=True):
             if activity % PERMILLE < propensity(actor.society, kind, bases[kind]):
                 admitted.add(kind)
-        best: dict[Action, tuple[tuple[int, int], int, str, Proposal]] = {}
+        best: dict[Action, tuple[tuple[int, int, int], int, str, Proposal]] = {}
         kept = [
             choice
             for choice in _local_choices(context, actor, frozenset(admitted))

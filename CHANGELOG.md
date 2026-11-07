@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Let regional powers use their administrative capacity and expand coherently in the new
+  region layout. Regional ambitions now check that their centre has room to grow; a realm's
+  coordination follows the share of its capacity in use, and overload adds division pressure.
+  Independence needs a new defeat before old fear can make the country submit again.
+
 - Make continents faster. *Choose a continent* draws its six sketches side by side instead of
   one after another, and keeps them: the world made from a chosen sketch starts from its land
   instead of drawing it again. The area of the game's map that a New World replaces is chosen

@@ -2,17 +2,62 @@
 
 from __future__ import annotations
 
+# pyright: reportPrivateUsage=false
 from dataclasses import replace
 
 from rnw.eu5_history_plan import project_start
-from rnw.history_engine import advance, create
-from rnw.history_metrics import government_combinations, landmasses, measure
-from rnw.history_model import Action, Proposal
+from rnw.history_context import Context
+from rnw.history_engine import advance, create, validate_history
+from rnw.history_metrics import _successor_groups, government_combinations, landmasses, measure
+from rnw.history_model import Action, Outcome, Partition, Proposal, Society
 from rnw.model import CellClass
 from tests.fakes import synthetic_world
 
-from .history_fixtures import divided_valley, valley
+from .history_fixtures import court, divided_valley, valley
 from .test_history_plan import inputs_for, quiet
+
+
+def test_successive_parentless_breakaways_belong_to_the_same_divided_realm() -> None:
+    history = court(
+        {
+            "realm": (10000, 6000, 59, False),
+            **dict.fromkeys(("a", "b", "c"), (1000, 600, 0, False)),
+        },
+        {
+            "realm": Society(centralization=750, integration=700),
+            **dict.fromkeys(("a", "b", "c"), Society()),
+        },
+    )
+    history = replace(history, turbulence=1000)
+    for key in ("a", "b", "c"):
+        history = advance(history, (Proposal(Action.CONFLICT, "realm", key, (key,)),))
+        assert history.events[-1].outcome is Outcome.ACCEPTED
+    children: list[str] = []
+    for key in ("a", "b", "c"):
+        context = Context(history, lambda: None)
+        realm = context.index.actors["realm"]
+        core = tuple(sorted(context.index.members["realm"] - {key}))
+        history = advance(
+            history,
+            (
+                Proposal(
+                    Action.SECESSION,
+                    "realm",
+                    partitions=(
+                        Partition(core, "realm", realm.authority),
+                        Partition((key,), key, context.index.actors[key].authority),
+                    ),
+                ),
+            ),
+        )
+        event = history.events[-1]
+        assert event.outcome is Outcome.ACCEPTED, event.reason
+        children.append(event.effects.created[0].key)
+    context = Context(history, lambda: None)
+    assert all("realm" not in context.ancestry(key) for key in children)
+    expected = {frozenset(context.index.members[key]) for key in ("realm", *children)}
+    assert all(set(group) == expected for group in _successor_groups(context))
+    validate_history(history)
 
 
 def test_divided_valley_counts_actual_transfers_and_independent_continuity() -> None:
