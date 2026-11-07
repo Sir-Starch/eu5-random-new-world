@@ -11,7 +11,8 @@
   vegetation no longer wait for the rest of the generator, and the game's scripts are read once
   for all the checks. Every world is the same, byte for byte. The cache of made land no longer
   grows without bound: it keeps the last four continents and the last sketches (it had reached
-  13 GB).
+  13 GB). The history of the New World's peoples is made in 22 seconds instead of 36, with the
+  same result: on the reference machine a world now takes about three and a half minutes.
 
 - Name the New World's regions after their peoples, and show the game's names in the
   generator. A region takes its name in the language most of its land speaks, as areas and

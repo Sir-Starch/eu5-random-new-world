@@ -394,6 +394,45 @@ The main thread is now the critical path: `natives` (about 48 s, of which the ca
 after the remap, with terrain finishing about 13 s before it. The history engine was left as
 it is during the R6 freeze. Raw timings are in the ignored `local_data/perf-20261107/` folder.
 
+### Follow-up: the history engine (2026-11-07)
+
+[V-EXEC] The owner lifted the R6 freeze for this work (2026-11-07). At `823b662` one history start
+(`build_history_start` on the captured input of continents/3, Varied, alone) takes about 22 s
+instead of 36 s, and the whole result is the same (C506). A fifth of the old time went to
+Python's automatic garbage collections, which walked millions of live history records again and
+again and found nothing to free; the collector now pauses for a history start and for each export
+and collects once at the end (a whole export leaves about 36 MiB of cycles, chiefly parsed
+scripts). The rest is less work in each of the 60 rounds, which the causal replay repeats:
+one search gives all of a realm's burden distances instead of one per place, a round's event
+tables extend the previous round's, unchanged settlements and the geography's totals are not
+checked again, draws share their hashed prefix, and choices that eligibility refuses for every
+member (migrations between hostile societies) are not enumerated.
+
+| Measure (31 threads) | Before | After |
+|---|---:|---:|
+| One start, continents/3 Varied, alone | 35.7 s | about 22 s |
+| `simulate` + causal replay, same input, collector off for both | 22.6 s | 16.9 s |
+| 22 captured starts (six presets × three levels, four sweeps), 11 at a time | 789.6 s | 479.6 s |
+| R6 development matrix, 192 starts | 8.2 min (about 12 workers) | 4.2 min (31 workers, the machine's default) |
+| `natives` in the reference export | 48.5 s | 27.9–29.4 s |
+| `texts` in the reference export | 19.0 s | 12.7–13.3 s |
+| Reference export, no land cache | 221–231 s | 200–211 s |
+
+Equality: the 22 starts are equal field by field (`FinalStartPlan` and the R6 observation);
+`R6_OUT=dev-c506` reproduces all 192 observations of `dev-d31` exactly; the reference world keeps
+digest `e1e4699e` (884 files) with the default threads and with `RNW_THREADS=1 RNW_MEMORY=1500`.
+In the export the terrain branch (92–103 s from 99 s) and the main thread (natives, texts, the
+spline network and the remap, done by about 176 s) now end within a quarter of a minute of each
+other, so a further gain needs both. With 31 starts on 16 cores a start takes a median 36.8 s,
+so the matrix is near what the machine allows.
+
+[V-EXEC] The development inputs predate the region layout W8 (`74b936b`, after the e60b77e
+freeze). A capture of continents/3 at `823b662` puts 7,686 of its 8,773 cells in another region
+and 8,090 in another area than the capture the calibration used, and its Varied start differs in
+21 of the 25 numeric measures of the observation (republics 13 → 41, conflicts 647 → 703, one
+seeded great empire → none). The development checks therefore describe the pre-W8 layout; the
+held-out captures of runbook step 3 would have the new one.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)

@@ -818,8 +818,19 @@ schema gained fields, and the story is unchanged.
 
 ### R6 runbook
 
-**Status, 2026-11-06:** steps 1–2 are done; the owner authorized steps 3–7 for a
-separate agent. Step 1 (2026-11-05): all fourteen statistical checks pass on the
+**Status, 2026-11-07:** steps 1–2 are done; the owner authorized steps 3–7 for a
+separate agent. The owner lifted the freeze below for the history engine speed-up (C506), and
+it is renewed at commit `823b662`, source SHA-256 `b62231a9…a5a464`; the e60b77e record is kept
+as `heldout-freeze-e60b77e.json`. No knob or threshold changed, and `R6_OUT=dev-c506` reproduces
+all 192 observations of `dev-d31`. Commits after e60b77e had already changed `src/rnw` (W7, W8,
+C503, the sketches), so the old record no longer matched. **Before step 3** note that W8 moved
+the regions and areas the history reads: the development captures predate it, and on
+continents/3 a current capture changes 21 of 25 observation measures
+([report](research/history-120-calibration.md#follow-up-the-history-engine-2026-11-07)).
+Recapturing the 48 development worlds and their 1.1.0 baselines and rerunning step 1 on them
+is the check that the calibration holds on the current layout; whether to do so before the
+held-out run is the owner's decision (plan D28).
+The record of 2026-11-06 follows. Step 1 (2026-11-05): all fourteen statistical checks pass on the
 development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
 D29 (N6–N9) feeds no history input ([plan §22.4](history-plan.md#224-scope-and-cut-order)),
@@ -831,16 +842,18 @@ because D31 changed the opinions before any held-out run: the whole development 
 was rerun on the new opinions (`R6_OUT=dev-d31`, all fourteen checks pass), and the 48
 Varied starts of the final source equal that rerun. `matrix.py heldout` and
 `evaluate.py heldout` refuse any other source. Later commits that touch only
-documentation keep the hash. The hub installed on 2026-11-06 after D31 was built from
-this source; reinstall it only if the source changes.
+documentation keep the hash. The hub installed on 2026-11-07 is built from the renewed
+freeze's source; reinstall it only if the source changes.
 
 R6 is long batch work, meant for a separate agent. The scripts are in the ignored
 `local_data/history-120/r6/`. Run from the repository root, in the foreground, with
 bounded workers (ADR 0006). Check the installed build first; nothing launches EU5.
 
-1. **Development calibration.** `uv run python local_data/history-120/r6/matrix.py dev --workers N`
+1. **Development calibration.** `uv run python local_data/history-120/r6/matrix.py dev`
    runs the 48 development worlds × Calm/Varied/Turbulent and the 48 continents and
-   archipelago × 3/42 sweeps. It resumes and keeps complete outputs. Then
+   archipelago × 3/42 sweeps, about four minutes on the reference machine. Without
+   `--workers N` it takes one start per spare core that free memory allows (512 MiB each).
+   It resumes and keeps complete outputs. Then
    `uv run python local_data/history-120/r6/evaluate.py dev` writes `dev/acceptance.json`.
    Adjust only the knobs above, delete the outputs that the change affects, rerun,
    and record each adjustment with its evidence in the calibration report.

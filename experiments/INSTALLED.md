@@ -6,6 +6,15 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-07, **1.2.0 development / pending epoch 61 — hub with the faster history engine**
+(C506). [V-EXEC] No world was installed: the change writes no other world bytes (the reference
+world reproduces `e1e4699e` with 31 threads and with one), so candidates C–H stay as they are.
+The standard updater installed hub 1.2.0 with the generator of `823b662`, the source of the
+renewed R6 freeze, after its Wine window, native, code, shell and bridge self-tests, and kept
+the former hub at `.rnw-hub-backups/1.2.0-1794026228349261286`. Windows wheel SHA-256:
+`1b0406b6e2caf04085fa2f12478db27f395191de69c66342b4576ef8730b11ab`. No playset, save or
+preference was edited; the agent did not launch or control EU5.
+
 2026-11-07, **1.2.0 development / pending epoch 61 — hub with the faster sketches and world**
 (C505). [V-EXEC] No world was installed: the change writes no other world bytes (the reference
 world reproduces `e1e4699e`), so candidates C–H stay as they are. The standard updater installed
