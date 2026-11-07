@@ -818,18 +818,15 @@ schema gained fields, and the story is unchanged.
 
 ### R6 runbook
 
-**Status, 2026-11-07:** steps 1–2 are done; the owner authorized steps 3–7 for a
-separate agent. The owner lifted the freeze below for the history engine speed-up (C506), and
-it is renewed at commit `823b662`, source SHA-256 `b62231a9…a5a464`; the e60b77e record is kept
-as `heldout-freeze-e60b77e.json`. No knob or threshold changed, and `R6_OUT=dev-c506` reproduces
-all 192 observations of `dev-d31`. Commits after e60b77e had already changed `src/rnw` (W7, W8,
-C503, the sketches), so the old record no longer matched. **Before step 3** note that W8 moved
-the regions and areas the history reads: the development captures predate it, and on
-continents/3 a current capture changes 21 of 25 observation measures
-([report](research/history-120-calibration.md#follow-up-the-history-engine-2026-11-07)).
-Recapturing the 48 development worlds and their 1.1.0 baselines and rerunning step 1 on them
-is the check that the calibration holds on the current layout; whether to do so before the
-held-out run is the owner's decision (plan D28).
+**Status, 2026-11-07:** steps 1–2 are done. The owner lifted the freeze for the history engine
+speed-up (C506), and it is renewed at commit `823b662`, source SHA-256 `b62231a9…a5a464`; the
+e60b77e record is kept as `heldout-freeze-e60b77e.json`. `R6_OUT=dev-c506` reproduces all 192
+observations of `dev-d31`. Commits after e60b77e had already changed `src/rnw` (W7, W8, C503,
+the sketches), so the old record no longer matched. The development calibration has now been
+rerun with current W8 inputs: 11 of 14 checks pass; Q1, Q4 and Q5 fail
+([report](research/history-120-calibration.md#development-checks-on-the-w8-layout-2026-11-07)).
+No knob or threshold changed. Do not start step 3: plan D28 leaves the next decision to the
+owner after these failures. Held-out seeds 1005–1008 have not been captured or run.
 The record of 2026-11-06 follows. Step 1 (2026-11-05): all fourteen statistical checks pass on the
 development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).

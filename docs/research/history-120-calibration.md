@@ -433,6 +433,74 @@ and 8,090 in another area than the capture the calibration used, and its Varied 
 seeded great empire → none). The development checks therefore describe the pre-W8 layout; the
 held-out captures of runbook step 3 would have the new one.
 
+## Development checks on the W8 layout (2026-11-07)
+
+[V-EXEC] Step 1 was rerun on the current W8 physical inputs with the frozen history source at
+`823b662` (`source_sha256` `b62231a9…a5a464`). The local harness routed inputs and baselines only
+through `local_data/history-120/r6/w8/` when `R6_INPUTS` was set, so older H7 captures and
+baselines could not shadow them. The 48 captures cover six presets × seeds 3/42/77/1000–1004;
+each is physical-only, with at most four captures in flight. Successful captures retained only
+`native-inputs.pkl` and `capture.json`; temporary land caches and generated data were removed.
+The pinned 1.1.0 native producer supplied 48 world baselines and 24 baselines for the low/high
+control sweeps (the default and turbulence rows use their world baseline). Every baseline points
+to `baseline-source/src/rnw`. Two spot checks confirmed changed region assignments with unchanged
+cell counts: continents/3, 7,686 of 8,773; archipelago/42, 4,431 of 7,447.
+
+All 192 starts and sweeps completed `ok`; every output's source hash matches the freeze. No knobs
+or acceptance thresholds changed. All fourteen checks were evaluated on the full matrix:
+
+| Check | Gate | `dev-d31` | W8 | Result on W8 |
+|---|---|---|---|---|
+| Q1 | Patchwork, rivals and paramount ≥10%; fractured ≥3%; any class ≤50% | 41.2 / 40.9 / 11.6 / 4.1% | 40.2 / 43.8 / 12.1 / 2.4% | Fail: fractured share |
+| Q2 | Median ≥3 region classes | 3.0 (48 worlds) | 3.0 (46 eligible worlds) | Pass |
+| Q3 | Turmoil ratio ≥1.5; rising in ≥75%; class directions; continuity ≥0.40 | 2.193; 97.9%; 0.865 | 2.218; 100%; 0.859 | Pass |
+| Q4 | Prudent realized ≥70%; overreach ended ≥50%; each group ≥50% | 74.2% (132/178); 56.4% (114/202); groups 80 / 80 / 66.7% | 61.0% (100/164); 62.9% (139/221); groups 93.8 / 90.9 / 100% | Fail: prudent realization |
+| Q5 | All 16 control sweeps monotone, with high > low | No failures | `turbulence/continents-3`: 0.109 → 0.195 → 0.191 | Fail |
+| Q6 | Great-empire ratio 0.5–1.5; ≥3 high-sweep worlds | 0.791; 31 realized; 4 worlds | 0.791; 30 realized; 4 worlds | Pass |
+| Q7 | Varied ratio 0.75–1.25; Calm/Turbulent 0.60–1.40 | 1.000 / 1.000 / 0.667 | 1.000 / 1.000 / 0.667 | Pass |
+| Q8 | Continent share ≤50%; landmass share ≤85%; no >20% dominated | No failures | No failures | Pass |
+| Q9 | Subjects median 8–40; ≥90% scaled | 33.5; 99.4% | 33.0; 99.3% | Pass |
+| Q10 | Alliance median 4–30 | 12 | 11 | Pass |
+| Q11 | Republic median ≤25%; IQR ≥5 points; types; assortativity ≥0.20 | 13.5%; 8.8 points; yes; 0.254 | 15.8%; 11.1 points; yes; 0.240 | Pass |
+| Q12 | Largest family ≤35%; routine ≤20%; distinct ≥3; short ≥10%; length ≤8 | 25.8%; 18.2%; 3; 23.6%; 8 | 25.7%; 18.2%; 3; 23.2%; 8 | Pass |
+| Q13 | Visible median ≥50% | 91.0% | 90.9% | Pass |
+| S11 | Archive ≤8 MiB | 584,589 bytes | 584,739 bytes | Pass |
+
+Thus 11 of 14 pass; Q1, Q4 and Q5 fail. The earlier narrow margins remain visible: long-chronicle
+families are still exactly three, and the unchanged Turbulent Q7 ratio of 0.667 is 0.067 above its
+floor. Paramount share is now 12.1%, 2.1 points above its gate (11.6% before); fractured share
+falls from 4.1% to 2.4%, 0.6 points below its gate.
+
+Q4 on the two recognition scales, over the 48 Varied starts with the 14/14 great-empire aims added
+to both rates, is:
+
+| Scale | Regional power | Paramount | Combined |
+|---|---:|---:|---:|
+| R6 recognition | 71/112 = 63.4% | 12/29 = 41.4% | 97/155 = 62.6% |
+| Q1 regional-share rule | 57/112 = 50.9% | 5/29 = 17.2% | 76/155 = 49.0% |
+
+The corresponding `dev-d31` combined rates were 123/168 = 73.2% and 92/168 = 54.8%. The Q4
+acceptance row above also includes the high `empire_permille` sweeps, so its denominator differs
+from the 48-world Q4-scale diagnostic.
+
+Ranked by median absolute delta across the 18 preset × level groups, the largest shifts were in
+archive bytes, assortativity, ownership locations, conflicts and ownership events. Each group
+median pairs the eight seeds; the level columns give signed medians across the six preset groups,
+followed by the largest absolute group median. Assortativity is in thousandths.
+
+| Measure | Calm Δ | Varied Δ | Turbulent Δ | Largest group median Δ |
+|---|---:|---:|---:|---|
+| Archive bytes | +214 | +806 | −1,413 | Supercontinent / Turbulent −5,455 |
+| Assortativity (‰) | +18 | −3 | +8 | Small continents / Turbulent +129 |
+| Ownership locations | +2 | +14 | +37 | Supercontinent / Varied +95.5 |
+| Conflicts | +15 | +9 | +22 | Archipelago / Turbulent +100 |
+| Ownership events | +9 | −3 | +9 | Islands / Turbulent +42 |
+
+The capture phase took 2,107.6 s (35 min 8 s); the 72 baselines took 19.8 s; the 192-row matrix
+took about 3 min on its automatically sized 31-worker pool. EU5 was not launched, and held-out
+seeds 1005–1008 were not captured or run. Since three checks fail, stop before runbook step 3;
+plan D28 leaves the next decision to the owner.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)
