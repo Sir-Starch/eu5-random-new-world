@@ -15,6 +15,7 @@ from rnw.history_model import (
     Cohort,
     Geography,
     HistoryError,
+    Settlement,
     Snapshot,
     Society,
     Tenure,
@@ -82,6 +83,32 @@ class Index:
                 if route.sea_steps <= geography.rules.max_sea_steps:
                     self.adjacency[route.first][route.second] = route.cost
                     self.adjacency[route.second][route.first] = route.cost
+        # Facts of the geography alone, shared by every round's index.
+        self.passages: tuple[tuple[str, str, int, int], ...] = (
+            physical.passages
+            if physical is not None
+            else tuple(
+                (route.first, route.second, route.cost, route.sea_steps)
+                for route in geography.routes
+                if route.sea_steps <= geography.rules.max_sea_steps
+            )
+        )
+        self.inhabited: frozenset[str] = (
+            physical.inhabited
+            if physical is not None
+            else frozenset(key for key, place in self.places.items() if place.population > 0)
+        )
+        self.budget: tuple[Counter[tuple[str, str]], Counter[tuple[str, str]]] = (
+            physical.budget
+            if physical is not None
+            else _population_totals(pop for place in geography.districts for pop in place.cohorts)
+        )
+        # Settlements already found valid. A settlement is immutable and its check reads
+        # only itself and the fixed capacities, so an unchanged one is not checked again;
+        # holding it here keeps its identity from being reused.
+        self.valid_settlements: dict[int, Settlement] = (
+            physical.valid_settlements if physical is not None else {}
+        )
 
     def cohorts(self, key: str) -> tuple[Cohort, ...]:
         return self.settlements[key].cohorts
@@ -217,7 +244,10 @@ def _validate_population(index: Index, state: Snapshot) -> None:
     require(
         set(index.settlements) == set(index.owner), "Settlements differ from inhabited holdings"
     )
+    valid = index.valid_settlements
     for place in state.settlements:
+        if valid.get(id(place)) is place:
+            continue
         require(bool(place.cause) and bool(place.cohorts), "Unexplained/empty settlement")
         unique((f"{pop.culture}\0{pop.religion}" for pop in place.cohorts), "cohort identity")
         require(
@@ -231,9 +261,10 @@ def _validate_population(index: Index, state: Snapshot) -> None:
             and index.population(place.district) <= index.capacities[place.district],
             "Invalid population/capacity",
         )
+        valid[id(place)] = place
     require(
         _population_totals(pop for place in state.settlements for pop in place.cohorts)
-        == _population_totals(pop for place in index.geography.districts for pop in place.cohorts),
+        == index.budget,
         "Population or identity budget changed",
     )
 
@@ -242,8 +273,9 @@ def validate_snapshot(index: Index, state: Snapshot) -> None:
     require(START <= state.year <= END and (state.year - START) % YEARS == 0, "Invalid round")
     unique((actor.key for actor in state.actors), "actor")
     unique((holding.district for holding in state.holdings), "holding")
-    inhabited = {key for key, place in index.places.items() if place.population > 0}
-    require(set(index.owner) == inhabited, "Every inhabited district needs exactly one holder")
+    require(
+        index.owner.keys() == index.inhabited, "Every inhabited district needs exactly one holder"
+    )
     _validate_population(index, state)
     for actor in state.actors:
         validate_society(actor.society)
@@ -310,19 +342,22 @@ def validate_snapshot(index: Index, state: Snapshot) -> None:
     for knowledge in state.knowledge:
         pair = (knowledge.first, knowledge.second)
         require(
-            set(pair) <= living
+            knowledge.first in living
+            and knowledge.second in living
             and knowledge.first != knowledge.second
             and pair not in known
             and bool(knowledge.cause),
             "Invalid/duplicate knowledge",
         )
         known.add(pair)
+    actors = index.actors
     for memory in state.memories:
+        first, second = actors.get(memory.first), actors.get(memory.second)
         require(
-            all(
-                key in index.actors and alive_at(index.actors[key], memory.year)
-                for key in (memory.first, memory.second)
-            ),
+            first is not None
+            and alive_at(first, memory.year)
+            and second is not None
+            and alive_at(second, memory.year),
             "Memory touches an actor outside its lifetime",
         )
         require(

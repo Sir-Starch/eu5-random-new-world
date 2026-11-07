@@ -1,11 +1,15 @@
-"""C486 uncached sparse index, retained independently for whole-history equality."""
+"""C486 uncached sparse index, retained independently for whole-history equality.
+
+The geography's facts that the index now keeps for every round (C506) are made again
+for each snapshot here, and no settlement counts as checked before.
+"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, final
 
-from rnw.history_checks import require
-from rnw.history_model import PERMILLE, Actor, Cohort, Geography, Snapshot, Tenure
+from rnw.history_checks import _population_totals, require  # pyright: ignore[reportPrivateUsage]
+from rnw.history_model import PERMILLE, Actor, Cohort, Geography, Settlement, Snapshot, Tenure
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -43,6 +47,16 @@ class UncachedIndex:
             if route.sea_steps <= geography.rules.max_sea_steps:
                 self.adjacency[route.first][route.second] = route.cost
                 self.adjacency[route.second][route.first] = route.cost
+        self.passages = tuple(
+            (route.first, route.second, route.cost, route.sea_steps)
+            for route in geography.routes
+            if route.sea_steps <= geography.rules.max_sea_steps
+        )
+        self.inhabited = frozenset(key for key, place in self.places.items() if place.population)
+        self.budget = _population_totals(
+            pop for place in geography.districts for pop in place.cohorts
+        )
+        self.valid_settlements: dict[int, Settlement] = {}
 
     def cohorts(self, key: str) -> tuple[Cohort, ...]:
         return self.settlements[key].cohorts

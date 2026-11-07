@@ -406,6 +406,16 @@ def migration_effects(context: Context, event: Event, proposal: Proposal) -> Eff
     )
 
 
+def _hostile(context: Context, first: str, second: str) -> bool:
+    return (
+        max(
+            context.score(first, second, Factor.GRIEVANCE),
+            context.score(second, first, Factor.GRIEVANCE),
+        )
+        >= context.history.geography.rules.union_trust
+    )
+
+
 def choices(
     context: Context, actor: Actor, kinds: frozenset[Action] | None = None
 ) -> list[Proposal]:
@@ -431,6 +441,9 @@ def choices(
         for destination in sorted(context.index.adjacency[source]):
             target = context.index.owner.get(destination, "")
             if not target or target == actor.key or (actor.key, target) not in context.known:
+                continue
+            # Eligibility refuses every move between hostile societies.
+            if _hostile(context, actor.key, target):
                 continue
             space = context.index.capacities[destination] - context.index.population(destination)
             if space <= 0:

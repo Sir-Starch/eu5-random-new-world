@@ -18,6 +18,7 @@ from rnw.eu5_history import BootstrapInputs, bootstrap_history, installed_rules
 from rnw.eu5_history_plan import ProjectionInputs, project_start
 from rnw.history_engine import simulate
 from rnw.history_routes import PhysicalMap, physical_routes, routed_graph
+from rnw.parallel import collector_paused
 from rnw.progress import checkpoint
 from rnw.societies import bootstrap_societies
 
@@ -34,6 +35,32 @@ if TYPE_CHECKING:
 
 
 def build_history_start(  # noqa: PLR0913 - the bridge needs the complete generated physical world.
+    *,
+    world: NewWorld,
+    plan: Plan,
+    biomes: CellBiomes,
+    river_pixels: NDArray[np.int64],
+    vanilla: native.VanillaNatives,
+    settings: NativeSettings,
+    seed: int,
+    loc_keys: KeySpace,
+) -> FinalStartPlan:
+    # Societies, the simulation, its causal replay and the projection build millions of
+    # acyclic records; the cyclic collector would only walk them again (C506).
+    with collector_paused():
+        return _build_history_start(
+            world=world,
+            plan=plan,
+            biomes=biomes,
+            river_pixels=river_pixels,
+            vanilla=vanilla,
+            settings=settings,
+            seed=seed,
+            loc_keys=loc_keys,
+        )
+
+
+def _build_history_start(  # noqa: PLR0913 - as build_history_start
     *,
     world: NewWorld,
     plan: Plan,

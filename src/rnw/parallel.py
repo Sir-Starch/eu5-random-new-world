@@ -16,8 +16,10 @@ from __future__ import annotations
 
 import contextlib
 import ctypes
+import gc
 import os
 import sys
+import threading
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Self
@@ -26,7 +28,7 @@ from rnw import _native
 from rnw.progress import checkpoint, run_stage
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Generator
     from types import TracebackType
 
 ENVIRONMENT: Final[str] = "RNW_THREADS"
@@ -220,6 +222,36 @@ def limit_malloc_arenas() -> None:
     if sys.platform.startswith("linux"):
         with contextlib.suppress(OSError, AttributeError):
             _ = ctypes.CDLL(None).mallopt(M_ARENA_MAX, MALLOC_ARENAS)
+
+
+_PAUSE_LOCK: Final[threading.Lock] = threading.Lock()
+_pauses: list[bool] = []
+
+
+@contextlib.contextmanager
+def collector_paused() -> Generator[None]:
+    """Pause Python's cyclic garbage collector for a job; collect its cycles once at the end.
+
+    With millions of live records each automatic collection walks them all again and holds
+    the interpreter meanwhile, so the stages on other threads wait as well. The history
+    engine spent a fifth of its time so and creates no cycles; a whole export leaves about
+    36 MiB of them, freed at its end [V-EXEC C506]. Reference counting still frees
+    everything else at once. When the outermost pause of any thread ends, the collector
+    resumes as it was and, if it was on, collects.
+    """
+    with _PAUSE_LOCK:
+        _pauses.append(gc.isenabled() if not _pauses else _pauses[0])
+        gc.disable()
+    try:
+        yield
+    finally:
+        with _PAUSE_LOCK:
+            enabled = _pauses.pop()
+            resume = not _pauses and enabled
+            if resume:
+                gc.enable()
+        if resume:
+            _ = gc.collect()
 
 
 def configure() -> int:

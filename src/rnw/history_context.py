@@ -46,7 +46,13 @@ class Context:
         checkpoint: Callable[[], None],
         *,
         physical: Index | None = None,
+        previous: Context | None = None,
     ) -> None:
+        """``previous`` may be the context of an earlier round of the same history; its
+        event tables are then extended instead of rebuilt. Either way they are the same.
+        """
+        if physical is None and previous is not None:
+            physical = previous.index
         self.history = history
         self.state = history.state
         self.index = Index(history.geography, history.state, checkpoint, physical=physical)
@@ -56,16 +62,10 @@ class Context:
         self.afraid: set[str] = set()
         self.threats: dict[str, set[str]] = defaultdict(set)
         self.causes_by_actor: dict[str, set[str]] = defaultdict(set)
-        self.event_years = {event.key: event.year for event in history.events}
-        self.event_kinds = {event.key: event.kind for event in history.events}
-        self.events = {event.key: event for event in history.events}
+        self._events(history, previous)
         self.frontiers: dict[str, tuple[str, ...]] = {}
         self.reform_choices: dict[str, tuple[Actor, tuple[Society, ...]]] = {}
         self.holdings = {holding.district: holding for holding in self.state.holdings}
-        self.experiences: dict[str, list[Event]] = defaultdict(list)
-        for event in history.events:
-            for key in event.actors:
-                self.experiences[key].append(event)
         for actor in self.state.actors:
             self.causes_by_actor[actor.key].add(actor.society_cause)
         for settlement in self.state.settlements:
@@ -118,30 +118,61 @@ class Context:
             for key in (bond.first, bond.second)
         }
         self.subjects = set(self.lords)
+        self._alliances: tuple[dict[str, set[str]], dict[str, set[str]]] | None = None
         self._aims: dict[str, Trajectory] | None = None
         self._groups: dict[str, tuple[Trajectory, ...]] | None = None
         self._founders: dict[str, str] | None = None
         self.ancestries: dict[str, frozenset[str]] = {}
 
+    def _events(self, history: History, previous: Context | None) -> None:
+        """Year, kind and record of every event, and each actor's events in order."""
+        shared = 0
+        if previous is not None and previous.history.geography is history.geography:
+            earlier = previous.history.events
+            if len(earlier) <= len(history.events) and history.events[: len(earlier)] == earlier:
+                shared = len(earlier)
+        self.event_years: dict[str, int]
+        self.event_kinds: dict[str, Action]
+        self.events: dict[str, Event]
+        self.experiences: dict[str, list[Event]]
+        if shared and previous is not None:
+            self.event_years = previous.event_years.copy()
+            self.event_kinds = previous.event_kinds.copy()
+            self.events = previous.events.copy()
+            # The earlier lists are shared until an actor gains an event; none is changed.
+            self.experiences = defaultdict(list, previous.experiences)
+        else:
+            self.event_years = {}
+            self.event_kinds = {}
+            self.events = {}
+            self.experiences = defaultdict(list)
+        copied: set[str] = set()
+        experiences = self.experiences
+        for event in history.events[shared:]:
+            self.event_years[event.key] = event.year
+            self.event_kinds[event.key] = event.kind
+            self.events[event.key] = event
+            for key in event.actors:
+                if shared and key not in copied:
+                    copied.add(key)
+                    experiences[key] = [*experiences.get(key, ())]
+                experiences[key].append(event)
+
     def _contacts(self) -> None:
         self.near: dict[str, dict[str, int]] = defaultdict(dict)
         self.land_near: dict[str, set[str]] = defaultdict(set)
         self.sea_near: dict[str, set[str]] = defaultdict(set)
-        for number, route in enumerate(self.history.geography.routes):
+        owner, near = self.index.owner, self.near
+        for number, (one, two, cost, sea) in enumerate(self.index.passages):
             if number % 128 == 0:
                 self.checkpoint()
-            first, second = self.index.owner.get(route.first), self.index.owner.get(route.second)
-            if (
-                first
-                and second
-                and first != second
-                and route.sea_steps <= (self.history.geography.rules.max_sea_steps)
-            ):
-                previous = self.near[first].get(second)
-                if previous is None or route.cost < previous:
-                    self.near[first][second] = route.cost
-                    self.near[second][first] = route.cost
-                contacts = self.sea_near if route.sea_steps else self.land_near
+            first, second = owner.get(one), owner.get(two)
+            if first and second and first != second:
+                previous = near[first].get(second)
+                if previous is None or cost < previous:
+                    near[first][second] = cost
+                    near[second][first] = cost
+                contacts = self.sea_near if sea else self.land_near
                 contacts[first].add(second)
                 contacts[second].add(first)
         self.reach = {key: dict(near) for key, near in self.near.items()}
@@ -264,6 +295,31 @@ class Context:
             self.ancestries[key] = frozenset(seen)
         return self.ancestries[key]
 
+    def _alliance_tables(self) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+        if self._alliances is None:
+            allies: dict[str, set[str]] = defaultdict(set)
+            causes: dict[str, set[str]] = defaultdict(set)
+            for bond in self.state.bonds:
+                if bond.kind is Action.PACT:
+                    allies[bond.first].add(bond.second)
+                    allies[bond.second].add(bond.first)
+                elif bond.kind is Action.DEPENDENCY:
+                    allies[bond.second].add(bond.first)
+                else:
+                    continue
+                causes[bond.first].add(bond.cause)
+                causes[bond.second].add(bond.cause)
+            self._alliances = allies, causes
+        return self._alliances
+
+    def allies(self, key: str) -> frozenset[str]:
+        """Who fights beside the actor: its pact partners and its subjects."""
+        return frozenset(self._alliance_tables()[0].get(key, ()))
+
+    def alliance_causes(self, key: str) -> frozenset[str]:
+        """The causes of every pact and dependency the actor is part of."""
+        return frozenset(self._alliance_tables()[1].get(key, ()))
+
     @property
     def aims(self) -> dict[str, Trajectory]:
         """Living holders of an expansion aim: the anchor's owner, descended from its members."""
@@ -314,6 +370,26 @@ class Context:
         if pair not in self.distances:
             self.distances[pair] = self._distance(key, target, through)
         return self.distances[pair]
+
+    def travel(self, key: str, through: tuple[str, ...] = ()) -> dict[str, int]:
+        """Least travel cost from the actor's seat to every place of its territory and
+        ``through`` that it reaches there: ``distance`` to each of them at once.
+        """
+        actor = self.index.actors[key]
+        members = self.index.members[key] | set(through)
+        adjacency = self.index.adjacency
+        costs = {actor.seat: 0}
+        pending = [(0, actor.seat)]
+        while pending:
+            self.checkpoint()
+            cost, place = heapq.heappop(pending)
+            if cost != costs[place]:
+                continue
+            for other, step in adjacency[place].items():
+                if other in members and cost + step < costs.get(other, 1 << 60):
+                    costs[other] = cost + step
+                    heapq.heappush(pending, (cost + step, other))
+        return costs
 
     def _distance(self, key: str, target: str, through: tuple[str, ...]) -> int:
         actor = self.index.actors[key]
@@ -449,6 +525,7 @@ def _burden(context: Context, actor: str, gained: tuple[str, ...] = ()) -> int:
     seat = context.index.actors[actor].seat
     home = {(pop.culture, pop.religion) for pop in context.index.cohorts(seat)}
     members = context.index.members[actor] | set(gained)
+    travel = context.travel(actor, gained)
     cost = 0
     for key in sorted(members):
         context.checkpoint()
@@ -458,7 +535,7 @@ def _burden(context: Context, actor: str, gained: tuple[str, ...] = ()) -> int:
             for pop in context.index.cohorts(key)
             if (pop.culture, pop.religion) not in home
         )
-        distance = context.distance(actor, key, gained)
+        distance = travel.get(key, 1 << 60)
         # New frontier districts can be reached directly; no traversal through foreign interiors.
         if distance >= 1 << 60:
             return PERMILLE + 1

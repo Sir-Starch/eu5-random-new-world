@@ -281,3 +281,40 @@ def test_windows_cores_follow_the_inherited_affinity_mask(
         assert parallel.cores() == expected
     monkeypatch.delattr(ctypes, "windll", raising=False)
     assert parallel.cores() == 32
+
+
+def test_the_collector_pauses_for_a_job_and_resumes_as_it_was() -> None:
+    import gc  # noqa: PLC0415 - only this test reads the collector
+
+    was = gc.isenabled()
+    try:
+        gc.enable()
+        with parallel.collector_paused():
+            assert not gc.isenabled()
+            with parallel.collector_paused():
+                assert not gc.isenabled()
+            assert not gc.isenabled()
+        assert gc.isenabled()
+        gc.disable()
+        with parallel.collector_paused():
+            pass
+        assert not gc.isenabled()
+        # Pauses of two threads end in either order; the collector resumes after the last.
+        gc.enable()
+        entered, release = threading.Event(), threading.Event()
+
+        def other() -> None:
+            with parallel.collector_paused():
+                entered.set()
+                _ = release.wait(10)
+
+        thread = threading.Thread(target=other)
+        with parallel.collector_paused():
+            thread.start()
+            _ = entered.wait(10)
+        assert not gc.isenabled()
+        release.set()
+        thread.join()
+        assert gc.isenabled()
+    finally:
+        _ = gc.enable() if was else gc.disable()

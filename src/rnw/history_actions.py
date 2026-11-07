@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from dataclasses import astuple, replace
+from dataclasses import replace
 from typing import TYPE_CHECKING, Final
 
 from rnw.history_context import MUTUAL, Context
@@ -90,8 +90,14 @@ LEAVE_POWER: Final[int] = 2
 ORDINARY_LORD_POWER: Final[int] = 4
 
 
+# One encoder for every key: equal to json.dumps with these options, without
+# constructing an encoder for each of the many keys.
+_KEY_ENCODER: Final[json.JSONEncoder] = json.JSONEncoder(ensure_ascii=True, separators=(",", ":"))
+
+
 def proposal_key(proposal: Proposal) -> str:
-    return json.dumps(
+    reform = proposal.reform
+    return _KEY_ENCODER.encode(
         (
             proposal.kind,
             proposal.actor,
@@ -103,7 +109,20 @@ def proposal_key(proposal: Proposal) -> str:
             ),
             proposal.threat,
             proposal.rank,
-            astuple(proposal.reform) if proposal.reform else (),
+            (
+                (
+                    reform.centralization,
+                    reform.authority,
+                    reform.livelihood,
+                    reform.exchange,
+                    reform.religious_authority,
+                    reform.military,
+                    reform.integration,
+                    reform.tradition,
+                )
+                if reform
+                else ()
+            ),
             (
                 (
                     proposal.movement.source,
@@ -116,9 +135,7 @@ def proposal_key(proposal: Proposal) -> str:
                 if proposal.movement
                 else None
             ),
-        ),
-        ensure_ascii=True,
-        separators=(",", ":"),
+        )
     )
 
 
@@ -523,7 +540,10 @@ def inherit_round(context: Context, events: list[Event]) -> list[Event]:  # noqa
             if one != other
         )
 
+    # Only a fact touching a changed actor is inherited.
     for memory in context.state.memories:
+        if memory.first not in changed and memory.second not in changed:
+            continue
         weight = memory.at(context.state.year)
         if weight:
             number, pairs = destinations(memory.first, memory.second, memory.cause)
@@ -532,6 +552,8 @@ def inherit_round(context: Context, events: list[Event]) -> list[Event]:  # noqa
                 for first, second in pairs
             )
     for known in context.state.knowledge:
+        if known.first not in changed and known.second not in changed:
+            continue
         number, pairs = destinations(known.first, known.second, known.cause)
         for first, second in pairs:
             knowledge[number][first, second] = Knowledge(first, second, events[number].key)
@@ -608,15 +630,7 @@ def _battle_support(
     context: Context, proposal: Proposal, remaining: Mapping[str, int]
 ) -> dict[str, dict[str, int]]:
     support: dict[str, dict[str, int]] = {proposal.actor: {}, proposal.target: {}}
-    allies = {
-        side: {
-            bond.second if bond.first == side else bond.first
-            for bond in context.state.bonds
-            if (bond.kind is Action.PACT and side in (bond.first, bond.second))
-            or (bond.kind is Action.DEPENDENCY and bond.second == side)
-        }
-        for side in support
-    }
+    allies = {side: context.allies(side) for side in support}
     for side, allocations in support.items():
         other = proposal.target if side == proposal.actor else proposal.actor
         # Conflicting obligations do not let an ally fight on both sides.
@@ -764,27 +778,35 @@ def _peaceful(context: Context, event: Event, proposal: Proposal) -> Effects:
     return Effects(bonds=(bond,), memories=tuple(memories))
 
 
+# The stated reason of an accepted proposal; a conflict's depends on a grievance.
+REASONS: Final[dict[Action, Reason]] = {
+    Action.CONTACT: Reason.ENCOUNTER,
+    Action.EXCHANGE: Reason.COOPERATION,
+    Action.UNION: Reason.BARGAIN,
+    Action.SEPARATION: Reason.OBLIGATIONS,
+    Action.DEPENDENCY: Reason.IMBALANCE,
+    Action.PROTECTION: Reason.THREAT,
+    Action.PACT: Reason.THREAT,
+    Action.ACCESS: Reason.SACRED_ACCESS,
+    Action.REFORM: Reason.REPEATED_PROBLEM,
+    Action.MIGRATION: Reason.PRESSURE,
+    Action.PRESSURE: Reason.PRESSURE,
+    Action.INDEPENDENCE: Reason.AUTONOMY,
+    Action.SECESSION: Reason.CAPACITY,
+}
+
+
 def adjudicate(
     context: Context, proposal: Proposal, remaining: Mapping[str, int]
 ) -> tuple[Event, dict[str, int]]:
-    reasons = {
-        Action.CONTACT: Reason.ENCOUNTER,
-        Action.EXCHANGE: Reason.COOPERATION,
-        Action.UNION: Reason.BARGAIN,
-        Action.SEPARATION: Reason.OBLIGATIONS,
-        Action.DEPENDENCY: Reason.IMBALANCE,
-        Action.PROTECTION: Reason.THREAT,
-        Action.PACT: Reason.THREAT,
-        Action.ACCESS: Reason.SACRED_ACCESS,
-        Action.CONFLICT: Reason.GRIEVANCE
-        if context.score(proposal.actor, proposal.target, Factor.GRIEVANCE)
-        else Reason.OPPORTUNITY,
-        Action.REFORM: Reason.REPEATED_PROBLEM,
-        Action.MIGRATION: Reason.PRESSURE,
-        Action.PRESSURE: Reason.PRESSURE,
-        Action.INDEPENDENCE: Reason.AUTONOMY,
-        Action.SECESSION: Reason.CAPACITY,
-    }
+    if proposal.kind is Action.CONFLICT:
+        stated = (
+            Reason.GRIEVANCE
+            if context.score(proposal.actor, proposal.target, Factor.GRIEVANCE)
+            else Reason.OPPORTUNITY
+        )
+    else:
+        stated = REASONS[proposal.kind]
     event = Event(
         event_key(context, proposal),
         context.state.year,
@@ -792,7 +814,7 @@ def adjudicate(
         tuple(sorted({key for key in (proposal.actor, proposal.target, proposal.threat) if key})),
         context.causes(proposal),
         Outcome.ACCEPTED,
-        reasons[proposal.kind],
+        stated,
     )
     reason = eligible(context, proposal)
     cost = COST[proposal.kind]
@@ -825,12 +847,8 @@ def adjudicate(
         allies = set(costs) - {proposal.actor, proposal.target}
         causes = set(event.causes)
         causes.update(context.index.actors[key].origin for key in allies)
-        causes.update(
-            bond.cause
-            for bond in context.state.bonds
-            if bond.kind in {Action.PACT, Action.DEPENDENCY}
-            and (bond.first in allies or bond.second in allies)
-        )
+        for key in allies:
+            causes.update(context.alliance_causes(key))
         return replace(
             event, actors=tuple(sorted(set(event.actors) | allies)), causes=tuple(sorted(causes))
         ), costs

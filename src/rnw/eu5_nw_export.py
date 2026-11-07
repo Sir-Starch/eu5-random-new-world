@@ -287,7 +287,15 @@ from rnw.newworld import (
     NewWorld,
     unported_cells,
 )
-from rnw.parallel import GIB, Stages, configure, cores, require_memory, stage_workers
+from rnw.parallel import (
+    GIB,
+    Stages,
+    collector_paused,
+    configure,
+    cores,
+    require_memory,
+    stage_workers,
+)
 from rnw.pdx import Block, parse
 from rnw.pictures import center_column, cover, tagged, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
@@ -2758,6 +2766,7 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
         require_memory(EXPORT_MEMORY, "The New World export")
     with (
         active(progress),
+        collector_paused(),
         Spool(spool_path(output)) as spool,
         inputs.recording(game_dir) as recorder,
     ):

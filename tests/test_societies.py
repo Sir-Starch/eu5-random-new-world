@@ -795,3 +795,16 @@ def test_bootstrap_size_outside_the_accepted_calibration_interval_is_rejected(sc
             state_floor=StateFloor(),
             size_permille=scale,
         )
+
+
+@pytest.mark.parametrize("limit", [-1, 0, STEP_COST, 3 * STEP_COST, 40 * STEP_COST])
+def test_a_bounded_search_reaches_exactly_what_growth_reaches(limit: int) -> None:
+    graph = _Graph(_grid())
+    count = len(graph.starts) - 1
+    rng = SplitMix64(11)
+    allowed = np.array([rng.below(10) < 7 for _ in range(count)])
+    for seed in range(0, count, 37):
+        for mask in (None, allowed):
+            cost, _ = graph.grow([seed], allowed=mask, limit=limit)
+            reached = graph.within(seed, limit, None if mask is None else mask.tolist())
+            assert sorted(reached) == np.flatnonzero(cost >= 0).tolist()

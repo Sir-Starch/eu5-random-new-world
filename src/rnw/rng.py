@@ -9,11 +9,14 @@ order. No global, hash-seeded or platform-dependent state is used.
 from __future__ import annotations
 
 import hashlib
+from functools import lru_cache
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from numpy.typing import NDArray
 
 RNG_VERSION: Final[str] = "splitmix64-v1"
@@ -48,10 +51,34 @@ def mix64(value: int) -> int:
     return z ^ (z >> 31)
 
 
+@lru_cache(maxsize=64, typed=True)
+def _stream(seed: int) -> hashlib._Hash:  # pyright: ignore[reportPrivateUsage]
+    """SHA-256 of the version and seed, the common start of every derived payload."""
+    return hashlib.sha256(f"{RNG_VERSION}\x1f{check_seed(seed)}".encode())
+
+
 def derive_seed(seed: int, *labels: str) -> int:
-    """Derive an independent 64-bit stream key from a seed and a label path."""
-    payload = "\x1f".join((RNG_VERSION, str(check_seed(seed)), *labels)).encode()
-    return int.from_bytes(hashlib.sha256(payload).digest()[:8], "little")
+    """Derive an independent 64-bit stream key from a seed and a label path.
+
+    The key is the first eight bytes, little-endian, of the SHA-256 of the version,
+    the seed and the labels joined by unit separators.
+    """
+    stream = _stream(seed).copy()
+    if labels:
+        stream.update(("\x1f" + "\x1f".join(labels)).encode())
+    return int.from_bytes(stream.digest()[:8], "little")
+
+
+def derive_seeds(seed: int, labels: tuple[str, ...], last: Iterable[str]) -> list[int]:
+    """``derive_seed(seed, *labels, each)`` for each label of ``last``, in order."""
+    stream = _stream(seed).copy()
+    stream.update("".join(f"\x1f{label}" for label in labels).encode())
+    found: list[int] = []
+    for label in last:
+        each = stream.copy()
+        each.update(f"\x1f{label}".encode())
+        found.append(int.from_bytes(each.digest()[:8], "little"))
+    return found
 
 
 class SplitMix64:

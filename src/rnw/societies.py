@@ -191,6 +191,27 @@ class _Graph:
                 heapq.heappush(heap, (total * PERMILLE // weight, index, target, total))
         return np.array(costs, dtype=np.int64), np.array(owners, dtype=np.int64)
 
+    def within(self, seed: int, limit: int, permitted: list[bool] | None = None) -> list[int]:
+        """The nodes ``grow([seed], allowed=permitted, limit=limit)`` reaches, without
+        its arrays over the whole graph: a short search stays as short as its reach.
+        """
+        starts, targets, costs = self.starts, self.targets, self.costs
+        reached: dict[int, None] = {}
+        heap = [(0, seed)]
+        while heap:
+            raw, node = heapq.heappop(heap)
+            if node in reached:
+                continue
+            reached[node] = None
+            for slot in range(starts[node], starts[node + 1]):
+                target = targets[slot]
+                if target in reached or (permitted is not None and not permitted[target]):
+                    continue
+                total = raw + costs[slot]
+                if total <= limit:
+                    heapq.heappush(heap, (total, target))
+        return list(reached)
+
 
 @dataclass(frozen=True, slots=True)
 class _Territory:
@@ -283,8 +304,7 @@ def _food(graph: _Graph, potential: NDArray[np.int64], radius: int) -> NDArray[n
         return food
     floor = int(np.sort(potential)[len(potential) // 2])
     for node in np.flatnonzero(potential >= max(1, floor)).tolist():
-        cost, _ = graph.grow([node], limit=radius)
-        food[node] = int(potential[cost >= 0].sum())
+        food[node] = int(potential[graph.within(node, radius)].sum())
     return food
 
 
@@ -308,6 +328,7 @@ def _spaced_seeds(
 ) -> list[int]:
     """Take candidates in order, skipping any within ``spacing`` of a taken seed."""
     blocked = np.zeros(len(graph.starts) - 1, dtype=bool)
+    permitted = None if allowed is None else allowed.tolist()
     seeds: list[int] = []
     for node in order:
         if len(seeds) >= wanted:
@@ -315,8 +336,7 @@ def _spaced_seeds(
         if blocked[node]:
             continue
         seeds.append(node)
-        reach, _ = graph.grow([node], allowed=allowed, limit=spacing - 1)
-        blocked |= reach >= 0
+        blocked[graph.within(node, spacing - 1, permitted)] = True
     return seeds
 
 

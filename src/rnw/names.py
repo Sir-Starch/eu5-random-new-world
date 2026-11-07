@@ -73,7 +73,8 @@ class MarkovNames:
         self._rng: SplitMix64 = SplitMix64(derive_seed(seed, "names", "markov", stream))
         self._used: set[str] = used if used is not None else set()
         self._used.update(name_key(name) for name in corpus)
-        self._next: dict[str, list[tuple[str, int]]] = {}
+        # Each context's sorted next characters with their counts, and the counts' total.
+        self._next: dict[str, tuple[list[tuple[str, int]], int]] = {}
         counts: dict[str, dict[str, int]] = {}
         for name in sorted(set(corpus)):
             padded = START * MARKOV_ORDER + name + END
@@ -82,17 +83,17 @@ class MarkovNames:
                 options = counts.setdefault(context, {})
                 options[padded[index]] = options.get(padded[index], 0) + 1
         for context, options in counts.items():
-            self._next[context] = sorted(options.items())
+            self._next[context] = (sorted(options.items()), sum(options.values()))
         self._fallback: NameGenerator = NameGenerator(seed, f"markov_{stream}")
 
     def _draw(self) -> str:
         context = START * MARKOV_ORDER
         out: list[str] = []
         while len(out) <= NAME_LENGTH[1]:
-            options = self._next.get(context)
-            if not options:
+            found = self._next.get(context)
+            if found is None or not found[0]:
                 break
-            total = sum(count for _, count in options)
+            options, total = found
             pick = self._rng.below(total)
             char = END
             for option, count in options:

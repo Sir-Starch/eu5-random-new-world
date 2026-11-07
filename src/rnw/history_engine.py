@@ -59,7 +59,7 @@ from rnw.history_model import (
 )
 from rnw.history_societies import bootstrap, choices, cohorts, propensity
 from rnw.history_trajectories import seed_events
-from rnw.rng import check_seed, derive_seed
+from rnw.rng import check_seed, derive_seed, derive_seeds
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -67,6 +67,7 @@ if TYPE_CHECKING:
 # Policy biases of seeded aims (D22-D23). They change which eligible proposals an
 # actor makes and how persistently, never eligibility, arbitration or outcomes.
 CONTESTS: Final[frozenset[Action]] = frozenset({Action.CONFLICT, Action.PRESSURE})
+_ACTIONS: Final[tuple[Action, ...]] = tuple(Action)
 # A regional power's contest propensity: 450 at Calm, 600 at Varied, 750 at Turbulent.
 AIM_CONFLICT: Final[int] = 350
 HEGEMONY_CONFLICT: Final[int] = 700
@@ -83,15 +84,20 @@ def _checkpoint() -> None:
     """Default callback; the generator can supply its existing cancellation checkpoint."""
 
 
+def _sorted_part(part: Partition) -> Partition:
+    districts = tuple(sorted(part.districts))
+    return part if districts == part.districts else replace(part, districts=districts)
+
+
 def _canonical(proposal: Proposal) -> Proposal:
-    return replace(
-        proposal,
-        districts=tuple(sorted(proposal.districts)),
-        partitions=tuple(
-            replace(part, districts=tuple(sorted(part.districts)))
-            for part in sorted(proposal.partitions, key=lambda part: part.seat)
-        ),
+    districts = tuple(sorted(proposal.districts))
+    partitions = tuple(
+        _sorted_part(part) for part in sorted(proposal.partitions, key=lambda part: part.seat)
     )
+    # Most proposals are already in canonical order; an equal copy would change nothing.
+    if districts == proposal.districts and partitions == proposal.partitions:
+        return proposal
+    return replace(proposal, districts=districts, partitions=partitions)
 
 
 def _apply(state: Snapshot, events: Sequence[Event]) -> Snapshot:
@@ -734,27 +740,26 @@ def propose(context: Context, *, turbulence: int = 500) -> tuple[Proposal, ...]:
             continue
         admitted: set[Action] = set()
         bases = _bases(context, actor, turbulence)
-        for kind in Action:
-            activity = derive_seed(
-                context.history.seed,
-                "history",
-                "activity",
-                str(context.state.year),
-                actor.key,
-                kind.value,
-            )
+        activities = derive_seeds(
+            context.history.seed,
+            ("history", "activity", str(context.state.year), actor.key),
+            (kind.value for kind in _ACTIONS),
+        )
+        for kind, activity in zip(_ACTIONS, activities, strict=True):
             if activity % PERMILLE < propensity(actor.society, kind, bases[kind]):
                 admitted.add(kind)
         best: dict[Action, tuple[tuple[int, int], int, str, Proposal]] = {}
-        for choice in _local_choices(context, actor, frozenset(admitted)):
-            if choice.kind is Action.REFORM and (
-                choice.reform is None or not _keeps_aim(context, actor, choice.reform)
-            ):
-                continue
-            key = proposal_key(choice)
-            draw = derive_seed(
-                context.history.seed, "history", "choice", str(context.state.year), key
-            )
+        kept = [
+            choice
+            for choice in _local_choices(context, actor, frozenset(admitted))
+            if choice.kind is not Action.REFORM
+            or (choice.reform is not None and _keeps_aim(context, actor, choice.reform))
+        ]
+        keys = [proposal_key(choice) for choice in kept]
+        draws = derive_seeds(
+            context.history.seed, ("history", "choice", str(context.state.year)), keys
+        )
+        for choice, key, draw in zip(kept, keys, draws, strict=True):
             ranked = (_preference(context, actor, choice), draw, key, choice)
             if choice.kind not in best or ranked[:3] < best[choice.kind][:3]:
                 best[choice.kind] = ranked
@@ -781,10 +786,9 @@ def simulate(
     """
     turbulence = history.turbulence if turbulence is None else turbulence
     require(0 <= turbulence <= PERMILLE, "Invalid historical turbulence")
-    physical: Index | None = None
+    context: Context | None = None
     while history.state.year < END:
-        context = Context(history, checkpoint, physical=physical)
-        physical = context.index
+        context = Context(history, checkpoint, previous=context)
         proposals = (
             policy(context) if policy is not None else propose(context, turbulence=turbulence)
         )
@@ -816,20 +820,26 @@ def validate_history(history: History, *, checkpoint: Callable[[], None] = _chec
             "Event touches an actor outside its lifetime",
         )
         seen[event.key] = event
-    physical: Index | None = None
+    context: Context | None = None
     for proposals in history.rounds:
-        context = Context(replay, checkpoint, physical=physical)
-        physical = context.index
+        context = Context(replay, checkpoint, previous=context)
         replay = _advance(context, proposals)
     require(replay.events == history.events, "Causal event replay differs")
     require(replay.state == history.state, "Final facts differ from causal replay")
 
 
+_RECORD_FIELDS: dict[type, tuple[str, ...]] = {}
+
+
 def _json_record(value: object) -> dict[str, object]:
-    if is_dataclass(value) and not isinstance(value, type):
-        return {field.name: cast("object", getattr(value, field.name)) for field in fields(value)}
-    message = f"Unsupported history record: {type(value).__name__}"
-    raise TypeError(message)
+    kind = type(value)
+    names = _RECORD_FIELDS.get(kind)
+    if names is None:
+        if not is_dataclass(value) or isinstance(value, type):
+            message = f"Unsupported history record: {kind.__name__}"
+            raise TypeError(message)
+        names = _RECORD_FIELDS.setdefault(kind, tuple(field.name for field in fields(value)))
+    return {name: cast("object", getattr(value, name)) for name in names}
 
 
 def digest(history: History, *, checkpoint: Callable[[], None] = _checkpoint) -> str:

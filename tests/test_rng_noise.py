@@ -5,11 +5,21 @@
 
 from __future__ import annotations
 
+import hashlib
+
 import numpy as np
 import pytest
 
 from rnw.noise import fractal_noise, value_noise
-from rnw.rng import SeedRangeError, SplitMix64, derive_seed, hash_grid, hash_point
+from rnw.rng import (
+    RNG_VERSION,
+    SeedRangeError,
+    SplitMix64,
+    derive_seed,
+    derive_seeds,
+    hash_grid,
+    hash_point,
+)
 
 
 def test_splitmix64_matches_reference_vectors() -> None:
@@ -87,3 +97,19 @@ def test_continent_noise_resolves_pixels_instead_of_large_stair_steps(period: in
     bound = int(np.ceil(1.5 * 65535 / period)) + 4
     assert int(np.abs(np.diff(field, axis=1)).max()) <= bound
     assert np.count_nonzero(np.diff(field[0]) == 0) < field.shape[1] // 4
+
+
+def test_derived_keys_follow_their_specification() -> None:
+    """The cached seed prefix changes nothing: SHA-256 of version, seed and labels."""
+    rng = SplitMix64(5)
+    words = ("history", "a\x1fb", "", "ü", "choice", "x" * 40)
+    for _ in range(500):
+        seed = rng.next_u64()
+        labels = tuple(words[rng.below(len(words))] for _ in range(rng.below(5)))
+        payload = "\x1f".join((RNG_VERSION, str(seed), *labels)).encode()
+        expected = int.from_bytes(hashlib.sha256(payload).digest()[:8], "little")
+        assert derive_seed(seed, *labels) == expected
+        last = [words[rng.below(len(words))] for _ in range(rng.below(4))]
+        assert derive_seeds(seed, labels, last) == [derive_seed(seed, *labels, x) for x in last]
+    with pytest.raises(SeedRangeError):
+        _ = derive_seeds(1 << 64, ("a",), ["b"])
