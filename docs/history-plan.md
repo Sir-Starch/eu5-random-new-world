@@ -148,7 +148,8 @@ on these observations.
 | D30 | Q4 recognition | Q4 gates on the D24 recognition shares as written; the Q1-scale rate is reported beside it (owner, 2026-11-06, before the held-out run) |
 | D31 | The game's measure | Written values take the game's scale and the window shows what the game shows, in its names; no internal scale is shown as game state (owner, 2026-11-06) |
 | D32 | Second acceptance round | After the failed held-out run (C509) the owner chose another D28 round: seeds 1005–1008 become development, mechanisms are fixed with margin, new held-out seeds 1009–1012 are frozen and run once (owner, 2026-11-07) |
-| D33 | Classifier order and the turbulence control | Fractured is tested before rival powers; Q5's turbulence order is read pooled over the seed set, each sweep pair still higher at high than at low; `ORDINARY_LORD_POWER` 6 and `UNREST_SLOPE` 450 (agent, under the owner's delegation, 2026-11-07, before any capture of 1009–1012) |
+| D33 | Classifier order and the turbulence control | Fractured is tested before rival powers; Q5's turbulence order is read pooled over the seed set, each sweep pair still higher at high than at low; `ORDINARY_LORD_POWER` 6 and `UNREST_SLOPE` 450 (slope restored to 350 by D34) (agent, under the owner's delegation, 2026-11-07, before any capture of 1009–1012) |
+| D34 | Statistical checks inform, they do not gate | The Q-checks of §18 stay computed and reported but are no longer release holds; no further held-out round is run to pass a number. Hard invariants and S8–S11 stay. Variety and working sliders are the product goals; `UNREST_SLOPE` back to 350 (owner, 2026-11-07) |
 
 ## 4. Scope and abstractions
 
@@ -822,6 +823,11 @@ run, grounded in the 1.1.0 product and the vanilla 1337 Americas. Development ru
 may show that a criterion is mis-specified. It is then revised by a recorded
 decision before the held-out run, never after it.
 
+*Since D34 (owner, 2026-11-07):* the statistical criteria below (Q1–Q13) are diagnostics.
+They are computed and reported with every calibration run, and a miss is investigated for a defect,
+but no threshold is a release hold. The "Hard" invariants and the resource limits S8–S11 are
+unchanged. See [§21.3](#213-decisions).
+
 **Seed sets.**
 
 - **Development:** the six presets (continents, supercontinent, small continents,
@@ -1258,6 +1264,32 @@ frozen after this commit and run once; its outcome is reported as it falls.
 (Q1 and Q9 now; Q4, Q5 and Q7 fail, [C512](research/claims-ledger.md)). Nothing was changed or rerun
 afterwards. Seeds 1009–1012 can no longer be held out, and D28 requires a further decision.
 
+**D34 Statistical checks inform, they do not gate (owner, 2026-11-07).** Two held-out runs failed
+on thin or quantized statistics (C509: fractured share and the subject median; C512: one seeded
+confederation, one adjacent-setting pair of a quantized median, and the Varied ordinary-size ratio),
+and a third round would have meant new criteria again. The owner ruled that RNW is a procedural
+random generator and needs no rigid thresholds: what matters is **variety** and that the
+generator's **sliders keep their effect**.
+
+- Q1–Q13 stay in `history_acceptance` and are reported with each calibration run. They are reference
+  scales and a way to notice a defect. A miss is read for its cause; it is not a release hold, and no
+  held-out round is run to make a number pass. C509 and C512 remain recorded as failed against the
+  thresholds as they stood; the D33 changes stand.
+- Still hard: the invariants listed under "Hard, every world" in [§18](#18-acceptance-criteria)
+  (validity, determinism, conservation, causal chains, 1.1.0 handling, spoilers, empty inputs, recorded
+  causes) and the resource limits S8–S11 measured at delivery.
+- Product goals, stated without numbers. Every preset shows several kinds of political structure
+  (patchwork, rival powers, a paramount, fractured remains, great realms). Each slider (state size,
+  share of land in states, extraordinary societies, turbulence) moves its statistic the way its name
+  says from low to high. A collapse of either, or a slider that does nothing, is a defect fixed at its
+  cause. On the C512 held-out set all four region classes hold 17–31% and every sweep pair of all
+  four sliders is higher at high than at low.
+- `UNREST_SLOPE` is back to 350 (D33 had 450). With 450 the median ordinary state held two locations
+  instead of the slider's three in 33% of development worlds (15% with 350) and in 15 of 24
+  held-out worlds: a drift from what the state-size slider asks. Development values with
+  `ORDINARY_LORD_POWER` 6 and slope 350 are those of the D33 run (`dev72-d34`).
+- R6 steps 5–8 proceed on the current source; the freeze of `1f6bc79` no longer constrains it.
+
 ### 21.5 Implementation refinements (2026-11-05, before any held-out run)
 
 Implementing D21–D28 against the single development world continents/3 exposed
@@ -1276,7 +1308,7 @@ untouched.
 - **Turbulence must change holding, not growth.** Scaling capacity by turbulence
   reduced expansion, and so reduced visible change. Instead, turbulence lowers the
   *unrest threshold* above which a conquered founder's province may break away:
-  93%, 82% and 72% of capacity at Calm, Varied and Turbulent (R6; first 88, 70 and 52%; since D33 91%, 77.5% and 64%). A breakaway restores
+  93%, 82% and 72% of capacity at Calm, Varied and Turbulent (R6; first 88, 70 and 52%; D33 tried 91%, 77.5% and 64%; D34 restored 93%, 82% and 72%). A breakaway restores
   that founder's land as a new state, with its own grievance; the realm survives.
   Q3 and Q5 therefore measure **recent turmoil**: state land taken by conquest,
   breakaway or division in the last 100 years. The cumulative changed-land share

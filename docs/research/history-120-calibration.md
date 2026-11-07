@@ -780,6 +780,18 @@ reference reproduction, packages, the owner's sitting, W2, W6, W7) are not start
 evidence is in the ignored `local_data/history-120/r6/heldout-d33/` (observations, saved Varied
 starts, `acceptance.json`, `q4-scales.txt`), `captures/`, `baselines/` and `sweep-baselines/`.
 
+### D34: checks inform, they do not gate (2026-11-07)
+
+[V-EXEC] After C512 the owner ruled that the statistical checks are diagnostics, not release holds
+([plan D34](../history-plan.md#213-decisions)). One change followed: `UNREST_SLOPE` 450 → 350, because
+450 doubled the share of worlds whose ordinary median is two locations rather than the slider's three
+(33% against 15% on the 72 development worlds; 15 of 24 on held-out). The full development matrix on the
+resulting source (`dev72-d34/`, `ORDINARY_LORD_POWER` 6, slope 350, D33 classifier and Q5) reports all
+fourteen checks passing with the same values as `dev72-d33/`: fractured 18.5%, rival powers 28.0%,
+paramount 17.1%, patchwork 33.8%; pooled recent turmoil 0.103 / 0.173 / 0.230; median subject pairs 32;
+assortativity 0.2375. No held-out set was run on this source. On the C512 held-out set every sweep
+pair of every slider was higher at high than at low, and the four region classes held 17–31%.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)

@@ -99,7 +99,7 @@ def test_capacity_keeps_the_ordinary_limit_and_scales_with_administration() -> N
     assert context.capacity("plain") == 1000
     # Three and a half doublings above the threshold at level-2 technology: 1000 + 11000 * 1.5.
     assert context.capacity("realm") == 17_500
-    assert context.unrest("realm") == 17_500 * 775 // 1000  # 77.5% of capacity at Varied (D33)
+    assert context.unrest("realm") == 17_500 * 825 // 1000
     assert context.limit("realm") == context.capacity("realm")
 
 
