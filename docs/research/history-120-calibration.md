@@ -10,6 +10,10 @@ fail their frozen thresholds. The calibration report retains the evidence and
 limits. No parameters were fitted to held-out outcomes; no profile install, hub
 update or owner game sitting was performed.
 
+**Current R6 status, 2026-11-07:** the renewed freeze has now completed its held-out
+run once. Q1 and Q9 fail; the other twelve checks pass. No parameters or thresholds
+were changed after the run. See the final section for the complete result.
+
 **Superseded as a gate (2026-11-05).** The independent
 [audit](../history-plan.md#21-independent-audit-and-redesign-2026-11-05) measured
 the 1337 maps of these same saved starts. It found that S1–S7 could pass on a
@@ -584,6 +588,52 @@ The source is committed and frozen at `ea4b676` (`3a125fed…3d048d2`). The old 
 as `local_data/history-120/r6/heldout-freeze-823b662.json`; the active record pins the W8 inputs,
 final acceptance artifact, source, knobs, thresholds and reference. Step 3 was not started.
 No hub replacement or game-profile installation belongs to this development calibration.
+
+### R6 held-out run (2026-11-07)
+
+[V-EXEC] Steps 3–4 of the [R6 runbook](../history-core.md#r6-runbook) completed against
+the active freeze: source commit `ea4b676`, source SHA-256
+`3a125fed6fcd31569973f9fb03abd9e7c40aed2f18dcf3c65367218cb3d048d2`, algorithm epoch 61,
+EU5 1.4.7 / build 26377361. The source hash matched before and after the run. Step 3 captured
+the six presets at seeds 1005–1008 (24 physical inputs) and generated 24 ordinary plus 24
+non-default sweep baselines using the saved v1.1.0 source. Step 4 completed all 120 rows:
+72 worlds and 48 control sweeps. All outputs record the frozen source hash. The Varied starts
+were saved for the D30 Q4 diagnostic. No EU5 session was launched.
+
+The frozen evaluator reports **12 of 14 checks passing**. Q1 fails only on fractured regions;
+Q9 fails only on the median subject count. All other statistical checks and S11 pass:
+
+| Check | Held-out result |
+|---|---|
+| Q1 | **Fail:** patchwork 26.16%, rival powers 48.84%, paramount 22.09%, fractured 1.74% (minimum 3%); largest class 48.84% |
+| Q2 | Median 3 classes across 24 worlds |
+| Q3 | Turbulent/Calm turmoil 2.387; rises in 100% of worlds; class directions hold; continuity 85.94% |
+| Q4 | Prudent recognition 77.59%; overreach ended 74.19%; league 90.9%, confederation 100%, sacred centre 60% |
+| Q5 | All 16 control sweeps monotone |
+| Q6 | Great-realm ratio 0.659; 12 realized; four high-sweep worlds |
+| Q7 | Ordinary-size ratios 1.000 / 1.000 / 0.667 at Calm / Varied / Turbulent |
+| Q8 | No landmass-dominance failures |
+| Q9 | **Fail:** median 42 subject pairs (maximum 40); 99.51% scaled |
+| Q10 | Median 9.5 alliances |
+| Q11 | Republic median 18.60%; IQR 14.90 points; government types hold; assortativity 0.2075 |
+| Q12 | Largest family 25.29%; routine 17.98%; 3 distinct families; 24.02% short chronicles |
+| Q13 | Median 91.47% of landed countries visible |
+| S11 | Largest archive 554,854 bytes |
+
+Q4 at both recognition scales on the 24 Varied worlds is:
+
+| Scale | Regional power | Paramount | Combined |
+|---|---:|---:|---:|
+| R6 recognition (D30 gate) | 63/79 = 79.7% | 14/22 = 63.6% | 81/105 = 77.1% |
+| Q1 regional-share rule | 53/79 = 67.1% | 13/22 = 59.1% | 70/105 = 66.7% |
+
+The four prudent great-empire aims are included in both combined rates (4/4 realized).
+The Q1-scale row is diagnostic under D30; Q4 passes on the frozen R6 recognition rule.
+The local evidence is in the ignored `local_data/history-120/r6/captures/`, `baselines/`,
+`sweep-baselines/` and `heldout/` directories, including `heldout/acceptance.json` and
+`heldout/q4-scales.txt`. Because Q1 and Q9 fail, the runbook stops before step 5; no tuning,
+new freeze or repeated held-out run was made. Plan D28 requires a further decision before R6
+continues.
 
 ## R6 development calibration of the audited redesign (2026-11-05)
 

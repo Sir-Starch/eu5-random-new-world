@@ -818,14 +818,16 @@ schema gained fields, and the story is unchanged.
 
 ### R6 runbook
 
-**Status, 2026-11-07:** the owner reopened development after the W8 failures (C507).
-The fixes now pass all fourteen checks on the complete W8 development matrix (C508;
-[report](research/history-120-calibration.md#w8-fixes-and-renewed-development-calibration-2026-11-07)).
-Steps 1–2 are complete again: source commit `ea4b676`, SHA-256 `3a125fed…3d048d2`, is frozen
-in `heldout-freeze.json`; the prior record is kept as `heldout-freeze-823b662.json` alongside
-the older records. Acceptance thresholds and classifier precedence are unchanged. R6 is ready
-for step 3; this development task ends before it. Held-out seeds 1005–1008 have not been captured
-or run. The pending epoch-61 reference reproduces `3a0eff79` (884 files), and `make check` passes.
+**Status, 2026-11-07:** R6 steps 1–4 are complete. On the active freeze at commit `ea4b676`
+(source SHA-256 `3a125fed…3d048d2`, EU5 build `26377361`), step 3 captured all 24 held-out
+physical inputs and produced 24 ordinary plus 24 sweep baselines from the saved v1.1.0 source.
+Step 4 completed all 120 starts (72 worlds, 48 sweeps), each with the frozen source hash.
+The held-out evaluation passes 12 of 14 checks: Q1 fails on fractured-region share (1.74% vs
+3% minimum), and Q9 fails on median subjects (42 vs maximum 40). Q4 passes at the D30 recognition
+scale; its Q1-scale diagnostic is 66.7%. No knob or threshold changed after the run. Per the
+runbook, stop before step 5 pending the further decision required by plan D28. Full results are
+in the [calibration report](research/history-120-calibration.md#r6-held-out-run-2026-11-07).
+
 The record of 2026-11-06 follows. Step 1 (2026-11-05): all fourteen statistical checks pass on the
 development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
