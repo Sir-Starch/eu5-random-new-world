@@ -3,6 +3,8 @@
 
 use rayon::prelude::*;
 
+use crate::lzav;
+
 const FORMAT: u8 = 3;
 const MIN_REFERENCE: usize = 5;
 const LITERALS_AT_END: usize = 9;
@@ -173,10 +175,54 @@ pub fn pack_layer(
     (sizes, packed.concat())
 }
 
+/// Mip level 0 of a layer, south-up as stored: `height * width` samples of `sample_bytes`
+/// little-endian bytes, each tile without its border; equal to the reference
+/// `read_level0` of `tests/reference/tiles.py`.
+///
+/// A tile's bytes are `data[offset..offset + size]`, cut at the end of `data` as a Python
+/// slice is; `spans` holds at least the level's tiles. Rows of tiles decode in parallel,
+/// and a fault reports the first faulty tile in file order.
+pub fn read_level0(
+    data: &[u8],
+    spans: &[(usize, usize)],
+    (height, width): (usize, usize),
+    sample_bytes: usize,
+) -> Result<Vec<u8>, lzav::Fault> {
+    let across = width.div_ceil(TILE);
+    let row_bytes = width * sample_bytes;
+    let mut out = vec![0_u8; height * row_bytes];
+    if out.is_empty() {
+        return Ok(out);
+    }
+    let raw_size = SIDE * SIDE * sample_bytes;
+    let faults: Vec<Result<(), lzav::Fault>> = out
+        .par_chunks_mut(TILE * row_bytes)
+        .enumerate()
+        .map(|(row_tile, chunk)| {
+            let rows = chunk.len() / row_bytes;
+            for column_tile in 0..across {
+                let (offset, size) = spans[row_tile * across + column_tile];
+                let start = offset.min(data.len());
+                let end = offset.saturating_add(size).min(data.len());
+                let tile = lzav::decode(&data[start..end], raw_size)?;
+                let left = column_tile * TILE;
+                let span = TILE.min(width - left) * sample_bytes;
+                for y in 0..rows {
+                    let from = ((BORDER + y) * SIDE + BORDER) * sample_bytes;
+                    let to = y * row_bytes + left * sample_bytes;
+                    chunk[to..to + span].copy_from_slice(&tile[from..from + span]);
+                }
+            }
+            Ok(())
+        })
+        .collect();
+    faults.into_iter().collect::<Result<(), _>>()?;
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::lzav;
 
     #[test]
     fn encoded_streams_decode_to_the_input() {
@@ -201,5 +247,47 @@ mod tests {
         let big: Vec<u16> = vec![5; 300 * 200];
         let (sizes, _) = pack_layer(&big, (300, 200), 1);
         assert_eq!(sizes.len(), 6 + 2 + 1); // 3 x 2 tiles, then 150 x 100 in 2 x 1, then 75 x 50 in one
+    }
+
+    #[test]
+    fn level0_reads_back_what_was_packed() {
+        for (rows, columns, sample_bytes) in
+            [(300, 200, 2), (128, 256, 1), (1, 1, 2), (129, 127, 1)]
+        {
+            let limit: usize = if sample_bytes == 2 { 65_536 } else { 256 };
+            let image: Vec<u16> = (0..rows * columns)
+                .map(|v| (v * 31 % limit) as u16)
+                .collect();
+            let (sizes, bytes) = pack_layer(&image, (rows, columns), sample_bytes);
+            let mut spans = Vec::new();
+            let mut offset = 0;
+            for size in sizes {
+                spans.push((offset, size));
+                offset += size;
+            }
+            let south_up = read_level0(&bytes, &spans, (rows, columns), sample_bytes).unwrap();
+            for row in 0..rows {
+                for column in 0..columns {
+                    let at = ((rows - 1 - row) * columns + column) * sample_bytes;
+                    let value = if sample_bytes == 2 {
+                        u16::from_le_bytes([south_up[at], south_up[at + 1]])
+                    } else {
+                        u16::from(south_up[at])
+                    };
+                    assert_eq!(value, image[row * columns + column]);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn level0_reports_a_damaged_tile() {
+        let (sizes, mut bytes) = pack_layer(&[7; 200 * 100], (200, 100), 1);
+        bytes[0] = 0x25;
+        let spans: Vec<(usize, usize)> = sizes.iter().map(|&size| (0, size)).collect();
+        assert_eq!(
+            read_level0(&bytes, &spans, (200, 100), 1),
+            Err(lzav::Fault::NotLzav)
+        );
     }
 }

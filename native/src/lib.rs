@@ -2,11 +2,13 @@
 //!
 //! Every function equals its Python reference in `tests/reference/` bit for bit.
 
+pub mod cells;
 pub mod components;
 pub mod distance;
 pub mod drainage;
 pub mod hash;
 pub mod lzav;
+pub mod mountains;
 pub mod noise;
 pub mod objects;
 pub mod raster;
@@ -15,7 +17,9 @@ pub mod terrain;
 pub mod tiles;
 pub mod voronoi;
 
-use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
+use numpy::{
+    IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
+};
 use pyo3::prelude::*;
 
 pyo3::create_exception!(_native, LzavError, pyo3::exceptions::PyValueError);
@@ -359,6 +363,131 @@ mod _native {
         shaped(py, (out.len() / 10, 10), out)
     }
 
+    /// `sample_instances` of several instance sets over the same pixels in one call: the
+    /// records of each set in order, each the same as a call of its own.
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn sample_instance_sets<'py>(
+        py: Python<'py>,
+        rows: PyReadonlyArray1<'py, u32>,
+        columns: PyReadonlyArray1<'py, u32>,
+        fine_keys: PyReadonlyArray1<'py, u32>,
+        coarse_keys: PyReadonlyArray1<'py, u32>,
+        use_fine: PyReadonlyArray1<'py, bool>,
+        fines: Vec<PyReadonlyArray1<'py, i64>>,
+        coarses: Vec<PyReadonlyArray1<'py, i64>>,
+        donors: Vec<PyReadonlyArray2<'py, f32>>,
+        keys: Vec<u64>,
+        map_rows: i64,
+    ) -> PyResult<Vec<Bound<'py, PyArray2<f32>>>> {
+        let lengths = [
+            rows.len()?,
+            columns.len()?,
+            fine_keys.len()?,
+            coarse_keys.len()?,
+        ];
+        let sets = keys.len();
+        if lengths.iter().any(|&n| n != lengths[0])
+            || fines.len() != sets
+            || coarses.len() != sets
+            || donors.len() != sets
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "mismatched lengths",
+            ));
+        }
+        let use_fine_values = use_fine.as_slice()?;
+        let mut tables: Vec<(&[i64], &[i64], &[f32])> = Vec::with_capacity(sets);
+        for ((fine, coarse), records) in fines.iter().zip(&coarses).zip(&donors) {
+            if fine.len()? != use_fine_values.len() {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "mismatched lengths",
+                ));
+            }
+            if records.as_array().dim().1 != 10 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "records have ten floats",
+                ));
+            }
+            tables.push((fine.as_slice()?, coarse.as_slice()?, records.as_slice()?));
+        }
+        let (rows, columns) = (rows.as_slice()?, columns.as_slice()?);
+        let (fine_keys, coarse_keys) = (fine_keys.as_slice()?, coarse_keys.as_slice()?);
+        let found: Vec<Vec<f32>> = py.detach(|| {
+            tables
+                .iter()
+                .zip(&keys)
+                .map(|(&(fine, coarse, records), &key)| {
+                    let pixels = objects::PixelView {
+                        rows,
+                        columns,
+                        fine: fine_keys,
+                        coarse: coarse_keys,
+                    };
+                    let density = objects::Densities {
+                        use_fine: use_fine_values,
+                        fine,
+                        coarse,
+                    };
+                    objects::sample_instances(pixels, &density, records, key, map_rows)
+                })
+                .collect()
+        });
+        found
+            .into_iter()
+            .map(|out| shaped(py, (out.len() / 10, 10), out))
+            .collect()
+    }
+
+    /// Sorted unique touching label pairs, packed as `low << 32 | high`.
+    #[pyfunction]
+    fn adjacency_pairs<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        wrap_x: bool,
+        diagonal: bool,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let shape = labels.as_array().dim();
+        let values = labels.as_slice()?;
+        let out = py.detach(|| cells::adjacency_pairs(values, shape, wrap_x, diagonal));
+        Ok(out.into_pyarray(py))
+    }
+
+    /// Sorted unique 4-neighbour label pairs and the number of contacts of each.
+    #[pyfunction]
+    #[allow(clippy::type_complexity)]
+    fn adjacency_lengths<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+    ) -> PyResult<(Bound<'py, PyArray1<i64>>, Bound<'py, PyArray1<i64>>)> {
+        let shape = labels.as_array().dim();
+        let values = labels.as_slice()?;
+        let (pairs, lengths) = py.detach(|| cells::adjacency_lengths(values, shape));
+        Ok((pairs.into_pyarray(py), lengths.into_pyarray(py)))
+    }
+
+    /// Pixels, row, column, elevation and elevation square sums of each of `count` cells,
+    /// as five rows of `count`.
+    #[pyfunction]
+    fn cell_sums<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        elevation: PyReadonlyArray2<'py, i32>,
+        count: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = labels.as_array().dim();
+        if elevation.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the labels and the elevation differ in shape",
+            ));
+        }
+        let (values, heights) = (labels.as_slice()?, elevation.as_slice()?);
+        let out = py
+            .detach(|| cells::cell_sums(values, heights, shape, count))
+            .map_err(|_| pyo3::exceptions::PyValueError::new_err("a label is past the count"))?;
+        shaped(py, (5, count), out)
+    }
+
     /// Number the 4-connected equal-label components in raster order of first pixel.
     #[pyfunction]
     fn label_components<'py>(
@@ -539,6 +668,93 @@ mod _native {
         let samples = image.as_slice()?;
         let (sizes, bytes) = py.detach(|| tiles::pack_layer(samples, shape, sample_bytes));
         Ok((sizes, PyBytes::new(py, &bytes)))
+    }
+
+    /// Mip level 0 of a tiled layer, south-up as stored, as `height x width` samples of 16
+    /// bits (`sample_bytes` 2) or 8 bits (1); tiles decode in parallel in one call.
+    #[pyfunction]
+    fn read_level0<'py>(
+        py: Python<'py>,
+        data: &[u8],
+        spans: Vec<(usize, usize)>,
+        shape: (usize, usize),
+        sample_bytes: usize,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let tiles = shape.0.div_ceil(tiles::TILE) * shape.1.div_ceil(tiles::TILE);
+        if !(1..=2).contains(&sample_bytes) || spans.len() < tiles {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the layer lists fewer tiles than its size needs, or an unknown sample size",
+            ));
+        }
+        if sample_bytes == 1 {
+            let out = py
+                .detach(|| tiles::read_level0(data, &spans, shape, 1))
+                .map_err(|fault| LzavError::new_err(fault.to_string()))?;
+            return Ok(shaped(py, shape, out)?.into_any());
+        }
+        let out = py
+            .detach(|| {
+                tiles::read_level0(data, &spans, shape, 2).map(|bytes| {
+                    bytes
+                        .as_chunks::<2>()
+                        .0
+                        .iter()
+                        .map(|&pair| u16::from_le_bytes(pair))
+                        .collect::<Vec<u16>>()
+                })
+            })
+            .map_err(|fault| LzavError::new_err(fault.to_string()))?;
+        Ok(shaped(py, shape, out)?.into_any())
+    }
+
+    /// Additive height and laid slot of the mountain stamps over a decal window: `sources`
+    /// and `materials` stack the stamps' images (no materials: zero images), `placements`
+    /// has a row of seven numbers per stamp and `bounds` four.
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn mountain_stamp<'py>(
+        py: Python<'py>,
+        sources: PyReadonlyArray3<'py, u16>,
+        materials: PyReadonlyArray3<'py, u8>,
+        placements: PyReadonlyArray2<'py, i64>,
+        bounds: PyReadonlyArray2<'py, i64>,
+        rotations: Vec<(i64, i64)>,
+        origin: (i64, i64),
+        shape: (usize, usize),
+        unit: i64,
+        no_material: u8,
+    ) -> PyResult<(Bound<'py, PyArray2<i64>>, Bound<'py, PyArray2<u8>>)> {
+        let (count, height, width) = sources.as_array().dim();
+        let (material_count, slot_height, slot_width) = materials.as_array().dim();
+        let images = mountains::Sources {
+            heights: sources.as_slice()?,
+            count,
+            shape: (height, width),
+            materials: materials.as_slice()?,
+            material_count,
+            material_shape: (slot_height, slot_width),
+        };
+        let (placements, bounds) = (placements.as_slice()?, bounds.as_slice()?);
+        let (out, laid) = py
+            .detach(|| {
+                mountains::stamp(
+                    &images,
+                    placements,
+                    bounds,
+                    &rotations,
+                    origin,
+                    shape,
+                    unit,
+                    no_material,
+                )
+            })
+            .map_err(|fault| {
+                pyo3::exceptions::PyValueError::new_err(match fault {
+                    mountains::Fault::Shape => "the stamps' sources or tables do not fit together",
+                    mountains::Fault::Placement => "a stamp names no source or rotation it has",
+                })
+            })?;
+        Ok((shaped(py, shape, out)?, shaped(py, shape, laid)?))
     }
 
     /// Land mask, canvas mask and heights of a decal window at decal resolution.

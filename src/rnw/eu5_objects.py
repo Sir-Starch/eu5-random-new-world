@@ -224,6 +224,31 @@ def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, donor
     )
 
 
+def sample_instance_sets(  # noqa: PLR0913 - sampling needs pixels, densities, donors and seeds.
+    pixels: tuple[NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32]],
+    *,
+    use_fine: NDArray[np.bool_],
+    densities: list[tuple[NDArray[np.int64], NDArray[np.int64]]],
+    sources: list[NDArray[np.float32]],
+    rows: int,
+    keys: list[int],
+) -> list[NDArray[np.float32]]:
+    """``sample_instances`` of several instance sets over the same pixels, in one native call.
+
+    Each set's records are those of a call of its own; one call instead of one per set keeps
+    the sampling from waiting for the interpreter after each set while other stages run.
+    """
+    return _native.sample_instance_sets(
+        *pixels,
+        use_fine,
+        [fine for fine, _ in densities],
+        [coarse for _, coarse in densities],
+        [np.ascontiguousarray(source, dtype=np.float32) for source in sources],
+        [key & MASK64 for key in keys],
+        rows,
+    )
+
+
 def canvas_pixels(
     classes: PixelClasses, canvas: NDArray[np.bool_], first: int = 0, last: int | None = None
 ) -> tuple[NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32]]:
@@ -306,20 +331,20 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     ]
     kept_records = [instance.records[~inside] for instance, inside in affected]
     fresh: list[list[NDArray[np.float32]]] = [[] for _ in affected]
+    keys = [derive_seed(seed, "objects", instance.name) for instance, _ in affected]
     for first, last in strips:
         checkpoint()
         pixels = canvas_pixels(classes, canvas, first, last)
-        for index, (instance, _) in enumerate(affected):
-            fresh[index].append(
-                sample_instances(
-                    pixels,
-                    use_fine=use_fine,
-                    densities=scaled[index],
-                    source=kept_records[index],
-                    rows=rows,
-                    key=derive_seed(seed, "objects", instance.name),
-                )
-            )
+        found = sample_instance_sets(
+            pixels,
+            use_fine=use_fine,
+            densities=scaled,
+            sources=kept_records,
+            rows=rows,
+            keys=keys,
+        )
+        for index, records in enumerate(found):
+            fresh[index].append(records)
     added = sum(int(part.shape[0]) for parts in fresh for part in parts)
     if added > removed:
         message = f"{added} new map object instances outnumber the {removed} they replace"

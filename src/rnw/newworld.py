@@ -971,6 +971,28 @@ def _world_edge(
     return ocean & ~inner
 
 
+def _first_land(
+    domain: NDArray[np.bool_],
+    seed: int,
+    settings: NewWorldSettings,
+    drawn: NDArray[np.bool_] | None,
+    stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None,
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
+    """Land, ocean and lake masks of the domain: drawn, kept from a sketch or made now."""
+    if drawn is not None:
+        if settings.landform:
+            message = "The Wall cannot be combined with a drawn land mask"
+            raise LandMaskError(message)
+        return _land_from_mask(domain, drawn, settings)
+    if stage is not None:
+        if any(mask.shape != domain.shape for mask in stage):
+            message = "The kept land stage does not fit the domain"
+            raise ValueError(message)
+        return stage
+    land, ocean, lakes, _ = land_stage(domain, seed, settings)
+    return land, ocean, lakes
+
+
 def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, seed, settings and the extras.
     domain: NDArray[np.bool_],
     *,
@@ -979,11 +1001,14 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     drawn: NDArray[np.bool_] | None = None,
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
+    stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
     With ``drawn`` (a land mask fitted to the domain, ``rnw.landmask``) the land is the
-    drawing's and the generator makes the rest on it.
+    drawing's and the generator makes the rest on it. ``stage`` is the land, ocean and lake
+    masks that ``land_stage`` made of this domain, seed and settings before (a sketched
+    continent, ``rnw.landcache``), so they are not made again; the arrays are consumed.
 
     ``groups`` are island groups that the domain covers. The land is made on the whole domain; a
     group that it leaves room stays, and one it touches moves to free ocean (``rnw.islands``).
@@ -996,13 +1021,7 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     The land cells, the sea cells and the relief depend only on the masks, so they are
     built beside each other when the machine has the cores and the memory for it.
     """
-    if drawn is None:
-        land, ocean, lakes, _ = land_stage(domain, seed, settings)
-    else:
-        if settings.landform:
-            message = "The Wall cannot be combined with a drawn land mask"
-            raise LandMaskError(message)
-        land, ocean, lakes = _land_from_mask(domain, drawn, settings)
+    land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage)
     whole = domain
     moves = place(whole, land, ocean, groups, margin=settings.coast_margin_px)
     domain = carve(whole, groups, moves)
@@ -1087,28 +1106,21 @@ def _cell_sums(
 ) -> tuple[NDArray[np.int64], ...]:
     """Pixels, row sum, column sum, elevation sum and elevation square sum per cell.
 
-    The sums are exact integers in float64 (below 2**53), added strip by strip, so the
-    result does not depend on the strip height.
+    The sums are exact 64-bit integers, added in parallel bands of rows, so the result does
+    not depend on the band height. The kernel is Rust (ADR 0005); its NumPy specification is
+    ``cell_sums`` of ``tests/reference/newworld.py``.
     """
-    rows, width = (int(size) for size in labels.shape)
-    totals = np.zeros((5, count), dtype=np.float64)
-    columns_of = np.arange(width, dtype=np.int64)
-    for first in range(0, rows, STRIP_ROWS):
-        last = min(rows, first + STRIP_ROWS)
-        strip = labels[first:last]
-        inside = strip >= 0
-        owner = strip[inside]
-        row_index = np.broadcast_to(
-            np.arange(first, last, dtype=np.int64)[:, np.newaxis], strip.shape
-        )
-        column_index = np.broadcast_to(columns_of[np.newaxis, :], strip.shape)
-        values = elevation[first:last][inside].astype(np.int64)
-        totals[0] += np.bincount(owner, minlength=count)
-        for slot, weights in enumerate(
-            (row_index[inside], column_index[inside], values, values * values), start=1
-        ):
-            totals[slot] += np.bincount(owner, weights=weights, minlength=count)
-    return tuple(total.astype(np.int64) for total in totals)
+    if elevation.dtype != np.int32 and elevation.size:
+        low, high = int(elevation.min()), int(elevation.max())
+        if low < np.iinfo(np.int32).min or high > np.iinfo(np.int32).max:
+            message = f"Elevation {low}..{high} does not fit the 32-bit cell sums"
+            raise ValueError(message)
+    sums = _native.cell_sums(
+        np.ascontiguousarray(labels, dtype=np.int32),
+        np.ascontiguousarray(elevation, dtype=np.int32),
+        count,
+    )
+    return tuple(sums[index] for index in range(5))
 
 
 def derive_world(

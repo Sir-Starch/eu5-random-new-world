@@ -1,6 +1,7 @@
-"""Pure NumPy tiling and Python LZAV packing: the specification of the Rust layer packer.
+"""Pure NumPy tiling and Python LZAV packing: the specification of the Rust layer packer
+and reader.
 
-Moved from ``rnw.terrain_tiles`` when ``write_layer`` became native
+Moved from ``rnw.terrain_tiles`` when ``write_layer`` and then ``read_level0`` became native
 (docs/adr/0005-native-core.md).
 """
 
@@ -14,7 +15,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from rnw.terrain_tiles import BORDER, SIDE, TILE, level_shapes, tile_counts
-from tests.reference.lzav import encode
+from tests.reference.lzav import decode, encode
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -65,3 +66,20 @@ def write_layer(north_up: NDArray[np.int64], layer: LayerFormat) -> tuple[str, b
         f"tile_infos={{ {infos} }}\n"
     )
     return info, b"".join(chunks)
+
+
+def read_level0(
+    layer: LayerFormat, spans: list[tuple[int, int]], data: bytes
+) -> NDArray[np.uint16] | NDArray[np.uint8]:
+    """Decode mip level 0 tile by tile and return it north-up, in the sample type of the layer."""
+    down, across = tile_counts(layer.height, layer.width)
+    image = np.zeros((down * TILE, across * TILE), dtype=layer.dtype)
+    raw_size = SIDE * SIDE * layer.sample_bytes
+    for index in range(down * across):
+        offset, size = spans[index]
+        tile = np.frombuffer(decode(data[offset : offset + size], raw_size), layer.dtype)
+        row, column = divmod(index, across)
+        image[row * TILE : (row + 1) * TILE, column * TILE : (column + 1) * TILE] = tile.reshape(
+            SIDE, SIDE
+        )[BORDER : BORDER + TILE, BORDER : BORDER + TILE]
+    return image[: layer.height, : layer.width][::-1]

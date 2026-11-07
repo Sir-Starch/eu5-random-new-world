@@ -913,7 +913,7 @@ class Controller:
             return text("ready_busy")
         if self.game is None:
             return text("ready_no_game")
-        code, game = self.world_code(), self.game
+        code, game, cache = self.world_code(), self.game, service.land_cache(self.data)
         try:
             seeds = candidates.roll(count)
         except candidates.CandidateError as error:
@@ -921,7 +921,7 @@ class Controller:
         self.candidates, self.candidate_code = [], None
 
         def work(_progress: Progress) -> None:
-            found = candidates.sketch(game.directory, code.settings(), seeds)
+            found = candidates.sketch(game.directory, code.settings(), seeds, cache=cache)
             with self._lock:
                 self.candidates, self.candidate_code = found, code
 

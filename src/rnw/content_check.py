@@ -9,13 +9,14 @@ no output.
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 from rnw.content_decisions import TABLE, Verdict, decide, missing
 from rnw.content_inventory import (
     Consumer,
     Footprint,
+    Trees,
     category_of,
     objects,
     read_footprint,
@@ -42,6 +43,8 @@ class Checked:
     footprint: Footprint
     consumers: Mapping[str, Consumer]
     verdicts: Mapping[str, Verdict]
+    # The vanilla scripts as the scan parsed them, for ``check_outcomes``, which lets them go.
+    trees: Trees = field(default_factory=Trees, repr=False, compare=False)
 
     def stats(self) -> dict[str, object]:
         """Counts of the consumers by decision, for the export's report."""
@@ -70,7 +73,8 @@ def check_decisions(
     if outside:
         message = f"Tags retired outside the American footprint: {', '.join(outside)}"
         raise ValueError(message)
-    consumers = scan(game_dir, footprint, {"events": events, MODIFIERS: modifiers})
+    trees = Trees()
+    consumers = scan(game_dir, footprint, {"events": events, MODIFIERS: modifiers}, trees=trees)
     undecided = missing(consumers.values(), footprint.tags, table)
     if undecided:
         shown = ", ".join(undecided[:SHOWN]) + (" ..." if len(undecided) > SHOWN else "")
@@ -84,7 +88,7 @@ def check_decisions(
         if verdict is None:  # pragma: no cover - ``missing`` returned nothing
             raise ValueError(key)
         verdicts[key] = verdict
-    return Checked(footprint, consumers, verdicts)
+    return Checked(footprint, consumers, verdicts, trees)
 
 
 def _shown(items: list[str]) -> str:
@@ -105,6 +109,7 @@ def check_outcomes(
     no object still names an American key that the generated world lacks (the engine logs each
     such key as an error when it loads the scripts, EU5 1.4.4, C223). A word that the decision
     table calls a given name is no reference. Raises ``ValueError`` listing the offenders.
+    The texts that the scan of ``checked`` parsed are not parsed again; they are let go here.
     """
     files = script_files(game_dir)
     original = {relative: path.read_bytes().decode("utf-8-sig") for relative, path in files.items()}
@@ -115,7 +120,9 @@ def check_outcomes(
     vanished: list[str] = []
     for relative in sorted(scripts.keys() & files.keys()):
         category = category_of(relative)
-        for ident in sorted(objects(original[relative]) - objects(final[relative])):
+        trees = checked.trees
+        gone = objects(original[relative], trees=trees) - objects(final[relative], trees=trees)
+        for ident in sorted(gone):
             consumer = checked.consumers.get(f"{category}:{ident}")
             if consumer is None or not consumer.retired:
                 vanished.append(f"{category}:{ident}")
@@ -126,7 +133,7 @@ def check_outcomes(
         raise ValueError(message)
     named = {
         key: kinds
-        for key, kinds in residuals(final, checked.footprint, present).items()
+        for key, kinds in residuals(final, checked.footprint, present, trees=checked.trees).items()
         if checked.verdicts.get(key) is None or checked.verdicts[key].reason != NOT_A_REFERENCE
     }
     if named:
@@ -138,5 +145,6 @@ def check_outcomes(
             f"{len(named)} script objects name keys the generated world lacks: {_shown(shown)}"
         )
         raise ValueError(message)
-    counted = sum(len(objects(text)) for text in final.values())
+    counted = sum(len(objects(text, trees=checked.trees)) for text in final.values())
+    checked.trees.clear()
     return {"objects": counted, "rewritten": len(scripts)}

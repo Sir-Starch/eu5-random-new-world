@@ -60,6 +60,22 @@ def _pooled(mask: NDArray[np.bool_], *, outside: bool = False) -> NDArray[np.boo
     return padded.reshape(rows, BLOCK, columns, BLOCK).any(axis=(1, 3))
 
 
+def _pool_into(blocked: NDArray[np.bool_], mask: NDArray[np.bool_]) -> None:
+    """``blocked |= _pooled(mask, outside=True)``, over the blocks that hold a pixel of ``mask``.
+
+    The blocks that the last ones reach past the mask are set already: ``blocked`` began as a
+    pooled mask with ``outside`` set, and it only grows.
+    """
+    rows = np.flatnonzero(mask.any(axis=1))
+    if rows.size == 0:
+        return
+    columns = np.flatnonzero(mask[int(rows[0]) : int(rows[-1]) + 1].any(axis=0))
+    top, bottom = int(rows[0]) // BLOCK, int(rows[-1]) // BLOCK + 1
+    left, right = int(columns[0]) // BLOCK, int(columns[-1]) // BLOCK + 1
+    window = mask[top * BLOCK : bottom * BLOCK, left * BLOCK : right * BLOCK]
+    blocked[top:bottom, left:right] |= _pooled(window, outside=True)
+
+
 def _paint(
     shape: tuple[int, int], footprint: Footprint, rows: int = 0, columns: int = 0
 ) -> NDArray[np.bool_]:
@@ -142,7 +158,7 @@ def place(
             raise PlacementError(message)
         moves[index] = found
         placed = _paint(shape, groups[index], *found)
-        blocked |= _pooled(within(placed, margin), outside=True)
+        _pool_into(blocked, within(placed, margin))
     return tuple(move for move in moves if move is not None)
 
 

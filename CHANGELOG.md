@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Make continents faster. *Choose a continent* draws its six sketches side by side instead of
+  one after another, and keeps them: the world made from a chosen sketch starts from its land
+  instead of drawing it again. The area of the game's map that a New World replaces is chosen
+  once per game version and kept. On the reference machine six sketches took 36 seconds, or
+  22 once the area is kept, where they took three and a half minutes; a world takes under four
+  minutes where it took five, and less when it is made from a sketch. Terrain, mountains and
+  vegetation no longer wait for the rest of the generator, and the game's scripts are read once
+  for all the checks. Every world is the same, byte for byte. The cache of made land no longer
+  grows without bound: it keeps the last four continents and the last sketches (it had reached
+  13 GB).
+
 - Name the New World's regions after their peoples, and show the game's names in the
   generator. A region takes its name in the language most of its land speaks, as areas and
   provinces already did, and the colonies and realms named after it follow. The generator's

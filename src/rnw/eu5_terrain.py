@@ -774,30 +774,49 @@ def _shift_stamp(raw: str, down: int, across: int, width: int) -> str:
     return number("position.y", number("position.x", raw, across, width), -down, None)
 
 
-def disable_decals(
-    store: DecalStore, codes: NDArray[np.int8], moved: Moved | None = None
-) -> tuple[dict[str, bytes], bytes]:
-    """Extend primary heightmaps and disable obsolete mountains in instances and cache.
+def _moved_steps(
+    moved: Moved | None, rows: int, points: list[tuple[float, float]]
+) -> list[tuple[int, int] | None]:
+    """The step of each point's pixel if it lies on a moved group, asked in one call: a call
+    each would wait for the interpreter thousands of times beside other stages."""
+    if moved is None or not points:
+        return [None] * len(points)
+    found, down, across = moved.find(
+        np.array([rows - 1 - int(y) // LOCATION_UNITS for _, y in points], dtype=np.int64),
+        np.array([int(x) // LOCATION_UNITS for x, _ in points], dtype=np.int64),
+    )
+    return [
+        (int(step), int(side)) if hit else None
+        for hit, step, side in zip(found.tolist(), down.tolist(), across.tolist(), strict=True)
+    ]
 
-    A mountain on a moved island group moves with it instead: its instance and its cache entry
-    take the new position, and it stays enabled.
-    """
-    kept: list[dict[str, object]] = []
-    wrapped, files = _wrapped_heightmaps(store)
+
+def _kept_cache(
+    store: DecalStore,
+    codes: NDArray[np.int8],
+    wrapped: dict[str, dict[str, object]],
+    moved: Moved | None,
+) -> list[dict[str, object]]:
+    """The decal cache's entries that stay: heightmaps (extended where wrapped), mountains off
+    the canvas, and the mountains of moved groups at their new places."""
     rows, width = store.map_shape
-
-    def moved_by(x: float, y: float) -> tuple[int, int] | None:
-        if moved is None:
-            return None
-        found, down, across = moved.find(
-            np.array([rows - 1 - int(y) // LOCATION_UNITS]), np.array([int(x) // LOCATION_UNITS])
-        )
-        return (int(down[0]), int(across[0])) if bool(found[0]) else None
-
-    for entry in store.cache:
-        name = str(entry["decal_name"])
-        position = cast("dict[str, dict[str, float]]", entry["decal_transform"])["position"]
-        step = None if HEIGHTMAP.fullmatch(name) else moved_by(position["x"], position["y"])
+    positions = [
+        cast("dict[str, dict[str, float]]", entry["decal_transform"])["position"]
+        for entry in store.cache
+    ]
+    names = [str(entry["decal_name"]) for entry in store.cache]
+    asked = [
+        (index, (position["x"], position["y"]))
+        for index, (name, position) in enumerate(zip(names, positions, strict=True))
+        if not HEIGHTMAP.fullmatch(name)
+    ]
+    steps: list[tuple[int, int] | None] = [None] * len(store.cache)
+    for (index, _), step in zip(
+        asked, _moved_steps(moved, rows, [point for _, point in asked]), strict=True
+    ):
+        steps[index] = step
+    kept: list[dict[str, object]] = []
+    for entry, name, position, step in zip(store.cache, names, positions, steps, strict=True):
         if step is not None:
             shifted = deepcopy(entry)
             place = cast("dict[str, dict[str, float]]", shifted["decal_transform"])["position"]
@@ -806,24 +825,58 @@ def disable_decals(
             kept.append(shifted)
         elif HEIGHTMAP.fullmatch(name) or not _inside(codes, position["x"], position["y"]):
             kept.append(wrapped.get(name, entry))
+    return kept
+
+
+def _instance_files(
+    store: DecalStore, codes: NDArray[np.int8], moved: Moved | None
+) -> dict[str, bytes]:
+    """Mountain instances on the canvas disabled, and those of moved groups moved with them."""
+    rows, width = store.map_shape
     decals = store.game_dir / TERRAIN / "decals"
+    instances: list[tuple[str, bytes, dict[str, object]]] = []
     for folder in sorted(path for path in decals.iterdir() if path.is_dir()):
         if HEIGHTMAP.fullmatch(folder.name) or not (folder / "instances").is_dir():
             continue
         for instance in sorted((folder / "instances").glob("*.json")):
             raw = instance.read_bytes()
             data = cast("dict[str, object]", json.loads(raw.decode("utf-8-sig")))
-            x = cast("float", data["position.x"])
-            y = cast("float", data["position.y"])
-            step = moved_by(x, y) if data.get("disabled") is False else None
             relative = f"in_game/gfx/terrain2/decals/{folder.name}/instances/{instance.name}"
-            prefix = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
-            if step is not None:
-                text = _shift_stamp(raw.decode("utf-8-sig"), step[0], step[1], width)
-                files[relative] = (prefix + text).encode("utf-8")
-            elif data.get("disabled") is False and _inside(codes, x, y):
-                text = raw.decode("utf-8-sig").replace('"disabled":\tfalse', '"disabled":\ttrue')
-                files[relative] = (prefix + text).encode("utf-8")
+            instances.append((relative, raw, data))
+    enabled = [
+        index for index, (_, _, data) in enumerate(instances) if data.get("disabled") is False
+    ]
+    points = [
+        (cast("float", instances[i][2]["position.x"]), cast("float", instances[i][2]["position.y"]))
+        for i in enabled
+    ]
+    shifts = dict(zip(enabled, _moved_steps(moved, rows, points), strict=True))
+    files: dict[str, bytes] = {}
+    for index, (relative, raw, data) in enumerate(instances):
+        step = shifts.get(index)
+        prefix = "\ufeff" if raw.startswith(b"\xef\xbb\xbf") else ""
+        if step is not None:
+            text = _shift_stamp(raw.decode("utf-8-sig"), step[0], step[1], width)
+            files[relative] = (prefix + text).encode("utf-8")
+        elif data.get("disabled") is False and _inside(
+            codes, cast("float", data["position.x"]), cast("float", data["position.y"])
+        ):
+            text = raw.decode("utf-8-sig").replace('"disabled":\tfalse', '"disabled":\ttrue')
+            files[relative] = (prefix + text).encode("utf-8")
+    return files
+
+
+def disable_decals(
+    store: DecalStore, codes: NDArray[np.int8], moved: Moved | None = None
+) -> tuple[dict[str, bytes], bytes]:
+    """Extend primary heightmaps and disable obsolete mountains in instances and cache.
+
+    A mountain on a moved island group moves with it instead: its instance and its cache entry
+    take the new position, and it stays enabled.
+    """
+    wrapped, files = _wrapped_heightmaps(store)
+    kept = _kept_cache(store, codes, wrapped, moved)
+    files.update(_instance_files(store, codes, moved))
     cache_out = ("\ufeff" + json.dumps(kept, indent="\t", ensure_ascii=False) + "\n").encode(
         "utf-8"
     )

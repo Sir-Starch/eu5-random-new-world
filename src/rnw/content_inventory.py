@@ -130,6 +130,32 @@ def read_footprint(game_dir: Path) -> Footprint:
     return Footprint(keys, frozenset(result.removed_ids & defined))
 
 
+class Trees:
+    """Parsed script texts by their text, so a text met again is not parsed again.
+
+    The inventory and its checks read the game's scripts more than once (the scan of the
+    vanilla files, then the check of what the world writes, most of it unchanged); parsing
+    them once takes most of that time. A tree is only read, never changed, by its users.
+    """
+
+    __slots__: tuple[str, ...] = ("_found",)
+
+    def __init__(self) -> None:
+        self._found: dict[str, Block] = {}
+
+    def of(self, text: str) -> Block:
+        """The root block of ``text``, parsed the first time it is asked for."""
+        found = self._found.get(text)
+        if found is None:
+            found = parse(text)
+            self._found[text] = found
+        return found
+
+    def clear(self) -> None:
+        """Let the trees go."""
+        self._found.clear()
+
+
 def category_of(relative: str) -> str:
     """The kind of script object a file under the remap roots holds."""
     parts = relative.split("/")
@@ -197,20 +223,26 @@ def lost_states(objects: Mapping[str, str], retired: Iterable[str]) -> dict[str,
 
 
 def scan(
-    game_dir: Path, footprint: Footprint, retired: Mapping[str, Iterable[str]] | None = None
+    game_dir: Path,
+    footprint: Footprint,
+    retired: Mapping[str, Iterable[str]] | None = None,
+    *,
+    trees: Trees | None = None,
 ) -> dict[str, Consumer]:
     """Every top-level script object that names replaced content, by decision key.
 
     ``retired`` lists, by category, the objects the exporter removes today; each one is a
     consumer even where it names no key. An object that reads state only a retired object
-    sets is a consumer of kind ``state``.
+    sets is a consumer of kind ``state``. The files are parsed into ``trees``, when given, for
+    the checks that read them again.
     """
+    trees = Trees() if trees is None else trees
     parsed: dict[str, tuple[str, Block]] = {}
     keywords: set[str] = set()
     for relative, path in script_files(game_dir).items():
         checkpoint()
         text = path.read_text(encoding="utf-8-sig")
-        parsed[relative] = (text, parse(text))
+        parsed[relative] = (text, trees.of(text))
         keywords |= _keys(parsed[relative][1])
     words = frozenset(keywords)
     merged: dict[str, tuple[set[str], dict[str, set[str]]]] = {}
@@ -257,7 +289,11 @@ def scan(
 
 
 def residuals(
-    texts: Mapping[str, str], footprint: Footprint, present: Mapping[str, AbstractSet[str]]
+    texts: Mapping[str, str],
+    footprint: Footprint,
+    present: Mapping[str, AbstractSet[str]],
+    *,
+    trees: Trees | None = None,
 ) -> dict[str, dict[str, tuple[str, ...]]]:
     """The objects of ``texts`` that still name a key the generated world does not have.
 
@@ -266,7 +302,8 @@ def residuals(
     vanilla files, minus what the remap and the decisions took away: a name of an American
     location, province, area, region or subcontinent that is gone, by decision key.
     """
-    parsed = {relative: (text, parse(text)) for relative, text in texts.items()}
+    trees = Trees() if trees is None else trees
+    parsed = {relative: (text, trees.of(text)) for relative, text in texts.items()}
     keywords: set[str] = set()
     for _, root in parsed.values():
         keywords |= _keys(root)
@@ -290,11 +327,12 @@ def residuals(
     }
 
 
-def objects(text: str) -> frozenset[str]:
+def objects(text: str, *, trees: Trees | None = None) -> frozenset[str]:
     """The identifiers of the top-level script objects of ``text``."""
+    root = parse(text) if trees is None else trees.of(text)
     return frozenset(
         entry.key
-        for entry in parse(text).entries
+        for entry in root.entries
         if entry.key is not None and isinstance(entry.value, Block)
     )
 

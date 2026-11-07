@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from rnw import landcache
 from rnw.app import candidates
 from rnw.eu5_canvas import Canvas
 from rnw.newworld import land_stage
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 @dataclass(frozen=True, slots=True)
 class MapStub:
     labels: NDArray[np.int32]
+    inputs: tuple[str, ...] = ("map.png 1 0",)
+    keys: tuple[str, ...] = ()
 
 
 def test_sketches_use_the_worlds_land_stage_and_leave_no_mod(
@@ -41,7 +44,7 @@ def test_sketches_use_the_worlds_land_stage_and_leave_no_mod(
         return canvas
 
     monkeypatch.setattr(candidates, "load_map", load)
-    monkeypatch.setattr(candidates, "select_canvas", select)
+    monkeypatch.setattr(landcache, "select_canvas", select)
     settings = replace(PRESETS["continents"], new_world=SMALL)
     expected, _sea, lakes, _height = land_stage(domain.copy(), 42, SMALL)
     found = candidates.sketch(tmp_path, settings, [42, 91])
@@ -68,3 +71,42 @@ def test_sketching_respects_cancellation(tmp_path: Path) -> None:
     progress.cancel()
     with active(progress), pytest.raises(Cancelled):
         _ = candidates.sketch(tmp_path, PRESETS["continents"], [42])
+
+
+def test_sketches_made_beside_each_other_equal_one_after_the_other_and_keep_their_land(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The sketches do not depend on how many are made at once, and each one's land stage is
+    kept for the world made from it."""
+    domain = np.ones((160, 192), dtype=np.bool_)
+    canvas = Canvas(
+        0, 0, domain, (160, 192), np.zeros(1, dtype=np.bool_), np.zeros(1, dtype=np.bool_)
+    )
+
+    def load(_root: Path) -> MapStub:
+        return MapStub(np.zeros((1, 1), dtype=np.int32))
+
+    def select(_map: MapStub, _band: int, *, expanded: bool) -> Canvas:
+        assert expanded
+        return canvas
+
+    monkeypatch.setattr(candidates, "load_map", load)
+    monkeypatch.setattr(landcache, "select_canvas", select)
+    settings = replace(PRESETS["continents"], new_world=SMALL)
+    seeds = [3, 5, 8, 13]
+    monkeypatch.setenv("RNW_THREADS", "1")
+    alone = candidates.sketch(tmp_path, settings, seeds)
+    monkeypatch.setenv("RNW_THREADS", "4")
+    cache = tmp_path / "cache"
+    beside = candidates.sketch(tmp_path, settings, seeds, cache=cache)
+    assert [item.seed for item in beside] == seeds
+    for first, second in zip(alone, beside, strict=True):
+        assert np.array_equal(first.picture, second.picture)
+        assert first.land_permille == second.land_permille
+    digest = landcache.domain_digest(domain)
+    for seed in seeds:
+        kept = landcache.read_stage(cache, landcache.stage_key(digest, seed, SMALL), domain.shape)
+        assert kept is not None
+        expected = land_stage(domain.copy(), seed, SMALL)[:3]
+        assert all(np.array_equal(a, b) for a, b in zip(kept, expected, strict=True))

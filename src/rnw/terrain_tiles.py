@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import _native
-from rnw.lzav import decode
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -84,18 +83,18 @@ def tile_counts(rows: int, columns: int) -> tuple[int, int]:
 def read_level0(
     layer: LayerFormat, spans: list[tuple[int, int]], data: bytes
 ) -> NDArray[np.uint16] | NDArray[np.uint8]:
-    """Decode mip level 0 and return it north-up, in the sample type of the layer."""
+    """Decode mip level 0 and return it north-up, in the sample type of the layer.
+
+    The tiles are decoded natively in one call (ADR 0005): a call per tile waited for the
+    interpreter after each of a layer's two thousand tiles whenever another stage ran Python
+    beside it. The NumPy and Python version is ``tests/reference/tiles.py``.
+    """
     down, across = tile_counts(layer.height, layer.width)
-    image = np.zeros((down * TILE, across * TILE), dtype=layer.dtype)
-    raw_size = SIDE * SIDE * layer.sample_bytes
-    for index in range(down * across):
-        offset, size = spans[index]
-        tile = np.frombuffer(decode(data[offset : offset + size], raw_size), layer.dtype)
-        row, column = divmod(index, across)
-        image[row * TILE : (row + 1) * TILE, column * TILE : (column + 1) * TILE] = tile.reshape(
-            SIDE, SIDE
-        )[BORDER : BORDER + TILE, BORDER : BORDER + TILE]
-    return image[: layer.height, : layer.width][::-1]
+    if len(spans) < down * across:
+        message = f"the layer lists {len(spans)} tiles and its size needs {down * across}"
+        raise TileFormatError(message)
+    image = _native.read_level0(data, spans, (layer.height, layer.width), layer.sample_bytes)
+    return image[::-1]
 
 
 def write_layer(north_up: NDArray[np.integer], layer: LayerFormat) -> tuple[str, bytes]:

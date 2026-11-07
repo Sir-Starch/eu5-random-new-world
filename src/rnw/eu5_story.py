@@ -114,15 +114,29 @@ def _lines(text: str, block: Block, skip: frozenset[str]) -> tuple[str, ...]:
     )
 
 
-def payload(game_dir: Path, source: Source) -> Payload:
-    """The effect lines of ``source`` in the installation; raises if it is gone or empty."""
+type Folders = dict[Path, dict[str, tuple[str, Block]]]
+
+
+def payload(game_dir: Path, source: Source, *, folders: Folders | None = None) -> Payload:
+    """The effect lines of ``source`` in the installation; raises if it is gone or empty.
+
+    ``folders`` keeps the blocks of each folder read, so the payloads of one world parse each
+    of the game's files once.
+    """
     directory = {
         STATIC: STATIC_DIR,
         BUILDING: BUILDING_DIR,
         PRIVILEGE: PRIVILEGE_DIR,
         REFORM: REFORM_DIR,
     }[source.kind]
-    found = _entries(game_dir / directory).get(source.name)
+    folder = game_dir / directory
+    if folders is None:
+        blocks = _entries(folder)
+    else:
+        blocks = folders.get(folder)
+        if blocks is None:
+            blocks = folders[folder] = _entries(folder)
+    found = blocks.get(source.name)
     if found is None:
         message = f"The {source.kind} {source.name} is gone from the installation"
         raise StoryError(message)
@@ -247,6 +261,7 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
     *,
     names: tuple[Mapping[str, Name], Mapping[str, Name]],
     keys: KeySpace | None,
+    folders: Folders,
 ) -> list[str]:
     """Add the formables' files and texts; return their families' founding modifiers.
 
@@ -288,13 +303,15 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
     reforms = [spec.reform for spec in specs if spec.reform is not None]
     if reforms:
         files[REFORMS_FILE] = "\n".join(
-            reform_block(reform, payload(game_dir, reform.source)) for reform in reforms
+            reform_block(reform, payload(game_dir, reform.source, folders=folders))
+            for reform in reforms
         ).encode("utf-8-sig")
         for reform in reforms:
             texts[reform.name] = Text(reform.name)
             texts[f"{reform.name}_desc"] = Text(f"{reform.name}_desc")
     return [
-        modifier_block(spec.modifier, payload(game_dir, spec.modifier.source)) for spec in specs
+        modifier_block(spec.modifier, payload(game_dir, spec.modifier.source, folders=folders))
+        for spec in specs
     ]
 
 
@@ -325,11 +342,17 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
     stories = [story for story in STORIES if story.pulse is not None or story.family in present]
     modifiers: list[str] = []
     privileges: list[str] = []
+    folders: Folders = {}
     for story in stories:
         files[f"{EVENTS_DIR}/{story.namespace}.txt"] = render_events(story).encode("utf-8-sig")
         texts.update({key: Text(key) for key in event_keys(story)})
-        modifiers += [modifier_block(m, payload(game_dir, m.source)) for m in story.modifiers]
-        privileges += [privilege_block(p, payload(game_dir, p.source)) for p in story.privileges]
+        modifiers += [
+            modifier_block(m, payload(game_dir, m.source, folders=folders)) for m in story.modifiers
+        ]
+        privileges += [
+            privilege_block(p, payload(game_dir, p.source, folders=folders))
+            for p in story.privileges
+        ]
     ids: dict[str, str] = {}
     if plan.opportunities:
         script, ids = start_events(plan)
@@ -342,7 +365,14 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
             plan.formations, names, tags, seed, taken, regions=regions, keys=keys
         )
         modifiers += _formations(
-            game_dir, plan, identities, files, texts, names=(names, regions or {}), keys=keys
+            game_dir,
+            plan,
+            identities,
+            files,
+            texts,
+            names=(names, regions or {}),
+            keys=keys,
+            folders=folders,
         )
     if memories:
         eu5_memories.check_installation(game_dir)

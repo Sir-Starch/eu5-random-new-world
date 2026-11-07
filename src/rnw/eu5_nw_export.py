@@ -99,7 +99,6 @@ from rnw.eu5_canvas import (
     open_map,
     place_islands,
     remainder_boxes,
-    select_canvas,
 )
 from rnw.eu5_content import ContentError, carry_out, cohort_places, culture_traits
 from rnw.eu5_development import (
@@ -2828,7 +2827,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     game_map, hierarchy = run_stage("load map", load)
     clean = run_stage(
         "select canvas",
-        lambda: select_canvas(
+        lambda: landcache.get_canvas(
+            cache_dir,
             game_map,
             settings.new_world.ocean_band_px,
             expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),

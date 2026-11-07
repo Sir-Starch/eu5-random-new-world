@@ -163,3 +163,53 @@ def label_components(labels: NDArray[np.int32], *, wrap_x: bool = False) -> NDAr
     roots = np.array([_find(parent, item) for item in range(run_count)], dtype=np.int64)
     _, component_of_run = np.unique(roots, return_inverse=True)
     return component_of_run.astype(np.int64)[run_of]
+
+
+def within(sources: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
+    """Pixels at most ``radius`` from a source, on blocks of four pixels over the whole raster."""
+    step, eighths = 4, 8
+    height, width = sources.shape
+    rows, columns = -(-height // step), -(-width // step)
+    padded = np.zeros((rows * step, columns * step), dtype=bool)
+    padded[:height, :width] = sources
+    pooled = padded.reshape(rows, step, columns, step).any(axis=(1, 3))
+    limit = radius // step
+    near = euclidean_distance(pooled, limit + 1) <= eighths * limit
+    return np.kron(near, np.ones((step, step), dtype=bool))[:height, :width]
+
+
+PAIR_SHIFT = np.int64(32)
+
+
+def _packed(a: NDArray[np.int32], b: NDArray[np.int32]) -> NDArray[np.int64]:
+    differ = a != b
+    low = np.minimum(a[differ], b[differ]).astype(np.int64)
+    high = np.maximum(a[differ], b[differ]).astype(np.int64)
+    return (low << PAIR_SHIFT) | high
+
+
+def adjacency_pairs(
+    labels: NDArray[np.int32], *, wrap_x: bool = False, diagonal: bool = False
+) -> NDArray[np.int64]:
+    """Sorted unique touching label pairs packed as ``low << 32 | high``."""
+    parts = [_packed(labels[:, :-1], labels[:, 1:]), _packed(labels[:-1], labels[1:])]
+    if diagonal:
+        parts.append(_packed(labels[:-1, :-1], labels[1:, 1:]))
+        parts.append(_packed(labels[:-1, 1:], labels[1:, :-1]))
+    if wrap_x and labels.shape[1] > 1:
+        parts.append(_packed(labels[:, -1], labels[:, 0]))
+        if diagonal:
+            parts.append(_packed(labels[:-1, -1], labels[1:, 0]))
+            parts.append(_packed(labels[:-1, 0], labels[1:, -1]))
+    return np.unique(np.concatenate(parts))
+
+
+def adjacency_lengths(
+    labels: NDArray[np.int32],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Sorted unique 4-neighbour pairs and the number of pixel contacts of each."""
+    packed = np.concatenate(
+        [_packed(labels[:, :-1], labels[:, 1:]), _packed(labels[:-1], labels[1:])]
+    )
+    pairs, lengths = np.unique(packed, return_counts=True)
+    return pairs, lengths.astype(np.int64)

@@ -15,15 +15,9 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 PAIR_SHIFT = np.int64(32)
+LOW_BITS = np.int64((1 << 32) - 1)
 WITHIN_STEP: Final[int] = 4
 WITHIN_EIGHTHS: Final[int] = 8
-
-
-def _packed(a: NDArray[np.int32], b: NDArray[np.int32]) -> NDArray[np.int64]:
-    differ = a != b
-    low = np.minimum(a[differ], b[differ]).astype(np.int64)
-    high = np.maximum(a[differ], b[differ]).astype(np.int64)
-    return (low << PAIR_SHIFT) | high
 
 
 def adjacency_pairs(
@@ -32,18 +26,10 @@ def adjacency_pairs(
     """Return sorted unique touching label pairs packed as ``low << 32 | high``.
 
     Pairs are 4-neighbour contacts; ``diagonal`` adds corner contacts. ``wrap_x``
-    joins the first and last columns like a horizontally wrapping world map.
+    joins the first and last columns like a horizontally wrapping world map. The kernel is
+    Rust (ADR 0005), its NumPy specification is ``tests/reference/topology.py``.
     """
-    parts = [_packed(labels[:, :-1], labels[:, 1:]), _packed(labels[:-1], labels[1:])]
-    if diagonal:
-        parts.append(_packed(labels[:-1, :-1], labels[1:, 1:]))
-        parts.append(_packed(labels[:-1, 1:], labels[1:, :-1]))
-    if wrap_x and labels.shape[1] > 1:
-        parts.append(_packed(labels[:, -1], labels[:, 0]))
-        if diagonal:
-            parts.append(_packed(labels[:-1, -1], labels[1:, 0]))
-            parts.append(_packed(labels[:-1, 0], labels[1:, -1]))
-    return np.unique(np.concatenate(parts))
+    return _native.adjacency_pairs(np.ascontiguousarray(labels, dtype=np.int32), wrap_x, diagonal)
 
 
 def adjacency_lengths(
@@ -53,17 +39,12 @@ def adjacency_lengths(
 
     A length is the number of 4-neighbour pixel contacts between the two labels.
     """
-    packed = np.concatenate(
-        [_packed(labels[:, :-1], labels[:, 1:]), _packed(labels[:-1], labels[1:])]
-    )
-    pairs, lengths = np.unique(packed, return_counts=True)
-    return pairs, lengths.astype(np.int64)
+    return _native.adjacency_lengths(np.ascontiguousarray(labels, dtype=np.int32))
 
 
 def unpack_pairs(pairs: NDArray[np.int64]) -> list[tuple[int, int]]:
     """Expand packed pairs into Python tuples in sorted order."""
-    mask = np.int64((1 << 32) - 1)
-    return list(zip((pairs >> PAIR_SHIFT).tolist(), (pairs & mask).tolist(), strict=True))
+    return list(zip((pairs >> PAIR_SHIFT).tolist(), (pairs & LOW_BITS).tolist(), strict=True))
 
 
 def label_components(labels: NDArray[np.int32], *, wrap_x: bool = False) -> NDArray[np.int32]:
@@ -133,14 +114,30 @@ def within(sources: NDArray[np.bool_], radius: int) -> NDArray[np.bool_]:
 
     Computed on blocks of ``WITHIN_STEP`` pixels, so a source counts for its whole block (up to
     three pixels of extra reach) and the contour is exact to a block. Sources are pooled with
-    ``any``, so no island of a pixel or two is lost.
+    ``any``, so no island of a pixel or two is lost. The distances are those of the blocks round
+    the sources' bounding box, a block beyond the reach on each side: every block farther out is
+    beyond the radius, so the result is the same as over the whole raster.
     """
     height, width = sources.shape
-    rows, columns = -(-height // WITHIN_STEP), -(-width // WITHIN_STEP)
-    padded = np.zeros((rows * WITHIN_STEP, columns * WITHIN_STEP), dtype=bool)
-    padded[:height, :width] = sources
-    pooled = padded.reshape(rows, WITHIN_STEP, columns, WITHIN_STEP).any(axis=(1, 3))
-    del padded
+    out = np.zeros((height, width), dtype=bool)
+    rows = np.flatnonzero(sources.any(axis=1))
+    if rows.size == 0:
+        return out
+    columns = np.flatnonzero(sources[int(rows[0]) : int(rows[-1]) + 1].any(axis=0))
     limit = radius // WITHIN_STEP
+    reach = limit + 1
+    blocks = (-(-height // WITHIN_STEP), -(-width // WITHIN_STEP))
+    top = max(0, int(rows[0]) // WITHIN_STEP - reach) * WITHIN_STEP
+    left = max(0, int(columns[0]) // WITHIN_STEP - reach) * WITHIN_STEP
+    bottom = min(height, (min(blocks[0], int(rows[-1]) // WITHIN_STEP + 1 + reach)) * WITHIN_STEP)
+    right = min(width, (min(blocks[1], int(columns[-1]) // WITHIN_STEP + 1 + reach)) * WITHIN_STEP)
+    window = sources[top:bottom, left:right]
+    down, across = -(-window.shape[0] // WITHIN_STEP), -(-window.shape[1] // WITHIN_STEP)
+    padded = np.zeros((down * WITHIN_STEP, across * WITHIN_STEP), dtype=bool)
+    padded[: window.shape[0], : window.shape[1]] = window
+    pooled = padded.reshape(down, WITHIN_STEP, across, WITHIN_STEP).any(axis=3).any(axis=1)
+    del padded
     near = euclidean_distance(pooled, limit + 1) <= WITHIN_EIGHTHS * limit
-    return np.kron(near, np.ones((WITHIN_STEP, WITHIN_STEP), dtype=bool))[:height, :width]
+    grown = np.repeat(np.repeat(near, WITHIN_STEP, axis=0), WITHIN_STEP, axis=1)
+    out[top:bottom, left:right] = grown[: bottom - top, : right - left]
+    return out

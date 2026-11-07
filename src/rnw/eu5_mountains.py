@@ -21,13 +21,12 @@ from typing import TYPE_CHECKING, Final, Protocol
 
 import numpy as np
 
+from rnw import _native
 from rnw.eu5_slots import NO_MATERIAL
 from rnw.fields import block_mean, box_blur
 from rnw.rng import derive_seed, hash_point
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
-
     from numpy.typing import NDArray
 
     from rnw.terrain_tiles import LayerFormat
@@ -125,6 +124,10 @@ class MountainRelief:
     materials: tuple[NDArray[np.uint8], ...] = ()
     # Bounding rows and columns (top, bottom, left, right; inclusive) of each placement.
     bounds: NDArray[np.int64] = field(init=False, repr=False)
+    # The sources, the materials and the placements as the native kernel reads them.
+    _stacked: NDArray[np.uint16] = field(init=False, repr=False)
+    _slots: NDArray[np.uint8] = field(init=False, repr=False)
+    _table: NDArray[np.int64] = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
         """Bound each placement's support, a rotated rectangle's half-diagonal rounded up."""
@@ -139,36 +142,32 @@ class MountainRelief:
             dtype=np.int64,
         ).reshape(-1, 4)
         object.__setattr__(self, "bounds", bounds)
-
-    def _footprints(
-        self, origin: tuple[int, int], shape: tuple[int, int]
-    ) -> Iterator[tuple[Mountain, tuple[slice, slice], NDArray[np.int64], NDArray[np.int64]]]:
-        """Each stamp that reaches a decal window: its placement, the slices of the window it
-        covers and the coordinates in its source there (1/1024 pixels, as ``u`` and ``v``).
-        """
-        column0, row0 = origin
-        rows, columns = shape
-        bounds = self.bounds
-        near = np.nonzero(
-            (bounds[:, 0] < row0 + rows)
-            & (bounds[:, 1] >= row0)
-            & (bounds[:, 2] < column0 + columns)
-            & (bounds[:, 3] >= column0)
-        )[0]
-        for index in near.tolist():
-            stamp = self.placements[index]
-            top = max(row0, int(bounds[index, 0]))
-            bottom = min(row0 + rows, int(bounds[index, 1]) + 1)
-            left = max(column0, int(bounds[index, 2]))
-            right = min(column0 + columns, int(bounds[index, 3]) + 1)
-            yy = np.arange(top, bottom, dtype=np.int64)[:, None] - stamp.row
-            xx = np.arange(left, right, dtype=np.int64)[None, :] - stamp.column
-            cosine, sine = ROTATIONS[stamp.rotation]
-            height, width = self.sources[stamp.source].shape
-            u = (xx * cosine + yy * sine) * width // stamp.along + width * UNIT // 2
-            v = (yy * cosine - xx * sine) * height // stamp.across + height * UNIT // 2
-            window = (slice(top - row0, bottom - row0), slice(left - column0, right - column0))
-            yield stamp, window, u, v
+        if (
+            len({source.shape for source in self.sources}) > 1
+            or len({slots.shape for slots in self.materials}) > 1
+        ):
+            message = "The mountain stamps' sources must share one size, and their materials one"
+            raise ValueError(message)
+        stacked = (
+            np.stack([np.asarray(source, dtype=np.uint16) for source in self.sources])
+            if self.sources
+            else np.zeros((0, 2, 2), dtype=np.uint16)
+        )
+        slots = (
+            np.stack([np.asarray(layer, dtype=np.uint8) for layer in self.materials])
+            if self.materials
+            else np.zeros((0, 1, 1), dtype=np.uint8)
+        )
+        table = np.array(
+            [
+                (m.row, m.column, m.along, m.across, m.source, m.rotation, m.strength)
+                for m in self.placements
+            ],
+            dtype=np.int64,
+        ).reshape(-1, 7)
+        object.__setattr__(self, "_stacked", stacked)
+        object.__setattr__(self, "_slots", slots)
+        object.__setattr__(self, "_table", table)
 
     def sample(self, origin: tuple[int, int], shape: tuple[int, int]) -> NDArray[np.int64]:
         """Additive height at a decal window in continuous generation coordinates."""
@@ -183,43 +182,27 @@ class MountainRelief:
     def stamp(
         self, origin: tuple[int, int], shape: tuple[int, int]
     ) -> tuple[NDArray[np.int64], NDArray[np.uint8]]:
-        """Additive height and material slot of a decal window.
+        """Additive height and material slot of a decal window (``origin`` is column, row).
 
         Heights add, as the engine's ``add`` blend does, and the stamp that is highest at a
         pixel decides its slot, the lower slot on a tie. Vanilla lets the lowest slot win, but
         that turns every dense massif into the first variation. Slots are indices, so they are
         taken from the nearest source pixel; the pattern then follows the stamp's own valleys.
+        Each stamp is sampled bilinearly from its source, which it covers turned and stretched,
+        with a small fade at the source's edge. The kernel is Rust (ADR 0005); its NumPy
+        specification is ``tests/reference/mountains.py``.
         """
-        out = np.zeros(shape, dtype=np.int64)
-        # Height times 256 plus the complement of the slot; negative where no slot is laid.
-        best = np.full(shape, -1, dtype=np.int64)
-        for stamp, window, u, v in self._footprints(origin, shape):
-            source = self.sources[stamp.source]
-            height, width = source.shape
-            # Source coordinates in 1/1024 pixels, bilinearly sampled with zero
-            # outside. A small edge fade removes the source's nonzero boundary.
-            ix, iy = u // UNIT, v // UNIT
-            valid = (ix >= 0) & (ix < width - 1) & (iy >= 0) & (iy < height - 1)
-            x, y = np.clip(ix, 0, width - 2), np.clip(iy, 0, height - 2)
-            fx, fy = u % UNIT, v % UNIT
-            a = source[y, x].astype(np.int64) * (UNIT - fx) + source[y, x + 1] * fx
-            b = source[y + 1, x].astype(np.int64) * (UNIT - fx) + source[y + 1, x + 1] * fx
-            value = (a * (UNIT - fy) + b * fy) // (UNIT * UNIT)
-            edge = np.minimum(
-                np.minimum(u, (width - 1) * UNIT - u), np.minimum(v, (height - 1) * UNIT - v)
-            )
-            fade = np.clip(edge * 32000 // (max(width, height) * UNIT), 0, 1000)
-            value = np.where(valid, value * fade // 1000 * stamp.strength // 1000, 0)
-            if self.materials:
-                slots = self.materials[stamp.source]
-                slot = slots[np.clip(iy, 0, slots.shape[0] - 1), np.clip(ix, 0, slots.shape[1] - 1)]
-                laid = (ix >= 0) & (ix < slots.shape[1]) & (iy >= 0) & (iy < slots.shape[0])
-                key = np.where(laid & (slot != NO_MATERIAL), value * 256 + 255 - slot, -1)
-                target = best[window]
-                _ = np.maximum(target, key, out=target)
-            target = out[window]
-            target += value
-        return out, np.where(best >= 0, 255 - best % 256, NO_MATERIAL).astype(np.uint8)
+        return _native.mountain_stamp(
+            self._stacked,
+            self._slots,
+            self._table,
+            self.bounds,
+            list(ROTATIONS),
+            (int(origin[0]), int(origin[1])),
+            (int(shape[0]), int(shape[1])),
+            UNIT,
+            NO_MATERIAL,
+        )
 
 
 def crest_axes(sources: tuple[NDArray[np.uint16], ...]) -> tuple[int, ...]:

@@ -456,11 +456,15 @@ def candidates(
     code: Annotated[str | None, typer.Option(help="Settings of this code; fresh seeds.")] = None,
     count: Annotated[int, typer.Option(min=1, max=12)] = 6,
     game_dir: GameDirOption = None,
+    data_dir: DataDirOption = None,
 ) -> None:
     try:
         base = decode(code) if code else new_code("continents", 0)
         found = continent_candidates.sketch(
-            _game(game_dir).directory, base.settings(), continent_candidates.roll(count)
+            _game(game_dir).directory,
+            base.settings(),
+            continent_candidates.roll(count),
+            cache=service.land_cache(_data(data_dir)),
         )
         output.parent.mkdir(parents=True, exist_ok=True)
         _ = output.write_bytes(

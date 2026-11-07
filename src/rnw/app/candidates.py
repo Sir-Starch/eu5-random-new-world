@@ -1,10 +1,14 @@
 """Sketches of continents to choose from before a world is made (ADR 0010, F, G4).
 
-A world takes about two minutes; the land alone, the same land model run on the same canvas with
-the same seed, takes a few seconds. So the generator can roll several seeds, draw each one's land
+A world takes a few minutes; the land alone, the same land model run on the same canvas with
+the same seed, takes seconds. So the generator can roll several seeds, draw each one's land
 and sea as a small picture, and let the player pick the continent they like and only then make the
 world. The sketch is the land stage of the world and nothing else: no cells, relief, biomes or
 peoples, and the coast of the finished world can move by the few pixels its cells' borders wobble.
+
+The sketches are made beside each other, as many at once as the cores and the free memory allow;
+each is the same whatever runs beside it. With a cache folder each sketch's land stage is kept
+there (``rnw.landcache``), and the world made from a sketch starts from it.
 
 This reads the installed game (the map and the canvas), so it is game-side.
 """
@@ -15,16 +19,17 @@ This reads the installed game (the map and the canvas), so it is game-side.
 from __future__ import annotations
 
 import secrets
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw import tagfont
-from rnw.eu5_canvas import select_canvas
+from rnw import landcache, tagfont
 from rnw.eu5_map import load_map
 from rnw.messages import say
 from rnw.newworld import land_stage
+from rnw.parallel import worker_count
 from rnw.progress import checkpoint, run_stage, running
 
 if TYPE_CHECKING:
@@ -32,6 +37,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_canvas import Canvas
     from rnw.settings import Settings
 
 STEP: Final[int] = 8
@@ -41,6 +47,9 @@ LAND: Final[tuple[int, int, int]] = (110, 160, 80)
 OUTSIDE: Final[tuple[int, int, int]] = (14, 20, 30)
 LABEL: Final[tuple[int, int, int]] = (250, 250, 250)
 MAX_COUNT: Final[int] = 12
+# Peak working memory of one land stage per canvas pixel, with headroom (measured 2026-11-07
+# on the continents canvas of EU5 1.4.7).
+STAGE_BYTES_PER_PIXEL: Final[int] = 40
 
 
 class CandidateError(ValueError):
@@ -68,30 +77,59 @@ def roll(count: int) -> list[int]:
     return [secrets.randbits(64) for _ in range(count)]
 
 
-def sketch(game_dir: Path, settings: Settings, seeds: list[int]) -> list[Candidate]:
+def sketch(
+    game_dir: Path, settings: Settings, seeds: list[int], *, cache: Path | None = None
+) -> list[Candidate]:
     """The land of each seed on the canvas of ``settings``, drawn at an eighth of the map.
 
-    Needs the game's map; a cancel is felt within a stage of the land model.
+    Needs the game's map; a cancel is felt within a stage of the land model. With ``cache``
+    (the land cache of ``rnw.app.service``) each sketch's land stage is kept for its world.
     """
     check_count(len(seeds))
     if settings.mask.id:
         message = say("candidates.drawn")
         raise CandidateError(message)
+    shape = settings.new_world
+    domain = _canvas(game_dir, settings, cache).mask
+    with running("candidates"):
+        digest = None if cache is None else landcache.domain_digest(domain)
+
+        def one(seed: int) -> Candidate:
+            checkpoint()
+            # The relief is let go at once: a sketch keeps only its masks.
+            land, ocean, lakes = land_stage(domain.copy(), seed, shape)[:3]
+            if cache is not None and digest is not None:
+                key = landcache.stage_key(digest, seed, shape)
+                landcache.keep_stage(cache, key, (land, ocean, lakes))
+            return _draw(seed, domain, land, lakes)
+
+        workers = worker_count(len(seeds), bytes_each=STAGE_BYTES_PER_PIXEL * domain.size)
+        if workers == 1:
+            found = [one(seed) for seed in seeds]
+        else:
+            pool = ThreadPoolExecutor(max_workers=workers)
+            try:
+                found = [job.result() for job in [pool.submit(one, seed) for seed in seeds]]
+            finally:
+                pool.shutdown(wait=True, cancel_futures=True)
+    if cache is not None:
+        landcache.prune(cache)
+    return found
+
+
+def _canvas(game_dir: Path, settings: Settings, cache: Path | None) -> Canvas:
+    """The canvas of ``settings`` on the installed map; the map is let go on return."""
     game_map = run_stage("load map", lambda: load_map(game_dir))
     shape = settings.new_world
-    canvas = run_stage(
+    return run_stage(
         "select canvas",
-        lambda: select_canvas(
-            game_map, shape.ocean_band_px, expanded=bool(shape.expand_oceans or shape.landform)
+        lambda: landcache.get_canvas(
+            cache,
+            game_map,
+            shape.ocean_band_px,
+            expanded=bool(shape.expand_oceans or shape.landform),
         ),
     )
-    found: list[Candidate] = []
-    with running("candidates"):
-        for seed in seeds:
-            checkpoint()
-            land, _ocean, lakes, _relief = land_stage(canvas.mask.copy(), seed, shape)
-            found.append(_draw(seed, canvas.mask, land, lakes))
-    return found
 
 
 def _draw(

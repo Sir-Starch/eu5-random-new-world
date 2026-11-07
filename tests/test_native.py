@@ -20,8 +20,11 @@ from rnw import (
     terrain_tiles,
     topology,
 )
+from rnw.eu5_mountains import ROTATIONS, Mountain, MountainRelief
+from rnw.eu5_slots import NO_MATERIAL
 from tests.reference import fields as reference_fields
 from tests.reference import lzav as reference_lzav
+from tests.reference import mountains as reference_mountains
 from tests.reference import noise as reference_noise
 from tests.reference import objects as reference_objects
 from tests.reference import points as reference_points
@@ -347,6 +350,32 @@ def test_instance_sampling_equals_the_reference(seed: int) -> None:
     ).shape == (0, 10)
 
 
+def test_instance_sets_sampled_together_equal_each_alone() -> None:
+    """One call for several sets gives each set the records of a call of its own."""
+    classes, canvas = _pixel_classes(6)
+    pixels = eu5_objects.canvas_pixels(classes, canvas)
+    generator = np.random.default_rng(6)
+    use_fine = generator.random(90) < 0.5
+    densities = [
+        (
+            generator.integers(0, 3 << 24, 90, dtype=np.int64),
+            generator.integers(0, 2 << 24, 90, dtype=np.int64),
+        )
+        for _ in range(3)
+    ]
+    sources = [generator.random((count, 10), dtype=np.float32) for count in (7, 0, 4)]
+    keys = [3, (1 << 64) + 5, -2]
+    together = eu5_objects.sample_instance_sets(
+        pixels, use_fine=use_fine, densities=densities, sources=sources, rows=13, keys=keys
+    )
+    for found, density, source, key in zip(together, densities, sources, keys, strict=True):
+        alone = eu5_objects.sample_instances(
+            pixels, use_fine=use_fine, densities=density, source=source, rows=13, key=key
+        )
+        assert np.array_equal(found.view(np.uint32), alone.view(np.uint32))
+    assert together[1].shape == (0, 10)
+
+
 @pytest.mark.parametrize("wrap_x", [False, True])
 def test_components_equal_the_reference(*, wrap_x: bool) -> None:
     """Numbering by first pixel, with and without the seam joining the edges."""
@@ -500,6 +529,39 @@ def test_layer_packing_equals_the_reference(shape: tuple[int, int], sample_bytes
     assert native == reference_tiles.write_layer(image, layer)
 
 
+@pytest.mark.parametrize(
+    ("shape", "sample_bytes"), [((100, 90), 2), ((300, 200), 1), ((517, 129), 2), ((256, 384), 1)]
+)
+def test_layer_reading_equals_the_reference(shape: tuple[int, int], sample_bytes: int) -> None:
+    """Level 0 read back natively equals the tile-by-tile reference and the image written."""
+    generator = np.random.default_rng(shape[1])
+    image = generator.integers(0, 256 if sample_bytes == 1 else 65_536, shape, dtype=np.int64)
+    image[shape[0] // 3 :, : shape[1] // 3] = 17  # long runs compress into references
+    layer = terrain_tiles.LayerFormat(shape[1], shape[0], "<u2" if sample_bytes == 2 else "u1")
+    info, data = terrain_tiles.write_layer(image, layer)
+    parsed, spans = terrain_tiles.parse_info(info)
+    native = terrain_tiles.read_level0(parsed, spans, data)
+    expected = reference_tiles.read_level0(parsed, spans, data)
+    assert native.dtype == expected.dtype
+    assert np.array_equal(native, expected)
+    assert np.array_equal(native, image)
+    native[0, 0] = 1  # writable, as the reference's image is: moved island groups are copied in
+
+
+def test_layer_reading_refuses_what_the_reference_refuses() -> None:
+    """A damaged tile is an LZAV error and a short tile list a format error, as before."""
+    layer = terrain_tiles.LayerFormat(200, 300, "u1")
+    info, data = terrain_tiles.write_layer(np.full((300, 200), 9, dtype=np.int64), layer)
+    parsed, spans = terrain_tiles.parse_info(info)
+    damaged = bytes([0x25]) + data[1:]
+    with pytest.raises(lzav.LzavError):
+        _ = terrain_tiles.read_level0(parsed, spans, damaged)
+    with pytest.raises(ValueError):  # noqa: PT011 - the reference's own LZAV error
+        _ = reference_tiles.read_level0(parsed, spans, damaged)
+    with pytest.raises(terrain_tiles.TileFormatError):
+        _ = terrain_tiles.read_level0(parsed, spans[:2], data)
+
+
 @pytest.mark.parametrize("seed", [1, 2])
 @pytest.mark.parametrize("origin", [(0, 0), (4096, 2048)])
 def test_decal_heights_equal_the_reference(seed: int, origin: tuple[int, int]) -> None:
@@ -545,3 +607,85 @@ def test_decal_heights_equal_the_reference(seed: int, origin: tuple[int, int]) -
         assert np.array_equal(part[0], land)
         assert np.array_equal(part[1], canvas[core])
         assert np.array_equal(part[2], expected[core])
+
+
+@pytest.mark.parametrize("seed", [3, 4, 5])
+@pytest.mark.parametrize("with_materials", [True, False])
+def test_mountain_stamps_equal_the_reference(seed: int, *, with_materials: bool) -> None:
+    """Heights and slots match for turned, stretched and overlapping stamps that reach past
+    the window on every side, at negative and positive origins."""
+    generator = np.random.default_rng(seed)
+    sources = tuple(
+        generator.integers(0, 65_536, (40, 56), dtype=np.int64).astype(np.uint16) for _ in range(3)
+    )
+    materials = (
+        tuple(
+            np.where(
+                generator.random((36, 50)) < 0.2, NO_MATERIAL, generator.integers(10, 13, (36, 50))
+            ).astype(np.uint8)
+            for _ in range(3)
+        )
+        if with_materials
+        else ()
+    )
+    placements = tuple(
+        Mountain(
+            int(generator.integers(-60, 260)),
+            int(generator.integers(-60, 300)),
+            int(generator.integers(20, 160)),
+            int(generator.integers(20, 120)),
+            int(generator.integers(0, 3)),
+            int(generator.integers(0, len(ROTATIONS))),
+            int(generator.integers(100, 1000)),
+        )
+        for _ in range(25)
+    )
+    relief = MountainRelief(sources, placements, materials)
+    for origin, shape in (((0, 0), (200, 240)), ((-37, -11), (90, 130)), ((123, 77), (61, 83))):
+        heights, slots = relief.stamp(origin, shape)
+        expected_heights, expected_slots = reference_mountains.stamp(relief, origin, shape)
+        assert np.array_equal(heights, expected_heights)
+        assert np.array_equal(slots, expected_slots)
+        assert heights.dtype == expected_heights.dtype
+        assert slots.dtype == expected_slots.dtype
+
+
+@pytest.mark.parametrize("seed", [6, 7])
+@pytest.mark.parametrize("radius", [0, 3, 9, 26])
+def test_within_its_window_equals_the_whole_raster(seed: int, radius: int) -> None:
+    """Sparse, edge-touching, dense and absent sources reach the same pixels as over the whole
+    raster, on sizes that are no multiple of the block."""
+    generator = np.random.default_rng(seed)
+    shape = (93, 131)
+    cases = [
+        np.zeros(shape, dtype=bool),
+        generator.random(shape) < 0.3,
+    ]
+    for points in ([(40, 60)], [(0, 0)], [(92, 130), (91, 3)], [(10, 70), (12, 75)]):
+        sources = np.zeros(shape, dtype=bool)
+        for row, column in points:
+            sources[row, column] = True
+        cases.append(sources)
+    for sources in cases:
+        assert np.array_equal(
+            topology.within(sources, radius), reference_topology.within(sources, radius)
+        )
+
+
+@pytest.mark.parametrize("seed", [8, 9])
+@pytest.mark.parametrize(
+    ("wrap_x", "diagonal"), [(False, False), (True, False), (False, True), (True, True)]
+)
+def test_adjacency_equals_the_reference(seed: int, *, wrap_x: bool, diagonal: bool) -> None:
+    """Pairs, packing of negative labels, wrapping, corners and contact lengths match."""
+    generator = np.random.default_rng(seed)
+    for shape in ((37, 53), (1, 9), (9, 1), (2, 2)):
+        labels = generator.integers(-3, 12, shape, dtype=np.int64).astype(np.int32)
+        assert np.array_equal(
+            topology.adjacency_pairs(labels, wrap_x=wrap_x, diagonal=diagonal),
+            reference_topology.adjacency_pairs(labels, wrap_x=wrap_x, diagonal=diagonal),
+        )
+        pairs, lengths = topology.adjacency_lengths(labels)
+        expected_pairs, expected_lengths = reference_topology.adjacency_lengths(labels)
+        assert np.array_equal(pairs, expected_pairs)
+        assert np.array_equal(lengths, expected_lengths)

@@ -67,6 +67,21 @@ def sample_instances(
     key: int,
     map_rows: int,
 ) -> NDArray[float32]: ...
+def adjacency_pairs(labels: NDArray[int32], wrap_x: bool, diagonal: bool) -> NDArray[int64]: ...
+def adjacency_lengths(labels: NDArray[int32]) -> tuple[NDArray[int64], NDArray[int64]]: ...
+def cell_sums(labels: NDArray[int32], elevation: NDArray[int32], count: int) -> NDArray[int64]: ...
+def sample_instance_sets(
+    rows: NDArray[uint32],
+    columns: NDArray[uint32],
+    fine_keys: NDArray[uint32],
+    coarse_keys: NDArray[uint32],
+    use_fine: NDArray[bool_],
+    fines: list[NDArray[int64]],
+    coarses: list[NDArray[int64]],
+    donors: list[NDArray[float32]],
+    keys: list[int],
+    map_rows: int,
+) -> list[NDArray[float32]]: ...
 def label_components(labels: NDArray[int32], wrap_x: bool) -> NDArray[int32]: ...
 def drainage(
     land: NDArray[bool_], height: NDArray[int64], rain: NDArray[int64], key: int
@@ -91,6 +106,20 @@ def synthesize_slots(
 def lzav_encode(raw: bytes) -> bytes: ...
 def configure_threads(threads: int) -> int: ...
 def pack_layer(image: NDArray[uint16], sample_bytes: int) -> tuple[list[int], bytes]: ...
+def mountain_stamp(
+    sources: NDArray[uint16],
+    materials: NDArray[uint8],
+    placements: NDArray[int64],
+    bounds: NDArray[int64],
+    rotations: list[tuple[int, int]],
+    origin: tuple[int, int],
+    shape: tuple[int, int],
+    unit: int,
+    no_material: int,
+) -> tuple[NDArray[int64], NDArray[uint8]]: ...
+def read_level0(
+    data: bytes, spans: list[tuple[int, int]], shape: tuple[int, int], sample_bytes: int
+) -> NDArray[uint16] | NDArray[uint8]: ...
 def decal_heights(
     codes: NDArray[int8],
     vanilla_water: NDArray[bool_],

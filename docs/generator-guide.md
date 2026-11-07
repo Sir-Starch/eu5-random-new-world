@@ -107,6 +107,9 @@ For a world with custom-drawn land, share a **`.rnworld`** file to include the l
 **Choose a continent** shows six land sketches before you build a complete world mod.
 Pick one to use its seed and settings. These previews reveal the land shape only;
 the final coastline can shift slightly when the game's locations are created.
+The sketches are drawn side by side, as many at once as your processor and free memory
+allow, and the land of each is kept: the world you make from a sketch starts from that
+land instead of drawing it again.
 
 To draw your own land, use **Save template** to get an image of the available area.
 Paint land white and sea black in an image editor, then load it with **Land from an image**.
@@ -486,7 +489,11 @@ change. For development builds, a version number alone is not enough to identify
 algorithm. Older output is not silently migrated. The [version policy](adr/0003-versioning.md)
 explains the technical rules.
 
-The local cache checks the algorithm and relevant game inputs before reusing work.
+The local cache checks the algorithm, the generator's own code and the relevant game
+inputs before reusing work. It lives in `cache/land` of the data folder and keeps the four
+most recently used continents (for rerolling resources or peoples), the land of the last
+24 sketches and the area of the game's map that a New World replaces; older entries are
+removed on their own. Deleting the folder is always safe: the next world makes them again.
 Newer input records also track directory listings, so they detect game patches that
 add scripts as well as changes to existing files. Older records still open, but records
 without directory listings may miss added files; a full reproduction check is stronger.

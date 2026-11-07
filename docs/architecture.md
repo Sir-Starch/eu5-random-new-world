@@ -40,7 +40,7 @@ Paths below are relative to `src/rnw/` unless stated otherwise.
 |---|---|
 | Installation inspection and compatibility | `geography.py`, `contract.py`, `inputs.py`, `eu5_map.py`; fingerprint and record the installed inputs |
 | Settings, deterministic streams and abstract topology | `settings.py`, `rng.py`, `noise.py`, `model.py`, `topology.py`, `synth.py`, `coast.py`, `validate.py` |
-| Generated New World and fields | `newworld.py`, `islands.py`, `wall.py`, `fields.py`, `relief.py`, `climate.py`, `rivers.py`, `lakes.py`, `gulfs.py`, `isthmuses.py`, `hierarchy.py` |
+| Generated New World and fields | `newworld.py`, `islands.py`, `wall.py`, `fields.py`, `relief.py`, `climate.py`, `rivers.py`, `lakes.py`, `gulfs.py`, `isthmuses.py`, `hierarchy.py`; `landcache.py` keeps made land in the data folder (finished continents for rerolls, the land of sketched continents for the world made from one, the map's canvas), keyed by every input and the generator's own code, and bounded |
 | Terrain serialization | `eu5_biomes.py`, `eu5_slots.py`, `eu5_terrain.py`, `eu5_mountains.py`, `eu5_objects.py`, `eu5_water.py`; `terrain_tiles.py`, `lzav.py`, `dds.py`, `png.py` |
 | Seas, routes and currents | `ports.py`, `seas.py`, `seanames.py`, `lanes.py`, `sea_corridors.py`, `sea_policy.py`, `straits.py`, `crossings.py`, `currents.py`; `eu5_oceans.py`, `eu5_seas.py` |
 | Native societies and start state | `societies.py`, `eu5_natives.py` (construction/writers), `eu5_start.py` (`FinalStartPlan`, countries and typed pop cohorts shared by writers, verifiers, AI, content and atlas), `eu5_ai.py`, `eu5_development.py`, `eu5_technology.py`, `eu5_empires.py`, `archetypes.py`, `eu5_archetypes.py` |

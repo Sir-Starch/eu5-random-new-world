@@ -53,7 +53,7 @@ from rnw.model import CellClass
 from rnw.names import NameGenerator
 from rnw.rng import SplitMix64, derive_seed
 from rnw.seanames import Placement, name_waters
-from rnw.topology import adjacency_pairs, unpack_pairs
+from rnw.topology import LOW_BITS, PAIR_SHIFT, adjacency_pairs, unpack_pairs
 from rnw.wastelands import location_units
 from rnw.wording import Name, Phrase
 
@@ -485,9 +485,10 @@ def outside_contacts(
             generated + offset,
             canvas.rolled(game_map.labels, rows)[:, columns],
         ).astype(np.int32)
-        for low, high in unpack_pairs(adjacency_pairs(combined)):
-            if low < offset <= high:
-                contacts.add((low, high - offset))
+        pairs = adjacency_pairs(combined)
+        low, high = pairs >> PAIR_SHIFT, pairs & LOW_BITS
+        across = pairs[(low < offset) & (high >= offset)]
+        contacts.update((low, high - offset) for low, high in unpack_pairs(across))
     return contacts
 
 

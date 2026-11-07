@@ -46,6 +46,11 @@ WAIT_PAUSE: Final[float] = 2.0
 CHECK_PREFIX: Final[str] = "rnw_exp_check_"
 
 
+def land_cache(data: Path) -> Path:
+    """The folder of made land (``rnw.landcache``): finished continents and sketched land."""
+    return data / "cache" / "land"
+
+
 class Exporter(Protocol):
     """The export function, so tests can stand in for the real one."""
 
@@ -219,7 +224,7 @@ def generate(
         world_code=text,
         world_label=worldname.label(world.preset, worldname.tag_of(world.id), world.name),
         land_mask=request.land_mask,
-        cache_dir=request.data / "cache" / "land",
+        cache_dir=land_cache(request.data),
     )
     world = replace(
         world,
