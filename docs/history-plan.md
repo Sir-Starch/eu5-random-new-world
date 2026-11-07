@@ -1254,6 +1254,10 @@ noise above, not on the result, and D32's rule applies: they are made before the
 set is captured. Seeds 1005–1008 are development and remain so. The held-out set 1009–1012 is
 frozen after this commit and run once; its outcome is reported as it falls.
 
+*Outcome (2026-11-07).* The set was frozen at `1f6bc79`, captured and run once: 11 of 14 checks pass
+(Q1 and Q9 now; Q4, Q5 and Q7 fail, [C512](research/claims-ledger.md)). Nothing was changed or rerun
+afterwards. Seeds 1009–1012 can no longer be held out, and D28 requires a further decision.
+
 ### 21.5 Implementation refinements (2026-11-05, before any held-out run)
 
 Implementing D21–D28 against the single development world continents/3 exposed

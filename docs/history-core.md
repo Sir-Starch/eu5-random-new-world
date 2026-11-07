@@ -831,6 +831,11 @@ in the [calibration report](research/history-120-calibration.md#r6-held-out-run-
 (72 worlds), mechanisms are fixed toward the stated development targets, and new held-out
 seeds 1009–1012 are frozen and run once ([plan D32](history-plan.md#21-independent-audit-and-redesign-2026-11-05)).
 Steps 2–4 repeat on the new freeze; the seeds named in them read 1009–1012 from then on.
+**Status after D33, 2026-11-07:** the held-out run on seeds 1009–1012 (freeze `1f6bc79`, source
+SHA-256 `b0ff59fd…6959e`) passed 11 of 14 checks; Q1 and Q9 pass now, Q4 (one seeded highland
+confederation not realized), Q5 (one `state_locations` pair) and Q7 (Varied ratio 0.667) fail. No
+change followed the run. Per step 4 the runbook stops before step 5 pending plan D28; the seeds
+are used. Results: [calibration report](research/history-120-calibration.md#d33-held-out-run-2026-11-07).
 **Decision D33 (agent under the owner's delegation, 2026-11-07, before any capture of 1009–1012):**
 fractured is tested before rival powers; Q5's turbulence order is read pooled over the seed set;
 `ORDINARY_LORD_POWER` 6 and `UNREST_SLOPE` 450. All fourteen checks pass on the 72 development

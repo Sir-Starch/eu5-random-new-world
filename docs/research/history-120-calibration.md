@@ -722,6 +722,64 @@ recognition (78.4% against 70%). Fractured at 17.7% (target 4%) no longer depend
 count. The development evidence is in the ignored `local_data/history-120/r6/dev72-d33f/`,
 `dev72-d33-u450/` and `it72-*`.
 
+### D33 held-out run (2026-11-07)
+
+[V-EXEC] Steps 2–4 of the [R6 runbook](../history-core.md#r6-runbook) on the new freeze: commit
+`1f6bc79`, source SHA-256 `b0ff59fdd48acbc34170120af64b7731d45ee4490cd70f3c296008018fb6959e`,
+algorithm epoch 61, EU5 1.4.7 / build 26377361 (installed build checked). The freeze record was
+written before any capture; the record of `ea4b676` is kept as `heldout-freeze-ea4b676.json`.
+Step 3 captured the six presets at seeds 1009–1012 (24 physical inputs, 0 failures) and produced
+24 ordinary plus 24 sweep baselines from the saved v1.1.0 source. Step 4 completed all 120 rows
+(72 worlds, 48 sweeps) from the frozen source, once; outputs are in `heldout-d33/`, the C509 run
+stays in `heldout/`. No EU5 session was launched. No knob, threshold or code changed after the run.
+
+The frozen evaluator reports **11 of 14 checks passing**. The two checks of C509, Q1 and Q9, now
+pass. Q4, Q5 and Q7 fail:
+
+| Check | Held-out result |
+|---|---|
+| Q1 | Pass: patchwork 30.72%, rival powers 27.71%, paramount 17.47%, fractured 19.28%, great realm 4.82% (166 regions) |
+| Q2 | Pass: median 4 classes (23 worlds) |
+| Q3 | Pass: Turbulent/Calm turmoil 2.297; rises in 100% of worlds; class directions hold; continuity 82.4% |
+| Q4 | **Fail:** prudent recognition 77.42% and overreach ended 63.72% pass; sea league 5/6, sacred centre 1/1, **highland confederation 0/1** (gate: each seeded kind ≥ 50%) |
+| Q5 | **Fail:** `state_locations`/archipelago-1009 ordinary median 2.5 (setting 2) → 2 (setting 3) → 8 (setting 10). Turbulence passes: pooled recent turmoil 0.101 / 0.165 / 0.232 |
+| Q6 | Pass: great-realm ratio 0.962; 31 realized; four high-sweep worlds |
+| Q7 | **Fail:** ordinary-size ratios 1.000 / 0.667 / 0.667 at Calm / Varied / Turbulent (Varied gate 0.75–1.25) |
+| Q8 | Pass |
+| Q9 | Pass: median 37.5 subject pairs (gate 40); 99.49% scaled |
+| Q10 | Pass: median 10.5 alliances |
+| Q11 | Pass: republic median 12.2%; IQR 8.15 points; assortativity 0.2285 |
+| Q12 | Pass: largest family 24.63%; routine 17.4%; 3 distinct families; 22.13% short chronicles |
+| Q13 | Pass: median 92.0% of landed countries visible |
+| S11 | Pass: largest archive 634,889 bytes |
+
+Q4 at both recognition scales on the 24 Varied worlds (`q4-scales.txt`, D30): R6 recognition
+61/81 = 75.3% combined; Q1 regional-share scale 53/81 = 65.4%.
+
+*Read of the three failures (diagnosis only; nothing was rerun on these seeds).*
+
+- **Q4 rests on one aim.** Only one highland confederation was seeded in the 24 Varied worlds (the
+  72 development worlds seed 14, 13 realized, 0.19 a world; P(at most 1 of 24) ≈ 5%) and it was not
+  realized. The gate is a rate over a count of one.
+- **Q5 compares adjacent settings of a quantized statistic.** A world's ordinary median is 2, 2.5
+  or 3, and the low and default settings are 2 and 3. The development matrix shows the same
+  ties (archipelago/42: 2.0, 2.0; continents/1005: 3.0, 3.0; continents/1006: 2, 2); one pair fell the other way here. It is
+  the same kind of flaw as the turbulence step that D33 pooled, in a control D33 did not examine.
+- **Q7 sits on a cliff at Varied, and D33 moved it closer.** The ratio per world is 1.0 where the
+  ordinary median is 3 and 0.667 where it is 2 (the 1.1.0 baseline is 3 in 22 of 24 worlds), so the
+  median over worlds flips when more than half the worlds fall to 2. Share of development
+  worlds at 2 with `UNREST_SLOPE` 350 / margin 4 (`it72-base`): 25%; margin 6 alone: 15%; margin 6
+  with `UNREST_SLOPE` 450 (the D33 choice): 33%. Held-out: 15 of 24 (62.5%; archipelago, islands,
+  supercontinent and wall 3 of 4 each). D33's candidate comparison counted Q7 as passing in all
+  400 draws and so did not weigh that this knob roughly doubled the share near the cliff; the
+  margin-6-alone candidate had traded it for Q11 margin (6.8% draw failures).
+
+Held-out seeds 1009–1012 are used; they cannot serve as held-out again. Per runbook step 4 the run
+stops here and plan D28 requires a further decision before R6 continues; steps 5–8 (S8–S10,
+reference reproduction, packages, the owner's sitting, W2, W6, W7) are not started. The
+evidence is in the ignored `local_data/history-120/r6/heldout-d33/` (observations, saved Varied
+starts, `acceptance.json`, `q4-scales.txt`), `captures/`, `baselines/` and `sweep-baselines/`.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)
