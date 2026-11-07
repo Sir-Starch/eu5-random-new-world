@@ -302,6 +302,98 @@ and the owner sitting remain pending an explicit next calibration/acceptance
 decision. The held-out results remain validation evidence and must not be used
 to tune the current policy.
 
+## Single-seed end-to-end stage profile (2026-11-06)
+
+[V-EXEC] A normal `rnw world` run of Continents seed `319218363` (code
+`RNW1-040G0-00000-9GDRN-V0410-002P3-ZZG`) completed in **258.8 s** (4:18.8),
+with a process peak of **8.5 GiB**. It ran 1.2.0 development / pending epoch 61
+against EU5 1.4.7 / build 26377361, with the default 31 threads and four
+overlapping stage workers. Its dedicated land cache started empty; the OS file
+cache was warm from an earlier interrupted run. The export completed its normal
+output checks and wrote a compact world file; it was not installed or loaded in
+EU5. This is a diagnostic single seed, not a paired S8 measurement or a new
+acceptance result. Raw timings and output are in the ignored
+`local_data/perf-20261106-continents-retry/` folder.
+
+| Stage | Elapsed |
+|---|---:|
+| `load map` | 2.3 s |
+| `select canvas` | 11.8 s |
+| `generate world` | 54.7 s |
+| ↳ `land cells` (overlapping substage) | 18.9 s |
+| ↳ `sea cells` (overlapping substage) | 15.5 s |
+| ↳ `relief` (overlapping substage) | 18.2 s |
+| `vanilla reads` | 1.5 s |
+| `vanilla geometry` | 1.9 s |
+| `vanilla localization keys` | 11.4 s |
+| `vanilla climate` | 16.6 s |
+| `vanilla material levels` | 12.3 s |
+| `vanilla natives` | 7.3 s |
+| `settle coasts` | 13.9 s |
+| `water shapes` | 5.8 s |
+| `biomes and rivers` | 22.5 s |
+| `identities` | 28.4 s |
+| `world checks` | 30.3 s |
+| `water textures` | 28.7 s |
+| `slot tables` | 0.1 s |
+| `location rasters` | 1.3 s |
+| `png encoding` | 3.5 s |
+| `terrain decals` | 111.2 s |
+| `vegetation instances` | 14.0 s |
+| `terrain` (aggregate of its work below) | 126.6 s |
+| `natives` | 30.5 s |
+| `atlas` | 1.9 s |
+| `texts` | 13.4 s |
+| `stories` | 4.9 s |
+| `spline network` | 10.9 s |
+| `script remap` | 5.4 s |
+| `selection cover` | 0.8 s |
+| `write files` and final persistence | ~9 s residual; not separately timed |
+
+Durations overlap: the rows must not be added, and the `terrain` aggregate
+includes its decal and vegetation work. `write files` currently reports progress
+but does not use the timing helper. [INFERRED] The ~9 s residual is the total
+service time after the last timed stage and also includes final world-file and
+library persistence. The longest compute block is `terrain decals` (111.2 s);
+the next largest is `generate world` (54.7 s). The latter is on the serial prefix
+before downstream stages start, while terrain overlaps the native/text/script
+branch. In this run terrain finished about 21 s after the selection-cover branch;
+that is the initial end-to-end saving available from terrain-only work before
+another branch becomes critical. Within `generate world`, the land/sea/relief
+subtimers start 26 s after the parent and finish about 10 s before it, so a
+follow-up profile should split the unlabelled preparation and finalization there.
+The offsets also leave about 23 s after `script remap` ends and before
+`selection cover` starts; instrument the intervening content, treaty and
+localization checks before attributing that time to the 5.4 s remapper.
+
+### Follow-up: the waits removed (2026-11-07)
+
+[V-EXEC] The reference world of `tests/golden_world.json` (pending epoch 61, EU5 1.4.7 /
+26377361, 31 threads, no land cache) took 295.3 s at `c229899` and 231.3 s at `d3d1b98`, with the
+same output digest (`e1e4699e`, 884 files) and an 8.5 GiB peak (C505). Most of the difference was
+waiting, not computing: alone on the captured inputs, `terrain_outputs` took 27–32 s, against
+134.6 s for `terrain decals` in the export. A stage that makes many small native or NumPy calls
+waits for the interpreter after each one while the main thread runs Python (natives, texts,
+checks). With two threads spinning in pure Python beside it, the same terrain did not finish
+within 600 s before the native layer reader and stamps; with one such thread it took 165 s
+after them (42 s with a 0.5 ms switch interval). In the export a 0.5–1 ms switch interval sped
+the terrain branch up but slowed `natives` and gained nothing overall, so the interval stays at
+its default. Timings below are the final run's unless stated.
+
+| Stage | Before | After |
+|---|---:|---:|
+| `select canvas` (kept per map input once selected) | 15.5 s | 12.4 s; 0.02 s kept |
+| `generate world` | 59.3 s | 39.0 s; 32.9 s from a sketch |
+| `terrain decals` | 134.6 s | 81.2 s, finishing before the main thread |
+| `vegetation instances` | 17.0 s (after the main thread's work) | 25.1 s, beside the main thread |
+| `stories` | 5.6 s | 0.8 s |
+| Six sketches (`rnw.app.candidates`) | 205 s of land stages in the owner's 2026-11-01 log | 35.9 s; 21.5 s for five with the canvas kept |
+
+The main thread is now the critical path: `natives` (about 48 s, of which the causal replay of
+`validate_history` is 17 s), `texts` (19 s), the spline network (11 s) and the content checks
+after the remap, with terrain finishing about 13 s before it. The history engine was left as
+it is during the R6 freeze. Raw timings are in the ignored `local_data/perf-20261107/` folder.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)
