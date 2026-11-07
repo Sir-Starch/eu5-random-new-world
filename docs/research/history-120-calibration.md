@@ -635,6 +635,37 @@ The local evidence is in the ignored `local_data/history-120/r6/captures/`, `bas
 new freeze or repeated held-out run was made. Plan D28 requires a further decision before R6
 continues.
 
+### D32 round: development findings on 72 worlds (2026-11-07)
+
+[V-EXEC] After the owner's D32 decision (seeds 1005–1008 join development), the 72 worlds
+at frozen source `ea4b676` give, at Varied: fractured regions 17/503 = 3.4%, median
+subject pairs 41, prudent recognition 192/254 = 75.6% (`it72-base`). No held-out input
+of 1009–1012 was captured. Thresholds and classifier are unchanged.
+
+- **Fractured is a leftover class.** The fractured rule (living successors of one recorded realm
+  hold at least 30% of the region) is true for 47 of 172 held-out and 80 of 331 W8 development
+  regions, but great realm, paramount, league and rival powers are tested first. Ordering
+  fractured above rivals would give 17.5% fractured, 30.8% rival powers, 16.3% paramount and
+  32.6% patchwork on the 72 worlds; above paramount, 23.3% / 30.8% / 10.5% / 32.6%.
+  Knobs move the share only within sampling noise (2.8–4.0% across `UNREST_SLOPE` 280–450,
+  `PRUDENT` 40%, `LORD_LOCATIONS` 3–4). A held-out set has about 170 regions: a true share of
+  4% falls under 3% with probability 0.31, 5% with 0.14 and 6% with 0.05.
+- **Subjects.** Net 41 pairs per world are 53 submissions and 12 independences (the 72 starts
+  hold 3,828 and 846 accepted events); the median subject has one location. Lord capacity
+  (`CLIENT_CAPACITY_MULTIPLIER` 3 or 2) and `LEAVE_POWER` 3 barely move the median (40.5 / 39.0 /
+  40.5). `LORD_LOCATIONS` 4 gives 35.5 and `ORDINARY_LORD_POWER` 6 gives 32.0 with Q4, Q7 and
+  the other checks intact.
+- **Coupling with Q5.** The full 72-world matrix with `ORDINARY_LORD_POWER` 6
+  (`dev72-ord6`, 216 starts and 96 sweep rows) passes 13 of 14: Q5 fails on the
+  continents/3 turbulence sweep, 0.120 → 0.253 → 0.221. At the committed value 4 all eight
+  turbulence pairs are monotone, but archipelago/42 steps 0.184 → 0.188. Lord-margin values
+  5 and 6, `LORD_LOCATIONS` 3–4 and `ESCALATION` 1600–2000 each leave one or two
+  non-monotone pairs, always Varied above Turbulent: Turbulent recent turmoil sits at
+  0.19–0.28 whatever the rule. The change is not committed.
+
+Evidence is in the ignored `local_data/history-120/r6/dev72/` (inputs), `it72-*`, `dev72-ord6/`
+and `turb-*` folders.
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)
