@@ -756,17 +756,17 @@ The model, causal replay, projection and portable format stay. These pieces chan
 
 | Piece | Where | Rule |
 |---|---|---|
-| Seeded aims | `history_trajectories.seed_events`, `Trajectory.strategy/region`, `TrajectoryKind.REGIONAL_POWER/PARAMOUNT` | Extraordinary aims per hearth as before; then one feasible setting per political region (≥ 8 landed foundings) from `SETTINGS`, interpolated by turbulence. Aims go to centres bordering two landed polities; prudent share `PRUDENT` |
-| Policy | `history_engine._bases`, `_preference`, `_keeps_aim` | An aim's holder contests persistently, in its domain first, and may seek a whole neighbour. Fearful neighbours favour pacts, protection and submission to it. League and confederation members favour pacts; sacred peers favour access. Holders do not reform away from their inclination |
-| Administration | `Context.capacity`, `limit`, `unrest` | 1,000 at or below centralization + integration 1,100; the surplus doubles every 200 and grows with technology above level 1. Overreaching aims conquer up to twice capacity. Provinces may break away above the unrest threshold: 93%, 82% or 72% of capacity at Calm, Varied and Turbulent |
+| Seeded aims | `history_trajectories.seed_events`, `Trajectory.strategy/region`, `TrajectoryKind.REGIONAL_POWER/PARAMOUNT` | Extraordinary aims per hearth as before; then one feasible setting per political region (≥ 8 landed foundings) from `SETTINGS`, interpolated by turbulence. Centres border two landed polities and have connected state land for their aim's share and scale; a paramount must have room against inaccessible founding rivals. Prudent share `PRUDENT` |
+| Policy | `history_engine._bases`, `_preference`, `_keeps_aim` | An aim's holder contests persistently, preferring gains in its domain and the largest eligible gain from the same opponent. A paramount prefers to leave a defeated neighbour standing. Fearful neighbours favour pacts, protection and submission to it. League and confederation members favour pacts; sacred peers favour access. Holders do not reform away from their inclination |
+| Administration | `Context.capacity`, `strain`, `limit`, `unrest` | 1,000 at or below centralization + integration 1,100; the surplus doubles every 200 and grows with technology above level 1. Coordination and contest effort use burden relative to capacity; overload increases secession propensity. Overreaching aims conquer up to twice capacity. Provinces may break away above the unrest threshold: 93%, 82% or 72% of capacity at Calm, Varied and Turbulent |
 | Breakaway | `Action.SECESSION`, `history_actions._secession_allowed` | One conquered founder's province becomes a new parentless state at its founder's or largest seat, with mutual grievance. The realm keeps its seat and lineage. The core and the province must each remain connected and supported |
-| Dependencies | `_submission_cause`, `Action.INDEPENDENCE`, `Effects.ended` | Submission needs fear of the lord, or a recorded threat the lord can face, plus a lord with 2× the locations and 3× the strength (4× for a lord without an aim). Independence needs a setback for the lord, a lord below 2× the subject's strength, or a lord over capacity. Its causes cite the setback |
+| Dependencies | `_submission_cause`, `Action.INDEPENDENCE`, `Effects.ended` | Submission needs fear of the lord, or a recorded threat the lord can face, plus a lord with 2× the locations and 4× the strength. Independence needs a setback for the lord, a lord below 2× the subject's strength, or a lord over capacity. Direct resubmission after independence needs a new defeat; old fear stays in memory but cannot itself undo the exit |
 | Contests | `history_actions.adjudicate`, `history_engine._advance` | A defender pays what it has left; one contest per participant per round; a seceding realm's land cannot change hands twice. Without a grievance an ordinary society needs 2.5×, 1.5× or parity of strength at Calm, Varied and Turbulent (`OPPORTUNITY`); an aim holder accepts parity against ordinary targets and keeps the ordinary margin against another aim; contest propensity rises faster beyond Varied (`ESCALATION`) |
 | Institutions | `eu5_history.traditions`, `history_societies.emulated` | Regional weights with a dominant authority; councils from collective bargains; a new authority only where at least half of the land neighbours hold it |
 | Chronicles | `history_text.chronicles` | Ranked by `SIGNIFICANCE`; `REPEATED` caps exchange 1, contact 0, migration 1, reform 2 (authority changes only); a routine entry only fills a life with fewer than `ROUTINE_FILL` (3) significant ones |
 | Groups | `history_trajectories._realized_group`, `history_actions._union_allowed`, `_league_allowed`, `history_engine._preference` | Partners of one seeded league never unite; confederates bargain on mutual trust after an exchange, or under fear; partners' pacts and exchanges rank first. Recognition reads the living descendants of the seeded members: the largest pact network of at least three that holds the anchor (leagues: council authority and an exchange network; confederates: agrarian, with the density prerequisite). A sacred centre needs its landed holder, a sacred anchor, sacred authority and two access partners |
 | Reading | `history_archive.AimFact`, `history_presenter.region` | Every seeded aim with its outcome appears under the region's **Ambitions** |
-| Measurement | `history_metrics.structure`, `history_acceptance.evaluate` | Region classes, recent turmoil, aim outcomes, subjects, institutions and chronicles; §18's thresholds as frozen constants |
+| Measurement | `history_metrics.structure`, `history_acceptance.evaluate` | Region classes, recent turmoil, aim outcomes, subjects, institutions and chronicles; §18's thresholds as frozen constants. Fractured regions follow the recorded source realm of successive secessions, separately from the actor ancestry that governs aim inheritance |
 
 **Calibration knobs**, adjustable on development seeds only (plan §17):
 
@@ -818,29 +818,29 @@ schema gained fields, and the story is unchanged.
 
 ### R6 runbook
 
-**Status, 2026-11-07:** steps 1–2 are done. The owner lifted the freeze for the history engine
-speed-up (C506), and it is renewed at commit `823b662`, source SHA-256 `b62231a9…a5a464`; the
-e60b77e record is kept as `heldout-freeze-e60b77e.json`. `R6_OUT=dev-c506` reproduces all 192
-observations of `dev-d31`. Commits after e60b77e had already changed `src/rnw` (W7, W8, C503,
-the sketches), so the old record no longer matched. The development calibration has now been
-rerun with current W8 inputs: 11 of 14 checks pass; Q1, Q4 and Q5 fail
-([report](research/history-120-calibration.md#development-checks-on-the-w8-layout-2026-11-07)).
-No knob or threshold changed. Do not start step 3: plan D28 leaves the next decision to the
-owner after these failures. Held-out seeds 1005–1008 have not been captured or run.
+**Status, 2026-11-07:** the owner reopened development after the W8 failures (C507).
+The fixes now pass all fourteen checks on the complete W8 development matrix (C508;
+[report](research/history-120-calibration.md#w8-fixes-and-renewed-development-calibration-2026-11-07)).
+Steps 1–2 are complete again: source commit `ea4b676`, SHA-256 `3a125fed…3d048d2`, is frozen
+in `heldout-freeze.json`; the prior record is kept as `heldout-freeze-823b662.json` alongside
+the older records. Acceptance thresholds and classifier precedence are unchanged. R6 is ready
+for step 3; this development task ends before it. Held-out seeds 1005–1008 have not been captured
+or run. The pending epoch-61 reference reproduces `3a0eff79` (884 files), and `make check` passes.
 The record of 2026-11-06 follows. Step 1 (2026-11-05): all fourteen statistical checks pass on the
 development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
 [calibration report](research/history-120-calibration.md#r6-development-calibration-of-the-audited-redesign-2026-11-05).
 D29 (N6–N9) feeds no history input ([plan §22.4](history-plan.md#224-scope-and-cut-order)),
 so that calibration stands. Q4 gates as written (plan D30). Step 2: the source of
-commit `e60b77e` is frozen, source SHA-256 `96706763…1b4587`, in the ignored
-`local_data/history-120/r6/heldout-freeze.json` (written by `freeze.py` beside it,
+commit `e60b77e` was frozen, source SHA-256 `96706763…1b4587`, in the ignored
+`local_data/history-120/r6/heldout-freeze-e60b77e.json` (written by `freeze.py` beside it,
 which refuses a second freeze). It supersedes the freeze of `b36915f`, kept beside it,
 because D31 changed the opinions before any held-out run: the whole development matrix
 was rerun on the new opinions (`R6_OUT=dev-d31`, all fourteen checks pass), and the 48
 Varied starts of the final source equal that rerun. `matrix.py heldout` and
-`evaluate.py heldout` refuse any other source. Later commits that touch only
-documentation keep the hash. The hub installed on 2026-11-07 is built from the renewed
-freeze's source; reinstall it only if the source changes.
+`evaluate.py heldout` check the active freeze record. Later commits that touch only
+documentation keep the hash. The hub installed on 2026-11-07 is built from `823b662`;
+this development calibration does not replace it. The frozen candidate's package
+and hub update belong to delivery step 5.
 
 R6 is long batch work, meant for a separate agent. The scripts are in the ignored
 `local_data/history-120/r6/`. Run from the repository root, in the foreground, with

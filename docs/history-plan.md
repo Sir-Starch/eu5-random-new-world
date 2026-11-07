@@ -846,6 +846,10 @@ each political region at 1337. It applies these rules in order:
    least 30%;
 6. **patchwork:** any other region.
 
+For the fractured class, recorded secessions connect all living branches of the same former
+realm, including successive provincial breakaways. This measurement follows the source realm
+even when the new actor is parentless for aim inheritance (W8 measurement correction).
+
 **Hard, every world and every turbulence level:**
 
 - Every living polity has valid members, seat, lifecycle and the agrarian and
@@ -1035,6 +1039,11 @@ trajectory. It assigns aims to actors chosen from existing facts (model strength
 separation between centres) and grants nothing else. Smaller regions use the
 ordinary policy only.
 
+The W8 development recheck also checks the centre's connected state land: it must
+have room for the aim's regional share and scale. A paramount's reachable component
+must be able to outnumber an inaccessible founding rival. These are eligibility
+facts at 1037; the actor must still win and hold its land through history.
+
 | Setting | Aims | Picture it tends toward (not guaranteed) |
 |---|---|---|
 | Patchwork | None | Many small states, local grievances, small pacts |
@@ -1089,6 +1098,9 @@ conquest and recognition.
 - **Prudent actors** never conquer beyond capacity.
 - **Overreaching actors** may reach twice their capacity. Every district beyond
   capacity adds failed-integration and division pressure.
+- Coordination and a contest's administrative effort use burden as a fraction of
+  the realm's capacity. The overloaded fraction also raises secession propensity
+  (W8 development correction); the ordinary capacity of 1,000 retains its prior scale.
 - **Recognition** is relative:
   - a *regional power* holds a bloc of at least 8% of its region's state
     locations and at least 2 × the region's median state (R6; first 15% and
@@ -1102,7 +1114,8 @@ conquest and recognition.
 
 **D25 Dependencies need a cause and can end.** Submission needs a recorded defeat
 by the lord, or a recorded threat that the lord protects against. The lord must
-hold at least twice the subject's locations and have three times its power.
+hold at least twice the subject's locations and have four times its power (W8
+development calibration; previously three for an aim holder).
 Voluntary submission to a merely larger neighbour is removed.
 
 - A new *independence* family ends a dependency when the lord has become weaker
@@ -1111,6 +1124,9 @@ Voluntary submission to a merely larger neighbour is removed.
 - Indirect rule (D24) makes subjects the natural form of a paramount's power.
 - The new family has templates, a named-opinion family and translations in every
   official language.
+- After independence, direct resubmission to the same lord needs a new defeat;
+  fear from before the exit cannot itself undo it. A current third-party threat
+  remains a separate cause.
 
 **D26 Authority follows regional tradition.** Each generated region draws a
 tradition, a weighting of the four founding authorities, from its own stream.

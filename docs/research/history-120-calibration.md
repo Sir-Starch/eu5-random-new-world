@@ -471,17 +471,19 @@ families are still exactly three, and the unchanged Turbulent Q7 ratio of 0.667 
 floor. Paramount share is now 12.1%, 2.1 points above its gate (11.6% before); fractured share
 falls from 4.1% to 2.4%, 0.6 points below its gate.
 
-Q4 on the two recognition scales, over the 48 Varied starts with the 14/14 great-empire aims added
+Q4 on the two recognition scales, over the 48 Varied starts with the 9/9 great-empire aims added
 to both rates, is:
 
 | Scale | Regional power | Paramount | Combined |
 |---|---:|---:|---:|
-| R6 recognition | 71/112 = 63.4% | 12/29 = 41.4% | 97/155 = 62.6% |
-| Q1 regional-share rule | 57/112 = 50.9% | 5/29 = 17.2% | 76/155 = 49.0% |
+| R6 recognition | 71/112 = 63.4% | 12/29 = 41.4% | 92/150 = 61.3% |
+| Q1 regional-share rule | 57/112 = 50.9% | 5/29 = 17.2% | 71/150 = 47.3% |
 
 The corresponding `dev-d31` combined rates were 123/168 = 73.2% and 92/168 = 54.8%. The Q4
 acceptance row above also includes the high `empire_permille` sweeps, so its denominator differs
 from the 48-world Q4-scale diagnostic.
+The combined figures above correct the first report, which inadvertently added five great-empire
+aims from the high sweeps to this world-only diagnostic; the acceptance result was unaffected.
 
 Ranked by median absolute delta across the 18 preset × level groups, the largest shifts were in
 archive bytes, assortativity, ownership locations, conflicts and ownership events. Each group
@@ -500,6 +502,88 @@ The capture phase took 2,107.6 s (35 min 8 s); the 72 baselines took 19.8 s; the
 took about 3 min on its automatically sized 31-worker pool. EU5 was not launched, and held-out
 seeds 1005–1008 were not captured or run. Since three checks fail, stop before runbook step 3;
 plan D28 leaves the next decision to the owner.
+
+### W8 fixes and renewed development calibration (2026-11-07)
+
+[V-EXEC] After C507 the owner authorized fixing the failures and reopened development. The
+48 W8 inputs and their pinned 1.1.0 baselines were reused; no world was excluded, no held-out
+input was captured or run, and `history_acceptance`'s thresholds and classifier precedence
+were unchanged. The final source SHA-256 is `3a125fed…3d048d2`; the complete development run is
+the ignored `local_data/history-120/r6/dev-w8-verified/` (192 rows, all `ok`, matching source
+hashes). It reproduces every observation of the successful `dev-w8-final/` run after removal
+of an unused helper. The measured wall time was 286.7 s, with other verification running.
+
+The fixes address construction and causality, plus one measurement defect:
+
+- Coordination and contest effort now use burden relative to administrative capacity.
+  Previously a realm using a quarter of its enlarged capacity could already hit the absolute
+  coordination penalty floor. The ordinary capacity of 1,000 retains its prior calculation.
+- An expansion aim prefers the largest eligible gain against the same opponent, including a
+  neighbour that crosses its domain boundary. A paramount keeps its preference for leaving a
+  defeated neighbour standing. Regional centres need reachable room for their recognition
+  share and scale; paramounts also need room against inaccessible founding rivals.
+- Actual overload adds secession propensity, as D24 requires, rather than only enabling it.
+- Direct resubmission after independence needs fear from a new defeat. The preceding trial
+  contained 107 resubmissions without a new defeat; a current third-party threat remains valid.
+- Fractured-region measurement follows the explicit source realms of successive secessions.
+  Those actors stay parentless for aim inheritance. On the same saved starts this correction
+  moves five patchwork regions to fractured (9 → 14 of 331), with no change to their histories,
+  the rival/paramount/great classes, the 30% lineage rule or classifier precedence.
+
+The gain-only trial raised prudent realization from 61.0% to 64.0%; room and overload reached
+65.6%; relative coordination reached 75.9%. `LORD_POWER` is calibrated from 3 to 4: the subjects
+median fell from 42.5 to 40.5 before the resubmission fix brought it to 39.5. Two trials were
+rejected: `ESCALATION=1600` left two turbulence-sweep failures, so it stays 1200;
+`UNREST_SLOPE=450` left 8 fractured regions, 43.5 subjects and one sweep failure, so it stays
+350. `PRUDENT`, recognition shares, the other knobs and all acceptance thresholds stay as before.
+
+All fourteen final checks pass (gates are in the preceding table and plan §18):
+
+| Check | Final value |
+|---|---|
+| Q1 | Patchwork 35.95%, rivals 42.90%, paramount 13.29%, fractured 4.23%, great realm 3.63% |
+| Q2 | Median 3 classes, 46 eligible worlds |
+| Q3 | Recent-turmoil ratio 2.103; rising in 97.9%; class directions hold; continuity 85.31% |
+| Q4 | Prudent 121/162 = 74.69%; overreach ended 177/223 = 79.37%; groups 93.75 / 90.91 / 100% |
+| Q5 | All 16 control sweeps monotone |
+| Q6 | Great-realm ratio 0.866; 31 realized; four high-sweep worlds |
+| Q7 | Ordinary-size ratios 1.000 / 1.000 / 0.667 |
+| Q8 | No domination failures |
+| Q9 | Subjects median 39.5; 99.57% scaled |
+| Q10 | Alliance median 11 |
+| Q11 | Republic median 15.01%; IQR 9.88 points; types hold; assortativity 0.255 |
+| Q12 | Largest family 25.52%; routine 18.32%; distinct 3; short 25.03%; length ≤8 |
+| Q13 | Visible median 90.80% |
+| S11 | Largest archive 574,884 bytes |
+
+The turbulence sweep's recent-turmoil shares at Calm / Varied / Turbulent are 0.120 / 0.240 /
+0.258 (continents/3), 0.109 / 0.141 / 0.242 (continents/42), 0.046 / 0.164 / 0.218
+(archipelago/3), and 0.126 / 0.184 / 0.188 (archipelago/42). Thin margins remain: subjects 39.5
+against 40, long-chronicle families exactly three, and Turbulent Q7 0.667 against 0.60.
+
+Q4 at both scales on these 48 Varied starts (the same 9/9 great-empire aims enter both combined
+rates; high sweeps are included only in the acceptance row above):
+
+| Scale | Regional power | Paramount | Combined |
+|---|---:|---:|---:|
+| R6 recognition | 81/111 = 73.0% | 21/29 = 72.4% | 111/149 = 74.5% |
+| Q1 regional-share rule | 68/111 = 61.3% | 12/29 = 41.4% | 89/149 = 59.7% |
+
+Locked dependency sync and `make check` passed: format, lint, strict types, 3,035 Python tests
+(17 optional skips) and 29 Rust tests. The synthetic divided-valley golden is now `1908cd27`:
+comparison with `823b662` finds identical facts and events apart from two contest effort
+commitments, 614 → 610, from the relative-load correction. The first full installed-game
+reference export took 238.4 s and passed all normal writers and output checks, producing
+`3a0eff79d1d23a819d9c8915960879a5502139130218c8cb1017475e4752afdb` (884 files) on the unchanged
+game fingerprint. The pending epoch-61 golden is updated; the frozen epoch-60 and epoch-59
+references are unchanged.
+An independent installed-game reference test reproduced that digest and passed its additional
+map/content assertions (`1 passed`, 220.2 s); EU5 itself was not launched.
+
+The source is committed and frozen at `ea4b676` (`3a125fed…3d048d2`). The old freeze is preserved
+as `local_data/history-120/r6/heldout-freeze-823b662.json`; the active record pins the W8 inputs,
+final acceptance artifact, source, knobs, thresholds and reference. Step 3 was not started.
+No hub replacement or game-profile installation belongs to this development calibration.
 
 ## R6 development calibration of the audited redesign (2026-11-05)
 
