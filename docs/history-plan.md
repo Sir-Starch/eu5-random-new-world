@@ -147,6 +147,7 @@ on these observations.
 | D29 | Consequences in play | Formable goals, political inheritance, AI goals, and events and names from the recorded past (N6–N9, [§22](#22-goals-and-consequences-in-play-2026-11-06)) |
 | D30 | Q4 recognition | Q4 gates on the D24 recognition shares as written; the Q1-scale rate is reported beside it (owner, 2026-11-06, before the held-out run) |
 | D31 | The game's measure | Written values take the game's scale and the window shows what the game shows, in its names; no internal scale is shown as game state (owner, 2026-11-06) |
+| D32 | Second acceptance round | After the failed held-out run (C509) the owner chose another D28 round: seeds 1005–1008 become development, mechanisms are fixed with margin, new held-out seeds 1009–1012 are frozen and run once (owner, 2026-11-07) |
 
 ## 4. Scope and abstractions
 
@@ -827,6 +828,8 @@ decision before the held-out run, never after it.
   for 48 worlds. All building and tuning use these.
 - **Held-out:** the same six presets × seeds 1005–1008, for 24 worlds. Seeds and
   source commit are frozen in R1's record, and the set runs once, in R6.
+  *Since D32 (2026-11-07):* 1005–1008 failed once (C509) and are development; the held-out
+  seeds are 1009–1012 (sweeps 1009/1010), frozen before capture and run once.
 - **Sweeps:** continents and archipelago × two seeds (3/42 for development,
   1005/1006 for held-out). Each control runs at a low, the default and a high value,
   and at all three turbulence levels.
@@ -1185,6 +1188,32 @@ elsewhere. Rules:
   chose is named as the generator's own.
 - Checking the window against the written files is not enough: the written value
   is also checked against the game's definition before it ships.
+
+**D32 Second acceptance round (owner, 2026-11-07).** The R6 held-out run at freeze
+`ea4b676` failed Q1 (fractured 1.74% against 3%) and Q9 (median subjects 42 against 40);
+[C509](research/claims-ledger.md). D28 requires a further recorded decision. The owner chose
+another round, not a waiver. Rules:
+
+- C509 stays recorded as failed. Seeds 1005–1008 join the development set (72 worlds,
+  `R6_INPUTS` captures in `local_data/history-120/r6/captures/`) and may be used to
+  fit and diagnose. They are no longer held out.
+- New held-out seeds **1009–1012** (same presets, 24 worlds; sweeps 1009/1010) are
+  frozen before they are captured and used once, as in D28. No world is rerolled or
+  excluded.
+- Fixes are to mechanisms, with margin. The development target for the two failed checks is
+  stated before tuning: pooled over the 72 worlds, median subject pairs ≤ 35 and fractured
+  regions ≥ 4%. Both are development targets, not gates; the §18 thresholds are unchanged.
+  The other twelve checks may not lose their present margins.
+- A change to a §18 criterion or to the region classifier (`history_metrics._classify`,
+  precedence) needs its own recorded decision, made before the new held-out run and not to
+  make a failed check pass.
+
+*Finding that bears on that last rule.* On the 24 held-out and 48 development starts the
+fractured rule (living successors of one recorded realm hold at least 30% of the region)
+is also true for 47 of 172 and 80 of 331 regions, but the classifier tests great realm,
+paramount, league and rival powers first, so 3 and 14 are labelled fractured. Fractured is
+therefore a leftover class by construction. The classifier is unchanged; whether
+its precedence measures the intended variety is open for the owner.
 
 ### 21.5 Implementation refinements (2026-11-05, before any held-out run)
 

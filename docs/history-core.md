@@ -827,6 +827,10 @@ The held-out evaluation passes 12 of 14 checks: Q1 fails on fractured-region sha
 scale; its Q1-scale diagnostic is 66.7%. No knob or threshold changed after the run. Per the
 runbook, stop before step 5 pending the further decision required by plan D28. Full results are
 in the [calibration report](research/history-120-calibration.md#r6-held-out-run-2026-11-07).
+**Decision D32 (owner, 2026-11-07):** another round. Seeds 1005–1008 become development
+(72 worlds), mechanisms are fixed toward the stated development targets, and new held-out
+seeds 1009–1012 are frozen and run once ([plan D32](history-plan.md#21-independent-audit-and-redesign-2026-11-05)).
+Steps 2–4 repeat on the new freeze; the seeds named in them read 1009–1012 from then on.
 
 The record of 2026-11-06 follows. Step 1 (2026-11-05): all fourteen statistical checks pass on the
 development set (144 starts, 48 sweeps); the evidence and every adjustment are in the
