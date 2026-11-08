@@ -837,8 +837,9 @@ continues from step 5 ([plan D34](history-plan.md#213-decisions)).
 **Step 5 so far (2026-11-08, source `94bf99b`):** S8 (median −17.3%), S9 (−362 MiB), S10 (1.7 s, thin),
 S11 (570,564 bytes) and the reference reproduction (884 files, `79dbf588`) pass; `make check` and
 `make desktop` pass ([measurements](research/history-120-calibration.md#d34-checks-inform-they-do-not-gate-2026-11-07)).
-Candidate I is installed and hub 1.2.0 is updated ([INSTALLED](../experiments/INSTALLED.md)); step 6
-(W2 matrix) and the owner's sitting remain.
+Candidate I is installed and hub 1.2.0 is updated ([INSTALLED](../experiments/INSTALLED.md)).
+Step 6 ran the W2 cells on continents 42 and on a painted land image only (the preset × seed sweep
+was dropped, see [roadmap W2](roadmap.md#workshop-feedback-in-120)); both pass. The owner's sitting remains.
 **Status after D33, 2026-11-07:** the held-out run on seeds 1009–1012 (freeze `1f6bc79`, source
 SHA-256 `b0ff59fd…6959e`) passed 11 of 14 checks; Q1 and Q9 pass now, Q4 (one seeded highland
 confederation not realized), Q5 (one `state_locations` pair) and Q7 (Varied ratio 0.667) fail. No
