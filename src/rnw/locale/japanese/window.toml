@@ -2815,3 +2815,7 @@ text = '''アメリカ大陸との類似度'''
 ["control.new_world.template_permille.about"]
 source = "f4883b0dfd38fb42"
 text = '''陸地が実際の南北アメリカの配置、つまり地峡でつながる北アメリカと南アメリカにどれだけ近いか。値が低いとかすかな面影だけが残り、高いと大陸の位置と大きさが保たれます。海岸線、海、山脈、河川はどの値でも新しく作られます。'''
+
+["stage.vanilla Americas"]
+source = "ccb3c0aa64b52c69"
+text = '''ゲーム本来のアメリカ大陸を読み込み中'''

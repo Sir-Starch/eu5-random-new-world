@@ -2815,3 +2815,7 @@ text = '''아메리카와의 유사도'''
 ["control.new_world.template_permille.about"]
 source = "f4883b0dfd38fb42"
 text = '''육지가 실제 아메리카의 배치, 곧 지협으로 이어진 북아메리카와 남아메리카를 얼마나 따르는지 정합니다. 값이 낮으면 희미한 흔적만 남고, 높으면 대륙의 위치와 크기가 유지됩니다. 해안선, 바다, 산맥, 강은 어떤 값에서도 새로 만들어집니다.'''
+
+["stage.vanilla Americas"]
+source = "ccb3c0aa64b52c69"
+text = '''게임 본래의 아메리카를 읽는 중'''

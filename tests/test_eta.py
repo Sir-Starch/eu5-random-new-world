@@ -219,3 +219,36 @@ def test_cache_hit_and_game_lock_wait_do_not_train_expensive_work() -> None:
 def test_history_separates_presets_and_game_builds() -> None:
     assert estimates.key("one", "continents") != estimates.key("two", "continents")
     assert estimates.key("one", "continents") != estimates.key("one", "wall")
+
+
+def test_stages_a_job_never_runs_take_no_time_and_do_not_pollute_what_is_learned() -> None:
+    """A world that keeps the real Americas makes no land: its time left is its own societies'."""
+    from rnw.export_stages import SKIPPED  # noqa: PLC0415
+
+    full = _model()
+    kept = _model()
+    kept.skip(SKIPPED)
+    # Before anything runs, the world without land is far nearer its end than the generated one.
+    assert kept.forecast(0.0) < full.forecast(0.0) / 2
+    # The stages it does run are timed from their real inputs, not from the start of the job.
+    kept.begin("load map", 0.0)
+    kept.finish("load map", 3.0, completed=True)
+    kept.begin("select canvas", 3.0)
+    kept.finish("select canvas", 9.0, completed=True)
+    kept.begin("vanilla natives", 9.0)
+    kept.finish("vanilla natives", 17.0, completed=True)
+    assert kept.costs["vanilla natives"] == pytest.approx(8.0)
+    kept.begin("natives", 17.0)
+    kept.finish("natives", 29.0, completed=True)
+    assert kept.costs["natives"] == pytest.approx(12.0)
+    # A stage that waits for a skipped one has no cost learned: its input time is not known.
+    kept.begin("script remap", 40.0)
+    kept.finish("script remap", 45.0, completed=True)
+    assert "script remap" not in kept.costs or kept.costs["script remap"] < 10.0
+
+
+def test_progress_counts_skipped_stages_as_done() -> None:
+    progress = Progress()
+    before = progress.fraction
+    progress.skip(("generate world", "terrain decals"))
+    assert progress.fraction > before

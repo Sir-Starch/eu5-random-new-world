@@ -2815,3 +2815,7 @@ text = '''Podobieństwo do Ameryk'''
 ["control.new_world.template_permille.about"]
 source = "f4883b0dfd38fb42"
 text = '''Jak wiernie ląd odwzorowuje układ prawdziwych Ameryk: Ameryki Północnej i Południowej połączonych przesmykiem. Niska wartość zostawia tylko odległe echo, wysoka zachowuje miejsce i wielkość kontynentów. Wybrzeża, morza, góry i rzeki są nowe przy każdej wartości.'''
+
+["stage.vanilla Americas"]
+source = "ccb3c0aa64b52c69"
+text = '''Wczytuję Ameryki z gry'''

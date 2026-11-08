@@ -71,6 +71,9 @@ def display_name(
             precious_permille=base.precious_permille,
             reveal_at_start=base.reveal_at_start,
         )
+        if preset == "omerika":
+            # Omerika that keeps the real Americas is still Omerika, the type it is offered as.
+            shape = replace(shape, keep_geography=base.keep_geography)
         if settings.mask.id or shape != base:
             title = "Custom world"
     return clean_name(name) or f"{title} {tag}"

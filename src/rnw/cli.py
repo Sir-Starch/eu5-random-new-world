@@ -33,10 +33,11 @@ from rnw.epoch import epoch_of
 from rnw.eu5_canvas import CanvasError
 from rnw.eu5_export import ExportError, export_candidate
 from rnw.eu5_map import Eu5ContractError
-from rnw.eu5_nw_export import NewWorldExportError, export_new_world
+from rnw.eu5_nw_export import NewWorldExportError
 from rnw.eu5_objects import ObjectBudgetError
 from rnw.eu5_regionkeys import RegionKeyError
 from rnw.eu5_remap import RemapError
+from rnw.eu5_world_export import export_world as make_world
 from rnw.geography import GeographyError, color_summary, read_locations, summary
 from rnw.layers import rolls_of
 from rnw.parallel import ResourceError
@@ -759,7 +760,7 @@ def newworld(  # noqa: PLR0913 - mirrors the generate command.
     """Stage a NOT GAME VALIDATED mod that replaces the New World with generated land."""
     try:
         chosen = load_settings(preset, settings)
-        report = export_new_world(
+        report = make_world(
             game_dir,
             output,
             seed=seed,

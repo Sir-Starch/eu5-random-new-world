@@ -2815,3 +2815,7 @@ text = '''Parecido con las Américas'''
 ["control.new_world.template_permille.about"]
 source = "f4883b0dfd38fb42"
 text = '''Cuánto sigue la tierra la disposición de las Américas reales: Norteamérica y Sudamérica, unidas por un istmo. Un valor bajo deja solo un eco lejano; uno alto conserva el lugar y el tamaño de los continentes. Las costas, los mares, las montañas y los ríos son nuevos con cualquier valor.'''
+
+["stage.vanilla Americas"]
+source = "ccb3c0aa64b52c69"
+text = '''Leyendo las Américas del juego'''

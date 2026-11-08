@@ -14,7 +14,7 @@ import statistics
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
 
 # Topological order; these are the data dependencies in eu5_nw_export._export_new_world.
 # The vanilla reads need the moved island groups, so they are submitted only after the world
@@ -108,6 +108,9 @@ class Estimate:
         self.begins: dict[str, float] = {}
         self.ends: dict[str, float] = {}
         self.costs: dict[str, float] = {}
+        # Stages this job never runs (a world that keeps the real Americas makes no land): they
+        # take no time, and what waits for them waits for their own inputs.
+        self.skipped: set[str] = set()
         self.fresh_world: bool = False
         self.waited_for_game: bool = False
         self.install: bool = False
@@ -117,6 +120,19 @@ class Estimate:
     def configure(self, learned: Mapping[str, float], *, install: bool) -> None:
         self.learned = dict(learned)
         self.install = install
+
+    def skip(self, names: Iterable[str]) -> None:
+        self.skipped.update(name for name in names if name in DEPENDENCIES)
+
+    def _end_of(self, name: str) -> float | None:
+        """When ``name`` ended, or, for a skipped stage, when its inputs were all there; None if
+        that is not yet known."""
+        if name not in self.skipped:
+            return self.ends.get(name)
+        found = [self._end_of(dep) for dep in DEPENDENCIES[name]]
+        if any(end is None for end in found):
+            return None
+        return max((end for end in found if end is not None), default=self.started)
 
     def begin(self, name: str, now: float) -> None:
         if name == "waiting for the game":
@@ -130,14 +146,15 @@ class Estimate:
         if name not in DEPENDENCIES or name not in self.begins or not completed:
             return
         dependencies = DEPENDENCIES[name]
+        known = [self._end_of(dep) for dep in dependencies]
         # Include uninstrumented work between dependencies and this stage. For a stage
         # submitted early, exclude its wait for inputs. Pending inputs mean invalid training.
         if (
-            all(dep in self.ends for dep in dependencies)
+            all(end is not None for end in known)
             and (name != "generate world" or self.fresh_world)
             and (name != "install" or not self.waited_for_game)
         ):
-            ready = max((self.ends[dep] for dep in dependencies), default=self.started)
+            ready = max((end for end in known if end is not None), default=self.started)
             self.costs[name] = max(0.01, now - ready)
         self.ends[name] = now
 
@@ -159,6 +176,9 @@ class Estimate:
         ends: dict[str, float] = {}
         for name, dependencies in DEPENDENCIES.items():
             if name == "install" and not self.install:
+                continue
+            if name in self.skipped:
+                ends[name] = max((ends[dep] for dep in dependencies), default=self.started)
                 continue
             if name in self.ends:
                 ends[name] = self.ends[name]

@@ -22,7 +22,7 @@ from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
 from rnw.eu5_canvas import select_canvas
 from rnw.eu5_map import load_map
-from rnw.eu5_nw_export import export_new_world
+from rnw.eu5_world_export import export_world
 from rnw.inputs import compare
 from rnw.messages import say
 from rnw.parallel import cores
@@ -167,10 +167,14 @@ def generate(
     nothing is recorded. A world that was made but could not be added is recorded and kept
     beside the generator, so ``add_to_game`` can try again without making it anew.
     """
-    run = export_new_world if exporter is None else exporter
+    run = export_world if exporter is None else exporter
     _require_profile(request)
     started = time.monotonic()
-    timing_key = estimates.key(request.game.build_id, request.code.preset)
+    # A world that keeps the real Americas makes no land; its stages are not those of its preset.
+    kept = request.code.settings().new_world.keep_geography
+    timing_key = estimates.key(
+        request.game.build_id, f"{request.code.preset}:real" if kept else request.code.preset
+    )
     if progress is not None:
         progress.configure_eta(
             estimates.load(request.data, timing_key),
@@ -482,7 +486,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
     if expected is None or manifest_digest(expected) != record.output_sha256:
         message = say("check.bundle")
         raise CheckError(message)
-    run = export_new_world if exporter is None else exporter
+    run = export_world if exporter is None else exporter
     scratch = workspace(data) / f"{CHECK_PREFIX}{world.id}"
     try:
         report = run(

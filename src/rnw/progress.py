@@ -22,7 +22,7 @@ from rnw.eta import Estimate
 from rnw.timing import timed
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Mapping
+    from collections.abc import Callable, Generator, Iterable, Mapping
 
 
 class Cancelled(Exception):  # noqa: N818 - a cancel is not an error, and "Cancelled" reads best
@@ -48,6 +48,7 @@ STAGES: Final[dict[str, StageInfo]] = {
     "vanilla climate": StageInfo("Measuring the old climate", 12),
     "vanilla material levels": StageInfo("Measuring the old terrain materials", 8),
     "vanilla natives": StageInfo("Reading the old native peoples", 4),
+    "vanilla Americas": StageInfo("Reading the game's own Americas", 0),
     "generate world": StageInfo("Generating continents, seas and relief", 26),
     "settle coasts": StageInfo("Giving every coast a port", 3),
     "water shapes": StageInfo("Shaping bays, straits and currents", 1),
@@ -146,6 +147,13 @@ class Progress:
         with self._lock:
             self._estimate.configure(learned, install=install)
 
+    def skip(self, names: Iterable[str]) -> None:
+        """Stages this job will not run: they count as done and take no time."""
+        found = tuple(names)
+        with self._lock:
+            self._done.update(found)
+            self._estimate.skip(found)
+
     def stage_costs(self) -> dict[str, float]:
         """Completed critical-path costs, for learning only after a successful job."""
         with self._lock:
@@ -212,6 +220,13 @@ def active(progress: Progress | None) -> Generator[None]:
         yield
     finally:
         _active = previous
+
+
+def skip_stages(*names: str) -> None:
+    """Tell the active job that these stages will not run; nothing when there is none."""
+    progress = _active
+    if progress is not None:
+        progress.skip(names)
 
 
 def checkpoint() -> None:

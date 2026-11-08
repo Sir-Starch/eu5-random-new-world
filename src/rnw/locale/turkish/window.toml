@@ -2815,3 +2815,7 @@ text = '''Amerikalar’a benzerlik'''
 ["control.new_world.template_permille.about"]
 source = "f4883b0dfd38fb42"
 text = '''Karanın gerçek Amerikalar’ın düzenini ne kadar yakından izleyeceği: bir berzahla birleşen Kuzey ve Güney Amerika. Düşük değer yalnızca uzak bir yankı bırakır, yüksek değer kıtaların yerini ve büyüklüğünü korur. Kıyılar, denizler, dağlar ve nehirler her değerde yenidir.'''
+
+["stage.vanilla Americas"]
+source = "ccb3c0aa64b52c69"
+text = '''Oyunun Amerikalar’ı okunuyor'''

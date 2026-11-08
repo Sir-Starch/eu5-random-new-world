@@ -2815,3 +2815,7 @@ text = '''Ähnlichkeit mit den Amerikas'''
 ["control.new_world.template_permille.about"]
 source = "f4883b0dfd38fb42"
 text = '''Wie genau das Land der Anordnung der echten Amerikas folgt: Nord- und Südamerika, durch eine Landenge verbunden. Ein niedriger Wert lässt nur ein loses Echo, ein hoher behält Lage und Größe der Kontinente bei. Küsten, Meere, Gebirge und Flüsse sind bei jedem Wert neu.'''
+
+["stage.vanilla Americas"]
+source = "ccb3c0aa64b52c69"
+text = '''Lese die Amerikas des Spiels'''
