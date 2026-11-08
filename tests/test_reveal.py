@@ -166,9 +166,10 @@ def test_the_setting_travels_in_the_world_code_and_default_codes_do_not_change()
     assert worldcode.decode(worldcode.encode(plain)).settings().new_world.reveal_at_start == 0
     assert worldcode.decode(worldcode.encode(revealed)).settings().new_world.reveal_at_start == 1
     # A code names its changes by field number, and a number once given is never reused.
-    assert worldcode.CHANGE_FIELDS[-3] == "natives.turbulence_permille"
-    assert worldcode.CHANGE_FIELDS[-2] == "new_world.reveal_at_start"
-    assert worldcode.CHANGE_FIELDS[-1] == "new_world.template_permille"
+    assert worldcode.CHANGE_FIELDS[-4] == "natives.turbulence_permille"
+    assert worldcode.CHANGE_FIELDS[-3] == "new_world.reveal_at_start"
+    assert worldcode.CHANGE_FIELDS[-2] == "new_world.template_permille"
+    assert worldcode.CHANGE_FIELDS[-1] == "new_world.keep_geography"
     assert len(worldcode.encode(plain)) < len(worldcode.encode(revealed))
     assert worldcode.with_new_seed(revealed, 43).settings().new_world.reveal_at_start == 1
 

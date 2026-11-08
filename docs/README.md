@@ -71,6 +71,7 @@ queue of work. The release-level version policy is ADR 0003.
 | [0009](adr/0009-hub-mod-with-generator.md) | Current Workshop generator hub and independent app delivery |
 | [0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) | Implemented layers, world files, reproducibility and installed-world recovery |
 | [0011](adr/0011-tauri-window.md) | The Tauri window over a Python bridge, its delivery and the classic fallback |
+| [0012](adr/0012-vanilla-geography.md) | Keeping the vanilla Americas and generating only their societies |
 
 ## Research and evidence
 

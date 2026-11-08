@@ -112,6 +112,10 @@ class NewWorldSettings:
     # (Omerika, ``rnw.omerika``): the weight of the vanilla Americas' low-frequency template in the
     # land density, in permille of the weight at which the template alone decides far from a coast.
     template_permille: int = 0
+    # 1: the Americas stay exactly as the installed game draws them and only their societies are
+    # generated (ADR 0012, ``rnw.vanilla_world``); every land and map setting of the New World is
+    # then without effect. 0: the New World is generated.
+    keep_geography: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -255,6 +259,7 @@ class Settings:
             "centre_permille": 0,
             "reveal_at_start": 0,
             "template_permille": 0,
+            "keep_geography": 0,
         }
         for key in (
             "landform",
@@ -266,6 +271,7 @@ class Settings:
             "centre_permille",
             "reveal_at_start",
             "template_permille",
+            "keep_geography",
         ):
             if world[key] == defaults[key]:
                 del world[key]
@@ -322,6 +328,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "centre_permille": (0, 1000),
     "reveal_at_start": (0, 1),
     "template_permille": (0, 1000),
+    "keep_geography": (0, 1),
     "population_permille": (0, 5000),
     "hearths_per_10k": (0, 100),
     "hearth_reach_steps": (1, 100),
@@ -631,6 +638,9 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
         raise SettingsError(message)
     if resolved.new_world.template_permille and resolved.new_world.landform:
         message = "Omerika cannot be combined with The Wall"
+        raise SettingsError(message)
+    if resolved.new_world.keep_geography and (resolved.mask.id or resolved.new_world.landform):
+        message = "The real Americas cannot be combined with a drawn land mask or The Wall"
         raise SettingsError(message)
     return resolved
 
