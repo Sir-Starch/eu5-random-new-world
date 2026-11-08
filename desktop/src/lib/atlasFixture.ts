@@ -33,4 +33,3 @@ export function bundle(): AtlasBundle {
     layers: { countries: layer },
   };
 }
-
