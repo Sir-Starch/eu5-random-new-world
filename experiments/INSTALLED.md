@@ -6,6 +6,18 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — steady time left during generation**.
+[V-EXEC] Installed the generator-only hub from `6792916` in the existing Windows/Proton profile. The
+ETA no longer cycles from 3:10 to 3:00 and back while a world is generated (vanilla reads after the
+world in the forecast graph, pace-only small corrections, timing schema 2; see
+[GUI design](../docs/gui-design.md)). `make check` passes (3,092 Python tests, 17 optional skips, 29
+native Rust tests). World bytes are unchanged, so candidate L is reused. The standard updater built
+and self-tested the hub under Wine (window, native, code, shell and bridge) and installed it,
+retaining `.rnw-hub-backups/1.2.0-1794173130189934084`. Candidate:
+`local_data/hub-updates/1.2.0-1794173077277333068/rnw_exp_hub`; Windows wheel SHA-256:
+`36fa085d4c527e9586d34f33827a9801f5f09771d2747f65ee446cdbe5a32582`. `desktop/` is unchanged. No EU5
+launch/control, playset, save or preference edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — candidate L, treaties within the diplomatic capacity** (C523).
 [V-EXEC] From `f980833`, installed **`mod/rnw_exp_world_fcyp6eay6y`** ("ATDT candidate L (treaties within
 capacity)") in the existing Windows/Proton profile: code `RNW1-08396-6JJMB-3X6KF-X0410-00813-C16WD-58`, candidate
