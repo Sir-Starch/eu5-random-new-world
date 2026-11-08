@@ -2795,3 +2795,23 @@ text = 'Ayarları yeniden rastgele seç'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'Tohumu koruyarak yeni bir dünya türü ve gelişmiş ayarlar seçer.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''Tanıdık bir Yeni Dünya, yeniden hayal edilmiş. Aynı genel biçim, tamamen farklı bir coğrafya.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''Amerikalar’a benzerlik'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''Karanın gerçek Amerikalar’ın düzenini ne kadar yakından izleyeceği: bir berzahla birleşen Kuzey ve Güney Amerika. Düşük değer yalnızca uzak bir yankı bırakır, yüksek değer kıtaların yerini ve büyüklüğünü korur. Kıyılar, denizler, dağlar ve nehirler her değerde yenidir.'''

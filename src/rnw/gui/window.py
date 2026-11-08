@@ -1814,7 +1814,8 @@ class MainWindow(QMainWindow):
             self.code_edit.setText(controller.code)
         self.notice.setText(controller.notice)
         self.notice.setVisible(bool(controller.notice))
-        self.control_sections["wall"].setVisible(controller.preset == "wall")
+        for group in ("wall", "omerika"):
+            self.control_sections[group].setVisible(controller.preset == group)
         for row in self.rows:
             key = row.control.key
             row.refresh(controller.value(key), changed=key in controller.changes, enabled=not busy)

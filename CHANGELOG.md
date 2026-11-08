@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Add the **Omerika** world type: *a familiar New World, reimagined*. The land keeps the general
+  shape of the Americas, North and South America joined by Central America, and everything else is
+  generated: coasts, bays, peninsulas, straits and inland seas, then relief, climate, rivers,
+  resources and peoples by the usual layers. The Americas are read from the installed game when
+  the world is made and used only as a low-frequency template; nothing of them is shipped. A
+  seed bends the template differently each time, and *Likeness to the Americas* (Advanced) says
+  how closely the land follows it. A corridor along the template's neck keeps the two great
+  landmasses joined by construction, and generation fails with a message instead of making land
+  that falls apart. World codes, the sketches of *Choose a continent* and rerolls carry it; codes
+  of other world types are unchanged.
+
 - Keep **Total Chaos** in the automatic name of an untouched random draw; manual changes
   name it **Custom world**. The code keeps that origin when shared or reopened. Add
   **Randomize settings again** to Total Chaos in both windows, keeping the seed.

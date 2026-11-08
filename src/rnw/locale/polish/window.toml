@@ -2795,3 +2795,23 @@ text = 'Losuj ustawienia ponownie'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'Losuje nowy typ świata i ustawienia zaawansowane, zachowując ziarno.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''Znajomy Nowy Świat, wymyślony na nowo. Ten sam ogólny kształt, zupełnie inna geografia.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''Podobieństwo do Ameryk'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''Jak wiernie ląd odwzorowuje układ prawdziwych Ameryk: Ameryki Północnej i Południowej połączonych przesmykiem. Niska wartość zostawia tylko odległe echo, wysoka zachowuje miejsce i wielkość kontynentów. Wybrzeża, morza, góry i rzeki są nowe przy każdej wartości.'''

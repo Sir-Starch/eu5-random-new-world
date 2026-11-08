@@ -2888,6 +2888,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             drawn=None if land_mask is None else fit(land_mask, clean.mask.shape),
             sea_bands=bands,
             groups=clean.footprints,
+            template=clean.template,
         ),
     )
     canvas = place_islands(

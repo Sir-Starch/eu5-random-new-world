@@ -105,12 +105,14 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     drawn: NDArray[np.bool_] | None,
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
+    template: NDArray[np.bool_] | None = None,
 ) -> str:
-    # The first number is the layout of the construction (7: the water band along the canvas's
-    # boundary and the crossings as chains of cells); the code's identity keeps an entry made by
-    # earlier code from being read when the land or the sea cells change inside an epoch.
+    # The first number is the layout of the construction (8: the Americas' template of Omerika;
+    # 7: the water band along the canvas's boundary and the crossings as chains of cells); the
+    # code's identity keeps an entry made by earlier code from being read when the land or the sea
+    # cells change inside an epoch. The template matters only to a world that uses it.
     spec = (
-        7,
+        8,
         epoch.CURRENT,
         code_identity(),
         seed,
@@ -122,7 +124,7 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     for group in groups:
         digest.update(group.rows.tobytes())
         digest.update(group.columns.tobytes())
-    for raster in (domain, drawn, sea_bands):
+    for raster in (domain, drawn, sea_bands, template if settings.template_permille else None):
         digest.update(b"none" if raster is None else b"raster")
         if raster is not None:
             for row in range(0, len(raster), STRIP):
@@ -155,7 +157,7 @@ def code_identity() -> str:
 
 def canvas_key(game_map: Eu5Map, band_px: int, *, expanded: bool) -> str:
     """The identity of a canvas: the digests of the map's files, the two settings and the code."""
-    spec = (1, code_identity(), tuple(game_map.inputs), len(game_map.keys), band_px, expanded)
+    spec = (2, code_identity(), tuple(game_map.inputs), len(game_map.keys), band_px, expanded)
     return hashlib.sha256(repr(spec).encode("utf-8")).hexdigest()
 
 
@@ -209,6 +211,10 @@ def _write_canvas(target: Path, canvas: Canvas) -> None:
             dtype=np.int64,
         ),
         "mask": np.packbits(canvas.mask, axis=None),
+        "has_template": np.array([canvas.template is not None]),
+        "template": np.packbits(canvas.template, axis=None)
+        if canvas.template is not None
+        else np.zeros(0, dtype=np.uint8),
         "removed": canvas.removed,
         "trimmed": canvas.trimmed,
         "has_opened": np.array([canvas.opened is not None]),
@@ -242,6 +248,13 @@ def _read_canvas(target: Path) -> Canvas:
             int(value) for value in found["scalars"].tolist()
         )
         mask = np.unpackbits(found["mask"], count=mask_rows * mask_columns).astype(np.bool_)
+        template = (
+            np.unpackbits(found["template"], count=mask_rows * mask_columns)
+            .astype(np.bool_)
+            .reshape(mask_rows, mask_columns)
+            if bool(found["has_template"][0])
+            else None
+        )
         footprint_rows = _split(found["footprint_rows"], found["footprint_counts"])
         footprint_columns = _split(found["footprint_columns"], found["footprint_counts"])
         locations = _split(found["group_locations"], found["group_location_counts"])
@@ -277,6 +290,7 @@ def _read_canvas(target: Path) -> Canvas:
             moves=tuple((int(down), int(across)) for down, across in found["moves"].tolist()),
             opened=found["opened"].astype(np.bool_) if bool(found["has_opened"][0]) else None,
             expanded=bool(expanded),
+            template=template,
         )
     except (
         OSError,
@@ -291,12 +305,16 @@ def _read_canvas(target: Path) -> Canvas:
         raise CacheError(message) from error
 
 
-def domain_digest(domain: NDArray[np.bool_]) -> str:
-    """SHA-256 of a canvas mask and its shape, read in strips."""
+def domain_digest(domain: NDArray[np.bool_], template: NDArray[np.bool_] | None = None) -> str:
+    """SHA-256 of a canvas mask and its shape, read in strips; with the Americas' template (the
+    land stage of Omerika reads it) the template's raster follows."""
     digest = hashlib.sha256(repr(domain.shape).encode("ascii"))
-    for row in range(0, len(domain), STRIP):
-        checkpoint()
-        digest.update(domain[row : row + STRIP].tobytes())
+    for raster in (domain, template):
+        if raster is None:
+            continue
+        for row in range(0, len(raster), STRIP):
+            checkpoint()
+            digest.update(raster[row : row + STRIP].tobytes())
     return digest.hexdigest()
 
 
@@ -425,12 +443,18 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     drawn: NDArray[np.bool_] | None,
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
+    template: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
     A world not yet made starts from the land stage of its sketch when one is kept.
+    ``template`` is the Americas on the canvas (``Canvas.template``) that Omerika reads.
     """
-    key = None if cache is None else cache_key(domain, seed, settings, drawn, sea_bands, groups)
+    key = (
+        None
+        if cache is None
+        else cache_key(domain, seed, settings, drawn, sea_bands, groups, template)
+    )
     target = None if cache is None or key is None else cache / key
     if target is not None and target.exists():
         world = _read(target, domain.shape)
@@ -439,7 +463,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     stage = None
     if cache is not None and drawn is None:
         shape = (int(domain.shape[0]), int(domain.shape[1]))
-        stage = read_stage(cache, stage_key(domain_digest(domain), seed, settings), shape)
+        digest = domain_digest(domain, template if settings.template_permille else None)
+        stage = read_stage(cache, stage_key(digest, seed, settings), shape)
     world = seal_pockets(
         generate_new_world(
             domain.copy(),
@@ -449,6 +474,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             sea_bands=sea_bands,
             groups=groups,
             stage=stage,
+            template=template,
         )
     )
     if target is not None and cache is not None:

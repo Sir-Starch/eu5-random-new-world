@@ -2795,3 +2795,23 @@ text = '設定を再抽選'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'シードを維持して、世界タイプと詳細設定を再抽選します。'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''見慣れた新世界を、新たに描き直す。全体の形はそのままに、地理はまったく別物。'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''アメリカ大陸との類似度'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''陸地が実際の南北アメリカの配置、つまり地峡でつながる北アメリカと南アメリカにどれだけ近いか。値が低いとかすかな面影だけが残り、高いと大陸の位置と大きさが保たれます。海岸線、海、山脈、河川はどの値でも新しく作られます。'''

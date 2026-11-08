@@ -382,6 +382,34 @@ The stamps' material blending is likewise inferred from the decal parameters. Th
 terrain stage is the coastal cap, a rise of 300 units per decal pixel from the lake's own height, so a lake
 in a range has a steep bank.
 
+## Omerika
+
+**Design (1.2.0 development, pending epoch 61).** [V-EXEC, EU5 1.4.7 / build 26377361] `rnw/omerika.py`
+adds one term to the continents' density field: the installed game's Americas (land and lakes of the
+`america` continent, `Canvas.template`, read when the canvas is selected and kept in the land cache,
+never shipped). The template is worked on a 4-pixel grid: its coverage is read through a smooth
+seed-drawn displacement (amplitude 120-300 px by likeness, period 1,500 px; the Jacobian stays above
+0.35), turned into a signed distance from the coast, cut off at 600 px, squared so that it is flat at
+the coast and steep far from it, and added to the fractal noise with weight `template_permille` (600
+by default) of twice the noise's range. The fractal noise therefore draws the coast and the
+template decides only a good way from the vanilla shore. The land share is the Americas' own
+(215‰ of the interior against 205‰ of the canvas). Climate, relief, rivers and everything after the land are the
+ordinary layers.
+
+**The join.** A low-pass field loses the isthmus. The two greatest cores of the template (land at least
+300 px from the sea) are joined by the cheapest 8-connected route on a 16-px grid that prefers depth
+(cost 1 + (120 px / depth)²), widened by two grid cells each side and raised by four noise ranges, so
+it is land by construction. `check_joined` runs after the land stage and after the pinch and
+classification and fails explicitly unless the corridor's places are land (90%) and one landmass; there
+is no repair.
+
+**Measured** (real canvas of the installed game, 8,192 × 10,078 px; `land_stage` takes 8.5-9.5 s, the
+template 0.6 s): 12 of 12 seeds at likeness 600 joined, land 201-207‰, overlap with the template
+(IoU) 0.47-0.58 (a random continent of the same share overlaps about 0.1); the non-expanded canvas gives
+IoU 0.38-0.42 and a share of 191-195‰. Seed 42 made a complete world in 2 min 40 s and passed every
+export validator. The reference world of the pending epoch reproduces its digest, so no other world
+type changed.
+
 ## The Wall
 
 The 1.1.0 / epoch 60 cycle adds `--preset wall` (The Wall; Russian: Стена).

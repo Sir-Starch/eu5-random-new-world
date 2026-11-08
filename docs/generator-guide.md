@@ -82,6 +82,7 @@ adjust the broad choices on the World tab or individual values in Advanced.
 | **Small continents** | Three or four separate continents of similar size. |
 | **Archipelago** | Several large islands and many smaller ones. |
 | **Scattered islands** | A sea of small islands with no great landmass. |
+| **Omerika** | A familiar New World, reimagined: the general shape of the Americas, entirely different geography. [More below](#the-omerika-preset). |
 | **The Wall** | A long north-south barrier, with optional sea passages. [More below](#the-wall-preset). |
 | **Random** | Picks one of the world types for you. |
 | **Total Chaos** | Picks a world type and randomizes its detailed settings within the allowed ranges. |
@@ -200,6 +201,29 @@ location, generation stops and explains the problem.
 
 **Reset** restores one slider to 1×. **Reset all to the world type** restores the chosen
 world type's settings. Resource settings are included in the world code.
+
+### The Omerika preset
+
+**Omerika** is a New World you seem to know: the general shape of the Americas, with North
+and South America joined by a Central American isthmus, and everything else new. The coasts, bays,
+peninsulas, straits and inland seas are generated, and so are the mountains, plains, climate,
+rivers, lakes, resources and peoples, as in every other world type.
+
+The shape comes from the installed game's own map, read when the world is made, and is used only
+as a low-frequency guide: where the great landmasses lie, how large they are and that a neck of
+land joins them. No coast of the Americas is copied. Each seed bends the guide in its own way, so
+the continents shift, swell and lean differently from seed to seed.
+
+In **Advanced → Omerika** you can adjust **Likeness to the Americas**. A low value leaves a loose
+echo of the layout; a high one keeps the places and sizes of the continents. The default is 60%.
+At 0% the guide is switched off and the world is made like any other with these settings. Land
+amount, landmass scale and coast detail work as in the other world types; the land amount starts
+at the share the Americas hold.
+
+The two great landmasses are joined by a corridor of land along the guide's neck, raised above
+the noise, so North and South America stay one landmass at every setting. If land ever fell
+apart anyway, generation stops with a message rather than producing it. Omerika cannot use a drawn
+land image or share a world with The Wall.
 
 ### The Wall preset
 

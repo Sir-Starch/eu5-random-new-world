@@ -2795,3 +2795,23 @@ text = 'Volver a sortear los ajustes'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'Elige al azar otro tipo de mundo y nuevos ajustes avanzados, conservando la semilla.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''Un Nuevo Mundo familiar, reinventado. La misma forma general, una geografía totalmente distinta.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''Parecido con las Américas'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''Cuánto sigue la tierra la disposición de las Américas reales: Norteamérica y Sudamérica, unidas por un istmo. Un valor bajo deja solo un eco lejano; uno alto conserva el lugar y el tamaño de los continentes. Las costas, los mares, las montañas y los ríos son nuevos con cualquier valor.'''

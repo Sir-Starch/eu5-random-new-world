@@ -90,14 +90,17 @@ def sketch(
         message = say("candidates.drawn")
         raise CandidateError(message)
     shape = settings.new_world
-    domain = _canvas(game_dir, settings, cache).mask
+    canvas = _canvas(game_dir, settings, cache)
+    domain = canvas.mask
+    # Only Omerika reads the Americas' template; the other world types do not hash it.
+    template = canvas.template if shape.template_permille else None
     with running("candidates"):
-        digest = None if cache is None else landcache.domain_digest(domain)
+        digest = None if cache is None else landcache.domain_digest(domain, template)
 
         def one(seed: int) -> Candidate:
             checkpoint()
             # The relief is let go at once: a sketch keeps only its masks.
-            land, ocean, lakes = land_stage(domain.copy(), seed, shape)[:3]
+            land, ocean, lakes = land_stage(domain.copy(), seed, shape, template)[:3]
             if cache is not None and digest is not None:
                 key = landcache.stage_key(digest, seed, shape)
                 landcache.keep_stage(cache, key, (land, ocean, lakes))

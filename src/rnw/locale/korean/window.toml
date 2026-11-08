@@ -2795,3 +2795,23 @@ text = '설정 다시 무작위 선택'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = '시드는 유지하고 세계 유형과 고급 설정을 다시 무작위로 선택합니다.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''익숙한 신세계를 새롭게 다시 그린 세계. 전체적인 모양은 같지만 지리는 완전히 다릅니다.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''아메리카와의 유사도'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''육지가 실제 아메리카의 배치, 곧 지협으로 이어진 북아메리카와 남아메리카를 얼마나 따르는지 정합니다. 값이 낮으면 희미한 흔적만 남고, 높으면 대륙의 위치와 크기가 유지됩니다. 해안선, 바다, 산맥, 강은 어떤 값에서도 새로 만들어집니다.'''

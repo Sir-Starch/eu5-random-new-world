@@ -242,6 +242,17 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "control.new_world.wall_ridge_permille": "Mountain spine",
     "control.new_world.wall_ridge_permille.about": "Height of the longitudinal mountain chain.",
+    "type.omerika": "Omerika",
+    "type.omerika.about": (
+        "A familiar New World, reimagined. Same general shape, entirely different geography."
+    ),
+    "group.omerika": "Omerika",
+    "control.new_world.template_permille": "Likeness to the Americas",
+    "control.new_world.template_permille.about": (
+        "How closely the land follows the layout of the real Americas, North and South America "
+        "joined by an isthmus. A low value leaves a loose echo; a high one keeps the places and "
+        "sizes of the continents. Coasts, seas, mountains and rivers are new at any value."
+    ),
     "type.islands": "Scattered islands",
     "type.islands.about": "A sea full of small islands, with no great landmass.",
     "type.random": "Random",

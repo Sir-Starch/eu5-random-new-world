@@ -43,12 +43,17 @@ def draw(mode: str, rng: random.Random | None = None) -> tuple[str, dict[str, in
     raise ValueError(message)
 
 
+def _own_group(preset: str) -> str:
+    """The Advanced group that only the world type ``preset`` has (the Wall's, Omerika's)."""
+    return {"wall": "wall", "omerika": "omerika"}.get(preset, "")
+
+
 def _advanced_changes(preset: str, rng: random.Random) -> dict[str, int]:
     for _ in range(ATTEMPTS):
         values = {
             control.key: control.value_at(rng.randint(0, controls.STEPS))
             for control in controls.ADVANCED
-            if control.group != "wall" or preset == "wall"
+            if control.group not in {"wall", "omerika"} or control.group == _own_group(preset)
         }
         settings = build_settings(preset, controls.nested(values))
         if controls.estimated_locations(settings) <= controls.LOCATION_BUDGET:

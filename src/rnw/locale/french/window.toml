@@ -2795,3 +2795,23 @@ text = 'Tirer de nouveaux paramètres'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'Tire un nouveau type de monde et de nouveaux paramètres avancés en conservant la graine.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''Un Nouveau Monde familier, réinventé. Même forme générale, géographie entièrement différente.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''Ressemblance avec les Amériques'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''À quel point la terre suit la disposition des vraies Amériques : l’Amérique du Nord et l’Amérique du Sud, reliées par un isthme. Une valeur basse ne laisse qu’un vague écho ; une valeur haute conserve la place et la taille des continents. Côtes, mers, montagnes et fleuves sont nouveaux quelle que soit la valeur.'''

@@ -108,6 +108,10 @@ class NewWorldSettings:
     # generated New World (for multiplayer, W6). 0: the New World stays to be discovered, as in
     # the game.
     reveal_at_start: int = 0
+    # 0: the land is the generator's own; more makes it keep the general shape of the Americas
+    # (Omerika, ``rnw.omerika``): the weight of the vanilla Americas' low-frequency template in the
+    # land density, in permille of the weight at which the template alone decides far from a coast.
+    template_permille: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,6 +254,7 @@ class Settings:
             "wall_allow_gaps": 1,
             "centre_permille": 0,
             "reveal_at_start": 0,
+            "template_permille": 0,
         }
         for key in (
             "landform",
@@ -260,6 +265,7 @@ class Settings:
             "wall_allow_gaps",
             "centre_permille",
             "reveal_at_start",
+            "template_permille",
         ):
             if world[key] == defaults[key]:
                 del world[key]
@@ -315,6 +321,7 @@ RANGES: Final[dict[str, tuple[int, int]]] = {
     "wall_allow_gaps": (0, 1),
     "centre_permille": (0, 1000),
     "reveal_at_start": (0, 1),
+    "template_permille": (0, 1000),
     "population_permille": (0, 5000),
     "hearths_per_10k": (0, 100),
     "hearth_reach_steps": (1, 100),
@@ -495,8 +502,23 @@ PRESETS["wall"] = replace(
         location_px=53,
     ),
 )
+# Omerika keeps the general shape of the Americas: their low-frequency template (``rnw.omerika``) in
+# the land density, and nothing else of them. The land share is the vanilla Americas' own (about
+# 20 % of the canvas); the noise draws the coasts at a finer scale than the continents preset's.
+PRESETS["omerika"] = replace(
+    PRESETS["continents"],
+    preset="omerika",
+    new_world=replace(
+        PRESETS["continents"].new_world,
+        template_permille=600,
+        land_permille=215,
+        feature_px=900,
+        min_island_px=400,
+    ),
+)
 # English names, for a mod's metadata and the window's default text.
 TITLES: Final[dict[str, str]] = {
+    "omerika": "Omerika",
     "wall": "The Wall",
     "supercontinent": "Supercontinent",
     "continents": "Continents",
@@ -506,6 +528,7 @@ TITLES: Final[dict[str, str]] = {
 }
 # The order in which the generator's window offers them.
 WORLD_TYPES: Final[tuple[str, ...]] = (
+    "omerika",
     "wall",
     "supercontinent",
     "continents",
@@ -602,6 +625,12 @@ def build_settings(preset: str, overrides: dict[str, object] | None = None) -> S
 
     if resolved.new_world.landform and resolved.mask.id:
         message = "The Wall cannot be combined with a drawn land mask"
+        raise SettingsError(message)
+    if resolved.new_world.template_permille and resolved.mask.id:
+        message = "Omerika cannot be combined with a drawn land mask"
+        raise SettingsError(message)
+    if resolved.new_world.template_permille and resolved.new_world.landform:
+        message = "Omerika cannot be combined with The Wall"
         raise SettingsError(message)
     return resolved
 

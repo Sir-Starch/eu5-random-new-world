@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw import _native, wall
+from rnw import _native, omerika, wall
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
 from rnw.islands import carve, place
@@ -265,9 +265,16 @@ MIN_KEPT_PERCENT: Final[int] = 50
 
 
 def land_stage(
-    domain: NDArray[np.bool_], seed: int, settings: NewWorldSettings
+    domain: NDArray[np.bool_],
+    seed: int,
+    settings: NewWorldSettings,
+    template: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int32]]:
-    """Return land, ocean, lake masks and the shaped elevation."""
+    """Return land, ocean, lake masks and the shaped elevation.
+
+    With ``settings.template_permille`` (Omerika, ``rnw.omerika``) the density field also holds the
+    low-frequency template of the installed game's Americas, ``template``, on the domain.
+    """
     if settings.landform:
         return _wall_land(domain, seed, settings)
     relief = _field(
@@ -279,7 +286,28 @@ def land_stage(
         persistence_permille=settings.persistence_permille,
         warp_permille=COAST_WARP_PERMILLE,
     )
-    return _natural_land(domain, seed, settings, relief)
+    shape = None
+    if settings.template_permille:
+        shape = _template(domain, seed, settings, template)
+        omerika.add_to(relief, shape)
+    land, ocean, lakes, elevation = _natural_land(domain, seed, settings, relief)
+    if shape is not None:
+        omerika.check_joined(land, shape)
+    return land, ocean, lakes, elevation
+
+
+def _template(
+    domain: NDArray[np.bool_],
+    seed: int,
+    settings: NewWorldSettings,
+    template: NDArray[np.bool_] | None,
+) -> omerika.Template:
+    """The prepared template of the Americas for this domain, seed and settings."""
+    if template is None or template.shape != domain.shape:
+        message = "Omerika needs the Americas' template of the canvas, and the template given "
+        message += "is missing or does not fit the canvas"
+        raise omerika.OmerikaError(message)
+    return omerika.prepare(template, seed, settings)
 
 
 def _natural_land(  # noqa: PLR0913 - the density field, the land budget and the canvas's boundary.
@@ -982,17 +1010,21 @@ def _world_edge(
     return ocean & ~inner
 
 
-def _first_land(
+def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the three ways to have land.
     domain: NDArray[np.bool_],
     seed: int,
     settings: NewWorldSettings,
     drawn: NDArray[np.bool_] | None,
     stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None,
+    template: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Land, ocean and lake masks of the domain: drawn, kept from a sketch or made now."""
     if drawn is not None:
         if settings.landform:
             message = "The Wall cannot be combined with a drawn land mask"
+            raise LandMaskError(message)
+        if settings.template_permille:
+            message = "Omerika cannot be combined with a drawn land mask"
             raise LandMaskError(message)
         return _land_from_mask(domain, drawn, settings)
     if stage is not None:
@@ -1000,7 +1032,7 @@ def _first_land(
             message = "The kept land stage does not fit the domain"
             raise ValueError(message)
         return stage
-    land, ocean, lakes, _ = land_stage(domain, seed, settings)
+    land, ocean, lakes, _ = land_stage(domain, seed, settings, template)
     return land, ocean, lakes
 
 
@@ -1013,6 +1045,7 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
     stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None = None,
+    template: NDArray[np.bool_] | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
@@ -1031,8 +1064,12 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
 
     The land cells, the sea cells and the relief depend only on the masks, so they are
     built beside each other when the machine has the cores and the memory for it.
+
+    ``template`` is the installed game's Americas on the domain (``Canvas.template``), which the
+    land of Omerika is made on (``settings.template_permille``, ``rnw.omerika``); the finished land
+    must still join the landmasses that the template joins.
     """
-    land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage)
+    land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage, template)
     whole = domain
     # Retained ocean islands stay in the open ocean, never in a new inland sea.
     placement_ocean = (
@@ -1050,6 +1087,8 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     # including existing lakes, before any cell, port or relief field gives it an identity.
     land, ocean, lakes = _classify(domain, land, shore, settings)
     del shore
+    if settings.template_permille:
+        omerika.check_joined(land, _template(domain, seed, settings, template))
     with Stages(stage_workers()) as stages:
         land_job = stages.submit(
             "land cells",

@@ -2795,3 +2795,23 @@ text = '重新随机设置'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = '保留种子，重新随机选择世界类型和高级设置。'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''熟悉的新世界，焕然重塑。总体形状相同，地理却截然不同。'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''与美洲的相似度'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''陆地在多大程度上遵循真实美洲的布局：北美洲与南美洲由地峡相连。数值低时只留下隐约的影子，数值高时则保留各大陆的位置与大小。无论取何值，海岸线、海洋、山脉与河流都是全新生成的。'''

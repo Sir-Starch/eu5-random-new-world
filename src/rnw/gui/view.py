@@ -269,7 +269,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     busy = c.busy
     values: dict[str, object] = {}
     for control in controls.CONTROLS:
-        if control.group == "wall" and c.preset != "wall":
+        if control.group in {"wall", "omerika"} and c.preset != control.group:
             continue
         value = c.value(control.key)
         default = control.default(c.preset)

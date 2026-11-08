@@ -118,6 +118,11 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control(
         "new_world.wall_ridge_permille", "wall", 0, 1000, factor=10, decimals=1, unit="percent"
     ),
+    # Omerika's likeness to the Americas: from none (the generator's own land, as in every other
+    # world type) to the nearest the noise allows.
+    Control(
+        "new_world.template_permille", "omerika", 0, 1000, factor=10, decimals=1, unit="percent"
+    ),
     Control("new_world.land_permille", "land", 150, 600, factor=10, decimals=1, unit="percent"),
     Control("new_world.centre_permille", "land", 0, 1000, factor=10, decimals=1, unit="percent"),
     Control("new_world.feature_px", "land", 250, 4000, logarithmic=True, unit="px"),
@@ -162,7 +167,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     ),
 )
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
-GROUPS: Final[tuple[str, ...]] = ("wall", "land", "map", "peoples", "resources")
+GROUPS: Final[tuple[str, ...]] = ("wall", "omerika", "land", "map", "peoples", "resources")
 # The checkboxes the new-world page holds itself: the oceans and the reveal of the New World.
 PAGE_OPTIONS: Final[frozenset[str]] = frozenset({"expand_oceans", "reveal_at_start"})
 # The Advanced tab's controls: all of them but the page's checkboxes. A random draw (Total Chaos)

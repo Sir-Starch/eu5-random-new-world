@@ -79,6 +79,19 @@ def test_cache_identity_contains_every_geography_input() -> None:
     assert landcache.cache_key(domain, 42, SMALL, None) != original
 
 
+def test_the_americas_template_is_part_of_the_identity_only_of_a_world_that_reads_it() -> None:
+    domain = np.ones((160, 192), dtype=np.bool_)
+    template = np.zeros_like(domain)
+    template[40:100, 50:120] = True
+    plain = landcache.cache_key(domain, 42, SMALL, None)
+    assert landcache.cache_key(domain, 42, SMALL, None, template=template) == plain
+    omerika = replace(SMALL, template_permille=600)
+    shaped = landcache.cache_key(domain, 42, omerika, None, template=template)
+    assert shaped != landcache.cache_key(domain, 42, omerika, None, template=~template)
+    assert shaped != landcache.cache_key(domain, 42, omerika, None)
+    assert landcache.domain_digest(domain) != landcache.domain_digest(domain, template)
+
+
 def test_projecting_cached_cells_preserves_identity_across_the_raster_seam(tmp_path: Path) -> None:
     """Land and sea crossing any projection cut keep their colour, graph and identity."""
     domain = np.ones((160, 400), dtype=np.bool_)
@@ -227,6 +240,7 @@ def _canvas() -> Canvas:
         ),
         opened=np.array([False, True, False]),
         expanded=True,
+        template=generator.random(mask.shape) < 0.3,
     )
 
 

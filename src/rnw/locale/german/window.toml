@@ -2795,3 +2795,23 @@ text = 'Einstellungen neu auslosen'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'Lost einen neuen Welttyp und neue erweiterte Einstellungen aus. Der Startwert bleibt gleich.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''Eine vertraute Neue Welt, neu gedacht. Gleiche Grundform, völlig andere Geografie.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''Ähnlichkeit mit den Amerikas'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''Wie genau das Land der Anordnung der echten Amerikas folgt: Nord- und Südamerika, durch eine Landenge verbunden. Ein niedriger Wert lässt nur ein loses Echo, ein hoher behält Lage und Größe der Kontinente bei. Küsten, Meere, Gebirge und Flüsse sind bei jedem Wert neu.'''

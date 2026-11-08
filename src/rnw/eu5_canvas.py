@@ -87,6 +87,9 @@ class Canvas:
     moves: tuple[tuple[int, int], ...] = ()
     opened: NDArray[np.bool_] | None = None
     expanded: bool = False
+    # Where the installed game's own Americas lie on the canvas (land and lakes of the New World's
+    # continent): the template of Omerika (``rnw.omerika``). Read from the map, never shipped.
+    template: NDArray[np.bool_] | None = None
 
     def rolled(self, labels: NDArray[np.int32], rows: slice | None = None) -> NDArray[np.int32]:
         """Rows of the map's ``labels`` in rolled coordinates (the map is not kept rolled)."""
@@ -397,6 +400,7 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
         raise CanvasError(message)
     removed, trimmed = _account(rolled, canvas, count)
     col0, col1 = int(used[0]), int(used[-1]) + 1
+    americas = new_world & ~sea
     return Canvas(
         roll=roll,
         col0=col0,
@@ -408,4 +412,5 @@ def select_canvas(game_map: Eu5Map, band_px: int, *, expanded: bool = False) -> 
         groups=groups,
         footprints=_footprints(rolled[:, col0:col1], canvas[:, col0:col1], groups, count),
         expanded=expanded,
+        template=np.ascontiguousarray(americas[rolled[:, col0:col1]]),
     )

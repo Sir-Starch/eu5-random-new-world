@@ -2795,3 +2795,23 @@ text = 'Sortear configurações novamente'
 ["randomize_settings.about"]
 source = "d6b934034f73e359"
 text = 'Sorteia um novo tipo de mundo e novas configurações avançadas, mantendo a semente.'
+
+["type.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["type.omerika.about"]
+source = "6ac6e66a11361f4c"
+text = '''Um Novo Mundo familiar, reimaginado. A mesma forma geral, uma geografia totalmente diferente.'''
+
+["group.omerika"]
+source = "1c3f4a5d97195341"
+text = '''Omerika'''
+
+["control.new_world.template_permille"]
+source = "0b66c7a3f44045a2"
+text = '''Semelhança com as Américas'''
+
+["control.new_world.template_permille.about"]
+source = "f4883b0dfd38fb42"
+text = '''O quanto a terra segue a disposição das Américas reais: América do Norte e América do Sul, ligadas por um istmo. Um valor baixo deixa apenas um eco distante; um valor alto mantém o lugar e o tamanho dos continentes. Costas, mares, montanhas e rios são novos em qualquer valor.'''
