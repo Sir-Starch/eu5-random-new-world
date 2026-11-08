@@ -2787,3 +2787,11 @@ text = '''開発度'''
 ["history.axis_plain"]
 source = "cfa7580b1f341b1c"
 text = '''{axis}：{value}'''
+
+["randomize_settings"]
+source = "98f6600015a0966d"
+text = '設定を再抽選'
+
+["randomize_settings.about"]
+source = "d6b934034f73e359"
+text = 'シードを維持して、世界タイプと詳細設定を再抽選します。'

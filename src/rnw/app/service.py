@@ -222,7 +222,7 @@ def generate(
         check_memory=request.check_memory,
         progress=progress,
         world_code=text,
-        world_label=worldname.label(world.preset, worldname.tag_of(world.id), world.name),
+        world_label=library.label(world),
         land_mask=request.land_mask,
         cache_dir=land_cache(request.data),
     )

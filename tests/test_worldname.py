@@ -9,7 +9,28 @@ import pytest
 
 from rnw import tagfont, worldname
 from rnw.eu5_nw_export import mod_metadata
-from rnw.settings import TITLES, WORLD_TYPES
+from rnw.settings import TITLES, WORLD_TYPES, build_settings
+
+
+def test_a_chaos_draw_and_manual_settings_have_honest_titles() -> None:
+    settings = build_settings("islands", {"new_world": {"land_permille": 341, "feature_px": 1133}})
+    assert worldname.label("islands", "K67E", settings=settings).title == "RNW: Custom world K67E"
+    assert worldname.label("islands", "K67E", settings=settings, origin="chaos").title == (
+        "RNW: Total Chaos K67E"
+    )
+    assert worldname.label("islands", "K67E", origin="chaos_custom").title == (
+        "RNW: Custom world K67E"
+    )
+    assert worldname.label("islands", "K67E", "Vinland", origin="chaos").title == "RNW: Vinland"
+    independent_changes: tuple[dict[str, object], ...] = (
+        {"natives": {"state_share_permille": 200}},
+        {"new_world": {"precious_permille": 30, "reveal_at_start": 1}},
+    )
+    for changes in independent_changes:
+        settings = build_settings("islands", changes)
+        assert worldname.label("islands", "AB23", settings=settings).title == (
+            "RNW: Scattered islands AB23"
+        )
 
 
 @pytest.mark.parametrize("preset", WORLD_TYPES)

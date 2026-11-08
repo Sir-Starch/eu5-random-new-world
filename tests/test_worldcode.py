@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import fields
+from dataclasses import fields, replace
 
 import pytest
 
@@ -10,6 +10,21 @@ from rnw import __version__, epoch
 from rnw.app import worldcode
 from rnw.app.worldcode import WorldCode, WorldCodeError, decode, encode, new_code, reproduces
 from rnw.settings import NativeSettings, NewWorldSettings, ResourceSettings
+
+
+@pytest.mark.parametrize("origin", ["chaos", "custom", "chaos_custom"])
+@pytest.mark.parametrize(
+    "changes", [None, {"new_world": {"feature_px": 1133}}, {"coast": {"passes": 2}}]
+)
+def test_naming_provenance_round_trips_without_changing_generation(
+    origin: str, changes: dict[str, object] | None
+) -> None:
+    original = new_code("islands", 15437062404537107275, changes)
+    named = replace(original, origin=origin)
+    assert decode(encode(named)) == named
+    assert named.settings() == original.settings()
+    assert worldcode.with_new_seed(named, 42).origin == origin
+    assert worldcode.rolled(named, "peoples").origin == origin
 
 
 def test_a_default_world_is_a_short_code_that_round_trips() -> None:

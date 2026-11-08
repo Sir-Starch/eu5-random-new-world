@@ -90,6 +90,13 @@ The quick choices for land, native peoples, native states, extraordinary peoples
 precious resources adjust the same settings you can change individually in **Advanced**
 (**Customize** in the classic window).
 
+In **Total Chaos**, **Randomize settings again** draws another world type and another set
+of Advanced values, keeping the seed. **Random** beside the seed changes only the seed.
+An untouched draw is named **Total Chaos <tag>**; changing its settings by hand names it
+**Custom world <tag>**. Its code keeps this distinction. A personal name overrides both.
+Older codes did not record the random mode: changed geography in such a code is called
+**Custom world**, rather than claiming to have the shape of its original preset.
+
 ### Seeds and world codes
 
 The **seed** is the number used to make a world. Change it, or press **Random**, to try

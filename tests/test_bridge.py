@@ -122,6 +122,11 @@ def test_the_window_changes_the_new_world_as_the_qt_window_did(
     assert controller.world_file == tmp_path / "w.rnworld"
     _ = bridge.call("set_choice", {"choice": "chaos"})
     assert controller.mode == "chaos"
+    seed, before = controller.seed, controller.code
+    _ = bridge.call("randomize_settings", {})
+    assert controller.seed == seed
+    assert controller.code != before
+    assert decode(controller.code).origin == "chaos"
 
 
 def test_the_queue_is_kept_listed_and_managed_through_the_bridge(

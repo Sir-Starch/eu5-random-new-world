@@ -2787,3 +2787,11 @@ text = '''Desenvolvimento'''
 ["history.axis_plain"]
 source = "cfa7580b1f341b1c"
 text = '''{axis}: {value}'''
+
+["randomize_settings"]
+source = "98f6600015a0966d"
+text = 'Sortear configurações novamente'
+
+["randomize_settings.about"]
+source = "d6b934034f73e359"
+text = 'Sorteia um novo tipo de mundo e novas configurações avançadas, mantendo a semente.'

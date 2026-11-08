@@ -99,6 +99,12 @@
             <option value={choice}>{t(`type.${choice}`)}</option>
           {/each}
         </select>
+        {#if n?.mode === "chaos"}
+          <div class="wide">
+            <button class="btn" disabled={locked} title={t("randomize_settings.about")}
+              onclick={() => app.call("randomize_settings")}>{t("randomize_settings")}</button>
+          </div>
+        {/if}
         <p class="wide hint">
           {t(`type.${n?.choice}.about`)}
           {#if n?.mode}{t("forge.drawn", { type: t(`type.${n.preset}`) })}{/if}

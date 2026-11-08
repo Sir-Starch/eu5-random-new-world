@@ -365,7 +365,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
     return {
         "id": world.id,
         "name": c.name(world),
-        "default_name": worldname.display_name(world.preset, worldname.tag_of(world.id)),
+        "default_name": library.display_name(world, name=""),
         "tag": worldname.tag_of(world.id),
         "code": world.code,
         "preset": world.preset,

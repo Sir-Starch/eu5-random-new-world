@@ -560,6 +560,7 @@ class MainWindow(QMainWindow):
     type_about: QLabel
     seed_edit: QLineEdit
     random_button: QPushButton
+    randomize_settings_button: QPushButton
     code_edit: QLineEdit
     copy_button: QPushButton
     paste_button: QPushButton
@@ -1068,6 +1069,10 @@ class MainWindow(QMainWindow):
         self.type_about = QLabel()
         self.type_about.setWordWrap(True)
         layout.addWidget(self.type_choice)
+        self.randomize_settings_button = QPushButton(text("randomize_settings"))
+        self.randomize_settings_button.setToolTip(text("randomize_settings.about"))
+        _ = self.randomize_settings_button.clicked.connect(self.controller.randomize_settings)
+        layout.addWidget(self.randomize_settings_button)
         layout.addWidget(self.type_about)
         _ = self.type_choice.currentIndexChanged.connect(self._pick_type)
         return types
@@ -1801,6 +1806,8 @@ class MainWindow(QMainWindow):
         self.type_choice.setCurrentIndex(random_types.CHOICES.index(shown))
         _ = self.type_choice.blockSignals(False)  # noqa: FBT003 - Qt synchronization
         self.type_about.setText(text(f"type.{shown}.about"))
+        self.randomize_settings_button.setVisible(controller.mode == random_types.CHAOS)
+        self.randomize_settings_button.setEnabled(not busy)
         if not self.seed_edit.hasFocus():
             self.seed_edit.setText(str(controller.seed))
         if not self.code_edit.hasFocus():

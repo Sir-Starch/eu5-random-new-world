@@ -2,8 +2,8 @@
 Advanced setting within its playable range.
 
 Both are choices of the window, not world types of their own. A draw is made when the player
-chooses the type and again with each press of the random button, and what it gives is an
-ordinary world of the type drawn, with the values drawn as changes: the world's code, name and
+chooses the type; Random draws again with a new seed, Total Chaos with Randomize settings again.
+The result uses the drawn type with the values drawn as changes: the world's code, name and
 library record carry them, so the world reproduces like any other. A draw is kept inside the
 location budget, which every window choice must keep to; the slider's own scale draws each value,
 so a value is as likely as any other position on its slider.

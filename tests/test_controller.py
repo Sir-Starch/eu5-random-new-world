@@ -1498,7 +1498,7 @@ def test_a_random_type_is_drawn_and_its_world_comes_back_from_its_code(
     controller.set_preset("continents")
     assert (controller.mode, controller.changes) == (None, {})
     assert controller.use_code(code) is None
-    assert controller.mode is None
+    assert controller.mode == "chaos"
     assert (controller.preset, controller.changes) == drawn
     controller.set_mode("chaos")
     controller.set_preset(controller.preset)
@@ -1535,3 +1535,49 @@ def test_the_random_button_leaves_total_chaos_alone(tmp_path: Path, fake_export:
     assert (controller.preset, controller.changes) == drawn
     assert controller.mode == "chaos"
     assert controller.estimated_locations() <= controls.LOCATION_BUDGET
+
+
+def test_total_chaos_names_survive_codes_edits_and_a_new_draw(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The button redraws settings, not the seed; manual edits change the automatic title."""
+    controller = _controller(tmp_path, fake_export)
+    controller.set_mode("chaos")
+    seed = controller.seed
+    first = controller.code
+    settings = controller.world_code().settings()
+    assert decode(first).origin == "chaos"
+    # A no-op from a widget's refresh must not make the draw custom.
+    controller.set_value("new_world.feature_px", settings.new_world.feature_px)
+    assert decode(controller.code).origin == "chaos"
+    assert controller.start() is None
+    _finish(controller)
+    world = controller.worlds[0]
+    tag = worldname.tag_of(world.id)
+    assert controller.name(world) == f"Total Chaos {tag}"
+    metadata = tmp_path / "profile/mod" / world.folder / ".metadata/metadata.json"
+    assert json.loads(metadata.read_text("utf-8-sig"))["name"] == f"RNW: Total Chaos {tag}"
+    assert controller.rename(world, "Vinland") is None
+    assert controller.rename(controller.worlds[0], f"Total Chaos {tag}") is None
+    assert controller.worlds[0].name == ""
+    controller.set_value("new_world.octaves", 4 if settings.new_world.octaves != 4 else 5)
+    edited = controller.code
+    assert decode(edited).origin == "chaos_custom"
+    assert controller.use_code(edited) is None
+    assert controller.mode == "chaos"
+    assert controller.start() is None
+    _finish(controller)
+    custom = next(w for w in controller.worlds if w.code == edited)
+    assert controller.name(custom) == f"Custom world {worldname.tag_of(custom.id)}"
+    controller.randomize_settings()
+    assert controller.seed == seed
+    assert controller.code not in {first, edited}
+    assert decode(controller.code).origin == "chaos"
+    assert controller.estimated_locations() <= controls.LOCATION_BUDGET
+
+
+def test_redrawing_chaos_is_inert_in_other_modes(tmp_path: Path, fake_export: Exporter) -> None:
+    controller = _controller(tmp_path, fake_export)
+    code = controller.code
+    controller.randomize_settings()
+    assert controller.code == code

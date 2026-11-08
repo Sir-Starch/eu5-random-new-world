@@ -8,6 +8,9 @@ changed settings, the changes; then three bytes of SHA-256 as a check. A default
 1 (zlib-packed canonical JSON) stays readable and carries changes outside that list.
 Reading is forgiving about case, spaces, dashes and the letters Crockford folds together
 (O is 0, I and L are 1).
+
+Flag 2 adds one naming-origin byte after the changes (1: Chaos, 2: custom, 3: edited Chaos).
+It is covered by the checksum but is never a generation setting. Older codes have no origin.
 """
 
 from __future__ import annotations
@@ -118,6 +121,8 @@ FOLDED: Final[dict[str, str]] = {"O": "0", "I": "1", "L": "1"}
 GROUP: Final[int] = 5
 CHECK_BYTES: Final[int] = 3
 HAS_CHANGES: Final[int] = 1
+HAS_ORIGIN: Final[int] = 2
+ORIGINS: Final[dict[str, int]] = {"chaos": 1, "custom": 2, "chaos_custom": 3}
 PRESET_IDS: Final[dict[str, int]] = {
     "continents": 1,
     "archipelago": 2,
@@ -142,6 +147,8 @@ class WorldCode:
     seed: int
     generator: str
     changes: dict[str, object] | None = None
+    # Naming provenance only; never part of generation settings or random streams.
+    origin: str = ""
 
     def resolved_changes(self) -> dict[str, object]:
         """Explicit legacy canvas choice when a code predates the ocean option."""
@@ -215,22 +222,27 @@ def rolled(code: WorldCode, part: str) -> WorldCode:
     changes = code.resolved_changes()
     section = cast("dict[str, object]", changes.setdefault("rolls", {}))
     section[part] = rolls_of(code.settings())[part] + 1
-    return _checked(code.preset, code.seed, changes)
+    return _checked(code.preset, code.seed, changes, origin=code.origin)
 
 
 def with_new_seed(code: WorldCode, seed: int | None = None) -> WorldCode:
     """The same settings on a new land: a new seed (random unless given), every roll back to 0."""
     changes = code.resolved_changes()
     _ = changes.pop("rolls", None)
-    return _checked(code.preset, random_seed() if seed is None else check_seed(seed), changes)
+    return _checked(
+        code.preset,
+        random_seed() if seed is None else check_seed(seed),
+        changes,
+        origin=code.origin,
+    )
 
 
-def _checked(preset: str, seed: int, changes: dict[str, object]) -> WorldCode:
+def _checked(preset: str, seed: int, changes: dict[str, object], *, origin: str = "") -> WorldCode:
     try:
         _ = build_settings(preset, changes)
     except (ValueError, SettingsError) as error:
         raise WorldCodeError(str(error)) from error
-    return WorldCode(preset, seed, __version__, changes or None)
+    return WorldCode(preset, seed, __version__, changes or None, origin)
 
 
 def encode(code: WorldCode) -> str:
@@ -241,6 +253,11 @@ def encode(code: WorldCode) -> str:
         raise WorldCodeError(message)
     major, minor, patch = _generator_parts(code.generator)
     flags = HAS_CHANGES if code.changes else 0
+    if code.origin:
+        if code.origin not in ORIGINS:
+            message = f"Unknown world naming origin {code.origin!r}"
+            raise WorldCodeError(message)
+        flags |= HAS_ORIGIN
     compact = _compact(code.changes) if code.changes else None
     version = COMPACT if compact is not None else FORMAT
     body = HEAD.pack(version, preset, code.seed, major, minor, patch, flags)
@@ -251,6 +268,8 @@ def encode(code: WorldCode) -> str:
             json.dumps(code.changes, sort_keys=True, separators=(",", ":")).encode(), 9
         )
         body += struct.pack(">H", len(packed)) + packed
+    if code.origin:
+        body += bytes([ORIGINS[code.origin]])
     body += hashlib.sha256(body).digest()[:CHECK_BYTES]
     digits = _to_base32(body)
     groups = [digits[at : at + GROUP] for at in range(0, len(digits), GROUP)]
@@ -280,6 +299,12 @@ def decode(text: str) -> WorldCode:
         raise WorldCodeError(message)
     changes: dict[str, object] | None = None
     rest = payload[HEAD.size :]
+    origin = ""
+    if flags & HAS_ORIGIN:
+        origins = {number: name for name, number in ORIGINS.items()}
+        if not rest or rest[-1] not in origins:
+            raise WorldCodeError(say("code.damaged"))
+        origin, rest = origins[rest[-1]], rest[:-1]
     if flags & HAS_CHANGES and version == COMPACT:
         changes = _expand(rest)
     elif flags & HAS_CHANGES:
@@ -297,7 +322,7 @@ def decode(text: str) -> WorldCode:
     elif rest:
         message = say("code.extra")
         raise WorldCodeError(message)
-    return WorldCode(names[preset], seed, f"{major}.{minor}.{patch}", changes)
+    return WorldCode(names[preset], seed, f"{major}.{minor}.{patch}", changes, origin)
 
 
 def _leb128(value: int) -> bytes:

@@ -484,7 +484,14 @@ def test_the_new_world_page_shows_types_and_needs_a_game(
     assert window.controller.mode == "chaos"
     assert window.type_choice.currentData() == "chaos"
     assert window.type_about.text() == text("type.chaos.about")
+    assert not window.randomize_settings_button.isHidden()
+    code, seed = window.controller.code, window.controller.seed
+    window.randomize_settings_button.click()
+    assert window.controller.code != code
+    assert window.controller.seed == seed
+    assert decode(window.controller.code).origin == "chaos"
     window.type_choice.setCurrentIndex(0)
+    assert window.randomize_settings_button.isHidden()
     assert window.controller.mode == "random"
     assert window.type_about.text() == text("type.random.about")
     _ = window.close()

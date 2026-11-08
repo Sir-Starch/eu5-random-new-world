@@ -195,6 +195,7 @@ class Controller:
         self.preset: str = "continents"
         # The random world type chosen in the window (``random_types``), None for a world type.
         self.mode: str | None = None
+        self.origin: str = ""
         self.seed: int = random_seed()
         self._generation_seed: int | None = None
         self.changes: dict[str, int] = {}
@@ -343,8 +344,10 @@ class Controller:
         """Choose a world type; the changed values go back to the type's own."""
         if name in PRESETS and name in WORLD_TYPES and (name != self.preset or self.mode):
             self.mode = None
+            self.origin = ""
             self.preset = name
             self.changes, self.other_changes = {}, {}
+            self.land_mask = None
             self.notice = ""
             self._changed()
 
@@ -353,6 +356,7 @@ class Controller:
         if mode in random_types.MODES:
             self.mode = mode
             self.other_changes, self.notice = {}, ""
+            self.land_mask = None
             self._draw()
             self._changed()
 
@@ -360,6 +364,16 @@ class Controller:
         """Draw the world type, and for Total Chaos the Advanced values, of the random mode."""
         if self.mode is not None:
             self.preset, self.changes = random_types.draw(self.mode)
+            self.origin = "chaos" if self.mode == random_types.CHAOS else ""
+
+    def randomize_settings(self) -> None:
+        """Draw Total Chaos again, keeping the seed; a manual edit no longer names this draw."""
+        if self.mode != random_types.CHAOS or (self.busy and not self.can_prepare):
+            return
+        self.other_changes, self.notice = {}, ""
+        self.land_mask = None
+        self._draw()
+        self._changed()
 
     def set_seed(self, value: str) -> str | None:
         """Take a seed typed as a number, or a world code pasted in its place."""
@@ -418,6 +432,7 @@ class Controller:
             names = ", ".join(text(f"control.{key}") for key in outside) or code.preset
             return text("outside_range", names=names)
         self.mode, self.preset, self.seed = None, code.preset, code.seed
+        self._use_origin(code)
         self.changes = {
             key: number
             for key, number in shown.items()
@@ -450,6 +465,8 @@ class Controller:
         """Change one setting, kept inside its playable range."""
         control = controls.BY_KEY[key]
         number = min(control.high, max(control.low, number))
+        if number != self.value(key):
+            self._custom_origin()
         if number == control.default(self.preset):
             _ = self.changes.pop(key, None)
         else:
@@ -464,6 +481,8 @@ class Controller:
     def set_quick(self, name: str, level: str) -> None:
         """Set the controls of one answer of a quick setting."""
         for key, number in quick.BY_NAME[name].level(level).values(self.preset).items():
+            if number != self.value(key):
+                self._custom_origin()
             if number == controls.BY_KEY[key].default(self.preset):
                 _ = self.changes.pop(key, None)
             else:
@@ -473,12 +492,15 @@ class Controller:
     def reset_value(self, key: str) -> None:
         """Give one setting back the world type's value."""
         if self.changes.pop(key, None) is not None:
+            self._custom_origin()
             self._changed()
 
     def reset_values(self) -> None:
         """Give every setting back the world type's value."""
         if self.changes or self.other_changes:
+            self.origin = "chaos_custom" if self.mode == random_types.CHAOS else ""
             self.changes, self.other_changes = {}, {}
+            self.land_mask = None
             self._changed()
 
     def _change_document(self) -> dict[str, object] | None:
@@ -491,7 +513,15 @@ class Controller:
 
     def world_code(self) -> WorldCode:
         """The code of the new world as chosen now."""
-        return WorldCode(self.preset, self.seed, __version__, self._change_document())
+        return WorldCode(self.preset, self.seed, __version__, self._change_document(), self.origin)
+
+    def _custom_origin(self) -> None:
+        self.origin = "chaos_custom" if self.mode == random_types.CHAOS else "custom"
+
+    def _use_origin(self, code: WorldCode) -> None:
+        self.origin = code.origin
+        if code.origin in {"chaos", "chaos_custom"}:
+            self.mode = random_types.CHAOS
 
     @property
     def code(self) -> str:
@@ -559,7 +589,7 @@ class Controller:
 
     def name(self, world: World) -> str:
         """The player's name for the world, or its type and tag (ADR 0010)."""
-        return worldname.display_name(world.preset, worldname.tag_of(world.id), world.name)
+        return library.display_name(world)
 
     def rename(self, world: World, name: str) -> str | None:
         """Give the world a name of the player's (blank or the default: none); returns what
@@ -570,7 +600,7 @@ class Controller:
         again.
         """
         cleaned = worldname.clean_name(name)
-        if cleaned == worldname.display_name(world.preset, worldname.tag_of(world.id)):
+        if cleaned == library.display_name(world, name=""):
             cleaned = ""
         if cleaned == world.name:
             return None
@@ -601,6 +631,7 @@ class Controller:
             return
         shown, other = controls.flat(code.resolved_changes())
         self.mode, self.preset = None, code.preset
+        self._use_origin(code)
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
         _ = self.other_changes.pop("rolls", None)
@@ -645,6 +676,7 @@ class Controller:
         code = decode(world.code)
         shown, other = controls.flat(code.resolved_changes())
         self.mode, self.preset, self.seed = None, code.preset, code.seed
+        self._use_origin(code)
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
         self.land_mask = library.land_mask(self.data, world)
@@ -828,6 +860,7 @@ class Controller:
         except landmask.LandMaskError as error:
             return explain(error)
         self.land_mask = mask
+        self._custom_origin()
         self.other_changes["mask"] = {"id": mask.id}
         self.notice = ""
         self._changed()
@@ -851,6 +884,8 @@ class Controller:
 
     def clear_land_image(self) -> None:
         """Go back to land the generator draws."""
+        if self.land_mask is not None or "mask" in self.other_changes:
+            self._custom_origin()
         self.land_mask = None
         _ = self.other_changes.pop("mask", None)
         self._changed()

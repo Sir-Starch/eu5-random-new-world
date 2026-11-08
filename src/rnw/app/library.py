@@ -48,6 +48,7 @@ from rnw.pictures import center_column, tagged, thumbnail
 from rnw.png import COLOR_RGB, encode_png
 from rnw.pngread import read_rgb
 from rnw.record import Manifest, NewerFormatError, Record, RecordError, output_entries
+from rnw.settings import SettingsError, build_settings
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -114,6 +115,32 @@ def world_id(code: str, game_build: str) -> str:
     """Ten letters and digits naming the world of ``code`` on ``game_build``."""
     digest = hashlib.sha256(f"{code}|{game_build}".encode()).digest()
     return base64.b32encode(digest).decode("ascii").lower()[:ID_LENGTH]
+
+
+def label(world: World, *, name: str | None = None) -> worldname.Label:
+    """One automatic name for exports, both windows and renames, including existing worlds."""
+    settings = None
+    origin = ""
+    with contextlib.suppress(WorldCodeError, SettingsError):
+        code = decode(world.code)
+        origin = code.origin
+        settings = (
+            build_settings(world.preset, world.record.settings)
+            if world.record is not None
+            else code.settings()
+        )
+    return worldname.label(
+        world.preset,
+        worldname.tag_of(world.id),
+        world.name if name is None else name,
+        settings=settings,
+        origin=origin,
+    )
+
+
+def display_name(world: World, *, name: str | None = None) -> str:
+    """The shared name without the game's RNW prefix; empty ``name`` asks for the default."""
+    return label(world, name=name).title.removeprefix(worldname.GAME_PREFIX)
 
 
 def folder(data: Path, world: World) -> Path:
@@ -376,7 +403,7 @@ def retitle(world: World, mod: Path) -> bool:
     replaced, as while the game holds it: the new name then shows after the world is added again.
     """
     target = mod / install.METADATA
-    title = worldname.label(world.preset, worldname.tag_of(world.id), world.name).title
+    title = label(world).title
     scratch = target.with_name(f".{target.name}.new")
     try:
         document = cast("dict[str, object]", json.loads(target.read_text(encoding="utf-8-sig")))

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep **Total Chaos** in the automatic name of an untouched random draw; manual changes
+  name it **Custom world**. The code keeps that origin when shared or reopened. Add
+  **Randomize settings again** to Total Chaos in both windows, keeping the seed.
+
 - Keep world switching responsive: prepare maps on a cancellable background worker, discard
   obsolete requests and reuse the four most recently viewed maps. Updating the window no
   longer reloads every revealed atlas just to decide whether comparison is available.

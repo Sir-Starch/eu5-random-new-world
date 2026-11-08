@@ -14,6 +14,7 @@ from __future__ import annotations
 import re
 import zlib
 from collections import Counter, deque
+from contextlib import suppress
 from dataclasses import dataclass
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
@@ -31,6 +32,7 @@ from rnw import (
     text_references,
     worldname,
 )
+from rnw.app.worldcode import WorldCodeError, decode
 from rnw.artifacts import (
     Spool,
     check_new_output,
@@ -2846,8 +2848,14 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     spec = run_spec(seed, settings)
     resources_seed = layer_seed(seed, RESOURCES, settings.rolls.resources)
     peoples_seed = layer_seed(seed, PEOPLES, settings.rolls.peoples)
+    origin = ""
+    with suppress(WorldCodeError):
+        origin = decode(world_code or "").origin
     named = world_label or worldname.label(
-        settings.preset, worldname.fallback_tag(world_code or spec_digest(spec))
+        settings.preset,
+        worldname.fallback_tag(world_code or spec_digest(spec)),
+        settings=settings,
+        origin=origin,
     )
 
     def load() -> tuple[Eu5Map, dict[str, Location]]:

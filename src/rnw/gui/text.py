@@ -250,6 +250,8 @@ STRINGS: Final[dict[str, str]] = {
         "The Advanced values are those of the type drawn."
     ),
     "type.chaos": "Total Chaos",
+    "randomize_settings": "Randomize settings again",
+    "randomize_settings.about": "Draw a new world type and Advanced settings, keeping the seed.",
     "type.chaos.about": (
         "A world type drawn at random when chosen, and every Advanced value drawn at random "
         "within its playable range."

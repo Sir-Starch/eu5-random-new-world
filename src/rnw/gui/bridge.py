@@ -126,6 +126,7 @@ class Bridge:
             "set_choice": self.set_choice,
             "set_seed": lambda p: c.set_seed(_str(p, "value")),
             "randomize": lambda _p: c.randomize(),
+            "randomize_settings": lambda _p: c.randomize_settings(),
             "use_code": lambda p: c.use_code(_str(p, "value")),
             "set_value": self.set_value,
             "set_position": self.set_position,

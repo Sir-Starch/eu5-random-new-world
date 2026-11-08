@@ -62,6 +62,13 @@ by purpose: Play, Versions, Share and Files; deletion is separated from ordinary
 
 ## 6. Interaction
 
+Total Chaos has **Randomize settings again** beside the world-type choice in both windows.
+It redraws the type and Advanced values without changing the seed, and is available while
+preparing the next queued world. The seed's Random button keeps a Chaos draw's settings.
+Naming provenance travels in the world code: an untouched draw is **Total Chaos**, manual
+settings make it **Custom world**, and a fresh draw restores **Total Chaos**. Personal names
+take precedence; see [the generator guide](generator-guide.md#choose-a-world-type).
+
 Long work runs through Controller's cancellable worker and reports completion or an
 error. A failed or cancelled queue stops before the next item. While a world is made the
 new world's choices and Add to queue stay available (`Controller.can_prepare`); worlds added
