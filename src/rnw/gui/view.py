@@ -26,7 +26,7 @@ from rnw import __version__, history_presenter, parallel, worldname
 from rnw import atlas as atlas_module
 from rnw.app import controls, library, quick, random_types
 from rnw.app.library import Placement
-from rnw.app.worldcode import encode
+from rnw.app.worldcode import WorldCode, encode
 from rnw.gui import mapstyle
 from rnw.gui.controller import NEW, STRAY, Controller, Phase, Task
 from rnw.gui.text import GROUPING, LANGUAGE_NAMES, TITLE, grouped, language, table, text
@@ -335,13 +335,19 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
     }
 
 
+def _queue_type(code: WorldCode) -> str:
+    """The type a queued world is called by: Total Chaos for a draw, as the window and the library
+    name it; otherwise its world type."""
+    return text("type.chaos") if code.origin == "chaos" else text(f"type.{code.preset}")
+
+
 def _queue(c: Controller) -> list[dict[str, object]]:
     """The worlds in the queue: the one the thread makes now marked, a failed one with its error."""
     return [
         {
             "code": encode(job.code),
             "seed": str(job.code.seed),
-            "type": text(f"type.{job.code.preset}"),
+            "type": _queue_type(job.code),
             "running": running,
             "error": error,
         }

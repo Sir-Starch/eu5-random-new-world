@@ -153,6 +153,23 @@ def test_the_queue_is_kept_listed_and_managed_through_the_bridge(
     assert controller.queue == []
 
 
+def test_a_queued_total_chaos_world_is_listed_as_total_chaos(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """The queue names a draw as the window and the library do, not by the preset it drew."""
+    bridge = _bridge(tmp_path, fake_export)
+    controller = bridge.controller
+    controller.install = False
+    controller.set_mode("chaos")
+    assert bridge.call("enqueue", {}) is None
+    controller.set_preset("continents")
+    assert bridge.call("set_seed", {"value": "9"}) is None
+    assert bridge.call("enqueue", {}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    queue = cast("list[dict[str, object]]", new["queue"])
+    assert [job["type"] for job in queue] == [text.text("type.chaos"), text.text("type.continents")]
+
+
 def test_a_failed_queue_world_is_listed_with_its_error_and_the_next_one_is_made(
     tmp_path: Path, fake_export: Exporter
 ) -> None:
