@@ -834,6 +834,10 @@ Steps 2–4 repeat on the new freeze; the seeds named in them read 1009–1012 f
 **Decision D34 (owner, 2026-11-07):** the statistical checks Q1–Q13 are reported diagnostics, not
 release holds; variety and working sliders are the goals; `UNREST_SLOPE` is back to 350. The runbook
 continues from step 5 ([plan D34](history-plan.md#213-decisions)).
+**Step 5 so far (2026-11-08, source `94bf99b`):** S8 (median −17.3%), S9 (−362 MiB), S10 (1.7 s, thin),
+S11 (570,564 bytes) and the reference reproduction (884 files, `79dbf588`) pass; `make check` and
+`make desktop` pass ([measurements](research/history-120-calibration.md#d34-checks-inform-they-do-not-gate-2026-11-07)).
+Packages, contact sheet, candidate install and hub update remain.
 **Status after D33, 2026-11-07:** the held-out run on seeds 1009–1012 (freeze `1f6bc79`, source
 SHA-256 `b0ff59fd…6959e`) passed 11 of 14 checks; Q1 and Q9 pass now, Q4 (one seeded highland
 confederation not realized), Q5 (one `state_locations` pair) and Q7 (Varied ratio 0.667) fail. No

@@ -792,6 +792,30 @@ paramount 17.1%, patchwork 33.8%; pooled recent turmoil 0.103 / 0.173 / 0.230; m
 assortativity 0.2375. No held-out set was run on this source. On the C512 held-out set every sweep
 pair of every slider was higher at high than at low, and the four region classes held 17–31%.
 
+**Delivery measurements on this source (2026-11-08).** The source is commit `94bf99b` (`src/rnw`
+SHA-256 `1324b77c…c6a57d7a`), EU5 build `26377361`; `make check` and `make desktop` pass on it.
+- [V-EXEC] **S8.** Twenty-four fresh sequential pairs (six presets × seeds 1009–1012, order
+  counterbalanced, 16 workers, 16384 MiB, `nice 19`, separate empty land caches) of the 1.1.0
+  source against this one, full normal generation: added time **median −17.3%, p95 −14.7%, max
+  −14.5%** (the new source is faster; no pair is slower). Every 1.1.0 baseline constructed, so the
+  explicit-sensitivity cohort equals the original one. The reference pair is 239.25 s → 198.42 s
+  (−17.1%). The speed-up comes from the 2026-11-07 waits and history-engine work, not from less
+  output: every stage through `write files` ran. Driver: `r6/timed_d34.py`, results in `r6/timed-d34/`.
+- [V-EXEC] **S9.** Reference peak 9.70 → 9.33 GiB: **−362 MiB** (limit +256 MiB, reference workload
+  only). The 24 seed-set pairs are not the S9 workload and are noisy in peak: median −86 MiB, range
+  −644 to +1173 MiB on a peak near 9 GiB, with four pairs above +590 MiB (small_continents 1009 and
+  1012, islands 1011, wall 1010). The peak of a 16-thread run depends on when stages overlap, so
+  these differences are reported, not read as a regression or as a pass.
+- [V-EXEC] **S10.** The normal exporter cancelled 50 ms into the reference's real history
+  simulation exits in **1.78 s, 1.69 s, 1.75 s** (three runs, `h7/cancel_export.py`), no complete output
+  or spool left. This meets the 2 s limit but is much closer to it than the 0.207 s measured on the
+  C486 source; cancellation latency on a slower machine is the thinnest resource margin now.
+  The cause is not investigated.
+- [V-EXEC] **S11.** Largest history in `atlas.json` over the 216 development worlds of
+  `dev72-d34`: **570,564 bytes** (limit 8 MiB).
+- [V-EXEC] The installed-game reference export reproduces the pending epoch-61 golden:
+  884 files, SHA-256 `79dbf588…21240` (`RNW_REPRODUCE=1`, 3 min 53 s).
+
 ## R6 development calibration of the audited redesign (2026-11-05)
 
 [V-EXEC, 2026-11-05] This is step 1 of the [R6 runbook](../history-core.md#r6-runbook)
