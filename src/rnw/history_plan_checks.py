@@ -9,7 +9,7 @@ from rnw.eu5_history import identity_cohorts
 from rnw.eu5_history_values import profile_positions
 from rnw.history_checks import Index, require, unique
 from rnw.history_context import Context
-from rnw.history_diplomacy import PAIR_LIMIT, RIVAL_MEMORY, WORLD_LIMIT
+from rnw.history_diplomacy import PAIR_LIMIT, RIVAL_MEMORY, UPKEEP_BUDGET, WORLD_LIMIT, upkeep
 from rnw.history_model import END, Action, Authority, Factor, Tenure, TrajectoryKind
 from rnw.history_trajectories import GROUP_MIN, realizations
 from rnw.opinions import ANALOGUES, POSITIVE, opinion_value
@@ -253,6 +253,16 @@ def _relations(plan: FinalStartPlan, context: Context, vanilla: VanillaNatives) 
             and (receiver, giver) not in plan.rivals,
             "Historical protection violates the guarantee prerequisites",
         )
+    population = {
+        tag: context.population(country.history_actor) for tag, country in countries.items()
+    }
+    require(
+        all(
+            used <= UPKEEP_BUDGET
+            for used in upkeep(population, plan.alliances, plan.protections).values()
+        ),
+        "A country's treaties exceed its diplomatic capacity",
+    )
     for country in plan.countries:
         require(
             by_actor[country.history_actor].tag == plan.history_tags[country.history_actor],

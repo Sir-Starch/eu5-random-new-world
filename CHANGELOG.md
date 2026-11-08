@@ -30,6 +30,13 @@
   start is left out: feudal law and the republican foundation wait for the institution of
   legalism, and royal court customs for the third level of technology, as in the base game.
 
+- Keep each country's alliances and guarantees within what it can carry. Leagues of the New
+  World gave small countries up to five alliances and four guarantees; the game charges each
+  treaty diplomatic capacity by the partner's size, so nine countries started over a limit even a
+  ruler of the highest diplomacy could not lift, with lower prestige, subject loyalty and cabinet
+  efficiency. A country now starts with the treaties it trusts most, as many as two alliances
+  between equals cost; the others stay part of its history.
+
 - Tell each country's past as a story. *Our History* read like a list of dated records
   ("1192: Society Unichita could no longer hold society Kiosaghe, which broke away. Recorded
   place: Oletan."). It now tells how the country began, what befell it (lands that broke away

@@ -2228,4 +2228,7 @@ The completion now leaves out a law behind an undecided `allow` and a law vanill
 government never hold at that level; only the countries' laws change (`5ded0387`).
 The owner's sitting on candidate K (observing again) loads the world without a single law or policy
 line; the rivalries the engine drops (C518) remain, and nine generated countries start over a
-diplomatic limit the engine cannot fix through the ruler (C523, also in ATDT, open).
+diplomatic limit the engine cannot fix through the ruler (C523, also in ATDT). They belong to
+sea leagues whose alliances and guarantees cost, by the game's own upkeep formulas, up to six
+times two alliances between equals; the projection now keeps each country's treaties within
+that budget, most trusted first, and leaves the rest to the chronicle (`a5c167c5`).
