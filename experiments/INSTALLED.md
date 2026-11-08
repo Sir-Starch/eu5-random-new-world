@@ -6,6 +6,22 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — candidate K, laws the game accepts** (C520–C522).
+[V-EXEC] From `7982a91`, installed **`mod/rnw_exp_world_feajb6bim5`** ("ATDT candidate K (laws the game
+accepts)") in the existing Windows/Proton profile: code `RNW1-08396-6JJMB-3X6KF-X0410-00813-C0X2X-P6`, the
+owner's world ATDT (`rnw_exp_world_atdtnjyqkq`) with its resources rolled again, so the same land, peoples
+and countries under a new world id. Its 51 generated monarchies of level 2 write cultural traditions and
+slave conversion and no longer feudal de jure law or royal court customs; its 31 republics no longer write
+the republican foundation; theocracies and level-1 monarchies are unchanged (Monahiton, RMP: slave
+conversion, civil society). `make check` passes (3,086 Python tests, 17 optional skips, 29 native Rust
+tests) and the installed-game reference check reproduces `5ded0387`. The staged installer refused any
+existing target; all 911 files match the prepared mod, both libraries hold the record, and the 18 other
+mod folders and 9 profile-root files are unchanged. The standard updater built and self-tested the hub
+under Wine (window, native, code, shell and bridge) and installed it, retaining
+`.rnw-hub-backups/1.2.0-1794167456059719272`. Candidate: `local_data/hub-updates/1.2.0-1794167408173755356/rnw_exp_hub`;
+Windows wheel SHA-256: `717e19d635d630cf2bff30d80e59499f708fb117cfccd574645276fee2bd7b23`. `desktop/` is
+unchanged, so the source window was not rebuilt. No EU5 launch/control, playset, save or preference edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — Total Chaos names and settings redraw**.
 [V-EXEC] From `1e2be53`, the automatic name keeps **Total Chaos** for an untouched draw and
 becomes **Custom world** after manual settings changes; naming provenance survives codes,
@@ -85,6 +101,22 @@ hub at `.rnw-hub-backups/1.2.0-1794118914264797681`. Candidate:
 `1f3eaa2474a439d92e30a441b57dd931d160bcd3690ccf317e17b8f7b7084118`.
 World bytes and `desktop/` are unchanged: existing candidates are reused, with no new world
 or source-window rebuild. No EU5 launch/control, playset, save or preference edit.
+
+2026-11-08, **1.2.0 development / pending epoch 61 — candidate J, the owner's RLTM with laws, names and
+the story** (C514–C517). [V-EXEC] Installed **`mod/rnw_exp_world_7qoul55qjp`** ("RLTM candidate J (laws,
+names, story)") in the existing Windows/Proton profile: code `RNW1-081YN-N7GXQ-AGMC7-Y0410-00833-AG0C6-R196G-0CZX0-3W`,
+the owner's world RLTM (`rnw_exp_world_rltmruw7gq`) with its resources rolled again, so the same land,
+peoples and countries under a new world id, generated at `12cd63b`. Unichita (BQU) writes feudal de jure
+law, royal court customs, slave conversion and cultural traditions; the world writes 128 memory-event
+entries and names its formables' territories. RLTM itself, regenerated from its code at `12cd63b` into an
+ignored folder, differs from the installed one only in its 22 localization files and `10_countries.txt`.
+The staged installer refused any existing target. All 912 files match the prepared mod, both libraries hold
+the record, and the 4 other mod folders and 9 profile-root files are unchanged. The standard updater
+installed hub 1.2.0 with the generator of `12cd63b` after its Wine window, native, code, shell and bridge
+self-tests and kept the former hub at `.rnw-hub-backups/1.2.0-1794115184121315550`. Windows wheel SHA-256:
+`01ede982e52265f8ea9413c16835f56f9b4befff2c1a5a030351ba9025d42cf5`. The source-run Tauri window was
+rebuilt (`npx tauri build --no-bundle --ci`) for the new Society and Chronicle tabs. No playset, save or
+preference was edited; the agent did not launch or control EU5.
 
 2026-11-08, **1.2.0 development / pending epoch 61 — candidate I, the D34 history** (R6 step 5).
 [V-EXEC] Installed **`mod/rnw_exp_world_lk3aao5c5f`** ("History 1.2 candidate I (D34 history)") in the
