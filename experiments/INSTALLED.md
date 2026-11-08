@@ -6,6 +6,23 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — responsive world switching**.
+[V-EXEC] Installed the generator-only hub from `4a704dc` in the existing Windows/Proton profile.
+Atlas preparation runs on a cancellable background worker; state/comparison listing reads file
+metadata, and the bridge/viewer retain the four most recently used maps. The bounded replay on
+13 copied library worlds and its timing scope are recorded in [the window guide](../docs/gui-design.md#9-the-tauri-window).
+`make check` passes (format, lint, strict types, 3,070 Python tests with 17 optional skips, 29 native
+Rust tests); the final focused suite passes all 41 bridge/library regressions, including the
+additional concurrent game-change regression. Desktop types, 27 interface tests and five shell
+tests pass. The source window was rebuilt with `npx tauri build --no-bundle --ci`; source and
+Windows/Wine window, native, code, shell and bridge self-tests pass. The standard updater verified
+and installed the hub, retaining `.rnw-hub-backups/1.2.0-1794123922216493721`. Candidate:
+`local_data/hub-updates/1.2.0-1794123868987720128/rnw_exp_hub`; Windows wheel SHA-256:
+`a4c47c278c154bd7e171e661698e7f1944b1a3c8c9e3c177b994ea432d4f2006`.
+World bytes are unchanged, so existing candidates are reused. No EU5 launch/control, playset,
+save or preference edit. The browser interaction review was unavailable (CUA host unavailable);
+the mounted-viewer DOM regression and the real Python protocol replay establish their stated scope.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — substantial inland seas; small basins as lakes**.
 [V-EXEC] From `d61b363`, installed **`mod/rnw_exp_world_qne7iu7ztf`** ("Inland water fix") in the
 existing Windows/Proton profile, with records in both generator libraries. It is the reported failing

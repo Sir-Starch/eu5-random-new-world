@@ -1,4 +1,4 @@
-// One worker for the app: relief and region names never occupy the window's event loop.
+// Cancellable relief and region-name preparation, kept off the window's event loop.
 import { prepareAtlas } from "./atlasPreparation";
 import type { AtlasBundle } from "./types";
 
