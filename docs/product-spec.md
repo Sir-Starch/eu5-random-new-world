@@ -1,8 +1,9 @@
 # Product specification
 
 Random New World generates New World geography and societies for EU5 while
-preserving the vanilla Old World. The released 1.0.0 product is accepted by the
-owner (C437); [roadmap](roadmap.md) separates its shipping scope from future work.
+preserving the vanilla Old World. The released 1.1.0 product is accepted by the
+owner (C437, C475); the [roadmap](roadmap.md) separates its shipping scope from future work.
+RNW 1.2.0 is the active candidate.
 
 ## Player journey
 
@@ -23,7 +24,7 @@ See the [guide](generator-guide.md) for operations and
 
 ## Shipping scope
 
-- Five landmass archetypes, Random/Total Chaos choices, adjustable geography,
+- Six landmass archetypes (*Supercontinent*, *Continents*, *Small Continents*, *Archipelago*, *Scattered Islands*, *The Wall*), Random/Total Chaos choices, adjustable geography,
   continent sketches, optional drawn land and optional larger ocean canvas.
 - Coherent relief, climate, biomes, rivers and sea geography from shared models.
 - New location hierarchy, native countries and tribes, cultures, religions,
@@ -39,15 +40,14 @@ Actual control ranges and presets live in `settings.py` and `app/controls.py`;
 this document does not invent a second list of presets or odds. Content definitions
 are indexed by the [catalogue](content-catalog.md).
 
-## Next update: history and geopolitics (1.2.0)
+## Major update: history and geopolitics (1.2.0)
 
-The owner set the 1.2.0 direction on 2026-11-02: simulate pre-1337 history to
-shape complex starting relationships between countries, and deepen the identity,
-structures and diversity of generated societies. The political world at campaign
-start should have understandable historical causes in its geography and societies.
-This is planned scope, not a shipping capability. The
-[roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) owns its status;
-the accepted [1.2.0 plan](history-plan.md) holds the design and implementation phases.
+RNW 1.2.0 introduces three centuries of simulated causal prehistory (1037–1337)
+to shape complex starting relationships between countries, starting laws and diplomatic
+budgets, narrative *Our History* storytelling, regional formable goals with missions and cores,
+substantial enclosed inland seas, and responsive generator workbench features.
+The [1.2.0 candidate notes](releases/1.2.0.md), the [roadmap](roadmap.md#next-major-update--120-history-and-geopolitics)
+and the accepted [1.2.0 plan](history-plan.md) hold the design, implementation phases and acceptance criteria.
 
 ## Engineering requirements
 

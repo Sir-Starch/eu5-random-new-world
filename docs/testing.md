@@ -2,8 +2,7 @@
 
 Use the checks that establish the behavior changed by the task. Historical
 experiment statuses retain their date/build; they are not an instruction to
-rerun all experiments or reopen release acceptance. The owner has accepted 1.0.0
-(C437); its tagged CI and published downloads are checked (C439).
+rerun all experiments or reopen release acceptance. The owner has accepted 1.0.0 (C437) and 1.1.0 (C475); tagged CI and published downloads are checked (C439).
 
 ## Choose checks by change
 
@@ -35,9 +34,9 @@ production build and the Rust shell's format, clippy and tests. Run
 `npx tauri build --no-bundle` in `desktop/`, `uv run rnw gui` opens that build and
 `QT_QPA_PLATFORM=offscreen uv run python -m rnw.gui --self-test` checks both windows; package
 self-tests require the Tauri window. The real window can be captured without a display in
-`dbus-run-session kwin_wayland --virtual` with `spectacle -b -n -f`. CI runs Linux/Windows checks and package self-tests. The 1.0.0
-verification passed 2,142 Python tests with 14 optional skips and 23 Rust tests
-(C438); these are a dated baseline, not permanent expected test counts.
+`dbus-run-session kwin_wayland --virtual` with `spectacle -b -n -f`. CI runs Linux/Windows checks and package self-tests. The 1.0.0 verification passed 2,142 Python tests with 14 optional skips and 23 Rust tests
+(C438); 1.1.0 passed 2,341 Python tests; current 1.2.0 development passes over 3,080 Python tests,
+17 optional skips and 29 Rust tests; these are dated baselines, not permanent expected test counts.
 
 Optional read-only game-input checks:
 

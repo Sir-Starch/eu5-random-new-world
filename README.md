@@ -40,19 +40,19 @@ build, save and mod compatibility, generation requirements and known visual issu
 | **Physical Geography** | Unified elevation, climate, biome, terrain material, and vegetation simulation; drainage-driven river networks, hydrologically integrated lakes, and branching mountain ranges with realistic relief and passes; vanilla-calibrated continental shelves and coastlines. |
 | **Seas & Navigation** | Guaranteed natural harbors for coastal sea zones; shape-aware water naming (gulfs, straits, bays, capes); dynamic reshaping of vanilla oceans and impassable `ocean_wasteland` basins; continuous ocean currents, shipping lanes, and physical-shore army strait crossings (`adjacencies.csv`). |
 | **Political & Region Keys** | Compact, connected locations, provinces, areas, and regions. Vanilla American region and area keys are mapped to generated landmasses via global integer assignment based on climate, relief, and coastal similarity. |
-| **Native Societies** | Procedural native cultures, religions, homelands, settled states, decentralized tribes, and subject networks. Seeded corridor affinities, primary identity cores, and fine-grained controls for state land targets and peasant/tribesman balance. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) with balanced structural tradeoffs. |
-| **Economy & Institutions** | Starting development, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. Individual 0–3× placement weights for all 34 ordinary New World RGOs alongside precious resources. |
-| **Dynamic Content & L10n** | [Procedural regional stories, formable nations, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Vanilla American historical triggers are cleanly gated or rebound. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
-| **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. **Ironman and Achievements are fully supported.** |
+| **Native Societies & History** | 300-year causal prehistory simulation (1037–1337) shaping starting polities, regional power settings, starting alliances, subjects, and opinions. Conservative population migration, primary identity cores, and fine-grained controls for state land targets, historical turbulence, and peasant/tribesman balance. Optional **Extraordinary Peoples** spawns (*Great Empires*, *Sea Leagues*, *Highland Confederations*, *Fractured Realms*, and *Sacred Centres*) seeded as ambitious centres with prudent or overreaching strategies. |
+| **Economy & Institutions** | Starting development matching EU5 exact rules (including river size weighting), valid initial laws and policies, harbor capacity, market hubs, road spline networks, and tech levels derived organically from local society structure. Individual 0–3× placement weights for all 34 ordinary New World RGOs alongside precious resources. |
+| **Dynamic Content & L10n** | [Procedural regional stories, formable nations ladder with missions & cores, restorations of fallen realms, narrative Our History storytelling, rare resource deposits, and colonial naming](docs/content-catalog.md) (*New X*). Settle the Frontier enabled across all New World land countries. Full localization across all **11 official EU5 languages** (including script-native transliteration and grammar for RU, ZH, JA, KO, PL, DE). |
+| **True Terra Incognita** | Spoiler-free by default: the New World remains masked in the generator preview, mod thumbnail, and EU5 country-selection map until you explicitly choose to reveal it. Optional multiplayer reveal at game start. **Ironman and Achievements are fully supported.** |
 
-The next major update, **1.2.0**, will focus on history and geopolitics: a pre-1337 history simulation will shape starting relationships between countries, alongside deeper, more distinctive and diverse societies. See the [roadmap](docs/roadmap.md) for the agreed direction and other future work, and the [1.2.0 plan](docs/history-plan.md) for its design.
+The **1.2.0** update introduces simulated prehistory, starting geopolitics, starting laws and diplomatic budgets, narrative Our History storytelling, regional formable nations with missions, and responsive generator workbench features. See the [1.2.0 candidate notes](docs/releases/1.2.0.md), the [roadmap](docs/roadmap.md) and the [1.2.0 plan](docs/history-plan.md) for full design and details.
 
 ## Screenshots
 
 ### In game
 
 <details>
-<summary>Eleven in-game screenshots — geography, native societies, oceans and dynamic content</summary>
+<summary>Twelve in-game screenshots — geography, native societies, oceans, dynamic content and history simulation</summary>
 
 Click a screenshot to view it at full size.
 
@@ -79,6 +79,9 @@ Click a screenshot to view it at full size.
 <tr>
 <td width="50%"><a href="docs/images/showcase/10-the-wall-returns.png"><img src="docs/images/showcase/10-the-wall-returns.png" alt="The Wall Returns: a continent-wide barrier across the New World"></a></td>
 <td width="50%"><a href="docs/images/showcase/11-improved-gen.png"><img src="docs/images/showcase/11-improved-gen.png" alt="RNW 1.1.0: More realistic mountains, water bodies, and coastlines"></a></td>
+</tr>
+<tr>
+<td colspan="2"><a href="docs/images/showcase/history-simulation.png"><img src="docs/images/showcase/history-simulation.png" alt="RNW 1.2.0: Overhauled societies &amp; geopolitics with 300-year history simulation"></a></td>
 </tr>
 </table>
 

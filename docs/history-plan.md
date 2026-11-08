@@ -764,6 +764,31 @@ of them (a named opinion) and a mediator.
   formation, so the naming choice at formation is the choice at a new rank
   (`on_country_rank_change` is not hooked, which would need a second name for every
   country of the world).
+- **D31, completed 2026-11-06:** [the game's measure](history-core.md) puts historical
+  opinions on EU5's native scale with annual decay, computes starting development from
+  exact installed formulas including calibrated river sizes (`eu5_development.py`),
+  and displays all eleven societal values on the Society tab.
+- **W7 & W8, completed 2026-11-06:** [Workshop feedback items](roadmap.md#workshop-feedback-in-120)
+  rebind *Settle the Frontier* across all American land countries (`settle_the_frontier_advance`),
+  lay out subcontinents as north-to-south bands with place-first regional matching, and name
+  regions after their local cultures.
+- **R6 validation and delivery, 2026-11-07:** after the first held-out run (C509), D32 froze
+  new held-out seeds 1009–1012. D33/D34 established that statistical checks inform rather than gate,
+  restoring unrest slope to 350. S8–S11 and hard invariants pass. Candidate I installed and hub
+  updated ([INSTALLED](../experiments/INSTALLED.md)).
+- **Owner sittings and candidate refinements, 2026-11-08:**
+  - **RLTM sitting & D35:** *Our History* told as a narrative story (`history_story.py`),
+    export validator for decision/event localization keys, and societal values displayed in game order.
+  - **Candidate K (C522):** laws and policies accepted by the engine (`eu5_laws.py`), leaving out
+    laws requiring unresearched advances (feudal law, republican foundation before legalism) or
+    unheld at tech level 2 (royal court customs).
+  - **Candidate L (C523):** alliances and guarantees kept strictly within diplomatic capacity
+    (at most two alliances between equals, `history_diplomacy.py`).
+  - **Closed basins (C516/C517):** substantial enclosed basins classified as navigable inland
+    seas with ports; small cut-off pockets turned into lakes.
+  - **Workbench & delivery:** Total Chaos naming provenance and redraw controls (C518);
+    responsive world switching with LRU atlas cache (C515); stable generation ETA countdown
+    with pacing adjustments (`eta.py`, `6792916`).
 
 ### Redesign phases after the audit (D21–D28)
 

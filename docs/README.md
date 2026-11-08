@@ -30,7 +30,7 @@ phases and acceptance criteria. The roadmap also lists the
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
 | [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |
-| [Changelog](../CHANGELOG.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
+| [Changelog](../CHANGELOG.md), [1.2.0 candidate notes](releases/1.2.0.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
 
 ## Subsystem references
 
@@ -83,6 +83,7 @@ current instructions or turn uncertainty into a publication prohibition.
 | [Interoperability register](research/interoperability.md) | Closed formats and written binaries, with source/compatibility rationale |
 | [1.4.7 compatibility check](research/compatibility-1-4-7.md) | Installed build, full input delta, map contract and offline checks |
 | [1.2.0 history calibration](research/history-120-calibration.md) | Development calibration, R6 held-out results, control sweeps, reference/portability and remaining acceptance scope |
+| [History contracts](research/history-contracts.md) | Installed history contracts, baseline measurements and seed matrices |
 | [1.4.6 compatibility check](research/compatibility-1-4-6.md) | Installed build, input delta and offline checks |
 | [More Locations compatibility](research/more-locations-compatibility.md) | Potential map conflicts, load-order limits and generation-time integration; third-party payload and combined engine behavior unverified |
 | [1.4.5 compatibility audit](research/compatibility-1-4-5.md) | Target-build fingerprints and DLC dispositions |

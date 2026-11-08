@@ -2,12 +2,13 @@
 
 ## Start here
 
-RNW **1.0.0** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.0.0)
+RNW **1.1.0** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.1.0)
 and distributed through [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331).
 The owner accepted the tested product and completed the publication-rules review
-(C437–C439, C441). The current target is **EU5 1.4.5 / Steam build 26211608**, including
-Across the Pillars; algorithm epoch **59**. Check the installed build before
-work that depends on game files, and audit changed inputs after a game patch.
+(C437–C439, C441). The current compatibility target is **EU5 1.4.7 / Steam build 26377361**,
+including Across the Pillars; frozen release epoch **60** (1.1.0) and pending algorithm epoch **61**
+(1.2.0 development). Check the installed build before work that depends on game files, and
+audit changed inputs after a game patch.
 
 Read [docs/README.md](docs/README.md) for the document map and
 [architecture](docs/architecture.md) for code ownership and invariants.

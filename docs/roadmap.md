@@ -131,6 +131,15 @@ independent colonies), formables restoring the realms the history records as fal
 AI goals toward them, and events driven by the recorded past. Phases N6–N9 and their
 criteria are in the [plan's §22](history-plan.md#22-goals-and-consequences-in-play-2026-11-06).
 
+**Owner decisions and refinements, 2026-11-07 – 2026-11-08.**
+- **Statistical checks inform, not gate (D34, 2026-11-07):** Statistical metrics inform
+  diagnostics rather than gating delivery; hard invariants and resource limits govern release.
+- **Storytelling and valid game start (D35, Candidates K & L, 2026-11-08):** *Our History*
+  told as a narrative story (`history_story.py`); laws and policies accepted cleanly by
+  the engine at start (`eu5_laws.py`); treaties budgeted within diplomatic capacity (at most two
+  alliances between equals, `history_diplomacy.py`); substantial enclosed basins as inland seas;
+  and responsive workbench switching and steady ETA forecasting.
+
 This brings generated national histories and broader society/diplomacy work out
 of the general future list and into the 1.2.0 focus. The earlier
 [community history suggestion](https://www.reddit.com/r/EU5/comments/1xia8uu/comment/19rtkpx9hq1z9/)
