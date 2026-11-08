@@ -2819,3 +2819,23 @@ text = '''육지가 실제 아메리카의 배치, 곧 지협으로 이어진 �
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''게임 본래의 아메리카를 읽는 중'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''실제 아메리카 유지'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''민족만'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''아메리카는 게임이 그린 모습 그대로 남으며, 땅, 해안선, 지형, 강, 장소는 생성되거나 바뀌지 않습니다. 오직 그곳의 민족만 생성됩니다. 국가, 문화, 종교, 역사, 법률 그리고 1337년의 나머지 사회입니다. 땅, 바다, 지도, 자원 설정은 적용되지 않으며 로비에서 신세계가 가려지지 않습니다.'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''실제 아메리카를 유지하는 세계에는 스케치할 땅이 없습니다.'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''실제 아메리카를 유지하는 세계는 게임 본래의 자원을 쓰므로 다시 만들 것이 없습니다.'''

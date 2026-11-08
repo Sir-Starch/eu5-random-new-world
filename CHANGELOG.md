@@ -13,6 +13,15 @@
   that falls apart. World codes, the sketches of *Choose a continent* and rerolls carry it; codes
   of other world types are unchanged.
 
+- Add **Keep the real Americas** to Omerika (*Peoples only*): the Americas stay exactly as the
+  game draws them and only their societies are generated, by the same stages as every world:
+  peoples, states, cultures, religions, the history of 1037-1337, laws, development, the AI,
+  stories and formable countries. The mod holds no map file and no copy of one of the game's;
+  places keep the game's names and the world is made in under a minute. Land, ocean, map and
+  resource settings, sketches and land templates do not apply, and the resources cannot be made
+  again; peoples can. The time left and the bar know the stages such a world never runs.
+  See [ADR 0012](docs/adr/0012-vanilla-geography.md).
+
 - Keep **Total Chaos** in the automatic name of an untouched random draw; manual changes
   name it **Custom world**. The code keeps that origin when shared or reopened. Add
   **Randomize settings again** to Total Chaos in both windows, keeping the seed.

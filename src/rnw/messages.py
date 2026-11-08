@@ -89,6 +89,7 @@ MESSAGES: Final[dict[str, str]] = {
     # continent sketches
     "candidates.count": "Choose between 1 and {count} sketches.",
     "candidates.drawn": "Sketches need generated land. Go back to generated land first.",
+    "candidates.real": "A world that keeps the real Americas has no land to sketch.",
 }
 
 

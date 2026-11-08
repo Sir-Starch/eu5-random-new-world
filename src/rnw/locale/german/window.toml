@@ -2819,3 +2819,23 @@ text = '''Wie genau das Land der Anordnung der echten Amerikas folgt: Nord- und 
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''Lese die Amerikas des Spiels'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''Echte Amerikas behalten'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''Nur Völker'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''Die Amerikas bleiben genau so, wie das Spiel sie zeichnet: Es wird weder Land noch Küste, Relief, Fluss oder Ort erzeugt oder verändert. Erzeugt werden nur ihre Völker: Staaten, Kulturen, Religionen, Geschichte, Gesetze und die übrige Gesellschaft von 1337. Die Einstellungen für Land, Ozean, Karte und Ressourcen gelten nicht, und die Neue Welt wird in der Lobby nicht verdeckt.'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''Eine Welt, die die echten Amerikas behält, hat kein Land zum Skizzieren.'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''Eine Welt, die die echten Amerikas behält, hat die Ressourcen des Spiels: Es gibt keine, die neu gewürfelt werden könnten.'''

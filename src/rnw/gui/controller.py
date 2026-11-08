@@ -663,6 +663,15 @@ class Controller:
             return explain(error)
         return None
 
+    def resources_problem(self, world: World) -> str | None:
+        """Why the resources of ``world`` cannot be made again, or None: a world that keeps the
+        real Americas has the game's own, so there is nothing to roll."""
+        try:
+            kept = decode(world.code).settings().new_world.keep_geography
+        except (WorldCodeError, SettingsError):
+            return None
+        return text("part.resources.real") if kept else None
+
     def edit_selected(self) -> str | None:
         """Load the selected world's type, seed and settings into the new-world page, to change
         the settings of its peoples or resources on the same land (a version of it); returns why

@@ -1254,6 +1254,37 @@ def test_the_reveal_checkbox_is_off_by_default_travels_in_the_code_and_explains_
 
 
 @pytest.mark.usefixtures("application")
+def test_the_real_americas_checkbox_is_offered_by_omerika_and_hides_what_it_makes_void(
+    tmp_path: Path,
+    fake_export: Exporter,
+) -> None:
+    window = _window(tmp_path, fake_export)
+    window.show()
+    window.controller.set_preset("omerika")
+    window._refresh_new()  # pyright: ignore[reportPrivateUsage]
+    assert window.keep_box.isVisible()
+    assert not window.keep_geography.isChecked()
+    assert window.expand_oceans.isVisible()
+    window.keep_geography.click()
+    assert decode(window.controller.code).settings().new_world.keep_geography == 1
+    # No ocean to expand, no New World to cover, no land to sketch and none of the land settings.
+    assert not window.expand_oceans.isVisible()
+    assert not window.visibility_box.isVisible()
+    assert not window.candidates_button.isEnabled()
+    assert not window.land_template_button.isEnabled()
+    assert window.control_sections["land"].isHidden()
+    assert window.control_sections["omerika"].isHidden()
+    assert not window.control_sections["peoples"].isHidden()
+    hidden = {row.quick.name for row in window.quick_rows if not row.shown}
+    assert hidden == {"land", "wealth"}
+    # Another world type does not offer it, and the box follows a pasted code.
+    assert window.controller.use_code(encode(new_code("continents", 123))) is None
+    assert not window.keep_box.isVisible()
+    assert window.expand_oceans.isVisible()
+    _ = window.close()
+
+
+@pytest.mark.usefixtures("application")
 def test_about_dialog_and_header_button(tmp_path: Path, fake_export: Exporter) -> None:
     window = _window(tmp_path, fake_export)
     assert window.about_button.text() == text("about")

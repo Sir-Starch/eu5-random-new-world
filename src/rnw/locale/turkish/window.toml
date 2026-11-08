@@ -2819,3 +2819,23 @@ text = '''Karanın gerçek Amerikalar’ın düzenini ne kadar yakından izleyec
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''Oyunun Amerikalar’ı okunuyor'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''Gerçek Amerikalar’ı koru'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''Yalnızca halklar'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''Amerikalar, oyunun çizdiği haliyle aynen kalır: hiçbir kara, kıyı, kabartma, nehir veya yer üretilmez ya da değiştirilmez. Yalnızca halkları üretilir: devletler, kültürler, dinler, tarih, yasalar ve 1337’nin geri kalan toplumu. Kara, okyanus, harita ve kaynak ayarları geçerli değildir ve Yeni Dünya lobide örtülmez.'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''Gerçek Amerikalar’ı koruyan bir dünyada eskiz çizilecek kara yoktur.'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''Gerçek Amerikalar’ı koruyan bir dünyada oyunun kendi kaynakları vardır: yeniden üretilecek bir şey yoktur.'''

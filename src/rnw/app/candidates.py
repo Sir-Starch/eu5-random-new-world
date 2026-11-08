@@ -89,6 +89,9 @@ def sketch(
     if settings.mask.id:
         message = say("candidates.drawn")
         raise CandidateError(message)
+    if settings.new_world.keep_geography:
+        message = say("candidates.real")
+        raise CandidateError(message)
     shape = settings.new_world
     canvas = _canvas(game_dir, settings, cache)
     domain = canvas.mask

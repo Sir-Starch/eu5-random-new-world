@@ -2819,3 +2819,23 @@ text = '''陸地が実際の南北アメリカの配置、つまり地峡でつ�
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''ゲーム本来のアメリカ大陸を読み込み中'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''本物のアメリカ大陸を維持'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''民族のみ'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''アメリカ大陸はゲームの描くままに残り、陸地、海岸線、地形、河川、地名は生成も変更もされません。生成されるのはそこに住む人々だけです。国家、文化、宗教、歴史、法律、そして1337年のその他の社会です。陸地、海洋、マップ、資源の設定は適用されず、ロビーで新世界が隠されることもありません。'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''本物のアメリカ大陸を維持する世界には、スケッチする陸地がありません。'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''本物のアメリカ大陸を維持する世界では資源はゲーム本来のものなので、作り直すものはありません。'''

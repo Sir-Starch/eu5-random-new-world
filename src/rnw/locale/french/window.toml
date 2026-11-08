@@ -2819,3 +2819,23 @@ text = '''À quel point la terre suit la disposition des vraies Amériques : l�
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''Lecture des Amériques du jeu'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''Garder les vraies Amériques'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''Peuples seulement'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''Les Amériques restent exactement comme le jeu les dessine : aucune terre, côte, relief, rivière ni localité n’est générée ou modifiée. Seuls leurs peuples sont générés : États, cultures, religions, histoire, lois et le reste de la société de 1337. Les réglages de terre, d’océan, de carte et de ressources ne s’appliquent pas, et le Nouveau Monde n’est pas masqué dans le salon.'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''Un monde qui garde les vraies Amériques n’a pas de terre à esquisser.'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''Un monde qui garde les vraies Amériques a les ressources du jeu : il n’y en a aucune à refaire.'''

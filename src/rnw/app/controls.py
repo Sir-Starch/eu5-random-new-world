@@ -136,6 +136,7 @@ CONTROLS: Final[tuple[Control, ...]] = (
     Control("new_world.province_size", "map", 3, 10),
     Control("new_world.expand_oceans", "map", 0, 1),
     Control("new_world.reveal_at_start", "map", 0, 1),
+    Control("new_world.keep_geography", "map", 0, 1),
     Control(
         "natives.population_permille", "peoples", 250, 3000, factor=1000, decimals=2, unit="times"
     ),
@@ -169,12 +170,36 @@ CONTROLS: Final[tuple[Control, ...]] = (
 BY_KEY: Final[dict[str, Control]] = {control.key: control for control in CONTROLS}
 GROUPS: Final[tuple[str, ...]] = ("wall", "omerika", "land", "map", "peoples", "resources")
 # The checkboxes the new-world page holds itself: the oceans and the reveal of the New World.
-PAGE_OPTIONS: Final[frozenset[str]] = frozenset({"expand_oceans", "reveal_at_start"})
+PAGE_OPTIONS: Final[frozenset[str]] = frozenset(
+    {"expand_oceans", "reveal_at_start", "keep_geography"}
+)
+# A world that keeps the real Americas (ADR 0012) generates no land, coast, relief or resource: the
+# groups of those settings, and the quick answers about them, do not apply to it. The reveal is the
+# game's own and still does.
+REAL_AMERICAS_GROUPS: Final[frozenset[str]] = frozenset(
+    {"wall", "omerika", "land", "map", "resources"}
+)
+REAL_AMERICAS_KEPT: Final[frozenset[str]] = frozenset({"reveal_at_start", "keep_geography"})
+REAL_AMERICAS_QUICK: Final[frozenset[str]] = frozenset({"land", "wealth"})
+# Locations of the installed game, which a world that keeps its Americas has (EU5 1.4.x).
+VANILLA_LOCATIONS: Final[int] = 27_312
 # The Advanced tab's controls: all of them but the page's checkboxes. A random draw (Total Chaos)
 # takes from this list too, so it never turns the reveal on.
 ADVANCED: Final[tuple[Control, ...]] = tuple(
     control for control in CONTROLS if control.field not in PAGE_OPTIONS
 )
+
+
+def visible(control: Control, preset: str, *, keeps: bool) -> bool:
+    """Whether the window shows ``control`` for the world type ``preset``; ``keeps``: the world
+    keeps the real Americas, which only Omerika offers."""
+    if control.field == "keep_geography":
+        return preset == "omerika" or keeps
+    if control.group in {"wall", "omerika"} and control.group != preset:
+        return False
+    return not (
+        keeps and control.group in REAL_AMERICAS_GROUPS and control.field not in REAL_AMERICAS_KEPT
+    )
 
 
 def wall_share(width_permille: int, land_permille: int) -> int:
@@ -186,6 +211,8 @@ def wall_share(width_permille: int, land_permille: int) -> int:
 def estimated_locations(settings: Settings) -> int:
     """Locations the world of ``settings`` will have, roughly (within about 600, C118)."""
     world = settings.new_world
+    if world.keep_geography:
+        return VANILLA_LOCATIONS
     wide = bool(world.expand_oceans or world.landform)
     land_area = WIDE_LAND_CELLS if wide else LAND_CELLS
     sea_area = WIDE_SEA_ZONES if wide else SEA_ZONES

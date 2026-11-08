@@ -232,7 +232,7 @@
         {#if w.version_problem}<div class="msg warn"><Icon name="warning" /><p>{w.version_problem}</p></div>{/if}
         <div class="commands two">
           <button class="btn" disabled={!w.can_change || !!w.version_problem} title={w.version_problem ?? t("part.peoples.tip")} onclick={() => app.act("reroll", { part: "peoples", keep_both: keepBoth })}>{t("part.peoples.button")}</button>
-          <button class="btn" disabled={!w.can_change || !!w.version_problem} title={w.version_problem ?? t("part.resources.tip")} onclick={() => app.act("reroll", { part: "resources", keep_both: keepBoth })}>{t("part.resources.button")}</button>
+          <button class="btn" disabled={!w.can_change || !!w.version_problem || !!w.resources_problem} title={w.version_problem ?? w.resources_problem ?? t("part.resources.tip")} onclick={() => app.act("reroll", { part: "resources", keep_both: keepBoth })}>{t("part.resources.button")}</button>
         </div>
         {#if w.placement === "in_game"}
           <Check checked={keepBoth} label={t("keep_both")} hint={t("keep_both_tip")} onchange={(value) => (keepBoth = value)} />

@@ -220,6 +220,16 @@ At 0% the guide is switched off and the world is made like any other with these 
 amount, landmass scale and coast detail work as in the other world types; the land amount starts
 at the share the Americas hold.
 
+Omerika alone offers **Keep the real Americas** (*Peoples only*), on the World tab. Ticked, the
+Americas stay exactly as the game draws them: no land, coast, relief, river, place or resource is
+generated or changed, and the generator makes only what lives there: states, cultures, religions,
+the history of 1037-1337, laws, development, the AI, stories and formable countries. Land, ocean,
+map and resource settings do not apply and are hidden, sketches and land templates are off, and
+**New resources** is off for such a world; **New peoples** and the peoples' settings work as usual.
+The New World is not covered in the lobby, places keep the game's names, and such a world needs
+no generated map files, so it is small and quick (under a minute). See the
+[known limitations](known-limitations.md).
+
 The two great landmasses are joined by a corridor of land along the guide's neck, raised above
 the noise, so North and South America stay one landmass at every setting. If land ever fell
 apart anyway, generation stops with a message rather than producing it. Omerika cannot use a drawn

@@ -110,7 +110,7 @@
           {#if n?.mode}{t("forge.drawn", { type: t(`type.${n.preset}`) })}{/if}
         </p>
 
-        {#each app.info?.quick ?? [] as item (item.name)}
+        {#each (app.info?.quick ?? []).filter((item) => !(n?.keeps_geography && item.geography)) as item (item.name)}
           <label class="key" for={`quick-${item.name}`} title={t(`quick.${item.name}.about`)}>{t(`quick.${item.name}`)}</label>
           <select
             id={`quick-${item.name}`}
@@ -128,6 +128,19 @@
           </select>
         {/each}
 
+        {#if n?.values["new_world.keep_geography"]}
+          <div class="wide oceans">
+            <Check
+              checked={(n.values["new_world.keep_geography"].shown ?? 0) > 0}
+              disabled={locked}
+              label={t("control.new_world.keep_geography")}
+              hint={t("control.new_world.keep_geography.about")}
+              info={t("control.new_world.keep_geography.info")}
+              onchange={(value) => app.call("set_value", { key: "new_world.keep_geography", value: value ? 1 : 0 })}
+            />
+          </div>
+        {/if}
+        {#if n?.values["new_world.expand_oceans"]}
         <div class="wide oceans">
           <Check
             checked={(n?.values["new_world.expand_oceans"]?.shown ?? 0) > 0}
@@ -138,6 +151,8 @@
             onchange={(value) => app.call("set_value", { key: "new_world.expand_oceans", value: value ? 1 : 0 })}
           />
         </div>
+        {/if}
+        {#if !n?.keeps_geography}
         <div class="wide oceans">
           <!-- The stored preference says "shown"; this box says "covered", so it is inverted. -->
           <Check
@@ -149,6 +164,7 @@
             onchange={(value) => app.call("set_show_new_world", { value: !value })}
           />
         </div>
+        {/if}
         <div class="wide oceans">
           <Check
             checked={(n?.values["new_world.reveal_at_start"]?.shown ?? 0) > 0}

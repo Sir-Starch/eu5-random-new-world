@@ -828,3 +828,61 @@ def test_a_game_change_during_preparation_does_not_poison_the_old_cache_key(
         release.set()
         worker.close()
         worker.thread.join(5)
+
+
+def test_a_world_that_keeps_the_real_americas_shows_only_what_applies_to_it(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    new = cast("dict[str, object]", bridge.state()["new"])
+    values = cast("dict[str, object]", new["values"])
+    # Omerika alone offers the choice, and it starts off.
+    assert bridge.call("set_choice", {"choice": "omerika"}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    values = cast("dict[str, object]", new["values"])
+    assert "new_world.keep_geography" in values
+    assert "new_world.template_permille" in values
+    assert new["keeps_geography"] is False
+    assert new["candidates_enabled"] is True
+    assert bridge.call("set_choice", {"choice": "continents"}) is None
+    other = cast("dict[str, object]", cast("dict[str, object]", bridge.state()["new"])["values"])
+    assert "new_world.keep_geography" not in other
+    assert "new_world.template_permille" not in other
+    # Switched on, the land, map and resource settings and the sketches do not apply.
+    assert bridge.call("set_choice", {"choice": "omerika"}) is None
+    assert bridge.call("set_value", {"key": "new_world.keep_geography", "value": 1}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    values = cast("dict[str, object]", new["values"])
+    assert new["keeps_geography"] is True
+    assert new["candidates_enabled"] is False
+    assert new["template_enabled"] is False
+    assert "new_world.keep_geography" in values
+    assert "new_world.reveal_at_start" in values
+    for hidden in (
+        "new_world.land_permille",
+        "new_world.expand_oceans",
+        "new_world.template_permille",
+    ):
+        assert hidden not in values
+    assert not [key for key in values if key.startswith("resources.")]
+    assert "natives.state_share_permille" in values
+    assert new["problem"] is None or "location" not in str(new["problem"]).lower()
+    quick = cast("list[dict[str, object]]", view.static(bridge.controller)["quick"])
+    assert {item["name"] for item in quick if item["geography"]} == {"land", "wealth"}
+    _ = json.dumps(new)
+
+
+def test_the_resources_of_a_world_that_keeps_the_real_americas_cannot_be_made_again(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    from types import SimpleNamespace  # noqa: PLC0415
+
+    from rnw.app.worldcode import encode, new_code  # noqa: PLC0415
+
+    controller = _bridge(tmp_path, fake_export).controller
+    kept = encode(new_code("omerika", 5, {"new_world": {"keep_geography": 1}}))
+    plain = encode(new_code("omerika", 5))
+    world_kept = cast("library.World", cast("object", SimpleNamespace(code=kept)))
+    world_plain = cast("library.World", cast("object", SimpleNamespace(code=plain)))
+    assert controller.resources_problem(world_kept) == text.text("part.resources.real")
+    assert controller.resources_problem(world_plain) is None

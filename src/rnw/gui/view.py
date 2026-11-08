@@ -93,7 +93,11 @@ def static(controller: Controller) -> dict[str, object]:
             for control in controls.CONTROLS
         ],
         "quick": [
-            {"name": item.name, "levels": [level.name for level in item.levels]}
+            {
+                "name": item.name,
+                "levels": [level.name for level in item.levels],
+                "geography": item.name in controls.REAL_AMERICAS_QUICK,
+            }
             for item in quick.QUICK
         ],
         "budget": controls.LOCATION_BUDGET,
@@ -268,8 +272,9 @@ def _batch(c: Controller) -> str:
 def _new(c: Controller, choices: Choices) -> dict[str, object]:
     busy = c.busy
     values: dict[str, object] = {}
+    keeps = bool(c.value("new_world.keep_geography"))
     for control in controls.CONTROLS:
-        if control.group in {"wall", "omerika"} and c.preset != control.group:
+        if not controls.visible(control, c.preset, keeps=keeps):
             continue
         value = c.value(control.key)
         default = control.default(c.preset)
@@ -320,10 +325,12 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         "target": str(target) if target is not None else "",
         "land_mask": format(drawn.id, "x") if drawn is not None else "",
         "land_mask_text": text("land_image_chosen", id=format(drawn.id, "x")) if drawn else "",
+        "keeps_geography": keeps,
         "candidates_enabled": not busy
         and c.game is not None
-        and not c.world_code().settings().mask.id,
-        "template_enabled": not busy and c.game is not None,
+        and not c.world_code().settings().mask.id
+        and not keeps,
+        "template_enabled": not busy and c.game is not None and not keeps,
         "preparable": c.can_prepare,
         "queue_problem": queue_problem,
         "queue": _queue(c),
@@ -410,6 +417,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "remove_problem": c.removal_problem(),
         "can_change": not c.busy and c.game is not None,
         "version_problem": c.version_problem(world),
+        "resources_problem": c.resources_problem(world),
         "task": _world_task(c) if mine else None,
         "told": choices.told.get(world.id, ""),
         "compare": len(comparable_worlds(c)) >= 2,  # noqa: PLR2004 - two worlds are compared

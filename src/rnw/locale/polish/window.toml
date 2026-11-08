@@ -2819,3 +2819,23 @@ text = '''Jak wiernie ląd odwzorowuje układ prawdziwych Ameryk: Ameryki Półn
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''Wczytuję Ameryki z gry'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''Zachowaj prawdziwe Ameryki'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''Tylko ludy'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''Ameryki pozostają dokładnie takie, jak rysuje je gra: nie generuje się ani nie zmienia żadnego lądu, wybrzeża, rzeźby terenu, rzeki ani miejsca. Generowane są tylko ich ludy: państwa, kultury, religie, historia, prawa i reszta społeczeństwa z 1337 roku. Ustawienia lądu, oceanu, mapy i zasobów nie obowiązują, a Nowy Świat nie jest zakrywany w lobby.'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''Świat, który zachowuje prawdziwe Ameryki, nie ma lądu do naszkicowania.'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''Świat, który zachowuje prawdziwe Ameryki, ma zasoby z gry: nie ma żadnych do ponownego wylosowania.'''

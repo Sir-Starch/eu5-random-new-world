@@ -2819,3 +2819,23 @@ text = '''O quanto a terra segue a disposição das Américas reais: América do
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''Lendo as Américas do jogo'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''Manter as Américas reais'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''Apenas povos'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''As Américas ficam exatamente como o jogo as desenha: nenhuma terra, costa, relevo, rio ou lugar é gerado ou alterado. Apenas os povos são gerados: estados, culturas, religiões, história, leis e o resto da sociedade de 1337. As configurações de terra, oceano, mapa e recursos não se aplicam, e o Novo Mundo não é coberto no lobby.'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''Um mundo que mantém as Américas reais não tem terra para esboçar.'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''Um mundo que mantém as Américas reais tem os recursos do próprio jogo: não há nenhum para refazer.'''

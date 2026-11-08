@@ -187,3 +187,49 @@ def test_the_installed_americas_are_wrapped() -> None:
     assert len(lands) > 4000
     assert all(vanilla.plan.cells[i].continent == "america" for i in lands)
     assert all(vanilla.biomes.climate[i] for i in lands)
+
+
+def test_the_choice_is_omerikas_and_hides_what_a_world_that_keeps_the_americas_makes_void() -> None:
+    from rnw.app import controls  # noqa: PLC0415
+
+    keep = controls.BY_KEY["new_world.keep_geography"]
+    land = controls.BY_KEY["new_world.land_permille"]
+    wall = controls.BY_KEY["new_world.wall_width_permille"]
+    likeness = controls.BY_KEY["new_world.template_permille"]
+    reveal = controls.BY_KEY["new_world.reveal_at_start"]
+    peoples = controls.BY_KEY["natives.state_share_permille"]
+    assert controls.visible(keep, "omerika", keeps=False)
+    assert not controls.visible(keep, "continents", keeps=False)
+    assert controls.visible(likeness, "omerika", keeps=False)
+    assert not controls.visible(likeness, "continents", keeps=False)
+    assert controls.visible(land, "omerika", keeps=False)
+    assert not controls.visible(wall, "omerika", keeps=False)
+    # Kept, the land, the likeness and the resources do not apply; the reveal and peoples do.
+    assert not controls.visible(land, "omerika", keeps=True)
+    assert not controls.visible(likeness, "omerika", keeps=True)
+    assert not controls.visible(controls.BY_KEY["resources.maize"], "omerika", keeps=True)
+    assert controls.visible(reveal, "omerika", keeps=True)
+    assert controls.visible(peoples, "omerika", keeps=True)
+    assert controls.visible(keep, "continents", keeps=True)
+
+
+def test_no_random_draw_keeps_the_americas_and_the_estimate_is_the_games() -> None:
+    import random  # noqa: PLC0415
+
+    from rnw.app import controls, random_types  # noqa: PLC0415
+
+    assert "keep_geography" in controls.PAGE_OPTIONS
+    for seed in range(40):
+        _, changes = random_types.draw(random_types.CHAOS, random.Random(seed))  # noqa: S311 - a test's draw
+        assert "new_world.keep_geography" not in changes
+    kept = build_settings("omerika", {"new_world": {"keep_geography": 1}})
+    assert controls.estimated_locations(kept) == controls.VANILLA_LOCATIONS
+    assert controls.estimated_locations(kept) <= controls.LOCATION_BUDGET
+
+
+def test_sketches_of_a_world_that_keeps_the_americas_are_refused_in_words(tmp_path: Path) -> None:
+    from rnw.app.candidates import CandidateError, sketch  # noqa: PLC0415
+
+    kept = build_settings("omerika", {"new_world": {"keep_geography": 1}})
+    with pytest.raises(CandidateError, match="real Americas"):
+        _ = sketch(tmp_path, kept, [1, 2])

@@ -2819,3 +2819,23 @@ text = '''陆地在多大程度上遵循真实美洲的布局：北美洲与南�
 ["stage.vanilla Americas"]
 source = "ccb3c0aa64b52c69"
 text = '''正在读取游戏原有的美洲'''
+
+["control.new_world.keep_geography"]
+source = "e0e1cb42b1884575"
+text = '''保留真实的美洲'''
+
+["control.new_world.keep_geography.about"]
+source = "8a604db947b5994e"
+text = '''仅生成民族'''
+
+["control.new_world.keep_geography.info"]
+source = "ec2c59bae05bf945"
+text = '''美洲完全保持游戏所绘的样子：不会生成或更改任何陆地、海岸、地势、河流或地点。只生成其中的民族：国家、文化、宗教、历史、法律以及1337年的其余社会。陆地、海洋、地图和资源设置不适用，新世界在大厅中也不会被遮盖。'''
+
+["error.candidates.real"]
+source = "50020d09ce8b62af"
+text = '''保留真实美洲的世界没有可供勾画的陆地。'''
+
+["part.resources.real"]
+source = "231a7f1347ab9b86"
+text = '''保留真实美洲的世界使用游戏原有的资源，没有可重新生成的内容。'''

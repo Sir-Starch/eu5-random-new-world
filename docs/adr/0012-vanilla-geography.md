@@ -1,7 +1,8 @@
 # ADR 0012: Keep the vanilla Americas, generate only their societies
 
-**Status:** Accepted 2026-11-08 (owner's request, with the Omerika world type). Implementation
-phases are tracked below; their acceptance is not a release hold for anything already shipped.
+**Status:** Accepted 2026-11-08 (owner's request, with the Omerika world type). Phases V1-V3
+implemented 2026-11-08/09; V4 (documentation, reference) below. Their acceptance is not a release
+hold for anything already shipped.
 
 ## Context
 
@@ -63,3 +64,22 @@ no code changes) makes the export a **societies-only export** on the vanilla map
 | V2 | `rnw.eu5_vanilla_export`: the societies-only export, its bundle, record, previews and atlas | A full export on the installed game passes every society validator and changes no physical file |
 | V3 | The window: the page option on Omerika, the controls and layers it disables, texts in every language; the CLI | Both windows show it; tests in the controller, the bridge and the translations |
 | V4 | Documentation, changelog, reference digest of the other world types unchanged | `make check`; reference world reproduced |
+
+## Implementation record (2026-11-09)
+
+[V-EXEC, EU5 1.4.7 / build 26377361, source `HEAD` of the V2-V3 commits]
+
+- A full export of Omerika with *Keep the real Americas* takes 45-50 s (the generated worlds take about
+  2 min 40 s): 4,434 land locations, 457 wastelands, 292 lakes and 1,479 seas as cells, 502 native
+  countries holding 2,515 locations, all society validators passed. Two exports of one seed are
+  byte-identical but for the mod's name. The mod holds about 80 text files (21 MB), no `map_data`, no
+  texture and no picture but the thumbnail.
+- The scripts' remap is **empty**: an identity remap of the Americas dropped the map's monuments,
+  illustrations and dynamic objects (`remap_text` drops, on a list of places, every entry a remap
+  names). Only the seat of the game's start and the holy sites that follow the peoples stand for
+  themselves.
+- `natives.names` holds references to the game's own texts, which every text renders as `$key$`; the
+  stories take the places' English words instead, since a formation is named after a word.
+- Left out of this export, and recorded in [known limitations](../known-limitations.md): the
+  selection-screen cover, the exceptional places, resource rolls, the road splines (the game's own
+  hold every contact), the Treaty of Tordesillas' line.

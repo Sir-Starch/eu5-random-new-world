@@ -91,10 +91,9 @@ An unobserved detail alone does not reopen acceptance or require another game se
   prevents incompatible biomes (e.g., desert in subtropical or forest in arid).
 
 - **Omerika preset (1.2.0 development):** land on a low-frequency template of the installed game's
-  Americas, bent by the seed, with a corridor that keeps North and South America joined. Open: an
-  option to keep the vanilla American geography and generate only its countries, cultures and
-  religions, which needs a path that reads the vanilla locations instead of generating cells.
-  See [terrain](terrain-biomes.md#omerika).
+  Americas, bent by the seed, with a corridor that keeps North and South America joined; and
+  *Keep the real Americas*, which generates only their societies on the game's own map
+  ([ADR 0012](adr/0012-vanilla-geography.md)). See [terrain](terrain-biomes.md#omerika).
 
 - **The Wall preset:** procedural longitudinal continent or island chain with mountain spine,
   island detour routing, width/position/gaps controls, and broader secondary continent placement.

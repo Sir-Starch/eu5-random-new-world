@@ -510,6 +510,7 @@ class _QuickRow:
         self.label: QLabel = QLabel(text(f"quick.{quick.name}"))
         self.label.setToolTip(about)
         self.buttons: dict[str, QPushButton] = {}
+        self.shown: bool = True
         self.levels: QHBoxLayout = QHBoxLayout()
         self.custom: QLabel = QLabel(text("quick.custom"))
         self.custom.setStyleSheet(MUTED)
@@ -531,6 +532,13 @@ class _QuickRow:
         grid.addLayout(self.heading, row, 0)
         grid.addLayout(self.levels, row, 1)
 
+    def show(self, *, shown: bool) -> None:
+        """Show or hide the whole row (a question that does not apply to the world)."""
+        self.shown = shown
+        self.label.setVisible(shown)
+        for button in self.buttons.values():
+            button.setVisible(shown)
+
     def refresh(self, level: str | None, *, enabled: bool) -> None:
         """Press the button of ``level``; none when the controls hold a custom mix."""
         for name, button in self.buttons.items():
@@ -538,7 +546,7 @@ class _QuickRow:
             button.setChecked(name == level)
             _ = button.blockSignals(False)  # noqa: FBT003 - Qt's own call
             button.setEnabled(enabled)
-        self.custom.setVisible(level is None)
+        self.custom.setVisible(level is None and self.shown)
 
     def _pick(self, level: str) -> None:
         self.window.controller.set_quick(self.quick.name, level)
@@ -828,6 +836,9 @@ class MainWindow(QMainWindow):
         world, layout = self._scroll_page()
         layout.addWidget(self._types())
         layout.addWidget(self._quick())
+        self.keep_box: QWidget = QWidget()
+        self.keep_box.setLayout(self._keep_row())
+        layout.addWidget(self.keep_box)
         self.expand_oceans: QCheckBox = QCheckBox(text("control.new_world.expand_oceans"))
         self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
         ocean_tip = _wrapped_tip(text("control.new_world.expand_oceans.info"))
@@ -835,9 +846,9 @@ class MainWindow(QMainWindow):
         _ = self.expand_oceans.toggled.connect(self._ocean_toggled)
         layout.addWidget(self.expand_oceans)
         # "Recommended" and an ⓘ mark; the explanation is the tooltip of the mark and the text.
-        ocean_hint = QLabel(text("control.new_world.expand_oceans.about"))
-        ocean_hint.setStyleSheet(MUTED)
-        ocean_hint.setToolTip(ocean_tip)
+        self.ocean_hint: QLabel = QLabel(text("control.new_world.expand_oceans.about"))
+        self.ocean_hint.setStyleSheet(MUTED)
+        self.ocean_hint.setToolTip(ocean_tip)
         self.ocean_help: QLabel = QLabel("ⓘ")
         self.ocean_help.setCursor(Qt.CursorShape.PointingHandCursor)
         self.ocean_help.setStyleSheet(MUTED)
@@ -845,14 +856,15 @@ class MainWindow(QMainWindow):
         ocean_note = QHBoxLayout()
         ocean_note.setContentsMargins(0, 0, 0, 0)
         ocean_note.setSpacing(6)
-        ocean_note.addWidget(ocean_hint)
+        ocean_note.addWidget(self.ocean_hint)
         ocean_note.addWidget(self.ocean_help, 0, Qt.AlignmentFlag.AlignVCenter)
         ocean_note.addStretch(1)
         layout.addLayout(ocean_note)
         # The stored preference says "shown"; the box says "covered", so it is inverted.
         self.lobby_cover: QCheckBox = QCheckBox(text("lobby_cover"))
         self.lobby_cover.setChecked(not self.controller.preferences.show_new_world)
-        visibility = QGroupBox(text("visibility"))
+        self.visibility_box: QGroupBox = QGroupBox(text("visibility"))
+        visibility = self.visibility_box
         visibility_layout = QVBoxLayout(visibility)
         visibility_layout.addWidget(self.lobby_cover)
         hint = QLabel(text("lobby_cover_hint"))
@@ -1722,6 +1734,29 @@ class MainWindow(QMainWindow):
             )
         return item
 
+    def _keep_row(self) -> QHBoxLayout:
+        """The checkbox that keeps the real Americas (ADR 0012), its hint and an ⓘ mark."""
+        self.keep_geography: QCheckBox = QCheckBox(text("control.new_world.keep_geography"))
+        self.keep_geography.setChecked(bool(self.controller.value("new_world.keep_geography")))
+        keep_tip = _wrapped_tip(text("control.new_world.keep_geography.info"))
+        self.keep_geography.setToolTip(keep_tip)
+        _ = self.keep_geography.toggled.connect(self._keep_toggled)
+        keep_hint = QLabel(text("control.new_world.keep_geography.about"))
+        keep_hint.setStyleSheet(MUTED)
+        keep_hint.setToolTip(keep_tip)
+        self.keep_help: QLabel = QLabel("ⓘ")
+        self.keep_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.keep_help.setStyleSheet(MUTED)
+        self.keep_help.setToolTip(keep_tip)
+        keep_row = QHBoxLayout()
+        keep_row.setContentsMargins(0, 0, 0, 0)
+        keep_row.setSpacing(6)
+        keep_row.addWidget(self.keep_geography)
+        keep_row.addWidget(keep_hint)
+        keep_row.addWidget(self.keep_help, 0, Qt.AlignmentFlag.AlignVCenter)
+        keep_row.addStretch(1)
+        return keep_row
+
     def _reveal_row(self) -> QHBoxLayout:
         """The checkbox that reveals the New World at the campaign start, its hint and an ⓘ mark."""
         self.reveal_at_start: QCheckBox = QCheckBox(text("control.new_world.reveal_at_start"))
@@ -1747,6 +1782,9 @@ class MainWindow(QMainWindow):
 
     def _ocean_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
         self.controller.set_value("new_world.expand_oceans", int(checked))
+
+    def _keep_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
+        self.controller.set_value("new_world.keep_geography", int(checked))
 
     def _reveal_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt checkbox
         self.controller.set_value("new_world.reveal_at_start", int(checked))
@@ -1781,6 +1819,15 @@ class MainWindow(QMainWindow):
             self.estimate_help.setVisible(False)
 
     def _refresh_ocean_option(self, busy: bool) -> None:  # noqa: FBT001 - UI state
+        keeps = bool(self.controller.value("new_world.keep_geography"))
+        _ = self.keep_geography.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.keep_geography.setChecked(keeps)
+        _ = self.keep_geography.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.keep_geography.setEnabled(not busy)
+        self.keep_box.setVisible(self.controller.preset == "omerika" or keeps)
+        # A world that keeps the real Americas has no ocean to expand and no New World to cover.
+        for widget in (self.expand_oceans, self.ocean_hint, self.ocean_help, self.visibility_box):
+            widget.setVisible(not keeps)
         _ = self.expand_oceans.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         self.expand_oceans.setChecked(bool(self.controller.value("new_world.expand_oceans")))
         _ = self.expand_oceans.blockSignals(False)  # noqa: FBT003 - Qt synchronization
@@ -1800,7 +1847,11 @@ class MainWindow(QMainWindow):
         )
         self.land_image_clear.setVisible(drawn is not None)
         self.land_image_button.setEnabled(not busy)
-        self.land_template_button.setEnabled(not controller.busy and controller.game is not None)
+        self.land_template_button.setEnabled(
+            not controller.busy
+            and controller.game is not None
+            and not controller.value("new_world.keep_geography")
+        )
         _ = self.type_choice.blockSignals(True)  # noqa: FBT003 - Qt synchronization
         shown = controller.mode or controller.preset
         self.type_choice.setCurrentIndex(random_types.CHOICES.index(shown))
@@ -1814,12 +1865,22 @@ class MainWindow(QMainWindow):
             self.code_edit.setText(controller.code)
         self.notice.setText(controller.notice)
         self.notice.setVisible(bool(controller.notice))
-        for group in ("wall", "omerika"):
-            self.control_sections[group].setVisible(controller.preset == group)
+        keeps = bool(controller.value("new_world.keep_geography"))
+        for group, section in self.control_sections.items():
+            section.setVisible(
+                any(
+                    controls.visible(control, controller.preset, keeps=keeps)
+                    for control in controls.ADVANCED
+                    if control.group == group
+                )
+            )
         for row in self.rows:
             key = row.control.key
             row.refresh(controller.value(key), changed=key in controller.changes, enabled=not busy)
         for quick_row in self.quick_rows:
+            quick_row.show(
+                shown=not (keeps and quick_row.quick.name in controls.REAL_AMERICAS_QUICK)
+            )
             quick_row.refresh(controller.quick_level(quick_row.quick.name), enabled=not busy)
         count = len(controller.changes)
         self.customized.setText(text("customized", count=count) if count else "")
@@ -1947,6 +2008,7 @@ class MainWindow(QMainWindow):
             not controller.busy
             and controller.game is not None
             and not controller.world_code().settings().mask.id
+            and not controller.value("new_world.keep_geography")
         )
 
     def _queue_text(self) -> str:
@@ -1992,7 +2054,7 @@ class MainWindow(QMainWindow):
             words=controller.words(found) if found is not None else atlas_module.ENGLISH,
         )
 
-    def _refresh_world(self) -> None:
+    def _refresh_world(self) -> None:  # noqa: PLR0915 - one pass over the selected world's page
         controller = self.controller
         world = controller.selected_world()
         if world is None:
@@ -2063,13 +2125,14 @@ class MainWindow(QMainWindow):
         self.check_button.setEnabled(not controller.busy and controller.game is not None)
         can_change = not controller.busy and controller.game is not None
         refused = controller.version_problem(world)
-        for button, tip, ready in (
-            (self.peoples_button, "part.peoples.tip", can_change),
-            (self.resources_button, "part.resources.tip", can_change),
-            (self.edit_button, "edit_same_land_tip", not controller.busy),
+        no_resources = controller.resources_problem(world)
+        for button, tip, ready, reason in (
+            (self.peoples_button, "part.peoples.tip", can_change, None),
+            (self.resources_button, "part.resources.tip", can_change, no_resources),
+            (self.edit_button, "edit_same_land_tip", not controller.busy, None),
         ):
-            button.setEnabled(ready and refused is None)
-            button.setToolTip(refused or text(tip))
+            button.setEnabled(ready and refused is None and reason is None)
+            button.setToolTip(refused or reason or text(tip))
         self.versions_note.setText(refused or "")
         self.versions_note.setVisible(refused is not None)
         self.keep_both.setVisible(placement is Placement.IN_GAME)

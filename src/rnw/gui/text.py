@@ -371,6 +371,18 @@ STRINGS: Final[dict[str, str]] = {
         "free to take any shape. Unchecking confines the New World to the original band "
         "around the Americas."
     ),
+    "part.resources.real": (
+        "A world that keeps the real Americas has the game's own resources: there are none to "
+        "make again."
+    ),
+    "control.new_world.keep_geography": "Keep the real Americas",
+    "control.new_world.keep_geography.about": "Peoples only",
+    "control.new_world.keep_geography.info": (
+        "The Americas stay exactly as the game draws them: no land, coast, relief, river or "
+        "place is generated or changed. Only their peoples are generated: states, cultures, "
+        "religions, history, laws and the rest of the society of 1337. The land, ocean, map and "
+        "resource settings do not apply, and the New World is not covered in the lobby."
+    ),
     "control.new_world.reveal_at_start": "Reveal the New World at the start",
     "control.new_world.reveal_at_start.about": "For multiplayer",
     "control.new_world.reveal_at_start.info": (

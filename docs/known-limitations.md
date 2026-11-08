@@ -70,6 +70,12 @@ These limits apply to **RNW 1.1.0**. For installation and everyday use, see the
   world (a 1.1.0 world in 1.2.0), with the reason shown; before 1.2.0 these buttons
   made such a version without saying that its land came from the current algorithm. Use
   **New world with these settings** for a new land, or the release that made the world.
+- **A world that keeps the real Americas (Omerika, 1.2.0) generates only their peoples.** The
+  game's own map, names, resources and ports stay, so the New World is not covered in the lobby,
+  there are no exceptional places and no resources to make again, and the Treaty of Tordesillas
+  keeps its vanilla line. The foundation of the start is the same as in every world, but its
+  behaviour on the real map has not been observed in the game; the stories name places by the
+  game's own English words in every language.
 - **Windows startup warnings.** The binaries are unsigned, so Smart App Control
   may block them. The 1.1.0 window also received one heuristic antivirus detection;
   the [release notes](releases/1.1.0.md#checksums-and-windows-binary-scans) list

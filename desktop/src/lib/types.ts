@@ -26,7 +26,7 @@ export interface Static {
   world_types: string[];
   groups: string[];
   controls: ControlInfo[];
-  quick: { name: string; levels: string[] }[];
+  quick: { name: string; levels: string[]; geography: boolean }[];
   budget: number;
   layers: string[];
   ramps: string[];
@@ -53,6 +53,7 @@ export interface NewState {
   notice: string;
   values: Record<string, ValueState>;
   quick: Record<string, string | null>;
+  keeps_geography: boolean;
   changed: number;
   estimate: number | null;
   estimate_text: string;
@@ -155,6 +156,7 @@ export interface WorldState {
   can_change: boolean;
   /** Why no version of this world can be made (another algorithm epoch), or null. */
   version_problem: string | null;
+  resources_problem: string | null;
   task: WorldTask | null;
   told: string;
   compare: boolean;
