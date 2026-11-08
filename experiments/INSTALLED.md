@@ -6,6 +6,23 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — candidate I, the D34 history** (R6 step 5).
+[V-EXEC] Installed **`mod/rnw_exp_world_lk3aao5c5f`** ("History 1.2 candidate I (D34 history)") in the
+existing Windows/Proton profile: code `RNW1-080J3-M4P7S-R656Y-R0410-00830-3SG46-R48Y1-G5YF8-BM`,
+candidate H's code with the resources rolled again (candidate F's land, a new world id), generated at
+`ba101a0` (the source of `94bf99b`: D33 classifier order and lord margin 6, unrest slope 350). The
+staged installer refused any existing target. All 912 files match the prepared mod, both libraries
+hold the record, and the 13 other mod folders and 9 profile-root files are unchanged. The installed-game
+reference export reproduces the pending golden (884 files, `79dbf588`). Its `countries` layer: 806
+countries on 7,282 land locations, 3,321 of them without an owner (a patchwork of small states with a
+few larger realms). The standard updater installed hub 1.2.0 with the same generator after its Wine
+window, native, code, shell and bridge self-tests and kept the former hub at
+`.rnw-hub-backups/1.2.0-1794099700748274200`. Windows wheel SHA-256:
+`def0c839a860b37027ae239c5bcdcf631db033f45cbd6135b8e361a88c02cfb4`. The source-run Tauri window needs
+no rebuild (`desktop/` is unchanged since `e46d7a2`). No playset, save or preference was edited; the
+agent did not launch or control EU5. The 24 held-out starts keep no world files, so no contact sheet
+of them was drawn; the checks Q1–Q2 are diagnostics under D34.
+
 2026-11-07, **1.2.0 development / pending epoch 61 — hub with the faster history engine**
 (C506). [V-EXEC] No world was installed: the change writes no other world bytes (the reference
 world reproduces `e1e4699e` with 31 threads and with one), so candidates C–H stay as they are.
