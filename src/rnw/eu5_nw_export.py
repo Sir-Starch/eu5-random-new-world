@@ -286,6 +286,7 @@ from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
 from rnw.newworld import (
     NewWorld,
+    inland_sea_min_area,
     unported_cells,
 )
 from rnw.parallel import (
@@ -318,7 +319,7 @@ from rnw.rivers import (
 from rnw.rivers import STEP as RIVER_STEP
 from rnw.rng import derive_seed
 from rnw.sea_corridors import corridor_paths, draw_corridors
-from rnw.seas import Shape
+from rnw.seas import Shape, inland_seas
 from rnw.settings import RESOURCES as RESOURCE_DEFAULTS
 from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
@@ -335,7 +336,7 @@ if TYPE_CHECKING:
     from rnw.eu5_start import Country, FinalStartPlan
     from rnw.game_texts import Entry
     from rnw.geography import Location
-    from rnw.settings import Settings
+    from rnw.settings import NewWorldSettings, Settings
     from rnw.wording import Name
     from rnw.worldname import Label
 
@@ -1048,6 +1049,18 @@ def _check_written_contacts(
         raise NewWorldExportError(message)
 
 
+def _inland_sea_cells(world: NewWorld, settings: NewWorldSettings) -> frozenset[int]:
+    """Allow substantial, physically enclosed seas; a small basin should have been a lake."""
+    basins = inland_seas(world)
+    minimum = inland_sea_min_area(settings)
+    for basin in basins:
+        area = sum(int(world.pixels[cell]) for cell in basin)
+        if area < minimum:
+            message = f"An inland sea has only {area} pixels (minimum {minimum}); expected a lake"
+            raise NewWorldExportError(message)
+    return frozenset(cell for basin in basins for cell in basin)
+
+
 def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and hierarchy.
     game_map: Eu5Map,
     canvas: Canvas,
@@ -1055,6 +1068,7 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
     final: NDArray[np.int32],
     plan: Plan,
     impassable: set[int] | frozenset[int],
+    settings: NewWorldSettings,
 ) -> tuple[dict[str, int], frozenset[int]]:
     """Connectivity, sea reachability and Old World contact preservation.
 
@@ -1113,7 +1127,12 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
             if other not in seen:
                 seen.add(other)
                 queue.append(other)
-    orphan = [i for i in range(vanilla_count, vanilla_count + count) if sea[i] and i not in seen]
+    inland = _inland_sea_cells(world, settings)
+    orphan = [
+        i
+        for i in range(vanilla_count, vanilla_count + count)
+        if sea[i] and i not in seen and i - vanilla_count not in inland
+    ]
     if orphan:
         message = f"{len(orphan)} generated sea zones cannot reach the Old World seas"
         raise NewWorldExportError(message)
@@ -1128,6 +1147,7 @@ def _check_world(  # noqa: PLR0913, PLR0917 - validates raster against input and
         "old_world_contacts_lost": 0,
         "generated_cells_split": 0,
         "generated_sea_zones_unreachable": 0,
+        "generated_inland_sea_zones": len(inland),
         "land_cells_without_port_access": 0,
     }
     return stats, frozenset(low for low, high in after if low < vanilla_count <= high)
@@ -3004,7 +3024,13 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         checks = stages.submit(
             "world checks",
             lambda: _check_world(
-                game_map, canvas, world, final_labels, identities.result()[1], shapes.zones
+                game_map,
+                canvas,
+                world,
+                final_labels,
+                identities.result()[1],
+                shapes.zones,
+                settings.new_world,
             ),
         )
         store, vanilla_attributes, new_world_keys, calibration = reads.result()

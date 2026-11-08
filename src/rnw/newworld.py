@@ -480,24 +480,35 @@ def _ocean(
     return parts, water & ocean_part[parts]
 
 
+def inland_sea_min_area(settings: NewWorldSettings) -> int:
+    """A closed sea holds at least four typical sea zones and exceeds the drawn lake size."""
+    return max(
+        settings.max_lake_px + 1,
+        settings.min_lake_px,
+        4 * max(settings.sea_zone_px**2, settings.min_sea_cell_px),
+    )
+
+
 def _classify(
     domain: NDArray[np.bool_],
     land: NDArray[np.bool_],
     shore: NDArray[np.bool_],
     settings: NewWorldSettings,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
-    """Split the water of ``domain`` into ocean and lakes; small lakes fill with land.
+    """Classify physical water before cells, relief or ports are constructed.
 
     Returns land, ocean and lake masks. Water that reaches the shore is ocean; water enclosed
-    by land is a lake unless it is smaller than ``min_lake_px`` or larger than ``max_lake_px``.
+    by land is a lake below ``inland_sea_min_area``, and a navigable inland sea above it.
+    Only water smaller than ``min_lake_px`` fills with land. The lake-size setting controls
+    drawn lakes; a natural basin can exceed it without being large enough to be a sea.
     """
     parts, ocean = _ocean(domain, land, shore)
     water = domain & ~land
     sizes = np.bincount(parts.ravel())
     enclosed = water & ~ocean
-    outside_range = (sizes < settings.min_lake_px) | (sizes > settings.max_lake_px)
-    small = enclosed & outside_range[parts]
-    return land | small, ocean, enclosed & ~small
+    small = enclosed & (sizes < settings.min_lake_px)[parts]
+    inland = enclosed & (sizes >= inland_sea_min_area(settings))[parts]
+    return land | small, ocean | inland, enclosed & ~small & ~inland
 
 
 def _land_from_mask(
@@ -1023,12 +1034,22 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     """
     land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage)
     whole = domain
-    moves = place(whole, land, ocean, groups, margin=settings.coast_margin_px)
+    # Retained ocean islands stay in the open ocean, never in a new inland sea.
+    placement_ocean = (
+        _ocean(domain, land | lakes, _off_limits(domain, settings))[1] if groups else ocean
+    )
+    moves = place(whole, land, placement_ocean, groups, margin=settings.coast_margin_px)
+    del placement_ocean
     domain = carve(whole, groups, moves)
     land &= domain
     ocean &= domain
     lakes &= domain
-    land, ocean, _ = pinch(land, ocean, _off_limits(domain, settings))
+    shore = _off_limits(domain, settings)
+    land, ocean, _ = pinch(land, ocean, shore)
+    # Narrowing can detach a small pocket from the ocean. Classify the finished coasts,
+    # including existing lakes, before any cell, port or relief field gives it an identity.
+    land, ocean, lakes = _classify(domain, land, shore, settings)
+    del shore
     with Stages(stage_workers()) as stages:
         land_job = stages.submit(
             "land cells",

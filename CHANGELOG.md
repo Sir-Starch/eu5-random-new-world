@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Allow substantial enclosed inland seas, with their own coastal areas and no ocean currents.
+  Small enclosed waters become lakes before ports and terrain are built, including pockets
+  cut off when straits are narrowed. Such a pocket previously stopped world generation with
+  "generated sea zones cannot reach the Old World seas". Ocean routes still have to connect.
+
 - Keep the open country/place card, map position and highlight while background generation
   updates its progress; reload the map only when its world or language changes.
 

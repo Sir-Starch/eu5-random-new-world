@@ -53,6 +53,7 @@ from rnw.model import CellClass
 from rnw.names import NameGenerator
 from rnw.rng import SplitMix64, derive_seed
 from rnw.seanames import Placement, name_waters
+from rnw.seas import inland_seas
 from rnw.topology import LOW_BITS, PAIR_SHIFT, adjacency_pairs, unpack_pairs
 from rnw.wastelands import location_units
 from rnw.wording import Name, Phrase
@@ -759,6 +760,28 @@ def _check_pieces(graph: ContactGraph, areas: list[_Area], *, depth: int, exempt
             raise IdentityError(message)
 
 
+def _inland_areas(
+    graph: ContactGraph,
+    basins: tuple[tuple[int, ...], ...],
+    coasts: dict[str, list[int]],
+    parents: dict[str, tuple[str, str, str]],
+    keys: KeySpace,
+) -> list[_Area]:
+    """Give each closed sea new areas in its dominant shore region, never an ocean identity."""
+    areas: list[_Area] = []
+    for basin in basins:
+        inside = set(basin)
+        shores = {region: len(inside.intersection(cells)) for region, cells in coasts.items()}
+        if not any(shores.values()):
+            message = "An inland sea has no generated shore region"
+            raise IdentityError(message)
+        region = min(shores, key=lambda name: (-shores[name], name))
+        for area in split(graph, list(basin), max(1, _rounded(len(basin), SEA_AREA_ZONES))):
+            provinces = split(graph, area, max(1, _rounded(len(area), SEA_PROVINCE_ZONES)))
+            areas.append(_Area(keys.next("rnw_sea_area_", 4), parents[region], provinces, new=True))
+    return areas
+
+
 def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas and world.
     game_map: Eu5Map,
     canvas: Canvas,
@@ -808,12 +831,21 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         if game_map.classes[label] is CellClass.SEA
         and game_map.continents[label] not in OCEANS | {NEW_WORLD}
     }
-    coasts = _independent_coasts(_coasts(world, is_sea, region_of), boundary)
+    basins = inland_seas(world)
+    inland = {cell for basin in basins for cell in basin}
+    all_coasts = _coasts(world, is_sea, region_of)
+    coasts = _independent_coasts(
+        {
+            region: [cell for cell in cells if cell not in inland]
+            for region, cells in all_coasts.items()
+        },
+        boundary,
+    )
     parents = _area_parents(hierarchy)
     parents.update({area.parents[0]: area.parents for area in areas})
     sea_areas, anchored = _sea_areas(
         sea,
-        [cell for cell, flag in enumerate(is_sea) if flag],
+        [cell for cell, flag in enumerate(is_sea) if flag and cell not in inland],
         _vanilla_seas(game_map, canvas, hierarchy, geometry),
         contacts,
         coasts=coasts,
@@ -821,10 +853,11 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         keys=keys,
         boundary=boundary,
     )
+    sea_areas.extend(_inland_areas(sea, basins, all_coasts, parents, keys))
     physical_land = contact_graph(world.centroids, world.edges, is_land)
     _check_pieces(physical_land, areas, depth=len(LEVELS), exempt=set())
     _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
-    _check_shores(sea, sea_areas, coasts)
+    _check_shores(sea, sea_areas, all_coasts)
     return areas + sea_areas, anchored
 
 

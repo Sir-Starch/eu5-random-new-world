@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Final
 
 from rnw import wording
 from rnw.names import NameGenerator
-from rnw.seas import DEEP_HOPS, PassageKind, Shape
+from rnw.seas import DEEP_HOPS, PassageKind, Shape, inland_seas
 from rnw.wording import Name, Phrase
 
 if TYPE_CHECKING:
@@ -196,8 +196,9 @@ def name_waters(
         text = _name(PASSAGES[passage.kind], words.next())
         names.update(dict.fromkeys(passage.cells, text))
     body_text: dict[int, Phrase] = {}
+    inland = {cell for basin in inland_seas(world) for cell in basin}
     for index, cells in enumerate(waters.bodies):
-        kind = _body_kind(len(cells))
+        kind = Kind.SEA if inland.intersection(cells) else _body_kind(len(cells))
         body_text[index] = _name(kind, words.next())
         for cell in cells:
             if cell not in names and (kind is not Kind.SEA or waters.hop[cell] > 0):

@@ -384,7 +384,7 @@ STRINGS: Final[dict[str, str]] = {
     "control.new_world.octaves.about": "Layers of detail in the coastline.",
     "control.new_world.max_lake_px": "Largest lake",
     "control.new_world.max_lake_px.about": (
-        "Lakes up to about this size are drawn; larger enclosed water fills with land."
+        "Lakes up to about this size are drawn. Large enclosed basins can form inland seas."
     ),
     "control.new_world.wasteland_permille": "Wasteland",
     "control.new_world.wasteland_permille.about": "Share of the land nobody can settle.",

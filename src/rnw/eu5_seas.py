@@ -43,7 +43,7 @@ from rnw.lanes import Course, plan_lanes
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast, relabel, settle_seas
 from rnw.sea_routes import cyclic_end, navigation_links
-from rnw.seas import Topography, Waters, analyse
+from rnw.seas import Topography, Waters, analyse, inland_seas
 from rnw.straits import CROSSING_PX
 
 if TYPE_CHECKING:
@@ -571,7 +571,7 @@ def _verify_lists(map_text: str, plan: Plan, water: Water) -> dict[str, object]:
 
 
 def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, object]:
-    """Ships can sail from the game's water to every coastal sea zone, but a sealed sea's."""
+    """Every ocean coast is reachable; a physically enclosed inland sea is independent."""
     sea = [number for number, kind in enumerate(world.classes) if kind is CellClass.SEA]
     shut = water.zones
     reached = set(coast.docks) - shut
@@ -583,8 +583,11 @@ def _verify_reach(world: NewWorld, coast: Coast, water: Water) -> dict[str, obje
             if other not in reached and other not in shut and world.classes[other] is CellClass.SEA:
                 reached.add(other)
                 queue.append(other)
-    cut_off = [cell for cell in sea if cell not in shut and cell not in reached]
-    if water.sealed == 0 and cut_off:
+    inland = {cell for basin in inland_seas(world) for cell in basin}
+    cut_off = [
+        cell for cell in sea if cell not in shut and cell not in reached and cell not in inland
+    ]
+    if cut_off:
         message = f"{len(cut_off)} sea cells cannot be reached by sea from the game's water"
         raise SeaError(message)
     navigable = set(sea) - shut

@@ -17,6 +17,7 @@ from rnw.eu5_newworld import OceanPlan, Plan, PlannedCell
 from rnw.eu5_nw_export import (
     LocationLimitError,
     _check_identity_budget,  # pyright: ignore[reportPrivateUsage]
+    _inland_sea_cells,  # pyright: ignore[reportPrivateUsage]
     _locator_instances,  # pyright: ignore[reportPrivateUsage]
 )
 from rnw.eu5_seas import (
@@ -44,7 +45,13 @@ from rnw.eu5_seas import (
 from rnw.lanes import Course
 from rnw.model import CellClass
 from rnw.ports import ForeignCoast
-from rnw.seas import Topography, analyse
+from rnw.seas import (
+    Topography,
+    _exterior,  # pyright: ignore[reportPrivateUsage]
+    analyse,
+    inland_seas,
+)
+from rnw.settings import PRESETS
 from tests.block_worlds import block_world, cell
 from tests.crossing_worlds import hourglass
 
@@ -308,6 +315,48 @@ def test_a_sea_that_ships_cannot_reach_stops_the_export() -> None:
         _ = verify_seas(_written(plan, water), plan, world, water.coast, water)
 
 
+def test_an_inland_sea_cannot_hide_an_unreachable_ocean_coast() -> None:
+    layout = ["...#####", "...#00##", "...#00##", "...#####"]
+    world = block_world(layout, block=130)
+    basin = cell(layout, 1, 4)
+    assert inland_seas(world) == ((basin,),)
+    assert _inland_sea_cells(world, PRESETS["continents"].new_world) == {basin}
+    assert analyse(world).topography[basin] is Topography.INLAND_SEA
+    water = _water(world, docks=(cell(layout, 0, 0),))
+    assert _verify_reach(world, water.coast, water)["sea_cells_cut_off"] == 0
+    # Closed deep water isolates part of the ocean. A legitimate inland sea and a
+    # stale sealed count must not disable verification of the ocean component.
+    shut = tuple(cell(layout, row, 1) for row in range(4))
+    broken = _water(world, shut=shut, docks=(cell(layout, 0, 0),))
+    broken = replace(broken, sealed=1)
+    with pytest.raises(SeaError, match="cannot be reached"):
+        _ = _verify_reach(world, broken.coast, broken)
+
+
+def test_a_small_inland_sea_is_rejected_instead_of_bypassing_classification() -> None:
+    world = block_world(["#####", "#000#", "#####"], block=3)
+    with pytest.raises(eu5_nw_export.NewWorldExportError, match="expected a lake"):
+        _ = _inland_sea_cells(world, PRESETS["continents"].new_world)
+
+
+def test_even_a_one_pixel_exterior_contact_excludes_an_inland_sea() -> None:
+    world = block_world(["#####", "#000#", "#####"], block=10)
+    assert inland_seas(world)
+    labels = world.labels.copy()
+    labels[10, 10] = -1
+    assert not inland_seas(replace(world, labels=labels))
+
+
+@pytest.mark.parametrize("height", [1, 255, 256, 257, 513])
+def test_exact_exterior_contacts_across_strip_boundaries(height: int) -> None:
+    labels = np.random.default_rng(height).integers(-1, 9, (height, 13), dtype=np.int32)
+    outside = np.pad(labels < 0, 1, constant_values=True)
+    near = outside[:-2, 1:-1] | outside[2:, 1:-1]
+    near |= outside[1:-1, :-2] | outside[1:-1, 2:]
+    expected = set(labels[near & (labels >= 0)].tolist())
+    assert set(np.flatnonzero(_exterior(labels, 9)).tolist()) == expected
+
+
 def test_a_reachable_lane_ending_in_closed_ocean_stops_the_export() -> None:
     world, plan = _world_with_ports()
     # All water is reachable, but the final deep cell is a cul-de-sac, away from
@@ -323,7 +372,7 @@ def test_a_cyclic_ocean_tip_also_fails_the_final_water_check() -> None:
     waters = analyse(world)
     sea = set(waters.sea())
     deep = {n for n in sea if waters.topography[n] is Topography.DEEP_OCEAN}
-    lanes = {cell(layout, 6, column) for column in range(3, 7)}
+    lanes = {cell(layout, 6, column) for column in range(2, 7)}
     lanes |= {cell(layout, row, column) for row in (6, 7) for column in (6, 7)}
     closed = deep - lanes
     waters = replace(
@@ -333,7 +382,15 @@ def test_a_cyclic_ocean_tip_also_fails_the_final_water_check() -> None:
             for n, kind in enumerate(waters.topography)
         ),
     )
-    coast = Coast(world, ForeignCoast(), {}, {}, frozenset({cell(layout, 6, 1)}), frozenset(), 0)
+    coast = Coast(
+        world,
+        ForeignCoast(),
+        {},
+        {},
+        frozenset({cell(layout, 6, 1), cell(layout, 6, 19)}),
+        frozenset(),
+        0,
+    )
     water = Water(coast, waters, frozenset(lanes), frozenset(closed), {}, 0, 1)
     with pytest.raises(SeaError, match="cyclic end"):
         _ = _verify_reach(world, coast, water)

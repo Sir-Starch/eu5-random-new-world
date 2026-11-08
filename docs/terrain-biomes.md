@@ -187,9 +187,9 @@ lakes, inland seas, narrow land connections and drainage are all constructed in 
 stage (`newworld._natural_land`) or the river stage, with no repair after generation. No new
 setting is added; the sizes follow the existing feature size, and `new_world.max_lake_px`
 (Largest lake) now defaults to 25,000 pixels with a control range up to 60,000. Its help text
-in all eleven languages now says what the code does: lakes are drawn up to about that size and
-larger *enclosed* water fills with land (water that reaches the open sea, with or without a
-strait, stays sea).
+in all eleven languages describes the drawn lake size. Since pending epoch 61, natural enclosed
+basins can remain lakes above that size or become substantial inland seas; see
+[the basin classification policy](sea-geography.md). Water connected to the open sea stays sea.
 
 **Distance from the Old World (1.1.0; `new_world.centre_permille`, 0 by default).** The
 land lies where the density field puts it, and on the wide expanded canvas that is often against

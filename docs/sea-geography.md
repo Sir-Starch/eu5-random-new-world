@@ -2,7 +2,34 @@
 
 Sea geography, optional ocean expansion and the route/current refinements below ship in the accepted 1.0.0 scope (C437). Dated observations describe their particular revisions; an UNKNOWN engine detail does not automatically require a new owner sitting. See [known limitations](known-limitations.md) for current player scope.
 
-**Isolated-water failure investigation, 1.2.0 / pending epoch 61 (2026-11-08):**
+**Closed basins, 1.2.0 / pending epoch 61 (2026-11-08):**
+physical water is classified before sea cells, relief, rivers and ports are built, and again
+after straits are narrowed. A basin below `min_lake_px` becomes land; a larger closed basin
+is a lake until it reaches the inland-sea threshold. That threshold is the greatest of
+`max_lake_px + 1`, `min_lake_px` and four times the larger of `sea_zone_px²` and
+`min_sea_cell_px`: a sea must hold at least four typical sea zones, even when the player
+asks for very small drawn lakes. Natural lakes can exceed the drawn-lake size while remaining
+below this sea threshold. Enclosed seas stay navigable `inland_sea`, with sea names, ports and new areas
+in their dominant shore region. They receive no ocean identities, deep-ocean wastelands or
+ocean currents. Retained ocean island groups are placed only in water connected to the
+canvas boundary, never inside an inland sea.
+
+The water and final-map validators exempt only physical sea components surrounded entirely
+by generated geography. Exact raster contacts, including single-pixel holes and crop edges,
+exclude a component from this exemption; a sealed-basin count cannot bypass the check of an
+unreachable ocean coast. The final check also rejects undersized SEA basins: classification
+must already have made them lakes. This is ordinary geography construction, not a retry or
+repair of an exported world.
+
+[V-EXEC, EU5 1.4.7 / build 26377361] A full export of the reported custom world succeeds.
+An independent read of its written raster and text files confirms that all 211 pixels of the
+former orphan are lakes, while eight closed seas (64,674–472,736 pixels; 85 zones in total)
+remain navigable inland seas with ports and no ocean currents. There are no lost Old World
+contacts, split generated cells or unreachable ocean zones. Synthetic regressions cover the
+basin-size policy, kept stages, inland topography and names, hierarchy, exact exterior contacts
+across strip boundaries, and refusal of a broken ocean route even when an inland sea exists.
+
+**Reproduction before the correction:**
 the owner's failed queued world (continents, seed `2941179964665144373`, custom settings)
 stopped with `1 generated sea zones cannot reach the Old World seas` on EU5 1.4.7 /
 build 26377361. [V-LOCAL / V-EXEC] Its exact geography cache matches the decoded world
@@ -17,10 +44,9 @@ rejects every generated SEA component without a retained Old World SEA connectio
 This is an accidental ocean disconnection during strait construction and inconsistent
 validation, not evidence that EU5 forbids enclosed seas. [V-LOCAL] In this installed
 build the Caspian locations are explicitly `sea_zones`, with port rows to them.
-The owner accepts enclosed seas as geography. Any correction must distinguish
-intentional basins from accidentally severed ocean passages at construction; this
-investigation changes no generator behavior and does not establish engine loading
-of the failed world.
+The owner accepts enclosed seas as geography and requests small basins as lakes rather than
+generation failures. The reproduction above describes the preceding code; engine loading of
+the corrected candidate is not established by offline checks.
 
 **Crossings as chains of cells, thin remainders and the water at the join, 1.1.0 / epoch 60
 (owner's report on world `aszzsukifw`, 2026-11-01):** four screenshots of the owner's world showed sea

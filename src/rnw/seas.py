@@ -298,16 +298,32 @@ def _pockets(
 def _exterior(lab: NDArray[np.int32], count: int) -> NDArray[np.bool_]:
     """Cells that touch the world outside the generated domain: the game's own water, or the
     edge of the domain's picture, beyond which the map goes on."""
-    outside = np.pad(lab < 0, 1, constant_values=True)
-    near = np.zeros_like(outside)
-    near[1:] |= outside[:-1]
-    near[:-1] |= outside[1:]
-    near[:, 1:] |= outside[:, :-1]
-    near[:, :-1] |= outside[:, 1:]
-    touching = np.unique(lab[near[1:-1, 1:-1] & (lab >= 0)])
     flags = np.zeros(count, dtype=bool)
-    flags[touching] = True
+    height = int(lab.shape[0])
+    for first in range(0, height, 256):
+        stop = min(height, first + 256)
+        block = lab[max(0, first - 1) : min(height, stop + 1)]
+        outside = np.pad(
+            block < 0, ((int(first == 0), int(stop == height)), (1, 1)), constant_values=True
+        )
+        near = outside[:-2, 1:-1] | outside[2:, 1:-1]
+        near |= outside[1:-1, :-2] | outside[1:-1, 2:]
+        labels = lab[first:stop]
+        flags[np.unique(labels[near & (labels >= 0)])] = True
     return flags
+
+
+def inland_seas(world: NewWorld) -> tuple[tuple[int, ...], ...]:
+    """Physical SEA components enclosed entirely inside the generated domain.
+
+    Use exact raster contacts, including one-pixel holes and the crop edges. A disconnected
+    ocean route that still reaches retained geography is never an inland-sea exemption.
+    """
+    sea = np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)
+    exterior = _exterior(world.labels, len(sea))
+    return tuple(
+        tuple(group) for group in _components(sea, _neighbours(world)) if not exterior[group].any()
+    )
 
 
 def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
@@ -337,6 +353,11 @@ def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
     narrow = sea & _shares(lab, narrow_at, water, count)
     enclosed = sea & _shares(lab, enclosed_at, water, count) & ~narrow
     enclosed |= _pockets(sea & ~narrow & ~enclosed, _exterior(lab, count), sea_links)
+    inland = {cell for basin in inland_seas(world) for cell in basin}
+    # A closed basin is a sea in its own right, including when settlement folded it into
+    # one large cell; it is neither an ocean current nor a passage to another water.
+    narrow[list(inland)] = False
+    enclosed[list(inland)] = True
     foreign = set(shore)
     coast = [
         cell
@@ -352,7 +373,7 @@ def analyse(world: NewWorld, shore: Collection[int] = ()) -> Waters:
         for group in sorted(
             _components(enclosed, sea_links), key=lambda group: (-len(group), group)
         )
-        if len(group) >= MIN_BODY_CELLS
+        if len(group) >= MIN_BODY_CELLS or inland.intersection(group)
     )
     body = np.full(count, -1, dtype=np.int32)
     for index, group in enumerate(bodies):

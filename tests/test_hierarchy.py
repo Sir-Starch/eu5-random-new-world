@@ -12,7 +12,9 @@ from rnw.eu5_newworld import (
     IdentityError,
     _Area,  # pyright: ignore[reportPrivateUsage]
     _check_pieces,  # pyright: ignore[reportPrivateUsage]
+    _check_shores,  # pyright: ignore[reportPrivateUsage]
     _independent_coasts,  # pyright: ignore[reportPrivateUsage]
+    _inland_areas,  # pyright: ignore[reportPrivateUsage]
     _land_areas,  # pyright: ignore[reportPrivateUsage]
     _protect_ocean_boundary,  # pyright: ignore[reportPrivateUsage]
     _reserve,  # pyright: ignore[reportPrivateUsage]
@@ -397,6 +399,25 @@ def test_ocean_with_only_a_vanilla_remainder_needs_no_empty_generated_area() -> 
         range(8)
     )
     _check_pieces(graph, areas, depth=2, exempt=anchored)
+
+
+def test_inland_seas_get_separate_connected_areas_of_their_dominant_shore() -> None:
+    graph = _grid(8, 2, gap_column=4)
+    basins = ((0, 1, 2, 3, 8, 9, 10, 11), (5, 6, 7, 13, 14, 15))
+    areas = _inland_areas(
+        graph,
+        basins,
+        {"north": [0, 1, 2, 5], "south": [3, 6, 7]},
+        {"north": ("north", "n", "america"), "south": ("south", "s", "america")},
+        KeySpace(set()),
+    )
+    assert [area.parents[0] for area in areas] == ["north", "south"]
+    assert all(area.new and area.name.startswith("rnw_sea_area_") for area in areas)
+    assert [sorted(cell for province in area.provinces for cell in province) for area in areas] == [
+        list(basin) for basin in basins
+    ]
+    _check_pieces(graph, areas, depth=2, exempt=set())
+    _check_shores(graph, areas, {"north": [0, 1, 2, 5], "south": [3, 6, 7]})
 
 
 def test_passable_old_world_sea_gets_connected_ocean_hierarchy() -> None:

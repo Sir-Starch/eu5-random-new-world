@@ -19,6 +19,7 @@ from rnw.newworld import (
     NewWorld,
     derive_world,
     generate_new_world,
+    inland_sea_min_area,
     land_stage,
     open_sea,
     seal_pockets,
@@ -55,6 +56,33 @@ SMALL = NewWorldSettings(
 def _land_mask(world: NewWorld) -> NDArray[np.bool_]:
     land = np.array([kind in LAND_KINDS for kind in world.classes] + [False])
     return land[world.labels]
+
+
+def test_finished_water_distinguishes_puddles_lakes_inland_seas_and_the_ocean() -> None:
+    """A detached ocean pocket gets its physical kind before partitioning, including kept stages."""
+    domain = np.ones((260, 460), dtype=bool)
+    land = np.zeros_like(domain)
+    land[20:240, 20:440] = True
+    land[40, 40] = False  # below the minimum lake area
+    land[60:63, 40:110] = False  # a small pocket formerly classified as SEA
+    land[90:120, 40:70] = False  # a natural lake larger than the drawn-lake setting
+    land[60:160, 160:240] = False  # substantial closed sea: 8,000 > 4 * 40**2
+    land[180:220, 250:460] = False  # an ocean gulf, even with a narrow mouth
+    world = generate_new_world(
+        domain,
+        seed=3,
+        settings=SMALL,
+        stage=(land, ~land, np.zeros_like(land)),
+    )
+    assert world.classes[int(world.labels[40, 40])] in LAND_KINDS
+    for point in ((61, 70), (100, 50)):
+        assert world.classes[int(world.labels[point])] is CellClass.LAKE
+    assert world.classes[int(world.labels[100, 200])] is CellClass.SEA
+    assert world.classes[int(world.labels[200, 350])] is CellClass.SEA
+    assert inland_sea_min_area(SMALL) == 6400
+    assert inland_sea_min_area(replace(SMALL, max_lake_px=9000)) == 9001
+    assert inland_sea_min_area(replace(SMALL, min_lake_px=9000)) == 9000
+    assert inland_sea_min_area(replace(SMALL, min_sea_cell_px=3000)) == 12000
 
 
 def test_land_outline_changes_with_the_seed() -> None:

@@ -86,6 +86,12 @@ def _named(
     return world, waters, name_waters(world, waters, placed, seed=seed), where
 
 
+def test_a_closed_sea_is_named_as_a_sea_even_with_few_large_zones() -> None:
+    _, waters, names, _ = _named(["######", "#0000#", "######"])
+    assert len(waters.bodies[0]) == 1
+    assert english(names.areas["an_area"]).endswith(" Sea")
+
+
 def test_every_cell_of_a_sea_has_its_name_and_the_cells_of_one_sea_share_it() -> None:
     world, waters, names, _ = _named(LAGOON)
     inside = [cell(LAGOON, row, column) for row in range(3, 7) for column in range(4, 12)]

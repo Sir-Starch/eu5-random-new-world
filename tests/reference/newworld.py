@@ -178,8 +178,16 @@ def land_model(
     ocean = water & np.isin(parts, ocean_parts)
     enclosed = water & ~ocean
     size = np.bincount(parts.ravel())[parts]
-    small = enclosed & ((size < settings.min_lake_px) | (size > settings.max_lake_px))
-    return land | small, ocean, enclosed & ~small, elevation
+    small = enclosed & (size < settings.min_lake_px)
+    inland = enclosed & (
+        size
+        >= max(
+            settings.max_lake_px + 1,
+            settings.min_lake_px,
+            4 * max(settings.sea_zone_px**2, settings.min_sea_cell_px),
+        )
+    )
+    return land | small, ocean | inland, enclosed & ~small & ~inland, elevation
 
 
 def _coasts(  # noqa: PLR0913 - the coast model needs the guard, both fields and the ramp.

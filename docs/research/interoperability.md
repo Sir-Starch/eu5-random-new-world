@@ -214,6 +214,17 @@ assets. Derived rasters, binary files and raw audit material stay under ignored
 The legal limits of observation, reproduction and distribution in the framework
 above continue to apply; this technical record supplies no additional clearance.
 
+### Follow-up: closed basins (2026-11-08, 1.2.0 / pending epoch 61)
+
+The [basin policy](../sea-geography.md) uses the existing `sea_zones`, `lakes`, ports,
+hierarchy and `inland_sea` template interfaces, observed in EU5 1.4.7 / build 26377361
+(including the Caspian's sea zones and ports). Small basins must become lakes before
+the normal terrain, water and object writers run, so their drawn geometry matches their
+gameplay class. Large closed seas use the same writers with navigable sea geography.
+No new binary structure, shader override or executable analysis is introduced; the
+existing installed-input guards, synthetic tests and output validators apply. All derived
+rasters and binary assets stay local under the same distribution boundary as R-001/R-002.
+
 ### Follow-up: seed-positioned land fields (2026-10-25, 0.12.1 / epoch 31)
 
 [V-EXEC C286] Moving the noise origin changes the generated land and the values
