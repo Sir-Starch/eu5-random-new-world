@@ -52,10 +52,15 @@ def test_a_world_without_a_new_world_cannot_be_revealed() -> None:
         _ = new_world_areas(old)
 
 
+def test_the_hook_runs_after_the_lobby_when_the_countries_of_the_players_are_known() -> None:
+    # on_game_start runs before the lobby, when no country is human yet (C129).
+    assert HOOK == "on_game_started_after_lobby"
+
+
 def test_the_start_is_hooked_like_the_games_own_modules_and_every_area_is_discovered() -> None:
     root = parse(script(AREAS))
     assert [entry.key for entry in root.entries] == [HOOK, ACTION]
-    # A second `effect` on on_game_start would stop the game's own start (C200): only on_actions.
+    # A second `effect` on a hook that has one would stop the game's own (C200): only on_actions.
     hook = root.block(HOOK)
     assert hook is not None
     assert [entry.key for entry in hook.entries] == ["on_actions"]
@@ -67,7 +72,15 @@ def test_the_start_is_hooked_like_the_games_own_modules_and_every_area_is_discov
     assert flag.value == DISCOVERED
     countries = effect.block("every_country")
     assert countries is not None
-    assert [entry.value for entry in countries.entries] == [f"area:{area}" for area in AREAS]
+    # Only the countries that a human plays discover the areas; the computer's discover them
+    # as they do in the game.
+    assert next(entry.key for entry in countries.entries) == "limit"
+    limit = countries.block("limit")
+    assert limit is not None
+    assert [(entry.key, entry.value) for entry in limit.entries] == [("is_human", "yes")]
+    areas = countries.entries[1:]
+    assert [entry.key for entry in areas] == ["discover_area"] * len(AREAS)
+    assert [entry.value for entry in areas] == [f"area:{area}" for area in AREAS]
 
 
 def test_the_file_is_written_with_a_byte_order_mark_and_checks_against_the_definitions() -> None:
@@ -92,6 +105,10 @@ DAMAGES: list[tuple[str, str, str]] = [
         "on_actions only",
     ),
     ("\t\t\tdiscover_area = area:rnw_a_area", "\t\t\tadd_gold = 1", "only discover"),
+    # Every country, the computer's too, would discover the areas without the filter.
+    ("\t\t\tlimit = { is_human = yes }\n", "", "must start with limit"),
+    ("is_human = yes", "is_human = no", "must start with limit"),
+    ("is_human = yes }", "is_human = yes is_ai = yes }", "must start with limit"),
     (f"\n{ACTION} = ", "\nother_action = ", "must define"),
 ]
 

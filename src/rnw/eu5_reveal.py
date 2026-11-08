@@ -1,21 +1,25 @@
-"""The optional reveal of the whole generated New World at the start of a campaign (W6).
+"""The optional reveal of the New World to the human players at a campaign's start (W6).
 
 A multiplayer table that wants every player to see the New World from the first day turns the
 world setting ``new_world.reveal_at_start`` on. The world then writes one file that hooks the
-game's own start the way the installation's ``ai_personalities_setup.txt`` does (a mod that
-defines ``on_game_start`` with an ``effect`` of its own stops the game's start, C200; a
-sub-on-action beside it runs, C206): every country discovers every area of the New World
-through the vanilla ``discover_area`` effect. No vanilla country record is edited, and a world
-made with the setting off has no such file.
+game's own ``on_game_started_after_lobby``, which runs when the campaign starts, after the
+players have chosen their countries (C129; ``on_game_start`` runs before the lobby, when no
+country is human yet), in the form of the installation's ``ai_personalities_setup.txt`` (a mod
+that defines an ``effect`` of its own on a hook that has one stops the game's own, C200; a
+sub-on-action beside it runs, C206). Every country that a human plays discovers every area of
+the New World through the vanilla ``discover_area`` effect; the computer's countries are left
+to discover it as they do in the game. No vanilla country record is edited, and a world made
+with the setting off has no such file.
 
 The areas are read from the ``definitions.txt`` the world writes, not from the generator's own
 plan: the reveal covers the areas the game will see under the New World's continent, land and
 sea. The installed ``discovered_any_in_americas_trigger`` is rebound to the generated sea areas
-(``eu5_content.rebind_discovery``), so once they are discovered it is true for every country on
-the first day. ``exploration_monthly.38`` ("Old World discovers New World") would then fire for
-the first Old World country that sends out an exploration, with a reward for it and a notice to
-every human player in range. The vanilla event is gated by its own flag, so the start effect
-sets that flag, ``new_world_discovered``, which the event sets itself when it fires (C499).
+(``eu5_content.rebind_discovery``), so once they are discovered it is true for those countries.
+``exploration_monthly.38`` ("Old World discovers New World") would then fire for the first
+human exploration, with a reward for it and a notice to every human player in range. The
+vanilla event is gated by its own flag, so the start effect sets that flag,
+``new_world_discovered``, which the event sets itself when it fires (C499). The flag is global:
+it is set for every country, not only for the humans.
 """
 
 from __future__ import annotations
@@ -30,13 +34,14 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 REVEAL_FILE: Final[str] = "in_game/common/on_action/rnw_reveal.txt"
-HOOK: Final[str] = "on_game_start"
+HOOK: Final[str] = "on_game_started_after_lobby"
 ACTION: Final[str] = "rnw_reveal_new_world"
 # The global variable the vanilla event "Old World discovers New World" tests and sets.
 DISCOVERED: Final[str] = "new_world_discovered"
 HEADER: Final[str] = (
     "# Written by Random New World for the setting 'Reveal the New World at the start'.\n"
-    "# Every country discovers every area of the generated New World when a campaign begins.\n"
+    "# Every country that a human plays discovers every area of the generated New World when\n"
+    "# the campaign begins, after the lobby.\n"
 )
 
 
@@ -60,14 +65,14 @@ def new_world_areas(definitions: str) -> list[str]:
 
 
 def script(areas: Sequence[str]) -> str:
-    """The on_action file: the hook on the game's start and the effect it runs."""
+    """The on_action file: the hook on the campaign's start after the lobby and its effect."""
     lines = [
         HEADER,
         f"{HOOK} = {{\n\ton_actions = {{ {ACTION} }}\n}}\n",
         f"\n{ACTION} = {{\n\teffect = {{\n",
         # The flag of the vanilla event that announces the discovery (see the module's note).
         f"\t\tset_global_variable = {DISCOVERED}\n",
-        "\t\tevery_country = {\n",
+        "\t\tevery_country = {\n\t\t\tlimit = { is_human = yes }\n",
         *(f"\t\t\tdiscover_area = area:{area}\n" for area in areas),
         "\t\t}\n\t}\n}\n",
     ]
@@ -86,9 +91,9 @@ def _entries(block: Block | None) -> list[str | None]:
 def verify(written: dict[str, bytes], definitions: str) -> dict[str, object]:
     """Check the reveal file as written against the written ``definitions.txt``.
 
-    The file hooks the game's start through ``on_actions`` and never defines an ``effect`` of
-    ``on_game_start`` itself, sets the vanilla flag, and has every country discover exactly the
-    areas under the New World's continent, each once.
+    The file hooks the campaign's start after the lobby through ``on_actions`` and never defines
+    an ``effect`` of the hook itself, sets the vanilla flag, and has every human country (and no
+    other) discover exactly the areas under the New World's continent, each once.
     """
     data = written.get(REVEAL_FILE)
     if data is None:
@@ -117,12 +122,21 @@ def verify(written: dict[str, bytes], definitions: str) -> dict[str, object]:
     if flag is None or flag.value != DISCOVERED or countries is None:
         message = f"{REVEAL_FILE}: the effect must set the global variable {DISCOVERED}"
         raise RevealError(message)
-    if any(entry.key != "discover_area" for entry in countries.entries):
+    limit = countries.block("limit")
+    filtered = (
+        limit is not None
+        and [(entry.key, entry.value) for entry in limit.entries] == [("is_human", "yes")]
+        and countries.entries[0].key == "limit"
+    )
+    if not filtered:
+        message = f"{REVEAL_FILE}: every_country must start with limit = {{ is_human = yes }}"
+        raise RevealError(message)
+    areas = countries.entries[1:]
+    if any(entry.key != "discover_area" for entry in areas):
         message = f"{REVEAL_FILE}: every_country may only discover areas"
         raise RevealError(message)
     discovered = [
-        entry.value.removeprefix("area:") if isinstance(entry.value, str) else ""
-        for entry in countries.entries
+        entry.value.removeprefix("area:") if isinstance(entry.value, str) else "" for entry in areas
     ]
     wanted = new_world_areas(definitions)
     if sorted(discovered) != wanted:

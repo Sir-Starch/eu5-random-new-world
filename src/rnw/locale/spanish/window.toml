@@ -711,8 +711,8 @@ source = "ed8a19dd636b4dba"
 text = '''Para multijugador'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "5d0aa8b5c868b498"
-text = '''Al comienzo de una campaña, todos los países descubren todas las áreas de este Nuevo Mundo, tierra y mar, de modo que todos los jugadores lo ven desde el primer día. Desactivado por defecto: el Nuevo Mundo espera entonces a ser descubierto, como en el juego. El evento del propio juego que anuncia el descubrimiento del Nuevo Mundo no se activa, porque el descubrimiento ya está hecho.'''
+source = "53b1f1dce58cd064"
+text = '''Al comienzo de una campaña, el país de cada jugador descubre todas las áreas de este Nuevo Mundo, tierra y mar, de modo que todos los jugadores lo ven desde el primer día. Los países controlados por el ordenador no lo reciben: encuentran el Nuevo Mundo explorando, como en el juego. Desactivado por defecto: el Nuevo Mundo espera entonces a ser descubierto por todos. El evento del propio juego que anuncia el descubrimiento del Nuevo Mundo no se activa, porque el descubrimiento ya está hecho.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

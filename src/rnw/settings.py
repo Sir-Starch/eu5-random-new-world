@@ -104,8 +104,9 @@ class NewWorldSettings:
     # 0: land lies where the density field puts it; more lifts the land density in the middle of
     # the canvas, away from the Old World's shores (same land share).
     centre_permille: int = 0
-    # 1: at the start of a campaign every country discovers every area of the generated New World
-    # (for multiplayer, W6). 0: the New World stays to be discovered, as in the game.
+    # 1: at the start of a campaign every country that a human plays discovers every area of the
+    # generated New World (for multiplayer, W6). 0: the New World stays to be discovered, as in
+    # the game.
     reveal_at_start: int = 0
 
 

@@ -711,8 +711,8 @@ source = "ed8a19dd636b4dba"
 text = '''Für Mehrspieler'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "5d0aa8b5c868b498"
-text = '''Zu Beginn einer Kampagne entdeckt jedes Land jedes Gebiet dieser Neuen Welt, Land und Meer, sodass alle Spieler sie vom ersten Tag an sehen. Standardmäßig aus: Die Neue Welt wartet dann darauf, entdeckt zu werden, wie im Spiel. Das Ereignis des Spiels, das die Entdeckung der Neuen Welt verkündet, wird nicht ausgelöst, weil die Entdeckung bereits gemacht ist.'''
+source = "53b1f1dce58cd064"
+text = '''Zu Beginn einer Kampagne entdeckt das Land jedes Spielers jedes Gebiet dieser Neuen Welt, Land und Meer, sodass alle Spieler sie vom ersten Tag an sehen. Vom Computer gesteuerte Länder erhalten dies nicht: Sie finden die Neue Welt durch Erkundung, wie im Spiel. Standardmäßig aus: Die Neue Welt wartet dann darauf, von allen entdeckt zu werden. Das Ereignis des Spiels, das die Entdeckung der Neuen Welt verkündet, wird nicht ausgelöst, weil die Entdeckung bereits gemacht ist.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

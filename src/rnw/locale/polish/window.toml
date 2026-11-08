@@ -711,8 +711,8 @@ source = "ed8a19dd636b4dba"
 text = '''Dla trybu wieloosobowego'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "5d0aa8b5c868b498"
-text = '''Na początku kampanii każdy kraj odkrywa każdy obszar tego Nowego Świata, ląd i morze, dzięki czemu wszyscy gracze widzą go od pierwszego dnia. Domyślnie wyłączone: Nowy Świat czeka wtedy na odkrycie, jak w grze. Wydarzenie gry zapowiadające odkrycie Nowego Świata nie następuje, ponieważ odkrycie już się dokonało.'''
+source = "53b1f1dce58cd064"
+text = '''Na początku kampanii kraj każdego gracza odkrywa każdy obszar tego Nowego Świata, ląd i morze, dzięki czemu wszyscy gracze widzą go od pierwszego dnia. Kraje sterowane przez komputer go nie dostają: znajdują Nowy Świat, eksplorując, jak w grze. Domyślnie wyłączone: Nowy Świat czeka wtedy na odkrycie przez wszystkich. Wydarzenie gry zapowiadające odkrycie Nowego Świata nie następuje, ponieważ odkrycie już się dokonało.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

@@ -356,11 +356,12 @@ STRINGS: Final[dict[str, str]] = {
     "control.new_world.reveal_at_start": "Reveal the New World at the start",
     "control.new_world.reveal_at_start.about": "For multiplayer",
     "control.new_world.reveal_at_start.info": (
-        "At the start of a campaign every country discovers every area of this New World, "
-        "land and sea, so that every player sees it from the first day. Off by default: the "
-        "New World then waits to be discovered, as in the game. The game's own event that "
-        "announces the discovery of the New World does not fire, because the discovery is "
-        "already made."
+        "At the start of a campaign the country of every player discovers every area of this "
+        "New World, land and sea, so that every player sees it from the first day. Countries "
+        "run by the computer are not given it: they find the New World by exploring, as in the "
+        "game. Off by default: the New World then waits to be discovered by everyone. The "
+        "game's own event that announces the discovery of the New World does not fire, because "
+        "the discovery is already made."
     ),
     "control.new_world.land_permille.about": "How much of the New World is land.",
     "control.new_world.centre_permille": "Distance from the Old World",

@@ -917,10 +917,10 @@ bounded workers (ADR 0006). Check the installed build first; nothing launches EU
    with `F` holding `{"schema":1,"new_world":{"reveal_at_start":1}}`; the world's id follows its
    code, so it is a folder of its own). Before the sitting, check the written
    `in_game/common/on_action/rnw_reveal.txt` against the candidate's `definitions.txt` (the export
-   already refuses a difference) and that no other mod of the profile defines `on_game_start` with
-   an `effect`. The last check of the sitting is that the whole New World, sea included, is
-   visible from the first day without fog for the country played; read `debug.log` for any line
-   naming `rnw_reveal.txt`. A failure cuts W6 and turns the setting off, with no further sitting.
+   already refuses a difference) and that no other mod of the profile defines
+   `on_game_started_after_lobby` with an `effect`. The last check of the sitting is that the whole
+   New World, sea included, is visible from the first day without fog for the country played
+   (not for the computer's countries: C514); read `debug.log` for any line naming `rnw_reveal.txt`. A failure cuts W6 and turns the setting off, with no further sitting.
 8. **W7 frontier** ([roadmap W7](roadmap.md#workshop-feedback-in-120)). Before the sitting,
    pick from the candidate's `10_countries.txt` a land country whose capital lies in a region
    the vanilla gate leaves out (Canada, the Caribbean, Mesoamerica or the West Coast) and has
