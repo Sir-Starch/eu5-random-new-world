@@ -286,13 +286,17 @@ text = '''Bu klasör bir EU5 kurulumu değil (game/in_game/map_data yok).'''
 source = "534de3c12b965d56"
 text = '''Bu klasör yok.'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''Yeni Dünya'yı oynamadan önce göster'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''Lobide Keşfedilmemiş Topraklar'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''Kapalıyken bu dünyanın resimleri ve ülke seçimi haritası terra incognita olarak örtülü kalır. Bunu daha sonra dünyanın sayfasında, yeniden oluşturmadan değiştirebilirsiniz.'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''Yeni Dünya'yı oynamadan önce gizler'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''Yeni Dünya'yı ülke seçimi haritasında ve bu dünyanın resimlerinde Keşfedilmemiş Topraklar olarak örter; böylece oynamadan önce görmezsiniz. İşaret kaldırılırsa Yeni Dünya orada gösterilir. Bunu daha sonra dünyanın sayfasında, yeniden oluşturmadan değiştirebilirsiniz.'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"

@@ -286,13 +286,17 @@ text = '''Dieser Ordner ist keine EU5-Installation (game/in_game/map_data fehlt)
 source = "534de3c12b965d56"
 text = '''Diesen Ordner gibt es nicht.'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''Die Neue Welt vor dem Spielen zeigen'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''Terra incognita in der Lobby'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''Ausgeschaltet bleiben die Bilder dieser Welt und die Karte der Länderwahl als Terra incognita verdeckt. Sie können das später auf der Seite der Welt ändern, ohne sie neu zu erstellen.'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''Verbirgt die Neue Welt vor dem Spielen'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''Verdeckt die Neue Welt als Terra incognita auf der Karte der Länderwahl und in den Bildern dieser Welt, damit Sie sie vor dem Spielen nicht sehen. Ohne Häkchen wird die Neue Welt dort gezeigt. Sie können das später auf der Seite der Welt ändern, ohne sie neu zu erstellen.'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"

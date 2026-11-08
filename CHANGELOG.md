@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Move the choice to show the New World before you play to the **World** tab, beside the
+  other options of the world, and name it for what it does: **Terra Incognita in the lobby**.
+  The box is on by default (the New World is covered on the country-selection map and in the
+  world's pictures); clearing it shows them. It had read the other way round, as *Show the
+  New World before you play it* on **Save and play**, with the same default (covered). The
+  choice itself is unchanged: it is a preference of the generator, each world keeps its own
+  setting, and a finished world's page changes it without generating again.
+
 - Let regional powers use their administrative capacity and expand coherently in the new
   region layout. Regional ambitions now check that their centre has room to grow; a realm's
   coordination follows the share of its capacity in use, and overload adds division pressure.

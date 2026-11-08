@@ -286,13 +286,17 @@ text = '''Ten folder nie jest instalacją EU5 (brak game/in_game/map_data).'''
 source = "534de3c12b965d56"
 text = '''Ten folder nie istnieje.'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''Pokaż Nowy Świat przed grą'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''Terra incognita w lobby'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''Gdy wyłączone, obrazy tego świata i mapa wyboru kraju pozostają zakryte jako terra incognita. Możesz to później zmienić na stronie świata bez ponownego tworzenia.'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''Ukrywa Nowy Świat przed grą'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''Zakrywa Nowy Świat jako terra incognita na mapie wyboru kraju i w obrazach tego świata, aby nie był widoczny przed grą. Po odznaczeniu Nowy Świat jest tam pokazany. Możesz to później zmienić na stronie świata bez ponownego tworzenia.'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"

@@ -133,6 +133,17 @@
           />
         </div>
         <div class="wide oceans">
+          <!-- The stored preference says "shown"; this box says "covered", so it is inverted. -->
+          <Check
+            checked={!s?.preferences.show_new_world}
+            disabled={locked}
+            label={t("lobby_cover")}
+            hint={t("lobby_cover_about")}
+            info={t("lobby_cover_hint")}
+            onchange={(value) => app.call("set_show_new_world", { value: !value })}
+          />
+        </div>
+        <div class="wide oceans">
           <Check
             checked={(n?.values["new_world.reveal_at_start"]?.shown ?? 0) > 0}
             disabled={locked}
@@ -232,13 +243,6 @@
           onchange={(value) => app.call("set_install", { value })}
         />
       {/if}
-      <Check
-        checked={!!s?.preferences.show_new_world}
-        disabled={locked}
-        label={t("show_new_world")}
-        hint={t("show_new_world_hint")}
-        onchange={(value) => app.call("set_show_new_world", { value })}
-      />
       <p class="hint">{t("output_hint")}</p>
     </Section>
 

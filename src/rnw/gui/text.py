@@ -155,10 +155,15 @@ STRINGS: Final[dict[str, str]] = {
     ),
     "not_a_game": "That folder is not an EU5 installation (game/in_game/map_data is missing).",
     "not_a_profile": "That folder does not exist.",
-    "show_new_world": "Show the New World before you play it",
-    "show_new_world_hint": (
-        "Off keeps this world's pictures and the country-selection map covered as terra "
-        "incognita. You can change this later on the world's page without generating it again."
+    # The box is "covered" where the stored preference (`show_new_world`) says "shown": checked
+    # means the New World is hidden, which is the default.
+    "lobby_cover": "Terra Incognita in the lobby",
+    "lobby_cover_about": "Hides the New World before you play",
+    "lobby_cover_hint": (
+        "Covers the New World as terra incognita on the country-selection map and in this "
+        "world's pictures, so that you do not see it before you play. Unchecked, the New World "
+        "is shown there. You can change this later on the world's page without generating it "
+        "again."
     ),
     "about_generator": (
         "Random New World makes New World maps for EU5. Every world it makes is a complete "

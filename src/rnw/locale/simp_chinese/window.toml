@@ -286,13 +286,17 @@ text = '''该文件夹不是EU5的安装目录（缺少 game/in_game/map_data）
 source = "534de3c12b965d56"
 text = '''该文件夹不存在。'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''游玩前显示新大陆'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''大厅中的未知之地'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''关闭时，这个世界的图片和国家选择地图会作为未知之地被遮盖。之后可在世界页面中更改，无需重新生成。'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''游玩前隐藏新大陆'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''在国家选择地图和这个世界的图片中，将新大陆作为未知之地遮盖起来，让你在游玩前看不到它。取消勾选后，那里会显示新大陆。之后可在世界页面中更改，无需重新生成。'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"

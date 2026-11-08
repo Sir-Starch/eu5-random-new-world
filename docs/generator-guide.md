@@ -228,7 +228,7 @@ ways to reveal a world:
 | Option | What it reveals |
 |---|---|
 | **Reveal this world** | The maps inside the generator. The mod picture and EU5 country-selection map keep their own visibility setting. |
-| **Show the New World before you play it** | That world's preview picture, mod thumbnail and EU5 country-selection map. Choose it in **Save and play** (**World** in the classic window), or change it later on the finished world's **World** tab. |
+| **Terra Incognita in the lobby** (on by default) | Covers the New World as terra incognita on that world's preview picture, mod thumbnail and EU5 country-selection map; clear the box to show them. Choose it on the **World** tab before you generate, or change it later on the finished world's **World** tab. |
 
 Changing the second option updates the existing mod's picture and selection-map cover
 without generating the geography again. From EU5's main menu, close and reopen the
