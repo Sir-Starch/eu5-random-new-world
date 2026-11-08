@@ -6,6 +6,21 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — preserve the map during background progress**.
+[V-EXEC] The Tauri atlas-loading effect compares world identity and language before resetting
+its session. A Happy DOM regression mounts the actual viewer with a synthetic atlas, opens the
+Society tab and keeps the same country card and highlight across fresh progress snapshots;
+switching worlds and language still reloads. Desktop types, all 22 interface tests and five shell
+tests pass; `make check` passes (3,055 Python tests, 17 optional skips; 29 native tests;
+format, lint and strict types). The source window was rebuilt with `npx tauri build --no-bundle --ci`.
+Source and Windows/Wine window, native, code, shell and bridge self-tests pass. The standard
+updater installed the generator-only hub in the existing Windows/Proton profile and retained
+its predecessor at `.rnw-hub-backups/1.2.0-1794119857578106614`. Candidate:
+`local_data/hub-updates/1.2.0-1794119782357455231/rnw_exp_hub`; Windows wheel SHA-256:
+`0bbae4d5d7d6b72262c08b24b6b1fedd2ef03510bf0a970f068aba15636cf767`.
+World bytes are unchanged, so existing candidates are reused. No EU5 launch/control, playset,
+save or preference edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — publish each completed queued world**.
 [V-EXEC] The shared controller refreshes the library after each successful queued world,
 before starting the next. A gated synthetic regression verifies publication while the next

@@ -54,6 +54,10 @@ package; that SDK's licence is BSD-3-Clause-style and its text travels as
 2026-10-30]. The web views themselves (the WebView2 runtime, WebKitGTK) are system
 components and are not redistributed.
 
+DOM regression tests use pinned Happy DOM 21.0.4 (MIT; npm metadata and local licence,
+2026-11-08). It and its added transitive dependencies are development-only, locked with
+integrity hashes, and excluded from the built interface and package notices.
+
 ## Reviewed platform terms
 
 The reviewed sources are the [Paradox User Agreement](https://legal.paradoxplaza.com/eula?locale=en)

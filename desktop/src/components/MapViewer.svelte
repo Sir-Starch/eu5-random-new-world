@@ -101,8 +101,14 @@
 
   // -- loading -----------------------------------------------------------------------------------
 
+  // Bridge snapshots replace the world object on every progress update. Compare primitive
+  // identities before reloading, so a snapshot cannot dismiss the open place/country card.
+  const worldId = $derived(world);
+  const atlasLanguage = $derived(app.info?.language ?? "");
+
   $effect(() => {
-    const id = world;
+    const id = worldId;
+    void atlasLanguage;
     const request = ++generation;
     untrack(() => {
       loading = true;
@@ -112,7 +118,7 @@
       session.atlas = null;
       hover = -1;
     });
-    void loadAtlas(id).then((found) => {
+    void untrack(() => loadAtlas(id)).then((found) => {
       if (request !== generation) return;
       loading = false;
       if (!found) {

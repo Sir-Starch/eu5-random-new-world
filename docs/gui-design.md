@@ -157,6 +157,8 @@ Compare shows two worlds with linked cameras. The Qt window keeps its own flat p
 The Tauri atlas cache prepares relief and region/sea labels in one Web Worker before handing
 the atlas to its renderer. The loading indicator remains live during that work; errors show
 the map's failure state and a later load can retry.
+Progress snapshots for the same world keep its map, camera, pinned place/country card and
+highlight. Only a change of world identity or atlas language restarts atlas loading.
 
 **Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+B, Ctrl+I, Ctrl+V of a world code
 anywhere, arrows in the library, `?` for the list. Every control is a native button/input or a

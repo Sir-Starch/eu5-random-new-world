@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Keep the open country/place card, map position and highlight while background generation
+  updates its progress; reload the map only when its world or language changes.
+
 - Show each completed world in the library as soon as it is ready, while the remaining
   queued worlds continue generating.
 

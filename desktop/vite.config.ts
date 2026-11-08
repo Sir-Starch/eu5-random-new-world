@@ -7,6 +7,8 @@ import { devBridge } from "./dev/bridge";
 export default defineConfig({
   plugins: [svelte(), devBridge()],
   clearScreen: false,
+  // DOM lifecycle tests need Svelte's client runtime rather than its SSR entry point.
+  resolve: { conditions: process.env.VITEST ? ["browser"] : undefined },
   server: {
     port: 5178,
     strictPort: true,
