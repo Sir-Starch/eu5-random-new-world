@@ -6,6 +6,23 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — substantial inland seas; small basins as lakes**.
+[V-EXEC] From `d61b363`, installed **`mod/rnw_exp_world_qne7iu7ztf`** ("Inland water fix") in the
+existing Windows/Proton profile, with records in both generator libraries. It is the reported failing
+custom continents seed `2941179964665144373`: all 211 pixels of the former orphan are now lakes;
+eight substantial closed seas (64,674–472,736 pixels, 85 zones) retain ports and inland-sea topography
+without ocean currents. The independent written-map audit and normal export validators pass. All
+892 installed files match the prepared candidate (881 nonmetadata files, SHA-256 `6ef512a7ac68eff8c7de63bc2b647c829a57e90f5d2297339fdcdd0e9fca2625`);
+15 other mod folders and nine profile-root files are hash-preserved. `make check` passes (3,066 Python
+tests, 17 optional skips; 29 Rust tests, format, lint and strict types), as do 15 installed-input tests
+(two optional skips) and source window/native/code/shell/bridge self-tests. The reference export keeps
+884 files and digest `7acf24cd`. The standard updater installed the generator-only hub after its
+Windows/Wine self-tests, retaining `.rnw-hub-backups/1.2.0-1794121221262536123`. Candidate:
+`local_data/hub-updates/1.2.0-1794121155450062438/rnw_exp_hub`; Windows wheel SHA-256:
+`076c2552fac4c240658f42597222f630155a90c84d2efc784ee08eba8c86fe47`. No EU5 launch/control,
+playset, save or preference edit. The [basin policy and reproduction](../docs/sea-geography.md)
+distinguish this offline verification from engine loading.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — preserve the map during background progress**.
 [V-EXEC] The Tauri atlas-loading effect compares world identity and language before resetting
 its session. A Happy DOM regression mounts the actual viewer with a synthetic atlas, opens the
