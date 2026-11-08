@@ -2,6 +2,26 @@
 
 Sea geography, optional ocean expansion and the route/current refinements below ship in the accepted 1.0.0 scope (C437). Dated observations describe their particular revisions; an UNKNOWN engine detail does not automatically require a new owner sitting. See [known limitations](known-limitations.md) for current player scope.
 
+**Isolated-water failure investigation, 1.2.0 / pending epoch 61 (2026-11-08):**
+the owner's failed queued world (continents, seed `2941179964665144373`, custom settings)
+stopped with `1 generated sea zones cannot reach the Old World seas` on EU5 1.4.7 /
+build 26377361. [V-LOCAL / V-EXEC] Its exact geography cache matches the decoded world
+code and installed map. The rejected cell is 211 pixels, bounds rows 1847–1886 and
+crop columns 6411–6418, surrounded entirely by one generated land location. Replaying
+the physical stages shows that these pixels belong to the 41,630,217-pixel ocean
+after `land_stage` and the 40,931,607-pixel ocean after island placement; `pinch`
+then leaves them as an isolated 211-pixel SEA component. Port settlement and water
+shaping retain it; the latter calls it `narrows` and records one sealed basin.
+`eu5_seas._verify_reach` permits sealed basins, while `eu5_nw_export._check_world`
+rejects every generated SEA component without a retained Old World SEA connection.
+This is an accidental ocean disconnection during strait construction and inconsistent
+validation, not evidence that EU5 forbids enclosed seas. [V-LOCAL] In this installed
+build the Caspian locations are explicitly `sea_zones`, with port rows to them.
+The owner accepts enclosed seas as geography. Any correction must distinguish
+intentional basins from accidentally severed ocean passages at construction; this
+investigation changes no generator behavior and does not establish engine loading
+of the failed world.
+
 **Crossings as chains of cells, thin remainders and the water at the join, 1.1.0 / epoch 60
 (owner's report on world `aszzsukifw`, 2026-11-01):** four screenshots of the owner's world showed sea
 locations with no reason to be shaped as they were. [V-GAME owner; matched to files V-LOCAL] Measured in
@@ -227,8 +247,9 @@ Read from the installation and from the owner's logs, not assumed:
   Between them the 750 deep zones run as lanes one or two cells wide, two to four cells from land,
   that the currents follow (a lane cell's current points at its neighbour in the lane within a
   median 4 degrees); round the lands the coastal and ocean zones form a band that touches the
-  closed ocean as often as the lanes. Everything ships may enter, the Old World's and the
-  New World's, is one connected water. The owner's maps of 1.4.4 show the same: grey where the
+  closed ocean as often as the lanes. The navigable ocean network connects the Old World and
+  New World; this does not include separate navigable basins such as the Caspian, whose locations
+  are also `sea_zones` (confirmed in 1.4.7 above). The owner's maps of 1.4.4 show grey where the
   topography map and the *Naval Range* map have the closed ocean, teal where ships may go
   [V-LOCAL C241; V-GAME owner's sitting of 2026-10-24].
 - **Names.** All the zones of the Black Sea are the Black Sea, the five central Mediterranean zones
