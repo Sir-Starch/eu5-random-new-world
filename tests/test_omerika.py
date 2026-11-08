@@ -21,6 +21,7 @@ from rnw.settings import (
     build_settings,
     run_spec,
 )
+from rnw.topology import euclidean_distance
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -62,7 +63,7 @@ def test_a_world_without_a_template_keeps_the_settings_document_it_had() -> None
     document = cast("dict[str, dict[str, int]]", PRESETS["continents"].to_json_data())
     assert "template_permille" not in document["new_world"]
     shaped = cast("dict[str, dict[str, int]]", PRESETS["omerika"].to_json_data())
-    assert shaped["new_world"]["template_permille"] == 600
+    assert shaped["new_world"]["template_permille"] == 500
     assert run_spec(1, PRESETS["continents"]) == run_spec(1, build_settings("continents", {}))
 
 
@@ -112,7 +113,11 @@ def test_the_template_finds_a_route_through_the_neck_between_the_two_great_landm
         abs(a[0] - b[0]) <= 1 and abs(a[1] - b[1]) <= 1
         for a, b in zip(template.route, template.route[1:], strict=False)
     )
-    assert len(template.joint[0]) == len(template.route)
+    # What the land must keep joined is the neck, not the stretch of the route inside a continent.
+    assert 0 < len(template.joint[0]) < len(template.route)
+    assert set((template.joint[0] // omerika.ROUTE_STEP).tolist()) <= {
+        row for row, _ in template.route
+    }
 
 
 def test_the_field_is_land_inside_the_template_and_sea_far_from_it(
@@ -186,3 +191,29 @@ def test_a_template_with_one_landmass_has_nothing_to_join(settings: NewWorldSett
     template = omerika.prepare(one, 7, settings)
     with pytest.raises(omerika.OmerikaError, match="fewer than two"):
         omerika.check_joined(one, template)
+
+
+def test_the_thin_parts_of_the_land_have_a_centre_line_and_the_thick_ones_none() -> None:
+    land = np.zeros((300, 400), dtype=bool)
+    land[100:200, 220:380] = True  # a broad continent, 400 x 640 px
+    land[145:155, 20:220] = True  # a cape 40 px wide and 800 px long, reaching west
+    inside = euclidean_distance(~land, 40).astype(np.int64)
+    line = omerika._skeleton(  # pyright: ignore[reportPrivateUsage]
+        land, inside
+    )
+    cape = line[145:155, 40:200]
+    assert int(cape.sum()) >= 120  # the cape's whole length is a line
+    assert not line[110:190, 260:340].any()  # the heart of the continent is not
+    assert not (line & ~land).any()
+
+
+def test_below_the_least_likeness_no_promise_is_made_to_join_the_great_landmasses(
+    americas: NDArray[np.bool_], settings: NewWorldSettings
+) -> None:
+    loose = replace(settings, template_permille=omerika.JOIN_MIN_PERMILLE - 1)
+    template = omerika.prepare(americas, 7, loose)
+    assert not template.promised
+    assert not template.route
+    # Nothing is asked of any land then: even one without a neck passes.
+    omerika.check_joined(np.zeros_like(americas), template)
+    assert omerika.prepare(americas, 7, replace(settings, template_permille=500)).promised

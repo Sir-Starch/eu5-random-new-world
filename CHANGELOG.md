@@ -8,8 +8,10 @@
   resources and peoples by the usual layers. The Americas are read from the installed game when
   the world is made and used only as a low-frequency template; nothing of them is shipped. A
   seed bends the template differently each time, and *Likeness to the Americas* (Advanced) says
-  how closely the land follows it. A corridor along the template's neck keeps the two great
-  landmasses joined by construction, and generation fails with a message instead of making land
+  how closely the land follows it (50% by default; at 100% the Americas are plainly recognisable,
+  coasts and seas still new). Narrow parts of the Americas (Central America, Yucatan, Baja, Florida,
+  Chile) are held against the noise, and from 30% a natural isthmus keeps the two great landmasses
+  joined by construction, and generation fails with a message instead of making land
   that falls apart. World codes, the sketches of *Choose a continent* and rerolls carry it; codes
   of other world types are unchanged.
 

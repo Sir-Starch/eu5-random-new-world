@@ -517,7 +517,7 @@ PRESETS["omerika"] = replace(
     preset="omerika",
     new_world=replace(
         PRESETS["continents"].new_world,
-        template_permille=600,
+        template_permille=500,
         land_permille=215,
         feature_px=900,
         min_island_px=400,

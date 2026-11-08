@@ -388,27 +388,37 @@ in a range has a steep bank.
 adds one term to the continents' density field: the installed game's Americas (land and lakes of the
 `america` continent, `Canvas.template`, read when the canvas is selected and kept in the land cache,
 never shipped). The template is worked on a 4-pixel grid: its coverage is read through a smooth
-seed-drawn displacement (amplitude 120-300 px by likeness, period 1,500 px; the Jacobian stays above
-0.35), turned into a signed distance from the coast, cut off at 600 px, squared so that it is flat at
-the coast and steep far from it, and added to the fractal noise with weight `template_permille` (600
-by default) of twice the noise's range. The fractal noise therefore draws the coast and the
-template decides only a good way from the vanilla shore. The land share is the Americas' own
-(215‰ of the interior against 205‰ of the canvas). Climate, relief, rivers and everything after the land are the
-ordinary layers.
+seed-drawn displacement (amplitude 300 px at a loose likeness, 80 px at the closest, period 1,500 px;
+the Jacobian stays above 0.35) and turned into a signed distance from the coast. Two profiles of it
+are mixed by the likeness squared: a *soft* one, cut off at 600 px and squared, flat at the coast and
+steep far from it, and a *sharp* one, linear and cut off at 140 px. The sum is added to the fractal
+noise with weight `template_permille` of three noise ranges (500 by default). The soft profile lets
+the noise draw the coast; the sharp one holds the outline at a close likeness. The land share is the
+Americas' own (215‰ of the interior against 205‰ of the canvas). Climate, relief, rivers and everything
+after the land are the ordinary layers.
 
-**The join.** A low-pass field loses the isthmus. The two greatest cores of the template (land at least
-300 px from the sea) are joined by the cheapest 8-connected route on a 16-px grid that prefers depth
-(cost 1 + (120 px / depth)²), widened by two grid cells each side and raised by four noise ranges, so
-it is land by construction. `check_joined` runs after the land stage and after the pinch and
-classification and fails explicitly unless the corridor's places are land (90%) and one landmass; there
-is no repair.
+**Thin parts.** A signed distance is a few dozen pixels deep in a neck or a cape, and the noise would
+take them (the first version lost Central America, Yucatan and Baja at likeness 1000 and left the
+corridor as a ribbon over the sea, owner's screenshot 2026-11-09). Where no land within 110 px of the
+sea lies near, the centre line of the land (the ridge of its depth, at least 16 px from the sea) is
+raised by three noise ranges and widened by three cells each side, in proportion to a likeness that
+rises from 250 to 650.
+
+**The join.** The two greatest cores of the template (land at least 300 px from the sea) are joined
+by the cheapest 8-connected route on a 16-px grid that prefers depth (cost 1 + (120 px / depth)²),
+widened and raised by four noise ranges, so it is land by construction. It is made only from a
+likeness of 300 (below it the land is a loose echo and keeps no promise to join: a corridor between
+places that the land no longer puts there is a ribbon). `check_joined` runs after the land stage and
+after the pinch and classification and fails explicitly unless the places of the *neck* (the stretch of
+the route less than 300 px deep; the route's stretch inside a continent may lie in an inland sea) are
+land (90%) and one landmass; there is no repair.
 
 **Measured** (real canvas of the installed game, 8,192 × 10,078 px; `land_stage` takes 8.5-9.5 s, the
-template 0.6 s): 12 of 12 seeds at likeness 600 joined, land 201-207‰, overlap with the template
-(IoU) 0.47-0.58 (a random continent of the same share overlaps about 0.1); the non-expanded canvas gives
-IoU 0.38-0.42 and a share of 191-195‰. Seed 42 made a complete world in 2 min 40 s and passed every
-export validator. The reference world of the pending epoch reproduces its digest, so no other world
-type changed.
+template 0.6 s): all seeds joined at likeness 300 (8), 500 (14) and 1000 (12); overlap with the
+template (IoU) 0.48-0.55 at 300, 0.65-0.74 at 500 and 0.81-0.84 at 1000 (a random continent of the same
+share overlaps about 0.1; land 201-207‰). At every likeness from 300 the share of land within 150 px of
+a place of the route is at least 0.4: no ribbon. The non-expanded canvas still works. A full export of
+seed 42 at 500 and at 1000 passes every export validator.
 
 ## The Wall
 

@@ -215,7 +215,7 @@ land joins them. No coast of the Americas is copied. Each seed bends the guide i
 the continents shift, swell and lean differently from seed to seed.
 
 In **Advanced → Omerika** you can adjust **Likeness to the Americas**. A low value leaves a loose
-echo of the layout; a high one keeps the places and sizes of the continents. The default is 60%.
+echo of the layout; a high one keeps the outline, the isthmus and the capes, and at 100% the Americas are plainly the Americas, with coasts, seas and mountains still new. The default is 50%.
 At 0% the guide is switched off and the world is made like any other with these settings. Land
 amount, landmass scale and coast detail work as in the other world types; the land amount starts
 at the share the Americas hold.
@@ -230,9 +230,10 @@ The New World is not covered in the lobby, places keep the game's names, and suc
 no generated map files, so it is small and quick (under a minute). See the
 [known limitations](known-limitations.md).
 
-The two great landmasses are joined by a corridor of land along the guide's neck, raised above
-the noise, so North and South America stay one landmass at every setting. If land ever fell
-apart anyway, generation stops with a message rather than producing it. Omerika cannot use a drawn
+From a likeness of 30% the two great landmasses are joined along the guide's neck, which the land
+holds above the noise, so North and South America stay one landmass; below it the world is a loose
+echo and keeps no such promise. If land ever fell apart anyway, generation stops with a message
+rather than producing it. Omerika cannot use a drawn
 land image or share a world with The Wall.
 
 ### The Wall preset
