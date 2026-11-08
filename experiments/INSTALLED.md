@@ -6,6 +6,24 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — Total Chaos names and settings redraw**.
+[V-EXEC] From `1e2be53`, the automatic name keeps **Total Chaos** for an untouched draw and
+becomes **Custom world** after manual settings changes; naming provenance survives codes,
+imports and new seeds without entering generation settings. Both windows have **Randomize
+settings again**, keeping the seed. `make check` passes (3,083 Python tests, 17 optional skips,
+29 native Rust tests); desktop types, 28 interface tests, five shell tests, the Linux window
+build and the source/window self-tests pass. The standard updater built, self-tested under
+Wine and verified the installed generator-only hub in the existing Windows/Proton profile,
+retaining `.rnw-hub-backups/1.2.0-1794125024650911525`. Candidate:
+`local_data/hub-updates/1.2.0-1794124971153988827/rnw_exp_hub`; Windows wheel SHA-256:
+`b5b111f38a5ab3dedf35a19da75f7b460ad960788e24ee112fc0808a3059f1cd`.
+
+The owner identified existing world **K67E** as an untouched Chaos draw (older codes have no
+origin). Its library name, installed metadata and recovery receipt now say **Total Chaos K67E**;
+its code is unchanged, and all 863 nonmetadata files are hash-preserved. Previous metadata and
+record: ignored `local_data/chaos-naming-20261108/`. World bytes are unchanged, so this candidate
+is reused. No EU5 launch/control, save or playset edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — responsive world switching**.
 [V-EXEC] Installed the generator-only hub from `4a704dc` in the existing Windows/Proton profile.
 Atlas preparation runs on a cancellable background worker; state/comparison listing reads file
