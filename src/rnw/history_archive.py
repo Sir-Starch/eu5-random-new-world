@@ -34,6 +34,7 @@ from rnw.history_model import (
 from rnw.history_text import chronicles
 from rnw.history_trajectories import realizations
 from rnw.history_values import AXES as VALUE_AXES
+from rnw.history_values import SHOWN
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
 
@@ -127,6 +128,9 @@ class CountryFact:
     great: bool
     landed: bool
     values: tuple[int, ...] = ()
+    # Where the country stands on each societal value the game shows it, in ``SHOWN`` order: its
+    # template's positions with its own in their place. Archives made before 2026-11-08 have none.
+    shown: tuple[int, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -363,6 +367,7 @@ def build(plan: FinalStartPlan, keys: Sequence[str]) -> Archive:
                 country.great,
                 country.kind == "state" or country.landed,
                 _values(country),
+                _shown(country),
             )
             for country in sorted(plan.countries, key=lambda country: country.tag)
         ),
@@ -465,6 +470,14 @@ def _aims(
     return tuple(result)
 
 
+def _shown(country: Country) -> tuple[int, ...]:
+    """Where the country stands on each value the game shows it, its template's included."""
+    if not country.positions:
+        return ()
+    standing = dict(country.positions)
+    return tuple(standing.get(axis, UNWRITTEN) for axis in SHOWN)
+
+
 def _values(country: Country) -> tuple[int, ...]:
     """The societal values the country's government block writes, by axis."""
     written = {key: int(value) for key, value in country.government if key in VALUE_AXES}
@@ -556,6 +569,11 @@ def to_data(archive: Archive) -> dict[str, object]:
             if any(c.values for c in archive.countries)
             else {}
         ),
+        **(
+            {"s": [list(c.shown) for c in archive.countries]}
+            if any(c.shown for c in archive.countries)
+            else {}
+        ),
     }
 
 
@@ -576,9 +594,10 @@ COLUMNS: Final[dict[str, int]] = {
     "h": 2,
     "t": 6,
     "u": len(VALUE_AXES),
+    "s": len(SHOWN),
 }
-# Present only in archives that kept the societal values.
-OPTIONAL: Final[frozenset[str]] = frozenset({"u"})
+# Present only in archives that kept the societal values (``s``: all the game shows).
+OPTIONAL: Final[frozenset[str]] = frozenset({"u", "s"})
 
 
 def pack(archive: Archive) -> dict[str, object]:
@@ -727,12 +746,13 @@ def _society(value: object) -> Society:
     )
 
 
-def _country_values(data: dict[str, object]) -> list[tuple[int, ...]]:
-    """Each country's societal values, or none for an archive that did not keep them."""
+def _country_values(data: dict[str, object], key: str = "u") -> list[tuple[int, ...]]:
+    """Each country's societal values (``u`` written, ``s`` shown), or none for an archive that
+    did not keep them."""
     countries = len(_list(data["c"], MAX_ACTORS))
-    if "u" not in data:
+    if key not in data:
         return [() for _ in range(countries)]
-    rows = _rows(data["u"], len(VALUE_AXES), MAX_ACTORS)
+    rows = _rows(data[key], COLUMNS[key], MAX_ACTORS)
     _require(len(rows) == countries, "History values differ from its countries")
     return [tuple(_integer(item, UNWRITTEN, 100) for item in row) for row in rows]
 
@@ -791,9 +811,13 @@ def from_data(value: object) -> Archive:
                 bool(_integer(r[5], 0, 1)),
                 bool(_integer(r[6], 0, 1)),
                 values,
+                shown,
             )
-            for r, values in zip(
-                _rows(data["c"], 7, MAX_ACTORS), _country_values(data), strict=True
+            for r, values, shown in zip(
+                _rows(data["c"], 7, MAX_ACTORS),
+                _country_values(data),
+                _country_values(data, "s"),
+                strict=True,
             )
         ),
         tuple((_integer(r[0]), _integer(r[1])) for r in _rows(data["i"], 2)),

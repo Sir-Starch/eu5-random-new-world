@@ -2779,3 +2779,7 @@ text = '''这个世界创建于记录社会价值观之前。创建新世界即�
 ["fact.development"]
 source = "21b6a798321a49f7"
 text = '''发展度'''
+
+["history.axis_plain"]
+source = "cfa7580b1f341b1c"
+text = '''{axis}：{value}'''

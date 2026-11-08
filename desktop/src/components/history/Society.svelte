@@ -44,14 +44,17 @@
 
 {#if dossier.values.length}
   <h3 class="hx-h">{t("history.values")}</h3>
+  <!-- As the game's Societal Values tab: its values in its order, two poles to each, the pole the
+       country leans to lit, a bar from the middle toward it and how far in the middle. -->
   <ul class="hx-values">
     {#each dossier.values as value (value.key)}
       {@const lean = leaning(value)}
       {@const bar = spread(value.position)}
-      <li class="hx-value">
-        <div class="head">
-          <span class="title">{value.label}</span>
-          <span class="lean"><span>{lean.name}</span> <b class="num">{lean.strength}</b></span>
+      {@const side = value.position < 0 ? "left" : value.position > 0 ? "right" : "none"}
+      <li class="hx-value" data-side={side}>
+        <div class="poles">
+          <span class="pole left" class:on={side === "left"}>{value.left}</span>
+          <span class="pole right" class:on={side === "right"}>{value.right}</span>
         </div>
         <div
           class="hx-bipolar"
@@ -64,18 +67,15 @@
         >
           <i style:left="{bar.left}%" style:width="{bar.width}%"></i>
           <span class="mid"></span>
+          <b class="badge num" data-side={side}>{lean.strength}</b>
         </div>
-        <div class="poles">
-          <span class="pole">{value.left}</span>
-          {#if value.kind === "foundation"}
-            <span></span>
-          {:else if value.place >= 0}
+        {#if value.cause}
+          {#if value.place >= 0}
             <button class="hx-since" title={names[value.place]} onclick={() => onplace(value.place)}>{value.cause} · {value.year}</button>
           {:else}
             <span class="hx-since">{value.cause} · {value.year}</span>
           {/if}
-          <span class="pole right">{value.right}</span>
-        </div>
+        {/if}
       </li>
     {/each}
   </ul>

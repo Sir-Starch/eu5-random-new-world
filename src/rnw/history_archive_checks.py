@@ -10,7 +10,7 @@ from rnw.history_archive import AXES, MAX_DEPTH, UNWRITTEN, HistoryArchiveError
 from rnw.history_model import END, START, Action, Outcome, Tenure, TrajectoryKind
 from rnw.history_text import LIMIT
 from rnw.history_values import AXES as VALUE_AXES
-from rnw.history_values import BOUND
+from rnw.history_values import BOUND, SHOWN
 
 OPINIONS_PER_PAIR = 4
 
@@ -217,6 +217,14 @@ def _ownership(record: Archive, links: AtlasLinks) -> None:
                 and all(UNWRITTEN <= value <= BOUND for value in country.values)
             ),
             "Invalid projected societal values",
+        )
+        _require(
+            not country.shown
+            or (
+                len(country.shown) == len(SHOWN)
+                and all(UNWRITTEN <= value <= BOUND for value in country.shown)
+            ),
+            "Invalid shown societal values",
         )
         country_actors[country.actor] = number
     _require(

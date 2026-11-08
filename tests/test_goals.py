@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from rnw import wording
 from rnw.content import (
     CULTURAL_UNION,
     GREAT_LAW,
@@ -17,7 +18,7 @@ from rnw.content import (
     TWO_WORLDS,
     Formation,
 )
-from rnw.eu5_formation import geographies, geography
+from rnw.eu5_formation import Identity, geographies, geography, key_of
 from rnw.eu5_goals import (
     SCORE_FILE,
     TARGET_FILE,
@@ -27,6 +28,7 @@ from rnw.eu5_goals import (
     goal,
     pursued,
 )
+from rnw.game_texts import Text
 from rnw.pdx import parse
 
 if TYPE_CHECKING:
@@ -42,6 +44,11 @@ FORMATIONS = (
     Formation(TWO_WORLDS, 0, ("a", "b"), (), (), "a", continent="america"),
     Formation(GREAT_LAW, 0, ("a", "b"), (), ("ABC", "DEF", "GHI"), "a"),
 )
+# Identities without claimed keys: each formable is called by ``key_of``.
+IDENTITIES = tuple(
+    Identity(f"T{number:02d}", wording.reference("x"), Text("x"), (1, 2, 3), ("red", "blue"))
+    for number, _ in enumerate(FORMATIONS)
+)
 
 
 def test_the_ai_pursues_the_goals_of_level_three_shown_by_default() -> None:
@@ -54,14 +61,14 @@ def test_the_ai_pursues_the_goals_of_level_three_shown_by_default() -> None:
         RESTORATION,
         GREAT_LAW,
     ]
-    assert files(FORMATIONS[:1]) == {}
+    assert files(FORMATIONS[:1], IDENTITIES[:1]) == {}
 
 
 def test_every_goal_names_only_written_territories_and_the_formables_own_rules() -> None:
     """N-C4: each entry asks its formable's own potential, a written geography and an age; the
     target list and the weighting read the same territory."""
-    written = files(FORMATIONS)
-    territories = parse(geographies(FORMATIONS))
+    written = files(FORMATIONS, IDENTITIES)
+    territories = parse(geographies(list(zip(FORMATIONS, IDENTITIES, strict=True))))
     for path in (TARGET_FILE, SCORE_FILE):
         root = parse(written[path])
         keys = [entry.key for entry in root.entries]
@@ -69,9 +76,9 @@ def test_every_goal_names_only_written_territories_and_the_formables_own_rules()
         for formation in (f for f in FORMATIONS if pursued(f)):
             entry = root.block(goal(formation))
             assert entry is not None
-            assert territories.block(geography(formation)) is not None
+            assert territories.block(geography(key_of(formation))) is not None
             text = written[path]
-            assert f"scripted_geography:{geography(formation)}" in text
+            assert f"scripted_geography:{geography(key_of(formation))}" in text
             attacker = entry.block("attacker_potential")
             assert attacker is not None
             age = attacker.block("current_age_or_later")

@@ -184,43 +184,65 @@ def _indented(lines: Sequence[str], depth: int) -> str:
     return "".join("\t" * depth + line + "\n" for line in lines)
 
 
-def geography(formation: Formation) -> str:
-    """The key of a formation's territory as a ``scripted_geography`` (its cores, the AI's goal)."""
-    return f"{key_of(formation)}_geography"
+GEOGRAPHY_SUFFIX: Final[str] = "_geography"
+# The name of the coast of each ocean of the empire of two oceans (a static text).
+COAST_NAME: Final[str] = "rnw_formation_coast_{ocean}"
 
 
-def geographies(formations: Sequence[Formation]) -> str:
+def geography(formable: str) -> str:
+    """The key of the territory of the formable ``formable`` as a ``scripted_geography`` (its
+    cores, the AI's goal). It is also the key of the territory's name, which the game shows in
+    the formable's tooltips, so it is claimed with the formable's own keys (``identities``)."""
+    return f"{formable}{GEOGRAPHY_SUFFIX}"
+
+
+def territory(formation: Formation, identity: Identity) -> str:
+    """The scripted geography of a formation's territory."""
+    return geography(identity.formable(formation))
+
+
+def side_geography(formable: str, ocean: str) -> str:
+    """The coast of one ocean of the empire of two oceans, as a scripted geography."""
+    return f"{geography(formable)}_{ocean}"
+
+
+def _suffixes(formation: Formation) -> tuple[str, ...]:
+    """The suffixes of the localization keys a formation's formable claims, after its base:
+    the formable and its description, the territory and the coast of each of its oceans."""
+    sides = tuple(
+        f"_f{GEOGRAPHY_SUFFIX}_{ocean}" for ocean, _ in zip(OCEANS, formation.sides, strict=False)
+    )
+    return ("_f", "_f_desc", f"_f{GEOGRAPHY_SUFFIX}", *sides)
+
+
+def geographies(pairs: Sequence[tuple[Formation, Identity]]) -> str:
     """The territory of every formation as a scripted geography: its region, continent or places.
 
     Vanilla's ``scripted_geography.info`` allows any level of the hierarchy in one geography.
     """
     out: list[str] = []
-    for formation in formations:
+    for formation, identity in pairs:
         if formation.region:
             kind, keys = "region", [formation.region]
         elif formation.continent:
             kind, keys = "continent", [formation.continent]
         else:
             kind, keys = "location", list(formation.places)
-        lines = [f"{geography(formation)} = {{", f"\t{kind} = {{", *(f"\t\t{k}" for k in keys)]
+        formable = identity.formable(formation)
+        lines = [f"{geography(formable)} = {{", f"\t{kind} = {{", *(f"\t\t{k}" for k in keys)]
         out.append(_indented([*lines, "\t}", "}"], 0))
         for ocean, coast in zip(OCEANS, formation.sides, strict=False):
-            side = [f"{side_geography(formation, ocean)} = {{", "\tlocation = {"]
+            side = [f"{side_geography(formable, ocean)} = {{", "\tlocation = {"]
             out.append(_indented([*side, *(f"\t\t{k}" for k in coast), "\t}", "}"], 0))
     return "\n".join(out)
 
 
-def side_geography(formation: Formation, ocean: str) -> str:
-    """The coast of one ocean of the empire of two oceans, as a scripted geography."""
-    return f"{geography(formation)}_{ocean}"
-
-
-def _cores(formation: Formation) -> str:
-    """The founder's cores on the rest of the territory, under one line of tooltip."""
+def _cores(scripted: str) -> str:
+    """The founder's cores on the rest of the territory ``scripted``, under one line of tooltip."""
     work = (
         _indented(
             [
-                f"scripted_geography:{geography(formation)} = {{",
+                f"scripted_geography:{scripted} = {{",
                 "\tevery_location_in_scripted_geography = {",
                 "\t\tlimit = {",
             ],
@@ -350,7 +372,7 @@ def block(formation: Formation, identity: Identity, asks: str = "") -> str:
         *(
             (
                 "any_owned_location = { is_port = yes is_in_scripted_geography = "
-                f"scripted_geography:{side_geography(formation, ocean)} }}"
+                f"scripted_geography:{side_geography(identity.formable(formation), ocean)} }}"
             )
             for ocean, _ in zip(OCEANS, formation.sides, strict=False)
         ),
@@ -378,7 +400,7 @@ def block(formation: Formation, identity: Identity, asks: str = "") -> str:
         f"\t\t\tyears = {spec.years}\n"
         "\t\t\tmode = add\n\t\t}\n"
         f"{_unlock(spec)}"
-        f"{_cores(formation) if spec.cores else ''}"
+        f"{_cores(territory(formation, identity)) if spec.cores else ''}"
         f"{_renaming(identity) if spec.renamed else ''}"
         f"{_summons(formation) if spec.heirs else ''}"
         f"{_founding() if spec.founds else ''}"
@@ -431,7 +453,7 @@ def files(
         FLAGS_FILE: flags,
         ARMS_FILE: arms,
         COLORS_FILE: colours,
-        GEOGRAPHY_FILE: geographies(formations),
+        GEOGRAPHY_FILE: geographies(pairs),
     }
     if any(BY_FAMILY[formation.family].heirs for formation in formations):
         found[RESTORATION_FILE] = restoration_events(pairs)
@@ -491,7 +513,7 @@ def identities(  # noqa: PLR0913 - the formations, the world's names and its col
         spec = BY_FAMILY[formation.family]
         key, nations = "", ()
         if keys is not None:
-            key = keys.group(f"rnw_{spec.stem}_", ("_f", "_f_desc")) + "_f"
+            key = keys.group(f"rnw_{spec.stem}_", _suffixes(formation)) + "_f"
             if spec.renamed:
                 nations = tuple(
                     (tradition.name, keys.group(f"{tag}_{tradition.name}_", ("",)))
@@ -522,7 +544,15 @@ def texts(formations: Sequence[Formation], identities_of: Sequence[Identity]) ->
         # without it the game shows the key and logs it as a missing localization.
         found[key] = wording.reference(identity.tag)
         found[f"{key}_desc"] = Described(formation_description(formation.family), identity.name)
+        # The game names a scripted geography by its key wherever a tooltip shows it (vanilla
+        # names all of its own); the territory is called as its formable is.
+        found[geography(key)] = wording.reference(identity.tag)
+        for ocean, _ in zip(OCEANS, formation.sides, strict=False):
+            found[side_geography(key, ocean)] = Text(COAST_NAME.format(ocean=ocean))
         spec = BY_FAMILY[formation.family]
+        if spec.named:
+            # The formable's name is ``$<named>$`` (``_naming``): the static name itself.
+            found[spec.named] = Text(spec.named)
         if spec.cores:
             found[CORES_TOOLTIP] = Text(CORES_TOOLTIP)
         if spec.heirs:

@@ -2779,3 +2779,7 @@ text = '''Este mundo foi criado antes de os valores sociais serem registrados. C
 ["fact.development"]
 source = "21b6a798321a49f7"
 text = '''Desenvolvimento'''
+
+["history.axis_plain"]
+source = "cfa7580b1f341b1c"
+text = '''{axis}: {value}'''

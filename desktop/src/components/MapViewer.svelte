@@ -869,7 +869,13 @@
             {:else if shownTab === "society" && dossier && facts.country}
               <Society {dossier} country={facts.country} names={atlas.data.names} onplace={goTo} />
             {:else if shownTab === "chronicle" && dossier}
-              <Chronicle entries={dossier.chronicle} names={atlas.data.names} onplace={goTo} />
+              <Chronicle
+                entries={dossier.chronicle}
+                story={dossier.story ?? []}
+                title={dossier.story_title ?? ""}
+                names={atlas.data.names}
+                onplace={goTo}
+              />
             {:else if shownTab === "relations" && dossier}
               <Relations {dossier} swatch={(tag) => swatches.get(tag)} onplace={goTo} />
             {/if}

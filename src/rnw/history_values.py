@@ -39,6 +39,26 @@ SOURCE: Final[dict[str, str]] = {
     EXCHANGE: "exchange",
 }
 BOUND: Final[int] = 100
+# The societal values the game shows a generated country in the age of traditions, in the order
+# of its own list (``in_game/common/societal_values/00_default.txt``, [V-LOCAL] EU5 1.4.7, Steam
+# build 26377361): the file's order without the values an age opens later (mercantilism and free
+# trade, outward and inward) and those a modifier or a country opens (sinicized, absolutism,
+# mysticism, latinization).
+# The owner's screenshot of 2026-11-08 shows these eleven in this order. The export checks the
+# order against the installation (``eu5_history_values.check_shown``).
+SHOWN: Final[tuple[str, ...]] = (
+    CENTRAL,
+    TRADITION,
+    SPIRITUAL,
+    "aristocracy_vs_plutocracy",
+    "serfdom_vs_free_subjects",
+    BELLIGERENCE,
+    QUALITY,
+    POSTURE,
+    EXCHANGE,
+    "capital_economy_vs_traditional_economy",
+    "individualism_vs_communalism",
+)
 
 
 def poles(axis: str) -> tuple[str, str]:

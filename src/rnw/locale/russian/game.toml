@@ -1030,11 +1030,11 @@ text = '''Воды так богаты рыбой, что кормят всё о
 source = "91430246d65837db"
 text = '''Меридиан договора'''
 
-["rnw_our_history"]
+["rnw_our_history.title"]
 source = "59ab2712ca1d5b62"
 text = '''Наша история'''
 
-["rnw_our_history_desc"]
+["rnw_our_history.desc"]
 source = "342ac1d5ca933aa8"
 text = '''Прочесть хронику нашего общества и его предшественников.'''
 
@@ -1853,3 +1853,183 @@ text = '''Провозгласить новое государство'''
 ["rnw_road.proclaim_desc"]
 source = "faed96e7a4804d75"
 text = '''Когда земли в наших руках, мы можем провозгласить новое государство — {name}.'''
+
+["rnw_formation_coast_atlantic_ocean_continent"]
+source = "8e5f3c2bcbfc9b22"
+text = '''Атлантическое побережье'''
+
+["rnw_formation_coast_pacific_ocean_continent"]
+source = "c67d6464d0fa0814"
+text = '''Тихоокеанское побережье'''
+
+["rnw_story_origin_foundation"]
+source = "5f172bf2e94ba735"
+text = '''Память народа {name} восходит к {year} году: уже тогда этот народ жил в окрестностях поселения {place}.'''
+
+["rnw_story_origin_home"]
+source = "dcd887b778c8b9ff"
+text = '''Память народа {name} восходит к {year} году: уже тогда этот народ жил на этой земле.'''
+
+["rnw_story_origin_union"]
+source = "60ec5876a09adc95"
+text = '''Народ {name} возник в {year} году, когда народы {first} и {second} стали единым целым.'''
+
+["rnw_story_origin_joined"]
+source = "f0485c7b0fc29806"
+text = '''Народ {name} обрёл нынешний облик в {year} году, когда к нему присоединился народ {first}.'''
+
+["rnw_story_origin_secession"]
+source = "cbd96f5ffa9ee69c"
+text = '''Народ {name} начал свой путь в {year} году, отделившись от народа {first}.'''
+
+["rnw_story_origin_separation"]
+source = "7c1da184a47dc0e2"
+text = '''Народ {name} — один из наследников народа {first}, распавшегося в {year} году.'''
+
+["rnw_story_origin_remnant"]
+source = "29b4adcf21b45fce"
+text = '''Народ {name} — то, что осталось от прежнего народа {name}, распавшегося в {year} году.'''
+
+["rnw_story_origin_other"]
+source = "5d1059466562fbb9"
+text = '''Народ {name} впервые упоминается в преданиях в {year} году.'''
+
+["rnw_story_when_year"]
+source = "0067799113adc27f"
+text = '''В {year} году'''
+
+["rnw_story_when_same"]
+source = "c0f903b48b9acfa2"
+text = '''В том же году'''
+
+["rnw_story_when_soon"]
+source = "07861017f0c00120"
+text = '''Вскоре после этого'''
+
+["rnw_story_union"]
+source = "79d631be9278a6a3"
+text = '''{when} народы {second} и {third} объединились в народ {first}.'''
+
+["rnw_story_joined"]
+source = "0b0082e02053cdbe"
+text = '''{when} народ {second} присоединился к народу {first}.'''
+
+["rnw_story_separation"]
+source = "609e239c6cffda59"
+text = '''{when} народ {first} распался на несколько наследников.'''
+
+["rnw_story_secession"]
+source = "d3f2176bfd83243c"
+text = '''{when} народ {second} отделился от народа {first}.'''
+
+["rnw_story_losses"]
+source = "6fcbf22ce12ef595"
+text = '''С {start} по {end} год народ {first} терял одну землю за другой: {list}.'''
+
+["rnw_story_lost_item"]
+source = "abac850c2c0f60da"
+text = '''{name} ({year})'''
+
+["rnw_story_independence"]
+source = "79347e39247e64ff"
+text = '''{when} народ {first} сбросил власть народа {second}.'''
+
+["rnw_story_dependency"]
+source = "07eed8df0afac9a7"
+text = '''{when} народ {first} покорился народу {second} и стал его вассалом.'''
+
+["rnw_story_protection"]
+source = "b8167d26a54276b8"
+text = '''{when} народ {second} взял народ {first} под своё покровительство.'''
+
+["rnw_story_pact"]
+source = "f7bd66e2416059a0"
+text = '''{when} народы {first} и {second} поклялись защищать друг друга.'''
+
+["rnw_story_access"]
+source = "09941059c88cd47c"
+text = '''{when} народ {second} открыл святилище в поселении {place} для паломников народа {first}.'''
+
+["rnw_story_conflict"]
+source = "d0be0b8fec427713"
+text = '''{when} народы {first} и {second} вступили в войну за поселение {place}.'''
+
+["rnw_story_conflict_for"]
+source = "a952d3cc4407add9"
+text = '''{when} народ {first} воевал с народом {second} за поселение {place}.'''
+
+["rnw_story_wars"]
+source = "82c25f70f370ed04"
+text = '''С {start} по {end} год народы {first} и {second} вели войну за войной.'''
+
+["rnw_story_wars_over"]
+source = "2c34f4921acbb20b"
+text = '''С {start} по {end} год народы {first} и {second} вели войну за войной за эти земли: {list}.'''
+
+["rnw_story_conflict_open"]
+source = "5b225c41713c7f36"
+text = '''{when} народы {first} и {second} вступили в войну.'''
+
+["rnw_story_pressure"]
+source = "fe131734673d61c4"
+text = '''{when} народы {first} и {second} сошлись в схватке, но ни одна земля не сменила хозяина.'''
+
+["rnw_story_repelled"]
+source = "088214effc9e6834"
+text = '''{when} народы {first} и {second} сражались, и нападение было отбито.'''
+
+["rnw_story_reform"]
+source = "0610aa549479ab68"
+text = '''{when} народ {first} изменил порядок своего правления.'''
+
+["rnw_story_resisted"]
+source = "f3afab850b51d46c"
+text = '''{when} народ {first} попытался изменить порядок своего правления, но попытка провалилась.'''
+
+["rnw_story_migration"]
+source = "2b2b2504b826d241"
+text = '''{when} выходцы из поселения {first} осели в поселении {second}.'''
+
+["rnw_story_exchange"]
+source = "d3c46e91b28928b8"
+text = '''{when} народ {first} начал торговать с народом {second}.'''
+
+["rnw_story_contact"]
+source = "c4c46f9c586bbe13"
+text = '''{when} народ {first} впервые встретился с народом {second}.'''
+
+["rnw_story_now_vassal"]
+source = "0f4c4193591f5522"
+text = '''Ныне народ {name} — вассал народа {first}.'''
+
+["rnw_story_now_free"]
+source = "cc8aeb987887b05c"
+text = '''Ныне народ {name} не подчиняется никакому сюзерену.'''
+
+["rnw_story_now_subjects"]
+source = "f4c41aea17785191"
+text = '''Его вассалы: {list}.'''
+
+["rnw_story_now_allies"]
+source = "c742fdfb1818b98e"
+text = '''Его союзники: {list}.'''
+
+["rnw_story_now_protectors"]
+source = "08b0036a61940020"
+text = '''Его покровители: {list}.'''
+
+["rnw_story_now_allies_protecting"]
+source = "af2ceb8ef0f54c57"
+text = '''Его союзники и покровители: {list}.'''
+
+["rnw_story_now_rivals"]
+source = "3aec78a09483de56"
+text = '''Его соперники: {list}.'''
+
+["rnw_story_list_pair"]
+source = "a8c60ace0cf11391"
+text = '''{first} и {second}'''
+
+["rnw_story_list_series"]
+source = "ce79e43811c0b2cc"
+text = '''{first}, {second}'''

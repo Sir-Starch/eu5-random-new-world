@@ -477,11 +477,13 @@ def test_every_family_writes_a_formable_of_its_own_level_rank_and_modifier() -> 
         assert (cores is not None) == spec.cores
         if cores is not None:
             assert f"custom_tooltip = {CORES_TOOLTIP}" in text
-            over = cores.block(f"scripted_geography:{geography(formation)}")
+            over = cores.block(f"scripted_geography:{geography(key_of(formation))}")
             assert over is not None
             assert over.block("every_location_in_scripted_geography") is not None
             assert "add_core = root" in text
-            territory = parse(geographies([formation])).block(geography(formation), "location")
+            territory = parse(geographies([(formation, identity)])).block(
+                geography(key_of(formation)), "location"
+            )
             assert territory is not None
             assert [word.value for word in territory.words()] == list(formation.places)
 
@@ -516,10 +518,12 @@ def test_the_league_asks_for_ports_the_empire_for_hegemony_and_a_realm_for_its_t
     assert regions is not None
     assert [word.value for word in regions.words()] == ["east_region"]
     assert entry.block("locations") is None
-    territory = parse(geographies([realm])).block(geography(realm), "region")
+    territory = parse(geographies([(realm, _identity(REGIONAL_REALM))])).block(
+        geography(key_of(realm)), "region"
+    )
     assert territory is not None
     assert [word.value for word in territory.words()] == ["east_region"]
-    assert f"scripted_geography:{geography(realm)}" in text
+    assert f"scripted_geography:{geography(key_of(realm))}" in text
 
 
 def _identity(family: str) -> Identity:
@@ -765,10 +769,10 @@ def test_the_fantasy_layer_is_one_of_each_over_the_continent() -> None:
         tuple(f"p{n:03d}" for n in range(111, 120)),
     )
     text = block(empire, _identity(TWO_OCEANS))
-    side = side_geography(empire, pacific)
+    side = side_geography(key_of(empire), pacific)
     assert f"is_in_scripted_geography = scripted_geography:{side}" in text
     assert "rule = fantasy" in text
-    coast = parse(geographies([empire])).block(side, "location")
+    coast = parse(geographies([(empire, _identity(TWO_OCEANS))])).block(side, "location")
     assert coast is not None
     assert [word.value for word in coast.words()] == list(empire.sides[1])
 

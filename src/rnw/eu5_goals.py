@@ -9,7 +9,7 @@ at peace for five years and no isolationist, considers every neighbour holding l
 territory, scored as half of ``attack_neighbors``, and weighs such a neighbour half again as high
 as it would. A realm waits for
 the age of discovery, the others for the second age. The territory is the formation's own
-``scripted_geography`` (``eu5_formation.geography``).
+``scripted_geography`` (``eu5_formation.territory``).
 
 Declaring war on an ally is not an AI choice the engine offers, so allies need no ``never_attack``
 [INFERRED]; how far the AI pursues these goals over a campaign is [UNKNOWN] and not observed.
@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 from rnw.content import REGIONAL_REALM
-from rnw.eu5_formation import geography, key_of, potential
+from rnw.eu5_formation import key_of, potential, territory
 from rnw.formations import BY_FAMILY
 
 if TYPE_CHECKING:
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from rnw.content import Formation
+    from rnw.eu5_formation import Identity
 
 TARGET_FILE: Final[str] = "in_game/common/ai_scripted_expansion_target/rnw_formations.txt"
 SCORE_FILE: Final[str] = "in_game/common/ai_scripted_expansion_score/rnw_formations.txt"
@@ -79,33 +80,36 @@ def _lines(lines: Sequence[str], depth: int) -> str:
     return "".join("\t" * depth + line + "\n" for line in lines)
 
 
-def _attacker(formation: Formation) -> str:
-    """Who pursues the formation: whoever could form it, at peace and no isolationist."""
+def _attacker(formation: Formation, scripted: str) -> str:
+    """Who pursues the formation: whoever could form it, at peace and no isolationist.
+
+    ``scripted`` is the scripted geography of its territory (``eu5_formation.territory``)."""
     age = AGES.get(formation.family, SECOND_AGE)
     lines = [
         f"current_age_or_later = {{ age = {age} }}",
         f"ai_personality != ai_personality:{ISOLATIONIST}",
         f"months_since_war >= {PEACE_MONTHS}",
-        f"capital ?= {{ is_in_scripted_geography = scripted_geography:{geography(formation)} }}",
+        f"capital ?= {{ is_in_scripted_geography = scripted_geography:{scripted} }}",
         *potential(formation),
     ]
     return f"\tattacker_potential = {{\n{_lines(lines, 2)}\t}}\n"
 
 
-def _holds(formation: Formation) -> str:
-    return f"owns_or_has_subject_in = scripted_geography:{geography(formation)}"
+def _holds(scripted: str) -> str:
+    return f"owns_or_has_subject_in = scripted_geography:{scripted}"
 
 
-def targets(formations: Sequence[Formation]) -> str:
+def targets(pairs: Sequence[tuple[Formation, Identity]]) -> str:
     """The neighbours that hold land of a formation's territory, as targets of its pursuer."""
     out: list[str] = []
-    for formation in formations:
+    for formation, identity in pairs:
         if not pursued(formation):
             continue
+        scripted = territory(formation, identity)
         body = [
             "candidate_list = {",
             "\tevery_neighbor_country = {",
-            f"\t\tlimit = {{ {_holds(formation)} }}",
+            f"\t\tlimit = {{ {_holds(scripted)} }}",
             "\t\tadd_to_list = source",
             "\t}",
             "}",
@@ -115,23 +119,25 @@ def targets(formations: Sequence[Formation]) -> str:
             f"\tmultiply = {SCORE}",
             "}",
         ]
-        out.append(f"{goal(formation)} = {{\n{_attacker(formation)}{_lines(body, 1)}}}\n")
+        out.append(f"{goal(formation)} = {{\n{_attacker(formation, scripted)}{_lines(body, 1)}}}\n")
     return "\n".join(out)
 
 
-def scores(formations: Sequence[Formation]) -> str:
+def scores(pairs: Sequence[tuple[Formation, Identity]]) -> str:
     """Every holder of a formation's territory weighs higher as a target of its pursuer."""
     out: list[str] = []
-    for formation in formations:
+    for formation, identity in pairs:
         if not pursued(formation):
             continue
-        body = ["target_trigger = {", f"\t{_holds(formation)}", "}", f"multiplier = {MULTIPLIER}"]
-        out.append(f"{goal(formation)} = {{\n{_attacker(formation)}{_lines(body, 1)}}}\n")
+        scripted = territory(formation, identity)
+        body = ["target_trigger = {", f"\t{_holds(scripted)}", "}", f"multiplier = {MULTIPLIER}"]
+        out.append(f"{goal(formation)} = {{\n{_attacker(formation, scripted)}{_lines(body, 1)}}}\n")
     return "\n".join(out)
 
 
-def files(formations: Sequence[Formation]) -> dict[str, str]:
+def files(formations: Sequence[Formation], identities: Sequence[Identity]) -> dict[str, str]:
     """The AI's goal files, if any formation is pursued."""
     if not any(pursued(formation) for formation in formations):
         return {}
-    return {TARGET_FILE: targets(formations), SCORE_FILE: scores(formations)}
+    pairs = list(zip(formations, identities, strict=True))
+    return {TARGET_FILE: targets(pairs), SCORE_FILE: scores(pairs)}

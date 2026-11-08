@@ -77,7 +77,9 @@ def _country(
     if calibration is not None and government.get("type") == "theocracy":
         require(
             not country.include
-            and country.laws == calibration.theocracy_institutions.laws
+            # The precedents' laws first; ``eu5_laws`` completes the ones the theocracy sees.
+            and country.laws[: len(calibration.theocracy_institutions.laws)]
+            == calibration.theocracy_institutions.laws
             and country.parliament == calibration.theocracy_institutions.parliament
             and country.religion not in calibration.theocracy_institutions.excluded_religions
             and all(government.get(k) == v for k, v in calibration.theocracy),

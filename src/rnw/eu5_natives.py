@@ -63,7 +63,8 @@ from rnw.eu5_empires import (
     travel_steps,
     unlinked,
 )
-from rnw.eu5_history_values import position_ranges
+from rnw.eu5_history_values import check_shown, position_ranges
+from rnw.eu5_laws import LawBook, read_book
 from rnw.eu5_remap import GeographicRemap, remap_text
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.eu5_technology import (
@@ -128,6 +129,8 @@ RIVALS_FILE: Final[str] = f"{SETUP}/20_rivals.txt"
 ORGANIZATIONS_FILE: Final[str] = f"{SETUP}/15_international_organizations.txt"
 GOVERNMENT_TYPE_DIR: Final[str] = "game/in_game/common/government_types"
 SOCIETAL_VALUE_DIR: Final[str] = "game/in_game/common/societal_values"
+LAW_DIR: Final[str] = "game/in_game/common/laws"
+ADVANCE_DIR: Final[str] = "game/in_game/common/advances"
 ORGANIZATION_TYPE_DIR: Final[str] = "game/in_game/common/international_organizations"
 HOLY_SITE_DIR: Final[str] = "game/in_game/common/holy_sites"
 NAMED_COLORS: Final[str] = "game/main_menu/common/named_colors/02_map.txt"
@@ -284,6 +287,7 @@ class VanillaNatives:
     state_floor: StateFloor = MINIMUM_STATE_SUPPORT
     history_positions: dict[str, tuple[int, int]] = field(default_factory=dict)
     history_governments: dict[str, tuple[tuple[str, str], ...]] = field(default_factory=dict)
+    law_book: LawBook | None = None
 
 
 def _milli(value: str) -> int:
@@ -631,6 +635,8 @@ def vanilla_natives(  # noqa: PLR0915 - independent installed calibration tables
         if key in place_names and pops.get(key)
     )
     governments = template_governments(template_texts, setup_text)
+    # The window lists the values the game shows in the game's order without reading it.
+    _ = check_shown(_texts(game_dir, SOCIETAL_VALUE_DIR))
     return VanillaNatives(
         density=density,
         population_per_location=total // len(american),
@@ -679,7 +685,21 @@ def vanilla_natives(  # noqa: PLR0915 - independent installed calibration tables
                 for path in sorted((game_dir / SOCIETAL_VALUE_DIR).glob("*.txt"))
             ],
         ),
+        law_book=read_book(
+            law_texts=_texts(game_dir, LAW_DIR),
+            advance_texts=_texts(game_dir, ADVANCE_DIR),
+            templates=template_texts,
+            setup_text=setup_text,
+            value_texts=_texts(game_dir, SOCIETAL_VALUE_DIR),
+        ),
     )
+
+
+def _texts(game_dir: Path, directory: str) -> list[str]:
+    return [
+        path.read_text(encoding="utf-8-sig")
+        for path in sorted((game_dir / directory).glob("*.txt"))
+    ]
 
 
 def state_population_floor(

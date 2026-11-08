@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw import game_texts, history_text
+from rnw import game_texts, history_archive, history_story, history_text
 from rnw.history_checks import require
 from rnw.history_model import HistoryError
 
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
     from rnw.eu5_start import FinalStartPlan
     from rnw.loc_keys import KeySpace
+    from rnw.wording import Name
 
 BIAS_FILE: Final[str] = "in_game/common/biases/rnw_history.txt"
 TRIGGER_FILE: Final[str] = "in_game/common/scripted_triggers/rnw_history.txt"
@@ -43,7 +44,11 @@ def guarantee_lines(protections: Sequence[tuple[str, str]]) -> str:
     )
 
 
-def build(plan: FinalStartPlan, keys: KeySpace) -> WrittenHistory:
+def build(plan: FinalStartPlan, keys: KeySpace, locations: Sequence[str]) -> WrittenHistory:
+    """The biases, the Our History decision and event, and each living country's story.
+
+    ``locations`` are the world's location keys (the archive's places, ``history_archive``).
+    """
     if plan.history is None:
         msg = "Historical text needs a projected history"
         raise HistoryError(msg)
@@ -61,7 +66,14 @@ def build(plan: FinalStartPlan, keys: KeySpace) -> WrittenHistory:
     files = {BIAS_FILE: biases.encode("utf-8-sig")}
     if not tags:
         return WrittenHistory(files, texts, {})
-    static = (DECISION, f"{DECISION}_desc", f"{DECISION}.a", f"{EVENT}.title", f"{EVENT}.a")
+    # A decision is named by ``<key>.title`` and ``<key>.desc``, as vanilla's decisions are.
+    static = (
+        f"{DECISION}.title",
+        f"{DECISION}.desc",
+        f"{DECISION}.a",
+        f"{EVENT}.title",
+        f"{EVENT}.a",
+    )
     # The world's key space reserves the mod's static keys at its start; a bare one claims them.
     require(
         keys.holds(static) or keys.claim(static),
@@ -104,11 +116,31 @@ def build(plan: FinalStartPlan, keys: KeySpace) -> WrittenHistory:
     )
     for key in static:
         texts[key] = game_texts.Text(key)
-    texts.update(
-        (chronicle_keys[tag], chronicle) for tag, chronicle in history_text.chronicles(plan).items()
-    )
+    texts.update((chronicle_keys[tag], story) for tag, story in stories(plan, locations).items())
     files.update(
         (path, text.encode("utf-8-sig"))
         for path, text in ((TRIGGER_FILE, trigger), (DECISION_FILE, decision), (EVENT_FILE, event))
     )
     return WrittenHistory(files, texts, chronicle_keys)
+
+
+def stories(plan: FinalStartPlan, locations: Sequence[str]) -> dict[str, history_story.Story]:
+    """Each living country's story, told from the history archive as the window tells it: a
+    country by its name on the map, a predecessor by the name of its seat."""
+    archive = history_archive.build(plan, locations)
+    names = {country.tag: country.name for country in plan.countries}
+    called: dict[int, Name] = {
+        fact.actor: names[fact.tag] for fact in archive.countries if fact.tag in names
+    }
+
+    def name(actor: int) -> Name:
+        return called.get(actor) or plan.names[locations[archive.actors[actor].seat]]
+
+    def place(index: int) -> Name:
+        return plan.names[locations[index]]
+
+    actors = {fact.tag: fact.actor for fact in archive.countries}
+    return {
+        tag: history_story.tell(archive, actors[tag], name=name, place=place)
+        for tag in sorted(plan.history_tags.values())
+    }

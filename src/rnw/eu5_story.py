@@ -283,7 +283,7 @@ def _formations(  # noqa: PLR0913 - the formables read the plan, the names and t
         identities,
         {tag: eu5_naming.fires(naming) for tag, naming in choices.items()},
     )
-    goals = eu5_goals.files(plan.formations)
+    goals = eu5_goals.files(plan.formations, identities)
     if goals:
         eu5_goals.check_installation(game_dir)
     roads = eu5_missions.roads(plan.formations, identities, keys)
@@ -374,12 +374,14 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
             keys=keys,
             folders=folders,
         )
+    numbered: list[int] = []
     if memories:
         eu5_memories.check_installation(game_dir)
         restored = eu5_memories.restorations(plan.formations, [i.tag for i in identities])
-        script = eu5_memories.events(memories, restored)
+        numbered = eu5_memories.numbers(memories, keys)
+        script = eu5_memories.events(memories, restored, numbered)
         files[MEMORY_FILE] = script.encode("utf-8-sig")
-        texts.update(eu5_memories.texts(memories))
+        texts.update(eu5_memories.texts(memories, numbered))
     if regions:
         colonial_names.check_installation(game_dir)
         files[colonial_names.NAMES_FILE] = colonial_names.script(list(regions)).encode("utf-8-sig")
@@ -405,7 +407,7 @@ def build(  # noqa: PLR0913 - the stories need the plan, the installation and th
         "colonial_names": len(regions or {}) * len(colonial_names.TRADITIONS),
         "absences": {absence.family: absence.reason for absence in plan.absences},
         "restorations_passed": dict(plan.passed),
-        "memories": eu5_memories.stats(memories),
+        "memories": eu5_memories.stats(memories, numbered),
         "formations": {
             identity.tag: {
                 "family": formation.family,

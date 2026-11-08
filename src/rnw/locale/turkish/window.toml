@@ -2779,3 +2779,7 @@ text = '''Bu dünya, toplumsal değerler kaydedilmeden önce oluşturuldu. Onlar
 ["fact.development"]
 source = "21b6a798321a49f7"
 text = '''Gelişim'''
+
+["history.axis_plain"]
+source = "cfa7580b1f341b1c"
+text = '''{axis}: {value}'''

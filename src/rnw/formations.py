@@ -113,6 +113,9 @@ EXTRA_TEXTS: Final[dict[str, str]] = {
         "and its holder can be fought for it."
     ),
     EMPIRE_ADJECTIVE: "American",
+    # The coasts of the empire of two oceans, as its territory's tooltips name them.
+    "rnw_formation_coast_atlantic_ocean_continent": "Atlantic Coast",
+    "rnw_formation_coast_pacific_ocean_continent": "Pacific Coast",
 }
 
 

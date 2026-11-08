@@ -18,6 +18,7 @@ import numpy as np
 from rnw.eu5_archetypes import government_fields
 from rnw.eu5_empires import empire_roads, extraordinary_report, road_targets
 from rnw.eu5_history_values import profile_positions
+from rnw.eu5_laws import complete, positions
 from rnw.eu5_natives import (
     DEFAULT_CITY,
     DEFAULT_TOWN,
@@ -90,6 +91,7 @@ class _Government:
     fields: tuple[tuple[str, str], ...]
     laws: tuple[tuple[str, str], ...]
     parliament: str
+    positions: tuple[tuple[str, int], ...] = ()
 
 
 @final
@@ -240,13 +242,28 @@ class _Projection:
                 vanilla.levels.get(include, 0) == actor.technology,
                 "Historical tribal technology differs from its installed template",
             )
-        return _Government(
-            include,
-            level,
-            government_fields(fields, (), profile_positions(actor.society, self.inputs.positions)),
-            laws,
-            parliament,
+        written = government_fields(
+            fields, (), profile_positions(actor.society, self.inputs.positions)
         )
+        if actor.tenure is Tenure.LAND and level is not None:
+            # Every law the state sees at the start holds a policy (``eu5_laws``).
+            require(vanilla.law_book is not None, "Missing installed law calibration")
+            if vanilla.law_book is not None:
+                laws = complete(
+                    vanilla.law_book,
+                    include=include,
+                    fields=written,
+                    laws=laws,
+                    level=level,
+                    religion=religion,
+                    culture=culture,
+                )
+        standing = (
+            positions(vanilla.law_book, include=include, fields=written)
+            if vanilla.law_book is not None
+            else {}
+        )
+        return _Government(include, level, written, laws, parliament, tuple(standing.items()))
 
     def countries(self) -> tuple[Country, ...]:
         vanilla = self.inputs.vanilla
@@ -318,6 +335,7 @@ class _Projection:
                     history_actor=actor.key,
                     memberships=memberships,
                     archetypes=roles,
+                    positions=fields.positions,
                 )
             )
         return tuple(countries)

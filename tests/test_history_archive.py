@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import pytest
 
-from rnw import atlas, history_text
+from rnw import atlas, eu5_history_text, game_texts, history_text
 from rnw import history_archive as archive
 from rnw.eu5_history_plan import project_start
 from rnw.history_archive_checks import validate
@@ -31,9 +31,15 @@ def plan() -> FinalStartPlan:
     return project_start(inputs_for(divided_valley()))
 
 
+def places(plan: FinalStartPlan) -> tuple[str, ...]:
+    """The location keys of a test world, as its atlas orders them."""
+    assert plan.history is not None
+    return tuple(sorted(place.key for place in plan.history.geography.districts))
+
+
 def history_atlas(plan: FinalStartPlan) -> atlas.Atlas:
     assert plan.history is not None
-    keys = tuple(sorted(place.key for place in plan.history.geography.districts))
+    keys = places(plan)
     index = {key: number for number, key in enumerate(keys)}
     owners = {
         key: number for number, country in enumerate(plan.countries) for key in country.members
@@ -93,12 +99,18 @@ def test_portable_roundtrip_replays_the_written_atlas(plan: FinalStartPlan) -> N
 
 @pytest.mark.parametrize("language", catalog_languages())
 def test_portable_chronicles_equal_game_chronicles(plan: FinalStartPlan, language: str) -> None:
+    """The window tells each country's story as the game's Our History does, word for word,
+    and lists the chronicle's events below it."""
     built = history_atlas(plan)
     reader = Reader(built, language, atlas.pretty)
     expected = history_text.chronicles(plan)
+    stories = eu5_history_text.stories(plan, places(plan))
+    texts = game_texts.localize(dict(stories), language)
     for tag, chronicle in expected.items():
-        actual = reader.country(tag)[2]
-        assert [row.text for row in actual.lines] == [
+        story, timeline = reader.country(tag)[2:4]
+        assert "\\n\\n".join(row.text for row in story.lines) == texts[tag]
+        assert story.title == reader.game["rnw_chronicle.1.title"]
+        assert [row.text for row in timeline.lines] == [
             history_text.render(row.text, language, reader.game) for row in chronicle.rows
         ]
         assert all(
@@ -273,12 +285,17 @@ def test_a_country_is_named_as_the_map_names_it_in_both_chronicles(plan: FinalSt
     )
     reader = Reader(history_atlas(renamed), "english", atlas.pretty)
     game = history_text.chronicles(renamed)
+    stories = game_texts.localize(
+        dict(eu5_history_text.stories(renamed, places(renamed))), "english"
+    )
     assert game
     for tag, chronicle in game.items():
-        window = reader.country(tag)[2]
+        story, window = reader.country(tag)[2:4]
+        assert "\\n\\n".join(row.text for row in story.lines) == stories[tag]
         assert [row.text for row in window.lines] == [
             history_text.render(row.text, "english", reader.game) for row in chronicle.rows
         ]
         # The country shows in its own rows by its map name; a predecessor keeps its seat's name.
         assert any(f"Realm {tag}" in line.text for line in window.lines)
         assert any("Seat" in line.text for line in window.lines)
+        assert f"Realm {tag}" in stories[tag]

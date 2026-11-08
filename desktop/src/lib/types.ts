@@ -272,6 +272,9 @@ export interface HistoryDossier {
   chronicle: HistoryEntry[];
   partners: HistoryPartner[];
   more: number;
+  /** The title of the game's Our History and its story in paragraphs (`history_story`). */
+  story_title?: string;
+  story?: string[];
 }
 
 /** A region's ownership changes, shared inheritances and aims (`history_presenter.RegionHistory`). */

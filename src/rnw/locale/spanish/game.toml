@@ -1030,11 +1030,11 @@ text = '''Aguas tan llenas de peces que alimentan a todas las costas cercanas.''
 source = "91430246d65837db"
 text = '''Meridiano del tratado'''
 
-["rnw_our_history"]
+["rnw_our_history.title"]
 source = "59ab2712ca1d5b62"
 text = '''Nuestra historia'''
 
-["rnw_our_history_desc"]
+["rnw_our_history.desc"]
 source = "342ac1d5ca933aa8"
 text = '''Leer la crónica de nuestra sociedad y sus predecesoras.'''
 
@@ -1853,3 +1853,183 @@ text = '''Proclamar el nuevo Estado'''
 ["rnw_road.proclaim_desc"]
 source = "faed96e7a4804d75"
 text = '''Con las tierras en nuestras manos, podemos proclamar {name}.'''
+
+["rnw_formation_coast_atlantic_ocean_continent"]
+source = "8e5f3c2bcbfc9b22"
+text = '''Costa atlántica'''
+
+["rnw_formation_coast_pacific_ocean_continent"]
+source = "c67d6464d0fa0814"
+text = '''Costa del Pacífico'''
+
+["rnw_story_origin_foundation"]
+source = "5f172bf2e94ba735"
+text = '''La memoria de {name} se remonta a {year}, cuando su pueblo ya vivía en torno a {place}.'''
+
+["rnw_story_origin_home"]
+source = "dcd887b778c8b9ff"
+text = '''La memoria de {name} se remonta a {year}, cuando su pueblo ya vivía en esta tierra.'''
+
+["rnw_story_origin_union"]
+source = "60ec5876a09adc95"
+text = '''{name} surgió en {year}, cuando {first} y {second} se hicieron uno.'''
+
+["rnw_story_origin_joined"]
+source = "f0485c7b0fc29806"
+text = '''{name} adquirió su forma actual en {year}, cuando {first} se le unió.'''
+
+["rnw_story_origin_secession"]
+source = "cbd96f5ffa9ee69c"
+text = '''{name} nació en {year}, al separarse de {first}.'''
+
+["rnw_story_origin_separation"]
+source = "7c1da184a47dc0e2"
+text = '''{name} es uno de los herederos de {first}, que se desintegró en {year}.'''
+
+["rnw_story_origin_remnant"]
+source = "29b4adcf21b45fce"
+text = '''{name} es lo que quedó de un {name} más antiguo, que se desintegró en {year}.'''
+
+["rnw_story_origin_other"]
+source = "5d1059466562fbb9"
+text = '''{name} aparece en los relatos en {year}.'''
+
+["rnw_story_when_year"]
+source = "0067799113adc27f"
+text = '''En {year},'''
+
+["rnw_story_when_same"]
+source = "c0f903b48b9acfa2"
+text = '''Ese mismo año,'''
+
+["rnw_story_when_soon"]
+source = "07861017f0c00120"
+text = '''Poco después,'''
+
+["rnw_story_union"]
+source = "79d631be9278a6a3"
+text = '''{when} {second} y {third} se unieron para formar {first}.'''
+
+["rnw_story_joined"]
+source = "0b0082e02053cdbe"
+text = '''{when} {second} se unió a {first}.'''
+
+["rnw_story_separation"]
+source = "609e239c6cffda59"
+text = '''{when} {first} se desintegró en varios sucesores.'''
+
+["rnw_story_secession"]
+source = "d3f2176bfd83243c"
+text = '''{when} {second} se separó de {first}.'''
+
+["rnw_story_losses"]
+source = "6fcbf22ce12ef595"
+text = '''De {start} a {end}, {first} perdió una tierra tras otra: {list}.'''
+
+["rnw_story_lost_item"]
+source = "abac850c2c0f60da"
+text = '''{name} ({year})'''
+
+["rnw_story_independence"]
+source = "79347e39247e64ff"
+text = '''{when} {first} se sacudió el dominio de {second}.'''
+
+["rnw_story_dependency"]
+source = "07eed8df0afac9a7"
+text = '''{when} {first} se sometió a {second} y se convirtió en su vasallo.'''
+
+["rnw_story_protection"]
+source = "b8167d26a54276b8"
+text = '''{when} {second} tomó a {first} bajo su protección.'''
+
+["rnw_story_pact"]
+source = "f7bd66e2416059a0"
+text = '''{when} {first} y {second} juraron defenderse mutuamente.'''
+
+["rnw_story_access"]
+source = "09941059c88cd47c"
+text = '''{when} {second} abrió el lugar sagrado de {place} a los peregrinos de {first}.'''
+
+["rnw_story_conflict"]
+source = "d0be0b8fec427713"
+text = '''{when} {first} y {second} entraron en guerra por {place}.'''
+
+["rnw_story_conflict_for"]
+source = "a952d3cc4407add9"
+text = '''{when} {first} combatió a {second} por {place}.'''
+
+["rnw_story_wars"]
+source = "82c25f70f370ed04"
+text = '''De {start} a {end}, {first} y {second} libraron una guerra tras otra.'''
+
+["rnw_story_wars_over"]
+source = "2c34f4921acbb20b"
+text = '''De {start} a {end}, {first} y {second} libraron una guerra tras otra por {list}.'''
+
+["rnw_story_conflict_open"]
+source = "5b225c41713c7f36"
+text = '''{when} {first} y {second} entraron en guerra.'''
+
+["rnw_story_pressure"]
+source = "fe131734673d61c4"
+text = '''{when} {first} y {second} llegaron a las armas, pero ninguna tierra cambió de manos.'''
+
+["rnw_story_repelled"]
+source = "088214effc9e6834"
+text = '''{when} {first} y {second} combatieron, y el ataque fue rechazado.'''
+
+["rnw_story_reform"]
+source = "0610aa549479ab68"
+text = '''{when} {first} cambió su forma de gobierno.'''
+
+["rnw_story_resisted"]
+source = "f3afab850b51d46c"
+text = '''{when} {first} intentó cambiar su forma de gobierno, pero el intento fracasó.'''
+
+["rnw_story_migration"]
+source = "2b2b2504b826d241"
+text = '''{when} gentes de {first} se asentaron en {second}.'''
+
+["rnw_story_exchange"]
+source = "d3c46e91b28928b8"
+text = '''{when} {first} empezó a comerciar con {second}.'''
+
+["rnw_story_contact"]
+source = "c4c46f9c586bbe13"
+text = '''{when} {first} conoció por primera vez a {second}.'''
+
+["rnw_story_now_vassal"]
+source = "0f4c4193591f5522"
+text = '''Hoy {name} es vasallo de {first}.'''
+
+["rnw_story_now_free"]
+source = "cc8aeb987887b05c"
+text = '''Hoy {name} no rinde vasallaje a ningún señor.'''
+
+["rnw_story_now_subjects"]
+source = "f4c41aea17785191"
+text = '''Sus vasallos: {list}.'''
+
+["rnw_story_now_allies"]
+source = "c742fdfb1818b98e"
+text = '''Sus aliados: {list}.'''
+
+["rnw_story_now_protectors"]
+source = "08b0036a61940020"
+text = '''Está bajo la protección de {list}.'''
+
+["rnw_story_now_allies_protecting"]
+source = "af2ceb8ef0f54c57"
+text = '''Sus aliados y protectores: {list}.'''
+
+["rnw_story_now_rivals"]
+source = "3aec78a09483de56"
+text = '''Sus rivales: {list}.'''
+
+["rnw_story_list_pair"]
+source = "a8c60ace0cf11391"
+text = '''{first} y {second}'''
+
+["rnw_story_list_series"]
+source = "ce79e43811c0b2cc"
+text = '''{first}, {second}'''

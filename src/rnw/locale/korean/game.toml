@@ -1030,11 +1030,11 @@ text = '''물고기가 하도 많아 주변의 모든 해안을 먹여 살리는
 source = "91430246d65837db"
 text = '''조약 자오선'''
 
-["rnw_our_history"]
+["rnw_our_history.title"]
 source = "59ab2712ca1d5b62"
 text = '''우리의 역사'''
 
-["rnw_our_history_desc"]
+["rnw_our_history.desc"]
 source = "342ac1d5ca933aa8"
 text = '''우리 사회와 그 전신의 연대기를 읽습니다.'''
 
@@ -1853,3 +1853,183 @@ text = '''새 국가를 선포하라'''
 ["rnw_road.proclaim_desc"]
 source = "faed96e7a4804d75"
 text = '''땅을 손에 넣었으니 이제 선포할 수 있습니다. 바로 {name}입니다.'''
+
+["rnw_formation_coast_atlantic_ocean_continent"]
+source = "8e5f3c2bcbfc9b22"
+text = '''대서양 연안'''
+
+["rnw_formation_coast_pacific_ocean_continent"]
+source = "c67d6464d0fa0814"
+text = '''태평양 연안'''
+
+["rnw_story_origin_foundation"]
+source = "5f172bf2e94ba735"
+text = '''{name} 세력의 기억은 {year}년까지 거슬러 올라갑니다. 그때 이미 그 백성은 {place} 지역 주변에 살고 있었습니다.'''
+
+["rnw_story_origin_home"]
+source = "dcd887b778c8b9ff"
+text = '''{name} 세력의 기억은 {year}년까지 거슬러 올라갑니다. 그때 이미 그 백성은 이 땅에 살고 있었습니다.'''
+
+["rnw_story_origin_union"]
+source = "60ec5876a09adc95"
+text = '''{name} 세력은 {year}년 {first} 세력과 {second} 세력이 하나가 되면서 생겨났습니다.'''
+
+["rnw_story_origin_joined"]
+source = "f0485c7b0fc29806"
+text = '''{name} 세력은 {year}년 {first} 세력이 합류하면서 지금의 모습을 갖추었습니다.'''
+
+["rnw_story_origin_secession"]
+source = "cbd96f5ffa9ee69c"
+text = '''{name} 세력은 {year}년 {first} 세력에게서 떨어져 나오며 시작되었습니다.'''
+
+["rnw_story_origin_separation"]
+source = "7c1da184a47dc0e2"
+text = '''{name} 세력은 {year}년에 무너진 {first} 세력의 후계자 중 하나입니다.'''
+
+["rnw_story_origin_remnant"]
+source = "29b4adcf21b45fce"
+text = '''{name} 세력은 {year}년에 무너진 옛 {name} 세력의 남은 부분입니다.'''
+
+["rnw_story_origin_other"]
+source = "5d1059466562fbb9"
+text = '''{name} 세력은 {year}년에 처음 기록에 등장합니다.'''
+
+["rnw_story_when_year"]
+source = "0067799113adc27f"
+text = '''{year}년,'''
+
+["rnw_story_when_same"]
+source = "c0f903b48b9acfa2"
+text = '''같은 해,'''
+
+["rnw_story_when_soon"]
+source = "07861017f0c00120"
+text = '''얼마 후,'''
+
+["rnw_story_union"]
+source = "79d631be9278a6a3"
+text = '''{when} {second} 세력과 {third} 세력이 합쳐져 {first} 세력이 되었습니다.'''
+
+["rnw_story_joined"]
+source = "0b0082e02053cdbe"
+text = '''{when} {second} 세력이 {first} 세력에 합류했습니다.'''
+
+["rnw_story_separation"]
+source = "609e239c6cffda59"
+text = '''{when} {first} 세력은 무너져 여러 후계 세력으로 나뉘었습니다.'''
+
+["rnw_story_secession"]
+source = "d3f2176bfd83243c"
+text = '''{when} {second} 세력이 {first} 세력에게서 떨어져 나갔습니다.'''
+
+["rnw_story_losses"]
+source = "6fcbf22ce12ef595"
+text = '''{start}년부터 {end}년까지 {first} 세력은 땅을 하나씩 잃었습니다: {list}.'''
+
+["rnw_story_lost_item"]
+source = "abac850c2c0f60da"
+text = '''{name}({year}년)'''
+
+["rnw_story_independence"]
+source = "79347e39247e64ff"
+text = '''{when} {first} 세력은 {second} 세력의 지배에서 벗어났습니다.'''
+
+["rnw_story_dependency"]
+source = "07eed8df0afac9a7"
+text = '''{when} {first} 세력은 {second} 세력에 굴복하여 그 속국이 되었습니다.'''
+
+["rnw_story_protection"]
+source = "b8167d26a54276b8"
+text = '''{when} {second} 세력이 {first} 세력을 보호하에 두었습니다.'''
+
+["rnw_story_pact"]
+source = "f7bd66e2416059a0"
+text = '''{when} {first} 세력과 {second} 세력은 서로를 지키기로 맹세했습니다.'''
+
+["rnw_story_access"]
+source = "09941059c88cd47c"
+text = '''{when} {second} 세력은 {place} 지역의 성지를 {first} 세력의 순례자들에게 열었습니다.'''
+
+["rnw_story_conflict"]
+source = "d0be0b8fec427713"
+text = '''{when} {first} 세력과 {second} 세력이 {place} 지역을 두고 전쟁을 벌였습니다.'''
+
+["rnw_story_conflict_for"]
+source = "a952d3cc4407add9"
+text = '''{when} {first} 세력은 {place} 지역을 두고 {second} 세력과 싸웠습니다.'''
+
+["rnw_story_wars"]
+source = "82c25f70f370ed04"
+text = '''{start}년부터 {end}년까지 {first} 세력과 {second} 세력은 전쟁을 거듭했습니다.'''
+
+["rnw_story_wars_over"]
+source = "2c34f4921acbb20b"
+text = '''{start}년부터 {end}년까지 {first} 세력과 {second} 세력은 다음 땅을 두고 전쟁을 거듭했습니다: {list}.'''
+
+["rnw_story_conflict_open"]
+source = "5b225c41713c7f36"
+text = '''{when} {first} 세력과 {second} 세력이 전쟁을 벌였습니다.'''
+
+["rnw_story_pressure"]
+source = "fe131734673d61c4"
+text = '''{when} {first} 세력과 {second} 세력이 충돌했지만, 주인이 바뀐 땅은 없었습니다.'''
+
+["rnw_story_repelled"]
+source = "088214effc9e6834"
+text = '''{when} {first} 세력과 {second} 세력이 싸웠고, 공격은 격퇴되었습니다.'''
+
+["rnw_story_reform"]
+source = "0610aa549479ab68"
+text = '''{when} {first} 세력은 통치 방식을 바꾸었습니다.'''
+
+["rnw_story_resisted"]
+source = "f3afab850b51d46c"
+text = '''{when} {first} 세력은 통치 방식을 바꾸려 했으나, 그 시도는 실패했습니다.'''
+
+["rnw_story_migration"]
+source = "2b2b2504b826d241"
+text = '''{when} {first} 지역의 사람들이 {second} 지역에 정착했습니다.'''
+
+["rnw_story_exchange"]
+source = "d3c46e91b28928b8"
+text = '''{when} {first} 세력은 {second} 세력과 교역을 시작했습니다.'''
+
+["rnw_story_contact"]
+source = "c4c46f9c586bbe13"
+text = '''{when} {first} 세력은 {second} 세력과 처음으로 마주쳤습니다.'''
+
+["rnw_story_now_vassal"]
+source = "0f4c4193591f5522"
+text = '''오늘날 {name} 세력은 {first} 세력의 속국입니다.'''
+
+["rnw_story_now_free"]
+source = "cc8aeb987887b05c"
+text = '''오늘날 {name} 세력은 어떤 종주에게도 복속되어 있지 않습니다.'''
+
+["rnw_story_now_subjects"]
+source = "f4c41aea17785191"
+text = '''속국: {list}.'''
+
+["rnw_story_now_allies"]
+source = "c742fdfb1818b98e"
+text = '''동맹: {list}.'''
+
+["rnw_story_now_protectors"]
+source = "08b0036a61940020"
+text = '''보호자: {list}.'''
+
+["rnw_story_now_allies_protecting"]
+source = "af2ceb8ef0f54c57"
+text = '''동맹이자 보호자: {list}.'''
+
+["rnw_story_now_rivals"]
+source = "3aec78a09483de56"
+text = '''경쟁국: {list}.'''
+
+["rnw_story_list_pair"]
+source = "a8c60ace0cf11391"
+text = '''{first} 및 {second}'''
+
+["rnw_story_list_series"]
+source = "ce79e43811c0b2cc"
+text = '''{first}, {second}'''

@@ -25,11 +25,11 @@ from rnw.history_model import (
 )
 from rnw.history_presenter import YEAR_PREFIX, Reader, encode
 from rnw.history_values import AXES as VALUE_AXES
-from rnw.history_values import SOURCE
+from rnw.history_values import SHOWN, SOURCE
 from rnw.loc_keys import KeySpace, key_hashes
 
 from .history_fixtures import divided_valley
-from .test_history_archive import history_atlas
+from .test_history_archive import history_atlas, places
 from .test_history_plan import inputs_for
 
 if TYPE_CHECKING:
@@ -108,10 +108,15 @@ def test_a_dossier_is_plain_json_and_the_text_sections_are_unchanged(built: atla
         "chronicle",
         "partners",
         "more",
+        "story_title",
+        "story",
     }
     assert isinstance(sent["chronicle"], list)
+    assert sent["story_title"] == "Our History"
+    assert isinstance(sent["story"], list)
+    assert sent["story"]
     titles = [section.title for section in reader.country(tag)]
-    assert titles == ["Society in 1337", "Opinions on the first day", "Chronicle"]
+    assert titles == ["Society in 1337", "Opinions on the first day", "Our History", "Chronicle"]
 
 
 def test_each_side_of_a_treaty_has_the_engines_opinion_of_the_other(built: atlas.Atlas) -> None:
@@ -157,7 +162,7 @@ def test_each_side_of_a_treaty_has_the_engines_opinion_of_the_other(built: atlas
 def test_a_historical_line_is_named_as_the_game_names_its_opinion(built: atlas.Atlas) -> None:
     """The window's line is the opinion's localized name in the written world, value and decay."""
     plan = project_start(inputs_for(divided_valley()))
-    written = eu5_history_text.build(plan, KeySpace(key_hashes(plan.names)))
+    written = eu5_history_text.build(plan, KeySpace(key_hashes(plan.names)), places(plan))
     game = game_texts.localize(written.texts, "english")
     named = {
         (o.first, o.second, o.value, o.yearly_decay): game[o.key] for o in plan.historical_opinions
@@ -238,8 +243,19 @@ def test_the_dossier_shows_the_values_the_game_is_given(built: atlas.Atlas) -> N
             for axis, value in zip(VALUE_AXES, country.values, strict=True)
             if value != -101
         }
-        assert {value.key: value.position for value in dossier.values} == written
-        assert all(value.left and value.right and value.cause for value in dossier.values)
+        # Every value the game shows, in its order; the history's own with their cause, the
+        # template's without one.
+        assert [value.key for value in dossier.values] == list(SHOWN)
+        shown = dict(zip(SHOWN, country.shown, strict=True))
+        for value in dossier.values:
+            assert value.left
+            assert value.right
+            if value.key in written:
+                assert value.position == written[value.key]
+                assert value.cause
+            else:
+                assert value.position == (0 if shown[value.key] == -101 else shown[value.key])
+                assert not value.cause
 
 
 def test_an_archive_without_values_says_so_instead_of_showing_the_models_traits(
@@ -248,7 +264,10 @@ def test_an_archive_without_values_says_so_instead_of_showing_the_models_traits(
     history = record(built)
     older = replace(
         built,
-        history=replace(history, countries=tuple(replace(c, values=()) for c in history.countries)),
+        history=replace(
+            history,
+            countries=tuple(replace(c, values=(), shown=()) for c in history.countries),
+        ),
     )
     reader = Reader(older, "english", atlas.pretty)
     dossier = reader.dossier(history.countries[0].tag)

@@ -67,6 +67,7 @@ from rnw.societies import LandGraph, Polity, Societies, StateFloor
 from .history_fixtures import divided_valley, valley, valley_policy
 from .test_archetype_world import CALIBRATION
 from .test_history_societies import _trajectory_world  # pyright: ignore[reportPrivateUsage]
+from .test_laws import LAW_BOOK
 
 if TYPE_CHECKING:
     from rnw.eu5_start import FinalStartPlan
@@ -189,6 +190,7 @@ def inputs_for(history: History) -> ProjectionInputs:
         state_floor=StateFloor(
             root.geography.rules.minimum_peasants, root.geography.rules.minimum_share
         ),
+        law_book=LAW_BOOK,
     )
     return ProjectionInputs(
         HistoryBootstrap(root, canonical_population(pops), int(populations.sum()), 0),
@@ -261,8 +263,11 @@ def test_authority_selects_a_usable_calibrated_government(
     assert all(country.level == level for country in plan.countries)
     if wanted == "theocracy":
         assert all(not country.include for country in plan.countries)
+        # The vanilla precedents' laws come first; ``eu5_laws`` completes the rest.
         assert all(
-            country.laws == CALIBRATION.theocracy_institutions.laws for country in plan.countries
+            country.laws[:2] == CALIBRATION.theocracy_institutions.laws
+            and dict(country.laws)["theocratic_leadership"] == "clerical_state"
+            for country in plan.countries
         )
 
 

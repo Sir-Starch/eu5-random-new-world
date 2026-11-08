@@ -15,7 +15,7 @@ from rnw.content import (
     RIVER_UNION,
     Formation,
 )
-from rnw.eu5_formation import Identity, block, geography, identities
+from rnw.eu5_formation import Identity, block, geography, identities, key_of
 from rnw.eu5_formation import texts as formation_texts
 from rnw.eu5_missions import (
     ICONS,
@@ -85,7 +85,7 @@ def test_each_formable_smaller_than_the_continent_has_its_road() -> None:
     land = mission.block(f"{key(found[0])}_land")
     assert land is not None
     text = missions(found)
-    assert f"scripted_geography:{geography(REALM)}" in text
+    assert f"scripted_geography:{geography(key_of(REALM))}" in text
     assert "count >= 8 owner ?= root" in text
     proclaim = mission.block(f"{key(found[0])}_proclaim")
     assert proclaim is not None

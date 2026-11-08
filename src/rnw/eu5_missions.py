@@ -17,7 +17,7 @@ import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
-from rnw.eu5_formation import geography, potential
+from rnw.eu5_formation import potential, territory
 from rnw.formations import BY_FAMILY, ROAD
 from rnw.game_texts import Described, Text
 
@@ -63,14 +63,15 @@ def check_installation(game_dir: Path) -> None:
 
 @dataclass(frozen=True, slots=True)
 class Road:
-    """The mission of one formation: its number, the formable's tag and name, its seat and the
-    places a founder must hold to be half way."""
+    """The mission of one formation: its number, the formable's tag and name, its seat, the
+    places a founder must hold to be half way, and the scripted geography of its territory."""
 
     base: str
     formation: Formation
     tag: str
     name: Phrase
     half: int
+    territory: str
 
 
 def offered(formation: Formation) -> bool:
@@ -101,7 +102,14 @@ def roads(
         base = f"{ROAD}_{len(found) + 1}" if keys is None else keys.group(f"{ROAD}_", SUFFIXES)
         need = float(BY_FAMILY[formation.family].fraction) * len(formation.places)
         found.append(
-            Road(base, formation, identity.tag, identity.name, max(1, math.ceil(need / 2)))
+            Road(
+                base,
+                formation,
+                identity.tag,
+                identity.name,
+                max(1, math.ceil(need / 2)),
+                territory(formation, identity),
+            )
         )
     return found
 
@@ -134,10 +142,10 @@ def missions(found: Sequence[Road]) -> str:
     out: list[str] = []
     for road in found:
         formation, tag = road.formation, road.tag
-        territory = f"scripted_geography:{geography(formation)}"
+        scripted = f"scripted_geography:{road.territory}"
         seat = formation.throne or formation.seat
         gathered = (
-            f"{territory} = {{ any_location_in_scripted_geography = "
+            f"{scripted} = {{ any_location_in_scripted_geography = "
             f"{{ count >= {road.half} owner ?= root }} }}"
         )
         lines = [
@@ -147,7 +155,7 @@ def missions(found: Sequence[Road]) -> str:
             "\tplayer_playstyle = military",
             "\tvisible = {",
             "\t\tgame_has_missions_enabled = yes",
-            f"\t\tcapital ?= {{ is_in_scripted_geography = {territory} }}",
+            f"\t\tcapital ?= {{ is_in_scripted_geography = {scripted} }}",
             *(f"\t\t{line}" for line in potential(formation)),
             "\t}",
             "\tenabled = { }",

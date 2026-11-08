@@ -75,8 +75,8 @@ def verify_text(plan: FinalStartPlan, written: writer.WrittenHistory) -> None:
     expected_texts = {
         *opinions,
         *written.chronicles.values(),
-        writer.DECISION,
-        f"{writer.DECISION}_desc",
+        f"{writer.DECISION}.title",
+        f"{writer.DECISION}.desc",
         f"{writer.DECISION}.a",
         f"{writer.EVENT}.title",
         f"{writer.EVENT}.a",

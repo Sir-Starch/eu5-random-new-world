@@ -28,6 +28,7 @@ from rnw import (
     game_texts,
     inputs,
     landcache,
+    text_references,
     worldname,
 )
 from rnw.artifacts import (
@@ -1495,7 +1496,9 @@ def _text_outputs(  # noqa: PLR0913, PLR0915 - every rewritten file needs the sh
     if (rewritten := rewrite_override_locators(override, removed)) != override:
         outputs[_mod_path(LOCATOR_OVERRIDE)] = _encode(game_dir, LOCATOR_OVERRIDE, rewritten)
     history_text = (
-        eu5_history_text.build(natives, loc_keys) if natives.history is not None else None
+        eu5_history_text.build(natives, loc_keys, tuple(cell.key for cell in plan.cells))
+        if natives.history is not None
+        else None
     )
     if history_text is not None:
         verify_history_text(natives, history_text)
@@ -3349,6 +3352,10 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         checkpoint()
         text_checks.update(verify_country_tags(game_dir, texts))
         text_checks.update(verify_localization(texts, vanilla_hashes, game_dir=game_dir))
+        try:
+            text_checks.update(text_references.verify(texts, vanilla_hashes))
+        except text_references.TextReferenceError as error:
+            raise NewWorldExportError(str(error)) from error
         text_stats["scripts_remapped"] = rewrite.remapped
         text_stats["illustrations_dropped"] = rewrite.illustrations
         text_stats["monuments_dropped"] = rewrite.monuments

@@ -28,6 +28,7 @@ from rnw.translations import catalog_languages
 
 from .history_fixtures import divided_valley
 from .test_history import _line  # pyright: ignore[reportPrivateUsage]
+from .test_history_archive import places
 from .test_history_plan import inputs_for, quiet, realized_network
 from .test_history_societies import _neighbours, _prepared  # pyright: ignore[reportPrivateUsage]
 
@@ -41,7 +42,7 @@ def plan() -> FinalStartPlan:
 
 
 def write(plan: FinalStartPlan) -> eu5_history_text.WrittenHistory:
-    written = eu5_history_text.build(plan, KeySpace(key_hashes(plan.names)))
+    written = eu5_history_text.build(plan, KeySpace(key_hashes(plan.names)), places(plan))
     verify_text(plan, written)
     return written
 
@@ -161,7 +162,7 @@ def test_all_world_history_text_renders_without_tokens(plan: FinalStartPlan, lan
     assert all('"' not in text and "\n" not in text for text in texts.values())
     assert all("\\n\\n" in texts[written.chronicles[c.tag]] for c in plan.countries)
     if language != "english":
-        assert texts[eu5_history_text.DECISION] != "Our History"
+        assert texts[f"{eu5_history_text.DECISION}.title"] != "Our History"
 
 
 def test_all_family_variants_render_with_names_in_every_language() -> None:
@@ -236,10 +237,12 @@ def test_guarantee_setup_keeps_provider_direction() -> None:
 
 def test_new_chronicle_keys_skip_taken_localization_hashes(plan: FinalStartPlan) -> None:
     keys = KeySpace(key_hashes(("rnw_chronicle_1", "rnw_chronicle_2")))
-    written = eu5_history_text.build(plan, keys)
+    written = eu5_history_text.build(plan, keys, places(plan))
     assert not set(written.chronicles.values()) & {"rnw_chronicle_1", "rnw_chronicle_2"}
     with pytest.raises(HistoryError, match="interface keys collide"):
-        _ = eu5_history_text.build(plan, KeySpace(key_hashes(("rnw_our_history",))))
+        _ = eu5_history_text.build(
+            plan, KeySpace(key_hashes(("rnw_our_history.title",))), places(plan)
+        )
 
 
 def test_repulsed_attack_never_claims_an_annexation() -> None:

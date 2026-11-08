@@ -2779,3 +2779,7 @@ text = '''Diese Welt entstand, bevor die Gesellschaftswerte festgehalten wurden.
 ["fact.development"]
 source = "21b6a798321a49f7"
 text = '''Entwicklung'''
+
+["history.axis_plain"]
+source = "cfa7580b1f341b1c"
+text = '''{axis}: {value}'''

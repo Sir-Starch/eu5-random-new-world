@@ -4,7 +4,8 @@ The static texts are the stories (events, options, modifiers, privileges), the f
 (descriptions with ``{name}`` for the formable's name, founding modifiers) and the exceptional
 places: the sources of the ``game`` catalogs (``translations``). A world's localization is a set
 of *entries*: a static text by its key (``Text``), a static text with a name filled in
-(``Described``), or a name the world composed (``wording.Name``); ``localize`` writes them in one
+(``Described``) or its scopes bound to fixed objects (``Bound``), or a name the world composed
+(``wording.Name``); ``localize`` writes them in one
 language. Historical sentences and bounded chronicles keep their names, years
 and source templates structured until this same localization boundary.
 """
@@ -15,7 +16,7 @@ from dataclasses import dataclass
 from functools import cache
 from typing import TYPE_CHECKING
 
-from rnw import eu5_places, history_text, memory_texts, translations, wording
+from rnw import eu5_places, history_story, history_text, memory_texts, translations, wording
 from rnw.formations import EXTRA_TEXTS, SPECS
 from rnw.stories import STORIES
 from rnw.storymodel import event_keys
@@ -41,7 +42,26 @@ class Described:
     name: wording.Name
 
 
-type Entry = Text | Described | wording.Name | history_text.Sentence | history_text.Chronicle
+@dataclass(frozen=True, slots=True)
+class Bound:
+    """A static text whose scripted scopes are bound to fixed objects of the world: each pair of
+    ``bindings`` replaces a token of the text (``[target_location.GetNameWithNoTooltip]``) by
+    another (``[ShowLocationNameWithNoTooltip('rnw_loc_00001')]``) in every language. A list
+    that shows the text without an event's scopes (the events list's ``.entry``) needs it."""
+
+    source: str
+    bindings: tuple[tuple[str, str], ...]
+
+
+type Entry = (
+    Text
+    | Described
+    | Bound
+    | wording.Name
+    | history_text.Sentence
+    | history_text.Chronicle
+    | history_story.Story
+)
 
 
 def formation_description(family: str) -> str:
@@ -66,6 +86,7 @@ def sources() -> dict[str, str]:
     found.update(memory_texts.TEXTS)
     found.update(eu5_places.texts(eu5_places.SPECS))
     found.update(history_text.sources())
+    found.update(history_story.TEXTS)
     return found
 
 
@@ -85,13 +106,19 @@ def localize(entries: Mapping[str, Entry], language: str) -> dict[str, str]:
     needed = {
         entry.source: english[entry.source]
         for entry in entries.values()
-        if isinstance(entry, Text | Described)
+        if isinstance(entry, Text | Described | Bound)
     }
     needed.update(
         (key, english[key])
         for entry in entries.values()
         if isinstance(entry, history_text.Sentence | history_text.Chronicle)
         for key in history_text.source_keys(entry)
+    )
+    needed.update(
+        (key, english[key])
+        for entry in entries.values()
+        if isinstance(entry, history_story.Story)
+        for key in history_story.source_keys(entry)
     )
     texts = (
         translations.translate(translations.GAME, language, needed)
@@ -102,12 +129,22 @@ def localize(entries: Mapping[str, Entry], language: str) -> dict[str, str]:
     for key, entry in entries.items():
         if isinstance(entry, Text):
             written[key] = texts[entry.source]
+        elif isinstance(entry, Bound):
+            text = texts[entry.source]
+            for token, value in entry.bindings:
+                if token not in text:
+                    message = f"{entry.source} in {language} lacks the token {token}"
+                    raise ValueError(message)
+                text = text.replace(token, value)
+            written[key] = text
         elif isinstance(entry, Described):
             written[key] = texts[entry.source].replace(
                 "{name}", wording.render(entry.name, language)
             )
         elif isinstance(entry, history_text.Sentence | history_text.Chronicle):
             written[key] = history_text.render(entry, language, texts)
+        elif isinstance(entry, history_story.Story):
+            written[key] = history_story.render(entry, language, texts)
         else:
             written[key] = wording.render(entry, language)
     return written

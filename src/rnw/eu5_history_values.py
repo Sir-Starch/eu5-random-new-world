@@ -16,6 +16,7 @@ from rnw.history_values import (
     MYSTICISM,
     POSTURE,
     QUALITY,
+    SHOWN,
     SPIRITUAL,
     TRADITION,
 )
@@ -99,3 +100,20 @@ def profile_positions(
             require(0 <= score <= PERMILLE, "Invalid history profile position")
             written.append((axis, low + (high - low) * score // PERMILLE))
     return tuple(written)
+
+
+def check_shown(value_texts: Sequence[str]) -> tuple[str, ...]:
+    """The values the game shows from the start, in its order: those its definitions open by no
+    ``age`` and no ``allow``. Raise unless they are ``history_values.SHOWN``, which the window
+    reads without the game."""
+    shown = tuple(
+        entry.key
+        for text in value_texts
+        for entry in parse(text).entries
+        if entry.key is not None
+        and isinstance(entry.value, Block)
+        and entry.value.first("age") is None
+        and entry.value.block("allow") is None
+    )
+    require(shown == SHOWN, f"The game shows other societal values: {', '.join(shown)}")
+    return shown

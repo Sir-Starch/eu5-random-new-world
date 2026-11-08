@@ -46,8 +46,8 @@ class Chronicle:
 
 
 TEXTS: Final[dict[str, str]] = {
-    "rnw_our_history": "Our History",
-    "rnw_our_history_desc": "Read the record of our society and its predecessors.",
+    "rnw_our_history.title": "Our History",
+    "rnw_our_history.desc": "Read the record of our society and its predecessors.",
     "rnw_our_history.a": "Open the chronicle.",
     "rnw_chronicle.1.title": "Our History",
     "rnw_chronicle.1.a": "Close the chronicle.",

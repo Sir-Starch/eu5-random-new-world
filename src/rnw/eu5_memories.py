@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from rnw.content import RESTORATION
-from rnw.game_texts import Text
+from rnw.game_texts import Bound, Text
 from rnw.history_model import Action, Factor
 from rnw.memory_texts import (
     BIASES_DIR,
@@ -44,6 +44,7 @@ from rnw.memory_texts import (
     REFUSED,
     SHRINE,
     SPREAD,
+    TEXTS,
     VALUES,
     VALUES_DIR,
     WINDOW,
@@ -57,6 +58,7 @@ if TYPE_CHECKING:
     from rnw.content import ContentPlan, Fallen, Formation
     from rnw.eu5_start import FinalStartPlan
     from rnw.game_texts import Entry
+    from rnw.loc_keys import KeySpace
 
 
 class RecallError(ValueError):
@@ -186,6 +188,62 @@ def event_id(number: int) -> str:
     return f"{NAMESPACE}.{number}"
 
 
+def entry_key(number: int) -> str:
+    """The key of the name the events list shows for a memory event (vanilla's
+    ``<event>.entry``, which every event with a ``dynamic_historical_event`` window has)."""
+    return f"{event_id(number)}.entry"
+
+
+# The scopes a family's title names, and how the events list, which has no scopes, names them.
+LOCATION_SCOPE: str = "[target_location.GetNameWithNoTooltip]"
+PARTNER_SCOPE: str = "[partner.GetNameWithNoTooltip]"
+
+
+def numbers(memories: Sequence[Memory], keys: KeySpace | None = None) -> list[int]:
+    """The number of each memory event: in order from 1, past any number whose ``.entry`` key
+    shares the engine's hash with a key already taken (``loc_keys``)."""
+    found: list[int] = []
+    number = 0
+    for _ in memories:
+        number += 1
+        while keys is not None and not keys.claim((entry_key(number),)):
+            number += 1
+        found.append(number)
+    return found
+
+
+def _numbered(memories: Sequence[Memory], numbered: Sequence[int] | None) -> list[int]:
+    if numbered is None:
+        return list(range(1, len(memories) + 1))
+    if len(numbered) != len(memories):
+        message = "Every memory event needs one number"
+        raise RecallError(message)
+    return list(numbered)
+
+
+def _entry(memory: Memory) -> Bound:
+    """The family's title with its scopes bound to the memory's place and partner."""
+    source = f"{NAMESPACE}.{memory.family}.title"
+    english = TEXTS[source]
+    bindings = [
+        (token, value)
+        for token, value, used in (
+            (
+                LOCATION_SCOPE,
+                f"[ShowLocationNameWithNoTooltip('{memory.place}')]",
+                bool(memory.place),
+            ),
+            (
+                PARTNER_SCOPE,
+                f"[GetCountry('{memory.partner}').GetNameWithNoTooltip]",
+                bool(memory.partner),
+            ),
+        )
+        if used and token in english
+    ]
+    return Bound(source, tuple(bindings))
+
+
 def _both(opinion: str) -> list[str]:
     return [
         f"add_opinion = {{ target = scope:partner modifier = {opinion} }}",
@@ -221,10 +279,13 @@ def _lines(lines: Sequence[str], depth: int) -> str:
     return "".join("\t" * depth + line + "\n" for line in lines)
 
 
-def events(memories: Sequence[Memory], restored: Mapping[int, str]) -> str:
-    """The script of the memory events; ``restored`` gives the tag of each restoration."""
+def events(
+    memories: Sequence[Memory], restored: Mapping[int, str], numbered: Sequence[int] | None = None
+) -> str:
+    """The script of the memory events; ``restored`` gives the tag of each restoration and
+    ``numbered`` the number of each event (``numbers``; in order from 1 without it)."""
     out = [f"namespace = {NAMESPACE}\n"]
-    for number, memory in enumerate(memories, start=1):
+    for number, memory in zip(_numbered(memories, numbered), memories, strict=True):
         base = f"{NAMESPACE}.{memory.family}"
         trigger, first, second, first_ai, second_ai = _parts(memory, restored.get(memory.realm, ""))
         scopes: list[str] = []
@@ -268,16 +329,22 @@ def events(memories: Sequence[Memory], restored: Mapping[int, str]) -> str:
     return "".join(out)
 
 
-def texts(memories: Sequence[Memory]) -> dict[str, Entry]:
-    """The localization: the static texts of each family that the world's events use."""
-    return {
+def texts(memories: Sequence[Memory], numbered: Sequence[int] | None = None) -> dict[str, Entry]:
+    """The localization: the static texts of each family that the world's events use, and the
+    name of each event in the events list (its family's title, of its own place)."""
+    found: dict[str, Entry] = {
         f"{NAMESPACE}.{memory.family}.{part}": Text(f"{NAMESPACE}.{memory.family}.{part}")
         for memory in memories
         for part in ("title", "desc", "a", "b")
     }
+    for number, memory in zip(_numbered(memories, numbered), memories, strict=True):
+        found[entry_key(number)] = _entry(memory)
+    return found
 
 
-def stats(memories: Sequence[Memory]) -> list[dict[str, object]]:
+def stats(
+    memories: Sequence[Memory], numbered: Sequence[int] | None = None
+) -> list[dict[str, object]]:
     """The report's record of each memory event and its cause (N-C6)."""
     return [
         {
@@ -289,7 +356,7 @@ def stats(memories: Sequence[Memory]) -> list[dict[str, object]]:
             "cause": memory.cause,
             "year": memory.year,
         }
-        for number, memory in enumerate(memories, start=1)
+        for number, memory in zip(_numbered(memories, numbered), memories, strict=True)
     ]
 
 

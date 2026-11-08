@@ -1030,11 +1030,11 @@ text = '''这片水域鱼群丰富，足以养活周边所有海岸。'''
 source = "91430246d65837db"
 text = '''条约经线'''
 
-["rnw_our_history"]
+["rnw_our_history.title"]
 source = "59ab2712ca1d5b62"
 text = '''我们的历史'''
 
-["rnw_our_history_desc"]
+["rnw_our_history.desc"]
 source = "342ac1d5ca933aa8"
 text = '''阅读我们社会及其前身的编年史。'''
 
@@ -1853,3 +1853,183 @@ text = '''宣告新国家'''
 ["rnw_road.proclaim_desc"]
 source = "faed96e7a4804d75"
 text = '''土地已在我们手中，我们可以宣告：{name}。'''
+
+["rnw_formation_coast_atlantic_ocean_continent"]
+source = "8e5f3c2bcbfc9b22"
+text = '''大西洋沿岸'''
+
+["rnw_formation_coast_pacific_ocean_continent"]
+source = "c67d6464d0fa0814"
+text = '''太平洋沿岸'''
+
+["rnw_story_origin_foundation"]
+source = "5f172bf2e94ba735"
+text = '''{name}的记忆可追溯至{year}年，那时其族人已在{place}一带生活。'''
+
+["rnw_story_origin_home"]
+source = "dcd887b778c8b9ff"
+text = '''{name}的记忆可追溯至{year}年，那时其族人已在这片土地上生活。'''
+
+["rnw_story_origin_union"]
+source = "60ec5876a09adc95"
+text = '''{name}兴起于{year}年，当时{first}与{second}合而为一。'''
+
+["rnw_story_origin_joined"]
+source = "f0485c7b0fc29806"
+text = '''{name}于{year}年因{first}的并入而形成今日的面貌。'''
+
+["rnw_story_origin_secession"]
+source = "cbd96f5ffa9ee69c"
+text = '''{name}始于{year}年，当时它脱离了{first}。'''
+
+["rnw_story_origin_separation"]
+source = "7c1da184a47dc0e2"
+text = '''{name}是{year}年瓦解的{first}的继承者之一。'''
+
+["rnw_story_origin_remnant"]
+source = "29b4adcf21b45fce"
+text = '''{name}是{year}年瓦解的旧{name}所遗留的部分。'''
+
+["rnw_story_origin_other"]
+source = "5d1059466562fbb9"
+text = '''{name}于{year}年首次见于记载。'''
+
+["rnw_story_when_year"]
+source = "0067799113adc27f"
+text = '''{year}年，'''
+
+["rnw_story_when_same"]
+source = "c0f903b48b9acfa2"
+text = '''同年，'''
+
+["rnw_story_when_soon"]
+source = "07861017f0c00120"
+text = '''此后不久，'''
+
+["rnw_story_union"]
+source = "79d631be9278a6a3"
+text = '''{when}{second}与{third}合并为{first}。'''
+
+["rnw_story_joined"]
+source = "0b0082e02053cdbe"
+text = '''{when}{second}并入{first}。'''
+
+["rnw_story_separation"]
+source = "609e239c6cffda59"
+text = '''{when}{first}瓦解，分裂为数个继承者。'''
+
+["rnw_story_secession"]
+source = "d3f2176bfd83243c"
+text = '''{when}{second}脱离了{first}。'''
+
+["rnw_story_losses"]
+source = "6fcbf22ce12ef595"
+text = '''从{start}年到{end}年，{first}接连失去领土：{list}。'''
+
+["rnw_story_lost_item"]
+source = "abac850c2c0f60da"
+text = '''{name}（{year}年）'''
+
+["rnw_story_independence"]
+source = "79347e39247e64ff"
+text = '''{when}{first}摆脱了{second}的统治。'''
+
+["rnw_story_dependency"]
+source = "07eed8df0afac9a7"
+text = '''{when}{first}屈服于{second}，成为其附庸。'''
+
+["rnw_story_protection"]
+source = "b8167d26a54276b8"
+text = '''{when}{second}将{first}置于其保护之下。'''
+
+["rnw_story_pact"]
+source = "f7bd66e2416059a0"
+text = '''{when}{first}与{second}立誓互相保卫。'''
+
+["rnw_story_access"]
+source = "09941059c88cd47c"
+text = '''{when}{second}向{first}的朝圣者开放了{place}的圣地。'''
+
+["rnw_story_conflict"]
+source = "d0be0b8fec427713"
+text = '''{when}{first}与{second}为争夺{place}而开战。'''
+
+["rnw_story_conflict_for"]
+source = "a952d3cc4407add9"
+text = '''{when}{first}为争夺{place}与{second}交战。'''
+
+["rnw_story_wars"]
+source = "82c25f70f370ed04"
+text = '''从{start}年到{end}年，{first}与{second}战事不断。'''
+
+["rnw_story_wars_over"]
+source = "2c34f4921acbb20b"
+text = '''从{start}年到{end}年，{first}与{second}为争夺{list}战事不断。'''
+
+["rnw_story_conflict_open"]
+source = "5b225c41713c7f36"
+text = '''{when}{first}与{second}开战。'''
+
+["rnw_story_pressure"]
+source = "fe131734673d61c4"
+text = '''{when}{first}与{second}发生冲突，但没有土地易手。'''
+
+["rnw_story_repelled"]
+source = "088214effc9e6834"
+text = '''{when}{first}与{second}交战，进攻被击退。'''
+
+["rnw_story_reform"]
+source = "0610aa549479ab68"
+text = '''{when}{first}改变了其统治方式。'''
+
+["rnw_story_resisted"]
+source = "f3afab850b51d46c"
+text = '''{when}{first}试图改变其统治方式，但未能成功。'''
+
+["rnw_story_migration"]
+source = "2b2b2504b826d241"
+text = '''{when}来自{first}的人们定居于{second}。'''
+
+["rnw_story_exchange"]
+source = "d3c46e91b28928b8"
+text = '''{when}{first}开始与{second}通商。'''
+
+["rnw_story_contact"]
+source = "c4c46f9c586bbe13"
+text = '''{when}{first}首次与{second}相遇。'''
+
+["rnw_story_now_vassal"]
+source = "0f4c4193591f5522"
+text = '''如今，{name}是{first}的附庸。'''
+
+["rnw_story_now_free"]
+source = "cc8aeb987887b05c"
+text = '''如今，{name}不受任何宗主管辖。'''
+
+["rnw_story_now_subjects"]
+source = "f4c41aea17785191"
+text = '''其附庸有{list}。'''
+
+["rnw_story_now_allies"]
+source = "c742fdfb1818b98e"
+text = '''其盟友有{list}。'''
+
+["rnw_story_now_protectors"]
+source = "08b0036a61940020"
+text = '''其保护者有{list}。'''
+
+["rnw_story_now_allies_protecting"]
+source = "af2ceb8ef0f54c57"
+text = '''其盟友{list}同时也是其保护者。'''
+
+["rnw_story_now_rivals"]
+source = "3aec78a09483de56"
+text = '''其宿敌有{list}。'''
+
+["rnw_story_list_pair"]
+source = "a8c60ace0cf11391"
+text = '''{first}和{second}'''
+
+["rnw_story_list_series"]
+source = "ce79e43811c0b2cc"
+text = '''{first}、{second}'''

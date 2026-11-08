@@ -41,6 +41,9 @@ class Country:
     history_actor: str = ""
     memberships: tuple[str, ...] = ()
     archetypes: tuple[str, ...] = ()
+    # Where the country stands on each societal value at the start, its template's included
+    # (``eu5_laws.positions``); the window shows them as the game does.
+    positions: tuple[tuple[str, int], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

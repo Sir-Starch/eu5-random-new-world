@@ -128,7 +128,7 @@ on these observations.
 | D10 | In-game visibility | Pair-specific named historical opinions plus the voluntary **Our History** decision; vanilla-key fallback |
 | D11 | Relations in EU5 | Vassals, alliances, rivals, confederations, opinions, discovery: core. `guarantee`: core with fallback. Claims, starting cores, truces, starting wars, tributaries, dynasties, ruins: not in 1.2.0. *Revised by D29:* cores granted by a formation and formables of political inheritance are in 1.2.0 |
 | D12 | Existing systems | Refactored first into a final start plan with byte-equal output (H1), then fed by history |
-| D13 | Reading surface | Generator atlas in both windows; in-game opinions and chronicle; structured chronicle text, not free prose |
+| D13 | Reading surface | Generator atlas in both windows; in-game opinions and chronicle; structured chronicle text, not free prose. *Revised by D35:* the chronicle is told as a story |
 | D14 | Player control | History always on; one new control, **Historical turbulence** (Calm/Varied/Turbulent), field `natives.turbulence_permille`; it moves conflict propensity, setting weights and strategy mix (D22–D23) |
 | D15 | Atlas | `format` 3 with a `history` section inside `atlas.json`; formats 1/2 stay readable and show no history (implementation correction below) |
 | D16 | Stories | Existing families read plan facts. *Revised by D29:* new event families driven by projected memories are in 1.2.0 |
@@ -150,6 +150,7 @@ on these observations.
 | D32 | Second acceptance round | After the failed held-out run (C509) the owner chose another D28 round: seeds 1005–1008 become development, mechanisms are fixed with margin, new held-out seeds 1009–1012 are frozen and run once (owner, 2026-11-07) |
 | D33 | Classifier order and the turbulence control | Fractured is tested before rival powers; Q5's turbulence order is read pooled over the seed set, each sweep pair still higher at high than at low; `ORDINARY_LORD_POWER` 6 and `UNREST_SLOPE` 450 (slope restored to 350 by D34) (agent, under the owner's delegation, 2026-11-07, before any capture of 1009–1012) |
 | D34 | Statistical checks inform, they do not gate | The Q-checks of §18 stay computed and reported but are no longer release holds; no further held-out round is run to pass a number. Hard invariants and S8–S11 stay. Variety and working sliders are the product goals; `UNREST_SLOPE` back to 350 (owner, 2026-11-07) |
+| D35 | Our History tells a story | The game's Our History and the window tell each country's story in paragraphs (origins, fortunes, its place in 1337), built from the chronicle's events and the setup's relations (`history_story`); the window keeps the event list beside it. Sentences still claim only what the record holds (owner, 2026-11-08, after the RLTM sitting) |
 
 ## 4. Scope and abstractions
 

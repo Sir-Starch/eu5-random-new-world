@@ -1,5 +1,6 @@
 <script lang="ts">
-  // The most significant recorded events of a society, oldest first, on a rail of dots.
+  // A society's story as the game's Our History tells it, then the most significant recorded
+  // events, oldest first, on a rail of dots.
   import { t } from "../../lib/app.svelte";
   import { eventStyle } from "../../lib/history";
   import type { HistoryEntry } from "../../lib/types";
@@ -8,14 +9,27 @@
 
   let {
     entries,
+    story = [],
+    title = "",
     names,
     onplace,
   }: {
     entries: HistoryEntry[];
+    story?: string[];
+    title?: string;
     names: string[];
     onplace: (cell: number) => void;
   } = $props();
 </script>
+
+{#if story.length}
+  <h3 class="hx-h">{title}</h3>
+  <div class="hx-story">
+    {#each story as paragraph, index (index)}
+      <p>{paragraph}</p>
+    {/each}
+  </div>
+{/if}
 
 <p class="hx-note">{t("history.chronicle_note")}</p>
 {#if entries.length === 0}

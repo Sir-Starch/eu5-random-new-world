@@ -2201,3 +2201,17 @@ The covered picture of a world (window preview, mod-list thumbnail) is fixed in 
 cut from the canvas after the island groups were placed, so each vanilla island group left an uncovered
 disc at a seed-dependent place; it now covers the whole canvas (pictures only, no epoch).
 
+## 2026-11-08 — The owner's RLTM sitting: laws, keys on the screen, the story (C514–C518)
+
+The owner played the generated duchy of Unichita on world RLTM (a world they generated with hub
+1.2.0) and reported three faults with screenshots: laws without a policy at the start, keys
+instead of names, and an *Our History* that read as a list of dated records. The session's logs
+showed no crash; besides the known locator and DLC thumbnail lines, the mod's own lines were the
+missing texts (C515) and 14 rivalries the engine drops (C518). The laws came from templates made
+for a lower level of technology than the one the states are given (C514); the texts from four
+names the world never wrote (C515). Both are fixed at construction, the texts under a new export
+check. The owner asked for a procedurally written description: the chronicle is now a story
+(D35, C516). The generator's Society tab lists every value the game shows, in its order (C517).
+The world RLTM regenerated from its code differs from the installed one only in localization
+and the countries' laws; the window was checked in headless Chromium on that world.
+

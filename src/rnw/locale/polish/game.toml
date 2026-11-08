@@ -1030,11 +1030,11 @@ text = '''Wody tak pełne ryb, że wykarmiają całe okoliczne wybrzeże.'''
 source = "91430246d65837db"
 text = '''Południk traktatu'''
 
-["rnw_our_history"]
+["rnw_our_history.title"]
 source = "59ab2712ca1d5b62"
 text = '''Nasza historia'''
 
-["rnw_our_history_desc"]
+["rnw_our_history.desc"]
 source = "342ac1d5ca933aa8"
 text = '''Przeczytaj kronikę naszej społeczności i jej poprzedników.'''
 
@@ -1853,3 +1853,183 @@ text = '''Ogłosić nowe państwo'''
 ["rnw_road.proclaim_desc"]
 source = "faed96e7a4804d75"
 text = '''Mając ziemie w rękach, możemy ogłosić: {name}.'''
+
+["rnw_formation_coast_atlantic_ocean_continent"]
+source = "8e5f3c2bcbfc9b22"
+text = '''Wybrzeże atlantyckie'''
+
+["rnw_formation_coast_pacific_ocean_continent"]
+source = "c67d6464d0fa0814"
+text = '''Wybrzeże pacyficzne'''
+
+["rnw_story_origin_foundation"]
+source = "5f172bf2e94ba735"
+text = '''Pamięć ludu {name} sięga roku {year}, gdy żył on już w okolicach osady {place}.'''
+
+["rnw_story_origin_home"]
+source = "dcd887b778c8b9ff"
+text = '''Pamięć ludu {name} sięga roku {year}, gdy żył on już na tej ziemi.'''
+
+["rnw_story_origin_union"]
+source = "60ec5876a09adc95"
+text = '''Lud {name} powstał w roku {year}, gdy ludy {first} i {second} stały się jednym.'''
+
+["rnw_story_origin_joined"]
+source = "f0485c7b0fc29806"
+text = '''Lud {name} przybrał obecny kształt w roku {year}, gdy przyłączył się do niego lud {first}.'''
+
+["rnw_story_origin_secession"]
+source = "cbd96f5ffa9ee69c"
+text = '''Lud {name} narodził się w roku {year}, odrywając się od ludu {first}.'''
+
+["rnw_story_origin_separation"]
+source = "7c1da184a47dc0e2"
+text = '''Lud {name} jest jednym z dziedziców ludu {first}, który rozpadł się w roku {year}.'''
+
+["rnw_story_origin_remnant"]
+source = "29b4adcf21b45fce"
+text = '''Lud {name} to to, co zostało z dawnego ludu {name}, który rozpadł się w roku {year}.'''
+
+["rnw_story_origin_other"]
+source = "5d1059466562fbb9"
+text = '''Lud {name} pojawia się w przekazach w roku {year}.'''
+
+["rnw_story_when_year"]
+source = "0067799113adc27f"
+text = '''W roku {year}'''
+
+["rnw_story_when_same"]
+source = "c0f903b48b9acfa2"
+text = '''Tego samego roku'''
+
+["rnw_story_when_soon"]
+source = "07861017f0c00120"
+text = '''Wkrótce potem'''
+
+["rnw_story_union"]
+source = "79d631be9278a6a3"
+text = '''{when} ludy {second} i {third} połączyły się w lud {first}.'''
+
+["rnw_story_joined"]
+source = "0b0082e02053cdbe"
+text = '''{when} lud {second} przyłączył się do ludu {first}.'''
+
+["rnw_story_separation"]
+source = "609e239c6cffda59"
+text = '''{when} lud {first} rozpadł się na kilku następców.'''
+
+["rnw_story_secession"]
+source = "d3f2176bfd83243c"
+text = '''{when} lud {second} oderwał się od ludu {first}.'''
+
+["rnw_story_losses"]
+source = "6fcbf22ce12ef595"
+text = '''W latach {start}–{end} lud {first} tracił jedną ziemię po drugiej: {list}.'''
+
+["rnw_story_lost_item"]
+source = "abac850c2c0f60da"
+text = '''{name} ({year})'''
+
+["rnw_story_independence"]
+source = "79347e39247e64ff"
+text = '''{when} lud {first} zrzucił zwierzchnictwo ludu {second}.'''
+
+["rnw_story_dependency"]
+source = "07eed8df0afac9a7"
+text = '''{when} lud {first} ugiął się przed ludem {second} i został jego wasalem.'''
+
+["rnw_story_protection"]
+source = "b8167d26a54276b8"
+text = '''{when} lud {second} wziął lud {first} pod swoją opiekę.'''
+
+["rnw_story_pact"]
+source = "f7bd66e2416059a0"
+text = '''{when} ludy {first} i {second} przysięgły bronić się nawzajem.'''
+
+["rnw_story_access"]
+source = "09941059c88cd47c"
+text = '''{when} lud {second} otworzył święte miejsce w osadzie {place} dla pielgrzymów ludu {first}.'''
+
+["rnw_story_conflict"]
+source = "d0be0b8fec427713"
+text = '''{when} ludy {first} i {second} wszczęły wojnę o osadę {place}.'''
+
+["rnw_story_conflict_for"]
+source = "a952d3cc4407add9"
+text = '''{when} lud {first} walczył z ludem {second} o osadę {place}.'''
+
+["rnw_story_wars"]
+source = "82c25f70f370ed04"
+text = '''W latach {start}–{end} ludy {first} i {second} toczyły wojnę za wojną.'''
+
+["rnw_story_wars_over"]
+source = "2c34f4921acbb20b"
+text = '''W latach {start}–{end} ludy {first} i {second} toczyły wojnę za wojną o te ziemie: {list}.'''
+
+["rnw_story_conflict_open"]
+source = "5b225c41713c7f36"
+text = '''{when} ludy {first} i {second} wszczęły wojnę.'''
+
+["rnw_story_pressure"]
+source = "fe131734673d61c4"
+text = '''{when} ludy {first} i {second} starły się, lecz żadna ziemia nie zmieniła właściciela.'''
+
+["rnw_story_repelled"]
+source = "088214effc9e6834"
+text = '''{when} ludy {first} i {second} walczyły, a atak został odparty.'''
+
+["rnw_story_reform"]
+source = "0610aa549479ab68"
+text = '''{when} lud {first} zmienił sposób sprawowania władzy.'''
+
+["rnw_story_resisted"]
+source = "f3afab850b51d46c"
+text = '''{when} lud {first} próbował zmienić sposób sprawowania władzy, lecz próba się nie powiodła.'''
+
+["rnw_story_migration"]
+source = "2b2b2504b826d241"
+text = '''{when} ludzie z osady {first} osiedlili się w osadzie {second}.'''
+
+["rnw_story_exchange"]
+source = "d3c46e91b28928b8"
+text = '''{when} lud {first} zaczął handlować z ludem {second}.'''
+
+["rnw_story_contact"]
+source = "c4c46f9c586bbe13"
+text = '''{when} lud {first} po raz pierwszy zetknął się z ludem {second}.'''
+
+["rnw_story_now_vassal"]
+source = "0f4c4193591f5522"
+text = '''Dziś lud {name} jest wasalem ludu {first}.'''
+
+["rnw_story_now_free"]
+source = "cc8aeb987887b05c"
+text = '''Dziś lud {name} nie podlega żadnemu zwierzchnikowi.'''
+
+["rnw_story_now_subjects"]
+source = "f4c41aea17785191"
+text = '''Jego wasale: {list}.'''
+
+["rnw_story_now_allies"]
+source = "c742fdfb1818b98e"
+text = '''Jego sojusznicy: {list}.'''
+
+["rnw_story_now_protectors"]
+source = "08b0036a61940020"
+text = '''Jego opiekunowie: {list}.'''
+
+["rnw_story_now_allies_protecting"]
+source = "af2ceb8ef0f54c57"
+text = '''Jego sojusznicy i opiekunowie: {list}.'''
+
+["rnw_story_now_rivals"]
+source = "3aec78a09483de56"
+text = '''Jego rywale: {list}.'''
+
+["rnw_story_list_pair"]
+source = "a8c60ace0cf11391"
+text = '''{first} i {second}'''
+
+["rnw_story_list_series"]
+source = "ce79e43811c0b2cc"
+text = '''{first}, {second}'''

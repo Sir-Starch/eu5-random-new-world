@@ -2779,3 +2779,7 @@ text = '''이 세계는 사회 가치관이 기록되기 전에 만들어졌습�
 ["fact.development"]
 source = "21b6a798321a49f7"
 text = '''개발'''
+
+["history.axis_plain"]
+source = "cfa7580b1f341b1c"
+text = '''{axis}: {value}'''

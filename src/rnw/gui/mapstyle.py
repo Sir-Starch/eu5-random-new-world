@@ -31,6 +31,7 @@ from rnw import atlas as atlas_module
 from rnw.gui.text import grouped
 from rnw.history_presenter import DEFAULT_RANK
 from rnw.history_values import AXES as VALUE_AXES
+from rnw.history_values import SHOWN as SHOWN_VALUES
 from rnw.history_values import poles as value_poles
 from rnw.opinions import TREATIES
 from rnw.topology import euclidean_distance
@@ -927,9 +928,10 @@ def identifiers(atlas: Atlas) -> frozenset[str]:
         found.update(country.rank or DEFAULT_RANK for country in atlas.history.countries)
         # The engine's opinions of the treaties, which the Relations tab names as the game does.
         found.update(treaty.key for treaty in TREATIES)
-        if any(country.values for country in atlas.history.countries):
-            found.update(VALUE_AXES)
-            found.update(pole for axis in VALUE_AXES for pole in value_poles(axis))
+        if any(country.values or country.shown for country in atlas.history.countries):
+            axes = (*VALUE_AXES, *SHOWN_VALUES)
+            found.update(axes)
+            found.update(pole for axis in axes for pole in value_poles(axis))
             found.add("game_concept_societal_values")
     for value in (*atlas.regions, *atlas.areas, *atlas.names):
         if isinstance(value, str) and value:

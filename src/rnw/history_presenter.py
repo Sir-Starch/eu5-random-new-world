@@ -7,11 +7,11 @@ from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from typing import TYPE_CHECKING, Final, final
 
-from rnw import history_text, translations, wording
+from rnw import history_story, history_text, translations, wording
 from rnw.history_archive import AXES, UNWRITTEN
 from rnw.history_model import Action, TrajectoryKind
 from rnw.history_values import AXES as VALUE_AXES
-from rnw.history_values import SOURCE, poles
+from rnw.history_values import SHOWN, SOURCE, poles
 from rnw.opinions import treaty_opinions
 
 if TYPE_CHECKING:
@@ -34,6 +34,7 @@ SOURCES: Final[dict[str, str]] = {
     "history.opinion_fading": "{label}: {value}, {fade} a year",
     "history.position": "Government: {government} · Country Rank: {rank}",
     "history.axis": "{axis}: {value} — {cause} ({year})",
+    "history.axis_plain": "{axis}: {value}",
     "history.shared": "{kind}: {members}",
     "history.changes": "{year} · Locations changing historical owner: {count}",
     "history.great_empire": "Great empire",
@@ -79,6 +80,8 @@ YEAR_PREFIX: Final[str] = r"^{year}\s*[年년]?\s*[:\uff1a]\s*"
 # The rank the game gives a country whose setup names none: an owner's saved game holds every
 # such country as a county [V-LOCAL C500].
 DEFAULT_RANK: Final[str] = "rank_county"
+# The title of the game's Our History, which heads the story (``eu5_history_text``).
+STORY_TITLE: Final[str] = "rnw_chronicle.1.title"
 # The trajectories of the *Extraordinary peoples* setting: a region shows whether they took
 # shape. The ordinary regional aims (D22) are the model's own and are not shown (plan D31).
 EXTRAORDINARY: Final[frozenset[TrajectoryKind]] = frozenset(
@@ -191,6 +194,10 @@ class Dossier:
     chronicle: tuple[Entry, ...]
     partners: tuple[Partner, ...]
     more: int
+    # The country's story as the game's Our History tells it (``history_story``): its title and
+    # paragraphs, in the window's language.
+    story_title: str = ""
+    story: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -269,7 +276,9 @@ class Reader:
         self.language = language
         self.key = key
         self.texts = translations.translate(translations.WINDOW, language, SOURCES)
-        self.game = translations.translate(translations.GAME, language, history_text.sources())
+        self.game = translations.translate(
+            translations.GAME, language, {**history_text.sources(), **history_story.TEXTS}
+        )
         self.countries = {c.tag: c for c in atlas.history.countries} if atlas.history else {}
         self.tags = {c.actor: c.tag for c in self.countries.values()}
         # A society that is a country on the map is named as the map names it (as the game's
@@ -347,9 +356,9 @@ class Reader:
         if record is None:
             return (Section(self.say("title"), (Line(self.say("none")),)),)
         country = self.countries[tag]
-        actor = record.actors[country.actor]
+        beginning = self.beginning(record, country.actor)
         profile = [
-            self.sentence(record, actor.origin, country.actor),
+            Line(beginning.text, beginning.place),
             Line(
                 self.say(
                     "position",
@@ -366,7 +375,9 @@ class Reader:
                 Line(
                     self.say(
                         "axis", axis=value.label, value=shown, cause=value.cause, year=value.year
-                    ),
+                    )
+                    if value.cause
+                    else self.say("axis_plain", axis=value.label, value=shown),
                     value.place,
                 )
             )
@@ -376,6 +387,10 @@ class Reader:
         return (
             Section(self.say("profile"), tuple(profile)),
             Section(self.say("relations"), self._relationships(record, country.actor)),
+            Section(
+                self.game[STORY_TITLE],
+                tuple(Line(paragraph) for paragraph in self.story(record, country.actor)),
+            ),
             Section(
                 self.say("chronicle"),
                 tuple(self.sentence(record, row, country.actor) for row in rows),
@@ -492,12 +507,11 @@ class Reader:
         if record is None:
             return None
         country = self.countries[tag]
-        actor = record.actors[country.actor]
         partners, more = self._partners(record, country.actor)
         return Dossier(
             government=self.key(country.government),
             rank=self.key(country.rank or DEFAULT_RANK),
-            origin=self.entry(record, actor.origin, country.actor),
+            origin=self.beginning(record, country.actor),
             values=self._values(country, self._axes(record, country.actor)),
             chronicle=tuple(
                 self.entry(record, row, country.actor)
@@ -505,7 +519,37 @@ class Reader:
             ),
             partners=partners,
             more=more,
+            story_title=self.game[STORY_TITLE],
+            story=self.story(record, country.actor),
         )
+
+    def beginning(self, record: Archive, actor: int) -> Entry:
+        """How the country began, in its story's words, at its seat (the Society tab's origin)."""
+        event = record.events[record.actors[actor].origin]
+        family = history_text.event_family(event.kind, event.outcome)
+        told = history_story.origin(
+            record,
+            actor,
+            name=lambda other: self.society(record, other),
+            place=lambda place: self.atlas.names[place],
+        )
+        return Entry(
+            event.year,
+            family,
+            self.game[f"rnw_history_cause_{family}"],
+            history_text.render(told, self.language, self.game),
+            record.actors[actor].seat,
+        )
+
+    def story(self, record: Archive, actor: int) -> tuple[str, ...]:
+        """The country's story in paragraphs, as the game tells it (``history_story``)."""
+        told = history_story.tell(
+            record,
+            actor,
+            name=lambda other: self.society(record, other),
+            place=lambda place: self.atlas.names[place],
+        )
+        return history_story.paragraphs(told, self.language, self.game)
 
     def _axes(self, record: Archive, actor: int) -> list[Axis]:
         """The society model's traits of ``actor``, each with the event that last shaped it: the
@@ -531,14 +575,27 @@ class Reader:
         return axes
 
     def _values(self, country: CountryFact, axes: list[Axis]) -> tuple[Value, ...]:
-        """The societal values written for the country, named as the game names them."""
+        """The societal values as the game shows the country them: every value it shows, in its
+        order (``history_values.SHOWN``), its template's positions included. A value the
+        history set names the event that shaped it; one the template gives names none. An
+        archive made before the shown values were kept lists the written ones, in that order."""
         by_trait = {axis.key: axis for axis in axes}
+        written = {
+            key: position
+            for key, position in zip(VALUE_AXES, country.values, strict=False)
+            if position != UNWRITTEN
+        }
+        if country.shown:
+            standing = {
+                key: written.get(key, 0 if position == UNWRITTEN else position)
+                for key, position in zip(SHOWN, country.shown, strict=True)
+            }
+        else:
+            standing = {key: written[key] for key in SHOWN if key in written}
         found: list[Value] = []
-        for key, position in zip(VALUE_AXES, country.values, strict=False):
-            if position == UNWRITTEN:
-                continue
+        for key, position in standing.items():
             left, right = poles(key)
-            cause = by_trait[SOURCE[key]]
+            cause = by_trait[SOURCE[key]] if key in written and key in SOURCE else None
             found.append(
                 Value(
                     key,
@@ -546,10 +603,10 @@ class Reader:
                     self.key(left),
                     self.key(right),
                     position,
-                    cause.kind,
-                    cause.cause,
-                    cause.year,
-                    cause.place,
+                    cause.kind if cause else "",
+                    cause.cause if cause else "",
+                    cause.year if cause else 0,
+                    cause.place if cause else -1,
                 )
             )
         return tuple(found)

@@ -823,7 +823,9 @@ def _group_problems(
             wanted = {(tags[0], other) for other in tags[1:]}
             if (
                 members[0].include
-                or members[0].laws != institutions.laws
+                # The theocracy's own laws hold the vanilla precedents' (``eu5_laws`` completes
+                # the rest).
+                or not set(institutions.laws) <= set(members[0].laws)
                 or members[0].parliament != institutions.parliament
                 or members[0].religion in institutions.excluded_religions
                 or any(dict(members[0].government).get(k) != v for k, v in fields.items())

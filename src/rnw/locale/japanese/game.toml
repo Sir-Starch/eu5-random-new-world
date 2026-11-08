@@ -1030,11 +1030,11 @@ text = '''魚があまりに豊富で、近隣のあらゆる沿岸を養う海�
 source = "91430246d65837db"
 text = '''条約の子午線'''
 
-["rnw_our_history"]
+["rnw_our_history.title"]
 source = "59ab2712ca1d5b62"
 text = '''我らの歴史'''
 
-["rnw_our_history_desc"]
+["rnw_our_history.desc"]
 source = "342ac1d5ca933aa8"
 text = '''我らの社会とその前身の年代記を読む。'''
 
@@ -1853,3 +1853,183 @@ text = '''新たな国家を宣言する'''
 ["rnw_road.proclaim_desc"]
 source = "faed96e7a4804d75"
 text = '''土地を手にした今、我らは宣言できる。すなわち{name}。'''
+
+["rnw_formation_coast_atlantic_ocean_continent"]
+source = "8e5f3c2bcbfc9b22"
+text = '''大西洋沿岸'''
+
+["rnw_formation_coast_pacific_ocean_continent"]
+source = "c67d6464d0fa0814"
+text = '''太平洋沿岸'''
+
+["rnw_story_origin_foundation"]
+source = "5f172bf2e94ba735"
+text = '''{name}の記憶は{year}年にさかのぼる。その頃すでに、その民は{place}の周辺に暮らしていた。'''
+
+["rnw_story_origin_home"]
+source = "dcd887b778c8b9ff"
+text = '''{name}の記憶は{year}年にさかのぼる。その頃すでに、その民はこの地に暮らしていた。'''
+
+["rnw_story_origin_union"]
+source = "60ec5876a09adc95"
+text = '''{name}は{year}年、{first}と{second}がひとつになって生まれた。'''
+
+["rnw_story_origin_joined"]
+source = "f0485c7b0fc29806"
+text = '''{name}は{year}年、{first}が加わったことで今の姿となった。'''
+
+["rnw_story_origin_secession"]
+source = "cbd96f5ffa9ee69c"
+text = '''{name}は{year}年、{first}から離反して生まれた。'''
+
+["rnw_story_origin_separation"]
+source = "7c1da184a47dc0e2"
+text = '''{name}は、{year}年に瓦解した{first}の継承者のひとつである。'''
+
+["rnw_story_origin_remnant"]
+source = "29b4adcf21b45fce"
+text = '''{name}は、{year}年に瓦解したかつての{name}の名残である。'''
+
+["rnw_story_origin_other"]
+source = "5d1059466562fbb9"
+text = '''{name}は{year}年に記録に現れる。'''
+
+["rnw_story_when_year"]
+source = "0067799113adc27f"
+text = '''{year}年、'''
+
+["rnw_story_when_same"]
+source = "c0f903b48b9acfa2"
+text = '''同じ年、'''
+
+["rnw_story_when_soon"]
+source = "07861017f0c00120"
+text = '''その後まもなく、'''
+
+["rnw_story_union"]
+source = "79d631be9278a6a3"
+text = '''{when}{second}と{third}が合わさって{first}となった。'''
+
+["rnw_story_joined"]
+source = "0b0082e02053cdbe"
+text = '''{when}{second}が{first}に加わった。'''
+
+["rnw_story_separation"]
+source = "609e239c6cffda59"
+text = '''{when}{first}は瓦解し、いくつもの後継に分かれた。'''
+
+["rnw_story_secession"]
+source = "d3f2176bfd83243c"
+text = '''{when}{second}が{first}から離反した。'''
+
+["rnw_story_losses"]
+source = "6fcbf22ce12ef595"
+text = '''{start}年から{end}年にかけて、{first}は次々と領地を失った：{list}。'''
+
+["rnw_story_lost_item"]
+source = "abac850c2c0f60da"
+text = '''{name}（{year}年）'''
+
+["rnw_story_independence"]
+source = "79347e39247e64ff"
+text = '''{when}{first}は{second}の支配を脱した。'''
+
+["rnw_story_dependency"]
+source = "07eed8df0afac9a7"
+text = '''{when}{first}は{second}に屈し、その属国となった。'''
+
+["rnw_story_protection"]
+source = "b8167d26a54276b8"
+text = '''{when}{second}が{first}を庇護下に置いた。'''
+
+["rnw_story_pact"]
+source = "f7bd66e2416059a0"
+text = '''{when}{first}と{second}は互いを守ることを誓った。'''
+
+["rnw_story_access"]
+source = "09941059c88cd47c"
+text = '''{when}{second}は{place}の聖地を{first}の巡礼者に開いた。'''
+
+["rnw_story_conflict"]
+source = "d0be0b8fec427713"
+text = '''{when}{first}と{second}が{place}をめぐって戦端を開いた。'''
+
+["rnw_story_conflict_for"]
+source = "a952d3cc4407add9"
+text = '''{when}{first}は{place}をめぐって{second}と戦った。'''
+
+["rnw_story_wars"]
+source = "82c25f70f370ed04"
+text = '''{start}年から{end}年にかけて、{first}と{second}は幾度も戦いを重ねた。'''
+
+["rnw_story_wars_over"]
+source = "2c34f4921acbb20b"
+text = '''{start}年から{end}年にかけて、{first}と{second}は{list}をめぐって幾度も戦いを重ねた。'''
+
+["rnw_story_conflict_open"]
+source = "5b225c41713c7f36"
+text = '''{when}{first}と{second}が戦端を開いた。'''
+
+["rnw_story_pressure"]
+source = "fe131734673d61c4"
+text = '''{when}{first}と{second}が衝突したが、領地は動かなかった。'''
+
+["rnw_story_repelled"]
+source = "088214effc9e6834"
+text = '''{when}{first}と{second}が戦い、攻撃は撃退された。'''
+
+["rnw_story_reform"]
+source = "0610aa549479ab68"
+text = '''{when}{first}は統治のあり方を改めた。'''
+
+["rnw_story_resisted"]
+source = "f3afab850b51d46c"
+text = '''{when}{first}は統治のあり方を改めようとしたが、その試みは失敗した。'''
+
+["rnw_story_migration"]
+source = "2b2b2504b826d241"
+text = '''{when}{first}の人々が{second}に移り住んだ。'''
+
+["rnw_story_exchange"]
+source = "d3c46e91b28928b8"
+text = '''{when}{first}は{second}と交易を始めた。'''
+
+["rnw_story_contact"]
+source = "c4c46f9c586bbe13"
+text = '''{when}{first}は初めて{second}と出会った。'''
+
+["rnw_story_now_vassal"]
+source = "0f4c4193591f5522"
+text = '''現在、{name}は{first}の属国である。'''
+
+["rnw_story_now_free"]
+source = "cc8aeb987887b05c"
+text = '''現在、{name}はいかなる宗主にも従っていない。'''
+
+["rnw_story_now_subjects"]
+source = "f4c41aea17785191"
+text = '''{list}を属国としている。'''
+
+["rnw_story_now_allies"]
+source = "c742fdfb1818b98e"
+text = '''{list}と同盟を結んでいる。'''
+
+["rnw_story_now_protectors"]
+source = "08b0036a61940020"
+text = '''{list}の庇護下にある。'''
+
+["rnw_story_now_allies_protecting"]
+source = "af2ceb8ef0f54c57"
+text = '''{list}と同盟を結び、その庇護を受けている。'''
+
+["rnw_story_now_rivals"]
+source = "3aec78a09483de56"
+text = '''{list}をライバルとしている。'''
+
+["rnw_story_list_pair"]
+source = "a8c60ace0cf11391"
+text = '''{first}と{second}'''
+
+["rnw_story_list_series"]
+source = "ce79e43811c0b2cc"
+text = '''{first}、{second}'''

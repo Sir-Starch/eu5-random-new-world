@@ -2,6 +2,29 @@
 
 ## Unreleased
 
+- Start every country of the New World with its laws in place. A generated state took a template
+  made for a lower level of technology, so royal court customs, feudal law and cultural
+  traditions, and nearly every law of a sacred centre's theocracy, opened with *No Policy
+  enacted* and cost political power and months to fix. Each law a state sees at the start now
+  holds a policy that the base game's countries of the same government hold, the one that leans
+  the way the country's own societal values already lean.
+
+- Tell each country's past as a story. *Our History* read like a list of dated records
+  ("1192: Society Unichita could no longer hold society Kiosaghe, which broke away. Recorded
+  place: Oletan."). It now tells how the country began, what befell it (lands that broke away
+  one after another make one sentence, so do the wars of two neighbours) and where it stands
+  today: its overlord, vassals, allies, protectors and rivals. The generator's window tells the
+  same story above the chronicle's events, in every language.
+
+- Show names instead of keys in the game. The *Our History* decision, the events of the
+  recorded past in a country's list of events, the names of the four fantasy formables and the
+  lands of the formables in their tooltips showed their localization keys. The export now
+  refuses a world that asks the game for a text it does not write.
+
+- Show societal values as the game does. The generator's window lists all eleven values the
+  game shows at the start, in the game's order and with the values a country inherits from its
+  template, each with its two poles, the one it leans to lit and how far it leans.
+
 - Let regional powers use their administrative capacity and expand coherently in the new
   region layout. Regional ambitions now check that their centre has room to grow; a realm's
   coordination follows the share of its capacity in use, and overload adds division pressure.
