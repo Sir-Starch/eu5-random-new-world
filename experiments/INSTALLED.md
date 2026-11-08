@@ -6,6 +6,20 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — candidate L, treaties within the diplomatic capacity** (C523).
+[V-EXEC] From `f980833`, installed **`mod/rnw_exp_world_fcyp6eay6y`** ("ATDT candidate L (treaties within
+capacity)") in the existing Windows/Proton profile: code `RNW1-08396-6JJMB-3X6KF-X0410-00813-C16WD-58`, candidate
+K's code with its resources rolled again, so ATDT's land, peoples and countries under a new world id. Its generated
+countries hold 12 alliances and 14 given guarantees (K: 29 and 21); the highest reckoned upkeep is 5.98 (K: 37.8,
+nine countries over the game's limit). `make check` passes (3,088 Python tests, 17 optional skips, 29 native Rust
+tests) and the installed-game reference check reproduces `a5c167c5`. The staged installer refused any existing
+target; all 911 files match the prepared mod, both libraries hold the record, and the 19 other mod folders and 9
+profile-root files are unchanged. The standard updater built and self-tested the hub under Wine (window, native,
+code, shell and bridge) and installed it, retaining `.rnw-hub-backups/1.2.0-1794171779707176259`. Candidate:
+`local_data/hub-updates/1.2.0-1794171728130281579/rnw_exp_hub`; Windows wheel SHA-256:
+`490d54c089f0b84da5aff7148c590b28bc5ae7ec0491e18cd632af28a7cb2595`. `desktop/` is unchanged. No EU5
+launch/control, playset, save or preference edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — candidate K, laws the game accepts** (C520–C522).
 [V-EXEC] From `7982a91`, installed **`mod/rnw_exp_world_feajb6bim5`** ("ATDT candidate K (laws the game
 accepts)") in the existing Windows/Proton profile: code `RNW1-08396-6JJMB-3X6KF-X0410-00813-C0X2X-P6`, the
