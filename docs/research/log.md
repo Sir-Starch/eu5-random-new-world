@@ -2226,3 +2226,6 @@ keeps its numbers. The sitting was in observer mode, which explains the decision
 setting feudal and republican laws whose advance sits behind the institution of legalism (C522).
 The completion now leaves out a law behind an undecided `allow` and a law vanilla's countries of the
 government never hold at that level; only the countries' laws change (`5ded0387`).
+The owner's sitting on candidate K (observing again) loads the world without a single law or policy
+line; the rivalries the engine drops (C518) remain, and nine generated countries start over a
+diplomatic limit the engine cannot fix through the ruler (C523, also in ATDT, open).
