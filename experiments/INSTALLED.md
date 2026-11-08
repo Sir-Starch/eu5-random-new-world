@@ -1798,3 +1798,19 @@ updater installed the **3,478-file** generator-only hub, retaining the former hu
 `local_data/hub-updates/1.1.0-1793576556798271660/rnw_exp_hub` of the `water-island-halo` worktree;
 Windows wheel SHA-256 `70e08d7bcb99d7efdb8081071ef67c08661585d4fbdc2b0080d3b6c511c4bf0f`. Unpublished
 1.1.0 / pending epoch 60; engine drawing of the water was not observed.
+
+2026-11-09, **1.2.0 development / pending epoch 61 — Omerika and Keep the real Americas** (source
+`48bc918c520835022a7352de548827700c52c402`; ADR 0012).
+[V-EXEC] Installed two worlds in the existing Windows/Proton profile, each into a **new** folder:
+**`mod/rnw_exp_world_y25smlinzi`**, Omerika (generated geography on the Americas' template; code
+`RNW1-043G0-00000-00001-A0410-0041J-RZG`, seed 42; 910 files), and **`mod/rnw_exp_world_o325km6mz5`**,
+Omerika with *Keep the real Americas* (the game's own map, only the societies generated; code
+`RNW1-083G0-00000-00000-B0410-00819-G0HKP-KR`, seed 11; 123 files, no map file). The installer verified the
+files; both mods carry the recovery data (`.metadata/rnw-library`), so the generator adopts them
+on its next start. All 7 other mod folders and the profile's playset, saves and settings are
+unchanged; no EU5 launch or control by the agent. The standard updater installed the 1.2.0 hub
+(Windows wheel SHA-256 `1b1fc6115e9725193e22f4c7319bf2e08efd468094de608362c87b2a4af2065a`; window,
+native kernels, world codes, shell and bridge self-tests pass) and kept the former hub in
+`.rnw-hub-backups/1.2.0-1794180236167272394`. Offline checks: 3,134 Python tests, strict types, lint,
+desktop tests; the reference world digest of epoch 61 is reproduced. Engine behaviour of both worlds,
+and of the real-Americas start on the game's map, is **not observed**.
