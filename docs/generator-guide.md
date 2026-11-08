@@ -135,23 +135,29 @@ about an older algorithm still applies.
 
 ### Reveal the New World at the start (multiplayer)
 
-**Reveal the New World at the start** is off by default. Switched on, every country
-discovers every area of the generated New World, land and sea, when a campaign begins, so
-that every player sees it from the first day. It is a world setting like the oceans option:
-it is saved in world codes and kept by later versions of the world, and a world made with it
-off has none of its files. The world writes one file, `in_game/common/on_action/rnw_reveal.txt`,
-which runs the game's own `discover_area` effect for each area at the game's start; no
-country record of the game is changed. On the classic window the option is at the foot of the
-**World** page, a scroll below *Before you play*.
+**Reveal the New World at the start** is off by default. Switched on, the country of every
+human player discovers every area of the generated New World, land and sea, when the
+campaign begins, so that every player sees it from the first day. The computer's countries
+do not get it: they find the New World by exploring, as in the game. It is a world setting
+like the oceans option: it is saved in world codes and kept by later versions of the world,
+and a world made with it off has none of its files. The world writes one file,
+`in_game/common/on_action/rnw_reveal.txt`, which runs the game's own `discover_area` effect
+for each area at the `on_game_started_after_lobby` hook, once the players have chosen their
+countries (the earlier `on_game_start` hook runs before the lobby, when no country is human
+yet); no country record of the game is changed. On the classic window the option is at the
+foot of the **World** page, a scroll below *Before you play*.
 
 The game's own announcement that the New World was discovered (an exploration event that
 rewards the first Old World country to explore, and tells every human player in range) is not
-shown, because the discovery is already made; the world sets the flag that event sets. The
-expedition *Western Ocean Voyage* is not offered, since it needs an undiscovered New World.
-Other content that reads the discovery (the Pacific crossing, the circumnavigation, a few
-events of Castile and the merchant republics) follows its own conditions as it would after a
-discovery. How the AI behaves with the New World known from 1337, and whether countries that
-appear later (colonial nations, formed states) know it too, has not been observed in the game.
+shown, because the discovery is already made; the world sets the flag that event sets (a
+global flag, set for the computer's countries too). The expedition *Western Ocean Voyage* is
+not offered to the players' countries, since it needs an undiscovered New World; the
+computer's countries keep it, as in the game. Other content that reads the discovery (the
+Pacific crossing, the circumnavigation, a few events of Castile and the merchant republics)
+follows its own conditions for each country, as it would after a discovery. Only the
+countries that a human plays at the start know the New World: a player who joins or changes
+country later, and a country created later, do not. Whether the hook runs for every start of
+a campaign (a new game, a multiplayer table) has not been observed in the game with this file.
 
 ### Adjust native societies
 
@@ -222,7 +228,7 @@ ways to reveal a world:
 | Option | What it reveals |
 |---|---|
 | **Reveal this world** | The maps inside the generator. The mod picture and EU5 country-selection map keep their own visibility setting. |
-| **Show the New World before you play it** | That world's preview picture, mod thumbnail and EU5 country-selection map. Choose it in **Save and play** (**World** in the classic window), or change it later on the finished world's **World** tab. |
+| **Terra Incognita in the lobby** (on by default) | Covers the New World as terra incognita on that world's preview picture, mod thumbnail and EU5 country-selection map; clear the box to show them. Choose it on the **World** tab before you generate, or change it later on the finished world's **World** tab. |
 
 Changing the second option updates the existing mod's picture and selection-map cover
 without generating the geography again. From EU5's main menu, close and reopen the

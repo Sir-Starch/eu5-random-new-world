@@ -792,7 +792,7 @@ class MainWindow(QMainWindow):
         _ = self.copy_button.clicked.connect(self._copy)
         _ = self.paste_button.clicked.connect(self._paste)
         _ = self.install_box.toggled.connect(self._install_toggled)
-        _ = self.show_new_world.toggled.connect(self.controller.set_show_new_world)
+        _ = self.lobby_cover.toggled.connect(self._lobby_cover_toggled)
         _ = self.generate_button.clicked.connect(self._generate)
         _ = self.cancel_button.clicked.connect(self.controller.cancel)
         return page
@@ -848,12 +848,13 @@ class MainWindow(QMainWindow):
         ocean_note.addWidget(self.ocean_help, 0, Qt.AlignmentFlag.AlignVCenter)
         ocean_note.addStretch(1)
         layout.addLayout(ocean_note)
-        self.show_new_world: QCheckBox = QCheckBox(text("show_new_world"))
-        self.show_new_world.setChecked(self.controller.preferences.show_new_world)
+        # The stored preference says "shown"; the box says "covered", so it is inverted.
+        self.lobby_cover: QCheckBox = QCheckBox(text("lobby_cover"))
+        self.lobby_cover.setChecked(not self.controller.preferences.show_new_world)
         visibility = QGroupBox(text("visibility"))
         visibility_layout = QVBoxLayout(visibility)
-        visibility_layout.addWidget(self.show_new_world)
-        hint = QLabel(text("show_new_world_hint"))
+        visibility_layout.addWidget(self.lobby_cover)
+        hint = QLabel(text("lobby_cover_hint"))
         hint.setWordWrap(True)
         visibility_layout.addWidget(hint)
         layout.addWidget(visibility)
@@ -1224,10 +1225,10 @@ class MainWindow(QMainWindow):
         self.preview_caption.setWordWrap(True)
         self.preview_caption.setStyleSheet(MUTED)
         inner.addWidget(self.preview_caption)
-        self.world_visibility: QCheckBox = QCheckBox(text("show_new_world"))
-        self.world_visibility.setToolTip(text("world_visibility_hint"))
-        _ = self.world_visibility.toggled.connect(self._world_visibility_changed)
-        inner.addWidget(self.world_visibility)
+        self.world_lobby_cover: QCheckBox = QCheckBox(text("lobby_cover"))
+        self.world_lobby_cover.setToolTip(text("world_visibility_hint"))
+        _ = self.world_lobby_cover.toggled.connect(self._world_lobby_cover_changed)
+        inner.addWidget(self.world_lobby_cover)
         self.visibility_hint: QLabel = QLabel(text("world_visibility_hint"))
         self.visibility_hint.setWordWrap(True)
         inner.addWidget(self.visibility_hint)
@@ -1242,10 +1243,13 @@ class MainWindow(QMainWindow):
         inner.addWidget(self.advice)
         return overview
 
-    def _world_visibility_changed(self, checked: bool) -> None:  # noqa: FBT001 - Qt signal
+    def _lobby_cover_toggled(self, checked: bool) -> None:  # noqa: FBT001 - Qt signal
+        self.controller.set_show_new_world(not checked)
+
+    def _world_lobby_cover_changed(self, checked: bool) -> None:  # noqa: FBT001 - Qt signal
         world = self.controller.selected_world()
         if world is not None:
-            problem = self.controller.set_world_visibility(world, show=checked)
+            problem = self.controller.set_world_visibility(world, show=not checked)
             # Refresh first: showing a world that was not shown yet clears the notice.
             self.refresh()
             self._tell(problem or text("visibility_updated"))
@@ -1815,10 +1819,10 @@ class MainWindow(QMainWindow):
         problem = controller.problem()
         self._refresh_estimate(controller)
         self._refresh_destination(problem)
-        _ = self.show_new_world.blockSignals(True)  # noqa: FBT003 - Qt synchronization
-        self.show_new_world.setChecked(controller.preferences.show_new_world)
-        _ = self.show_new_world.blockSignals(False)  # noqa: FBT003 - Qt synchronization
-        self.show_new_world.setEnabled(not busy)
+        _ = self.lobby_cover.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.lobby_cover.setChecked(not controller.preferences.show_new_world)
+        _ = self.lobby_cover.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.lobby_cover.setEnabled(not busy)
         self._refresh_ocean_option(busy)
         generating = controller.task in {Task.GENERATE, Task.QUEUE, Task.CANDIDATES}
         self.cancel_button.setEnabled(controller.phase is Phase.RUNNING and generating)
@@ -2077,10 +2081,10 @@ class MainWindow(QMainWindow):
         self._refresh_task(mine=mine)
 
     def _refresh_visibility(self, world: World) -> None:
-        _ = self.world_visibility.blockSignals(True)  # noqa: FBT003 - Qt synchronization
-        self.world_visibility.setChecked(self.controller.shown(world))
-        _ = self.world_visibility.blockSignals(False)  # noqa: FBT003 - Qt synchronization
-        self.world_visibility.setEnabled(not self.controller.busy)
+        _ = self.world_lobby_cover.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        self.world_lobby_cover.setChecked(not self.controller.shown(world))
+        _ = self.world_lobby_cover.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.world_lobby_cover.setEnabled(not self.controller.busy)
 
     def _refresh_task(self, *, mine: bool) -> None:
         controller = self.controller

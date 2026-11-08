@@ -286,13 +286,17 @@ text = '''Essa pasta não é uma instalação do EU5 (falta game/in_game/map_dat
 source = "534de3c12b965d56"
 text = '''Essa pasta não existe.'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''Mostrar o Novo Mundo antes de jogar'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''Terra Incognita no lobby'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''Desligado, as imagens deste mundo e o mapa de escolha de país ficam cobertos como terra incognita. Você pode mudar isso depois na página do mundo sem criá-lo de novo.'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''Esconde o Novo Mundo antes de jogar'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''Cobre o Novo Mundo como terra incognita no mapa de escolha de país e nas imagens deste mundo, para que você não o veja antes de jogar. Desmarcado, o Novo Mundo aparece ali. Você pode mudar isso depois na página do mundo sem criá-lo de novo.'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"
@@ -711,8 +715,8 @@ source = "ed8a19dd636b4dba"
 text = '''Para multijogador'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "5d0aa8b5c868b498"
-text = '''No início de uma campanha, todos os países descobrem todas as áreas deste Novo Mundo, terra e mar, para que todos os jogadores o vejam desde o primeiro dia. Desativado por padrão: o Novo Mundo fica então à espera de ser descoberto, como no jogo. O evento do próprio jogo que anuncia a descoberta do Novo Mundo não ocorre, porque a descoberta já foi feita.'''
+source = "53b1f1dce58cd064"
+text = '''No início de uma campanha, o país de cada jogador descobre todas as áreas deste Novo Mundo, terra e mar, para que todos os jogadores o vejam desde o primeiro dia. Os países controlados pelo computador não o recebem: eles encontram o Novo Mundo explorando, como no jogo. Desativado por padrão: o Novo Mundo fica então à espera de ser descoberto por todos. O evento do próprio jogo que anuncia a descoberta do Novo Mundo não ocorre, porque a descoberta já foi feita.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

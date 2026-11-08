@@ -314,7 +314,7 @@ def test_the_library_and_world_page_fit_the_supported_window_size(
     window.show()
     QApplication.processEvents()
     assert (window.width(), window.height()) == (width, height)
-    assert not window.show_new_world.visibleRegion().isEmpty()
+    assert not window.lobby_cover.visibleRegion().isEmpty()
     assert not window.progress_box.isVisible()
     for button in window.new_page.findChildren(QPushButton):
         if button.isVisibleTo(window):
@@ -324,7 +324,7 @@ def test_the_library_and_world_page_fit_the_supported_window_size(
     pump(lambda: window.controller.selected_world() is not None)
     QApplication.processEvents()
     assert (window.width(), window.height()) == (width, height)
-    assert not window.world_visibility.visibleRegion().isEmpty()
+    assert not window.world_lobby_cover.visibleRegion().isEmpty()
     _ = window.close()
 
 
@@ -580,7 +580,9 @@ def test_a_made_world_opens_hidden_and_shows_when_the_setting_says_so(
     pump(lambda: window.stack.currentWidget() is window.world_page)
     assert window.world_list.count() == 2
     assert window.preview_caption.text().startswith(text("preview_hidden"))
-    window.world_visibility.setChecked(True)
+    # The box says "covered": a new world is covered, and clearing the box shows it.
+    assert window.world_lobby_cover.isChecked()
+    window.world_lobby_cover.setChecked(False)
     pump(lambda: window.preview_caption.text().startswith(text("preview_shown")))
     assert window.remove_button.isVisible() or not window.isVisible()
     window.world_list.setCurrentRow(0)
@@ -598,7 +600,10 @@ def test_new_world_visibility_is_a_default_and_leaves_the_existing_world_hidden(
     [first] = window.controller.worlds
     window.controller.select(NEW)
     pump(lambda: window.stack.currentWidget() is window.new_page)
-    window.show_new_world.setChecked(True)
+    # Covering is the default; clearing the box makes new worlds shown.
+    assert window.lobby_cover.isChecked()
+    assert not window.controller.preferences.show_new_world
+    window.lobby_cover.setChecked(False)
     assert window.controller.preferences.show_new_world
     assert not window.controller.shown(first)
     window.controller.randomize()
@@ -618,15 +623,16 @@ def test_a_missing_cover_keeps_the_visibility_checkbox_and_reports_the_problem(
     window = _window(tmp_path, fake_export)
     window.generate_button.click()
     pump(lambda: window.controller.phase is Phase.FINISHED)
-    pump(window.world_visibility.isEnabled)
+    # A new world is covered: wait until the box shows it before clicking.
+    pump(window.world_lobby_cover.isChecked)
     world = window.controller.selected_world()
     assert world is not None
     cover = library.folder(window.controller.data, world) / COVER_COPY
     for path in cover.rglob("*"):
         if path.is_file():
             path.unlink()
-    window.world_visibility.click()
-    assert not window.world_visibility.isChecked()
+    window.world_lobby_cover.click()
+    assert window.world_lobby_cover.isChecked()
     assert "cover" in window.world_notice.text()
     assert "missing" in window.world_notice.text()
     assert window.controller.task is Task.GENERATE

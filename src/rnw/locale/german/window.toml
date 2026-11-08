@@ -286,13 +286,17 @@ text = '''Dieser Ordner ist keine EU5-Installation (game/in_game/map_data fehlt)
 source = "534de3c12b965d56"
 text = '''Diesen Ordner gibt es nicht.'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''Die Neue Welt vor dem Spielen zeigen'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''Terra incognita in der Lobby'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''Ausgeschaltet bleiben die Bilder dieser Welt und die Karte der Länderwahl als Terra incognita verdeckt. Sie können das später auf der Seite der Welt ändern, ohne sie neu zu erstellen.'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''Verbirgt die Neue Welt vor dem Spielen'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''Verdeckt die Neue Welt als Terra incognita auf der Karte der Länderwahl und in den Bildern dieser Welt, damit Sie sie vor dem Spielen nicht sehen. Ohne Häkchen wird die Neue Welt dort gezeigt. Sie können das später auf der Seite der Welt ändern, ohne sie neu zu erstellen.'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"
@@ -711,8 +715,8 @@ source = "ed8a19dd636b4dba"
 text = '''Für Mehrspieler'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "5d0aa8b5c868b498"
-text = '''Zu Beginn einer Kampagne entdeckt jedes Land jedes Gebiet dieser Neuen Welt, Land und Meer, sodass alle Spieler sie vom ersten Tag an sehen. Standardmäßig aus: Die Neue Welt wartet dann darauf, entdeckt zu werden, wie im Spiel. Das Ereignis des Spiels, das die Entdeckung der Neuen Welt verkündet, wird nicht ausgelöst, weil die Entdeckung bereits gemacht ist.'''
+source = "53b1f1dce58cd064"
+text = '''Zu Beginn einer Kampagne entdeckt das Land jedes Spielers jedes Gebiet dieser Neuen Welt, Land und Meer, sodass alle Spieler sie vom ersten Tag an sehen. Vom Computer gesteuerte Länder erhalten dies nicht: Sie finden die Neue Welt durch Erkundung, wie im Spiel. Standardmäßig aus: Die Neue Welt wartet dann darauf, von allen entdeckt zu werden. Das Ereignis des Spiels, das die Entdeckung der Neuen Welt verkündet, wird nicht ausgelöst, weil die Entdeckung bereits gemacht ist.'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

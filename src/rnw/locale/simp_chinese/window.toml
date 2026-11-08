@@ -286,13 +286,17 @@ text = '''该文件夹不是EU5的安装目录（缺少 game/in_game/map_data）
 source = "534de3c12b965d56"
 text = '''该文件夹不存在。'''
 
-["show_new_world"]
-source = "18ff780a82fcefac"
-text = '''游玩前显示新大陆'''
+["lobby_cover"]
+source = "44c59194df93c574"
+text = '''大厅中的未知之地'''
 
-["show_new_world_hint"]
-source = "bc591758b90681d6"
-text = '''关闭时，这个世界的图片和国家选择地图会作为未知之地被遮盖。之后可在世界页面中更改，无需重新生成。'''
+["lobby_cover_about"]
+source = "6089e82813d6162b"
+text = '''游玩前隐藏新大陆'''
+
+["lobby_cover_hint"]
+source = "7027b3756356472f"
+text = '''在国家选择地图和这个世界的图片中，将新大陆作为未知之地遮盖起来，让你在游玩前看不到它。取消勾选后，那里会显示新大陆。之后可在世界页面中更改，无需重新生成。'''
 
 ["about_generator"]
 source = "6ed5499d9096e55f"
@@ -711,8 +715,8 @@ source = "ed8a19dd636b4dba"
 text = '''适用于多人游戏'''
 
 ["control.new_world.reveal_at_start.info"]
-source = "5d0aa8b5c868b498"
-text = '''战役开始时，每个国家都会发现这片新大陆的所有区域（陆地和海洋），让所有玩家从第一天起就能看到它。默认关闭：此时新大陆像在游戏中一样等待被发现。游戏自带的、宣告发现新大陆的事件不会触发，因为发现已经完成。'''
+source = "53b1f1dce58cd064"
+text = '''战役开始时，每位玩家的国家都会发现这片新大陆的所有区域（陆地和海洋），让所有玩家从第一天起就能看到它。由电脑控制的国家不会获得这一点：它们像在游戏中一样通过探索来发现新大陆。默认关闭：此时新大陆等待所有人去发现。游戏自带的、宣告发现新大陆的事件不会触发，因为发现已经完成。'''
 
 ["control.new_world.land_permille.about"]
 source = "e0a693457850e1a8"

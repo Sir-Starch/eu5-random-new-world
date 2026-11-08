@@ -25,6 +25,14 @@
   game shows at the start, in the game's order and with the values a country inherits from its
   template, each with its two poles, the one it leans to lit and how far it leans.
 
+- Move the choice to show the New World before you play to the **World** tab, beside the
+  other options of the world, and name it for what it does: **Terra Incognita in the lobby**.
+  The box is on by default (the New World is covered on the country-selection map and in the
+  world's pictures); clearing it shows them. It had read the other way round, as *Show the
+  New World before you play it* on **Save and play**, with the same default (covered). The
+  choice itself is unchanged: it is a preference of the generator, each world keeps its own
+  setting, and a finished world's page changes it without generating again.
+
 - Let regional powers use their administrative capacity and expand coherently in the new
   region layout. Regional ambitions now check that their centre has room to grow; a realm's
   coordination follows the share of its capacity in use, and overload adds division pressure.
@@ -142,13 +150,15 @@
 
 - Add the world setting **Reveal the New World at the start**, for multiplayer, off by
   default and saved in world codes. Switched on, the world writes one on_action file that
-  has every country discover every area of the generated New World, land and sea, through
-  the game's own `discover_area` effect when a campaign begins; no country record of the
-  game changes. The world also sets the flag of the game's "New World discovered" event, so
-  that this event does not reward the first Old World explorer and notify every player on
-  the first exploration. A world made with the setting off is unchanged (the reference
-  export reproduces). It is on the World page of both windows; the classic window holds it
-  a scroll below *Before you play*.
+  has the country of every human player discover every area of the generated New World,
+  land and sea, through the game's own `discover_area` effect when the campaign starts,
+  once the players have chosen their countries (`on_game_started_after_lobby`); the
+  computer's countries discover the New World by exploring, as in the game. No country
+  record of the game changes. The world also sets the flag of the game's "New World
+  discovered" event, so that this event does not reward the first Old World explorer and
+  notify every player on the first exploration. A world made with the setting off is
+  unchanged (the reference export reproduces). It is on the World page of both windows; the
+  classic window holds it a scroll below *Before you play*.
 
 - Keep the queue going when a world cannot be made. In both windows the failed world stays
   in the queue, marked with its error, and the next world starts. When the run ends, the

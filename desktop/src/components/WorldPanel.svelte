@@ -223,7 +223,8 @@
       </Section>
 
       <Section id="world.visibility" title={t("visibility")}>
-        <Check checked={w.shown} disabled={busy} label={t("show_new_world")} hint={t("world_visibility_hint")} onchange={(value) => app.act("set_visibility", { id: w.id, value })} />
+        <!-- `shown` is the stored state; the box says "covered", so it is inverted. -->
+        <Check checked={!w.shown} disabled={busy} label={t("lobby_cover")} hint={t("world_visibility_hint")} onchange={(value) => app.act("set_visibility", { id: w.id, value: !value })} />
       </Section>
 
       <Section id="world.versions" title={t("world_versions")} closed>
