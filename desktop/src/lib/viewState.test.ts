@@ -9,7 +9,7 @@ import { WorldAtlas } from "./atlas";
 import { bundle } from "./atlasFixture";
 import type { State, Static } from "./types";
 
-vi.mock("./atlasCache", () => ({ loadAtlas: vi.fn(async () => {
+vi.mock("./atlasCache", () => ({ releaseAtlas: vi.fn(), loadAtlas: vi.fn(async () => {
   const data = bundle();
   data.history = { countries: { AAA: {
     government: "Republic", rank: "Duchy", origin: { year: 1037, text: "Founded", place: -1, kind: "origin", label: "Origin" },
@@ -80,7 +80,7 @@ describe("world viewer during background work", () => {
     app.now = snapshot("other", 0.9);
     await settle();
     expect(loadAtlas).toHaveBeenCalledTimes(2);
-    expect(loadAtlas).toHaveBeenLastCalledWith("other");
+    expect(loadAtlas).toHaveBeenLastCalledWith("other", "main", "");
     expect(map.pinned).toBe(-1);
     expect(map.match).toBeNull();
     // Changing the language must still reload the localized atlas.

@@ -12,6 +12,7 @@ import queue
 import re
 import threading
 import time
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING, cast, final
 
@@ -24,6 +25,7 @@ from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
 from rnw.app.worldcode import decode
 from rnw.gui import text, view
+from rnw.gui.atlas_loading import AtlasRequests
 from rnw.gui.bridge import Bridge, BridgeError, serve
 from rnw.gui.controller import NEW, Controller, Phase, Task
 from rnw.png import COLOR_RGB, encode_png
@@ -34,6 +36,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
     from typing import IO
 
+    from rnw.app.library import World
     from rnw.app.service import Exporter
     from rnw.progress import Progress
 
@@ -488,6 +491,11 @@ class _Outgoing:
     def flush(self) -> None:
         pass
 
+    def messages(self) -> list[dict[str, object]]:
+        with self._guard:
+            lines = "".join(self._text).splitlines()
+        return [json.loads(line) for line in lines]
+
     def states(self) -> list[dict[str, object]]:
         with self._guard:
             lines = "".join(self._text).splitlines()
@@ -599,3 +607,202 @@ def test_a_state_that_cannot_be_drawn_is_logged_and_the_next_one_is_sent(
     assert "the state could not be drawn" in (tmp_path / "data" / "last-error.log").read_text(
         encoding="utf-8"
     )
+
+
+def test_state_and_comparison_listing_never_decode_library_atlases(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    _ = _made(bridge)
+    original = bridge.controller.worlds[0]
+    document, labels = atlas.to_files(synthetic_atlas())
+    worlds = [replace(original, id=f"test{i:06d}") for i in range(6)]
+    for world in worlds:
+        folder = library.folder(bridge.controller.data, world)
+        folder.mkdir(parents=True)
+        _ = (folder / atlas.JSON_FILE).write_bytes(document)
+        _ = (folder / atlas.LABELS_FILE).write_bytes(labels)
+    bridge.controller.worlds = worlds
+
+    def forbidden(*_args: object) -> None:
+        pytest.fail("A state refresh must not load any atlas")
+
+    monkeypatch.setattr(library, "atlas", forbidden)
+    for world in worlds * 2:
+        bridge.controller.select(world.id)
+        state = cast("dict[str, object]", bridge.state()["world"])
+        assert state["atlas"] is True
+        assert state["compare"] is True
+        assert state["atlas_revision"]
+    assert len(view.compare_list(bridge.controller)) == len(worlds)
+
+
+def test_switching_worlds_cancels_obsolete_atlases_while_the_bridge_keeps_serving(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A blocked map must not block selection, cancel, state ticks or the last chosen map."""
+    bridge = _bridge(tmp_path, fake_export)
+    _ = _made(bridge)
+    original = bridge.controller.worlds[0]
+    worlds = [replace(original, id=f"test{i:06d}") for i in range(3)]
+    bridge.controller.worlds = worlds
+    started, release = threading.Event(), threading.Event()
+    loaded: list[str] = []
+
+    def load(
+        _controller: Controller, world: World, checkpoint: Callable[[], None]
+    ) -> dict[str, object]:
+        loaded.append(world.id)
+        if world is worlds[0]:
+            started.set()
+            assert release.wait(5)
+        checkpoint()
+        return {"id": world.id}
+
+    monkeypatch.setattr(view, "atlas_bundle", load)
+    lines, outgoing, thread, ended = _served(bridge)
+    try:
+        lines.send("select", id=worlds[0].id)
+        lines.send("atlas", id=worlds[0].id, request_key="main:first")
+        assert started.wait(5)
+        lines.send("cancel_atlas", request_key="main:first")
+        lines.send("select", id=worlds[1].id)
+        lines.send("atlas", id=worlds[1].id, request_key="main:middle")
+        lines.send("cancel_atlas", request_key="main:middle")
+        lines.send("select", id=worlds[2].id)
+        lines.send("atlas", id=worlds[2].id, request_key="main:last")
+        lines.send("set_seed", value="123")
+        _until(
+            lambda: any(s["selection"] == worlds[2].id for s in outgoing.states()),
+            "selection delivered before the blocked atlas finishes",
+            seconds=2,
+        )
+        assert bridge.controller.seed == 123
+        release.set()
+        _until(
+            lambda: any(m.get("result") == {"id": worlds[2].id} for m in outgoing.messages()),
+            "last map delivered",
+        )
+        assert loaded == [worlds[0].id, worlds[2].id]
+        # The prepared bundle is reused on returning to the same map.
+        lines.send("atlas", id=worlds[2].id, request_key="main:again")
+        _until(
+            lambda: sum(m.get("result") == {"id": worlds[2].id} for m in outgoing.messages()) == 2,
+            "cached map delivered",
+        )
+        assert loaded == [worlds[0].id, worlds[2].id]
+        ids = [m["id"] for m in outgoing.messages() if "id" in m]
+        assert len(ids) == len(set(ids)), "Every cancelled/completed RPC has exactly one reply"
+    finally:
+        release.set()
+        lines.close()
+        thread.join(5)
+    assert not thread.is_alive()
+    assert not ended
+
+
+def test_background_atlas_failure_can_retry_and_file_changes_expire_prepared_bundles(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    _ = _made(bridge)
+    world = bridge.controller.worlds[0]
+    calls = 0
+
+    def load(
+        _controller: Controller, _world: World, checkpoint: Callable[[], None]
+    ) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        checkpoint()
+        if calls == 1:
+            message = "cannot read the atlas"
+            raise OSError(message)
+        return {"id": world.id}
+
+    monkeypatch.setattr(view, "atlas_bundle", load)
+    worker = AtlasRequests(bridge.controller)
+
+    def ask(number: int) -> dict[str, object]:
+        replies: list[dict[str, object]] = []
+        worker.submit(number, "viewer", world)
+
+        def delivered() -> bool:
+            replies.extend(worker.drain())
+            return bool(replies)
+
+        _until(delivered, "atlas response")
+        assert len(replies) == 1
+        return replies[0]
+
+    try:
+        assert "error" in ask(1)
+        assert ask(2)["result"] == {"id": world.id}
+        assert ask(3)["result"] == {"id": world.id}
+        assert calls == 2
+        folder = library.folder(bridge.controller.data, world)
+        document, labels = atlas.to_files(synthetic_atlas())
+        _ = (folder / atlas.JSON_FILE).write_bytes(document)
+        _ = (folder / atlas.LABELS_FILE).write_bytes(labels)
+        assert ask(4)["result"] == {"id": world.id}
+        assert calls == 3
+        # A game change also changes the localized names even when world files stay the same.
+        game = bridge.controller.game
+        assert game is not None
+        bridge.controller.game = replace(game, build_id="new-build")
+        assert ask(5)["result"] == {"id": world.id}
+        assert calls == 4
+    finally:
+        worker.close()
+        worker.thread.join(5)
+    assert not worker.thread.is_alive()
+
+
+def test_a_game_change_during_preparation_does_not_poison_the_old_cache_key(
+    tmp_path: Path, fake_export: Exporter, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bridge = _bridge(tmp_path, fake_export)
+    _ = _made(bridge)
+    c = bridge.controller
+    world, game = c.worlds[0], c.game
+    assert game is not None
+    started, release = threading.Event(), threading.Event()
+    calls = 0
+
+    def load(
+        controller: Controller, _world: World, checkpoint: Callable[[], None]
+    ) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            started.set()
+            assert release.wait(5)
+        checkpoint()
+        assert controller.game is not None
+        return {"build": controller.game.build_id}
+
+    monkeypatch.setattr(view, "atlas_bundle", load)
+    worker = AtlasRequests(c)
+    replies: list[dict[str, object]] = []
+
+    def delivered() -> bool:
+        replies.extend(worker.drain())
+        return bool(replies)
+
+    try:
+        worker.submit(1, "viewer", world)
+        assert started.wait(5)
+        c.game = replace(game, build_id="other")
+        release.set()
+        _until(delivered, "obsolete response")
+        assert replies.pop()["result"] is None
+        # Revisiting the original game must prepare its own words, not the mixed old request.
+        c.game = game
+        worker.submit(2, "viewer", world)
+        _until(delivered, "original game response")
+        assert replies.pop()["result"] == {"build": game.build_id}
+        assert calls == 2
+    finally:
+        release.set()
+        worker.close()
+        worker.thread.join(5)

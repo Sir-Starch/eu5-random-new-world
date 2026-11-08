@@ -5,7 +5,7 @@
   import { onDestroy, onMount, untrack, type Snippet } from "svelte";
   import { app, grouped, t } from "../lib/app.svelte";
   import { LAND, developmentText, type Facts } from "../lib/atlas";
-  import { loadAtlas } from "../lib/atlasCache";
+  import { loadAtlas, releaseAtlas } from "../lib/atlasCache";
   import {
     between,
     clamp,
@@ -46,6 +46,7 @@
     onCompare?: () => void;
   } = $props();
 
+  const viewer = untrack(() => compact) ? `compare-${crypto.randomUUID()}` : "main";
   let failed = $state(false);
   let generation = 0;
   let loading = $state(true);
@@ -104,11 +105,15 @@
   // Bridge snapshots replace the world object on every progress update. Compare primitive
   // identities before reloading, so a snapshot cannot dismiss the open place/country card.
   const worldId = $derived(world);
+  const atlasRevision = $derived(app.now?.library?.find((entry) => entry.id === worldId)?.atlas_revision ?? "");
+  const atlasGame = $derived(`${app.now?.game?.directory ?? ""}|${app.now?.game?.build ?? ""}`);
   const atlasLanguage = $derived(app.info?.language ?? "");
 
   $effect(() => {
     const id = worldId;
     void atlasLanguage;
+    void atlasGame;
+    const revision = atlasRevision;
     const request = ++generation;
     untrack(() => {
       loading = true;
@@ -118,7 +123,7 @@
       session.atlas = null;
       hover = -1;
     });
-    void untrack(() => loadAtlas(id)).then((found) => {
+    void untrack(() => loadAtlas(id, viewer, revision)).then((found) => {
       if (request !== generation) return;
       loading = false;
       if (!found) {
@@ -133,7 +138,7 @@
       loading = false;
       failed = true;
     });
-    return () => { generation++; };
+    return () => { generation++; releaseAtlas(viewer); };
   });
 
   function setup(found: NonNullable<typeof atlas>): void {

@@ -154,11 +154,25 @@ location card whose values isolate their country, culture, religion, resource or
 minimap, zoom in the toolbar, map-only focus that keeps the view's centre, a PNG of the whole
 lens as it is drawn (names included, one pixel per atlas pixel) and copying the current view.
 Compare shows two worlds with linked cameras. The Qt window keeps its own flat pictures.
-The Tauri atlas cache prepares relief and region/sea labels in one Web Worker before handing
-the atlas to its renderer. The loading indicator remains live during that work; errors show
-the map's failure state and a later load can retry.
+The Tauri bridge reads and prepares the requested atlas on one cancellable background worker;
+state snapshots and comparison eligibility inspect file metadata without decoding the library's
+maps. Each viewer releases obsolete work when it switches or closes, including its relief and
+region/sea-label Web Worker. Comparison panes can share a pending map without cancelling each
+other. The bridge and viewer keep bounded LRU caches of four maps, keyed by file revision,
+language and game; small inspector counts are kept separately. The loading indicator remains
+live during that work; errors show the map's failure state and a later load can retry.
 Progress snapshots for the same world keep its map, camera, pinned place/country card and
-highlight. Only a change of world identity or atlas language restarts atlas loading.
+highlight. A change of world identity, atlas files, language or game restarts atlas loading.
+
+[V-EXEC 2026-11-08] On the owner's 13-world library, a state snapshot took about 6.7 seconds
+before removing the full-library atlas reads, and a median 2.9 ms afterwards. A bounded
+protocol replay on a copy of that library delivered first atlas bundles in 0.35/0.75 seconds
+and retained bundles in 0.16/0.21 seconds (including JSON serialization); six rapid requests
+with cancellation delivered the last selection in 0.39 seconds and its bundle in 1.63 seconds.
+These measure the Python protocol, excluding browser drawing and Tauri IPC. Synthetic tests
+cover continued input/state delivery during a blocked load, cancellation, one reply per RPC,
+shared comparison loads, LRU eviction, file/game/language invalidation and failure/retry.
+Local evidence: `local_data/world-switching/measurement.json`.
 
 **Keyboard.** Ctrl+N, Ctrl+O, Ctrl+Enter, Ctrl+, , Ctrl+B, Ctrl+I, Ctrl+V of a world code
 anywhere, arrows in the library, `?` for the list. Every control is a native button/input or a

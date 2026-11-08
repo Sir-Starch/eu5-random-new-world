@@ -10,7 +10,8 @@ a line the window reads.
 
 The window asks; the bridge does what the Qt window's buttons did, by calling the same controller
 methods, and returns the problem the controller reports (in the window's language) or None. All
-calls run on one thread, as the Qt window's did; the controller's own thread does the long work.
+actions run on one thread; atlas requests use a separate cancellable worker, and the
+controller's own thread does generation and installation.
 Closing standard input cancels running work, waits for it and ends the process.
 
 ``--self-test`` answers ``hello`` for a temporary library, checks the native kernels and the world
@@ -37,6 +38,7 @@ from rnw.app import logs, paths, random_types
 from rnw.app.worldcode import decode, encode, new_code
 from rnw.gui import text as window
 from rnw.gui import view
+from rnw.gui.atlas_loading import AtlasRequests
 from rnw.gui.controller import NEW, Controller, Phase, Task
 
 if TYPE_CHECKING:
@@ -410,6 +412,10 @@ class Bridge:
 
     # -- one request ---------------------------------------------------------------------------
 
+    def defer_atlas(self, atlases: AtlasRequests, number: object, params: Params) -> None:
+        request_key = _str(params, "request_key") if "request_key" in params else f"main:{number}"
+        atlases.submit(number, request_key, self._world(params))
+
     def call(self, method: str, params: Params) -> object:
         """Carry out ``method``; raises ``BridgeError`` for one that does not exist."""
         handler = self.methods.get(method)
@@ -419,7 +425,9 @@ class Bridge:
         return handler(params)
 
 
-def _answer(bridge: Bridge, line: str) -> dict[str, object] | None:
+def _answer(  # noqa: PLR0911 - deferred RPCs have no immediate reply
+    bridge: Bridge, line: str, atlases: AtlasRequests | None = None
+) -> dict[str, object] | None:
     """The reply to one line of input; None for a blank line."""
     if not line.strip():
         return None
@@ -433,7 +441,17 @@ def _answer(bridge: Bridge, line: str) -> dict[str, object] | None:
     if not isinstance(method, str) or not isinstance(params, dict):
         return {"id": number, "error": "A request needs a method and an object of parameters"}
     try:
-        result = bridge.call(method, cast("Params", params))
+        values = cast("Params", params)
+        if atlases is not None and method == "atlas":
+            bridge.defer_atlas(atlases, number, values)
+            return None
+        if atlases is not None and method == "cancel_atlas":
+            atlases.cancel(_str(values, "request_key"))
+            return {"id": number, "result": None}
+        if atlases is not None and method == "set_language":
+            for request_key in list(atlases.pending):
+                atlases.cancel(request_key)
+        result = bridge.call(method, values)
     except BridgeError as error:
         return {"id": number, "error": str(error)}
     except Exception as error:  # noqa: BLE001 - the window shows it; the log keeps the traceback
@@ -509,6 +527,7 @@ def serve(bridge: Bridge, incoming: IO[str], outgoing: IO[str]) -> None:
         outgoing.flush()
 
     pace = _Pace()
+    atlases = AtlasRequests(bridge.controller)
     while True:
         try:
             line = lines.get(timeout=STATE_INTERVAL / 2)
@@ -517,10 +536,16 @@ def serve(bridge: Bridge, incoming: IO[str], outgoing: IO[str]) -> None:
         if line is None:
             break
         if line:
-            reply = _answer(bridge, line)
+            reply = _answer(bridge, line, atlases)
             if reply is not None:
                 send(reply)
+        replies = atlases.drain()
+        if replies:
+            bridge.dirty.set()
+        for reply in replies:
+            send(reply)
         pace.keep_up(bridge, send)
+    atlases.close()
     bridge.controller.cancel()
     bridge.controller.wait(CLOSE_WAIT)
 

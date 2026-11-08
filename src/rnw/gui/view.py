@@ -209,6 +209,11 @@ def picture_key(path: Path | None) -> str:
     return f"{path.name}:{status.st_mtime_ns}:{status.st_size}"
 
 
+def atlas_revision(controller: Controller, world: World) -> str:
+    stamp = library.atlas_stamp(controller.data, world)
+    return repr(stamp[1:]) if stamp else ""
+
+
 def _library(c: Controller) -> list[dict[str, object]]:
     entries: list[dict[str, object]] = []
     for world, depth in c.listed():
@@ -218,6 +223,7 @@ def _library(c: Controller) -> list[dict[str, object]]:
                 "kind": "world",
                 "id": world.id,
                 "title": c.name(world),
+                "atlas_revision": atlas_revision(c, world),
                 "preset": world.preset,
                 "type": text(f"type.{world.preset}"),
                 "created": world.created,
@@ -350,16 +356,9 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
     placement = c.placement(world)
     changed = c.changed_count(world)
     note = c.build_note(world)
-    found = c.atlas(world) if c.revealed(world) else None
-    bundle_path = library.folder(c.data, world)
-    has_atlas = (
-        found is not None
-        if c.revealed(world)
-        else all(
-            (bundle_path / name).is_file()
-            for name in (atlas_module.JSON_FILE, atlas_module.LABELS_FILE)
-        )
-    )
+    stamp = library.atlas_stamp(c.data, world)
+    has_atlas = stamp is not None
+    totals = library.cached_totals(c.data, world) if c.revealed(world) else None
     parent = c.parent_of(world)
     mod = c.profile.directory / "mod" / world.folder if c.profile is not None else None
     mine = c.task_target == world.id and c.task in WORLD_TASKS
@@ -386,8 +385,11 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "shown": c.shown(world),
         "revealed": c.revealed(world),
         "atlas": has_atlas,
-        "summary": c.summary(world),
-        "totals": atlas_module.totals(found) if found is not None and c.revealed(world) else None,
+        "atlas_revision": repr(stamp[1:]) if stamp else "",
+        "summary": text("summary", **{key: grouped(value) for key, value in totals.items()})
+        if totals is not None
+        else "",
+        "totals": totals,
         "notes": world.notes,
         "user_tag": world.user_tag,
         "starred": world.starred,
@@ -404,7 +406,7 @@ def _world(c: Controller, choices: Choices) -> dict[str, object] | None:
         "version_problem": c.version_problem(world),
         "task": _world_task(c) if mine else None,
         "told": choices.told.get(world.id, ""),
-        "compare": len(c.maps_to_compare()) >= 2,  # noqa: PLR2004 - two worlds are compared
+        "compare": len(comparable_worlds(c)) >= 2,  # noqa: PLR2004 - two worlds are compared
     }
 
 
@@ -501,29 +503,34 @@ def words_for(controller: Controller, found: Atlas) -> atlas_module.Words:
 
 
 def history_data(
-    reader: history_presenter.Reader, found: Atlas, shown: Callable[[object], str]
+    reader: history_presenter.Reader,
+    found: Atlas,
+    shown: Callable[[object], str],
+    checkpoint: Callable[[], None] = lambda: None,
 ) -> dict[str, object]:
     """Each country's society and each region's history, keyed as the window asks for them.
 
     Countries are keyed by tag; a region by the name the window shows for it (``Facts.region``,
     the ``shown`` of its name), while the reader looks it up by the name it renders itself.
     """
-    regions = {shown(value): value for value in found.regions}
-    return {
-        "countries": {
-            country.tag: history_presenter.encode(dossier)
-            for country in found.countries
-            if (dossier := reader.dossier(country.tag)) is not None
-        },
-        "regions": {
-            name: history_presenter.encode(summary)
-            for name, value in sorted(regions.items())
-            if (summary := reader.place(reader.name(value))) is not None
-        },
-    }
+    countries: dict[str, object] = {}
+    for country in found.countries:
+        checkpoint()
+        dossier = reader.dossier(country.tag)
+        if dossier is not None:
+            countries[country.tag] = history_presenter.encode(dossier)
+    regions: dict[str, object] = {}
+    for name, value in sorted({shown(value): value for value in found.regions}.items()):
+        checkpoint()
+        summary = reader.place(reader.name(value))
+        if summary is not None:
+            regions[name] = history_presenter.encode(summary)
+    return {"countries": countries, "regions": regions}
 
 
-def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | None:
+def atlas_bundle(
+    controller: Controller, world: World, checkpoint: Callable[[], None] = lambda: None
+) -> dict[str, object] | None:
     """A revealed world's atlas as the map viewer paints and asks it; None when it has none or
     its New World is covered."""
     if not controller.revealed(world):
@@ -531,6 +538,7 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
     found = controller.atlas(world)
     if found is None:
         return None
+    checkpoint()
     started = time.perf_counter()
     words = words_for(controller, found)
     height, width = found.size
@@ -540,6 +548,7 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
 
     layers: dict[str, object] = {}
     for layer in atlas_module.LAYERS:
+        checkpoint()
         lens = atlas_module.lens(found, layer, words)
         layers[layer] = {
             "colours": _b64(lens.colours),
@@ -595,9 +604,10 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
         "totals": atlas_module.totals(found),
         "layers": layers,
     }
+    checkpoint()
     reader = controller.history_reader(world)
     bundle["history"] = (
-        history_data(reader, found, name)
+        history_data(reader, found, name, checkpoint)
         if reader is not None and found.history is not None
         else None
     )
@@ -605,11 +615,19 @@ def atlas_bundle(controller: Controller, world: World) -> dict[str, object] | No
     return bundle
 
 
+def comparable_worlds(controller: Controller) -> list[World]:
+    """List eligible files without decoding every map and evicting the active world's cache."""
+    return [
+        world
+        for world in controller.worlds
+        if controller.revealed(world) and library.atlas_stamp(controller.data, world) is not None
+    ]
+
+
 def compare_list(controller: Controller) -> list[dict[str, str]]:
     """The worlds whose maps may be compared: revealed, with an atlas."""
     return [
-        {"id": world.id, "name": controller.name(world)}
-        for world, _found in controller.maps_to_compare()
+        {"id": world.id, "name": controller.name(world)} for world in comparable_worlds(controller)
     ]
 
 

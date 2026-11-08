@@ -38,6 +38,7 @@ from rnw.atlas import JSON_FILE as ATLAS_JSON
 from rnw.atlas import LABELS_FILE as ATLAS_LABELS
 from rnw.atlas import Atlas, AtlasError
 from rnw.atlas import from_files as atlas_from_files
+from rnw.atlas import totals as atlas_totals
 from rnw.bundle import COVER_COPY
 from rnw.landmask import LandMask, LandMaskError
 from rnw.landmask import read as read_land_mask
@@ -58,6 +59,7 @@ ID_LENGTH: Final[int] = 10
 PREVIEW: Final[str] = "preview.png"
 PREVIEW_HIDDEN: Final[str] = "preview_hidden.png"
 ATLAS_CACHE: Final[int] = 4
+ATLAS_TOTALS_CACHE: Final[int] = 128
 INPUTS: Final[str] = "inputs.json"
 LAND_MASK: Final[str] = "land_mask.png"
 MANIFEST: Final[str] = "manifest.json"
@@ -279,28 +281,57 @@ def migrate_visibility(data: Path, *, default: bool) -> list[World]:
     return migrated
 
 
-_ATLASES: dict[tuple[str, int, int, int, int], Atlas] = {}
+type AtlasStamp = tuple[str, int, int, int, int]
+
+_ATLASES: dict[AtlasStamp, Atlas] = {}
+# A few counts need no retained map: revisiting a client-cached map must keep its inspector.
+_ATLAS_TOTALS: dict[AtlasStamp, dict[str, int]] = {}
+
+
+def atlas_stamp(data: Path, world: World) -> AtlasStamp | None:
+    """The identity of the atlas files, without opening or validating their contents."""
+    folder_path = folder(data, world)
+    try:
+        first = (folder_path / ATLAS_JSON).stat()
+        second = (folder_path / ATLAS_LABELS).stat()
+    except OSError:
+        return None
+    return (str(folder_path), first.st_mtime_ns, first.st_size, second.st_mtime_ns, second.st_size)
+
+
+def cached_atlas(data: Path, world: World) -> Atlas | None:
+    """An already read atlas, without doing expensive work on the window's thread."""
+    key = atlas_stamp(data, world)
+    return _ATLASES.get(key) if key is not None else None
+
+
+def cached_totals(data: Path, world: World) -> dict[str, int] | None:
+    """Small inspector counts, retained independently of the much larger map cache."""
+    key = atlas_stamp(data, world)
+    return _ATLAS_TOTALS.get(key) if key is not None else None
 
 
 def atlas(data: Path, world: World) -> Atlas | None:
-    """The world's atlas from its bundle, or None if it has none (made before atlases) or it
-    cannot be read. Kept in memory while the files are as they were."""
-    folder_path = folder(data, world)
-    document, labels = folder_path / ATLAS_JSON, folder_path / ATLAS_LABELS
-    try:
-        first, second = document.stat(), labels.stat()
-    except OSError:
+    """Read and validate once per file revision; retain the four most recently used atlases."""
+    key = atlas_stamp(data, world)
+    if key is None:
         return None
-    # Sizes too: two writes within one tick of the file system's clock share a time.
-    key = (str(folder_path), first.st_mtime_ns, first.st_size, second.st_mtime_ns, second.st_size)
-    if key not in _ATLASES:
+    found = _ATLASES.pop(key, None)
+    if found is None:
+        folder_path = folder(data, world)
         try:
-            _ATLASES[key] = atlas_from_files(document.read_bytes(), labels.read_bytes())
+            found = atlas_from_files(
+                (folder_path / ATLAS_JSON).read_bytes(), (folder_path / ATLAS_LABELS).read_bytes()
+            )
         except (OSError, AtlasError):
             return None
-        if len(_ATLASES) > ATLAS_CACHE:
-            _ = _ATLASES.pop(next(iter(_ATLASES)))
-    return _ATLASES[key]
+    _ATLASES[key] = found
+    _ATLAS_TOTALS[key] = atlas_totals(found)
+    while len(_ATLAS_TOTALS) > ATLAS_TOTALS_CACHE:
+        _ = _ATLAS_TOTALS.pop(next(iter(_ATLAS_TOTALS)))
+    while len(_ATLASES) > ATLAS_CACHE:
+        _ = _ATLASES.pop(next(iter(_ATLASES)))
+    return found
 
 
 def rename(data: Path, world: World, name: str) -> World:

@@ -320,3 +320,27 @@ def test_the_atlas_is_read_from_the_bundle_and_a_world_can_be_revealed(tmp_path:
     assert shown.revealed
     assert [item.revealed for item in library.load(tmp_path)] == [True]
     assert not library.reveal(tmp_path, shown, revealed=False).revealed
+
+
+def test_atlas_cache_retains_recently_revisited_maps_and_invalidates_changed_files(
+    tmp_path: Path,
+) -> None:
+    worlds = [_world(seed) for seed in range(library.ATLAS_CACHE + 1)]
+    document, labels = atlas_files(synthetic_atlas())
+    for world in worlds:
+        folder = _bundle(tmp_path, world)
+        _ = (folder / ATLAS_JSON).write_bytes(document)
+        _ = (folder / ATLAS_LABELS).write_bytes(labels)
+    first = library.atlas(tmp_path, worlds[0])
+    assert first is not None
+    for world in worlds[1:-1]:
+        assert library.atlas(tmp_path, world) is not None
+    assert library.atlas(tmp_path, worlds[0]) is first
+    assert library.atlas(tmp_path, worlds[-1]) is not None
+    assert library.atlas(tmp_path, worlds[0]) is first
+    assert library.cached_atlas(tmp_path, worlds[1]) is None
+    assert library.cached_totals(tmp_path, worlds[1]) is not None
+    _ = (library.folder(tmp_path, worlds[0]) / ATLAS_JSON).write_text("broken", encoding="utf-8")
+    assert library.cached_atlas(tmp_path, worlds[0]) is None
+    assert library.cached_totals(tmp_path, worlds[0]) is None
+    assert library.atlas(tmp_path, worlds[0]) is None

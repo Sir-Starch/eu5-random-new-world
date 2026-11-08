@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Keep world switching responsive: prepare maps on a cancellable background worker, discard
+  obsolete requests and reuse the four most recently viewed maps. Updating the window no
+  longer reloads every revealed atlas just to decide whether comparison is available.
+
 - Allow substantial enclosed inland seas, with their own coastal areas and no ocean currents.
   Small enclosed waters become lakes before ports and terrain are built, including pockets
   cut off when straits are narrowed. Such a pocket previously stopped world generation with

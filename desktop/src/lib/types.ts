@@ -82,6 +82,7 @@ export interface NewState {
 }
 
 export interface LibraryEntry {
+  atlas_revision?: string;
   kind: "world" | "stray";
   id: string;
   title: string;
@@ -136,6 +137,7 @@ export interface WorldState {
   shown: boolean;
   revealed: boolean;
   atlas: boolean;
+  atlas_revision?: string;
   summary: string;
   totals: Totals | null;
   notes: string;
