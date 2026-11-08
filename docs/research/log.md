@@ -2215,3 +2215,12 @@ check. The owner asked for a procedurally written description: the chronicle is 
 The world RLTM regenerated from its code differs from the installed one only in localization
 and the countries' laws; the window was checked in headless Chromium on that world.
 
+
+## 2026-11-08 — The owner's ATDT sitting: values, observer, court policy (C520–C522)
+
+The owner observed Monahiton (RMP) on world ATDT and reported that the societal values differ from
+the window and that *Our History* does nothing. The bars and the game's tooltip equal the written
+values; the row numbers are the monthly change and the marker the inertia cap (C520), so the window
+keeps its numbers. The sitting was in observer mode, which explains the decision (C521). The same
+`error.log` shows the engine removing every generated `aristocratic_court_policy` at the start
+(C522), against C514's reading of the advances at level 2; that is open.
