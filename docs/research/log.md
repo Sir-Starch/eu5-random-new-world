@@ -2222,5 +2222,7 @@ The owner observed Monahiton (RMP) on world ATDT and reported that the societal 
 the window and that *Our History* does nothing. The bars and the game's tooltip equal the written
 values; the row numbers are the monthly change and the marker the inertia cap (C520), so the window
 keeps its numbers. The sitting was in observer mode, which explains the decision (C521). The same
-`error.log` shows the engine removing every generated `aristocratic_court_policy` at the start
-(C522), against C514's reading of the advances at level 2; that is open.
+`error.log` shows the engine removing every generated `aristocratic_court_policy` at the start and
+setting feudal and republican laws whose advance sits behind the institution of legalism (C522).
+The completion now leaves out a law behind an undecided `allow` and a law vanilla's countries of the
+government never hold at that level; only the countries' laws change (`5ded0387`).

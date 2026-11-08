@@ -26,7 +26,9 @@
   traditions, and nearly every law of a sacred centre's theocracy, opened with *No Policy
   enacted* and cost political power and months to fix. Each law a state sees at the start now
   holds a policy that the base game's countries of the same government hold, the one that leans
-  the way the country's own societal values already lean.
+  the way the country's own societal values already lean. A law the game would not grant at the
+  start is left out: feudal law and the republican foundation wait for the institution of
+  legalism, and royal court customs for the third level of technology, as in the base game.
 
 - Tell each country's past as a story. *Our History* read like a list of dated records
   ("1192: Society Unichita could no longer hold society Kiosaghe, which broke away. Recorded

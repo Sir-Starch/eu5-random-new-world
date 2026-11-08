@@ -1,4 +1,4 @@
-"""Every law a generated state sees at the start holds a policy, as vanilla's complete setups do.
+"""Every law a generated state sees at the start holds a policy where vanilla's countries do.
 
 The owner's sitting of 2026-11-08 found a generated duchy with laws of "No Policy enacted": each
 costs political power and months to enact. The installation says why [V-LOCAL, EU5 1.4.7, Steam
@@ -8,7 +8,21 @@ build 26377361]:
   other law is shown when its ``potential`` holds. In the age of traditions an advance starts
   researched unless its ``starting_technology_level`` is above the country's (the comment at the
   top of ``advances/0_age_of_traditions.txt``); here an advance also needs every advance it
-  ``requires``, and an advance with a ``potential`` of its own is left out.
+  ``requires``, and an advance with a ``potential`` of its own is left out. An advance with an
+  ``allow`` starts researched only when it holds: ``legalism_advance`` asks for the embraced
+  institution of legalism, which no generated country has, and the game set the feudal de jure
+  law of 51 generated monarchies and the republican foundation of 31 republics behind it with
+  ``Setting a law … that the country doesn't have the advance for`` ([V-GAME] the owner's ATDT
+  sitting, 2026-11-08, C522).
+* A law that an advance unlocks is not written at a level where vanilla's countries of the same
+  government hold laws that advances unlock but never this one. The game removed the aristocratic
+  court of all 51 generated monarchies of level 2 (``Removing invalid policy … at game start``,
+  the same sitting) though the court's advance needs only writing and codified laws; vanilla's
+  190 monarchies of level 2 hold its coinage, distribution of power and mining laws and no royal
+  court customs, and 999 of its 1,189 of level 3 hold them. A level whose vanilla countries hold
+  no such law (its monarchies of level 0 and 1 hold two laws, neither unlocked) or that vanilla
+  lacks (theocracies below 3) is no evidence: the advances decide. The engine's reason is
+  [UNKNOWN]; vanilla's 1337 is the evidence.
 * The generated states take the vanilla American templates, made for level 2, and write their
   own level (0 to 3, ``natives.md``). Those templates set no royal court customs, feudal de jure
   law or cultural traditions, which 999 of the 1,189 vanilla monarchies of level 3 set; the
@@ -29,7 +43,7 @@ from __future__ import annotations
 
 import operator
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
 from rnw.pdx import Block, Entry, parse
@@ -97,6 +111,7 @@ class Advance:
     level: int | None
     requires: tuple[str, ...]
     gated: bool
+    allow: Block | None = None
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -109,6 +124,11 @@ class LawBook:
     templates: Mapping[str, Block]
     held: Mapping[tuple[str, str], Counter[str]]
     axes: tuple[str, ...]
+    # The levels at which vanilla's countries of a government hold a law
+    # (``starting_technology_level``, their own or a template's).
+    held_levels: Mapping[tuple[str, str], frozenset[int]] = field(
+        default_factory=dict[tuple[str, str], frozenset[int]]
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,8 +202,24 @@ def _advances(texts: Sequence[str]) -> tuple[dict[str, Advance], dict[str, tuple
             int(str(level.value)) if level is not None else None,
             tuple(str(entry.value) for entry in body.find("requires")),
             body.block("potential") is not None,
+            body.block("allow"),
         )
     return advances, {law: tuple(names) for law, names in unlocked.items()}
+
+
+def _level(block: Block, templates: Mapping[str, Block], trail: tuple[str, ...] = ()) -> int | None:
+    """A setup entry's ``starting_technology_level``: its own, else the highest of its includes'
+    (as ``eu5_natives.template_levels`` reads the templates)."""
+    own = block.first("starting_technology_level")
+    if own is not None and isinstance(own.value, str) and own.value.isdigit():
+        return int(own.value)
+    found = [
+        level
+        for include in block.find("include")
+        if (name := str(include.value).strip('"')) in templates and name not in trail
+        if (level := _level(templates[name], templates, (*trail, name))) is not None
+    ]
+    return max(found) if found else None
 
 
 def _resolve(
@@ -238,14 +274,26 @@ def read_book(
         message = "The 1337 setup has no countries"
         raise LawError(message)
     held: dict[tuple[str, str], Counter[str]] = {}
+    held_levels: dict[tuple[str, str], set[int]] = {}
     for entry in holder.entries:
         if not isinstance(entry.value, Block) or entry.value.first("type") is not None:
             continue
         kind, written, _ = _resolve(entry.value, parsed)
+        level = _level(entry.value, parsed)
         for law, policy in written.items():
             held.setdefault((kind, law), Counter())[policy] += 1
+            if level is not None:
+                held_levels.setdefault((kind, law), set()).add(level)
     axes = tuple(name for name, _ in _blocks(value_texts))
-    return LawBook(laws, unlocked, advances, parsed, held, axes)
+    return LawBook(
+        laws,
+        unlocked,
+        advances,
+        parsed,
+        held,
+        axes,
+        {key: frozenset(found) for key, found in held_levels.items()},
+    )
 
 
 # --- A three-valued reading of the triggers the laws ask at the start ----------------------
@@ -339,8 +387,9 @@ def holds(block: Block | None, facts: Facts) -> bool | None:
 # --- Which laws a country sees, and which policy it holds ----------------------------------
 
 
-def _researched(book: LawBook, level: int) -> set[str]:
-    """The advances of the age of traditions a country of ``level`` starts with."""
+def _researched(book: LawBook, facts: Facts) -> set[str]:
+    """The advances of the age of traditions the country starts with: within its level, with
+    every advance they require, and with their ``allow`` holding (an undecided one does not)."""
     done: dict[str, bool] = {}
 
     def researched(name: str, trail: frozenset[str]) -> bool:
@@ -351,7 +400,8 @@ def _researched(book: LawBook, level: int) -> set[str]:
             advance is not None
             and name not in trail
             and not advance.gated
-            and (advance.level is None or advance.level <= level)
+            and (advance.level is None or advance.level <= facts.level)
+            and (advance.allow is None or holds(advance.allow, facts) is True)
             and all(researched(other, trail | {name}) for other in advance.requires)
         )
         done[name] = ok
@@ -360,9 +410,19 @@ def _researched(book: LawBook, level: int) -> set[str]:
     return {name for name in book.advances if researched(name, frozenset())}
 
 
+def held_at_level(book: LawBook, law: str, facts: Facts) -> bool:
+    """Whether vanilla's 1337 admits ``law`` at the country's level: its countries of the same
+    government and level hold it, or hold no law an advance unlocks (no evidence either way)."""
+
+    def held(name: str) -> bool:
+        return facts.level in book.held_levels.get((facts.government, name), frozenset())
+
+    return held(law) or not any(held(name) for name in book.unlocked_by)
+
+
 def shown(book: LawBook, facts: Facts) -> list[str]:
     """The laws the country sees at the start, in the installation's order."""
-    researched = _researched(book, facts.level)
+    researched = _researched(book, facts)
     return [
         name
         for name, law in book.laws.items()
@@ -447,7 +507,8 @@ def complete(  # noqa: PLR0913 - a country's template, own fields and identity.
     culture: str,
 ) -> tuple[tuple[str, str], ...]:
     """The country's own laws with a policy for every law it sees that its template leaves
-    empty, in the order of the installation after the ones it already writes."""
+    empty and that vanilla's countries of its government and level hold, in the order of the
+    installation after the ones it already writes."""
     kind, inherited = "", dict[str, str]()
     if include:
         if include not in book.templates:
@@ -464,6 +525,9 @@ def complete(  # noqa: PLR0913 - a country's template, own fields and identity.
     facts = Facts(government, level, religion, culture, standing, current)
     for law in shown(book, facts):
         if law in current:
+            continue
+        if law in book.unlocked_by and not held_at_level(book, law, facts):
+            # The game may refuse it at this level (the module's note); vanilla holds none.
             continue
         policy = choose(book, law, facts)
         if policy:

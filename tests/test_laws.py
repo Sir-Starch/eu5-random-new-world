@@ -90,7 +90,7 @@ MONARCHY = """\t\tM{n:02d} = {{ include = "noble" government = {{ laws = {{
 \t\t\tslave_conversion = allow_slave_religion
 \t\t}} }} }}
 """
-THEOCRACY = """\t\tTHE = { government = { type = theocracy laws = {
+THEOCRACY = """\t\tTHE = { starting_technology_level = 3 government = { type = theocracy laws = {
 \t\t\ttheocratic_leadership = clerical_state divine_cause_law = pursuit_of_knowledge_policy
 \t\t\tcultural_traditions_law = civil_society legal_code_law = traditional_law_policy
 \t\t} } }
@@ -212,3 +212,100 @@ def test_written_laws_come_first_and_stay() -> None:
 def test_an_unknown_template_is_refused() -> None:
     with pytest.raises(LawError, match="not installed"):
         _ = _complete("missing_template", 2)
+
+
+# The owner's ATDT sitting (2026-11-08): the game set the feudal de jure law behind the
+# institution of legalism with a warning and removed the aristocratic court of every generated
+# monarchy of level 2; vanilla's monarchies hold the court at level 3 only.
+LEVEL_LAWS = (
+    LAWS
+    + """
+feudal_de_jure_law = {
+\tpotential = { government_type = government_type:monarchy }
+\tby_tradition = { }
+}
+"""
+)
+LEVEL_ADVANCES = (
+    ADVANCES
+    + """
+legalism_advance = {
+\tage = age_1_traditions
+\trequires = written_alphabet
+\tallow = { has_embraced_institution = institution:legalism }
+}
+feudal_de_jure_law_advance = {
+\tage = age_1_traditions
+\trequires = legalism_advance
+\tunlock_law = feudal_de_jure_law
+}
+"""
+)
+LEVEL_TEMPLATES = {
+    "old_monarchy": "starting_technology_level = 3\ngovernment = { type = monarchy }\n",
+    "american_monarchy": "starting_technology_level = 2\ngovernment = { type = monarchy }\n",
+}
+OLD_MONARCHY = """\t\tO{n:02d} = {{ include = "old_monarchy" government = {{ laws = {{
+\t\t\troyal_court_customs_law = aristocratic_court_policy
+\t\t\tfeudal_de_jure_law = by_tradition cultural_traditions_law = civil_society
+\t\t}} }} }}
+"""
+AMERICAN_MONARCHY = """\t\tA{n:02d} = {{ include = "american_monarchy" government = {{ laws = {{
+\t\t\tcultural_traditions_law = civil_society
+\t\t}} }} }}
+"""
+LEVEL_SETUP = (
+    "countries = {\n\tcountries = {\n"
+    + "".join(OLD_MONARCHY.format(n=n) for n in range(10))
+    + "".join(AMERICAN_MONARCHY.format(n=n) for n in range(10))
+    + "\t}\n}\n"
+)
+LEVEL_BOOK = read_book(
+    law_texts=[LEVEL_LAWS],
+    advance_texts=[LEVEL_ADVANCES],
+    templates=LEVEL_TEMPLATES,
+    setup_text=LEVEL_SETUP,
+    value_texts=[VALUES],
+)
+
+
+def _complete_levels(level: int) -> dict[str, str]:
+    return dict(
+        complete(
+            LEVEL_BOOK,
+            include="",
+            fields=(("type", "monarchy"),),
+            laws=(),
+            level=level,
+            religion="mystery",
+            culture="people",
+        )
+    )
+
+
+def test_an_advance_whose_allow_is_undecided_does_not_start_researched() -> None:
+    """Legalism asks for an embraced institution, so the feudal de jure law behind it is not
+    shown, at level 3 as at level 2."""
+    facts = LawFacts("monarchy", 3, "mystery", "people", {}, {})
+    assert "feudal_de_jure_law" not in shown(LEVEL_BOOK, facts)
+    assert "feudal_de_jure_law" not in _complete_levels(3)
+
+
+def test_a_law_an_advance_unlocks_is_written_where_vanilla_holds_it_at_the_level() -> None:
+    """Vanilla's monarchies of level 2 hold no royal court customs, those of level 3 do; the
+    cultural traditions are held at both."""
+    assert _complete_levels(2) == {"cultural_traditions_law": "civil_society"}
+    assert _complete_levels(3) == {
+        "royal_court_customs_law": "aristocratic_court_policy",
+        "cultural_traditions_law": "civil_society",
+    }
+    assert LEVEL_BOOK.held_levels["monarchy", "royal_court_customs_law"] == frozenset({3})
+
+
+def test_a_level_without_vanilla_evidence_is_left_to_the_advances() -> None:
+    """Vanilla has no theocracy of level 2: the theocracy's divine cause and traditions, which
+    advances unlock, are written as the advances allow."""
+    laws = _complete("", 2, (("type", "theocracy"),))
+    assert "divine_cause_law" in laws
+    assert "cultural_traditions_law" in laws
+    assert LAW_BOOK.held_levels["theocracy", "divine_cause_law"] == frozenset({3})
