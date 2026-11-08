@@ -22,8 +22,13 @@ FILE: Final[str] = "generation-times.json"
 SAMPLES: Final[int] = 5
 CONTEXTS: Final[int] = 16
 # Change when the timing model or pipeline dependencies change, independently of world epochs.
-SCHEMA: Final[int] = 1
+# 2: the vanilla reads follow the generated world, so schema 1 costs included its time.
+SCHEMA: Final[int] = 2
 MAX_SECONDS: Final[float] = 86400.0
+# Stages served from the land cache: a hit takes hundredths of a second and says nothing
+# about the cost of the next miss.
+CACHED: Final[frozenset[str]] = frozenset({"select canvas", "generate world"})
+CACHE_HIT_SECONDS: Final[float] = 1.0
 
 
 def key(build: str, preset: str) -> str:
@@ -89,7 +94,7 @@ def save(data: Path, context: str, costs: dict[str, float]) -> None:
     rows = _read(data)
     stages = rows.pop(context, {})
     for name, seconds in costs.items():
-        if name == "generate world" and seconds < 1.0:
+        if name in CACHED and seconds < CACHE_HIT_SECONDS:
             continue
         stages[name] = [*stages.get(name, []), seconds][-SAMPLES:]
     rows[context] = stages

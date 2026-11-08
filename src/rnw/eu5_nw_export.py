@@ -2899,7 +2899,8 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     moved_groups = moved_pixels_of(canvas)
     removed = {game_map.keys[index] for index in np.flatnonzero(canvas.removed).tolist()}
     with Stages(stage_workers()) as stages:
-        # Everything that reads only the vanilla game runs beside the generation of the world.
+        # The vanilla reads need the moved island groups, so they run beside the coasts and
+        # water of the generated world, not beside its generation (``rnw.eta.DEPENDENCIES``).
         def read_vanilla() -> tuple[
             DecalStore, dict[str, dict[str, str]], set[str], DevelopmentCalibration
         ]:

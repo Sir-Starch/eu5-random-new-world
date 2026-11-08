@@ -84,16 +84,56 @@ def test_machine_history_improves_a_slower_run_from_the_first_prediction() -> No
     assert max(_replay(learned, events)) < 5
 
 
-def test_polling_counts_down_and_overdue_corrections_do_not_grow_every_second() -> None:
+def _generating(learned: dict[str, float]) -> Estimate:
+    """The owner's case: the canvas is ready and the world is being generated."""
+    model = _model()
+    model.configure(learned, install=True)
+    model.begin("load map", 0)
+    model.finish("load map", 3, completed=True)
+    model.begin("select canvas", 3)
+    model.finish("select canvas", 9, completed=True)
+    model.begin("generate world", 9)
+    model.begin("land cells", 9)
+    return model
+
+
+@pytest.mark.parametrize("learned", [{}, {"vanilla localization keys": 120.0}])
+def test_polling_counts_down_while_stages_waiting_for_the_world_are_not_submitted(
+    learned: dict[str, float],
+) -> None:
+    # The vanilla reads are submitted only after the world exists; their forecast must not
+    # start "now" on every poll, which recedes the deadline with the clock.
+    model = _generating(learned)
+    first = model.remaining(9)
+    for time in range(10, 9 + int(REFERENCE_SECONDS["generate world"])):
+        assert model.remaining(float(time)) == pytest.approx(first - (time - 9))
+
+
+@pytest.mark.parametrize("learned", [{}, {"generate world": 50.0}])
+def test_overdue_stage_holds_the_countdown_instead_of_sawing(learned: dict[str, float]) -> None:
+    model = _generating(learned)
+    expected = learned.get("generate world", REFERENCE_SECONDS["generate world"])
+    values = [model.remaining(float(time)) for time in range(9, 9 + int(expected * 4))]
+    rises = [right - left for left, right in pairwise(values) if right > left]
+    # Never the 3:10 -> 3:00 -> 3:10 cycle: a later forecast pauses the shown time, and
+    # only one substantial revision may raise it.
+    assert len(rises) <= 1
+    assert all(rise >= 15 for rise in rises)
+    assert values[-1] <= values[int(expected) + 5] <= values[0]
+    assert all(value > 0 for value in values)
+
+
+def test_small_corrections_change_the_pace_not_the_shown_time() -> None:
     model = _model()
     model.begin("load map", 0)
-    first = model.remaining(0)
-    for time in range(1, 10):
-        assert model.remaining(time) == pytest.approx(first - time)
-    values = [model.remaining(float(time)) for time in range(10, 100)]
-    increases = sum(right > left for left, right in pairwise(values))
-    assert 0 < increases < 10
-    assert all(value > 0 for value in values)
+    target = model.forecast(1.0)
+    # Each case: the time shown at the previous poll (t = 0), then one second later.
+    model.deadline, model.polled = target - 5.0, 0.0
+    assert model.remaining(1.0) == pytest.approx(target - 5.0)  # later: held still
+    model.deadline, model.polled = target + 6.0, 0.0
+    assert model.remaining(1.0) == pytest.approx(target + 6.0 - 2.0)  # earlier: double speed
+    model.deadline, model.polled = target + 60.0, 0.0
+    assert model.remaining(1.0) == pytest.approx(target - 1.0)  # a revision: at once
 
 
 def test_cancelled_or_failed_stage_does_not_train_and_reset_forgets_deadline(
@@ -114,9 +154,16 @@ def test_cancelled_or_failed_stage_does_not_train_and_reset_forgets_deadline(
 
 def test_training_is_bounded_robust_and_ignores_cached_worlds(tmp_path: Path) -> None:
     for index in range(9):
-        estimates.save(tmp_path, "machine", {"write files": 4, "generate world": 25 + index})
-    estimates.save(tmp_path, "machine", {"write files": 4, "generate world": 0.1})
+        estimates.save(
+            tmp_path,
+            "machine",
+            {"write files": 4, "generate world": 25 + index, "select canvas": 30 + index},
+        )
+    estimates.save(
+        tmp_path, "machine", {"write files": 4, "generate world": 0.1, "select canvas": 0.02}
+    )
     assert estimates.load(tmp_path, "machine")["generate world"] == 31
+    assert estimates.load(tmp_path, "machine")["select canvas"] == 36
     estimates.save(tmp_path, "machine", {"load map": 400})  # incomplete run
     assert "load map" not in estimates.load(tmp_path, "machine")
     assert not list(tmp_path.glob(".*.new"))

@@ -15,6 +15,14 @@
   cut off when straits are narrowed. Such a pocket previously stopped world generation with
   "generated sea zones cannot reach the Old World seas". Ocean routes still have to connect.
 
+- Keep the time left steady while a world is generated. It counted down from 3:10 to 3:00
+  and jumped back to 3:10 again and again: the estimate expected the game's data to be read
+  beside the generation of the land, which cannot start before the land exists, and every
+  correction raised it a few seconds at a time. Now a stage that runs late holds the time still,
+  a small correction changes only the pace of the countdown and only a large one moves it at
+  once. Timings learned by earlier versions are discarded once, as they counted the land's
+  time twice; a cached canvas no longer teaches that a new one is free.
+
 - Keep the open country/place card, map position and highlight while background generation
   updates its progress; reload the map only when its world or language changes.
 

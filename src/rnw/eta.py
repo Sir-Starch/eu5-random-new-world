@@ -1,8 +1,11 @@
 """Predict the remaining critical path, independently of the completed-stage progress bar.
 
 Stages can start before their inputs are ready. Their measured cost excludes that wait,
-so parallel work and nested diagnostic stages are never added twice. Only stage events or
-an overdue-stage review can move the deadline; polling simply counts down to it.
+so parallel work and nested diagnostic stages are never added twice. Each poll forecasts
+the completion again; the shown deadline only follows it. A small difference changes the
+pace of the countdown (it pauses for a later forecast and runs at double speed toward an
+earlier one), so an overdue stage holds the time still instead of resetting it upward
+every few seconds. Only a substantial revision moves the shown time at once.
 """
 
 from __future__ import annotations
@@ -13,25 +16,28 @@ from typing import TYPE_CHECKING, Final
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-# Topological order; these are the data dependencies in eu5_nw_export._export. The two
-# long branches (terrain and scripts) join at write files. Keep this beside its regression.
+# Topological order; these are the data dependencies in eu5_nw_export._export_new_world.
+# The vanilla reads need the moved island groups, so they are submitted only after the world
+# is generated; the main thread waits for the world checks, which read the identities, before
+# the slot tables. The two long branches (terrain and scripts) join at write files. Keep
+# this beside its regression.
 DEPENDENCIES: Final[dict[str, tuple[str, ...]]] = {
     "load map": (),
     "select canvas": ("load map",),
-    "vanilla reads": ("select canvas",),
-    "vanilla geometry": ("select canvas",),
-    "vanilla localization keys": ("select canvas",),
+    "generate world": ("select canvas",),
+    "vanilla reads": ("generate world",),
+    "vanilla geometry": ("generate world",),
+    "vanilla localization keys": ("generate world",),
     "vanilla climate": ("vanilla reads",),
     "vanilla material levels": ("vanilla reads",),
     "vanilla natives": ("vanilla reads", "vanilla geometry"),
-    "generate world": ("select canvas",),
     "settle coasts": ("generate world",),
     "water shapes": ("settle coasts",),
     "water textures": ("water shapes",),
-    "world checks": ("water shapes",),
     "biomes and rivers": ("water shapes", "vanilla climate"),
     "identities": ("biomes and rivers", "vanilla geometry", "vanilla localization keys"),
-    "slot tables": ("identities", "vanilla material levels"),
+    "world checks": ("identities",),
+    "slot tables": ("world checks", "vanilla material levels"),
     "location rasters": ("slot tables",),
     "png encoding": ("location rasters",),
     "terrain decals": ("location rasters",),
@@ -80,8 +86,16 @@ REFERENCE_SECONDS: Final[dict[str, float]] = {
     "write files": 9.0,
     "install": 1.0,
 }
-REVIEW_SECONDS: Final[float] = 10.0
+# A forecast that differs from the shown deadline by less than this changes only the pace of
+# the countdown; a larger revision is shown at once.
+REVISION_SECONDS: Final[float] = 15.0
+REVISION_SHARE: Final[float] = 0.1
+# Seconds past its expected cost before a stage counts as overdue.
+OVERDUE_GRACE: Final[float] = 2.0
 MIN_CALIBRATION_WEIGHT: Final[float] = 2.0
+# Not a measure of the machine: reading the map waits for the disk, and the canvas's cost
+# depends on the preset (a few seconds, or half a minute with expanded oceans).
+UNCALIBRATED: Final[frozenset[str]] = frozenset({"load map", "select canvas"})
 
 
 class Estimate:
@@ -98,13 +112,11 @@ class Estimate:
         self.waited_for_game: bool = False
         self.install: bool = False
         self.deadline: float | None = None
-        self.reviewed: float = now
-        self.changed: bool = True
+        self.polled: float = now
 
     def configure(self, learned: Mapping[str, float], *, install: bool) -> None:
         self.learned = dict(learned)
         self.install = install
-        self.changed = True
 
     def begin(self, name: str, now: float) -> None:
         if name == "waiting for the game":
@@ -113,7 +125,6 @@ class Estimate:
             self.fresh_world = True
         if name in DEPENDENCIES:
             self.begins[name] = now
-            self.changed = True
 
     def finish(self, name: str, now: float, *, completed: bool) -> None:
         if name not in DEPENDENCIES or name not in self.begins or not completed:
@@ -129,7 +140,6 @@ class Estimate:
             ready = max((self.ends[dep] for dep in dependencies), default=self.started)
             self.costs[name] = max(0.01, now - ready)
         self.ends[name] = now
-        self.changed = True
 
     def _scale(self) -> float:
         # Short cached reads and a cached physical world say nothing about the speed of
@@ -138,12 +148,13 @@ class Estimate:
         ratios = [
             cost / self.learned.get(name, self.priors[name])
             for name, cost in self.costs.items()
-            if self.priors[name] >= MIN_CALIBRATION_WEIGHT
+            if name not in UNCALIBRATED
+            and self.priors[name] >= MIN_CALIBRATION_WEIGHT
             and cost >= max(1.0, self.priors[name] * 0.25)
         ]
         return max(0.25, min(8.0, statistics.median([1.0, 1.0, *ratios])))
 
-    def _forecast(self, now: float) -> float:
+    def forecast(self, now: float) -> float:
         scale = self._scale()
         ends: dict[str, float] = {}
         for name, dependencies in DEPENDENCIES.items():
@@ -154,34 +165,35 @@ class Estimate:
                 continue
             ready = max((ends[dep] for dep in dependencies), default=self.started)
             expected = self.learned.get(name, self.priors[name]) * scale
-            if name in self.begins:
-                # A running stage may still be waiting for an input. Once ready, allow a
-                # diminishing but nonzero tail when overdue; revise at most every ten seconds.
-                start = ready
-                spent = max(0.0, now - start)
+            # A cost runs from the moment the inputs are ready and includes the unnamed work
+            # before the stage announces itself, so its forecast does too, begun or not. A
+            # stage still waiting for predicted inputs has ``ready`` in the future. An
+            # overdue stage gets a diminishing but nonzero tail.
+            spent = max(0.0, now - ready)
+            if spent > expected + OVERDUE_GRACE:
                 tail = expected * 0.5 / (1.0 + spent / max(expected, 0.01))
-                ends[name] = (
-                    now + max(1.0, tail) if spent > expected + 2.0 else max(start + expected, now)
-                )
+                ends[name] = now + max(1.0, tail)
             else:
-                # Never predict that work which has not even started finished in the past.
-                ends[name] = max(now, ready) + expected
+                ends[name] = max(ready + expected, now)
         return ends["install" if self.install else "write files"]
 
     def remaining(self, now: float) -> float:
         if ("install" if self.install else "write files") in self.ends:
             return 0.0
-        if self.changed or now - self.reviewed >= REVIEW_SECONDS:
-            target = self._forecast(now)
-            if self.deadline is None:
+        target = self.forecast(now)
+        if self.deadline is None:
+            self.deadline = target
+        else:
+            difference = target - self.deadline
+            elapsed = max(0.0, now - self.polled)
+            revision = max(REVISION_SECONDS, max(0.0, self.deadline - now) * REVISION_SHARE)
+            if abs(difference) >= revision:
                 self.deadline = target
+            elif difference > 0:
+                # Later: hold the shown time still until the deadline meets the forecast.
+                self.deadline += min(difference, elapsed)
             else:
-                difference = target - self.deadline
-                left = max(0.0, self.deadline - now)
-                # Small changes are noise; a meaningful correction is blended into the
-                # deadline. Do not turn each tick of an overdue stage into a stopwatch.
-                if abs(difference) >= max(4.0, left * 0.08):
-                    self.deadline += difference * 0.5
-            self.changed = False
-            self.reviewed = now
-        return max(1.0, (self.deadline or now) - now)
+                # Earlier: count down at double speed until it meets the forecast.
+                self.deadline -= min(-difference, elapsed)
+        self.polled = now
+        return max(1.0, self.deadline - now)
