@@ -76,9 +76,10 @@ code or recovery bundle enter the library automatically, without renaming their 
 folders. Worlds without either stay visible as unregistered, rather than being called
 old. Missing provenance is shown explicitly. The visible window polls small metadata
 and library-record changes every two seconds; unchanged polls do not reload or redraw.
-Generation suspends polling. Metadata-first copies can gain their verified atlas/record
-when the rest arrives, preserving personal fields. Refreshing or renaming preserves
-selection and unsaved notes.
+Generation suspends polling; the queue explicitly refreshes the library after each successful
+world, before starting the next, without changing the current selection. Metadata-first copies
+can gain their verified atlas/record when the rest arrives, preserving personal fields.
+Refreshing or renaming preserves selection and unsaved notes.
 Game-build comparisons run on one background worker with a visible checking note. Unchanged
 file hashes (where change timestamps are available) and the game's name catalogue are reused.
 Classic maps are drawn only when their tab is visible, on one drawing worker; while it works,

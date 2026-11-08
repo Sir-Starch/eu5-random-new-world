@@ -174,7 +174,9 @@ def test_a_queue_world_that_failed_is_marked_in_the_queue_box_and_the_next_is_ma
     assert text("queue_failed_hint") in window.queue_failures.text()
     assert "the first world failed" in window.queue_failures.text()
     assert "the first world failed" in window.queue_label.toolTip()
-    assert window.run_queue_button.isEnabled()
+    # The queue label can already match during the per-world library refresh;
+    # let the terminal notification reach the window too.
+    pump(window.run_queue_button.isEnabled)
     assert "1 could not be made" in window.status.text()
     _ = window.close()
 

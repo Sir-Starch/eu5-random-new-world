@@ -1062,6 +1062,9 @@ class Controller:
                         self.queue = [item for item in self.queue if item is not job]
                         self.queue_done += 1
                         self.finished, self.fraction = frozenset(), 0.0
+                    # Publish this world's library entry before starting the next one.
+                    # External library polling stays suspended while the worker is busy.
+                    self.refresh_library()
                 finally:
                     with self._lock:
                         self._queue_current = None

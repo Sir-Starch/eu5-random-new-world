@@ -109,6 +109,41 @@ def test_queued_worlds_keep_their_own_settings_and_run_in_order(
     assert decode(second.code).settings().natives.empire_permille == 800
 
 
+def test_completed_world_is_published_while_the_next_queued_world_is_running(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    controller = _controller(tmp_path, fake_export)
+    gate = _Gate(controller, 20)
+    published = threading.Event()
+
+    def observe() -> None:
+        if controller.busy and any(world.seed == 10 for world in controller.worlds):
+            published.set()
+
+    controller.subscribe(observe)
+    for seed in (10, 20):
+        _ = controller.set_seed(str(seed))
+        assert controller.enqueue() is None
+    assert controller.start_queue() is None
+    try:
+        assert gate.started.wait(10)
+        assert controller.phase is Phase.RUNNING
+        assert published.is_set()
+        [world] = controller.worlds
+        assert world.seed == 10
+        assert (tmp_path / "profile" / "mod" / world.folder).is_dir()
+        assert controller.selection == NEW
+        assert controller.queue_done == 1
+        assert [(job.code.seed, running) for job, running, _ in controller.queue_entries()] == [
+            (20, True)
+        ]
+    finally:
+        gate.release.set()
+        controller.wait(10)
+    assert controller.phase is Phase.FINISHED
+    assert {world.seed for world in controller.worlds} == {10, 20}
+
+
 def _failing(controller: Controller, *seeds: int) -> None:
     """Make the generator fail for the worlds of these seeds."""
     original = controller.generator

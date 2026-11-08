@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Show each completed world in the library as soon as it is ready, while the remaining
+  queued worlds continue generating.
+
 - Start every country of the New World with its laws in place. A generated state took a template
   made for a lower level of technology, so royal court customs, feudal law and cultural
   traditions, and nearly every law of a sacred centre's theocracy, opened with *No Policy

@@ -6,6 +6,19 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-08, **1.2.0 development / pending epoch 61 — publish each completed queued world**.
+[V-EXEC] The shared controller refreshes the library after each successful queued world,
+before starting the next. A gated synthetic regression verifies publication while the next
+world is still running, installation, notification and selection preservation. `make check`
+passes (3,055 Python tests, 17 optional skips; 29 Rust tests; format, lint and strict types). Source and
+Windows/Wine window, native, code, shell and bridge self-tests pass. The standard updater
+installed the generator-only hub in the existing Windows/Proton profile, retaining the former
+hub at `.rnw-hub-backups/1.2.0-1794118914264797681`. Candidate:
+`local_data/hub-updates/1.2.0-1794118854086507986/rnw_exp_hub`; Windows wheel SHA-256:
+`1f3eaa2474a439d92e30a441b57dd931d160bcd3690ccf317e17b8f7b7084118`.
+World bytes and `desktop/` are unchanged: existing candidates are reused, with no new world
+or source-window rebuild. No EU5 launch/control, playset, save or preference edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — candidate I, the D34 history** (R6 step 5).
 [V-EXEC] Installed **`mod/rnw_exp_world_lk3aao5c5f`** ("History 1.2 candidate I (D34 history)") in the
 existing Windows/Proton profile: code `RNW1-080J3-M4P7S-R656Y-R0410-00830-3SG46-R48Y1-G5YF8-BM`,
