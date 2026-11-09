@@ -2,6 +2,31 @@
 
 ## Unreleased
 
+## 1.2.0 — 2026-11-09
+
+- A shared past for the New World: 300 years of simulated history (1037–1337) lead to the
+  campaign start. Read each country's story, chronicle, relationships and societal values in the
+  generator, and see their consequences in the game: governments, laws the game accepts,
+  treaties within diplomatic capacity, historical opinions, and formable countries with real goals.
+  Choose **Calm**, **Varied** or **Turbulent** history.
+- Formable nations and missions (*Road to X*) from confederations to a realm of each region and a
+  fantasy empire of the New World, restorations of divided realms, AI goals toward them, and events
+  of the recorded past. *Our History* tells each country's past as a story.
+- Two new ways to start from the Americas: **Omerika**, a familiar New World reimagined (the
+  Americas' general shape, new geography), and **Keep the real Americas**, which leaves the game's
+  map as it is and generates only the societies, in under a minute.
+- Better geography and a steadier workbench: inland seas and lakes, regions laid out and named as
+  the Americas lie, faster continents, responsive world switching, a steady time left, a queue that
+  keeps going, warnings about conflicting mods, and an optional reveal of the New World at the start
+  for multiplayer.
+- Targets EU5 1.4.7 / Steam build 26377361. Algorithm epoch 61: the world bytes changed, so a world
+  code made by 1.1.0 (epoch 60) can give another world, and the application refuses new peoples or
+  resources on a world of an earlier epoch. Worlds already built and their saves are not rewritten
+  or migrated.
+- All four Workshop categories: **Map**, **Gameplay**, **Utilities** and **Alternative History**.
+
+The entries below describe each change in detail.
+
 - Add the **Omerika** world type: *a familiar New World, reimagined*. The land keeps the general
   shape of the Americas, North and South America joined by Central America, and everything else is
   generated: coasts, bays, peninsulas, straits and inland seas, then relief, climate, rivers,
@@ -250,9 +275,8 @@
   that can succeed or fail. New client obligations require real administrative
   capacity. Our History and historical opinion names are localized in all eleven
   languages. Older atlases remain readable without invented history, and the Old
-  World is preserved. Target 1.2.0 uses pending epoch 61; frozen epoch 60 is retained.
-  Published calibration passes; final performance, held-out validation and packaged
-  delivery remain H7 work.
+  World is preserved. Algorithm epoch 61; frozen epoch 60 is retained. The statistical
+  calibration checks are reported as diagnostics, not as release gates.
 
 - Fix *Create a version* (new peoples or new resources) stopping with "The generator
   stopped" in the new window (also in 1.1.0). The line under the world had no words for a
@@ -282,24 +306,6 @@
 - **Native Linux window startup.** A packaged Tauri window now gets the system library search path,
   not PyInstaller's bundled library directory. This lets current system WebKitGTK/ICU load its
   matching `libstdc++` on Arch and other rolling distributions.
-
-- **No pale disc round islands in the water texture.** The first rebuild of a new coast's water
-  (see the entry below) left the excess brightness that vanilla seas have 40 to 64 pixels from land
-  (coasts with such neighbours lie on shallow seas) round every island and let it blend back into the
-  original sea: a pale disc with an edge in the game. A shelf now ends in the far sea at three quarters
-  of its reach; the background of the open sea no longer takes in the darker filled cells beside it,
-  and every division rounds to the nearest instead of taking half a unit off each channel at each
-  step. Where the old map was open sea the pixel is now the original with the new coast's halo
-  added, which ends smoothly about 40 pixels out: nothing else of the original sea changes (it kept
-  its own fine detail, which the synthetic sea lacked). On the owner's masks the mean difference from
-  the original sea 32 to 64 pixels from a new island is +6.8 / +1.4 / 0 / 0 luminance units (was
-  +14 / +9 / +4 / 0). A change of the water textures, so the epoch-60 reference digest is
-  refreshed.
-
-- Army strait crossings use the shortest water-only section of opposing physical shores,
-  including diagonal directions. Wider or same-continent links require a real throat opening
-  into wider water on both sides; short coastal land walks and parallel duplicates are excluded.
-  This replaces the rejected broad 36-pixel rule that produced misplaced crossings.
 
 ## 1.1.0 — 2026-11-01
 
@@ -601,6 +607,24 @@ The entries below describe each change in detail.
 - Keep a chosen game folder's discovered build instead of showing it as unknown.
 - Keep the New world library action visible when the platform has no matching icon theme.
 - Replace the hub avatar with the owner's in-game map and generator screenshot design.
+
+- **No pale disc round islands in the water texture.** The first rebuild of a new coast's water
+  (see the entry below) left the excess brightness that vanilla seas have 40 to 64 pixels from land
+  (coasts with such neighbours lie on shallow seas) round every island and let it blend back into the
+  original sea: a pale disc with an edge in the game. A shelf now ends in the far sea at three quarters
+  of its reach; the background of the open sea no longer takes in the darker filled cells beside it,
+  and every division rounds to the nearest instead of taking half a unit off each channel at each
+  step. Where the old map was open sea the pixel is now the original with the new coast's halo
+  added, which ends smoothly about 40 pixels out: nothing else of the original sea changes (it kept
+  its own fine detail, which the synthetic sea lacked). On the owner's masks the mean difference from
+  the original sea 32 to 64 pixels from a new island is +6.8 / +1.4 / 0 / 0 luminance units (was
+  +14 / +9 / +4 / 0). A change of the water textures, so the epoch-60 reference digest is
+  refreshed.
+
+- Army strait crossings use the shortest water-only section of opposing physical shores,
+  including diagonal directions. Wider or same-continent links require a real throat opening
+  into wider water on both sides; short coastal land walks and parallel duplicates are excluded.
+  This replaces the rejected broad 36-pixel rule that produced misplaced crossings.
 
 ## 1.0.0 — 2026-10-29
 

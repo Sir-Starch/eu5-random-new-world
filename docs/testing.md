@@ -35,8 +35,8 @@ production build and the Rust shell's format, clippy and tests. Run
 `QT_QPA_PLATFORM=offscreen uv run python -m rnw.gui --self-test` checks both windows; package
 self-tests require the Tauri window. The real window can be captured without a display in
 `dbus-run-session kwin_wayland --virtual` with `spectacle -b -n -f`. CI runs Linux/Windows checks and package self-tests. The 1.0.0 verification passed 2,142 Python tests with 14 optional skips and 23 Rust tests
-(C438); 1.1.0 passed 2,341 Python tests; current 1.2.0 development passes over 3,080 Python tests,
-17 optional skips and 29 Rust tests; these are dated baselines, not permanent expected test counts.
+(C438); 1.1.0 passed 2,341 Python tests; the 1.2.0 candidate passed 3,137 Python tests with
+19 optional skips and 29 Rust tests (C524); these are dated baselines, not permanent expected test counts.
 
 Optional read-only game-input checks:
 
@@ -47,7 +47,7 @@ RNW_LAYERS=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_instal
 ```
 
 The reference export compares the current epoch's output with
-`tests/golden_world.json` (pending epoch 61 for 1.2.0). The frozen
+`tests/golden_world.json` (epoch 61 of 1.2.0). The frozen
 epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch60.json`
 and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples
 rerolls. They take substantially longer than synthetic tests and need the local

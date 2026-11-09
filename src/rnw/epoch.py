@@ -96,7 +96,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 13, 21),
     (0, 13, 22),
     (1, 1, 0),  # Resources, geography, populations and identity-aware state cores.
-    (1, 2, 0),  # Pending: causal prehistory, final start and closed-basin water classification.
+    (1, 2, 0),  # Causal prehistory, final start, closed-basin water and the Omerika world type.
 )
 
 

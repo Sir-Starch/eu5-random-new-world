@@ -2232,3 +2232,24 @@ diplomatic limit the engine cannot fix through the ruler (C523, also in ATDT). T
 sea leagues whose alliances and guarantees cost, by the game's own upkeep formulas, up to six
 times two alliances between equals; the projection now keeps each country's treaties within
 that budget, most trusted first, and leaves the rest to the chronicle (`a5c167c5`).
+
+## 2026-11-09 — Preparing 1.2.0 (C524)
+
+The cycle's pending epoch 61 is frozen with the 1.2.0 target. The installed game is EU5 1.4.7 (build
+26377361), the build the cycle was developed against, and the epoch-61 reference world reproduces
+byte for byte on it, so the golden stays as it was; only its comment and the epoch entry no longer say
+pending. The Unreleased changelog becomes the dated 1.2.0 entry with a summary on top. Reading it
+against the `v1.1.0` tag showed that two entries of the 1.1.0 cycle (the water shelf round islands and
+the army strait crossings) had been left under Unreleased when 1.1.0 was tagged; they now stand in the
+1.1.0 section. The release notes gain Omerika, Keep the real Americas and the faster continents, and the
+English Workshop change notes are written. The eleven Workshop descriptions still describe 1.1.0 and are
+the owner's to update before the Steam page changes.
+
+GitHub's Windows check has been red on `main` since 2026-11-04 (runs `41901239110` to `42535004382`): the
+same three tests of `tests/test_website.py` failed in each, while Linux passed. The cause is in
+`website/sitegen.py`: `git_show` read the tagged `rnw/gui/text.py` through `subprocess.run(text=True)`,
+which decodes with the platform's locale (cp1252 on Windows), so the UTF-8 file failed to decode, its
+`stdout` came back `None` and `ast.parse` raised. It now decodes as UTF-8; the website tests pass under
+`LC_ALL=C PYTHONUTF8=0`. The `package` job was skipped behind that red check in the latest run (`42535004382`), so the
+packaged self-tests have not been seen green on `main` there; the release workflow runs them.
+Nothing is published, tagged or pushed by this commit.

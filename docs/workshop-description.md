@@ -2,6 +2,12 @@
 
 The Steam Workshop text for release 1.1.0 ([ADR 0009](adr/0009-hub-mod-with-generator.md)) is kept in Steam's own markup, ready to paste: [`workshop/english.bbcode`](workshop/english.bbcode) and one file per official language in [`workshop/`](workshop/). It covers what players get, four steps to create and enable a world, DLC support, requirements and campaign compatibility. The Linux / Proton guide image is embedded in every language. The Guide button opens the player's guide at [rnw.sirstarch.com](https://rnw.sirstarch.com/) ([source](../website/README.md)), which opens in the visitor's language; downloads, known issues, bug reports and technical details are linked on GitHub. A small italic Ko-fi link sits above the short licence and unofficial-project footer.
 
+## 1.2.0 publication texts
+
+- **GitHub release body:** [detailed release notes](releases/1.2.0.md), English Markdown with absolute links. It gets the candidate commit, workflow run and archive checksums after the release workflow has built the archives.
+- **Workshop change notes:** [English BBCode](releases/1.2.0-workshop.bbcode), ready to paste into the update's change notes. English only; its release link is for the forthcoming `v1.2.0` page.
+- **Workshop descriptions:** the eleven files in [`workshop/`](workshop/) still describe the 1.1.0 feature set (six world types and no history). They need a pass for the 1.2.0 scope (simulated history, Omerika, formables) before they are pasted for this release; this is owner-managed Steam page work and is not part of the candidate commit.
+
 ## 1.1.0 publication texts
 
 - **GitHub release body:** [detailed release notes](releases/1.1.0.md), in English Markdown. Use the document as the release body; the links are absolute so they also work on GitHub's release page.
