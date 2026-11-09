@@ -1560,7 +1560,12 @@ def test_total_chaos_names_survive_codes_edits_and_a_new_draw(
     assert controller.rename(world, "Vinland") is None
     assert controller.rename(controller.worlds[0], f"Total Chaos {tag}") is None
     assert controller.worlds[0].name == ""
-    controller.set_value("new_world.octaves", 4 if settings.new_world.octaves != 4 else 5)
+    # A value inside the control's range that differs from the draw's: a clamped edit is a no-op.
+    octaves = controls.BY_KEY["new_world.octaves"]
+    current = controller.value("new_world.octaves")
+    controller.set_value(
+        "new_world.octaves", octaves.low if current != octaves.low else octaves.high
+    )
     edited = controller.code
     assert decode(edited).origin == "chaos_custom"
     assert controller.use_code(edited) is None
