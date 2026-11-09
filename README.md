@@ -144,7 +144,7 @@ No Python or Rust installation is required for the [released packages](https://g
 
 1. Subscribe to [**Random New World** on the Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331) (or download the standalone archive from [GitHub Releases](https://github.com/Sir-Starch/eu5-random-new-world/releases) — release archives include SHA-256 checksums).
 2. In the EU5 **Mods** menu, locate *Random New World*, click **Open in folder**, and launch **Random New World Generator** (works on Windows and on Linux/Steam Deck via Proton).
-3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (usually a few minutes; allow about 7.5 GB of free RAM).
+3. Pick an archetype (or paste a friend's **World Code**) and click **Generate** (usually a few minutes; allow about 9 GB of free RAM).
 4. Enable the newly created world mod (e.g., *RNW: Small continents 7K3Q*) in your playset — **only one RNW world mod at a time** — and start a new 1337 campaign. *(Do not enable the generator hub item itself in your playset).*
 
 > [!TIP]
@@ -165,7 +165,7 @@ No Python or Rust installation is required for the [released packages](https://g
 * **Python 3.12+** and **[uv](https://docs.astral.sh/uv/)**.
 * Stable **Rust** toolchain ([rustup](https://rustup.rs/)) to compile the native extension.
 * **Node.js 20+** (only needed when building the Tauri desktop window from source).
-* **~7.5 GB of free RAM** during world compilation.
+* **~9 GB of free RAM** during world compilation.
 
 #### Launch the GUI
 

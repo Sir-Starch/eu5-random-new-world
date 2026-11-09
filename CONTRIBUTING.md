@@ -30,7 +30,7 @@ EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py
 RNW_REPRODUCE=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py -k reference
 ```
 
-The second test rebuilds the reference world and compares its digest. It takes about two minutes and needs 7.5 GiB of free memory.
+The second test rebuilds the reference world and compares its digest. It takes about two minutes and needs 9 GiB of free memory.
 
 ## Changes to generated output
 

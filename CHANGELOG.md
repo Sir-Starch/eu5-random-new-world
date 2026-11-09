@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Say what generation really needs: **about 9 GB of free RAM**, not 7.5. A 1.2.0 world's
+  smallest run (one thread) peaks at 8.1 GiB, so the check before generation now asks for 9 GiB
+  and stops early, saying how much is free, instead of letting a machine with 8 GiB start. The
+  guides, the Workshop descriptions and the website carry the new figure. Worlds are unchanged.
+
 ## 1.2.0 — 2026-11-09
 
 - A shared past for the New World: 300 years of simulated history (1037–1337) lead to the

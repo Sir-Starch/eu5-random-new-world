@@ -454,8 +454,8 @@ ARCHETYPE_FILES: Final[tuple[str, ...]] = (
 
 
 # The smallest working set of an export: its peak with one thread and the thinnest bands
-# (6.8 GiB on the continents preset, C103), rounded up.
-EXPORT_MEMORY: Final[int] = 7 * GIB + GIB // 2
+# (8.1 GiB on the continents preset in 1.2.0, ADR 0006), plus the margin the ADR keeps.
+EXPORT_MEMORY: Final[int] = 9 * GIB
 
 
 class NewWorldExportError(ValueError):

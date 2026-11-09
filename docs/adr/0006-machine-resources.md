@@ -17,7 +17,7 @@ EU5 asks for 16 GB of RAM at the minimum (Intel Core i7-8700K or Ryzen 5 3600, s
    - vanilla decal layers (30 ms each to decode) are read when needed and not kept; narrow types (`uint8`, `uint16`, `int32`) replace `int64` wherever the range is known, and 32-bit component numbers replace 64-bit ones.
 3. **The allocator.** glibc gives every thread an arena that keeps what is freed in it; limiting it to two arenas (`mallopt`, set when the pool is sized) took the default peak from 8.4 to 6.9 GiB with the same output and speed. Other platforms need nothing.
 4. **The machine is read at every run** (`rnw.parallel`): the threads the process may use (its affinity and a container's CPU quota; one thread stays free from four threads up so the desktop does not stall), the memory that is free now (`MemAvailable`, the container's cgroup headroom, or the Windows `GlobalMemoryStatusEx` figure), and a budget of 60% of it for bands and workers. The native thread pool is sized once from the same figures. `RNW_THREADS` and `RNW_MEMORY` (MiB) override them for benchmarks and tests. Where the system will not say how much memory is free, a conservative 4 GiB is assumed for sizing.
-5. **Preflight.** The export first requires 7.5 GiB of free memory (the measured floor of 6.8 GiB, rounded up) and otherwise stops, before any work, saying how much it needs and how much is free; `--ignore-memory` starts anyway. Nothing falls back silently.
+5. **Preflight.** The export first requires 9 GiB of free memory (7.5 GiB until 1.2.0; see the amendment below) and otherwise stops, before any work, saying how much it needs and how much is free; `--ignore-memory` starts anyway. Nothing falls back silently.
 6. **Stages overlap when the machine allows.** The export is a graph of stages that start when their inputs exist (`parallel.Stages`); with four or more threads and 10 GiB free up to four run at once, otherwise they run one after the other in submission order, which is the old sequence. A stage may wait only for stages submitted before it, so waiting cannot deadlock. Overlap saves 30 s (C103): everything that reads only the vanilla game (reads, geometry, localization keys, the vanilla climate, the decals' material levels, the vanilla natives) runs beside the generation of the world, and the identities, the checks, the water textures and the biome model run beside each other after it. It costs about 1 GiB of peak.
 7. **Proof.** Each banded or stripped function has a test that equals its whole-raster specification (kept in `tests/reference/`) for band heights from one row to the whole raster and for one thread and several, and a test that fails if the halo is smaller than the distance reach. A full export under `RNW_MEMORY=2500 RNW_THREADS=2`, `RNW_THREADS=6` and `RNW_MEMORY=3000 RNW_THREADS=3`, and with one thread, produces the same 733 file hashes as the default run, and those as the Python build of 0.9.13.
 
@@ -29,3 +29,17 @@ The original peak-memory measurements above are Linux results. The later Windows
 smoke (C428) and passing Linux/Windows CI (C439) establish their own scope, not a
 cross-platform peak-memory comparison. Measure the affected workload when tuning
 resource use; do not treat the absence of every platform measurement as a release hold.
+
+## Amendment, 2026-11-09: the memory floor of 1.2.0
+
+The 1.2.0 generator peaks higher than the 0.9.13 export this ADR measured (the cause was not isolated: the generator gained many stages since), so the figures of decisions 1 and 5 no longer hold. [V-EXEC: `main` at 65f8195 (1.2.0 and the Unreleased notes), continents preset, seed 42, installed EU5 1.4.7, Linux, 32 threads, peak resident memory of the process from `ru_maxrss` and a `/proc` sampler]
+
+| Run | Peak | Time |
+|---|---|---|
+| default threads, plenty of memory | 9.81 GiB | 253 s |
+| `RNW_THREADS=6` (the minimum-spec CPU) | 9.32 GiB | 253 s |
+| `RNW_THREADS=6 RNW_MEMORY=8704` (8.5 GiB free) | 8.14 GiB | 370 s |
+| `RNW_THREADS=1 RNW_MEMORY=1500` (the floor) | 8.08 GiB | 579 s |
+| Omerika, `RNW_THREADS=6 RNW_MEMORY=9216` | 7.55 GiB | 293 s |
+
+The floor is 8.1 GiB, 1.3 GiB above the 6.8 GiB of 0.9.13, and the old 7.5 GiB preflight lay below it: a machine with 8 GiB free was let through to a run that needed 8.1. The floor plus the 0.7 GiB margin decision 5 kept (6.8 to 7.5) is 8.8 GiB, rounded up to **9 GiB**: `EXPORT_MEMORY` is 9 GiB, and the player-facing text says "about 9 GB of free RAM". With more memory free the stages overlap and the peak rises to 9.3-9.8 GiB, which is why 16 GB machines are still told to close EU5 first. The adaptive sizing of decision 4 holds: with 8.5 GiB free and six threads the process stayed at 8.1 GiB. Nothing about the output changed. The measurement is of the continents preset and of Omerika; the export on the vanilla Americas (*Keep the real Americas*) reads the same limit and generates no land. The earlier figures above stay as the record of 0.9.13.

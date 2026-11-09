@@ -1,4 +1,4 @@
-source = "bc1247e7baf206f8"
+source = "c9141f3076460f73"
 
 [meta]
 title = "Random New World · 플레이어 가이드"
@@ -38,7 +38,7 @@ lead = "첫 캠페인이라면 기본 설정으로 충분합니다. 이 페이�
 "2_text" = "{ui:new_world}를 누르고 {ui:new_tab.world} 탭에서 {ui:type}를 고르세요. 처음에는 {ui:type.continents}이 무난합니다. 나머지는 그대로 두거나 친구에게 받은 {ui:code}를 붙여 넣으세요."
 "3_title" = "생성하기"
 "3_text" = "{ui:new_tab.output} 탭에서 {ui:destination.library}을 그대로 두고 {ui:install}에 체크하세요. {ui:generate}를 누르고 몇 분 기다리세요."
-"3_note" = "생성에는 약 7.5GB의 여유 RAM이 필요합니다."
+"3_note" = "생성에는 약 9GB의 여유 RAM이 필요합니다."
 "4_title" = "켜고 플레이하기"
 "4_text" = "{game:mods_dlcs}에서 새 월드(예: **RNW: Small continents 7K3Q**)에 체크하고 {game:apply}을 누른 뒤 1337년 새 캠페인을 시작하세요."
 "4_note" = "**Random New World (RNW)** 자체는 체크하지 마세요. 생성기만 들어 있습니다. 캠페인에 필요한 것은 모두 월드 모드에 들어 있습니다."
@@ -125,7 +125,7 @@ title = "문제가 생겼을 때"
 found_q = "생성기가 EU5를 찾지 못함"
 found_a = "{ui:settings_title}을 열고 없는 폴더를 지정하세요. EU5를 한 번도 실행하지 않았다면 프로필이 만들어지도록 한 번 실행한 뒤 생성기를 다시 여세요."
 memory_q = "메모리가 부족함"
-memory_a = "생성에는 약 7.5GB의 여유 RAM이 필요한데, EU5는 주 메뉴에서도 16GB 대부분을 차지할 수 있습니다. 생성기가 열리면 EU5를 종료하거나, 게임 없이 생성기를 실행하세요. 생성기는 Steam의 `steamapps/workshop/content/3450310/3829217331` 폴더에 있습니다."
+memory_a = "생성에는 약 9GB의 여유 RAM이 필요한데, EU5는 주 메뉴에서도 16GB 대부분을 차지할 수 있습니다. 생성기가 열리면 EU5를 종료하거나, 게임 없이 생성기를 실행하세요. 생성기는 Steam의 `steamapps/workshop/content/3450310/3829217331` 폴더에 있습니다."
 blank_q = "창이 비어 있거나 제대로 그려지지 않음"
 blank_a = "{ui:settings_title}에서 {ui:settings.classic_window}을 선택하고 생성기를 다시 시작하세요. 창이 아예 열리지 않으면 `--classic`을 붙여 실행하세요."
 classic_q = "대신 더 단순한 창이 열림"

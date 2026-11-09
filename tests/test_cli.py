@@ -99,7 +99,7 @@ def test_newworld_refuses_to_start_without_the_memory_it_needs(
         app, ["newworld", "--game-dir", str(game), "--output", str(output), "--seed", "1"]
     )
     assert result.exit_code == 2
-    assert "needs about 7.5 GiB of free memory" in result.output
+    assert "needs about 9.0 GiB of free memory" in result.output
     assert "2.0 GiB free" in result.output
     assert not output.exists()
 
