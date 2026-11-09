@@ -1826,3 +1826,12 @@ algorithm of an unreleased epoch does, so `y25smlinzi`'s own code now makes othe
 seed 42 at 50% and at 100% pass every validator. The hub update was **not** done: EU5 was running and
 the updater refuses then, as it must; the source-run generator already has the change, and the Windows hub
 takes it with the next `update_local_hub.py`. Engine behaviour is **not observed**.
+
+2026-11-09, **1.2.0 release hub** (tag `v1.2.0` at `c50ebda76bcd02ca9cc2b169dc209531a10a0369`, tagged workflow run 42551734576).
+[V-EXEC] Installed the generator-only hub of the published `RandomNewWorld-1.2.0-Workshop-Windows-Proton.zip`
+(SHA-256 `ab7c974f38fa277f0ac1e348929247059080d6fcb259a5cfd15dba5308cf2566`) in the existing Windows/Proton profile with
+`update_local_hub.py --candidate`, so the local hub is the package that goes to the Workshop. The window, native kernels,
+world codes, shell and bridge self-tests pass under Wine; the installed folder is identical to the posted zip (3,570 files);
+its window (`2035b89e…8035`), native module (`89e51e4b…1ecd47`) and launcher (`49674400…6932`) are the files scanned on
+VirusTotal. The former hub is retained in `.rnw-hub-backups/1.2.0-1794193456668297154`. All other mod folders (15 worlds
+and 2 others), the playset, saves and settings are unchanged; no EU5 launch or control by the agent.
