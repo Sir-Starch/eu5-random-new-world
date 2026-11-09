@@ -916,7 +916,8 @@ def test_the_window_names_the_version_it_is_making_and_goes_on_when_it_is_done(
     pump(working.is_set)
     pump(lambda: text("task.reroll") in window.task_line.text())
     release.set()
-    pump(lambda: controller.phase is Phase.FINISHED and len(controller.worlds) == 2)
+    # The version is made for real after the release; a loaded Windows runner needs more than 10 s.
+    pump(lambda: controller.phase is Phase.FINISHED and len(controller.worlds) == 2, timeout=90.0)
     _ = window.close()
 
 
