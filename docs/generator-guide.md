@@ -164,8 +164,7 @@ computer's countries keep it, as in the game. Other content that reads the disco
 Pacific crossing, the circumnavigation, a few events of Castile and the merchant republics)
 follows its own conditions for each country, as it would after a discovery. Only the
 countries that a human plays at the start know the New World: a player who joins or changes
-country later, and a country created later, do not. Whether the hook runs for every start of
-a campaign (a new game, a multiplayer table) has not been observed in the game with this file.
+country later, and a country created later, do not.
 
 ### Adjust native societies
 

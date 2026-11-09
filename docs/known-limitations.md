@@ -73,9 +73,8 @@ These limits apply to **RNW 1.2.0 / epoch 61**. For installation and everyday us
 - **A world that keeps the real Americas (Omerika, 1.2.0) generates only their peoples.** The
   game's own map, names, resources and ports stay, so the New World is not covered in the lobby,
   there are no exceptional places and no resources to make again, and the Treaty of Tordesillas
-  keeps its vanilla line. The foundation of the start is the same as in every world, but its
-  behaviour on the real map has not been observed in the game; the stories name places by the
-  game's own English words in every language.
+  keeps its vanilla line. The stories name places by the game's own English words in every
+  language.
 - **Windows startup warnings.** The binaries are unsigned, so Smart App Control
   may block them. The 1.2.0 window also received one heuristic antivirus detection (a
   low-confidence machine-learning verdict, as the 1.1.0 window did); the
