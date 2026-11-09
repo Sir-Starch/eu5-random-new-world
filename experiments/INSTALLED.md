@@ -1814,3 +1814,15 @@ native kernels, world codes, shell and bridge self-tests pass) and kept the form
 `.rnw-hub-backups/1.2.0-1794180236167272394`. Offline checks: 3,134 Python tests, strict types, lint,
 desktop tests; the reference world digest of epoch 61 is reproduced. Engine behaviour of both worlds,
 and of the real-Americas start on the game's map, is **not observed**.
+
+2026-11-09, **Omerika, natural isthmus and a real likeness** (source `0d8bdbabde1d4ac8374b198d89fd660c15e943fd`; owner's screenshot of
+`rnw_exp_world_y25smlinzi`: the isthmus was a ribbon of one location over open sea, and 100% likeness
+was not recognisable).
+[V-EXEC] Installed **`mod/rnw_exp_world_jtvmtid347`** into a new folder: Omerika, seed 77, the new
+default likeness of 50% (code `RNW1-043G0-00000-00002-D0410-00568-GC0`). The earlier
+`rnw_exp_world_y25smlinzi` (same code family, seed 42, made by the previous Omerika algorithm of the
+same pending epoch) stays as it was; a code of the default settings does not change when the
+algorithm of an unreleased epoch does, so `y25smlinzi`'s own code now makes other land. Full exports of
+seed 42 at 50% and at 100% pass every validator. The hub update was **not** done: EU5 was running and
+the updater refuses then, as it must; the source-run generator already has the change, and the Windows hub
+takes it with the next `update_local_hub.py`. Engine behaviour is **not observed**.
