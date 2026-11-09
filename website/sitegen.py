@@ -253,8 +253,13 @@ def content_problems(only: frozenset[str] | None = None) -> list[str]:
 
 def git_show(path: str) -> str:
     spec = f"{RELEASE['tag']}:{path}"
+    # Source files are UTF-8; the platform's locale (cp1252 on Windows) must not decode them.
     done = subprocess.run(
-        ["git", "-C", str(ROOT), "show", spec], capture_output=True, text=True, check=False
+        ["git", "-C", str(ROOT), "show", spec],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=False,
     )
     if done.returncode:
         message = f"cannot read {spec}: {done.stderr.strip()}"
