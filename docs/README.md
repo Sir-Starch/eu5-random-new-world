@@ -1,7 +1,7 @@
 # Documentation
 
-RNW 1.1.0 shipped for EU5 1.4.6; its latest fully verified compatibility is
-EU5 1.4.7 / Steam build 26377361 (epoch 60). The generator supports EU5 1.4.*;
+RNW 1.2.0 (epoch 61) shipped on 2026-11-09 for EU5 1.4.7 / Steam build 26377361, its latest
+fully verified compatibility; 1.1.0 (epoch 60) targeted EU5 1.4.6. The generator supports EU5 1.4.*;
 new patches in this branch are usually compatible without a generator update.
 Continue each generated map's campaign on the exact EU5 version used to create it.
 Start with [AGENTS.md](../AGENTS.md) for working instructions and

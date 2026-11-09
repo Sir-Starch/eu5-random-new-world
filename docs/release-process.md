@@ -11,6 +11,14 @@ The [Workshop hub](https://steamcommunity.com/sharedfiles/filedetails/?id=382921
 was subsequently installed and launched by the owner; its downloaded file set
 matches the prepared hub (C441).
 
+[RNW 1.2.0](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.2.0)
+(epoch 61, EU5 1.4.7 / Steam build 26377361) was published on 2026-11-09 from tag `v1.2.0` at
+`c50ebda76bcd02ca9cc2b169dc209531a10a0369`, built by the tagged workflow run 42551734576 (C524,
+C525). The candidate cycle needed fixes at new SHAs (Windows CI decoding, the release workflow's
+tags and macOS runner, two flaky tests); the release assets come from the tagged run, whose archives
+and Windows binaries differ from the candidate run's, so scans use the tagged run's hashes. The
+release was created as a draft, its assets were downloaded and checked, then it was published.
+
 | Field | Stable value |
 |---|---|
 | Public name | Random New World (RNW) |

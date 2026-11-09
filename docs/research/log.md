@@ -2253,3 +2253,15 @@ which decodes with the platform's locale (cp1252 on Windows), so the UTF-8 file 
 `LC_ALL=C PYTHONUTF8=0`. The `package` job was skipped behind that red check in the latest run (`42535004382`), so the
 packaged self-tests have not been seen green on `main` there; the release workflow runs them.
 Nothing is published, tagged or pushed by this commit.
+
+## 2026-11-09 — Publishing 1.2.0 (C525)
+
+The cycle's candidate was rebuilt three times before it passed everything: the release workflow's Linux job lacked
+the release tag that the website tests read and hit a flaky Total Chaos test (`octaves` is 5 to 8, so the
+test's edit to 4 was a no-op for a fifth of the draws), then GitHub dropped the `macos-14` runner, and Windows
+CI hit a 10 s wait in a window test. Tag `v1.2.0` was pushed to `c50ebda`; the tagged run's binaries have other
+hashes than the candidate run's, so the scans used those. VirusTotal's API (the owner's key, kept outside the
+repository) reported one low-confidence heuristic on the window, which the owner accepted as for 1.1.0. The
+release was published as a draft first and checked after publication. Left for the owner and for after the
+release: the Workshop hub upload and descriptions, and the player's guide, whose hidden-map section describes
+the control that 1.2.0 moved to the World tab as *Terra Incognita in the lobby*.

@@ -2,10 +2,11 @@
 
 ## Released baseline
 
-**RNW 1.1.0 / epoch 60** is the current released and accepted baseline, targeting
-**EU5 1.4.6 / Steam build 26300913**. See the [release notes](releases/1.1.0.md)
-and [known limitations](known-limitations.md). The 1.0.0 record below preserves
-the first release's acceptance and distribution history.
+**RNW 1.2.0 / epoch 61** is the current released baseline (GitHub, 2026-11-09), targeting
+**EU5 1.4.7 / Steam build 26377361**. See the [release notes](releases/1.2.0.md)
+and [known limitations](known-limitations.md). **RNW 1.1.0 / epoch 60** (EU5 1.4.6, build
+26300913; [notes](releases/1.1.0.md)) and the 1.0.0 record below preserve earlier releases'
+acceptance and distribution history.
 
 **RNW 1.0.0 / epoch 59**, released on 2026-10-29, targets **EU5 1.4.5 /
 Steam build 26211608**, including optional Across the Pillars adaptation.
