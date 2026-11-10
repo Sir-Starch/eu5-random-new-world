@@ -143,8 +143,9 @@ class LandMask:
         return encode_png(palette[self.kinds], color_type=COLOR_RGB, compression="zlib")
 
 
-def _decode(data: bytes) -> NDArray[np.uint8]:
-    """The kind of every pixel of a picture, or ``LandMaskError``."""
+def decode_kinds(data: bytes) -> NDArray[np.uint8]:
+    """The kind of every pixel of a picture, or ``LandMaskError``; nothing about its land is
+    checked, so a drawing that is not yet a world (an empty sheet) reads."""
     try:
         with Image.open(io.BytesIO(data)) as image:
             width, height = image.size
@@ -200,7 +201,7 @@ def from_kinds(kinds: NDArray[np.uint8]) -> LandMask:
 
 def from_bytes(data: bytes) -> LandMask:
     """The drawing of a picture; raises ``LandMaskError`` for one that cannot be a world."""
-    mask = from_kinds(_decode(data))
+    mask = from_kinds(decode_kinds(data))
     if not MIN_LAND_PERMILLE <= mask.share <= MAX_LAND_PERMILLE:
         message = say(
             "mask.share",
