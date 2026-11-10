@@ -65,11 +65,6 @@
     </select>
 
     <div class="span spaced">
-      <!-- The stored preference says "shown"; this box says "covered", so it is inverted. -->
-      <Check checked={!s?.preferences.show_new_world} label={t("lobby_cover")} hint={t("lobby_cover_hint")}
-        onchange={(value) => app.call("set_show_new_world", { value: !value })} />
-    </div>
-    <div class="span">
       <Check checked={s?.preferences.window === "classic"} label={t("settings.classic_window")} hint={t("settings.classic_window.about")}
         onchange={(value) => app.call("set_window", { classic: value })} />
     </div>

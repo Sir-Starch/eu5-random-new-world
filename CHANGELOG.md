@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Take **Terra Incognita in the lobby** out of the window's Settings. It repeated the box of the same name
+  on the **World** tab, where the choice is made before a world is generated and changed afterwards,
+  and the two controlled the same preference. Nothing the generator writes changes.
 - Stretch a land drawn in an image onto the map smoothly. Up to 1.2.1 a picture was enlarged by whole
   pixels with only a faint blur, so the coasts of a world made from an image (a template painted over
   in the editor, a famous land, a picture of your own) climbed in steps of four to eight map pixels,
