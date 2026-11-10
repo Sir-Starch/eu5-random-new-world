@@ -1882,3 +1882,18 @@ land locations, 33.4 % and 29.7 %; vanilla 31.5 %), no straight row edge, no sli
 world codes, shell and bridge self-tests pass under Wine; the former hub (the first version) is retained in
 `.rnw-hub-backups/1.2.2-1794292853821154226`. The 10 other mod folders (including the two worlds of the first version, left in place), the
 playset, saves and settings are unchanged; no EU5 launch or control by the agent.
+
+2026-11-10, **Smooth coasts on a drawn land** (source `d04e7f6`, pending epoch 63; the owner's report that the coasts of worlds made from an
+image stand in steps up close). [V-EXEC] Installed **`mod/rnw_exp_world_2vyxfck2mt`** into a **new** folder of the Windows/Proton profile
+(910 files incl. `.metadata`; the installer verified all files, and both libraries, native and Proton, hold the record): code
+`RNW1-081JW-JXF6M-3H9ZK-H0410-40RB0-2ZG82-241Z8-0Y448-1R8GJ-4XR0C-DA01G-V04E0-27E5Z-7P8KY-FQ6D4-T01G2-7EPM0`, the resources reroll of the code of
+`rnw_exp_world_vwr7n5wybh` on the same picture (`land_mask.png`, 2,520 x 2,048, id 228421682281669), so the same land under a new world id.
+The stretch of the drawing onto the canvas is now a blur of 1.4 picture pixels read through a cubic spline instead of whole-pixel steps
+(`rnw.landmask`); the world's land share is 0.109724 of the canvas against 0.109728 of the old stretch, and the water raster of the world
+(`rivers.png`) differs from the old world's in 0.03 % of the map, all of it along the coast, where the steps became curves. `make check`'s
+Python side passes (3,205 tests, 19 optional skips; format, lint and strict types clean; the Rust crate is unchanged) and the installed-game
+reference check reproduces the epoch-63 reference world unchanged (the generated-land path does not use the stretch). The local hub was
+updated with `update_local_hub.py` to the 1.2.2 development build (wheel SHA-256
+`ea63ac17f9b40f40ae1dd6d57208f3c480c02aa2cabc30eaec3f3e7dc8c30d0a`, launcher `49674400…6932`): the window, native kernels, world codes, shell
+and bridge self-tests pass under Wine; the former hub is retained in `.rnw-hub-backups/1.2.2-1794307556219318875`. The 14 existing mod
+folders (hashes compared before and after), the playset, saves and settings are unchanged; no EU5 launch or control by the agent.
