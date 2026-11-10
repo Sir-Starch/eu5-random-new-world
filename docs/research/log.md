@@ -2278,3 +2278,16 @@ VirusTotal by upload through the API (the owner's key, kept outside the reposito
 window drew the same single Trapmine low-confidence heuristic as before, which the owner accepted in writing before
 the draft was published. The player's guide (`website/sitegen.py` `RELEASE`) still names v1.1.0 and is untouched.
 Left for the owner: the Workshop hub upload with `docs/releases/1.2.1-workshop.bbcode` as change notes.
+
+## 2026-11-10 — Subcontinents at the waist (C529)
+
+The owner generated two worlds from one drawn image with different seeds and both showed a
+straight horizontal edge between North and South America that sliced two island arms and left
+South America 13 % of the land. The cause was the C502 rule (bands of rows), not those inputs:
+the two real `_land_areas` inputs were captured from the installed worlds and reproduced it, and
+`supercontinent` and `continents` worlds without a drawing show a ruler-straight edge too.
+Subcontinents are now cut by a minimum cut in a latitude window around their share
+(`hierarchy.neck_parts`): island arms whole, the boundary on the peninsula's neck, one piece per
+landmass as before. A subcontinent may fall below its vanilla share where its land is split in
+pieces (the image worlds: 12 %). This opens epoch 63 for 1.2.2; the reference world changes 96 of
+884 files. Details and the measurements of seven captured worlds: [N5](n5-region-keys.md#subcontinents-at-the-waist-not-along-a-row-2026-11-10-c529).

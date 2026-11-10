@@ -28,10 +28,10 @@ from rnw.hierarchy import (
     PartitionError,
     absorb_small_pieces,
     balanced_parts,
-    banded_parts,
     centre_of,
     contact_graph,
     match,
+    neck_parts,
     piece_counts,
     pieces,
     split,
@@ -175,21 +175,78 @@ def test_islands_without_a_source_join_the_nearest_part_whole() -> None:
     assert split_landmasses(graph, parts) == []
 
 
-def test_bands_follow_rows_and_weights() -> None:
+def _drawn(*rows: str) -> ContactGraph:
+    """The land (``#``) of a drawing, one cell per character, in contact by their four sides."""
+    width = len(rows[0])
+    centres = np.array(
+        [(row * SPACING, column * SPACING) for row in range(len(rows)) for column in range(width)],
+        dtype=np.int64,
+    )
+    edges: list[tuple[int, int]] = []
+    for row in range(len(rows)):
+        for column in range(width):
+            cell = row * width + column
+            if column + 1 < width:
+                edges.append((cell, cell + 1))
+            if row + 1 < len(rows):
+                edges.append((cell, cell + width))
+    keep = [rows[row][column] == "#" for row in range(len(rows)) for column in range(width)]
+    return contact_graph(centres, edges, keep)
+
+
+def test_open_land_is_cut_by_rows_and_weights() -> None:
     graph = _grid(10, 40)
     members = _land(graph)
-    north, south = banded_parts(graph, members, [3, 1])
+    north, south = neck_parts(graph, members, [3, 1])
     assert (len(north), len(south)) == (300, 100)
     assert max(int(graph.centres[cell][0]) for cell in north) < min(
         int(graph.centres[cell][0]) for cell in south
     )
     assert all(len(pieces(graph, part)) == 1 for part in (north, south))
-    assert banded_parts(graph, list(reversed(members)), [3, 1]) == [north, south]
+    assert neck_parts(graph, list(reversed(members)), [3, 1]) == [north, south]
 
 
-def test_a_band_crossing_a_landmass_twice_keeps_one_piece_there() -> None:
-    """A U open to the north: the northern band holds both arms, so it keeps the larger one
-    and the other arm joins the southern band, which it touches."""
+def test_three_parts_follow_each_other_from_north_to_south() -> None:
+    graph = _grid(10, 30)
+    members = _land(graph)
+    parts = neck_parts(graph, members, [1, 1, 1])
+    assert [len(part) for part in parts] == [100, 100, 100]
+    rows = [[int(graph.centres[cell][0]) for cell in part] for part in parts]
+    assert max(rows[0]) < min(rows[1]) <= max(rows[1]) < min(rows[2])
+    assert split_landmasses(graph, parts) == []
+
+
+def test_the_cut_runs_through_the_waist_not_along_a_row() -> None:
+    """Two blobs joined by a two-cell neck. The share puts the row line in the lower blob,
+    ten cells wide there; the neck, a few rows higher, is two cells wide, and the cut takes it."""
+    blob = "#" * 10
+    neck = "....##...."
+    graph = _drawn(*[blob] * 10, *[neck] * 6, *[blob] * 10)
+    members = _land(graph)
+    north, south = neck_parts(graph, members, [3, 2])
+    lower = {cell for cell in members if int(graph.centres[cell][0]) >= 16 * SPACING}
+    assert set(south) == lower
+    assert sorted(north + south) == members
+
+
+def test_a_small_landmass_on_the_line_is_joined_whole_not_sliced() -> None:
+    """A tall mainland beside a three-row island lying across the row line."""
+    rows = ["#" * 10 + "." + ("#" * 10 if 5 <= row <= 7 else "." * 10) for row in range(12)]
+    graph = _drawn(*rows)
+    members = _land(graph)
+    island = [cell for cell in members if int(graph.centres[cell][1]) > 10 * SPACING]
+    assert len(island) == 30
+    north, south = neck_parts(graph, members, [1, 1])
+    assert len(set(island) & set(north)) in (0, len(island))
+    assert split_landmasses(graph, [north, south]) == []
+    mainland = set(members) - set(island)
+    assert mainland & set(north)
+    assert mainland & set(south)
+
+
+def test_a_cut_crossing_a_landmass_twice_keeps_one_piece_there() -> None:
+    """A U open to the north: the northern part would hold both arms, so it keeps the larger
+    one and the other arm joins the southern part, which it touches."""
     width, height = 10, 10
     graph = _grid(width, height)
     hollow = {row * width + column for row in range(6) for column in range(3, 7)}
@@ -197,12 +254,12 @@ def test_a_band_crossing_a_landmass_twice_keeps_one_piece_there() -> None:
     edges = [(first, second) for first, links in enumerate(graph.links) for second, _ in links]
     graph = contact_graph(graph.centres, edges, keep)
     members = _land(graph)
-    north, south = banded_parts(graph, members, [1, 1])
+    north, south = neck_parts(graph, members, [1, 1])
     assert split_landmasses(graph, [north, south]) == []
     assert len(pieces(graph, north)) == 1
     assert sorted(north + south) == members
-    with pytest.raises(PartitionError, match="Cannot band"):
-        _ = banded_parts(graph, members, [1, 0])
+    with pytest.raises(PartitionError, match="Cannot cut"):
+        _ = neck_parts(graph, members, [1, 0])
 
 
 def test_region_keys_keep_their_vanilla_layout_against_physical_pull() -> None:

@@ -277,6 +277,12 @@ GOLDEN_MANIFESTS = {
         "continents": "eac906bc875e8424169b37ed3b6f6d4375747add372c719546fe11a06dc25fe8",
         "archipelago": "94cca3e23a55d611824aec62af3aebfc03e2414ee389e93660086f32fe3f8037",
     },
+    # 1.2.2 cuts the New World's subcontinents at their waists; the synthetic bundle differs only
+    # by the epoch number its run spec records.
+    63: {
+        "continents": "5f05d8a3ed7298cc2c3a7dad172ff3faeca7a7cfb3fd92298edffacc490c66fb",
+        "archipelago": "be98609fec4ae23aa6711701d5ab54cd8fe26470e6cde98352154e30eafb4a05",
+    },
 }
 
 

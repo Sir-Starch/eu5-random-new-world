@@ -41,7 +41,9 @@ validate references, localization and graph consistency at construction.
 ## Geography keys chosen for content (N5)
 
 Generated regions and land areas reuse the needed vanilla identities within their
-original hierarchy. Subcontinents are north-to-south bands. A region key goes to the
+original hierarchy. Subcontinents are cut from the north along the shortest line near
+their vanilla share, at a landmass's waist ([C529](research/n5-region-keys.md#subcontinents-at-the-waist-not-along-a-row-2026-11-10-c529)).
+A region key goes to the
 part that lies where the key lies in its vanilla subcontinent, and physical similarity
 chooses among comparable places. An area key goes to the physically closest part, and
 place breaks ties. The [N5 audit](research/n5-region-keys.md) records the

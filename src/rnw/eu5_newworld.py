@@ -39,10 +39,10 @@ from rnw.eu5_regionkeys import (
 from rnw.hierarchy import (
     absorb_small_pieces,
     balanced_parts,
-    banded_parts,
     centre_of,
     contact_graph,
     match,
+    neck_parts,
     piece_counts,
     pieces,
     split,
@@ -293,7 +293,7 @@ def _bands(
         message = f"{len(cells)} generated cells cannot hold the {len(keys)} keys {keys}"
         raise IdentityError(message)
     order = sorted(range(len(keys)), key=lambda key: (tally.centre(keys[key])[0], keys[key]))
-    found = banded_parts(graph, cells, [tally.count[keys[key]] for key in order])
+    found = neck_parts(graph, cells, [tally.count[keys[key]] for key in order])
     parts: list[list[int]] = [[] for _ in keys]
     for key, part in zip(order, found, strict=True):
         parts[key] = part

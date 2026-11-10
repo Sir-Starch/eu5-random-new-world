@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Cut the New World's subcontinents where the land is narrow, not along a row. 1.2.1 and earlier
+  ranked the land by latitude and cut it with a ruler: a straight horizontal edge ran through
+  islands and continents, a strip of an island could become part of South America, and a
+  peninsula could be handed back to the north because the cut had left it a smaller piece. A
+  subcontinent's boundary is now the shortest cut within a window of latitudes around its share
+  of the land (a minimum cut), so it runs through a waist or a bay, a small landmass belongs to
+  one subcontinent whole, and each subcontinent keeps one piece on every landmass. A subcontinent
+  may be smaller than its vanilla share where its land comes in several pieces. Regions, areas
+  and provinces are made from the new subcontinents. Algorithm epoch 63: the world bytes changed,
+  so a world code made by 1.2.1 (epoch 62) can give another world. Worlds already built are not
+  rewritten.
+
 ## 1.2.1 — 2026-11-10
 
 - A hotfix for 1.2.0: the countries of a generated New World no longer each trade in a market of

@@ -1,11 +1,11 @@
 {
-  "comment": "Epoch 62 of 1.2.1, EU5 1.4.7/build26377361; frozen epoch61 preserved in golden_world_epoch61.json. 1.2.1 hotfix: an exchange agreement of the recorded history no longer makes each partner a market centre and a town of its own (1.2.0 gave 70-87 % of the New World's capitals a market where the vanilla Americas have 12 for 223 landed countries); the calibrated centres of the settlement plan are the only ones. Changes 27 of 884 files (03_markets, 07_cities_and_buildings, 14_development, 26_ai_personalities, the towns and the files that name them); the count stays 884; reproduced in two independent exports at 31 and 8 threads (f454b5f5).",
-  "epoch": 62,
-  "code": "RNW1-081G0-00000-0KAA7-E0410-20860-2AG63-YG1W8-8G3GH-149XR-08TM0-38E6J-5",
+  "comment": "Epoch 63 of 1.2.2, EU5 1.4.7/build26377361; frozen epoch62 preserved in golden_world_epoch62.json. 1.2.2 cuts the New World's subcontinents at the narrowest waist of a landmass within a window of latitudes around the vanilla share (minimum cut by maximum flow, one piece per landmass, small landmasses joined whole), where 1.2.0 and 1.2.1 cut them along a row, which sliced islands in two. Regions, areas and provinces are made from the new subcontinents. Changes 96 of the 884 files (the location raster, the hierarchy, its localization in all eleven languages and the scripts that name it); the count stays 884; reproduced in two independent exports at 31 and 8 threads (6536df49).",
+  "epoch": 63,
+  "code": "RNW1-081G0-00000-0KAA7-E0410-40860-2AG63-YG1W8-8G3GH-149XR-08TM0-339WC-T",
   "game_fingerprint_sha256": "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a",
   "game_label": "EU5 1.4.7 / Steam build 26377361",
   "output": {
-    "sha256": "f454b5f58532fd3cb7a91ee3361e1a10ca33463beedb1d24033059a7dc2324c0",
+    "sha256": "6536df49e50cfba9aeeaf0c80ad2e393728bf95db64c48de42bf390e56cb8aaa",
     "count": 884
   }
 }

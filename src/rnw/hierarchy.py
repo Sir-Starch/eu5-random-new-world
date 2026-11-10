@@ -7,8 +7,10 @@ shortest-path tree and therefore connected. A landmass without a source of its o
 island) joins the part of the nearest cell as a whole, so no part ever has two pieces on
 one landmass. Every part starts with an additive handicap that grows while it is larger
 than its target, so part sizes approach their targets, and movable sources follow their
-part's centre (Lloyd relaxation). The top level can instead be cut into bands of rows
-(``banded_parts``), each band keeping one piece per landmass. Integer arithmetic and fixed
+part's centre (Lloyd relaxation). The top level can instead be cut from north to south
+(``neck_parts``): each boundary is the shortest cut, by maximum flow, within a window of
+latitudes around the part's share, so it runs through a landmass's waist and joins small
+landmasses whole; each part keeps one piece per landmass. Integer arithmetic and fixed
 tie-breaks make every result a pure function of the inputs.
 """
 
@@ -20,7 +22,7 @@ from __future__ import annotations
 import heapq
 import math
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, final
 
 import numpy as np
 
@@ -34,6 +36,9 @@ if TYPE_CHECKING:
 LLOYD_ROUNDS: Final[int] = 6
 BALANCE_ROUNDS: Final[int] = 12
 CHUNK: Final[int] = 512
+NECK_WINDOW: Final[int] = 200
+NECK_CONTACT: Final[int] = 1000
+NECK_PULL: Final[int] = 150
 
 
 class PartitionError(ValueError):
@@ -395,30 +400,127 @@ def split(
     return parts
 
 
-def banded_parts(
-    graph: ContactGraph, members: Sequence[int], weights: Sequence[int]
-) -> list[list[int]]:
-    """Parts in bands from the first row to the last, each its ``weights`` share of members.
+@final
+class _Flow:
+    """A maximum flow (Dinic) on integer capacities; arcs are stored in pairs (``arc ^ 1``)."""
 
-    Members are ranked by row, then column and index. A band can cross a landmass more
-    than once; then the part keeps its largest piece on that landmass and every other piece
-    joins the part it has most contacts with (lowest index on ties). Parts are settled in
-    order, and a settled part has one piece on each landmass, so a piece it receives
-    touches that piece: no part ends with two pieces on one landmass.
+    def __init__(self, size: int) -> None:
+        self.size = size
+        self.head: list[int] = []
+        self.capacity: list[int] = []
+        self.arcs: list[list[int]] = [[] for _ in range(size)]
+
+    def add(self, first: int, second: int, forward: int, backward: int = 0) -> None:
+        self.arcs[first].append(len(self.head))
+        self.head.append(second)
+        self.capacity.append(forward)
+        self.arcs[second].append(len(self.head))
+        self.head.append(first)
+        self.capacity.append(backward)
+
+    def _levels(self, source: int) -> list[int]:
+        level = [-1] * self.size
+        level[source] = 0
+        queue = [source]
+        for node in queue:
+            for arc in self.arcs[node]:
+                if self.capacity[arc] > 0 and level[self.head[arc]] < 0:
+                    level[self.head[arc]] = level[node] + 1
+                    queue.append(self.head[arc])
+        return level
+
+    def _augment(self, source: int, sink: int, level: list[int], seen: list[int]) -> int:
+        """Push one blocking-flow path from ``source``; 0 when the level graph is exhausted."""
+        path: list[int] = []
+        node = source
+        while True:
+            if node == sink:
+                pushed = min(self.capacity[arc] for arc in path)
+                for arc in path:
+                    self.capacity[arc] -= pushed
+                    self.capacity[arc ^ 1] += pushed
+                return pushed
+            arcs = self.arcs[node]
+            while seen[node] < len(arcs):
+                arc = arcs[seen[node]]
+                following = self.head[arc]
+                if self.capacity[arc] > 0 and level[following] == level[node] + 1:
+                    path.append(arc)
+                    node = following
+                    break
+                seen[node] += 1
+            else:
+                if not path:
+                    return 0
+                level[node] = -1
+                node = self.head[path.pop() ^ 1]
+                seen[node] += 1
+
+    def source_side(self, source: int, sink: int) -> list[bool]:
+        """Saturate the flow, then the nodes the source still reaches: the smallest minimum cut."""
+        while True:
+            level = self._levels(source)
+            if level[sink] < 0:
+                return [reached >= 0 for reached in level]
+            seen = [0] * self.size
+            while self._augment(source, sink, level, seen):
+                pass
+
+
+def _north_side(graph: ContactGraph, members: Sequence[int], count: int) -> list[int]:
+    """About ``count`` of the northernmost members: the shortest cut near that latitude.
+
+    Members are ranked by row, then column and index. The ``count`` northernmost are the
+    banded answer; the cut may instead follow any line inside a window of ``NECK_WINDOW``
+    permille of the members on either side of it, where it costs ``NECK_CONTACT`` per contact
+    it severs and each member pays up to ``NECK_PULL`` for lying on the far side of the
+    banded line, growing with its distance from it. A landmass whose narrowest waist lies in
+    the window is cut there; one that lies inside it is joined whole to the side its
+    latitude favours. Members beyond the window keep their side. The minimum cut is exact
+    (maximum flow), and the smallest one is taken, so the result is a pure function of the
+    inputs.
     """
-    if not weights or min(weights) < 1 or len(members) < len(weights):
-        message = f"Cannot band {len(members)} cells by the weights {list(weights)}"
-        raise PartitionError(message)
     ranked = sorted(members, key=lambda node: (*graph.centres[node].tolist(), node))
-    owner: dict[int, int] = {}
-    total, start, held = sum(weights), 0, 0
-    for part, weight in enumerate(weights):
-        held += weight
-        end = held * len(ranked) // total
-        owner.update(dict.fromkeys(ranked[start:end], part))
-        start = end
+    size = len(ranked)
+    half = max(1, size * NECK_WINDOW // 1000)
+    first = max(1, count - half)
+    last = min(size - 1, count + half)
+    inside = {node: number for number, node in enumerate(ranked[first:last])}
+    above, below = set(ranked[:first]), set(ranked[last:])
+    source, sink = len(inside), len(inside) + 1
+    flow = _Flow(len(inside) + 2)
+    width = max(1, half)
+    for node, number in inside.items():
+        rank = first + number
+        pulled = NECK_PULL * (count - rank) // width
+        toward_source, toward_sink = max(0, pulled), max(0, -pulled)
+        for neighbour, _ in graph.links[node]:
+            if neighbour in inside:
+                if neighbour > node:
+                    flow.add(number, inside[neighbour], NECK_CONTACT, NECK_CONTACT)
+            elif neighbour in above:
+                toward_source += NECK_CONTACT
+            elif neighbour in below:
+                toward_sink += NECK_CONTACT
+        if toward_source:
+            flow.add(source, number, toward_source)
+        if toward_sink:
+            flow.add(number, sink, toward_sink)
+    reached = flow.source_side(source, sink)
+    return ranked[:first] + [node for node, number in inside.items() if reached[number]]
+
+
+def _one_piece_each(
+    graph: ContactGraph, members: Sequence[int], owner: dict[int, int], count: int
+) -> list[list[int]]:
+    """Parts with one piece on every landmass: a part keeps its largest piece there.
+
+    Every other piece joins the part it has most contacts with (lowest index on ties). Parts
+    are settled in order, and a settled part has one piece on each landmass, so a piece it
+    receives touches that piece: no part ends with two pieces on one landmass.
+    """
     landmasses = pieces(graph, members)
-    for part in range(len(weights)):
+    for part in range(count):
         for landmass in landmasses:
             found = pieces(graph, [node for node in landmass if owner[node] == part])
             for piece in sorted(found, key=lambda cells: (-len(cells), cells[0]))[1:]:
@@ -430,13 +532,41 @@ def banded_parts(
                             counts[owner[neighbour]] = counts.get(owner[neighbour], 0) + 1
                 target = min(counts, key=lambda other: (-counts[other], other))
                 owner.update(dict.fromkeys(piece, target))
-    parts: list[list[int]] = [[] for _ in weights]
+    parts: list[list[int]] = [[] for _ in range(count)]
     for node in sorted(owner):
         parts[owner[node]].append(node)
     if not all(parts):
-        message = "A band lost all its cells"
+        message = "A part lost all its cells"
         raise PartitionError(message)
     return parts
+
+
+def neck_parts(
+    graph: ContactGraph, members: Sequence[int], weights: Sequence[int]
+) -> list[list[int]]:
+    """Parts from the first row to the last, each about its ``weights`` share of members.
+
+    Parts are cut off one at a time from the north: each takes the shortest cut near the
+    latitude that gives it its share of the cells left (``_north_side``), so a boundary runs
+    through a landmass's waist instead of along a row, and a small landmass is not sliced.
+    The cut can leave a part with several pieces on one landmass; it keeps its largest
+    and the others join the part they touch most (``_one_piece_each``), so a part is smaller
+    than its share where its land is split, never larger than the window allows.
+    """
+    if not weights or min(weights) < 1 or len(members) < len(weights):
+        message = f"Cannot cut {len(members)} cells by the weights {list(weights)}"
+        raise PartitionError(message)
+    owner: dict[int, int] = {}
+    left = sorted(members)
+    for part, weight in enumerate(weights[:-1]):
+        count = weight * len(left) // sum(weights[part:])
+        count = min(max(1, count), len(left) - (len(weights) - part - 1))
+        north = _north_side(graph, left, count)
+        owner.update(dict.fromkeys(north, part))
+        taken = set(north)
+        left = [node for node in left if node not in taken]
+    owner.update(dict.fromkeys(left, len(weights) - 1))
+    return _one_piece_each(graph, members, owner, len(weights))
 
 
 def piece_counts(found: Sequence[Sequence[int]], size: int, *, at_least: int) -> list[int]:
