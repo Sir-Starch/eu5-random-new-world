@@ -19,6 +19,14 @@ tags and macOS runner, two flaky tests); the release assets come from the tagged
 and Windows binaries differ from the candidate run's, so scans use the tagged run's hashes. The
 release was created as a draft, its assets were downloaded and checked, then it was published.
 
+[RNW 1.2.1](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.2.1)
+(epoch 62, EU5 1.4.7 / Steam build 26377361) was published on 2026-11-10 from tag `v1.2.1` at
+`451d7442f13b84fc7acef68af8326cc83354b6f7`, built by the tagged workflow run 42737379357 (C528). It is
+a hotfix: main equalled `v1.2.0` in code, so the fix was made on main and the next PATCH taken
+(ADR 0003). The candidate dispatch (run 42735744666) and general CI (run 42735719028) passed on the
+same commit at the first attempt; the release assets come from the tagged run, scanned by exact hash.
+The window and the native module came out with new hashes, so they were scanned again; the launcher is unchanged.
+
 | Field | Stable value |
 |---|---|
 | Public name | Random New World (RNW) |

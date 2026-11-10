@@ -2269,3 +2269,12 @@ the control that 1.2.0 moved to the World tab as *Terra Incognita in the lobby*.
 ## 2026-11-10 — 1.2.1 hotfix: markets (C527)
 
 The owner reported that every country of a generated New World had a market of its own. The installed 1.2.0 worlds confirmed it (70–87 % of capitals held one). A probe on one world's code wrapped the planners and showed that `settlement_centres` plans 18 centres and `eu5_history_plan._centres` raised them to 115 by making each exchange partner a market and a town; the 1.1.0 planner had no such step. The step is removed (an exchange keeps its opinion and its roads), the synthetic sea-league test asserts that only the calibrated centre trades alone, and epoch 62 holds the output (884 files, `f454b5f5`). The scratch probe and exports stayed outside the repository.
+
+## 2026-11-10 — Publishing 1.2.1 (C528)
+
+The hotfix needed no second candidate: general CI, the candidate dispatch and the tagged run passed on `451d744`
+(an unsigned annotated tag, as `v1.2.0`). The window and native module hashes differ from 1.2.0's, so both went to
+VirusTotal by upload through the API (the owner's key, kept outside the repository): the native module was clean, the
+window drew the same single Trapmine low-confidence heuristic as before, which the owner accepted in writing before
+the draft was published. The player's guide (`website/sitegen.py` `RELEASE`) still names v1.1.0 and is untouched.
+Left for the owner: the Workshop hub upload with `docs/releases/1.2.1-workshop.bbcode` as change notes.
