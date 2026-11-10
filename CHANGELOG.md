@@ -2,8 +2,17 @@
 
 ## Unreleased
 
+## 1.2.1 — 2026-11-10
+
+- A hotfix for 1.2.0: the countries of a generated New World no longer each trade in a market of
+  their own. Targets EU5 1.4.7 / Steam build 26377361. Algorithm epoch 62; the application
+  refuses new peoples or resources on a world of an earlier epoch, as it did for 1.1.0 worlds in
+  1.2.0. Worlds already built and their saves are not rewritten or migrated.
+
+The entries below describe each change in detail.
+
 - Give each country of the New World no market of its own. 1.2.0 made every country that had
-  recorded an exchange agreement a market centre and a town, so 85-95 % of the capitals of a
+  recorded an exchange agreement a market centre and a town, so 70-87 % of the capitals of a
   generated world traded alone (115 markets and 113 towns for 127 countries in one world; the
   vanilla Americas have 12 market centres for 223 landed countries). An exchange now leaves an
   opinion and land roads only, and the market centres and towns are the calibrated ones of the

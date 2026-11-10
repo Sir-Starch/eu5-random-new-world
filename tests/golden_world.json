@@ -1,7 +1,7 @@
 {
-  "comment": "Epoch 62 of 1.2.1 (pending until frozen), EU5 1.4.7/build26377361; frozen epoch61 preserved in golden_world_epoch61.json. 1.2.1 hotfix: an exchange agreement of the recorded history no longer makes each partner a market centre and a town of its own (1.2.0 gave 85-95 % of the New World's capitals a market where the vanilla Americas have 12 for 223 landed countries); the calibrated centres of the settlement plan are the only ones. Changes 27 of 884 files (03_markets, 07_cities_and_buildings, 14_development, 26_ai_personalities, the towns and the files that name them); the count stays 884; reproduced in two independent exports at 31 and 8 threads (f454b5f5).",
+  "comment": "Epoch 62 of 1.2.1, EU5 1.4.7/build26377361; frozen epoch61 preserved in golden_world_epoch61.json. 1.2.1 hotfix: an exchange agreement of the recorded history no longer makes each partner a market centre and a town of its own (1.2.0 gave 70-87 % of the New World's capitals a market where the vanilla Americas have 12 for 223 landed countries); the calibrated centres of the settlement plan are the only ones. Changes 27 of 884 files (03_markets, 07_cities_and_buildings, 14_development, 26_ai_personalities, the towns and the files that name them); the count stays 884; reproduced in two independent exports at 31 and 8 threads (f454b5f5).",
   "epoch": 62,
-  "code": "RNW1-081G0-00000-0KAA7-E0410-00860-2AG63-YG1W8-8G3GH-149XR-08TM0-3AY3A-3",
+  "code": "RNW1-081G0-00000-0KAA7-E0410-20860-2AG63-YG1W8-8G3GH-149XR-08TM0-38E6J-5",
   "game_fingerprint_sha256": "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a",
   "game_label": "EU5 1.4.7 / Steam build 26377361",
   "output": {

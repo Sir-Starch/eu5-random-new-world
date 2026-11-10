@@ -159,7 +159,7 @@ market centres are the calibrated ones of the settlement plan (cities, the large
 near each hearth, one local market per disconnected landed group), as in 1.1.0. Markets,
 calibrated settlement ranks, population totals and discoveries are recomputed from
 surviving outcomes. [V-EXEC, 2026-11-10] 1.2.0 gave every exchange partner a market and a
-town: 85-95 % of the generated capitals of the installed worlds held a market (115 markets
+town: 70-87 % of the generated capitals of the installed worlds held a market (115 markets
 and 113 towns for 127 countries in one world) where the vanilla Americas have 12 market
 centres for 223 landed countries; 1.2.1 returns that world to 18 markets.
 The AI adapter reads full historical threat/competition facts and actual group

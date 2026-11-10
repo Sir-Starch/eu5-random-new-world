@@ -1,6 +1,6 @@
 # Known limitations
 
-These limits apply to **RNW 1.2.0 / epoch 61**. For installation and everyday use, see the
+These limits apply to **RNW 1.2.1 / epoch 62**. For installation and everyday use, see the
 [generator guide](generator-guide.md).
 
 ## Game compatibility and saves
@@ -67,7 +67,7 @@ These limits apply to **RNW 1.2.0 / epoch 61**. For installation and everyday us
 - **A world made by an earlier algorithm gets no versions.** A version keeps the
   world's land, and the same seed gives other land under another algorithm. Since 1.2.0
   **New peoples**, **New resources** and **Same land, change settings** are off for such a
-  world (a 1.1.0 world in 1.2.0), with the reason shown; before 1.2.0 these buttons
+  world (a 1.2.0 world in 1.2.1), with the reason shown; before 1.2.0 these buttons
   made such a version without saying that its land came from the current algorithm. Use
   **New world with these settings** for a new land, or the release that made the world.
 - **A world that keeps the real Americas (Omerika, 1.2.0) generates only their peoples.** The

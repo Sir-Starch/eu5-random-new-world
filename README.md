@@ -12,7 +12,7 @@
 ![Rust core](https://img.shields.io/badge/core-Rust-B7410E.svg)
 ![EU5 1.4.*](https://img.shields.io/badge/EU5-1.4.%2A-8B6F47.svg)
 ![Ironman & Achievements](https://img.shields.io/badge/Ironman%20%26%20Achievements-supported-success.svg)
-![Version: 1.2.0](https://img.shields.io/badge/version-1.2.0-blue.svg)
+![Version: 1.2.1](https://img.shields.io/badge/version-1.2.1-blue.svg)
 
 </div>
 

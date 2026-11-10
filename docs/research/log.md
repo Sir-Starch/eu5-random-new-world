@@ -2265,3 +2265,7 @@ repository) reported one low-confidence heuristic on the window, which the owner
 release was published as a draft first and checked after publication. Left for the owner and for after the
 release: the Workshop hub upload and descriptions, and the player's guide, whose hidden-map section describes
 the control that 1.2.0 moved to the World tab as *Terra Incognita in the lobby*.
+
+## 2026-11-10 — 1.2.1 hotfix: markets (C527)
+
+The owner reported that every country of a generated New World had a market of its own. The installed 1.2.0 worlds confirmed it (70–87 % of capitals held one). A probe on one world's code wrapped the planners and showed that `settlement_centres` plans 18 centres and `eu5_history_plan._centres` raised them to 115 by making each exchange partner a market and a town; the 1.1.0 planner had no such step. The step is removed (an exchange keeps its opinion and its roads), the synthetic sea-league test asserts that only the calibrated centre trades alone, and epoch 62 holds the output (884 files, `f454b5f5`). The scratch probe and exports stayed outside the repository.

@@ -47,9 +47,9 @@ RNW_LAYERS=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_instal
 ```
 
 The reference export compares the current epoch's output with
-`tests/golden_world.json` (epoch 61 of 1.2.0). The frozen
-epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch60.json`
-and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples
+`tests/golden_world.json` (epoch 62 of 1.2.1). The frozen
+epoch-61, epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch61.json`,
+`tests/golden_world_epoch60.json` and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples
 rerolls. They take substantially longer than synthetic tests and need the local
 game inputs; use them when those outputs are affected. Do not rewrite a frozen
 epoch's reference to make a failure pass. See [ADR 0003](adr/0003-versioning.md).
