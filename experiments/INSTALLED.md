@@ -1866,4 +1866,19 @@ with the strips. The local hub was updated with `update_local_hub.py` to the 1.2
 native kernels, world codes, shell and bridge self-tests pass under Wine; the former hub is retained in
 `.rnw-hub-backups/1.2.1-1794290263148019562`. The 8 other mod folders, the playset, saves and settings are unchanged; no EU5 launch or
 control by the agent. The reference world of epoch 63 (884 files, `6536df49`) is reproduced by two exports and by the installed-game
-reference check.
+reference check. **Superseded the same day by the entry below:** that first cut still kept one piece per landmass in the subcontinent
+level and so held South America to 12 %; the two worlds above show that outdated layout and the hub was replaced.
+
+2026-11-10, **Subcontinents at the waist, second version** (source `6f31911…`, C529; the same two seeds). [V-EXEC] Installed two worlds of the
+same image and settings made by the final 1.2.2 (epoch 63, reference world `43dfd7ec…`, 884 files) into **new** folders of the Windows/Proton
+profile, each with the peoples reroll of the code (same land, new id): **`mod/rnw_exp_world_vwr7n5wybh`** (code
+`RNW1-081JW-JXF6M-3H9ZK-H0410-40RA0-2ZG82-241Z8-0Y448-1R8GJ-4XR0C-DA01G-W04EW-BYFCH-7WZEC-T9M03-045BT-EG`, seed of the owner's
+`w673erssza`) and **`mod/rnw_exp_world_v67wczjn5d`** (code
+`RNW1-081ZN-XBHNQ-ZTVZD-N0410-40RA0-2ZG82-241Z8-0Y448-1R8GJ-4XR0C-DA01G-W04EW-BYFCH-7WZEC-T9M03-04J80-FR`, seed of `xsdvjw25nl`). Each passes
+every export validator (910 and 912 files incl. `.metadata`; the installer verified all files) and is in both libraries. In the written
+hierarchy South America is the southern part of the sun: the west, south and east arms with their islands (598 of 1,788 and 527 of 1,776
+land locations, 33.4 % and 29.7 %; vanilla 31.5 %), no straight row edge, no sliced arm. The local hub was updated again
+(wheel SHA-256 `9e0db0a8d17ecca521c623b47609414a132529dcba7dac83c5f33ccf5d68d766`, launcher `49674400…6932`): the window, native kernels,
+world codes, shell and bridge self-tests pass under Wine; the former hub (the first version) is retained in
+`.rnw-hub-backups/1.2.2-1794292853821154226`. The 10 other mod folders (including the two worlds of the first version, left in place), the
+playset, saves and settings are unchanged; no EU5 launch or control by the agent.
