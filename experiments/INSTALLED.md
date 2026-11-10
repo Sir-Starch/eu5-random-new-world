@@ -1851,3 +1851,19 @@ world codes, shell and bridge self-tests pass under Wine; the installed folder i
 its window (`2035b89e…8035`), native module (`89e51e4b…1ecd47`) and launcher (`49674400…6932`) are the files scanned on
 VirusTotal. The former hub is retained in `.rnw-hub-backups/1.2.0-1794193456668297154`. All other mod folders (15 worlds
 and 2 others), the playset, saves and settings are unchanged; no EU5 launch or control by the agent.
+
+2026-11-10, **Subcontinents at the waist** (source `1e5cbca0521eb96ce6760d95c9e82ed2ce858d16`, C529; owner's two worlds from one drawn
+image, `rnw_exp_world_w673erssza` and `rnw_exp_world_xsdvjw25nl`, whose South America took 13 % of the land and had a strip on each of
+two island arms).
+[V-EXEC] Installed two worlds of the same image and settings, seeds as the owner's, made by 1.2.2 (epoch 63), into **new** folders of
+the existing Windows/Proton profile: **`mod/rnw_exp_world_qzupge5atp`** (code `RNW1-081JW-JXF6M-3H9ZK-H0410-40R90-2ZG82-241Z8-0Y448-1R8GJ-4XR0C-DA01G-XRQWY-S2FSY-WSMK8-060BN-FKS0`)
+and **`mod/rnw_exp_world_hn3wu6v24j`** (code `RNW1-081ZN-XBHNQ-ZTVZD-N0410-40R90-2ZG82-241Z8-0Y448-1R8GJ-4XR0C-DA01G-XRQWY-S2FSY-WSMK8-0609J-FXZR`).
+Each passes every export validator (912 files incl. `.metadata`; the installer verified all files) and is in both libraries (native and
+Proton). In the written hierarchy South America is the south-western peninsula in one piece (215 and 216 of 1,788 and 1,776 land
+locations, 12.0 % and 12.2 %), both arms are whole in North America and no straight row edge remains; the owner's old worlds had 13.3 % and 13.5 %
+with the strips. The local hub was updated with `update_local_hub.py` to the 1.2.2 development build (wheel SHA-256
+`357b893a4e80e0aac229c23bd7a7ff15f894a38b7ac2e6ba19c4ac8744919583`, window `30189958…6054`, launcher `49674400…6932`): the window,
+native kernels, world codes, shell and bridge self-tests pass under Wine; the former hub is retained in
+`.rnw-hub-backups/1.2.1-1794290263148019562`. The 8 other mod folders, the playset, saves and settings are unchanged; no EU5 launch or
+control by the agent. The reference world of epoch 63 (884 files, `6536df49`) is reproduced by two exports and by the installed-game
+reference check.
