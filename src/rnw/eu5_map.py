@@ -117,6 +117,27 @@ def _hash(game_dir: Path, relative: str) -> FileFingerprint:
     return FileFingerprint(relative, source.stat().st_size, digest)
 
 
+# Every file ``load_map`` reads, in the order its fingerprints are kept.
+INPUT_FILES: Final[tuple[str, ...]] = (
+    NAMED_COLORS,
+    DEFINITIONS,
+    DEFAULT_MAP,
+    LOCATIONS,
+    RIVERS,
+    PORTS,
+    ADJACENCIES,
+    *LOCATOR_FILES,
+    LOCATOR_OVERRIDE,
+)
+
+
+def input_fingerprints(game_dir: Path) -> tuple[FileFingerprint, ...]:
+    """The size and SHA-256 of each file ``load_map`` reads: about twenty megabytes, read in a
+    fraction of a second, without decoding any of it. What is made from the map is the same
+    while these are."""
+    return tuple(_hash(game_dir, relative) for relative in INPUT_FILES)
+
+
 def class_lists(text: str) -> dict[str, list[str]]:
     """The location tokens of the class lists in the text of a ``default.map``."""
     text = COMMENT.sub("", text)
@@ -236,17 +257,6 @@ def load_map(game_dir: Path) -> Eu5Map:
     points.extend(read_override_locators(game_dir / LOCATOR_OVERRIDE, LOCATOR_OVERRIDE, height))
     points.extend(read_csv_points(game_dir / PORTS, PORTS, ((2, 3),), height))
     points.extend(read_csv_points(game_dir / ADJACENCIES, ADJACENCIES, ((4, 5), (6, 7)), height))
-    files = (
-        NAMED_COLORS,
-        DEFINITIONS,
-        DEFAULT_MAP,
-        LOCATIONS,
-        RIVERS,
-        PORTS,
-        ADJACENCIES,
-        *LOCATOR_FILES,
-        LOCATOR_OVERRIDE,
-    )
     return Eu5Map(
         keys=keys,
         colors=colors,
@@ -259,5 +269,5 @@ def load_map(game_dir: Path) -> Eu5Map:
         locations_chunks=read_chunks(game_dir / LOCATIONS),
         rivers_chunks=read_chunks(game_dir / RIVERS),
         points=tuple(point for point in points if point.key in index),
-        inputs=tuple(_hash(game_dir, relative) for relative in files),
+        inputs=input_fingerprints(game_dir),
     )

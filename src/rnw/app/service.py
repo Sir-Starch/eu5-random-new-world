@@ -14,16 +14,13 @@ import time
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
-import numpy as np
-
 from rnw import __version__, worldname
 from rnw.app import estimates, exchange, install, library, logs, recovery
 from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
-from rnw.eu5_canvas import select_canvas
-from rnw.eu5_map import load_map
 from rnw.eu5_world_export import export_world
 from rnw.inputs import compare
+from rnw.landarea import get_area
 from rnw.messages import say
 from rnw.parallel import cores
 from rnw.png import COLOR_GRAY, encode_png
@@ -37,6 +34,7 @@ if TYPE_CHECKING:
     from rnw.app.discovery import GameInstall, Profile
     from rnw.app.library import World
     from rnw.app.worldcode import WorldCode
+    from rnw.landarea import LandArea
     from rnw.landmask import LandMask
     from rnw.progress import Progress
     from rnw.settings import Settings
@@ -393,31 +391,40 @@ def required_land_mask(data: Path, world: World) -> LandMask | None:
     return found
 
 
-TEMPLATE_STEP: Final[int] = 4
-TEMPLATE_AREA: Final[int] = 90
-TEMPLATE_OUTSIDE: Final[int] = 20
+def land_area(
+    game: GameInstall, settings: Settings = PRESETS["continents"], *, data: Path | None = None
+) -> LandArea:
+    """The area the New World can fill with ``settings``: read from the land cache when it was
+    chosen before (a fraction of a second), else chosen from the installed game's map (seconds)
+    and kept there."""
+    shape = settings.new_world
+    return get_area(
+        None if data is None else land_cache(data),
+        game.directory,
+        shape.ocean_band_px,
+        expanded=bool(shape.expand_oceans or shape.landform),
+    )
 
 
 def land_template(
-    game: GameInstall, output: Path, settings: Settings = PRESETS["continents"]
+    game: GameInstall,
+    output: Path,
+    settings: Settings = PRESETS["continents"],
+    *,
+    data: Path | None = None,
 ) -> tuple[int, int]:
     """Write a picture of the area the New World can fill, to draw land on; returns its size.
 
-    Dark grey is the area, black is outside it. The player paints land in white (any program),
-    and ``Land from an image`` builds the world on it. The picture shows the area at a quarter
-    of the map's size and is for the player's own use: it is cut from the installed game's map.
+    Dark grey is the area and black is outside it; the game's own Americas are a lighter grey
+    and the Old World's island groups that the area covers a darker one. The player paints land
+    in white (any program), and ``Land from an image`` builds the world on it. The picture shows
+    the area at a quarter of the map's size and is for the player's own use: it is cut from the
+    installed game's map.
     """
-    game_map = load_map(game.directory)
-    canvas = select_canvas(
-        game_map,
-        settings.new_world.ocean_band_px,
-        expanded=bool(settings.new_world.expand_oceans or settings.new_world.landform),
-    )
-    shrunk = canvas.mask[::TEMPLATE_STEP, ::TEMPLATE_STEP]
-    grey = np.where(shrunk, TEMPLATE_AREA, TEMPLATE_OUTSIDE).astype(np.uint8)
+    picture = land_area(game, settings, data=data).picture()
     output.parent.mkdir(parents=True, exist_ok=True)
-    _ = output.write_bytes(encode_png(grey, color_type=COLOR_GRAY, compression="zlib"))
-    height, width = cast("tuple[int, int]", grey.shape)
+    _ = output.write_bytes(encode_png(picture, color_type=COLOR_GRAY, compression="zlib"))
+    height, width = cast("tuple[int, int]", picture.shape)
     return width, height
 
 

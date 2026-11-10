@@ -886,7 +886,10 @@ class Controller:
 
         def work(_progress: Progress) -> None:
             _ = service.land_template(
-                game, output, build_settings(self.preset, self._change_document())
+                game,
+                output,
+                build_settings(self.preset, self._change_document()),
+                data=self.data,
             )
 
         return self._run(Task.TEMPLATE, str(output), work)

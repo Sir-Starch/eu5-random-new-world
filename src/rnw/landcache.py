@@ -1,14 +1,16 @@
 """Made land kept on disk, so it is not made twice (ADR 0010).
 
-Three kinds of entry live under the cache folder. A *world* entry holds the finished cells and
+Four kinds of entry live under the cache folder. A *world* entry holds the finished cells and
 relief of a continent, so rerolling its resources or peoples skips the geography. A *stage*
 entry holds only the land stage (land, ocean and lake masks) of a sketched continent
 (``rnw.app.candidates``), so the world made from the chosen sketch starts from the land the
 player saw instead of drawing it again. A *canvas* entry holds the area of the game's map that
 a New World replaces (``rnw.eu5_canvas.select_canvas``), which depends only on the map's files
-and two settings. Each is keyed by everything that shapes it, the generator's own code
-included; an entry is the same data the generator would make, never an approximation. Each
-kind keeps its most recently used entries and removes the rest.
+and two settings. An *area* entry holds that area as the picture a player draws land on, in
+three layers at a quarter of the size (``rnw.landarea``), and is found from the fingerprints of
+the map's files alone, without decoding the map. Each is keyed by everything that shapes it, the
+generator's own code included; an entry is the same data the generator would make, never an
+approximation. Each kind keeps its most recently used entries and removes the rest.
 """
 
 # NumPy stubs type array shapes, loaded archives and tolist() as Any.
@@ -82,6 +84,11 @@ STAGE_MASKS: Final[tuple[str, ...]] = ("land", "ocean", "lakes")
 CANVASES: Final[str] = "canvases"
 CANVAS_SUFFIX: Final[str] = ".canvas.npz"
 KEPT_CANVASES: Final[int] = 4
+# The area of the map a New World fills, as the editor and the template show it
+# (``rnw.landarea``): one per band, Pacific side and game version.
+AREAS: Final[str] = "areas"
+AREA_SUFFIX: Final[str] = ".area.npz"
+KEPT_AREAS: Final[int] = 4
 # Files of the generator's own code that its identity covers (``code_identity``).
 CODE_SUFFIXES: Final[frozenset[str]] = frozenset({".py", ".pyc", ".so", ".pyd"})
 _CODE: list[str] = []
@@ -168,7 +175,7 @@ def get_canvas(cache: Path | None, game_map: Eu5Map, band_px: int, *, expanded: 
     target = cache / CANVASES / f"{canvas_key(game_map, band_px, expanded=expanded)}{CANVAS_SUFFIX}"
     if target.exists():
         canvas = _read_canvas(target)
-        _touch(target)
+        touch(target)
         return canvas
     canvas = select_canvas(game_map, band_px, expanded=expanded)
     _write_canvas(target, canvas)
@@ -337,7 +344,7 @@ def keep_stage(cache: Path, key: str, stage: LandStage) -> None:
     """Write a land stage, packed and compressed, under ``key``; an existing one stays."""
     target = stage_path(cache, key)
     if target.exists():
-        _touch(target)
+        touch(target)
         return
     target.parent.mkdir(parents=True, exist_ok=True)
     shape = stage[0].shape
@@ -380,7 +387,7 @@ def read_stage(cache: Path, key: str, shape: tuple[int, int]) -> LandStage | Non
     except (ValueError, zlib.error) as error:
         message = f"Land cache {target} is damaged; remove this entry and retry: {error}"
         raise CacheError(message) from error
-    _touch(target)
+    touch(target)
     return masks[0], masks[1], masks[2]
 
 
@@ -403,7 +410,17 @@ def prune(cache: Path) -> None:
         if item.name.endswith(CANVAS_SUFFIX)
         and ENTRY.fullmatch(item.name.removesuffix(CANVAS_SUFFIX))
     ]
-    for found, kept in ((worlds, KEPT_WORLDS), (stages, KEPT_STAGES), (canvases, KEPT_CANVASES)):
+    areas = [
+        item
+        for item in _entries(cache / AREAS)
+        if item.name.endswith(AREA_SUFFIX) and ENTRY.fullmatch(item.name.removesuffix(AREA_SUFFIX))
+    ]
+    for found, kept in (
+        (worlds, KEPT_WORLDS),
+        (stages, KEPT_STAGES),
+        (canvases, KEPT_CANVASES),
+        (areas, KEPT_AREAS),
+    ):
         dated = sorted(((_used(item), item) for item in found), reverse=True)
         for used, item in dated[kept:]:
             if now - used < RECENT_SECONDS:
@@ -429,7 +446,7 @@ def _used(item: Path) -> float:
         return 0.0
 
 
-def _touch(item: Path) -> None:
+def touch(item: Path) -> None:
     with contextlib.suppress(OSError):
         os.utime(item)
 
@@ -458,7 +475,7 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     target = None if cache is None or key is None else cache / key
     if target is not None and target.exists():
         world = _read(target, domain.shape)
-        _touch(target)
+        touch(target)
         return world
     stage = None
     if cache is not None and drawn is None:
