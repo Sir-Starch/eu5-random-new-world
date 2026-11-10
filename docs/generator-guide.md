@@ -115,8 +115,9 @@ For a world with custom-drawn land, share a **`.rnworld`** file to include the l
 **Land editor…** is the one button for the land of a new world. It opens the editor over the
 window on the area the New World can fill. Start from one of eight ready lands (a supercontinent,
 two or three continents, an archipelago, an island chain, a ring, a crescent, scattered islands),
-the game's own Americas or a continent sketched by **Sketch continents** (six sketches with this
-world's settings; they reveal the land shape only, and the final coastline can shift slightly
+the game's own Americas, one of four famous lands (Westeros, Tamriel, Kalimdor and Ansalon: the
+outline of the coast from a map, scaled to the area and put where it fits) or a continent sketched
+by **Sketch continents** (six sketches with this world's settings; they reveal the land shape only, and the final coastline can shift slightly
 when the game's locations are created; they are drawn side by side, as many at once as your
 processor and free memory allow, and the world you make from a sketch starts from its kept land
 instead of drawing it again), or paint from nothing with the brush, eraser, fill, line,

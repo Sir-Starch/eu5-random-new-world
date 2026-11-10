@@ -3211,3 +3211,32 @@ text = '''그림을 원래 크기 그대로 사용해 세계를 만듭니다. �
 ["editor.drop"]
 source = "abe68d23e39712da"
 text = '''그림을 놓아 가져오기'''
+
+["editor.group_ready"]
+source = "c38b0ef175ce7c4e"
+text = '''준비된 땅'''
+
+["editor.group_known"]
+source = "a0807f6a093ad68a"
+text = '''유명한 땅'''
+
+["editor.group_sketches"]
+source = "1e0d3da863b2dcb0"
+text = '''스케치한 대륙'''
+
+["editor.land.westeros"]
+source = "93ceb9c21e57ccfc"
+text = '''웨스테로스'''
+
+["editor.land.tamriel"]
+source = "8f4cfa489e2b6b29"
+text = '''탐리엘'''
+
+["editor.land.kalimdor"]
+source = "cbaca2663cc1eacf"
+text = '''칼림도어'''
+
+["editor.land.ansalon"]
+source = "57db4d540d7253f0"
+text = '''안살론'''
+

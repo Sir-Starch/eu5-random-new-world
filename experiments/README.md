@@ -102,3 +102,5 @@ authorization to create or install one.
 - [068 — Continuous location identities](068-continuous-location-identities/README.md): correct 067's repair premise, follow vanilla's shared identities across the raster edge, remove forced cell splitting and bind vanished sea areas consistently; 0.13.5 / epoch 42, corrected EVXP reference and separate candidate.
 
 - [069 — Campaign mod corrections](069-campaign-mod-fixes/README.md): correct treaty scripts/labels, boundary river drawing, duplicate VFX records and initial guild capacities from the completed EVXP audit; 0.13.6 / epoch 43, reproduced reference and separately installed candidate, unresolved attributions retained.
+
+- [070 — Known lands](070-known-lands/README.md): outlines of four famous fantasy lands cut out of map pictures as starting points for the land editor; 1.2.2 (unreleased).

@@ -3211,3 +3211,32 @@ text = '''画像を元のサイズのまま使って世界を作ります。こ�
 ["editor.drop"]
 source = "abe68d23e39712da"
 text = '''画像をドロップして読み込む'''
+
+["editor.group_ready"]
+source = "c38b0ef175ce7c4e"
+text = '''用意された陸地'''
+
+["editor.group_known"]
+source = "a0807f6a093ad68a"
+text = '''有名な陸地'''
+
+["editor.group_sketches"]
+source = "1e0d3da863b2dcb0"
+text = '''スケッチした大陸'''
+
+["editor.land.westeros"]
+source = "93ceb9c21e57ccfc"
+text = '''ウェスタロス'''
+
+["editor.land.tamriel"]
+source = "8f4cfa489e2b6b29"
+text = '''タムリエル'''
+
+["editor.land.kalimdor"]
+source = "cbaca2663cc1eacf"
+text = '''カリムドア'''
+
+["editor.land.ansalon"]
+source = "57db4d540d7253f0"
+text = '''アンサロン'''
+

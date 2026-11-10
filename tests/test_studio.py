@@ -304,3 +304,29 @@ def test_the_editor_draws_a_world_and_its_picture_becomes_the_land(
     with pytest.raises(BridgeError, match="no preset"):
         _ = bridge.call("land_preset", {"preset": "pangaea", "seed": 1})
     assert bridge.call("land_americas", {}) is not None
+
+
+def test_known_lands_are_offered_and_laid_on_the_sheet() -> None:
+    area = _sheet()
+    opened = studio.opening(area, None, [], SETTINGS)
+    lands = cast("list[str]", opened["lands"])
+    assert "tamriel" in lands
+    image = studio.known(area, "tamriel", SETTINGS)
+    report = studio.report(area, image, SETTINGS)
+    assert report["refusal"] == landeditor.NOTHING
+    assert report["kept"] == 100
+    with pytest.raises(studio.StudioError, match="no known land"):
+        _ = studio.known(area, "pangaea", SETTINGS)
+
+
+def test_the_bridge_lays_a_known_land(
+    tmp_path: Path, fake_export: Exporter, cut: list[int]
+) -> None:
+    _ = cut
+    bridge = _bridge(tmp_path, fake_export)
+    assert bridge.call("prepare_land_area", {}) is None
+    bridge.controller.wait(10)
+    image = cast("str", bridge.call("land_known", {"land": "westeros"}))
+    assert np.count_nonzero(_decoded(image) == LAND) > 0
+    with pytest.raises(BridgeError, match="no known land"):
+        _ = bridge.call("land_known", {"land": "pangaea"})

@@ -88,6 +88,8 @@ max-complexity = 12
 # Letters of other scripts that look like Latin ones are what these modules write.
 "src/rnw/{translit,wording,messages}.py" = ["RUF001"]
 "src/rnw/gui/text.py" = ["RUF001"]
+# Recipes tuned by eye against map pictures: a research script, not product code.
+"experiments/070-known-lands/build_lands.py" = ["ALL"]
 # A design script, not product code: long SVG path strings, copy in every script of the game's
 # languages, and one call to the external renderer.
 "docs/images/workshop/make_banners.py" = [

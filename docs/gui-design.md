@@ -135,7 +135,7 @@ Add to queue), the land image (with Edit in the editor), or a blank sheet ruled 
 while it is open (ADR 0011) and holds the rest (sketching continents, the template, importing and
 using a picture; a picture dropped on the window is imported): a toolbar of
 brush, eraser, fill, line, rectangle, ellipse and hand on the left, the six kinds of ground and the
-brush options over the sheet, and on the right the ready lands, Add terrain, the generator's check
+brush options over the sheet, and on the right the starting lands in three groups (ready lands, famous lands, sketched continents), Add terrain, the generator's check
 and the picture's import, save and clear; the status line repeats the check's worst line. The sheet
 is the area at an eighth of the map's size, zoomed and panned in the window; undo keeps changed
 pixels only. While a world is made, its

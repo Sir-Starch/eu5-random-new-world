@@ -297,7 +297,7 @@ def _layout(
     return bumps + 0.22 * rough + 0.08 * _unit(seed, "preset_fine", shape, 28, 2)
 
 
-def _tidy(land: Mask, usable: Mask) -> Mask:
+def tidy(land: Mask, usable: Mask) -> Mask:
     """Take out specks of land and pits of water: a preset has no dust to clean."""
     pieces = label_components(land.astype(np.int32))
     sizes = np.bincount(pieces.ravel())
@@ -326,7 +326,7 @@ def make_preset(preset: str, area: LandArea, seed: int, *, margin: int = 6) -> K
     inside = potential[usable]
     keep = max(1, int(inside.size * SHARES[preset] // PERMILLE))
     threshold = float(np.partition(inside, inside.size - keep)[inside.size - keep])
-    land = _tidy(usable & (potential >= threshold), usable) & usable
+    land = tidy(usable & (potential >= threshold), usable) & usable
     return np.where(land, LAND, SEA).astype(np.uint8)
 
 

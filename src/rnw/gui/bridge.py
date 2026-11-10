@@ -145,6 +145,7 @@ class Bridge:
             "land_editor": lambda _p: self._studio(self.land_editor),
             "land_preset": lambda p: self._studio(self.land_preset, p),
             "land_americas": lambda _p: self._studio(self.land_americas),
+            "land_known": lambda p: self._studio(self.land_known, p),
             "land_sketch": lambda p: self._studio(self.land_sketch, p),
             "land_decorate": lambda p: self._studio(self.land_decorate, p),
             "land_import": lambda p: self._studio(self.land_import, p),
@@ -301,6 +302,9 @@ class Bridge:
 
     def land_americas(self) -> str:
         return studio.real_americas(self._sheet())
+
+    def land_known(self, params: Params) -> str:
+        return studio.known(self._sheet(), _str(params, "land"), self._new_world())
 
     def land_sketch(self, params: Params) -> str:
         return studio.sketch(self._sheet(), self.controller.candidates, _int(params, "index"))

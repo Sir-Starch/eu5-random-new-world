@@ -3211,3 +3211,32 @@ text = '''Constrói o mundo sobre uma imagem no tamanho original, sem editá-la 
 ["editor.drop"]
 source = "abe68d23e39712da"
 text = '''Solte uma imagem para importá-la'''
+
+["editor.group_ready"]
+source = "c38b0ef175ce7c4e"
+text = '''Terras prontas'''
+
+["editor.group_known"]
+source = "a0807f6a093ad68a"
+text = '''Terras famosas'''
+
+["editor.group_sketches"]
+source = "1e0d3da863b2dcb0"
+text = '''Continentes esboçados'''
+
+["editor.land.westeros"]
+source = "93ceb9c21e57ccfc"
+text = '''Westeros'''
+
+["editor.land.tamriel"]
+source = "8f4cfa489e2b6b29"
+text = '''Tamriel'''
+
+["editor.land.kalimdor"]
+source = "cbaca2663cc1eacf"
+text = '''Kalimdor'''
+
+["editor.land.ansalon"]
+source = "57db4d540d7253f0"
+text = '''Ansalon'''
+

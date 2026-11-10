@@ -10,6 +10,10 @@ requirement or distribution route when it actually changes them.
 
 - The generator, our original code/assets and their source, plus licensed Python,
   Qt and other runtime dependencies with their notices and licences.
+- The outlines of four known lands for the land editor (`src/rnw/lands`, 6-12 KB each): the
+  shape of a coast cut out of a map picture, with no name, drawing, colour or text of the map. The
+  pictures and the recipes are named in `experiments/070-known-lands`; the owner decided on
+  2026-11-10 that the shape of a coast is used as such.
 - The Workshop hub contains the application only. A built world is generated
   from the player's lawful local EU5 installation and stays local. Public packages
   exclude game files, derived map rasters, shaders copied from the installation,

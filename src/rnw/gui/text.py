@@ -422,6 +422,13 @@ STRINGS: Final[dict[str, str]] = {
     "editor.preset.crescent": "Crescent",
     "editor.preset.scattered": "Scattered islands",
     "editor.americas": "The game's Americas",
+    "editor.group_ready": "Ready lands",
+    "editor.group_known": "Famous lands",
+    "editor.group_sketches": "Sketched continents",
+    "editor.land.westeros": "Westeros",
+    "editor.land.tamriel": "Tamriel",
+    "editor.land.kalimdor": "Kalimdor",
+    "editor.land.ansalon": "Ansalon",
     "editor.sketch": "Sketch {number}",
     "editor.decorate": "Add terrain",
     "editor.decorate_tip": (

@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw import landeditor, landmask
+from rnw import knownlands, landeditor, landmask
 from rnw.app import candidates as sketches
 from rnw.gui import view
 from rnw.gui.text import explain
@@ -105,6 +105,7 @@ def opening(
         "image": image,
         "fit": fit,
         "presets": list(landeditor.PRESETS),
+        "lands": list(knownlands.land_ids()),
         "sketches": [
             index for index, one in enumerate(found) if one.picture.shape[:2] == area.picture_shape
         ],
@@ -127,6 +128,22 @@ def preset(area: LandArea, name: str, seed: int, settings: NewWorldSettings) -> 
     try:
         margin = landeditor.margin_for(settings)
         return kinds_url(landeditor.make_preset(name, area, seed, margin=margin))
+    except ValueError as error:
+        raise StudioError(str(error)) from error
+
+
+def known(area: LandArea, name: str, settings: NewWorldSettings) -> str:
+    """A known land (``rnw.knownlands``) laid on the area, off the coast margin the settings keep,
+    without the pieces the generator would remove."""
+    try:
+        return kinds_url(
+            knownlands.known_land(
+                name,
+                area,
+                margin=landeditor.margin_for(settings),
+                speck=max(1, settings.min_island_px // EDITOR_STEP**2),
+            )
+        )
     except ValueError as error:
         raise StudioError(str(error)) from error
 

@@ -15,6 +15,12 @@
   smaller than the smallest island), move (the Old World's island groups under the land) or refuse
   (too little or too much land, a lake open to the sea). The picture can be imported and saved, and
   the last drawing is kept for next time.
+- Start the land editor from four famous lands: Westeros, Tamriel, Kalimdor and Ansalon. Each is
+  the outline of the coast from a map, with its lakes where the map has them; the editor scales it
+  to the area, puts it where it fits best (off the Old World's island groups where it can) and the
+  generator's check accepts it as it is. Where a map is cut and its continent runs on (the north of
+  Westeros, the south of Ansalon), the land runs to the edge of the area there instead of ending in
+  a coast. The gallery is in three groups: ready lands, famous lands and sketched continents.
 - Mark the ground in a land image with colours: brown for **mountains**, gold for **highlands**, light
   green for **lowlands** and blue for **lakes**. White and black still mean land and sea, and a
   grey or white-and-black picture makes the same world and has the same id as before. Painted ground

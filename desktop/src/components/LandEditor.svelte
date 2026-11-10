@@ -109,6 +109,8 @@
   let starts = $state.raw<Start[]>([]);
   let seed = $state(freshSeed());
   let startRun = 0;
+  let knownRun = 0;
+  let knownStarts = $state.raw<Start[]>([]);
   let sketchStarts = $state.raw<Start[]>([]);
   let sketchRun = 0;
   let sketched = "";
@@ -200,6 +202,7 @@
     setup();
     scheduleCheck();
     void loadStarts();
+    void loadKnown();
   }
 
   async function savedDraft(found: EditorInfo): Promise<Uint8Array | null> {
@@ -520,6 +523,25 @@
     }
   }
 
+  /** The famous lands: fixed outlines, laid on the sheet by the generator. */
+  async function loadKnown(): Promise<void> {
+    if (!info || !inside) return;
+    const run = ++knownRun;
+    const found = info;
+    const area = inside;
+    knownStarts = found.lands.map((land) => ({ id: `land:${land}`, label: t(`editor.land.${land}`), kinds: null, thumb: "" }));
+    for (const [index, land] of found.lands.entries()) {
+      const url = await app.call<string>("land_known", { land });
+      if (run !== knownRun) return;
+      if (!url) continue;
+      const kinds = await kindsOfUrl(url, found.palette);
+      if (run !== knownRun) return;
+      const next = knownStarts.slice();
+      next[index] = { ...next[index]!, kinds, thumb: thumbnail(kinds, found.width, found.height, THUMB_EVERY, area) };
+      knownStarts = next;
+    }
+  }
+
   /** The continents sketched in the window (one task, six pictures) join the ready lands. */
   async function loadSketches(): Promise<void> {
     if (!info || !inside) return;
@@ -783,13 +805,23 @@
             <h3>{t("editor.start")}</h3>
             <button class="btn small" title={t("editor.reroll_tip")} onclick={again}><Icon name="dice" />{t("editor.reroll")}</button>
           </div>
+          {#snippet tile(item: Start)}
+            <button class="start" disabled={!item.kinds} title={item.label} onclick={() => item.kinds && take(item.kinds)}>
+              <span class="picture">{#if item.thumb}<img src={item.thumb} alt="" />{:else}<span class="spinner"></span>{/if}</span>
+              <span class="name">{item.label}</span>
+            </button>
+          {/snippet}
           <div class="gallery">
-            {#each [...starts, ...sketchStarts] as item (item.id)}
-              <button class="start" disabled={!item.kinds} title={item.label} onclick={() => item.kinds && take(item.kinds)}>
-                <span class="picture">{#if item.thumb}<img src={item.thumb} alt="" />{:else}<span class="spinner"></span>{/if}</span>
-                <span class="name">{item.label}</span>
-              </button>
-            {/each}
+            <p class="group">{t("editor.group_ready")}</p>
+            {#each starts as item (item.id)}{@render tile(item)}{/each}
+            {#if knownStarts.length}
+              <p class="group">{t("editor.group_known")}</p>
+              {#each knownStarts as item (item.id)}{@render tile(item)}{/each}
+            {/if}
+            {#if sketchStarts.length}
+              <p class="group">{t("editor.group_sketches")}</p>
+              {#each sketchStarts as item (item.id)}{@render tile(item)}{/each}
+            {/if}
           </div>
           <button class="btn" disabled={sketching || !s?.new.candidates_enabled} title={t("editor.sketch_tip")} onclick={() => app.act("sketch_candidates")}>
             {#if sketching}<span class="spinner"></span>{s?.running || t("stage.candidates")}{:else}<Icon name="dice" />{t("editor.sketch_run")}{/if}
@@ -1069,6 +1101,17 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
+  }
+  .group {
+    grid-column: 1 / -1;
+    margin: 4px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .group:first-child {
+    margin-top: 0;
   }
   .start {
     display: grid;

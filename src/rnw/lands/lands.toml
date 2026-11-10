@@ -1,0 +1,26 @@
+# The known lands of the land editor (rnw.knownlands): one outline each, cut out of the map picture
+# named by ``source`` by experiments/070-known-lands. ``share`` is the permille of the usable area
+# that its land fills when it is laid on the sheet. Only the outline is kept: no name, drawing or
+# colour of the map.
+
+[[land]]
+id = "westeros"
+share = 230
+source = "supplied by the owner on 2026-11-10: a road-map style map of Westeros with the Iron Islands, Skagos, Bear Island, the Three Sisters and the Stepstones"
+open = "n"
+
+[[land]]
+id = "tamriel"
+share = 300
+source = "https://commons.wikimedia.org/wiki/File:Map_of_Tamriel.png"
+
+[[land]]
+id = "kalimdor"
+share = 220
+source = "supplied by the owner on 2026-11-10: Kalimdor after the 4th war, a map by Sturmbart"
+
+[[land]]
+id = "ansalon"
+share = 300
+source = "supplied by the owner on 2026-11-10: a detailed painted map of Ansalon with its islands and the Icewall Glacier"
+open = "s"

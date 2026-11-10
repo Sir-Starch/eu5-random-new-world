@@ -14,6 +14,8 @@ analysis = Analysis(
     # The translation catalogs are data files of the package (rnw.translations).
     datas=[
         (str(root / "src" / "rnw" / "locale"), "rnw/locale"),
+        # The outlines of the land editor's known lands (rnw.knownlands).
+        (str(root / "src" / "rnw" / "lands"), "rnw/lands"),
         # How both windows draw the maps (rnw.gui.mapstyle reads it).
         (str(root / "src" / "rnw" / "gui" / "lenses.json"), "rnw/gui"),
     ],

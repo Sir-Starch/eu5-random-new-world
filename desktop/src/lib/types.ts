@@ -344,6 +344,8 @@ export interface EditorInfo {
   image: string;
   fit: "" | "exact" | "stretched" | "centered";
   presets: string[];
+  /** Ids of the known lands (famous fantasy and science-fiction outlines). */
+  lands: string[];
   /** Indices of the sketched continents that fit the sheet. */
   sketches: number[];
 }
