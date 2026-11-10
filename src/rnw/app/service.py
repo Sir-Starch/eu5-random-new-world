@@ -397,13 +397,15 @@ def land_area(
     """The area the New World can fill with ``settings``: read from the land cache when it was
     chosen before (a fraction of a second), else chosen from the installed game's map (seconds)
     and kept there."""
+    directory, band, expanded = area_inputs(game, settings)
+    return get_area(None if data is None else land_cache(data), directory, band, expanded=expanded)
+
+
+def area_inputs(game: GameInstall, settings: Settings) -> tuple[Path, int, bool]:
+    """What the area depends on: the game, the ocean band and whether the oceans are expanded.
+    Two choices with the same inputs have the same area."""
     shape = settings.new_world
-    return get_area(
-        None if data is None else land_cache(data),
-        game.directory,
-        shape.ocean_band_px,
-        expanded=bool(shape.expand_oceans or shape.landform),
-    )
+    return game.directory, shape.ocean_band_px, bool(shape.expand_oceans or shape.landform)
 
 
 def land_template(

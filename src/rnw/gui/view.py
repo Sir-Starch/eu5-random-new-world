@@ -331,6 +331,7 @@ def _new(c: Controller, choices: Choices) -> dict[str, object]:
         and not c.world_code().settings().mask.id
         and not keeps,
         "template_enabled": not busy and c.game is not None and not keeps,
+        "editor_ready": c.land_sheet() is not None,
         "preparable": c.can_prepare,
         "queue_problem": queue_problem,
         "queue": _queue(c),

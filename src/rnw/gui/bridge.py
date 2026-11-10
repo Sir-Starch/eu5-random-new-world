@@ -36,8 +36,8 @@ from typing import IO, TYPE_CHECKING, Final, cast
 from rnw import __version__, _native
 from rnw.app import logs, paths, random_types
 from rnw.app.worldcode import decode, encode, new_code
+from rnw.gui import studio, view
 from rnw.gui import text as window
-from rnw.gui import view
 from rnw.gui.atlas_loading import AtlasRequests
 from rnw.gui.controller import NEW, Controller, Phase, Task
 
@@ -45,6 +45,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from rnw.app.library import World
+    from rnw.landarea import LandArea
+    from rnw.settings import NewWorldSettings
 
 # The window redraws from a state at most this often; progress comes in smaller steps.
 STATE_INTERVAL: Final[float] = 0.12
@@ -139,6 +141,15 @@ class Bridge:
             "choose_land_image": lambda p: c.choose_land_image(Path(_str(p, "path"))),
             "clear_land_image": lambda _p: c.clear_land_image(),
             "save_land_template": lambda p: c.save_land_template(Path(_str(p, "path"))),
+            "prepare_land_area": lambda _p: c.prepare_land_area(),
+            "land_editor": lambda _p: self._studio(self.land_editor),
+            "land_preset": lambda p: self._studio(self.land_preset, p),
+            "land_americas": lambda _p: self._studio(self.land_americas),
+            "land_sketch": lambda p: self._studio(self.land_sketch, p),
+            "land_decorate": lambda p: self._studio(self.land_decorate, p),
+            "land_import": lambda p: self._studio(self.land_import, p),
+            "land_check": lambda p: self._studio(self.land_check, p),
+            "use_land_picture": self.use_land_picture,
             "sketch_candidates": lambda _p: c.sketch_candidates(),
             "candidate_pictures": self.candidate_pictures,
             "choose_candidate": lambda p: c.choose_candidate(_int(p, "index")),
@@ -260,6 +271,59 @@ class Bridge:
             elif kind == "world":
                 c.world_file = Path(path)
         self.dirty.set()
+
+    # -- the land editor -----------------------------------------------------------------------
+
+    def _studio(self, action: Callable[..., object], *params: Params) -> object:
+        """Carry out an editor request; what the editor cannot answer is the window's to tell."""
+        try:
+            return action(*params)
+        except studio.StudioError as error:
+            raise BridgeError(str(error)) from error
+
+    def _sheet(self) -> LandArea:
+        area = self.controller.land_sheet()
+        if area is None:
+            raise studio.StudioError(studio.UNPREPARED)
+        return area
+
+    def _new_world(self) -> NewWorldSettings:
+        return self.controller.world_code().settings().new_world
+
+    def land_editor(self) -> dict[str, object]:
+        c = self.controller
+        return studio.opening(self._sheet(), c.land_mask, c.candidates)
+
+    def land_preset(self, params: Params) -> str:
+        return studio.preset(
+            self._sheet(), _str(params, "preset"), _int(params, "seed"), self._new_world()
+        )
+
+    def land_americas(self) -> str:
+        return studio.real_americas(self._sheet())
+
+    def land_sketch(self, params: Params) -> str:
+        return studio.sketch(self._sheet(), self.controller.candidates, _int(params, "index"))
+
+    def land_decorate(self, params: Params) -> str:
+        return studio.decorate(
+            self._sheet(), _str(params, "image"), _int(params, "seed"), _ids(params, "parts")
+        )
+
+    def land_import(self, params: Params) -> dict[str, str]:
+        return studio.imported(self._sheet(), Path(_str(params, "path")))
+
+    def land_check(self, params: Params) -> dict[str, object]:
+        return studio.report(self._sheet(), _str(params, "image"), self._new_world())
+
+    def use_land_picture(self, params: Params) -> str | None:
+        """Make the land of the new world the picture the editor drew; returns what is wrong
+        with it, or None."""
+        try:
+            data = studio.png_of(_str(params, "image"))
+        except studio.StudioError as error:
+            raise BridgeError(str(error)) from error
+        return self.controller.use_land_picture(data)
 
     def candidate_pictures(self, _params: Params) -> list[str]:
         return [view.array_picture(found.picture) for found in self.controller.candidates]

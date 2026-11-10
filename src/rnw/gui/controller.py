@@ -64,6 +64,7 @@ from rnw.gui.text import (
     system_language,
     text,
 )
+from rnw.landarea import EDITOR_STEP
 from rnw.layers import PARTS, rolls_of
 from rnw.messages import Said, say
 from rnw.png import COLOR_RGB, encode_png
@@ -77,11 +78,15 @@ if TYPE_CHECKING:
 
     from rnw.app.library import World
     from rnw.atlas import Atlas
+    from rnw.landarea import LandArea
     from rnw.landmask import LandMask
+    from rnw.settings import Settings
 
 SEED_MAX: Final[int] = (1 << 64) - 1
 ERROR_LOG: Final[str] = "last-error.log"
 NEW: Final[str] = "new"
+# The target of the task that cuts the editor's area (the template's target is its file).
+EDITOR: Final[str] = "editor"
 STRAY: Final[str] = "stray:"
 # Atlases whose map words are kept (the window asks at every refresh).
 WORDS_KEPT: Final[int] = 4
@@ -226,6 +231,9 @@ class Controller:
         self._playset: dict[tuple[str, str], tuple[float, playset.Check | None]] = {}
         self.runs: int = 0
         self.land_mask: LandMask | None = None
+        # The area a New World can fill at the land editor's step, and what it was cut for.
+        self.sheet: LandArea | None = None
+        self._sheet_inputs: tuple[Path, int, bool] | None = None
         self.last_import: exchange.Imported | None = None
         self._history_readers: dict[int, history_presenter.Reader] = {}
         self._words: dict[int, tuple[Atlas, tuple[str, Path | None], atlas.Words]] = {}
@@ -865,15 +873,54 @@ class Controller:
         """Make the land of the new world the picture at ``path`` (white is land, black is sea);
         returns what is wrong with the picture, or None."""
         try:
-            mask = landmask.read(path)
+            return self._use_land(landmask.read(path))
         except landmask.LandMaskError as error:
             return explain(error)
+
+    def use_land_picture(self, data: bytes) -> str | None:
+        """Make the land of the new world the picture the editor drew (the bytes of a PNG);
+        returns what is wrong with it, or None."""
+        try:
+            return self._use_land(landmask.from_bytes(data))
+        except landmask.LandMaskError as error:
+            return explain(error)
+
+    def _use_land(self, mask: LandMask) -> None:
         self.land_mask = mask
         self._custom_origin()
         self.other_changes["mask"] = {"id": mask.id}
         self.notice = ""
         self._changed()
-        return None
+
+    def land_sheet(self) -> LandArea | None:
+        """The area the editor draws on, when it was cut for the choices made now; else None."""
+        if self.game is None or self.sheet is None:
+            return None
+        wanted = service.area_inputs(self.game, self._area_settings())
+        return self.sheet if self._sheet_inputs == wanted else None
+
+    def _area_settings(self) -> Settings:
+        return build_settings(self.preset, self._change_document())
+
+    def prepare_land_area(self) -> str | None:
+        """Cut the area the editor draws on from the installed game's map, as a task (a second
+        or two from the land cache, else several); returns why not, or None. When the area is
+        ready already nothing is started."""
+        if self.busy:
+            return text("ready_busy")
+        if self.game is None:
+            return text("ready_no_game")
+        game, settings = self.game, self._area_settings()
+        if self.land_sheet() is not None:
+            return None
+        inputs = service.area_inputs(game, settings)
+
+        def work(_progress: Progress) -> None:
+            area = service.land_area(game, settings, data=self.data).at(EDITOR_STEP)
+            with self._lock:
+                self.sheet, self._sheet_inputs = area, inputs
+
+        return self._run(Task.TEMPLATE, EDITOR, work)
 
     def save_land_template(self, output: Path) -> str | None:
         """Write the picture of the area the New World can fill, to draw land on, as a task;

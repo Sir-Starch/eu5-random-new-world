@@ -437,6 +437,11 @@ OPEN_LAKE: Final[str] = "lake_open"
 NOTHING: Final[str] = ""
 
 
+def margin_for(settings: NewWorldSettings) -> int:
+    """The sheet pixels of coast margin the generator keeps free of land, at least one."""
+    return max(1, -(-settings.coast_margin_px // EDITOR_STEP))
+
+
 def check(kinds: Kinds, area: LandArea, settings: NewWorldSettings) -> Check:
     """What would happen to ``kinds`` drawn on ``area`` (at the editor's step), by the generator's
     own rules at the sheet's resolution: land outside the area or in its coast margin is dropped,
@@ -449,7 +454,7 @@ def check(kinds: Kinds, area: LandArea, settings: NewWorldSettings) -> Check:
         message = f"A pixel of kind {int(kinds.max())} is none of the {KINDS} kinds"
         raise ValueError(message)
     land = np.array(IS_LAND, dtype=np.bool_)[kinds]
-    margin = max(1, -(-settings.coast_margin_px // EDITOR_STEP))
+    margin = margin_for(settings)
     domain = area.area
     guard = ~domain
     guard[:, [0, -1]] = True
