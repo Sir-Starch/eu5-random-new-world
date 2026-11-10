@@ -378,7 +378,7 @@ model, and nothing adds a second set of relations later.
 | Named historical opinions | New: a world-generated bias file and its localization | Core, with fallback F1 |
 | Our History decision and chronicle event | New: a world-generated decision, event and localization | Core, with fallback F2 |
 | Protection without subjecthood | `scripted_oneway` `guarantee` (5 vanilla precedents) | Core, with fallback F3 |
-| Exchange agreement | Named opinion, markets and roads | Core; `trade_access` not used |
+| Exchange agreement | Named opinion and roads (a market and a town for every partner in 1.2.0 was a defect, removed in 1.2.1) | Core; `trade_access` not used |
 | Tributary dependence | Blocked: `tributary` needs a tribal or horde overlord (C158) | Memory and named opinion only |
 | Claims, starting cores, truces, starting wars, dynasties, rulers, ruins | — | Not in 1.2.0 ([§20](#20-beyond-120)) |
 | Formable goals, cores granted by a formation, inheritance formables, AI goals, memory events | N6–N9 ([§22](#22-goals-and-consequences-in-play-2026-11-06)) | Core (D29) |

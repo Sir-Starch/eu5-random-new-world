@@ -97,6 +97,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (0, 13, 22),
     (1, 1, 0),  # Resources, geography, populations and identity-aware state cores.
     (1, 2, 0),  # Causal prehistory, final start, closed-basin water and the Omerika world type.
+    (1, 2, 1),  # Pending: market centres only where the calibrated settlement plan puts them.
 )
 
 

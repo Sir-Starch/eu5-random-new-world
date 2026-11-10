@@ -568,6 +568,10 @@ def test_realized_network_uses_actual_pacts_and_discovered_partner_capitals(
         )
         assert len(plan.exchanges) == 2
         assert not plan.roads  # The star's water passages cannot become land roads.
+        # An exchange is an opinion and a road, never a market or a town: 1.2.0 made every
+        # partner a market centre of its own, so each country of the New World traded alone.
+        assert plan.markets == ("threat",)
+        assert {rank for rank, _ in plan.ranks.values()} == {"city"}
     else:
         assert len(plan.confederations) == 1
         assert all(c.landed and c.level is None for c in plan.countries if c.tag in group.members)

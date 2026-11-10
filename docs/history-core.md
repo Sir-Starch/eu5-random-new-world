@@ -153,9 +153,15 @@ remove trust while leaving its grievance. No cause, sign or value is rewritten.
 
 Alliances follow actual pacts; rivalries require surviving recorded hostility.
 Protection projects only where the guarantee's subjecthood/rank prerequisites
-allow it. Exchange creates centres and physical land roads within the participants'
-territories; a water route never becomes a road. Markets, calibrated settlement
-ranks, population totals and discoveries are recomputed from surviving outcomes.
+allow it. Exchange creates physical land roads within the participants'
+territories; a water route never becomes a road. It creates no market and no town: the
+market centres are the calibrated ones of the settlement plan (cities, the largest state
+near each hearth, one local market per disconnected landed group), as in 1.1.0. Markets,
+calibrated settlement ranks, population totals and discoveries are recomputed from
+surviving outcomes. [V-EXEC, 2026-11-10] 1.2.0 gave every exchange partner a market and a
+town: 85-95 % of the generated capitals of the installed worlds held a market (115 markets
+and 113 towns for 127 countries in one world) where the vanilla Americas have 12 market
+centres for 223 landed countries; 1.2.1 returns that world to 18 markets.
 The AI adapter reads full historical threat/competition facts and actual group
 roles independently of which opinions fit the display limit; guarantees also
 enter its context.

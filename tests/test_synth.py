@@ -271,6 +271,12 @@ GOLDEN_MANIFESTS = {
         "continents": "cbd2eac9ba094ad4b519aa4c5f146cd038f45d465ef4f1b099f2f31f77d94b35",
         "archipelago": "5c44ef5764e7ba6fdfe18c689c39cc7716d42f8179bea4a4698256930d7a1d58",
     },
+    # 1.2.1 changes the market centres of a New World's peoples; the bundle differs only by the
+    # epoch number its run spec records.
+    62: {
+        "continents": "eac906bc875e8424169b37ed3b6f6d4375747add372c719546fe11a06dc25fe8",
+        "archipelago": "94cca3e23a55d611824aec62af3aebfc03e2414ee389e93660086f32fe3f8037",
+    },
 }
 
 

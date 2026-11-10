@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Give each country of the New World no market of its own. 1.2.0 made every country that had
+  recorded an exchange agreement a market centre and a town, so 85-95 % of the capitals of a
+  generated world traded alone (115 markets and 113 towns for 127 countries in one world; the
+  vanilla Americas have 12 market centres for 223 landed countries). An exchange now leaves an
+  opinion and land roads only, and the market centres and towns are the calibrated ones of the
+  settlement plan again (18 markets in that world). Worlds already built are not rewritten: make
+  the world again with 1.2.1 to get its markets. Algorithm epoch 62: the world bytes changed, so
+  a world code made by 1.2.0 (epoch 61) can give another world.
+
 - Say what generation really needs: **about 9 GB of free RAM**, not 7.5. A 1.2.0 world's
   smallest run (one thread) peaks at 8.1 GiB, so the check before generation now asks for 9 GiB
   and stops early, saying how much is free, instead of letting a machine with 8 GiB start. The
