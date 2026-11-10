@@ -340,10 +340,11 @@ STRINGS: Final[dict[str, str]] = {
     "land_image_clear": "Back to generated land",
     "land_image_title": "Choose the land image",
     "land_image_files": "Pictures (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)",
-    "editor.open": "Draw land…",
+    "editor.open": "Land editor…",
     "editor.open_tip": (
-        "Draw the land of the new world in the editor: start from a ready land, paint sea, land, "
-        "mountains, highlands, lowlands and lakes, and see what the generator will make of it."
+        "Choose the land of the new world: draw it, start from a ready land or a sketched "
+        "continent, or bring your own picture. The ground is painted in six kinds, and the "
+        "generator says what it will make of it."
     ),
     "editor.edit": "Edit in the editor",
     "editor.title": "Land editor",
@@ -400,6 +401,16 @@ STRINGS: Final[dict[str, str]] = {
     "editor.filled": "Filled shapes",
     "editor.hint": "Paint land with the brush, or start from a ready land on the right.",
     "editor.start": "Start from",
+    "editor.sketch_run": "Sketch continents",
+    "editor.sketch_tip": (
+        "Sketch six continents with this world's settings; they join the ready lands above."
+    ),
+    "editor.as_is": "Use a picture as it is…",
+    "editor.as_is_tip": (
+        "Build the world on a picture at its own size, without editing it here: its coastlines "
+        "can be finer than the editor's sheet holds."
+    ),
+    "editor.drop": "Drop a picture to import it",
     "editor.reroll": "Roll again",
     "editor.reroll_tip": "Another shape for each ready land",
     "editor.preset.supercontinent": "Supercontinent",

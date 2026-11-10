@@ -110,41 +110,43 @@ algorithm, the application warns you that the result may change.
 
 For a world with custom-drawn land, share a **`.rnworld`** file to include the land image.
 
-### Preview continents or draw your own
+### Choose the land: sketches, drawing, your own picture
 
-**Choose a continent** shows six land sketches before you build a complete world mod.
-Pick one to use its seed and settings. These previews reveal the land shape only;
-the final coastline can shift slightly when the game's locations are created.
-The sketches are drawn side by side, as many at once as your processor and free memory
-allow, and the land of each is kept: the world you make from a sketch starts from that
-land instead of drawing it again.
-
-To draw your own land, use **Draw land…**: the land editor opens over the window on the area the
-New World can fill. Start from one of eight ready lands (a supercontinent, two or three
-continents, an archipelago, an island chain, a ring, a crescent, scattered islands), the game's
-own Americas or a continent you sketched, or paint from nothing with the brush, eraser, fill,
-line, rectangle and ellipse. Besides sea and plain land, six kinds of ground can be painted:
+**Land editor…** is the one button for the land of a new world. It opens the editor over the
+window on the area the New World can fill. Start from one of eight ready lands (a supercontinent,
+two or three continents, an archipelago, an island chain, a ring, a crescent, scattered islands),
+the game's own Americas or a continent sketched by **Sketch continents** (six sketches with this
+world's settings; they reveal the land shape only, and the final coastline can shift slightly
+when the game's locations are created; they are drawn side by side, as many at once as your
+processor and free memory allow, and the world you make from a sketch starts from its kept land
+instead of drawing it again), or paint from nothing with the brush, eraser, fill, line,
+rectangle and ellipse. Besides sea and plain land, four kinds of ground can be painted:
 **mountains**, **highlands**, **lowlands** and **lakes**. **Add terrain** draws mountain chains,
 highlands, lowlands and lakes onto plain land for you and leaves what you painted alone.
+
 The generator checks the drawing as you paint and says what it will do: land in the hatched
 coast margin or outside the area is dropped, pieces smaller than the smallest island are removed,
 the Old World's island groups that the land reaches move to the nearest open sea, and a world needs
 between 3 % and 90 % of the sheet to be land. A lake that opens to the sea (it must be enclosed by
 land) is ringed on the sheet, and the drawing cannot be used until it is closed or painted as sea.
-**Use this land** builds the new world on the drawing. The window keeps the last drawing for next
-time; **Save the drawing…** and **Import a picture…** move it to and from a file.
+**Use this land** builds the new world on the drawing; the window keeps the last drawing for next
+time.
 
-You can also paint outside the editor. **Save template…** writes a picture of the area (a second
-once the area is known, instead of the half minute the first look took): dark grey is the area,
-black is outside it, the lighter grey is the game's Americas and the darker grey the Old World's
-island groups. Paint land white and sea black in any image editor, then load it with **Land from an
-image**. The colours the editor uses work there too: brown for mountains, gold for highlands, light
-green for lowlands and blue for lakes (a colour is read when it is clearly that colour; anything
-else is land or sea by its brightness, as before). Painted ground is a hint to the relief: a
-mountain colour raises a range with its foothills, highlands raise hills and plateaus, lowlands keep
-the ground flat. The rest of the world is generated on that outline. Loading a land image disables
-the six-sketch choice. The Wall cannot use a land image. The classic window has the template and the
-land image; the editor is in the new window.
+Pictures come and go inside the editor too. Drop a picture on the window (on the new world's page
+or on the editor) or choose **Import a picture…** to lay it on the sheet and go on painting;
+**Use a picture as it is…** builds the world on a picture at its own size, with no editing and
+finer coastlines than the sheet holds; **Save the drawing…** writes the drawing as a picture; and
+**Save template…** writes a picture of the area to paint on in any program (a second once the area
+is known, instead of the half minute the first look took): dark grey is the area, black is outside
+it, the lighter grey is the game's Americas and the darker grey the Old World's island groups.
+Paint land white and sea black, or use the ground colours: brown for mountains, gold for highlands,
+light green for lowlands and blue for lakes (a colour is read when it is clearly that colour;
+anything else is land or sea by its brightness). Painted ground is a hint to the relief: a
+mountain colour raises a range with its foothills, highlands raise hills and plateaus, lowlands
+keep the ground flat. The rest of the world is generated on that outline. Choosing sketches is not
+possible on a drawn land, and the Wall cannot use a land image. The classic window keeps the
+sketches, **Save template…** and **Land from an image…** as buttons; the editor is in the new
+window.
 
 ### Give your continents more room
 

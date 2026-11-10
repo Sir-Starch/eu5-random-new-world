@@ -2841,12 +2841,12 @@ source = "231a7f1347ab9b86"
 text = '''Gerçek Amerikalar’ı koruyan bir dünyada oyunun kendi kaynakları vardır: yeniden üretilecek bir şey yoktur.'''
 
 ["editor.open"]
-source = "2749097d4615e22a"
-text = '''Kara çiz…'''
+source = "60c0db7d7b3fb78e"
+text = '''Kara düzenleyici…'''
 
 ["editor.open_tip"]
-source = "7af03c865496e2d2"
-text = '''Yeni dünyanın karasını düzenleyicide çizin: hazır bir karadan başlayın, deniz, kara, dağlar, yaylalar, ovalar ve göller boyayın, üretecin ondan ne yapacağını görün.'''
+source = "b02393190cbcee2b"
+text = '''Yeni dünyanın karasını seçin: çizin, hazır bir karadan ya da taslağı çıkarılmış bir kıtadan başlayın veya kendi resminizi getirin. Arazi altı türde boyanır ve üreteç bundan ne yapacağını söyler.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -3191,3 +3191,23 @@ text = '''B fırça · E silgi · G doldur · 1–6 türler · [ ] boyut · sağ
 ["error.mask.lake_open"]
 source = "c0572bc2ba55387d"
 text = '''İşaretlediğiniz bir göl denize açılıyor; soldan yaklaşık %{left}, yukarıdan %{top} konumunda: göl, karayla çevrili sudur. Göl ile deniz arasında bir kara şeridi bırakın ya da bu suyu deniz olarak boyayın.'''
+
+["editor.sketch_run"]
+source = "c5155b83bf3f8a52"
+text = '''Kıta taslakları çıkar'''
+
+["editor.sketch_tip"]
+source = "3c24f3e9e632987c"
+text = '''Bu dünyanın ayarlarıyla altı kıta taslağı çıkarır; yukarıdaki hazır karalara katılırlar.'''
+
+["editor.as_is"]
+source = "2256c329230fd44a"
+text = '''Resmi olduğu gibi kullan…'''
+
+["editor.as_is_tip"]
+source = "c6930696b0cc8f4c"
+text = '''Dünyayı resmi kendi boyutunda kullanarak kurar, burada düzenlemez: kıyı çizgileri düzenleyicinin tuvalinin taşıyabileceğinden daha ince olabilir.'''
+
+["editor.drop"]
+source = "abe68d23e39712da"
+text = '''İçe aktarmak için bir resim bırakın'''

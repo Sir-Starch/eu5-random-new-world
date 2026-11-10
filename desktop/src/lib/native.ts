@@ -83,10 +83,13 @@ export async function openUrl(url: string): Promise<void> {
 }
 
 /** Paths dropped on the window (Tauri gives them; a browser does not). */
-export async function onDrop(handler: (paths: string[]) => void): Promise<void> {
+export async function onDrop(handler: (paths: string[]) => void, hovering?: (over: boolean) => void): Promise<void> {
   if (!inTauri()) return;
   const { getCurrentWebview } = await import("@tauri-apps/api/webview");
   await getCurrentWebview().onDragDropEvent((event) => {
-    if (event.payload.type === "drop") handler(event.payload.paths);
+    const kind = event.payload.type;
+    if (kind === "enter" || kind === "over") hovering?.(true);
+    else hovering?.(false);
+    if (kind === "drop") handler(event.payload.paths);
   });
 }

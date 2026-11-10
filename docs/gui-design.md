@@ -131,7 +131,9 @@ game with add/remove and folder, advice, then folding sections for details and c
 visibility, Create a version, Share and export; delete last), Maps and Notes. For the new world,
 the middle shows its land: continent sketches to pick from (the chosen one is marked, each has
 Add to queue), the land image (with Edit in the editor), or a blank sheet ruled like a map with
-**Draw land…**; the land editor covers the whole window while it is open (ADR 0011): a toolbar of
+**Land editor…**, the only land button in the page's header; the land editor covers the whole window
+while it is open (ADR 0011) and holds the rest (sketching continents, the template, importing and
+using a picture; a picture dropped on the window is imported): a toolbar of
 brush, eraser, fill, line, rectangle, ellipse and hand on the left, the six kinds of ground and the
 brush options over the sheet, and on the right the ready lands, Add terrain, the generator's check
 and the picture's import, save and clear; the status line repeats the check's worst line. The sheet

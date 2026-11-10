@@ -2841,12 +2841,12 @@ source = "231a7f1347ab9b86"
 text = '''Un monde qui garde les vraies Amériques a les ressources du jeu : il n’y en a aucune à refaire.'''
 
 ["editor.open"]
-source = "2749097d4615e22a"
-text = '''Dessiner les terres…'''
+source = "60c0db7d7b3fb78e"
+text = '''Éditeur de terres…'''
 
 ["editor.open_tip"]
-source = "7af03c865496e2d2"
-text = '''Dessinez les terres du nouveau monde dans l'éditeur : partez d'une terre prête, peignez mer, terre, montagnes, hauts plateaux, basses terres et lacs, et voyez ce que le générateur en fera.'''
+source = "b02393190cbcee2b"
+text = '''Choisissez les terres du nouveau monde : dessinez-les, partez d'une terre prête ou d'un continent esquissé, ou apportez votre propre image. Le relief se peint en six types, et le générateur dit ce qu'il en fera.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -3191,3 +3191,23 @@ text = '''B pinceau · E gomme · G remplissage · 1–6 types · [ ] taille · 
 ["error.mask.lake_open"]
 source = "c0572bc2ba55387d"
 text = '''Un lac que vous avez marqué s'ouvre sur la mer, à environ {left} % depuis la gauche et {top} % depuis le haut : un lac est de l'eau entourée de terre. Laissez une bande de terre entre le lac et la mer, ou peignez l'eau en mer.'''
+
+["editor.sketch_run"]
+source = "c5155b83bf3f8a52"
+text = '''Esquisser des continents'''
+
+["editor.sketch_tip"]
+source = "3c24f3e9e632987c"
+text = '''Esquisse six continents avec les réglages de ce monde ; ils s'ajoutent aux terres prêtes ci-dessus.'''
+
+["editor.as_is"]
+source = "2256c329230fd44a"
+text = '''Utiliser une image telle quelle…'''
+
+["editor.as_is_tip"]
+source = "c6930696b0cc8f4c"
+text = '''Construit le monde sur une image à sa taille d'origine, sans la modifier ici : ses côtes peuvent être plus fines que la feuille de l'éditeur.'''
+
+["editor.drop"]
+source = "abe68d23e39712da"
+text = '''Déposez une image pour l'importer'''

@@ -2841,12 +2841,12 @@ source = "231a7f1347ab9b86"
 text = '''Świat, który zachowuje prawdziwe Ameryki, ma zasoby z gry: nie ma żadnych do ponownego wylosowania.'''
 
 ["editor.open"]
-source = "2749097d4615e22a"
-text = '''Narysuj ląd…'''
+source = "60c0db7d7b3fb78e"
+text = '''Edytor lądu…'''
 
 ["editor.open_tip"]
-source = "7af03c865496e2d2"
-text = '''Narysuj ląd nowego świata w edytorze: zacznij od gotowego lądu, maluj morze, ląd, góry, wyżyny, niziny i jeziora i zobacz, co z tego zrobi generator.'''
+source = "b02393190cbcee2b"
+text = '''Wybierz ląd nowego świata: narysuj go, zacznij od gotowego lądu lub naszkicowanego kontynentu albo przynieś własny obraz. Teren maluje się w sześciu rodzajach, a generator mówi, co z tego zrobi.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -3191,3 +3191,23 @@ text = '''B pędzel · E gumka · G wypełnienie · 1–6 rodzaje · [ ] rozmiar
 ["error.mask.lake_open"]
 source = "c0572bc2ba55387d"
 text = '''Zaznaczone przez ciebie jezioro otwiera się na morze, około {left} % od lewej i {top} % od góry: jezioro to woda otoczona lądem. Zostaw pas lądu między jeziorem a morzem albo namaluj tę wodę jako morze.'''
+
+["editor.sketch_run"]
+source = "c5155b83bf3f8a52"
+text = '''Szkicuj kontynenty'''
+
+["editor.sketch_tip"]
+source = "3c24f3e9e632987c"
+text = '''Szkicuje sześć kontynentów z ustawieniami tego świata; dołączają do gotowych lądów powyżej.'''
+
+["editor.as_is"]
+source = "2256c329230fd44a"
+text = '''Użyj obrazu bez zmian…'''
+
+["editor.as_is_tip"]
+source = "c6930696b0cc8f4c"
+text = '''Buduje świat na obrazie w jego własnym rozmiarze, bez edycji tutaj: jego linie brzegowe mogą być dokładniejsze, niż mieści arkusz edytora.'''
+
+["editor.drop"]
+source = "abe68d23e39712da"
+text = '''Upuść obraz, aby go zaimportować'''

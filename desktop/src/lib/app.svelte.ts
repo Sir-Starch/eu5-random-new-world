@@ -85,6 +85,10 @@ class App {
   modal = $state<Modal | null>(null);
   /** The land editor covers the window. */
   editor = $state(false);
+  /** A picture dropped on the window that the editor is to take onto its sheet. */
+  importPath = $state("");
+  /** Files are being dragged over the window. */
+  dragging = $state(false);
   worldTab = $state<WorldTab>("world");
   newTab = $state<NewTab>("world");
   layout = $state<Layout>(storedLayout());

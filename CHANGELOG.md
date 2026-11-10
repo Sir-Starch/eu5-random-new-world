@@ -2,16 +2,19 @@
 
 ## Unreleased
 
-- Draw the land of a new world in a **land editor** in the window (**Draw land…**). It opens over the
-  window on the area the New World can fill, with a brush, eraser, fill, line, rectangle and
-  ellipse, undo, zoom and pan, eight ready lands (supercontinent, two and three continents,
-  archipelago, island chain, ring, crescent, scattered islands) with their own pictures, the game's
-  Americas and any continent sketched as starting points, and **Add terrain**, which draws mountain
-  chains, highlands, lowlands and lakes onto plain land. The generator checks the drawing as it is
+- Choose the land of a new world in one **Land editor…** button, which replaces the window's
+  buttons for sketching continents, loading a land image and saving the template (the classic window
+  keeps them). The editor opens over the window on the area the New World can fill, with a brush,
+  eraser, fill, line, rectangle and ellipse, undo, zoom and pan, eight ready lands (supercontinent,
+  two and three continents, archipelago, island chain, ring, crescent, scattered islands) with their
+  own pictures, the game's Americas and sketched continents (**Sketch continents**) as starting
+  points, and **Add terrain**, which draws mountain chains, highlands, lowlands and lakes onto plain
+  land. A picture dropped on the window is laid on the sheet; **Use a picture as it is…** keeps its
+  own resolution and **Save template…** is in the editor. The generator checks the drawing as it is
   painted and says what it will drop (land outside the area or in the coast margin), remove (pieces
   smaller than the smallest island), move (the Old World's island groups under the land) or refuse
   (too little or too much land, a lake open to the sea). The picture can be imported and saved, and
-  the last drawing is kept for next time. The classic window keeps the template and the land image.
+  the last drawing is kept for next time.
 - Mark the ground in a land image with colours: brown for **mountains**, gold for **highlands**, light
   green for **lowlands** and blue for **lakes**. White and black still mean land and sea, and a
   grey or white-and-black picture makes the same world and has the same id as before. Painted ground

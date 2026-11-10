@@ -2841,12 +2841,12 @@ source = "231a7f1347ab9b86"
 text = '''Eine Welt, die die echten Amerikas behält, hat die Ressourcen des Spiels: Es gibt keine, die neu gewürfelt werden könnten.'''
 
 ["editor.open"]
-source = "2749097d4615e22a"
-text = '''Land zeichnen…'''
+source = "60c0db7d7b3fb78e"
+text = '''Land-Editor…'''
 
 ["editor.open_tip"]
-source = "7af03c865496e2d2"
-text = '''Zeichne das Land der neuen Welt im Editor: beginne mit einem fertigen Land, male Meer, Land, Gebirge, Hochland, Tiefland und Seen und sieh, was der Generator daraus macht.'''
+source = "b02393190cbcee2b"
+text = '''Wähle das Land der neuen Welt: zeichne es, beginne mit einem fertigen Land oder einem skizzierten Kontinent oder bringe ein eigenes Bild mit. Das Gelände wird in sechs Arten gemalt, und der Generator sagt, was er daraus macht.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -3191,3 +3191,23 @@ text = '''B Pinsel · E Radierer · G Füllen · 1–6 Arten · [ ] Größe · r
 ["error.mask.lake_open"]
 source = "c0572bc2ba55387d"
 text = '''Ein von dir markierter See öffnet sich zum Meer, etwa {left} % von links und {top} % von oben: Ein See ist von Land umschlossenes Wasser. Lass einen Landstreifen zwischen See und Meer oder male das Wasser als Meer.'''
+
+["editor.sketch_run"]
+source = "c5155b83bf3f8a52"
+text = '''Kontinente skizzieren'''
+
+["editor.sketch_tip"]
+source = "3c24f3e9e632987c"
+text = '''Skizziert sechs Kontinente mit den Einstellungen dieser Welt; sie kommen zu den fertigen Ländern oben hinzu.'''
+
+["editor.as_is"]
+source = "2256c329230fd44a"
+text = '''Ein Bild unverändert verwenden …'''
+
+["editor.as_is_tip"]
+source = "c6930696b0cc8f4c"
+text = '''Baut die Welt auf einem Bild in seiner eigenen Größe auf, ohne es hier zu bearbeiten: Seine Küsten können feiner sein, als das Blatt des Editors hergibt.'''
+
+["editor.drop"]
+source = "abe68d23e39712da"
+text = '''Bild ablegen, um es zu importieren'''

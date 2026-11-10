@@ -109,6 +109,9 @@
   let starts = $state.raw<Start[]>([]);
   let seed = $state(freshSeed());
   let startRun = 0;
+  let sketchStarts = $state.raw<Start[]>([]);
+  let sketchRun = 0;
+  let sketched = "";
   let adding = $state({ mountains: true, highlands: true, lowlands: false, lakes: true });
   let decorations = 0;
   let report = $state<Report | null>(null);
@@ -156,6 +159,7 @@
     clearTimeout(checkTimer);
     clearTimeout(draftTimer);
     startRun++;
+    sketchRun++;
     checkRun++;
   });
 
@@ -502,11 +506,6 @@
         call: () => app.call<string>("land_preset", { preset, seed }),
       })),
       { id: "americas", label: t("editor.americas"), call: () => app.call<string>("land_americas") },
-      ...found.sketches.map((index) => ({
-        id: `sketch:${index}`,
-        label: t("editor.sketch", { number: index + 1 }),
-        call: () => app.call<string>("land_sketch", { index }),
-      })),
     ];
     starts = wanted.map((item) => ({ id: item.id, label: item.label, kinds: null, thumb: "" }));
     for (const [index, item] of wanted.entries()) {
@@ -520,6 +519,41 @@
       starts = next;
     }
   }
+
+  /** The continents sketched in the window (one task, six pictures) join the ready lands. */
+  async function loadSketches(): Promise<void> {
+    if (!info || !inside) return;
+    const run = ++sketchRun;
+    const found = info;
+    const area = inside;
+    const count = app.now?.candidates.length ?? 0;
+    sketchStarts = Array.from({ length: count }, (_, index) => ({
+      id: `sketch:${index}`,
+      label: t("editor.sketch", { number: index + 1 }),
+      kinds: null,
+      thumb: "",
+    }));
+    for (let index = 0; index < count; index++) {
+      const url = await app.call<string>("land_sketch", { index });
+      if (run !== sketchRun) return;
+      if (!url) continue;
+      const kinds = await kindsOfUrl(url, found.palette);
+      if (run !== sketchRun) return;
+      const next = sketchStarts.slice();
+      next[index] = { ...next[index]!, kinds, thumb: thumbnail(kinds, found.width, found.height, THUMB_EVERY, area) };
+      sketchStarts = next;
+    }
+  }
+
+  // New sketches (another set of seeds) replace the old ones in the gallery.
+  $effect(() => {
+    const key = (s?.candidates ?? []).map((candidate) => candidate.seed).join(",");
+    if (stage !== "ready" || key === sketched) return;
+    sketched = key;
+    void loadSketches();
+  });
+
+  const sketching = $derived(!!s?.busy && s.task === "candidates");
 
   function again(): void {
     seed = freshSeed();
@@ -544,9 +578,13 @@
   }
 
   async function importPicture(): Promise<void> {
-    if (!info || working) return;
     const path = await openFile(t("land_image_title"), IMAGES);
-    if (!path) return;
+    if (path) await bring(path);
+  }
+
+  /** A picture dropped on the window, or chosen, goes onto the sheet. */
+  async function bring(path: string): Promise<void> {
+    if (!info || working) return;
     working = true;
     try {
       const got = await app.call<{ image: string; fit: string }>("land_import", { path });
@@ -556,6 +594,32 @@
     } finally {
       working = false;
     }
+  }
+
+  // Pictures dropped on the window while it is open (or that opened it).
+  $effect(() => {
+    const path = app.importPath;
+    if (!path || stage !== "ready" || working) return;
+    app.importPath = "";
+    void bring(path);
+  });
+
+  /** The picture as it is, at its own size and without the editor (finer than the sheet). */
+  async function useAsIs(): Promise<void> {
+    const path = await openFile(t("land_image_title"), IMAGES);
+    if (!path) return;
+    if (await app.act("choose_land_image", { path })) {
+      app.toast("success", t("editor.used"), 5);
+      close();
+    }
+  }
+
+  /** The grey picture of the area to paint on elsewhere, saved where the player says. */
+  async function saveTemplate(): Promise<void> {
+    const path = await saveFile(t("land_template"), "new-world-template.png", [{ name: "PNG", extensions: ["png"] }]);
+    if (!path || !(await app.act("save_land_template", { path }))) return;
+    for (let waited = 0; waited < 600 && app.now?.busy; waited++) await new Promise((done) => setTimeout(done, 100));
+    if (app.now?.phase === "finished") app.toast("success", t("picture_saved", { path }), 5);
   }
 
   async function exportPicture(): Promise<void> {
@@ -720,13 +784,16 @@
             <button class="btn small" title={t("editor.reroll_tip")} onclick={again}><Icon name="dice" />{t("editor.reroll")}</button>
           </div>
           <div class="gallery">
-            {#each starts as item (item.id)}
+            {#each [...starts, ...sketchStarts] as item (item.id)}
               <button class="start" disabled={!item.kinds} title={item.label} onclick={() => item.kinds && take(item.kinds)}>
                 <span class="picture">{#if item.thumb}<img src={item.thumb} alt="" />{:else}<span class="spinner"></span>{/if}</span>
                 <span class="name">{item.label}</span>
               </button>
             {/each}
           </div>
+          <button class="btn" disabled={sketching || !s?.new.candidates_enabled} title={t("editor.sketch_tip")} onclick={() => app.act("sketch_candidates")}>
+            {#if sketching}<span class="spinner"></span>{s?.running || t("stage.candidates")}{:else}<Icon name="dice" />{t("editor.sketch_run")}{/if}
+          </button>
         </section>
 
         <section>
@@ -764,7 +831,9 @@
           <div class="head"><h3>{t("editor.picture")}</h3></div>
           <div class="commands">
             <button class="btn" disabled={working} onclick={importPicture}><Icon name="open" />{t("editor.import")}</button>
+            <button class="btn" disabled={working} title={t("editor.as_is_tip")} onclick={useAsIs}><Icon name="image" />{t("editor.as_is")}</button>
             <button class="btn" disabled={empty} onclick={exportPicture}><Icon name="download" />{t("editor.export")}</button>
+            <button class="btn" disabled={!s?.new.template_enabled} title={t("land_template_tip")} onclick={saveTemplate}><Icon name="file" />{t("land_template")}</button>
             <button class="btn danger" disabled={empty} onclick={clearSheet}><Icon name="trash" />{t("editor.clear")}</button>
           </div>
         </section>

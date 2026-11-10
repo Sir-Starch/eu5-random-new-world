@@ -2841,12 +2841,12 @@ source = "231a7f1347ab9b86"
 text = '''保留真实美洲的世界使用游戏原有的资源，没有可重新生成的内容。'''
 
 ["editor.open"]
-source = "2749097d4615e22a"
-text = '''绘制陆地…'''
+source = "60c0db7d7b3fb78e"
+text = '''陆地编辑器…'''
 
 ["editor.open_tip"]
-source = "7af03c865496e2d2"
-text = '''在编辑器中绘制新世界的陆地：从现成的陆地开始，涂画海洋、陆地、山脉、高地、低地和湖泊，并查看生成器将如何处理。'''
+source = "b02393190cbcee2b"
+text = '''选择新世界的陆地：自己绘制，从现成的陆地或草绘的大陆开始，或带来您自己的图片。地形分六种类型绘制，生成器会告诉您它将如何处理。'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -3191,3 +3191,23 @@ text = '''B 画笔 · E 橡皮 · G 填充 · 1–6 类型 · [ ] 大小 · 右�
 ["error.mask.lake_open"]
 source = "c0572bc2ba55387d"
 text = '''您标记的湖泊与海相通，位置约在距左边 {left} %、距顶部 {top} % 处：湖泊是被陆地环绕的水域。请在湖与海之间留出一条陆地带，或将这片水域画成海洋。'''
+
+["editor.sketch_run"]
+source = "c5155b83bf3f8a52"
+text = '''草绘大陆'''
+
+["editor.sketch_tip"]
+source = "3c24f3e9e632987c"
+text = '''按此世界的设置草绘六块大陆，它们会加入上方的现成陆地。'''
+
+["editor.as_is"]
+source = "2256c329230fd44a"
+text = '''直接使用图片…'''
+
+["editor.as_is_tip"]
+source = "c6930696b0cc8f4c"
+text = '''按图片原始大小生成世界，不在此处编辑：海岸线可以比编辑器画布更精细。'''
+
+["editor.drop"]
+source = "abe68d23e39712da"
+text = '''拖放图片以导入'''

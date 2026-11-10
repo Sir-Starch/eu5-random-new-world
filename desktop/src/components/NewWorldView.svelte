@@ -2,11 +2,9 @@
   // The middle of the window for the new world: its land (continent sketches to choose from, an
   // image of the land, or nothing yet), the progress of a world being made and how it ended.
   import { app, clock, t } from "../lib/app.svelte";
-  import { copyText, openFile, saveFile } from "../lib/native";
+  import { copyText } from "../lib/native";
   import Icon from "./Icon.svelte";
   import QueueList from "./QueueList.svelte";
-
-  const IMAGES = [{ name: "PNG, JPEG, BMP, TIFF", extensions: ["png", "jpg", "jpeg", "bmp", "tif", "tiff"] }];
 
   const s = $derived(app.now);
   const n = $derived(s?.new);
@@ -32,16 +30,6 @@
     pictures = [];
     if (key) void app.call<string[]>("candidate_pictures").then((found) => sketches === key && (pictures = found ?? []));
   });
-
-  async function landImage(): Promise<void> {
-    const path = await openFile(t("land_image_title"), IMAGES);
-    if (path) await app.act("choose_land_image", { path });
-  }
-
-  async function template(): Promise<void> {
-    const path = await saveFile(t("land_template"), "new-world-template.png", [{ name: "PNG", extensions: ["png"] }]);
-    if (path) await app.act("save_land_template", { path });
-  }
 </script>
 
 <div class="view">
@@ -50,10 +38,7 @@
     <span class="pane-sub">{t(`type.${n?.choice}`)}</span>
     <span class="spacer"></span>
     <div class="land-tools">
-      <button class="btn small" disabled={!n?.candidates_enabled} title={t("candidates_hint")} onclick={() => app.act("sketch_candidates")}>{t("candidates")}</button>
       <button class="btn small" disabled={locked || !n?.template_enabled} title={t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
-      <button class="btn small" disabled={locked} title={t("land_image_tip")} onclick={landImage}>{t("land_image")}</button>
-      <button class="btn small" disabled={!n?.template_enabled} title={t("land_template_tip")} onclick={template}>{t("land_template")}</button>
     </div>
   </div>
 
@@ -159,9 +144,8 @@
               <button class="btn small" disabled={locked} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
             </div>
           {:else}
-            <h2>{t("land_tools")}</h2>
-            <p class="dim">{t("candidates_hint")}</p>
-            <p class="faint">{t("land_image_tip")}</p>
+            <h2>{t("editor.title")}</h2>
+            <p class="dim">{t("editor.open_tip")}</p>
             <button class="btn primary" disabled={locked || !n?.template_enabled} title={t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
           {/if}
         </div>

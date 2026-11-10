@@ -133,15 +133,25 @@
 
   onMount(() => {
     void app.start().then(deepLink);
-    void onDrop((paths) => {
-      for (const path of paths) {
-        if (/\.rnworld(-mod)?$/i.test(path)) {
-          void take(path);
+    void onDrop(
+      (paths) => {
+        for (const path of paths) {
+          if (/\.rnworld(-mod)?$/i.test(path)) {
+            void take(path);
+            return;
+          }
+        }
+        // A picture dropped on the new world's page, or on the land editor, is drawn on.
+        const picture = paths.find((path) => /\.(png|jpe?g|bmp|tiff?)$/i.test(path));
+        if (picture && (app.editor || page === "new")) {
+          app.importPath = picture;
+          app.editor = true;
           return;
         }
-      }
-      app.toast("warning", t("not_world_file"));
-    });
+        app.toast("warning", t("not_world_file"));
+      },
+      (over) => (app.dragging = over),
+    );
   });
 </script>
 
@@ -220,6 +230,10 @@
 
 {#if app.editor}<LandEditor />{/if}
 
+{#if app.dragging && (app.editor || page === "new")}
+  <div class="drop" aria-hidden="true"><span>{t("editor.drop")}</span></div>
+{/if}
+
 {#if app.modal?.kind === "settings"}
   <Settings />
 {:else if app.modal?.kind === "about"}
@@ -231,6 +245,21 @@
 {/if}
 
 <style>
+  .drop {
+    position: fixed;
+    inset: 8px;
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--accent);
+    border-radius: 6px;
+    background: var(--accent-soft);
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 500;
+    pointer-events: none;
+  }
   .shell {
     --toast-right: calc(var(--aside) + 13px);
     display: grid;

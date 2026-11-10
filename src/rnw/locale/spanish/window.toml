@@ -2841,12 +2841,12 @@ source = "231a7f1347ab9b86"
 text = '''Un mundo que conserva las Américas reales tiene los recursos del juego: no hay ninguno que rehacer.'''
 
 ["editor.open"]
-source = "2749097d4615e22a"
-text = '''Dibujar tierra…'''
+source = "60c0db7d7b3fb78e"
+text = '''Editor de tierra…'''
 
 ["editor.open_tip"]
-source = "7af03c865496e2d2"
-text = '''Dibuja la tierra del nuevo mundo en el editor: parte de una tierra lista, pinta mar, tierra, montañas, tierras altas, tierras bajas y lagos, y mira qué hará el generador con ella.'''
+source = "b02393190cbcee2b"
+text = '''Elige la tierra del nuevo mundo: dibújala, parte de una tierra lista o de un continente esbozado, o trae tu propia imagen. El terreno se pinta en seis tipos, y el generador dice qué hará con él.'''
 
 ["editor.edit"]
 source = "ea532e98dc1718e8"
@@ -3191,3 +3191,23 @@ text = '''B pincel · E goma · G relleno · 1–6 tipos · [ ] tamaño · el bo
 ["error.mask.lake_open"]
 source = "c0572bc2ba55387d"
 text = '''Un lago que marcaste se abre al mar, a un {left} % desde la izquierda y un {top} % desde arriba: un lago es agua rodeada de tierra. Deja una franja de tierra entre el lago y el mar, o pinta el agua como mar.'''
+
+["editor.sketch_run"]
+source = "c5155b83bf3f8a52"
+text = '''Esbozar continentes'''
+
+["editor.sketch_tip"]
+source = "3c24f3e9e632987c"
+text = '''Esboza seis continentes con los ajustes de este mundo; se suman a las tierras listas de arriba.'''
+
+["editor.as_is"]
+source = "2256c329230fd44a"
+text = '''Usar una imagen tal cual…'''
+
+["editor.as_is_tip"]
+source = "c6930696b0cc8f4c"
+text = '''Construye el mundo sobre una imagen a su tamaño original, sin editarla aquí: sus costas pueden ser más finas de lo que admite el lienzo del editor.'''
+
+["editor.drop"]
+source = "abe68d23e39712da"
+text = '''Suelta una imagen para importarla'''
