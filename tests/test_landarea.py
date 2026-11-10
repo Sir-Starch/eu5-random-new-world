@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import io
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, final
 
 import numpy as np
 import pytest
@@ -21,6 +21,7 @@ from rnw.settings import PRESETS
 from tests.fakes import build_game
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from pathlib import Path
 
 
@@ -82,10 +83,20 @@ def test_the_template_picture_is_grey_and_draws_no_land_by_itself() -> None:
     )
 
 
+@final
 class _Counter:
     def __init__(self) -> None:
-        self.loads = 0
-        self.selections = 0
+        self.loads: int = 0
+        self.selections: int = 0
+
+
+def _fingerprint(digest: str) -> Callable[[Path], tuple[FileFingerprint, ...]]:
+    """A stand-in for the map's fingerprints that names one digest."""
+
+    def fingerprints(_root: Path) -> tuple[FileFingerprint, ...]:
+        return (FileFingerprint("map.png", 1, digest * 32),)
+
+    return fingerprints
 
 
 @pytest.fixture
@@ -93,9 +104,10 @@ def counted(monkeypatch: pytest.MonkeyPatch) -> _Counter:
     """The game's map and the canvas stood in for, counting how often each is made."""
     counter = _Counter()
 
+    @final
     class MapStub:
-        keys = ("a",)
-        inputs = ("map 1 0",)
+        keys: tuple[str, ...] = ("a",)
+        inputs: tuple[str, ...] = ("map 1 0",)
 
     def load(_root: Path) -> MapStub:
         counter.loads += 1
@@ -108,9 +120,7 @@ def counted(monkeypatch: pytest.MonkeyPatch) -> _Counter:
 
     monkeypatch.setattr(landarea, "load_map", load)
     monkeypatch.setattr(landcache, "select_canvas", select)
-    monkeypatch.setattr(
-        landarea, "input_fingerprints", lambda _root: (FileFingerprint("map.png", 1, "ab" * 32),)
-    )
+    monkeypatch.setattr(landarea, "input_fingerprints", _fingerprint("ab"))
     return counter
 
 
@@ -146,9 +156,7 @@ def test_the_key_follows_the_files_the_settings_and_the_code(
     assert landarea.area_key(tmp_path, 100, expanded=True) == key
     assert landarea.area_key(tmp_path, 101, expanded=True) != key
     assert landarea.area_key(tmp_path, 100, expanded=False) != key
-    monkeypatch.setattr(
-        landarea, "input_fingerprints", lambda _root: (FileFingerprint("map.png", 1, "cd" * 32),)
-    )
+    monkeypatch.setattr(landarea, "input_fingerprints", _fingerprint("cd"))
     assert landarea.area_key(tmp_path, 100, expanded=True) != key
     monkeypatch.setattr(landcache, "code_identity", lambda: "other code")
     assert landarea.area_key(tmp_path, 100, expanded=True) != key

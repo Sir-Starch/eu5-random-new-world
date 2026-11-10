@@ -26,11 +26,12 @@ from rnw.islands import carve, place
 from rnw.isthmuses import raise_isthmuses
 from rnw.lakes import carve_lakes
 from rnw.landmask import LandMaskError
+from rnw.messages import say
 from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
-from rnw.relief import generate_relief
+from rnw.relief import ReliefHints, generate_relief
 from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import (
     CLEAR_PERMILLE,
@@ -522,6 +523,7 @@ def _classify(
     land: NDArray[np.bool_],
     shore: NDArray[np.bool_],
     settings: NewWorldSettings,
+    marked: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Classify physical water before cells, relief or ports are constructed.
 
@@ -529,6 +531,9 @@ def _classify(
     by land is a lake below ``inland_sea_min_area``, and a navigable inland sea above it.
     Only water smaller than ``min_lake_px`` fills with land. The lake-size setting controls
     drawn lakes; a natural basin can exceed it without being large enough to be a sea.
+
+    ``marked`` are the pixels a drawing marks as lakes: an enclosed water that is mostly marked
+    is a lake whatever its size, neither filled nor made a sea.
     """
     parts, ocean = _ocean(domain, land, shore)
     water = domain & ~land
@@ -536,15 +541,45 @@ def _classify(
     enclosed = water & ~ocean
     small = enclosed & (sizes < settings.min_lake_px)[parts]
     inland = enclosed & (sizes >= inland_sea_min_area(settings))[parts]
+    if marked is not None:
+        painted = np.bincount(parts[marked & enclosed], minlength=len(sizes))
+        kept = (painted * 2 >= sizes)[parts]
+        small &= ~kept
+        inland &= ~kept
     return land | small, ocean | inland, enclosed & ~small & ~inland
+
+
+def _lakes_open(
+    domain: NDArray[np.bool_],
+    land: NDArray[np.bool_],
+    shore: NDArray[np.bool_],
+    marked: NDArray[np.bool_],
+) -> None:
+    """Refuse a drawing whose marked lakes open to the sea: a lake is water that land encloses,
+    and one that does not would be a bay, not what the drawing says."""
+    _, ocean = _ocean(domain, land, shore)
+    leaking = marked & ocean & domain
+    if not leaking.any():
+        return
+    rows, columns = np.nonzero(leaking)
+    message = say(
+        "mask.lake_open",
+        left=int(columns.mean()) * 100 // domain.shape[1],
+        top=int(rows.mean()) * 100 // domain.shape[0],
+    )
+    raise LandMaskError(message)
 
 
 def _land_from_mask(
     domain: NDArray[np.bool_],
     drawn: NDArray[np.bool_],
     settings: NewWorldSettings,
+    lakes: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Land, ocean and lakes of a land that is drawn, not generated (``rnw.landmask``).
+
+    ``lakes`` are the pixels the drawing marks as lakes; they stay lakes, and a marked lake
+    that land does not enclose is refused.
 
     The land keeps off the canvas's edge, as generated land does (the coast margin from what
     lies outside the domain and the border); specks under
@@ -584,7 +619,9 @@ def _land_from_mask(
             "draw larger continents"
         )
         raise LandMaskError(message)
-    return _classify(domain, land, shore, settings)
+    if lakes is not None:
+        _lakes_open(domain, land, shore, lakes)
+    return _classify(domain, land, shore, settings, lakes)
 
 
 def _off_limits(domain: NDArray[np.bool_], settings: NewWorldSettings) -> NDArray[np.bool_]:
@@ -1017,8 +1054,12 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
     drawn: NDArray[np.bool_] | None,
     stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None,
     template: NDArray[np.bool_] | None = None,
+    lakes: NDArray[np.bool_] | None = None,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]]:
     """Land, ocean and lake masks of the domain: drawn, kept from a sketch or made now."""
+    if drawn is None and lakes is not None:
+        message = "Marked lakes belong to a drawn land, and none was given"
+        raise ValueError(message)
     if drawn is not None:
         if settings.landform:
             message = "The Wall cannot be combined with a drawn land mask"
@@ -1026,7 +1067,7 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
         if settings.template_permille:
             message = "Omerika cannot be combined with a drawn land mask"
             raise LandMaskError(message)
-        return _land_from_mask(domain, drawn, settings)
+        return _land_from_mask(domain, drawn, settings, lakes)
     if stage is not None:
         if any(mask.shape != domain.shape for mask in stage):
             message = "The kept land stage does not fit the domain"
@@ -1046,13 +1087,19 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     groups: Sequence[Footprint] = (),
     stage: tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.bool_]] | None = None,
     template: NDArray[np.bool_] | None = None,
+    lakes_drawn: NDArray[np.bool_] | None = None,
+    hints: ReliefHints | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
     With ``drawn`` (a land mask fitted to the domain, ``rnw.landmask``) the land is the
-    drawing's and the generator makes the rest on it. ``stage`` is the land, ocean and lake
-    masks that ``land_stage`` made of this domain, seed and settings before (a sketched
-    continent, ``rnw.landcache``), so they are not made again; the arrays are consumed.
+    drawing's and the generator makes the rest on it. A drawing may also mark lakes
+    (``lakes_drawn``, which stay lakes) and the relief it asks for (``hints``: painted
+    mountains, highlands and lowlands, ``rnw.relief``).
+
+    ``stage`` is the land, ocean and lake masks that ``land_stage`` made of this domain, seed
+    and settings before (a sketched continent, ``rnw.landcache``), so they are not made again;
+    the arrays are consumed.
 
     ``groups`` are island groups that the domain covers. The land is made on the whole domain; a
     group that it leaves room stays, and one it touches moves to free ocean (``rnw.islands``).
@@ -1069,7 +1116,7 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     land of Omerika is made on (``settings.template_permille``, ``rnw.omerika``); the finished land
     must still join the landmasses that the template joins.
     """
-    land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage, template)
+    land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage, template, lakes_drawn)
     whole = domain
     # Retained ocean islands stay in the open ocean, never in a new inland sea.
     placement_ocean = (
@@ -1085,7 +1132,7 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     land, ocean, _ = pinch(land, ocean, shore)
     # Narrowing can detach a small pocket from the ocean. Classify the finished coasts,
     # including existing lakes, before any cell, port or relief field gives it an identity.
-    land, ocean, lakes = _classify(domain, land, shore, settings)
+    land, ocean, lakes = _classify(domain, land, shore, settings, lakes_drawn)
     del shore
     if settings.template_permille:
         omerika.check_joined(land, _template(domain, seed, settings, template))
@@ -1112,7 +1159,9 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
                 domain=domain,
             ),
         )
-        relief_job = stages.submit("relief", partial(generate_relief, land, seed=seed, lakes=lakes))
+        relief_job = stages.submit(
+            "relief", partial(generate_relief, land, seed=seed, lakes=lakes, hints=hints)
+        )
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
         land_cells, sea_cells, relief = land_job.result(), sea_job.result(), relief_job.result()
     if settings.landform:

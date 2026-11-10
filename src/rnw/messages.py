@@ -81,6 +81,11 @@ MESSAGES: Final[dict[str, str]] = {
         "The picture is {share} % land; a world needs between {low} % and {high} %. White is land, "
         "black is sea."
     ),
+    "mask.lake_open": (
+        "A lake you marked opens to the sea, around {left} % from the left and {top} % from the "
+        "top: a lake is water that land encloses. Leave a strip of land between a lake and the "
+        "sea, or paint the water as sea."
+    ),
     "mask.file": "{name} cannot be read ({error}).",
     "mask.aspect": (
         "The picture is {given} times as wide as it is high; the New World's area is {wanted}. "

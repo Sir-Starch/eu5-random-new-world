@@ -20,6 +20,7 @@ follow its chains.
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -81,6 +82,52 @@ RIDGES: Final[tuple[tuple[int, int], ...]] = (
 # Strips start on the noise lattice (the coarsest field samples every 16 pixels). A strip's
 # window reaches HALO rows past it: the foothill blur (FOOTHILL_RADIUS) over a strength that
 # itself reads the slope (SLOPE_REACH and SLOPE_BLUR rows away), rounded up to the lattice.
+# Painted hints (``rnw.landmask``): how much of the ground a player marked as mountains,
+# highlands or lowlands, in permille, on a grid of ``HINT_STEP`` pixels, smoothed over
+# ``HINT_BLUR`` of its cells. A class is felt from ``HINT_LOW`` of coverage and complete at
+# ``HINT_HIGH``, so a thin stroke still makes a range. Painted mountains stand at least
+# ``PAINT_FLOOR`` permille of a chain's height, whatever the massif noise says there.
+HINT_STEP: Final[int] = 8
+HINT_BLUR: Final[int] = 2
+HINT_LOW: Final[int] = 80
+HINT_HIGH: Final[int] = 600
+# Painted mountains have flanks as a chain has: a second, wider smoothing of the mountains'
+# coverage (``FLANK_BLUR`` cells) falls off over ``FLANK_LOW`` to ``FLANK_HIGH``, and the range
+# is made of the flank and the crest zone in the shares the chains' envelope has.
+FLANK_BLUR: Final[int] = 8
+FLANK_LOW: Final[int] = 20
+FLANK_HIGH: Final[int] = 300
+FLANK_SHARE: Final[int] = 450
+PAINT_FLOOR: Final[int] = 450
+HIGHLAND_PLATEAU: Final[int] = 550  # permille of a plateau's rise that painted highlands reach
+HINT_BYTES: Final[int] = 40  # working memory of the three hint fields per pixel of a strip
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class ReliefHints:
+    """What a drawing asks of the ground beyond its outline, as three coverage grids.
+
+    Each grid has ``ceil(rows / HINT_STEP) + 1`` rows and ``ceil(columns / HINT_STEP) + 1``
+    columns, sample ``(i, j)`` at pixel ``(i * HINT_STEP, j * HINT_STEP)``, as the distance grid
+    of ``_inland_grid`` does. Values are permille of coverage.
+    """
+
+    mountains: NDArray[np.int32]
+    highlands: NDArray[np.int32]
+    lowlands: NDArray[np.int32]
+    flanks: NDArray[np.int32]
+
+    def grids(
+        self,
+    ) -> tuple[NDArray[np.int32], NDArray[np.int32], NDArray[np.int32], NDArray[np.int32]]:
+        return self.mountains, self.highlands, self.lowlands, self.flanks
+
+    def fits(self, shape: tuple[int, int]) -> bool:
+        """Whether the grids are those of a raster of ``shape``."""
+        grid = (-(-shape[0] // HINT_STEP) + 1, -(-shape[1] // HINT_STEP) + 1)
+        return all(found.shape == grid for found in self.grids())
+
+
 STRIP_ALIGN: Final[int] = 16
 STRIP_ROWS: Final[int] = 256
 HALO: Final[int] = 80
@@ -205,8 +252,19 @@ def _inland_grid(land: NDArray[np.bool_], strip: int) -> NDArray[np.int64]:
     return np.pad(eighths * step, ((0, 1), (0, 1)), mode="edge")
 
 
-def _strength(seed: int, shape: tuple[int, int], row0: int) -> NDArray[np.int64]:
-    """How far the ground is mountain, in [0, 1000]: the chains' envelope and massif height."""
+def _strength(
+    seed: int,
+    shape: tuple[int, int],
+    row0: int,
+    painted: NDArray[np.int64] | None = None,
+    calm: NDArray[np.int64] | None = None,
+) -> NDArray[np.int64]:
+    """How far the ground is mountain, in [0, 1000]: the chains' envelope and massif height.
+
+    ``painted`` (mountains a player drew, in permille of a full range) raises it to at least
+    ``PAINT_FLOOR`` of the massif's height there, and ``calm`` (lowlands) takes the generated
+    chains out, so a painted range stands wherever it is drawn and no chain crosses a plain.
+    """
     envelope = np.zeros(shape, dtype=np.int64)
     for stream, period, core, flank, share in CHAINS:
         chain = _chain(seed, stream, shape, row0, period=period, core=core, flank=flank)
@@ -222,7 +280,40 @@ def _strength(seed: int, shape: tuple[int, int], row0: int) -> NDArray[np.int64]
     del massif
     presence = _field(seed, "relief_presence", shape, step=16, period=2400, octaves=2, row0=row0)
     link = MASSIF_FLOOR + (PERMILLE - MASSIF_FLOOR) * smoothstep(presence, -6000, 5000) // PERMILLE
-    return envelope * height // PERMILLE * link // PERMILLE
+    natural = envelope * height // PERMILLE * link // PERMILLE
+    if calm is not None:
+        natural = natural * (PERMILLE - calm) // PERMILLE
+    if painted is None:
+        return natural
+    raised = painted * (PAINT_FLOOR + (PERMILLE - PAINT_FLOOR) * height // PERMILLE) // PERMILLE
+    return np.maximum(natural, raised)
+
+
+def _hint_fields(
+    hints: ReliefHints | None, start: int, shape: tuple[int, int]
+) -> tuple[NDArray[np.int64] | None, NDArray[np.int64] | None, NDArray[np.int64] | None]:
+    """The painted mountains, highlands and lowlands over the rows of a window, each in permille
+    of the class it asks for (None for a class nothing was painted as); ``start`` lies on the
+    hints' grid, since it is a multiple of the strips' alignment."""
+    if hints is None:
+        return None, None, None
+    first = start // HINT_STEP
+    needed = (shape[0] - 1) // HINT_STEP + 2
+    fields: list[NDArray[np.int64] | None] = []
+    for grid in hints.grids():
+        window = grid[first : first + needed].astype(np.int64)
+        fields.append(upsample(window, HINT_STEP, shape) if window.any() else None)
+    crest, highlands, lowlands, flank = fields
+    mountains = None
+    if crest is not None and flank is not None:
+        inner = smoothstep(crest, HINT_LOW, HINT_HIGH)
+        outer = smoothstep(flank, FLANK_LOW, FLANK_HIGH)
+        mountains = (outer * FLANK_SHARE + inner * (PERMILLE - FLANK_SHARE)) // PERMILLE
+    return (
+        mountains,
+        None if highlands is None else smoothstep(highlands, HINT_LOW, HINT_HIGH),
+        None if lowlands is None else smoothstep(lowlands, HINT_LOW, HINT_HIGH),
+    )
 
 
 def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grids, the seed and rows.
@@ -234,6 +325,7 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
     seed: int,
     first: int,
     last: int,
+    hints: ReliefHints | None = None,
 ) -> NDArray[np.int32]:
     """Height of rows ``first`` to ``last``, computed in a window that reaches ``HALO`` rows
     past them; every field is a function of the pixel, so the window changes nothing.
@@ -255,7 +347,8 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
         else upsample(lake_grid[lattice : lattice + rows_needed], DISTANCE_STEP, shape)
     )
     broad = _field(seed, "relief_broad", shape, step=16, period=1600, octaves=3, row0=start)
-    strength = _strength(seed, shape, start)
+    painted, airy, calm = _hint_fields(hints, start, shape)
+    strength = _strength(seed, shape, start, painted, calm)
     mountain = strength * (
         RIDGE_FLOOR + _ridged(seed, shape, start) * (PERMILLE - RIDGE_FLOOR) // PERMILLE
     )
@@ -264,6 +357,10 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
     foothill = box_blur(strength, FOOTHILL_RADIUS)
     hilliness = np.minimum(PERMILLE, smoothstep(hilly, -3000, 11000) + foothill * 3 // 2)
     del hilly, foothill
+    if airy is not None:
+        hilliness = np.maximum(hilliness, airy)
+    if calm is not None:
+        hilliness = hilliness * (PERMILLE - calm) // PERMILLE
     broad_hills = _field(
         seed, "relief_hills", shape, step=4, period=72, octaves=3, row0=start, warp=600
     )
@@ -279,7 +376,12 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
     plateau_noise = _field(
         seed, "relief_plateau", shape, step=8, period=1000, octaves=3, row0=start
     )
-    plateau = smoothstep(plateau_noise, 9800, 14700) * (PERMILLE - strength) // PERMILLE
+    plateau = smoothstep(plateau_noise, 9800, 14700)
+    if airy is not None:
+        plateau = np.maximum(plateau, airy * HIGHLAND_PLATEAU // PERMILLE)
+    if calm is not None:
+        plateau = plateau * (PERMILLE - calm) // PERMILLE
+    plateau = plateau * (PERMILLE - strength) // PERMILLE
     plateau = plateau * PLATEAU_HEIGHT // PERMILLE
     del plateau_noise, strength
     base = COAST_HEIGHT + np.minimum(sea, INLAND_LIMIT * 8) * INLAND_SLOPE // 8
@@ -303,21 +405,33 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
 
 
 def generate_relief(
-    land: NDArray[np.bool_], *, seed: int, lakes: NDArray[np.bool_] | None = None
+    land: NDArray[np.bool_],
+    *,
+    seed: int,
+    lakes: NDArray[np.bool_] | None = None,
+    hints: ReliefHints | None = None,
 ) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed.
 
     ``lakes`` are the enclosed waters inside the land: the distance to the sea, which sets the
     inland rise, reaches over them, and hills rise from their shores over ``LAKE_RAMP`` pixels.
+    ``hints`` are the mountains, highlands and lowlands a player painted (``ReliefHints``): a
+    painted range is raised from the same chains and crests as a generated one, painted
+    highlands are hills and plateau, and lowlands are left flat. Without hints the relief is
+    exactly what it was.
 
     The raster is cut into strips of ``STRIP_ROWS`` rows (a multiple of the coarsest noise
     step) that run on a few threads; the result is the same for any strip height and any
     number of threads, and the working memory is a few strips instead of a dozen rasters.
     """
     rows, columns = (int(size) for size in land.shape)
-    workers = worker_count(STRIP_WORKERS, bytes_each=STRIP_BYTES * columns * STRIP_ROWS)
+    if hints is not None and not hints.fits(land.shape):
+        message = "The relief hints are not those of this raster"
+        raise ValueError(message)
+    weight = STRIP_BYTES + (HINT_BYTES if hints is not None else 0)
+    workers = worker_count(STRIP_WORKERS, bytes_each=weight * columns * STRIP_ROWS)
     height = band_rows(
-        STRIP_BYTES * columns,
+        weight * columns,
         workers=workers,
         floor=STRIP_FLOOR,
         ceiling=STRIP_ROWS + 2 * HALO,
@@ -332,7 +446,7 @@ def generate_relief(
         checkpoint()
         last = min(rows, first + strip)
         out[first:last] = _relief_strip(
-            land, grid, sea_grid, lake_grid, seed=seed, first=first, last=last
+            land, grid, sea_grid, lake_grid, seed=seed, first=first, last=last, hints=hints
         )
 
     with ThreadPoolExecutor(max_workers=workers) as pool:

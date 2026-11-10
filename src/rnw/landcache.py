@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from rnw.eu5_map import Eu5Map
+    from rnw.relief import ReliefHints
     from rnw.settings import NewWorldSettings
 
 STRIP: Final[int] = 256
@@ -113,6 +114,8 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
     template: NDArray[np.bool_] | None = None,
+    lakes: NDArray[np.bool_] | None = None,
+    hints: ReliefHints | None = None,
 ) -> str:
     # The first number is the layout of the construction (8: the Americas' template of Omerika;
     # 7: the water band along the canvas's boundary and the crossings as chains of cells); the
@@ -137,6 +140,17 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
             for row in range(0, len(raster), STRIP):
                 checkpoint()
                 digest.update(raster[row : row + STRIP].tobytes())
+    # A drawing's marked lakes and relief hints change the world only when it has them, so a
+    # drawing of land and sea alone keeps the key it had.
+    if lakes is not None:
+        digest.update(b"lakes")
+        for row in range(0, len(lakes), STRIP):
+            checkpoint()
+            digest.update(lakes[row : row + STRIP].tobytes())
+    if hints is not None:
+        digest.update(b"hints")
+        for grid in hints.grids():
+            digest.update(grid.tobytes())
     return digest.hexdigest()
 
 
@@ -461,6 +475,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     sea_bands: NDArray[np.bool_] | None = None,
     groups: Sequence[Footprint] = (),
     template: NDArray[np.bool_] | None = None,
+    lakes_drawn: NDArray[np.bool_] | None = None,
+    hints: ReliefHints | None = None,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
@@ -470,7 +486,9 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     key = (
         None
         if cache is None
-        else cache_key(domain, seed, settings, drawn, sea_bands, groups, template)
+        else cache_key(
+            domain, seed, settings, drawn, sea_bands, groups, template, lakes_drawn, hints
+        )
     )
     target = None if cache is None or key is None else cache / key
     if target is not None and target.exists():
@@ -492,6 +510,8 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             groups=groups,
             stage=stage,
             template=template,
+            lakes_drawn=lakes_drawn,
+            hints=hints,
         )
     )
     if target is not None and cache is not None:

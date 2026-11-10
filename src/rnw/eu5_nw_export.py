@@ -281,7 +281,7 @@ from rnw.history_model import Factor, Military
 from rnw.history_output_checks import verify_diplomacy
 from rnw.history_output_checks import verify_text as verify_history_text
 from rnw.history_plan_checks import validate_projection
-from rnw.landmask import LandMask, fit
+from rnw.landmask import Fitted, LandMask, fit_drawing
 from rnw.languages import official_languages
 from rnw.layers import PEOPLES, RESOURCES, layer_seed
 from rnw.loc_keys import KeySpace, key_hash, key_hashes
@@ -2878,6 +2878,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     bands = current_bands(game_map, clean, vanilla_waters)
     # The land is made on the whole canvas; the island groups it covers stay or move, and the
     # rest is built round them (``rnw.islands``). Everything after this reads the moved map.
+    drawing: Fitted | None = None if land_mask is None else fit_drawing(land_mask, clean.mask.shape)
     world = run_stage(
         "generate world",
         lambda: landcache.get_world(
@@ -2885,12 +2886,15 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             clean.mask,
             seed=seed,
             settings=settings.new_world,
-            drawn=None if land_mask is None else fit(land_mask, clean.mask.shape),
+            drawn=None if drawing is None else drawing.land,
             sea_bands=bands,
             groups=clean.footprints,
             template=clean.template,
+            lakes_drawn=None if drawing is None else drawing.lakes,
+            hints=None if drawing is None else drawing.hints,
         ),
     )
+    drawing = None  # the fitted drawing is the cache's key and the world's land; let it go
     canvas = place_islands(
         game_map, clean, [(int(rows), int(columns)) for rows, columns in world.moves.tolist()]
     )

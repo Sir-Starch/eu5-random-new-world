@@ -94,3 +94,30 @@ def test_a_lake_does_not_raise_a_cone_of_land_round_it() -> None:
     # Without the lake counted as land the ring stands a pit's wall below the open ground; with it,
     # the ring is as high as ground at the same distance from the sea.
     assert level[ring].mean() > cone[ring].mean() + 500
+
+
+def _painted(shape: tuple[int, int]) -> relief.ReliefHints:
+    """Mountains, highlands and lowlands marked on three bands of the raster."""
+    rows, columns = -(-shape[0] // relief.HINT_STEP) + 1, -(-shape[1] // relief.HINT_STEP) + 1
+    grids = [np.zeros((rows, columns), dtype=np.int32) for _ in range(4)]
+    grids[0][rows // 5 : rows // 5 + 6, 3:-3] = 1000
+    grids[3][max(0, rows // 5 - 4) : rows // 5 + 10, 1:-1] = 400
+    grids[1][rows // 2 : rows // 2 + 7, 3:-3] = 1000
+    grids[2][-9:-3, 3:-3] = 1000
+    return relief.ReliefHints(grids[0], grids[1], grids[2], grids[3])
+
+
+@pytest.mark.parametrize("window", [1, 150, 400])
+def test_strips_equal_the_whole_raster_with_painted_hints(
+    monkeypatch: pytest.MonkeyPatch, window: int
+) -> None:
+    """Painted mountains, highlands and lowlands do not depend on where a strip begins."""
+    land = _land(5, (203, 317))
+    hints = _painted(land.shape)
+    monkeypatch.setattr(relief, "band_rows", _fixed(max(relief.STRIP_FLOOR, 400)))
+    monkeypatch.setattr(relief, "worker_count", _fixed(1))
+    whole = relief.generate_relief(land, seed=5, hints=hints)
+    monkeypatch.setattr(relief, "band_rows", _fixed(max(relief.STRIP_FLOOR, window)))
+    monkeypatch.setattr(relief, "worker_count", _fixed(3))
+    assert np.array_equal(relief.generate_relief(land, seed=5, hints=hints), whole)
+    assert not np.array_equal(whole, relief.generate_relief(land, seed=5))
