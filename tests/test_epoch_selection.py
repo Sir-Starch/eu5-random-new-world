@@ -44,7 +44,6 @@ def test_every_selectable_epoch_but_the_current_has_its_frozen_reference_world()
 def test_a_switch_lies_inside_the_window_it_still_has_to_serve() -> None:
     """A switch at or below the oldest selectable epoch is dead code; one above the current is
     not yet true. Each epoch of a switch is also an epoch of the table."""
-    assert len(set(epoch.SWITCHES.values())) == len(epoch.SWITCHES)
     for name, number in epoch.SWITCHES.items():
         assert epoch.OLDEST_SELECTABLE < number <= epoch.CURRENT, name
         assert epoch.epoch_of(epoch.first_release(number)) == number

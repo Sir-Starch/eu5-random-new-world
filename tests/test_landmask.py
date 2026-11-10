@@ -13,9 +13,10 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from rnw import landmask
+from rnw import epoch, landmask
 from rnw.app import library, service
 from rnw.app.worldcode import decode, encode, new_code
+from rnw.fields import box_blur
 from rnw.landmask import LandMask, LandMaskError
 from rnw.newworld import generate_new_world
 from rnw.settings import PRESETS
@@ -132,6 +133,29 @@ def test_a_stretched_staircase_becomes_a_smooth_coast() -> None:
     straight = _stretch(block, (768, 704))
     assert set(_edge(straight)[300:400]) == {22.0 * 8}
     assert abs(int(straight.sum()) - int(block.sum()) * 64) < 64 * 8
+
+
+def test_an_epoch_before_the_spline_stretches_a_drawing_by_blocks_as_it_did() -> None:
+    """Epochs 61 and 62 (``SMOOTH_DRAWN_COASTS`` is 63) stretch by whole pixels and smooth with a
+    box blur; the reference below is that algorithm as 1.2.1 wrote it."""
+    rows, columns, shape = 96, 88, (768, 704)
+    drawn = np.zeros((rows, columns), dtype=bool)
+    for row in range(rows):
+        drawn[row, 30 + row // 4 :] = True
+    drawn[20:40, 5:15] = True
+    height, width = shape
+    wanted = drawn[np.ix_(np.arange(height) * rows // height, np.arange(width) * columns // width)]
+    scale = min(height // rows, width // columns)
+    assert scale > landmask.SMOOTH_ABOVE
+    wanted = box_blur(wanted.astype(np.int64) * landmask.PERMILLE, scale // 2) >= 500
+    mask = LandMask(drawn)
+    for number in range(epoch.OLDEST_SELECTABLE, epoch.SMOOTH_DRAWN_COASTS):
+        assert np.array_equal(landmask.fit(mask, shape, number), wanted)
+        assert np.array_equal(landmask.fit_drawing(mask, shape, number).land, wanted)
+    smooth = landmask.fit(mask, shape, epoch.SMOOTH_DRAWN_COASTS)
+    assert not np.array_equal(smooth, wanted)
+    assert np.array_equal(landmask.fit(mask, shape), smooth)
+    assert np.array_equal(landmask.fit_drawing(mask, shape).land, smooth)
 
 
 def test_a_stretched_drawing_is_the_same_whatever_the_strips_and_mirrors_itself(

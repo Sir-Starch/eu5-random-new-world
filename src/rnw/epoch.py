@@ -119,9 +119,11 @@ OLDEST_SELECTABLE: Final[int] = 61
 # never above ``CURRENT``; a switch at or below ``OLDEST_SELECTABLE`` is dead code (a test says so).
 NO_EXCHANGE_MARKETS: Final[int] = 62  # 1.2.1: an exchange partner is no market centre of its own.
 SUBCONTINENT_WAISTS: Final[int] = 63  # 1.2.2: subcontinents are cut at the land's waist.
+SMOOTH_DRAWN_COASTS: Final[int] = 63  # 1.2.2: a small drawing is stretched by a spline, not blocks.
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
+    "SMOOTH_DRAWN_COASTS": SMOOTH_DRAWN_COASTS,
 }
 
 

@@ -2887,7 +2887,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     bands = current_bands(game_map, clean, vanilla_waters)
     # The land is made on the whole canvas; the island groups it covers stay or move, and the
     # rest is built round them (``rnw.islands``). Everything after this reads the moved map.
-    drawing: Fitted | None = None if land_mask is None else fit_drawing(land_mask, clean.mask.shape)
+    drawing: Fitted | None = (
+        None if land_mask is None else fit_drawing(land_mask, clean.mask.shape, settings.algorithm)
+    )
     world = run_stage(
         "generate world",
         lambda: landcache.get_world(

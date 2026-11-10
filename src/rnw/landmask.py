@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 from PIL import Image
 
+from rnw.epoch import CURRENT, SMOOTH_DRAWN_COASTS
 from rnw.fields import box_blur
 from rnw.messages import say
 from rnw.png import COLOR_GRAY, COLOR_RGB, encode_png
@@ -61,6 +62,9 @@ BLUR_UNIT: Final[int] = sum(BLUR_TAPS)
 VALUE_UNIT: Final[int] = 256
 # The cubic B-spline's weights are whole numbers adding up to this, so the arithmetic is exact.
 TAP_UNIT: Final[int] = 1 << 10
+# Epochs before ``SMOOTH_DRAWN_COASTS`` smooth a drawing that is stretched by more than this many
+# whole pixels, and only then (``_stretch_by_blocks``).
+SMOOTH_ABOVE: Final[int] = 2
 PERMILLE: Final[int] = 1000
 
 # What a pixel of a drawing is. A kind is its index in ``KIND_COLORS``.
@@ -285,7 +289,25 @@ def _blurred(indicator: NDArray[np.bool_]) -> NDArray[np.int32]:
     return (blurred + step // 2) // step
 
 
-def _stretch(indicator: NDArray[np.bool_], shape: tuple[int, int]) -> NDArray[np.bool_]:
+def _stretch_by_blocks(indicator: NDArray[np.bool_], shape: tuple[int, int]) -> NDArray[np.bool_]:
+    """``indicator`` on a canvas of ``shape`` as epochs 61 and 62 made it: stretched by whole
+    pixels, and when it is much smaller than the canvas its blocky edges smoothed (a blur and a
+    threshold, in integers). Kept verbatim for the epochs before ``SMOOTH_DRAWN_COASTS``."""
+    height, width = shape
+    rows, columns = indicator.shape
+    source_rows = np.arange(height, dtype=np.int64) * rows // height
+    source_columns = np.arange(width, dtype=np.int64) * columns // width
+    fitted = indicator[np.ix_(source_rows, source_columns)]
+    scale = min(height // rows, width // columns)
+    if scale > SMOOTH_ABOVE:
+        smooth = box_blur(fitted.astype(np.int64) * PERMILLE, scale // 2)
+        fitted = smooth >= PERMILLE // 2
+    return fitted
+
+
+def _stretch(
+    indicator: NDArray[np.bool_], shape: tuple[int, int], algorithm: int = CURRENT
+) -> NDArray[np.bool_]:
     """``indicator`` on a canvas of ``shape``.
 
     A picture the canvas does not outgrow is read pixel by pixel. A smaller one is stretched
@@ -293,8 +315,11 @@ def _stretch(indicator: NDArray[np.bool_], shape: tuple[int, int]) -> NDArray[np
     through a cubic B-spline (smooth in itself) and is land where that reaches half. A straight
     coast stays where it was drawn, and the steps of the drawing's pixels, which a stretch by
     whole pixels leaves as a staircase on the shore, become curves; a feature a pixel or two wide
-    goes. Done in strips of canvas rows and in integers: the same on every machine.
+    goes. Done in strips of canvas rows and in integers: the same on every machine. An epoch
+    before ``SMOOTH_DRAWN_COASTS`` stretches by blocks (``_stretch_by_blocks``).
     """
+    if algorithm < SMOOTH_DRAWN_COASTS:
+        return _stretch_by_blocks(indicator, shape)
     height, width = shape
     rows, columns = indicator.shape
     if height <= rows or width <= columns:
@@ -322,8 +347,8 @@ def _stretch(indicator: NDArray[np.bool_], shape: tuple[int, int]) -> NDArray[np
     return fitted
 
 
-def fit(mask: LandMask, shape: tuple[int, int]) -> NDArray[np.bool_]:
-    """The picture's land on a canvas of ``shape`` (rows, columns).
+def fit(mask: LandMask, shape: tuple[int, int], algorithm: int = CURRENT) -> NDArray[np.bool_]:
+    """The picture's land on a canvas of ``shape`` (rows, columns), as epoch ``algorithm`` makes it.
 
     The picture's proportions must be the canvas's, within ``ASPECT_PERMILLE``. A picture the
     canvas does not outgrow is read pixel by pixel; a smaller one is stretched smoothly, so that
@@ -342,7 +367,7 @@ def fit(mask: LandMask, shape: tuple[int, int]) -> NDArray[np.bool_]:
             height=rows,
         )
         raise LandMaskError(message)
-    return _stretch(mask.land, shape)
+    return _stretch(mask.land, shape, algorithm)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -385,15 +410,15 @@ def _hint_grid(
     return np.pad(smooth, ((0, 1), (0, 1)), mode="edge").astype(np.int32)
 
 
-def fit_drawing(mask: LandMask, shape: tuple[int, int]) -> Fitted:
+def fit_drawing(mask: LandMask, shape: tuple[int, int], algorithm: int = CURRENT) -> Fitted:
     """The drawing on a canvas of ``shape``: ``fit``'s land, less the lakes the drawing marks
     (a lake is cut out of the land, and wins where the smoothed edges meet), and the relief
-    hints of its mountains, highlands and lowlands. Deterministic."""
-    land = fit(mask, shape)
+    hints of its mountains, highlands and lowlands. Deterministic; ``algorithm`` is the epoch."""
+    land = fit(mask, shape, algorithm)
     kinds = mask.kinds
     if kinds is None:
         return Fitted(land, None, None)
-    lakes = _stretch(kinds == LAKE, shape) if np.any(kinds == LAKE) else None
+    lakes = _stretch(kinds == LAKE, shape, algorithm) if np.any(kinds == LAKE) else None
     if lakes is not None:
         land &= ~lakes
     marked = [kinds == kind for kind in (MOUNTAINS, HIGHLANDS, LOWLANDS)]

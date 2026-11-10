@@ -52,8 +52,13 @@ one mod and writes no extra file.
   `epoch.SWITCHES`. Epoch 63 → 62: subcontinents are cut at the waist (`hierarchy.neck_parts`)
   from 63 and by the earlier banded cuts (`hierarchy.banded_parts`) before it. Epoch 62 → 61: an
   exchange partner is a market centre and a town of its own before 62
-  (`eu5_history_plan._centres`). The land cache sits before both gates, so its keys need no epoch;
-  a future gate inside the cached land stage must add the algorithm to them.
+  (`eu5_history_plan._centres`). Also epoch 63: a drawn land smaller than the canvas is stretched
+  by a spline from 63 and by whole pixels with a box blur before it (`landmask._stretch_by_blocks`,
+  verbatim from 1.2.1), a gate in the land stage through `fit` and `fit_drawing`; the land editor's
+  own picture of a drawing is always the current epoch's. The land cache needs no epoch in its key
+  for these: the sketch's land stage sits before the first two gates, and the world's key digests
+  the fitted drawing itself, which the third changes. A future gate inside the cached land stage
+  that leaves its inputs as they are must add the algorithm to the key.
 
 ### The rule for a new epoch
 
@@ -73,7 +78,9 @@ newer game build makes that epoch's algorithm on the new inputs, and the record 
 - The three epochs of today (61, 62, 63) make worlds equal to their frozen references; nothing in
   a world's bytes changed with this ADR, so it opens no epoch. [V-EXEC, 2026-11-10, local game
   files of the compatibility target: the installed-game reproduction of epochs 61 and 62 equals
-  their goldens' digests and file counts; epoch 63 equals the pending golden.]
+  their goldens' digests and file counts; epoch 63 equals the pending golden.] The references are
+  worlds of a generated sketch; the drawn-land gate is checked against the 1.2.1 module itself
+  instead (`tests/test_landmask.py`: equal to the verbatim algorithm, and unequal to the spline).
 - Each new epoch costs a switch and a reference. A fix that cannot be gated cheaply drops the
   oldest epochs instead of forking a stage.
 - No new storage, dependency or distribution method: a preference, an integer in the run and the
