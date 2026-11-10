@@ -442,6 +442,15 @@ def margin_for(settings: NewWorldSettings) -> int:
     return max(1, -(-settings.coast_margin_px // EDITOR_STEP))
 
 
+def shore_of(area: LandArea, settings: NewWorldSettings) -> Mask:
+    """The pixels within the coast margin of what is outside the area or of the picture's side
+    edges: land drawn there is dropped."""
+    margin = margin_for(settings)
+    guard = ~area.area
+    guard[:, [0, -1]] = True
+    return distance_from(guard, margin, octagonal=True) < margin
+
+
 def check(kinds: Kinds, area: LandArea, settings: NewWorldSettings) -> Check:
     """What would happen to ``kinds`` drawn on ``area`` (at the editor's step), by the generator's
     own rules at the sheet's resolution: land outside the area or in its coast margin is dropped,
@@ -454,11 +463,8 @@ def check(kinds: Kinds, area: LandArea, settings: NewWorldSettings) -> Check:
         message = f"A pixel of kind {int(kinds.max())} is none of the {KINDS} kinds"
         raise ValueError(message)
     land = np.array(IS_LAND, dtype=np.bool_)[kinds]
-    margin = margin_for(settings)
     domain = area.area
-    guard = ~domain
-    guard[:, [0, -1]] = True
-    shore = distance_from(guard, margin, octagonal=True) < margin
+    shore = shore_of(area, settings)
     asked = land & domain
     kept = asked & ~shore
     asked_px, kept_px, total = (int(np.count_nonzero(x)) for x in (asked, kept, land))

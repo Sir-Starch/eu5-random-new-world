@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''Ląd z obrazu…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''Zbuduj świat na lądzie narysowanym przez ciebie lub zrobionym gdzie indziej: obraz z bielą jako lądem i czernią jako morzem, w proporcjach obszaru Nowego Świata. Reszta zostanie wygenerowana na nim.'''
+source = "702588360cbfabf5"
+text = '''Zbuduj świat na lądzie, który narysowałeś lub stworzyłeś gdzie indziej: obraz z bielą dla lądu i czernią dla morza, w proporcjach obszaru Nowego Świata. Kolory oznaczają teren: brąz to góry, złoto to wyżyny, jasna zieleń to niziny, a błękit to jeziora. Resztę generuje się na nim.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''Zapisz szablon…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''Zapisać obraz obszaru, który może zająć Nowy Świat, z mapy twojej gry, aby narysować na nim ląd w dowolnym programie: pomaluj ląd na biało.'''
+source = "e071abeb98d87c91"
+text = '''Zapisuje obraz obszaru, który może wypełnić Nowy Świat, na podstawie mapy twojej gry, byś mógł narysować na nim ląd w dowolnym programie: maluj ląd na biało lub kolorami terenu z funkcji Ląd z obrazu. Jaśniejszy szary to Ameryki z gry, ciemniejszy szary to grupy wysp Starego Świata.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''Świat, który zachowuje prawdziwe Ameryki, nie ma lądu do naszkicowa
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''Świat, który zachowuje prawdziwe Ameryki, ma zasoby z gry: nie ma żadnych do ponownego wylosowania.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''Narysuj ląd…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''Narysuj ląd nowego świata w edytorze: zacznij od gotowego lądu, maluj morze, ląd, góry, wyżyny, niziny i jeziora i zobacz, co z tego zrobi generator.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''Edytuj w edytorze'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''Edytor lądu'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''Wycinanie obszaru z mapy gry…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''Za pierwszym razem trwa to kilka sekund; obszar zostaje zapisany na następny raz.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''Otwieranie arkusza…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''Nie udało się wyciąć obszaru.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''Zamknij'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Anuluj'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''Użyj tego lądu'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''Zbuduj nowy świat na tym rysunku.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''Generator nie może jeszcze stworzyć świata z tego rysunku; sprawdź, co pisze po prawej.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''Nowy świat powstanie na twoim lądzie.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''Cofnij'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''Ponów'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''Przybliż'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''Oddal'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''Pokaż cały arkusz'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''Rozmiar rzeczywisty'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''Pokaż twój rysunek'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''Pokaż Ameryki z gry'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''Pokaż grupy wysp Starego Świata'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''Pokaż margines wybrzeża: ląd narysowany w zakreskowanym pasie zostanie odrzucony'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''Narzędzia'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''Pędzel'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''Gumka (maluje morze)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''Wypełnienie'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''Linia'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''Prostokąt'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''Elipsa'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''Przesuń widok (lub przytrzymaj spację)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''Co malować'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''Morze'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''Ląd'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''Góry'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''Wyżyny'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''Niziny'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''Jezioro'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''Otwarta woda; gumka też ją maluje'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''Zwykły ląd: rzeźbę wybiera generator'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''Góry: tutaj wznosi się pasmo lub wysokie szczyty'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''Wyżyny: wzgórza i płaskowyże'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''Niziny: płaskie równiny i doliny'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''Jezioro: woda otoczona lądem'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''Rozmiar'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''Teren tylko na lądzie'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''Góry, wyżyny i niziny maluje się tylko na lądzie, nigdy na morzu ani jeziorach.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''Wypełnione kształty'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''Maluj ląd pędzlem albo zacznij od gotowego lądu po prawej.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''Zacznij od'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''Losuj ponownie'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''Inny kształt każdego gotowego lądu'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Superkontynent'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''Dwa kontynenty'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''Trzy kontynenty'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Archipelag'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''Łańcuch wysp'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''Pierścień'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''Półksiężyc'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''Rozproszone wyspy'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''Ameryki z gry'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''Szkic {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''Dodaj teren'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''Dodaje do zwykłego lądu pasma górskie, wyżyny, niziny i jeziora. To, co namalowałeś, zostaje.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''Pasma górskie'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''Wyżyny'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''Niziny'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''Jeziora'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''Dodaj do lądu'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''Nic nie dodano: nie ma zwykłego lądu, do którego można dodać.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''Co zrobi generator'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''Sprawdzanie…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''Ląd zajmuje {share} % arkusza.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''Ląd zajmuje {share} % arkusza; świat potrzebuje od {low} % do {high} %.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''Prawie cały ląd leży poza obszarem lub na jego marginesie wybrzeża (zostaje {kept} %). Rysuj w jaśniejszym obszarze, z dala od zakreskowanego pasa.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''Jeziora otwarte na morze: {count} (zakreślone na arkuszu). Jezioro to woda otoczona lądem: zostaw pas lądu między nim a morzem albo namaluj je jako morze.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''{dropped} % lądu leży poza obszarem lub na jego marginesie wybrzeża i zostanie odrzucone.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''Kawałki lądu mniejsze niż najmniejsza wyspa, które zostaną usunięte: {count}.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''Grupy wysp Starego Świata, do których sięga ląd: {count}. Każda przesuwa się jako całość na najbliższe otwarte morze.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''Obraz'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''Importuj obraz…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''Zapisz rysunek…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''Wyczyść arkusz'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''Obraz został rozciągnięty do arkusza.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''Obraz ma inne proporcje niż arkusz; wyśrodkowano go na nim.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B pędzel · E gumka · G wypełnienie · 1–6 rodzaje · [ ] rozmiar · prawy przycisk pobiera rodzaj · spacja przesuwa'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''Zaznaczone przez ciebie jezioro otwiera się na morze, około {left} % od lewej i {top} % od góry: jezioro to woda otoczona lądem. Zostaw pas lądu między jeziorem a morzem albo namaluj tę wodę jako morze.'''

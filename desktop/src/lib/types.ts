@@ -67,6 +67,8 @@ export interface NewState {
   land_mask_text: string;
   candidates_enabled: boolean;
   template_enabled: boolean;
+  /** The area the land editor draws on has been cut for the choices made now. */
+  editor_ready: boolean;
   /** The new world can be changed and queued now, also while a world is being made. */
   preparable: boolean;
   /** Why the world chosen now cannot be queued, or null. */
@@ -322,4 +324,26 @@ export interface AtlasBundle {
   countries: CountryInfo[];
   totals: Totals;
   layers: Record<string, LayerBundle>;
+}
+
+/** What the generator gives the land editor when it opens (``land_editor``): the sheet, the picture
+ * chosen now and the ready lands. Pictures are PNG data URLs. */
+export interface EditorInfo {
+  width: number;
+  height: number;
+  /** Pixels of the map to a pixel of the sheet. */
+  step: number;
+  /** The area as greys: each of ``classes`` is one of them. */
+  backdrop: string;
+  /** White where land is dropped for the coast margin, inside the area. */
+  margin: string;
+  classes: { outside: number; area: number; islands: number; americas: number };
+  /** The generator's colour of each kind, for the pictures that go to it. */
+  palette: number[][];
+  /** The picture chosen now laid on the sheet, "" when none; ``fit`` says how. */
+  image: string;
+  fit: "" | "exact" | "stretched" | "centered";
+  presets: string[];
+  /** Indices of the sketched continents that fit the sheet. */
+  sketches: number[];
 }

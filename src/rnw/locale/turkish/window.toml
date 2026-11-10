@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''Resimden kara…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''Dünyayı kendi çizdiğiniz ya da başka yerde hazırladığınız bir kara üzerine kurun: karayı beyaz, denizi siyah gösteren ve Yeni Dünya alanının oranlarında bir resim. Gerisi onun üzerine oluşturulur.'''
+source = "702588360cbfabf5"
+text = '''Dünyayı kendi çizdiğiniz ya da başka yerde hazırladığınız bir kara üzerine kurun: kara için beyaz, deniz için siyah kullanılan, Yeni Dünya alanının oranlarında bir resim. Renkler araziyi belirler: dağlar için kahverengi, yaylalar için altın sarısı, ovalar için açık yeşil, göller için mavi. Gerisi bunun üzerine üretilir.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''Şablonu kaydet…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''Karanızı herhangi bir programda çizebilmeniz için, oyununuzun haritasından Yeni Dünya'nın kaplayabileceği alanın resmini çıkarın: karayı beyaza boyayın.'''
+source = "e071abeb98d87c91"
+text = '''Oyununuzun haritasından Yeni Dünya'nın doldurabileceği alanın resmini yazar; karayı istediğiniz programda üzerine çizebilirsiniz: karayı beyaza ya da Resimden kara'nın arazi renkleriyle boyayın. Açık gri oyunun Amerikaları, koyu gri Eski Dünya'nın ada gruplarıdır.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''Gerçek Amerikalar’ı koruyan bir dünyada eskiz çizilecek kara yok
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''Gerçek Amerikalar’ı koruyan bir dünyada oyunun kendi kaynakları vardır: yeniden üretilecek bir şey yoktur.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''Kara çiz…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''Yeni dünyanın karasını düzenleyicide çizin: hazır bir karadan başlayın, deniz, kara, dağlar, yaylalar, ovalar ve göller boyayın, üretecin ondan ne yapacağını görün.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''Düzenleyicide düzenle'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''Kara düzenleyici'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''Alan oyunun haritasından kesiliyor…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''İlk seferde birkaç saniye sürer; alan bir sonraki sefer için saklanır.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''Tuval açılıyor…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''Alan kesilemedi.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''Kapat'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''İptal'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''Bu karayı kullan'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''Yeni dünyayı bu çizim üzerine kur.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''Üreteç bu çizimden henüz bir dünya yapamıyor; sağdaki açıklamaya bakın.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''Yeni dünya sizin karanızın üzerine kurulacak.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''Geri al'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''Yinele'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''Yakınlaştır'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''Uzaklaştır'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''Tüm tuvali göster'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''Gerçek boyut'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''Çiziminizi göster'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''Oyunun Amerikaları'nı göster'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''Eski Dünya'nın ada gruplarını göster'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''Kıyı payını göster: taramalı şeride çizilen kara atılır'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''Araçlar'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''Fırça'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''Silgi (deniz boyar)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''Doldur'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''Çizgi'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''Dikdörtgen'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''Elips'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''Görünümü kaydır (ya da Boşluk tuşunu basılı tut)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''Ne boyanacak'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''Deniz'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''Kara'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''Dağlar'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''Yaylalar'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''Ovalar'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''Göl'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''Açık su; silgi de bunu boyar'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''Düz kara: kabartmayı üreteç seçer'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''Dağlar: burada bir sıradağ ya da yüksek zirveler yükselir'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''Yaylalar: tepeler ve platolar'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''Ovalar: düz ovalar ve vadiler'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''Göl: karayla çevrili su'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''Boyut'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''Arazi yalnızca karada'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''Dağlar, yaylalar ve ovalar yalnızca karaya boyanır; asla denize ya da göllere değil.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''Dolu şekiller'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''Karayı fırçayla boyayın ya da sağdaki hazır bir karadan başlayın.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''Başlangıç'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''Yeniden at'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''Her hazır kara için başka bir biçim'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Süper kıta'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''İki kıta'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''Üç kıta'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Takımadalar'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''Ada zinciri'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''Halka'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''Hilal'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''Dağınık adalar'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''Oyunun Amerikaları'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''Taslak {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''Arazi ekle'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''Düz karaya sıradağlar, yaylalar, ovalar ve göller ekler. Boyadığınız yerler olduğu gibi kalır.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''Sıradağlar'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''Yaylalar'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''Ovalar'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''Göller'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''Karaya ekle'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''Hiçbir şey eklenmedi: eklenecek düz kara yok.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''Üretecin yapacakları'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''Denetleniyor…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''Kara, tuvalin %{share} kadarıdır.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''Kara, tuvalin %{share} kadarı; bir dünya için %{low} ile %{high} arası gerekir.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''Karanın neredeyse tamamı alanın dışında ya da kıyı payında (%{kept} kalıyor). Daha açık alanın içine, taramalı şeritten uzağa çizin.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''Denize açık göller: {count} (tuvalde daire içine alındı). Göl, karayla çevrili sudur: onunla deniz arasında bir kara şeridi bırakın ya da denizi olarak boyayın.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''Karanın %{dropped} kadarı alanın dışında ya da kıyı payında; atılacak.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''En küçük adadan küçük olduğu için kaldırılacak kara parçaları: {count}.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''Karanın eriştiği Eski Dünya ada grupları: {count}. Her biri tek parça olarak en yakın açık denize taşınır.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''Resim'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''Resim içe aktar…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''Çizimi kaydet…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''Tuvali temizle'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''Resim tuvale sığacak şekilde gerildi.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''Resmin oranları tuvalinkinden farklı; tuvalin ortasına yerleştirildi.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B fırça · E silgi · G doldur · 1–6 türler · [ ] boyut · sağ tuş bir tür alır · Boşluk kaydırır'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''İşaretlediğiniz bir göl denize açılıyor; soldan yaklaşık %{left}, yukarıdan %{top} konumunda: göl, karayla çevrili sudur. Göl ile deniz arasında bir kara şeridi bırakın ya da bu suyu deniz olarak boyayın.'''

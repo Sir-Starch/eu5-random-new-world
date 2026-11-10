@@ -90,7 +90,7 @@ def test_what_is_not_the_sheet_or_not_a_picture_is_refused() -> None:
 
 def test_the_editor_opens_on_the_sheet_with_the_picture_chosen_now() -> None:
     area = _sheet()
-    bare = studio.opening(area, None, [])
+    bare = studio.opening(area, None, [], SETTINGS)
     assert (bare["width"], bare["height"], bare["step"]) == (300, 240, EDITOR_STEP)
     assert bare["image"] == ""
     assert bare["presets"] == list(landeditor.PRESETS)
@@ -101,10 +101,15 @@ def test_the_editor_opens_on_the_sheet_with_the_picture_chosen_now() -> None:
     assert backdrop[10, 10] == classes["area"]
     assert backdrop[100, 100] == classes["americas"] or backdrop[100, 100] == classes["area"]
     assert bare["sketches"] == []
+    margin = np.asarray(Image.open(io.BytesIO(studio.png_of(cast("str", bare["margin"])))))
+    assert margin.shape == area.picture_shape
+    assert margin[12, 100] == 255  # in the area, within the coast margin of its edge
+    assert margin[120, 150] == 0
+    assert margin[0, 0] == 0  # outside the area is not margin
     from rnw.landmask import from_kinds  # noqa: PLC0415 - one test needs it
 
     kinds = landeditor.make_preset(landeditor.SUPERCONTINENT, area, 1)
-    drawn = studio.opening(area, from_kinds(kinds), [])
+    drawn = studio.opening(area, from_kinds(kinds), [], SETTINGS)
     assert drawn["fit"] == "exact"
     assert np.array_equal(_decoded(cast("str", drawn["image"])), kinds)
 
@@ -117,7 +122,7 @@ def test_sketched_continents_that_fit_the_sheet_are_offered_and_become_land() ->
     picture[70:72, 70:72] = candidates.LAKE
     wrong = np.zeros((4, 4, 3), dtype=np.uint8)
     found = [candidates.Candidate(1, picture, 100), candidates.Candidate(2, wrong, 100)]
-    assert studio.opening(area, None, found)["sketches"] == [0]
+    assert studio.opening(area, None, found, SETTINGS)["sketches"] == [0]
     kinds = _decoded(studio.sketch(area, found, 0))
     assert kinds[60, 80] == LAND
     assert kinds[70, 70] == LAKE

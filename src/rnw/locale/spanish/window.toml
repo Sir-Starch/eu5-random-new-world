@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''Tierra desde una imagen…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''Construye el mundo sobre tierra que has dibujado o hecho en otro sitio: una imagen con blanco para la tierra y negro para el mar, con las proporciones de la zona del Nuevo Mundo. El resto se genera sobre ella.'''
+source = "702588360cbfabf5"
+text = '''Construye el mundo sobre una tierra que dibujaste o hiciste en otro lugar: una imagen con blanco para la tierra y negro para el mar, con las proporciones del área del Nuevo Mundo. Los colores marcan el terreno: marrón para montañas, dorado para tierras altas, verde claro para tierras bajas y azul para lagos. El resto se genera sobre ella.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''Guardar plantilla…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''Escribir una imagen de la zona que puede ocupar el Nuevo Mundo, a partir del mapa de tu juego, para dibujar tu tierra en cualquier programa: pinta la tierra de blanco.'''
+source = "e071abeb98d87c91"
+text = '''Guarda una imagen del área que puede llenar el Nuevo Mundo, tomada del mapa de tu juego, para dibujar tu tierra en cualquier programa: pinta la tierra de blanco o con los colores de terreno de Tierra desde una imagen. El gris más claro son las Américas del juego y el gris más oscuro, los grupos de islas del Viejo Mundo.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''Un mundo que conserva las Américas reales no tiene tierra que esbozar
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''Un mundo que conserva las Américas reales tiene los recursos del juego: no hay ninguno que rehacer.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''Dibujar tierra…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''Dibuja la tierra del nuevo mundo en el editor: parte de una tierra lista, pinta mar, tierra, montañas, tierras altas, tierras bajas y lagos, y mira qué hará el generador con ella.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''Editar en el editor'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''Editor de tierra'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''Recortando el área del mapa del juego…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''La primera vez tarda varios segundos; el área se guarda para la próxima.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''Abriendo el lienzo…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''No se pudo recortar el área.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''Cerrar'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Cancelar'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''Usar esta tierra'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''Construir el nuevo mundo sobre este dibujo.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''El generador aún no puede hacer un mundo con este dibujo; mira lo que dice a la derecha.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''El nuevo mundo se construirá sobre tu tierra.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''Deshacer'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''Rehacer'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''Acercar'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''Alejar'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''Mostrar todo el lienzo'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''Tamaño real'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''Mostrar tu dibujo'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''Mostrar las Américas del juego'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''Mostrar los grupos de islas del Viejo Mundo'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''Mostrar el margen costero: la tierra dibujada en la franja rayada se descarta'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''Herramientas'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''Pincel'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''Goma (pinta mar)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''Relleno'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''Línea'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''Rectángulo'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''Elipse'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''Mover la vista (o mantén Espacio)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''Qué pintar'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''Mar'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''Tierra'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''Montañas'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''Tierras altas'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''Tierras bajas'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''Lago'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''Agua abierta; la goma también la pinta'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''Tierra simple: el generador elige el relieve'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''Montañas: aquí se alzan una cordillera o altas cumbres'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''Tierras altas: colinas y mesetas'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''Tierras bajas: llanuras y valles'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''Un lago: agua rodeada de tierra'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''Tamaño'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''Terreno solo en la tierra'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''Montañas, tierras altas y tierras bajas se pintan solo sobre la tierra, nunca sobre el mar o los lagos.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''Formas rellenas'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''Pinta la tierra con el pincel o parte de una tierra lista a la derecha.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''Empezar desde'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''Volver a tirar'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''Otra forma para cada tierra lista'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Supercontinente'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''Dos continentes'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''Tres continentes'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Archipiélago'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''Cadena de islas'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''Anillo'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''Media luna'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''Islas dispersas'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''Las Américas del juego'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''Boceto {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''Añadir terreno'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''Añade cordilleras, tierras altas, tierras bajas y lagos a la tierra simple. Lo que pintaste se queda.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''Cordilleras'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''Tierras altas'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''Tierras bajas'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''Lagos'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''Añadir a la tierra'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''No se añadió nada: no hay tierra simple donde añadir.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''Qué hará el generador'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''Comprobando…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''La tierra ocupa el {share} % del lienzo.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''La tierra ocupa el {share} % del lienzo; un mundo necesita entre el {low} % y el {high} %.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''Casi toda la tierra queda fuera del área o en su margen costero (queda un {kept} %). Dibuja dentro del área más clara, lejos de la franja rayada.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''Lagos abiertos al mar: {count} (rodeados en el lienzo). Un lago es agua rodeada de tierra: deja una franja de tierra entre él y el mar, o píntalo como mar.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''El {dropped} % de la tierra queda fuera del área o en su margen costero y se descartará.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''Trozos de tierra menores que la isla más pequeña, que se eliminarán: {count}.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''Grupos de islas del Viejo Mundo que alcanza la tierra: {count}. Cada uno se mueve, como una sola pieza, al mar abierto más cercano.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''Imagen'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''Importar una imagen…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''Guardar el dibujo…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''Vaciar el lienzo'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''La imagen se estiró para ajustarse al lienzo.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''La imagen tiene otras proporciones que el lienzo; se centró en él.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B pincel · E goma · G relleno · 1–6 tipos · [ ] tamaño · el botón derecho toma un tipo · Espacio mueve'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''Un lago que marcaste se abre al mar, a un {left} % desde la izquierda y un {top} % desde arriba: un lago es agua rodeada de tierra. Deja una franja de tierra entre el lago y el mar, o pinta el agua como mar.'''

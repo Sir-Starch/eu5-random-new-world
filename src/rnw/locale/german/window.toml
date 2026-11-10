@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''Land aus einem Bild…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''Bauen Sie die Welt auf Land, das Sie selbst gezeichnet oder anderswo erstellt haben: ein Bild mit Weiß für Land und Schwarz für Meer, in den Proportionen des Gebiets der Neuen Welt. Der Rest wird darauf erzeugt.'''
+source = "702588360cbfabf5"
+text = '''Baue die Welt auf einem Land, das du selbst gezeichnet oder anderswo erstellt hast: ein Bild mit Weiß für Land und Schwarz für Meer, im Seitenverhältnis des Gebiets der Neuen Welt. Farben markieren das Gelände: Braun für Gebirge, Gold für Hochland, Hellgrün für Tiefland und Blau für Seen. Der Rest wird darauf erzeugt.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''Vorlage speichern…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''Ein Bild des Gebiets, das die Neue Welt füllen kann, aus der Karte Ihres Spiels schreiben, um Ihr Land in einem beliebigen Programm darauf zu zeichnen: Land weiß malen.'''
+source = "e071abeb98d87c91"
+text = '''Speichert ein Bild des Gebiets, das die Neue Welt füllen kann, aus der Karte deines Spiels, damit du dein Land in einem beliebigen Programm darauf zeichnen kannst: male Land weiß oder in den Geländefarben von Land aus einem Bild. Das hellere Grau sind die Amerikas des Spiels, das dunklere Grau die Inselgruppen der Alten Welt.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''Eine Welt, die die echten Amerikas behält, hat kein Land zum Skizzier
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''Eine Welt, die die echten Amerikas behält, hat die Ressourcen des Spiels: Es gibt keine, die neu gewürfelt werden könnten.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''Land zeichnen…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''Zeichne das Land der neuen Welt im Editor: beginne mit einem fertigen Land, male Meer, Land, Gebirge, Hochland, Tiefland und Seen und sieh, was der Generator daraus macht.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''Im Editor bearbeiten'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''Land-Editor'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''Das Gebiet wird aus der Spielkarte geschnitten …'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''Beim ersten Mal dauert es einige Sekunden; das Gebiet wird für das nächste Mal gespeichert.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''Das Blatt wird geöffnet …'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''Das Gebiet konnte nicht geschnitten werden.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''Schließen'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Abbrechen'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''Dieses Land verwenden'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''Die neue Welt auf dieser Zeichnung aufbauen.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''Aus dieser Zeichnung kann der Generator noch keine Welt machen; sieh rechts, was er dazu sagt.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''Die neue Welt wird auf deinem Land aufgebaut.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''Rückgängig'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''Wiederholen'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''Vergrößern'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''Verkleinern'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''Das ganze Blatt anzeigen'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''Originalgröße'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''Deine Zeichnung anzeigen'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''Die Amerikas des Spiels anzeigen'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''Die Inselgruppen der Alten Welt anzeigen'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''Den Küstenrand anzeigen: Land im schraffierten Streifen wird verworfen'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''Werkzeuge'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''Pinsel'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''Radierer (malt Meer)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''Füllen'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''Linie'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''Rechteck'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''Ellipse'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''Ansicht verschieben (oder Leertaste halten)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''Was gemalt wird'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''Meer'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''Land'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''Gebirge'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''Hochland'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''Tiefland'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''See'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''Offenes Wasser; der Radierer malt es auch'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''Einfaches Land: der Generator wählt das Relief'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''Gebirge: hier erheben sich eine Kette oder hohe Gipfel'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''Hochland: Hügel und Plateaus'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''Tiefland: flache Ebenen und Täler'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''Ein See: von Land umschlossenes Wasser'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''Größe'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''Gelände nur auf Land'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''Gebirge, Hochland und Tiefland werden nur auf Land gemalt, nie auf Meer oder Seen.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''Gefüllte Formen'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''Male Land mit dem Pinsel oder beginne rechts mit einem fertigen Land.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''Beginnen mit'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''Neu würfeln'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''Eine andere Form für jedes fertige Land'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Superkontinent'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''Zwei Kontinente'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''Drei Kontinente'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Archipel'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''Inselkette'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''Ring'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''Sichel'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''Verstreute Inseln'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''Die Amerikas des Spiels'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''Skizze {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''Gelände hinzufügen'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''Fügt einfachem Land Gebirgsketten, Hochland, Tiefland und Seen hinzu. Was du gemalt hast, bleibt.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''Gebirgsketten'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''Hochland'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''Tiefland'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''Seen'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''Zum Land hinzufügen'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''Es wurde nichts hinzugefügt: Es gibt kein einfaches Land dafür.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''Was der Generator tun wird'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''Wird geprüft …'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''Land macht {share} % des Blattes aus.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''Land macht {share} % des Blattes aus; eine Welt braucht zwischen {low} % und {high} %.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''Fast das ganze Land liegt außerhalb des Gebiets oder in seinem Küstenrand ({kept} % bleiben übrig). Zeichne im helleren Gebiet, abseits des schraffierten Streifens.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''Seen, die zum Meer offen sind: {count} (auf dem Blatt eingekreist). Ein See ist von Land umschlossenes Wasser: lass einen Landstreifen zwischen ihm und dem Meer oder male ihn als Meer.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''{dropped} % des Landes liegen außerhalb des Gebiets oder in seinem Küstenrand und werden verworfen.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''Landstücke, die kleiner als die kleinste Insel sind und entfernt werden: {count}.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''Inselgruppen der Alten Welt, die das Land erreicht: {count}. Jede wird als ein Stück in das nächste offene Meer verschoben.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''Bild'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''Bild importieren …'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''Zeichnung speichern …'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''Blatt leeren'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''Das Bild wurde auf das Blatt gestreckt.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''Das Bild hat andere Proportionen als das Blatt; es wurde darauf zentriert.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B Pinsel · E Radierer · G Füllen · 1–6 Arten · [ ] Größe · rechte Taste wählt eine Art · Leertaste verschiebt'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''Ein von dir markierter See öffnet sich zum Meer, etwa {left} % von links und {top} % von oben: Ein See ist von Land umschlossenes Wasser. Lass einen Landstreifen zwischen See und Meer oder male das Wasser als Meer.'''

@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''Terres depuis une image…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''Bâtissez le monde sur des terres dessinées par vous ou faites ailleurs : une image avec du blanc pour la terre et du noir pour la mer, aux proportions de la zone du Nouveau Monde. Le reste est généré dessus.'''
+source = "702588360cbfabf5"
+text = '''Construisez le monde sur une terre dessinée ou créée ailleurs : une image avec du blanc pour la terre et du noir pour la mer, aux proportions de la zone du Nouveau Monde. Des couleurs marquent le relief : brun pour les montagnes, or pour les hauts plateaux, vert clair pour les basses terres et bleu pour les lacs. Le reste est généré dessus.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''Enregistrer le modèle…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''Écrire une image de la zone que le Nouveau Monde peut occuper, d'après la carte de votre jeu, pour y dessiner vos terres dans n'importe quel logiciel : peignez la terre en blanc.'''
+source = "e071abeb98d87c91"
+text = '''Enregistre une image de la zone que le Nouveau Monde peut remplir, tirée de la carte de votre jeu, pour y dessiner vos terres dans n'importe quel programme : peignez la terre en blanc ou dans les couleurs de relief de Terres depuis une image. Le gris clair est celui des Amériques du jeu et le gris foncé celui des groupes d'îles de l'Ancien Monde.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''Un monde qui garde les vraies Amériques n’a pas de terre à esquiss
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''Un monde qui garde les vraies Amériques a les ressources du jeu : il n’y en a aucune à refaire.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''Dessiner les terres…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''Dessinez les terres du nouveau monde dans l'éditeur : partez d'une terre prête, peignez mer, terre, montagnes, hauts plateaux, basses terres et lacs, et voyez ce que le générateur en fera.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''Modifier dans l'éditeur'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''Éditeur de terres'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''Découpage de la zone dans la carte du jeu…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''La première fois, cela prend plusieurs secondes ; la zone est conservée pour la suite.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''Ouverture de la feuille…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''La zone n'a pas pu être découpée.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''Fermer'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Annuler'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''Utiliser ces terres'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''Construire le nouveau monde sur ce dessin.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''Le générateur ne peut pas encore faire un monde de ce dessin ; voyez ce qu'il indique à droite.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''Le nouveau monde sera construit sur vos terres.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''Annuler'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''Rétablir'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''Zoomer'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''Dézoomer'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''Afficher toute la feuille'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''Taille réelle'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''Afficher votre dessin'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''Afficher les Amériques du jeu'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''Afficher les groupes d'îles de l'Ancien Monde'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''Afficher la marge côtière : les terres dessinées dans la bande hachurée sont abandonnées'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''Outils'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''Pinceau'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''Gomme (peint la mer)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''Remplissage'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''Ligne'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''Rectangle'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''Ellipse'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''Déplacer la vue (ou maintenir Espace)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''Quoi peindre'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''Mer'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''Terre'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''Montagnes'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''Hauts plateaux'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''Basses terres'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''Lac'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''Eau libre ; la gomme la peint aussi'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''Terre simple : le générateur choisit le relief'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''Montagnes : une chaîne ou de hauts sommets s'élèvent ici'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''Hauts plateaux : collines et plateaux'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''Basses terres : plaines et vallées'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''Un lac : de l'eau entourée de terre'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''Taille'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''Relief sur la terre seulement'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''Montagnes, hauts plateaux et basses terres ne se peignent que sur la terre, jamais sur la mer ou les lacs.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''Formes pleines'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''Peignez la terre au pinceau ou partez d'une terre prête, à droite.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''Partir de'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''Retirer'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''Une autre forme pour chaque terre prête'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Supercontinent'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''Deux continents'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''Trois continents'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Archipel'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''Chaîne d'îles'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''Anneau'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''Croissant'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''Îles éparses'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''Les Amériques du jeu'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''Esquisse {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''Ajouter du relief'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''Ajoute des chaînes de montagnes, des hauts plateaux, des basses terres et des lacs aux terres simples. Ce que vous avez peint reste.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''Chaînes de montagnes'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''Hauts plateaux'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''Basses terres'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''Lacs'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''Ajouter aux terres'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''Rien n'a été ajouté : il n'y a pas de terre simple où en ajouter.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''Ce que fera le générateur'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''Vérification…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''Les terres occupent {share} % de la feuille.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''Les terres occupent {share} % de la feuille ; un monde en demande entre {low} % et {high} %.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''Presque toutes les terres sont hors de la zone ou dans sa marge côtière (il en reste {kept} %). Dessinez dans la zone plus claire, loin de la bande hachurée.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''Lacs ouverts sur la mer : {count} (entourés sur la feuille). Un lac est de l'eau entourée de terre : laissez une bande de terre entre lui et la mer, ou peignez-le en mer.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''{dropped} % des terres sont hors de la zone ou dans sa marge côtière et seront abandonnées.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''Morceaux de terre plus petits que la plus petite île, qui seront supprimés : {count}.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''Groupes d'îles de l'Ancien Monde que les terres atteignent : {count}. Chacun se déplace, d'une seule pièce, vers la mer libre la plus proche.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''Image'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''Importer une image…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''Enregistrer le dessin…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''Vider la feuille'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''L'image a été étirée à la taille de la feuille.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''L'image n'a pas les proportions de la feuille ; elle a été centrée dessus.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B pinceau · E gomme · G remplissage · 1–6 types · [ ] taille · clic droit prend un type · Espace déplace'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''Un lac que vous avez marqué s'ouvre sur la mer, à environ {left} % depuis la gauche et {top} % depuis le haut : un lac est de l'eau entourée de terre. Laissez une bande de terre entre le lac et la mer, ou peignez l'eau en mer.'''

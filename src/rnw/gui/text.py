@@ -324,18 +324,140 @@ STRINGS: Final[dict[str, str]] = {
     "land_image": "Land from an image…",
     "land_image_tip": (
         "Build the world on land you drew or made elsewhere: a picture with white for land and "
-        "black for sea, in the proportions of the New World's area. The rest is generated on it."
+        "black for sea, in the proportions of the New World's area. Colours mark the ground: "
+        "brown for mountains, gold for highlands, light green for lowlands and blue for lakes. "
+        "The rest is generated on it."
     ),
     "land_template": "Save template…",
     "land_template_tip": (
         "Write a picture of the area the New World can fill, from your game's map, to draw "
-        "your land on in any program: paint land white."
+        "your land on in any program: paint land white, or in the ground colours of Land from "
+        "an image. The lighter grey is the game's Americas and the darker grey the Old World's "
+        "island groups."
     ),
     "task.template": "Drawing the template…",
     "land_image_chosen": "The land is drawn in an image ({id}).",
     "land_image_clear": "Back to generated land",
     "land_image_title": "Choose the land image",
     "land_image_files": "Pictures (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)",
+    "editor.open": "Draw land…",
+    "editor.open_tip": (
+        "Draw the land of the new world in the editor: start from a ready land, paint sea, land, "
+        "mountains, highlands, lowlands and lakes, and see what the generator will make of it."
+    ),
+    "editor.edit": "Edit in the editor",
+    "editor.title": "Land editor",
+    "editor.preparing": "Cutting the area from the game's map…",
+    "editor.preparing_hint": (
+        "The first time takes several seconds; the area is kept for the next time."
+    ),
+    "editor.loading": "Opening the sheet…",
+    "editor.failed": "The area could not be cut.",
+    "editor.close": "Close",
+    "editor.cancel": "Cancel",
+    "editor.use": "Use this land",
+    "editor.use_tip": "Build the new world on this drawing.",
+    "editor.use_blocked": (
+        "The generator cannot make a world of this drawing yet; see what it says on the right."
+    ),
+    "editor.used": "The new world will be built on your land.",
+    "editor.undo": "Undo",
+    "editor.redo": "Redo",
+    "editor.zoom_in": "Zoom in",
+    "editor.zoom_out": "Zoom out",
+    "editor.zoom_fit": "Show the whole sheet",
+    "editor.zoom_100": "Actual size",
+    "editor.layer.drawing": "Show your drawing",
+    "editor.layer.americas": "Show the game's Americas",
+    "editor.layer.islands": "Show the Old World's island groups",
+    "editor.layer.margin": "Show the coast margin: land drawn in the hatched band is dropped",
+    "editor.tools": "Tools",
+    "editor.tool.brush": "Brush",
+    "editor.tool.eraser": "Eraser (paints sea)",
+    "editor.tool.fill": "Fill",
+    "editor.tool.line": "Line",
+    "editor.tool.rectangle": "Rectangle",
+    "editor.tool.ellipse": "Ellipse",
+    "editor.tool.pan": "Move the view (or hold Space)",
+    "editor.kinds": "What to paint",
+    "editor.kind.sea": "Sea",
+    "editor.kind.land": "Land",
+    "editor.kind.mountains": "Mountains",
+    "editor.kind.highlands": "Highlands",
+    "editor.kind.lowlands": "Lowlands",
+    "editor.kind.lake": "Lake",
+    "editor.kind.sea.tip": "Open water; the eraser paints it too",
+    "editor.kind.land.tip": "Plain land: the generator chooses its relief",
+    "editor.kind.mountains.tip": "Mountains: a range or high peaks rise here",
+    "editor.kind.highlands.tip": "Highlands: hills and plateaus",
+    "editor.kind.lowlands.tip": "Lowlands: flat plains and valleys",
+    "editor.kind.lake.tip": "A lake: water that land encloses",
+    "editor.size": "Size",
+    "editor.on_ground": "Terrain on land only",
+    "editor.on_ground_tip": (
+        "Mountains, highlands and lowlands are painted on land only, never on sea or lakes."
+    ),
+    "editor.filled": "Filled shapes",
+    "editor.hint": "Paint land with the brush, or start from a ready land on the right.",
+    "editor.start": "Start from",
+    "editor.reroll": "Roll again",
+    "editor.reroll_tip": "Another shape for each ready land",
+    "editor.preset.supercontinent": "Supercontinent",
+    "editor.preset.two_continents": "Two continents",
+    "editor.preset.three_continents": "Three continents",
+    "editor.preset.archipelago": "Archipelago",
+    "editor.preset.island_chain": "Island chain",
+    "editor.preset.ring": "Ring",
+    "editor.preset.crescent": "Crescent",
+    "editor.preset.scattered": "Scattered islands",
+    "editor.americas": "The game's Americas",
+    "editor.sketch": "Sketch {number}",
+    "editor.decorate": "Add terrain",
+    "editor.decorate_tip": (
+        "Adds mountain chains, highlands, lowlands and lakes to plain land. What you painted stays."
+    ),
+    "editor.add.mountains": "Mountain chains",
+    "editor.add.highlands": "Highlands",
+    "editor.add.lowlands": "Lowlands",
+    "editor.add.lakes": "Lakes",
+    "editor.decorate_run": "Add to the land",
+    "editor.nothing_added": "Nothing was added: there is no plain land to add to.",
+    "editor.check": "What the generator will do",
+    "editor.checking": "Checking…",
+    "editor.check.land": "Land is {share} % of the sheet.",
+    "editor.check.share": (
+        "Land is {share} % of the sheet; a world needs between {low} % and {high} %."
+    ),
+    "editor.check.outside_all": (
+        "Almost all of the land lies outside the area or on its coast margin ({kept} % is left). "
+        "Draw inside the lighter area, away from the hatched band."
+    ),
+    "editor.check.lake_open": (
+        "Lakes that open to the sea: {count} (ringed on the sheet). A lake is water that land "
+        "encloses: leave a strip of land between it and the sea, or paint it as sea."
+    ),
+    "editor.check.dropped": (
+        "{dropped} % of the land lies outside the area or on its coast margin and will be dropped."
+    ),
+    "editor.check.specks": (
+        "Pieces of land smaller than the smallest island, which will be removed: {count}."
+    ),
+    "editor.check.islands": (
+        "Island groups of the Old World that the land reaches: {count}. Each moves, as one "
+        "piece, to the nearest open sea."
+    ),
+    "editor.picture": "Picture",
+    "editor.import": "Import a picture…",
+    "editor.export": "Save the drawing…",
+    "editor.clear": "Clear the sheet",
+    "editor.fit.stretched": "The picture was stretched to the sheet.",
+    "editor.fit.centered": (
+        "The picture has other proportions than the sheet; it was centered on it."
+    ),
+    "editor.keys": (
+        "B brush · E eraser · G fill · 1–6 kinds · [ ] size · right button takes a kind · "
+        "Space moves"
+    ),
     "rolled_code": "This is a version of its continent: {parts} made again.",
     "bad_seed": "A seed is a whole number from 0 to 18446744073709551615.",
     "customize": "Customize",

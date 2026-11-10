@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''从图片导入陆地…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''在你自己绘制或在别处制作的陆地上构建世界：白色表示陆地、黑色表示海洋，比例与新大陆区域一致。其余部分会在此基础上生成。'''
+source = "702588360cbfabf5"
+text = '''在您自己绘制或在别处制作的陆地上生成世界：图片中白色为陆地、黑色为海洋，比例与新世界区域一致。用颜色标记地形：棕色为山脉，金色为高地，浅绿色为低地，蓝色为湖泊。其余部分在其上生成。'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''保存模板…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''根据你游戏的地图，输出一张新大陆可占用区域的图片，以便在任意软件中在上面绘制陆地：把陆地涂成白色。'''
+source = "e071abeb98d87c91"
+text = '''根据游戏地图，保存新世界可填充区域的图片，您可以在任意程序中在上面绘制陆地：将陆地涂成白色，或使用“从图片导入陆地”的地形颜色。较浅的灰色是游戏中的美洲，较深的灰色是旧世界的岛群。'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''保留真实美洲的世界没有可供勾画的陆地。'''
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''保留真实美洲的世界使用游戏原有的资源，没有可重新生成的内容。'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''绘制陆地…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''在编辑器中绘制新世界的陆地：从现成的陆地开始，涂画海洋、陆地、山脉、高地、低地和湖泊，并查看生成器将如何处理。'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''在编辑器中编辑'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''陆地编辑器'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''正在从游戏地图中截取区域…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''首次需要几秒钟；区域会被保存，供下次使用。'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''正在打开画布…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''无法截取区域。'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''关闭'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''取消'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''使用此陆地'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''在此图上生成新世界。'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''生成器还无法用此图生成世界；请查看右侧的说明。'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''新世界将在您绘制的陆地上生成。'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''撤销'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''重做'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''放大'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''缩小'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''显示整个画布'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''实际大小'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''显示您的绘图'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''显示游戏中的美洲'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''显示旧世界的岛群'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''显示海岸边距：画在斜线带中的陆地将被舍弃'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''工具'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''画笔'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''橡皮（涂成海洋）'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''填充'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''直线'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''矩形'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''椭圆'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''移动视图（或按住空格键）'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''绘制内容'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''海洋'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''陆地'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''山脉'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''高地'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''低地'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''湖泊'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''开阔水域；橡皮也会涂成海洋'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''普通陆地：地形由生成器决定'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''山脉：此处会隆起山脉或高峰'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''高地：丘陵和高原'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''低地：平原和山谷'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''湖泊：被陆地环绕的水域'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''大小'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''地形仅画在陆地上'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''山脉、高地和低地只会画在陆地上，不会画在海洋或湖泊上。'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''填充图形'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''用画笔涂画陆地，或从右侧的现成陆地开始。'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''起点'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''重新生成'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''为每个现成陆地生成另一种形状'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''超大陆'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''两块大陆'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''三块大陆'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''群岛'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''岛链'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''环形'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''新月形'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''散落的岛屿'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''游戏中的美洲'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''草图 {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''添加地形'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''为普通陆地添加山脉、高地、低地和湖泊。您已绘制的部分保持不变。'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''山脉'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''高地'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''低地'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''湖泊'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''添加到陆地'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''没有添加任何内容：没有可添加的普通陆地。'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''生成器将如何处理'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''正在检查…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''陆地占画布的 {share} %。'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''陆地占画布的 {share} %；世界需要 {low} % 到 {high} %。'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''几乎所有陆地都在区域之外或海岸边距内（仅剩 {kept} %）。请在较亮的区域内绘制，远离斜线带。'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''与海相通的湖泊：{count} 个（已在画布上圈出）。湖泊是被陆地环绕的水域：请在湖与海之间留出一条陆地带，或将其画成海洋。'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''{dropped} % 的陆地位于区域之外或海岸边距内，将被舍弃。'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''小于最小岛屿、将被移除的陆地碎块：{count} 块。'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''陆地触及的旧世界岛群：{count} 组。每组都会作为一个整体移动到最近的开阔海域。'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''图片'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''导入图片…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''保存绘图…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''清空画布'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''图片已拉伸以适应画布。'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''图片比例与画布不同，已居中放置。'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B 画笔 · E 橡皮 · G 填充 · 1–6 类型 · [ ] 大小 · 右键取色 · 空格移动'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''您标记的湖泊与海相通，位置约在距左边 {left} %、距顶部 {top} % 处：湖泊是被陆地环绕的水域。请在湖与海之间留出一条陆地带，或将这片水域画成海洋。'''

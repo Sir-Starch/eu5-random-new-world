@@ -27,7 +27,7 @@ from rnw.landarea import (
     OUTSIDE_GREY,
 )
 from rnw.landmask import KIND_COLORS, LandMask, LandMaskError
-from rnw.png import COLOR_RGB, encode_png
+from rnw.png import COLOR_GRAY, COLOR_RGB, encode_png
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Sequence
@@ -82,6 +82,7 @@ def opening(
     area: LandArea,
     drawn: LandMask | None,
     found: Sequence[sketches.Candidate],
+    settings: NewWorldSettings,
 ) -> dict[str, object]:
     """What the window needs to open the editor on the sheet ``area`` (the area at
     ``EDITOR_STEP``): the sheet, the picture chosen now (laid on it, with how it was laid), the
@@ -93,6 +94,7 @@ def opening(
         "height": height,
         "step": EDITOR_STEP,
         "backdrop": view.data_url(area.png()),
+        "margin": view.data_url(_grey(landeditor.shore_of(area, settings) & area.area)),
         "classes": {
             "outside": OUTSIDE_GREY,
             "area": AREA_GREY,
@@ -107,6 +109,12 @@ def opening(
             index for index, one in enumerate(found) if one.picture.shape[:2] == area.picture_shape
         ],
     }
+
+
+def _grey(mask: NDArray[np.bool_]) -> bytes:
+    """A mask as a grey PNG: white where it holds."""
+    grey = np.where(mask, 255, 0).astype(np.uint8)
+    return encode_png(grey, color_type=COLOR_GRAY, compression="zlib")
 
 
 def _lay(drawn: LandMask, area: LandArea) -> tuple[str, str]:
@@ -186,5 +194,7 @@ def report(area: LandArea, url: str, settings: NewWorldSettings) -> dict[str, ob
         "specks": found.specks,
         "open_lakes": [list(place) for place in found.open_lakes],
         "islands": found.islands_touched,
+        "low": landmask.MIN_LAND_PERMILLE,
+        "high": landmask.MAX_LAND_PERMILLE,
         "refusal": found.refusal,
     }

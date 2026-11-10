@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''画像から陸地…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''自分で描いた、またはほかで作った陸地の上にワールドを作ります。陸地を白、海を黒で、新世界の範囲と同じ縦横比で描いた画像を使います。残りはその上に作られます。'''
+source = "702588360cbfabf5"
+text = '''自分で描いた、または別のソフトで作った陸地の上に世界を作ります。新世界の領域と同じ縦横比の画像で、白が陸地、黒が海です。色で地形を指定できます：茶色は山地、金色は高地、薄緑は低地、青は湖です。残りはその上に生成されます。'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''テンプレートを保存…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''ゲームの地図から、新世界が占められる範囲の画像を書き出します。好きなソフトで陸地を白く塗って描いてください。'''
+source = "e071abeb98d87c91"
+text = '''ゲームのマップから、新世界が埋められる領域の画像を書き出します。好きなソフトで陸地を描けます：陸地は白、または「画像から陸地」の地形色で塗ってください。明るい灰色はゲームのアメリカ大陸、暗い灰色は旧世界の島嶼群です。'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''本物のアメリカ大陸を維持する世界には、スケッチ�
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''本物のアメリカ大陸を維持する世界では資源はゲーム本来のものなので、作り直すものはありません。'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''陸地を描く…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''エディターで新しい世界の陸地を描きます。用意された陸地から始め、海・陸地・山地・高地・低地・湖を塗り、ジェネレーターがどう扱うかを確認できます。'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''エディターで編集'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''陸地エディター'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''ゲームのマップから領域を切り出しています…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''初回は数秒かかります。領域は次回のために保存されます。'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''シートを開いています…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''領域を切り出せませんでした。'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''閉じる'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''キャンセル'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''この陸地を使う'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''この絵の上に新しい世界を作ります。'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''この絵からはまだ世界を作れません。右側の説明を確認してください。'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''新しい世界はあなたの陸地の上に作られます。'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''元に戻す'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''やり直す'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''拡大'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''縮小'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''シート全体を表示'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''実寸'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''描いた絵を表示'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''ゲームのアメリカ大陸を表示'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''旧世界の島嶼群を表示'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''沿岸の余白を表示：斜線の帯に描いた陸地は破棄されます'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''ツール'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''ブラシ'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''消しゴム（海を塗る）'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''塗りつぶし'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''直線'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''長方形'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''楕円'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''表示を移動（またはスペースを押し続ける）'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''塗る種類'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''海'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''陸地'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''山地'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''高地'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''低地'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''湖'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''開けた水域。消しゴムでも塗れます'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''ふつうの陸地。起伏はジェネレーターが決めます'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''山地：ここに山脈や高い山々がそびえます'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''高地：丘陵や台地'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''低地：平野や谷'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''湖：陸地に囲まれた水域'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''サイズ'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''地形は陸地のみ'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''山地・高地・低地は陸地にのみ塗られ、海や湖には塗られません。'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''塗りつぶした図形'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''ブラシで陸地を塗るか、右側の用意された陸地から始めてください。'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''開始点'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''振り直す'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''用意された陸地ごとに別の形にします'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''超大陸'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''二つの大陸'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''三つの大陸'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''群島'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''島の連なり'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''環'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''三日月'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''散らばった島々'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''ゲームのアメリカ大陸'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''スケッチ {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''地形を追加'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''ふつうの陸地に山脈・高地・低地・湖を追加します。自分で塗った部分はそのまま残ります。'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''山脈'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''高地'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''低地'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''湖'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''陸地に追加'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''何も追加されませんでした。追加できるふつうの陸地がありません。'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''ジェネレーターの処理内容'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''確認中…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''陸地はシートの {share} % です。'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''陸地はシートの {share} % です。世界には {low} % から {high} % が必要です。'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''陸地のほとんどが領域の外か沿岸の余白にあります（残るのは {kept} %）。明るい領域の内側で、斜線の帯から離して描いてください。'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''海に開いた湖：{count} 個（シート上で丸く示しています）。湖は陸地に囲まれた水域です。湖と海の間に陸地の帯を残すか、海として塗ってください。'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''陸地の {dropped} % が領域の外か沿岸の余白にあり、破棄されます。'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''最小の島より小さく、削除される陸地の断片：{count} 個。'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''陸地が届く旧世界の島嶼群：{count} 組。それぞれが一つのまとまりのまま、最も近い開けた海へ移動します。'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''画像'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''画像を読み込む…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''絵を保存…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''シートを空にする'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''画像はシートに合わせて引き伸ばされました。'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''画像の縦横比がシートと異なるため、中央に配置しました。'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B ブラシ · E 消しゴム · G 塗りつぶし · 1–6 種類 · [ ] サイズ · 右ボタンで種類を取得 · スペースで移動'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''印を付けた湖が海に開いています（左から約 {left} %、上から約 {top} %）。湖は陸地に囲まれた水域です。湖と海の間に陸地の帯を残すか、その水を海として塗ってください。'''

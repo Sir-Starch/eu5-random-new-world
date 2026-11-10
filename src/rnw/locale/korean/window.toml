@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''그림에서 땅 가져오기…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''직접 그렸거나 다른 곳에서 만든 땅 위에 월드를 짓습니다. 땅은 흰색, 바다는 검은색으로, 신대륙 영역의 비율에 맞춘 그림을 쓰세요. 나머지는 그 위에 생성됩니다.'''
+source = "702588360cbfabf5"
+text = '''직접 그렸거나 다른 곳에서 만든 땅 위에 세계를 만듭니다. 신세계 영역과 같은 비율의 그림에서 흰색은 육지, 검은색은 바다입니다. 색으로 지형을 표시합니다: 갈색은 산악, 금색은 고지대, 연두색은 저지대, 파란색은 호수입니다. 나머지는 그 위에 생성됩니다.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''견본 저장…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''게임 지도에서 신대륙이 차지할 수 있는 영역의 그림을 저장합니다. 아무 프로그램에서나 그 위에 땅을 흰색으로 칠해 그리세요.'''
+source = "e071abeb98d87c91"
+text = '''게임 지도에서 신세계가 채울 수 있는 영역의 그림을 저장합니다. 아무 프로그램으로 땅을 그리세요: 육지는 흰색 또는 '그림에서 땅 가져오기'의 지형 색으로 칠합니다. 밝은 회색은 게임의 아메리카, 어두운 회색은 구세계의 섬 무리입니다.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''실제 아메리카를 유지하는 세계에는 스케치할 땅이 �
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''실제 아메리카를 유지하는 세계는 게임 본래의 자원을 쓰므로 다시 만들 것이 없습니다.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''땅 그리기…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''편집기에서 새 세계의 땅을 그립니다. 준비된 땅에서 시작해 바다, 육지, 산악, 고지대, 저지대, 호수를 칠하고 생성기가 어떻게 만들지 확인하세요.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''편집기에서 편집'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''땅 편집기'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''게임 지도에서 영역을 잘라내는 중…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''처음에는 몇 초가 걸리며, 영역은 다음을 위해 저장됩니다.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''캔버스를 여는 중…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''영역을 잘라내지 못했습니다.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''닫기'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''취소'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''이 땅 사용'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''이 그림 위에 새 세계를 만듭니다.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''생성기가 아직 이 그림으로 세계를 만들 수 없습니다. 오른쪽의 설명을 확인하세요.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''새 세계는 당신이 그린 땅 위에 만들어집니다.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''실행 취소'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''다시 실행'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''확대'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''축소'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''캔버스 전체 보기'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''실제 크기'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''그린 그림 보기'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''게임의 아메리카 보기'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''구세계의 섬 무리 보기'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''해안 여백 보기: 빗금 띠에 그린 땅은 버려집니다'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''도구'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''붓'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''지우개 (바다를 칠함)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''채우기'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''선'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''사각형'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''타원'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''화면 이동 (또는 스페이스 키 누르기)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''칠할 종류'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''바다'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''육지'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''산악'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''고지대'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''저지대'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''호수'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''트인 바다. 지우개도 이것을 칠합니다'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''일반 육지: 지형은 생성기가 정합니다'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''산악: 이곳에 산맥이나 높은 봉우리가 솟습니다'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''고지대: 구릉과 고원'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''저지대: 평원과 계곡'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''호수: 육지로 둘러싸인 물'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''크기'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''지형은 육지에만'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''산악, 고지대, 저지대는 육지에만 칠해지며 바다나 호수에는 칠해지지 않습니다.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''채운 도형'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''붓으로 육지를 칠하거나 오른쪽의 준비된 땅에서 시작하세요.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''시작 모양'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''다시 굴리기'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''준비된 땅마다 다른 모양'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''초대륙'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''두 대륙'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''세 대륙'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''군도'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''섬 사슬'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''고리'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''초승달'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''흩어진 섬들'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''게임의 아메리카'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''스케치 {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''지형 추가'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''일반 육지에 산맥, 고지대, 저지대, 호수를 추가합니다. 직접 칠한 부분은 그대로 남습니다.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''산맥'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''고지대'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''저지대'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''호수'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''육지에 추가'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''추가된 것이 없습니다. 추가할 일반 육지가 없습니다.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''생성기가 할 일'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''확인 중…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''육지는 캔버스의 {share} %입니다.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''육지는 캔버스의 {share} %입니다. 세계에는 {low} %에서 {high} %가 필요합니다.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''육지 거의 전부가 영역 밖이거나 해안 여백에 있습니다({kept} %만 남음). 빗금 띠에서 떨어진 밝은 영역 안에 그리세요.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''바다로 열린 호수: {count}개(캔버스에 원으로 표시). 호수는 육지로 둘러싸인 물입니다. 호수와 바다 사이에 육지 띠를 남기거나 바다로 칠하세요.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''육지의 {dropped} %가 영역 밖이거나 해안 여백에 있어 버려집니다.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''가장 작은 섬보다 작아서 제거될 육지 조각: {count}개.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''육지가 닿는 구세계의 섬 무리: {count}개. 각각 한 덩어리로 가장 가까운 트인 바다로 옮겨집니다.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''그림'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''그림 가져오기…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''그림 저장…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''캔버스 비우기'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''그림이 캔버스에 맞게 늘어났습니다.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''그림의 비율이 캔버스와 달라 가운데에 배치했습니다.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B 붓 · E 지우개 · G 채우기 · 1–6 종류 · [ ] 크기 · 오른쪽 버튼으로 종류 선택 · 스페이스로 이동'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''표시한 호수가 바다로 열려 있습니다(왼쪽에서 약 {left} %, 위에서 약 {top} %). 호수는 육지로 둘러싸인 물입니다. 호수와 바다 사이에 육지 띠를 남기거나 그 물을 바다로 칠하세요.'''

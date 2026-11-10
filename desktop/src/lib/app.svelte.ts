@@ -83,6 +83,8 @@ class App {
   now = $state<State | null>(null);
   toasts = $state<Toast[]>([]);
   modal = $state<Modal | null>(null);
+  /** The land editor covers the window. */
+  editor = $state(false);
   worldTab = $state<WorldTab>("world");
   newTab = $state<NewTab>("world");
   layout = $state<Layout>(storedLayout());

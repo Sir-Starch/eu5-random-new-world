@@ -611,16 +611,16 @@ source = "4b6ea32b544af5c3"
 text = '''Суша с картинки…'''
 
 ["land_image_tip"]
-source = "8169f244febce3d5"
-text = '''Постройте мир на суше, которую вы нарисовали или сделали где-то ещё: белым — суша, чёрным — море, в пропорциях области Нового Света. Остальное будет создано поверх неё.'''
+source = "702588360cbfabf5"
+text = '''Постройте мир на суше, которую вы нарисовали или сделали в другой программе: картинка, где белый цвет — суша, а чёрный — море, в пропорциях области Нового Света. Цвета отмечают местность: коричневый — горы, золотой — нагорья, светло-зелёный — низины, синий — озёра. Остальное создаётся на ней.'''
 
 ["land_template"]
 source = "ec4afdef9bceb8d5"
 text = '''Сохранить шаблон…'''
 
 ["land_template_tip"]
-source = "933d156783ad138e"
-text = '''Сохранить картинку области, которую может занять Новый Свет, по карте вашей игры, чтобы рисовать на ней сушу в любой программе: закрасьте сушу белым.'''
+source = "e071abeb98d87c91"
+text = '''Записывает картинку области, которую может заполнить Новый Свет, по карте вашей игры, чтобы рисовать на ней сушу в любой программе: красьте сушу белым или цветами местности из пункта «Суша с картинки». Светло-серый — это Америки из игры, тёмно-серый — группы островов Старого Света.'''
 
 ["task.template"]
 source = "562fb1abc40a9754"
@@ -2839,3 +2839,355 @@ text = '''У мира, где остаются настоящие Америки
 ["part.resources.real"]
 source = "231a7f1347ab9b86"
 text = '''В мире с настоящими Америками ресурсы игровые: перегенерировать нечего.'''
+
+["editor.open"]
+source = "2749097d4615e22a"
+text = '''Нарисовать сушу…'''
+
+["editor.open_tip"]
+source = "7af03c865496e2d2"
+text = '''Нарисуйте сушу нового мира в редакторе: начните с готовой суши, рисуйте море, сушу, горы, нагорья, низины и озёра и смотрите, что из этого сделает генератор.'''
+
+["editor.edit"]
+source = "ea532e98dc1718e8"
+text = '''Править в редакторе'''
+
+["editor.title"]
+source = "741fe99063eb5947"
+text = '''Редактор суши'''
+
+["editor.preparing"]
+source = "6441bdcfc20faf2a"
+text = '''Вырезаю область из карты игры…'''
+
+["editor.preparing_hint"]
+source = "ca7f1740121d3e8d"
+text = '''В первый раз это занимает несколько секунд; область сохраняется для следующего раза.'''
+
+["editor.loading"]
+source = "2efe6cdfe991fab2"
+text = '''Открываю лист…'''
+
+["editor.failed"]
+source = "b53dd0415d3a2754"
+text = '''Не удалось вырезать область.'''
+
+["editor.close"]
+source = "7d9eb7acb13e2462"
+text = '''Закрыть'''
+
+["editor.cancel"]
+source = "19766ed6ccb2f4a3"
+text = '''Отмена'''
+
+["editor.use"]
+source = "9648de1d008135aa"
+text = '''Использовать эту сушу'''
+
+["editor.use_tip"]
+source = "5a6f463f3eabadac"
+text = '''Построить новый мир на этом рисунке.'''
+
+["editor.use_blocked"]
+source = "4393eab3f2421076"
+text = '''Генератор пока не может сделать мир из этого рисунка; посмотрите, что он пишет справа.'''
+
+["editor.used"]
+source = "db3bfb4ad32023c6"
+text = '''Новый мир будет построен на вашей суше.'''
+
+["editor.undo"]
+source = "a8283ade31856f71"
+text = '''Отменить'''
+
+["editor.redo"]
+source = "74273989b0966e23"
+text = '''Повторить'''
+
+["editor.zoom_in"]
+source = "0e47f09a748fa132"
+text = '''Приблизить'''
+
+["editor.zoom_out"]
+source = "bc7b631a689b45ca"
+text = '''Отдалить'''
+
+["editor.zoom_fit"]
+source = "ea7e755a18d06161"
+text = '''Показать весь лист'''
+
+["editor.zoom_100"]
+source = "74cdbe70e394d004"
+text = '''Реальный размер'''
+
+["editor.layer.drawing"]
+source = "4f6d08084be4e7c3"
+text = '''Показать ваш рисунок'''
+
+["editor.layer.americas"]
+source = "51d00c1eb3b98ab3"
+text = '''Показать Америки из игры'''
+
+["editor.layer.islands"]
+source = "dcc743a8b7be8c94"
+text = '''Показать группы островов Старого Света'''
+
+["editor.layer.margin"]
+source = "2561d8bdb9cffdbd"
+text = '''Показать береговое поле: суша, нарисованная в заштрихованной полосе, отбрасывается'''
+
+["editor.tools"]
+source = "ea93d6a262ecb87a"
+text = '''Инструменты'''
+
+["editor.tool.brush"]
+source = "8624ca0fcb3cd60d"
+text = '''Кисть'''
+
+["editor.tool.eraser"]
+source = "ce8ecb4b609997f0"
+text = '''Ластик (рисует море)'''
+
+["editor.tool.fill"]
+source = "033955d469b620d6"
+text = '''Заливка'''
+
+["editor.tool.line"]
+source = "d7852cd0d2453e8c"
+text = '''Линия'''
+
+["editor.tool.rectangle"]
+source = "0306996228eb0b74"
+text = '''Прямоугольник'''
+
+["editor.tool.ellipse"]
+source = "cb1ee8cb964f2362"
+text = '''Эллипс'''
+
+["editor.tool.pan"]
+source = "d6dda48073e6dc99"
+text = '''Двигать вид (или держать пробел)'''
+
+["editor.kinds"]
+source = "5c0153fc3e0e213b"
+text = '''Чем рисовать'''
+
+["editor.kind.sea"]
+source = "76b3af333dbac074"
+text = '''Море'''
+
+["editor.kind.land"]
+source = "b6baff9358ddd8f7"
+text = '''Суша'''
+
+["editor.kind.mountains"]
+source = "0e9b3aa04e8a8308"
+text = '''Горы'''
+
+["editor.kind.highlands"]
+source = "42d6fd618932575d"
+text = '''Нагорья'''
+
+["editor.kind.lowlands"]
+source = "778543d86246f062"
+text = '''Низины'''
+
+["editor.kind.lake"]
+source = "52082793941524be"
+text = '''Озеро'''
+
+["editor.kind.sea.tip"]
+source = "73598b587082becb"
+text = '''Открытая вода; ластик рисует её же'''
+
+["editor.kind.land.tip"]
+source = "e77b3a7d1c538203"
+text = '''Обычная суша: рельеф выберет генератор'''
+
+["editor.kind.mountains.tip"]
+source = "44baa0d7d37d4080"
+text = '''Горы: здесь поднимется хребет или высокие вершины'''
+
+["editor.kind.highlands.tip"]
+source = "fb3aa629b9575d2e"
+text = '''Нагорья: холмы и плато'''
+
+["editor.kind.lowlands.tip"]
+source = "f06314b33fa64e13"
+text = '''Низины: ровные равнины и долины'''
+
+["editor.kind.lake.tip"]
+source = "01b55f279084d7a6"
+text = '''Озеро: вода, окружённая сушей'''
+
+["editor.size"]
+source = "1af851907331c0ed"
+text = '''Размер'''
+
+["editor.on_ground"]
+source = "7a8e3dd0a4a2ad04"
+text = '''Местность только на суше'''
+
+["editor.on_ground_tip"]
+source = "41ac105fdb5a4f78"
+text = '''Горы, нагорья и низины рисуются только на суше, но не на море и не на озёрах.'''
+
+["editor.filled"]
+source = "9c51d32381e7a045"
+text = '''Закрашенные фигуры'''
+
+["editor.hint"]
+source = "c5e54f5fab5d526a"
+text = '''Рисуйте сушу кистью или начните с готовой суши справа.'''
+
+["editor.start"]
+source = "eb3f51dc872678ef"
+text = '''Начать с'''
+
+["editor.reroll"]
+source = "fe223c925f14f43e"
+text = '''Перебросить'''
+
+["editor.reroll_tip"]
+source = "8c964ee81520b48b"
+text = '''Другая форма для каждой готовой суши'''
+
+["editor.preset.supercontinent"]
+source = "2bcaef12e98803f1"
+text = '''Суперматерик'''
+
+["editor.preset.two_continents"]
+source = "3934912d7a602cf6"
+text = '''Два материка'''
+
+["editor.preset.three_continents"]
+source = "1753319a67b38b62"
+text = '''Три материка'''
+
+["editor.preset.archipelago"]
+source = "875b7406b52b0fa2"
+text = '''Архипелаг'''
+
+["editor.preset.island_chain"]
+source = "454d9384b30e78e4"
+text = '''Цепь островов'''
+
+["editor.preset.ring"]
+source = "b3f952e8b6787ce0"
+text = '''Кольцо'''
+
+["editor.preset.crescent"]
+source = "f65678294f3b5f71"
+text = '''Полумесяц'''
+
+["editor.preset.scattered"]
+source = "6cc98682072010a2"
+text = '''Рассыпанные острова'''
+
+["editor.americas"]
+source = "80e3026403729d93"
+text = '''Америки из игры'''
+
+["editor.sketch"]
+source = "561bef5d36a97b04"
+text = '''Набросок {number}'''
+
+["editor.decorate"]
+source = "1500b943fcc83323"
+text = '''Добавить местность'''
+
+["editor.decorate_tip"]
+source = "97ab40e8a4f4c535"
+text = '''Добавляет на обычную сушу горные хребты, нагорья, низины и озёра. Нарисованное вами остаётся.'''
+
+["editor.add.mountains"]
+source = "2cf0cc0de2217709"
+text = '''Горные хребты'''
+
+["editor.add.highlands"]
+source = "42d6fd618932575d"
+text = '''Нагорья'''
+
+["editor.add.lowlands"]
+source = "778543d86246f062"
+text = '''Низины'''
+
+["editor.add.lakes"]
+source = "ef4efa1111fdef42"
+text = '''Озёра'''
+
+["editor.decorate_run"]
+source = "692e7ee660f5970c"
+text = '''Добавить на сушу'''
+
+["editor.nothing_added"]
+source = "9d7a93d8a0a00333"
+text = '''Ничего не добавлено: нет обычной суши, куда можно добавлять.'''
+
+["editor.check"]
+source = "ac383636c6946523"
+text = '''Что сделает генератор'''
+
+["editor.checking"]
+source = "ec963ffc911b8401"
+text = '''Проверяю…'''
+
+["editor.check.land"]
+source = "5b5d48b3363eb3a9"
+text = '''Суша занимает {share} % листа.'''
+
+["editor.check.share"]
+source = "bcb2a6fbebc06626"
+text = '''Суша занимает {share} % листа; для мира нужно от {low} % до {high} %.'''
+
+["editor.check.outside_all"]
+source = "0ae840e858373e68"
+text = '''Почти вся суша лежит вне области или на её береговом поле (остаётся {kept} %). Рисуйте внутри более светлой области, подальше от заштрихованной полосы.'''
+
+["editor.check.lake_open"]
+source = "8911f39fee1d9e2a"
+text = '''Озёр, открытых к морю: {count} (обведены на листе). Озеро — это вода, окружённая сушей: оставьте полосу суши между ним и морем или нарисуйте его как море.'''
+
+["editor.check.dropped"]
+source = "b2c081fa78fe760e"
+text = '''{dropped} % суши лежит вне области или на её береговом поле и будет отброшено.'''
+
+["editor.check.specks"]
+source = "86b80d234027943a"
+text = '''Кусков суши меньше самого малого острова, которые будут удалены: {count}.'''
+
+["editor.check.islands"]
+source = "43cfc4601bfd4094"
+text = '''Групп островов Старого Света, до которых дотягивается суша: {count}. Каждая переместится целиком на ближайшее открытое море.'''
+
+["editor.picture"]
+source = "9a1c54f55e7cfb1c"
+text = '''Картинка'''
+
+["editor.import"]
+source = "223e8d923bc89c33"
+text = '''Импортировать картинку…'''
+
+["editor.export"]
+source = "d4ad76c90156e777"
+text = '''Сохранить рисунок…'''
+
+["editor.clear"]
+source = "d42ef3dee508ad4c"
+text = '''Очистить лист'''
+
+["editor.fit.stretched"]
+source = "1a4b2206eb79b98c"
+text = '''Картинка растянута под лист.'''
+
+["editor.fit.centered"]
+source = "46d4757e4a4f2756"
+text = '''У картинки другие пропорции, чем у листа; она помещена по центру.'''
+
+["editor.keys"]
+source = "cf3641c3ee84f5a8"
+text = '''B кисть · E ластик · G заливка · 1–6 виды · [ ] размер · правая кнопка берёт вид · пробел двигает'''
+
+["error.mask.lake_open"]
+source = "c0572bc2ba55387d"
+text = '''Отмеченное вами озеро открывается к морю, примерно в {left} % от левого края и в {top} % от верхнего: озеро — это вода, окружённая сушей. Оставьте полосу суши между озером и морем или нарисуйте эту воду как море.'''

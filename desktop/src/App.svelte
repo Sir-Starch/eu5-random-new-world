@@ -4,6 +4,7 @@
   import Compare from "./components/Compare.svelte";
   import Dialogs from "./components/Dialogs.svelte";
   import Icon from "./components/Icon.svelte";
+  import LandEditor from "./components/LandEditor.svelte";
   import NewWorldPanel from "./components/NewWorldPanel.svelte";
   import NewWorldView from "./components/NewWorldView.svelte";
   import Settings from "./components/Settings.svelte";
@@ -216,6 +217,8 @@
     <Toasts />
   </div>
 {/if}
+
+{#if app.editor}<LandEditor />{/if}
 
 {#if app.modal?.kind === "settings"}
   <Settings />

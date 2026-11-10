@@ -292,7 +292,7 @@ class Bridge:
 
     def land_editor(self) -> dict[str, object]:
         c = self.controller
-        return studio.opening(self._sheet(), c.land_mask, c.candidates)
+        return studio.opening(self._sheet(), c.land_mask, c.candidates, self._new_world())
 
     def land_preset(self, params: Params) -> str:
         return studio.preset(

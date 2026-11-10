@@ -51,6 +51,7 @@
     <span class="spacer"></span>
     <div class="land-tools">
       <button class="btn small" disabled={!n?.candidates_enabled} title={t("candidates_hint")} onclick={() => app.act("sketch_candidates")}>{t("candidates")}</button>
+      <button class="btn small" disabled={locked || !n?.template_enabled} title={t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
       <button class="btn small" disabled={locked} title={t("land_image_tip")} onclick={landImage}>{t("land_image")}</button>
       <button class="btn small" disabled={!n?.template_enabled} title={t("land_template_tip")} onclick={template}>{t("land_template")}</button>
     </div>
@@ -153,11 +154,15 @@
             <Icon name="image" />
             <p>{n.land_mask_text}</p>
             <code class="faint selectable">{n.land_mask}</code>
-            <button class="btn small" disabled={locked} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
+            <div class="row">
+              <button class="btn small" disabled={locked || !n.template_enabled} onclick={() => (app.editor = true)}>{t("editor.edit")}</button>
+              <button class="btn small" disabled={locked} onclick={() => app.call("clear_land_image")}>{t("land_image_clear")}</button>
+            </div>
           {:else}
             <h2>{t("land_tools")}</h2>
             <p class="dim">{t("candidates_hint")}</p>
             <p class="faint">{t("land_image_tip")}</p>
+            <button class="btn primary" disabled={locked || !n?.template_enabled} title={t("editor.open_tip")} onclick={() => (app.editor = true)}>{t("editor.open")}</button>
           {/if}
         </div>
       </div>
@@ -240,6 +245,12 @@
   }
   .sheet h2 {
     color: var(--text);
+  }
+  .row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .sheet code {
     max-width: 100%;
