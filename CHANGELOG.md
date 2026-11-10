@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Stretch a land drawn in an image onto the map smoothly. Up to 1.2.1 a picture was enlarged by whole
+  pixels with only a faint blur, so the coasts of a world made from an image (a template painted over
+  in the editor, a famous land, a picture of your own) climbed in steps of four to eight map pixels,
+  which showed close up as a staircase against the curves of a generated coast. The drawing is now
+  blurred by a pixel and a half and read through a cubic spline, so that the coast is a smooth curve
+  where it was drawn: it stays where the picture puts it, and the land keeps its share to a few
+  hundredths of a percent. A stroke one or two picture pixels wide (a hair-thin strait or island) is
+  smoothed away; draw those three pixels across. A world made again from the same picture and code
+  has the new coasts, like any other change of the generator in this release.
 - Choose the land of a new world in one **Land editor…** button, which replaces the window's
   buttons for sketching continents, loading a land image and saving the template (the classic window
   keeps them). The editor opens over the window on the area the New World can fill, with a brush,

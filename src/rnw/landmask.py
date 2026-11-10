@@ -52,7 +52,15 @@ MAX_LAND_PERMILLE: Final[int] = 900
 # How far the picture's proportions may differ from the canvas's, in permille.
 ASPECT_PERMILLE: Final[int] = 100
 ID_BITS: Final[int] = 48
-SMOOTH_ABOVE: Final[int] = 2
+# A drawing is smoothed before it is stretched: a binomial blur of 8 (a standard deviation of
+# 1.4 picture pixels, in whole numbers adding up to ``BLUR_UNIT`` along an axis) takes the
+# staircase of a stroke's pixels out of a coast and leaves what is a few pixels across. The blur
+# is then kept to ``VALUE_UNIT`` levels, so that the stretch below stays in 32 bits.
+BLUR_TAPS: Final[tuple[int, ...]] = (1, 8, 28, 56, 70, 56, 28, 8, 1)
+BLUR_UNIT: Final[int] = sum(BLUR_TAPS)
+VALUE_UNIT: Final[int] = 256
+# The cubic B-spline's weights are whole numbers adding up to this, so the arithmetic is exact.
+TAP_UNIT: Final[int] = 1 << 10
 PERMILLE: Final[int] = 1000
 
 # What a pixel of a drawing is. A kind is its index in ``KIND_COLORS``.
@@ -222,27 +230,104 @@ def read(path: Path) -> LandMask:
         raise LandMaskError(message) from error
 
 
+class _Taps:
+    """How the four source pixels round a canvas pixel add up along one axis.
+
+    A canvas pixel's centre lies at ``position = (2 c + 1) * source / (2 * canvas) - 1 / 2`` in
+    source pixels; ``first`` is the pixel at or before it and ``weights`` the cubic B-spline's
+    four weights of ``first - 1 .. first + 2`` (``TAP_UNIT`` in all). Both come from exact integer
+    arithmetic, so the same drawing gives the same land on every machine. Indices past the picture
+    take its edge pixel.
+    """
+
+    first: NDArray[np.int64]
+    weights: NDArray[np.int32]
+
+    def __init__(self, source: int, canvas: int) -> None:
+        # Position c lies at ``(2 c + 1) * source - canvas`` over ``2 * canvas``.
+        whole = 2 * canvas
+        if 12 * whole**3 * TAP_UNIT >= 1 << 63:
+            message = f"A canvas {canvas} pixels across is too large for the exact stretch"
+            raise ValueError(message)
+        top = (2 * np.arange(canvas, dtype=np.int64) + 1) * source - canvas
+        self.first = top // whole
+        a = top - self.first * whole  # the fraction past ``first``, over ``whole``
+        cube, unit = whole**3, TAP_UNIT
+        # The spline's weights times 6 * whole**3; the four add up to exactly that.
+        parts = (
+            (whole - a) ** 3,
+            3 * a**3 - 6 * a**2 * whole + 4 * cube,
+            -3 * a**3 + 3 * a**2 * whole + 3 * a * whole**2 + cube,
+            a**3,
+        )
+        scaled = np.stack([(2 * part * unit + 6 * cube) // (12 * cube) for part in parts])
+        # Rounding may leave the sum a unit or two off ``TAP_UNIT``: the centre pixels take it.
+        scaled[1] += unit - scaled.sum(axis=0)
+        self.weights = scaled.astype(np.int32)
+
+    def index(self, tap: int, limit: int) -> NDArray[np.int64]:
+        """The source pixel of tap ``tap`` (0 to 3) of every canvas pixel."""
+        return np.clip(self.first + tap - 1, 0, limit - 1)
+
+
+def _blurred(indicator: NDArray[np.bool_]) -> NDArray[np.int32]:
+    """``indicator`` blurred by ``BLUR_TAPS`` along both axes, in ``VALUE_UNIT`` levels (rounded),
+    with the picture's edge pixels carried on past its edge."""
+    reach = len(BLUR_TAPS) // 2
+    blurred = indicator.astype(np.int32)
+    for axis in (0, 1):
+        along = np.arange(int(blurred.shape[axis]), dtype=np.int64)
+        total = np.zeros_like(blurred)
+        for tap, weight in enumerate(BLUR_TAPS):
+            total += weight * blurred.take(along + tap - reach, axis=axis, mode="clip")
+        blurred = total
+    step = BLUR_UNIT**2 // VALUE_UNIT
+    return (blurred + step // 2) // step
+
+
 def _stretch(indicator: NDArray[np.bool_], shape: tuple[int, int]) -> NDArray[np.bool_]:
-    """``indicator`` on a canvas of ``shape``: stretched by whole pixels, and when it is much
-    smaller than the canvas its blocky edges smoothed (a blur and a threshold, in integers)."""
+    """``indicator`` on a canvas of ``shape``.
+
+    A picture the canvas does not outgrow is read pixel by pixel. A smaller one is stretched
+    smoothly: the picture is blurred, each pixel of the canvas takes the blur round it
+    through a cubic B-spline (smooth in itself) and is land where that reaches half. A straight
+    coast stays where it was drawn, and the steps of the drawing's pixels, which a stretch by
+    whole pixels leaves as a staircase on the shore, become curves; a feature a pixel or two wide
+    goes. Done in strips of canvas rows and in integers: the same on every machine.
+    """
     height, width = shape
     rows, columns = indicator.shape
-    source_rows = np.arange(height, dtype=np.int64) * rows // height
-    source_columns = np.arange(width, dtype=np.int64) * columns // width
-    fitted = indicator[np.ix_(source_rows, source_columns)]
-    scale = min(height // rows, width // columns)
-    if scale > SMOOTH_ABOVE:
-        smooth = box_blur(fitted.astype(np.int64) * PERMILLE, scale // 2)
-        fitted = smooth >= PERMILLE // 2
+    if height <= rows or width <= columns:
+        source_rows = np.arange(height, dtype=np.int64) * rows // height
+        source_columns = np.arange(width, dtype=np.int64) * columns // width
+        return indicator[np.ix_(source_rows, source_columns)]
+    across = _Taps(columns, width)
+    down = _Taps(rows, height)
+    across_index = [across.index(tap, columns) for tap in range(4)]
+    values = _blurred(indicator)
+    fitted = np.empty((height, width), dtype=np.bool_)
+    for top in range(0, height, STRIP_ROWS):
+        strip = slice(top, min(height, top + STRIP_ROWS))
+        wanted = [down.index(tap, rows)[strip] for tap in range(4)]
+        first = int(min(index.min() for index in wanted))
+        last = int(max(index.max() for index in wanted))
+        # The picture's rows this strip reads, already stretched across.
+        flat = np.zeros((last - first + 1, width), dtype=np.int32)
+        for tap in range(4):
+            flat += values[first : last + 1][:, across_index[tap]] * across.weights[tap]
+        total = np.zeros((strip.stop - top, width), dtype=np.int32)
+        for tap in range(4):
+            total += flat[wanted[tap] - first] * down.weights[tap, strip, np.newaxis]
+        fitted[strip] = total >= TAP_UNIT**2 * VALUE_UNIT // 2
     return fitted
 
 
 def fit(mask: LandMask, shape: tuple[int, int]) -> NDArray[np.bool_]:
     """The picture's land on a canvas of ``shape`` (rows, columns).
 
-    The picture's proportions must be the canvas's, within ``ASPECT_PERMILLE``; it is stretched
-    to it by whole pixels, and when it is much smaller than the canvas its blocky edges are
-    smoothed (a blur and a threshold, in integers). Deterministic.
+    The picture's proportions must be the canvas's, within ``ASPECT_PERMILLE``. A picture the
+    canvas does not outgrow is read pixel by pixel; a smaller one is stretched smoothly, so that
+    its coasts are curves and not a staircase of its pixels (``_stretch``). Deterministic.
     """
     height, width = shape
     rows, columns = mask.size

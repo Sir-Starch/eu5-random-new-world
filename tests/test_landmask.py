@@ -100,6 +100,101 @@ def test_the_picture_is_fitted_to_the_canvas_and_a_wrong_shape_says_what_is_righ
         _ = landmask.fit(mask, (480, 880))
 
 
+def _stretch(drawn: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
+    """The drawing's land on a canvas of ``shape`` (``fit`` demands the picture's proportions,
+    which these tests keep within a tenth)."""
+    return landmask.fit(LandMask(drawn), shape)
+
+
+def _edge(land: np.ndarray) -> np.ndarray:
+    """The first land pixel of every row."""
+    return np.argmax(land, axis=1).astype(float)
+
+
+def test_a_stretched_staircase_becomes_a_smooth_coast() -> None:
+    """A coast drawn one pixel in four steps lies on its line, not on a staircase of eight-pixel
+    steps; a straight coast stays exactly where it was drawn."""
+    rows, columns = 96, 88
+    drawn = np.zeros((rows, columns), dtype=bool)
+    for row in range(rows):
+        drawn[row, 30 + row // 4 :] = True
+    stretched = _stretch(drawn, (768, 704))
+    whole = np.arange(768) * rows // 768, np.arange(704) * columns // 704
+    pixels = drawn[np.ix_(*whole)]
+    deviations: list[float] = []
+    for land in (stretched, pixels):
+        edge, row = _edge(land)[100:600], np.arange(100, 600)
+        deviations.append(float(np.abs(edge - np.polyval(np.polyfit(row, edge, 1), row)).max()))
+    assert deviations[0] < 1.5  # a curve, within a pixel and a half of its line
+    assert deviations[1] > 3  # what stretching by whole pixels leaves
+    block = np.zeros((rows, columns), dtype=bool)
+    block[24:72, 22:66] = True
+    straight = _stretch(block, (768, 704))
+    assert set(_edge(straight)[300:400]) == {22.0 * 8}
+    assert abs(int(straight.sum()) - int(block.sum()) * 64) < 64 * 8
+
+
+def test_a_stretched_drawing_is_the_same_whatever_the_strips_and_mirrors_itself(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The strips of canvas rows only bound the memory, and the arithmetic is exact: a drawing
+    that is symmetric makes land that is, at a scale that is not a whole number too."""
+    block = np.zeros((96, 88), dtype=bool)
+    block[24:72, 22:66] = True
+    block[40:50, 30:36] = False
+    block[:, 60:64] = block[:, 22:26]
+    whole = _stretch(block, (700, 642))
+    monkeypatch.setattr(landmask, "STRIP_ROWS", 37)
+    assert np.array_equal(_stretch(block, (700, 642)), whole)
+    plain = np.zeros((96, 88), dtype=bool)
+    plain[24:72, 22:66] = True
+    even = _stretch(plain, (700, 642))
+    assert np.array_equal(even, even[:, ::-1])
+    assert np.array_equal(even, even[::-1])
+
+
+def test_a_stretched_drawing_is_a_blur_read_through_a_cubic_spline() -> None:
+    """The integer arithmetic agrees with the same stretch done plainly, in floating point."""
+    rng = np.random.default_rng(3)
+    drawn = np.zeros((40, 36), dtype=bool)
+    drawn[8:30, 6:28] = True
+    drawn[rng.random(drawn.shape) < 0.04] ^= True
+    height, width = 213, 191
+
+    def spline(source: int, canvas: int) -> np.ndarray:
+        position = (np.arange(canvas) + 0.5) * source / canvas - 0.5
+        first = np.floor(position).astype(int)
+        t = position - first
+        weights = np.stack(
+            [
+                (1 - t) ** 3 / 6,
+                (3 * t**3 - 6 * t**2 + 4) / 6,
+                (-3 * t**3 + 3 * t**2 + 3 * t + 1) / 6,
+                t**3 / 6,
+            ]
+        )
+        matrix = np.zeros((canvas, source))
+        for tap in range(4):
+            index = np.clip(first + tap - 1, 0, source - 1)
+            np.add.at(matrix, (np.arange(canvas), index), weights[tap])
+        return matrix
+
+    taps = np.array(landmask.BLUR_TAPS, dtype=float) / landmask.BLUR_UNIT
+    blurred = drawn.astype(float)
+    for axis in (0, 1):
+        along = np.arange(blurred.shape[axis])
+        blurred = np.sum(
+            [
+                taps[k] * blurred.take(along + k - len(taps) // 2, axis=axis, mode="clip")
+                for k in range(len(taps))
+            ],
+            axis=0,
+        )
+    plain = spline(40, height) @ blurred @ spline(36, width).T >= 0.5
+    stretched = _stretch(drawn, (height, width))
+    assert np.count_nonzero(stretched != plain) <= 2
+
+
 def _domain(height: int = 420, width: int = 380) -> np.ndarray:
     domain = np.zeros((height, width), dtype=bool)
     domain[20:-20, 20:-20] = True

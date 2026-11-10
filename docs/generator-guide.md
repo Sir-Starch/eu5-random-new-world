@@ -144,7 +144,10 @@ Paint land white and sea black, or use the ground colours: brown for mountains, 
 light green for lowlands and blue for lakes (a colour is read when it is clearly that colour;
 anything else is land or sea by its brightness). Painted ground is a hint to the relief: a
 mountain colour raises a range with its foothills, highlands raise hills and plateaus, lowlands
-keep the ground flat. The rest of the world is generated on that outline. Choosing sketches is not
+keep the ground flat. The rest of the world is generated on that outline, which is stretched to the
+map smoothly: a coast drawn in pixels becomes a curve, not a staircase, and stays where it was drawn.
+A stroke only a pixel or two wide (a hair-thin strait or island) is smoothed away, so draw those
+three pixels across. Choosing sketches is not
 possible on a drawn land, and the Wall cannot use a land image. The classic window keeps the
 sketches, **Save template…** and **Land from an image…** as buttons; the editor is in the new
 window.
