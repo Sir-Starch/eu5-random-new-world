@@ -3240,3 +3240,39 @@ text = '''Kalimdor'''
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
 
+
+["settings.experimental"]
+source = "6c39e69019727335"
+text = '''Funkcje eksperymentalne'''
+
+["settings.experimental.about"]
+source = "1b4e4c052fc67782"
+text = '''Funkcje, które są jeszcze testowane. Każda pojawia się tam, gdzie działa, i każda może się zmienić lub zniknąć w późniejszej wersji.'''
+
+["epoch.title"]
+source = "0d4593739cca99b9"
+text = '''Epoka algorytmu'''
+
+["epoch.about"]
+source = "564b73cc2c42fc29"
+text = '''Tworzy świat tak, jak robiło to wcześniejsze wydanie generatora, dla dawnych kodów i światów. To samo ziarno i te same ustawienia dają ten sam świat tylko w tej samej epoce.'''
+
+["epoch.choice"]
+source = "874b582be5fc8886"
+text = '''Epoka {epoch}: wydanie {release}'''
+
+["epoch.choice.current"]
+source = "c6e08c48fe5cc9f5"
+text = '''Epoka {epoch}: wydanie {release} (bieżąca)'''
+
+["epoch.followed"]
+source = "7face6208484cae9"
+text = '''Ten kod utworzono w wydaniu {release}, więc świat powstaje w epoce {epoch}, tak jak w tym wydaniu.'''
+
+["epoch.unavailable"]
+source = "c8034a4f55614434"
+text = '''Nie można wybrać epoki {epoch}. Z funkcjami eksperymentalnymi ten generator tworzy epoki od {first} do {last}.'''
+
+["error.epoch.stamp"]
+source = "0a0469d8c4467849"
+text = '''Ten kod świata nosi wydanie {release}, które tworzyło epokę {stamped}, a zażądano epoki {asked}. Świat starszej epoki wymaga kodu z jej znakiem.'''

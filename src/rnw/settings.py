@@ -240,11 +240,16 @@ class Settings:
     rolls: RollSettings = ROLLS
     mask: MaskSettings = MASK
     resources: ResourceSettings = RESOURCES
+    # The algorithm epoch the world is made by (``rnw.epoch``): never a setting of the world
+    # (a code and a record carry it as the release and the ``algorithm``), so it is no part of
+    # the document and of no digest of it. Whoever asks for an older epoch passes it here.
+    algorithm: int = ALGORITHM
 
     def to_json_data(self) -> dict[str, object]:
         """Return the schema-tagged document; no rolls are written while all are 0, so that the
         document, and every digest of it, is what it was before rolls existed."""
         data = cast("dict[str, object]", asdict(self))
+        del data["algorithm"]
         coast = cast("dict[str, object]", data["coast"])
         coast["window"] = list(self.coast.window)
         # Keep pre-Wall settings documents byte-identical, including old world codes.
@@ -668,7 +673,7 @@ def run_spec(seed: int, settings: Settings) -> dict[str, object]:
     world is made of leaves the specification, and every digest of it, as it was."""
     return {
         "generator": GENERATOR,
-        "algorithm": ALGORITHM,
+        "algorithm": settings.algorithm,
         "rng": RNG_VERSION,
         "seed": check_seed(seed),
         "settings": settings.to_json_data(),

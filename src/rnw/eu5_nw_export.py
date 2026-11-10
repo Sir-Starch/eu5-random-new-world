@@ -2811,6 +2811,14 @@ def export_new_world(  # noqa: PLR0913 - the CLI contract names each input.
         )
 
 
+def _require_algorithm(settings: Settings) -> None:
+    """Refuse an epoch this generator cannot make a world by, in words, before any work."""
+    try:
+        _ = epoch.require_selectable(settings.algorithm)
+    except epoch.EpochError as error:
+        raise NewWorldExportError(str(error)) from error
+
+
 def _ocean_pixels(world: NewWorld) -> NDArray[np.bool_]:
     """The generated sea mask, in bounded strips and independent of cell numbers."""
     sea_class = np.array([kind is CellClass.SEA for kind in world.classes] + [False])
@@ -2837,6 +2845,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
     cache_dir: Path | None,
 ) -> dict[str, object]:
     _ = configure()
+    _require_algorithm(settings)
     if settings.mask.id != (0 if land_mask is None else land_mask.id):
         message = (
             "The settings name a drawn land that was not given, or the given one is not it"
@@ -2990,6 +2999,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 waters=shapes.waters,
                 physical=physical,
                 biomes=weathering.result()[0],
+                algorithm=settings.algorithm,
             )
             if settings.new_world.expand_oceans or settings.new_world.landform:
                 plan.oceans = plan_oceans(
@@ -3150,6 +3160,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 settings=settings.natives,
                 seed=peoples_seed,
                 loc_keys=loc_keys,
+                algorithm=settings.algorithm,
             ),
         )
         checkpoint()
@@ -3607,7 +3618,7 @@ def _reproducibility(  # noqa: PLR0913 - what a record is made of
     fingerprint, label = game
     record = Record(
         format=FORMAT,
-        algorithm=epoch.CURRENT,
+        algorithm=settings.algorithm,
         release=__version__,
         code=world_code,
         preset=settings.preset,

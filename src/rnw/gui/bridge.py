@@ -138,6 +138,8 @@ class Bridge:
             "set_install": self.set_install,
             "set_destination": self.set_destination,
             "set_show_new_world": lambda p: c.set_show_new_world(_bool(p, "value")),
+            "set_experimental": lambda p: c.set_experimental(_bool(p, "value")),
+            "set_algorithm": lambda p: c.set_algorithm(_int(p, "value")),
             "choose_land_image": lambda p: c.choose_land_image(Path(_str(p, "path"))),
             "clear_land_image": lambda _p: c.clear_land_image(),
             "save_land_template": lambda p: c.save_land_template(Path(_str(p, "path"))),

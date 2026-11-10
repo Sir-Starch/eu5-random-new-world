@@ -73,6 +73,10 @@
       <Check checked={s?.preferences.window === "classic"} label={t("settings.classic_window")} hint={t("settings.classic_window.about")}
         onchange={(value) => app.call("set_window", { classic: value })} />
     </div>
+    <div class="span">
+      <Check checked={!!s?.preferences.experimental} label={t("settings.experimental")} hint={t("settings.experimental.about")}
+        onchange={(value) => app.call("set_experimental", { value })} />
+    </div>
     <p class="full hint about">{t("about_generator")}</p>
   </div>
   {#snippet footer()}

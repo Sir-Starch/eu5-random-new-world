@@ -25,6 +25,7 @@ from rnw.settings import WORLD_TYPES
 from tests.fakes import made_by_older_generator
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
     from pathlib import Path
 
     import pytest
@@ -1006,8 +1007,9 @@ def _checked_controller(
         game: GameInstall,
         data: Path,
         progress: Progress | None = None,
+        algorithms: Collection[int] | None = None,
     ) -> service.Check:
-        del game, data, progress
+        del game, data, progress, algorithms
         calls.append(world.id)
         if found is None:
             message = "no way"

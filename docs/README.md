@@ -72,6 +72,7 @@ queue of work. The release-level version policy is ADR 0003.
 | [0010](adr/0010-layered-worlds-and-a-generator-of-its-own.md) | Implemented layers, world files, reproducibility and installed-world recovery |
 | [0011](adr/0011-tauri-window.md) | The Tauri window over a Python bridge, its delivery and the classic fallback |
 | [0012](adr/0012-vanilla-geography.md) | Keeping the vanilla Americas and generating only their societies |
+| [0013](adr/0013-experimental-features-and-epoch-choice.md) | The experimental-features box and the choice of an algorithm epoch (61 to the current one) |
 
 ## Research and evidence
 

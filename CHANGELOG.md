@@ -52,6 +52,17 @@
   whole. A subcontinent may hold two pieces of one landmass when each can hold a region; regions,
   areas and provinces still keep one. Algorithm epoch 63: the world bytes changed, so a world code
   made by 1.2.1 (epoch 62) can give another world. Worlds already built are not rewritten.
+- Add **Experimental features** to Settings, in the Tauri and the classic window. The box reveals
+  options that are not meant for every player; unticking it returns them to their defaults. The
+  first is the **Algorithm epoch** on the new-world page: with the box ticked the generator makes a
+  world by epoch 63 (this one), 62 (1.2.1) or 61 (1.2.0), the same bytes as that release made
+  from the same code and game files. The code of such a world carries its release, a pasted code of
+  a listed older epoch selects it, and the versions, queued copies and candidates of a world keep
+  its epoch. Without the box nothing changes: an older world still has no versions and the window
+  names the other release. The epoch is not remembered between sessions, a world code and a
+  settings file keep their format, and the command line makes the current epoch. A new epoch now
+  keeps the algorithm it replaces behind a switch, with its frozen reference world checked, or
+  drops the oldest selectable epochs ([ADR 0013](docs/adr/0013-experimental-features-and-epoch-choice.md)).
 
 ## 1.2.1 — 2026-11-10
 

@@ -9,6 +9,7 @@ import json
 import os
 import re
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 from typing import cast
 
@@ -599,6 +600,44 @@ def test_local_reference_world_comes_out_the_same(tmp_path: Path) -> None:
     )
     absences = cast("dict[str, str]", stories["absences"])
     assert all(family in absences for family in confederate if not offered[family])
+    if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
+        pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
+    output = cast("dict[str, object]", golden["output"])
+    assert record.output_sha256 == output["sha256"]
+    assert record.output_count == output["count"]
+
+
+@pytest.mark.parametrize("number", epoch.selectable()[:-1])
+def test_local_older_epochs_come_out_as_their_frozen_reference_worlds(
+    number: int, tmp_path: Path
+) -> None:
+    """Every selectable epoch but the current one is still made byte for byte (ADR 0013): its
+    frozen reference world (``golden_world_epoch<N>.json``) is made again by that epoch.
+
+    Slow, about four minutes and 7.5 GiB each, so only with ``RNW_REPRODUCE=1``. Skipped on
+    another game build than the one the digest was taken on, as the current reference is.
+    """
+    root_value = os.environ.get("EU5_GAME_DIR")
+    if root_value is None or os.environ.get("RNW_REPRODUCE") != "1":
+        pytest.skip("EU5_GAME_DIR and RNW_REPRODUCE=1 are needed")
+    golden = cast(
+        "dict[str, object]",
+        json.loads(
+            Path(__file__).with_name(f"golden_world_epoch{number}.json").read_text(encoding="utf-8")
+        ),
+    )
+    assert golden["epoch"] == number
+    code = decode(str(golden["code"]))
+    assert epoch.epoch_of(code.generator) == number
+    report = export_new_world(
+        Path(root_value),
+        tmp_path / "generated" / "rnw_exp_reference",
+        seed=code.seed,
+        settings=replace(code.settings(), algorithm=number),
+        world_code=str(golden["code"]),
+    )
+    record = Record.from_json(report["record"])
+    assert record.algorithm == number
     if record.game.fingerprint_sha256 != golden["game_fingerprint_sha256"]:
         pytest.skip(f"the reference world is for {golden['game_label']}, not {record.game.label}")
     output = cast("dict[str, object]", golden["output"])

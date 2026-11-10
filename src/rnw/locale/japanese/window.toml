@@ -3240,3 +3240,39 @@ text = '''カリムドア'''
 source = "57db4d540d7253f0"
 text = '''アンサロン'''
 
+
+["settings.experimental"]
+source = "6c39e69019727335"
+text = '''実験的機能'''
+
+["settings.experimental.about"]
+source = "1b4e4c052fc67782"
+text = '''まだ試験中の機能です。それぞれ、効果のある場所に表示されます。今後のリリースで変更または廃止される場合があります。'''
+
+["epoch.title"]
+source = "0d4593739cca99b9"
+text = '''アルゴリズムのエポック'''
+
+["epoch.about"]
+source = "564b73cc2c42fc29"
+text = '''以前のリリースのジェネレーターと同じ方法でワールドを作ります。以前のコードやワールド向けです。同じシードと設定でも、同じワールドになるのは同じエポックのときだけです。'''
+
+["epoch.choice"]
+source = "874b582be5fc8886"
+text = '''エポック{epoch}：リリース{release}'''
+
+["epoch.choice.current"]
+source = "c6e08c48fe5cc9f5"
+text = '''エポック{epoch}：リリース{release}（現在）'''
+
+["epoch.followed"]
+source = "7face6208484cae9"
+text = '''このコードはリリース{release}で作られたため、そのリリースと同じくエポック{epoch}でワールドを作ります。'''
+
+["epoch.unavailable"]
+source = "c8034a4f55614434"
+text = '''エポック{epoch}は選べません。実験的機能をオンにすると、このジェネレーターはエポック{first}から{last}まで作れます。'''
+
+["error.epoch.stamp"]
+source = "0a0469d8c4467849"
+text = '''このワールドコードにはリリース{release}（エポック{stamped}）が記されていますが、エポック{asked}が指定されました。古いエポックのワールドには、そのエポックが記されたコードが必要です。'''

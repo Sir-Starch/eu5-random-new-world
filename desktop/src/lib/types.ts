@@ -50,6 +50,10 @@ export interface NewState {
   mode: string | null;
   seed: string;
   code: string;
+  /** The algorithm epoch the world is made by, and the epochs to choose from (none unless the
+   *  experimental features are on), newest first. */
+  algorithm: number;
+  algorithms: { epoch: number; label: string }[];
   notice: string;
   values: Record<string, ValueState>;
   quick: Record<string, string | null>;
@@ -199,7 +203,7 @@ export interface State {
   game: GameState;
   games: string[];
   profiles: string[];
-  preferences: { show_new_world: boolean; language: string; window: string };
+  preferences: { show_new_world: boolean; language: string; window: string; experimental: boolean };
   resources: string;
   selection: string;
   library: LibraryEntry[];

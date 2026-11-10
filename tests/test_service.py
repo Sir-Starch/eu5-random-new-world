@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 import pytest
@@ -13,7 +13,7 @@ from rnw.app import install, library, service
 from rnw.app.discovery import GameInstall, Profile
 from rnw.app.library import Placement
 from rnw.app.service import Request, generate
-from rnw.app.worldcode import encode, new_code
+from rnw.app.worldcode import decode, encode, new_code
 from rnw.bundle import COVER_COPY
 from rnw.eu5_lobby import SCRIPTED_GUI_FILE
 from rnw.pictures import TERRA_INCOGNITA
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from rnw.landmask import LandMask
+    from rnw.settings import Settings
     from rnw.worldname import Label
 
 
@@ -48,6 +49,7 @@ class FakeExport:
         self.calls: list[tuple[int, str | None]] = []
         self.labels: list[Label | None] = []
         self.masks: list[LandMask | None] = []
+        self.algorithms: list[int] = []
 
     def __call__(  # noqa: PLR0913
         self,
@@ -66,7 +68,9 @@ class FakeExport:
         land_mask: LandMask | None = None,
         cache_dir: Path | None = None,
     ) -> dict[str, object]:
-        del settings, settings_file, accept_build, replace, check_memory, cache_dir
+        del settings_file, accept_build, replace, check_memory, cache_dir
+        algorithm = cast("Settings", settings).algorithm
+        self.algorithms.append(algorithm)
         self.calls.append((seed, world_code))
         self.labels.append(world_label)
         self.masks.append(land_mask)
@@ -89,12 +93,15 @@ class FakeExport:
         record = write_bundle_record(
             output, game_dir, seed=seed, preset="continents", code=world_code
         )
+        made = dict(cast("dict[str, object]", record["record"]))
+        made["algorithm"] = algorithm
         return {
             "status": "NOT GAME VALIDATED",
             "canvas": {},
             "generated": {},
             "invariants": {},
             **record,
+            "record": made,
         }
 
 
@@ -446,6 +453,75 @@ def test_a_world_of_another_epoch_is_not_rebuilt_to_be_checked(tmp_path: Path) -
     assert found.verdict is Verdict.OTHER_ALGORITHM
     assert found.reproduced is None
     assert len(export.calls) == 1
+
+
+def _made_by(tmp_path: Path, export: FakeExport, number: int) -> tuple[library.World, GameInstall]:
+    """A world made by epoch ``number``, the code stamped as that epoch's release stamps it."""
+    game_dir = tmp_path / "game"
+    for relative in ("game/a.txt", "game/b.txt"):
+        (game_dir / relative).parent.mkdir(parents=True, exist_ok=True)
+        _ = (game_dir / relative).write_text(relative, encoding="utf-8")
+    code = replace(new_code("continents", 4242), generator=epoch.stamp_of(number))
+    request = replace(_request(tmp_path, install=False), code=code, algorithm=number)
+    return generate(request, Progress(), export).world, GameInstall(game_dir, None, "26043558")
+
+
+def test_a_world_is_made_by_the_epoch_asked_for_and_its_record_says_so(tmp_path: Path) -> None:
+    export = FakeExport()
+    world, _game = _made_by(tmp_path, export, 61)
+    assert export.algorithms == [61]
+    assert world.record is not None
+    assert world.record.algorithm == 61
+    assert epoch.epoch_of(decode(world.code).generator) == 61
+
+
+def test_a_world_is_made_by_the_current_epoch_unless_another_is_asked_for(tmp_path: Path) -> None:
+    """The command line asks for no epoch: a code stamped with an older release is made by this
+    generator's own, as before the experimental features."""
+    export = FakeExport()
+    code = replace(new_code("continents", 4242), generator=epoch.stamp_of(61))
+    made = generate(replace(_request(tmp_path, install=False), code=code), Progress(), export)
+    assert export.algorithms == [epoch.CURRENT]
+    assert made.world.record is not None
+    assert made.world.record.algorithm == epoch.CURRENT
+
+
+def test_an_epoch_must_be_the_one_the_code_is_stamped_with(tmp_path: Path) -> None:
+    export = FakeExport()
+    request = replace(_request(tmp_path, install=False), algorithm=61)
+    with pytest.raises(install.InstallError, match="stamped with release"):
+        _ = generate(request, Progress(), export)
+    assert export.calls == []
+
+
+def test_an_epoch_out_of_reach_is_refused_before_anything_is_made(tmp_path: Path) -> None:
+    export = FakeExport()
+    older = epoch.OLDEST_SELECTABLE - 1
+    code = replace(new_code("continents", 4242), generator=epoch.first_release(older))
+    request = replace(_request(tmp_path, install=False), code=code, algorithm=older)
+    with pytest.raises(install.InstallError, match="cannot be chosen"):
+        _ = generate(request, Progress(), export)
+    assert export.calls == []
+
+
+def test_a_world_of_an_older_epoch_is_checked_by_rebuilding_it_by_that_epoch(
+    tmp_path: Path,
+) -> None:
+    export = FakeExport()
+    world, game = _made_by(tmp_path, export, 61)
+    refused = service.check(world, game=game, data=tmp_path / "data", exporter=export)
+    assert refused.verdict is Verdict.OTHER_ALGORITHM
+    assert export.algorithms == [61]
+    found = service.check(
+        world,
+        game=game,
+        data=tmp_path / "data",
+        exporter=export,
+        algorithms=epoch.selectable(),
+    )
+    assert found.verdict is Verdict.IDENTICAL
+    assert found.reproduced is True
+    assert export.algorithms == [61, 61]
 
 
 def test_a_world_without_a_record_or_a_bundle_cannot_be_checked(tmp_path: Path) -> None:

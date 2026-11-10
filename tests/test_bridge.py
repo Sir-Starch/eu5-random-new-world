@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, cast, final
 import numpy as np
 import pytest
 
-from rnw import atlas
+from rnw import atlas, epoch
 from rnw.app import library, preferences, service
 from rnw.app.candidates import Candidate
 from rnw.app.discovery import Environment, GameInstall, Profile
@@ -99,6 +99,36 @@ def test_the_window_choice_is_kept_for_the_next_start(
     assert shown["window"] == "classic"
     _ = bridge.call("set_window", {"classic": False})
     assert preferences.load(bridge.controller.data).window == ""
+
+
+def test_the_experimental_box_opens_the_epoch_choice_and_closing_it_takes_the_epoch_back(
+    tmp_path: Path, fake_export: Exporter
+) -> None:
+    """Settings box -> ``set_experimental``; the new-world page lists the epochs only while it is
+    ticked, and ``set_algorithm`` changes the epoch and the stamp of the code."""
+    bridge = _bridge(tmp_path, fake_export)
+    state = bridge.state()
+    new = cast("dict[str, object]", state["new"])
+    assert cast("dict[str, object]", state["preferences"])["experimental"] is False
+    assert new["algorithms"] == []
+    assert new["algorithm"] == epoch.CURRENT
+    refusal = bridge.call("set_algorithm", {"value": 62})
+    assert isinstance(refusal, str)
+    assert bridge.call("set_experimental", {"value": True}) is None
+    state = bridge.state()
+    new = cast("dict[str, object]", state["new"])
+    assert cast("dict[str, object]", state["preferences"])["experimental"] is True
+    choices = cast("list[dict[str, object]]", new["algorithms"])
+    assert [item["epoch"] for item in choices] == list(reversed(epoch.selectable()))
+    assert all(isinstance(item["label"], str) and item["label"] for item in choices)
+    assert bridge.call("set_algorithm", {"value": 62}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    assert new["algorithm"] == 62
+    assert epoch.epoch_of(decode(str(new["code"])).generator) == 62
+    assert bridge.call("set_experimental", {"value": False}) is None
+    new = cast("dict[str, object]", bridge.state()["new"])
+    assert (new["algorithm"], new["algorithms"]) == (epoch.CURRENT, [])
+    _ = json.dumps(bridge.state())
 
 
 def test_the_window_changes_the_new_world_as_the_qt_window_did(

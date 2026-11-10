@@ -656,6 +656,53 @@ def neck_parts(
     return _settle_pieces(graph, members, owner, least)
 
 
+def banded_parts(
+    graph: ContactGraph, members: Sequence[int], weights: Sequence[int]
+) -> list[list[int]]:
+    """Parts in bands from the first row to the last, each its ``weights`` share of members.
+
+    The way epochs 61 and 62 cut the subcontinents (``rnw.epoch.SUBCONTINENT_WAISTS``), kept
+    byte for byte so that a world of those epochs is made again; ``neck_parts`` replaced it.
+
+    Members are ranked by row, then column and index. A band can cross a landmass more
+    than once; then the part keeps its largest piece on that landmass and every other piece
+    joins the part it has most contacts with (lowest index on ties). Parts are settled in
+    order, and a settled part has one piece on each landmass, so a piece it receives
+    touches that piece: no part ends with two pieces on one landmass.
+    """
+    if not weights or min(weights) < 1 or len(members) < len(weights):
+        message = f"Cannot band {len(members)} cells by the weights {list(weights)}"
+        raise PartitionError(message)
+    ranked = sorted(members, key=lambda node: (*graph.centres[node].tolist(), node))
+    owner: dict[int, int] = {}
+    total, start, held = sum(weights), 0, 0
+    for part, weight in enumerate(weights):
+        held += weight
+        end = held * len(ranked) // total
+        owner.update(dict.fromkeys(ranked[start:end], part))
+        start = end
+    landmasses = pieces(graph, members)
+    for part in range(len(weights)):
+        for landmass in landmasses:
+            found = pieces(graph, [node for node in landmass if owner[node] == part])
+            for piece in sorted(found, key=lambda cells: (-len(cells), cells[0]))[1:]:
+                inside = set(piece)
+                counts: dict[int, int] = {}
+                for node in piece:
+                    for neighbour, _ in graph.links[node]:
+                        if neighbour in owner and neighbour not in inside:
+                            counts[owner[neighbour]] = counts.get(owner[neighbour], 0) + 1
+                target = min(counts, key=lambda other: (-counts[other], other))
+                owner.update(dict.fromkeys(piece, target))
+    parts: list[list[int]] = [[] for _ in weights]
+    for node in sorted(owner):
+        parts[owner[node]].append(node)
+    if not all(parts):
+        message = "A band lost all its cells"
+        raise PartitionError(message)
+    return parts
+
+
 def piece_counts(found: Sequence[Sequence[int]], size: int, *, at_least: int) -> list[int]:
     """Parts per piece: one per ``size`` cells, at least one each and ``at_least`` in all.
 

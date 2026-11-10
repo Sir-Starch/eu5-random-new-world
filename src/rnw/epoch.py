@@ -13,6 +13,11 @@ changes the generator:
   the texts, the cover's shaders, a preset's values, the order of a random stream) is a new epoch:
   append an entry for the cycle's target release, or refresh its existing pending epoch
   reference, in the same change. Never change a frozen release's entry.
+* The epochs from ``OLDEST_SELECTABLE`` to the current one stay reachable through the experimental
+  features (ADR 0013). A new epoch therefore keeps the behaviour it replaces behind a named switch
+  below (``settings.algorithm >= SWITCH``), unless the difference is too costly to keep, and then
+  raises ``OLDEST_SELECTABLE`` past the epoch it drops. The epoch it follows needs its frozen
+  reference world (``tests/golden_world_epoch<N>.json``), and a test checks that it exists.
 * A change that alters none (the window, the packaging, a picture, the metadata, speed that
   proves equal bytes) is not.
 * Ordinary commits keep the cycle's target version (ADR 0003). Output changes within a cycle
@@ -102,8 +107,30 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
 )
 
 
+# The oldest epoch the experimental features can still make a world by (ADR 0013). Every epoch
+# from here to the current one stays reachable: a change that opens a new epoch keeps the
+# previous behaviour behind the switch below, and its frozen reference world proves the old
+# path still makes the same bytes. Raising this number drops epochs for good; lowering it needs
+# the old behaviour of every epoch in between.
+OLDEST_SELECTABLE: Final[int] = 61
+
+# The epoch that began each behaviour a world can still be made without. A generator stage asks
+# ``settings.algorithm >= SWITCH`` and keeps the older path in its own words. Append only, and
+# never above ``CURRENT``; a switch at or below ``OLDEST_SELECTABLE`` is dead code (a test says so).
+NO_EXCHANGE_MARKETS: Final[int] = 62  # 1.2.1: an exchange partner is no market centre of its own.
+SUBCONTINENT_WAISTS: Final[int] = 63  # 1.2.2: subcontinents are cut at the land's waist.
+SWITCHES: Final[dict[str, int]] = {
+    "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
+    "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
+}
+
+
 class ReleaseError(ValueError):
     """Text that is not a release version (``major.minor.patch``)."""
+
+
+class EpochError(ValueError):
+    """An epoch this generator cannot make a world by."""
 
 
 def parse(version: str) -> Release:
@@ -123,3 +150,38 @@ def epoch_of(release: str) -> int:
 
 
 CURRENT: Final[int] = epoch_of(__version__)
+
+
+def first_release(number: int) -> str:
+    """The first release of epoch ``number``, as the text of a version (``1.2.1``)."""
+    if not 1 <= number <= len(ALGORITHM_SINCE):
+        message = f"There is no epoch {number}; they run from 1 to {len(ALGORITHM_SINCE)}"
+        raise EpochError(message)
+    return ".".join(str(part) for part in ALGORITHM_SINCE[number - 1])
+
+
+def selectable() -> tuple[int, ...]:
+    """The epochs the experimental features can make a world by, oldest first."""
+    return tuple(range(OLDEST_SELECTABLE, CURRENT + 1))
+
+
+def available(*, experimental: bool) -> tuple[int, ...]:
+    """The epochs this generator makes a world by now: the current one, and with the
+    experimental features every selectable one."""
+    return selectable() if experimental else (CURRENT,)
+
+
+def require_selectable(number: int) -> int:
+    """``number`` if a world can be made by it, else ``EpochError`` in words."""
+    if number not in selectable():
+        first, last = OLDEST_SELECTABLE, CURRENT
+        message = f"Epoch {number} cannot be chosen; this generator makes epochs {first} to {last}"
+        raise EpochError(message)
+    return number
+
+
+def stamp_of(number: int) -> str:
+    """The release a world code of epoch ``number`` is stamped with: the running release for the
+    current epoch, the epoch's first release for an older one, whose generator makes the same
+    world (a code names the release that made it)."""
+    return __version__ if require_selectable(number) == CURRENT else first_release(number)

@@ -19,7 +19,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
-from rnw import __version__, atlas, history_presenter, landmask, worldfile, worldname
+from rnw import __version__, atlas, epoch, history_presenter, landmask, worldfile, worldname
 from rnw.app import (
     candidates,
     controls,
@@ -50,7 +50,6 @@ from rnw.app.worldcode import (
     encode,
     random_seed,
     reproduces,
-    require_same_land,
     rolled,
     with_new_seed,
 )
@@ -74,7 +73,7 @@ from rnw.settings import PRESETS, WORLD_TYPES, SettingsError, build_settings
 from rnw.wording import render
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Collection
 
     from rnw.app.library import World
     from rnw.atlas import Atlas
@@ -155,6 +154,7 @@ class Checker(Protocol):
         game: GameInstall,
         data: Path,
         progress: Progress | None = None,
+        algorithms: Collection[int] | None = None,
     ) -> service.Check: ...
 
 
@@ -163,9 +163,14 @@ def _generate(request: service.Request, progress: Progress | None = None) -> ser
 
 
 def _check(
-    world: World, *, game: GameInstall, data: Path, progress: Progress | None = None
+    world: World,
+    *,
+    game: GameInstall,
+    data: Path,
+    progress: Progress | None = None,
+    algorithms: Collection[int] | None = None,
 ) -> service.Check:
-    return service.check(world, game=game, data=data, progress=progress)
+    return service.check(world, game=game, data=data, progress=progress, algorithms=algorithms)
 
 
 class Controller:
@@ -202,6 +207,9 @@ class Controller:
         self.mode: str | None = None
         self.origin: str = ""
         self.seed: int = random_seed()
+        # The algorithm epoch the new world is made by (``rnw.epoch``); only the experimental
+        # features move it off the current one, and unticking them puts it back.
+        self.algorithm: int = epoch.CURRENT
         self._generation_seed: int | None = None
         self.changes: dict[str, int] = {}
         self.other_changes: dict[str, object] = {}
@@ -448,7 +456,15 @@ class Controller:
         }
         self.other_changes = other
         notices: list[str] = []
-        if not reproduces(code):
+        self.algorithm = epoch.CURRENT
+        if reproduces(code):
+            pass
+        elif reproduces(code, self.algorithms()):
+            # An older epoch this generator still makes (the experimental features): the page
+            # makes the world by it, as the release in the code did.
+            self.algorithm = epoch.epoch_of(code.generator)
+            notices.append(text("epoch.followed", release=code.generator, epoch=self.algorithm))
+        else:
             notices.append(text("other_version", made=code.generator, current=__version__))
         if set(other) - {"rolls", "mask"}:
             notices.append(text("other_changes"))
@@ -521,7 +537,70 @@ class Controller:
 
     def world_code(self) -> WorldCode:
         """The code of the new world as chosen now."""
-        return WorldCode(self.preset, self.seed, __version__, self._change_document(), self.origin)
+        return WorldCode(
+            self.preset,
+            self.seed,
+            epoch.stamp_of(self.algorithm),
+            self._change_document(),
+            self.origin,
+        )
+
+    def algorithms(self) -> tuple[int, ...]:
+        """The epochs this generator makes a world by now: the current one, and with the
+        experimental features the older ones it keeps (ADR 0013)."""
+        return epoch.available(experimental=self.preferences.experimental)
+
+    def epoch_choices(self) -> list[tuple[int, str]]:
+        """The epochs the new world can be made by, newest first, each with its label; none unless
+        the experimental features are on."""
+        if not self.preferences.experimental:
+            return []
+        return [
+            (
+                number,
+                text(
+                    "epoch.choice.current" if number == epoch.CURRENT else "epoch.choice",
+                    epoch=number,
+                    release=epoch.stamp_of(number),
+                ),
+            )
+            for number in reversed(self.algorithms())
+        ]
+
+    def set_experimental(self, on: bool) -> None:  # noqa: FBT001 - the settings' box
+        """Tick or untick the experimental features; unticking makes new worlds of the current
+        epoch again."""
+        self.preferences = replace(self.preferences, experimental=on)
+        preferences.save(self.data, self.preferences)
+        if not on:
+            self.algorithm = epoch.CURRENT
+        self._changed()
+
+    def set_algorithm(self, number: int) -> str | None:
+        """Choose the epoch the new world is made by; returns why not, or None."""
+        if number not in self.algorithms():
+            first, last = epoch.OLDEST_SELECTABLE, epoch.CURRENT
+            return text("epoch.unavailable", epoch=number, first=first, last=last)
+        if number != self.algorithm:
+            self.algorithm = number
+            self._changed()
+        return None
+
+    def _in_epoch(self, code: WorldCode, number: int | None = None) -> WorldCode:
+        """``code`` stamped as the release that made epoch ``number`` (by default the chosen one)
+        would stamp it: a code names the release that made its world."""
+        return replace(code, generator=epoch.stamp_of(self.algorithm if number is None else number))
+
+    def world_epoch(self, world: World) -> int | None:
+        """The epoch that made ``world``: its record says, else its code's stamp; None when the
+        code cannot be read or predates the epochs."""
+        if world.record is not None:
+            return world.record.algorithm
+        try:
+            made = epoch.epoch_of(decode(world.code).generator)
+        except (WorldCodeError, epoch.ReleaseError):
+            return None
+        return made or None
 
     def _custom_origin(self) -> None:
         self.origin = "chaos_custom" if self.mode == random_types.CHAOS else "custom"
@@ -656,15 +735,18 @@ class Controller:
         algorithm epoch. The world's record says which epoch made its files, and the record
         decides: the release stamped in a code is only what the code was copied from (a world
         made here from an old code has the old stamp). Without a record the code's stamp has to
-        do (``require_same_land``). A world of another epoch is refused in words, and a code
+        do (``reproduces``). A world of another epoch is refused in words, and a code
         that cannot be read with its own message.
         """
         try:
             code = decode(world.code)
             record = world.record
+            wanted = self.algorithms()
             if record is None:
-                require_same_land(code)
-            elif verdict(record) is not Verdict.SAME_ALGORITHM:
+                if not reproduces(code, wanted):
+                    message = say("version.other_algorithm", release=code.generator)
+                    raise WorldCodeError(message)  # noqa: TRY301 - one place makes the words
+            elif verdict(record, algorithms=wanted) is not Verdict.SAME_ALGORITHM:
                 message = say("version.other_algorithm", release=record.release)
                 raise WorldCodeError(message)  # noqa: TRY301 - one place makes the refusal's words
         except WorldCodeError as error:
@@ -693,6 +775,8 @@ class Controller:
         code = decode(world.code)
         shown, other = controls.flat(code.resolved_changes())
         self.mode, self.preset, self.seed = None, code.preset, code.seed
+        # A version is made by the epoch that made the world, which ``version_problem`` allowed.
+        self.algorithm = self.world_epoch(world) or epoch.CURRENT
         self._use_origin(code)
         self.changes = {k: v for k, v in shown.items() if controls.BY_KEY[k].allows(v)}
         self.other_changes = other
@@ -765,8 +849,9 @@ class Controller:
         problem = self.version_problem(world)
         if problem is not None:
             return problem
+        made = self.world_epoch(world) or epoch.CURRENT
         try:
-            code = rolled(decode(world.code), part)
+            code = self._in_epoch(rolled(decode(world.code), part), made)
             drawn = service.required_land_mask(self.data, world)
         except (WorldCodeError, service.LandImageError) as error:
             return explain(error)
@@ -782,6 +867,7 @@ class Controller:
             parent=world.id,
             part=part,
             land_mask=drawn,
+            algorithm=made,
         )
 
         def work(progress: Progress) -> service.Result:
@@ -1024,7 +1110,7 @@ class Controller:
     def choose_candidate(self, index: int) -> None:
         if self.busy or self.candidate_code is None or not 0 <= index < len(self.candidates):
             return
-        code = with_new_seed(self.candidate_code, self.candidates[index].seed)
+        code = self._in_epoch(with_new_seed(self.candidate_code, self.candidates[index].seed))
         _ = self.use_code(encode(code))
         self.selection = NEW
         self._changed()
@@ -1039,7 +1125,9 @@ class Controller:
         with, without choosing it; returns why not, or None."""
         if self.candidate_code is None or not 0 <= index < len(self.candidates):
             return None
-        return self._enqueue(with_new_seed(self.candidate_code, self.candidates[index].seed))
+        return self._enqueue(
+            self._in_epoch(with_new_seed(self.candidate_code, self.candidates[index].seed))
+        )
 
     def _enqueue(self, code: WorldCode) -> str | None:
         reason = text("ready_busy") if not self.can_prepare else self.setup_problem(code)
@@ -1068,7 +1156,7 @@ class Controller:
         return {
             index
             for index, found in enumerate(self.candidates)
-            if encode(with_new_seed(code, found.seed)) in waiting
+            if encode(self._in_epoch(with_new_seed(code, found.seed))) in waiting
         }
 
     def dequeue(self, code: str) -> None:
@@ -1188,6 +1276,7 @@ class Controller:
             land_mask=self.land_mask if code is None else None,
             output_folder=self.output_folder,
             world_file=self.world_file,
+            algorithm=self.algorithm,
         )
 
     def start(self) -> str | None:
@@ -1224,7 +1313,9 @@ class Controller:
             )
         if found is not None and found.verdict is Verdict.OTHER_INPUTS:
             return text("repro.other_inputs", count=len(found.changed_inputs))
-        key = REPRODUCTION.get(verdict(record), "repro.same_algorithm")
+        key = REPRODUCTION.get(
+            verdict(record, algorithms=self.algorithms()), "repro.same_algorithm"
+        )
         return text(key, release=record.release)
 
     # -- world files ---------------------------------------------------------------------------
@@ -1450,9 +1541,12 @@ class Controller:
         if world.record is None:
             return text("repro.none")
         game, data, checks, checker = self.game, self.data, self.checks, self.checker
+        algorithms = self.algorithms()
 
         def work(progress: Progress) -> None:
-            checks[world.id] = checker(world, game=game, data=data, progress=progress)
+            checks[world.id] = checker(
+                world, game=game, data=data, progress=progress, algorithms=algorithms
+            )
 
         return self._run(Task.CHECK, world.id, work)
 

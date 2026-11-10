@@ -212,6 +212,20 @@
         </span>
       </label>
       <p class="hint">{t("code_hint")}</p>
+      {#if n?.algorithms.length}
+        <label class="field">
+          <span class="key">{t("epoch.title")}</span>
+          <select
+            class="input"
+            value={String(n.algorithm)}
+            disabled={locked}
+            onchange={(event) => app.act("set_algorithm", { value: Number(event.currentTarget.value) })}
+          >
+            {#each n.algorithms as item (item.epoch)}<option value={String(item.epoch)}>{item.label}</option>{/each}
+          </select>
+        </label>
+        <p class="hint">{t("epoch.about")}</p>
+      {/if}
     </Section>
   {:else if app.newTab === "advanced"}
     <div class="advanced-head">

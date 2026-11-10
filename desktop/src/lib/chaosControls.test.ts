@@ -19,7 +19,7 @@ it("offers a separate settings draw only for Total Chaos and respects preparatio
   const call = vi.spyOn(app, "call").mockResolvedValue(undefined);
   app.newTab = "world";
   app.info = { strings: { randomize_settings: "Randomize settings again" } } as unknown as Static;
-  const settings = { mode: "chaos", choice: "chaos", preset: "islands", queue: [], values: {}, quick: {} } as unknown as NewState;
+  const settings = { mode: "chaos", choice: "chaos", preset: "islands", queue: [], values: {}, quick: {}, algorithm: 63, algorithms: [] } as unknown as NewState;
   app.now = { busy: false, preferences: { show_new_world: false }, new: settings } as State;
   panel = mount(NewWorldPanel, { target: document.body });
   flushSync();

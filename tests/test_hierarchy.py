@@ -11,6 +11,7 @@ import pytest
 from rnw.eu5_newworld import (
     IdentityError,
     _Area,  # pyright: ignore[reportPrivateUsage]
+    _bands,  # pyright: ignore[reportPrivateUsage]
     _check_pieces,  # pyright: ignore[reportPrivateUsage]
     _check_shores,  # pyright: ignore[reportPrivateUsage]
     _independent_coasts,  # pyright: ignore[reportPrivateUsage]
@@ -28,6 +29,7 @@ from rnw.hierarchy import (
     PartitionError,
     absorb_small_pieces,
     balanced_parts,
+    banded_parts,
     centre_of,
     contact_graph,
     match,
@@ -276,6 +278,63 @@ def test_a_piece_too_small_to_hold_a_region_joins_the_part_it_touches() -> None:
     assert sorted(north + south) == members
     with pytest.raises(PartitionError, match="Cannot cut"):
         _ = neck_parts(graph, members, [1, 0])
+
+
+def test_bands_follow_rows_and_weights() -> None:
+    """Epochs 61 and 62 cut the subcontinents in bands (``rnw.epoch.SUBCONTINENT_WAISTS``)."""
+    graph = _grid(10, 40)
+    members = _land(graph)
+    north, south = banded_parts(graph, members, [3, 1])
+    assert (len(north), len(south)) == (300, 100)
+    assert max(int(graph.centres[cell][0]) for cell in north) < min(
+        int(graph.centres[cell][0]) for cell in south
+    )
+    assert all(len(pieces(graph, part)) == 1 for part in (north, south))
+    assert banded_parts(graph, list(reversed(members)), [3, 1]) == [north, south]
+
+
+def test_a_band_crossing_a_landmass_twice_keeps_one_piece_there() -> None:
+    """A U open to the north: the northern band holds both arms, so it keeps the larger one
+    and the other arm joins the southern band, which it touches."""
+    width, height = 10, 10
+    graph = _grid(width, height)
+    hollow = {row * width + column for row in range(6) for column in range(3, 7)}
+    keep = [cell not in hollow for cell in range(width * height)]
+    edges = [(first, second) for first, links in enumerate(graph.links) for second, _ in links]
+    graph = contact_graph(graph.centres, edges, keep)
+    members = _land(graph)
+    north, south = banded_parts(graph, members, [1, 1])
+    assert split_landmasses(graph, [north, south]) == []
+    assert len(pieces(graph, north)) == 1
+    assert sorted(north + south) == members
+    with pytest.raises(PartitionError, match="Cannot band"):
+        _ = banded_parts(graph, members, [1, 0])
+
+
+def test_the_epoch_chooses_between_bands_and_waists_for_the_subcontinents() -> None:
+    """On an hourglass the bands cut through the middle of the neck, the waist cut at its end:
+    epoch 62 and below band the rows, epoch 63 cuts the narrowest part."""
+    graph = _drawn(
+        "##########",
+        "##########",
+        "   ####   ",
+        "   ####   ",
+        "   ####   ",
+        "##########",
+        "##########",
+    )
+    cells = _land(graph)
+    tally = _Tally(0)
+    for index in range(26):
+        tally.add(("america", "north", "region", "area"), 0, index, 1)
+        tally.add(("america", "south", "region", "area"), 100, index, 1)
+    keys = ["north", "south"]
+    for older in (61, 62):
+        assert _bands(graph, cells, tally, keys, older) == banded_parts(graph, cells, [26, 26])
+    waists = _bands(graph, cells, tally, keys, 63)
+    assert waists != banded_parts(graph, cells, [26, 26])
+    assert [len(part) for part in waists] == [28, 24]
+    assert sorted(waists[0] + waists[1]) == cells
 
 
 def test_region_keys_keep_their_vanilla_layout_against_physical_pull() -> None:

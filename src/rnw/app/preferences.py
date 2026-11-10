@@ -28,6 +28,8 @@ class Preferences:
     language: str = ""
     # Which window opens: empty for the Tauri window, "classic" for the Qt one (rnw.gui.start).
     window: str = ""
+    # The experimental features (ADR 0013): off until the player ticks them in the settings.
+    experimental: bool = False
 
 
 def load(data: Path) -> Preferences:
@@ -40,6 +42,7 @@ def load(data: Path) -> Preferences:
             profile_dir=str(row.get("profile_dir", "")),
             language=str(row.get("language", "")),
             window=str(row.get("window", "")),
+            experimental=row.get("experimental") is True,
         )
     return Preferences()
 

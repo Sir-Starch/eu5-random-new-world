@@ -31,7 +31,7 @@ from rnw import epoch
 from rnw.settings import SettingsError, build_settings
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Collection, Iterable, Mapping
 
     from rnw.settings import Settings
 
@@ -260,8 +260,13 @@ def canonical(data: object) -> str:
     return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True) + "\n"
 
 
-def verdict(record: Record, *, inputs_same: bool | None = None) -> Verdict:
+def verdict(
+    record: Record, *, inputs_same: bool | None = None, algorithms: Collection[int] | None = None
+) -> Verdict:
     """Whether this generator makes the record's world again.
+
+    ``algorithms`` are the epochs it makes a world by now (``epoch.available``): the current one
+    unless the experimental features keep the older ones within reach.
 
     ``inputs_same`` is the result of comparing the game's files with the ones the world read:
     True, False, or None when they have not been compared (a window that opens a world does not
@@ -269,7 +274,7 @@ def verdict(record: Record, *, inputs_same: bool | None = None) -> Verdict:
     """
     if record.format > FORMAT:
         return Verdict.NEWER_FORMAT
-    if record.algorithm != epoch.CURRENT:
+    if record.algorithm not in (algorithms if algorithms is not None else (epoch.CURRENT,)):
         return Verdict.OTHER_ALGORITHM
     if inputs_same is None:
         return Verdict.SAME_ALGORITHM

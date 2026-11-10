@@ -49,6 +49,18 @@ def test_preferences_keep_the_new_world_hidden_until_changed(tmp_path: Path) -> 
     assert not preferences.load(tmp_path).show_new_world
 
 
+def test_the_experimental_features_stay_off_until_ticked_and_only_a_true_turns_them_on(
+    tmp_path: Path,
+) -> None:
+    """Off by default; a saved choice comes back; anything but the JSON ``true`` is off."""
+    assert not preferences.load(tmp_path).experimental
+    preferences.save(tmp_path, preferences.Preferences(experimental=True))
+    assert preferences.load(tmp_path).experimental
+    for odd in ('"yes"', "1", "null", "[]"):
+        _ = (tmp_path / preferences.FILE).write_text(f'{{"experimental": {odd}}}', encoding="utf-8")
+        assert not preferences.load(tmp_path).experimental
+
+
 def test_the_data_folder_can_be_chosen_by_a_variable_or_kept_beside_the_program(
     tmp_path: Path,
 ) -> None:

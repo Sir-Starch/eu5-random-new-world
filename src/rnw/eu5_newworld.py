@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import wording
+from rnw.epoch import CURRENT, SUBCONTINENT_WAISTS
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.eu5_regionkeys import (
     AREA_PLACE_WEIGHT,
@@ -39,6 +40,7 @@ from rnw.eu5_regionkeys import (
 from rnw.hierarchy import (
     absorb_small_pieces,
     balanced_parts,
+    banded_parts,
     centre_of,
     contact_graph,
     match,
@@ -286,14 +288,19 @@ def _vanilla_land(
 
 
 def _bands(
-    graph: ContactGraph, cells: list[int], tally: _Tally, keys: list[str]
+    graph: ContactGraph, cells: list[int], tally: _Tally, keys: list[str], algorithm: int
 ) -> list[list[int]]:
-    """The subcontinents from north to south, in their vanilla order and about their shares."""
+    """The subcontinents from north to south, in their vanilla order and about their shares.
+
+    Cut at the land's waists (``neck_parts``); before epoch 63 in bands of rows (``banded_parts``).
+    """
     if len(keys) > len(cells):
         message = f"{len(cells)} generated cells cannot hold the {len(keys)} keys {keys}"
         raise IdentityError(message)
     order = sorted(range(len(keys)), key=lambda key: (tally.centre(keys[key])[0], keys[key]))
     weights = [tally.count[keys[key]] for key in order]
+    if algorithm < SUBCONTINENT_WAISTS:
+        return _in_order(banded_parts(graph, cells, weights), order)
     total = sum(weights)
     # A piece of a subcontinent on a landmass it shares with another piece must be able to hold
     # a region: as many cells as an average region of the subcontinent's share of the cells.
@@ -301,8 +308,12 @@ def _bands(
         max(1, len(cells) * weight // total // max(1, len(tally.children[keys[key]])))
         for key, weight in zip(order, weights, strict=True)
     ]
-    found = neck_parts(graph, cells, weights, lowest)
-    parts: list[list[int]] = [[] for _ in keys]
+    return _in_order(neck_parts(graph, cells, weights, lowest), order)
+
+
+def _in_order(found: list[list[int]], order: list[int]) -> list[list[int]]:
+    """The parts, cut north to south, by the subcontinent each belongs to."""
+    parts: list[list[int]] = [[] for _ in order]
     for key, part in zip(order, found, strict=True):
         parts[key] = part
     return parts
@@ -357,6 +368,7 @@ def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and ph
     keys: KeySpace,
     *,
     physical: KeyMatcher,
+    algorithm: int = CURRENT,
 ) -> list[_Area]:
     """Top-down: subcontinents and regions keep their vanilla keys, areas reuse theirs.
 
@@ -372,7 +384,7 @@ def _land_areas(  # noqa: PLR0913 - partition geometry, vanilla hierarchy and ph
     areas: list[_Area] = []
     subcontinents = sorted(tally.children[NEW_WORLD])
     for subcontinent, sub_cells in zip(
-        subcontinents, _bands(graph, cells, tally, subcontinents), strict=True
+        subcontinents, _bands(graph, cells, tally, subcontinents, algorithm), strict=True
     ):
         regions = sorted(tally.children[subcontinent])
         needs = [len(tally.children[region]) for region in regions]
@@ -801,6 +813,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     keys: KeySpace,
     physical: KeyMatcher,
     units: LocationUnits,
+    algorithm: int,
 ) -> tuple[list[_Area], set[str]]:
     """Land areas, then sea areas, all checked; and the names of the cut ocean areas."""
     count = len(game_map.keys)
@@ -819,6 +832,7 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
         settings.province_size,
         keys,
         physical=physical,
+        algorithm=algorithm,
     )
     areas = [
         replace(
@@ -864,7 +878,9 @@ def _hierarchy(  # noqa: PLR0913, PLR0917 - the hierarchy reads the map, canvas 
     )
     sea_areas.extend(_inland_areas(sea, basins, all_coasts, parents, keys))
     physical_land = contact_graph(world.centroids, world.edges, is_land)
-    _check_pieces(physical_land, areas, depth=len(LEVELS) - 1, exempt=set())
+    # A subcontinent may hold two pieces of a landmass since epoch 63; before, one (bands).
+    one_piece_up_to = len(LEVELS) - (1 if algorithm >= SUBCONTINENT_WAISTS else 0)
+    _check_pieces(physical_land, areas, depth=one_piece_up_to, exempt=set())
     _check_pieces(sea, sea_areas, depth=2, exempt=anchored)
     _check_shores(sea, sea_areas, all_coasts)
     return areas + sea_areas, anchored
@@ -883,6 +899,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
     waters: Waters,
     physical: KeyMatcher,
     biomes: CellBiomes,
+    algorithm: int = CURRENT,
 ) -> Plan:
     """Assign keys, colours, names and parents to every generated cell.
 
@@ -906,7 +923,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
         ),
     )
     areas, anchored = _hierarchy(
-        game_map, canvas, world, hierarchy, geometry, settings, keys, physical, units
+        game_map, canvas, world, hierarchy, geometry, settings, keys, physical, units, algorithm
     )
     plan = Plan(cells=[], anchored_sea_areas=sorted(anchored), physical_keys=physical.assignments)
     province_names = NameGenerator(seed, "provinces")

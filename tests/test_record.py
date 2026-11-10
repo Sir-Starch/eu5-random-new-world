@@ -120,3 +120,14 @@ def test_a_verdict_is_always_one_of_five_states() -> None:
     newer = replace(record, format=FORMAT + 1, algorithm=epoch.CURRENT + 1)
     assert verdict(newer, inputs_same=True) is Verdict.NEWER_FORMAT
     assert cast("object", Verdict.IDENTICAL.value) == "identical"
+
+
+def test_an_older_epoch_is_the_same_algorithm_only_when_the_generator_is_set_to_make_it() -> None:
+    """The experimental features widen the epochs a generator makes; the verdict follows them."""
+    older = replace(_record(), algorithm=epoch.OLDEST_SELECTABLE)
+    assert verdict(older) is Verdict.OTHER_ALGORITHM
+    assert verdict(older, algorithms=(epoch.CURRENT,)) is Verdict.OTHER_ALGORITHM
+    assert verdict(older, algorithms=epoch.selectable()) is Verdict.SAME_ALGORITHM
+    assert verdict(older, inputs_same=True, algorithms=epoch.selectable()) is Verdict.IDENTICAL
+    unreadable = replace(older, format=FORMAT + 1)
+    assert verdict(unreadable, algorithms=epoch.selectable()) is Verdict.NEWER_FORMAT

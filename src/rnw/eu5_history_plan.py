@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, final
 
 import numpy as np
 
+from rnw.epoch import CURRENT, NO_EXCHANGE_MARKETS
 from rnw.eu5_archetypes import government_fields
 from rnw.eu5_empires import empire_roads, extraordinary_report, road_targets
 from rnw.eu5_history_values import profile_positions
@@ -44,6 +45,7 @@ from rnw.societies import (
     CITY,
     STATE,
     STEP_COST,
+    TOWN,
     TRIBE,
     Polity,
     settlement_centres,
@@ -81,6 +83,8 @@ class ProjectionInputs:
     holy_sites: Mapping[str, str]
     reach_steps: int = 16
     coastal_areas: Mapping[str, tuple[str, ...]] | None = None
+    # The epoch the start is projected by (``rnw.epoch``).
+    algorithm: int = CURRENT
 
 
 @dataclass(frozen=True, slots=True)
@@ -428,16 +432,44 @@ def _discovered(
 
 
 def _centres(
-    projection: _Projection, societies: Societies
+    projection: _Projection,
+    countries: Sequence[Country],
+    societies: Societies,
+    diplomacy: DiplomacyProjection,
 ) -> tuple[dict[str, tuple[str, str]], tuple[str, ...]]:
     """Ranks with the culture's town setup and the market centres of the surviving countries.
 
     The calibrated centres of ``settlement_centres`` are all there is: an exchange agreement
     adds a road and an opinion, never a market. The vanilla Americas have 12 market centres for
     223 landed countries; a market of every partner made each country trade alone (1.2.0).
+    That is what epoch 61 still does (``rnw.epoch.NO_EXCHANGE_MARKETS``): each partner of a
+    recorded exchange becomes a market centre and, unless it ranks already, a town.
     """
+    ranks = dict(societies.ranks)
+    markets = set(societies.markets)
+    if projection.inputs.algorithm < NO_EXCHANGE_MARKETS:
+        by_tag = {country.tag: country for country in countries}
+        for pair in diplomacy.exchanges:
+            for tag in pair:
+                country = by_tag[tag]
+                actor = projection.context.index.actors[country.history_actor]
+                coastal = [
+                    key for key in country.members if projection.context.index.places[key].coastal
+                ]
+                choices = (
+                    coastal
+                    if actor.society.exchange == "coastal" and coastal
+                    else [country.capital]
+                )
+                place = min(
+                    choices,
+                    key=lambda key: (-int(societies.population[projection.nodes[key]]), key),
+                )
+                node = projection.nodes[place]
+                markets.add(node)
+                _ = ranks.setdefault(node, TOWN)
     setups: dict[str, tuple[str, str]] = {}
-    for node, rank in sorted(societies.ranks.items()):
+    for node, rank in sorted(ranks.items()):
         key = projection.inputs.keys[node]
         culture, _ = projection.identity(key)
         info = projection.inputs.vanilla.cultures[culture]
@@ -445,7 +477,7 @@ def _centres(
             (info.city_setup or DEFAULT_CITY) if rank == CITY else (info.town_setup or DEFAULT_TOWN)
         )
         setups[key] = rank, setup
-    return setups, tuple(projection.inputs.keys[node] for node in sorted(societies.markets))
+    return setups, tuple(projection.inputs.keys[node] for node in sorted(markets))
 
 
 def _roads(  # noqa: PLR0913 - existing road targets require centres and current population.
@@ -520,7 +552,7 @@ def project_start(
     confederations = _confederations(projection.groups)
     countries = _discovered(projection, countries, diplomacy, confederations)
     societies = projection.societies(countries)
-    ranks, markets = _centres(projection, societies)
+    ranks, markets = _centres(projection, countries, societies, diplomacy)
     population = dict(zip(inputs.keys, societies.population.tolist(), strict=True))
     roads = _roads(
         projection, countries, diplomacy, ranks=ranks, markets=markets, population=population

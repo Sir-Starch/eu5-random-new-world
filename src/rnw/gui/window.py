@@ -214,6 +214,7 @@ class SettingsDialog(QDialog):
         layout.addWidget(self.language_note)
         layout.addWidget(self.problem)
         layout.addLayout(self._window_choice())
+        layout.addLayout(self._experimental_choice())
         for choice in (self.game_choice, self.profile_choice):
             choice.setSizeAdjustPolicy(
                 QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
@@ -259,6 +260,20 @@ class SettingsDialog(QDialog):
         rows = QVBoxLayout()
         rows.setSpacing(2)
         rows.addWidget(self.classic_box)
+        rows.addWidget(hint)
+        return rows
+
+    def _experimental_choice(self) -> QVBoxLayout:
+        """The box that makes the experimental features available (ADR 0013)."""
+        controller = self.window_.controller
+        self.experimental_box: QCheckBox = QCheckBox(text("settings.experimental"))
+        self.experimental_box.setChecked(controller.preferences.experimental)
+        _ = self.experimental_box.toggled.connect(controller.set_experimental)
+        hint = QLabel(text("settings.experimental.about"))
+        hint.setWordWrap(True)
+        rows = QVBoxLayout()
+        rows.setSpacing(2)
+        rows.addWidget(self.experimental_box)
         rows.addWidget(hint)
         return rows
 
@@ -1069,6 +1084,16 @@ class MainWindow(QMainWindow):
         buttons.addWidget(self.copy_button)
         buttons.addWidget(self.paste_button)
         world.addLayout(buttons, 1, 2)
+        # The algorithm epoch (ADR 0013): shown only while the experimental features are on.
+        self.epoch_label: QLabel = QLabel(text("epoch.title"))
+        self.epoch_choice: QComboBox = QComboBox()
+        self.epoch_choice.setToolTip(text("epoch.about"))
+        self.epoch_label.setToolTip(text("epoch.about"))
+        self.epoch_label.setVisible(False)
+        self.epoch_choice.setVisible(False)
+        world.addWidget(self.epoch_label, 2, 0)
+        world.addWidget(self.epoch_choice, 2, 1)
+        _ = self.epoch_choice.activated.connect(self._epoch_picked)
         world.setColumnStretch(1, 1)
         return world
 
@@ -1863,6 +1888,7 @@ class MainWindow(QMainWindow):
             self.seed_edit.setText(str(controller.seed))
         if not self.code_edit.hasFocus():
             self.code_edit.setText(controller.code)
+        self._refresh_epoch(busy)
         self.notice.setText(controller.notice)
         self.notice.setVisible(bool(controller.notice))
         keeps = bool(controller.value("new_world.keep_geography"))
@@ -2266,6 +2292,34 @@ class MainWindow(QMainWindow):
             self.notice.setText(problem)
             self.notice.setVisible(True)
             self.seed_edit.setText(str(self.controller.seed))
+
+    def _refresh_epoch(self, busy: bool) -> None:  # noqa: FBT001 - one flag of the refresh
+        """The epoch choice: listed while the experimental features are on."""
+        choices = self.controller.epoch_choices()
+        self.epoch_label.setVisible(bool(choices))
+        self.epoch_choice.setVisible(bool(choices))
+        listed = [
+            cast("int", self.epoch_choice.itemData(i)) for i in range(self.epoch_choice.count())
+        ]
+        _ = self.epoch_choice.blockSignals(True)  # noqa: FBT003 - Qt synchronization
+        if listed != [number for number, _label in choices]:
+            self.epoch_choice.clear()
+            for number, label in choices:
+                self.epoch_choice.addItem(label, number)
+        self.epoch_choice.setCurrentIndex(
+            max(0, self.epoch_choice.findData(self.controller.algorithm))
+        )
+        _ = self.epoch_choice.blockSignals(False)  # noqa: FBT003 - Qt synchronization
+        self.epoch_choice.setEnabled(not busy)
+
+    def _epoch_picked(self, index: int) -> None:
+        number = cast("object", self.epoch_choice.itemData(index))
+        if not isinstance(number, int):
+            return
+        problem = self.controller.set_algorithm(number)
+        if problem:
+            self.notice.setText(problem)
+            self.notice.setVisible(True)
 
     def _code_typed(self) -> None:
         if not self.code_edit.text().strip() or self.code_edit.text() == self.controller.code:

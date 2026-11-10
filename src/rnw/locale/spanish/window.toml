@@ -3240,3 +3240,39 @@ text = '''Kalimdor'''
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
 
+
+["settings.experimental"]
+source = "6c39e69019727335"
+text = '''Funciones experimentales'''
+
+["settings.experimental.about"]
+source = "1b4e4c052fc67782"
+text = '''Funciones que aún están en prueba. Cada una aparece donde actúa, y cualquiera puede cambiar o desaparecer en una versión posterior.'''
+
+["epoch.title"]
+source = "0d4593739cca99b9"
+text = '''Época del algoritmo'''
+
+["epoch.about"]
+source = "564b73cc2c42fc29"
+text = '''Crea el mundo como lo hacía una versión anterior del generador, para códigos y mundos de antes. La misma semilla y los mismos ajustes dan el mismo mundo solo en la misma época.'''
+
+["epoch.choice"]
+source = "874b582be5fc8886"
+text = '''Época {epoch}: versión {release}'''
+
+["epoch.choice.current"]
+source = "c6e08c48fe5cc9f5"
+text = '''Época {epoch}: versión {release} (actual)'''
+
+["epoch.followed"]
+source = "7face6208484cae9"
+text = '''Este código lo creó la versión {release}, así que el mundo se crea con la época {epoch}, como lo hacía esa versión.'''
+
+["epoch.unavailable"]
+source = "c8034a4f55614434"
+text = '''No se puede elegir la época {epoch}. Con las funciones experimentales, este generador crea las épocas de la {first} a la {last}.'''
+
+["error.epoch.stamp"]
+source = "0a0469d8c4467849"
+text = '''Este código de mundo lleva la versión {release}, que creó la época {stamped}, pero se pidió la época {asked}. Un mundo de una época anterior necesita un código marcado con ella.'''

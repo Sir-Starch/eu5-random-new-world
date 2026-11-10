@@ -23,7 +23,7 @@ import secrets
 import struct
 import zlib
 from dataclasses import dataclass
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from rnw import __version__
 from rnw.epoch import CURRENT, epoch_of
@@ -31,6 +31,9 @@ from rnw.layers import PARTS, rolls_of
 from rnw.messages import say
 from rnw.rng import check_seed
 from rnw.settings import PRESETS, SettingsError, build_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Collection
 
 PREFIX: Final[str] = "RNW1"
 IN_TEXT: Final[re.Pattern[str]] = re.compile(r"\bRNW1(?:-[A-Za-z0-9]+)+", re.IGNORECASE)
@@ -394,11 +397,14 @@ def format_of(text: str) -> int:
     return body[0]
 
 
-def reproduces(code: WorldCode) -> bool:
+def reproduces(code: WorldCode, algorithms: Collection[int] | None = None) -> bool:
     """Whether this generator makes the world of ``code``: the release that made it and this one
-    are of the same algorithm epoch (``rnw.epoch``); before the first epoch nothing is promised."""
+    are of the same algorithm epoch (``rnw.epoch``); before the first epoch nothing is promised.
+
+    ``algorithms`` are the epochs it makes a world by now (``epoch.available``); by default only
+    the current one, as the command line has it."""
     made = epoch_of(code.generator)
-    return made != 0 and made == CURRENT
+    return made != 0 and made in (algorithms if algorithms is not None else (CURRENT,))
 
 
 def _to_base32(data: bytes) -> str:

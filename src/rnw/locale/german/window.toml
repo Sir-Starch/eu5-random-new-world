@@ -3240,3 +3240,39 @@ text = '''Kalimdor'''
 source = "57db4d540d7253f0"
 text = '''Ansalon'''
 
+
+["settings.experimental"]
+source = "6c39e69019727335"
+text = '''Experimentelle Funktionen'''
+
+["settings.experimental.about"]
+source = "1b4e4c052fc67782"
+text = '''Funktionen, die noch erprobt werden. Jede erscheint dort, wo sie wirkt, und jede kann sich in einer späteren Version ändern oder entfallen.'''
+
+["epoch.title"]
+source = "0d4593739cca99b9"
+text = '''Algorithmus-Epoche'''
+
+["epoch.about"]
+source = "564b73cc2c42fc29"
+text = '''Erstellt die Welt so, wie es eine frühere Version des Generators tat, für Codes und Welten von früher. Derselbe Startwert und dieselben Einstellungen ergeben nur in derselben Epoche dieselbe Welt.'''
+
+["epoch.choice"]
+source = "874b582be5fc8886"
+text = '''Epoche {epoch}: Version {release}'''
+
+["epoch.choice.current"]
+source = "c6e08c48fe5cc9f5"
+text = '''Epoche {epoch}: Version {release} (aktuell)'''
+
+["epoch.followed"]
+source = "7face6208484cae9"
+text = '''Dieser Code wurde mit Version {release} erstellt; die Welt wird daher in Epoche {epoch} erstellt, so wie diese Version es tat.'''
+
+["epoch.unavailable"]
+source = "c8034a4f55614434"
+text = '''Epoche {epoch} kann nicht gewählt werden. Mit den experimentellen Funktionen erstellt dieser Generator die Epochen {first} bis {last}.'''
+
+["error.epoch.stamp"]
+source = "0a0469d8c4467849"
+text = '''Dieser Weltcode trägt die Version {release}, die Epoche {stamped} erstellte, verlangt wurde aber Epoche {asked}. Eine Welt einer älteren Epoche braucht einen Code mit deren Kennzeichen.'''

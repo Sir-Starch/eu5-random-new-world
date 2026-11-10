@@ -3240,3 +3240,39 @@ text = '''卡利姆多'''
 source = "57db4d540d7253f0"
 text = '''安萨隆'''
 
+
+["settings.experimental"]
+source = "6c39e69019727335"
+text = '''实验性功能'''
+
+["settings.experimental.about"]
+source = "1b4e4c052fc67782"
+text = '''仍在试用中的功能。每项功能会显示在它起作用的地方，且都可能在以后的版本中更改或移除。'''
+
+["epoch.title"]
+source = "0d4593739cca99b9"
+text = '''算法纪元'''
+
+["epoch.about"]
+source = "564b73cc2c42fc29"
+text = '''按生成器早期版本的方式生成世界，适用于旧的代码和旧的世界。相同的种子和设置只有在同一纪元下才会得到相同的世界。'''
+
+["epoch.choice"]
+source = "874b582be5fc8886"
+text = '''纪元{epoch}：版本{release}'''
+
+["epoch.choice.current"]
+source = "c6e08c48fe5cc9f5"
+text = '''纪元{epoch}：版本{release}（当前）'''
+
+["epoch.followed"]
+source = "7face6208484cae9"
+text = '''此代码由版本{release}生成，因此世界按纪元{epoch}生成，与该版本一致。'''
+
+["epoch.unavailable"]
+source = "c8034a4f55614434"
+text = '''无法选择纪元{epoch}。开启实验性功能后，本生成器可生成纪元{first}至{last}。'''
+
+["error.epoch.stamp"]
+source = "0a0469d8c4467849"
+text = '''此世界代码标记为版本{release}（纪元{stamped}），但请求的是纪元{asked}。较早纪元的世界需要带有该纪元标记的代码。'''

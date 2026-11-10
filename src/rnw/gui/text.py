@@ -958,6 +958,26 @@ STRINGS: Final[dict[str, str]] = {
     "settings.theme.system": "System",
     "settings.theme.dark": "Dark",
     "settings.theme.light": "Light",
+    "settings.experimental": "Experimental features",
+    "settings.experimental.about": (
+        "Features that are still being tried out. Each one shows where it works, and any of "
+        "them can change or go away in a later release."
+    ),
+    "epoch.title": "Algorithm epoch",
+    "epoch.about": (
+        "Makes the world the way an earlier release of the generator did, for codes and worlds "
+        "from before. The same seed and settings give the same world only by the same epoch."
+    ),
+    "epoch.choice": "Epoch {epoch}: release {release}",
+    "epoch.choice.current": "Epoch {epoch}: release {release} (current)",
+    "epoch.followed": (
+        "This code was made by release {release}, so the world is made by epoch {epoch}, as "
+        "that release made it."
+    ),
+    "epoch.unavailable": (
+        "Epoch {epoch} cannot be chosen. With the experimental features this generator makes "
+        "epochs {first} to {last}."
+    ),
     "settings.classic_window": "Use the classic window",
     "settings.classic_window.about": (
         "From the next start. The classic window also opens by itself when this new one cannot."

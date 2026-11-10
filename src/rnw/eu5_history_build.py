@@ -14,6 +14,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from rnw import eu5_natives as native
+from rnw.epoch import CURRENT
 from rnw.eu5_history import BootstrapInputs, bootstrap_history, installed_rules
 from rnw.eu5_history_plan import ProjectionInputs, project_start
 from rnw.history_engine import simulate
@@ -44,6 +45,7 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
     settings: NativeSettings,
     seed: int,
     loc_keys: KeySpace,
+    algorithm: int = CURRENT,
 ) -> FinalStartPlan:
     # Societies, the simulation, its causal replay and the projection build millions of
     # acyclic records; the cyclic collector would only walk them again (C506).
@@ -57,6 +59,7 @@ def build_history_start(  # noqa: PLR0913 - the bridge needs the complete genera
             settings=settings,
             seed=seed,
             loc_keys=loc_keys,
+            algorithm=algorithm,
         )
 
 
@@ -70,6 +73,7 @@ def _build_history_start(  # noqa: PLR0913 - as build_history_start
     settings: NativeSettings,
     seed: int,
     loc_keys: KeySpace,
+    algorithm: int = CURRENT,
 ) -> FinalStartPlan:
     graph, cells = native.land_graph(world, biomes, river_pixels, vanilla)
     cells = replace(
@@ -176,6 +180,7 @@ def _build_history_start(  # noqa: PLR0913 - as build_history_start
                 keys[node]: tuple(sorted({plan.cells[sea].area for sea in cells.seas[node]}))
                 for node in range(len(keys))
             },
+            algorithm=algorithm,
         ),
         checkpoint=checkpoint,
     )

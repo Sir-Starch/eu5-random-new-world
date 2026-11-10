@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from rnw.epoch import NO_EXCHANGE_MARKETS
 from rnw.eu5_empires import EmpireCalibration
 from rnw.eu5_history import HistoryBootstrap, canonical_population
 from rnw.eu5_history_plan import ProjectionInputs, project_start
@@ -581,6 +582,24 @@ def test_realized_network_uses_actual_pacts_and_discovered_partner_capitals(
     ai = _ai_diplomacy(without_display_biases, tags)
     threat = plan.history_tags["threat"]
     assert all(threat in ai.threatened_by[plan.history_tags[key]] for key in ("0", "1", "2"))
+
+
+def test_epoch_61_makes_each_exchange_partner_a_market_centre_and_a_town() -> None:
+    """What 1.2.0 did and the experimental features can still do (``NO_EXCHANGE_MARKETS``): the
+    same history, projected by epoch 61, gives every partner of an exchange a market of its own."""
+    history = realized_network(TrajectoryKind.SEA_LEAGUE)
+    # Each projection takes its own inputs: the location keys it hands out are used up by it.
+    now = project_start(inputs_for(history))
+    older_inputs = replace(inputs_for(history), algorithm=NO_EXCHANGE_MARKETS - 1)
+    before = project_start(older_inputs)
+    assert len(now.exchanges) == len(before.exchanges) == 2
+    assert now.markets == ("threat",)
+    assert before.markets == ("0", "1", "2", "threat")  # the three countries of the exchanges too
+    assert {rank for rank, _ in now.ranks.values()} == {"city"}
+    assert "town" in {rank for rank, _ in before.ranks.values()}
+    check(before, older_inputs)
+    first = project_start(replace(inputs_for(history), algorithm=NO_EXCHANGE_MARKETS))
+    assert (first.markets, first.ranks) == (now.markets, now.ranks)
 
 
 def test_only_a_realized_expansion_gets_the_empire_level_rank_and_royal_roads() -> None:

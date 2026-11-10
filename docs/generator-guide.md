@@ -107,6 +107,8 @@ A **world code** includes the seed and generation settings. Copy it to keep or s
 world's recipe; paste one into **World code** to use it. For the same result, use the
 same generator release and game files. If a code comes from a different generation
 algorithm, the application warns you that the result may change.
+To make a world again by an older algorithm, see
+[Experimental features](#experimental-features-an-older-algorithm-epoch).
 
 For a world with custom-drawn land, share a **`.rnworld`** file to include the land image.
 
@@ -442,6 +444,25 @@ For a portable setup, place a file named **`portable.txt`** beside the packaged 
 The generator will keep its data in a **`data/`** folder beside it, for both the window
 and command line. You can also choose another data directory with `RNW_DATA` or the
 command-line option `--data-dir`.
+
+## Experimental features: an older algorithm epoch
+
+Tick **Experimental features** in **Settings** to show options that are not meant for every
+player. Unticking it hides them and returns them to their defaults.
+
+The first one is the **Algorithm epoch** on the new-world page, beside the seed and the world
+code. It lists the current epoch (the default) and the older ones this generator still makes
+(epoch 62 of release 1.2.1 and epoch 61 of release 1.2.0 for 1.2.2). Choose an older one to make a
+world as that release made it, for a campaign that continues an old world or to compare two
+algorithms. The world code of such a world names that release, so it also opens in the older
+generator; pasting a code of a listed older epoch while the box is ticked selects its epoch on
+its own. Versions of the world, its queued copies and its candidates keep the epoch it was made
+by. The epoch is not remembered between sessions.
+
+An epoch is the generator's algorithm, not the game's files: an older epoch on a newer game
+build makes that epoch's world on the new inputs, as the world's record says. Epochs older than
+the list are not offered; the window names the release that made such a world. The command
+line always makes the current epoch.
 
 ## Troubleshooting
 

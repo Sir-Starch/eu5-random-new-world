@@ -40,6 +40,11 @@ MESSAGES: Final[dict[str, str]] = {
         "generator's, so a version of it would not be on the same land. Make a new world with "
         "the same settings instead, or use generator {release}, which makes the original."
     ),
+    # a world made by an older epoch (the experimental features)
+    "epoch.stamp": (
+        "This world code is stamped with release {release}, which made epoch {stamped}, but "
+        "epoch {asked} was asked for. A world of an older epoch needs a code stamped with it."
+    ),
     # the game and the profile
     "install.in_use": (
         "The game is using {mod}. Untick it in the game's playset and apply the playset, or close "

@@ -60,7 +60,7 @@ except ImportError:
     pytest.skip("PySide6 is not available", allow_module_level=True)
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Collection
     from pathlib import Path
 
     from rnw.app.library import World
@@ -818,9 +818,14 @@ def test_a_world_page_says_whether_it_comes_out_the_same_and_checks_on_request(
     controller = window.controller
 
     def checker(
-        world: World, *, game: GameInstall, data: Path, progress: Progress | None = None
+        world: World,
+        *,
+        game: GameInstall,
+        data: Path,
+        progress: Progress | None = None,
+        algorithms: Collection[int] | None = None,
     ) -> service.Check:
-        del world, game, data, progress
+        del world, game, data, progress, algorithms
         return service.Check(Verdict.IDENTICAL, True, [], [], 1.0)  # noqa: FBT003
 
     controller.checker = checker

@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Final, Protocol, cast
 
-from rnw import __version__, worldname
+from rnw import __version__, epoch, worldname
 from rnw.app import estimates, exchange, install, library, logs, recovery
 from rnw.app.paths import workspace
 from rnw.app.worldcode import decode, encode
@@ -29,6 +29,7 @@ from rnw.record import Record, RecordError, Verdict, manifest_digest, output_ent
 from rnw.settings import PRESETS
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
     from pathlib import Path
 
     from rnw.app.discovery import GameInstall, Profile
@@ -89,6 +90,9 @@ class Request:
     land_mask: LandMask | None = None
     output_folder: Path | None = None
     world_file: Path | None = None
+    # The algorithm epoch the world is made by (``rnw.epoch``): an older one only for a code
+    # stamped with it, through the experimental features.
+    algorithm: int = epoch.CURRENT
 
 
 @dataclass(frozen=True, slots=True)
@@ -156,6 +160,24 @@ def _require_profile(request: Request) -> None:
         raise install.InstallError(message)
 
 
+def _require_epoch(request: Request) -> None:
+    """An epoch of the past is made only for a code that says so, so that the library's code of
+    a world and its record never disagree about what made it."""
+    try:
+        _ = epoch.require_selectable(request.algorithm)
+    except epoch.EpochError as error:
+        raise install.InstallError(str(error)) from error
+    stamped = epoch.epoch_of(request.code.generator)
+    if request.algorithm not in {epoch.CURRENT, stamped}:
+        message = say(
+            "epoch.stamp",
+            release=request.code.generator,
+            stamped=stamped,
+            asked=request.algorithm,
+        )
+        raise install.InstallError(message)
+
+
 def generate(
     request: Request, progress: Progress | None = None, exporter: Exporter | None = None
 ) -> Result:
@@ -167,6 +189,7 @@ def generate(
     """
     run = export_world if exporter is None else exporter
     _require_profile(request)
+    _require_epoch(request)
     started = time.monotonic()
     # A world that keeps the real Americas makes no land; its stages are not those of its preset.
     kept = request.code.settings().new_world.keep_geography
@@ -218,7 +241,7 @@ def generate(
         request.game.directory,
         output,
         seed=request.code.seed,
-        settings=request.code.settings(),
+        settings=replace(request.code.settings(), algorithm=request.algorithm),
         accept_build=request.accept_build,
         replace=True,
         check_memory=request.check_memory,
@@ -466,6 +489,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
     progress: Progress | None = None,
     exporter: Exporter | None = None,
     check_memory: bool = True,
+    algorithms: Collection[int] | None = None,
 ) -> Check:
     """Find out whether this generator makes the world again, byte for byte (ADR 0010, G).
 
@@ -484,7 +508,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
     logs.get().info(
         "check %s: record of epoch %d, release %s", world.id, record.algorithm, record.release
     )
-    early = verdict(record)
+    early = verdict(record, algorithms=algorithms)
     if early in {Verdict.OTHER_ALGORITHM, Verdict.NEWER_FORMAT}:
         return Check(early, None, [], [], time.monotonic() - started)
     with active(progress), running("compare inputs"):
@@ -502,7 +526,7 @@ def check(  # noqa: PLR0913 - a world, the game and where the work is shown
             game.directory,
             scratch,
             seed=record.seed,
-            settings=record.resolved_settings(),
+            settings=replace(record.resolved_settings(), algorithm=record.algorithm),
             accept_build=None,
             replace=True,
             check_memory=check_memory,

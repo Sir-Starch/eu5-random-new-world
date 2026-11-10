@@ -46,6 +46,12 @@ RNW_REPRODUCE=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_ins
 RNW_LAYERS=1 EU5_GAME_DIR=/path/to/game uv run pytest -q tests/test_local_install.py -k layers
 ```
 
+`-k reference` also makes every older selectable epoch (`-k older_epochs` for those alone) with
+`Settings.algorithm` set to it and compares the result with that epoch's frozen golden: the
+proof that its gate still makes the old bytes ([ADR 0013](adr/0013-experimental-features-and-epoch-choice.md)).
+`tests/test_epoch_selection.py` and `tests/test_epoch_controller.py` need no game: the window of
+epochs, the switches, the stamps and what the controller makes of the choice.
+
 The reference export compares the current epoch's output with
 `tests/golden_world.json` (pending epoch 63 of 1.2.2). The frozen
 epoch-62, epoch-61, epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch62.json`,
