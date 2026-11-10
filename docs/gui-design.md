@@ -130,7 +130,13 @@ Reveal while the map is covered; the inspector's tabs are World (name, favourite
 game with add/remove and folder, advice, then folding sections for details and check,
 visibility, Create a version, Share and export; delete last), Maps and Notes. For the new world,
 the middle shows its land: continent sketches to pick from (the chosen one is marked, each has
-Add to queue), the land image, or a blank sheet ruled like a map; while a world is made, its
+Add to queue), the land image (with Edit in the editor), or a blank sheet ruled like a map with
+**Draw land…**; the land editor covers the whole window while it is open (ADR 0011): a toolbar of
+brush, eraser, fill, line, rectangle, ellipse and hand on the left, the six kinds of ground and the
+brush options over the sheet, and on the right the ready lands, Add terrain, the generator's check
+and the picture's import, save and clear; the status line repeats the check's worst line. The sheet
+is the area at an eighth of the map's size, zoomed and panned in the window; undo keeps changed
+pixels only. While a world is made, its
 progress, stages, ETA and Cancel, with the queue under them; afterwards the outcome with Open
 the world or a retry. The queue (its worlds, Run queue, Clear queue, a remove button for each)
 sits below the sketches at rest, so that the grid does not move with each world added. The inspector's tabs are World
