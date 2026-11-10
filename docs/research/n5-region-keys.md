@@ -255,60 +255,83 @@ distribution boundary.
 
 [V-LOCAL, V-EXEC; RNW 1.2.2 development / pending epoch 63; EU5 1.4.7 / 26377361] The owner
 generated two worlds from one drawn image with different seeds (preset supercontinent) and in
-both the subcontinents were cut wrong. North America was 87.0 % and 86.7 % of the land cells
-where the vanilla Americas give it 68.5 % of their locations, and South America had three
-pieces: the south-western peninsula and a strip of 25–29 cells on each of the two island arms
-that lie across the band line, so a straight horizontal edge ran through both islands and the
-mainland's neck. The cause is the C502 rule itself, not one input: a band is the cells ranked
-by row, so its boundary is a row, whatever the land is. Two defects followed from it. A row
-slices a landmass that lies across it, and the "one piece per landmass" repair then gave the
-rest of the southern band, a whole peninsula of the same world, back to the north because it
-was the smaller piece. The cut was also straight in worlds without a drawing: the
-`supercontinent` (seed 11) and `continents` (seed 7) presets had a ruler-straight edge through
-a continent.
+both the subcontinents were cut wrong, then said of a first fix that left South America at 12 %
+of the land that nothing in the generator should make it smaller. Two defects, not one:
 
-The subcontinents are now cut from the north, one part at a time (`hierarchy.neck_parts`). The
-part takes the shortest cut, in contacts, that lies in a **window of latitudes** around the
-row that would give it its vanilla share:
+1. **The row.** A band is the cells ranked by row, so its boundary is a row, whatever the land
+   is: a ruler-straight edge through two island arms (a strip of 25–29 cells of each became
+   "South America") and through the mainland's neck. The `supercontinent` and `continents`
+   worlds without a drawing show the same edge (`continents` 1001: 19,292 by the length below).
+2. **One piece per landmass at the top level.** `_check_pieces` has demanded since 0.9.4 (C77,
+   the owner's report of regions and areas in pieces) that no group at any of the four levels
+   has two pieces on one landmass, subcontinents included, and C502's repair enforced it by
+   giving the smaller piece back to the other part. The drawing has two peninsulas hanging south
+   of the body: South America kept one and the other went to North America, so South America had
+   13.0 % and 13.3 % of the cells against 31.5 % of the vanilla locations. Nothing asked for a
+   smaller South America; it was the invariant's side effect, and a first version of C529 kept the
+   invariant and documented the shortfall as a limit (12 %). The owner's report that it is not
+   acceptable is right, and vanilla itself has 15 groups with two pieces on one landmass (0.9.4).
+
+**Now** (`hierarchy.neck_parts`, `eu5_newworld._bands`): the subcontinents are cut from the
+north, one part at a time. For a part the shortest cut (exact minimum cut, Dinic maximum flow on
+integer capacities, the smallest one) in a window of latitudes around its share:
 
 - Cells are ranked by row, column and index; the first `count` are the banded answer. The
-  `NECK_WINDOW` = 200 permille of the cells on either side of that rank are free; the cells
-  beyond keep their side.
-- Severing a contact between free cells costs `NECK_CONTACT` = 1000; a free cell costs up to
-  `NECK_PULL` = 150 for lying on the far side of the banded line, in proportion to its
-  distance from it. The cut that minimizes the sum is exact (maximum flow, Dinic, integers;
-  the smallest minimum cut) and a pure function of the inputs.
-- A landmass whose narrowest waist lies in the window is cut there, a landmass that lies
-  inside it is joined whole to the side its latitude favours, and one that spans the window is
-  cut where it is narrowest. The tie of equal cuts goes to the banded line through the pull.
-- A cut can still leave a part two pieces on one landmass (a U open to the north). The old
-  repair stays: a part keeps its largest piece there and the others join the part they touch
-  most. A part is therefore smaller than its share where its land is split in pieces, and no
-  longer takes a share it cannot hold in one piece.
+  `NECK_WINDOW` = 200 permille of the cells on either side are free, the rest keep their side. A
+  severed contact costs `NECK_CONTACT` = 1000; a free cell costs up to `NECK_PULL` = 150 on the
+  far side of the banded line, in proportion to its distance from it.
+- The size of a side moves in steps (a peninsula or an island comes whole), so the cut is taken
+  at `count` and at lines up to `NECK_REACH` = 150 permille away (every 5 steps of `NECK_STEP` =
+  10 permille, then every step around the best) and the cut whose side is nearest the share wins,
+  scoring the distance in cells plus `NECK_CELLS_PER_CONTACT` = 4 cells per severed contact
+  (`_closest_north`). A side is measured as settled: its small pieces have left it and the
+  other side's have come.
+- **A subcontinent may hold several pieces of one landmass**, for instance two peninsulas that
+  hang south of a body. A piece smaller than an average region of that subcontinent (its share of
+  the cells divided by its regions) beside a larger one on its landmass joins the part it touches
+  most (`_settle_pieces`): it could not hold a region, and regions, areas and provinces keep the
+  one-piece rule (`_check_pieces(depth=3)`, which skips the subcontinent level). A piece without
+  a source in `spread_sources` would otherwise join a region across the landmass.
 
-[V-EXEC] Seven captured `_land_areas` inputs (the two image worlds, `supercontinent` seed 11,
-`continents` 7, `small_continents` 7, `archipelago` 73, `islands` 73) all pass `_check_pieces`
-and cover every cell. The length of the boundary (the sum of the centre distances of the
-contacts between subcontinents) went 7,433 → 543 and 7,661 → 498 in the image worlds, 7,368 →
-5,282, 5,463 → 1,812, 6,384 → 562, 3,780 → 0 and 2,339 → 86 in the others; the image worlds
-have South America in one piece (219 and 221 cells) with both island arms whole in the north;
-the archipelago has no cut island at all. South America's share is 11.8 % and 12.0 % in the
-image worlds (its peninsula is the one piece the land allows; the other southern strip hangs
-from the other side of the mainland and cannot join it), and 31.0 %, 28.5 %, 25.6 %, 28.9 %
-and 34.0 % in the others against 31.5 % in vanilla. A sweep of the window (100, 200, 300) and
-the pull (50, 150, 400) kept 200 and 150: a window of 300 with a pull of 50 let South America
-take 53.7 % of the `supercontinent` world, and a window of 100 cut the image worlds along 11
-contacts against 6. The cut of all seven takes 0.7 s together. Synthetic regressions: a two-blob land
-whose neck lies a few rows above the row line is cut at the neck, and an island across the
-line stays whole (`tests/test_hierarchy.py`; both fail with a window of one rank, which is the
-row cut). The reference world (`supercontinent`, seed 20261102) changes 96 of its 884 files: the
-location raster, the hierarchy, its localization in all eleven languages and the scripts that
-name it; the 884-file digest `f454b5f5` of epoch 62 (reproduced from `HEAD` in the same
-session) becomes `6536df49`, reproduced at 31 and 8 threads.
+[V-EXEC] Twelve captured `_land_areas` inputs (the two image worlds; `supercontinent` 11 and 5,
+`continents` 7 and 1001, `small_continents` 7 and 42, `archipelago` 73, `islands` 73, `wall` 9,
+`omerika` 42), South America's share of the cells and the length of the boundary (sum of the
+centre distances of the contacts between subcontinents), 1.2.1 → now; the vanilla share is
+31.5 %:
 
-What the cut does not do: it does not look for natural features other than the land's own
-shape (a broad landmass with no waist is cut along the shortest line, which can still be
-nearly straight), and it does not restore a subcontinent's vanilla share when its land is
-split in pieces. Regions, areas and provinces are unchanged algorithms on the new
-subcontinents. The inputs were captured as for the W8 bench: monkeypatch `eu5_newworld._land_areas`
-to pickle its arguments and cancel the export, then rerun the real function in about a second.
+| world | South America | boundary | landmasses cut |
+|---|---|---|---|
+| image, seed A | 13.0 → 32.9 % | 7,433 → 1,125 | 3 → 1 |
+| image, seed B | 13.3 → 30.4 % | 7,661 → 1,187 | 3 → 1 |
+| supercontinent 11 | 29.6 → 31.8 % | 7,368 → 5,196 | 2 → 1 |
+| supercontinent 5 | 31.5 → 26.2 % | 7,160 → 1,446 | 1 → 1 |
+| continents 7 | 34.1 → 28.5 % | 5,463 → 1,812 | 1 → 1 |
+| continents 1001 | 31.5 → 26.2 % | 19,292 → 4,761 | 1 → 1 |
+| small_continents 7 | 31.5 → 34.6 % | 6,384 → 3,523 | 3 → 2 |
+| small_continents 42 | 34.7 → 37.0 % | 2,314 → 0 | 1 → 0 |
+| archipelago 73 | 31.5 → 32.2 % | 3,780 → 0 | 2 → 0 |
+| islands 73 | 30.3 → 34.0 % | 2,339 → 86 | 4 → 1 |
+| wall 9 | 29.1 → 29.5 % | 4,612 → 2,131 | 2 → 2 |
+| omerika 42 | 31.5 → 36.7 % | 4,093 → 469 | 1 → 1 |
+
+Every input passes `_check_pieces` at the region level and below and covers every cell;
+`_land_areas` takes 0.9–5.3 s per world (0.7–2.5 s with the single cut before the scan). In the
+image worlds South America is both south-hanging peninsulas and the two island arms that lie on
+the line, whole; the other worlds stay within 6 points of the vanilla share. A sweep of the
+window (100–400), the pull (50–1,600) and the reach found the shares of the image worlds
+bounded by the necks (19–24 %) until the scan was added; it, not a wider window, closes the
+gap, and a window of 300 with a pull of 50 took 53.7 % of `supercontinent` 11 in the first
+version. Synthetic regressions (`tests/test_hierarchy.py`): a two-blob land whose neck lies a few
+rows above the row line is cut at the neck; an island across the line stays whole; both legs
+that hang south of a body are one part; a leg too small to hold a region joins the other part
+(the waist and island tests fail with a window of one rank and no scan, which is the row cut). The reference world
+(`supercontinent`, seed 20261102) goes `f454b5f5` (epoch 62, reproduced from `HEAD` in the same
+session) → `43dfd7ec` (884 files, reproduced at 31 and 8 threads and by the installed-game
+reference check).
+
+What it does not do: it does not look for natural features other than the land's own shape (a
+broad landmass without a waist is cut along the shortest line, which can stay nearly horizontal:
+`continents` 1001), and it reaches the vanilla share only as far as whole peninsulas and islands
+allow. Regions, areas and provinces are unchanged algorithms on the new subcontinents. The inputs
+were captured as for the W8 bench: monkeypatch `eu5_newworld._land_areas` to pickle its arguments
+and cancel the export, then rerun the real function.

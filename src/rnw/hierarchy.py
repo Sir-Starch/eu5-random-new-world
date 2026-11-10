@@ -9,9 +9,10 @@ one landmass. Every part starts with an additive handicap that grows while it is
 than its target, so part sizes approach their targets, and movable sources follow their
 part's centre (Lloyd relaxation). The top level can instead be cut from north to south
 (``neck_parts``): each boundary is the shortest cut, by maximum flow, within a window of
-latitudes around the part's share, so it runs through a landmass's waist and joins small
-landmasses whole; each part keeps one piece per landmass. Integer arithmetic and fixed
-tie-breaks make every result a pure function of the inputs.
+latitudes around the part's share, tried at several latitudes for the size nearest the share,
+so it runs through a landmass's waist and joins small landmasses whole; a part may hold two
+pieces of one landmass when each can hold a region. Integer arithmetic and fixed tie-breaks
+make every result a pure function of the inputs.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -39,6 +40,9 @@ CHUNK: Final[int] = 512
 NECK_WINDOW: Final[int] = 200
 NECK_CONTACT: Final[int] = 1000
 NECK_PULL: Final[int] = 150
+NECK_REACH: Final[int] = 150
+NECK_STEP: Final[int] = 10
+NECK_CELLS_PER_CONTACT: Final[int] = 4
 
 
 class PartitionError(ValueError):
@@ -510,29 +514,104 @@ def _north_side(graph: ContactGraph, members: Sequence[int], count: int) -> list
     return ranked[:first] + [node for node, number in inside.items() if reached[number]]
 
 
-def _one_piece_each(
-    graph: ContactGraph, members: Sequence[int], owner: dict[int, int], count: int
-) -> list[list[int]]:
-    """Parts with one piece on every landmass: a part keeps its largest piece there.
+def _split_pieces(
+    graph: ContactGraph, landmasses: Sequence[Sequence[int]], cells: Sequence[int], least: int
+) -> tuple[list[int], list[int]]:
+    """``cells`` as (kept, small): small are pieces under ``least`` beside a larger one there."""
+    held = set(cells)
+    kept: list[int] = []
+    small: list[int] = []
+    for landmass in landmasses:
+        found = pieces(graph, [node for node in landmass if node in held])
+        for number, piece in enumerate(sorted(found, key=lambda cells: (-len(cells), cells[0]))):
+            (kept if number == 0 or len(piece) >= least else small).extend(piece)
+    return sorted(kept), sorted(small)
 
-    Every other piece joins the part it has most contacts with (lowest index on ties). Parts
-    are settled in order, and a settled part has one piece on each landmass, so a piece it
-    receives touches that piece: no part ends with two pieces on one landmass.
+
+def _closest_north(
+    graph: ContactGraph, members: Sequence[int], target: int, least: Sequence[int]
+) -> list[int]:
+    """The north side, from cuts near several latitudes, whose size comes closest to ``target``.
+
+    A cut at the waist takes whole peninsulas and islands, so the size of a side moves in steps
+    as the latitude moves, and the cut at the banded line alone can stop far from the share.
+    Lines are tried from ``NECK_REACH`` permille of the members above ``target`` to as many
+    below it, first every five ``NECK_STEP`` permille, then every step around the best. A side
+    is what its cut holds with the settling of ``_settle_pieces`` done: its pieces under
+    ``least[0]`` cells that share a landmass with a larger one go to the other side, and the
+    other side's under ``least[1]`` come to it. A cut scores its distance in cells from
+    ``target`` plus ``NECK_CELLS_PER_CONTACT`` cells for each contact it severs; ties go to the
+    line nearest the banded one. The scan is fixed, so the result is a pure function of the
+    inputs.
+    """
+    size = len(members)
+    step = max(1, size * NECK_STEP // 1000)
+    reach = size * NECK_REACH // 1000
+    inside = set(members)
+    landmasses = pieces(graph, members)
+    seen: dict[int, tuple[tuple[int, int, int], list[int]]] = {}
+
+    def score(asked: int) -> tuple[int, int, int]:
+        asked = min(max(1, asked), size - 1)
+        if asked not in seen:
+            north, _ = _split_pieces(
+                graph, landmasses, _north_side(graph, members, asked), least[0]
+            )
+            held = set(north)
+            rest = [node for node in members if node not in held]
+            _, strays = _split_pieces(graph, landmasses, rest, least[1])
+            north = sorted([*north, *strays])
+            held = set(north)
+            severed = sum(
+                1
+                for node in north
+                for neighbour, _ in graph.links[node]
+                if neighbour in inside and neighbour not in held
+            )
+            miss = abs(len(north) - target) + NECK_CELLS_PER_CONTACT * severed
+            seen[asked] = ((miss, abs(asked - target), asked), north)
+        return seen[asked][0]
+
+    coarse = range(target - reach, target + reach + 1, 5 * step)
+    best = min(score(asked) for asked in [target, *coarse])
+    for asked in range(best[2] - 4 * step, best[2] + 4 * step + 1, step):
+        _ = score(asked)
+    return seen[min(score(asked) for asked in sorted(seen))[2]][1]
+
+
+def _settle_pieces(
+    graph: ContactGraph,
+    members: Sequence[int],
+    owner: dict[int, int],
+    lowest: Sequence[int],
+) -> list[list[int]]:
+    """Parts whose pieces on a landmass are each at least ``lowest`` of the part, or its largest.
+
+    On every landmass a part keeps its largest piece and any piece of ``lowest[part]`` cells or
+    more: a piece that large can hold a region of its own. Every smaller piece joins the part it
+    has most contacts with (lowest index on ties), which can make a piece of that part larger, so
+    the pass repeats until nothing moves. A part is never emptied: its largest piece stays.
     """
     landmasses = pieces(graph, members)
-    for part in range(count):
-        for landmass in landmasses:
-            found = pieces(graph, [node for node in landmass if owner[node] == part])
-            for piece in sorted(found, key=lambda cells: (-len(cells), cells[0]))[1:]:
-                inside = set(piece)
-                counts: dict[int, int] = {}
-                for node in piece:
-                    for neighbour, _ in graph.links[node]:
-                        if neighbour in owner and neighbour not in inside:
-                            counts[owner[neighbour]] = counts.get(owner[neighbour], 0) + 1
-                target = min(counts, key=lambda other: (-counts[other], other))
-                owner.update(dict.fromkeys(piece, target))
-    parts: list[list[int]] = [[] for _ in range(count)]
+    moved = True
+    while moved:
+        moved = False
+        for part, least in enumerate(lowest):
+            for landmass in landmasses:
+                found = pieces(graph, [node for node in landmass if owner[node] == part])
+                for piece in sorted(found, key=lambda cells: (-len(cells), cells[0]))[1:]:
+                    if len(piece) >= least:
+                        continue
+                    inside = set(piece)
+                    counts: dict[int, int] = {}
+                    for node in piece:
+                        for neighbour, _ in graph.links[node]:
+                            if neighbour in owner and neighbour not in inside:
+                                counts[owner[neighbour]] = counts.get(owner[neighbour], 0) + 1
+                    target = min(counts, key=lambda other: (-counts[other], other))
+                    owner.update(dict.fromkeys(piece, target))
+                    moved = True
+    parts: list[list[int]] = [[] for _ in lowest]
     for node in sorted(owner):
         parts[owner[node]].append(node)
     if not all(parts):
@@ -542,31 +621,39 @@ def _one_piece_each(
 
 
 def neck_parts(
-    graph: ContactGraph, members: Sequence[int], weights: Sequence[int]
+    graph: ContactGraph,
+    members: Sequence[int],
+    weights: Sequence[int],
+    lowest: Sequence[int] = (),
 ) -> list[list[int]]:
     """Parts from the first row to the last, each about its ``weights`` share of members.
 
-    Parts are cut off one at a time from the north: each takes the shortest cut near the
-    latitude that gives it its share of the cells left (``_north_side``), so a boundary runs
-    through a landmass's waist instead of along a row, and a small landmass is not sliced.
-    The cut can leave a part with several pieces on one landmass; it keeps its largest
-    and the others join the part they touch most (``_one_piece_each``), so a part is smaller
-    than its share where its land is split, never larger than the window allows.
+    Parts are cut off one at a time from the north: each takes the shortest cut, in contacts,
+    near the latitude that gives it its share of the cells left, tried at several latitudes
+    for the size nearest its share (``_closest_north``). A boundary therefore runs through a
+    landmass's waist instead of along a row, and a small landmass is not sliced.
+
+    A part may hold several pieces of one landmass, for instance two peninsulas that hang south
+    from a body that belongs to the north, as a subcontinent does on the game's own map. Only a
+    piece smaller than ``lowest[part]`` cells (1 by default, so none) beside a larger one on
+    its landmass joins the part it touches most (``_settle_pieces``): it is too small to hold
+    a region of its own.
     """
     if not weights or min(weights) < 1 or len(members) < len(weights):
         message = f"Cannot cut {len(members)} cells by the weights {list(weights)}"
         raise PartitionError(message)
     owner: dict[int, int] = {}
     left = sorted(members)
+    least = list(lowest) or [1] * len(weights)
     for part, weight in enumerate(weights[:-1]):
         count = weight * len(left) // sum(weights[part:])
         count = min(max(1, count), len(left) - (len(weights) - part - 1))
-        north = _north_side(graph, left, count)
+        north = _closest_north(graph, left, count, least[part : part + 2])
         owner.update(dict.fromkeys(north, part))
         taken = set(north)
         left = [node for node in left if node not in taken]
     owner.update(dict.fromkeys(left, len(weights) - 1))
-    return _one_piece_each(graph, members, owner, len(weights))
+    return _settle_pieces(graph, members, owner, least)
 
 
 def piece_counts(found: Sequence[Sequence[int]], size: int, *, at_least: int) -> list[int]:

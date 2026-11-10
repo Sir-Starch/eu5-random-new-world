@@ -1,11 +1,11 @@
 {
-  "comment": "Epoch 63 of 1.2.2, EU5 1.4.7/build26377361; frozen epoch62 preserved in golden_world_epoch62.json. 1.2.2 cuts the New World's subcontinents at the narrowest waist of a landmass within a window of latitudes around the vanilla share (minimum cut by maximum flow, one piece per landmass, small landmasses joined whole), where 1.2.0 and 1.2.1 cut them along a row, which sliced islands in two. Regions, areas and provinces are made from the new subcontinents. Changes 96 of the 884 files (the location raster, the hierarchy, its localization in all eleven languages and the scripts that name it); the count stays 884; reproduced in two independent exports at 31 and 8 threads (6536df49).",
+  "comment": "Epoch 63 of 1.2.2, EU5 1.4.7/build26377361; frozen epoch62 preserved in golden_world_epoch62.json. 1.2.2 cuts the New World's subcontinents at the waist of a landmass, by a minimum cut in a window of latitudes around the vanilla share (scanned over several latitudes for the size nearest it), where 1.2.0 and 1.2.1 cut them along a row, which sliced islands in two; a subcontinent may hold two pieces of one landmass when each can hold a region. Regions, areas and provinces are made from the new subcontinents. The location raster, the hierarchy, its localization in all eleven languages and the scripts that name it change; the count stays 884; reproduced in two independent exports at 31 and 8 threads (43dfd7ec).",
   "epoch": 63,
   "code": "RNW1-081G0-00000-0KAA7-E0410-40860-2AG63-YG1W8-8G3GH-149XR-08TM0-339WC-T",
   "game_fingerprint_sha256": "592e8309b7ed9bef1cc0df3eaccd798896d75cd3c3d7ecf9ed525bb6aca3009a",
   "game_label": "EU5 1.4.7 / Steam build 26377361",
   "output": {
-    "sha256": "6536df49e50cfba9aeeaf0c80ad2e393728bf95db64c48de42bf390e56cb8aaa",
+    "sha256": "43dfd7ecfffb9a4f7f7c4b648a890938f2fa4d5f87ad61a5590aea481e92fa3e",
     "count": 884
   }
 }

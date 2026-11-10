@@ -244,18 +244,34 @@ def test_a_small_landmass_on_the_line_is_joined_whole_not_sliced() -> None:
     assert mainland & set(south)
 
 
-def test_a_cut_crossing_a_landmass_twice_keeps_one_piece_there() -> None:
-    """A U open to the north: the northern part would hold both arms, so it keeps the larger
-    one and the other arm joins the southern part, which it touches."""
-    width, height = 10, 10
-    graph = _grid(width, height)
-    hollow = {row * width + column for row in range(6) for column in range(3, 7)}
-    keep = [cell not in hollow for cell in range(width * height)]
-    edges = [(first, second) for first, links in enumerate(graph.links) for second, _ in links]
-    graph = contact_graph(graph.centres, edges, keep)
+def test_a_part_holds_both_peninsulas_that_hang_south_of_a_northern_body() -> None:
+    """A body with two legs. The southern part is the share of both legs, in two pieces on one
+    landmass: no leg is handed back to the north to make the part one piece (C529)."""
+    body = "#" * 10
+    legs = ".##.....##."
+    graph = _drawn(*[body] * 6, *[legs[:10]] * 10)
     members = _land(graph)
-    north, south = neck_parts(graph, members, [1, 1])
+    north, south = neck_parts(graph, members, [3, 2])
+    assert {int(graph.centres[cell][0]) for cell in south} == {
+        row * SPACING for row in range(6, 16)
+    }
+    assert len(pieces(graph, south)) == 2
+    assert len(pieces(graph, north)) == 1
+    assert sorted(north + south) == members
+
+
+def test_a_piece_too_small_to_hold_a_region_joins_the_part_it_touches() -> None:
+    """The same land with a minimum size for a piece beside a larger one: the smaller leg is
+    given up to the north (``lowest``), so each part has one piece there."""
+    body = "#" * 10
+    legs = ".##.....#."
+    graph = _drawn(*[body] * 6, *[legs] * 10)
+    members = _land(graph)
+    north, south = neck_parts(graph, members, [3, 2], [1, 1])
+    assert len(pieces(graph, south)) == 2
+    north, south = neck_parts(graph, members, [3, 2], [30, 30])
     assert split_landmasses(graph, [north, south]) == []
+    assert len(pieces(graph, south)) == 1
     assert len(pieces(graph, north)) == 1
     assert sorted(north + south) == members
     with pytest.raises(PartitionError, match="Cannot cut"):

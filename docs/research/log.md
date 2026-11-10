@@ -2283,11 +2283,14 @@ Left for the owner: the Workshop hub upload with `docs/releases/1.2.1-workshop.b
 
 The owner generated two worlds from one drawn image with different seeds and both showed a
 straight horizontal edge between North and South America that sliced two island arms and left
-South America 13 % of the land. The cause was the C502 rule (bands of rows), not those inputs:
-the two real `_land_areas` inputs were captured from the installed worlds and reproduced it, and
-`supercontinent` and `continents` worlds without a drawing show a ruler-straight edge too.
-Subcontinents are now cut by a minimum cut in a latitude window around their share
-(`hierarchy.neck_parts`): island arms whole, the boundary on the peninsula's neck, one piece per
-landmass as before. A subcontinent may fall below its vanilla share where its land is split in
-pieces (the image worlds: 12 %). This opens epoch 63 for 1.2.2; the reference world changes 96 of
-884 files. Details and the measurements of seven captured worlds: [N5](n5-region-keys.md#subcontinents-at-the-waist-not-along-a-row-2026-11-10-c529).
+South America 13 % of the land. The two real `_land_areas` inputs were captured from the
+installed worlds and reproduced it; `supercontinent` and `continents` worlds without a drawing
+show a ruler-straight edge too. A first fix (a minimum cut in a latitude window) removed the
+edge but kept the old invariant of one piece per landmass at the subcontinent level, so South
+America stayed at 12 % (one peninsula; the other went to the north), and I recorded that as a
+limit. The owner objected that nothing asked for a smaller South America, which was right: the
+invariant (0.9.4, for regions and areas, C77) had never been wanted for subcontinents, and in ten
+other worlds 1.2.1 gives South America 29–35 %. It is lifted at that level only, with a minimum
+piece size, and the cut is scanned over several latitudes for the size nearest the vanilla share:
+the image worlds 32.9 % and 30.4 %, both peninsulas and both arms whole. This opens epoch 63 for
+1.2.2. Details and the twelve captured worlds: [N5](n5-region-keys.md#subcontinents-at-the-waist-not-along-a-row-2026-11-10-c529).
