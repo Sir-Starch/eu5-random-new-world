@@ -6,6 +6,22 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-10, **1.2.1 hotfix / epoch 62 — market centres only where the plan puts them** (C527).
+[V-EXEC] From `6fc23b7`, installed **`mod/rnw_exp_world_xmin7loaib`** ("Custom world XMIN") in the existing
+Windows/Proton profile: code `RNW1-082JH-V212F-K325Z-E0410-20R10-2B020-N676J-G`, the code of world 3QFN
+(`rnw_exp_world_3qfnncn4ld`, made by 1.2.0) re-encoded by generator 1.2.1, so the same land, peoples and
+countries under a new world id. Its 127 generated countries hold 18 market centres and no exchange
+partner a market of its own; the 1.2.0 world has 115 markets and 113 towns. The installed 1.2.0 worlds
+are untouched (3QFN stays); the new folder carries its own library record. `make check` passes (3,137 Python tests,
+19 optional skips, 29 Rust tests) and the installed-game reference check reproduces `f454b5f5` (884
+files). The standard updater built and self-tested the hub under Wine (window, native, code, shell and
+bridge) and installed it, retaining `.rnw-hub-backups/1.2.0-1794273869956681909`. Candidate:
+`local_data/hub-updates/1.2.1-1794273812448306150/rnw_exp_hub`; Windows wheel SHA-256:
+`f14b7ec210e23cff1794ee2ba7ce9f2f2a4b4bf3a62eb45df982eb6dbd34862b`; window
+`dbe64c4ec81ed8742cbaedcd53c1b5219db98cb54a28e9ce78e1dc3dbaa0e63b` (rebuilt for 1.2.1, so a new hash
+to scan at publication); launcher unchanged (`49674400…6932`). No EU5 launch/control, playset, save or
+preference edit.
+
 2026-11-08, **1.2.0 development / pending epoch 61 — steady time left during generation**.
 [V-EXEC] Installed the generator-only hub from `6792916` in the existing Windows/Proton profile. The
 ETA no longer cycles from 3:10 to 3:00 and back while a world is generated (vanilla reads after the
