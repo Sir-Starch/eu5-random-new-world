@@ -27,6 +27,15 @@ a hotfix: main equalled `v1.2.0` in code, so the fix was made on main and the ne
 same commit at the first attempt; the release assets come from the tagged run, scanned by exact hash.
 The window and the native module came out with new hashes, so they were scanned again; the launcher is unchanged.
 
+[RNW 1.2.2](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.2.2)
+(epoch 63, EU5 1.4.7 / Steam build 26377361) was published on 2026-11-11 from tag `v1.2.2` at
+`838f656471c71a77ff4bd9044e9d27fef7dcbd84`; its tagged workflow run 43076755252 passed all five
+jobs (C532). The six public assets were downloaded after upload and verified against the combined
+`SHA256SUMS`. Exact archive and Windows-binary hashes are in the [release notes](releases/1.2.2.md).
+VirusTotal reports no detections for the launcher and native module. Trapmine reports the Tauri
+window's low-confidence `suspicious.low.ml.score`; the owner accepted that exact tagged-file
+heuristic as a false positive in writing on 2026-11-11. The Workshop page update remains the owner's step.
+
 | Field | Stable value |
 |---|---|
 | Public name | Random New World (RNW) |

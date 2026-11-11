@@ -50,8 +50,8 @@ KOFI: Final = "https://ko-fi.com/rnw"
 
 # The release the guide describes. Bump with a release; the terms follow the tag.
 RELEASE: Final[dict[str, str]] = {
-    "tag": "v1.1.0",
-    "version": "1.1.0",
+    "tag": "v1.2.2",
+    "version": "1.2.2",
     "game": "1.4.*",
     "verified": "1.4.7",
 }
@@ -1098,7 +1098,7 @@ def section_hidden(page: Page) -> str:
         "</div>"
         '<dl class="legend two">'
         f'<div class="lg"><dt><span class="ui">{esc(page.ui("reveal_world"))}</span></dt><dd>{page.t("hidden.reveal_text")}</dd></div>'
-        f'<div class="lg"><dt><span class="ui">{esc(page.ui("show_new_world"))}</span></dt><dd>{page.t("hidden.show_text")}</dd></div>'
+        f'<div class="lg"><dt><span class="ui">{esc(page.ui("lobby_cover"))}</span></dt><dd>{page.t("hidden.show_text")}</dd></div>'
         "</dl>"
         f'<p class="aside-note">{page.t("hidden.atlas")}</p></section>'
     )

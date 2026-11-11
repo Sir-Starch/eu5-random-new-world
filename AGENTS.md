@@ -2,15 +2,16 @@
 
 ## Start here
 
-RNW **1.2.1** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.2.1)
-(2026-11-10, a hotfix for the market centres that 1.2.0 gave every exchange partner; 1.2.0, 1.1.0
-and 1.0.0 are earlier releases). The generator reaches players through
+RNW **1.2.2** is released on [GitHub](https://github.com/Sir-Starch/eu5-random-new-world/releases/tag/v1.2.2)
+(2026-11-11, smoother drawn coasts, a unified land editor and lower memory use; 1.2.1, 1.2.0,
+1.1.0 and 1.0.0 are earlier releases). The generator reaches players through
 [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3829217331); updating that
-item to 1.2.1 is the owner's step (change notes: `docs/releases/1.2.1-workshop.bbcode`). The owner accepted the tested product and completed the
-publication-rules review (C437–C439, C441). The current compatibility target is
+item to 1.2.2 is the owner's step (change notes: `docs/releases/1.2.2-workshop.bbcode`). The
+publication-rules review remains accepted (C437–C439, C441); the owner accepted the tagged
+Tauri-window low-confidence heuristic in writing (C532). The current compatibility target is
 **EU5 1.4.7 / Steam build 26377361**, including Across the Pillars; frozen release epochs
-**60** (1.1.0), **61** (1.2.0) and **62** (1.2.1). An output change now starts a new pending
-epoch (ADR 0003).
+**60** (1.1.0), **61** (1.2.0), **62** (1.2.1) and **63** (1.2.2). An output change now starts
+a new pending epoch (ADR 0003).
 Check the installed build before work that depends on game files, and audit changed inputs after
 a game patch.
 

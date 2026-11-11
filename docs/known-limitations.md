@@ -1,6 +1,6 @@
 # Known limitations
 
-These limits apply to **RNW 1.2.1 / epoch 62**. For installation and everyday use, see the
+These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday use, see the
 [generator guide](generator-guide.md).
 
 ## Game compatibility and saves
@@ -76,9 +76,9 @@ These limits apply to **RNW 1.2.1 / epoch 62**. For installation and everyday us
   keeps its vanilla line. The stories name places by the game's own English words in every
   language.
 - **Windows startup warnings.** The binaries are unsigned, so Smart App Control
-  may block them. The 1.2.0 window also received one heuristic antivirus detection (a
-  low-confidence machine-learning verdict, as the 1.1.0 window did); the
-  [release notes](releases/1.2.0.md#checksums-and-windows-binary-scans) list the exact files
+  may block them. The 1.2.2 Tauri window received one low-confidence machine-learning heuristic;
+  the owner accepted it as a false positive in writing. The
+  [release notes](releases/1.2.2.md#checksums-and-windows-binary-scans) list the exact files
   and scan results. The generator requires no administrator access.
 - **The main window needs WebView2 on Windows or WebKitGTK 4.1 on Linux.**
   Without it, the classic window opens automatically, including in the usual
