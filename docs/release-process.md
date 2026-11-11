@@ -96,6 +96,13 @@ remain with the owner. Agents do not launch/control EU5 to publish or test.
 6. Create the GitHub release, attach the checked assets and notes, then publish.
    Download the posted assets once and verify checksums. Record the release URL
    and tag/commit. The CI-only macOS build is not an offered game/platform route.
+7. Publishing the release also announces it in the community's Discord:
+   `.github/workflows/discord-release.yml` ([`packaging/discord_release.py`](../packaging/discord_release.py))
+   posts one message to the channel behind the repository secret `DISCORD_RELEASE_WEBHOOK`: a
+   ping for the *Release Ping* role, the opening of the release notes and links to the Workshop
+   item and the guide. A draft is never announced and a pre-release never pings. The workflow is
+   separate from the release workflow, so it cannot fail a release. To post a release again, run
+   it by hand with the tag; a manual run pings nobody unless asked to.
 
 Documentation-only status updates after publication do not require rebuilding the
 released binaries, moving the tag, changing the version or rescanning them.

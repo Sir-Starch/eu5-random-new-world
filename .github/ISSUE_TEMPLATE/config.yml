@@ -3,6 +3,9 @@ contact_links:
   - name: Questions and help
     url: https://github.com/Sir-Starch/eu5-random-new-world/discussions
     about: Ask how to use the generator or share a world code.
+  - name: Chat, worlds and screenshots
+    url: https://discord.gg/dnfZGzK4FQ
+    about: Hang out with other players, show off your worlds, or ask a quick question on the Discord server.
   - name: Report a security vulnerability
     url: https://github.com/Sir-Starch/eu5-random-new-world/security/advisories/new
     about: Please report security problems privately.

@@ -1,6 +1,6 @@
 # Known limitations
 
-These limits apply to **RNW 1.2.1 / epoch 62**. For installation and everyday use, see the
+These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday use, see the
 [generator guide](generator-guide.md).
 
 ## Game compatibility and saves

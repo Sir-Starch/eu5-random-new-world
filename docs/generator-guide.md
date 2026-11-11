@@ -579,7 +579,7 @@ commands. Commands use the normal application data directory unless you set
 stores the recipe; making exactly the same world again also needs the original
 generation algorithm, resolved settings and rolls, and game inputs.
 
-RNW 1.2.1 uses **algorithm epoch 62**; 1.2.0 used **epoch 61**, 1.1.0 **epoch 60** and 1.0.0 **epoch 59**. An epoch identifies a
+RNW 1.2.2 uses **algorithm epoch 63**; 1.2.1 used **epoch 62**, 1.2.0 **epoch 61**, 1.1.0 **epoch 60** and 1.0.0 **epoch 59**. An epoch identifies a
 generation algorithm, so the same code can produce different worlds after an epoch
 change. For development builds, a version number alone is not enough to identify the
 algorithm. Older output is not silently migrated. The [version policy](adr/0003-versioning.md)

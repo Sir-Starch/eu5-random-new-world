@@ -1,19 +1,12 @@
 # Documentation
 
-RNW 1.2.1 (epoch 62) shipped on 2026-11-10 for official EU5 1.4.7 / Steam build 26377361,
+RNW 1.2.2 (epoch 63) shipped on 2026-11-11 for official EU5 1.4.7 / Steam build 26377361,
 the latest compatible game version; 1.1.0 (epoch 60) targeted EU5 1.4.6. The 1.4.8 test
 branch with hourly ticks is not supported.
 Continue each generated map's campaign on the exact EU5 version used to create it.
 Start with [AGENTS.md](../AGENTS.md) for working instructions and
 [architecture](architecture.md) for current code. This index distinguishes current
 guidance from the historical record; an old unchecked box is not a current task.
-
-The next major update is **1.2.0**, focused on simulated prehistory, starting
-geopolitics and the depth, identity and diversity of societies. The
-[roadmap](roadmap.md#next-major-update--120-history-and-geopolitics) records the
-owner's direction; the accepted [1.2.0 plan](history-plan.md) holds its design,
-phases and acceptance criteria. The roadmap also lists the
-[Workshop-feedback fixes](roadmap.md#workshop-feedback-in-120) that ship with 1.2.0.
 
 ## Current guides
 
@@ -30,7 +23,7 @@ phases and acceptance criteria. The roadmap also lists the
 | [Testing](testing.md) | Appropriate offline checks, CI and bounded owner-only game observation |
 | [Release process](release-process.md) | Version/tag/package/publication workflow and permanent hub identity |
 | [Distribution and licences](legal.md) | Accepted distribution boundary, licences and when to review a real change |
-| [Changelog](../CHANGELOG.md), [1.2.0 candidate notes](releases/1.2.0.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
+| [Changelog](../CHANGELOG.md), [1.2.2 notes](releases/1.2.2.md), [1.2.1 notes](releases/1.2.1.md), [1.2.0 notes](releases/1.2.0.md), [1.1.0 notes](releases/1.1.0.md), [1.0.0 notes](releases/1.0.0.md) | Release history and player-facing release notes |
 
 ## Subsystem references
 

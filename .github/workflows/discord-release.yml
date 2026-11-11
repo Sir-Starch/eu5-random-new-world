@@ -1,0 +1,50 @@
+name: discord-release
+# Announces a published release in the community's Discord channel (packaging/discord_release.py).
+# The channel's webhook is the repository secret DISCORD_RELEASE_WEBHOOK. Run it by hand to post a
+# release again; a manual run pings nobody unless asked to.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to announce (vMAJOR.MINOR.PATCH)
+        required: true
+        type: string
+      ping:
+        description: Ping the Release Ping role
+        required: false
+        default: false
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: discord-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  announce:
+    if: github.repository == 'Sir-Starch/eu5-random-new-world'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Fetch the release (manual run)
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > "$RUNNER_TEMP/release.json"
+      - name: Post to Discord
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+          MANUAL: ${{ github.event_name == 'workflow_dispatch' }}
+          PING: ${{ inputs.ping }}
+        run: |
+          file="$GITHUB_EVENT_PATH"
+          args=()
+          if [ "$MANUAL" = true ]; then
+            file="$RUNNER_TEMP/release.json"
+            [ "$PING" = true ] || args+=(--no-ping)
+          fi
+          python3 packaging/discord_release.py "$file" "${args[@]}"
