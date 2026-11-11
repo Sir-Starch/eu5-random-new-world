@@ -5,10 +5,10 @@ These limits apply to **RNW 1.2.1 / epoch 62**. For installation and everyday us
 
 ## Game compatibility and saves
 
-- **EU5 1.4.*.** New patches in this branch are usually compatible without a
-  generator update. The latest fully verified version is **EU5 1.4.7, Steam
-  build 26377361**. This branch guidance does not migrate an existing map to a
-  different game version.
+- **Official EU5 1.4.7, Steam build 26377361, is the latest compatible game
+  version.** The 1.4.8 test branch with hourly ticks is not supported. This
+  compatibility guidance does not migrate an existing map to a different game
+  version.
 - **New 1337 campaigns only.** A generated map cannot be added to an existing
   campaign. Keep the exact generated world mod used by each save and continue
   that campaign on the exact EU5 version used to generate its map. Updating the
