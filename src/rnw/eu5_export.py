@@ -29,6 +29,7 @@ from rnw.eu5_map import (
     RIVER_WATER,
     RIVERS,
     Eu5Map,
+    differing_pixels,
     labels_from_rgb,
     load_map,
     open_png,
@@ -271,7 +272,7 @@ def _verify_written(
     height, width = game_map.labels.shape
     vanilla_rgb = open_png(game_dir / LOCATIONS, "RGB")
     written_rgb = open_png(mod_dir / MOD_LOCATIONS, "RGB", (width, height))
-    differs = np.any(written_rgb != vanilla_rgb, axis=2)
+    differs = differing_pixels(written_rgb, vanilla_rgb)
     del vanilla_rgb
     outside = differs.copy()
     outside[window.slices()] = False

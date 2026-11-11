@@ -213,24 +213,46 @@ def open_png(path: Path, mode: str, size: tuple[int, int] | None = None) -> NDAr
         Image.MAX_IMAGE_PIXELS = previous
 
 
-def pack_rgb(rgb: NDArray[np.uint8]) -> NDArray[np.int64]:
-    """Pack an RGB array into 24-bit integers."""
+# Rows a pass over a whole-map raster takes at once: the temporaries of a strip are a few
+# megabytes where the same pass over the map takes a gigabyte or more at the 16384 x 8192
+# canvas (ADR 0006); the strip height never changes a result.
+STRIP_ROWS: Final[int] = 256
+
+
+def pack_rgb(rgb: NDArray[np.uint8]) -> NDArray[np.int32]:
+    """Pack an RGB array into 24-bit integers (``int32`` holds them)."""
     return (
-        (rgb[..., 0].astype(np.int64) << 16)
-        | (rgb[..., 1].astype(np.int64) << 8)
-        | rgb[..., 2].astype(np.int64)
+        (rgb[..., 0].astype(np.int32) << 16)
+        | (rgb[..., 1].astype(np.int32) << 8)
+        | rgb[..., 2].astype(np.int32)
     )
 
 
 def labels_from_rgb(rgb: NDArray[np.uint8], colors: NDArray[np.int64]) -> NDArray[np.int32]:
-    """Map raster colours to declaration indices, refusing undeclared colours."""
+    """Map raster colours to declaration indices, refusing undeclared colours.
+
+    Works strip by strip, so the only whole-map array is the result.
+    """
     lookup = np.full(COLOR_SPACE, -1, dtype=np.int32)
     lookup[colors] = np.arange(colors.size, dtype=np.int32)
-    labels = lookup[pack_rgb(rgb)]
-    missing = int(np.count_nonzero(labels < 0))
+    labels = np.empty(rgb.shape[:-1], dtype=np.int32)
+    missing = 0
+    for top in range(0, labels.shape[0], STRIP_ROWS):
+        strip = lookup[pack_rgb(rgb[top : top + STRIP_ROWS])]
+        missing += int(np.count_nonzero(strip < 0))
+        labels[top : top + STRIP_ROWS] = strip
     if missing:
         raise UndeclaredColorError(missing)
     return labels
+
+
+def differing_pixels(left: NDArray[np.uint8], right: NDArray[np.uint8]) -> NDArray[np.bool_]:
+    """Where two RGB rasters of one size differ in any channel, strip by strip."""
+    differs = np.empty(left.shape[:-1], dtype=np.bool_)
+    for top in range(0, differs.shape[0], STRIP_ROWS):
+        rows = slice(top, top + STRIP_ROWS)
+        differs[rows] = np.any(left[rows] != right[rows], axis=-1)
+    return differs
 
 
 def load_map(game_dir: Path) -> Eu5Map:

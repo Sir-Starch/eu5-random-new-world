@@ -171,6 +171,7 @@ from rnw.eu5_map import (
     RIVER_WATER,
     RIVERS,
     Eu5Map,
+    differing_pixels,
     labels_from_rgb,
     load_map,
     open_png,
@@ -2970,7 +2971,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 designed=designed,
             ),
         )
-        shapes = run_stage("water shapes", lambda: shape_water(settled))
+        shapes = run_stage("water shapes", lambda: shape_water(settled))  # noqa: F821 - deleted after the stages
         coast = shapes.coast
         world = coast.world
         # The exact budget is checked after identities are planned: an early
@@ -2984,7 +2985,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 game_map,
                 hierarchy,
                 reads.result()[1],
-                unpack_pairs(climates.result().locations.pairs),
+                unpack_pairs(climates.result().locations.pairs),  # noqa: F821 - deleted after the stages
                 world=world,
                 biomes=weathering.result()[0],
                 pixels=geometry.pixels.tolist(),
@@ -3036,7 +3037,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 canvas=canvas,
                 world=world,
                 final_labels=final_labels,
-                vanilla=climates.result(),
+                vanilla=climates.result(),  # noqa: F821 - deleted after the stages
                 attributes=reads.result()[1],
                 seed=seed,
                 precious_permille=settings.new_world.precious_permille,
@@ -3109,7 +3110,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     window = np.zeros((rows.stop - rows.start, world_columns.size), dtype=np.int32)
                     local = inside[valid]
                     window[:, valid] = np.where(
-                        canvas.mask[rows][:, local], carved[rows][:, local], 0
+                        canvas.mask[rows][:, local],
+                        carved[rows][:, local],  # noqa: F821 - deleted after the stages
+                        0,
                     )
                     return window
 
@@ -3120,7 +3123,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                     labels=final_labels,
                     rivers=rivers < RIVER_CLASSES,
                     noise_roll=seam,
-                    mountains=mountain_relief(store, carved, seed=seed, column0=0),
+                    mountains=mountain_relief(store, carved, seed=seed, column0=0),  # noqa: F821 - deleted after the stages
                     moved=moved_groups,
                 )
                 return terrain_outputs(store, inputs, slot_tables, seed, spool)
@@ -3430,6 +3433,9 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         rgb, rivers = locations.result()
         png_data = encodings.result()
         terrain_stats = terraining.result()
+    # Nothing below reads these, yet they held 1 GiB until the function returned. Ruff
+    # reads this del before the closures above that use them (the F821 noqa marks).
+    del settled, carved, climates
     terrain_stats["rivers"] = river_stats
     name = output.name
     encoding = f"zlib level {ZLIB_LEVEL}, Up filter, zlib {zlib.ZLIB_RUNTIME_VERSION}"
@@ -3488,7 +3494,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         _check_written_contacts(stage / name / "in_game/map_data", written, game_map, canvas)
         del written
         vanilla = open_png(game_dir / LOCATIONS, "RGB")
-        changed = np.any(decoded != vanilla, axis=2)
+        changed = differing_pixels(decoded, vanilla)
         del vanilla, decoded
         outside = changed.copy()
         canvas.put(outside, np.zeros(canvas.mask.shape, dtype=bool))
