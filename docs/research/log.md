@@ -2294,3 +2294,9 @@ other worlds 1.2.1 gives South America 29–35 %. It is lifted at that level onl
 piece size, and the cut is scanned over several latitudes for the size nearest the vanilla share:
 the image worlds 32.9 % and 30.4 %, both peninsulas and both arms whole. This opens epoch 63 for
 1.2.2. Details and the twelve captured worlds: [N5](n5-region-keys.md#subcontinents-at-the-waist-not-along-a-row-2026-11-10-c529).
+
+## 2026-11-11 — 1.2.2 release-candidate preflight (C532)
+
+[V-EXEC] Candidate commit `e129e1eeaa6996aee465c64d92e78dbb5fea95e9`: `uv sync --locked --group dev && make check` passes (3,266 Python tests, 21 optional skips; 29 Rust tests); `make desktop` passes (50 Vitest tests and five Tauri Rust tests); `RNW_REPRODUCE=1` on installed EU5 build 26377361 reproduces the goldens for epochs 61–63 (3 passed, 16 deselected). The Windows/Proton hub was built, self-tested and installed; see [INSTALLED](../../experiments/INSTALLED.md).
+
+[V-EXEC] The general CI run 43049051448 passed its Windows job; its Ubuntu job failed while resolving Ubuntu package mirrors, and its desktop job was stopped after the same apt/DNS hang. Five attempts of release run 43049113546 failed before source validation or artifact builds: `apt-get` could not resolve `azure.archive.ubuntu.com`. No stable tag or GitHub release was created. The candidate remains unpublished; rerun CI and the candidate workflow when the runner can resolve its package mirrors.

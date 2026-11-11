@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.2.2 — 2026-11-11
+## Unreleased
 
-- Targets EU5 1.4.7 / Steam build 26377361. Algorithm epoch 63: world codes from 1.2.1 can make a different world; existing worlds and saves are not rewritten or migrated.
+- The 1.2.2 candidate targets EU5 1.4.7 / Steam build 26377361 and uses algorithm epoch 63. A 1.2.1 code can make another world at that epoch; existing worlds and saves are not rewritten or migrated.
 
 - Ask for **about 8 GB of free RAM** instead of 9. The last step of generation re-read the map it had written and checked it in whole-map copies of two to three gigabytes at once; it now works in strips, the generator hands back the memory it no longer uses when a stage ends, and arrays nothing reads any more are dropped. The smallest run peaks at 6.8 GiB instead of 8.1 GiB and the default at 8.9 instead of 9.1 GiB, in the same time, and a world made again from the same code is byte for byte the same.
 - Take **Terra Incognita in the lobby** out of the window's Settings. It repeated the box of the same name
