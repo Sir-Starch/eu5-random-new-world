@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Ask for **about 8 GB of free RAM** instead of 9. The last step of generation re-read the map it had written and checked it in whole-map copies of two to three gigabytes at once; it now works in strips, the generator hands back the memory it no longer uses when a stage ends, and arrays nothing reads any more are dropped. The smallest run peaks at 6.8 GiB instead of 8.1 GiB and the default at 8.9 instead of 9.1 GiB, in the same time, and a world made again from the same code is byte for byte the same.
 - Take **Terra Incognita in the lobby** out of the window's Settings. It repeated the box of the same name
   on the **World** tab, where the choice is made before a world is generated and changed afterwards,
   and the two controlled the same preference. Nothing the generator writes changes.

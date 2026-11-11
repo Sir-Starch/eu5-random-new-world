@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · 玩家指南"
@@ -38,7 +38,7 @@ lead = "第一场战役用默认设置就足够了。本页的其他内容可以
 "2_text" = "点击{ui:new_world}，在{ui:new_tab.world}标签页中选择{ui:type}。初次游玩推荐{ui:type.continents}。其他保持不变，或粘贴朋友给你的{ui:code}。"
 "3_title" = "生成"
 "3_text" = "在{ui:new_tab.output}标签页中保留{ui:destination.library}，并勾选{ui:install}。点击{ui:generate}，等待几分钟。"
-"3_note" = "生成需要约9GB空闲内存。"
+"3_note" = "生成需要约8GB空闲内存。"
 "4_title" = "启用并开始游戏"
 "4_text" = "在{game:mods_dlcs}中勾选你的新世界，例如**RNW: Small continents 7K3Q**，点击{game:apply}，然后开始一场1337年的新战役。"
 "4_note" = "不要勾选**Random New World (RNW)**本身：它只包含生成器。战役所需的一切都在你的世界模组里。"
@@ -125,7 +125,7 @@ title = "遇到问题时"
 found_q = "生成器找不到EU5"
 found_a = "打开{ui:settings_title}，选择缺少的文件夹。如果你从未启动过EU5，请先启动一次以创建配置文件，然后重新打开生成器。"
 memory_q = "内存不足"
-memory_a = "生成需要约9GB空闲内存，而EU5即使停在主菜单也可能占用16GB中的大部分。生成器打开后请关闭EU5，或者不启动游戏直接运行生成器：它位于Steam的`steamapps/workshop/content/3450310/3829217331`文件夹中。"
+memory_a = "生成需要约8GB空闲内存，而EU5即使停在主菜单也可能占用16GB中的大部分。生成器打开后请关闭EU5，或者不启动游戏直接运行生成器：它位于Steam的`steamapps/workshop/content/3450310/3829217331`文件夹中。"
 blank_q = "窗口空白或显示错乱"
 blank_a = "打开{ui:settings_title}，选择{ui:settings.classic_window}，然后重新启动生成器。如果窗口根本打不开，请加上`--classic`启动程序。"
 classic_q = "打开了一个更简朴的窗口"

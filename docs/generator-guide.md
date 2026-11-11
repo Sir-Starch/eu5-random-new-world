@@ -28,7 +28,7 @@ See [known limitations](known-limitations.md) for game updates, saves and mod co
    Leave **Expand generation into the oceans** checked to give your continents more room.
 4. **Generate it.** On **Save and play**, choose **Keep the mod in the library** and tick
    **Add to the game when it is done**. Click **Generate** and wait for it to finish.
-   Generation usually takes a few minutes; allow about 9 GB of free RAM.
+   Generation usually takes a few minutes; allow about 8 GB of free RAM.
    Maps stay hidden by default so you can discover the New World during your campaign.
 5. **Enable your world in EU5.** In the game's Mods menu, enable the newly created world
    mod, for example **RNW: Small continents 7K3Q**, and start a **new 1337 campaign**.

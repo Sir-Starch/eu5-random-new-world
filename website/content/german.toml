@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · Spielerhandbuch"
@@ -38,7 +38,7 @@ lead = "Für die erste Kampagne reichen die Standardeinstellungen. Alles andere 
 "2_text" = "Klicke auf {ui:new_world} und wähle auf dem Reiter {ui:new_tab.world} eine {ui:type}. {ui:type.continents} sind für den Anfang eine gute Wahl. Lass den Rest, wie er ist, oder füge den {ui:code} eines Freundes ein."
 "3_title" = "Erzeuge sie"
 "3_text" = "Lass auf dem Reiter {ui:new_tab.output} die Option {ui:destination.library} gewählt und setze das Häkchen bei {ui:install}. Klicke auf {ui:generate} und warte ein paar Minuten."
-"3_note" = "Die Erzeugung braucht etwa 9 GB freien Arbeitsspeicher."
+"3_note" = "Die Erzeugung braucht etwa 8 GB freien Arbeitsspeicher."
 "4_title" = "Aktivieren und spielen"
 "4_text" = "Hake im Menü {game:mods_dlcs} deine neue Welt an, etwa **RNW: Small continents 7K3Q**, klicke auf {game:apply} und beginne eine neue Kampagne im Jahr 1337."
 "4_note" = "Lass **Random New World (RNW)** selbst deaktiviert: Diese Mod enthält nur den Generator. Deine Welt-Mod bringt alles mit, was die Kampagne braucht."
@@ -125,7 +125,7 @@ title = "Wenn etwas schiefgeht"
 found_q = "Der Generator findet EU5 nicht"
 found_a = "Öffne {ui:settings_title} und wähle den fehlenden Ordner. Hast du EU5 noch nie gestartet, starte es einmal, damit es sein Profil anlegt, und öffne dann den Generator erneut."
 memory_q = "Zu wenig Arbeitsspeicher"
-memory_a = "Die Erzeugung braucht etwa 9 GB freien Arbeitsspeicher, und EU5 kann schon im Hauptmenü fast 16 GB belegen. Schließe EU5, sobald der Generator offen ist, oder starte den Generator ohne das Spiel: Er liegt im Steam-Ordner `steamapps/workshop/content/3450310/3829217331`."
+memory_a = "Die Erzeugung braucht etwa 8 GB freien Arbeitsspeicher, und EU5 kann schon im Hauptmenü fast 16 GB belegen. Schließe EU5, sobald der Generator offen ist, oder starte den Generator ohne das Spiel: Er liegt im Steam-Ordner `steamapps/workshop/content/3450310/3829217331`."
 blank_q = "Das Fenster bleibt leer oder wird falsch gezeichnet"
 blank_a = "Öffne {ui:settings_title}, wähle {ui:settings.classic_window} und starte den Generator neu. Öffnet sich das Fenster gar nicht, starte das Programm mit `--classic`."
 classic_q = "Stattdessen öffnet sich ein schlichteres Fenster"

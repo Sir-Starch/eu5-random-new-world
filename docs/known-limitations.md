@@ -59,7 +59,7 @@ These limits apply to **RNW 1.2.1 / epoch 62**. For installation and everyday us
 
 ## Generation and startup
 
-- **Allow about 9 GB of free RAM for generation.** On a 16 GB system, close
+- **Allow about 8 GB of free RAM for generation.** On a 16 GB system, close
   EU5 after opening the generator, or launch the generator directly from its
   folder.
 - **Some seeds and settings cannot produce a valid world.** Generation stops

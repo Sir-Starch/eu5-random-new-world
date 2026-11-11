@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · Guia do jogador"
@@ -38,7 +38,7 @@ lead = "As configurações padrão bastam para uma primeira campanha. Todo o res
 "2_text" = "Clique em {ui:new_world} e, na aba {ui:new_tab.world}, escolha um {ui:type}. {ui:type.continents} é uma boa primeira escolha. Deixe o resto como está ou cole o {ui:code} de um amigo."
 "3_title" = "Gere o mundo"
 "3_text" = "Na aba {ui:new_tab.output}, mantenha {ui:destination.library} e marque {ui:install}. Clique em {ui:generate} e espere alguns minutos."
-"3_note" = "A geração precisa de cerca de 9 GB de RAM livre."
+"3_note" = "A geração precisa de cerca de 8 GB de RAM livre."
 "4_title" = "Ative e jogue"
 "4_text" = "Em {game:mods_dlcs}, marque o seu novo mundo, por exemplo **RNW: Small continents 7K3Q**, clique em {game:apply} e comece uma nova campanha em 1337."
 "4_note" = "Deixe o próprio **Random New World (RNW)** desmarcado: ele só contém o gerador. O mod do seu mundo tem tudo de que a campanha precisa."
@@ -125,7 +125,7 @@ title = "Se algo der errado"
 found_q = "O gerador não encontra o EU5"
 found_a = "Abra {ui:settings_title} e escolha a pasta que falta. Se você nunca abriu o EU5, abra uma vez para ele criar o perfil e depois abra o gerador de novo."
 memory_q = "Falta memória"
-memory_a = "A geração precisa de cerca de 9 GB de RAM livre, e o EU5 pode ocupar quase 16 GB mesmo no menu principal. Feche o EU5 depois que o gerador abrir ou inicie o gerador sem o jogo: ele fica na pasta da Steam `steamapps/workshop/content/3450310/3829217331`."
+memory_a = "A geração precisa de cerca de 8 GB de RAM livre, e o EU5 pode ocupar quase 16 GB mesmo no menu principal. Feche o EU5 depois que o gerador abrir ou inicie o gerador sem o jogo: ele fica na pasta da Steam `steamapps/workshop/content/3450310/3829217331`."
 blank_q = "A janela fica vazia ou é desenhada errado"
 blank_a = "Abra {ui:settings_title}, escolha {ui:settings.classic_window} e reinicie o gerador. Se a janela nem abrir, inicie o programa com `--classic`."
 classic_q = "Abriu uma janela mais simples"

@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · Oyuncu rehberi"
@@ -38,7 +38,7 @@ lead = "İlk sefer için varsayılan ayarlar yeterlidir. Bu sayfadaki geri kalan
 "2_text" = "{ui:new_world} öğesine tıklayın ve {ui:new_tab.world} sekmesinde {ui:type} seçin; başlangıç için {ui:type.continents} iyi bir seçimdir. Gerisini olduğu gibi bırakın ya da bir arkadaşınızdan aldığınız kodu {ui:code} alanına yapıştırın."
 "3_title" = "Oluşturun"
 "3_text" = "{ui:new_tab.output} sekmesinde {ui:destination.library} seçeneğini koruyun ve {ui:install} kutusunu işaretleyin. {ui:generate} düğmesine tıklayıp birkaç dakika bekleyin."
-"3_note" = "Oluşturma için yaklaşık 9 GB boş RAM gerekir."
+"3_note" = "Oluşturma için yaklaşık 8 GB boş RAM gerekir."
 "4_title" = "Etkinleştirin ve oynayın"
 "4_text" = "{game:mods_dlcs} menüsünde yeni dünyanızı, örneğin **RNW: Small continents 7K3Q** modunu işaretleyin, {game:apply} düğmesine tıklayın ve 1337’de yeni bir sefer başlatın."
 "4_note" = "**Random New World (RNW)** modunun kendisini işaretlemeyin: içinde yalnızca oluşturucu var. Dünya modunuz seferin ihtiyaç duyduğu her şeyi içerir."
@@ -125,7 +125,7 @@ title = "Bir şeyler ters giderse"
 found_q = "Oluşturucu EU5’i bulamıyor"
 found_a = "{ui:settings_title} penceresini açın ve eksik klasörü seçin. EU5’i hiç başlatmadıysanız profilini oluşturması için oyunu bir kez açın, sonra oluşturucuyu yeniden açın."
 memory_q = "Bellek yetmiyor"
-memory_a = "Oluşturma için yaklaşık 9 GB boş RAM gerekir ve EU5 ana menüde bile 16 GB’ın neredeyse tamamını tutabilir. Oluşturucu açılınca EU5’i kapatın ya da oluşturucuyu oyun olmadan başlatın: Steam’in `steamapps/workshop/content/3450310/3829217331` klasöründedir."
+memory_a = "Oluşturma için yaklaşık 8 GB boş RAM gerekir ve EU5 ana menüde bile 16 GB’ın neredeyse tamamını tutabilir. Oluşturucu açılınca EU5’i kapatın ya da oluşturucuyu oyun olmadan başlatın: Steam’in `steamapps/workshop/content/3450310/3829217331` klasöründedir."
 blank_q = "Pencere boş ya da bozuk çiziliyor"
 blank_a = "{ui:settings_title} penceresini açın, {ui:settings.classic_window} seçeneğini işaretleyin ve oluşturucuyu yeniden başlatın. Pencere hiç açılmıyorsa programı `--classic` ile başlatın."
 classic_q = "Onun yerine daha sade bir pencere açıldı"

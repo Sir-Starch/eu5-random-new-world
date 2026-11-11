@@ -16,6 +16,8 @@ The Steam Workshop text for the current release ([ADR 0009](adr/0009-hub-mod-wit
 
 **Memory figure update 2026-11-09 [V-EXEC]:** The RAM warning of all eleven descriptions now says about 9 GB of free RAM instead of 7.5 (measurements: [ADR 0006](adr/0006-machine-resources.md), C526). The texts are those of commit `5bc2933` and were published to the main item through the Steamworks API the same way; against the live texts exactly one line (the warning) differed in each language. Every submission returned `EResult=1`, an uncached query returned each text exactly, and title, preview URL and visibility matched the snapshot taken just before. The hub itself was not uploaded. Records stay local in `local_data/workshop-main-2026-11-09-ram/`.
 
+**Memory figure update 2026-11-11 [V-EXEC]:** The RAM warning of the eleven descriptions in this repository now says about 8 GB of free RAM instead of 9 (measurements: [ADR 0006](adr/0006-machine-resources.md), C531). They are not published to the Steam item yet.
+
 ## 1.1.0 publication texts
 
 - **GitHub release body:** [detailed release notes](releases/1.1.0.md), in English Markdown. Use the document as the release body; the links are absolute so they also work on GitHub's release page.

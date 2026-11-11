@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · Guía del jugador"
@@ -38,7 +38,7 @@ lead = "Para una primera campaña bastan los ajustes predeterminados. Todo lo de
 "2_text" = "Pulsa {ui:new_world} y, en la pestaña {ui:new_tab.world}, elige un {ui:type}. {ui:type.continents} es una buena primera opción. Deja lo demás como está o pega el {ui:code} de un amigo."
 "3_title" = "Genéralo"
 "3_text" = "En la pestaña {ui:new_tab.output}, deja marcado {ui:destination.library} y marca {ui:install}. Pulsa {ui:generate} y espera unos minutos."
-"3_note" = "La generación necesita unos 9 GB de RAM libre."
+"3_note" = "La generación necesita unos 8 GB de RAM libre."
 "4_title" = "Actívalo y juega"
 "4_text" = "En {game:mods_dlcs}, marca tu nuevo mundo, por ejemplo **RNW: Small continents 7K3Q**, pulsa {game:apply} e inicia una nueva campaña en 1337."
 "4_note" = "Deja **Random New World (RNW)** sin marcar: solo contiene el generador. Tu mod de mundo incluye todo lo que necesita la campaña."
@@ -125,7 +125,7 @@ title = "Si algo falla"
 found_q = "El generador no encuentra EU5"
 found_a = "Abre {ui:settings_title} y elige la carpeta que falta. Si nunca has iniciado EU5, ábrelo una vez para que cree su perfil y vuelve a abrir el generador."
 memory_q = "No hay memoria suficiente"
-memory_a = "La generación necesita unos 9 GB de RAM libre, y EU5 puede ocupar casi 16 GB incluso en el menú principal. Cierra EU5 cuando el generador esté abierto o inicia el generador sin el juego: está en la carpeta de Steam `steamapps/workshop/content/3450310/3829217331`."
+memory_a = "La generación necesita unos 8 GB de RAM libre, y EU5 puede ocupar casi 16 GB incluso en el menú principal. Cierra EU5 cuando el generador esté abierto o inicia el generador sin el juego: está en la carpeta de Steam `steamapps/workshop/content/3450310/3829217331`."
 blank_q = "La ventana sale vacía o se dibuja mal"
 blank_a = "Abre {ui:settings_title}, elige {ui:settings.classic_window} y vuelve a iniciar el generador. Si la ventana no llega a abrirse, inicia el programa con `--classic`."
 classic_q = "Se ha abierto una ventana más sencilla"

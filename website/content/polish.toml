@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · Poradnik gracza"
@@ -38,7 +38,7 @@ lead = "Do pierwszej kampanii wystarczą ustawienia domyślne. Cała reszta tej 
 "2_text" = "Kliknij {ui:new_world} i na karcie {ui:new_tab.world} ustaw pole {ui:type}; na początek dobrze sprawdzą się {ui:type.continents}. Resztę zostaw bez zmian albo wklej w pole {ui:code} kod od znajomego."
 "3_title" = "Wygeneruj go"
 "3_text" = "Na karcie {ui:new_tab.output} zostaw opcję {ui:destination.library} i zaznacz {ui:install}. Kliknij {ui:generate} i poczekaj kilka minut."
-"3_note" = "Generowanie wymaga około 9 GB wolnej pamięci RAM."
+"3_note" = "Generowanie wymaga około 8 GB wolnej pamięci RAM."
 "4_title" = "Włącz go i graj"
 "4_text" = "W menu {game:mods_dlcs} zaznacz nowy świat, np. **RNW: Small continents 7K3Q**, kliknij {game:apply} i rozpocznij nową kampanię w 1337 roku."
 "4_note" = "Samego moda **Random New World (RNW)** nie zaznaczaj: zawiera tylko generator. Mod świata ma wszystko, czego potrzebuje kampania."
@@ -125,7 +125,7 @@ title = "Gdy coś pójdzie nie tak"
 found_q = "Generator nie znajduje EU5"
 found_a = "Otwórz {ui:settings_title} i wskaż brakujący folder. Jeśli gra nie była jeszcze nigdy uruchamiana, uruchom ją raz, by utworzyła profil, a potem ponownie otwórz generator."
 memory_q = "Brakuje pamięci"
-memory_a = "Generowanie wymaga około 9 GB wolnej pamięci RAM, a EU5 potrafi zająć prawie 16 GB już w menu głównym. Zamknij EU5, gdy generator się otworzy, albo uruchamiaj generator bez gry: znajduje się w folderze Steam `steamapps/workshop/content/3450310/3829217331`."
+memory_a = "Generowanie wymaga około 8 GB wolnej pamięci RAM, a EU5 potrafi zająć prawie 16 GB już w menu głównym. Zamknij EU5, gdy generator się otworzy, albo uruchamiaj generator bez gry: znajduje się w folderze Steam `steamapps/workshop/content/3450310/3829217331`."
 blank_q = "Okno jest puste lub źle się rysuje"
 blank_a = "Otwórz {ui:settings_title}, zaznacz {ui:settings.classic_window} i uruchom generator ponownie. Jeśli okno w ogóle się nie otwiera, uruchom program z opcją `--classic`."
 classic_q = "Otworzyło się prostsze okno"

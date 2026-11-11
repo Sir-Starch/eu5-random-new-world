@@ -1,4 +1,4 @@
-source = "c9141f3076460f73"
+source = "f462402450b2b2b9"
 
 [meta]
 title = "Random New World · Guide du joueur"
@@ -38,7 +38,7 @@ lead = "Les réglages par défaut suffisent pour une première campagne. Tout le
 "2_text" = "Cliquez sur {ui:new_world} et, dans l’onglet {ui:new_tab.world}, choisissez un {ui:type}. {ui:type.continents} est un bon premier choix. Laissez le reste tel quel, ou collez le {ui:code} d’un ami."
 "3_title" = "Générez-le"
 "3_text" = "Dans l’onglet {ui:new_tab.output}, gardez {ui:destination.library} et cochez {ui:install}. Cliquez sur {ui:generate} et patientez quelques minutes."
-"3_note" = "La génération demande environ 9 Go de RAM libre."
+"3_note" = "La génération demande environ 8 Go de RAM libre."
 "4_title" = "Activez-le et jouez"
 "4_text" = "Dans {game:mods_dlcs}, cochez votre nouveau monde, par exemple **RNW: Small continents 7K3Q**, cliquez sur {game:apply} et commencez une nouvelle campagne en 1337."
 "4_note" = "Laissez **Random New World (RNW)** lui-même décoché : il ne contient que le générateur. Votre mod de monde contient tout ce dont la campagne a besoin."
@@ -125,7 +125,7 @@ title = "En cas de problème"
 found_q = "Le générateur ne trouve pas EU5"
 found_a = "Ouvrez {ui:settings_title} et choisissez le dossier manquant. Si vous n’avez jamais lancé EU5, lancez-le une fois pour qu’il crée son profil, puis rouvrez le générateur."
 memory_q = "Pas assez de mémoire"
-memory_a = "La génération demande environ 9 Go de RAM libre, et EU5 peut occuper presque 16 Go dès le menu principal. Fermez EU5 une fois le générateur ouvert, ou lancez le générateur sans le jeu : il se trouve dans le dossier Steam `steamapps/workshop/content/3450310/3829217331`."
+memory_a = "La génération demande environ 8 Go de RAM libre, et EU5 peut occuper presque 16 Go dès le menu principal. Fermez EU5 une fois le générateur ouvert, ou lancez le générateur sans le jeu : il se trouve dans le dossier Steam `steamapps/workshop/content/3450310/3829217331`."
 blank_q = "La fenêtre est vide ou mal dessinée"
 blank_a = "Ouvrez {ui:settings_title}, choisissez {ui:settings.classic_window} et relancez le générateur. Si la fenêtre ne s’ouvre pas du tout, lancez le programme avec `--classic`."
 classic_q = "Une fenêtre plus sobre s’est ouverte à la place"
