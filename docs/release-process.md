@@ -126,6 +126,17 @@ Release archives do not carry a separate Workshop-text bundle; the texts are pas
 from `docs/workshop/` with those headers left out. The hub does not require a separate README to be usable: its
 metadata gives the launch instruction, and the page carries the full guide.
 
+For each localized title or description update, set `SetItemUpdateLanguage` and
+submit **both** `SetItemTitle` and `SetItemDescription` on the same update handle.
+Keep the title **Random New World (RNW MAJOR.MINOR.PATCH)** in every language,
+matching the published release. Snapshot the live texts first; a title-only repair
+resubmits that language's existing description exactly. Omitting one field can
+clear it: the 2026-11-12 repair reproduced this for a description, then restored
+it from the snapshot. After submission, query every official language without
+cached responses and verify both fields, plus the preview URL. See
+[Steamworks title and language APIs](https://partner.steamgames.com/doc/api/ISteamUGC#SetItemTitle)
+and the [repair record](workshop-description.md).
+
 The hub's `.metadata/metadata.json` tags and the Workshop publication's tags are
 separate. Uploading the hub files does not establish that the publication's
 categories changed. Submit the complete tag list with
