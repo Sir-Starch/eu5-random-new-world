@@ -22,6 +22,7 @@ import hashlib
 import math
 import re
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final
@@ -42,6 +43,7 @@ from rnw.climate import RainSettings, rainfall
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.fields import block_mean
 from rnw.model import CellClass
+from rnw.parallel import worker_count
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed, hash_point
 from rnw.settings import RESOURCES, ResourceSettings, SettingsError
@@ -101,12 +103,20 @@ EMPTY_LAND: Final[dict[str, str]] = {"farmland": "grasslands"}
 CULTIVATED: Final[frozenset[str]] = frozenset({"farmland"})
 OPEN_CLIMATE_ROUNDS: Final[int] = 0
 OPEN_VEGETATION_ROUNDS: Final[int] = 0
-# A plurality of 32 neighbours seldom names a class that is rare among them, so the votes for each
-# (climate, vegetation) pair are weighed by the cube root of the inverse of its share of the
-# training locations: on world gady3byywf the semi-arid and cold arid land rose from 29 to 51
-# permille (vanilla 86 to 91) while climate regions kept vanilla's size (12.8 cells, Old World
-# 13.2) [V-EXEC 2026-11-13]. ``PRIOR_SCALE`` keeps the integer root fine-grained.
+# A plurality of 32 neighbours seldom names a class that is rare among them: read without itself,
+# a vanilla location was given a semi-arid or cold arid climate 72 times in a thousand where 91
+# are, and a Mediterranean one where it is not. The votes of each (climate, vegetation) pair are
+# therefore weighed so that the vote gives every pair about as many of the training locations,
+# each read without itself, as hold it (``calibrated_weights``): ``CALIBRATION_ROUNDS`` rounds
+# from the cube root of the inverse of its share (``prior_weights``), each multiplying a weight by
+# the square root of its rows over the rows it was chosen for, rescaled to ``WEIGHT_TOP``.
+# Calibrated on the Old World alone, the vote gives the Americas 89 permille of those climates
+# (they hold 87; the cube root gave 82) [V-EXEC 2026-11-13]. ``PRIOR_SCALE`` keeps the integer
+# root fine-grained.
 PRIOR_SCALE: Final[int] = 10**12
+CALIBRATION_ROUNDS: Final[int] = 10
+CALIBRATION_THREADS: Final[int] = 8  # each searches the neighbours of its own CHUNK rows
+WEIGHT_TOP: Final[int] = 1 << 20
 # Seeds are spaced by the size vanilla gives a location of the class the vote will choose
 # (epoch 64, ``epoch.RIVERS_FIRST``, ``SizeModel``); sizes are log2 of a location's pixels over
 # its region's median in ``OCTAVE_PARTS``ths of an octave.
@@ -286,8 +296,14 @@ def _standardize(
 
 
 def _nearest(train: NDArray[np.int64], block: NDArray[np.int64], k: int) -> NDArray[np.int64]:
-    """The ``k`` nearest training rows of each row of ``block``, nearest first (ties by index)."""
-    distance = ((block[:, np.newaxis, :] - train[np.newaxis, :, :]) ** 2).sum(axis=2)
+    """The ``k`` nearest training rows of each row of ``block``, nearest first (ties by index).
+
+    The squared distance is |a|^2 + |b|^2 - 2 a.b, exact in integers (standardized features are
+    a few times 10^4, so every term stays far below 2^63) and the same as the sum of squared
+    differences, at a third of the time.
+    """
+    distance = (train * train).sum(axis=1)[np.newaxis, :] - 2 * (block @ train.T)
+    distance += (block * block).sum(axis=1)[:, np.newaxis]
     nearest = np.argpartition(distance, k - 1, axis=1)[:, :k]
     near_distance = np.take_along_axis(distance, nearest, axis=1)
     order = np.lexsort((nearest, near_distance), axis=-1)
@@ -350,6 +366,84 @@ def prior_weights(classes: NDArray[np.int64], count: int) -> NDArray[np.int64]:
         [integer_cube_root(PRIOR_SCALE * total // found) if found else 0 for found in rows],
         dtype=np.int64,
     )
+
+
+def chosen_pairs(scores: NDArray[np.int64], climate_of: NDArray[np.int64]) -> NDArray[np.int64]:
+    """The pair each row of ``scores`` chooses without smoothing: the climate whose pairs have
+    the most votes, then that climate's pair with the most (``regularize_votes`` with no rounds).
+    """
+    climates = np.zeros((scores.shape[0], int(climate_of.max()) + 1), dtype=np.int64)
+    np.add.at(climates.T, climate_of, scores.T)
+    allowed = climate_of[np.newaxis, :] == np.argmax(climates, axis=1)[:, np.newaxis]
+    return np.argmax(np.where(allowed, scores, 0), axis=1)
+
+
+def _rescaled(weights: NDArray[np.int64]) -> NDArray[np.int64]:
+    top = int(weights.max()) if weights.size else 0
+    if top <= 0:
+        return weights
+    return np.where(weights > 0, np.maximum(1, weights * WEIGHT_TOP // top), 0)
+
+
+def nearest_others(train: NDArray[np.int64], start: int, k: int) -> NDArray[np.int64]:
+    """The ``k`` nearest rows of ``train`` to each of its ``CHUNK`` rows from ``start``, the row
+    itself left out (nearest first, ties by index)."""
+    size = min(CHUNK, int(train.shape[0]) - start)
+    nearest = _nearest(train, train[start : start + size], k + 1)
+    own = nearest == np.arange(start, start + size, dtype=np.int64)[:, np.newaxis]
+    # A row behind k + 1 identical rows is not among its own nearest; it drops the last.
+    own[~own.any(axis=1), -1] = True
+    return nearest[~own].reshape(size, k)
+
+
+def calibrated_weights(
+    train: NDArray[np.int64], classes: NDArray[np.int64], climate_of: NDArray[np.int64]
+) -> NDArray[np.int64]:
+    """The weight of each pair's votes with which the vote reads the training rows as they are.
+
+    Each row of ``train`` (standardized) is voted on by its ``NEIGHBOURS`` nearest other rows;
+    over ``CALIBRATION_ROUNDS`` rounds from ``prior_weights`` the weight of a pair is multiplied
+    by the square root of the rows that hold it over the rows it is chosen for, so that every pair
+    is chosen about as often as vanilla holds it. A pair without rows weighs nothing.
+    """
+    count = int(climate_of.size)
+    weights = _rescaled(prior_weights(classes, count))
+    k = min(NEIGHBOURS, int(train.shape[0]) - 1)
+    if k <= 0:
+        return weights
+    held = np.bincount(classes, minlength=count).tolist()
+    scores = np.zeros((train.shape[0], count), dtype=np.int64)
+    rank = np.arange(k, 0, -1, dtype=np.int64)
+    starts = range(0, int(train.shape[0]), CHUNK)
+
+    def search(first: int) -> NDArray[np.int64]:
+        return nearest_others(train, first, k)
+
+    # A distance row and its partition per training row and thread, four arrays of int64.
+    workers = worker_count(CALIBRATION_THREADS, bytes_each=32 * CHUNK * int(train.shape[0]))
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        searched = pool.map(search, starts)
+        for start, nearest in zip(starts, searched, strict=True):
+            checkpoint()
+            size = int(nearest.shape[0])
+            rows = np.repeat(np.arange(size, dtype=np.int64), k)
+            np.add.at(
+                scores[start : start + size], (rows, classes[nearest].ravel()), np.tile(rank, size)
+            )
+    for _ in range(CALIBRATION_ROUNDS):
+        chosen = np.bincount(
+            chosen_pairs(scores * weights[np.newaxis, :], climate_of), minlength=count
+        ).tolist()
+        weights = _rescaled(
+            np.array(
+                [
+                    math.isqrt(weight * weight * (rows + 1) // (found + 1)) if rows else 0
+                    for weight, rows, found in zip(weights.tolist(), held, chosen, strict=True)
+                ],
+                dtype=np.int64,
+            )
+        )
+    return weights
 
 
 def block_features(
@@ -421,19 +515,21 @@ class SizeModel:
 
     ``features`` are the ``block_features`` of the ``SIZE_STEP`` blocks of each location, averaged
     over its pixels; ``pairs`` are their (climate, vegetation) pairs, ``climate_of`` the climate of
-    each pair and ``size`` log2 of their pixels over the median of their region (the Old World,
-    the Americas) in ``OCTAVE_PARTS``ths of an octave.
+    each pair, ``size`` log2 of their pixels over the median of their region (the Old World,
+    the Americas) in ``OCTAVE_PARTS``ths of an octave and ``weights`` the ``calibrated_weights``
+    of the pairs' votes (``size_table``).
     """
 
     features: NDArray[np.int64]
     pairs: NDArray[np.int64]
     climate_of: NDArray[np.int64]
     size: NDArray[np.int64]
+    weights: NDArray[np.int64]
 
     def digest(self) -> str:
         """SHA-256 of the model, for the keys of the worlds made with it."""
         found = hashlib.sha256()
-        for array in (self.features, self.pairs, self.climate_of, self.size):
+        for array in (self.features, self.pairs, self.climate_of, self.size, self.weights):
             found.update(repr(array.shape).encode("ascii"))
             found.update(np.ascontiguousarray(array, dtype=np.int64).tobytes())
         return found.hexdigest()
@@ -480,11 +576,23 @@ def size_model(
             values = pixels[index[rows]]
             median = int(np.sort(values)[(rows.size - 1) // 2])
             size[rows] = [octave_parts(value, median) for value in values.tolist()]
+    return size_table(sums[index] // pixels[index][:, np.newaxis], pairs, climate_of, size)
+
+
+def size_table(
+    features: NDArray[np.int64],
+    pairs: NDArray[np.int64],
+    climate_of: NDArray[np.int64],
+    size: NDArray[np.int64],
+) -> SizeModel:
+    """The ``SizeModel`` of these locations, its votes weighed as the vote reads them."""
+    train, _ = _standardize(features, features[:0], LAND_WEIGHTS)
     return SizeModel(
-        features=sums[index] // pixels[index][:, np.newaxis],
+        features=features,
         pairs=pairs,
         climate_of=climate_of,
         size=size,
+        weights=calibrated_weights(train, pairs, climate_of),
     )
 
 
@@ -527,12 +635,8 @@ def class_sizes(model: SizeModel, query: NDArray[np.int64]) -> NDArray[np.int64]
         raise ValueError(message)
     count = int(model.climate_of.size)
     train, rows = _standardize(model.features, query, LAND_WEIGHTS)
-    scores = knn_scores(train, model.pairs, rows, count)
-    scores = scores * prior_weights(model.pairs, count)[np.newaxis, :]
-    climates = np.zeros((rows.shape[0], int(model.climate_of.max()) + 1), dtype=np.int64)
-    np.add.at(climates.T, model.climate_of, scores.T)
-    allowed = model.climate_of[np.newaxis, :] == np.argmax(climates, axis=1)[:, np.newaxis]
-    chosen = np.argmax(np.where(allowed, scores, 0), axis=1)
+    scores = knn_scores(train, model.pairs, rows, count) * model.weights[np.newaxis, :]
+    chosen = chosen_pairs(scores, model.climate_of)
     out = np.zeros(rows.shape[0], dtype=np.int64)
     for pair in np.unique(chosen).tolist():
         members = np.flatnonzero(model.pairs == pair)
@@ -853,8 +957,8 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     just chosen (``rnw.barrens``) and ``CellBiomes.kinds`` holds the class of every cell; without
     it the cells keep the class they came with, the highest ones being wasteland. With
     ``open_climate`` (epoch 64, ``epoch.OPEN_CLIMATE``) the vote learns from the Americas too,
-    without the cultivated land, weighs rare pairs up (``prior_weights``) and smooths over
-    ``OPEN_*_ROUNDS``.
+    without the cultivated land, weighs each pair so that it reads vanilla as it is
+    (``calibrated_weights``) and smooths over ``OPEN_*_ROUNDS``.
     """
     count = len(cells.kinds)
     old = _old_world(game_map)
@@ -879,7 +983,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     train_s, query_s = _standardize(train_x, query_x, LAND_WEIGHTS)
     scores = knn_scores(train_s, joint_ids, query_s, len(joint_names))
     if open_climate:
-        scores = scores * prior_weights(joint_ids, len(joint_names))[np.newaxis, :]
+        scores = scores * calibrated_weights(train_s, joint_ids, joint_climate)[np.newaxis, :]
     position = np.full(count, -1, dtype=np.int64)
     position[land_cells] = np.arange(land_cells.size)
     edges = _edge_array(cells.edges, land)

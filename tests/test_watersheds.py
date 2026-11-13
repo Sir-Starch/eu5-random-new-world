@@ -13,11 +13,16 @@ import pytest
 
 from rnw import epoch, relief, watersheds
 from rnw.eu5_biomes import (
+    CHUNK,
+    NEIGHBOURS,
     OCTAVE_PARTS,
     SIZE_STEP,
+    calibrated_weights,
+    chosen_pairs,
     class_sizes,
     integer_cube_root,
     latitude_tenths,
+    nearest_others,
     octave_parts,
     prior_weights,
     size_model,
@@ -247,3 +252,47 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     assert model.features[:, 2].tolist() == [7000, 9000, 9000]
     assert np.array_equal(model.features[1], model.features[2])
     assert model.digest() == size_model(game_map, templates, height).digest()
+
+
+def _chosen_without_self(train: np.ndarray, classes: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    """How often each pair is chosen when every row is read by its nearest other rows."""
+    rank = np.arange(NEIGHBOURS, 0, -1, dtype=np.int64)
+    scores = np.zeros((train.shape[0], weights.size), dtype=np.int64)
+    for row in range(train.shape[0]):
+        distance = ((train - train[row]) ** 2).sum(axis=1)
+        distance[row] = np.iinfo(np.int64).max
+        order: np.ndarray = np.lexsort((np.arange(int(train.shape[0]), dtype=np.int64), distance))
+        nearest = order[:NEIGHBOURS]
+        np.add.at(scores[row], classes[nearest], rank)
+    climate_of = np.arange(weights.size, dtype=np.int64)
+    return np.bincount(chosen_pairs(scores * weights, climate_of), minlength=weights.size)
+
+
+def test_calibrated_weights_give_a_rare_class_its_share() -> None:
+    # A class whose share of the neighbourhood rises from none to 60 % along the row: a plurality
+    # names it only where it holds more than half, a third of the rows it holds.
+    places = np.arange(1000, dtype=np.int64)
+    classes = ((places * 7919) % 1000 < places * 6 // 10).astype(np.int64)
+    train = np.stack([places * 10, np.zeros_like(places)], axis=1)
+    held = np.bincount(classes, minlength=2)
+    plain = _chosen_without_self(train, classes, np.array([1, 1], dtype=np.int64))
+    assert plain[1] * 3 < held[1] * 2
+    weights = calibrated_weights(train, classes, np.array([0, 1], dtype=np.int64))
+    chosen = _chosen_without_self(train, classes, weights)
+    assert abs(int(chosen[1]) - int(held[1])) * 10 <= int(held[1])
+    assert np.array_equal(weights, calibrated_weights(train, classes, np.array([0, 1])))
+
+
+def test_a_row_never_votes_for_itself() -> None:
+    train = np.zeros((CHUNK + 40, 2), dtype=np.int64)  # all alike: every tie goes by index
+    train[CHUNK:, 0] = 5
+    for start in (0, CHUNK):
+        nearest = nearest_others(train, start, NEIGHBOURS)
+        own = np.arange(start, start + int(nearest.shape[0]), dtype=np.int64)[:, np.newaxis]
+        assert nearest.shape == (min(CHUNK, train.shape[0] - start), NEIGHBOURS)
+        assert not np.any(nearest == own)
+    # A pair no row holds weighs nothing; one row alone still gets a weight.
+    weights = calibrated_weights(train, np.array([0] * (CHUNK + 39) + [2]), np.array([0, 1, 2]))
+    assert weights[1] == 0
+    assert weights[0] > 0
+    assert weights[2] > 0

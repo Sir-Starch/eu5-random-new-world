@@ -1358,7 +1358,7 @@ def _cell_sums(
 # ``HILL_STEP`` pixels, which no slope has. A spread about the plane that fits a whole cell grows
 # with the cell, so once the cells were sized by the land the largest became hills: hills were
 # 1.32 times the median location and 327 permille of the coastal locations hills, where the
-# bend gives 1.05 and 289 (vanilla 0.83 and 254 in the Old World) on world gady3byywf
+# bend gives 1.08 and 280 (vanilla 0.83 and 254 in the Old World) on world gady3byywf
 # [V-EXEC 2026-11-13].
 HILL_STEP: Final[int] = 8
 

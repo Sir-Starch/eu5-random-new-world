@@ -35,8 +35,9 @@ worlds and saves are not rewritten or migrated.
   borders. Each location is as large as the game's own locations of the climate and vegetation it
   will have, where the game's land is like it: large in deserts, dry steppes, the cold and far
   inland, small on wet coasts. The climate learns from the game's Americas as well as the Old World,
-  keeps the transitional lands, and no longer counts farmland as natural grassland; hills are
-  rough ground, not the slope up from every coast. Epoch 63 and older make the same worlds as before.
+  no longer counts farmland as natural grassland, and gives each climate as much land as the game's
+  own locations would have, so the semi-arid and cold dry lands come back; hills are rough ground,
+  not the slope up from every coast. Epoch 63 and older make the same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 

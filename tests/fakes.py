@@ -16,7 +16,7 @@ from rnw.app.worldcode import decode, encode, new_code
 from rnw.atlas import JSON_FILE, LABELS_FILE
 from rnw.atlas import to_files as atlas_files
 from rnw.eu5_atlas import build_atlas
-from rnw.eu5_biomes import OCTAVE_PARTS, CellBiomes, SizeModel
+from rnw.eu5_biomes import OCTAVE_PARTS, CellBiomes, SizeModel, size_table
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.inputs import hash_files
@@ -238,11 +238,11 @@ def synthetic_sizes() -> SizeModel:
         for coast in (20, 200)
     ]
     table = np.array(rows, dtype=np.int64)
-    return SizeModel(
-        features=table[:, :4],
-        pairs=table[:, 4].copy(),
-        climate_of=np.array([0, 1], dtype=np.int64),
-        size=(OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
+    return size_table(
+        table[:, :4],
+        table[:, 4].copy(),
+        np.array([0, 1], dtype=np.int64),
+        (OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
     )
 
 
