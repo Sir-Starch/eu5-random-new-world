@@ -126,7 +126,7 @@ CORDILLERAS: Final[int] = (
     64  # 1.3.0: mountain belts stand along active coasts, the land falls away.
 )
 OPEN_CLIMATE: Final[int] = 64  # 1.3.0: the climate vote learns the Americas, without farmland.
-ROUGH_HILLS: Final[int] = 64  # 1.3.0: hills are rough ground, not the slope of a coastal cell.
+ROUGH_HILLS: Final[int] = 64  # 1.3.0: the ground is voted by the game's locations; hills are rough.
 RIVERS_FIRST: Final[int] = (
     64  # 1.3.0: rivers come before the cells, which follow them and the land.
 )

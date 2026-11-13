@@ -20,23 +20,24 @@ from rnw.eu5_biomes import (
     SIZE_STEP,
     TOPOGRAPHIES,
     block_relief,
-    block_topographies,
     calibrated_weights,
     cell_ruggedness,
     chosen_pairs,
     class_sizes,
+    ground_ranks,
     integer_cube_root,
     latitude_tenths,
     nearest_others,
     octave_parts,
     prior_weights,
     size_model,
+    vote_grounds,
 )
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.fields import upsample
 from rnw.model import CellClass
-from rnw.newworld import NewWorld, cell_roughness, generate_new_world
-from rnw.relief import HILL_STEP
+from rnw.newworld import NewWorld, generate_new_world
+from rnw.relief import HILL_STEP, cell_roughness
 from rnw.settings import NewWorldSettings
 from rnw.synth import grow_regions, grow_weighted
 from rnw.topology import label_components
@@ -225,8 +226,15 @@ def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
     assert np.array_equal(
         class_sizes(SIZES, both, np.zeros((4, 2), dtype=np.int64)), [-1000] * 2 + [1000] * 2
     )
-    # The higher block is the one mountain the shares allow, and mountains are 500 smaller.
-    model = replace(SIZES, shares=np.array([1, 0, 0, 0, 1]), offsets=np.array([-500, 0, 0, 0, 0]))
+    # The block whose readings rank like vanilla's mountains is the one mountain the shares allow,
+    # and mountains are 500 smaller.
+    model = replace(
+        SIZES,
+        shares=np.array([1, 0, 0, 0, 1]),
+        offsets=np.array([-500, 0, 0, 0, 0]),
+        ground_table=np.repeat(np.array([[0] * 5, [500] * 5], dtype=np.int64), NEIGHBOURS, axis=0),
+        grounds=np.repeat(np.array([4, 0], dtype=np.int64), NEIGHBOURS),
+    )
     assert class_sizes(model, dry, flat).tolist() == [1000, 500]
 
 
@@ -272,6 +280,10 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     assert model.offsets.tolist() == [step_up, 0, -step_up, 0, 0]
     assert model.shares.tolist() == [0, 1, 0, 0, 1]
     assert model.dry.tolist() == [True, False]
+    # The ground vote learns from the Old World's passable locations, the field among them, each
+    # reading ranked among them: alike in height, the two rank by their order.
+    assert model.grounds.tolist() == [TOPOGRAPHIES.index("flatland"), TOPOGRAPHIES.index("plateau")]
+    assert model.ground_table[:, 0].tolist() == [0, 500]
 
 
 def _chosen_without_self(train: np.ndarray, classes: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -318,32 +330,41 @@ def test_a_row_never_votes_for_itself() -> None:
     assert weights[2] > 0
 
 
-def test_blocks_take_their_ground_from_their_relief_in_vanilla_shares() -> None:
-    #           latitude, rain, height, coast
-    features = np.array(
+def test_the_ground_is_voted_by_vanilla_locations_alike_in_rank() -> None:
+    #           mean height, ruggedness, roughness, rain, distance to the sea
+    query = np.array(
         [
-            [300, 100, 9000, 100],  # 0: high and broken: mountains
-            [300, 100, 8800, 100],  # 1: high and smooth: plateau
-            [300, 100, 7000, 100],  # 2: bends most: hills
-            [300, 900, 6100, 10],  # 3: wet, low, at the sea: wetlands
-            [300, 950, 6000, 5],  # 4: wetter still, but a desert
-            [300, 100, 7000, 100],  # 5: flatland
+            [9000, 900, 80, 100, 100],  # high and broken
+            [8800, 10, 20, 150, 300],  # high and smooth, far from the sea
+            [6000, 20, 10, 900, 5],  # low, wet, at the sea
+            [7000, 30, 30, 500, 50],
         ],
         dtype=np.int64,
     )
-    relief = np.array(
-        [[900, 50], [10, 40], [300, 800], [20, 10], [20, 10], [30, 20]], dtype=np.int64
+    ranks = ground_ranks(query)
+    assert ranks[:, 0].tolist() == [750, 500, 0, 250]
+    intended = ["mountains", "plateau", "wetlands", "flatland"]
+    model = replace(
+        SIZES,
+        ground_table=np.repeat(ranks, NEIGHBOURS, axis=0),
+        grounds=np.repeat([TOPOGRAPHIES.index(name) for name in intended], NEIGHBOURS),
     )
-    dry = np.array([False, False, False, False, True, False])
-    shares = np.array([1, 1, 1, 1, 2], dtype=np.int64)
-    ground = block_topographies(features, relief, dry, shares)
-    assert [TOPOGRAPHIES[kind] for kind in ground.tolist()] == [
+    shares = np.array([1, 1, 0, 1, 1], dtype=np.int64)
+    wet = np.zeros(4, dtype=bool)
+
+    def names(voted: np.ndarray) -> list[str]:
+        return [TOPOGRAPHIES[kind] for kind in voted.tolist()]
+
+    assert names(vote_grounds(model, query, wet, shares)) == intended
+    # Only the order of the readings counts, not their scale.
+    assert names(vote_grounds(model, query * 10, wet, shares)) == intended
+    # A dry row is never wetland: the wetland share goes to the first other free row.
+    dry = np.array([False, False, True, False])
+    assert names(vote_grounds(model, query, dry, shares)) == [
         "mountains",
         "plateau",
-        "hills",
+        "flatland",
         "wetlands",
-        "flatland",
-        "flatland",
     ]
 
 
@@ -368,6 +389,10 @@ def test_a_cell_is_as_rugged_as_its_ground_whatever_its_size() -> None:
     labels[:, 4 * SIZE_STEP :] = 2  # a block of water
     rugged = cell_ruggedness(labels, height, 2)
     assert rugged[0] == rugged[1] > 300
+    # Vanilla's land is not its first labels: a mask of its land pixels reads the same.
+    assert np.array_equal(cell_ruggedness(labels, height, 2, labels < 2), rugged)
+    rough = cell_roughness(labels, height, 2)
+    assert np.array_equal(cell_roughness(labels, height, 2, labels < 2), rough)
     # Their own spreads differ: the large cell spans thrice the slope.
     own = [int(height[labels == cell].std()) for cell in (0, 1)]
     assert own[1] > 3 * own[0] // 2

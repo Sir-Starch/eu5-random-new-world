@@ -37,13 +37,14 @@ if TYPE_CHECKING:
 
 COAST_HEIGHT: Final[int] = 5700
 
-# Hills are rough ground (epoch 64, ``epoch.ROUGH_HILLS``, ``newworld.cell_roughness``): the bend
+# Hills are rough ground (epoch 64, ``epoch.ROUGH_HILLS``, ``cell_roughness``): the bend
 # of the height over ``HILL_STEP`` pixels (``strip_bend``), which no slope has. A spread about the
 # plane that fits a whole cell grows with the cell, so once the cells were sized by the land the
 # largest became hills: hills were 1.32 times the median location and 327 permille of the coastal
 # locations hills, where the bend gives 1.08 and 280 (vanilla 0.83 and 254 in the Old World) on
 # world gady3byywf [V-EXEC 2026-11-13].
 HILL_STEP: Final[int] = 8
+ROUGHNESS_ROWS: Final[int] = 1024  # rows of a strip read for ``cell_roughness``
 
 INLAND_LIMIT: Final[int] = 320
 DISTANCE_STEP: Final[int] = 4
@@ -657,3 +658,35 @@ def strip_bend(
         bend[first - start : last - start] += np.where(both, found, 0)
         ends[first - start : last - start] += both
     return np.where(ends > 0, bend // np.maximum(ends, 1), -1)
+
+
+def cell_roughness(
+    labels: NDArray[np.int32],
+    elevation: NDArray[np.integer],
+    count: int,
+    land: NDArray[np.bool_] | None = None,
+) -> NDArray[np.int64]:
+    """How rough each of the first ``count`` cells (the land cells) is: the mean bend of its
+    height, ``|h(p + d) + h(p - d) - 2 h(p)|`` over ``d`` = ``HILL_STEP`` pixels along the rows and
+    the columns, averaged over the directions whose two ends are land, then over the cell.
+
+    A slope, as every cell rising from a coast has, does not bend; nor does the reading grow with
+    the cell, as a spread about the cell's plane does. ``land`` marks the land pixels when the
+    land cells are not simply the first ``count`` labels (vanilla's map, ``eu5_biomes.size_model``);
+    a label of -1 is none. Integer arithmetic, a strip at a time.
+    """
+    rows = int(labels.shape[0])
+    totals = np.zeros(count, dtype=np.int64)
+    pixels = np.zeros(count, dtype=np.int64)
+    for start in range(0, rows, ROUGHNESS_ROWS):
+        checkpoint()
+        stop = min(rows, start + ROUGHNESS_ROWS)
+        low, high = max(0, start - HILL_STEP), min(rows, stop + HILL_STEP)
+        block = labels[low:high]
+        on_land = (block >= 0) & (block < count) if land is None else land[low:high]
+        bend = strip_bend(on_land, elevation[low:high], start, stop, rows)
+        cell = block[start - low : stop - low]
+        keep = on_land[start - low : stop - low] & (cell >= 0) & (cell < count) & (bend >= 0)
+        totals += np.bincount(cell[keep], weights=bend[keep], minlength=count).astype(np.int64)
+        pixels += np.bincount(cell[keep], minlength=count)
+    return totals // np.maximum(pixels, 1)

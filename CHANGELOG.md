@@ -37,9 +37,11 @@ worlds and saves are not rewritten or migrated.
   on plateaus and far inland, small on wet coasts and in the mountains. The climate learns from the
   game's Americas as well as the Old World, no longer counts farmland as natural grassland, and
   gives each climate as much land as the game's own locations would have, so the semi-arid and cold
-  dry lands come back; hills are rough ground, not the slope up from every coast, and mountains and
-  plateaus are chosen by their ground, not by how large their location is. Epoch 63 and older make
-  the same worlds as before.
+  dry lands come back. The ground of each location is chosen by the game's own locations most like
+  it in height, ruggedness, roughness, rain and distance to the sea, so hills are rough ground, not
+  the slope up from every coast, mountains and plateaus are not chosen by how large their location
+  is, and wetlands lie in the low land inland as well as at the sea. Epoch 63 and older make the
+  same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 

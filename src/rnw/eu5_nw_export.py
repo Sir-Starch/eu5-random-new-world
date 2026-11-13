@@ -294,7 +294,6 @@ from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
 from rnw.newworld import (
     NewWorld,
-    cell_roughness,
     inland_sea_min_area,
     unported_cells,
 )
@@ -314,7 +313,7 @@ from rnw.ports import ForeignCoast, coast_links, pair_lengths, plan_ports
 from rnw.progress import Progress, active, checkpoint, run_stage, running, skip_stages
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
-from rnw.relief import COAST_HEIGHT
+from rnw.relief import COAST_HEIGHT, cell_roughness
 from rnw.rivers import (
     NONE,
     RiverGenerationError,
@@ -563,6 +562,7 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
     settings: Settings,
     seed: int,
     material_seed: int,
+    sizes: SizeModel | None,
 ) -> tuple[NewWorld, CellBiomes, dict[str, object]]:
     """The land of ``world`` with its wastelands planned (epoch 64 on), before its coasts.
 
@@ -588,6 +588,7 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
         material_seed=material_seed,
         wastelands=_wasteland_settings(game_dir, world, settings),
         open_climate=settings.algorithm >= epoch.OPEN_CLIMATE,
+        ground=sizes,
     )
     if biomes.kinds is None:
         message = "The wasteland plan did not give the class of the land cells"
@@ -3013,9 +3014,13 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
     drawing: Fitted | None = (
         None if land_mask is None else fit_drawing(land_mask, clean.mask.shape, settings.algorithm)
     )
-    world: NewWorld = run_stage(
-        "generate world",
-        lambda: landcache.get_world(
+
+    def generate() -> tuple[NewWorld, SizeModel | None]:
+        # The game's own locations size the cells (epoch 64) and vote their ground later.
+        sizes = (
+            _vanilla_sizes(game_dir, game_map) if settings.algorithm >= epoch.RIVERS_FIRST else None
+        )
+        made = landcache.get_world(
             cache_dir,
             clean.mask,
             seed=seed,
@@ -3028,11 +3033,12 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
             hints=None if drawing is None else drawing.hints,
             algorithm=settings.algorithm,
             seam=(clean.roll - clean.col0) % clean.shape[1],
-            sizes=_vanilla_sizes(game_dir, game_map)
-            if settings.algorithm >= epoch.RIVERS_FIRST
-            else None,
-        ),
-    )
+            sizes=sizes,
+        )
+        return made, sizes
+
+    world: NewWorld
+    world, sizes = run_stage("generate world", generate)
     drawing = None  # the fitted drawing is the cache's key and the world's land; let it go
     canvas = place_islands(
         game_map, clean, [(int(rows), int(columns)) for rows, columns in world.moves.tolist()]
@@ -3102,6 +3108,7 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
                     settings=settings,
                     seed=seed,
                     material_seed=resources_seed,
+                    sizes=sizes,
                 ),
             )
             land_biomes = (land_cells, land_stats)

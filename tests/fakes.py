@@ -16,7 +16,14 @@ from rnw.app.worldcode import decode, encode, new_code
 from rnw.atlas import JSON_FILE, LABELS_FILE
 from rnw.atlas import to_files as atlas_files
 from rnw.eu5_atlas import build_atlas
-from rnw.eu5_biomes import OCTAVE_PARTS, TOPOGRAPHIES, CellBiomes, SizeModel, size_table
+from rnw.eu5_biomes import (
+    OCTAVE_PARTS,
+    TOPOGRAPHIES,
+    CellBiomes,
+    SizeModel,
+    ground_ranks,
+    size_table,
+)
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.inputs import hash_files
@@ -238,14 +245,20 @@ def synthetic_sizes() -> SizeModel:
         for coast in (20, 200)
     ]
     table = np.array(rows, dtype=np.int64)
+    flatland = TOPOGRAPHIES.index("flatland")
+    #            mean height, ruggedness, roughness, rain, distance to the sea
+    readings = np.stack(
+        [table[:, 2], table[:, 2] // 30, table[:, 2] // 60, table[:, 1], table[:, 3]], axis=1
+    )
     return size_table(
         table[:, :4],
         table[:, 4].copy(),
         np.array([0, 1], dtype=np.int64),
         (OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
-        topography=np.full(len(rows), TOPOGRAPHIES.index("flatland"), dtype=np.int64),
+        topography=np.full(len(rows), flatland, dtype=np.int64),
         shares=np.array([1, 1, 2, 1, 5], dtype=np.int64),
         dry=np.array([False, False]),
+        ground=(ground_ranks(readings), np.full(len(rows), flatland, dtype=np.int64)),
     )
 
 

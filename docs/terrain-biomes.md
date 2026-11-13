@@ -279,29 +279,30 @@ scatter of seeds beside the relief, before any river, climate or drainage existe
 
 | Measure | Old World | Americas | Epoch 64 before this section | After it: `gady3byywf`; seed 42 |
 |---|---|---|---|---|
-| Location size p90/p10 (CV) | 9.9 (1.12) | 8.7 (0.80) | 2.35 (0.37) | 7.6 (0.98); 6.5 (0.84) |
-| River pixels on a location border (all land pixels) | 302 ‰ (100) | 218 ‰ (79) | 73 ‰ (69) | 307 ‰ (68); 297 ‰ (68) |
+| Location size p90/p10 (CV) | 9.9 (1.12) | 8.7 (0.80) | 2.35 (0.37) | 7.6 (0.98); 6.6 (0.87) |
+| River pixels on a location border (all land pixels) | 302 ‰ (100) | 218 ‰ (79) | 73 ‰ (69) | 304 ‰ (69); 300 ‰ (68) |
 | Largest river network, share of all river pixels | 63 ‰ | 199 ‰ | 49 ‰ (second world 44 ‰) | 75 ‰; 84 ‰ |
-| Climate regions: mean cells, same-climate contacts | 13.3, 810 ‰ | 11.1, 748 ‰ | 59.4, 916 ‰ | 10.2, 687 ‰; 10.1, 685 ‰ |
-| Semi-arid and cold arid land | 93 ‰ | 86 ‰ | ≤ 17 ‰ | 61 ‰; 45 ‰ |
-| Mountain locations at the sea; coastal flatland / hills | 137 ‰; 497 / 254 ‰ | 153 ‰; 425 / 221 ‰ | 66 ‰; 255 / 384 ‰ | 55 ‰; 355 / 278 ‰; seed 42: 89 ‰; 353 / 288 ‰ |
+| Climate regions: mean cells, same-climate contacts | 14.3, 808 ‰ | 9.0, 750 ‰ | 59.4, 916 ‰ | 8.3, 678 ‰; 8.0, 683 ‰ |
+| Semi-arid and cold arid land | 93 ‰ | 86 ‰ | ≤ 17 ‰ | 63 ‰; 48 ‰ |
+| Mountain locations at the sea; coastal flatland / hills / wetlands | 137 ‰; 497 / 254 / 106 ‰ | 153 ‰; 425 / 221 / 160 ‰ | 66 ‰; 255 / 384 ‰ | 78 ‰; 461 / 186 / 196 ‰; seed 42: 94 ‰; 485 / 211 / 124 ‰ |
 
-Seed 42 is the code of `gady3byywf` with that seed (`RNW1-040G0-00000-00001-A041G-0013C-NR0`).
+Seed 42 is the code of `gady3byywf` with that seed (`RNW1-040G0-00000-00001-A041G-0013C-NR0`); the
+vanilla climate regions are read over the columns of `gady3byywf`.
 
 The median size of a class's locations over the median of its region, in the same worlds and in
 two more epoch-64 worlds, a Wall world (`vnnvge53ci`) and a drawn land (`62g4bmw4xx`):
 
 | Class | Old World | Americas | `gady3byywf` | Seed 42 | Wall | Drawn |
 |---|---|---|---|---|---|---|
-| Desert vegetation | 1.52 | 1.45 | 1.31 | 1.54 | 1.55 | 1.44 |
-| Arid climate | 1.55 | 1.03 | 1.28 | 1.63 | 1.52 | 1.46 |
-| Subpolar climate | 3.12 | 1.48 | 1.87 | 1.57 | 1.74 | |
-| Oceanic climate | 0.54 | 0.69 | 0.71 | 0.68 | 0.68 | 0.86 |
-| Mountains | 0.86 | 0.61 | 0.81 | 0.91 | 0.75 | 0.63 |
-| Plateau | 1.58 | 1.48 | 1.56 | 1.25 | 1.18 | 1.33 |
-| Hills | 0.83 | 0.91 | 1.02 | 1.05 | 1.09 | 1.19 |
-| Wetlands | 1.14 | 1.07 | 0.75 | 0.69 | 0.81 | 0.75 |
-| Coast (0–40 px) / far inland (300+ px) | 0.70 / 1.80 | 0.59 / 2.06 | 0.74 / 2.01 | 0.75 / 1.20 | | |
+| Desert vegetation | 1.52 | 1.45 | 1.29 | 1.60 | 1.50 | 1.52 |
+| Arid climate | 1.55 | 1.03 | 1.30 | 1.62 | 1.43 | 1.54 |
+| Subpolar climate | 3.12 | 1.48 | 1.82 | 1.64 | 1.64 | |
+| Oceanic climate | 0.54 | 0.69 | 0.69 | 0.69 | 0.67 | 0.84 |
+| Mountains | 0.86 | 0.61 | 0.87 | 1.00 | 0.87 | 0.71 |
+| Plateau | 1.58 | 1.48 | 1.32 | 1.16 | 1.14 | 1.27 |
+| Hills | 0.83 | 0.91 | 1.12 | 1.12 | 1.08 | 1.21 |
+| Wetlands | 1.14 | 1.07 | 0.76 | 0.85 | 0.72 | 0.78 |
+| Coast (0–40 px) / far inland (300+ px) | 0.70 / 1.80 | 0.59 / 2.06 | 0.74 / 2.05 | 0.75 / 1.20 | | |
 
 From epoch 64 each is changed at its cause, each behind its own switch of `rnw.epoch`:
 
@@ -335,12 +336,15 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   out one location at a time, the model gives vanilla deserts 1.41 of the median (they are 1.48),
   arid land 1.47 (1.51), subpolar 2.45 (2.38) and tropical land 0.98 (1.02), and chooses desert for
   1,197 locations where 1,194 are; R² 0.48 [V-EXEC 2026-11-13]. A block's ground moves its size
-  too: ranked from its relief in vanilla's proportions as the cells are (`block_topographies`, on
-  the spread and the bend of its height, `block_relief`), it takes the mean amount by which vanilla's
-  locations of that ground, each read without itself, lie off the size of their class
+  too: voted as the cells' is (`vote_grounds`, below; the block reads its height, the spread and
+  the bend of its height, `block_relief`, its rain and its distance to the sea), it takes the mean
+  amount by which vanilla's locations of that ground, each read without itself, lie off the size of
+  their class
   (`SizeModel.offsets`): mountains 0.90 of it, plateaus 1.05, wetlands 1.07, hills and flatland
   1.00. Class, height and distance to the sea already carry most of vanilla's difference between
-  grounds.
+  grounds. Adding the ranks of the spread and the bend to the size neighbours themselves fitted
+  vanilla a little better (R² 0.50) but made the generated plateaus smaller (`gady3byywf` 1.32 to
+  1.11) and the sizes less varied (p90/p10 7.6 to 7.0), so it is not used [V-EXEC].
   A least-squares fit of size on the same four features (R² 0.34) had left this world's deserts at
   0.96 of the median: the zonal rain barely tells a vanilla desert (the share of desert and sparse
   locations falls only from 0.30 to 0.13 from the driest to the wettest of seven rain bins), so a
@@ -352,17 +356,14 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   proportion to its spacing (`synth.grow_weighted`); grown at one speed, the cells of the largest
   spacings had come out at three quarters of their area, cut off by their denser neighbours.
   What remains: `gady3byywf`'s deserts are scattered patches, and part of their cells lie in blocks
-  the vote reads as another class, so they stay at 1.31. Its tropical land is 1.55 of the median
-  because 534 of its 1,539 tropical locations lie over 300 pixels from the sea; band by band (0.63,
-  1.11, 1.48, 2.98 from the coast inwards) it follows the Old World's (0.84, 1.24, 1.90, 2.43).
-  Seed 42's far inland is 1.20, not 1.8–2.1, because 697 of its 1,326 locations there are
-  subtropical, at 0.92 (the Old World's far subtropical land: 0.89). Wetlands are 0.69–0.81 of the
-  median (vanilla 1.07–1.14), 0.67–0.71 within 40 pixels of the sea where vanilla's are 0.83–0.85:
-  they are ranked by low mean height, and a large cell at the sea reaches further up the land
-  behind it [INFERRED]; reading the cells' distance to the sea over their pixels instead of at their
-  centres changed them by under 3 % [V-EXEC]. Hills at the sea are 0.90–0.94 of the median against
-  vanilla's 0.54–0.61, not yet traced. Coastal wetlands are 187–222 ‰ of the coastal locations
-  (vanilla 106 and 160): the flat coastal cells that hills no longer take.
+  the vote reads as another class, so they stay at 1.29. Its tropical land is 1.56 of the median
+  because 543 of its 1,536 tropical locations lie over 300 pixels from the sea; band by band (0.62,
+  1.09, 1.60, 2.98 from the coast inwards) it follows the Old World's (0.84, 1.24, 1.90, 2.43).
+  Seed 42's far inland is 1.20, not 1.8–2.1, because 701 of its 1,327 locations there are
+  subtropical, at 0.92 (the Old World's far subtropical land: 0.89). The grounds that are still too
+  small or too few follow the relief of epoch 64, not the vote (below): plateaus (1.14–1.32 against
+  1.48–1.58) and wetlands (0.72–0.85 against 1.07–1.14) and mountains at the sea (78 and 94 ‰ of
+  the mountains of `gady3byywf` and seed 42 against 137–153 ‰).
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is not smoothed over the location
   graph. A plurality of 32 neighbours seldom names a class that is rare among them: each vanilla
@@ -381,24 +382,43 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   interiors: 90 % of its locations lie within 440 pixels of the sea, while a tenth of vanilla's
   semi-arid and cold arid ones lie beyond 640, and its median height is 10,109 against their
   11,807.
-* **Rough hills** (`ROUGH_HILLS`, `newworld.cell_roughness`). Hills are ranked by how much a cell's
+* **The ground voted** (`ROUGH_HILLS`, `eu5_biomes.vote_grounds`). The ground of the passable land
+  is voted, as its climate is, by the 32 vanilla Old World locations nearest in five readings, each
+  ranked within its own map's land so that vanilla's decal relief and the generated relief compare:
+  mean height, ruggedness and roughness (both below), rainfall and distance to the sea; each ground
+  then takes its share of the Old World's locations, wetlands never desert. The 64-pixel blocks of
+  the size model are voted the same way. Read on vanilla itself, each location without itself, the
+  hand-made ranks that came before (height plus twice the spread for mountains, rain against
+  height and the sea for wetlands) named the ground of 635 Old World locations in a thousand and 597
+  in the Americas, 19 % of the wetlands rightly, none of them over 120 pixels from the sea (384 are)
+  and 116 mountains at the sea (417 are); the vote names 750 and 659, 42 % of the wetlands, 326
+  beyond 120 pixels and 360 coastal mountains [V-EXEC 2026-11-13]. On the generated worlds the
+  coastal wetlands fell from 187–222 ‰ of the coastal locations to 81–196 ‰ (vanilla 106 and 160)
+  and `gady3byywf` has 70 wetlands over 120 pixels from the sea where it had none.
+  What remains is the relief's. Vanilla's wetlands are its lowest land (median height rank 0.08–0.11)
+  at middling rain, and a fifth of them lie in the farthest quarter of the land from the sea; the
+  generated land's lowest ground is at the coast (`gady3byywf`'s farthest quarter has a median
+  height rank of 0.47, the Old World's 0.65, and 36 of its 420 wetlands lie over 300 pixels from
+  the sea against a sixth of the Old World's). Vanilla's plateaus are high (0.78–0.84)
+  and far from the sea (0.65–0.75); its farthest quarter is high too (0.59–0.65), the generated
+  one is not, so the vote finds the generated plateaus nearer the coast, where locations are
+  smaller. The cordillera stands a location inland of the sea (mountains fade out over 40 pixels at
+  any shore): 57–94 ‰ of the generated mountains touch the sea against vanilla's 133–153 ‰, and on
+  the Wall and the drawn land 15–18 ‰ of the coastal locations are mountains (vanilla 66–71 ‰).
+  Hills are 1.08–1.21 of the median against 0.83–0.91, 1.01 at the sea against `gady3byywf`'s
+  coastal flatland at 0.73 [V-EXEC 2026-11-13].
+* **Rough hills** (`ROUGH_HILLS`, `relief.cell_roughness`). Hills are ranked by how much a cell's
   height bends: the mean of |h(p + d) + h(p − d) − 2 h(p)| over `HILL_STEP` = 8 pixels along the
   rows and the columns whose two ends are land. A slope bends not at all, so the ramp up from every
   coast no longer reads as hill country, and the measure does not grow with the cell. The spread
   about a cell's best-fitting plane, used first, grew with the cell and made hills the largest
   locations (1.32 of the median, coastal hills 327 ‰); the bend gives 1.02 and 278 ‰ on the same
   world. For the same reason mountains (height plus twice the spread) and plateaus (height less
-  three times the spread) are ranked by the spread of the ground a cell lies on, the mean over its
-  pixels of the spread of the height in their 64-pixel block (`cell_ruggedness`), not by the cell's
-  own: the variance of a fractal relief grows with the area read, so the largest cells had become
-  mountains and the smallest plateaus. Mountains were 1.00–1.08 of the median and plateaus
-  0.96–0.99 (vanilla 0.61–0.86 and 1.48–1.58); within 40, 120 and 300 pixels of the sea
-  `gady3byywf`'s mountains were 1.21, 1.07 and 0.94 against the Old World's 0.65, 0.82 and 0.82.
-  Now mountains are 0.63–0.91 and plateaus 1.18–1.56 on the four worlds, and band by band
-  `gady3byywf`'s mountains 0.79, 0.75, 0.83 and plateaus 1.04, 1.32, 2.87 (the Old World's plateaus
-  1.02, 1.30, 3.27). Fewer cells at the sea become mountains: 30–39 ‰ of the coastal locations
-  (42–56 ‰ before; vanilla 66–71 ‰), since a large coastal cell no longer counts the climb to the
-  cordillera inland of it as broken ground.
+  three times the spread) were then ranked, and the vote now reads, the spread of the ground a cell
+  lies on, the mean over its pixels of the spread of the height in their 64-pixel block
+  (`cell_ruggedness`), not the cell's own: the variance of a fractal relief grows with the area
+  read, so the largest cells had become mountains and the smallest plateaus (mountains 1.00–1.08 of
+  the median and plateaus 0.96–0.99, vanilla 0.61–0.86 and 1.48–1.58).
 
 ## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 

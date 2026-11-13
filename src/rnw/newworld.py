@@ -31,7 +31,7 @@ from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
-from rnw.relief import HILL_STEP, ReliefHints, generate_relief, strip_bend
+from rnw.relief import ReliefHints, generate_relief
 from rnw.rivers import RiverGenerationError
 from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import (
@@ -1352,32 +1352,6 @@ def _cell_sums(
         count,
     )
     return tuple(sums[index] for index in range(5))
-
-
-def cell_roughness(
-    labels: NDArray[np.int32], elevation: NDArray[np.int32], count: int
-) -> NDArray[np.int64]:
-    """How rough each of the first ``count`` cells (the land cells) is: the mean bend of its
-    height, ``|h(p + d) + h(p - d) - 2 h(p)|`` over ``d`` = ``HILL_STEP`` pixels along the rows and
-    the columns, averaged over the directions whose two ends are land, then over the cell.
-
-    A slope, as every cell rising from a coast has, does not bend; nor does the reading grow with
-    the cell, as a spread about the cell's plane does. Integer arithmetic, a strip at a time.
-    """
-    rows = int(labels.shape[0])
-    totals = np.zeros(count, dtype=np.int64)
-    pixels = np.zeros(count, dtype=np.int64)
-    for start in range(0, rows, STRIP_ROWS):
-        checkpoint()
-        stop = min(rows, start + STRIP_ROWS)
-        low, high = max(0, start - HILL_STEP), min(rows, stop + HILL_STEP)
-        block = labels[low:high]
-        bend = strip_bend((block >= 0) & (block < count), elevation[low:high], start, stop, rows)
-        cell = block[start - low : stop - low]
-        keep = (cell >= 0) & (cell < count) & (bend >= 0)
-        totals += np.bincount(cell[keep], weights=bend[keep], minlength=count).astype(np.int64)
-        pixels += np.bincount(cell[keep], minlength=count)
-    return totals // np.maximum(pixels, 1)
 
 
 def derive_world(
