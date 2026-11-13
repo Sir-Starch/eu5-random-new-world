@@ -64,6 +64,7 @@ ARRAYS: Final[tuple[str, ...]] = (
     "mean_elevation",
     "spread",
     "moves",
+    "barrier",
     "edges",
 )
 
@@ -530,6 +531,7 @@ def _write(target: Path, world: NewWorld) -> None:
         "mean_elevation": world.mean_elevation,
         "spread": world.spread,
         "moves": world.moves,
+        "barrier": world.barrier,
     }
     with TemporaryDirectory(prefix=".land-", dir=target.parent) as temporary:
         stage = Path(temporary)
@@ -592,6 +594,7 @@ def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
             spread=_i64(target, "spread", (count,)),
             edges=edges,
             moves=_i64(target, "moves", ((target / "moves").stat().st_size // 16, 2)),
+            barrier=_i64(target, "barrier", ((target / "barrier").stat().st_size // 8,)),
         )
     except (OSError, ValueError, TypeError, KeyError, IndexError) as error:
         message = f"Land cache {target} is damaged; remove this entry and retry: {error}"

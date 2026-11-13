@@ -1698,6 +1698,10 @@ text = '''正在读取原有原住民'''
 source = "e84556e6a019ab76"
 text = '''正在生成大陆、海洋和地势'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''正在规划陆地和荒原'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''正在为每段海岸设置港口'''

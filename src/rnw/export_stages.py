@@ -13,6 +13,7 @@ SKIPPED: Final[tuple[str, ...]] = (
     "vanilla localization keys",
     "vanilla climate",
     "vanilla material levels",
+    "land character",
     "settle coasts",
     "water shapes",
     "water textures",

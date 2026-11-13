@@ -125,6 +125,10 @@ class NewWorld:
     spread: NDArray[np.int64]
     edges: tuple[tuple[int, int], ...]
     moves: NDArray[np.int64] = field(default_factory=lambda: np.zeros((0, 2), dtype=np.int64))
+    # The cells the Wall's guaranteed land core runs through, one chain from the north edge to
+    # the south, in ascending order (empty for any other world): the barrier itself, which the
+    # wasteland plan keeps impassable (``rnw.barrens``). ``rnw.ports.relabel`` renumbers it.
+    barrier: NDArray[np.int64] = field(default_factory=lambda: np.zeros(0, dtype=np.int64))
 
 
 def _field(  # noqa: PLR0913 - a field is defined by its stream, shape, octaves and warp.
@@ -1195,19 +1199,33 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     for index in polar.tolist():
         if index >= 0 and kinds[index] is CellClass.LAND:
             kinds[index] = CellClass.WASTELAND
-    if settings.landform:
-        middle = wall.spine(whole, seed, settings)
-        if (
-            not settings.wall_allow_gaps
-            and not np.isin(
-                labels[np.arange(len(middle)), middle],
-                [i for i, kind in enumerate(kinds) if kind in LAND_KINDS],
-            ).all()
-        ):
-            message = "The Wall lost its continuous land barrier during cell construction"
-            raise ValueError(message)
+    barrier = _wall_cells(labels, kinds, whole, seed, settings) if settings.landform else None
     world = derive_world(labels, tuple(kinds), relief)
-    return replace(world, moves=np.array(moves, dtype=np.int64).reshape(-1, 2))
+    return replace(
+        world,
+        moves=np.array(moves, dtype=np.int64).reshape(-1, 2),
+        **({} if barrier is None else {"barrier": barrier}),
+    )
+
+
+def _wall_cells(
+    labels: NDArray[np.int32],
+    kinds: list[CellClass],
+    whole: NDArray[np.bool_],
+    seed: int,
+    settings: NewWorldSettings,
+) -> NDArray[np.int64]:
+    """The land cells the Wall's guaranteed core runs through, in ascending order.
+
+    Without gaps every row of the core must lie on land, or the Wall lost its barrier.
+    """
+    middle = wall.spine(whole, seed, settings)
+    along = labels[np.arange(len(middle)), middle]
+    on_land = np.isin(along, [i for i, kind in enumerate(kinds) if kind in LAND_KINDS])
+    if not settings.wall_allow_gaps and not on_land.all():
+        message = "The Wall lost its continuous land barrier during cell construction"
+        raise ValueError(message)
+    return np.unique(along[on_land]).astype(np.int64)
 
 
 def _cell_sums(

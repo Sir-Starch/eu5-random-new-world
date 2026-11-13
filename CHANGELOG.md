@@ -13,12 +13,15 @@ worlds and saves are not rewritten or migrated.
   climate and vegetation the game's wastelands cover and how big they are, divides **Wasteland
   share** between flat wilds (tundra, taiga, jungle), dunes, plateaus, hills and mountains by that
   proportion, puts each where its ground and climate suit it (dry remote ground for dunes, wet
-  remote lowland for jungle, the roughest highest ground for mountains) and grows it as units of
-  the sizes the game's wastelands have: mostly small, a few huge. Every passable location still
-  reaches a coast, and no wasteland is drawn by the game's fallback biome. Wastelands are named
-  for their terrain in every language (a *Highlands*, a *Wilds* or a *Desert*) and both windows
-  draw each with its own relief and colour. The Wall keeps its highest cells. At the highest
-  **Wasteland** the world can hold a few per cent fewer wastelands than asked, because every
+  remote lowland for jungle, the roughest highest ground for mountains; shore or inland as the
+  game's own wastelands of that kind lie) and grows it as units of the sizes the game's wastelands
+  have: mostly small, a few huge. A wasteland can stand at the sea, as a fifth of the game's do. The
+  Wall's own barrier stays impassable and the land beside it is planned like any other land. Every
+  passable location still reaches a coast, and no wasteland is drawn by the game's fallback biome.
+  Wastelands are named for their terrain in every language (a *Highlands*, a *Wilds* or a *Desert*)
+  and both windows draw each with its own relief and colour. The wastelands are now decided before
+  the coasts are given their ports and straits, which are made for the land left passable. At the
+  highest **Wasteland** the world can hold a few per cent fewer wastelands than asked, because every
   passable location must still reach a coast. Epoch 63 and older make the same worlds as before.
 
 ## 1.2.2 — 2026-11-11

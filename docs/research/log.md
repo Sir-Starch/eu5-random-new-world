@@ -2325,7 +2325,10 @@ flat, 24.5 % mountain, 14.3 % plateau, 10.7 % hills, 10.0 % dune (a few huge one
 the area). 1.3.0 / epoch 64 plans them in `barrens.py` after the biome vote. Two things the first
 tries taught: counting vanilla sizes by location gave a speckle of single cells, so a unit draws
 its size by area (a random wasteland pixel picks the location); and a cell beside the sea cannot
-change class after `settle_coast`/`shape_water` (ports, docks and crossings read it), so those stay
-and only interior cells are planned. A reserve of classes without a vanilla rate did not close the
+change class after `settle_coast` (its ports and docks, and the crossings of `shape_water`, read it).
+The first answer froze those cells and left the Wall to the old rule; the owner rejected that as a
+shortcut, and the answer is the order: the plan (stage `land character`) now comes before the
+coasts, the Wall's barrier is recorded in `NewWorld.barrier` and everything else is planned,
+coastal cells with a per-kind coast preference read from the vanilla wastelands. A reserve of classes without a vanilla rate did not close the
 shortfall at 200 and 500 per mille (reachability is the limit) and was dropped. [V-EXEC]
-Reproduced: epoch 64 reference twice, epoch 63 twice (before and after the naming change).
+Reproduced: epoch 64 reference twice and epoch 63 (the predecessor) once after the reorder.

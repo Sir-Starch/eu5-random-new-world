@@ -94,6 +94,7 @@ from rnw.eu5_biomes import (
     template_attributes,
     vanilla_locations,
     wasteland_settings,
+    water_climates,
 )
 from rnw.eu5_canvas import (
     NEW_WORLD,
@@ -306,7 +307,7 @@ from rnw.pdx import Block, parse
 from rnw.pictures import center_column, cover, tagged, thumbnail
 from rnw.png import COLOR_PALETTE, COLOR_RGB, ZLIB_LEVEL, encode_png
 from rnw.ports import ForeignCoast, coast_links, pair_lengths, plan_ports
-from rnw.progress import Progress, active, checkpoint, run_stage, running
+from rnw.progress import Progress, active, checkpoint, run_stage, running, skip_stages
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
 from rnw.relief import COAST_HEIGHT
@@ -496,28 +497,91 @@ def _coastal(world: NewWorld) -> NDArray[np.bool_]:
     return flags
 
 
-def _planned_world(world: NewWorld, biomes: CellBiomes) -> NewWorld:
-    """``world`` with the classes of the wasteland plan, when the biome model made one."""
-    return world if biomes.kinds is None else replace(world, classes=biomes.kinds)
+def _land_count(world: NewWorld) -> int:
+    """How many cells are land. The generator numbers land first, then sea, then lakes, and the
+    coast stages only fold sea cells together, so the land cells keep their numbers from the
+    plan of their wastelands to the written world."""
+    count = sum(kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes)
+    if any(kind not in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes[:count]):
+        message = "The generated land cells do not come before its water cells"
+        raise NewWorldExportError(message)
+    return count
 
 
-def _wasteland_settings(
-    game_dir: Path, world: NewWorld, settings: Settings
-) -> WastelandSettings | None:
-    """What the wasteland plan needs, or ``None`` for the worlds that keep the highest cells as
-    wasteland: the epochs before ``NATURAL_WASTELANDS`` and the Wall, whose spine is no terrain."""
-    if settings.algorithm < epoch.NATURAL_WASTELANDS or settings.new_world.landform:
-        return None
-    land = sum(kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes)
-    polar = np.zeros(len(world.classes), dtype=bool)
+def _generated(canvas: Canvas, world: NewWorld, count: int | None = None) -> Generated:
+    """The first ``count`` cells of ``world`` (all by default) as the biome model reads them."""
+    count = len(world.classes) if count is None else count
+    points = np.stack(
+        [world.centroids[:count, 0], _world_columns(canvas, world.centroids[:count, 1])], axis=1
+    )
+    return Generated(
+        kinds=world.classes[:count],
+        points=points,
+        mean_height=world.mean_elevation[:count],
+        spread=world.spread[:count],
+        edges=tuple((a, b) for a, b in world.edges if a < count and b < count),
+        coastal=_coastal(world)[:count],
+        pixels=world.pixels[:count],
+    )
+
+
+def _wasteland_settings(game_dir: Path, world: NewWorld, settings: Settings) -> WastelandSettings:
+    """What the wasteland plan needs of the game and of the land cells of ``world``."""
+    count = _land_count(world)
+    polar = np.zeros(count, dtype=bool)
     edge = np.unique(world.labels[[0, -1], :])
-    polar[edge[edge >= 0]] = True
+    polar[edge[(edge >= 0) & (edge < count)]] = True
+    barrier = np.zeros(count, dtype=bool)
+    barrier[world.barrier] = True
     return wasteland_settings(
         biome_rules(_read(game_dir, BIOME_DEFINITIONS)),
         material_counts(_read(game_dir, TERRAIN_MATERIALS)),
-        budget=land * settings.new_world.wasteland_permille // 1000,
+        budget=count * settings.new_world.wasteland_permille // 1000,
         polar=polar,
+        barrier=barrier,
     )
+
+
+def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the vanilla climate and the game.
+    game_map: Eu5Map,
+    *,
+    canvas: Canvas,
+    world: NewWorld,
+    vanilla: VanillaClimate,
+    attributes: dict[str, dict[str, str]],
+    game_dir: Path,
+    settings: Settings,
+    seed: int,
+    material_seed: int,
+) -> tuple[NewWorld, CellBiomes, dict[str, object]]:
+    """The land of ``world`` with its wastelands planned (epoch 64 on), before its coasts.
+
+    The ports, the docks and the strait crossings of the coast stage are made for the passable
+    land beside the sea, so which cells are wasteland has to be known first. The climate and
+    vegetation vote needs only the land cells and where the sea is, none of which the coast stages
+    change, so it is made here once; the later biome stage adds the climates of the waters that
+    remain. Returns the world with the planned classes, the biomes of its land cells and the
+    statistics of their model.
+    """
+    count = _land_count(world)
+    grid = _final_climate(game_map, canvas, world, _final_labels(game_map, canvas, world), vanilla)
+    biomes, stats = assign_biomes(
+        game_map=game_map,
+        templates=attributes,
+        vanilla=vanilla.locations,
+        vanilla_grid=vanilla.grid,
+        final_grid=grid,
+        cells=_generated(canvas, world, count),
+        seed=seed,
+        precious_permille=settings.new_world.precious_permille,
+        resources=settings.resources,
+        material_seed=material_seed,
+        wastelands=_wasteland_settings(game_dir, world, settings),
+    )
+    if biomes.kinds is None:
+        message = "The wasteland plan did not give the class of the land cells"
+        raise NewWorldExportError(message)
+    return replace(world, classes=(*biomes.kinds, *world.classes[count:])), biomes, stats
 
 
 def _template_bodies(text: str) -> dict[str, str]:
@@ -2857,7 +2921,7 @@ def _ocean_pixels(world: NewWorld) -> NDArray[np.bool_]:
     return ocean
 
 
-def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every stage of the export.
+def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over every stage of the export.
     spool: Spool,
     recorder: inputs.InputRecorder,
     game_dir: Path,
@@ -2986,6 +3050,27 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         )
         del ocean
         vanilla_ports = read_ports(_read(game_dir, PORTS))
+        land_biomes: tuple[CellBiomes, dict[str, object]] | None = None
+        if settings.algorithm >= epoch.NATURAL_WASTELANDS:
+            # The coasts (ports, docks, strait crossings) are made for the passable land beside
+            # the sea, so the wasteland plan comes first and the coast stages see its classes.
+            world, land_cells, land_stats = run_stage(
+                "land character",
+                lambda: _land_character(
+                    game_map,
+                    canvas=canvas,
+                    world=world,
+                    vanilla=climates.result(),  # noqa: F821 - deleted after the stages
+                    attributes=reads.result()[1],
+                    game_dir=game_dir,
+                    settings=settings,
+                    seed=seed,
+                    material_seed=resources_seed,
+                ),
+            )
+            land_biomes = (land_cells, land_stats)
+        else:
+            skip_stages("land character")
         settled = run_stage(
             "settle coasts",
             lambda: settle_coast(
@@ -3005,28 +3090,23 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
         # cell count double-counts generated sea cells sharing retained oceans.
         final_labels = _final_labels(game_map, canvas, world)
 
-        def planned() -> NewWorld:
-            """The world with the classes the wasteland plan chose (the others are unchanged)."""
-            return _planned_world(world, weathering.result()[0])
-
         def identify() -> tuple[KeySpace, Plan]:
             loc_keys = KeySpace(localization.result() | static_hashes())
             geometry = geometries.result()
             biomes = weathering.result()[0]
-            final_world = _planned_world(world, biomes)
             physical = physical_keys(
                 game_map,
                 hierarchy,
                 reads.result()[1],
                 unpack_pairs(climates.result().locations.pairs),  # noqa: F821 - deleted after the stages
-                world=final_world,
+                world=world,
                 biomes=biomes,
                 pixels=geometry.pixels.tolist(),
             )
             plan = plan_identities(
                 game_map,
                 canvas,
-                final_world,
+                world,
                 hierarchy,
                 geometry,
                 seed=seed,
@@ -3039,7 +3119,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             )
             if settings.new_world.expand_oceans or settings.new_world.landform:
                 plan.oceans = plan_oceans(
-                    game_map, canvas, final_world, plan, hierarchy, shapes.zones, loc_keys
+                    game_map, canvas, world, plan, hierarchy, shapes.zones, loc_keys
                 )
             return loc_keys, plan
 
@@ -3076,7 +3156,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
                 precious_permille=settings.new_world.precious_permille,
                 resources=settings.resources,
                 material_seed=resources_seed,
-                wastelands=_wasteland_settings(game_dir, world, settings),
+                land=land_biomes,
             )
             return biomes, biome_stats, _rivers(world, canvas, climate, seed)
 
@@ -3087,7 +3167,7 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             lambda: _check_world(
                 game_map,
                 canvas,
-                planned(),
+                world,
                 final_labels,
                 identities.result()[1],
                 shapes.zones,
@@ -3103,9 +3183,6 @@ def _export_new_world(  # noqa: C901, PLR0913, PLR0915 - one pass over every sta
             removed -= plan.oceans.retained
         _check_identity_budget(game_map, removed, plan)
         biomes, biome_stats, (river_codes, carved, river_stats) = weathering.result()
-        # Everything below reads the classes the wasteland plan chose; the stages above took
-        # them from the plan itself (``planned``), so none of them saw the earlier ones.
-        world = _planned_world(world, biomes)
         slot_tables, slot_stats = run_stage(
             "slot tables",
             lambda: _slot_tables(game_map, vanilla_attributes, biomes, game_dir, levels.result()),
@@ -3764,6 +3841,23 @@ def _vanilla_climate(game_map: Eu5Map, store: DecalStore) -> VanillaClimate:
     )
 
 
+def _final_climate(
+    game_map: Eu5Map,
+    canvas: Canvas,
+    world: NewWorld,
+    final_labels: NDArray[np.int32],
+    vanilla: VanillaClimate,
+) -> ClimateGrid:
+    """The climate grid of the whole map as ``world`` shapes it: its sea and its relief."""
+    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
+    final_sea = np.concatenate(
+        [sea, np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)]
+    )
+    height = vanilla.height.astype(np.int32)
+    canvas.put(height, world.elevation)
+    return climate_grid(final_sea[final_labels], height)
+
+
 def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world and the vanilla climate.
     game_map: Eu5Map,
     *,
@@ -3776,47 +3870,57 @@ def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world an
     precious_permille: int = 1000,
     resources: ResourceSettings = RESOURCE_DEFAULTS,
     material_seed: int | None = None,
-    wastelands: WastelandSettings | None = None,
+    land: tuple[CellBiomes, dict[str, object]] | None = None,
 ) -> tuple[CellBiomes, dict[str, object], ClimateGrid]:
-    """Climate, vegetation, topography and raw material of every generated cell, and with
-    ``wastelands`` the class of each, the wastelands being planned (``rnw.barrens``)."""
-    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
-    final_sea = np.concatenate(
-        [sea, np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)]
-    )
-    height = vanilla.height.astype(np.int32)
-    canvas.put(height, world.elevation)
-    final_grid = climate_grid(final_sea[final_labels], height)
-    del height
-    points = np.stack(
-        [world.centroids[:, 0], _world_columns(canvas, world.centroids[:, 1])], axis=1
-    )
-    cells = Generated(
-        kinds=world.classes,
-        points=points,
-        mean_height=world.mean_elevation,
-        spread=world.spread,
-        edges=world.edges,
-        coastal=_coastal(world),
-        pixels=world.pixels,
-    )
-    biomes, stats = assign_biomes(
-        game_map=game_map,
-        templates=attributes,
-        vanilla=vanilla.locations,
-        vanilla_grid=vanilla.grid,
-        final_grid=final_grid,
-        cells=cells,
-        seed=seed,
-        precious_permille=precious_permille,
-        resources=resources,
-        material_seed=material_seed,
-        wastelands=wastelands,
-    )
-    stats["coherence"] = _coherence(
-        game_map, attributes, vanilla.locations.pairs, _planned_world(world, biomes), biomes
-    )
+    """Climate, vegetation, topography and raw material of every generated cell.
+
+    With ``land`` (epoch 64 on) the land cells were made before the coasts (``_land_character``)
+    and only the waters that remain get their climate here.
+    """
+    final_grid = _final_climate(game_map, canvas, world, final_labels, vanilla)
+    cells = _generated(canvas, world)
+    if land is None:
+        biomes, stats = assign_biomes(
+            game_map=game_map,
+            templates=attributes,
+            vanilla=vanilla.locations,
+            vanilla_grid=vanilla.grid,
+            final_grid=final_grid,
+            cells=cells,
+            seed=seed,
+            precious_permille=precious_permille,
+            resources=resources,
+            material_seed=material_seed,
+        )
+    else:
+        waters = water_climates(
+            game_map,
+            templates=attributes,
+            vanilla=vanilla.locations,
+            vanilla_grid=vanilla.grid,
+            final_grid=final_grid,
+            cells=cells,
+        )
+        biomes = _with_waters(land[0], waters, len(cells.kinds))
+        stats = dict(land[1])
+    stats["coherence"] = _coherence(game_map, attributes, vanilla.locations.pairs, world, biomes)
     return biomes, stats, final_grid
+
+
+def _with_waters(land: CellBiomes, waters: dict[int, str], count: int) -> CellBiomes:
+    """The biomes of the land cells (numbered first) and the climates of ``count - len(land)``
+    water cells after them."""
+    rest = count - len(land.climate)
+    climate = [*land.climate, *[""] * rest]
+    for cell, name in waters.items():
+        climate[cell] = name
+    blank = ("",) * rest
+    return CellBiomes(
+        tuple(climate),
+        (*land.vegetation, *blank),
+        (*land.topography, *blank),
+        (*land.raw_material, *blank),
+    )
 
 
 def _coherence(

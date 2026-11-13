@@ -1698,6 +1698,10 @@ text = '''Eski yerli halklar okunuyor'''
 source = "e84556e6a019ab76"
 text = '''Kıtalar, denizler ve yer şekilleri oluşturuluyor'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''Kara ve çorak topraklar planlanıyor'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''Her kıyıya bir liman veriliyor'''

@@ -1698,6 +1698,10 @@ text = '''Lecture des anciens peuples autochtones'''
 source = "e84556e6a019ab76"
 text = '''Création des continents, des mers et du relief'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''La terre et ses terres sauvages'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''Un port pour chaque côte'''

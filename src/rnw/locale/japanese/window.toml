@@ -1698,6 +1698,10 @@ text = '''元の先住民を読み込んでいます'''
 source = "e84556e6a019ab76"
 text = '''大陸、海、起伏を作っています'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''土地と荒れ地を計画しています'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''すべての海岸に港を置いています'''

@@ -1,4 +1,4 @@
-"""The natural wasteland plan: budget, coast, reachability, biomes, determinism (synthetic data).
+"""The natural wasteland plan: budget, coast, barrier, reachability, biomes, determinism.
 
 Every land, climate and calibration here is made up; none of it needs the game.
 """
@@ -35,14 +35,14 @@ from rnw.barrens import (
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
     TERRAIN_MATERIALS,
-    CellBiomes,
     biome_rules,
     climate_groups,
     wasteland_settings,
 )
 from rnw.eu5_newworld import _land_name  # pyright: ignore[reportPrivateUsage]
 from rnw.eu5_nw_export import (
-    _planned_world,  # pyright: ignore[reportPrivateUsage]
+    NewWorldExportError,
+    _land_count,  # pyright: ignore[reportPrivateUsage]
     _wasteland_settings,  # pyright: ignore[reportPrivateUsage]
 )
 from rnw.model import CellClass
@@ -66,11 +66,11 @@ def _dune_needs_desert(_climate: str, vegetation: str, topography: str) -> bool:
 
 
 def _grid(
-    *, wasteland: set[int] | None = None, ring_wasteland: bool = False
+    *, wasteland: set[int] | None = None, barrier: set[int] | None = None
 ) -> tuple[Terrain, WastelandSettings]:
     """A land of ``WIDTH`` by ``HEIGHT`` cells: jungle in the west, desert in the east, a ridge
     between, hills at the east and the rest low and smooth. Its outer ring touches the sea and
-    its top and bottom rows are polar (wasteland)."""
+    its top and bottom rows are polar (wasteland); ``barrier`` are cells the Wall runs through."""
     count = WIDTH * HEIGHT
     xs = np.arange(count) % WIDTH
     ys = np.arange(count) // WIDTH
@@ -84,9 +84,11 @@ def _grid(
     hills = (xs >= 14) & (xs <= 16)
     spread[hills] = FLAT_SPREAD + 200
     west = xs < 10
+    wall = np.zeros(count, dtype=bool)
+    wall[sorted(barrier or set())] = True
     kinds = [CellClass.LAND] * count
     for cell in range(count):
-        if polar[cell] or (ring_wasteland and coastal[cell]) or cell in (wasteland or set()):
+        if polar[cell] or cell in (wasteland or set()) or cell in (barrier or set()):
             kinds[cell] = CellClass.WASTELAND
     edges = [
         (cell, other)
@@ -106,9 +108,10 @@ def _grid(
         latitude=np.abs(ys - HEIGHT // 2) * 60,
         coastal=coastal,
         polar=polar,
+        barrier=wall,
         edges=np.array(edges, dtype=np.int64),
     )
-    return terrain, WastelandSettings(0, polar, GROUPS, _dune_needs_desert)
+    return terrain, WastelandSettings(0, polar, wall, GROUPS, _dune_needs_desert)
 
 
 CALIBRATION = Calibration(
@@ -134,9 +137,9 @@ def _plan(
     seed: int = 1,
     *,
     wasteland: set[int] | None = None,
-    ring_wasteland: bool = False,
+    barrier: set[int] | None = None,
 ) -> tuple[Terrain, WastelandPlan]:
-    terrain, settings = _grid(wasteland=wasteland, ring_wasteland=ring_wasteland)
+    terrain, settings = _grid(wasteland=wasteland, barrier=barrier)
     return terrain, plan_wastelands(
         terrain, CALIBRATION, replace(settings, budget=budget), seed=seed
     )
@@ -175,16 +178,44 @@ def test_epoch_63_topography_rule_is_kept() -> None:
     assert legacy_topography(MOUNTAIN_FLOOR - 1, FLAT_SPREAD) == "hills_wasteland"
 
 
-def test_the_budget_is_met_beside_the_frozen_cells() -> None:
-    terrain, plan = _plan(60)
-    frozen = sum(1 for kind in terrain.kinds if kind is CellClass.WASTELAND)
+def test_the_budget_is_met_and_the_polar_cells_come_on_top() -> None:
+    terrain, plan = _plan(70)
     waste = sum(1 for kind in plan.kinds if kind is CellClass.WASTELAND)
     assert plan.stats["shortfall"] == 0
-    assert plan.stats["frozen_coastal_or_polar"] == 0
-    assert plan.stats["planned"] == 60
-    # the budget counts the wastelands at a coast, not the polar ones, which come on top
-    assert waste == 60 + frozen
-    assert frozen == int(terrain.polar.sum())
+    assert plan.stats["barrier"] == 0
+    assert plan.stats["polar"] == int(terrain.polar.sum())
+    assert plan.stats["planned"] == 70
+    assert waste == 70 + int(terrain.polar.sum())
+
+
+def test_the_barrier_counts_in_the_budget_and_stays_wasteland() -> None:
+    barrier = {WIDTH * row + 9 for row in range(2, HEIGHT - 2)}
+    terrain, plan = _plan(70, barrier=barrier)
+    assert plan.stats["barrier"] == len(barrier)
+    assert plan.stats["planned"] == 70 - len(barrier)
+    for cell in barrier:
+        assert plan.kinds[cell] is CellClass.WASTELAND
+        assert plan.topography[cell] == legacy_topography(
+            int(terrain.height[cell]), int(terrain.spread[cell])
+        )
+    waste = sum(1 for kind in plan.kinds if kind is CellClass.WASTELAND)
+    assert waste == 70 + int(terrain.polar.sum())
+    assert _reaches_coast(terrain, plan.kinds)
+
+
+def test_a_wall_world_plans_the_land_beside_its_barrier() -> None:
+    """The land on either side of the barrier gets natural wastelands of several kinds."""
+    barrier = {WIDTH * row + 9 for row in range(2, HEIGHT - 2)}
+    terrain, plan = _plan(70, barrier=barrier)
+    planned = {
+        cell: name
+        for cell, name in plan.topography.items()
+        if not terrain.polar[cell] and cell not in barrier
+    }
+    assert planned
+    assert any(cell % WIDTH < 9 for cell in planned)
+    assert any(cell % WIDTH > 9 for cell in planned)
+    assert len(set(planned.values())) >= 3
 
 
 def test_the_plan_gives_several_kinds_under_both_vegetations() -> None:
@@ -217,10 +248,35 @@ def test_a_kind_stands_only_on_ground_that_allows_it() -> None:
             assert ground == "flat"
 
 
-def test_cells_at_the_sea_and_the_poles_keep_their_class() -> None:
-    terrain, plan = _plan(90, wasteland={WIDTH * 3, WIDTH * 3 + 1, WIDTH * 5 + WIDTH - 1})
-    for cell in np.flatnonzero(terrain.coastal | terrain.polar).tolist():
-        assert plan.kinds[cell] is terrain.kinds[cell]
+def test_cells_at_the_sea_can_be_wasteland_and_the_poles_always_are() -> None:
+    terrain, plan = _plan(150)
+    assert all(plan.kinds[cell] is CellClass.WASTELAND for cell in np.flatnonzero(terrain.polar))
+    at_sea = [
+        cell
+        for cell in np.flatnonzero(terrain.coastal & ~terrain.polar).tolist()
+        if plan.kinds[cell] is CellClass.WASTELAND
+    ]
+    assert at_sea
+    assert _reaches_coast(terrain, plan.kinds)
+
+
+def test_a_kind_the_game_puts_at_the_sea_is_planned_nearer_it() -> None:
+    """The coast preference of a kind moves where its units stand."""
+    inland = replace(CALIBRATION, coast=dict.fromkeys(KINDS, -1000))
+    shore = replace(CALIBRATION, coast=dict.fromkeys(KINDS, 1000))
+    terrain, settings = _grid()
+    settings = replace(settings, budget=50)
+    away = plan_wastelands(terrain, inland, settings, seed=3)
+    near = plan_wastelands(terrain, shore, settings, seed=3)
+
+    def at_sea(plan: WastelandPlan) -> int:
+        return sum(
+            1
+            for cell in np.flatnonzero(terrain.coastal & ~terrain.polar).tolist()
+            if plan.kinds[cell] is CellClass.WASTELAND
+        )
+
+    assert at_sea(near) > at_sea(away)
 
 
 def test_every_passable_cell_still_reaches_a_coast() -> None:
@@ -239,8 +295,8 @@ def test_the_plan_is_the_same_for_the_same_seed_and_another_for_another() -> Non
 
 
 def test_no_budget_leaves_no_wasteland_that_the_plan_did_not_keep() -> None:
-    """The highest cells of an earlier plan are not kept: the plan starts afresh."""
-    inside = {WIDTH * 4 + 3, WIDTH * 4 + 4, WIDTH * 7 + 12}
+    """The highest cells of an earlier plan are not kept: the plan starts afresh, at the sea too."""
+    inside = {WIDTH * 4 + 3, WIDTH * 4 + 4, WIDTH * 7 + 12, WIDTH * 5 + WIDTH - 1}
     terrain, plan = _plan(0, wasteland=inside)
     assert all(kind is CellClass.LAND for cell, kind in enumerate(plan.kinds) if cell in inside)
     assert plan.stats["planned"] == 0
@@ -248,9 +304,22 @@ def test_no_budget_leaves_no_wasteland_that_the_plan_did_not_keep() -> None:
 
 
 def test_land_that_cannot_reach_a_coast_is_sealed_with_the_old_topography() -> None:
-    """A pocket the frozen wastelands enclose cannot be passable: it is wasteland as before."""
-    terrain, plan = _plan(0, ring_wasteland=True)
-    inner = [cell for cell in range(len(terrain.kinds)) if not terrain.coastal[cell]]
+    """A pocket the barrier encloses cannot be passable: it is wasteland as before."""
+    ring = {
+        cell
+        for cell in range(WIDTH * HEIGHT)
+        if cell % WIDTH in (4, 14) and 2 <= cell // WIDTH <= HEIGHT - 3
+    } | {
+        cell
+        for cell in range(WIDTH * HEIGHT)
+        if cell // WIDTH in (2, HEIGHT - 3) and 4 <= cell % WIDTH <= 14
+    }
+    terrain, plan = _plan(0, barrier=ring)
+    inner = [
+        cell
+        for cell in range(WIDTH * HEIGHT)
+        if 4 < cell % WIDTH < 14 and 2 < cell // WIDTH < HEIGHT - 3
+    ]
     assert plan.stats["unreachable_forced"] == len(inner)
     for cell in inner:
         assert plan.kinds[cell] is CellClass.WASTELAND
@@ -327,6 +396,7 @@ def test_calibration_reads_rates_by_area_and_sizes_by_kind() -> None:
             "dune_wasteland",
             "hills_wasteland",
         ),
+        coastal=np.array([False, True, False, False, False, False]),
         pixels=np.array([100_000, 50_000, 50_000, 100_000, 10_000, 90_000], dtype=np.int64),
         include=np.array([True, True, True, True, True, False]),
         groups={"arctic": "arctic", "oceanic": "arctic"},
@@ -339,6 +409,11 @@ def test_calibration_reads_rates_by_area_and_sizes_by_kind() -> None:
     assert found.sizes["dune"] == (10_000,)
     assert found.sizes["flat"] == (50_000,)
     assert "hills" not in found.sizes
+    # one of the patch's four locations touches the sea: its flat wasteland does (seen 1, expected
+    # a quarter), its mountain wasteland does not; a kind with no coast to compare has no tilt
+    assert found.coast["flat"] == 600
+    assert found.coast["mountain"] == -1000
+    assert "dune" not in found.coast
 
 
 BIOMES = """\
@@ -386,6 +461,7 @@ def test_the_game_files_say_which_wastelands_can_be_drawn() -> None:
         {"desert_rock_wasteland": 3, "jungle_waste_biome": 3, "bare_biome": 0},
         budget=5,
         polar=np.zeros(3, dtype=bool),
+        barrier=np.zeros(3, dtype=bool),
     )
     assert got.groups["subtropical"] == got.groups["tropical"] == "subtropical"
     assert got.biome_ok("arid", "desert", TOPOGRAPHY["dune"])
@@ -406,34 +482,31 @@ def _game(tmp_path: Path) -> Path:
 
 def _world() -> NewWorld:
     labels = np.arange(12, dtype=np.int32).reshape(3, 4)
-    kinds = (CellClass.LAND,) * 10 + (CellClass.SEA, CellClass.WASTELAND)
+    kinds = (CellClass.LAND,) * 10 + (CellClass.WASTELAND, CellClass.SEA)
     return derive_world(labels, kinds, np.full(labels.shape, 9000, dtype=np.int32))
 
 
-def test_only_new_epochs_and_ordinary_lands_plan_their_wastelands(tmp_path: Path) -> None:
+def test_the_plan_reads_the_land_cells_the_world_numbers_first(tmp_path: Path) -> None:
     game, world = _game(tmp_path), _world()
     settings = build_settings("continents")
     settings = replace(settings, new_world=replace(settings.new_world, wasteland_permille=500))
     assert settings.algorithm == epoch.NATURAL_WASTELANDS
+    assert _land_count(world) == 11
     got = _wasteland_settings(game, world, settings)
-    assert got is not None
     # the budget counts every land cell (here 11) by the share of the settings
     assert got.budget == 5
-    assert got.polar.tolist() == [True] * 4 + [False] * 4 + [True] * 4
-    old = replace(settings, algorithm=epoch.NATURAL_WASTELANDS - 1)
-    assert _wasteland_settings(game, world, old) is None
-    wall = replace(settings, new_world=replace(settings.new_world, landform=1))
-    assert _wasteland_settings(game, world, wall) is None
+    assert got.polar.tolist() == [True] * 4 + [False] * 4 + [True] * 3
+    assert not got.barrier.any()
+    # the Wall's barrier is read from the world
+    walled = replace(world, barrier=np.array([5, 6], dtype=np.int64))
+    assert _wasteland_settings(game, walled, settings).barrier.nonzero()[0].tolist() == [5, 6]
 
 
-def test_a_plan_replaces_the_classes_of_the_world_and_no_plan_leaves_them() -> None:
+def test_water_before_land_is_no_world_the_plan_can_read() -> None:
     world = _world()
-    plain = CellBiomes(("",) * 12, ("",) * 12, ("",) * 12, ("",) * 12)
-    assert _planned_world(world, plain) is world
-    kinds = (CellClass.WASTELAND,) * 12
-    planned = _planned_world(world, replace(plain, kinds=kinds))
-    assert planned.classes == kinds
-    assert planned.labels is world.labels
+    swapped = replace(world, classes=(CellClass.SEA, *world.classes[:-1]))
+    with pytest.raises(NewWorldExportError, match="land cells"):
+        _ = _land_count(swapped)
 
 
 def test_the_wasteland_plan_is_gated_by_its_own_epoch() -> None:

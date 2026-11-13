@@ -632,23 +632,16 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         rain=rain,
         coast=coast,
     )
-    water_train = [
-        i
-        for i, kind in enumerate(game_map.classes)
-        if kind in WATER_KINDS and old[i] and "climate" in attributes[i]
-    ]
-    water_cells = np.flatnonzero(~land)
-    if water_train and water_cells.size:
-        water_names, water_ids = _vocabulary([attributes[i]["climate"] for i in water_train])
-        water_index = np.array(water_train, dtype=np.int64)
-        water_s, water_q = _standardize(
-            water_features(vanilla_grid, vanilla.points[water_index]),
-            water_features(final_grid, cells.points[water_cells]),
-            WATER_WEIGHTS,
-        )
-        water_choice = np.argmax(knn_scores(water_s, water_ids, water_q, len(water_names)), axis=1)
-        for slot, cell in enumerate(water_cells.tolist()):
-            climate[cell] = water_names[int(water_choice[slot])]
+    waters = water_climates(
+        game_map,
+        templates=templates,
+        vanilla=vanilla,
+        vanilla_grid=vanilla_grid,
+        final_grid=final_grid,
+        cells=cells,
+    )
+    for cell, name in waters.items():
+        climate[cell] = name
     raw = _raw_materials(
         game_map,
         attributes=attributes,
@@ -678,6 +671,42 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     return result, stats
 
 
+def water_climates(  # noqa: PLR0913 - the waters read the map, the templates and both grids.
+    game_map: Eu5Map,
+    *,
+    templates: dict[str, dict[str, str]],
+    vanilla: VanillaLocations,
+    vanilla_grid: ClimateGrid,
+    final_grid: ClimateGrid,
+    cells: Generated,
+) -> dict[int, str]:
+    """The climate of every sea and lake cell of ``cells``, by the vanilla waters nearest in
+    place and height; empty when ``cells`` has no water or the game has no water template."""
+    old = _old_world(game_map)
+    attributes = [templates.get(key, {}) for key in game_map.keys]
+    water_train = [
+        i
+        for i, kind in enumerate(game_map.classes)
+        if kind in WATER_KINDS and old[i] and "climate" in attributes[i]
+    ]
+    water_cells = np.array(
+        [cell for cell, kind in enumerate(cells.kinds) if kind not in LAND_KINDS], dtype=np.int64
+    )
+    if not water_train or not water_cells.size:
+        return {}
+    water_names, water_ids = _vocabulary([attributes[i]["climate"] for i in water_train])
+    water_index = np.array(water_train, dtype=np.int64)
+    water_s, water_q = _standardize(
+        water_features(vanilla_grid, vanilla.points[water_index]),
+        water_features(final_grid, cells.points[water_cells]),
+        WATER_WEIGHTS,
+    )
+    water_choice = np.argmax(knn_scores(water_s, water_ids, water_q, len(water_names)), axis=1)
+    return {
+        cell: water_names[int(water_choice[slot])] for slot, cell in enumerate(water_cells.tolist())
+    }
+
+
 def climate_groups(rules: list[BiomeRule]) -> dict[str, str]:
     """The climates that ``biomes.txt`` draws alike, each named for the first of its group."""
     groups: dict[str, str] = {}
@@ -695,6 +724,7 @@ def wasteland_settings(
     *,
     budget: int,
     polar: NDArray[np.bool_],
+    barrier: NDArray[np.bool_],
 ) -> WastelandSettings:
     """What the wasteland plan needs of the game: the climate groups and a test that a
     (climate, vegetation, topography) is drawn by a biome of its own with materials, not by
@@ -708,7 +738,7 @@ def wasteland_settings(
             known[key] = bool(biome) and biome != DEFAULT_BIOME and materials.get(biome, 0) > 0
         return known[key]
 
-    return WastelandSettings(budget, polar, climate_groups(rules), biome_ok)
+    return WastelandSettings(budget, polar, barrier, climate_groups(rules), biome_ok)
 
 
 def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and the vote.
@@ -736,6 +766,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         climate=[row.get("climate", "") for row in attributes],
         vegetation=[row.get("vegetation", "") for row in attributes],
         topography=[row.get("topography", "") for row in attributes],
+        coastal=_vanilla_coastal(game_map, vanilla.pairs),
         pixels=pixels,
         include=old,
         groups=settings.groups,
@@ -754,9 +785,21 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         latitude=latitude,
         coastal=cells.coastal,
         polar=settings.polar,
+        barrier=settings.barrier,
         edges=edges,
     )
     return plan_wastelands(terrain, calibration, settings, seed=seed)
+
+
+def _vanilla_coastal(game_map: Eu5Map, pairs: NDArray[np.int64]) -> NDArray[np.bool_]:
+    """Which vanilla locations touch a sea zone (a contact in ``pairs`` is low << 32 | high)."""
+    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
+    low = pairs >> np.int64(32)
+    high = pairs & np.int64((1 << 32) - 1)
+    coastal = np.zeros(len(game_map.keys), dtype=bool)
+    coastal[low[sea[high]]] = True
+    coastal[high[sea[low]]] = True
+    return coastal
 
 
 def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template field.
@@ -782,13 +825,7 @@ def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template fi
     use their individual ``resources`` weights. No new material is introduced into a class;
     if even its coastal/inland pool is empty, generation fails explicitly.
     """
-    sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
-    mask = np.int64((1 << 32) - 1)
-    low = vanilla.pairs >> np.int64(32)
-    high = vanilla.pairs & mask
-    coastal = np.zeros(len(game_map.keys), dtype=bool)
-    coastal[low[sea[high]]] = True
-    coastal[high[sea[low]]] = True
+    coastal = _vanilla_coastal(game_map, vanilla.pairs)
     tables: list[dict[tuple[str, ...], Counter[str]]] = [{}, {}, {}, {}]
     for i, kind in enumerate(game_map.classes):
         if kind is not CellClass.LAND or not source[i] or "raw_material" not in attributes[i]:

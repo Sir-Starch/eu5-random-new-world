@@ -5,10 +5,14 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
+import numpy as np
 import pytest
 
 from rnw.model import CellClass
-from rnw.ports import ForeignCoast, PortError, plan_ports, served, settle_seas
+from rnw.newworld import derive_world
+from rnw.ports import ForeignCoast, PortError, plan_ports, relabel, served, settle_seas
 from tests.block_worlds import block_world, cell
 
 
@@ -115,3 +119,14 @@ def test_settling_changes_no_pixel_of_land_and_none_outside_the_merged_cells() -
     assert (settled.world.labels >= 0).all()
     assert settled.world.labels.shape == world.labels.shape
     assert int(settled.world.pixels.sum()) == int(world.pixels.sum())
+
+
+def test_folding_sea_cells_renumbers_the_barrier_with_the_land() -> None:
+    labels = np.arange(4, dtype=np.int32).reshape(1, 4)
+    kinds = (CellClass.SEA, CellClass.SEA, CellClass.LAND, CellClass.LAND)
+    world = derive_world(labels, kinds, np.zeros(labels.shape, dtype=np.int32))
+    world = replace(world, barrier=np.array([2, 3], dtype=np.int64))
+    folded, cell_of = relabel(world, {0: 1})
+    assert cell_of == (0, 0, 1, 2)
+    assert folded.barrier.tolist() == [1, 2]
+    assert [folded.classes[cell] for cell in folded.barrier.tolist()] == [CellClass.LAND] * 2

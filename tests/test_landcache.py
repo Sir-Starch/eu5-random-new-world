@@ -57,6 +57,17 @@ def test_a_cached_continent_equals_the_uncached_one_and_skips_generation(
         assert np.array_equal(actual, wanted)
     assert found.classes == expected.classes
     assert found.edges == expected.edges
+    assert np.array_equal(found.barrier, expected.barrier)
+
+
+def test_the_cache_keeps_the_barrier_of_a_wall_world(tmp_path: Path) -> None:
+    domain = np.ones((320, 480), dtype=np.bool_)
+    settings = replace(SMALL, landform=1, wall_allow_gaps=0)
+    cache = tmp_path / "land"
+    made = landcache.get_world(cache, domain, seed=7, settings=settings, drawn=None)
+    kept = landcache.get_world(cache, domain, seed=7, settings=settings, drawn=None)
+    assert made.barrier.size > 0
+    assert np.array_equal(kept.barrier, made.barrier)
 
 
 def test_corrupt_cache_fails_instead_of_rebuilding(tmp_path: Path) -> None:

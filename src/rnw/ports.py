@@ -22,7 +22,7 @@ else), so the world the rest of the generator sees has a port for every coastal 
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -290,4 +290,6 @@ def relabel(world: NewWorld, merged: Mapping[int, int]) -> tuple[NewWorld, tuple
         stop = start + STRIP_ROWS
         labels[start:stop] = table[world.labels[start:stop]]
     kinds = tuple(world.classes[cell] for cell in kept)
-    return derive_world(labels, kinds, world.elevation), cell_of
+    moved: list[int] = [cell_of[int(cell)] for cell in world.barrier]
+    barrier = np.unique(np.array(moved, dtype=np.int64))
+    return replace(derive_world(labels, kinds, world.elevation), barrier=barrier), cell_of

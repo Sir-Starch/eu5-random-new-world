@@ -53,6 +53,18 @@ def test_wall_has_no_water_passage_and_keeps_polar_end_locations_impassable(
     assert west.isdisjoint(east)
 
 
+def test_the_wall_world_records_the_cells_of_its_barrier() -> None:
+    """The cells the core runs through are kept apart as the barrier; other worlds have none."""
+    settings = replace(SMALL, wall_allow_gaps=0, landform=1)
+    domain = np.ones((320, 480), dtype=bool)
+    world = generate_new_world(domain, seed=7, settings=settings)
+    middle = wall.spine(domain, 7, settings)
+    along = world.labels[np.arange(len(middle)), middle]
+    assert world.barrier.tolist() == sorted(set(along.tolist()))
+    assert all(world.classes[cell] in LAND_KINDS for cell in world.barrier.tolist())
+    assert generate_new_world(domain, seed=7, settings=SMALL).barrier.size == 0
+
+
 def test_wall_rejects_a_canvas_without_a_polar_corridor() -> None:
     domain = np.ones((100, 240), dtype=bool)
     domain[0] = False

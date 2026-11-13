@@ -1698,6 +1698,10 @@ text = '''원래 원주민을 읽는 중'''
 source = "e84556e6a019ab76"
 text = '''대륙, 바다, 기복을 만드는 중'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''땅과 황무지를 계획하는 중'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''모든 해안에 항구를 두는 중'''

@@ -20,7 +20,8 @@ if TYPE_CHECKING:
 # The vanilla reads need the moved island groups, so they are submitted only after the world
 # is generated; the main thread waits for the world checks, which read the identities, before
 # the slot tables. The two long branches (terrain and scripts) join at write files. Keep
-# this beside its regression.
+# this beside its regression. The land character (the wasteland plan, epoch 64 on) precedes the
+# coasts, which are made for the land it leaves passable; before epoch 64 it is skipped.
 DEPENDENCIES: Final[dict[str, tuple[str, ...]]] = {
     "load map": (),
     "select canvas": ("load map",),
@@ -31,7 +32,8 @@ DEPENDENCIES: Final[dict[str, tuple[str, ...]]] = {
     "vanilla climate": ("vanilla reads",),
     "vanilla material levels": ("vanilla reads",),
     "vanilla natives": ("vanilla reads", "vanilla geometry"),
-    "settle coasts": ("generate world",),
+    "land character": ("generate world", "vanilla climate"),
+    "settle coasts": ("land character",),
     "water shapes": ("settle coasts",),
     "water textures": ("water shapes",),
     "biomes and rivers": ("water shapes", "vanilla climate"),
@@ -65,6 +67,7 @@ REFERENCE_SECONDS: Final[dict[str, float]] = {
     "vanilla material levels": 18.0,
     "vanilla natives": 8.0,
     "generate world": 69.0,
+    "land character": 20.0,
     "settle coasts": 9.0,
     "water shapes": 5.0,
     "water textures": 16.0,

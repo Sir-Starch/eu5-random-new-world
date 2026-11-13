@@ -22,9 +22,13 @@ things the installed game provides (the construction is described in ``docs/terr
   jungle, cold remote ground for tundra, the highest and roughest ground for mountains.
 
 Nothing is repaired afterwards. A wasteland is only added where every passable cell that
-remains still reaches the coast, and only on cells that touch no sea, because the ports,
-the docks and the strait crossings of the coast stage were made for the cells beside the sea as
-they were. A cell whose templates would match no biome of ``biomes.txt`` is no candidate.
+remains still reaches the coast, and a cell whose templates would match no biome of
+``biomes.txt`` is no candidate. Coastal cells are planned like any other (a fifth of the game's
+wastelands touch the sea, as a fifth of its land does); the strait crossings, which join
+passable shores, are planned after this plan, from the cells it left passable. Two kinds of cell
+are fixed beforehand: the land that touches a polar edge of the map, which is always impassable,
+and the cells the Wall's core runs through (``NewWorld.barrier``), which are its barrier. They
+carry the topography their height gives (``legacy_topography``).
 """
 
 # pyright: reportAny=false
@@ -34,7 +38,7 @@ import bisect
 import heapq
 import itertools
 from collections import defaultdict, deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import TYPE_CHECKING, Final, final
 
@@ -84,6 +88,9 @@ CAPACITY_PERMILLE: Final[int] = 800
 ROUNDS: Final[int] = 4
 SMOOTHING: Final[int] = 4
 NOISE_WEIGHT: Final[int] = 3
+# How much of a kind's score its coast preference takes when the game's wastelands of that kind
+# lie wholly at the sea (or wholly away from it), in permille.
+COAST_WEIGHT: Final[int] = 500
 
 Patch = tuple[str, str]
 Triple = tuple[str, str, str]
@@ -116,11 +123,14 @@ class Calibration:
 
     ``rates`` is, for a patch (a climate group and a vegetation) and a kind, the part per
     million of the patch's land area that wastelands of the kind cover. ``sizes`` is the sorted
-    size in pixels of every vanilla wasteland location of a kind.
+    size in pixels of every vanilla wasteland location of a kind. ``coast`` is how far the
+    kind's wastelands lie nearer the sea (positive) or farther from it (negative) than the land
+    of their own patches does, in permille of the most it could (see ``calibrate``).
     """
 
     rates: Mapping[Class, int]
     sizes: Mapping[str, tuple[int, ...]]
+    coast: Mapping[str, int] = field(default_factory=dict[str, int])
 
 
 def calibrate(  # noqa: PLR0913 - the calibration reads every attribute of a vanilla location.
@@ -129,14 +139,26 @@ def calibrate(  # noqa: PLR0913 - the calibration reads every attribute of a van
     climate: Sequence[str],
     vegetation: Sequence[str],
     topography: Sequence[str],
+    coastal: NDArray[np.bool_],
     pixels: NDArray[np.int64],
     include: NDArray[np.bool_],
     groups: Mapping[str, str],
 ) -> Calibration:
-    """Rates and sizes of the vanilla wastelands among the ``include`` locations."""
+    """Rates, sizes and coast preferences of the vanilla wastelands among the ``include``
+    locations.
+
+    The coast preference of a kind compares the share of its locations that touch the sea
+    (``seen``) with the share its own patches' land has (``expected``: each wasteland location
+    counts the coastal share of the locations of its patch): ``1000 * (seen - expected) /
+    (seen + expected)``, so +1000 is a kind wholly at the sea in patches without a coast.
+    """
     area: dict[Patch, int] = defaultdict(int)
     covered: dict[Class, int] = defaultdict(int)
     sizes: dict[str, list[int]] = defaultdict(list)
+    count: dict[Patch, int] = defaultdict(int)
+    shore: dict[Patch, int] = defaultdict(int)
+    wastelands: dict[str, list[Patch]] = defaultdict(list)
+    seen: dict[str, int] = defaultdict(int)
     for index, kind in enumerate(classes):
         size = int(pixels[index])
         if (
@@ -150,16 +172,27 @@ def calibrate(  # noqa: PLR0913 - the calibration reads every attribute of a van
             continue
         patch = (groups.get(climate[index], climate[index]), vegetation[index])
         area[patch] += size
+        count[patch] += 1
+        shore[patch] += int(coastal[index])
         name = VANILLA_KINDS.get(topography[index])
         if kind is CellClass.WASTELAND and name is not None:
             covered[(*patch, name)] += size
             sizes[name].append(size)
+            wastelands[name].append(patch)
+            seen[name] += int(coastal[index])
     rates = {
         key: share * PPM // area[(key[0], key[1])]
         for key, share in covered.items()
         if area[(key[0], key[1])] >= MIN_PATCH_PX
     }
-    return Calibration(rates, {name: tuple(sorted(found)) for name, found in sizes.items()})
+    coast: dict[str, int] = {}
+    for name, patches in wastelands.items():
+        observed = Fraction(seen[name], len(patches))
+        expected = sum((Fraction(shore[patch], count[patch]) for patch in patches), Fraction(0))
+        expected /= len(patches)
+        if observed + expected:
+            coast[name] = int(PERMILLE * (observed - expected) / (observed + expected))
+    return Calibration(rates, {name: tuple(sorted(found)) for name, found in sizes.items()}, coast)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -167,7 +200,8 @@ class Terrain:
     """The land cells of a generated world as the planner reads them.
 
     Arrays and tuples are indexed by cell. ``edges`` joins land cells that touch. ``coastal`` is
-    a cell that touches the sea, ``polar`` one that touches a polar edge of the map.
+    a cell that touches the sea, ``polar`` one that touches a polar edge of the map and
+    ``barrier`` one the Wall's core runs through.
     """
 
     kinds: tuple[CellClass, ...]
@@ -181,6 +215,7 @@ class Terrain:
     latitude: NDArray[np.int64]
     coastal: NDArray[np.bool_]
     polar: NDArray[np.bool_]
+    barrier: NDArray[np.bool_]
     edges: NDArray[np.int64]
 
 
@@ -190,6 +225,7 @@ class WastelandSettings:
 
     budget: int
     polar: NDArray[np.bool_]
+    barrier: NDArray[np.bool_]
     groups: Mapping[str, str]
     biome_ok: Callable[[str, str, str], bool]
 
@@ -328,10 +364,7 @@ class _Planner:
         self.wasteland = bytearray(count)
         self.triple: dict[int, Triple] = {}
         for cell in range(count):
-            if self.land[cell] and (
-                bool(terrain.polar[cell])
-                or (terrain.kinds[cell] is CellClass.WASTELAND and bool(terrain.coastal[cell]))
-            ):
+            if self.land[cell] and (bool(terrain.polar[cell]) or bool(terrain.barrier[cell])):
                 self._mark(cell, self._legacy(cell))
         passable = bytearray(
             int(self.land[cell] and not self.wasteland[cell]) for cell in range(count)
@@ -340,11 +373,7 @@ class _Planner:
             int(bool(passable[cell]) and bool(terrain.coastal[cell])) for cell in range(count)
         )
         self.reach = _Reach(self.adjacency, passable, sinks)
-        self.free = [
-            cell
-            for cell in range(count)
-            if self.land[cell] and not terrain.coastal[cell] and not terrain.polar[cell]
-        ]
+        self.free = [cell for cell in range(count) if self.land[cell] and not self.wasteland[cell]]
         self.scores: dict[str, NDArray[np.int64]] = {}
         self.pools: dict[Class, list[int]] = {}
         self.members: dict[Class, set[int]] = {}
@@ -367,16 +396,17 @@ class _Planner:
         self.triple[cell] = triple
 
     def run(self, budget: int) -> WastelandPlan:
-        """Plan the wastelands for ``budget`` cells beside the ones that cannot change."""
+        """Plan the wastelands for ``budget`` cells beside the Wall's barrier, which counts in it
+        (the polar ones come on top)."""
         terrain = self.terrain
-        frozen = sum(1 for cell in self.triple if not terrain.polar[cell])
+        barrier = sum(1 for cell in self.triple if not terrain.polar[cell])
         free = set(self.free)
         forced = [cell for cell in self.reach.unreached() if cell in free]
         for cell in forced:
             self._mark(cell, self._legacy(cell))
             self.reach.block(cell)
         candidates = [cell for cell in self.free if not self.wasteland[cell]]
-        wanted = max(0, budget - frozen)
+        wanted = max(0, budget - barrier)
         placed = 0
         if candidates and wanted:
             self.mean_cell = max(1, int(terrain.pixels[candidates].mean()))
@@ -387,7 +417,7 @@ class _Planner:
         if unreached:
             message = f"The wasteland plan leaves {len(unreached)} cells without a way to a coast"
             raise WastelandPlanError(message)
-        return self._result(budget, frozen, len(forced), placed)
+        return self._result(budget, barrier, len(forced), placed)
 
     # -- scores --------------------------------------------------------------------------
 
@@ -400,6 +430,7 @@ class _Planner:
         dry = PERMILLE - _permille_ranks(terrain.rain[cells])
         wet = _permille_ranks(terrain.rain[cells])
         remote = _permille_ranks(terrain.coast[cells])
+        shore = PERMILLE - remote
         cold = _permille_ranks(terrain.latitude[cells])
         vegetation = np.array([terrain.vegetation[cell] for cell in candidates])
         freezing = np.array(
@@ -410,22 +441,25 @@ class _Planner:
         )
         prior = np.where(
             vegetation == "desert",
-            (dry + remote) // 2,
-            np.where(
-                vegetation == "jungle",
-                (wet + remote) // 2,
-                np.where(freezing, (cold + remote) // 2, remote),
-            ),
+            dry,
+            np.where(vegetation == "jungle", wet, np.where(freezing, cold, PERMILLE // 2)),
         )
         physical = {
-            "dune": (2 * smooth + dry + remote) // 4,
+            "dune": (smooth + dry) // 2,
             "plateau": _permille_ranks(height - 3 * spread),
             "flat": (2 * smooth + prior) // 3,
             "hills": _permille_ranks(spread),
             "mountain": _permille_ranks(height + 2 * spread),
         }
         count = len(terrain.kinds)
-        for kind, values in physical.items():
+        for kind, ground in physical.items():
+            # The game puts some kinds at the sea more than their land does, others less: the
+            # cells nearer the sea (or farther from it) score higher by as much as it shows.
+            tilt = self.calibration.coast.get(kind, 0)
+            weight = abs(tilt) * COAST_WEIGHT // PERMILLE
+            values = ((PERMILLE - weight) * ground + weight * (shore if tilt > 0 else remote)) // (
+                PERMILLE
+            )
             noise = self._regional(kind, cells, count)
             full = np.zeros(count, dtype=np.int64)
             full[cells] = (
@@ -594,7 +628,7 @@ class _Planner:
 
     # -- result --------------------------------------------------------------------------
 
-    def _result(self, budget: int, frozen: int, forced: int, placed: int) -> WastelandPlan:
+    def _result(self, budget: int, barrier: int, forced: int, placed: int) -> WastelandPlan:
         terrain = self.terrain
         kinds = tuple(
             (CellClass.WASTELAND if self.wasteland[cell] else CellClass.LAND)
@@ -609,10 +643,16 @@ class _Planner:
         sizes = sorted((cells for _, cells in self.units), reverse=True)
         stats: dict[str, object] = {
             "budget": budget,
-            "frozen_coastal_or_polar": frozen,
+            "polar": sum(1 for cell in self.triple if terrain.polar[cell]),
+            "barrier": barrier,
+            "at_sea": sum(
+                1
+                for cell in self.triple
+                if terrain.coastal[cell] and not terrain.polar[cell] and not terrain.barrier[cell]
+            ),
             "unreachable_forced": forced,
             "planned": placed,
-            "shortfall": max(0, budget - frozen - placed),
+            "shortfall": max(0, budget - barrier - placed),
             "by_kind": dict(by_kind),
             "units": len(sizes),
             "largest_units": sizes[:8],
@@ -629,8 +669,7 @@ def plan_wastelands(
 ) -> WastelandPlan:
     """Decide which land cells are wasteland, and of what kind, for a world of ``terrain``.
 
-    Wastelands that touch the sea or a polar edge stay as they are, and so do the cells that
-    touch the sea; every other cell is planned afresh: ``settings.budget`` less the wastelands
-    at a coast.
+    Only the cells at a polar edge and the Wall's barrier are fixed beforehand; every other land
+    cell, at the coast or inland, is planned afresh: ``settings.budget`` less the barrier.
     """
     return _Planner(terrain, calibration, settings, seed).run(settings.budget)

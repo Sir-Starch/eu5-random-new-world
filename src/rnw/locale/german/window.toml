@@ -1698,6 +1698,10 @@ text = '''Lese die alten Ureinwohner'''
 source = "e84556e6a019ab76"
 text = '''Erzeuge Kontinente, Meere und Relief'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''Plane das Land und sein Ödland'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''Gebe jeder Küste einen Hafen'''

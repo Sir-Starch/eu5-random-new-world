@@ -1698,6 +1698,10 @@ text = '''Lendo os povos nativos antigos'''
 source = "e84556e6a019ab76"
 text = '''Gerando continentes, mares e relevo'''
 
+["stage.land character"]
+source = "eb49c460d56536ce"
+text = '''Planejando a terra e seus ermos'''
+
 ["stage.settle coasts"]
 source = "e2cd040b59052112"
 text = '''Dando um porto a cada costa'''
