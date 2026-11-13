@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
-from rnw import _native, omerika, wall
+from rnw import _native, epoch, omerika, wall
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
 from rnw.islands import carve, place
@@ -32,6 +32,7 @@ from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
 from rnw.relief import ReliefHints, generate_relief
+from rnw.rivers import RiverGenerationError
 from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import (
     CLEAR_PERMILLE,
@@ -48,12 +49,14 @@ from rnw.topology import (
     label_components,
     unpack_pairs,
 )
+from rnw.watersheds import border_rivers, domain_climate, domain_rivers, river_cells, spacing_grid
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_biomes import SizeModel
     from rnw.islands import Footprint
     from rnw.settings import NewWorldSettings
 
@@ -890,7 +893,12 @@ def _absorb_orphans(
 
 
 def wobble_borders(
-    labels: NDArray[np.int32], kinds: list[CellClass], seed: int, *, fixed_sea: bool = False
+    labels: NDArray[np.int32],
+    kinds: list[CellClass],
+    seed: int,
+    *,
+    fixed_sea: bool = False,
+    fixed: NDArray[np.bool_] | None = None,
 ) -> NDArray[np.int32]:
     """Bend straight cell borders into curves; classes, coasts and cell count are kept.
 
@@ -898,7 +906,8 @@ def wobble_borders(
     has the same class. Pieces cut off from their cell's largest part are absorbed by a
     neighbouring cell of the same class. A cell that would vanish or split gets its
     original pixels back, and so do the pixels it took, until every cell is one piece;
-    one bad cell no longer undoes the wobble of the whole world (C71).
+    one bad cell no longer undoes the wobble of the whole world (C71). Pixels in ``fixed``
+    (beside the rivers that are borders) keep their label.
     """
     shape = (int(labels.shape[0]), int(labels.shape[1]))
     kind = np.array([list(CellClass).index(value) for value in kinds], dtype=np.int64)
@@ -921,6 +930,8 @@ def wobble_borders(
         for start in range(0, shape[0], STRIP_ROWS):
             rows = slice(start, min(shape[0], start + STRIP_ROWS))
             same[rows] &= kind[np.maximum(labels[rows], 0)] != sea_kind
+    if fixed is not None:
+        same &= ~fixed
     moved = np.where(same, source, labels).astype(np.int32)
     del source, same, valid
     counts = np.bincount(moved[moved >= 0], minlength=len(kinds))
@@ -975,6 +986,50 @@ def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) ->
         sites.ravel()[positions] = np.arange(len(positions), dtype=np.int32)
     return merge_small(grow_regions(mask, sites), smallest)
 
+
+def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, settings and seam.
+    land: NDArray[np.bool_],
+    lakes: NDArray[np.bool_],
+    relief: NDArray[np.int32],
+    *,
+    seed: int,
+    settings: NewWorldSettings,
+    seam: int | None,
+    sizes: SizeModel | None,
+) -> tuple[NDArray[np.int32], NDArray[np.bool_]]:
+    """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``) and the river pixels
+    that are their borders: the domain's rain drains its relief (``rnw.watersheds``), the seeds
+    are spaced by the vanilla sizes of the land's classes (``sizes``), the polar bands keep three
+    times the spacing, and the larger rivers are walls the cells grow up to."""
+    if sizes is None:
+        message = (
+            "Cells of this epoch are spaced by the game's locations; the size model is missing"
+        )
+        raise ValueError(message)
+    climate = domain_climate(land, lakes, relief)
+    try:
+        rivers = domain_rivers(land, relief, lakes=lakes, rain=climate.rain, seam=seam, seed=seed)
+    except RiverGenerationError as error:
+        raise ValueError(str(error)) from error
+    walls = border_rivers(rivers)
+    del rivers
+    spacing = settings.location_px
+    band = min(land.shape[0] // 4, 6 * spacing)
+    grid = spacing_grid(land, relief, climate, polar_rows=band, sizes=sizes)
+    del climate
+    cells = river_cells(
+        land,
+        walls,
+        key=derive_seed(seed, "nw_land_sites"),
+        spacing=spacing,
+        grid=grid,
+        smallest=settings.min_cell_px,
+    )
+    return cells, walls
+
+
+# Pixels this near a border river (within the wobble's reach and its diagonal) keep their cell.
+RIVER_HOLD: Final[int] = WOBBLE_PX * 3 // 2
 
 # A sea cell thinner than a fifth of the sea-cell spacing (twice its area over its perimeter), whose
 # perimeter is at least 40 % other sea cells, is a needle or a crescent between cells and joins the
@@ -1081,7 +1136,7 @@ def _first_land(  # noqa: PLR0913, PLR0917 - the domain, seed, settings and the 
     return land, ocean, lakes
 
 
-def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, seed, settings and the extras.
+def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the domain, seed, settings and the extras.
     domain: NDArray[np.bool_],
     *,
     seed: int,
@@ -1093,6 +1148,9 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     template: NDArray[np.bool_] | None = None,
     lakes_drawn: NDArray[np.bool_] | None = None,
     hints: ReliefHints | None = None,
+    algorithm: int = epoch.CURRENT,
+    seam: int | None = None,
+    sizes: SizeModel | None = None,
 ) -> NewWorld:
     """Fill ``domain`` with generated land, sea and lake cells.
 
@@ -1119,6 +1177,14 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     ``template`` is the installed game's Americas on the domain (``Canvas.template``), which the
     land of Omerika is made on (``settings.template_permille``, ``rnw.omerika``); the finished land
     must still join the landmasses that the template joins.
+
+    ``algorithm`` is the epoch the world is made by. From ``epoch.CORDILLERAS`` the relief raises
+    the active coasts' cordilleras; from ``epoch.RIVERS_FIRST`` the land cells wait for the relief:
+    its rivers are drawn first (``rnw.watersheds``, in watershed domains split at ``seam``, the
+    domain column the game's map starts at), the cells are seeded as far apart as vanilla's
+    locations of the class the climate vote will choose (``sizes``, read from the game:
+    ``eu5_biomes.size_model``; required from that epoch) and grown with the larger rivers as
+    borders, and the wobble leaves those borders on their rivers.
     """
     land, ocean, lakes = _first_land(domain, seed, settings, drawn, stage, template, lakes_drawn)
     whole = domain
@@ -1140,16 +1206,22 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
     del shore
     if settings.template_permille:
         omerika.check_joined(land, _template(domain, seed, settings, template))
+    rivers_first = algorithm >= epoch.RIVERS_FIRST
+    walls: NDArray[np.bool_] | None = None
     with Stages(stage_workers()) as stages:
-        land_job = stages.submit(
-            "land cells",
-            partial(
-                _cells,
-                land,
-                key=derive_seed(seed, "nw_land_sites"),
-                spacing=settings.location_px,
-                smallest=settings.min_cell_px,
-            ),
+        land_job = (
+            None
+            if rivers_first
+            else stages.submit(
+                "land cells",
+                partial(
+                    _cells,
+                    land,
+                    key=derive_seed(seed, "nw_land_sites"),
+                    spacing=settings.location_px,
+                    smallest=settings.min_cell_px,
+                ),
+            )
         )
         sea_job = stages.submit(
             "sea cells",
@@ -1164,11 +1236,38 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
             ),
         )
         relief_job = stages.submit(
-            "relief", partial(generate_relief, land, seed=seed, lakes=lakes, hints=hints)
+            "relief",
+            partial(
+                generate_relief,
+                land,
+                seed=seed,
+                lakes=lakes,
+                hints=hints,
+                margins=algorithm >= epoch.CORDILLERAS,
+            ),
         )
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
-        land_cells, sea_cells, relief = land_job.result(), sea_job.result(), relief_job.result()
-    if settings.landform:
+        relief = relief_job.result()
+        if land_job is None:
+            if settings.landform:
+                wall.add_relief(relief, land, whole, seed, settings)
+            land_cells, walls = stages.submit(
+                "land cells",
+                partial(
+                    _river_cells,
+                    land,
+                    lakes,
+                    relief,
+                    seed=seed,
+                    settings=settings,
+                    seam=seam,
+                    sizes=sizes,
+                ),
+            ).result()
+        else:
+            land_cells = land_job.result()
+        sea_cells = sea_job.result()
+    if settings.landform and not rivers_first:
         wall.add_relief(relief, land, whole, seed, settings)
     del ocean, lakes, land
     labels = np.full(domain.shape, -1, dtype=np.int32)
@@ -1184,7 +1283,12 @@ def generate_new_world(  # noqa: PLR0913 - the world's inputs are the domain, se
         kinds.extend([kind] * present)
         del numbered
     del land_cells, sea_cells, lake_cells
-    labels = wobble_borders(labels, kinds, seed, fixed_sea=sea_bands is not None)
+    fixed = None
+    if walls is not None:
+        fixed = euclidean_distance(walls, RIVER_HOLD + 1) <= RIVER_HOLD * 8
+        del walls
+    labels = wobble_borders(labels, kinds, seed, fixed_sea=sea_bands is not None, fixed=fixed)
+    del fixed
     count = len(kinds)
     pixels, _, _, total, _ = _cell_sums(labels, relief, count)
     mean_relief = total // np.maximum(1, pixels)
@@ -1248,6 +1352,67 @@ def _cell_sums(
         count,
     )
     return tuple(sums[index] for index in range(5))
+
+
+# Hills are rough ground (epoch 64, ``epoch.ROUGH_HILLS``): the bend of the height over
+# ``HILL_STEP`` pixels, which no slope has. A spread about the plane that fits a whole cell grows
+# with the cell, so once the cells were sized by the land the largest became hills: hills were
+# 1.32 times the median location and 327 permille of the coastal locations hills, where the
+# bend gives 1.05 and 289 (vanilla 0.83 and 254 in the Old World) on world gady3byywf
+# [V-EXEC 2026-11-13].
+HILL_STEP: Final[int] = 8
+
+
+def cell_roughness(
+    labels: NDArray[np.int32], elevation: NDArray[np.int32], count: int
+) -> NDArray[np.int64]:
+    """How rough each of the first ``count`` cells (the land cells) is: the mean bend of its
+    height, ``|h(p + d) + h(p - d) - 2 h(p)|`` over ``d`` = ``HILL_STEP`` pixels along the rows and
+    the columns, averaged over the directions whose two ends are land, then over the cell.
+
+    A slope, as every cell rising from a coast has, does not bend; nor does the reading grow with
+    the cell, as a spread about the cell's plane does. Integer arithmetic, a strip at a time.
+    """
+    step = HILL_STEP
+    rows, columns = (int(size) for size in labels.shape)
+    totals = np.zeros(count, dtype=np.int64)
+    pixels = np.zeros(count, dtype=np.int64)
+    for start in range(0, rows, STRIP_ROWS):
+        checkpoint()
+        stop = min(rows, start + STRIP_ROWS)
+        low, high = max(0, start - step), min(rows, stop + step)
+        block = labels[low:high]
+        land = (block >= 0) & (block < count)
+        height = elevation[low:high].astype(np.int64)
+        inner = slice(start - low, stop - low)
+        bend = np.zeros((stop - start, columns), dtype=np.int64)
+        ends = np.zeros((stop - start, columns), dtype=np.int64)
+        if columns > 2 * step:
+            middle = slice(step, columns - step)
+            both = land[inner, : -2 * step] & land[inner, 2 * step :]
+            found = height[inner, 2 * step :] + height[inner, : -2 * step]
+            found = np.abs(found - 2 * height[inner, middle])
+            bend[:, middle] += np.where(both, found, 0)
+            ends[:, middle] += both
+        # Rows ``step`` away from the strip's own; the first and last ``step`` of the map have none.
+        first, last = max(start, step), min(stop, rows - step)
+        if first < last:
+            here = slice(first - low, last - low)
+            above, below = (
+                slice(first - step - low, last - step - low),
+                slice(first + step - low, last + step - low),
+            )
+            both = land[above] & land[below]
+            found = np.abs(height[above] + height[below] - 2 * height[here])
+            bend[first - start : last - start] += np.where(both, found, 0)
+            ends[first - start : last - start] += both
+        cell = block[inner]
+        keep = (cell >= 0) & (cell < count) & (ends > 0)
+        totals += np.bincount(cell[keep], weights=bend[keep] // ends[keep], minlength=count).astype(
+            np.int64
+        )
+        pixels += np.bincount(cell[keep], minlength=count)
+    return totals // np.maximum(pixels, 1)
 
 
 def derive_world(

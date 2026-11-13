@@ -15,6 +15,7 @@ from rnw.model import CellClass
 from rnw.newworld import LAND_KINDS, generate_new_world, land_stage
 from rnw.settings import NewWorldSettings, build_settings
 from rnw.topology import label_components
+from tests.fakes import SIZES
 from tests.test_newworld import SMALL
 
 if TYPE_CHECKING:
@@ -38,7 +39,7 @@ def test_wall_has_no_water_passage_and_keeps_polar_end_locations_impassable(
         wall_coast_permille=coast,
     )
     domain = np.ones((320, 480), dtype=bool)
-    world = generate_new_world(domain, seed=seed, settings=settings)
+    world = generate_new_world(domain, seed=seed, settings=settings, sizes=SIZES)
     middle = wall.spine(domain, seed, settings)
     land = np.array([kind in LAND_KINDS for kind in world.classes])[world.labels]
     assert land[np.arange(len(middle)), middle].all()
@@ -57,19 +58,19 @@ def test_the_wall_world_records_the_cells_of_its_barrier() -> None:
     """The cells the core runs through are kept apart as the barrier; other worlds have none."""
     settings = replace(SMALL, wall_allow_gaps=0, landform=1)
     domain = np.ones((320, 480), dtype=bool)
-    world = generate_new_world(domain, seed=7, settings=settings)
+    world = generate_new_world(domain, seed=7, settings=settings, sizes=SIZES)
     middle = wall.spine(domain, 7, settings)
     along = world.labels[np.arange(len(middle)), middle]
     assert world.barrier.tolist() == sorted(set(along.tolist()))
     assert all(world.classes[cell] in LAND_KINDS for cell in world.barrier.tolist())
-    assert generate_new_world(domain, seed=7, settings=SMALL).barrier.size == 0
+    assert generate_new_world(domain, seed=7, settings=SMALL, sizes=SIZES).barrier.size == 0
 
 
 @pytest.mark.parametrize("seed", [7, 42, 1000])
 def test_the_barrier_is_one_chain_of_touching_cells_from_pole_to_pole(seed: int) -> None:
     settings = replace(SMALL, wall_allow_gaps=0, landform=1)
     domain = np.ones((320, 480), dtype=bool)
-    world = generate_new_world(domain, seed=seed, settings=settings)
+    world = generate_new_world(domain, seed=seed, settings=settings, sizes=SIZES)
     cells = set(world.barrier.tolist())
     around: dict[int, list[int]] = {cell: [] for cell in cells}
     for first, second in world.edges:

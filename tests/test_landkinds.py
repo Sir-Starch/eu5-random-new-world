@@ -29,7 +29,7 @@ from rnw.landmask import (
 from rnw.model import CellClass
 from rnw.newworld import generate_new_world
 from rnw.relief import HINT_STEP, ReliefHints, generate_relief
-from tests.fakes import build_game, build_world
+from tests.fakes import SIZES, build_game, build_world
 from tests.test_newworld import SMALL
 
 if TYPE_CHECKING:
@@ -249,8 +249,10 @@ def test_a_marked_lake_stays_a_lake_of_any_size() -> None:
     huge[130:300, 110:270] = True
     for lake in (small, huge):
         land = drawn & ~lake
-        plain = generate_new_world(domain, seed=5, settings=settings, drawn=land)
-        marked = generate_new_world(domain, seed=5, settings=settings, drawn=land, lakes_drawn=lake)
+        plain = generate_new_world(domain, seed=5, settings=settings, drawn=land, sizes=SIZES)
+        marked = generate_new_world(
+            domain, seed=5, settings=settings, drawn=land, lakes_drawn=lake, sizes=SIZES
+        )
         row, column = _centre(lake)
         assert marked.classes[int(marked.labels[row, column])] is CellClass.LAKE
         assert plain.classes[int(plain.labels[row, column])] is not CellClass.LAKE
@@ -262,7 +264,7 @@ def test_a_marked_lake_that_opens_to_the_sea_is_refused() -> None:
     lake[150:190, 60:140] = True
     with pytest.raises(LandMaskError, match="opens to the sea"):
         _ = generate_new_world(
-            domain, seed=5, settings=SMALL, drawn=drawn & ~lake, lakes_drawn=lake
+            domain, seed=5, settings=SMALL, drawn=drawn & ~lake, lakes_drawn=lake, sizes=SIZES
         )
 
 
@@ -270,7 +272,7 @@ def test_lakes_without_a_drawn_land_are_refused() -> None:
     domain = _domain()
     lake = np.zeros(domain.shape, dtype=bool)
     with pytest.raises(ValueError, match="belong to a drawn land"):
-        _ = generate_new_world(domain, seed=5, settings=SMALL, lakes_drawn=lake)
+        _ = generate_new_world(domain, seed=5, settings=SMALL, lakes_drawn=lake, sizes=SIZES)
 
 
 def test_painted_mountains_make_a_mountainous_world() -> None:
@@ -279,8 +281,10 @@ def test_painted_mountains_make_a_mountainous_world() -> None:
     rows = slice(190 // HINT_STEP, 230 // HINT_STEP)
     columns = slice(90 // HINT_STEP, 290 // HINT_STEP)
     hints = _hints(domain.shape, mountains=(rows, columns))
-    plain = generate_new_world(domain, seed=5, settings=SMALL, drawn=drawn)
-    marked = generate_new_world(domain, seed=5, settings=SMALL, drawn=drawn, hints=hints)
+    plain = generate_new_world(domain, seed=5, settings=SMALL, drawn=drawn, sizes=SIZES)
+    marked = generate_new_world(
+        domain, seed=5, settings=SMALL, drawn=drawn, hints=hints, sizes=SIZES
+    )
     band = (slice(195, 225), slice(100, 280))
     assert marked.elevation[band].mean() > plain.elevation[band].mean() + 5000
     assert marked.labels.shape == plain.labels.shape

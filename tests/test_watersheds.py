@@ -1,0 +1,249 @@
+"""Epoch 64: cordilleras, rivers before cells, seeds spaced by the land, rough hills, open vote."""
+
+# NumPy stubs type array comparisons, shapes and tolist() as Any.
+# pyright: reportAny=false
+
+from __future__ import annotations
+
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, cast
+
+import numpy as np
+import pytest
+
+from rnw import epoch, relief, watersheds
+from rnw.eu5_biomes import (
+    OCTAVE_PARTS,
+    SIZE_STEP,
+    class_sizes,
+    integer_cube_root,
+    latitude_tenths,
+    octave_parts,
+    prior_weights,
+    size_model,
+)
+from rnw.eu5_canvas import NEW_WORLD
+from rnw.fields import upsample
+from rnw.model import CellClass
+from rnw.newworld import HILL_STEP, NewWorld, cell_roughness, generate_new_world
+from rnw.settings import NewWorldSettings
+from rnw.synth import grow_regions, grow_weighted
+from rnw.topology import label_components
+from tests.fakes import SIZES
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from rnw.eu5_map import Eu5Map
+
+SMALL = NewWorldSettings(
+    land_permille=450,
+    feature_px=96,
+    octaves=3,
+    persistence_permille=500,
+    coast_margin_px=6,
+    min_island_px=24,
+    min_lake_px=8,
+    max_lake_px=400,
+    location_px=14,
+    sea_zone_px=40,
+    min_cell_px=30,
+    min_sea_cell_px=60,
+    wasteland_permille=90,
+    province_size=6,
+    ocean_band_px=32,
+)
+
+
+def _fixed(value: int) -> Callable[..., int]:
+    def answer(*_arguments: object, **_options: object) -> int:
+        return value
+
+    return answer
+
+
+def _land(seed: int, shape: tuple[int, int]) -> np.ndarray:
+    generator = np.random.default_rng(seed)
+    coarse = generator.integers(0, 1000, (shape[0] // 60 + 2, shape[1] // 60 + 2))
+    land = upsample(coarse, 60, shape) > 430
+    land[:6] = False
+    land[-6:] = False
+    land[:, :6] = False
+    land[:, -6:] = False
+    return land
+
+
+@pytest.mark.parametrize("window", [1, 200, 600])
+def test_cordilleras_are_the_same_for_any_strip_height(
+    monkeypatch: pytest.MonkeyPatch, window: int
+) -> None:
+    land = _land(5, (420, 380))
+    whole = relief.generate_relief(land, seed=5, margins=True)
+    monkeypatch.setattr(relief, "band_rows", _fixed(max(relief.STRIP_FLOOR, window)))
+    monkeypatch.setattr(relief, "worker_count", _fixed(3))
+    assert np.array_equal(relief.generate_relief(land, seed=5, margins=True), whole)
+    assert not np.array_equal(whole, relief.generate_relief(land, seed=5))
+    assert np.all(whole[~land] == 0)
+    assert int(whole[land].min()) >= relief.COAST_HEIGHT
+
+
+def test_a_plane_has_no_roughness_and_a_large_cell_reads_as_rough_as_a_small_one() -> None:
+    rows, columns = np.mgrid[0:96, 0:120]
+    labels = np.where(columns < 30, 0, 1).astype(np.int32)  # a small cell beside a large one
+    plane = (6000 + rows * 40 + columns * 25).astype(np.int32)
+    # A checkerboard of squares HILL_STEP wide: the height bends by four times 300 both ways.
+    squares = np.where((rows // HILL_STEP + columns // HILL_STEP) % 2 == 0, 300, -300)
+    assert cell_roughness(labels, plane, 2).tolist() == [0, 0]
+    assert cell_roughness(labels, plane + squares.astype(np.int32), 2).tolist() == [1200, 1200]
+    # A pixel is read along the directions whose ends are land, and only if one is.
+    labels[:, 60:] = -1
+    assert cell_roughness(labels, plane + squares.astype(np.int32), 2).tolist() == [1200, 1200]
+
+
+def test_integer_cube_roots_and_prior_weights_are_exact() -> None:
+    for value in (0, 1, 7, 8, 26, 27, 10**12, 10**12 + 1, 3**60 - 1, 3**60):
+        root = integer_cube_root(value)
+        assert root**3 <= value < (root + 1) ** 3
+    weights = prior_weights(np.array([0, 0, 0, 1, 2, 2], dtype=np.int64), 4)
+    assert weights[3] == 0
+    assert weights[1] > weights[2] > weights[0]
+
+
+def test_seeds_follow_the_spacing_and_reach_every_island() -> None:
+    mask = np.zeros((256, 256), dtype=bool)
+    mask[8:248, 8:248] = True
+    mask[250:253, 250:253] = True  # a speck too small for any grid seed
+    mask[248:250, :] = False
+    grid = np.full((8, 8), 1000, dtype=np.int64)
+    grid[:, 4:] = 2000
+    sites = watersheds.variable_sites(17, mask, 16, grid)
+    again = watersheds.variable_sites(17, mask, 16, grid)
+    assert np.array_equal(sites, again)
+    rows, columns = np.nonzero(sites >= 0)
+    assert np.all(mask[rows, columns])
+    dense = int(np.count_nonzero(columns < 128))
+    sparse = int(np.count_nonzero(columns >= 128))
+    assert dense > 3 * sparse
+    parts = label_components(mask.astype(np.int32))
+    assert set(np.unique(parts[mask]).tolist()) <= set(parts[rows, columns].tolist())
+    assert sorted(sites[rows, columns].tolist()) == list(range(rows.size))
+
+
+def test_cells_grow_up_to_the_walls_and_take_their_pixels() -> None:
+    land = np.ones((120, 120), dtype=bool)
+    walls = np.zeros_like(land)
+    walls[:, 60] = True
+    grid = np.full((4, 4), 1000, dtype=np.int64)
+    cells = watersheds.river_cells(land, walls, key=3, spacing=30, grid=grid, smallest=10)
+    assert np.all(cells >= 0)
+    left, right = set(cells[:, :60].ravel().tolist()), set(cells[:, 61:].ravel().tolist())
+    assert not left & right
+    # Every wall pixel belongs to a cell of one side and touches a cell of the other.
+    assert np.all((cells[:, 60] != cells[:, 59]) | (cells[:, 60] != cells[:, 61]))
+    assert np.array_equal(grow_regions(land, cells), cells)
+
+
+def test_seeds_grow_at_their_own_speed() -> None:
+    mask = np.ones((3, 31), dtype=bool)
+    seeds = np.full(mask.shape, -1, dtype=np.int32)
+    seeds[1, 0] = 0
+    seeds[1, 30] = 1
+    equal = grow_weighted(mask, seeds, np.array([5, 5], dtype=np.int64))
+    assert np.array_equal(equal, grow_regions(mask, seeds))
+    # The first seed is twice as fast, so it reaches twice as far before they meet.
+    fast = grow_weighted(mask, seeds, np.array([2, 1], dtype=np.int64))
+    assert np.flatnonzero(fast[1] == 0).max() == 20  # they meet at round 20; the west claims first
+    assert np.all(fast >= 0)
+
+
+def test_the_spacing_keeps_the_number_of_cells() -> None:
+    land = _land(9, (640, 640))
+    height = relief.generate_relief(land, seed=9)
+    climate = watersheds.domain_climate(land, np.zeros_like(land), height)
+    grid = watersheds.spacing_grid(land, height, climate, polar_rows=0, sizes=SIZES)
+    share = land[::32, ::32]
+    spacing = grid[: share.shape[0], : share.shape[1]][share]
+    expected = int((1_000_000 * 1000 // (spacing * spacing)).sum())
+    assert abs(expected - int(share.sum()) * 1000) * 10 <= int(share.sum()) * 1000
+    assert set(np.unique(grid).tolist()) <= set(watersheds.SPACING)
+
+
+def test_rivers_come_first_from_epoch_64_only() -> None:
+    domain = np.ones((240, 320), dtype=bool)
+    older = generate_new_world(
+        domain, seed=3, settings=SMALL, algorithm=epoch.RIVERS_FIRST - 1, sizes=SIZES
+    )
+    other_seam = generate_new_world(
+        domain, seed=3, settings=SMALL, algorithm=epoch.RIVERS_FIRST - 1, seam=100, sizes=SIZES
+    )
+    assert np.array_equal(older.labels, other_seam.labels)
+    world = generate_new_world(
+        domain, seed=3, settings=SMALL, algorithm=epoch.RIVERS_FIRST, sizes=SIZES
+    )
+    again = generate_new_world(
+        domain, seed=3, settings=SMALL, algorithm=epoch.RIVERS_FIRST, sizes=SIZES
+    )
+    assert np.array_equal(world.labels, again.labels)
+    assert not np.array_equal(world.labels, older.labels)
+
+    def land(made: NewWorld) -> np.ndarray:
+        kinds = [kind in (CellClass.LAND, CellClass.WASTELAND) for kind in made.classes]
+        return np.array([*kinds, False])[made.labels]
+
+    assert np.array_equal(land(world), land(older))
+
+
+def test_octave_parts_are_exact() -> None:
+    assert octave_parts(2, 1) == OCTAVE_PARTS
+    assert octave_parts(1, 2) == -OCTAVE_PARTS
+    assert octave_parts(704, 704) == 0
+    assert octave_parts(705, 704) == 0
+    assert octave_parts(703, 704) == -1
+    assert octave_parts(3, 2) == 37  # 64 log2(1.5) = 37.4
+    assert octave_parts(3 * 512, 512) == 101  # 64 log2(3) = 101.4
+    assert octave_parts(1 << 20, 1) == 20 * OCTAVE_PARTS
+
+
+def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
+    dry = np.array([[100, 80, 7000, 50], [500, 120, 8000, 150]], dtype=np.int64)
+    wet = np.array([[100, 900, 7000, 50], [500, 700, 8000, 150]], dtype=np.int64)
+    assert class_sizes(SIZES, dry).tolist() == [1000, 1000]
+    assert class_sizes(SIZES, wet).tolist() == [-1000, -1000]
+    assert np.array_equal(class_sizes(SIZES, np.concatenate([wet, dry])), [-1000] * 2 + [1000] * 2)
+
+
+def test_the_size_model_reads_locations_through_their_blocks() -> None:
+    step = SIZE_STEP
+    labels = np.zeros((2 * step, 2 * step), dtype=np.int32)  # "old" fills the top two blocks
+    labels[step:, :step] = 3  # cultivated: the vote does not learn from it, so neither does this
+    labels[step:, step : step + step // 4] = 1
+    labels[step:, step + step // 4 :] = 2
+    labels[0, 0] = 4  # a wasteland pixel
+    namespace = SimpleNamespace(
+        keys=("old", "west", "east", "fields", "waste"),
+        classes=(CellClass.LAND,) * 4 + (CellClass.WASTELAND,),
+        continents=("europe", NEW_WORLD, NEW_WORLD, "europe", "europe"),
+        labels=labels,
+    )
+    game_map = cast("Eu5Map", cast("object", namespace))
+    templates = {
+        "old": {"climate": "arid", "vegetation": "desert"},
+        "west": {"climate": "oceanic", "vegetation": "forest"},
+        "east": {"climate": "oceanic", "vegetation": "forest"},
+        "fields": {"climate": "oceanic", "vegetation": "farmland"},
+        "waste": {"climate": "arid", "vegetation": "desert"},
+    }
+    height = np.full(labels.shape, 7000, dtype=np.uint16)
+    height[step:, step:] = 9000
+    model = size_model(game_map, templates, height)
+    # The Old World's one passable location is its median; the Americas' lower median is the
+    # smaller of their two, the larger is three times as large.
+    assert model.size.tolist() == [0, 0, octave_parts(3, 1)]
+    assert model.pairs.tolist() == [0, 1, 1]
+    assert model.climate_of.tolist() == [0, 1]
+    # Both of the Americas' locations lie in one block and read its features.
+    centres = np.array([step // 2, step + step // 2, step + step // 2], dtype=np.int64)
+    assert model.features[:, 0].tolist() == latitude_tenths(centres).tolist()
+    assert model.features[:, 2].tolist() == [7000, 9000, 9000]
+    assert np.array_equal(model.features[1], model.features[2])
+    assert model.digest() == size_model(game_map, templates, height).digest()

@@ -20,7 +20,7 @@ from rnw.fields import box_blur
 from rnw.landmask import LandMask, LandMaskError
 from rnw.newworld import generate_new_world
 from rnw.settings import PRESETS
-from tests.fakes import build_game, build_world
+from tests.fakes import SIZES, build_game, build_world
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -231,7 +231,7 @@ def test_a_world_is_made_on_the_drawn_land_and_keeps_off_the_edge() -> None:
     domain = _domain()
     drawn = np.zeros(domain.shape, dtype=bool)
     drawn[120:300, 100:280] = True
-    world = generate_new_world(domain, seed=5, settings=settings, drawn=drawn)
+    world = generate_new_world(domain, seed=5, settings=settings, drawn=drawn, sizes=SIZES)
     land_pixels = np.isin(
         world.labels,
         [i for i, kind in enumerate(world.classes) if kind.value in {"land", "wasteland"}],
@@ -240,9 +240,9 @@ def test_a_world_is_made_on_the_drawn_land_and_keeps_off_the_edge() -> None:
     assert inside > 0.6
     assert not land_pixels[:60].any()
     assert not land_pixels[:, :60].any()
-    again = generate_new_world(domain, seed=5, settings=settings, drawn=drawn)
+    again = generate_new_world(domain, seed=5, settings=settings, drawn=drawn, sizes=SIZES)
     assert np.array_equal(world.labels, again.labels)
-    other_seed = generate_new_world(domain, seed=6, settings=settings, drawn=drawn)
+    other_seed = generate_new_world(domain, seed=6, settings=settings, drawn=drawn, sizes=SIZES)
     land_a = np.isin(world.labels, [i for i, k in enumerate(world.classes) if k.value == "land"])
     land_b = np.isin(
         other_seed.labels, [i for i, k in enumerate(other_seed.classes) if k.value == "land"]
@@ -260,11 +260,11 @@ def test_land_drawn_where_the_world_cannot_be_is_refused() -> None:
     edge[22:30, 22:360] = True
     for drawn in (outside, edge):
         with pytest.raises(LandMaskError, match="cannot be"):
-            _ = generate_new_world(domain, seed=1, settings=settings, drawn=drawn)
+            _ = generate_new_world(domain, seed=1, settings=settings, drawn=drawn, sizes=SIZES)
     specks = np.zeros(domain.shape, dtype=bool)
     specks[200:202, 200:202] = True
     with pytest.raises(LandMaskError, match="larger continents"):
-        _ = generate_new_world(domain, seed=1, settings=settings, drawn=specks)
+        _ = generate_new_world(domain, seed=1, settings=settings, drawn=specks, sizes=SIZES)
 
 
 def test_the_code_holds_the_pictures_id_and_a_world_needs_the_picture_to_be_made_again(

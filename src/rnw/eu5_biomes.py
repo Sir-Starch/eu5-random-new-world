@@ -9,7 +9,8 @@ k-nearest-neighbour vote over Old World locations calibrates climate and vegetat
 (climate, vegetation) pairs; the votes are then smoothed over the location adjacency graph so
 zones are contiguous, and a cell's vegetation is chosen among the pairs of its own climate.
 Topography comes from relief ranks with vanilla shares; raw materials are drawn from
-vanilla frequencies. The New World starts empty, so farmland is learned as grassland.
+vanilla frequencies. The New World starts empty, so farmland is learned as grassland; from epoch
+64 the vote leaves farmland out and learns from the vanilla Americas as well (``OPEN_CLIMATE``).
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -17,6 +18,7 @@ vanilla frequencies. The New World starts empty, so farmland is learned as grass
 
 from __future__ import annotations
 
+import hashlib
 import math
 import re
 from collections import Counter
@@ -91,6 +93,25 @@ VEGETATION_ROUNDS: Final[int] = 1
 SELF_WEIGHT: Final[int] = 2
 TOPOGRAPHIES: Final[tuple[str, ...]] = ("mountains", "plateau", "hills", "wetlands", "flatland")
 EMPTY_LAND: Final[dict[str, str]] = {"farmland": "grasslands"}
+# Epoch 64 (``epoch.OPEN_CLIMATE``): the vote learns from the vanilla Americas as well as the Old
+# World, leaves out the cultivated locations (``CULTIVATED``) instead of reading them as grassland,
+# so that the land they were cleared from votes there, and smooths over fewer rounds: three
+# rounds left 59 cells per climate region against vanilla's 13 and ate the transitional climates
+# (1.7 % semi-arid and cold arid land against vanilla's 9.3 %) [V-EXEC 2026-11-13].
+CULTIVATED: Final[frozenset[str]] = frozenset({"farmland"})
+OPEN_CLIMATE_ROUNDS: Final[int] = 0
+OPEN_VEGETATION_ROUNDS: Final[int] = 0
+# A plurality of 32 neighbours seldom names a class that is rare among them, so the votes for each
+# (climate, vegetation) pair are weighed by the cube root of the inverse of its share of the
+# training locations: on world gady3byywf the semi-arid and cold arid land rose from 29 to 51
+# permille (vanilla 86 to 91) while climate regions kept vanilla's size (12.8 cells, Old World
+# 13.2) [V-EXEC 2026-11-13]. ``PRIOR_SCALE`` keeps the integer root fine-grained.
+PRIOR_SCALE: Final[int] = 10**12
+# Seeds are spaced by the size vanilla gives a location of the class the vote will choose
+# (epoch 64, ``epoch.RIVERS_FIRST``, ``SizeModel``); sizes are log2 of a location's pixels over
+# its region's median in ``OCTAVE_PARTS``ths of an octave.
+OCTAVE_PARTS: Final[int] = 64
+SIZE_STEP: Final[int] = 64  # pixels per block of the size model; a multiple of CLIMATE_STEP
 # biomes.txt defines no desert wetlands biome; such templates fall to default_biome, whose
 # only material is fallback_material [V-LOCAL C54].
 NO_WETLANDS: Final[frozenset[str]] = frozenset({"desert"})
@@ -264,6 +285,15 @@ def _standardize(
     return (train - mean) * scale // std, (query - mean) * scale // std
 
 
+def _nearest(train: NDArray[np.int64], block: NDArray[np.int64], k: int) -> NDArray[np.int64]:
+    """The ``k`` nearest training rows of each row of ``block``, nearest first (ties by index)."""
+    distance = ((block[:, np.newaxis, :] - train[np.newaxis, :, :]) ** 2).sum(axis=2)
+    nearest = np.argpartition(distance, k - 1, axis=1)[:, :k]
+    near_distance = np.take_along_axis(distance, nearest, axis=1)
+    order = np.lexsort((nearest, near_distance), axis=-1)
+    return np.take_along_axis(nearest, order, axis=1)
+
+
 def knn_scores(
     train: NDArray[np.int64], classes: NDArray[np.int64], query: NDArray[np.int64], count: int
 ) -> NDArray[np.int64]:
@@ -275,17 +305,241 @@ def knn_scores(
     weights = np.arange(k, 0, -1, dtype=np.int64)
     for start in range(0, query.shape[0], CHUNK):
         block = query[start : start + CHUNK]
-        distance = ((block[:, np.newaxis, :] - train[np.newaxis, :, :]) ** 2).sum(axis=2)
-        nearest = np.argpartition(distance, k - 1, axis=1)[:, :k]
-        near_distance = np.take_along_axis(distance, nearest, axis=1)
-        order = np.lexsort((nearest, near_distance), axis=-1)
-        nearest = np.take_along_axis(nearest, order, axis=1)
+        nearest = _nearest(train, block, k)
         size = int(block.shape[0])
         rows = np.repeat(np.arange(size, dtype=np.int64), k)
         np.add.at(
             scores[start : start + size], (rows, classes[nearest].ravel()), np.tile(weights, size)
         )
     return scores
+
+
+def knn_totals(
+    train: NDArray[np.int64], values: NDArray[np.int64], query: NDArray[np.int64]
+) -> tuple[NDArray[np.int64], int]:
+    """The sum of ``values`` over the nearest training rows of each query row, and how many
+    rows that is (``NEIGHBOURS``, or every row of a smaller ``train``)."""
+    k = min(NEIGHBOURS, train.shape[0])
+    totals = np.zeros(query.shape[0], dtype=np.int64)
+    if k == 0:
+        return totals, 0
+    for start in range(0, query.shape[0], CHUNK):
+        nearest = _nearest(train, query[start : start + CHUNK], k)
+        totals[start : start + CHUNK] = values[nearest].sum(axis=1)
+    return totals, k
+
+
+def integer_cube_root(value: int) -> int:
+    """The integer cube root of a non-negative integer (exact, by bisection)."""
+    low, high = 0, 1 << ((value.bit_length() + 2) // 3 + 1)
+    while low < high:
+        middle = (low + high + 1) // 2
+        if middle * middle * middle <= value:
+            low = middle
+        else:
+            high = middle - 1
+    return low
+
+
+def prior_weights(classes: NDArray[np.int64], count: int) -> NDArray[np.int64]:
+    """The weight of each class's votes: the integer cube root of ``PRIOR_SCALE`` over its share
+    of ``classes`` (0 for a class with no row)."""
+    rows = np.bincount(classes, minlength=count).tolist()
+    total = sum(rows)
+    return np.array(
+        [integer_cube_root(PRIOR_SCALE * total // found) if found else 0 for found in rows],
+        dtype=np.int64,
+    )
+
+
+def block_features(
+    land: NDArray[np.bool_], height: NDArray[np.integer], grid: ClimateGrid
+) -> tuple[NDArray[np.bool_], NDArray[np.int64]]:
+    """The ``SIZE_STEP`` blocks with land and the ``land_features`` of their land, in raster
+    order: the latitude of the block's centre, and the mean rainfall, height and distance to the
+    sea over its land. The vanilla map (``size_model``) and a generated domain
+    (``watersheds.spacing_grid``) are read alike."""
+    step = SIZE_STEP
+    rows, columns = (int(size) for size in land.shape)
+    shape = (-(-rows // step), -(-columns // step))
+    # Means scaled by the pixels of a whole block are sums there, so a block with one pixel of
+    # land has it and the ratios below are exact for whole blocks.
+    area = step * step
+    count = np.empty(shape, dtype=np.int64)
+    total = np.empty(shape, dtype=np.int64)
+    strip = step * 16
+    for first in range(0, rows, strip):
+        window = slice(first, min(rows, first + strip))
+        blocks = slice(first // step, -(-window.stop // step))
+        on_land = land[window]
+        count[blocks] = block_mean(on_land.astype(np.int64) * area, step)
+        total[blocks] = block_mean(
+            np.where(on_land, height[window], 0).astype(np.int64) * area, step
+        )
+    # The land share of each climate cell weighs its rain and distance to the sea.
+    weight = _climate_share(land)
+    ratio = step // CLIMATE_STEP
+    cells = ratio * ratio
+    weights = np.maximum(block_mean(weight * cells, ratio)[: shape[0], : shape[1]], 1)
+    rain = block_mean(grid.rain * weight * cells, ratio)[: shape[0], : shape[1]] // weights
+    coast = block_mean(grid.coast * weight * cells, ratio)[: shape[0], : shape[1]] // weights
+    found = count > 0
+    centres = np.arange(shape[0], dtype=np.int64) * step + step // 2
+    latitude = np.broadcast_to(latitude_tenths(centres)[:, np.newaxis], shape)
+    features = np.stack(
+        [latitude[found], rain[found], (total // np.maximum(count, 1))[found], coast[found]],
+        axis=1,
+    )
+    return found, features
+
+
+def _climate_share(land: NDArray[np.bool_]) -> NDArray[np.int64]:
+    """The land share (permille) of every ``CLIMATE_STEP`` cell, a strip of rows at a time."""
+    step = CLIMATE_STEP
+    rows, columns = (int(size) for size in land.shape)
+    out = np.empty((-(-rows // step), -(-columns // step)), dtype=np.int64)
+    strip = step * 256
+    for first in range(0, rows, strip):
+        window = slice(first, min(rows, first + strip))
+        out[first // step : -(-window.stop // step)] = block_mean(
+            land[window].astype(np.int64) * PERMILLE, step
+        )
+    return out
+
+
+def octave_parts(pixels: int, median: int) -> int:
+    """``floor(OCTAVE_PARTS * log2(pixels / median))``, exactly (both positive)."""
+    above, below = pixels**OCTAVE_PARTS, median**OCTAVE_PARTS
+    parts = above.bit_length() - below.bit_length()
+    too_far = (below << parts > above) if parts >= 0 else (below > above << -parts)
+    return parts - int(too_far)
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class SizeModel:
+    """The vanilla land locations the seed spacing learns from (``size_model``).
+
+    ``features`` are the ``block_features`` of the ``SIZE_STEP`` blocks of each location, averaged
+    over its pixels; ``pairs`` are their (climate, vegetation) pairs, ``climate_of`` the climate of
+    each pair and ``size`` log2 of their pixels over the median of their region (the Old World,
+    the Americas) in ``OCTAVE_PARTS``ths of an octave.
+    """
+
+    features: NDArray[np.int64]
+    pairs: NDArray[np.int64]
+    climate_of: NDArray[np.int64]
+    size: NDArray[np.int64]
+
+    def digest(self) -> str:
+        """SHA-256 of the model, for the keys of the worlds made with it."""
+        found = hashlib.sha256()
+        for array in (self.features, self.pairs, self.climate_of, self.size):
+            found.update(repr(array.shape).encode("ascii"))
+            found.update(np.ascontiguousarray(array, dtype=np.int64).tobytes())
+        return found.hexdigest()
+
+
+def size_model(
+    game_map: Eu5Map, templates: dict[str, dict[str, str]], height: NDArray[np.uint16]
+) -> SizeModel:
+    """The ``SizeModel`` of the game's own map, read before anything is moved or generated.
+
+    The locations are the passable ones the vote learns from with open climates
+    (``assign_biomes``): the Old World and the Americas, without the cultivated land.
+    Wastelands are planned on the cells later (``rnw.barrens``); vanilla's are vast and would
+    make the land beside them as large. A location is read as the blocks it lies in, the way a
+    generated domain is (``watersheds.spacing_grid``), not at its centre, which lies the nearer
+    the coast the smaller a coastal location is. ``height`` is the vanilla height at location
+    resolution (``DecalStore.world_heights``).
+    """
+    labels = game_map.labels
+    count = len(game_map.keys)
+    kinds = np.array([kind in LAND_KINDS for kind in game_map.classes] + [False])
+    sea = np.array([kind is CellClass.SEA for kind in game_map.classes] + [False])
+    land = kinds[labels]
+    found, features = block_features(land, height, climate_grid(sea[labels], height))
+    del land
+    table = np.zeros((found.size, features.shape[1]), dtype=np.int64)
+    table[found.ravel()] = features
+    pixels, sums = _location_sums(labels, table, (int(found.shape[0]), int(found.shape[1])), count)
+    attributes = [templates.get(key, {}) for key in game_map.keys]
+    learned, joint = _land_training(game_map, attributes, pixels, open_climate=True)
+    kept = [
+        slot
+        for slot, i in enumerate(learned)
+        if pixels[i] > 0 and game_map.classes[i] is CellClass.LAND
+    ]
+    index = np.array([learned[slot] for slot in kept], dtype=np.int64)
+    names, pairs = _vocabulary([joint[slot] for slot in kept])
+    _, climate_of = _vocabulary([name.split("|")[0] for name in names])
+    old = _old_world(game_map)[index]
+    size = np.zeros(index.size, dtype=np.int64)
+    for region in (old, ~old):
+        rows = np.flatnonzero(region)
+        if rows.size:
+            values = pixels[index[rows]]
+            median = int(np.sort(values)[(rows.size - 1) // 2])
+            size[rows] = [octave_parts(value, median) for value in values.tolist()]
+    return SizeModel(
+        features=sums[index] // pixels[index][:, np.newaxis],
+        pairs=pairs,
+        climate_of=climate_of,
+        size=size,
+    )
+
+
+def _location_sums(
+    labels: NDArray[np.int32], table: NDArray[np.int64], shape: tuple[int, int], count: int
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """The pixels of each of ``count`` labels and the sums of ``table`` (one row per ``SIZE_STEP``
+    block in raster order, ``shape`` blocks) over them; a label of -1 is none."""
+    step = SIZE_STEP
+    pixels = np.zeros(count, dtype=np.int64)
+    sums = np.zeros((count, table.shape[1]), dtype=np.int64)
+    columns = np.arange(int(labels.shape[1]), dtype=np.int64) // step
+    for first in range(0, int(labels.shape[0]), step * 8):
+        checkpoint()
+        window = labels[first : first + step * 8].ravel()
+        rows = np.arange(first, first + step * 8, dtype=np.int64)[: labels.shape[0] - first]
+        block = (rows[:, np.newaxis] // step * shape[1] + columns[np.newaxis, :]).ravel()
+        here = window >= 0
+        block, owner = block[here], window[here]
+        pixels += np.bincount(owner, minlength=count)
+        for column in range(table.shape[1]):
+            # Exact: integer sums below 2^53 in a strip.
+            found = np.bincount(owner, weights=table[block, column], minlength=count)
+            sums[:, column] += found.astype(np.int64)
+    return pixels, sums
+
+
+def class_sizes(model: SizeModel, query: NDArray[np.int64]) -> NDArray[np.int64]:
+    """How large vanilla makes its locations on land like each row of ``query``
+    (``block_features``), as log2 over its region's median in thousandths of an octave.
+
+    The row takes the (climate, vegetation) pair the vote would give it with open climates
+    (``assign_biomes``, ``regularize_votes`` without smoothing), then the mean size of the
+    ``NEIGHBOURS`` nearest vanilla locations of that pair: vanilla sizes its locations by what
+    they are, deserts and the cold large and the wet lowlands small, so a size read from the
+    neighbours of every class would pull each class towards the median.
+    """
+    if model.pairs.size == 0:
+        message = "The size model has no land location to learn from"
+        raise ValueError(message)
+    count = int(model.climate_of.size)
+    train, rows = _standardize(model.features, query, LAND_WEIGHTS)
+    scores = knn_scores(train, model.pairs, rows, count)
+    scores = scores * prior_weights(model.pairs, count)[np.newaxis, :]
+    climates = np.zeros((rows.shape[0], int(model.climate_of.max()) + 1), dtype=np.int64)
+    np.add.at(climates.T, model.climate_of, scores.T)
+    allowed = model.climate_of[np.newaxis, :] == np.argmax(climates, axis=1)[:, np.newaxis]
+    chosen = np.argmax(np.where(allowed, scores, 0), axis=1)
+    out = np.zeros(rows.shape[0], dtype=np.int64)
+    for pair in np.unique(chosen).tolist():
+        members = np.flatnonzero(model.pairs == pair)
+        here = np.flatnonzero(chosen == pair)
+        totals, k = knn_totals(train[members], model.size[members], rows[here])
+        out[here] = np.floor_divide(totals * PERMILLE, OCTAVE_PARTS * k)
+    return out
 
 
 def smooth_scores(
@@ -316,6 +570,9 @@ class Generated:
     coastal: NDArray[np.bool_]
     # The pixels of each cell; the wasteland plan weighs the world's patches by them.
     pixels: NDArray[np.int64] | None = None
+    # How rough each cell is: the mean bend of its height (``newworld.cell_roughness``, epoch 64,
+    # ``epoch.ROUGH_HILLS``); None: hills are ranked by the plain spread.
+    roughness: NDArray[np.int64] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -385,11 +642,14 @@ def _topography(  # noqa: PLR0913 - ranks use height, spread, rain and coast tog
     rain: NDArray[np.int64],
     coast: NDArray[np.int64],
     dry: frozenset[int],
+    rough: NDArray[np.int64] | None = None,
 ) -> dict[int, str]:
     """Assign topographies in vanilla proportions by relief and wetness ranks.
 
-    Cells in ``dry`` never become wetlands.
+    Cells in ``dry`` never become wetlands. With ``rough`` (``Generated.roughness``) hills are
+    the roughest cells, not those whose ground merely slopes, as it does up from every coast.
     """
+    hilly = spread if rough is None else rough
     remaining = list(cells)
     out: dict[int, str] = {}
     total = sum(shares.values())
@@ -403,7 +663,7 @@ def _topography(  # noqa: PLR0913 - ranks use height, spread, rain and coast tog
         if name == "plateau":
             return int(mean_height[i] - 3 * spread[i])
         if name == "hills":
-            return int(spread[i])
+            return int(hilly[i])
         return rain_rank[i] - height_rank[i] - coast_rank[i] // 2
 
     for name in TOPOGRAPHIES[:-1]:
@@ -447,12 +707,50 @@ def _old_world(game_map: Eu5Map) -> NDArray[np.bool_]:
     )
 
 
-def regularize_votes(
+def _land_training(
+    game_map: Eu5Map,
+    attributes: list[dict[str, str]],
+    pixels: NDArray[np.int64] | None,
+    open_climate: bool,  # noqa: FBT001 - the vote's own switch, passed through.
+) -> tuple[list[int], list[str]]:
+    """The vanilla land locations the vote learns from and their "climate|vegetation" pairs.
+
+    The Old World's; with ``open_climate`` also the Americas' locations that have ``pixels``,
+    and none of the cultivated land.
+    """
+    learned = _old_world(game_map)
+    if open_climate:
+        measured = np.zeros(len(game_map.keys), dtype=bool)
+        if pixels is not None:
+            known = min(measured.size, pixels.size)
+            measured[:known] = pixels[:known] > 0
+        learned = learned | (_new_world(game_map) & measured)
+    train = [
+        i
+        for i, kind in enumerate(game_map.classes)
+        if kind in LAND_KINDS and learned[i] and "climate" in attributes[i]
+        and "vegetation" in attributes[i]
+        and not (open_climate and attributes[i]["vegetation"] in CULTIVATED)
+    ]  # fmt: skip
+    joint = [
+        "|".join(
+            (
+                attributes[i]["climate"],
+                EMPTY_LAND.get(attributes[i]["vegetation"], attributes[i]["vegetation"]),
+            )
+        )
+        for i in train
+    ]
+    return train, joint
+
+
+def regularize_votes(  # noqa: PLR0913, PLR0917 - the votes, the pairs, the graph and the rounds.
     scores: NDArray[np.int64],
     joint_climate: NDArray[np.int64],
     joint_vegetation: NDArray[np.int64],
     edges: NDArray[np.int64],
     climates: int,
+    rounds: tuple[int, int] = (CLIMATE_ROUNDS, VEGETATION_ROUNDS),
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
     """Climate and vegetation of every cell from its smoothed joint (climate, vegetation) votes.
 
@@ -462,10 +760,12 @@ def regularize_votes(
     that the calibration holds in that climate and never for another climate's vegetation. When
     that climate has no vote left in the cell's neighbourhood, the neighbourhood widens by one
     smoothing round at a time, up to the climate's own rounds, in which the climate was
-    chosen and so has a vote. A cell with no vote at all is refused, not guessed.
+    chosen and so has a vote. A cell with no vote at all is refused, not guessed. ``rounds`` are
+    the climate's and the vegetation's rounds (``OPEN_*_ROUNDS`` from epoch 64).
     """
+    climate_rounds, vegetation_rounds = rounds
     layers = [scores]
-    for _ in range(CLIMATE_ROUNDS):
+    for _ in range(climate_rounds):
         layers.append(smooth_scores(layers[-1], edges, 1))
     climate_scores = np.zeros((scores.shape[0], climates), dtype=np.int64)
     np.add.at(climate_scores.T, joint_climate, layers[-1].T)
@@ -473,7 +773,7 @@ def regularize_votes(
     allowed = joint_climate[np.newaxis, :] == climate_choice[:, np.newaxis]
     votes = np.zeros_like(scores)
     waiting = np.ones(scores.shape[0], dtype=bool)
-    for layer in layers[VEGETATION_ROUNDS:]:
+    for layer in layers[min(vegetation_rounds, climate_rounds) :]:
         local = np.where(allowed, layer, 0)
         found = waiting & local.any(axis=1)
         votes[found] = local[found]
@@ -516,6 +816,7 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
         rain=rain,
         coast=coast,
         dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
+        rough=cells.roughness,
     )
     for cell, name in ranked.items():
         topography[cell] = name
@@ -542,6 +843,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     resources: ResourceSettings = RESOURCES,
     material_seed: int | None = None,
     wastelands: WastelandSettings | None = None,
+    open_climate: bool = False,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics.
 
@@ -549,26 +851,15 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     world, ``rnw.layers``), else from ``seed``; everything else is the land's, from ``seed``.
     With ``wastelands`` (epoch 64) the wastelands are planned from the climate and vegetation
     just chosen (``rnw.barrens``) and ``CellBiomes.kinds`` holds the class of every cell; without
-    it the cells keep the class they came with, the highest ones being wasteland.
+    it the cells keep the class they came with, the highest ones being wasteland. With
+    ``open_climate`` (epoch 64, ``epoch.OPEN_CLIMATE``) the vote learns from the Americas too,
+    without the cultivated land, weighs rare pairs up (``prior_weights``) and smooths over
+    ``OPEN_*_ROUNDS``.
     """
     count = len(cells.kinds)
     old = _old_world(game_map)
     attributes = [templates.get(key, {}) for key in game_map.keys]
-    land_train = [
-        i
-        for i, kind in enumerate(game_map.classes)
-        if kind in LAND_KINDS and old[i] and "climate" in attributes[i]
-        and "vegetation" in attributes[i]
-    ]  # fmt: skip
-    joint = [
-        "|".join(
-            (
-                attributes[i]["climate"],
-                EMPTY_LAND.get(attributes[i]["vegetation"], attributes[i]["vegetation"]),
-            )
-        )
-        for i in land_train
-    ]
+    land_train, joint = _land_training(game_map, attributes, vanilla.pixels, open_climate)
     joint_names, joint_ids = _vocabulary(joint)
     climate_names, joint_climate = _vocabulary([name.split("|")[0] for name in joint_names])
     vegetation_names, joint_vegetation = _vocabulary([name.split("|")[1] for name in joint_names])
@@ -587,12 +878,21 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     )
     train_s, query_s = _standardize(train_x, query_x, LAND_WEIGHTS)
     scores = knn_scores(train_s, joint_ids, query_s, len(joint_names))
+    if open_climate:
+        scores = scores * prior_weights(joint_ids, len(joint_names))[np.newaxis, :]
     position = np.full(count, -1, dtype=np.int64)
     position[land_cells] = np.arange(land_cells.size)
     edges = _edge_array(cells.edges, land)
     local_edges = position[edges] if edges.size else edges
     climate_choice, vegetation_choice = regularize_votes(
-        scores, joint_climate, joint_vegetation, local_edges, len(climate_names)
+        scores,
+        joint_climate,
+        joint_vegetation,
+        local_edges,
+        len(climate_names),
+        (OPEN_CLIMATE_ROUNDS, OPEN_VEGETATION_ROUNDS)
+        if open_climate
+        else (CLIMATE_ROUNDS, VEGETATION_ROUNDS),
     )
     climate = [""] * count
     vegetation = [""] * count

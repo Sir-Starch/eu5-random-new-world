@@ -16,6 +16,7 @@ from rnw.islands import Footprint
 from rnw.model import CellClass
 from rnw.newworld import generate_new_world, land_stage, seal_pockets
 from rnw.topology import component_counts
+from tests.fakes import SIZES
 from tests.test_newworld import SMALL
 
 if TYPE_CHECKING:
@@ -31,8 +32,8 @@ def test_a_cached_continent_equals_the_uncached_one_and_skips_generation(
 ) -> None:
     domain = np.ones((160, 192), dtype=np.bool_)
     cache = tmp_path / "land"
-    expected = landcache.get_world(None, domain, seed=42, settings=SMALL, drawn=None)
-    _ = landcache.get_world(cache, domain, seed=42, settings=SMALL, drawn=None)
+    expected = landcache.get_world(None, domain, seed=42, settings=SMALL, drawn=None, sizes=SIZES)
+    _ = landcache.get_world(cache, domain, seed=42, settings=SMALL, drawn=None, sizes=SIZES)
 
     def forbidden(*_args: int, **_kwargs: int) -> NewWorld:
         pytest.fail("a cache hit must not regenerate land")
@@ -44,6 +45,7 @@ def test_a_cached_continent_equals_the_uncached_one_and_skips_generation(
         seed=42,
         settings=replace(SMALL, precious_permille=99),
         drawn=None,
+        sizes=SIZES,
     )
     for actual, wanted in (
         (found.labels, expected.labels),
@@ -64,19 +66,19 @@ def test_the_cache_keeps_the_barrier_of_a_wall_world(tmp_path: Path) -> None:
     domain = np.ones((320, 480), dtype=np.bool_)
     settings = replace(SMALL, landform=1, wall_allow_gaps=0)
     cache = tmp_path / "land"
-    made = landcache.get_world(cache, domain, seed=7, settings=settings, drawn=None)
-    kept = landcache.get_world(cache, domain, seed=7, settings=settings, drawn=None)
+    made = landcache.get_world(cache, domain, seed=7, settings=settings, drawn=None, sizes=SIZES)
+    kept = landcache.get_world(cache, domain, seed=7, settings=settings, drawn=None, sizes=SIZES)
     assert made.barrier.size > 0
     assert np.array_equal(kept.barrier, made.barrier)
 
 
 def test_corrupt_cache_fails_instead_of_rebuilding(tmp_path: Path) -> None:
     domain = np.ones((160, 192), dtype=np.bool_)
-    _ = landcache.get_world(tmp_path, domain, seed=1, settings=SMALL, drawn=None)
+    _ = landcache.get_world(tmp_path, domain, seed=1, settings=SMALL, drawn=None, sizes=SIZES)
     target = next(tmp_path.iterdir())
     _ = (target / "labels").write_bytes(b"damaged")
     with pytest.raises(landcache.CacheError, match="damaged"):
-        _ = landcache.get_world(tmp_path, domain, seed=1, settings=SMALL, drawn=None)
+        _ = landcache.get_world(tmp_path, domain, seed=1, settings=SMALL, drawn=None, sizes=SIZES)
 
 
 def test_cache_identity_contains_every_geography_input() -> None:
@@ -106,8 +108,8 @@ def test_the_americas_template_is_part_of_the_identity_only_of_a_world_that_read
 def test_projecting_cached_cells_preserves_identity_across_the_raster_seam(tmp_path: Path) -> None:
     """Land and sea crossing any projection cut keep their colour, graph and identity."""
     domain = np.ones((160, 400), dtype=np.bool_)
-    expected = seal_pockets(generate_new_world(domain, seed=3, settings=SMALL))
-    world = landcache.get_world(tmp_path, domain, seed=3, settings=SMALL, drawn=None)
+    expected = seal_pockets(generate_new_world(domain, seed=3, settings=SMALL, sizes=SIZES))
+    world = landcache.get_world(tmp_path, domain, seed=3, settings=SMALL, drawn=None, sizes=SIZES)
     assert np.array_equal(world.labels, expected.labels)
     assert world.classes == expected.classes
     assert world.edges == expected.edges
@@ -137,8 +139,12 @@ def test_the_cache_keeps_the_moves_of_island_groups_and_keys_on_the_groups(tmp_p
     grid[70:74, 90:100] = True
     found = np.nonzero(grid)
     groups = [Footprint(found[0].astype(np.int32), found[1].astype(np.int32))]
-    first = landcache.get_world(tmp_path, domain, seed=5, settings=SMALL, drawn=None, groups=groups)
-    again = landcache.get_world(tmp_path, domain, seed=5, settings=SMALL, drawn=None, groups=groups)
+    first = landcache.get_world(
+        tmp_path, domain, seed=5, settings=SMALL, drawn=None, groups=groups, sizes=SIZES
+    )
+    again = landcache.get_world(
+        tmp_path, domain, seed=5, settings=SMALL, drawn=None, groups=groups, sizes=SIZES
+    )
     assert first.moves.shape == (1, 2)
     assert np.array_equal(first.moves, again.moves)
     plain = landcache.cache_key(domain, 5, SMALL, None)
@@ -152,7 +158,7 @@ def test_a_kept_land_stage_makes_the_same_world_without_drawing_the_land_again(
     """The world made from a sketched continent's kept land equals the one made from scratch."""
     domain = np.ones((160, 192), dtype=np.bool_)
     domain[:, :6] = False
-    expected = landcache.get_world(None, domain, seed=7, settings=SMALL, drawn=None)
+    expected = landcache.get_world(None, domain, seed=7, settings=SMALL, drawn=None, sizes=SIZES)
     untouched = domain.copy()
     stage = land_stage(domain.copy(), 7, SMALL)[:3]
     assert np.array_equal(domain, untouched)
@@ -166,7 +172,7 @@ def test_a_kept_land_stage_makes_the_same_world_without_drawing_the_land_again(
         pytest.fail("a kept land stage must not be drawn again")
 
     monkeypatch.setattr(newworld, "land_stage", forbidden)
-    found = landcache.get_world(tmp_path, domain, seed=7, settings=SMALL, drawn=None)
+    found = landcache.get_world(tmp_path, domain, seed=7, settings=SMALL, drawn=None, sizes=SIZES)
     assert np.array_equal(found.labels, expected.labels)
     assert np.array_equal(found.elevation, expected.elevation)
     assert found.classes == expected.classes
@@ -192,7 +198,7 @@ def test_a_damaged_land_stage_fails_instead_of_being_drawn_again(tmp_path: Path)
     target = landcache.stage_path(tmp_path, key)
     _ = target.write_bytes(target.read_bytes()[:-7])
     with pytest.raises(landcache.CacheError, match="damaged"):
-        _ = landcache.get_world(tmp_path, domain, seed=1, settings=SMALL, drawn=None)
+        _ = landcache.get_world(tmp_path, domain, seed=1, settings=SMALL, drawn=None, sizes=SIZES)
 
 
 def test_pruning_keeps_the_most_recently_used_entries(tmp_path: Path) -> None:

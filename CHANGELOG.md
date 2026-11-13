@@ -24,6 +24,19 @@ worlds and saves are not rewritten or migrated.
   the coasts are given their ports and straits, which are made for the land left passable. At the
   highest **Wasteland** the world can hold a few per cent fewer wastelands than asked, because every
   passable location must still reach a coast. Epoch 63 and older make the same worlds as before.
+- Make the **land of a New World follow its rivers and its climate**. Up to 1.2.2 the locations were
+  cut from an even scatter of points before any river or climate existed, so a desert, a taiga and a
+  river valley had locations of the same size and the rivers ran across them at random; mountain
+  ranges ran anywhere but along a coast, so continents drained in short rivers to the nearest sea;
+  and the climate was smoothed so much that the semi-arid and cold dry lands between the wet and the
+  desert nearly vanished. Now each landmass has active coasts, which raise a cordillera a little
+  inland of them, and the land falls away from them across a broad plain, so great rivers cross
+  the continent. The rivers are drawn before the locations, and the larger rivers are their
+  borders. Each location is as large as the game's own locations of the climate and vegetation it
+  will have, where the game's land is like it: large in deserts, dry steppes, the cold and far
+  inland, small on wet coasts. The climate learns from the game's Americas as well as the Old World,
+  keeps the transitional lands, and no longer counts farmland as natural grassland; hills are
+  rough ground, not the slope up from every coast. Epoch 63 and older make the same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 

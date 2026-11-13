@@ -30,6 +30,7 @@ from rnw.newworld import (
 from rnw.sea_corridors import corridor_paths, draw_corridors
 from rnw.settings import NewWorldSettings
 from rnw.topology import distance_from, label_components
+from tests.fakes import SIZES
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -69,10 +70,7 @@ def test_finished_water_distinguishes_puddles_lakes_inland_seas_and_the_ocean() 
     land[60:160, 160:240] = False  # substantial closed sea: 8,000 > 4 * 40**2
     land[180:220, 250:460] = False  # an ocean gulf, even with a narrow mouth
     world = generate_new_world(
-        domain,
-        seed=3,
-        settings=SMALL,
-        stage=(land, ~land, np.zeros_like(land)),
+        domain, seed=3, settings=SMALL, stage=(land, ~land, np.zeros_like(land)), sizes=SIZES
     )
     assert world.classes[int(world.labels[40, 40])] in LAND_KINDS
     for point in ((61, 70), (100, 50)):
@@ -92,7 +90,8 @@ def test_land_outline_changes_with_the_seed() -> None:
     domain[20:280, 20:400] = True
     domain[140:170, 400:590] = True
     masks = [
-        _land_mask(generate_new_world(domain, seed=seed, settings=settings)) for seed in range(1, 5)
+        _land_mask(generate_new_world(domain, seed=seed, settings=settings, sizes=SIZES))
+        for seed in range(1, 5)
     ]
     overlap = [np.count_nonzero(a & b) / np.count_nonzero(a | b) for a, b in combinations(masks, 2)]
     # A ramp of feature_px / 3 gave one outline (0.83); the water band along the canvas's boundary
@@ -104,7 +103,7 @@ def test_land_outline_changes_with_the_seed() -> None:
 def test_continent_cells_continue_through_the_middle_of_the_canvas() -> None:
     """A canvas has no reserved artificial boundary through its generated land."""
     domain = np.ones((160, 400), dtype=bool)
-    world = generate_new_world(domain, seed=3, settings=SMALL)
+    world = generate_new_world(domain, seed=3, settings=SMALL, sizes=SIZES)
     mask = _land_mask(world)
     assert np.any(mask[:, 199] & mask[:, 200])
     assert np.any(world.labels[:, 199][mask[:, 199]] == world.labels[:, 200][mask[:, 199]])
@@ -113,7 +112,9 @@ def test_continent_cells_continue_through_the_middle_of_the_canvas() -> None:
 def test_polar_contacts_are_narrow_large_and_impassable() -> None:
     """A continent may approach a pole, but cannot fill the whole map edge."""
     domain = np.ones((240, 480), dtype=bool)
-    worlds = [generate_new_world(domain, seed=seed, settings=SMALL) for seed in range(8)]
+    worlds = [
+        generate_new_world(domain, seed=seed, settings=SMALL, sizes=SIZES) for seed in range(8)
+    ]
     touching = 0
     for world in worlds:
         land = _land_mask(world)
@@ -154,7 +155,7 @@ def test_drawn_land_crosses_the_map_seam_without_a_channel() -> None:
     domain = np.ones((160, 400), dtype=bool)
     drawn = np.zeros(domain.shape, dtype=bool)
     drawn[30:130, 60:340] = True
-    world = generate_new_world(domain, seed=3, settings=SMALL, drawn=drawn)
+    world = generate_new_world(domain, seed=3, settings=SMALL, drawn=drawn, sizes=SIZES)
     assert np.all(_land_mask(world)[40:120, 190:210])
 
 
@@ -198,7 +199,7 @@ def test_islet_inside_land_keeps_a_strait() -> None:
     settings = replace(SMALL, land_permille=700)
     domain = np.ones((240, 240), dtype=bool)
     domain[116:124, 116:124] = False
-    world = generate_new_world(domain, seed=5, settings=settings)
+    world = generate_new_world(domain, seed=5, settings=settings, sizes=SIZES)
     mask = _land_mask(world)
     water = (world.labels >= 0) & ~mask
     parts = label_components(np.where(water, 1, 0).astype(np.int32))
@@ -230,8 +231,8 @@ def test_sea_cells_follow_actual_routes_without_moving_the_coast() -> None:
     bands = np.zeros(domain.shape, dtype=bool)
     bands[35:55, :] = True
     bands[100:120, :] = True
-    plain = generate_new_world(domain, seed=3, settings=SMALL)
-    world = generate_new_world(domain, seed=3, settings=SMALL, sea_bands=bands)
+    plain = generate_new_world(domain, seed=3, settings=SMALL, sizes=SIZES)
+    world = generate_new_world(domain, seed=3, settings=SMALL, sea_bands=bands, sizes=SIZES)
     assert np.array_equal(_land_mask(world), _land_mask(plain))
     assert np.array_equal(world.elevation, plain.elevation)
     assert np.array_equal(world.labels[_land_mask(world)], plain.labels[_land_mask(plain)])
@@ -344,7 +345,7 @@ def test_island_groups_stay_or_move_and_are_holes_of_the_cells() -> None:
         _block(slice(60 + 30 * n, 64 + 30 * n), slice(40 + 90 * n, 52 + 90 * n), shape)
         for n in range(3)
     ]
-    world = generate_new_world(domain, seed=3, settings=SMALL, groups=groups)
+    world = generate_new_world(domain, seed=3, settings=SMALL, groups=groups, sizes=SIZES)
     assert world.moves.shape == (3, 2)
     land, _ocean, _lakes, _ = land_stage(domain, 3, SMALL)
     for group, (rows, columns) in zip(groups, world.moves.tolist(), strict=True):
@@ -352,7 +353,7 @@ def test_island_groups_stay_or_move_and_are_holes_of_the_cells() -> None:
         assert (world.labels[target] == -1).all()
         assert not land[target].any()
     assert (world.labels == -1).sum() == sum(group.size for group in groups)
-    again = generate_new_world(domain, seed=3, settings=SMALL, groups=groups)
+    again = generate_new_world(domain, seed=3, settings=SMALL, groups=groups, sizes=SIZES)
     assert np.array_equal(world.labels, again.labels)
     assert np.array_equal(world.moves, again.moves)
 

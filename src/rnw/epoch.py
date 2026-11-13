@@ -104,7 +104,7 @@ ALGORITHM_SINCE: Final[tuple[Release, ...]] = (
     (1, 2, 0),  # Causal prehistory, final start, closed-basin water and the Omerika world type.
     (1, 2, 1),  # Market centres only where the calibrated settlement plan puts them.
     (1, 2, 2),  # Subcontinents cut at the waist, with whole islands; smooth drawn coasts.
-    (1, 3, 0),  # Wastelands of every terrain, planned from the climate (``rnw.barrens``).
+    (1, 3, 0),  # Planned wastelands; cordilleras, open climate, rough hills, rivers before cells.
 )
 
 
@@ -122,11 +122,23 @@ NO_EXCHANGE_MARKETS: Final[int] = 62  # 1.2.1: an exchange partner is no market 
 SUBCONTINENT_WAISTS: Final[int] = 63  # 1.2.2: subcontinents are cut at the land's waist.
 SMOOTH_DRAWN_COASTS: Final[int] = 63  # 1.2.2: a small drawing is stretched by a spline, not blocks.
 NATURAL_WASTELANDS: Final[int] = 64  # 1.3.0: wastelands are planned terrain, not the highest cells.
+CORDILLERAS: Final[int] = (
+    64  # 1.3.0: mountain belts stand along active coasts, the land falls away.
+)
+OPEN_CLIMATE: Final[int] = 64  # 1.3.0: the climate vote learns the Americas, without farmland.
+ROUGH_HILLS: Final[int] = 64  # 1.3.0: hills are rough ground, not the slope of a coastal cell.
+RIVERS_FIRST: Final[int] = (
+    64  # 1.3.0: rivers come before the cells, which follow them and the land.
+)
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
     "SMOOTH_DRAWN_COASTS": SMOOTH_DRAWN_COASTS,
     "NATURAL_WASTELANDS": NATURAL_WASTELANDS,
+    "CORDILLERAS": CORDILLERAS,
+    "OPEN_CLIMATE": OPEN_CLIMATE,
+    "ROUGH_HILLS": ROUGH_HILLS,
+    "RIVERS_FIRST": RIVERS_FIRST,
 }
 
 

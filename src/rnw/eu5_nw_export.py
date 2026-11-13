@@ -84,6 +84,7 @@ from rnw.eu5_biomes import (
     CellBiomes,
     ClimateGrid,
     Generated,
+    SizeModel,
     VanillaLocations,
     assign_biomes,
     biome_of,
@@ -91,6 +92,7 @@ from rnw.eu5_biomes import (
     climate_grid,
     label_statistics,
     material_counts,
+    size_model,
     template_attributes,
     vanilla_locations,
     wasteland_settings,
@@ -291,6 +293,7 @@ from rnw.loc_keys import KeySpace, key_hash, key_hashes
 from rnw.model import CellClass
 from rnw.newworld import (
     NewWorld,
+    cell_roughness,
     inland_sea_min_area,
     unported_cells,
 )
@@ -330,6 +333,7 @@ from rnw.settings import ResourceSettings, canonical_json, run_spec, spec_digest
 from rnw.societies import STATE
 from rnw.splnet import SplineError
 from rnw.topology import adjacency_pairs, distance_from, label_components, unpack_pairs
+from rnw.watersheds import domain_climate, domain_rivers
 from rnw.wording import render
 
 if TYPE_CHECKING:
@@ -508,8 +512,11 @@ def _land_count(world: NewWorld) -> int:
     return count
 
 
-def _generated(canvas: Canvas, world: NewWorld, count: int | None = None) -> Generated:
-    """The first ``count`` cells of ``world`` (all by default) as the biome model reads them."""
+def _generated(
+    canvas: Canvas, world: NewWorld, count: int | None = None, *, rough: bool = False
+) -> Generated:
+    """The first ``count`` cells of ``world`` (all by default) as the biome model reads them;
+    with ``rough`` (epoch 64, ``epoch.ROUGH_HILLS``) their roughness too."""
     count = len(world.classes) if count is None else count
     points = np.stack(
         [world.centroids[:count, 0], _world_columns(canvas, world.centroids[:count, 1])], axis=1
@@ -522,6 +529,7 @@ def _generated(canvas: Canvas, world: NewWorld, count: int | None = None) -> Gen
         edges=tuple((a, b) for a, b in world.edges if a < count and b < count),
         coastal=_coastal(world)[:count],
         pixels=world.pixels[:count],
+        roughness=cell_roughness(world.labels, world.elevation, count) if rough else None,
     )
 
 
@@ -571,12 +579,13 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
         vanilla=vanilla.locations,
         vanilla_grid=vanilla.grid,
         final_grid=grid,
-        cells=_generated(canvas, world, count),
+        cells=_generated(canvas, world, count, rough=settings.algorithm >= epoch.ROUGH_HILLS),
         seed=seed,
         precious_permille=settings.new_world.precious_permille,
         resources=settings.resources,
         material_seed=material_seed,
         wastelands=_wasteland_settings(game_dir, world, settings),
+        open_climate=settings.algorithm >= epoch.OPEN_CLIMATE,
     )
     if biomes.kinds is None:
         message = "The wasteland plan did not give the class of the land cells"
@@ -1965,16 +1974,36 @@ def _river_basins(  # noqa: PLR0913 - the land, relief, canvas, climate, seed an
 
 
 def _rivers(
-    world: NewWorld, canvas: Canvas, climate: ClimateGrid, seed: int
+    world: NewWorld, canvas: Canvas, climate: ClimateGrid, seed: int, algorithm: int = 0
 ) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
-    """River codes and valleys from the same independently planned watershed domains."""
+    """River codes and valleys from the same independently planned watershed domains.
+
+    From ``epoch.RIVERS_FIRST`` they are the rivers the cells were grown along: drawn again from
+    the world's own land, lakes and relief and the domain's rain (``rnw.watersheds``), not from
+    the climate of the whole map.
+    """
     land_kind = np.array(
         [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
     )
     land = land_kind[world.labels]
     lake_kind = np.array([kind is CellClass.LAKE for kind in world.classes] + [False])
     elevation = world.elevation
-    rivers = _river_basins(land, elevation, canvas, climate, seed, lakes=lake_kind[world.labels])
+    lakes = lake_kind[world.labels]
+    if algorithm >= epoch.RIVERS_FIRST:
+        try:
+            rivers = domain_rivers(
+                land,
+                elevation,
+                lakes=lakes,
+                rain=domain_climate(land, lakes, elevation).rain,
+                seam=(canvas.roll - canvas.col0) % canvas.shape[1],
+                seed=seed,
+            )
+        except RiverGenerationError as exc:
+            raise NewWorldExportError(str(exc)) from exc
+    else:
+        rivers = _river_basins(land, elevation, canvas, climate, seed, lakes=lakes)
+    del lakes
     classes = flow_classes(rivers, RIVER_WIDTH_SHARES)
     problems = network_problems(rivers.role, ~land)
     if any(problems.values()):
@@ -2995,6 +3024,11 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
             template=clean.template,
             lakes_drawn=None if drawing is None else drawing.lakes,
             hints=None if drawing is None else drawing.hints,
+            algorithm=settings.algorithm,
+            seam=(clean.roll - clean.col0) % clean.shape[1],
+            sizes=_vanilla_sizes(game_dir, game_map)
+            if settings.algorithm >= epoch.RIVERS_FIRST
+            else None,
         ),
     )
     drawing = None  # the fitted drawing is the cache's key and the world's land; let it go
@@ -3158,7 +3192,7 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
                 material_seed=resources_seed,
                 land=land_biomes,
             )
-            return biomes, biome_stats, _rivers(world, canvas, climate, seed)
+            return biomes, biome_stats, _rivers(world, canvas, climate, seed, settings.algorithm)
 
         weathering = stages.submit("biomes and rivers", weather)
         identities = stages.submit("identities", identify)
@@ -3819,6 +3853,14 @@ def _old_world_land(game_map: Eu5Map) -> NDArray[np.bool_]:
         ],
         dtype=bool,
     )
+
+
+def _vanilla_sizes(game_dir: Path, game_map: Eu5Map) -> SizeModel:
+    """How large the game makes its land locations of each class (``eu5_biomes.size_model``),
+    read from its map as it ships, before anything is moved or generated."""
+    shape = (int(game_map.labels.shape[0]), int(game_map.labels.shape[1]))
+    height = DecalStore(game_dir, shape).world_heights()
+    return size_model(game_map, template_attributes(_read(game_dir, TEMPLATES)), height)
 
 
 @dataclass(frozen=True, slots=True, eq=False)

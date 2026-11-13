@@ -49,6 +49,7 @@ if TYPE_CHECKING:
 
     from numpy.typing import NDArray
 
+    from rnw.eu5_biomes import SizeModel
     from rnw.eu5_map import Eu5Map
     from rnw.relief import ReliefHints
     from rnw.settings import NewWorldSettings
@@ -117,14 +118,22 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     template: NDArray[np.bool_] | None = None,
     lakes: NDArray[np.bool_] | None = None,
     hints: ReliefHints | None = None,
+    algorithm: int = epoch.CURRENT,
+    seam: int | None = None,
+    sizes: SizeModel | None = None,
 ) -> str:
-    # The first number is the layout of the construction (8: the Americas' template of Omerika;
-    # 7: the water band along the canvas's boundary and the crossings as chains of cells); the
-    # code's identity keeps an entry made by earlier code from being read when the land or the sea
-    # cells change inside an epoch. The template matters only to a world that uses it.
+    # The first number is the layout of the construction (10: the game's location sizes the
+    # cells are spaced by; 9: the epoch the world is made by and the seam its rivers are split
+    # at; 8: the Americas' template of Omerika; 7: the water band
+    # along the canvas's boundary and the crossings as chains of cells); the code's identity keeps
+    # an entry made by earlier code from being read when the land or the sea cells change inside
+    # an epoch. The template matters only to a world that uses it.
     spec = (
-        8,
+        10,
         epoch.CURRENT,
+        algorithm,
+        seam,
+        None if sizes is None else sizes.digest(),
         code_identity(),
         seed,
         replace(settings, precious_permille=0),
@@ -478,17 +487,32 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
     template: NDArray[np.bool_] | None = None,
     lakes_drawn: NDArray[np.bool_] | None = None,
     hints: ReliefHints | None = None,
+    algorithm: int = epoch.CURRENT,
+    seam: int | None = None,
+    sizes: SizeModel | None = None,
 ) -> NewWorld:
     """The cells and relief of the continent, read from the cache when it was made before.
 
     A world not yet made starts from the land stage of its sketch when one is kept.
     ``template`` is the Americas on the canvas (``Canvas.template``) that Omerika reads.
+    ``algorithm``, ``seam`` and ``sizes`` are ``generate_new_world``'s.
     """
     key = (
         None
         if cache is None
         else cache_key(
-            domain, seed, settings, drawn, sea_bands, groups, template, lakes_drawn, hints
+            domain,
+            seed,
+            settings,
+            drawn,
+            sea_bands,
+            groups,
+            template,
+            lakes_drawn,
+            hints,
+            algorithm=algorithm,
+            seam=seam,
+            sizes=sizes,
         )
     )
     target = None if cache is None or key is None else cache / key
@@ -513,6 +537,9 @@ def get_world(  # noqa: PLR0913 - the cache key includes each independent geogra
             template=template,
             lakes_drawn=lakes_drawn,
             hints=hints,
+            algorithm=algorithm,
+            seam=seam,
+            sizes=sizes,
         )
     )
     if target is not None and cache is not None:

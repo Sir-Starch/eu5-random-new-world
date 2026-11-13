@@ -36,10 +36,10 @@ The interim patch transfer copied river and border bands from unrelated places a
 | Stage | Module | Method |
 |---|---|---|
 | 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (protected-domain or longitudinal canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
-| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. Up to epoch 63 the highest cells become wastelands; from epoch 64 they are planned ([Natural wastelands](#natural-wastelands-130--epoch-64)). See [Mountains and hills](#mountains-and-hills-110--epoch-60). |
+| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. Up to epoch 63 the highest cells become wastelands; from epoch 64 they are planned ([Natural wastelands](#natural-wastelands-130--epoch-64)). From epoch 64 the active coasts of each landmass also raise a cordillera, and the land falls away from them ([Drainage before cells](#drainage-before-cells-130--epoch-64)). See [Mountains and hills](#mountains-and-hills-110--epoch-60). |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
-| 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation among the pairs of the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
-| 4. Coherence | `eu5_biomes.py` | The joint (climate, vegetation) votes are smoothed over the location adjacency graph: 3 rounds choose the climate; 1 round, limited to that climate's own pairs and widened when it has no vote, chooses the vegetation (issue #4). Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. Desert cells never become wetlands, because no biome covers that combination (C54). |
+| 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation among the pairs of the chosen climate. Up to epoch 63 farmland is learned as grassland, because the New World starts empty; from epoch 64 the vote also learns from the vanilla Americas, leaves farmland out and weighs each pair's votes by the cube root of the inverse of its share. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
+| 4. Coherence | `eu5_biomes.py` | Up to epoch 63 the joint (climate, vegetation) votes are smoothed over the location adjacency graph: 3 rounds choose the climate; 1 round, limited to that climate's own pairs and widened when it has no vote, chooses the vegetation (issue #4). From epoch 64 neither is smoothed: the k-NN vote on smooth fields already gives climate regions of vanilla's size. Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast; from epoch 64 hills are ranked by how much their height bends over eight pixels, not by the slope every coastal cell has. Desert cells never become wetlands, because no biome covers that combination (C54). |
 | 5. Material slots | `eu5_slots.py` | The vanilla rules above, applied to the generated labels and templates. Band edges, variation families and levels come from uniformised integer noise in absolute decal coordinates, so adjacent decals agree. Each label's biome is resolved through `biomes.txt` (most specific rule); a slot its material list lacks becomes the same variation level of the first family, else the highest listed level, else slot 0. On mountains the installed stamps' own slots are laid over the variations (below). |
 | 6. Gameplay consistency | `eu5_nw_export.py` | Each location template gets the model's climate, vegetation and topography. Raw materials are drawn from vanilla frequencies for the same climate, vegetation, topography and coastal flag. |
 | 7. Vegetation instances | `eu5_objects.py` | Vanilla instances inside the canvas are dropped. New instances are sampled per material pixel at the Old World density for the pixel's (vegetation, climate, topography, slot) class. Rotation and scale are copied from vanilla records of the same file. The engine caps the mesh map objects of a game at 2^24 (16,777,216) and drops those loaded last, so the new instances may not outnumber the removed ones (all densities scale down together by a recorded factor; 1% of the budget stays unused, `ObjectBudgetError` otherwise). Vanilla holds 15.9 million, the 0.9.8 world 19.5 million (C95). |
@@ -269,6 +269,93 @@ asked (bench, same inputs: 200 ‰ 11 of 1,297 cells short; 500 ‰ 106 of 3,243
 location must still reach a coast; the stats record `shortfall`. A mountain range painted in a land
 image is high ground, which the plan favours for mountain wastelands, but it is not made impassable
 throughout.
+
+## Drainage before cells (1.3.0 / epoch 64)
+
+An audit of the epoch-64 world `gady3byywf` (continents, seed 20261115) against the vanilla Old
+World and the vanilla Americas in the same map columns [V-EXEC 2026-11-13, EU5 1.4.7, build 26377361]
+traced several shortfalls to the order of the stages: the land cells were grown from a uniform
+scatter of seeds beside the relief, before any river, climate or drainage existed.
+
+| Measure | Old World | Americas | Epoch 64 before this section | After it: `gady3byywf`; seed 42 |
+|---|---|---|---|---|
+| Location size p90/p10 (CV) | 9.9 (1.12) | 8.7 (0.80) | 2.35 (0.37) | 7.4 (0.95); 6.3 (0.84) |
+| River pixels on a location border (all land pixels) | 302 ‰ (100) | 218 ‰ (79) | 73 ‰ (69) | 306 ‰ (70); 308 ‰ (70) |
+| Largest river network, share of all river pixels | 63 ‰ | 199 ‰ | 49 ‰ (second world 44 ‰) | 75 ‰; 84 ‰ |
+| Climate regions: mean cells, same-climate contacts | 13.3, 810 ‰ | 11.1, 748 ‰ | 59.4, 916 ‰ | 9.1, 706 ‰ * |
+| Semi-arid and cold arid land | 93 ‰ | 86 ‰ | ≤ 17 ‰ | 45 ‰ * |
+| Mountain locations at the sea; coastal flatland / hills | 137 ‰; 497 / 254 ‰ | 153 ‰; 425 / 221 ‰ | 66 ‰; 255 / 384 ‰ | 81 ‰; 342 / 283 ‰; seed 42: 118 ‰; 338 / 297 ‰ |
+
+\* Counted afterwards by a script that also takes the wastelands into the regions and only the
+passable land into the shares; it gives vanilla 14.3 cells and 808 ‰ (Old World), 9.0 cells and
+750 ‰ (Americas), and 92 ‰ semi-arid and cold arid land in both [V-EXEC 2026-11-13]. Seed 42 is
+the code of `gady3byywf` with that seed (`RNW1-040G0-00000-00001-A041G-0013C-NR0`).
+
+The median size of a class's locations over the median of its region, in the same worlds and in
+two more epoch-64 worlds, a Wall world (`vnnvge53ci`) and a drawn land (`62g4bmw4xx`):
+
+| Class | Old World | Americas | `gady3byywf` | Seed 42 | Wall | Drawn |
+|---|---|---|---|---|---|---|
+| Desert vegetation | 1.52 | 1.45 | 1.25 | 1.54 | 1.51 | 1.53 |
+| Arid climate | 1.55 | 1.03 | 1.29 | 1.59 | 1.40 | 1.48 |
+| Subpolar climate | 3.12 | 1.48 | 1.99 | | | |
+| Oceanic climate | 0.54 | 0.69 | 0.67 | | | |
+| Hills | 0.83 | 0.91 | 1.06 | 1.08 | | |
+| Coast (0–40 px) / far inland (300+ px) | 0.70 / 1.80 | 0.59 / 2.06 | 0.73 / 2.00 | 0.74 / 1.23 | | |
+
+From epoch 64 each is changed at its cause, each behind its own switch of `rnw.epoch`:
+
+* **Cordilleras** (`CORDILLERAS`, `relief.py`). The coasts of each landmass that face the way of
+  its plate (a direction a per-seed vector and two slow noises give, broken up by a local noise)
+  are active margins. A cordillera stands 100–260 pixels inland of them; the land falls away from
+  them by up to 1,800 units over 2,400 pixels, and the inner chains of that foreland keep a fifth of
+  their strength. The distance is measured on a 16-pixel grid within the landmass, and a grid cell
+  of mostly water takes the value of the nearest land cell: blended towards the cap over the sea, it
+  had raised a false ridge and a step of the tilt along every shore near an active coast, so the
+  coastal locations were two and a half times as rough as the inland ones (median 867 against 349)
+  and 458 ‰ of them hills. An axis 50–150 pixels inland with a 10-pixel ramp to the sea put half of
+  all mountain locations within one step of the coast (vanilla 26–35 %). The share
+  of land above 16,000 units stays near 136 ‰.
+* **Rivers first** (`RIVERS_FIRST`, `watersheds.py`, `newworld.py`). The relief is made first; the
+  domain's own rain (the zonal-wind model on the domain, all but its land and lakes being sea)
+  drains it in the export's watershed domains; the cells are seeded with a spacing the land sets
+  and grown up to the 300 ‰ largest rivers by flow, whose pixels then join the cell beside them, and
+  the border wobble leaves the pixels within 24 pixels of those rivers alone. The export draws the
+  same rivers again from the same inputs, so they are the borders.
+  The spacing is read from the installed game (`eu5_biomes.size_model`, built by the export from
+  the vanilla map and part of the land cache key). Each passable vanilla land location of the Old
+  World and the Americas, farmland left out as in the vote, carries its size as exact 64ths of an
+  octave over the lower median of its region, and the pixel-weighted mean of the features of the
+  64-pixel blocks it covers: latitude, rain, mean height and the share of coast. Every 64-pixel block
+  of generated land reads the same features the same way (`block_features`), takes the (climate,
+  vegetation) pair the climate vote will choose there (the same k-NN and prior weights) and the mean
+  size of the 32 vanilla locations of that pair nearest to it (`class_sizes`): a desert is as large
+  as vanilla's deserts where vanilla's land is like it, a wet coast as small as vanilla's. Left out
+  one location at a time, the model gives vanilla deserts 1.39 of the median (they are 1.48), arid
+  land 1.46 (1.51), subpolar 2.46 (2.38) and tropical land 0.95 (1.02); R² 0.48 [V-EXEC 2026-11-13].
+  A least-squares fit of size on the same four features (R² 0.34) had left this world's deserts at
+  0.96 of the median: the zonal rain barely tells a vanilla desert (the share of desert and sparse
+  locations falls only from 0.30 to 0.13 from the driest to the wettest of seven rain bins), so a
+  size read from the features alone loses the class, while choosing the class first does not.
+  Features read at a location's centre had made coastal locations read as coast and the large ones
+  as inland, so the training and the query both read blocks.
+  The sizes are not smoothed: they are cut into quarter-octave levels and shifted as a whole to keep
+  the number of cells, and the polar bands keep three times the spacing. A seed grows at a speed in
+  proportion to its spacing (`synth.grow_weighted`); grown at one speed, the cells of the largest
+  spacings had come out at three quarters of their area, cut off by their denser neighbours.
+  What remains: `gady3byywf`'s deserts are scattered patches, and about a third of their cells lie in
+  blocks the vote reads as another class, so they stay at 1.25. Its tropical land is 1.62 of the
+  median because 654 of its 1,772 tropical locations lie over 300 pixels from the sea; band by band
+  (0.60, 1.01, 1.62, 2.74 from the coast inwards) it follows the Old World's (0.84, 1.24, 1.90, 2.43).
+* **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
+  well, leaves farmland out instead of reading it as grassland, weighs each pair's votes by the cube
+  root of the inverse of its share, and is not smoothed over the location graph.
+* **Rough hills** (`ROUGH_HILLS`, `newworld.cell_roughness`). Hills are ranked by how much a cell's
+  height bends: the mean of |h(p + d) + h(p − d) − 2 h(p)| over `HILL_STEP` = 8 pixels along the
+  rows and the columns whose two ends are land. A slope bends not at all, so the ramp up from every
+  coast no longer reads as hill country, and the measure does not grow with the cell. The spread
+  about a cell's best-fitting plane, used first, grew with the cell and made hills the largest
+  locations (1.32 of the median, coastal hills 327 ‰); the bend gives 1.06 and 283 ‰.
 
 ## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 

@@ -16,7 +16,7 @@ from rnw.app.worldcode import decode, encode, new_code
 from rnw.atlas import JSON_FILE, LABELS_FILE
 from rnw.atlas import to_files as atlas_files
 from rnw.eu5_atlas import build_atlas
-from rnw.eu5_biomes import CellBiomes
+from rnw.eu5_biomes import OCTAVE_PARTS, CellBiomes, SizeModel
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.inputs import hash_files
@@ -224,3 +224,26 @@ def build_world(data: Path, game: GameInstall, *, name: str = "") -> library.Wor
     made = replace(world, record=Record.from_json(report["record"]))
     library.save(data, made)
     return made
+
+
+def synthetic_sizes() -> SizeModel:
+    """A size model of two made-up classes for worlds made without the game: dry land one octave
+    larger than the median, wet land one octave smaller (``eu5_biomes.SizeModel``)."""
+    rows = [
+        (latitude, rain, height, coast, wet)
+        for latitude in (0, 200, 400, 600)
+        for wet in (0, 1)
+        for rain in ((600, 800, 1000) if wet else (50, 100, 150))
+        for height in (6000, 9000)
+        for coast in (20, 200)
+    ]
+    table = np.array(rows, dtype=np.int64)
+    return SizeModel(
+        features=table[:, :4],
+        pairs=table[:, 4].copy(),
+        climate_of=np.array([0, 1], dtype=np.int64),
+        size=(OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
+    )
+
+
+SIZES = synthetic_sizes()

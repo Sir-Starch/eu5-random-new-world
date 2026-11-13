@@ -102,6 +102,29 @@ def grow_regions(mask: NDArray[np.bool_], seeds: NDArray[np.int32]) -> NDArray[n
     return labels.reshape(height, width)
 
 
+def grow_weighted(
+    mask: NDArray[np.bool_], seeds: NDArray[np.int32], speed: NDArray[np.int64]
+) -> NDArray[np.int32]:
+    """``grow_regions`` with each label growing at its own ``speed`` (one per label, positive):
+    in round ``t`` a label steps on when ``t * speed // fastest`` grows, so the fastest steps
+    every round, and the border between two seeds lies where they meet at their speeds.
+    """
+    height, width = mask.shape
+    allowed = mask.ravel()
+    labels = np.where(allowed, seeds.ravel(), -1).astype(np.int32)
+    frontier = np.flatnonzero(labels >= 0)
+    fastest = int(speed.max()) if speed.size else 1
+    round_number = 0
+    while frontier.size:
+        checkpoint()
+        round_number += 1
+        pace = speed[labels[frontier]]
+        steps = round_number * pace // fastest > (round_number - 1) * pace // fastest
+        claimed = _claim(labels, allowed, frontier[steps], width, height)
+        frontier = np.concatenate([frontier[~steps], claimed])
+    return labels.reshape(height, width)
+
+
 def _claim(
     labels: NDArray[np.int32],
     allowed: NDArray[np.bool_],
@@ -125,7 +148,7 @@ def _claim(
     return np.sort(np.concatenate(claimed))
 
 
-def _first_pixels(components: NDArray[np.integer]) -> NDArray[np.int64]:
+def first_pixels(components: NDArray[np.integer]) -> NDArray[np.int64]:
     _, first = np.unique(components.ravel(), return_index=True)
     return first.astype(np.int64)
 
@@ -147,7 +170,7 @@ def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.in
     components = label_components(mask.astype(np.int32))
     covered = np.zeros(int(components.max()) + 1, dtype=bool)
     covered[components.ravel()[flat]] = True
-    firsts = _first_pixels(components)
+    firsts = first_pixels(components)
     extra = firsts[mask.ravel()[firsts] & ~covered[components.ravel()[firsts]]]
     seeds = np.full(mask.size, -1, dtype=np.int32)
     ordered = np.concatenate([flat, extra])

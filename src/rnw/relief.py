@@ -30,7 +30,7 @@ from rnw.noise import NOISE_SCALE
 from rnw.parallel import band_rows, worker_count
 from rnw.progress import checkpoint
 from rnw.rng import derive_seed
-from rnw.topology import euclidean_distance
+from rnw.topology import euclidean_distance, label_components, nearest_label
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -101,6 +101,30 @@ FLANK_SHARE: Final[int] = 450
 PAINT_FLOOR: Final[int] = 450
 HIGHLAND_PLATEAU: Final[int] = 550  # permille of a plateau's rise that painted highlands reach
 HINT_BYTES: Final[int] = 40  # working memory of the three hint fields per pixel of a strip
+# Active margins (epoch 64, ``epoch.CORDILLERAS``): the coasts of a landmass that face one way,
+# which turns slowly across the map, are where its plate meets another. A cordillera stands
+# ``CORDILLERA_AXIS`` pixels inland of them, and the land falls away from them by up to
+# ``TILT_HEIGHT`` over ``TILT_REACH`` pixels, so its rivers run across the continent to the far
+# coast instead of radially to the nearest one. The fields live on a grid of ``MARGIN_STEP``
+# pixels: the land's density smoothed over ``MARGIN_BLUR`` of its cells gives each coast its
+# facing, and the distance to an active coast is measured within the landmass that has it.
+MARGIN_STEP: Final[int] = 16
+MARGIN_BLUR: Final[int] = 10
+MARGIN_TURN: Final[int] = 6000  # pixels over which the facing of the active coasts turns
+MARGIN_LOCAL: Final[int] = 1400  # period of the noise that breaks an active stretch up
+MARGIN_NOISE: Final[int] = 400  # permille of a cosine the local noise moves a coast by
+MARGIN_BIAS: Final[int] = 450  # cosine (permille) a coast must face its plate's way by
+MARGIN_FILL: Final[int] = 4  # coarse cells of water that take their nearest land cell's value
+CORDILLERA_AXIS: Final[tuple[int, int]] = (100, 260)
+CORDILLERA_CORE: Final[int] = 45
+CORDILLERA_FLANK: Final[int] = 130
+CORDILLERA_FLOOR: Final[int] = 520  # permille of the peak a cordillera holds at its lowest pass
+TILT_HEIGHT: Final[int] = 1800
+TILT_REACH: Final[int] = 2400
+# Behind a cordillera lies its foreland, a broad plain the rivers cross: the inner chains there
+# keep ``PERMILLE - FORELAND_DAMP`` of their strength between the two pairs of distances.
+FORELAND_DAMP: Final[int] = 800
+FORELAND: Final[tuple[int, int, int, int]] = (260, 460, 1400, 2200)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -252,18 +276,114 @@ def _inland_grid(land: NDArray[np.bool_], strip: int) -> NDArray[np.int64]:
     return np.pad(eighths * step, ((0, 1), (0, 1)), mode="edge")
 
 
-def _strength(
+def _margin_grid(land: NDArray[np.bool_], seed: int, strip: int) -> NDArray[np.int64]:
+    """Distance to the nearest active coast of the same landmass, in eighths of a pixel, on a
+    grid ``MARGIN_STEP`` coarser (capped at ``TILT_REACH``; padded as ``_inland_grid`` is).
+
+    A coast is active where it faces the way of its plate: the cosine between its facing (down
+    the slope of the smoothed land density, from land to sea) and a direction that a per-seed
+    vector and two slow noises give, moved by a local noise, exceeds ``MARGIN_BIAS``. Integer
+    arithmetic and square roots of exact integers only.
+    """
+    step = MARGIN_STEP
+    rows, columns = (int(size) for size in land.shape)
+    coarse = np.empty((-(-rows // step), -(-columns // step)), dtype=bool)
+    for first in range(0, rows, strip):
+        mean = block_mean(land[first : first + strip].astype(np.int64) * PERMILLE, step)
+        coarse[first // step : first // step + mean.shape[0]] = mean >= PERMILLE // 2
+    shape = (int(coarse.shape[0]), int(coarse.shape[1]))
+    density = np.pad(box_blur(coarse.astype(np.int64) * PERMILLE, MARGIN_BLUR), 1, mode="edge")
+    gx = density[1:-1, 2:] - density[1:-1, :-2]
+    gy = density[2:, 1:-1] - density[:-2, 1:-1]
+    del density
+    turn = MARGIN_TURN // step
+    hashed = derive_seed(seed, "relief_margin_plate")
+    base_u = (hashed & 0xFFFF) - 0x8000
+    base_v = ((hashed >> 16) & 0xFFFF) - 0x8000
+    u = warped_noise(derive_seed(seed, "relief_margin_u"), shape, step=4, period=turn,
+                     octaves=1, warp_px=0) + base_u  # fmt: skip
+    v = warped_noise(derive_seed(seed, "relief_margin_v"), shape, step=4, period=turn,
+                     octaves=1, warp_px=0) + base_v  # fmt: skip
+    dot = -(gx * u + gy * v)
+    norm = np.floor(np.sqrt((gx * gx + gy * gy).astype(np.float64))).astype(np.int64) * np.floor(
+        np.sqrt((u * u + v * v).astype(np.float64))
+    ).astype(np.int64)
+    del gx, gy, u, v
+    cosine = dot * PERMILLE // np.maximum(norm, 1)
+    del dot, norm
+    local = warped_noise(
+        derive_seed(seed, "relief_margin_local"),
+        shape,
+        step=2,
+        period=MARGIN_LOCAL // step,
+        octaves=2,
+        warp_px=MARGIN_LOCAL // step // 3,
+    )
+    activity = cosine + local * MARGIN_NOISE // NOISE_SCALE - MARGIN_BIAS
+    del cosine, local
+    padded = np.pad(coarse, 1, mode="edge")
+    shore = coarse & ~(padded[:-2, 1:-1] & padded[2:, 1:-1] & padded[1:-1, :-2] & padded[1:-1, 2:])
+    active = shore & (activity > 0)
+    del padded, shore, activity
+    limit = TILT_REACH // step
+    distance = euclidean_distance(active, limit) * step
+    parts = label_components(coarse.astype(np.int32))
+    owner = nearest_label(np.where(active, parts, -1).astype(np.int32), active, 2 * limit)
+    distance = np.where(coarse & (owner == parts), distance, TILT_REACH * 8)
+    del owner, parts
+    # A cell of mostly water takes the value of the nearest land cell, so the land pixels at a
+    # coast read their own landmass's distance, not one blended towards the cap over the sea.
+    cells = np.arange(coarse.size, dtype=np.int32).reshape(shape)
+    nearest = nearest_label(np.where(coarse, cells, -1).astype(np.int32), coarse, MARGIN_FILL)
+    del cells
+    filled = np.where(nearest >= 0, distance.ravel()[np.maximum(nearest, 0)], TILT_REACH * 8)
+    return np.pad(np.minimum(filled, TILT_REACH * 8), ((0, 1), (0, 1)), mode="edge")
+
+
+def _cordillera(
+    seed: int, shape: tuple[int, int], row0: int, near: NDArray[np.int64]
+) -> NDArray[np.int64]:
+    """Envelope in [0, 1000] of the cordillera that runs along the active coasts, its axis
+    ``CORDILLERA_AXIS`` pixels inland; ``near`` is the distance to them in eighths of a pixel."""
+    wander = _field(seed, "relief_cordillera", shape, step=16, period=1200, octaves=2, row0=row0)
+    low, high = CORDILLERA_AXIS
+    axis = low + (np.clip(wander, -NOISE_SCALE, NOISE_SCALE) + NOISE_SCALE) * (high - low) // (
+        2 * NOISE_SCALE
+    )
+    del wander
+    distance = np.abs(near - axis * 8)
+    width = _field(
+        seed, "relief_cordillera_width", shape, step=16, period=900, octaves=2, row0=row0
+    )
+    scale = PERMILLE + width * PERMILLE // (2 * NOISE_SCALE)
+    del width
+    inner = np.clip(
+        PERMILLE - distance * PERMILLE // np.maximum(CORDILLERA_CORE * 8 * scale // PERMILLE, 1),
+        0,
+        PERMILLE,
+    )
+    outer = np.clip(
+        PERMILLE - distance * PERMILLE // np.maximum(CORDILLERA_FLANK * 8 * scale // PERMILLE, 1),
+        0,
+        PERMILLE,
+    )
+    return (smoothstep(outer, 0, PERMILLE) * 450 + smoothstep(inner, 0, PERMILLE) * 550) // PERMILLE
+
+
+def _strength(  # noqa: PLR0913, PLR0917 - the chains, the painted classes and the active coasts.
     seed: int,
     shape: tuple[int, int],
     row0: int,
     painted: NDArray[np.int64] | None = None,
     calm: NDArray[np.int64] | None = None,
+    near: NDArray[np.int64] | None = None,
 ) -> NDArray[np.int64]:
     """How far the ground is mountain, in [0, 1000]: the chains' envelope and massif height.
 
     ``painted`` (mountains a player drew, in permille of a full range) raises it to at least
     ``PAINT_FLOOR`` of the massif's height there, and ``calm`` (lowlands) takes the generated
     chains out, so a painted range stands wherever it is drawn and no chain crosses a plain.
+    ``near`` (the distance to the active coasts, ``_margin_grid``) adds their cordillera.
     """
     envelope = np.zeros(shape, dtype=np.int64)
     for stream, period, core, flank, share in CHAINS:
@@ -277,10 +397,24 @@ def _strength(
         MASSIF_FLOOR
         + (PERMILLE - MASSIF_FLOOR) * smoothstep(massif, MASSIF_LOW, MASSIF_HIGH) // PERMILLE
     )
+    belt_height = (
+        None
+        if near is None
+        else CORDILLERA_FLOOR
+        + (PERMILLE - CORDILLERA_FLOOR) * smoothstep(massif, MASSIF_LOW, MASSIF_HIGH) // PERMILLE
+    )
     del massif
     presence = _field(seed, "relief_presence", shape, step=16, period=2400, octaves=2, row0=row0)
     link = MASSIF_FLOOR + (PERMILLE - MASSIF_FLOOR) * smoothstep(presence, -6000, 5000) // PERMILLE
     natural = envelope * height // PERMILLE * link // PERMILLE
+    if near is not None and belt_height is not None:
+        rise, flat, fade, end = (distance * 8 for distance in FORELAND)
+        foreland = (
+            smoothstep(near, rise, flat) * (PERMILLE - smoothstep(near, fade, end)) // PERMILLE
+        )
+        natural = natural * (PERMILLE - FORELAND_DAMP * foreland // PERMILLE) // PERMILLE
+        belt = _cordillera(seed, shape, row0, near) * belt_height // PERMILLE
+        natural = np.maximum(natural, belt)
     if calm is not None:
         natural = natural * (PERMILLE - calm) // PERMILLE
     if painted is None:
@@ -316,7 +450,7 @@ def _hint_fields(
     )
 
 
-def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grids, the seed and rows.
+def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both distance grids, the seed and rows.
     land: NDArray[np.bool_],
     grid: NDArray[np.int64],
     sea_grid: NDArray[np.int64],
@@ -326,9 +460,11 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
     first: int,
     last: int,
     hints: ReliefHints | None = None,
+    margin_grid: NDArray[np.int64] | None = None,
 ) -> NDArray[np.int32]:
     """Height of rows ``first`` to ``last``, computed in a window that reaches ``HALO`` rows
     past them; every field is a function of the pixel, so the window changes nothing.
+    ``margin_grid`` (``_margin_grid``) raises the active coasts' cordillera and tilt.
     """
     rows, columns = (int(size) for size in land.shape)
     start, stop = max(0, first - HALO), min(rows, last + HALO)
@@ -348,7 +484,12 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
     )
     broad = _field(seed, "relief_broad", shape, step=16, period=1600, octaves=3, row0=start)
     painted, airy, calm = _hint_fields(hints, start, shape)
-    strength = _strength(seed, shape, start, painted, calm)
+    near = None
+    if margin_grid is not None:
+        coarse = start // MARGIN_STEP
+        needed = (shape[0] - 1) // MARGIN_STEP + 2
+        near = upsample(margin_grid[coarse : coarse + needed], MARGIN_STEP, shape)
+    strength = _strength(seed, shape, start, painted, calm, near)
     mountain = strength * (
         RIDGE_FLOOR + _ridged(seed, shape, start) * (PERMILLE - RIDGE_FLOOR) // PERMILLE
     )
@@ -386,6 +527,12 @@ def _relief_strip(  # noqa: PLR0913 - a strip reads the land, both distance grid
     del plateau_noise, strength
     base = COAST_HEIGHT + np.minimum(sea, INLAND_LIMIT * 8) * INLAND_SLOPE // 8
     broad_ramp = np.minimum(sea, BROAD_RAMP * 8) * PERMILLE // (BROAD_RAMP * 8)
+    if near is not None:
+        # The land falls away from an active coast across the continent.
+        reach = TILT_REACH * 8
+        tilt = TILT_HEIGHT * (reach - np.minimum(near, reach)) // reach
+        base = base + tilt * broad_ramp // PERMILLE
+        del tilt, near
     relief_ramp = np.minimum(inland, RELIEF_RAMP * 8) * PERMILLE // (RELIEF_RAMP * 8)
     low_ramp = relief_ramp
     if lake is not None:
@@ -410,6 +557,7 @@ def generate_relief(
     seed: int,
     lakes: NDArray[np.bool_] | None = None,
     hints: ReliefHints | None = None,
+    margins: bool = False,
 ) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed.
 
@@ -418,7 +566,8 @@ def generate_relief(
     ``hints`` are the mountains, highlands and lowlands a player painted (``ReliefHints``): a
     painted range is raised from the same chains and crests as a generated one, painted
     highlands are hills and plateau, and lowlands are left flat. Without hints the relief is
-    exactly what it was.
+    exactly what it was. With ``margins`` (epoch 64, ``epoch.CORDILLERAS``) the active coasts of
+    each landmass raise a cordillera a little inland of them and tilt the land away.
 
     The raster is cut into strips of ``STRIP_ROWS`` rows (a multiple of the coarsest noise
     step) that run on a few threads; the result is the same for any strip height and any
@@ -440,13 +589,24 @@ def generate_relief(
     grid = _inland_grid(land, strip)
     sea_grid = grid if lakes is None else _inland_grid(land | lakes, strip)
     lake_grid = None if lakes is None else _inland_grid(~lakes, strip)
+    margin_grid = (
+        _margin_grid(land if lakes is None else land | lakes, seed, strip) if margins else None
+    )
     out = np.empty((rows, columns), dtype=np.int32)
 
     def run(first: int) -> None:
         checkpoint()
         last = min(rows, first + strip)
         out[first:last] = _relief_strip(
-            land, grid, sea_grid, lake_grid, seed=seed, first=first, last=last, hints=hints
+            land,
+            grid,
+            sea_grid,
+            lake_grid,
+            seed=seed,
+            first=first,
+            last=last,
+            hints=hints,
+            margin_grid=margin_grid,
         )
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
