@@ -104,7 +104,6 @@ def _grid(
         spread=spread,
         pixels=np.full(count, CELL_PX, dtype=np.int64),
         rain=xs * 50,
-        coast=np.minimum.reduce([xs, WIDTH - 1 - xs, ys, HEIGHT - 1 - ys]) * 100,
         latitude=np.abs(ys - HEIGHT // 2) * 60,
         coastal=coastal,
         polar=polar,
@@ -260,23 +259,23 @@ def test_cells_at_the_sea_can_be_wasteland_and_the_poles_always_are() -> None:
     assert _reaches_coast(terrain, plan.kinds)
 
 
-def test_a_kind_the_game_puts_at_the_sea_is_planned_nearer_it() -> None:
-    """The coast preference of a kind moves where its units stand."""
-    inland = replace(CALIBRATION, coast=dict.fromkeys(KINDS, -1000))
-    shore = replace(CALIBRATION, coast=dict.fromkeys(KINDS, 1000))
+def test_a_kind_the_game_puts_at_the_sea_is_planned_there_as_often() -> None:
+    """The share of a class's cells at the sea follows the factor read from the game."""
+    inland = replace(CALIBRATION, shore=dict.fromkeys(KINDS, 0))
+    neutral = replace(CALIBRATION, shore=dict.fromkeys(KINDS, 1000))
+    shore = replace(CALIBRATION, shore=dict.fromkeys(KINDS, 4000))
     terrain, settings = _grid()
     settings = replace(settings, budget=50)
-    away = plan_wastelands(terrain, inland, settings, seed=3)
-    near = plan_wastelands(terrain, shore, settings, seed=3)
 
-    def at_sea(plan: WastelandPlan) -> int:
+    def at_sea(calibration: Calibration) -> int:
+        plan = plan_wastelands(terrain, calibration, settings, seed=3)
         return sum(
             1
             for cell in np.flatnonzero(terrain.coastal & ~terrain.polar).tolist()
             if plan.kinds[cell] is CellClass.WASTELAND
         )
 
-    assert at_sea(near) > at_sea(away)
+    assert at_sea(inland) < at_sea(neutral) < at_sea(shore)
 
 
 def test_every_passable_cell_still_reaches_a_coast() -> None:
@@ -409,11 +408,12 @@ def test_calibration_reads_rates_by_area_and_sizes_by_kind() -> None:
     assert found.sizes["dune"] == (10_000,)
     assert found.sizes["flat"] == (50_000,)
     assert "hills" not in found.sizes
-    # one of the patch's four locations touches the sea: its flat wasteland does (seen 1, expected
-    # a quarter), its mountain wasteland does not; a kind with no coast to compare has no tilt
-    assert found.coast["flat"] == 600
-    assert found.coast["mountain"] == -1000
-    assert "dune" not in found.coast
+    # a sixth of the patch's area touches the sea: its flat wasteland does, so it is six times as
+    # likely to as the patch, its mountain wasteland does not; a kind with no coast in its patch
+    # to compare has no factor
+    assert found.shore["flat"] == 6000
+    assert found.shore["mountain"] == 0
+    assert "dune" not in found.shore
 
 
 BIOMES = """\

@@ -65,6 +65,29 @@ def test_the_wall_world_records_the_cells_of_its_barrier() -> None:
     assert generate_new_world(domain, seed=7, settings=SMALL).barrier.size == 0
 
 
+@pytest.mark.parametrize("seed", [7, 42, 1000])
+def test_the_barrier_is_one_chain_of_touching_cells_from_pole_to_pole(seed: int) -> None:
+    settings = replace(SMALL, wall_allow_gaps=0, landform=1)
+    domain = np.ones((320, 480), dtype=bool)
+    world = generate_new_world(domain, seed=seed, settings=settings)
+    cells = set(world.barrier.tolist())
+    around: dict[int, list[int]] = {cell: [] for cell in cells}
+    for first, second in world.edges:
+        if first in cells and second in cells:
+            around[first].append(second)
+            around[second].append(first)
+    start = next(iter(cells))
+    seen, stack = {start}, [start]
+    while stack:
+        for other in around[stack.pop()]:
+            if other not in seen:
+                seen.add(other)
+                stack.append(other)
+    assert seen == cells
+    assert {int(cell) for cell in world.labels[0]} & cells
+    assert {int(cell) for cell in world.labels[-1]} & cells
+
+
 def test_wall_rejects_a_canvas_without_a_polar_corridor() -> None:
     domain = np.ones((100, 240), dtype=bool)
     domain[0] = False

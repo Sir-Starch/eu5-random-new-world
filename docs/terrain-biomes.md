@@ -198,10 +198,11 @@ the construction is [INFERRED] from those measurements, not a copy of Paradox's 
    `biomes.txt` and a vegetation) and kind (mountain, hills, plateau, flat, dune) it reads the part
    of the patch's land that vanilla wastelands cover, and the size of every vanilla wasteland by
    kind. A patch below 150,000 pixels gives no rate (a few dozen locations are noise, not a share).
-   It also reads, per kind, how far the game's wastelands lie nearer the sea than the land of their
-   own patches does (`Calibration.coast`, from -1000 to +1000; [V-LOCAL 1.4.7] mountains -768,
-   plateaus -407, dunes -388, hills -195, flat wilds +102): a fifth of the game's wastelands touch
-   the sea, as a fifth of its land does, but the kinds differ.
+   It also reads, per kind, how much likelier the area of the game's wastelands is to touch the sea
+   than the land of their own patches (`Calibration.shore`; [V-LOCAL 1.4.7] flat wilds 1.48, plateaus
+   1.07, mountains 0.99, dunes 0.94, hills 0.33): 21 % of the game's wastelands (23.5 % of the
+   Old World's locations, 27.7 % of its wasteland area) touch the sea, as a fifth of its land does,
+   but the kinds differ.
 2. **Quotas.** The world's budget (land cells × the wasteland share, as before) is divided between
    the (climate, vegetation, kind) classes in proportion to rate × the patch's area in the world, by
    exact capped water-filling (`fractions.Fraction`, a class never takes more than 80 % of what it
@@ -211,9 +212,11 @@ the construction is [INFERRED] from those measurements, not a copy of Paradox's 
 3. **Suitability.** A cell can only be a kind its ground allows (a mountain on high ground, hills
    on rough ground, a plateau on high smooth ground, a flat or a dune on low smooth ground), and
    within that ranks by what the kind is: dry smooth ground for dunes, wet lowland for jungle, cold
-   ground for tundra, the highest roughest ground for mountains, tilted towards the shore or away
-   from it by the kind's coast preference (up to half the score), and blended 70/30 with a smoothed
-   regional noise, so that districts favour a kind. Coastal cells are candidates like any other.
+   ground for tundra, the highest roughest ground for mountains, each blended 70/30 with a smoothed
+   regional noise, so that districts favour a kind. Coastal cells are candidates like any other, and
+   the seeds of a class are drawn from two strata, the cells at the sea and the others, so that the
+   class's cells at the sea keep the share its candidates have there times the kind's `shore`
+   factor, whatever the units grow into (a deficit rule, `_Planner._next_seed`).
 4. **Units.** Vanilla wastelands are mostly single locations with a heavy tail of huge ones, and
    touching wastelands of identical attributes are one location (`wastelands.location_units`). A
    unit draws its size from the vanilla sizes weighted by area (a random vanilla wasteland *pixel*
@@ -226,7 +229,7 @@ the construction is [INFERRED] from those measurements, not a copy of Paradox's 
 Two kinds of cell are fixed beforehand: land at a polar edge of the map, which is always
 impassable and comes on top of the budget, and the cells the Wall's core runs through
 (`NewWorld.barrier`, one chain from pole to pole, recorded by `newworld._wall_cells`, kept by the
-land cache and renumbered by `ports.relabel`), which are mountain wastelands and count in the budget.
+land cache and renumbered by `ports.relabel`), which are wastelands of the topography their height gives and count in the budget.
 The land on either side of the Wall is planned like any other. Both carry the topography their
 height gives (`legacy_topography`), as do the passable pockets that the fixed cells enclose (they
 reach no coast and are sealed, `unreachable_forced`). The plan fails with `WastelandPlanError` if a
@@ -241,7 +244,8 @@ generator numbers land cells first and the coast stages only fold sea cells toge
 keeps the land cells' numbers; `_land_count` checks it); the climate of the waters that remain is
 drawn later by the stage `biomes and rivers` (`water_climates`). Epoch 63 and older keep the old
 order (the highest cells become wasteland at the land stage and the biome model runs after the
-coasts). The cost is one stage on the critical path, about 20 s of a 4-minute export.
+coasts). The cost is a stage on the critical path (about 6 s) and that the coast stages no longer
+overlap the wait for the vanilla climate: about 15 s of a 4-minute export [V-EXEC].
 
 The topography written is the kind's: `mountain_wasteland`, `hills_wasteland`, `plateau_wasteland`,
 `flatland_wasteland` or `dune_wasteland` (biome `desert_rock_wasteland`). Wastelands are named for
@@ -250,15 +254,18 @@ plateau is a *Highlands*, a flat one *Wilds*, a dune a *Desert*), and both windo
 its own relief and colour (`lenses.json`).
 
 [V-EXEC 2026-11-13] The reference world (supercontinent, seed 20261102, 9 % wastelands): budget 583,
-no shortfall; 116 dune, 14 plateau, 298 flat, 48 hills and 107 mountain cells, in 103 units (the
-largest 41 cells), 54 of them touching the sea, every written location a valid biome
-(`default_biome_locations` 0). A Wall world (seed 20261113): budget 414 = 176 barrier cells + 238
-planned (31 dune, 8 plateau, 87 flat, 24 hills, 88 mountain cells), 60 of the planned at the sea, no
-shortfall, 1 pocket sealed. The composition follows the vanilla rates patch by patch but is shaped
-by the generated relief, which has few smooth high cells, so plateaus are rarer than in the game.
+no shortfall; 116 dune, 14 plateau, 298 flat, 48 hills and 107 mountain cells, in 122 units (the
+largest 50 cells), every written location a valid biome (`default_biome_locations` 0). 65 planned
+cells (11 %, 13 % of the planned area) touch the sea, against 14 % of the land's cells and 24 to 28 %
+of the game's wastelands: the generated coast is a rough ramp (65 % of its cells have the ground of
+hills, against 29 % of the inland ones), so few cells at the sea can be flat or dune wastelands and
+the share follows what the ground allows. The same plan at 30 ‰ puts 19 % of its cells at the sea,
+at 200 ‰ 12 % and at 500 ‰ 14 %. The composition follows the vanilla rates patch by patch but is
+shaped by the generated relief, which has few smooth high cells, so plateaus are rarer than in the
+game.
 
 **Limits.** At the highest **Wasteland** the world holds a few per cent fewer wastelands than
-asked (bench, same inputs: 200 ‰ 20 of 1,297 cells short; 500 ‰ 193 of 3,243), because every passable
+asked (bench, same inputs: 200 ‰ 11 of 1,297 cells short; 500 ‰ 106 of 3,243), because every passable
 location must still reach a coast; the stats record `shortfall`. A mountain range painted in a land
 image is high ground, which the plan favours for mountain wastelands, but it is not made impassable
 throughout.

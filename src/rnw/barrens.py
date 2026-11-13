@@ -18,8 +18,10 @@ things the installed game provides (the construction is described in ``docs/terr
   of one unit carry identical attributes and merge into one location (``wastelands``).
 * **Where it fits.** A cell can only be a kind that its own ground allows (a mountain wasteland
   stands on high ground, a flat one on low smooth ground), and inside that the seeds and the
-  growth prefer what the kind is: dry, remote, flat ground for dunes, wet remote lowland for
-  jungle, cold remote ground for tundra, the highest and roughest ground for mountains.
+  growth prefer what the kind is: dry flat ground for dunes, wet lowland for jungle, cold
+  ground for tundra, the highest and roughest ground for mountains. How many of a class's cells
+  are at the sea follows the game: its wastelands of a kind touch the sea as often as the land of
+  their patches does, times a factor read from the game (``Calibration.shore``).
 
 Nothing is repaired afterwards. A wasteland is only added where every passable cell that
 remains still reaches the coast, and a cell whose templates would match no biome of
@@ -88,9 +90,6 @@ CAPACITY_PERMILLE: Final[int] = 800
 ROUNDS: Final[int] = 4
 SMOOTHING: Final[int] = 4
 NOISE_WEIGHT: Final[int] = 3
-# How much of a kind's score its coast preference takes when the game's wastelands of that kind
-# lie wholly at the sea (or wholly away from it), in permille.
-COAST_WEIGHT: Final[int] = 500
 
 Patch = tuple[str, str]
 Triple = tuple[str, str, str]
@@ -123,14 +122,14 @@ class Calibration:
 
     ``rates`` is, for a patch (a climate group and a vegetation) and a kind, the part per
     million of the patch's land area that wastelands of the kind cover. ``sizes`` is the sorted
-    size in pixels of every vanilla wasteland location of a kind. ``coast`` is how far the
-    kind's wastelands lie nearer the sea (positive) or farther from it (negative) than the land
-    of their own patches does, in permille of the most it could (see ``calibrate``).
+    size in pixels of every vanilla wasteland location of a kind. ``shore`` is how much likelier
+    the area of a kind's wastelands is to touch the sea than the land of its own patches is, in
+    permille (1000: as likely; see ``calibrate``); a kind with no coast to compare has none.
     """
 
     rates: Mapping[Class, int]
     sizes: Mapping[str, tuple[int, ...]]
-    coast: Mapping[str, int] = field(default_factory=dict[str, int])
+    shore: Mapping[str, int] = field(default_factory=dict[str, int])
 
 
 def calibrate(  # noqa: PLR0913 - the calibration reads every attribute of a vanilla location.
@@ -147,17 +146,15 @@ def calibrate(  # noqa: PLR0913 - the calibration reads every attribute of a van
     """Rates, sizes and coast preferences of the vanilla wastelands among the ``include``
     locations.
 
-    The coast preference of a kind compares the share of its locations that touch the sea
-    (``seen``) with the share its own patches' land has (``expected``: each wasteland location
-    counts the coastal share of the locations of its patch): ``1000 * (seen - expected) /
-    (seen + expected)``, so +1000 is a kind wholly at the sea in patches without a coast.
+    The shore of a kind compares the share of its area that touches the sea (``seen``) with the
+    share its own patches' land has (``expected``: each wasteland counts the coastal share of the
+    area of its patch), as ``1000 * seen / expected`` in permille.
     """
     area: dict[Patch, int] = defaultdict(int)
     covered: dict[Class, int] = defaultdict(int)
     sizes: dict[str, list[int]] = defaultdict(list)
-    count: dict[Patch, int] = defaultdict(int)
     shore: dict[Patch, int] = defaultdict(int)
-    wastelands: dict[str, list[Patch]] = defaultdict(list)
+    wastelands: dict[str, list[tuple[Patch, int]]] = defaultdict(list)
     seen: dict[str, int] = defaultdict(int)
     for index, kind in enumerate(classes):
         size = int(pixels[index])
@@ -172,27 +169,26 @@ def calibrate(  # noqa: PLR0913 - the calibration reads every attribute of a van
             continue
         patch = (groups.get(climate[index], climate[index]), vegetation[index])
         area[patch] += size
-        count[patch] += 1
-        shore[patch] += int(coastal[index])
+        shore[patch] += size * int(coastal[index])
         name = VANILLA_KINDS.get(topography[index])
         if kind is CellClass.WASTELAND and name is not None:
             covered[(*patch, name)] += size
             sizes[name].append(size)
-            wastelands[name].append(patch)
-            seen[name] += int(coastal[index])
+            wastelands[name].append((patch, size))
+            seen[name] += size * int(coastal[index])
     rates = {
         key: share * PPM // area[(key[0], key[1])]
         for key, share in covered.items()
         if area[(key[0], key[1])] >= MIN_PATCH_PX
     }
-    coast: dict[str, int] = {}
-    for name, patches in wastelands.items():
-        observed = Fraction(seen[name], len(patches))
-        expected = sum((Fraction(shore[patch], count[patch]) for patch in patches), Fraction(0))
-        expected /= len(patches)
-        if observed + expected:
-            coast[name] = int(PERMILLE * (observed - expected) / (observed + expected))
-    return Calibration(rates, {name: tuple(sorted(found)) for name, found in sizes.items()}, coast)
+    lift: dict[str, int] = {}
+    for name, found in wastelands.items():
+        expected = sum(
+            (Fraction(shore[patch] * size, area[patch]) for patch, size in found), Fraction(0)
+        )
+        if expected:
+            lift[name] = int(PERMILLE * Fraction(seen[name]) / expected)
+    return Calibration(rates, {name: tuple(sorted(found)) for name, found in sizes.items()}, lift)
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -211,7 +207,6 @@ class Terrain:
     spread: NDArray[np.int64]
     pixels: NDArray[np.int64]
     rain: NDArray[np.int64]
-    coast: NDArray[np.int64]
     latitude: NDArray[np.int64]
     coastal: NDArray[np.bool_]
     polar: NDArray[np.bool_]
@@ -377,7 +372,14 @@ class _Planner:
         self.scores: dict[str, NDArray[np.int64]] = {}
         self.pools: dict[Class, list[int]] = {}
         self.members: dict[Class, set[int]] = {}
-        self.cursor: dict[Class, int] = {}
+        # The seeds of a class stand in two strata, the cells at the sea and the others, each best
+        # first with a cursor; the share of the class's cells at the sea that the game's
+        # wastelands of the kind would have, and how many have been placed so far.
+        self.strata: dict[tuple[Class, bool], list[int]] = {}
+        self.cursor: dict[tuple[Class, bool], int] = {}
+        self.target: dict[Class, Fraction] = {}
+        self.placed: dict[Class, int] = defaultdict(int)
+        self.at_sea: dict[Class, int] = defaultdict(int)
         self.weights: dict[Class, int] = {}
         self.dead: set[int] = set()
         self.units: list[tuple[str, int]] = []
@@ -429,8 +431,6 @@ class _Planner:
         smooth = PERMILLE - _permille_ranks(spread)
         dry = PERMILLE - _permille_ranks(terrain.rain[cells])
         wet = _permille_ranks(terrain.rain[cells])
-        remote = _permille_ranks(terrain.coast[cells])
-        shore = PERMILLE - remote
         cold = _permille_ranks(terrain.latitude[cells])
         vegetation = np.array([terrain.vegetation[cell] for cell in candidates])
         freezing = np.array(
@@ -452,14 +452,7 @@ class _Planner:
             "mountain": _permille_ranks(height + 2 * spread),
         }
         count = len(terrain.kinds)
-        for kind, ground in physical.items():
-            # The game puts some kinds at the sea more than their land does, others less: the
-            # cells nearer the sea (or farther from it) score higher by as much as it shows.
-            tilt = self.calibration.coast.get(kind, 0)
-            weight = abs(tilt) * COAST_WEIGHT // PERMILLE
-            values = ((PERMILLE - weight) * ground + weight * (shore if tilt > 0 else remote)) // (
-                PERMILLE
-            )
+        for kind, values in physical.items():
             noise = self._regional(kind, cells, count)
             full = np.zeros(count, dtype=np.int64)
             full[cells] = (
@@ -512,7 +505,15 @@ class _Planner:
             cells.sort(key=lambda cell, score=score: (-int(score[cell]), cell))
             self.pools[klass] = cells
             self.members[klass] = set(cells)
-            self.cursor[klass] = 0
+            near = [cell for cell in cells if terrain.coastal[cell]]
+            self.strata[(klass, True)] = near
+            self.strata[(klass, False)] = [cell for cell in cells if not terrain.coastal[cell]]
+            self.cursor[(klass, True)] = self.cursor[(klass, False)] = 0
+            # The cells at the sea are that share of the class's candidates; the game's
+            # wastelands of the kind are ``shore`` times as likely to be there as its land is.
+            base = Fraction(len(near), len(cells))
+            lift = self.calibration.shore.get(klass[2])
+            self.target[klass] = base if lift is None else min(Fraction(1), base * lift / PERMILLE)
 
     def _divide(self, wanted: int) -> int:
         """Place ``wanted`` cells: a first division by the weights, then rounds for the rest."""
@@ -568,18 +569,33 @@ class _Planner:
             if seed is None:
                 break
             size = min(quota - placed, self._draw_size(klass[2]))
-            grown = self._grow(klass, seed, size)
-            self.units.append((klass[2], grown))
-            placed += grown
+            unit = self._grow(klass, seed, size)
+            self.units.append((klass[2], len(unit)))
+            self.placed[klass] += len(unit)
+            self.at_sea[klass] += sum(1 for cell in unit if self.terrain.coastal[cell])
+            placed += len(unit)
         return placed
 
     def _next_seed(self, klass: Class) -> int | None:
-        """The best cell of the class that can still be wasteland, or None."""
-        pool = self.pools[klass]
+        """The best cell of the class that can still be wasteland, or None.
+
+        The stratum is the one the class is behind in: a seed at the sea while fewer of the cells
+        placed so far lie there than the class's share, else one away from it. This holds the
+        share whatever the units grow into, and takes the other stratum when one has no seed left.
+        """
+        behind = self.at_sea[klass] < self.target[klass] * (self.placed[klass] + 1)
+        for coastal in (behind, not behind):
+            seed = self._pop(klass, coastal=coastal)
+            if seed is not None:
+                return seed
+        return None
+
+    def _pop(self, klass: Class, *, coastal: bool) -> int | None:
+        pool = self.strata[(klass, coastal)]
         triple = (klass[0], klass[1], TOPOGRAPHY[klass[2]])
-        while self.cursor[klass] < len(pool):
-            cell = pool[self.cursor[klass]]
-            self.cursor[klass] += 1
+        while self.cursor[(klass, coastal)] < len(pool):
+            cell = pool[self.cursor[(klass, coastal)]]
+            self.cursor[(klass, coastal)] += 1
             if self._admissible(cell, triple, frozenset()):
                 return cell
         return None
@@ -598,7 +614,7 @@ class _Planner:
             return False
         return True
 
-    def _grow(self, klass: Class, seed: int, size: int) -> int:
+    def _grow(self, klass: Class, seed: int, size: int) -> set[int]:
         """A unit from ``seed``: the best neighbours of its cells, up to ``size`` cells."""
         triple = (klass[0], klass[1], TOPOGRAPHY[klass[2]])
         score = self.scores[klass[2]]
@@ -620,7 +636,7 @@ class _Planner:
             self._take(cell, triple)
             unit.add(cell)
             push(cell)
-        return len(unit)
+        return unit
 
     def _take(self, cell: int, triple: Triple) -> None:
         self._mark(cell, triple)

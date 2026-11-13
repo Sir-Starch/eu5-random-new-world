@@ -50,7 +50,7 @@ STAGES: Final[dict[str, StageInfo]] = {
     "vanilla natives": StageInfo("Reading the old native peoples", 4),
     "vanilla Americas": StageInfo("Reading the game's own Americas", 0),
     "generate world": StageInfo("Generating continents, seas and relief", 26),
-    "land character": StageInfo("Planning the land and its wastelands", 8),
+    "land character": StageInfo("Planning the land and its wastelands", 3),
     "settle coasts": StageInfo("Giving every coast a port", 3),
     "water shapes": StageInfo("Shaping bays, straits and currents", 1),
     "identities": StageInfo("Naming locations, areas and regions", 9),

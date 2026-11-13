@@ -615,7 +615,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
             old=old,
             cells=cells,
             fields=(climate, vegetation),
-            features=(rain, coast, latitude),
+            features=(rain, latitude),
             edges=edges,
             settings=wastelands,
             seed=seed,
@@ -749,7 +749,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     old: NDArray[np.bool_],
     cells: Generated,
     fields: tuple[list[str], list[str]],
-    features: tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]],
+    features: tuple[NDArray[np.int64], NDArray[np.int64]],
     edges: NDArray[np.int64],
     settings: WastelandSettings,
     seed: int,
@@ -772,7 +772,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         groups=settings.groups,
     )
     climate, vegetation = fields
-    rain, coast, latitude = features
+    rain, latitude = features
     terrain = Terrain(
         kinds=cells.kinds,
         climate=tuple(climate),
@@ -781,7 +781,6 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         spread=cells.spread,
         pixels=cells.pixels,
         rain=rain,
-        coast=coast,
         latitude=latitude,
         coastal=cells.coastal,
         polar=settings.polar,

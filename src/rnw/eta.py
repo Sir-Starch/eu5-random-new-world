@@ -67,7 +67,7 @@ REFERENCE_SECONDS: Final[dict[str, float]] = {
     "vanilla material levels": 18.0,
     "vanilla natives": 8.0,
     "generate world": 69.0,
-    "land character": 20.0,
+    "land character": 6.0,
     "settle coasts": 9.0,
     "water shapes": 5.0,
     "water textures": 16.0,
