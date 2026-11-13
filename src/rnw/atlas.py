@@ -127,6 +127,9 @@ TERRAIN_COLOURS: Final[dict[str, tuple[int, int, int]]] = {
     "wetlands": (88, 150, 140),
     "hills_wasteland": (140, 132, 118),
     "mountain_wasteland": (108, 102, 98),
+    "flatland_wasteland": (156, 150, 130),
+    "plateau_wasteland": (160, 150, 124),
+    "dune_wasteland": (214, 190, 140),
 }
 MAX_PIXELS: Final[int] = 64_000_000
 MAX_CELLS: Final[int] = 1 << 24

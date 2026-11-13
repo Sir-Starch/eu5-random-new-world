@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+Targets 1.3.0 and algorithm epoch 64. A 1.2.2 code can make another world at that epoch; existing
+worlds and saves are not rewritten or migrated.
+
+- Make the **wastelands of a New World more than mountains**. Up to 1.2.2 the highest cells of the
+  relief were the impassable locations, so every wasteland was a mountain, while the game's own map
+  has impassable tundra and taiga, jungle, dunes, plateaus and hills as well (by area less than a
+  quarter of the vanilla wastelands are mountains). The generator now plans them once the climate
+  and vegetation of every location are drawn: it reads from your installation how much of each
+  climate and vegetation the game's wastelands cover and how big they are, divides **Wasteland
+  share** between flat wilds (tundra, taiga, jungle), dunes, plateaus, hills and mountains by that
+  proportion, puts each where its ground and climate suit it (dry remote ground for dunes, wet
+  remote lowland for jungle, the roughest highest ground for mountains) and grows it as units of
+  the sizes the game's wastelands have: mostly small, a few huge. Every passable location still
+  reaches a coast, and no wasteland is drawn by the game's fallback biome. Wastelands are named
+  for their terrain in every language (a *Highlands*, a *Wilds* or a *Desert*) and both windows
+  draw each with its own relief and colour. The Wall keeps its highest cells. At the highest
+  **Wasteland** the world can hold a few per cent fewer wastelands than asked, because every
+  passable location must still reach a coast. Epoch 63 and older make the same worlds as before.
+
 ## 1.2.2 — 2026-11-11
 
 - Targets EU5 1.4.7 / Steam build 26377361 and uses algorithm epoch 63. A 1.2.1 code can make another world at that epoch; existing worlds and saves are not rewritten or migrated.

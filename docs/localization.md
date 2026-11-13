@@ -28,7 +28,7 @@ rewritten.
 | Exceptional places (silver lodes, fishery) | `eu5_places.SPECS` | English |
 | Colonial names | `colonial_names.TRADITIONS` (`Nueva {root}`, `New {root}`…) | founder's form in every language |
 | Names of water | `seanames.TERMS`, `SECTORS`, `CENTRAL`, `FAR` | English |
-| Wastelands, lakes | `eu5_natives.WASTELAND_SUFFIX`, `eu5_newworld.NAME_SUFFIX` (`" Highlands"`, `" Lake"`) | English |
+| Wastelands, lakes | `wording` terms `HIGHLANDS`, `WILDS`, `DESERT` (by topography from epoch 64, `eu5_newworld.WASTE_TERMS`) and `LAKE`, through `eu5_newworld.NAME_TERM` | every language |
 | Proper names (locations, provinces, areas, regions, countries) | `names.NameGenerator`, `eu5_natives.PlaceNamer` (Markov chains over the game's American names) | Latin script in every language |
 | Country adjectives `TAG_ADJ` | `eu5_natives.country_names`, `eu5_formation.texts` | the name itself in every language |
 | The generator window | `gui/text.py` (about 470 strings), `progress.py` stage names | English only |

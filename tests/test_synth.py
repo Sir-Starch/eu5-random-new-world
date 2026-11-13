@@ -283,6 +283,12 @@ GOLDEN_MANIFESTS = {
         "continents": "5f05d8a3ed7298cc2c3a7dad172ff3faeca7a7cfb3fd92298edffacc490c66fb",
         "archipelago": "be98609fec4ae23aa6711701d5ab54cd8fe26470e6cde98352154e30eafb4a05",
     },
+    # 1.3.0 plans the wastelands of a New World from its terrain; the synthetic bundle differs
+    # only by the epoch number its run spec records.
+    64: {
+        "continents": "b89b6b4c89d460cbce4465a44f398185574feaac4c2da4e6c7723f9a9085a329",
+        "archipelago": "975ab8a5540fef12f0634c2ec51b37561c645c1a0e2108acad624e542cb1c3bd",
+    },
 }
 
 

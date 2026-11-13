@@ -180,10 +180,12 @@ export function relief(atlas: WorldAtlas): Relief {
     if (kind[c] !== LAND && kind[c] !== WASTELAND) continue;
     const rgb = physicalColour(atlas, c);
     colour.set(rgb, c * 3);
-    const topography = TOPOGRAPHY[raw[atlas.data.topography[c]] ?? ""] ?? TOPOGRAPHY.flatland;
-    const wasteland = kind[c] === WASTELAND ? TOPOGRAPHY.mountain_wasteland : null;
-    high[c] = (wasteland ?? topography).height;
-    rough[c] = (wasteland ?? topography).rough;
+    // A wasteland has the relief of its own topography (a flat wild, a dune, a plateau); one the
+    // style does not know stands as a mountain, a land as a plain.
+    const fallback = kind[c] === WASTELAND ? TOPOGRAPHY.mountain_wasteland : TOPOGRAPHY.flatland;
+    const topography = TOPOGRAPHY[raw[atlas.data.topography[c]] ?? ""] ?? fallback;
+    high[c] = topography.height;
+    rough[c] = topography.rough;
   }
 
   // Sample the box: land mask, colours, heights.

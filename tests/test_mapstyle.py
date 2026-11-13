@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 
 from rnw import atlas as atlas_module
+from rnw import barrens
 from rnw.atlas import Country
 from rnw.eu5_history_plan import project_start
 from rnw.gui import mapstyle
@@ -204,3 +205,19 @@ def test_the_rules_line_names_the_game_region_only_where_the_world_names_it_othe
     } == {"Alaska"}
     assert {"alaska_region", "north_pacific_ocean_region"} <= mapstyle.identifiers(renamed)
     assert mapstyle.rules(replace(found, region_keys=None), words) == [""] * found.cells
+
+
+def test_every_wasteland_topography_the_generator_writes_is_drawn_by_both_windows() -> None:
+    """A flat wild or a dune is no mountain on the physical map: each topography of a planned
+    wasteland (``rnw.barrens``) has its own relief, its colour on the terrain lens and its entry in
+    the palette both windows read (``lenses.json``), and the flat ones lie lower than a mountain."""
+    palette = json.loads(Path(mapstyle.__file__).with_name("lenses.json").read_text("utf-8"))[
+        "palettes"
+    ]["terrain"]
+    for name in barrens.TOPOGRAPHY.values():
+        assert name in mapstyle.TOPOGRAPHY
+        assert name in atlas_module.TERRAIN_COLOURS
+        assert name in palette
+    heights = {name: mapstyle.TOPOGRAPHY[name]["height"] for name in barrens.TOPOGRAPHY.values()}
+    for flat in ("flatland_wasteland", "dune_wasteland"):
+        assert heights[flat] < heights["hills_wasteland"] < heights["mountain_wasteland"]

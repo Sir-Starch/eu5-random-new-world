@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import wording
-from rnw.epoch import CURRENT, SUBCONTINENT_WAISTS
+from rnw.epoch import CURRENT, NATURAL_WASTELANDS, SUBCONTINENT_WAISTS
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.eu5_regionkeys import (
     AREA_PLACE_WEIGHT,
@@ -87,6 +87,11 @@ KEY_PREFIX: Final[dict[CellClass, str]] = {
 NAME_TERM: Final[dict[CellClass, str]] = {
     CellClass.WASTELAND: wording.HIGHLANDS,
     CellClass.LAKE: wording.LAKE,
+}
+# A wasteland of a flat or a dune topography is no highland: from epoch 64 it is a wild or a desert.
+WASTE_TERMS: Final[dict[str, str]] = {
+    "flatland_wasteland": wording.WILDS,
+    "dune_wasteland": wording.DESERT,
 }
 # Vanilla American land holds 6.2 locations per province and 5.8 provinces per area, its
 # sea areas 8.6 zones per province and 52 per area (local 1.4.1 definitions.txt and
@@ -969,7 +974,7 @@ def plan_identities(  # noqa: PLR0913 - planning reads the map, canvas, world, h
                 key=keys.next(KEY_PREFIX[kind], 5),
                 name=sea.cells[index]
                 if kind is CellClass.SEA
-                else _land_name(location_names.next(), kind),
+                else _land_name(location_names.next(), kind, biomes.topography[index], algorithm),
                 color=colors[index],
                 kind=kind,
                 province=province_of[index],
@@ -999,9 +1004,12 @@ def _area_parents(hierarchy: dict[str, Location]) -> dict[str, tuple[str, str, s
     }
 
 
-def _land_name(word: str, kind: CellClass) -> Name:
-    """A land cell's name: its word, with the term of a wasteland or a lake."""
+def _land_name(word: str, kind: CellClass, topography: str, algorithm: int) -> Name:
+    """A land cell's name: its word, with the term of a wasteland (by its topography since epoch
+    64) or a lake."""
     term = NAME_TERM.get(kind)
+    if term is not None and kind is CellClass.WASTELAND and algorithm >= NATURAL_WASTELANDS:
+        term = WASTE_TERMS.get(topography, term)
     return word if term is None else Phrase(term, word)
 
 

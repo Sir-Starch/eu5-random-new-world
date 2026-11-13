@@ -2316,3 +2316,16 @@ Tauri window had one Trapmine `suspicious.low.ml.score` heuristic (70 undetected
 for all 11 languages from the tagged window. Its generator's old `show_new_world` label no longer
 existed; replacing it with the current `lobby_cover` label fixed the build. Recaptured window frames
 matched the committed images byte for byte.
+
+## 2026-11-13 — Natural wastelands (C533)
+
+[V-LOCAL] The owner asked for generated wastelands that are more than mountains, as the game's own
+include jungle and more. The installed 1.4.7 map: 1,821 impassable of 22,718 land locations, by area 30.7 %
+flat, 24.5 % mountain, 14.3 % plateau, 10.7 % hills, 10.0 % dune (a few huge ones hold two thirds of
+the area). 1.3.0 / epoch 64 plans them in `barrens.py` after the biome vote. Two things the first
+tries taught: counting vanilla sizes by location gave a speckle of single cells, so a unit draws
+its size by area (a random wasteland pixel picks the location); and a cell beside the sea cannot
+change class after `settle_coast`/`shape_water` (ports, docks and crossings read it), so those stay
+and only interior cells are planned. A reserve of classes without a vanilla rate did not close the
+shortfall at 200 and 500 per mille (reachability is the limit) and was dropped. [V-EXEC]
+Reproduced: epoch 64 reference twice, epoch 63 twice (before and after the naming change).

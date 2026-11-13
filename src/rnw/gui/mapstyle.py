@@ -298,9 +298,10 @@ def relief(atlas: Atlas) -> Relief:
     rough = np.zeros(atlas.cells, dtype=np.float32)
     for index in range(atlas.cells):
         topography = atlas.word("topography", int(atlas.topography[index]))
-        found = TOPOGRAPHY.get(topography, TOPOGRAPHY["flatland"])
-        if int(atlas.kinds[index]) == WASTELAND:
-            found = TOPOGRAPHY["mountain_wasteland"]
+        # A wasteland has the relief of its own topography (a flat wild, a dune, a plateau); one
+        # the style does not know stands as a mountain, a land as a plain.
+        fallback = "mountain_wasteland" if int(atlas.kinds[index]) == WASTELAND else "flatland"
+        found = TOPOGRAPHY.get(topography, TOPOGRAPHY[fallback])
         high[index], rough[index] = found["height"], found["rough"]
     share = blur(mask, 2)
     soft = [

@@ -20,12 +20,22 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw.barrens import (
+    FLAT_SPREAD,
+    MOUNTAIN_FLOOR,
+    Terrain,
+    WastelandPlan,
+    WastelandSettings,
+    calibrate,
+    legacy_topography,
+    plan_wastelands,
+)
 from rnw.climate import RainSettings, rainfall
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.fields import block_mean
@@ -53,6 +63,7 @@ MATERIAL_LIST: Final[re.Pattern[str]] = re.compile(
     r"\bname\s*=\s*([A-Za-z0-9_]+)\s+materials\s*=\s*\{([^{}]*)\}"
 )
 BIOME_KEYS: Final[tuple[str, ...]] = ("climate", "vegetation", "topography")
+DEFAULT_BIOME: Final[str] = "default_biome"
 BIOME_DEFINITIONS: Final[str] = "game/in_game/gfx/map/biome_definitions/biomes.txt"
 TERRAIN_MATERIALS: Final[str] = "game/in_game/gfx/terrain2/materials.txt"
 CLIMATE_STEP: Final[int] = 4
@@ -83,8 +94,8 @@ EMPTY_LAND: Final[dict[str, str]] = {"farmland": "grasslands"}
 # biomes.txt defines no desert wetlands biome; such templates fall to default_biome, whose
 # only material is fallback_material [V-LOCAL C54].
 NO_WETLANDS: Final[frozenset[str]] = frozenset({"desert"})
-MOUNTAIN_WASTE_HEIGHT: Final[int] = 14000
-FLAT_WASTE_SPREAD: Final[int] = 900
+MOUNTAIN_WASTE_HEIGHT: Final[int] = MOUNTAIN_FLOOR
+FLAT_WASTE_SPREAD: Final[int] = FLAT_SPREAD
 LAND_KINDS: Final[frozenset[CellClass]] = frozenset(
     {CellClass.LAND, CellClass.WASTELAND, CellClass.NON_OWNABLE}
 )
@@ -303,6 +314,8 @@ class Generated:
     spread: NDArray[np.int64]
     edges: tuple[tuple[int, int], ...]
     coastal: NDArray[np.bool_]
+    # The pixels of each cell; the wasteland plan weighs the world's patches by them.
+    pixels: NDArray[np.int64] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -313,15 +326,18 @@ class CellBiomes:
     vegetation: tuple[str, ...]
     topography: tuple[str, ...]
     raw_material: tuple[str, ...]
+    # The class of each cell when the wasteland plan (``rnw.barrens``) chose it; None: as given.
+    kinds: tuple[CellClass, ...] | None = None
 
 
 @dataclass(frozen=True, slots=True, eq=False)
 class VanillaLocations:
-    """Per vanilla label: centre and mean height; plus its contact pairs."""
+    """Per vanilla label: centre and mean height; plus its contact pairs and pixel counts."""
 
     points: NDArray[np.int64]
     mean_height: NDArray[np.int64]
     pairs: NDArray[np.int64]
+    pixels: NDArray[np.int64] | None = None
 
 
 def vanilla_locations(labels: NDArray[np.int32], height: NDArray[np.uint16]) -> VanillaLocations:
@@ -345,6 +361,7 @@ def vanilla_locations(labels: NDArray[np.int32], height: NDArray[np.uint16]) -> 
         points=np.stack([exact[1] // pixels, exact[2] // pixels], axis=1),
         mean_height=exact[3] // pixels,
         pairs=adjacency_pairs(labels, wrap_x=True),
+        pixels=exact[0],
     )
 
 
@@ -407,9 +424,7 @@ def _ranks(values: NDArray[np.int64], cells: list[int]) -> dict[int, int]:
 
 
 def _waste_topography(height: int, spread: int) -> str:
-    if height >= MOUNTAIN_WASTE_HEIGHT:
-        return "mountain_wasteland"
-    return "plateau_wasteland" if spread < FLAT_WASTE_SPREAD else "hills_wasteland"
+    return legacy_topography(height, spread)
 
 
 def _pick(counter: Counter[str], key: int) -> str:
@@ -469,6 +484,51 @@ def regularize_votes(
     return climate_choice, joint_vegetation[np.argmax(votes, axis=1)]
 
 
+def _land_columns(
+    count: int, land_cells: NDArray[np.int64], query_x: NDArray[np.int64]
+) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
+    """Rainfall, distance to the sea and latitude of every cell (zero for water)."""
+    columns = [np.zeros(count, dtype=np.int64) for _ in range(3)]
+    for column, source in zip(columns, (1, 3, 0), strict=True):
+        column[land_cells] = query_x[:, source]
+    return columns[0], columns[1], columns[2]
+
+
+def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, the vote and the ranks.
+    land_cells: NDArray[np.int64],
+    cells: Generated,
+    plan: WastelandPlan | None,
+    *,
+    shares: dict[str, int],
+    vegetation: list[str],
+    rain: NDArray[np.int64],
+    coast: NDArray[np.int64],
+) -> list[str]:
+    """The topography of every land cell: ranks of relief for the passable ones, the plan's (or
+    the epoch 63 rule's) for the wastelands."""
+    topography = [""] * len(cells.kinds)
+    plain = [i for i in land_cells.tolist() if cells.kinds[i] is CellClass.LAND]
+    ranked = _topography(
+        plain,
+        shares=shares,
+        mean_height=cells.mean_height,
+        spread=cells.spread,
+        rain=rain,
+        coast=coast,
+        dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
+    )
+    for cell, name in ranked.items():
+        topography[cell] = name
+    for cell in land_cells.tolist():
+        if cells.kinds[cell] is CellClass.WASTELAND:
+            topography[cell] = (
+                plan.topography[cell]
+                if plan is not None
+                else _waste_topography(int(cells.mean_height[cell]), int(cells.spread[cell]))
+            )
+    return topography
+
+
 def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     *,
     game_map: Eu5Map,
@@ -481,11 +541,15 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     precious_permille: int = 1000,
     resources: ResourceSettings = RESOURCES,
     material_seed: int | None = None,
+    wastelands: WastelandSettings | None = None,
 ) -> tuple[CellBiomes, dict[str, object]]:
     """Template attributes for every generated cell and calibration statistics.
 
     The raw materials are drawn from ``material_seed`` when given (the resources part of the
     world, ``rnw.layers``), else from ``seed``; everything else is the land's, from ``seed``.
+    With ``wastelands`` (epoch 64) the wastelands are planned from the climate and vegetation
+    just chosen (``rnw.barrens``) and ``CellBiomes.kinds`` holds the class of every cell; without
+    it the cells keep the class they came with, the highest ones being wasteland.
     """
     count = len(cells.kinds)
     old = _old_world(game_map)
@@ -540,28 +604,34 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         for i, kind in enumerate(game_map.classes)
         if kind is CellClass.LAND and old[i]
     )
-    topography = [""] * count
-    plain = [i for i in land_cells.tolist() if cells.kinds[i] is CellClass.LAND]
-    rain = np.zeros(count, dtype=np.int64)
-    coast = np.zeros(count, dtype=np.int64)
-    rain[land_cells] = query_x[:, 1]
-    coast[land_cells] = query_x[:, 3]
-    ranked = _topography(
-        plain,
+    rain, coast, latitude = _land_columns(count, land_cells, query_x)
+    plan = (
+        None
+        if wastelands is None
+        else _plan_wastelands(
+            game_map=game_map,
+            attributes=attributes,
+            vanilla=vanilla,
+            old=old,
+            cells=cells,
+            fields=(climate, vegetation),
+            features=(rain, coast, latitude),
+            edges=edges,
+            settings=wastelands,
+            seed=seed,
+        )
+    )
+    if plan is not None:
+        cells = replace(cells, kinds=plan.kinds)
+    topography = _topographies(
+        land_cells,
+        cells,
+        plan,
         shares={name: shares[name] for name in TOPOGRAPHIES},
-        mean_height=cells.mean_height,
-        spread=cells.spread,
+        vegetation=vegetation,
         rain=rain,
         coast=coast,
-        dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
     )
-    for cell, name in ranked.items():
-        topography[cell] = name
-    for cell in land_cells.tolist():
-        if cells.kinds[cell] is CellClass.WASTELAND:
-            topography[cell] = _waste_topography(
-                int(cells.mean_height[cell]), int(cells.spread[cell])
-            )
     water_train = [
         i
         for i, kind in enumerate(game_map.classes)
@@ -590,14 +660,103 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         precious_permille=precious_permille,
         resources=resources,
     )
-    result = CellBiomes(tuple(climate), tuple(vegetation), tuple(topography), raw)
+    result = CellBiomes(
+        tuple(climate),
+        tuple(vegetation),
+        tuple(topography),
+        raw,
+        kinds=None if plan is None else plan.kinds,
+    )
     stats: dict[str, object] = {
         "training_land_locations": len(land_train),
         "climate_classes": climate_names,
         "vegetation_classes": vegetation_names,
         "topography_shares": {name: shares[name] for name in TOPOGRAPHIES},
     }
+    if plan is not None:
+        stats["wastelands"] = plan.stats
     return result, stats
+
+
+def climate_groups(rules: list[BiomeRule]) -> dict[str, str]:
+    """The climates that ``biomes.txt`` draws alike, each named for the first of its group."""
+    groups: dict[str, str] = {}
+    for rule in rules:
+        if rule.climate:
+            first = min(rule.climate)
+            for name in sorted(rule.climate):
+                _ = groups.setdefault(name, first)
+    return groups
+
+
+def wasteland_settings(
+    rules: list[BiomeRule],
+    materials: dict[str, int],
+    *,
+    budget: int,
+    polar: NDArray[np.bool_],
+) -> WastelandSettings:
+    """What the wasteland plan needs of the game: the climate groups and a test that a
+    (climate, vegetation, topography) is drawn by a biome of its own with materials, not by
+    ``default_biome``."""
+    known: dict[tuple[str, str, str], bool] = {}
+
+    def biome_ok(climate: str, vegetation: str, topography: str) -> bool:
+        key = (climate, vegetation, topography)
+        if key not in known:
+            biome = biome_of(rules, climate, vegetation, topography)
+            known[key] = bool(biome) and biome != DEFAULT_BIOME and materials.get(biome, 0) > 0
+        return known[key]
+
+    return WastelandSettings(budget, polar, climate_groups(rules), biome_ok)
+
+
+def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and the vote.
+    *,
+    game_map: Eu5Map,
+    attributes: list[dict[str, str]],
+    vanilla: VanillaLocations,
+    old: NDArray[np.bool_],
+    cells: Generated,
+    fields: tuple[list[str], list[str]],
+    features: tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]],
+    edges: NDArray[np.int64],
+    settings: WastelandSettings,
+    seed: int,
+) -> WastelandPlan:
+    """The wasteland plan of ``rnw.barrens`` for the cells and the climate and vegetation chosen."""
+    if vanilla.pixels is None or cells.pixels is None:
+        message = "The wasteland plan needs the pixel counts of the vanilla and generated cells"
+        raise ValueError(message)
+    pixels = np.zeros(len(game_map.keys), dtype=np.int64)
+    known = min(pixels.size, vanilla.pixels.size)
+    pixels[:known] = vanilla.pixels[:known]
+    calibration = calibrate(
+        classes=game_map.classes,
+        climate=[row.get("climate", "") for row in attributes],
+        vegetation=[row.get("vegetation", "") for row in attributes],
+        topography=[row.get("topography", "") for row in attributes],
+        pixels=pixels,
+        include=old,
+        groups=settings.groups,
+    )
+    climate, vegetation = fields
+    rain, coast, latitude = features
+    terrain = Terrain(
+        kinds=cells.kinds,
+        climate=tuple(climate),
+        vegetation=tuple(vegetation),
+        height=cells.mean_height,
+        spread=cells.spread,
+        pixels=cells.pixels,
+        rain=rain,
+        coast=coast,
+        latitude=latitude,
+        coastal=cells.coastal,
+        polar=settings.polar,
+        edges=edges,
+    )
+    return plan_wastelands(terrain, calibration, settings, seed=seed)
 
 
 def _raw_materials(  # noqa: PLR0913 - raw materials depend on every template field.

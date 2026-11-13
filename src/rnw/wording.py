@@ -27,6 +27,10 @@ ENGLISH: Final[str] = "english"
 REFERENCE: Final[str] = "reference"
 ADJECTIVE: Final[str] = "adjective"
 HIGHLANDS: Final[str] = "highlands"
+WILDS: Final[str] = "wilds"
+DESERT: Final[str] = "desert"
+# The terms of a wasteland (``eu5_newworld.WASTE_TERMS``): a highland, a flat wild or a desert.
+WASTELANDS: Final[tuple[str, ...]] = (HIGHLANDS, WILDS, DESERT)
 LAKE: Final[str] = "lake"
 # The kinds of water (``seanames.Kind`` values).
 WATERS: Final[tuple[str, ...]] = (
@@ -153,6 +157,8 @@ EN_TERMS: Final[dict[str, Term]] = {
     "islands": Term("{n} Islands"),
     "archipelago": Term("{n} Archipelago"),
     HIGHLANDS: Term("{n} Highlands"),
+    WILDS: Term("{n} Wilds"),
+    DESERT: Term("{n} Desert"),
     LAKE: Term("Lake {n}"),
 }
 EN_SECTORS: Final[dict[str, str]] = {
@@ -207,6 +213,8 @@ RU_TERMS: Final[dict[str, Term]] = {
     "islands": Term("Острова {n}", "m", "островов"),
     "archipelago": Term("Архипелаг {n}", "m", "архипелага"),
     HIGHLANDS: Term("Нагорье {n}", "m", "нагорья"),
+    WILDS: Term("Дебри {n}", "p", "дебрей"),
+    DESERT: Term("Пустыня {n}", "f", "пустыни"),
     LAKE: Term("Озеро {n}", "m", "озера"),
 }
 # A part of a body: ``Северная часть моря Кайра``, as the game writes the parts of a strait.
@@ -277,6 +285,8 @@ DE_TERMS: Final[dict[str, Term]] = {
     "islands": Term("{n}-Inseln", "p"),
     "archipelago": Term("{n}-Archipel", "m"),
     HIGHLANDS: Term("Hochland von {n}", "n"),
+    WILDS: Term("Wildnis von {n}", "f"),
+    DESERT: Term("Wüste {n}", "f"),
     LAKE: Term("{n}-See", "m"),
 }
 DE_SECTORS: Final[dict[str, str]] = {
@@ -350,6 +360,8 @@ FR_TERMS: Final[dict[str, Term]] = {
     "islands": Term("Îles {n}", "f"),
     "archipelago": Term("Archipel de {n}", "m"),
     HIGHLANDS: Term("Hautes Terres de {n}", "f"),
+    WILDS: Term("Terres Sauvages de {n}", "f"),
+    DESERT: Term("Désert de {n}", "m"),
     LAKE: Term("Lac {n}", "m"),
 }
 FR_SECTORS: Final[dict[str, str]] = {
@@ -411,6 +423,8 @@ ES_TERMS: Final[dict[str, Term]] = {
     "islands": Term("Islas {n}", "p"),
     "archipelago": Term("Archipiélago de {n}"),
     HIGHLANDS: Term("Tierras Altas de {n}", "p"),
+    WILDS: Term("Tierras Salvajes de {n}", "p"),
+    DESERT: Term("Desierto de {n}"),
     LAKE: Term("Lago {n}"),
 }
 ES_SECTORS: Final[dict[str, str]] = {
@@ -449,6 +463,8 @@ PT_TERMS: Final[dict[str, Term]] = {
     "islands": Term("Ilhas {n}", "p"),
     "archipelago": Term("Arquipélago de {n}"),
     HIGHLANDS: Term("Planalto de {n}"),
+    WILDS: Term("Ermos de {n}"),
+    DESERT: Term("Deserto de {n}"),
     LAKE: Term("Lago {n}"),
 }
 PT_SECTORS: Final[dict[str, str]] = {
@@ -515,6 +531,8 @@ PL_TERMS: Final[dict[str, Term]] = {
     "islands": Term("Wyspy {n}", "p"),
     "archipelago": Term("Archipelag {n}", "m"),
     HIGHLANDS: Term("Wyżyna {n}", "f"),
+    WILDS: Term("Pustkowia {n}", "n"),
+    DESERT: Term("Pustynia {n}", "f"),
     LAKE: Term("Jezioro {n}", "n"),
 }
 # Stems and whether they are soft (``Wschodni``) or hard (``Północny``).
@@ -594,6 +612,8 @@ TR_TERMS: Final[dict[str, Term]] = {
     "islands": Term("{n} Adaları"),
     "archipelago": Term("{n} Takımadaları"),
     HIGHLANDS: Term("{n} Yaylası"),
+    WILDS: Term("{n} Vahşi Toprakları"),
+    DESERT: Term("{n} Çölü"),
     LAKE: Term("{n} Gölü"),
 }
 TR_SECTORS: Final[dict[str, str]] = {
@@ -643,6 +663,8 @@ JA_TERMS: Final[dict[str, Term]] = {
     "islands": Term("{n}諸島"),
     "archipelago": Term("{n}群島"),
     HIGHLANDS: Term("{n}高地"),
+    WILDS: Term("{n}荒野"),
+    DESERT: Term("{n}砂漠"),
     LAKE: Term("{n}湖"),
 }
 JA_SECTORS: Final[dict[str, str]] = {
@@ -689,6 +711,8 @@ KO_TERMS: Final[dict[str, Term]] = {
     "islands": Term("{n} 제도"),
     "archipelago": Term("{n} 군도"),
     HIGHLANDS: Term("{n} 고원"),
+    WILDS: Term("{n} 황야"),
+    DESERT: Term("{n} 사막"),
     LAKE: Term("{n}호"),
 }
 KO_SECTORS: Final[dict[str, str]] = {
@@ -734,6 +758,8 @@ ZH_TERMS: Final[dict[str, Term]] = {
     "islands": Term("{n}诸岛"),
     "archipelago": Term("{n}群岛"),
     HIGHLANDS: Term("{n}高地"),
+    WILDS: Term("{n}荒野"),
+    DESERT: Term("{n}沙漠"),
     LAKE: Term("{n}湖"),
 }
 ZH_SECTORS: Final[dict[str, str]] = {

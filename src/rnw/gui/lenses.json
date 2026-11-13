@@ -24,7 +24,8 @@
     },
     "terrain": {
       "flatland": "#a9c480", "wetlands": "#5f9c8e", "plateau": "#c9b07e", "hills": "#a88c62",
-      "mountains": "#85705c", "hills_wasteland": "#9a9284", "mountain_wasteland": "#7a746e"
+      "mountains": "#85705c", "hills_wasteland": "#9a9284", "mountain_wasteland": "#7a746e",
+      "flatland_wasteland": "#a79f86", "plateau_wasteland": "#a99d82", "dune_wasteland": "#d9c38e"
     },
     "resources": {
       "wheat": "#e6cf6a", "maize": "#e0c24e", "rice": "#d8d892", "potato": "#c4b168", "legumes": "#a9c46a",
@@ -61,6 +62,9 @@
     "hills": { "height": 0.24, "rough": 0.45, "rock": 0.1 },
     "mountains": { "height": 0.55, "rough": 1, "rock": 0.36 },
     "hills_wasteland": { "height": 0.45, "rough": 0.8, "rock": 0.5 },
+    "flatland_wasteland": { "height": 0.1, "rough": 0.2, "rock": 0.5 },
+    "plateau_wasteland": { "height": 0.4, "rough": 0.3, "rock": 0.5 },
+    "dune_wasteland": { "height": 0.1, "rough": 0.14, "rock": 0.5 },
     "mountain_wasteland": { "height": 0.7, "rough": 1, "rock": 0.6 }
   },
   "colours": {

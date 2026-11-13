@@ -36,7 +36,7 @@ The interim patch transfer copied river and border bands from unrelated places a
 | Stage | Module | Method |
 |---|---|---|
 | 0. Land and sea | `newworld.py` | Fractal noise above a threshold that keeps the land budget, with one seed-drawn lattice origin for the whole crop so high-variance nodes do not favour fixed map positions (0.12.1, C286). Near a guard (protected-domain or longitudinal canvas edge, axes opening enclosed seas) elevation falls over a ramp of four coast margins whose start moves inland by 0–2 ramps of warped noise; canvas slivers thinner than two ramps stay sea. A sea cut off around a protected islet gets its shortest path to open water added to the guard, and the coasts are redrawn (C64). |
-| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. The highest cells become wastelands. See [Mountains and hills](#mountains-and-hills-110--epoch-60). |
+| 1. Relief | `relief.py` | One continuous height field in decal units. Mountain chains follow the zero lines of two families of low-frequency noise at the width of a real range (the noise divided by its slope), rise to massifs of varied height and carry ridged-multifractal crests; plus foothills, hill country, plateaus, a broad tilt and an inland rise. All noise uses rotated lattices and domain warping, so nothing aligns with the raster. Ramps use a Euclidean distance to the sea. Up to epoch 63 the highest cells become wastelands; from epoch 64 they are planned ([Natural wastelands](#natural-wastelands-130--epoch-64)). See [Mountains and hills](#mountains-and-hills-110--epoch-60). |
 | 2. Climate | `climate.py`, `eu5_biomes.py` | Absolute latitude comes from city-locator anchors (C49). Rainfall comes from zonal winds: easterlies below 30°, westerlies from 30° to 60°, polar easterlies above, blended across the band edges. The sea recharges moisture (an ocean fully, a strait little). Land loses a fixed share per pixel plus an orographic share on smoothed terrain, which gives rain shadow behind ranges. The same model runs on the vanilla map and on the generated map. |
 | 3. Classification | `eu5_biomes.py` | Integer k-nearest-neighbour vote (k = 32) over about 18,000 Old World land locations, on latitude, rainfall, mean height and distance to the sea. It predicts climate first, then vegetation among the pairs of the chosen climate. Farmland is learned as grassland, because the New World starts empty. Sea and lake climates come from vanilla sea zones by latitude and distance to land. |
 | 4. Coherence | `eu5_biomes.py` | The joint (climate, vegetation) votes are smoothed over the location adjacency graph: 3 rounds choose the climate; 1 round, limited to that climate's own pairs and widened when it has no vote, chooses the vegetation (issue #4). Topography comes from relief ranks in vanilla proportions (mountains, plateaus, hills, wetlands, flatland), using height, height spread, rainfall and distance to the coast. Desert cells never become wetlands, because no biome covers that combination (C54). |
@@ -179,6 +179,70 @@ bounds, local numeric/visual comparison and remaining engine uncertainty are in
 058. Neither biome grouping alone nor a height-source plot proves final game
 appearance. No engine files are patched and no derived game resources are shipped
 with the generator.
+
+## Natural wastelands (1.3.0 / epoch 64)
+
+Until epoch 63 the wastelands were the highest cells of the relief (the share set by **Wasteland
+share**), so every one was a mountain. [V-LOCAL EU5 1.4.7, build 26377361, 2026-11-13] The game's own
+map has 1,821 impassable locations among 22,718 land ones (8.0 % of the locations, 38.4 % of the
+land area, because a few are enormous: the largest is 1.14 million pixels, the median 632 and the
+5 % largest hold two thirds of the area). By area they are 30.7 % flat wastelands (tundra, taiga
+and jungle hearts), 24.5 % mountains, 14.3 % plateaus and mesas, 10.7 % hills and 10.0 % dunes, under
+36 % sparse, 26 % forest, 23 % desert, 9 % jungle and 5 % woods. Mountains are less than a quarter.
+
+`barrens.py` (called from `eu5_biomes.assign_biomes` once climate and vegetation are drawn, and
+only from epoch 64 and for ordinary lands, not the Wall) plans the wastelands in five steps; the
+construction is [INFERRED] from those measurements, not a copy of Paradox's authoring.
+
+1. **Calibration from the installed game, by area.** For each patch (a climate group of
+   `biomes.txt` and a vegetation) and kind (mountain, hills, plateau, flat, dune) it reads the part
+   of the patch's land that vanilla wastelands cover, and the size of every vanilla wasteland by
+   kind. A patch below 150,000 pixels gives no rate (a few dozen locations are noise, not a share).
+2. **Quotas.** The world's budget (land cells × the wasteland share, as before) is divided between
+   the (climate, vegetation, kind) classes in proportion to rate × the patch's area in the world, by
+   exact capped water-filling (`fractions.Fraction`, a class never takes more than 80 % of what it
+   can hold in the first round) and rounded by systematic sampling, so the sum is exact. A class
+   exists only where `biomes.txt` draws the triple by a biome of its own with materials, never by
+   `default_biome`.
+3. **Suitability.** A cell can only be a kind its ground allows (a mountain on high ground, hills
+   on rough ground, a plateau on high smooth ground, a flat or a dune on low smooth ground), and
+   within that ranks by what the kind is: dry remote smooth ground for dunes, wet remote lowland
+   for jungle, cold remote ground for tundra, the highest roughest ground for mountains, each
+   blended 70/30 with a smoothed regional noise, so that districts favour a kind.
+4. **Units.** Vanilla wastelands are mostly single locations with a heavy tail of huge ones, and
+   touching wastelands of identical attributes are one location (`wastelands.location_units`). A
+   unit draws its size from the vanilla sizes weighted by area (a random vanilla wasteland *pixel*
+   picks the location, so the area, not the count, sets the shape), converted to generated cells,
+   and grows from the best cell over cells of one class. No unit touches another of the same
+   attributes, so the sizes drawn are the sizes written.
+5. **Reachability.** A cell becomes wasteland only if every passable cell still reaches a coast
+   without it (a breadth-first test per cell; cells that are the last way are never taken).
+
+Cells that touch the sea or a polar edge keep their class and the old topography: the ports,
+docks and strait crossings of the coast stage are made from the cells beside the sea as they are
+(`settle_coast`, `shape_water`), so the plan is made after the land is cached and does not change the
+cache key. Wastelands the plan does not choose (land a frozen ring encloses) are sealed as before.
+The plan fails with `WastelandPlanError` if a passable cell would reach no coast, and
+`_check_world` still refuses unported land.
+
+The topography written is the kind's: `mountain_wasteland`, `hills_wasteland`, `plateau_wasteland`,
+`flatland_wasteland` or `dune_wasteland` (biome `desert_rock_wasteland`). Wastelands are named for
+their terrain, in every language (`wording.HIGHLANDS`, `WILDS`, `DESERT`; a mountain, hills or
+plateau is a *Highlands*, a flat one *Wilds*, a dune a *Desert*), and both windows draw each with
+its own relief and colour (`lenses.json`).
+
+[V-EXEC 2026-11-13] The reference world (supercontinent, seed 20261102, 9 % wastelands): budget 583,
+15 frozen at the coast, 568 planned, no shortfall; 113 dune, 14 plateau, 292 flat, 47 hills and
+102 mountain cells, in 113 units (the largest 41 cells) and 125 written wasteland locations, every
+one a valid biome (`default_biome_locations` 0). By area the planned part is about 19 % dunes,
+2 % plateaus, 49 % flat, 9 % hills and 21 % mountains: the composition follows the vanilla rates
+patch by patch but is shaped by the generated relief, which has few smooth high cells, so
+plateaus are rarer than in the game.
+
+**Limits.** At the highest **Wasteland** the world holds a few per cent fewer wastelands than
+asked (bench, same inputs: 200 ‰ 20 of 1,297 cells short; 500 ‰ 193 of 3,243), because every passable
+location must still reach a coast; the stats record `shortfall`. A mountain range painted in a land image is high ground, which the plan favours for mountain
+wastelands, but it is not made impassable throughout. The Wall keeps the highest cells.
 
 ## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 

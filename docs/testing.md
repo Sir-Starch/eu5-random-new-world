@@ -53,9 +53,9 @@ proof that its gate still makes the old bytes ([ADR 0013](adr/0013-experimental-
 epochs, the switches, the stamps and what the controller makes of the choice.
 
 The reference export compares the current epoch's output with
-`tests/golden_world.json` (pending epoch 63 of 1.2.2). The frozen
-epoch-62, epoch-61, epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch62.json`,
-`tests/golden_world_epoch61.json`, `tests/golden_world_epoch60.json` and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples
+`tests/golden_world.json` (pending epoch 64 of 1.3.0). The frozen
+epoch-63, epoch-62, epoch-61, epoch-60 and epoch-59 references are preserved in `tests/golden_world_epoch63.json`,
+`tests/golden_world_epoch62.json`, `tests/golden_world_epoch61.json`, `tests/golden_world_epoch60.json` and `tests/golden_world_epoch59.json`. The layer check compares land/resources/peoples
 rerolls. They take substantially longer than synthetic tests and need the local
 game inputs; use them when those outputs are affected. Do not rewrite a frozen
 epoch's reference to make a failure pass. See [ADR 0003](adr/0003-versioning.md).

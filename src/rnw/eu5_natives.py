@@ -1446,7 +1446,10 @@ def _place_names(
                 near.setdefault(waste, []).append(culture[land])
     for waste in sorted(near):
         culture[waste] = _majority(near[waste])
-        names[plan.cells[waste].key] = Phrase(wording.HIGHLANDS, namer.name(culture[waste]))
+        # the planned name's term stays (a highland, a wild or a desert); its word is local
+        planned = plan.cells[waste].name
+        term = planned.term if isinstance(planned, Phrase) else wording.HIGHLANDS
+        names[plan.cells[waste].key] = Phrase(term, namer.name(culture[waste]))
     members: dict[str, list[str]] = {}
     regions: dict[str, list[str]] = {}
     for cell, value in sorted(culture.items()):

@@ -52,7 +52,7 @@ def test_each_language_writes_parts_of_a_sea_and_a_formable_its_own_way(language
 
 def test_every_language_knows_every_term_family_and_tradition() -> None:
     for language in wording.LANGUAGES:
-        for term in (*wording.WATERS, wording.HIGHLANDS, wording.LAKE):
+        for term in (*wording.WATERS, *wording.WASTELANDS, wording.LAKE):
             assert render(Phrase(term, "Kaira"), language)
             for sector in (*wording.SECTORS, wording.CENTRAL):
                 assert render(Phrase(term, "Kaira", (wording.FAR, sector)), language)

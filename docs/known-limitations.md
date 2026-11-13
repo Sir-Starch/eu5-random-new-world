@@ -62,6 +62,9 @@ These limits apply to **RNW 1.2.2 / epoch 63**. For installation and everyday us
 - **Allow about 8 GB of free RAM for generation.** On a 16 GB system, close
   EU5 after opening the generator, or launch the generator directly from its
   folder.
+- **A very high Wasteland setting gives a little less than asked.** From 1.3.0 every passable
+  location must still reach a coast when the wastelands are planned, so at the top of the
+  slider a few per cent of the asked cells stay passable.
 - **Some seeds and settings cannot produce a valid world.** Generation stops
   with an error in that case. Use **Generate with a new seed** to retry.
 - **A world made by an earlier algorithm gets no versions.** A version keeps the
