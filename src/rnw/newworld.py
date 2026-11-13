@@ -31,7 +31,7 @@ from rnw.model import CellClass
 from rnw.noise import NOISE_SCALE, fractal_noise
 from rnw.parallel import Stages, stage_workers
 from rnw.progress import checkpoint
-from rnw.relief import ReliefHints, generate_relief
+from rnw.relief import HILL_STEP, ReliefHints, generate_relief, strip_bend
 from rnw.rivers import RiverGenerationError
 from rnw.rng import SplitMix64, derive_seed, mix64
 from rnw.sea_corridors import (
@@ -1354,15 +1354,6 @@ def _cell_sums(
     return tuple(sums[index] for index in range(5))
 
 
-# Hills are rough ground (epoch 64, ``epoch.ROUGH_HILLS``): the bend of the height over
-# ``HILL_STEP`` pixels, which no slope has. A spread about the plane that fits a whole cell grows
-# with the cell, so once the cells were sized by the land the largest became hills: hills were
-# 1.32 times the median location and 327 permille of the coastal locations hills, where the
-# bend gives 1.08 and 280 (vanilla 0.83 and 254 in the Old World) on world gady3byywf
-# [V-EXEC 2026-11-13].
-HILL_STEP: Final[int] = 8
-
-
 def cell_roughness(
     labels: NDArray[np.int32], elevation: NDArray[np.int32], count: int
 ) -> NDArray[np.int64]:
@@ -1373,44 +1364,18 @@ def cell_roughness(
     A slope, as every cell rising from a coast has, does not bend; nor does the reading grow with
     the cell, as a spread about the cell's plane does. Integer arithmetic, a strip at a time.
     """
-    step = HILL_STEP
-    rows, columns = (int(size) for size in labels.shape)
+    rows = int(labels.shape[0])
     totals = np.zeros(count, dtype=np.int64)
     pixels = np.zeros(count, dtype=np.int64)
     for start in range(0, rows, STRIP_ROWS):
         checkpoint()
         stop = min(rows, start + STRIP_ROWS)
-        low, high = max(0, start - step), min(rows, stop + step)
+        low, high = max(0, start - HILL_STEP), min(rows, stop + HILL_STEP)
         block = labels[low:high]
-        land = (block >= 0) & (block < count)
-        height = elevation[low:high].astype(np.int64)
-        inner = slice(start - low, stop - low)
-        bend = np.zeros((stop - start, columns), dtype=np.int64)
-        ends = np.zeros((stop - start, columns), dtype=np.int64)
-        if columns > 2 * step:
-            middle = slice(step, columns - step)
-            both = land[inner, : -2 * step] & land[inner, 2 * step :]
-            found = height[inner, 2 * step :] + height[inner, : -2 * step]
-            found = np.abs(found - 2 * height[inner, middle])
-            bend[:, middle] += np.where(both, found, 0)
-            ends[:, middle] += both
-        # Rows ``step`` away from the strip's own; the first and last ``step`` of the map have none.
-        first, last = max(start, step), min(stop, rows - step)
-        if first < last:
-            here = slice(first - low, last - low)
-            above, below = (
-                slice(first - step - low, last - step - low),
-                slice(first + step - low, last + step - low),
-            )
-            both = land[above] & land[below]
-            found = np.abs(height[above] + height[below] - 2 * height[here])
-            bend[first - start : last - start] += np.where(both, found, 0)
-            ends[first - start : last - start] += both
-        cell = block[inner]
-        keep = (cell >= 0) & (cell < count) & (ends > 0)
-        totals += np.bincount(cell[keep], weights=bend[keep] // ends[keep], minlength=count).astype(
-            np.int64
-        )
+        bend = strip_bend((block >= 0) & (block < count), elevation[low:high], start, stop, rows)
+        cell = block[start - low : stop - low]
+        keep = (cell >= 0) & (cell < count) & (bend >= 0)
+        totals += np.bincount(cell[keep], weights=bend[keep], minlength=count).astype(np.int64)
         pixels += np.bincount(cell[keep], minlength=count)
     return totals // np.maximum(pixels, 1)
 

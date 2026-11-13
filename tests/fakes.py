@@ -16,7 +16,7 @@ from rnw.app.worldcode import decode, encode, new_code
 from rnw.atlas import JSON_FILE, LABELS_FILE
 from rnw.atlas import to_files as atlas_files
 from rnw.eu5_atlas import build_atlas
-from rnw.eu5_biomes import OCTAVE_PARTS, CellBiomes, SizeModel, size_table
+from rnw.eu5_biomes import OCTAVE_PARTS, TOPOGRAPHIES, CellBiomes, SizeModel, size_table
 from rnw.eu5_newworld import Plan, PlannedCell
 from rnw.eu5_start import Country, FinalStartPlan, PopCohort
 from rnw.inputs import hash_files
@@ -243,6 +243,9 @@ def synthetic_sizes() -> SizeModel:
         table[:, 4].copy(),
         np.array([0, 1], dtype=np.int64),
         (OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
+        topography=np.full(len(rows), TOPOGRAPHIES.index("flatland"), dtype=np.int64),
+        shares=np.array([1, 1, 2, 1, 5], dtype=np.int64),
+        dry=np.array([False, False]),
     )
 
 

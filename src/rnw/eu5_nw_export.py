@@ -89,6 +89,7 @@ from rnw.eu5_biomes import (
     assign_biomes,
     biome_of,
     biome_rules,
+    cell_ruggedness,
     climate_grid,
     label_statistics,
     material_counts,
@@ -516,7 +517,7 @@ def _generated(
     canvas: Canvas, world: NewWorld, count: int | None = None, *, rough: bool = False
 ) -> Generated:
     """The first ``count`` cells of ``world`` (all by default) as the biome model reads them;
-    with ``rough`` (epoch 64, ``epoch.ROUGH_HILLS``) their roughness too."""
+    with ``rough`` (epoch 64, ``epoch.ROUGH_HILLS``) their roughness and ruggedness too."""
     count = len(world.classes) if count is None else count
     points = np.stack(
         [world.centroids[:count, 0], _world_columns(canvas, world.centroids[:count, 1])], axis=1
@@ -530,6 +531,7 @@ def _generated(
         coastal=_coastal(world)[:count],
         pixels=world.pixels[:count],
         roughness=cell_roughness(world.labels, world.elevation, count) if rough else None,
+        ruggedness=cell_ruggedness(world.labels, world.elevation, count) if rough else None,
     )
 
 

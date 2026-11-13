@@ -32,12 +32,14 @@ worlds and saves are not rewritten or migrated.
   desert nearly vanished. Now each landmass has active coasts, which raise a cordillera a little
   inland of them, and the land falls away from them across a broad plain, so great rivers cross
   the continent. The rivers are drawn before the locations, and the larger rivers are their
-  borders. Each location is as large as the game's own locations of the climate and vegetation it
-  will have, where the game's land is like it: large in deserts, dry steppes, the cold and far
-  inland, small on wet coasts. The climate learns from the game's Americas as well as the Old World,
-  no longer counts farmland as natural grassland, and gives each climate as much land as the game's
-  own locations would have, so the semi-arid and cold dry lands come back; hills are rough ground,
-  not the slope up from every coast. Epoch 63 and older make the same worlds as before.
+  borders. Each location is as large as the game's own locations of the climate, vegetation and
+  ground it will have, where the game's land is like it: large in deserts, dry steppes, the cold,
+  on plateaus and far inland, small on wet coasts and in the mountains. The climate learns from the
+  game's Americas as well as the Old World, no longer counts farmland as natural grassland, and
+  gives each climate as much land as the game's own locations would have, so the semi-arid and cold
+  dry lands come back; hills are rough ground, not the slope up from every coast, and mountains and
+  plateaus are chosen by their ground, not by how large their location is. Epoch 63 and older make
+  the same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 

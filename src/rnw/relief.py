@@ -36,6 +36,15 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
 COAST_HEIGHT: Final[int] = 5700
+
+# Hills are rough ground (epoch 64, ``epoch.ROUGH_HILLS``, ``newworld.cell_roughness``): the bend
+# of the height over ``HILL_STEP`` pixels (``strip_bend``), which no slope has. A spread about the
+# plane that fits a whole cell grows with the cell, so once the cells were sized by the land the
+# largest became hills: hills were 1.32 times the median location and 327 permille of the coastal
+# locations hills, where the bend gives 1.08 and 280 (vanilla 0.83 and 254 in the Old World) on
+# world gady3byywf [V-EXEC 2026-11-13].
+HILL_STEP: Final[int] = 8
+
 INLAND_LIMIT: Final[int] = 320
 DISTANCE_STEP: Final[int] = 4
 INLAND_SLOPE: Final[int] = 2
@@ -613,3 +622,38 @@ def generate_relief(
         for _ in pool.map(run, range(0, rows, strip)):
             pass
     return out
+
+
+def strip_bend(
+    land: NDArray[np.bool_], height: NDArray[np.integer], start: int, stop: int, rows: int
+) -> NDArray[np.int64]:
+    """The bend of every pixel of rows ``start`` to ``stop`` of a map of ``rows`` rows: the mean
+    of ``|h(p + d) + h(p - d) - 2 h(p)|`` over ``d`` = ``HILL_STEP`` pixels along the row and the
+    column whose two ends are land, -1 where neither is read. ``land`` and ``height`` hold the
+    rows from ``max(0, start - HILL_STEP)`` to ``min(rows, stop + HILL_STEP)``; integers.
+    """
+    step = HILL_STEP
+    low = max(0, start - step)
+    columns = int(land.shape[1])
+    values = height.astype(np.int64)
+    inner = slice(start - low, stop - low)
+    bend = np.zeros((stop - start, columns), dtype=np.int64)
+    ends = np.zeros((stop - start, columns), dtype=np.int64)
+    if columns > 2 * step:
+        middle = slice(step, columns - step)
+        both = land[inner, : -2 * step] & land[inner, 2 * step :]
+        found = values[inner, 2 * step :] + values[inner, : -2 * step]
+        found = np.abs(found - 2 * values[inner, middle])
+        bend[:, middle] += np.where(both, found, 0)
+        ends[:, middle] += both
+    # Rows ``step`` away from the strip's own; the first and last ``step`` of the map have none.
+    first, last = max(start, step), min(stop, rows - step)
+    if first < last:
+        here = slice(first - low, last - low)
+        above = slice(first - step - low, last - step - low)
+        below = slice(first + step - low, last + step - low)
+        both = land[above] & land[below]
+        found = np.abs(values[above] + values[below] - 2 * values[here])
+        bend[first - start : last - start] += np.where(both, found, 0)
+        ends[first - start : last - start] += both
+    return np.where(ends > 0, bend // np.maximum(ends, 1), -1)

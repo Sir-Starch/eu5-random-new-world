@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
@@ -17,7 +18,11 @@ from rnw.eu5_biomes import (
     NEIGHBOURS,
     OCTAVE_PARTS,
     SIZE_STEP,
+    TOPOGRAPHIES,
+    block_relief,
+    block_topographies,
     calibrated_weights,
+    cell_ruggedness,
     chosen_pairs,
     class_sizes,
     integer_cube_root,
@@ -30,7 +35,8 @@ from rnw.eu5_biomes import (
 from rnw.eu5_canvas import NEW_WORLD
 from rnw.fields import upsample
 from rnw.model import CellClass
-from rnw.newworld import HILL_STEP, NewWorld, cell_roughness, generate_new_world
+from rnw.newworld import NewWorld, cell_roughness, generate_new_world
+from rnw.relief import HILL_STEP
 from rnw.settings import NewWorldSettings
 from rnw.synth import grow_regions, grow_weighted
 from rnw.topology import label_components
@@ -212,9 +218,16 @@ def test_octave_parts_are_exact() -> None:
 def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
     dry = np.array([[100, 80, 7000, 50], [500, 120, 8000, 150]], dtype=np.int64)
     wet = np.array([[100, 900, 7000, 50], [500, 700, 8000, 150]], dtype=np.int64)
-    assert class_sizes(SIZES, dry).tolist() == [1000, 1000]
-    assert class_sizes(SIZES, wet).tolist() == [-1000, -1000]
-    assert np.array_equal(class_sizes(SIZES, np.concatenate([wet, dry])), [-1000] * 2 + [1000] * 2)
+    flat = np.zeros((2, 2), dtype=np.int64)
+    assert class_sizes(SIZES, dry, flat).tolist() == [1000, 1000]
+    assert class_sizes(SIZES, wet, flat).tolist() == [-1000, -1000]
+    both = np.concatenate([wet, dry])
+    assert np.array_equal(
+        class_sizes(SIZES, both, np.zeros((4, 2), dtype=np.int64)), [-1000] * 2 + [1000] * 2
+    )
+    # The higher block is the one mountain the shares allow, and mountains are 500 smaller.
+    model = replace(SIZES, shares=np.array([1, 0, 0, 0, 1]), offsets=np.array([-500, 0, 0, 0, 0]))
+    assert class_sizes(model, dry, flat).tolist() == [1000, 500]
 
 
 def test_the_size_model_reads_locations_through_their_blocks() -> None:
@@ -232,11 +245,11 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     )
     game_map = cast("Eu5Map", cast("object", namespace))
     templates = {
-        "old": {"climate": "arid", "vegetation": "desert"},
-        "west": {"climate": "oceanic", "vegetation": "forest"},
-        "east": {"climate": "oceanic", "vegetation": "forest"},
-        "fields": {"climate": "oceanic", "vegetation": "farmland"},
-        "waste": {"climate": "arid", "vegetation": "desert"},
+        "old": {"climate": "arid", "vegetation": "desert", "topography": "flatland"},
+        "west": {"climate": "oceanic", "vegetation": "forest", "topography": "hills"},
+        "east": {"climate": "oceanic", "vegetation": "forest", "topography": "mountains"},
+        "fields": {"climate": "oceanic", "vegetation": "farmland", "topography": "plateau"},
+        "waste": {"climate": "arid", "vegetation": "desert", "topography": "mountains"},
     }
     height = np.full(labels.shape, 7000, dtype=np.uint16)
     height[step:, step:] = 9000
@@ -252,6 +265,13 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     assert model.features[:, 2].tolist() == [7000, 9000, 9000]
     assert np.array_equal(model.features[1], model.features[2])
     assert model.digest() == size_model(game_map, templates, height).digest()
+    # Read without itself, each of the Americas' two forests is given the other's size; the
+    # mountain lies 101/64 octave above that, the hill as far below. The shares are the Old
+    # World's passable locations, the field among them.
+    step_up = octave_parts(3, 1) * 1000 // OCTAVE_PARTS
+    assert model.offsets.tolist() == [step_up, 0, -step_up, 0, 0]
+    assert model.shares.tolist() == [0, 1, 0, 0, 1]
+    assert model.dry.tolist() == [True, False]
 
 
 def _chosen_without_self(train: np.ndarray, classes: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -296,3 +316,58 @@ def test_a_row_never_votes_for_itself() -> None:
     assert weights[1] == 0
     assert weights[0] > 0
     assert weights[2] > 0
+
+
+def test_blocks_take_their_ground_from_their_relief_in_vanilla_shares() -> None:
+    #           latitude, rain, height, coast
+    features = np.array(
+        [
+            [300, 100, 9000, 100],  # 0: high and broken: mountains
+            [300, 100, 8800, 100],  # 1: high and smooth: plateau
+            [300, 100, 7000, 100],  # 2: bends most: hills
+            [300, 900, 6100, 10],  # 3: wet, low, at the sea: wetlands
+            [300, 950, 6000, 5],  # 4: wetter still, but a desert
+            [300, 100, 7000, 100],  # 5: flatland
+        ],
+        dtype=np.int64,
+    )
+    relief = np.array(
+        [[900, 50], [10, 40], [300, 800], [20, 10], [20, 10], [30, 20]], dtype=np.int64
+    )
+    dry = np.array([False, False, False, False, True, False])
+    shares = np.array([1, 1, 1, 1, 2], dtype=np.int64)
+    ground = block_topographies(features, relief, dry, shares)
+    assert [TOPOGRAPHIES[kind] for kind in ground.tolist()] == [
+        "mountains",
+        "plateau",
+        "hills",
+        "wetlands",
+        "flatland",
+        "flatland",
+    ]
+
+
+def test_block_relief_reads_the_spread_and_the_bend_of_each_block() -> None:
+    rows, columns = np.mgrid[0:SIZE_STEP, 0 : 2 * SIZE_STEP]
+    height = np.full(rows.shape, 7000, dtype=np.int32)
+    right = columns >= SIZE_STEP
+    squares = np.where((rows // HILL_STEP + columns // HILL_STEP) % 2 == 0, 300, -300)
+    height[right] += squares[right].astype(np.int32)
+    land = np.ones(rows.shape, dtype=bool)
+    found = np.ones((1, 2), dtype=bool)
+    relief = block_relief(land, height, found)
+    assert relief[:, 0].tolist() == [0, 300]
+    assert 0 < relief[0, 1] < relief[1, 1] <= 1200
+
+
+def test_a_cell_is_as_rugged_as_its_ground_whatever_its_size() -> None:
+    rows, columns = np.mgrid[0:SIZE_STEP, 0 : 5 * SIZE_STEP]
+    squares = np.where((rows // HILL_STEP + columns // HILL_STEP) % 2 == 0, 300, -300)
+    height = (7000 + squares + 10 * columns).astype(np.int32)  # broken ground on a slope
+    labels = np.where(columns < SIZE_STEP, 0, 1).astype(np.int32)  # a small cell, a large one
+    labels[:, 4 * SIZE_STEP :] = 2  # a block of water
+    rugged = cell_ruggedness(labels, height, 2)
+    assert rugged[0] == rugged[1] > 300
+    # Their own spreads differ: the large cell spans thrice the slope.
+    own = [int(height[labels == cell].std()) for cell in (0, 1)]
+    assert own[1] > 3 * own[0] // 2

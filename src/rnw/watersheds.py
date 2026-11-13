@@ -27,6 +27,7 @@ from rnw.eu5_biomes import (
     SIZE_STEP,
     ClimateGrid,
     block_features,
+    block_relief,
     class_sizes,
     climate_grid,
 )
@@ -162,10 +163,11 @@ def spacing_grid(
     """Seed spacing of every ``DENSITY_STEP`` block, in permille of the uniform spacing.
 
     Each ``SIZE_STEP`` block of land takes the size of the vanilla locations of the class the
-    vote will give it (``eu5_biomes.class_sizes``), quantized to the levels of ``SPACING`` and
-    shifted as a whole so that the land outside the polar bands expects as many cells as the
-    uniform spacing gives it. The sizes are not smoothed: vanilla's change from one class to the
-    next. The ``polar_rows`` rows at either edge keep ``POLAR_SPACING``.
+    vote will give it and of the ground its relief makes it (``eu5_biomes.class_sizes``),
+    quantized to the levels of ``SPACING`` and shifted as a whole so that the land outside the
+    polar bands expects as many cells as the uniform spacing gives it. The sizes are not
+    smoothed: vanilla's change from one class to the next. The ``polar_rows`` rows at either
+    edge keep ``POLAR_SPACING``.
     """
     step = DENSITY_STEP
     rows, columns = (int(size) for size in land.shape)
@@ -179,7 +181,7 @@ def spacing_grid(
     found, features = block_features(land, height, climate)
     coarse = np.zeros(found.shape, dtype=np.int64)
     if features.size:
-        coarse[found] = class_sizes(sizes, features)
+        coarse[found] = class_sizes(sizes, features, block_relief(land, height, found))
     ratio = SIZE_STEP // step
     size = np.repeat(np.repeat(coarse, ratio, axis=0), ratio, axis=1)[: shape[0], : shape[1]]
     level = np.floor_divide(size + 125, 250)
