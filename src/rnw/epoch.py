@@ -131,6 +131,7 @@ RIVERS_FIRST: Final[int] = (
     64  # 1.3.0: rivers come before the cells, which follow them and the land.
 )
 BASINS: Final[int] = 64  # 1.3.0: the rivers wear the land down to their graded beds.
+TABLELANDS: Final[int] = 64  # 1.3.0: plateaus are broad tablelands, not rare domes.
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
@@ -141,6 +142,7 @@ SWITCHES: Final[dict[str, int]] = {
     "ROUGH_HILLS": ROUGH_HILLS,
     "RIVERS_FIRST": RIVERS_FIRST,
     "BASINS": BASINS,
+    "TABLELANDS": TABLELANDS,
 }
 
 

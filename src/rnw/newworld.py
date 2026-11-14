@@ -1279,6 +1279,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                 hints=hints,
                 margins=algorithm >= epoch.CORDILLERAS,
                 spread=spread,
+                tablelands=algorithm >= epoch.TABLELANDS,
             ),
         )
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)

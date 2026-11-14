@@ -100,6 +100,23 @@ def test_the_hill_spread_is_the_same_in_any_strip_and_leaves_the_relief_alone(
         _ = relief.generate_relief(land, seed=4, spread=np.zeros((3, 3), dtype=np.int16))
 
 
+@pytest.mark.parametrize("window", [1, 150])
+def test_tablelands_only_raise_more_of_the_land_in_any_strip(
+    monkeypatch: pytest.MonkeyPatch, window: int
+) -> None:
+    land = _land(9, (352, 300))
+    monkeypatch.setattr(relief, "worker_count", _fixed(3))
+    monkeypatch.setattr(relief, "band_rows", _fixed(10_000))
+    whole = relief.generate_relief(land, seed=9, margins=True, tablelands=True)
+    domes = relief.generate_relief(land, seed=9, margins=True)
+    monkeypatch.setattr(relief, "band_rows", _fixed(max(relief.STRIP_FLOOR, window)))
+    assert np.array_equal(
+        whole, relief.generate_relief(land, seed=9, margins=True, tablelands=True)
+    )
+    assert np.all(whole >= domes)
+    assert np.count_nonzero(whole > domes + 1000) > np.count_nonzero(land) // 50
+
+
 def test_a_lake_does_not_raise_a_cone_of_land_round_it() -> None:
     """The inland rise follows the distance to the sea: round a lake the ground is level."""
     shape = (420, 420)

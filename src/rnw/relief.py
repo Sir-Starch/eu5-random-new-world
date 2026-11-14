@@ -61,6 +61,17 @@ HILL_HEIGHT: Final[int] = 5500
 # are 179 and 216, the rivers unchanged [V-EXEC 2026-11-14].
 HILL_GAIN: Final[int] = 36
 PLATEAU_HEIGHT: Final[int] = 6500
+# The plateau noise over which the land rises to a plateau. Before epoch 64 a plateau stood on
+# 2.5 % of the land of world gady3byywf (7.5 % at all), and the ground voted a plateau was mostly
+# smooth upland outside it; from epoch 64 (``epoch.TABLELANDS``) a plateau rises over a lower
+# stretch of the noise, from a fifth of the land and fully on a twelfth: plateaus are 112 and 176
+# permille of the locations of worlds gady3byywf and seed 42 (were 90 and 147; vanilla 127, the
+# Americas 147), the land at 13,000 to 15,000 41 and 63 permille (35 and 55; vanilla 64 to 71)
+# and the five largest rivers 301 and 253 permille of the river pixels (292 and 237); mountains
+# are 125 and 151 (115 and 142), a smaller share of every band above 13,000 but with more land
+# above 18,000 [V-EXEC 2026-11-14].
+PLATEAU_EDGE: Final[tuple[int, int]] = (9800, 14700)
+TABLELAND_EDGE: Final[tuple[int, int]] = (4000, 9000)
 FOOTHILL_RADIUS: Final[int] = 48
 BROAD_RAMP: Final[int] = 120
 RELIEF_RAMP: Final[int] = 40
@@ -483,11 +494,13 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     hints: ReliefHints | None = None,
     margin_grid: NDArray[np.int64] | None = None,
     spread_out: NDArray[np.int16] | None = None,
+    tablelands: bool = False,
 ) -> NDArray[np.int32]:
     """Height of rows ``first`` to ``last``, computed in a window that reaches ``HALO`` rows
     past them; every field is a function of the pixel, so the window changes nothing.
     ``margin_grid`` (``_margin_grid``) raises the active coasts' cordillera and tilt; the rows of
-    ``spread_out`` receive the hill spread (``generate_relief``).
+    ``spread_out`` receive the hill spread, and ``tablelands`` widens the plateaus
+    (``generate_relief``).
     """
     rows, columns = (int(size) for size in land.shape)
     start, stop = max(0, first - HALO), min(rows, last + HALO)
@@ -546,7 +559,7 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     plateau_noise = _field(
         seed, "relief_plateau", shape, step=8, period=1000, octaves=3, row0=start
     )
-    plateau = smoothstep(plateau_noise, 9800, 14700)
+    plateau = smoothstep(plateau_noise, *(TABLELAND_EDGE if tablelands else PLATEAU_EDGE))
     if airy is not None:
         plateau = np.maximum(plateau, airy * HIGHLAND_PLATEAU // PERMILLE)
     if calm is not None:
@@ -584,7 +597,7 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     return np.where(window[core], height[core], 0).astype(np.int32)
 
 
-def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing, margins and spread.
+def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three epoch-64 fields.
     land: NDArray[np.bool_],
     *,
     seed: int,
@@ -592,6 +605,7 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing, margins 
     hints: ReliefHints | None = None,
     margins: bool = False,
     spread: NDArray[np.int16] | None = None,
+    tablelands: bool = False,
 ) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed.
 
@@ -604,7 +618,8 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing, margins 
     each landmass raise a cordillera a little inland of them and tilt the land away. ``spread``
     (epoch 64, ``epoch.ROUGH_HILLS``), a raster of the land's shape, is filled with how far the
     hills would spread about the middle of their noise at ``HILL_GAIN`` (0 off the land), which
-    ``basins.shape_relief`` adds once the drainage is planned.
+    ``basins.shape_relief`` adds once the drainage is planned. With ``tablelands`` (epoch 64,
+    ``epoch.TABLELANDS``) plateaus rise over ``TABLELAND_EDGE`` of their noise.
 
     The raster is cut into strips of ``STRIP_ROWS`` rows (a multiple of the coarsest noise
     step) that run on a few threads; the result is the same for any strip height and any
@@ -648,6 +663,7 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing, margins 
             hints=hints,
             margin_grid=margin_grid,
             spread_out=spread,
+            tablelands=tablelands,
         )
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
