@@ -38,7 +38,10 @@ worlds and saves are not rewritten or migrated.
   on plateaus and far inland, small on wet coasts and in the mountains. The climate learns from the
   game's Americas as well as the Old World, no longer counts farmland as natural grassland, and
   gives each climate as much land as the game's own locations would have, so the semi-arid and cold
-  dry lands come back. The ground of each location is chosen by the game's own locations most like
+  dry lands come back. The rain now has seasons: the rain belts follow the sun, monsoons blow in
+  from the warm seas, and cold currents dry the subtropical west coasts, so deserts lie where the
+  air arrives dry (behind ranges, on high plateaus, on the west of the subtropics) instead of being
+  scattered by latitude, and the wettest land is tropical forest. The ground of each location is chosen by the game's own locations most like
   it in height, ruggedness, roughness, rain and distance to the sea, so hills are rough ground, not
   the slope up from every coast, mountains and plateaus are not chosen by how large their location
   is, and wetlands lie in the low land inland as well as at the sea. Epoch 63 and older make the

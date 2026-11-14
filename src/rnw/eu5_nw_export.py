@@ -3074,7 +3074,12 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
             "vanilla localization keys", lambda: key_hashes(vanilla_localization_keys(game_dir))
         )
         climates = stages.submit(
-            "vanilla climate", lambda: _vanilla_climate(game_map, reads.result()[0])
+            "vanilla climate",
+            lambda: _vanilla_climate(
+                game_map,
+                reads.result()[0],
+                seasonal=settings.algorithm >= epoch.OPEN_CLIMATE,
+            ),
         )
         levels = stages.submit(
             "vanilla material levels",
@@ -3885,14 +3890,15 @@ class VanillaClimate:
     grid: ClimateGrid
 
 
-def _vanilla_climate(game_map: Eu5Map, store: DecalStore) -> VanillaClimate:
-    """Vanilla heights, location statistics and climate grid (computed beside the world)."""
+def _vanilla_climate(game_map: Eu5Map, store: DecalStore, *, seasonal: bool) -> VanillaClimate:
+    """Vanilla heights, location statistics and climate grid (computed beside the world); with
+    ``seasonal`` (epoch 64, ``epoch.OPEN_CLIMATE``) the rain of each season."""
     height = store.world_heights()
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     return VanillaClimate(
         height=height,
         locations=vanilla_locations(game_map.labels, height),
-        grid=climate_grid(sea[game_map.labels], height),
+        grid=climate_grid(sea[game_map.labels], height, seasonal=seasonal),
     )
 
 
@@ -3903,14 +3909,16 @@ def _final_climate(
     final_labels: NDArray[np.int32],
     vanilla: VanillaClimate,
 ) -> ClimateGrid:
-    """The climate grid of the whole map as ``world`` shapes it: its sea and its relief."""
+    """The climate grid of the whole map as ``world`` shapes it: its sea and its relief, with
+    the seasons when the vanilla grid has them."""
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes], dtype=bool)
     final_sea = np.concatenate(
         [sea, np.array([kind is CellClass.SEA for kind in world.classes], dtype=bool)]
     )
     height = vanilla.height.astype(np.int32)
     canvas.put(height, world.elevation)
-    return climate_grid(final_sea[final_labels], height)
+    seasonal = vanilla.grid.winter is not None
+    return climate_grid(final_sea[final_labels], height, seasonal=seasonal)
 
 
 def _biome_model(  # noqa: PLR0913 - the biome model reads the map, the world and the vanilla climate.

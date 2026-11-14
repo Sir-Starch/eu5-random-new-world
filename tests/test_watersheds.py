@@ -30,6 +30,7 @@ from rnw.eu5_biomes import (
     nearest_others,
     octave_parts,
     prior_weights,
+    rain_root,
     size_model,
     vote_grounds,
 )
@@ -221,8 +222,14 @@ def test_octave_parts_are_exact() -> None:
 
 
 def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
-    dry = np.array([[100, 80, 7000, 50], [500, 120, 8000, 150]], dtype=np.int64)
-    wet = np.array([[100, 900, 7000, 50], [500, 700, 8000, 150]], dtype=np.int64)
+    def blocks(rows: list[tuple[int, int, int, int]]) -> np.ndarray:
+        # The seasons' features, as the synthetic model reads them (``tests.fakes``).
+        table = np.array(rows, dtype=np.int64)
+        summer, winter = rain_root(table[:, 1] * 2 // 3), rain_root(table[:, 1] // 3)
+        return np.stack([table[:, 0], summer, table[:, 2], table[:, 3], winter], axis=1)
+
+    dry = blocks([(100, 80, 7000, 50), (500, 120, 8000, 150)])
+    wet = blocks([(100, 900, 7000, 50), (500, 700, 8000, 150)])
     flat = np.zeros((2, 2), dtype=np.int64)
     assert class_sizes(SIZES, dry, flat).tolist() == [1000, 1000]
     assert class_sizes(SIZES, wet, flat).tolist() == [-1000, -1000]

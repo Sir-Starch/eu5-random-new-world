@@ -40,7 +40,7 @@ from rnw.barrens import (
     legacy_topography,
     plan_wastelands,
 )
-from rnw.climate import RainSettings, rainfall
+from rnw.climate import RainSettings, SeasonalSettings, rainfall, seasonal_rainfall
 from rnw.eu5_canvas import NEW_WORLD, OCEANS
 from rnw.fields import block_mean
 from rnw.model import CellClass
@@ -85,12 +85,38 @@ LATITUDE_ANCHORS: Final[tuple[tuple[int, int], ...]] = (
 RAIN: Final[RainSettings] = RainSettings(
     decay_px=225, recharge_px=40, lift_units=8000, blur_px=16, relief_blur_px=8
 )
+# Epoch 64 (``epoch.OPEN_CLIMATE``): the rain of each season (``climate.seasonal_rainfall``), its
+# belts moved by 7 degrees. Latitudes in tenths of a degree of the season's effective latitude.
+SEASONAL: Final[SeasonalSettings] = SeasonalSettings(
+    shift=70,
+    decay_px=120,
+    recharge_px=30,
+    lift_units=6000,
+    blur_px=12,
+    relief_blur_px=8,
+    current_px=120,
+    capacity=((0, 1000), (200, 1000), (400, 650), (600, 350), (800, 120)),
+    efficiency=(
+        (0, 1000), (80, 1000), (130, 700), (180, 300), (220, 150), (300, 150), (360, 500),
+        (420, 900), (600, 900), (700, 600), (850, 300),
+    ),
+    easterly=((0, 700), (250, 700), (330, 0), (620, 0), (700, 600)),
+    westerly=((0, 0), (250, 0), (330, 1000), (620, 1000), (700, 400)),
+    summer_inflow=((0, 300), (80, 600), (300, 600), (400, 300), (550, 0)),
+    winter_inflow=((0, 300), (80, 100), (300, 100), (400, 150), (550, 0)),
+    cold_current=((0, 1000), (80, 1000), (150, 450), (380, 450), (450, 1000)),
+    warm_current=((0, 1000), (150, 1150), (400, 1150), (500, 1000)),
+)  # fmt: skip
 SEA_HEIGHT: Final[int] = 5700
 COAST_LIMIT: Final[int] = 160
 NEIGHBOURS: Final[int] = 32
 CHUNK: Final[int] = 128
-# Feature weights in tenths: latitude, rainfall, height, distance to sea.
+# Feature weights in tenths: latitude, rainfall, height, distance to sea; with the seasons
+# (``ClimateGrid.winter``) the rainfall is the summer's and the winter's follows at the end.
 LAND_WEIGHTS: Final[tuple[int, ...]] = (50, 30, 25, 10)
+WINTER_WEIGHT: Final[int] = 30
+RAIN_ROOT_SHIFT: Final[int] = 32  # the features read the fourth root of rain << 32
+RAIN_ROOT_CAP: Final[int] = (1 << 19) - 1  # keeps rain << 32 below 2^51, where sqrt is exact
 WATER_WEIGHTS: Final[tuple[int, ...]] = (40, 10)
 CLIMATE_ROUNDS: Final[int] = 3
 VEGETATION_ROUNDS: Final[int] = 1
@@ -237,6 +263,22 @@ class ClimateGrid:
     rain: NDArray[np.int64]
     coast: NDArray[np.int64]
     shore: NDArray[np.int64]
+    # The winter's share of ``rain`` (epoch 64, ``seasonal_rainfall``); None: the yearly zonal
+    # rain alone.
+    winter: NDArray[np.int64] | None = None
+
+
+def land_weights(columns: int) -> tuple[int, ...]:
+    """The weights of ``land_features`` with ``columns`` columns."""
+    return LAND_WEIGHTS if columns == len(LAND_WEIGHTS) else (*LAND_WEIGHTS, WINTER_WEIGHT)
+
+
+def rain_root(values: NDArray[np.int64]) -> NDArray[np.int64]:
+    """The fourth root of ``values << RAIN_ROOT_SHIFT``, rounded down (exact: the float square
+    roots of integers below 2^51 round down to the integer roots). Rain's long tail of wet
+    coasts would otherwise squeeze the dry land together in the vote."""
+    shifted = np.clip(values, 0, RAIN_ROOT_CAP).astype(np.float64) * float(1 << RAIN_ROOT_SHIFT)
+    return np.floor(np.sqrt(np.floor(np.sqrt(shifted)))).astype(np.int64)
 
 
 def _block_means(
@@ -261,17 +303,29 @@ def _block_means(
     return share, mean
 
 
-def climate_grid(sea: NDArray[np.bool_], height: NDArray[np.integer]) -> ClimateGrid:
-    """Rainfall, distance to the sea (land) and distance to land (water), in pixels."""
+def climate_grid(
+    sea: NDArray[np.bool_], height: NDArray[np.integer], *, seasonal: bool = False
+) -> ClimateGrid:
+    """Rainfall, distance to the sea (land) and distance to land (water), in pixels; with
+    ``seasonal`` (epoch 64) the rain of the summer and the winter (``seasonal_rainfall``)."""
     step = CLIMATE_STEP
     share, mean = _block_means(sea, height, CLIMATE_STRIP)
     sea_grid = share >= 500  # noqa: PLR2004 - half
     height_grid = np.maximum(mean, SEA_HEIGHT)
+    del share, mean
     rows = np.arange(sea_grid.shape[0], dtype=np.int64) * step + step // 2
-    rain = rainfall(sea_grid, height_grid, latitude_tenths(rows), RAIN)
+    winter = None
+    if seasonal:
+        summer, winter = seasonal_rainfall(
+            sea_grid, height_grid, latitude_tenths(rows), EQUATOR_ROW // step, SEASONAL
+        )
+        rain = summer + winter
+        del summer
+    else:
+        rain = rainfall(sea_grid, height_grid, latitude_tenths(rows), RAIN)
     coast = distance_from(sea_grid, COAST_LIMIT, octagonal=True).astype(np.int64) * step
     shore = distance_from(~sea_grid, COAST_LIMIT, octagonal=True).astype(np.int64) * step
-    return ClimateGrid(rain=rain, coast=coast, shore=shore)
+    return ClimateGrid(rain=rain, coast=coast, shore=shore, winter=winter)
 
 
 def _sample(grid: NDArray[np.int64], points: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -283,20 +337,19 @@ def _sample(grid: NDArray[np.int64], points: NDArray[np.int64]) -> NDArray[np.in
 def land_features(
     grid: ClimateGrid, points: NDArray[np.int64], mean_height: NDArray[np.int64]
 ) -> NDArray[np.int64]:
-    """Latitude, rainfall, mean height and distance to the sea per location.
+    """Latitude, rainfall, mean height and distance to the sea per location; with the seasons
+    the rainfall is the ``rain_root`` of the summer's and that of the winter's follows.
 
     Height spread is left out: vanilla decals carry far more fine relief than the
     location-scale relief field, so the two would not be comparable.
     """
-    return np.stack(
-        [
-            latitude_tenths(points[:, 0]),
-            _sample(grid.rain, points),
-            mean_height,
-            _sample(grid.coast, points),
-        ],
-        axis=1,
-    )
+    rain = _sample(grid.rain, points)
+    columns = [latitude_tenths(points[:, 0]), rain, mean_height, _sample(grid.coast, points)]
+    if grid.winter is not None:
+        winter = _sample(grid.winter, points)
+        columns[1] = rain_root(rain - winter)
+        columns.append(rain_root(winter))
+    return np.stack(columns, axis=1)
 
 
 def water_features(grid: ClimateGrid, points: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -497,14 +550,18 @@ def block_features(
     weights = np.maximum(block_mean(weight * cells, ratio)[: shape[0], : shape[1]], 1)
     rain = block_mean(grid.rain * weight * cells, ratio)[: shape[0], : shape[1]] // weights
     coast = block_mean(grid.coast * weight * cells, ratio)[: shape[0], : shape[1]] // weights
+    winter = None
+    if grid.winter is not None:
+        winter = block_mean(grid.winter * weight * cells, ratio)[: shape[0], : shape[1]] // weights
+        rain = rain_root(rain - winter)
+        winter = rain_root(winter)
     found = count > 0
     centres = np.arange(shape[0], dtype=np.int64) * step + step // 2
     latitude = np.broadcast_to(latitude_tenths(centres)[:, np.newaxis], shape)
-    features = np.stack(
-        [latitude[found], rain[found], (total // np.maximum(count, 1))[found], coast[found]],
-        axis=1,
-    )
-    return found, features
+    columns = [latitude[found], rain[found], (total // np.maximum(count, 1))[found], coast[found]]
+    if winter is not None:
+        columns.append(winter[found])
+    return found, np.stack(columns, axis=1)
 
 
 def block_relief(
@@ -702,7 +759,7 @@ def size_model(
     kinds = np.array([kind in LAND_KINDS for kind in game_map.classes] + [False])
     sea = np.array([kind is CellClass.SEA for kind in game_map.classes] + [False])
     land = kinds[labels]
-    grid = climate_grid(sea[labels], height)
+    grid = climate_grid(sea[labels], height, seasonal=True)
     found, features = block_features(land, height, grid)
     rugged = cell_ruggedness(labels, height, count, land)
     rough = cell_roughness(labels, height, count, land)
@@ -793,7 +850,7 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
     wastelands) still sizes its class but sets no offset. ``ground`` is the vote's table of ranks
     and the grounds of its rows (``SizeModel.ground_table``, ``SizeModel.grounds``).
     """
-    train, _ = _standardize(features, features[:0], LAND_WEIGHTS)
+    train, _ = _standardize(features, features[:0], land_weights(int(features.shape[1])))
     given = np.zeros(size.size, dtype=np.int64)
     for pair in np.unique(pairs).tolist():
         members = np.flatnonzero(pairs == pair)
@@ -872,7 +929,7 @@ def class_sizes(
         message = "The size model has no land location to learn from"
         raise ValueError(message)
     count = int(model.climate_of.size)
-    train, rows = _standardize(model.features, query, LAND_WEIGHTS)
+    train, rows = _standardize(model.features, query, land_weights(int(query.shape[1])))
     scores = knn_scores(train, model.pairs, rows, count) * model.weights[np.newaxis, :]
     chosen = chosen_pairs(scores, model.climate_of)
     out = np.zeros(rows.shape[0], dtype=np.int64)
@@ -1142,10 +1199,13 @@ def regularize_votes(  # noqa: PLR0913, PLR0917 - the votes, the pairs, the grap
 def _land_columns(
     count: int, land_cells: NDArray[np.int64], query_x: NDArray[np.int64]
 ) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]:
-    """Rainfall, distance to the sea and latitude of every cell (zero for water)."""
+    """Rainfall, distance to the sea and latitude of every cell (zero for water); with the
+    seasons the rainfall is the sum of the two seasons' ``rain_root``."""
     columns = [np.zeros(count, dtype=np.int64) for _ in range(3)]
     for column, source in zip(columns, (1, 3, 0), strict=True):
         column[land_cells] = query_x[:, source]
+    if query_x.shape[1] > len(LAND_WEIGHTS):
+        columns[0][land_cells] += query_x[:, len(LAND_WEIGHTS)]
     return columns[0], columns[1], columns[2]
 
 
@@ -1283,7 +1343,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         cells.points[land_cells],
         cells.mean_height[land_cells],
     )
-    train_s, query_s = _standardize(train_x, query_x, LAND_WEIGHTS)
+    train_s, query_s = _standardize(train_x, query_x, land_weights(int(query_x.shape[1])))
     scores = knn_scores(train_s, joint_ids, query_s, len(joint_names))
     if open_climate:
         scores = scores * calibrated_weights(train_s, joint_ids, joint_climate)[np.newaxis, :]

@@ -22,6 +22,7 @@ from rnw.eu5_biomes import (
     CellBiomes,
     SizeModel,
     ground_ranks,
+    rain_root,
     size_table,
 )
 from rnw.eu5_newworld import Plan, PlannedCell
@@ -245,13 +246,17 @@ def synthetic_sizes() -> SizeModel:
         for coast in (20, 200)
     ]
     table = np.array(rows, dtype=np.int64)
+    # The features of the seasons (``eu5_biomes.land_features``): the summer's rain root in the
+    # rain column, the winter's after the distance to the sea.
+    summer, winter = rain_root(table[:, 1] * 2 // 3), rain_root(table[:, 1] // 3)
+    features = np.stack([table[:, 0], summer, table[:, 2], table[:, 3], winter], axis=1)
     flatland = TOPOGRAPHIES.index("flatland")
     #            mean height, ruggedness, roughness, rain, distance to the sea
     readings = np.stack(
         [table[:, 2], table[:, 2] // 30, table[:, 2] // 60, table[:, 1], table[:, 3]], axis=1
     )
     return size_table(
-        table[:, :4],
+        features,
         table[:, 4].copy(),
         np.array([0, 1], dtype=np.int64),
         (OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),

@@ -63,9 +63,10 @@ BORDER_PERMILLE: Final[int] = 300
 def domain_climate(
     land: NDArray[np.bool_], lakes: NDArray[np.bool_], height: NDArray[np.integer]
 ) -> ClimateGrid:
-    """Rainfall and distance to the sea on a grid ``CLIMATE_STEP`` coarser than the domain, with
-    all but its land and lakes taken as sea. The domain's rows are the game map's (latitudes)."""
-    return climate_grid(~(land | lakes), height)
+    """Rainfall of each season and distance to the sea on a grid ``CLIMATE_STEP`` coarser than
+    the domain, with all but its land and lakes taken as sea. The domain's rows are the game
+    map's (latitudes)."""
+    return climate_grid(~(land | lakes), height, seasonal=True)
 
 
 def _span_rain(rain: NDArray[np.int64], shape: tuple[int, int], left: int) -> NDArray[np.int64]:
