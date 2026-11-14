@@ -1010,15 +1010,18 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     seam: int | None,
     sizes: SizeModel | None,
     hints: ReliefHints | None = None,
+    spread: NDArray[np.int16] | None = None,
     algorithm: int = epoch.CURRENT,
 ) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan]:
     """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``), the river pixels
     that are their borders and the drainage plan the rivers run down: the relief's drainage is
     planned (``rnw.watersheds``), the relief is worn down along it in place (``epoch.BASINS``,
-    ``rnw.basins``; ``hints`` keep painted mountains), and the rain of the worn relief runs down
-    the plan; the seeds are spaced by the vanilla sizes of the land's classes (``sizes``), the
-    polar bands keep three times the spacing, and the larger rivers are walls the cells grow up
-    to. The seeds are spaced on the height the decals will show (``epoch.ROUGH_HILLS``)."""
+    ``rnw.basins``; ``hints`` keep painted mountains) and its hill country roughened by
+    ``spread`` outside the rivers' valley floors (``epoch.ROUGH_HILLS``), and the rain of the
+    relief runs down the plan; the seeds are spaced by the vanilla sizes of the land's classes
+    (``sizes``), the polar bands keep three times the spacing, and the larger rivers are walls
+    the cells grow up to. The seeds are spaced on the height the decals will show
+    (``epoch.ROUGH_HILLS``)."""
     if sizes is None:
         message = (
             "Cells of this epoch are spaced by the game's locations; the size model is missing"
@@ -1027,7 +1030,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     try:
         plan = plan_drainage(land, relief, lakes=lakes, seam=seam, seed=seed)
         if algorithm >= epoch.BASINS:
-            shape_relief(relief, land, plan, seed=seed, hints=hints)
+            shape_relief(relief, land, plan, seed=seed, hints=hints, spread=spread)
         climate = domain_climate(land, lakes, relief)
         rivers = domain_rivers(land, plan, lakes=lakes, rain=climate.rain, seed=seed)
     except RiverGenerationError as error:
@@ -1260,6 +1263,12 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                 domain=domain,
             ),
         )
+        # The hill country roughens once the drainage is planned (epoch 64, ``epoch.ROUGH_HILLS``).
+        spread = (
+            np.zeros(land.shape, dtype=np.int16)
+            if rivers_first and algorithm >= epoch.ROUGH_HILLS
+            else None
+        )
         relief_job = stages.submit(
             "relief",
             partial(
@@ -1269,6 +1278,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                 lakes=lakes,
                 hints=hints,
                 margins=algorithm >= epoch.CORDILLERAS,
+                spread=spread,
             ),
         )
         lake_cells = np.where(lakes, label_components(np.where(lakes, 1, 0).astype(np.int32)), -1)
@@ -1288,9 +1298,11 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                     seam=seam,
                     sizes=sizes,
                     hints=hints,
+                    spread=spread,
                     algorithm=algorithm,
                 ),
             ).result()
+            del spread
         else:
             land_cells = land_job.result()
         sea_cells = sea_job.result()

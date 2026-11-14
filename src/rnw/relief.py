@@ -52,6 +52,14 @@ INLAND_SLOPE: Final[int] = 2
 BROAD_HEIGHT: Final[int] = 1300
 MOUNTAIN_PEAK: Final[int] = 38000
 HILL_HEIGHT: Final[int] = 5500
+# Epoch 64 (``epoch.ROUGH_HILLS``): hill country spreads about the middle of its noise this many
+# tenths as far as the structural relief has it (``generate_relief``'s ``spread``), once the
+# drainage is planned (``basins.shape_relief``). Read on the height the decals show, the land at
+# 8000 to 9500 had a bend of 214 to 220 (vanilla 322 to 411) and 136 and 188 permille of the
+# locations of worlds gady3byywf and seed 42 were hills (vanilla 217, the Americas 228); with the
+# spread the bend is 273 to 280 and hills are 191 and 224, the rivers unchanged
+# [V-EXEC 2026-11-14].
+HILL_GAIN: Final[int] = 36
 PLATEAU_HEIGHT: Final[int] = 6500
 FOOTHILL_RADIUS: Final[int] = 48
 BROAD_RAMP: Final[int] = 120
@@ -474,10 +482,12 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     last: int,
     hints: ReliefHints | None = None,
     margin_grid: NDArray[np.int64] | None = None,
+    spread_out: NDArray[np.int16] | None = None,
 ) -> NDArray[np.int32]:
     """Height of rows ``first`` to ``last``, computed in a window that reaches ``HALO`` rows
     past them; every field is a function of the pixel, so the window changes nothing.
-    ``margin_grid`` (``_margin_grid``) raises the active coasts' cordillera and tilt.
+    ``margin_grid`` (``_margin_grid``) raises the active coasts' cordillera and tilt; the rows of
+    ``spread_out`` receive the hill spread (``generate_relief``).
     """
     rows, columns = (int(size) for size in land.shape)
     start, stop = max(0, first - HALO), min(rows, last + HALO)
@@ -526,6 +536,12 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     ) // 2 * 300 // PERMILLE
     del broad_hills, fine_hills
     hills = hilliness * (hills_noise * HILL_HEIGHT // NOISE_SCALE) // PERMILLE
+    # The hills spread about the middle of their noise (``hill_spread``) by HILL_GAIN - 1 times.
+    spread = (
+        hilliness * ((hills_noise - NOISE_SCALE // 2) * HILL_HEIGHT // NOISE_SCALE) // PERMILLE
+        if spread_out is not None
+        else None
+    )
     del hills_noise, hilliness
     plateau_noise = _field(
         seed, "relief_plateau", shape, step=8, period=1000, octaves=3, row0=start
@@ -561,16 +577,21 @@ def _relief_strip(  # noqa: PLR0913, PLR0915 - a strip reads the land, both dist
     )
     height = np.maximum(height, COAST_HEIGHT)
     core = slice(first - start, last - start)
+    if spread_out is not None and spread is not None:
+        # At most HILL_HEIGHT / 2 * (HILL_GAIN - 10) / 10 either way, well inside int16.
+        spread = spread[core] * low_ramp[core] // PERMILLE * (HILL_GAIN - 10) // 10
+        spread_out[first:last] = np.where(window[core], spread, 0)
     return np.where(window[core], height[core], 0).astype(np.int32)
 
 
-def generate_relief(
+def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing, margins and spread.
     land: NDArray[np.bool_],
     *,
     seed: int,
     lakes: NDArray[np.bool_] | None = None,
     hints: ReliefHints | None = None,
     margins: bool = False,
+    spread: NDArray[np.int16] | None = None,
 ) -> NDArray[np.int32]:
     """Height per pixel of ``land`` (0 on water), deterministic for a seed.
 
@@ -580,7 +601,10 @@ def generate_relief(
     painted range is raised from the same chains and crests as a generated one, painted
     highlands are hills and plateau, and lowlands are left flat. Without hints the relief is
     exactly what it was. With ``margins`` (epoch 64, ``epoch.CORDILLERAS``) the active coasts of
-    each landmass raise a cordillera a little inland of them and tilt the land away.
+    each landmass raise a cordillera a little inland of them and tilt the land away. ``spread``
+    (epoch 64, ``epoch.ROUGH_HILLS``), a raster of the land's shape, is filled with how far the
+    hills would spread about the middle of their noise at ``HILL_GAIN`` (0 off the land), which
+    ``basins.shape_relief`` adds once the drainage is planned.
 
     The raster is cut into strips of ``STRIP_ROWS`` rows (a multiple of the coarsest noise
     step) that run on a few threads; the result is the same for any strip height and any
@@ -589,6 +613,9 @@ def generate_relief(
     rows, columns = (int(size) for size in land.shape)
     if hints is not None and not hints.fits(land.shape):
         message = "The relief hints are not those of this raster"
+        raise ValueError(message)
+    if spread is not None and spread.shape != land.shape:
+        message = "The hill spread is not a raster of the land's shape"
         raise ValueError(message)
     weight = STRIP_BYTES + (HINT_BYTES if hints is not None else 0)
     workers = worker_count(STRIP_WORKERS, bytes_each=weight * columns * STRIP_ROWS)
@@ -620,6 +647,7 @@ def generate_relief(
             last=last,
             hints=hints,
             margin_grid=margin_grid,
+            spread_out=spread,
         )
 
     with ThreadPoolExecutor(max_workers=workers) as pool:

@@ -79,6 +79,27 @@ def test_strips_equal_the_whole_raster_with_lakes(
     assert np.array_equal(result, reference_relief.generate_relief(land, seed=4, lakes=lake))
 
 
+@pytest.mark.parametrize("window", [1, 150])
+def test_the_hill_spread_is_the_same_in_any_strip_and_leaves_the_relief_alone(
+    monkeypatch: pytest.MonkeyPatch, window: int
+) -> None:
+    land, lake = _with_lake(4, (203, 317))
+    monkeypatch.setattr(relief, "worker_count", _fixed(3))
+    monkeypatch.setattr(relief, "band_rows", _fixed(10_000))
+    whole = np.zeros(land.shape, dtype=np.int16)
+    _ = relief.generate_relief(land, seed=4, lakes=lake, margins=True, spread=whole)
+    monkeypatch.setattr(relief, "band_rows", _fixed(max(relief.STRIP_FLOOR, window)))
+    spread = np.ones(land.shape, dtype=np.int16)
+    result = relief.generate_relief(land, seed=4, lakes=lake, margins=True, spread=spread)
+    assert np.array_equal(result, relief.generate_relief(land, seed=4, lakes=lake, margins=True))
+    assert np.array_equal(spread, whole)
+    assert np.all(spread[~land] == 0)
+    assert np.any(spread[land] > 200)
+    assert np.any(spread[land] < -200)
+    with pytest.raises(ValueError, match="land's shape"):
+        _ = relief.generate_relief(land, seed=4, spread=np.zeros((3, 3), dtype=np.int16))
+
+
 def test_a_lake_does_not_raise_a_cone_of_land_round_it() -> None:
     """The inland rise follows the distance to the sea: round a lake the ground is level."""
     shape = (420, 420)

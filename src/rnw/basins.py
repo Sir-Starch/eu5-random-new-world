@@ -19,7 +19,14 @@ shields, which a slow noise places on a share of each landmass; the lowering is 
 ``smoothing`` cells and added to the relief, so hills and valleys smaller than the base keep their
 shape and a pixel as high as ``standing`` (a narrow range, the Wall) stands. How gently a
 landmass's rivers fall and how much of it is shield are drawn for each landmass, so every
-continent's basins lie at their own height. The plan is not changed: the export draws the same
+continent's basins lie at their own height.
+
+Hill country is dissected between the rivers that drain it (epoch 64, ``epoch.ROUGH_HILLS``): the
+spread of its hills (``relief.generate_relief``) is added once the drainage is planned, so it
+cannot split the rivers' basins, where the worn land lies in ``hill_band`` (coastal plains stay
+flat, plateau tops and ranges keep the relief they have) and outside the valley floors of the
+rivers of ``valley_catchment`` cells or more, which widen with the root of the catchment and fall
+by ``valley_slope`` a cell, cell by cell. The plan is not changed: the export draws the same
 rivers along it, and the larger rivers climb no more often than on the relief they were planned
 on. Integer arithmetic.
 """
@@ -62,6 +69,10 @@ class BasinSettings:
     shield_share: tuple[int, int]  # permille of a landmass of hard old rock, drawn between
     shield_period: int  # pixels of the noise that places the shields
     shield_edge: int  # noise units over which the rock softens at a shield's edge
+    valley_catchment: int  # cells of catchment of a river whose valley floor the hills leave
+    valley_slope: int  # permille of a root of the catchment lost per cell away from such a river
+    valley_edge: tuple[int, int]  # the valley cone over which the hills fade out to its floor
+    hill_band: tuple[int, int, int, int]  # worn heights the hill spread fades in over, then out
 
 
 BASINS: Final[BasinSettings] = BasinSettings(
@@ -75,6 +86,10 @@ BASINS: Final[BasinSettings] = BasinSettings(
     shield_share=(0, 600),
     shield_period=2400,
     shield_edge=6000,
+    valley_catchment=40,
+    valley_slope=20000,
+    valley_edge=(-40000, -8000),
+    hill_band=(6000, 7000, 9000, 12000),
 )
 STRIP_ROWS: Final[int] = 512  # rows of the raster read or changed at a time (a multiple of STEP)
 CONE_BLOCK: Final[int] = 4  # drainage cells a side of the blocks the cones are widened over
@@ -275,6 +290,46 @@ def _base_height(
     return np.where(share > 0, total * PERMILLE // np.maximum(share, 1), COAST_HEIGHT)
 
 
+def valley_floors(grid: _Grid, settings: BasinSettings) -> NDArray[np.int64]:
+    """How much of the hill spread each drainage cell keeps, in permille: none on the floor of a
+    river of ``valley_catchment`` cells or more, which is as wide as the square root of its
+    catchment over ``valley_slope``, all of it beyond ``valley_edge``. The cone of the rivers'
+    roots falls by ``valley_slope`` a cell (the root of two a diagonal one) over the land and
+    lakes, cell by cell, so a tributary's floor never cuts its river's."""
+    low, high = settings.valley_edge
+    roots = np.floor(np.sqrt(np.maximum(grid.catchment, 0).astype(np.float64))).astype(np.int64)
+    river = grid.over & (grid.catchment >= settings.valley_catchment)
+    cone = np.where(river, np.maximum(roots * PERMILLE, low), low)
+    height, width = cone.shape
+    while True:
+        before = cone.copy()
+        for down, right, length in MOVES:
+            fall = settings.valley_slope * length // PERMILLE
+            target = cone[_window(height, down), _window(width, right)]
+            source = cone[_window(height, -down), _window(width, -right)]
+            _ = np.maximum(target, source - fall, out=target)
+        cone[~grid.over] = low
+        if np.array_equal(cone, before):
+            break
+    return PERMILLE - smoothstep(cone, low, high)
+
+
+def _cell_pixels(
+    padded: NDArray[np.int64], first: int, last: int, columns: int
+) -> NDArray[np.int64]:
+    """Rows ``first`` to ``last`` (``columns`` pixels wide) of values given at the centres of the
+    drainage cells, interpolated between them; ``padded`` is the grid edge-padded by one cell
+    before and two after on both axes. Sample k of ``padded`` sits at pixel STEP * k - STEP // 2
+    on both axes, and ``upsample`` reads two samples beyond the rows and columns it fills."""
+    width = (padded.shape[1] - 2) * STEP
+    half = STEP // 2
+    low = (first + half) // STEP
+    high = -(-(last + half) // STEP)
+    window = upsample(padded[low : high + 2], STEP, ((high - low) * STEP, width))
+    start = first + half - low * STEP
+    return window[start : start + last - first, half : half + columns]
+
+
 def basin_change(  # noqa: PLR0913 - the relief, land, plan, seed, drawing and settings.
     relief: NDArray[np.int32],
     land: NDArray[np.bool_],
@@ -287,7 +342,20 @@ def basin_change(  # noqa: PLR0913 - the relief, land, plan, seed, drawing and s
     """The change of height (never positive) at the centre of every drainage cell of the domain
     (``_grid``): the base of the land lowered to the graded bed, smoothed."""
     rows, columns = (int(size) for size in land.shape)
-    grid = _grid(rows, columns, plan)
+    return _basin_change(
+        _grid(rows, columns, plan), relief, land, seed=seed, hints=hints, settings=settings
+    )
+
+
+def _basin_change(  # noqa: PLR0913 - the grid, relief, land, seed, drawing and settings.
+    grid: _Grid,
+    relief: NDArray[np.int32],
+    land: NDArray[np.bool_],
+    *,
+    seed: int,
+    hints: ReliefHints | None,
+    settings: BasinSettings,
+) -> NDArray[np.int64]:
     cone = widened(grid.catchment, grid.over, settings)
     fall, softness = _landmass_draws(grid.over, seed, settings)
     bed = _graded_bed(grid, cone, fall, settings.base)
@@ -308,35 +376,49 @@ def basin_change(  # noqa: PLR0913 - the relief, land, plan, seed, drawing and s
     return -box_blur(lowering, settings.smoothing)
 
 
-def shape_relief(  # noqa: PLR0913 - the relief, land, plan, seed, drawing and settings.
+def shape_relief(  # noqa: PLR0913 - the relief, land, plan, seed, drawing, spread and settings.
     relief: NDArray[np.int32],
     land: NDArray[np.bool_],
     plan: DrainagePlan,
     *,
     seed: int,
     hints: ReliefHints | None = None,
+    spread: NDArray[np.int16] | None = None,
     settings: BasinSettings = BASINS,
 ) -> None:
     """Lower the land of ``relief`` in place by ``basin_change``, interpolated between the centres
     of the drainage cells, a strip of rows at a time: a pixel as high as ``standing`` less and
-    then not at all (a narrow range or a wall stands), and land stays at least ``COAST_HEIGHT``."""
+    then not at all (a narrow range or a wall stands), and land stays at least ``COAST_HEIGHT``.
+
+    ``spread`` (``relief.generate_relief``, epoch 64) then roughens the hill country that the
+    plan's rivers drain: the hills are added where the worn land lies in ``hill_band`` (coastal
+    plains stay flat, uplands and plateaus keep their hills), outside the ``valley_floors`` of
+    the rivers, so the rivers keep the beds they were planned on."""
     rows, columns = (int(size) for size in land.shape)
-    change = basin_change(relief, land, plan, seed=seed, hints=hints, settings=settings)
-    # Sample k of the padded grid sits at pixel STEP * k - STEP // 2 on both axes; ``upsample``
-    # reads two samples beyond the rows and columns it fills.
+    grid = _grid(rows, columns, plan)
+    change = _basin_change(grid, relief, land, seed=seed, hints=hints, settings=settings)
     padded = np.pad(change, ((1, 2), (1, 2)), mode="edge")
     del change
-    width = (padded.shape[1] - 2) * STEP
-    half = STEP // 2
+    kept = (
+        None
+        if spread is None
+        else np.pad(valley_floors(grid, settings), ((1, 2), (1, 2)), mode="edge")
+    )
+    del grid
+    rise, flat, fall, top = settings.hill_band
     for first in range(0, rows, STRIP_ROWS):
         last = min(rows, first + STRIP_ROWS)
-        low = (first + half) // STEP
-        high = -(-(last + half) // STEP)
-        window = upsample(padded[low : high + 2], STEP, ((high - low) * STEP, width))
-        start = first + half - low * STEP
-        part = window[start : start + last - first, half : half + columns]
-        del window
+        part = _cell_pixels(padded, first, last, columns)
         height = relief[first:last].astype(np.int64)
         part = part * (PERMILLE - smoothstep(height, *settings.standing)) // PERMILLE
         worn = np.maximum(height + part, COAST_HEIGHT)
+        del part
+        if spread is not None and kept is not None:
+            band = (
+                smoothstep(worn, rise, flat) * (PERMILLE - smoothstep(worn, fall, top)) // PERMILLE
+            )
+            hills = spread[first:last].astype(np.int64) * band // PERMILLE
+            hills = hills * _cell_pixels(kept, first, last, columns) // PERMILLE
+            worn = np.maximum(worn + hills, COAST_HEIGHT)
+            del band, hills
         relief[first:last] = np.where(land[first:last], worn, height)

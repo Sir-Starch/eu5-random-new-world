@@ -123,3 +123,42 @@ def test_every_landmass_draws_its_fall_and_its_share_of_shields() -> None:
             shares.append(int(np.count_nonzero(softness[20:380, window] < PERMILLE // 2)))
         assert np.all(softness[~over] == PERMILLE)
     assert len(set(shares)) > 3
+
+
+def _with_spread(seed: int) -> tuple[np.ndarray, np.ndarray, DrainagePlan, np.ndarray]:
+    land = _land(seed, (320, 480))
+    lakes = np.zeros_like(land)
+    spread = np.zeros(land.shape, dtype=np.int16)
+    relief = generate_relief(land, seed=seed, lakes=lakes, margins=True, spread=spread)
+    plan = plan_drainage(land, relief, lakes=lakes, seam=241, seed=seed)
+    return land, relief, plan, spread
+
+
+def test_the_hills_roughen_outside_the_valley_floors_and_the_rivers_keep_their_climbs() -> None:
+    low, _, _, top = basins.BASINS.hill_band
+    for seed in (3, 11):
+        land, relief, plan, spread = _with_spread(seed)
+        worn = relief.copy()
+        basins.shape_relief(worn, land, plan, seed=seed)
+        rough = relief.copy()
+        basins.shape_relief(rough, land, plan, seed=seed, spread=spread)
+        assert np.array_equal(rough[~land], relief[~land])
+        assert np.all(rough[land] >= COAST_HEIGHT)
+        moved = np.abs(rough.astype(np.int64) - worn) > 300
+        assert np.count_nonzero(moved) > land.sum() // 50
+        # Coastal plains stay flat, and the high ground keeps the hills it has.
+        outside = land & ((worn < low) | (worn >= top))
+        assert np.array_equal(rough[outside], worn[outside])
+        assert _climbs(rough, plan) <= _climbs(relief, plan)
+
+
+def test_a_river_keeps_no_hills_on_its_valley_floor() -> None:
+    land, _, plan = _world(3)
+    rows, columns = (int(size) for size in land.shape)
+    grid = basins._grid(rows, columns, plan)
+    kept = basins.valley_floors(grid, basins.BASINS)
+    river = grid.over & (grid.catchment >= basins.BASINS.valley_catchment)
+    assert river.any()
+    assert np.all(kept[river] == 0)
+    assert np.all((kept >= 0) & (kept <= PERMILLE))
+    assert np.count_nonzero(kept[grid.over] == PERMILLE) > grid.over.sum() // 10
