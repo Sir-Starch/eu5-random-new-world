@@ -397,9 +397,14 @@ def test_the_ground_is_voted_by_vanilla_locations_alike_without_shares() -> None
     # The readings count as they are: a land of lowland marsh is all wetland, with no quota.
     marsh = np.repeat(table[2:3], 4, axis=0) + np.arange(4)[:, np.newaxis]
     assert names(marsh) == ["wetlands"] * 4
-    # A dry row is never wetland.
+    # A dry row is never wetland, also with the weights matched to the rows voted.
     dry = np.array([False, False, True, False, False])
     assert names(table, dry)[2] != "wetlands"
+    matched = vote_grounds(model, marsh, np.ones(len(marsh), dtype=bool), matched=True)
+    assert TOPOGRAPHIES.index("wetlands") not in matched.tolist()
+    assert vote_grounds(model, table, np.zeros(5, dtype=bool), matched=True).tolist() == [
+        TOPOGRAPHIES.index(name) for name in intended
+    ]
 
 
 def test_block_relief_reads_the_spread_and_the_bend_of_each_block() -> None:

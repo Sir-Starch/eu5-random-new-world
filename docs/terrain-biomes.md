@@ -339,10 +339,10 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   octave over the lower median of its region, and the pixel-weighted mean of the features of the
   64-pixel blocks it covers: latitude, rain, mean height and the share of coast. Every 64-pixel block
   of generated land reads the same features the same way (`block_features`), takes the (climate,
-  vegetation) pair the climate vote will choose there (the same k-NN and prior weights) and the mean
+  vegetation) pair the climate vote would choose there with vanilla's weights (the same k-NN) and the mean
   size of the 32 vanilla locations of that pair nearest to it (`class_sizes`): a desert is as large
   as vanilla's deserts where vanilla's land is like it, a wet coast as small as vanilla's. The pairs'
-  votes are weighed for these locations as for the vote's own (`calibrated_weights`, below). Left
+  votes are weighed by `calibrated_weights` (below), not matched to the world as the vote's own are. Left
   out one location at a time, the model gives vanilla deserts 1.41 of the median (they are 1.48),
   arid land 1.47 (1.51), subpolar 2.45 (2.38) and tropical land 0.98 (1.02), and chooses desert for
   1,197 locations where 1,194 are; R² 0.48 [V-EXEC 2026-11-13]. A block's ground moves its size
@@ -467,8 +467,13 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   the plurality, the neighbours and the truth agree (wetlands 60, 59 and 61 ‰ of the Old World's
   passable locations); on seed 42 the plurality gave 31 ‰ of wetlands, 213 ‰ of hills and 151 ‰ of
   mountains where the neighbours hold 39, 235 and 134, and 91 ‰ of subtropical climate for 122
-  [V-EXEC 2026-11-14]. The ground is voted once over all the land, for the wasteland plan and the
-  topography alike. By full export, `gady3byywf`'s mountains went from 118 to 98 ‰ of its land
+  [V-EXEC 2026-11-14]. Held out where the truth is known, the Old World voting the Americas, the
+  matching takes the error of the shares (half the summed differences) from 189 to 165 ‰ for the
+  climates and from 88 to 65 ‰ for the grounds (mountains 189 to 166 ‰ where 128 are, hills 174 to
+  203 ‰ where 228 are, subtropical 87 to 106 ‰ where 142 are), and leaves the share of locations
+  named rightly as it was (climate 398 and 395 ‰, ground 660 and 660 ‰) [V-EXEC 2026-11-14]. The
+  ground is voted once over all the land, for the wasteland plan and the topography alike. By full
+  export, `gady3byywf`'s mountains went from 118 to 98 ‰ of its land
   locations, its hills from 168 to 188 ‰ and its cold dry climates from 72 to 80 ‰; seed 42's
   wetlands from 29 to 37 ‰ (88 ‰ of its coastal locations, from 77), its hills from 205 to 229 ‰
   and its mountains from 139 to 118 ‰.

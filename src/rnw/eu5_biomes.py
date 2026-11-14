@@ -1372,9 +1372,10 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     it the cells keep the class they came with, the highest ones being wasteland. With
     ``open_climate`` (epoch 64, ``epoch.OPEN_CLIMATE``) the vote learns from the Americas too,
     without the cultivated land, weighs each pair so that it reads vanilla as it is
-    (``calibrated_weights``) and smooths over ``OPEN_*_ROUNDS``. The ground of cells with a
-    ``Generated.ruggedness`` (epoch 64) is voted by the vanilla locations of ``ground`` (the
-    ``SizeModel`` of the game's map, ``vote_grounds``), which they then require.
+    (``calibrated_weights``), matches those weights to the world's own land (``matched_weights``)
+    and smooths over ``OPEN_*_ROUNDS``. The ground of cells with a ``Generated.ruggedness`` (epoch
+    64) is voted once over all the land by the vanilla locations of ``ground`` (the ``SizeModel``
+    of the game's map, ``vote_grounds``, matched alike), which they then require.
     """
     count = len(cells.kinds)
     old = _old_world(game_map)
