@@ -293,7 +293,7 @@ scatter of seeds beside the relief, before any river, climate or drainage existe
 | River pixels on a location border (all land pixels) | 302 ‰ (100) | 218 ‰ (79) | 73 ‰ (69) | 304 ‰ (69); 300 ‰ (68) |
 | Largest river network, share of all river pixels | 63 ‰ | 199 ‰ | 49 ‰ (second world 44 ‰) | 75 ‰; 84 ‰ |
 | Climate regions: mean cells, same-climate contacts | 14.3, 808 ‰ | 9.0, 750 ‰ | 59.4, 916 ‰ | 8.3, 678 ‰; 8.0, 683 ‰ |
-| Semi-arid and cold arid land | 93 ‰ | 86 ‰ | ≤ 17 ‰ | 63 ‰; 48 ‰ |
+| Semi-arid and cold arid land (this audit's count; for the count of the passable locations used below, vanilla holds 116 ‰ in both) | 93 ‰ | 86 ‰ | ≤ 17 ‰ | 63 ‰; 48 ‰ |
 | Mountain locations at the sea; coastal flatland / hills / wetlands | 137 ‰; 497 / 254 / 106 ‰ | 153 ‰; 425 / 221 / 160 ‰ | 66 ‰; 255 / 384 ‰ | 78 ‰; 461 / 186 / 196 ‰; seed 42: 94 ‰; 485 / 211 / 124 ‰ |
 
 Seed 42 is the code of `gady3byywf` with that seed (`RNW1-040G0-00000-00001-A041G-0013C-NR0`); the
@@ -372,7 +372,8 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   Seed 42's far inland is 1.20, not 1.8–2.1, because 701 of its 1,327 locations there are
   subtropical, at 0.92 (the Old World's far subtropical land: 0.89). The plateaus (1.14–1.32 against
   1.48–1.58) and wetlands (0.72–0.85 against 1.07–1.14) of this step were too small, from its
-  relief, not the vote; the worn relief (below) took them to 1.20–1.45 and 0.78–0.82.
+  relief, not the vote; with the worn relief and the matched votes (below) they are 1.42 and 1.16
+  on `gady3byywf` and seed 42, and 0.83 and 0.76.
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is not smoothed over the location
   graph. A plurality of 32 neighbours seldom names a class that is rare among them: each vanilla
@@ -385,27 +386,24 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   87 ‰ (the cube root alone: 82 ‰) [V-EXEC 2026-11-13]. The neighbour search runs on eight threads
   and in integers (|a|² + |b|² − 2 a·b, the same distances in a third of the time); the two
   calibrations, of the vote and of the size model, take about a second each.
-  The vote gives what the neighbours hold. Band by band of latitude, generated locations with the
-  rain, height and distance to the sea of vanilla's cold dry ones are voted cold semi-arid or cold
-  arid about as often as vanilla's are (35–45°: 262 ‰ of `gady3byywf`'s locations, 306 ‰ of the
-  training locations; on ground of 10,000–15,000 units there, the rain-shadowed plateaus, 372 ‰
-  against 267 ‰), so how much of a world is cold and dry is its geography: after the worn relief
-  (below) seed 42 has 112 ‰ of its passable locations in those two climates, vanilla's Old World
-  and Americas 116 ‰ each, and `gady3byywf` 72 ‰, because only 5 % of its land between 30° and 55°
-  lies over 400 pixels from the sea (the Americas 13 %, the Old World 19 %) and its high land lies
-  near the equator (a median 10°, where the Americas' dry highlands lie at 15–21°), wet all year
-  as the equatorial Andes are [V-EXEC 2026-11-14].
+  Matched to each world (below), the vote gives a world the climates the neighbours of its
+  locations hold: cold semi-arid and cold arid on 117 ‰ of seed 42's passable locations and 80 ‰ of
+  `gady3byywf`'s, where vanilla's Old World and Americas hold 116 ‰ each, counted the same way. How
+  much of a world is cold and dry is its geography: only 5 % of `gady3byywf`'s land between 30° and
+  55° lies over 400 pixels from the sea (the Americas 13 %, the Old World 19 %) and its high land
+  lies near the equator (a median 10°, where the Americas' dry highlands lie at 15–21°), wet all
+  year as the equatorial Andes are [V-EXEC 2026-11-14].
 * **The ground voted** (`ROUGH_HILLS`, `eu5_biomes.vote_grounds`). The ground of the passable land
-  is voted, as its climate is, by the 32 vanilla Old World locations nearest in five readings, each
-  ranked within its own map's land so that vanilla's decal relief and the generated relief compare:
-  mean height, ruggedness and roughness (both below), rainfall and distance to the sea; each ground
-  then takes its share of the Old World's locations, wetlands never desert. The 64-pixel blocks of
-  the size model are voted the same way. Read on vanilla itself, each location without itself, the
-  hand-made ranks that came before (height plus twice the spread for mountains, rain against
-  height and the sea for wetlands) named the ground of 635 Old World locations in a thousand and 597
-  in the Americas, 19 % of the wetlands rightly, none of them over 120 pixels from the sea (384 are)
-  and 116 mountains at the sea (417 are); the vote names 750 and 659, 42 % of the wetlands, 326
-  beyond 120 pixels and 360 coastal mountains [V-EXEC 2026-11-13]. On the generated worlds the
+  is voted, as its climate is, by the 32 vanilla Old World locations nearest in four readings of the
+  height the decals show (the worn relief, below), taken as they are and scaled by vanilla's spread:
+  mean height, ruggedness and roughness (both below) and distance to the sea; each ground's votes
+  weigh what makes vanilla read as it is, matched to the world's own land (below), and a desert is
+  never wetland. The 64-pixel blocks of the size model are voted the same way, with vanilla's weights.
+  Read on vanilla itself, each location without itself, the hand-made ranks that came before
+  (height plus twice the spread for mountains, rain against height and the sea for wetlands) named
+  the ground of 635 Old World locations in a thousand and 597 in the Americas and 19 % of the
+  wetlands rightly; the vote names 926 and 660 and 79 % of the wetlands, and rainfall as a fifth
+  reading adds nothing (Americas 640) [V-EXEC 2026-11-13, 2026-11-14]. On the generated worlds the
   coastal wetlands fell from 187–222 ‰ of the coastal locations to 81–196 ‰ (vanilla 106 and 160)
   and `gady3byywf` has 70 wetlands over 120 pixels from the sea where it had none.
   The relief of this step put the generated land's lowest ground at the coast: vanilla's wetlands
@@ -444,20 +442,36 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   42 against 292 and 237 ‰ without them. The ground is voted on the height the decals will show
   (`eu5_terrain.land_surface`: the relief, its detail and its coastal cap through the writer's own
   kernel, without the stamps), as vanilla's is read from its primary heightmap; read on the raw
-  relief, hill country had looked like flatland (82 ‰ hills). By full export [V-EXEC 2026-11-14,
-  vanilla in `gady3byywf`'s columns]:
+  relief, hill country had looked like flatland (82 ‰ hills). By full export with the matched votes
+  (below) [V-EXEC 2026-11-14, vanilla in `gady3byywf`'s columns]:
 
   | Measure | Old World | Americas | `gady3byywf` | Seed 42 |
   |---|---|---|---|---|
-  | Mountains / plateau / hills / flatland / wetlands, ‰ of land locations | 104 / 117 / 202 / 449 / 57 | 114 / 129 / 209 / 366 / 75 | 118 / 105 / 168 / 503 / 53 | 139 / 160 / 205 / 404 / 29 |
-  | Median size over the region's: plateau / hills / wetlands / mountains | 1.58 / 0.83 / 1.14 / 0.86 | 1.48 / 0.91 / 1.07 / 0.61 | 1.45 / 1.06 / 0.82 / 0.86 | 1.20 / 1.09 / 0.78 / 0.96 |
-  | Wetlands among coastal locations; mountains touching the sea | 106 ‰; 137 ‰ | 160 ‰; 153 ‰ | 112 ‰; 50 ‰ | 77 ‰; 83 ‰ |
+  | Mountains / plateau / hills / flatland / wetlands, ‰ of land locations | 104 / 117 / 202 / 449 / 57 | 114 / 129 / 209 / 366 / 75 | 98 / 111 / 188 / 497 / 55 | 118 / 154 / 229 / 395 / 37 |
+  | Median size over the region's: plateau / hills / wetlands / mountains | 1.58 / 0.83 / 1.14 / 0.86 | 1.48 / 0.91 / 1.07 / 0.61 | 1.42 / 1.08 / 0.83 / 0.82 | 1.16 / 1.10 / 0.76 / 0.94 |
+  | Wetlands among coastal locations; mountains touching the sea | 106 ‰; 137 ‰ | 160 ‰; 153 ‰ | 115 ‰; 46 ‰ | 88 ‰; 82 ‰ |
   | Largest / five largest river networks, of river pixels | 63 / 264 ‰ | 199 / 423 ‰ | 137 / 300 ‰ | 94 / 250 ‰ |
-  | Size spread p90/p10; river pixels on a location border | 9.9; 302 ‰ | 8.7; 218 ‰ | 7.6; 306 ‰ | 7.2; 294 ‰ |
+  | Size spread p90/p10; river pixels on a location border | 9.9; 302 ‰ | 8.7; 218 ‰ | 7.6; 306 ‰ | 7.2; 293 ‰ |
 
-  Seed 42 is drier (a quarter of its passable land arid or semi-arid, where no wetland stands), so it
-  has fewer wetlands. Mountains at the sea are fewer than vanilla's because the cordillera stands a
-  location inland of an active coast; a random continent need not have coastal ranges at all.
+  Seed 42 is the higher continent (half its land above 9,200 units against 7,900; 206 ‰ of it below
+  6,600 against 271 ‰), so it has fewer of the low coasts and plains where wetlands lie. Mountains at
+  the sea are fewer than vanilla's because the cordillera stands a location inland of an active
+  coast; a random continent need not have coastal ranges at all.
+* **Matched votes** (`OPEN_CLIMATE`, `ROUGH_HILLS`, `eu5_biomes.matched_weights`). Weights
+  calibrated on vanilla make the vote read vanilla's own locations as they are, but a world's land
+  lies otherwise over the readings, and there a plurality again gives a class that its neighbours
+  hold in part fewer rows than they hold of it. Each world's climate and ground votes are therefore
+  matched to its own locations: the rounds of the calibration, towards the rows that the neighbours
+  of its locations hold of each class (their rank-weighted votes per location, summed), so that a
+  world has as much of a class as land like its own holds, not vanilla's shares. On vanilla itself
+  the plurality, the neighbours and the truth agree (wetlands 60, 59 and 61 ‰ of the Old World's
+  passable locations); on seed 42 the plurality gave 31 ‰ of wetlands, 213 ‰ of hills and 151 ‰ of
+  mountains where the neighbours hold 39, 235 and 134, and 91 ‰ of subtropical climate for 122
+  [V-EXEC 2026-11-14]. The ground is voted once over all the land, for the wasteland plan and the
+  topography alike. By full export, `gady3byywf`'s mountains went from 118 to 98 ‰ of its land
+  locations, its hills from 168 to 188 ‰ and its cold dry climates from 72 to 80 ‰; seed 42's
+  wetlands from 29 to 37 ‰ (88 ‰ of its coastal locations, from 77), its hills from 205 to 229 ‰
+  and its mountains from 139 to 118 ‰.
 
 ## Coast shape, water bodies and drainage (1.1.0 / epoch 60)
 

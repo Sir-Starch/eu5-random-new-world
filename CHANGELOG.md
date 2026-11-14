@@ -49,7 +49,9 @@ worlds and saves are not rewritten or migrated.
   sea and the deltas lie at its level, the hill country between the rivers is dissected, and the
   plateaus are broad tablelands, so the interior stays high between the basins. The ground is read
   on the height the game's own relief will show, and the wastelands are chosen by how rough their
-  ground is, not by how large their location is. Epoch 63 and older make the same worlds as before.
+  ground is, not by how large their location is. Each world has as much of every climate and ground
+  as land like its own has in the game, so the rarer ones (wetlands, hills, dry steppes) are not
+  crowded out by the common ones. Epoch 63 and older make the same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 
