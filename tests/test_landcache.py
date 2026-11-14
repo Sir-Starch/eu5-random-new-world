@@ -60,6 +60,12 @@ def test_a_cached_continent_equals_the_uncached_one_and_skips_generation(
     assert found.classes == expected.classes
     assert found.edges == expected.edges
     assert np.array_equal(found.barrier, expected.barrier)
+    assert found.drainage is not None
+    assert expected.drainage is not None
+    assert found.drainage.seam == expected.drainage.seam
+    assert len(found.drainage.parents) == len(expected.drainage.parents)
+    for kept, made in zip(found.drainage.parents, expected.drainage.parents, strict=True):
+        assert np.array_equal(kept, made)
 
 
 def test_the_cache_keeps_the_barrier_of_a_wall_world(tmp_path: Path) -> None:

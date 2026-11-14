@@ -1981,9 +1981,9 @@ def _rivers(
 ) -> tuple[NDArray[np.uint8], NDArray[np.int32], dict[str, object]]:
     """River codes and valleys from the same independently planned watershed domains.
 
-    From ``epoch.RIVERS_FIRST`` they are the rivers the cells were grown along: drawn again from
-    the world's own land, lakes and relief and the domain's rain (``rnw.watersheds``), not from
-    the climate of the whole map.
+    From ``epoch.RIVERS_FIRST`` they are the rivers the cells were grown along: drawn again along
+    the world's own drainage plan (``NewWorld.drainage``) with the rain of its land, lakes and
+    relief (``rnw.watersheds``), not from the climate of the whole map.
     """
     land_kind = np.array(
         [kind in {CellClass.LAND, CellClass.WASTELAND} for kind in world.classes] + [False]
@@ -1993,13 +1993,17 @@ def _rivers(
     elevation = world.elevation
     lakes = lake_kind[world.labels]
     if algorithm >= epoch.RIVERS_FIRST:
+        plan = world.drainage
+        seam = (canvas.roll - canvas.col0) % canvas.shape[1]
+        if plan is None or plan.seam != seam:
+            message = "The world carries no drainage plan split at this map's seam"
+            raise NewWorldExportError(message)
         try:
             rivers = domain_rivers(
                 land,
-                elevation,
+                plan,
                 lakes=lakes,
                 rain=domain_climate(land, lakes, elevation).rain,
-                seam=(canvas.roll - canvas.col0) % canvas.shape[1],
                 seed=seed,
             )
         except RiverGenerationError as exc:

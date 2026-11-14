@@ -49,7 +49,15 @@ from rnw.topology import (
     label_components,
     unpack_pairs,
 )
-from rnw.watersheds import border_rivers, domain_climate, domain_rivers, river_cells, spacing_grid
+from rnw.watersheds import (
+    DrainagePlan,
+    border_rivers,
+    domain_climate,
+    domain_rivers,
+    plan_drainage,
+    river_cells,
+    spacing_grid,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -132,6 +140,9 @@ class NewWorld:
     # the south, in ascending order (empty for any other world): the barrier itself, which the
     # wasteland plan keeps impassable (``rnw.barrens``). ``rnw.ports.relabel`` renumbers it.
     barrier: NDArray[np.int64] = field(default_factory=lambda: np.zeros(0, dtype=np.int64))
+    # How the land drains (epoch 64, ``epoch.RIVERS_FIRST``): the plan its rivers were drawn along
+    # when the cells were grown, which the export draws them along again; None before.
+    drainage: DrainagePlan | None = None
 
 
 def _field(  # noqa: PLR0913 - a field is defined by its stream, shape, octaves and warp.
@@ -996,11 +1007,12 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     settings: NewWorldSettings,
     seam: int | None,
     sizes: SizeModel | None,
-) -> tuple[NDArray[np.int32], NDArray[np.bool_]]:
-    """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``) and the river pixels
-    that are their borders: the domain's rain drains its relief (``rnw.watersheds``), the seeds
-    are spaced by the vanilla sizes of the land's classes (``sizes``), the polar bands keep three
-    times the spacing, and the larger rivers are walls the cells grow up to."""
+) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan]:
+    """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``), the river pixels
+    that are their borders and the drainage plan the rivers run down: the relief's drainage is
+    planned (``rnw.watersheds``) and the domain's rain runs down it, the seeds are spaced by the
+    vanilla sizes of the land's classes (``sizes``), the polar bands keep three times the
+    spacing, and the larger rivers are walls the cells grow up to."""
     if sizes is None:
         message = (
             "Cells of this epoch are spaced by the game's locations; the size model is missing"
@@ -1008,7 +1020,8 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         raise ValueError(message)
     climate = domain_climate(land, lakes, relief)
     try:
-        rivers = domain_rivers(land, relief, lakes=lakes, rain=climate.rain, seam=seam, seed=seed)
+        plan = plan_drainage(land, relief, lakes=lakes, seam=seam, seed=seed)
+        rivers = domain_rivers(land, plan, lakes=lakes, rain=climate.rain, seed=seed)
     except RiverGenerationError as error:
         raise ValueError(str(error)) from error
     walls = border_rivers(rivers)
@@ -1025,7 +1038,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         grid=grid,
         smallest=settings.min_cell_px,
     )
-    return cells, walls
+    return cells, walls, plan
 
 
 # Pixels this near a border river (within the wobble's reach and its diagonal) keep their cell.
@@ -1208,6 +1221,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
         omerika.check_joined(land, _template(domain, seed, settings, template))
     rivers_first = algorithm >= epoch.RIVERS_FIRST
     walls: NDArray[np.bool_] | None = None
+    drainage: DrainagePlan | None = None
     with Stages(stage_workers()) as stages:
         land_job = (
             None
@@ -1251,7 +1265,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
         if land_job is None:
             if settings.landform:
                 wall.add_relief(relief, land, whole, seed, settings)
-            land_cells, walls = stages.submit(
+            land_cells, walls, drainage = stages.submit(
                 "land cells",
                 partial(
                     _river_cells,
@@ -1308,6 +1322,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     return replace(
         world,
         moves=np.array(moves, dtype=np.int64).reshape(-1, 2),
+        drainage=drainage,
         **({} if barrier is None else {"barrier": barrier}),
     )
 

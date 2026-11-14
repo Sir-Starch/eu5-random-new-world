@@ -292,4 +292,11 @@ def relabel(world: NewWorld, merged: Mapping[int, int]) -> tuple[NewWorld, tuple
     kinds = tuple(world.classes[cell] for cell in kept)
     moved: list[int] = [cell_of[int(cell)] for cell in world.barrier]
     barrier = np.unique(np.array(moved, dtype=np.int64))
-    return replace(derive_world(labels, kinds, world.elevation), barrier=barrier), cell_of
+    return (
+        replace(
+            derive_world(labels, kinds, world.elevation),
+            barrier=barrier,
+            drainage=world.drainage,
+        ),
+        cell_of,
+    )

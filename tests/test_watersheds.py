@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import pytest
 
-from rnw import epoch, relief, watersheds
+from rnw import epoch, eu5_nw_export, relief, watersheds
 from rnw.eu5_biomes import (
     CHUNK,
     NEIGHBOURS,
@@ -34,10 +34,12 @@ from rnw.eu5_biomes import (
     vote_grounds,
 )
 from rnw.eu5_canvas import NEW_WORLD
+from rnw.eu5_nw_export import NewWorldExportError
 from rnw.fields import upsample
 from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world
 from rnw.relief import HILL_STEP, cell_roughness
+from rnw.rivers import RiverGenerationError
 from rnw.settings import NewWorldSettings
 from rnw.synth import grow_regions, grow_weighted
 from rnw.topology import label_components
@@ -46,6 +48,8 @@ from tests.fakes import SIZES
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from rnw.eu5_biomes import ClimateGrid
+    from rnw.eu5_canvas import Canvas
     from rnw.eu5_map import Eu5Map
 
 SMALL = NewWorldSettings(
@@ -396,3 +400,42 @@ def test_a_cell_is_as_rugged_as_its_ground_whatever_its_size() -> None:
     # Their own spreads differ: the large cell spans thrice the slope.
     own = [int(height[labels == cell].std()) for cell in (0, 1)]
     assert own[1] > 3 * own[0] // 2
+
+
+def test_the_world_keeps_its_drainage_plan_and_a_foreign_plan_is_refused() -> None:
+    domain = np.ones((240, 320), dtype=bool)
+    world = generate_new_world(
+        domain, seed=3, settings=SMALL, algorithm=epoch.RIVERS_FIRST, seam=100, sizes=SIZES
+    )
+    plan = world.drainage
+    assert plan is not None
+    assert plan.seam == 100
+    assert len(plan.parents) == len(watersheds.plan_spans(320, 100))
+    older = generate_new_world(
+        domain, seed=3, settings=SMALL, algorithm=epoch.RIVERS_FIRST - 1, sizes=SIZES
+    )
+    assert older.drainage is None
+    for carried, roll in ((None, 100), (plan, 101)):
+        canvas = cast(
+            "Canvas", cast("object", SimpleNamespace(roll=roll, col0=0, shape=(240, 320)))
+        )
+        with pytest.raises(NewWorldExportError, match="no drainage plan split at this map's seam"):
+            _ = eu5_nw_export._rivers(  # pyright: ignore[reportPrivateUsage]
+                replace(world, drainage=carried),
+                canvas,
+                cast("ClimateGrid", cast("object", None)),
+                3,
+                algorithm=epoch.RIVERS_FIRST,
+            )
+    land = np.zeros((240, 320), dtype=bool)
+    land[40:200, 60:260] = True
+    lakes = np.zeros_like(land)
+    whole = watersheds.plan_drainage(
+        land, np.where(land, 7000, 0).astype(np.int32), lakes=lakes, seam=None, seed=5
+    )
+    rain = np.full((60, 80), 800, dtype=np.int64)
+    rivers = watersheds.domain_rivers(land, whole, lakes=lakes, rain=rain, seed=5)
+    assert rivers.stats["watershed_domains"] == 1
+    split = replace(whole, seam=100)
+    with pytest.raises(RiverGenerationError, match="number of spans"):
+        _ = watersheds.domain_rivers(land, split, lakes=lakes, rain=rain, seed=5)

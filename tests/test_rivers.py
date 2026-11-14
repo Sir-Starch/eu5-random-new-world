@@ -15,14 +15,19 @@ from rnw.rivers import (
     NONE,
     SOURCE,
     STEP,
+    RiverGenerationError,
     Rivers,
+    accumulate,
     carve_valleys,
     drainage,
     flow_classes,
     generate_rivers,
     network_problems,
     outlet_problems,
+    planned_rivers,
+    route,
     streams,
+    upstream_order,
 )
 from tests.reference import rivers as reference_rivers
 
@@ -202,3 +207,42 @@ def test_a_lake_receives_rivers_and_gives_one_outflow() -> None:
     # Without the lakes argument the same water is a sink and no river leaves it.
     sealed = generate_rivers(land, height, rain, seed=11)
     assert not np.any((sealed.role == SOURCE) & near & ~lake & (np.arange(420)[:, None] < 250))
+
+
+def test_rivers_drawn_along_a_planned_tree_are_those_routed_now() -> None:
+    """``route`` then ``planned_rivers`` draws what ``generate_rivers`` draws, with any rain."""
+    land, height, rain = _valley(420, 280)
+    r, c = np.indices(land.shape)
+    lake = np.asarray(((r - 250) ** 2 + (c - 140) ** 2) < 14**2, dtype=bool)
+    land &= ~lake
+    rain = rain + (np.indices(rain.shape)[1] * 37) % 900
+    parent = route(land, height, seed=11, lakes=lake)
+    planned = planned_rivers(land, parent, rain, seed=11, lakes=lake)
+    routed = generate_rivers(land, height, rain, seed=11, lakes=lake)
+    assert np.array_equal(planned.role, routed.role)
+    assert np.array_equal(planned.flow, routed.flow)
+    assert planned.stats == routed.stats
+
+
+def test_accumulated_flow_is_the_drainage_flow_and_upstream_comes_first() -> None:
+    land, height, rain = _valley()
+    coarse = land[::STEP, ::STEP]
+    weight = np.where(coarse, rain[: coarse.shape[0], : coarse.shape[1]], 0).astype(np.int64)
+    tree = drainage(coarse, height[::STEP, ::STEP], weight, 5)
+    assert np.array_equal(accumulate(tree.parent, weight), tree.flow)
+    seen = np.zeros(coarse.size, dtype=bool)
+    for group in upstream_order(tree.parent):
+        assert not np.any(seen[tree.parent[group]])
+        seen[group] = True
+    assert np.array_equal(seen, tree.parent >= 0)
+
+
+def test_a_plan_of_another_domain_is_refused() -> None:
+    land, height, rain = _valley()
+    parent = route(land, height, seed=11)
+    wetter = land.copy()
+    wetter[:40] = False
+    with pytest.raises(RiverGenerationError, match="not this domain's"):
+        _ = planned_rivers(wetter, parent, rain, seed=11)
+    with pytest.raises(RiverGenerationError, match="not this domain's"):
+        _ = planned_rivers(land, parent[:-1], rain, seed=11)

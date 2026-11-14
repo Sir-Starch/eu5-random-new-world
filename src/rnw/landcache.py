@@ -43,6 +43,8 @@ from rnw.islands import Footprint
 from rnw.model import CellClass
 from rnw.newworld import NewWorld, generate_new_world, seal_pockets
 from rnw.progress import checkpoint
+from rnw.rivers import STEP as RIVER_STEP
+from rnw.watersheds import DrainagePlan, plan_spans
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -67,6 +69,8 @@ ARRAYS: Final[tuple[str, ...]] = (
     "moves",
     "barrier",
     "edges",
+    "drainage",
+    "drainage_seam",
 )
 
 
@@ -122,14 +126,15 @@ def cache_key(  # noqa: PLR0913, PLR0917 - the key covers each independent geogr
     seam: int | None = None,
     sizes: SizeModel | None = None,
 ) -> str:
-    # The first number is the layout of the construction (10: the game's location sizes the
-    # cells are spaced by; 9: the epoch the world is made by and the seam its rivers are split
-    # at; 8: the Americas' template of Omerika; 7: the water band
-    # along the canvas's boundary and the crossings as chains of cells); the code's identity keeps
+    # The first number is the layout of the construction (11: the drainage plan the rivers are
+    # drawn along; 10: the game's location sizes the cells are spaced by; 9: the epoch the world
+    # is made by and the seam its rivers are split at; 8: the Americas' template of Omerika; 7: the
+    # water band along the canvas's boundary and the crossings as chains of cells); the code's
+    # identity keeps
     # an entry made by earlier code from being read when the land or the sea cells change inside
     # an epoch. The template matters only to a world that uses it.
     spec = (
-        10,
+        11,
         epoch.CURRENT,
         algorithm,
         seam,
@@ -568,6 +573,13 @@ def _write(target: Path, world: NewWorld) -> None:
         for name, table in tables.items():
             table.tofile(stage / name)
         np.array(world.edges, dtype=np.int32).tofile(stage / "edges")
+        plan = world.drainage
+        # No plan, or the seam of one (-1: none), then its trees one after another.
+        seam = -2 if plan is None else -1 if plan.seam is None else plan.seam
+        np.array([seam], dtype=np.int64).tofile(stage / "drainage_seam")
+        np.concatenate(
+            [np.zeros(0, dtype=np.int32), *(() if plan is None else plan.parents)]
+        ).astype(np.int32).tofile(stage / "drainage")
         _ = (stage / "classes").write_bytes(bytes(KINDS.index(kind) for kind in world.classes))
         lines = [f"{file.name}\t{_hash_file(file)}\n" for file in sorted(stage.iterdir())]
         _ = (stage / "hashes.txt").write_text("".join(lines), encoding="ascii")
@@ -586,6 +598,25 @@ def _i64(target: Path, name: str, shape: tuple[int, ...]) -> NDArray[np.int64]:
     if path.stat().st_size != prod(shape) * np.dtype(np.int64).itemsize:
         raise CacheError(path)
     return np.fromfile(path, dtype=np.int64).reshape(shape)
+
+
+def _drainage(target: Path, shape: tuple[int, ...]) -> DrainagePlan | None:
+    """The drainage plan kept with a world (``_write``), its trees cut by the spans of its seam."""
+    seam = int(_i64(target, "drainage_seam", (1,))[0])
+    if seam == -2:  # noqa: PLR2004 - the mark of a world without a plan
+        if (target / "drainage").stat().st_size:
+            raise CacheError(target)
+        return None
+    found = None if seam == -1 else seam
+    rows, columns = int(shape[0]), int(shape[1])
+    sizes = [
+        -(-rows // RIVER_STEP) * -(-(right - left) // RIVER_STEP)
+        for left, right in plan_spans(columns, found)
+    ]
+    joined = _i32(target, "drainage", (sum(sizes),))
+    bounds = np.cumsum([0, *sizes])
+    parents = tuple(joined[bounds[i] : bounds[i + 1]] for i in range(len(sizes)))
+    return DrainagePlan(seam=found, parents=parents)
 
 
 def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
@@ -622,6 +653,7 @@ def _read(target: Path, shape: tuple[int, ...]) -> NewWorld:
             edges=edges,
             moves=_i64(target, "moves", ((target / "moves").stat().st_size // 16, 2)),
             barrier=_i64(target, "barrier", ((target / "barrier").stat().st_size // 8,)),
+            drainage=_drainage(target, shape),
         )
     except (OSError, ValueError, TypeError, KeyError, IndexError) as error:
         message = f"Land cache {target} is damaged; remove this entry and retry: {error}"

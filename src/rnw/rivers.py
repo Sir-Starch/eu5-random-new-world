@@ -545,6 +545,119 @@ def _coarse_share(mask: NDArray[np.bool_], strip: int) -> NDArray[np.int64]:
     return share
 
 
+def _coarse_water(
+    lakes: NDArray[np.bool_] | None, count: NDArray[np.int64]
+) -> tuple[NDArray[np.bool_], NDArray[np.bool_] | None, NDArray[np.bool_]]:
+    """The coarse land, lake and flowed-over (land or lake) cells of a domain whose coarse land
+    share is ``count``; a domain without water to drain to fails."""
+    coarse_land = count >= PERMILLE // 2
+    coarse_lake = None
+    if lakes is not None:
+        coarse_lake = ~coarse_land & (_coarse_share(lakes, STRIP_ROWS) >= PERMILLE // 2)
+    flows_over = coarse_land if coarse_lake is None else coarse_land | coarse_lake
+    if np.all(flows_over):
+        message = "River domain has no water outlet; its closed boundary is not a mouth"
+        raise RiverGenerationError(message)
+    return coarse_land, coarse_lake, flows_over
+
+
+def _routing(
+    land: NDArray[np.bool_],
+    height: NDArray[np.int32] | NDArray[np.int64],
+    seed: int,
+    lakes: NDArray[np.bool_] | None,
+) -> tuple[NDArray[np.int64], NDArray[np.bool_] | None, NDArray[np.bool_]]:
+    """The heights the flow is routed over (the relief plus valley noise), the coarse lakes and
+    the flowed-over cells of a domain."""
+    shape = (-(-land.shape[0] // STEP), -(-land.shape[1] // STEP))
+    count, weight = _coarse_land_and_height(land, height, STRIP_ROWS)
+    _, coarse_lake, flows_over = _coarse_water(lakes, count)
+    coarse_height = weight * PERMILLE // np.maximum(1, count)
+    if coarse_lake is not None:
+        coarse_height = np.where(coarse_lake, 0, coarse_height)
+    valleys = warped_noise(
+        derive_seed(seed, "river_valleys"),
+        shape,
+        step=2,
+        period=VALLEY_PERIOD,
+        octaves=4,
+        warp_px=VALLEY_PERIOD // 3,
+    )
+    return coarse_height + valleys * VALLEY_HEIGHT // NOISE_SCALE, coarse_lake, flows_over
+
+
+def _weights(rain: NDArray[np.int64], flows_over: NDArray[np.bool_]) -> NDArray[np.int64]:
+    """What each coarse cell adds to the flow: the square root of its rain."""
+    wet = np.maximum(np.where(flows_over, rain, 0), 0) * RAIN_UNIT
+    return np.floor(np.sqrt(wet.astype(np.float64))).astype(np.int64)
+
+
+def route(
+    land: NDArray[np.bool_],
+    height: NDArray[np.int32] | NDArray[np.int64],
+    *,
+    seed: int,
+    lakes: NDArray[np.bool_] | None = None,
+) -> NDArray[np.int64]:
+    """The drainage tree ``generate_rivers`` routes a domain's flow by, without the flow: the
+    downstream coarse cell of every coarse cell in raster order, -1 for water.
+
+    The tree does not depend on the rain, only on the relief, the lakes and the seed, so rivers
+    drawn later along it (``planned_rivers``) with any rain are those ``generate_rivers`` draws
+    from the same relief and rain.
+    """
+    routing, _, flows_over = _routing(land, height, seed, lakes)
+    tree = drainage(
+        flows_over, routing, np.zeros(routing.shape, dtype=np.int64), derive_seed(seed, "drainage")
+    )
+    return tree.parent
+
+
+def upstream_order(parent: NDArray[np.integer]) -> list[NDArray[np.int64]]:
+    """The cells of a drainage tree that have a downstream cell, in groups of equal depth (the
+    number of steps to water), deepest first: each cell comes after every cell upstream of it.
+
+    The depths come from pointer jumping, so the groups are found in a few passes over the
+    tree, however long its rivers."""
+    jump = parent.astype(np.int64).ravel()
+    depth = (jump >= 0).astype(np.int64)
+    while True:
+        live = np.flatnonzero(jump >= 0)
+        if live.size == 0:
+            break
+        depth[live] += depth[jump[live]]
+        jump[live] = jump[jump[live]]
+    order = np.argsort(-depth, kind="stable")
+    groups = np.split(order, np.flatnonzero(np.diff(depth[order])) + 1)
+    return [group for group in groups if group.size and depth[group[0]] > 0]
+
+
+def accumulate(parent: NDArray[np.integer], weight: NDArray[np.int64]) -> NDArray[np.int64]:
+    """The catchment of every cell of a drainage tree: its own ``weight`` and that of every cell
+    upstream of it, as ``drainage`` accumulates it (exact integer sums)."""
+    links = parent.astype(np.int64).ravel()
+    flow = weight.astype(np.int64).ravel().copy()
+    for group in upstream_order(links):
+        np.add.at(flow, links[group], flow[group])
+    return flow
+
+
+def _drawn(  # noqa: PLR0913 - the land, its tree, lakes, columns, seed and the output buffers.
+    land: NDArray[np.bool_],
+    tree: Drainage,
+    coarse_lake: NDArray[np.bool_] | None,
+    *,
+    columns: int,
+    seed: int,
+    output: Rivers | None,
+) -> Rivers:
+    threshold = river_threshold(tree, int(np.count_nonzero(land)), coarse_lake)
+    found = streams(tree, threshold, MIN_STREAM_CELLS, coarse_lake)
+    rivers = draw_rivers(land, tree, found, columns=columns, seed=seed, output=output)
+    rivers.stats["threshold"] = threshold
+    return rivers
+
+
 def generate_rivers(  # noqa: PLR0913 - the raster, its fields, the lakes and the output buffers.
     land: NDArray[np.bool_],
     height: NDArray[np.int32] | NDArray[np.int64],
@@ -561,36 +674,32 @@ def generate_rivers(  # noqa: PLR0913 - the raster, its fields, the lakes and th
     lake receives its rivers and gives one outflow river from its lowest rim, instead of
     ending every river it meets. Without it all water is a sink.
     """
+    routing, coarse_lake, flows_over = _routing(land, height, seed, lakes)
+    tree = drainage(flows_over, routing, _weights(rain, flows_over), derive_seed(seed, "drainage"))
+    return _drawn(land, tree, coarse_lake, columns=routing.shape[1], seed=seed, output=output)
+
+
+def planned_rivers(  # noqa: PLR0913 - the raster, its tree, rain, lakes and the output buffers.
+    land: NDArray[np.bool_],
+    parent: NDArray[np.integer],
+    rain: NDArray[np.int64],
+    *,
+    seed: int,
+    output: Rivers | None = None,
+    lakes: NDArray[np.bool_] | None = None,
+) -> Rivers:
+    """The rivers ``generate_rivers`` draws, along a drainage tree made before (``route``)
+    instead of one routed over the domain's relief now: the flow is the rain accumulated down
+    ``parent``. The tree must be this domain's: its water cells are the domain's."""
     shape = (-(-land.shape[0] // STEP), -(-land.shape[1] // STEP))
-    count, weight = _coarse_land_and_height(land, height, STRIP_ROWS)
-    coarse_land = count >= PERMILLE // 2
-    coarse_lake = None
-    if lakes is not None:
-        coarse_lake = ~coarse_land & (_coarse_share(lakes, STRIP_ROWS) >= PERMILLE // 2)
-    flows_over = coarse_land if coarse_lake is None else coarse_land | coarse_lake
-    if np.all(flows_over):
-        message = "River domain has no water outlet; its closed boundary is not a mouth"
+    count = _coarse_share(land, STRIP_ROWS)
+    _, coarse_lake, flows_over = _coarse_water(lakes, count)
+    links = parent.astype(np.int64).ravel()
+    if links.size != flows_over.size or not np.array_equal(links >= 0, flows_over.ravel()):
+        message = "The drainage plan is not this domain's: its water differs from the land's"
         raise RiverGenerationError(message)
-    coarse_height = weight * PERMILLE // np.maximum(1, count)
-    if coarse_lake is not None:
-        coarse_height = np.where(coarse_lake, 0, coarse_height)
-    valleys = warped_noise(
-        derive_seed(seed, "river_valleys"),
-        shape,
-        step=2,
-        period=VALLEY_PERIOD,
-        octaves=4,
-        warp_px=VALLEY_PERIOD // 3,
-    )
-    routing = coarse_height + valleys * VALLEY_HEIGHT // NOISE_SCALE
-    wet = np.maximum(np.where(flows_over, rain, 0), 0) * RAIN_UNIT
-    weight = np.floor(np.sqrt(wet.astype(np.float64))).astype(np.int64)
-    tree = drainage(flows_over, routing, weight, derive_seed(seed, "drainage"))
-    threshold = river_threshold(tree, int(np.count_nonzero(land)), coarse_lake)
-    found = streams(tree, threshold, MIN_STREAM_CELLS, coarse_lake)
-    rivers = draw_rivers(land, tree, found, columns=shape[1], seed=seed, output=output)
-    rivers.stats["threshold"] = threshold
-    return rivers
+    tree = Drainage(parent=links, flow=accumulate(links, _weights(rain, flows_over)))
+    return _drawn(land, tree, coarse_lake, columns=shape[1], seed=seed, output=output)
 
 
 def flow_classes(rivers: Rivers, shares_permille: tuple[int, ...]) -> NDArray[np.int8]:

@@ -5,12 +5,13 @@ the land is: small in wet, warm lowlands and on the coasts, large in deserts, on
 in the cold [V-EXEC, ``docs/terrain-biomes.md``]. Cells grown from a uniform scatter of seeds
 before any river exists can do neither. So the domain's own rainfall (``domain_climate``: the
 zonal-wind model of ``rnw.climate`` on the domain, everything outside its land and lakes being
-sea) drains its relief first (``domain_rivers``), in the same independent watershed domains as
-the export's rivers; the cells are then grown with the larger rivers as walls and seeds spaced
-by the size vanilla gives the class the climate vote will choose (``spacing_grid``, from the
-game's own locations: ``eu5_biomes.SizeModel``). The export draws the same rivers again from the
-same inputs, so the borders it gets are the rivers it writes. Integer arithmetic and square
-roots of exact integers.
+sea) runs down the drainage of its relief (``plan_drainage``, ``domain_rivers``), in the same
+independent watershed domains as the export's rivers; the cells are then grown with the larger
+rivers as walls and seeds spaced by the size vanilla gives the class the climate vote will choose
+(``spacing_grid``, from the game's own locations: ``eu5_biomes.SizeModel``). The world keeps its
+drainage plan (``newworld.NewWorld.drainage``) and the export draws the same rivers again along
+it, so the borders it gets are the rivers it writes. Integer arithmetic and square roots of
+exact integers.
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -18,6 +19,7 @@ roots of exact integers.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
 import numpy as np
@@ -39,8 +41,9 @@ from rnw.rivers import (
     RiverGenerationError,
     Rivers,
     flow_classes,
-    generate_rivers,
     outlet_problems,
+    planned_rivers,
+    route,
 )
 from rnw.rng import derive_seed, hash_grid
 from rnw.synth import first_pixels, grow_regions, grow_weighted, merge_small
@@ -77,23 +80,69 @@ def _span_rain(rain: NDArray[np.int64], shape: tuple[int, int], left: int) -> ND
     return rain[grid_rows[:, np.newaxis], grid_columns[np.newaxis, :]]
 
 
-def domain_rivers(  # noqa: PLR0913 - the land, relief, lakes, rain, seam and seed.
+@dataclass(frozen=True, slots=True, eq=False)
+class DrainagePlan:
+    """How a domain's land drains, decided on its relief before anything is raised on it.
+
+    One drainage tree (``rivers.route``) per independent watershed domain of the seam
+    (``eu5_rivers.watershed_spans``; ``seam`` None: one domain), each the downstream coarse cell
+    of every coarse cell of its span in raster order, -1 for water. The rivers are drawn along it
+    (``domain_rivers``) when the cells are grown and again when the world is written.
+    """
+
+    seam: int | None
+    parents: tuple[NDArray[np.int32], ...]
+
+
+def plan_spans(columns: int, seam: int | None) -> tuple[tuple[int, int], ...]:
+    """The column spans of a plan's trees: ``eu5_rivers.watershed_spans``, one without a seam."""
+    return ((0, columns),) if seam is None else watershed_spans(columns, seam)
+
+
+def plan_drainage(
     land: NDArray[np.bool_],
     height: NDArray[np.int32],
     *,
     lakes: NDArray[np.bool_],
-    rain: NDArray[np.int64],
     seam: int | None,
     seed: int,
-) -> Rivers:
-    """The rivers of the domain in independent watershed domains split at ``seam`` (the column
-    the game's map starts at; None: no seam), each draining to genuine water.
+) -> DrainagePlan:
+    """The drainage of the domain's relief in independent watershed domains split at ``seam``
+    (the column the game's map starts at; None: no seam), as the export plans its rivers
+    (``eu5_nw_export._river_basins``), each span with its own seed."""
+    columns = int(land.shape[1])
+    parents = tuple(
+        route(
+            land[:, left:right],
+            height[:, left:right],
+            seed=derive_seed(seed, f"river_basin_{left}"),
+            lakes=lakes[:, left:right],
+        ).astype(np.int32)
+        for left, right in plan_spans(columns, seam)
+    )
+    return DrainagePlan(seam=seam, parents=parents)
 
-    The same planning as the export's (``eu5_nw_export._river_basins``) with the domain's own
-    ``rain`` (``domain_climate``); a span that cannot drain or has a bad outlet fails.
+
+def domain_rivers(
+    land: NDArray[np.bool_],
+    plan: DrainagePlan,
+    *,
+    lakes: NDArray[np.bool_],
+    rain: NDArray[np.int64],
+    seed: int,
+) -> Rivers:
+    """The rivers of the domain along its drainage ``plan`` (``plan_drainage``), the flow being
+    the domain's own ``rain`` (``domain_climate``), each span draining to genuine water.
+
+    A plan that is not this domain's (another number of spans, or water where the domain has
+    land) or a span with a bad outlet fails.
     """
     rows, columns = (int(size) for size in land.shape)
-    spans = ((0, columns),) if seam is None else watershed_spans(columns, seam)
+    seam = plan.seam
+    spans = plan_spans(columns, seam)
+    if len(spans) != len(plan.parents):
+        message = "The drainage plan is not this domain's: it has another number of spans"
+        raise RiverGenerationError(message)
     rivers = Rivers(
         np.empty(land.shape, dtype=np.int8),
         np.empty(land.shape, dtype=np.int64),
@@ -105,12 +154,12 @@ def domain_rivers(  # noqa: PLR0913 - the land, relief, lakes, rain, seam and se
                 rivers.role[:, column] = NONE
                 rivers.flow[:, column] = 0
     thresholds: list[int] = []
-    for left, right in spans:
+    for (left, right), parent in zip(spans, plan.parents, strict=True):
         domain = land[:, left:right]
         target = Rivers(rivers.role[:, left:right], rivers.flow[:, left:right], {})
-        found = generate_rivers(
+        found = planned_rivers(
             domain,
-            height[:, left:right],
+            parent,
             _span_rain(rain, (rows, right - left), left),
             seed=derive_seed(seed, f"river_basin_{left}"),
             output=target,
