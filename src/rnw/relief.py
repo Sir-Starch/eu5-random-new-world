@@ -335,12 +335,15 @@ def _margin_grid(land: NDArray[np.bool_], seed: int, strip: int) -> NDArray[np.i
     shore = coarse & ~(padded[:-2, 1:-1] & padded[2:, 1:-1] & padded[1:-1, :-2] & padded[1:-1, 2:])
     active = shore & (activity > 0)
     del padded, shore, activity
+    # Each landmass measures from its own active coasts only, however near another's lie.
     limit = TILT_REACH // step
-    distance = euclidean_distance(active, limit) * step
     parts = label_components(coarse.astype(np.int32))
-    owner = nearest_label(np.where(active, parts, -1).astype(np.int32), active, 2 * limit)
-    distance = np.where(coarse & (owner == parts), distance, TILT_REACH * 8)
-    del owner, parts
+    distance = np.full(shape, TILT_REACH * 8, dtype=np.int64)
+    for part in np.unique(parts[active]).tolist():
+        mine = parts == part
+        near = euclidean_distance(active & mine, limit) * step
+        distance = np.where(mine, np.minimum(near, TILT_REACH * 8), distance)
+    del parts
     # A cell of mostly water takes the value of the nearest land cell, so the land pixels at a
     # coast read their own landmass's distance, not one blended towards the cap over the sea.
     cells = np.arange(coarse.size, dtype=np.int32).reshape(shape)

@@ -11,7 +11,8 @@ import numpy as np
 import pytest
 
 from rnw import relief
-from rnw.fields import upsample, warped_noise
+from rnw.fields import PERMILLE, block_mean, upsample, warped_noise
+from rnw.topology import label_components
 from tests.reference import relief as reference_relief
 
 if TYPE_CHECKING:
@@ -121,3 +122,21 @@ def test_strips_equal_the_whole_raster_with_painted_hints(
     monkeypatch.setattr(relief, "worker_count", _fixed(3))
     assert np.array_equal(relief.generate_relief(land, seed=5, hints=hints), whole)
     assert not np.array_equal(whole, relief.generate_relief(land, seed=5))
+
+
+@pytest.mark.parametrize("seed", [0, 3])
+def test_a_landmass_measures_its_tilt_from_its_own_active_coasts_without_breaks(seed: int) -> None:
+    generator = np.random.default_rng(seed)
+    coarse = generator.integers(0, 1000, (960 // 60 + 2, 1440 // 60 + 2))
+    land = upsample(coarse, 60, (960, 1440)) > 520
+    step = relief.MARGIN_STEP
+    grid = relief._margin_grid(land, seed, 256)[:-1, :-1]  # pyright: ignore[reportPrivateUsage]
+    cells = block_mean(land.astype(np.int64) * PERMILLE, step) >= PERMILLE // 2
+    parts = label_components(cells.astype(np.int32))
+    # A distance to a fixed set of coasts changes by at most a cell between neighbouring cells.
+    for here, there in (
+        ((slice(None), slice(1, None)), (slice(None), slice(None, -1))),
+        ((slice(1, None), slice(None)), (slice(None, -1), slice(None))),
+    ):
+        same = cells[here] & cells[there] & (parts[here] == parts[there])
+        assert np.abs(grid[here] - grid[there])[same].max(initial=0) <= step * 8 + 8
