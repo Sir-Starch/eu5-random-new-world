@@ -663,11 +663,38 @@ def strip_bend(
     return np.where(ends > 0, bend // np.maximum(ends, 1), -1)
 
 
+def land_blur(
+    land: NDArray[np.bool_], height: NDArray[np.integer], radius: int
+) -> NDArray[np.int64]:
+    """The mean height of the land in the box of ``radius`` pixels round every land pixel, 0 off
+    the land (``radius`` 0: the height itself). The edges of the window are replicated, so a row
+    within ``radius`` of an edge that is not the map's reads short; read a window ``radius`` rows
+    wider (``blurred_window``). Integers."""
+    if radius <= 0:
+        return np.where(land, height, 0).astype(np.int64)
+    share = box_blur(land.astype(np.int64) * PERMILLE, radius)
+    total = box_blur(np.where(land, height, 0).astype(np.int64) * PERMILLE, radius)
+    return np.where(land, total // np.maximum(share, 1), 0)
+
+
+def blurred_window(
+    land: NDArray[np.bool_], height: NDArray[np.integer], low: int, high: int, radius: int
+) -> NDArray[np.int64]:
+    """Rows ``low`` to ``high`` of ``height`` blurred over the land (``land_blur``), read with
+    ``radius`` more rows on each side, so they are the rows of the whole map's blur."""
+    rows = int(land.shape[0])
+    first, last = max(0, low - radius), min(rows, high + radius)
+    blurred = land_blur(land[first:last], height[first:last], radius)
+    return blurred[low - first : high - first]
+
+
 def cell_roughness(
     labels: NDArray[np.int32],
     elevation: NDArray[np.integer],
     count: int,
     land: NDArray[np.bool_] | None = None,
+    *,
+    blur: int = 0,
 ) -> NDArray[np.int64]:
     """How rough each of the first ``count`` cells (the land cells) is: the mean bend of its
     height, ``|h(p + d) + h(p - d) - 2 h(p)|`` over ``d`` = ``HILL_STEP`` pixels along the rows and
@@ -676,18 +703,26 @@ def cell_roughness(
     A slope, as every cell rising from a coast has, does not bend; nor does the reading grow with
     the cell, as a spread about the cell's plane does. ``land`` marks the land pixels when the
     land cells are not simply the first ``count`` labels (vanilla's map, ``eu5_biomes.size_model``);
-    a label of -1 is none. Integer arithmetic, a strip at a time.
+    a label of -1 is none. With ``blur`` the height is first blurred over the land
+    (``land_blur``), so a fine texture that one map has and another lacks does not count.
+    Integer arithmetic, a strip at a time.
     """
     rows = int(labels.shape[0])
     totals = np.zeros(count, dtype=np.int64)
     pixels = np.zeros(count, dtype=np.int64)
+    on_map = (labels >= 0) & (labels < count) if land is None and blur else land
     for start in range(0, rows, ROUGHNESS_ROWS):
         checkpoint()
         stop = min(rows, start + ROUGHNESS_ROWS)
         low, high = max(0, start - HILL_STEP), min(rows, stop + HILL_STEP)
         block = labels[low:high]
         on_land = (block >= 0) & (block < count) if land is None else land[low:high]
-        bend = strip_bend(on_land, elevation[low:high], start, stop, rows)
+        values = (
+            elevation[low:high]
+            if not blur or on_map is None
+            else blurred_window(on_map, elevation, low, high, blur)
+        )
+        bend = strip_bend(on_land, values, start, stop, rows)
         cell = block[start - low : stop - low]
         keep = on_land[start - low : stop - low] & (cell >= 0) & (cell < count) & (bend >= 0)
         totals += np.bincount(cell[keep], weights=bend[keep], minlength=count).astype(np.int64)

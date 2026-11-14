@@ -8,9 +8,11 @@ distance to the sea and zonal-wind rainfall (``climate.py``). An integer
 k-nearest-neighbour vote over Old World locations calibrates climate and vegetation as joint
 (climate, vegetation) pairs; the votes are then smoothed over the location adjacency graph so
 zones are contiguous, and a cell's vegetation is chosen among the pairs of its own climate.
-Topography comes from relief ranks with vanilla shares; raw materials are drawn from
-vanilla frequencies. The New World starts empty, so farmland is learned as grassland; from epoch
-64 the vote leaves farmland out and learns from the vanilla Americas as well (``OPEN_CLIMATE``).
+Topography comes from relief ranks with vanilla shares, from epoch 64 from a vote of vanilla's
+locations alike in height, relief and distance to the sea (``vote_grounds``); raw materials are
+drawn from vanilla frequencies. The New World starts empty, so farmland is learned as grassland;
+from epoch 64 the vote leaves farmland out and learns from the vanilla Americas as well
+(``OPEN_CLIMATE``).
 """
 
 # NumPy stubs type array comparisons, shapes and tolist() as Any.
@@ -46,7 +48,7 @@ from rnw.fields import block_mean
 from rnw.model import CellClass
 from rnw.parallel import worker_count
 from rnw.progress import checkpoint
-from rnw.relief import HILL_STEP, cell_roughness, strip_bend
+from rnw.relief import HILL_STEP, blurred_window, cell_roughness, strip_bend
 from rnw.rng import derive_seed, hash_point
 from rnw.settings import RESOURCES, ResourceSettings, SettingsError
 from rnw.topology import adjacency_pairs, distance_from
@@ -155,17 +157,20 @@ WEIGHT_TOP: Final[int] = 1 << 20
 # [V-EXEC 2026-11-13].
 RELIEF_ROWS: Final[int] = 512  # rows of a strip read for the relief of the size blocks
 # Epoch 64 (``epoch.ROUGH_HILLS``): the ground of the land is voted, as its climate is, by the
-# ``NEIGHBOURS`` vanilla Old World locations most like it (``vote_grounds``) in
-# ``GROUND_COLUMNS`` readings, each ranked within its own map's land so that vanilla's decal
-# relief and the generated relief compare: mean height, ruggedness (``cell_ruggedness``),
-# roughness (``relief.cell_roughness``), rainfall and distance to the sea; each ground then takes
-# its share of the Old World's locations. Read on vanilla itself, each location without itself,
-# the former hand-made ranks (height and spread for mountains, rain against height and the sea
-# for wetlands) named the ground of 635 Old World locations in a thousand (597 in the Americas),
-# 19 % of their wetlands rightly, none of them over 120 px from the sea (384 are) and 116 coastal
-# mountains (417 are); the vote names 750 (659), 42 % of the wetlands, 326 beyond 120 px and 360
-# coastal mountains [V-EXEC 2026-11-13].
-GROUND_COLUMNS: Final[int] = 5
+# ``NEIGHBOURS`` vanilla Old World locations most like it (``vote_grounds``) in ``GROUND_COLUMNS``
+# readings: mean height, ruggedness (``cell_ruggedness``), roughness (``relief.cell_roughness``)
+# and distance to the sea, the relief blurred over the land by ``GROUND_BLUR`` pixels first, for
+# vanilla's decals have twice the fine bend of the generated relief and the blurred readings of
+# the two compare (lowland bend 88 against 61 to 74). The readings are taken as they are, scaled
+# by vanilla's spread (``GROUND_WEIGHTS``), and each ground's votes weigh what makes vanilla read
+# as it is (``calibrated_weights``), so a world has as much of each ground as its land holds, not
+# the Old World's shares. Read on vanilla, each location voted by the others, the vote names the
+# ground of 926 Old World locations in a thousand and 79 % of their wetlands; voting the Americas
+# by the Old World it names 660 (the ranked vote with the Old World's shares, 659). The rainfall
+# adds nothing (Americas 640 with it) and is left out [V-EXEC 2026-11-14].
+GROUND_COLUMNS: Final[int] = 4
+GROUND_BLUR: Final[int] = 8
+GROUND_WEIGHTS: Final[tuple[int, ...]] = (30, 30, 30, 15)
 OCTAVE_PARTS: Final[int] = 64
 SIZE_STEP: Final[int] = 64  # pixels per block of the size model; a multiple of CLIMATE_STEP
 # biomes.txt defines no desert wetlands biome; such templates fall to default_biome, whose
@@ -565,11 +570,16 @@ def block_features(
 
 
 def block_relief(
-    land: NDArray[np.bool_], height: NDArray[np.integer], found: NDArray[np.bool_]
+    land: NDArray[np.bool_],
+    height: NDArray[np.integer],
+    found: NDArray[np.bool_],
+    *,
+    blur: int = 0,
 ) -> NDArray[np.int64]:
     """The spread and the bend of the height of the land of each ``found`` ``SIZE_STEP`` block,
     in raster order (``block_features``): the standard deviation of its height and the mean of
-    ``relief.strip_bend``, which ``_topography`` ranks as it ranks the cells' (integers)."""
+    ``relief.strip_bend``, which ``_topography`` ranks as it ranks the cells' (integers). With
+    ``blur`` the height is first blurred over the land (``relief.land_blur``)."""
     step = SIZE_STEP
     rows, columns = (int(size) for size in land.shape)
     width = -(-columns // step)
@@ -584,9 +594,14 @@ def block_relief(
         checkpoint()
         stop = min(rows, start + RELIEF_ROWS)
         low, high = max(0, start - HILL_STEP), min(rows, stop + HILL_STEP)
-        bend = strip_bend(land[low:high], height[low:high], start, stop, rows)
+        window = (
+            height[low:high].astype(np.int64)
+            if not blur
+            else blurred_window(land, height, low, high, blur)
+        )
+        bend = strip_bend(land[low:high], window, start, stop, rows)
         on_land = land[start:stop]
-        values = height[start:stop].astype(np.int64)
+        values = window[start - low : stop - low]
         index = (np.arange(start, stop, dtype=np.int64)[:, np.newaxis] // step) * width
         index = np.broadcast_to(index + column_block[np.newaxis, :], on_land.shape)
         owner = index[on_land]
@@ -612,6 +627,8 @@ def cell_ruggedness(
     elevation: NDArray[np.integer],
     count: int,
     land: NDArray[np.bool_] | None = None,
+    *,
+    blur: int = 0,
 ) -> NDArray[np.int64]:
     """How broken the ground of each of the first ``count`` cells (the land cells) is: the mean,
     over its pixels, of the spread of the height of the land of the ``SIZE_STEP`` block each
@@ -619,57 +636,53 @@ def cell_ruggedness(
     fractal relief grows with the area read, so ranked by it the largest cells became mountains
     and the smallest plateaus; this reads every cell at the same scale, as the size model reads
     its blocks. ``land`` marks the land pixels when the land cells are not simply the first
-    ``count`` labels (vanilla's map, ``size_model``). Integers."""
+    ``count`` labels (vanilla's map, ``size_model``); ``blur`` blurs the height over the land
+    first (``relief.land_blur``). Integers."""
     rows, columns = (int(size) for size in labels.shape)
     step = SIZE_STEP
     shape = (-(-rows // step), -(-columns // step))
     on_land = (labels >= 0) & (labels < count) if land is None else land
-    relief = block_relief(on_land, elevation, np.ones(shape, dtype=bool))
+    relief = block_relief(on_land, elevation, np.ones(shape, dtype=bool), blur=blur)
     del on_land
     cells = max(count, int(labels.max()) + 1)
     pixels, sums = _location_sums(labels, relief[:, :1], shape, cells)
     return sums[:count, 0] // np.maximum(pixels[:count], 1)
 
 
-def ground_ranks(table: NDArray[np.int64]) -> NDArray[np.int64]:
-    """Each column of ``table`` as the permille rank of its rows among them (ties by row)."""
-    count = int(table.shape[0])
-    order = np.arange(count, dtype=np.int64)
-    out = np.empty_like(table)
-    for column in range(int(table.shape[1])):
-        out[np.lexsort((order, table[:, column])), column] = order * PERMILLE // max(1, count)
-    return out
+def cell_mean(
+    labels: NDArray[np.int32], values: NDArray[np.integer], count: int
+) -> NDArray[np.int64]:
+    """The mean of ``values`` over the pixels of each of the first ``count`` cells, a strip of
+    ``RELIEF_ROWS`` rows at a time (exact: a strip's sums stay below 2^53). Integers."""
+    totals = np.zeros(count, dtype=np.int64)
+    pixels = np.zeros(count, dtype=np.int64)
+    for start in range(0, int(labels.shape[0]), RELIEF_ROWS):
+        checkpoint()
+        cell = labels[start : start + RELIEF_ROWS]
+        keep = (cell >= 0) & (cell < count)
+        chosen = cell[keep]
+        weights = values[start : start + RELIEF_ROWS][keep]
+        totals += np.bincount(chosen, weights=weights, minlength=count).astype(np.int64)
+        pixels += np.bincount(chosen, minlength=count)
+    return totals // np.maximum(pixels, 1)
 
 
 def vote_grounds(
-    model: SizeModel,
-    query: NDArray[np.int64],
-    dry: NDArray[np.bool_],
-    shares: NDArray[np.int64],
+    model: SizeModel, query: NDArray[np.int64], dry: NDArray[np.bool_]
 ) -> NDArray[np.int64]:
     """The ground (an index of ``TOPOGRAPHIES``) of each row of ``query``: its ``GROUND_COLUMNS``
-    readings (mean height, ruggedness, roughness, rainfall, distance to the sea) are ranked among
-    the rows of ``query`` and the vanilla locations nearest in rank vote
-    (``SizeModel.ground_table``, ``knn_scores``). In the order of ``TOPOGRAPHIES`` each ground
-    takes the rows that vote most for it, as many as its ``shares`` give, wetlands never ``dry``
-    rows; the rest is flatland. Ties go by the row's order."""
+    readings (mean height, ruggedness, roughness, distance to the sea), scaled as vanilla's
+    (``GROUND_WEIGHTS``), are voted on by the nearest vanilla locations (``SizeModel.ground_table``,
+    ``knn_scores``), each ground's votes weighed by ``SizeModel.ground_weights``; a ``dry`` row is
+    never wetland. Ties go to the earlier ground."""
     if model.grounds.size == 0:
         message = "The size model has no ground to learn from"
         raise ValueError(message)
-    count = int(query.shape[0])
-    kinds = len(TOPOGRAPHIES)
-    scores = knn_scores(model.ground_table, model.grounds, ground_ranks(query), kinds)
-    total = max(1, int(shares.sum()))
-    ground = np.full(count, kinds - 1, dtype=np.int64)
-    free = np.ones(count, dtype=bool)
-    for kind in range(kinds - 1):
-        wanted = count * int(shares[kind]) // total
-        open_rows = free & ~dry if TOPOGRAPHIES[kind] == "wetlands" else free
-        candidates = np.flatnonzero(open_rows)
-        chosen = candidates[np.lexsort((candidates, -scores[candidates, kind]))][:wanted]
-        ground[chosen] = kind
-        free[chosen] = False
-    return ground
+    train, rows = _standardize(model.ground_table, query, GROUND_WEIGHTS)
+    scores = knn_scores(train, model.grounds, rows, len(TOPOGRAPHIES))
+    scores *= model.ground_weights[np.newaxis, :]
+    scores[dry, TOPOGRAPHIES.index("wetlands")] = -1
+    return np.argmax(scores, axis=1).astype(np.int64)
 
 
 def _climate_share(land: NDArray[np.bool_]) -> NDArray[np.int64]:
@@ -702,12 +715,11 @@ class SizeModel:
     over its pixels; ``pairs`` are their (climate, vegetation) pairs, ``climate_of`` the climate of
     each pair, ``size`` log2 of their pixels over the median of their region (the Old World,
     the Americas) in ``OCTAVE_PARTS``ths of an octave and ``weights`` the ``calibrated_weights``
-    of the pairs' votes (``size_table``). ``shares`` are vanilla's counts of each of
-    ``TOPOGRAPHIES``, ``dry`` the pairs that are never wetland and ``offsets`` how far, in
-    thousandths of an octave, vanilla's locations of each ground lie off the size of their class.
-    ``ground_table`` holds
-    the ``ground_ranks`` of the ``GROUND_COLUMNS`` readings of the Old World's passable locations
-    and ``grounds`` their ground (``vote_grounds``).
+    of the pairs' votes (``size_table``). ``dry`` are the pairs that are never wetland and
+    ``offsets`` how far, in thousandths of an octave, vanilla's locations of each ground lie off
+    the size of their class. ``ground_table`` holds the ``GROUND_COLUMNS`` readings of the Old
+    World's passable locations, ``grounds`` their ground and ``ground_weights`` the
+    ``calibrated_weights`` of each ground's votes (``vote_grounds``).
     """
 
     features: NDArray[np.int64]
@@ -715,11 +727,11 @@ class SizeModel:
     climate_of: NDArray[np.int64]
     size: NDArray[np.int64]
     weights: NDArray[np.int64]
-    shares: NDArray[np.int64]
     dry: NDArray[np.bool_]
     offsets: NDArray[np.int64]
     ground_table: NDArray[np.int64]
     grounds: NDArray[np.int64]
+    ground_weights: NDArray[np.int64]
 
     def digest(self) -> str:
         """SHA-256 of the model, for the keys of the worlds made with it."""
@@ -730,11 +742,11 @@ class SizeModel:
             self.climate_of,
             self.size,
             self.weights,
-            self.shares,
             self.dry,
             self.offsets,
             self.ground_table,
             self.grounds,
+            self.ground_weights,
         ):
             found.update(repr(array.shape).encode("ascii"))
             found.update(np.ascontiguousarray(array, dtype=np.int64).tobytes())
@@ -761,8 +773,8 @@ def size_model(
     land = kinds[labels]
     grid = climate_grid(sea[labels], height, seasonal=True)
     found, features = block_features(land, height, grid)
-    rugged = cell_ruggedness(labels, height, count, land)
-    rough = cell_roughness(labels, height, count, land)
+    rugged = cell_ruggedness(labels, height, count, land, blur=GROUND_BLUR)
+    rough = cell_roughness(labels, height, count, land, blur=GROUND_BLUR)
     del land
     table = np.zeros((found.size, features.shape[1]), dtype=np.int64)
     table[found.ravel()] = features
@@ -787,12 +799,6 @@ def size_model(
             median = int(np.sort(values)[(rows.size - 1) // 2])
             size[rows] = [octave_parts(value, median) for value in values.tolist()]
     grounds = [attributes[learned[slot]].get("topography", "") for slot in kept]
-    # The cells' shares (``assign_biomes``): the Old World's passable land.
-    counted = Counter(
-        attributes[i].get("topography", "")
-        for i, kind in enumerate(game_map.classes)
-        if kind is CellClass.LAND and old_world[i]
-    )
     centred, points, mean_height = _label_centres(labels, height, count)
     voters = np.array(
         [
@@ -806,9 +812,7 @@ def size_model(
         dtype=np.int64,
     )
     read = land_features(grid, points[voters], mean_height[voters])
-    readings = np.stack(
-        [mean_height[voters], rugged[voters], rough[voters], read[:, 1], read[:, 3]], axis=1
-    )
+    readings = np.stack([mean_height[voters], rugged[voters], rough[voters], read[:, 3]], axis=1)
     return size_table(
         sums[index] // pixels[index][:, np.newaxis],
         pairs,
@@ -818,10 +822,9 @@ def size_model(
             [TOPOGRAPHIES.index(name) if name in TOPOGRAPHIES else -1 for name in grounds],
             dtype=np.int64,
         ),
-        shares=np.array([counted[name] for name in TOPOGRAPHIES], dtype=np.int64),
         dry=np.array([name.split("|")[1] in NO_WETLANDS for name in names], dtype=bool),
         ground=(
-            ground_ranks(readings),
+            readings,
             np.array(
                 [TOPOGRAPHIES.index(attributes[i]["topography"]) for i in voters.tolist()],
                 dtype=np.int64,
@@ -837,7 +840,6 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
     size: NDArray[np.int64],
     *,
     topography: NDArray[np.int64],
-    shares: NDArray[np.int64],
     dry: NDArray[np.bool_],
     ground: tuple[NDArray[np.int64], NDArray[np.int64]],
 ) -> SizeModel:
@@ -847,8 +849,9 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
     locations' sizes less the size their class gives them, each read without itself: the mean
     size of the ``NEIGHBOURS`` nearest other locations of its pair (``class_sizes``). A location
     of a ground no passable cell is given (-1: vanilla's few passable atolls and mountain
-    wastelands) still sizes its class but sets no offset. ``ground`` is the vote's table of ranks
-    and the grounds of its rows (``SizeModel.ground_table``, ``SizeModel.grounds``).
+    wastelands) still sizes its class but sets no offset. ``ground`` is the vote's table of
+    readings and the grounds of its rows (``SizeModel.ground_table``, ``SizeModel.grounds``),
+    whose votes are weighed as they read vanilla (``SizeModel.ground_weights``).
     """
     train, _ = _standardize(features, features[:0], land_weights(int(features.shape[1])))
     given = np.zeros(size.size, dtype=np.int64)
@@ -879,11 +882,15 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
         climate_of=climate_of,
         size=size,
         weights=calibrated_weights(train, pairs, climate_of),
-        shares=shares,
         dry=dry,
         offsets=offsets,
         ground_table=ground[0],
         grounds=ground[1],
+        ground_weights=calibrated_weights(
+            _standardize(ground[0], ground[0][:0], GROUND_WEIGHTS)[0],
+            ground[1],
+            np.arange(len(TOPOGRAPHIES), dtype=np.int64),
+        ),
     )
 
 
@@ -922,8 +929,8 @@ def class_sizes(
     ``NEIGHBOURS`` nearest vanilla locations of that pair: vanilla sizes its locations by what
     they are, deserts and the cold large and the wet lowlands small, so a size read from the
     neighbours of every class would pull each class towards the median. The row's ground, voted
-    from its height, its ``relief`` (``block_relief``: spread and bend), rain and distance to the
-    sea among all of ``query`` (``vote_grounds``), moves the size by that ground's offset.
+    from its height, its ``relief`` (``block_relief`` blurred by ``GROUND_BLUR``: spread and
+    bend) and distance to the sea (``vote_grounds``), moves the size by that ground's offset.
     """
     if model.pairs.size == 0:
         message = "The size model has no land location to learn from"
@@ -938,8 +945,8 @@ def class_sizes(
         here = np.flatnonzero(chosen == pair)
         totals, k = knn_totals(train[members], model.size[members], rows[here])
         out[here] = np.floor_divide(totals * PERMILLE, OCTAVE_PARTS * k)
-    readings = np.stack([query[:, 2], relief[:, 0], relief[:, 1], query[:, 1], query[:, 3]], axis=1)
-    ground = vote_grounds(model, readings, model.dry[chosen], model.shares)
+    readings = np.stack([query[:, 2], relief[:, 0], relief[:, 1], query[:, 3]], axis=1)
+    ground = vote_grounds(model, readings, model.dry[chosen])
     return out + model.offsets[ground]
 
 
@@ -1236,15 +1243,7 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
             dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
         )
         if cells.ruggedness is None
-        else _voted_grounds(
-            plain,
-            cells,
-            shares=shares,
-            vegetation=vegetation,
-            rain=rain,
-            coast=coast,
-            ground=ground,
-        )
+        else _voted_grounds(plain, cells, vegetation=vegetation, coast=coast, ground=ground)
     )
     for cell, name in ranked.items():
         topography[cell] = name
@@ -1258,18 +1257,16 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
     return topography
 
 
-def _voted_grounds(  # noqa: PLR0913 - the vote reads the cells, the shares and the climate.
+def _voted_grounds(
     chosen: list[int],
     cells: Generated,
     *,
-    shares: dict[str, int],
     vegetation: list[str],
-    rain: NDArray[np.int64],
     coast: NDArray[np.int64],
     ground: SizeModel | None,
 ) -> dict[int, str]:
-    """The ground of the ``chosen`` cells, voted by vanilla's locations like them in the Old
-    World's ``shares`` over those cells (epoch 64, ``vote_grounds``); dry cells are no wetlands."""
+    """The ground of the ``chosen`` cells, voted by vanilla's locations like them (epoch 64,
+    ``vote_grounds``); dry cells are no wetlands."""
     if ground is None or cells.ruggedness is None or cells.roughness is None:
         message = "The ground of the land is voted by the game's own locations, not read"
         raise ValueError(message)
@@ -1279,16 +1276,12 @@ def _voted_grounds(  # noqa: PLR0913 - the vote reads the cells, the shares and 
             cells.mean_height[index],
             cells.ruggedness[index],
             cells.roughness[index],
-            rain[index],
             coast[index],
         ],
         axis=1,
     )
     voted = vote_grounds(
-        ground,
-        readings,
-        np.array([vegetation[i] in NO_WETLANDS for i in chosen], dtype=bool),
-        np.array([shares[name] for name in TOPOGRAPHIES], dtype=np.int64),
+        ground, readings, np.array([vegetation[i] in NO_WETLANDS for i in chosen], dtype=bool)
     )
     kinds: list[int] = voted.tolist()
     return {cell: TOPOGRAPHIES[kind] for cell, kind in zip(chosen, kinds, strict=True)}
@@ -1386,13 +1379,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
             fields=(climate, vegetation),
             features=(rain, latitude),
             grounds=_voted_grounds(
-                land_cells.tolist(),
-                cells,
-                shares=grounds,
-                vegetation=vegetation,
-                rain=rain,
-                coast=coast,
-                ground=ground,
+                land_cells.tolist(), cells, vegetation=vegetation, coast=coast, ground=ground
             ),
             edges=edges,
             settings=wastelands,

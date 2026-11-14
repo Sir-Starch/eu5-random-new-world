@@ -21,6 +21,7 @@ import numpy as np
 
 from rnw import _native, epoch, omerika, wall
 from rnw.basins import shape_relief
+from rnw.eu5_terrain import land_surface
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
 from rnw.islands import carve, place
@@ -1017,7 +1018,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     ``rnw.basins``; ``hints`` keep painted mountains), and the rain of the worn relief runs down
     the plan; the seeds are spaced by the vanilla sizes of the land's classes (``sizes``), the
     polar bands keep three times the spacing, and the larger rivers are walls the cells grow up
-    to."""
+    to. The seeds are spaced on the height the decals will show (``epoch.ROUGH_HILLS``)."""
     if sizes is None:
         message = (
             "Cells of this epoch are spaced by the game's locations; the size model is missing"
@@ -1035,8 +1036,11 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     del rivers
     spacing = settings.location_px
     band = min(land.shape[0] // 4, 6 * spacing)
-    grid = spacing_grid(land, relief, climate, polar_rows=band, sizes=sizes)
-    del climate
+    # The sizes are voted on the height the decals will show (epoch 64, ``epoch.ROUGH_HILLS``), as
+    # the ground of the cells will be (``eu5_terrain.surface_heights``).
+    surface = land_surface(land, relief, seed=seed) if algorithm >= epoch.ROUGH_HILLS else relief
+    grid = spacing_grid(land, surface, climate, polar_rows=band, sizes=sizes)
+    del climate, surface
     cells = river_cells(
         land,
         walls,

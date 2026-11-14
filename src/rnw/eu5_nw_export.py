@@ -80,6 +80,7 @@ from rnw.eu5_atlas import build_atlas
 from rnw.eu5_biomes import (
     BIOME_DEFINITIONS,
     CLIMATE_STEP,
+    GROUND_BLUR,
     TERRAIN_MATERIALS,
     CellBiomes,
     ClimateGrid,
@@ -89,6 +90,7 @@ from rnw.eu5_biomes import (
     assign_biomes,
     biome_of,
     biome_rules,
+    cell_mean,
     cell_ruggedness,
     climate_grid,
     label_statistics,
@@ -267,12 +269,14 @@ from rnw.eu5_story import build as build_stories
 from rnw.eu5_technology import written_records
 from rnw.eu5_terrain import (
     LAND_CODE,
+    MARGIN,
     OUTSIDE,
     WATER_CODE,
     DecalStore,
     ShiftedStore,
     TerrainInputs,
     level_shares,
+    surface_heights,
     terrain_outputs,
 )
 from rnw.eu5_towns import plan_towns
@@ -513,10 +517,15 @@ def _land_count(world: NewWorld) -> int:
 
 
 def _generated(
-    canvas: Canvas, world: NewWorld, count: int | None = None, *, rough: bool = False
+    canvas: Canvas,
+    world: NewWorld,
+    count: int | None = None,
+    *,
+    surface: NDArray[np.uint16] | None = None,
 ) -> Generated:
     """The first ``count`` cells of ``world`` (all by default) as the biome model reads them;
-    with ``rough`` (epoch 64, ``epoch.ROUGH_HILLS``) their roughness and ruggedness too."""
+    with the ``surface`` the decals show (epoch 64, ``epoch.ROUGH_HILLS``; ``_surface``) their
+    mean height, roughness and ruggedness are read from it, as vanilla's are from its decals."""
     count = len(world.classes) if count is None else count
     points = np.stack(
         [world.centroids[:count, 0], _world_columns(canvas, world.centroids[:count, 1])], axis=1
@@ -524,14 +533,53 @@ def _generated(
     return Generated(
         kinds=world.classes[:count],
         points=points,
-        mean_height=world.mean_elevation[:count],
+        mean_height=(
+            world.mean_elevation[:count]
+            if surface is None
+            else cell_mean(world.labels, surface, count)
+        ),
         spread=world.spread[:count],
         edges=tuple((a, b) for a, b in world.edges if a < count and b < count),
         coastal=_coastal(world)[:count],
         pixels=world.pixels[:count],
-        roughness=cell_roughness(world.labels, world.elevation, count) if rough else None,
-        ruggedness=cell_ruggedness(world.labels, world.elevation, count) if rough else None,
+        roughness=(
+            None
+            if surface is None
+            else cell_roughness(world.labels, surface, count, blur=GROUND_BLUR)
+        ),
+        ruggedness=(
+            None
+            if surface is None
+            else cell_ruggedness(world.labels, surface, count, blur=GROUND_BLUR)
+        ),
     )
+
+
+def _surface(game_map: Eu5Map, canvas: Canvas, world: NewWorld, seed: int) -> NDArray[np.uint16]:
+    """The primary height the decals will show over ``world`` (``eu5_terrain.surface_heights``),
+    in its own coordinates: the codes and the vanilla water of the map around the canvas as the
+    decals read them, its relief before the rivers carve their valleys and its coasts settle.
+    On world gady3byywf the ground vote on it agreed on 96 % of the 6682 land locations with the
+    vote on the written primary heights; most of the rest are wetlands against flatland on the
+    coasts that settle later [V-EXEC 2026-11-14]."""
+    rows, span = (int(size) for size in world.labels.shape)
+    width = int(game_map.labels.shape[1])
+    columns = (
+        np.arange(-MARGIN, span + MARGIN, dtype=np.int64) + canvas.col0 - canvas.roll
+    ) % width
+    water_kind = np.array(
+        [kind in {CellClass.SEA, CellClass.LAKE} for kind in game_map.classes], dtype=bool
+    )
+    world_codes = _codes(game_map, canvas, world)
+    codes = np.empty((rows, columns.size), dtype=np.int8)
+    water = np.empty((rows, columns.size), dtype=bool)
+    strip = 1024  # rows of the map's labels copied at a time
+    for start in range(0, rows, strip):
+        window = slice(start, min(rows, start + strip))
+        codes[window] = world_codes[window][:, columns]
+        water[window] = water_kind[game_map.labels[window][:, columns]]
+    del world_codes
+    return surface_heights(codes, water, world.elevation, seed=seed)
 
 
 def _wasteland_settings(game_dir: Path, world: NewWorld, settings: Settings) -> WastelandSettings:
@@ -581,7 +629,16 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
         vanilla=vanilla.locations,
         vanilla_grid=vanilla.grid,
         final_grid=grid,
-        cells=_generated(canvas, world, count, rough=settings.algorithm >= epoch.ROUGH_HILLS),
+        cells=_generated(
+            canvas,
+            world,
+            count,
+            surface=(
+                _surface(game_map, canvas, world, seed)
+                if settings.algorithm >= epoch.ROUGH_HILLS
+                else None
+            ),
+        ),
         seed=seed,
         precious_permille=settings.new_world.precious_permille,
         resources=settings.resources,

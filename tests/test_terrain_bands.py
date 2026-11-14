@@ -13,16 +13,19 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pytest
 
+from rnw import eu5_terrain
 from rnw.eu5_mountains import Mountain, MountainRelief
 from rnw.eu5_slots import VARIATION, SlotTables
 from rnw.eu5_terrain import (
     BAND_HALO,
     CAP_REACH,
+    MARGIN,
     Decal,
     TerrainInputs,
     TerrainRangeError,
     _rebuild_decal,  # pyright: ignore[reportPrivateUsage]
     _write_where,  # pyright: ignore[reportPrivateUsage]
+    surface_heights,
 )
 from rnw.fields import upsample
 from rnw.terrain_tiles import LayerFormat, TileFormatError, parse_info, read_level0, write_layer
@@ -125,6 +128,33 @@ def test_every_band_size_and_thread_count_builds_the_same_decal(seed: int) -> No
         files, image = _rebuild(seed, band, threads)
         assert np.array_equal(image, whole_image), (band, threads)
         assert files == whole_files, (band, threads)
+
+
+@pytest.mark.parametrize("chunk", [37, 2048])
+def test_the_surface_is_the_primary_height_the_decal_writes(
+    monkeypatch: pytest.MonkeyPatch, chunk: int
+) -> None:
+    """The ground vote reads, at every land pixel, the sample a decal is written with (no stamps
+    here), in windows of any width."""
+    seed = 3
+    monkeypatch.setattr(eu5_terrain, "SURFACE_COLUMNS", chunk)
+    files, _ = _rebuild(seed, 40, 2)
+    layer, spans = parse_info(files[f"in_game/{DECAL.name}_height.info"].decode("utf-8"))
+    written = read_level0(layer, spans, files[f"in_game/{DECAL.name}_height.bin"])[1::2, 1::2]
+    inputs, _ = _world(seed)
+    columns = np.arange(-MARGIN, COLUMNS + MARGIN) % COLUMNS
+    surface = surface_heights(
+        inputs.codes[:, columns],
+        inputs.vanilla_water[:, columns],
+        inputs.relief(slice(0, ROWS), slice(0, COLUMNS)),
+        seed=seed,
+    )
+    rows = slice(DECAL.row0, DECAL.row0 + DECAL.rows)
+    footprint = slice(DECAL.column0, DECAL.column0 + DECAL.columns)
+    land = inputs.codes[rows, footprint] == 1
+    assert land.sum() > 20_000
+    assert np.array_equal(surface[rows, footprint][land], written[land])
+    assert np.all(surface[inputs.codes == -1] == 0)
 
 
 def test_the_halo_covers_the_coast_cap() -> None:

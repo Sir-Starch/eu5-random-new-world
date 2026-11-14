@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import pytest
 
-from rnw import epoch, eu5_nw_export, newworld, relief, watersheds
+from rnw import epoch, eu5_biomes, eu5_nw_export, newworld, relief, watersheds
 from rnw.eu5_biomes import (
     CHUNK,
     NEIGHBOURS,
@@ -24,7 +24,6 @@ from rnw.eu5_biomes import (
     cell_ruggedness,
     chosen_pairs,
     class_sizes,
-    ground_ranks,
     integer_cube_root,
     latitude_tenths,
     nearest_others,
@@ -237,14 +236,16 @@ def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
     assert np.array_equal(
         class_sizes(SIZES, both, np.zeros((4, 2), dtype=np.int64)), [-1000] * 2 + [1000] * 2
     )
-    # The block whose readings rank like vanilla's mountains is the one mountain the shares allow,
-    # and mountains are 500 smaller.
+    # The block whose height, relief and distance to the sea are like vanilla's mountains is
+    # voted mountain, and mountains are 500 smaller.
     model = replace(
         SIZES,
-        shares=np.array([1, 0, 0, 0, 1]),
         offsets=np.array([-500, 0, 0, 0, 0]),
-        ground_table=np.repeat(np.array([[0] * 5, [500] * 5], dtype=np.int64), NEIGHBOURS, axis=0),
+        ground_table=np.repeat(
+            np.array([[7000, 0, 0, 50], [8000, 0, 0, 150]], dtype=np.int64), NEIGHBOURS, axis=0
+        ),
         grounds=np.repeat(np.array([4, 0], dtype=np.int64), NEIGHBOURS),
+        ground_weights=np.ones(len(TOPOGRAPHIES), dtype=np.int64),
     )
     assert class_sizes(model, dry, flat).tolist() == [1000, 500]
 
@@ -285,16 +286,15 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     assert np.array_equal(model.features[1], model.features[2])
     assert model.digest() == size_model(game_map, templates, height).digest()
     # Read without itself, each of the Americas' two forests is given the other's size; the
-    # mountain lies 101/64 octave above that, the hill as far below. The shares are the Old
-    # World's passable locations, the field among them.
+    # mountain lies 101/64 octave above that, the hill as far below.
     step_up = octave_parts(3, 1) * 1000 // OCTAVE_PARTS
     assert model.offsets.tolist() == [step_up, 0, -step_up, 0, 0]
-    assert model.shares.tolist() == [0, 1, 0, 0, 1]
     assert model.dry.tolist() == [True, False]
-    # The ground vote learns from the Old World's passable locations, the field among them, each
-    # reading ranked among them: alike in height, the two rank by their order.
+    # The ground vote learns from the Old World's passable locations, the field among them, read
+    # as they are.
     assert model.grounds.tolist() == [TOPOGRAPHIES.index("flatland"), TOPOGRAPHIES.index("plateau")]
-    assert model.ground_table[:, 0].tolist() == [0, 500]
+    assert model.ground_table[:, 0].tolist() == [7000, 7000]
+    assert model.ground_weights.size == len(TOPOGRAPHIES)
 
 
 def _chosen_without_self(train: np.ndarray, classes: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -341,42 +341,38 @@ def test_a_row_never_votes_for_itself() -> None:
     assert weights[2] > 0
 
 
-def test_the_ground_is_voted_by_vanilla_locations_alike_in_rank() -> None:
-    #           mean height, ruggedness, roughness, rain, distance to the sea
-    query = np.array(
+def test_the_ground_is_voted_by_vanilla_locations_alike_without_shares() -> None:
+    #           mean height, ruggedness, roughness, distance to the sea
+    table = np.array(
         [
-            [9000, 900, 80, 100, 100],  # high and broken
-            [8800, 10, 20, 150, 300],  # high and smooth, far from the sea
-            [6000, 20, 10, 900, 5],  # low, wet, at the sea
-            [7000, 30, 30, 500, 50],
+            [16000, 3000, 900, 300],  # high and broken
+            [12000, 300, 120, 400],  # high and smooth, far from the sea
+            [6100, 60, 30, 10],  # low and smooth, at the sea
+            [7600, 500, 300, 150],  # low and rough
+            [7000, 150, 60, 200],
         ],
         dtype=np.int64,
     )
-    ranks = ground_ranks(query)
-    assert ranks[:, 0].tolist() == [750, 500, 0, 250]
-    intended = ["mountains", "plateau", "wetlands", "flatland"]
+    intended = ["mountains", "plateau", "wetlands", "hills", "flatland"]
+    grounds = np.repeat([TOPOGRAPHIES.index(name) for name in intended], NEIGHBOURS)
     model = replace(
         SIZES,
-        ground_table=np.repeat(ranks, NEIGHBOURS, axis=0),
-        grounds=np.repeat([TOPOGRAPHIES.index(name) for name in intended], NEIGHBOURS),
+        ground_table=np.repeat(table, NEIGHBOURS, axis=0),
+        grounds=grounds,
+        ground_weights=np.ones(len(TOPOGRAPHIES), dtype=np.int64),
     )
-    shares = np.array([1, 1, 0, 1, 1], dtype=np.int64)
-    wet = np.zeros(4, dtype=bool)
 
-    def names(voted: np.ndarray) -> list[str]:
-        return [TOPOGRAPHIES[kind] for kind in voted.tolist()]
+    def names(query: np.ndarray, dry: np.ndarray | None = None) -> list[str]:
+        found = np.zeros(len(query), dtype=bool) if dry is None else dry
+        return [TOPOGRAPHIES[kind] for kind in vote_grounds(model, query, found).tolist()]
 
-    assert names(vote_grounds(model, query, wet, shares)) == intended
-    # Only the order of the readings counts, not their scale.
-    assert names(vote_grounds(model, query * 10, wet, shares)) == intended
-    # A dry row is never wetland: the wetland share goes to the first other free row.
-    dry = np.array([False, False, True, False])
-    assert names(vote_grounds(model, query, dry, shares)) == [
-        "mountains",
-        "plateau",
-        "flatland",
-        "wetlands",
-    ]
+    assert names(table) == intended
+    # The readings count as they are: a land of lowland marsh is all wetland, with no quota.
+    marsh = np.repeat(table[2:3], 4, axis=0) + np.arange(4)[:, np.newaxis]
+    assert names(marsh) == ["wetlands"] * 4
+    # A dry row is never wetland.
+    dry = np.array([False, False, True, False, False])
+    assert names(table, dry)[2] != "wetlands"
 
 
 def test_block_relief_reads_the_spread_and_the_bend_of_each_block() -> None:
@@ -469,3 +465,27 @@ def test_the_cells_grow_along_the_rivers_of_the_worn_relief() -> None:
         algorithm=epoch.BASINS - 1,
     )  # fmt: skip
     assert np.array_equal(older, planned)
+
+
+def test_blurred_readings_are_those_of_the_whole_map_in_any_strip(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Cells of 50 pixels a side over a land of several islands.
+    blocks = np.arange(300)[:, np.newaxis] // 50 * 6 + np.arange(260)[np.newaxis, :] // 50
+    labels = np.where(_land(6, (300, 260)), blocks, -1).astype(np.int32)
+    count = int(labels.max()) + 1
+    generator = np.random.default_rng(6)
+    height = (7000 + generator.integers(0, 3000, labels.shape)).astype(np.int32)
+    land = labels >= 0
+    whole = relief.land_blur(land, height, 8)
+    expected = (
+        cell_roughness(labels, whole, count),
+        cell_ruggedness(labels, whole, count),
+    )
+    monkeypatch.setattr(relief, "ROUGHNESS_ROWS", 40)
+    monkeypatch.setattr(eu5_biomes, "RELIEF_ROWS", 40)
+    found = (
+        cell_roughness(labels, height, count, blur=8),
+        cell_ruggedness(labels, height, count, blur=8),
+    )
+    assert all(np.array_equal(a, b) for a, b in zip(found, expected, strict=True))

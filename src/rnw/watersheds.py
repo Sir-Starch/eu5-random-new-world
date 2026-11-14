@@ -26,6 +26,7 @@ import numpy as np
 
 from rnw.eu5_biomes import (
     CLIMATE_STEP,
+    GROUND_BLUR,
     SIZE_STEP,
     ClimateGrid,
     block_features,
@@ -231,7 +232,8 @@ def spacing_grid(
     found, features = block_features(land, height, climate)
     coarse = np.zeros(found.shape, dtype=np.int64)
     if features.size:
-        coarse[found] = class_sizes(sizes, features, block_relief(land, height, found))
+        relief = block_relief(land, height, found, blur=GROUND_BLUR)
+        coarse[found] = class_sizes(sizes, features, relief)
     ratio = SIZE_STEP // step
     size = np.repeat(np.repeat(coarse, ratio, axis=0), ratio, axis=1)[: shape[0], : shape[1]]
     level = np.floor_divide(size + 125, 250)

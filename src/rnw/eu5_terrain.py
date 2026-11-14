@@ -394,6 +394,109 @@ def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the cor
     )
 
 
+# The ground of the land is voted on the height its decals show (epoch 64, ``epoch.ROUGH_HILLS``):
+# vanilla's locations are read from its primary heightmaps, which hold no mountain stamps (those
+# are decals of their own), so the generated land is read from the primary height the decals write,
+# its relief, detail and coastal cap, without the stamps baked into them. On the relief alone hill
+# country read three times smoother than vanilla's and only 82 permille of the land of world
+# t2f5i5zcnr was hills; on the written primary heights 140 (vanilla 217) [V-EXEC 2026-11-14].
+SURFACE_COLUMNS: Final[int] = 2048  # core columns of one window of ``surface_heights``
+
+
+def surface_heights(
+    codes: NDArray[np.int8],
+    vanilla_water: NDArray[np.bool_],
+    relief: NDArray[np.int32],
+    *,
+    seed: int,
+) -> NDArray[np.uint16]:
+    """The primary height the decals write over a canvas, one sample per location pixel.
+
+    The rasters are in the canvas's rolled coordinates, where the decals lay their detail noise
+    at twice the column and the row (``TerrainInputs.noise_roll``). ``codes`` (``OUTSIDE``,
+    ``WATER_CODE``, ``LAND_CODE``) and ``vanilla_water`` carry ``MARGIN`` columns of the map on
+    either side of the canvas, which ``relief`` (zero off the land) spans. The samples are those
+    ``_rebuild_band`` writes before the mountain stamps (``decal_heights``: relief plus detail
+    under the coastal cap), at the odd decal pixels, as ``DecalStore.world_heights`` reads
+    vanilla's; zero off the canvas. Computed in the windows of the decals, bands of rows and
+    ``SURFACE_COLUMNS`` columns on a few threads; the result is the same for any.
+    """
+    rows, span = (int(size) for size in relief.shape)
+    if codes.shape != (rows, span + 2 * MARGIN) or vanilla_water.shape != codes.shape:
+        message = "The canvas codes do not reach the margin on either side of its relief"
+        raise ValueError(message)
+    out = np.zeros((rows, span), dtype=np.uint16)
+    chunk = max(1, min(span, SURFACE_COLUMNS))
+    columns = chunk + 2 * MARGIN
+    workers = worker_count(
+        DECAL_THREADS, bytes_each=BAND_BYTES * columns * (2 * BAND_HALO + MIN_BAND_ROWS)
+    )
+    band = (
+        band_rows(
+            BAND_BYTES * columns,
+            workers=workers,
+            floor=2 * BAND_HALO + MIN_BAND_ROWS,
+            ceiling=2 * BAND_HALO + BAND_ROWS,
+        )
+        - 2 * BAND_HALO
+    )
+    limit = int(np.iinfo(np.uint16).max)
+
+    def run(piece: tuple[int, int, int, int]) -> None:
+        checkpoint()
+        first, last, left, right = piece
+        row0, row1 = max(0, first - BAND_HALO), min(rows, last + BAND_HALO)
+        window = (slice(row0, row1), slice(left, right + 2 * MARGIN))
+        # The relief of the window's canvas columns; its margins matter only to the bilinear
+        # step at the canvas's edge, where the map is not generated.
+        height = np.zeros((row1 - row0, right - left + 2 * MARGIN), dtype=np.int32)
+        low, high = max(0, left - MARGIN), min(span, right + MARGIN)
+        height[:, low - left + MARGIN : high - left + MARGIN] = relief[row0:row1, low:high]
+        water = vanilla_water[window]
+        core = (
+            slice((first - row0) * 2, (last - row0) * 2),
+            slice(2 * MARGIN, 2 * (MARGIN + right - left)),
+        )
+        _, inside, heights = decal_heights(
+            coast_codes(codes[window], water),
+            water,
+            height,
+            seed=seed,
+            origin=(2 * (left - MARGIN), 2 * row0),
+            core=core,
+        )
+        samples = heights[1::2, 1::2]
+        shown = inside[1::2, 1::2]
+        chosen = samples[shown]
+        if chosen.size and (int(chosen.min()) < 0 or int(chosen.max()) > limit):
+            message = f"primary heights {chosen.min()}..{chosen.max()} do not fit the layer"
+            raise TerrainRangeError(message)
+        out[first:last, left:right] = np.where(shown, samples, 0)
+
+    pieces = [
+        (first, min(rows, first + band), left, min(span, left + chunk))
+        for first in range(0, rows, band)
+        for left in range(0, span, chunk)
+    ]
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        for _ in pool.map(run, pieces):
+            pass
+    return out
+
+
+def land_surface(
+    land: NDArray[np.bool_], relief: NDArray[np.int32], *, seed: int
+) -> NDArray[np.uint16]:
+    """``surface_heights`` of a generated land before it lies on the map (its rolled canvas
+    coordinates): what is not land is the decals' water, and nothing lies beyond its edges."""
+    codes = np.pad(
+        np.where(land, LAND_CODE, WATER_CODE).astype(np.int8),
+        ((0, 0), (MARGIN, MARGIN)),
+        constant_values=OUTSIDE,
+    )
+    return surface_heights(codes, codes == WATER_CODE, relief, seed=seed)
+
+
 def level_shares(
     store: DecalStore, labels: NDArray[np.int32], group: NDArray[np.int64], groups: int
 ) -> NDArray[np.int64]:

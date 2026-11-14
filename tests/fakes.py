@@ -21,7 +21,6 @@ from rnw.eu5_biomes import (
     TOPOGRAPHIES,
     CellBiomes,
     SizeModel,
-    ground_ranks,
     rain_root,
     size_table,
 )
@@ -251,19 +250,16 @@ def synthetic_sizes() -> SizeModel:
     summer, winter = rain_root(table[:, 1] * 2 // 3), rain_root(table[:, 1] // 3)
     features = np.stack([table[:, 0], summer, table[:, 2], table[:, 3], winter], axis=1)
     flatland = TOPOGRAPHIES.index("flatland")
-    #            mean height, ruggedness, roughness, rain, distance to the sea
-    readings = np.stack(
-        [table[:, 2], table[:, 2] // 30, table[:, 2] // 60, table[:, 1], table[:, 3]], axis=1
-    )
+    #            mean height, ruggedness, roughness, distance to the sea
+    readings = np.stack([table[:, 2], table[:, 2] // 30, table[:, 2] // 60, table[:, 3]], axis=1)
     return size_table(
         features,
         table[:, 4].copy(),
         np.array([0, 1], dtype=np.int64),
         (OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
         topography=np.full(len(rows), flatland, dtype=np.int64),
-        shares=np.array([1, 1, 2, 1, 5], dtype=np.int64),
         dry=np.array([False, False]),
-        ground=(ground_ranks(readings), np.full(len(rows), flatland, dtype=np.int64)),
+        ground=(readings, np.full(len(rows), flatland, dtype=np.int64)),
     )
 
 
