@@ -26,6 +26,7 @@ import re
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
+from functools import partial
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final
 
@@ -54,6 +55,8 @@ from rnw.settings import RESOURCES, ResourceSettings, SettingsError
 from rnw.topology import adjacency_pairs, distance_from
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from numpy.typing import NDArray
 
     from rnw.eu5_map import Eu5Map
@@ -145,6 +148,15 @@ OPEN_VEGETATION_ROUNDS: Final[int] = 0
 # root fine-grained.
 PRIOR_SCALE: Final[int] = 10**12
 CALIBRATION_ROUNDS: Final[int] = 10
+# Weights calibrated on vanilla make the vote read vanilla's own land as it is, but a world's land
+# is spread otherwise over the readings, and there a plurality again gives a class its neighbours
+# hold in part fewer rows than they hold of it: on world seed 42 the vote gave 31 permille of
+# wetlands and 213 of hills where the neighbours of its locations hold 39 and 235, and mountains
+# 151 for 134; its climates, subtropical 91 for 122. From epoch 64 the weights are matched to each
+# world's own land (``matched_weights``): the same rounds, towards the rows that the neighbours of
+# its locations hold of each class (their rank-weighted votes per row, in ``SOFT_SCALE``ths of a
+# row), so that the world has as much of a class as land like its own holds [V-EXEC 2026-11-14].
+SOFT_SCALE: Final[int] = 1000
 CALIBRATION_THREADS: Final[int] = 8  # each searches the neighbours of its own CHUNK rows
 WEIGHT_TOP: Final[int] = 1 << 20
 # Seeds are spaced by the size vanilla gives a location of the class the vote will choose
@@ -463,6 +475,38 @@ def _rescaled(weights: NDArray[np.int64]) -> NDArray[np.int64]:
     return np.where(weights > 0, np.maximum(1, weights * WEIGHT_TOP // top), 0)
 
 
+def matched_weights(
+    scores: NDArray[np.int64],
+    weights: NDArray[np.int64],
+    choose: Callable[[NDArray[np.int64]], NDArray[np.int64]],
+) -> NDArray[np.int64]:
+    """``weights`` matched to the rows of ``scores`` (unweighed ``knn_scores``): over
+    ``CALIBRATION_ROUNDS`` rounds the weight of a class is multiplied by the square root of the
+    rows its neighbours hold (each row's votes over their sum, in ``SOFT_SCALE``ths) over the rows
+    ``choose`` gives it from the weighed scores, and rescaled to ``WEIGHT_TOP``. A class that
+    weighs nothing stays so. Integers."""
+    count = int(weights.size)
+    weights = _rescaled(weights)
+    total = np.maximum(scores.sum(axis=1, keepdims=True), 1)
+    held: list[int] = (scores * SOFT_SCALE // total).sum(axis=0).tolist()
+    for _ in range(CALIBRATION_ROUNDS):
+        found: list[int] = np.bincount(
+            choose(scores * weights[np.newaxis, :]), minlength=count
+        ).tolist()
+        weights = _rescaled(
+            np.array(
+                [
+                    math.isqrt(weight * weight * (rows + SOFT_SCALE) // ((chosen + 1) * SOFT_SCALE))
+                    if weight
+                    else 0
+                    for weight, rows, chosen in zip(weights.tolist(), held, found, strict=True)
+                ],
+                dtype=np.int64,
+            )
+        )
+    return weights
+
+
 def nearest_others(train: NDArray[np.int64], start: int, k: int) -> NDArray[np.int64]:
     """The ``k`` nearest rows of ``train`` to each of its ``CHUNK`` rows from ``start``, the row
     itself left out (nearest first, ties by index)."""
@@ -668,21 +712,34 @@ def cell_mean(
 
 
 def vote_grounds(
-    model: SizeModel, query: NDArray[np.int64], dry: NDArray[np.bool_]
+    model: SizeModel,
+    query: NDArray[np.int64],
+    dry: NDArray[np.bool_],
+    *,
+    matched: bool = False,
 ) -> NDArray[np.int64]:
     """The ground (an index of ``TOPOGRAPHIES``) of each row of ``query``: its ``GROUND_COLUMNS``
     readings (mean height, ruggedness, roughness, distance to the sea), scaled as vanilla's
     (``GROUND_WEIGHTS``), are voted on by the nearest vanilla locations (``SizeModel.ground_table``,
-    ``knn_scores``), each ground's votes weighed by ``SizeModel.ground_weights``; a ``dry`` row is
-    never wetland. Ties go to the earlier ground."""
+    ``knn_scores``), each ground's votes weighed by ``SizeModel.ground_weights``, ``matched`` to
+    the rows of ``query`` (``matched_weights``); a ``dry`` row is never wetland and its neighbours'
+    wetlands count for no ground. Ties go to the earlier ground."""
     if model.grounds.size == 0:
         message = "The size model has no ground to learn from"
         raise ValueError(message)
     train, rows = _standardize(model.ground_table, query, GROUND_WEIGHTS)
     scores = knn_scores(train, model.grounds, rows, len(TOPOGRAPHIES))
-    scores *= model.ground_weights[np.newaxis, :]
-    scores[dry, TOPOGRAPHIES.index("wetlands")] = -1
-    return np.argmax(scores, axis=1).astype(np.int64)
+    wet = TOPOGRAPHIES.index("wetlands")
+    scores[dry, wet] = 0
+
+    def choose(weighed: NDArray[np.int64]) -> NDArray[np.int64]:
+        weighed[dry, wet] = -1
+        return np.argmax(weighed, axis=1).astype(np.int64)
+
+    weights = model.ground_weights
+    if matched:
+        weights = matched_weights(scores, weights, choose)
+    return choose(scores * weights[np.newaxis, :])
 
 
 def _climate_share(land: NDArray[np.bool_]) -> NDArray[np.int64]:
@@ -1225,11 +1282,11 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
     vegetation: list[str],
     rain: NDArray[np.int64],
     coast: NDArray[np.int64],
-    ground: SizeModel | None,
+    voted: dict[int, str] | None,
 ) -> list[str]:
-    """The topography of every land cell: for the passable ones voted by vanilla's locations
-    like them (epoch 64, with ``Generated.ruggedness``; ``vote_grounds``) or ranks of relief,
-    the plan's (or the epoch 63 rule's) for the wastelands."""
+    """The topography of every land cell: for the passable ones the ground ``voted`` for them
+    (epoch 64, with ``Generated.ruggedness``; ``_voted_grounds``) or ranks of relief, the plan's
+    (or the epoch 63 rule's) for the wastelands."""
     topography = [""] * len(cells.kinds)
     plain = [i for i in land_cells.tolist() if cells.kinds[i] is CellClass.LAND]
     ranked = (
@@ -1242,8 +1299,8 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
             coast=coast,
             dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
         )
-        if cells.ruggedness is None
-        else _voted_grounds(plain, cells, vegetation=vegetation, coast=coast, ground=ground)
+        if voted is None
+        else {cell: voted[cell] for cell in plain}
     )
     for cell, name in ranked.items():
         topography[cell] = name
@@ -1265,8 +1322,8 @@ def _voted_grounds(
     coast: NDArray[np.int64],
     ground: SizeModel | None,
 ) -> dict[int, str]:
-    """The ground of the ``chosen`` cells, voted by vanilla's locations like them (epoch 64,
-    ``vote_grounds``); dry cells are no wetlands."""
+    """The ground of the ``chosen`` cells, voted by vanilla's locations like them with the weights
+    matched to these cells (epoch 64, ``vote_grounds``); dry cells are no wetlands."""
     if ground is None or cells.ruggedness is None or cells.roughness is None:
         message = "The ground of the land is voted by the game's own locations, not read"
         raise ValueError(message)
@@ -1281,7 +1338,10 @@ def _voted_grounds(
         axis=1,
     )
     voted = vote_grounds(
-        ground, readings, np.array([vegetation[i] in NO_WETLANDS for i in chosen], dtype=bool)
+        ground,
+        readings,
+        np.array([vegetation[i] in NO_WETLANDS for i in chosen], dtype=bool),
+        matched=True,
     )
     kinds: list[int] = voted.tolist()
     return {cell: TOPOGRAPHIES[kind] for cell, kind in zip(chosen, kinds, strict=True)}
@@ -1339,7 +1399,12 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     train_s, query_s = _standardize(train_x, query_x, land_weights(int(query_x.shape[1])))
     scores = knn_scores(train_s, joint_ids, query_s, len(joint_names))
     if open_climate:
-        scores = scores * calibrated_weights(train_s, joint_ids, joint_climate)[np.newaxis, :]
+        weights = matched_weights(
+            scores,
+            calibrated_weights(train_s, joint_ids, joint_climate),
+            partial(chosen_pairs, climate_of=joint_climate),
+        )
+        scores = scores * weights[np.newaxis, :]
     position = np.full(count, -1, dtype=np.int64)
     position[land_cells] = np.arange(land_cells.size)
     edges = _edge_array(cells.edges, land)
@@ -1366,7 +1431,15 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     )
     rain, coast, latitude = _land_columns(count, land_cells, query_x)
     grounds = {name: shares[name] for name in TOPOGRAPHIES}
-    # The plan reads what ground every land cell is before it chooses the wastelands among them.
+    # The ground of every land cell, voted once: the plan reads it before it chooses the
+    # wastelands among them, and the passable cells keep it.
+    voted = (
+        None
+        if cells.ruggedness is None
+        else _voted_grounds(
+            land_cells.tolist(), cells, vegetation=vegetation, coast=coast, ground=ground
+        )
+    )
     plan = (
         None
         if wastelands is None
@@ -1378,9 +1451,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
             cells=cells,
             fields=(climate, vegetation),
             features=(rain, latitude),
-            grounds=_voted_grounds(
-                land_cells.tolist(), cells, vegetation=vegetation, coast=coast, ground=ground
-            ),
+            grounds=voted,
             edges=edges,
             settings=wastelands,
             seed=seed,
@@ -1396,7 +1467,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         vegetation=vegetation,
         rain=rain,
         coast=coast,
-        ground=ground,
+        voted=voted,
     )
     waters = water_climates(
         game_map,
@@ -1516,7 +1587,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     cells: Generated,
     fields: tuple[list[str], list[str]],
     features: tuple[NDArray[np.int64], NDArray[np.int64]],
-    grounds: dict[int, str],
+    grounds: dict[int, str] | None,
     edges: NDArray[np.int64],
     settings: WastelandSettings,
     seed: int,
@@ -1526,8 +1597,8 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     if vanilla.pixels is None or cells.pixels is None:
         message = "The wasteland plan needs the pixel counts of the vanilla and generated cells"
         raise ValueError(message)
-    if cells.ruggedness is None:
-        message = "The wasteland plan needs the ruggedness of the generated cells"
+    if cells.ruggedness is None or grounds is None:
+        message = "The wasteland plan needs the ruggedness and the voted ground of the cells"
         raise ValueError(message)
     pixels = np.zeros(len(game_map.keys), dtype=np.int64)
     known = min(pixels.size, vanilla.pixels.size)

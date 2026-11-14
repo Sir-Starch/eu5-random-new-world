@@ -26,6 +26,7 @@ from rnw.eu5_biomes import (
     class_sizes,
     integer_cube_root,
     latitude_tenths,
+    matched_weights,
     nearest_others,
     octave_parts,
     prior_weights,
@@ -324,6 +325,32 @@ def test_calibrated_weights_give_a_rare_class_its_share() -> None:
     chosen = _chosen_without_self(train, classes, weights)
     assert abs(int(chosen[1]) - int(held[1])) * 10 <= int(held[1])
     assert np.array_equal(weights, calibrated_weights(train, classes, np.array([0, 1])))
+
+
+def test_matched_weights_give_a_world_the_share_its_neighbours_hold() -> None:
+    # Rows whose neighbours hold the second class from 20 % to 60 %: a plurality names it for a
+    # quarter of the rows, though the neighbours hold 40 % of it.
+    share = np.arange(200, dtype=np.int64) * 40 // 199 + 20
+    scores = np.stack([(100 - share) * 5, share * 5], axis=1)
+    climate_of = np.arange(2, dtype=np.int64)
+
+    def choose(weighed: np.ndarray) -> np.ndarray:
+        return chosen_pairs(weighed, climate_of)
+
+    ones = np.ones(2, dtype=np.int64)
+    held = int(share.sum()) * 200 // int((share + (100 - share)).sum())
+    assert int(np.bincount(choose(scores), minlength=2)[1]) * 3 < held * 2
+    weights = matched_weights(scores, ones, choose)
+    found = np.bincount(choose(scores * weights), minlength=2)
+    assert abs(int(found[1]) - held) <= 2
+    assert np.array_equal(weights, matched_weights(scores, ones, choose))
+    # Rows that are of one class each keep their choice; one row alone and a class that weighs
+    # nothing are no trouble.
+    pure = np.array([[160, 0], [0, 160], [160, 0]], dtype=np.int64)
+    assert np.array_equal(choose(pure * matched_weights(pure, ones, choose)), [0, 1, 0])
+    single = matched_weights(scores[:1], ones, choose)
+    assert single.shape == (2,)
+    assert matched_weights(scores, np.array([1, 0], dtype=np.int64), choose)[1] == 0
 
 
 def test_a_row_never_votes_for_itself() -> None:
