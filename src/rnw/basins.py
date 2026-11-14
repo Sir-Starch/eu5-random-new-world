@@ -12,14 +12,17 @@ cordilleras stand above it all.
 On the coarse grid of each watershed domain's drainage tree, the square root of every cell's
 catchment (in cells) is widened into a cone that falls by ``cone_slope`` a cell around the larger
 rivers, so a river's plain is as wide as its basin is large. A graded bed rises from the coast up
-the tree by the landmass's ``gradient`` over the widened root at every step. The base of the land
-(its mean height over ``base_blur`` cells around) is lowered to that bed, less on high ground
-(``mountains``), not at all where a drawing paints mountains and not on the hard old rock of the
-shields, which a slow noise places on a share of each landmass; the lowering is smoothed over
-``smoothing`` cells and added to the relief, so hills and valleys smaller than the base keep their
-shape and a pixel as high as ``standing`` (a narrow range, the Wall) stands. How gently a
-landmass's rivers fall and how much of it is shield are drawn for each landmass, so every
-continent's basins lie at their own height.
+the tree by the landmass's ``gradient`` over the widened root at every step, from ``base`` below
+the sea at the mouths, so the plains nearest the sea and the deltas lie at its level (with
+wetlands on 36 and 24 permille of the locations of worlds gady3byywf and seed 42 and the bed
+100 above the sea, 55 and 36 with it 200 below; vanilla 61, the Americas 85) [V-EXEC 2026-11-14].
+The base of the land (its mean height over ``base_blur`` cells around) is lowered to that bed,
+less on high ground (``mountains``), not at all where a drawing paints mountains and not on the
+hard old rock of the shields, which a slow noise places on a share of each landmass; the lowering
+is smoothed over ``smoothing`` cells and added to the relief, so hills and valleys smaller than
+the base keep their shape and a pixel as high as ``standing`` (a narrow range, the Wall) stands.
+How gently a landmass's rivers fall and how much of it is shield are drawn for each landmass, so
+every continent's basins lie at their own height.
 
 Hill country is dissected between the rivers that drain it (epoch 64, ``epoch.ROUGH_HILLS``): the
 spread of its hills (``relief.generate_relief``) is added once the drainage is planned, so it
@@ -61,7 +64,7 @@ class BasinSettings:
 
     cone_slope: int  # permille of a root of the catchment lost per cell away from a river
     gradient: tuple[int, int]  # a landmass's graded fall per cell times the root, drawn between
-    base: int  # the graded bed at the coast, above COAST_HEIGHT
+    base: int  # the graded bed at the coast over COAST_HEIGHT (below it: plains at sea level)
     mountains: tuple[int, int]  # the base height over which the land is lowered less and then not
     standing: tuple[int, int]  # the height of a pixel over which it is lowered less and then not
     base_blur: int  # cells around a cell whose mean land height is its base
@@ -78,7 +81,7 @@ class BasinSettings:
 BASINS: Final[BasinSettings] = BasinSettings(
     cone_slope=2000,
     gradient=(300, 1500),
-    base=100,
+    base=-200,
     mountains=(12000, 16000),
     standing=(14000, 18000),
     base_blur=8,
@@ -251,7 +254,7 @@ def _landmass_draws(
 def _graded_bed(
     grid: _Grid, cone: NDArray[np.int64], fall: NDArray[np.int64], base: int
 ) -> NDArray[np.int64]:
-    """The height of the graded bed of every cell: ``base`` above the coast where the trees meet
+    """The height of the graded bed of every cell: ``base`` over the coast where the trees meet
     the water, rising by ``fall`` over the widened root at every step up a tree (a diagonal step
     the root of two longer), summed in thousandths."""
     columns = grid.over.shape[1]

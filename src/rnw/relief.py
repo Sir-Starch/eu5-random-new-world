@@ -57,8 +57,8 @@ HILL_HEIGHT: Final[int] = 5500
 # drainage is planned (``basins.shape_relief``). Read on the height the decals show, the land at
 # 8000 to 9500 had a bend of 214 to 220 (vanilla 322 to 411) and 136 and 188 permille of the
 # locations of worlds gady3byywf and seed 42 were hills (vanilla 217, the Americas 228); with the
-# spread the bend is 273 to 280 and hills are 191 and 224, the rivers unchanged
-# [V-EXEC 2026-11-14].
+# spread (and the river beds 200 below the sea at their mouths) the bend is 279 to 304 and hills
+# are 179 and 216, the rivers unchanged [V-EXEC 2026-11-14].
 HILL_GAIN: Final[int] = 36
 PLATEAU_HEIGHT: Final[int] = 6500
 FOOTHILL_RADIUS: Final[int] = 48
