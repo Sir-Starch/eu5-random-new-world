@@ -16,8 +16,9 @@ things the installed game provides (the construction is described in ``docs/terr
   huge ones. A class draws its units' sizes from the vanilla sizes, in generated cells, and
   grows each unit from a seed over cells of one climate and vegetation, so that touching cells
   of one unit carry identical attributes and merge into one location (``wastelands``).
-* **Where it fits.** A cell can only be a kind that its own ground allows (a mountain wasteland
-  stands on high ground, a flat one on low smooth ground), and inside that the seeds and the
+* **Where it fits.** A cell can only be a kind that its own ground allows, as the game's
+  locations like it vote that ground (``eu5_biomes.vote_grounds``: a mountain wasteland stands
+  on mountains, a flat one or dunes on flatland or wetlands), and inside that the seeds and the
   growth prefer what the kind is: dry flat ground for dunes, wet lowland for jungle, cold
   ground for tundra, the highest and roughest ground for mountains. How many of a class's cells
   are at the sea follows the game: its wastelands of a kind touch the sea as often as the land of
@@ -59,7 +60,6 @@ if TYPE_CHECKING:
 # of a wasteland, kept for the cells the planner does not choose.
 MOUNTAIN_FLOOR: Final[int] = 14_000
 FLAT_SPREAD: Final[int] = 900
-PLATEAU_FLOOR: Final[int] = 11_000
 # Most particular kinds first: the dunes take the flattest dry cells before the flat ground does.
 KINDS: Final[tuple[str, ...]] = ("dune", "plateau", "flat", "hills", "mountain")
 TOPOGRAPHY: Final[dict[str, str]] = {
@@ -78,6 +78,14 @@ VANILLA_KINDS: Final[dict[str, str]] = {
     "flatland_wasteland": "flat",
     "hills_wasteland": "hills",
     "mountain_wasteland": "mountain",
+}
+# The kind of wasteland a voted ground allows (the dunes stand on flat ground too).
+GROUND_KINDS: Final[dict[str, str]] = {
+    "mountains": "mountain",
+    "plateau": "plateau",
+    "hills": "hills",
+    "flatland": "flat",
+    "wetlands": "flat",
 }
 LAND_KINDS: Final[frozenset[CellClass]] = frozenset({CellClass.LAND, CellClass.WASTELAND})
 COLD: Final[frozenset[str]] = frozenset({"arctic", "subpolar"})
@@ -105,15 +113,6 @@ def legacy_topography(height: int, spread: int) -> str:
     if height >= MOUNTAIN_FLOOR:
         return TOPOGRAPHY["mountain"]
     return TOPOGRAPHY["plateau"] if spread < FLAT_SPREAD else TOPOGRAPHY["hills"]
-
-
-def ground_of(height: int, spread: int) -> str:
-    """The kind of wasteland the relief of a cell allows."""
-    if height >= MOUNTAIN_FLOOR:
-        return "mountain"
-    if spread >= FLAT_SPREAD:
-        return "hills"
-    return "plateau" if height >= PLATEAU_FLOOR else "flat"
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -197,12 +196,14 @@ class Terrain:
 
     Arrays and tuples are indexed by cell. ``edges`` joins land cells that touch. ``coastal`` is
     a cell that touches the sea, ``polar`` one that touches a polar edge of the map and
-    ``barrier`` one the Wall's core runs through.
+    ``barrier`` one the Wall's core runs through. ``ground`` is the kind of wasteland the voted
+    ground of a land cell allows (``GROUND_KINDS``), empty for the other cells.
     """
 
     kinds: tuple[CellClass, ...]
     climate: tuple[str, ...]
     vegetation: tuple[str, ...]
+    ground: tuple[str, ...]
     height: NDArray[np.int64]
     spread: NDArray[np.int64]
     pixels: NDArray[np.int64]
@@ -490,7 +491,7 @@ class _Planner:
         found: dict[Class, list[int]] = defaultdict(list)
         for cell in candidates:
             climate, vegetation = terrain.climate[cell], terrain.vegetation[cell]
-            ground = ground_of(int(terrain.height[cell]), int(terrain.spread[cell]))
+            ground = terrain.ground[cell]
             for kind in KINDS:
                 if kind != ground and not (kind == "dune" and ground == "flat"):
                     continue

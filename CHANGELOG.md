@@ -13,7 +13,8 @@ worlds and saves are not rewritten or migrated.
   climate and vegetation the game's wastelands cover and how big they are, divides **Wasteland
   share** between flat wilds (tundra, taiga, jungle), dunes, plateaus, hills and mountains by that
   proportion, puts each where its ground and climate suit it (dry ground for dunes, wet lowland
-  for jungle, the roughest highest ground for mountains) and grows it as units of the sizes the
+  for jungle, the roughest highest ground for mountains; the ground is the one the game's
+  locations most like it would have, as for the passable land) and grows it as units of the sizes the
   game's wastelands have: mostly small, a few huge. A wasteland can stand at the sea, as a fifth of
   the game's do, and each kind keeps the game's tendency to (flat wilds more often, hills less) as
   far as the generated ground allows. The

@@ -31,6 +31,7 @@ import numpy as np
 
 from rnw.barrens import (
     FLAT_SPREAD,
+    GROUND_KINDS,
     MOUNTAIN_FLOOR,
     Terrain,
     WastelandPlan,
@@ -1164,9 +1165,8 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
     the plan's (or the epoch 63 rule's) for the wastelands."""
     topography = [""] * len(cells.kinds)
     plain = [i for i in land_cells.tolist() if cells.kinds[i] is CellClass.LAND]
-    ranked: dict[int, str]
-    if cells.ruggedness is None:
-        ranked = _topography(
+    ranked = (
+        _topography(
             plain,
             shares=shares,
             mean_height=cells.mean_height,
@@ -1175,29 +1175,17 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
             coast=coast,
             dry=frozenset(i for i in plain if vegetation[i] in NO_WETLANDS),
         )
-    else:
-        if ground is None or cells.roughness is None:
-            message = "The ground of the land is voted by the game's own locations, not read"
-            raise ValueError(message)
-        index = np.array(plain, dtype=np.int64)
-        readings = np.stack(
-            [
-                cells.mean_height[index],
-                cells.ruggedness[index],
-                cells.roughness[index],
-                rain[index],
-                coast[index],
-            ],
-            axis=1,
+        if cells.ruggedness is None
+        else _voted_grounds(
+            plain,
+            cells,
+            shares=shares,
+            vegetation=vegetation,
+            rain=rain,
+            coast=coast,
+            ground=ground,
         )
-        voted = vote_grounds(
-            ground,
-            readings,
-            np.array([vegetation[i] in NO_WETLANDS for i in plain], dtype=bool),
-            np.array([shares[name] for name in TOPOGRAPHIES], dtype=np.int64),
-        )
-        kinds: list[int] = voted.tolist()
-        ranked = {cell: TOPOGRAPHIES[kind] for cell, kind in zip(plain, kinds, strict=True)}
+    )
     for cell, name in ranked.items():
         topography[cell] = name
     for cell in land_cells.tolist():
@@ -1208,6 +1196,42 @@ def _topographies(  # noqa: PLR0913 - topography reads the classes, the plan, th
                 else _waste_topography(int(cells.mean_height[cell]), int(cells.spread[cell]))
             )
     return topography
+
+
+def _voted_grounds(  # noqa: PLR0913 - the vote reads the cells, the shares and the climate.
+    chosen: list[int],
+    cells: Generated,
+    *,
+    shares: dict[str, int],
+    vegetation: list[str],
+    rain: NDArray[np.int64],
+    coast: NDArray[np.int64],
+    ground: SizeModel | None,
+) -> dict[int, str]:
+    """The ground of the ``chosen`` cells, voted by vanilla's locations like them in the Old
+    World's ``shares`` over those cells (epoch 64, ``vote_grounds``); dry cells are no wetlands."""
+    if ground is None or cells.ruggedness is None or cells.roughness is None:
+        message = "The ground of the land is voted by the game's own locations, not read"
+        raise ValueError(message)
+    index = np.array(chosen, dtype=np.int64)
+    readings = np.stack(
+        [
+            cells.mean_height[index],
+            cells.ruggedness[index],
+            cells.roughness[index],
+            rain[index],
+            coast[index],
+        ],
+        axis=1,
+    )
+    voted = vote_grounds(
+        ground,
+        readings,
+        np.array([vegetation[i] in NO_WETLANDS for i in chosen], dtype=bool),
+        np.array([shares[name] for name in TOPOGRAPHIES], dtype=np.int64),
+    )
+    kinds: list[int] = voted.tolist()
+    return {cell: TOPOGRAPHIES[kind] for cell, kind in zip(chosen, kinds, strict=True)}
 
 
 def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
@@ -1288,6 +1312,8 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         if kind is CellClass.LAND and old[i]
     )
     rain, coast, latitude = _land_columns(count, land_cells, query_x)
+    grounds = {name: shares[name] for name in TOPOGRAPHIES}
+    # The plan reads what ground every land cell is before it chooses the wastelands among them.
     plan = (
         None
         if wastelands is None
@@ -1299,6 +1325,15 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
             cells=cells,
             fields=(climate, vegetation),
             features=(rain, latitude),
+            grounds=_voted_grounds(
+                land_cells.tolist(),
+                cells,
+                shares=grounds,
+                vegetation=vegetation,
+                rain=rain,
+                coast=coast,
+                ground=ground,
+            ),
             edges=edges,
             settings=wastelands,
             seed=seed,
@@ -1310,7 +1345,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
         land_cells,
         cells,
         plan,
-        shares={name: shares[name] for name in TOPOGRAPHIES},
+        shares=grounds,
         vegetation=vegetation,
         rain=rain,
         coast=coast,
@@ -1434,11 +1469,13 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     cells: Generated,
     fields: tuple[list[str], list[str]],
     features: tuple[NDArray[np.int64], NDArray[np.int64]],
+    grounds: dict[int, str],
     edges: NDArray[np.int64],
     settings: WastelandSettings,
     seed: int,
 ) -> WastelandPlan:
-    """The wasteland plan of ``rnw.barrens`` for the cells and the climate and vegetation chosen."""
+    """The wasteland plan of ``rnw.barrens`` for the cells, the climate and vegetation chosen and
+    the voted ground of every land cell (``grounds``)."""
     if vanilla.pixels is None or cells.pixels is None:
         message = "The wasteland plan needs the pixel counts of the vanilla and generated cells"
         raise ValueError(message)
@@ -1461,6 +1498,10 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         kinds=cells.kinds,
         climate=tuple(climate),
         vegetation=tuple(vegetation),
+        ground=tuple(
+            GROUND_KINDS[grounds[cell]] if cell in grounds else ""
+            for cell in range(len(cells.kinds))
+        ),
         height=cells.mean_height,
         spread=cells.spread,
         pixels=cells.pixels,

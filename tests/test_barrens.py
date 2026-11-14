@@ -19,6 +19,7 @@ import pytest
 from rnw import epoch, wording
 from rnw.barrens import (
     FLAT_SPREAD,
+    GROUND_KINDS,
     KINDS,
     MOUNTAIN_FLOOR,
     TOPOGRAPHY,
@@ -28,7 +29,6 @@ from rnw.barrens import (
     WastelandSettings,
     _allocate,  # pyright: ignore[reportPrivateUsage]
     calibrate,
-    ground_of,
     legacy_topography,
     plan_wastelands,
 )
@@ -100,6 +100,10 @@ def _grid(
         kinds=tuple(kinds),
         climate=tuple("tropical" if flag else "arid" for flag in west),
         vegetation=tuple("jungle" if flag else "desert" for flag in west),
+        ground=tuple(
+            "mountain" if ridge[cell] else "hills" if hills[cell] else "flat"
+            for cell in range(count)
+        ),
         height=height,
         spread=spread,
         pixels=np.full(count, CELL_PX, dtype=np.int64),
@@ -162,12 +166,10 @@ def _reaches_coast(terrain: Terrain, kinds: tuple[CellClass, ...]) -> bool:
     return seen == passable
 
 
-def test_the_ground_decides_what_kind_a_cell_may_be() -> None:
-    assert ground_of(MOUNTAIN_FLOOR, 100) == "mountain"
-    assert ground_of(MOUNTAIN_FLOOR - 1, FLAT_SPREAD) == "hills"
-    assert ground_of(11_000, FLAT_SPREAD - 1) == "plateau"
-    assert ground_of(5000, FLAT_SPREAD - 1) == "flat"
-    assert {ground_of(h, s) for h in (3000, 12_000, 16_000) for s in (100, 2000)} <= set(KINDS)
+def test_every_voted_ground_allows_a_kind() -> None:
+    """Each ground the game's locations vote allows one kind; dunes ask for flat ground."""
+    assert set(GROUND_KINDS) == {"mountains", "plateau", "hills", "flatland", "wetlands"}
+    assert set(GROUND_KINDS.values()) == set(KINDS) - {"dune"}
 
 
 def test_epoch_63_topography_rule_is_kept() -> None:
@@ -241,7 +243,7 @@ def test_a_kind_stands_only_on_ground_that_allows_it() -> None:
     for cell, name in plan.topography.items():
         if terrain.polar[cell]:
             continue
-        ground = ground_of(int(terrain.height[cell]), int(terrain.spread[cell]))
+        ground = terrain.ground[cell]
         assert name in {TOPOGRAPHY[ground], TOPOGRAPHY["dune"]}
         if name == TOPOGRAPHY["dune"]:
             assert ground == "flat"

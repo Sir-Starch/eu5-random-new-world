@@ -209,10 +209,16 @@ the construction is [INFERRED] from those measurements, not a copy of Paradox's 
    can hold in the first round) and rounded by systematic sampling, so the sum is exact. A class
    exists only where `biomes.txt` draws the triple by a biome of its own with materials, never by
    `default_biome`.
-3. **Suitability.** A cell can only be a kind its ground allows (a mountain on high ground, hills
-   on rough ground, a plateau on high smooth ground, a flat or a dune on low smooth ground), and
-   within that ranks by what the kind is: dry smooth ground for dunes, wet lowland for jungle, cold
-   ground for tundra, the highest roughest ground for mountains, each blended 70/30 with a smoothed
+3. **Suitability.** A cell can only be a kind its ground allows: the ground that the game's
+   locations most like it vote for it (`vote_grounds`, over all the land before the plan; mountains,
+   hills and plateaus allow their kind, flatland and wetlands a flat wild or dunes). The plan first
+   read fixed heights (14,000 and 11,000) and the cell's own height spread, which grows with the
+   cell; with the vote `gady3byywf` has 215 mountain, 294 flat, 61 hills, 16 plateau and 80 dune
+   wastelands where it had 237, 284, 56, 10 and 79, and 125 of its 666 at the sea where it had 104
+   (vanilla: a fifth), while under the fixed heights a relief with higher smooth interiors, tried
+   below, had cost 94 flat wilds and added 68 mountains [V-EXEC 2026-11-13]. Within that a cell
+   ranks by what the kind is: dry smooth ground for dunes, wet lowland for jungle, cold ground for
+   tundra, the highest roughest ground for mountains, each blended 70/30 with a smoothed
    regional noise, so that districts favour a kind. Coastal cells are candidates like any other, and
    the seeds of a class are drawn from two strata, the cells at the sea and the others, so that the
    class's cells at the sea keep the share its candidates have there times the kind's `shore`
@@ -402,8 +408,22 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   the sea against a sixth of the Old World's). Vanilla's plateaus are high (0.78–0.84)
   and far from the sea (0.65–0.75); its farthest quarter is high too (0.59–0.65), the generated
   one is not, so the vote finds the generated plateaus nearer the coast, where locations are
-  smaller. The cordillera stands a location inland of the sea (mountains fade out over 40 pixels at
-  any shore): 57–94 ‰ of the generated mountains touch the sea against vanilla's 133–153 ‰, and on
+  smaller. The farthest quarter is low because it is the cordilleras' foreland: 92–93 % of the
+  land of `gady3byywf` and seed 42 lies within reach of an active coast, the land over 600 pixels
+  from the sea a median 938–948 pixels from one, where the inner chains keep a fifth of their
+  strength; epoch 63's relief, without active coasts, has the same land at 10,961 instead of 9,420
+  (`gady3byywf`). That foreland is also where the great rivers gather. Every way of raising it that
+  was tried split them on at least one of the two worlds: a rise with the distance from the sea, a
+  foreland narrowed to 900 pixels, tablelands on a noise of 700 or 1,000 pixels, and tablelands
+  kept off the corridors of the trunk rivers of a first drainage took the largest network from
+  81–84 ‰ of the river pixels to 45–68 ‰, or the five largest from 265 to 194–235 ‰. Tablelands on
+  a noise of 2,000 pixels raised the farthest quarter only where a peak of the noise fell
+  (`gady3byywf` 0.47 → 0.64, seed 42 0.46 → 0.44). A cordillera nearer the coast (30–180 pixels)
+  with steeper mountain shores brought `gady3byywf`'s mountains at the sea from 78 to 118–123 ‰ of
+  its mountains but seed 42's from 94 to 263 ‰. None of these was kept. Vanilla's Americas hold
+  both a high far quarter (0.59) and a basin of 199 ‰, with highlands that flank their basins
+  [V-EXEC 2026-11-13]. The cordillera stands a location inland of the sea (mountains fade out over
+  40 pixels at any shore): 57–94 ‰ of the generated mountains touch the sea against vanilla's 133–153 ‰, and on
   the Wall and the drawn land 15–18 ‰ of the coastal locations are mountains (vanilla 66–71 ‰).
   Hills are 1.08–1.21 of the median against 0.83–0.91, 1.01 at the sea against `gady3byywf`'s
   coastal flatland at 0.73 [V-EXEC 2026-11-13].
