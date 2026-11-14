@@ -197,7 +197,12 @@ class Terrain:
     Arrays and tuples are indexed by cell. ``edges`` joins land cells that touch. ``coastal`` is
     a cell that touches the sea, ``polar`` one that touches a polar edge of the map and
     ``barrier`` one the Wall's core runs through. ``ground`` is the kind of wasteland the voted
-    ground of a land cell allows (``GROUND_KINDS``), empty for the other cells.
+    ground of a land cell allows (``GROUND_KINDS``), empty for the other cells. ``rugged`` is how
+    broken the ground a cell lies on is, read at one scale whatever the cell's size
+    (``eu5_biomes.cell_ruggedness``); the suitability ranks read it. ``spread``, the cell's own
+    height spread, grows with the cell (on a ground of one kind larger cells had more of it:
+    Spearman 0.18 to 0.34, for ``rugged`` -0.20 to -0.01, on world gady3byywf [V-EXEC
+    2026-11-14]), so only the topography of the fixed cells reads it (``legacy_topography``).
     """
 
     kinds: tuple[CellClass, ...]
@@ -206,6 +211,7 @@ class Terrain:
     ground: tuple[str, ...]
     height: NDArray[np.int64]
     spread: NDArray[np.int64]
+    rugged: NDArray[np.int64]
     pixels: NDArray[np.int64]
     rain: NDArray[np.int64]
     latitude: NDArray[np.int64]
@@ -428,8 +434,8 @@ class _Planner:
         """How well each cell suits each kind, in permille (0 to 1000), over the candidates."""
         terrain = self.terrain
         cells = np.array(candidates, dtype=np.int64)
-        height, spread = terrain.height[cells], terrain.spread[cells]
-        smooth = PERMILLE - _permille_ranks(spread)
+        height, rugged = terrain.height[cells], terrain.rugged[cells]
+        smooth = PERMILLE - _permille_ranks(rugged)
         dry = PERMILLE - _permille_ranks(terrain.rain[cells])
         wet = _permille_ranks(terrain.rain[cells])
         cold = _permille_ranks(terrain.latitude[cells])
@@ -447,10 +453,10 @@ class _Planner:
         )
         physical = {
             "dune": (smooth + dry) // 2,
-            "plateau": _permille_ranks(height - 3 * spread),
+            "plateau": _permille_ranks(height - 3 * rugged),
             "flat": (2 * smooth + prior) // 3,
-            "hills": _permille_ranks(spread),
-            "mountain": _permille_ranks(height + 2 * spread),
+            "hills": _permille_ranks(rugged),
+            "mountain": _permille_ranks(height + 2 * rugged),
         }
         count = len(terrain.kinds)
         for kind, values in physical.items():

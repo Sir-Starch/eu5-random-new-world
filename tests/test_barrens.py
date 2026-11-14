@@ -106,6 +106,7 @@ def _grid(
         ),
         height=height,
         spread=spread,
+        rugged=spread.copy(),
         pixels=np.full(count, CELL_PX, dtype=np.int64),
         rain=xs * 50,
         latitude=np.abs(ys - HEIGHT // 2) * 60,
@@ -247,6 +248,21 @@ def test_a_kind_stands_only_on_ground_that_allows_it() -> None:
         assert name in {TOPOGRAPHY[ground], TOPOGRAPHY["dune"]}
         if name == TOPOGRAPHY["dune"]:
             assert ground == "flat"
+
+
+def test_the_ruggedness_ranks_the_cells_and_their_own_spread_does_not() -> None:
+    terrain, settings = _grid()
+    settings = replace(settings, budget=70)
+    base = plan_wastelands(terrain, CALIBRATION, settings, seed=1)
+    # A spread that grows with the cell, as a cell's own does, here on every planned cell.
+    grown = np.where(
+        terrain.polar, terrain.spread, terrain.spread * 3 + np.arange(terrain.spread.size) * 40
+    )
+    same = plan_wastelands(replace(terrain, spread=grown), CALIBRATION, settings, seed=1)
+    assert same.topography == base.topography
+    turned = terrain.rugged.max() - terrain.rugged + terrain.rugged.min()
+    other = plan_wastelands(replace(terrain, rugged=turned), CALIBRATION, settings, seed=1)
+    assert other.topography != base.topography
 
 
 def test_cells_at_the_sea_can_be_wasteland_and_the_poles_always_are() -> None:

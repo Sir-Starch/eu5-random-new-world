@@ -1526,6 +1526,9 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
     if vanilla.pixels is None or cells.pixels is None:
         message = "The wasteland plan needs the pixel counts of the vanilla and generated cells"
         raise ValueError(message)
+    if cells.ruggedness is None:
+        message = "The wasteland plan needs the ruggedness of the generated cells"
+        raise ValueError(message)
     pixels = np.zeros(len(game_map.keys), dtype=np.int64)
     known = min(pixels.size, vanilla.pixels.size)
     pixels[:known] = vanilla.pixels[:known]
@@ -1551,6 +1554,7 @@ def _plan_wastelands(  # noqa: PLR0913 - the plan reads the map, the world and t
         ),
         height=cells.mean_height,
         spread=cells.spread,
+        rugged=cells.ruggedness,
         pixels=cells.pixels,
         rain=rain,
         latitude=latitude,
