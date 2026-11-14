@@ -130,6 +130,7 @@ ROUGH_HILLS: Final[int] = 64  # 1.3.0: the ground is voted by the game's locatio
 RIVERS_FIRST: Final[int] = (
     64  # 1.3.0: rivers come before the cells, which follow them and the land.
 )
+BASINS: Final[int] = 64  # 1.3.0: the rivers wear the land down to their graded beds.
 SWITCHES: Final[dict[str, int]] = {
     "NO_EXCHANGE_MARKETS": NO_EXCHANGE_MARKETS,
     "SUBCONTINENT_WAISTS": SUBCONTINENT_WAISTS,
@@ -139,6 +140,7 @@ SWITCHES: Final[dict[str, int]] = {
     "OPEN_CLIMATE": OPEN_CLIMATE,
     "ROUGH_HILLS": ROUGH_HILLS,
     "RIVERS_FIRST": RIVERS_FIRST,
+    "BASINS": BASINS,
 }
 
 

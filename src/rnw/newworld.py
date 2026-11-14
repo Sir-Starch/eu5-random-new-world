@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Final
 import numpy as np
 
 from rnw import _native, epoch, omerika, wall
+from rnw.basins import shape_relief
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
 from rnw.islands import carve, place
@@ -1007,20 +1008,26 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     settings: NewWorldSettings,
     seam: int | None,
     sizes: SizeModel | None,
+    hints: ReliefHints | None = None,
+    algorithm: int = epoch.CURRENT,
 ) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan]:
     """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``), the river pixels
     that are their borders and the drainage plan the rivers run down: the relief's drainage is
-    planned (``rnw.watersheds``) and the domain's rain runs down it, the seeds are spaced by the
-    vanilla sizes of the land's classes (``sizes``), the polar bands keep three times the
-    spacing, and the larger rivers are walls the cells grow up to."""
+    planned (``rnw.watersheds``), the relief is worn down along it in place (``epoch.BASINS``,
+    ``rnw.basins``; ``hints`` keep painted mountains), and the rain of the worn relief runs down
+    the plan; the seeds are spaced by the vanilla sizes of the land's classes (``sizes``), the
+    polar bands keep three times the spacing, and the larger rivers are walls the cells grow up
+    to."""
     if sizes is None:
         message = (
             "Cells of this epoch are spaced by the game's locations; the size model is missing"
         )
         raise ValueError(message)
-    climate = domain_climate(land, lakes, relief)
     try:
         plan = plan_drainage(land, relief, lakes=lakes, seam=seam, seed=seed)
+        if algorithm >= epoch.BASINS:
+            shape_relief(relief, land, plan, seed=seed, hints=hints)
+        climate = domain_climate(land, lakes, relief)
         rivers = domain_rivers(land, plan, lakes=lakes, rain=climate.rain, seed=seed)
     except RiverGenerationError as error:
         raise ValueError(str(error)) from error
@@ -1276,6 +1283,8 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
                     settings=settings,
                     seam=seam,
                     sizes=sizes,
+                    hints=hints,
+                    algorithm=algorithm,
                 ),
             ).result()
         else:

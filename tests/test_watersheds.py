@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, cast
 import numpy as np
 import pytest
 
-from rnw import epoch, eu5_nw_export, relief, watersheds
+from rnw import epoch, eu5_nw_export, newworld, relief, watersheds
 from rnw.eu5_biomes import (
     CHUNK,
     NEIGHBOURS,
@@ -446,3 +446,26 @@ def test_the_world_keeps_its_drainage_plan_and_a_foreign_plan_is_refused() -> No
     split = replace(whole, seam=100)
     with pytest.raises(RiverGenerationError, match="number of spans"):
         _ = watersheds.domain_rivers(land, split, lakes=lakes, rain=rain, seed=5)
+
+
+def test_the_cells_grow_along_the_rivers_of_the_worn_relief() -> None:
+    land = _land(4, (240, 320))
+    lakes = np.zeros_like(land)
+    planned = relief.generate_relief(land, seed=4, lakes=lakes, margins=True)
+    worn = planned.copy()
+    _, walls, plan = newworld._river_cells(  # pyright: ignore[reportPrivateUsage]
+        land, lakes, worn, seed=4, settings=SMALL, seam=100, sizes=SIZES, algorithm=epoch.BASINS
+    )
+    assert not np.array_equal(worn, planned)
+    before = watersheds.plan_drainage(land, planned, lakes=lakes, seam=100, seed=4)
+    assert all(np.array_equal(a, b) for a, b in zip(plan.parents, before.parents, strict=True))
+    # The export draws the rivers again with the rain of the world's (worn) elevation.
+    rain = watersheds.domain_climate(land, lakes, worn).rain
+    rivers = watersheds.domain_rivers(land, plan, lakes=lakes, rain=rain, seed=4)
+    assert np.array_equal(walls, watersheds.border_rivers(rivers))
+    older = planned.copy()
+    _ = newworld._river_cells(  # pyright: ignore[reportPrivateUsage]
+        land, lakes, older, seed=4, settings=SMALL, seam=100, sizes=SIZES,
+        algorithm=epoch.BASINS - 1,
+    )  # fmt: skip
+    assert np.array_equal(older, planned)
