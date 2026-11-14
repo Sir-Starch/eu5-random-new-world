@@ -200,8 +200,8 @@ class Terrain:
     ground of a land cell allows (``GROUND_KINDS``), empty for the other cells. ``rugged`` is how
     broken the ground a cell lies on is, read at one scale whatever the cell's size
     (``eu5_biomes.cell_ruggedness``); the suitability ranks read it. ``spread``, the cell's own
-    height spread, grows with the cell (on a ground of one kind larger cells had more of it:
-    Spearman 0.18 to 0.34, for ``rugged`` -0.20 to -0.01, on world gady3byywf [V-EXEC
+    height spread, grows with the cell (on mountain, hills and plateau ground the larger cells had
+    more of it: Spearman 0.18 to 0.34, for ``rugged`` -0.20 to -0.01, on world gady3byywf [V-EXEC
     2026-11-14]), so only the topography of the fixed cells reads it (``legacy_topography``).
     """
 

@@ -44,8 +44,12 @@ worlds and saves are not rewritten or migrated.
   scattered by latitude, and the wettest land is tropical forest. The ground of each location is chosen by the game's own locations most like
   it in height, ruggedness, roughness, rain and distance to the sea, so hills are rough ground, not
   the slope up from every coast, mountains and plateaus are not chosen by how large their location
-  is, and wetlands lie in the low land inland as well as at the sea. Epoch 63 and older make the
-  same worlds as before.
+  is, and wetlands lie in the low land inland as well as at the sea. The rivers then wear the land
+  down as on Earth: the great rivers spread broad low plains far inland, the plains nearest the
+  sea and the deltas lie at its level, the hill country between the rivers is dissected, and the
+  plateaus are broad tablelands, so the interior stays high between the basins. The ground is read
+  on the height the game's own relief will show, and the wastelands are chosen by how rough their
+  ground is, not by how large their location is. Epoch 63 and older make the same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 
