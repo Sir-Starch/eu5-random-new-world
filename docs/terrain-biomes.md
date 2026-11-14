@@ -411,16 +411,19 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   smaller. The farthest quarter is low because it is the cordilleras' foreland: 92–93 % of the
   land of `gady3byywf` and seed 42 lies within reach of an active coast, the land over 600 pixels
   from the sea a median 938–948 pixels from one, where the inner chains keep a fifth of their
-  strength; epoch 63's relief, without active coasts, has the same land at 10,961 instead of 9,420
-  (`gady3byywf`). That foreland is also where the great rivers gather. Every way of raising it that
-  was tried split them on at least one of the two worlds: a rise with the distance from the sea, a
-  foreland narrowed to 900 pixels, tablelands on a noise of 700 or 1,000 pixels, and tablelands
-  kept off the corridors of the trunk rivers of a first drainage took the largest network from
-  81–84 ‰ of the river pixels to 45–68 ‰, or the five largest from 265 to 194–235 ‰. Tablelands on
-  a noise of 2,000 pixels raised the farthest quarter only where a peak of the noise fell
-  (`gady3byywf` 0.47 → 0.64, seed 42 0.46 → 0.44). A cordillera nearer the coast (30–180 pixels)
-  with steeper mountain shores brought `gady3byywf`'s mountains at the sea from 78 to 118–123 ‰ of
-  its mountains but seed 42's from 94 to 263 ‰. None of these was kept. Vanilla's Americas hold
+  strength; epoch 63's relief, without active coasts, has `gady3byywf`'s land over 600 pixels from
+  the sea at a median 10,961 instead of 8,723. That foreland is also where the great rivers gather
+  (the largest network holds 81 and 84 ‰ of the river pixels of `gady3byywf` and seed 42), and each
+  combination tried to raise it split them on one of the two: a foreland narrowed to 900 pixels
+  with a cordillera nearer the coast (`gady3byywf`: 63 ‰; with tablelands or a rise by the distance
+  from the sea added, 45–49 ‰), tablelands on a noise of 700 or 1,000 pixels (55–66 ‰ on both),
+  tablelands kept off the corridors of the trunk rivers of a first drainage (seed 42: 55–68 ‰), and
+  tablelands on a noise of 2,000 pixels with the cordillera where it is (`gady3byywf`'s five largest
+  networks from 265 to 227 ‰; seed 42's farthest quarter stayed at 0.46). `gady3byywf`'s farthest
+  quarter rose to 0.63–0.65, its rivers kept, only with a cordillera nearer the coast (30–180
+  pixels) and those 2,000-pixel tablelands; that cordillera took seed 42's mountains at the sea
+  from 0.17 to 0.29–0.34 of its voted mountains (vanilla's locations: 0.14–0.15). None of these
+  was kept. Vanilla's Americas hold
   both a high far quarter (0.59) and a basin of 199 ‰, with highlands that flank their basins
   [V-EXEC 2026-11-13]. The cordillera stands a location inland of the sea (mountains fade out over
   40 pixels at any shore): 57–94 ‰ of the generated mountains touch the sea against vanilla's 133–153 ‰, and on
