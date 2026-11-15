@@ -13,7 +13,16 @@ import numpy as np
 import pytest
 
 from rnw.app import controls, worldcode
-from rnw.eu5_biomes import Generated, VanillaLocations, _raw_materials, _weighted
+from rnw.eu5_biomes import (
+    POOL_SCALE,
+    Generated,
+    VanillaLocations,
+    _material_factors,
+    _material_keys,
+    _pooled,
+    _raw_materials,
+    _weighted,
+)
 from rnw.eu5_map import Eu5Map
 from rnw.layers import land_key
 from rnw.model import CellClass
@@ -67,13 +76,15 @@ def test_integer_weights_keep_defaults_exact_and_scale_each_resource_independent
     assert counts == Counter(maize=4, copper=2, silver=1)
 
 
-def _draw(
+def _draw(  # noqa: PLR0913 - a tiny world needs each of its knobs.
     rows: list[tuple[str, str, str, bool]],
     *,
     resources: ResourceSettings = RESOURCES,
     precious: int = 1000,
     coast: bool = False,
     count: int = 6000,
+    ground: str = "flatland",
+    pooled: bool = False,
 ) -> tuple[str, ...]:
     # A tiny installed world: each row is one New World land location and its RGO,
     # vegetation, topography and coast; a last Old World rice donor must never be used.
@@ -140,11 +151,12 @@ def _draw(
         fields=(
             ["temperate"] * (count + 3),
             ["grasslands"] * (count + 3),
-            ["flatland"] * (count + 3),
+            [ground] * (count + 3),
         ),
         seed=42,
         precious_permille=precious,
         resources=resources,
+        pooled=pooled,
     )
 
 
@@ -186,3 +198,79 @@ def test_all_resources_can_be_disabled_in_settings_but_generation_fails_explicit
         _ = _draw(
             [("stone", "grasslands", "flatland", False)], resources=settings.resources, precious=0
         )
+
+
+def _rows(*groups: tuple[int, str, str, bool]) -> list[tuple[str, str, str, bool]]:
+    # (count, material, topography, coastal) groups of grassland New World locations.
+    return [
+        (material, "grasslands", topography, coastal)
+        for count, material, topography, coastal in groups
+        for _ in range(count)
+    ]
+
+
+def test_pooled_small_class_borrows_the_broader_class_instead_of_deciding_alone() -> None:
+    # Two hills locations with cocoa used to decide every hills cell; pooled, the 60 flatland
+    # locations of the same climate and vegetation stand behind them.
+    rows = _rows((2, "cocoa", "hills", False), (60, "maize", "flatland", False))
+    assert set(_draw(rows, ground="hills")) == {"cocoa", ""}
+    hills = Counter(_draw(rows, ground="hills", pooled=True))
+    assert hills["maize"] > 3 * hills["cocoa"] > 0
+    assert set(hills) == {"maize", "cocoa", ""}
+
+
+def test_pooled_large_class_keeps_its_own_mix() -> None:
+    rows = _rows(
+        (300, "maize", "flatland", False),
+        (100, "copper", "flatland", False),
+        (20, "silver", "hills", False),
+    )
+    flat = Counter(_draw(rows, pooled=True))
+    land = flat.total() - flat[""]
+    assert abs(flat["maize"] * 1000 // land - 714) < 40  # 300 of 420 broader, mostly its own 750
+    assert 0 < flat["silver"] < land // 20
+
+
+def test_pooled_draw_keeps_the_coast_the_weights_and_the_explicit_failure() -> None:
+    rows = _rows(
+        (40, "maize", "flatland", False),
+        (5, "copper", "hills", False),
+        (30, "fish", "flatland", True),
+    )
+    assert "fish" not in _draw(rows, pooled=True)
+    assert set(_draw(rows, coast=True, pooled=True)) == {"fish", ""}
+    assert set(_draw(rows, pooled=True, resources=replace(RESOURCES, maize=0))) == {"copper", ""}
+    pooled = _draw(rows, pooled=True)
+    assert pooled == _draw(rows, pooled=True)
+    assert pooled[-3:] == ("", "", "")
+    with pytest.raises(SettingsError, match="No enabled raw materials for inland"):
+        _ = _draw(rows, pooled=True, resources=replace(RESOURCES, maize=0, copper=0))
+
+
+def test_material_factors_make_vanilla_classes_expect_vanilla_counts() -> None:
+    finest = {
+        ("t", "grasslands", "hills", "inland"): Counter(cocoa=2),
+        ("t", "grasslands", "flatland", "inland"): Counter(maize=50, silver=10),
+        ("t", "forest", "flatland", "inland"): Counter(lumber=30, maize=5),
+        ("t", "forest", "flatland", "coast"): Counter(fish=20, pearls=1),
+    }
+    tables: list[dict[tuple[str, ...], Counter[str]]] = [{}, {}, {}, {}]
+    for key, counter in finest.items():
+        for table, level in zip(tables, _material_keys(*key), strict=True):
+            table.setdefault(level, Counter()).update(counter)
+    factors = _material_factors(tables)
+    expected: dict[str, float] = {}
+    target: Counter[str] = Counter()
+    for key, counter in finest.items():
+        target.update(counter)
+        shares = _pooled(tables, _material_keys(*key))
+        assert sum(shares.values()) <= POOL_SCALE
+        weighed = {name: share * factors[name] for name, share in shares.items()}
+        total = sum(weighed.values())
+        for name, value in weighed.items():
+            expected[name] = expected.get(name, 0.0) + counter.total() * value / total
+    for name, count in target.items():
+        assert abs(expected[name] - count) < 0.05 * count + 0.05
+    assert _pooled(tables, _material_keys("t", "grasslands", "dunes", "inland")) == _pooled(
+        tables, _material_keys("t", "grasslands", "nowhere", "inland")
+    )

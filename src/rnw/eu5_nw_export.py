@@ -646,6 +646,7 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
         wastelands=_wasteland_settings(game_dir, world, settings),
         open_climate=settings.algorithm >= epoch.OPEN_CLIMATE,
         ground=sizes,
+        pooled_resources=settings.algorithm >= epoch.POOLED_RESOURCES,
     )
     if biomes.kinds is None:
         message = "The wasteland plan did not give the class of the land cells"

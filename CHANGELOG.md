@@ -52,6 +52,16 @@ worlds and saves are not rewritten or migrated.
   ground is, not by how large their location is. Each world has as much of every climate and ground
   as land like its own has in the game, so the rarer ones (wetlands, hills, dry steppes) are not
   crowded out by the common ones. Epoch 63 and older make the same worlds as before.
+- Draw the **resources of a New World from broader groups of the game's locations** when the
+  game has few locations like a generated one. Up to 1.2.2 a location took its resource only from
+  the game's American locations with exactly its climate, vegetation, terrain and coast, so two
+  of them could decide every location like it: subtropical jungle had no food at all (only cocoa,
+  chili, dyes and lumber), dry desert flatland inland had only maize and cotton, and dry woods at
+  the coast had pearls in a third of their locations. Now a small group of the game's locations
+  is mixed with the broader groups around it (the same climate and vegetation, then the
+  vegetation alone) by how many locations stand behind it, while a large group keeps its own mix,
+  and on the game's own Americas the totals of every resource stay the game's. Epoch 63 and
+  older make the same worlds as before.
 
 ## 1.2.2 — 2026-11-11
 
