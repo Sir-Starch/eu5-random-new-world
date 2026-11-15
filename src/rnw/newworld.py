@@ -21,6 +21,7 @@ import numpy as np
 
 from rnw import _native, epoch, omerika, wall
 from rnw.basins import shape_relief
+from rnw.eu5_biomes import ground_field
 from rnw.eu5_terrain import land_surface
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
@@ -1085,13 +1086,23 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     # the ground of the cells will be (``eu5_terrain.surface_heights``).
     surface = land_surface(land, relief, seed=seed) if algorithm >= epoch.ROUGH_HILLS else relief
     sea = ~(land | lakes)
+    # The ground is voted once over the land, a block at a time, and every cell takes that of the
+    # land it covers (``eu5_biomes.ground_field``), the first cells as the final ones.
+    ground = ground_field(sizes, land, surface, climate)
     first = river_cells(
         land,
         walls,
         key=derive_seed(seed, "nw_land_sites_first"),
         spacing=spacing,
         grid=spacing_grid(
-            land, surface, climate, sea=sea, polar_rows=band, sizes=sizes, spacing=spacing
+            land,
+            surface,
+            climate,
+            sea=sea,
+            polar_rows=band,
+            sizes=sizes,
+            ground=ground,
+            spacing=spacing,
         ),
         smallest=settings.min_cell_px,
     )
@@ -1104,10 +1115,11 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         sea=sea,
         polar_rows=band,
         sizes=sizes,
+        ground=ground,
         key=derive_seed(seed, "nw_land_density"),
         spacing=spacing,
     )
-    del first, climate, surface, sea
+    del first, climate, surface, sea, ground
     cells = river_cells(
         land,
         walls,

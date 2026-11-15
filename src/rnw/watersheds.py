@@ -27,11 +27,11 @@ import numpy as np
 
 from rnw.eu5_biomes import (
     CLIMATE_STEP,
-    GROUND_BLUR,
     SIZE_STEP,
     ClimateGrid,
+    GroundField,
     block_features,
-    block_relief,
+    block_ground_scores,
     cell_readings,
     cell_sizes,
     class_sizes,
@@ -220,6 +220,30 @@ DENSITY_SPREAD: Final[int] = 650
 SEED_GAP: Final[int] = 758
 # Candidate seeds per square of the local spacing, as the side of a lattice (3: nine).
 SEED_CANDIDATES: Final[int] = 3
+# Times the cells are grown and the seed of each cell beside water moved to the centre of its cell
+# before the last growth (Lloyd's relaxation of the shore, ``river_cells``). A thrown seed lies
+# anywhere in its square, and one by the sea grew a cell the sea cut: a coastal cell's size
+# followed its seed's distance from the sea (rank correlation 0.77; seeds within 0.15 of their
+# spacing of it grew 0.88 of an octave under their plan), and as the land rises from the shore the
+# cells reaching inland took the hills' ground. On four worlds the coastal hills came out 0.30 of
+# an octave larger than the coastal flatland beside them (standard error 0.04) and the coastal
+# wetlands 0.06 smaller (0.05), where vanilla's are 0.03 and 0.09 larger and 0.03 smaller and 0.10
+# larger (Old World, Americas). With two steps and the shore's speed (``SHORE_SHARE_FLOOR``) they
+# are 0.05 larger (0.03) and 0.01 larger (0.03), the coastal cells 0.19 of an octave under their
+# plan against the inland ones (0.40 before, spread 0.38 against 0.56), and the neighbours of a
+# grown cell differ by more than an octave in 80 permille of the pairs (106 before). Moving every
+# seed evens the coast no better (0.07 and -0.01) and lays the land out in a lattice of diamonds,
+# the shape the four-neighbour growth gives regular seeds [V-EXEC 2026-11-15, seeds 20261115, 42,
+# 7 and 1234, grown cells].
+RELAX_STEPS: Final[int] = 2
+CENTRE_STRIP: Final[int] = 512  # rows of the grown cells read at a time for their centres
+# A seed grows faster by the square root of the land's share (permille, at least this) of the
+# square its cell is planned to cover, so a seed by the sea, half of whose square is water, still
+# grows over its planned land: without it the relaxed coast's hills came out 0.14 of an octave
+# larger than its flatland (0.03) and its cells 0.26 of an octave under their plan
+# [V-EXEC 2026-11-15, the four worlds]. The share is counted on blocks of LAND_COUNT_STEP pixels.
+SHORE_SHARE_FLOOR: Final[int] = 250
+LAND_COUNT_STEP: Final[int] = 8
 SPACING_PARTS: Final[int] = 64  # spacing exponents are 64ths of an octave
 SHIFT_OCTAVES: Final[int] = 6  # the whole spacing is scaled by at most this many octaves
 _FIXED: Final[int] = 20  # binary places of ``_ROOTS`` and ``_POWERS``
@@ -292,24 +316,26 @@ def spacing_grid(  # noqa: PLR0913 - the land, sea, relief and climate, bands, m
     sea: NDArray[np.bool_],
     polar_rows: int,
     sizes: SizeModel,
+    ground: GroundField,
     spacing: int,
 ) -> NDArray[np.int64]:
     """Seed spacing of every ``DENSITY_STEP`` block, in permille of the uniform ``spacing``, read
     from the land alone: the first cells are grown on it (``cell_spacing_grid``).
 
     Each ``SIZE_STEP`` block of land takes the size of the vanilla locations of the class the
-    vote will give it and of the ground its relief makes it, on the coast if it holds ``sea``
-    (``eu5_biomes.class_sizes``), graded and scaled as ``_graded_grid`` does. The
-    ``polar_rows`` rows at either edge keep ``POLAR_SPACING``.
+    vote will give it and of the ground its land votes (``ground``, ``block_ground_scores``), on
+    the coast if it holds ``sea`` (``eu5_biomes.class_sizes``), graded and scaled as
+    ``_graded_grid`` does. The ``polar_rows`` rows at either edge keep ``POLAR_SPACING``.
     """
     step = DENSITY_STEP
     share = _land_share(land)
     found, features = block_features(land, height, climate)
     coarse = np.zeros(found.shape, dtype=np.int64)
     if features.size:
-        relief = block_relief(land, height, found, blur=GROUND_BLUR)
         coastal = _blocks_holding(sea, found.shape)
-        coarse[found] = class_sizes(sizes, features, relief, coastal[found])
+        coarse[found] = class_sizes(
+            sizes, features, block_ground_scores(ground, found), coastal[found]
+        )
     ratio = SIZE_STEP // step
     shape = share.shape
     size = np.repeat(np.repeat(coarse, ratio, axis=0), ratio, axis=1)[: shape[0], : shape[1]]
@@ -324,13 +350,14 @@ def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea
     sea: NDArray[np.bool_],
     polar_rows: int,
     sizes: SizeModel,
+    ground: GroundField,
     key: int,
     spacing: int,
 ) -> NDArray[np.int64]:
     """Seed spacing of every ``DENSITY_STEP`` block, in permille of the uniform ``spacing``, read
     from first ``cells`` grown on ``spacing_grid``: every cell takes the size vanilla gives the
-    class and the ground the final vote will give it, inland or by the ``sea``
-    (``eu5_biomes.cell_sizes``), a block the
+    class and the ground the final vote will give it (from the votes of its land, ``ground``),
+    inland or by the ``sea`` (``eu5_biomes.cell_sizes``), a block the
     mean over its land, and the grid is graded and scaled (``_graded_grid``) with the
     settlement noise (``key``). The final cells then lie, by and large, where cells of their
     own class were sized.
@@ -340,8 +367,10 @@ def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea
     shape = share.shape
     size = np.zeros(shape, dtype=np.int64)
     if count:
-        features, centred, readings, coastal = cell_readings(cells, count, height, climate, sea)
-        target = cell_sizes(sizes, features, centred, readings, coastal)
+        features, centred, votes, coastal = cell_readings(
+            cells, count, height, climate, sea, ground=ground
+        )
+        target = cell_sizes(sizes, features, centred, votes, coastal)
         step = DENSITY_STEP
         area = step * step
         rows = int(cells.shape[0])
@@ -595,12 +624,144 @@ def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and 
     Each seed grows as fast as its spacing (``synth.grow_weighted``): grown at one pace, a seed
     of the sparse land gives half of the way to each seed of the dense land beside it, and the
     cells of the largest spacings came out at three quarters of their area [V-EXEC 2026-11-13].
+    A seed by the sea grows faster by the root of the land's share of its square
+    (``_seed_speeds``). The cells are grown ``RELAX_STEPS`` times, the seed of each cell beside
+    water (``_shore_cells``) moving to the centre of the cell it grew (``_centre_pixels``), before
+    the last growth.
     """
     sites = spaced_sites(key, land, spacing, grid)
-    rows, columns = np.nonzero(sites >= 0)
-    speed = np.zeros(int(sites.max()) + 1 if rows.size else 0, dtype=np.int64)
-    speed[sites[rows, columns]] = grid[rows // DENSITY_STEP, columns // DENSITY_STEP]
-    del rows, columns
-    grown = grow_weighted(land & ~walls, sites, speed)
-    del sites
+    passable = land & ~walls
+    columns = int(land.shape[1])
+    placed = np.flatnonzero(sites.ravel() >= 0)
+    order = sites.ravel()[placed].astype(np.int64)
+    flat = np.zeros(order.size, dtype=np.int64)
+    flat[order] = placed  # the pixel of each seed, by its number
+    del placed, order
+    table = _land_table(land)
+    for _ in range(RELAX_STEPS):
+        grown = grow_weighted(passable, sites, _seed_speeds(flat, grid, table, columns))
+        flat = np.where(_shore_cells(grown, land, flat.size), _centre_pixels(grown, flat), flat)
+        del grown
+        sites = np.full(land.shape, -1, dtype=np.int32)
+        sites.ravel()[flat] = np.arange(flat.size, dtype=np.int32)
+    grown = grow_weighted(passable, sites, _seed_speeds(flat, grid, table, columns))
+    del sites, passable, table
     return merge_small(grow_regions(land, grown), smallest)
+
+
+def _land_table(land: NDArray[np.bool_]) -> NDArray[np.int64]:
+    """The land pixels of each ``LAND_COUNT_STEP`` block, summed from the top left (a summed-area
+    table with a first row and column of zeros)."""
+    step = LAND_COUNT_STEP
+    counts = block_mean(land.astype(np.int64) * (step * step), step)
+    table = np.zeros((counts.shape[0] + 1, counts.shape[1] + 1), dtype=np.int64)
+    table[1:, 1:] = counts.cumsum(axis=0).cumsum(axis=1)
+    return table
+
+
+def _seed_speeds(
+    flat: NDArray[np.int64], grid: NDArray[np.int64], table: NDArray[np.int64], columns: int
+) -> NDArray[np.int64]:
+    """The growth speed of each seed at raster position ``flat``: its spacing (``grid``), faster by
+    the square root of the land's share of the square its cell is planned to cover (the land's
+    area over the seeds, shared by the squares of their spacings; summed from ``table``,
+    ``_land_table``), so that a seed by the sea grows over as much land as one inland."""
+    if flat.size == 0:
+        return np.zeros(0, dtype=np.int64)
+    rows, cells = np.divmod(flat, columns)
+    spacing = grid[rows // DENSITY_STEP, cells // DENSITY_STEP]
+    step = LAND_COUNT_STEP
+    land = int(table[-1, -1])
+    squares = spacing * spacing
+    total = int(squares.sum())
+    side = np.array(
+        [math.isqrt(value * land // total) for value in squares.tolist()], dtype=np.int64
+    )
+    blocks = (table.shape[0] - 1, table.shape[1] - 1)
+    top = np.clip((rows - side // 2) // step, 0, blocks[0])
+    bottom = np.clip(-(-(rows + side - side // 2) // step), 0, blocks[0])
+    left = np.clip((cells - side // 2) // step, 0, blocks[1])
+    right = np.clip(-(-(cells + side - side // 2) // step), 0, blocks[1])
+    inside = table[bottom, right] - table[top, right] - table[bottom, left] + table[top, left]
+    area = np.maximum((bottom - top) * (right - left) * step * step, 1)
+    share = np.clip(inside * PERMILLE // area, SHORE_SHARE_FLOOR, PERMILLE)
+    factor = np.array(
+        [math.isqrt(PERMILLE * PERMILLE * PERMILLE // value) for value in share.tolist()],
+        dtype=np.int64,
+    )
+    return spacing * factor // PERMILLE
+
+
+def _shore_cells(
+    grown: NDArray[np.int32], land: NDArray[np.bool_], count: int
+) -> NDArray[np.bool_]:
+    """Whether each of the ``count`` cells of ``grown`` has a pixel beside water (outside
+    ``land``)."""
+    out = np.zeros(count, dtype=bool)
+    rows = int(grown.shape[0])
+    for first in range(0, rows, CENTRE_STRIP):
+        top, bottom = max(0, first - 1), min(rows, first + CENTRE_STRIP + 1)
+        water = ~land[top:bottom]
+        beside = np.zeros_like(water)
+        beside[1:] |= water[:-1]
+        beside[:-1] |= water[1:]
+        beside[:, 1:] |= water[:, :-1]
+        beside[:, :-1] |= water[:, 1:]
+        part = grown[top:bottom]
+        inner = slice(first - top, first - top + min(CENTRE_STRIP, rows - first))
+        labels = part[inner][beside[inner] & (part[inner] >= 0)]
+        out[labels] = True
+    return out
+
+
+def _centre_pixels(grown: NDArray[np.int32], flat: NDArray[np.int64]) -> NDArray[np.int64]:
+    """The raster position of the centre of each cell of ``grown`` (numbered as the seeds at
+    ``flat``): the pixel of its mean row and column (floored) when the cell holds it, else the
+    cell's pixel nearest to it, the first in raster order of equals. A seed that grew no cell
+    keeps its pixel."""
+    count = int(flat.size)
+    rows, columns = (int(size) for size in grown.shape)
+    pixels = np.zeros(count, dtype=np.int64)
+    row_sums = np.zeros(count, dtype=np.int64)
+    column_sums = np.zeros(count, dtype=np.int64)
+    for first in range(0, rows, CENTRE_STRIP):
+        part = grown[first : first + CENTRE_STRIP]
+        ys, xs = np.nonzero(part >= 0)
+        labels = part[ys, xs]
+        pixels += np.bincount(labels, minlength=count)
+        # Sums of whole rows and columns stay below 2^53, so the float sums are exact.
+        row_sums += np.bincount(labels, weights=ys + first, minlength=count).astype(np.int64)
+        column_sums += np.bincount(labels, weights=xs, minlength=count).astype(np.int64)
+    grew = pixels > 0
+    held = np.maximum(pixels, 1)
+    centre_rows, centre_columns = row_sums // held, column_sums // held
+    centres = centre_rows * columns + centre_columns
+    own = grew & (grown.ravel()[centres] == np.arange(count))
+    out = np.where(own, centres, flat)
+    missing = np.flatnonzero(grew & ~own)
+    if missing.size == 0:
+        return out
+    best = np.full(count, np.iinfo(np.int64).max, dtype=np.int64)
+    found = np.full(count, -1, dtype=np.int64)
+    wanted = np.zeros(count, dtype=bool)
+    wanted[missing] = True
+    for first in range(0, rows, CENTRE_STRIP):
+        part = grown[first : first + CENTRE_STRIP]
+        ys, xs = np.nonzero((part >= 0) & wanted[np.maximum(part, 0)])
+        if ys.size == 0:
+            continue
+        labels = part[ys, xs].astype(np.int64)
+        ys = ys + first
+        distance = (ys - centre_rows[labels]) ** 2 + (xs - centre_columns[labels]) ** 2
+        # Nearest first, then raster order; strips run in raster order, so an earlier strip's
+        # equal pixel is kept.
+        sequence = np.lexsort((ys * columns + xs, distance, labels))
+        labels, distance = labels[sequence], distance[sequence]
+        position = (ys * columns + xs)[sequence]
+        firsts = np.flatnonzero(np.r_[True, labels[1:] != labels[:-1]])
+        chosen, nearest = labels[firsts], distance[firsts]
+        better = nearest < best[chosen]
+        best[chosen[better]] = nearest[better]
+        found[chosen[better]] = position[firsts][better]
+    out[missing] = found[missing]
+    return out

@@ -16,6 +16,7 @@ import zlib
 from collections import Counter, deque
 from contextlib import suppress
 from dataclasses import dataclass, replace
+from functools import partial
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final, cast
 
@@ -90,9 +91,11 @@ from rnw.eu5_biomes import (
     assign_biomes,
     biome_of,
     biome_rules,
+    cell_ground_scores,
     cell_mean,
     cell_ruggedness,
     climate_grid,
+    ground_field,
     label_statistics,
     material_counts,
     size_model,
@@ -522,11 +525,25 @@ def _generated(
     count: int | None = None,
     *,
     surface: NDArray[np.uint16] | None = None,
+    ground: tuple[SizeModel, ClimateGrid] | None = None,
 ) -> Generated:
     """The first ``count`` cells of ``world`` (all by default) as the biome model reads them;
     with the ``surface`` the decals show (epoch 64, ``epoch.ROUGH_HILLS``; ``_surface``) their
-    mean height, roughness and ruggedness are read from it, as vanilla's are from its decals."""
+    mean height, roughness and ruggedness are read from it, as vanilla's are from its decals,
+    and with the ``ground`` model and the world's climate grid the ground votes of their land
+    (``eu5_biomes.ground_field``, ``cell_ground_scores``)."""
     count = len(world.classes) if count is None else count
+    votes = None
+    if surface is not None and ground is not None:
+        field = ground_field(
+            ground[0],
+            (world.labels >= 0) & (world.labels < count),
+            surface,
+            ground[1],
+            columns=partial(_world_columns, canvas),
+        )
+        votes = cell_ground_scores(world.labels, count, field)
+        del field
     points = np.stack(
         [world.centroids[:count, 0], _world_columns(canvas, world.centroids[:count, 1])], axis=1
     )
@@ -552,6 +569,7 @@ def _generated(
             if surface is None
             else cell_ruggedness(world.labels, surface, count, blur=GROUND_BLUR)
         ),
+        ground=votes,
     )
 
 
@@ -638,6 +656,7 @@ def _land_character(  # noqa: PLR0913 - the plan reads the map, the world, the v
                 if settings.algorithm >= epoch.ROUGH_HILLS
                 else None
             ),
+            ground=None if sizes is None else (sizes, grid),
         ),
         seed=seed,
         precious_permille=settings.new_world.precious_permille,

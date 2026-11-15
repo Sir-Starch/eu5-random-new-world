@@ -15,16 +15,21 @@ import pytest
 from rnw import epoch, eu5_biomes, eu5_nw_export, newworld, relief, watersheds
 from rnw.eu5_biomes import (
     CHUNK,
+    GROUND_STEP,
     NEIGHBOURS,
     OCTAVE_PARTS,
     SIZE_STEP,
     TOPOGRAPHIES,
+    GroundField,
     block_relief,
     calibrated_weights,
+    cell_ground_scores,
     cell_ruggedness,
     cell_sizes,
+    choose_grounds,
     chosen_pairs,
     class_sizes,
+    ground_field,
     integer_cube_root,
     latitude_tenths,
     matched_weights,
@@ -182,6 +187,72 @@ def test_cells_grow_up_to_the_walls_and_take_their_pixels() -> None:
     assert np.array_equal(grow_regions(land, cells), cells)
 
 
+def test_a_cell_centre_is_its_own_pixel_nearest_its_mean() -> None:
+    grown = np.full((600, 7), -1, dtype=np.int32)
+    grown[0:3, 0:3] = 0  # a square holds its mean (1, 1)
+    grown[13, :] = 1  # a cup: the mean (12, 3) lies in its hollow, the nearest pixel below it
+    grown[10:13, 0] = 1
+    grown[10:13, 6] = 1
+    grown[20, [0, 6]] = 2  # two pixels as near to the mean (20, 3): the first in raster order
+    grown[590:600, 2] = 3  # beyond the first strip of rows: the mean row 594
+    grown[[500, 520], 4] = 5  # a tie across two strips keeps the earlier pixel
+    flat = np.array([0, 13 * 7, 20 * 7, 590 * 7 + 2, 300 * 7, 520 * 7 + 4], dtype=np.int64)
+    centres = watersheds._centre_pixels(grown, flat)  # pyright: ignore[reportPrivateUsage]
+    # Cell 4 grew nothing and keeps its seed's pixel.
+    assert centres.tolist() == [1 * 7 + 1, 13 * 7 + 3, 20 * 7, 594 * 7 + 2, 300 * 7, 500 * 7 + 4]
+
+
+def test_shore_cells_touch_water_across_strips(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(watersheds, "CENTRE_STRIP", 2)
+    land = np.ones((7, 6), dtype=bool)
+    land[2, 4:] = False  # water in the second strip, beside cell 1 in the first and cell 2
+    land[:, 0] = False  # and beside cell 0
+    grown = np.full(land.shape, -1, dtype=np.int32)
+    grown[:, 1:3] = 0
+    grown[:2, 3:] = 1
+    grown[3:5, 3:] = 2
+    grown[5:, 3:] = 3  # inland
+    shore = watersheds._shore_cells(grown, land, 5)  # pyright: ignore[reportPrivateUsage]
+    # Cell 4 grew nothing.
+    assert shore.tolist() == [True, True, True, False, False]
+
+
+def test_relaxed_cells_are_even_up_to_the_coast(monkeypatch: pytest.MonkeyPatch) -> None:
+    land = np.zeros((256, 512), dtype=bool)
+    land[:, 64:] = True
+    walls = np.zeros_like(land)
+    grid = np.full((8, 16), 1000, dtype=np.int64)
+    steps = watersheds.RELAX_STEPS
+    assert steps > 0
+
+    def sizes(relax: int) -> tuple[float, float]:
+        """The coastal cells' mean size over the inner ones' and the inner ones' spread."""
+        monkeypatch.setattr(watersheds, "RELAX_STEPS", relax)
+        cells = watersheds.river_cells(land, walls, key=5, spacing=32, grid=grid, smallest=10)
+        pixels = np.bincount(cells[cells >= 0])
+        coastal = np.unique(cells[:, 64])
+        edges = np.unique(np.concatenate([cells[0], cells[-1], cells[:, -1], coastal]))
+        inner = np.setdiff1d(np.flatnonzero(pixels), edges)
+        ratio = float(pixels[coastal].mean() / pixels[inner].mean())
+        return ratio, float(np.log2(pixels[inner]).std())
+
+    thrown, relaxed = sizes(0), sizes(steps)
+    assert relaxed[1] < thrown[1]
+    assert abs(1 - relaxed[0]) < abs(1 - thrown[0])
+
+
+def test_a_seed_by_the_sea_grows_faster() -> None:
+    land = np.zeros((128, 256), dtype=bool)
+    land[:, 128:] = True
+    grid = np.full((4, 8), 1000, dtype=np.int64)
+    table = watersheds._land_table(land)  # pyright: ignore[reportPrivateUsage]
+    flat = np.array([64 * 256 + 130, 64 * 256 + 200], dtype=np.int64)
+    speeds = watersheds._seed_speeds(flat, grid, table, 256)  # pyright: ignore[reportPrivateUsage]
+    # Half of the shore seed's square is sea: it grows faster by about the root of two.
+    assert speeds[1] == 1000
+    assert 1300 < speeds[0] < 1450
+
+
 def test_seeds_grow_at_their_own_speed() -> None:
     mask = np.ones((3, 31), dtype=bool)
     seeds = np.full(mask.shape, -1, dtype=np.int32)
@@ -199,8 +270,9 @@ def test_the_spacing_keeps_the_number_of_cells() -> None:
     land = _land(9, (640, 640))
     height = relief.generate_relief(land, seed=9)
     climate = watersheds.domain_climate(land, np.zeros_like(land), height)
+    ground = ground_field(SIZES, land, height, climate)
     grid = watersheds.spacing_grid(
-        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, spacing=32
+        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, ground=ground, spacing=32
     )
     _assert_spacing_keeps_the_cells(land, grid)
     # Neighbouring blocks of land differ by at most the gradation of a block.
@@ -218,14 +290,23 @@ def test_cells_size_the_land_by_their_own_class() -> None:
     height = relief.generate_relief(land, seed=9)
     climate = watersheds.domain_climate(land, np.zeros_like(land), height)
     walls = np.zeros_like(land)
+    ground = ground_field(SIZES, land, height, climate)
     grid = watersheds.spacing_grid(
-        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, spacing=32
+        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, ground=ground, spacing=32
     )
     first = watersheds.river_cells(land, walls, key=1, spacing=32, grid=grid, smallest=40)
 
     def sized(key: int) -> np.ndarray:
         return watersheds.cell_spacing_grid(
-            first, height, climate, sea=~land, polar_rows=0, sizes=SIZES, key=key, spacing=32
+            first,
+            height,
+            climate,
+            sea=~land,
+            polar_rows=0,
+            sizes=SIZES,
+            ground=ground,
+            key=key,
+            spacing=32,
         )
 
     final = sized(5)
@@ -296,28 +377,56 @@ def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
 
     dry = blocks([(100, 80, 7000, 50), (500, 120, 8000, 150)])
     wet = blocks([(100, 900, 7000, 50), (500, 700, 8000, 150)])
-    flat = np.zeros((2, 2), dtype=np.int64)
+    flat = _votes(["flatland", "flatland"])
     inland = np.zeros(2, dtype=bool)
     assert class_sizes(SIZES, dry, flat, inland).tolist() == [1000, 1000]
     assert class_sizes(SIZES, wet, flat, inland).tolist() == [-1000, -1000]
     both = np.concatenate([wet, dry])
     assert np.array_equal(
-        class_sizes(SIZES, both, np.zeros((4, 2), dtype=np.int64), np.zeros(4, dtype=bool)),
+        class_sizes(SIZES, both, _votes(["flatland"] * 4), np.zeros(4, dtype=bool)),
         [-1000] * 2 + [1000] * 2,
     )
-    # The block whose height, relief and distance to the sea are like vanilla's mountains is
-    # voted mountain, and mountains are 500 smaller, 300 on the coast.
+    # The block whose land votes mountain takes the size of mountains: 500 smaller, 300 on the
+    # coast.
     model = replace(
         SIZES,
         offsets=np.array([[-500, 0, 0, 0, 0], [-300, 0, 0, 0, 0]]),
-        ground_table=np.repeat(
-            np.array([[7000, 0, 0, 50], [8000, 0, 0, 150]], dtype=np.int64), NEIGHBOURS, axis=0
-        ),
-        grounds=np.repeat(np.array([4, 0], dtype=np.int64), NEIGHBOURS),
         ground_weights=np.ones(len(TOPOGRAPHIES), dtype=np.int64),
     )
-    assert class_sizes(model, dry, flat, inland).tolist() == [1000, 500]
-    assert class_sizes(model, dry, flat, np.array([False, True])).tolist() == [1000, 700]
+    voted = _votes(["flatland", "mountains"])
+    assert class_sizes(model, dry, voted, inland).tolist() == [1000, 500]
+    assert class_sizes(model, dry, voted, np.array([False, True])).tolist() == [1000, 700]
+
+
+def _votes(names: list[str]) -> np.ndarray:
+    """Ground votes (``eu5_biomes.ground_scores``) all for the named ground of each row."""
+    votes = np.zeros((len(names), len(TOPOGRAPHIES)), dtype=np.int64)
+    votes[np.arange(len(names)), [TOPOGRAPHIES.index(name) for name in names]] = 528
+    return votes
+
+
+def test_cells_take_the_ground_of_the_land_they_cover() -> None:
+    """A cell's ground is that of the blocks of its land, whatever the cell's size."""
+    step = GROUND_STEP
+    scores = np.zeros((2 * 4, len(TOPOGRAPHIES)), dtype=np.int64)
+    scores[[0, 1, 4, 5]] = _votes(["wetlands"])[0]  # the left half of the land votes wetland
+    scores[[2, 3, 6, 7]] = _votes(["hills"])[0]
+    pixels = np.full(8, step * step, dtype=np.int64)
+    field = GroundField(shape=(2, 4), scores=scores, pixels=pixels)
+    labels = np.full((2 * step, 4 * step), -1, dtype=np.int32)
+    labels[:4, :4] = 0  # a small cell in the wetland
+    labels[4:, : 2 * step] = 1  # a large one filling the rest of it
+    labels[:, 2 * step : 3 * step + 4] = 2  # most of its land in the hills, a strip in the wetland
+    labels[:, 3 * step + 4 :] = 3
+    labels[0, 0] = 9  # beyond the cells counted
+    votes = cell_ground_scores(labels, 4, field)
+    assert votes[0, TOPOGRAPHIES.index("wetlands")] == 15 * 528
+    model = replace(SIZES, ground_weights=np.ones(len(TOPOGRAPHIES), dtype=np.int64))
+    chosen = choose_grounds(model, votes, np.zeros(4, dtype=bool))
+    assert [TOPOGRAPHIES[kind] for kind in chosen.tolist()] == ["wetlands"] * 2 + ["hills"] * 2
+    # A dry cell is never wetland.
+    dry = choose_grounds(model, votes, np.array([True, False, False, False]))
+    assert TOPOGRAPHIES[int(dry[0])] != "wetlands"
 
 
 def test_cells_take_the_size_of_the_class_they_will_be_voted() -> None:
@@ -328,7 +437,7 @@ def test_cells_take_the_size_of_the_class_they_will_be_voted() -> None:
 
     dry = blocks([(100, 80, 7000, 50), (500, 120, 8000, 150)])
     wet = blocks([(100, 900, 7000, 50), (500, 700, 8000, 150)])
-    readings = np.array([[7000, 233, 116, 50], [8000, 266, 133, 150]], dtype=np.int64)
+    readings = _votes(["flatland", "flatland"])
     inland = np.zeros(2, dtype=bool)
     assert cell_sizes(SIZES, dry, dry, readings, inland).tolist() == [1000, 1000]
     assert cell_sizes(SIZES, wet, wet, readings, inland).tolist() == [-1000, -1000]
@@ -382,10 +491,12 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     # Landmasses of fewer locations than ``mainland`` size no class.
     assert size_model(game_map, templates, height, mainland=6).size.size == 0
     assert model.dry.tolist() == [True, False]
-    # The ground vote learns from the Old World's passable locations, the field among them, read
-    # as they are.
-    assert model.grounds.tolist() == [TOPOGRAPHIES.index("flatland"), TOPOGRAPHIES.index("plateau")]
-    assert model.ground_table[:, 0].tolist() == [7000, 7000]
+    # The ground vote learns from the blocks of the Old World's passable land, the field among
+    # them, each given the ground of the location holding most of it: "old" fills the top half's
+    # 32 blocks, the field the 16 below its left half.
+    flat, plateau = TOPOGRAPHIES.index("flatland"), TOPOGRAPHIES.index("plateau")
+    assert model.grounds.tolist() == [flat] * 32 + [plateau] * 16
+    assert model.ground_table[:, 0].tolist() == [7000] * 48
     assert model.ground_weights.size == len(TOPOGRAPHIES)
 
 

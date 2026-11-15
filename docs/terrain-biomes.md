@@ -421,21 +421,43 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   two octaves apart are grown, not planned: on `gady3byywf`'s grown cells their sizes differ by
   0.25 of an octave in the field and 2.0 in growth, the smaller cell 1.4 octaves under what its
   spacing gives (spread over all cells 0.88) [V-EXEC].
-  What remains: vanilla's ground does not make a location larger or smaller than its neighbours.
-  Against the adjacent flatland locations of the same pair and coast, its wetland, hill and
-  plateau locations differ by −0.04 to +0.08 of an octave in both regions, its mountains by −0.01
-  to −0.09; its wetlands are larger overall because they lie where the land's locations are large.
-  The generated inland ones now behave so (wetlands −0.05 on both worlds, `4aomqqsg6b` −0.27
-  before; hills +0.08 and +0.02), but at the coast the wetlands are 0.36 and 0.19 smaller than the
-  flatland beside them and the hills 0.42 and 0.41 larger. On `4aomqqsg6b`'s land the coastal
-  wetland cells were sized as coastal locations of their pair are (their offset lies 0.04 below
-  coastal flatland's) and came out 0.38 of an octave below their size where coastal flatland came
-  out 0.16 below [V-EXEC]: of the coastal cells, those that cover only the low strip
-  at the sea are voted wetland and those that reach inland hills [INFERRED: the ground vote reads
-  a cell's own mean height, relief and centre; the scaled distance to the sea changes nothing, a
-  vote on block heights without retraining it little]. Neither keeping the seeds back from the sea
-  (coastal cells then outgrow the inland ones and the land loses 7–9 % of its cells) nor
-  re-estimating the ground offsets against the class (backfitting moved them by under 0.05) helps.
+  Vanilla's ground does not make a location larger or smaller than its neighbours: against the
+  adjacent flatland locations of the same pair and coast, its wetland, hill and plateau locations
+  differ by −0.06 to +0.10 of an octave in both regions, its mountains by +0.04 to −0.09; its
+  wetlands are larger overall because they lie where the land's locations are large. The generated
+  coast did not behave so: `qjkrrkxfot`'s coastal wetlands were 0.32 of an octave smaller than the
+  flatland beside them and its coastal hills 0.36 larger, and on four worlds' grown cells the
+  coastal hills 0.30 larger (standard error 0.04). Both causes lay in a cell's own extent
+  (C537, [V-EXEC 2026-11-15]):
+  - The ground was voted on a cell's own readings, and the distance to the sea at its centre grows
+    with the cell (rank correlation +0.58 among vanilla's coastal locations of one ground). The
+    ground is now voted block by block (16 pixels) by vanilla's blocks, and a cell sums the votes
+    of its land (`ground_field`). Read on vanilla, each block voted by the blocks of the other
+    locations, coastal wetlands and hills come out 0.08 smaller and 0.03 larger than vanilla's in
+    their pair, against 0.27 and 0.14 voted by location.
+  - A thrown seed by the sea grew a cell the sea cut: a coastal cell's size followed its seed's
+    distance from the sea (rank correlation 0.77; seeds within 0.15 of their spacing of it grew
+    0.88 of an octave under their plan), and as the land rises from the shore the cells reaching
+    inland took the hills' ground, those on the strand the wetlands'. A vote over a disk of the
+    planned area around each seed changed nothing (coastal wetlands −0.23, hills +0.32 on the same
+    cells), and neither did keeping the seeds back from the sea (coastal cells outgrew the inland
+    ones and the land lost 7–9 % of its cells) or re-estimating the ground offsets. Now the seed of
+    each cell beside water moves to the centre of the cell it grew, twice (Lloyd's relaxation of
+    the shore, `watersheds.RELAX_STEPS`), and a seed grows faster by the root of the land's share
+    of its planned square (`SHORE_SHARE_FLOOR`). Pooled over four worlds the coastal hills are 0.05
+    larger than the coastal flatland beside them (0.03) and the coastal wetlands 0.01 larger
+    (0.03); without the faster shore the hills are 0.14 larger. Moving every seed evened the coast
+    no better (0.07 and −0.01) but laid the land out in a lattice of diamonds, the shape the
+    four-neighbour growth gives regular seeds.
+
+  On whole locations of `kkgvhey7ry` (the land of `qjkrrkxfot`, its peoples rolled again):
+  neighbours more than an octave apart in 96 ‰ of the pairs, more than two in 4.2 ‰, more than
+  three in 0.3 ‰ (vanilla 99–108, 4.1–4.4 and 0.1), locations under a quarter of their neighbours'
+  median 0.9 ‰ (0.7–0.9); coastal wetlands −0.11 and hills +0.03 against their flatland, inland
+  +0.01 and +0.05; wetlands 0.99 of the median, hills 1.07, plateaus 1.22, mountains 0.74
+  [V-EXEC 2026-11-15]. What remains: coastal mountains are still 0.16 of an octave larger than the
+  flatland beside them (standard error 0.05; vanilla +0.04 and −0.05) and inland ones 0.16 smaller
+  (0.05; vanilla −0.02 and −0.09), as before the shore was relaxed (−0.14).
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is not smoothed over the location
   graph. A plurality of 32 neighbours seldom names a class that is rare among them: each vanilla

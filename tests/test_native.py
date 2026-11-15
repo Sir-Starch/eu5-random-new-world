@@ -10,6 +10,7 @@ import pytest
 
 from rnw import (
     _native,
+    eu5_biomes,
     eu5_objects,
     eu5_slots,
     eu5_terrain,
@@ -689,3 +690,24 @@ def test_adjacency_equals_the_reference(seed: int, *, wrap_x: bool, diagonal: bo
         expected_pairs, expected_lengths = reference_topology.adjacency_lengths(labels)
         assert np.array_equal(pairs, expected_pairs)
         assert np.array_equal(lengths, expected_lengths)
+
+
+def test_nearest_rows_take_the_nearest_rows_ties_by_index() -> None:
+    """The k-d tree finds the ``k`` training rows first in squared distance, then index."""
+    rng = np.random.default_rng(64)
+    for width, spread in ((1, 3), (4, 3), (4, 100_000)):
+        train = rng.integers(-spread, spread + 1, size=(700, width), dtype=np.int64)
+        query = rng.integers(-spread, spread + 1, size=(150, width), dtype=np.int64)
+        distance = ((query[:, np.newaxis, :] - train[np.newaxis, :, :]) ** 2).sum(axis=2)
+        index = np.broadcast_to(np.arange(len(train)), distance.shape)
+        order = np.lexsort((index, distance), axis=-1)
+        for k in (1, 7, 32):
+            assert np.array_equal(_native.nearest_rows(train, query, k), order[:, :k])
+        if spread > len(train):
+            # Without ties at the k-th row the numpy search keeps the same rows.
+            assert np.array_equal(
+                _native.nearest_rows(train, query, 7),
+                eu5_biomes._nearest(train, query, 7),  # pyright: ignore[reportPrivateUsage]
+            )
+    with pytest.raises(ValueError, match="do not fit"):
+        _ = _native.nearest_rows(train, query[:, :2], 3)

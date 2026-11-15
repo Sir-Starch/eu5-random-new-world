@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import _native
 from rnw.barrens import (
     FLAT_SPREAD,
     GROUND_KINDS,
@@ -186,20 +187,23 @@ SIZE_COLUMNS: Final[tuple[int, ...]] = (0, 1, 4)  # latitude, summer and winter 
 MAINLAND: Final[int] = 100
 RELIEF_ROWS: Final[int] = 512  # rows of a strip read for the relief of the size blocks
 # Epoch 64 (``epoch.ROUGH_HILLS``): the ground of the land is voted, as its climate is, by the
-# ``NEIGHBOURS`` vanilla Old World locations most like it (``vote_grounds``) in ``GROUND_COLUMNS``
-# readings: mean height, ruggedness (``cell_ruggedness``), roughness (``relief.cell_roughness``)
-# and distance to the sea, the relief blurred over the land by ``GROUND_BLUR`` pixels first, for
-# vanilla's decals have twice the fine bend of the generated relief and the blurred readings of
-# the two compare (lowland bend 88 against 61 to 74). The readings are taken as they are, scaled
-# by vanilla's spread (``GROUND_WEIGHTS``), and each ground's votes weigh what makes vanilla read
-# as it is (``calibrated_weights``), so a world has as much of each ground as its land holds, not
-# the Old World's shares. Read on vanilla, each location voted by the others, the vote names the
-# ground of 926 Old World locations in a thousand and 79 % of their wetlands; voting the Americas
-# by the Old World it names 660 (the ranked vote with the Old World's shares, 659). The rainfall
-# adds nothing (Americas 640 with it) and is left out [V-EXEC 2026-11-14].
+# ``NEIGHBOURS`` most like it of vanilla's Old World land, a ``GROUND_STEP`` block at a time
+# (``ground_field``; a vanilla block has the ground of the location holding most of it), in
+# ``GROUND_COLUMNS`` readings: mean height, ruggedness (``cell_ruggedness``), roughness
+# (``relief.cell_roughness``) and distance to the sea, the relief blurred over the land by
+# ``GROUND_BLUR`` pixels first, for vanilla's decals have twice the fine bend of the generated
+# relief and the blurred readings of the two compare (lowland bend 88 against 61 to 74). The
+# readings are taken as they are, scaled by vanilla's spread (``GROUND_WEIGHTS``), and each
+# ground's votes weigh what makes vanilla read as it is (``calibrated_weights``), so a world has
+# as much of each ground as its land holds, not the Old World's shares. A cell sums the votes of
+# the land it covers (``cell_ground_scores``). Read on vanilla, each block voted by the blocks of
+# the other locations, the summed votes name the ground of 704 Old World locations in a thousand
+# and 43 % of their wetlands [V-EXEC 2026-11-15]. The rainfall adds nothing (voted by location,
+# the Americas named 640 with it against 660) and is left out [V-EXEC 2026-11-14].
 GROUND_COLUMNS: Final[int] = 4
 GROUND_BLUR: Final[int] = 8
 GROUND_WEIGHTS: Final[tuple[int, ...]] = (30, 30, 30, 15)
+GROUND_STEP: Final[int] = 16  # pixels per block of the ground field (``ground_field``)
 OCTAVE_PARTS: Final[int] = 64
 SIZE_STEP: Final[int] = 64  # pixels per block of the size model; a multiple of CLIMATE_STEP
 # biomes.txt defines no desert wetlands biome; such templates fall to default_biome, whose
@@ -403,7 +407,8 @@ def _standardize(
 
 
 def _nearest(train: NDArray[np.int64], block: NDArray[np.int64], k: int) -> NDArray[np.int64]:
-    """The ``k`` nearest training rows of each row of ``block``, nearest first (ties by index).
+    """The ``k`` nearest training rows of each row of ``block``, nearest first (ties by index,
+    but which of the rows as far as the ``k``-th it keeps is the partition's).
 
     The squared distance is |a|^2 + |b|^2 - 2 a.b, exact in integers (standardized features are
     a few times 10^4, so every term stays far below 2^63) and the same as the sum of squared
@@ -535,22 +540,11 @@ def nearest_others(train: NDArray[np.int64], start: int, k: int) -> NDArray[np.i
     return nearest[~own].reshape(size, k)
 
 
-def calibrated_weights(
-    train: NDArray[np.int64], classes: NDArray[np.int64], climate_of: NDArray[np.int64]
+def _scores_by_chunks(
+    train: NDArray[np.int64], classes: NDArray[np.int64], count: int, k: int
 ) -> NDArray[np.int64]:
-    """The weight of each pair's votes with which the vote reads the training rows as they are.
-
-    Each row of ``train`` (standardized) is voted on by its ``NEIGHBOURS`` nearest other rows;
-    over ``CALIBRATION_ROUNDS`` rounds from ``prior_weights`` the weight of a pair is multiplied
-    by the square root of the rows that hold it over the rows it is chosen for, so that every pair
-    is chosen about as often as vanilla holds it. A pair without rows weighs nothing.
-    """
-    count = int(climate_of.size)
-    weights = _rescaled(prior_weights(classes, count))
-    k = min(NEIGHBOURS, int(train.shape[0]) - 1)
-    if k <= 0:
-        return weights
-    held = np.bincount(classes, minlength=count).tolist()
+    """The rank-weighted votes of each row's ``k`` nearest other rows (``nearest_others``), a
+    ``CHUNK`` of rows per thread."""
     scores = np.zeros((train.shape[0], count), dtype=np.int64)
     rank = np.arange(k, 0, -1, dtype=np.int64)
     starts = range(0, int(train.shape[0]), CHUNK)
@@ -569,6 +563,65 @@ def calibrated_weights(
             np.add.at(
                 scores[start : start + size], (rows, classes[nearest].ravel()), np.tile(rank, size)
             )
+    return scores
+
+
+def _scores_without_self(
+    train: NDArray[np.int64], classes: NDArray[np.int64], count: int, k: int
+) -> NDArray[np.int64]:
+    """The rank-weighted votes of each row's ``k`` nearest other rows, taken as
+    ``nearest_others`` takes them from ``nearest_rows``."""
+    size = int(train.shape[0])
+    nearest = nearest_rows(train, train, k + 1)
+    own = nearest == np.arange(size, dtype=np.int64)[:, np.newaxis]
+    own[~own.any(axis=1), -1] = True
+    nearest = nearest[~own].reshape(size, k)
+    checkpoint()
+    scores = np.zeros((size, count), dtype=np.int64)
+    np.add.at(
+        scores,
+        (np.repeat(np.arange(size, dtype=np.int64), k), classes[nearest].ravel()),
+        np.tile(np.arange(k, 0, -1, dtype=np.int64), size),
+    )
+    return scores
+
+
+def nearest_rows(train: NDArray[np.int64], query: NDArray[np.int64], k: int) -> NDArray[np.int64]:
+    """The ``k`` nearest rows of ``train`` to each row of ``query``, nearest first, ties by index
+    (also those ``_nearest`` leaves to its partition at the ``k``-th row), all the rows at once,
+    by the native k-d tree (ADR 0005)."""
+    return _native.nearest_rows(
+        np.ascontiguousarray(train, dtype=np.int64), np.ascontiguousarray(query, dtype=np.int64), k
+    )
+
+
+def calibrated_weights(
+    train: NDArray[np.int64],
+    classes: NDArray[np.int64],
+    climate_of: NDArray[np.int64],
+    *,
+    exact_ties: bool = False,
+) -> NDArray[np.int64]:
+    """The weight of each pair's votes with which the vote reads the training rows as they are.
+
+    Each row of ``train`` (standardized) is voted on by its ``NEIGHBOURS`` nearest other rows
+    (``nearest_others``; with ``exact_ties``, as the ground model of epoch 64 is made,
+    ``nearest_rows``); over ``CALIBRATION_ROUNDS`` rounds from ``prior_weights`` the weight of a
+    pair is multiplied by the square root of the rows that hold it over the rows it is chosen for,
+    so that every pair is chosen about as often as vanilla holds it. A pair without rows weighs
+    nothing.
+    """
+    count = int(climate_of.size)
+    weights = _rescaled(prior_weights(classes, count))
+    k = min(NEIGHBOURS, int(train.shape[0]) - 1)
+    if k <= 0:
+        return weights
+    held = np.bincount(classes, minlength=count).tolist()
+    scores = (
+        _scores_without_self(train, classes, count, k)
+        if exact_ties
+        else _scores_by_chunks(train, classes, count, k)
+    )
     for _ in range(CALIBRATION_ROUNDS):
         chosen = np.bincount(
             chosen_pairs(scores * weights[np.newaxis, :], climate_of), minlength=count
@@ -728,25 +781,41 @@ def cell_mean(
     return totals // np.maximum(pixels, 1)
 
 
-def vote_grounds(
+def ground_scores(model: SizeModel, readings: NDArray[np.int64]) -> NDArray[np.int64]:
+    """The votes for each ground of the ``NEIGHBOURS`` vanilla blocks (``SizeModel.ground_table``)
+    nearest each row of ``readings`` in ``GROUND_COLUMNS`` (mean height, ruggedness, roughness,
+    distance to the sea), scaled as vanilla's (``GROUND_WEIGHTS``), rank-weighted as
+    ``knn_scores`` weighs them (``nearest_rows``)."""
+    if model.grounds.size == 0:
+        message = "The size model has no ground to learn from"
+        raise ValueError(message)
+    train, rows = _standardize(model.ground_table, readings, GROUND_WEIGHTS)
+    k = min(NEIGHBOURS, int(train.shape[0]))
+    size = int(rows.shape[0])
+    nearest = nearest_rows(train, rows, k)
+    checkpoint()
+    scores = np.zeros((size, len(TOPOGRAPHIES)), dtype=np.int64)
+    np.add.at(
+        scores,
+        (np.repeat(np.arange(size, dtype=np.int64), k), model.grounds[nearest].ravel()),
+        np.tile(np.arange(k, 0, -1, dtype=np.int64), size),
+    )
+    return scores
+
+
+def choose_grounds(
     model: SizeModel,
-    query: NDArray[np.int64],
+    scores: NDArray[np.int64],
     dry: NDArray[np.bool_],
     *,
     matched: bool = False,
 ) -> NDArray[np.int64]:
-    """The ground (an index of ``TOPOGRAPHIES``) of each row of ``query``: its ``GROUND_COLUMNS``
-    readings (mean height, ruggedness, roughness, distance to the sea), scaled as vanilla's
-    (``GROUND_WEIGHTS``), are voted on by the nearest vanilla locations (``SizeModel.ground_table``,
-    ``knn_scores``), each ground's votes weighed by ``SizeModel.ground_weights``, ``matched`` to
-    the rows of ``query`` (``matched_weights``); a ``dry`` row is never wetland and its neighbours'
-    wetlands count for no ground. Ties go to the earlier ground."""
-    if model.grounds.size == 0:
-        message = "The size model has no ground to learn from"
-        raise ValueError(message)
-    train, rows = _standardize(model.ground_table, query, GROUND_WEIGHTS)
-    scores = knn_scores(train, model.grounds, rows, len(TOPOGRAPHIES))
+    """The ground (an index of ``TOPOGRAPHIES``) of each row of ``scores`` (``ground_scores``, or
+    their sums over a cell's land, ``cell_ground_scores``), each ground's votes weighed by
+    ``SizeModel.ground_weights``, ``matched`` to these rows (``matched_weights``); a ``dry`` row is
+    never wetland and its wetland votes count for no ground. Ties go to the earlier ground."""
     wet = TOPOGRAPHIES.index("wetlands")
+    scores = scores.copy()
     scores[dry, wet] = 0
 
     def choose(weighed: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -757,6 +826,169 @@ def vote_grounds(
     if matched:
         weights = matched_weights(scores, weights, choose)
     return choose(scores * weights[np.newaxis, :])
+
+
+def vote_grounds(
+    model: SizeModel,
+    query: NDArray[np.int64],
+    dry: NDArray[np.bool_],
+    *,
+    matched: bool = False,
+) -> NDArray[np.int64]:
+    """The ground of each row of ``query`` (``GROUND_COLUMNS`` readings), voted by the nearest
+    vanilla blocks (``ground_scores``, ``choose_grounds``)."""
+    return choose_grounds(model, ground_scores(model, query), dry, matched=matched)
+
+
+@dataclass(frozen=True, slots=True, eq=False)
+class GroundField:
+    """The ground votes of a land (``ground_field``): one row of ``ground_scores`` per
+    ``GROUND_STEP`` block in raster order (``shape`` blocks), zero where a block holds no land,
+    and the land pixels of each block."""
+
+    shape: tuple[int, int]
+    scores: NDArray[np.int64]
+    pixels: NDArray[np.int64]
+
+
+def _block_raster(land: NDArray[np.bool_]) -> tuple[NDArray[np.int32], NDArray[np.int64]]:
+    """The ``GROUND_STEP`` block (raster order) of each pixel of ``land`` (-1 elsewhere) and the
+    land pixels of every block, a strip of ``RELIEF_ROWS`` rows at a time."""
+    step = GROUND_STEP
+    rows, columns = (int(size) for size in land.shape)
+    width = -(-columns // step)
+    count = -(-rows // step) * width
+    out = np.full(land.shape, -1, dtype=np.int32)
+    pixels = np.zeros(count, dtype=np.int64)
+    across = (np.arange(columns, dtype=np.int64) // step).astype(np.int32)
+    for start in range(0, rows, RELIEF_ROWS):
+        checkpoint()
+        stop = min(rows, start + RELIEF_ROWS)
+        down = (np.arange(start, stop, dtype=np.int64) // step * width).astype(np.int32)
+        here = land[start:stop]
+        blocks = np.where(here, down[:, np.newaxis] + across[np.newaxis, :], -1)
+        out[start:stop] = blocks
+        pixels += np.bincount(blocks[here], minlength=count)
+    return out, pixels
+
+
+def _ground_readings(  # noqa: PLR0913 - the blocks, the height, the grid and how to read them.
+    blocks: NDArray[np.int32],
+    count: int,
+    height: NDArray[np.integer],
+    grid: ClimateGrid,
+    *,
+    land: NDArray[np.bool_] | None,
+    columns: Callable[[NDArray[np.int64]], NDArray[np.int64]] | None,
+) -> NDArray[np.int64]:
+    """The ``GROUND_COLUMNS`` readings of each of the ``count`` blocks of ``blocks``
+    (``_block_raster``): the mean height of its land, its ruggedness and roughness
+    (``cell_ruggedness``, ``relief.cell_roughness``, the height blurred by ``GROUND_BLUR``; the
+    relief read over ``land`` when given) and the distance to the sea at its land's centre, whose
+    column ``columns`` takes to ``grid``'s when the blocks lie elsewhere on the map."""
+    mean_height = cell_mean(blocks, height, count)
+    rugged = cell_ruggedness(blocks, height, count, land, blur=GROUND_BLUR)
+    rough = cell_roughness(blocks, height, count, land, blur=GROUND_BLUR)
+    centres = _cell_centres(blocks, count)
+    if columns is not None:
+        centres[:, 1] = columns(centres[:, 1])
+    return np.stack([mean_height, rugged, rough, _sample(grid.coast, centres)], axis=1)
+
+
+def ground_field(
+    model: SizeModel,
+    land: NDArray[np.bool_],
+    height: NDArray[np.integer],
+    grid: ClimateGrid,
+    *,
+    columns: Callable[[NDArray[np.int64]], NDArray[np.int64]] | None = None,
+) -> GroundField:
+    """The ground votes of every ``GROUND_STEP`` block of ``land`` (``ground_scores`` of its
+    ``_ground_readings`` on ``height`` and ``grid``).
+
+    The ground is a property of the land a cell covers, as vanilla's is of its regions, not of
+    the cell's own extent: read at a cell's centre, the distance to the sea grows with the cell
+    (rank correlation +0.58 among vanilla's coastal Old World locations of one ground), so the
+    vote made the smallest coastal cells wetland and those reaching inland hills. Voted on
+    vanilla's own locations, each without itself, its coastal wetlands came out 0.27 of an
+    octave smaller than vanilla's within their pair and its coastal hills 0.14 larger; voted by
+    blocks of a fixed footprint (each block without those of its own location) and summed over
+    each location, 0.08 smaller and 0.03 larger, naming the ground of 704 locations in a
+    thousand (by location 711) and 43 % of the wetlands (33 %) [V-EXEC 2026-11-15].
+    """
+    blocks, pixels = _block_raster(land)
+    count = int(pixels.size)
+    readings = _ground_readings(blocks, count, height, grid, land=None, columns=columns)
+    del blocks
+    found = np.flatnonzero(pixels)
+    scores = np.zeros((count, len(TOPOGRAPHIES)), dtype=np.int64)
+    scores[found] = ground_scores(model, readings[found])
+    rows, width = (int(size) for size in land.shape)
+    shape = (-(-rows // GROUND_STEP), -(-width // GROUND_STEP))
+    return GroundField(shape=shape, scores=scores, pixels=pixels)
+
+
+def cell_ground_scores(
+    labels: NDArray[np.int32], count: int, field: GroundField
+) -> NDArray[np.int64]:
+    """The ground votes of each of the first ``count`` cells of ``labels`` (-1: none): the
+    ``GroundField`` votes of the block of each of its pixels, summed (``choose_grounds``)."""
+    own = np.where((labels >= 0) & (labels < count), labels, -1).astype(np.int32)
+    _, sums = _location_sums(own, field.scores, field.shape, count, step=GROUND_STEP)
+    return sums
+
+
+def block_ground_scores(field: GroundField, found: NDArray[np.bool_]) -> NDArray[np.int64]:
+    """The ground votes of the ``SIZE_STEP`` blocks of ``found`` (``block_features``) in raster
+    order: those of the ``GroundField`` blocks within each, weighed by their land pixels."""
+    ratio = SIZE_STEP // GROUND_STEP
+    rows, columns = field.shape
+    weighed = (field.scores * field.pixels[:, np.newaxis]).reshape(rows, columns, -1)
+    padded = np.zeros(
+        (-(-rows // ratio) * ratio, -(-columns // ratio) * ratio, weighed.shape[2]),
+        dtype=np.int64,
+    )
+    padded[:rows, :columns] = weighed
+    summed = padded.reshape(
+        padded.shape[0] // ratio, ratio, padded.shape[1] // ratio, ratio, -1
+    ).sum(axis=(1, 3))
+    return summed[: found.shape[0], : found.shape[1]][found]
+
+
+def _ground_training(  # noqa: PLR0913 - the map, its voters, their grounds, height, grid and land.
+    labels: NDArray[np.int32],
+    voters: NDArray[np.bool_],
+    truth: NDArray[np.int64],
+    height: NDArray[np.integer],
+    grid: ClimateGrid,
+    *,
+    land: NDArray[np.bool_],
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """The ``GROUND_COLUMNS`` readings of the ``GROUND_STEP`` blocks of the land of the
+    ``voters`` (per label, one more for -1) and the ground (``truth``, per label) of the voter
+    holding most of each block's pixels (ties: the lower label), the relief read over ``land``."""
+    blocks, pixels = _block_raster(voters[labels])
+    count = int(pixels.size)
+    readings = _ground_readings(blocks, count, height, grid, land=land, columns=None)
+    labelled = int(voters.size)
+    owner = np.full(count, -1, dtype=np.int64)
+    strip = GROUND_STEP * (RELIEF_ROWS // GROUND_STEP)
+    for start in range(0, int(labels.shape[0]), strip):
+        checkpoint()
+        block = blocks[start : start + strip]
+        here = block >= 0
+        keys, held = np.unique(
+            block[here].astype(np.int64) * labelled + labels[start : start + strip][here],
+            return_counts=True,
+        )
+        order = np.lexsort((keys % labelled, -held, keys // labelled))
+        first = np.ones(order.size, dtype=bool)
+        first[1:] = keys[order][1:] // labelled != keys[order][:-1] // labelled
+        chosen = keys[order][first]
+        owner[chosen // labelled] = chosen % labelled
+    del blocks
+    found = np.flatnonzero(pixels)
+    return readings[found], truth[owner[found]]
 
 
 def _climate_share(land: NDArray[np.bool_]) -> NDArray[np.int64]:
@@ -792,9 +1024,10 @@ class SizeModel:
     of the pairs' votes (``size_table``); they are the mainland's (``MAINLAND``). ``dry`` are the
     pairs that are never wetland and ``offsets`` how far, in thousandths of an octave, vanilla's
     locations of each ground lie off the size of their class, inland (row 0) and on the coast
-    (row 1). ``ground_table`` holds the ``GROUND_COLUMNS`` readings of the Old
-    World's passable locations, ``grounds`` their ground and ``ground_weights`` the
-    ``calibrated_weights`` of each ground's votes (``vote_grounds``). ``vote_table`` holds the
+    (row 1). ``ground_table`` holds the ``GROUND_COLUMNS`` readings of the ``GROUND_STEP`` blocks
+    of the Old World's passable land, ``grounds`` the ground of the location holding most of each
+    (``_ground_training``) and ``ground_weights`` the ``calibrated_weights`` of each ground's votes
+    (``ground_scores``, ``choose_grounds``). ``vote_table`` holds the
     ``land_features`` the climate vote of the cells learns from (``assign_biomes`` with open
     climates: each vanilla location read at its centre), ``vote_pairs`` their pairs, of which
     ``vote_climate_of`` gives the climate, ``vote_weights`` the vote's ``calibrated_weights``,
@@ -870,9 +1103,6 @@ def size_model(
     land = kinds[labels]
     grid = climate_grid(sea[labels], height, seasonal=True)
     found, features = block_features(land, height, grid)
-    rugged = cell_ruggedness(labels, height, count, land, blur=GROUND_BLUR)
-    rough = cell_roughness(labels, height, count, land, blur=GROUND_BLUR)
-    del land
     table = np.zeros((found.size, features.shape[1]), dtype=np.int64)
     table[found.ravel()] = features
     pixels, sums = _location_sums(labels, table, (int(found.shape[0]), int(found.shape[1])), count)
@@ -912,17 +1142,27 @@ def size_model(
     centred, points, mean_height = _label_centres(labels, height, count)
     voters = np.array(
         [
-            i
-            for i, kind in enumerate(game_map.classes)
-            if kind is CellClass.LAND
-            and old_world[i]
+            kind is CellClass.LAND
+            and bool(old_world[i])
             and centred[i] > 0
             and attributes[i].get("topography", "") in TOPOGRAPHIES
-        ],
+            for i, kind in enumerate(game_map.classes)
+        ]
+        + [False],
+        dtype=bool,
+    )
+    truth = np.array(
+        [
+            TOPOGRAPHIES.index(row["topography"])
+            if row.get("topography", "") in TOPOGRAPHIES
+            else -1
+            for row in attributes
+        ]
+        + [-1],
         dtype=np.int64,
     )
-    read = land_features(grid, points[voters], mean_height[voters])
-    readings = np.stack([mean_height[voters], rugged[voters], rough[voters], read[:, 3]], axis=1)
+    ground = _ground_training(labels, voters, truth, height, grid, land=land)
+    del land
     # The climate vote of the cells, as ``assign_biomes`` makes it with open climates.
     vote_names, vote_pairs = _vocabulary(joint)
     _, vote_climate_of = _vocabulary([name.split("|")[0] for name in vote_names])
@@ -946,13 +1186,7 @@ def size_model(
         ),
         dry=np.array([name.split("|")[1] in NO_WETLANDS for name in names], dtype=bool),
         coastal=coastal[index],
-        ground=(
-            readings,
-            np.array(
-                [TOPOGRAPHIES.index(attributes[i]["topography"]) for i in voters.tolist()],
-                dtype=np.int64,
-            ),
-        ),
+        ground=ground,
         vote=vote,
     )
 
@@ -1024,6 +1258,7 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
             _standardize(ground[0], ground[0][:0], GROUND_WEIGHTS)[0],
             ground[1],
             np.arange(len(TOPOGRAPHIES), dtype=np.int64),
+            exact_ties=True,
         ),
         vote_table=vote[0],
         vote_pairs=vote[1],
@@ -1039,11 +1274,15 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
 
 
 def _location_sums(
-    labels: NDArray[np.int32], table: NDArray[np.int64], shape: tuple[int, int], count: int
+    labels: NDArray[np.int32],
+    table: NDArray[np.int64],
+    shape: tuple[int, int],
+    count: int,
+    *,
+    step: int = SIZE_STEP,
 ) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
-    """The pixels of each of ``count`` labels and the sums of ``table`` (one row per ``SIZE_STEP``
+    """The pixels of each of ``count`` labels and the sums of ``table`` (one row per ``step``
     block in raster order, ``shape`` blocks) over them; a label of -1 is none."""
-    step = SIZE_STEP
     pixels = np.zeros(count, dtype=np.int64)
     sums = np.zeros((count, table.shape[1]), dtype=np.int64)
     columns = np.arange(int(labels.shape[1]), dtype=np.int64) // step
@@ -1065,7 +1304,7 @@ def _location_sums(
 def class_sizes(
     model: SizeModel,
     query: NDArray[np.int64],
-    relief: NDArray[np.int64],
+    ground: NDArray[np.int64],
     coastal: NDArray[np.bool_],
 ) -> NDArray[np.int64]:
     """How large vanilla makes its locations on land like each row of ``query``
@@ -1076,9 +1315,9 @@ def class_sizes(
     ``NEIGHBOURS`` vanilla locations of that pair nearest in ``SIZE_COLUMNS``: vanilla sizes its
     locations by what they are, deserts and the cold large and the wet lowlands small, so a size
     read from the neighbours of every class would pull each class towards the median. The row's
-    ground, voted from its height, its ``relief`` (``block_relief`` blurred by ``GROUND_BLUR``:
-    spread and bend) and distance to the sea (``vote_grounds``), moves the size by that ground's
-    offset inland or on the coast (``coastal``: the block holds sea).
+    ground, chosen from the ground votes of its land (``ground``: ``block_ground_scores``,
+    ``choose_grounds``), moves the size by that ground's offset inland or on the coast
+    (``coastal``: the block holds sea).
     """
     if model.pairs.size == 0:
         message = "The size model has no land location to learn from"
@@ -1087,10 +1326,8 @@ def class_sizes(
     train, rows = _standardize(model.features, query, land_weights(int(query.shape[1])))
     scores = knn_scores(train, model.pairs, rows, count) * model.weights[np.newaxis, :]
     chosen = chosen_pairs(scores, model.climate_of)
-    out = _pair_sizes(model, chosen, query)
-    readings = np.stack([query[:, 2], relief[:, 0], relief[:, 1], query[:, 3]], axis=1)
-    ground = vote_grounds(model, readings, model.dry[chosen])
-    return out + model.offsets[coastal.astype(np.int64), ground]
+    kinds = choose_grounds(model, ground, model.dry[chosen])
+    return _pair_sizes(model, chosen, query) + model.offsets[coastal.astype(np.int64), kinds]
 
 
 def _size_train(
@@ -1120,18 +1357,20 @@ def _pair_sizes(
     return out
 
 
-def cell_readings(
+def cell_readings(  # noqa: PLR0913 - the cells, the height, grid, sea and ground of the land.
     labels: NDArray[np.int32],
     count: int,
     height: NDArray[np.integer],
     grid: ClimateGrid,
     sea: NDArray[np.bool_],
+    *,
+    ground: GroundField,
 ) -> tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64], NDArray[np.bool_]]:
     """What ``cell_sizes`` reads of each of the ``count`` cells of ``labels`` (-1: none) on
     ``height`` and ``grid``: the ``block_features`` averaged over its pixels, the
-    ``land_features`` at its centre, the ground's readings (mean height, ruggedness, roughness,
-    distance to the sea), each as the export reads its cells (``assign_biomes``), and whether it
-    touches the ``sea`` (not a lake), as the export's coastal cells do."""
+    ``land_features`` at its centre, the votes of the ``ground`` of its land
+    (``cell_ground_scores``), each as the export reads its cells (``assign_biomes``), and whether
+    it touches the ``sea`` (not a lake), as the export's coastal cells do."""
     land = (labels >= 0) & (labels < count)
     found, blocks = block_features(land, height, grid)
     table = np.zeros((found.size, blocks.shape[1]), dtype=np.int64)
@@ -1144,18 +1383,9 @@ def cell_readings(
     )
     del land, table
     features = sums // np.maximum(pixels, 1)[:, np.newaxis]
-    mean_height = cell_mean(labels, height, count)
-    centred = land_features(grid, _cell_centres(labels, count), mean_height)
-    readings = np.stack(
-        [
-            mean_height,
-            cell_ruggedness(labels, height, count, blur=GROUND_BLUR),
-            cell_roughness(labels, height, count, blur=GROUND_BLUR),
-            centred[:, 3],
-        ],
-        axis=1,
-    )
-    return features, centred, readings, _cells_touching(labels, count, sea)
+    centred = land_features(grid, _cell_centres(labels, count), cell_mean(labels, height, count))
+    votes = cell_ground_scores(labels, count, ground)
+    return features, centred, votes, _cells_touching(labels, count, sea)
 
 
 def _cells_touching(
@@ -1226,7 +1456,7 @@ def cell_sizes(
     model: SizeModel,
     features: NDArray[np.int64],
     centred: NDArray[np.int64],
-    readings: NDArray[np.int64],
+    ground: NDArray[np.int64],
     coastal: NDArray[np.bool_],
 ) -> NDArray[np.int64]:
     """How large vanilla makes its locations of the class and ground each cell will be given,
@@ -1234,8 +1464,9 @@ def cell_sizes(
 
     Each cell's pair is voted as ``assign_biomes`` votes it, on the ``land_features`` read at its
     centre (``centred``) by ``SizeModel.vote_table``, the weights matched to these cells; its
-    ground as the final cells' is, on its ``readings`` (``vote_grounds``, matched; a desert is
-    never wetland). The size is the mean of the ``NEIGHBOURS`` vanilla locations of that pair
+    ground as the final cells' is, from the votes of its land (``ground``,
+    ``cell_ground_scores``; ``choose_grounds``, matched; a desert is never wetland). The size is
+    the mean of the ``NEIGHBOURS`` vanilla locations of that pair
     nearest in the ``SIZE_COLUMNS`` of ``features`` (``block_features`` averaged over the cell,
     ``SizeModel.features``) and that ground's offset inland or on the coast (``coastal``: the
     cell touches the sea). A pair the size model holds no location of takes the pair the
@@ -1261,8 +1492,8 @@ def cell_sizes(
         )
         fallback = knn_scores(train, model.pairs, rows, int(model.climate_of.size))
         pair[missing] = chosen_pairs(fallback * model.weights[np.newaxis, :], model.climate_of)
-    ground = vote_grounds(model, readings, model.vote_dry[voted], matched=True)
-    return _pair_sizes(model, pair, features) + model.offsets[coastal.astype(np.int64), ground]
+    kinds = choose_grounds(model, ground, model.vote_dry[voted], matched=True)
+    return _pair_sizes(model, pair, features) + model.offsets[coastal.astype(np.int64), kinds]
 
 
 def smooth_scores(
@@ -1299,6 +1530,8 @@ class Generated:
     # ground is ranked by height and the cell's own spread (``_topography``).
     roughness: NDArray[np.int64] | None = None
     ruggedness: NDArray[np.int64] | None = None
+    # The ground votes of each cell's land (``cell_ground_scores``), which choose its ground.
+    ground: NDArray[np.int64] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -1577,27 +1810,18 @@ def _voted_grounds(
     cells: Generated,
     *,
     vegetation: list[str],
-    coast: NDArray[np.int64],
     ground: SizeModel | None,
 ) -> dict[int, str]:
-    """The ground of the ``chosen`` cells, voted by vanilla's locations like them with the weights
-    matched to these cells (epoch 64, ``vote_grounds``); dry cells are no wetlands."""
-    if ground is None or cells.ruggedness is None or cells.roughness is None:
-        message = "The ground of the land is voted by the game's own locations, not read"
+    """The ground of the ``chosen`` cells, chosen from the votes of their land
+    (``Generated.ground``) with the weights matched to these cells (epoch 64, ``choose_grounds``);
+    dry cells are no wetlands."""
+    if ground is None or cells.ground is None:
+        message = "The ground of the land is voted by the game's own land, not read"
         raise ValueError(message)
     index = np.array(chosen, dtype=np.int64)
-    readings = np.stack(
-        [
-            cells.mean_height[index],
-            cells.ruggedness[index],
-            cells.roughness[index],
-            coast[index],
-        ],
-        axis=1,
-    )
-    voted = vote_grounds(
+    voted = choose_grounds(
         ground,
-        readings,
+        cells.ground[index],
         np.array([vegetation[i] in NO_WETLANDS for i in chosen], dtype=bool),
         matched=True,
     )
@@ -1698,9 +1922,7 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     voted = (
         None
         if cells.ruggedness is None
-        else _voted_grounds(
-            land_cells.tolist(), cells, vegetation=vegetation, coast=coast, ground=ground
-        )
+        else _voted_grounds(land_cells.tolist(), cells, vegetation=vegetation, ground=ground)
     )
     plan = (
         None

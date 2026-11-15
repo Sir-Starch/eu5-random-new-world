@@ -7,6 +7,7 @@ pub mod components;
 pub mod distance;
 pub mod drainage;
 pub mod hash;
+pub mod knn;
 pub mod lzav;
 pub mod mountains;
 pub mod noise;
@@ -195,6 +196,26 @@ mod _native {
         let (flags, sites) = (mask.as_slice()?, seeds.as_slice()?);
         let out = py.detach(|| voronoi::partition(flags, sites, shape.1));
         shaped(py, shape, out)
+    }
+
+    /// The `k` nearest `train` rows to each `query` row, nearest first, ties by index.
+    #[pyfunction]
+    fn nearest_rows<'py>(
+        py: Python<'py>,
+        train: PyReadonlyArray2<'py, i64>,
+        query: PyReadonlyArray2<'py, i64>,
+        k: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let (rows, width) = train.as_array().dim();
+        let (queries, columns) = query.as_array().dim();
+        if columns != width || k > rows {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "the rows do not fit together",
+            ));
+        }
+        let (train, query) = (train.as_slice()?, query.as_slice()?);
+        let out = py.detach(|| knn::nearest(train, query, width, k));
+        shaped(py, (queries, k), out)
     }
 
     /// Bilinear upsampling of a grid sampled every `step` pixels.
