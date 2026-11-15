@@ -259,7 +259,15 @@ def synthetic_sizes() -> SizeModel:
         (OCTAVE_PARTS - 2 * OCTAVE_PARTS * table[:, 4]).astype(np.int64),
         topography=np.full(len(rows), flatland, dtype=np.int64),
         dry=np.array([False, False]),
+        coastal=np.zeros(len(rows), dtype=bool),
         ground=(readings, np.full(len(rows), flatland, dtype=np.int64)),
+        vote=(
+            features[:, :5],
+            table[:, 4].copy(),
+            np.array([0, 1], dtype=np.int64),
+            np.array([False, False]),
+            np.array([0, 1], dtype=np.int64),
+        ),
     )
 
 

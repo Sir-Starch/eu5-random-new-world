@@ -22,6 +22,7 @@ from rnw.eu5_biomes import (
     block_relief,
     calibrated_weights,
     cell_ruggedness,
+    cell_sizes,
     chosen_pairs,
     class_sizes,
     integer_cube_root,
@@ -133,8 +134,8 @@ def test_seeds_follow_the_spacing_and_reach_every_island() -> None:
     mask[248:250, :] = False
     grid = np.full((8, 8), 1000, dtype=np.int64)
     grid[:, 4:] = 2000
-    sites = watersheds.variable_sites(17, mask, 16, grid)
-    again = watersheds.variable_sites(17, mask, 16, grid)
+    sites = watersheds.spaced_sites(17, mask, 16, grid)
+    again = watersheds.spaced_sites(17, mask, 16, grid)
     assert np.array_equal(sites, again)
     rows, columns = np.nonzero(sites >= 0)
     assert np.all(mask[rows, columns])
@@ -144,6 +145,27 @@ def test_seeds_follow_the_spacing_and_reach_every_island() -> None:
     parts = label_components(mask.astype(np.int32))
     assert set(np.unique(parts[mask]).tolist()) <= set(parts[rows, columns].tolist())
     assert sorted(sites[rows, columns].tolist()) == list(range(rows.size))
+    # No two seeds of the square lie nearer than SEED_GAP of the mean of their spacings.
+    square = rows < 248
+    ys, xs = rows[square], columns[square]
+    radius = 16 * grid[ys // watersheds.DENSITY_STEP, xs // watersheds.DENSITY_STEP] // 1000
+    near = (ys[:, None] - ys[None, :]) ** 2 + (xs[:, None] - xs[None, :]) ** 2
+    gap = watersheds.SEED_GAP * (radius[:, None] + radius[None, :])
+    np.fill_diagonal(near, 1 << 40)
+    assert np.all(4_000_000 * near >= gap * gap)
+
+
+def test_spacing_powers_are_exact_integers() -> None:
+    parts = watersheds.SPACING_PARTS
+    exponents = np.arange(-2 * parts, 2 * parts + 1, dtype=np.int64)
+    values = watersheds.spacing_permille(exponents)
+    assert values[exponents == 0].tolist() == [1000]
+    assert values[exponents == parts].tolist() == [2000]
+    assert values[exponents == -parts].tolist() == [500]
+    assert values[exponents == parts // 2].tolist() == [1414]  # 1000 sqrt(2), floored
+    assert np.all(np.diff(values) > 0)
+    real = 1000 * np.exp2(exponents / parts)
+    assert np.all((values <= real + 1e-6) & (values > real - 2))
 
 
 def test_cells_grow_up_to_the_walls_and_take_their_pixels() -> None:
@@ -177,12 +199,56 @@ def test_the_spacing_keeps_the_number_of_cells() -> None:
     land = _land(9, (640, 640))
     height = relief.generate_relief(land, seed=9)
     climate = watersheds.domain_climate(land, np.zeros_like(land), height)
-    grid = watersheds.spacing_grid(land, height, climate, polar_rows=0, sizes=SIZES)
+    grid = watersheds.spacing_grid(
+        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, spacing=32
+    )
+    _assert_spacing_keeps_the_cells(land, grid)
+    # Neighbouring blocks of land differ by at most the gradation of a block.
+    slope = watersheds.GRADATION * watersheds.DENSITY_STEP // 32
+    has = _blocks_with_land(land)
+    for first, second, both in (
+        (grid[:, :-1], grid[:, 1:], has[:, :-1] & has[:, 1:]),
+        (grid[:-1], grid[1:], has[:-1] & has[1:]),
+    ):
+        assert np.all(np.abs(first - second)[both] <= slope)
+
+
+def test_cells_size_the_land_by_their_own_class() -> None:
+    land = _land(9, (640, 640))
+    height = relief.generate_relief(land, seed=9)
+    climate = watersheds.domain_climate(land, np.zeros_like(land), height)
+    walls = np.zeros_like(land)
+    grid = watersheds.spacing_grid(
+        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, spacing=32
+    )
+    first = watersheds.river_cells(land, walls, key=1, spacing=32, grid=grid, smallest=40)
+
+    def sized(key: int) -> np.ndarray:
+        return watersheds.cell_spacing_grid(
+            first, height, climate, sea=~land, polar_rows=0, sizes=SIZES, key=key, spacing=32
+        )
+
+    final = sized(5)
+    assert np.array_equal(final, sized(5))
+    assert not np.array_equal(final, sized(6))
+    _assert_spacing_keeps_the_cells(land, final)
+
+
+def _blocks_with_land(land: np.ndarray) -> np.ndarray:
+    step = watersheds.DENSITY_STEP
+    rows, columns = -(-land.shape[0] // step), -(-land.shape[1] // step)
+    padded = np.zeros((rows * step, columns * step), dtype=bool)
+    padded[: land.shape[0], : land.shape[1]] = land
+    return padded.reshape(rows, step, columns, step).any(axis=(1, 3))
+
+
+def _assert_spacing_keeps_the_cells(land: np.ndarray, grid: np.ndarray) -> None:
     share = land[::32, ::32]
     spacing = grid[: share.shape[0], : share.shape[1]][share]
     expected = int((1_000_000 * 1000 // (spacing * spacing)).sum())
     assert abs(expected - int(share.sum()) * 1000) * 10 <= int(share.sum()) * 1000
-    assert set(np.unique(grid).tolist()) <= set(watersheds.SPACING)
+    low, high = watersheds.SPACING_RANGE
+    assert np.all((spacing >= low) & (spacing <= high))
 
 
 def test_rivers_come_first_from_epoch_64_only() -> None:
@@ -231,24 +297,46 @@ def test_class_sizes_take_the_size_of_the_class_the_vote_chooses() -> None:
     dry = blocks([(100, 80, 7000, 50), (500, 120, 8000, 150)])
     wet = blocks([(100, 900, 7000, 50), (500, 700, 8000, 150)])
     flat = np.zeros((2, 2), dtype=np.int64)
-    assert class_sizes(SIZES, dry, flat).tolist() == [1000, 1000]
-    assert class_sizes(SIZES, wet, flat).tolist() == [-1000, -1000]
+    inland = np.zeros(2, dtype=bool)
+    assert class_sizes(SIZES, dry, flat, inland).tolist() == [1000, 1000]
+    assert class_sizes(SIZES, wet, flat, inland).tolist() == [-1000, -1000]
     both = np.concatenate([wet, dry])
     assert np.array_equal(
-        class_sizes(SIZES, both, np.zeros((4, 2), dtype=np.int64)), [-1000] * 2 + [1000] * 2
+        class_sizes(SIZES, both, np.zeros((4, 2), dtype=np.int64), np.zeros(4, dtype=bool)),
+        [-1000] * 2 + [1000] * 2,
     )
     # The block whose height, relief and distance to the sea are like vanilla's mountains is
-    # voted mountain, and mountains are 500 smaller.
+    # voted mountain, and mountains are 500 smaller, 300 on the coast.
     model = replace(
         SIZES,
-        offsets=np.array([-500, 0, 0, 0, 0]),
+        offsets=np.array([[-500, 0, 0, 0, 0], [-300, 0, 0, 0, 0]]),
         ground_table=np.repeat(
             np.array([[7000, 0, 0, 50], [8000, 0, 0, 150]], dtype=np.int64), NEIGHBOURS, axis=0
         ),
         grounds=np.repeat(np.array([4, 0], dtype=np.int64), NEIGHBOURS),
         ground_weights=np.ones(len(TOPOGRAPHIES), dtype=np.int64),
     )
-    assert class_sizes(model, dry, flat).tolist() == [1000, 500]
+    assert class_sizes(model, dry, flat, inland).tolist() == [1000, 500]
+    assert class_sizes(model, dry, flat, np.array([False, True])).tolist() == [1000, 700]
+
+
+def test_cells_take_the_size_of_the_class_they_will_be_voted() -> None:
+    def blocks(rows: list[tuple[int, int, int, int]]) -> np.ndarray:
+        table = np.array(rows, dtype=np.int64)
+        summer, winter = rain_root(table[:, 1] * 2 // 3), rain_root(table[:, 1] // 3)
+        return np.stack([table[:, 0], summer, table[:, 2], table[:, 3], winter], axis=1)
+
+    dry = blocks([(100, 80, 7000, 50), (500, 120, 8000, 150)])
+    wet = blocks([(100, 900, 7000, 50), (500, 700, 8000, 150)])
+    readings = np.array([[7000, 233, 116, 50], [8000, 266, 133, 150]], dtype=np.int64)
+    inland = np.zeros(2, dtype=bool)
+    assert cell_sizes(SIZES, dry, dry, readings, inland).tolist() == [1000, 1000]
+    assert cell_sizes(SIZES, wet, wet, readings, inland).tolist() == [-1000, -1000]
+    # Its centre votes the class: dry land around a wet centre is sized as the wet class is.
+    assert cell_sizes(SIZES, dry, wet, readings, inland).tolist() == [-1000, -1000]
+    # A coastal cell moves by its ground's coastal offset.
+    coast = replace(SIZES, offsets=np.array([[0] * 5, [0, 0, 0, 0, -400]]))
+    assert cell_sizes(coast, dry, dry, readings, np.array([True, False])).tolist() == [600, 1000]
 
 
 def test_the_size_model_reads_locations_through_their_blocks() -> None:
@@ -274,7 +362,7 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     }
     height = np.full(labels.shape, 7000, dtype=np.uint16)
     height[step:, step:] = 9000
-    model = size_model(game_map, templates, height)
+    model = size_model(game_map, templates, height, mainland=1)
     # The Old World's one passable location is its median; the Americas' lower median is the
     # smaller of their two, the larger is three times as large.
     assert model.size.tolist() == [0, 0, octave_parts(3, 1)]
@@ -285,11 +373,14 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     assert model.features[:, 0].tolist() == latitude_tenths(centres).tolist()
     assert model.features[:, 2].tolist() == [7000, 9000, 9000]
     assert np.array_equal(model.features[1], model.features[2])
-    assert model.digest() == size_model(game_map, templates, height).digest()
+    assert model.digest() == size_model(game_map, templates, height, mainland=1).digest()
     # Read without itself, each of the Americas' two forests is given the other's size; the
     # mountain lies 101/64 octave above that, the hill as far below.
     step_up = octave_parts(3, 1) * 1000 // OCTAVE_PARTS
-    assert model.offsets.tolist() == [step_up, 0, -step_up, 0, 0]
+    # No location touches the sea: the coastal offsets are none.
+    assert model.offsets.tolist() == [[step_up, 0, -step_up, 0, 0], [0] * 5]
+    # Landmasses of fewer locations than ``mainland`` size no class.
+    assert size_model(game_map, templates, height, mainland=6).size.size == 0
     assert model.dry.tolist() == [True, False]
     # The ground vote learns from the Old World's passable locations, the field among them, read
     # as they are.
@@ -481,7 +572,7 @@ def test_the_cells_grow_along_the_rivers_of_the_worn_relief() -> None:
     lakes = np.zeros_like(land)
     planned = relief.generate_relief(land, seed=4, lakes=lakes, margins=True)
     worn = planned.copy()
-    _, walls, plan = newworld._river_cells(  # pyright: ignore[reportPrivateUsage]
+    _, walls, plan, _ = newworld._river_cells(  # pyright: ignore[reportPrivateUsage]
         land, lakes, worn, seed=4, settings=SMALL, seam=100, sizes=SIZES, algorithm=epoch.BASINS
     )
     assert not np.array_equal(worn, planned)

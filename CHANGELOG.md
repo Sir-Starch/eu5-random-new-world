@@ -35,7 +35,10 @@ worlds and saves are not rewritten or migrated.
   the continent. The rivers are drawn before the locations, and the larger rivers are their
   borders. Each location is as large as the game's own locations of the climate, vegetation and
   ground it will have, where the game's land is like it: large in deserts, dry steppes, the cold,
-  on plateaus and far inland, small on wet coasts and in the mountains. The climate learns from the
+  on plateaus and far inland, small on wet coasts and in the mountains. Neighbouring locations
+  grow or shrink gradually, as the game's do, so a tiny location no longer sits among large ones
+  or nearly enclosed by one of them, and the land widens toward the large locations near the
+  poles. The climate learns from the
   game's Americas as well as the Old World, no longer counts farmland as natural grassland, and
   gives each climate as much land as the game's own locations would have, so the semi-arid and cold
   dry lands come back. The rain now has seasons: the rain belts follow the sun, monsoons blow in

@@ -342,7 +342,12 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   vegetation) pair the climate vote would choose there with vanilla's weights (the same k-NN) and the mean
   size of the 32 vanilla locations of that pair nearest to it (`class_sizes`): a desert is as large
   as vanilla's deserts where vanilla's land is like it, a wet coast as small as vanilla's. The pairs'
-  votes are weighed by `calibrated_weights` (below), not matched to the world as the vote's own are. Left
+  votes are weighed by `calibrated_weights` (below), not matched to the world as the vote's own are.
+  Since 2026-11-15 the nearest locations are sought in latitude and the summer's and winter's rain
+  only (`SIZE_COLUMNS`), the ground and the coast moving the size instead (below), and only the
+  locations of landmasses of 100 locations or more size a class (`MAINLAND`): those of smaller
+  islands lie 0.5 to 1.7 octaves below their pair, as large as their islands allow. The figures of
+  this paragraph and the next are of the model before that. Left
   out one location at a time, the model gives vanilla deserts 1.41 of the median (they are 1.48),
   arid land 1.47 (1.51), subpolar 2.45 (2.38) and tropical land 0.98 (1.02), and chooses desert for
   1,197 locations where 1,194 are; R² 0.48 [V-EXEC 2026-11-13]. A block's ground moves its size
@@ -361,10 +366,41 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   size read from the features alone loses the class, while choosing the class first does not.
   Features read at a location's centre had made coastal locations read as coast and the large ones
   as inland, so the training and the query both read blocks.
-  The sizes are not smoothed: they are cut into quarter-octave levels and shifted as a whole to keep
-  the number of cells, and the polar bands keep three times the spacing. A seed grows at a speed in
-  proportion to its spacing (`synth.grow_weighted`); grown at one speed, the cells of the largest
-  spacings had come out at three quarters of their area, cut off by their denser neighbours.
+  **Sized by what each location becomes** (2026-11-15). Sized block by block, a location's class
+  was another than the block's for 43 % of the cells, and its ground for 58 % of the wetlands:
+  generated deserts and cold dry land came out near the median and wetlands small. The land is now
+  cut twice (`watersheds.cell_spacing_grid`): first cells, grown on the block sizes, are voted as
+  the export will vote the final ones, each on its own centre and pixels (`eu5_biomes.cell_sizes`:
+  the pair with matched weights, the ground with `vote_grounds`), and each sizes the land it lies on
+  by the mean of the 32 vanilla locations of that pair nearest in latitude and rain, moved by the
+  mean amount vanilla's mainland locations of its ground lie off that, inland or on the coast
+  (`SizeModel.offsets`, two rows: inland mountains −0.16 of an octave, plateaus +0.07, hills
+  +0.05, wetlands +0.08, flatland +0.04; on the coast +0.11, −0.02, −0.10, −0.13, −0.09); the
+  final cells are then seeded on that field. On `4aomqqsg6b`'s land 927 ‰ of the final locations
+  get the ground their size was read for, and the export's coastal locations are the cells' own
+  (997 ‰). The second cut costs the export of that world 334 to 384 seconds with four threads (the
+  land cells 35 to 60); the memory floor (seed 42, one thread, `RNW_MEMORY=1500`) is 6.74 GiB.
+  **Neighbours change size gradually** (2026-11-15). Vanilla's neighbouring passable land locations
+  differ by more than an octave in 99 and 107 ‰ of their pairs (Old World, Americas), by more than
+  two in 4.5 and 3.9 ‰ and by more than three in 0.1 ‰, and 0.6 and 1.0 ‰ of them are under a quarter
+  of their neighbours' median (whole locations, those with most of their pixels on the side, sizes
+  and borders read on the full map; cut at the New World's columns, the cut ones had looked small
+  and doubled the share over two octaves). Sized block by block, with seeds on a jittered grid that
+  could put two within 0.15 of the spacing, the generated ones (`4aomqqsg6b`) did in 299, 64.5 and
+  13.7 ‰, and 21 ‰ were under a quarter of their neighbours. The spacing is now graded (`grade_spacing`: a block's
+  spacing exceeds a neighbour's by at most `GRADATION`, 0.3 pixel per pixel), taken in exact 64ths of
+  an octave (`spacing_permille`, integer powers of two), and the seeds are thrown as blue noise
+  (`spaced_sites`: candidates in a hashed order, each kept only beyond 0.758 of the mean of its and
+  its neighbours' spacings); the border wobble shrinks with the spacing. A smooth settlement noise
+  (`DENSITY_PERIOD` 800 pixels, `DENSITY_SPREAD`) then gives each world its denser and sparser
+  regions, as vanilla's locations lie 0.74–0.87 of an octave off the size of their class, shared
+  by neighbours (correlation 0.51–0.58). The spacing is scaled as a whole to keep the number of
+  cells, and the polar bands keep three times the spacing; the land before them widens toward
+  them at the same rate from half their area, for their passable cells had bordered ordinary ones
+  (51 of a world's 59 pairs more than three octaves apart lay there), and they stay the larger, as
+  those at the map's edge become its wastelands. A seed grows at a speed in proportion to
+  its spacing (`synth.grow_weighted`); grown at one speed, the cells of the largest spacings had come
+  out at three quarters of their area, cut off by their denser neighbours.
   What remains: `gady3byywf`'s deserts are scattered patches, and part of their cells lie in blocks
   the vote reads as another class, so they stay at 1.29. Its tropical land is 1.56 of the median
   because 543 of its 1,536 tropical locations lie over 300 pixels from the sea; band by band (0.62,
@@ -374,6 +410,32 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   1.48–1.58) and wetlands (0.72–0.85 against 1.07–1.14) of this step were too small, from its
   relief, not the vote; with the worn relief and the matched votes (below) they are 1.42 and 1.16
   on `gady3byywf` and seed 42, and 0.83 and 0.76.
+  With the cells sized by what they become and graded (whole locations of `qjkrrkxfot` and of the
+  reference world): neighbours more than an octave apart 120 and 127 ‰ of the pairs, more than two
+  7.0 and 7.9 ‰, more than three 0.7 and 0.3 ‰ (vanilla 99–107, 3.9–4.5 and 0.1), locations under a
+  quarter of their neighbours' median 3.0 and 2.6 ‰ (vanilla 0.6–1.0), small ones mostly bordered
+  by one four times larger 15.2 and 17.3 ‰ (vanilla 19.8–40.9); η² of log size by pair 0.213
+  and 0.223, by pair and ground 0.365 and 0.372 (vanilla 0.189–0.314 and 0.380–0.384), its spread
+  1.10 and 1.22 octaves (vanilla 1.23–1.24). Plateaus 1.30 and 1.34 of the median, hills 1.14 and
+  1.07, wetlands 0.70 and 0.77, mountains 0.75 and 0.90 [V-EXEC 2026-11-15]. The pairs still over
+  two octaves apart are grown, not planned: on `gady3byywf`'s grown cells their sizes differ by
+  0.25 of an octave in the field and 2.0 in growth, the smaller cell 1.4 octaves under what its
+  spacing gives (spread over all cells 0.88) [V-EXEC].
+  What remains: vanilla's ground does not make a location larger or smaller than its neighbours.
+  Against the adjacent flatland locations of the same pair and coast, its wetland, hill and
+  plateau locations differ by −0.04 to +0.08 of an octave in both regions, its mountains by −0.01
+  to −0.09; its wetlands are larger overall because they lie where the land's locations are large.
+  The generated inland ones now behave so (wetlands −0.05 on both worlds, `4aomqqsg6b` −0.27
+  before; hills +0.08 and +0.02), but at the coast the wetlands are 0.36 and 0.19 smaller than the
+  flatland beside them and the hills 0.42 and 0.41 larger. On `4aomqqsg6b`'s land the coastal
+  wetland cells were sized as coastal locations of their pair are (their offset lies 0.04 below
+  coastal flatland's) and came out 0.38 of an octave below their size where coastal flatland came
+  out 0.16 below [V-EXEC]: of the coastal cells, those that cover only the low strip
+  at the sea are voted wetland and those that reach inland hills [INFERRED: the ground vote reads
+  a cell's own mean height, relief and centre; the scaled distance to the sea changes nothing, a
+  vote on block heights without retraining it little]. Neither keeping the seeds back from the sea
+  (coastal cells then outgrow the inland ones and the land loses 7–9 % of its cells) nor
+  re-estimating the ground offsets against the class (backfitting moved them by under 0.05) helps.
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is not smoothed over the location
   graph. A plurality of 32 neighbours seldom names a class that is rare among them: each vanilla

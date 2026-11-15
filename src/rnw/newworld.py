@@ -52,8 +52,10 @@ from rnw.topology import (
     unpack_pairs,
 )
 from rnw.watersheds import (
+    DENSITY_STEP,
     DrainagePlan,
     border_rivers,
+    cell_spacing_grid,
     domain_climate,
     domain_rivers,
     plan_drainage,
@@ -905,13 +907,14 @@ def _absorb_orphans(
     return is_orphan.reshape(height, width)
 
 
-def wobble_borders(
+def wobble_borders(  # noqa: PLR0913 - the cells, their classes, the seed and what stays.
     labels: NDArray[np.int32],
     kinds: list[CellClass],
     seed: int,
     *,
     fixed_sea: bool = False,
     fixed: NDArray[np.bool_] | None = None,
+    scale: NDArray[np.int64] | None = None,
 ) -> NDArray[np.int32]:
     """Bend straight cell borders into curves; classes, coasts and cell count are kept.
 
@@ -920,18 +923,14 @@ def wobble_borders(
     neighbouring cell of the same class. A cell that would vanish or split gets its
     original pixels back, and so do the pixels it took, until every cell is one piece;
     one bad cell no longer undoes the wobble of the whole world (C71). Pixels in ``fixed``
-    (beside the rivers that are borders) keep their label.
+    (beside the rivers that are borders) keep their label. With ``scale`` (epoch 64, the
+    seed spacing of every ``watersheds.DENSITY_STEP`` block in permille of the uniform one) a
+    land pixel is displaced in proportion to a spacing below the uniform one, so the smallest
+    cells bend as much as the others for their width instead of losing pieces to them.
     """
     shape = (int(labels.shape[0]), int(labels.shape[1]))
     kind = np.array([list(CellClass).index(value) for value in kinds], dtype=np.int64)
-    offsets = [
-        warped_noise(
-            derive_seed(seed, stream), shape, step=4, period=WOBBLE_PERIOD, octaves=3, warp_px=0
-        )
-        * WOBBLE_PX
-        // NOISE_SCALE
-        for stream in ("nw_wobble_rows", "nw_wobble_columns")
-    ]
+    offsets = _wobble_offsets(labels, kind, seed, scale)
     rows = np.clip(np.arange(shape[0])[:, np.newaxis] + offsets[0], 0, shape[0] - 1)
     columns = np.clip(np.arange(shape[1])[np.newaxis, :] + offsets[1], 0, shape[1] - 1)
     source = labels[rows, columns]
@@ -983,6 +982,48 @@ def wobble_borders(
     return labels
 
 
+def _wobble_offsets(
+    labels: NDArray[np.int32], kind: NDArray[np.int64], seed: int, scale: NDArray[np.int64] | None
+) -> list[NDArray[np.int64]]:
+    """The row and column displacement of every pixel (``wobble_borders``), in pixels."""
+    shape = (int(labels.shape[0]), int(labels.shape[1]))
+    noises = [
+        warped_noise(
+            derive_seed(seed, stream), shape, step=4, period=WOBBLE_PERIOD, octaves=3, warp_px=0
+        )
+        for stream in ("nw_wobble_rows", "nw_wobble_columns")
+    ]
+    if scale is None:
+        return [noise * WOBBLE_PX // NOISE_SCALE for noise in noises]
+    _scale_wobble(noises, labels, kind, scale)
+    return noises
+
+
+def _scale_wobble(
+    offsets: list[NDArray[np.int64]],
+    labels: NDArray[np.int32],
+    kind: NDArray[np.int64],
+    scale: NDArray[np.int64],
+) -> None:
+    """Turn the wobble noise ``offsets`` into pixels in place, a strip at a time: ``WOBBLE_PX``
+    at the noise's full scale, times the ``scale`` of the block (permille, at most one) for the
+    pixels of land cells."""
+    land = list(CellClass).index(CellClass.LAND)
+    width = int(labels.shape[1])
+    block_columns = np.minimum(np.arange(width) // DENSITY_STEP, int(scale.shape[1]) - 1)
+    capped = np.minimum(scale, PERMILLE)
+    for start in range(0, int(labels.shape[0]), STRIP_ROWS):
+        window = slice(start, min(int(labels.shape[0]), start + STRIP_ROWS))
+        block_rows = np.minimum(
+            np.arange(window.start, window.stop) // DENSITY_STEP, int(scale.shape[0]) - 1
+        )
+        cell = labels[window]
+        on_land = (cell >= 0) & (kind[np.maximum(cell, 0)] == land)
+        factor = np.where(on_land, capped[block_rows][:, block_columns], PERMILLE)
+        for offset in offsets:
+            offset[window] = offset[window] * WOBBLE_PX * factor // (NOISE_SCALE * PERMILLE)
+
+
 def _cells(mask: NDArray[np.bool_], *, key: int, spacing: int, smallest: int) -> NDArray[np.int32]:
     """Grow land cells, with larger seed spacing toward both polar edges."""
     sites = seed_sites(key, mask, spacing)
@@ -1012,9 +1053,10 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     hints: ReliefHints | None = None,
     spread: NDArray[np.int16] | None = None,
     algorithm: int = epoch.CURRENT,
-) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan]:
+) -> tuple[NDArray[np.int32], NDArray[np.bool_], DrainagePlan, NDArray[np.int64]]:
     """Land cells grown after the rivers (epoch 64, ``epoch.RIVERS_FIRST``), the river pixels
-    that are their borders and the drainage plan the rivers run down: the relief's drainage is
+    that are their borders, the drainage plan the rivers run down and the seed spacing of every
+    ``watersheds.DENSITY_STEP`` block (``watersheds.cell_spacing_grid``): the relief's drainage is
     planned (``rnw.watersheds``), the relief is worn down along it in place (``epoch.BASINS``,
     ``rnw.basins``; ``hints`` keep painted mountains) and its hill country roughened by
     ``spread`` outside the rivers' valley floors (``epoch.ROUGH_HILLS``), and the rain of the
@@ -1042,8 +1084,30 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
     # The sizes are voted on the height the decals will show (epoch 64, ``epoch.ROUGH_HILLS``), as
     # the ground of the cells will be (``eu5_terrain.surface_heights``).
     surface = land_surface(land, relief, seed=seed) if algorithm >= epoch.ROUGH_HILLS else relief
-    grid = spacing_grid(land, surface, climate, polar_rows=band, sizes=sizes)
-    del climate, surface
+    sea = ~(land | lakes)
+    first = river_cells(
+        land,
+        walls,
+        key=derive_seed(seed, "nw_land_sites_first"),
+        spacing=spacing,
+        grid=spacing_grid(
+            land, surface, climate, sea=sea, polar_rows=band, sizes=sizes, spacing=spacing
+        ),
+        smallest=settings.min_cell_px,
+    )
+    # The first cells are voted as the final ones will be; each sizes the land it lies on by its
+    # own class, ground and coast (``watersheds.cell_spacing_grid``).
+    grid = cell_spacing_grid(
+        first,
+        surface,
+        climate,
+        sea=sea,
+        polar_rows=band,
+        sizes=sizes,
+        key=derive_seed(seed, "nw_land_density"),
+        spacing=spacing,
+    )
+    del first, climate, surface, sea
     cells = river_cells(
         land,
         walls,
@@ -1052,7 +1116,7 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         grid=grid,
         smallest=settings.min_cell_px,
     )
-    return cells, walls, plan
+    return cells, walls, plan, grid
 
 
 # Pixels this near a border river (within the wobble's reach and its diagonal) keep their cell.
@@ -1236,6 +1300,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     rivers_first = algorithm >= epoch.RIVERS_FIRST
     walls: NDArray[np.bool_] | None = None
     drainage: DrainagePlan | None = None
+    cell_spacing: NDArray[np.int64] | None = None
     with Stages(stage_workers()) as stages:
         land_job = (
             None
@@ -1287,7 +1352,7 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
         if land_job is None:
             if settings.landform:
                 wall.add_relief(relief, land, whole, seed, settings)
-            land_cells, walls, drainage = stages.submit(
+            land_cells, walls, drainage, cell_spacing = stages.submit(
                 "land cells",
                 partial(
                     _river_cells,
@@ -1327,7 +1392,10 @@ def generate_new_world(  # noqa: PLR0913, PLR0915 - the world's inputs are the d
     if walls is not None:
         fixed = euclidean_distance(walls, RIVER_HOLD + 1) <= RIVER_HOLD * 8
         del walls
-    labels = wobble_borders(labels, kinds, seed, fixed_sea=sea_bands is not None, fixed=fixed)
+    labels = wobble_borders(
+        labels, kinds, seed, fixed_sea=sea_bands is not None, fixed=fixed, scale=cell_spacing
+    )
+    del cell_spacing
     del fixed
     count = len(kinds)
     pixels, _, _, total, _ = _cell_sums(labels, relief, count)
