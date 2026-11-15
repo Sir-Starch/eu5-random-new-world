@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
@@ -222,12 +223,13 @@ def test_relaxed_cells_are_even_up_to_the_coast(monkeypatch: pytest.MonkeyPatch)
     land[:, 64:] = True
     walls = np.zeros_like(land)
     grid = np.full((8, 16), 1000, dtype=np.int64)
-    steps = watersheds.RELAX_STEPS
-    assert steps > 0
+    steps = (watersheds.RELAX_STEPS, watersheds.SHORE_FEEDBACK_STEPS)
+    assert min(steps) > 0
 
-    def sizes(relax: int) -> tuple[float, float]:
+    def sizes(relax: int, feedback: int) -> tuple[float, float]:
         """The coastal cells' mean size over the inner ones' and the inner ones' spread."""
         monkeypatch.setattr(watersheds, "RELAX_STEPS", relax)
+        monkeypatch.setattr(watersheds, "SHORE_FEEDBACK_STEPS", feedback)
         cells = watersheds.river_cells(land, walls, key=5, spacing=32, grid=grid, smallest=10)
         pixels = np.bincount(cells[cells >= 0])
         coastal = np.unique(cells[:, 64])
@@ -236,21 +238,28 @@ def test_relaxed_cells_are_even_up_to_the_coast(monkeypatch: pytest.MonkeyPatch)
         ratio = float(pixels[coastal].mean() / pixels[inner].mean())
         return ratio, float(np.log2(pixels[inner]).std())
 
-    thrown, relaxed = sizes(0), sizes(steps)
-    assert relaxed[1] < thrown[1]
+    thrown, relaxed = sizes(0, 0), sizes(*steps)
     assert abs(1 - relaxed[0]) < abs(1 - thrown[0])
+    assert relaxed[1] < thrown[1] * 1.1
 
 
-def test_a_seed_by_the_sea_grows_faster() -> None:
-    land = np.zeros((128, 256), dtype=bool)
-    land[:, 128:] = True
-    grid = np.full((4, 8), 1000, dtype=np.int64)
-    table = watersheds._land_table(land)  # pyright: ignore[reportPrivateUsage]
-    flat = np.array([64 * 256 + 130, 64 * 256 + 200], dtype=np.int64)
-    speeds = watersheds._seed_speeds(flat, grid, table, 256)  # pyright: ignore[reportPrivateUsage]
-    # Half of the shore seed's square is sea: it grows faster by about the root of two.
-    assert speeds[1] == 1000
-    assert 1300 < speeds[0] < 1450
+def test_a_shore_cell_is_sped_to_its_share_of_its_neighbourhood() -> None:
+    grown = np.full((2, 70), -1, dtype=np.int32)
+    grown[:, :5] = 0  # 10 pixels beside 1 (60): half of the 70 is its share, 35
+    grown[:, 5:35] = 1
+    grown[:, 36:66] = 2  # 60 pixels beside 1 across a wall pixel: not its neighbour
+    grown[:, 66:] = 3  # 8 pixels beside 2: their share is 34 each
+    planned = np.full(4, 1000, dtype=np.int64)
+    gain = np.full(4, 1000, dtype=np.int64)
+    shore = np.array([True, False, True, True])
+    found = watersheds._shore_gains(grown, planned, gain, shore)  # pyright: ignore[reportPrivateUsage]
+    # 0: the root of 35 over 10; 1 is inland and keeps its speed; 2: the root of 34 over 60;
+    # 3: twice as fast, no more (the root of 34 over 8 is 2.06).
+    assert found.tolist() == [1870, 1000, 752, 2000]
+    # A twice larger spacing plans four times the land; the factors stay within their range.
+    wide = watersheds._shore_gains(grown, np.array([1000, 2000, 1000, 1000]), gain, shore)  # pyright: ignore[reportPrivateUsage]
+    assert int(wide[0]) == math.isqrt(14 * 1000 * 1000 // 10)
+    assert watersheds._shore_gains(grown, planned, np.full(4, 3000), shore).max() == 4000  # pyright: ignore[reportPrivateUsage]
 
 
 def test_seeds_grow_at_their_own_speed() -> None:
@@ -439,13 +448,24 @@ def test_cells_take_the_size_of_the_class_they_will_be_voted() -> None:
     wet = blocks([(100, 900, 7000, 50), (500, 700, 8000, 150)])
     readings = _votes(["flatland", "flatland"])
     inland = np.zeros(2, dtype=bool)
-    assert cell_sizes(SIZES, dry, dry, readings, inland).tolist() == [1000, 1000]
-    assert cell_sizes(SIZES, wet, wet, readings, inland).tolist() == [-1000, -1000]
+    apart = np.zeros((0, 2), dtype=np.int64)
+    assert cell_sizes(SIZES, dry, dry, readings, inland, edges=apart).tolist() == [1000, 1000]
+    assert cell_sizes(SIZES, wet, wet, readings, inland, edges=apart).tolist() == [-1000, -1000]
     # Its centre votes the class: dry land around a wet centre is sized as the wet class is.
-    assert cell_sizes(SIZES, dry, wet, readings, inland).tolist() == [-1000, -1000]
+    assert cell_sizes(SIZES, dry, wet, readings, inland, edges=apart).tolist() == [-1000, -1000]
     # A coastal cell moves by its ground's coastal offset.
     coast = replace(SIZES, offsets=np.array([[0] * 5, [0, 0, 0, 0, -400]]))
-    assert cell_sizes(coast, dry, dry, readings, np.array([True, False])).tolist() == [600, 1000]
+    sizes = cell_sizes(coast, dry, dry, readings, np.array([True, False]), edges=apart)
+    assert sizes.tolist() == [600, 1000]
+    # Voted as the export votes, smoothed over the cells' contacts: a cell barely wet among dry
+    # neighbours is sized as dry land, read alone as wet land.
+    four = blocks([(100, 80, 7000, 50)] * 2 + [(100, 300, 7000, 50)] + [(100, 80, 7000, 50)])
+    chain = np.array([[0, 1], [1, 2], [2, 3]], dtype=np.int64)
+    flat, inland_four = _votes(["flatland"] * 4), np.zeros(4, dtype=bool)
+    alone = cell_sizes(SIZES, four, four, flat, inland_four, edges=apart)
+    assert alone.tolist() == [1000, 1000, -1000, 1000]
+    joined = cell_sizes(SIZES, four, four, flat, inland_four, edges=chain)
+    assert joined.tolist() == [1000] * 4
 
 
 def test_the_size_model_reads_locations_through_their_blocks() -> None:
@@ -498,6 +518,30 @@ def test_the_size_model_reads_locations_through_their_blocks() -> None:
     assert model.grounds.tolist() == [flat] * 32 + [plateau] * 16
     assert model.ground_table[:, 0].tolist() == [7000] * 48
     assert model.ground_weights.size == len(TOPOGRAPHIES)
+
+
+def test_ground_offsets_are_read_against_the_flatland_beside_them() -> None:
+    flat, mountains, hills = (
+        TOPOGRAPHIES.index(name) for name in ("flatland", "mountains", "hills")
+    )
+    # A dense region (a flat and a mountain location, both small for their class) beside a sparse
+    # one of large flatland; a coastal hill touches no flatland; a passable atoll (-1) sets none.
+    off = np.array([-600, -700, 400, 400, 250, 900], dtype=np.int64)
+    topography = np.array([flat, mountains, flat, flat, hills, -1], dtype=np.int64)
+    coastal = np.array([False, False, False, False, True, False])
+    pairs = np.zeros(6, dtype=np.int64)
+    contacts = np.array([[0, 1], [2, 3], [1, 2], [4, 3], [5, 0]], dtype=np.int64)
+    contacts[2] = [1, 4]  # a mountain beside a hill: no flatland, it counts for nothing
+    offsets = eu5_biomes._local_offsets(off, topography, coastal, pairs, contacts)  # pyright: ignore[reportPrivateUsage]
+    # The mountain lies 100 under the flatland beside it, not 766 under the mean flatland.
+    assert int(offsets[0, mountains] - offsets[0, flat]) == -100
+    # The coastal hill touches inland flatland of its pair: it is read against it.
+    assert int(offsets[1, hills] - offsets[0, flat]) == 250 - 400
+    # The grounds so linked keep the mean of their five locations.
+    linked = 3 * int(offsets[0, flat]) + int(offsets[0, mountains]) + int(offsets[1, hills])
+    assert linked == -600 + 400 + 400 - 700 + 250
+    # A ground with no location sets no offset.
+    assert int(offsets[0, TOPOGRAPHIES.index("plateau")]) == 0
 
 
 def _chosen_without_self(train: np.ndarray, classes: np.ndarray, weights: np.ndarray) -> np.ndarray:

@@ -28,6 +28,7 @@ from rnw.eu5_biomes import (
     assign_biomes,
     regularize_votes,
     smooth_scores,
+    smoothed_pairs,
 )
 from rnw.model import CellClass
 
@@ -265,3 +266,18 @@ def test_cold_climates_keep_forests_at_a_rainfall_that_is_desert_elsewhere() -> 
     biomes = _classify(calibration, cells, _chain(6))
     assert biomes.climate == ("subarctic",) * 3 + ("arid",) * 3
     assert biomes.vegetation == ("forest",) * 3 + ("desert",) * 3
+
+
+def test_smoothed_pairs_are_what_the_smoothed_vote_gives() -> None:
+    generator = np.random.default_rng(7)
+    scores = generator.integers(0, 50, size=(40, 6)).astype(np.int64)
+    joint_climate = np.array([0, 0, 1, 1, 2, 2], dtype=np.int64)
+    joint_vegetation = np.array([0, 1, 0, 1, 0, 1], dtype=np.int64)
+    edges = np.array([[row, row + 1] for row in range(39)] + [[0, 20], [5, 30]], dtype=np.int64)
+    for rounds in (0, 1, 2):
+        climate, vegetation = regularize_votes(
+            scores, joint_climate, joint_vegetation, edges, 3, (rounds, rounds)
+        )
+        pairs = smoothed_pairs(scores, joint_climate, edges=edges, rounds=rounds)
+        assert np.array_equal(joint_climate[pairs], climate)
+        assert np.array_equal(joint_vegetation[pairs], vegetation)

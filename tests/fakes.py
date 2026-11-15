@@ -260,6 +260,7 @@ def synthetic_sizes() -> SizeModel:
         topography=np.full(len(rows), flatland, dtype=np.int64),
         dry=np.array([False, False]),
         coastal=np.zeros(len(rows), dtype=bool),
+        contacts=np.zeros((0, 2), dtype=np.int64),
         ground=(readings, np.full(len(rows), flatland, dtype=np.int64)),
         vote=(
             features[:, :5],

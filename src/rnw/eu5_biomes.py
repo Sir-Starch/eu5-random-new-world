@@ -26,6 +26,7 @@ import re
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
+from fractions import Fraction
 from functools import partial
 from itertools import pairwise
 from typing import TYPE_CHECKING, Final
@@ -143,10 +144,16 @@ EMPTY_LAND: Final[dict[str, str]] = {"farmland": "grasslands"}
 # World, leaves out the cultivated locations (``CULTIVATED``) instead of reading them as grassland,
 # so that the land they were cleared from votes there, and smooths over fewer rounds: three
 # rounds left 59 cells per climate region against vanilla's 13 and ate the transitional climates
-# (1.7 % semi-arid and cold arid land against vanilla's 9.3 %) [V-EXEC 2026-11-13].
+# (1.7 % semi-arid and cold arid land against vanilla's 9.3 %) [V-EXEC 2026-11-13]. Unsmoothed,
+# the vote speckled the land instead: 51 passable locations in a thousand had a climate none of
+# their neighbours shared (vanilla's Old World 13, the Americas 30) and a climate region held 9.3
+# locations (26 and 13). One round, its weights matched to the world through the smoothing
+# (``matched_weights``, ``smoothed_pairs``), leaves 13 in a thousand and 20 cells a region and
+# keeps every climate's share: semi-arid, cold arid and Mediterranean land 203 cells in a
+# thousand where the neighbours hold 196 (unsmoothed 199) [V-EXEC 2026-11-15, four worlds].
 CULTIVATED: Final[frozenset[str]] = frozenset({"farmland"})
-OPEN_CLIMATE_ROUNDS: Final[int] = 0
-OPEN_VEGETATION_ROUNDS: Final[int] = 0
+OPEN_CLIMATE_ROUNDS: Final[int] = 1
+OPEN_VEGETATION_ROUNDS: Final[int] = 1
 # A plurality of 32 neighbours seldom names a class that is rare among them: read without itself,
 # a vanilla location was given a semi-arid or cold arid climate 72 times in a thousand where 91
 # are, and a Mediterranean one where it is not. The votes of each (climate, vegetation) pair are
@@ -176,12 +183,16 @@ WEIGHT_TOP: Final[int] = 1 << 20
 # vanilla locations of its pair nearest in latitude and the seasons' rain (``SIZE_COLUMNS``):
 # read by height and distance to the sea as well, the size of a cell followed its own extent
 # (a small coastal cell reads the coast and was sized as a coastal one) and could not tell hills
-# from plateaus of one height. The ground and the coast then move it by the mean amount
-# vanilla's mainland locations of that ground and coast lie off that size (``SizeModel.offsets``):
-# coastal and inland flatland -0.12 and +0.17 of an octave, hills -0.21 and +0.04, mountains
-# +0.03 and -0.40, plateaus +0.13 and +0.30, wetlands +0.15 and +0.39 (means, both regions, by
-# pair alone). The locations of landmasses of fewer than ``MAINLAND`` locations lie 0.5 to 1.7
-# octaves below their pair, as large as their islands allow, so they size no class
+# from plateaus of one height. The ground and the coast then move it by how far vanilla's
+# mainland locations of that ground and coast lie off that size, read against the flatland of
+# their pair beside them (``SizeModel.offsets``, ``_local_offsets``). Their mean offsets mix in
+# their regions: mountains -0.16 of an octave inland and +0.11 on the coast, for the land of a
+# mountain region is all subdivided alike, which made the mountain cells 0.16 smaller inland
+# and larger on the coast than the plain beside them (vanilla -0.09 to -0.02 and -0.05 to +0.04).
+# Read against their neighbours, mountains lie 0.07 under the flatland inland and on the coast,
+# hills 0.06 and 0.03 over it, wetlands as large and coastal flatland 0.11 under the inland's
+# [V-EXEC 2026-11-15]. The locations of landmasses of fewer than ``MAINLAND`` locations lie 0.5
+# to 1.7 octaves below their pair, as large as their islands allow, so they size no class
 # [V-EXEC 2026-11-15].
 SIZE_COLUMNS: Final[tuple[int, ...]] = (0, 1, 4)  # latitude, summer and winter rain
 MAINLAND: Final[int] = 100
@@ -488,6 +499,20 @@ def chosen_pairs(scores: NDArray[np.int64], climate_of: NDArray[np.int64]) -> ND
     np.add.at(climates.T, climate_of, scores.T)
     allowed = climate_of[np.newaxis, :] == np.argmax(climates, axis=1)[:, np.newaxis]
     return np.argmax(np.where(allowed, scores, 0), axis=1)
+
+
+def smoothed_pairs(
+    scores: NDArray[np.int64],
+    climate_of: NDArray[np.int64],
+    *,
+    edges: NDArray[np.int64],
+    rounds: int,
+) -> NDArray[np.int64]:
+    """The pair each row of ``scores`` chooses after ``rounds`` of ``smooth_scores`` over
+    ``edges`` (pairs of rows): ``chosen_pairs`` of the smoothed scores, which is what
+    ``regularize_votes`` gives with as many climate and vegetation rounds."""
+    smoothed = smooth_scores(scores, edges, rounds) if rounds else scores
+    return chosen_pairs(smoothed, climate_of)
 
 
 def _rescaled(weights: NDArray[np.int64]) -> NDArray[np.int64]:
@@ -1024,10 +1049,11 @@ class SizeModel:
     of the pairs' votes (``size_table``); they are the mainland's (``MAINLAND``). ``dry`` are the
     pairs that are never wetland and ``offsets`` how far, in thousandths of an octave, vanilla's
     locations of each ground lie off the size of their class, inland (row 0) and on the coast
-    (row 1). ``ground_table`` holds the ``GROUND_COLUMNS`` readings of the ``GROUND_STEP`` blocks
-    of the Old World's passable land, ``grounds`` the ground of the location holding most of each
-    (``_ground_training``) and ``ground_weights`` the ``calibrated_weights`` of each ground's votes
-    (``ground_scores``, ``choose_grounds``). ``vote_table`` holds the
+    (row 1), read against the flatland beside them (``_local_offsets``). ``ground_table`` holds
+    the ``GROUND_COLUMNS`` readings of the ``GROUND_STEP`` blocks of the Old World's passable
+    land, ``grounds`` the ground of the location holding most of each (``_ground_training``) and
+    ``ground_weights`` the ``calibrated_weights`` of each ground's votes (``ground_scores``,
+    ``choose_grounds``). ``vote_table`` holds the
     ``land_features`` the climate vote of the cells learns from (``assign_biomes`` with open
     climates: each vanilla location read at its centre), ``vote_pairs`` their pairs, of which
     ``vote_climate_of`` gives the climate, ``vote_weights`` the vote's ``calibrated_weights``,
@@ -1118,7 +1144,6 @@ def size_model(
     landmass = _landmass_sizes(
         contacts, np.array([kind not in WATER_KINDS for kind in game_map.classes])
     )
-    del contacts
     old_world = _old_world(game_map)
     # Each region's median is its passable land's, islands among them.
     medians: dict[bool, int] = {}
@@ -1132,6 +1157,8 @@ def size_model(
             medians[region] = values[(len(values) - 1) // 2]
     kept = [slot for slot in passable if landmass[learned[slot]] >= mainland]
     index = np.array([learned[slot] for slot in kept], dtype=np.int64)
+    neighbours = _contact_rows(contacts, index, count)
+    del contacts
     names, pairs = _vocabulary([joint[slot] for slot in kept])
     _, climate_of = _vocabulary([name.split("|")[0] for name in names])
     size = np.array(
@@ -1186,9 +1213,25 @@ def size_model(
         ),
         dry=np.array([name.split("|")[1] in NO_WETLANDS for name in names], dtype=bool),
         coastal=coastal[index],
+        contacts=neighbours,
         ground=ground,
         vote=vote,
     )
+
+
+def _contact_rows(
+    contacts: NDArray[np.int64], index: NDArray[np.int64], count: int
+) -> NDArray[np.int64]:
+    """The ``contacts`` (``adjacency_pairs`` of ``count`` labels) of two labels of ``index``, as
+    pairs of their rows in ``index``."""
+    row = np.full(count, -1, dtype=np.int64)
+    row[index] = np.arange(index.size, dtype=np.int64)
+    low = contacts >> np.int64(32)
+    high = contacts & np.int64((1 << 32) - 1)
+    known = (low >= 0) & (high >= 0) & (low < count) & (high < count)
+    first, second = row[low[known]], row[high[known]]
+    keep = (first >= 0) & (second >= 0)
+    return np.stack([first[keep], second[keep]], axis=1)
 
 
 def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and grounds.
@@ -1200,6 +1243,7 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
     topography: NDArray[np.int64],
     dry: NDArray[np.bool_],
     coastal: NDArray[np.bool_],
+    contacts: NDArray[np.int64],
     ground: tuple[NDArray[np.int64], NDArray[np.int64]],
     vote: tuple[
         NDArray[np.int64],
@@ -1211,10 +1255,11 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
 ) -> SizeModel:
     """The ``SizeModel`` of these locations, its votes weighed as the vote reads them.
 
-    The offset of a ground (``topography``, indices of ``TOPOGRAPHIES``) inland and on the coast
-    (``coastal``) is the mean of its locations' sizes less the size their class gives them, each
-    read without itself: the mean size of the ``NEIGHBOURS`` other locations of its pair nearest
-    in ``SIZE_COLUMNS`` (``class_sizes``). A location
+    A location's size off its class is its size less the size its class gives it, read without
+    itself: the mean size of the ``NEIGHBOURS`` other locations of its pair nearest in
+    ``SIZE_COLUMNS`` (``class_sizes``). The offsets of the grounds (``topography``, indices of
+    ``TOPOGRAPHIES``) inland and on the coast (``coastal``) are read from the locations that
+    touch (``contacts``: pairs of rows, ``_local_offsets``). A location
     of a ground no passable cell is given (-1: vanilla's few passable atolls and mountain
     wastelands) still sizes its class but sets no offset. ``ground`` is the vote's table of
     readings and the grounds of its rows (``SizeModel.ground_table``, ``SizeModel.grounds``),
@@ -1238,12 +1283,7 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
                 size[members][nearest].sum(axis=1) * PERMILLE, OCTAVE_PARTS * k
             )
     off = size * PERMILLE // OCTAVE_PARTS - given
-    offsets = np.zeros((2, len(TOPOGRAPHIES)), dtype=np.int64)
-    for side in (0, 1):
-        for kind in range(len(TOPOGRAPHIES)):
-            chosen = (topography == kind) & (coastal == bool(side))
-            if chosen.any():
-                offsets[side, kind] = int(off[chosen].sum()) // int(chosen.sum())
+    offsets = _local_offsets(off, topography, coastal, pairs, contacts)
     return SizeModel(
         features=features,
         pairs=pairs,
@@ -1271,6 +1311,89 @@ def size_table(  # noqa: PLR0913 - the locations, their classes, sizes and groun
         vote_dry=vote[3],
         vote_size=vote[4],
     )
+
+
+def _local_offsets(
+    off: NDArray[np.int64],
+    topography: NDArray[np.int64],
+    coastal: NDArray[np.bool_],
+    pairs: NDArray[np.int64],
+    contacts: NDArray[np.int64],
+) -> NDArray[np.int64]:
+    """How far, in thousandths of an octave, the locations of each ground lie off the size of
+    their class inland (row 0) and on the coast (row 1), read against the flatland beside them.
+
+    ``off`` is each location's size off its class (``size_table``). Over the ``contacts`` (pairs
+    of rows) of two locations of one pair, one of them flatland and the two of different ground
+    or coast, the offsets are those whose differences fit the differences of ``off`` best (least
+    squares, exactly, in fractions; floored). The grounds linked by such contacts keep the mean
+    ``off`` of their locations; a ground linked to none is its locations' mean, one with no
+    location (``topography`` -1 counts for none) none. Read so, the land beside a location
+    stands for its region: vanilla's mountains lie 0.16 of an octave under their class inland
+    and 0.11 over it on the coast, as a mountain region's locations are all smaller or all
+    larger, but within 0.07 of the flatland beside them [V-EXEC 2026-11-15].
+    """
+    kinds = len(TOPOGRAPHIES)
+    groups = 2 * kinds
+    flat = TOPOGRAPHIES.index("flatland")
+    known = topography >= 0
+    group = np.where(known, coastal.astype(np.int64) * kinds + topography, -1)
+    first, second = contacts[:, 0], contacts[:, 1]
+    star = (
+        known[first]
+        & known[second]
+        & (pairs[first] == pairs[second])
+        & ((topography[first] == flat) | (topography[second] == flat))
+        & (group[first] != group[second])
+    )
+    one, other = group[first[star]], group[second[star]]
+    difference = off[first[star]] - off[second[star]]
+    links = np.zeros((groups, groups), dtype=np.int64)
+    np.add.at(links, (one, other), 1)
+    np.add.at(links, (other, one), 1)
+    right = np.zeros(groups, dtype=np.int64)
+    np.add.at(right, one, difference)
+    np.add.at(right, other, -difference)
+    members = np.bincount(group[known], minlength=groups)
+    totals = np.zeros(groups, dtype=np.int64)
+    np.add.at(totals, group[known], off[known])
+    root = list(range(groups))
+
+    def find(node: int) -> int:
+        while root[node] != node:
+            node = root[node]
+        return node
+
+    for a, b in zip(*np.nonzero(links), strict=True):
+        root[find(int(a))] = find(int(b))
+    found = [0] * groups
+    for component in sorted({find(g) for g in range(groups) if members[g]}):
+        chosen = [g for g in range(groups) if members[g] and find(g) == component]
+        # The normal equations of the component, the first replaced by the mean that it keeps.
+        matrix = [
+            [Fraction(int(-links[g, h]) + (int(links[g].sum()) if g == h else 0)) for h in chosen]
+            for g in chosen
+        ]
+        values = [Fraction(int(right[g])) for g in chosen]
+        matrix[0] = [Fraction(int(members[g])) for g in chosen]
+        values[0] = Fraction(int(totals[chosen].sum()))
+        for g, value in zip(chosen, _solved(matrix, values), strict=True):
+            found[g] = math.floor(value)
+    return np.array(found, dtype=np.int64).reshape(2, kinds)
+
+
+def _solved(matrix: list[list[Fraction]], values: list[Fraction]) -> list[Fraction]:
+    """The solution of a square, regular linear system, exactly (Gauss-Jordan elimination)."""
+    size = len(values)
+    rows = [[*row, value] for row, value in zip(matrix, values, strict=True)]
+    for column in range(size):
+        pivot = next(row for row in range(column, size) if rows[row][column] != 0)
+        rows[column], rows[pivot] = rows[pivot], rows[column]
+        for row in range(size):
+            if row != column and rows[row][column] != 0:
+                factor = rows[row][column] / rows[column][column]
+                rows[row] = [a - factor * b for a, b in zip(rows[row], rows[column], strict=True)]
+    return [rows[row][size] / rows[row][row] for row in range(size)]
 
 
 def _location_sums(
@@ -1452,18 +1575,49 @@ def _cell_centres(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]:
     return np.stack([rows // found, columns // found], axis=1)
 
 
-def cell_sizes(
+def cell_edges(labels: NDArray[np.int32], count: int) -> NDArray[np.int64]:
+    """The contacts of the first ``count`` labels of ``labels`` (4-neighbours, as
+    ``newworld.derive_world`` reads a world's), one (lower, higher) row per pair."""
+    pairs = adjacency_pairs(labels)
+    low = pairs >> np.int64(32)
+    high = pairs & np.int64((1 << 32) - 1)
+    keep = (low >= 0) & (high >= 0) & (low < count) & (high < count)
+    return np.stack([low[keep], high[keep]], axis=1).astype(np.int64)
+
+
+def cell_pairs(
+    model: SizeModel, centred: NDArray[np.int64], *, edges: NDArray[np.int64]
+) -> NDArray[np.int64]:
+    """The (climate, vegetation) pair (an index of ``SizeModel.vote_pairs``) ``assign_biomes``
+    gives each cell with open climates, from the ``land_features`` read at its centre
+    (``centred``): the weights matched to these cells through ``OPEN_CLIMATE_ROUNDS`` of
+    smoothing over their contacts (``edges``, ``smoothed_pairs``)."""
+    vote_train, vote_rows = _standardize(
+        model.vote_table, centred, land_weights(int(centred.shape[1]))
+    )
+    scores = knn_scores(vote_train, model.vote_pairs, vote_rows, int(model.vote_climate_of.size))
+    choose = partial(
+        smoothed_pairs, climate_of=model.vote_climate_of, edges=edges, rounds=OPEN_CLIMATE_ROUNDS
+    )
+    weights = matched_weights(scores, model.vote_weights, choose)
+    return choose(scores * weights[np.newaxis, :])
+
+
+def cell_sizes(  # noqa: PLR0913 - the model, the cells' readings, coast and contacts.
     model: SizeModel,
     features: NDArray[np.int64],
     centred: NDArray[np.int64],
     ground: NDArray[np.int64],
     coastal: NDArray[np.bool_],
+    *,
+    edges: NDArray[np.int64],
 ) -> NDArray[np.int64]:
     """How large vanilla makes its locations of the class and ground each cell will be given,
     as log2 over its region's median in thousandths of an octave (``class_sizes``).
 
-    Each cell's pair is voted as ``assign_biomes`` votes it, on the ``land_features`` read at its
-    centre (``centred``) by ``SizeModel.vote_table``, the weights matched to these cells; its
+    Each cell's pair is voted as ``assign_biomes`` votes it (``cell_pairs``: on the
+    ``land_features`` read at its centre, ``centred``, by ``SizeModel.vote_table``, smoothed
+    over the cells' contacts, ``edges``, the weights matched to these cells); its
     ground as the final cells' is, from the votes of its land (``ground``,
     ``cell_ground_scores``; ``choose_grounds``, matched; a desert is never wetland). The size is
     the mean of the ``NEIGHBOURS`` vanilla locations of that pair
@@ -1477,13 +1631,7 @@ def cell_sizes(
     if model.vote_pairs.size == 0 or model.pairs.size == 0:
         message = "The size model has no land location to learn from"
         raise ValueError(message)
-    vote_train, vote_rows = _standardize(
-        model.vote_table, centred, land_weights(int(centred.shape[1]))
-    )
-    scores = knn_scores(vote_train, model.vote_pairs, vote_rows, int(model.vote_climate_of.size))
-    choose = partial(chosen_pairs, climate_of=model.vote_climate_of)
-    weights = matched_weights(scores, model.vote_weights, choose)
-    voted = choose(scores * weights[np.newaxis, :])
+    voted = cell_pairs(model, centred, edges=edges)
     pair = model.vote_size[voted]
     missing = pair < 0
     if missing.any():
@@ -1855,8 +2003,9 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     it the cells keep the class they came with, the highest ones being wasteland. With
     ``open_climate`` (epoch 64, ``epoch.OPEN_CLIMATE``) the vote learns from the Americas too,
     without the cultivated land, weighs each pair so that it reads vanilla as it is
-    (``calibrated_weights``), matches those weights to the world's own land (``matched_weights``)
-    and smooths over ``OPEN_*_ROUNDS``. The ground of cells with a ``Generated.ruggedness`` (epoch
+    (``calibrated_weights``), smooths over ``OPEN_*_ROUNDS`` and matches those weights to the
+    world's own land through the smoothing (``matched_weights``, ``smoothed_pairs``). The ground
+    of cells with a ``Generated.ruggedness`` (epoch
     64) is voted once over all the land by the vanilla locations of ``ground`` (the ``SizeModel``
     of the game's map, ``vote_grounds``, matched alike), which they then require. With
     ``pooled_resources`` (epoch 64, ``epoch.POOLED_RESOURCES``) the raw materials are drawn from
@@ -1884,17 +2033,23 @@ def assign_biomes(  # noqa: PLR0913 - one pass over the calibrated biome model.
     )
     train_s, query_s = _standardize(train_x, query_x, land_weights(int(query_x.shape[1])))
     scores = knn_scores(train_s, joint_ids, query_s, len(joint_names))
-    if open_climate:
-        weights = matched_weights(
-            scores,
-            calibrated_weights(train_s, joint_ids, joint_climate),
-            partial(chosen_pairs, climate_of=joint_climate),
-        )
-        scores = scores * weights[np.newaxis, :]
     position = np.full(count, -1, dtype=np.int64)
     position[land_cells] = np.arange(land_cells.size)
     edges = _edge_array(cells.edges, land)
     local_edges = position[edges] if edges.size else edges
+    if open_climate:
+        # Matched through the smoothing, so that the smoothed vote keeps each pair's share.
+        weights = matched_weights(
+            scores,
+            calibrated_weights(train_s, joint_ids, joint_climate),
+            partial(
+                smoothed_pairs,
+                climate_of=joint_climate,
+                edges=local_edges,
+                rounds=OPEN_CLIMATE_ROUNDS,
+            ),
+        )
+        scores = scores * weights[np.newaxis, :]
     climate_choice, vegetation_choice = regularize_votes(
         scores,
         joint_climate,

@@ -442,27 +442,56 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
     planned area around each seed changed nothing (coastal wetlands −0.23, hills +0.32 on the same
     cells), and neither did keeping the seeds back from the sea (coastal cells outgrew the inland
     ones and the land lost 7–9 % of its cells) or re-estimating the ground offsets. Now the seed of
-    each cell beside water moves to the centre of the cell it grew, twice (Lloyd's relaxation of
-    the shore, `watersheds.RELAX_STEPS`), and a seed grows faster by the root of the land's share
-    of its planned square (`SHORE_SHARE_FLOOR`). Pooled over four worlds the coastal hills are 0.05
-    larger than the coastal flatland beside them (0.03) and the coastal wetlands 0.01 larger
-    (0.03); without the faster shore the hills are 0.14 larger. Moving every seed evened the coast
-    no better (0.07 and −0.01) but laid the land out in a lattice of diamonds, the shape the
-    four-neighbour growth gives regular seeds.
+    each cell beside water moves once to the centre of the cell it grew (Lloyd's relaxation of the
+    shore, `watersheds.RELAX_STEPS`), and twice the speed of each such cell is corrected toward its
+    planned share of the land it and its neighbours grew (`SHORE_FEEDBACK_STEPS`, `_shore_gains`:
+    by the root of that share over its own area). The first version of this (C537) moved the seeds
+    twice and sped every seed by the root of the land's share of its planned square; it evened the
+    coastal hills (+0.05) partly by inflating every coastal cell, its coastal flatland 0.05 of an
+    octave larger than the inland flatland beside it where vanilla's is 0.17 and 0.10 smaller
+    (relaxed without the faster shore −0.06, not relaxed at all −0.24). Corrected toward the share
+    of all the land, the coastal cells grew into the next row (+0.43); every cell corrected, the
+    sizes evened out (neighbours more than an octave apart in 38 ‰ of the grown pairs, not 70–80);
+    moved again after the last correction, +0.10. Moving every seed evened the coast no better and
+    laid the land out in a lattice of diamonds, the shape the four-neighbour growth gives regular
+    seeds.
+  - The ground offsets of the size model (C538) were each ground's mean off its class over the
+    whole map, and so mixed in its regions: a mountain region's locations are all small inland and
+    all large on the coast, and the plan made inland mountain cells 0.21 of an octave smaller than
+    the plain beside them and coastal ones 0.20 larger. They are now read against the land beside
+    each location (`_local_offsets`: least squares over the contacts of two locations of one pair,
+    one of them flatland), which puts vanilla's mountains 0.07 under the flatland beside them
+    inland and on the coast, its hills 0.06 and 0.03 over it, its wetlands level with it and its
+    coastal flatland 0.11 under the inland's. A coastal cell that grew large still reaches the high
+    land behind the shore: among the coastal cells the share of mountain rises from 27 ‰ in the
+    fifth smallest for their plan to 67 ‰ in the largest, and the corrected shore narrows that
+    spread.
 
-  On whole locations of `kkgvhey7ry` (the land of `qjkrrkxfot`, its peoples rolled again):
-  neighbours more than an octave apart in 96 ‰ of the pairs, more than two in 4.2 ‰, more than
-  three in 0.3 ‰ (vanilla 99–108, 4.1–4.4 and 0.1), locations under a quarter of their neighbours'
-  median 0.9 ‰ (0.7–0.9); coastal wetlands −0.11 and hills +0.03 against their flatland, inland
-  +0.01 and +0.05; wetlands 0.99 of the median, hills 1.07, plateaus 1.22, mountains 0.74
-  [V-EXEC 2026-11-15]. What remains: coastal mountains are still 0.16 of an octave larger than the
-  flatland beside them (standard error 0.05; vanilla +0.04 and −0.05) and inland ones 0.16 smaller
-  (0.05; vanilla −0.02 and −0.09), as before the shore was relaxed (−0.14).
+  Pooled over the four worlds' grown cells with all three and the smoothed climate (below): coastal
+  flatland 0.015 of an octave smaller than the inland flatland beside it (its plan 0.007; vanilla
+  0.17 and 0.10); against the flatland of their pair and coast, coastal hills +0.08 (standard
+  error 0.02), wetlands −0.02 (0.03) and mountains +0.09 (0.04), inland hills +0.02, wetlands
+  −0.06, plateaus −0.03 and mountains −0.09 (0.03), where before coastal mountains were +0.16 and
+  inland ones −0.16; neighbours more than an octave apart in 70 ‰ of the grown pairs and more than
+  two in 3.4 ‰ (80 and 4.1 before) [V-EXEC 2026-11-15].
+  On whole locations of `uc6q6tihfq` (the land of `kkgvhey7ry`, its peoples rolled again):
+  coastal flatland 0.05 of an octave smaller than the inland flatland beside it (vanilla's Old
+  World 0.17, the Americas 0.10; `kkgvhey7ry` 0.06 larger); inland mountains −0.09 against the
+  flatland beside them (vanilla −0.09 and −0.02; before −0.29), hills −0.00 (+0.01, −0.00),
+  wetlands −0.06 (−0.05, −0.06), plateaus +0.04 (−0.05, +0.04); coastal hills +0.12 (+0.03,
+  +0.09) and wetlands −0.09 (−0.03, +0.10); neighbours more than an octave apart in 88 ‰ of the
+  pairs, more than two in 4.2 ‰, more than three in 0.3 ‰ (vanilla 99–108, 4.1–4.4 and 0.1;
+  before 96, 4.2 and 0.3), locations under a quarter of their neighbours' median 0.7 ‰ (0.7–0.9)
+  [V-EXEC 2026-11-15]. What remains: a single world holds too few coastal mountains to read (four
+  here); pooled, they are 0.09 of an octave larger than the flatland beside them (standard error
+  0.04; vanilla +0.04 and −0.05). The plan wants the coastal flatland 0.10 smaller than the inland,
+  but the first cells, the blocks and the grading dilute the offset to 0.01 before the cells grow.
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
-  well, leaves farmland out instead of reading it as grassland, and is not smoothed over the location
-  graph. A plurality of 32 neighbours seldom names a class that is rare among them: each vanilla
-  location read without itself, the vote gave 72 ‰ of them a semi-arid or cold arid climate where
-  91 ‰ have one, and too many a Mediterranean one. The pairs' votes are therefore weighed so that
+  well, leaves farmland out instead of reading it as grassland, and is smoothed over the location
+  graph once, its weights matched through that smoothing (below). A plurality of 32 neighbours
+  seldom names a class that is rare among them: each vanilla location read without itself, the
+  vote gave 72 ‰ of them a semi-arid or cold arid climate where 91 ‰ have one, and too many a
+  Mediterranean one. The pairs' votes are therefore weighed so that
   the vote, each location read by its 32 nearest others, chooses every pair about as often as vanilla
   holds it (`calibrated_weights`: ten rounds from the cube root of the inverse of the pair's share,
   each multiplying a weight by the square root of its locations over the locations it was chosen
@@ -477,6 +506,21 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   55° lies over 400 pixels from the sea (the Americas 13 %, the Old World 19 %) and its high land
   lies near the equator (a median 10°, where the Americas' dry highlands lie at 15–21°), wet all
   year as the equatorial Andes are [V-EXEC 2026-11-14].
+  Unsmoothed, the vote speckled the land: on `kkgvhey7ry` 51 passable locations in a thousand had a
+  climate none of their neighbours shared (vanilla's Old World 13, the Americas 30), 133 one that
+  fewer than a third of them shared (42, 83), and a climate region held 9.3 locations (26.3, 13.0);
+  the dry and Mediterranean climates were the scattered ones (100–200 ‰ of their locations alone).
+  Three rounds had eaten those climates (C534) because a plurality of smoothed votes again favours
+  the class most of the neighbours hold. Now the votes are smoothed once (`OPEN_CLIMATE_ROUNDS`,
+  `OPEN_VEGETATION_ROUNDS`) and the weights are matched to the world through that smoothing
+  (`smoothed_pairs`), so the smoothed vote keeps each pair's share: over four worlds' cells 13 ‰
+  stand alone, a region holds 20 cells, and the semi-arid, cold arid and Mediterranean land is
+  203 ‰ where the neighbours hold 196 ‰ (unsmoothed 199 ‰); two rounds left 7 ‰ and 27 cells but
+  drifted twice as far from the shares (24 ‰ against 16 ‰) [V-EXEC 2026-11-15]. On the whole
+  locations of `uc6q6tihfq` 14 ‰ stand alone, 42 ‰ share their climate with fewer than a third of
+  their neighbours, a region holds 19.1 locations and 176 ‰ of the neighbours differ in climate
+  (vanilla 148 and 215; `kkgvhey7ry` 277) [V-EXEC 2026-11-15]. The first cells are voted the same
+  way over their own contacts (`cell_pairs`), so they are still sized by the class they will have.
 * **The ground voted** (`ROUGH_HILLS`, `eu5_biomes.vote_grounds`). The ground of the passable land
   is voted, as its climate is, by the 32 vanilla Old World locations nearest in four readings of the
   height the decals show (the worn relief, below), taken as they are and scaled by vanilla's spread:
