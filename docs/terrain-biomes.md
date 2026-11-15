@@ -486,6 +486,14 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   here); pooled, they are 0.09 of an octave larger than the flatland beside them (standard error
   0.04; vanilla +0.04 and −0.05). The plan wants the coastal flatland 0.10 smaller than the inland,
   but the first cells, the blocks and the grading dilute the offset to 0.01 before the cells grow.
+  This world's coastal hills (+0.12, `kkgvhey7ry` +0.03) lie at the top of vanilla's range; pooled
+  they are +0.08. Neighbouring sizes now contrast less than vanilla's (88 ‰ of the pairs more than
+  an octave apart, vanilla 99–108; the spread of the log sizes 1.08, vanilla 1.21–1.25). On the
+  four worlds' grown cells the corrected shore takes 9 ‰ of that contrast (79 ‰ without it, with
+  coastal hills +0.22 and mountains +0.31 and the spread of the coastal growth 0.45 instead of
+  0.36) and the smoothed climate 4 ‰ (74 ‰ unsmoothed): what it removes is the shore's growth
+  noise and the speckle's size jumps, not planned variety, but the planned sizes themselves vary
+  less than vanilla's [V-EXEC 2026-11-15].
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is smoothed over the location
   graph once, its weights matched through that smoothing (below). A plurality of 32 neighbours
