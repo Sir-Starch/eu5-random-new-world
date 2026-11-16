@@ -21,7 +21,7 @@ import numpy as np
 
 from rnw import _native, epoch, omerika, wall
 from rnw.basins import shape_relief
-from rnw.eu5_biomes import ground_field
+from rnw.eu5_biomes import coastal_offsets, ground_field
 from rnw.eu5_terrain import land_surface
 from rnw.fields import SUBPIXEL, fractal_at, upsample, warped_noise
 from rnw.gulfs import carve_inland_seas
@@ -1119,7 +1119,10 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         key=derive_seed(seed, "nw_land_density"),
         spacing=spacing,
     )
-    del first, climate, surface, sea, ground
+    del first
+    # The final cells beside the sea grow as large as their plan at the density of the inland
+    # cells round them, moved by vanilla's offset of their ground on the coast, read on the cells
+    # as they grow; the inland ones within a band of theirs (``watersheds._density_gains``).
     cells = river_cells(
         land,
         walls,
@@ -1127,7 +1130,9 @@ def _river_cells(  # noqa: PLR0913 - the land, lakes and relief, the seed, setti
         spacing=spacing,
         grid=grid,
         smallest=settings.min_cell_px,
+        coast=partial(coastal_offsets, sizes, height=surface, grid=climate, sea=sea, ground=ground),
     )
+    del climate, surface, sea, ground
     return cells, walls, plan, grid
 
 

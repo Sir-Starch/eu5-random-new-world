@@ -14,8 +14,9 @@ Tauri-window low-confidence heuristic in writing (C532). The current compatibili
 whose pending epoch is **64** (natural wastelands, `rnw.barrens`; cordilleras, rivers before
 cells, open climate, rough hills, C534; pooled raw materials, C535; cells sized by what they
 become and graded, C536; coastal cells sized like inland ones, C537; grounds sized against their
-neighbours, the shore corrected and the climate smoothed once, C538). An output change in this cycle
-refines that epoch; one after its tag starts a new one (ADR 0003).
+neighbours, the shore corrected and the climate smoothed once, C538; coastal cells sized at the
+inland density, inland cells banded, two gradations, gentler polar approach, C539). An output
+change in this cycle refines that epoch; one after its tag starts a new one (ADR 0003).
 Check the installed build before work that depends on game files, and audit changed inputs after
 a game patch.
 

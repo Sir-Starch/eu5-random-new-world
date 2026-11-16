@@ -262,6 +262,128 @@ def test_a_shore_cell_is_sped_to_its_share_of_its_neighbourhood() -> None:
     assert watersheds._shore_gains(grown, planned, np.full(4, 3000), shore).max() == 4000  # pyright: ignore[reportPrivateUsage]
 
 
+def test_a_coastal_cell_is_sped_to_its_plan_at_the_inland_density() -> None:
+    grown = np.full((2, 70), -1, dtype=np.int32)
+    grown[:, :5] = 0  # 10 pixels on the shore, beside the inland 1 (60 pixels)
+    grown[:, 5:35] = 1
+    grown[:, 36:56] = 2  # 40 inland pixels across a wall pixel
+    grown[:, 56:60] = 3  # 8 pixels on the shore beside 2, its seed far from the inland seeds
+    planned = np.full(4, 1000, dtype=np.int64)
+    gain = np.full(4, 1000, dtype=np.int64)
+    shore = np.array([True, False, False, True])
+    blocks = (np.zeros(4, dtype=np.int64), np.array([0, 1, 2, 9], dtype=np.int64))
+
+    def gains(offset: int) -> list[int]:
+        offsets = np.array([offset, 0, 0, offset], dtype=np.int64)
+        return watersheds._density_gains(  # pyright: ignore[reportPrivateUsage]
+            grown, planned, gain, shore, blocks=blocks, shape=(1, 20), offsets=offsets
+        ).tolist()
+
+    # 0: the inland seeds within four blocks (1 and 2, the columns wrapping) grew 100 pixels for
+    # two planned squares, so its plan is 50 pixels: twice as fast, no more (the root of 50 over
+    # 10 is 2.24); an octave smaller, 25: the root of 25 over 10. 1 and 2 are inland and keep
+    # their speed. 3 has no inland seed so near and is sped to its share of its neighbourhood: the
+    # root of 24 over 8.
+    assert gains(0) == [2000, 1000, 1000, 1732]
+    assert gains(-1000) == [math.isqrt(25 * 1000 * 1000 // 10), 1000, 1000, 1732]
+
+
+def test_an_inland_cell_is_kept_within_a_band_of_its_plan() -> None:
+    grown = np.zeros((2, 51), dtype=np.int32)
+    grown[:, 45:] = 1  # 10 pixels hemmed in beside 90
+    grown[:, 50] = 2  # 2 pixels, planned a quarter of the area of the others
+    planned = np.array([1000, 1000, 500], dtype=np.int64)
+    gain = np.full(3, 1000, dtype=np.int64)
+    shore = np.zeros(3, dtype=bool)
+    blocks = (np.zeros(3, dtype=np.int64), np.array([0, 1, 1], dtype=np.int64))
+    out = watersheds._density_gains(  # pyright: ignore[reportPrivateUsage]
+        grown, planned, gain, shore, blocks=blocks, shape=(1, 8), offsets=np.zeros(3, np.int64)
+    ).tolist()
+    # The three grew 102 pixels for 2.25 planned squares: 45 for each square. 0 (90) lies over
+    # 2^(3/4) of that (75) and is slowed to it, 1 (10) under 2^(-3/4) (26) and sped to it, 2 (2
+    # against 11) to 6.
+    assert out == [
+        math.isqrt(75 * 1000 * 1000 // 90),
+        math.isqrt(26 * 1000 * 1000 // 10),
+        math.isqrt(6 * 1000 * 1000 // 2),
+    ]
+
+
+def test_coastal_cells_follow_their_offset_by_the_sea() -> None:
+    land = np.zeros((256, 512), dtype=bool)
+    land[:, 64:] = True
+    walls = np.zeros_like(land)
+    grid = np.full((8, 16), 1000, dtype=np.int64)
+
+    def ratio(offset: int) -> float:
+        """The coastal cells' mean size over the inner ones'."""
+        cells = watersheds.river_cells(
+            land,
+            walls,
+            key=5,
+            spacing=32,
+            grid=grid,
+            smallest=10,
+            coast=lambda _grown, count: np.full(count, offset, dtype=np.int64),
+        )
+        pixels = np.bincount(cells[cells >= 0])
+        coastal = np.unique(cells[:, 64])
+        edges = np.unique(np.concatenate([cells[0], cells[-1], cells[:, -1], coastal]))
+        inner = np.setdiff1d(np.flatnonzero(pixels), edges)
+        return float(pixels[coastal].mean() / pixels[inner].mean())
+
+    level, smaller = ratio(0), ratio(-1000)
+    assert abs(math.log2(level)) < 0.25
+    assert smaller < level * 0.9
+
+
+def test_coastal_offsets_are_the_grounds_by_the_sea() -> None:
+    land = _land(9, (640, 640))
+    height = relief.generate_relief(land, seed=9)
+    climate = watersheds.domain_climate(land, np.zeros_like(land), height)
+    ground = ground_field(SIZES, land, height, climate)
+    grid = watersheds.spacing_grid(
+        land, height, climate, sea=~land, polar_rows=0, sizes=SIZES, ground=ground, spacing=32
+    )
+    cells = watersheds.river_cells(
+        land, np.zeros_like(land), key=1, spacing=32, grid=grid, smallest=40
+    )
+    count = int(cells.max()) + 1
+    sea = ~land
+    sea[: land.shape[0] // 2] = False  # the northern water is a lake: its shore is inland
+    offsets = eu5_biomes.coastal_offsets(
+        SIZES, cells, count, height=height, grid=climate, sea=sea, ground=ground
+    )
+    _, _, _, coastal = eu5_biomes.cell_readings(cells, count, height, climate, sea, ground=ground)
+    assert coastal.any()
+    assert not coastal.all()
+    assert np.all(offsets[~coastal] == 0)
+    flatland = int(SIZES.offsets[0, TOPOGRAPHIES.index("flatland")])
+    allowed = {int(value) - flatland for value in SIZES.offsets[1]}
+    assert set(offsets[coastal].tolist()) <= allowed
+
+
+def test_the_land_widens_gently_toward_the_polar_bands() -> None:
+    shape = (16, 8)
+    polar = np.zeros(shape, dtype=bool)
+    polar[:2] = True
+    polar[-2:] = True
+    share = np.full(shape, 1024, dtype=np.int64)
+    small = np.full(shape, -3000, dtype=np.int64)  # dense land, narrowed further by the density
+    for density, gradation in ((np.full(shape, -1000), watersheds.GRADATION), (None, 300)):
+        grid = watersheds._graded_grid(  # pyright: ignore[reportPrivateUsage]
+            small, share, polar, 32, density, gradation=gradation
+        )
+        gentle = gradation // watersheds.APPROACH_SLOWER
+        half = watersheds.POLAR_SPACING * 1000 // 1414
+        # The bands keep their spacing; the first blocks before them have half their cells' area
+        # and the land narrows from there at the gentler rate, the density notwithstanding.
+        assert np.all(grid[:2] == watersheds.POLAR_SPACING)
+        assert np.all(grid[2] == half)
+        assert np.all(grid[3] == half - gentle)
+        assert np.array_equal(grid, grid[::-1])
+
+
 def test_seeds_grow_at_their_own_speed() -> None:
     mask = np.ones((3, 31), dtype=bool)
     seeds = np.full(mask.shape, -1, dtype=np.int32)
@@ -285,7 +407,7 @@ def test_the_spacing_keeps_the_number_of_cells() -> None:
     )
     _assert_spacing_keeps_the_cells(land, grid)
     # Neighbouring blocks of land differ by at most the gradation of a block.
-    slope = watersheds.GRADATION * watersheds.DENSITY_STEP // 32
+    slope = watersheds.FIRST_GRADATION * watersheds.DENSITY_STEP // 32
     has = _blocks_with_land(land)
     for first, second, both in (
         (grid[:, :-1], grid[:, 1:], has[:, :-1] & has[:, 1:]),

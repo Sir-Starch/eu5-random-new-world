@@ -111,7 +111,9 @@ def test_continent_cells_continue_through_the_middle_of_the_canvas() -> None:
 
 def test_polar_contacts_are_narrow_large_and_impassable() -> None:
     """A continent may approach a pole, but cannot fill the whole map edge."""
-    domain = np.ones((240, 480), dtype=bool)
+    # Tall enough that the middle rows lie beyond the polar bands and the land widening gently
+    # toward them (``watersheds.APPROACH_SLOWER``): 240 rows were band and approach throughout.
+    domain = np.ones((400, 480), dtype=bool)
     worlds = [
         generate_new_world(domain, seed=seed, settings=SMALL, sizes=SIZES) for seed in range(8)
     ]
@@ -121,7 +123,7 @@ def test_polar_contacts_are_narrow_large_and_impassable() -> None:
         interior = [
             int(world.pixels[i])
             for i, kind in enumerate(world.classes)
-            if kind in LAND_KINDS and 80 <= world.centroids[i, 0] < 160
+            if kind in LAND_KINDS and 160 <= world.centroids[i, 0] < 240
         ]
         for row in (0, -1):
             assert np.count_nonzero(land[row]) <= 8 * SMALL.location_px

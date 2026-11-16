@@ -55,6 +55,8 @@ from rnw.synth import first_pixels, grow_regions, grow_weighted, merge_small
 from rnw.topology import adjacency_pairs, label_components
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from numpy.typing import NDArray
 
     from rnw.eu5_biomes import SizeModel
@@ -201,13 +203,28 @@ POLAR_SPACING: Final[int] = 3000  # permille of the spacing in the polar bands, 
 # The narrowest and widest spacing of the land outside them, permille of the uniform spacing:
 # 2^(-3/4) and 2^(7/4), a cell from 0.35 to 11 times the uniform area, as before.
 SPACING_RANGE: Final[tuple[int, int]] = (595, 3364)
-# How fast the spacing may grow with distance, in thousandths of a pixel per pixel: a location
-# is then at most 1.3 times as wide as a neighbour one of its own widths away, so neighbouring
-# locations differ by at most 0.76 of an octave in area before their seeds are drawn. Vanilla's
-# neighbours differ by more than an octave in 100 and 109 permille of its Old World's and
-# Americas' pairs of land locations and by more than two in 5; sized block by block, the
-# generated ones did in 299 and 65 permille [V-EXEC 2026-11-15].
-GRADATION: Final[int] = 300
+# How fast the spacing of the final cells may grow with distance, in thousandths of a pixel per
+# pixel: a location is then at most 1.5 times as wide as a neighbour one of its own widths away.
+# Vanilla's neighbours differ by more than an octave in 100 and 109 permille of its Old World's
+# and Americas' pairs of land locations and by more than two in 5; sized block by block, the
+# generated ones did in 299 and 65 permille [V-EXEC 2026-11-15]. The cells' own targets differ
+# as often as vanilla's (103 to 107 permille over an octave); graded at 300, the plan held 21 and
+# the grown cells of eight worlds 69 and 2.9, the polar bands left out; at 500, with the inland
+# cells kept within ``SIZE_BAND`` of their plan, 46 and the grown cells 87 and 3.0 [V-EXEC
+# 2026-11-16, seeds 20261115, 42, 7, 1234, 99, 2026, 31337 and 555].
+GRADATION: Final[int] = 500
+# The first cells (``spacing_grid``) are graded more gently: a coastal cell whose plan is large
+# reaches the high land behind the shore and is voted mountain, so the steeper the first cells'
+# sizes change, the larger the coastal mountain blocks the final cells are planned on came out
+# (against the coastal flatland of their pair: +0.005 of an octave at 300, +0.04 at 400, +0.09 at
+# 500), and the final cells followed them [V-EXEC 2026-11-16, eight worlds as above].
+FIRST_GRADATION: Final[int] = 300
+# The land before a polar band widens toward it this many times more slowly than ``GRADATION``
+# allows: at the full rate the spacing doubled within three blocks where the cells are small, and
+# the pairs of cells beside the bands differed by more than two octaves in 40 to 50 permille of
+# them (28 pooled), ten times as often as elsewhere; widening at half the rate, and never narrowed
+# by the settlement noise (``_graded_grid``), in 5 [V-EXEC 2026-11-16].
+APPROACH_SLOWER: Final[int] = 2
 # Settlement that the land's class does not explain: vanilla's locations lie off the size their
 # class gives them by 0.74 and 0.87 of an octave (standard deviations, Old World and Americas),
 # and that remainder is shared by neighbours (correlation 0.51 and 0.58) and fades over 300 to
@@ -243,11 +260,43 @@ SEED_CANDIDATES: Final[int] = 3
 # every cell corrected, the neighbours of a grown cell differed by more than an octave in 38
 # permille of the pairs, not 70; every seed moved, the land lay in a lattice of diamonds, the
 # shape the four-neighbour growth gives regular seeds [V-EXEC 2026-11-15, seeds 20261115, 42, 7
-# and 1234, grown cells].
+# and 1234, grown cells]. A share of its own neighbourhood depends on whom a cell borders: a
+# coastal mountain cell borders more inland cells, which the sea does not cut, than the coastal
+# flatland beside it, and was given 0.055 of an octave more land for it; and the plan, read from
+# blocks of first cells whose ground is the final cell's for three in five coastal mountains,
+# carries little of vanilla's offsets on the coast (coastal mountains planned 0.02 larger than the
+# coastal flatland beside them, their size 0.07 smaller): over eight worlds the coastal mountains
+# came out 0.09 larger (standard error of the worlds' means 0.025). The final cells beside the sea
+# are therefore corrected instead toward their planned square at the density of the inland cells
+# round them (``SHORE_DENSITY_BLOCKS``), moved by vanilla's offset of their ground on the coast
+# against its inland flatland (``eu5_biomes.coastal_offsets``, read on the cells as they grow).
+# Unlike the share of all the land, which knew no offset, this plans the coast smaller than the
+# inland round it, as vanilla's is. Pooled, with ``SIZE_BAND``, ``GRADATION`` and
+# ``FIRST_GRADATION``: coastal mountains 0.03 larger than the coastal flatland beside them (0.03),
+# coastal hills 0.04, inland mountains 0.05 smaller, coastal flatland 0.02 smaller than the inland
+# (0.00 before; its plan's offset is diluted by the first cells and the blocks). Tried and worse
+# for the coastal mountains: every seed sped toward the size its first cell was given (+0.17; the
+# class of a coastal cell follows its extent, so the cells whose target came out large grew
+# large), a third pass of cells (+0.11), four corrections (+0.08), no river walls (+0.10), the
+# coastal offset of the cell's own ground instead of against the inland flatland (+0.05), the
+# mean inland cell round it instead of its own plan (coastal flatland 0.07 larger) [V-EXEC
+# 2026-11-16, seeds 20261115, 42, 7, 1234, 99, 2026, 31337 and 555, grown cells].
 RELAX_STEPS: Final[int] = 1
 SHORE_FEEDBACK_STEPS: Final[int] = 2
 SHORE_GAIN_STEP: Final[tuple[int, int]] = (500, 2000)  # permille of a cell's speed, per growth
 SHORE_GAIN_RANGE: Final[tuple[int, int]] = (250, 4000)  # permille of its spacing, in all
+# The final cells beside the sea are corrected toward their planned square at the density of the
+# inland cells whose seeds lie within this many ``DENSITY_STEP`` blocks of theirs (``river_cells``
+# with ``coast``), not toward their share of their own neighbours.
+SHORE_DENSITY_BLOCKS: Final[int] = 4
+# An inland final cell that grew more than this (thousandths of an octave of area) off its planned
+# square at that density is corrected back to the edge of the band, the others not: a slow seed
+# among fast ones was hemmed in (the smaller cell of an inland pair over two octaves had a
+# neighbour planned 0.73 of an octave larger, against 0.34 for all inland cells; its seed lay as
+# far from the others as any), and those pairs grew 1.1 octaves apart beyond their plans.
+# Corrected all the way, every cell evened the land (38 permille of the pairs over an octave);
+# within the band the growth keeps its variety [V-EXEC 2026-11-16, eight worlds as above].
+SIZE_BAND: Final[int] = 750
 CENTRE_STRIP: Final[int] = 512  # rows of the grown cells read at a time
 SPACING_PARTS: Final[int] = 64  # spacing exponents are 64ths of an octave
 SHIFT_OCTAVES: Final[int] = 6  # the whole spacing is scaled by at most this many octaves
@@ -330,7 +379,8 @@ def spacing_grid(  # noqa: PLR0913 - the land, sea, relief and climate, bands, m
     Each ``SIZE_STEP`` block of land takes the size of the vanilla locations of the class the
     vote will give it and of the ground its land votes (``ground``, ``block_ground_scores``), on
     the coast if it holds ``sea`` (``eu5_biomes.class_sizes``), graded and scaled as
-    ``_graded_grid`` does. The ``polar_rows`` rows at either edge keep ``POLAR_SPACING``.
+    ``_graded_grid`` does at ``FIRST_GRADATION``. The ``polar_rows`` rows at either edge keep
+    ``POLAR_SPACING``.
     """
     step = DENSITY_STEP
     share = _land_share(land)
@@ -344,7 +394,9 @@ def spacing_grid(  # noqa: PLR0913 - the land, sea, relief and climate, bands, m
     ratio = SIZE_STEP // step
     shape = share.shape
     size = np.repeat(np.repeat(coarse, ratio, axis=0), ratio, axis=1)[: shape[0], : shape[1]]
-    return _graded_grid(size, share, _polar(shape, polar_rows), spacing, None)
+    return _graded_grid(
+        size, share, _polar(shape, polar_rows), spacing, None, gradation=FIRST_GRADATION
+    )
 
 
 def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea, bands, model, key.
@@ -394,7 +446,7 @@ def cell_spacing_grid(  # noqa: PLR0913 - the land's cells, relief, climate, sea
             size[blocks] = np.floor_divide(total, np.maximum(pixels, 1))
     polar = _polar(shape, polar_rows)
     density = _density(key, shape, (share > 0) & ~polar)
-    return _graded_grid(size, share, polar, spacing, density)
+    return _graded_grid(size, share, polar, spacing, density, gradation=GRADATION)
 
 
 def _blocks_holding(mask: NDArray[np.bool_], shape: tuple[int, ...]) -> NDArray[np.bool_]:
@@ -433,19 +485,22 @@ def _polar(shape: tuple[int, int], polar_rows: int) -> NDArray[np.bool_]:
     return polar
 
 
-def _graded_grid(
+def _graded_grid(  # noqa: PLR0913 - the sizes, land, bands, spacing, density and gradation.
     size: NDArray[np.int64],
     share: NDArray[np.int64],
     polar: NDArray[np.bool_],
     spacing: int,
     density: NDArray[np.int64] | None,
+    *,
+    gradation: int,
 ) -> NDArray[np.int64]:
     """The spacing (permille of the uniform ``spacing``) of blocks whose cells should be ``size``
     (thousandths of an octave of area): within ``SPACING_RANGE``, graded (``grade_spacing``,
-    ``GRADATION``; the polar blocks keep ``POLAR_SPACING`` ungraded, for their cells become the
-    large wastelands of the map's edge, and the land before them widens toward them at the same
-    rate from half their area), then moved by the settlement
-    ``density`` (thousandths of an octave of area), which is smooth and needs no grading, and
+    ``gradation``; the polar blocks keep ``POLAR_SPACING`` ungraded, for their cells become the
+    large wastelands of the map's edge, and the land before them widens toward them
+    ``APPROACH_SLOWER`` times more slowly from half their area), then moved by the settlement
+    ``density`` (thousandths of an octave of area), which is smooth and needs no grading and
+    never narrows the land before the bands, and
     scaled as a whole, in 64ths of an octave, so that the land outside the polar bands expects
     as many cells as the uniform spacing gives it. Vanilla's own sizes change between classes
     over a location or two, not at once: neighbouring locations differ by more than an octave
@@ -460,13 +515,14 @@ def _graded_grid(
         if density is None
         else spacing_permille(np.floor_divide(density * (SPACING_PARTS // 2), PERMILLE))
     )
-    slope = GRADATION * DENSITY_STEP // max(1, spacing)
+    slope = gradation * DENSITY_STEP // max(1, spacing)
     wanted = int(weight.sum()) * PERMILLE
-    # The land before a polar band widens toward it at the same rate, from half the area of the
+    # The land before a polar band widens toward it, its first blocks from half the area of the
     # band's cells, so they border cells that grow into them instead of ordinary ones and remain
     # the larger, for those touching the map's edge become its wastelands.
+    gentle = slope // APPROACH_SLOWER
     approach = -grade_spacing(
-        -np.where(polar & has_land, POLAR_SPACING * PERMILLE // 1414, 0), has_land, slope
+        -np.where(polar & has_land, POLAR_SPACING * PERMILLE // 1414 + gentle, 0), has_land, gentle
     )
 
     def graded(shift: int) -> NDArray[np.int64]:
@@ -474,6 +530,7 @@ def _graded_grid(
         out = grade_spacing(np.maximum(free, approach), has_land & ~polar, slope)
         if moved is not None:
             out = np.clip(out * moved // PERMILLE, SPACING_RANGE[0], SPACING_RANGE[1])
+            out = np.maximum(out, approach)
         # A block without land holds no seed; it keeps the uniform spacing.
         return np.where(has_land, np.where(polar, POLAR_SPACING, out), PERMILLE)
 
@@ -624,6 +681,7 @@ def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and 
     spacing: int,
     grid: NDArray[np.int64],
     smallest: int,
+    coast: Callable[[NDArray[np.int32], int], NDArray[np.int64]] | None = None,
 ) -> NDArray[np.int32]:
     """Land cells grown from ``spaced_sites`` that do not cross ``walls`` (the border rivers),
     whose pixels then join the cell beside them; cells under ``smallest`` pixels are merged.
@@ -634,7 +692,11 @@ def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and 
     The cells are grown ``SHORE_FEEDBACK_STEPS`` times before the last growth: each time the speed
     of every cell beside water (``_shore_cells``) is corrected toward its planned share of the land
     it and its neighbours grew (``_shore_gains``), and the first ``RELAX_STEPS`` times its seed
-    moves to the centre of the cell it grew (``_centre_pixels``).
+    moves to the centre of the cell it grew (``_centre_pixels``). Given ``coast`` (each grown
+    cell's size offset by the sea, in thousandths of an octave: ``eu5_biomes.coastal_offsets``),
+    a shore cell is corrected instead toward its planned square at the density of the inland cells
+    round it, moved by that offset, and an inland cell grown more than ``SIZE_BAND`` off its plan
+    at that density back to the band's edge (``_density_gains``).
     """
     sites = spaced_sites(key, land, spacing, grid)
     passable = land & ~walls
@@ -650,7 +712,19 @@ def river_cells(  # noqa: PLR0913 - the land, its walls, the seeds' spacing and 
         grown = grow_weighted(passable, sites, planned * gain // PERMILLE)
         shore = _shore_cells(grown, land, flat.size)
         if step < SHORE_FEEDBACK_STEPS:
-            gain = _shore_gains(grown, planned, gain, shore)
+            gain = (
+                _shore_gains(grown, planned, gain, shore)
+                if coast is None
+                else _density_gains(
+                    grown,
+                    planned,
+                    gain,
+                    shore,
+                    blocks=_seed_blocks(flat, columns),
+                    shape=(int(grid.shape[0]), int(grid.shape[1])),
+                    offsets=coast(grown, flat.size),
+                )
+            )
         if step < RELAX_STEPS:
             flat = np.where(shore, _centre_pixels(grown, flat), flat)
             sites = np.full(land.shape, -1, dtype=np.int32)
@@ -689,9 +763,71 @@ def _shore_gains(
     the land shared by the squares of their spacings (``planned``), each factor multiplied by the
     square root of that share over the cell's area (within ``SHORE_GAIN_STEP``) and kept within
     ``SHORE_GAIN_RANGE``."""
+    area = _grown_areas(grown, int(planned.size))
+    squares = planned * planned
+    return _corrected(gain, _shares(grown, squares, area), area, shore)
+
+
+def _seed_blocks(flat: NDArray[np.int64], columns: int) -> tuple[NDArray[np.int64], ...]:
+    """The ``DENSITY_STEP`` block (row, column) of each seed's raster position ``flat``."""
+    rows, cells = np.divmod(flat, columns)
+    return rows // DENSITY_STEP, cells // DENSITY_STEP
+
+
+def _block_box(values: NDArray[np.int64], radius: int) -> NDArray[np.int64]:
+    """The sum of ``values`` over the blocks within ``radius`` of each (a square), the columns
+    wrapping round the world and the rows ending at its edges."""
+    padded = np.pad(values, ((radius, radius), (0, 0)))
+    if radius:
+        padded = np.concatenate([padded[:, -radius:], padded, padded[:, :radius]], axis=1)
+    total = np.pad(padded.cumsum(axis=0).cumsum(axis=1), ((1, 0), (1, 0)))
+    side = 2 * radius + 1
+    return total[side:, side:] - total[:-side, side:] - total[side:, :-side] + total[:-side, :-side]
+
+
+def _density_gains(  # noqa: PLR0913 - the cells, their spacing and speed, the shore, seeds, offsets.
+    grown: NDArray[np.int32],
+    planned: NDArray[np.int64],
+    gain: NDArray[np.int64],
+    shore: NDArray[np.bool_],
+    *,
+    blocks: tuple[NDArray[np.int64], ...],
+    shape: tuple[int, int],
+    offsets: NDArray[np.int64],
+) -> NDArray[np.int64]:
+    """``_shore_gains`` with each ``shore`` cell corrected toward its planned square (``planned``)
+    at the density of the inland cells round it: the land they grew over the squares of their
+    spacings, summed over the cells whose seeds lie within ``SHORE_DENSITY_BLOCKS`` of the cell's
+    seed's block (``blocks``, of a grid of ``shape`` blocks), moved by its ``offsets``
+    (thousandths of an octave of area); a shore cell with no inland cell so near keeps its share of
+    its neighbourhood. An inland cell grown more than ``SIZE_BAND`` off its planned square at that
+    density is corrected to the edge of the band."""
     count = int(planned.size)
     area = _grown_areas(grown, count)
     squares = planned * planned
+    inland = ~shore
+    rows, columns = blocks
+    land_sum = np.zeros(shape, dtype=np.int64)
+    square_sum = np.zeros(shape, dtype=np.int64)
+    np.add.at(land_sum, (rows[inland], columns[inland]), area[inland])
+    np.add.at(square_sum, (rows[inland], columns[inland]), squares[inland])
+    near_land = _block_box(land_sum, SHORE_DENSITY_BLOCKS)[rows, columns]
+    near_squares = _block_box(square_sum, SHORE_DENSITY_BLOCKS)[rows, columns]
+    moved = spacing_permille(np.floor_divide(offsets * SPACING_PARTS, PERMILLE))
+    planned_here = squares * near_land // np.maximum(near_squares, 1)
+    dense = planned_here * moved // PERMILLE
+    band = spacing_permille(np.array([-SIZE_BAND, SIZE_BAND]) * SPACING_PARTS // PERMILLE)
+    kept = np.clip(area, planned_here * band[0] // PERMILLE, planned_here * band[1] // PERMILLE)
+    wanted = np.where(shore, np.where(near_squares > 0, dense, _shares(grown, squares, area)), kept)
+    return _corrected(gain, wanted, area, np.ones(count, dtype=bool))
+
+
+def _shares(
+    grown: NDArray[np.int32], squares: NDArray[np.int64], area: NDArray[np.int64]
+) -> NDArray[np.int64]:
+    """Each cell's share of the land (``area``) it and the cells beside it in ``grown`` grew,
+    shared by their ``squares``."""
+    count = int(squares.size)
     pairs = adjacency_pairs(grown)
     low = pairs >> np.int64(32)
     high = pairs & np.int64((1 << 32) - 1)
@@ -702,7 +838,17 @@ def _shore_gains(
     np.add.at(around, high, area[low])
     np.add.at(weight, low, squares[high])
     np.add.at(weight, high, squares[low])
-    wanted = around * squares // np.maximum(weight, 1)
+    return around * squares // np.maximum(weight, 1)
+
+
+def _corrected(
+    gain: NDArray[np.int64],
+    wanted: NDArray[np.int64],
+    area: NDArray[np.int64],
+    shore: NDArray[np.bool_],
+) -> NDArray[np.int64]:
+    """``gain`` of the ``shore`` cells multiplied by the root of ``wanted`` over their ``area``
+    (within ``SHORE_GAIN_STEP``) and kept within ``SHORE_GAIN_RANGE``."""
     correction = np.array(
         [
             math.isqrt(share * PERMILLE * PERMILLE // max(own, 1))

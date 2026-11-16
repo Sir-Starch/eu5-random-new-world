@@ -1644,6 +1644,27 @@ def cell_sizes(  # noqa: PLR0913 - the model, the cells' readings, coast and con
     return _pair_sizes(model, pair, features) + model.offsets[coastal.astype(np.int64), kinds]
 
 
+def coastal_offsets(  # noqa: PLR0913 - the model, the cells, the height, grid, sea and ground.
+    model: SizeModel,
+    labels: NDArray[np.int32],
+    count: int,
+    *,
+    height: NDArray[np.integer],
+    grid: ClimateGrid,
+    sea: NDArray[np.bool_],
+    ground: GroundField,
+) -> NDArray[np.int64]:
+    """How far vanilla's locations of the ground each of the ``count`` cells of ``labels`` will
+    be given lie off its inland flatland, on the coast, in thousandths of an octave
+    (``SizeModel.offsets``): the pair and the ground voted as ``cell_sizes`` votes them; 0 for a
+    cell that does not touch the ``sea``."""
+    _, centred, votes, coastal = cell_readings(labels, count, height, grid, sea, ground=ground)
+    voted = cell_pairs(model, centred, edges=cell_edges(labels, count))
+    kinds = choose_grounds(model, votes, model.vote_dry[voted], matched=True)
+    flatland = model.offsets[0, TOPOGRAPHIES.index("flatland")]
+    return np.where(coastal, model.offsets[1, kinds] - flatland, 0).astype(np.int64)
+
+
 def smooth_scores(
     scores: NDArray[np.int64], edges: NDArray[np.int64], rounds: int
 ) -> NDArray[np.int64]:

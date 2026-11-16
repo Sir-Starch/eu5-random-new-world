@@ -388,7 +388,8 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   and doubled the share over two octaves). Sized block by block, with seeds on a jittered grid that
   could put two within 0.15 of the spacing, the generated ones (`4aomqqsg6b`) did in 299, 64.5 and
   13.7 ‰, and 21 ‰ were under a quarter of their neighbours. The spacing is now graded (`grade_spacing`: a block's
-  spacing exceeds a neighbour's by at most `GRADATION`, 0.3 pixel per pixel), taken in exact 64ths of
+  spacing exceeds a neighbour's by at most 0.3 pixel per pixel for the first cells,
+  `FIRST_GRADATION`, and since 2026-11-16 0.5 for the final ones, `GRADATION`), taken in exact 64ths of
   an octave (`spacing_permille`, integer powers of two), and the seeds are thrown as blue noise
   (`spaced_sites`: candidates in a hashed order, each kept only beyond 0.758 of the mean of its and
   its neighbours' spacings); the border wobble shrinks with the spacing. A smooth settlement noise
@@ -396,7 +397,8 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   regions, as vanilla's locations lie 0.74–0.87 of an octave off the size of their class, shared
   by neighbours (correlation 0.51–0.58). The spacing is scaled as a whole to keep the number of
   cells, and the polar bands keep three times the spacing; the land before them widens toward
-  them at the same rate from half their area, for their passable cells had bordered ordinary ones
+  them at half that rate (`APPROACH_SLOWER`, since 2026-11-16) from half their area, and the
+  settlement noise never narrows it, for their passable cells had bordered ordinary ones
   (51 of a world's 59 pairs more than three octaves apart lay there), and they stay the larger, as
   those at the map's edge become its wastelands. A seed grows at a speed in proportion to
   its spacing (`synth.grow_weighted`); grown at one speed, the cells of the largest spacings had come
@@ -491,9 +493,66 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   an octave apart, vanilla 99–108; the spread of the log sizes 1.08, vanilla 1.21–1.25). On the
   four worlds' grown cells the corrected shore takes 9 ‰ of that contrast (79 ‰ without it, with
   coastal hills +0.22 and mountains +0.31 and the spread of the coastal growth 0.45 instead of
-  0.36) and the smoothed climate 4 ‰ (74 ‰ unsmoothed): what it removes is the shore's growth
-  noise and the speckle's size jumps, not planned variety, but the planned sizes themselves vary
-  less than vanilla's [V-EXEC 2026-11-15].
+  0.36) and the smoothed climate 4 ‰ (74 ‰ unsmoothed) [V-EXEC 2026-11-15]. The planned variety
+  was not short, as this paragraph first said: the cells' own targets differ by more than an
+  octave in 103–107 ‰ of the pairs, as vanilla's do, and the gradation held the plan to 21 ‰
+  (C539, below).
+
+  **Coastal mountains and contrast** (2026-11-16, C539). Over eight worlds' grown cells (seeds
+  20261115, 42, 7, 1234, 99, 2026, 31337 and 555) the cells of C538 left the coastal mountains 0.09
+  of an octave larger than the coastal flatland of their pair beside them (standard error of the
+  worlds' means 0.025) and neighbours more than an octave apart in 69 ‰ of the pairs, the polar
+  bands left out. Four causes, each changed where it arises:
+  - A shore cell was corrected toward its share of its own neighbourhood, and that share depends
+    on whom it borders: a coastal mountain cell borders more inland cells, which the sea does not
+    cut, and was given 0.055 of an octave more land for it. The final cells beside the sea are now
+    corrected toward their planned square at the density of the inland cells whose seeds lie
+    within four blocks of theirs, moved by vanilla's offset of their ground on the coast against
+    its inland flatland (`watersheds._density_gains`, `eu5_biomes.coastal_offsets`, read on the
+    cells as they grow; a lake shore takes no offset). The first cells keep their share.
+  - A coastal cell planned large reaches the high land behind the shore and is voted mountain, so
+    the steeper the first cells' sizes change, the larger the blocks the coastal mountains are
+    planned on: +0.005 of an octave against the coastal flatland of their pair at 0.3 pixel per
+    pixel, +0.04 at 0.4, +0.09 at 0.5, and the final cells follow their plan. The first cells keep
+    0.3 (`FIRST_GRADATION`); the final cells, which no vote reads before they are drawn, are graded
+    at 0.5 (`GRADATION`), so that more of the cells' own variety reaches the plan (pairs over an
+    octave 21 → 46 ‰).
+  - A slow seed among fast ones was hemmed in: the smaller cells of the inland pairs over two
+    octaves had a neighbour planned 0.73 of an octave larger (0.34 for all inland cells), their
+    seeds as far from the others as any, and grew 1.1 octaves under their plan while the larger
+    grew 0.6 over. An inland final cell grown more than three quarters of an octave off its plan
+    at the density round it is now corrected back to that band (`SIZE_BAND`); corrected all the
+    way, every cell had evened the land (38 ‰ over an octave).
+  - The land before the polar bands widened at the full rate, and the settlement noise, applied
+    after, narrowed it further: the spacing doubled within three blocks where the cells are small,
+    and 28 ‰ of the pairs of cells by the bands were more than two octaves apart, ten times as many
+    as elsewhere. It now widens at half the rate and the noise no longer narrows it: 5 ‰.
+
+  Pooled over the eight worlds' grown cells: coastal mountains +0.03 against the coastal flatland
+  of their pair (standard error 0.03; vanilla +0.04 and −0.05), inland mountains −0.05 (−0.09,
+  −0.02), coastal hills +0.04 (+0.03, +0.09), inland hills −0.00, coastal and inland wetlands −0.03
+  and −0.04, inland plateaus −0.03; coastal flatland 0.02 smaller than the inland beside it (0.00
+  before); neighbours more than one, two and three octaves apart in 87, 3.0 and 0.11 ‰ of the pairs
+  (69, 2.9 and 0.16 before), under a quarter of their neighbours' median 0.13 ‰ (0.68). Tried and
+  worse are listed at `watersheds.RELAX_STEPS` [V-EXEC 2026-11-16].
+  On whole locations of `d7w4gsxhse` (the land of `uc6q6tihfq`, its peoples rolled again):
+  neighbours more than an octave apart in 94 ‰ of the pairs, more than two in 3.9 ‰, more than
+  three in 0.1 ‰ (vanilla 99–107, 3.9–4.4 and 0.1; `uc6q6tihfq` 88, 4.2 and 0.3), under a quarter
+  of their neighbours' median 0.1 ‰ (vanilla 0.6–1.0; before 0.7); its grown cells contrast the
+  least of the eight worlds' (80 ‰ over an octave; the others 81–96); seed 1234's world
+  (`py4hwjlbok`, whose grown cells contrast as the eight worlds' do on average, 87 ‰) has 97, 3.7
+  and 0.0 ‰ (86, 3.8 and 0.1 before). Coastal hills +0.09 and +0.05 against the flatland beside
+  them (before +0.12 and +0.14), coastal wetlands −0.01 and −0.05; inland hills −0.01 and +0.01,
+  wetlands −0.01 and −0.16, plateaus −0.01 and +0.01; coastal flatland 0.03 and 0.01 smaller than
+  the inland; the climate of `d7w4gsxhse` as before (177 ‰ of neighbours differ, 14 ‰ alone).
+  Inland mountains beside flatland of their pair are −0.18 and −0.24 there (62 and 66 locations;
+  before −0.09 and −0.03), while all inland mountains keep their median size (0.77 and 0.97 of the
+  passable median, as before) and the eight worlds' grown cells put them at −0.05 (−0.07 before);
+  the same land's whole locations swung from −0.18 to +0.05 between variants of this change, so
+  one world's 60-odd contacts do not settle it [V-EXEC 2026-11-16].
+  What remains: the coastal flatland is planned 0.10 of an octave smaller than the inland, but
+  the first cells and the blocks dilute that to 0.02 (vanilla 0.10–0.17), and fewer locations are
+  under a quarter of their neighbours than vanilla's.
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is smoothed over the location
   graph once, its weights matched through that smoothing (below). A plurality of 32 neighbours
