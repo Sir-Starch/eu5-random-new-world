@@ -547,12 +547,18 @@ From epoch 64 each is changed at its cause, each behind its own switch of `rnw.e
   the inland; the climate of `d7w4gsxhse` as before (177 ‰ of neighbours differ, 14 ‰ alone).
   Inland mountains beside flatland of their pair are −0.18 and −0.24 there (62 and 66 locations;
   before −0.09 and −0.03), while all inland mountains keep their median size (0.77 and 0.97 of the
-  passable median, as before) and the eight worlds' grown cells put them at −0.05 (−0.07 before);
-  the same land's whole locations swung from −0.18 to +0.05 between variants of this change, so
-  one world's 60-odd contacts do not settle it [V-EXEC 2026-11-16].
-  What remains: the coastal flatland is planned 0.10 of an octave smaller than the inland, but
-  the first cells and the blocks dilute that to 0.02 (vanilla 0.10–0.17), and fewer locations are
-  under a quarter of their neighbours than vanilla's.
+  passable median, as before) and the eight worlds' grown cells put them at −0.05 (−0.07 before).
+  Over six worlds' whole locations (these two and seeds 42, 7, 99 and 2026) they are −0.10 (385
+  contacts; the worlds' means from −0.24 to +0.20, standard error 0.07; vanilla −0.09 and −0.02):
+  these two lie in the low tail. The six worlds' neighbours differ by more than an octave in 94 to
+  104 ‰ of the pairs (mean 99), by more than two in 3.7 to 4.4 ‰, by more than three in 0.0 to
+  0.1 ‰, as vanilla's do; coastal hills +0.07, coastal mountains −0.03 (64 contacts), inland
+  wetlands −0.08 and plateaus −0.06 against the flatland beside them; the coastal flatland 0.03
+  smaller than the inland [V-EXEC 2026-11-16].
+  The band leaves fewer locations under a quarter of their neighbours' median than vanilla's (0.0
+  to 0.6 ‰ on the six worlds, vanilla 0.6–1.0; a handful of locations per world). What remains:
+  the coastal flatland is planned 0.10 of an octave smaller than the inland, but the first cells
+  and the blocks dilute that to 0.02–0.03 (vanilla 0.10–0.17).
 * **Open climate** (`OPEN_CLIMATE`, `eu5_biomes.py`). The vote learns from the vanilla Americas as
   well, leaves farmland out instead of reading it as grassland, and is smoothed over the location
   graph once, its weights matched through that smoothing (below). A plurality of 32 neighbours
