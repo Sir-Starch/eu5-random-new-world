@@ -10,8 +10,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from itertools import pairwise
-from typing import TYPE_CHECKING, Final, override
+from typing import TYPE_CHECKING, Final, cast, override
 
+from rnw import _native
 from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
@@ -81,6 +82,25 @@ class Entry:
 def parse(text: str) -> Block:
     """Parse a whole file into its root block (offsets index ``text``)."""
     checkpoint()
+    try:
+        parser = _native.PdxParser(text)
+    except UnicodeEncodeError:
+        # Python str also admits lone surrogates, unlike a Rust UTF-8 string.
+        return _parse_python(text)
+    try:
+        while not parser.advance():
+            checkpoint()
+    except RecursionError:
+        del parser
+        return _parse_python(text)
+    except _native.PdxSyntaxError as error:
+        reason, offset = cast("tuple[str, int]", error.args)
+        raise PdxSyntaxError(reason, offset) from error
+    return cast("Block", parser.finish(Block, Entry, checkpoint))
+
+
+def _parse_python(text: str) -> Block:
+    """The original grammar for lone surrogates and deeply nested input."""
     tokens = [
         (match.lastgroup or "", match.group(), match.start(), match.end())
         for match in TOKEN.finditer(text)

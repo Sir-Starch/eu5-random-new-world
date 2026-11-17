@@ -165,6 +165,11 @@ that no official editor exists.
 
 **Data and structures studied or written.**
 
+- The existing setup and location scripts keep their span-preserving text interface.
+  The 2026-11-17 Rust lexer/parser implements the original Python grammar, character
+  offsets and strict errors; the same Python records feed the unchanged writers.
+  Comments and untouched source spans are preserved. Synthetic valid/malformed scripts
+  compare against the Python reference; no new script syntax or binary format is added.
 - `in_game/map_data/locations.png`, `rivers.png`, preview and metadata PNGs use an
   open image format. RGB location colours resolve through named locations; indexed
   river pixels carry the game's observed water/land/channel codes. The generator

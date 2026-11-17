@@ -299,6 +299,21 @@ The Windows hub passes the standard Wine window/native/code and shell/bridge sel
 and is installed with an all-file verification and a backup of the previous hub. See
 [installation history](../experiments/INSTALLED.md). Existing worlds and playsets are preserved.
 
+[V-EXEC C541] The next phase moves the span-preserving script lexer/parser to Rust,
+keeping the original Python records, source spans and strict errors. All 3,005 text inputs
+in the reported world's manifest produce identical parsed records; 2,311 synthetic cases
+have the same digest under Linux and the packaged Windows runtime. Large setup/locator
+files take about a quarter of the old parse time in isolated replay. Locked checks pass
+3,506 Python tests (22 skips) and 33 Rust tests; the installed-game suite again passes
+19 checks, including epochs 61–64. The reported world's 884 files, input manifest, atlas
+and previews remain identical. The updated Windows hub is self-tested and installed.
+
+Its full service diagnostic takes 226.1 s, but substantial unrelated game activity began
+during that run. It is not a matched after result and does not replace the controlled
+221.0-second median above. A separate history-process experiment also reproduces the
+world, but has no matched end-to-end performance evidence; it is not selected for the
+product. Further experiments stay local until they demonstrate a useful gain.
+
 **The 180/120-second targets are not met.** The measured gaps are about 41 s cold and 82 s
 with static inputs cached. Further work must reduce the society → texts → verification
 critical path as well as the remaining raster work. The serial history replay contains the

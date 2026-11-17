@@ -6,6 +6,21 @@ an old removal command is not an instruction to delete anything now. Current hub
 identity is `sirstarch.randomnewworld` in local folder `rnw_exp_hub` (C438); the
 actual Workshop download and separate local library were checked in C441.
 
+2026-11-17, **1.3.0 development / epoch 64 — native script parsing** (C541).
+[V-EXEC] Updated the generator-only hub after the Rust lexer/parser phase. All 3,005 recorded
+text inputs retain their parsed records/spans, and 2,311 synthetic cases match Linux and
+packaged Windows. Locked checks pass (3,506 Python checks, 22 optional skips, 33 Rust checks);
+the read-only installed-game suite again reproduces epochs 61–64 (19 passed, one optional
+skip). The reported world retains all 884 original output hashes, atlas and previews, so the
+existing installed world below is reused. Full timings under new background game activity
+are diagnostic only; the prior controlled median is unchanged as an evidence claim.
+The standard Wine self-tests and all-file installation verification pass. Candidate:
+`local_data/hub-updates/1.3.0-performance-1794925471641114643/rnw_exp_hub`; previous hub:
+`.rnw-hub-backups/1.3.0-1794926411188468640`. Windows wheel SHA-256:
+`db5fcdd25ddef32ddbf1799337b6dccda8df0f526c3e19419e8efceb1adec0b0`; window
+`c3feb56bb030089ad4c075f407306b252a276177d5fed1f8636689b719fb180c`; launcher unchanged
+(`49674400…6932`). No world, save, playset or preference edit; no EU5 launch/control.
+
 2026-11-17, **1.3.0 development / epoch 64 — exact-output performance** (C540).
 [V-EXEC] Installed the generator-only hub after the native, calibration, raster and early
 moved-map preparation phases. The matched cold service median is 221.0 s versus 335.4 s;

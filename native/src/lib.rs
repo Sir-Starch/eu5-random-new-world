@@ -13,6 +13,7 @@ pub mod lzav;
 pub mod mountains;
 pub mod noise;
 pub mod objects;
+pub mod pdx;
 pub mod raster;
 pub mod relief;
 pub mod slots;
@@ -30,6 +31,7 @@ use pyo3::prelude::*;
 
 pyo3::create_exception!(_native, LzavError, pyo3::exceptions::PyValueError);
 pyo3::create_exception!(_native, TerrainRangeError, pyo3::exceptions::PyValueError);
+pyo3::create_exception!(_native, PdxSyntaxError, pyo3::exceptions::PyValueError);
 
 fn object_fault(fault: objects::Fault) -> PyErr {
     let message = match fault {
@@ -58,7 +60,118 @@ mod _native {
     #[pymodule_export]
     use super::LzavError;
     #[pymodule_export]
+    use super::PdxSyntaxError;
+    #[pymodule_export]
     use super::TerrainRangeError;
+
+    #[pyclass]
+    struct PdxParser {
+        state: Option<pdx::Parser>,
+    }
+
+    #[pymethods]
+    impl PdxParser {
+        #[new]
+        fn new(text: String) -> Self {
+            Self {
+                state: Some(pdx::Parser::new(text)),
+            }
+        }
+
+        fn advance(&mut self, py: Python<'_>) -> PyResult<bool> {
+            let state = self.state.as_mut().ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err("script parser is finished")
+            })?;
+            py.detach(|| state.advance(std::time::Duration::from_millis(20)))
+                .map_err(|fault| {
+                    let (reason, offset) = match fault {
+                        pdx::Fault::Bad(offset, value) => (
+                            format!(
+                                "unexpected character {}",
+                                pyo3::types::PyString::new(py, &value.to_string())
+                                    .repr()
+                                    .expect("string repr")
+                            ),
+                            offset,
+                        ),
+                        pdx::Fault::Value(offset, at) => (
+                            format!(
+                                "expected a value, found {}",
+                                pyo3::types::PyString::new(py, state.value(at))
+                                    .repr()
+                                    .expect("string repr")
+                            ),
+                            offset,
+                        ),
+                        pdx::Fault::Message(message, offset) => (message.to_owned(), offset),
+                        pdx::Fault::Deep => {
+                            return pyo3::exceptions::PyRecursionError::new_err(
+                                "script uses the recursive reference parser",
+                            );
+                        }
+                    };
+                    PdxSyntaxError::new_err((reason, offset))
+                })
+        }
+
+        fn finish<'py>(
+            &mut self,
+            py: Python<'py>,
+            block: &Bound<'py, PyAny>,
+            entry: &Bound<'py, PyAny>,
+            checkpoint: &Bound<'py, PyAny>,
+        ) -> PyResult<Bound<'py, PyAny>> {
+            use pyo3::types::PyList;
+
+            let state = self.state.take().ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err("script parser is finished")
+            })?;
+            if !state.finished() {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "script parser has unfinished work",
+                ));
+            }
+            // Keep the existing Python records and their mutable lists. All blocks
+            // exist before wiring children; no Python/C recursion or shared cache.
+            let mut blocks = Vec::with_capacity(state.blocks.len());
+            let mut lists = Vec::with_capacity(state.blocks.len());
+            for (at, node) in state.blocks.iter().enumerate() {
+                if at % 1024 == 0 {
+                    checkpoint.call0()?;
+                }
+                let entries = PyList::empty(py);
+                blocks.push(block.call1((
+                    &entries,
+                    node.open.map_or(-1, |n| n as i64),
+                    node.close,
+                ))?);
+                lists.push(entries);
+            }
+            let mut count = 0;
+            for (at, node) in state.blocks.iter().enumerate() {
+                for item in &node.entries {
+                    if count % 1024 == 0 {
+                        checkpoint.call0()?;
+                    }
+                    count += 1;
+                    let value = match item.value {
+                        pdx::Value::Scalar(token) => {
+                            pyo3::types::PyString::new(py, state.value(token)).into_any()
+                        }
+                        pdx::Value::Block(child) => blocks[child].clone(),
+                    };
+                    lists[at].append(entry.call1((
+                        item.key.map(|key| state.value(key)),
+                        item.op.map(|op| state.value(op)),
+                        value,
+                        item.start,
+                        item.end,
+                    ))?)?;
+                }
+            }
+            Ok(blocks.swap_remove(0))
+        }
+    }
 
     #[pyclass]
     struct RidgeAccumulator {
