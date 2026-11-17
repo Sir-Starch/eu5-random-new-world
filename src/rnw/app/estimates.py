@@ -23,7 +23,8 @@ SAMPLES: Final[int] = 5
 CONTEXTS: Final[int] = 16
 # Change when the timing model or pipeline dependencies change, independently of world epochs.
 # 2: the vanilla reads follow the generated world, so schema 1 costs included its time.
-SCHEMA: Final[int] = 2
+# 3: native raster/cell kernels, exact calibration caching and revised stage preparation.
+SCHEMA: Final[int] = 3
 MAX_SECONDS: Final[float] = 86400.0
 # Stages served from the land cache: a hit takes hundredths of a second and says nothing
 # about the cost of the next miss.

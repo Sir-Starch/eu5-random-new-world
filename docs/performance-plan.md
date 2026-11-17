@@ -285,6 +285,23 @@ the fastest observation as the after result. A matched repeated comparison remai
 The additional mid-kernel cancellation test raises from the second native growth checkpoint
 and preserves the caller's seed raster.
 
+[V-EXEC 2026-11-17] A later complete **31-thread** run took **254.1 s**, peak **7.68 GiB**,
+with the same 884 output files and input digest. This matches the baseline's resource limit,
+but is still a single after observation. CPU sampling then selected fused chain arithmetic,
+Rust-owned ridge accumulators and canvas budget counts without pixel-coordinate vectors.
+Nearest-neighbour queries use the exact tree only when the selected set is unique; boundary
+ties still use the original NumPy partition, and out-of-model integer ranges keep its wrapped
+arithmetic. Synthetic tests include dense duplicates, query chunking, integer overflow,
+noncontiguous inputs and consumed-state errors.
+
+The complete candidate with these relief kernels again reproduced all output/input hashes
+(**252.3 s**, peak **8.13 GiB**; this diagnostic also captured relief inputs). Its relief stage
+was **13.6 s**, versus **21.4 s** in the preceding 31-thread run; total times must still be
+repeated under matched conditions. Full locked checks now pass **3,482 Python tests**
+(22 optional skips) and **31 Rust tests**. Progress weights and ETA priors were recalibrated
+from actual dependency-excluding stage costs, and the local timing schema was advanced to 3.
+World epochs, versions and goldens are unchanged. These results do **not** meet the time targets.
+
 The bar also credits completed relief/sea-cell/land-cell subpasses against their parent's
 weight, without counting them twice or inventing progress while a pass is running. This is
 separate from generation speed. The **180/120-second targets remain open**.

@@ -14,6 +14,7 @@ pub mod mountains;
 pub mod noise;
 pub mod objects;
 pub mod raster;
+pub mod relief;
 pub mod slots;
 pub mod spacing;
 pub mod terrain;
@@ -58,6 +59,92 @@ mod _native {
     use super::LzavError;
     #[pymodule_export]
     use super::TerrainRangeError;
+
+    #[pyclass]
+    struct RidgeAccumulator {
+        state: relief::Ridges,
+        shape: (usize, usize),
+        finished: bool,
+    }
+
+    #[pymethods]
+    impl RidgeAccumulator {
+        #[new]
+        fn new(height: usize, width: usize, scale: i64, gain: i64) -> PyResult<Self> {
+            let size = height.checked_mul(width).ok_or_else(|| {
+                pyo3::exceptions::PyValueError::new_err("ridge shape is too large")
+            })?;
+            if scale <= 0 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "ridge scale must be positive",
+                ));
+            }
+            Ok(Self {
+                state: relief::Ridges::new(size, scale, gain),
+                shape: (height, width),
+                finished: false,
+            })
+        }
+
+        fn add(
+            &mut self,
+            py: Python<'_>,
+            noise: PyReadonlyArray2<'_, i64>,
+            share: i64,
+        ) -> PyResult<()> {
+            if self.finished || noise.as_array().dim() != self.shape {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "ridge state is finished or noise shape differs",
+                ));
+            }
+            let noise = noise.as_slice()?;
+            py.detach(|| self.state.add(noise, share));
+            Ok(())
+        }
+
+        fn finish<'py>(
+            &mut self,
+            py: Python<'py>,
+            shares: i64,
+        ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+            if self.finished || shares <= 0 {
+                return Err(pyo3::exceptions::PyValueError::new_err(
+                    "ridge state is finished or shares are not positive",
+                ));
+            }
+            self.finished = true;
+            let values = py.detach(|| self.state.finish(shares));
+            shaped(py, self.shape, values)
+        }
+    }
+
+    #[pyfunction]
+    fn relief_chain<'py>(
+        py: Python<'py>,
+        axis: PyReadonlyArray2<'py, i64>,
+        wander: PyReadonlyArray2<'py, i64>,
+        width: PyReadonlyArray2<'py, i64>,
+        params: [i64; 9],
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = axis.as_array().dim();
+        if shape.0 == 0
+            || shape.1 == 0
+            || wander.as_array().dim() != shape
+            || width.as_array().dim() != shape
+            || params[0] <= 0
+            || params[1] < 0
+            || params[2] <= 0
+            || params[5] <= 0
+            || params[6] <= 0
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid relief chain window or parameters",
+            ));
+        }
+        let (axis, wander, width) = (axis.as_slice()?, wander.as_slice()?, width.as_slice()?);
+        let out = py.detach(|| relief::chain(axis, wander, width, shape, params));
+        shaped(py, shape, out)
+    }
 
     #[pyfunction]
     fn parse_instances<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyArray1<f32>>> {
@@ -857,6 +944,39 @@ mod _native {
             pixels.fine.into_pyarray(py),
             pixels.coarse.into_pyarray(py),
         ))
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn canvas_counts<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        materials: PyReadonlyArray2<'py, u8>,
+        canvas: PyReadonlyArray2<'py, bool>,
+        fine: PyReadonlyArray1<'py, i64>,
+        coarse: PyReadonlyArray1<'py, i64>,
+        use_fine: PyReadonlyArray1<'py, bool>,
+        coarse_keys: usize,
+    ) -> PyResult<(Bound<'py, PyArray1<i64>>, Bound<'py, PyArray1<i64>>)> {
+        let shape = labels.as_array().dim();
+        if canvas.as_array().dim() != shape {
+            return Err(object_fault(objects::Fault::Shape));
+        }
+        let raster = objects::Raster {
+            labels: labels.as_slice()?,
+            materials: materials.as_slice()?,
+            shape,
+        };
+        let (canvas, fine, coarse, use_fine) = (
+            canvas.as_slice()?,
+            fine.as_slice()?,
+            coarse.as_slice()?,
+            use_fine.as_slice()?,
+        );
+        let (fine, coarse) = py
+            .detach(|| objects::canvas_counts(&raster, canvas, fine, coarse, use_fine, coarse_keys))
+            .map_err(object_fault)?;
+        Ok((fine.into_pyarray(py), coarse.into_pyarray(py)))
     }
 
     /// Material pixels per key among the pixels whose label is in `mask`.

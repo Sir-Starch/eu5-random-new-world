@@ -220,8 +220,7 @@ def _ridged(seed: int, shape: tuple[int, int], row0: int) -> NDArray[np.int64]:
     Each octave's crest (one at the zero line, squared) lets a share of the next octave through,
     so fine ridges grow on high crests and the low ground between stays smooth.
     """
-    total = np.zeros(shape, dtype=np.int64)
-    weight = np.full(shape, PERMILLE, dtype=np.int64)
+    ridges = _native.RidgeAccumulator(*shape, NOISE_SCALE, RIDGE_GAIN)
     for period, share in RIDGES:
         noise = _field(
             seed,
@@ -233,14 +232,10 @@ def _ridged(seed: int, shape: tuple[int, int], row0: int) -> NDArray[np.int64]:
             row0=row0,
             warp=RIDGE_WARP,
         )
-        crest = NOISE_SCALE - np.minimum(np.abs(noise), NOISE_SCALE)
+        ridges.add(np.ascontiguousarray(noise), share)
         del noise
-        crest = crest * crest // NOISE_SCALE
-        total += crest * weight // PERMILLE * share // PERMILLE
-        weight = np.minimum(PERMILLE, crest * RIDGE_GAIN // NOISE_SCALE)
-        del crest
     shares = sum(share for _, share in RIDGES)
-    return np.minimum(PERMILLE, total * PERMILLE * PERMILLE // (shares * NOISE_SCALE))
+    return ridges.finish(shares)
 
 
 def _chain(  # noqa: PLR0913 - a chain is defined by its stream, window, period and widths.
@@ -260,33 +255,13 @@ def _chain(  # noqa: PLR0913 - a chain is defined by its stream, window, period 
     """
     axis = _field(seed, stream, shape, step=8, period=period, octaves=2, row0=row0, warp=AXIS_WARP)
     wander = _field(seed, f"{stream}_edge", shape, step=4, period=260, octaves=3, row0=row0)
-    reach = SLOPE_REACH
-    padded = np.pad(axis, reach, mode="edge")
-    dx = (
-        (padded[reach:-reach, 2 * reach :] - padded[reach:-reach, : -2 * reach]) * 16 // (2 * reach)
-    )
-    dy = (
-        (padded[2 * reach :, reach:-reach] - padded[: -2 * reach, reach:-reach]) * 16 // (2 * reach)
-    )
-    del padded
-    slope = box_blur(np.sqrt(dx * dx + dy * dy).astype(np.int64), SLOPE_BLUR)
-    del dx, dy
-    distance = np.abs(axis + wander // AXIS_WANDER) * 256 // np.maximum(slope, SLOPE_FLOOR)
-    decisive = smoothstep(slope, *SLOPE_FADE)
-    del axis, wander, slope
     width = _field(seed, f"{stream}_width", shape, step=16, period=900, octaves=2, row0=row0)
-    scale = PERMILLE + width * PERMILLE // (2 * NOISE_SCALE)
-    del width
-    inner = np.clip(
-        PERMILLE - distance * PERMILLE // np.maximum(core * 16 * scale // PERMILLE, 1), 0, PERMILLE
+    return _native.relief_chain(
+        np.ascontiguousarray(axis),
+        np.ascontiguousarray(wander),
+        np.ascontiguousarray(width),
+        (SLOPE_REACH, SLOPE_BLUR, SLOPE_FLOOR, *SLOPE_FADE, AXIS_WANDER, NOISE_SCALE, core, flank),
     )
-    outer = np.clip(
-        PERMILLE - distance * PERMILLE // np.maximum(flank * 16 * scale // PERMILLE, 1), 0, PERMILLE
-    )
-    envelope = (
-        smoothstep(outer, 0, PERMILLE) * 450 + smoothstep(inner, 0, PERMILLE) * 550
-    ) // PERMILLE
-    return envelope * decisive // PERMILLE
 
 
 def _inland_grid(land: NDArray[np.bool_], strip: int) -> NDArray[np.int64]:

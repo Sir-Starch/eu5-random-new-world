@@ -172,6 +172,68 @@ pub fn canvas_pixels(
     Ok(out)
 }
 
+/// Counts for the canvas budget, without materializing four coordinate/key vectors.
+/// The two tables and slot merging are identical to `canvas_pixels` followed by bincounts.
+pub fn canvas_counts(
+    raster: &Raster,
+    canvas: &[bool],
+    fine_classes: &[i64],
+    coarse_classes: &[i64],
+    use_fine: &[bool],
+    coarse_keys: usize,
+) -> Result<(Vec<i64>, Vec<i64>), Fault> {
+    raster.check()?;
+    if canvas.len() != raster.labels.len() {
+        return Err(Fault::Shape);
+    }
+    let (height, width) = raster.shape;
+    let step = CHUNK / (2 * width).max(1) + 1;
+    let starts: Vec<usize> = (0..2 * height).step_by(step).collect();
+    let parts: Result<Vec<_>, Fault> = starts
+        .par_iter()
+        .map(|&start| {
+            let mut fine_count = vec![0_i64; use_fine.len()];
+            let mut coarse_count = vec![0_i64; coarse_keys];
+            for row in start..(start + step).min(2 * height) {
+                for column in 0..2 * width {
+                    let at = (row / 2) * width + column / 2;
+                    if !canvas[at] {
+                        continue;
+                    }
+                    let label = raster.labels[at];
+                    let fine = class_of(fine_classes, label)?;
+                    if fine < 0 {
+                        continue;
+                    }
+                    let slot = raster.slot(row, column);
+                    let fine =
+                        usize::try_from(fine * SLOT_CLASSES + slot).map_err(|_| Fault::Label)?;
+                    let coarse =
+                        usize::try_from(class_of(coarse_classes, label)? * SLOT_CLASSES + slot)
+                            .map_err(|_| Fault::Label)?;
+                    if *use_fine.get(fine).ok_or(Fault::Label)? {
+                        fine_count[fine] += 1;
+                    } else {
+                        *coarse_count.get_mut(coarse).ok_or(Fault::Label)? += 1;
+                    }
+                }
+            }
+            Ok((fine_count, coarse_count))
+        })
+        .collect();
+    let mut fine = vec![0_i64; use_fine.len()];
+    let mut coarse = vec![0_i64; coarse_keys];
+    for (a, b) in parts? {
+        for (slot, count) in fine.iter_mut().zip(a) {
+            *slot += count;
+        }
+        for (slot, count) in coarse.iter_mut().zip(b) {
+            *slot += count;
+        }
+    }
+    Ok((fine, coarse))
+}
+
 /// Material pixels per key among the pixels whose label is in `mask`.
 pub fn pixel_counts(
     raster: &Raster,

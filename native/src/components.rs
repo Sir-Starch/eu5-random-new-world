@@ -38,11 +38,16 @@ pub fn label_components(labels: &[i32], (height, width): (usize, usize), wrap_x:
     }
     let mut parent: Vec<u32> = (0..runs).collect();
     for row in 1..height {
+        let mut previous = (i32::MAX, i32::MAX);
         for column in 0..width {
             let at = row * width + column;
-            if labels[at] == labels[at - width] {
-                join(&mut parent, run_of[at - width] as u32, run_of[at] as u32);
+            let pair = (run_of[at - width], run_of[at]);
+            // A vertical run pair stays connected after its first union. Repeating
+            // that same union at every pixel cannot change its minimum root.
+            if pair != previous && labels[at] == labels[at - width] {
+                join(&mut parent, pair.0 as u32, pair.1 as u32);
             }
+            previous = pair;
         }
     }
     if wrap_x && width > 1 {

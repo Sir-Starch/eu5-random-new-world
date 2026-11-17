@@ -285,6 +285,28 @@ def canvas_pixels(
     return rows, columns, fine, coarse
 
 
+@measured
+def canvas_counts(  # noqa: PLR0913, PLR0917 - tables and the bounded row interval.
+    classes: PixelClasses,
+    canvas: NDArray[np.bool_],
+    use_fine: NDArray[np.bool_],
+    coarse_keys: int,
+    first: int = 0,
+    last: int | None = None,
+) -> tuple[NDArray[np.int64], NDArray[np.int64]]:
+    """Budget counts of one strip, with the same keys as ``canvas_pixels``."""
+    start, stop, _ = slice(first, last).indices(int(classes.labels.shape[0]))
+    return _native.canvas_counts(
+        np.ascontiguousarray(classes.labels[start:stop]),
+        np.ascontiguousarray(classes.materials[start * 2 : stop * 2]),
+        np.ascontiguousarray(canvas[start:stop]),
+        np.ascontiguousarray(classes.label_class),
+        np.ascontiguousarray(classes.label_coarse),
+        np.ascontiguousarray(use_fine),
+        coarse_keys,
+    )
+
+
 def _strips(classes: PixelClasses) -> list[tuple[int, int]]:
     """Location row ranges whose canvas pixels fit the memory budget one range at a time."""
     rows, columns = (int(size) for size in classes.labels.shape)
@@ -333,10 +355,10 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     fine_count = np.zeros(fine_pixels.size, dtype=np.int64)
     coarse_count_pixels = np.zeros(coarse_pixels.size, dtype=np.int64)
     for first, last in strips:
-        _, _, fine_key, coarse_key = canvas_pixels(classes, canvas, first, last)
-        fine_chosen = use_fine[fine_key]
-        fine_count += np.bincount(fine_key, minlength=fine_pixels.size) * use_fine
-        coarse_count_pixels += np.bincount(coarse_key[~fine_chosen], minlength=coarse_pixels.size)
+        checkpoint()
+        fine, coarse = canvas_counts(classes, canvas, use_fine, coarse_pixels.size, first, last)
+        fine_count += fine
+        coarse_count_pixels += coarse
     scale = budget_scale(
         tables, fine_count, coarse_count_pixels, removed * BUDGET_PERMILLE // PERMILLE
     )

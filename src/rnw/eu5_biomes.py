@@ -418,7 +418,36 @@ def _standardize(
     return (train - mean) * scale // std, (query - mean) * scale // std
 
 
+@measured
 def _nearest(train: NDArray[np.int64], block: NDArray[np.int64], k: int) -> NDArray[np.int64]:
+    """The identical partition-selected neighbours, using the tree when the set is unique.
+
+    A tie across the kth boundary keeps NumPy's original partition decision for that row.
+    Equal distances within the chosen set already sort by training index in both paths.
+    The range guard retains the original wrapped arithmetic for out-of-model inputs.
+    """
+    if not train.size or not 0 < k <= train.shape[0]:
+        return _partition_nearest(train, block, k)
+    bound = max(abs(int(train.min())), abs(int(train.max())))
+    if block.size:
+        bound = max(bound, abs(int(block.min())), abs(int(block.max())))
+    if 4 * bound * bound * train.shape[1] > np.iinfo(np.int64).max:
+        return _partition_nearest(train, block, k)
+    found = nearest_rows(train, block, min(k + 1, train.shape[0]))
+    if k == train.shape[0]:
+        return found
+    delta = train[found] - block[:, np.newaxis, :]
+    distance = (delta * delta).sum(axis=2)
+    tied = distance[:, k - 1] == distance[:, k]
+    nearest = found[:, :k].copy()
+    if tied.any():
+        nearest[tied] = _partition_nearest(train, block[tied], k)
+    return nearest
+
+
+def _partition_nearest(
+    train: NDArray[np.int64], block: NDArray[np.int64], k: int
+) -> NDArray[np.int64]:
     """The ``k`` nearest training rows of each row of ``block``, nearest first (ties by index,
     but which of the rows as far as the ``k``-th it keeps is the partition's).
 

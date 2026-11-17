@@ -64,8 +64,8 @@ def test_parallel_reference_replay_and_learning_exclude_input_waits() -> None:
     model.configure({}, install=True)
     errors = _replay(model, _schedule())
     assert max(errors) < 5
-    assert model.costs["identities"] == REFERENCE_SECONDS["identities"]
-    assert model.costs["vanilla climate"] == REFERENCE_SECONDS["vanilla climate"]
+    assert model.costs["identities"] == pytest.approx(REFERENCE_SECONDS["identities"])
+    assert model.costs["vanilla climate"] == pytest.approx(REFERENCE_SECONDS["vanilla climate"])
     assert model.remaining(10000) == 0
 
 

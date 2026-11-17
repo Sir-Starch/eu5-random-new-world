@@ -138,3 +138,17 @@ def test_inline_numbers_retain_scalar_float64_rounding_and_grammar(
 def test_inline_numbers_reject_invalid_tokens_or_incomplete_records(text: str) -> None:
     with pytest.raises(ValueError, match=r"invalid instance|reshape"):
         _ = eu5_objects._inline_values(text)  # pyright: ignore[reportPrivateUsage]
+
+
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_canvas_budget_counts_equal_coordinate_vectors(seed: int) -> None:
+    classes, canvas = _classes(seed)
+    generator = np.random.default_rng(seed)
+    use_fine = generator.integers(0, 2, 3 * 18).astype(bool)
+    for first, last in [(0, ROWS), (13, 43), (42, 43), (0, 0)]:
+        _, _, fine, coarse = canvas_pixels(classes, canvas, first, last)
+        expected_fine = np.bincount(fine, minlength=use_fine.size) * use_fine
+        expected_coarse = np.bincount(coarse[~use_fine[fine]], minlength=2 * 18)
+        actual = eu5_objects.canvas_counts(classes, canvas, use_fine, 2 * 18, first, last)
+        assert np.array_equal(actual[0], expected_fine)
+        assert np.array_equal(actual[1], expected_coarse)
