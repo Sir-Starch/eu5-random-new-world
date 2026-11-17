@@ -33,8 +33,6 @@ from rnw.eu5_slots import (
     LEVELS,
     NO_MATERIAL,
     REACH,
-    SLOTS,
-    VARIATION,
     SlotTables,
     level_counts,
     slot_remap,
@@ -67,7 +65,7 @@ LOCATION_UNITS: Final[int] = 4
 WRAP_PADDING: Final[int] = 512
 HEIGHTMAP: Final[re.Pattern[str]] = re.compile(r"heightmap_\d+_\d+")
 OUTSIDE: Final[int] = -1
-DECAL_THREADS: Final[int] = 8
+DECAL_THREADS: Final[int] = 4
 WATER_CODE: Final[int] = 0
 LAND_CODE: Final[int] = 1
 # Fine grain of the ground: a fractal from 64 down to 4 decal pixels whose octaves fall by
@@ -258,49 +256,29 @@ class ShiftedStore(DecalStore):
         )
         if not here.any():
             return layer, image
-        sources: dict[str, NDArray[np.uint16] | NDArray[np.uint8]] = {}
-        for sub_row in range(2):
-            for sub_column in range(2):
-                self._copy(
-                    image,
-                    placed,
-                    kind,
-                    (rows[here], columns[here]),
-                    (moved.rows[here], moved.columns[here]),
-                    (sub_row, sub_column),
-                    sources,
-                )
-        return layer, image
-
-    def _copy(  # noqa: PLR0913, PLR0917 - a copy names the image, both places and the sub-pixel.
-        self,
-        image: NDArray[np.uint16] | NDArray[np.uint8],
-        placed: Decal,
-        kind: str,
-        target: tuple[NDArray[np.int64], NDArray[np.int64]],
-        source: tuple[NDArray[np.int64], NDArray[np.int64]],
-        sub: tuple[int, int],
-        cache: dict[str, NDArray[np.uint16] | NDArray[np.uint8]],
-    ) -> None:
+        # A placement's membership and coordinates do not depend on the four
+        # subpixels. Read one original layer at a time, and retain the original
+        # placement/duplicate-write order for each independent subpixel.
+        source_rows, source_columns = moved.rows[here], moved.columns[here]
+        target_rows = 2 * (rows[here] - placed.row0)
+        target_columns = 2 * (columns[here] - placed.column0)
         for origin in self.decals:
             inside = (
-                (source[0] >= origin.row0)
-                & (source[0] < origin.row0 + origin.rows)
-                & (source[1] >= origin.column0)
-                & (source[1] < origin.column0 + origin.columns)
+                (source_rows >= origin.row0)
+                & (source_rows < origin.row0 + origin.rows)
+                & (source_columns >= origin.column0)
+                & (source_columns < origin.column0 + origin.columns)
             )
             if not inside.any():
                 continue
-            if origin.name not in cache:
-                cache[origin.name] = DecalStore.layer(self, origin.name, kind)[1]
-            values = cache[origin.name][
-                2 * (source[0][inside] - origin.row0) + sub[0],
-                2 * (source[1][inside] - origin.column0) + sub[1],
-            ]
-            image[
-                2 * (target[0][inside] - placed.row0) + sub[0],
-                2 * (target[1][inside] - placed.column0) + sub[1],
-            ] = values
+            original = DecalStore.layer(self, origin.name, kind)[1]
+            sy = 2 * (source_rows[inside] - origin.row0)
+            sx = 2 * (source_columns[inside] - origin.column0)
+            ty, tx = target_rows[inside], target_columns[inside]
+            for sub_row in range(2):
+                for sub_column in range(2):
+                    image[ty + sub_row, tx + sub_column] = original[sy + sub_row, sx + sub_column]
+        return layer, image
 
 
 # Median vanilla shelf profile measured on decal heightmap_6_16 [V-EXEC]: height by step
@@ -323,7 +301,7 @@ COAST_APRON: Final[int] = (max(REACH, WATER_PROFILE[-1][0] + COAST_SMOOTH + 2) +
 # the material rules look 17 decal pixels away, so no row of a band depends on the band
 # size or on where its neighbours begin [V-EXEC C102].
 BAND_HALO: Final[int] = CAP_REACH + 8
-BAND_ROWS: Final[int] = 128
+BAND_ROWS: Final[int] = 256
 MIN_BAND_ROWS: Final[int] = 16
 # Working memory per location pixel of a band window: the original 600-byte
 # allowance (C102), plus distance, gain and sampled mountain-detail arrays.
@@ -351,6 +329,7 @@ def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the cor
     seed: int,
     origin: tuple[int, int],
     core: tuple[slice, slice] | None = None,
+    sampled: bool = False,
 ) -> tuple[NDArray[np.bool_], NDArray[np.bool_], NDArray[np.int64]]:
     """Land mask of a decal window and canvas mask and generated heights of its core.
 
@@ -359,7 +338,9 @@ def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the cor
     without a terrace; water follows the vanilla shelf profile. ``core`` (row and column
     slices of the decal-resolution window, all of it by default) limits the canvas mask and
     the heights, and with them the noise and the per-pixel rules, to those pixels; the
-    distance fields always cover the window. The kernel is Rust (ADR 0005), its NumPy
+    distance fields always cover the window. ``sampled`` evaluates only the odd rows and
+    columns consumed by the ground survey; it is identical to slicing the full result
+    with ``[1::2, 1::2]``. The kernel is Rust (ADR 0005), its NumPy
     specification is ``tests/reference/terrain.py``.
     """
     rows, columns = core if core is not None else (slice(None), slice(None))
@@ -393,6 +374,7 @@ def decal_heights(  # noqa: PLR0913 - a window, its seed and origin, and the cor
         WATER_PROFILE[-1][0] + 1,
         params,
         (row0, row1 - row0, column0, column1 - column0),
+        sampled,
     )
 
 
@@ -467,9 +449,10 @@ def surface_heights(
             seed=seed,
             origin=(2 * (left - MARGIN), 2 * row0),
             core=core,
+            sampled=True,
         )
-        samples = heights[1::2, 1::2]
-        shown = inside[1::2, 1::2]
+        samples = heights
+        shown = inside
         chosen = samples[shown]
         if chosen.size and (int(chosen.min()) < 0 or int(chosen.max()) > limit):
             message = f"primary heights {chosen.min()}..{chosen.max()} do not fit the layer"
@@ -598,10 +581,13 @@ def _lay_stamp_slots(
     takes the slot its list can hold, as every written slot does, and one that lists no
     variation at all keeps what it has.
     """
-    count = np.clip(tables.materials[labels], 0, SLOTS)
-    remapped = slot_remap()[count, np.minimum(stamped, SLOTS - 1)]
-    shown = (stamped != NO_MATERIAL) & (remapped >= VARIATION)
-    return np.where(shown, np.minimum(slots, remapped), slots).astype(np.uint8)
+    return _native.stamp_slots(
+        np.ascontiguousarray(slots),
+        np.ascontiguousarray(stamped),
+        np.ascontiguousarray(labels),
+        np.ascontiguousarray(tables.materials),
+        np.ascontiguousarray(slot_remap()).ravel(),
+    )
 
 
 @measured
@@ -623,6 +609,33 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
     columns = np.arange(window.column0, window.column1, dtype=np.int64) % width
     local_water = inputs.vanilla_water[rows][:, columns]
     local_codes = coast_codes(codes[rows][:, columns], local_water)
+    # Nothing is written outside this exact mask. Keep the normal halo around its
+    # horizontal bounding box, so every retained distance/noise sample is unchanged.
+    core_row = window.inner_row // 2
+    core_column = window.inner_column // 2
+    written = (
+        local_codes[
+            core_row : core_row + last - first,
+            core_column : core_column + decal.columns,
+        ]
+        != OUTSIDE
+    )
+    active = np.flatnonzero(np.any(written, axis=0))
+    if not active.size:
+        return
+    left, right = int(active[0]), int(active[-1]) + 1
+    if left or right < decal.columns:
+        narrowed = replace(decal, column0=decal.column0 + left, columns=right - left)
+        _rebuild_band(
+            narrowed,
+            first=first,
+            last=last,
+            inputs=inputs,
+            tables=tables,
+            seed=seed,
+            images=(images[0][:, left * 2 : right * 2], images[1][:, left * 2 : right * 2]),
+        )
+        return
     relief = inputs.relief(rows, slice(window.column0, window.column1))
     labels = np.repeat(np.repeat(inputs.labels[rows][:, columns], 2, axis=0), 2, axis=1)
     rivers = np.repeat(np.repeat(inputs.rivers[rows][:, columns], 2, axis=0), 2, axis=1)
@@ -658,13 +671,18 @@ def _rebuild_band(  # noqa: PLR0913 - a band reads the decal, its rows, the inpu
             window_origin = (origin[0] + core[1].start, origin[1] + core[0].start)
             detail, laid = inputs.mountains.stamp(window_origin, heights.shape)
             # The stamps' own slots show where their heights do: on the mountains.
-            stamped = np.where(inside & (heights >= LOW), laid, NO_MATERIAL)
-            gain = np.clip((heights - LOW) * 1000 // (FULL - LOW), 0, 1000)
-            raised = heights + np.where(inside, detail * gain // 1000 * river_reach[core] // 12, 0)
-            heights = np.minimum(raised, np.maximum(heights, CAP))
-            if np.any(heights > np.iinfo(np.uint16).max):
-                message = "Mountain detail exceeds the terrain height range"
-                raise TerrainRangeError(message)
+            try:
+                heights, stamped = _native.blend_mountains(
+                    np.ascontiguousarray(heights),
+                    np.ascontiguousarray(inside),
+                    np.ascontiguousarray(detail),
+                    np.ascontiguousarray(laid),
+                    np.ascontiguousarray(river_reach[core]),
+                    (LOW, FULL, CAP),
+                    NO_MATERIAL,
+                )
+            except _native.TerrainRangeError as error:
+                raise TerrainRangeError(str(error)) from error
         target = (slice(first * 2, last * 2), slice(left * 2, right * 2))
         height_image, material_image = images
         _write_where(height_image[target], heights, inside)

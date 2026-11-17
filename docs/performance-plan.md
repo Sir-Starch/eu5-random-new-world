@@ -258,6 +258,37 @@ profile rather than treating this first gain as completion. The locked full chec
 (3,393 Python tests, 22 optional skips; 31 Rust tests). Local raw evidence stays under
 `local_data/performance-20261117/`.
 
+[V-EXEC 2026-11-17] The next implementation also fuses land-height blurs, block relief,
+mountain blending and material stamping; removes whole-raster component sorting and unused
+roughness readings; batches exact geographic remaps; and reuses history queries only within
+their immutable state snapshot. Terrain bands omit columns outside their active core, retain
+all original halos, and evaluate land noise only where its value is consumed. The ground survey
+computes the odd height samples directly instead of discarding three quarters of them. The
+written decals still use the complete height field. Shifted island layers prepare their source
+coordinates once, and inline vegetation numbers and localization hashes use exact native
+conversions. Original implementations and adversarial equality cases remain in the tests.
+
+An intermediate fresh-library export with eight threads took **262.5 seconds**, peak
+**7.84 GiB**, reproducing the same 884 files and input digest. Its geography stage took 90.0 s,
+including relief 19.8 s and land cells 40.5 s; the later terrain branch took 84.1 s (decals 53.5 s,
+vegetation 28.4 s). Several of these spans overlap or wait for dependencies: they are not
+additive exclusive CPU costs. This is a diagnostic comparison with a different thread limit,
+not the final matched benchmark. The latest kernels still need a clean complete-world time
+comparison and the installed-game current/frozen-epoch checks. Full locked checks pass after
+this phase (3,450 Python tests, 22 optional skips; 31 Rust tests). No goldens have changed.
+
+The latest complete candidate export took **301.4 s**, peak **8.55 GiB**, at eight threads,
+again reproducing every output and input hash. Its terrain branch was 78.2 s, including
+22.8 s for vegetation, but geography was 107.6 s and canvas selection 13.7 s. The difference
+from the preceding 262.5-second diagnostic is unresolved host/run variability; do not select
+the fastest observation as the after result. A matched repeated comparison remains required.
+The additional mid-kernel cancellation test raises from the second native growth checkpoint
+and preserves the caller's seed raster.
+
+The bar also credits completed relief/sea-cell/land-cell subpasses against their parent's
+weight, without counting them twice or inventing progress while a pass is running. This is
+separate from generation speed. The **180/120-second targets remain open**.
+
 The final result must include a before/after table of complete-world time, critical-path
 stage time, peak memory, cache mode and output digest; the unchanged golden/reference
 results; the coherent implementation commits and the installed hub self-test result.

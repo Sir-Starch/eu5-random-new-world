@@ -121,6 +121,77 @@ impl Octave {
             *slot += self.amplitude * value;
         }
     }
+
+    fn add_masked_row(&self, row: usize, total: &mut [i64], mask: &[bool], step: usize) {
+        let y = self.y0 + row as i64;
+        let index = y / self.period;
+        let sy = smooth((y - index * self.period) * UNIT / self.period);
+        let top = (index - self.first_row) as usize * self.columns;
+        let upper = &self.lattice[top..top + self.columns];
+        let lower = &self.lattice[top + self.columns..top + 2 * self.columns];
+        for (x, slot) in total.iter_mut().enumerate() {
+            if !mask[x] {
+                continue;
+            }
+            let at = self.cell[x * step] as usize;
+            *slot += self.amplitude
+                * blend(
+                    upper[at],
+                    upper[at + 1],
+                    lower[at],
+                    lower[at + 1],
+                    self.fraction[x * step],
+                    sy,
+                );
+        }
+    }
+}
+
+/// The identical fractal on selected pixels; unselected values are never consumed.
+pub fn fractal_masked(
+    key: u64,
+    (x0, y0): (i64, i64),
+    (width, height, step): (usize, usize, usize),
+    period: i64,
+    octaves: u32,
+    persistence_permille: i64,
+    mask: &[bool],
+) -> Vec<i64> {
+    let mut out = vec![0_i64; width * height];
+    if !mask.iter().any(|&keep| keep) {
+        return out;
+    }
+    let mut stack = Vec::new();
+    let mut amplitude = PERMILLE;
+    let mut weight = 0;
+    for octave in 0..octaves {
+        stack.push(Octave::new(
+            octave_key(key, octave),
+            x0,
+            y0,
+            (width - 1) * step + 1,
+            (height - 1) * step + 1,
+            2.max(period >> octave),
+            amplitude,
+        ));
+        weight += amplitude;
+        amplitude = 1.max(amplitude * persistence_permille / PERMILLE);
+    }
+    let weight = 1.max(weight);
+    out.par_chunks_mut(width)
+        .zip(mask.par_chunks(width))
+        .enumerate()
+        .for_each(|(row, (line, keep))| {
+            for octave in &stack {
+                octave.add_masked_row(row * step, line, keep, step);
+            }
+            for (value, &keep) in line.iter_mut().zip(keep) {
+                if keep {
+                    *value = value.div_euclid(weight);
+                }
+            }
+        });
+    out
 }
 
 /// Fractal noise of a window of the world: octaves of halving period summed with

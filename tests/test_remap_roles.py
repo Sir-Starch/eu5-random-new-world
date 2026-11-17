@@ -1,5 +1,7 @@
 """A remapped place retains the access that vanilla scripts rely on."""
 
+# NumPy coordinates are typed dynamically.
+# pyright: reportAny=false
 from __future__ import annotations
 
 from dataclasses import replace
@@ -148,3 +150,31 @@ def test_a_dropped_area_without_any_compatible_location_is_an_error() -> None:
             access=RemapAccess(),
             areas={"lost_area": ["absent"]},
         )
+
+
+def test_batched_role_mapping_equals_reference_with_ties_and_shared_scopes() -> None:
+    from tests.reference.remap import build_remap as reference_remap  # noqa: PLC0415
+
+    rng = np.random.default_rng(319218363)
+    plan = _plan()
+    # Small coordinates deliberately make exact ties common; the first pool member wins.
+    for _ in range(12):
+        centres = rng.integers(-10, 10, (4, 2), dtype=np.int64)
+        removed = [
+            (str(i), CellClass.LAND if i % 2 else CellClass.SEA, int(y), int(x))
+            for i, (y, x) in enumerate(rng.integers(-10, 10, (80, 2)))
+        ]
+        access = RemapAccess(
+            port_keys=frozenset(str(i) for i in range(1, 80, 6)),
+            port_cells=frozenset({1}),
+            navigable_keys=frozenset(str(i) for i in range(0, 80, 8)),
+            closed_seas=frozenset({2}),
+        )
+        areas = {"shared": [str(i) for i in range(10)]}
+        provinces = {"shared": ["0", "1"], "missing": ["absent"]}
+        actual = build_remap(removed, plan, centres, provinces, access=access, areas=areas)
+        expected = reference_remap(removed, plan, centres, provinces, access=access, areas=areas)
+        assert actual == expected
+        assert actual.areas == expected.areas
+        assert actual.provinces == expected.provinces
+        assert list(actual) == list(expected)

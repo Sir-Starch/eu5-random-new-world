@@ -717,21 +717,16 @@ def block_relief(
     found: NDArray[np.bool_],
     *,
     blur: int = 0,
+    rough: bool = True,
 ) -> NDArray[np.int64]:
     """The spread and the bend of the height of the land of each ``found`` ``SIZE_STEP`` block,
     in raster order (``block_features``): the standard deviation of its height and the mean of
     ``relief.strip_bend``, which ``_topography`` ranks as it ranks the cells' (integers). With
     ``blur`` the height is first blurred over the land (``relief.land_blur``)."""
     step = SIZE_STEP
-    rows, columns = (int(size) for size in land.shape)
-    width = -(-columns // step)
+    rows = int(land.shape[0])
     blocks = int(found.size)
-    count = np.zeros(blocks, dtype=np.int64)
-    total = np.zeros(blocks, dtype=np.int64)
-    square = np.zeros(blocks, dtype=np.int64)
-    bent = np.zeros(blocks, dtype=np.int64)
-    read = np.zeros(blocks, dtype=np.int64)
-    column_block = np.arange(columns, dtype=np.int64) // step
+    totals = np.zeros((5, blocks), dtype=np.int64)
     for start in range(0, rows, RELIEF_ROWS):
         checkpoint()
         stop = min(rows, start + RELIEF_ROWS)
@@ -741,21 +736,16 @@ def block_relief(
             if not blur
             else blurred_window(land, height, low, high, blur)
         )
-        bend = strip_bend(land[low:high], window, start, stop, rows)
-        on_land = land[start:stop]
-        values = window[start - low : stop - low]
-        index = (np.arange(start, stop, dtype=np.int64)[:, np.newaxis] // step) * width
-        index = np.broadcast_to(index + column_block[np.newaxis, :], on_land.shape)
-        owner = index[on_land]
-        # Exact: integer sums below 2^53 in a strip.
-        count += np.bincount(owner, minlength=blocks)
-        total += np.bincount(owner, weights=values[on_land], minlength=blocks).astype(np.int64)
-        square += np.bincount(
-            owner, weights=values[on_land] * values[on_land], minlength=blocks
-        ).astype(np.int64)
-        kept = on_land & (bend >= 0)
-        bent += np.bincount(index[kept], weights=bend[kept], minlength=blocks).astype(np.int64)
-        read += np.bincount(index[kept], minlength=blocks)
+        bend = strip_bend(land[low:high], window, start, stop, rows) if rough else None
+        totals += _native.block_relief(
+            np.ascontiguousarray(land[start:stop]),
+            np.ascontiguousarray(window[start - low : stop - low]),
+            bend,
+            blocks,
+            step,
+            start,
+        )
+    count, total, square, bent, read = totals
     where = np.flatnonzero(found.ravel())
     pixels = np.maximum(count[where], 1)
     mean = total[where] // pixels
@@ -784,7 +774,7 @@ def cell_ruggedness(
     step = SIZE_STEP
     shape = (-(-rows // step), -(-columns // step))
     on_land = (labels >= 0) & (labels < count) if land is None else land
-    relief = block_relief(on_land, elevation, np.ones(shape, dtype=bool), blur=blur)
+    relief = block_relief(on_land, elevation, np.ones(shape, dtype=bool), blur=blur, rough=False)
     del on_land
     cells = max(count, int(labels.max()) + 1)
     pixels, sums = _location_sums(labels, relief[:, :1], shape, cells)
@@ -881,22 +871,10 @@ class GroundField:
 def _block_raster(land: NDArray[np.bool_]) -> tuple[NDArray[np.int32], NDArray[np.int64]]:
     """The ``GROUND_STEP`` block (raster order) of each pixel of ``land`` (-1 elsewhere) and the
     land pixels of every block, a strip of ``RELIEF_ROWS`` rows at a time."""
-    step = GROUND_STEP
-    rows, columns = (int(size) for size in land.shape)
-    width = -(-columns // step)
-    count = -(-rows // step) * width
-    out = np.full(land.shape, -1, dtype=np.int32)
-    pixels = np.zeros(count, dtype=np.int64)
-    across = (np.arange(columns, dtype=np.int64) // step).astype(np.int32)
-    for start in range(0, rows, RELIEF_ROWS):
-        checkpoint()
-        stop = min(rows, start + RELIEF_ROWS)
-        down = (np.arange(start, stop, dtype=np.int64) // step * width).astype(np.int32)
-        here = land[start:stop]
-        blocks = np.where(here, down[:, np.newaxis] + across[np.newaxis, :], -1)
-        out[start:stop] = blocks
-        pixels += np.bincount(blocks[here], minlength=count)
-    return out, pixels
+    checkpoint()
+    out = _native.block_labels(np.ascontiguousarray(land), GROUND_STEP)
+    checkpoint()
+    return out
 
 
 @measured
@@ -1758,19 +1736,15 @@ def _label_centres(
     """The pixels, pixel-weighted centre (row, column) and mean height of the first ``count``
     labels (no label of -1)."""
     count = max(count, int(labels.max()) + 1)
-    width = labels.shape[1]
-    sums = np.zeros((4, count), dtype=np.float64)
+    exact = np.zeros((4, count), dtype=np.int64)
     for start in range(0, labels.shape[0], 1024):
         checkpoint()
-        block = labels[start : start + 1024].ravel()
-        values = height[start : start + 1024].ravel().astype(np.float64)
-        index = np.arange(block.size, dtype=np.int64)
-        sums[0] += np.bincount(block, minlength=count)
-        sums[1] += np.bincount(block, weights=(index // width + start).astype(np.float64),
-                               minlength=count)  # fmt: skip
-        sums[2] += np.bincount(block, weights=(index % width).astype(np.float64), minlength=count)
-        sums[3] += np.bincount(block, weights=values, minlength=count)
-    exact = sums.astype(np.int64)
+        exact += _native.label_moments(
+            np.ascontiguousarray(labels[start : start + 1024]),
+            np.ascontiguousarray(height[start : start + 1024], dtype=np.int64),
+            count,
+            start,
+        )
     pixels = np.maximum(1, exact[0])
     points = np.stack([exact[1] // pixels, exact[2] // pixels], axis=1)
     return exact[0], points, exact[3] // pixels

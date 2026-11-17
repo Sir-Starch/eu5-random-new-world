@@ -25,10 +25,25 @@ pub fn distance_from_wrapped(
 ) -> Vec<i32> {
     let mut distance = vec![limit; sources.len()];
     let mut frontier: Vec<u32> = Vec::new();
-    for (index, &source) in sources.iter().enumerate() {
-        if source {
-            distance[index] = 0;
-            frontier.push(index as u32);
+    // Interior sources cannot enqueue anything in round one (which is cardinal).
+    // Retain the boundary in the original raster order; every retained round is identical.
+    for row in 0..height {
+        for column in 0..width {
+            let at = row * width + column;
+            if !sources[at] {
+                continue;
+            }
+            distance[at] = 0;
+            if limit > 1
+                && ((row > 0 && !sources[at - width])
+                    || (row + 1 < height && !sources[at + width])
+                    || (column > 0 && !sources[at - 1])
+                    || (column + 1 < width && !sources[at + 1])
+                    || (wrap_x && width > 1 && column == 0 && !sources[at + width - 1])
+                    || (wrap_x && width > 1 && column + 1 == width && !sources[at + 1 - width]))
+            {
+                frontier.push(at as u32);
+            }
         }
     }
     let mut next: Vec<u32> = Vec::new();
@@ -175,11 +190,20 @@ pub fn nearest_label(
         .zip(sources)
         .map(|(&l, &s)| if s { l } else { -1 })
         .collect();
-    let mut frontier: Vec<u32> = sources
-        .iter()
-        .enumerate()
-        .filter_map(|(index, &source)| source.then_some(index as u32))
-        .collect();
+    let mut frontier = Vec::new();
+    for row in 0..height {
+        for column in 0..width {
+            let at = row * width + column;
+            if sources[at]
+                && ((row > 0 && out[at - width] < 0)
+                    || (row + 1 < height && out[at + width] < 0)
+                    || (column > 0 && out[at - 1] < 0)
+                    || (column + 1 < width && out[at + 1] < 0))
+            {
+                frontier.push(at as u32);
+            }
+        }
+    }
     let mut next: Vec<u32> = Vec::new();
     for _ in 0..limit {
         if frontier.is_empty() {

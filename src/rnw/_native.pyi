@@ -2,11 +2,15 @@
 
 from collections.abc import Callable
 
-from numpy import bool_, float32, int8, int32, int64, uint8, uint16, uint32
+from numpy import bool_, float32, int8, int32, int64, uint8, uint16, uint32, uint64
 from numpy.typing import NDArray
 
 class LzavError(ValueError): ...
+class TerrainRangeError(ValueError): ...
 
+def parse_instances(text: str) -> NDArray[float32]: ...
+def murmur3(data: bytes, seed: int) -> int: ...
+def key_hashes(keys: list[str]) -> list[int]: ...
 def lzav_decode(data: bytes, size: int) -> bytes: ...
 def value_window(
     key: int, x0: int, y0: int, width: int, height: int, period: int
@@ -133,6 +137,7 @@ def decal_heights(
     profile_end: int,
     params: dict[str, int],
     core: tuple[int, int, int, int],
+    sampled: bool = False,
 ) -> tuple[NDArray[bool_], NDArray[bool_], NDArray[int64]]: ...
 def grow_labels(
     mask: NDArray[bool_],
@@ -207,3 +212,39 @@ def strip_bend(
     rows: int,
     step: int,
 ) -> NDArray[int64]: ...
+def land_blur(land: NDArray[bool_], values: NDArray[int64], radius: int) -> NDArray[int64]: ...
+def block_relief(
+    land: NDArray[bool_],
+    values: NDArray[int64],
+    bend: NDArray[int64] | None,
+    blocks: int,
+    step: int,
+    first: int,
+) -> NDArray[int64]: ...
+def block_labels(land: NDArray[bool_], step: int) -> tuple[NDArray[int32], NDArray[int64]]: ...
+def renumber(labels: NDArray[int32]) -> NDArray[int32]: ...
+def format_instances(values: NDArray[float32]) -> str: ...
+def coastal_pixels(
+    labels: NDArray[int32],
+    land: NDArray[bool_],
+    sea: NDArray[bool_],
+) -> NDArray[int64]: ...
+def blend_mountains(
+    heights: NDArray[int64],
+    inside: NDArray[bool_],
+    detail: NDArray[int64],
+    laid: NDArray[uint8],
+    reach: NDArray[int32],
+    limits: tuple[int, int, int],
+    no_material: int,
+) -> tuple[NDArray[int64], NDArray[uint8]]: ...
+def stamp_slots(
+    slots: NDArray[uint8],
+    stamped: NDArray[uint8],
+    labels: NDArray[int32],
+    materials: NDArray[int64],
+    remap: NDArray[int64],
+) -> NDArray[uint8]: ...
+def first_pixels32(labels: NDArray[int32]) -> NDArray[int64]: ...
+def first_pixels64(labels: NDArray[int64]) -> NDArray[int64]: ...
+def first_pixels_u64(labels: NDArray[uint64]) -> NDArray[int64]: ...

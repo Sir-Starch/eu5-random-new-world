@@ -3,14 +3,19 @@
 # pyright: reportAny=false
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 import numpy as np
 
+from rnw.fields import box_blur
 from rnw.progress import checkpoint
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+
+from rnw.eu5_biomes import RELIEF_ROWS, SIZE_STEP
+from rnw.relief import HILL_STEP
 
 CENTRE_STRIP = 256
 PERMILLE = 1000
@@ -302,3 +307,94 @@ def strip_bend(
         bend[first - start : last - start] += np.where(both, found, 0)
         ends[first - start : last - start] += both
     return np.where(ends > 0, bend // np.maximum(ends, 1), -1)
+
+
+def land_blur(
+    land: NDArray[np.bool_], height: NDArray[np.integer], radius: int
+) -> NDArray[np.int64]:
+    """The mean height of the land in the box of ``radius`` pixels round every land pixel, 0 off
+    the land (``radius`` 0: the height itself). The edges of the window are replicated, so a row
+    within ``radius`` of an edge that is not the map's reads short; read a window ``radius`` rows
+    wider (``blurred_window``). Integers."""
+    if radius <= 0:
+        return np.where(land, height, 0).astype(np.int64)
+    share = box_blur(land.astype(np.int64) * PERMILLE, radius)
+    total = box_blur(np.where(land, height, 0).astype(np.int64) * PERMILLE, radius)
+    return np.where(land, total // np.maximum(share, 1), 0)
+
+
+def blurred_window(
+    land: NDArray[np.bool_], height: NDArray[np.integer], low: int, high: int, radius: int
+) -> NDArray[np.int64]:
+    """Rows ``low`` to ``high`` of ``height`` blurred over the land (``land_blur``), read with
+    ``radius`` more rows on each side, so they are the rows of the whole map's blur."""
+    rows = int(land.shape[0])
+    first, last = max(0, low - radius), min(rows, high + radius)
+    blurred = land_blur(land[first:last], height[first:last], radius)
+    return blurred[low - first : high - first]
+
+
+def block_relief(
+    land: NDArray[np.bool_],
+    height: NDArray[np.integer],
+    found: NDArray[np.bool_],
+    *,
+    blur: int = 0,
+) -> NDArray[np.int64]:
+    """The spread and the bend of the height of the land of each ``found`` ``SIZE_STEP`` block,
+    in raster order (``block_features``): the standard deviation of its height and the mean of
+    ``relief.strip_bend``, which ``_topography`` ranks as it ranks the cells' (integers). With
+    ``blur`` the height is first blurred over the land (``relief.land_blur``)."""
+    step = SIZE_STEP
+    rows, columns = (int(size) for size in land.shape)
+    width = -(-columns // step)
+    blocks = int(found.size)
+    count = np.zeros(blocks, dtype=np.int64)
+    total = np.zeros(blocks, dtype=np.int64)
+    square = np.zeros(blocks, dtype=np.int64)
+    bent = np.zeros(blocks, dtype=np.int64)
+    read = np.zeros(blocks, dtype=np.int64)
+    column_block = np.arange(columns, dtype=np.int64) // step
+    for start in range(0, rows, RELIEF_ROWS):
+        checkpoint()
+        stop = min(rows, start + RELIEF_ROWS)
+        low, high = max(0, start - HILL_STEP), min(rows, stop + HILL_STEP)
+        window = (
+            height[low:high].astype(np.int64)
+            if not blur
+            else blurred_window(land, height, low, high, blur)
+        )
+        bend = strip_bend(land[low:high], window, start, stop, rows)
+        on_land = land[start:stop]
+        values = window[start - low : stop - low]
+        index = (np.arange(start, stop, dtype=np.int64)[:, np.newaxis] // step) * width
+        index = np.broadcast_to(index + column_block[np.newaxis, :], on_land.shape)
+        owner = index[on_land]
+        # Exact: integer sums below 2^53 in a strip.
+        count += np.bincount(owner, minlength=blocks)
+        total += np.bincount(owner, weights=values[on_land], minlength=blocks).astype(np.int64)
+        square += np.bincount(
+            owner, weights=values[on_land] * values[on_land], minlength=blocks
+        ).astype(np.int64)
+        kept = on_land & (bend >= 0)
+        bent += np.bincount(index[kept], weights=bend[kept], minlength=blocks).astype(np.int64)
+        read += np.bincount(index[kept], minlength=blocks)
+    where = np.flatnonzero(found.ravel())
+    pixels = np.maximum(count[where], 1)
+    mean = total[where] // pixels
+    variance = np.maximum(square[where] // pixels - mean * mean, 0)
+    spread = np.array([math.isqrt(int(value)) for value in variance.tolist()], dtype=np.int64)
+    return np.stack([spread, bent[where] // np.maximum(read[where], 1)], axis=1)
+
+
+def renumber(labels: NDArray[np.int32]) -> NDArray[np.int32]:
+    """Number non-negative labels by first appearance in raster order."""
+    flat = labels.ravel()
+    valid = flat >= 0
+    present, first = np.unique(flat[valid], return_index=True)
+    order = np.argsort(first, kind="stable")
+    mapping = np.full(int(present.max()) + 1 if present.size else 1, -1, dtype=np.int32)
+    mapping[present[order]] = np.arange(present.size, dtype=np.int32)
+    out = np.full(flat.shape, -1, dtype=np.int32)
+    out[valid] = mapping[flat[valid]]
+    return out.reshape(labels.shape)

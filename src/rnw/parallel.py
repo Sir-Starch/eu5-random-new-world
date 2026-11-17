@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Final, Self
 
 from rnw import _native
 from rnw.progress import checkpoint, run_stage
+from rnw.timing import timed
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
@@ -359,12 +360,28 @@ class Stages:
 
     def submit[T](self, name: str, work: Callable[[], T]) -> Future[T]:
         """Start ``work`` as the stage ``name`` and return its future."""
+        return self._submit(lambda: _run_stage(name, work))
+
+    def prepare[T](self, name: str, work: Callable[[], T]) -> Future[T]:
+        """Independent preparation in the same bounded pool, without a second UI stage.
+
+        Timings include it; its consumer's stage still accounts for any wait. The same
+        dependency/submission-order rule as ``submit`` applies.
+        """
+
+        def run() -> T:
+            checkpoint()
+            return timed(name, work)
+
+        return self._submit(run)
+
+    def _submit[T](self, work: Callable[[], T]) -> Future[T]:
         checkpoint()
         if self._pool is not None:
-            return self._pool.submit(_run_stage, name, work)
+            return self._pool.submit(work)
         future: Future[T] = Future()
         try:
-            future.set_result(_run_stage(name, work))
+            future.set_result(work())
         except BaseException as error:  # noqa: BLE001 - re-raised by result()
             future.set_exception(error)
         return future

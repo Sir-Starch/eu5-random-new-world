@@ -6,6 +6,35 @@
 
 use crate::hash::hash_point;
 use rayon::prelude::*;
+use std::fmt::Write;
+
+/// Python's float32 -> float64 `:.6f` rows, including signed zero and nonfinite values.
+pub fn format_inline(values: &[f32], (rows, columns): (usize, usize)) -> String {
+    if columns == 0 {
+        return "\n".repeat(rows);
+    }
+    let parts: Vec<String> = values
+        .par_chunks(columns * 256)
+        .map(|part| {
+            let mut text = String::with_capacity(part.len() * 12);
+            for row in part.chunks(columns) {
+                for (column, &v) in row.iter().enumerate() {
+                    if column > 0 {
+                        text.push(' ');
+                    }
+                    if v.is_nan() {
+                        text.push_str("nan");
+                    } else {
+                        write!(&mut text, "{:.6}", f64::from(v)).unwrap();
+                    }
+                }
+                text.push('\n');
+            }
+            text
+        })
+        .collect();
+    parts.concat()
+}
 
 pub const SLOT_CLASSES: i64 = 18;
 pub const NO_SLOT: u8 = 17;

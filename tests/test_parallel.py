@@ -318,3 +318,18 @@ def test_the_collector_pauses_for_a_job_and_resumes_as_it_was() -> None:
         assert gc.isenabled()
     finally:
         _ = gc.enable() if was else gc.disable()
+
+
+@pytest.mark.parametrize("workers", [1, 2])
+def test_independent_preparation_uses_the_stage_pool_without_announcing_another_stage(
+    workers: int,
+) -> None:
+    from rnw.progress import Progress, Update, active  # noqa: PLC0415
+
+    updates: list[Update] = []
+    progress = Progress(updates.append)
+    with active(progress), parallel.Stages(workers) as stages:
+        prepared = stages.prepare("independent input", lambda: 42)
+        finished = stages.submit("texts", lambda: prepared.result() + 1)
+        assert finished.result(timeout=5) == 43
+    assert {update.stage for update in updates} == {"texts"}

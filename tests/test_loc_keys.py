@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from typing import TYPE_CHECKING
 
 import pytest
@@ -14,6 +15,7 @@ from rnw.eu5_nw_export import (
     verify_localization,
 )
 from rnw.loc_keys import KeySpace, key_hash, key_hashes, murmur3_32
+from tests.reference.loc_keys import murmur3_32 as reference_murmur3
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -172,3 +174,13 @@ def test_same_path_localization_keeps_its_keys_and_new_keys_still_cannot_collide
     outputs["main_menu/localization/english/new.yml"] = b'l_english:\n rnw_loc_05454: "A"\n'
     with pytest.raises(NewWorldExportError, match="1 generated localization keys collide"):
         _ = verify_localization(outputs, vanilla, game_dir=tmp_path)
+
+
+def test_native_hash_matches_scalar_for_arbitrary_bytes_and_unicode() -> None:
+    generator = random.Random(729)  # noqa: S311 - deterministic synthetic hash vectors
+    data = [generator.randbytes(size) for size in range(513)]
+    for seed in (0, 1, -1, 2**64 + 123, -(2**68)):
+        for value in data:
+            assert murmur3_32(value, seed) == reference_murmur3(value, seed)
+    keys = ["", "Привет", "海岸", "a\0b", "𒀀", "é", "e\u0301", "x" * 1000]
+    assert key_hashes(iter(keys)) == {reference_murmur3(key.encode()) for key in keys}

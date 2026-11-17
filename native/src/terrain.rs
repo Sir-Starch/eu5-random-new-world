@@ -5,9 +5,9 @@
 //! the results are at decal resolution, two pixels per location pixel.
 
 use crate::distance::{distance_from, euclidean_distance};
-use crate::noise::fractal_window;
+use crate::noise::fractal_masked;
 use crate::raster::{box_blur, upsample};
-use crate::slots::{Core, crop};
+use crate::slots::{Core, crop_strided};
 use rayon::prelude::*;
 use std::collections::HashMap;
 
@@ -17,6 +17,67 @@ const CREST_OCTAVES: u32 = 3;
 const CREST_PERSISTENCE: i64 = 500;
 const PERMILLE: i64 = 1000;
 const LAND_THRESHOLD: i64 = 500;
+
+/// Fuse the existing mountain-height arithmetic; each division stays in reference order.
+pub fn blend_mountains(
+    heights: &[i64],
+    inside: &[bool],
+    detail: &[i64],
+    laid: &[u8],
+    reach: &[i32],
+    (low, full, cap): (i64, i64, i64),
+    no_material: u8,
+) -> Result<(Vec<i64>, Vec<u8>), &'static str> {
+    let mut out = heights.to_vec();
+    let mut stamps = vec![no_material; heights.len()];
+    out.par_iter_mut()
+        .zip(stamps.par_iter_mut())
+        .enumerate()
+        .try_for_each(|(at, (slot, stamp))| {
+            let h = heights[at];
+            let stamped = if inside[at] && h >= low {
+                laid[at]
+            } else {
+                no_material
+            };
+            // A zero stamp, a river bed, or a height below the ramp adds exactly zero.
+            // Retain its material decision; the reference computes it before the height.
+            *stamp = stamped;
+            if !inside[at]
+                || detail[at] == 0
+                || reach[at] == 0
+                || (h >= 0 && h < low && low <= i64::from(u16::MAX))
+            {
+                return if h > i64::from(u16::MAX) {
+                    Err("Mountain detail exceeds the terrain height range")
+                } else {
+                    Ok(())
+                };
+            }
+            let gain = h
+                .wrapping_sub(low)
+                .wrapping_mul(1000)
+                .div_euclid(full - low)
+                .clamp(0, 1000);
+            let added = if inside[at] {
+                detail[at]
+                    .wrapping_mul(gain)
+                    .div_euclid(1000)
+                    .wrapping_mul(i64::from(reach[at]))
+                    .div_euclid(12)
+            } else {
+                0
+            };
+            let out = h.wrapping_add(added).min(h.max(cap));
+            if out > i64::from(u16::MAX) {
+                return Err("Mountain detail exceeds the terrain height range");
+            }
+            *slot = out;
+            *stamp = stamped;
+            Ok(())
+        })?;
+    Ok((out, stamps))
+}
 
 /// Integer constants of the height model, by name.
 pub struct Params(HashMap<String, i64>);
@@ -176,24 +237,16 @@ pub fn heights(
     origin: (i64, i64),
     table: &[(i64, i64)],
     params: &Params,
+    step: usize,
 ) -> Result<Vec<i64>, String> {
+    if core.rows == 0 || core.columns == 0 {
+        return Ok(Vec::new());
+    }
     let doubled = (shape.0 * 2, shape.1 * 2);
     let coast_height = params.get("coast_height")?;
-    let filled: Vec<i64> = relief
-        .par_iter()
-        .map(|&r| if r > 0 { r } else { coast_height })
-        .collect();
-    let smooth = crop(
-        &upsample(&pad_edge(&filled, shape), shape.1 + 1, 2, doubled),
-        doubled.1,
-        core,
-    );
-    drop(filled);
-    let (land, inland, offshore) = (
-        crop(&fields.land, doubled.1, core),
-        crop(&fields.inland, doubled.1, core),
-        crop(&fields.offshore, doubled.1, core),
-    );
+    let rows = core.rows.div_ceil(step);
+    let columns = core.columns.div_ceil(step);
+    let land = crop_strided(&fields.land, doubled.1, core, step);
     let origin = (origin.0 + core.column0 as i64, origin.1 + core.row0 as i64);
     let (detail_period, crest_period) = (params.get("detail_period")?, params.get("crest_period")?);
     let (detail_octaves, detail_persistence) = (
@@ -202,23 +255,25 @@ pub fn heights(
     );
     let (detail, crest) = rayon::join(
         || {
-            fractal_window(
+            fractal_masked(
                 keys.0,
                 origin,
-                (core.columns, core.rows),
+                (columns, rows, step),
                 detail_period,
                 detail_octaves,
                 detail_persistence,
+                &land,
             )
         },
         || {
-            fractal_window(
+            fractal_masked(
                 keys.1,
                 origin,
-                (core.columns, core.rows),
+                (columns, rows, step),
                 crest_period,
                 CREST_OCTAVES,
                 CREST_PERSISTENCE,
+                &land,
             )
         },
     );
@@ -234,25 +289,43 @@ pub fn heights(
         params.get("cap_slope")?,
         params.get("eighths")?,
     );
-    Ok((0..smooth.len())
-        .into_par_iter()
-        .map(|at| {
-            if !land[at] {
-                return profile(offshore[at], table, eighths);
+    let mut out = vec![0_i64; rows * columns];
+    out.par_chunks_mut(columns)
+        .enumerate()
+        .for_each(|(row, line)| {
+            let y = row * step + core.row0;
+            for (column, slot) in line.iter_mut().enumerate() {
+                let at = row * columns + column;
+                let x = column * step + core.column0;
+                let field = y * doubled.1 + x;
+                if !land[at] {
+                    *slot = profile(fields.offshore[field], table, eighths);
+                    continue;
+                }
+                // Evaluate precisely the old padded bilinear sample, only where consumed.
+                let (i, j) = (y / 2, x / 2);
+                let (fy, fx) = ((y % 2) as i64, (x % 2) as i64);
+                let sample = |r: usize, c: usize| {
+                    let h = relief[r.min(shape.0 - 1) * shape.1 + c.min(shape.1 - 1)];
+                    if h > 0 { h } else { coast_height }
+                };
+                let top = sample(i, j) * (2 - fx) + sample(i, j + 1) * fx;
+                let bottom = sample(i + 1, j) * (2 - fx) + sample(i + 1, j + 1) * fx;
+                let smooth = (top * (2 - fy) + bottom * fy).div_euclid(4);
+                let raised = (smooth - coast_height).max(0);
+                let amplitude =
+                    detail_base + (raised.min(detail_reach) * detail_permille).div_euclid(PERMILLE);
+                let ridge = noise_scale - crest[at].abs().min(noise_scale);
+                let crests = ((ridge * ridge).div_euclid(noise_scale) * raised.min(crest_full))
+                    .div_euclid(crest_full);
+                let inner = smooth
+                    + (detail[at] * amplitude).div_euclid(noise_scale)
+                    + (crests * crest_height).div_euclid(noise_scale);
+                let cap = shore + ((fields.inland[field] - eighths) * slope).div_euclid(eighths);
+                *slot = inner.min(cap).max(shore);
             }
-            let raised = (smooth[at] - coast_height).max(0);
-            let amplitude =
-                detail_base + (raised.min(detail_reach) * detail_permille).div_euclid(PERMILLE);
-            let ridge = noise_scale - crest[at].abs().min(noise_scale);
-            let crests = ((ridge * ridge).div_euclid(noise_scale) * raised.min(crest_full))
-                .div_euclid(crest_full);
-            let inner = smooth[at]
-                + (detail[at] * amplitude).div_euclid(noise_scale)
-                + (crests * crest_height).div_euclid(noise_scale);
-            let cap = shore + ((inland[at] - eighths) * slope).div_euclid(eighths);
-            inner.min(cap).max(shore)
-        })
-        .collect())
+        });
+    Ok(out)
 }
 
 #[cfg(test)]

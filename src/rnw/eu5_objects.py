@@ -28,6 +28,7 @@ from rnw import _native
 from rnw.parallel import band_rows
 from rnw.progress import checkpoint
 from rnw.rng import MASK64, derive_seed
+from rnw.timing import measured
 
 if TYPE_CHECKING:
     from collections.abc import Buffer, MutableMapping
@@ -76,6 +77,7 @@ class InstanceSet:
     records: NDArray[np.float32]
 
 
+@measured
 def _bin_sets(game_dir: Path) -> list[InstanceSet]:
     root = game_dir / MAP_OBJECTS
     names: set[str] = set()
@@ -92,18 +94,29 @@ def _bin_sets(game_dir: Path) -> list[InstanceSet]:
     return sets
 
 
+def _inline_values(text: str) -> NDArray[np.float32]:
+    """Parse the same float64 values without millions of temporary token strings.
+
+    The native parser accepts ordinary ASCII float syntax. Python's token conversion
+    additionally accepts underscores, Unicode digits and four extra control separators;
+    retain that exact grammar for those inputs. Both paths round through float64.
+    """
+    if text.isascii() and "_" not in text and not any(c in text for c in "\x1c\x1d\x1e\x1f"):
+        return _native.parse_instances(text).reshape(-1, RECORD_FLOATS)
+    values = np.array(text.split(), dtype=np.float64)
+    return values.reshape(-1, RECORD_FLOATS).astype(np.float32)
+
+
+@measured
 def _inline_sets(game_dir: Path) -> list[InstanceSet]:
     sets: list[InstanceSet] = []
     for path in sorted((game_dir / MAP_OBJECTS / "generated").glob("*.txt")):
         text = path.read_text(encoding="utf-8-sig")
         relative = f"{MAP_OBJECTS}/generated/{path.name}"
-        for match in INLINE.finditer(text):
-            values = np.array(match.group(5).split(), dtype=np.float64)
-            sets.append(
-                InstanceSet(
-                    relative, match.group(2), values.reshape(-1, RECORD_FLOATS).astype(np.float32)
-                )
-            )
+        sets.extend(
+            InstanceSet(relative, match.group(2), _inline_values(match.group(5)))
+            for match in INLINE.finditer(text)
+        )
     return sets
 
 
@@ -161,6 +174,7 @@ def pixel_counts(
     )
 
 
+@measured
 def _densities(
     instance: InstanceSet,
     classes: PixelClasses,
@@ -224,6 +238,7 @@ def sample_instances(  # noqa: PLR0913 - sampling needs pixels, densities, donor
     )
 
 
+@measured
 def sample_instance_sets(  # noqa: PLR0913 - sampling needs pixels, densities, donors and seeds.
     pixels: tuple[NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32], NDArray[np.uint32]],
     *,
@@ -372,11 +387,12 @@ def object_outputs(  # noqa: PLR0913 - one pass over every instance file.
     }
 
 
+@measured
 def _format(values: NDArray[np.float32]) -> str:
-    rows = [" ".join(f"{float(v):.6f}" for v in row) for row in values.tolist()]
-    return "".join(f"{row}\n" for row in rows)
+    return _native.format_instances(np.ascontiguousarray(values))
 
 
+@measured
 def rewrite_inline(path: Path, replaced: dict[str, NDArray[np.float32]]) -> bytes:
     raw = path.read_bytes()
     text = raw.decode("utf-8-sig")

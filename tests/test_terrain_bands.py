@@ -329,3 +329,44 @@ def test_padded_sources_equal_periodic_independently_rebuilt_tiles(
         first, last = images
         assert np.array_equal(padded[kind][0], np.concatenate([last[:, -8:], first], axis=1))
         assert np.array_equal(padded[kind][1], np.concatenate([last, first[:, :8]], axis=1))
+
+
+@pytest.mark.parametrize("band", [17, 130, 290])
+@pytest.mark.parametrize("footprint", ["empty", "island", "seam"])
+def test_mask_cropping_keeps_every_byte_of_the_uncropped_band(
+    monkeypatch: pytest.MonkeyPatch, band: int, footprint: str
+) -> None:
+    from tests.reference.terrain_band import rebuild_band  # noqa: PLC0415
+
+    inputs, tables = _world(3)
+    codes = np.full(inputs.codes.shape, -1, dtype=np.int8)
+    if footprint == "island":
+        codes[70:135, 90:155] = inputs.codes[70:135, 90:155]
+    elif footprint == "seam":
+        codes[100:250, :30] = inputs.codes[100:250, :30]
+        codes[100:250, -30:] = inputs.codes[100:250, -30:]
+    inputs = replace(inputs, codes=codes, noise_roll=103)
+    decal = Decal("crop", 25, -20, 290, COLUMNS + 40)
+    with ThreadPoolExecutor(2) as pool:
+        actual, pixels = _rebuild_decal(
+            decal,
+            FakeStore(decal=decal),  # pyright: ignore[reportArgumentType]
+            inputs,
+            tables,
+            seed=3,
+            pool=pool,
+            band=band,
+        )
+    with monkeypatch.context() as patch, ThreadPoolExecutor(2) as pool:
+        patch.setattr(eu5_terrain, "_rebuild_band", rebuild_band)
+        expected, reference = _rebuild_decal(
+            decal,
+            FakeStore(decal=decal),  # pyright: ignore[reportArgumentType]
+            inputs,
+            tables,
+            seed=3,
+            pool=pool,
+            band=band,
+        )
+    assert actual == expected
+    assert np.array_equal(pixels, reference)

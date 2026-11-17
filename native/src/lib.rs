@@ -23,10 +23,12 @@ pub mod water;
 
 use numpy::{
     IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3,
+    PyReadonlyArrayDyn,
 };
 use pyo3::prelude::*;
 
 pyo3::create_exception!(_native, LzavError, pyo3::exceptions::PyValueError);
+pyo3::create_exception!(_native, TerrainRangeError, pyo3::exceptions::PyValueError);
 
 fn object_fault(fault: objects::Fault) -> PyErr {
     let message = match fault {
@@ -54,6 +56,37 @@ mod _native {
 
     #[pymodule_export]
     use super::LzavError;
+    #[pymodule_export]
+    use super::TerrainRangeError;
+
+    #[pyfunction]
+    fn parse_instances<'py>(py: Python<'py>, text: &str) -> PyResult<Bound<'py, PyArray1<f32>>> {
+        let values = py
+            .detach(|| {
+                text.split(|c: char| c.is_ascii_whitespace() || c == '\u{b}')
+                    .filter(|word| !word.is_empty())
+                    .map(|word| word.parse::<f64>().map(|value| value as f32))
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .map_err(|_| {
+                pyo3::exceptions::PyValueError::new_err("invalid instance transform number")
+            })?;
+        Ok(values.into_pyarray(py))
+    }
+
+    #[pyfunction]
+    fn murmur3(data: &[u8], seed: u32) -> u32 {
+        hash::murmur3(data, seed)
+    }
+
+    #[pyfunction]
+    fn key_hashes(py: Python<'_>, keys: Vec<String>) -> Vec<u32> {
+        py.detach(|| {
+            keys.iter()
+                .map(|key| hash::murmur3(key.as_bytes(), 0))
+                .collect()
+        })
+    }
 
     /// Size the thread pool of the kernels; returns its size. Only the first call before a
     /// kernel has run can change it, later calls report the size in force.
@@ -63,6 +96,196 @@ mod _native {
             .num_threads(threads.max(1))
             .build_global();
         rayon::current_num_threads()
+    }
+
+    #[pyfunction]
+    fn first_pixels32<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArrayDyn<'py, i32>,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let labels = labels.as_slice()?;
+        Ok(py.detach(|| cells::first_pixels(labels)).into_pyarray(py))
+    }
+    #[pyfunction]
+    fn first_pixels64<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArrayDyn<'py, i64>,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let labels = labels.as_slice()?;
+        Ok(py.detach(|| cells::first_pixels(labels)).into_pyarray(py))
+    }
+    #[pyfunction]
+    fn first_pixels_u64<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArrayDyn<'py, u64>,
+    ) -> PyResult<Bound<'py, PyArray1<i64>>> {
+        let labels = labels.as_slice()?;
+        Ok(py.detach(|| cells::first_pixels(labels)).into_pyarray(py))
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments, clippy::type_complexity)]
+    fn blend_mountains<'py>(
+        py: Python<'py>,
+        heights: PyReadonlyArray2<'py, i64>,
+        inside: PyReadonlyArray2<'py, bool>,
+        detail: PyReadonlyArray2<'py, i64>,
+        laid: PyReadonlyArray2<'py, u8>,
+        reach: PyReadonlyArray2<'py, i32>,
+        limits: (i64, i64, i64),
+        no_material: u8,
+    ) -> PyResult<(Bound<'py, PyArray2<i64>>, Bound<'py, PyArray2<u8>>)> {
+        let shape = heights.as_array().dim();
+        if inside.as_array().dim() != shape
+            || detail.as_array().dim() != shape
+            || laid.as_array().dim() != shape
+            || reach.as_array().dim() != shape
+            || limits.1 <= limits.0
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid mountain blend arrays",
+            ));
+        }
+        let (h, i, d, l, r) = (
+            heights.as_slice()?,
+            inside.as_slice()?,
+            detail.as_slice()?,
+            laid.as_slice()?,
+            reach.as_slice()?,
+        );
+        let (out, stamps) = py
+            .detach(|| terrain::blend_mountains(h, i, d, l, r, limits, no_material))
+            .map_err(TerrainRangeError::new_err)?;
+        Ok((shaped(py, shape, out)?, shaped(py, shape, stamps)?))
+    }
+
+    #[pyfunction]
+    fn stamp_slots<'py>(
+        py: Python<'py>,
+        slots: PyReadonlyArray2<'py, u8>,
+        stamped: PyReadonlyArray2<'py, u8>,
+        labels: PyReadonlyArray2<'py, i32>,
+        materials: PyReadonlyArray1<'py, i64>,
+        remap: PyReadonlyArray1<'py, i64>,
+    ) -> PyResult<Bound<'py, PyArray2<u8>>> {
+        let shape = slots.as_array().dim();
+        if stamped.as_array().dim() != shape
+            || labels.as_array().dim() != shape
+            || remap.len()? != 17 * 16
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid stamp slot arrays",
+            ));
+        }
+        let (s, t, l, m, r) = (
+            slots.as_slice()?,
+            stamped.as_slice()?,
+            labels.as_slice()?,
+            materials.as_slice()?,
+            remap.as_slice()?,
+        );
+        let out = py
+            .detach(|| slots::stamp_slots(s, t, l, m, r))
+            .map_err(pyo3::exceptions::PyValueError::new_err)?;
+        shaped(py, shape, out)
+    }
+
+    #[pyfunction]
+    fn coastal_pixels<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+        land: PyReadonlyArray1<'py, bool>,
+        sea: PyReadonlyArray1<'py, bool>,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = labels.as_array().dim();
+        let (labels, land, sea) = (labels.as_slice()?, land.as_slice()?, sea.as_slice()?);
+        if land.len() != sea.len() || labels.iter().any(|&l| l >= 0 && l as usize >= land.len()) {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "coast label out of range",
+            ));
+        }
+        let out = py.detach(|| cells::coastal_pixels(labels, shape, land, sea));
+        shaped(py, (out.len() / 3, 3), out)
+    }
+
+    #[pyfunction]
+    fn format_instances(py: Python<'_>, values: PyReadonlyArray2<'_, f32>) -> PyResult<String> {
+        let shape = values.as_array().dim();
+        let values = values.as_slice()?;
+        Ok(py.detach(|| objects::format_inline(values, shape)))
+    }
+
+    #[pyfunction]
+    fn renumber<'py>(
+        py: Python<'py>,
+        labels: PyReadonlyArray2<'py, i32>,
+    ) -> PyResult<Bound<'py, PyArray2<i32>>> {
+        let shape = labels.as_array().dim();
+        let labels = labels.as_slice()?;
+        let out = py.detach(|| cells::renumber(labels));
+        shaped(py, shape, out)
+    }
+
+    #[pyfunction]
+    fn land_blur<'py>(
+        py: Python<'py>,
+        land: PyReadonlyArray2<'py, bool>,
+        values: PyReadonlyArray2<'py, i64>,
+        radius: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = land.as_array().dim();
+        if values.as_array().dim() != shape {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "raster shapes differ",
+            ));
+        }
+        let (land, values) = (land.as_slice()?, values.as_slice()?);
+        let out = py.detach(|| raster::land_blur(land, values, shape, radius));
+        shaped(py, shape, out)
+    }
+
+    #[pyfunction]
+    #[allow(clippy::too_many_arguments)]
+    fn block_relief<'py>(
+        py: Python<'py>,
+        land: PyReadonlyArray2<'py, bool>,
+        values: PyReadonlyArray2<'py, i64>,
+        bend: Option<PyReadonlyArray2<'py, i64>>,
+        blocks: usize,
+        step: usize,
+        first: usize,
+    ) -> PyResult<Bound<'py, PyArray2<i64>>> {
+        let shape = land.as_array().dim();
+        if values.as_array().dim() != shape
+            || bend.as_ref().is_some_and(|b| b.as_array().dim() != shape)
+            || step == 0
+            || (shape.0 > 0 && blocks < (first + shape.0).div_ceil(step) * shape.1.div_ceil(step))
+        {
+            return Err(pyo3::exceptions::PyValueError::new_err(
+                "invalid relief block strip",
+            ));
+        }
+        let bend = bend.as_ref().map(|b| b.as_slice()).transpose()?;
+        let (land, values) = (land.as_slice()?, values.as_slice()?);
+        let out =
+            py.detach(|| cells::block_relief(land, values, bend, shape.1, blocks, step, first));
+        shaped(py, (5, blocks), out)
+    }
+
+    #[pyfunction]
+    #[allow(clippy::type_complexity)]
+    fn block_labels<'py>(
+        py: Python<'py>,
+        land: PyReadonlyArray2<'py, bool>,
+        step: usize,
+    ) -> PyResult<(Bound<'py, PyArray2<i32>>, Bound<'py, PyArray1<i64>>)> {
+        if step == 0 {
+            return Err(pyo3::exceptions::PyValueError::new_err("empty block step"));
+        }
+        let shape = land.as_array().dim();
+        let land = land.as_slice()?;
+        let (labels, counts) = py.detach(|| cells::block_labels(land, shape, step));
+        Ok((shaped(py, shape, labels)?, counts.into_pyarray(py)))
     }
 
     #[pyfunction]
@@ -1103,6 +1326,7 @@ mod _native {
 
     /// Land mask, canvas mask and heights of a decal window at decal resolution.
     #[pyfunction]
+    #[pyo3(signature = (codes, vanilla_water, relief, keys, origin, table, profile_end, params, core, sampled=false))]
     #[allow(clippy::too_many_arguments, clippy::type_complexity)]
     fn decal_heights<'py>(
         py: Python<'py>,
@@ -1115,6 +1339,7 @@ mod _native {
         profile_end: i32,
         params: std::collections::HashMap<String, i64>,
         core: (usize, usize, usize, usize),
+        sampled: bool,
     ) -> PyResult<(
         Bound<'py, PyArray2<bool>>,
         Bound<'py, PyArray2<bool>>,
@@ -1148,21 +1373,34 @@ mod _native {
                 "the core does not lie inside the window",
             ));
         }
+        let step = if sampled { 2 } else { 1 };
+        let core = if sampled {
+            slots::Core {
+                row0: core.row0 + 1,
+                rows: core.rows.saturating_sub(1),
+                column0: core.column0 + 1,
+                columns: core.columns.saturating_sub(1),
+            }
+        } else {
+            core
+        };
         let (land, canvas, heights) = py
             .detach(|| {
                 let fields =
                     terrain::land_and_distances(codes, water, shape, &params, profile_end)?;
-                let heights =
-                    terrain::heights(relief, shape, core, &fields, keys, origin, &table, &params)?;
-                let canvas = slots::crop(&fields.canvas, shape.1 * 2, core);
+                let heights = terrain::heights(
+                    relief, shape, core, &fields, keys, origin, &table, &params, step,
+                )?;
+                let canvas = slots::crop_strided(&fields.canvas, shape.1 * 2, core, step);
                 Ok::<_, String>((fields.land, canvas, heights))
             })
             .map_err(pyo3::exceptions::PyValueError::new_err)?;
         let doubled = (shape.0 * 2, shape.1 * 2);
+        let output = (core.rows.div_ceil(step), core.columns.div_ceil(step));
         Ok((
             shaped(py, doubled, land)?,
-            shaped(py, core.shape(), canvas)?,
-            shaped(py, core.shape(), heights)?,
+            shaped(py, output, canvas)?,
+            shaped(py, output, heights)?,
         ))
     }
 

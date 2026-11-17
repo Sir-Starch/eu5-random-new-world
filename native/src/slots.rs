@@ -27,6 +27,39 @@ const RIVER: (i64, i64) = (0, 3);
 const OCTAVES: u32 = 2;
 const PERSISTENCE: i64 = 500;
 
+/// The original stamp-slot blend, with no pixel-sized gathered material/remap tables.
+pub fn stamp_slots(
+    slots: &[u8],
+    stamped: &[u8],
+    labels: &[i32],
+    materials: &[i64],
+    remap: &[i64],
+) -> Result<Vec<u8>, &'static str> {
+    slots
+        .par_iter()
+        .enumerate()
+        .map(|(at, &slot)| {
+            let label = i64::from(labels[at]);
+            let index = if label < 0 {
+                materials.len() as i64 + label
+            } else {
+                label
+            };
+            let count = materials
+                .get(usize::try_from(index).map_err(|_| "stamp label out of range")?)
+                .ok_or("stamp label out of range")?
+                .clamp(&0, &SLOTS);
+            let mapped = remap
+                [*count as usize * SLOTS as usize + usize::from(stamped[at].min(SLOTS as u8 - 1))];
+            Ok(if stamped[at] != NO_MATERIAL && mapped >= VARIATION {
+                i64::from(slot).min(mapped) as u8
+            } else {
+                slot
+            })
+        })
+        .collect()
+}
+
 /// Per-label values (index = label).
 pub struct Tables<'a> {
     pub water: &'a [bool],
@@ -144,6 +177,18 @@ pub fn crop<T: Copy>(values: &[T], width: usize, core: Core) -> Vec<T> {
         out.extend_from_slice(&values[row * width + core.column0..][..core.columns]);
     }
     out
+}
+
+/// A core sampled at the same integer stride on both axes (one keeps every pixel).
+pub fn crop_strided<T: Copy>(values: &[T], width: usize, core: Core, step: usize) -> Vec<T> {
+    (core.row0..core.row0 + core.rows)
+        .step_by(step)
+        .flat_map(|row| {
+            (core.column0..core.column0 + core.columns)
+                .step_by(step)
+                .map(move |column| values[row * width + column])
+        })
+        .collect()
 }
 
 /// Material slot per pixel of the `core` of a window whose top-left decal pixel is `origin`

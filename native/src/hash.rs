@@ -1,4 +1,5 @@
-//! SplitMix64 lattice hashing, bit-identical to `rnw.rng`.
+//! SplitMix64 lattice hashing and MurmurHash3 localization keys, bit-identical to the
+//! `rnw.rng` and `tests/reference/loc_keys.py` specifications.
 
 pub const GAMMA: u64 = 0x9E37_79B9_7F4A_7C15;
 pub const MUL1: u64 = 0xBF58_476D_1CE4_E5B9;
@@ -20,6 +21,35 @@ pub fn mix64(value: u64) -> u64 {
 pub fn hash_point(key: u64, x: i64, y: i64) -> u64 {
     let z = key ^ (x as u64).wrapping_mul(X_MUL) ^ (y as u64).wrapping_mul(Y_MUL);
     mix64(z.wrapping_add(GAMMA))
+}
+
+/// MurmurHash3 x86_32 of arbitrary bytes, with the engine's original wrapping arithmetic.
+pub fn murmur3(data: &[u8], seed: u32) -> u32 {
+    let scramble = |value: u32| {
+        value
+            .wrapping_mul(0xcc9e2d51)
+            .rotate_left(15)
+            .wrapping_mul(0x1b873593)
+    };
+    let mut hashed = seed;
+    let (chunks, tail) = data.as_chunks::<4>();
+    for &chunk in chunks {
+        let block = u32::from_le_bytes(chunk);
+        hashed = (hashed ^ scramble(block))
+            .rotate_left(13)
+            .wrapping_mul(5)
+            .wrapping_add(0xe6546b64);
+    }
+    if !tail.is_empty() {
+        let block = tail.iter().enumerate().fold(0_u32, |value, (at, &byte)| {
+            value | (u32::from(byte) << (at * 8))
+        });
+        hashed ^= scramble(block);
+    }
+    hashed ^= data.len() as u32;
+    hashed = (hashed ^ (hashed >> 16)).wrapping_mul(0x85ebca6b);
+    hashed = (hashed ^ (hashed >> 13)).wrapping_mul(0xc2b2ae35);
+    hashed ^ (hashed >> 16)
 }
 
 #[cfg(test)]

@@ -24,7 +24,7 @@ from rnw.history_model import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from rnw.history_model import Actor, Proposal, Society
+    from rnw.history_model import Actor, Proposal, Reason, Society
 
 MUTUAL = frozenset({Action.CONTACT, Action.EXCHANGE, Action.UNION, Action.PACT})
 INTEGRATION_YEARS: Final[int] = 25
@@ -86,10 +86,7 @@ class Context:
         for bond in self.state.bonds:
             self.causes_by_actor[bond.first].add(bond.cause)
             self.causes_by_actor[bond.second].add(bond.cause)
-        self.scores: dict[tuple[str, str, Factor], int] = {}
-        self.powers: dict[str, int] = {}
-        self.burdens: dict[tuple[str, tuple[str, ...]], int] = {}
-        self.distances: dict[tuple[str, str, tuple[str, ...]], int] = {}
+        self._query_caches()
         self.bond_pairs = {(bond.kind, bond.first, bond.second) for bond in self.state.bonds}
         self.lords = {
             bond.first: bond.second for bond in self.state.bonds if bond.kind is Action.DEPENDENCY
@@ -123,6 +120,13 @@ class Context:
         self._groups: dict[str, tuple[Trajectory, ...]] | None = None
         self._founders: dict[str, str] | None = None
         self.ancestries: dict[str, frozenset[str]] = {}
+
+    def _query_caches(self) -> None:
+        self.eligibility: dict[Proposal, Reason | None] = {}
+        self.scores: dict[tuple[str, str, Factor], int] = {}
+        self.powers: dict[str, int] = {}
+        self.burdens: dict[tuple[str, tuple[str, ...]], int] = {}
+        self.distances: dict[tuple[str, str, tuple[str, ...]], int] = {}
 
     def _events(self, history: History, previous: Context | None) -> None:
         """Year, kind and record of every event, and each actor's events in order."""

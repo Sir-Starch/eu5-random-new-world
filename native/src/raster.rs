@@ -4,6 +4,89 @@
 
 use rayon::prelude::*;
 
+/// Land-weighted box mean. Keep the reference's vertical and horizontal integer
+/// divisions for both the share and height, then divide the two blurred fields.
+pub fn land_blur(
+    land: &[bool],
+    values: &[i64],
+    (rows, width): (usize, usize),
+    radius: usize,
+) -> Vec<i64> {
+    if width == 0 || rows == 0 {
+        return Vec::new();
+    }
+    if radius == 0 {
+        return values
+            .iter()
+            .zip(land)
+            .map(|(&v, &l)| if l { v } else { 0 })
+            .collect();
+    }
+    let size = (2 * radius + 1) as i64;
+    let mut vertical = vec![[0_i64; 2]; values.len()];
+    let chunk_rows = rows.div_ceil(rayon::current_num_threads() * 4).max(1);
+    vertical
+        .par_chunks_mut(chunk_rows * width)
+        .enumerate()
+        .for_each(|(chunk, block)| {
+            let first = chunk * chunk_rows;
+            let sample = |y: isize, x: usize| {
+                let at = y.clamp(0, rows as isize - 1) as usize * width + x;
+                if land[at] {
+                    [1000, values[at].wrapping_mul(1000)]
+                } else {
+                    [0, 0]
+                }
+            };
+            let mut window = vec![[0_i64; 2]; width];
+            for dy in -(radius as isize)..=radius as isize {
+                for (x, slot) in window.iter_mut().enumerate() {
+                    let v = sample(first as isize + dy, x);
+                    for c in 0..2 {
+                        slot[c] = slot[c].wrapping_add(v[c]);
+                    }
+                }
+            }
+            for (r, line) in block.chunks_mut(width).enumerate() {
+                for (slot, sum) in line.iter_mut().zip(&window) {
+                    *slot = [sum[0].div_euclid(size), sum[1].div_euclid(size)];
+                }
+                let y = (first + r) as isize;
+                for (x, slot) in window.iter_mut().enumerate() {
+                    let added = sample(y + radius as isize + 1, x);
+                    let removed = sample(y - radius as isize, x);
+                    for c in 0..2 {
+                        slot[c] = slot[c].wrapping_add(added[c]).wrapping_sub(removed[c]);
+                    }
+                }
+            }
+        });
+    let mut out = vec![0_i64; values.len()];
+    out.par_chunks_mut(width).enumerate().for_each(|(y, line)| {
+        let at = |x: isize| vertical[y * width + x.clamp(0, width as isize - 1) as usize];
+        let mut window = [0_i64; 2];
+        for x in -(radius as isize)..=radius as isize {
+            let v = at(x);
+            for c in 0..2 {
+                window[c] = window[c].wrapping_add(v[c]);
+            }
+        }
+        for (x, slot) in line.iter_mut().enumerate() {
+            if land[y * width + x] {
+                *slot = window[1]
+                    .div_euclid(size)
+                    .div_euclid(window[0].div_euclid(size).max(1));
+            }
+            let added = at(x as isize + radius as isize + 1);
+            let removed = at(x as isize - radius as isize);
+            for c in 0..2 {
+                window[c] = window[c].wrapping_add(added[c]).wrapping_sub(removed[c]);
+            }
+        }
+    });
+    out
+}
+
 /// Horizontal and vertical second differences of a strip, preserving endpoint masks.
 pub fn strip_bend(
     land: &[bool],

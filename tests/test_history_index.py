@@ -146,3 +146,35 @@ def test_a_settlement_found_valid_is_checked_again_once_it_is_replaced() -> None
     # The unchanged snapshot is still accepted on the shared index.
     again = Index(history.geography, history.state, lambda: None, physical=first)
     validate_snapshot(again, history.state)
+
+
+def test_memoized_eligibility_and_support_keep_complete_rounds_and_replay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rnw import history_actions  # noqa: PLC0415
+
+    for initial in histories():
+        fast = history_engine.simulate(initial, turbulence=800)
+        history_engine.validate_history(fast)
+        with monkeypatch.context() as patch:
+            patch.setattr(history_actions, "eligible", history_actions._eligible)  # pyright: ignore[reportPrivateUsage]
+            patch.setattr(history_engine, "eligible", history_actions._eligible)  # pyright: ignore[reportPrivateUsage]
+            patch.setattr(history_context, "Index", UncachedIndex)
+            patch.setattr(history_engine, "Index", UncachedIndex)
+            reference = history_engine.simulate(initial, turbulence=800)
+            history_engine.validate_history(reference)
+        assert reference == fast
+
+
+def test_supported_cache_keys_include_seat_tenure_and_actual_members() -> None:
+    history = valley()
+    index = Index(history.geography, history.state, lambda: None)
+    reference = UncachedIndex(history.geography, history.state, lambda: None)
+    for actor in history.state.actors:
+        members = index.members[actor.key].copy()
+        for seat in (actor.seat, "absent"):
+            changed = replace(actor, seat=seat)
+            assert index.supported(changed, members) == reference.supported(changed, members)
+            assert index.supported(changed, members) == reference.supported(changed, members)
+        members.clear()
+        assert index.supported(actor, members) == reference.supported(actor, members)

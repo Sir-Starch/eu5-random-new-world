@@ -314,6 +314,161 @@ pub fn merge_small(labels: &[i32], shape: (usize, usize), minimum: i64) -> Vec<i
         .collect()
 }
 
+/// Per-size-block count, sum, square sum, bend sum and bend count of a strip.
+#[allow(clippy::too_many_arguments)]
+pub fn block_relief(
+    land: &[bool],
+    values: &[i64],
+    bend: Option<&[i64]>,
+    width: usize,
+    blocks: usize,
+    step: usize,
+    first: usize,
+) -> Vec<i64> {
+    let columns = width.div_ceil(step);
+    let mut out = vec![0_i64; 5 * blocks];
+    for (at, &on_land) in land.iter().enumerate() {
+        if !on_land {
+            continue;
+        }
+        let block = ((first + at / width) / step) * columns + (at % width) / step;
+        let v = values[at];
+        out[block] += 1;
+        out[blocks + block] = out[blocks + block].wrapping_add(v);
+        out[2 * blocks + block] = out[2 * blocks + block].wrapping_add(v.wrapping_mul(v));
+        if let Some(bend) = bend
+            && bend[at] >= 0
+        {
+            out[3 * blocks + block] = out[3 * blocks + block].wrapping_add(bend[at]);
+            out[4 * blocks + block] += 1;
+        }
+    }
+    out
+}
+
+/// Fixed block labels and their land counts, without pixel-sized index temporaries.
+pub fn block_labels(
+    land: &[bool],
+    (rows, width): (usize, usize),
+    step: usize,
+) -> (Vec<i32>, Vec<i64>) {
+    let columns = width.div_ceil(step);
+    let mut labels = vec![-1; land.len()];
+    let mut counts = vec![0_i64; rows.div_ceil(step) * columns];
+    if width == 0 {
+        return (labels, counts);
+    }
+    labels
+        .par_chunks_mut(step * width)
+        .zip(counts.par_chunks_mut(columns))
+        .enumerate()
+        .for_each(|(by, (out, counts))| {
+            for (y, line) in out.chunks_mut(width).enumerate() {
+                for (bx, count) in counts.iter_mut().enumerate() {
+                    let label = (by * columns + bx) as i32;
+                    for (x, slot) in line.iter_mut().enumerate().skip(bx * step).take(step) {
+                        if land[(by * step + y) * width + x] {
+                            *slot = label;
+                            *count += 1;
+                        }
+                    }
+                }
+            }
+        });
+    (labels, counts)
+}
+
+/// Number nonnegative labels by first raster appearance, without sorting all pixels.
+pub fn renumber(labels: &[i32]) -> Vec<i32> {
+    let count = (i64::from(labels.iter().max().copied().unwrap_or(-1)) + 1).max(0) as usize;
+    let mut mapping = vec![-1; count];
+    let mut next = 0;
+    labels
+        .iter()
+        .map(|&label| {
+            if label < 0 {
+                return -1;
+            }
+            let slot = &mut mapping[label as usize];
+            if *slot < 0 {
+                *slot = next;
+                next += 1;
+            }
+            *slot
+        })
+        .collect()
+}
+
+/// Land/sea labels and the land pixel of every four-neighbour coastal contact.
+pub fn coastal_pixels(
+    labels: &[i32],
+    (rows, width): (usize, usize),
+    land: &[bool],
+    sea: &[bool],
+) -> Vec<i64> {
+    (0..rows)
+        .into_par_iter()
+        .flat_map_iter(|y| {
+            let mut found = Vec::new();
+            for x in 0..width {
+                let at = y * width + x;
+                let a = labels[at];
+                if a < 0 {
+                    continue;
+                }
+                for other in [
+                    if x + 1 < width { Some(at + 1) } else { None },
+                    if y + 1 < rows { Some(at + width) } else { None },
+                ]
+                .into_iter()
+                .flatten()
+                {
+                    let b = labels[other];
+                    if b < 0 {
+                        continue;
+                    }
+                    if land[a as usize] && sea[b as usize] {
+                        found.extend([i64::from(a), i64::from(b), at as i64]);
+                    }
+                    if sea[a as usize] && land[b as usize] {
+                        found.extend([i64::from(b), i64::from(a), other as i64]);
+                    }
+                }
+            }
+            found
+        })
+        .collect()
+}
+
+/// First raster position of each distinct value, ordered by the original label value.
+/// Dense component IDs need one indexed scan; arbitrary sparse integer IDs use a map.
+pub fn first_pixels<T: Copy + Ord + Into<i128>>(labels: &[T]) -> Vec<i64> {
+    let Some(&low) = labels.iter().min() else {
+        return Vec::new();
+    };
+    let high = labels.iter().max().copied().unwrap();
+    let low: i128 = low.into();
+    let span = high.into() - low + 1;
+    if span <= labels.len() as i128 {
+        let mut first = vec![-1; span as usize];
+        for (at, &label) in labels.iter().enumerate() {
+            let slot = &mut first[(label.into() - low) as usize];
+            if *slot < 0 {
+                *slot = at as i64;
+            }
+        }
+        first.into_iter().filter(|&at| at >= 0).collect()
+    } else {
+        let mut first = std::collections::HashMap::new();
+        for (at, &label) in labels.iter().enumerate() {
+            first.entry(label.into()).or_insert(at as i64);
+        }
+        let mut entries: Vec<(i128, i64)> = first.into_iter().collect();
+        entries.sort_unstable_by_key(|&(label, _)| label);
+        entries.into_iter().map(|(_, at)| at).collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

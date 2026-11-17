@@ -30,10 +30,12 @@ from typing import TYPE_CHECKING, Final
 
 import numpy as np
 
+from rnw import _native
 from rnw.eu5_events import EVENT_ID, mentions, names_tag, retire_events, retire_modifiers
 from rnw.model import CellClass
 from rnw.pdx import Block, Edits, PdxSyntaxError, line_span, parse
 from rnw.progress import checkpoint
+from rnw.timing import measured
 
 if TYPE_CHECKING:
     from collections.abc import Set as AbstractSet
@@ -125,6 +127,15 @@ def _scope_map(remap: dict[str, str], scope: str) -> dict[str, str]:
     return remap.locations
 
 
+def _role_pool(pool: NDArray[np.int64], role: str, access: RemapAccess) -> NDArray[np.int64]:
+    if role == "port":
+        return np.array([i for i in pool.tolist() if i in access.port_cells], dtype=np.int64)
+    if role == "water":
+        return np.array([i for i in pool.tolist() if i not in access.closed_seas], dtype=np.int64)
+    return pool
+
+
+@measured
 def build_remap(  # noqa: PLR0913 - geographic levels share their location bindings.
     removed: list[tuple[str, CellClass, int, int]],
     plan: Plan,
@@ -147,20 +158,33 @@ def build_remap(  # noqa: PLR0913 - geographic levels share their location bindi
     for family in set(FAMILY.values()):
         members = [i for i, cell in enumerate(plan.cells) if cell.kind in family]
         by_family[family] = np.array(members, dtype=np.int64)
-    for key, kind, row, column in removed:
-        pool = by_family[FAMILY[kind]]
-        if key in access.port_keys:
-            pool = np.array([i for i in pool.tolist() if i in access.port_cells], dtype=np.int64)
-        elif key in access.navigable_keys:
-            pool = np.array(
-                [i for i in pool.tolist() if i not in access.closed_seas], dtype=np.int64
-            )
-        if not pool.size:
+    # The family and access role define a pool once. Every query still chooses the
+    # exact squared-distance minimum; equal distances keep the pool's first index.
+    pools: dict[tuple[frozenset[CellClass], str], NDArray[np.int64]] = {}
+    groups: dict[tuple[frozenset[CellClass], str], list[int]] = {}
+    for index, (key, kind, _row, _column) in enumerate(removed):
+        role = (
+            "port"
+            if key in access.port_keys
+            else "water"
+            if key in access.navigable_keys
+            else "all"
+        )
+        group = FAMILY[kind], role
+        if group not in pools:
+            pools[group] = _role_pool(by_family[FAMILY[kind]], role, access)
+        if not pools[group].size:
             message = f"No generated replacement preserves the geographic role of {key}"
             raise RemapError(message)
-        delta = centres[pool] - np.array([row, column], dtype=np.int64)
-        best = int(pool[int(np.argmin((delta * delta).sum(axis=1)))])
-        remap[key] = plan.cells[best].key
+        groups.setdefault(group, []).append(index)
+    mapped_cells = np.empty(len(removed), dtype=np.int64)
+    for group, indices in groups.items():
+        pool = pools[group]
+        queries = np.array([(removed[i][2], removed[i][3]) for i in indices], dtype=np.int64)
+        nearest = _native.nearest_rows(np.ascontiguousarray(centres[pool]), queries, 1)[:, 0]
+        mapped_cells[indices] = pool[nearest]
+    for index, (key, _kind, _row, _column) in enumerate(removed):
+        remap[key] = plan.cells[int(mapped_cells[index])].key
     province_of = {cell.key: cell.province for cell in plan.cells}
     province_remap: dict[str, str] = {}
     for province, keys in provinces.items():

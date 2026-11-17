@@ -461,7 +461,14 @@ def _threat_allowed(context: Context, proposal: Proposal) -> Reason | None:
     return None
 
 
-def eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C901, PLR0911, PLR0912
+def eligible(context: Context, proposal: Proposal) -> Reason | None:
+    """Reuse the full eligibility decision only within the same immutable prior snapshot."""
+    if proposal not in context.eligibility:
+        context.eligibility[proposal] = _eligible(context, proposal)
+    return context.eligibility[proposal]
+
+
+def _eligible(context: Context, proposal: Proposal) -> Reason | None:  # noqa: C901, PLR0911, PLR0912
     if proposal.kind is Action.REFORM:
         return reform_allowed(context, proposal)
     if proposal.kind is Action.SEPARATION:

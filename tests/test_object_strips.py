@@ -105,3 +105,36 @@ def test_canvas_pixels_of_strips_join_into_those_of_the_canvas() -> None:
     for kind in range(4):
         assert np.array_equal(np.concatenate([part[kind] for part in parts]), whole[kind])
     assert whole[0].size > 1000
+
+
+@pytest.mark.parametrize("separator", [" ", "\t", "\n", "\r\n", "\v", "\f", "\x1c", "\u00a0"])
+@pytest.mark.parametrize("extended", [False, True])
+def test_inline_numbers_retain_scalar_float64_rounding_and_grammar(
+    separator: str, *, extended: bool
+) -> None:
+    generator = np.random.default_rng(782)
+    numbers = ["0", "-0", "+0", "NaN", "-nan", "+NAN", "inf", "-Infinity", "+INF", "1e999"]
+    if extended:
+        numbers += [
+            "1_2",
+            "٣.٥",
+            ".5",
+            "1.",
+            "1e-999",
+            "1e-27",
+            "1.000000059604644775390625",
+            "-1e-999",
+            "1e38",
+            "3.4028234663852886e38",
+        ]
+    numbers += [format(value, ".75g") for value in generator.normal(size=2000)]
+    text = separator.join(numbers)
+    expected = np.array(text.split(), dtype=np.float64).reshape(-1, 10).astype(np.float32)
+    result = eu5_objects._inline_values(text)  # pyright: ignore[reportPrivateUsage]
+    assert np.array_equal(result.view(np.uint32), expected.view(np.uint32))
+
+
+@pytest.mark.parametrize("text", ["1 junk", "1 2x", "nan(payload)", "0x1.0p1", "1e+", "1 2 3"])
+def test_inline_numbers_reject_invalid_tokens_or_incomplete_records(text: str) -> None:
+    with pytest.raises(ValueError, match=r"invalid instance|reshape"):
+        _ = eu5_objects._inline_values(text)  # pyright: ignore[reportPrivateUsage]

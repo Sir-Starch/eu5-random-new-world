@@ -134,3 +134,47 @@ def test_water_texture_pixels_of_a_moved_island_move_with_it() -> None:
     assert tuple(image[7, 14]) == (9, 8, 7, 6)
     assert placed[7, 14]
     assert carry_pixels(image, None, 2) is None
+
+
+def test_factored_moved_layers_equal_each_original_subpixel_pass(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from tests.reference.shifted_terrain import ShiftedStore as ReferenceStore  # noqa: PLC0415
+
+    cache = tmp_path / DECAL_CACHE
+    cache.parent.mkdir(parents=True)
+    _ = cache.write_text("[]", encoding="utf-8")
+    rng = np.random.default_rng(159357)
+    rows = rng.integers(0, 32, 100, dtype=np.int64)
+    columns = rng.integers(0, WIDTH, 100, dtype=np.int64)
+    moved = Moved(
+        rows,
+        columns,
+        rng.integers(-5, 6, 100, dtype=np.int64),
+        rng.integers(-50, 51, 100, dtype=np.int64),
+        WIDTH,
+        rows * WIDTH + columns,
+    )
+    fast, reference = (
+        ShiftedStore(tmp_path, (32, WIDTH), moved),
+        ReferenceStore(tmp_path, (32, WIDTH), moved),
+    )
+    # Overlapping source footprints also retain the original last-placement precedence.
+    fast.decals = reference.decals = [
+        Decal("left", 0, 0, 32, 32),
+        Decal("overlap", 0, 20, 32, 32),
+        Decal("right", 0, 32, 32, 32),
+    ]
+    images = {d.name: rng.integers(0, 65536, (64, 64), dtype=np.uint16) for d in fast.decals}
+
+    def vanilla(_self: DecalStore, decal: str, kind: str) -> tuple[LayerFormat, np.ndarray]:
+        if kind == "height":
+            return LayerFormat(64, 64, "<u2"), images[decal].copy()
+        return LayerFormat(64, 64, "u1"), (images[decal] % 16).astype(np.uint8)
+
+    monkeypatch.setattr(DecalStore, "layer", vanilla)
+    for decal in fast.decals:
+        for kind in ("height", "materials"):
+            assert np.array_equal(
+                fast.layer(decal.name, kind)[1], reference.layer(decal.name, kind)[1]
+            )

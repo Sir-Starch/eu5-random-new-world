@@ -117,8 +117,12 @@ def grow_weighted(
 
 
 def first_pixels(components: NDArray[np.integer]) -> NDArray[np.int64]:
-    _, first = np.unique(components.ravel(), return_index=True)
-    return first.astype(np.int64)
+    checkpoint()
+    if components.dtype == np.int32:
+        return _native.first_pixels32(np.ascontiguousarray(components, dtype=np.int32))
+    if components.dtype == np.uint64:
+        return _native.first_pixels_u64(np.ascontiguousarray(components, dtype=np.uint64))
+    return _native.first_pixels64(np.ascontiguousarray(components, dtype=np.int64))
 
 
 def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.int32]:
@@ -148,15 +152,10 @@ def seed_sites(key: int, mask: NDArray[np.bool_], spacing: int) -> NDArray[np.in
 
 def renumber(labels: NDArray[np.int32]) -> NDArray[np.int32]:
     """Number non-negative labels by first appearance in raster order."""
-    flat = labels.ravel()
-    valid = flat >= 0
-    present, first = np.unique(flat[valid], return_index=True)
-    order = np.argsort(first, kind="stable")
-    mapping = np.full(int(present.max()) + 1 if present.size else 1, -1, dtype=np.int32)
-    mapping[present[order]] = np.arange(present.size, dtype=np.int32)
-    out = np.full(flat.shape, -1, dtype=np.int32)
-    out[valid] = mapping[flat[valid]]
-    return out.reshape(labels.shape)
+    checkpoint()
+    out = _native.renumber(np.ascontiguousarray(labels))
+    checkpoint()
+    return out
 
 
 @measured

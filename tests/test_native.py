@@ -608,6 +608,12 @@ def test_decal_heights_equal_the_reference(seed: int, origin: tuple[int, int]) -
         assert np.array_equal(part[0], land)
         assert np.array_equal(part[1], canvas[core])
         assert np.array_equal(part[2], expected[core])
+        sampled = eu5_terrain.decal_heights(
+            codes, water, relief, seed=seed, origin=origin, core=core, sampled=True
+        )
+        assert np.array_equal(sampled[0], land)
+        assert np.array_equal(sampled[1], canvas[core][1::2, 1::2])
+        assert np.array_equal(sampled[2], expected[core][1::2, 1::2])
 
 
 @pytest.mark.parametrize("seed", [3, 4, 5])

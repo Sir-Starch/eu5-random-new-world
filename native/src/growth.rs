@@ -33,11 +33,24 @@ impl Growth {
         {
             return Err("growth needs a positive speed for every seed label");
         }
-        let frontier = labels
-            .iter()
-            .enumerate()
-            .filter_map(|(at, &label)| (label >= 0).then_some(at))
-            .collect();
+        let mut frontier = Vec::new();
+        for row in 0..labels.len().checked_div(width).unwrap_or(0) {
+            for column in 0..width {
+                let at = row * width + column;
+                if labels[at] < 0 {
+                    continue;
+                }
+                let free = |target| allowed[target] && labels[target] < 0;
+                if speed.is_some()
+                    || (row > 0 && free(at - width))
+                    || (at + width < labels.len() && free(at + width))
+                    || (column > 0 && free(at - 1))
+                    || (column + 1 < width && free(at + 1))
+                {
+                    frontier.push(at);
+                }
+            }
+        }
         Ok(Self {
             allowed: allowed.to_vec(),
             labels,

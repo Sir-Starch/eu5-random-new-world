@@ -24,6 +24,7 @@ import numpy as np
 
 from rnw import (
     __version__,
+    _native,
     epoch,
     eu5_history_text,
     eu5_memories,
@@ -321,7 +322,7 @@ from rnw.ports import ForeignCoast, coast_links, pair_lengths, plan_ports
 from rnw.progress import Progress, active, checkpoint, run_stage, running, skip_stages
 from rnw.record import FORMAT, GameRecord, Record, manifest_digest, output_entries
 from rnw.record import canonical as record_json
-from rnw.relief import COAST_HEIGHT, cell_roughness
+from rnw.relief import COAST_HEIGHT
 from rnw.rivers import (
     NONE,
     RiverGenerationError,
@@ -352,6 +353,7 @@ if TYPE_CHECKING:
     from numpy.typing import NDArray
 
     from rnw.barrens import WastelandSettings
+    from rnw.eu5_remap import GeographicRemap
     from rnw.eu5_start import Country, FinalStartPlan
     from rnw.game_texts import Entry
     from rnw.geography import Location
@@ -561,11 +563,6 @@ def _generated(
         edges=tuple((a, b) for a, b in world.edges if a < count and b < count),
         coastal=_coastal(world)[:count],
         pixels=world.pixels[:count],
-        roughness=(
-            None
-            if surface is None
-            else cell_roughness(world.labels, surface, count, blur=GROUND_BLUR)
-        ),
         ruggedness=(
             None
             if surface is None
@@ -821,7 +818,8 @@ def _crossing_rows(plan: Plan, canvas: Canvas, water: Water) -> list[str]:
     return rows
 
 
-def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
+@measured
+def _ports(
     plan: Plan,
     world: NewWorld,
     canvas: Canvas,
@@ -844,24 +842,8 @@ def _ports(  # noqa: PLR0915 - port choice and dock placement share one pass.
     width = labels.shape[1]
     land = np.array([cell.kind is CellClass.LAND for cell in plan.cells] + [False])
     sea = np.array([cell.kind is CellClass.SEA for cell in plan.cells] + [False])
-    pairs: list[tuple[NDArray[np.int64], NDArray[np.int64], NDArray[np.int64]]] = []
-    flat = labels.ravel()
-    for offset in (1, width):
-        a = flat[:-offset]
-        b = flat[offset:]
-        index = np.arange(flat.size - offset, dtype=np.int64)
-        if offset == 1:
-            index = index[(index % width) != width - 1]
-            a, b = flat[index], flat[index + 1]
-        forward = land[a] & sea[b]
-        backward = sea[a] & land[b]
-        pairs.append((a[forward].astype(np.int64), b[forward].astype(np.int64), index[forward]))
-        pairs.append(
-            (b[backward].astype(np.int64), a[backward].astype(np.int64), index[backward] + offset)
-        )
-    land_cells = np.concatenate([item[0] for item in pairs])
-    sea_cells = np.concatenate([item[1] for item in pairs])
-    pixels = np.concatenate([item[2] for item in pairs])
+    contacts = _native.coastal_pixels(np.ascontiguousarray(labels), land, sea)
+    land_cells, sea_cells, pixels = contacts.T
     rows_out: list[str] = []
     positions: dict[int, tuple[int, int]] = {}
     if land_cells.size:
@@ -3401,6 +3383,40 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
             return terrain_stats
 
         terraining = stages.submit("terrain", build_terrain)
+
+        def prepare_geography() -> tuple[
+            tuple[list[str], dict[int, tuple[int, int]]], GeographicRemap
+        ]:
+            ports = _ports(plan, world, canvas, coast.foreign, vanilla_ports)
+            remap = build_remap(
+                [
+                    (
+                        game_map.keys[i],
+                        game_map.classes[i],
+                        int(geometry.rows[i]),
+                        int(geometry.columns[i]),
+                    )
+                    for i in np.flatnonzero(canvas.removed).tolist()
+                    if game_map.keys[i] in removed
+                ],
+                plan,
+                np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
+                _removed_provinces(hierarchy, removed),
+                areas=_removed_areas(hierarchy, removed, plan.dropped_areas),
+                access=RemapAccess(
+                    port_keys=frozenset(vanilla_ports),
+                    port_cells=frozenset(ports[1]),
+                    navigable_keys=frozenset(
+                        key
+                        for i, key in enumerate(game_map.keys)
+                        if game_map.classes[i] is CellClass.SEA and not game_map.ambiguous[i]
+                    ),
+                    closed_seas=shapes.zones,
+                ),
+            )
+            return ports, remap
+
+        geographic = stages.prepare("ports and geographic remap", prepare_geography)
         river_pixels = np.bincount(
             world.labels[river_codes < RIVER_CLASSES].ravel(), minlength=len(world.classes) + 1
         )[: len(world.classes)]
@@ -3419,33 +3435,7 @@ def _export_new_world(  # noqa: C901, PLR0912, PLR0913, PLR0915 - one pass over 
             ),
         )
         checkpoint()
-        ports = _ports(plan, world, canvas, coast.foreign, vanilla_ports)
-        remap = build_remap(
-            [
-                (
-                    game_map.keys[i],
-                    game_map.classes[i],
-                    int(geometry.rows[i]),
-                    int(geometry.columns[i]),
-                )
-                for i in np.flatnonzero(canvas.removed).tolist()
-                if game_map.keys[i] in removed
-            ],
-            plan,
-            np.stack([world.centroids[:, 0], world.centroids[:, 1] + canvas.col0], axis=1),
-            _removed_provinces(hierarchy, removed),
-            areas=_removed_areas(hierarchy, removed, plan.dropped_areas),
-            access=RemapAccess(
-                port_keys=frozenset(vanilla_ports),
-                port_cells=frozenset(ports[1]),
-                navigable_keys=frozenset(
-                    key
-                    for i, key in enumerate(game_map.keys)
-                    if game_map.classes[i] is CellClass.SEA and not game_map.ambiguous[i]
-                ),
-                closed_seas=shapes.zones,
-            ),
-        )
+        ports, remap = geographic.result()
         development = _plan_development(
             calibration,
             game_map=game_map,

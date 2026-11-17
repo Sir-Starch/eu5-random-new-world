@@ -111,3 +111,25 @@ def test_every_stage_the_code_announces_has_a_label_and_a_weight() -> None:
     assert {"generate world", "texts", "write files", "terrain decals"} <= used
     assert used - set(STAGES) == set()
     assert set(STAGES) - used == set()
+
+
+def test_completed_geography_subpasses_advance_the_bar_without_double_counting() -> None:
+    job, updates = _collect()
+    with progress.active(job), progress.running("generate world"):
+        assert job.fraction == 0
+        for name in ("sea cells", "relief", "land cells"):
+            progress.run_stage(name, lambda: None)
+        earned = sum(progress.WORLD_PART_SECONDS.values()) / progress.WORLD_SECONDS
+        assert job.fraction == pytest.approx(
+            STAGES["generate world"].weight * earned / TOTAL_WEIGHT
+        )
+    assert job.fraction == pytest.approx(STAGES["generate world"].weight / TOTAL_WEIGHT)
+    fractions = [update.fraction for update in updates]
+    assert fractions == sorted(fractions)
+
+
+def test_cached_geography_earns_its_whole_weight_without_subpasses() -> None:
+    job = Progress()
+    with progress.active(job):
+        progress.run_stage("generate world", lambda: None)
+    assert job.fraction == pytest.approx(STAGES["generate world"].weight / TOTAL_WEIGHT)

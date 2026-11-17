@@ -67,6 +67,7 @@ class Index:
         )
         self.populations: dict[str, int] = {}
         self.farmers: dict[str, int] = {}
+        self.supports: dict[tuple[str, Tenure, frozenset[str]], bool] = {}
         self.actors = {actor.key: actor for actor in state.actors}
         self.owner = {holding.district: holding.actor for holding in state.holdings}
         self.members: dict[str, set[str]] = {actor.key: set() for actor in state.actors}
@@ -134,6 +135,14 @@ class Index:
         return seen == members
 
     def supported(self, actor: Actor, members: set[str]) -> bool:
+        # Connectivity, tenure and food depend only on this immutable snapshot, seat
+        # and exact members. Keep no result across demographic/ownership transitions.
+        key = actor.seat, actor.tenure, frozenset(members)
+        if key not in self.supports:
+            self.supports[key] = self._supported(actor, members)
+        return self.supports[key]
+
+    def _supported(self, actor: Actor, members: set[str]) -> bool:
         if not members or not self.connected(members, actor.seat):
             return False
         if any(self.places[key].tenure != actor.tenure for key in members):

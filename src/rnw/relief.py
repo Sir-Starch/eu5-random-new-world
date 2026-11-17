@@ -655,6 +655,11 @@ def generate_relief(  # noqa: PLR0913 - the land, seed, lakes, drawing and three
     def run(first: int) -> None:
         checkpoint()
         last = min(rows, first + strip)
+        if not np.any(land[first:last]):
+            out[first:last] = 0
+            if spread is not None:
+                spread[first:last] = 0
+            return
         out[first:last] = _relief_strip(
             land,
             grid,
@@ -701,11 +706,9 @@ def land_blur(
     the land (``radius`` 0: the height itself). The edges of the window are replicated, so a row
     within ``radius`` of an edge that is not the map's reads short; read a window ``radius`` rows
     wider (``blurred_window``). Integers."""
-    if radius <= 0:
-        return np.where(land, height, 0).astype(np.int64)
-    share = box_blur(land.astype(np.int64) * PERMILLE, radius)
-    total = box_blur(np.where(land, height, 0).astype(np.int64) * PERMILLE, radius)
-    return np.where(land, total // np.maximum(share, 1), 0)
+    return _native.land_blur(
+        np.ascontiguousarray(land), np.ascontiguousarray(height, dtype=np.int64), max(0, radius)
+    )
 
 
 def blurred_window(

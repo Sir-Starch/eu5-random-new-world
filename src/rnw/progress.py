@@ -88,6 +88,10 @@ STAGES: Final[dict[str, StageInfo]] = {
         0,
     ),
 }
+# Completed subpasses earn part of their parent's weight; the remainder includes land
+# construction, calibration and final geography checks. Concurrent passes count once.
+WORLD_PART_SECONDS: Final[dict[str, int]] = {"relief": 20, "sea cells": 10, "land cells": 40}
+WORLD_SECONDS: Final[int] = 90
 TOTAL_WEIGHT: Final[int] = sum(info.weight for info in STAGES.values())
 
 
@@ -182,7 +186,12 @@ class Progress:
         self._move(name, finished=True, completed=completed)
 
     def _share(self) -> float:
-        done = sum(STAGES[name].weight for name in self._done if name in STAGES)
+        done = float(sum(STAGES[name].weight for name in self._done if name in STAGES))
+        if "generate world" in self._running and "generate world" not in self._done:
+            parts = sum(
+                seconds for name, seconds in WORLD_PART_SECONDS.items() if name in self._done
+            )
+            done += STAGES["generate world"].weight * parts / WORLD_SECONDS
         return min(1.0, done / TOTAL_WEIGHT)
 
     def _move(self, name: str, *, finished: bool, completed: bool = True) -> None:
